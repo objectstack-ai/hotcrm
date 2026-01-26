@@ -1,0 +1,88 @@
+name: Deploy Documentation
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'docs/**'
+      - 'README.md'
+      - 'QUICKSTART.md'
+      - 'PROJECT_SUMMARY.md'
+  workflow_dispatch:
+
+jobs:
+  deploy-docs:
+    name: Deploy Documentation to GitHub Pages
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+      
+      - name: Create documentation site
+        run: |
+          mkdir -p _site
+          cp README.md _site/index.md
+          cp QUICKSTART.md _site/
+          cp PROJECT_SUMMARY.md _site/
+          cp -r docs/* _site/ 2>/dev/null || true
+          
+          # Create a simple index.html that redirects to README
+          cat > _site/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <title>HotCRM Documentation</title>
+            <meta http-equiv="refresh" content="0; url=https://github.com/hotcrm/hotcrm#readme">
+            <style>
+              body {
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                margin: 0;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+              }
+              .container {
+                text-align: center;
+              }
+              h1 {
+                font-size: 3em;
+                margin-bottom: 0.5em;
+              }
+              p {
+                font-size: 1.2em;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <h1>🔥 HotCRM</h1>
+              <p>Redirecting to documentation...</p>
+            </div>
+          </body>
+          </html>
+          EOF
+      
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '_site'
+      
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

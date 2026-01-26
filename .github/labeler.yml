@@ -1,0 +1,30 @@
+# Configuration for PR labeler
+# Labels PRs based on changed files
+
+documentation:
+  - changed-files:
+    - any-glob-to-any-file: ['docs/**', '*.md', 'README*', 'CONTRIBUTING*']
+
+dependencies:
+  - changed-files:
+    - any-glob-to-any-file: ['package.json', 'package-lock.json']
+
+ci/cd:
+  - changed-files:
+    - any-glob-to-any-file: ['.github/**']
+
+backend:
+  - changed-files:
+    - any-glob-to-any-file: ['src/server.ts', 'src/engine/**', 'src/triggers/**', 'src/actions/**']
+
+ui:
+  - changed-files:
+    - any-glob-to-any-file: ['src/ui/**', 'tailwind.config.js']
+
+metadata:
+  - changed-files:
+    - any-glob-to-any-file: ['src/metadata/**']
+
+configuration:
+  - changed-files:
+    - any-glob-to-any-file: ['*.config.js', '*.config.ts', 'tsconfig.json', '.gitignore', '.env*']
