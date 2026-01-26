@@ -1,0 +1,282 @@
+# Contract Object Definition
+# Follows @objectstack/spec standard for enterprise CRM
+
+name: Contract
+label: 合同
+labelPlural: 合同
+icon: file-text
+description: 合同管理
+
+# Enable core features
+features:
+  searchable: true
+  trackFieldHistory: true
+  enableNotes: true
+  enableAttachments: true
+
+# Field Definitions
+fields:
+  # Basic Information
+  - name: ContractNumber
+    type: autoNumber
+    label: 合同编号
+    format: "CT-{YYYY}{MM}{DD}-{0000}"
+    
+  - name: AccountId
+    type: lookup
+    label: 客户
+    referenceTo: Account
+    required: true
+    
+  - name: OpportunityId
+    type: lookup
+    label: 关联商机
+    referenceTo: Opportunity
+    
+  - name: Status
+    type: select
+    label: 状态
+    required: true
+    defaultValue: Draft
+    options:
+      - label: 📝 草稿
+        value: Draft
+      - label: 🔍 审核中
+        value: In Approval
+      - label: ✅ 已激活
+        value: Activated
+      - label: ⏸️ 暂停
+        value: On Hold
+      - label: ✔️ 已完成
+        value: Completed
+      - label: ❌ 已终止
+        value: Terminated
+        
+  # Contract Terms
+  - name: StartDate
+    type: date
+    label: 开始日期
+    required: true
+    
+  - name: EndDate
+    type: date
+    label: 结束日期
+    
+  - name: ContractTerm
+    type: number
+    label: 合同期限（月）
+    
+  - name: BillingFrequency
+    type: select
+    label: 账单周期
+    options:
+      - label: 月付
+        value: Monthly
+      - label: 季付
+        value: Quarterly
+      - label: 半年付
+        value: Semi-Annual
+      - label: 年付
+        value: Annual
+      - label: 一次性
+        value: One-Time
+        
+  # Financial
+  - name: ContractValue
+    type: currency
+    label: 合同金额
+    precision: 2
+    required: true
+    
+  - name: PaymentTerms
+    type: select
+    label: 付款条件
+    options:
+      - label: 预付款
+        value: Prepaid
+      - label: 货到付款
+        value: Net 0
+      - label: 15天内付款
+        value: Net 15
+      - label: 30天内付款
+        value: Net 30
+      - label: 60天内付款
+        value: Net 60
+      - label: 90天内付款
+        value: Net 90
+        
+  # Renewal
+  - name: AutoRenewal
+    type: checkbox
+    label: 自动续约
+    defaultValue: false
+    
+  - name: RenewalNoticeDate
+    type: date
+    label: 续约通知日期
+    
+  - name: RenewalTerm
+    type: number
+    label: 续约期限（月）
+    
+  # Legal
+  - name: SpecialTerms
+    type: textarea
+    label: 特殊条款
+    rows: 5
+    
+  - name: Description
+    type: textarea
+    label: 描述
+    rows: 5
+    
+  # Signatures
+  - name: CustomerSignedDate
+    type: date
+    label: 客户签署日期
+    
+  - name: CustomerSignedBy
+    type: text
+    label: 客户签署人
+    length: 100
+    
+  - name: CompanySignedDate
+    type: date
+    label: 公司签署日期
+    
+  - name: CompanySignedBy
+    type: lookup
+    label: 公司签署人
+    referenceTo: User
+    
+  # Ownership
+  - name: OwnerId
+    type: lookup
+    label: 负责人
+    referenceTo: User
+    required: true
+    defaultValue: $currentUser
+
+# List Views
+listViews:
+  - name: All
+    label: 所有合同
+    filters: []
+    columns:
+      - ContractNumber
+      - AccountId
+      - Status
+      - StartDate
+      - EndDate
+      - ContractValue
+      - OwnerId
+      
+  - name: MyContracts
+    label: 我的合同
+    filters:
+      - field: OwnerId
+        operator: equals
+        value: $currentUser
+    columns:
+      - ContractNumber
+      - AccountId
+      - Status
+      - StartDate
+      - ContractValue
+      
+  - name: Active
+    label: 活跃合同
+    filters:
+      - field: Status
+        operator: equals
+        value: Activated
+    columns:
+      - ContractNumber
+      - AccountId
+      - StartDate
+      - EndDate
+      - ContractValue
+      - AutoRenewal
+      
+  - name: ExpiringThisQuarter
+    label: 本季到期
+    filters:
+      - field: EndDate
+        operator: thisQuarter
+    sortBy: EndDate
+    sortOrder: asc
+    columns:
+      - ContractNumber
+      - AccountId
+      - EndDate
+      - ContractValue
+      - AutoRenewal
+      - RenewalNoticeDate
+
+# Page Layout
+pageLayout:
+  sections:
+    - label: 合同信息
+      columns: 2
+      fields:
+        - ContractNumber
+        - AccountId
+        - OpportunityId
+        - Status
+        - OwnerId
+        
+    - label: 合同期限
+      columns: 2
+      fields:
+        - StartDate
+        - EndDate
+        - ContractTerm
+        - BillingFrequency
+        
+    - label: 财务信息
+      columns: 2
+      fields:
+        - ContractValue
+        - PaymentTerms
+        
+    - label: 续约信息
+      columns: 2
+      fields:
+        - AutoRenewal
+        - RenewalNoticeDate
+        - RenewalTerm
+        
+    - label: 签署信息
+      columns: 2
+      fields:
+        - CustomerSignedDate
+        - CustomerSignedBy
+        - CompanySignedDate
+        - CompanySignedBy
+        
+    - label: 其他
+      columns: 1
+      fields:
+        - SpecialTerms
+        - Description
+
+# Validation Rules
+validationRules:
+  - name: EndDateAfterStartDate
+    errorMessage: 结束日期必须晚于开始日期
+    formula: |
+      AND(
+        NOT(ISBLANK(EndDate)),
+        EndDate <= StartDate
+      )
+      
+  - name: RequireSignatureForActivation
+    errorMessage: 激活合同前必须完成双方签署
+    formula: |
+      AND(
+        Status = "Activated",
+        OR(
+          ISBLANK(CustomerSignedDate),
+          ISBLANK(CompanySignedDate)
+        )
+      )

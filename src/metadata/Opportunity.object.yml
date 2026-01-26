@@ -1,0 +1,346 @@
+# Opportunity Object Definition
+# Follows @objectstack/spec standard for enterprise CRM
+
+name: Opportunity
+label: 商机
+labelPlural: 商机
+icon: briefcase
+description: 销售商机和管道管理
+
+# Enable core features
+features:
+  searchable: true
+  trackFieldHistory: true
+  enableActivities: true
+  enableNotes: true
+  enableAttachments: true
+
+# Field Definitions
+fields:
+  # Basic Information
+  - name: Name
+    type: text
+    label: 商机名称
+    required: true
+    searchable: true
+    length: 120
+    
+  - name: AccountId
+    type: lookup
+    label: 客户
+    referenceTo: Account
+    required: true
+    
+  - name: ContactId
+    type: lookup
+    label: 主要联系人
+    referenceTo: Contact
+    
+  # Sales Information
+  - name: Amount
+    type: currency
+    label: 金额
+    precision: 2
+    
+  - name: CloseDate
+    type: date
+    label: 预计成交日期
+    required: true
+    
+  - name: Stage
+    type: select
+    label: 阶段
+    required: true
+    options:
+      - label: 🔍 潜在客户
+        value: Prospecting
+        probability: 10
+      - label: 📞 需求确认
+        value: Qualification
+        probability: 20
+      - label: 💡 方案设计
+        value: Needs Analysis
+        probability: 40
+      - label: 📊 方案展示
+        value: Proposal
+        probability: 60
+      - label: 💰 商务谈判
+        value: Negotiation
+        probability: 80
+      - label: ✅ 成交
+        value: Closed Won
+        probability: 100
+        isWon: true
+      - label: ❌ 失败
+        value: Closed Lost
+        probability: 0
+        isLost: true
+        
+  - name: Probability
+    type: percent
+    label: 赢单概率
+    
+  - name: Type
+    type: select
+    label: 商机类型
+    options:
+      - label: 新业务
+        value: New Business
+      - label: 现有业务扩展
+        value: Existing Business
+      - label: 续约
+        value: Renewal
+        
+  # Competition & Strategy
+  - name: LeadSource
+    type: select
+    label: 线索来源
+    options:
+      - label: Web
+        value: Web
+      - label: 电话咨询
+        value: Phone Inquiry
+      - label: 合作伙伴推荐
+        value: Partner Referral
+      - label: 已购客户推荐
+        value: Customer Referral
+      - label: 展会
+        value: Trade Show
+      - label: 市场活动
+        value: Marketing Campaign
+      - label: 其他
+        value: Other
+        
+  - name: NextStep
+    type: text
+    label: 下一步行动
+    length: 255
+    
+  - name: CompetitorAnalysis
+    type: textarea
+    label: 竞争分析
+    rows: 5
+    
+  # Forecast
+  - name: ForecastCategory
+    type: select
+    label: 预测分类
+    options:
+      - label: 已承诺
+        value: Commit
+      - label: 最可能
+        value: Best Case
+      - label: 管道
+        value: Pipeline
+      - label: 已省略
+        value: Omitted
+        
+  - name: IsWon
+    type: formula
+    label: 是否赢单
+    returnType: checkbox
+    formula: Stage = "Closed Won"
+    
+  - name: IsClosed
+    type: formula
+    label: 是否已关闭
+    returnType: checkbox
+    formula: OR(Stage = "Closed Won", Stage = "Closed Lost")
+    
+  # Product Information
+  - name: ProductInterest
+    type: text
+    label: 感兴趣的产品
+    length: 255
+    
+  - name: Quantity
+    type: number
+    label: 数量
+    
+  - name: Discount
+    type: percent
+    label: 折扣
+    
+  # Other
+  - name: Description
+    type: textarea
+    label: 描述
+    rows: 5
+    
+  - name: LossReason
+    type: select
+    label: 失败原因
+    options:
+      - label: 价格过高
+        value: Price
+      - label: 功能不满足
+        value: Features
+      - label: 时机不对
+        value: Timing
+      - label: 竞争对手
+        value: Competitor
+      - label: 预算不足
+        value: Budget
+      - label: 其他
+        value: Other
+    visibleWhen:
+      field: Stage
+      operator: equals
+      value: Closed Lost
+      
+  # Ownership
+  - name: OwnerId
+    type: lookup
+    label: 负责人
+    referenceTo: User
+    required: true
+    defaultValue: $currentUser
+
+# Relationships
+relationships:
+  - name: Contracts
+    type: hasMany
+    object: Contract
+    foreignKey: OpportunityId
+    label: 合同
+
+# List Views
+listViews:
+  - name: All
+    label: 所有商机
+    filters: []
+    columns:
+      - Name
+      - AccountId
+      - Amount
+      - CloseDate
+      - Stage
+      - Probability
+      - OwnerId
+      
+  - name: MyOpportunities
+    label: 我的商机
+    filters:
+      - field: OwnerId
+        operator: equals
+        value: $currentUser
+    columns:
+      - Name
+      - AccountId
+      - Amount
+      - CloseDate
+      - Stage
+      - NextStep
+      
+  - name: ClosingThisQuarter
+    label: 本季度成交
+    filters:
+      - field: CloseDate
+        operator: thisQuarter
+    sortBy: CloseDate
+    sortOrder: asc
+    columns:
+      - Name
+      - AccountId
+      - Amount
+      - CloseDate
+      - Stage
+      - Probability
+      
+  - name: Won
+    label: 已成交
+    filters:
+      - field: Stage
+        operator: equals
+        value: Closed Won
+    columns:
+      - Name
+      - AccountId
+      - Amount
+      - CloseDate
+      - OwnerId
+      
+  - name: HighValue
+    label: 高价值商机
+    filters:
+      - field: Amount
+        operator: greaterThan
+        value: 1000000
+      - field: IsClosed
+        operator: equals
+        value: false
+    columns:
+      - Name
+      - AccountId
+      - Amount
+      - Stage
+      - CloseDate
+      - Probability
+
+# Page Layout
+pageLayout:
+  sections:
+    - label: 商机信息
+      columns: 2
+      fields:
+        - Name
+        - AccountId
+        - ContactId
+        - Amount
+        - CloseDate
+        - Stage
+        - Probability
+        - Type
+        - OwnerId
+        
+    - label: 销售策略
+      columns: 2
+      fields:
+        - LeadSource
+        - NextStep
+        - ForecastCategory
+        - ProductInterest
+        - Quantity
+        - Discount
+        
+    - label: 分析与竞争
+      columns: 1
+      fields:
+        - CompetitorAnalysis
+        - Description
+        
+    - label: 结果
+      columns: 2
+      fields:
+        - LossReason
+      visibleWhen:
+        field: Stage
+        operator: equals
+        value: Closed Lost
+
+# Validation Rules
+validationRules:
+  - name: RequireLossReasonWhenLost
+    errorMessage: 商机失败时必须填写失败原因
+    formula: |
+      AND(
+        Stage = "Closed Lost",
+        ISBLANK(LossReason)
+      )
+      
+  - name: CloseDateInFuture
+    errorMessage: 预计成交日期不能早于今天
+    formula: |
+      AND(
+        NOT(IsClosed),
+        CloseDate < TODAY()
+      )
+
+# Triggers
+triggers:
+  - name: OpportunityStageChange
+    event: afterUpdate
+    file: triggers/OpportunityTrigger.ts
+    conditions:
+      - field: Stage
+        changed: true
