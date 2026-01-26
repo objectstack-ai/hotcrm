@@ -238,7 +238,7 @@ export async function executeSmartBriefing(request: SmartBriefingRequest): Promi
       filters: {
         AccountId: accountId
       },
-      orderBy: { field: 'ActivityDate', direction: 'desc' },
+      orderBy: [{ field: 'ActivityDate', direction: 'desc' }],
       limit: activityLimit
     });
 
@@ -249,7 +249,7 @@ export async function executeSmartBriefing(request: SmartBriefingRequest): Promi
       filters: {
         AccountId: accountId
       },
-      orderBy: { field: 'SentDate', direction: 'desc' },
+      orderBy: [{ field: 'SentDate', direction: 'desc' }],
       limit: 5
     });
 
