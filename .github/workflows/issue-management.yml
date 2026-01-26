@@ -48,18 +48,3 @@ jobs:
             - [ ] All CI checks pass
             
             A maintainer will review your PR soon. Thanks for contributing! 🚀
-
-  auto-assign:
-    name: Auto-assign Issues
-    runs-on: ubuntu-latest
-    if: github.event_name == 'issues' && github.event.action == 'labeled'
-    permissions:
-      issues: write
-    
-    steps:
-      - name: Auto-assign based on labels
-        uses: pozil/auto-assign-issue@v1
-        with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          assignees: hotcrm/maintainers
-          numOfAssignee: 1
