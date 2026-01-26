@@ -1,0 +1,464 @@
+# Payment Object Definition
+# 回款管理 - Finance Domain
+# Follows @objectstack/spec standard for enterprise CRM
+
+name: Payment
+label: 回款
+labelPlural: 回款
+icon: money-bill-wave
+description: 回款计划、发票记录和逾期提醒
+
+# Enable core features
+features:
+  searchable: true
+  trackFieldHistory: true
+  enableActivities: true
+  enableNotes: true
+  enableAttachments: true
+
+# Field Definitions
+fields:
+  # Basic Information
+  - name: PaymentNumber
+    type: autoNumber
+    label: 回款编号
+    format: PAY-{YYYY}-{MM}-{0000}
+    readonly: true
+    searchable: true
+    
+  - name: Name
+    type: text
+    label: 回款名称
+    required: true
+    searchable: true
+    length: 255
+    
+  - name: Type
+    type: select
+    label: 回款类型
+    required: true
+    options:
+      - label: 💰 首款
+        value: Down Payment
+      - label: 🎯 里程碑付款
+        value: Milestone Payment
+      - label: 📦 交付付款
+        value: Delivery Payment
+      - label: ✅ 验收付款
+        value: Acceptance Payment
+      - label: 🔄 尾款
+        value: Final Payment
+      - label: 📅 定期付款
+        value: Recurring Payment
+      - label: 🔧 维保费
+        value: Maintenance Fee
+      - label: 🎁 其他
+        value: Other
+        
+  - name: Status
+    type: select
+    label: 状态
+    required: true
+    defaultValue: Planned
+    options:
+      - label: 📋 计划中
+        value: Planned
+      - label: 📧 已开票
+        value: Invoiced
+      - label: ✅ 已收款
+        value: Received
+      - label: ⏰ 逾期
+        value: Overdue
+      - label: 🚫 核销
+        value: Written Off
+      - label: ❌ 取消
+        value: Cancelled
+        
+  # Related Records
+  - name: AccountId
+    type: lookup
+    label: 客户
+    referenceTo: Account
+    required: true
+    
+  - name: OpportunityId
+    type: lookup
+    label: 关联商机
+    referenceTo: Opportunity
+    
+  - name: ContractId
+    type: lookup
+    label: 关联合同
+    referenceTo: Contract
+    required: true
+    
+  - name: QuoteId
+    type: lookup
+    label: 关联报价单
+    referenceTo: Quote
+    
+  # Amount
+  - name: PlannedAmount
+    type: currency
+    label: 计划金额
+    precision: 2
+    required: true
+    
+  - name: ReceivedAmount
+    type: currency
+    label: 实收金额
+    precision: 2
+    
+  - name: UnpaidAmount
+    type: currency
+    label: 未付金额
+    precision: 2
+    readonly: true
+    description: 计划金额 - 实收金额
+    
+  - name: Currency
+    type: select
+    label: 币种
+    required: true
+    defaultValue: CNY
+    options:
+      - label: 人民币 (CNY)
+        value: CNY
+      - label: 美元 (USD)
+        value: USD
+      - label: 欧元 (EUR)
+        value: EUR
+      - label: 英镑 (GBP)
+        value: GBP
+        
+  # Dates
+  - name: PlannedDate
+    type: date
+    label: 计划回款日期
+    required: true
+    
+  - name: ActualDate
+    type: date
+    label: 实际回款日期
+    
+  - name: DaysOverdue
+    type: number
+    label: 逾期天数
+    precision: 0
+    readonly: true
+    
+  # Invoice
+  - name: InvoiceNumber
+    type: text
+    label: 发票号
+    length: 50
+    searchable: true
+    
+  - name: InvoiceDate
+    type: date
+    label: 开票日期
+    
+  - name: InvoiceAmount
+    type: currency
+    label: 发票金额
+    precision: 2
+    
+  # Payment Method
+  - name: PaymentMethod
+    type: select
+    label: 付款方式
+    options:
+      - label: 银行转账
+        value: Bank Transfer
+      - label: 支票
+        value: Check
+      - label: 现金
+        value: Cash
+      - label: 信用卡
+        value: Credit Card
+      - label: 支付宝
+        value: Alipay
+      - label: 微信支付
+        value: WeChat Pay
+      - label: 其他
+        value: Other
+        
+  - name: ReferenceNumber
+    type: text
+    label: 交易参考号
+    length: 100
+    description: 银行流水号或交易凭证号
+    
+  # Bank Info
+  - name: BankName
+    type: text
+    label: 收款银行
+    length: 255
+    
+  - name: BankAccount
+    type: text
+    label: 收款账号
+    length: 50
+    
+  # Reminder
+  - name: ReminderSent
+    type: checkbox
+    label: 已发送提醒
+    defaultValue: false
+    
+  - name: ReminderSentDate
+    type: datetime
+    label: 提醒发送时间
+    readonly: true
+    
+  - name: LastReminderDate
+    type: datetime
+    label: 最后提醒时间
+    readonly: true
+    
+  # Notes
+  - name: Description
+    type: textarea
+    label: 备注
+    length: 5000
+    
+  - name: OverdueReason
+    type: textarea
+    label: 逾期原因
+    length: 2000
+    
+  # Collection
+  - name: CollectionAssignee
+    type: lookup
+    label: 催款负责人
+    referenceTo: User
+    description: 逾期时指派催款人
+    
+  - name: CollectionPriority
+    type: select
+    label: 催款优先级
+    options:
+      - label: 🔴 高
+        value: High
+      - label: 🟡 中
+        value: Medium
+      - label: 🟢 低
+        value: Low
+
+# Relationships
+relationships:
+  - name: Activities
+    type: hasMany
+    object: Activity
+    foreignKey: WhatId
+    label: 催款活动
+
+# List Views
+listViews:
+  - name: AllPayments
+    label: 所有回款
+    filters: []
+    columns:
+      - PaymentNumber
+      - Name
+      - Account
+      - PlannedAmount
+      - ReceivedAmount
+      - Status
+      - PlannedDate
+      - ActualDate
+    sortBy: PlannedDate
+    sortOrder: desc
+    
+  - name: MyPayments
+    label: 我的回款
+    filters:
+      - field: OwnerId
+        operator: equals
+        value: $CurrentUser.Id
+    columns:
+      - PaymentNumber
+      - Name
+      - Account
+      - PlannedAmount
+      - ReceivedAmount
+      - Status
+      - PlannedDate
+    sortBy: PlannedDate
+    sortOrder: desc
+    
+  - name: Planned
+    label: 计划中
+    filters:
+      - field: Status
+        operator: equals
+        value: Planned
+    columns:
+      - PaymentNumber
+      - Name
+      - Account
+      - PlannedAmount
+      - PlannedDate
+      - Owner
+    sortBy: PlannedDate
+    sortOrder: asc
+    
+  - name: Overdue
+    label: 逾期回款
+    filters:
+      - field: Status
+        operator: equals
+        value: Overdue
+    columns:
+      - PaymentNumber
+      - Name
+      - Account
+      - UnpaidAmount
+      - PlannedDate
+      - DaysOverdue
+      - CollectionAssignee
+      - CollectionPriority
+    sortBy: DaysOverdue
+    sortOrder: desc
+    
+  - name: ThisMonth
+    label: 本月回款
+    filters:
+      - field: PlannedDate
+        operator: this_month
+    columns:
+      - PaymentNumber
+      - Name
+      - Account
+      - PlannedAmount
+      - ReceivedAmount
+      - Status
+      - PlannedDate
+    sortBy: PlannedDate
+    sortOrder: asc
+    
+  - name: Received
+    label: 已收款
+    filters:
+      - field: Status
+        operator: equals
+        value: Received
+      - field: ActualDate
+        operator: this_year
+    columns:
+      - PaymentNumber
+      - Name
+      - Account
+      - ReceivedAmount
+      - ActualDate
+      - PaymentMethod
+    sortBy: ActualDate
+    sortOrder: desc
+
+# Page Layout
+pageLayout:
+  sections:
+    - label: 回款信息
+      columns: 2
+      fields:
+        - PaymentNumber
+        - Name
+        - Type
+        - Status
+        - AccountId
+        - ContractId
+        - OpportunityId
+        - QuoteId
+        
+    - label: 金额
+      columns: 2
+      fields:
+        - PlannedAmount
+        - ReceivedAmount
+        - UnpaidAmount
+        - Currency
+        
+    - label: 日期
+      columns: 2
+      fields:
+        - PlannedDate
+        - ActualDate
+        - DaysOverdue
+        
+    - label: 发票信息
+      columns: 2
+      fields:
+        - InvoiceNumber
+        - InvoiceDate
+        - InvoiceAmount
+        
+    - label: 付款方式
+      columns: 2
+      fields:
+        - PaymentMethod
+        - ReferenceNumber
+        - BankName
+        - BankAccount
+        
+    - label: 催款管理
+      columns: 2
+      fields:
+        - CollectionAssignee
+        - CollectionPriority
+        - ReminderSent
+        - ReminderSentDate
+        - LastReminderDate
+        
+    - label: 备注
+      columns: 1
+      fields:
+        - Description
+        - OverdueReason
+
+# Validation Rules
+validationRules:
+  - name: ReceivedAmountNotGreaterThanPlanned
+    errorMessage: 实收金额不能超过计划金额
+    formula: |
+      AND(
+        NOT(ISBLANK(ReceivedAmount)),
+        ReceivedAmount > PlannedAmount
+      )
+      
+  - name: ActualDateRequiredWhenReceived
+    errorMessage: 状态为已收款时必须填写实际回款日期
+    formula: |
+      AND(
+        Status = "Received",
+        ISBLANK(ActualDate)
+      )
+      
+  - name: InvoiceNumberRequiredWhenInvoiced
+    errorMessage: 状态为已开票时必须填写发票号
+    formula: |
+      AND(
+        Status = "Invoiced",
+        ISBLANK(InvoiceNumber)
+      )
+      
+  - name: CollectionAssigneeRequiredWhenOverdue
+    errorMessage: 逾期回款必须指派催款负责人
+    formula: |
+      AND(
+        Status = "Overdue",
+        ISBLANK(CollectionAssignee)
+      )
+
+# Triggers
+triggers:
+  - name: PaymentOverdueCheck
+    event: beforeUpdate
+    description: 检查并更新逾期状态和逾期天数
+    
+  - name: PaymentReminderScheduler
+    event: afterInsert, afterUpdate
+    description: 安排回款提醒任务
+    
+  - name: ContractPaymentAggregation
+    event: afterUpdate
+    description: 更新合同的回款汇总信息
