@@ -1,0 +1,568 @@
+# Quote Object Definition
+# 报价单管理 (CPQ - Configure, Price, Quote) - Sales Force Automation Domain
+# Follows @objectstack/spec standard for enterprise CRM
+
+name: Quote
+label: 报价单
+labelPlural: 报价单
+icon: file-invoice-dollar
+description: 复杂报价配置、折扣审批和 PDF 生成
+
+# Enable core features
+features:
+  searchable: true
+  trackFieldHistory: true
+  enableActivities: true
+  enableNotes: true
+  enableAttachments: true
+  enableApprovalProcess: true
+
+# Field Definitions
+fields:
+  # Basic Information
+  - name: QuoteNumber
+    type: autoNumber
+    label: 报价单编号
+    format: Q-{YYYY}-{MM}-{0000}
+    readonly: true
+    searchable: true
+    
+  - name: Name
+    type: text
+    label: 报价单名称
+    required: true
+    searchable: true
+    length: 255
+    
+  - name: Status
+    type: select
+    label: 状态
+    required: true
+    defaultValue: Draft
+    options:
+      - label: 📝 草稿
+        value: Draft
+      - label: 🔄 审批中
+        value: In Review
+      - label: ✅ 已批准
+        value: Approved
+      - label: ❌ 已拒绝
+        value: Rejected
+      - label: 📧 已发送
+        value: Sent
+      - label: 🤝 客户已接受
+        value: Accepted
+      - label: 🚫 已失效
+        value: Expired
+        
+  # Related Records
+  - name: OpportunityId
+    type: lookup
+    label: 关联商机
+    referenceTo: Opportunity
+    required: true
+    
+  - name: AccountId
+    type: lookup
+    label: 客户
+    referenceTo: Account
+    required: true
+    
+  - name: ContactId
+    type: lookup
+    label: 联系人
+    referenceTo: Contact
+    
+  - name: PricebookId
+    type: lookup
+    label: 价格表
+    referenceTo: Pricebook
+    required: true
+    
+  # Dates
+  - name: QuoteDate
+    type: date
+    label: 报价日期
+    required: true
+    defaultValue: $TODAY
+    
+  - name: ExpirationDate
+    type: date
+    label: 有效期至
+    required: true
+    
+  - name: ValidityPeriodDays
+    type: number
+    label: 有效期（天）
+    precision: 0
+    defaultValue: 30
+    readonly: true
+    
+  # Pricing
+  - name: Subtotal
+    type: currency
+    label: 小计
+    precision: 2
+    readonly: true
+    description: 所有产品行项目金额总和
+    
+  - name: DiscountPercent
+    type: percent
+    label: 折扣率
+    defaultValue: 0
+    
+  - name: DiscountAmount
+    type: currency
+    label: 折扣金额
+    precision: 2
+    readonly: true
+    
+  - name: TaxPercent
+    type: percent
+    label: 税率
+    defaultValue: 0
+    
+  - name: TaxAmount
+    type: currency
+    label: 税额
+    precision: 2
+    readonly: true
+    
+  - name: ShippingHandling
+    type: currency
+    label: 运费
+    precision: 2
+    defaultValue: 0
+    
+  - name: TotalPrice
+    type: currency
+    label: 总价
+    precision: 2
+    readonly: true
+    description: 小计 - 折扣 + 税额 + 运费
+    
+  # Payment Terms
+  - name: PaymentTerms
+    type: select
+    label: 付款条款
+    options:
+      - label: 预付全款
+        value: Full Prepayment
+      - label: 30% 预付，70% 验收后
+        value: 30/70 Split
+      - label: 50% 预付，50% 验收后
+        value: 50/50 Split
+      - label: 验收后 30 天
+        value: Net 30
+      - label: 验收后 60 天
+        value: Net 60
+      - label: 验收后 90 天
+        value: Net 90
+      - label: 分期付款
+        value: Installments
+      - label: 其他
+        value: Other
+        
+  - name: DeliveryTerms
+    type: select
+    label: 交付条款
+    options:
+      - label: 现场交付
+        value: On-site Delivery
+      - label: 远程交付
+        value: Remote Delivery
+      - label: 云端部署
+        value: Cloud Deployment
+      - label: 邮寄
+        value: Shipping
+      - label: 数字下载
+        value: Digital Download
+      - label: 其他
+        value: Other
+        
+  # Shipping Address
+  - name: ShippingStreet
+    type: text
+    label: 收货地址
+    length: 255
+    
+  - name: ShippingCity
+    type: text
+    label: 收货城市
+    length: 40
+    
+  - name: ShippingState
+    type: text
+    label: 收货省/州
+    length: 80
+    
+  - name: ShippingPostalCode
+    type: text
+    label: 收货邮编
+    length: 20
+    
+  - name: ShippingCountry
+    type: text
+    label: 收货国家
+    length: 80
+    
+  # Billing Address
+  - name: BillingStreet
+    type: text
+    label: 账单地址
+    length: 255
+    
+  - name: BillingCity
+    type: text
+    label: 账单城市
+    length: 40
+    
+  - name: BillingState
+    type: text
+    label: 账单省/州
+    length: 80
+    
+  - name: BillingPostalCode
+    type: text
+    label: 账单邮编
+    length: 20
+    
+  - name: BillingCountry
+    type: text
+    label: 账单国家
+    length: 80
+    
+  # Approval
+  - name: ApprovalStatus
+    type: select
+    label: 审批状态
+    readonly: true
+    options:
+      - label: 未提交
+        value: Not Submitted
+      - label: 待审批
+        value: Pending
+      - label: 已批准
+        value: Approved
+      - label: 已拒绝
+        value: Rejected
+      - label: 已撤回
+        value: Recalled
+        
+  - name: ApprovalLevel
+    type: number
+    label: 审批层级
+    precision: 0
+    readonly: true
+    description: 需要的审批级别（基于折扣率）
+    
+  - name: ApprovedBy
+    type: lookup
+    label: 批准人
+    referenceTo: User
+    readonly: true
+    
+  - name: ApprovedDate
+    type: datetime
+    label: 批准日期
+    readonly: true
+    
+  # Additional Info
+  - name: Description
+    type: textarea
+    label: 描述
+    length: 32000
+    
+  - name: InternalNotes
+    type: textarea
+    label: 内部备注
+    length: 5000
+    description: 仅内部可见
+    
+  # PDF Generation
+  - name: PDFGeneratedDate
+    type: datetime
+    label: PDF 生成时间
+    readonly: true
+    
+  - name: PDFUrl
+    type: url
+    label: PDF 链接
+    readonly: true
+    
+  # AI Enhancement Fields
+  - name: AIRecommendedBundle
+    type: textarea
+    label: AI 推荐产品组合
+    readonly: true
+    length: 2000
+    description: 根据客户预算自动推荐产品组合
+    
+  - name: AIOptimalDiscount
+    type: percent
+    label: AI 建议折扣
+    readonly: true
+    description: 基于历史数据的最优折扣建议
+    
+  - name: AIWinProbability
+    type: percent
+    label: AI 预测赢单率
+    readonly: true
+    description: 基于报价方案的赢单概率
+    
+  - name: AIPricingAnalysis
+    type: textarea
+    label: AI 定价分析
+    readonly: true
+    length: 2000
+    description: 价格竞争力分析和建议
+
+# Relationships
+relationships:
+  - name: QuoteLineItems
+    type: hasMany
+    object: QuoteLineItem
+    foreignKey: QuoteId
+    label: 报价单明细
+    
+  - name: Contracts
+    type: hasMany
+    object: Contract
+    foreignKey: QuoteId
+    label: 关联合同
+
+# List Views
+listViews:
+  - name: AllQuotes
+    label: 所有报价单
+    filters: []
+    columns:
+      - QuoteNumber
+      - Name
+      - Account
+      - TotalPrice
+      - Status
+      - QuoteDate
+      - ExpirationDate
+    sortBy: QuoteDate
+    sortOrder: desc
+    
+  - name: MyQuotes
+    label: 我的报价单
+    filters:
+      - field: OwnerId
+        operator: equals
+        value: $CurrentUser.Id
+    columns:
+      - QuoteNumber
+      - Name
+      - Account
+      - TotalPrice
+      - Status
+      - ExpirationDate
+    sortBy: QuoteDate
+    sortOrder: desc
+    
+  - name: DraftQuotes
+    label: 草稿
+    filters:
+      - field: Status
+        operator: equals
+        value: Draft
+    columns:
+      - QuoteNumber
+      - Name
+      - Account
+      - TotalPrice
+      - QuoteDate
+      - Owner
+    sortBy: QuoteDate
+    sortOrder: desc
+    
+  - name: PendingApproval
+    label: 待审批
+    filters:
+      - field: ApprovalStatus
+        operator: equals
+        value: Pending
+    columns:
+      - QuoteNumber
+      - Name
+      - Account
+      - TotalPrice
+      - DiscountPercent
+      - ApprovalLevel
+      - Owner
+    sortBy: QuoteDate
+    sortOrder: asc
+    
+  - name: Approved
+    label: 已批准
+    filters:
+      - field: ApprovalStatus
+        operator: equals
+        value: Approved
+      - field: Status
+        operator: notIn
+        value: [Accepted, Expired]
+    columns:
+      - QuoteNumber
+      - Name
+      - Account
+      - TotalPrice
+      - ApprovedDate
+      - ExpirationDate
+    sortBy: ApprovedDate
+    sortOrder: desc
+    
+  - name: Expiring
+    label: 即将到期
+    filters:
+      - field: ExpirationDate
+        operator: next_n_days
+        value: 7
+      - field: Status
+        operator: notIn
+        value: [Accepted, Expired]
+    columns:
+      - QuoteNumber
+      - Name
+      - Account
+      - TotalPrice
+      - ExpirationDate
+      - Owner
+    sortBy: ExpirationDate
+    sortOrder: asc
+
+# Page Layout
+pageLayout:
+  sections:
+    - label: 报价单信息
+      columns: 2
+      fields:
+        - QuoteNumber
+        - Name
+        - Status
+        - OpportunityId
+        - AccountId
+        - ContactId
+        - PricebookId
+        
+    - label: 日期
+      columns: 2
+      fields:
+        - QuoteDate
+        - ExpirationDate
+        - ValidityPeriodDays
+        
+    - label: 金额
+      columns: 2
+      fields:
+        - Subtotal
+        - DiscountPercent
+        - DiscountAmount
+        - TaxPercent
+        - TaxAmount
+        - ShippingHandling
+        - TotalPrice
+        
+    - label: 付款与交付
+      columns: 2
+      fields:
+        - PaymentTerms
+        - DeliveryTerms
+        
+    - label: 收货地址
+      columns: 2
+      fields:
+        - ShippingStreet
+        - ShippingCity
+        - ShippingState
+        - ShippingPostalCode
+        - ShippingCountry
+        
+    - label: 账单地址
+      columns: 2
+      fields:
+        - BillingStreet
+        - BillingCity
+        - BillingState
+        - BillingPostalCode
+        - BillingCountry
+        
+    - label: 审批信息
+      columns: 2
+      fields:
+        - ApprovalStatus
+        - ApprovalLevel
+        - ApprovedBy
+        - ApprovedDate
+        
+    - label: PDF 文档
+      columns: 2
+      fields:
+        - PDFGeneratedDate
+        - PDFUrl
+        
+    - label: AI 智能报价
+      columns: 1
+      fields:
+        - AIRecommendedBundle
+        - AIOptimalDiscount
+        - AIWinProbability
+        - AIPricingAnalysis
+        
+    - label: 备注
+      columns: 1
+      fields:
+        - Description
+        - InternalNotes
+
+# Validation Rules
+validationRules:
+  - name: ExpirationAfterQuoteDate
+    errorMessage: 有效期至必须晚于报价日期
+    formula: |
+      AND(
+        NOT(ISBLANK(QuoteDate)),
+        NOT(ISBLANK(ExpirationDate)),
+        ExpirationDate <= QuoteDate
+      )
+      
+  - name: HighDiscountRequiresApproval
+    errorMessage: 折扣率超过 20% 需要审批
+    formula: |
+      AND(
+        DiscountPercent > 0.20,
+        ApprovalStatus != "Approved"
+      )
+      
+  - name: ApprovedQuoteReadOnly
+    errorMessage: 已批准的报价单不能修改金额
+    formula: |
+      AND(
+        ApprovalStatus = "Approved",
+        OR(
+          Subtotal != PRIORVALUE(Subtotal),
+          DiscountPercent != PRIORVALUE(DiscountPercent),
+          TaxPercent != PRIORVALUE(TaxPercent)
+        )
+      )
+
+# Triggers
+triggers:
+  - name: QuotePriceCalculation
+    event: beforeInsert, beforeUpdate
+    description: 自动计算折扣、税额和总价
+    
+  - name: QuoteApprovalRouting
+    event: afterUpdate
+    description: 根据折扣率自动路由审批流程
+    
+  - name: QuotePDFGeneration
+    event: afterUpdate
+    description: 状态变为已批准时自动生成 PDF
+    
+  - name: QuoteAIRecommendation
+    event: afterInsert, afterUpdate
+    description: AI 分析并生成产品组合建议

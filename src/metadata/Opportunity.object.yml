@@ -195,6 +195,41 @@ fields:
     referenceTo: User
     required: true
     defaultValue: $currentUser
+    
+  # AI Analysis Field (AI 增强功能)
+  - name: AISummary
+    type: textarea
+    label: AI 赢单分析
+    readonly: true
+    length: 5000
+    description: AI 自动分析商机赢单概率和建议
+    
+  - name: AINextStepSuggestion
+    type: textarea
+    label: AI 下一步建议
+    readonly: true
+    length: 2000
+    description: AI 建议的最佳跟进话术和行动
+    
+  - name: AIWinProbability
+    type: percent
+    label: AI 赢单预测
+    readonly: true
+    description: 基于历史数据预测本单成功率
+    
+  - name: AIRiskFactors
+    type: textarea
+    label: AI 风险因素
+    readonly: true
+    length: 2000
+    description: 识别的潜在风险和应对建议
+    
+  - name: AICompetitiveIntel
+    type: textarea
+    label: AI 竞争情报
+    readonly: true
+    length: 2000
+    description: 竞争对手分析和差异化建议
 
 # Relationships
 relationships:
@@ -309,6 +344,15 @@ pageLayout:
         - CompetitorAnalysis
         - Description
         
+    - label: AI 赢单分析
+      columns: 1
+      fields:
+        - AISummary
+        - AINextStepSuggestion
+        - AIWinProbability
+        - AIRiskFactors
+        - AICompetitiveIntel
+        
     - label: 结果
       columns: 2
       fields:
@@ -344,3 +388,7 @@ triggers:
     conditions:
       - field: Stage
         changed: true
+        
+  - name: OpportunityAIAnalysis
+    event: afterInsert, afterUpdate
+    description: AI 分析商机并生成赢单建议
