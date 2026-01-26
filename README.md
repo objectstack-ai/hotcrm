@@ -1,5 +1,10 @@
 # HotCRM - Enterprise-Level CRM System
 
+[![CI](https://github.com/hotcrm/hotcrm/workflows/CI/badge.svg)](https://github.com/hotcrm/hotcrm/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/hotcrm/hotcrm/workflows/CodeQL%20Security%20Analysis/badge.svg)](https://github.com/hotcrm/hotcrm/actions/workflows/codeql.yml)
+[![Code Quality](https://github.com/hotcrm/hotcrm/workflows/Code%20Quality/badge.svg)](https://github.com/hotcrm/hotcrm/actions/workflows/code-quality.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 > A world-class Customer Relationship Management system built on @objectstack/spec protocol with Salesforce-level functionality and Apple/Linear-level UX.
 
 ## 🌟 Overview
@@ -182,6 +187,23 @@ export async function onOpportunityStageChange(ctx: TriggerContext) {
 - Row-level security support
 - Field-level permissions
 - Encrypted sensitive data
+- Weekly CodeQL security scans
+- Automated dependency updates via Dependabot
+
+## 🤖 Automation & CI/CD
+
+HotCRM includes comprehensive GitHub Actions workflows for automation:
+
+- **Continuous Integration**: Automated builds, linting, and testing on every PR
+- **Security Scanning**: Weekly CodeQL analysis for vulnerability detection
+- **Code Quality**: Automated quality checks and best practices enforcement
+- **Automated Releases**: Tag-based releases with automatic changelog generation
+- **Documentation**: Auto-deploy to GitHub Pages
+- **Dependency Management**: Weekly automated dependency updates
+- **Issue Management**: Auto-greeting for first-time contributors
+- **PR Automation**: Auto-labeling based on changed files
+
+For detailed workflow documentation, see [.github/README.md](.github/README.md) and [.github/AUTOMATION_SUMMARY.md](.github/AUTOMATION_SUMMARY.md).
 
 ## 📄 License
 
@@ -189,7 +211,7 @@ MIT License - see LICENSE file for details
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please read our contributing guidelines first.
+Contributions are welcome! Please read our [CONTRIBUTING.md](CONTRIBUTING.md) guide first.
 
 ## 📞 Support
 
