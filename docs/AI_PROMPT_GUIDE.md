@@ -15,7 +15,7 @@ This document provides a comprehensive guide on how to use AI prompts effectivel
 
 1. **Metadata Driven**: 所有对象（Account, Contact 等）均通过 JSON/YAML 描述。
 2. **ObjectQL**: 数据查询必须使用 ObjectQL 语法，而非 SQL。
-3. **UI Engine**: 前端渲染基于 `amis` 框架，样式使用 Tailwind CSS。
+3. **UI Engine**: 前端渲染基于 `ObjectUI` 框架，样式使用 Tailwind CSS。
 4. **Project Structure**: 
    - src/metadata/ - 对象定义 (.object.yml)
    - src/triggers/ - 业务逻辑触发器
@@ -150,7 +150,7 @@ When starting a new feature or modification, always begin with this context-sett
 
 ```markdown
 # Task: Design [Component Name]
-请基于 `amis` 规范和 `ObjectUI` 组件库，设计 [具体组件或页面]。
+请基于 `ObjectUI` 规范和组件库，设计 [具体组件或页面]。
 
 # Design Aesthetic
 - **Style**: 极简主义，参考 Apple macOS 或 Linear 的设计语言
@@ -174,7 +174,7 @@ When starting a new feature or modification, always begin with this context-sett
 [描述需要的 API 接口和数据格式]
 
 # Output
-请生成 `amis` 的 JSON/TypeScript 配置代码。在 `className` 中大量使用 Tailwind CSS 类来实现上述设计风格。
+请生成 `ObjectUI` 的 JSON/TypeScript 配置代码。在 `className` 中大量使用 Tailwind CSS 类来实现上述设计风格。
 
 # Interaction Requirements
 [描述交互行为：点击、hover、加载状态等]
@@ -184,7 +184,7 @@ When starting a new feature or modification, always begin with this context-sett
 
 ```markdown
 # Task: Design Pipeline Kanban Board
-请基于 `amis` 规范设计一个商机管道看板。
+请基于 `ObjectUI` 规范设计一个商机管道看板。
 
 # Design Aesthetic
 - **Style**: 参考 Linear 的看板设计
@@ -215,7 +215,7 @@ When starting a new feature or modification, always begin with this context-sett
 - 返回格式：{ stages: [{ name, color, opportunities: [...] }] }
 
 # Output
-TypeScript 格式的 amis 配置
+TypeScript 格式的 ObjectUI 配置
 
 # Interaction Requirements
 - 拖拽商机到不同阶段时，自动更新 Stage 字段
@@ -251,7 +251,7 @@ TypeScript 格式的 amis 配置
    - 明确输出格式和要求
    - 特别考虑 [行业/场景] 的特殊需求
 
-3. 提供前端 `amis` 配置
+3. 提供前端 `ObjectUI` 配置
    - 使用带有 AI 图标的卡片
    - 异步加载和展示结果
    - Loading 状态
@@ -295,7 +295,7 @@ TypeScript 格式的 amis 配置
    - 输出：主题行 + 3 种风格的正文
    - 要求：简洁、个性化、有 CTA
 
-3. 前端 amis 组件
+3. 前端 ObjectUI 组件
    - 模态对话框显示 3 种草稿
    - Tab 切换不同风格
    - 编辑器支持修改

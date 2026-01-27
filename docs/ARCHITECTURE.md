@@ -8,7 +8,7 @@ This document describes the architecture of HotCRM, a world-class enterprise CRM
 ┌─────────────────────────────────────────────────────────────────┐
 │                         Frontend Layer                          │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
-│  │   amis UI    │  │   Tailwind   │  │  Components  │          │
+│  │ ObjectUI │  │   Tailwind   │  │  Components  │          │
 │  │   Engine     │  │     CSS      │  │   Library    │          │
 │  └──────────────┘  └──────────────┘  └──────────────┘          │
 └─────────────────────────────────────────────────────────────────┘
@@ -119,7 +119,7 @@ Capabilities:
 
 ### 6. UI Layer
 
-Modern, declarative UI configurations using amis + Tailwind.
+Modern, declarative UI configurations using ObjectUI + Tailwind.
 
 ```
 src/ui/
@@ -214,7 +214,7 @@ Everything is defined in YAML/JSON metadata:
 ### 2. Declarative UI
 
 UI is configuration, not code:
-- JSON schema (amis)
+- JSON schema (ObjectUI)
 - Tailwind classes for styling
 - Service-based data fetching
 - Composable components

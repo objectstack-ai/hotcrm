@@ -38,3 +38,11 @@ declare module '@objectstack/spec/data' {
     [key: string]: any;
   }
 }
+
+declare module '@objectstack/spec/ui' {
+  export interface DashboardSchema {
+    name: string;
+    label: string;
+    widgets: any[];
+  }
+}

@@ -95,7 +95,7 @@
 │  │  ─────────  │  ────────   │  ────────   │  ────────   │  ────────   │   │
 │  │  • Object   │  • Type-    │  • Triggers │  • Dynamic  │  • FLS      │   │
 │  │    Modeling │    Safe     │  • Approval │    Pages    │  • Sharing  │   │
-│  │  • Field    │  • Filter   │  • Formula  │  • amis +   │  • History  │   │
+│  │  • Field    │  • Filter   │  • Formula  │  ObjectUI  │  • History  │   │
 │  │    Mgmt     │  • Join     │  • Validate │    Tailwind │  • Encrypt  │   │
 │  └─────────────┴─────────────┴─────────────┴─────────────┴─────────────┘   │
 └─────────────────────────────────────────────────────────────────────────────┘
@@ -267,7 +267,7 @@ Knowledge       ██████████ (100%) RAG, Q&A               Cri
 │  Application Layer                                           │
 │  ┌──────────┬──────────┬──────────┬──────────┐             │
 │  │  Web UI  │  Mobile  │  API     │  Batch   │             │
-│  │  (amis)  │  App     │  Server  │  Jobs    │             │
+│  │  (ObjectUI)  │  App     │  Server  │  Jobs    │             │
 │  └──────────┴──────────┴──────────┴──────────┘             │
 │                       │                                      │
 └───────────────────────┼──────────────────────────────────────┘

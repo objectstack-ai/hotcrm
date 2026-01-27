@@ -24,7 +24,7 @@ HotCRM is a **comprehensive, AI-native enterprise CRM** system covering the comp
 
 1. **Metadata Driven**: All business objects are defined through declarative YAML files
 2. **ObjectQL**: Data queries use ObjectQL syntax for type-safe, flexible queries
-3. **UI Engine**: Frontend rendering based on amis framework with Tailwind CSS styling
+3. **UI Engine**: Frontend rendering based on **ObjectUI** framework with Tailwind CSS styling
 4. **AI Native**: Built-in AI capabilities for intelligent insights and automation
 
 ### Project Structure

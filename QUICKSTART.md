@@ -51,7 +51,7 @@ Expected response:
 curl http://localhost:3000/api/ui/dashboard/sales
 ```
 
-Returns the complete amis configuration for the sales dashboard.
+Returns the complete ObjectUI configuration for the sales dashboard.
 
 ### 3. Test AI Smart Briefing
 
@@ -149,7 +149,7 @@ export async function onOpportunityStageChange(ctx: TriggerContext) {
 }
 ```
 
-### 4. UI (amis + Tailwind)
+### 4. UI (ObjectUI + Tailwind)
 
 Declarative UI configurations:
 
@@ -225,7 +225,7 @@ triggers:
 ### Create a UI Component
 
 1. Create a new `.ts` file in `src/ui/components/`
-2. Export an amis configuration object
+2. Export an ObjectUI configuration object
 3. Use it in your pages
 
 ### Add an API Endpoint

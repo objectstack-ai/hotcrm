@@ -95,7 +95,7 @@ HotCRM is a **world-class enterprise CRM system** built on the @objectstack/spec
 - **Design**: Apple/Linear aesthetics with Tailwind CSS
 - **Features**: Responsive grid, glass effects, smooth animations
 
-**Components**: Clean, modular, reusable amis configurations
+**Components**: Clean, modular, reusable ObjectUI configurations
 
 ### 5. AI Features (Phase 5) ✅
 
