@@ -8,6 +8,7 @@
   ],
   "scripts": {
     "dev": "pnpm --filter @hotcrm/server dev",
+    "dev:docs": "pnpm --filter @hotcrm/docs dev",
     "build": "pnpm -r build",
     "build:core": "pnpm --filter @hotcrm/core build",
     "build:metadata": "pnpm --filter @hotcrm/metadata build",
@@ -15,6 +16,7 @@
     "build:actions": "pnpm --filter @hotcrm/actions build",
     "build:ui": "pnpm --filter @hotcrm/ui build",
     "build:server": "pnpm --filter @hotcrm/server build",
+    "build:docs": "pnpm --filter @hotcrm/docs build",
     "start": "pnpm --filter @hotcrm/server start",
     "lint": "pnpm -r lint",
     "test": "jest --passWithNoTests",
