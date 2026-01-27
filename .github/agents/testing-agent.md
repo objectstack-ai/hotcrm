@@ -22,7 +22,7 @@ HotCRM uses **Jest** for testing. All test files should use `.test.ts` suffix.
 
 ```typescript
 // account.object.test.ts
-import { ObjectSchema } from '@objectstack/spec/data';
+import { ObjectSchema } // Zod schema for validation from '@objectstack/spec/data';
 import Account from './account.object';
 
 describe('Account Object Metadata', () => {
@@ -259,7 +259,7 @@ describe('AI Smart Briefing Action', () => {
 ```typescript
 // dashboard.test.ts
 import SalesDashboard from './sales_dashboard.dashboard';
-import { DashboardSchema } from '@objectstack/spec/ui';
+import { DashboardSchema } // Zod schema for validation from '@objectstack/spec/ui';
 
 describe('Sales Dashboard', () => {
   it('should match DashboardSchema', () => {

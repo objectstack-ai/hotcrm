@@ -1,6 +1,6 @@
-import type { DashboardSchema } from '@objectstack/spec/ui';
+import type { Dashboard } from '@objectstack/spec/ui';
 
-const SalesDashboard: DashboardSchema = {
+const SalesDashboard: Dashboard = {
   name: 'sales_dashboard',
   label: '销售主管仪表盘',
   widgets: [

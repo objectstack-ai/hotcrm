@@ -178,7 +178,7 @@ touch src/hooks/lead_notification.hook.ts
 ## Step 2: Define Hook Schema
 
 ```typescript
-import type { HookSchema } from '@objectstack/spec/data';
+import type { Hook } from '@objectstack/spec/data';
 import { db } from '../engine/objectql';
 
 export interface TriggerContext {
@@ -188,7 +188,7 @@ export interface TriggerContext {
   user: { id: string; name: string; email: string };
 }
 
-const LeadNotification: HookSchema = {
+const LeadNotification: Hook = {
   name: 'LeadNotification',
   object: 'Lead',
   events: ['afterInsert'],

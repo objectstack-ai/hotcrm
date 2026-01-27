@@ -21,7 +21,7 @@ You are an **Expert Business Logic Developer** for HotCRM. Your specialty is imp
 
 ### Hook Structure
 ```typescript
-import type { HookSchema } from '@objectstack/spec/data';
+import type { Hook } from '@objectstack/spec/data';
 import { db } from '../engine/objectql';
 
 export interface TriggerContext {
@@ -35,7 +35,7 @@ export interface TriggerContext {
   };
 }
 
-const MyHook: HookSchema = {
+const MyHook: Hook = {
   name: 'HookName',
   object: 'ObjectName',
   events: ['beforeInsert', 'afterUpdate', etc.],
@@ -77,7 +77,7 @@ export default MyHook;
 ### Pattern 1: Field Auto-Population
 ```typescript
 // Set values before insert
-const SetDefaults: HookSchema = {
+const SetDefaults: Hook = {
   name: 'SetOpportunityDefaults',
   object: 'Opportunity',
   events: ['beforeInsert'],
@@ -110,7 +110,7 @@ const SetDefaults: HookSchema = {
 
 ### Pattern 2: Validation with Business Rules
 ```typescript
-const ValidateDiscount: HookSchema = {
+const ValidateDiscount: Hook = {
   name: 'ValidateQuoteDiscount',
   object: 'Quote',
   events: ['beforeInsert', 'beforeUpdate'],
@@ -139,7 +139,7 @@ const ValidateDiscount: HookSchema = {
 
 ### Pattern 3: Cascade Updates (After Events)
 ```typescript
-const OpportunityStageChange: HookSchema = {
+const OpportunityStageChange: Hook = {
   name: 'OpportunityStageChange',
   object: 'Opportunity',
   events: ['afterUpdate'],
@@ -201,7 +201,7 @@ const OpportunityStageChange: HookSchema = {
 
 ### Pattern 4: Rollup Calculations
 ```typescript
-const UpdateAccountRevenue: HookSchema = {
+const UpdateAccountRevenue: Hook = {
   name: 'UpdateAccountRevenue',
   object: 'Opportunity',
   events: ['afterInsert', 'afterUpdate', 'afterDelete'],
@@ -241,7 +241,7 @@ const UpdateAccountRevenue: HookSchema = {
 
 ### Pattern 5: Record Ownership & Assignment
 ```typescript
-const AutoAssignLead: HookSchema = {
+const AutoAssignLead: Hook = {
   name: 'AutoAssignLead',
   object: 'Lead',
   events: ['beforeInsert'],
@@ -273,7 +273,7 @@ const AutoAssignLead: HookSchema = {
 
 ### Pattern 6: Data Enrichment
 ```typescript
-const EnrichContactFromEmail: HookSchema = {
+const EnrichContactFromEmail: Hook = {
   name: 'EnrichContactFromEmail',
   object: 'Contact',
   events: ['beforeInsert', 'beforeUpdate'],
@@ -432,7 +432,7 @@ handler: async (ctx: TriggerContext) => {
 
 ### Use Case 1: Lead Conversion
 ```typescript
-const ConvertLead: HookSchema = {
+const ConvertLead: Hook = {
   name: 'ConvertLead',
   object: 'Lead',
   events: ['afterUpdate'],
@@ -486,7 +486,7 @@ const ConvertLead: HookSchema = {
 
 ### Use Case 2: SLA Management
 ```typescript
-const CalculateSLA: HookSchema = {
+const CalculateSLA: Hook = {
   name: 'CalculateCaseSLA',
   object: 'Case',
   events: ['beforeInsert', 'beforeUpdate'],
@@ -523,7 +523,7 @@ const CalculateSLA: HookSchema = {
 
 ### Pattern: Async External API Call
 ```typescript
-const NotifyExternalSystem: HookSchema = {
+const NotifyExternalSystem: Hook = {
   name: 'NotifyExternalSystem',
   object: 'Order',
   events: ['afterInsert'],

@@ -21,9 +21,9 @@ You are an **Expert Metadata Developer** for HotCRM, a world-class enterprise CR
 
 ### Import Structure
 ```typescript
-import type { ObjectSchema } from '@objectstack/spec/data';
+import type { ServiceObject } from '@objectstack/spec/data';
 
-const MyObject: ObjectSchema = {
+const MyObject = {
   // Definition here
 };
 
@@ -38,12 +38,12 @@ export default MyObject;
   labelPlural: string,       // Plural form
   icon?: string,             // Icon identifier
   description?: string,      // Brief description
-  features: {                // Object capabilities
+  capabilities: {                // Object capabilities
     searchable?: boolean,
-    trackFieldHistory?: boolean,
-    enableActivities?: boolean,
-    enableNotes?: boolean,
-    enableAttachments?: boolean
+    trackHistory?: boolean,
+    activities?: boolean,
+    feeds?: boolean,
+    files?: boolean
   },
   fields: FieldDefinition[], // Array of field definitions
   relationships?: Relationship[],
@@ -239,20 +239,20 @@ Add `helpText` for complex fields:
 ## 📝 Complete Example: Product Object
 
 ```typescript
-import type { ObjectSchema } from '@objectstack/spec/data';
+import type { ServiceObject } from '@objectstack/spec/data';
 
-const Product: ObjectSchema = {
+const Product = {
   name: 'Product',
   label: '产品',
   labelPlural: '产品',
   icon: 'package',
   description: '产品目录管理',
-  features: {
+  capabilities: {
     searchable: true,
-    trackFieldHistory: true,
-    enableActivities: false,
-    enableNotes: true,
-    enableAttachments: true
+    trackHistory: true,
+    activities: false,
+    feeds: true,
+    files: true
   },
   fields: [
     {
@@ -435,7 +435,7 @@ relationships: [
 ## ⚠️ Common Pitfalls to Avoid
 
 1. **❌ Using YAML/JSON** → ✅ Always use TypeScript (*.object.ts)
-2. **❌ Missing type imports** → ✅ Always `import type { ObjectSchema }`
+2. **❌ Missing type imports** → ✅ Always `import type { ServiceObject }`
 3. **❌ Inconsistent naming** → ✅ Use PascalCase for API names
 4. **❌ No export default** → ✅ Always `export default ObjectName`
 5. **❌ Magic strings** → ✅ Use typed literal values from spec
