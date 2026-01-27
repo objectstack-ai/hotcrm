@@ -1,3 +1,8 @@
+---
+title: Documentation Structure
+description: Complete overview of HotCRM documentation organization and structure
+---
+
 # HotCRM Documentation
 
 This directory contains the complete official documentation for HotCRM in fumadocs format.
