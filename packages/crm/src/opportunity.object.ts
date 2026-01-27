@@ -66,7 +66,7 @@ const Opportunity: ObjectSchema = {
       name: 'Probability',
       type: 'percent',
       label: '赢单概率',
-      description: '基于所选阶段自动设置的赢单概率'
+      description: '赢单概率百分比'
     },
     {
       name: 'NextStep',

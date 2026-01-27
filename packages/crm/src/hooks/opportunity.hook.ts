@@ -119,7 +119,7 @@ async function handleClosedWon(ctx: TriggerContext): Promise<void> {
       WhatId: opportunity.Id,
       OwnerId: ctx.user.id,
       ActivityDate: new Date().toISOString().split('T')[0],
-      Description: `商机 "${opportunity.Name}" 已成功成交，金额: ¥${opportunity.Amount?.toLocaleString() || 0}`
+      Description: `商机 "${opportunity.Name}" 已成功成交，金额: ${opportunity.Amount?.toLocaleString() || 0}`
     });
     console.log('✅ Activity logged for Closed Won');
   } catch (error) {
@@ -161,7 +161,7 @@ async function handleClosedLost(ctx: TriggerContext): Promise<void> {
       WhatId: opportunity.Id,
       OwnerId: ctx.user.id,
       ActivityDate: new Date().toISOString().split('T')[0],
-      Description: `商机 "${opportunity.Name}" 已丢失，金额: ¥${opportunity.Amount?.toLocaleString() || 0}。原因待分析。`
+      Description: `商机 "${opportunity.Name}" 已丢失，金额: ${opportunity.Amount?.toLocaleString() || 0}。原因待分析。`
     });
     console.log('✅ Activity logged for Closed Lost');
   } catch (error) {

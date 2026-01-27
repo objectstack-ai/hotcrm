@@ -261,15 +261,13 @@ const LeadStatusChangeTrigger: HookSchema = {
 
 /**
  * Handle lead conversion
+ * 
+ * Note: Called from afterUpdate trigger, so only logs the conversion.
+ * ConvertedDate should be set by the application when changing status to Converted.
  */
 async function handleLeadConversion(ctx: TriggerContext): Promise<void> {
   console.log('✅ Processing lead conversion...');
   const lead = ctx.new;
-
-  // Set conversion date directly on the object if not already set
-  if (!lead.ConvertedDate) {
-    lead.ConvertedDate = new Date().toISOString();
-  }
 
   // Log activity
   try {
@@ -290,15 +288,13 @@ async function handleLeadConversion(ctx: TriggerContext): Promise<void> {
 
 /**
  * Handle lead unqualification
+ * 
+ * Note: Called from afterUpdate trigger, so only logs the unqualification.
+ * IsInPublicPool should be updated by the application or a workflow rule.
  */
 async function handleLeadUnqualification(ctx: TriggerContext): Promise<void> {
   console.log('❌ Processing lead unqualification...');
   const lead = ctx.new;
-
-  // Remove from public pool directly on the object
-  if (lead.IsInPublicPool) {
-    lead.IsInPublicPool = false;
-  }
 
   // Log activity
   try {

@@ -355,7 +355,7 @@ export async function executeSmartBriefing(request: SmartBriefingRequest): Promi
       nextSteps: briefing.nextSteps,
       talkingPoints: briefing.talkingPoints,
       sentiment: briefing.sentiment,
-      engagementScore: Math.max(0, Math.min(100, briefing.engagementScore)), // Clamp to 0-100
+      engagementScore: Math.max(0, Math.min(100, Number(briefing.engagementScore) || 0)), // Clamp to 0-100
       metadata: {
         activitiesAnalyzed: activities.length,
         emailsAnalyzed: emails.length,
