@@ -92,6 +92,22 @@ npm run build
 npm start
 ```
 
+## 🤖 AI-Assisted Development
+
+HotCRM includes a comprehensive **Agent System** to accelerate development. Each agent is an expert in a specific domain:
+
+- **[Metadata Developer](.github/agents/metadata-developer.md)** - Object definitions, fields, relationships
+- **[Business Logic](.github/agents/business-logic-agent.md)** - Hooks, triggers, automation
+- **[UI Developer](.github/agents/ui-developer.md)** - Views, dashboards, forms
+- **[Integration](.github/agents/integration-agent.md)** - APIs, webhooks, external systems
+- **[AI Features](.github/agents/ai-features-agent.md)** - ML models, predictions, intelligence
+- **[Testing](.github/agents/testing-agent.md)** - Test generation and validation
+- **[Documentation](.github/agents/documentation-agent.md)** - Technical writing and guides
+
+**Quick Start**: See the **[Agent Guide](.github/AGENT_GUIDE.md)** for examples and workflows.
+
+**For Complex Tasks**: Use the **[Orchestrator](.github/agents/ORCHESTRATOR.md)** to coordinate multiple agents.
+
 ## 📦 Core Features
 
 HotCRM implements a comprehensive enterprise CRM system organized into **5 major domains**:
