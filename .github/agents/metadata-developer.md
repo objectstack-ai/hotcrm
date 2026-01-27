@@ -34,7 +34,7 @@ export default MyObject;
 ```typescript
 {
   name: string,              // PascalCase: 'Account', 'Opportunity'
-  label: string,             // Display name (可使用中文)
+  label: string,             // Display name (user-friendly)
   labelPlural: string,       // Plural form
   icon?: string,             // Icon identifier
   description?: string,      // Brief description
