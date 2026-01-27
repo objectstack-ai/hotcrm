@@ -5,12 +5,12 @@
  * This server provides RESTful APIs for ObjectQL queries, triggers, and UI rendering.
  */
 
-import express, { Request, Response, NextFunction } from 'express';
-import { db } from './engine/objectql';
-import { executeSmartBriefing } from './actions/ai_smart_briefing.action';
-import salesDashboard from './ui/dashboard/sales_dashboard.dashboard';
+import express, { Request, Response, NextFunction, Express } from 'express';
+import { db } from '@hotcrm/core';
+import { executeSmartBriefing } from '@hotcrm/crm';
+import { salesDashboard } from '@hotcrm/ui';
 
-const app = express();
+const app: Express = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware

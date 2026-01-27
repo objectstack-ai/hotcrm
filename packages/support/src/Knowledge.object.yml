@@ -1,0 +1,516 @@
+# Knowledge Object Definition
+# 知识库管理 - Service & Customer Success Domain
+# Follows @objectstack/spec standard for enterprise CRM
+
+name: Knowledge
+label: 知识库
+labelPlural: 知识库
+icon: book
+description: 帮助文档、FAQ 和解决方案库，支持 AI 问答
+
+# Enable core features
+features:
+  searchable: true
+  trackFieldHistory: true
+  enableNotes: false
+  enableAttachments: true
+  enableVersioning: true
+
+# Field Definitions
+fields:
+  # Basic Information
+  - name: Title
+    type: text
+    label: 标题
+    required: true
+    searchable: true
+    length: 255
+    
+  - name: KnowledgeNumber
+    type: autoNumber
+    label: 知识编号
+    format: KB-{YYYY}-{0000}
+    readonly: true
+    searchable: true
+    
+  - name: UrlName
+    type: text
+    label: URL 名称
+    unique: true
+    length: 255
+    description: 用于生成友好的 URL，如 kb/how-to-reset-password
+    
+  # Content
+  - name: Summary
+    type: textarea
+    label: 摘要
+    required: true
+    length: 1000
+    searchable: true
+    description: 文章简短摘要，用于搜索结果展示
+    
+  - name: Content
+    type: textarea
+    label: 内容
+    required: true
+    length: 65000
+    searchable: true
+    description: 富文本内容，支持 Markdown 或 HTML
+    
+  # Classification
+  - name: Category
+    type: select
+    label: 分类
+    required: true
+    options:
+      - label: 📘 产品指南
+        value: Product Guide
+      - label: ❓ FAQ
+        value: FAQ
+      - label: 🔧 故障排查
+        value: Troubleshooting
+      - label: 🎓 教程
+        value: Tutorial
+      - label: 📋 最佳实践
+        value: Best Practices
+      - label: 🆕 新功能
+        value: New Features
+      - label: 📖 API 文档
+        value: API Documentation
+      - label: 🎯 其他
+        value: Other
+        
+  - name: SubCategory
+    type: text
+    label: 子分类
+    length: 100
+    
+  - name: Tags
+    type: text
+    label: 标签
+    length: 500
+    searchable: true
+    description: 逗号分隔的标签，如：登录,密码,安全
+    
+  # Product Association
+  - name: ProductId
+    type: lookup
+    label: 相关产品
+    referenceTo: Product
+    
+  - name: ApplicableProducts
+    type: text
+    label: 适用产品
+    length: 500
+    description: 多个产品 ID，逗号分隔
+    
+  # Publishing
+  - name: Status
+    type: select
+    label: 状态
+    required: true
+    defaultValue: Draft
+    options:
+      - label: 📝 草稿
+        value: Draft
+      - label: 🔍 审核中
+        value: In Review
+      - label: ✅ 已发布
+        value: Published
+      - label: 📦 已归档
+        value: Archived
+        
+  - name: PublishedDate
+    type: datetime
+    label: 发布日期
+    readonly: true
+    
+  - name: ArchivedDate
+    type: datetime
+    label: 归档日期
+    readonly: true
+    
+  - name: LastReviewedDate
+    type: date
+    label: 最后审核日期
+    
+  - name: NextReviewDate
+    type: date
+    label: 下次审核日期
+    description: 建议定期审核知识库内容
+    
+  # Visibility
+  - name: Visibility
+    type: select
+    label: 可见性
+    required: true
+    defaultValue: Internal
+    options:
+      - label: 🌐 公开
+        value: Public
+      - label: 🔒 内部
+        value: Internal
+      - label: 🎫 客户门户
+        value: Customer Portal
+      - label: 🤝 合作伙伴
+        value: Partner
+        
+  - name: RequireLogin
+    type: checkbox
+    label: 需要登录
+    defaultValue: false
+    
+  # Statistics
+  - name: ViewCount
+    type: number
+    label: 浏览次数
+    precision: 0
+    readonly: true
+    defaultValue: 0
+    
+  - name: HelpfulCount
+    type: number
+    label: 有帮助次数
+    precision: 0
+    readonly: true
+    defaultValue: 0
+    
+  - name: NotHelpfulCount
+    type: number
+    label: 无帮助次数
+    precision: 0
+    readonly: true
+    defaultValue: 0
+    
+  - name: HelpfulScore
+    type: percent
+    label: 有用率
+    readonly: true
+    description: 有帮助次数 / (有帮助 + 无帮助)
+    
+  - name: AverageRating
+    type: number
+    label: 平均评分
+    precision: 1
+    readonly: true
+    min: 1
+    max: 5
+    
+  # Related Cases
+  - name: CasesResolvedCount
+    type: number
+    label: 解决工单数
+    precision: 0
+    readonly: true
+    defaultValue: 0
+    description: 使用本文解决的工单数量
+    
+  # Author
+  - name: AuthorId
+    type: lookup
+    label: 作者
+    referenceTo: User
+    required: true
+    
+  - name: ReviewerId
+    type: lookup
+    label: 审核人
+    referenceTo: User
+    
+  # SEO
+  - name: MetaDescription
+    type: textarea
+    label: Meta 描述
+    length: 200
+    description: 用于搜索引擎优化
+    
+  - name: Keywords
+    type: text
+    label: 关键词
+    length: 500
+    searchable: true
+    
+  # Version Control
+  - name: VersionNumber
+    type: number
+    label: 版本号
+    precision: 1
+    readonly: true
+    defaultValue: 1.0
+    
+  - name: VersionNotes
+    type: textarea
+    label: 版本说明
+    length: 2000
+    
+  # AI Enhancement Fields
+  - name: AIGeneratedSummary
+    type: textarea
+    label: AI 生成摘要
+    readonly: true
+    length: 1000
+    description: AI 自动生成的文章摘要
+    
+  - name: AIRelatedArticles
+    type: text
+    label: AI 推荐相关文章
+    readonly: true
+    length: 500
+    description: 知识库文章 ID 列表
+    
+  - name: AIEmbedding
+    type: text
+    label: AI 向量嵌入
+    readonly: true
+    length: 5000
+    description: 用于 RAG (检索增强生成) 的向量表示
+    
+  - name: AIQAScore
+    type: number
+    label: AI 问答质量分数
+    precision: 2
+    readonly: true
+    min: 0
+    max: 100
+    description: 文章用于 AI 问答的质量评分
+
+# Relationships
+relationships:
+  - name: KnowledgeFeedback
+    type: hasMany
+    object: KnowledgeFeedback
+    foreignKey: KnowledgeId
+    label: 用户反馈
+    
+  - name: Cases
+    type: hasMany
+    object: Case
+    foreignKey: KnowledgeId
+    label: 关联工单
+
+# List Views
+listViews:
+  - name: AllArticles
+    label: 所有文章
+    filters: []
+    columns:
+      - KnowledgeNumber
+      - Title
+      - Category
+      - Status
+      - ViewCount
+      - HelpfulScore
+      - PublishedDate
+    sortBy: PublishedDate
+    sortOrder: desc
+    
+  - name: Published
+    label: 已发布
+    filters:
+      - field: Status
+        operator: equals
+        value: Published
+    columns:
+      - Title
+      - Category
+      - SubCategory
+      - ViewCount
+      - HelpfulScore
+      - PublishedDate
+    sortBy: ViewCount
+    sortOrder: desc
+    
+  - name: MyArticles
+    label: 我的文章
+    filters:
+      - field: AuthorId
+        operator: equals
+        value: $CurrentUser.Id
+    columns:
+      - Title
+      - Category
+      - Status
+      - LastModifiedDate
+      - PublishedDate
+    sortBy: LastModifiedDate
+    sortOrder: desc
+    
+  - name: NeedReview
+    label: 待审核
+    filters:
+      - field: Status
+        operator: equals
+        value: In Review
+    columns:
+      - Title
+      - Category
+      - Author
+      - CreatedDate
+    sortBy: CreatedDate
+    sortOrder: asc
+    
+  - name: MostHelpful
+    label: 最有帮助
+    filters:
+      - field: Status
+        operator: equals
+        value: Published
+      - field: HelpfulCount
+        operator: greaterThan
+        value: 10
+    columns:
+      - Title
+      - Category
+      - HelpfulCount
+      - HelpfulScore
+      - ViewCount
+    sortBy: HelpfulScore
+    sortOrder: desc
+    
+  - name: PopularArticles
+    label: 热门文章
+    filters:
+      - field: Status
+        operator: equals
+        value: Published
+    columns:
+      - Title
+      - Category
+      - ViewCount
+      - HelpfulScore
+      - PublishedDate
+    sortBy: ViewCount
+    sortOrder: desc
+    
+  - name: FAQ
+    label: 常见问题
+    filters:
+      - field: Category
+        operator: equals
+        value: FAQ
+      - field: Status
+        operator: equals
+        value: Published
+    columns:
+      - Title
+      - SubCategory
+      - ViewCount
+      - HelpfulScore
+    sortBy: ViewCount
+    sortOrder: desc
+
+# Page Layout
+pageLayout:
+  sections:
+    - label: 文章信息
+      columns: 2
+      fields:
+        - KnowledgeNumber
+        - Title
+        - UrlName
+        - Status
+        - Category
+        - SubCategory
+        - Tags
+        
+    - label: 产品关联
+      columns: 2
+      fields:
+        - ProductId
+        - ApplicableProducts
+        
+    - label: 发布设置
+      columns: 2
+      fields:
+        - Visibility
+        - RequireLogin
+        - PublishedDate
+        - ArchivedDate
+        
+    - label: 审核
+      columns: 2
+      fields:
+        - AuthorId
+        - ReviewerId
+        - LastReviewedDate
+        - NextReviewDate
+        
+    - label: 统计数据
+      columns: 2
+      fields:
+        - ViewCount
+        - HelpfulCount
+        - NotHelpfulCount
+        - HelpfulScore
+        - AverageRating
+        - CasesResolvedCount
+        
+    - label: 版本控制
+      columns: 2
+      fields:
+        - VersionNumber
+        - VersionNotes
+        
+    - label: SEO
+      columns: 2
+      fields:
+        - MetaDescription
+        - Keywords
+        
+    - label: AI 增强
+      columns: 1
+      fields:
+        - AIGeneratedSummary
+        - AIRelatedArticles
+        - AIQAScore
+        
+    - label: 摘要
+      columns: 1
+      fields:
+        - Summary
+        
+    - label: 内容
+      columns: 1
+      fields:
+        - Content
+
+# Validation Rules
+validationRules:
+  - name: PublishedArticleRequiresReviewer
+    errorMessage: 发布文章必须经过审核人审核
+    formula: |
+      AND(
+        Status = "Published",
+        ISBLANK(ReviewerId)
+      )
+      
+  - name: NextReviewDateInFuture
+    errorMessage: 下次审核日期必须是未来的日期
+    formula: |
+      AND(
+        NOT(ISBLANK(NextReviewDate)),
+        NextReviewDate < $TODAY
+      )
+      
+  - name: UrlNameFormat
+    errorMessage: URL 名称只能包含小写字母、数字和连字符
+    formula: |
+      NOT(REGEX(UrlName, "^[a-z0-9-]+$"))
+
+# Triggers
+triggers:
+  - name: KnowledgePublishing
+    event: afterUpdate
+    description: 文章发布时记录时间并生成 URL
+    
+  - name: KnowledgeAIProcessing
+    event: afterInsert, afterUpdate
+    description: AI 生成摘要、提取关键词和创建向量嵌入
+    
+  - name: KnowledgeHelpfulScore
+    event: afterUpdate
+    description: 根据反馈计算有用率和评分
+    
+  - name: KnowledgeVersionControl
+    event: beforeUpdate
+    description: 重大修改时自动增加版本号

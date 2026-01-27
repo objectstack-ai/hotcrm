@@ -1,0 +1,32 @@
+{
+  "name": "@hotcrm/crm",
+  "version": "1.0.0",
+  "description": "CRM module - Account, Contact, Lead, Opportunity management with hooks and actions",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "eslint src --ext .ts"
+  },
+  "keywords": [
+    "crm",
+    "sales",
+    "marketing",
+    "accounts",
+    "contacts"
+  ],
+  "author": "HotCRM Team",
+  "license": "MIT",
+  "dependencies": {
+    "@hotcrm/core": "workspace:*",
+    "typescript": "^5.3.0",
+    "axios": "^1.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@typescript-eslint/eslint-plugin": "^6.14.0",
+    "@typescript-eslint/parser": "^6.14.0",
+    "eslint": "^8.55.0"
+  }
+}
