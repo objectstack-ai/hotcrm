@@ -1,0 +1,465 @@
+---
+title: Monorepo Structure
+description: Understanding the HotCRM monorepo architecture
+---
+
+# Monorepo Structure
+
+HotCRM uses a **multi-package monorepo** architecture powered by pnpm workspaces. This allows for modular development, independent versioning, and clear separation of concerns.
+
+## Why Monorepo?
+
+### Benefits
+
+1. **Code Reuse**: Shared code across packages without duplication
+2. **Atomic Changes**: Update multiple packages in a single commit
+3. **Easier Refactoring**: Change interfaces across packages safely
+4. **Simplified Dependencies**: Single version of dependencies
+5. **Better Testing**: Test interactions between packages
+6. **Developer Experience**: Single clone, single install
+
+### Challenges (and Solutions)
+
+| Challenge | Solution |
+|-----------|----------|
+| Long build times | Incremental builds with pnpm |
+| Complex dependencies | Clear dependency graph |
+| Version management | Workspace protocol |
+| Large repository | Focused packages |
+
+## Directory Structure
+
+```
+hotcrm/
+├── packages/               # All packages live here
+│   ├── core/              # Foundation package
+│   ├── crm/               # Marketing & Sales domain
+│   ├── support/           # Service & Support domain
+│   ├── products/          # Product & Pricing domain
+│   ├── finance/           # Contracts & Payments domain
+│   ├── ui/                # UI components
+│   └── server/            # Application server
+│
+├── docs/                  # Documentation
+├── .github/               # GitHub workflows and configs
+├── pnpm-workspace.yaml    # Workspace configuration
+├── package.json           # Root package with scripts
+├── tsconfig.json          # Shared TypeScript config
+└── README.md
+```
+
+## Package Overview
+
+### Core Package: `@hotcrm/core`
+
+**Purpose**: Foundation layer with ObjectQL engine and type definitions
+
+**Contents**:
+```
+packages/core/
+├── src/
+│   ├── objectql.ts           # Query engine
+│   ├── objectstack-spec.d.ts # Type definitions
+│   └── index.ts              # Exports
+├── package.json
+├── tsconfig.json
+└── README.md
+```
+
+**Dependencies**: None (zero dependencies!)
+
+**Used by**: All other packages
+
+### Domain Packages (Vertical Slices)
+
+Each domain package is a complete vertical slice with schemas, hooks, and actions.
+
+#### `@hotcrm/crm` - Marketing & Sales
+
+**Contents**:
+```
+packages/crm/
+├── src/
+│   ├── account.object.ts          # Account schema
+│   ├── contact.object.ts          # Contact schema
+│   ├── lead.object.ts             # Lead schema
+│   ├── opportunity.object.ts      # Opportunity schema
+│   ├── campaign.object.ts         # Campaign schema
+│   ├── activity.object.ts         # Activity schema
+│   ├── opportunity.hook.ts        # Opportunity triggers
+│   ├── ai_smart_briefing.action.ts # AI action
+│   └── index.ts                   # Exports
+└── package.json
+```
+
+**Dependencies**: `@hotcrm/core`
+
+#### `@hotcrm/support` - Service & Support
+
+**Contents**:
+```
+packages/support/
+├── src/
+│   ├── case.object.ts        # Case schema
+│   ├── knowledge.object.ts   # Knowledge schema
+│   └── index.ts
+└── package.json
+```
+
+**Dependencies**: `@hotcrm/core`
+
+#### `@hotcrm/products` - Product & Pricing
+
+**Contents**:
+```
+packages/products/
+├── src/
+│   ├── product.object.ts     # Product schema
+│   ├── pricebook.object.ts   # Pricebook schema
+│   ├── quote.object.ts       # Quote schema
+│   └── index.ts
+└── package.json
+```
+
+**Dependencies**: `@hotcrm/core`
+
+#### `@hotcrm/finance` - Contracts & Payments
+
+**Contents**:
+```
+packages/finance/
+├── src/
+│   ├── contract.object.ts    # Contract schema
+│   ├── payment.object.ts     # Payment schema
+│   └── index.ts
+└── package.json
+```
+
+**Dependencies**: `@hotcrm/core`
+
+### Application Packages
+
+#### `@hotcrm/ui` - UI Components
+
+**Contents**:
+```
+packages/ui/
+├── src/
+│   ├── dashboard/
+│   │   └── sales_dashboard.dashboard.ts
+│   ├── components/
+│   │   └── AISmartBriefingCard.ts
+│   └── index.ts
+└── package.json
+```
+
+**Dependencies**: `@hotcrm/core`
+
+#### `@hotcrm/server` - Application Server
+
+**Contents**:
+```
+packages/server/
+├── src/
+│   └── server.ts             # Express server
+├── package.json
+└── README.md
+```
+
+**Dependencies**: All domain packages + `@hotcrm/ui`
+
+## Dependency Graph
+
+```
+@hotcrm/server (Application Layer)
+  ├── @hotcrm/core
+  ├── @hotcrm/crm
+  ├── @hotcrm/support
+  ├── @hotcrm/products
+  ├── @hotcrm/finance
+  └── @hotcrm/ui
+
+@hotcrm/crm, @hotcrm/support, @hotcrm/products, @hotcrm/finance
+  └── @hotcrm/core
+
+@hotcrm/ui
+  └── @hotcrm/core
+
+@hotcrm/core
+  └── (no dependencies)
+```
+
+**Dependency Rules**:
+- Core has zero external dependencies
+- Domain packages only depend on core
+- UI only depends on core
+- Server assembles everything
+
+## Workspace Configuration
+
+### `pnpm-workspace.yaml`
+
+```yaml
+packages:
+  - 'packages/*'
+```
+
+This tells pnpm to treat all directories in `packages/` as workspace packages.
+
+### Root `package.json`
+
+```json
+{
+  "name": "@hotcrm/monorepo",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "pnpm --filter @hotcrm/server dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "test": "jest --passWithNoTests"
+  }
+}
+```
+
+## Package Scripts
+
+### Building Packages
+
+```bash
+# Build all packages (in dependency order)
+pnpm build
+
+# Build specific package
+pnpm --filter @hotcrm/core build
+
+# Build package and its dependencies
+pnpm --filter @hotcrm/server... build
+```
+
+### Running Commands
+
+```bash
+# Run command in all packages
+pnpm -r test
+
+# Run command in specific package
+pnpm --filter @hotcrm/crm test
+
+# Run command in multiple packages
+pnpm --filter @hotcrm/crm --filter @hotcrm/support lint
+```
+
+### Development
+
+```bash
+# Start dev server (only server package)
+pnpm dev
+
+# Watch mode for specific package
+pnpm --filter @hotcrm/core dev
+```
+
+## Package.json Example
+
+### Domain Package
+
+```json
+{
+  "name": "@hotcrm/crm",
+  "version": "1.0.0",
+  "description": "Marketing and Sales domain for HotCRM",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "eslint src/**/*.ts",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@hotcrm/core": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.0"
+  }
+}
+```
+
+**Key Points**:
+- `workspace:*` - Use the workspace version
+- `main` and `types` - Point to built files
+- Minimal dependencies
+
+## TypeScript Configuration
+
+### Root `tsconfig.json`
+
+```json
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "commonjs",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "declaration": true,
+    "outDir": "./dist"
+  }
+}
+```
+
+### Package `tsconfig.json`
+
+```json
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src"
+  },
+  "include": ["src/**/*"],
+  "references": [
+    { "path": "../core" }
+  ]
+}
+```
+
+## Vertical Slice Architecture
+
+Each domain package follows the **Vertical Slice** pattern:
+
+```
+@hotcrm/crm/
+├── Schemas (*.object.ts)
+├── Hooks (*.hook.ts)
+├── Actions (*.action.ts)
+└── index.ts (exports all)
+```
+
+**Benefits**:
+- Complete feature isolation
+- Easy to understand
+- Can be deployed independently
+- Clear ownership
+
+**Example**: The CRM package contains everything related to Marketing & Sales:
+- Data models (Account, Lead, Opportunity)
+- Business logic (opportunity stage automation)
+- Actions (AI Smart Briefing)
+
+## Inter-Package Communication
+
+### Importing from Other Packages
+
+```typescript
+// In @hotcrm/server
+import { db } from '@hotcrm/core';
+import { Account, Lead } from '@hotcrm/crm';
+import { Case } from '@hotcrm/support';
+```
+
+### Exporting from Package
+
+```typescript
+// In @hotcrm/crm/src/index.ts
+export { default as Account } from './account.object';
+export { default as Contact } from './contact.object';
+export { default as Lead } from './lead.object';
+export { default as Opportunity } from './opportunity.object';
+```
+
+## Deprecated Packages
+
+These packages were split into domain packages:
+
+- `@hotcrm/metadata` → Split into `@hotcrm/crm`, `@hotcrm/support`, etc.
+- `@hotcrm/hooks` → Moved into respective domain packages
+- `@hotcrm/actions` → Moved into respective domain packages
+
+## Best Practices
+
+### 1. Keep Packages Focused
+
+Each package should have a single, clear responsibility.
+
+### 2. Minimize Dependencies
+
+Packages should have minimal external dependencies.
+
+### 3. Use Workspace Protocol
+
+```json
+{
+  "dependencies": {
+    "@hotcrm/core": "workspace:*"  // ✅ Use workspace version
+  }
+}
+```
+
+### 4. Follow File Suffix Protocol
+
+```
+*.object.ts     # Object schemas
+*.hook.ts       # Business logic
+*.action.ts     # Custom actions
+```
+
+### 5. Export from index.ts
+
+```typescript
+// packages/crm/src/index.ts
+export { default as Account } from './account.object';
+export { default as Contact } from './contact.object';
+// ... all exports
+```
+
+### 6. Build in Dependency Order
+
+pnpm automatically builds packages in the correct order based on dependencies.
+
+## Adding a New Package
+
+1. Create package directory:
+```bash
+mkdir -p packages/my-package/src
+```
+
+2. Create `package.json`:
+```json
+{
+  "name": "@hotcrm/my-package",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "dependencies": {
+    "@hotcrm/core": "workspace:*"
+  }
+}
+```
+
+3. Create `tsconfig.json`:
+```json
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src"
+  },
+  "include": ["src/**/*"]
+}
+```
+
+4. Install dependencies:
+```bash
+pnpm install
+```
+
+## Next Steps
+
+- [Metadata-Driven Architecture](/docs/architecture/metadata-driven)
+- [Creating Objects](/docs/development/creating-objects)
+- [Package Development Guide](/docs/development/packages)

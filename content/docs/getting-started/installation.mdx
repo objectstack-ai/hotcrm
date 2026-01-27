@@ -1,0 +1,194 @@
+---
+title: Installation
+description: How to install and set up HotCRM
+---
+
+# Installation
+
+This guide will help you install and set up HotCRM on your local machine or server.
+
+## Prerequisites
+
+Before installing HotCRM, make sure you have the following installed:
+
+- **Node.js** 18.0.0 or higher
+- **pnpm** 8.0.0 or higher (recommended for monorepo management)
+- **Git** for cloning the repository
+
+### Installing Node.js
+
+Download and install Node.js from [nodejs.org](https://nodejs.org/). We recommend using the LTS (Long Term Support) version.
+
+To verify your installation:
+
+```bash
+node --version  # Should show v18.0.0 or higher
+```
+
+### Installing pnpm
+
+pnpm is a fast, disk space efficient package manager. Install it globally:
+
+```bash
+npm install -g pnpm
+```
+
+Verify the installation:
+
+```bash
+pnpm --version  # Should show 8.0.0 or higher
+```
+
+## Installation Steps
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/hotcrm/hotcrm.git
+cd hotcrm
+```
+
+### 2. Install Dependencies
+
+Install all package dependencies using pnpm:
+
+```bash
+pnpm install
+```
+
+This will install dependencies for all packages in the monorepo.
+
+### 3. Build All Packages
+
+Build all packages in the correct order:
+
+```bash
+pnpm build
+```
+
+This command will:
+1. Build `@hotcrm/core` first (foundation)
+2. Build domain packages (`@hotcrm/crm`, `@hotcrm/support`, etc.)
+3. Build `@hotcrm/ui` (UI components)
+4. Build `@hotcrm/server` (application server)
+
+### 4. Start the Development Server
+
+Start the development server with hot reload:
+
+```bash
+pnpm dev
+```
+
+The server will start at `http://localhost:3000` (or another port if 3000 is in use).
+
+## Building Individual Packages
+
+You can also build individual packages:
+
+```bash
+# Build core package only
+pnpm --filter @hotcrm/core build
+
+# Build CRM domain package
+pnpm --filter @hotcrm/crm build
+
+# Build server package
+pnpm --filter @hotcrm/server build
+```
+
+## Production Deployment
+
+For production deployment:
+
+### 1. Build for Production
+
+```bash
+pnpm build
+```
+
+### 2. Start the Production Server
+
+```bash
+pnpm start
+```
+
+## Environment Configuration
+
+Create a `.env` file in the root directory to configure environment variables:
+
+```env
+# Server Configuration
+PORT=3000
+NODE_ENV=production
+
+# Database Configuration (Future)
+# DB_HOST=localhost
+# DB_PORT=5432
+# DB_NAME=hotcrm
+# DB_USER=hotcrm
+# DB_PASSWORD=your_password
+
+# AI Configuration (Future)
+# OPENAI_API_KEY=your_openai_api_key
+```
+
+## Troubleshooting
+
+### Port Already in Use
+
+If port 3000 is already in use, you can change it in the `.env` file or by setting the PORT environment variable:
+
+```bash
+PORT=3001 pnpm dev
+```
+
+### Build Errors
+
+If you encounter build errors:
+
+1. Clean all build artifacts:
+   ```bash
+   pnpm clean
+   ```
+
+2. Reinstall dependencies:
+   ```bash
+   rm -rf node_modules pnpm-lock.yaml
+   pnpm install
+   ```
+
+3. Rebuild:
+   ```bash
+   pnpm build
+   ```
+
+### pnpm Not Found
+
+If `pnpm` command is not recognized, ensure it's installed globally:
+
+```bash
+npm install -g pnpm
+```
+
+Or use npm instead (though pnpm is recommended):
+
+```bash
+npm install
+npm run build
+npm run dev
+```
+
+## Verify Installation
+
+To verify that HotCRM is installed correctly:
+
+1. Check that the development server starts without errors
+2. Open `http://localhost:3000` in your browser
+3. You should see the HotCRM dashboard
+
+## Next Steps
+
+- [Quick Start Guide](/docs/getting-started/quick-start) - Learn the basics
+- [Architecture Overview](/docs/architecture/overview) - Understand how HotCRM works
+- [Creating Objects](/docs/development/creating-objects) - Start customizing
