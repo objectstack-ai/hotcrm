@@ -18,7 +18,10 @@
   "license": "MIT",
   "dependencies": {
     "@hotcrm/core": "workspace:*",
-    "@hotcrm/metadata": "workspace:*",
+    "@hotcrm/crm": "workspace:*",
+    "@hotcrm/support": "workspace:*",
+    "@hotcrm/products": "workspace:*",
+    "@hotcrm/finance": "workspace:*",
     "@hotcrm/hooks": "workspace:*",
     "@hotcrm/actions": "workspace:*",
     "@hotcrm/ui": "workspace:*",

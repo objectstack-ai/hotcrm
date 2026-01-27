@@ -5,8 +5,7 @@
     "rootDir": "./src"
   },
   "references": [
-    { "path": "../core" },
-    { "path": "../crm" }
+    { "path": "../core" }
   ],
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

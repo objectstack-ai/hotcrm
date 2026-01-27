@@ -6,7 +6,7 @@
   },
   "references": [
     { "path": "../core" },
-    { "path": "../metadata" }
+    { "path": "../crm" }
   ],
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

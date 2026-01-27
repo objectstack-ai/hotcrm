@@ -6,7 +6,10 @@
   },
   "references": [
     { "path": "../core" },
-    { "path": "../metadata" },
+    { "path": "../crm" },
+    { "path": "../support" },
+    { "path": "../products" },
+    { "path": "../finance" },
     { "path": "../hooks" },
     { "path": "../actions" },
     { "path": "../ui" }

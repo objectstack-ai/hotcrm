@@ -18,7 +18,8 @@
   "license": "MIT",
   "dependencies": {
     "@hotcrm/core": "workspace:*",
-    "@hotcrm/metadata": "workspace:*",
+    "@hotcrm/crm": "workspace:*",
+    "@hotcrm/finance": "workspace:*",
     "typescript": "^5.3.0"
   },
   "devDependencies": {

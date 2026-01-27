@@ -6,7 +6,8 @@
   },
   "references": [
     { "path": "../core" },
-    { "path": "../metadata" }
+    { "path": "../crm" },
+    { "path": "../finance" }
   ],
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

@@ -16,7 +16,10 @@
     "baseUrl": ".",
     "paths": {
       "@hotcrm/core": ["packages/core/src"],
-      "@hotcrm/metadata": ["packages/metadata/src"],
+      "@hotcrm/crm": ["packages/crm/src"],
+      "@hotcrm/support": ["packages/support/src"],
+      "@hotcrm/products": ["packages/products/src"],
+      "@hotcrm/finance": ["packages/finance/src"],
       "@hotcrm/hooks": ["packages/hooks/src"],
       "@hotcrm/actions": ["packages/actions/src"],
       "@hotcrm/ui": ["packages/ui/src"],
@@ -25,7 +28,10 @@
   },
   "references": [
     { "path": "./packages/core" },
-    { "path": "./packages/metadata" },
+    { "path": "./packages/crm" },
+    { "path": "./packages/support" },
+    { "path": "./packages/products" },
+    { "path": "./packages/finance" },
     { "path": "./packages/hooks" },
     { "path": "./packages/actions" },
     { "path": "./packages/ui" },

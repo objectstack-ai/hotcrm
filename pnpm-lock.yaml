@@ -38,9 +38,9 @@ importers:
       '@hotcrm/core':
         specifier: workspace:*
         version: link:../core
-      '@hotcrm/metadata':
+      '@hotcrm/crm':
         specifier: workspace:*
-        version: link:../metadata
+        version: link:../crm
       axios:
         specifier: ^1.6.0
         version: 1.13.3
@@ -80,14 +80,61 @@ importers:
         specifier: ^8.55.0
         version: 8.57.1
 
+  packages/crm:
+    dependencies:
+      '@hotcrm/core':
+        specifier: workspace:*
+        version: link:../core
+      typescript:
+        specifier: ^5.3.0
+        version: 5.9.3
+    devDependencies:
+      '@types/node':
+        specifier: ^20.10.0
+        version: 20.19.30
+      '@typescript-eslint/eslint-plugin':
+        specifier: ^6.14.0
+        version: 6.21.0(@typescript-eslint/parser@6.21.0(eslint@8.57.1)(typescript@5.9.3))(eslint@8.57.1)(typescript@5.9.3)
+      '@typescript-eslint/parser':
+        specifier: ^6.14.0
+        version: 6.21.0(eslint@8.57.1)(typescript@5.9.3)
+      eslint:
+        specifier: ^8.55.0
+        version: 8.57.1
+
+  packages/finance:
+    dependencies:
+      '@hotcrm/core':
+        specifier: workspace:*
+        version: link:../core
+      typescript:
+        specifier: ^5.3.0
+        version: 5.9.3
+    devDependencies:
+      '@types/node':
+        specifier: ^20.10.0
+        version: 20.19.30
+      '@typescript-eslint/eslint-plugin':
+        specifier: ^6.14.0
+        version: 6.21.0(@typescript-eslint/parser@6.21.0(eslint@8.57.1)(typescript@5.9.3))(eslint@8.57.1)(typescript@5.9.3)
+      '@typescript-eslint/parser':
+        specifier: ^6.14.0
+        version: 6.21.0(eslint@8.57.1)(typescript@5.9.3)
+      eslint:
+        specifier: ^8.55.0
+        version: 8.57.1
+
   packages/hooks:
     dependencies:
       '@hotcrm/core':
         specifier: workspace:*
         version: link:../core
-      '@hotcrm/metadata':
+      '@hotcrm/crm':
         specifier: workspace:*
-        version: link:../metadata
+        version: link:../crm
+      '@hotcrm/finance':
+        specifier: workspace:*
+        version: link:../finance
       typescript:
         specifier: ^5.3.0
         version: 5.9.3
@@ -127,6 +174,28 @@ importers:
         specifier: ^8.55.0
         version: 8.57.1
 
+  packages/products:
+    dependencies:
+      '@hotcrm/core':
+        specifier: workspace:*
+        version: link:../core
+      typescript:
+        specifier: ^5.3.0
+        version: 5.9.3
+    devDependencies:
+      '@types/node':
+        specifier: ^20.10.0
+        version: 20.19.30
+      '@typescript-eslint/eslint-plugin':
+        specifier: ^6.14.0
+        version: 6.21.0(@typescript-eslint/parser@6.21.0(eslint@8.57.1)(typescript@5.9.3))(eslint@8.57.1)(typescript@5.9.3)
+      '@typescript-eslint/parser':
+        specifier: ^6.14.0
+        version: 6.21.0(eslint@8.57.1)(typescript@5.9.3)
+      eslint:
+        specifier: ^8.55.0
+        version: 8.57.1
+
   packages/server:
     dependencies:
       '@hotcrm/actions':
@@ -135,12 +204,21 @@ importers:
       '@hotcrm/core':
         specifier: workspace:*
         version: link:../core
+      '@hotcrm/crm':
+        specifier: workspace:*
+        version: link:../crm
+      '@hotcrm/finance':
+        specifier: workspace:*
+        version: link:../finance
       '@hotcrm/hooks':
         specifier: workspace:*
         version: link:../hooks
-      '@hotcrm/metadata':
+      '@hotcrm/products':
         specifier: workspace:*
-        version: link:../metadata
+        version: link:../products
+      '@hotcrm/support':
+        specifier: workspace:*
+        version: link:../support
       '@hotcrm/ui':
         specifier: workspace:*
         version: link:../ui
@@ -173,14 +251,36 @@ importers:
         specifier: ^2.0.0
         version: 2.0.0(@types/node@20.19.30)(typescript@5.9.3)
 
+  packages/support:
+    dependencies:
+      '@hotcrm/core':
+        specifier: workspace:*
+        version: link:../core
+      typescript:
+        specifier: ^5.3.0
+        version: 5.9.3
+    devDependencies:
+      '@types/node':
+        specifier: ^20.10.0
+        version: 20.19.30
+      '@typescript-eslint/eslint-plugin':
+        specifier: ^6.14.0
+        version: 6.21.0(@typescript-eslint/parser@6.21.0(eslint@8.57.1)(typescript@5.9.3))(eslint@8.57.1)(typescript@5.9.3)
+      '@typescript-eslint/parser':
+        specifier: ^6.14.0
+        version: 6.21.0(eslint@8.57.1)(typescript@5.9.3)
+      eslint:
+        specifier: ^8.55.0
+        version: 8.57.1
+
   packages/ui:
     dependencies:
       '@hotcrm/core':
         specifier: workspace:*
         version: link:../core
-      '@hotcrm/metadata':
+      '@hotcrm/crm':
         specifier: workspace:*
-        version: link:../metadata
+        version: link:../crm
       tailwindcss:
         specifier: ^3.4.0
         version: 3.4.19
