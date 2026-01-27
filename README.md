@@ -84,27 +84,51 @@ hotcrm/
 
 ### Package Dependencies
 
+**Domain-Driven Architecture:**
+
+```
+@hotcrm/core (Foundation)
+  ├── Domain Packages
+  │   ├── @hotcrm/crm (Marketing & Sales)
+  │   ├── @hotcrm/support (Customer Service)
+  │   ├── @hotcrm/products (Product & Pricing)
+  │   └── @hotcrm/finance (Financial Operations)
+  │
+  ├── Integration Packages
+  │   ├── @hotcrm/hooks (uses CRM + Finance domains)
+  │   ├── @hotcrm/actions (uses CRM domain)
+  │   └── @hotcrm/ui (uses CRM domain)
+  │
+  └── @hotcrm/server (integrates all packages)
+```
+
+**Detailed Dependencies:**
+
 ```
 @hotcrm/server
   ├── @hotcrm/core
-  ├── @hotcrm/metadata
+  ├── @hotcrm/crm
+  ├── @hotcrm/support
+  ├── @hotcrm/products
+  ├── @hotcrm/finance
   ├── @hotcrm/hooks
   ├── @hotcrm/actions
   └── @hotcrm/ui
 
 @hotcrm/hooks
   ├── @hotcrm/core
-  └── @hotcrm/metadata
+  ├── @hotcrm/crm
+  └── @hotcrm/finance
 
 @hotcrm/actions
   ├── @hotcrm/core
-  └── @hotcrm/metadata
+  └── @hotcrm/crm
 
 @hotcrm/ui
   ├── @hotcrm/core
-  └── @hotcrm/metadata
+  └── @hotcrm/crm
 
-@hotcrm/metadata
+Domain Packages (crm, support, products, finance)
   └── @hotcrm/core
 
 @hotcrm/core (no dependencies)
@@ -159,41 +183,73 @@ pnpm start
 
 ## 📦 Package Overview
 
-### @hotcrm/core
+### Core Package
+
+#### @hotcrm/core
 
 Core engine providing ObjectQL query language and type definitions.
 
 [Read more →](./packages/core/README.md)
 
-### @hotcrm/metadata
+### Domain Packages (Business-Focused)
 
-Business object metadata definitions covering the complete CRM lifecycle.
+#### @hotcrm/crm
 
-[Read more →](./packages/metadata/README.md)
+Marketing & Sales domain - Account, Contact, Lead, Opportunity, Campaign, and Activity management.
 
-### @hotcrm/hooks
+[Read more →](./packages/crm/README.md)
 
-Business logic, automation triggers, and workflows.
+#### @hotcrm/support
+
+Customer Service domain - Case management and Knowledge base.
+
+[Read more →](./packages/support/README.md)
+
+#### @hotcrm/products
+
+Product & Pricing domain - Product catalog, Pricebook, and Quote (CPQ) management.
+
+[Read more →](./packages/products/README.md)
+
+#### @hotcrm/finance
+
+Financial Operations domain - Contract lifecycle and Payment tracking.
+
+[Read more →](./packages/finance/README.md)
+
+### Integration Packages
+
+#### @hotcrm/hooks
+
+Business logic, automation triggers, and workflows across domains.
 
 [Read more →](./packages/hooks/README.md)
 
-### @hotcrm/actions
+#### @hotcrm/actions
 
 Custom business actions and AI-powered features.
 
 [Read more →](./packages/actions/README.md)
 
-### @hotcrm/ui
+#### @hotcrm/ui
 
 UI components, dashboards, and page configurations.
 
 [Read more →](./packages/ui/README.md)
 
-### @hotcrm/server
+#### @hotcrm/server
 
-Express server with REST APIs and endpoints.
+Express server with REST APIs and endpoints integrating all domains.
 
 [Read more →](./packages/server/README.md)
+
+### Legacy Package (Deprecated)
+
+#### @hotcrm/metadata
+
+⚠️ **Deprecated**: This package has been split into domain-specific packages (@hotcrm/crm, @hotcrm/support, @hotcrm/products, @hotcrm/finance). Use the domain packages instead for better modularity.
+
+[Read more →](./packages/metadata/README.md)
 
 ## 🤖 AI-Assisted Development
 
