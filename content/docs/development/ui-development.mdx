@@ -1,0 +1,797 @@
+---
+title: UI Development
+description: How to create dashboards, pages, and UI components in HotCRM
+---
+
+# UI Development
+
+HotCRM uses a **configuration-driven UI engine** based on the `@objectstack/spec` protocol. This allows you to build powerful interfaces through TypeScript configuration rather than writing React components.
+
+## UI Philosophy
+
+HotCRM follows a "Configuration over Code" approach:
+
+1. **Configuration First**: Define UI through TypeScript schemas
+2. **Low-Code**: Extend with custom components only when needed
+3. **Pro-Code**: Full React/TypeScript flexibility when required
+
+## File Suffix Protocol
+
+UI files follow the standard protocol:
+
+```
+{name}.dashboard.ts    # Dashboard configurations
+{name}.page.ts         # Page configurations
+{name}.view.ts         # View configurations
+{component}.ts         # UI components
+```
+
+## Dashboard Development
+
+### Basic Dashboard Structure
+
+```typescript
+import type { DashboardSchema } from '@objectstack/spec/ui';
+
+const SalesDashboard: DashboardSchema = {
+  name: 'sales_dashboard',
+  label: '销售主管仪表盘',
+  description: '销售业绩和管道概览',
+  
+  layout: 'grid',
+  columns: 12,
+  
+  widgets: [
+    // Widget definitions go here
+  ]
+};
+
+export default SalesDashboard;
+```
+
+### Widget Types
+
+#### 1. Metric Card
+
+Display a single key metric:
+
+```typescript
+{
+  type: 'metric',
+  title: 'Total Revenue',
+  grid: { col: 3, row: 2 },
+  
+  query: {
+    object: 'Opportunity',
+    aggregation: {
+      function: 'SUM',
+      field: 'Amount'
+    },
+    filters: [
+      ['Stage', '=', 'Closed Won'],
+      ['CloseDate', 'this_quarter']
+    ]
+  },
+  
+  format: 'currency',
+  icon: 'dollar-sign',
+  trend: {
+    comparison: 'previous_quarter',
+    direction: 'up'
+  }
+}
+```
+
+#### 2. Chart Widget
+
+```typescript
+{
+  type: 'chart',
+  title: 'Pipeline by Stage',
+  grid: { col: 6, row: 4 },
+  
+  chartType: 'funnel', // bar, line, pie, funnel, etc.
+  
+  query: {
+    object: 'Opportunity',
+    groupBy: 'Stage',
+    aggregations: {
+      count: { function: 'COUNT', field: 'Id' },
+      totalAmount: { function: 'SUM', field: 'Amount' }
+    },
+    filters: [
+      ['IsClosed', '=', false]
+    ],
+    orderBy: [['Stage', 'asc']]
+  },
+  
+  xAxis: 'Stage',
+  yAxis: 'totalAmount',
+  
+  colors: ['#3B82F6', '#10B981', '#F59E0B', '#EF4444']
+}
+```
+
+#### 3. Table Widget
+
+```typescript
+{
+  type: 'table',
+  title: 'Top Opportunities',
+  grid: { col: 6, row: 4 },
+  
+  query: {
+    object: 'Opportunity',
+    fields: ['Name', 'AccountId', 'Amount', 'CloseDate', 'Stage'],
+    filters: [
+      ['IsClosed', '=', false],
+      ['Amount', '>', 50000]
+    ],
+    orderBy: [['Amount', 'desc']],
+    limit: 10
+  },
+  
+  columns: [
+    { field: 'Name', label: 'Opportunity', link: true },
+    { field: 'AccountId', label: 'Account' },
+    { field: 'Amount', label: 'Amount', format: 'currency' },
+    { field: 'CloseDate', label: 'Close Date', format: 'date' },
+    { field: 'Stage', label: 'Stage', format: 'badge' }
+  ]
+}
+```
+
+#### 4. List Widget
+
+```typescript
+{
+  type: 'list',
+  title: 'Recent Activities',
+  grid: { col: 4, row: 4 },
+  
+  query: {
+    object: 'Activity',
+    fields: ['Subject', 'Type', 'ActivityDate', 'OwnerId'],
+    filters: [
+      ['OwnerId', '=', '$currentUser']
+    ],
+    orderBy: [['ActivityDate', 'desc']],
+    limit: 20
+  },
+  
+  itemTemplate: {
+    title: '{{Subject}}',
+    subtitle: '{{Type}} • {{ActivityDate}}',
+    avatar: '{{OwnerId.avatar}}',
+    icon: '{{Type.icon}}'
+  }
+}
+```
+
+#### 5. AI Insight Widget
+
+```typescript
+{
+  type: 'ai-insight',
+  title: 'AI Smart Briefing',
+  grid: { col: 6, row: 3 },
+  
+  insightType: 'daily-summary',
+  
+  dataSource: {
+    opportunities: {
+      filters: [['OwnerId', '=', '$currentUser']]
+    },
+    accounts: {
+      filters: [['OwnerId', '=', '$currentUser']]
+    },
+    activities: {
+      filters: [
+        ['OwnerId', '=', '$currentUser'],
+        ['ActivityDate', 'today']
+      ]
+    }
+  },
+  
+  sections: [
+    'summary',
+    'keyInsights',
+    'actionItems',
+    'risks'
+  ]
+}
+```
+
+### Complete Dashboard Example
+
+```typescript
+import type { DashboardSchema } from '@objectstack/spec/ui';
+
+const SalesDashboard: DashboardSchema = {
+  name: 'sales_dashboard',
+  label: '销售主管仪表盘',
+  description: '销售业绩和管道概览',
+  
+  layout: 'grid',
+  columns: 12,
+  
+  filters: [
+    {
+      name: 'dateRange',
+      type: 'dateRange',
+      label: 'Date Range',
+      defaultValue: 'this_quarter'
+    },
+    {
+      name: 'team',
+      type: 'select',
+      label: 'Team',
+      options: {
+        source: 'User',
+        field: 'Team'
+      }
+    }
+  ],
+  
+  widgets: [
+    // Row 1: Key Metrics
+    {
+      type: 'metric',
+      title: 'Total Revenue',
+      grid: { col: 3, row: 2 },
+      query: {
+        object: 'Opportunity',
+        aggregation: { function: 'SUM', field: 'Amount' },
+        filters: [
+          ['Stage', '=', 'Closed Won'],
+          ['CloseDate', '{{dateRange}}']
+        ]
+      },
+      format: 'currency',
+      icon: 'dollar-sign',
+      color: 'green'
+    },
+    
+    {
+      type: 'metric',
+      title: 'Win Rate',
+      grid: { col: 3, row: 2 },
+      query: {
+        object: 'Opportunity',
+        aggregation: { function: 'AVG', field: 'IsWon' },
+        filters: [
+          ['IsClosed', '=', true],
+          ['CloseDate', '{{dateRange}}']
+        ]
+      },
+      format: 'percent',
+      icon: 'target',
+      color: 'blue'
+    },
+    
+    {
+      type: 'metric',
+      title: 'Pipeline Value',
+      grid: { col: 3, row: 2 },
+      query: {
+        object: 'Opportunity',
+        aggregation: { function: 'SUM', field: 'Amount' },
+        filters: [['IsClosed', '=', false]]
+      },
+      format: 'currency',
+      icon: 'trending-up',
+      color: 'purple'
+    },
+    
+    {
+      type: 'metric',
+      title: 'Avg Deal Size',
+      grid: { col: 3, row: 2 },
+      query: {
+        object: 'Opportunity',
+        aggregation: { function: 'AVG', field: 'Amount' },
+        filters: [
+          ['Stage', '=', 'Closed Won'],
+          ['CloseDate', '{{dateRange}}']
+        ]
+      },
+      format: 'currency',
+      icon: 'briefcase',
+      color: 'orange'
+    },
+    
+    // Row 2: Charts
+    {
+      type: 'chart',
+      title: 'Pipeline by Stage',
+      grid: { col: 6, row: 4 },
+      chartType: 'funnel',
+      query: {
+        object: 'Opportunity',
+        groupBy: 'Stage',
+        aggregations: {
+          count: { function: 'COUNT', field: 'Id' },
+          amount: { function: 'SUM', field: 'Amount' }
+        },
+        filters: [['IsClosed', '=', false]]
+      },
+      xAxis: 'Stage',
+      yAxis: 'amount'
+    },
+    
+    {
+      type: 'chart',
+      title: 'Revenue Trend',
+      grid: { col: 6, row: 4 },
+      chartType: 'line',
+      query: {
+        object: 'Opportunity',
+        groupBy: 'CloseDate.month',
+        aggregations: {
+          revenue: { function: 'SUM', field: 'Amount' }
+        },
+        filters: [
+          ['Stage', '=', 'Closed Won'],
+          ['CloseDate', 'last_12_months']
+        ]
+      },
+      xAxis: 'month',
+      yAxis: 'revenue'
+    },
+    
+    // Row 3: AI Insights and Tables
+    {
+      type: 'ai-insight',
+      title: 'AI Smart Briefing',
+      grid: { col: 6, row: 3 },
+      insightType: 'daily-summary',
+      dataSource: {
+        opportunities: {
+          filters: [['OwnerId', '=', '$currentUser']]
+        }
+      }
+    },
+    
+    {
+      type: 'table',
+      title: 'Top Deals Closing This Month',
+      grid: { col: 6, row: 3 },
+      query: {
+        object: 'Opportunity',
+        fields: ['Name', 'AccountId', 'Amount', 'CloseDate', 'AIWinProbability'],
+        filters: [
+          ['CloseDate', 'this_month'],
+          ['IsClosed', '=', false]
+        ],
+        orderBy: [['Amount', 'desc']],
+        limit: 10
+      },
+      columns: [
+        { field: 'Name', label: 'Opportunity', link: true },
+        { field: 'AccountId', label: 'Account' },
+        { field: 'Amount', label: 'Amount', format: 'currency' },
+        { field: 'CloseDate', label: 'Close Date', format: 'date' },
+        { field: 'AIWinProbability', label: 'Win %', format: 'percent' }
+      ]
+    }
+  ]
+};
+
+export default SalesDashboard;
+```
+
+## Page Development
+
+### Basic Page Structure
+
+```typescript
+import type { PageSchema } from '@objectstack/spec/ui';
+
+const CustomPage: PageSchema = {
+  name: 'custom_page',
+  title: 'Custom Page',
+  path: '/custom-page',
+  
+  layout: 'container',
+  
+  sections: [
+    // Section definitions
+  ]
+};
+
+export default CustomPage;
+```
+
+### Page Layouts
+
+```typescript
+// Container layout (centered, max-width)
+{
+  layout: 'container',
+  maxWidth: '1200px'
+}
+
+// Full width layout
+{
+  layout: 'full'
+}
+
+// Sidebar layout
+{
+  layout: 'sidebar',
+  sidebar: {
+    position: 'left', // or 'right'
+    width: '250px',
+    content: [/* sidebar widgets */]
+  }
+}
+```
+
+## UI Components
+
+### Custom Component Example
+
+```typescript
+// AISmartBriefingCard.ts
+import type { ComponentSchema } from '@objectstack/spec/ui';
+
+export const AISmartBriefingCard: ComponentSchema = {
+  name: 'AISmartBriefingCard',
+  type: 'card',
+  
+  props: {
+    accountId: { type: 'string', required: true },
+    includeOpportunities: { type: 'boolean', default: true },
+    includeCases: { type: 'boolean', default: true },
+    timeRange: { type: 'string', default: 'last_30_days' }
+  },
+  
+  dataSource: {
+    account: {
+      object: 'Account',
+      filters: [['Id', '=', '{{accountId}}']]
+    },
+    opportunities: {
+      object: 'Opportunity',
+      filters: [
+        ['AccountId', '=', '{{accountId}}'],
+        ['CreatedDate', '{{timeRange}}']
+      ],
+      condition: '{{includeOpportunities}}'
+    },
+    cases: {
+      object: 'Case',
+      filters: [
+        ['AccountId', '=', '{{accountId}}'],
+        ['CreatedDate', '{{timeRange}}']
+      ],
+      condition: '{{includeCases}}'
+    }
+  },
+  
+  template: {
+    title: 'AI Smart Briefing',
+    icon: 'sparkles',
+    
+    sections: [
+      {
+        type: 'summary',
+        content: '{{account.AISummary}}'
+      },
+      {
+        type: 'insights',
+        title: 'Key Insights',
+        items: '{{account.AIKeyInsights}}'
+      },
+      {
+        type: 'actions',
+        title: 'Recommended Actions',
+        items: '{{account.AIRecommendedActions}}'
+      },
+      {
+        type: 'risks',
+        title: 'Risk Factors',
+        items: '{{account.AIRiskFactors}}',
+        color: 'red'
+      }
+    ]
+  },
+  
+  styling: {
+    className: 'ai-briefing-card',
+    padding: '1.5rem',
+    borderRadius: '0.5rem',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+  }
+};
+
+export default AISmartBriefingCard;
+```
+
+## Styling with Tailwind CSS
+
+HotCRM uses Tailwind CSS for styling:
+
+```typescript
+{
+  type: 'card',
+  className: 'bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow',
+  
+  children: [
+    {
+      type: 'heading',
+      level: 2,
+      className: 'text-2xl font-bold text-gray-900 mb-4',
+      content: 'Dashboard Title'
+    },
+    {
+      type: 'text',
+      className: 'text-gray-600',
+      content: 'Dashboard description'
+    }
+  ]
+}
+```
+
+### Common Tailwind Patterns
+
+```typescript
+// Cards
+'bg-white rounded-lg shadow-md p-6'
+
+// Buttons
+'bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded'
+
+// Inputs
+'border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
+
+// Badges
+'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800'
+
+// Grid layouts
+'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'
+```
+
+## Form Development
+
+### Basic Form
+
+```typescript
+{
+  type: 'form',
+  object: 'Lead',
+  mode: 'create', // or 'edit'
+  
+  fields: [
+    {
+      name: 'FirstName',
+      type: 'text',
+      label: 'First Name',
+      placeholder: 'Enter first name',
+      required: true
+    },
+    {
+      name: 'LastName',
+      type: 'text',
+      label: 'Last Name',
+      required: true
+    },
+    {
+      name: 'Email',
+      type: 'email',
+      label: 'Email',
+      validation: {
+        pattern: '^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$',
+        message: 'Please enter a valid email'
+      }
+    },
+    {
+      name: 'Phone',
+      type: 'phone',
+      label: 'Phone'
+    },
+    {
+      name: 'Company',
+      type: 'text',
+      label: 'Company',
+      required: true
+    },
+    {
+      name: 'Industry',
+      type: 'select',
+      label: 'Industry',
+      options: [
+        { label: 'Technology', value: 'Technology' },
+        { label: 'Finance', value: 'Finance' },
+        { label: 'Healthcare', value: 'Healthcare' }
+      ]
+    }
+  ],
+  
+  layout: {
+    columns: 2,
+    sections: [
+      {
+        label: 'Contact Information',
+        fields: ['FirstName', 'LastName', 'Email', 'Phone']
+      },
+      {
+        label: 'Company Information',
+        fields: ['Company', 'Industry']
+      }
+    ]
+  },
+  
+  actions: {
+    submit: {
+      label: 'Create Lead',
+      className: 'bg-blue-600 text-white px-4 py-2 rounded'
+    },
+    cancel: {
+      label: 'Cancel',
+      className: 'bg-gray-200 text-gray-700 px-4 py-2 rounded'
+    }
+  }
+}
+```
+
+## Navigation
+
+### Menu Configuration
+
+```typescript
+{
+  type: 'navigation',
+  items: [
+    {
+      label: 'Home',
+      icon: 'home',
+      path: '/'
+    },
+    {
+      label: 'Sales',
+      icon: 'briefcase',
+      children: [
+        { label: 'Leads', path: '/leads' },
+        { label: 'Accounts', path: '/accounts' },
+        { label: 'Opportunities', path: '/opportunities' },
+        { label: 'Quotes', path: '/quotes' }
+      ]
+    },
+    {
+      label: 'Service',
+      icon: 'headphones',
+      children: [
+        { label: 'Cases', path: '/cases' },
+        { label: 'Knowledge', path: '/knowledge' }
+      ]
+    },
+    {
+      label: 'Reports',
+      icon: 'bar-chart',
+      path: '/reports'
+    }
+  ]
+}
+```
+
+## Responsive Design
+
+```typescript
+{
+  type: 'grid',
+  
+  // Mobile: 1 column
+  // Tablet: 2 columns
+  // Desktop: 4 columns
+  className: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4',
+  
+  // Hide on mobile
+  mobileHidden: true,
+  
+  // Responsive widget sizing
+  widgets: [
+    {
+      grid: {
+        col: { xs: 12, md: 6, lg: 3 },
+        row: 2
+      }
+    }
+  ]
+}
+```
+
+## Best Practices
+
+### 1. Use Semantic Naming
+
+```typescript
+// ✅ Good
+const SalesDashboard: DashboardSchema = {
+  name: 'sales_dashboard',
+  label: '销售仪表盘'
+}
+
+// ❌ Bad
+const Dashboard1: DashboardSchema = {
+  name: 'dash1'
+}
+```
+
+### 2. Optimize Queries
+
+```typescript
+// ✅ Good - Limit fields
+query: {
+  object: 'Opportunity',
+  fields: ['Name', 'Amount', 'Stage'],
+  limit: 10
+}
+
+// ❌ Bad - Fetch everything
+query: {
+  object: 'Opportunity'
+}
+```
+
+### 3. Use Filters Effectively
+
+```typescript
+// ✅ Good - Filter at database level
+query: {
+  object: 'Lead',
+  filters: [
+    ['Status', '=', 'New'],
+    ['CreatedDate', 'last_7_days']
+  ]
+}
+```
+
+### 4. Provide User Controls
+
+```typescript
+// ✅ Good - Let users filter
+filters: [
+  {
+    name: 'dateRange',
+    type: 'dateRange',
+    label: 'Date Range'
+  },
+  {
+    name: 'owner',
+    type: 'lookup',
+    label: 'Owner',
+    object: 'User'
+  }
+]
+```
+
+### 5. Handle Loading & Empty States
+
+```typescript
+{
+  type: 'table',
+  
+  loading: {
+    message: 'Loading opportunities...',
+    skeleton: true
+  },
+  
+  emptyState: {
+    icon: 'inbox',
+    title: 'No opportunities found',
+    description: 'Create your first opportunity to get started',
+    action: {
+      label: 'New Opportunity',
+      path: '/opportunities/new'
+    }
+  }
+}
+```
+
+## Next Steps
+
+- [Creating Objects](/docs/development/creating-objects) - Define data model
+- [Business Logic](/docs/development/business-logic) - Add automation
+- [ObjectQL API](/docs/api-reference/objectql-api) - Query data
+- [Tailwind CSS](https://tailwindcss.com/docs) - Styling reference

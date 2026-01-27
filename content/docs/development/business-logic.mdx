@@ -1,0 +1,703 @@
+---
+title: Business Logic
+description: How to write hooks and triggers for business logic in HotCRM
+---
+
+# Business Logic
+
+HotCRM uses **hooks** (also called triggers) to implement server-side business logic. Hooks execute automatically when records are created, updated, or deleted.
+
+## Hook Architecture
+
+Hooks follow the **File Suffix Protocol**:
+
+```
+{object_name}.hook.ts
+```
+
+Example: `opportunity.hook.ts`, `lead.hook.ts`
+
+## Hook Events
+
+Hooks can fire at different points in the record lifecycle:
+
+- **beforeInsert**: Before a record is created
+- **afterInsert**: After a record is created
+- **beforeUpdate**: Before a record is updated
+- **afterUpdate**: After a record is updated
+- **beforeDelete**: Before a record is deleted
+- **afterDelete**: After a record is deleted
+
+## Basic Hook Structure
+
+```typescript
+import type { HookSchema } from '@objectstack/spec/data';
+import { db } from '@hotcrm/core';
+
+export interface TriggerContext {
+  old?: Record<string, any>;   // Previous record state (updates only)
+  new: Record<string, any>;     // New record state
+  db: typeof db;                // Database client
+  user: {                       // Current user
+    id: string;
+    name: string;
+    email: string;
+  };
+}
+
+const MyHook: HookSchema = {
+  name: 'MyHookName',
+  object: 'ObjectName',
+  events: ['afterUpdate'],       // Hook events
+  handler: async (ctx: TriggerContext) => {
+    // Your business logic here
+  }
+};
+
+export default MyHook;
+```
+
+## Complete Example: Opportunity Hook
+
+This is a real example from HotCRM that handles opportunity stage changes:
+
+```typescript
+import type { HookSchema } from '@objectstack/spec/data';
+import { db } from '@hotcrm/core';
+
+export interface TriggerContext {
+  old?: Record<string, any>;
+  new: Record<string, any>;
+  db: typeof db;
+  user: { id: string; name: string; email: string; };
+}
+
+/**
+ * Opportunity Stage Change Trigger
+ * 
+ * Handles automation when opportunity stage changes:
+ * - Closed Won: Creates contract, updates account status, logs activity
+ * - Closed Lost: Updates account, logs activity, sends notification
+ * - Stage changes: Validates data completeness, updates probability
+ */
+const OpportunityStageChange: HookSchema = {
+  name: 'OpportunityStageChange',
+  object: 'Opportunity',
+  events: ['afterUpdate'],
+  handler: async (ctx: TriggerContext) => {
+    try {
+      // Check if Stage actually changed
+      const stageChanged = ctx.old?.Stage !== ctx.new.Stage;
+      if (!stageChanged) {
+        return;
+      }
+
+      console.log(`🔄 Stage changed from "${ctx.old?.Stage}" to "${ctx.new.Stage}"`);
+
+      // Log activity for stage change
+      await logStageChange(ctx);
+
+      // Validate data completeness for advanced stages
+      await validateStageRequirements(ctx);
+
+      // Handle "Closed Won" scenario
+      if (ctx.new.Stage === 'Closed Won') {
+        await handleClosedWon(ctx);
+      }
+
+      // Handle "Closed Lost" scenario
+      if (ctx.new.Stage === 'Closed Lost') {
+        await handleClosedLost(ctx);
+      }
+
+    } catch (error) {
+      console.error('❌ Error in OpportunityTrigger:', error);
+      throw error;
+    }
+  }
+};
+
+/**
+ * Handle Closed Won automation
+ */
+async function handleClosedWon(ctx: TriggerContext): Promise<void> {
+  console.log('✅ Processing Closed Won automation...');
+  const opportunity = ctx.new;
+
+  if (!opportunity.AccountId) {
+    console.error('❌ Cannot process: Opportunity has no AccountId');
+    return;
+  }
+
+  // 1. Create Contract
+  const contract = await ctx.db.doc.create('Contract', {
+    AccountId: opportunity.AccountId,
+    OpportunityId: opportunity.Id,
+    Status: 'Draft',
+    ContractValue: opportunity.Amount || 0,
+    StartDate: new Date().toISOString().split('T')[0],
+    OwnerId: opportunity.OwnerId || ctx.user.id,
+    Description: `Auto-generated from Opportunity: ${opportunity.Name}`
+  });
+  console.log(`✅ Contract created: ${contract.Id}`);
+
+  // 2. Update Account Status
+  await ctx.db.doc.update('Account', opportunity.AccountId, {
+    CustomerStatus: 'Active Customer'
+  });
+  console.log('✅ Account status updated to Active Customer');
+
+  // 3. Log activity
+  await ctx.db.doc.create('Activity', {
+    Subject: `商机成交: ${opportunity.Name}`,
+    Type: 'Milestone',
+    Status: 'Completed',
+    Priority: 'High',
+    AccountId: opportunity.AccountId,
+    WhatId: opportunity.Id,
+    OwnerId: ctx.user.id,
+    ActivityDate: new Date().toISOString().split('T')[0],
+    Description: `商机 "${opportunity.Name}" 已成功成交，金额: ${opportunity.Amount?.toLocaleString() || 0}`
+  });
+  console.log('✅ Activity logged for Closed Won');
+}
+
+async function handleClosedLost(ctx: TriggerContext): Promise<void> {
+  console.log('❌ Processing Closed Lost automation...');
+  const opportunity = ctx.new;
+
+  if (!opportunity.AccountId) {
+    return;
+  }
+
+  // Log activity for lost opportunity
+  await ctx.db.doc.create('Activity', {
+    Subject: `商机丢失: ${opportunity.Name}`,
+    Type: 'Milestone',
+    Status: 'Completed',
+    Priority: 'Normal',
+    AccountId: opportunity.AccountId,
+    WhatId: opportunity.Id,
+    OwnerId: ctx.user.id,
+    ActivityDate: new Date().toISOString().split('T')[0],
+    Description: `商机 "${opportunity.Name}" 已丢失，金额: ${opportunity.Amount?.toLocaleString() || 0}。原因待分析。`
+  });
+  console.log('✅ Activity logged for Closed Lost');
+}
+
+/**
+ * Log activity when stage changes
+ */
+async function logStageChange(ctx: TriggerContext): Promise<void> {
+  const opportunity = ctx.new;
+  const oldStage = ctx.old?.Stage || 'Unknown';
+  
+  await ctx.db.doc.create('Activity', {
+    Subject: `商机阶段变更: ${oldStage} → ${ctx.new.Stage}`,
+    Type: 'Stage Change',
+    Status: 'Completed',
+    Priority: 'Normal',
+    AccountId: opportunity.AccountId,
+    WhatId: opportunity.Id,
+    OwnerId: ctx.user.id,
+    ActivityDate: new Date().toISOString().split('T')[0],
+    Description: `商机阶段从 "${oldStage}" 变更为 "${ctx.new.Stage}"`
+  });
+}
+
+/**
+ * Validate required fields for advanced stages
+ */
+async function validateStageRequirements(ctx: TriggerContext): Promise<void> {
+  const opportunity = ctx.new;
+  const stage = opportunity.Stage;
+  const warnings: string[] = [];
+
+  // Validation for Proposal stage
+  if (stage === 'Proposal' && !opportunity.Amount) {
+    warnings.push('Proposal stage should have an Amount specified');
+  }
+
+  // Validation for Negotiation stage
+  if (stage === 'Negotiation') {
+    if (!opportunity.Amount) {
+      warnings.push('Negotiation stage requires Amount');
+    }
+    if (!opportunity.ContactId) {
+      warnings.push('Negotiation stage should have a primary Contact');
+    }
+    if (!opportunity.NextStep) {
+      warnings.push('Negotiation stage should have clear Next Steps');
+    }
+  }
+
+  // Validation for Closed stages
+  if ((stage === 'Closed Won' || stage === 'Closed Lost') && !opportunity.Amount) {
+    warnings.push('Closed opportunities should have an Amount for reporting');
+  }
+
+  if (warnings.length > 0) {
+    console.warn(`⚠️ Stage validation warnings for ${opportunity.Name}:`, warnings);
+  }
+}
+
+export default OpportunityStageChange;
+```
+
+## Common Hook Patterns
+
+### 1. Before Insert - Set Default Values
+
+```typescript
+const LeadBeforeInsert: HookSchema = {
+  name: 'LeadBeforeInsert',
+  object: 'Lead',
+  events: ['beforeInsert'],
+  handler: async (ctx: TriggerContext) => {
+    const lead = ctx.new;
+    
+    // Set default rating based on annual revenue
+    if (!lead.Rating && lead.AnnualRevenue) {
+      if (lead.AnnualRevenue > 10000000) {
+        lead.Rating = 'Hot';
+      } else if (lead.AnnualRevenue > 1000000) {
+        lead.Rating = 'Warm';
+      } else {
+        lead.Rating = 'Cold';
+      }
+    }
+    
+    // Auto-assign to public pool if no owner
+    if (!lead.OwnerId) {
+      lead.IsInPublicPool = true;
+      lead.PoolEntryDate = new Date().toISOString();
+    }
+    
+    // Calculate data completeness
+    lead.DataCompleteness = calculateCompleteness(lead);
+  }
+};
+
+function calculateCompleteness(lead: any): number {
+  const fields = ['FirstName', 'LastName', 'Email', 'Phone', 'Company', 'Title', 'Industry'];
+  const filled = fields.filter(f => lead[f]).length;
+  return Math.round((filled / fields.length) * 100);
+}
+```
+
+### 2. After Insert - Create Related Records
+
+```typescript
+const AccountAfterInsert: HookSchema = {
+  name: 'AccountAfterInsert',
+  object: 'Account',
+  events: ['afterInsert'],
+  handler: async (ctx: TriggerContext) => {
+    const account = ctx.new;
+    
+    // Create default contact for new account
+    await ctx.db.doc.create('Contact', {
+      FirstName: 'Primary',
+      LastName: 'Contact',
+      AccountId: account.Id,
+      Title: 'To Be Updated',
+      Email: account.Email || '',
+      OwnerId: account.OwnerId
+    });
+    
+    // Create onboarding task
+    await ctx.db.doc.create('Task', {
+      Subject: `Onboard new account: ${account.Name}`,
+      Status: 'Not Started',
+      Priority: 'High',
+      WhatId: account.Id,
+      OwnerId: account.OwnerId,
+      DueDate: addDays(new Date(), 7)
+    });
+  }
+};
+
+function addDays(date: Date, days: number): string {
+  const result = new Date(date);
+  result.setDate(result.getDate() + days);
+  return result.toISOString().split('T')[0];
+}
+```
+
+### 3. Before Update - Validate Changes
+
+```typescript
+const ContractBeforeUpdate: HookSchema = {
+  name: 'ContractBeforeUpdate',
+  object: 'Contract',
+  events: ['beforeUpdate'],
+  handler: async (ctx: TriggerContext) => {
+    const oldContract = ctx.old!;
+    const newContract = ctx.new;
+    
+    // Prevent changing activated contract
+    if (oldContract.Status === 'Activated' && newContract.Status !== 'Activated') {
+      throw new Error('不能修改已激活的合同状态');
+    }
+    
+    // Require approval for value changes > 10%
+    if (oldContract.ContractValue && newContract.ContractValue) {
+      const change = Math.abs(
+        (newContract.ContractValue - oldContract.ContractValue) / oldContract.ContractValue
+      );
+      
+      if (change > 0.1 && !newContract.ApprovalStatus) {
+        throw new Error('合同金额变更超过10%需要审批');
+      }
+    }
+  }
+};
+```
+
+### 4. After Update - Cascade Updates
+
+```typescript
+const AccountAfterUpdate: HookSchema = {
+  name: 'AccountAfterUpdate',
+  object: 'Account',
+  events: ['afterUpdate'],
+  handler: async (ctx: TriggerContext) => {
+    const oldAccount = ctx.old!;
+    const newAccount = ctx.new;
+    
+    // If account owner changed, update all related opportunities
+    if (oldAccount.OwnerId !== newAccount.OwnerId) {
+      const opportunities = await ctx.db.find('Opportunity', {
+        filters: [
+          ['AccountId', '=', newAccount.Id],
+          ['IsClosed', '=', false]
+        ]
+      });
+      
+      for (const opp of opportunities) {
+        await ctx.db.doc.update('Opportunity', opp.Id, {
+          OwnerId: newAccount.OwnerId
+        });
+      }
+      
+      console.log(`✅ Updated owner for ${opportunities.length} opportunities`);
+    }
+  }
+};
+```
+
+### 5. Before Delete - Prevent Deletion
+
+```typescript
+const AccountBeforeDelete: HookSchema = {
+  name: 'AccountBeforeDelete',
+  object: 'Account',
+  events: ['beforeDelete'],
+  handler: async (ctx: TriggerContext) => {
+    const account = ctx.new;
+    
+    // Check for active opportunities
+    const activeOpps = await ctx.db.find('Opportunity', {
+      filters: [
+        ['AccountId', '=', account.Id],
+        ['IsClosed', '=', false]
+      ],
+      limit: 1
+    });
+    
+    if (activeOpps.length > 0) {
+      throw new Error('不能删除有活动商机的客户');
+    }
+    
+    // Check for active contracts
+    const activeContracts = await ctx.db.find('Contract', {
+      filters: [
+        ['AccountId', '=', account.Id],
+        ['Status', '=', 'Activated']
+      ],
+      limit: 1
+    });
+    
+    if (activeContracts.length > 0) {
+      throw new Error('不能删除有激活合同的客户');
+    }
+  }
+};
+```
+
+### 6. After Delete - Cleanup
+
+```typescript
+const OpportunityAfterDelete: HookSchema = {
+  name: 'OpportunityAfterDelete',
+  object: 'Opportunity',
+  events: ['afterDelete'],
+  handler: async (ctx: TriggerContext) => {
+    const opportunity = ctx.new;
+    
+    // Delete related quotes
+    const quotes = await ctx.db.find('Quote', {
+      filters: [['OpportunityId', '=', opportunity.Id]]
+    });
+    
+    for (const quote of quotes) {
+      await ctx.db.doc.delete('Quote', quote.Id);
+    }
+    
+    console.log(`✅ Deleted ${quotes.length} related quotes`);
+  }
+};
+```
+
+## AI Integration in Hooks
+
+### Calculate AI Score
+
+```typescript
+const LeadAfterInsert: HookSchema = {
+  name: 'LeadAfterInsert',
+  object: 'Lead',
+  events: ['afterInsert'],
+  handler: async (ctx: TriggerContext) => {
+    const lead = ctx.new;
+    
+    // Calculate lead score using AI
+    const score = await calculateLeadScore(lead);
+    
+    // Update lead with score
+    await ctx.db.doc.update('Lead', lead.Id, {
+      LeadScore: score.score,
+      AISummary: score.summary,
+      AIRecommendedAction: score.recommendedAction
+    });
+  }
+};
+
+async function calculateLeadScore(lead: any): Promise<{
+  score: number;
+  summary: string;
+  recommendedAction: string;
+}> {
+  // Profile completeness (30%)
+  const completeness = calculateCompleteness(lead);
+  const completenessScore = (completeness / 100) * 30;
+  
+  // Company quality (40%)
+  let companyScore = 0;
+  if (lead.AnnualRevenue > 10000000) companyScore += 20;
+  else if (lead.AnnualRevenue > 1000000) companyScore += 10;
+  
+  if (lead.NumberOfEmployees > 500) companyScore += 20;
+  else if (lead.NumberOfEmployees > 50) companyScore += 10;
+  
+  // Engagement (30%)
+  const engagementScore = 30; // Default for new leads
+  
+  const totalScore = Math.round(completenessScore + companyScore + engagementScore);
+  
+  let summary = '';
+  let action = '';
+  
+  if (totalScore >= 70) {
+    summary = '高质量线索：公司规模大，资料完整';
+    action = '立即联系，安排产品演示';
+  } else if (totalScore >= 40) {
+    summary = '中等质量线索：需要进一步确认需求';
+    action = '发送邮件了解具体需求';
+  } else {
+    summary = '低质量线索：资料不完整或公司规模小';
+    action = '添加到培育流程';
+  }
+  
+  return { score: totalScore, summary, action };
+}
+```
+
+### Generate AI Content
+
+```typescript
+const OpportunityAfterUpdate: HookSchema = {
+  name: 'OpportunityAfterUpdate',
+  object: 'Opportunity',
+  events: ['afterUpdate'],
+  handler: async (ctx: TriggerContext) => {
+    const opportunity = ctx.new;
+    
+    // Generate AI insights when stage advances
+    if (ctx.old?.Stage !== opportunity.Stage) {
+      const insights = await generateOpportunityInsights(opportunity);
+      
+      await ctx.db.doc.update('Opportunity', opportunity.Id, {
+        AIWinProbability: insights.winProbability,
+        AIRiskFactors: insights.riskFactors,
+        AINextStepSuggestion: insights.nextStep,
+        AICompetitiveIntel: insights.competitiveIntel
+      });
+    }
+  }
+};
+
+async function generateOpportunityInsights(opp: any) {
+  // In real implementation, this would call an AI service
+  return {
+    winProbability: 75,
+    riskFactors: 'Competitor presence detected. Long sales cycle.',
+    nextStep: 'Schedule executive meeting to address pricing concerns',
+    competitiveIntel: 'Customer is also evaluating Salesforce. Highlight our AI capabilities.'
+  };
+}
+```
+
+## Hook Best Practices
+
+### 1. Keep Hooks Focused
+
+```typescript
+// ✅ Good - One responsibility
+const OpportunityClosedWon: HookSchema = {
+  name: 'OpportunityClosedWon',
+  object: 'Opportunity',
+  events: ['afterUpdate'],
+  handler: async (ctx) => {
+    if (ctx.new.Stage === 'Closed Won') {
+      await handleClosedWon(ctx);
+    }
+  }
+};
+
+// ❌ Bad - Too many responsibilities
+const OpportunityEverything: HookSchema = {
+  handler: async (ctx) => {
+    // 200 lines of mixed logic
+  }
+};
+```
+
+### 2. Use Helper Functions
+
+```typescript
+// ✅ Good - Modular helper functions
+async function handleClosedWon(ctx: TriggerContext) {
+  await createContract(ctx);
+  await updateAccount(ctx);
+  await logActivity(ctx);
+}
+
+async function createContract(ctx: TriggerContext) {
+  // Focused logic
+}
+```
+
+### 3. Handle Errors Gracefully
+
+```typescript
+handler: async (ctx: TriggerContext) => {
+  try {
+    await someOperation(ctx);
+  } catch (error) {
+    console.error('❌ Error:', error);
+    
+    // Don't fail the entire transaction for non-critical operations
+    if (!isCritical(error)) {
+      console.warn('⚠️ Non-critical error, continuing...');
+      return;
+    }
+    
+    // Re-throw critical errors
+    throw error;
+  }
+}
+```
+
+### 4. Avoid Recursive Triggers
+
+```typescript
+// ✅ Good - Check for actual change
+handler: async (ctx: TriggerContext) => {
+  const stageChanged = ctx.old?.Stage !== ctx.new.Stage;
+  if (!stageChanged) {
+    return; // Prevent infinite loop
+  }
+  
+  // Process stage change
+}
+```
+
+### 5. Use Batch Operations
+
+```typescript
+// ✅ Good - Batch update
+const contactIds = opportunities.map(o => o.ContactId);
+await ctx.db.batch.update('Contact', contactIds.map(id => ({
+  id,
+  data: { LastActivityDate: new Date() }
+})));
+
+// ❌ Bad - Individual updates
+for (const opp of opportunities) {
+  await ctx.db.doc.update('Contact', opp.ContactId, {
+    LastActivityDate: new Date()
+  });
+}
+```
+
+### 6. Log Important Actions
+
+```typescript
+handler: async (ctx: TriggerContext) => {
+  console.log(`🔄 Processing ${ctx.new.Name}`);
+  
+  await doSomething(ctx);
+  console.log('✅ Operation completed');
+  
+  if (warnings.length > 0) {
+    console.warn('⚠️ Warnings:', warnings);
+  }
+}
+```
+
+## Testing Hooks
+
+### Unit Test Example
+
+```typescript
+import { describe, it, expect, vi } from 'vitest';
+import OpportunityStageChange from './opportunity.hook';
+
+describe('OpportunityStageChange', () => {
+  it('should create contract when opportunity is closed won', async () => {
+    const mockDb = {
+      doc: {
+        create: vi.fn(),
+        update: vi.fn()
+      }
+    };
+    
+    const ctx = {
+      old: { Stage: 'Negotiation' },
+      new: {
+        Stage: 'Closed Won',
+        Id: 'opp_123',
+        Name: 'Test Deal',
+        AccountId: 'acc_123',
+        Amount: 50000
+      },
+      db: mockDb as any,
+      user: { id: 'user_1', name: 'Test User', email: 'test@example.com' }
+    };
+    
+    await OpportunityStageChange.handler(ctx);
+    
+    expect(mockDb.doc.create).toHaveBeenCalledWith('Contract', expect.objectContaining({
+      AccountId: 'acc_123',
+      OpportunityId: 'opp_123'
+    }));
+  });
+});
+```
+
+## Next Steps
+
+- [Creating Objects](/docs/development/creating-objects) - Define custom objects
+- [UI Development](/docs/development/ui-development) - Build custom UI
+- [ObjectQL API](/docs/api-reference/objectql-api) - Database operations in hooks

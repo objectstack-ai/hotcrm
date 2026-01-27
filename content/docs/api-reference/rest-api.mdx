@@ -1,0 +1,1030 @@
+---
+title: REST API Reference
+description: HTTP REST API endpoints for HotCRM
+---
+
+# REST API Reference
+
+HotCRM provides a comprehensive REST API for CRUD operations, queries, and AI features. All API endpoints follow RESTful conventions.
+
+## Base URL
+
+```
+https://api.hotcrm.com/v1
+```
+
+## Authentication
+
+All API requests require authentication using Bearer tokens:
+
+```bash
+curl -H "Authorization: Bearer YOUR_API_TOKEN" \
+  https://api.hotcrm.com/v1/accounts
+```
+
+### Obtaining an API Token
+
+```bash
+POST /auth/token
+
+{
+  "email": "user@example.com",
+  "password": "your_password"
+}
+```
+
+**Response:**
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "expiresIn": 3600,
+  "refreshToken": "refresh_token_here"
+}
+```
+
+---
+
+## Standard CRUD Operations
+
+### List Records
+
+Get a list of records with optional filtering and pagination.
+
+```
+GET /{object}
+```
+
+**Query Parameters:**
+- `fields`: Comma-separated field names
+- `filters`: JSON-encoded filter array
+- `sort`: Field name to sort by (prefix with `-` for descending)
+- `limit`: Maximum records to return (default: 50, max: 200)
+- `offset`: Number of records to skip
+
+**Examples:**
+
+```bash
+# Get all accounts
+GET /accounts
+
+# Get specific fields
+GET /accounts?fields=Name,Industry,Phone
+
+# Filter accounts
+GET /accounts?filters=[["Industry","=","Technology"]]
+
+# Sort and limit
+GET /accounts?sort=-AnnualRevenue&limit=20
+
+# Pagination
+GET /accounts?limit=50&offset=100
+```
+
+**Response:**
+```json
+{
+  "records": [
+    {
+      "Id": "acc_123",
+      "Name": "Acme Corporation",
+      "Industry": "Technology",
+      "Phone": "+1-555-0123",
+      "CreatedDate": "2026-01-15T10:30:00Z"
+    }
+  ],
+  "totalCount": 150,
+  "hasMore": true
+}
+```
+
+---
+
+### Get Record by ID
+
+Retrieve a single record.
+
+```
+GET /{object}/{id}
+```
+
+**Query Parameters:**
+- `fields`: Comma-separated field names to return
+
+**Example:**
+
+```bash
+GET /accounts/acc_123
+GET /accounts/acc_123?fields=Name,Industry,Phone
+```
+
+**Response:**
+```json
+{
+  "Id": "acc_123",
+  "Name": "Acme Corporation",
+  "Industry": "Technology",
+  "AnnualRevenue": 5000000,
+  "Phone": "+1-555-0123",
+  "Website": "https://acme.com",
+  "CreatedDate": "2026-01-15T10:30:00Z",
+  "ModifiedDate": "2026-01-20T14:22:00Z"
+}
+```
+
+---
+
+### Create Record
+
+Create a new record.
+
+```
+POST /{object}
+```
+
+**Request Body:**
+```json
+{
+  "Name": "New Customer Inc.",
+  "Industry": "Technology",
+  "AnnualRevenue": 2000000,
+  "Phone": "+1-555-0199",
+  "Website": "https://newcustomer.com"
+}
+```
+
+**Response:**
+```json
+{
+  "Id": "acc_456",
+  "Name": "New Customer Inc.",
+  "Industry": "Technology",
+  "AnnualRevenue": 2000000,
+  "Phone": "+1-555-0199",
+  "Website": "https://newcustomer.com",
+  "CreatedDate": "2026-01-27T15:45:00Z"
+}
+```
+
+**Status Codes:**
+- `201 Created`: Record created successfully
+- `400 Bad Request`: Validation error
+- `401 Unauthorized`: Authentication required
+- `403 Forbidden`: Insufficient permissions
+
+---
+
+### Update Record
+
+Update an existing record (partial update).
+
+```
+PATCH /{object}/{id}
+```
+
+**Request Body:**
+```json
+{
+  "Phone": "+1-555-9999",
+  "Status": "Active Customer"
+}
+```
+
+**Response:**
+```json
+{
+  "Id": "acc_123",
+  "Name": "Acme Corporation",
+  "Phone": "+1-555-9999",
+  "Status": "Active Customer",
+  "ModifiedDate": "2026-01-27T16:00:00Z"
+}
+```
+
+**Status Codes:**
+- `200 OK`: Record updated successfully
+- `400 Bad Request`: Validation error
+- `404 Not Found`: Record does not exist
+
+---
+
+### Replace Record
+
+Replace an existing record (full update).
+
+```
+PUT /{object}/{id}
+```
+
+All fields must be provided. Missing fields will be set to null/default.
+
+---
+
+### Delete Record
+
+Delete a record.
+
+```
+DELETE /{object}/{id}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Record deleted successfully"
+}
+```
+
+**Status Codes:**
+- `200 OK`: Record deleted successfully
+- `404 Not Found`: Record does not exist
+- `409 Conflict`: Cannot delete (has related records)
+
+---
+
+## Query Endpoint
+
+Advanced queries with filters, sorting, and relationships.
+
+```
+POST /query
+```
+
+**Request Body:**
+```json
+{
+  "object": "Opportunity",
+  "fields": ["Name", "Amount", "Stage", "CloseDate"],
+  "filters": [
+    ["Stage", "!=", "Closed Lost"],
+    ["Amount", ">", 10000],
+    ["CloseDate", "this_quarter"]
+  ],
+  "sort": [["Amount", "desc"]],
+  "limit": 50
+}
+```
+
+**Response:**
+```json
+{
+  "records": [
+    {
+      "Id": "opp_789",
+      "Name": "Enterprise Deal",
+      "Amount": 150000,
+      "Stage": "Negotiation",
+      "CloseDate": "2026-03-15"
+    }
+  ],
+  "totalCount": 23,
+  "hasMore": false
+}
+```
+
+### Query with Relationships
+
+```json
+{
+  "object": "Account",
+  "fields": ["Name", "Industry"],
+  "filters": [["Industry", "=", "Technology"]],
+  "related": {
+    "Opportunities": {
+      "fields": ["Name", "Amount", "Stage"],
+      "filters": [["IsClosed", "=", false]],
+      "limit": 10
+    },
+    "Contacts": {
+      "fields": ["FirstName", "LastName", "Email"]
+    }
+  }
+}
+```
+
+---
+
+## Batch Operations
+
+### Batch Create
+
+Create multiple records in a single request.
+
+```
+POST /batch/{object}
+```
+
+**Request Body:**
+```json
+{
+  "records": [
+    {
+      "FirstName": "John",
+      "LastName": "Doe",
+      "Email": "john@example.com"
+    },
+    {
+      "FirstName": "Jane",
+      "LastName": "Smith",
+      "Email": "jane@example.com"
+    }
+  ]
+}
+```
+
+**Response:**
+```json
+{
+  "results": [
+    { "Id": "con_001", "success": true },
+    { "Id": "con_002", "success": true }
+  ],
+  "successCount": 2,
+  "errorCount": 0
+}
+```
+
+---
+
+### Batch Update
+
+Update multiple records.
+
+```
+PATCH /batch/{object}
+```
+
+**Request Body:**
+```json
+{
+  "updates": [
+    { "Id": "lead_001", "Status": "Working" },
+    { "Id": "lead_002", "Status": "Converted" },
+    { "Id": "lead_003", "Status": "Nurturing" }
+  ]
+}
+```
+
+---
+
+### Batch Delete
+
+Delete multiple records.
+
+```
+DELETE /batch/{object}
+```
+
+**Request Body:**
+```json
+{
+  "ids": ["lead_001", "lead_002", "lead_003"]
+}
+```
+
+---
+
+## Aggregation Endpoints
+
+### Count Records
+
+```
+GET /{object}/count?filters=[["Status","=","Active"]]
+```
+
+**Response:**
+```json
+{
+  "count": 342
+}
+```
+
+---
+
+### Sum Field
+
+```
+GET /{object}/sum/{field}?filters=[["Stage","=","Closed Won"]]
+```
+
+**Example:**
+```bash
+GET /opportunities/sum/Amount?filters=[["Stage","=","Closed Won"]]
+```
+
+**Response:**
+```json
+{
+  "sum": 1250000,
+  "count": 15
+}
+```
+
+---
+
+### Average Field
+
+```
+GET /{object}/avg/{field}
+```
+
+**Example:**
+```bash
+GET /opportunities/avg/Amount?filters=[["Stage","=","Closed Won"]]
+```
+
+**Response:**
+```json
+{
+  "average": 83333.33,
+  "count": 15
+}
+```
+
+---
+
+### Group By
+
+```
+POST /{object}/groupby
+```
+
+**Request Body:**
+```json
+{
+  "groupBy": "Stage",
+  "aggregations": {
+    "count": { "function": "COUNT", "field": "Id" },
+    "totalAmount": { "function": "SUM", "field": "Amount" },
+    "avgAmount": { "function": "AVG", "field": "Amount" }
+  },
+  "filters": [["IsClosed", "=", false]]
+}
+```
+
+**Response:**
+```json
+{
+  "groups": [
+    {
+      "Stage": "Prospecting",
+      "count": 12,
+      "totalAmount": 450000,
+      "avgAmount": 37500
+    },
+    {
+      "Stage": "Qualification",
+      "count": 8,
+      "totalAmount": 320000,
+      "avgAmount": 40000
+    }
+  ]
+}
+```
+
+---
+
+## AI Endpoints
+
+### Calculate Lead Score
+
+```
+POST /ai/lead-score/{leadId}
+```
+
+**Response:**
+```json
+{
+  "leadId": "lead_123",
+  "score": 85,
+  "summary": "高质量线索：公司规模大，资料完整",
+  "recommendedAction": "立即联系，安排产品演示",
+  "factors": {
+    "completeness": 90,
+    "companyQuality": 85,
+    "engagement": 80
+  }
+}
+```
+
+---
+
+### Opportunity Win Prediction
+
+```
+POST /ai/win-prediction/{opportunityId}
+```
+
+**Response:**
+```json
+{
+  "opportunityId": "opp_456",
+  "winProbability": 75,
+  "riskFactors": [
+    "Competitor presence detected",
+    "Long sales cycle (120 days)"
+  ],
+  "nextStepSuggestion": "Schedule executive meeting to address pricing concerns",
+  "competitiveIntel": "Customer is also evaluating Salesforce. Highlight our AI capabilities.",
+  "confidence": 85
+}
+```
+
+---
+
+### Smart Briefing
+
+```
+POST /ai/briefing
+```
+
+**Request Body:**
+```json
+{
+  "accountId": "acc_123",
+  "includeOpportunities": true,
+  "includeCases": true,
+  "includeActivities": true,
+  "timeRange": "last_30_days"
+}
+```
+
+**Response:**
+```json
+{
+  "summary": "Acme Corporation (Technology, $5M revenue) has been a customer for 2 years with 3 active opportunities totaling $450K.",
+  "keyInsights": [
+    "Opportunity 'Enterprise Upgrade' ($200K) is in Negotiation stage with 85% win probability",
+    "2 open support cases, both medium priority, on track for SLA",
+    "Last meeting was 3 days ago with positive sentiment"
+  ],
+  "recommendedActions": [
+    "Schedule follow-up on Enterprise Upgrade pricing",
+    "Send proposal for Professional Services engagement"
+  ],
+  "riskFactors": [
+    "Competitor 'Salesforce' mentioned in last meeting",
+    "Contract renewal in 60 days"
+  ]
+}
+```
+
+---
+
+### Voice Transcription
+
+```
+POST /ai/transcribe
+```
+
+**Request Body:**
+```json
+{
+  "audioUrl": "https://storage.example.com/recording.mp3",
+  "language": "en",
+  "speakers": 2
+}
+```
+
+**Response:**
+```json
+{
+  "transcription": "[00:00] John: Thanks for joining...",
+  "summary": "Customer expressed interest but requested 10% discount...",
+  "actionItems": [
+    "John: Check with manager on discount approval",
+    "John: Follow up tomorrow"
+  ],
+  "sentiment": "Positive",
+  "duration": 345,
+  "speakers": [
+    { "id": 1, "name": "John" },
+    { "id": 2, "name": "Sarah" }
+  ]
+}
+```
+
+---
+
+### Knowledge Q&A (RAG)
+
+```
+POST /ai/knowledge/ask
+```
+
+**Request Body:**
+```json
+{
+  "question": "How do I reset my password?",
+  "category": "FAQ",
+  "maxResults": 5
+}
+```
+
+**Response:**
+```json
+{
+  "answer": "To reset your password:\n1. Go to the login page\n2. Click 'Forgot Password'\n3. Enter your email...",
+  "sources": [
+    {
+      "id": "kb_001",
+      "title": "Password Reset Guide",
+      "relevance": 0.95,
+      "url": "/knowledge/kb_001"
+    }
+  ],
+  "confidence": 92
+}
+```
+
+---
+
+### Semantic Search
+
+```
+POST /ai/knowledge/search
+```
+
+**Request Body:**
+```json
+{
+  "query": "configure email notifications",
+  "category": "Product Guide",
+  "limit": 10
+}
+```
+
+**Response:**
+```json
+{
+  "results": [
+    {
+      "id": "kb_045",
+      "title": "Email Notification Settings",
+      "summary": "Configure when and how you receive email notifications...",
+      "relevance": 0.89,
+      "category": "Product Guide"
+    }
+  ]
+}
+```
+
+---
+
+### Auto-Categorize Case
+
+```
+POST /ai/case-categorize
+```
+
+**Request Body:**
+```json
+{
+  "subject": "System not responding after update",
+  "description": "Critical issue: Production system crashed after latest update. All users affected."
+}
+```
+
+**Response:**
+```json
+{
+  "suggestedType": "Incident",
+  "suggestedPriority": "Critical",
+  "suggestedAgent": "user_789",
+  "routingReason": "Agent has system expertise, 2 active cases, 95% CSAT",
+  "confidence": 90
+}
+```
+
+---
+
+### Product Recommendations
+
+```
+POST /ai/product-recommend
+```
+
+**Request Body:**
+```json
+{
+  "accountId": "acc_123",
+  "budget": 50000,
+  "existingProducts": ["prod_001"],
+  "industry": "Technology"
+}
+```
+
+**Response:**
+```json
+{
+  "bundle": [
+    {
+      "productId": "prod_101",
+      "name": "HotCRM Enterprise",
+      "reason": "Upgrade from Pro with AI features",
+      "price": 30000
+    },
+    {
+      "productId": "prod_205",
+      "name": "Professional Services",
+      "reason": "Recommended for Enterprise customers",
+      "price": 15000
+    }
+  ],
+  "totalPrice": 50000,
+  "crossSell": [
+    {
+      "productId": "prod_402",
+      "name": "Training Package",
+      "reason": "High adoption rate with Enterprise tier",
+      "price": 3000
+    }
+  ]
+}
+```
+
+---
+
+## Metadata Endpoints
+
+### Get Object Schema
+
+```
+GET /metadata/objects/{objectName}
+```
+
+**Response:**
+```json
+{
+  "name": "Account",
+  "label": "客户",
+  "fields": [
+    {
+      "name": "Name",
+      "type": "text",
+      "label": "客户名称",
+      "required": true,
+      "length": 255
+    }
+  ],
+  "relationships": [...],
+  "validationRules": [...]
+}
+```
+
+---
+
+### List All Objects
+
+```
+GET /metadata/objects
+```
+
+**Response:**
+```json
+{
+  "objects": [
+    { "name": "Account", "label": "客户" },
+    { "name": "Contact", "label": "联系人" },
+    { "name": "Opportunity", "label": "商机" }
+  ]
+}
+```
+
+---
+
+## Webhook Endpoints
+
+### List Webhooks
+
+```
+GET /webhooks
+```
+
+---
+
+### Create Webhook
+
+```
+POST /webhooks
+```
+
+**Request Body:**
+```json
+{
+  "name": "Opportunity Webhook",
+  "object": "Opportunity",
+  "events": ["create", "update"],
+  "url": "https://myapp.com/webhooks/opportunity",
+  "secret": "webhook_secret_key"
+}
+```
+
+---
+
+### Delete Webhook
+
+```
+DELETE /webhooks/{webhookId}
+```
+
+---
+
+## Error Responses
+
+All error responses follow this format:
+
+```json
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Validation failed",
+    "details": [
+      {
+        "field": "Email",
+        "message": "Email is required"
+      }
+    ]
+  }
+}
+```
+
+### Error Codes
+
+| Code | HTTP Status | Description |
+|------|-------------|-------------|
+| `VALIDATION_ERROR` | 400 | Field validation failed |
+| `DUPLICATE_ERROR` | 400 | Unique constraint violation |
+| `AUTHENTICATION_ERROR` | 401 | Invalid or missing token |
+| `PERMISSION_ERROR` | 403 | Insufficient permissions |
+| `NOT_FOUND` | 404 | Resource not found |
+| `REFERENCE_ERROR` | 409 | Foreign key constraint |
+| `RATE_LIMIT_ERROR` | 429 | Too many requests |
+| `SERVER_ERROR` | 500 | Internal server error |
+
+---
+
+## Rate Limiting
+
+API requests are rate-limited per API token:
+
+- **Standard**: 1000 requests/hour
+- **Premium**: 10000 requests/hour
+- **Enterprise**: Unlimited
+
+Rate limit headers are included in all responses:
+
+```
+X-RateLimit-Limit: 1000
+X-RateLimit-Remaining: 847
+X-RateLimit-Reset: 1706374800
+```
+
+---
+
+## Pagination
+
+Use `limit` and `offset` for pagination:
+
+```bash
+# Page 1
+GET /accounts?limit=50&offset=0
+
+# Page 2
+GET /accounts?limit=50&offset=50
+
+# Page 3
+GET /accounts?limit=50&offset=100
+```
+
+Response includes pagination metadata:
+
+```json
+{
+  "records": [...],
+  "totalCount": 342,
+  "hasMore": true,
+  "limit": 50,
+  "offset": 50
+}
+```
+
+---
+
+## Field Selection
+
+Request specific fields to reduce payload size:
+
+```bash
+# All fields (default)
+GET /accounts/acc_123
+
+# Specific fields only
+GET /accounts/acc_123?fields=Name,Industry,Phone
+
+# Related fields (dot notation)
+GET /opportunities/opp_123?fields=Name,Amount,Account.Name,Contact.Email
+```
+
+---
+
+## Filtering Examples
+
+### Simple Filters
+
+```bash
+# Single filter
+GET /accounts?filters=[["Industry","=","Technology"]]
+
+# Multiple filters (AND)
+GET /opportunities?filters=[["Stage","!=","Closed Lost"],["Amount",">",10000]]
+```
+
+### Advanced Filters
+
+```bash
+# Date range
+GET /opportunities?filters=[["CloseDate","between",["2026-01-01","2026-12-31"]]]
+
+# In list
+GET /accounts?filters=[["Industry","in",["Technology","Finance"]]]
+
+# Like (contains)
+GET /accounts?filters=[["Name","like","%Corp%"]]
+
+# Current user
+GET /opportunities?filters=[["OwnerId","=","$currentUser"]]
+```
+
+---
+
+## SDK Examples
+
+### JavaScript/TypeScript
+
+```typescript
+import { HotCRMClient } from '@hotcrm/sdk';
+
+const client = new HotCRMClient({
+  apiKey: 'YOUR_API_KEY',
+  baseUrl: 'https://api.hotcrm.com/v1'
+});
+
+// Get accounts
+const accounts = await client.accounts.list({
+  filters: [['Industry', '=', 'Technology']],
+  limit: 20
+});
+
+// Create opportunity
+const opp = await client.opportunities.create({
+  Name: 'Enterprise Deal',
+  AccountId: 'acc_123',
+  Amount: 150000,
+  Stage: 'Prospecting',
+  CloseDate: '2026-12-31'
+});
+
+// AI features
+const briefing = await client.ai.briefing({
+  accountId: 'acc_123',
+  timeRange: 'last_30_days'
+});
+```
+
+### Python
+
+```python
+from hotcrm import Client
+
+client = Client(api_key='YOUR_API_KEY')
+
+# Get accounts
+accounts = client.accounts.list(
+    filters=[['Industry', '=', 'Technology']],
+    limit=20
+)
+
+# Create opportunity
+opp = client.opportunities.create(
+    Name='Enterprise Deal',
+    AccountId='acc_123',
+    Amount=150000,
+    Stage='Prospecting',
+    CloseDate='2026-12-31'
+)
+
+# AI features
+briefing = client.ai.briefing(
+    account_id='acc_123',
+    time_range='last_30_days'
+)
+```
+
+---
+
+## Next Steps
+
+- [ObjectQL API](/docs/api-reference/objectql-api) - TypeScript query language
+- [Creating Objects](/docs/development/creating-objects) - Define custom objects
+- [AI Capabilities](/docs/ai/capabilities) - AI features documentation
