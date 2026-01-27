@@ -75,6 +75,7 @@ async function handleClosedWon(ctx: TriggerContext): Promise<void> {
   const errors: string[] = [];
 
   // 1. Create Contract
+  let contractId;
   try {
     const contract = await ctx.db.doc.create('Contract', {
       AccountId: opportunity.AccountId,
@@ -85,7 +86,12 @@ async function handleClosedWon(ctx: TriggerContext): Promise<void> {
       OwnerId: opportunity.OwnerId || ctx.user.id,
       Description: `Auto-generated from Opportunity: ${opportunity.Name}`
     });
-    console.log(`✅ Contract created: ${contract.Id}`);
+    contractId = contract?.Id;
+    if (contractId) {
+      console.log(`✅ Contract created: ${contractId}`);
+    } else {
+      console.warn('⚠️ Contract created but no ID returned');
+    }
   } catch (error) {
     console.error('❌ Failed to create Contract:', error);
     errors.push('Contract creation failed');

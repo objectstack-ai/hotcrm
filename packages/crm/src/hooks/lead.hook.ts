@@ -1,6 +1,43 @@
 import type { HookSchema } from '@objectstack/spec/data';
 import { db } from '@hotcrm/core';
 
+// Constants for lead scoring
+const HIGH_SCORE_THRESHOLD = 70;
+const SCORING_WEIGHTS = {
+  DATA_COMPLETENESS: 0.2,
+  RATING: {
+    Hot: 20,
+    Warm: 12,
+    Cold: 5
+  },
+  INDUSTRY: {
+    HIGH_PRIORITY: 10,
+    STANDARD: 5
+  },
+  COMPANY_SIZE: {
+    LARGE: 15,      // > 1000
+    MEDIUM: 12,     // > 500
+    SMALL: 8,       // > 100
+    MICRO: 5        // > 10
+  },
+  REVENUE: {
+    VERY_HIGH: 15,  // > 100M
+    HIGH: 12,       // > 50M
+    MEDIUM: 8,      // > 10M
+    LOW: 5          // > 1M
+  },
+  ENGAGEMENT: {
+    VERY_HIGH: 20,  // > 10 activities
+    HIGH: 15,       // > 5
+    MEDIUM: 10,     // > 2
+    LOW: 5          // > 0
+  },
+  RECENT_ACTIVITY_BONUS: 5,
+  RECENT_ACTIVITY_DAYS: 7
+};
+
+const HIGH_PRIORITY_INDUSTRIES = ['Technology', 'Finance', 'Healthcare'];
+
 // Types for Context
 interface TriggerContext {
   old?: Record<string, any>;
@@ -82,65 +119,59 @@ async function calculateLeadScore(lead: Record<string, any>, ctx: TriggerContext
 
   // 1. Data Completeness Score (20 points)
   const completeness = lead.DataCompleteness || 0;
-  score += Math.round(completeness * 0.2);
+  score += Math.round(completeness * SCORING_WEIGHTS.DATA_COMPLETENESS);
 
   // 2. Rating Score (20 points)
-  const ratingScores: Record<string, number> = {
-    'Hot': 20,
-    'Warm': 12,
-    'Cold': 5
-  };
-  score += ratingScores[lead.Rating] || 0;
+  score += SCORING_WEIGHTS.RATING[lead.Rating as keyof typeof SCORING_WEIGHTS.RATING] || 0;
 
-  // 3. Industry Score (10 points) - prioritize certain industries
-  const highPriorityIndustries = ['Technology', 'Finance', 'Healthcare'];
-  if (highPriorityIndustries.includes(lead.Industry)) {
-    score += 10;
+  // 3. Industry Score (10 points)
+  if (HIGH_PRIORITY_INDUSTRIES.includes(lead.Industry)) {
+    score += SCORING_WEIGHTS.INDUSTRY.HIGH_PRIORITY;
   } else if (lead.Industry) {
-    score += 5;
+    score += SCORING_WEIGHTS.INDUSTRY.STANDARD;
   }
 
   // 4. Company Size Score (15 points)
   const employees = lead.NumberOfEmployees || 0;
   if (employees > 1000) {
-    score += 15;
+    score += SCORING_WEIGHTS.COMPANY_SIZE.LARGE;
   } else if (employees > 500) {
-    score += 12;
+    score += SCORING_WEIGHTS.COMPANY_SIZE.MEDIUM;
   } else if (employees > 100) {
-    score += 8;
+    score += SCORING_WEIGHTS.COMPANY_SIZE.SMALL;
   } else if (employees > 10) {
-    score += 5;
+    score += SCORING_WEIGHTS.COMPANY_SIZE.MICRO;
   }
 
   // 5. Revenue Score (15 points)
   const revenue = lead.AnnualRevenue || 0;
   if (revenue > 100000000) {
-    score += 15;
+    score += SCORING_WEIGHTS.REVENUE.VERY_HIGH;
   } else if (revenue > 50000000) {
-    score += 12;
+    score += SCORING_WEIGHTS.REVENUE.HIGH;
   } else if (revenue > 10000000) {
-    score += 8;
+    score += SCORING_WEIGHTS.REVENUE.MEDIUM;
   } else if (revenue > 1000000) {
-    score += 5;
+    score += SCORING_WEIGHTS.REVENUE.LOW;
   }
 
   // 6. Engagement Score (20 points)
   const activities = lead.NumberOfActivities || 0;
   if (activities > 10) {
-    score += 20;
+    score += SCORING_WEIGHTS.ENGAGEMENT.VERY_HIGH;
   } else if (activities > 5) {
-    score += 15;
+    score += SCORING_WEIGHTS.ENGAGEMENT.HIGH;
   } else if (activities > 2) {
-    score += 10;
+    score += SCORING_WEIGHTS.ENGAGEMENT.MEDIUM;
   } else if (activities > 0) {
-    score += 5;
+    score += SCORING_WEIGHTS.ENGAGEMENT.LOW;
   }
 
   // Recent activity bonus
   if (lead.LastActivityDate) {
     const daysSinceActivity = getDaysSince(lead.LastActivityDate);
-    if (daysSinceActivity < 7) {
-      score += 5; // Bonus for recent activity
+    if (daysSinceActivity < SCORING_WEIGHTS.RECENT_ACTIVITY_DAYS) {
+      score += SCORING_WEIGHTS.RECENT_ACTIVITY_BONUS;
     }
   }
 
@@ -173,7 +204,7 @@ async function managePublicPool(lead: Record<string, any>, ctx: TriggerContext):
   }
 
   // Auto-remove high-score leads from public pool
-  if (lead.LeadScore > 70 && lead.IsInPublicPool) {
+  if (lead.LeadScore > HIGH_SCORE_THRESHOLD && lead.IsInPublicPool) {
     console.warn(`⚠️ High-score lead (${lead.LeadScore}) should not be in public pool`);
     // Note: Validation rule will prevent this, but log warning
   }
@@ -235,11 +266,9 @@ async function handleLeadConversion(ctx: TriggerContext): Promise<void> {
   console.log('✅ Processing lead conversion...');
   const lead = ctx.new;
 
-  // Set conversion date if not already set
+  // Set conversion date directly on the object if not already set
   if (!lead.ConvertedDate) {
-    await ctx.db.doc.update('Lead', lead.Id, {
-      ConvertedDate: new Date().toISOString()
-    });
+    lead.ConvertedDate = new Date().toISOString();
   }
 
   // Log activity
@@ -266,11 +295,9 @@ async function handleLeadUnqualification(ctx: TriggerContext): Promise<void> {
   console.log('❌ Processing lead unqualification...');
   const lead = ctx.new;
 
-  // Remove from public pool
+  // Remove from public pool directly on the object
   if (lead.IsInPublicPool) {
-    await ctx.db.doc.update('Lead', lead.Id, {
-      IsInPublicPool: false
-    });
+    lead.IsInPublicPool = false;
   }
 
   // Log activity

@@ -1,3 +1,7 @@
+// Constants
+const MAX_RETRIES = 3;
+const RETRY_DELAY_MS = 1000;
+
 /**
  * AI Smart Briefing Action
  * 
@@ -303,7 +307,7 @@ export async function executeSmartBriefing(request: SmartBriefingRequest): Promi
 
     // 6. Call LLM API (mock implementation with retry logic)
     let llmResponse: string | undefined;
-    let retries = 3;
+    let retries = MAX_RETRIES;
     while (retries > 0) {
       try {
         llmResponse = await callLLM(systemPrompt);
@@ -311,10 +315,10 @@ export async function executeSmartBriefing(request: SmartBriefingRequest): Promi
       } catch (error) {
         retries--;
         if (retries === 0) {
-          throw new Error(`LLM API failed after 3 retries: ${error}`);
+          throw new Error(`LLM API failed after ${MAX_RETRIES} retries: ${error}`);
         }
         console.warn(`⚠️ LLM call failed, retrying... (${retries} attempts left)`);
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS));
       }
     }
 
