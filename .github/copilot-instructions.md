@@ -30,8 +30,9 @@ You are an expert developer and CTO working on **HotCRM**, a world-class enterpr
 ### 1. Modeling Objects (Metadata)
 - **Format**: use TypeScript (`.object.ts`).
 - **Standard**: Follow the **File Suffix Protocol** (`snake_case` + suffix).
-- **Import**: Always `import type { ObjectSchema } from '@objectstack/spec/data';`.
+- **Import**: Always `import type { ServiceObject } from '@objectstack/spec/data';` (or use Data namespace).
 - **Export**: `export default const ...`.
+- **Note**: Object definitions use plain objects (no type annotations) due to Zod type inference. Runtime validation is handled by the protocol.
 
 ### 2. Business Logic (Hooks)
 - **Language**: TypeScript (`*.hook.ts`).
