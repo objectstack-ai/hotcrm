@@ -20,3 +20,4 @@ packages/*/.turbo/
 
 # TypeScript build info
 *.tsbuildinfo
+*.backup
