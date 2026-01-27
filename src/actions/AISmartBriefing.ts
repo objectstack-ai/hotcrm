@@ -231,30 +231,21 @@ export async function executeSmartBriefing(request: SmartBriefingRequest): Promi
       throw new Error(`Account not found: ${accountId}`);
     }
 
-    // 2. Fetch recent Activities
-    const activitiesResult = await db.query({
-      object: 'Activity',
+    // 2. Fetch recent Activities (Refactored to Protocol Compliant 'find')
+    const activities = await db.find('Activity', {
       fields: ['Type', 'Subject', 'ActivityDate', 'Status', 'Description'],
-      filters: {
-        AccountId: accountId
-      },
-      orderBy: [{ field: 'ActivityDate', direction: 'desc' }],
+      filters: [['AccountId', '=', accountId]],
+      sort: 'ActivityDate desc',
       limit: activityLimit
     });
 
-    // 3. Fetch recent Emails
-    const emailsResult = await db.query({
-      object: 'Email',
+    // 3. Fetch recent Emails (Refactored to Protocol Compliant 'find')
+    const emails = await db.find('Email', {
       fields: ['Subject', 'SentDate', 'Direction', 'Body'],
-      filters: {
-        AccountId: accountId
-      },
-      orderBy: [{ field: 'SentDate', direction: 'desc' }],
+      filters: [['AccountId', '=', accountId]],
+      sort: 'SentDate desc',
       limit: 5
     });
-
-    const activities = activitiesResult.records || [];
-    const emails = emailsResult.records || [];
 
     // 4. Build System Prompt
     const systemPrompt = buildSystemPrompt(account, activities, emails);

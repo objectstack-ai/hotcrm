@@ -45,6 +45,20 @@ export interface ObjectQLResult<T = any> {
 }
 
 /**
+ * Array-based filter format compliant with Copilot Instructions
+ * @example [['status', '=', 'active'], ['amount', '>', 1000]]
+ */
+export type ObjectQLArrayFilter = [string, string, any][];
+
+export interface ObjectQLFindOptions {
+  filters?: ObjectQLArrayFilter;
+  fields?: string[];
+  sort?: string | string[];
+  limit?: number;
+  skip?: number;
+}
+
+/**
  * ObjectQL Database Interface
  * 
  * This interface provides methods for querying and manipulating data
@@ -52,7 +66,21 @@ export interface ObjectQLResult<T = any> {
  */
 export class ObjectQLEngine {
   /**
-   * Query records using ObjectQL
+   * Find records using the array-based filter syntax (Strict Protocol Compliance)
+   * 
+   * @example
+   * const activeAccounts = await db.find('Account', { 
+   *   filters: [['status', '=', 'active']] 
+   * });
+   */
+  async find<T = any>(objectName: string, options: ObjectQLFindOptions): Promise<T[]> {
+    console.log(`ObjectQL Find [${objectName}]:`, JSON.stringify(options, null, 2));
+    // In a real implementation, this would translate array filters to database query
+    return [] as T[];
+  }
+
+  /**
+   * Query records using ObjectQL (Standard Object Syntax)
    * 
    * @example
    * const accounts = await db.query({
