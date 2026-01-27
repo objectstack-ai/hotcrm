@@ -1,6 +1,6 @@
 import type { ServiceObject } from '@objectstack/spec/data';
 
-const Contract: ServiceObject = {
+const Contract = {
   name: 'Contract',
   label: '合同',
   labelPlural: '合同',

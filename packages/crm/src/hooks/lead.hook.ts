@@ -1,4 +1,4 @@
-import type { HookSchema } from '@objectstack/spec/data';
+import type { Hook } from '@objectstack/spec/data';
 import { db } from '@hotcrm/core';
 
 // Constants for lead scoring
@@ -54,7 +54,7 @@ interface TriggerContext {
  * 2. Data Completeness percentage
  * 3. Public pool management
  */
-const LeadScoringTrigger: HookSchema = {
+const LeadScoringTrigger: Hook = {
   name: 'LeadScoringTrigger',
   object: 'Lead',
   events: ['beforeInsert', 'beforeUpdate'],
@@ -226,7 +226,7 @@ function getDaysSince(dateString: string): number {
  * 
  * Handles automation when lead status changes
  */
-const LeadStatusChangeTrigger: HookSchema = {
+const LeadStatusChangeTrigger: Hook = {
   name: 'LeadStatusChangeTrigger',
   object: 'Lead',
   events: ['afterUpdate'],

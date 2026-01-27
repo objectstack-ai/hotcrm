@@ -1,6 +1,6 @@
 import type { ServiceObject } from '@objectstack/spec/data';
 
-const Opportunity: ServiceObject = {
+const Opportunity = {
   name: 'Opportunity',
   label: '商机',
   labelPlural: '商机',

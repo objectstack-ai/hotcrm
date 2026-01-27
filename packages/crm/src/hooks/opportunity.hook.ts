@@ -1,4 +1,4 @@
-import type { HookSchema } from '@objectstack/spec/data';
+import type { Hook } from '@objectstack/spec/data';
 import { db } from '@hotcrm/core';
 
 // Types for Context embedded here or imported if available
@@ -17,7 +17,7 @@ export interface TriggerContext {
  * - Closed Lost: Updates account, logs activity, sends notification
  * - Stage changes: Validates data completeness, updates probability
  */
-const OpportunityStageChange: HookSchema = {
+const OpportunityStageChange: Hook = {
   name: 'OpportunityStageChange',
   object: 'Opportunity',
   events: ['afterUpdate'],
