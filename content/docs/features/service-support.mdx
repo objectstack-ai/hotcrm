@@ -273,27 +273,30 @@ await db.doc.update('Case', case.Id, {
 
 #### Auto-Categorization (AIAutoCategory)
 
-AI automatically categorizes incoming cases:
+AI automatically categorizes incoming cases into business categories:
 
 ```typescript
 // Input: Case description
 "My login is not working. I enter my password but get error: Invalid credentials"
 
-// AI categorization
+// AI auto-categorization (sets AIAutoCategory field)
 {
-  AIAutoCategory: 'Technical',
-  Type: 'Problem',
+  AIAutoCategory: 'Technical', // Business category
+  // Agent manually sets Type field based on AI suggestion
+  Type: 'Problem', // Case type
   Priority: 'High' // Affects user access
 }
 ```
 
-**Categories**:
-- **Technical**: Technical issues
-- **Product**: Product questions
+**AI Categories** (auto-populated by AI):
+- **Technical**: Technical issues requiring troubleshooting
+- **Product**: Product questions or how-to inquiries
 - **Billing**: Billing/payment issues
-- **Feature**: Feature requests
-- **Complaint**: Customer complaints
+- **Feature**: Feature requests or enhancement ideas
+- **Complaint**: Customer complaints or dissatisfaction
 - **Other**: Other categories
+
+Note: `AIAutoCategory` is an AI-suggested business category, while `Type` is the formal case type (Problem, Question, Incident, etc.) set by the agent.
 
 #### Intelligent Routing (AISuggestedAssignee)
 
