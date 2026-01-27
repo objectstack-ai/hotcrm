@@ -9,41 +9,43 @@ This package contains UI components, dashboards, and page configurations followi
 ## What's Included
 
 ### Dashboards
-- **Sales Dashboard** (`src/dashboard/sales_dashboard.dashboard.ts`): Comprehensive sales management dashboard with real-time KPIs, pipeline visualization, and activity feeds
+- **Sales Dashboard** (`src/dashboard/sales_dashboard.dashboard.ts`): Dashboard configuration structure prepared for implementation
 
 ### Components
-- **AI Smart Briefing Card** (`src/components/AISmartBriefingCard.ts`): Interactive card component for displaying AI-generated account briefings and insights
+- **AI Smart Briefing Card** (`src/components/AISmartBriefingCard.ts`): Component definition structure prepared for implementation
 
-## Features
+> **Note**: The UI package currently contains configuration skeletons. Full implementations with widgets and interactive components are planned for future development.
 
-### Sales Dashboard
+## Planned Features
 
-The sales dashboard provides a complete view of sales performance with:
+### Sales Dashboard (To Be Implemented)
 
-**KPI Cards:**
+The sales dashboard is designed to provide:
+
+**Planned KPI Cards:**
 - Revenue metrics with trend indicators
 - Lead generation and conversion tracking
 - Win rate calculation and monitoring
 - Pipeline health indicators
 
-**Visualizations:**
+**Planned Visualizations:**
 - Interactive pipeline funnel charts by stage
 - Deal distribution and conversion rates
 - Revenue forecasting graphs
 
-**Activity Feed:**
+**Planned Activity Feed:**
 - Recent customer interactions timeline
 - Team collaboration and updates
 - Quick action buttons
 
-**AI Integration:**
+**Planned AI Integration:**
 - Smart briefing card for account insights
 - Next-step recommendations
 - Industry-specific talking points
 
-### AI Smart Briefing Card
+### AI Smart Briefing Card (To Be Implemented)
 
-Interactive component that displays:
+Component planned to display:
 - AI-generated account overview (200-word summary)
 - Key insights from recent activities
 - Personalized recommendations
@@ -72,7 +74,8 @@ HotCRM's UI follows a **Modern SaaS** aesthetic inspired by:
 ```typescript
 import { salesDashboard } from '@hotcrm/ui';
 
-// Serve dashboard configuration via API
+// Dashboard configuration structure (implementation pending)
+// Will be used for UI rendering once widgets are implemented
 app.get('/api/ui/dashboard/sales', (req, res) => {
   res.json(salesDashboard);
 });
@@ -82,12 +85,27 @@ app.get('/api/ui/dashboard/sales', (req, res) => {
 ```typescript
 import { AISmartBriefingCard } from '@hotcrm/ui';
 
-// Use component configuration in UI rendering
-const briefingCard = AISmartBriefingCard({
-  accountId: 'acc_123',
-  activityLimit: 10
-});
+// Component configuration structure (implementation pending)
+// Will be populated with ObjectUI properties
+const briefingCard = AISmartBriefingCard;
 ```
+
+## Current Status
+
+This package provides the **foundational structure** for UI components and dashboards. The TypeScript definitions and exports are in place, ready for:
+- ObjectUI widget implementations
+- Dashboard layout configurations
+- Component property definitions
+- Integration with the server API
+
+## Future Development
+
+Planned enhancements:
+- Complete dashboard widget implementations
+- Interactive component definitions
+- Real-time data binding
+- Responsive layout configurations
+- Accessibility features (ARIA labels, keyboard navigation)
 
 ## Technology Stack
 
