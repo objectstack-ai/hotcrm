@@ -32,7 +32,7 @@ Payment tracking and reconciliation with:
 import { ContractSchema } from '@hotcrm/finance';
 
 // Use object definitions in your code
-console.log(ContractSchema.label); // "合同"
+console.log(ContractSchema.label); // "Contract"
 ```
 
 ## Domain Focus

@@ -280,11 +280,11 @@ HotCRM includes a comprehensive **Agent System** to accelerate development. Each
 
 HotCRM implements a comprehensive enterprise CRM system organized into **5 major domains**:
 
-### 1. 🟢 Marketing & Leads (获客域)
+### 1. 🟢 Marketing & Leads
 
 **Lead Management** (`Lead`)
 - Lead capture with duplicate detection
-- Public pool (公海池) for unclaimed leads
+- Public pool for unclaimed leads
 - AI-powered lead scoring (0-100 scale)
 - Automatic data completeness calculation
 - Lead conversion tracking to Account/Contact/Opportunity
@@ -296,7 +296,7 @@ HotCRM implements a comprehensive enterprise CRM system organized into **5 major
 - Campaign member management
 - AI-generated marketing content and audience analysis
 
-### 2. 🔵 Sales Force Automation (销售域)
+### 2. 🔵 Sales Force Automation
 
 **Customer 360** (`Account`)
 - Customer/company management with industry classification
@@ -358,7 +358,7 @@ HotCRM implements a comprehensive enterprise CRM system organized into **5 major
 - Collection assignment and prioritization
 - Multiple payment methods support
 
-### 3. 🟠 Service & Customer Success (服务域)
+### 3. 🟠 Service & Customer Success
 
 **Case Management** (`Case`)
 - Multi-channel ticket intake (Email, Web, Phone, WeChat, Chat)
@@ -377,7 +377,7 @@ HotCRM implements a comprehensive enterprise CRM system organized into **5 major
 - RAG (Retrieval-Augmented Generation) support with vector embeddings
 - Usage analytics and helpfulness scoring
 
-### 4. 🟣 Platform Foundation (底座域)
+### 4. 🟣 Platform Foundation
 
 **Metadata-Driven Architecture**
 - All objects defined in declarative YAML
@@ -391,7 +391,7 @@ HotCRM implements a comprehensive enterprise CRM system organized into **5 major
 - Automatic calculations
 - Cross-object updates
 
-### 5. 🤖 AI Copilot (智能域)
+### 5. 🤖 AI Copilot
 
 **AI Enhancement Throughout**
 - **Lead**: Auto-scoring, data enrichment from email signatures
