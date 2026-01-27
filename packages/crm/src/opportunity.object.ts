@@ -1,54 +1,48 @@
-import type { ObjectSchema } from '@objectstack/spec/data';
+import type { ServiceObject } from '@objectstack/spec/data';
 
-const Opportunity: ObjectSchema = {
+const Opportunity: ServiceObject = {
   name: 'Opportunity',
   label: '商机',
   labelPlural: '商机',
   icon: 'briefcase',
   description: '销售商机和管道管理',
-  features: {
+  capabilities: {
     searchable: true,
-    trackFieldHistory: true,
-    enableActivities: true,
-    enableNotes: true,
-    enableAttachments: true
+    trackHistory: true,
+    activities: true,
+    feeds: true,
+    files: true
   },
-  fields: [
-    {
-      name: 'Name',
+  fields: {
+    Name: {
       type: 'text',
       label: '商机名称',
       required: true,
       searchable: true,
-      length: 120
+      maxLength: 120
     },
-    {
-      name: 'AccountId',
+    AccountId: {
       type: 'lookup',
       label: '客户',
-      referenceTo: 'Account',
+      reference: 'Account',
       required: true
     },
-    {
-      name: 'ContactId',
+    ContactId: {
       type: 'lookup',
       label: '主要联系人',
-      referenceTo: 'Contact'
+      reference: 'Contact'
     },
-    {
-      name: 'Amount',
+    Amount: {
       type: 'currency',
       label: '金额',
       precision: 2
     },
-    {
-      name: 'CloseDate',
+    CloseDate: {
       type: 'date',
       label: '预计成交日期',
       required: true
     },
-    {
-      name: 'Stage',
+    Stage: {
       type: 'select',
       label: '阶段',
       required: true,
@@ -62,21 +56,18 @@ const Opportunity: ObjectSchema = {
         { label: '❌ 失败', value: 'Closed Lost', probability: 0, isLost: true }
       ]
     },
-    {
-      name: 'Probability',
+    Probability: {
       type: 'percent',
       label: '赢单概率',
       description: '赢单概率百分比'
     },
-    {
-      name: 'NextStep',
+    NextStep: {
       type: 'text',
       label: '下一步行动',
-      length: 255,
+      maxLength: 255,
       description: '明确的下一步行动计划'
     },
-    {
-      name: 'LeadSource',
+    LeadSource: {
       type: 'select',
       label: '线索来源',
       options: [
@@ -90,8 +81,7 @@ const Opportunity: ObjectSchema = {
         { label: '其他', value: 'Other' }
       ]
     },
-    {
-      name: 'ForecastCategory',
+    ForecastCategory: {
       type: 'select',
       label: '预测类别',
       defaultValue: 'Pipeline',
@@ -103,8 +93,7 @@ const Opportunity: ObjectSchema = {
         { label: '已成交', value: 'Closed' }
       ]
     },
-    {
-      name: 'Type',
+    Type: {
       type: 'select',
       label: '商机类型',
       options: [
@@ -114,8 +103,7 @@ const Opportunity: ObjectSchema = {
         { label: '现有业务-更换', value: 'Existing Business - Replacement' }
       ]
     },
-    {
-      name: 'ExpectedRevenue',
+    ExpectedRevenue: {
       type: 'currency',
       label: '预期营收',
       precision: 2,
@@ -123,23 +111,21 @@ const Opportunity: ObjectSchema = {
       readonly: true,
       description: '基于金额和赢单概率计算'
     },
-    {
-      name: 'DaysOpen',
+    DaysOpen: {
       type: 'number',
       label: '开放天数',
       precision: 0,
       formula: 'DATEDIFF(TODAY(), CreatedDate)',
       readonly: true
     },
-    {
-      name: 'OwnerId',
+    OwnerId: {
       type: 'lookup',
       label: '负责人',
-      referenceTo: 'User',
+      reference: 'User',
       required: true,
       defaultValue: '$currentUser'
     }
-  ],
+  },
   relationships: [
     {
       name: 'Contracts',

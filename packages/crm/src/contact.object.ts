@@ -1,34 +1,31 @@
-import type { ObjectSchema } from '@objectstack/spec/data';
+import type { ServiceObject } from '@objectstack/spec/data';
 
-const Contact: ObjectSchema = {
+const Contact: ServiceObject = {
   name: 'Contact',
   label: '联系人',
   labelPlural: '联系人',
   icon: 'user',
   description: '个人联系人管理',
-  features: {
+  capabilities: {
     searchable: true,
-    trackFieldHistory: true,
-    enableActivities: true,
-    enableNotes: true
+    trackHistory: true,
+    activities: true,
+    feeds: true
   },
-  fields: [
-    {
-      name: 'FirstName',
+  fields: {
+    FirstName: {
       type: 'text',
       label: '名',
-      length: 40
+      maxLength: 40
     },
-    {
-      name: 'LastName',
+    LastName: {
       type: 'text',
       label: '姓',
       required: true,
       searchable: true,
-      length: 80
+      maxLength: 80
     },
-    {
-      name: 'Salutation',
+    Salutation: {
       type: 'select',
       label: '称谓',
       options: [
@@ -38,28 +35,24 @@ const Contact: ObjectSchema = {
         { label: '教授', value: 'Prof.' }
       ]
     },
-    {
-      name: 'AccountId',
+    AccountId: {
       type: 'masterDetail',
       label: '所属客户',
-      referenceTo: 'Account',
+      reference: 'Account',
       required: true,
       cascadeDelete: true
     },
-    {
-      name: 'Title',
+    Title: {
       type: 'text',
       label: '职位',
-      length: 128
+      maxLength: 128
     },
-    {
-      name: 'Department',
+    Department: {
       type: 'text',
       label: '部门',
-      length: 80
+      maxLength: 80
     },
-    {
-      name: 'Level',
+    Level: {
       type: 'select',
       label: '职级',
       options: [
@@ -70,36 +63,30 @@ const Contact: ObjectSchema = {
         { label: '专员', value: 'Individual Contributor' }
       ]
     },
-    {
-      name: 'Email',
+    Email: {
       type: 'email',
       label: '邮箱',
       unique: true
     },
-    {
-      name: 'Phone',
+    Phone: {
       type: 'phone',
       label: '电话'
     },
-    {
-      name: 'MobilePhone',
+    MobilePhone: {
       type: 'phone',
       label: '手机'
     },
-    {
-      name: 'Fax',
+    Fax: {
       type: 'phone',
       label: '传真'
     },
-    {
-      name: 'IsDecisionMaker',
+    IsDecisionMaker: {
       type: 'checkbox',
       label: '决策者',
       defaultValue: false,
       description: '是否为主要决策者'
     },
-    {
-      name: 'InfluenceLevel',
+    InfluenceLevel: {
       type: 'select',
       label: '影响力',
       options: [
@@ -108,8 +95,7 @@ const Contact: ObjectSchema = {
         { label: '低 - 普通参与者', value: 'Low' }
       ]
     },
-    {
-      name: 'RelationshipStrength',
+    RelationshipStrength: {
       type: 'select',
       label: '关系强度',
       options: [
@@ -120,8 +106,7 @@ const Contact: ObjectSchema = {
       ],
       defaultValue: 'Unknown'
     },
-    {
-      name: 'PreferredContact',
+    PreferredContact: {
       type: 'select',
       label: '首选联系方式',
       options: [
@@ -131,19 +116,17 @@ const Contact: ObjectSchema = {
         { label: '微信', value: 'WeChat' }
       ]
     },
-    {
-      name: 'LastContactDate',
+    LastContactDate: {
       type: 'date',
       label: '最后联系日期',
       readonly: true
     },
-    {
-      name: 'Notes',
+    Notes: {
       type: 'textarea',
       label: '备注',
       rows: 4
     }
-  ],
+  },
   relationships: [
     {
       name: 'Opportunities',

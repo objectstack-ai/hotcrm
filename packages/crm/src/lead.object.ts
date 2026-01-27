@@ -1,106 +1,92 @@
-import type { ObjectSchema } from '@objectstack/spec/data';
+import type { ServiceObject } from '@objectstack/spec/data';
 
-const Lead: ObjectSchema = {
+const Lead: ServiceObject = {
   name: 'Lead',
   label: '线索',
   labelPlural: '线索',
   icon: 'user-plus',
   description: '潜在客户线索管理，包括线索打分、公海池和自动分配',
-  features: {
+  capabilities: {
     searchable: true,
-    trackFieldHistory: true,
-    enableActivities: true,
-    enableNotes: true,
-    enableAttachments: true,
+    trackHistory: true,
+    activities: true,
+    feeds: true,
+    files: true,
     enableDuplicateDetection: true
   },
-  fields: [
+  fields: {
     // Basic Information
-    {
-      name: 'FirstName',
+    FirstName: {
       type: 'text',
       label: '名',
-      length: 40
+      maxLength: 40
     },
-    {
-      name: 'LastName',
+    LastName: {
       type: 'text',
       label: '姓',
       required: true,
-      length: 80,
+      maxLength: 80,
       searchable: true
     },
-    {
-      name: 'Company',
+    Company: {
       type: 'text',
       label: '公司',
       required: true,
-      length: 255,
+      maxLength: 255,
       searchable: true
     },
-    {
-      name: 'Title',
+    Title: {
       type: 'text',
       label: '职位',
-      length: 128
+      maxLength: 128
     },
     // Contact Information
-    {
-      name: 'Email',
+    Email: {
       type: 'email',
       label: '邮箱',
       unique: true,
       searchable: true
     },
-    {
-      name: 'Phone',
+    Phone: {
       type: 'phone',
       label: '电话'
     },
-    {
-      name: 'MobilePhone',
+    MobilePhone: {
       type: 'phone',
       label: '手机'
     },
-    {
-      name: 'Website',
+    Website: {
       type: 'url',
       label: '网站'
     },
     // Address
-    {
-      name: 'Street',
+    Street: {
       type: 'text',
       label: '街道地址',
-      length: 255
+      maxLength: 255
     },
-    {
-      name: 'City',
+    City: {
       type: 'text',
       label: '城市',
-      length: 40
+      maxLength: 40
     },
-    {
-      name: 'State',
+    State: {
       type: 'text',
       label: '省/州',
-      length: 80
+      maxLength: 80
     },
-    {
-      name: 'PostalCode',
+    PostalCode: {
       type: 'text',
       label: '邮编',
-      length: 20
+      maxLength: 20
     },
-    {
-      name: 'Country',
+    Country: {
       type: 'text',
       label: '国家',
-      length: 80
+      maxLength: 80
     },
     // Lead Classification
-    {
-      name: 'Status',
+    Status: {
       type: 'select',
       label: '状态',
       required: true,
@@ -113,8 +99,7 @@ const Lead: ObjectSchema = {
         { label: '❌ 不合格', value: 'Unqualified' }
       ]
     },
-    {
-      name: 'Rating',
+    Rating: {
       type: 'select',
       label: '评级',
       options: [
@@ -123,8 +108,7 @@ const Lead: ObjectSchema = {
         { label: '❄️ Cold (冷)', value: 'Cold' }
       ]
     },
-    {
-      name: 'LeadSource',
+    LeadSource: {
       type: 'select',
       label: '线索来源',
       options: [
@@ -138,8 +122,7 @@ const Lead: ObjectSchema = {
         { label: 'Other 其他', value: 'Other' }
       ]
     },
-    {
-      name: 'Industry',
+    Industry: {
       type: 'select',
       label: '行业',
       options: [
@@ -154,8 +137,7 @@ const Lead: ObjectSchema = {
       ]
     },
     // Lead Scoring & AI
-    {
-      name: 'LeadScore',
+    LeadScore: {
       type: 'number',
       label: '线索评分',
       precision: 0,
@@ -164,132 +146,114 @@ const Lead: ObjectSchema = {
       readonly: true,
       description: 'AI 自动计算的线索质量分数 (0-100)'
     },
-    {
-      name: 'DataCompleteness',
+    DataCompleteness: {
       type: 'percent',
       label: '资料完整度',
       readonly: true,
       description: '线索信息填写完整度百分比'
     },
-    {
-      name: 'LastActivityDate',
+    LastActivityDate: {
       type: 'datetime',
       label: '最后活动时间',
       readonly: true
     },
-    {
-      name: 'NumberOfActivities',
+    NumberOfActivities: {
       type: 'number',
       label: '活动次数',
       readonly: true,
       precision: 0
     },
     // Public Pool (公海池)
-    {
-      name: 'IsInPublicPool',
+    IsInPublicPool: {
       type: 'checkbox',
       label: '在公海池中',
       defaultValue: true,
       description: '是否在公海池中等待分配'
     },
-    {
-      name: 'PoolEntryDate',
+    PoolEntryDate: {
       type: 'datetime',
       label: '进入公海时间',
       readonly: true
     },
-    {
-      name: 'ClaimedDate',
+    ClaimedDate: {
       type: 'datetime',
       label: '认领时间',
       readonly: true
     },
     // Assignment
-    {
-      name: 'OwnerId',
+    OwnerId: {
       type: 'lookup',
       label: '负责人',
-      referenceTo: 'User',
+      reference: 'User',
       required: true
     },
     // Conversion
-    {
-      name: 'ConvertedDate',
+    ConvertedDate: {
       type: 'datetime',
       label: '转化日期',
       readonly: true
     },
-    {
-      name: 'ConvertedAccountId',
+    ConvertedAccountId: {
       type: 'lookup',
       label: '转化后的客户',
-      referenceTo: 'Account',
+      reference: 'Account',
       readonly: true
     },
-    {
-      name: 'ConvertedContactId',
+    ConvertedContactId: {
       type: 'lookup',
       label: '转化后的联系人',
-      referenceTo: 'Contact',
+      reference: 'Contact',
       readonly: true
     },
-    {
-      name: 'ConvertedOpportunityId',
+    ConvertedOpportunityId: {
       type: 'lookup',
       label: '转化后的商机',
-      referenceTo: 'Opportunity',
+      reference: 'Opportunity',
       readonly: true
     },
     // Campaign
-    {
-      name: 'CampaignId',
+    CampaignId: {
       type: 'lookup',
       label: '营销活动',
-      referenceTo: 'Campaign'
+      reference: 'Campaign'
     },
     // Additional Info
-    {
-      name: 'NumberOfEmployees',
+    NumberOfEmployees: {
       type: 'number',
       label: '员工数',
       precision: 0
     },
-    {
-      name: 'AnnualRevenue',
+    AnnualRevenue: {
       type: 'currency',
       label: '年营收',
       precision: 2
     },
-    {
-      name: 'Description',
+    Description: {
       type: 'textarea',
       label: '描述',
-      length: 32000
+      maxLength: 32000
     },
     // AI Enhancement Fields
-    {
-      name: 'AISummary',
+    AISummary: {
       type: 'textarea',
       label: 'AI 线索分析',
       readonly: true,
-      length: 2000,
+      maxLength: 2000,
       description: 'AI 生成的线索质量分析和建议'
     },
-    {
-      name: 'AIRecommendedAction',
+    AIRecommendedAction: {
       type: 'text',
       label: 'AI 推荐行动',
       readonly: true,
-      length: 255
+      maxLength: 255
     },
-    {
-      name: 'EmailSignatureData',
+    EmailSignatureData: {
       type: 'textarea',
       label: '邮件签名提取信息',
       readonly: true,
       description: 'AI 从邮件签名提取的联系信息'
     }
-  ],
+  },
   relationships: [
     {
       name: 'Activities',

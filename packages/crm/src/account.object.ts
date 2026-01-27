@@ -1,37 +1,34 @@
-import type { ObjectSchema } from '@objectstack/spec/data';
+import type { ServiceObject } from '@objectstack/spec/data';
 
-const Account: ObjectSchema = {
+const Account: ServiceObject = {
   name: 'Account',
   label: '客户',
   labelPlural: '客户',
   icon: 'building',
   description: '企业客户和组织管理',
-  features: {
+  capabilities: {
     searchable: true,
-    trackFieldHistory: true,
-    enableActivities: true,
-    enableNotes: true,
-    enableAttachments: true
+    trackHistory: true,
+    activities: true,
+    feeds: true,
+    files: true
   },
-  fields: [
-    {
-      name: 'Name',
+  fields: {
+    Name: {
       type: 'text',
       label: '客户名称',
       required: true,
       searchable: true,
       unique: true,
-      length: 255
+      maxLength: 255
     },
-    {
-      name: 'AccountNumber',
+    AccountNumber: {
       type: 'text',
       label: '客户编号',
       unique: true,
-      length: 40
+      maxLength: 40
     },
-    {
-      name: 'Type',
+    Type: {
       type: 'select',
       label: '客户类型',
       options: [
@@ -42,8 +39,7 @@ const Account: ObjectSchema = {
         { label: '其他', value: 'Other' }
       ]
     },
-    {
-      name: 'Industry',
+    Industry: {
       type: 'select',
       label: '行业',
       searchable: true,
@@ -60,19 +56,16 @@ const Account: ObjectSchema = {
         { label: '其他', value: 'Other' }
       ]
     },
-    {
-      name: 'AnnualRevenue',
+    AnnualRevenue: {
       type: 'currency',
       label: '年营收',
       precision: 2
     },
-    {
-      name: 'NumberOfEmployees',
+    NumberOfEmployees: {
       type: 'number',
       label: '员工人数'
     },
-    {
-      name: 'Rating',
+    Rating: {
       type: 'select',
       label: '客户评级',
       options: [
@@ -81,88 +74,73 @@ const Account: ObjectSchema = {
         { label: '冷淡 ❄️', value: 'Cold' }
       ]
     },
-    {
-      name: 'Phone',
+    Phone: {
       type: 'phone',
       label: '电话'
     },
-    {
-      name: 'Fax',
+    Fax: {
       type: 'phone',
       label: '传真'
     },
-    {
-      name: 'Website',
+    Website: {
       type: 'url',
       label: '网站'
     },
-    {
-      name: 'Email',
+    Email: {
       type: 'email',
       label: '邮箱'
     },
-    {
-      name: 'BillingStreet',
+    BillingStreet: {
       type: 'textarea',
       label: '账单地址（街道）',
       rows: 2
     },
-    {
-      name: 'BillingCity',
+    BillingCity: {
       type: 'text',
       label: '账单地址（城市）',
-      length: 40
+      maxLength: 40
     },
-    {
-      name: 'BillingState',
+    BillingState: {
       type: 'text',
       label: '账单地址（省份）',
-      length: 40
+      maxLength: 40
     },
-    {
-      name: 'BillingPostalCode',
+    BillingPostalCode: {
       type: 'text',
       label: '账单地址（邮编）',
-      length: 20
+      maxLength: 20
     },
-    {
-      name: 'BillingCountry',
+    BillingCountry: {
       type: 'text',
       label: '账单地址（国家）',
-      length: 40
+      maxLength: 40
     },
-    {
-      name: 'ShippingStreet',
+    ShippingStreet: {
       type: 'textarea',
       label: '送货地址（街道）',
       rows: 2
     },
-    {
-      name: 'ShippingCity',
+    ShippingCity: {
       type: 'text',
       label: '送货地址（城市）',
-      length: 40
+      maxLength: 40
     },
-    {
-      name: 'ShippingState',
+    ShippingState: {
       type: 'text',
       label: '送货地址（省份）',
-      length: 40
+      maxLength: 40
     },
-    {
-      name: 'ShippingPostalCode',
+    ShippingPostalCode: {
       type: 'text',
       label: '送货地址（邮编）',
-      length: 20
+      maxLength: 20
     },
-    {
-      name: 'ShippingCountry',
+    ShippingCountry: {
       type: 'text',
       label: '送货地址（国家）',
-      length: 40
+      maxLength: 40
     },
-    {
-      name: 'CustomerStatus',
+    CustomerStatus: {
       type: 'select',
       label: '客户状态',
       defaultValue: 'Prospect',
@@ -173,14 +151,12 @@ const Account: ObjectSchema = {
         { label: '暂停合作', value: 'On Hold' }
       ]
     },
-    {
-      name: 'Description',
+    Description: {
       type: 'textarea',
       label: '描述',
       rows: 5
     },
-    {
-      name: 'SLATier',
+    SLATier: {
       type: 'select',
       label: 'SLA等级',
       options: [
@@ -191,8 +167,7 @@ const Account: ObjectSchema = {
       ],
       description: '服务等级协议层级'
     },
-    {
-      name: 'HealthScore',
+    HealthScore: {
       type: 'number',
       label: '健康度评分',
       precision: 0,
@@ -200,34 +175,30 @@ const Account: ObjectSchema = {
       max: 100,
       description: '客户健康度评分 (0-100)'
     },
-    {
-      name: 'NextRenewalDate',
+    NextRenewalDate: {
       type: 'date',
       label: '下次续约日期'
     },
-    {
-      name: 'ContractValue',
+    ContractValue: {
       type: 'currency',
       label: '合同总价值',
       precision: 2,
       readonly: true,
       description: '所有有效合同的总价值'
     },
-    {
-      name: 'OwnerId',
+    OwnerId: {
       type: 'lookup',
       label: '负责人',
-      referenceTo: 'User',
+      reference: 'User',
       required: true,
       defaultValue: '$currentUser'
     },
-    {
-      name: 'ParentId',
+    ParentId: {
       type: 'lookup',
       label: '上级客户',
-      referenceTo: 'Account'
+      reference: 'Account'
     }
-  ],
+  },
   relationships: [
     {
       name: 'Contacts',
