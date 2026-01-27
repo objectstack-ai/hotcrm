@@ -1,0 +1,673 @@
+---
+title: Contracts & Payments
+description: Contract lifecycle management and payment tracking features
+---
+
+# Contracts & Payments Domain
+
+The Contracts & Payments domain manages contract lifecycles and payment collections, ensuring smooth revenue recognition and cash flow management.
+
+## Overview
+
+**Key Objects**: `Contract`, `Payment`
+
+**Main Goals**:
+- Contract lifecycle management
+- Automated renewal reminders
+- Payment schedule tracking
+- Collection management
+- Overdue monitoring and alerts
+- E-signature integration ready
+
+## Contract Management
+
+### Contract Object
+
+The Contract object manages customer contracts from draft to completion.
+
+#### Core Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| ContractNumber | AutoNumber | Auto-generated contract number (CT-YYYYMMDD-0000) |
+| AccountId | Reference | Customer account (required) |
+| OpportunityId | Reference | Related opportunity |
+| QuoteId | Reference | Source quote |
+| Status | Picklist | Contract status |
+| StartDate | Date | Contract start date (required) |
+| EndDate | Date | Contract end date |
+| ContractTerm | Number | Contract duration in months |
+| ContractValue | Currency | Total contract value (required) |
+| BillingFrequency | Picklist | Monthly, Quarterly, Annually |
+| AutoRenew | Checkbox | Auto-renew on expiration? |
+| RenewalReminderDays | Number | Days before expiration to send reminder |
+| OwnerId | Reference | Contract owner |
+
+#### Contract Status Flow
+
+1. **📝 Draft** - Being prepared, not yet finalized
+2. **🔍 In Approval** - Undergoing internal approval
+3. **✅ Activated** - Active contract in force
+4. **⏸️ On Hold** - Temporarily paused
+5. **✔️ Completed** - Successfully completed
+6. **❌ Terminated** - Cancelled or terminated early
+
+**Status Progression**:
+```typescript
+// Activate a contract
+await db.doc.update('Contract', contractId, {
+  Status: 'Activated',
+  StartDate: new Date()
+});
+
+// Complete a contract
+await db.doc.update('Contract', contractId, {
+  Status: 'Completed',
+  EndDate: new Date()
+});
+
+// Terminate early
+await db.doc.update('Contract', contractId, {
+  Status: 'Terminated',
+  TerminationDate: new Date(),
+  TerminationReason: 'Customer request'
+});
+```
+
+### Contract Lifecycle
+
+#### 1. Creation from Quote
+
+When a quote is accepted, create a contract:
+
+```typescript
+// Convert accepted quote to contract
+const quote = await db.findOne('Quote', quoteId);
+
+const contract = await db.doc.create('Contract', {
+  AccountId: quote.AccountId,
+  OpportunityId: quote.OpportunityId,
+  QuoteId: quote.Id,
+  Status: 'Draft',
+  StartDate: new Date(),
+  EndDate: addMonths(new Date(), 12), // 1 year contract
+  ContractTerm: 12,
+  ContractValue: quote.TotalPrice,
+  BillingFrequency: 'Annually',
+  AutoRenew: true,
+  RenewalReminderDays: 90
+});
+```
+
+#### 2. Activation
+
+Once signed, activate the contract:
+
+```typescript
+await db.doc.update('Contract', contract.Id, {
+  Status: 'Activated',
+  SignedDate: new Date(),
+  SignedBy: customerContactId,
+  ActivationDate: new Date()
+});
+
+// Also update opportunity and account
+await db.doc.update('Opportunity', opportunityId, {
+  Stage: 'Closed Won'
+});
+
+await db.doc.update('Account', accountId, {
+  CustomerStatus: 'Active Customer'
+});
+```
+
+#### 3. Monitoring & Renewals
+
+Track contract health and renewal dates:
+
+```typescript
+// Get contracts expiring in next 90 days
+const expiringContracts = await db.find('Contract', {
+  filters: [
+    ['Status', '=', 'Activated'],
+    ['EndDate', 'next_90_days']
+  ],
+  orderBy: { field: 'EndDate', direction: 'asc' }
+});
+
+// Send renewal reminders
+for (const contract of expiringContracts) {
+  const daysUntilExpiration = daysBetween(new Date(), contract.EndDate);
+  
+  if (daysUntilExpiration <= contract.RenewalReminderDays) {
+    await sendRenewalReminder({
+      contractId: contract.Id,
+      daysRemaining: daysUntilExpiration
+    });
+  }
+}
+```
+
+#### 4. Renewal Process
+
+For auto-renew contracts:
+
+```typescript
+// Auto-renew contract
+if (contract.AutoRenew && contract.Status === 'Activated') {
+  const newContract = await db.doc.create('Contract', {
+    AccountId: contract.AccountId,
+    PreviousContractId: contract.Id,
+    Status: 'Draft',
+    StartDate: contract.EndDate, // Start when old contract ends
+    EndDate: addMonths(contract.EndDate, contract.ContractTerm),
+    ContractTerm: contract.ContractTerm,
+    ContractValue: contract.ContractValue * 1.05, // 5% increase
+    BillingFrequency: contract.BillingFrequency,
+    AutoRenew: true,
+    RenewalReminderDays: contract.RenewalReminderDays
+  });
+  
+  // Mark old contract as completed
+  await db.doc.update('Contract', contract.Id, {
+    Status: 'Completed',
+    RenewedToContractId: newContract.Id
+  });
+}
+```
+
+### E-Signature Integration
+
+HotCRM is ready for e-signature integration:
+
+```typescript
+// Send for signature (DocuSign, Adobe Sign, etc.)
+const envelopeId = await sendForESignature({
+  contractId: contract.Id,
+  recipients: [
+    {
+      email: customerContact.Email,
+      name: `${customerContact.FirstName} ${customerContact.LastName}`,
+      role: 'Signer'
+    }
+  ],
+  documentUrl: contract.PDFUrl
+});
+
+await db.doc.update('Contract', contract.Id, {
+  ESignatureStatus: 'Sent',
+  ESignatureEnvelopeId: envelopeId,
+  SentForSignatureDate: new Date()
+});
+
+// Webhook callback when signed
+onDocumentSigned(async (envelope) => {
+  await db.doc.update('Contract', contract.Id, {
+    ESignatureStatus: 'Signed',
+    SignedDate: new Date(),
+    Status: 'Activated'
+  });
+});
+```
+
+### List Views
+
+1. **All Contracts**: All contracts in system
+2. **Active Contracts**: Status = Activated
+3. **Expiring Soon**: Activated contracts expiring within 90 days
+4. **Draft Contracts**: Status = Draft
+5. **High Value**: ContractValue > $100,000
+6. **Up for Renewal**: Auto-renew contracts expiring within 60 days
+
+## Payment Tracking
+
+### Payment Object
+
+The Payment object tracks payment schedules, invoices, and collections.
+
+#### Core Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| PaymentNumber | AutoNumber | Auto-generated payment number (PAY-YYYY-MM-0000) |
+| Name | Text | Payment name (required) |
+| Type | Picklist | Payment type |
+| Status | Picklist | Payment status |
+| AccountId | Reference | Customer account (required) |
+| OpportunityId | Reference | Related opportunity |
+| ContractId | Reference | Related contract (required) |
+| QuoteId | Reference | Source quote |
+| PlannedAmount | Currency | Expected payment amount (required) |
+| ReceivedAmount | Currency | Actual amount received |
+| UnpaidAmount | Currency | Outstanding balance (calculated) |
+| Currency | Picklist | CNY, USD, EUR, GBP |
+| PlannedDate | Date | Expected payment date (required) |
+| ActualDate | Date | Actual payment received date |
+| DaysOverdue | Number | Days past due (calculated) |
+| InvoiceNumber | Text | Invoice number |
+| InvoiceDate | Date | Invoice date |
+| InvoiceAmount | Currency | Invoice amount |
+| PaymentMethod | Picklist | Payment method used |
+| ReferenceNumber | Text | Transaction reference/bank slip number |
+| BankName | Text | Receiving bank |
+| BankAccount | Text | Receiving account number |
+| CollectionAssignee | Reference | Collection agent (for overdue) |
+| CollectionPriority | Picklist | High, Medium, Low |
+| Description | Textarea | Payment notes |
+| OverdueReason | Textarea | Reason for delay |
+
+#### Payment Types
+
+- **💰 Down Payment** (首款): Initial deposit
+- **🎯 Milestone Payment**: Based on project milestones
+- **📦 Delivery Payment**: Upon delivery/installation
+- **✅ Acceptance Payment**: After acceptance testing
+- **🔄 Final Payment** (尾款): Final installment
+- **📅 Recurring Payment**: Subscription payments
+- **🔧 Maintenance Fee**: Annual maintenance/support
+- **🎁 Other**: Other payment types
+
+#### Payment Status Flow
+
+1. **📋 Planned** - Payment scheduled, not yet invoiced
+2. **📧 Invoiced** - Invoice sent to customer
+3. **✅ Received** - Payment received in full
+4. **⏰ Overdue** - Past due date, not received
+5. **🚫 Written Off** - Bad debt, written off
+6. **❌ Cancelled** - Payment cancelled
+
+**Status Transitions**:
+```typescript
+// Send invoice
+await db.doc.update('Payment', paymentId, {
+  Status: 'Invoiced',
+  InvoiceNumber: 'INV-2026-0042',
+  InvoiceDate: new Date()
+});
+
+// Receive payment
+await db.doc.update('Payment', paymentId, {
+  Status: 'Received',
+  ActualDate: new Date(),
+  ReceivedAmount: payment.PlannedAmount,
+  PaymentMethod: 'Bank Transfer',
+  ReferenceNumber: 'TXN-20260115-001'
+});
+
+// Mark as overdue (automated trigger)
+if (payment.PlannedDate < today && payment.Status === 'Invoiced') {
+  await db.doc.update('Payment', paymentId, {
+    Status: 'Overdue',
+    DaysOverdue: daysBetween(payment.PlannedDate, today),
+    CollectionAssignee: await getNextCollectionAgent()
+  });
+}
+```
+
+### Payment Schedule
+
+Create payment plans from contracts:
+
+```typescript
+// Create payment schedule for 30/70 split
+const contract = await db.findOne('Contract', contractId);
+
+// 30% down payment
+await db.doc.create('Payment', {
+  Name: `${contract.ContractNumber} - Down Payment`,
+  Type: 'Down Payment',
+  Status: 'Planned',
+  AccountId: contract.AccountId,
+  ContractId: contract.Id,
+  PlannedAmount: contract.ContractValue * 0.30,
+  Currency: 'CNY',
+  PlannedDate: contract.StartDate
+});
+
+// 70% final payment after acceptance
+await db.doc.create('Payment', {
+  Name: `${contract.ContractNumber} - Final Payment`,
+  Type: 'Final Payment',
+  Status: 'Planned',
+  AccountId: contract.AccountId,
+  ContractId: contract.Id,
+  PlannedAmount: contract.ContractValue * 0.70,
+  Currency: 'CNY',
+  PlannedDate: addDays(contract.StartDate, 90) // 90 days implementation
+});
+```
+
+### Payment Methods
+
+Support multiple payment channels:
+
+- **Bank Transfer**: Wire transfer (most common)
+- **Check**: Physical check
+- **Cash**: Cash payment
+- **Credit Card**: Card payment
+- **Alipay**: 支付宝
+- **WeChat Pay**: 微信支付
+- **Other**: Other methods
+
+### Overdue Management
+
+#### Automatic Overdue Detection
+
+System automatically marks payments overdue:
+
+```typescript
+// Trigger: Payment Overdue Check
+if (payment.PlannedDate < today && payment.Status === 'Invoiced') {
+  const daysOverdue = daysBetween(payment.PlannedDate, today);
+  
+  await db.doc.update('Payment', payment.Id, {
+    Status: 'Overdue',
+    DaysOverdue: daysOverdue,
+    CollectionPriority: calculatePriority(payment.PlannedAmount, daysOverdue)
+  });
+}
+
+function calculatePriority(amount, days) {
+  if (amount > 100000 || days > 60) return 'High';
+  if (amount > 50000 || days > 30) return 'Medium';
+  return 'Low';
+}
+```
+
+#### Collection Assignment
+
+Assign collection agents to overdue payments:
+
+```typescript
+// Get high-priority overdue payments
+const highPriorityOverdue = await db.find('Payment', {
+  filters: [
+    ['Status', '=', 'Overdue'],
+    ['CollectionPriority', '=', 'High']
+  ],
+  orderBy: { field: 'DaysOverdue', direction: 'desc' }
+});
+
+// Assign to collection team
+for (const payment of highPriorityOverdue) {
+  if (!payment.CollectionAssignee) {
+    await db.doc.update('Payment', payment.Id, {
+      CollectionAssignee: await getNextAvailableAgent()
+    });
+    
+    await createCollectionTask({
+      paymentId: payment.Id,
+      assignee: payment.CollectionAssignee,
+      priority: 'High',
+      dueDate: addDays(new Date(), 3) // Follow up within 3 days
+    });
+  }
+}
+```
+
+### Payment Reminders
+
+Automated reminder system:
+
+```typescript
+// Send payment reminder (scheduled job)
+const upcomingPayments = await db.find('Payment', {
+  filters: [
+    ['Status', '=', 'Invoiced'],
+    ['PlannedDate', 'next_7_days']
+  ]
+});
+
+for (const payment of upcomingPayments) {
+  if (!payment.ReminderSent) {
+    await sendPaymentReminder({
+      paymentId: payment.Id,
+      recipientEmail: payment.Account.Email,
+      daysUntilDue: daysBetween(new Date(), payment.PlannedDate)
+    });
+    
+    await db.doc.update('Payment', payment.Id, {
+      ReminderSent: true,
+      ReminderSentDate: new Date()
+    });
+  }
+}
+```
+
+### List Views
+
+1. **All Payments**: All payment records
+2. **My Payments**: Payments I own
+3. **Planned**: Status = Planned
+4. **Overdue**: Status = Overdue, sorted by days overdue
+5. **This Month**: PlannedDate in current month
+6. **Received**: Status = Received
+
+## Best Practices
+
+### Contract Management
+
+1. **Link to Opportunities**: Always associate contracts with won opportunities
+2. **Set End Dates**: Define clear contract end dates for tracking
+3. **Enable Auto-Renew**: Set AutoRenew = true for subscription contracts
+4. **Renewal Reminders**: Set RenewalReminderDays (typically 60-90 days)
+5. **Document Terms**: Include payment terms, delivery terms, SLAs
+6. **Version Control**: Create new contracts for renewals instead of editing
+7. **Track Amendments**: Use separate amendment records for contract changes
+8. **Monitor Expirations**: Review expiring contracts weekly
+
+### Payment Management
+
+1. **Create Full Schedule**: Set up all payment milestones upfront
+2. **Invoice Promptly**: Move to "Invoiced" status immediately when sent
+3. **Record Receipts**: Update ActualDate and ReceivedAmount when received
+4. **Document References**: Always capture ReferenceNumber for traceability
+5. **Prioritize Collections**: Focus on high-value and oldest overdue payments
+6. **Follow Up Regularly**: Contact customers 7 days before due date
+7. **Escalate Quickly**: Assign collection agents within 3 days of overdue
+8. **Track Reasons**: Document OverdueReason for future prevention
+
+## Example Workflows
+
+### Contract Creation from Closed-Won Opportunity
+
+```typescript
+// 1. Opportunity is marked as Closed Won
+const opportunity = await db.findOne('Opportunity', oppId);
+const quote = await db.findOne('Quote', { OpportunityId: oppId });
+
+// 2. Create contract
+const contract = await db.doc.create('Contract', {
+  AccountId: opportunity.AccountId,
+  OpportunityId: opportunity.Id,
+  QuoteId: quote.Id,
+  Status: 'Draft',
+  StartDate: new Date(),
+  EndDate: addYears(new Date(), 1),
+  ContractTerm: 12,
+  ContractValue: quote.TotalPrice,
+  BillingFrequency: 'Annually',
+  AutoRenew: true,
+  RenewalReminderDays: 90
+});
+
+// 3. Create payment schedule (50/50 split)
+const downPayment = await db.doc.create('Payment', {
+  Name: `${contract.ContractNumber} - Down Payment`,
+  Type: 'Down Payment',
+  Status: 'Planned',
+  AccountId: opportunity.AccountId,
+  ContractId: contract.Id,
+  QuoteId: quote.Id,
+  PlannedAmount: contract.ContractValue * 0.50,
+  Currency: quote.Currency || 'CNY',
+  PlannedDate: new Date()
+});
+
+const finalPayment = await db.doc.create('Payment', {
+  Name: `${contract.ContractNumber} - Final Payment`,
+  Type: 'Acceptance Payment',
+  Status: 'Planned',
+  AccountId: opportunity.AccountId,
+  ContractId: contract.Id,
+  QuoteId: quote.Id,
+  PlannedAmount: contract.ContractValue * 0.50,
+  Currency: quote.Currency || 'CNY',
+  PlannedDate: addDays(new Date(), 60) // 60 days for implementation
+});
+
+// 4. Send for signature
+await sendContractForSignature(contract.Id);
+
+// 5. After signature, activate contract
+await db.doc.update('Contract', contract.Id, {
+  Status: 'Activated',
+  SignedDate: new Date()
+});
+
+// 6. Update account status
+await db.doc.update('Account', opportunity.AccountId, {
+  CustomerStatus: 'Active Customer',
+  ContractValue: contract.ContractValue
+});
+```
+
+### Payment Collection Process
+
+```typescript
+// 1. Send invoice when payment is due soon
+const payment = await db.findOne('Payment', paymentId);
+
+// Generate and send invoice
+const invoice = await generateInvoice({
+  paymentId: payment.Id,
+  accountId: payment.AccountId
+});
+
+await db.doc.update('Payment', payment.Id, {
+  Status: 'Invoiced',
+  InvoiceNumber: invoice.invoiceNumber,
+  InvoiceDate: new Date(),
+  InvoiceAmount: payment.PlannedAmount
+});
+
+await sendInvoiceEmail({
+  paymentId: payment.Id,
+  invoiceUrl: invoice.pdfUrl
+});
+
+// 2. Send reminder 7 days before due date
+if (daysBetween(new Date(), payment.PlannedDate) === 7) {
+  await sendPaymentReminder({
+    paymentId: payment.Id,
+    message: 'Your payment is due in 7 days'
+  });
+}
+
+// 3. If payment becomes overdue, assign to collection
+if (payment.Status === 'Overdue') {
+  await db.doc.update('Payment', payment.Id, {
+    CollectionAssignee: collectionAgentId,
+    CollectionPriority: 'High'
+  });
+  
+  await createActivity({
+    Type: 'Task',
+    Subject: `Follow up on overdue payment ${payment.PaymentNumber}`,
+    WhatId: payment.AccountId,
+    OwnerId: collectionAgentId,
+    Priority: 'High',
+    DueDate: addDays(new Date(), 1) // Follow up tomorrow
+  });
+}
+
+// 4. When payment is received
+await db.doc.update('Payment', payment.Id, {
+  Status: 'Received',
+  ActualDate: new Date(),
+  ReceivedAmount: payment.PlannedAmount,
+  PaymentMethod: 'Bank Transfer',
+  ReferenceNumber: 'TXN-20260115-001'
+});
+
+// 5. Update contract payment tracking
+const contractPayments = await db.find('Payment', {
+  filters: [
+    ['ContractId', '=', payment.ContractId],
+    ['Status', '=', 'Received']
+  ]
+});
+
+const totalReceived = contractPayments.reduce(
+  (sum, p) => sum + p.ReceivedAmount,
+  0
+);
+
+await db.doc.update('Contract', payment.ContractId, {
+  TotalReceived: totalReceived,
+  PercentageReceived: (totalReceived / contract.ContractValue) * 100
+});
+```
+
+### Renewal Management Process
+
+```typescript
+// Scheduled job: Daily renewal check
+async function checkContractRenewals() {
+  // Get contracts expiring in next 90 days
+  const expiringContracts = await db.find('Contract', {
+    filters: [
+      ['Status', '=', 'Activated'],
+      ['EndDate', 'next_90_days'],
+      ['RenewalOpportunityId', 'IS NULL']
+    ]
+  });
+  
+  for (const contract of expiringContracts) {
+    const daysUntilExpiration = daysBetween(new Date(), contract.EndDate);
+    
+    // Send reminder at 90, 60, 30 days
+    if ([90, 60, 30].includes(daysUntilExpiration)) {
+      await sendRenewalReminder({
+        contractId: contract.Id,
+        daysRemaining: daysUntilExpiration
+      });
+    }
+    
+    // Create renewal opportunity at 90 days
+    if (daysUntilExpiration === 90 && !contract.RenewalOpportunityId) {
+      const renewalOpp = await db.doc.create('Opportunity', {
+        Name: `${contract.Account.Name} - Renewal`,
+        AccountId: contract.AccountId,
+        Type: 'Existing Business - Renewal',
+        Stage: 'Qualification',
+        Amount: contract.ContractValue * 1.05, // 5% increase
+        CloseDate: addDays(contract.EndDate, -30), // Close 30 days before expiration
+        LeadSource: 'Renewal',
+        OriginalContractId: contract.Id
+      });
+      
+      await db.doc.update('Contract', contract.Id, {
+        RenewalOpportunityId: renewalOpp.Id
+      });
+      
+      // Assign to account owner
+      await createActivity({
+        Type: 'Task',
+        Subject: `Begin renewal discussion for ${contract.ContractNumber}`,
+        WhatId: renewalOpp.Id,
+        OwnerId: contract.Account.OwnerId,
+        Priority: 'High',
+        DueDate: new Date()
+      });
+    }
+  }
+}
+```
+
+## Next Steps
+
+- [Sales Automation](/docs/features/sales-automation) - Link contracts to opportunities
+- [Product & Pricing](/docs/features/product-pricing) - Create quotes that become contracts
+- [Service & Support](/docs/features/service-support) - Track service contracts
+- [Creating Objects](/docs/development/creating-objects) - Customize contract fields

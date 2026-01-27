@@ -1,0 +1,141 @@
+---
+title: Introduction
+description: Learn about HotCRM and its capabilities
+---
+
+# Introduction to HotCRM
+
+HotCRM is a world-class **Customer Relationship Management** system that combines Salesforce-level functionality with Apple/Linear-level user experience. Built on the innovative @objectstack/spec protocol, it provides a comprehensive solution for managing the entire customer lifecycle from Lead to Cash.
+
+## What is HotCRM?
+
+HotCRM is designed to help businesses of all sizes manage their customer relationships more effectively. It covers five major domains:
+
+### 🟢 Marketing & Leads (获客域)
+
+Capture and nurture leads through multiple channels, with AI-powered lead scoring and intelligent assignment.
+
+**Key Objects**: Lead, Campaign
+
+### 🔵 Sales Force Automation (销售域)
+
+Complete sales pipeline management with 360-degree customer view, opportunity tracking, and CPQ (Configure, Price, Quote).
+
+**Key Objects**: Account, Contact, Opportunity, Activity, Product, Pricebook, Quote, Contract, Payment
+
+### 🟠 Service & Customer Success (服务域)
+
+Deliver exceptional customer service with omni-channel case management and AI-powered knowledge base.
+
+**Key Objects**: Case, Knowledge
+
+### 🟣 Platform Foundation (底座域)
+
+Extensible, metadata-driven platform that allows complete customization without code.
+
+**Components**: Metadata Engine, ObjectQL, Workflow Engine, UI Engine
+
+### 🤖 AI Copilot (智能域)
+
+AI capabilities embedded throughout the system for intelligent automation and insights.
+
+**Features**: Predictive analytics, NLP, recommendations, automated insights
+
+## Core Principles
+
+HotCRM is built on five core architectural principles:
+
+### 1. Metadata-Driven Architecture
+
+All business objects are defined natively in **TypeScript** (`.object.ts` files), not YAML or JSON. This provides:
+
+- Full type safety with IDE autocomplete
+- Compile-time validation
+- Easy refactoring and version control
+- Native JavaScript/TypeScript development experience
+
+```typescript
+import type { ObjectSchema } from '@objectstack/spec/data';
+
+export default const Account: ObjectSchema = {
+  name: 'Account',
+  label: 'Account',
+  fields: [
+    {
+      name: 'Name',
+      type: 'text',
+      label: 'Account Name',
+      required: true
+    }
+    // ... more fields
+  ]
+};
+```
+
+### 2. ObjectQL Query Language
+
+Replace SQL with a type-safe, flexible query language:
+
+```typescript
+// Simple query
+const accounts = await db.find('Account', { 
+  filters: [['Status', '=', 'Active']] 
+});
+
+// Complex query with relationships
+const result = await db.query({
+  object: 'Account',
+  fields: ['Name', 'Industry'],
+  filters: {
+    Industry: { $in: ['Technology', 'Finance'] }
+  },
+  related: {
+    Opportunities: {
+      fields: ['Name', 'Amount', 'Stage']
+    }
+  }
+});
+```
+
+### 3. UI Engine with Tailwind CSS
+
+Frontend rendering based on ObjectUI framework with Tailwind CSS for beautiful, responsive interfaces.
+
+### 4. AI-First Design
+
+Every major feature has built-in AI capabilities:
+- Lead scoring and enrichment
+- Opportunity win prediction
+- Smart case routing
+- Knowledge base Q&A
+
+### 5. Modular Monorepo Architecture
+
+Clean separation of concerns with pnpm workspaces:
+
+```
+hotcrm/
+├── packages/
+│   ├── core/       # ObjectQL engine
+│   ├── crm/        # Marketing & Sales
+│   ├── support/    # Service & Support
+│   ├── products/   # Product & Pricing
+│   ├── finance/    # Contracts & Payments
+│   ├── ui/         # UI Components
+│   └── server/     # Application Server
+```
+
+## Who Should Use HotCRM?
+
+HotCRM is designed for:
+
+- **Small to Medium Businesses** looking for an affordable, feature-rich CRM
+- **Enterprises** requiring customization and extensibility
+- **Developers** who want full control over their CRM system
+- **Teams** seeking modern UX with AI-powered insights
+
+## What's Next?
+
+- [Installation Guide](/docs/getting-started/installation) - Get HotCRM up and running
+- [Quick Start](/docs/getting-started/quick-start) - Your first steps with HotCRM
+- [Architecture Overview](/docs/architecture/overview) - Deep dive into the system design

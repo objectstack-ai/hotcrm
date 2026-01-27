@@ -1,0 +1,9 @@
+{
+  "title": "Architecture",
+  "pages": [
+    "overview",
+    "metadata-driven",
+    "objectql",
+    "monorepo-structure"
+  ]
+}

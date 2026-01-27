@@ -1,0 +1,735 @@
+---
+title: Product & Pricing (CPQ)
+description: Product catalog, pricebook management, and quote generation features
+---
+
+# Product & Pricing Domain
+
+The Product & Pricing domain enables Configure-Price-Quote (CPQ) capabilities with multi-currency support, regional pricing, and AI-powered product recommendations.
+
+## Overview
+
+**Key Objects**: `Product`, `Pricebook`, `Quote`
+
+**Main Goals**:
+- Comprehensive product catalog management
+- Multi-currency, multi-region pricing strategies
+- Complex quote configuration
+- Discount approval workflows
+- AI-driven product bundling and pricing optimization
+
+## Product Catalog Management
+
+### Product Object
+
+The Product object represents goods and services you sell.
+
+#### Core Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| Name | Text | Product name (required) |
+| ProductCode | Text | SKU or product code (unique) |
+| Description | Textarea | Product description |
+| Family | Picklist | Product family/category |
+| IsActive | Checkbox | Is product available for sale? |
+| ProductType | Picklist | Physical, Digital, Service, Subscription |
+| ListPrice | Currency | Standard/suggested retail price |
+| CostPrice | Currency | Cost of goods sold |
+| QuantityUnitOfMeasure | Picklist | Unit, Set, Device, License, Hour, etc. |
+| QuantityInStock | Number | Current stock quantity |
+| ReorderLevel | Number | Reorder threshold |
+| StockStatus | Picklist | In Stock, Low Stock, Out of Stock, Reordering |
+| Weight | Number | Weight in kg |
+| Dimensions | Text | Dimensions (L×W×H in cm) |
+| VendorName | Text | Supplier name |
+| ProductUrl | URL | Product page URL |
+| ImageUrl | URL | Product image URL |
+| MinimumOrderQuantity | Number | Minimum order quantity |
+| MaximumOrderQuantity | Number | Maximum order quantity |
+
+#### Product Families
+
+- **Software**: Software products and licenses
+- **Hardware**: Physical hardware devices
+- **Professional Services**: Consulting and implementation
+- **Consulting**: Advisory services
+- **Training**: Training courses and workshops
+- **Support**: Support and maintenance plans
+- **Subscription**: Recurring subscription services
+- **Other**: Other product types
+
+#### Product Types
+
+- **Physical**: Tangible products requiring inventory
+- **Digital**: Software downloads, digital content
+- **Service**: Professional services (hourly/daily)
+- **Subscription**: Recurring revenue products
+
+### Inventory Management
+
+Track stock levels and automate reordering:
+
+```typescript
+// Check low stock products
+const lowStock = await db.find('Product', {
+  filters: [
+    ['StockStatus', 'in', ['Low Stock', 'Out of Stock']],
+    ['IsActive', '=', true]
+  ],
+  orderBy: { field: 'QuantityInStock', direction: 'asc' }
+});
+
+// Auto-update stock status (via trigger)
+if (product.QuantityInStock === 0) {
+  stockStatus = 'Out of Stock';
+} else if (product.QuantityInStock < product.ReorderLevel) {
+  stockStatus = 'Low Stock';
+} else {
+  stockStatus = 'In Stock';
+}
+```
+
+### Units of Measure
+
+Support various measurement units:
+
+- **Unit**: Individual items (pieces)
+- **Set**: Bundled sets
+- **Device**: Devices/equipment
+- **License**: Software licenses
+- **User**: Per-user licensing
+- **Hour**: Hourly services
+- **Day**: Daily services
+- **Month**: Monthly subscriptions
+- **Year**: Annual subscriptions
+
+### AI Features
+
+#### Sales Points Generation (AISalesPoints)
+
+AI automatically generates compelling sales messaging:
+
+```typescript
+"Key Selling Points for 'Enterprise CRM Platform':
+
+✨ Unique Value Propositions:
+- 40% lower TCO compared to Salesforce
+- Native China deployment (no VPN required)
+- Advanced AI capabilities built-in
+- Industry-leading customization
+
+🎯 Target Audience:
+- Enterprise companies with 500+ users
+- Organizations expanding in Asia-Pacific
+- Companies requiring extensive customization
+
+💼 Use Cases:
+- Global sales team coordination
+- Multi-currency deal management
+- Complex approval workflows
+- Customer 360-degree view"
+```
+
+#### Product Bundling Recommendations (AIRecommendedProducts)
+
+Smart product combinations:
+
+```typescript
+"Recommended Bundle for 'CRM Enterprise License':
+1. Training Package (Professional Services) - 80% attach rate
+2. Premium Support (12 months) - 95% attach rate
+3. API Integration Service - 60% attach rate
+4. Mobile App Add-on - 50% attach rate
+
+Total bundle value: $45,000 (vs. $52,000 individual)
+Average discount: 13%
+Win rate when bundled: 78% (vs. 52% standalone)"
+```
+
+#### Pricing Strategy (AIPricingStrategy)
+
+AI-powered pricing recommendations:
+
+```typescript
+"Pricing Strategy Analysis:
+
+Current Price: $299/user/month
+Market Position: Premium (85th percentile)
+
+Recommendations:
+1. Consider volume discounts:
+   - 100-500 users: 15% discount
+   - 500-1000 users: 25% discount
+   - 1000+ users: 35% discount
+
+2. Competitive positioning:
+   - 40% lower than Salesforce
+   - 20% higher than HubSpot
+   - Differentiate on China deployment
+
+3. Upsell opportunities:
+   - API access: +$50/user/month
+   - Advanced analytics: +$30/user/month
+   - Premium support: +$25/user/month"
+```
+
+### List Views
+
+1. **All Products**: All products in catalog
+2. **Active Products**: IsActive = true
+3. **Software Products**: Family = Software
+4. **Services**: Family in [Professional Services, Consulting, Training, Support]
+5. **Low Stock**: StockStatus in [Low Stock, Out of Stock]
+
+## Price Management
+
+### Pricebook Object
+
+The Pricebook object manages pricing for different currencies, regions, and sales channels.
+
+#### Core Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| Name | Text | Pricebook name (required) |
+| Description | Textarea | Pricebook description |
+| IsActive | Checkbox | Is pricebook available for use? |
+| IsStandard | Checkbox | Is this the standard pricebook? |
+| PricingStrategy | Picklist | Pricing strategy type |
+| Currency | Picklist | CNY, USD, EUR, GBP, JPY, HKD, SGD |
+| Region | Picklist | Geographic region |
+| SalesChannel | Picklist | Sales channel type |
+| StartDate | Date | Effective start date |
+| EndDate | Date | Expiration date |
+| IsValid | Checkbox | Currently valid (calculated) |
+| TotalProducts | Number | Number of products (calculated) |
+| AverageDiscount | Percent | Average discount vs. standard |
+
+#### Pricing Strategies
+
+- **Standard**: Default pricing
+- **Discount**: Discounted pricing
+- **Channel**: Partner/reseller pricing
+- **Regional**: Geographic-specific pricing
+- **VIP**: Premium customer pricing
+- **Promotion**: Promotional pricing
+- **Volume**: Quantity-based pricing
+
+#### Multi-Currency Support
+
+HotCRM supports 7 major currencies:
+
+- **CNY**: Chinese Yuan (人民币)
+- **USD**: US Dollar (美元)
+- **EUR**: Euro (欧元)
+- **GBP**: British Pound (英镑)
+- **JPY**: Japanese Yen (日元)
+- **HKD**: Hong Kong Dollar (港币)
+- **SGD**: Singapore Dollar (新加坡元)
+
+#### Regional Pricing
+
+Define different prices by geography:
+
+- **Global**: Worldwide default
+- **China Mainland**: 中国大陆
+- **HK/Macau/Taiwan**: 港澳台
+- **North America**: 北美
+- **Europe**: 欧洲
+- **Asia Pacific**: 亚太
+- **Middle East**: 中东
+- **Other**: 其他地区
+
+#### Sales Channels
+
+Price differently by distribution channel:
+
+- **Direct**: Direct sales team
+- **Channel**: Channel partners/resellers
+- **Online**: E-commerce website
+- **Retail**: Retail stores
+- **Distribution**: Distributors
+- **Agent**: Sales agents
+
+### Standard Pricebook
+
+Every HotCRM instance has one standard pricebook:
+
+```typescript
+// System enforces only one standard pricebook
+{
+  Name: 'Standard Pricebook',
+  IsStandard: true,
+  Currency: 'CNY', // Must be CNY
+  IsActive: true
+}
+```
+
+**Validation**: Standard pricebook must use CNY currency.
+
+### Creating Regional Pricebooks
+
+```typescript
+// Create US pricebook
+const usPricebook = await db.doc.create('Pricebook', {
+  Name: 'US Direct Sales - 2026',
+  Currency: 'USD',
+  Region: 'North America',
+  SalesChannel: 'Direct',
+  PricingStrategy: 'Standard',
+  StartDate: '2026-01-01',
+  EndDate: '2026-12-31',
+  IsActive: true
+});
+
+// Create China channel pricebook with 20% discount
+const chinaPricebook = await db.doc.create('Pricebook', {
+  Name: 'China Channel Partner - 2026',
+  Currency: 'CNY',
+  Region: 'China Mainland',
+  SalesChannel: 'Channel',
+  PricingStrategy: 'Discount',
+  StartDate: '2026-01-01',
+  EndDate: '2026-12-31',
+  IsActive: true
+});
+```
+
+### Pricebook Entries
+
+Products must be added to pricebooks with specific prices:
+
+```typescript
+// Add product to US pricebook
+await db.doc.create('PricebookEntry', {
+  PricebookId: usPricebook.Id,
+  ProductId: crmProductId,
+  UnitPrice: 299.00, // $299 USD
+  IsActive: true
+});
+
+// Add same product to China pricebook
+await db.doc.create('PricebookEntry', {
+  PricebookId: chinaPricebook.Id,
+  ProductId: crmProductId,
+  UnitPrice: 1999.00, // ¥1999 CNY
+  IsActive: true
+});
+```
+
+### List Views
+
+1. **All Pricebooks**: All pricebooks in system
+2. **Active Pricebooks**: IsActive = true
+3. **Valid Pricebooks**: IsValid = true and IsActive = true
+4. **By Currency**: Group by currency
+5. **Expiring Pricebooks**: EndDate within next 30 days
+
+## Quotation (CPQ)
+
+### Quote Object
+
+The Quote object enables Configure-Price-Quote with complex discount approvals.
+
+#### Core Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| QuoteNumber | AutoNumber | Auto-generated quote number |
+| Name | Text | Quote name (required) |
+| Status | Picklist | Quote status |
+| OpportunityId | Reference | Related opportunity (required) |
+| AccountId | Reference | Customer account (required) |
+| ContactId | Reference | Primary contact |
+| PricebookId | Reference | Pricebook to use (required) |
+| QuoteDate | Date | Quote date (default: today) |
+| ExpirationDate | Date | Quote expiration date |
+| ValidityPeriodDays | Number | Valid for (days) |
+| Subtotal | Currency | Sum of line items (calculated) |
+| DiscountPercent | Percent | Overall discount percentage |
+| DiscountAmount | Currency | Discount in currency (calculated) |
+| TaxPercent | Percent | Tax rate |
+| TaxAmount | Currency | Tax amount (calculated) |
+| ShippingHandling | Currency | Shipping cost |
+| TotalPrice | Currency | Grand total (calculated) |
+| PaymentTerms | Picklist | Payment terms |
+| DeliveryTerms | Picklist | Delivery terms |
+| ApprovalStatus | Picklist | Approval workflow status |
+| ApprovalLevel | Number | Required approval level |
+| Description | Textarea | Quote description |
+| InternalNotes | Textarea | Internal notes (not shown to customer) |
+
+#### Quote Status Flow
+
+1. **📝 Draft** - Being prepared
+2. **🔄 In Review** - Under review
+3. **✅ Approved** - Approved for sending
+4. **❌ Rejected** - Rejected
+5. **📧 Sent** - Sent to customer
+6. **🤝 Customer Accepted** - Customer accepted
+7. **🚫 Expired** - Past expiration date
+
+### Quote Calculation
+
+Prices are automatically calculated:
+
+```typescript
+// Automatic calculation formula
+Subtotal = Sum of all QuoteLineItems (Quantity × UnitPrice)
+DiscountAmount = Subtotal × DiscountPercent
+TaxAmount = (Subtotal - DiscountAmount) × TaxPercent
+TotalPrice = Subtotal - DiscountAmount + TaxAmount + ShippingHandling
+```
+
+**Example**:
+```
+Subtotal:          $100,000.00
+Discount (15%):    -$15,000.00
+Subtotal after:     $85,000.00
+Tax (13%):         +$11,050.00
+Shipping:           +$1,000.00
+----------------------------
+Total Price:        $97,050.00
+```
+
+### Payment Terms
+
+- **Full Prepayment**: 100% upfront
+- **30/70 Split**: 30% down, 70% on acceptance
+- **50/50 Split**: 50% down, 50% on acceptance
+- **Net 30**: Payment due 30 days after acceptance
+- **Net 60**: Payment due 60 days after acceptance
+- **Net 90**: Payment due 90 days after acceptance
+- **Installments**: Custom payment schedule
+- **Other**: Custom terms
+
+### Delivery Terms
+
+- **On-site Delivery**: Delivered to customer location
+- **Remote Delivery**: Remote installation/configuration
+- **Cloud Deployment**: Hosted in cloud
+- **Shipping**: Physical shipment
+- **Digital Download**: Software download
+- **Other**: Custom delivery
+
+### Discount Approval Workflow
+
+Discounts trigger multi-level approvals:
+
+| Discount % | Approval Level | Approver |
+|------------|----------------|----------|
+| 0-10% | 0 | Sales Rep (auto-approved) |
+| 10-20% | 1 | Sales Manager |
+| 20-30% | 2 | Director of Sales |
+| 30%+ | 3 | VP of Sales or CFO |
+
+```typescript
+// Trigger approval workflow
+if (quote.DiscountPercent > 0.20) {
+  await db.doc.update('Quote', quote.Id, {
+    Status: 'In Review',
+    ApprovalStatus: 'Pending',
+    ApprovalLevel: 2 // Director approval needed
+  });
+  
+  // Route to director
+  await createApprovalRequest({
+    objectType: 'Quote',
+    objectId: quote.Id,
+    approverId: directorOfSalesId,
+    reason: `Discount of ${quote.DiscountPercent * 100}% requires director approval`
+  });
+}
+```
+
+### PDF Generation
+
+Quotes can be exported as professional PDFs:
+
+```typescript
+// Generate quote PDF
+await generateQuotePDF(quote.Id);
+
+// Updates quote record
+{
+  PDFGeneratedDate: new Date(),
+  PDFUrl: 'https://storage.hotcrm.com/quotes/Q-2026-01-0042.pdf'
+}
+```
+
+### AI Features
+
+#### Product Bundle Recommendations (AIRecommendedBundle)
+
+AI suggests optimal product combinations:
+
+```typescript
+"Recommended Bundle based on $150K budget:
+
+Option 1: Balanced Solution ($148K)
+- CRM Enterprise (500 users): $120K
+- Professional Services (80 hrs): $16K
+- Premium Support (12 months): $12K
+Win Probability: 72%
+
+Option 2: Premium Solution ($195K - suggest upsell)
+- CRM Enterprise (500 users): $120K
+- Advanced Analytics Add-on: $30K
+- Professional Services (120 hrs): $24K
+- Premium Support (12 months): $12K
+- Mobile App Licenses: $9K
+Win Probability: 65%
+
+Recommendation: Start with Option 1, upsell Analytics in 6 months."
+```
+
+#### Optimal Discount (AIOptimalDiscount)
+
+Data-driven discount recommendations:
+
+```typescript
+"Optimal Discount Analysis:
+
+Current Discount: 15%
+AI Recommended: 12%
+
+Reasoning:
+- Historical win rate at 12%: 68%
+- Historical win rate at 15%: 70% (marginal gain)
+- Revenue impact: +$4,500 with 12% discount
+- Customer's budget confirmed, price not main concern
+- Competitor pricing allows lower discount
+
+Recommendation: Start at 10%, max 12%"
+```
+
+#### Win Probability Prediction (AIWinProbability)
+
+Predict quote success:
+
+```typescript
+{
+  winProbability: 67,
+  confidence: 'High',
+  factors: {
+    positive: [
+      'Strong relationship with decision maker',
+      'Budget confirmed and allocated',
+      'Timeline matches their needs',
+      'No active competitors identified'
+    ],
+    negative: [
+      'Price 20% above initial budget',
+      'Long approval process (45 days)',
+      'Economic buyer not fully engaged'
+    ],
+    recommendations: [
+      'Reduce discount to 10% (still competitive)',
+      'Schedule call with economic buyer',
+      'Add value-adds instead of deeper discount'
+    ]
+  }
+}
+```
+
+#### Pricing Competitiveness (AIPricingAnalysis)
+
+Market positioning analysis:
+
+```typescript
+"Pricing Competitiveness Analysis:
+
+Your Quote: $97,050
+Market Range: $85,000 - $125,000
+Position: Mid-range (competitive)
+
+vs. Salesforce: 35% lower ✅
+vs. HubSpot: 15% higher ⚠️
+vs. Microsoft Dynamics: 20% lower ✅
+
+Value Proposition:
+- Better price than enterprise competitors
+- Justify premium over HubSpot with:
+  * Enterprise-grade security
+  * Advanced customization
+  * China deployment
+  * Dedicated support
+
+Competitive Response:
+If customer mentions HubSpot pricing:
+1. Highlight enterprise features
+2. Offer premium support bundle
+3. Show TCO over 3 years (we win)"
+```
+
+### Example Workflow: Creating a Quote
+
+```typescript
+// 1. Create quote
+const quote = await db.doc.create('Quote', {
+  Name: 'Acme Corp - CRM Enterprise Solution',
+  OpportunityId: opportunityId,
+  AccountId: accountId,
+  ContactId: contactId,
+  PricebookId: usPricebookId,
+  QuoteDate: new Date(),
+  ExpirationDate: '2026-03-15', // 30 days validity
+  PaymentTerms: '50/50 Split',
+  DeliveryTerms: 'Cloud Deployment',
+  Status: 'Draft'
+});
+
+// 2. Add line items
+await db.doc.create('QuoteLineItem', {
+  QuoteId: quote.Id,
+  ProductId: crmEnterpriseId,
+  Quantity: 500,
+  UnitPrice: 299.00,
+  Description: 'CRM Enterprise - 500 users, annual subscription'
+});
+
+await db.doc.create('QuoteLineItem', {
+  QuoteId: quote.Id,
+  ProductId: trainingId,
+  Quantity: 40,
+  UnitPrice: 200.00,
+  Description: 'On-site training - 40 hours'
+});
+
+// 3. Apply discount
+await db.doc.update('Quote', quote.Id, {
+  DiscountPercent: 0.15, // 15% discount
+  TaxPercent: 0.13, // 13% tax
+  ShippingHandling: 1000.00
+});
+// Subtotal, DiscountAmount, TaxAmount, TotalPrice calculated automatically
+
+// 4. Submit for approval (if discount > 10%)
+await db.doc.update('Quote', quote.Id, {
+  Status: 'In Review'
+});
+
+// 5. After approval, send to customer
+await db.doc.update('Quote', quote.Id, {
+  Status: 'Sent'
+});
+await sendQuoteEmail(quote.Id);
+
+// 6. Customer accepts
+await db.doc.update('Quote', quote.Id, {
+  Status: 'Customer Accepted'
+});
+```
+
+### List Views
+
+1. **All Quotes**: All quotes in system
+2. **My Quotes**: Quotes I own
+3. **Draft Quotes**: Status = Draft
+4. **Pending Approval**: ApprovalStatus = Pending
+5. **Approved**: ApprovalStatus = Approved
+6. **Expiring**: ExpirationDate within next 7 days
+
+## Best Practices
+
+### Product Management
+
+1. **Keep SKUs Unique**: Ensure ProductCode is unique for inventory tracking
+2. **Complete Descriptions**: Write detailed product descriptions for customer clarity
+3. **Set Reorder Levels**: Configure ReorderLevel to automate inventory alerts
+4. **Use Product Families**: Organize products into logical families for reporting
+5. **Maintain Images**: Add ImageUrl for better visual presentation
+6. **Set Min/Max Quantities**: Define ordering constraints
+7. **Leverage AI**: Use AI-generated sales points in customer presentations
+
+### Pricebook Management
+
+1. **One Standard**: Maintain one standard pricebook as baseline
+2. **Date Validity**: Set StartDate and EndDate for seasonal pricing
+3. **Regional Pricing**: Create separate pricebooks for different regions
+4. **Channel Pricing**: Differentiate direct vs. channel pricing
+5. **Review Regularly**: Update prices at least annually
+6. **Document Strategy**: Use Description field to explain pricing strategy
+
+### Quote Management
+
+1. **Link to Opportunity**: Always associate quotes with opportunities
+2. **Set Expiration**: Define clear ExpirationDate (typically 30 days)
+3. **Document Assumptions**: Use InternalNotes for special conditions
+4. **Seek Approval Early**: Submit for approval before sending to customer
+5. **Track Versions**: Create new quote versions instead of editing sent quotes
+6. **Generate PDFs**: Always generate professional PDF before sending
+7. **Use AI Recommendations**: Review AI bundle and discount suggestions
+8. **Follow Up**: Monitor quote status and follow up before expiration
+
+## Example Workflows
+
+### End-to-End CPQ Process
+
+```typescript
+// 1. Customer requests quote for 500 users
+const opportunity = await db.findOne('Opportunity', oppId);
+
+// 2. AI recommends product bundle
+const bundle = await aiRecommendProductBundle({
+  accountId: opportunity.AccountId,
+  budget: 150000,
+  userCount: 500
+});
+
+// 3. Create quote with recommended products
+const quote = await db.doc.create('Quote', {
+  Name: `${opportunity.Name} - Quote`,
+  OpportunityId: opportunity.Id,
+  AccountId: opportunity.AccountId,
+  ContactId: opportunity.ContactId,
+  PricebookId: await getDefaultPricebook(opportunity.AccountId),
+  QuoteDate: new Date(),
+  ExpirationDate: addDays(new Date(), 30)
+});
+
+// 4. Add AI-recommended line items
+for (const item of bundle.items) {
+  await db.doc.create('QuoteLineItem', {
+    QuoteId: quote.Id,
+    ProductId: item.productId,
+    Quantity: item.quantity,
+    UnitPrice: item.unitPrice
+  });
+}
+
+// 5. Apply AI-suggested discount
+await db.doc.update('Quote', quote.Id, {
+  DiscountPercent: bundle.suggestedDiscount / 100
+});
+
+// 6. Review and adjust
+const pricing = await aiAnalyzePricing(quote.Id);
+console.log(`Win probability: ${pricing.winProbability}%`);
+console.log(`Competitive position: ${pricing.competitivePosition}`);
+
+// 7. Submit for approval if needed
+if (quote.DiscountPercent > 0.10) {
+  await submitForApproval(quote.Id);
+}
+
+// 8. After approval, generate PDF and send
+await generateQuotePDF(quote.Id);
+await sendQuoteToCustomer(quote.Id);
+
+// 9. Track customer response
+// (Customer accepts via portal or email)
+
+// 10. Convert to contract
+if (quote.Status === 'Customer Accepted') {
+  await convertQuoteToContract(quote.Id);
+}
+```
+
+## Next Steps
+
+- [Contracts & Payments](/docs/features/contracts-payments) - Convert quotes to contracts
+- [Sales Automation](/docs/features/sales-automation) - Link quotes to opportunities
+- [Service & Support](/docs/features/service-support) - Support sold products
+- [AI Capabilities](/docs/ai/overview) - Deep dive into AI features

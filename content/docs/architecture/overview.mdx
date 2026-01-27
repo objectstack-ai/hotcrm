@@ -1,0 +1,340 @@
+---
+title: Architecture Overview
+description: Understanding HotCRM's architecture and design principles
+---
+
+# Architecture Overview
+
+HotCRM is built on a modern, scalable architecture that emphasizes type safety, modularity, and developer experience. This document provides a high-level overview of the system architecture.
+
+## High-Level Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         Frontend Layer                          │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
+│  │   ObjectUI   │  │   Tailwind   │  │  Components  │          │
+│  │    Engine    │  │     CSS      │  │   Library    │          │
+│  └──────────────┘  └──────────────┘  └──────────────┘          │
+└─────────────────────────────────────────────────────────────────┘
+                            ▲
+                            │ REST API / JSON
+                            ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                      Application Layer                          │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
+│  │   Express    │  │   Actions    │  │   Triggers   │          │
+│  │   Server     │  │   (AI/API)   │  │   (Logic)    │          │
+│  └──────────────┘  └──────────────┘  └──────────────┘          │
+└─────────────────────────────────────────────────────────────────┘
+                            ▲
+                            │ ObjectQL
+                            ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                        Data Layer                               │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
+│  │   ObjectQL   │  │   Metadata   │  │   Database   │          │
+│  │   Engine     │  │   Registry   │  │   (Future)   │          │
+│  └──────────────┘  └──────────────┘  └──────────────┘          │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+## Core Components
+
+### 1. Frontend Layer
+
+The frontend is built using modern web technologies with a focus on user experience.
+
+**Technologies:**
+- **ObjectUI Engine**: Dynamic UI rendering based on metadata
+- **Tailwind CSS**: Utility-first CSS framework for styling
+- **Components Library**: Reusable UI components
+
+**Features:**
+- Server-side rendering
+- Dynamic form generation
+- Real-time updates
+- Responsive design
+
+### 2. Application Layer
+
+The middle tier handles business logic, API endpoints, and external integrations.
+
+**Components:**
+- **Express Server**: RESTful API server
+- **Actions**: Custom business actions (AI features, external APIs)
+- **Triggers**: Event-driven business logic
+
+**Capabilities:**
+- Request routing and validation
+- Authentication and authorization
+- Business rule execution
+- External API integration
+
+### 3. Data Layer
+
+The data layer manages all data operations and persistence.
+
+**Components:**
+- **ObjectQL Engine**: Type-safe query language
+- **Metadata Registry**: Object and field definitions
+- **Database**: Data persistence (future: PostgreSQL, MongoDB)
+
+**Features:**
+- Type-safe queries
+- Relationship management
+- Data validation
+- Audit logging
+
+## Design Principles
+
+### 1. Metadata-Driven
+
+Everything in HotCRM is defined through metadata:
+
+```typescript
+// Object definition in TypeScript
+export default const Account: ObjectSchema = {
+  name: 'Account',
+  label: 'Account',
+  fields: [...],
+  relationships: [...],
+  triggers: [...],
+  listViews: [...]
+};
+```
+
+**Benefits:**
+- Single source of truth
+- Type safety
+- Easy customization
+- Version control
+
+### 2. Type-Safe
+
+Full TypeScript implementation with strict type checking:
+
+```typescript
+// Type-safe queries
+const accounts: Account[] = await db.find('Account', {
+  filters: [['Industry', '=', 'Technology']]
+});
+
+// Compile-time validation
+accounts.forEach(account => {
+  console.log(account.Name); // ✅ Type-safe
+  console.log(account.InvalidField); // ❌ Compile error
+});
+```
+
+### 3. Modular & Extensible
+
+Clean package separation allows easy customization and extension.
+
+### 4. AI-First
+
+AI capabilities are core to the platform, not add-ons.
+
+### 5. Developer-Friendly
+
+Focus on developer experience with excellent tooling and documentation.
+
+## Data Flow
+
+### Read Operation
+
+```
+User Request
+    ↓
+Express Server (REST API)
+    ↓
+ObjectQL Query Engine
+    ↓
+Metadata Registry (validate schema)
+    ↓
+Database Access
+    ↓
+Return Data (JSON)
+```
+
+### Write Operation
+
+```
+User Request (Create/Update)
+    ↓
+Express Server (validation)
+    ↓
+Before Triggers (business logic)
+    ↓
+ObjectQL Mutation Engine
+    ↓
+Database Write
+    ↓
+After Triggers (automation)
+    ↓
+Return Result
+```
+
+## Monorepo Structure
+
+HotCRM uses a **multi-package monorepo** architecture:
+
+```
+hotcrm/
+├── packages/
+│   ├── core/                 # Foundation
+│   ├── crm/                  # Marketing & Sales
+│   ├── support/              # Service & Support
+│   ├── products/             # Product & Pricing
+│   ├── finance/              # Contracts & Payments
+│   ├── ui/                   # UI Components
+│   └── server/               # Application Server
+├── pnpm-workspace.yaml       # Workspace config
+└── package.json              # Root scripts
+```
+
+**Package Dependencies:**
+
+```
+@hotcrm/server (Application Assembly)
+  ├── @hotcrm/core
+  ├── @hotcrm/crm
+  ├── @hotcrm/support
+  ├── @hotcrm/products
+  ├── @hotcrm/finance
+  └── @hotcrm/ui
+
+Domain Packages (crm, support, products, finance)
+  └── @hotcrm/core
+
+@hotcrm/ui
+  └── @hotcrm/core
+
+@hotcrm/core (no dependencies)
+```
+
+## Vertical Slice Architecture
+
+Each domain package is a self-contained vertical slice:
+
+```
+@hotcrm/crm/
+├── src/
+│   ├── account.object.ts      # Schema
+│   ├── contact.object.ts      # Schema
+│   ├── opportunity.object.ts  # Schema
+│   ├── opportunity.hook.ts    # Business Logic
+│   ├── ai_briefing.action.ts  # Custom Action
+│   └── index.ts               # Exports
+└── package.json
+```
+
+**Benefits:**
+- Complete feature isolation
+- Easy to understand and maintain
+- Can be deployed independently
+- Clear ownership
+
+## Security Architecture
+
+### Authentication & Authorization
+
+```typescript
+// Future: JWT-based authentication
+const user = await authenticate(req.headers.authorization);
+
+// Row-level security
+const accounts = await db.find('Account', {
+  filters: [['OwnerId', '=', user.Id]]
+});
+```
+
+### Field-Level Security
+
+```typescript
+// Field permissions based on user role
+if (user.role !== 'Admin') {
+  delete account.AnnualRevenue; // Hide sensitive data
+}
+```
+
+### Audit Trail
+
+All data operations are logged for compliance:
+
+```typescript
+{
+  timestamp: '2026-01-27T10:00:00Z',
+  user: 'john.doe@acme.com',
+  action: 'UPDATE',
+  object: 'Account',
+  recordId: 'acc_123',
+  changes: {
+    Status: { old: 'Prospect', new: 'Customer' }
+  }
+}
+```
+
+## Scalability
+
+### Horizontal Scaling
+
+The stateless application layer can be scaled horizontally:
+
+```
+Load Balancer
+    ├── Server Instance 1
+    ├── Server Instance 2
+    └── Server Instance 3
+          ↓
+    Database Cluster
+```
+
+### Caching Strategy
+
+- **Metadata Caching**: Object schemas are cached in memory
+- **Query Results**: Frequently accessed data is cached
+- **API Responses**: Cache at CDN level
+
+### Performance Optimization
+
+- Lazy loading of related records
+- Batch operations for bulk data
+- Database query optimization
+- Efficient indexing
+
+## Technology Stack
+
+### Backend
+
+- **Runtime**: Node.js 18+
+- **Language**: TypeScript 5+
+- **Framework**: Express.js
+- **Package Manager**: pnpm 8+
+
+### Frontend (Future)
+
+- **Framework**: React / Next.js
+- **Styling**: Tailwind CSS
+- **State Management**: React Query / Zustand
+
+### Database (Future)
+
+- **Primary**: PostgreSQL (relational data)
+- **Cache**: Redis (session, cache)
+- **Search**: Elasticsearch (full-text search)
+- **Vector DB**: Pinecone (AI embeddings)
+
+### AI/ML
+
+- **LLM**: OpenAI GPT-4 / GPT-3.5
+- **Embeddings**: OpenAI text-embedding-ada-002
+- **NLP**: Custom models for entity extraction
+
+## Next Steps
+
+Explore specific architectural components:
+
+- [Metadata-Driven Architecture](/docs/architecture/metadata-driven)
+- [ObjectQL Query Language](/docs/architecture/objectql)
+- [Monorepo Structure](/docs/architecture/monorepo-structure)

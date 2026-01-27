@@ -1,0 +1,812 @@
+---
+title: Service & Support
+description: Case management and knowledge base features with AI-powered support
+---
+
+# Service & Customer Success Domain
+
+The Service & Support domain (服务域) helps increase customer lifetime value (LTV) and reduce churn through exceptional omni-channel support and AI-powered assistance.
+
+## Overview
+
+**Key Objects**: `Case`, `Knowledge`
+
+**Main Goals**:
+- Omni-channel case management (Email, Web, Phone, WeChat, Chat, Mobile)
+- SLA tracking and enforcement
+- AI-powered auto-assignment and solution suggestions
+- Comprehensive knowledge base with AI Q&A
+- Customer satisfaction tracking
+- Escalation management
+
+## Case Management
+
+### Case Object
+
+The Case object represents customer support requests and issues.
+
+#### Core Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| CaseNumber | AutoNumber | Auto-generated case number (CASE-YYYY-0000) |
+| Subject | Text | Case subject/title (required) |
+| Description | Textarea | Problem description (required) |
+| Status | Picklist | Case status |
+| Priority | Picklist | Critical, High, Medium, Low |
+| Type | Picklist | Problem, Question, Incident, etc. |
+| Origin | Picklist | How the case was created |
+| AccountId | Reference | Customer account (required) |
+| ContactId | Reference | Person who reported the issue |
+| ContractId | Reference | Related service contract |
+| ProductId | Reference | Related product |
+| OwnerId | Reference | Case owner (required) |
+| AssignedToQueueId | Reference | Support team queue |
+| SLALevel | Picklist | Platinum, Gold, Silver, Bronze, Standard |
+| ResponseDueDate | DateTime | SLA response deadline (calculated) |
+| ResolutionDueDate | DateTime | SLA resolution deadline (calculated) |
+| FirstResponseTime | DateTime | When first response was sent |
+| ActualResolutionTime | DateTime | When case was resolved |
+| ResponseTimeMinutes | Number | Time to first response (calculated) |
+| ResolutionTimeMinutes | Number | Time to resolution (calculated) |
+| IsSLAViolated | Checkbox | SLA was violated (calculated) |
+| Resolution | Textarea | Solution description |
+| RootCause | Textarea | Root cause analysis |
+| ResolutionCategory | Picklist | How it was resolved |
+| CustomerSatisfaction | Picklist | Customer satisfaction rating |
+| SatisfactionScore | Number | Score 1-5 (calculated) |
+
+#### Case Types
+
+- **🐛 Problem**: Technical problems requiring troubleshooting
+- **❓ Question**: General questions or inquiries
+- **🆘 Incident**: Critical incidents requiring immediate attention
+- **💡 Feature Request**: Customer requests for new features
+- **🎓 Training**: Training requests
+- **🔧 Maintenance**: Scheduled maintenance
+- **📖 Other**: Other case types
+
+#### Case Status Flow
+
+1. **🆕 New** - Just created, not yet assigned
+2. **📋 Open** - Assigned, pending first response
+3. **🔄 In Progress** - Actively being worked on
+4. **⏸️ Waiting on Customer** - Waiting for customer response
+5. **⏰ Escalated** - Escalated to higher tier
+6. **✅ Resolved** - Solution provided, pending closure
+7. **🔒 Closed** - Case closed
+
+**Status Transitions**:
+```typescript
+// Open case (auto-assigned)
+await db.doc.update('Case', caseId, {
+  Status: 'Open',
+  OwnerId: assignedAgentId,
+  AssignedDate: new Date()
+});
+
+// Start working
+await db.doc.update('Case', caseId, {
+  Status: 'In Progress',
+  FirstResponseTime: new Date()
+});
+
+// Resolve case
+await db.doc.update('Case', caseId, {
+  Status: 'Resolved',
+  ActualResolutionTime: new Date(),
+  Resolution: 'Reset password link sent. Customer confirmed access restored.',
+  ResolutionCategory: 'Technical Support'
+});
+
+// Close case
+await db.doc.update('Case', caseId, {
+  Status: 'Closed',
+  ClosedDate: new Date()
+});
+```
+
+#### Case Priority
+
+- **🔴 Critical**: System down, business stopped
+- **🟠 High**: Major feature not working, significant impact
+- **🟡 Medium**: Feature not working, workaround available
+- **🟢 Low**: Minor issue, cosmetic, question
+
+### Omni-Channel Support
+
+Cases can be created from multiple channels:
+
+#### Origin Channels
+
+- **📧 Email**: Email-to-case
+- **🌐 Web**: Web form submission
+- **📞 Phone**: Phone call
+- **💬 WeChat**: WeChat integration
+- **🤖 Chat Bot**: Live chat or chatbot
+- **📱 Mobile App**: Mobile app submission
+- **🎯 Other**: Other channels
+
+**Email-to-Case Example**:
+```typescript
+// Automatic case creation from support@yourcompany.com
+{
+  Subject: email.subject,
+  Description: email.body,
+  Origin: 'Email',
+  ContactId: findOrCreateContact(email.from),
+  AccountId: contact.AccountId,
+  Priority: 'Medium',
+  Status: 'New'
+}
+```
+
+### SLA Management
+
+#### SLA Tiers
+
+Define service level agreements by customer tier:
+
+| Tier | Response Time | Resolution Time | Business Hours |
+|------|---------------|-----------------|----------------|
+| 🏆 Platinum | 1 hour | 4 hours | 24/7 |
+| 🥇 Gold | 2 hours | 8 hours | 24/7 |
+| 🥈 Silver | 4 hours | 1 business day | Business hours |
+| 🥉 Bronze | 8 hours | 2 business days | Business hours |
+| 📋 Standard | 1 business day | 5 business days | Business hours |
+
+#### SLA Calculation
+
+SLA deadlines are automatically calculated:
+
+```typescript
+// Trigger: Calculate SLA deadlines
+const slaRules = {
+  'Platinum': { responseHours: 1, resolutionHours: 4, is24x7: true },
+  'Gold': { responseHours: 2, resolutionHours: 8, is24x7: true },
+  'Silver': { responseHours: 4, resolutionHours: 8, is24x7: false },
+  'Bronze': { responseHours: 8, resolutionHours: 16, is24x7: false },
+  'Standard': { responseHours: 24, resolutionHours: 120, is24x7: false }
+};
+
+const rule = slaRules[case.SLALevel];
+
+case.ResponseDueDate = addBusinessHours(
+  case.CreatedDate,
+  rule.responseHours,
+  rule.is24x7
+);
+
+case.ResolutionDueDate = addBusinessHours(
+  case.CreatedDate,
+  rule.resolutionHours,
+  rule.is24x7
+);
+
+// Check for SLA violation
+if (now() > case.ResolutionDueDate && case.Status !== 'Closed') {
+  case.IsSLAViolated = true;
+}
+```
+
+### Escalation Management
+
+Automatic escalation for SLA violations or high-priority cases:
+
+```typescript
+// Trigger: Auto-escalate
+if (case.Priority === 'Critical' && !case.IsEscalated) {
+  // Immediate escalation for critical cases
+  await db.doc.update('Case', case.Id, {
+    IsEscalated: true,
+    EscalatedDate: new Date(),
+    EscalatedToId: await getSeniorSupportManager(),
+    EscalationReason: 'Critical priority - automatic escalation'
+  });
+  
+  await sendEscalationNotification(case.Id);
+}
+
+// Or escalate on SLA breach
+if (case.IsSLAViolated && !case.IsEscalated) {
+  await db.doc.update('Case', case.Id, {
+    IsEscalated: true,
+    EscalatedDate: new Date(),
+    EscalatedToId: case.Owner.ManagerId,
+    EscalationReason: 'SLA violation - auto-escalated to manager'
+  });
+}
+```
+
+### Resolution Tracking
+
+#### Resolution Categories
+
+- **💻 Technical Support**: Technical assistance provided
+- **📚 Product Guidance**: How-to help or product education
+- **🔧 Configuration Change**: Settings or config updated
+- **🐛 Bug Fix**: Software bug fixed
+- **📦 Product Update**: Software update/patch applied
+- **🎓 Training**: Training provided
+- **❌ No Fix Needed**: Not a bug or working as designed
+- **🎯 Other**: Other resolution type
+
+#### Root Cause Analysis
+
+Track why issues occur for future prevention:
+
+```typescript
+await db.doc.update('Case', caseId, {
+  Resolution: 'Password reset link sent. User successfully logged in.',
+  RootCause: 'User forgot password after 90-day mandatory reset policy.',
+  ResolutionCategory: 'Technical Support'
+});
+```
+
+### Customer Satisfaction
+
+Track customer happiness with surveys:
+
+```typescript
+// Send satisfaction survey after case closure
+await sendSatisfactionSurvey({
+  caseId: case.Id,
+  contactEmail: case.Contact.Email
+});
+
+// Customer responds
+await db.doc.update('Case', case.Id, {
+  CustomerSatisfaction: 'Very Satisfied',
+  SatisfactionScore: 5,
+  CustomerFeedback: 'Agent was very helpful and resolved issue quickly!'
+});
+```
+
+**Satisfaction Levels**:
+- **😄 Very Satisfied** (5 points)
+- **🙂 Satisfied** (4 points)
+- **😐 Neutral** (3 points)
+- **😟 Dissatisfied** (2 points)
+- **😡 Very Dissatisfied** (1 point)
+
+### AI Features
+
+#### Auto-Categorization (AIAutoCategory)
+
+AI automatically categorizes incoming cases into business categories:
+
+```typescript
+// Input: Case description
+"My login is not working. I enter my password but get error: Invalid credentials"
+
+// AI auto-categorization (sets AIAutoCategory field)
+{
+  AIAutoCategory: 'Technical', // Business category
+  // Agent manually sets Type field based on AI suggestion
+  Type: 'Problem', // Case type
+  Priority: 'High' // Affects user access
+}
+```
+
+**AI Categories** (auto-populated by AI):
+- **Technical**: Technical issues requiring troubleshooting
+- **Product**: Product questions or how-to inquiries
+- **Billing**: Billing/payment issues
+- **Feature**: Feature requests or enhancement ideas
+- **Complaint**: Customer complaints or dissatisfaction
+- **Other**: Other categories
+
+Note: `AIAutoCategory` is an AI-suggested business category, while `Type` is the formal case type (Problem, Question, Incident, etc.) set by the agent.
+
+#### Intelligent Routing (AISuggestedAssignee)
+
+AI recommends the best agent based on expertise and workload:
+
+```typescript
+// AI analyzes case and suggests agent
+{
+  AISuggestedAssignee: 'john-smith',
+  reason: 'John has:
+    - 95% satisfaction on password reset cases
+    - Lowest current queue (3 cases)
+    - Experience with this customer account
+    - Available now (not in meeting)'
+}
+```
+
+#### Knowledge Base Integration (AIRelatedKnowledge)
+
+AI finds relevant knowledge articles:
+
+```typescript
+// For case about password reset
+{
+  AIRelatedKnowledge: ['KB-2026-0015', 'KB-2026-0089', 'KB-2025-0234'],
+  articles: [
+    {
+      id: 'KB-2026-0015',
+      title: 'How to Reset Your Password',
+      relevance: 98
+    },
+    {
+      id: 'KB-2026-0089',
+      title: 'Troubleshooting Login Issues',
+      relevance: 85
+    }
+  ]
+}
+```
+
+#### Solution Suggestions (AISuggestedSolution)
+
+AI recommends solutions based on similar cases:
+
+```typescript
+"Suggested Solution (based on 234 similar cases):
+
+1. Send password reset link to user@example.com
+2. Verify email delivery (check spam folder)
+3. If link expired, generate new one (valid 24 hours)
+4. If still failing, check account status:
+   - Is account locked? (unlock required)
+   - Is account expired? (reactivate required)
+
+95% of similar cases resolved with Step 1-2.
+Average resolution time: 15 minutes."
+```
+
+#### Sentiment Analysis (AISentimentAnalysis)
+
+Understand customer emotion:
+
+- **😊 Positive**: Happy, satisfied customer
+- **😐 Neutral**: Informational, neutral tone
+- **😟 Negative**: Frustrated, concerned
+- **😡 Angry**: Very upset, escalate immediately
+
+```typescript
+// Angry customer detected
+if (case.AISentimentAnalysis === 'Angry') {
+  await db.doc.update('Case', case.Id, {
+    Priority: 'High',
+    IsEscalated: true,
+    EscalatedToId: customerSuccessManagerId
+  });
+  
+  await sendImmediateNotification({
+    to: customerSuccessManagerId,
+    message: `Angry customer detected: ${case.CaseNumber}`
+  });
+}
+```
+
+### List Views
+
+1. **All Cases**: All cases in system
+2. **My Cases**: Cases owned by me, not closed
+3. **Open Cases**: Status not in [Closed, Resolved]
+4. **High Priority**: Priority in [Critical, High], not closed
+5. **Escalated**: IsEscalated = true, not closed
+6. **SLA Violations**: IsSLAViolated = true
+7. **Recently Closed**: Closed in last 30 days
+
+## Knowledge Base
+
+### Knowledge Object
+
+The Knowledge object stores help articles, FAQs, and solutions.
+
+#### Core Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| KnowledgeNumber | AutoNumber | Auto-generated KB number (KB-YYYY-0000) |
+| Title | Text | Article title (required) |
+| UrlName | Text | URL-friendly name (unique) |
+| Summary | Textarea | Brief summary (required) |
+| Content | Textarea | Full article content (required) |
+| Category | Picklist | Article category |
+| SubCategory | Text | Sub-category |
+| Tags | Text | Comma-separated tags |
+| ProductId | Reference | Related product |
+| Status | Picklist | Draft, In Review, Published, Archived |
+| PublishedDate | DateTime | When published |
+| Visibility | Picklist | Public, Internal, Customer Portal, Partner |
+| RequireLogin | Checkbox | Require authentication to view? |
+| ViewCount | Number | Times viewed (calculated) |
+| HelpfulCount | Number | "Helpful" votes |
+| NotHelpfulCount | Number | "Not helpful" votes |
+| HelpfulScore | Percent | Helpfulness percentage (calculated) |
+| AverageRating | Number | Average rating 1-5 |
+| CasesResolvedCount | Number | Cases resolved using this article |
+| AuthorId | Reference | Article author |
+| ReviewerId | Reference | Reviewer/approver |
+| LastReviewedDate | Date | Last review date |
+| NextReviewDate | Date | When to review again |
+| VersionNumber | Number | Article version (1.0, 1.1, etc.) |
+
+#### Article Categories
+
+- **📘 Product Guide**: Product documentation and guides
+- **❓ FAQ**: Frequently asked questions
+- **🔧 Troubleshooting**: Problem-solving guides
+- **🎓 Tutorial**: Step-by-step tutorials
+- **📋 Best Practices**: Recommended practices
+- **🆕 New Features**: New feature announcements
+- **📖 API Documentation**: Developer documentation
+- **🎯 Other**: Other content types
+
+#### Article Status Flow
+
+1. **📝 Draft** - Being written
+2. **🔍 In Review** - Under review by SME/manager
+3. **✅ Published** - Live and available
+4. **📦 Archived** - Retired/outdated
+
+```typescript
+// Submit for review
+await db.doc.update('Knowledge', articleId, {
+  Status: 'In Review',
+  ReviewerId: await getKnowledgeReviewer()
+});
+
+// Publish article
+await db.doc.update('Knowledge', articleId, {
+  Status: 'Published',
+  PublishedDate: new Date(),
+  UrlName: generateUrlSlug(article.Title) // e.g., 'how-to-reset-password'
+});
+```
+
+### Visibility Control
+
+Control who can see articles:
+
+- **🌐 Public**: Anyone on internet (no login)
+- **🔒 Internal**: Employees only
+- **🎫 Customer Portal**: Logged-in customers
+- **🤝 Partner**: Partners and resellers
+
+```typescript
+// Public FAQ
+{
+  Title: 'How to Reset Your Password',
+  Category: 'FAQ',
+  Visibility: 'Public',
+  RequireLogin: false
+}
+
+// Internal troubleshooting guide
+{
+  Title: 'Advanced Database Troubleshooting',
+  Category: 'Troubleshooting',
+  Visibility: 'Internal',
+  RequireLogin: true
+}
+```
+
+### Version Control
+
+Track article changes over time:
+
+```typescript
+// Major update
+await db.doc.update('Knowledge', articleId, {
+  VersionNumber: 2.0,
+  VersionNotes: 'Updated for 2026 product release. Added new section on AI features.',
+  LastReviewedDate: new Date(),
+  NextReviewDate: addMonths(new Date(), 6) // Review in 6 months
+});
+
+// Minor update
+await db.doc.update('Knowledge', articleId, {
+  VersionNumber: 2.1,
+  VersionNotes: 'Fixed typos and updated screenshots.'
+});
+```
+
+### Article Analytics
+
+Track article performance:
+
+```typescript
+// View tracking
+{
+  ViewCount: 1523,
+  HelpfulCount: 1289,
+  NotHelpfulCount: 45,
+  HelpfulScore: 96.6, // (1289 / (1289 + 45)) * 100
+  AverageRating: 4.7,
+  CasesResolvedCount: 234 // Cases linked to this article
+}
+
+// Identify top articles
+const topArticles = await db.find('Knowledge', {
+  filters: [['Status', '=', 'Published']],
+  orderBy: { field: 'HelpfulScore', direction: 'desc' },
+  limit: 10
+});
+```
+
+### AI Features
+
+#### Auto-Generated Summaries (AIGeneratedSummary)
+
+AI creates concise summaries:
+
+```typescript
+// Input: Long article content (2000 words)
+// AI Output:
+"This article explains how to reset your password in 3 simple steps:
+1. Click 'Forgot Password' on login page
+2. Check email for reset link (valid 24 hours)
+3. Create new password meeting security requirements
+
+Common issues covered: email not received, link expired, account locked."
+```
+
+#### Related Articles (AIRelatedArticles)
+
+AI finds similar content:
+
+```typescript
+// For article "How to Reset Password"
+{
+  AIRelatedArticles: [
+    'KB-2026-0089: Troubleshooting Login Issues',
+    'KB-2026-0156: Account Security Best Practices',
+    'KB-2025-0245: Two-Factor Authentication Setup'
+  ]
+}
+```
+
+#### Vector Embeddings for RAG (AIEmbedding)
+
+Enable AI chatbot with semantic search:
+
+```typescript
+// AI creates vector embedding for semantic search
+{
+  AIEmbedding: "[0.123, -0.456, 0.789, ...]", // 1536-dimension vector
+  AIQAScore: 94 // Quality score for Q&A usage
+}
+
+// Semantic search example
+const results = await semanticSearch(
+  "I can't log in",
+  { 
+    collection: 'knowledge',
+    topK: 5
+  }
+);
+// Returns: "How to Reset Password" (even though query didn't mention "password")
+```
+
+#### AI Q&A Chatbot
+
+Use knowledge base for AI-powered support:
+
+```typescript
+// Customer asks question
+const question = "My password isn't working";
+
+// AI retrieves relevant articles
+const context = await vectorSearch(question, 'Knowledge');
+
+// AI generates answer
+const answer = await aiGenerateAnswer({
+  question: question,
+  context: context,
+  sources: true
+});
+
+console.log(answer);
+// "To reset your password:
+// 1. Click 'Forgot Password' on the login page
+// 2. Enter your email address
+// 3. Check your email for a reset link
+//
+// Sources: KB-2026-0015, KB-2026-0089"
+```
+
+### List Views
+
+1. **All Articles**: All knowledge articles
+2. **Published**: Status = Published
+3. **My Articles**: Articles I authored
+4. **Need Review**: Status = In Review
+5. **Most Helpful**: Sorted by HelpfulScore
+6. **Popular Articles**: Sorted by ViewCount
+7. **FAQ**: Category = FAQ
+
+## Best Practices
+
+### Case Management
+
+1. **Respond Quickly**: Aim for first response within SLA
+2. **Set Clear Priorities**: Use priority correctly (Critical = business down)
+3. **Document Thoroughly**: Write clear resolution notes for future reference
+4. **Link Knowledge**: Attach related KB articles to cases
+5. **Track Satisfaction**: Always send satisfaction surveys
+6. **Analyze Trends**: Review common case types monthly
+7. **Use AI Suggestions**: Review AI-recommended solutions before researching
+8. **Close Promptly**: Don't leave resolved cases open
+
+### Knowledge Base
+
+1. **Write Clearly**: Use simple, clear language
+2. **Add Screenshots**: Include visual aids
+3. **Keep Updated**: Review articles quarterly
+4. **Use Categories**: Properly categorize for discoverability
+5. **Tag Thoroughly**: Add relevant tags for search
+6. **Test Solutions**: Verify steps work before publishing
+7. **Track Performance**: Monitor HelpfulScore and update low-scoring articles
+8. **Leverage AI**: Use AI-generated summaries as starting point
+9. **Version Control**: Document significant changes in VersionNotes
+10. **Make Searchable**: Optimize titles and summaries for search
+
+## Example Workflows
+
+### Complete Case Resolution Workflow
+
+```typescript
+// 1. Customer submits case via email
+const caseData = {
+  Subject: 'Cannot access my account',
+  Description: 'I try to log in but it says my password is incorrect',
+  Origin: 'Email',
+  ContactId: contactId,
+  AccountId: accountId,
+  Priority: 'Medium',
+  Status: 'New'
+};
+
+const newCase = await db.doc.create('Case', caseData);
+
+// 2. AI auto-categorizes and assigns
+// (Automatic via trigger)
+{
+  AIAutoCategory: 'Technical',
+  AISuggestedAssignee: 'agent-john-smith',
+  AIRelatedKnowledge: ['KB-2026-0015', 'KB-2026-0089'],
+  AISuggestedSolution: '...',
+  AISentimentAnalysis: 'Neutral',
+  OwnerId: 'agent-john-smith'
+}
+
+// 3. Agent reviews AI suggestions and responds
+await db.doc.update('Case', newCase.Id, {
+  Status: 'In Progress',
+  FirstResponseTime: new Date()
+});
+
+await sendEmailToCustomer({
+  caseId: newCase.Id,
+  template: 'first-response',
+  content: 'I\'ve sent a password reset link to your email...'
+});
+
+// 4. Agent resolves case
+await db.doc.update('Case', newCase.Id, {
+  Status: 'Resolved',
+  ActualResolutionTime: new Date(),
+  Resolution: 'Sent password reset link. Customer confirmed successful login.',
+  ResolutionCategory: 'Technical Support',
+  RootCause: 'User forgot password',
+  LinkedKnowledgeArticleId: 'KB-2026-0015'
+});
+
+// 5. Customer satisfaction survey
+await sendSatisfactionSurvey(newCase.Id);
+
+// 6. Customer responds (via email link)
+await db.doc.update('Case', newCase.Id, {
+  CustomerSatisfaction: 'Very Satisfied',
+  SatisfactionScore: 5,
+  CustomerFeedback: 'Quick response and clear instructions!'
+});
+
+// 7. Auto-close after 3 days
+await db.doc.update('Case', newCase.Id, {
+  Status: 'Closed',
+  ClosedDate: new Date()
+});
+
+// 8. Update knowledge article stats
+await db.doc.update('Knowledge', 'KB-2026-0015', {
+  CasesResolvedCount: increment(1)
+});
+```
+
+### Knowledge Article Creation Workflow
+
+```typescript
+// 1. Create draft article
+const article = await db.doc.create('Knowledge', {
+  Title: 'How to Reset Your Password',
+  Category: 'FAQ',
+  SubCategory: 'Account Access',
+  Tags: 'password, reset, login, access',
+  Summary: 'Step-by-step guide to reset your password',
+  Content: `
+    # How to Reset Your Password
+    
+    If you've forgotten your password, follow these steps:
+    
+    ## Step 1: Navigate to Login Page
+    Go to https://app.hotcrm.com/login
+    
+    ## Step 2: Click "Forgot Password"
+    Below the login form, click the "Forgot Password?" link
+    
+    ## Step 3: Enter Email Address
+    Enter the email address associated with your account
+    
+    ## Step 4: Check Your Email
+    You'll receive a password reset link within 5 minutes
+    
+    ## Step 5: Create New Password
+    Click the link and create a new password that meets requirements:
+    - At least 8 characters
+    - One uppercase letter
+    - One number
+    - One special character
+    
+    ## Troubleshooting
+    - **Didn't receive email?** Check spam folder
+    - **Link expired?** Generate a new reset link (valid 24 hours)
+    - **Account locked?** Contact support@hotcrm.com
+  `,
+  Status: 'Draft',
+  Visibility: 'Public',
+  RequireLogin: false,
+  AuthorId: currentUserId
+});
+
+// 2. AI generates summary and embeddings
+// (Automatic via trigger)
+{
+  AIGeneratedSummary: '...',
+  AIEmbedding: '[0.123, -0.456, ...]',
+  AIQAScore: 92
+}
+
+// 3. Submit for review
+await db.doc.update('Knowledge', article.Id, {
+  Status: 'In Review',
+  ReviewerId: knowledgeManagerId
+});
+
+// 4. Reviewer approves
+await db.doc.update('Knowledge', article.Id, {
+  Status: 'Published',
+  PublishedDate: new Date(),
+  UrlName: 'how-to-reset-password',
+  NextReviewDate: addMonths(new Date(), 6)
+});
+
+// 5. Article gets views and feedback
+// (Tracked automatically)
+{
+  ViewCount: 1523,
+  HelpfulCount: 1289,
+  NotHelpfulCount: 45,
+  HelpfulScore: 96.6,
+  CasesResolvedCount: 234
+}
+
+// 6. Periodic review
+await db.doc.update('Knowledge', article.Id, {
+  LastReviewedDate: new Date(),
+  NextReviewDate: addMonths(new Date(), 6),
+  VersionNumber: 1.1,
+  VersionNotes: 'Updated screenshots for new UI'
+});
+```
+
+## Next Steps
+
+- [Sales Automation](/docs/features/sales-automation) - Link cases to accounts and contracts
+- [Contracts & Payments](/docs/features/contracts-payments) - Support service contracts
+- [AI Capabilities](/docs/ai/overview) - Deep dive into AI features
+- [Creating Objects](/docs/development/creating-objects) - Customize case and knowledge objects

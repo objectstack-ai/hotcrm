@@ -1,0 +1,864 @@
+---
+title: Creating Objects
+description: How to create custom business objects in HotCRM using TypeScript
+---
+
+# Creating Objects
+
+HotCRM uses a **metadata-driven architecture** where all business objects are defined in TypeScript using the `@objectstack/spec` protocol. This guide shows you how to create custom objects.
+
+## File Suffix Protocol
+
+HotCRM follows a strict file naming convention:
+
+```
+{object_name}.object.ts    # Object definitions
+{object_name}.hook.ts      # Business logic triggers
+{object_name}.page.ts      # UI page configurations
+{object_name}.view.ts      # UI view configurations
+```
+
+**Naming Rules:**
+- Use `snake_case` for file names
+- Always include the appropriate suffix (`.object.ts`, `.hook.ts`, etc.)
+- Object names in the schema use `PascalCase`
+
+## Basic Object Structure
+
+### Step 1: Import the Schema Type
+
+```typescript
+import type { ObjectSchema } from '@objectstack/spec/data';
+```
+
+### Step 2: Define the Object
+
+```typescript
+const MyCustomObject: ObjectSchema = {
+  name: 'CustomObject',           // PascalCase, no spaces
+  label: '自定义对象',              // Display name (singular)
+  labelPlural: '自定义对象',        // Display name (plural)
+  icon: 'briefcase',               // Icon name
+  description: 'Description of the object',
+  
+  features: {
+    searchable: true,              // Enable full-text search
+    trackFieldHistory: true,       // Track field changes
+    enableActivities: true,        // Link to activities
+    enableNotes: true,             // Allow notes
+    enableAttachments: true,       // Allow file attachments
+    enableDuplicateDetection: true // Check for duplicates
+  },
+  
+  fields: [
+    // Field definitions go here
+  ],
+  
+  relationships: [
+    // Relationship definitions go here
+  ],
+  
+  listViews: [
+    // List view definitions go here
+  ],
+  
+  validationRules: [
+    // Validation rules go here
+  ],
+  
+  pageLayout: {
+    // Page layout configuration
+  }
+};
+
+export default MyCustomObject;
+```
+
+### Step 3: Export the Object
+
+```typescript
+export default MyCustomObject;
+```
+
+## Field Types
+
+### Text Fields
+
+```typescript
+// Simple text
+{
+  name: 'Name',
+  type: 'text',
+  label: '名称',
+  required: true,
+  searchable: true,
+  length: 255,
+  unique: false
+}
+
+// Long text
+{
+  name: 'Description',
+  type: 'textarea',
+  label: '描述',
+  length: 32000,
+  rows: 5
+}
+
+// Email
+{
+  name: 'Email',
+  type: 'email',
+  label: '邮箱',
+  unique: true,
+  searchable: true
+}
+
+// Phone
+{
+  name: 'Phone',
+  type: 'phone',
+  label: '电话'
+}
+
+// URL
+{
+  name: 'Website',
+  type: 'url',
+  label: '网站'
+}
+```
+
+### Number Fields
+
+```typescript
+// Integer
+{
+  name: 'Quantity',
+  type: 'number',
+  label: '数量',
+  precision: 0,
+  min: 0,
+  max: 99999
+}
+
+// Decimal
+{
+  name: 'Price',
+  type: 'number',
+  label: '价格',
+  precision: 2,
+  min: 0
+}
+
+// Currency
+{
+  name: 'Amount',
+  type: 'currency',
+  label: '金额',
+  precision: 2,
+  currency: 'CNY'
+}
+
+// Percentage
+{
+  name: 'Discount',
+  type: 'percent',
+  label: '折扣',
+  precision: 2,
+  min: 0,
+  max: 100
+}
+```
+
+### Date & Time Fields
+
+```typescript
+// Date only
+{
+  name: 'StartDate',
+  type: 'date',
+  label: '开始日期'
+}
+
+// Date and time
+{
+  name: 'CreatedAt',
+  type: 'datetime',
+  label: '创建时间',
+  defaultValue: '$now',
+  readonly: true
+}
+
+// Time only
+{
+  name: 'MeetingTime',
+  type: 'time',
+  label: '会议时间'
+}
+```
+
+### Select Fields
+
+```typescript
+// Single select (picklist)
+{
+  name: 'Status',
+  type: 'select',
+  label: '状态',
+  required: true,
+  defaultValue: 'Draft',
+  options: [
+    { label: '📝 草稿', value: 'Draft' },
+    { label: '🔄 进行中', value: 'In Progress' },
+    { label: '✅ 完成', value: 'Completed' },
+    { label: '❌ 已取消', value: 'Cancelled' }
+  ]
+}
+
+// Multi-select
+{
+  name: 'Skills',
+  type: 'multiselect',
+  label: '技能',
+  options: [
+    { label: 'JavaScript', value: 'javascript' },
+    { label: 'Python', value: 'python' },
+    { label: 'Java', value: 'java' },
+    { label: 'Go', value: 'go' }
+  ]
+}
+```
+
+### Boolean Fields
+
+```typescript
+{
+  name: 'IsActive',
+  type: 'checkbox',
+  label: '激活',
+  defaultValue: true
+}
+```
+
+### Lookup Fields (Relationships)
+
+```typescript
+// Many-to-one relationship
+{
+  name: 'AccountId',
+  type: 'lookup',
+  label: '客户',
+  referenceTo: 'Account',    // Related object
+  required: true,
+  cascadeDelete: false       // Delete behavior
+}
+
+// Polymorphic lookup (multiple object types)
+{
+  name: 'WhatId',
+  type: 'lookup',
+  label: '相关对象',
+  referenceTo: ['Account', 'Opportunity', 'Case']
+}
+```
+
+### Formula Fields
+
+```typescript
+// Calculated field
+{
+  name: 'ExpectedRevenue',
+  type: 'currency',
+  label: '预期营收',
+  precision: 2,
+  formula: 'Amount * Probability / 100',
+  readonly: true,
+  description: '基于金额和赢单概率计算'
+}
+
+// Date calculation
+{
+  name: 'DaysOpen',
+  type: 'number',
+  label: '开放天数',
+  precision: 0,
+  formula: 'DATEDIFF(TODAY(), CreatedDate)',
+  readonly: true
+}
+```
+
+### AI-Enhanced Fields
+
+```typescript
+// AI-generated score
+{
+  name: 'LeadScore',
+  type: 'number',
+  label: '线索评分',
+  precision: 0,
+  min: 0,
+  max: 100,
+  readonly: true,
+  description: 'AI 自动计算的线索质量分数'
+}
+
+// AI-generated text
+{
+  name: 'AISummary',
+  type: 'textarea',
+  label: 'AI 摘要',
+  readonly: true,
+  length: 2000
+}
+```
+
+## Relationships
+
+### One-to-Many (hasMany)
+
+```typescript
+relationships: [
+  {
+    name: 'Opportunities',        // Relationship name
+    type: 'hasMany',              // One-to-many
+    object: 'Opportunity',        // Related object
+    foreignKey: 'AccountId',      // Foreign key in related object
+    label: '商机'
+  }
+]
+```
+
+### Many-to-One (belongsTo)
+
+```typescript
+// Automatically created when you define a lookup field
+{
+  name: 'AccountId',
+  type: 'lookup',
+  label: '客户',
+  referenceTo: 'Account'
+}
+// Creates reverse relationship: Account.belongsTo
+```
+
+### Many-to-Many
+
+```typescript
+// Use junction object
+const CampaignMember: ObjectSchema = {
+  name: 'CampaignMember',
+  fields: [
+    {
+      name: 'CampaignId',
+      type: 'lookup',
+      referenceTo: 'Campaign',
+      required: true
+    },
+    {
+      name: 'LeadId',
+      type: 'lookup',
+      referenceTo: 'Lead'
+    },
+    {
+      name: 'ContactId',
+      type: 'lookup',
+      referenceTo: 'Contact'
+    },
+    {
+      name: 'Status',
+      type: 'select',
+      options: [
+        { label: 'Sent', value: 'Sent' },
+        { label: 'Responded', value: 'Responded' }
+      ]
+    }
+  ]
+};
+```
+
+## List Views
+
+Define how records are displayed in list views:
+
+```typescript
+listViews: [
+  {
+    name: 'AllRecords',
+    label: '所有记录',
+    filters: [],                   // No filters - show all
+    columns: ['Name', 'Status', 'CreatedDate'],
+    sort: [['CreatedDate', 'desc']]
+  },
+  
+  {
+    name: 'MyActive',
+    label: '我的活动记录',
+    filters: [
+      ['OwnerId', '=', '$currentUser'],
+      ['Status', '=', 'Active']
+    ],
+    columns: ['Name', 'Priority', 'DueDate'],
+    sort: [['DueDate', 'asc']]
+  },
+  
+  {
+    name: 'HighPriority',
+    label: '高优先级',
+    filters: [
+      ['Priority', '=', 'High'],
+      ['Status', 'not in', ['Completed', 'Cancelled']]
+    ],
+    columns: ['Name', 'Status', 'AssignedTo', 'DueDate'],
+    sort: [['DueDate', 'asc']]
+  }
+]
+```
+
+### Filter Operators
+
+```typescript
+// Comparison
+['Field', '=', 'value']
+['Field', '!=', 'value']
+['Field', '>', 100]
+['Field', '>=', 100]
+['Field', '<', 100]
+['Field', '<=', 100]
+
+// Lists
+['Field', 'in', ['value1', 'value2']]
+['Field', 'not in', ['value1', 'value2']]
+
+// Null checks
+['Field', 'is null']
+['Field', 'is not null']
+
+// Text search
+['Field', 'like', '%search%']
+
+// Date ranges
+['CreatedDate', 'last_n_days', 7]
+['CreatedDate', 'this_month']
+['CreatedDate', 'this_year']
+
+// Current user
+['OwnerId', '=', '$currentUser']
+```
+
+## Validation Rules
+
+Add business rules to ensure data quality:
+
+```typescript
+validationRules: [
+  {
+    name: 'EmailOrPhoneRequired',
+    errorMessage: '邮箱或电话至少需要填写一个',
+    formula: 'AND(ISBLANK(Email), ISBLANK(Phone))'
+  },
+  
+  {
+    name: 'EndDateAfterStartDate',
+    errorMessage: '结束日期必须在开始日期之后',
+    formula: 'EndDate < StartDate'
+  },
+  
+  {
+    name: 'DiscountLimit',
+    errorMessage: '折扣不能超过30%',
+    formula: 'AND(Discount > 30, NOT(ISPICKVAL(ApprovalStatus, "Approved")))'
+  },
+  
+  {
+    name: 'AmountRequiredForAdvancedStage',
+    errorMessage: '进入方案阶段必须填写金额',
+    formula: 'AND(ISPICKVAL(Stage, "Proposal"), ISBLANK(Amount))'
+  }
+]
+```
+
+### Formula Functions
+
+- `ISBLANK(field)` - Check if field is empty
+- `AND(condition1, condition2, ...)` - Logical AND
+- `OR(condition1, condition2, ...)` - Logical OR
+- `NOT(condition)` - Logical NOT
+- `ISPICKVAL(field, 'value')` - Check picklist value
+- `DATEDIFF(date1, date2)` - Days between dates
+- `TODAY()` - Current date
+- `NOW()` - Current date and time
+- `PRIORVALUE(field)` - Previous value (before update)
+
+## Page Layout
+
+Define how fields are displayed on detail pages:
+
+```typescript
+pageLayout: {
+  sections: [
+    {
+      label: '基本信息',
+      columns: 2,                  // 2-column layout
+      fields: ['Name', 'Status', 'Priority', 'OwnerId']
+    },
+    
+    {
+      label: '详细信息',
+      columns: 2,
+      fields: ['StartDate', 'EndDate', 'Amount', 'Probability']
+    },
+    
+    {
+      label: '描述',
+      columns: 1,                  // 1-column layout (full width)
+      fields: ['Description']
+    },
+    
+    {
+      label: 'AI 分析',
+      columns: 1,
+      fields: ['AISummary', 'AIRecommendedAction']
+    }
+  ]
+}
+```
+
+## Complete Example
+
+Here's a complete custom object for tracking projects:
+
+```typescript
+import type { ObjectSchema } from '@objectstack/spec/data';
+
+const Project: ObjectSchema = {
+  name: 'Project',
+  label: '项目',
+  labelPlural: '项目',
+  icon: 'folder',
+  description: '项目管理和跟踪',
+  
+  features: {
+    searchable: true,
+    trackFieldHistory: true,
+    enableActivities: true,
+    enableNotes: true,
+    enableAttachments: true
+  },
+  
+  fields: [
+    // Basic Information
+    {
+      name: 'Name',
+      type: 'text',
+      label: '项目名称',
+      required: true,
+      searchable: true,
+      length: 255
+    },
+    
+    {
+      name: 'AccountId',
+      type: 'lookup',
+      label: '客户',
+      referenceTo: 'Account',
+      required: true
+    },
+    
+    {
+      name: 'OwnerId',
+      type: 'lookup',
+      label: '项目经理',
+      referenceTo: 'User',
+      required: true,
+      defaultValue: '$currentUser'
+    },
+    
+    // Status & Dates
+    {
+      name: 'Status',
+      type: 'select',
+      label: '状态',
+      required: true,
+      defaultValue: 'Planning',
+      options: [
+        { label: '📋 规划中', value: 'Planning' },
+        { label: '🚀 进行中', value: 'In Progress' },
+        { label: '⏸️ 暂停', value: 'On Hold' },
+        { label: '✅ 已完成', value: 'Completed' },
+        { label: '❌ 已取消', value: 'Cancelled' }
+      ]
+    },
+    
+    {
+      name: 'Priority',
+      type: 'select',
+      label: '优先级',
+      options: [
+        { label: 'Critical', value: 'Critical' },
+        { label: 'High', value: 'High' },
+        { label: 'Medium', value: 'Medium' },
+        { label: 'Low', value: 'Low' }
+      ]
+    },
+    
+    {
+      name: 'StartDate',
+      type: 'date',
+      label: '开始日期',
+      required: true
+    },
+    
+    {
+      name: 'EndDate',
+      type: 'date',
+      label: '结束日期',
+      required: true
+    },
+    
+    {
+      name: 'DurationDays',
+      type: 'number',
+      label: '工期(天)',
+      precision: 0,
+      formula: 'DATEDIFF(EndDate, StartDate)',
+      readonly: true
+    },
+    
+    // Budget
+    {
+      name: 'Budget',
+      type: 'currency',
+      label: '预算',
+      precision: 2,
+      currency: 'CNY'
+    },
+    
+    {
+      name: 'ActualCost',
+      type: 'currency',
+      label: '实际成本',
+      precision: 2,
+      currency: 'CNY'
+    },
+    
+    {
+      name: 'BudgetVariance',
+      type: 'currency',
+      label: '预算差异',
+      precision: 2,
+      formula: 'Budget - ActualCost',
+      readonly: true
+    },
+    
+    // Progress
+    {
+      name: 'PercentComplete',
+      type: 'percent',
+      label: '完成百分比',
+      precision: 0,
+      min: 0,
+      max: 100,
+      defaultValue: 0
+    },
+    
+    {
+      name: 'Description',
+      type: 'textarea',
+      label: '描述',
+      length: 32000
+    },
+    
+    // AI Fields
+    {
+      name: 'AIRiskScore',
+      type: 'number',
+      label: 'AI 风险评分',
+      precision: 0,
+      min: 0,
+      max: 100,
+      readonly: true,
+      description: 'AI 预测的项目风险分数'
+    },
+    
+    {
+      name: 'AIRecommendations',
+      type: 'textarea',
+      label: 'AI 建议',
+      readonly: true
+    }
+  ],
+  
+  relationships: [
+    {
+      name: 'Tasks',
+      type: 'hasMany',
+      object: 'Task',
+      foreignKey: 'ProjectId',
+      label: '任务'
+    },
+    {
+      name: 'Activities',
+      type: 'hasMany',
+      object: 'Activity',
+      foreignKey: 'WhatId',
+      label: '活动'
+    }
+  ],
+  
+  listViews: [
+    {
+      name: 'AllProjects',
+      label: '所有项目',
+      filters: [],
+      columns: ['Name', 'AccountId', 'Status', 'Priority', 'StartDate', 'EndDate', 'PercentComplete'],
+      sort: [['StartDate', 'desc']]
+    },
+    
+    {
+      name: 'MyActiveProjects',
+      label: '我的活动项目',
+      filters: [
+        ['OwnerId', '=', '$currentUser'],
+        ['Status', 'in', ['Planning', 'In Progress']]
+      ],
+      columns: ['Name', 'AccountId', 'Status', 'PercentComplete', 'EndDate'],
+      sort: [['EndDate', 'asc']]
+    },
+    
+    {
+      name: 'AtRisk',
+      label: '风险项目',
+      filters: [
+        ['AIRiskScore', '>', 70],
+        ['Status', 'not in', ['Completed', 'Cancelled']]
+      ],
+      columns: ['Name', 'AccountId', 'AIRiskScore', 'PercentComplete', 'EndDate', 'OwnerId'],
+      sort: [['AIRiskScore', 'desc']]
+    }
+  ],
+  
+  validationRules: [
+    {
+      name: 'EndDateAfterStartDate',
+      errorMessage: '结束日期必须在开始日期之后',
+      formula: 'EndDate < StartDate'
+    },
+    
+    {
+      name: 'ActualCostNotExceedBudget',
+      errorMessage: '实际成本不能超过预算的150%',
+      formula: 'ActualCost > (Budget * 1.5)'
+    },
+    
+    {
+      name: 'CompletedProjectMustBe100Percent',
+      errorMessage: '已完成项目必须是100%完成',
+      formula: 'AND(ISPICKVAL(Status, "Completed"), PercentComplete < 100)'
+    }
+  ],
+  
+  pageLayout: {
+    sections: [
+      {
+        label: '项目信息',
+        columns: 2,
+        fields: ['Name', 'AccountId', 'OwnerId', 'Status', 'Priority']
+      },
+      {
+        label: '时间规划',
+        columns: 2,
+        fields: ['StartDate', 'EndDate', 'DurationDays', 'PercentComplete']
+      },
+      {
+        label: '预算管理',
+        columns: 2,
+        fields: ['Budget', 'ActualCost', 'BudgetVariance']
+      },
+      {
+        label: 'AI 分析',
+        columns: 1,
+        fields: ['AIRiskScore', 'AIRecommendations']
+      },
+      {
+        label: '描述',
+        columns: 1,
+        fields: ['Description']
+      }
+    ]
+  }
+};
+
+export default Project;
+```
+
+## Best Practices
+
+### 1. Use Meaningful Names
+
+```typescript
+// ✅ Good
+{
+  name: 'ExpectedCloseDate',
+  label: '预计成交日期'
+}
+
+// ❌ Bad
+{
+  name: 'Date1',
+  label: '日期1'
+}
+```
+
+### 2. Add Descriptions
+
+```typescript
+// ✅ Good
+{
+  name: 'LeadScore',
+  label: '线索评分',
+  description: 'AI 自动计算的线索质量分数 (0-100)'
+}
+```
+
+### 3. Use Validation Rules
+
+```typescript
+// ✅ Good - Enforce data quality
+validationRules: [
+  {
+    name: 'EmailOrPhoneRequired',
+    errorMessage: '邮箱或电话至少需要填写一个',
+    formula: 'AND(ISBLANK(Email), ISBLANK(Phone))'
+  }
+]
+```
+
+### 4. Provide Helpful List Views
+
+```typescript
+// ✅ Good - Multiple useful views
+listViews: [
+  { name: 'All', ... },
+  { name: 'MyActive', ... },
+  { name: 'HighPriority', ... },
+  { name: 'OverdueItems', ... }
+]
+```
+
+### 5. Use Readonly for Calculated Fields
+
+```typescript
+// ✅ Good
+{
+  name: 'TotalAmount',
+  formula: 'Quantity * UnitPrice',
+  readonly: true
+}
+```
+
+## Next Steps
+
+- [Business Logic](/docs/development/business-logic) - Add hooks and triggers
+- [UI Development](/docs/development/ui-development) - Create custom UI
+- [ObjectQL API](/docs/api-reference/objectql-api) - Query your objects

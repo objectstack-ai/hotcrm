@@ -1,0 +1,7 @@
+{
+  "title": "API Reference",
+  "pages": [
+    "objectql-api",
+    "rest-api"
+  ]
+}

@@ -1,0 +1,506 @@
+---
+title: Marketing & Leads
+description: Lead management and campaign tracking features
+---
+
+# Marketing & Leads Domain
+
+The Marketing & Leads domain (获客域) helps you capture traffic, cleanse data, and deliver high-quality leads to your sales team.
+
+## Overview
+
+**Key Objects**: `Lead`, `Campaign`
+
+**Main Goals**:
+- Multi-channel lead capture
+- Lead deduplication and enrichment
+- AI-powered lead scoring
+- Campaign ROI tracking
+- Public pool (公海池) management
+
+## Lead Management
+
+### Lead Object
+
+The Lead object represents potential customers before they're qualified and converted into Accounts and Contacts.
+
+#### Core Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| FirstName | Text | First name of the lead |
+| LastName | Text | Last name of the lead |
+| Company | Text | Company name |
+| Title | Text | Job title |
+| Email | Email | Email address |
+| Phone | Phone | Phone number |
+| Mobile | Phone | Mobile phone number |
+| LeadSource | Picklist | Where the lead came from |
+| Industry | Picklist | Industry classification |
+| Status | Picklist | Lead status (New, Working, Nurturing, Converted, Dead) |
+| LeadScore | Number | AI-calculated score (0-100) |
+| DataCompleteness | Percent | Profile completeness percentage |
+| OwnerId | Reference | Lead owner (null = public pool) |
+
+#### Lead Sources
+
+- Website
+- Trade Show
+- Webinar
+- Social Media (LinkedIn, WeChat, etc.)
+- Referral
+- Email Campaign
+- Cold Call
+- Partner
+- Other
+
+#### Lead Status Flow
+
+1. **New** - Just captured, not yet contacted
+2. **Working** - Being actively contacted
+3. **Nurturing** - Not ready to buy, being nurtured
+4. **Converted** - Converted to Account/Contact/Opportunity
+5. **Dead** - No longer viable
+
+### Lead Scoring
+
+HotCRM automatically calculates a lead score (0-100) based on:
+
+**Data Completeness (40 points)**:
+- Basic info (name, company, email): 15 points
+- Contact details (phone, mobile): 10 points
+- Company info (industry, revenue): 15 points
+
+**Engagement (30 points)**:
+- Email opens: 5 points
+- Email clicks: 10 points
+- Website visits: 10 points
+- Form submissions: 5 points
+
+**Demographic Fit (30 points)**:
+- Industry match: 10 points
+- Company size match: 10 points
+- Job title match: 10 points
+
+**AI Enhancement**:
+```typescript
+// AI automatically updates lead score
+{
+  name: 'LeadScore',
+  type: 'number',
+  label: 'Lead Score',
+  aiCalculated: true,
+  formula: 'AI_CALCULATE_LEAD_SCORE()'
+}
+```
+
+### Public Pool (公海池)
+
+Leads without an owner go to the public pool, where any sales rep can claim them.
+
+**View Public Pool Leads**:
+```typescript
+const publicPool = await db.find('Lead', {
+  filters: [['OwnerId', 'IS NULL', null]]
+});
+```
+
+**Claim a Lead**:
+```typescript
+await db.doc.update('Lead', leadId, {
+  OwnerId: currentUserId,
+  Status: 'Working'
+});
+```
+
+**Return to Pool**:
+```typescript
+await db.doc.update('Lead', leadId, {
+  OwnerId: null,
+  Status: 'New'
+});
+```
+
+### Lead Conversion
+
+When a lead is qualified, convert it to:
+- **Account**: The company
+- **Contact**: The person
+- **Opportunity**: The potential deal
+
+**Conversion Process**:
+```typescript
+// 1. Create Account
+const account = await db.doc.create('Account', {
+  Name: lead.Company,
+  Industry: lead.Industry,
+  Phone: lead.Phone,
+  Website: lead.Website
+});
+
+// 2. Create Contact
+const contact = await db.doc.create('Contact', {
+  FirstName: lead.FirstName,
+  LastName: lead.LastName,
+  Email: lead.Email,
+  Phone: lead.Phone,
+  AccountId: account.Id,
+  Title: lead.Title
+});
+
+// 3. Create Opportunity
+const opportunity = await db.doc.create('Opportunity', {
+  Name: `${lead.Company} - Opportunity`,
+  AccountId: account.Id,
+  ContactId: contact.Id,
+  Stage: 'Prospecting',
+  LeadSource: lead.LeadSource
+});
+
+// 4. Update Lead
+await db.doc.update('Lead', lead.Id, {
+  Status: 'Converted',
+  ConvertedAccountId: account.Id,
+  ConvertedContactId: contact.Id,
+  ConvertedOpportunityId: opportunity.Id,
+  ConvertedDate: new Date()
+});
+```
+
+### AI Features
+
+#### Data Enrichment
+
+AI automatically enriches lead data from email signatures:
+
+```typescript
+// Input: Email signature
+const signature = `
+John Doe
+Senior VP of Sales
+Acme Corporation
+john.doe@acme.com
++1-555-0123
+`;
+
+// AI extraction
+{
+  FirstName: 'John',
+  LastName: 'Doe',
+  Title: 'Senior VP of Sales',
+  Company: 'Acme Corporation',
+  Email: 'john.doe@acme.com',
+  Phone: '+1-555-0123'
+}
+```
+
+#### Best Lead Recommendations
+
+AI suggests which leads to contact next:
+
+```typescript
+const hotLeads = await db.find('Lead', {
+  filters: [
+    ['LeadScore', '>', 70],
+    ['Status', '!=', 'Converted']
+  ],
+  orderBy: { field: 'LeadScore', direction: 'desc' },
+  limit: 10
+});
+```
+
+### List Views
+
+Pre-configured views for easy access:
+
+1. **All Leads**: All leads in the system
+2. **My Leads**: Leads assigned to me
+3. **Public Pool (公海池)**: Unclaimed leads
+4. **High Score Leads**: Score > 70
+5. **Recent Leads**: Created in last 7 days
+6. **To Be Nurtured**: Status = Nurturing
+7. **Converted Leads**: Status = Converted
+
+## Campaign Management
+
+### Campaign Object
+
+Track marketing campaigns across multiple channels.
+
+#### Core Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| Name | Text | Campaign name |
+| Type | Picklist | Campaign type (Email, Social, Event, etc.) |
+| Status | Picklist | Campaign status |
+| StartDate | Date | Campaign start date |
+| EndDate | Date | Campaign end date |
+| BudgetedCost | Currency | Planned budget |
+| ActualCost | Currency | Actual spend |
+| ExpectedRevenue | Currency | Expected revenue from campaign |
+| ActualRevenue | Currency | Actual revenue generated |
+| NumLeads | Number | Number of leads generated |
+| NumConvertedLeads | Number | Leads that converted |
+| ConversionRate | Percent | Lead conversion percentage |
+| ROI | Percent | Return on investment |
+
+#### Campaign Types
+
+- **Email**: Email marketing campaigns
+- **Social Media**: LinkedIn, WeChat, etc.
+- **Webinar**: Online webinars and events
+- **Trade Show**: Industry conferences
+- **Content Marketing**: Blogs, whitepapers
+- **SEO/SEM**: Search engine marketing
+- **Event**: In-person events
+- **Partner Marketing**: Co-marketing with partners
+- **Other**: Custom campaign types
+
+#### Campaign Status
+
+1. **Planning** - Campaign being planned
+2. **In Progress** - Campaign is active
+3. **Completed** - Campaign has ended
+4. **On Hold** - Temporarily paused
+5. **Cancelled** - Campaign cancelled
+
+### Campaign Metrics
+
+**Automatic ROI Calculation**:
+```typescript
+ROI = (ActualRevenue - ActualCost) / ActualCost * 100
+```
+
+**Example**:
+- ActualCost: $5,000
+- ActualRevenue: $50,000
+- ROI: (50,000 - 5,000) / 5,000 = 900%
+
+**Conversion Funnel**:
+```
+Leads Generated → Converted Leads → Opportunities → Closed Won
+     1000       →      200       →      50        →     15
+```
+
+**Conversion Rate**:
+```typescript
+ConversionRate = NumConvertedLeads / NumLeads * 100
+// Example: 200 / 1000 = 20%
+```
+
+### Campaign Member Management
+
+Track who participated in each campaign:
+
+```typescript
+// Add member to campaign
+await db.doc.create('CampaignMember', {
+  CampaignId: campaignId,
+  LeadId: leadId,
+  Status: 'Sent',
+  FirstRespondedDate: null
+});
+
+// Track response
+await db.doc.update('CampaignMember', memberId, {
+  Status: 'Responded',
+  FirstRespondedDate: new Date()
+});
+```
+
+**Member Status**:
+- Sent
+- Responded
+- Attended (for events)
+- No Show
+- Unsubscribed
+
+### AI Features
+
+#### Marketing Content Generation
+
+AI generates marketing copy:
+
+```typescript
+import { aiGenerateMarketingCopy } from '@hotcrm/actions';
+
+const content = await aiGenerateMarketingCopy({
+  campaignType: 'Email',
+  targetAudience: 'Enterprise IT Directors',
+  product: 'Cloud CRM Solution',
+  tone: 'Professional',
+  length: 'Short'
+});
+
+console.log(content.subject); // Email subject line
+console.log(content.body);    // Email body
+console.log(content.cta);     // Call to action
+```
+
+#### Audience Analysis
+
+AI analyzes and segments your target audience:
+
+```typescript
+const segments = await aiAudienceAnalysis({
+  industry: 'Technology',
+  companySize: 'Enterprise',
+  jobTitles: ['CTO', 'VP Engineering', 'IT Director']
+});
+
+// Returns:
+{
+  primarySegment: 'Enterprise Tech Leaders',
+  characteristics: [
+    'Budget authority over $100K',
+    'Focused on digital transformation',
+    'Values ROI and security'
+  ],
+  recommendedChannels: ['LinkedIn', 'Email', 'Webinars'],
+  messagingTips: [
+    'Emphasize enterprise-grade security',
+    'Show clear ROI metrics',
+    'Highlight integration capabilities'
+  ]
+}
+```
+
+#### Channel Recommendations
+
+AI suggests optimal marketing channels:
+
+```typescript
+const recommendations = await aiRecommendChannels({
+  targetAudience: 'IT Directors',
+  budget: 10000,
+  goals: ['Lead Generation', 'Brand Awareness']
+});
+
+// Returns:
+[
+  {
+    channel: 'LinkedIn Ads',
+    estimatedCost: 4000,
+    expectedLeads: 80,
+    costPerLead: 50
+  },
+  {
+    channel: 'Email Campaign',
+    estimatedCost: 2000,
+    expectedLeads: 200,
+    costPerLead: 10
+  },
+  {
+    channel: 'Webinar',
+    estimatedCost: 3000,
+    expectedLeads: 50,
+    costPerLead: 60
+  }
+]
+```
+
+## Best Practices
+
+### Lead Management
+
+1. **Keep the Public Pool Clean**: Regularly review and assign or disqualify leads
+2. **Update Lead Status**: Keep status current (New → Working → Nurturing/Converted/Dead)
+3. **Monitor Lead Score**: Focus on high-score leads (>70)
+4. **Enrich Data**: Complete all available fields for better scoring
+5. **Track Source**: Always capture lead source for attribution
+
+### Campaign Management
+
+1. **Set Clear Goals**: Define success metrics before launching
+2. **Track Costs**: Update actual costs regularly
+3. **Monitor ROI**: Calculate and review ROI for optimization
+4. **Segment Audiences**: Target specific segments for better conversion
+5. **Test and Iterate**: A/B test messaging and channels
+6. **Follow Up**: Ensure timely follow-up on campaign responses
+
+## Example Workflows
+
+### Lead Capture Workflow
+
+```typescript
+// 1. Web form submission
+const lead = await db.doc.create('Lead', {
+  FirstName: 'John',
+  LastName: 'Doe',
+  Email: 'john@example.com',
+  Company: 'Example Corp',
+  LeadSource: 'Website',
+  Status: 'New'
+});
+
+// 2. AI calculates score
+// (automatic via trigger)
+
+// 3. Auto-assign to sales rep
+if (lead.LeadScore > 70) {
+  await db.doc.update('Lead', lead.Id, {
+    OwnerId: await getNextAvailableRep(),
+    Status: 'Working'
+  });
+}
+
+// 4. Send notification
+await sendNotification({
+  to: lead.OwnerId,
+  message: `New hot lead: ${lead.FirstName} ${lead.LastName} (Score: ${lead.LeadScore})`
+});
+```
+
+### Campaign Execution Workflow
+
+```typescript
+// 1. Create campaign
+const campaign = await db.doc.create('Campaign', {
+  Name: 'Q1 2026 Email Campaign',
+  Type: 'Email',
+  Status: 'Planning',
+  StartDate: '2026-02-01',
+  EndDate: '2026-02-28',
+  BudgetedCost: 5000
+});
+
+// 2. Build target list
+const targets = await db.find('Lead', {
+  filters: [
+    ['Industry', '=', 'Technology'],
+    ['LeadScore', '>', 50],
+    ['Status', '!=', 'Converted']
+  ]
+});
+
+// 3. Add campaign members
+for (const lead of targets) {
+  await db.doc.create('CampaignMember', {
+    CampaignId: campaign.Id,
+    LeadId: lead.Id,
+    Status: 'Sent'
+  });
+}
+
+// 4. Track results
+await db.doc.update('Campaign', campaign.Id, {
+  NumLeads: targets.length,
+  Status: 'In Progress'
+});
+
+// 5. Calculate ROI (after campaign)
+await db.doc.update('Campaign', campaign.Id, {
+  ActualCost: 4500,
+  ActualRevenue: 45000,
+  NumConvertedLeads: 15,
+  Status: 'Completed'
+});
+// ROI automatically calculated: (45000-4500)/4500 = 900%
+```
+
+## Next Steps
+
+- [Sales Automation](/docs/features/sales-automation) - Convert leads to customers
+- [AI Capabilities](/docs/ai/overview) - Learn more about AI features
+- [Creating Objects](/docs/development/creating-objects) - Customize lead/campaign objects
