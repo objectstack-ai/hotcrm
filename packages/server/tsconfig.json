@@ -10,8 +10,6 @@
     { "path": "../support" },
     { "path": "../products" },
     { "path": "../finance" },
-    { "path": "../hooks" },
-    { "path": "../actions" },
     { "path": "../ui" }
   ],
   "include": ["src/**/*"],

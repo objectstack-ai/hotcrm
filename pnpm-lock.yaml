@@ -85,6 +85,9 @@ importers:
       '@hotcrm/core':
         specifier: workspace:*
         version: link:../core
+      axios:
+        specifier: ^1.6.0
+        version: 1.13.3
       typescript:
         specifier: ^5.3.0
         version: 5.9.3
@@ -198,9 +201,6 @@ importers:
 
   packages/server:
     dependencies:
-      '@hotcrm/actions':
-        specifier: workspace:*
-        version: link:../actions
       '@hotcrm/core':
         specifier: workspace:*
         version: link:../core
@@ -210,9 +210,6 @@ importers:
       '@hotcrm/finance':
         specifier: workspace:*
         version: link:../finance
-      '@hotcrm/hooks':
-        specifier: workspace:*
-        version: link:../hooks
       '@hotcrm/products':
         specifier: workspace:*
         version: link:../products

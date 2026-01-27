@@ -7,7 +7,7 @@
 
 import express, { Request, Response, NextFunction, Express } from 'express';
 import { db } from '@hotcrm/core';
-import { executeSmartBriefing } from '@hotcrm/actions';
+import { executeSmartBriefing } from '@hotcrm/crm';
 import { salesDashboard } from '@hotcrm/ui';
 
 const app: Express = express();

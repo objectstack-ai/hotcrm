@@ -1,7 +1,7 @@
 {
   "name": "@hotcrm/server",
   "version": "1.0.0",
-  "description": "Express server and APIs for HotCRM",
+  "description": "Express server and APIs for HotCRM - Assembly and startup only",
   "main": "dist/server.js",
   "scripts": {
     "dev": "ts-node-dev --respawn src/server.ts",
@@ -22,8 +22,6 @@
     "@hotcrm/support": "workspace:*",
     "@hotcrm/products": "workspace:*",
     "@hotcrm/finance": "workspace:*",
-    "@hotcrm/hooks": "workspace:*",
-    "@hotcrm/actions": "workspace:*",
     "@hotcrm/ui": "workspace:*",
     "express": "^4.18.2",
     "dotenv": "^16.3.1",

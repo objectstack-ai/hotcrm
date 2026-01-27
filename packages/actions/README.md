@@ -1,8 +1,47 @@
 # @hotcrm/actions
 
+⚠️ **DEPRECATED**: This package has been integrated into domain packages for better vertical integration.
+
+## Migration Guide
+
+Actions are now part of their respective domain packages:
+
+| Old Package | New Package | Action |
+|-------------|-------------|--------|
+| `@hotcrm/actions` (AI Smart Briefing) | `@hotcrm/crm` | Account analysis and insights |
+
+## Why Domain-Integrated Actions?
+
+The new architecture follows the principle of **vertical slice architecture**:
+- Each domain contains its own schemas, hooks, and actions
+- Better cohesion within domains
+- Reduced coupling between packages
+- Easier to understand and maintain
+
+## Migration Path
+
+### Before
+```typescript
+import { executeSmartBriefing } from '@hotcrm/actions';
+```
+
+### After
+```typescript
+import { executeSmartBriefing } from '@hotcrm/crm';
+```
+
+## Timeline
+
+- **Current**: Package marked as deprecated
+- **Next Release**: Package will be removed
+
+---
+
+## Legacy Documentation
+
 Custom actions for HotCRM.
 
-## Overview
+### Overview
 
 This package contains custom business actions that extend the core CRM functionality with specialized operations.
 

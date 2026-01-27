@@ -1,8 +1,47 @@
 # @hotcrm/hooks
 
-Business logic and triggers for HotCRM.
+⚠️ **DEPRECATED**: This package has been integrated into domain packages for better vertical integration.
 
-## Overview
+## Migration Guide
+
+Hooks are now part of their respective domain packages:
+
+| Old Package | New Package | Hook |
+|-------------|-------------|------|
+| `@hotcrm/hooks` (OpportunityHook) | `@hotcrm/crm` | Opportunity Stage Change automation |
+
+## Why Domain-Integrated Hooks?
+
+The new architecture follows the principle of **vertical slice architecture**:
+- Each domain contains its own schemas, hooks, and actions
+- Better cohesion within domains
+- Reduced coupling between packages
+- Easier to understand and maintain
+
+## Migration Path
+
+### Before
+```typescript
+import { OpportunityStageChange } from '@hotcrm/hooks';
+```
+
+### After
+```typescript
+import { OpportunityStageChange } from '@hotcrm/crm';
+```
+
+## Timeline
+
+- **Current**: Package marked as deprecated
+- **Next Release**: Package will be removed
+
+---
+
+## Legacy Documentation
+
+Business logic, automation triggers, and workflows.
+
+### Overview
 
 This package contains all business automation logic, hooks, and triggers that respond to data changes and automate business workflows.
 

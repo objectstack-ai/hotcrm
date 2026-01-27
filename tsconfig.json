@@ -20,8 +20,6 @@
       "@hotcrm/support": ["packages/support/src"],
       "@hotcrm/products": ["packages/products/src"],
       "@hotcrm/finance": ["packages/finance/src"],
-      "@hotcrm/hooks": ["packages/hooks/src"],
-      "@hotcrm/actions": ["packages/actions/src"],
       "@hotcrm/ui": ["packages/ui/src"],
       "@hotcrm/server": ["packages/server/src"]
     }
@@ -32,8 +30,6 @@
     { "path": "./packages/support" },
     { "path": "./packages/products" },
     { "path": "./packages/finance" },
-    { "path": "./packages/hooks" },
-    { "path": "./packages/actions" },
     { "path": "./packages/ui" },
     { "path": "./packages/server" }
   ],
