@@ -1,0 +1,26 @@
+<svg width="120" height="32" viewBox="0 0 120 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Flame icon representing "Hot" -->
+  <g>
+    <path d="M12 4C12 4 8 8 8 12C8 14.2091 9.79086 16 12 16C14.2091 16 16 14.2091 16 12C16 8 12 4 12 4Z" fill="url(#gradient1)"/>
+    <path d="M12 8C12 8 10 10 10 12C10 13.1046 10.8954 14 12 14C13.1046 14 14 13.1046 14 12C14 10 12 8 12 8Z" fill="#FFF"/>
+    <ellipse cx="12" cy="20" rx="8" ry="3" fill="url(#gradient2)" opacity="0.3"/>
+  </g>
+  
+  <!-- Text "HotCRM" -->
+  <text x="26" y="21" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="700" fill="#111827">
+    Hot<tspan fill="#6366F1">CRM</tspan>
+  </text>
+  
+  <!-- Gradients -->
+  <defs>
+    <linearGradient id="gradient1" x1="12" y1="4" x2="12" y2="16" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#F59E0B"/>
+      <stop offset="50%" stop-color="#EF4444"/>
+      <stop offset="100%" stop-color="#DC2626"/>
+    </linearGradient>
+    <linearGradient id="gradient2" x1="12" y1="17" x2="12" y2="23" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#EF4444"/>
+      <stop offset="100%" stop-color="#DC2626" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+</svg>
