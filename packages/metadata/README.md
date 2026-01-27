@@ -92,7 +92,7 @@ This package contains all business object metadata definitions for the CRM syste
 import { AccountSchema, ContactSchema, OpportunitySchema } from '@hotcrm/metadata';
 
 // Use object definitions in your code
-console.log(AccountSchema.label); // "客户"
+console.log(AccountSchema.label); // "Account"
 ```
 
 ### Architecture
