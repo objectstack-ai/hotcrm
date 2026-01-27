@@ -41,6 +41,9 @@ importers:
       '@hotcrm/crm':
         specifier: workspace:*
         version: link:../crm
+      '@objectstack/spec':
+        specifier: ^0.4.1
+        version: 0.4.1
       axios:
         specifier: ^1.6.0
         version: 1.13.3
@@ -63,6 +66,9 @@ importers:
 
   packages/core:
     dependencies:
+      '@objectstack/spec':
+        specifier: ^0.4.1
+        version: 0.4.1
       typescript:
         specifier: ^5.3.0
         version: 5.9.3
@@ -85,6 +91,9 @@ importers:
       '@hotcrm/core':
         specifier: workspace:*
         version: link:../core
+      '@objectstack/spec':
+        specifier: ^0.4.1
+        version: 0.4.1
       axios:
         specifier: ^1.6.0
         version: 1.13.3
@@ -110,6 +119,9 @@ importers:
       '@hotcrm/core':
         specifier: workspace:*
         version: link:../core
+      '@objectstack/spec':
+        specifier: ^0.4.1
+        version: 0.4.1
       typescript:
         specifier: ^5.3.0
         version: 5.9.3
@@ -138,6 +150,9 @@ importers:
       '@hotcrm/finance':
         specifier: workspace:*
         version: link:../finance
+      '@objectstack/spec':
+        specifier: ^0.4.1
+        version: 0.4.1
       typescript:
         specifier: ^5.3.0
         version: 5.9.3
@@ -160,6 +175,9 @@ importers:
       '@hotcrm/core':
         specifier: workspace:*
         version: link:../core
+      '@objectstack/spec':
+        specifier: ^0.4.1
+        version: 0.4.1
       typescript:
         specifier: ^5.3.0
         version: 5.9.3
@@ -182,6 +200,9 @@ importers:
       '@hotcrm/core':
         specifier: workspace:*
         version: link:../core
+      '@objectstack/spec':
+        specifier: ^0.4.1
+        version: 0.4.1
       typescript:
         specifier: ^5.3.0
         version: 5.9.3
@@ -253,6 +274,9 @@ importers:
       '@hotcrm/core':
         specifier: workspace:*
         version: link:../core
+      '@objectstack/spec':
+        specifier: ^0.4.1
+        version: 0.4.1
       typescript:
         specifier: ^5.3.0
         version: 5.9.3
@@ -278,6 +302,9 @@ importers:
       '@hotcrm/crm':
         specifier: workspace:*
         version: link:../crm
+      '@objectstack/spec':
+        specifier: ^0.4.1
+        version: 0.4.1
       tailwindcss:
         specifier: ^3.4.0
         version: 3.4.19
@@ -608,6 +635,10 @@ packages:
   '@nodelib/fs.walk@1.2.8':
     resolution: {integrity: sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg==}
     engines: {node: '>= 8'}
+
+  '@objectstack/spec@0.4.1':
+    resolution: {integrity: sha512-UEGjeZBgK0eAcShKOVYgDQ8+vekaRcgYSmJ09Avf3iyTzjl3sKqYC0WVQdyVWbqptMhU5kNlKEIIVxcdJnUc0Q==}
+    engines: {node: '>=18.0.0'}
 
   '@sinclair/typebox@0.27.8':
     resolution: {integrity: sha512-+Fj43pSMwJs4KRrH/938Uf+uAELIgVBmQzg/q1YG10djyfA3TnrU8N8XzqCh/okZdszqBQTZf96idMfE5lnwTA==}
@@ -2397,6 +2428,9 @@ packages:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
 
+  zod@3.25.76:
+    resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
+
 snapshots:
 
   '@alloc/quick-lru@5.2.0': {}
@@ -2836,6 +2870,10 @@ snapshots:
     dependencies:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.20.1
+
+  '@objectstack/spec@0.4.1':
+    dependencies:
+      zod: 3.25.76
 
   '@sinclair/typebox@0.27.8': {}
 
@@ -4836,3 +4874,5 @@ snapshots:
   yn@3.1.1: {}
 
   yocto-queue@0.1.0: {}
+
+  zod@3.25.76: {}
