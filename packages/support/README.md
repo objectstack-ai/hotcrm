@@ -9,10 +9,10 @@ This package contains all customer support functionality including case manageme
 ## Business Objects (Schemas)
 
 **Legacy YAML Definitions:**
-- **Case** (in @hotcrm/metadata): Multi-channel ticket intake (Email, Web, Phone, WeChat, Chat), SLA management, priority/escalation, customer satisfaction tracking
-- **Knowledge** (in @hotcrm/metadata): Help documentation, FAQ management, article categorization, version control, RAG support with vector embeddings
+- **Case**: Multi-channel ticket intake (Email, Web, Phone, WeChat, Chat), SLA management, priority/escalation, customer satisfaction tracking
+- **Knowledge**: Help documentation, FAQ management, article categorization, version control, RAG support with vector embeddings
 
-> Note: Case and Knowledge objects are currently defined in YAML format in the @hotcrm/metadata package. They are planned for TypeScript migration to this package in future releases.
+> Note: Case and Knowledge objects are currently defined in YAML format. They are planned for TypeScript migration to this package in future releases.
 
 ## Key Features
 
@@ -39,7 +39,6 @@ This package contains all customer support functionality including case manageme
 import { /* CaseSchema, KnowledgeSchema */ } from '@hotcrm/support';
 
 // Note: TypeScript schema exports will be available after migration from YAML
-// Current definitions are in @hotcrm/metadata package
 ```
 
 ## Future Enhancements

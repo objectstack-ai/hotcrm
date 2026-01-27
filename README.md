@@ -129,12 +129,6 @@ Domain Packages (crm, support, products, finance)
 @hotcrm/core (no dependencies)
 ```
 
-**Deprecated Packages:**
-- `@hotcrm/hooks` - ⚠️ Integrated into domain packages
-- `@hotcrm/actions` - ⚠️ Integrated into domain packages
-- `@hotcrm/metadata` - ⚠️ Split into domain packages
-
-
 ## 🚀 Getting Started
 
 ### Prerequisites
@@ -260,26 +254,6 @@ Express server for application assembly and REST API endpoints. Integrates all d
 - AI-powered features integration
 
 [Read more →](./packages/server/README.md)
-
-### Deprecated Packages
-
-#### @hotcrm/hooks
-
-⚠️ **Deprecated**: Hooks have been moved into their respective domain packages for better vertical integration.
-
-[Read more →](./packages/hooks/README.md)
-
-#### @hotcrm/actions
-
-⚠️ **Deprecated**: Actions have been moved into their respective domain packages for better vertical integration.
-
-[Read more →](./packages/actions/README.md)
-
-#### @hotcrm/metadata
-
-⚠️ **Deprecated**: This package has been split into domain-specific packages (@hotcrm/crm, @hotcrm/support, @hotcrm/products, @hotcrm/finance). Contains legacy YAML definitions.
-
-[Read more →](./packages/metadata/README.md)
 
 ## 🤖 AI-Assisted Development
 

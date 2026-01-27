@@ -9,11 +9,11 @@ This package contains all product and pricing functionality including product ca
 ## Business Objects (Schemas)
 
 **Legacy YAML Definitions:**
-- **Product** (in @hotcrm/metadata): Product catalog with SKU management, product families, multi-UOM support, inventory tracking, AI-powered sales points
-- **Pricebook** (in @hotcrm/metadata): Multi-currency pricing (CNY, USD, EUR, GBP, JPY, HKD, SGD), regional/channel pricing, tiered strategies, date-effective pricing
-- **Quote** (in @hotcrm/metadata): Complex quote configuration, multi-level discount approval, automatic tax/shipping calculation, PDF generation, AI product bundle recommendations
+- **Product**: Product catalog with SKU management, product families, multi-UOM support, inventory tracking, AI-powered sales points
+- **Pricebook**: Multi-currency pricing (CNY, USD, EUR, GBP, JPY, HKD, SGD), regional/channel pricing, tiered strategies, date-effective pricing
+- **Quote**: Complex quote configuration, multi-level discount approval, automatic tax/shipping calculation, PDF generation, AI product bundle recommendations
 
-> Note: Product, Pricebook, and Quote objects are currently defined in YAML format in the @hotcrm/metadata package. They are planned for TypeScript migration to this package in future releases.
+> Note: Product, Pricebook, and Quote objects are currently defined in YAML format. They are planned for TypeScript migration to this package in future releases.
 
 ## Key Features
 
@@ -47,7 +47,6 @@ This package contains all product and pricing functionality including product ca
 import { /* ProductSchema, PricebookSchema, QuoteSchema */ } from '@hotcrm/products';
 
 // Note: TypeScript schema exports will be available after migration from YAML
-// Current definitions are in @hotcrm/metadata package
 ```
 
 ## Future Enhancements
