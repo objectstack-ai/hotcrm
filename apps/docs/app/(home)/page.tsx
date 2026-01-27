@@ -22,8 +22,8 @@ export default function HomePage() {
           </p>
           
           <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-            HotCRM unifies marketing, sales, and customer service in one powerful platform. 
-            Close deals faster with AI-powered insights and deliver exceptional customer experiences.
+            Open-source CRM unifying marketing, sales, and customer service in one powerful platform. 
+            Close deals faster with AI-powered insights and deliver exceptional customer experiences—completely free.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -130,10 +130,10 @@ export default function HomePage() {
       {/* Stats */}
       <section className="container mx-auto px-4 py-16 border-t border-border">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto text-center">
-          <StatCard number="360°" label="Customer View" />
-          <StatCard number="24/7" label="AI Assistant" />
-          <StatCard number="All-in-One" label="Platform" />
-          <StatCard number="Global" label="Multi-Currency" />
+          <StatCard number="100%" label="Open Source" />
+          <StatCard number="Free" label="Forever" />
+          <StatCard number="AI-Native" label="Auto-Maintained" />
+          <StatCard number="ObjectStack" label="Powered" />
         </div>
       </section>
 
