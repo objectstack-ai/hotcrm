@@ -11,3 +11,9 @@ coverage/
 *~
 .cache/
 tmp/
+
+# Monorepo specific
+packages/*/node_modules/
+packages/*/dist/
+packages/*/.turbo/
+.pnpm-store/

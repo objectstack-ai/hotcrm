@@ -1,0 +1,608 @@
+# Case Object Definition
+# 工单管理 - Service & Customer Success Domain
+# Follows @objectstack/spec standard for enterprise CRM
+
+name: Case
+label: 工单
+labelPlural: 工单
+icon: ticket-alt
+description: 客户服务工单和支持请求管理
+
+# Enable core features
+features:
+  searchable: true
+  trackFieldHistory: true
+  enableActivities: true
+  enableNotes: true
+  enableAttachments: true
+  enableEmailToCase: true
+
+# Field Definitions
+fields:
+  # Basic Information
+  - name: CaseNumber
+    type: autoNumber
+    label: 工单编号
+    format: CASE-{YYYY}-{0000}
+    readonly: true
+    searchable: true
+    
+  - name: Subject
+    type: text
+    label: 主题
+    required: true
+    searchable: true
+    length: 255
+    
+  - name: Description
+    type: textarea
+    label: 问题描述
+    required: true
+    length: 32000
+    searchable: true
+    
+  - name: Status
+    type: select
+    label: 状态
+    required: true
+    defaultValue: New
+    options:
+      - label: 🆕 新建
+        value: New
+      - label: 📋 待处理
+        value: Open
+      - label: 🔄 处理中
+        value: In Progress
+      - label: ⏸️ 等待客户
+        value: Waiting on Customer
+      - label: ⏰ 升级
+        value: Escalated
+      - label: ✅ 已解决
+        value: Resolved
+      - label: 🔒 已关闭
+        value: Closed
+        
+  - name: Priority
+    type: select
+    label: 优先级
+    required: true
+    defaultValue: Medium
+    options:
+      - label: 🔴 紧急
+        value: Critical
+      - label: 🟠 高
+        value: High
+      - label: 🟡 中
+        value: Medium
+      - label: 🟢 低
+        value: Low
+        
+  - name: Type
+    type: select
+    label: 工单类型
+    options:
+      - label: 🐛 问题
+        value: Problem
+      - label: ❓ 咨询
+        value: Question
+      - label: 🆘 故障
+        value: Incident
+      - label: 💡 功能请求
+        value: Feature Request
+      - label: 🎓 培训
+        value: Training
+      - label: 🔧 维护
+        value: Maintenance
+      - label: 📖 其他
+        value: Other
+        
+  - name: Origin
+    type: select
+    label: 来源渠道
+    required: true
+    options:
+      - label: 📧 邮件
+        value: Email
+      - label: 🌐 网页
+        value: Web
+      - label: 📞 电话
+        value: Phone
+      - label: 💬 微信
+        value: WeChat
+      - label: 🤖 聊天机器人
+        value: Chat Bot
+      - label: 📱 APP
+        value: Mobile App
+      - label: 🎯 其他
+        value: Other
+        
+  # Related Records
+  - name: AccountId
+    type: lookup
+    label: 客户
+    referenceTo: Account
+    required: true
+    
+  - name: ContactId
+    type: lookup
+    label: 联系人
+    referenceTo: Contact
+    
+  - name: ContractId
+    type: lookup
+    label: 关联合同
+    referenceTo: Contract
+    description: 服务合同
+    
+  - name: ProductId
+    type: lookup
+    label: 相关产品
+    referenceTo: Product
+    
+  # Assignment
+  - name: OwnerId
+    type: lookup
+    label: 负责人
+    referenceTo: User
+    required: true
+    
+  - name: AssignedToQueueId
+    type: lookup
+    label: 分配队列
+    referenceTo: Queue
+    description: 支持团队队列
+    
+  # SLA Management
+  - name: SLALevel
+    type: select
+    label: SLA 级别
+    options:
+      - label: 🏆 白金
+        value: Platinum
+      - label: 🥇 黄金
+        value: Gold
+      - label: 🥈 白银
+        value: Silver
+      - label: 🥉 青铜
+        value: Bronze
+      - label: 📋 标准
+        value: Standard
+        
+  - name: ResponseDueDate
+    type: datetime
+    label: 响应截止时间
+    readonly: true
+    description: 根据 SLA 自动计算
+    
+  - name: ResolutionDueDate
+    type: datetime
+    label: 解决截止时间
+    readonly: true
+    description: 根据 SLA 自动计算
+    
+  - name: FirstResponseTime
+    type: datetime
+    label: 首次响应时间
+    readonly: true
+    
+  - name: ActualResolutionTime
+    type: datetime
+    label: 实际解决时间
+    readonly: true
+    
+  - name: ResponseTimeMinutes
+    type: number
+    label: 响应时长（分钟）
+    precision: 0
+    readonly: true
+    
+  - name: ResolutionTimeMinutes
+    type: number
+    label: 解决时长（分钟）
+    precision: 0
+    readonly: true
+    
+  - name: IsSLAViolated
+    type: checkbox
+    label: SLA 违规
+    readonly: true
+    defaultValue: false
+    
+  # Escalation
+  - name: IsEscalated
+    type: checkbox
+    label: 已升级
+    defaultValue: false
+    
+  - name: EscalatedDate
+    type: datetime
+    label: 升级时间
+    readonly: true
+    
+  - name: EscalatedToId
+    type: lookup
+    label: 升级至
+    referenceTo: User
+    
+  - name: EscalationReason
+    type: textarea
+    label: 升级原因
+    length: 2000
+    
+  # Resolution
+  - name: Resolution
+    type: textarea
+    label: 解决方案
+    length: 32000
+    searchable: true
+    
+  - name: RootCause
+    type: textarea
+    label: 根本原因
+    length: 5000
+    
+  - name: ResolutionCategory
+    type: select
+    label: 解决方案分类
+    options:
+      - label: 💻 技术支持
+        value: Technical Support
+      - label: 📚 产品指导
+        value: Product Guidance
+      - label: 🔧 配置修改
+        value: Configuration Change
+      - label: 🐛 Bug 修复
+        value: Bug Fix
+      - label: 📦 产品更新
+        value: Product Update
+      - label: 🎓 培训
+        value: Training
+      - label: ❌ 无需修复
+        value: No Fix Needed
+      - label: 🎯 其他
+        value: Other
+        
+  # Satisfaction
+  - name: CustomerSatisfaction
+    type: select
+    label: 客户满意度
+    readonly: true
+    options:
+      - label: 😄 非常满意
+        value: Very Satisfied
+      - label: 🙂 满意
+        value: Satisfied
+      - label: 😐 一般
+        value: Neutral
+      - label: 😟 不满意
+        value: Dissatisfied
+      - label: 😡 非常不满意
+        value: Very Dissatisfied
+        
+  - name: SatisfactionScore
+    type: number
+    label: 满意度评分
+    precision: 0
+    min: 1
+    max: 5
+    readonly: true
+    
+  - name: CustomerFeedback
+    type: textarea
+    label: 客户反馈
+    length: 5000
+    readonly: true
+    
+  # AI Enhancement Fields
+  - name: AIAutoCategory
+    type: select
+    label: AI 自动分类
+    readonly: true
+    options:
+      - label: 技术问题
+        value: Technical
+      - label: 产品咨询
+        value: Product
+      - label: 账务问题
+        value: Billing
+      - label: 功能建议
+        value: Feature
+      - label: 投诉
+        value: Complaint
+      - label: 其他
+        value: Other
+        
+  - name: AISuggestedAssignee
+    type: lookup
+    label: AI 推荐处理人
+    referenceTo: User
+    readonly: true
+    description: 根据工单内容自动推荐最合适的客服
+    
+  - name: AIRelatedKnowledge
+    type: text
+    label: AI 推荐知识库
+    readonly: true
+    length: 500
+    description: 相关知识库文章 ID 列表
+    
+  - name: AISuggestedSolution
+    type: textarea
+    label: AI 建议解决方案
+    readonly: true
+    length: 5000
+    description: 基于知识库的智能解决方案建议
+    
+  - name: AISentimentAnalysis
+    type: select
+    label: AI 情绪分析
+    readonly: true
+    options:
+      - label: 😊 积极
+        value: Positive
+      - label: 😐 中性
+        value: Neutral
+      - label: 😟 消极
+        value: Negative
+      - label: 😡 愤怒
+        value: Angry
+
+# Relationships
+relationships:
+  - name: CaseComments
+    type: hasMany
+    object: CaseComment
+    foreignKey: CaseId
+    label: 工单评论
+    
+  - name: Activities
+    type: hasMany
+    object: Activity
+    foreignKey: WhatId
+    label: 活动记录
+
+# List Views
+listViews:
+  - name: AllCases
+    label: 所有工单
+    filters: []
+    columns:
+      - CaseNumber
+      - Subject
+      - Account
+      - Priority
+      - Status
+      - Owner
+      - CreatedDate
+    sortBy: CreatedDate
+    sortOrder: desc
+    
+  - name: MyCases
+    label: 我的工单
+    filters:
+      - field: OwnerId
+        operator: equals
+        value: $CurrentUser.Id
+      - field: Status
+        operator: notIn
+        value: [Closed]
+    columns:
+      - CaseNumber
+      - Subject
+      - Account
+      - Priority
+      - Status
+      - ResolutionDueDate
+    sortBy: Priority
+    sortOrder: desc
+    
+  - name: OpenCases
+    label: 未关闭
+    filters:
+      - field: Status
+        operator: notIn
+        value: [Closed, Resolved]
+    columns:
+      - CaseNumber
+      - Subject
+      - Account
+      - Priority
+      - Status
+      - Owner
+      - CreatedDate
+    sortBy: CreatedDate
+    sortOrder: asc
+    
+  - name: HighPriority
+    label: 高优先级
+    filters:
+      - field: Priority
+        operator: in
+        value: [Critical, High]
+      - field: Status
+        operator: notIn
+        value: [Closed, Resolved]
+    columns:
+      - CaseNumber
+      - Subject
+      - Account
+      - Priority
+      - Status
+      - ResolutionDueDate
+      - Owner
+    sortBy: Priority
+    sortOrder: desc
+    
+  - name: Escalated
+    label: 已升级
+    filters:
+      - field: IsEscalated
+        operator: equals
+        value: true
+      - field: Status
+        operator: notIn
+        value: [Closed, Resolved]
+    columns:
+      - CaseNumber
+      - Subject
+      - Account
+      - Priority
+      - EscalatedDate
+      - EscalatedTo
+      - Owner
+    sortBy: EscalatedDate
+    sortOrder: desc
+    
+  - name: SLAViolations
+    label: SLA 违规
+    filters:
+      - field: IsSLAViolated
+        operator: equals
+        value: true
+    columns:
+      - CaseNumber
+      - Subject
+      - Account
+      - SLALevel
+      - ResolutionDueDate
+      - Owner
+    sortBy: ResolutionDueDate
+    sortOrder: asc
+    
+  - name: RecentlyClosed
+    label: 最近关闭
+    filters:
+      - field: Status
+        operator: equals
+        value: Closed
+      - field: ClosedDate
+        operator: last_n_days
+        value: 30
+    columns:
+      - CaseNumber
+      - Subject
+      - Account
+      - ResolutionTimeMinutes
+      - CustomerSatisfaction
+      - ClosedDate
+    sortBy: ClosedDate
+    sortOrder: desc
+
+# Page Layout
+pageLayout:
+  sections:
+    - label: 工单信息
+      columns: 2
+      fields:
+        - CaseNumber
+        - Subject
+        - Status
+        - Priority
+        - Type
+        - Origin
+        
+    - label: 关联记录
+      columns: 2
+      fields:
+        - AccountId
+        - ContactId
+        - ContractId
+        - ProductId
+        
+    - label: 分配
+      columns: 2
+      fields:
+        - OwnerId
+        - AssignedToQueueId
+        
+    - label: SLA 管理
+      columns: 2
+      fields:
+        - SLALevel
+        - ResponseDueDate
+        - ResolutionDueDate
+        - FirstResponseTime
+        - ActualResolutionTime
+        - ResponseTimeMinutes
+        - ResolutionTimeMinutes
+        - IsSLAViolated
+        
+    - label: 升级
+      columns: 2
+      fields:
+        - IsEscalated
+        - EscalatedDate
+        - EscalatedToId
+        - EscalationReason
+        
+    - label: 解决方案
+      columns: 1
+      fields:
+        - Resolution
+        - RootCause
+        - ResolutionCategory
+        
+    - label: 客户满意度
+      columns: 2
+      fields:
+        - CustomerSatisfaction
+        - SatisfactionScore
+        - CustomerFeedback
+        
+    - label: AI 智能派单
+      columns: 1
+      fields:
+        - AIAutoCategory
+        - AISuggestedAssignee
+        - AIRelatedKnowledge
+        - AISuggestedSolution
+        - AISentimentAnalysis
+        
+    - label: 问题描述
+      columns: 1
+      fields:
+        - Description
+
+# Validation Rules
+validationRules:
+  - name: ResolutionRequiredWhenResolved
+    errorMessage: 状态为已解决时必须填写解决方案
+    formula: |
+      AND(
+        Status = "Resolved",
+        ISBLANK(Resolution)
+      )
+      
+  - name: ClosedCaseReadOnly
+    errorMessage: 已关闭的工单不能修改
+    formula: |
+      AND(
+        PRIORVALUE(Status) = "Closed",
+        Status != "Closed"
+      )
+      
+  - name: EscalationReasonRequired
+    errorMessage: 升级工单必须填写升级原因
+    formula: |
+      AND(
+        IsEscalated = true,
+        ISBLANK(EscalationReason)
+      )
+
+# Triggers
+triggers:
+  - name: CaseAutoAssignment
+    event: afterInsert
+    description: AI 智能派单，根据工单内容自动分配给最合适的客服
+    
+  - name: CaseSLACalculation
+    event: beforeInsert, beforeUpdate
+    description: 根据 SLA 级别计算响应和解决截止时间
+    
+  - name: CaseEscalationCheck
+    event: afterUpdate
+    description: 检查 SLA 违规并自动升级
+    
+  - name: CaseAIAnalysis
+    event: afterInsert, afterUpdate
+    description: AI 分析工单内容，自动分类并推荐解决方案

@@ -3,8 +3,6 @@
     "target": "ES2020",
     "module": "commonjs",
     "lib": ["ES2020"],
-    "outDir": "./dist",
-    "rootDir": "./src",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -13,8 +11,27 @@
     "moduleResolution": "node",
     "declaration": true,
     "declarationMap": true,
-    "sourceMap": true
+    "sourceMap": true,
+    "composite": true,
+    "baseUrl": ".",
+    "paths": {
+      "@hotcrm/core": ["packages/core/src"],
+      "@hotcrm/metadata": ["packages/metadata/src"],
+      "@hotcrm/hooks": ["packages/hooks/src"],
+      "@hotcrm/actions": ["packages/actions/src"],
+      "@hotcrm/ui": ["packages/ui/src"],
+      "@hotcrm/server": ["packages/server/src"]
+    }
   },
-  "include": ["src/**/*"],
+  "references": [
+    { "path": "./packages/core" },
+    { "path": "./packages/metadata" },
+    { "path": "./packages/hooks" },
+    { "path": "./packages/actions" },
+    { "path": "./packages/ui" },
+    { "path": "./packages/server" }
+  ],
+  "files": [],
+  "include": [],
   "exclude": ["node_modules", "dist"]
 }

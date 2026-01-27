@@ -1,0 +1,28 @@
+{
+  "name": "@hotcrm/core",
+  "version": "1.0.0",
+  "description": "Core engine and ObjectQL for HotCRM",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "eslint src --ext .ts"
+  },
+  "keywords": [
+    "crm",
+    "objectstack",
+    "objectql"
+  ],
+  "author": "HotCRM Team",
+  "license": "MIT",
+  "dependencies": {
+    "typescript": "^5.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@typescript-eslint/eslint-plugin": "^6.14.0",
+    "@typescript-eslint/parser": "^6.14.0",
+    "eslint": "^8.55.0"
+  }
+}
