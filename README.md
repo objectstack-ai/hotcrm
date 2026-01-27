@@ -84,55 +84,56 @@ hotcrm/
 
 ### Package Dependencies
 
-**Domain-Driven Architecture:**
+**Vertical Slice Architecture:**
+
+Each domain package is a self-contained vertical slice with schemas, hooks, and actions:
 
 ```
 @hotcrm/core (Foundation)
-  ├── Domain Packages
-  │   ├── @hotcrm/crm (Marketing & Sales)
-  │   ├── @hotcrm/support (Customer Service)
-  │   ├── @hotcrm/products (Product & Pricing)
-  │   └── @hotcrm/finance (Financial Operations)
+  ├── @hotcrm/crm (Marketing & Sales Vertical Slice)
+  │   ├── Schemas: Account, Contact, Lead, Opportunity, Campaign, Activity
+  │   ├── Hooks: Opportunity stage automation
+  │   └── Actions: AI Smart Briefing
   │
-  ├── Integration Packages
-  │   ├── @hotcrm/hooks (uses CRM + Finance domains)
-  │   ├── @hotcrm/actions (uses CRM domain)
-  │   └── @hotcrm/ui (uses CRM domain)
+  ├── @hotcrm/support (Customer Service Vertical Slice)
+  │   └── Schemas: Case, Knowledge
   │
-  └── @hotcrm/server (integrates all packages)
+  ├── @hotcrm/products (Product & Pricing Vertical Slice)
+  │   └── Schemas: Product, Pricebook, Quote
+  │
+  ├── @hotcrm/finance (Financial Operations Vertical Slice)
+  │   └── Schemas: Contract, Payment
+  │
+  ├── @hotcrm/ui (UI Components)
+  │
+  └── @hotcrm/server (Application Assembly & Startup)
 ```
 
-**Detailed Dependencies:**
+**Simplified Dependencies:**
 
 ```
 @hotcrm/server
   ├── @hotcrm/core
-  ├── @hotcrm/crm
+  ├── @hotcrm/crm (includes schemas + hooks + actions)
   ├── @hotcrm/support
   ├── @hotcrm/products
   ├── @hotcrm/finance
-  ├── @hotcrm/hooks
-  ├── @hotcrm/actions
   └── @hotcrm/ui
-
-@hotcrm/hooks
-  ├── @hotcrm/core
-  ├── @hotcrm/crm
-  └── @hotcrm/finance
-
-@hotcrm/actions
-  ├── @hotcrm/core
-  └── @hotcrm/crm
-
-@hotcrm/ui
-  ├── @hotcrm/core
-  └── @hotcrm/crm
 
 Domain Packages (crm, support, products, finance)
   └── @hotcrm/core
 
+@hotcrm/ui
+  └── @hotcrm/core
+
 @hotcrm/core (no dependencies)
 ```
+
+**Deprecated Packages:**
+- `@hotcrm/hooks` - ⚠️ Integrated into domain packages
+- `@hotcrm/actions` - ⚠️ Integrated into domain packages
+- `@hotcrm/metadata` - ⚠️ Split into domain packages
+
 
 ## 🚀 Getting Started
 
@@ -191,45 +192,41 @@ Core engine providing ObjectQL query language and type definitions.
 
 [Read more →](./packages/core/README.md)
 
-### Domain Packages (Business-Focused)
+### Domain Packages (Vertical Slices)
+
+Each domain package is a complete vertical slice containing schemas, hooks, and actions:
 
 #### @hotcrm/crm
 
-Marketing & Sales domain - Account, Contact, Lead, Opportunity, Campaign, and Activity management.
+**Marketing & Sales Domain** - Complete vertical slice including:
+- **Schemas**: Account, Contact, Lead, Opportunity, Campaign, Activity
+- **Hooks**: Opportunity stage change automation
+- **Actions**: AI Smart Briefing for account insights
 
 [Read more →](./packages/crm/README.md)
 
 #### @hotcrm/support
 
-Customer Service domain - Case management and Knowledge base.
+**Customer Service Domain** - Case management and Knowledge base
+- **Schemas**: Case, Knowledge
 
 [Read more →](./packages/support/README.md)
 
 #### @hotcrm/products
 
-Product & Pricing domain - Product catalog, Pricebook, and Quote (CPQ) management.
+**Product & Pricing Domain** - Product catalog, Pricebook, and Quote (CPQ) management
+- **Schemas**: Product, Pricebook, Quote
 
 [Read more →](./packages/products/README.md)
 
 #### @hotcrm/finance
 
-Financial Operations domain - Contract lifecycle and Payment tracking.
+**Financial Operations Domain** - Contract lifecycle and Payment tracking
+- **Schemas**: Contract, Payment
 
 [Read more →](./packages/finance/README.md)
 
-### Integration Packages
-
-#### @hotcrm/hooks
-
-Business logic, automation triggers, and workflows across domains.
-
-[Read more →](./packages/hooks/README.md)
-
-#### @hotcrm/actions
-
-Custom business actions and AI-powered features.
-
-[Read more →](./packages/actions/README.md)
+### Application Packages
 
 #### @hotcrm/ui
 
@@ -239,15 +236,27 @@ UI components, dashboards, and page configurations.
 
 #### @hotcrm/server
 
-Express server with REST APIs and endpoints integrating all domains.
+Express server for application assembly and startup only. Integrates all domains.
 
 [Read more →](./packages/server/README.md)
 
-### Legacy Package (Deprecated)
+### Deprecated Packages
+
+#### @hotcrm/hooks
+
+⚠️ **Deprecated**: Hooks have been moved into their respective domain packages for better vertical integration.
+
+[Read more →](./packages/hooks/README.md)
+
+#### @hotcrm/actions
+
+⚠️ **Deprecated**: Actions have been moved into their respective domain packages for better vertical integration.
+
+[Read more →](./packages/actions/README.md)
 
 #### @hotcrm/metadata
 
-⚠️ **Deprecated**: This package has been split into domain-specific packages (@hotcrm/crm, @hotcrm/support, @hotcrm/products, @hotcrm/finance). Use the domain packages instead for better modularity.
+⚠️ **Deprecated**: This package has been split into domain-specific packages (@hotcrm/crm, @hotcrm/support, @hotcrm/products, @hotcrm/finance).
 
 [Read more →](./packages/metadata/README.md)
 

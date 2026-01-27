@@ -1,12 +1,39 @@
-# Domain-Driven Architecture
+# Domain-Driven Architecture with Vertical Slices
 
 ## Overview
 
-HotCRM now follows a **Domain-Driven Design (DDD)** approach, organizing code by business domain rather than technical layer. This architecture provides better modularity, clearer boundaries, and enables teams to work independently on different business capabilities.
+HotCRM follows a **Domain-Driven Design (DDD)** approach with **Vertical Slice Architecture**, organizing code by business domain rather than technical layer. Each domain package is a complete vertical slice containing all related code: schemas, hooks, and actions.
 
 ## Architecture Principles
 
-### 1. Domain-Centric Organization
+### 1. Vertical Slice Architecture
+
+Each domain is a **complete vertical slice** containing everything needed for that business capability:
+
+**Before (Horizontal/Technical Layers):**
+```
+packages/
+  ├── metadata/       # All schemas
+  ├── hooks/          # All hooks
+  └── actions/        # All actions
+```
+
+**After (Vertical Slices):**
+```
+packages/
+  ├── crm/
+  │   ├── schemas/    # Account, Contact, Opportunity
+  │   ├── hooks/      # Opportunity automation
+  │   └── actions/    # AI Smart Briefing
+  ├── support/
+  │   └── schemas/    # Case, Knowledge
+  ├── products/
+  │   └── schemas/    # Product, Pricebook, Quote
+  └── finance/
+      └── schemas/    # Contract, Payment
+```
+
+### 2. Domain-Centric Organization
 
 Code is organized around **business domains**, not technical layers:
 
@@ -36,15 +63,15 @@ packages/
       └── Contract
 ```
 
-### 2. Bounded Contexts
+### 3. Bounded Contexts
 
 Each domain package represents a **bounded context** with:
 - Clear domain boundaries
-- Cohesive business logic
+- Cohesive business logic (schemas + hooks + actions)
 - Minimal coupling with other domains
 - Independent evolution
 
-### 3. Ubiquitous Language
+### 4. Ubiquitous Language
 
 Each domain uses terminology from its business area:
 - **CRM**: Accounts, Leads, Opportunities, Pipeline
@@ -58,7 +85,9 @@ Each domain uses terminology from its business area:
 
 **Business Capability:** Lead-to-Cash lifecycle management
 
-**Objects:**
+**Complete Vertical Slice:**
+
+**Schemas:**
 - **Account**: Customer/company management
 - **Contact**: Person relationships
 - **Lead**: Prospecting and qualification
@@ -66,9 +95,15 @@ Each domain uses terminology from its business area:
 - **Campaign**: Marketing initiatives
 - **Activity**: Customer interactions
 
+**Hooks:**
+- **Opportunity Stage Change**: Automated contract creation when deals close-won
+
+**Actions:**
+- **AI Smart Briefing**: Intelligent account insights and recommendations
+
 **Core Workflows:**
 - Lead qualification → Opportunity creation
-- Opportunity stages → Closed Won/Lost
+- Opportunity stages → Closed Won/Lost → Contract creation
 - Account relationship management
 - Sales forecasting and pipeline analysis
 
@@ -129,58 +164,101 @@ Each domain uses terminology from its business area:
 
 **Team Focus:** Finance, Legal
 
-## Cross-Domain Integration
+## Vertical Slice Integration
 
-### @hotcrm/hooks
+### How Hooks and Actions are Integrated
 
-**Purpose:** Cross-domain automation
+Previously, hooks and actions were in separate packages. Now they're integrated into their respective domains:
 
-**Examples:**
-- When Opportunity (CRM) closes → Create Contract (Finance)
-- When Contract (Finance) activates → Update Account status (CRM)
+**Before:**
+```
+@hotcrm/crm (only schemas)
+@hotcrm/hooks (opportunity.hook.ts)
+@hotcrm/actions (ai_smart_briefing.action.ts)
+```
 
-**Dependencies:** Uses multiple domain packages as needed
+**After:**
+```
+@hotcrm/crm
+  ├── schemas/
+  ├── hooks/opportunity.hook.ts
+  └── actions/ai_smart_briefing.action.ts
+```
 
----
+### Benefits of Vertical Slices
 
-### @hotcrm/actions
+1. **High Cohesion**: Related code stays together
+2. **Low Coupling**: Fewer inter-package dependencies
+3. **Single Responsibility**: Each domain owns its complete feature set
+4. **Easier Navigation**: Find all CRM code in one place
+5. **Independent Deployment**: Deploy entire domain as a unit
 
-**Purpose:** Business operations that span domains
+### Cross-Domain Communication
 
-**Examples:**
-- AI Smart Briefing: Analyzes Account (CRM) data
-- Bulk operations across multiple domains
-- Third-party integrations
+Domains communicate through:
+- **ObjectQL API**: For data operations (no direct imports)
+- **Domain Events** (future): For async communication
+- **Server Layer**: For HTTP API integration
 
-**Dependencies:** Primarily uses CRM domain
+Example: CRM domain creates Contract without importing Finance domain
+```typescript
+// In @hotcrm/crm/hooks/opportunity.hook.ts
+await ctx.db.doc.create('Contract', {  // Uses ObjectQL, not Finance domain
+  AccountId: opportunity.AccountId,
+  OpportunityId: opportunity.Id,
+  // ...
+});
+```
 
----
+## Application Layer
+
+### @hotcrm/server
+
+**Purpose:** Application assembly and startup only
+
+**Responsibilities:**
+- Import and register domain packages
+- Set up HTTP routes
+- Start Express server
+- No business logic
+
+**Example:**
+```typescript
+import { executeSmartBriefing } from '@hotcrm/crm';  // Import from domain
+import { salesDashboard } from '@hotcrm/ui';
+
+// Server only assembles and starts
+app.post('/api/ai/smart-briefing', async (req, res) => {
+  const briefing = await executeSmartBriefing(req.body);
+  res.json(briefing);
+});
+```
 
 ### @hotcrm/ui
 
 **Purpose:** User interface components
 
-**Strategy:** Domain-specific UI components organized by domain
+**Strategy:** Domain-agnostic UI components
 
 **Future Structure:**
 ```
 packages/ui/src/
-  ├── crm/              # CRM-related UI
-  ├── support/          # Support-related UI
-  ├── products/         # Products-related UI
-  └── finance/          # Finance-related UI
+  ├── components/       # Shared UI components
+  └── dashboard/        # Dashboard configurations
 ```
 
 ## Dependency Rules
 
-### Core Principle: Acyclic Dependencies
+### Core Principle: Simplified Acyclic Dependencies
 
 ```
-Application Layer (server)
-        ↓
-Integration Layer (hooks, actions, ui)
+Application Layer (server, ui)
         ↓
 Domain Layer (crm, support, products, finance)
+  Each domain is a complete vertical slice with:
+  - Schemas
+  - Hooks  
+  - Actions
         ↓
 Foundation Layer (core)
 ```
