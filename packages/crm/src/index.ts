@@ -25,6 +25,7 @@ export * from './lead.object';
 export * from './opportunity.object';
 
 // Export hooks
+export * from './hooks/lead.hook';
 export * from './hooks/opportunity.hook';
 
 // Export actions
