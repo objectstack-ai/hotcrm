@@ -11,7 +11,7 @@ export function baseOptions(): BaseLayoutProps {
     nav: {
       title: (
         <div className="flex items-center gap-2">
-          <Image src="/logo.svg" alt="HotCRM Logo" width={120} height={32} />
+          <Image src="/logo.svg" alt="HotCRM Logo" width={120} height={32} priority />
         </div>
       ),
     },
