@@ -1,6 +1,6 @@
 # @hotcrm/crm
 
-CRM module for HotCRM - Account, Contact, Lead, and Opportunity management with integrated hooks and actions.
+CRM module for HotCRM - Complete Marketing & Sales domain with Account, Contact, Lead, and Opportunity management.
 
 ## Overview
 
@@ -9,36 +9,57 @@ This package contains all core CRM functionality for managing the sales pipeline
 ## What's Included
 
 ### Business Objects (Schemas)
-- **Account**: Customer account management including company information, industry, revenue, and relationship status
-- **Contact**: Contact information and relationships with accounts, including communication preferences and roles
-- **Lead**: Lead management and qualification tracking from initial inquiry to conversion
-- **Opportunity**: Sales opportunity and pipeline management with stage tracking, forecasting, and win/loss analysis
-- **Campaign**: Marketing campaign tracking with ROI analysis and lead generation metrics
-- **Activity**: Activity logging and tracking for customer interactions, meetings, calls, and emails
+
+**TypeScript Definitions (Preferred):**
+- **Account** (`account.object.ts`): Customer/company management with industry classification, revenue tracking, and parent-child hierarchies
+- **Contact** (`contact.object.ts`): Individual contact management with account relationships and role tracking
+- **Lead** (`lead.object.ts`): Lead capture, qualification, and conversion tracking with AI-powered scoring
+- **Opportunity** (`opportunity.object.ts`): Sales pipeline management with 7 stages, AI win probability, and forecasting
+
+**Legacy YAML Definitions:**
+- **Campaign**: Marketing campaign tracking with budget, ROI, and multi-channel support (in @hotcrm/metadata)
+- **Activity**: Call, email, meeting, and task logging with GPS and AI transcription (in @hotcrm/metadata)
+
+> Note: Campaign and Activity are planned for TypeScript migration in future releases.
 
 ### Hooks (Business Logic)
-- **Opportunity Stage Change**: Automatically creates contracts when opportunities close-won and updates account status
+- **Lead Conversion Hook** (`lead.hook.ts`): Automatically creates Account/Contact/Opportunity when lead is converted
+- **Opportunity Stage Change Hook** (`opportunity.hook.ts`): Creates contracts when opportunities close-won and updates account status
 
 ### Actions (Custom Operations)
-- **AI Smart Briefing**: Generates intelligent account insights by analyzing recent activities, communications, and context
+- **AI Smart Briefing** (`ai_smart_briefing.action.ts`): Generates intelligent account insights by analyzing recent activities, communications, and context
 
 ## Usage
 
 ### Importing Schemas
 ```typescript
-import { AccountSchema, ContactSchema, OpportunitySchema } from '@hotcrm/crm';
+import { 
+  AccountSchema, 
+  ContactSchema, 
+  LeadSchema,
+  OpportunitySchema 
+} from '@hotcrm/crm';
 
 console.log(AccountSchema.label); // "Account"
+console.log(LeadSchema.label); // "Lead"
 ```
 
 ### Using Hooks
 ```typescript
-import { OpportunityStageChange } from '@hotcrm/crm';
+import { 
+  LeadConversionHook,
+  OpportunityStageChangeHook 
+} from '@hotcrm/crm';
 
-// Hook automatically triggers when:
+// Lead conversion hook automatically triggers when:
+// - Lead status changes to "Converted"
+// - Creates associated Account, Contact, and Opportunity
+// - Links relationships properly
+
+// Opportunity stage change hook automatically triggers when:
 // - Opportunity stage changes to "Closed Won"
 // - Creates associated Contract
-// - Updates Account status
+// - Updates Account status to "Active Customer"
 ```
 
 ### Using Actions
@@ -50,9 +71,10 @@ const briefing = await executeSmartBriefing({
   activityLimit: 10
 });
 
-console.log(briefing.summary);
-console.log(briefing.keyInsights);
-console.log(briefing.recommendations);
+console.log(briefing.summary);      // AI-generated account overview
+console.log(briefing.keyInsights);  // Important observations
+console.log(briefing.recommendations); // Next steps
+console.log(briefing.talkingPoints);   // Industry-specific sales points
 ```
 
 ## Architecture
