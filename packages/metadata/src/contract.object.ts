@@ -1,39 +1,35 @@
-import type { ObjectSchema } from '@objectstack/spec/data';
+import type { ServiceObject } from '@objectstack/spec/data';
 
-const Contract: ObjectSchema = {
+const Contract: ServiceObject = {
   name: 'Contract',
   label: '合同',
   labelPlural: '合同',
   icon: 'file-text',
   description: '合同管理',
-  features: {
+  capabilities: {
     searchable: true,
-    trackFieldHistory: true,
-    enableNotes: true,
-    enableAttachments: true
+    trackHistory: true,
+    feeds: true,
+    files: true
   },
-  fields: [
-    {
-      name: 'ContractNumber',
+  fields: {
+    ContractNumber: {
       type: 'autoNumber',
       label: '合同编号',
       format: 'CT-{YYYY}{MM}{DD}-{0000}'
     },
-    {
-      name: 'AccountId',
+    AccountId: {
       type: 'lookup',
       label: '客户',
-      referenceTo: 'Account',
+      reference: 'Account',
       required: true
     },
-    {
-      name: 'OpportunityId',
+    OpportunityId: {
       type: 'lookup',
       label: '关联商机',
-      referenceTo: 'Opportunity'
+      reference: 'Opportunity'
     },
-    {
-      name: 'Status',
+    Status: {
       type: 'select',
       label: '状态',
       required: true,
@@ -47,30 +43,26 @@ const Contract: ObjectSchema = {
         { label: '❌ 已终止', value: 'Terminated' }
       ]
     },
-    {
-      name: 'StartDate',
+    StartDate: {
       type: 'date',
       label: '开始日期',
       required: true
     },
-    {
-      name: 'EndDate',
+    EndDate: {
       type: 'date',
       label: '结束日期'
     },
-    {
-      name: 'ContractTerm',
+    ContractTerm: {
       type: 'number',
       label: '合同期限（月）'
     },
-    {
-      name: 'ContractValue',
+    ContractValue: {
       type: 'currency',
       label: '合同金额',
       precision: 2,
       required: true
     }
-  ],
+  },
   listViews: [
     {
       name: 'All',
