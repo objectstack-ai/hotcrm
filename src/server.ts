@@ -7,8 +7,8 @@
 
 import express, { Request, Response, NextFunction } from 'express';
 import { db } from './engine/objectql';
-import { executeSmartBriefing } from './actions/AISmartBriefing';
-import salesDashboard from './ui/dashboard/SalesDashboard';
+import { executeSmartBriefing } from './actions/ai_smart_briefing.action';
+import salesDashboard from './ui/dashboard/sales_dashboard.dashboard';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
