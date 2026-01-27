@@ -188,7 +188,12 @@ pnpm start
 
 #### @hotcrm/core
 
-Core engine providing ObjectQL query language and type definitions.
+Core engine providing ObjectQL query language and type definitions for the entire CRM system.
+
+**Key Features:**
+- ObjectQL query engine for type-safe data access
+- TypeScript type definitions for @objectstack/spec
+- Database abstraction layer
 
 [Read more →](./packages/core/README.md)
 
@@ -199,8 +204,9 @@ Each domain package is a complete vertical slice containing schemas, hooks, and 
 #### @hotcrm/crm
 
 **Marketing & Sales Domain** - Complete vertical slice including:
-- **Schemas**: Account, Contact, Lead, Opportunity, Campaign, Activity
-- **Hooks**: Opportunity stage change automation
+- **Schemas (TypeScript)**: Account, Contact, Lead, Opportunity
+- **Schemas (Legacy YAML)**: Campaign, Activity
+- **Hooks**: Lead conversion automation, Opportunity stage change automation
 - **Actions**: AI Smart Briefing for account insights
 
 [Read more →](./packages/crm/README.md)
@@ -208,21 +214,25 @@ Each domain package is a complete vertical slice containing schemas, hooks, and 
 #### @hotcrm/support
 
 **Customer Service Domain** - Case management and Knowledge base
-- **Schemas**: Case, Knowledge
+- **Schemas (Legacy YAML)**: Case, Knowledge
+- Package structure prepared for future TypeScript migrations
 
 [Read more →](./packages/support/README.md)
 
 #### @hotcrm/products
 
 **Product & Pricing Domain** - Product catalog, Pricebook, and Quote (CPQ) management
-- **Schemas**: Product, Pricebook, Quote
+- **Schemas (Legacy YAML)**: Product, Pricebook, Quote
+- Package structure prepared for future TypeScript migrations
 
 [Read more →](./packages/products/README.md)
 
 #### @hotcrm/finance
 
 **Financial Operations Domain** - Contract lifecycle and Payment tracking
-- **Schemas**: Contract, Payment
+- **Schemas (TypeScript)**: Contract
+- **Schemas (Legacy YAML)**: Payment
+- Partial migration to TypeScript in progress
 
 [Read more →](./packages/finance/README.md)
 
@@ -230,13 +240,24 @@ Each domain package is a complete vertical slice containing schemas, hooks, and 
 
 #### @hotcrm/ui
 
-UI components, dashboards, and page configurations.
+UI components, dashboards, and page configurations with Apple/Linear-inspired design.
+
+**Includes:**
+- Sales Dashboard with KPIs and pipeline visualization
+- AI Smart Briefing Card component
+- Tailwind CSS-based styling
 
 [Read more →](./packages/ui/README.md)
 
 #### @hotcrm/server
 
-Express server for application assembly and startup only. Integrates all domains.
+Express server for application assembly and REST API endpoints. Integrates all domain packages.
+
+**Features:**
+- RESTful API endpoints for all CRM objects
+- ObjectQL query interface
+- Dashboard KPIs and metrics
+- AI-powered features integration
 
 [Read more →](./packages/server/README.md)
 
@@ -256,7 +277,7 @@ Express server for application assembly and startup only. Integrates all domains
 
 #### @hotcrm/metadata
 
-⚠️ **Deprecated**: This package has been split into domain-specific packages (@hotcrm/crm, @hotcrm/support, @hotcrm/products, @hotcrm/finance).
+⚠️ **Deprecated**: This package has been split into domain-specific packages (@hotcrm/crm, @hotcrm/support, @hotcrm/products, @hotcrm/finance). Contains legacy YAML definitions.
 
 [Read more →](./packages/metadata/README.md)
 

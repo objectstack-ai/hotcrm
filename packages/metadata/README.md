@@ -2,9 +2,28 @@
 
 ⚠️ **DEPRECATED**: This package has been split into domain-specific packages for better modularity.
 
+## Current State
+
+This package currently contains **legacy YAML definitions** for objects that have not yet been migrated to TypeScript:
+
+**Still in @hotcrm/metadata:**
+- Campaign (Marketing campaigns) - YAML
+- Activity (Customer interactions) - YAML  
+- Case (Support cases) - YAML
+- Knowledge (Knowledge base) - YAML
+- Product (Product catalog) - YAML
+- Pricebook (Pricing) - YAML
+- Quote (CPQ) - YAML
+- Payment (Payment tracking) - YAML
+- Lead (partial, YAML version) - YAML
+
+**Migrated to TypeScript in domain packages:**
+- Account, Contact, Lead, Opportunity → `@hotcrm/crm`
+- Contract → `@hotcrm/finance`
+
 ## Migration Guide
 
-Please use the new domain-based packages instead:
+Please use the new domain-based packages for TypeScript schemas:
 
 | Old Package | New Package | Domain |
 |-------------|-------------|--------|
@@ -40,9 +59,25 @@ import { ContractSchema, PaymentSchema } from '@hotcrm/finance';
 
 ## Timeline
 
-- **Current**: Both `@hotcrm/metadata` and domain packages are available
-- **Next Release**: `@hotcrm/metadata` marked as deprecated
-- **Future Release**: `@hotcrm/metadata` will be removed
+- **Current**: Package contains legacy YAML definitions for objects not yet migrated
+- **Migration in Progress**: Objects being converted to TypeScript in domain packages
+- **Future Release**: Package will be removed once all migrations are complete
+
+## What Objects Are Where?
+
+### @hotcrm/crm (TypeScript ✅)
+- Account, Contact, Lead, Opportunity
+- Campaign, Activity (still in YAML, referenced from metadata)
+
+### @hotcrm/support (YAML only)
+- Case, Knowledge (in metadata package)
+
+### @hotcrm/products (YAML only)  
+- Product, Pricebook, Quote (in metadata package)
+
+### @hotcrm/finance (Mixed)
+- Contract (TypeScript ✅)
+- Payment (YAML, in metadata package)
 
 ## Documentation
 

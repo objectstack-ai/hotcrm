@@ -1,36 +1,54 @@
 # @hotcrm/support
 
-Support module for HotCRM - Case and Knowledge management.
+Customer Service & Support module for HotCRM - Case management and Knowledge base.
 
 ## Overview
 
-This package contains all customer support functionality including case management and knowledge base.
+This package contains all customer support functionality including case management, SLA tracking, and knowledge base management. Package structure follows vertical slice architecture, prepared for future expansion with hooks and actions.
 
-## Business Objects
+## Business Objects (Schemas)
 
-### Case
-Customer support case management with:
-- Priority and severity tracking
-- SLA management
-- Assignment and routing
-- Resolution tracking
-- Customer satisfaction metrics
+**Legacy YAML Definitions:**
+- **Case** (in @hotcrm/metadata): Multi-channel ticket intake (Email, Web, Phone, WeChat, Chat), SLA management, priority/escalation, customer satisfaction tracking
+- **Knowledge** (in @hotcrm/metadata): Help documentation, FAQ management, article categorization, version control, RAG support with vector embeddings
 
-### Knowledge
-Knowledge base and documentation with:
-- Article management
-- Categories and tagging
-- Search functionality
-- Version control
-- Access permissions
+> Note: Case and Knowledge objects are currently defined in YAML format in the @hotcrm/metadata package. They are planned for TypeScript migration to this package in future releases.
+
+## Key Features
+
+### Case Management
+- **Multi-Channel Intake**: Email, Web, Phone, WeChat, Chat Bot, Mobile App
+- **SLA Management**: Automatic calculation and tracking of response/resolution times
+- **AI-Powered Routing**: Intelligent auto-assignment to best available agent
+- **Priority Management**: Configurable priority levels with escalation rules
+- **Customer Satisfaction**: Built-in CSAT tracking and feedback collection
+- **Solution Recommendations**: AI-powered suggestions from knowledge base
+
+### Knowledge Base
+- **Article Management**: Create, edit, and publish help documentation
+- **Categorization**: Hierarchical categories and flexible tagging system
+- **Version Control**: Track article revisions with review workflows
+- **Visibility Levels**: Public, Internal, and Partner access controls
+- **AI Enhancement**: Automated article summarization and related content discovery
+- **RAG Ready**: Vector embeddings for retrieval-augmented generation
+- **Analytics**: Usage tracking and helpfulness scoring
 
 ## Usage
 
 ```typescript
 import { /* CaseSchema, KnowledgeSchema */ } from '@hotcrm/support';
 
-// Note: TypeScript definitions to be created following the metadata protocol
+// Note: TypeScript schema exports will be available after migration from YAML
+// Current definitions are in @hotcrm/metadata package
 ```
+
+## Future Enhancements
+
+This package is structured to support:
+- TypeScript schema definitions (`.object.ts` files)
+- Business logic hooks for case automation
+- Custom actions for AI-powered support features
+- Integration with external support platforms
 
 ## Domain Focus
 

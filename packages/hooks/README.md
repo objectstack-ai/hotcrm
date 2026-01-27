@@ -8,7 +8,7 @@ Hooks are now part of their respective domain packages:
 
 | Old Package | New Package | Hook |
 |-------------|-------------|------|
-| `@hotcrm/hooks` (OpportunityHook) | `@hotcrm/crm` | Opportunity Stage Change automation |
+| `@hotcrm/hooks` (OpportunityHook) | `@hotcrm/crm` | Opportunity Stage Change, Lead Conversion |
 
 ## Why Domain-Integrated Hooks?
 
@@ -27,7 +27,10 @@ import { OpportunityStageChange } from '@hotcrm/hooks';
 
 ### After
 ```typescript
-import { OpportunityStageChange } from '@hotcrm/crm';
+import { 
+  OpportunityStageChangeHook, 
+  LeadConversionHook 
+} from '@hotcrm/crm';
 ```
 
 ## Timeline
