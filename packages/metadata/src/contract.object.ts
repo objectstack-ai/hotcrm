@@ -14,7 +14,7 @@ const Contract = {
   },
   fields: {
     ContractNumber: {
-      type: 'autoNumber',
+      type: 'autonumber',
       label: '合同编号',
       format: 'CT-{YYYY}{MM}{DD}-{0000}'
     },
