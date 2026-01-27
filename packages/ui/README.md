@@ -9,10 +9,10 @@ This package contains UI components, dashboards, and page configurations followi
 ## What's Included
 
 ### Dashboards
-- **Sales Dashboard** (`sales_dashboard.dashboard.ts`): Comprehensive sales management dashboard with real-time KPIs, pipeline visualization, and activity feeds
+- **Sales Dashboard** (`src/dashboard/sales_dashboard.dashboard.ts`): Comprehensive sales management dashboard with real-time KPIs, pipeline visualization, and activity feeds
 
 ### Components
-- **AI Smart Briefing Card** (`AISmartBriefingCard.ts`): Interactive card component for displaying AI-generated account briefings and insights
+- **AI Smart Briefing Card** (`src/components/AISmartBriefingCard.ts`): Interactive card component for displaying AI-generated account briefings and insights
 
 ## Features
 
