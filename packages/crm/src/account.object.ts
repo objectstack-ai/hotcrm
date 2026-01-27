@@ -180,6 +180,40 @@ const Account: ObjectSchema = {
       rows: 5
     },
     {
+      name: 'SLATier',
+      type: 'select',
+      label: 'SLA等级',
+      options: [
+        { label: '白金', value: 'Platinum' },
+        { label: '黄金', value: 'Gold' },
+        { label: '白银', value: 'Silver' },
+        { label: '标准', value: 'Standard' }
+      ],
+      description: '服务等级协议层级'
+    },
+    {
+      name: 'HealthScore',
+      type: 'number',
+      label: '健康度评分',
+      precision: 0,
+      min: 0,
+      max: 100,
+      description: '客户健康度评分 (0-100)'
+    },
+    {
+      name: 'NextRenewalDate',
+      type: 'date',
+      label: '下次续约日期'
+    },
+    {
+      name: 'ContractValue',
+      type: 'currency',
+      label: '合同总价值',
+      precision: 2,
+      readonly: true,
+      description: '所有有效合同的总价值'
+    },
+    {
       name: 'OwnerId',
       type: 'lookup',
       label: '负责人',
@@ -229,13 +263,50 @@ const Account: ObjectSchema = {
       name: 'All',
       label: '所有客户',
       filters: [],
-      columns: ['Name', 'Type', 'Industry', 'AnnualRevenue', 'Rating', 'OwnerId']
+      columns: ['Name', 'Type', 'Industry', 'AnnualRevenue', 'Rating', 'CustomerStatus', 'OwnerId']
     },
     {
       name: 'MyAccounts',
       label: '我的客户',
       filters: [['OwnerId', '=', '$currentUser']],
-      columns: ['Name', 'Type', 'Industry', 'CustomerStatus', 'Rating']
+      columns: ['Name', 'Type', 'Industry', 'CustomerStatus', 'Rating', 'HealthScore']
+    },
+    {
+      name: 'ActiveCustomers',
+      label: '活跃客户',
+      filters: [['CustomerStatus', '=', 'Active Customer']],
+      columns: ['Name', 'Industry', 'ContractValue', 'SLATier', 'HealthScore', 'NextRenewalDate', 'OwnerId'],
+      sort: [['ContractValue', 'desc']]
+    },
+    {
+      name: 'AtRisk',
+      label: '风险客户',
+      filters: [
+        ['CustomerStatus', '=', 'Active Customer'],
+        ['HealthScore', '<', 50]
+      ],
+      columns: ['Name', 'Industry', 'HealthScore', 'NextRenewalDate', 'SLATier', 'OwnerId'],
+      sort: [['HealthScore', 'asc']]
+    },
+    {
+      name: 'HighValue',
+      label: '高价值客户',
+      filters: [
+        ['CustomerStatus', '=', 'Active Customer'],
+        ['ContractValue', '>', 100000]
+      ],
+      columns: ['Name', 'Industry', 'ContractValue', 'AnnualRevenue', 'SLATier', 'HealthScore', 'OwnerId'],
+      sort: [['ContractValue', 'desc']]
+    },
+    {
+      name: 'RenewalsSoon',
+      label: '即将续约',
+      filters: [
+        ['NextRenewalDate', 'next_90_days'],
+        ['CustomerStatus', '=', 'Active Customer']
+      ],
+      columns: ['Name', 'Industry', 'NextRenewalDate', 'ContractValue', 'HealthScore', 'OwnerId'],
+      sort: [['NextRenewalDate', 'asc']]
     }
   ],
   validationRules: [
@@ -243,8 +314,57 @@ const Account: ObjectSchema = {
       name: 'RequireIndustryForHighRevenue',
       errorMessage: '年营收超过1000万的客户必须选择行业',
       formula: 'AND(AnnualRevenue > 10000000, ISBLANK(Industry))'
+    },
+    {
+      name: 'RequireSLAForActiveCustomers',
+      errorMessage: '活跃客户必须设置SLA等级',
+      formula: 'AND(CustomerStatus = "Active Customer", ISBLANK(SLATier))'
+    },
+    {
+      name: 'HealthScoreRange',
+      errorMessage: '健康度评分必须在0-100之间',
+      formula: 'OR(HealthScore < 0, HealthScore > 100)'
     }
-  ]
+  ],
+  pageLayout: {
+    sections: [
+      {
+        label: '基本信息',
+        columns: 2,
+        fields: ['Name', 'AccountNumber', 'Type', 'Industry', 'OwnerId', 'ParentId']
+      },
+      {
+        label: '客户状态',
+        columns: 2,
+        fields: ['CustomerStatus', 'Rating', 'SLATier', 'HealthScore']
+      },
+      {
+        label: '公司信息',
+        columns: 2,
+        fields: ['NumberOfEmployees', 'AnnualRevenue', 'Website', 'Phone', 'Email']
+      },
+      {
+        label: '合同信息',
+        columns: 2,
+        fields: ['ContractValue', 'NextRenewalDate']
+      },
+      {
+        label: '账单地址',
+        columns: 2,
+        fields: ['BillingStreet', 'BillingCity', 'BillingState', 'BillingPostalCode', 'BillingCountry']
+      },
+      {
+        label: '送货地址',
+        columns: 2,
+        fields: ['ShippingStreet', 'ShippingCity', 'ShippingState', 'ShippingPostalCode', 'ShippingCountry']
+      },
+      {
+        label: '其他信息',
+        columns: 1,
+        fields: ['Description']
+      }
+    ]
+  }
 };
 
 export default Account;

@@ -59,7 +59,7 @@ export interface SmartBriefingResponse {
  * 3. Request specific, actionable outputs
  * 4. Ensure personalization based on industry
  */
-function buildSystemPrompt(account: any, activities: any[], emails: any[]): string {
+function buildSystemPrompt(account: any, activities: any[], emails: any[], opportunities: any[] = []): string {
   return `
 You are an expert sales intelligence assistant for a world-class CRM system. Your role is to analyze customer data and provide actionable insights to sales professionals.
 
@@ -70,6 +70,18 @@ You are an expert sales intelligence assistant for a world-class CRM system. You
 **Annual Revenue:** ${account.AnnualRevenue ? `$${account.AnnualRevenue.toLocaleString()}` : 'Unknown'}
 **Customer Status:** ${account.CustomerStatus || 'Unknown'}
 **Rating:** ${account.Rating || 'Unknown'}
+**Health Score:** ${account.HealthScore || 'Unknown'}
+**SLA Tier:** ${account.SLATier || 'Unknown'}
+
+# Active Opportunities
+
+${opportunities.length > 0 ? opportunities.map((opp, i) => `
+${i + 1}. **${opp.Name}**
+   Stage: ${opp.Stage}
+   Amount: $${opp.Amount?.toLocaleString() || 'TBD'}
+   Close Date: ${opp.CloseDate}
+   Probability: ${opp.Probability}%
+`).join('\n') : 'No active opportunities'}
 
 # Recent Activities (Last ${activities.length} interactions)
 
@@ -222,42 +234,108 @@ export async function executeSmartBriefing(request: SmartBriefingRequest): Promi
   try {
     const { accountId, activityLimit = 10 } = request;
 
-    // 1. Fetch Account data
-    const account = await db.doc.get('Account', accountId, {
-      fields: ['Name', 'Industry', 'AnnualRevenue', 'CustomerStatus', 'Rating', 'Description']
-    });
+    // Input validation
+    if (!accountId) {
+      throw new Error('accountId is required');
+    }
+
+    // 1. Fetch Account data with error handling
+    let account;
+    try {
+      account = await db.doc.get('Account', accountId, {
+        fields: ['Name', 'Industry', 'AnnualRevenue', 'CustomerStatus', 'Rating', 'Description', 'HealthScore', 'SLATier']
+      });
+    } catch (error) {
+      throw new Error(`Failed to fetch account: ${error}`);
+    }
 
     if (!account) {
       throw new Error(`Account not found: ${accountId}`);
     }
 
     // 2. Fetch recent Activities (Refactored to Protocol Compliant 'find')
-    const activities = await db.find('Activity', {
-      fields: ['Type', 'Subject', 'ActivityDate', 'Status', 'Description'],
-      filters: [['AccountId', '=', accountId]],
-      sort: 'ActivityDate desc',
-      limit: activityLimit
-    });
+    let activities = [];
+    try {
+      activities = await db.find('Activity', {
+        fields: ['Type', 'Subject', 'ActivityDate', 'Status', 'Description'],
+        filters: [['AccountId', '=', accountId]],
+        sort: 'ActivityDate desc',
+        limit: activityLimit
+      });
+    } catch (error) {
+      console.warn('⚠️ Failed to fetch activities, continuing without them:', error);
+      activities = [];
+    }
 
     // 3. Fetch recent Emails (Refactored to Protocol Compliant 'find')
-    const emails = await db.find('Email', {
-      fields: ['Subject', 'SentDate', 'Direction', 'Body'],
-      filters: [['AccountId', '=', accountId]],
-      sort: 'SentDate desc',
-      limit: 5
-    });
+    let emails = [];
+    try {
+      emails = await db.find('Email', {
+        fields: ['Subject', 'SentDate', 'Direction', 'Body'],
+        filters: [['AccountId', '=', accountId]],
+        sort: 'SentDate desc',
+        limit: 5
+      });
+    } catch (error) {
+      console.warn('⚠️ Failed to fetch emails, continuing without them:', error);
+      emails = [];
+    }
 
-    // 4. Build System Prompt
-    const systemPrompt = buildSystemPrompt(account, activities, emails);
+    // 4. Fetch recent Opportunities for context
+    let opportunities = [];
+    try {
+      opportunities = await db.find('Opportunity', {
+        fields: ['Name', 'Stage', 'Amount', 'CloseDate', 'Probability'],
+        filters: [
+          ['AccountId', '=', accountId],
+          ['Stage', 'not in', ['Closed Lost']]
+        ],
+        sort: 'CloseDate asc',
+        limit: 5
+      });
+    } catch (error) {
+      console.warn('⚠️ Failed to fetch opportunities, continuing without them:', error);
+      opportunities = [];
+    }
 
-    // 5. Call LLM API (mock implementation)
-    // In production, this would call OpenAI, Anthropic, or similar
-    const llmResponse = await callLLM(systemPrompt);
+    // 5. Build System Prompt with all context
+    const systemPrompt = buildSystemPrompt(account, activities, emails, opportunities);
 
-    // 6. Parse and enhance response
-    const briefing = JSON.parse(llmResponse);
+    // 6. Call LLM API (mock implementation with retry logic)
+    let llmResponse: string | undefined;
+    let retries = 3;
+    while (retries > 0) {
+      try {
+        llmResponse = await callLLM(systemPrompt);
+        break;
+      } catch (error) {
+        retries--;
+        if (retries === 0) {
+          throw new Error(`LLM API failed after 3 retries: ${error}`);
+        }
+        console.warn(`⚠️ LLM call failed, retrying... (${retries} attempts left)`);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+    }
 
-    // 7. Add industry-specific insights if available
+    if (!llmResponse) {
+      throw new Error('LLM API returned empty response');
+    }
+
+    // 7. Parse and validate response
+    let briefing;
+    try {
+      briefing = JSON.parse(llmResponse);
+      
+      // Validate required fields
+      if (!briefing.summary || !briefing.nextSteps || !briefing.talkingPoints) {
+        throw new Error('Invalid LLM response format');
+      }
+    } catch (error) {
+      throw new Error(`Failed to parse LLM response: ${error}`);
+    }
+
+    // 8. Add industry-specific insights if available
     const industryData = INDUSTRY_INSIGHTS[account.Industry as string];
     if (industryData && briefing.talkingPoints.length < 5) {
       // Enhance talking points with industry insights
@@ -267,13 +345,13 @@ export async function executeSmartBriefing(request: SmartBriefingRequest): Promi
       ];
     }
 
-    // 8. Build final response
+    // 9. Build final response
     const response: SmartBriefingResponse = {
       summary: briefing.summary,
       nextSteps: briefing.nextSteps,
       talkingPoints: briefing.talkingPoints,
       sentiment: briefing.sentiment,
-      engagementScore: briefing.engagementScore,
+      engagementScore: Math.max(0, Math.min(100, briefing.engagementScore)), // Clamp to 0-100
       metadata: {
         activitiesAnalyzed: activities.length,
         emailsAnalyzed: emails.length,
