@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { ArrowRight, Boxes, Database, Zap, Code, Shield, Sparkles } from 'lucide-react';
+import { siteConfig } from '@/lib/layout.shared';
 
 export default function HomePage() {
   return (
@@ -34,7 +35,7 @@ export default function HomePage() {
               <ArrowRight className="w-4 h-4" />
             </Link>
             <Link
-              href="https://github.com/hotcrm/hotcrm"
+              href={siteConfig.github}
               className="inline-flex items-center gap-2 px-6 py-3 border border-border rounded-lg font-medium hover:bg-accent transition-colors"
             >
               View on GitHub
@@ -109,7 +110,7 @@ pnpm dev`}</code>
             <div className="rounded-lg border border-border bg-card p-6">
               <h3 className="text-lg font-semibold mb-3">ObjectQL Example</h3>
               <pre className="bg-muted p-4 rounded-md overflow-x-auto">
-                <code className="text-sm">{`// Query accounts with opportunities
+                <code className="text-sm">{`// Query technology accounts
 const accounts = await objectql.find({
   object: 'Account',
   fields: ['Name', 'Industry'],
