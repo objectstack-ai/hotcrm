@@ -5,7 +5,7 @@ Get up and running with HotCRM in 5 minutes.
 ## Prerequisites
 
 - Node.js 18+ installed
-- npm or yarn
+- pnpm 8+ (recommended for monorepo management)
 - Basic understanding of TypeScript/JavaScript
 
 ## Installation
@@ -15,15 +15,40 @@ Get up and running with HotCRM in 5 minutes.
 git clone https://github.com/hotcrm/hotcrm.git
 cd hotcrm
 
-# Install dependencies
-npm install
+# Install pnpm globally if not already installed
+npm install -g pnpm
+
+# Install all dependencies for all packages
+pnpm install
+```
+
+## Project Structure
+
+HotCRM uses a **monorepo architecture** with multiple packages:
+
+- **@hotcrm/core** - Core engine and ObjectQL
+- **@hotcrm/metadata** - Business object definitions
+- **@hotcrm/hooks** - Business logic and triggers
+- **@hotcrm/actions** - Custom actions
+- **@hotcrm/ui** - UI components and dashboards
+- **@hotcrm/server** - Express server and APIs
+
+## Build
+
+```bash
+# Build all packages (required before first run)
+pnpm build
+
+# Or build individual packages
+pnpm --filter @hotcrm/core build
+pnpm --filter @hotcrm/server build
 ```
 
 ## Development
 
 ```bash
-# Start the development server
-npm run dev
+# Start the development server (with hot reload)
+pnpm dev
 ```
 
 The server will start on `http://localhost:3000`.

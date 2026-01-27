@@ -12,53 +12,102 @@
 HotCRM is a **comprehensive, AI-native enterprise CRM** system covering the complete Lead-to-Cash lifecycle. Built on the @objectstack/spec protocol, it delivers:
 
 - **Complete CRM Suite**: 14 core objects spanning Marketing, Sales, Service, and Finance domains
-- **Metadata-Driven Architecture**: All objects defined through declarative YAML files
+- **Metadata-Driven Architecture**: All objects defined through TypeScript (type-safe)
 - **ObjectQL**: Type-safe query language replacing traditional SQL
 - **AI-First Design**: Every major feature enhanced with AI capabilities
 - **Modern UI/UX**: Apple/Linear-inspired design with Tailwind CSS
 - **Enterprise-Ready**: SLA management, approval workflows, multi-currency support
+- **Monorepo Architecture**: Modular package structure for deep customization
 
 ## 📚 Architecture
 
 ### Core Principles
 
-1. **Metadata Driven**: All business objects are defined through declarative YAML files
+1. **Metadata Driven**: All business objects are defined natively in TypeScript (`.object.ts`)
 2. **ObjectQL**: Data queries use ObjectQL syntax for type-safe, flexible queries
 3. **UI Engine**: Frontend rendering based on **ObjectUI** framework with Tailwind CSS styling
 4. **AI Native**: Built-in AI capabilities for intelligent insights and automation
+5. **Modular Packages**: Clean separation of concerns with pnpm workspaces
 
-### Project Structure
+### Monorepo Structure
+
+HotCRM uses a **multi-package monorepo** architecture powered by pnpm workspaces, allowing for independent development and deployment of different CRM modules:
 
 ```
 hotcrm/
-├── src/
-│   ├── metadata/           # Object definitions (.object.yml)
-│   │   ├── Lead.object.yml         # 线索管理
-│   │   ├── Campaign.object.yml     # 营销活动
-│   │   ├── Account.object.yml      # 客户管理
-│   │   ├── Contact.object.yml      # 联系人
-│   │   ├── Opportunity.object.yml  # 商机
-│   │   ├── Activity.object.yml     # 活动记录
-│   │   ├── Product.object.yml      # 产品目录
-│   │   ├── Pricebook.object.yml    # 价格表
-│   │   ├── Quote.object.yml        # 报价单 (CPQ)
-│   │   ├── Contract.object.yml     # 合同
-│   │   ├── Payment.object.yml      # 回款
-│   │   ├── Case.object.yml         # 工单
-│   │   └── Knowledge.object.yml    # 知识库
-│   ├── triggers/           # Business automation logic
-│   │   └── OpportunityTrigger.ts
-│   ├── actions/            # ObjectStack Actions (API endpoints)
-│   │   └── AISmartBriefing.ts
-│   ├── ui/                 # UI configurations
-│   │   ├── dashboard/
-│   │   └── components/
-│   ├── engine/             # Core engine (ObjectQL, etc.)
-│   │   └── objectql.ts
-│   └── server.ts           # Main server entry
-├── public/                 # Static assets
-├── package.json
-└── tsconfig.json
+├── packages/
+│   ├── core/                 # Core engine and ObjectQL
+│   │   ├── src/
+│   │   │   ├── objectql.ts          # ObjectQL query engine
+│   │   │   ├── objectstack-spec.d.ts # Type definitions
+│   │   │   └── index.ts             # Package exports
+│   │   ├── package.json
+│   │   ├── tsconfig.json
+│   │   └── README.md
+│   │
+│   ├── metadata/             # Business object definitions
+│   │   ├── src/
+│   │   │   ├── account.object.ts    # Account metadata
+│   │   │   ├── contact.object.ts    # Contact metadata
+│   │   │   ├── opportunity.object.ts # Opportunity metadata
+│   │   │   ├── contract.object.ts   # Contract metadata
+│   │   │   └── *.object.yml         # Legacy YAML definitions
+│   │   └── package.json
+│   │
+│   ├── hooks/                # Business logic and triggers
+│   │   ├── src/
+│   │   │   └── opportunity.hook.ts  # Opportunity automation
+│   │   └── package.json
+│   │
+│   ├── actions/              # Custom business actions
+│   │   ├── src/
+│   │   │   └── ai_smart_briefing.action.ts
+│   │   └── package.json
+│   │
+│   ├── ui/                   # UI components and dashboards
+│   │   ├── src/
+│   │   │   ├── dashboard/
+│   │   │   │   └── sales_dashboard.dashboard.ts
+│   │   │   └── components/
+│   │   │       └── AISmartBriefingCard.ts
+│   │   └── package.json
+│   │
+│   └── server/               # Express server and REST APIs
+│       ├── src/
+│       │   └── server.ts
+│       └── package.json
+│
+├── pnpm-workspace.yaml       # Workspace configuration
+├── package.json              # Root package with scripts
+└── tsconfig.json             # Root TypeScript config
+```
+
+### Package Dependencies
+
+```
+@hotcrm/server
+  ├── @hotcrm/core
+  ├── @hotcrm/metadata
+  ├── @hotcrm/hooks
+  ├── @hotcrm/actions
+  └── @hotcrm/ui
+
+@hotcrm/hooks
+  ├── @hotcrm/core
+  └── @hotcrm/metadata
+
+@hotcrm/actions
+  ├── @hotcrm/core
+  └── @hotcrm/metadata
+
+@hotcrm/ui
+  ├── @hotcrm/core
+  └── @hotcrm/metadata
+
+@hotcrm/metadata
+  └── @hotcrm/core
+
+@hotcrm/core (no dependencies)
 ```
 
 ## 🚀 Getting Started
@@ -66,31 +115,85 @@ hotcrm/
 ### Prerequisites
 
 - Node.js 18+
-- npm or yarn
+- pnpm 8+ (recommended for monorepo management)
 
 ### Installation
 
 ```bash
-npm install
+# Install pnpm if not already installed
+npm install -g pnpm
+
+# Install all dependencies
+pnpm install
 ```
 
 ### Development
 
 ```bash
-npm run dev
-```
+# Start the development server
+pnpm dev
 
-### Build
+# Build all packages
+pnpm build
 
-```bash
-npm run build
+# Build a specific package
+pnpm --filter @hotcrm/core build
+pnpm --filter @hotcrm/server build
+
+# Run linting on all packages
+pnpm lint
+
+# Clean all build artifacts
+pnpm clean
 ```
 
 ### Production
 
 ```bash
-npm start
+# Build all packages
+pnpm build
+
+# Start the production server
+pnpm start
 ```
+
+## 📦 Package Overview
+
+### @hotcrm/core
+
+Core engine providing ObjectQL query language and type definitions.
+
+[Read more →](./packages/core/README.md)
+
+### @hotcrm/metadata
+
+Business object metadata definitions covering the complete CRM lifecycle.
+
+[Read more →](./packages/metadata/README.md)
+
+### @hotcrm/hooks
+
+Business logic, automation triggers, and workflows.
+
+[Read more →](./packages/hooks/README.md)
+
+### @hotcrm/actions
+
+Custom business actions and AI-powered features.
+
+[Read more →](./packages/actions/README.md)
+
+### @hotcrm/ui
+
+UI components, dashboards, and page configurations.
+
+[Read more →](./packages/ui/README.md)
+
+### @hotcrm/server
+
+Express server with REST APIs and endpoints.
+
+[Read more →](./packages/server/README.md)
 
 ## 🤖 AI-Assisted Development
 
