@@ -7,4 +7,7 @@
  */
 
 export * from './objectql';
-export * from './objectstack-spec';
+
+// Re-export type definitions from @objectstack/spec
+export type { ObjectSchema, FieldSchema, HookSchema } from '@objectstack/spec/data';
+export type { DashboardSchema } from '@objectstack/spec/ui';

@@ -15,7 +15,7 @@
  * - Industry-specific sales talking points
  */
 
-import { db } from '../engine/objectql';
+import { db } from '@hotcrm/core';
 
 export interface SmartBriefingRequest {
   /** Account ID to analyze */

@@ -1,5 +1,5 @@
 import type { HookSchema } from '@objectstack/spec/data';
-import { db } from '../engine/objectql';
+import { db } from '@hotcrm/core';
 
 // Types for Context embedded here or imported if available
 export interface TriggerContext {
