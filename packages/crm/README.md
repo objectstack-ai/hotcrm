@@ -17,8 +17,8 @@ This package contains all core CRM functionality for managing the sales pipeline
 - **Opportunity** (`opportunity.object.ts`): Sales pipeline management with 7 stages, AI win probability, and forecasting
 
 **Legacy YAML Definitions:**
-- **Campaign**: Marketing campaign tracking with budget, ROI, and multi-channel support (in @hotcrm/metadata)
-- **Activity**: Call, email, meeting, and task logging with GPS and AI transcription (in @hotcrm/metadata)
+- **Campaign**: Marketing campaign tracking with budget, ROI, and multi-channel support
+- **Activity**: Call, email, meeting, and task logging with GPS and AI transcription
 
 > Note: Campaign and Activity are planned for TypeScript migration in future releases.
 

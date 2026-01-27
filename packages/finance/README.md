@@ -12,7 +12,7 @@ This package contains all finance-related functionality including contract lifec
 - **Contract** (`contract.object.ts`): Contract lifecycle management with terms, renewal tracking, amendment management, e-signature integration readiness, and compliance tracking
 
 **Legacy YAML Definitions:**
-- **Payment** (in @hotcrm/metadata): Payment schedules, invoice management, multiple payment methods, reconciliation, revenue recognition, multi-currency support
+- **Payment**: Payment schedules, invoice management, multiple payment methods, reconciliation, revenue recognition, multi-currency support
 
 > Note: Contract has been migrated to TypeScript. Payment is planned for TypeScript migration in future releases.
 

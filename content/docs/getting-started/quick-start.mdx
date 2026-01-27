@@ -148,9 +148,9 @@ await db.doc.create('QuoteLineItem', {
 Get AI-generated insights about your customer:
 
 ```typescript
-import { aiSmartBriefing } from '@hotcrm/actions';
+import { executeSmartBriefing } from '@hotcrm/crm';
 
-const briefing = await aiSmartBriefing({
+const briefing = await executeSmartBriefing({
   accountId: accountId
 });
 
