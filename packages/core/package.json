@@ -17,7 +17,7 @@
   "author": "HotCRM Team",
   "license": "MIT",
   "dependencies": {
-    "@objectstack/spec": "^0.4.1",
+    "@objectstack/spec": "^0.6.0",
     "typescript": "^5.3.0"
   },
   "devDependencies": {
