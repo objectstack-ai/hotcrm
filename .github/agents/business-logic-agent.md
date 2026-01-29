@@ -123,8 +123,8 @@ const ValidateDiscount: Hook = {
       
       if (quote.DiscountPercent > maxDiscount) {
         throw new Error(
-          `折扣不能超过${maxDiscount}%。` +
-          `金额超过10万的订单最多可打8折，其他订单最多9折。`
+          `Discount cannot exceed ${maxDiscount}%. ` +
+          `Orders over 100,000 can have up to 20% discount, others up to 10% discount.`
         );
       }
     }

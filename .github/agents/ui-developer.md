@@ -31,8 +31,8 @@ const AccountListView: ViewSchema = {
   filters: {
     default: [['Type', '=', 'Customer']],
     quickFilters: [
-      { label: '我的客户', filter: [['OwnerId', '=', '$currentUser']] },
-      { label: '高价值', filter: [['Rating', '=', 'Hot']] }
+      { label: 'My Customers', filter: [['OwnerId', '=', '$currentUser']] },
+      { label: 'High Value', filter: [['Rating', '=', 'Hot']] }
     ]
   },
   actions: ['New', 'Edit', 'Delete', 'Export']
