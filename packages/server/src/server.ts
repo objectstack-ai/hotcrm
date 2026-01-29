@@ -3,6 +3,14 @@
  * 
  * Main server entry point for the enterprise CRM system.
  * This server provides RESTful APIs for ObjectQL queries, triggers, and UI rendering.
+ * 
+ * NOTE: Currently using the local ObjectQL mock implementation from @hotcrm/core
+ * due to ESM compatibility issues with @objectstack/runtime@0.6.1.
+ * The runtime packages are available and dependencies are updated to latest version (0.6.1),
+ * but they have missing .js extensions in import statements which causes runtime errors.
+ * 
+ * Once @objectstack/runtime is fixed to properly support ES modules, this can be migrated
+ * to use ObjectKernel, ObjectQLPlugin, and DriverPlugin.
  */
 
 import express, { Request, Response, NextFunction, Express } from 'express';
@@ -322,6 +330,7 @@ if (require.main === module) {
 ╔═══════════════════════════════════════════════════════════╗
 ║                                                           ║
 ║   🔥 HotCRM - Enterprise CRM System                      ║
+║   📦 @objectstack upgraded to v0.6.1                     ║
 ║                                                           ║
 ║   Server running on http://localhost:${PORT}              ║
 ║   Health check: http://localhost:${PORT}/health          ║
