@@ -9,6 +9,8 @@
 
 > 📝 **Latest Updates**: See [UPGRADE_NOTES.md](UPGRADE_NOTES.md) for information about the v0.6.1 upgrade and runtime migration status.
 
+> ✅ **Protocol Compliance**: All metadata is fully compliant with @objectstack/spec v0.6.1. See [PROTOCOL_COMPLIANCE.md](PROTOCOL_COMPLIANCE.md) for details.
+
 ## 🌟 Overview
 
 HotCRM is a **comprehensive, AI-native enterprise CRM** system covering the complete Lead-to-Cash lifecycle. Built on the @objectstack/spec v0.6.1 protocol, it delivers:

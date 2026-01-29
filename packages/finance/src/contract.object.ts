@@ -1,7 +1,7 @@
 import type { ServiceObject } from '@objectstack/spec/data';
 
 const Contract = {
-  name: 'Contract',
+  name: 'contract',
   label: '合同',
   labelPlural: '合同',
   icon: 'file-text',
@@ -14,7 +14,7 @@ const Contract = {
   },
   fields: {
     ContractNumber: {
-      type: 'autonumber',
+      type: 'autoNumber',
       label: '合同编号',
       format: 'CT-{YYYY}{MM}{DD}-{0000}'
     },

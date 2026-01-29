@@ -1,7 +1,7 @@
 import type { ServiceObject } from '@objectstack/spec/data';
 
 const Case = {
-  name: 'Case',
+  name: 'case',
   label: 'Case',
   labelPlural: 'Cases',
   icon: 'ticket-alt',

@@ -33,7 +33,7 @@ export default MyObject;
 ### Required Object Properties
 ```typescript
 {
-  name: string,              // PascalCase: 'Account', 'Opportunity'
+  name: string,              // snake_case: 'account', 'project_task'
   label: string,             // Display name (user-friendly)
   labelPlural: string,       // Plural form
   icon?: string,             // Icon identifier
@@ -199,8 +199,9 @@ listViews: [
 
 ## 🎨 Best Practices
 
-### 1. Field Naming
-- **API Name**: PascalCase (e.g., `FirstName`, `AnnualRevenue`)
+### 1. Naming Conventions
+- **Object Name (Machine Name)**: snake_case (e.g., `account`, `project_task`)
+- **Field API Name**: PascalCase (e.g., `FirstName`, `AnnualRevenue`)
 - **Labels**: 用户友好 (e.g., `年营收`, `联系人`)
 - **Consistent**: Use same patterns across objects (e.g., always `OwnerId` for owner)
 
@@ -242,7 +243,7 @@ Add `helpText` for complex fields:
 import type { ServiceObject } from '@objectstack/spec/data';
 
 const Product = {
-  name: 'Product',
+  name: 'product',
   label: '产品',
   labelPlural: '产品',
   icon: 'package',
@@ -436,7 +437,7 @@ relationships: [
 
 1. **❌ Using YAML/JSON** → ✅ Always use TypeScript (*.object.ts)
 2. **❌ Missing type imports** → ✅ Always `import type { ServiceObject }`
-3. **❌ Inconsistent naming** → ✅ Use PascalCase for API names
+3. **❌ Inconsistent naming** → ✅ Use snake_case for object names, PascalCase for field names
 4. **❌ No export default** → ✅ Always `export default ObjectName`
 5. **❌ Magic strings** → ✅ Use typed literal values from spec
 6. **❌ Missing required props** → ✅ Include name, label, fields minimum

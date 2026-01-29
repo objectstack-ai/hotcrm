@@ -1,7 +1,7 @@
 import type { ServiceObject } from '@objectstack/spec/data';
 
 const Quote = {
-  name: 'Quote',
+  name: 'quote',
   label: 'Quote',
   labelPlural: 'Quotes',
   icon: 'file-invoice-dollar',

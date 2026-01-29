@@ -1,7 +1,7 @@
 import type { ServiceObject } from '@objectstack/spec/data';
 
 const Activity = {
-  name: 'Activity',
+  name: 'activity',
   label: 'Activity',
   labelPlural: 'Activities',
   icon: 'calendar-check',

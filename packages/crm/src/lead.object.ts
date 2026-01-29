@@ -1,7 +1,7 @@
 import type { ServiceObject } from '@objectstack/spec/data';
 
 const Lead = {
-  name: 'Lead',
+  name: 'lead',
   label: '线索',
   labelPlural: '线索',
   icon: 'user-plus',
