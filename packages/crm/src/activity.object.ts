@@ -423,7 +423,7 @@ const Activity = {
     {
       name: 'RecurrenceEndDateValid',
       errorMessage: 'Recurrence end date must be after activity date',
-      formula: 'AND(IsRecurring = true, NOT(ISBLANK(RecurrenceEndDate)), RecurrenceEndDate <= ActivityDate)'
+      formula: 'AND(IsRecurring = true, NOT(ISBLANK(RecurrenceEndDate)), RecurrenceEndDate < ActivityDate)'
     },
     {
       name: 'DueDateValidation',

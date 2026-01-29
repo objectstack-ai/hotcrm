@@ -8,7 +8,7 @@
  */
 
 // Export business objects
-export * from './quote.object';
+export { default as Quote } from './quote.object';
 
 // Note: YAML files (Product, Pricebook) are kept for reference
 // TypeScript definitions should be created following the metadata protocol

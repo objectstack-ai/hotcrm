@@ -7,7 +7,7 @@
  */
 
 // Export business objects
-export * from './case.object';
+export { default as Case } from './case.object';
 
 // Note: YAML files (Knowledge) are kept for reference
 // TypeScript definitions should be created following the metadata protocol

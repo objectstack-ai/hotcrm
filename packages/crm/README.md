@@ -34,16 +34,16 @@ This package contains all core CRM functionality for managing the sales pipeline
 ### Importing Schemas
 ```typescript
 import { 
-  AccountSchema, 
-  ContactSchema, 
-  LeadSchema,
-  OpportunitySchema,
-  ActivitySchema  // ✨ NEW
+  Account, 
+  Contact, 
+  Lead,
+  Opportunity,
+  Activity  // ✨ NEW
 } from '@hotcrm/crm';
 
-console.log(AccountSchema.label); // "Account"
-console.log(LeadSchema.label); // "Lead"
-console.log(ActivitySchema.label); // "Activity"
+console.log(Account.label); // "Account"
+console.log(Lead.label); // "Lead"
+console.log(Activity.label); // "Activity"
 ```
 
 ### Using Hooks

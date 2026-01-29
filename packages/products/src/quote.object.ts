@@ -517,7 +517,7 @@ const Quote = {
     {
       name: 'HighDiscountRequiresApproval',
       errorMessage: 'Discount over 20% requires approval',
-      formula: 'AND(DiscountPercent > 0.20, ApprovalStatus != "Approved", Status != "Draft")'
+      formula: 'AND(DiscountPercent > 0.20, ApprovalStatus NOT IN ("Approved", "Pending"), Status NOT IN ("Draft", "In Review"))'
     },
     {
       name: 'ApprovedQuoteReadOnly',

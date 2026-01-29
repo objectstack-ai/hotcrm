@@ -46,13 +46,13 @@ This package contains all product and pricing functionality including product ca
 ## Usage
 
 ```typescript
-import { QuoteSchema } from '@hotcrm/products';
+import { Quote } from '@hotcrm/products';
 
-console.log(QuoteSchema.label); // "Quote"
-console.log(QuoteSchema.fields.QuoteNumber); // Auto-number field configuration
-console.log(QuoteSchema.validationRules); // Approval and pricing validations
+console.log(Quote.label); // "Quote"
+console.log(Quote.fields.QuoteNumber); // Auto-number field configuration
+console.log(Quote.validationRules); // Approval and pricing validations
 
-// Note: Product and Pricebook TypeScript schema exports will be available after migration from YAML
+// Note: Product and Pricebook TypeScript exports will be available after migration from YAML
 ```
 
 ## Future Enhancements

@@ -531,7 +531,7 @@ const Case = {
     {
       name: 'ClosedCaseReadOnly',
       errorMessage: 'Closed cases cannot be modified',
-      formula: 'AND(PRIORVALUE(Status) = "Closed", Status != "Closed")'
+      formula: 'AND(PRIORVALUE(Status) = "Closed", Status != "Closed", NOT(ISNEW()))'
     },
     {
       name: 'EscalationReasonRequired',

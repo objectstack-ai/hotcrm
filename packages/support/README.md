@@ -38,14 +38,14 @@ This package contains all customer support functionality including case manageme
 ## Usage
 
 ```typescript
-import { CaseSchema } from '@hotcrm/support';
+import { Case } from '@hotcrm/support';
 
-console.log(CaseSchema.label); // "Case"
-console.log(CaseSchema.fields.CaseNumber); // Auto-number field configuration
-console.log(CaseSchema.fields.SLALevel); // SLA level options
-console.log(CaseSchema.listViews); // Pre-configured views (My Cases, Team Queue, etc.)
+console.log(Case.label); // "Case"
+console.log(Case.fields.CaseNumber); // Auto-number field configuration
+console.log(Case.fields.SLALevel); // SLA level options
+console.log(Case.listViews); // Pre-configured views (My Cases, Team Queue, etc.)
 
-// Note: Knowledge TypeScript schema export will be available after migration from YAML
+// Note: Knowledge TypeScript export will be available after migration from YAML
 ```
 
 ## Future Enhancements
