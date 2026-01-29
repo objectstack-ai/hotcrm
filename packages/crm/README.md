@@ -15,12 +15,12 @@ This package contains all core CRM functionality for managing the sales pipeline
 - **Contact** (`contact.object.ts`): Individual contact management with account relationships and role tracking
 - **Lead** (`lead.object.ts`): Lead capture, qualification, and conversion tracking with AI-powered scoring
 - **Opportunity** (`opportunity.object.ts`): Sales pipeline management with 7 stages, AI win probability, and forecasting
+- **Activity** (`activity.object.ts`): ✨ **NEW** - Comprehensive activity tracking (Call, Email, Meeting, Task, Note, SMS, etc.) with Who/What relationship pattern, recurring tasks, AI transcription, and smart insights
 
 **Legacy YAML Definitions:**
 - **Campaign**: Marketing campaign tracking with budget, ROI, and multi-channel support
-- **Activity**: Call, email, meeting, and task logging with GPS and AI transcription
 
-> Note: Campaign and Activity are planned for TypeScript migration in future releases.
+> Note: Campaign is planned for TypeScript migration in future releases.
 
 ### Hooks (Business Logic)
 - **Lead Conversion Hook** (`lead.hook.ts`): Automatically creates Account/Contact/Opportunity when lead is converted
@@ -37,11 +37,13 @@ import {
   AccountSchema, 
   ContactSchema, 
   LeadSchema,
-  OpportunitySchema 
+  OpportunitySchema,
+  ActivitySchema  // ✨ NEW
 } from '@hotcrm/crm';
 
 console.log(AccountSchema.label); // "Account"
 console.log(LeadSchema.label); // "Lead"
+console.log(ActivitySchema.label); // "Activity"
 ```
 
 ### Using Hooks

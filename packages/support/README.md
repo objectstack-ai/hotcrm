@@ -8,11 +8,13 @@ This package contains all customer support functionality including case manageme
 
 ## Business Objects (Schemas)
 
+**TypeScript Definitions (Preferred):**
+- **Case** (`case.object.ts`): ✨ **NEW** - Multi-channel case management (Email, Web, Phone, WeChat, Chat, Mobile App, Walk-in), SLA tracking with auto-calculation, AI-powered routing and assignment, priority/escalation workflows, CSAT tracking, and intelligent solution recommendations
+
 **Legacy YAML Definitions:**
-- **Case**: Multi-channel ticket intake (Email, Web, Phone, WeChat, Chat), SLA management, priority/escalation, customer satisfaction tracking
 - **Knowledge**: Help documentation, FAQ management, article categorization, version control, RAG support with vector embeddings
 
-> Note: Case and Knowledge objects are currently defined in YAML format. They are planned for TypeScript migration to this package in future releases.
+> Note: Knowledge object is planned for TypeScript migration in future releases.
 
 ## Key Features
 
@@ -36,9 +38,14 @@ This package contains all customer support functionality including case manageme
 ## Usage
 
 ```typescript
-import { /* CaseSchema, KnowledgeSchema */ } from '@hotcrm/support';
+import { CaseSchema } from '@hotcrm/support';
 
-// Note: TypeScript schema exports will be available after migration from YAML
+console.log(CaseSchema.label); // "Case"
+console.log(CaseSchema.fields.CaseNumber); // Auto-number field configuration
+console.log(CaseSchema.fields.SLALevel); // SLA level options
+console.log(CaseSchema.listViews); // Pre-configured views (My Cases, Team Queue, etc.)
+
+// Note: Knowledge TypeScript schema export will be available after migration from YAML
 ```
 
 ## Future Enhancements
