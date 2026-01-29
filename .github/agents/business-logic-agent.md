@@ -124,7 +124,7 @@ const ValidateDiscount: Hook = {
       if (quote.DiscountPercent > maxDiscount) {
         throw new Error(
           `Discount cannot exceed ${maxDiscount}%. ` +
-          `Orders over 100,000 can have up to 20% discount, others up to 10% discount.`
+          `Orders over 100,000 allow up to 20% discount; smaller orders allow up to 10% discount.`
         );
       }
     }

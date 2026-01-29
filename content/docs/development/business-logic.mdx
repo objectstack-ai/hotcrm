@@ -157,7 +157,7 @@ async function handleClosedWon(ctx: TriggerContext): Promise<void> {
     WhatId: opportunity.Id,
     OwnerId: ctx.user.id,
     ActivityDate: new Date().toISOString().split('T')[0],
-    Description: `Opportunity "${opportunity.Name}" successfully closed won, amount: ${opportunity.Amount?.toLocaleString() || 0}`
+    Description: `Opportunity "${opportunity.Name}" successfully won, amount: ${opportunity.Amount?.toLocaleString() || 0}`
   });
   console.log('✅ Activity logged for Closed Won');
 }
