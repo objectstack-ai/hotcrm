@@ -65,7 +65,9 @@ const ActivityRelatedObjectUpdatesTrigger: Hook = {
         return;
       }
       
-      const activityDate = activity.ActivityDate?.split('T')[0] || new Date().toISOString().split('T')[0];
+      const activityDate = activity.ActivityDate 
+        ? activity.ActivityDate.split('T')[0] 
+        : new Date().toISOString().split('T')[0];
       
       // Update Contact.LastContactDate
       if (activity.WhoId) {
@@ -168,6 +170,13 @@ async function createNextRecurrence(activity: Record<string, any>, ctx: TriggerC
   
   const interval = activity.RecurrenceInterval || 1;
   
+  // Validate recurrence pattern
+  const validPatterns = ['Daily', 'Weekly', 'Monthly', 'Yearly'];
+  if (!validPatterns.includes(activity.RecurrencePattern)) {
+    console.error(`❌ Invalid recurrence pattern: ${activity.RecurrencePattern}`);
+    return;
+  }
+  
   switch (activity.RecurrencePattern) {
     case 'Daily':
       nextDate.setDate(nextDate.getDate() + interval);
@@ -176,7 +185,19 @@ async function createNextRecurrence(activity: Record<string, any>, ctx: TriggerC
       nextDate.setDate(nextDate.getDate() + (7 * interval));
       break;
     case 'Monthly':
-      nextDate.setMonth(nextDate.getMonth() + interval);
+      // Handle month overflow properly (e.g., Jan 31 + 1 month = Feb 28/29)
+      const targetMonth = nextDate.getMonth() + interval;
+      const targetYear = nextDate.getFullYear() + Math.floor(targetMonth / 12);
+      const normalizedMonth = targetMonth % 12;
+      const currentDay = nextDate.getDate();
+      
+      nextDate.setFullYear(targetYear);
+      nextDate.setMonth(normalizedMonth);
+      
+      // If day was reset due to overflow (e.g., Jan 31 -> Mar 3), set to last day of target month
+      if (nextDate.getDate() !== currentDay) {
+        nextDate.setDate(0); // Sets to last day of previous month
+      }
       break;
     case 'Yearly':
       nextDate.setFullYear(nextDate.getFullYear() + interval);
@@ -184,9 +205,17 @@ async function createNextRecurrence(activity: Record<string, any>, ctx: TriggerC
   }
   
   // Check if we should create the next occurrence
-  if (activity.RecurrenceEndDate && nextDate > new Date(activity.RecurrenceEndDate)) {
-    console.log(`⏹️ Recurrence ended - reached end date`);
-    return;
+  if (activity.RecurrenceEndDate) {
+    try {
+      const endDate = new Date(activity.RecurrenceEndDate);
+      if (nextDate > endDate) {
+        console.log(`⏹️ Recurrence ended - reached end date`);
+        return;
+      }
+    } catch (error) {
+      console.error(`❌ Invalid RecurrenceEndDate: ${activity.RecurrenceEndDate}`);
+      return;
+    }
   }
   
   // Create next occurrence

@@ -207,14 +207,16 @@ const ContactRelationshipStrengthTrigger: Hook = {
       
       // Auto-promote based on activity frequency (would need to query activities)
       // This is simplified logic - real implementation would count activities
-      else if (daysSinceContact < 7) {
+      else if (daysSinceContact < 7 && daysSinceContact >= 0) {
         // Recent contact suggests active relationship
         if (currentStrength === 'Weak' || currentStrength === 'Unknown') {
           contact.RelationshipStrength = 'Medium';
           console.log(`⬆️ Promoted relationship strength: ${currentStrength} → Medium (active engagement)`);
         } else if (currentStrength === 'Medium') {
-          // Would check activity count here
-          // If many recent activities, promote to Strong
+          // In real implementation, would check activity count here
+          // If many recent activities (e.g., > 10 in last 30 days), promote to Strong
+          // For now, we log that this could be promoted
+          console.log(`ℹ️ Medium relationship with recent contact - could promote to Strong based on activity count`);
         }
       }
       
@@ -226,11 +228,12 @@ const ContactRelationshipStrengthTrigger: Hook = {
 
 /**
  * Helper function to calculate days since a given date
+ * Returns positive number for past dates, negative for future dates
  */
 function getDaysSince(dateString: string): number {
   const date = new Date(dateString);
   const now = new Date();
-  const diffTime = Math.abs(now.getTime() - date.getTime());
+  const diffTime = now.getTime() - date.getTime();
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   return diffDays;
 }

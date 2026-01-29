@@ -32,6 +32,10 @@ const CampaignROICalculationTrigger: Hook = {
       if (actualCost > 0) {
         campaign.ROI = ((actualRevenue - actualCost) / actualCost) * 100;
         console.log(`📊 Campaign ROI calculated: ${campaign.ROI.toFixed(2)}%`);
+      } else if (actualRevenue > 0 && actualCost === 0) {
+        // Infinite ROI - revenue with no cost
+        campaign.ROI = 999.99; // Cap at a high value for display purposes
+        console.log(`📊 Campaign ROI: Infinite (revenue with zero cost) - capped at 999.99%`);
       } else {
         campaign.ROI = 0;
       }
