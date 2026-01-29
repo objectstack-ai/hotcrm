@@ -6,6 +6,10 @@ Express server and REST APIs for HotCRM - Application assembly and HTTP interfac
 
 This package provides the HTTP server and REST API endpoints for the HotCRM system. It serves as the application assembly layer, integrating all domain packages (@hotcrm/crm, @hotcrm/support, @hotcrm/products, @hotcrm/finance) and exposing them through a unified API.
 
+### Runtime Architecture
+
+Currently using the local ObjectQL implementation from `@hotcrm/core` while preparing for migration to the official `@objectstack/runtime` (v0.6.1). The runtime dependencies are installed and ready, but cannot be used yet due to ESM compatibility issues in the published packages. See [UPGRADE_NOTES.md](../../UPGRADE_NOTES.md) for details.
+
 ## Key Features
 
 - **RESTful APIs**: Standard REST endpoints for all CRM operations
@@ -146,13 +150,23 @@ OPENAI_API_KEY=your-api-key-here
 
 ### Server Configuration
 
-The server integrates with all domain packages:
+The server integrates with all domain packages and runtime dependencies:
+
+**Domain Packages:**
 - **@hotcrm/core** - ObjectQL engine and type definitions
 - **@hotcrm/crm** - CRM schemas, hooks, and actions
 - **@hotcrm/support** - Support schemas and features
 - **@hotcrm/products** - Product and pricing schemas
 - **@hotcrm/finance** - Finance schemas and features
 - **@hotcrm/ui** - Dashboard and component configurations
+
+**ObjectStack Runtime (v0.6.1):**
+- **@objectstack/core** - Core kernel and plugin system
+- **@objectstack/runtime** - Runtime engine and plugin management
+- **@objectstack/objectql** - Official ObjectQL implementation
+- **@objectstack/driver-memory** - In-memory data driver
+
+> **Note:** While runtime dependencies are installed, they are not yet in use due to ESM compatibility issues. The server currently uses the local ObjectQL implementation from `@hotcrm/core`. Migration to the official runtime will occur once the upstream packages are fixed. See [UPGRADE_NOTES.md](../../UPGRADE_NOTES.md) for details.
 
 ## Architecture
 
