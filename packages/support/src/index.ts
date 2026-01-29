@@ -6,5 +6,8 @@
  * - Knowledge: Knowledge base and documentation
  */
 
-// Note: YAML files (Case, Knowledge) are kept for reference
+// Export business objects
+export { default as Case } from './case.object';
+
+// Note: YAML files (Knowledge) are kept for reference
 // TypeScript definitions should be created following the metadata protocol

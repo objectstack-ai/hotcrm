@@ -19,10 +19,11 @@
  */
 
 // Export business objects
-export * from './account.object';
-export * from './contact.object';
-export * from './lead.object';
-export * from './opportunity.object';
+export { default as Account } from './account.object';
+export { default as Activity } from './activity.object';
+export { default as Contact } from './contact.object';
+export { default as Lead } from './lead.object';
+export { default as Opportunity } from './opportunity.object';
 
 // Export hooks
 export * from './hooks/lead.hook';
@@ -31,5 +32,5 @@ export * from './hooks/opportunity.hook';
 // Export actions
 export * from './actions/ai_smart_briefing.action';
 
-// Note: YAML files (Campaign, Activity) are kept for backward compatibility
+// Note: YAML files (Campaign) are kept for backward compatibility
 // TypeScript definitions are preferred as per the custom instructions

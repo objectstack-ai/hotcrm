@@ -8,12 +8,14 @@ This package contains all product and pricing functionality including product ca
 
 ## Business Objects (Schemas)
 
+**TypeScript Definitions (Preferred):**
+- **Quote** (`quote.object.ts`): ✨ **NEW** - CPQ (Configure-Price-Quote) with complex pricing, multi-level discount approval, tax/shipping calculation, PDF generation, quote versioning, and AI product bundle recommendations
+
 **Legacy YAML Definitions:**
 - **Product**: Product catalog with SKU management, product families, multi-UOM support, inventory tracking, AI-powered sales points
 - **Pricebook**: Multi-currency pricing (CNY, USD, EUR, GBP, JPY, HKD, SGD), regional/channel pricing, tiered strategies, date-effective pricing
-- **Quote**: Complex quote configuration, multi-level discount approval, automatic tax/shipping calculation, PDF generation, AI product bundle recommendations
 
-> Note: Product, Pricebook, and Quote objects are currently defined in YAML format. They are planned for TypeScript migration to this package in future releases.
+> Note: Product and Pricebook objects are planned for TypeScript migration in future releases.
 
 ## Key Features
 
@@ -44,9 +46,13 @@ This package contains all product and pricing functionality including product ca
 ## Usage
 
 ```typescript
-import { /* ProductSchema, PricebookSchema, QuoteSchema */ } from '@hotcrm/products';
+import { Quote } from '@hotcrm/products';
 
-// Note: TypeScript schema exports will be available after migration from YAML
+console.log(Quote.label); // "Quote"
+console.log(Quote.fields.QuoteNumber); // Auto-number field configuration
+console.log(Quote.validationRules); // Approval and pricing validations
+
+// Note: Product and Pricebook TypeScript exports will be available after migration from YAML
 ```
 
 ## Future Enhancements
