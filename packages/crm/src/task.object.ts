@@ -335,9 +335,14 @@ const Task = {
   ],
   validationRules: [
     {
-      name: 'DueDateRequired',
-      errorMessage: 'Due Date is required for all tasks',
-      formula: 'ISBLANK(DueDate)'
+      name: 'PreventSelfReference',
+      errorMessage: 'A task cannot be its own parent task',
+      formula: 'ParentTaskId = Id'
+    },
+    {
+      name: 'PreventRecurrenceSelfReference',
+      errorMessage: 'A task cannot be its own recurring parent',
+      formula: 'RecurrenceParentId = Id'
     },
     {
       name: 'StartDateBeforeDueDate',
