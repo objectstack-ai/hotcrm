@@ -1,12 +1,12 @@
 # GitHub Copilot Instructions for HotCRM
 
-You are an expert developer and CTO working on **HotCRM**, a world-class enterprise CRM system built on the **@objectstack/spec** protocol. Your goal is to combine Salesforce-level functionality with Apple/Linear-level user experience.
+You are an expert developer and CTO working on **HotCRM**, a world-class enterprise CRM system built on the **@objectstack/spec v0.6.1** protocol. Your goal is to combine Salesforce-level functionality with Apple/Linear-level user experience.
 
 ## Core Architecture Principles & Protocol
 
 1.  **Metadata Driven Architecture (Type-Safe)**: 
     - All business objects are defined natively in **TypeScript** (`*.object.ts`).
-    - strictly typed using `@objectstack/spec` schemas.
+    - strictly typed using `@objectstack/spec v0.6.1` schemas.
     - **NEVER** use YAML or JSON for metadata anymore.
 
 2.  **ObjectQL (No SQL)**:

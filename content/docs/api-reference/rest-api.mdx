@@ -497,8 +497,8 @@ POST /ai/lead-score/{leadId}
 {
   "leadId": "lead_123",
   "score": 85,
-  "summary": "高质量线索：公司规模大，资料完整",
-  "recommendedAction": "立即联系，安排产品演示",
+  "summary": "High quality lead: Large company, complete profile",
+  "recommendedAction": "Contact immediately, schedule product demo",
   "factors": {
     "completeness": 90,
     "companyQuality": 85,
@@ -757,12 +757,12 @@ GET /metadata/objects/{objectName}
 ```json
 {
   "name": "Account",
-  "label": "客户",
+  "label": "Account",
   "fields": [
     {
       "name": "Name",
       "type": "text",
-      "label": "客户名称",
+      "label": "Account Name",
       "required": true,
       "length": 255
     }
@@ -784,9 +784,9 @@ GET /metadata/objects
 ```json
 {
   "objects": [
-    { "name": "Account", "label": "客户" },
-    { "name": "Contact", "label": "联系人" },
-    { "name": "Opportunity", "label": "商机" }
+    { "name": "Account", "label": "Account" },
+    { "name": "Contact", "label": "Contact" },
+    { "name": "Opportunity", "label": "Opportunity" }
   ]
 }
 ```

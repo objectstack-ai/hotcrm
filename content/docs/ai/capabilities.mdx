@@ -27,12 +27,12 @@ The lead scoring model evaluates multiple factors:
 {
   name: 'LeadScore',
   type: 'number',
-  label: '线索评分',
+  label: 'Lead Score',
   precision: 0,
   min: 0,
   max: 100,
   readonly: true,
-  description: 'AI 自动计算的线索质量分数 (0-100)'
+  description: 'AI-calculated lead quality score (0-100)'
 }
 ```
 
@@ -111,27 +111,27 @@ Predict the probability of winning a deal based on historical data and current o
 {
   name: 'AIWinProbability',
   type: 'percent',
-  label: 'AI 赢单概率',
+  label: 'AI Win Probability',
   readonly: true,
-  description: 'AI 预测的赢单概率'
+  description: 'AI-predicted win probability'
 },
 {
   name: 'AIRiskFactors',
   type: 'textarea',
-  label: 'AI 风险因素',
+  label: 'AI Risk Factors',
   readonly: true,
-  description: 'AI 识别的潜在风险'
+  description: 'AI-identified potential risks'
 },
 {
   name: 'AINextStepSuggestion',
   type: 'text',
-  label: 'AI 建议下一步',
+  label: 'AI Next Step Suggestion',
   readonly: true
 },
 {
   name: 'AICompetitiveIntel',
   type: 'textarea',
-  label: 'AI 竞争情报',
+  label: 'AI Competitive Intelligence',
   readonly: true
 }
 ```
@@ -253,26 +253,26 @@ Automatically transcribe meeting recordings and phone calls to text with action 
 {
   name: 'Transcription',
   type: 'textarea',
-  label: '会议转录',
+  label: 'Meeting Transcription',
   readonly: true,
   length: 32000
 },
 {
   name: 'TranscriptionSummary',
   type: 'textarea',
-  label: 'AI 会议摘要',
+  label: 'AI Meeting Summary',
   readonly: true
 },
 {
   name: 'AIActionItems',
   type: 'textarea',
-  label: 'AI 提取行动项',
+  label: 'AI Extracted Action Items',
   readonly: true
 },
 {
   name: 'AISentiment',
   type: 'select',
-  label: 'AI 情感分析',
+  label: 'AI Sentiment Analysis',
   readonly: true,
   options: [
     { label: '😊 Positive', value: 'Positive' },
@@ -350,7 +350,7 @@ Automatically categorize cases, leads, and other records based on content analys
 {
   name: 'AISuggestedType',
   type: 'select',
-  label: 'AI 建议类型',
+  label: 'AI Suggested Type',
   readonly: true,
   options: [
     { label: '🐛 Problem', value: 'Problem' },
@@ -362,7 +362,7 @@ Automatically categorize cases, leads, and other records based on content analys
 {
   name: 'AISuggestedPriority',
   type: 'select',
-  label: 'AI 建议优先级',
+  label: 'AI Suggested Priority',
   readonly: true,
   options: [
     { label: 'Critical', value: 'Critical' },
@@ -421,14 +421,14 @@ Generated Answer + Citations
 {
   name: 'VectorEmbedding',
   type: 'json',
-  label: '向量嵌入',
+  label: 'Vector Embedding',
   readonly: true,
-  description: 'AI 生成的语义向量用于相似度搜索'
+  description: 'AI-generated semantic vector for similarity search'
 },
 {
   name: 'AISummary',
   type: 'textarea',
-  label: 'AI 摘要',
+  label: 'AI Summary',
   readonly: true
 }
 ```
@@ -502,14 +502,14 @@ The AI considers:
 {
   name: 'AISuggestedAgent',
   type: 'lookup',
-  label: 'AI 推荐客服',
+  label: 'AI Suggested Agent',
   referenceTo: 'User',
   readonly: true
 },
 {
   name: 'AIRoutingReason',
   type: 'text',
-  label: 'AI 路由原因',
+  label: 'AI Routing Reason',
   readonly: true
 }
 ```

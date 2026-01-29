@@ -127,25 +127,25 @@ HotCRM uses a consistent naming convention for AI-generated fields:
 {
   name: 'LeadScore',
   type: 'number',
-  label: '线索评分',
+  label: 'Lead Score',
   min: 0,
   max: 100,
   readonly: true,
-  description: 'AI 自动计算的线索质量分数 (0-100)'
+  description: 'AI-calculated lead quality score (0-100)'
 }
 
 {
   name: 'AISummary',
   type: 'textarea',
-  label: 'AI 线索分析',
+  label: 'AI Lead Analysis',
   readonly: true,
-  description: 'AI 生成的线索质量分析和建议'
+  description: 'AI-generated lead quality analysis and recommendations'
 }
 
 {
   name: 'AIRecommendedAction',
   type: 'text',
-  label: 'AI 推荐行动',
+  label: 'AI Recommended Action',
   readonly: true
 }
 ```

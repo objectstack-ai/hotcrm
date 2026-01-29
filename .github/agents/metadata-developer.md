@@ -111,7 +111,7 @@ export default MyObject;
 {
   name: 'AccountId',
   type: 'lookup',
-  label: '客户',
+  label: 'Account',
   referenceTo: 'Account',
   required: true
 }

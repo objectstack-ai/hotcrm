@@ -149,7 +149,7 @@ async function handleClosedWon(ctx: TriggerContext): Promise<void> {
 
   // 3. Log activity
   await ctx.db.doc.create('Activity', {
-    Subject: `商机成交: ${opportunity.Name}`,
+    Subject: `Opportunity Won: ${opportunity.Name}`,
     Type: 'Milestone',
     Status: 'Completed',
     Priority: 'High',
@@ -157,7 +157,7 @@ async function handleClosedWon(ctx: TriggerContext): Promise<void> {
     WhatId: opportunity.Id,
     OwnerId: ctx.user.id,
     ActivityDate: new Date().toISOString().split('T')[0],
-    Description: `商机 "${opportunity.Name}" 已成功成交，金额: ${opportunity.Amount?.toLocaleString() || 0}`
+    Description: `Opportunity "${opportunity.Name}" successfully won, amount: ${opportunity.Amount?.toLocaleString() || 0}`
   });
   console.log('✅ Activity logged for Closed Won');
 }
@@ -172,7 +172,7 @@ async function handleClosedLost(ctx: TriggerContext): Promise<void> {
 
   // Log activity for lost opportunity
   await ctx.db.doc.create('Activity', {
-    Subject: `商机丢失: ${opportunity.Name}`,
+    Subject: `Opportunity Lost: ${opportunity.Name}`,
     Type: 'Milestone',
     Status: 'Completed',
     Priority: 'Normal',
@@ -180,7 +180,7 @@ async function handleClosedLost(ctx: TriggerContext): Promise<void> {
     WhatId: opportunity.Id,
     OwnerId: ctx.user.id,
     ActivityDate: new Date().toISOString().split('T')[0],
-    Description: `商机 "${opportunity.Name}" 已丢失，金额: ${opportunity.Amount?.toLocaleString() || 0}。原因待分析。`
+    Description: `Opportunity "${opportunity.Name}" lost, amount: ${opportunity.Amount?.toLocaleString() || 0}. Reason to be analyzed.`
   });
   console.log('✅ Activity logged for Closed Lost');
 }
@@ -193,7 +193,7 @@ async function logStageChange(ctx: TriggerContext): Promise<void> {
   const oldStage = ctx.old?.Stage || 'Unknown';
   
   await ctx.db.doc.create('Activity', {
-    Subject: `商机阶段变更: ${oldStage} → ${ctx.new.Stage}`,
+    Subject: `Opportunity Stage Changed: ${oldStage} → ${ctx.new.Stage}`,
     Type: 'Stage Change',
     Status: 'Completed',
     Priority: 'Normal',
@@ -201,7 +201,7 @@ async function logStageChange(ctx: TriggerContext): Promise<void> {
     WhatId: opportunity.Id,
     OwnerId: ctx.user.id,
     ActivityDate: new Date().toISOString().split('T')[0],
-    Description: `商机阶段从 "${oldStage}" 变更为 "${ctx.new.Stage}"`
+    Description: `Opportunity stage changed from "${oldStage}" to "${ctx.new.Stage}"`
   });
 }
 
@@ -337,7 +337,7 @@ const ContractBeforeUpdate: HookSchema = {
     
     // Prevent changing activated contract
     if (oldContract.Status === 'Activated' && newContract.Status !== 'Activated') {
-      throw new Error('不能修改已激活的合同状态');
+      throw new Error('Cannot modify activated contract status');
     }
     
     // Require approval for value changes > 10%
@@ -347,7 +347,7 @@ const ContractBeforeUpdate: HookSchema = {
       );
       
       if (change > 0.1 && !newContract.ApprovalStatus) {
-        throw new Error('合同金额变更超过10%需要审批');
+        throw new Error('Contract amount change exceeding 10% requires approval');
       }
     }
   }
@@ -406,7 +406,7 @@ const AccountBeforeDelete: HookSchema = {
     });
     
     if (activeOpps.length > 0) {
-      throw new Error('不能删除有活动商机的客户');
+      throw new Error('Cannot delete account with active opportunities');
     }
     
     // Check for active contracts
@@ -419,7 +419,7 @@ const AccountBeforeDelete: HookSchema = {
     });
     
     if (activeContracts.length > 0) {
-      throw new Error('不能删除有激活合同的客户');
+      throw new Error('Cannot delete account with activated contracts');
     }
   }
 };
@@ -499,14 +499,14 @@ async function calculateLeadScore(lead: any): Promise<{
   let action = '';
   
   if (totalScore >= 70) {
-    summary = '高质量线索：公司规模大，资料完整';
-    action = '立即联系，安排产品演示';
+    summary = 'High quality lead: Large company, complete profile';
+    action = 'Contact immediately, schedule product demo';
   } else if (totalScore >= 40) {
-    summary = '中等质量线索：需要进一步确认需求';
-    action = '发送邮件了解具体需求';
+    summary = 'Medium quality lead: Needs further requirement confirmation';
+    action = 'Send email to understand specific needs';
   } else {
-    summary = '低质量线索：资料不完整或公司规模小';
-    action = '添加到培育流程';
+    summary = 'Low quality lead: Incomplete profile or small company';
+    action = 'Add to nurturing workflow';
   }
   
   return { score: totalScore, summary, action };

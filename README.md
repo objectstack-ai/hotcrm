@@ -7,6 +7,8 @@
 
 > A world-class Customer Relationship Management system built on @objectstack/spec v0.6.1 protocol with Salesforce-level functionality and Apple/Linear-level UX.
 
+> 📝 **Latest Updates**: See [UPGRADE_NOTES.md](UPGRADE_NOTES.md) for information about the v0.6.1 upgrade and runtime migration status.
+
 ## 🌟 Overview
 
 HotCRM is a **comprehensive, AI-native enterprise CRM** system covering the complete Lead-to-Cash lifecycle. Built on the @objectstack/spec v0.6.1 protocol, it delivers:
@@ -375,7 +377,7 @@ HotCRM implements a comprehensive enterprise CRM system organized into **5 major
 ### 4. 🟣 Platform Foundation
 
 **Metadata-Driven Architecture**
-- All objects defined in declarative YAML
+- All objects defined natively in TypeScript (`.object.ts`)
 - ObjectQL query language for type-safe data access
 - Dynamic field and layout management
 - Custom validation rules
