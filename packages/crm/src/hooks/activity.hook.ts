@@ -166,7 +166,7 @@ async function createNextRecurrence(activity: Record<string, any>, ctx: TriggerC
   
   // Calculate next occurrence date based on pattern
   const currentDate = new Date(activity.ActivityDate);
-  let nextDate = new Date(currentDate);
+  const nextDate = new Date(currentDate);
   
   const interval = activity.RecurrenceInterval || 1;
   
@@ -184,7 +184,7 @@ async function createNextRecurrence(activity: Record<string, any>, ctx: TriggerC
     case 'Weekly':
       nextDate.setDate(nextDate.getDate() + (7 * interval));
       break;
-    case 'Monthly':
+    case 'Monthly': {
       // Handle month overflow properly (e.g., Jan 31 + 1 month = Feb 28/29)
       const targetMonth = nextDate.getMonth() + interval;
       const targetYear = nextDate.getFullYear() + Math.floor(targetMonth / 12);
@@ -199,6 +199,7 @@ async function createNextRecurrence(activity: Record<string, any>, ctx: TriggerC
         nextDate.setDate(0); // Sets to last day of previous month
       }
       break;
+    }
     case 'Yearly':
       nextDate.setFullYear(nextDate.getFullYear() + interval);
       break;
