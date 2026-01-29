@@ -23,6 +23,7 @@
     "@hotcrm/products": "workspace:*",
     "@hotcrm/finance": "workspace:*",
     "@hotcrm/ui": "workspace:*",
+    "@objectstack/core": "^0.6.1",
     "@objectstack/runtime": "^0.6.1",
     "@objectstack/objectql": "^0.6.1",
     "@objectstack/driver-memory": "^0.6.1",

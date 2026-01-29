@@ -205,6 +205,9 @@ importers:
       '@hotcrm/ui':
         specifier: workspace:*
         version: link:../ui
+      '@objectstack/core':
+        specifier: ^0.6.1
+        version: 0.6.1
       '@objectstack/driver-memory':
         specifier: ^0.6.1
         version: 0.6.1
