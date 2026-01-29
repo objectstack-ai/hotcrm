@@ -36,8 +36,8 @@ import type { ObjectSchema } from '@objectstack/spec/data';
 ```typescript
 const MyCustomObject: ObjectSchema = {
   name: 'CustomObject',           // PascalCase, no spaces
-  label: '自定义对象',              // Display name (singular)
-  labelPlural: '自定义对象',        // Display name (plural)
+  label: 'Custom Object',          // Display name (singular)
+  labelPlural: 'Custom Objects',   // Display name (plural)
   icon: 'briefcase',               // Icon name
   description: 'Description of the object',
   
@@ -89,7 +89,7 @@ export default MyCustomObject;
 {
   name: 'Name',
   type: 'text',
-  label: '名称',
+  label: 'Name',
   required: true,
   searchable: true,
   length: 255,
@@ -100,7 +100,7 @@ export default MyCustomObject;
 {
   name: 'Description',
   type: 'textarea',
-  label: '描述',
+  label: 'Description',
   length: 32000,
   rows: 5
 }
@@ -109,7 +109,7 @@ export default MyCustomObject;
 {
   name: 'Email',
   type: 'email',
-  label: '邮箱',
+  label: 'Email',
   unique: true,
   searchable: true
 }
@@ -118,14 +118,14 @@ export default MyCustomObject;
 {
   name: 'Phone',
   type: 'phone',
-  label: '电话'
+  label: 'Phone'
 }
 
 // URL
 {
   name: 'Website',
   type: 'url',
-  label: '网站'
+  label: 'Website'
 }
 ```
 
@@ -136,7 +136,7 @@ export default MyCustomObject;
 {
   name: 'Quantity',
   type: 'number',
-  label: '数量',
+  label: 'Quantity',
   precision: 0,
   min: 0,
   max: 99999
@@ -146,7 +146,7 @@ export default MyCustomObject;
 {
   name: 'Price',
   type: 'number',
-  label: '价格',
+  label: 'Price',
   precision: 2,
   min: 0
 }
@@ -155,7 +155,7 @@ export default MyCustomObject;
 {
   name: 'Amount',
   type: 'currency',
-  label: '金额',
+  label: 'Amount',
   precision: 2,
   currency: 'CNY'
 }
@@ -164,7 +164,7 @@ export default MyCustomObject;
 {
   name: 'Discount',
   type: 'percent',
-  label: '折扣',
+  label: 'Discount',
   precision: 2,
   min: 0,
   max: 100
@@ -178,14 +178,14 @@ export default MyCustomObject;
 {
   name: 'StartDate',
   type: 'date',
-  label: '开始日期'
+  label: 'Start Date'
 }
 
 // Date and time
 {
   name: 'CreatedAt',
   type: 'datetime',
-  label: '创建时间',
+  label: 'Created At',
   defaultValue: '$now',
   readonly: true
 }
@@ -194,7 +194,7 @@ export default MyCustomObject;
 {
   name: 'MeetingTime',
   type: 'time',
-  label: '会议时间'
+  label: 'Meeting Time'
 }
 ```
 
@@ -205,14 +205,14 @@ export default MyCustomObject;
 {
   name: 'Status',
   type: 'select',
-  label: '状态',
+  label: 'Status',
   required: true,
   defaultValue: 'Draft',
   options: [
-    { label: '📝 草稿', value: 'Draft' },
-    { label: '🔄 进行中', value: 'In Progress' },
-    { label: '✅ 完成', value: 'Completed' },
-    { label: '❌ 已取消', value: 'Cancelled' }
+    { label: '📝 Draft', value: 'Draft' },
+    { label: '🔄 In Progress', value: 'In Progress' },
+    { label: '✅ Completed', value: 'Completed' },
+    { label: '❌ Cancelled', value: 'Cancelled' }
   ]
 }
 
@@ -236,7 +236,7 @@ export default MyCustomObject;
 {
   name: 'IsActive',
   type: 'checkbox',
-  label: '激活',
+  label: 'Active',
   defaultValue: true
 }
 ```
@@ -248,7 +248,7 @@ export default MyCustomObject;
 {
   name: 'AccountId',
   type: 'lookup',
-  label: '客户',
+  label: 'Account',
   referenceTo: 'Account',    // Related object
   required: true,
   cascadeDelete: false       // Delete behavior
@@ -258,7 +258,7 @@ export default MyCustomObject;
 {
   name: 'WhatId',
   type: 'lookup',
-  label: '相关对象',
+  label: 'Related To',
   referenceTo: ['Account', 'Opportunity', 'Case']
 }
 ```
@@ -270,18 +270,18 @@ export default MyCustomObject;
 {
   name: 'ExpectedRevenue',
   type: 'currency',
-  label: '预期营收',
+  label: 'Expected Revenue',
   precision: 2,
   formula: 'Amount * Probability / 100',
   readonly: true,
-  description: '基于金额和赢单概率计算'
+  description: 'Calculated based on amount and win probability'
 }
 
 // Date calculation
 {
   name: 'DaysOpen',
   type: 'number',
-  label: '开放天数',
+  label: 'Days Open',
   precision: 0,
   formula: 'DATEDIFF(TODAY(), CreatedDate)',
   readonly: true
@@ -295,19 +295,19 @@ export default MyCustomObject;
 {
   name: 'LeadScore',
   type: 'number',
-  label: '线索评分',
+  label: 'Lead Score',
   precision: 0,
   min: 0,
   max: 100,
   readonly: true,
-  description: 'AI 自动计算的线索质量分数'
+  description: 'AI-calculated lead quality score'
 }
 
 // AI-generated text
 {
   name: 'AISummary',
   type: 'textarea',
-  label: 'AI 摘要',
+  label: 'AI Summary',
   readonly: true,
   length: 2000
 }
@@ -324,7 +324,7 @@ relationships: [
     type: 'hasMany',              // One-to-many
     object: 'Opportunity',        // Related object
     foreignKey: 'AccountId',      // Foreign key in related object
-    label: '商机'
+    label: 'Opportunities'
   }
 ]
 ```
@@ -336,7 +336,7 @@ relationships: [
 {
   name: 'AccountId',
   type: 'lookup',
-  label: '客户',
+  label: 'Account',
   referenceTo: 'Account'
 }
 // Creates reverse relationship: Account.belongsTo
@@ -385,7 +385,7 @@ Define how records are displayed in list views:
 listViews: [
   {
     name: 'AllRecords',
-    label: '所有记录',
+    label: 'All Records',
     filters: [],                   // No filters - show all
     columns: ['Name', 'Status', 'CreatedDate'],
     sort: [['CreatedDate', 'desc']]
@@ -393,7 +393,7 @@ listViews: [
   
   {
     name: 'MyActive',
-    label: '我的活动记录',
+    label: 'My Active Records',
     filters: [
       ['OwnerId', '=', '$currentUser'],
       ['Status', '=', 'Active']
@@ -404,7 +404,7 @@ listViews: [
   
   {
     name: 'HighPriority',
-    label: '高优先级',
+    label: 'High Priority',
     filters: [
       ['Priority', '=', 'High'],
       ['Status', 'not in', ['Completed', 'Cancelled']]
@@ -454,25 +454,25 @@ Add business rules to ensure data quality:
 validationRules: [
   {
     name: 'EmailOrPhoneRequired',
-    errorMessage: '邮箱或电话至少需要填写一个',
+    errorMessage: 'Email or Phone is required',
     formula: 'AND(ISBLANK(Email), ISBLANK(Phone))'
   },
   
   {
     name: 'EndDateAfterStartDate',
-    errorMessage: '结束日期必须在开始日期之后',
+    errorMessage: 'End date must be after start date',
     formula: 'EndDate < StartDate'
   },
   
   {
     name: 'DiscountLimit',
-    errorMessage: '折扣不能超过30%',
+    errorMessage: 'Discount cannot exceed 30%',
     formula: 'AND(Discount > 30, NOT(ISPICKVAL(ApprovalStatus, "Approved")))'
   },
   
   {
     name: 'AmountRequiredForAdvancedStage',
-    errorMessage: '进入方案阶段必须填写金额',
+    errorMessage: 'Amount is required for Proposal stage',
     formula: 'AND(ISPICKVAL(Stage, "Proposal"), ISBLANK(Amount))'
   }
 ]
@@ -498,25 +498,25 @@ Define how fields are displayed on detail pages:
 pageLayout: {
   sections: [
     {
-      label: '基本信息',
+      label: 'Basic Information',
       columns: 2,                  // 2-column layout
       fields: ['Name', 'Status', 'Priority', 'OwnerId']
     },
     
     {
-      label: '详细信息',
+      label: 'Details',
       columns: 2,
       fields: ['StartDate', 'EndDate', 'Amount', 'Probability']
     },
     
     {
-      label: '描述',
+      label: 'Description',
       columns: 1,                  // 1-column layout (full width)
       fields: ['Description']
     },
     
     {
-      label: 'AI 分析',
+      label: 'AI Analysis',
       columns: 1,
       fields: ['AISummary', 'AIRecommendedAction']
     }
@@ -533,10 +533,10 @@ import type { ObjectSchema } from '@objectstack/spec/data';
 
 const Project: ObjectSchema = {
   name: 'Project',
-  label: '项目',
-  labelPlural: '项目',
+  label: 'Project',
+  labelPlural: 'Projects',
   icon: 'folder',
-  description: '项目管理和跟踪',
+  description: 'Project management and tracking',
   
   features: {
     searchable: true,
@@ -551,7 +551,7 @@ const Project: ObjectSchema = {
     {
       name: 'Name',
       type: 'text',
-      label: '项目名称',
+      label: 'Project Name',
       required: true,
       searchable: true,
       length: 255
@@ -560,7 +560,7 @@ const Project: ObjectSchema = {
     {
       name: 'AccountId',
       type: 'lookup',
-      label: '客户',
+      label: 'Account',
       referenceTo: 'Account',
       required: true
     },
@@ -568,7 +568,7 @@ const Project: ObjectSchema = {
     {
       name: 'OwnerId',
       type: 'lookup',
-      label: '项目经理',
+      label: 'Project Manager',
       referenceTo: 'User',
       required: true,
       defaultValue: '$currentUser'
@@ -578,22 +578,22 @@ const Project: ObjectSchema = {
     {
       name: 'Status',
       type: 'select',
-      label: '状态',
+      label: 'Status',
       required: true,
       defaultValue: 'Planning',
       options: [
-        { label: '📋 规划中', value: 'Planning' },
-        { label: '🚀 进行中', value: 'In Progress' },
-        { label: '⏸️ 暂停', value: 'On Hold' },
-        { label: '✅ 已完成', value: 'Completed' },
-        { label: '❌ 已取消', value: 'Cancelled' }
+        { label: '📋 Planning', value: 'Planning' },
+        { label: '🚀 In Progress', value: 'In Progress' },
+        { label: '⏸️ On Hold', value: 'On Hold' },
+        { label: '✅ Completed', value: 'Completed' },
+        { label: '❌ Cancelled', value: 'Cancelled' }
       ]
     },
     
     {
       name: 'Priority',
       type: 'select',
-      label: '优先级',
+      label: 'Priority',
       options: [
         { label: 'Critical', value: 'Critical' },
         { label: 'High', value: 'High' },
@@ -605,21 +605,21 @@ const Project: ObjectSchema = {
     {
       name: 'StartDate',
       type: 'date',
-      label: '开始日期',
+      label: 'Start Date',
       required: true
     },
     
     {
       name: 'EndDate',
       type: 'date',
-      label: '结束日期',
+      label: 'End Date',
       required: true
     },
     
     {
       name: 'DurationDays',
       type: 'number',
-      label: '工期(天)',
+      label: 'Duration (Days)',
       precision: 0,
       formula: 'DATEDIFF(EndDate, StartDate)',
       readonly: true
@@ -629,7 +629,7 @@ const Project: ObjectSchema = {
     {
       name: 'Budget',
       type: 'currency',
-      label: '预算',
+      label: 'Budget',
       precision: 2,
       currency: 'CNY'
     },
@@ -637,7 +637,7 @@ const Project: ObjectSchema = {
     {
       name: 'ActualCost',
       type: 'currency',
-      label: '实际成本',
+      label: 'Actual Cost',
       precision: 2,
       currency: 'CNY'
     },
@@ -645,7 +645,7 @@ const Project: ObjectSchema = {
     {
       name: 'BudgetVariance',
       type: 'currency',
-      label: '预算差异',
+      label: 'Budget Variance',
       precision: 2,
       formula: 'Budget - ActualCost',
       readonly: true
@@ -655,7 +655,7 @@ const Project: ObjectSchema = {
     {
       name: 'PercentComplete',
       type: 'percent',
-      label: '完成百分比',
+      label: 'Percent Complete',
       precision: 0,
       min: 0,
       max: 100,
@@ -665,7 +665,7 @@ const Project: ObjectSchema = {
     {
       name: 'Description',
       type: 'textarea',
-      label: '描述',
+      label: 'Description',
       length: 32000
     },
     
@@ -673,18 +673,18 @@ const Project: ObjectSchema = {
     {
       name: 'AIRiskScore',
       type: 'number',
-      label: 'AI 风险评分',
+      label: 'AI Risk Score',
       precision: 0,
       min: 0,
       max: 100,
       readonly: true,
-      description: 'AI 预测的项目风险分数'
+      description: 'AI-predicted project risk score'
     },
     
     {
       name: 'AIRecommendations',
       type: 'textarea',
-      label: 'AI 建议',
+      label: 'AI Recommendations',
       readonly: true
     }
   ],
@@ -695,21 +695,21 @@ const Project: ObjectSchema = {
       type: 'hasMany',
       object: 'Task',
       foreignKey: 'ProjectId',
-      label: '任务'
+      label: 'Tasks'
     },
     {
       name: 'Activities',
       type: 'hasMany',
       object: 'Activity',
       foreignKey: 'WhatId',
-      label: '活动'
+      label: 'Activities'
     }
   ],
   
   listViews: [
     {
       name: 'AllProjects',
-      label: '所有项目',
+      label: 'All Projects',
       filters: [],
       columns: ['Name', 'AccountId', 'Status', 'Priority', 'StartDate', 'EndDate', 'PercentComplete'],
       sort: [['StartDate', 'desc']]
@@ -717,7 +717,7 @@ const Project: ObjectSchema = {
     
     {
       name: 'MyActiveProjects',
-      label: '我的活动项目',
+      label: 'My Active Projects',
       filters: [
         ['OwnerId', '=', '$currentUser'],
         ['Status', 'in', ['Planning', 'In Progress']]
@@ -728,7 +728,7 @@ const Project: ObjectSchema = {
     
     {
       name: 'AtRisk',
-      label: '风险项目',
+      label: 'At Risk Projects',
       filters: [
         ['AIRiskScore', '>', 70],
         ['Status', 'not in', ['Completed', 'Cancelled']]
@@ -741,19 +741,19 @@ const Project: ObjectSchema = {
   validationRules: [
     {
       name: 'EndDateAfterStartDate',
-      errorMessage: '结束日期必须在开始日期之后',
+      errorMessage: 'End date must be after start date',
       formula: 'EndDate < StartDate'
     },
     
     {
       name: 'ActualCostNotExceedBudget',
-      errorMessage: '实际成本不能超过预算的150%',
+      errorMessage: 'Actual cost cannot exceed 150% of budget',
       formula: 'ActualCost > (Budget * 1.5)'
     },
     
     {
       name: 'CompletedProjectMustBe100Percent',
-      errorMessage: '已完成项目必须是100%完成',
+      errorMessage: 'Completed project must be 100% complete',
       formula: 'AND(ISPICKVAL(Status, "Completed"), PercentComplete < 100)'
     }
   ],
@@ -761,27 +761,27 @@ const Project: ObjectSchema = {
   pageLayout: {
     sections: [
       {
-        label: '项目信息',
+        label: 'Project Information',
         columns: 2,
         fields: ['Name', 'AccountId', 'OwnerId', 'Status', 'Priority']
       },
       {
-        label: '时间规划',
+        label: 'Time Planning',
         columns: 2,
         fields: ['StartDate', 'EndDate', 'DurationDays', 'PercentComplete']
       },
       {
-        label: '预算管理',
+        label: 'Budget Management',
         columns: 2,
         fields: ['Budget', 'ActualCost', 'BudgetVariance']
       },
       {
-        label: 'AI 分析',
+        label: 'AI Analysis',
         columns: 1,
         fields: ['AIRiskScore', 'AIRecommendations']
       },
       {
-        label: '描述',
+        label: 'Description',
         columns: 1,
         fields: ['Description']
       }
@@ -800,13 +800,13 @@ export default Project;
 // ✅ Good
 {
   name: 'ExpectedCloseDate',
-  label: '预计成交日期'
+  label: 'Expected Close Date'
 }
 
 // ❌ Bad
 {
   name: 'Date1',
-  label: '日期1'
+  label: 'Date 1'
 }
 ```
 
@@ -816,8 +816,8 @@ export default Project;
 // ✅ Good
 {
   name: 'LeadScore',
-  label: '线索评分',
-  description: 'AI 自动计算的线索质量分数 (0-100)'
+  label: 'Lead Score',
+  description: 'AI-calculated lead quality score (0-100)'
 }
 ```
 
@@ -828,7 +828,7 @@ export default Project;
 validationRules: [
   {
     name: 'EmailOrPhoneRequired',
-    errorMessage: '邮箱或电话至少需要填写一个',
+    errorMessage: 'Email or Phone is required',
     formula: 'AND(ISBLANK(Email), ISBLANK(Phone))'
   }
 ]
