@@ -1,7 +1,7 @@
 import type { ServiceObject } from '@objectstack/spec/data';
 
 const Contact = {
-  name: 'Contact',
+  name: 'contact',
   label: '联系人',
   labelPlural: '联系人',
   icon: 'user',

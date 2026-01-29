@@ -61,6 +61,10 @@ function analyzeObjectFile(filePath) {
   const nameMatch = content.match(/name:\s*'([^']+)'/);
   if (nameMatch) {
     result.objectName = nameMatch[1];
+    // Check if object name is lowercase/snake_case (machine name convention)
+    if (!/^[a-z][a-z0-9_]*$/.test(result.objectName)) {
+      result.issues.push(`Object name '${result.objectName}' must be lowercase/snake_case (e.g., 'account', 'project_task')`);
+    }
   } else {
     result.issues.push('Missing required "name" property');
   }

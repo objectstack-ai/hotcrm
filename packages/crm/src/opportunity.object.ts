@@ -1,7 +1,7 @@
 import type { ServiceObject } from '@objectstack/spec/data';
 
 const Opportunity = {
-  name: 'Opportunity',
+  name: 'opportunity',
   label: '商机',
   labelPlural: '商机',
   icon: 'briefcase',

@@ -15,7 +15,25 @@ All metadata objects in the HotCRM repository have been validated and confirmed 
 
 ## Protocol Requirements
 
-### 1. Field Naming Convention
+### 1. Object Naming Convention
+
+**Requirement:** Object `name` property (machine name) MUST use **lowercase/snake_case** (e.g., `account`, `project_task`)
+
+**Status:** ✅ **COMPLIANT**
+
+All 8 objects use lowercase naming for the machine name property.
+
+#### Examples:
+- ✅ `name: 'account'`
+- ✅ `name: 'activity'`
+- ✅ `name: 'contact'`
+- ✅ `name: 'lead'`
+- ✅ `name: 'opportunity'`
+- ✅ `name: 'contract'`
+- ✅ `name: 'quote'`
+- ✅ `name: 'case'`
+
+### 2. Field Naming Convention
 
 **Requirement:** All field names MUST use **PascalCase** (e.g., `FirstName`, `AccountId`, `CreatedDate`)
 
@@ -158,7 +176,12 @@ The validation was performed using automated scripts that:
 
 When creating or modifying object metadata, ensure:
 
-1. **Field Names:**
+1. **Object Names (Machine Names):**
+   - Use lowercase/snake_case: `account`, `project_task`, not `Account` or `ProjectTask`
+   - Start with a lowercase letter
+   - Use underscores for multi-word names: `project_task` not `projectTask`
+
+2. **Field Names:**
    - Use PascalCase: `FirstName`, not `first_name` or `firstName`
    - Start with a capital letter
    - Use descriptive names: `BillingStreet` not `BillStreet`
@@ -188,7 +211,8 @@ node /path/to/validation_script.js
 ```
 
 The validation script checks:
-- ✓ Field naming conventions
+- ✓ Object name convention (lowercase/snake_case)
+- ✓ Field naming conventions (PascalCase)
 - ✓ Field type validity
 - ✓ Object structure completeness
 - ✓ Relationship definitions
@@ -200,6 +224,7 @@ The HotCRM metadata is **fully compliant** with the @objectstack/spec v0.6.1 pro
 ### Changes Made
 
 - Fixed `Contract.ContractNumber` field type from `autonumber` to `autoNumber`
+- Fixed all object `name` properties to use lowercase/snake_case (account, activity, contact, lead, opportunity, contract, quote, case)
 
 ### Recommendations
 
