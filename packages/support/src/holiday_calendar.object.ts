@@ -101,7 +101,7 @@ const HolidayCalendar = {
     {
       name: 'UniqueCalendarYear',
       errorMessage: 'A calendar already exists for this country, region, and year',
-      formula: 'NOT(ISNEW())'
+      formula: 'AND(NOT(ISNEW()), EXISTS(SELECT Id FROM HolidayCalendar WHERE Country = $Country AND Region = $Region AND Year = $Year AND Id != $Id))'
     }
   ],
   listViews: [

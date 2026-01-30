@@ -323,12 +323,12 @@ const PortalUser = {
     {
       name: 'UniqueUsername',
       errorMessage: 'Username must be unique',
-      formula: 'NOT(ISNEW())'
+      formula: 'AND(NOT(ISNEW()), EXISTS(SELECT Id FROM PortalUser WHERE Username = $Username AND Id != $Id))'
     },
     {
       name: 'UniqueEmail',
       errorMessage: 'Email must be unique',
-      formula: 'NOT(ISNEW())'
+      formula: 'AND(NOT(ISNEW()), EXISTS(SELECT Id FROM PortalUser WHERE Email = $Email AND Id != $Id))'
     },
     {
       name: 'ContactAccountMatch',

@@ -164,7 +164,7 @@ const AgentSkill = {
     {
       name: 'UniqueUserSkill',
       errorMessage: 'This agent already has this skill assigned',
-      formula: 'NOT(ISNEW())'
+      formula: 'AND(NOT(ISNEW()), EXISTS(SELECT Id FROM AgentSkill WHERE UserId = $UserId AND SkillId = $SkillId AND Id != $Id))'
     },
     {
       name: 'CertificationNumberRequired',

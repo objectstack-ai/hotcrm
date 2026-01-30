@@ -166,7 +166,7 @@ const QueueMember = {
     {
       name: 'UniqueQueueMember',
       errorMessage: 'This agent is already a member of this queue',
-      formula: 'NOT(ISNEW())'
+      formula: 'AND(NOT(ISNEW()), EXISTS(SELECT Id FROM QueueMember WHERE QueueId = $QueueId AND UserId = $UserId AND Id != $Id))'
     },
     {
       name: 'LeftDateAfterJoined',
