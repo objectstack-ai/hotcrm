@@ -14,9 +14,11 @@
 
 // Core Support Objects
 export { default as Case } from './case.object';
+export { default as CaseComment } from './case_comment.object';
 export { default as KnowledgeArticle } from './knowledge_article.object';
 
 // SLA Management
+export { default as SLAPolicy } from './sla_policy.object';
 export { default as SLATemplate } from './sla_template.object';
 export { default as SLAMilestone } from './sla_milestone.object';
 export { default as BusinessHours } from './business_hours.object';
@@ -42,6 +44,10 @@ export { default as SocialMediaCase } from './social_media_case.object';
 export { default as PortalUser } from './portal_user.object';
 export { default as ForumTopic } from './forum_topic.object';
 export { default as ForumPost } from './forum_post.object';
+
+// Business Logic Hooks
+export { default as CaseHooks } from './hooks/case.hook';
+export { default as KnowledgeHooks } from './hooks/knowledge.hook';
 
 // Note: YAML files (Knowledge) are kept for reference
 // TypeScript definitions should be created following the metadata protocol
