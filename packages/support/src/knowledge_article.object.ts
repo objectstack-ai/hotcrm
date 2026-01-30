@@ -283,6 +283,162 @@ const KnowledgeArticle = {
       maxLength: 255,
       readonly: true,
       description: 'URL-friendly article identifier'
+    },
+    // AI-Driven Features
+    AICategory: {
+      type: 'select',
+      label: 'AI Suggested Category',
+      readonly: true,
+      options: [
+        { label: 'Technical', value: 'Technical' },
+        { label: 'Product', value: 'Product' },
+        { label: 'Billing', value: 'Billing' },
+        { label: 'How-To', value: 'HowTo' },
+        { label: 'FAQ', value: 'FAQ' },
+        { label: 'Troubleshooting', value: 'Troubleshooting' },
+        { label: 'Best Practices', value: 'BestPractices' },
+        { label: 'Release Notes', value: 'ReleaseNotes' },
+        { label: 'Other', value: 'Other' }
+      ],
+      description: 'AI-suggested category based on content analysis'
+    },
+    AITags: {
+      type: 'text',
+      label: 'AI Suggested Tags',
+      maxLength: 500,
+      readonly: true,
+      description: 'Comma-separated AI-generated tags'
+    },
+    AISummary: {
+      type: 'textarea',
+      label: 'AI Generated Summary',
+      maxLength: 500,
+      readonly: true,
+      description: 'AI-generated article summary'
+    },
+    AIKeywords: {
+      type: 'text',
+      label: 'AI Extracted Keywords',
+      maxLength: 500,
+      readonly: true,
+      searchable: true,
+      description: 'Keywords extracted by AI'
+    },
+    RelatedArticleIds: {
+      type: 'text',
+      label: 'Related Articles',
+      maxLength: 1000,
+      readonly: true,
+      description: 'Comma-separated IDs of AI-suggested related articles'
+    },
+    // Workflow & Versioning
+    ScheduledPublishDate: {
+      type: 'datetime',
+      label: 'Scheduled Publish Date',
+      description: 'When to auto-publish this article'
+    },
+    ArchivedDate: {
+      type: 'datetime',
+      label: 'Archived Date',
+      readonly: true
+    },
+    ArchivedByUserId: {
+      type: 'lookup',
+      label: 'Archived By',
+      reference: 'User',
+      readonly: true
+    },
+    ArchivedReason: {
+      type: 'textarea',
+      label: 'Archive Reason',
+      maxLength: 1000,
+      readonly: true
+    },
+    VersionNumber: {
+      type: 'text',
+      label: 'Version',
+      maxLength: 50,
+      readonly: true,
+      defaultValue: '1.0',
+      description: 'Article version number'
+    },
+    PreviousVersionId: {
+      type: 'lookup',
+      label: 'Previous Version',
+      reference: 'KnowledgeArticle',
+      readonly: true,
+      description: 'Previous version of this article'
+    },
+    // Quality & Performance Metrics
+    QualityScore: {
+      type: 'number',
+      label: 'Quality Score',
+      precision: 0,
+      min: 0,
+      max: 100,
+      readonly: true,
+      description: 'Overall article quality score (0-100)'
+    },
+    PopularityScore: {
+      type: 'number',
+      label: 'Popularity Score',
+      precision: 0,
+      min: 0,
+      max: 100,
+      readonly: true,
+      description: 'Article popularity score based on views and engagement'
+    },
+    HelpfulnessRating: {
+      type: 'number',
+      label: 'Helpfulness %',
+      precision: 0,
+      min: 0,
+      max: 100,
+      readonly: true,
+      description: 'Percentage of users who found this helpful'
+    },
+    CaseResolutionCount: {
+      type: 'number',
+      label: 'Cases Resolved',
+      precision: 0,
+      readonly: true,
+      defaultValue: 0,
+      description: 'Number of cases resolved using this article'
+    },
+    LastUsedInCaseDate: {
+      type: 'datetime',
+      label: 'Last Used in Case',
+      readonly: true,
+      description: 'When this article was last used in case resolution'
+    },
+    ViewCountLast6Months: {
+      type: 'number',
+      label: 'Views (Last 6 Months)',
+      precision: 0,
+      readonly: true,
+      defaultValue: 0,
+      description: 'View count in the last 6 months'
+    },
+    // Content Features
+    HasAttachments: {
+      type: 'checkbox',
+      label: 'Has Attachments',
+      readonly: true,
+      defaultValue: false
+    },
+    AttachmentCount: {
+      type: 'number',
+      label: 'Attachment Count',
+      precision: 0,
+      readonly: true,
+      defaultValue: 0
+    },
+    EstimatedReadTime: {
+      type: 'number',
+      label: 'Est. Read Time (Minutes)',
+      precision: 0,
+      readonly: true,
+      description: 'Estimated time to read article'
     }
   },
   relationships: [
@@ -397,6 +553,45 @@ const KnowledgeArticle = {
       filters: [],
       columns: ['Category', 'Title', 'Status', 'ViewCount', 'HelpfulRating'],
       sort: [['Category', 'asc'], ['Title', 'asc']]
+    },
+    {
+      name: 'ScheduledPublish',
+      label: 'Scheduled to Publish',
+      filters: [
+        ['Status', '=', 'Draft'],
+        ['ScheduledPublishDate', '!=', null]
+      ],
+      columns: ['ArticleNumber', 'Title', 'ScheduledPublishDate', 'OwnerId'],
+      sort: [['ScheduledPublishDate', 'asc']]
+    },
+    {
+      name: 'TopQuality',
+      label: 'Top Quality',
+      filters: [
+        ['Status', '=', 'Published'],
+        ['QualityScore', '>=', 80]
+      ],
+      columns: ['ArticleNumber', 'Title', 'QualityScore', 'PopularityScore', 'ViewCount'],
+      sort: [['QualityScore', 'desc']]
+    },
+    {
+      name: 'MostUsedInCases',
+      label: 'Most Used in Cases',
+      filters: [
+        ['Status', '=', 'Published'],
+        ['CaseResolutionCount', '>', 0]
+      ],
+      columns: ['ArticleNumber', 'Title', 'CaseResolutionCount', 'LastUsedInCaseDate', 'HelpfulRating'],
+      sort: [['CaseResolutionCount', 'desc']]
+    },
+    {
+      name: 'Archived',
+      label: 'Archived',
+      filters: [
+        ['Status', '=', 'Archived']
+      ],
+      columns: ['ArticleNumber', 'Title', 'ArchivedDate', 'ArchivedReason', 'ArchivedByUserId'],
+      sort: [['ArchivedDate', 'desc']]
     }
   ],
   pageLayout: {
@@ -450,6 +645,26 @@ const KnowledgeArticle = {
         label: 'Analytics',
         columns: 3,
         fields: ['ViewCount', 'UniqueViews', 'HelpfulCount', 'NotHelpfulCount', 'HelpfulRating', 'AverageTimeOnPage', 'LinkedFromCases', 'SearchRank']
+      },
+      {
+        label: 'Performance Metrics',
+        columns: 3,
+        fields: ['QualityScore', 'PopularityScore', 'CaseResolutionCount', 'LastUsedInCaseDate', 'ViewCountLast6Months']
+      },
+      {
+        label: 'AI Enhancement',
+        columns: 2,
+        fields: ['AICategory', 'AITags', 'AISummary', 'AIKeywords', 'RelatedArticleIds']
+      },
+      {
+        label: 'Workflow & Versioning',
+        columns: 2,
+        fields: ['ScheduledPublishDate', 'VersionNumber', 'PreviousVersionId', 'ArchivedDate', 'ArchivedByUserId', 'ArchivedReason']
+      },
+      {
+        label: 'Content Details',
+        columns: 3,
+        fields: ['HasAttachments', 'AttachmentCount', 'EstimatedReadTime']
       },
       {
         label: 'SEO',
