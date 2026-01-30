@@ -9,7 +9,7 @@ The Product & Pricing domain enables Configure-Price-Quote (CPQ) capabilities wi
 
 ## Overview
 
-**Key Objects**: `Product`, `Pricebook`, `Quote`
+**Key Objects**: `Product`, `Pricebook`, `Quote`, `QuoteLineItem`, `ProductBundle`, `PriceRule`, `DiscountSchedule`, `ApprovalRequest`
 
 **Main Goals**:
 - Comprehensive product catalog management
@@ -725,6 +725,418 @@ await sendQuoteToCustomer(quote.Id);
 if (quote.Status === 'Customer Accepted') {
   await convertQuoteToContract(quote.Id);
 }
+```
+
+## Quote Line Items
+
+### Quote Line Item Object
+
+Individual products/services on a quote with detailed pricing.
+
+#### Core Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| QuoteId | Reference | Parent quote (required) |
+| ProductId | Reference | Product being quoted (required) |
+| LineNumber | Number | Line number (for ordering) |
+| Quantity | Number | Quantity (required) |
+| ListPrice | Currency | Product list price |
+| UnitPrice | Currency | Unit price (after discount) |
+| Discount | Percent | Line-level discount percentage |
+| DiscountAmount | Currency | Discount amount (calculated) |
+| Subtotal | Currency | Quantity × UnitPrice (calculated) |
+| TotalPrice | Currency | Final price after discount (calculated) |
+| Description | Textarea | Line item description |
+| ProductCode | Text | Product SKU |
+| ServiceDate | Date | Service start date |
+| Recurring | Checkbox | Recurring subscription |
+| RecurringPeriod | Picklist | Monthly, Quarterly, Annually |
+| TaxRate | Percent | Tax rate |
+| TaxAmount | Currency | Tax amount (calculated) |
+
+**Example Usage**:
+```typescript
+// Add product to quote
+await db.doc.create('QuoteLineItem', {
+  QuoteId: quoteId,
+  ProductId: productId,
+  LineNumber: 1,
+  Quantity: 10,
+  ListPrice: 1000,
+  UnitPrice: 900, // 10% discount
+  Discount: 10,
+  Description: 'Enterprise CRM License - Annual',
+  Recurring: true,
+  RecurringPeriod: 'Annually',
+  TaxRate: 8.5
+});
+
+// Calculated fields (automatic)
+{
+  DiscountAmount: 100, // (1000 - 900) × 10
+  Subtotal: 9000, // 10 × 900
+  TaxAmount: 765, // 9000 × 0.085
+  TotalPrice: 9765 // 9000 + 765
+}
+```
+
+## Product Bundling
+
+### Product Bundle Object
+
+Pre-configured product bundles for cross-selling.
+
+#### Core Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| Name | Text | Bundle name (required) |
+| BundleCode | Text | Unique bundle code |
+| Description | Textarea | Bundle description |
+| IsActive | Checkbox | Bundle is available |
+| BundleType | Picklist | Static, Dynamic, Configurable |
+| PricingMethod | Picklist | Fixed, Component Sum, Percentage Off |
+| FixedPrice | Currency | Fixed bundle price |
+| DiscountPercent | Percent | Discount off component sum |
+| ValidFrom | Date | Valid from date |
+| ValidTo | Date | Valid to date |
+| MinimumQuantity | Number | Minimum bundle quantity |
+| MaximumQuantity | Number | Maximum bundle quantity |
+
+**Example Usage**:
+```typescript
+// Create "Starter Pack" bundle
+const bundle = await db.doc.create('ProductBundle', {
+  Name: 'CRM Starter Pack',
+  BundleCode: 'BUNDLE-STARTER',
+  Description: 'Everything you need to get started',
+  IsActive: true,
+  BundleType: 'Static',
+  PricingMethod: 'Percentage Off',
+  DiscountPercent: 15, // 15% off individual prices
+  ValidFrom: new Date('2026-01-01'),
+  ValidTo: new Date('2026-12-31')
+});
+
+// Add products to bundle
+const bundleItems = [
+  { ProductId: crmLicenseId, Quantity: 5, IsRequired: true },
+  { ProductId: trainingId, Quantity: 1, IsRequired: true },
+  { ProductId: supportId, Quantity: 1, IsRequired: false } // Optional
+];
+
+// AI recommends bundles based on customer needs
+const recommendations = await getAIBundleRecommendations({
+  accountId: accountId,
+  budget: 50000,
+  industry: 'Technology'
+});
+```
+
+## Advanced Pricing
+
+### Price Rule Object
+
+Dynamic pricing rules based on quantity, customer, or time.
+
+#### Core Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| Name | Text | Rule name (required) |
+| IsActive | Checkbox | Rule is active |
+| Priority | Number | Rule priority (1-100) |
+| ProductId | Reference | Specific product (optional) |
+| ProductFamily | Picklist | Product family (optional) |
+| RuleType | Picklist | Volume, Customer Tier, Geographic, Time-Based |
+| Conditions | Textarea | JSON conditions |
+| DiscountType | Picklist | Percentage, Fixed Amount, Price Override |
+| DiscountValue | Number | Discount value |
+| ValidFrom | Date | Valid from date |
+| ValidTo | Date | Valid to date |
+| MinimumQuantity | Number | Minimum quantity |
+| MaximumQuantity | Number | Maximum quantity |
+
+**Example Usage**:
+```typescript
+// Volume discount pricing
+await db.doc.create('PriceRule', {
+  Name: 'Volume Discount - 10+ Units',
+  IsActive: true,
+  Priority: 50,
+  ProductId: productId,
+  RuleType: 'Volume',
+  Conditions: JSON.stringify({
+    quantity: { gte: 10 }
+  }),
+  DiscountType: 'Percentage',
+  DiscountValue: 15 // 15% off for 10+ units
+});
+
+// Customer tier pricing
+await db.doc.create('PriceRule', {
+  Name: 'VIP Customer Discount',
+  IsActive: true,
+  Priority: 80,
+  ProductFamily: 'Software',
+  RuleType: 'Customer Tier',
+  Conditions: JSON.stringify({
+    'Account.CustomerTier': 'VIP'
+  }),
+  DiscountType: 'Percentage',
+  DiscountValue: 20
+});
+
+// Geographic pricing
+await db.doc.create('PriceRule', {
+  Name: 'APAC Regional Pricing',
+  IsActive: true,
+  Priority: 60,
+  RuleType: 'Geographic',
+  Conditions: JSON.stringify({
+    'Account.Region': ['APAC', 'Southeast Asia']
+  }),
+  DiscountType: 'Fixed Amount',
+  DiscountValue: 500
+});
+
+// Time-based promotions
+await db.doc.create('PriceRule', {
+  Name: 'Q4 End of Year Sale',
+  IsActive: true,
+  Priority: 90,
+  RuleType: 'Time-Based',
+  ValidFrom: new Date('2026-10-01'),
+  ValidTo: new Date('2026-12-31'),
+  DiscountType: 'Percentage',
+  DiscountValue: 25
+});
+```
+
+### Discount Schedule Object
+
+Tiered discount schedules for volume pricing.
+
+#### Core Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| Name | Text | Schedule name (required) |
+| ProductId | Reference | Product (required) |
+| IsActive | Checkbox | Schedule is active |
+| Tier1MinQty | Number | Tier 1 minimum quantity |
+| Tier1Discount | Percent | Tier 1 discount |
+| Tier2MinQty | Number | Tier 2 minimum quantity |
+| Tier2Discount | Percent | Tier 2 discount |
+| Tier3MinQty | Number | Tier 3 minimum quantity |
+| Tier3Discount | Percent | Tier 3 discount |
+| Tier4MinQty | Number | Tier 4 minimum quantity |
+| Tier4Discount | Percent | Tier 4 discount |
+| Tier5MinQty | Number | Tier 5 minimum quantity |
+| Tier5Discount | Percent | Tier 5 discount |
+
+**Example Usage**:
+```typescript
+// Create tiered volume discount
+await db.doc.create('DiscountSchedule', {
+  Name: 'Enterprise License Volume Discount',
+  ProductId: enterpriseLicenseId,
+  IsActive: true,
+  Tier1MinQty: 1,
+  Tier1Discount: 0, // No discount for 1-9
+  Tier2MinQty: 10,
+  Tier2Discount: 10, // 10% for 10-24
+  Tier3MinQty: 25,
+  Tier3Discount: 15, // 15% for 25-49
+  Tier4MinQty: 50,
+  Tier4Discount: 20, // 20% for 50-99
+  Tier5MinQty: 100,
+  Tier5Discount: 25 // 25% for 100+
+});
+
+// Auto-apply discount based on quantity
+const quantity = 45;
+const discount = getDiscountForQuantity(scheduleId, quantity);
+// Returns: 15% (Tier 3)
+```
+
+## Approval Workflows
+
+### Approval Request Object
+
+Discount and pricing approval requests.
+
+#### Core Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| QuoteId | Reference | Quote being approved (required) |
+| RequestedById | Reference | Person requesting approval (required) |
+| RequestedDate | DateTime | When requested |
+| ApprovalType | Picklist | Discount, Price Override, Special Terms |
+| DiscountRequested | Percent | Discount percentage requested |
+| DiscountAmount | Currency | Dollar amount of discount |
+| Justification | Textarea | Business justification (required) |
+| Status | Picklist | Pending, Approved, Rejected, Recalled |
+| ApproverId | Reference | Assigned approver |
+| ApprovedDate | DateTime | When approved/rejected |
+| ApproverComments | Textarea | Approver notes |
+| EscalationLevel | Number | Approval level (1-3) |
+| AutoApprovalEligible | Checkbox | Qualifies for auto-approval |
+
+**Example Usage**:
+```typescript
+// Request discount approval
+const approval = await db.doc.create('ApprovalRequest', {
+  QuoteId: quoteId,
+  RequestedById: salesRepId,
+  ApprovalType: 'Discount',
+  DiscountRequested: 25,
+  DiscountAmount: 12500,
+  Justification: 'Strategic account. Competitor offering 30% off. Must match to win deal.',
+  Status: 'Pending',
+  ApproverId: salesManagerId,
+  EscalationLevel: 1
+});
+
+// Auto-escalate if manager doesn't approve within 24 hours
+// Or if discount > threshold
+if (approval.DiscountRequested > 20) {
+  await db.doc.update('ApprovalRequest', approval.Id, {
+    ApproverId: vpSalesId,
+    EscalationLevel: 2
+  });
+}
+
+// Manager approves
+await db.doc.update('ApprovalRequest', approval.Id, {
+  Status: 'Approved',
+  ApprovedDate: new Date(),
+  ApproverComments: 'Approved. This is a strategic account worth the discount.'
+});
+
+// Apply discount to quote
+await db.doc.update('Quote', quoteId, {
+  Discount: approval.DiscountRequested,
+  ApprovalStatus: 'Approved'
+});
+```
+
+**Approval Thresholds**:
+```typescript
+// Typical approval matrix
+const approvalMatrix = {
+  '0-10%': { approver: 'Sales Rep', autoApprove: true },
+  '10-15%': { approver: 'Sales Manager', autoApprove: false },
+  '15-20%': { approver: 'Regional Director', autoApprove: false },
+  '20-25%': { approver: 'VP Sales', autoApprove: false },
+  '25%+': { approver: 'CFO + VP Sales', autoApprove: false }
+};
+```
+
+## Complete CPQ Workflow
+
+```typescript
+// 1. Sales rep creates opportunity
+const opp = await db.doc.create('Opportunity', {
+  Name: 'ACME Corp - CRM Project',
+  AccountId: acmeAccountId,
+  Amount: 50000,
+  Stage: 'Proposal'
+});
+
+// 2. Create quote from opportunity
+const quote = await db.doc.create('Quote', {
+  OpportunityId: opp.Id,
+  AccountId: acmeAccountId,
+  ContactId: primaryContactId,
+  QuoteName: 'ACME CRM Proposal - 2026',
+  ValidUntil: addDays(new Date(), 30),
+  Currency: 'USD'
+});
+
+// 3. Add products using AI bundle recommendation
+const bundleRecommendation = await getAIBundleRecommendations({
+  accountId: acmeAccountId,
+  budget: 50000,
+  industry: opp.Industry
+});
+
+// Add recommended bundle
+for (const item of bundleRecommendation.items) {
+  await db.doc.create('QuoteLineItem', {
+    QuoteId: quote.Id,
+    ProductId: item.ProductId,
+    Quantity: item.Quantity,
+    UnitPrice: item.UnitPrice,
+    Discount: item.Discount
+  });
+}
+
+// 4. Apply volume discount pricing rules
+const pricingRules = await evaluatePricingRules(quote);
+for (const rule of pricingRules) {
+  await applyPricingRule(quote.Id, rule);
+}
+
+// 5. Calculate totals
+const totals = await calculateQuoteTotals(quote.Id);
+await db.doc.update('Quote', quote.Id, {
+  Subtotal: totals.subtotal,
+  TotalDiscount: totals.discount,
+  Tax: totals.tax,
+  ShippingHandling: totals.shipping,
+  GrandTotal: totals.grandTotal
+});
+
+// 6. Request discount approval (if needed)
+if (quote.Discount > 15) {
+  const approval = await db.doc.create('ApprovalRequest', {
+    QuoteId: quote.Id,
+    RequestedById: salesRepId,
+    ApprovalType: 'Discount',
+    DiscountRequested: quote.Discount,
+    Justification: 'Competitive situation. Customer comparing with Salesforce.',
+    ApproverId: salesManagerId
+  });
+  
+  // Wait for approval
+  await waitForApproval(approval.Id);
+}
+
+// 7. Generate PDF quote
+const pdfUrl = await generateQuotePDF(quote.Id);
+
+// 8. Send to customer
+await sendQuoteEmail({
+  quoteId: quote.Id,
+  to: primaryContact.Email,
+  subject: 'Your CRM Proposal from HotCRM',
+  pdfUrl: pdfUrl
+});
+
+// 9. Track customer response
+await db.doc.update('Quote', quote.Id, {
+  Status: 'Sent',
+  SentDate: new Date()
+});
+
+// 10. Customer accepts
+await db.doc.update('Quote', quote.Id, {
+  Status: 'Customer Accepted',
+  AcceptedDate: new Date()
+});
+
+// 11. Convert to contract
+const contract = await convertQuoteToContract(quote.Id);
+
+// 12. Update opportunity
+await db.doc.update('Opportunity', opp.Id, {
+  Stage: 'Closed Won',
+  Amount: quote.GrandTotal,
+  CloseDate: new Date()
+});
 ```
 
 ## Next Steps

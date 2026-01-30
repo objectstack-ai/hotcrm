@@ -9,7 +9,7 @@ The Service & Support domain (服务域) helps increase customer lifetime value 
 
 ## Overview
 
-**Key Objects**: `Case`, `Knowledge`
+**Key Objects**: `Case`, `CaseComment`, `KnowledgeArticle`, `Queue`, `QueueMember`, `RoutingRule`, `Skill`, `AgentSkill`, `SLAPolicy`, `SLATemplate`, `SLAMilestone`, `BusinessHours`, `Holiday`, `HolidayCalendar`, `EscalationRule`, `WebToCase`, `EmailToCase`, `SocialMediaCase`, `ForumTopic`, `ForumPost`, `PortalUser`
 
 **Main Goals**:
 - Omni-channel case management (Email, Web, Phone, WeChat, Chat, Mobile)
@@ -802,6 +802,810 @@ await db.doc.update('Knowledge', article.Id, {
   VersionNumber: 1.1,
   VersionNotes: 'Updated screenshots for new UI'
 });
+```
+
+## Queue Management
+
+### Queue Object
+
+Support queues organize and distribute cases to teams of agents.
+
+#### Core Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| Name | Text | Queue name (required) |
+| DeveloperName | Text | API name (unique, required) |
+| Description | Textarea | Queue description |
+| Email | Email | Queue email address |
+| IsActive | Checkbox | Queue is active |
+| SupportedObjects | Picklist | Objects this queue supports (Case, Lead, etc.) |
+| MaxQueueSize | Number | Maximum cases in queue |
+| CurrentQueueSize | Number | Current cases in queue (calculated) |
+| AverageWaitTime | Number | Average wait time in minutes (calculated) |
+
+**Example Usage**:
+```typescript
+// Create support queue
+const queue = await db.doc.create('Queue', {
+  Name: 'Technical Support - Tier 1',
+  DeveloperName: 'tech_support_tier1',
+  Description: 'First-line technical support',
+  Email: 'tech-support@company.com',
+  IsActive: true,
+  SupportedObjects: 'Case',
+  MaxQueueSize: 50
+});
+```
+
+### Queue Member Object
+
+Defines which users are members of which queues.
+
+#### Core Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| QueueId | Reference | Queue (required) |
+| UserId | Reference | User/Agent (required) |
+| JoinedDate | DateTime | When user joined queue |
+| IsActive | Checkbox | Member is active |
+| MaxConcurrentCases | Number | Max simultaneous cases |
+| CurrentCaseLoad | Number | Current assigned cases (calculated) |
+| SkillLevel | Picklist | Beginner, Intermediate, Advanced, Expert |
+
+**Example Usage**:
+```typescript
+// Add agent to queue
+await db.doc.create('QueueMember', {
+  QueueId: queueId,
+  UserId: agentId,
+  IsActive: true,
+  MaxConcurrentCases: 10,
+  SkillLevel: 'Advanced'
+});
+```
+
+## Intelligent Routing & Assignment
+
+### Routing Rule Object
+
+Automated rules for assigning cases to the right queue or agent.
+
+#### Core Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| Name | Text | Rule name (required) |
+| IsActive | Checkbox | Rule is active |
+| Priority | Number | Rule priority (1-100, higher = earlier) |
+| ObjectType | Picklist | Case, Lead, etc. |
+| Conditions | Textarea | JSON conditions |
+| AssignToQueueId | Reference | Target queue |
+| AssignToUserId | Reference | Target user |
+| NotifyAssignee | Checkbox | Send notification to assignee |
+
+**Example Usage**:
+```typescript
+// Route VIP customer cases to senior team
+await db.doc.create('RoutingRule', {
+  Name: 'VIP Customer Cases',
+  IsActive: true,
+  Priority: 100,
+  ObjectType: 'Case',
+  Conditions: JSON.stringify({
+    'Account.CustomerTier': 'VIP',
+    'Priority': ['Critical', 'High']
+  }),
+  AssignToQueueId: vipSupportQueueId,
+  NotifyAssignee: true
+});
+
+// Route by product
+await db.doc.create('RoutingRule', {
+  Name: 'Mobile App Issues',
+  IsActive: true,
+  Priority: 80,
+  ObjectType: 'Case',
+  Conditions: JSON.stringify({
+    'Product.Name': { contains: 'Mobile App' }
+  }),
+  AssignToQueueId: mobileTeamQueueId
+});
+```
+
+### Skill Object
+
+Define skills/expertise areas for intelligent routing.
+
+#### Core Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| Name | Text | Skill name (required) |
+| DeveloperName | Text | API name (unique) |
+| Description | Textarea | Skill description |
+| Category | Picklist | Technical, Product, Language, Industry |
+| IsActive | Checkbox | Skill is active |
+
+**Example Skills**:
+```typescript
+// Technical skills
+await db.doc.create('Skill', {
+  Name: 'Database Administration',
+  DeveloperName: 'database_admin',
+  Category: 'Technical',
+  IsActive: true
+});
+
+// Language skills
+await db.doc.create('Skill', {
+  Name: 'Spanish Language',
+  DeveloperName: 'lang_spanish',
+  Category: 'Language',
+  IsActive: true
+});
+
+// Product skills
+await db.doc.create('Skill', {
+  Name: 'Mobile App Expert',
+  DeveloperName: 'product_mobile_app',
+  Category: 'Product',
+  IsActive: true
+});
+```
+
+### Agent Skill Object
+
+Maps agents to their skills with proficiency levels.
+
+#### Core Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| UserId | Reference | Agent/User (required) |
+| SkillId | Reference | Skill (required) |
+| ProficiencyLevel | Picklist | Beginner, Intermediate, Advanced, Expert |
+| YearsExperience | Number | Years of experience |
+| CertifiedDate | Date | Certification date |
+| LastUsedDate | Date | Last time skill was used |
+
+**Example Usage**:
+```typescript
+// Assign skills to agent
+await db.doc.create('AgentSkill', {
+  UserId: agentId,
+  SkillId: databaseSkillId,
+  ProficiencyLevel: 'Expert',
+  YearsExperience: 5,
+  CertifiedDate: new Date('2021-06-15')
+});
+
+// Skill-based routing
+const bestAgent = await findBestAgent({
+  requiredSkill: 'database_admin',
+  minProficiency: 'Advanced',
+  availability: 'available'
+});
+```
+
+## SLA Management System
+
+### SLA Policy Object
+
+Define service level agreement policies for different customer tiers.
+
+#### Core Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| Name | Text | Policy name (required) |
+| Description | Textarea | Policy description |
+| IsActive | Checkbox | Policy is active |
+| CustomerTier | Picklist | Platinum, Gold, Silver, Bronze, Standard |
+| IsDefault | Checkbox | Default policy |
+| BusinessHoursId | Reference | Business hours calendar |
+
+**Example Usage**:
+```typescript
+// Platinum SLA Policy
+await db.doc.create('SLAPolicy', {
+  Name: 'Platinum Support SLA',
+  IsActive: true,
+  CustomerTier: 'Platinum',
+  BusinessHoursId: '24x7BusinessHoursId'
+});
+```
+
+### SLA Template Object
+
+Templates defining specific SLA milestones and timelines.
+
+#### Core Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| Name | Text | Template name (required) |
+| SLAPolicyId | Reference | Parent policy (required) |
+| MilestoneType | Picklist | First Response, Resolution, Update |
+| TargetMinutes | Number | Time limit in minutes |
+| Priority | Picklist | Critical, High, Medium, Low |
+| IsActive | Checkbox | Template is active |
+
+**Example Usage**:
+```typescript
+// Platinum: Critical priority response time
+await db.doc.create('SLATemplate', {
+  Name: 'Platinum Critical - First Response',
+  SLAPolicyId: platinumPolicyId,
+  MilestoneType: 'First Response',
+  TargetMinutes: 60, // 1 hour
+  Priority: 'Critical',
+  IsActive: true
+});
+
+// Platinum: Critical priority resolution time
+await db.doc.create('SLATemplate', {
+  Name: 'Platinum Critical - Resolution',
+  SLAPolicyId: platinumPolicyId,
+  MilestoneType: 'Resolution',
+  TargetMinutes: 240, // 4 hours
+  Priority: 'Critical',
+  IsActive: true
+});
+```
+
+### SLA Milestone Object
+
+Track actual SLA milestone performance on each case.
+
+#### Core Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| CaseId | Reference | Case (required) |
+| SLATemplateId | Reference | SLA Template (required) |
+| MilestoneType | Picklist | First Response, Resolution |
+| TargetDate | DateTime | Deadline (calculated) |
+| CompletionDate | DateTime | When achieved |
+| IsViolated | Checkbox | SLA violated (calculated) |
+| ActualMinutes | Number | Time taken (calculated) |
+| BusinessMinutes | Number | Business time taken (calculated) |
+
+**Example Usage**:
+```typescript
+// SLA milestone tracking (automatic via trigger)
+const milestone = await db.doc.create('SLAMilestone', {
+  CaseId: caseId,
+  SLATemplateId: templateId,
+  MilestoneType: 'First Response',
+  TargetDate: addBusinessMinutes(new Date(), 60, businessHoursId)
+});
+
+// Mark milestone complete
+await db.doc.update('SLAMilestone', milestone.Id, {
+  CompletionDate: new Date(),
+  IsViolated: false,
+  ActualMinutes: 45
+});
+```
+
+## Business Hours & Holidays
+
+### Business Hours Object
+
+Define operating hours for accurate SLA calculations.
+
+#### Core Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| Name | Text | Business hours name (required) |
+| TimeZone | Picklist | Time zone |
+| Is24x7 | Checkbox | 24/7 coverage |
+| MondayStart | Time | Monday start time |
+| MondayEnd | Time | Monday end time |
+| TuesdayStart | Time | Tuesday start time |
+| TuesdayEnd | Time | Tuesday end time |
+| WednesdayStart | Time | Wednesday start time |
+| WednesdayEnd | Time | Wednesday end time |
+| ThursdayStart | Time | Thursday start time |
+| ThursdayEnd | Time | Thursday end time |
+| FridayStart | Time | Friday start time |
+| FridayEnd | Time | Friday end time |
+| SaturdayStart | Time | Saturday start time (optional) |
+| SaturdayEnd | Time | Saturday end time (optional) |
+| SundayStart | Time | Sunday start time (optional) |
+| SundayEnd | Time | Sunday end time (optional) |
+| HolidayCalendarId | Reference | Holiday calendar |
+
+**Example Usage**:
+```typescript
+// Standard business hours (9-5 weekdays)
+await db.doc.create('BusinessHours', {
+  Name: 'Standard Business Hours (PST)',
+  TimeZone: 'America/Los_Angeles',
+  Is24x7: false,
+  MondayStart: '09:00',
+  MondayEnd: '17:00',
+  TuesdayStart: '09:00',
+  TuesdayEnd: '17:00',
+  WednesdayStart: '09:00',
+  WednesdayEnd: '17:00',
+  ThursdayStart: '09:00',
+  ThursdayEnd: '17:00',
+  FridayStart: '09:00',
+  FridayEnd: '17:00',
+  HolidayCalendarId: usHolidayCalendarId
+});
+
+// 24/7 Support
+await db.doc.create('BusinessHours', {
+  Name: '24/7 Global Support',
+  TimeZone: 'UTC',
+  Is24x7: true
+});
+```
+
+### Holiday Calendar Object
+
+Group holidays for business hours calculations.
+
+#### Core Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| Name | Text | Calendar name (required) |
+| Description | Textarea | Calendar description |
+| Country | Text | Country code (US, UK, etc.) |
+| IsActive | Checkbox | Calendar is active |
+
+**Example Usage**:
+```typescript
+await db.doc.create('HolidayCalendar', {
+  Name: 'US Federal Holidays',
+  Country: 'US',
+  IsActive: true
+});
+```
+
+### Holiday Object
+
+Individual holiday definitions.
+
+#### Core Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| Name | Text | Holiday name (required) |
+| HolidayCalendarId | Reference | Calendar (required) |
+| HolidayDate | Date | Date of holiday (required) |
+| IsRecurring | Checkbox | Recurs annually |
+| RecurrenceRule | Text | Recurrence pattern |
+| Description | Textarea | Holiday description |
+
+**Example Usage**:
+```typescript
+// Fixed date holiday
+await db.doc.create('Holiday', {
+  Name: 'New Year\'s Day',
+  HolidayCalendarId: usCalendarId,
+  HolidayDate: new Date('2026-01-01'),
+  IsRecurring: true,
+  RecurrenceRule: 'YEARLY on January 1'
+});
+
+// Floating holiday (e.g., Thanksgiving)
+await db.doc.create('Holiday', {
+  Name: 'Thanksgiving',
+  HolidayCalendarId: usCalendarId,
+  HolidayDate: new Date('2026-11-26'),
+  IsRecurring: true,
+  RecurrenceRule: 'YEARLY on 4th Thursday of November'
+});
+```
+
+## Escalation Management
+
+### Escalation Rule Object
+
+Automated escalation rules for critical cases or SLA violations.
+
+#### Core Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| Name | Text | Rule name (required) |
+| IsActive | Checkbox | Rule is active |
+| Priority | Number | Rule priority (1-100) |
+| TriggerType | Picklist | SLA Violation, Time-Based, Priority-Based |
+| Conditions | Textarea | JSON conditions |
+| EscalateAfterMinutes | Number | Minutes before escalation |
+| EscalateToUserId | Reference | Escalate to user |
+| EscalateToQueueId | Reference | Escalate to queue |
+| NotifyManager | Checkbox | Notify manager |
+| NotifyExecutive | Checkbox | Notify executive team |
+
+**Example Usage**:
+```typescript
+// Auto-escalate critical cases
+await db.doc.create('EscalationRule', {
+  Name: 'Critical Priority Auto-Escalation',
+  IsActive: true,
+  Priority: 100,
+  TriggerType: 'Priority-Based',
+  Conditions: JSON.stringify({
+    'Priority': 'Critical',
+    'Status': ['New', 'Open']
+  }),
+  EscalateAfterMinutes: 0, // Immediate
+  EscalateToQueueId: seniorSupportQueueId,
+  NotifyManager: true,
+  NotifyExecutive: true
+});
+
+// SLA violation escalation
+await db.doc.create('EscalationRule', {
+  Name: 'SLA Violation Escalation',
+  IsActive: true,
+  Priority: 90,
+  TriggerType: 'SLA Violation',
+  Conditions: JSON.stringify({
+    'IsSLAViolated': true,
+    'Status': { notIn: ['Closed', 'Resolved'] }
+  }),
+  EscalateToUserId: supportManagerId,
+  NotifyManager: true
+});
+
+// Time-based escalation
+await db.doc.create('EscalationRule', {
+  Name: 'Open Case Too Long',
+  IsActive: true,
+  Priority: 70,
+  TriggerType: 'Time-Based',
+  Conditions: JSON.stringify({
+    'Status': 'Open',
+    'Priority': 'High'
+  }),
+  EscalateAfterMinutes: 480, // 8 hours
+  EscalateToUserId: teamLeadId
+});
+```
+
+## Omni-Channel Integration
+
+### Web-to-Case Object
+
+Capture cases from web forms.
+
+#### Core Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| Name | Text | Form name (required) |
+| FormUrl | URL | Form URL |
+| IsActive | Checkbox | Form is active |
+| DefaultOwnerId | Reference | Default case owner |
+| DefaultPriority | Picklist | Default priority |
+| DefaultStatus | Picklist | Default status |
+| AutoResponseTemplate | Textarea | Auto-response email |
+| RequireCaptcha | Checkbox | Require CAPTCHA |
+| AllowedDomains | Text | Comma-separated allowed domains |
+
+**Example Usage**:
+```typescript
+await db.doc.create('WebToCase', {
+  Name: 'Support Contact Form',
+  FormUrl: 'https://company.com/support',
+  IsActive: true,
+  DefaultOwnerId: supportQueueId,
+  DefaultPriority: 'Medium',
+  DefaultStatus: 'New',
+  AutoResponseTemplate: 'Thank you for contacting support...',
+  RequireCaptcha: true
+});
+```
+
+### Email-to-Case Object
+
+Automatic case creation from emails.
+
+#### Core Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| Name | Text | Email configuration name (required) |
+| EmailAddress | Email | Support email address (required) |
+| IsActive | Checkbox | Configuration is active |
+| RoutingAddress | Email | Routing email |
+| DefaultOwnerId | Reference | Default case owner |
+| DefaultPriority | Picklist | Default priority |
+| AutoResponseEnabled | Checkbox | Send auto-response |
+| AutoResponseTemplate | Textarea | Auto-response template |
+| ThreadingEnabled | Checkbox | Enable email threading |
+
+**Example Usage**:
+```typescript
+await db.doc.create('EmailToCase', {
+  Name: 'General Support Email',
+  EmailAddress: 'support@company.com',
+  IsActive: true,
+  DefaultOwnerId: supportQueueId,
+  DefaultPriority: 'Medium',
+  AutoResponseEnabled: true,
+  AutoResponseTemplate: 'We received your email and will respond within 24 hours.',
+  ThreadingEnabled: true
+});
+```
+
+### Social Media Case Object
+
+Track cases from social media channels.
+
+#### Core Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| CaseId | Reference | Related case (required) |
+| Platform | Picklist | Twitter, Facebook, LinkedIn, Instagram, WeChat |
+| PostId | Text | Social media post ID |
+| PostUrl | URL | Link to post |
+| AuthorHandle | Text | Social media handle |
+| PostContent | Textarea | Post content |
+| PostedDate | DateTime | When posted |
+| Sentiment | Picklist | Positive, Neutral, Negative, Angry |
+| IsPublic | Checkbox | Public post |
+| FollowerCount | Number | Author's follower count |
+| EngagementScore | Number | Likes + shares + comments |
+
+**Example Usage**:
+```typescript
+// Track Twitter mention
+await db.doc.create('SocialMediaCase', {
+  CaseId: caseId,
+  Platform: 'Twitter',
+  PostId: '123456789',
+  PostUrl: 'https://twitter.com/user/status/123456789',
+  AuthorHandle: '@customer',
+  PostContent: '@YourCompany app is not loading...',
+  PostedDate: new Date(),
+  Sentiment: 'Negative',
+  IsPublic: true,
+  FollowerCount: 5420,
+  EngagementScore: 15
+});
+```
+
+## Community & Self-Service
+
+### Forum Topic Object
+
+Community forum discussion topics.
+
+#### Core Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| Title | Text | Topic title (required) |
+| Body | Textarea | Topic content (required) |
+| Category | Picklist | General, Product, Technical, Ideas |
+| Tags | Text | Comma-separated tags |
+| AuthorId | Reference | Topic author (required) |
+| Status | Picklist | Open, Answered, Closed |
+| IsPinned | Checkbox | Pinned to top |
+| IsLocked | Checkbox | No new replies |
+| ViewCount | Number | Times viewed |
+| ReplyCount | Number | Number of replies (calculated) |
+| LastActivityDate | DateTime | Last reply date |
+| BestAnswerId | Reference | Best answer post |
+
+**Example Usage**:
+```typescript
+await db.doc.create('ForumTopic', {
+  Title: 'How to integrate with Salesforce?',
+  Body: 'I need help setting up the Salesforce integration...',
+  Category: 'Technical',
+  Tags: 'integration, salesforce, api',
+  AuthorId: userId,
+  Status: 'Open',
+  IsPinned: false
+});
+```
+
+### Forum Post Object
+
+Replies to forum topics.
+
+#### Core Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| ForumTopicId | Reference | Parent topic (required) |
+| Body | Textarea | Post content (required) |
+| AuthorId | Reference | Post author (required) |
+| ParentPostId | Reference | Reply to post (for threading) |
+| IsAnswer | Checkbox | Marked as answer |
+| LikeCount | Number | Number of likes |
+| IsFlagged | Checkbox | Flagged for moderation |
+| FlagReason | Text | Reason for flag |
+
+**Example Usage**:
+```typescript
+// Reply to topic
+await db.doc.create('ForumPost', {
+  ForumTopicId: topicId,
+  Body: 'You can use our REST API to integrate...',
+  AuthorId: supportAgentId
+});
+
+// Mark as best answer
+await db.doc.update('ForumPost', postId, {
+  IsAnswer: true
+});
+
+await db.doc.update('ForumTopic', topicId, {
+  Status: 'Answered',
+  BestAnswerId: postId
+});
+```
+
+## Customer Portal
+
+### Portal User Object
+
+Self-service portal users (customers, partners).
+
+#### Core Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| ContactId | Reference | Related contact (required) |
+| AccountId | Reference | Related account (required) |
+| Username | Text | Portal username (unique, required) |
+| Email | Email | Email address (required) |
+| IsActive | Checkbox | User is active |
+| UserType | Picklist | Customer, Partner, Community |
+| LastLoginDate | DateTime | Last login time |
+| LoginCount | Number | Total login count |
+| PasswordResetRequired | Checkbox | Must reset password |
+| TwoFactorEnabled | Checkbox | 2FA enabled |
+| LanguagePreference | Picklist | en, es, fr, de, zh, ja |
+| TimeZone | Picklist | User's time zone |
+
+**Example Usage**:
+```typescript
+// Create portal user
+await db.doc.create('PortalUser', {
+  ContactId: contactId,
+  AccountId: accountId,
+  Username: 'john.doe@customer.com',
+  Email: 'john.doe@customer.com',
+  IsActive: true,
+  UserType: 'Customer',
+  PasswordResetRequired: true,
+  LanguagePreference: 'en',
+  TimeZone: 'America/Los_Angeles'
+});
+```
+
+**Portal Capabilities**:
+- Submit and track support cases
+- Search knowledge base
+- Participate in community forums
+- View account information
+- Download contracts and invoices
+- Chat with support agents
+
+## Case Comments
+
+### Case Comment Object
+
+Comments and internal notes on cases.
+
+#### Core Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| CaseId | Reference | Parent case (required) |
+| Body | Textarea | Comment content (required) |
+| CreatedById | Reference | Comment author (required) |
+| IsPublished | Checkbox | Visible to customer |
+| IsInternal | Checkbox | Internal note only |
+| AttachmentCount | Number | Number of attachments |
+
+**Example Usage**:
+```typescript
+// Public comment (visible to customer)
+await db.doc.create('CaseComment', {
+  CaseId: caseId,
+  Body: 'I\'ve reset your password. Please check your email.',
+  CreatedById: agentId,
+  IsPublished: true,
+  IsInternal: false
+});
+
+// Internal note (agent only)
+await db.doc.create('CaseComment', {
+  CaseId: caseId,
+  Body: 'Customer is frustrated. Senior engineer needed.',
+  CreatedById: agentId,
+  IsPublished: false,
+  IsInternal: true
+});
+```
+
+## Integration Workflows
+
+### Complete Omni-Channel Case Flow
+
+```typescript
+// 1. Email arrives at support@company.com
+// 2. Email-to-Case creates new case
+const emailCase = {
+  Subject: email.subject,
+  Description: email.body,
+  Origin: 'Email',
+  ContactId: findOrCreateContact(email.from),
+  Priority: 'Medium',
+  Status: 'New'
+};
+
+const newCase = await db.doc.create('Case', emailCase);
+
+// 3. Routing Rules evaluate
+const routingRule = await evaluateRoutingRules(newCase);
+
+// 4. Skill-based assignment
+const bestAgent = await findBestAgent({
+  requiredSkills: ['email_support', 'product_billing'],
+  minProficiency: 'Intermediate',
+  queueId: routingRule.AssignToQueueId,
+  maxCaseLoad: 10
+});
+
+// 5. Assign case and create SLA milestones
+await db.doc.update('Case', newCase.Id, {
+  OwnerId: bestAgent.Id,
+  Status: 'Open'
+});
+
+const slaTemplates = await getSLATemplates(newCase);
+for (const template of slaTemplates) {
+  await db.doc.create('SLAMilestone', {
+    CaseId: newCase.Id,
+    SLATemplateId: template.Id,
+    TargetDate: calculateTargetDate(template, businessHours)
+  });
+}
+
+// 6. Agent responds
+await db.doc.create('CaseComment', {
+  CaseId: newCase.Id,
+  Body: 'I\'ve reviewed your billing inquiry...',
+  IsPublished: true
+});
+
+// 7. Mark first response milestone complete
+await completeMilestone(newCase.Id, 'First Response');
+
+// 8. Escalation rule triggers if needed
+if (isOverdue(newCase)) {
+  await escalateCase(newCase.Id, escalationRule);
+}
+
+// 9. Resolve case
+await db.doc.update('Case', newCase.Id, {
+  Status: 'Resolved',
+  Resolution: 'Billing corrected. Refund issued.',
+  ResolutionCategory: 'Billing Issue'
+});
+
+// 10. Complete resolution milestone
+await completeMilestone(newCase.Id, 'Resolution');
+
+// 11. Send satisfaction survey
+await sendSurvey(newCase.Id);
 ```
 
 ## Next Steps

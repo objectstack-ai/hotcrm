@@ -15,7 +15,7 @@
 
 HotCRM is a **comprehensive, AI-native enterprise CRM** system covering the complete Lead-to-Cash lifecycle. Built on the @objectstack/spec v0.6.1 protocol, it delivers:
 
-- **Complete CRM Suite**: 14 core objects spanning Marketing, Sales, Service, and Finance domains
+- **Complete CRM Suite**: 36 core objects (TypeScript) spanning Marketing, Sales, Service, and Finance domains
 - **Metadata-Driven Architecture**: All objects defined through TypeScript (type-safe)
 - **ObjectQL**: Type-safe query language replacing traditional SQL
 - **AI-First Design**: Every major feature enhanced with AI capabilities
@@ -404,11 +404,15 @@ HotCRM implements a comprehensive enterprise CRM system organized into **5 major
 
 ## 🎯 Key Statistics
 
-- **14 Core Objects**: Lead, Campaign, Account, Contact, Opportunity, Activity, Product, Pricebook, Quote, Contract, Payment, Case, Knowledge
+- **36 Core Objects** (TypeScript): Complete enterprise CRM coverage across all domains
+  - **CRM**: Account, Contact, Lead, Opportunity, Activity, Task, Note, Campaign Member
+  - **Support**: Case, Case Comment, Knowledge Article, Forum Topic/Post, Queue, Routing/Escalation Rules, SLA Policies, Business Hours, Portal User
+  - **Products**: Quote, Quote Line Item, Product Bundle, Price Rule, Discount Schedule, Approval Request
+  - **Finance**: Contract
 - **7 Sales Stages**: Complete pipeline from Prospecting to Closed Won/Lost
 - **8 Currencies**: Multi-currency support for global operations
 - **6 Service Channels**: Email, Web, Phone, WeChat, Chat Bot, Mobile App
-- **100+ Fields**: Comprehensive data capture across all objects
+- **250+ Fields**: Comprehensive data capture across all objects
 - **AI-First Design**: Every major object has AI enhancement capabilities
 
 - KPI cards with real-time metrics

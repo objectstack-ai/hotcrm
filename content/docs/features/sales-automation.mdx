@@ -9,7 +9,7 @@ The Sales Force Automation domain (销售域) standardizes sales activities and 
 
 ## Overview
 
-**Key Objects**: `Account`, `Contact`, `Opportunity`, `Activity`
+**Key Objects**: `Account`, `Contact`, `Opportunity`, `Activity`, `Task`, `Note`, `CampaignMember`
 
 **Main Goals**:
 - 360-degree customer view
@@ -710,6 +710,426 @@ const totalExpectedRevenue = myPipeline.reduce(
 );
 
 console.log(`Total pipeline: $${totalExpectedRevenue.toLocaleString()}`);
+```
+
+## Task Management
+
+### Task Object
+
+Tasks represent work items, to-dos, and follow-ups for sales reps.
+
+#### Core Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| Subject | Text | Task subject (required) |
+| Description | Textarea | Task details |
+| Priority | Picklist | High, Normal, Low |
+| Status | Picklist | Not Started, In Progress, Completed, Waiting, Deferred |
+| DueDate | Date | Due date |
+| ReminderDateTime | DateTime | Reminder time |
+| OwnerId | Reference | Assigned to user (required) |
+| WhatId | Reference | Related Account, Opportunity, etc. |
+| WhoId | Reference | Related Contact or Lead |
+| ActivityType | Picklist | Call, Email, Meeting, Follow-up, Demo |
+| IsRecurring | Checkbox | Recurring task |
+| RecurrencePattern | Text | Daily, Weekly, Monthly pattern |
+| CompletedDate | DateTime | When completed |
+
+**Example Usage**:
+```typescript
+// Create follow-up task
+await db.doc.create('Task', {
+  Subject: 'Follow up on proposal',
+  Description: 'Check if customer has any questions about pricing',
+  Priority: 'High',
+  Status: 'Not Started',
+  DueDate: addDays(new Date(), 2),
+  ReminderDateTime: addDays(new Date(), 1, 14, 0), // Tomorrow at 2pm
+  OwnerId: salesRepId,
+  WhatId: opportunityId,
+  WhoId: decisionMakerId,
+  ActivityType: 'Follow-up'
+});
+
+// Complete task
+await db.doc.update('Task', taskId, {
+  Status: 'Completed',
+  CompletedDate: new Date()
+});
+
+// Create recurring weekly check-in
+await db.doc.create('Task', {
+  Subject: 'Weekly account review',
+  Priority: 'Normal',
+  Status: 'Not Started',
+  DueDate: new Date(),
+  OwnerId: accountManagerId,
+  WhatId: accountId,
+  ActivityType: 'Meeting',
+  IsRecurring: true,
+  RecurrencePattern: 'Weekly on Monday at 9:00 AM'
+});
+```
+
+### Task List Views
+
+1. **My Tasks**: Tasks owned by me, not completed
+2. **Today's Tasks**: Due today
+3. **Overdue Tasks**: Past due date, not completed
+4. **High Priority**: Priority = High, not completed
+5. **This Week**: Due within next 7 days
+6. **Completed Tasks**: Status = Completed
+7. **Account Tasks**: Tasks related to specific account
+
+## Notes & Collaboration
+
+### Note Object
+
+Notes capture important information, insights, and updates on records.
+
+#### Core Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| Title | Text | Note title (required) |
+| Body | Textarea | Note content (required) |
+| OwnerId | Reference | Note creator (required) |
+| ParentId | Reference | Related record (Account, Opp, Contact, etc.) |
+| IsPrivate | Checkbox | Private note (only visible to owner) |
+| IsPinned | Checkbox | Pinned to top of timeline |
+| Tags | Text | Comma-separated tags |
+| MentionedUserIds | Text | @mentioned users (comma-separated IDs) |
+
+**Example Usage**:
+```typescript
+// Add customer insight note
+await db.doc.create('Note', {
+  Title: 'Customer Pain Points Discovered',
+  Body: `During today's call, customer mentioned:
+  - Current CRM is too complex
+  - Mobile app is essential (50% of team is remote)
+  - Need better reporting for executives
+  - Budget approved: $50K
+  
+  Next step: Send mobile demo video`,
+  OwnerId: salesRepId,
+  ParentId: opportunityId,
+  IsPrivate: false,
+  IsPinned: true,
+  Tags: 'discovery, pain-points, mobile'
+});
+
+// Private internal note
+await db.doc.create('Note', {
+  Title: 'Competitive Intel',
+  Body: 'Customer is also evaluating Salesforce. Pricing is main concern.',
+  OwnerId: salesRepId,
+  ParentId: accountId,
+  IsPrivate: true, // Only visible to owner
+  Tags: 'competitive, salesforce'
+});
+
+// Collaborate with @mentions
+await db.doc.create('Note', {
+  Title: 'Need Engineering Help',
+  Body: '@john-doe Can you join the demo next week? Customer wants to see API integration capabilities.',
+  OwnerId: salesRepId,
+  ParentId: opportunityId,
+  MentionedUserIds: 'john-doe',
+  Tags: 'demo, api, technical'
+});
+
+// Trigger: Send notification to @mentioned users
+// (Automatic notification sent to john-doe)
+```
+
+**Note Organization**:
+```typescript
+// Pin important notes
+await db.doc.update('Note', noteId, {
+  IsPinned: true
+});
+
+// Tag for easy filtering
+const technicalNotes = await db.find('Note', {
+  filters: [
+    ['ParentId', '=', opportunityId],
+    ['Tags', 'contains', 'technical']
+  ]
+});
+
+// Find notes mentioning you
+const myMentions = await db.find('Note', {
+  filters: [
+    ['MentionedUserIds', 'contains', currentUserId]
+  ],
+  orderBy: { field: 'CreatedDate', direction: 'desc' }
+});
+```
+
+## Campaign Member Management
+
+### Campaign Member Object
+
+Tracks which contacts/leads are part of which marketing campaigns.
+
+#### Core Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| CampaignId | Reference | Campaign (required) |
+| ContactId | Reference | Contact (if converted lead) |
+| LeadId | Reference | Lead (if not yet converted) |
+| Status | Picklist | Sent, Responded, Clicked, Opened, Bounced, etc. |
+| MemberStatus | Picklist | Campaign-specific status |
+| HasResponded | Checkbox | Member responded to campaign |
+| FirstRespondedDate | DateTime | First response date |
+| EmailBounced | Checkbox | Email bounced |
+| BouncedReason | Text | Bounce reason |
+| DoNotCall | Checkbox | Do not call this member |
+| DoNotEmail | Checkbox | Do not email this member |
+| OptedOut | Checkbox | Opted out of communications |
+| JoinedDate | DateTime | When added to campaign |
+| Source | Picklist | How added (Manual, Import, Web Form, API) |
+
+**Example Usage**:
+```typescript
+// Add contact to email campaign
+await db.doc.create('CampaignMember', {
+  CampaignId: emailCampaignId,
+  ContactId: contactId,
+  Status: 'Sent',
+  MemberStatus: 'Email Sent',
+  JoinedDate: new Date(),
+  Source: 'Manual'
+});
+
+// Track email engagement
+await db.doc.update('CampaignMember', memberId, {
+  Status: 'Opened',
+  MemberStatus: 'Email Opened'
+});
+
+// Track response
+await db.doc.update('CampaignMember', memberId, {
+  Status: 'Responded',
+  MemberStatus: 'Downloaded Whitepaper',
+  HasResponded: true,
+  FirstRespondedDate: new Date()
+});
+
+// Handle bounced email
+await db.doc.update('CampaignMember', memberId, {
+  Status: 'Bounced',
+  EmailBounced: true,
+  BouncedReason: 'Invalid email address'
+});
+
+// Respect opt-out
+await db.doc.update('CampaignMember', memberId, {
+  OptedOut: true,
+  DoNotEmail: true
+});
+```
+
+### Campaign Member Statuses
+
+Campaign member statuses are campaign-specific and customizable:
+
+**Email Campaign Statuses**:
+- Sent
+- Opened
+- Clicked
+- Downloaded
+- Responded
+- Bounced
+- Unsubscribed
+
+**Event Campaign Statuses**:
+- Invited
+- Registered
+- Attended
+- No-Show
+- Cancelled
+
+**Webinar Campaign Statuses**:
+- Invited
+- Registered
+- Attended Live
+- Watched Recording
+- No-Show
+
+**Example: Event Campaign Workflow**:
+```typescript
+// 1. Invite contacts to event
+const invitees = await getTargetContacts({ industry: 'Technology' });
+for (const contact of invitees) {
+  await db.doc.create('CampaignMember', {
+    CampaignId: techSummitId,
+    ContactId: contact.Id,
+    Status: 'Invited',
+    MemberStatus: 'Invited',
+    Source: 'Manual'
+  });
+}
+
+// 2. Contact registers
+await db.doc.update('CampaignMember', memberId, {
+  Status: 'Registered',
+  MemberStatus: 'Registered',
+  HasResponded: true,
+  FirstRespondedDate: new Date()
+});
+
+// 3. Check-in at event
+await db.doc.update('CampaignMember', memberId, {
+  Status: 'Attended',
+  MemberStatus: 'Attended'
+});
+
+// 4. Measure campaign ROI
+const campaignStats = await db.query(`
+  SELECT 
+    CampaignId,
+    COUNT(Id) as TotalMembers,
+    COUNT(CASE WHEN HasResponded THEN 1 END) as Responders,
+    COUNT(CASE WHEN Status = 'Attended' THEN 1 END) as Attendees
+  FROM CampaignMember
+  WHERE CampaignId = '${techSummitId}'
+  GROUP BY CampaignId
+`);
+
+// 5. Create follow-up tasks for attendees
+const attendees = await db.find('CampaignMember', {
+  filters: [
+    ['CampaignId', '=', techSummitId],
+    ['Status', '=', 'Attended']
+  ]
+});
+
+for (const attendee of attendees) {
+  await db.doc.create('Task', {
+    Subject: 'Follow up on Tech Summit attendance',
+    DueDate: addDays(new Date(), 3),
+    OwnerId: attendee.Contact.OwnerId,
+    WhoId: attendee.ContactId,
+    ActivityType: 'Follow-up'
+  });
+}
+```
+
+### Campaign Attribution
+
+Link campaign members to opportunities for ROI tracking:
+
+```typescript
+// When creating opportunity from campaign member
+await db.doc.create('Opportunity', {
+  Name: `${contact.Account.Name} - CRM Project`,
+  AccountId: contact.AccountId,
+  ContactId: contact.Id,
+  CampaignId: campaignMember.CampaignId, // Track campaign source
+  LeadSource: 'Tech Summit Event',
+  Amount: 50000,
+  Stage: 'Prospecting'
+});
+
+// Report: Campaign ROI
+const campaignROI = await db.query(`
+  SELECT 
+    c.Name as CampaignName,
+    c.BudgetedCost,
+    COUNT(o.Id) as OpportunitiesGenerated,
+    SUM(CASE WHEN o.Stage = 'Closed Won' THEN o.Amount ELSE 0 END) as Revenue,
+    SUM(CASE WHEN o.Stage = 'Closed Won' THEN o.Amount ELSE 0 END) / c.BudgetedCost as ROI
+  FROM Campaign c
+  LEFT JOIN Opportunity o ON o.CampaignId = c.Id
+  WHERE c.Status = 'Completed'
+  GROUP BY c.Id, c.Name, c.BudgetedCost
+  ORDER BY ROI DESC
+`);
+```
+
+## Complete Sales Process Workflow
+
+```typescript
+// 1. Campaign generates lead
+const lead = await db.doc.create('Lead', {
+  FirstName: 'John',
+  LastName: 'Doe',
+  Company: 'ACME Corp',
+  Email: 'john.doe@acme.com',
+  LeadSource: 'Tech Summit Event',
+  Status: 'New'
+});
+
+// 2. Add to campaign
+await db.doc.create('CampaignMember', {
+  CampaignId: techSummitId,
+  LeadId: lead.Id,
+  Status: 'Attended'
+});
+
+// 3. Sales rep qualifies lead
+await db.doc.update('Lead', lead.Id, {
+  Status: 'Qualified',
+  Rating: 'Hot'
+});
+
+// 4. Convert lead to Account, Contact, Opportunity
+const conversion = await convertLead(lead.Id);
+
+// 5. Add discovery notes
+await db.doc.create('Note', {
+  Title: 'Discovery Call Summary',
+  Body: 'Customer needs CRM for 50 users. Budget: $50K. Timeline: Q2.',
+  ParentId: conversion.OpportunityId,
+  Tags: 'discovery, budget-approved'
+});
+
+// 6. Create follow-up task
+await db.doc.create('Task', {
+  Subject: 'Send proposal',
+  DueDate: addDays(new Date(), 2),
+  OwnerId: salesRepId,
+  WhatId: conversion.OpportunityId,
+  ActivityType: 'Email'
+});
+
+// 7. Log sales activity
+await db.doc.create('Activity', {
+  Subject: 'Discovery call with John',
+  ActivityType: 'Call',
+  AccountId: conversion.AccountId,
+  ContactId: conversion.ContactId,
+  OpportunityId: conversion.OpportunityId,
+  Duration: 45,
+  CallResult: 'Qualified',
+  Notes: 'Strong interest. Sending proposal Friday.'
+});
+
+// 8. Move opportunity through stages
+await db.doc.update('Opportunity', conversion.OpportunityId, {
+  Stage: 'Proposal'
+});
+
+// ... create quote, get approval, send proposal ...
+
+// 9. Win the deal
+await db.doc.update('Opportunity', conversion.OpportunityId, {
+  Stage: 'Closed Won',
+  CloseDate: new Date()
+});
+
+// 10. Create onboarding tasks
+await db.doc.create('Task', {
+  Subject: 'Schedule kickoff call',
+  Priority: 'High',
+  DueDate: addDays(new Date(), 1),
+  OwnerId: customerSuccessManagerId,
+  WhatId: conversion.AccountId
+});
 ```
 
 ## Next Steps
