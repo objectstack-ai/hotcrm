@@ -63,8 +63,16 @@ async function calculateQuotePricing(ctx: TriggerContext): Promise<void> {
   
   try {
     // Calculate Discount Amount from Percent or vice versa
-    if (quote.Subtotal && quote.DiscountPercent) {
-      quote.DiscountAmount = quote.Subtotal * quote.DiscountPercent;
+    // Only calculate if one is provided and the other is not
+    if (quote.Subtotal) {
+      if (quote.DiscountPercent && !quote.DiscountAmount) {
+        quote.DiscountAmount = quote.Subtotal * quote.DiscountPercent;
+      } else if (quote.DiscountAmount && !quote.DiscountPercent) {
+        quote.DiscountPercent = quote.DiscountAmount / quote.Subtotal;
+      } else if (quote.DiscountPercent && quote.DiscountAmount) {
+        // Both provided - recalculate DiscountAmount from DiscountPercent for consistency
+        quote.DiscountAmount = quote.Subtotal * quote.DiscountPercent;
+      }
     }
 
     // Calculate Tax Amount
@@ -116,11 +124,11 @@ async function determineApprovalRequirements(ctx: TriggerContext): Promise<void>
       // Set approval status to Pending if discount increased
       if (ctx.old) {
         const oldDiscount = ctx.old.DiscountPercent || 0;
-        if (discountPercent > oldDiscount && quote.ApprovalStatus !== 'Approved') {
+        if (discountPercent > oldDiscount && quote.ApprovalStatus !== 'Approved' && quote.ApprovalStatus !== 'Pending') {
           quote.ApprovalStatus = 'Pending';
           console.log(`🔄 Quote requires Level ${approvalLevel} approval (${(discountPercent * 100).toFixed(1)}% discount)`);
         }
-      } else {
+      } else if (quote.ApprovalStatus !== 'Pending') {
         quote.ApprovalStatus = 'Pending';
         console.log(`🔄 New quote requires Level ${approvalLevel} approval (${(discountPercent * 100).toFixed(1)}% discount)`);
       }

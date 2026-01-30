@@ -136,9 +136,9 @@ async function handleEffectiveDateChange(ctx: TriggerContext): Promise<void> {
     // Check if pricebook should be activated
     if (pricebook.EffectiveDate) {
       const effectiveDate = new Date(pricebook.EffectiveDate);
-      effectiveDate.setHours(0, 0, 0, 0);
+      const effectiveDateOnly = new Date(effectiveDate.getFullYear(), effectiveDate.getMonth(), effectiveDate.getDate());
       
-      if (effectiveDate <= today && pricebook.Status === 'Draft') {
+      if (effectiveDateOnly <= today && pricebook.Status === 'Draft') {
         console.log(`✅ Pricebook effective date reached, activating: ${pricebook.Name}`);
         
         await ctx.db.doc.update('Pricebook', pricebook.Id, {
@@ -150,9 +150,9 @@ async function handleEffectiveDateChange(ctx: TriggerContext): Promise<void> {
     // Check if pricebook should be expired
     if (pricebook.ExpirationDate) {
       const expirationDate = new Date(pricebook.ExpirationDate);
-      expirationDate.setHours(0, 0, 0, 0);
+      const expirationDateOnly = new Date(expirationDate.getFullYear(), expirationDate.getMonth(), expirationDate.getDate());
       
-      if (expirationDate < today && pricebook.Status === 'Active') {
+      if (expirationDateOnly < today && pricebook.Status === 'Active') {
         console.log(`⏰ Pricebook expired, deactivating: ${pricebook.Name}`);
         
         await ctx.db.doc.update('Pricebook', pricebook.Id, {
@@ -224,9 +224,10 @@ async function handleStatusChange(ctx: TriggerContext): Promise<void> {
             ]
           });
           
-          if (otherStandard && otherStandard.length > 0) {
-            console.log(`⚠️ Deactivating ${otherStandard.length} other standard pricebook(s)`);
-            for (const pb of otherStandard) {
+          const otherPricebooks = otherStandard || [];
+          if (otherPricebooks.length > 0) {
+            console.log(`⚠️ Deactivating ${otherPricebooks.length} other standard pricebook(s)`);
+            for (const pb of otherPricebooks) {
               await ctx.db.doc.update('Pricebook', pb.Id, {
                 Status: 'Inactive',
                 ExpirationDate: new Date().toISOString().split('T')[0]

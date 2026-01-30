@@ -385,9 +385,9 @@ const QuoteLineItem = {
       formula: 'AND(NOT(ISBLANK(ServiceStartDate)), NOT(ISBLANK(ServiceEndDate)), ServiceEndDate <= ServiceStartDate)'
     },
     {
-      name: 'BundleParentRequired',
-      errorMessage: 'Bundle items must have a bundle parent',
-      formula: 'AND(IsBundle = true, ISBLANK(BundleParentId))'
+      name: 'BundleComponentRequired',
+      errorMessage: 'Bundle components must have a bundle parent specified',
+      formula: 'AND(IsOptional = false, NOT(ISBLANK(RequiredByLineItemId)), ISBLANK(BundleParentId))'
     },
     {
       name: 'PricebookEntryOrProductRequired',
