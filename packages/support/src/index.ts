@@ -8,6 +8,8 @@
  * - Queue Management: Support queues and routing
  * - Multi-Channel: Email-to-case, web-to-case integrations
  * - Skills: Skill-based routing and agent proficiency
+ * - Portal: Customer self-service portal
+ * - Community: Forum topics and posts
  */
 
 // Core Support Objects
@@ -18,6 +20,8 @@ export { default as KnowledgeArticle } from './knowledge_article.object';
 export { default as SLATemplate } from './sla_template.object';
 export { default as SLAMilestone } from './sla_milestone.object';
 export { default as BusinessHours } from './business_hours.object';
+export { default as HolidayCalendar } from './holiday_calendar.object';
+export { default as Holiday } from './holiday.object';
 
 // Queue & Routing
 export { default as Queue } from './queue.object';
@@ -32,6 +36,12 @@ export { default as AgentSkill } from './agent_skill.object';
 // Multi-Channel Integration
 export { default as EmailToCase } from './email_to_case.object';
 export { default as WebToCase } from './web_to_case.object';
+export { default as SocialMediaCase } from './social_media_case.object';
+
+// Customer Portal
+export { default as PortalUser } from './portal_user.object';
+export { default as ForumTopic } from './forum_topic.object';
+export { default as ForumPost } from './forum_post.object';
 
 // Note: YAML files (Knowledge) are kept for reference
 // TypeScript definitions should be created following the metadata protocol
