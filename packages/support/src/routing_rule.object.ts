@@ -1,13 +1,12 @@
-import type { ObjectSchema } from '@objectstack/spec/data';
 
-const RoutingRule: ObjectSchema = {
+const RoutingRule = {
   name: 'routing_rule',
   label: 'Routing Rule',
   labelPlural: 'Routing Rules',
   icon: 'route',
   description: 'Intelligent case routing rules for automatic assignment',
   enable: {
-    searchEnabled: true,
+    searchable: true,
     trackHistory: true
   },
   fields: {
@@ -17,7 +16,7 @@ const RoutingRule: ObjectSchema = {
       label: 'Rule Name',
       required: true,
       maxLength: 255,
-      searchEnabled: true
+      searchable: true
     },
     Description: {
       type: 'textarea',

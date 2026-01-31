@@ -70,25 +70,38 @@ You must strictly adhere to the File Suffix Protocol. Every file type maps to a 
 *   **Good:** Use strict literal types defined by the schema. If you are unsure, ask to check `@objectstack/spec` definitions.
 
 ### **B. Constant Exports**
-All metadata files must `export default` a strictly typed constant.
+All metadata files must `export default` a constant.
+
+**For @objectstack/spec v0.7.1+:**
 
 ```typescript
-// ✅ CORRECT
-import type { ObjectSchema } from '@objectstack/spec/data';
-
-const Issue: ObjectSchema = {
+// ✅ CORRECT - No type annotation (allows Zod input type inference)
+const Issue = {
   name: 'issue',
+  label: 'Issue',
   // ...
 };
 export default Issue;
 ```
 
 ```typescript
+// ❌ WRONG - Type annotation enforces strict output type
+import type { ServiceObject } from '@objectstack/spec/data';
+
+const Issue: ServiceObject = {
+  name: 'issue',
+  // ... This will require ALL optional properties!
+};
+```
+
+```typescript
 // ❌ WRONG
 export default {
   name: 'issue'
-} // Type is 'any', no validation!
+} // Inline export, harder to reference
 ```
+
+**Note**: In v0.7.1, removing type annotations allows TypeScript to use Zod's input type (with optional properties), not the strict output type.
 
 ### **C. Naming Conventions**
 *   **Filenames:** `snake_case` + `suffix.ts`. (e.g., `project_task.object.ts`)

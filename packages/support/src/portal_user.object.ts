@@ -1,13 +1,12 @@
-import type { ObjectSchema } from '@objectstack/spec/data';
 
-const PortalUser: ObjectSchema = {
+const PortalUser = {
   name: 'portal_user',
   label: 'Portal User',
   labelPlural: 'Portal Users',
   icon: 'user-shield',
   description: 'Customer portal user access and preferences',
   enable: {
-    searchEnabled: true,
+    searchable: true,
     trackHistory: true
   },
   fields: {
@@ -17,13 +16,13 @@ const PortalUser: ObjectSchema = {
       label: 'Username',
       required: true,
       maxLength: 100,
-      searchEnabled: true
+      searchable: true
     },
     Email: {
       type: 'email',
       label: 'Email',
       required: true,
-      searchEnabled: true
+      searchable: true
     },
     FirstName: {
       type: 'text',

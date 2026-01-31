@@ -1,13 +1,12 @@
-import type { ObjectSchema } from '@objectstack/spec/data';
 
-const WebToCase: ObjectSchema = {
+const WebToCase = {
   name: 'web_to_case',
   label: 'Web-to-Case Form',
   labelPlural: 'Web-to-Case Forms',
   icon: 'globe',
   description: 'Web form configuration for customer case submission',
   enable: {
-    searchEnabled: true,
+    searchable: true,
     trackHistory: true
   },
   fields: {
@@ -17,7 +16,7 @@ const WebToCase: ObjectSchema = {
       label: 'Form Name',
       required: true,
       maxLength: 255,
-      searchEnabled: true
+      searchable: true
     },
     Description: {
       type: 'textarea',

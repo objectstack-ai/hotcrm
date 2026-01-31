@@ -1,13 +1,12 @@
-import type { ObjectSchema } from '@objectstack/spec/data';
 
-const EscalationRule: ObjectSchema = {
+const EscalationRule = {
   name: 'escalation_rule',
   label: 'Escalation Rule',
   labelPlural: 'Escalation Rules',
   icon: 'arrow-up',
   description: 'Rules for automatic case escalation based on SLA violations or conditions',
   enable: {
-    searchEnabled: true,
+    searchable: true,
     trackHistory: true
   },
   fields: {
@@ -17,7 +16,7 @@ const EscalationRule: ObjectSchema = {
       label: 'Rule Name',
       required: true,
       maxLength: 255,
-      searchEnabled: true
+      searchable: true
     },
     Description: {
       type: 'textarea',

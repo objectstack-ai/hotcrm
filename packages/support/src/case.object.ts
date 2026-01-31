@@ -1,33 +1,32 @@
-import type { ObjectSchema } from '@objectstack/spec/data';
 
-const Case: ObjectSchema = {
+const Case = {
   name: 'case',
   label: 'Case',
   labelPlural: 'Cases',
   icon: 'ticket-alt',
   description: 'Customer service case and support request management with SLA tracking and AI-powered routing',
   enable: {
-    searchEnabled: true,
+    searchable: true,
     trackHistory: true,
-    activitiesEnabled: true,
-    feedsEnabled: true,
-    filesEnabled: true,
+    activities: true,
+    feeds: true,
+    files: true,
     emailToCase: true
   },
   fields: {
     // Basic Information
     CaseNumber: {
-      type: 'autoNumber',
+      type: 'autonumber',
       label: 'Case Number',
       format: 'CASE-{YYYY}-{0000}',
       readonly: true,
-      searchEnabled: true
+      searchable: true
     },
     Subject: {
       type: 'text',
       label: 'Subject',
       required: true,
-      searchEnabled: true,
+      searchable: true,
       maxLength: 255
     },
     Description: {
@@ -35,7 +34,7 @@ const Case: ObjectSchema = {
       label: 'Description',
       required: true,
       maxLength: 32000,
-      searchEnabled: true
+      searchable: true
     },
     Status: {
       type: 'select',
@@ -246,7 +245,7 @@ const Case: ObjectSchema = {
       type: 'textarea',
       label: 'Resolution',
       maxLength: 32000,
-      searchEnabled: true
+      searchable: true
     },
     RootCause: {
       type: 'textarea',

@@ -1,17 +1,16 @@
-import type { ObjectSchema } from '@objectstack/spec/data';
 
-const DiscountSchedule: ObjectSchema = {
+const DiscountSchedule = {
   name: 'discount_schedule',
   label: 'Discount Schedule',
   labelPlural: 'Discount Schedules',
   icon: 'percent',
   description: 'Discount schedules with date ranges, approval workflows, and margin protection',
   enable: {
-    searchEnabled: true,
+    searchable: true,
     trackHistory: true,
-    activitiesEnabled: true,
-    feedsEnabled: true,
-    filesEnabled: false
+    activities: true,
+    feeds: true,
+    files: false
   },
   fields: {
     // Basic Information
@@ -19,14 +18,14 @@ const DiscountSchedule: ObjectSchema = {
       type: 'text',
       label: 'Schedule Name',
       required: true,
-      searchEnabled: true,
+      searchable: true,
       maxLength: 255
     },
     ScheduleCode: {
       type: 'text',
       label: 'Schedule Code',
       unique: true,
-      searchEnabled: true,
+      searchable: true,
       maxLength: 50,
       description: 'Unique identifier for the discount schedule'
     },

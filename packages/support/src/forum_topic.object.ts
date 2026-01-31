@@ -1,13 +1,12 @@
-import type { ObjectSchema } from '@objectstack/spec/data';
 
-const ForumTopic: ObjectSchema = {
+const ForumTopic = {
   name: 'forum_topic',
   label: 'Forum Topic',
   labelPlural: 'Forum Topics',
   icon: 'comments',
   description: 'Community forum discussion topics',
   enable: {
-    searchEnabled: true,
+    searchable: true,
     trackHistory: true
   },
   fields: {
@@ -17,14 +16,14 @@ const ForumTopic: ObjectSchema = {
       label: 'Topic Title',
       required: true,
       maxLength: 255,
-      searchEnabled: true
+      searchable: true
     },
     Description: {
       type: 'textarea',
       label: 'Description',
       required: true,
       maxLength: 5000,
-      searchEnabled: true
+      searchable: true
     },
     // Categorization
     Category: {
@@ -46,7 +45,7 @@ const ForumTopic: ObjectSchema = {
       type: 'text',
       label: 'Tags',
       maxLength: 500,
-      searchEnabled: true,
+      searchable: true,
       description: 'Comma-separated tags'
     },
     // Author

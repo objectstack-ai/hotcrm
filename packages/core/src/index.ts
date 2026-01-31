@@ -10,5 +10,5 @@ export * from './objectql';
 
 // Re-export type definitions for @objectstack/spec
 // Note: These are defined in objectstack-spec.d.ts
-export type { ObjectSchema, FieldSchema, HookSchema } from '@objectstack/spec/data';
-export type { DashboardSchema } from '@objectstack/spec/ui';
+export type { ServiceObject, Field, Hook } from '@objectstack/spec/data';
+export type { Dashboard } from '@objectstack/spec/ui';

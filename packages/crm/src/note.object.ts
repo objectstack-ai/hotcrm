@@ -1,16 +1,15 @@
-import type { ObjectSchema } from '@objectstack/spec/data';
 
-const Note: ObjectSchema = {
+const Note = {
   name: 'note',
   label: 'Note',
   labelPlural: 'Notes',
   icon: 'sticky-note',
   description: 'Quick notes with markdown support, @mentions, and full-text search',
   enable: {
-    searchEnabled: true,
+    searchable: true,
     trackHistory: false,
-    feedsEnabled: false,
-    filesEnabled: true
+    feeds: false,
+    files: true
   },
   fields: {
     // Basic Information
@@ -18,14 +17,14 @@ const Note: ObjectSchema = {
       type: 'text',
       label: 'Note Title',
       required: true,
-      searchEnabled: true,
+      searchable: true,
       maxLength: 255
     },
     Body: {
       type: 'textarea',
       label: 'Note Body',
       required: true,
-      searchEnabled: true,
+      searchable: true,
       maxLength: 32000,
       description: 'Rich text with Markdown support'
     },

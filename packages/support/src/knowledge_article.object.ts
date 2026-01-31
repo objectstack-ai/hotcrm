@@ -1,45 +1,44 @@
-import type { ObjectSchema } from '@objectstack/spec/data';
 
-const KnowledgeArticle: ObjectSchema = {
+const KnowledgeArticle = {
   name: 'knowledge_article',
   label: 'Knowledge Article',
   labelPlural: 'Knowledge Articles',
   icon: 'book',
   description: 'Knowledge base articles for customer self-service and agent assistance',
   enable: {
-    searchEnabled: true,
+    searchable: true,
     trackHistory: true,
-    filesEnabled: true
+    files: true
   },
   fields: {
     // Basic Information
     ArticleNumber: {
-      type: 'autoNumber',
+      type: 'autonumber',
       label: 'Article Number',
       format: 'KB-{YYYY}-{0000}',
       readonly: true,
-      searchEnabled: true
+      searchable: true
     },
     Title: {
       type: 'text',
       label: 'Title',
       required: true,
       maxLength: 255,
-      searchEnabled: true
+      searchable: true
     },
     Summary: {
       type: 'textarea',
       label: 'Summary',
       required: true,
       maxLength: 500,
-      searchEnabled: true,
+      searchable: true,
       description: 'Brief summary shown in search results'
     },
     Content: {
       type: 'textarea',
       label: 'Content',
       required: true,
-      searchEnabled: true,
+      searchable: true,
       maxLength: 32000,
       description: 'Full article content with formatting'
     },
@@ -69,7 +68,7 @@ const KnowledgeArticle: ObjectSchema = {
       type: 'text',
       label: 'Keywords',
       maxLength: 500,
-      searchEnabled: true,
+      searchable: true,
       description: 'Comma-separated keywords for search'
     },
     Tags: {
@@ -321,7 +320,7 @@ const KnowledgeArticle: ObjectSchema = {
       label: 'AI Extracted Keywords',
       maxLength: 500,
       readonly: true,
-      searchEnabled: true,
+      searchable: true,
       description: 'Keywords extracted by AI'
     },
     RelatedArticleIds: {

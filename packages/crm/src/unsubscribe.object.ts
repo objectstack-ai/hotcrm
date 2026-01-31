@@ -1,15 +1,14 @@
-import type { ObjectSchema } from '@objectstack/spec/data';
 
-const Unsubscribe: ObjectSchema = {
+const Unsubscribe = {
   name: 'unsubscribe',
   label: '退订记录',
   labelPlural: '退订记录',
   icon: 'user-x',
   description: '邮件退订和退信管理，支持全局和特定列表退订',
   enable: {
-    searchEnabled: true,
+    searchable: true,
     trackHistory: true,
-    filesEnabled: false
+    files: false
   },
   fields: {
     // Contact Information
@@ -17,7 +16,7 @@ const Unsubscribe: ObjectSchema = {
       type: 'email',
       label: '邮箱地址',
       required: true,
-      searchEnabled: true,
+      searchable: true,
       description: '退订的邮箱地址'
     },
     LeadId: {
