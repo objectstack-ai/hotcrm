@@ -125,7 +125,7 @@ const KnowledgeArticleWorkflowTrigger: Hook = {
       const oldArticle = ctx.old;
 
       // Track status changes
-      if (oldArticle.Status !== article.Status) {
+      if (oldArticle && oldArticle.Status !== article.Status) {
         await trackStatusChange(article, oldArticle, ctx);
       }
 
@@ -166,7 +166,7 @@ const KnowledgeArticleUsageTracker: Hook = {
       const oldCase = ctx.old;
 
       // Track when case is resolved and knowledge was used
-      if (caseRecord.Status === 'Resolved' && oldCase.Status !== 'Resolved') {
+      if (oldCase && caseRecord.Status === 'Resolved' && oldCase.Status !== 'Resolved') {
         if (caseRecord.AIRelatedKnowledge) {
           const articleIds = caseRecord.AIRelatedKnowledge.split(',');
           
@@ -517,7 +517,7 @@ async function incrementArticleUsage(articleId: string, ctx: TriggerContext): Pr
 
     if (article && article.length > 0) {
       const currentCount = article[0].CaseResolutionCount || 0;
-      await ctx.db.update('KnowledgeArticle', articleId, {
+      await ctx.db.doc.update('KnowledgeArticle', articleId, {
         CaseResolutionCount: currentCount + 1,
         LastUsedInCaseDate: new Date()
       });
