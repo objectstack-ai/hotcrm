@@ -1,673 +1,831 @@
 ---
-title: Contracts & Payments
-description: Contract lifecycle management and payment tracking features
+title: Contract & Revenue Management
+description: Execute deals, manage contract lifecycles, and track recurring revenue
 ---
 
-# Contracts & Payments Domain
+# Contract & Revenue Management
 
-The Contracts & Payments domain manages contract lifecycles and payment collections, ensuring smooth revenue recognition and cash flow management.
+Turn closed deals into executed contracts and predictable revenue. HotCRM helps you manage the entire contract lifecycle from signature to renewal, track payments, and ensure healthy cash flow.
 
-## Overview
+## What You Can Do
 
-**Key Objects**: `Contract`, `Payment`
+<Cards>
+  <Card title="Contract Lifecycle" icon="file-signature">
+    Manage contracts from draft through renewal or termination
+  </Card>
+  <Card title="Auto-Renewals" icon="refresh">
+    Never miss a renewal with automated reminders and workflows
+  </Card>
+  <Card title="Revenue Tracking" icon="chart-line">
+    Monitor ARR, MRR, and contract value in real-time
+  </Card>
+  <Card title="Payment Management" icon="credit-card">
+    Track invoices, payments, and collections (Coming Q1 2026)
+  </Card>
+</Cards>
 
-**Main Goals**:
-- Contract lifecycle management
-- Automated renewal reminders
-- Payment schedule tracking
-- Collection management
-- Overdue monitoring and alerts
-- E-signature integration ready
+---
 
 ## Contract Management
 
-### Contract Object
+### What is a Contract?
 
-The Contract object manages customer contracts from draft to completion.
+A Contract is a legally binding agreement between you and your customer that defines:
+- What you're delivering (products/services)
+- How much they're paying
+- When payment is due
+- Contract duration
+- Renewal terms
+- Cancellation policy
 
-#### Core Fields
+**Contracts are created from:**
+- ✅ Accepted quotes
+- ✅ Won opportunities
+- ✅ Manual entry (for existing contracts)
 
-| Field | Type | Description |
-|-------|------|-------------|
-| ContractNumber | AutoNumber | Auto-generated contract number (CT-YYYYMMDD-0000) |
-| AccountId | Reference | Customer account (required) |
-| OpportunityId | Reference | Related opportunity |
-| QuoteId | Reference | Source quote |
-| Status | Picklist | Contract status |
-| StartDate | Date | Contract start date (required) |
-| EndDate | Date | Contract end date |
-| ContractTerm | Number | Contract duration in months |
-| ContractValue | Currency | Total contract value (required) |
-| BillingFrequency | Picklist | Monthly, Quarterly, Annually |
-| AutoRenew | Checkbox | Auto-renew on expiration? |
-| RenewalReminderDays | Number | Days before expiration to send reminder |
-| OwnerId | Reference | Contract owner |
-
-#### Contract Status Flow
-
-1. **📝 Draft** - Being prepared, not yet finalized
-2. **🔍 In Approval** - Undergoing internal approval
-3. **✅ Activated** - Active contract in force
-4. **⏸️ On Hold** - Temporarily paused
-5. **✔️ Completed** - Successfully completed
-6. **❌ Terminated** - Cancelled or terminated early
-
-**Status Progression**:
-```typescript
-// Activate a contract
-await db.doc.update('Contract', contractId, {
-  Status: 'Activated',
-  StartDate: new Date()
-});
-
-// Complete a contract
-await db.doc.update('Contract', contractId, {
-  Status: 'Completed',
-  EndDate: new Date()
-});
-
-// Terminate early
-await db.doc.update('Contract', contractId, {
-  Status: 'Terminated',
-  TerminationDate: new Date(),
-  TerminationReason: 'Customer request'
-});
-```
+---
 
 ### Contract Lifecycle
 
-#### 1. Creation from Quote
-
-When a quote is accepted, create a contract:
-
-```typescript
-// Convert accepted quote to contract
-const quote = await db.findOne('Quote', quoteId);
-
-const contract = await db.doc.create('Contract', {
-  AccountId: quote.AccountId,
-  OpportunityId: quote.OpportunityId,
-  QuoteId: quote.Id,
-  Status: 'Draft',
-  StartDate: new Date(),
-  EndDate: addMonths(new Date(), 12), // 1 year contract
-  ContractTerm: 12,
-  ContractValue: quote.TotalPrice,
-  BillingFrequency: 'Annually',
-  AutoRenew: true,
-  RenewalReminderDays: 90
-});
+```mermaid
+graph LR
+    A[Draft] --> B[In Approval]
+    B --> C[Activated]
+    C --> D{Renewal Time?}
+    D -->|Auto-Renew| E[Renewed]
+    D -->|Manual| F[Renewal Opportunity]
+    C --> G[On Hold]
+    G --> C
+    C --> H[Completed]
+    C --> I[Terminated]
 ```
 
-#### 2. Activation
+---
 
-Once signed, activate the contract:
+### Contract Status
 
-```typescript
-await db.doc.update('Contract', contract.Id, {
-  Status: 'Activated',
-  SignedDate: new Date(),
-  SignedBy: customerContactId,
-  ActivationDate: new Date()
-});
+**1. Draft** - Being prepared, not yet legal
+- Created from quote or manually
+- Terms being negotiated
+- Not yet signed
+- Can be edited freely
 
-// Also update opportunity and account
-await db.doc.update('Opportunity', opportunityId, {
-  Stage: 'Closed Won'
-});
+**Example:** Sales rep creates contract from accepted quote, legal team reviews terms.
 
-await db.doc.update('Account', accountId, {
-  CustomerStatus: 'Active Customer'
-});
+---
+
+**2. In Approval** - Awaiting internal sign-off
+- Submitted for approval
+- Legal review in progress
+- Finance approval pending
+- Cannot be edited without resubmitting
+
+**Example:** $250K contract requires CFO approval before sending to customer.
+
+---
+
+**3. Activated** - Signed and in force
+- Fully executed (signed by both parties)
+- Services being delivered
+- Revenue being recognized
+- Renewal tracking active
+
+**Example:** 2-year contract signed on Jan 1, 2026, active through Dec 31, 2027.
+
+---
+
+**4. On Hold** - Temporarily paused
+- Customer requested pause
+- Payment issues
+- Service suspended
+- Can be reactivated
+
+**Example:** Customer requests 3-month pause due to internal restructuring.
+
+---
+
+**5. Completed** - Successfully finished
+- Contract term ended
+- All obligations fulfilled
+- Final payment received
+- Ready for renewal discussion
+
+**Example:** 1-year contract completed successfully, customer renewing for year 2.
+
+---
+
+**6. Terminated** - Cancelled early
+- Customer cancelled
+- Non-payment
+- Breach of contract
+- Mutual agreement to end
+
+**Example:** Customer went out of business, contract terminated after 6 months of 12-month term.
+
+---
+
+### Key Contract Information
+
+**Essential Fields:**
+
+| Field | Description | Example |
+|-------|-------------|---------|
+| **Contract Number** | Auto-generated ID | CT-2026-0001 |
+| **Account** | Customer | TechCorp Inc. |
+| **Opportunity** | Related deal | TechCorp - CRM Implementation |
+| **Quote** | Source quote | Q-2026-0123 |
+| **Status** | Current state | Activated |
+| **Start Date** | When it begins | January 1, 2026 |
+| **End Date** | When it expires | December 31, 2026 |
+| **Contract Term** | Duration (months) | 12 months |
+| **Contract Value** | Total value | $75,000 |
+| **Billing Frequency** | How often billed | Monthly, Quarterly, Annual |
+| **Auto-Renew** | Renew automatically? | Yes/No |
+| **Owner** | Contract manager | Sarah Chen |
+
+---
+
+### Contract Numbering
+
+**Professional auto-generated numbers:**
+
+```
+Format: CT-YYYY-NNNN
+
+Examples:
+- CT-2026-0001 (First contract of 2026)
+- CT-2026-0123 (123rd contract of 2026)
+- CT-2027-0001 (First contract of 2027)
 ```
 
-#### 3. Monitoring & Renewals
+**Benefits:**
+- Unique identifier
+- Easy to reference
+- Year-based organization
+- Sequential tracking
 
-Track contract health and renewal dates:
+---
 
-```typescript
-// Get contracts expiring in next 90 days
-const expiringContracts = await db.find('Contract', {
-  filters: [
-    ['Status', '=', 'Activated'],
-    ['EndDate', 'next_90_days']
-  ],
-  orderBy: { field: 'EndDate', direction: 'asc' }
-});
+### Creating Contracts
 
-// Send renewal reminders
-for (const contract of expiringContracts) {
-  const daysUntilExpiration = daysBetween(new Date(), contract.EndDate);
+#### Method 1: From Accepted Quote (Recommended)
+
+```
+1. Quote accepted by customer
+2. Click "Create Contract"
+3. System auto-populates:
+   ✅ Account and Opportunity
+   ✅ Contract value from quote
+   ✅ Products/line items
+   ✅ Terms and conditions
+4. Set start/end dates
+5. Configure billing frequency
+6. Set auto-renew preference
+7. Submit for approval (if required)
+8. Send for signature
+9. Activate when signed
+```
+
+**Why this is best:**
+- No data re-entry
+- Ensures quote and contract match
+- Maintains complete audit trail
+- Faster execution
+
+---
+
+#### Method 2: From Won Opportunity
+
+```
+1. Opportunity reaches "Closed Won"
+2. Click "Create Contract"
+3. Enter contract details manually:
+   - Contract value
+   - Start and end dates
+   - Billing terms
+4. Submit for approval
+5. Activate
+```
+
+**When to use:**
+- Simple deals without formal quote
+- Verbal agreements
+- Renewals of existing contracts
+
+---
+
+#### Method 3: Manual Entry
+
+```
+1. Go to Contracts
+2. Click "New Contract"
+3. Fill in all details
+4. Attach supporting documents
+5. Activate
+```
+
+**When to use:**
+- Migrating existing contracts into CRM
+- Historical contracts for tracking
+- Partner or vendor contracts
+
+---
+
+### Contract Terms & Billing
+
+#### Billing Frequency
+
+**Monthly** - Billed every month
+```
+Contract Value: $12,000/year
+Billing: $1,000/month
+Payment: Due on 1st of each month
+```
+
+**Quarterly** - Billed every 3 months
+```
+Contract Value: $12,000/year
+Billing: $3,000/quarter
+Payment: Due Jan 1, Apr 1, Jul 1, Oct 1
+```
+
+**Annual** - Billed once per year
+```
+Contract Value: $12,000/year
+Billing: $12,000 upfront or on anniversary
+Payment: Due on contract start date
+```
+
+**Custom** - Flexible payment schedule
+```
+Contract Value: $24,000 (2 years)
+Billing: 
+  - $8,000 upfront
+  - $8,000 at month 6
+  - $8,000 at month 12
+```
+
+---
+
+#### Contract Terms (Duration)
+
+**Standard Terms:**
+- **Month-to-Month** - No commitment, cancel anytime
+- **12 Months** - 1-year commitment (most common)
+- **24 Months** - 2-year commitment (discount offered)
+- **36 Months** - 3-year commitment (best pricing)
+
+**Multi-Year Benefits:**
+```
+1-Year: $1,000/month ($12,000/year)
+2-Year: $900/month ($10,800/year) - Save 10%
+3-Year: $800/month ($9,600/year) - Save 20%
+```
+
+---
+
+## Contract Renewals
+
+### Why Renewals Matter
+
+**Business Impact:**
+- Retention is cheaper than new acquisition (5-7x)
+- Renewals are predictable revenue
+- Expansion opportunities (upsell/cross-sell)
+- Customer lifetime value (LTV) growth
+
+**Industry Benchmarks:**
+- SaaS Renewal Rate: 85-95%
+- Lost renewal = lost ARR + future expansion
+- Renewals should be 30-50% of new revenue
+
+---
+
+### Auto-Renewal
+
+**How it works:**
+```
+Contract: TechCorp - Annual CRM License
+Start Date: Jan 1, 2026
+End Date: Dec 31, 2026
+Auto-Renew: Yes
+Renewal Reminder: 90 days before expiration
+
+Timeline:
+- Oct 2, 2026: Auto-reminder sent to customer
+  "Your contract renews in 90 days"
   
-  if (daysUntilExpiration <= contract.RenewalReminderDays) {
-    await sendRenewalReminder({
-      contractId: contract.Id,
-      daysRemaining: daysUntilExpiration
-    });
-  }
-}
-```
-
-#### 4. Renewal Process
-
-For auto-renew contracts:
-
-```typescript
-// Auto-renew contract
-if (contract.AutoRenew && contract.Status === 'Activated') {
-  const newContract = await db.doc.create('Contract', {
-    AccountId: contract.AccountId,
-    PreviousContractId: contract.Id,
-    Status: 'Draft',
-    StartDate: contract.EndDate, // Start when old contract ends
-    EndDate: addMonths(contract.EndDate, contract.ContractTerm),
-    ContractTerm: contract.ContractTerm,
-    ContractValue: contract.ContractValue * 1.05, // 5% increase
-    BillingFrequency: contract.BillingFrequency,
-    AutoRenew: true,
-    RenewalReminderDays: contract.RenewalReminderDays
-  });
+- Nov 1, 2026: Follow-up reminder (60 days)
+  "Renews in 60 days - review and confirm"
   
-  // Mark old contract as completed
-  await db.doc.update('Contract', contract.Id, {
-    Status: 'Completed',
-    RenewedToContractId: newContract.Id
-  });
-}
-```
-
-### E-Signature Integration
-
-HotCRM is ready for e-signature integration:
-
-```typescript
-// Send for signature (DocuSign, Adobe Sign, etc.)
-const envelopeId = await sendForESignature({
-  contractId: contract.Id,
-  recipients: [
-    {
-      email: customerContact.Email,
-      name: `${customerContact.FirstName} ${customerContact.LastName}`,
-      role: 'Signer'
-    }
-  ],
-  documentUrl: contract.PDFUrl
-});
-
-await db.doc.update('Contract', contract.Id, {
-  ESignatureStatus: 'Sent',
-  ESignatureEnvelopeId: envelopeId,
-  SentForSignatureDate: new Date()
-});
-
-// Webhook callback when signed
-onDocumentSigned(async (envelope) => {
-  await db.doc.update('Contract', contract.Id, {
-    ESignatureStatus: 'Signed',
-    SignedDate: new Date(),
-    Status: 'Activated'
-  });
-});
-```
-
-### List Views
-
-1. **All Contracts**: All contracts in system
-2. **Active Contracts**: Status = Activated
-3. **Expiring Soon**: Activated contracts expiring within 90 days
-4. **Draft Contracts**: Status = Draft
-5. **High Value**: ContractValue > $100,000
-6. **Up for Renewal**: Auto-renew contracts expiring within 60 days
-
-## Payment Tracking
-
-### Payment Object
-
-The Payment object tracks payment schedules, invoices, and collections.
-
-#### Core Fields
-
-| Field | Type | Description |
-|-------|------|-------------|
-| PaymentNumber | AutoNumber | Auto-generated payment number (PAY-YYYY-MM-0000) |
-| Name | Text | Payment name (required) |
-| Type | Picklist | Payment type |
-| Status | Picklist | Payment status |
-| AccountId | Reference | Customer account (required) |
-| OpportunityId | Reference | Related opportunity |
-| ContractId | Reference | Related contract (required) |
-| QuoteId | Reference | Source quote |
-| PlannedAmount | Currency | Expected payment amount (required) |
-| ReceivedAmount | Currency | Actual amount received |
-| UnpaidAmount | Currency | Outstanding balance (calculated) |
-| Currency | Picklist | CNY, USD, EUR, GBP |
-| PlannedDate | Date | Expected payment date (required) |
-| ActualDate | Date | Actual payment received date |
-| DaysOverdue | Number | Days past due (calculated) |
-| InvoiceNumber | Text | Invoice number |
-| InvoiceDate | Date | Invoice date |
-| InvoiceAmount | Currency | Invoice amount |
-| PaymentMethod | Picklist | Payment method used |
-| ReferenceNumber | Text | Transaction reference/bank slip number |
-| BankName | Text | Receiving bank |
-| BankAccount | Text | Receiving account number |
-| CollectionAssignee | Reference | Collection agent (for overdue) |
-| CollectionPriority | Picklist | High, Medium, Low |
-| Description | Textarea | Payment notes |
-| OverdueReason | Textarea | Reason for delay |
-
-#### Payment Types
-
-- **💰 Down Payment** (首款): Initial deposit
-- **🎯 Milestone Payment**: Based on project milestones
-- **📦 Delivery Payment**: Upon delivery/installation
-- **✅ Acceptance Payment**: After acceptance testing
-- **🔄 Final Payment** (尾款): Final installment
-- **📅 Recurring Payment**: Subscription payments
-- **🔧 Maintenance Fee**: Annual maintenance/support
-- **🎁 Other**: Other payment types
-
-#### Payment Status Flow
-
-1. **📋 Planned** - Payment scheduled, not yet invoiced
-2. **📧 Invoiced** - Invoice sent to customer
-3. **✅ Received** - Payment received in full
-4. **⏰ Overdue** - Past due date, not received
-5. **🚫 Written Off** - Bad debt, written off
-6. **❌ Cancelled** - Payment cancelled
-
-**Status Transitions**:
-```typescript
-// Send invoice
-await db.doc.update('Payment', paymentId, {
-  Status: 'Invoiced',
-  InvoiceNumber: 'INV-2026-0042',
-  InvoiceDate: new Date()
-});
-
-// Receive payment
-await db.doc.update('Payment', paymentId, {
-  Status: 'Received',
-  ActualDate: new Date(),
-  ReceivedAmount: payment.PlannedAmount,
-  PaymentMethod: 'Bank Transfer',
-  ReferenceNumber: 'TXN-20260115-001'
-});
-
-// Mark as overdue (automated trigger)
-if (payment.PlannedDate < today && payment.Status === 'Invoiced') {
-  await db.doc.update('Payment', paymentId, {
-    Status: 'Overdue',
-    DaysOverdue: daysBetween(payment.PlannedDate, today),
-    CollectionAssignee: await getNextCollectionAgent()
-  });
-}
-```
-
-### Payment Schedule
-
-Create payment plans from contracts:
-
-```typescript
-// Create payment schedule for 30/70 split
-const contract = await db.findOne('Contract', contractId);
-
-// 30% down payment
-await db.doc.create('Payment', {
-  Name: `${contract.ContractNumber} - Down Payment`,
-  Type: 'Down Payment',
-  Status: 'Planned',
-  AccountId: contract.AccountId,
-  ContractId: contract.Id,
-  PlannedAmount: contract.ContractValue * 0.30,
-  Currency: 'CNY',
-  PlannedDate: contract.StartDate
-});
-
-// 70% final payment after acceptance
-await db.doc.create('Payment', {
-  Name: `${contract.ContractNumber} - Final Payment`,
-  Type: 'Final Payment',
-  Status: 'Planned',
-  AccountId: contract.AccountId,
-  ContractId: contract.Id,
-  PlannedAmount: contract.ContractValue * 0.70,
-  Currency: 'CNY',
-  PlannedDate: addDays(contract.StartDate, 90) // 90 days implementation
-});
-```
-
-### Payment Methods
-
-Support multiple payment channels:
-
-- **Bank Transfer**: Wire transfer (most common)
-- **Check**: Physical check
-- **Cash**: Cash payment
-- **Credit Card**: Card payment
-- **Alipay**: 支付宝
-- **WeChat Pay**: 微信支付
-- **Other**: Other methods
-
-### Overdue Management
-
-#### Automatic Overdue Detection
-
-System automatically marks payments overdue:
-
-```typescript
-// Trigger: Payment Overdue Check
-if (payment.PlannedDate < today && payment.Status === 'Invoiced') {
-  const daysOverdue = daysBetween(payment.PlannedDate, today);
+- Dec 1, 2026: Final reminder (30 days)
+  "Renews in 30 days - last chance to make changes"
   
-  await db.doc.update('Payment', payment.Id, {
-    Status: 'Overdue',
-    DaysOverdue: daysOverdue,
-    CollectionPriority: calculatePriority(payment.PlannedAmount, daysOverdue)
-  });
-}
-
-function calculatePriority(amount, days) {
-  if (amount > 100000 || days > 60) return 'High';
-  if (amount > 50000 || days > 30) return 'Medium';
-  return 'Low';
-}
+- Dec 31, 2026: Contract auto-renews
+  New contract created: CT-2027-0001
+  New end date: Dec 31, 2027
 ```
 
-#### Collection Assignment
+**Auto-Renew Best Practices:**
 
-Assign collection agents to overdue payments:
+✅ **Do:**
+- Send multiple reminders (90, 60, 30 days)
+- Allow customers to update or cancel easily
+- Price lock for auto-renewals
+- Offer incentives for early commitment
 
-```typescript
-// Get high-priority overdue payments
-const highPriorityOverdue = await db.find('Payment', {
-  filters: [
-    ['Status', '=', 'Overdue'],
-    ['CollectionPriority', '=', 'High']
-  ],
-  orderBy: { field: 'DaysOverdue', direction: 'desc' }
-});
+❌ **Don't:**
+- Auto-renew without notice
+- Surprise price increases
+- Make cancellation difficult
+- Lock customers in unfairly
 
-// Assign to collection team
-for (const payment of highPriorityOverdue) {
-  if (!payment.CollectionAssignee) {
-    await db.doc.update('Payment', payment.Id, {
-      CollectionAssignee: await getNextAvailableAgent()
-    });
-    
-    await createCollectionTask({
-      paymentId: payment.Id,
-      assignee: payment.CollectionAssignee,
-      priority: 'High',
-      dueDate: addDays(new Date(), 3) // Follow up within 3 days
-    });
-  }
-}
+---
+
+### Manual Renewal Process
+
+**For contracts without auto-renew:**
+
+```
+90 Days Before Expiration:
+□ Create renewal opportunity
+□ Schedule renewal call with customer
+□ Review usage and satisfaction
+□ Identify expansion opportunities
+
+60 Days Before:
+□ Present renewal quote
+□ Include any upgrades/expansions
+□ Offer multi-year incentive
+□ Request verbal commitment
+
+30 Days Before:
+□ Send contract for signature
+□ Follow up on approval delays
+□ Address any concerns
+□ Confirm renewal
+
+At Expiration:
+□ Activate new contract
+□ Update subscription/access
+□ Send welcome email for new term
+□ Schedule QBR (Quarterly Business Review)
 ```
 
-### Payment Reminders
+---
 
-Automated reminder system:
+### Renewal Opportunities
 
-```typescript
-// Send payment reminder (scheduled job)
-const upcomingPayments = await db.find('Payment', {
-  filters: [
-    ['Status', '=', 'Invoiced'],
-    ['PlannedDate', 'next_7_days']
-  ]
-});
+**Track renewals as opportunities:**
 
-for (const payment of upcomingPayments) {
-  if (!payment.ReminderSent) {
-    await sendPaymentReminder({
-      paymentId: payment.Id,
-      recipientEmail: payment.Account.Email,
-      daysUntilDue: daysBetween(new Date(), payment.PlannedDate)
-    });
-    
-    await db.doc.update('Payment', payment.Id, {
-      ReminderSent: true,
-      ReminderSentDate: new Date()
-    });
-  }
-}
+```
+Opportunity: TechCorp - 2027 Renewal
+Type: Renewal
+Account: TechCorp Inc.
+Current Contract Value: $75,000
+Proposed Renewal Value: $90,000
+Expansion:
+  + 10 additional users ($10,000)
+  + Premium support upgrade ($5,000)
+
+Close Date: December 31, 2026
+Probability: 95%
+Status: Verbal commitment received
 ```
 
-### List Views
+**Why track as opportunities:**
+- Forecast renewal revenue
+- Identify at-risk renewals early
+- Track expansion revenue separately
+- Manage renewal sales process
 
-1. **All Payments**: All payment records
-2. **My Payments**: Payments I own
-3. **Planned**: Status = Planned
-4. **Overdue**: Status = Overdue, sorted by days overdue
-5. **This Month**: PlannedDate in current month
-6. **Received**: Status = Received
+---
+
+### At-Risk Renewals
+
+**Warning Signs:**
+
+🚨 **Red Flags:**
+- Low product usage (not logging in)
+- Multiple open support cases
+- Complaints or dissatisfaction
+- Executive sponsor left company
+- No response to outreach
+- Exploring competitors
+
+**Risk Levels:**
+
+**High Risk (🔴)** - Likely to churn
+- Health score: <40
+- No engagement in 90+ days
+- Negative feedback
+- Budget cuts announced
+
+**Action:** Executive intervention, discount offer, win-back plan
+
+**Medium Risk (🟡)** - Could go either way
+- Health score: 40-60
+- Low engagement
+- Mixed feedback
+- Price-shopping
+
+**Action:** Business review, prove ROI, address concerns
+
+**Low Risk (🟢)** - Likely to renew
+- Health score: 60+
+- Active usage
+- Positive feedback
+- Expansion discussions
+
+**Action:** Standard renewal process, propose expansion
+
+---
+
+## Revenue Tracking
+
+### Key Metrics
+
+**Annual Recurring Revenue (ARR)**
+```
+Total value of all annual contracts
+
+Example:
+- 100 customers at $10,000/year = $1,000,000 ARR
+
+Calculation:
+Sum of all active annual contract values
+```
+
+**Monthly Recurring Revenue (MRR)**
+```
+ARR ÷ 12 = MRR
+
+Example:
+$1,000,000 ARR ÷ 12 = $83,333 MRR
+```
+
+**Customer Lifetime Value (LTV)**
+```
+Average contract value × Average retention years
+
+Example:
+$10,000/year × 5 years average = $50,000 LTV
+```
+
+**Churn Rate**
+```
+Lost customers ÷ Total customers × 100%
+
+Example:
+Lost 5 customers out of 100
+Churn Rate = 5%
+
+Target: <5% annual churn (SaaS)
+```
+
+**Revenue Retention**
+```
+Renewal revenue ÷ Expiring revenue × 100%
+
+Example:
+$900K renewals from $1M expiring
+Retention = 90%
+
+Target: >100% (including expansions)
+```
+
+---
+
+### Revenue Forecasting
+
+**Predictable Revenue Components:**
+
+**1. Existing ARR** (Most certain)
+```
+Current active contracts: $1,000,000
+Expected renewal rate: 90%
+Forecasted renewals: $900,000
+```
+
+**2. Expansion Revenue** (High confidence)
+```
+Upsell opportunities in pipeline: $150,000
+Expected win rate: 70%
+Forecasted expansion: $105,000
+```
+
+**3. New Business** (Moderate confidence)
+```
+New opportunities in pipeline: $500,000
+Expected win rate: 25%
+Forecasted new revenue: $125,000
+```
+
+**Total Forecast:**
+```
+Renewals: $900,000
+Expansion: $105,000
+New: $125,000
+---
+Total ARR: $1,130,000 (13% growth)
+```
+
+---
+
+## Payment Management (Planned - Q1 2026)
+
+### Invoice Generation
+
+**Automatic invoicing:**
+```
+Contract: TechCorp Annual License
+Billing: Quarterly ($3,000)
+
+Invoices Generated:
+- Invoice #INV-2026-0001: Jan 1 ($3,000)
+- Invoice #INV-2026-0002: Apr 1 ($3,000)
+- Invoice #INV-2026-0003: Jul 1 ($3,000)
+- Invoice #INV-2026-0004: Oct 1 ($3,000)
+
+Each includes:
+✅ Contract reference
+✅ Line items
+✅ Payment terms (Net 30)
+✅ Payment methods
+✅ Tax calculation
+```
+
+---
+
+### Payment Tracking
+
+**Payment Status:**
+- **Scheduled** - Invoice not yet sent
+- **Sent** - Invoice sent to customer
+- **Paid** - Payment received ✅
+- **Overdue** - Past due date 🔴
+- **Partially Paid** - Partial payment received
+- **Cancelled** - Invoice cancelled
+
+**Example:**
+```
+Invoice #INV-2026-0001
+Amount: $3,000
+Due Date: January 31, 2026
+Status: Paid ✅
+Paid Date: January 28, 2026
+Payment Method: ACH Transfer
+```
+
+---
+
+### Collections Management
+
+**Overdue Workflow:**
+```
+Day 0: Invoice due date
+  No action, grace period
+
+Day 1: Overdue
+  Auto-reminder email sent
+
+Day 7: 7 days overdue
+  Follow-up email + phone call
+
+Day 14: 14 days overdue
+  Escalate to manager
+  Final notice before service suspension
+
+Day 30: 30 days overdue
+  Suspend service access
+  Engage collections agency (if applicable)
+  Consider contract termination
+```
+
+**Best Practices:**
+✅ Friendly reminders before due date
+✅ Multiple payment options (credit card, ACH, wire)
+✅ Automated payment processing
+✅ Clear escalation procedures
+✅ Maintain customer relationship while collecting
+
+---
+
+## Contract Analytics
+
+### Key Reports
+
+**1. Contract Value by Status**
+```
+Active Contracts: $2,500,000 (85%)
+Expiring This Quarter: $300,000 (10%)
+Terminated: $150,000 (5%)
+```
+
+**2. Renewal Pipeline**
+```
+Expiring in 30 days: $100,000
+Expiring in 60 days: $150,000
+Expiring in 90 days: $200,000
+Renewal probability: 90% average
+```
+
+**3. Revenue by Billing Type**
+```
+Annual: $1,500,000 (60%)
+Quarterly: $750,000 (30%)
+Monthly: $250,000 (10%)
+```
+
+**4. Contract Term Distribution**
+```
+Month-to-Month: 15%
+1-Year: 65%
+2-Year: 15%
+3-Year: 5%
+```
+
+---
 
 ## Best Practices
 
-### Contract Management
+### For Sales Teams
 
-1. **Link to Opportunities**: Always associate contracts with won opportunities
-2. **Set End Dates**: Define clear contract end dates for tracking
-3. **Enable Auto-Renew**: Set AutoRenew = true for subscription contracts
-4. **Renewal Reminders**: Set RenewalReminderDays (typically 60-90 days)
-5. **Document Terms**: Include payment terms, delivery terms, SLAs
-6. **Version Control**: Create new contracts for renewals instead of editing
-7. **Track Amendments**: Use separate amendment records for contract changes
-8. **Monitor Expirations**: Review expiring contracts weekly
+✅ **Create Contracts Promptly**
+- Convert won deals to contracts immediately
+- Don't let deals languish after close
+- Get signatures fast (strike while hot)
 
-### Payment Management
+✅ **Track Renewals Proactively**
+- Start renewal conversations 90 days early
+- Build relationships, not just transact
+- Always look for expansion opportunities
 
-1. **Create Full Schedule**: Set up all payment milestones upfront
-2. **Invoice Promptly**: Move to "Invoiced" status immediately when sent
-3. **Record Receipts**: Update ActualDate and ReceivedAmount when received
-4. **Document References**: Always capture ReferenceNumber for traceability
-5. **Prioritize Collections**: Focus on high-value and oldest overdue payments
-6. **Follow Up Regularly**: Contact customers 7 days before due date
-7. **Escalate Quickly**: Assign collection agents within 3 days of overdue
-8. **Track Reasons**: Document OverdueReason for future prevention
+✅ **Document Everything**
+- Attach signed contracts
+- Note verbal commitments
+- Keep complete history
+- Maintain audit trail
 
-## Example Workflows
+---
 
-### Contract Creation from Closed-Won Opportunity
+### For Finance Teams
 
-```typescript
-// 1. Opportunity is marked as Closed Won
-const opportunity = await db.findOne('Opportunity', oppId);
-const quote = await db.findOne('Quote', { OpportunityId: oppId });
+✅ **Monitor Cash Flow**
+- Track payment schedules
+- Follow up on overdue invoices
+- Forecast revenue accurately
+- Manage payment methods
 
-// 2. Create contract
-const contract = await db.doc.create('Contract', {
-  AccountId: opportunity.AccountId,
-  OpportunityId: opportunity.Id,
-  QuoteId: quote.Id,
-  Status: 'Draft',
-  StartDate: new Date(),
-  EndDate: addYears(new Date(), 1),
-  ContractTerm: 12,
-  ContractValue: quote.TotalPrice,
-  BillingFrequency: 'Annually',
-  AutoRenew: true,
-  RenewalReminderDays: 90
-});
+✅ **Revenue Recognition**
+- Recognize revenue according to terms
+- Track deferred revenue
+- Comply with accounting standards (ASC 606)
+- Reconcile contracts to payments
 
-// 3. Create payment schedule (50/50 split)
-const downPayment = await db.doc.create('Payment', {
-  Name: `${contract.ContractNumber} - Down Payment`,
-  Type: 'Down Payment',
-  Status: 'Planned',
-  AccountId: opportunity.AccountId,
-  ContractId: contract.Id,
-  QuoteId: quote.Id,
-  PlannedAmount: contract.ContractValue * 0.50,
-  Currency: quote.Currency || 'CNY',
-  PlannedDate: new Date()
-});
+---
 
-const finalPayment = await db.doc.create('Payment', {
-  Name: `${contract.ContractNumber} - Final Payment`,
-  Type: 'Acceptance Payment',
-  Status: 'Planned',
-  AccountId: opportunity.AccountId,
-  ContractId: contract.Id,
-  QuoteId: quote.Id,
-  PlannedAmount: contract.ContractValue * 0.50,
-  Currency: quote.Currency || 'CNY',
-  PlannedDate: addDays(new Date(), 60) // 60 days for implementation
-});
+### For Customer Success
 
-// 4. Send for signature
-await sendContractForSignature(contract.Id);
+✅ **Own the Renewal**
+- Ensure customer success throughout term
+- Monitor health scores
+- Address issues proactively
+- Build case for renewal
 
-// 5. After signature, activate contract
-await db.doc.update('Contract', contract.Id, {
-  Status: 'Activated',
-  SignedDate: new Date()
-});
+✅ **Drive Expansion**
+- Identify upsell opportunities
+- Prove ROI continuously
+- Understand customer roadmap
+- Align with their growth
 
-// 6. Update account status
-await db.doc.update('Account', opportunity.AccountId, {
-  CustomerStatus: 'Active Customer',
-  ContractValue: contract.ContractValue
-});
+---
+
+## Common Workflows
+
+### Workflow 1: Quote to Contract
+
+```
+1. Customer accepts quote
+   Status: Quote Accepted ✅
+
+2. Sales rep clicks "Create Contract"
+   System auto-fills contract details
+
+3. Contract review
+   Legal team reviews terms
+
+4. Contract approval
+   Finance approves pricing
+
+5. Send for signature
+   DocuSign sent to customer
+
+6. Customer signs
+   Contract fully executed
+
+7. Activate contract
+   Status: Activated
+   Start date: Today
+
+8. Generate first invoice
+   Send to customer accounting
+
+9. Handoff to customer success
+   Implementation kickoff scheduled
 ```
 
-### Payment Collection Process
+---
 
-```typescript
-// 1. Send invoice when payment is due soon
-const payment = await db.findOne('Payment', paymentId);
+### Workflow 2: Contract Renewal
 
-// Generate and send invoice
-const invoice = await generateInvoice({
-  paymentId: payment.Id,
-  accountId: payment.AccountId
-});
+```
+90 Days Before Expiration:
 
-await db.doc.update('Payment', payment.Id, {
-  Status: 'Invoiced',
-  InvoiceNumber: invoice.invoiceNumber,
-  InvoiceDate: new Date(),
-  InvoiceAmount: payment.PlannedAmount
-});
+1. Auto-reminder triggers
+   Email to customer + account owner
 
-await sendInvoiceEmail({
-  paymentId: payment.Id,
-  invoiceUrl: invoice.pdfUrl
-});
+2. Customer success review
+   Check health score and usage
 
-// 2. Send reminder 7 days before due date
-if (daysBetween(new Date(), payment.PlannedDate) === 7) {
-  await sendPaymentReminder({
-    paymentId: payment.Id,
-    message: 'Your payment is due in 7 days'
-  });
-}
+3. Create renewal opportunity
+   Quote prepared with any changes
 
-// 3. If payment becomes overdue, assign to collection
-if (payment.Status === 'Overdue') {
-  await db.doc.update('Payment', payment.Id, {
-    CollectionAssignee: collectionAgentId,
-    CollectionPriority: 'High'
-  });
-  
-  await createActivity({
-    Type: 'Task',
-    Subject: `Follow up on overdue payment ${payment.PaymentNumber}`,
-    WhatId: payment.AccountId,
-    OwnerId: collectionAgentId,
-    Priority: 'High',
-    DueDate: addDays(new Date(), 1) // Follow up tomorrow
-  });
-}
+60 Days Before:
 
-// 4. When payment is received
-await db.doc.update('Payment', payment.Id, {
-  Status: 'Received',
-  ActualDate: new Date(),
-  ReceivedAmount: payment.PlannedAmount,
-  PaymentMethod: 'Bank Transfer',
-  ReferenceNumber: 'TXN-20260115-001'
-});
+4. Renewal call scheduled
+   Review value, address concerns
 
-// 5. Update contract payment tracking
-const contractPayments = await db.find('Payment', {
-  filters: [
-    ['ContractId', '=', payment.ContractId],
-    ['Status', '=', 'Received']
-  ]
-});
+5. Quote presented
+   Include expansion if applicable
 
-const totalReceived = contractPayments.reduce(
-  (sum, p) => sum + p.ReceivedAmount,
-  0
-);
+30 Days Before:
 
-await db.doc.update('Contract', payment.ContractId, {
-  TotalReceived: totalReceived,
-  PercentageReceived: (totalReceived / contract.ContractValue) * 100
-});
+6. Contract sent for signature
+   Same terms or negotiated updates
+
+7. Customer signs
+   New contract activated
+
+8. Old contract status → Completed
+   New contract → Activated
 ```
 
-### Renewal Management Process
+---
 
-```typescript
-// Scheduled job: Daily renewal check
-async function checkContractRenewals() {
-  // Get contracts expiring in next 90 days
-  const expiringContracts = await db.find('Contract', {
-    filters: [
-      ['Status', '=', 'Activated'],
-      ['EndDate', 'next_90_days'],
-      ['RenewalOpportunityId', 'IS NULL']
-    ]
-  });
-  
-  for (const contract of expiringContracts) {
-    const daysUntilExpiration = daysBetween(new Date(), contract.EndDate);
-    
-    // Send reminder at 90, 60, 30 days
-    if ([90, 60, 30].includes(daysUntilExpiration)) {
-      await sendRenewalReminder({
-        contractId: contract.Id,
-        daysRemaining: daysUntilExpiration
-      });
-    }
-    
-    // Create renewal opportunity at 90 days
-    if (daysUntilExpiration === 90 && !contract.RenewalOpportunityId) {
-      const renewalOpp = await db.doc.create('Opportunity', {
-        Name: `${contract.Account.Name} - Renewal`,
-        AccountId: contract.AccountId,
-        Type: 'Existing Business - Renewal',
-        Stage: 'Qualification',
-        Amount: contract.ContractValue * 1.05, // 5% increase
-        CloseDate: addDays(contract.EndDate, -30), // Close 30 days before expiration
-        LeadSource: 'Renewal',
-        OriginalContractId: contract.Id
-      });
-      
-      await db.doc.update('Contract', contract.Id, {
-        RenewalOpportunityId: renewalOpp.Id
-      });
-      
-      // Assign to account owner
-      await createActivity({
-        Type: 'Task',
-        Subject: `Begin renewal discussion for ${contract.ContractNumber}`,
-        WhatId: renewalOpp.Id,
-        OwnerId: contract.Account.OwnerId,
-        Priority: 'High',
-        DueDate: new Date()
-      });
-    }
-  }
-}
-```
+## Roadmap: Planned Features
 
-## Next Steps
+### Q1 2026
+- 🚧 **Payment Processing** - Invoice generation and payment tracking
+- 🚧 **E-Signature Integration** - DocuSign/Adobe Sign native integration
+- 🚧 **Automated Collections** - Overdue payment workflows
 
-- [Sales Automation](/docs/features/sales-automation) - Link contracts to opportunities
-- [Product & Pricing](/docs/features/product-pricing) - Create quotes that become contracts
-- [Service & Support](/docs/features/service-support) - Track service contracts
-- [Creating Objects](/docs/development/creating-objects) - Customize contract fields
+### Q2 2026
+- 🚧 **Subscription Management** - Recurring billing and auto-renewals
+- 🚧 **Revenue Recognition** - ASC 606 compliant revenue scheduling
+- 🚧 **Contract Templates** - Legal-approved contract templates
+
+### Q3 2026
+- 🚧 **Contract AI** - AI-powered contract review and risk analysis
+- 🚧 **Multi-Currency** - Global contract and payment support
+- 🚧 **Payment Methods** - Credit card, ACH, wire transfer integration
+
+---
+
+## Success Metrics
+
+**Impact of Contract Management:**
+- ⬆️ 95%+ contract renewal rate
+- ⬆️ 25% increase in multi-year commitments
+- ⬆️ 40% faster contract execution (days → hours)
+- ⬇️ 75% reduction in manual invoicing
+- ⬆️ 99% on-time payment collection
+- ⬆️ 30% increase in expansion revenue
+
+---
+
+## Getting Started
+
+<Cards>
+  <Card title="Create Your First Contract" href="/docs/guides/contract-creation">
+    Learn to create contracts from quotes
+  </Card>
+  <Card title="Set Up Auto-Renewals" href="/docs/guides/auto-renewals">
+    Configure renewal reminders and automation
+  </Card>
+  <Card title="Track Revenue" href="/docs/guides/revenue-tracking">
+    Monitor ARR, MRR, and contract value
+  </Card>
+  <Card title="Renewal Playbook" href="/docs/guides/renewal-playbook">
+    Best practices for maximizing renewals
+  </Card>
+</Cards>
+
+---
+
+## Related Topics
+
+- [Sales Automation](/docs/features/sales-automation) - Close deals to create contracts
+- [Product & Quote Management](/docs/features/product-pricing) - Generate quotes that become contracts
+- [Customer Service](/docs/features/customer-service) - Link support to contracts and SLAs
+- [API Reference](/docs/api-reference/rest-api) - Contract management API
