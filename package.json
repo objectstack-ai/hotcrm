@@ -1,7 +1,7 @@
 {
   "name": "@hotcrm/monorepo",
   "version": "1.0.0",
-  "description": "Enterprise-level CRM system based on @objectstack/spec with world-class UI/UX - Monorepo Structure",
+  "description": "Enterprise-level CRM system based on @objectstack/spec with world-class UI/UX - Plugin-based Monorepo Architecture",
   "private": true,
   "workspaces": [
     "packages/*"
@@ -29,7 +29,8 @@
     "objectstack",
     "salesforce",
     "enterprise",
-    "monorepo"
+    "monorepo",
+    "plugin-architecture"
   ],
   "author": "HotCRM Team",
   "license": "MIT",
