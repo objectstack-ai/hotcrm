@@ -12,7 +12,7 @@ const EmailTemplate = {
   },
   fields: {
     // Basic Information
-    Name: {
+    name: {
       type: 'text',
       label: '模板名称',
       required: true,
@@ -20,22 +20,22 @@ const EmailTemplate = {
       searchable: true,
       description: '邮件模板的唯一名称'
     },
-    TemplateCode: {
+    template_code: {
       type: 'text',
       label: '模板代码',
       unique: true,
       maxLength: 80,
       description: '用于API调用的唯一模板标识符'
     },
-    Description: {
+    description: {
       type: 'textarea',
       label: '描述',
       maxLength: 1000,
       description: '模板用途和场景说明'
     },
     
-    // Template Type & Category
-    TemplateType: {
+    // Template Type & category
+    template_type: {
       type: 'select',
       label: '模板类型',
       required: true,
@@ -50,7 +50,7 @@ const EmailTemplate = {
         { label: '🔄 重新参与', value: 'Re-engagement' }
       ]
     },
-    Category: {
+    category: {
       type: 'select',
       label: '分类',
       options: [
@@ -64,27 +64,27 @@ const EmailTemplate = {
     },
     
     // Template Content
-    Subject: {
+    subject: {
       type: 'text',
       label: '邮件主题',
       required: true,
       maxLength: 255,
       description: '支持个性化令牌，如 {{FirstName}}'
     },
-    PreheaderText: {
+    preheader_text: {
       type: 'text',
       label: '预览文本',
       maxLength: 150,
       description: '邮件客户端显示的预览文本'
     },
-    HtmlBody: {
+    html_body: {
       type: 'textarea',
       label: 'HTML 内容',
       required: true,
       maxLength: 65535,
       description: '邮件的 HTML 内容，支持令牌和动态内容块'
     },
-    PlainTextBody: {
+    plain_text_body: {
       type: 'textarea',
       label: '纯文本内容',
       maxLength: 32000,
@@ -92,14 +92,14 @@ const EmailTemplate = {
     },
     
     // Personalization & Dynamic Content
-    PersonalizationTokens: {
+    personalization_tokens: {
       type: 'textarea',
       label: '个性化令牌',
       readonly: true,
       maxLength: 2000,
       description: '模板中使用的所有令牌列表（自动提取）'
     },
-    DynamicContentBlocks: {
+    dynamic_content_blocks: {
       type: 'number',
       label: '动态内容块数量',
       precision: 0,
@@ -109,7 +109,7 @@ const EmailTemplate = {
     },
     
     // Design Settings
-    DesignSystem: {
+    design_system: {
       type: 'select',
       label: '设计系统',
       defaultValue: 'Custom',
@@ -119,15 +119,15 @@ const EmailTemplate = {
         { label: '预设模板', value: 'Preset' }
       ]
     },
-    DesignJson: {
+    design_json: {
       type: 'textarea',
       label: '设计配置 JSON',
       maxLength: 65535,
       description: '可视化编辑器的设计配置（JSON格式）'
     },
     
-    // Status & Ownership
-    Status: {
+    // status & Ownership
+    status: {
       type: 'select',
       label: '状态',
       required: true,
@@ -138,13 +138,13 @@ const EmailTemplate = {
         { label: '📦 已归档', value: 'Archived' }
       ]
     },
-    IsActive: {
+    is_active: {
       type: 'checkbox',
       label: '是否启用',
       defaultValue: true,
       description: '只有启用的模板才能用于发送'
     },
-    OwnerId: {
+    owner_id: {
       type: 'lookup',
       label: '负责人',
       reference: 'User',
@@ -152,18 +152,18 @@ const EmailTemplate = {
     },
     
     // A/B Testing
-    IsABTest: {
+    is_a_b_test: {
       type: 'checkbox',
       label: '启用 A/B 测试',
       defaultValue: false
     },
-    ABTestVariantId: {
+    a_b_test_variant_id: {
       type: 'lookup',
       label: 'A/B 测试变体',
       reference: 'EmailTemplate',
       description: '关联的测试变体模板'
     },
-    ABTestWinnerMetric: {
+    a_b_test_winner_metric: {
       type: 'select',
       label: 'A/B 测试胜出指标',
       options: [
@@ -174,54 +174,54 @@ const EmailTemplate = {
     },
     
     // Usage Statistics
-    TotalSent: {
+    total_sent: {
       type: 'number',
       label: '总发送次数',
       precision: 0,
       defaultValue: 0,
       readonly: true
     },
-    TotalOpened: {
+    total_opened: {
       type: 'number',
       label: '总打开次数',
       precision: 0,
       defaultValue: 0,
       readonly: true
     },
-    TotalClicked: {
+    total_clicked: {
       type: 'number',
       label: '总点击次数',
       precision: 0,
       defaultValue: 0,
       readonly: true
     },
-    AverageOpenRate: {
+    average_open_rate: {
       type: 'percent',
       label: '平均打开率',
       readonly: true,
       description: '自动计算：总打开次数 / 总发送次数'
     },
-    AverageClickRate: {
+    average_click_rate: {
       type: 'percent',
       label: '平均点击率',
       readonly: true,
       description: '自动计算：总点击次数 / 总打开次数'
     },
-    LastUsedDate: {
+    last_used_date: {
       type: 'datetime',
       label: '最后使用时间',
       readonly: true
     },
     
     // Deliverability
-    SpamScore: {
+    spam_score: {
       type: 'number',
       label: '垃圾邮件评分',
       precision: 1,
       readonly: true,
       description: '0-10分，分数越低越好'
     },
-    HasUnsubscribeLink: {
+    has_unsubscribe_link: {
       type: 'checkbox',
       label: '包含退订链接',
       defaultValue: false,
@@ -230,14 +230,14 @@ const EmailTemplate = {
     },
     
     // AI Enhancement
-    AIGeneratedSubjectLines: {
+    ai_generated_subject_lines: {
       type: 'textarea',
       label: 'AI 生成主题行',
       readonly: true,
       maxLength: 2000,
       description: 'AI 推荐的替代主题行选项'
     },
-    AIOptimizationSuggestions: {
+    ai_optimization_suggestions: {
       type: 'textarea',
       label: 'AI 优化建议',
       readonly: true,
@@ -250,14 +250,14 @@ const EmailTemplate = {
       name: 'Owner',
       type: 'belongsTo',
       object: 'User',
-      foreignKey: 'OwnerId',
+      foreignKey: 'owner_id',
       label: '负责人'
     },
     {
       name: 'ABTestVariant',
       type: 'belongsTo',
       object: 'EmailTemplate',
-      foreignKey: 'ABTestVariantId',
+      foreignKey: 'a_b_test_variant_id',
       label: 'A/B测试变体'
     }
   ],
@@ -266,35 +266,35 @@ const EmailTemplate = {
       name: 'AllTemplates',
       label: '所有模板',
       filters: [],
-      columns: ['Name', 'TemplateType', 'Category', 'Status', 'AverageOpenRate', 'TotalSent', 'LastUsedDate'],
+      columns: ['name', 'template_type', 'category', 'status', 'average_open_rate', 'total_sent', 'last_used_date'],
       sort: [['CreatedDate', 'desc']]
     },
     {
       name: 'ActiveTemplates',
       label: '启用的模板',
-      filters: [['IsActive', '=', true], ['Status', '=', 'Published']],
-      columns: ['Name', 'TemplateType', 'Subject', 'AverageOpenRate', 'AverageClickRate', 'TotalSent'],
-      sort: [['TotalSent', 'desc']]
+      filters: [['is_active', '=', true], ['status', '=', 'Published']],
+      columns: ['name', 'template_type', 'subject', 'average_open_rate', 'average_click_rate', 'total_sent'],
+      sort: [['total_sent', 'desc']]
     },
     {
       name: 'MyTemplates',
       label: '我的模板',
-      filters: [['OwnerId', '=', '$CurrentUser.Id']],
-      columns: ['Name', 'TemplateType', 'Status', 'LastUsedDate', 'TotalSent'],
+      filters: [['owner_id', '=', '$CurrentUser.Id']],
+      columns: ['name', 'template_type', 'status', 'last_used_date', 'total_sent'],
       sort: [['ModifiedDate', 'desc']]
     },
     {
       name: 'HighPerformance',
       label: '高绩效模板',
-      filters: [['AverageOpenRate', '>', 30], ['TotalSent', '>', 100]],
-      columns: ['Name', 'TemplateType', 'AverageOpenRate', 'AverageClickRate', 'TotalSent'],
-      sort: [['AverageOpenRate', 'desc']]
+      filters: [['average_open_rate', '>', 30], ['total_sent', '>', 100]],
+      columns: ['name', 'template_type', 'average_open_rate', 'average_click_rate', 'total_sent'],
+      sort: [['average_open_rate', 'desc']]
     },
     {
       name: 'ABTests',
       label: 'A/B 测试',
-      filters: [['IsABTest', '=', true]],
-      columns: ['Name', 'ABTestVariantId', 'ABTestWinnerMetric', 'AverageOpenRate', 'TotalSent'],
+      filters: [['is_a_b_test', '=', true]],
+      columns: ['name', 'a_b_test_variant_id', 'a_b_test_winner_metric', 'average_open_rate', 'total_sent'],
       sort: [['CreatedDate', 'desc']]
     }
   ],
@@ -302,12 +302,12 @@ const EmailTemplate = {
     {
       name: 'RequireUnsubscribeLink',
       errorMessage: '营销邮件必须包含退订链接',
-      formula: 'AND(TemplateType = "Marketing", NOT(HasUnsubscribeLink))'
+      formula: 'AND(template_type = "Marketing", NOT(has_unsubscribe_link))'
     },
     {
       name: 'PublishedTemplateValidation',
       errorMessage: '发布的模板必须填写主题和HTML内容',
-      formula: 'AND(Status = "Published", OR(ISBLANK(Subject), ISBLANK(HtmlBody)))'
+      formula: 'AND(status = "Published", OR(ISBLANK(subject), ISBLANK(html_body)))'
     }
   ],
   pageLayout: {
@@ -315,42 +315,42 @@ const EmailTemplate = {
       {
         label: '模板信息',
         columns: 2,
-        fields: ['Name', 'TemplateCode', 'TemplateType', 'Category', 'Status', 'IsActive', 'OwnerId']
+        fields: ['name', 'template_code', 'template_type', 'category', 'status', 'is_active', 'owner_id']
       },
       {
         label: '邮件内容',
         columns: 1,
-        fields: ['Subject', 'PreheaderText', 'HtmlBody', 'PlainTextBody']
+        fields: ['subject', 'preheader_text', 'html_body', 'plain_text_body']
       },
       {
         label: '设计配置',
         columns: 2,
-        fields: ['DesignSystem', 'PersonalizationTokens', 'DynamicContentBlocks']
+        fields: ['design_system', 'personalization_tokens', 'dynamic_content_blocks']
       },
       {
         label: 'A/B 测试',
         columns: 2,
-        fields: ['IsABTest', 'ABTestVariantId', 'ABTestWinnerMetric']
+        fields: ['is_a_b_test', 'a_b_test_variant_id', 'a_b_test_winner_metric']
       },
       {
         label: '使用统计',
         columns: 3,
-        fields: ['TotalSent', 'TotalOpened', 'TotalClicked', 'AverageOpenRate', 'AverageClickRate', 'LastUsedDate']
+        fields: ['total_sent', 'total_opened', 'total_clicked', 'average_open_rate', 'average_click_rate', 'last_used_date']
       },
       {
         label: '可传递性',
         columns: 2,
-        fields: ['SpamScore', 'HasUnsubscribeLink']
+        fields: ['spam_score', 'has_unsubscribe_link']
       },
       {
         label: 'AI 优化助手',
         columns: 1,
-        fields: ['AIGeneratedSubjectLines', 'AIOptimizationSuggestions']
+        fields: ['ai_generated_subject_lines', 'ai_optimization_suggestions']
       },
       {
         label: '描述',
         columns: 1,
-        fields: ['Description']
+        fields: ['description']
       }
     ]
   }

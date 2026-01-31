@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 
 /**
- * ObjectStack Spec v0.7.1 Protocol Compliance Validator
+ * ObjectStack Spec v0.7.2+ Protocol Compliance Validator
  * 
  * This script validates all .object.ts files in the repository against
- * the @objectstack/spec v0.7.1 protocol requirements.
+ * the @objectstack/spec v0.7.2+ protocol requirements.
+ * 
+ * IMPORTANT: Field names must be lowercase/snake_case (e.g., first_name, account_id)
  * 
  * Usage:
  *   node scripts/validate-protocol.js
@@ -44,8 +46,10 @@ const INVALID_FIELD_TYPES = {
 // Valid relationship types
 const VALID_RELATIONSHIP_TYPES = new Set(['hasMany', 'hasOne', 'belongsTo']);
 
-function isPascalCase(name) {
-  return /^[A-Z][a-zA-Z0-9]*$/.test(name);
+function isLowercaseSnakeCase(name) {
+  // Field names must be lowercase with optional underscores (snake_case)
+  // Examples: name, first_name, account_id, annual_revenue
+  return /^[a-z][a-z0-9_]*$/.test(name);
 }
 
 function analyzeObjectFile(filePath) {
@@ -109,8 +113,8 @@ function analyzeObjectFile(filePath) {
         result.fieldNames.push(fieldName);
         result.fieldCount++;
         
-        if (!isPascalCase(fieldName)) {
-          result.issues.push(`Field '${fieldName}' is not PascalCase`);
+        if (!isLowercaseSnakeCase(fieldName)) {
+          result.issues.push(`Field '${fieldName}' must be lowercase/snake_case (e.g., 'first_name', 'account_id')`);
         }
       }
     }
@@ -162,7 +166,7 @@ function findObjectFiles(dir) {
 
 function printHeader() {
   console.log('╔' + '═'.repeat(78) + '╗');
-  console.log('║ ObjectStack Spec v0.7.1 Protocol Compliance Validator'.padEnd(79) + '║');
+  console.log('║ ObjectStack Spec v0.7.2+ Protocol Compliance Validator'.padEnd(79) + '║');
   console.log('╚' + '═'.repeat(78) + '╝\n');
 }
 
@@ -218,9 +222,9 @@ function printSummary(results) {
   });
 
   if (totalIssues === 0) {
-    console.log('\n✅ ALL OBJECTS COMPLIANT WITH @objectstack/spec v0.7.1');
+    console.log('\n✅ ALL OBJECTS COMPLIANT WITH @objectstack/spec v0.7.2+');
     console.log('\nProtocol Requirements Met:');
-    console.log('  ✓ All field names use PascalCase');
+    console.log('  ✓ All field names use lowercase/snake_case');
     console.log('  ✓ All field types are valid');
     console.log('  ✓ All object definitions follow the standard structure');
     return true;

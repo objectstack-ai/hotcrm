@@ -11,25 +11,25 @@ const EscalationRule = {
   },
   fields: {
     // Basic Information
-    Name: {
+    name: {
       type: 'text',
-      label: 'Rule Name',
+      label: 'Rule name',
       required: true,
       maxLength: 255,
       searchable: true
     },
-    Description: {
+    description: {
       type: 'textarea',
-      label: 'Description',
+      label: 'description',
       maxLength: 2000
     },
-    IsActive: {
+    is_active: {
       type: 'checkbox',
       label: 'Active',
       defaultValue: true
     },
     // Trigger Conditions
-    TriggerType: {
+    trigger_type: {
       type: 'select',
       label: 'Trigger Type',
       required: true,
@@ -42,7 +42,7 @@ const EscalationRule = {
         { label: 'Manual Trigger', value: 'Manual' }
       ]
     },
-    ThresholdMinutes: {
+    threshold_minutes: {
       type: 'number',
       label: 'Threshold (Minutes)',
       precision: 0,
@@ -50,7 +50,7 @@ const EscalationRule = {
       description: 'Time threshold for triggering escalation'
     },
     // Escalation Target
-    EscalationLevel: {
+    escalation_level: {
       type: 'number',
       label: 'Escalation Level',
       required: true,
@@ -60,7 +60,7 @@ const EscalationRule = {
       defaultValue: 1,
       description: 'Level of escalation (1-5)'
     },
-    EscalateToType: {
+    escalate_to_type: {
       type: 'select',
       label: 'Escalate To',
       required: true,
@@ -71,53 +71,53 @@ const EscalationRule = {
         { label: 'Manager', value: 'Manager' }
       ]
     },
-    EscalateToUserId: {
+    escalate_to_user_id: {
       type: 'lookup',
       label: 'Escalate to User',
       reference: 'User',
       description: 'Specific user to escalate to'
     },
-    EscalateToQueueId: {
+    escalate_to_queue_id: {
       type: 'lookup',
       label: 'Escalate to Queue',
       reference: 'Queue',
       description: 'Queue to escalate to'
     },
-    EscalateToRoleId: {
+    escalate_to_role_id: {
       type: 'lookup',
       label: 'Escalate to Role',
       reference: 'Role',
       description: 'Role to escalate to (any user with this role)'
     },
     // Notification
-    NotifyOriginalOwner: {
+    notify_original_owner: {
       type: 'checkbox',
       label: 'Notify Original Owner',
       defaultValue: true
     },
-    NotifyEscalationTarget: {
+    notify_escalation_target: {
       type: 'checkbox',
       label: 'Notify Escalation Target',
       defaultValue: true
     },
-    NotifyCustomer: {
+    notify_customer: {
       type: 'checkbox',
       label: 'Notify Customer',
       defaultValue: false
     },
-    EmailTemplateId: {
+    email_template_id: {
       type: 'lookup',
       label: 'Email Template',
       reference: 'EmailTemplate',
       description: 'Email template for escalation notification'
     },
     // Additional Actions
-    UpdatePriority: {
+    update_priority: {
       type: 'checkbox',
       label: 'Update Priority',
       defaultValue: false
     },
-    NewPriority: {
+    new_priority: {
       type: 'select',
       label: 'New Priority',
       options: [
@@ -127,12 +127,12 @@ const EscalationRule = {
         { label: 'Low', value: 'Low' }
       ]
     },
-    UpdateStatus: {
+    update_status: {
       type: 'checkbox',
       label: 'Update Status',
       defaultValue: false
     },
-    NewStatus: {
+    new_status: {
       type: 'select',
       label: 'New Status',
       options: [
@@ -144,7 +144,7 @@ const EscalationRule = {
       ]
     },
     // Filters
-    ApplicableCaseTypes: {
+    applicable_case_types: {
       type: 'multiselect',
       label: 'Applicable Case Types',
       options: [
@@ -157,7 +157,7 @@ const EscalationRule = {
         { label: 'Other', value: 'Other' }
       ]
     },
-    ApplicablePriorities: {
+    applicable_priorities: {
       type: 'multiselect',
       label: 'Applicable Priorities',
       options: [
@@ -168,14 +168,14 @@ const EscalationRule = {
       ]
     },
     // Statistics
-    TimesTriggered: {
+    times_triggered: {
       type: 'number',
       label: 'Times Triggered',
       precision: 0,
       readonly: true,
       description: 'Number of times this rule has triggered'
     },
-    LastTriggeredDate: {
+    last_triggered_date: {
       type: 'datetime',
       label: 'Last Triggered',
       readonly: true
@@ -185,22 +185,22 @@ const EscalationRule = {
     {
       name: 'EscalationTargetRequired',
       errorMessage: 'Escalation target is required based on escalate to type',
-      formula: 'OR(AND(EscalateToType = "User", ISBLANK(EscalateToUserId)), AND(EscalateToType = "Queue", ISBLANK(EscalateToQueueId)), AND(EscalateToType = "Role", ISBLANK(EscalateToRoleId)))'
+      formula: 'OR(AND(escalate_to_type = "User", ISBLANK(escalate_to_user_id)), AND(escalate_to_type = "Queue", ISBLANK(escalate_to_queue_id)), AND(escalate_to_type = "Role", ISBLANK(escalate_to_role_id)))'
     },
     {
       name: 'ThresholdRequiredForTimeBased',
       errorMessage: 'Threshold is required for time-based triggers',
-      formula: 'AND(TriggerType IN ("ResponseTime", "ResolutionTime", "NoActivity"), ISBLANK(ThresholdMinutes))'
+      formula: 'AND(trigger_type IN ("ResponseTime", "ResolutionTime", "NoActivity"), ISBLANK(threshold_minutes))'
     },
     {
       name: 'NewPriorityRequired',
       errorMessage: 'New priority is required when update priority is enabled',
-      formula: 'AND(UpdatePriority = true, ISBLANK(NewPriority))'
+      formula: 'AND(update_priority = true, ISBLANK(new_priority))'
     },
     {
       name: 'NewStatusRequired',
       errorMessage: 'New status is required when update status is enabled',
-      formula: 'AND(UpdateStatus = true, ISBLANK(NewStatus))'
+      formula: 'AND(update_status = true, ISBLANK(new_status))'
     }
   ],
   listViews: [
@@ -208,17 +208,17 @@ const EscalationRule = {
       name: 'AllRules',
       label: 'All Escalation Rules',
       filters: [],
-      columns: ['Name', 'TriggerType', 'EscalationLevel', 'EscalateToType', 'IsActive', 'TimesTriggered'],
-      sort: [['EscalationLevel', 'asc']]
+      columns: ['name', 'trigger_type', 'escalation_level', 'escalate_to_type', 'is_active', 'times_triggered'],
+      sort: [['escalation_level', 'asc']]
     },
     {
       name: 'ActiveRules',
       label: 'Active Rules',
       filters: [
-        ['IsActive', '=', true]
+        ['is_active', '=', true]
       ],
-      columns: ['Name', 'TriggerType', 'EscalationLevel', 'EscalateToType', 'TimesTriggered', 'LastTriggeredDate'],
-      sort: [['EscalationLevel', 'asc']]
+      columns: ['name', 'trigger_type', 'escalation_level', 'escalate_to_type', 'times_triggered', 'last_triggered_date'],
+      sort: [['escalation_level', 'asc']]
     }
   ],
   pageLayout: {
@@ -226,37 +226,37 @@ const EscalationRule = {
       {
         label: 'Rule Information',
         columns: 2,
-        fields: ['Name', 'Description', 'IsActive']
+        fields: ['name', 'description', 'is_active']
       },
       {
         label: 'Trigger Conditions',
         columns: 2,
-        fields: ['TriggerType', 'ThresholdMinutes', 'EscalationLevel']
+        fields: ['trigger_type', 'threshold_minutes', 'escalation_level']
       },
       {
         label: 'Escalation Target',
         columns: 2,
-        fields: ['EscalateToType', 'EscalateToUserId', 'EscalateToQueueId', 'EscalateToRoleId']
+        fields: ['escalate_to_type', 'escalate_to_user_id', 'escalate_to_queue_id', 'escalate_to_role_id']
       },
       {
         label: 'Notifications',
         columns: 2,
-        fields: ['NotifyOriginalOwner', 'NotifyEscalationTarget', 'NotifyCustomer', 'EmailTemplateId']
+        fields: ['notify_original_owner', 'notify_escalation_target', 'notify_customer', 'email_template_id']
       },
       {
         label: 'Additional Actions',
         columns: 2,
-        fields: ['UpdatePriority', 'NewPriority', 'UpdateStatus', 'NewStatus']
+        fields: ['update_priority', 'new_priority', 'update_status', 'new_status']
       },
       {
         label: 'Filters',
         columns: 2,
-        fields: ['ApplicableCaseTypes', 'ApplicablePriorities']
+        fields: ['applicable_case_types', 'applicable_priorities']
       },
       {
         label: 'Statistics',
         columns: 2,
-        fields: ['TimesTriggered', 'LastTriggeredDate']
+        fields: ['times_triggered', 'last_triggered_date']
       }
     ]
   }

@@ -11,34 +11,34 @@ const QueueMember = {
   },
   fields: {
     // Relationships
-    QueueId: {
+    queue_id: {
       type: 'lookup',
       label: 'Queue',
       reference: 'Queue',
       required: true
     },
-    UserId: {
+    user_id: {
       type: 'lookup',
       label: 'Agent',
       reference: 'User',
       required: true
     },
-    // Membership Status
-    IsActive: {
+    // Membership status
+    is_active: {
       type: 'checkbox',
       label: 'Active',
       defaultValue: true
     },
-    IsPrimary: {
+    is_primary: {
       type: 'checkbox',
       label: 'Primary Queue',
       defaultValue: false,
       description: 'This is the agent\'s primary queue'
     },
     // Availability
-    Status: {
+    status: {
       type: 'select',
-      label: 'Status',
+      label: 'status',
       defaultValue: 'Available',
       options: [
         { label: '✅ Available', value: 'Available' },
@@ -49,12 +49,12 @@ const QueueMember = {
         { label: '🏠 Offline', value: 'Offline' }
       ]
     },
-    AcceptNewCases: {
+    accept_new_cases: {
       type: 'checkbox',
       label: 'Accept New Cases',
       defaultValue: true
     },
-    MaxCases: {
+    max_cases: {
       type: 'number',
       label: 'Max Active Cases',
       precision: 0,
@@ -63,7 +63,7 @@ const QueueMember = {
       description: 'Maximum number of active cases'
     },
     // Assignment Priority
-    AssignmentPriority: {
+    assignment_priority: {
       type: 'number',
       label: 'Assignment Priority',
       precision: 0,
@@ -71,7 +71,7 @@ const QueueMember = {
       defaultValue: 100,
       description: 'Lower number = higher priority for assignment'
     },
-    AssignmentWeight: {
+    assignment_weight: {
       type: 'number',
       label: 'Assignment Weight',
       precision: 0,
@@ -81,59 +81,59 @@ const QueueMember = {
       description: 'Weight in load balancing (1-10)'
     },
     // Schedule
-    JoinedDate: {
+    joined_date: {
       type: 'date',
       label: 'Joined Date',
       defaultValue: 'TODAY()'
     },
-    LeftDate: {
+    left_date: {
       type: 'date',
       label: 'Left Date'
     },
     // Working Hours Override
-    HasCustomSchedule: {
+    has_custom_schedule: {
       type: 'checkbox',
       label: 'Custom Schedule',
       defaultValue: false,
       description: 'Agent has custom working hours'
     },
-    CustomScheduleNotes: {
+    custom_schedule_notes: {
       type: 'textarea',
-      label: 'Schedule Notes',
+      label: 'Schedule notes',
       maxLength: 1000
     },
     // Performance Statistics
-    CurrentCases: {
+    current_cases: {
       type: 'number',
       label: 'Current Active Cases',
       precision: 0,
       readonly: true
     },
-    TotalCasesHandled: {
+    total_cases_handled: {
       type: 'number',
       label: 'Total Cases Handled',
       precision: 0,
       readonly: true
     },
-    AvgResponseTime: {
+    avg_response_time: {
       type: 'number',
       label: 'Avg Response Time (Minutes)',
       precision: 2,
       readonly: true
     },
-    AvgResolutionTime: {
+    avg_resolution_time: {
       type: 'number',
       label: 'Avg Resolution Time (Minutes)',
       precision: 2,
       readonly: true
     },
-    SLAComplianceRate: {
+    sla_compliance_rate: {
       type: 'number',
       label: 'SLA Compliance Rate (%)',
       precision: 2,
       readonly: true
     },
-    CustomerSatisfactionAvg: {
+    customer_satisfaction_avg: {
       type: 'number',
       label: 'Avg CSAT Score',
       precision: 2,
@@ -141,13 +141,13 @@ const QueueMember = {
       description: 'Average customer satisfaction (1-5)'
     },
     // Last Assignment
-    LastAssignedDate: {
+    last_assigned_date: {
       type: 'datetime',
       label: 'Last Assigned',
       readonly: true,
       description: 'Last time a case was assigned to this agent'
     },
-    TotalAssignments: {
+    total_assignments: {
       type: 'number',
       label: 'Total Assignments',
       precision: 0,
@@ -155,9 +155,9 @@ const QueueMember = {
       description: 'Total number of cases assigned'
     },
     // Additional Info
-    Notes: {
+    notes: {
       type: 'textarea',
-      label: 'Notes',
+      label: 'notes',
       maxLength: 2000
     }
   },
@@ -165,22 +165,22 @@ const QueueMember = {
     {
       name: 'UniqueQueueMember',
       errorMessage: 'This agent is already a member of this queue',
-      formula: 'AND(NOT(ISNEW()), EXISTS(SELECT Id FROM QueueMember WHERE QueueId = $QueueId AND UserId = $UserId AND Id != $Id))'
+      formula: 'AND(NOT(ISNEW()), EXISTS(SELECT Id FROM QueueMember WHERE queue_id = $queue_id AND user_id = $user_id AND Id != $Id))'
     },
     {
       name: 'LeftDateAfterJoined',
       errorMessage: 'Left date must be after joined date',
-      formula: 'AND(NOT(ISBLANK(LeftDate)), LeftDate < JoinedDate)'
+      formula: 'AND(NOT(ISBLANK(left_date)), left_date < joined_date)'
     },
     {
       name: 'InactiveIfLeft',
       errorMessage: 'Member must be inactive if they have left the queue',
-      formula: 'AND(NOT(ISBLANK(LeftDate)), IsActive = true)'
+      formula: 'AND(NOT(ISBLANK(left_date)), is_active = true)'
     },
     {
       name: 'MaxCasesPositive',
       errorMessage: 'Max cases must be greater than 0',
-      formula: 'MaxCases <= 0'
+      formula: 'max_cases <= 0'
     }
   ],
   listViews: [
@@ -188,55 +188,55 @@ const QueueMember = {
       name: 'AllMembers',
       label: 'All Queue Members',
       filters: [],
-      columns: ['QueueId', 'UserId', 'Status', 'IsActive', 'CurrentCases', 'MaxCases', 'AcceptNewCases'],
-      sort: [['QueueId', 'asc'], ['UserId', 'asc']]
+      columns: ['queue_id', 'user_id', 'status', 'is_active', 'current_cases', 'max_cases', 'accept_new_cases'],
+      sort: [['queue_id', 'asc'], ['user_id', 'asc']]
     },
     {
       name: 'ActiveMembers',
       label: 'Active Members',
       filters: [
-        ['IsActive', '=', true]
+        ['is_active', '=', true]
       ],
-      columns: ['QueueId', 'UserId', 'Status', 'CurrentCases', 'MaxCases', 'SLAComplianceRate', 'CustomerSatisfactionAvg'],
-      sort: [['QueueId', 'asc']]
+      columns: ['queue_id', 'user_id', 'status', 'current_cases', 'max_cases', 'sla_compliance_rate', 'customer_satisfaction_avg'],
+      sort: [['queue_id', 'asc']]
     },
     {
       name: 'AvailableAgents',
       label: 'Available Agents',
       filters: [
-        ['IsActive', '=', true],
-        ['Status', '=', 'Available'],
-        ['AcceptNewCases', '=', true]
+        ['is_active', '=', true],
+        ['status', '=', 'Available'],
+        ['accept_new_cases', '=', true]
       ],
-      columns: ['QueueId', 'UserId', 'CurrentCases', 'MaxCases', 'AvgResolutionTime', 'SLAComplianceRate'],
-      sort: [['CurrentCases', 'asc']]
+      columns: ['queue_id', 'user_id', 'current_cases', 'max_cases', 'avg_resolution_time', 'sla_compliance_rate'],
+      sort: [['current_cases', 'asc']]
     },
     {
       name: 'ByQueue',
       label: 'By Queue',
       filters: [],
-      columns: ['QueueId', 'UserId', 'Status', 'CurrentCases', 'TotalCasesHandled', 'CustomerSatisfactionAvg'],
-      sort: [['QueueId', 'asc'], ['CustomerSatisfactionAvg', 'desc']]
+      columns: ['queue_id', 'user_id', 'status', 'current_cases', 'total_cases_handled', 'customer_satisfaction_avg'],
+      sort: [['queue_id', 'asc'], ['customer_satisfaction_avg', 'desc']]
     },
     {
       name: 'TopPerformers',
       label: 'Top Performers',
       filters: [
-        ['IsActive', '=', true],
-        ['TotalCasesHandled', '>', 10]
+        ['is_active', '=', true],
+        ['total_cases_handled', '>', 10]
       ],
-      columns: ['UserId', 'QueueId', 'TotalCasesHandled', 'SLAComplianceRate', 'CustomerSatisfactionAvg', 'AvgResolutionTime'],
-      sort: [['CustomerSatisfactionAvg', 'desc'], ['SLAComplianceRate', 'desc']]
+      columns: ['user_id', 'queue_id', 'total_cases_handled', 'sla_compliance_rate', 'customer_satisfaction_avg', 'avg_resolution_time'],
+      sort: [['customer_satisfaction_avg', 'desc'], ['sla_compliance_rate', 'desc']]
     },
     {
       name: 'AtCapacity',
       label: 'At Capacity',
       filters: [
-        ['IsActive', '=', true],
-        ['CurrentCases', '>=', 'MaxCases']
+        ['is_active', '=', true],
+        ['current_cases', '>=', 'max_cases']
       ],
-      columns: ['QueueId', 'UserId', 'CurrentCases', 'MaxCases', 'Status'],
-      sort: [['CurrentCases', 'desc']]
+      columns: ['queue_id', 'user_id', 'current_cases', 'max_cases', 'status'],
+      sort: [['current_cases', 'desc']]
     }
   ],
   pageLayout: {
@@ -244,37 +244,37 @@ const QueueMember = {
       {
         label: 'Queue Membership',
         columns: 2,
-        fields: ['QueueId', 'UserId', 'IsActive', 'IsPrimary']
+        fields: ['queue_id', 'user_id', 'is_active', 'is_primary']
       },
       {
         label: 'Availability',
         columns: 2,
-        fields: ['Status', 'AcceptNewCases', 'MaxCases', 'CurrentCases']
+        fields: ['status', 'accept_new_cases', 'max_cases', 'current_cases']
       },
       {
         label: 'Assignment Settings',
         columns: 2,
-        fields: ['AssignmentPriority', 'AssignmentWeight']
+        fields: ['assignment_priority', 'assignment_weight']
       },
       {
         label: 'Schedule',
         columns: 2,
-        fields: ['JoinedDate', 'LeftDate', 'HasCustomSchedule', 'CustomScheduleNotes']
+        fields: ['joined_date', 'left_date', 'has_custom_schedule', 'custom_schedule_notes']
       },
       {
         label: 'Performance Metrics',
         columns: 3,
-        fields: ['TotalCasesHandled', 'AvgResponseTime', 'AvgResolutionTime', 'SLAComplianceRate', 'CustomerSatisfactionAvg']
+        fields: ['total_cases_handled', 'avg_response_time', 'avg_resolution_time', 'sla_compliance_rate', 'customer_satisfaction_avg']
       },
       {
         label: 'Assignment History',
         columns: 2,
-        fields: ['LastAssignedDate', 'TotalAssignments']
+        fields: ['last_assigned_date', 'total_assignments']
       },
       {
         label: 'Additional Information',
         columns: 1,
-        fields: ['Notes']
+        fields: ['notes']
       }
     ]
   }

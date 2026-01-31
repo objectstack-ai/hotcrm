@@ -12,19 +12,19 @@ const Contact = {
     feeds: true
   },
   fields: {
-    FirstName: {
+    first_name: {
       type: 'text',
       label: '名',
       maxLength: 40
     },
-    LastName: {
+    last_name: {
       type: 'text',
       label: '姓',
       required: true,
       searchable: true,
       maxLength: 80
     },
-    Salutation: {
+    salutation: {
       type: 'select',
       label: '称谓',
       options: [
@@ -34,58 +34,58 @@ const Contact = {
         { label: '教授', value: 'Prof.' }
       ]
     },
-    AccountId: {
+    account_id: {
       type: 'master_detail',
       label: '所属客户',
       reference: 'Account',
       required: true,
       cascadeDelete: true
     },
-    Title: {
+    title: {
       type: 'text',
       label: '职位',
       maxLength: 128
     },
-    Department: {
+    department: {
       type: 'text',
       label: '部门',
       maxLength: 80
     },
-    Level: {
+    level: {
       type: 'select',
       label: '职级',
       options: [
-        { label: 'C级高管', value: 'C-Level' },
+        { label: 'C级高管', value: 'C-level' },
         { label: 'VP级', value: 'VP' },
         { label: '总监', value: 'Director' },
         { label: '经理', value: 'Manager' },
         { label: '专员', value: 'Individual Contributor' }
       ]
     },
-    Email: {
+    email: {
       type: 'email',
       label: '邮箱',
       unique: true
     },
-    Phone: {
+    phone: {
       type: 'phone',
       label: '电话'
     },
-    MobilePhone: {
+    mobile_phone: {
       type: 'phone',
       label: '手机'
     },
-    Fax: {
+    fax: {
       type: 'phone',
       label: '传真'
     },
-    IsDecisionMaker: {
+    is_decision_maker: {
       type: 'checkbox',
       label: '决策者',
       defaultValue: false,
       description: '是否为主要决策者'
     },
-    InfluenceLevel: {
+    influence_level: {
       type: 'select',
       label: '影响力',
       options: [
@@ -94,7 +94,7 @@ const Contact = {
         { label: '低 - 普通参与者', value: 'Low' }
       ]
     },
-    RelationshipStrength: {
+    relationship_strength: {
       type: 'select',
       label: '关系强度',
       options: [
@@ -105,22 +105,22 @@ const Contact = {
       ],
       defaultValue: 'Unknown'
     },
-    PreferredContact: {
+    preferred_contact: {
       type: 'select',
       label: '首选联系方式',
       options: [
-        { label: '邮箱', value: 'Email' },
-        { label: '电话', value: 'Phone' },
+        { label: '邮箱', value: 'email' },
+        { label: '电话', value: 'phone' },
         { label: '手机', value: 'Mobile' },
         { label: '微信', value: 'WeChat' }
       ]
     },
-    LastContactDate: {
+    last_contact_date: {
       type: 'date',
       label: '最后联系日期',
       readonly: true
     },
-    Notes: {
+    notes: {
       type: 'textarea',
       label: '备注',
       rows: 4
@@ -131,7 +131,7 @@ const Contact = {
       name: 'Opportunities',
       type: 'hasMany',
       object: 'Opportunity',
-      foreignKey: 'ContactId',
+      foreignKey: 'contact_id',
       label: '商机'
     }
   ],
@@ -139,39 +139,39 @@ const Contact = {
     {
       name: 'All',
       label: '所有联系人',
-      columns: ['FirstName', 'LastName', 'AccountId', 'Title', 'Email', 'Phone']
+      columns: ['first_name', 'last_name', 'account_id', 'title', 'email', 'phone']
     },
     {
       name: 'DecisionMakers',
       label: '决策者',
-      filters: [['IsDecisionMaker', '=', true]],
-      columns: ['FirstName', 'LastName', 'AccountId', 'Title', 'Level', 'InfluenceLevel', 'RelationshipStrength'],
-      sort: [['LastName', 'asc']]
+      filters: [['is_decision_maker', '=', true]],
+      columns: ['first_name', 'last_name', 'account_id', 'title', 'level', 'influence_level', 'relationship_strength'],
+      sort: [['last_name', 'asc']]
     },
     {
       name: 'KeyInfluencers',
       label: '关键影响者',
-      filters: [['InfluenceLevel', 'in', ['High', 'Medium']]],
-      columns: ['FirstName', 'LastName', 'AccountId', 'Title', 'InfluenceLevel', 'RelationshipStrength', 'LastContactDate'],
-      sort: [['InfluenceLevel', 'asc']]
+      filters: [['influence_level', 'in', ['High', 'Medium']]],
+      columns: ['first_name', 'last_name', 'account_id', 'title', 'influence_level', 'relationship_strength', 'last_contact_date'],
+      sort: [['influence_level', 'asc']]
     },
     {
       name: 'StrongRelationships',
       label: '强关系联系人',
-      filters: [['RelationshipStrength', '=', 'Strong']],
-      columns: ['FirstName', 'LastName', 'AccountId', 'Title', 'Email', 'Phone', 'LastContactDate']
+      filters: [['relationship_strength', '=', 'Strong']],
+      columns: ['first_name', 'last_name', 'account_id', 'title', 'email', 'phone', 'last_contact_date']
     }
   ],
   validationRules: [
     {
       name: 'RequireEmailOrPhone',
       errorMessage: '必须至少填写邮箱或电话之一',
-      formula: 'AND(ISBLANK(Email), ISBLANK(Phone), ISBLANK(MobilePhone))'
+      formula: 'AND(ISBLANK(email), ISBLANK(phone), ISBLANK(mobile_phone))'
     },
     {
       name: 'DecisionMakerRequiresInfluence',
       errorMessage: '决策者的影响力必须设置为"高"',
-      formula: 'AND(IsDecisionMaker = true, InfluenceLevel != "High")'
+      formula: 'AND(is_decision_maker = true, influence_level != "High")'
     }
   ],
   pageLayout: {
@@ -179,27 +179,27 @@ const Contact = {
       {
         label: '基本信息',
         columns: 2,
-        fields: ['Salutation', 'FirstName', 'LastName', 'AccountId', 'Title', 'Department']
+        fields: ['salutation', 'first_name', 'last_name', 'account_id', 'title', 'department']
       },
       {
         label: '联系方式',
         columns: 2,
-        fields: ['Email', 'Phone', 'MobilePhone', 'Fax', 'PreferredContact']
+        fields: ['email', 'phone', 'mobile_phone', 'fax', 'preferred_contact']
       },
       {
         label: '职业信息',
         columns: 2,
-        fields: ['Level', 'IsDecisionMaker', 'InfluenceLevel', 'RelationshipStrength']
+        fields: ['level', 'is_decision_maker', 'influence_level', 'relationship_strength']
       },
       {
         label: '互动信息',
         columns: 2,
-        fields: ['LastContactDate']
+        fields: ['last_contact_date']
       },
       {
         label: '备注',
         columns: 1,
-        fields: ['Notes']
+        fields: ['notes']
       }
     ]
   }

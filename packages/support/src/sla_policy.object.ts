@@ -11,38 +11,38 @@ const SLAPolicy = {
   },
   fields: {
     // Basic Information
-    PolicyName: {
+    policy_name: {
       type: 'text',
       label: 'Policy Name',
       required: true,
       maxLength: 255,
       searchable: true
     },
-    Description: {
+    description: {
       type: 'textarea',
-      label: 'Description',
+      label: 'description',
       maxLength: 2000
     },
-    IsActive: {
+    is_active: {
       type: 'checkbox',
       label: 'Active',
       defaultValue: true
     },
-    EffectiveDate: {
+    effective_date: {
       type: 'date',
       label: 'Effective Date',
       required: true,
       description: 'When this policy takes effect'
     },
-    ExpirationDate: {
+    expiration_date: {
       type: 'date',
       label: 'Expiration Date',
       description: 'When this policy expires (optional)'
     },
-    // Policy Tier
-    Tier: {
+    // Policy tier
+    tier: {
       type: 'select',
-      label: 'Service Tier',
+      label: 'Service tier',
       required: true,
       options: [
         { label: '🏆 Platinum - Premium 24/7', value: 'Platinum' },
@@ -52,9 +52,9 @@ const SLAPolicy = {
         { label: '📋 Standard - Community', value: 'Standard' }
       ]
     },
-    Priority: {
+    priority: {
       type: 'number',
-      label: 'Policy Priority',
+      label: 'Policy priority',
       required: true,
       precision: 0,
       min: 1,
@@ -62,7 +62,7 @@ const SLAPolicy = {
       description: 'Lower number = higher priority when multiple policies match'
     },
     // Coverage
-    CoverageType: {
+    coverage_type: {
       type: 'select',
       label: 'Coverage Type',
       required: true,
@@ -74,14 +74,14 @@ const SLAPolicy = {
         { label: '🎯 Custom Schedule', value: 'Custom' }
       ]
     },
-    BusinessHoursId: {
+    business_hours_id: {
       type: 'lookup',
       label: 'Business Hours',
       reference: 'BusinessHours',
       description: 'Business hours calendar for SLA calculation'
     },
     // Applicability Filters
-    AppliesTo: {
+    applies_to: {
       type: 'select',
       label: 'Applies To',
       required: true,
@@ -89,18 +89,18 @@ const SLAPolicy = {
       options: [
         { label: 'All Accounts', value: 'All' },
         { label: 'Specific Accounts', value: 'Accounts' },
-        { label: 'Account Tier', value: 'Tier' },
+        { label: 'Account tier', value: 'tier' },
         { label: 'Product Category', value: 'Product' },
         { label: 'Geographic Region', value: 'Region' }
       ]
     },
-    AccountIds: {
+    account_ids: {
       type: 'text',
       label: 'Account IDs',
       maxLength: 2000,
       description: 'Comma-separated account IDs (when Applies To = Accounts)'
     },
-    AccountTier: {
+    account_tier: {
       type: 'multiselect',
       label: 'Account Tiers',
       options: [
@@ -110,7 +110,7 @@ const SLAPolicy = {
         { label: 'Startup', value: 'Startup' }
       ]
     },
-    ApplicableCaseTypes: {
+    applicable_case_types: {
       type: 'multiselect',
       label: 'Case Types',
       options: [
@@ -123,7 +123,7 @@ const SLAPolicy = {
         { label: 'Other', value: 'Other' }
       ]
     },
-    ApplicablePriorities: {
+    applicable_priorities: {
       type: 'multiselect',
       label: 'Priorities',
       options: [
@@ -135,19 +135,19 @@ const SLAPolicy = {
     },
     // SLA Milestones Configuration
     // First Response
-    EnableFirstResponse: {
+    enable_first_response: {
       type: 'checkbox',
       label: 'Track First Response',
       defaultValue: true
     },
-    FirstResponseMinutes: {
+    first_response_minutes: {
       type: 'number',
       label: 'First Response (Minutes)',
       precision: 0,
       min: 1,
       description: 'Target time for first agent response'
     },
-    FirstResponseWarningPercent: {
+    first_response_warning_percent: {
       type: 'number',
       label: 'First Response Warning (%)',
       precision: 0,
@@ -157,19 +157,19 @@ const SLAPolicy = {
       description: 'Percentage threshold for warning'
     },
     // Next Response
-    EnableNextResponse: {
+    enable_next_response: {
       type: 'checkbox',
       label: 'Track Next Response',
       defaultValue: true
     },
-    NextResponseMinutes: {
+    next_response_minutes: {
       type: 'number',
       label: 'Next Response (Minutes)',
       precision: 0,
       min: 1,
       description: 'Target time for subsequent responses'
     },
-    NextResponseWarningPercent: {
+    next_response_warning_percent: {
       type: 'number',
       label: 'Next Response Warning (%)',
       precision: 0,
@@ -178,19 +178,19 @@ const SLAPolicy = {
       defaultValue: 75
     },
     // Resolution
-    EnableResolution: {
+    enable_resolution: {
       type: 'checkbox',
       label: 'Track Resolution',
       defaultValue: true
     },
-    ResolutionMinutes: {
+    resolution_minutes: {
       type: 'number',
       label: 'Resolution Time (Minutes)',
       precision: 0,
       min: 1,
       description: 'Target time to resolve case'
     },
-    ResolutionWarningPercent: {
+    resolution_warning_percent: {
       type: 'number',
       label: 'Resolution Warning (%)',
       precision: 0,
@@ -199,12 +199,12 @@ const SLAPolicy = {
       defaultValue: 80
     },
     // Closure
-    EnableClosure: {
+    enable_closure: {
       type: 'checkbox',
       label: 'Track Closure',
       defaultValue: false
     },
-    ClosureMinutes: {
+    closure_minutes: {
       type: 'number',
       label: 'Closure Time (Minutes)',
       precision: 0,
@@ -212,12 +212,12 @@ const SLAPolicy = {
       description: 'Target time to close case after resolution'
     },
     // Escalation Rules
-    EnableAutoEscalation: {
+    enable_auto_escalation: {
       type: 'checkbox',
       label: 'Auto Escalation',
       defaultValue: true
     },
-    EscalationLevel1Percent: {
+    escalation_level1_percent: {
       type: 'number',
       label: 'Level 1 Escalation (%)',
       precision: 0,
@@ -226,13 +226,13 @@ const SLAPolicy = {
       defaultValue: 85,
       description: 'SLA percentage for first escalation'
     },
-    EscalationLevel1RuleId: {
+    escalation_level1_rule_id: {
       type: 'lookup',
       label: 'Level 1 Rule',
       reference: 'EscalationRule',
       description: 'Escalation rule for level 1'
     },
-    EscalationLevel2Percent: {
+    escalation_level2_percent: {
       type: 'number',
       label: 'Level 2 Escalation (%)',
       precision: 0,
@@ -240,12 +240,12 @@ const SLAPolicy = {
       max: 100,
       defaultValue: 95
     },
-    EscalationLevel2RuleId: {
+    escalation_level2_rule_id: {
       type: 'lookup',
       label: 'Level 2 Rule',
       reference: 'EscalationRule'
     },
-    EscalationLevel3Percent: {
+    escalation_level3_percent: {
       type: 'number',
       label: 'Level 3 Escalation (%)',
       precision: 0,
@@ -253,58 +253,58 @@ const SLAPolicy = {
       max: 100,
       defaultValue: 100
     },
-    EscalationLevel3RuleId: {
+    escalation_level3_rule_id: {
       type: 'lookup',
       label: 'Level 3 Rule',
       reference: 'EscalationRule'
     },
     // Notifications
-    NotifyOnWarning: {
+    notify_on_warning: {
       type: 'checkbox',
       label: 'Notify on Warning',
       defaultValue: true
     },
-    NotifyOnViolation: {
+    notify_on_violation: {
       type: 'checkbox',
       label: 'Notify on Violation',
       defaultValue: true
     },
-    NotifyOnEscalation: {
+    notify_on_escalation: {
       type: 'checkbox',
       label: 'Notify on Escalation',
       defaultValue: true
     },
-    WarningEmailTemplateId: {
+    warning_email_template_id: {
       type: 'lookup',
       label: 'Warning Email Template',
       reference: 'EmailTemplate'
     },
-    ViolationEmailTemplateId: {
+    violation_email_template_id: {
       type: 'lookup',
       label: 'Violation Email Template',
       reference: 'EmailTemplate'
     },
     // Pause Rules
-    AllowSLAPause: {
+    allow_sla_pause: {
       type: 'checkbox',
       label: 'Allow SLA Pause',
       defaultValue: true,
       description: 'Allow pausing SLA timer'
     },
-    AutoPauseOnCustomerWait: {
+    auto_pause_on_customer_wait: {
       type: 'checkbox',
       label: 'Pause on Customer Wait',
       defaultValue: true,
       description: 'Auto-pause when waiting on customer'
     },
-    AutoPauseOnHold: {
+    auto_pause_on_hold: {
       type: 'checkbox',
       label: 'Pause on Hold',
       defaultValue: false,
       description: 'Auto-pause when case is on hold'
     },
     // Performance Targets
-    TargetComplianceRate: {
+    target_compliance_rate: {
       type: 'number',
       label: 'Target Compliance (%)',
       precision: 2,
@@ -313,7 +313,7 @@ const SLAPolicy = {
       defaultValue: 95,
       description: 'Target SLA compliance rate'
     },
-    MinimumComplianceRate: {
+    minimum_compliance_rate: {
       type: 'number',
       label: 'Minimum Compliance (%)',
       precision: 2,
@@ -323,7 +323,7 @@ const SLAPolicy = {
       description: 'Minimum acceptable compliance rate'
     },
     // Statistics & Metrics
-    ActiveCases: {
+    active_cases: {
       type: 'number',
       label: 'Active Cases',
       precision: 0,
@@ -331,33 +331,33 @@ const SLAPolicy = {
       defaultValue: 0,
       description: 'Cases currently using this policy'
     },
-    TotalCasesProcessed: {
+    total_cases_processed: {
       type: 'number',
       label: 'Total Cases Processed',
       precision: 0,
       readonly: true,
       defaultValue: 0
     },
-    CurrentComplianceRate: {
+    current_compliance_rate: {
       type: 'number',
       label: 'Current Compliance (%)',
       precision: 2,
       readonly: true,
       description: 'Current SLA compliance rate'
     },
-    AverageResponseTime: {
+    average_response_time: {
       type: 'number',
       label: 'Avg Response (Minutes)',
       precision: 0,
       readonly: true
     },
-    AverageResolutionTime: {
+    average_resolution_time: {
       type: 'number',
       label: 'Avg Resolution (Minutes)',
       precision: 0,
       readonly: true
     },
-    ViolationCount: {
+    violation_count: {
       type: 'number',
       label: 'Violations',
       precision: 0,
@@ -365,29 +365,29 @@ const SLAPolicy = {
       defaultValue: 0,
       description: 'Total SLA violations'
     },
-    LastViolationDate: {
+    last_violation_date: {
       type: 'datetime',
       label: 'Last Violation',
       readonly: true
     },
-    // Version Control
-    Version: {
+    // version Control
+    version: {
       type: 'text',
-      label: 'Version',
+      label: 'version',
       maxLength: 50,
       readonly: true,
       description: 'Policy version number'
     },
-    PreviousVersionId: {
+    previous_version_id: {
       type: 'lookup',
-      label: 'Previous Version',
+      label: 'Previous version',
       reference: 'SLAPolicy',
       readonly: true,
       description: 'Previous version of this policy'
     },
-    IsLatestVersion: {
+    is_latest_version: {
       type: 'checkbox',
-      label: 'Latest Version',
+      label: 'Latest version',
       readonly: true,
       defaultValue: true
     }
@@ -396,57 +396,57 @@ const SLAPolicy = {
     {
       name: 'EffectiveBeforeExpiration',
       errorMessage: 'Effective date must be before expiration date',
-      formula: 'AND(NOT(ISBLANK(ExpirationDate)), EffectiveDate >= ExpirationDate)'
+      formula: 'AND(NOT(ISBLANK(expiration_date)), effective_date >= expiration_date)'
     },
     {
       name: 'FirstResponseRequired',
       errorMessage: 'First response time is required when tracking is enabled',
-      formula: 'AND(EnableFirstResponse = true, ISBLANK(FirstResponseMinutes))'
+      formula: 'AND(enable_first_response = true, ISBLANK(first_response_minutes))'
     },
     {
       name: 'NextResponseRequired',
       errorMessage: 'Next response time is required when tracking is enabled',
-      formula: 'AND(EnableNextResponse = true, ISBLANK(NextResponseMinutes))'
+      formula: 'AND(enable_next_response = true, ISBLANK(next_response_minutes))'
     },
     {
       name: 'ResolutionRequired',
       errorMessage: 'Resolution time is required when tracking is enabled',
-      formula: 'AND(EnableResolution = true, ISBLANK(ResolutionMinutes))'
+      formula: 'AND(enable_resolution = true, ISBLANK(resolution_minutes))'
     },
     {
       name: 'ClosureRequired',
       errorMessage: 'Closure time is required when tracking is enabled',
-      formula: 'AND(EnableClosure = true, ISBLANK(ClosureMinutes))'
+      formula: 'AND(enable_closure = true, ISBLANK(closure_minutes))'
     },
     {
       name: 'ResponseBeforeResolution',
       errorMessage: 'First response time must be less than resolution time',
-      formula: 'AND(EnableFirstResponse = true, EnableResolution = true, FirstResponseMinutes >= ResolutionMinutes)'
+      formula: 'AND(enable_first_response = true, enable_resolution = true, first_response_minutes >= resolution_minutes)'
     },
     {
       name: 'BusinessHoursRequired',
       errorMessage: 'Business hours is required for business hours coverage',
-      formula: 'AND(CoverageType = "BusinessHours", ISBLANK(BusinessHoursId))'
+      formula: 'AND(coverage_type = "BusinessHours", ISBLANK(business_hours_id))'
     },
     {
       name: 'AccountIdsRequired',
       errorMessage: 'Account IDs required when applies to specific accounts',
-      formula: 'AND(AppliesTo = "Accounts", ISBLANK(AccountIds))'
+      formula: 'AND(applies_to = "Accounts", ISBLANK(account_ids))'
     },
     {
       name: 'EscalationRulesRequired',
       errorMessage: 'Escalation rules required when auto escalation is enabled',
-      formula: 'AND(EnableAutoEscalation = true, ISBLANK(EscalationLevel1RuleId))'
+      formula: 'AND(enable_auto_escalation = true, ISBLANK(escalation_level1_rule_id))'
     },
     {
       name: 'MinLessThanTarget',
       errorMessage: 'Minimum compliance rate must be less than target',
-      formula: 'MinimumComplianceRate >= TargetComplianceRate'
+      formula: 'minimum_compliance_rate >= target_compliance_rate'
     },
     {
       name: 'AtLeastOneMilestone',
       errorMessage: 'At least one SLA milestone must be enabled',
-      formula: 'AND(EnableFirstResponse = false, EnableNextResponse = false, EnableResolution = false, EnableClosure = false)'
+      formula: 'AND(enable_first_response = false, enable_next_response = false, enable_resolution = false, enable_closure = false)'
     }
   ],
   listViews: [
@@ -454,46 +454,46 @@ const SLAPolicy = {
       name: 'AllPolicies',
       label: 'All Policies',
       filters: [],
-      columns: ['PolicyName', 'Tier', 'Priority', 'IsActive', 'ActiveCases', 'CurrentComplianceRate'],
-      sort: [['Priority', 'asc']]
+      columns: ['policy_name', 'tier', 'priority', 'is_active', 'active_cases', 'current_compliance_rate'],
+      sort: [['priority', 'asc']]
     },
     {
       name: 'ActivePolicies',
       label: 'Active Policies',
       filters: [
-        ['IsActive', '=', true],
-        ['IsLatestVersion', '=', true]
+        ['is_active', '=', true],
+        ['is_latest_version', '=', true]
       ],
-      columns: ['PolicyName', 'Tier', 'EffectiveDate', 'ActiveCases', 'CurrentComplianceRate', 'ViolationCount'],
-      sort: [['Priority', 'asc']]
+      columns: ['policy_name', 'tier', 'effective_date', 'active_cases', 'current_compliance_rate', 'violation_count'],
+      sort: [['priority', 'asc']]
     },
     {
       name: 'ByTier',
-      label: 'By Service Tier',
+      label: 'By Service tier',
       filters: [
-        ['IsActive', '=', true]
+        ['is_active', '=', true]
       ],
-      columns: ['PolicyName', 'Tier', 'FirstResponseMinutes', 'ResolutionMinutes', 'CurrentComplianceRate'],
-      sort: [['Tier', 'asc'], ['Priority', 'asc']]
+      columns: ['policy_name', 'tier', 'first_response_minutes', 'resolution_minutes', 'current_compliance_rate'],
+      sort: [['tier', 'asc'], ['priority', 'asc']]
     },
     {
       name: 'LowCompliance',
       label: 'Low Compliance',
       filters: [
-        ['IsActive', '=', true],
-        ['CurrentComplianceRate', '<', 90]
+        ['is_active', '=', true],
+        ['current_compliance_rate', '<', 90]
       ],
-      columns: ['PolicyName', 'Tier', 'CurrentComplianceRate', 'TargetComplianceRate', 'ViolationCount', 'ActiveCases'],
-      sort: [['CurrentComplianceRate', 'asc']]
+      columns: ['policy_name', 'tier', 'current_compliance_rate', 'target_compliance_rate', 'violation_count', 'active_cases'],
+      sort: [['current_compliance_rate', 'asc']]
     },
     {
       name: 'RecentViolations',
       label: 'Recent Violations',
       filters: [
-        ['ViolationCount', '>', 0]
+        ['violation_count', '>', 0]
       ],
-      columns: ['PolicyName', 'Tier', 'ViolationCount', 'LastViolationDate', 'CurrentComplianceRate'],
-      sort: [['LastViolationDate', 'desc']]
+      columns: ['policy_name', 'tier', 'violation_count', 'last_violation_date', 'current_compliance_rate'],
+      sort: [['last_violation_date', 'desc']]
     }
   ],
   pageLayout: {
@@ -501,72 +501,72 @@ const SLAPolicy = {
       {
         label: 'Policy Information',
         columns: 2,
-        fields: ['PolicyName', 'Description', 'Tier', 'Priority', 'IsActive']
+        fields: ['policy_name', 'description', 'tier', 'priority', 'is_active']
       },
       {
         label: 'Effective Period',
         columns: 2,
-        fields: ['EffectiveDate', 'ExpirationDate', 'Version', 'IsLatestVersion']
+        fields: ['effective_date', 'expiration_date', 'version', 'is_latest_version']
       },
       {
         label: 'Coverage',
         columns: 2,
-        fields: ['CoverageType', 'BusinessHoursId']
+        fields: ['coverage_type', 'business_hours_id']
       },
       {
         label: 'Applicability',
         columns: 2,
-        fields: ['AppliesTo', 'AccountIds', 'AccountTier', 'ApplicableCaseTypes', 'ApplicablePriorities']
+        fields: ['applies_to', 'account_ids', 'account_tier', 'applicable_case_types', 'applicable_priorities']
       },
       {
         label: 'First Response SLA',
         columns: 3,
-        fields: ['EnableFirstResponse', 'FirstResponseMinutes', 'FirstResponseWarningPercent']
+        fields: ['enable_first_response', 'first_response_minutes', 'first_response_warning_percent']
       },
       {
         label: 'Next Response SLA',
         columns: 3,
-        fields: ['EnableNextResponse', 'NextResponseMinutes', 'NextResponseWarningPercent']
+        fields: ['enable_next_response', 'next_response_minutes', 'next_response_warning_percent']
       },
       {
         label: 'Resolution SLA',
         columns: 3,
-        fields: ['EnableResolution', 'ResolutionMinutes', 'ResolutionWarningPercent']
+        fields: ['enable_resolution', 'resolution_minutes', 'resolution_warning_percent']
       },
       {
         label: 'Closure SLA',
         columns: 3,
-        fields: ['EnableClosure', 'ClosureMinutes']
+        fields: ['enable_closure', 'closure_minutes']
       },
       {
         label: 'Auto Escalation',
         columns: 2,
-        fields: ['EnableAutoEscalation', 'EscalationLevel1Percent', 'EscalationLevel1RuleId', 'EscalationLevel2Percent', 'EscalationLevel2RuleId', 'EscalationLevel3Percent', 'EscalationLevel3RuleId']
+        fields: ['enable_auto_escalation', 'escalation_level1_percent', 'escalation_level1_rule_id', 'escalation_level2_percent', 'escalation_level2_rule_id', 'escalation_level3_percent', 'escalation_level3_rule_id']
       },
       {
         label: 'Notifications',
         columns: 2,
-        fields: ['NotifyOnWarning', 'NotifyOnViolation', 'NotifyOnEscalation', 'WarningEmailTemplateId', 'ViolationEmailTemplateId']
+        fields: ['notify_on_warning', 'notify_on_violation', 'notify_on_escalation', 'warning_email_template_id', 'violation_email_template_id']
       },
       {
         label: 'Pause Rules',
         columns: 2,
-        fields: ['AllowSLAPause', 'AutoPauseOnCustomerWait', 'AutoPauseOnHold']
+        fields: ['allow_sla_pause', 'auto_pause_on_customer_wait', 'auto_pause_on_hold']
       },
       {
         label: 'Performance Targets',
         columns: 2,
-        fields: ['TargetComplianceRate', 'MinimumComplianceRate']
+        fields: ['target_compliance_rate', 'minimum_compliance_rate']
       },
       {
         label: 'Current Performance',
         columns: 3,
-        fields: ['ActiveCases', 'CurrentComplianceRate', 'ViolationCount']
+        fields: ['active_cases', 'current_compliance_rate', 'violation_count']
       },
       {
         label: 'Statistics',
         columns: 3,
-        fields: ['TotalCasesProcessed', 'AverageResponseTime', 'AverageResolutionTime', 'LastViolationDate']
+        fields: ['total_cases_processed', 'average_response_time', 'average_resolution_time', 'last_violation_date']
       }
     ]
   }

@@ -13,16 +13,16 @@ const Note = {
   },
   fields: {
     // Basic Information
-    Title: {
+    title: {
       type: 'text',
-      label: 'Note Title',
+      label: 'Note title',
       required: true,
       searchable: true,
       maxLength: 255
     },
-    Body: {
+    body: {
       type: 'textarea',
-      label: 'Note Body',
+      label: 'Note body',
       required: true,
       searchable: true,
       maxLength: 32000,
@@ -30,14 +30,14 @@ const Note = {
     },
     
     // Polymorphic Parent Relationship
-    ParentId: {
+    parent_id: {
       type: 'text',
       label: 'Parent Record ID',
       required: true,
       maxLength: 18,
       description: 'ID of the parent record (polymorphic)'
     },
-    ParentType: {
+    parent_type: {
       type: 'select',
       label: 'Parent Type',
       required: true,
@@ -58,27 +58,27 @@ const Note = {
     },
     
     // Privacy & Organization
-    IsPrivate: {
+    is_private: {
       type: 'checkbox',
       label: 'Private Note',
       defaultValue: false,
       description: 'When true, only the owner can see this note'
     },
-    IsPinned: {
+    is_pinned: {
       type: 'checkbox',
       label: 'Pinned',
       defaultValue: false,
       description: 'Pin important notes to the top'
     },
-    Tags: {
+    tags: {
       type: 'text',
-      label: 'Tags',
+      label: 'tags',
       maxLength: 500,
       description: 'Comma-separated tags for categorization and search'
     },
     
     // Ownership
-    OwnerId: {
+    owner_id: {
       type: 'lookup',
       label: 'Owner',
       reference: 'User',
@@ -87,14 +87,14 @@ const Note = {
     },
     
     // Mentions & Collaboration
-    MentionedUserIds: {
+    mentioned_user_ids: {
       type: 'text',
       label: 'Mentioned Users',
       maxLength: 1000,
       readonly: true,
       description: 'Comma-separated User IDs extracted from @mentions in the body'
     },
-    HasMentions: {
+    has_mentions: {
       type: 'checkbox',
       label: 'Has @Mentions',
       defaultValue: false,
@@ -102,34 +102,34 @@ const Note = {
     },
     
     // Markdown & Formatting
-    IsMarkdown: {
+    is_markdown: {
       type: 'checkbox',
       label: 'Markdown Enabled',
       defaultValue: true,
       description: 'Enable Markdown formatting for this note'
     },
-    RenderedBody: {
+    rendered_body: {
       type: 'textarea',
-      label: 'Rendered Body',
+      label: 'Rendered body',
       readonly: true,
       maxLength: 32000,
       description: 'HTML-rendered version of the markdown body'
     },
     
     // Metadata
-    WordCount: {
+    word_count: {
       type: 'number',
       label: 'Word Count',
       precision: 0,
       readonly: true,
       description: 'Approximate word count'
     },
-    LastEditedDate: {
+    last_edited_date: {
       type: 'datetime',
       label: 'Last Edited',
       readonly: true
     },
-    LastEditedById: {
+    last_edited_by_id: {
       type: 'lookup',
       label: 'Last Edited By',
       reference: 'User',
@@ -137,30 +137,30 @@ const Note = {
     },
     
     // Search & Indexing
-    SearchableText: {
+    searchable_text: {
       type: 'textarea',
       label: 'Searchable Text',
       readonly: true,
       maxLength: 32000,
-      description: 'Combined Title + Body for full-text search indexing'
+      description: 'Combined title + body for full-text search indexing'
     },
     
     // AI Enhancement
-    AISummary: {
+    ai_summary: {
       type: 'textarea',
       label: 'AI Summary',
       readonly: true,
       maxLength: 1000,
       description: 'AI-generated summary of the note'
     },
-    AIExtractedKeywords: {
+    ai_extracted_keywords: {
       type: 'text',
       label: 'AI Extracted Keywords',
       readonly: true,
       maxLength: 500,
       description: 'AI-extracted keywords from the note content'
     },
-    AISentiment: {
+    ai_sentiment: {
       type: 'select',
       label: 'AI Sentiment',
       readonly: true,
@@ -176,7 +176,7 @@ const Note = {
       name: 'Attachments',
       type: 'hasMany',
       object: 'Attachment',
-      foreignKey: 'ParentId',
+      foreignKey: 'parent_id',
       label: 'Attachments'
     }
   ],
@@ -185,68 +185,68 @@ const Note = {
       name: 'AllNotes',
       label: 'All Notes',
       filters: [],
-      columns: ['Title', 'ParentType', 'ParentId', 'OwnerId', 'IsPinned', 'Tags', 'LastEditedDate'],
-      sort: [['IsPinned', 'desc'], ['LastEditedDate', 'desc']]
+      columns: ['title', 'parent_type', 'parent_id', 'owner_id', 'is_pinned', 'tags', 'last_edited_date'],
+      sort: [['is_pinned', 'desc'], ['last_edited_date', 'desc']]
     },
     {
       name: 'MyNotes',
       label: 'My Notes',
-      filters: [['OwnerId', '=', '$currentUser']],
-      columns: ['Title', 'ParentType', 'ParentId', 'IsPinned', 'Tags', 'LastEditedDate'],
-      sort: [['IsPinned', 'desc'], ['LastEditedDate', 'desc']]
+      filters: [['owner_id', '=', '$currentUser']],
+      columns: ['title', 'parent_type', 'parent_id', 'is_pinned', 'tags', 'last_edited_date'],
+      sort: [['is_pinned', 'desc'], ['last_edited_date', 'desc']]
     },
     {
       name: 'PinnedNotes',
       label: 'Pinned Notes',
-      filters: [['IsPinned', '=', true]],
-      columns: ['Title', 'ParentType', 'ParentId', 'OwnerId', 'Tags', 'LastEditedDate'],
-      sort: [['LastEditedDate', 'desc']]
+      filters: [['is_pinned', '=', true]],
+      columns: ['title', 'parent_type', 'parent_id', 'owner_id', 'tags', 'last_edited_date'],
+      sort: [['last_edited_date', 'desc']]
     },
     {
       name: 'PrivateNotes',
       label: 'Private Notes',
       filters: [
-        ['IsPrivate', '=', true],
-        ['OwnerId', '=', '$currentUser']
+        ['is_private', '=', true],
+        ['owner_id', '=', '$currentUser']
       ],
-      columns: ['Title', 'ParentType', 'ParentId', 'Tags', 'LastEditedDate'],
-      sort: [['LastEditedDate', 'desc']]
+      columns: ['title', 'parent_type', 'parent_id', 'tags', 'last_edited_date'],
+      sort: [['last_edited_date', 'desc']]
     },
     {
       name: 'RecentNotes',
       label: 'Recent Notes',
-      filters: [['LastEditedDate', 'last_n_days', 7]],
-      columns: ['Title', 'ParentType', 'ParentId', 'OwnerId', 'Tags', 'LastEditedDate'],
-      sort: [['LastEditedDate', 'desc']]
+      filters: [['last_edited_date', 'last_n_days', 7]],
+      columns: ['title', 'parent_type', 'parent_id', 'owner_id', 'tags', 'last_edited_date'],
+      sort: [['last_edited_date', 'desc']]
     },
     {
       name: 'NotesWithMentions',
       label: 'Notes Mentioning Me',
-      filters: [['MentionedUserIds', 'contains', '$currentUser']],
-      columns: ['Title', 'ParentType', 'ParentId', 'OwnerId', 'LastEditedDate'],
-      sort: [['LastEditedDate', 'desc']]
+      filters: [['mentioned_user_ids', 'contains', '$currentUser']],
+      columns: ['title', 'parent_type', 'parent_id', 'owner_id', 'last_edited_date'],
+      sort: [['last_edited_date', 'desc']]
     }
   ],
   validationRules: [
     {
       name: 'RequireParentId',
       errorMessage: 'Notes must be attached to a parent record',
-      formula: 'ISBLANK(ParentId)'
+      formula: 'ISBLANK(parent_id)'
     },
     {
       name: 'RequireParentType',
       errorMessage: 'Parent Type is required',
-      formula: 'ISBLANK(ParentType)'
+      formula: 'ISBLANK(parent_type)'
     },
     {
       name: 'TitleMaxLength',
-      errorMessage: 'Title cannot exceed 255 characters',
-      formula: 'LEN(Title) > 255'
+      errorMessage: 'title cannot exceed 255 characters',
+      formula: 'LEN(title) > 255'
     },
     {
       name: 'BodyMaxLength',
       errorMessage: 'Note body cannot exceed 32,000 characters',
-      formula: 'LEN(Body) > 32000'
+      formula: 'LEN(body) > 32000'
     }
   ],
   pageLayout: {
@@ -254,32 +254,32 @@ const Note = {
       {
         label: 'Note Information',
         columns: 2,
-        fields: ['Title', 'ParentType', 'ParentId', 'OwnerId']
+        fields: ['title', 'parent_type', 'parent_id', 'owner_id']
       },
       {
         label: 'Settings',
         columns: 2,
-        fields: ['IsPrivate', 'IsPinned', 'IsMarkdown', 'Tags']
+        fields: ['is_private', 'is_pinned', 'is_markdown', 'tags']
       },
       {
         label: 'Mentions & Collaboration',
         columns: 2,
-        fields: ['HasMentions', 'MentionedUserIds']
+        fields: ['has_mentions', 'mentioned_user_ids']
       },
       {
         label: 'Metadata',
         columns: 2,
-        fields: ['WordCount', 'LastEditedDate', 'LastEditedById']
+        fields: ['word_count', 'last_edited_date', 'last_edited_by_id']
       },
       {
         label: 'AI Insights',
         columns: 2,
-        fields: ['AISummary', 'AIExtractedKeywords', 'AISentiment']
+        fields: ['ai_summary', 'ai_extracted_keywords', 'ai_sentiment']
       },
       {
         label: 'Note Content',
         columns: 1,
-        fields: ['Body']
+        fields: ['body']
       }
     ]
   }

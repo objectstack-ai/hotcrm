@@ -12,20 +12,20 @@ const CaseComment = {
   },
   fields: {
     // Relationships
-    CaseId: {
+    case_id: {
       type: 'lookup',
       label: 'Case',
       reference: 'Case',
       required: true
     },
-    ParentCommentId: {
+    parent_comment_id: {
       type: 'lookup',
       label: 'Parent Comment',
       reference: 'CaseComment',
       description: 'Parent comment for threaded discussions'
     },
     // Comment Information
-    CommentType: {
+    comment_type: {
       type: 'select',
       label: 'Comment Type',
       required: true,
@@ -41,7 +41,7 @@ const CaseComment = {
         { label: '🎯 Other', value: 'Other' }
       ]
     },
-    Body: {
+    body: {
       type: 'textarea',
       label: 'Comment',
       required: true,
@@ -49,7 +49,7 @@ const CaseComment = {
       searchable: true,
       description: 'Comment text'
     },
-    PlainTextBody: {
+    plain_text_body: {
       type: 'textarea',
       label: 'Plain Text',
       maxLength: 32000,
@@ -58,63 +58,63 @@ const CaseComment = {
       description: 'Plain text version for search'
     },
     // Visibility
-    IsPublic: {
+    is_public: {
       type: 'checkbox',
       label: 'Visible to Customer',
       defaultValue: false,
       description: 'Whether this comment is visible in customer portal'
     },
-    IsInternal: {
+    is_internal: {
       type: 'checkbox',
       label: 'Internal Only',
       defaultValue: false,
       description: 'Internal note not visible to customer'
     },
     // User Information
-    CreatedById: {
+    created_by_id: {
       type: 'lookup',
       label: 'Created By',
       reference: 'User',
       readonly: true
     },
-    ContactId: {
+    contact_id: {
       type: 'lookup',
       label: 'Contact',
       reference: 'Contact',
       description: 'Customer contact who created this comment'
     },
     // Email Integration
-    FromEmail: {
+    from_email: {
       type: 'email',
       label: 'From Email',
       description: 'Email address of sender (for email comments)'
     },
-    ToEmail: {
+    to_email: {
       type: 'text',
       label: 'To Email',
       maxLength: 500,
       description: 'Email recipients'
     },
-    CcEmail: {
+    cc_email: {
       type: 'text',
       label: 'CC Email',
       maxLength: 500,
       description: 'CC recipients'
     },
-    EmailSubject: {
+    email_subject: {
       type: 'text',
       label: 'Email Subject',
       maxLength: 255,
       searchable: true
     },
-    EmailMessageId: {
+    email_message_id: {
       type: 'text',
       label: 'Email Message ID',
       maxLength: 255,
       readonly: true,
       description: 'Unique email message identifier'
     },
-    InReplyToId: {
+    in_reply_to_id: {
       type: 'text',
       label: 'In Reply To',
       maxLength: 255,
@@ -122,14 +122,14 @@ const CaseComment = {
       description: 'Email thread tracking'
     },
     // SLA & Response Tracking
-    IsFirstResponse: {
+    is_first_response: {
       type: 'checkbox',
       label: 'Is First Response',
       readonly: true,
       defaultValue: false,
       description: 'First agent response to case'
     },
-    ResponseTimeMinutes: {
+    response_time_minutes: {
       type: 'number',
       label: 'Response Time (Minutes)',
       precision: 0,
@@ -137,14 +137,14 @@ const CaseComment = {
       description: 'Minutes since last customer comment'
     },
     // AI Features
-    AIGeneratedSuggestion: {
+    ai_generated_suggestion: {
       type: 'textarea',
       label: 'AI Suggested Response',
       maxLength: 5000,
       readonly: true,
       description: 'AI-generated response suggestion'
     },
-    AISentiment: {
+    ai_sentiment: {
       type: 'select',
       label: 'AI Sentiment',
       readonly: true,
@@ -155,7 +155,7 @@ const CaseComment = {
         { label: '😡 Angry', value: 'Angry' }
       ]
     },
-    AIConfidenceScore: {
+    ai_confidence_score: {
       type: 'number',
       label: 'AI Confidence',
       precision: 2,
@@ -164,7 +164,7 @@ const CaseComment = {
       readonly: true,
       description: 'AI confidence in sentiment analysis'
     },
-    AIKeywords: {
+    ai_keywords: {
       type: 'text',
       label: 'AI Keywords',
       maxLength: 500,
@@ -172,38 +172,38 @@ const CaseComment = {
       description: 'Extracted keywords'
     },
     // Metadata
-    IsSolution: {
+    is_solution: {
       type: 'checkbox',
       label: 'Marked as Solution',
       defaultValue: false,
       description: 'This comment contains the solution'
     },
-    IsEdited: {
+    is_edited: {
       type: 'checkbox',
       label: 'Edited',
       readonly: true,
       defaultValue: false
     },
-    EditedDate: {
+    edited_date: {
       type: 'datetime',
       label: 'Last Edited',
       readonly: true
     },
-    EditedById: {
+    edited_by_id: {
       type: 'lookup',
       label: 'Edited By',
       reference: 'User',
       readonly: true
     },
     // Engagement
-    LikeCount: {
+    like_count: {
       type: 'number',
       label: 'Likes',
       precision: 0,
       readonly: true,
       defaultValue: 0
     },
-    IsHelpful: {
+    is_helpful: {
       type: 'checkbox',
       label: 'Marked Helpful',
       readonly: true,
@@ -211,7 +211,7 @@ const CaseComment = {
       description: 'Customer marked this as helpful'
     },
     // Integration
-    ChannelSource: {
+    channel_source: {
       type: 'select',
       label: 'Channel',
       options: [
@@ -228,7 +228,7 @@ const CaseComment = {
         { label: '🎯 Other', value: 'Other' }
       ]
     },
-    ChannelMessageId: {
+    channel_message_id: {
       type: 'text',
       label: 'Channel Message ID',
       maxLength: 255,
@@ -236,13 +236,13 @@ const CaseComment = {
       description: 'External message ID from source channel'
     },
     // Attachment Info
-    HasAttachment: {
+    has_attachment: {
       type: 'checkbox',
       label: 'Has Attachment',
       readonly: true,
       defaultValue: false
     },
-    AttachmentCount: {
+    attachment_count: {
       type: 'number',
       label: 'Attachments',
       precision: 0,
@@ -255,7 +255,7 @@ const CaseComment = {
       name: 'ChildComments',
       type: 'hasMany',
       object: 'CaseComment',
-      foreignKey: 'ParentCommentId',
+      foreignKey: 'parent_comment_id',
       label: 'Replies'
     }
   ],
@@ -263,17 +263,17 @@ const CaseComment = {
     {
       name: 'PublicNotInternal',
       errorMessage: 'Comment cannot be both public and internal',
-      formula: 'AND(IsPublic = true, IsInternal = true)'
+      formula: 'AND(is_public = true, is_internal = true)'
     },
     {
       name: 'CustomerCommentPublic',
       errorMessage: 'Customer comments must be public',
-      formula: 'AND(CommentType = "Customer", IsPublic = false)'
+      formula: 'AND(comment_type = "Customer", is_public = false)'
     },
     {
       name: 'InternalNotPublic',
       errorMessage: 'Internal notes cannot be visible to customer',
-      formula: 'AND(CommentType = "Internal", IsPublic = true)'
+      formula: 'AND(comment_type = "Internal", is_public = true)'
     }
   ],
   listViews: [
@@ -281,52 +281,52 @@ const CaseComment = {
       name: 'AllComments',
       label: 'All Comments',
       filters: [],
-      columns: ['CaseId', 'CommentType', 'CreatedById', 'Body', 'IsPublic', 'CreatedDate'],
+      columns: ['case_id', 'comment_type', 'created_by_id', 'body', 'is_public', 'CreatedDate'],
       sort: [['CreatedDate', 'desc']]
     },
     {
       name: 'PublicComments',
       label: 'Public Comments',
       filters: [
-        ['IsPublic', '=', true]
+        ['is_public', '=', true]
       ],
-      columns: ['CaseId', 'CommentType', 'CreatedById', 'Body', 'CreatedDate'],
+      columns: ['case_id', 'comment_type', 'created_by_id', 'body', 'CreatedDate'],
       sort: [['CreatedDate', 'desc']]
     },
     {
       name: 'InternalNotes',
       label: 'Internal Notes',
       filters: [
-        ['IsInternal', '=', true]
+        ['is_internal', '=', true]
       ],
-      columns: ['CaseId', 'CreatedById', 'Body', 'CreatedDate'],
+      columns: ['case_id', 'created_by_id', 'body', 'CreatedDate'],
       sort: [['CreatedDate', 'desc']]
     },
     {
       name: 'CustomerResponses',
       label: 'Customer Responses',
       filters: [
-        ['CommentType', '=', 'Customer']
+        ['comment_type', '=', 'Customer']
       ],
-      columns: ['CaseId', 'ContactId', 'Body', 'AISentiment', 'CreatedDate'],
+      columns: ['case_id', 'contact_id', 'body', 'ai_sentiment', 'CreatedDate'],
       sort: [['CreatedDate', 'desc']]
     },
     {
       name: 'Solutions',
       label: 'Solutions',
       filters: [
-        ['IsSolution', '=', true]
+        ['is_solution', '=', true]
       ],
-      columns: ['CaseId', 'CommentType', 'CreatedById', 'Body', 'CreatedDate'],
+      columns: ['case_id', 'comment_type', 'created_by_id', 'body', 'CreatedDate'],
       sort: [['CreatedDate', 'desc']]
     },
     {
       name: 'EmailComments',
       label: 'Email Thread',
       filters: [
-        ['CommentType', '=', 'Email']
+        ['comment_type', '=', 'Email']
       ],
-      columns: ['CaseId', 'FromEmail', 'EmailSubject', 'CreatedDate'],
+      columns: ['case_id', 'from_email', 'email_subject', 'CreatedDate'],
       sort: [['CreatedDate', 'desc']]
     }
   ],
@@ -335,47 +335,47 @@ const CaseComment = {
       {
         label: 'Comment Information',
         columns: 2,
-        fields: ['CaseId', 'CommentType', 'ChannelSource', 'ParentCommentId']
+        fields: ['case_id', 'comment_type', 'channel_source', 'parent_comment_id']
       },
       {
         label: 'Visibility',
         columns: 2,
-        fields: ['IsPublic', 'IsInternal', 'IsSolution']
+        fields: ['is_public', 'is_internal', 'is_solution']
       },
       {
         label: 'Content',
         columns: 1,
-        fields: ['Body']
+        fields: ['body']
       },
       {
         label: 'Email Details',
         columns: 2,
-        fields: ['FromEmail', 'ToEmail', 'CcEmail', 'EmailSubject', 'EmailMessageId', 'InReplyToId']
+        fields: ['from_email', 'to_email', 'cc_email', 'email_subject', 'email_message_id', 'in_reply_to_id']
       },
       {
         label: 'User Information',
         columns: 2,
-        fields: ['CreatedById', 'ContactId']
+        fields: ['created_by_id', 'contact_id']
       },
       {
         label: 'Response Tracking',
         columns: 2,
-        fields: ['IsFirstResponse', 'ResponseTimeMinutes']
+        fields: ['is_first_response', 'response_time_minutes']
       },
       {
         label: 'AI Analysis',
         columns: 2,
-        fields: ['AISentiment', 'AIConfidenceScore', 'AIKeywords', 'AIGeneratedSuggestion']
+        fields: ['ai_sentiment', 'ai_confidence_score', 'ai_keywords', 'ai_generated_suggestion']
       },
       {
         label: 'Engagement',
         columns: 2,
-        fields: ['LikeCount', 'IsHelpful', 'HasAttachment', 'AttachmentCount']
+        fields: ['like_count', 'is_helpful', 'has_attachment', 'attachment_count']
       },
       {
         label: 'Edit History',
         columns: 2,
-        fields: ['IsEdited', 'EditedDate', 'EditedById']
+        fields: ['is_edited', 'edited_date', 'edited_by_id']
       }
     ]
   }

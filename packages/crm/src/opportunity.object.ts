@@ -13,35 +13,35 @@ const Opportunity = {
     files: true
   },
   fields: {
-    Name: {
+    name: {
       type: 'text',
       label: '商机名称',
       required: true,
       searchable: true,
       maxLength: 120
     },
-    AccountId: {
+    account_id: {
       type: 'lookup',
       label: '客户',
       reference: 'Account',
       required: true
     },
-    ContactId: {
+    contact_id: {
       type: 'lookup',
       label: '主要联系人',
       reference: 'Contact'
     },
-    Amount: {
+    amount: {
       type: 'currency',
       label: '金额',
       precision: 2
     },
-    CloseDate: {
+    close_date: {
       type: 'date',
       label: '预计成交日期',
       required: true
     },
-    Stage: {
+    stage: {
       type: 'select',
       label: '阶段',
       required: true,
@@ -55,18 +55,18 @@ const Opportunity = {
         { label: '❌ 失败', value: 'Closed Lost', probability: 0, isLost: true }
       ]
     },
-    Probability: {
+    probability: {
       type: 'percent',
       label: '赢单概率',
       description: '赢单概率百分比'
     },
-    NextStep: {
+    next_step: {
       type: 'text',
       label: '下一步行动',
       maxLength: 255,
       description: '明确的下一步行动计划'
     },
-    LeadSource: {
+    lead_source: {
       type: 'select',
       label: '线索来源',
       options: [
@@ -80,7 +80,7 @@ const Opportunity = {
         { label: '其他', value: 'Other' }
       ]
     },
-    ForecastCategory: {
+    forecast_category: {
       type: 'select',
       label: '预测类别',
       defaultValue: 'Pipeline',
@@ -92,7 +92,7 @@ const Opportunity = {
         { label: '已成交', value: 'Closed' }
       ]
     },
-    Type: {
+    type: {
       type: 'select',
       label: '商机类型',
       options: [
@@ -102,22 +102,22 @@ const Opportunity = {
         { label: '现有业务-更换', value: 'Existing Business - Replacement' }
       ]
     },
-    ExpectedRevenue: {
+    expected_revenue: {
       type: 'currency',
       label: '预期营收',
       precision: 2,
-      formula: 'Amount * Probability / 100',
+      formula: 'amount * probability / 100',
       readonly: true,
       description: '基于金额和赢单概率计算'
     },
-    DaysOpen: {
+    days_open: {
       type: 'number',
       label: '开放天数',
       precision: 0,
       formula: 'DATEDIFF(TODAY(), CreatedDate)',
       readonly: true
     },
-    OwnerId: {
+    owner_id: {
       type: 'lookup',
       label: '负责人',
       reference: 'User',
@@ -130,7 +130,7 @@ const Opportunity = {
       name: 'Contracts',
       type: 'hasMany',
       object: 'Contract',
-      foreignKey: 'OpportunityId',
+      foreignKey: 'opportunity_id',
       label: '合同'
     }
   ],
@@ -138,76 +138,76 @@ const Opportunity = {
     {
       name: 'All',
       label: '所有商机',
-      columns: ['Name', 'AccountId', 'Amount', 'CloseDate', 'Stage', 'Probability', 'OwnerId']
+      columns: ['name', 'account_id', 'amount', 'close_date', 'stage', 'probability', 'owner_id']
     },
     {
       name: 'MyOpenOpportunities',
       label: '我的进行中商机',
       filters: [
-        ['OwnerId', '=', '$currentUser'],
-        ['Stage', 'not in', ['Closed Won', 'Closed Lost']]
+        ['owner_id', '=', '$currentUser'],
+        ['stage', 'not in', ['Closed Won', 'Closed Lost']]
       ],
-      columns: ['Name', 'AccountId', 'Amount', 'ExpectedRevenue', 'CloseDate', 'Stage', 'NextStep'],
-      sort: [['CloseDate', 'asc']]
+      columns: ['name', 'account_id', 'amount', 'expected_revenue', 'close_date', 'stage', 'next_step'],
+      sort: [['close_date', 'asc']]
     },
     {
       name: 'ClosingThisMonth',
       label: '本月预计成交',
       filters: [
-        ['CloseDate', 'this_month'],
-        ['Stage', 'not in', ['Closed Won', 'Closed Lost']]
+        ['close_date', 'this_month'],
+        ['stage', 'not in', ['Closed Won', 'Closed Lost']]
       ],
-      columns: ['Name', 'AccountId', 'Amount', 'Probability', 'CloseDate', 'Stage', 'OwnerId'],
-      sort: [['Amount', 'desc']]
+      columns: ['name', 'account_id', 'amount', 'probability', 'close_date', 'stage', 'owner_id'],
+      sort: [['amount', 'desc']]
     },
     {
       name: 'HighValueDeals',
       label: '高价值商机',
       filters: [
-        ['Amount', '>', 100000],
-        ['Stage', 'not in', ['Closed Won', 'Closed Lost']]
+        ['amount', '>', 100000],
+        ['stage', 'not in', ['Closed Won', 'Closed Lost']]
       ],
-      columns: ['Name', 'AccountId', 'Amount', 'ExpectedRevenue', 'Stage', 'Probability', 'OwnerId'],
-      sort: [['Amount', 'desc']]
+      columns: ['name', 'account_id', 'amount', 'expected_revenue', 'stage', 'probability', 'owner_id'],
+      sort: [['amount', 'desc']]
     },
     {
       name: 'StagnantOpportunities',
       label: '停滞商机',
       filters: [
-        ['DaysOpen', '>', 90],
-        ['Stage', 'not in', ['Closed Won', 'Closed Lost']]
+        ['days_open', '>', 90],
+        ['stage', 'not in', ['Closed Won', 'Closed Lost']]
       ],
-      columns: ['Name', 'AccountId', 'Amount', 'DaysOpen', 'Stage', 'NextStep', 'OwnerId'],
-      sort: [['DaysOpen', 'desc']]
+      columns: ['name', 'account_id', 'amount', 'days_open', 'stage', 'next_step', 'owner_id'],
+      sort: [['days_open', 'desc']]
     },
     {
       name: 'WonOpportunities',
       label: '已赢单',
-      filters: [['Stage', '=', 'Closed Won']],
-      columns: ['Name', 'AccountId', 'Amount', 'CloseDate', 'Type', 'OwnerId'],
-      sort: [['CloseDate', 'desc']]
+      filters: [['stage', '=', 'Closed Won']],
+      columns: ['name', 'account_id', 'amount', 'close_date', 'type', 'owner_id'],
+      sort: [['close_date', 'desc']]
     }
   ],
   validationRules: [
     {
       name: 'CloseDateInFuture',
       errorMessage: '预计成交日期必须是未来日期（除非已成交）',
-      formula: 'AND(CloseDate < TODAY(), Stage != "Closed Won", Stage != "Closed Lost")'
+      formula: 'AND(close_date < TODAY(), stage != "Closed Won", stage != "Closed Lost")'
     },
     {
       name: 'AmountRequired',
       errorMessage: '商机金额不能为空',
-      formula: 'AND(Stage != "Prospecting", ISBLANK(Amount))'
+      formula: 'AND(stage != "Prospecting", ISBLANK(amount))'
     },
     {
       name: 'NextStepRequired',
       errorMessage: '进行中的商机必须填写下一步行动',
-      formula: 'AND(Stage != "Closed Won", Stage != "Closed Lost", ISBLANK(NextStep))'
+      formula: 'AND(stage != "Closed Won", stage != "Closed Lost", ISBLANK(next_step))'
     },
     {
       name: 'ContactRequired',
       errorMessage: '商务谈判阶段必须指定主要联系人',
-      formula: 'AND(Stage = "Negotiation", ISBLANK(ContactId))'
+      formula: 'AND(stage = "Negotiation", ISBLANK(contact_id))'
     }
   ],
   pageLayout: {
@@ -215,17 +215,17 @@ const Opportunity = {
       {
         label: '商机信息',
         columns: 2,
-        fields: ['Name', 'AccountId', 'ContactId', 'OwnerId', 'Type', 'LeadSource']
+        fields: ['name', 'account_id', 'contact_id', 'owner_id', 'type', 'lead_source']
       },
       {
         label: '销售阶段',
         columns: 2,
-        fields: ['Stage', 'Probability', 'ForecastCategory', 'NextStep']
+        fields: ['stage', 'probability', 'forecast_category', 'next_step']
       },
       {
         label: '金额与日期',
         columns: 2,
-        fields: ['Amount', 'ExpectedRevenue', 'CloseDate', 'DaysOpen']
+        fields: ['amount', 'expected_revenue', 'close_date', 'days_open']
       }
     ]
   }

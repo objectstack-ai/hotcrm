@@ -11,31 +11,31 @@ const BusinessHours = {
   },
   fields: {
     // Basic Information
-    Name: {
+    name: {
       type: 'text',
-      label: 'Calendar Name',
+      label: 'Calendar name',
       required: true,
       maxLength: 255,
       searchable: true
     },
-    Description: {
+    description: {
       type: 'textarea',
-      label: 'Description',
+      label: 'description',
       maxLength: 2000
     },
-    IsActive: {
+    is_active: {
       type: 'checkbox',
       label: 'Active',
       defaultValue: true
     },
-    IsDefault: {
+    is_default: {
       type: 'checkbox',
       label: 'Default Calendar',
       defaultValue: false,
       description: 'Use as default for new SLA templates'
     },
     // Timezone
-    TimeZone: {
+    time_zone: {
       type: 'select',
       label: 'Time Zone',
       required: true,
@@ -53,125 +53,125 @@ const BusinessHours = {
       ]
     },
     // Monday
-    MondayEnabled: {
+    monday_enabled: {
       type: 'checkbox',
       label: 'Monday Working Day',
       defaultValue: true
     },
-    MondayStartTime: {
+    monday_start_time: {
       type: 'time',
       label: 'Monday Start',
       defaultValue: '09:00'
     },
-    MondayEndTime: {
+    monday_end_time: {
       type: 'time',
       label: 'Monday End',
       defaultValue: '18:00'
     },
     // Tuesday
-    TuesdayEnabled: {
+    tuesday_enabled: {
       type: 'checkbox',
       label: 'Tuesday Working Day',
       defaultValue: true
     },
-    TuesdayStartTime: {
+    tuesday_start_time: {
       type: 'time',
       label: 'Tuesday Start',
       defaultValue: '09:00'
     },
-    TuesdayEndTime: {
+    tuesday_end_time: {
       type: 'time',
       label: 'Tuesday End',
       defaultValue: '18:00'
     },
     // Wednesday
-    WednesdayEnabled: {
+    wednesday_enabled: {
       type: 'checkbox',
       label: 'Wednesday Working Day',
       defaultValue: true
     },
-    WednesdayStartTime: {
+    wednesday_start_time: {
       type: 'time',
       label: 'Wednesday Start',
       defaultValue: '09:00'
     },
-    WednesdayEndTime: {
+    wednesday_end_time: {
       type: 'time',
       label: 'Wednesday End',
       defaultValue: '18:00'
     },
     // Thursday
-    ThursdayEnabled: {
+    thursday_enabled: {
       type: 'checkbox',
       label: 'Thursday Working Day',
       defaultValue: true
     },
-    ThursdayStartTime: {
+    thursday_start_time: {
       type: 'time',
       label: 'Thursday Start',
       defaultValue: '09:00'
     },
-    ThursdayEndTime: {
+    thursday_end_time: {
       type: 'time',
       label: 'Thursday End',
       defaultValue: '18:00'
     },
     // Friday
-    FridayEnabled: {
+    friday_enabled: {
       type: 'checkbox',
       label: 'Friday Working Day',
       defaultValue: true
     },
-    FridayStartTime: {
+    friday_start_time: {
       type: 'time',
       label: 'Friday Start',
       defaultValue: '09:00'
     },
-    FridayEndTime: {
+    friday_end_time: {
       type: 'time',
       label: 'Friday End',
       defaultValue: '18:00'
     },
     // Saturday
-    SaturdayEnabled: {
+    saturday_enabled: {
       type: 'checkbox',
       label: 'Saturday Working Day',
       defaultValue: false
     },
-    SaturdayStartTime: {
+    saturday_start_time: {
       type: 'time',
       label: 'Saturday Start',
       defaultValue: '09:00'
     },
-    SaturdayEndTime: {
+    saturday_end_time: {
       type: 'time',
       label: 'Saturday End',
       defaultValue: '13:00'
     },
     // Sunday
-    SundayEnabled: {
+    sunday_enabled: {
       type: 'checkbox',
       label: 'Sunday Working Day',
       defaultValue: false
     },
-    SundayStartTime: {
+    sunday_start_time: {
       type: 'time',
       label: 'Sunday Start',
       defaultValue: '09:00'
     },
-    SundayEndTime: {
+    sunday_end_time: {
       type: 'time',
       label: 'Sunday End',
       defaultValue: '13:00'
     },
     // Holiday Handling
-    ExcludeHolidays: {
+    exclude_holidays: {
       type: 'checkbox',
       label: 'Exclude Holidays',
       defaultValue: true,
       description: 'Exclude public holidays from business hours'
     },
-    HolidayCalendarId: {
+    holiday_calendar_id: {
       type: 'lookup',
       label: 'Holiday Calendar',
       reference: 'HolidayCalendar',
@@ -182,12 +182,12 @@ const BusinessHours = {
     {
       name: 'OnlyOneDefault',
       errorMessage: 'Only one business hours calendar can be set as default',
-      formula: 'IsDefault = true'
+      formula: 'is_default = true'
     },
     {
       name: 'HolidayCalendarRequired',
       errorMessage: 'Holiday calendar is required when holidays are excluded',
-      formula: 'AND(ExcludeHolidays = true, ISBLANK(HolidayCalendarId))'
+      formula: 'AND(exclude_holidays = true, ISBLANK(holiday_calendar_id))'
     }
   ],
   listViews: [
@@ -195,17 +195,17 @@ const BusinessHours = {
       name: 'AllBusinessHours',
       label: 'All Business Hours',
       filters: [],
-      columns: ['Name', 'TimeZone', 'IsDefault', 'IsActive', 'ExcludeHolidays'],
-      sort: [['IsDefault', 'desc'], ['Name', 'asc']]
+      columns: ['name', 'time_zone', 'is_default', 'is_active', 'exclude_holidays'],
+      sort: [['is_default', 'desc'], ['name', 'asc']]
     },
     {
       name: 'ActiveHours',
       label: 'Active Hours',
       filters: [
-        ['IsActive', '=', true]
+        ['is_active', '=', true]
       ],
-      columns: ['Name', 'TimeZone', 'IsDefault', 'ExcludeHolidays'],
-      sort: [['Name', 'asc']]
+      columns: ['name', 'time_zone', 'is_default', 'exclude_holidays'],
+      sort: [['name', 'asc']]
     }
   ],
   pageLayout: {
@@ -213,47 +213,47 @@ const BusinessHours = {
       {
         label: 'Calendar Information',
         columns: 2,
-        fields: ['Name', 'Description', 'TimeZone', 'IsActive', 'IsDefault']
+        fields: ['name', 'description', 'time_zone', 'is_active', 'is_default']
       },
       {
         label: 'Monday',
         columns: 3,
-        fields: ['MondayEnabled', 'MondayStartTime', 'MondayEndTime']
+        fields: ['monday_enabled', 'monday_start_time', 'monday_end_time']
       },
       {
         label: 'Tuesday',
         columns: 3,
-        fields: ['TuesdayEnabled', 'TuesdayStartTime', 'TuesdayEndTime']
+        fields: ['tuesday_enabled', 'tuesday_start_time', 'tuesday_end_time']
       },
       {
         label: 'Wednesday',
         columns: 3,
-        fields: ['WednesdayEnabled', 'WednesdayStartTime', 'WednesdayEndTime']
+        fields: ['wednesday_enabled', 'wednesday_start_time', 'wednesday_end_time']
       },
       {
         label: 'Thursday',
         columns: 3,
-        fields: ['ThursdayEnabled', 'ThursdayStartTime', 'ThursdayEndTime']
+        fields: ['thursday_enabled', 'thursday_start_time', 'thursday_end_time']
       },
       {
         label: 'Friday',
         columns: 3,
-        fields: ['FridayEnabled', 'FridayStartTime', 'FridayEndTime']
+        fields: ['friday_enabled', 'friday_start_time', 'friday_end_time']
       },
       {
         label: 'Saturday',
         columns: 3,
-        fields: ['SaturdayEnabled', 'SaturdayStartTime', 'SaturdayEndTime']
+        fields: ['saturday_enabled', 'saturday_start_time', 'saturday_end_time']
       },
       {
         label: 'Sunday',
         columns: 3,
-        fields: ['SundayEnabled', 'SundayStartTime', 'SundayEndTime']
+        fields: ['sunday_enabled', 'sunday_start_time', 'sunday_end_time']
       },
       {
         label: 'Holiday Settings',
         columns: 2,
-        fields: ['ExcludeHolidays', 'HolidayCalendarId']
+        fields: ['exclude_holidays', 'holiday_calendar_id']
       }
     ]
   }

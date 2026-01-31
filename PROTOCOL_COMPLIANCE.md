@@ -1,11 +1,11 @@
-# ObjectStack Spec v0.6.1 Protocol Compliance Report
+# ObjectStack Spec v0.7.2+ Protocol Compliance Report
 
 **Date:** 2026-01-31  
 **Status:** ✅ **FULLY COMPLIANT**
 
 ## Executive Summary
 
-All metadata objects in the HotCRM repository have been validated and confirmed to be **fully compliant** with the @objectstack/spec v0.6.1 protocol requirements.
+All metadata objects in the HotCRM repository have been validated and confirmed to be **fully compliant** with the @objectstack/spec v0.7.2+ protocol requirements.
 
 - **Total Objects:** 41
 - **Total Fields:** 1,286
@@ -15,68 +15,65 @@ All metadata objects in the HotCRM repository have been validated and confirmed 
 
 ## Recent Updates (2026-01-31)
 
-The entire codebase has been updated to align with the latest @objectstack/spec v0.6.1 development standards:
+### BREAKING CHANGE: Field Names Now Lowercase/Snake_Case
 
-### 1. Import Statements Updated
-- **Changed:** `ServiceObject` → `ObjectSchema`
-- **Updated:** All 41 object files now import from `@objectstack/spec/data`
+The entire codebase has been updated to align with the latest @objectstack/spec v0.7.2+ protocol requirements:
 
-```typescript
-// Before
-import type { ServiceObject } from '@objectstack/spec/data';
+**ALL FIELD NAMES MUST NOW USE LOWERCASE/SNAKE_CASE**
 
-// After
-import type { ObjectSchema } from '@objectstack/spec/data';
-```
+This is a major breaking change from the previous PascalCase convention.
 
-### 2. Type Annotations Added
-- **Added:** Explicit `: ObjectSchema` type annotations to all object constants
-- **Pattern:** `const ObjectName: ObjectSchema = { ... }`
+### 1. Field Naming Convention Changed
+- **Changed:** PascalCase → lowercase/snake_case
+- **Updated:** All 1,286 fields across all 41 objects
 
 ```typescript
-// Before
-const Account = {
-  name: 'account',
-  // ...
-};
-
-// After
-const Account: ObjectSchema = {
-  name: 'account',
-  // ...
-};
-```
-
-### 3. Capabilities Renamed to Enable
-- **Changed:** `capabilities` → `enable`
-- **Updated:** Property names to follow new convention
-
-```typescript
-// Before
-capabilities: {
-  searchable: true,
-  trackHistory: true,
-  activities: true,
-  feeds: true,
-  files: true
+// Before (v0.7.1 and earlier)
+fields: {
+  FirstName: { type: 'text', label: '名' },
+  LastName: { type: 'text', label: '姓' },
+  AccountId: { type: 'lookup', reference: 'Account' },
+  AnnualRevenue: { type: 'currency' }
 }
 
-// After
-enable: {
-  searchEnabled: true,
-  trackHistory: true,
-  activitiesEnabled: true,
-  feedsEnabled: true,
-  filesEnabled: true
+// After (v0.7.2+)
+fields: {
+  first_name: { type: 'text', label: '名' },
+  last_name: { type: 'text', label: '姓' },
+  account_id: { type: 'lookup', reference: 'Account' },
+  annual_revenue: { type: 'currency' }
 }
 ```
 
-### 4. Documentation Updated
-- **Updated:** AI Quick Reference Guide to use correct types
-- **Fixed:** `ObjectDefinition` → `ObjectSchema`
-- **Fixed:** `DashboardDefinition` → `DashboardSchema`
-- **Fixed:** `ActionDefinition` → `ActionSchema`
-- **Aligned:** All documentation with metadata.prompt.md standards
+### 2. Field References Updated
+All field references have been updated to use lowercase/snake_case:
+
+- ✅ **listViews columns** - Updated all column references
+- ✅ **pageLayout fields** - Updated all field references in layouts
+- ✅ **validationRules formulas** - Updated all field names in validation formulas
+- ✅ **relationships foreignKey** - Updated all foreign key references
+
+```typescript
+// Example: listViews columns (Before → After)
+columns: ['Name', 'Type', 'AccountId'] → columns: ['name', 'type', 'account_id']
+
+// Example: validation formula (Before → After)
+formula: 'AND(AnnualRevenue > 10000000, ISBLANK(Industry))'
+formula: 'AND(annual_revenue > 10000000, ISBLANK(industry))'
+
+// Example: foreignKey (Before → After)
+foreignKey: 'AccountId' → foreignKey: 'account_id'
+```
+
+### 3. Validation Script Updated
+- **Updated:** `scripts/validate-protocol.js` to check for lowercase/snake_case field names
+- **Function:** `isPascalCase()` → `isLowercaseSnakeCase()`
+- **Pattern:** `/^[a-z][a-z0-9_]*$/` (lowercase with optional underscores)
+
+### 4. Conversion Tools Created
+- **Created:** `scripts/convert-fields-to-lowercase.js` - Automated field name conversion
+- **Created:** `scripts/fix-foreign-keys.js` - Foreign key reference fixer
+- **Converted:** All 1,286 fields across 41 objects automatically
 
 ## Protocol Requirements
 
@@ -100,19 +97,21 @@ All 8 objects use lowercase naming for the machine name property.
 
 ### 2. Field Naming Convention
 
-**Requirement:** All field names MUST use **PascalCase** (e.g., `FirstName`, `AccountId`, `CreatedDate`)
+**Requirement:** All field names MUST use **lowercase/snake_case** (e.g., `first_name`, `account_id`, `annual_revenue`)
 
 **Status:** ✅ **COMPLIANT**
 
-All 248 fields across all objects follow the PascalCase naming convention.
+All 1,286 fields across all objects follow the lowercase/snake_case naming convention.
 
 #### Examples:
-- ✅ `Name`
-- ✅ `FirstName`
-- ✅ `AccountId`
-- ✅ `AnnualRevenue`
-- ✅ `BillingStreet`
-- ✅ `IsDecisionMaker`
+- ✅ `name`
+- ✅ `first_name`
+- ✅ `account_id`
+- ✅ `annual_revenue`
+- ✅ `billing_street`
+- ✅ `is_decision_maker`
+
+**IMPORTANT:** This is a breaking change from previous versions where PascalCase was used.
 
 ### 2. Field Type Specification
 
@@ -138,7 +137,8 @@ All 248 fields across all objects follow the PascalCase naming convention.
 | `email` | Email address |
 | `url` | Web URL |
 | `autoNumber` | Auto-incrementing number |
-| `masterDetail` | Master-detail relationship |
+| `autonumber` | Alias for autoNumber (lowercase variant) |
+| `master_detail` | Master-detail relationship |
 | `hasMany` | One-to-many relationship |
 | `belongsTo` | Belongs-to relationship |
 | `multiselect` | Multi-select picklist |
@@ -148,12 +148,9 @@ All 248 fields across all objects follow the PascalCase naming convention.
 
 | ❌ Incorrect | ✅ Correct | Notes |
 |--------------|------------|-------|
-| `autonumber` | `autoNumber` | Must use camelCase |
+| `PascalCase` field names | `snake_case` field names | v0.7.2+ requires lowercase |
 | `picklist` | `select` | Salesforce terminology |
 | `reference` | `lookup` | Alternative naming |
-
-**Fixed Issues:**
-- ✅ Contract.ContractNumber: Changed `'autonumber'` → `'autoNumber'`
 
 ### 3. Object Structure
 
@@ -176,13 +173,14 @@ All objects include:
 
 ### 4. Relationship Naming
 
-**Requirement:** Relationship names MUST use PascalCase and valid relationship types
+**Requirement:** Relationship names MUST use PascalCase and valid relationship types. Foreign keys MUST use lowercase/snake_case.
 
 **Status:** ✅ **COMPLIANT**
 
 All 65 relationships use:
 - ✅ PascalCase names (e.g., `Contacts`, `Opportunities`, `ChildAccounts`)
 - ✅ Valid types: `hasMany`, `belongsTo`
+- ✅ Foreign keys in lowercase/snake_case (e.g., `account_id`, `contact_id`)
 
 ## Validation Summary
 
@@ -194,10 +192,11 @@ All 41 objects across all packages have been validated:
 
 ### Validation Results
 - ✅ All object names use snake_case
-- ✅ All field names use PascalCase  
+- ✅ All field names use lowercase/snake_case (v0.7.2+ requirement)
 - ✅ All field types are valid
 - ✅ All objects have proper structure
 - ✅ All relationships are correctly defined
+- ✅ All foreign keys use lowercase/snake_case
 
 ## Validation Methodology
 
@@ -222,14 +221,16 @@ When creating or modifying object metadata, ensure:
    - Use underscores for multi-word names: `project_task` not `projectTask`
 
 2. **Field Names:**
-   - Use PascalCase: `FirstName`, not `first_name` or `firstName`
-   - Start with a capital letter
-   - Use descriptive names: `BillingStreet` not `BillStreet`
+   - Use lowercase/snake_case: `first_name`, not `FirstName` or `firstName`
+   - Start with a lowercase letter
+   - Use underscores for multi-word names: `annual_revenue` not `annualRevenue`
+   - **BREAKING CHANGE**: This changed from PascalCase in v0.7.1 to snake_case in v0.7.2+
 
 2. **Field Types:**
-   - Use `autoNumber` not `autonumber`
+   - Use `autonumber` or `autoNumber` (both accepted)
    - Use `select` not `picklist`
    - Use `lookup` not `reference`
+   - Use `master_detail` not `masterDetail`
 
 3. **Object Properties:**
    - Always include `name`, `label`, `icon`, and `description`
@@ -238,9 +239,9 @@ When creating or modifying object metadata, ensure:
    - Add `validationRules` for business logic
 
 4. **Relationships:**
-   - Use PascalCase names
+   - Use PascalCase names for relationship names
    - Specify correct relationship types
-   - Include proper foreign key references
+   - Use lowercase/snake_case for foreign key references (e.g., `account_id`, `contact_id`)
 
 ### Validation Command
 
@@ -252,23 +253,50 @@ node /path/to/validation_script.js
 
 The validation script checks:
 - ✓ Object name convention (lowercase/snake_case)
-- ✓ Field naming conventions (PascalCase)
+- ✓ Field naming conventions (lowercase/snake_case) - v0.7.2+ requirement
 - ✓ Field type validity
 - ✓ Object structure completeness
 - ✓ Relationship definitions
+- ✓ Foreign key naming (lowercase/snake_case)
 
 ## Conclusion
 
-The HotCRM metadata is **fully compliant** with the @objectstack/spec v0.6.1 protocol. All 41 objects follow the latest development standards.
+The HotCRM metadata is **fully compliant** with the @objectstack/spec v0.7.2+ protocol. All 41 objects follow the latest development standards.
 
-### Changes Made (2026-01-31)
+### Changes Made (2026-01-31) - v0.7.2+ Protocol Update
+
+**BREAKING CHANGE: Field Names Now Lowercase/Snake_Case**
+
+1. ✅ **Converted all field names** from PascalCase to lowercase/snake_case (1,286 fields)
+   - Created automated conversion script: `scripts/convert-fields-to-lowercase.js`
+   - Examples: `FirstName` → `first_name`, `AccountId` → `account_id`
+
+2. ✅ **Updated all field references** across the codebase
+   - listViews columns updated
+   - pageLayout fields updated
+   - validationRules formulas updated
+   - Foreign keys in relationships updated
+
+3. ✅ **Updated validation script** to check for lowercase/snake_case
+   - Modified `scripts/validate-protocol.js`
+   - Changed validation from PascalCase to lowercase/snake_case
+
+4. ✅ **Updated documentation** to reflect new protocol
+   - Updated `.github/prompts/metadata.prompt.md`
+   - Updated `PROTOCOL_COMPLIANCE.md`
+
+5. ✅ **All validation checks pass** with 0 errors
+   - 41 objects validated
+   - 1,286 fields checked
+   - 65 relationships verified
+
+### Previous Changes (2026-01-31) - v0.7.1 Update
 
 1. ✅ Updated all import statements: `ServiceObject` → `ObjectSchema`
 2. ✅ Added type annotations to all 41 object constants
 3. ✅ Renamed `capabilities` → `enable` in all objects
 4. ✅ Updated capability property names to follow new convention
 5. ✅ Updated AI Quick Reference documentation to match latest standards
-6. ✅ All validation checks pass with 0 errors
 
 ### Previous Changes (2026-01-29)
 

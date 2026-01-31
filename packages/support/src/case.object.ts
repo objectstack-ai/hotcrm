@@ -15,30 +15,30 @@ const Case = {
   },
   fields: {
     // Basic Information
-    CaseNumber: {
+    case_number: {
       type: 'autonumber',
       label: 'Case Number',
       format: 'CASE-{YYYY}-{0000}',
       readonly: true,
       searchable: true
     },
-    Subject: {
+    subject: {
       type: 'text',
-      label: 'Subject',
+      label: 'subject',
       required: true,
       searchable: true,
       maxLength: 255
     },
-    Description: {
+    description: {
       type: 'textarea',
-      label: 'Description',
+      label: 'description',
       required: true,
       maxLength: 32000,
       searchable: true
     },
-    Status: {
+    status: {
       type: 'select',
-      label: 'Status',
+      label: 'status',
       required: true,
       defaultValue: 'New',
       options: [
@@ -51,9 +51,9 @@ const Case = {
         { label: '🔒 Closed', value: 'Closed' }
       ]
     },
-    Priority: {
+    priority: {
       type: 'select',
-      label: 'Priority',
+      label: 'priority',
       required: true,
       defaultValue: 'Medium',
       options: [
@@ -63,9 +63,9 @@ const Case = {
         { label: '🟢 Low', value: 'Low' }
       ]
     },
-    Severity: {
+    severity: {
       type: 'select',
-      label: 'Severity',
+      label: 'severity',
       options: [
         { label: 'S1 - Critical Impact', value: 'S1' },
         { label: 'S2 - High Impact', value: 'S2' },
@@ -73,9 +73,9 @@ const Case = {
         { label: 'S4 - Low Impact', value: 'S4' }
       ]
     },
-    Type: {
+    type: {
       type: 'select',
-      label: 'Case Type',
+      label: 'Case type',
       options: [
         { label: '🐛 Problem', value: 'Problem' },
         { label: '❓ Question', value: 'Question' },
@@ -86,9 +86,9 @@ const Case = {
         { label: '📖 Other', value: 'Other' }
       ]
     },
-    Origin: {
+    origin: {
       type: 'select',
-      label: 'Origin Channel',
+      label: 'origin Channel',
       required: true,
       options: [
         { label: '📧 Email', value: 'Email' },
@@ -102,55 +102,55 @@ const Case = {
       ]
     },
     // Related Records
-    AccountId: {
+    account_id: {
       type: 'lookup',
       label: 'Account',
       reference: 'Account',
       required: true
     },
-    ContactId: {
+    contact_id: {
       type: 'lookup',
       label: 'Contact',
       reference: 'Contact'
     },
-    ContractId: {
+    contract_id: {
       type: 'lookup',
       label: 'Contract',
       reference: 'Contract',
       description: 'Service contract'
     },
-    ProductId: {
+    product_id: {
       type: 'lookup',
       label: 'Product',
       reference: 'Product'
     },
-    AssetId: {
+    asset_id: {
       type: 'lookup',
       label: 'Asset',
       reference: 'Asset',
       description: 'Related asset or equipment'
     },
-    ParentCaseId: {
+    parent_case_id: {
       type: 'lookup',
       label: 'Parent Case',
       reference: 'Case',
       description: 'Parent case if this is a sub-case'
     },
     // Assignment
-    OwnerId: {
+    owner_id: {
       type: 'lookup',
       label: 'Owner',
       reference: 'User',
       required: true
     },
-    AssignedToQueueId: {
+    assigned_to_queue_id: {
       type: 'lookup',
       label: 'Queue',
       reference: 'Queue',
       description: 'Support team queue'
     },
     // SLA Management
-    SLALevel: {
+    sla_level: {
       type: 'select',
       label: 'SLA Level',
       options: [
@@ -161,78 +161,78 @@ const Case = {
         { label: '📋 Standard', value: 'Standard' }
       ]
     },
-    ResponseDueDate: {
+    response_due_date: {
       type: 'datetime',
       label: 'Response Due',
       readonly: true,
       description: 'Auto-calculated based on SLA'
     },
-    ResolutionDueDate: {
+    resolution_due_date: {
       type: 'datetime',
-      label: 'Resolution Due',
+      label: 'resolution Due',
       readonly: true,
       description: 'Auto-calculated based on SLA'
     },
-    FirstResponseTime: {
+    first_response_time: {
       type: 'datetime',
       label: 'First Response Time',
       readonly: true
     },
-    ActualResolutionTime: {
+    actual_resolution_time: {
       type: 'datetime',
-      label: 'Actual Resolution Time',
+      label: 'Actual resolution Time',
       readonly: true
     },
-    ResponseTimeMinutes: {
+    response_time_minutes: {
       type: 'number',
       label: 'Response Time (Minutes)',
       precision: 0,
       readonly: true
     },
-    ResolutionTimeMinutes: {
+    resolution_time_minutes: {
       type: 'number',
-      label: 'Resolution Time (Minutes)',
+      label: 'resolution Time (Minutes)',
       precision: 0,
       readonly: true
     },
-    IsSLAViolated: {
+    is_sla_violated: {
       type: 'checkbox',
       label: 'SLA Violated',
       readonly: true,
       defaultValue: false
     },
-    SLAViolationType: {
+    sla_violation_type: {
       type: 'select',
-      label: 'SLA Violation Type',
+      label: 'SLA Violation type',
       readonly: true,
       options: [
         { label: 'Response Time Violation', value: 'Response' },
-        { label: 'Resolution Time Violation', value: 'Resolution' },
+        { label: 'resolution Time Violation', value: 'resolution' },
         { label: 'Both', value: 'Both' }
       ]
     },
     // Escalation
-    IsEscalated: {
+    is_escalated: {
       type: 'checkbox',
       label: 'Escalated',
       defaultValue: false
     },
-    EscalatedDate: {
+    escalated_date: {
       type: 'datetime',
       label: 'Escalated Date',
       readonly: true
     },
-    EscalatedToId: {
+    escalated_to_id: {
       type: 'lookup',
       label: 'Escalated To',
       reference: 'User'
     },
-    EscalationReason: {
+    escalation_reason: {
       type: 'textarea',
       label: 'Escalation Reason',
       maxLength: 2000
     },
-    EscalationLevel: {
+    escalation_level: {
       type: 'number',
       label: 'Escalation Level',
       precision: 0,
@@ -240,21 +240,21 @@ const Case = {
       readonly: true,
       description: 'Number of times escalated'
     },
-    // Resolution
-    Resolution: {
+    // resolution
+    resolution: {
       type: 'textarea',
-      label: 'Resolution',
+      label: 'resolution',
       maxLength: 32000,
       searchable: true
     },
-    RootCause: {
+    root_cause: {
       type: 'textarea',
       label: 'Root Cause',
       maxLength: 5000
     },
-    ResolutionCategory: {
+    resolution_category: {
       type: 'select',
-      label: 'Resolution Category',
+      label: 'resolution Category',
       options: [
         { label: '💻 Technical Support', value: 'Technical Support' },
         { label: '📚 Product Guidance', value: 'Product Guidance' },
@@ -266,13 +266,13 @@ const Case = {
         { label: '🎯 Other', value: 'Other' }
       ]
     },
-    WorkAroundProvided: {
+    work_around_provided: {
       type: 'checkbox',
       label: 'Workaround Provided',
       defaultValue: false
     },
     // Customer Satisfaction (CSAT)
-    CustomerSatisfaction: {
+    customer_satisfaction: {
       type: 'select',
       label: 'Customer Satisfaction',
       readonly: true,
@@ -284,7 +284,7 @@ const Case = {
         { label: '😡 Very Dissatisfied', value: 'Very Dissatisfied' }
       ]
     },
-    SatisfactionScore: {
+    satisfaction_score: {
       type: 'number',
       label: 'CSAT Score',
       precision: 0,
@@ -293,29 +293,29 @@ const Case = {
       readonly: true,
       description: 'Customer satisfaction rating (1-5)'
     },
-    CustomerFeedback: {
+    customer_feedback: {
       type: 'textarea',
       label: 'Customer Feedback',
       maxLength: 5000,
       readonly: true
     },
-    CSATSurveyDate: {
+    csat_survey_date: {
       type: 'datetime',
       label: 'CSAT Survey Date',
       readonly: true
     },
     // Timestamps
-    ClosedDate: {
+    closed_date: {
       type: 'datetime',
       label: 'Closed Date',
       readonly: true
     },
-    ReopenedDate: {
+    reopened_date: {
       type: 'datetime',
       label: 'Reopened Date',
       readonly: true
     },
-    ReopenCount: {
+    reopen_count: {
       type: 'number',
       label: 'Reopen Count',
       precision: 0,
@@ -323,7 +323,7 @@ const Case = {
       readonly: true
     },
     // AI Enhancement Fields
-    AIAutoCategory: {
+    ai_auto_category: {
       type: 'select',
       label: 'AI Auto Category',
       readonly: true,
@@ -336,28 +336,28 @@ const Case = {
         { label: 'Other', value: 'Other' }
       ]
     },
-    AISuggestedAssigneeId: {
+    ai_suggested_assignee_id: {
       type: 'lookup',
       label: 'AI Suggested Assignee',
       reference: 'User',
       readonly: true,
       description: 'AI-recommended agent based on skills and availability'
     },
-    AIRelatedKnowledge: {
+    ai_related_knowledge: {
       type: 'text',
       label: 'AI Related Knowledge',
       readonly: true,
       maxLength: 500,
       description: 'Related knowledge base article IDs'
     },
-    AISuggestedSolution: {
+    ai_suggested_solution: {
       type: 'textarea',
       label: 'AI Suggested Solution',
       readonly: true,
       maxLength: 5000,
       description: 'AI-generated solution based on knowledge base'
     },
-    AISentimentAnalysis: {
+    ai_sentiment_analysis: {
       type: 'select',
       label: 'AI Sentiment',
       readonly: true,
@@ -368,7 +368,7 @@ const Case = {
         { label: '😡 Angry', value: 'Angry' }
       ]
     },
-    AIUrgencyScore: {
+    ai_urgency_score: {
       type: 'number',
       label: 'AI Urgency Score',
       precision: 0,
@@ -377,7 +377,7 @@ const Case = {
       readonly: true,
       description: 'AI-calculated urgency score (0-100)'
     },
-    AIKeywords: {
+    ai_keywords: {
       type: 'text',
       label: 'AI Keywords',
       readonly: true,
@@ -390,28 +390,28 @@ const Case = {
       name: 'CaseComments',
       type: 'hasMany',
       object: 'CaseComment',
-      foreignKey: 'CaseId',
+      foreignKey: 'case_id',
       label: 'Case Comments'
     },
     {
       name: 'Activities',
       type: 'hasMany',
       object: 'Activity',
-      foreignKey: 'WhatId',
+      foreignKey: 'what_id',
       label: 'Activities'
     },
     {
       name: 'ChildCases',
       type: 'hasMany',
       object: 'Case',
-      foreignKey: 'ParentCaseId',
+      foreignKey: 'parent_case_id',
       label: 'Child Cases'
     },
     {
       name: 'SLAHistory',
       type: 'hasMany',
       object: 'SLAHistory',
-      foreignKey: 'CaseId',
+      foreignKey: 'case_id',
       label: 'SLA History'
     }
   ],
@@ -420,142 +420,142 @@ const Case = {
       name: 'AllCases',
       label: 'All Cases',
       filters: [],
-      columns: ['CaseNumber', 'Subject', 'AccountId', 'Priority', 'Status', 'OwnerId', 'CreatedDate'],
+      columns: ['case_number', 'subject', 'account_id', 'priority', 'status', 'owner_id', 'CreatedDate'],
       sort: [['CreatedDate', 'desc']]
     },
     {
       name: 'MyCases',
       label: 'My Cases',
       filters: [
-        ['OwnerId', '=', '$currentUser'],
-        ['Status', 'not in', ['Closed']]
+        ['owner_id', '=', '$currentUser'],
+        ['status', 'not in', ['Closed']]
       ],
-      columns: ['CaseNumber', 'Subject', 'AccountId', 'Priority', 'Status', 'ResolutionDueDate'],
-      sort: [['Priority', 'desc'], ['ResolutionDueDate', 'asc']]
+      columns: ['case_number', 'subject', 'account_id', 'priority', 'status', 'resolution_due_date'],
+      sort: [['priority', 'desc'], ['resolution_due_date', 'asc']]
     },
     {
       name: 'TeamQueue',
       label: 'Team Queue',
       filters: [
-        ['AssignedToQueueId', '!=', null],
-        ['Status', 'not in', ['Closed', 'Resolved']]
+        ['assigned_to_queue_id', '!=', null],
+        ['status', 'not in', ['Closed', 'Resolved']]
       ],
-      columns: ['CaseNumber', 'Subject', 'AccountId', 'Priority', 'Status', 'AssignedToQueueId', 'CreatedDate'],
-      sort: [['Priority', 'desc'], ['CreatedDate', 'asc']]
+      columns: ['case_number', 'subject', 'account_id', 'priority', 'status', 'assigned_to_queue_id', 'CreatedDate'],
+      sort: [['priority', 'desc'], ['CreatedDate', 'asc']]
     },
     {
       name: 'OpenCases',
       label: 'Open',
       filters: [
-        ['Status', 'not in', ['Closed', 'Resolved']]
+        ['status', 'not in', ['Closed', 'Resolved']]
       ],
-      columns: ['CaseNumber', 'Subject', 'AccountId', 'Priority', 'Status', 'OwnerId', 'CreatedDate'],
+      columns: ['case_number', 'subject', 'account_id', 'priority', 'status', 'owner_id', 'CreatedDate'],
       sort: [['CreatedDate', 'asc']]
     },
     {
       name: 'HighPriority',
-      label: 'High Priority',
+      label: 'High priority',
       filters: [
-        ['Priority', 'in', ['Critical', 'High']],
-        ['Status', 'not in', ['Closed', 'Resolved']]
+        ['priority', 'in', ['Critical', 'High']],
+        ['status', 'not in', ['Closed', 'Resolved']]
       ],
-      columns: ['CaseNumber', 'Subject', 'AccountId', 'Priority', 'Status', 'ResolutionDueDate', 'OwnerId'],
-      sort: [['Priority', 'desc']]
+      columns: ['case_number', 'subject', 'account_id', 'priority', 'status', 'resolution_due_date', 'owner_id'],
+      sort: [['priority', 'desc']]
     },
     {
       name: 'EscalatedCases',
       label: 'Escalated',
       filters: [
-        ['IsEscalated', '=', true],
-        ['Status', 'not in', ['Closed', 'Resolved']]
+        ['is_escalated', '=', true],
+        ['status', 'not in', ['Closed', 'Resolved']]
       ],
-      columns: ['CaseNumber', 'Subject', 'AccountId', 'Priority', 'EscalatedDate', 'EscalatedToId', 'OwnerId'],
-      sort: [['EscalatedDate', 'desc']]
+      columns: ['case_number', 'subject', 'account_id', 'priority', 'escalated_date', 'escalated_to_id', 'owner_id'],
+      sort: [['escalated_date', 'desc']]
     },
     {
       name: 'SLAViolations',
       label: 'SLA Violations',
       filters: [
-        ['IsSLAViolated', '=', true]
+        ['is_sla_violated', '=', true]
       ],
-      columns: ['CaseNumber', 'Subject', 'AccountId', 'SLALevel', 'SLAViolationType', 'ResolutionDueDate', 'OwnerId'],
-      sort: [['ResolutionDueDate', 'asc']]
+      columns: ['case_number', 'subject', 'account_id', 'sla_level', 'sla_violation_type', 'resolution_due_date', 'owner_id'],
+      sort: [['resolution_due_date', 'asc']]
     },
     {
       name: 'TodayClosed',
       label: 'Today Closed',
       filters: [
-        ['Status', '=', 'Closed'],
-        ['ClosedDate', 'today', null]
+        ['status', '=', 'Closed'],
+        ['closed_date', 'today', null]
       ],
-      columns: ['CaseNumber', 'Subject', 'AccountId', 'ResolutionTimeMinutes', 'CustomerSatisfaction', 'ClosedDate'],
-      sort: [['ClosedDate', 'desc']]
+      columns: ['case_number', 'subject', 'account_id', 'resolution_time_minutes', 'customer_satisfaction', 'closed_date'],
+      sort: [['closed_date', 'desc']]
     },
     {
       name: 'RecentlyClosed',
       label: 'Recently Closed',
       filters: [
-        ['Status', '=', 'Closed'],
-        ['ClosedDate', 'last_n_days', 30]
+        ['status', '=', 'Closed'],
+        ['closed_date', 'last_n_days', 30]
       ],
-      columns: ['CaseNumber', 'Subject', 'AccountId', 'ResolutionTimeMinutes', 'CustomerSatisfaction', 'ClosedDate'],
-      sort: [['ClosedDate', 'desc']]
+      columns: ['case_number', 'subject', 'account_id', 'resolution_time_minutes', 'customer_satisfaction', 'closed_date'],
+      sort: [['closed_date', 'desc']]
     },
     {
       name: 'WaitingOnCustomer',
       label: 'Waiting on Customer',
       filters: [
-        ['Status', '=', 'Waiting on Customer']
+        ['status', '=', 'Waiting on Customer']
       ],
-      columns: ['CaseNumber', 'Subject', 'AccountId', 'ContactId', 'ModifiedDate', 'OwnerId'],
+      columns: ['case_number', 'subject', 'account_id', 'contact_id', 'ModifiedDate', 'owner_id'],
       sort: [['ModifiedDate', 'asc']]
     },
     {
       name: 'UnassignedCases',
       label: 'Unassigned',
       filters: [
-        ['AssignedToQueueId', '=', null],
-        ['Status', '=', 'New']
+        ['assigned_to_queue_id', '=', null],
+        ['status', '=', 'New']
       ],
-      columns: ['CaseNumber', 'Subject', 'AccountId', 'Priority', 'Origin', 'CreatedDate', 'AIUrgencyScore'],
-      sort: [['AIUrgencyScore', 'desc'], ['CreatedDate', 'asc']]
+      columns: ['case_number', 'subject', 'account_id', 'priority', 'origin', 'CreatedDate', 'ai_urgency_score'],
+      sort: [['ai_urgency_score', 'desc'], ['CreatedDate', 'asc']]
     }
   ],
   validationRules: [
     {
       name: 'ResolutionRequiredWhenResolved',
-      errorMessage: 'Resolution is required when status is Resolved',
-      formula: 'AND(Status = "Resolved", ISBLANK(Resolution))'
+      errorMessage: 'resolution is required when status is Resolved',
+      formula: 'AND(status = "Resolved", ISBLANK(resolution))'
     },
     {
       name: 'ClosedCaseReadOnly',
       errorMessage: 'Closed cases cannot be modified',
-      formula: 'AND(PRIORVALUE(Status) = "Closed", Status != "Closed", NOT(ISNEW()))'
+      formula: 'AND(PRIORVALUE(status) = "Closed", status != "Closed", NOT(ISNEW()))'
     },
     {
       name: 'EscalationReasonRequired',
       errorMessage: 'Escalation reason is required when escalating a case',
-      formula: 'AND(IsEscalated = true, ISBLANK(EscalationReason))'
+      formula: 'AND(is_escalated = true, ISBLANK(escalation_reason))'
     },
     {
       name: 'EscalatedToRequired',
       errorMessage: 'Escalated To user is required when case is escalated',
-      formula: 'AND(IsEscalated = true, ISBLANK(EscalatedToId))'
+      formula: 'AND(is_escalated = true, ISBLANK(escalated_to_id))'
     },
     {
       name: 'ContactMustBelongToAccount',
       errorMessage: 'Contact must belong to the selected Account',
-      formula: 'AND(NOT(ISBLANK(ContactId)), NOT(ISBLANK(AccountId)))'
+      formula: 'AND(NOT(ISBLANK(contact_id)), NOT(ISBLANK(account_id)))'
     },
     {
       name: 'ResolutionCategoryRequired',
-      errorMessage: 'Resolution category is required when case is resolved',
-      formula: 'AND(Status = "Resolved", ISBLANK(ResolutionCategory))'
+      errorMessage: 'resolution category is required when case is resolved',
+      formula: 'AND(status = "Resolved", ISBLANK(resolution_category))'
     },
     {
       name: 'RootCauseRequired',
       errorMessage: 'Root cause is required for high priority cases when resolved',
-      formula: 'AND(Status = "Resolved", Priority IN ("Critical", "High"), ISBLANK(RootCause))'
+      formula: 'AND(status = "Resolved", priority IN ("Critical", "High"), ISBLANK(root_cause))'
     }
   ],
   pageLayout: {
@@ -563,52 +563,52 @@ const Case = {
       {
         label: 'Case Information',
         columns: 2,
-        fields: ['CaseNumber', 'Subject', 'Status', 'Priority', 'Severity', 'Type', 'Origin']
+        fields: ['case_number', 'subject', 'status', 'priority', 'severity', 'type', 'origin']
       },
       {
         label: 'Related Records',
         columns: 2,
-        fields: ['AccountId', 'ContactId', 'ContractId', 'ProductId', 'AssetId', 'ParentCaseId']
+        fields: ['account_id', 'contact_id', 'contract_id', 'product_id', 'asset_id', 'parent_case_id']
       },
       {
         label: 'Assignment',
         columns: 2,
-        fields: ['OwnerId', 'AssignedToQueueId']
+        fields: ['owner_id', 'assigned_to_queue_id']
       },
       {
         label: 'SLA Management',
         columns: 2,
-        fields: ['SLALevel', 'ResponseDueDate', 'ResolutionDueDate', 'FirstResponseTime', 'ActualResolutionTime', 'ResponseTimeMinutes', 'ResolutionTimeMinutes', 'IsSLAViolated', 'SLAViolationType']
+        fields: ['sla_level', 'response_due_date', 'resolution_due_date', 'first_response_time', 'actual_resolution_time', 'response_time_minutes', 'resolution_time_minutes', 'is_sla_violated', 'sla_violation_type']
       },
       {
         label: 'Escalation',
         columns: 2,
-        fields: ['IsEscalated', 'EscalatedDate', 'EscalatedToId', 'EscalationReason', 'EscalationLevel']
+        fields: ['is_escalated', 'escalated_date', 'escalated_to_id', 'escalation_reason', 'escalation_level']
       },
       {
-        label: 'Resolution',
+        label: 'resolution',
         columns: 1,
-        fields: ['Resolution', 'RootCause', 'ResolutionCategory', 'WorkAroundProvided']
+        fields: ['resolution', 'root_cause', 'resolution_category', 'work_around_provided']
       },
       {
         label: 'Customer Satisfaction',
         columns: 2,
-        fields: ['CustomerSatisfaction', 'SatisfactionScore', 'CustomerFeedback', 'CSATSurveyDate']
+        fields: ['customer_satisfaction', 'satisfaction_score', 'customer_feedback', 'csat_survey_date']
       },
       {
         label: 'Case History',
         columns: 2,
-        fields: ['ClosedDate', 'ReopenedDate', 'ReopenCount']
+        fields: ['closed_date', 'reopened_date', 'reopen_count']
       },
       {
         label: 'AI Smart Routing',
         columns: 1,
-        fields: ['AIAutoCategory', 'AISuggestedAssigneeId', 'AIRelatedKnowledge', 'AISuggestedSolution', 'AISentimentAnalysis', 'AIUrgencyScore', 'AIKeywords']
+        fields: ['ai_auto_category', 'ai_suggested_assignee_id', 'ai_related_knowledge', 'ai_suggested_solution', 'ai_sentiment_analysis', 'ai_urgency_score', 'ai_keywords']
       },
       {
-        label: 'Description',
+        label: 'description',
         columns: 1,
-        fields: ['Description']
+        fields: ['description']
       }
     ]
   }

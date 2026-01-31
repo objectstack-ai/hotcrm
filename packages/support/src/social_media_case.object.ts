@@ -11,27 +11,27 @@ const SocialMediaCase = {
   },
   fields: {
     // Basic Information
-    Name: {
+    name: {
       type: 'text',
-      label: 'Configuration Name',
+      label: 'Configuration name',
       required: true,
       maxLength: 255,
       searchable: true
     },
-    Description: {
+    description: {
       type: 'textarea',
-      label: 'Description',
+      label: 'description',
       maxLength: 2000
     },
-    IsActive: {
+    is_active: {
       type: 'checkbox',
       label: 'Active',
       defaultValue: true
     },
-    // Platform Configuration
-    Platform: {
+    // platform Configuration
+    platform: {
       type: 'select',
-      label: 'Social Platform',
+      label: 'Social platform',
       required: true,
       options: [
         { label: '💬 WeChat', value: 'WeChat' },
@@ -44,81 +44,81 @@ const SocialMediaCase = {
         { label: '🎵 TikTok', value: 'TikTok' }
       ]
     },
-    AccountHandle: {
+    account_handle: {
       type: 'text',
       label: 'Account Handle',
       required: true,
       maxLength: 255,
       description: 'Social media account username/handle to monitor'
     },
-    AccountId: {
+    account_id: {
       type: 'text',
       label: 'Account ID',
       maxLength: 255,
-      description: 'Platform-specific account identifier'
+      description: 'platform-specific account identifier'
     },
     // Authentication
-    AccessToken: {
+    access_token: {
       type: 'text',
       label: 'Access Token',
       maxLength: 1000,
       description: 'OAuth access token (encrypted)'
     },
-    RefreshToken: {
+    refresh_token: {
       type: 'text',
       label: 'Refresh Token',
       maxLength: 1000,
       description: 'OAuth refresh token (encrypted)'
     },
-    TokenExpiryDate: {
+    token_expiry_date: {
       type: 'datetime',
       label: 'Token Expiry',
       readonly: true
     },
     // Monitoring Configuration
-    MonitorMentions: {
+    monitor_mentions: {
       type: 'checkbox',
       label: 'Monitor Mentions',
       defaultValue: true,
       description: 'Create cases from @mentions'
     },
-    MonitorDirectMessages: {
+    monitor_direct_messages: {
       type: 'checkbox',
       label: 'Monitor Direct Messages',
       defaultValue: true,
       description: 'Create cases from DMs'
     },
-    MonitorComments: {
+    monitor_comments: {
       type: 'checkbox',
       label: 'Monitor Comments',
       defaultValue: true,
       description: 'Create cases from post comments'
     },
-    MonitorHashtags: {
+    monitor_hashtags: {
       type: 'text',
       label: 'Monitor Hashtags',
       maxLength: 500,
       description: 'Comma-separated hashtags to monitor'
     },
-    MonitorKeywords: {
+    monitor_keywords: {
       type: 'textarea',
       label: 'Monitor Keywords',
       maxLength: 2000,
       description: 'Keywords to trigger case creation (one per line)'
     },
     // Routing
-    DefaultQueueId: {
+    default_queue_id: {
       type: 'lookup',
       label: 'Default Queue',
       reference: 'Queue',
       required: true
     },
-    DefaultOwnerId: {
+    default_owner_id: {
       type: 'lookup',
       label: 'Default Owner',
       reference: 'User'
     },
-    DefaultPriority: {
+    default_priority: {
       type: 'select',
       label: 'Default Priority',
       defaultValue: 'Medium',
@@ -129,7 +129,7 @@ const SocialMediaCase = {
         { label: 'Low', value: 'Low' }
       ]
     },
-    DefaultCaseType: {
+    default_case_type: {
       type: 'select',
       label: 'Default Case Type',
       defaultValue: 'Question',
@@ -143,37 +143,37 @@ const SocialMediaCase = {
       ]
     },
     // Contact Matching
-    AutoMatchContact: {
+    auto_match_contact: {
       type: 'checkbox',
       label: 'Auto Match Contact',
       defaultValue: true,
       description: 'Match social profile to existing contact'
     },
-    CreateContactIfNotFound: {
+    create_contact_if_not_found: {
       type: 'checkbox',
       label: 'Create Contact If Not Found',
       defaultValue: true
     },
-    DefaultAccountId: {
+    default_account_id: {
       type: 'lookup',
       label: 'Default Account',
       reference: 'Account',
       description: 'Account for new contacts'
     },
     // Response Configuration
-    SendAutoResponse: {
+    send_auto_response: {
       type: 'checkbox',
       label: 'Send Auto Response',
       defaultValue: true,
       description: 'Send automatic acknowledgment message'
     },
-    AutoResponseMessage: {
+    auto_response_message: {
       type: 'textarea',
       label: 'Auto Response Message',
       maxLength: 500,
       description: 'Message to send when case is created'
     },
-    ResponseDelaySeconds: {
+    response_delay_seconds: {
       type: 'number',
       label: 'Response Delay (Seconds)',
       precision: 0,
@@ -183,46 +183,46 @@ const SocialMediaCase = {
       description: 'Delay before sending auto-response'
     },
     // AI Processing
-    UseAISentimentAnalysis: {
+    use_ai_sentiment_analysis: {
       type: 'checkbox',
       label: 'Use AI Sentiment Analysis',
       defaultValue: true,
       description: 'Analyze sentiment of social posts'
     },
-    UseAIForPriority: {
+    use_ai_for_priority: {
       type: 'checkbox',
       label: 'Use AI for Priority',
       defaultValue: true,
       description: 'AI determines case priority based on content'
     },
-    UseAIForUrgency: {
+    use_ai_for_urgency: {
       type: 'checkbox',
       label: 'Use AI for Urgency',
       defaultValue: true,
       description: 'Detect urgent situations (e.g., angry customers)'
     },
     // Filtering
-    MinimumFollowers: {
+    minimum_followers: {
       type: 'number',
       label: 'Minimum Followers',
       precision: 0,
       min: 0,
       description: 'Minimum follower count to create case (0 = all)'
     },
-    ExcludeVerifiedUsers: {
+    exclude_verified_users: {
       type: 'checkbox',
       label: 'Exclude Verified Users',
       defaultValue: false,
       description: 'Do not create cases from verified accounts'
     },
-    BlockedUsers: {
+    blocked_users: {
       type: 'textarea',
       label: 'Blocked Users',
       maxLength: 2000,
       description: 'Usernames to ignore (one per line)'
     },
     // Polling
-    PollingInterval: {
+    polling_interval: {
       type: 'number',
       label: 'Polling Interval (Minutes)',
       precision: 0,
@@ -231,60 +231,60 @@ const SocialMediaCase = {
       defaultValue: 5,
       description: 'How often to check for new mentions/messages'
     },
-    LastPolledDate: {
+    last_polled_date: {
       type: 'datetime',
       label: 'Last Polled',
       readonly: true
     },
     // Statistics
-    TotalPostsProcessed: {
+    total_posts_processed: {
       type: 'number',
       label: 'Posts Processed',
       precision: 0,
       readonly: true,
       defaultValue: 0
     },
-    CasesCreated: {
+    cases_created: {
       type: 'number',
       label: 'Cases Created',
       precision: 0,
       readonly: true,
       defaultValue: 0
     },
-    ResponsesSent: {
+    responses_sent: {
       type: 'number',
       label: 'Responses Sent',
       precision: 0,
       readonly: true,
       defaultValue: 0
     },
-    ErrorCount: {
+    error_count: {
       type: 'number',
       label: 'Error Count',
       precision: 0,
       readonly: true,
       defaultValue: 0
     },
-    LastErrorDate: {
+    last_error_date: {
       type: 'datetime',
       label: 'Last Error',
       readonly: true
     },
-    LastErrorMessage: {
+    last_error_message: {
       type: 'text',
       label: 'Last Error Message',
       maxLength: 500,
       readonly: true
     },
     // Engagement Metrics
-    AverageSentiment: {
+    average_sentiment: {
       type: 'number',
       label: 'Average Sentiment Score',
       precision: 2,
       readonly: true,
       description: 'Average sentiment score (-1 to 1)'
     },
-    AverageResponseTime: {
+    average_response_time: {
       type: 'number',
       label: 'Avg Response Time (Minutes)',
       precision: 2,
@@ -295,12 +295,12 @@ const SocialMediaCase = {
     {
       name: 'AutoResponseRequired',
       errorMessage: 'Auto response message is required when auto response is enabled',
-      formula: 'AND(SendAutoResponse = true, ISBLANK(AutoResponseMessage))'
+      formula: 'AND(send_auto_response = true, ISBLANK(auto_response_message))'
     },
     {
       name: 'MonitoringRequired',
       errorMessage: 'At least one monitoring option must be enabled',
-      formula: 'AND(MonitorMentions = false, MonitorDirectMessages = false, MonitorComments = false)'
+      formula: 'AND(monitor_mentions = false, monitor_direct_messages = false, monitor_comments = false)'
     }
   ],
   listViews: [
@@ -308,33 +308,33 @@ const SocialMediaCase = {
       name: 'AllConfigurations',
       label: 'All Configurations',
       filters: [],
-      columns: ['Name', 'Platform', 'AccountHandle', 'IsActive', 'CasesCreated', 'ResponsesSent'],
-      sort: [['Platform', 'asc'], ['Name', 'asc']]
+      columns: ['name', 'platform', 'account_handle', 'is_active', 'cases_created', 'responses_sent'],
+      sort: [['platform', 'asc'], ['name', 'asc']]
     },
     {
       name: 'ActiveConfigurations',
       label: 'Active',
       filters: [
-        ['IsActive', '=', true]
+        ['is_active', '=', true]
       ],
-      columns: ['Platform', 'AccountHandle', 'DefaultQueueId', 'LastPolledDate', 'CasesCreated', 'AverageSentiment'],
-      sort: [['Platform', 'asc']]
+      columns: ['platform', 'account_handle', 'default_queue_id', 'last_polled_date', 'cases_created', 'average_sentiment'],
+      sort: [['platform', 'asc']]
     },
     {
       name: 'ByPlatform',
-      label: 'By Platform',
+      label: 'By platform',
       filters: [],
-      columns: ['Platform', 'Name', 'CasesCreated', 'AverageSentiment', 'AverageResponseTime'],
-      sort: [['Platform', 'asc'], ['CasesCreated', 'desc']]
+      columns: ['platform', 'name', 'cases_created', 'average_sentiment', 'average_response_time'],
+      sort: [['platform', 'asc'], ['cases_created', 'desc']]
     },
     {
       name: 'WithErrors',
       label: 'With Errors',
       filters: [
-        ['ErrorCount', '>', 0]
+        ['error_count', '>', 0]
       ],
-      columns: ['Name', 'Platform', 'ErrorCount', 'LastErrorDate', 'LastErrorMessage'],
-      sort: [['LastErrorDate', 'desc']]
+      columns: ['name', 'platform', 'error_count', 'last_error_date', 'last_error_message'],
+      sort: [['last_error_date', 'desc']]
     }
   ],
   pageLayout: {
@@ -342,62 +342,62 @@ const SocialMediaCase = {
       {
         label: 'Configuration Information',
         columns: 2,
-        fields: ['Name', 'Description', 'Platform', 'IsActive']
+        fields: ['name', 'description', 'platform', 'is_active']
       },
       {
         label: 'Account Details',
         columns: 2,
-        fields: ['AccountHandle', 'AccountId']
+        fields: ['account_handle', 'account_id']
       },
       {
         label: 'Authentication',
         columns: 2,
-        fields: ['AccessToken', 'RefreshToken', 'TokenExpiryDate']
+        fields: ['access_token', 'refresh_token', 'token_expiry_date']
       },
       {
         label: 'Monitoring Settings',
         columns: 2,
-        fields: ['MonitorMentions', 'MonitorDirectMessages', 'MonitorComments', 'MonitorHashtags', 'MonitorKeywords']
+        fields: ['monitor_mentions', 'monitor_direct_messages', 'monitor_comments', 'monitor_hashtags', 'monitor_keywords']
       },
       {
         label: 'Default Case Settings',
         columns: 2,
-        fields: ['DefaultQueueId', 'DefaultOwnerId', 'DefaultPriority', 'DefaultCaseType']
+        fields: ['default_queue_id', 'default_owner_id', 'default_priority', 'default_case_type']
       },
       {
         label: 'Contact Matching',
         columns: 2,
-        fields: ['AutoMatchContact', 'CreateContactIfNotFound', 'DefaultAccountId']
+        fields: ['auto_match_contact', 'create_contact_if_not_found', 'default_account_id']
       },
       {
         label: 'Response Configuration',
         columns: 1,
-        fields: ['SendAutoResponse', 'AutoResponseMessage', 'ResponseDelaySeconds']
+        fields: ['send_auto_response', 'auto_response_message', 'response_delay_seconds']
       },
       {
         label: 'AI Processing',
         columns: 3,
-        fields: ['UseAISentimentAnalysis', 'UseAIForPriority', 'UseAIForUrgency']
+        fields: ['use_ai_sentiment_analysis', 'use_ai_for_priority', 'use_ai_for_urgency']
       },
       {
         label: 'Filtering',
         columns: 2,
-        fields: ['MinimumFollowers', 'ExcludeVerifiedUsers', 'BlockedUsers']
+        fields: ['minimum_followers', 'exclude_verified_users', 'blocked_users']
       },
       {
         label: 'Polling',
         columns: 2,
-        fields: ['PollingInterval', 'LastPolledDate']
+        fields: ['polling_interval', 'last_polled_date']
       },
       {
         label: 'Statistics',
         columns: 3,
-        fields: ['TotalPostsProcessed', 'CasesCreated', 'ResponsesSent', 'ErrorCount', 'LastErrorDate', 'LastErrorMessage']
+        fields: ['total_posts_processed', 'cases_created', 'responses_sent', 'error_count', 'last_error_date', 'last_error_message']
       },
       {
         label: 'Engagement Metrics',
         columns: 2,
-        fields: ['AverageSentiment', 'AverageResponseTime']
+        fields: ['average_sentiment', 'average_response_time']
       }
     ]
   }

@@ -14,82 +14,82 @@ const QuoteLineItem = {
   },
   fields: {
     // Related Records
-    QuoteId: {
+    quote_id: {
       type: 'lookup',
       label: 'Quote',
       reference: 'Quote',
       required: true
     },
-    ProductId: {
+    product_id: {
       type: 'lookup',
       label: 'Product',
       reference: 'Product',
       required: true
     },
-    ProductBundleId: {
+    product_bundle_id: {
       type: 'lookup',
       label: 'Product Bundle',
       reference: 'ProductBundle',
       description: 'Bundle this line item is part of'
     },
-    PricebookEntryId: {
+    pricebook_entry_id: {
       type: 'lookup',
       label: 'Pricebook Entry',
       reference: 'PricebookEntry',
       description: 'Reference to the pricebook entry'
     },
     // Line Item Details
-    LineNumber: {
+    line_number: {
       type: 'number',
       label: 'Line Number',
       precision: 0,
       required: true,
       description: 'Display order of line item'
     },
-    ProductName: {
+    product_name: {
       type: 'text',
       label: 'Product Name',
       maxLength: 255,
       readonly: true,
       description: 'Cached product name for quick display'
     },
-    ProductCode: {
+    product_code: {
       type: 'text',
       label: 'Product Code',
       maxLength: 50,
       readonly: true,
       description: 'Cached product code'
     },
-    Description: {
+    description: {
       type: 'textarea',
-      label: 'Description',
+      label: 'description',
       maxLength: 2000,
       description: 'Custom description for this line item'
     },
-    // Quantity & Units
-    Quantity: {
+    // quantity & Units
+    quantity: {
       type: 'number',
-      label: 'Quantity',
+      label: 'quantity',
       precision: 2,
       required: true,
       defaultValue: 1,
       description: 'Number of units'
     },
-    UnitOfMeasure: {
+    unit_of_measure: {
       type: 'text',
       label: 'Unit of Measure',
       maxLength: 50,
       description: 'e.g., Each, License, User, GB, Hour'
     },
     // Pricing
-    ListPrice: {
+    list_price: {
       type: 'currency',
       label: 'List Price',
       precision: 2,
       required: true,
       description: 'Standard list price per unit'
     },
-    UnitPrice: {
+    unit_price: {
       type: 'currency',
       label: 'Unit Price',
       precision: 2,
@@ -97,7 +97,7 @@ const QuoteLineItem = {
       description: 'Actual selling price per unit (after discounts)'
     },
     // Discounts
-    DiscountType: {
+    discount_type: {
       type: 'select',
       label: 'Discount Type',
       options: [
@@ -108,76 +108,76 @@ const QuoteLineItem = {
       ],
       defaultValue: 'None'
     },
-    DiscountPercent: {
+    discount_percent: {
       type: 'percent',
       label: 'Discount %',
       description: 'Discount percentage applied to list price'
     },
-    DiscountAmount: {
+    discount_amount: {
       type: 'currency',
       label: 'Discount Amount',
       precision: 2,
       description: 'Total discount amount for this line'
     },
-    PriceRuleId: {
+    price_rule_id: {
       type: 'lookup',
       label: 'Applied Price Rule',
       reference: 'PriceRule',
       description: 'Pricing rule applied to this line item'
     },
     // Calculated Amounts
-    Subtotal: {
+    subtotal: {
       type: 'currency',
-      label: 'Subtotal',
+      label: 'subtotal',
       precision: 2,
       readonly: true,
-      description: 'List Price × Quantity'
+      description: 'List Price × quantity'
     },
-    TotalPrice: {
+    total_price: {
       type: 'currency',
       label: 'Total Price',
       precision: 2,
       readonly: true,
-      description: 'Unit Price × Quantity (after discounts)'
+      description: 'Unit Price × quantity (after discounts)'
     },
-    Margin: {
+    margin: {
       type: 'currency',
-      label: 'Margin',
+      label: 'margin',
       precision: 2,
       readonly: true,
       description: 'Profit margin for this line item'
     },
-    MarginPercent: {
+    margin_percent: {
       type: 'percent',
-      label: 'Margin %',
+      label: 'margin %',
       readonly: true,
       description: 'Profit margin percentage'
     },
     // Product Configuration
-    ConfigurationJSON: {
+    configuration_json: {
       type: 'textarea',
       label: 'Configuration',
       maxLength: 32000,
       description: 'JSON configuration for customizable products'
     },
-    SelectedOptions: {
+    selected_options: {
       type: 'textarea',
       label: 'Selected Options',
       maxLength: 2000,
       description: 'Selected product options and variants'
     },
     // Service Dates (for subscription/service products)
-    ServiceStartDate: {
+    service_start_date: {
       type: 'date',
       label: 'Service Start Date',
       description: 'Start date for subscription or service'
     },
-    ServiceEndDate: {
+    service_end_date: {
       type: 'date',
       label: 'Service End Date',
       description: 'End date for subscription or service'
     },
-    BillingFrequency: {
+    billing_frequency: {
       type: 'select',
       label: 'Billing Frequency',
       options: [
@@ -190,33 +190,33 @@ const QuoteLineItem = {
       defaultValue: 'OneTime'
     },
     // Tax
-    TaxPercent: {
+    tax_percent: {
       type: 'percent',
       label: 'Tax %',
       description: 'Tax percentage for this line item'
     },
-    TaxAmount: {
+    tax_amount: {
       type: 'currency',
       label: 'Tax Amount',
       precision: 2,
       readonly: true,
       description: 'Calculated tax amount'
     },
-    IsTaxable: {
+    is_taxable: {
       type: 'checkbox',
       label: 'Taxable',
       defaultValue: true,
       description: 'Is this line item subject to tax?'
     },
     // Additional Charges
-    SetupFee: {
+    setup_fee: {
       type: 'currency',
       label: 'Setup Fee',
       precision: 2,
       defaultValue: 0,
       description: 'One-time setup fee'
     },
-    ShippingCost: {
+    shipping_cost: {
       type: 'currency',
       label: 'Shipping Cost',
       precision: 2,
@@ -224,48 +224,48 @@ const QuoteLineItem = {
       description: 'Shipping cost for this item'
     },
     // Product Dependencies
-    RequiredByLineItemId: {
+    required_by_line_item_id: {
       type: 'lookup',
       label: 'Required By',
       reference: 'QuoteLineItem',
       description: 'Parent line item that requires this item'
     },
-    IsOptional: {
+    is_optional: {
       type: 'checkbox',
       label: 'Optional',
       defaultValue: false,
       description: 'Is this an optional add-on?'
     },
-    IsBundle: {
+    is_bundle: {
       type: 'checkbox',
       label: 'Bundle',
       defaultValue: false,
       readonly: true,
       description: 'Is this a bundle item?'
     },
-    BundleParentId: {
+    bundle_parent_id: {
       type: 'lookup',
       label: 'Bundle Parent',
       reference: 'QuoteLineItem',
       description: 'Parent bundle line item'
     },
     // Notes
-    InternalNotes: {
+    internal_notes: {
       type: 'textarea',
       label: 'Internal Notes',
       maxLength: 2000,
       description: 'Internal notes not visible to customer'
     },
-    CustomerNotes: {
+    customer_notes: {
       type: 'textarea',
       label: 'Customer Notes',
       maxLength: 2000,
       description: 'Notes visible to customer on quote'
     },
-    // Status
-    Status: {
+    // status
+    status: {
       type: 'select',
-      label: 'Status',
+      label: 'status',
       defaultValue: 'Active',
       options: [
         { label: 'Active', value: 'Active' },
@@ -274,23 +274,23 @@ const QuoteLineItem = {
       ]
     },
     // AI Enhancement
-    AIRecommendedUpsell: {
+    ai_recommended_upsell: {
       type: 'lookup',
       label: 'AI Recommended Upsell',
       reference: 'Product',
       readonly: true,
       description: 'AI-suggested upsell product for this line item'
     },
-    AIRecommendedCrossSell: {
+    ai_recommended_cross_sell: {
       type: 'textarea',
       label: 'AI Cross-Sell Recommendations',
       readonly: true,
       maxLength: 2000,
       description: 'AI-suggested complementary products'
     },
-    AIOptimalQuantity: {
+    ai_optimal_quantity: {
       type: 'number',
-      label: 'AI Optimal Quantity',
+      label: 'AI Optimal quantity',
       precision: 0,
       readonly: true,
       description: 'AI-recommended optimal quantity based on usage patterns'
@@ -301,14 +301,14 @@ const QuoteLineItem = {
       name: 'ChildLineItems',
       type: 'hasMany',
       object: 'QuoteLineItem',
-      foreignKey: 'RequiredByLineItemId',
+      foreignKey: 'required_by_line_item_id',
       label: 'Child Line Items'
     },
     {
       name: 'BundleComponents',
       type: 'hasMany',
       object: 'QuoteLineItem',
-      foreignKey: 'BundleParentId',
+      foreignKey: 'bundle_parent_id',
       label: 'Bundle Components'
     }
   ],
@@ -317,81 +317,81 @@ const QuoteLineItem = {
       name: 'AllLineItems',
       label: 'All Line Items',
       filters: [],
-      columns: ['LineNumber', 'QuoteId', 'ProductName', 'Quantity', 'UnitPrice', 'TotalPrice', 'Status'],
-      sort: [['LineNumber', 'asc']]
+      columns: ['line_number', 'quote_id', 'product_name', 'quantity', 'unit_price', 'total_price', 'status'],
+      sort: [['line_number', 'asc']]
     },
     {
       name: 'ActiveLineItems',
       label: 'Active',
-      filters: [['Status', '=', 'Active']],
-      columns: ['LineNumber', 'ProductName', 'Quantity', 'ListPrice', 'DiscountPercent', 'UnitPrice', 'TotalPrice'],
-      sort: [['LineNumber', 'asc']]
+      filters: [['status', '=', 'Active']],
+      columns: ['line_number', 'product_name', 'quantity', 'list_price', 'discount_percent', 'unit_price', 'total_price'],
+      sort: [['line_number', 'asc']]
     },
     {
       name: 'DiscountedItems',
       label: 'Discounted Items',
       filters: [
-        ['Status', '=', 'Active'],
-        ['DiscountPercent', '>', 0]
+        ['status', '=', 'Active'],
+        ['discount_percent', '>', 0]
       ],
-      columns: ['ProductName', 'ListPrice', 'DiscountPercent', 'UnitPrice', 'TotalPrice', 'MarginPercent'],
-      sort: [['DiscountPercent', 'desc']]
+      columns: ['product_name', 'list_price', 'discount_percent', 'unit_price', 'total_price', 'margin_percent'],
+      sort: [['discount_percent', 'desc']]
     },
     {
       name: 'BundleItems',
       label: 'Bundle Items',
-      filters: [['IsBundle', '=', true]],
-      columns: ['ProductName', 'BundleParentId', 'Quantity', 'UnitPrice', 'TotalPrice'],
-      sort: [['BundleParentId', 'asc']]
+      filters: [['is_bundle', '=', true]],
+      columns: ['product_name', 'bundle_parent_id', 'quantity', 'unit_price', 'total_price'],
+      sort: [['bundle_parent_id', 'asc']]
     },
     {
       name: 'SubscriptionItems',
       label: 'Subscriptions',
-      filters: [['BillingFrequency', '!=', 'OneTime']],
-      columns: ['ProductName', 'BillingFrequency', 'ServiceStartDate', 'ServiceEndDate', 'UnitPrice', 'TotalPrice'],
-      sort: [['ServiceStartDate', 'asc']]
+      filters: [['billing_frequency', '!=', 'OneTime']],
+      columns: ['product_name', 'billing_frequency', 'service_start_date', 'service_end_date', 'unit_price', 'total_price'],
+      sort: [['service_start_date', 'asc']]
     },
     {
       name: 'HighValueItems',
       label: 'High Value',
       filters: [
-        ['TotalPrice', '>', 10000],
-        ['Status', '=', 'Active']
+        ['total_price', '>', 10000],
+        ['status', '=', 'Active']
       ],
-      columns: ['ProductName', 'Quantity', 'UnitPrice', 'TotalPrice', 'MarginPercent'],
-      sort: [['TotalPrice', 'desc']]
+      columns: ['product_name', 'quantity', 'unit_price', 'total_price', 'margin_percent'],
+      sort: [['total_price', 'desc']]
     }
   ],
   validationRules: [
     {
       name: 'QuantityPositive',
-      errorMessage: 'Quantity must be greater than zero',
-      formula: 'Quantity <= 0'
+      errorMessage: 'quantity must be greater than zero',
+      formula: 'quantity <= 0'
     },
     {
       name: 'UnitPriceLessThanOrEqualListPrice',
       errorMessage: 'Unit price cannot exceed list price without approval',
-      formula: 'UnitPrice > ListPrice'
+      formula: 'unit_price > list_price'
     },
     {
       name: 'DiscountPercentValid',
       errorMessage: 'Discount percentage must be between 0% and 100%',
-      formula: 'AND(DiscountType = "Percentage", OR(DiscountPercent < 0, DiscountPercent > 1))'
+      formula: 'AND(discount_type = "Percentage", OR(discount_percent < 0, discount_percent > 1))'
     },
     {
       name: 'ServiceEndDateAfterStartDate',
       errorMessage: 'Service end date must be after start date',
-      formula: 'AND(NOT(ISBLANK(ServiceStartDate)), NOT(ISBLANK(ServiceEndDate)), ServiceEndDate <= ServiceStartDate)'
+      formula: 'AND(NOT(ISBLANK(service_start_date)), NOT(ISBLANK(service_end_date)), service_end_date <= service_start_date)'
     },
     {
       name: 'BundleComponentRequired',
       errorMessage: 'Bundle components must have a bundle parent specified',
-      formula: 'AND(IsOptional = false, NOT(ISBLANK(RequiredByLineItemId)), ISBLANK(BundleParentId))'
+      formula: 'AND(is_optional = false, NOT(ISBLANK(required_by_line_item_id)), ISBLANK(bundle_parent_id))'
     },
     {
       name: 'PricebookEntryOrProductRequired',
       errorMessage: 'Either pricebook entry or product must be specified',
-      formula: 'AND(ISBLANK(PricebookEntryId), ISBLANK(ProductId))'
+      formula: 'AND(ISBLANK(pricebook_entry_id), ISBLANK(product_id))'
     }
   ],
   pageLayout: {
@@ -399,57 +399,57 @@ const QuoteLineItem = {
       {
         label: 'Line Item Information',
         columns: 2,
-        fields: ['LineNumber', 'QuoteId', 'ProductId', 'ProductName', 'ProductCode', 'Status']
+        fields: ['line_number', 'quote_id', 'product_id', 'product_name', 'product_code', 'status']
       },
       {
         label: 'Bundle & Dependencies',
         columns: 2,
-        fields: ['ProductBundleId', 'IsBundle', 'BundleParentId', 'RequiredByLineItemId', 'IsOptional']
+        fields: ['product_bundle_id', 'is_bundle', 'bundle_parent_id', 'required_by_line_item_id', 'is_optional']
       },
       {
-        label: 'Quantity & Units',
+        label: 'quantity & Units',
         columns: 2,
-        fields: ['Quantity', 'UnitOfMeasure']
+        fields: ['quantity', 'unit_of_measure']
       },
       {
         label: 'Pricing',
         columns: 2,
-        fields: ['PricebookEntryId', 'ListPrice', 'DiscountType', 'DiscountPercent', 'DiscountAmount', 'UnitPrice', 'PriceRuleId']
+        fields: ['pricebook_entry_id', 'list_price', 'discount_type', 'discount_percent', 'discount_amount', 'unit_price', 'price_rule_id']
       },
       {
         label: 'Amounts',
         columns: 2,
-        fields: ['Subtotal', 'TotalPrice', 'Margin', 'MarginPercent']
+        fields: ['subtotal', 'total_price', 'margin', 'margin_percent']
       },
       {
         label: 'Tax',
         columns: 2,
-        fields: ['IsTaxable', 'TaxPercent', 'TaxAmount']
+        fields: ['is_taxable', 'tax_percent', 'tax_amount']
       },
       {
         label: 'Additional Charges',
         columns: 2,
-        fields: ['SetupFee', 'ShippingCost']
+        fields: ['setup_fee', 'shipping_cost']
       },
       {
         label: 'Service Dates',
         columns: 2,
-        fields: ['ServiceStartDate', 'ServiceEndDate', 'BillingFrequency']
+        fields: ['service_start_date', 'service_end_date', 'billing_frequency']
       },
       {
         label: 'Configuration',
         columns: 1,
-        fields: ['SelectedOptions', 'ConfigurationJSON']
+        fields: ['selected_options', 'configuration_json']
       },
       {
         label: 'Notes',
         columns: 1,
-        fields: ['Description', 'CustomerNotes', 'InternalNotes']
+        fields: ['description', 'customer_notes', 'internal_notes']
       },
       {
         label: 'AI Recommendations',
         columns: 1,
-        fields: ['AIRecommendedUpsell', 'AIRecommendedCrossSell', 'AIOptimalQuantity']
+        fields: ['ai_recommended_upsell', 'ai_recommended_cross_sell', 'ai_optimal_quantity']
       }
     ]
   }

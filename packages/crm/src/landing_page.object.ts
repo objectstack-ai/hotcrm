@@ -12,35 +12,35 @@ const LandingPage = {
   },
   fields: {
     // Basic Information
-    Name: {
+    name: {
       type: 'text',
       label: '着陆页名称',
       required: true,
       maxLength: 255,
       searchable: true
     },
-    Title: {
+    title: {
       type: 'text',
       label: '页面标题',
       required: true,
       maxLength: 255,
       description: '浏览器标题栏显示的标题'
     },
-    Slug: {
+    slug: {
       type: 'text',
-      label: 'URL Slug',
+      label: 'URL slug',
       unique: true,
       maxLength: 100,
       description: '页面URL路径，如：/landing/product-launch'
     },
-    Description: {
+    description: {
       type: 'textarea',
       label: '描述',
       maxLength: 1000
     },
     
     // Page Type & Campaign
-    PageType: {
+    page_type: {
       type: 'select',
       label: '页面类型',
       required: true,
@@ -54,7 +54,7 @@ const LandingPage = {
         { label: '🎁 优惠促销', value: 'Promotion' }
       ]
     },
-    CampaignId: {
+    campaign_id: {
       type: 'lookup',
       label: '关联营销活动',
       reference: 'Campaign',
@@ -62,25 +62,25 @@ const LandingPage = {
     },
     
     // Content & Design
-    HtmlContent: {
+    html_content: {
       type: 'textarea',
       label: 'HTML 内容',
       maxLength: 65535,
       description: '页面的完整 HTML 内容'
     },
-    DesignJson: {
+    design_json: {
       type: 'textarea',
       label: '设计配置 JSON',
       maxLength: 65535,
       description: '可视化编辑器的设计配置（组件、样式等）'
     },
-    CustomCss: {
+    custom_css: {
       type: 'textarea',
       label: '自定义 CSS',
       maxLength: 32000,
       description: '自定义样式代码'
     },
-    CustomJavascript: {
+    custom_javascript: {
       type: 'textarea',
       label: '自定义 JavaScript',
       maxLength: 32000,
@@ -88,51 +88,51 @@ const LandingPage = {
     },
     
     // SEO & Meta
-    MetaTitle: {
+    meta_title: {
       type: 'text',
       label: 'SEO 标题',
       maxLength: 70,
       description: '搜索引擎结果显示的标题'
     },
-    MetaDescription: {
+    meta_description: {
       type: 'textarea',
       label: 'SEO 描述',
       maxLength: 160,
       description: '搜索引擎结果显示的描述'
     },
-    MetaKeywords: {
+    meta_keywords: {
       type: 'text',
       label: 'SEO 关键词',
       maxLength: 255,
       description: '逗号分隔的关键词'
     },
-    OgImage: {
+    og_image: {
       type: 'url',
       label: 'Open Graph 图片',
       description: '社交媒体分享时显示的图片URL'
     },
     
     // Form Integration
-    FormId: {
+    form_id: {
       type: 'lookup',
       label: '内嵌表单',
       reference: 'Form',
       description: '页面中集成的表单'
     },
-    ThankYouMessage: {
+    thank_you_message: {
       type: 'textarea',
       label: '感谢消息',
       maxLength: 2000,
       description: '表单提交后显示的消息'
     },
-    RedirectUrl: {
+    redirect_url: {
       type: 'url',
       label: '提交后重定向URL',
       description: '表单提交后跳转的页面（可选）'
     },
     
-    // Status & Publishing
-    Status: {
+    // status & Publishing
+    status: {
       type: 'select',
       label: '状态',
       required: true,
@@ -143,22 +143,22 @@ const LandingPage = {
         { label: '📦 已归档', value: 'Archived' }
       ]
     },
-    IsActive: {
+    is_active: {
       type: 'checkbox',
       label: '是否启用',
       defaultValue: true
     },
-    PublishedDate: {
+    published_date: {
       type: 'datetime',
       label: '发布时间',
       readonly: true
     },
-    ExpiryDate: {
+    expiry_date: {
       type: 'datetime',
       label: '过期时间',
       description: '页面自动下线时间（可选）'
     },
-    OwnerId: {
+    owner_id: {
       type: 'lookup',
       label: '负责人',
       reference: 'User',
@@ -166,58 +166,58 @@ const LandingPage = {
     },
     
     // A/B Testing
-    IsABTest: {
+    is_a_b_test: {
       type: 'checkbox',
       label: '启用 A/B 测试',
       defaultValue: false
     },
-    ABTestVariantId: {
+    a_b_test_variant_id: {
       type: 'lookup',
       label: 'A/B 测试变体',
       reference: 'LandingPage',
       description: '关联的测试变体页面'
     },
-    TrafficSplitPercent: {
+    traffic_split_percent: {
       type: 'percent',
       label: '流量分配比例',
       description: 'A/B测试时此版本的流量占比'
     },
     
     // Analytics & Performance
-    TotalViews: {
+    total_views: {
       type: 'number',
       label: '总访问量',
       precision: 0,
       defaultValue: 0,
       readonly: true
     },
-    UniqueVisitors: {
+    unique_visitors: {
       type: 'number',
       label: '独立访客数',
       precision: 0,
       defaultValue: 0,
       readonly: true
     },
-    TotalSubmissions: {
+    total_submissions: {
       type: 'number',
       label: '表单提交次数',
       precision: 0,
       defaultValue: 0,
       readonly: true
     },
-    ConversionRate: {
+    conversion_rate: {
       type: 'percent',
       label: '转化率',
       readonly: true,
       description: '自动计算：提交次数 / 独立访客数'
     },
-    AverageTimeOnPage: {
+    average_time_on_page: {
       type: 'number',
       label: '平均停留时间(秒)',
       precision: 0,
       readonly: true
     },
-    BounceRate: {
+    bounce_rate: {
       type: 'percent',
       label: '跳出率',
       readonly: true,
@@ -225,19 +225,19 @@ const LandingPage = {
     },
     
     // Traffic Sources
-    SourceUtmCampaign: {
+    source_utm_campaign: {
       type: 'text',
       label: 'UTM Campaign',
       maxLength: 100,
       description: '跟踪参数：utm_campaign'
     },
-    SourceUtmMedium: {
+    source_utm_medium: {
       type: 'text',
       label: 'UTM Medium',
       maxLength: 100,
       description: '跟踪参数：utm_medium'
     },
-    SourceUtmSource: {
+    source_utm_source: {
       type: 'text',
       label: 'UTM Source',
       maxLength: 100,
@@ -245,32 +245,32 @@ const LandingPage = {
     },
     
     // Mobile Optimization
-    IsMobileOptimized: {
+    is_mobile_optimized: {
       type: 'checkbox',
       label: '移动端优化',
       defaultValue: true,
       description: '是否针对移动设备优化'
     },
-    MobileConversionRate: {
+    mobile_conversion_rate: {
       type: 'percent',
       label: '移动端转化率',
       readonly: true
     },
-    DesktopConversionRate: {
+    desktop_conversion_rate: {
       type: 'percent',
       label: '桌面端转化率',
       readonly: true
     },
     
     // Loading Performance
-    PageLoadTime: {
+    page_load_time: {
       type: 'number',
       label: '页面加载时间(ms)',
       precision: 0,
       readonly: true,
       description: '平均加载时间（毫秒）'
     },
-    PageSizeKb: {
+    page_size_kb: {
       type: 'number',
       label: '页面大小(KB)',
       precision: 2,
@@ -278,14 +278,14 @@ const LandingPage = {
     },
     
     // AI Enhancement
-    AIDesignSuggestions: {
+    ai_design_suggestions: {
       type: 'textarea',
       label: 'AI 设计建议',
       readonly: true,
       maxLength: 2000,
       description: 'AI 分析的设计和布局优化建议'
     },
-    AICopywritingSuggestions: {
+    ai_copywriting_suggestions: {
       type: 'textarea',
       label: 'AI 文案建议',
       readonly: true,
@@ -298,28 +298,28 @@ const LandingPage = {
       name: 'Campaign',
       type: 'belongsTo',
       object: 'Campaign',
-      foreignKey: 'CampaignId',
+      foreignKey: 'campaign_id',
       label: '营销活动'
     },
     {
       name: 'Form',
       type: 'belongsTo',
       object: 'Form',
-      foreignKey: 'FormId',
+      foreignKey: 'form_id',
       label: '表单'
     },
     {
       name: 'Owner',
       type: 'belongsTo',
       object: 'User',
-      foreignKey: 'OwnerId',
+      foreignKey: 'owner_id',
       label: '负责人'
     },
     {
       name: 'ABTestVariant',
       type: 'belongsTo',
       object: 'LandingPage',
-      foreignKey: 'ABTestVariantId',
+      foreignKey: 'a_b_test_variant_id',
       label: 'A/B测试变体'
     }
   ],
@@ -328,53 +328,53 @@ const LandingPage = {
       name: 'AllPages',
       label: '所有着陆页',
       filters: [],
-      columns: ['Name', 'PageType', 'Status', 'TotalViews', 'ConversionRate', 'PublishedDate'],
+      columns: ['name', 'page_type', 'status', 'total_views', 'conversion_rate', 'published_date'],
       sort: [['CreatedDate', 'desc']]
     },
     {
       name: 'ActivePages',
       label: '启用的着陆页',
-      filters: [['IsActive', '=', true], ['Status', '=', 'Published']],
-      columns: ['Name', 'PageType', 'TotalViews', 'UniqueVisitors', 'ConversionRate', 'CampaignId'],
-      sort: [['TotalViews', 'desc']]
+      filters: [['is_active', '=', true], ['status', '=', 'Published']],
+      columns: ['name', 'page_type', 'total_views', 'unique_visitors', 'conversion_rate', 'campaign_id'],
+      sort: [['total_views', 'desc']]
     },
     {
       name: 'MyPages',
       label: '我的着陆页',
-      filters: [['OwnerId', '=', '$CurrentUser.Id']],
-      columns: ['Name', 'Status', 'TotalViews', 'ConversionRate', 'ModifiedDate'],
+      filters: [['owner_id', '=', '$CurrentUser.Id']],
+      columns: ['name', 'status', 'total_views', 'conversion_rate', 'ModifiedDate'],
       sort: [['ModifiedDate', 'desc']]
     },
     {
       name: 'HighConversion',
       label: '高转化页面',
-      filters: [['ConversionRate', '>', 10], ['TotalViews', '>', 100]],
-      columns: ['Name', 'PageType', 'ConversionRate', 'TotalSubmissions', 'TotalViews'],
-      sort: [['ConversionRate', 'desc']]
+      filters: [['conversion_rate', '>', 10], ['total_views', '>', 100]],
+      columns: ['name', 'page_type', 'conversion_rate', 'total_submissions', 'total_views'],
+      sort: [['conversion_rate', 'desc']]
     },
     {
       name: 'ABTests',
       label: 'A/B 测试',
-      filters: [['IsABTest', '=', true]],
-      columns: ['Name', 'ABTestVariantId', 'TrafficSplitPercent', 'ConversionRate', 'TotalViews'],
+      filters: [['is_a_b_test', '=', true]],
+      columns: ['name', 'a_b_test_variant_id', 'traffic_split_percent', 'conversion_rate', 'total_views'],
       sort: [['CreatedDate', 'desc']]
     }
   ],
   validationRules: [
     {
       name: 'RequireSlugForPublished',
-      errorMessage: '发布的着陆页必须设置 URL Slug',
-      formula: 'AND(Status = "Published", ISBLANK(Slug))'
+      errorMessage: '发布的着陆页必须设置 URL slug',
+      formula: 'AND(status = "Published", ISBLANK(slug))'
     },
     {
       name: 'RequireContentOrDesign',
       errorMessage: '着陆页必须有 HTML 内容或设计配置',
-      formula: 'AND(ISBLANK(HtmlContent), ISBLANK(DesignJson))'
+      formula: 'AND(ISBLANK(html_content), ISBLANK(design_json))'
     },
     {
       name: 'ExpiryDateAfterPublished',
       errorMessage: '过期时间必须晚于发布时间',
-      formula: 'AND(NOT(ISBLANK(PublishedDate)), NOT(ISBLANK(ExpiryDate)), ExpiryDate < PublishedDate)'
+      formula: 'AND(NOT(ISBLANK(published_date)), NOT(ISBLANK(expiry_date)), expiry_date < published_date)'
     }
   ],
   pageLayout: {
@@ -382,62 +382,62 @@ const LandingPage = {
       {
         label: '页面信息',
         columns: 2,
-        fields: ['Name', 'Title', 'Slug', 'PageType', 'Status', 'IsActive', 'OwnerId', 'CampaignId']
+        fields: ['name', 'title', 'slug', 'page_type', 'status', 'is_active', 'owner_id', 'campaign_id']
       },
       {
         label: '内容与设计',
         columns: 1,
-        fields: ['HtmlContent', 'CustomCss', 'CustomJavascript']
+        fields: ['html_content', 'custom_css', 'custom_javascript']
       },
       {
         label: 'SEO 优化',
         columns: 2,
-        fields: ['MetaTitle', 'MetaDescription', 'MetaKeywords', 'OgImage']
+        fields: ['meta_title', 'meta_description', 'meta_keywords', 'og_image']
       },
       {
         label: '表单集成',
         columns: 2,
-        fields: ['FormId', 'ThankYouMessage', 'RedirectUrl']
+        fields: ['form_id', 'thank_you_message', 'redirect_url']
       },
       {
         label: '发布设置',
         columns: 2,
-        fields: ['PublishedDate', 'ExpiryDate']
+        fields: ['published_date', 'expiry_date']
       },
       {
         label: 'A/B 测试',
         columns: 2,
-        fields: ['IsABTest', 'ABTestVariantId', 'TrafficSplitPercent']
+        fields: ['is_a_b_test', 'a_b_test_variant_id', 'traffic_split_percent']
       },
       {
         label: '访问统计',
         columns: 3,
-        fields: ['TotalViews', 'UniqueVisitors', 'TotalSubmissions', 'ConversionRate', 'AverageTimeOnPage', 'BounceRate']
+        fields: ['total_views', 'unique_visitors', 'total_submissions', 'conversion_rate', 'average_time_on_page', 'bounce_rate']
       },
       {
         label: '流量来源',
         columns: 3,
-        fields: ['SourceUtmCampaign', 'SourceUtmMedium', 'SourceUtmSource']
+        fields: ['source_utm_campaign', 'source_utm_medium', 'source_utm_source']
       },
       {
         label: '移动端优化',
         columns: 2,
-        fields: ['IsMobileOptimized', 'MobileConversionRate', 'DesktopConversionRate']
+        fields: ['is_mobile_optimized', 'mobile_conversion_rate', 'desktop_conversion_rate']
       },
       {
         label: '性能指标',
         columns: 2,
-        fields: ['PageLoadTime', 'PageSizeKb']
+        fields: ['page_load_time', 'page_size_kb']
       },
       {
         label: 'AI 优化助手',
         columns: 1,
-        fields: ['AIDesignSuggestions', 'AICopywritingSuggestions']
+        fields: ['ai_design_suggestions', 'ai_copywriting_suggestions']
       },
       {
         label: '描述',
         columns: 1,
-        fields: ['Description']
+        fields: ['description']
       }
     ]
   }

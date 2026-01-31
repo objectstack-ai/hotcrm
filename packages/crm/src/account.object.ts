@@ -13,7 +13,7 @@ const Account = {
     files: true
   },
   fields: {
-    Name: {
+    name: {
       type: 'text',
       label: '客户名称',
       required: true,
@@ -21,13 +21,13 @@ const Account = {
       unique: true,
       maxLength: 255
     },
-    AccountNumber: {
+    account_number: {
       type: 'text',
       label: '客户编号',
       unique: true,
       maxLength: 40
     },
-    Type: {
+    type: {
       type: 'select',
       label: '客户类型',
       options: [
@@ -38,7 +38,7 @@ const Account = {
         { label: '其他', value: 'Other' }
       ]
     },
-    Industry: {
+    industry: {
       type: 'select',
       label: '行业',
       searchable: true,
@@ -55,16 +55,16 @@ const Account = {
         { label: '其他', value: 'Other' }
       ]
     },
-    AnnualRevenue: {
+    annual_revenue: {
       type: 'currency',
       label: '年营收',
       precision: 2
     },
-    NumberOfEmployees: {
+    number_of_employees: {
       type: 'number',
       label: '员工人数'
     },
-    Rating: {
+    rating: {
       type: 'select',
       label: '客户评级',
       options: [
@@ -73,73 +73,73 @@ const Account = {
         { label: '冷淡 ❄️', value: 'Cold' }
       ]
     },
-    Phone: {
+    phone: {
       type: 'phone',
       label: '电话'
     },
-    Fax: {
+    fax: {
       type: 'phone',
       label: '传真'
     },
-    Website: {
+    website: {
       type: 'url',
       label: '网站'
     },
-    Email: {
+    email: {
       type: 'email',
       label: '邮箱'
     },
-    BillingStreet: {
+    billing_street: {
       type: 'textarea',
       label: '账单地址（街道）',
       rows: 2
     },
-    BillingCity: {
+    billing_city: {
       type: 'text',
       label: '账单地址（城市）',
       maxLength: 40
     },
-    BillingState: {
+    billing_state: {
       type: 'text',
       label: '账单地址（省份）',
       maxLength: 40
     },
-    BillingPostalCode: {
+    billing_postal_code: {
       type: 'text',
       label: '账单地址（邮编）',
       maxLength: 20
     },
-    BillingCountry: {
+    billing_country: {
       type: 'text',
       label: '账单地址（国家）',
       maxLength: 40
     },
-    ShippingStreet: {
+    shipping_street: {
       type: 'textarea',
       label: '送货地址（街道）',
       rows: 2
     },
-    ShippingCity: {
+    shipping_city: {
       type: 'text',
       label: '送货地址（城市）',
       maxLength: 40
     },
-    ShippingState: {
+    shipping_state: {
       type: 'text',
       label: '送货地址（省份）',
       maxLength: 40
     },
-    ShippingPostalCode: {
+    shipping_postal_code: {
       type: 'text',
       label: '送货地址（邮编）',
       maxLength: 20
     },
-    ShippingCountry: {
+    shipping_country: {
       type: 'text',
       label: '送货地址（国家）',
       maxLength: 40
     },
-    CustomerStatus: {
+    customer_status: {
       type: 'select',
       label: '客户状态',
       defaultValue: 'Prospect',
@@ -150,12 +150,12 @@ const Account = {
         { label: '暂停合作', value: 'On Hold' }
       ]
     },
-    Description: {
+    description: {
       type: 'textarea',
       label: '描述',
       rows: 5
     },
-    SLATier: {
+    sla_tier: {
       type: 'select',
       label: 'SLA等级',
       options: [
@@ -166,7 +166,7 @@ const Account = {
       ],
       description: '服务等级协议层级'
     },
-    HealthScore: {
+    health_score: {
       type: 'number',
       label: '健康度评分',
       precision: 0,
@@ -174,25 +174,25 @@ const Account = {
       max: 100,
       description: '客户健康度评分 (0-100)'
     },
-    NextRenewalDate: {
+    next_renewal_date: {
       type: 'date',
       label: '下次续约日期'
     },
-    ContractValue: {
+    contract_value: {
       type: 'currency',
       label: '合同总价值',
       precision: 2,
       readonly: true,
       description: '所有有效合同的总价值'
     },
-    OwnerId: {
+    owner_id: {
       type: 'lookup',
       label: '负责人',
       reference: 'User',
       required: true,
       defaultValue: '$currentUser'
     },
-    ParentId: {
+    parent_id: {
       type: 'lookup',
       label: '上级客户',
       reference: 'Account'
@@ -203,28 +203,28 @@ const Account = {
       name: 'Contacts',
       type: 'hasMany',
       object: 'Contact',
-      foreignKey: 'AccountId',
+      foreignKey: 'account_id',
       label: '联系人'
     },
     {
       name: 'Opportunities',
       type: 'hasMany',
       object: 'Opportunity',
-      foreignKey: 'AccountId',
+      foreignKey: 'account_id',
       label: '商机'
     },
     {
       name: 'Contracts',
       type: 'hasMany',
       object: 'Contract',
-      foreignKey: 'AccountId',
+      foreignKey: 'account_id',
       label: '合同'
     },
     {
       name: 'ChildAccounts',
       type: 'hasMany',
       object: 'Account',
-      foreignKey: 'ParentId',
+      foreignKey: 'parent_id',
       label: '下级客户'
     }
   ],
@@ -233,67 +233,67 @@ const Account = {
       name: 'All',
       label: '所有客户',
       filters: [],
-      columns: ['Name', 'Type', 'Industry', 'AnnualRevenue', 'Rating', 'CustomerStatus', 'OwnerId']
+      columns: ['name', 'type', 'industry', 'annual_revenue', 'rating', 'customer_status', 'owner_id']
     },
     {
       name: 'MyAccounts',
       label: '我的客户',
-      filters: [['OwnerId', '=', '$currentUser']],
-      columns: ['Name', 'Type', 'Industry', 'CustomerStatus', 'Rating', 'HealthScore']
+      filters: [['owner_id', '=', '$currentUser']],
+      columns: ['name', 'type', 'industry', 'customer_status', 'rating', 'health_score']
     },
     {
       name: 'ActiveCustomers',
       label: '活跃客户',
-      filters: [['CustomerStatus', '=', 'Active Customer']],
-      columns: ['Name', 'Industry', 'ContractValue', 'SLATier', 'HealthScore', 'NextRenewalDate', 'OwnerId'],
-      sort: [['ContractValue', 'desc']]
+      filters: [['customer_status', '=', 'Active Customer']],
+      columns: ['name', 'industry', 'contract_value', 'sla_tier', 'health_score', 'next_renewal_date', 'owner_id'],
+      sort: [['contract_value', 'desc']]
     },
     {
       name: 'AtRisk',
       label: '风险客户',
       filters: [
-        ['CustomerStatus', '=', 'Active Customer'],
-        ['HealthScore', '<', 50]
+        ['customer_status', '=', 'Active Customer'],
+        ['health_score', '<', 50]
       ],
-      columns: ['Name', 'Industry', 'HealthScore', 'NextRenewalDate', 'SLATier', 'OwnerId'],
-      sort: [['HealthScore', 'asc']]
+      columns: ['name', 'industry', 'health_score', 'next_renewal_date', 'sla_tier', 'owner_id'],
+      sort: [['health_score', 'asc']]
     },
     {
       name: 'HighValue',
       label: '高价值客户',
       filters: [
-        ['CustomerStatus', '=', 'Active Customer'],
-        ['ContractValue', '>', 100000]
+        ['customer_status', '=', 'Active Customer'],
+        ['contract_value', '>', 100000]
       ],
-      columns: ['Name', 'Industry', 'ContractValue', 'AnnualRevenue', 'SLATier', 'HealthScore', 'OwnerId'],
-      sort: [['ContractValue', 'desc']]
+      columns: ['name', 'industry', 'contract_value', 'annual_revenue', 'sla_tier', 'health_score', 'owner_id'],
+      sort: [['contract_value', 'desc']]
     },
     {
       name: 'RenewalsSoon',
       label: '即将续约',
       filters: [
-        ['NextRenewalDate', 'next_90_days'],
-        ['CustomerStatus', '=', 'Active Customer']
+        ['next_renewal_date', 'next_90_days'],
+        ['customer_status', '=', 'Active Customer']
       ],
-      columns: ['Name', 'Industry', 'NextRenewalDate', 'ContractValue', 'HealthScore', 'OwnerId'],
-      sort: [['NextRenewalDate', 'asc']]
+      columns: ['name', 'industry', 'next_renewal_date', 'contract_value', 'health_score', 'owner_id'],
+      sort: [['next_renewal_date', 'asc']]
     }
   ],
   validationRules: [
     {
       name: 'RequireIndustryForHighRevenue',
       errorMessage: '年营收超过1000万的客户必须选择行业',
-      formula: 'AND(AnnualRevenue > 10000000, ISBLANK(Industry))'
+      formula: 'AND(annual_revenue > 10000000, ISBLANK(industry))'
     },
     {
       name: 'RequireSLAForActiveCustomers',
       errorMessage: '活跃客户必须设置SLA等级',
-      formula: 'AND(CustomerStatus = "Active Customer", ISBLANK(SLATier))'
+      formula: 'AND(customer_status = "Active Customer", ISBLANK(sla_tier))'
     },
     {
       name: 'HealthScoreRange',
       errorMessage: '健康度评分必须在0-100之间',
-      formula: 'OR(HealthScore < 0, HealthScore > 100)'
+      formula: 'OR(health_score < 0, health_score > 100)'
     }
   ],
   pageLayout: {
@@ -301,37 +301,37 @@ const Account = {
       {
         label: '基本信息',
         columns: 2,
-        fields: ['Name', 'AccountNumber', 'Type', 'Industry', 'OwnerId', 'ParentId']
+        fields: ['name', 'account_number', 'type', 'industry', 'owner_id', 'parent_id']
       },
       {
         label: '客户状态',
         columns: 2,
-        fields: ['CustomerStatus', 'Rating', 'SLATier', 'HealthScore']
+        fields: ['customer_status', 'rating', 'sla_tier', 'health_score']
       },
       {
         label: '公司信息',
         columns: 2,
-        fields: ['NumberOfEmployees', 'AnnualRevenue', 'Website', 'Phone', 'Email']
+        fields: ['number_of_employees', 'annual_revenue', 'website', 'phone', 'email']
       },
       {
         label: '合同信息',
         columns: 2,
-        fields: ['ContractValue', 'NextRenewalDate']
+        fields: ['contract_value', 'next_renewal_date']
       },
       {
         label: '账单地址',
         columns: 2,
-        fields: ['BillingStreet', 'BillingCity', 'BillingState', 'BillingPostalCode', 'BillingCountry']
+        fields: ['billing_street', 'billing_city', 'billing_state', 'billing_postal_code', 'billing_country']
       },
       {
         label: '送货地址',
         columns: 2,
-        fields: ['ShippingStreet', 'ShippingCity', 'ShippingState', 'ShippingPostalCode', 'ShippingCountry']
+        fields: ['shipping_street', 'shipping_city', 'shipping_state', 'shipping_postal_code', 'shipping_country']
       },
       {
         label: '其他信息',
         columns: 1,
-        fields: ['Description']
+        fields: ['description']
       }
     ]
   }

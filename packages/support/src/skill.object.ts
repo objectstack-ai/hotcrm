@@ -11,25 +11,25 @@ const Skill = {
   },
   fields: {
     // Basic Information
-    Name: {
+    name: {
       type: 'text',
-      label: 'Skill Name',
+      label: 'Skill name',
       required: true,
       maxLength: 255,
       searchable: true
     },
-    Description: {
+    description: {
       type: 'textarea',
-      label: 'Description',
+      label: 'description',
       maxLength: 2000
     },
-    IsActive: {
+    is_active: {
       type: 'checkbox',
       label: 'Active',
       defaultValue: true
     },
     // Categorization
-    SkillCategory: {
+    skill_category: {
       type: 'select',
       label: 'Skill Category',
       required: true,
@@ -43,7 +43,7 @@ const Skill = {
         { label: '📚 Other', value: 'Other' }
       ]
     },
-    SkillType: {
+    skill_type: {
       type: 'select',
       label: 'Skill Type',
       defaultValue: 'Required',
@@ -54,13 +54,13 @@ const Skill = {
       ]
     },
     // Related Product/Category
-    RelatedProductIds: {
+    related_product_ids: {
       type: 'text',
       label: 'Related Products',
       maxLength: 500,
       description: 'Comma-separated product IDs this skill applies to'
     },
-    RelatedCategories: {
+    related_categories: {
       type: 'multiselect',
       label: 'Related Categories',
       options: [
@@ -73,7 +73,7 @@ const Skill = {
       ]
     },
     // Priority Weight
-    RoutingWeight: {
+    routing_weight: {
       type: 'number',
       label: 'Routing Weight',
       precision: 0,
@@ -83,32 +83,32 @@ const Skill = {
       description: 'Weight in skill-based routing (1-10, higher = more important)'
     },
     // Certification
-    RequiresCertification: {
+    requires_certification: {
       type: 'checkbox',
       label: 'Requires Certification',
       defaultValue: false
     },
-    CertificationName: {
+    certification_name: {
       type: 'text',
-      label: 'Certification Name',
+      label: 'Certification name',
       maxLength: 255
     },
     // Statistics
-    TotalAgents: {
+    total_agents: {
       type: 'number',
       label: 'Total Agents',
       precision: 0,
       readonly: true,
       description: 'Number of agents with this skill'
     },
-    CasesRequiring: {
+    cases_requiring: {
       type: 'number',
       label: 'Cases Requiring Skill',
       precision: 0,
       readonly: true,
       description: 'Number of open cases requiring this skill'
     },
-    AverageResolutionTime: {
+    average_resolution_time: {
       type: 'number',
       label: 'Avg Resolution Time (Minutes)',
       precision: 2,
@@ -121,7 +121,7 @@ const Skill = {
       name: 'AgentSkills',
       type: 'hasMany',
       object: 'AgentSkill',
-      foreignKey: 'SkillId',
+      foreignKey: 'skill_id',
       label: 'Agent Skills'
     }
   ],
@@ -129,7 +129,7 @@ const Skill = {
     {
       name: 'CertificationNameRequired',
       errorMessage: 'Certification name is required when certification is required',
-      formula: 'AND(RequiresCertification = true, ISBLANK(CertificationName))'
+      formula: 'AND(requires_certification = true, ISBLANK(certification_name))'
     }
   ],
   listViews: [
@@ -137,34 +137,34 @@ const Skill = {
       name: 'AllSkills',
       label: 'All Skills',
       filters: [],
-      columns: ['Name', 'SkillCategory', 'SkillType', 'RoutingWeight', 'TotalAgents', 'IsActive'],
-      sort: [['SkillCategory', 'asc'], ['Name', 'asc']]
+      columns: ['name', 'skill_category', 'skill_type', 'routing_weight', 'total_agents', 'is_active'],
+      sort: [['skill_category', 'asc'], ['name', 'asc']]
     },
     {
       name: 'ActiveSkills',
       label: 'Active Skills',
       filters: [
-        ['IsActive', '=', true]
+        ['is_active', '=', true]
       ],
-      columns: ['Name', 'SkillCategory', 'TotalAgents', 'CasesRequiring', 'AverageResolutionTime'],
-      sort: [['Name', 'asc']]
+      columns: ['name', 'skill_category', 'total_agents', 'cases_requiring', 'average_resolution_time'],
+      sort: [['name', 'asc']]
     },
     {
       name: 'ByCategory',
       label: 'By Category',
       filters: [],
-      columns: ['Name', 'SkillCategory', 'SkillType', 'RoutingWeight', 'TotalAgents'],
-      sort: [['SkillCategory', 'asc'], ['RoutingWeight', 'desc']]
+      columns: ['name', 'skill_category', 'skill_type', 'routing_weight', 'total_agents'],
+      sort: [['skill_category', 'asc'], ['routing_weight', 'desc']]
     },
     {
       name: 'InDemand',
       label: 'High Demand',
       filters: [
-        ['CasesRequiring', '>', 0],
-        ['IsActive', '=', true]
+        ['cases_requiring', '>', 0],
+        ['is_active', '=', true]
       ],
-      columns: ['Name', 'SkillCategory', 'CasesRequiring', 'TotalAgents', 'AverageResolutionTime'],
-      sort: [['CasesRequiring', 'desc']]
+      columns: ['name', 'skill_category', 'cases_requiring', 'total_agents', 'average_resolution_time'],
+      sort: [['cases_requiring', 'desc']]
     }
   ],
   pageLayout: {
@@ -172,22 +172,22 @@ const Skill = {
       {
         label: 'Skill Information',
         columns: 2,
-        fields: ['Name', 'Description', 'SkillCategory', 'SkillType', 'IsActive']
+        fields: ['name', 'description', 'skill_category', 'skill_type', 'is_active']
       },
       {
         label: 'Related Areas',
         columns: 2,
-        fields: ['RelatedProductIds', 'RelatedCategories']
+        fields: ['related_product_ids', 'related_categories']
       },
       {
         label: 'Routing Configuration',
         columns: 2,
-        fields: ['RoutingWeight', 'RequiresCertification', 'CertificationName']
+        fields: ['routing_weight', 'requires_certification', 'certification_name']
       },
       {
         label: 'Statistics',
         columns: 3,
-        fields: ['TotalAgents', 'CasesRequiring', 'AverageResolutionTime']
+        fields: ['total_agents', 'cases_requiring', 'average_resolution_time']
       }
     ]
   }

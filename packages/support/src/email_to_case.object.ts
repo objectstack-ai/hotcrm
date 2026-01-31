@@ -11,31 +11,31 @@ const EmailToCase = {
   },
   fields: {
     // Basic Information
-    Name: {
+    name: {
       type: 'text',
-      label: 'Configuration Name',
+      label: 'Configuration name',
       required: true,
       maxLength: 255,
       searchable: true
     },
-    Description: {
+    description: {
       type: 'textarea',
-      label: 'Description',
+      label: 'description',
       maxLength: 2000
     },
-    IsActive: {
+    is_active: {
       type: 'checkbox',
       label: 'Active',
       defaultValue: true
     },
     // Email Configuration
-    EmailAddress: {
+    email_address: {
       type: 'email',
       label: 'Email Address',
       required: true,
       description: 'Support email address to monitor'
     },
-    MailboxType: {
+    mailbox_type: {
       type: 'select',
       label: 'Mailbox Type',
       required: true,
@@ -48,43 +48,43 @@ const EmailToCase = {
         { label: 'Exchange', value: 'Exchange' }
       ]
     },
-    MailServer: {
+    mail_server: {
       type: 'text',
       label: 'Mail Server',
       maxLength: 255,
       description: 'IMAP/POP3 server address'
     },
-    MailPort: {
+    mail_port: {
       type: 'number',
       label: 'Port',
       precision: 0,
       defaultValue: 993
     },
-    UseSSL: {
+    use_ssl: {
       type: 'checkbox',
       label: 'Use SSL',
       defaultValue: true
     },
-    Username: {
+    username: {
       type: 'text',
-      label: 'Username',
+      label: 'username',
       maxLength: 255
     },
     // Routing
-    DefaultQueueId: {
+    default_queue_id: {
       type: 'lookup',
       label: 'Default Queue',
       reference: 'Queue',
       required: true,
       description: 'Queue for new cases created from emails'
     },
-    DefaultOwnerId: {
+    default_owner_id: {
       type: 'lookup',
       label: 'Default Owner',
       reference: 'User',
       description: 'Default case owner (if not using queue)'
     },
-    DefaultPriority: {
+    default_priority: {
       type: 'select',
       label: 'Default Priority',
       defaultValue: 'Medium',
@@ -95,7 +95,7 @@ const EmailToCase = {
         { label: 'Low', value: 'Low' }
       ]
     },
-    DefaultCaseType: {
+    default_case_type: {
       type: 'select',
       label: 'Default Case Type',
       options: [
@@ -109,19 +109,19 @@ const EmailToCase = {
       ]
     },
     // Case Creation Rules
-    CreateCasePerEmail: {
+    create_case_per_email: {
       type: 'checkbox',
       label: 'Create Case Per Email',
       defaultValue: true,
       description: 'Create new case for each email (vs. threading)'
     },
-    ThreadBySubject: {
+    thread_by_subject: {
       type: 'checkbox',
       label: 'Thread by Subject',
       defaultValue: true,
       description: 'Add to existing case if subject matches'
     },
-    ThreadWindowHours: {
+    thread_window_hours: {
       type: 'number',
       label: 'Thread Window (Hours)',
       precision: 0,
@@ -130,49 +130,49 @@ const EmailToCase = {
       description: 'Time window for threading emails to same case'
     },
     // Contact Matching
-    AutoMatchContact: {
+    auto_match_contact: {
       type: 'checkbox',
       label: 'Auto Match Contact',
       defaultValue: true,
       description: 'Automatically match sender to existing contact'
     },
-    CreateContactIfNotFound: {
+    create_contact_if_not_found: {
       type: 'checkbox',
       label: 'Create Contact If Not Found',
       defaultValue: true,
       description: 'Create new contact for unknown senders'
     },
-    DefaultAccountId: {
+    default_account_id: {
       type: 'lookup',
       label: 'Default Account',
       reference: 'Account',
       description: 'Account for cases when contact not found'
     },
     // Processing Rules
-    ProcessUnreadOnly: {
+    process_unread_only: {
       type: 'checkbox',
       label: 'Process Unread Only',
       defaultValue: true
     },
-    MarkAsRead: {
+    mark_as_read: {
       type: 'checkbox',
       label: 'Mark as Read',
       defaultValue: true,
       description: 'Mark email as read after processing'
     },
-    MoveToFolder: {
+    move_to_folder: {
       type: 'text',
       label: 'Move to Folder',
       maxLength: 255,
       description: 'IMAP folder to move processed emails'
     },
     // Attachments
-    SaveAttachments: {
+    save_attachments: {
       type: 'checkbox',
       label: 'Save Attachments',
       defaultValue: true
     },
-    MaxAttachmentSize: {
+    max_attachment_size: {
       type: 'number',
       label: 'Max Attachment Size (MB)',
       precision: 0,
@@ -180,62 +180,62 @@ const EmailToCase = {
       max: 100,
       defaultValue: 25
     },
-    AllowedFileTypes: {
+    allowed_file_types: {
       type: 'text',
       label: 'Allowed File Types',
       maxLength: 500,
       description: 'Comma-separated extensions (e.g., pdf,doc,docx,jpg,png)'
     },
     // AI Processing
-    UseAIForCategorization: {
+    use_ai_for_categorization: {
       type: 'checkbox',
       label: 'Use AI for Categorization',
       defaultValue: false,
       description: 'Use AI to auto-categorize and route cases'
     },
-    UseAIForPriority: {
+    use_ai_for_priority: {
       type: 'checkbox',
       label: 'Use AI for Priority',
       defaultValue: false,
       description: 'Use AI to determine case priority'
     },
-    UseAISentimentAnalysis: {
+    use_ai_sentiment_analysis: {
       type: 'checkbox',
       label: 'Use AI Sentiment Analysis',
       defaultValue: false
     },
     // Filtering
-    SubjectFilters: {
+    subject_filters: {
       type: 'textarea',
       label: 'Subject Filters',
       maxLength: 2000,
       description: 'Keywords to filter emails (one per line)'
     },
-    SenderFilters: {
+    sender_filters: {
       type: 'textarea',
       label: 'Sender Filters',
       maxLength: 2000,
       description: 'Email addresses or domains to filter (one per line)'
     },
-    ExcludeAutoReplies: {
+    exclude_auto_replies: {
       type: 'checkbox',
       label: 'Exclude Auto-Replies',
       defaultValue: true
     },
     // Auto Response
-    SendAutoResponse: {
+    send_auto_response: {
       type: 'checkbox',
       label: 'Send Auto Response',
       defaultValue: false
     },
-    AutoResponseTemplateId: {
+    auto_response_template_id: {
       type: 'lookup',
       label: 'Auto Response Template',
       reference: 'EmailTemplate',
       description: 'Email template for auto-response'
     },
     // Polling
-    PollingInterval: {
+    polling_interval: {
       type: 'number',
       label: 'Polling Interval (Minutes)',
       precision: 0,
@@ -244,36 +244,36 @@ const EmailToCase = {
       defaultValue: 5,
       description: 'How often to check for new emails'
     },
-    LastPolledDate: {
+    last_polled_date: {
       type: 'datetime',
       label: 'Last Polled',
       readonly: true
     },
     // Statistics
-    TotalEmailsProcessed: {
+    total_emails_processed: {
       type: 'number',
       label: 'Emails Processed',
       precision: 0,
       readonly: true
     },
-    CasesCreated: {
+    cases_created: {
       type: 'number',
       label: 'Cases Created',
       precision: 0,
       readonly: true
     },
-    FailedEmails: {
+    failed_emails: {
       type: 'number',
       label: 'Failed Emails',
       precision: 0,
       readonly: true
     },
-    LastErrorDate: {
+    last_error_date: {
       type: 'datetime',
       label: 'Last Error',
       readonly: true
     },
-    LastErrorMessage: {
+    last_error_message: {
       type: 'text',
       label: 'Last Error Message',
       maxLength: 500,
@@ -284,17 +284,17 @@ const EmailToCase = {
     {
       name: 'MailServerRequired',
       errorMessage: 'Mail server is required for IMAP/POP3 mailbox types',
-      formula: 'AND(MailboxType IN ("IMAP", "POP3"), ISBLANK(MailServer))'
+      formula: 'AND(mailbox_type IN ("IMAP", "POP3"), ISBLANK(mail_server))'
     },
     {
       name: 'AutoResponseTemplateRequired',
       errorMessage: 'Auto response template is required when auto response is enabled',
-      formula: 'AND(SendAutoResponse = true, ISBLANK(AutoResponseTemplateId))'
+      formula: 'AND(send_auto_response = true, ISBLANK(auto_response_template_id))'
     },
     {
       name: 'ThreadWindowRequired',
       errorMessage: 'Thread window is required when threading by subject',
-      formula: 'AND(ThreadBySubject = true, ISBLANK(ThreadWindowHours))'
+      formula: 'AND(thread_by_subject = true, ISBLANK(thread_window_hours))'
     }
   ],
   listViews: [
@@ -302,26 +302,26 @@ const EmailToCase = {
       name: 'AllConfigurations',
       label: 'All Configurations',
       filters: [],
-      columns: ['Name', 'EmailAddress', 'MailboxType', 'DefaultQueueId', 'IsActive', 'CasesCreated'],
-      sort: [['Name', 'asc']]
+      columns: ['name', 'email_address', 'mailbox_type', 'default_queue_id', 'is_active', 'cases_created'],
+      sort: [['name', 'asc']]
     },
     {
       name: 'ActiveConfigurations',
       label: 'Active',
       filters: [
-        ['IsActive', '=', true]
+        ['is_active', '=', true]
       ],
-      columns: ['Name', 'EmailAddress', 'DefaultQueueId', 'LastPolledDate', 'CasesCreated', 'FailedEmails'],
-      sort: [['Name', 'asc']]
+      columns: ['name', 'email_address', 'default_queue_id', 'last_polled_date', 'cases_created', 'failed_emails'],
+      sort: [['name', 'asc']]
     },
     {
       name: 'WithErrors',
       label: 'With Errors',
       filters: [
-        ['FailedEmails', '>', 0]
+        ['failed_emails', '>', 0]
       ],
-      columns: ['Name', 'EmailAddress', 'FailedEmails', 'LastErrorDate', 'LastErrorMessage'],
-      sort: [['LastErrorDate', 'desc']]
+      columns: ['name', 'email_address', 'failed_emails', 'last_error_date', 'last_error_message'],
+      sort: [['last_error_date', 'desc']]
     }
   ],
   pageLayout: {
@@ -329,57 +329,57 @@ const EmailToCase = {
       {
         label: 'Configuration Information',
         columns: 2,
-        fields: ['Name', 'Description', 'IsActive']
+        fields: ['name', 'description', 'is_active']
       },
       {
         label: 'Email Settings',
         columns: 2,
-        fields: ['EmailAddress', 'MailboxType', 'MailServer', 'MailPort', 'UseSSL', 'Username']
+        fields: ['email_address', 'mailbox_type', 'mail_server', 'mail_port', 'use_ssl', 'username']
       },
       {
         label: 'Default Case Settings',
         columns: 2,
-        fields: ['DefaultQueueId', 'DefaultOwnerId', 'DefaultPriority', 'DefaultCaseType']
+        fields: ['default_queue_id', 'default_owner_id', 'default_priority', 'default_case_type']
       },
       {
         label: 'Case Creation Rules',
         columns: 2,
-        fields: ['CreateCasePerEmail', 'ThreadBySubject', 'ThreadWindowHours']
+        fields: ['create_case_per_email', 'thread_by_subject', 'thread_window_hours']
       },
       {
         label: 'Contact Matching',
         columns: 2,
-        fields: ['AutoMatchContact', 'CreateContactIfNotFound', 'DefaultAccountId']
+        fields: ['auto_match_contact', 'create_contact_if_not_found', 'default_account_id']
       },
       {
         label: 'Processing Rules',
         columns: 2,
-        fields: ['ProcessUnreadOnly', 'MarkAsRead', 'MoveToFolder', 'PollingInterval']
+        fields: ['process_unread_only', 'mark_as_read', 'move_to_folder', 'polling_interval']
       },
       {
         label: 'Attachments',
         columns: 2,
-        fields: ['SaveAttachments', 'MaxAttachmentSize', 'AllowedFileTypes']
+        fields: ['save_attachments', 'max_attachment_size', 'allowed_file_types']
       },
       {
         label: 'AI Processing',
         columns: 2,
-        fields: ['UseAIForCategorization', 'UseAIForPriority', 'UseAISentimentAnalysis']
+        fields: ['use_ai_for_categorization', 'use_ai_for_priority', 'use_ai_sentiment_analysis']
       },
       {
         label: 'Filtering',
         columns: 2,
-        fields: ['SubjectFilters', 'SenderFilters', 'ExcludeAutoReplies']
+        fields: ['subject_filters', 'sender_filters', 'exclude_auto_replies']
       },
       {
         label: 'Auto Response',
         columns: 2,
-        fields: ['SendAutoResponse', 'AutoResponseTemplateId']
+        fields: ['send_auto_response', 'auto_response_template_id']
       },
       {
         label: 'Statistics',
         columns: 3,
-        fields: ['LastPolledDate', 'TotalEmailsProcessed', 'CasesCreated', 'FailedEmails', 'LastErrorDate', 'LastErrorMessage']
+        fields: ['last_polled_date', 'total_emails_processed', 'cases_created', 'failed_emails', 'last_error_date', 'last_error_message']
       }
     ]
   }

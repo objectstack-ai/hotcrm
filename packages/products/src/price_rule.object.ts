@@ -14,14 +14,14 @@ const PriceRule = {
   },
   fields: {
     // Basic Information
-    Name: {
+    name: {
       type: 'text',
-      label: 'Rule Name',
+      label: 'Rule name',
       required: true,
       searchable: true,
       maxLength: 255
     },
-    RuleCode: {
+    rule_code: {
       type: 'text',
       label: 'Rule Code',
       unique: true,
@@ -29,14 +29,14 @@ const PriceRule = {
       maxLength: 50,
       description: 'Unique identifier for the pricing rule'
     },
-    Description: {
+    description: {
       type: 'textarea',
-      label: 'Description',
+      label: 'description',
       maxLength: 2000
     },
-    Status: {
+    status: {
       type: 'select',
-      label: 'Status',
+      label: 'status',
       required: true,
       defaultValue: 'Active',
       options: [
@@ -48,7 +48,7 @@ const PriceRule = {
       ]
     },
     // Rule Type
-    RuleType: {
+    rule_type: {
       type: 'select',
       label: 'Rule Type',
       required: true,
@@ -62,54 +62,54 @@ const PriceRule = {
         { label: 'Bundle Discount', value: 'BundleDiscount' }
       ]
     },
-    // Priority
-    Priority: {
+    // priority
+    priority: {
       type: 'number',
-      label: 'Priority',
+      label: 'priority',
       precision: 0,
       required: true,
       defaultValue: 100,
       description: 'Rule execution priority (lower number = higher priority)'
     },
     // Applicability
-    AppliesTo: {
+    applies_to: {
       type: 'select',
       label: 'Applies To',
       required: true,
       options: [
         { label: 'All Products', value: 'AllProducts' },
         { label: 'Specific Product', value: 'SpecificProduct' },
-        { label: 'Product Category', value: 'ProductCategory' },
-        { label: 'Product Family', value: 'ProductFamily' },
+        { label: 'Product Category', value: 'product_category' },
+        { label: 'Product Family', value: 'product_family' },
         { label: 'Product Bundle', value: 'ProductBundle' }
       ]
     },
-    ProductId: {
+    product_id: {
       type: 'lookup',
       label: 'Product',
       reference: 'Product',
       description: 'Specific product this rule applies to'
     },
-    ProductCategory: {
+    product_category: {
       type: 'text',
       label: 'Product Category',
       maxLength: 100,
       description: 'Product category this rule applies to'
     },
-    ProductFamily: {
+    product_family: {
       type: 'text',
       label: 'Product Family',
       maxLength: 100,
       description: 'Product family this rule applies to'
     },
-    ProductBundleId: {
+    product_bundle_id: {
       type: 'lookup',
       label: 'Product Bundle',
       reference: 'ProductBundle',
       description: 'Product bundle this rule applies to'
     },
     // Customer Scope
-    CustomerScope: {
+    customer_scope: {
       type: 'select',
       label: 'Customer Scope',
       required: true,
@@ -117,126 +117,126 @@ const PriceRule = {
       options: [
         { label: 'All Customers', value: 'AllCustomers' },
         { label: 'Specific Account', value: 'SpecificAccount' },
-        { label: 'Account Type', value: 'AccountType' },
-        { label: 'Industry', value: 'Industry' },
-        { label: 'Customer Segment', value: 'CustomerSegment' }
+        { label: 'Account Type', value: 'account_type' },
+        { label: 'industry', value: 'industry' },
+        { label: 'Customer Segment', value: 'customer_segment' }
       ]
     },
-    AccountId: {
+    account_id: {
       type: 'lookup',
       label: 'Account',
       reference: 'Account',
       description: 'Specific account this rule applies to'
     },
-    AccountType: {
+    account_type: {
       type: 'text',
       label: 'Account Type',
       maxLength: 100,
       description: 'Account type this rule applies to'
     },
-    Industry: {
+    industry: {
       type: 'text',
-      label: 'Industry',
+      label: 'industry',
       maxLength: 100,
-      description: 'Industry this rule applies to'
+      description: 'industry this rule applies to'
     },
-    CustomerSegment: {
+    customer_segment: {
       type: 'text',
       label: 'Customer Segment',
       maxLength: 100,
       description: 'Customer segment this rule applies to'
     },
     // Date Range
-    StartDate: {
+    start_date: {
       type: 'date',
       label: 'Start Date',
       required: true,
       description: 'Date when rule becomes active'
     },
-    EndDate: {
+    end_date: {
       type: 'date',
       label: 'End Date',
       description: 'Date when rule expires'
     },
     // Pricing Configuration
-    DiscountType: {
+    discount_type: {
       type: 'select',
       label: 'Discount Type',
       options: [
         { label: 'Percentage', value: 'Percentage' },
         { label: 'Fixed Amount', value: 'FixedAmount' },
-        { label: 'New Price', value: 'NewPrice' }
+        { label: 'New Price', value: 'new_price' }
       ]
     },
-    DiscountPercent: {
+    discount_percent: {
       type: 'percent',
       label: 'Discount %',
       description: 'Discount percentage'
     },
-    DiscountAmount: {
+    discount_amount: {
       type: 'currency',
       label: 'Discount Amount',
       precision: 2,
       description: 'Fixed discount amount'
     },
-    NewPrice: {
+    new_price: {
       type: 'currency',
       label: 'New Price',
       precision: 2,
       description: 'Overridden price'
     },
     // Volume Tiers
-    UseTieredPricing: {
+    use_tiered_pricing: {
       type: 'checkbox',
       label: 'Use Tiered Pricing',
       defaultValue: false,
       description: 'Enable quantity-based tiered pricing'
     },
-    MinimumQuantity: {
+    minimum_quantity: {
       type: 'number',
       label: 'Minimum Quantity',
       precision: 0,
       description: 'Minimum quantity required for rule to apply'
     },
-    MaximumQuantity: {
+    maximum_quantity: {
       type: 'number',
       label: 'Maximum Quantity',
       precision: 0,
       description: 'Maximum quantity for rule applicability'
     },
     // Contract-Based Pricing
-    ContractId: {
+    contract_id: {
       type: 'lookup',
       label: 'Contract',
       reference: 'Contract',
       description: 'Contract this pricing rule is associated with'
     },
-    RequireContract: {
+    require_contract: {
       type: 'checkbox',
       label: 'Require Contract',
       defaultValue: false,
       description: 'Rule only applies if customer has an active contract'
     },
     // Promotional
-    PromotionCode: {
+    promotion_code: {
       type: 'text',
       label: 'Promotion Code',
       maxLength: 50,
       description: 'Promotion code for customer entry'
     },
-    IsPublic: {
+    is_public: {
       type: 'checkbox',
       label: 'Public Promotion',
       defaultValue: false,
       description: 'Publicly advertised promotion'
     },
-    UsageLimit: {
+    usage_limit: {
       type: 'number',
       label: 'Usage Limit',
       precision: 0,
       description: 'Maximum number of times rule can be used'
     },
-    UsageCount: {
+    usage_count: {
       type: 'number',
       label: 'Usage Count',
       precision: 0,
@@ -245,61 +245,61 @@ const PriceRule = {
       description: 'Current usage count'
     },
     // Stackability
-    AllowStacking: {
+    allow_stacking: {
       type: 'checkbox',
       label: 'Allow Stacking',
       defaultValue: false,
       description: 'Allow combining with other pricing rules'
     },
-    ExclusionRules: {
+    exclusion_rules: {
       type: 'textarea',
       label: 'Exclusion Rules',
       maxLength: 2000,
       description: 'Rules that cannot be combined with this rule (comma-separated rule codes)'
     },
     // Competitive Pricing
-    CompetitorPrice: {
+    competitor_price: {
       type: 'currency',
       label: 'Competitor Price',
       precision: 2,
       description: 'Competitor reference price'
     },
-    CompetitorName: {
+    competitor_name: {
       type: 'text',
-      label: 'Competitor Name',
+      label: 'Competitor name',
       maxLength: 255,
       description: 'Competitor being matched or beaten'
     },
-    PriceMatchStrategy: {
+    price_match_strategy: {
       type: 'select',
       label: 'Price Match Strategy',
       options: [
         { label: 'Match Competitor', value: 'Match' },
-        { label: 'Beat by %', value: 'BeatByPercent' },
-        { label: 'Beat by Amount', value: 'BeatByAmount' }
+        { label: 'Beat by %', value: 'beat_by_percent' },
+        { label: 'Beat by Amount', value: 'beat_by_amount' }
       ]
     },
-    BeatByPercent: {
+    beat_by_percent: {
       type: 'percent',
       label: 'Beat By %',
       description: 'Percentage to beat competitor price by'
     },
-    BeatByAmount: {
+    beat_by_amount: {
       type: 'currency',
       label: 'Beat By Amount',
       precision: 2,
       description: 'Amount to beat competitor price by'
     },
     // Approval
-    RequiresApproval: {
+    requires_approval: {
       type: 'checkbox',
       label: 'Requires Approval',
       defaultValue: false,
       description: 'Rule requires approval before activation'
     },
-    ApprovalStatus: {
+    approval_status: {
       type: 'select',
-      label: 'Approval Status',
+      label: 'Approval status',
       readonly: true,
       defaultValue: 'Not Required',
       options: [
@@ -309,32 +309,32 @@ const PriceRule = {
         { label: 'Rejected', value: 'Rejected' }
       ]
     },
-    ApprovedById: {
+    approved_by_id: {
       type: 'lookup',
       label: 'Approved By',
       reference: 'User',
       readonly: true
     },
-    ApprovedDate: {
+    approved_date: {
       type: 'datetime',
       label: 'Approved Date',
       readonly: true
     },
     // AI Enhancement
-    AIOptimalDiscountPercent: {
+    ai_optimal_discount_percent: {
       type: 'percent',
       label: 'AI Optimal Discount',
       readonly: true,
       description: 'AI-recommended optimal discount percentage'
     },
-    AIExpectedImpact: {
+    ai_expected_impact: {
       type: 'textarea',
       label: 'AI Expected Impact',
       readonly: true,
       maxLength: 2000,
       description: 'AI analysis of expected revenue and margin impact'
     },
-    AICompetitiveAnalysis: {
+    ai_competitive_analysis: {
       type: 'textarea',
       label: 'AI Competitive Analysis',
       readonly: true,
@@ -347,14 +347,14 @@ const PriceRule = {
       name: 'PriceTiers',
       type: 'hasMany',
       object: 'PriceTier',
-      foreignKey: 'PriceRuleId',
+      foreignKey: 'price_rule_id',
       label: 'Price Tiers'
     },
     {
       name: 'AppliedQuotes',
       type: 'hasMany',
       object: 'Quote',
-      foreignKey: 'PriceRuleId',
+      foreignKey: 'price_rule_id',
       label: 'Applied Quotes'
     }
   ],
@@ -363,52 +363,52 @@ const PriceRule = {
       name: 'AllRules',
       label: 'All Price Rules',
       filters: [],
-      columns: ['Name', 'RuleCode', 'RuleType', 'Status', 'Priority', 'StartDate', 'EndDate'],
-      sort: [['Priority', 'asc']]
+      columns: ['name', 'rule_code', 'rule_type', 'status', 'priority', 'start_date', 'end_date'],
+      sort: [['priority', 'asc']]
     },
     {
       name: 'ActiveRules',
       label: 'Active Rules',
-      filters: [['Status', '=', 'Active']],
-      columns: ['Name', 'RuleType', 'AppliesTo', 'CustomerScope', 'Priority', 'EndDate'],
-      sort: [['Priority', 'asc']]
+      filters: [['status', '=', 'Active']],
+      columns: ['name', 'rule_type', 'applies_to', 'customer_scope', 'priority', 'end_date'],
+      sort: [['priority', 'asc']]
     },
     {
       name: 'PromotionalRules',
       label: 'Promotional',
-      filters: [['RuleType', '=', 'Promotional']],
-      columns: ['Name', 'PromotionCode', 'DiscountPercent', 'StartDate', 'EndDate', 'UsageCount', 'UsageLimit'],
-      sort: [['StartDate', 'desc']]
+      filters: [['rule_type', '=', 'Promotional']],
+      columns: ['name', 'promotion_code', 'discount_percent', 'start_date', 'end_date', 'usage_count', 'usage_limit'],
+      sort: [['start_date', 'desc']]
     },
     {
       name: 'ContractPricing',
       label: 'Contract Pricing',
-      filters: [['RuleType', '=', 'ContractBased']],
-      columns: ['Name', 'ContractId', 'AccountId', 'DiscountPercent', 'StartDate', 'EndDate'],
-      sort: [['StartDate', 'desc']]
+      filters: [['rule_type', '=', 'ContractBased']],
+      columns: ['name', 'contract_id', 'account_id', 'discount_percent', 'start_date', 'end_date'],
+      sort: [['start_date', 'desc']]
     },
     {
       name: 'VolumeDiscounts',
       label: 'Volume Discounts',
-      filters: [['RuleType', '=', 'VolumeDiscount']],
-      columns: ['Name', 'ProductId', 'MinimumQuantity', 'DiscountPercent', 'Status'],
-      sort: [['MinimumQuantity', 'asc']]
+      filters: [['rule_type', '=', 'VolumeDiscount']],
+      columns: ['name', 'product_id', 'minimum_quantity', 'discount_percent', 'status'],
+      sort: [['minimum_quantity', 'asc']]
     },
     {
       name: 'ExpiringRules',
       label: 'Expiring Soon',
       filters: [
-        ['Status', '=', 'Active'],
-        ['EndDate', 'next_n_days', 30]
+        ['status', '=', 'Active'],
+        ['end_date', 'next_n_days', 30]
       ],
-      columns: ['Name', 'RuleType', 'EndDate', 'UsageCount', 'UsageLimit'],
-      sort: [['EndDate', 'asc']]
+      columns: ['name', 'rule_type', 'end_date', 'usage_count', 'usage_limit'],
+      sort: [['end_date', 'asc']]
     },
     {
       name: 'PendingApproval',
       label: 'Pending Approval',
-      filters: [['ApprovalStatus', '=', 'Pending']],
-      columns: ['Name', 'RuleType', 'DiscountPercent', 'RequiresApproval', 'CreatedDate'],
+      filters: [['approval_status', '=', 'Pending']],
+      columns: ['name', 'rule_type', 'discount_percent', 'requires_approval', 'CreatedDate'],
       sort: [['CreatedDate', 'asc']]
     }
   ],
@@ -416,57 +416,57 @@ const PriceRule = {
     {
       name: 'EndDateAfterStartDate',
       errorMessage: 'End date must be after start date',
-      formula: 'AND(NOT(ISBLANK(StartDate)), NOT(ISBLANK(EndDate)), EndDate <= StartDate)'
+      formula: 'AND(NOT(ISBLANK(start_date)), NOT(ISBLANK(end_date)), end_date <= start_date)'
     },
     {
       name: 'DiscountTypeRequired',
       errorMessage: 'Discount type is required',
-      formula: 'AND(RuleType IN ("VolumeDiscount", "Promotional", "CustomerSpecific"), ISBLANK(DiscountType))'
+      formula: 'AND(rule_type IN ("VolumeDiscount", "Promotional", "CustomerSpecific"), ISBLANK(discount_type))'
     },
     {
       name: 'DiscountPercentValid',
       errorMessage: 'Discount percentage must be between 0% and 100%',
-      formula: 'AND(DiscountType = "Percentage", OR(DiscountPercent < 0, DiscountPercent > 1))'
+      formula: 'AND(discount_type = "Percentage", OR(discount_percent < 0, discount_percent > 1))'
     },
     {
       name: 'DiscountAmountRequired',
       errorMessage: 'Discount amount is required when discount type is Fixed Amount',
-      formula: 'AND(DiscountType = "FixedAmount", ISBLANK(DiscountAmount))'
+      formula: 'AND(discount_type = "FixedAmount", ISBLANK(discount_amount))'
     },
     {
       name: 'NewPriceRequired',
       errorMessage: 'New price is required when discount type is New Price',
-      formula: 'AND(DiscountType = "NewPrice", ISBLANK(NewPrice))'
+      formula: 'AND(discount_type = "new_price", ISBLANK(new_price))'
     },
     {
       name: 'ProductRequired',
       errorMessage: 'Product is required when applies to specific product',
-      formula: 'AND(AppliesTo = "SpecificProduct", ISBLANK(ProductId))'
+      formula: 'AND(applies_to = "SpecificProduct", ISBLANK(product_id))'
     },
     {
       name: 'AccountRequired',
       errorMessage: 'Account is required when customer scope is specific account',
-      formula: 'AND(CustomerScope = "SpecificAccount", ISBLANK(AccountId))'
+      formula: 'AND(customer_scope = "SpecificAccount", ISBLANK(account_id))'
     },
     {
       name: 'ContractRequired',
       errorMessage: 'Contract is required when rule type is contract-based',
-      formula: 'AND(RuleType = "ContractBased", ISBLANK(ContractId))'
+      formula: 'AND(rule_type = "ContractBased", ISBLANK(contract_id))'
     },
     {
       name: 'PromotionCodeRequired',
       errorMessage: 'Promotion code is required for promotional rules',
-      formula: 'AND(RuleType = "Promotional", ISBLANK(PromotionCode))'
+      formula: 'AND(rule_type = "Promotional", ISBLANK(promotion_code))'
     },
     {
       name: 'MinMaxQuantityValid',
       errorMessage: 'Maximum quantity must be greater than minimum quantity',
-      formula: 'AND(NOT(ISBLANK(MinimumQuantity)), NOT(ISBLANK(MaximumQuantity)), MaximumQuantity < MinimumQuantity)'
+      formula: 'AND(NOT(ISBLANK(minimum_quantity)), NOT(ISBLANK(maximum_quantity)), maximum_quantity < minimum_quantity)'
     },
     {
       name: 'CompetitorPriceRequired',
       errorMessage: 'Competitor price is required for competitive pricing rules',
-      formula: 'AND(RuleType = "Competitive", ISBLANK(CompetitorPrice))'
+      formula: 'AND(rule_type = "Competitive", ISBLANK(competitor_price))'
     }
   ],
   pageLayout: {
@@ -474,62 +474,62 @@ const PriceRule = {
       {
         label: 'Rule Information',
         columns: 2,
-        fields: ['Name', 'RuleCode', 'Status', 'RuleType', 'Priority', 'Description']
+        fields: ['name', 'rule_code', 'status', 'rule_type', 'priority', 'description']
       },
       {
         label: 'Applicability',
         columns: 2,
-        fields: ['AppliesTo', 'ProductId', 'ProductCategory', 'ProductFamily', 'ProductBundleId']
+        fields: ['applies_to', 'product_id', 'product_category', 'product_family', 'product_bundle_id']
       },
       {
         label: 'Customer Scope',
         columns: 2,
-        fields: ['CustomerScope', 'AccountId', 'AccountType', 'Industry', 'CustomerSegment']
+        fields: ['customer_scope', 'account_id', 'account_type', 'industry', 'customer_segment']
       },
       {
         label: 'Date Range',
         columns: 2,
-        fields: ['StartDate', 'EndDate']
+        fields: ['start_date', 'end_date']
       },
       {
         label: 'Pricing Configuration',
         columns: 2,
-        fields: ['DiscountType', 'DiscountPercent', 'DiscountAmount', 'NewPrice']
+        fields: ['discount_type', 'discount_percent', 'discount_amount', 'new_price']
       },
       {
         label: 'Volume & Tiered Pricing',
         columns: 2,
-        fields: ['UseTieredPricing', 'MinimumQuantity', 'MaximumQuantity']
+        fields: ['use_tiered_pricing', 'minimum_quantity', 'maximum_quantity']
       },
       {
         label: 'Contract-Based Pricing',
         columns: 2,
-        fields: ['ContractId', 'RequireContract']
+        fields: ['contract_id', 'require_contract']
       },
       {
         label: 'Promotional Settings',
         columns: 2,
-        fields: ['PromotionCode', 'IsPublic', 'UsageLimit', 'UsageCount']
+        fields: ['promotion_code', 'is_public', 'usage_limit', 'usage_count']
       },
       {
         label: 'Stackability',
         columns: 2,
-        fields: ['AllowStacking', 'ExclusionRules']
+        fields: ['allow_stacking', 'exclusion_rules']
       },
       {
         label: 'Competitive Pricing',
         columns: 2,
-        fields: ['CompetitorName', 'CompetitorPrice', 'PriceMatchStrategy', 'BeatByPercent', 'BeatByAmount']
+        fields: ['competitor_name', 'competitor_price', 'price_match_strategy', 'beat_by_percent', 'beat_by_amount']
       },
       {
         label: 'Approval',
         columns: 2,
-        fields: ['RequiresApproval', 'ApprovalStatus', 'ApprovedById', 'ApprovedDate']
+        fields: ['requires_approval', 'approval_status', 'approved_by_id', 'approved_date']
       },
       {
         label: 'AI Insights',
         columns: 1,
-        fields: ['AIOptimalDiscountPercent', 'AIExpectedImpact', 'AICompetitiveAnalysis']
+        fields: ['ai_optimal_discount_percent', 'ai_expected_impact', 'ai_competitive_analysis']
       }
     ]
   }

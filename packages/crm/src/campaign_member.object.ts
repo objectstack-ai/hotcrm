@@ -12,30 +12,30 @@ const CampaignMember = {
   },
   fields: {
     // Relationship Fields
-    CampaignId: {
+    campaign_id: {
       type: 'lookup',
       label: 'Campaign',
       reference: 'Campaign',
       required: true,
       description: 'The marketing campaign this member belongs to'
     },
-    LeadId: {
+    lead_id: {
       type: 'lookup',
       label: 'Lead',
       reference: 'Lead',
-      description: 'Related lead (mutually exclusive with ContactId)'
+      description: 'Related lead (mutually exclusive with contact_id)'
     },
-    ContactId: {
+    contact_id: {
       type: 'lookup',
       label: 'Contact',
       reference: 'Contact',
-      description: 'Related contact (mutually exclusive with LeadId)'
+      description: 'Related contact (mutually exclusive with lead_id)'
     },
     
-    // Status & Engagement
-    Status: {
+    // status & Engagement
+    status: {
       type: 'select',
-      label: 'Member Status',
+      label: 'Member status',
       required: true,
       defaultValue: 'Sent',
       options: [
@@ -46,7 +46,7 @@ const CampaignMember = {
         { label: '🚫 Unsubscribed', value: 'Unsubscribed' }
       ]
     },
-    FirstRespondedDate: {
+    first_responded_date: {
       type: 'datetime',
       label: 'First Responded Date',
       readonly: true,
@@ -54,7 +54,7 @@ const CampaignMember = {
     },
     
     // Member Details
-    MemberSource: {
+    member_source: {
       type: 'select',
       label: 'Member Source',
       defaultValue: 'Manual',
@@ -65,52 +65,52 @@ const CampaignMember = {
         { label: '🤖 Automation', value: 'Automation' }
       ]
     },
-    Notes: {
+    notes: {
       type: 'textarea',
-      label: 'Notes',
+      label: 'notes',
       maxLength: 2000,
       description: 'Additional notes about this campaign member'
     },
     
     // Email Tracking (for email campaigns)
-    EmailBouncedReason: {
+    email_bounced_reason: {
       type: 'text',
       label: 'Email Bounced Reason',
       readonly: true,
       maxLength: 255
     },
-    EmailBouncedDate: {
+    email_bounced_date: {
       type: 'datetime',
       label: 'Email Bounced Date',
       readonly: true
     },
-    HasResponded: {
+    has_responded: {
       type: 'checkbox',
       label: 'Has Responded',
       defaultValue: false,
       readonly: true,
-      description: 'Auto-set to true when Status is Responded'
+      description: 'Auto-set to true when status is Responded'
     },
     
     // Tracking
-    FirstOpenedDate: {
+    first_opened_date: {
       type: 'datetime',
       label: 'First Opened Date',
       readonly: true
     },
-    FirstClickedDate: {
+    first_clicked_date: {
       type: 'datetime',
       label: 'First Clicked Date',
       readonly: true
     },
-    NumberOfOpens: {
+    number_of_opens: {
       type: 'number',
       label: 'Number of Opens',
       defaultValue: 0,
       precision: 0,
       readonly: true
     },
-    NumberOfClicks: {
+    number_of_clicks: {
       type: 'number',
       label: 'Number of Clicks',
       defaultValue: 0,
@@ -123,21 +123,21 @@ const CampaignMember = {
       name: 'Campaign',
       type: 'belongsTo',
       object: 'Campaign',
-      foreignKey: 'CampaignId',
+      foreignKey: 'campaign_id',
       label: 'Campaign'
     },
     {
       name: 'Lead',
       type: 'belongsTo',
       object: 'Lead',
-      foreignKey: 'LeadId',
+      foreignKey: 'lead_id',
       label: 'Lead'
     },
     {
       name: 'Contact',
       type: 'belongsTo',
       object: 'Contact',
-      foreignKey: 'ContactId',
+      foreignKey: 'contact_id',
       label: 'Contact'
     }
   ],
@@ -146,35 +146,35 @@ const CampaignMember = {
       name: 'AllMembers',
       label: 'All Campaign Members',
       filters: [],
-      columns: ['CampaignId', 'LeadId', 'ContactId', 'Status', 'MemberSource', 'FirstRespondedDate'],
+      columns: ['campaign_id', 'lead_id', 'contact_id', 'status', 'member_source', 'first_responded_date'],
       sort: [['CreatedDate', 'desc']]
     },
     {
       name: 'Responded',
       label: 'Responded',
-      filters: [['Status', '=', 'Responded']],
-      columns: ['CampaignId', 'LeadId', 'ContactId', 'FirstRespondedDate', 'Notes'],
-      sort: [['FirstRespondedDate', 'desc']]
+      filters: [['status', '=', 'Responded']],
+      columns: ['campaign_id', 'lead_id', 'contact_id', 'first_responded_date', 'notes'],
+      sort: [['first_responded_date', 'desc']]
     },
     {
       name: 'Engaged',
       label: 'Engaged (Opened/Clicked)',
-      filters: [['Status', 'in', ['Opened', 'Clicked']]],
-      columns: ['CampaignId', 'LeadId', 'ContactId', 'Status', 'NumberOfOpens', 'NumberOfClicks', 'FirstOpenedDate'],
-      sort: [['FirstOpenedDate', 'desc']]
+      filters: [['status', 'in', ['Opened', 'Clicked']]],
+      columns: ['campaign_id', 'lead_id', 'contact_id', 'status', 'number_of_opens', 'number_of_clicks', 'first_opened_date'],
+      sort: [['first_opened_date', 'desc']]
     },
     {
       name: 'Unsubscribed',
       label: 'Unsubscribed',
-      filters: [['Status', '=', 'Unsubscribed']],
-      columns: ['CampaignId', 'LeadId', 'ContactId', 'FirstRespondedDate', 'Notes'],
+      filters: [['status', '=', 'Unsubscribed']],
+      columns: ['campaign_id', 'lead_id', 'contact_id', 'first_responded_date', 'notes'],
       sort: [['CreatedDate', 'desc']]
     },
     {
       name: 'NotEngaged',
       label: 'Not Engaged',
-      filters: [['Status', '=', 'Sent']],
-      columns: ['CampaignId', 'LeadId', 'ContactId', 'MemberSource', 'CreatedDate'],
+      filters: [['status', '=', 'Sent']],
+      columns: ['campaign_id', 'lead_id', 'contact_id', 'member_source', 'CreatedDate'],
       sort: [['CreatedDate', 'desc']]
     }
   ],
@@ -182,17 +182,17 @@ const CampaignMember = {
     {
       name: 'RequireLeadOrContact',
       errorMessage: 'Campaign Member must have either a Lead or a Contact',
-      formula: 'AND(ISBLANK(LeadId), ISBLANK(ContactId))'
+      formula: 'AND(ISBLANK(lead_id), ISBLANK(contact_id))'
     },
     {
       name: 'PreventBothLeadAndContact',
       errorMessage: 'Campaign Member cannot have both Lead and Contact',
-      formula: 'AND(NOT(ISBLANK(LeadId)), NOT(ISBLANK(ContactId)))'
+      formula: 'AND(NOT(ISBLANK(lead_id)), NOT(ISBLANK(contact_id)))'
     },
     {
       name: 'StatusProgression',
-      errorMessage: 'Status cannot regress (e.g., from Responded to Sent)',
-      formula: 'AND(PRIORVALUE(Status) = "Responded", Status = "Sent")'
+      errorMessage: 'status cannot regress (e.g., from Responded to Sent)',
+      formula: 'AND(PRIORVALUE(status) = "Responded", status = "Sent")'
     }
   ],
   pageLayout: {
@@ -200,22 +200,22 @@ const CampaignMember = {
       {
         label: 'Campaign Member Information',
         columns: 2,
-        fields: ['CampaignId', 'LeadId', 'ContactId', 'Status', 'MemberSource']
+        fields: ['campaign_id', 'lead_id', 'contact_id', 'status', 'member_source']
       },
       {
         label: 'Engagement Tracking',
         columns: 2,
-        fields: ['FirstOpenedDate', 'FirstClickedDate', 'FirstRespondedDate', 'NumberOfOpens', 'NumberOfClicks', 'HasResponded']
+        fields: ['first_opened_date', 'first_clicked_date', 'first_responded_date', 'number_of_opens', 'number_of_clicks', 'has_responded']
       },
       {
         label: 'Email Bounced Information',
         columns: 2,
-        fields: ['EmailBouncedDate', 'EmailBouncedReason']
+        fields: ['email_bounced_date', 'email_bounced_reason']
       },
       {
-        label: 'Notes',
+        label: 'notes',
         columns: 1,
-        fields: ['Notes']
+        fields: ['notes']
       }
     ]
   }

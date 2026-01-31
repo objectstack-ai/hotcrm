@@ -13,16 +13,16 @@ const Activity = {
   },
   fields: {
     // Basic Information
-    Subject: {
+    subject: {
       type: 'text',
-      label: 'Subject',
+      label: 'subject',
       required: true,
       searchable: true,
       maxLength: 255
     },
-    Type: {
+    type: {
       type: 'select',
-      label: 'Activity Type',
+      label: 'Activity type',
       required: true,
       options: [
         { label: '📞 Call', value: 'Call' },
@@ -37,9 +37,9 @@ const Activity = {
         { label: '🎯 Other', value: 'Other' }
       ]
     },
-    Status: {
+    status: {
       type: 'select',
-      label: 'Status',
+      label: 'status',
       required: true,
       defaultValue: 'Planned',
       options: [
@@ -50,9 +50,9 @@ const Activity = {
         { label: '⏰ Deferred', value: 'Deferred' }
       ]
     },
-    Priority: {
+    priority: {
       type: 'select',
-      label: 'Priority',
+      label: 'priority',
       defaultValue: 'Medium',
       options: [
         { label: '🔴 High', value: 'High' },
@@ -61,105 +61,105 @@ const Activity = {
       ]
     },
     // Date & Time
-    ActivityDate: {
+    activity_date: {
       type: 'datetime',
       label: 'Activity Date',
       required: true
     },
-    DueDate: {
+    due_date: {
       type: 'date',
       label: 'Due Date'
     },
-    EndDateTime: {
+    end_date_time: {
       type: 'datetime',
       label: 'End Time'
     },
-    DurationInMinutes: {
+    duration_in_minutes: {
       type: 'number',
       label: 'Duration (Minutes)',
       precision: 0
     },
-    CompletedDate: {
+    completed_date: {
       type: 'datetime',
       label: 'Completed Date',
       readonly: true
     },
     // Related Records (Who/What Pattern)
-    WhoId: {
+    who_id: {
       type: 'lookup',
       label: 'Related Person',
       reference: ['Contact', 'Lead'],
       description: 'Link to Contact or Lead'
     },
-    WhatId: {
+    what_id: {
       type: 'lookup',
       label: 'Related To',
       reference: ['Account', 'Opportunity', 'Contract', 'Case'],
       description: 'Link to Account, Opportunity, Contract, or Case'
     },
-    OwnerId: {
+    owner_id: {
       type: 'lookup',
       label: 'Assigned To',
       reference: 'User',
       required: true
     },
-    // Location
-    Location: {
+    // location
+    location: {
       type: 'text',
-      label: 'Location',
+      label: 'location',
       maxLength: 255
     },
-    IsOnline: {
+    is_online: {
       type: 'checkbox',
       label: 'Online Activity',
       defaultValue: false
     },
-    MeetingLink: {
+    meeting_link: {
       type: 'url',
       label: 'Meeting Link',
       description: 'Zoom/Teams/Tencent Meeting link'
     },
     // Check-in (for field visits)
-    CheckInTime: {
+    check_in_time: {
       type: 'datetime',
       label: 'Check-in Time',
       readonly: true
     },
-    CheckInLocation: {
+    check_in_location: {
       type: 'text',
-      label: 'Check-in Location',
+      label: 'Check-in location',
       readonly: true,
       maxLength: 255
     },
-    CheckInLatitude: {
+    check_in_latitude: {
       type: 'number',
       label: 'Check-in Latitude',
       readonly: true,
       precision: 7
     },
-    CheckInLongitude: {
+    check_in_longitude: {
       type: 'number',
       label: 'Check-in Longitude',
       readonly: true,
       precision: 7
     },
     // Call Details
-    CallType: {
+    call_type: {
       type: 'select',
-      label: 'Call Type',
+      label: 'Call type',
       options: [
         { label: 'Outbound', value: 'Outbound' },
         { label: 'Inbound', value: 'Inbound' },
         { label: 'Internal', value: 'Internal' }
       ]
     },
-    CallDurationInSeconds: {
+    call_duration_in_seconds: {
       type: 'number',
       label: 'Call Duration (Seconds)',
       precision: 0,
       readonly: true
     },
-    CallResult: {
+    call_result: {
       type: 'select',
       label: 'Call Result',
       options: [
@@ -171,46 +171,46 @@ const Activity = {
       ]
     },
     // Email Details
-    EmailSubject: {
+    email_subject: {
       type: 'text',
-      label: 'Email Subject',
+      label: 'Email subject',
       maxLength: 255
     },
-    EmailBody: {
+    email_body: {
       type: 'textarea',
       label: 'Email Body',
       maxLength: 32000
     },
-    EmailFromAddress: {
+    email_from_address: {
       type: 'email',
       label: 'From'
     },
-    EmailToAddress: {
+    email_to_address: {
       type: 'email',
       label: 'To'
     },
-    EmailCcAddress: {
+    email_cc_address: {
       type: 'text',
       label: 'CC',
       maxLength: 500
     },
     // SMS Details
-    SMSBody: {
+    sms_body: {
       type: 'text',
       label: 'SMS Content',
       maxLength: 1000
     },
-    SMSPhoneNumber: {
+    sms_phone_number: {
       type: 'phone',
       label: 'SMS Phone Number'
     },
     // Recurring Task Support
-    IsRecurring: {
+    is_recurring: {
       type: 'checkbox',
       label: 'Recurring Task',
       defaultValue: false
     },
-    RecurrencePattern: {
+    recurrence_pattern: {
       type: 'select',
       label: 'Recurrence Pattern',
       options: [
@@ -220,18 +220,18 @@ const Activity = {
         { label: 'Yearly', value: 'Yearly' }
       ]
     },
-    RecurrenceInterval: {
+    recurrence_interval: {
       type: 'number',
       label: 'Recurrence Interval',
       precision: 0,
       min: 1,
       description: 'Repeat every N days/weeks/months/years'
     },
-    RecurrenceEndDate: {
+    recurrence_end_date: {
       type: 'date',
       label: 'Recurrence End Date'
     },
-    RecurrenceInstanceId: {
+    recurrence_instance_id: {
       type: 'lookup',
       label: 'Parent Recurring Activity',
       reference: 'Activity',
@@ -239,28 +239,28 @@ const Activity = {
       description: 'Link to the master recurring activity'
     },
     // Content & Notes
-    Description: {
+    description: {
       type: 'textarea',
-      label: 'Description/Notes',
+      label: 'description/Notes',
       maxLength: 32000,
       searchable: true
     },
     // AI Enhancement Fields
-    AITranscription: {
+    ai_transcription: {
       type: 'textarea',
       label: 'AI Transcription',
       readonly: true,
       maxLength: 32000,
       description: 'AI-powered voice-to-text transcription'
     },
-    AIActionItems: {
+    ai_action_items: {
       type: 'textarea',
       label: 'AI Extracted Action Items',
       readonly: true,
       maxLength: 5000,
       description: 'Auto-extracted action items from meetings/calls'
     },
-    AISentimentAnalysis: {
+    ai_sentiment_analysis: {
       type: 'select',
       label: 'AI Sentiment',
       readonly: true,
@@ -270,14 +270,14 @@ const Activity = {
         { label: '😟 Negative', value: 'Negative' }
       ]
     },
-    AIKeyPoints: {
+    ai_key_points: {
       type: 'textarea',
       label: 'AI Key Points',
       readonly: true,
       maxLength: 2000,
       description: 'AI summary of key discussion points'
     },
-    AINextStepSuggestion: {
+    ai_next_step_suggestion: {
       type: 'text',
       label: 'AI Next Step',
       readonly: true,
@@ -289,14 +289,14 @@ const Activity = {
       name: 'Attachments',
       type: 'hasMany',
       object: 'Attachment',
-      foreignKey: 'ParentId',
+      foreignKey: 'parent_id',
       label: 'Attachments'
     },
     {
       name: 'RecurringInstances',
       type: 'hasMany',
       object: 'Activity',
-      foreignKey: 'RecurrenceInstanceId',
+      foreignKey: 'recurrence_instance_id',
       label: 'Recurring Instances'
     }
   ],
@@ -305,129 +305,129 @@ const Activity = {
       name: 'AllActivities',
       label: 'All Activities',
       filters: [],
-      columns: ['Subject', 'Type', 'Status', 'ActivityDate', 'WhoId', 'WhatId', 'OwnerId'],
-      sort: [['ActivityDate', 'desc']]
+      columns: ['subject', 'type', 'status', 'activity_date', 'who_id', 'what_id', 'owner_id'],
+      sort: [['activity_date', 'desc']]
     },
     {
       name: 'MyActivities',
       label: 'My Activities',
-      filters: [['OwnerId', '=', '$currentUser']],
-      columns: ['Subject', 'Type', 'Status', 'Priority', 'ActivityDate', 'WhoId', 'WhatId'],
-      sort: [['ActivityDate', 'desc']]
+      filters: [['owner_id', '=', '$currentUser']],
+      columns: ['subject', 'type', 'status', 'priority', 'activity_date', 'who_id', 'what_id'],
+      sort: [['activity_date', 'desc']]
     },
     {
       name: 'TodayActivities',
       label: 'Today',
       filters: [
-        ['ActivityDate', 'today', null],
-        ['OwnerId', '=', '$currentUser']
+        ['activity_date', 'today', null],
+        ['owner_id', '=', '$currentUser']
       ],
-      columns: ['Subject', 'Type', 'Status', 'ActivityDate', 'WhoId', 'WhatId', 'Location'],
-      sort: [['ActivityDate', 'asc']]
+      columns: ['subject', 'type', 'status', 'activity_date', 'who_id', 'what_id', 'location'],
+      sort: [['activity_date', 'asc']]
     },
     {
       name: 'ThisWeekActivities',
       label: 'This Week',
       filters: [
-        ['ActivityDate', 'this_week', null],
-        ['OwnerId', '=', '$currentUser']
+        ['activity_date', 'this_week', null],
+        ['owner_id', '=', '$currentUser']
       ],
-      columns: ['Subject', 'Type', 'Status', 'Priority', 'ActivityDate', 'WhoId', 'WhatId'],
-      sort: [['ActivityDate', 'asc']]
+      columns: ['subject', 'type', 'status', 'priority', 'activity_date', 'who_id', 'what_id'],
+      sort: [['activity_date', 'asc']]
     },
     {
       name: 'UpcomingActivities',
       label: 'Upcoming',
       filters: [
-        ['ActivityDate', 'next_n_days', 7],
-        ['Status', 'not in', ['Completed', 'Cancelled']]
+        ['activity_date', 'next_n_days', 7],
+        ['status', 'not in', ['Completed', 'Cancelled']]
       ],
-      columns: ['Subject', 'Type', 'Priority', 'ActivityDate', 'WhoId', 'WhatId', 'OwnerId'],
-      sort: [['ActivityDate', 'asc']]
+      columns: ['subject', 'type', 'priority', 'activity_date', 'who_id', 'what_id', 'owner_id'],
+      sort: [['activity_date', 'asc']]
     },
     {
       name: 'OverdueActivities',
       label: 'Overdue',
       filters: [
-        ['DueDate', '<', '$today'],
-        ['Status', 'not in', ['Completed', 'Cancelled']]
+        ['due_date', '<', '$today'],
+        ['status', 'not in', ['Completed', 'Cancelled']]
       ],
-      columns: ['Subject', 'Type', 'Priority', 'DueDate', 'WhoId', 'WhatId', 'OwnerId'],
-      sort: [['DueDate', 'asc']]
+      columns: ['subject', 'type', 'priority', 'due_date', 'who_id', 'what_id', 'owner_id'],
+      sort: [['due_date', 'asc']]
     },
     {
       name: 'CompletedActivities',
       label: 'Completed',
-      filters: [['Status', '=', 'Completed']],
-      columns: ['Subject', 'Type', 'ActivityDate', 'CompletedDate', 'WhoId', 'WhatId', 'OwnerId'],
-      sort: [['CompletedDate', 'desc']]
+      filters: [['status', '=', 'Completed']],
+      columns: ['subject', 'type', 'activity_date', 'completed_date', 'who_id', 'what_id', 'owner_id'],
+      sort: [['completed_date', 'desc']]
     },
     {
       name: 'MeetingRecords',
       label: 'Meetings',
       filters: [
-        ['Type', '=', 'Meeting'],
-        ['Status', '=', 'Completed']
+        ['type', '=', 'Meeting'],
+        ['status', '=', 'Completed']
       ],
-      columns: ['Subject', 'ActivityDate', 'Location', 'WhoId', 'WhatId', 'OwnerId', 'AIKeyPoints'],
-      sort: [['ActivityDate', 'desc']]
+      columns: ['subject', 'activity_date', 'location', 'who_id', 'what_id', 'owner_id', 'ai_key_points'],
+      sort: [['activity_date', 'desc']]
     },
     {
       name: 'TeamCalendar',
       label: 'Team Calendar',
       filters: [
-        ['ActivityDate', 'this_month', null],
-        ['Type', 'in', ['Meeting', 'Call', 'Demo']]
+        ['activity_date', 'this_month', null],
+        ['type', 'in', ['Meeting', 'Call', 'Demo']]
       ],
-      columns: ['Subject', 'Type', 'Status', 'ActivityDate', 'WhoId', 'WhatId', 'OwnerId'],
-      sort: [['ActivityDate', 'asc']]
+      columns: ['subject', 'type', 'status', 'activity_date', 'who_id', 'what_id', 'owner_id'],
+      sort: [['activity_date', 'asc']]
     }
   ],
   validationRules: [
     {
       name: 'EndDateTimeAfterStart',
       errorMessage: 'End time must be after start time',
-      formula: 'AND(NOT(ISBLANK(ActivityDate)), NOT(ISBLANK(EndDateTime)), EndDateTime < ActivityDate)'
+      formula: 'AND(NOT(ISBLANK(activity_date)), NOT(ISBLANK(end_date_time)), end_date_time < activity_date)'
     },
     {
       name: 'MeetingRequiresLocation',
       errorMessage: 'In-person meetings must have a location',
-      formula: 'AND(Type = "Meeting", IsOnline = false, ISBLANK(Location))'
+      formula: 'AND(type = "Meeting", is_online = false, ISBLANK(location))'
     },
     {
       name: 'OnlineMeetingRequiresLink',
       errorMessage: 'Online meetings should have a meeting link',
-      formula: 'AND(Type = "Meeting", IsOnline = true, ISBLANK(MeetingLink))'
+      formula: 'AND(type = "Meeting", is_online = true, ISBLANK(meeting_link))'
     },
     {
       name: 'CallRequiresCallType',
       errorMessage: 'Call activities must specify call type',
-      formula: 'AND(Type = "Call", ISBLANK(CallType))'
+      formula: 'AND(type = "Call", ISBLANK(call_type))'
     },
     {
       name: 'EmailRequiresRecipient',
       errorMessage: 'Email activities must have a recipient',
-      formula: 'AND(Type = "Email", ISBLANK(EmailToAddress))'
+      formula: 'AND(type = "Email", ISBLANK(email_to_address))'
     },
     {
       name: 'SMSRequiresPhoneNumber',
       errorMessage: 'SMS activities must have a phone number',
-      formula: 'AND(Type = "SMS", ISBLANK(SMSPhoneNumber))'
+      formula: 'AND(type = "SMS", ISBLANK(sms_phone_number))'
     },
     {
       name: 'RecurringTaskRequiresPattern',
       errorMessage: 'Recurring tasks must have a recurrence pattern',
-      formula: 'AND(IsRecurring = true, ISBLANK(RecurrencePattern))'
+      formula: 'AND(is_recurring = true, ISBLANK(recurrence_pattern))'
     },
     {
       name: 'RecurrenceEndDateValid',
       errorMessage: 'Recurrence end date must be after activity date',
-      formula: 'AND(IsRecurring = true, NOT(ISBLANK(RecurrenceEndDate)), RecurrenceEndDate < ActivityDate)'
+      formula: 'AND(is_recurring = true, NOT(ISBLANK(recurrence_end_date)), recurrence_end_date < activity_date)'
     },
     {
       name: 'DueDateValidation',
       errorMessage: 'Due date must be after activity date',
-      formula: 'AND(NOT(ISBLANK(DueDate)), NOT(ISBLANK(ActivityDate)), DueDate < ActivityDate)'
+      formula: 'AND(NOT(ISBLANK(due_date)), NOT(ISBLANK(activity_date)), due_date < activity_date)'
     }
   ],
   pageLayout: {
@@ -435,57 +435,57 @@ const Activity = {
       {
         label: 'Activity Information',
         columns: 2,
-        fields: ['Subject', 'Type', 'Status', 'Priority', 'OwnerId']
+        fields: ['subject', 'type', 'status', 'priority', 'owner_id']
       },
       {
         label: 'Date & Time',
         columns: 2,
-        fields: ['ActivityDate', 'EndDateTime', 'DueDate', 'DurationInMinutes', 'CompletedDate']
+        fields: ['activity_date', 'end_date_time', 'due_date', 'duration_in_minutes', 'completed_date']
       },
       {
         label: 'Related Records',
         columns: 2,
-        fields: ['WhoId', 'WhatId']
+        fields: ['who_id', 'what_id']
       },
       {
-        label: 'Location',
+        label: 'location',
         columns: 2,
-        fields: ['Location', 'IsOnline', 'MeetingLink']
+        fields: ['location', 'is_online', 'meeting_link']
       },
       {
         label: 'Check-in',
         columns: 2,
-        fields: ['CheckInTime', 'CheckInLocation', 'CheckInLatitude', 'CheckInLongitude']
+        fields: ['check_in_time', 'check_in_location', 'check_in_latitude', 'check_in_longitude']
       },
       {
         label: 'Call Details',
         columns: 2,
-        fields: ['CallType', 'CallDurationInSeconds', 'CallResult']
+        fields: ['call_type', 'call_duration_in_seconds', 'call_result']
       },
       {
         label: 'Email Details',
         columns: 2,
-        fields: ['EmailSubject', 'EmailFromAddress', 'EmailToAddress', 'EmailCcAddress']
+        fields: ['email_subject', 'email_from_address', 'email_to_address', 'email_cc_address']
       },
       {
         label: 'SMS Details',
         columns: 2,
-        fields: ['SMSBody', 'SMSPhoneNumber']
+        fields: ['sms_body', 'sms_phone_number']
       },
       {
         label: 'Recurring Task',
         columns: 2,
-        fields: ['IsRecurring', 'RecurrencePattern', 'RecurrenceInterval', 'RecurrenceEndDate', 'RecurrenceInstanceId']
+        fields: ['is_recurring', 'recurrence_pattern', 'recurrence_interval', 'recurrence_end_date', 'recurrence_instance_id']
       },
       {
         label: 'AI Insights',
         columns: 1,
-        fields: ['AITranscription', 'AIActionItems', 'AIKeyPoints', 'AISentimentAnalysis', 'AINextStepSuggestion']
+        fields: ['ai_transcription', 'ai_action_items', 'ai_key_points', 'ai_sentiment_analysis', 'ai_next_step_suggestion']
       },
       {
-        label: 'Description & Notes',
+        label: 'description & Notes',
         columns: 1,
-        fields: ['Description', 'EmailBody']
+        fields: ['description', 'email_body']
       }
     ]
   }
