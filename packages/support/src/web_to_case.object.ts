@@ -11,31 +11,31 @@ const WebToCase = {
   },
   fields: {
     // Basic Information
-    Name: {
+    name: {
       type: 'text',
-      label: 'Form Name',
+      label: 'Form name',
       required: true,
       maxLength: 255,
       searchable: true
     },
-    Description: {
+    description: {
       type: 'textarea',
-      label: 'Description',
+      label: 'description',
       maxLength: 2000
     },
-    IsActive: {
+    is_active: {
       type: 'checkbox',
       label: 'Active',
       defaultValue: true
     },
     // Form Configuration
-    FormURL: {
+    form_u_r_l: {
       type: 'url',
       label: 'Form URL',
       readonly: true,
       description: 'Generated URL for this web form'
     },
-    FormKey: {
+    form_key: {
       type: 'text',
       label: 'Form Key',
       maxLength: 100,
@@ -43,18 +43,18 @@ const WebToCase = {
       description: 'Unique key for form submission API'
     },
     // Routing
-    DefaultQueueId: {
+    default_queue_id: {
       type: 'lookup',
       label: 'Default Queue',
       reference: 'Queue',
       required: true
     },
-    DefaultOwnerId: {
+    default_owner_id: {
       type: 'lookup',
       label: 'Default Owner',
       reference: 'User'
     },
-    DefaultPriority: {
+    default_priority: {
       type: 'select',
       label: 'Default Priority',
       defaultValue: 'Medium',
@@ -65,7 +65,7 @@ const WebToCase = {
         { label: 'Low', value: 'Low' }
       ]
     },
-    DefaultCaseType: {
+    default_case_type: {
       type: 'select',
       label: 'Default Case Type',
       defaultValue: 'Question',
@@ -80,49 +80,49 @@ const WebToCase = {
       ]
     },
     // Form Fields
-    RequireContactInfo: {
+    require_contact_info: {
       type: 'checkbox',
       label: 'Require Contact Information',
       defaultValue: true
     },
-    RequireEmail: {
+    require_email: {
       type: 'checkbox',
       label: 'Require Email',
       defaultValue: true
     },
-    RequirePhone: {
+    require_phone: {
       type: 'checkbox',
       label: 'Require Phone',
       defaultValue: false
     },
-    RequireCompany: {
+    require_company: {
       type: 'checkbox',
       label: 'Require Company',
       defaultValue: false
     },
-    AllowPrioritySelection: {
+    allow_priority_selection: {
       type: 'checkbox',
       label: 'Allow Priority Selection',
       defaultValue: false
     },
-    AllowTypeSelection: {
+    allow_type_selection: {
       type: 'checkbox',
       label: 'Allow Type Selection',
       defaultValue: true
     },
-    CustomFields: {
+    custom_fields: {
       type: 'textarea',
       label: 'Custom Fields (JSON)',
       maxLength: 5000,
       description: 'JSON configuration for additional form fields'
     },
     // Attachments
-    AllowAttachments: {
+    allow_attachments: {
       type: 'checkbox',
       label: 'Allow Attachments',
       defaultValue: true
     },
-    MaxAttachmentSize: {
+    max_attachment_size: {
       type: 'number',
       label: 'Max Attachment Size (MB)',
       precision: 0,
@@ -130,7 +130,7 @@ const WebToCase = {
       max: 50,
       defaultValue: 10
     },
-    MaxAttachments: {
+    max_attachments: {
       type: 'number',
       label: 'Max Attachments',
       precision: 0,
@@ -138,66 +138,66 @@ const WebToCase = {
       max: 10,
       defaultValue: 5
     },
-    AllowedFileTypes: {
+    allowed_file_types: {
       type: 'text',
       label: 'Allowed File Types',
       maxLength: 500,
       description: 'Comma-separated extensions (e.g., pdf,doc,jpg,png)'
     },
     // Auto Response
-    SendAutoResponse: {
+    send_auto_response: {
       type: 'checkbox',
       label: 'Send Auto Response',
       defaultValue: true
     },
-    AutoResponseTemplateId: {
+    auto_response_template_id: {
       type: 'lookup',
       label: 'Auto Response Template',
       reference: 'EmailTemplate'
     },
     // Success Page
-    SuccessMessage: {
+    success_message: {
       type: 'textarea',
       label: 'Success Message',
       maxLength: 1000,
       defaultValue: 'Thank you! Your case has been submitted successfully. We will get back to you soon.'
     },
-    RedirectURL: {
+    redirect_u_r_l: {
       type: 'url',
       label: 'Redirect URL',
       description: 'URL to redirect after successful submission'
     },
     // Security
-    RequireCaptcha: {
+    require_captcha: {
       type: 'checkbox',
       label: 'Require CAPTCHA',
       defaultValue: true,
       description: 'Require CAPTCHA verification to prevent spam'
     },
-    AllowAnonymous: {
+    allow_anonymous: {
       type: 'checkbox',
       label: 'Allow Anonymous Submissions',
       defaultValue: true
     },
-    RequireAccountMatch: {
+    require_account_match: {
       type: 'checkbox',
       label: 'Require Account Match',
       defaultValue: false,
       description: 'Require submitter email to match existing account'
     },
-    AllowedDomains: {
+    allowed_domains: {
       type: 'textarea',
       label: 'Allowed Domains',
       maxLength: 1000,
       description: 'Allowed email domains (one per line, leave empty for all)'
     },
-    BlockedDomains: {
+    blocked_domains: {
       type: 'textarea',
       label: 'Blocked Domains',
       maxLength: 1000,
       description: 'Blocked email domains (one per line)'
     },
-    RateLimitPerHour: {
+    rate_limit_per_hour: {
       type: 'number',
       label: 'Rate Limit Per Hour',
       precision: 0,
@@ -206,88 +206,88 @@ const WebToCase = {
       description: 'Maximum submissions per email per hour'
     },
     // Branding
-    FormTitle: {
+    form_title: {
       type: 'text',
       label: 'Form Title',
       maxLength: 255,
       defaultValue: 'Submit a Support Request'
     },
-    FormSubtitle: {
+    form_subtitle: {
       type: 'text',
       label: 'Form Subtitle',
       maxLength: 500
     },
-    LogoURL: {
+    logo_u_r_l: {
       type: 'url',
       label: 'Logo URL',
       description: 'URL to company logo for form header'
     },
-    CustomCSS: {
+    custom_c_s_s: {
       type: 'textarea',
       label: 'Custom CSS',
       maxLength: 5000,
       description: 'Custom CSS for form styling'
     },
     // Contact Creation
-    AutoCreateContact: {
+    auto_create_contact: {
       type: 'checkbox',
       label: 'Auto Create Contact',
       defaultValue: true,
       description: 'Automatically create contact if not found'
     },
-    DefaultAccountId: {
+    default_account_id: {
       type: 'lookup',
       label: 'Default Account',
       reference: 'Account',
       description: 'Default account for new contacts'
     },
     // AI Processing
-    UseAIForCategorization: {
+    use_a_i_for_categorization: {
       type: 'checkbox',
       label: 'Use AI for Categorization',
       defaultValue: false
     },
-    UseAIForPriority: {
+    use_a_i_for_priority: {
       type: 'checkbox',
       label: 'Use AI for Priority',
       defaultValue: false
     },
-    UseAISentimentAnalysis: {
+    use_a_i_sentiment_analysis: {
       type: 'checkbox',
       label: 'Use AI Sentiment Analysis',
       defaultValue: false
     },
     // Statistics
-    TotalSubmissions: {
+    total_submissions: {
       type: 'number',
       label: 'Total Submissions',
       precision: 0,
       readonly: true
     },
-    SubmissionsToday: {
+    submissions_today: {
       type: 'number',
       label: 'Submissions Today',
       precision: 0,
       readonly: true
     },
-    SubmissionsThisMonth: {
+    submissions_this_month: {
       type: 'number',
       label: 'Submissions This Month',
       precision: 0,
       readonly: true
     },
-    SpamBlocked: {
+    spam_blocked: {
       type: 'number',
       label: 'Spam Blocked',
       precision: 0,
       readonly: true
     },
-    LastSubmissionDate: {
+    last_submission_date: {
       type: 'datetime',
       label: 'Last Submission',
       readonly: true
     },
-    AverageRating: {
+    average_rating: {
       type: 'number',
       label: 'Average Form Rating',
       precision: 2,
@@ -299,12 +299,12 @@ const WebToCase = {
     {
       name: 'AutoResponseTemplateRequired',
       errorMessage: 'Auto response template is required when auto response is enabled',
-      formula: 'AND(SendAutoResponse = true, ISBLANK(AutoResponseTemplateId))'
+      formula: 'AND(send_auto_response = true, ISBLANK(auto_response_template_id))'
     },
     {
       name: 'AllowedFileTypesRequired',
       errorMessage: 'Allowed file types must be specified when attachments are enabled',
-      formula: 'AND(AllowAttachments = true, ISBLANK(AllowedFileTypes))'
+      formula: 'AND(allow_attachments = true, ISBLANK(allowed_file_types))'
     }
   ],
   listViews: [
@@ -312,27 +312,27 @@ const WebToCase = {
       name: 'AllForms',
       label: 'All Web Forms',
       filters: [],
-      columns: ['Name', 'FormTitle', 'DefaultQueueId', 'IsActive', 'TotalSubmissions', 'SubmissionsToday'],
-      sort: [['Name', 'asc']]
+      columns: ['name', 'form_title', 'default_queue_id', 'is_active', 'total_submissions', 'submissions_today'],
+      sort: [['name', 'asc']]
     },
     {
       name: 'ActiveForms',
       label: 'Active Forms',
       filters: [
-        ['IsActive', '=', true]
+        ['is_active', '=', true]
       ],
-      columns: ['Name', 'DefaultQueueId', 'TotalSubmissions', 'SubmissionsToday', 'AverageRating'],
-      sort: [['TotalSubmissions', 'desc']]
+      columns: ['name', 'default_queue_id', 'total_submissions', 'submissions_today', 'average_rating'],
+      sort: [['total_submissions', 'desc']]
     },
     {
       name: 'HighTraffic',
       label: 'High Traffic',
       filters: [
-        ['SubmissionsToday', '>', 10],
-        ['IsActive', '=', true]
+        ['submissions_today', '>', 10],
+        ['is_active', '=', true]
       ],
-      columns: ['Name', 'SubmissionsToday', 'SubmissionsThisMonth', 'SpamBlocked', 'AverageRating'],
-      sort: [['SubmissionsToday', 'desc']]
+      columns: ['name', 'submissions_today', 'submissions_this_month', 'spam_blocked', 'average_rating'],
+      sort: [['submissions_today', 'desc']]
     }
   ],
   pageLayout: {
@@ -340,57 +340,57 @@ const WebToCase = {
       {
         label: 'Form Information',
         columns: 2,
-        fields: ['Name', 'Description', 'IsActive', 'FormURL', 'FormKey']
+        fields: ['name', 'description', 'is_active', 'form_u_r_l', 'form_key']
       },
       {
         label: 'Default Case Settings',
         columns: 2,
-        fields: ['DefaultQueueId', 'DefaultOwnerId', 'DefaultPriority', 'DefaultCaseType']
+        fields: ['default_queue_id', 'default_owner_id', 'default_priority', 'default_case_type']
       },
       {
         label: 'Form Fields',
         columns: 2,
-        fields: ['RequireContactInfo', 'RequireEmail', 'RequirePhone', 'RequireCompany', 'AllowPrioritySelection', 'AllowTypeSelection', 'CustomFields']
+        fields: ['require_contact_info', 'require_email', 'require_phone', 'require_company', 'allow_priority_selection', 'allow_type_selection', 'custom_fields']
       },
       {
         label: 'Attachments',
         columns: 2,
-        fields: ['AllowAttachments', 'MaxAttachmentSize', 'MaxAttachments', 'AllowedFileTypes']
+        fields: ['allow_attachments', 'max_attachment_size', 'max_attachments', 'allowed_file_types']
       },
       {
         label: 'Auto Response',
         columns: 2,
-        fields: ['SendAutoResponse', 'AutoResponseTemplateId']
+        fields: ['send_auto_response', 'auto_response_template_id']
       },
       {
         label: 'Success Configuration',
         columns: 1,
-        fields: ['SuccessMessage', 'RedirectURL']
+        fields: ['success_message', 'redirect_u_r_l']
       },
       {
         label: 'Security Settings',
         columns: 2,
-        fields: ['RequireCaptcha', 'AllowAnonymous', 'RequireAccountMatch', 'RateLimitPerHour', 'AllowedDomains', 'BlockedDomains']
+        fields: ['require_captcha', 'allow_anonymous', 'require_account_match', 'rate_limit_per_hour', 'allowed_domains', 'blocked_domains']
       },
       {
         label: 'Branding',
         columns: 1,
-        fields: ['FormTitle', 'FormSubtitle', 'LogoURL', 'CustomCSS']
+        fields: ['form_title', 'form_subtitle', 'logo_u_r_l', 'custom_c_s_s']
       },
       {
         label: 'Contact Creation',
         columns: 2,
-        fields: ['AutoCreateContact', 'DefaultAccountId']
+        fields: ['auto_create_contact', 'default_account_id']
       },
       {
         label: 'AI Processing',
         columns: 3,
-        fields: ['UseAIForCategorization', 'UseAIForPriority', 'UseAISentimentAnalysis']
+        fields: ['use_a_i_for_categorization', 'use_a_i_for_priority', 'use_a_i_sentiment_analysis']
       },
       {
         label: 'Statistics',
         columns: 3,
-        fields: ['TotalSubmissions', 'SubmissionsToday', 'SubmissionsThisMonth', 'SpamBlocked', 'LastSubmissionDate', 'AverageRating']
+        fields: ['total_submissions', 'submissions_today', 'submissions_this_month', 'spam_blocked', 'last_submission_date', 'average_rating']
       }
     ]
   }

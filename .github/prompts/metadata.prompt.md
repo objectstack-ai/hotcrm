@@ -107,6 +107,9 @@ export default {
 *   **Filenames:** `snake_case` + `suffix.ts`. (e.g., `project_task.object.ts`)
 *   **Metadata Keys:** `camelCase`. (e.g., `trackHistory`, `apiEnabled`)
 *   **Machine Names:** `snake_case`. (e.g., `name: 'project_task'`)
+*   **Field Names:** `snake_case`. (e.g., `first_name`, `account_id`, `annual_revenue`)
+  - **IMPORTANT**: As of @objectstack/spec v0.7.2+, all field names must use lowercase/snake_case
+  - This applies to all field definitions, references in listViews, pageLayout, validationRules, and foreignKey in relationships
 
 ## 3. Workflow Priorities
 

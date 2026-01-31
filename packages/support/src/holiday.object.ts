@@ -11,38 +11,38 @@ const Holiday = {
   },
   fields: {
     // Relationship
-    CalendarId: {
+    calendar_id: {
       type: 'lookup',
       label: 'Holiday Calendar',
       reference: 'HolidayCalendar',
       required: true
     },
     // Basic Information
-    Name: {
+    name: {
       type: 'text',
-      label: 'Holiday Name',
+      label: 'Holiday name',
       required: true,
       maxLength: 255,
       searchable: true
     },
-    Description: {
+    description: {
       type: 'textarea',
-      label: 'Description',
+      label: 'description',
       maxLength: 1000
     },
     // Date
-    HolidayDate: {
+    holiday_date: {
       type: 'date',
       label: 'Holiday Date',
       required: true
     },
-    IsRecurring: {
+    is_recurring: {
       type: 'checkbox',
       label: 'Recurring',
       defaultValue: false,
       description: 'This holiday recurs annually'
     },
-    RecurringDay: {
+    recurring_day: {
       type: 'number',
       label: 'Day of Month',
       precision: 0,
@@ -50,7 +50,7 @@ const Holiday = {
       max: 31,
       description: 'For recurring holidays'
     },
-    RecurringMonth: {
+    recurring_month: {
       type: 'select',
       label: 'Month',
       options: [
@@ -69,7 +69,7 @@ const Holiday = {
       ]
     },
     // Type
-    HolidayType: {
+    holiday_type: {
       type: 'select',
       label: 'Holiday Type',
       required: true,
@@ -83,29 +83,29 @@ const Holiday = {
       ]
     },
     // Duration
-    IsFullDay: {
+    is_full_day: {
       type: 'checkbox',
       label: 'Full Day',
       defaultValue: true
     },
-    StartTime: {
+    start_time: {
       type: 'time',
       label: 'Start Time',
       description: 'For partial day holidays'
     },
-    EndTime: {
+    end_time: {
       type: 'time',
       label: 'End Time',
       description: 'For partial day holidays'
     },
     // Observance
-    IsObserved: {
+    is_observed: {
       type: 'checkbox',
       label: 'Observed by Company',
       defaultValue: true,
       description: 'Company observes this holiday (no work)'
     },
-    ObservanceNotes: {
+    observance_notes: {
       type: 'text',
       label: 'Observance Notes',
       maxLength: 500
@@ -115,17 +115,17 @@ const Holiday = {
     {
       name: 'RecurringFieldsRequired',
       errorMessage: 'Recurring day and month are required for recurring holidays',
-      formula: 'AND(IsRecurring = true, OR(ISBLANK(RecurringDay), ISBLANK(RecurringMonth)))'
+      formula: 'AND(is_recurring = true, OR(ISBLANK(recurring_day), ISBLANK(recurring_month)))'
     },
     {
       name: 'PartialDayTimesRequired',
       errorMessage: 'Start and end times are required for partial day holidays',
-      formula: 'AND(IsFullDay = false, OR(ISBLANK(StartTime), ISBLANK(EndTime)))'
+      formula: 'AND(is_full_day = false, OR(ISBLANK(start_time), ISBLANK(end_time)))'
     },
     {
       name: 'ValidTimeRange',
       errorMessage: 'End time must be after start time',
-      formula: 'AND(NOT(IsFullDay), NOT(ISBLANK(StartTime)), NOT(ISBLANK(EndTime)), EndTime <= StartTime)'
+      formula: 'AND(NOT(is_full_day), NOT(ISBLANK(start_time)), NOT(ISBLANK(end_time)), end_time <= start_time)'
     }
   ],
   listViews: [
@@ -133,45 +133,45 @@ const Holiday = {
       name: 'AllHolidays',
       label: 'All Holidays',
       filters: [],
-      columns: ['Name', 'HolidayDate', 'HolidayType', 'IsObserved', 'CalendarId'],
-      sort: [['HolidayDate', 'asc']]
+      columns: ['name', 'holiday_date', 'holiday_type', 'is_observed', 'calendar_id'],
+      sort: [['holiday_date', 'asc']]
     },
     {
       name: 'UpcomingHolidays',
       label: 'Upcoming Holidays',
       filters: [
-        ['HolidayDate', '>=', 'TODAY()'],
-        ['IsObserved', '=', true]
+        ['holiday_date', '>=', 'TODAY()'],
+        ['is_observed', '=', true]
       ],
-      columns: ['Name', 'HolidayDate', 'HolidayType', 'IsFullDay'],
-      sort: [['HolidayDate', 'asc']]
+      columns: ['name', 'holiday_date', 'holiday_type', 'is_full_day'],
+      sort: [['holiday_date', 'asc']]
     },
     {
       name: 'ThisYear',
       label: 'This Year',
       filters: [
-        ['HolidayDate', 'this_year', null]
+        ['holiday_date', 'this_year', null]
       ],
-      columns: ['Name', 'HolidayDate', 'HolidayType', 'IsObserved', 'CalendarId'],
-      sort: [['HolidayDate', 'asc']]
+      columns: ['name', 'holiday_date', 'holiday_type', 'is_observed', 'calendar_id'],
+      sort: [['holiday_date', 'asc']]
     },
     {
       name: 'ObservedHolidays',
       label: 'Observed by Company',
       filters: [
-        ['IsObserved', '=', true]
+        ['is_observed', '=', true]
       ],
-      columns: ['Name', 'HolidayDate', 'HolidayType', 'IsFullDay'],
-      sort: [['HolidayDate', 'asc']]
+      columns: ['name', 'holiday_date', 'holiday_type', 'is_full_day'],
+      sort: [['holiday_date', 'asc']]
     },
     {
       name: 'RecurringHolidays',
       label: 'Recurring Holidays',
       filters: [
-        ['IsRecurring', '=', true]
+        ['is_recurring', '=', true]
       ],
-      columns: ['Name', 'RecurringMonth', 'RecurringDay', 'HolidayType', 'IsObserved'],
-      sort: [['RecurringMonth', 'asc'], ['RecurringDay', 'asc']]
+      columns: ['name', 'recurring_month', 'recurring_day', 'holiday_type', 'is_observed'],
+      sort: [['recurring_month', 'asc'], ['recurring_day', 'asc']]
     }
   ],
   pageLayout: {
@@ -179,22 +179,22 @@ const Holiday = {
       {
         label: 'Holiday Information',
         columns: 2,
-        fields: ['CalendarId', 'Name', 'Description', 'HolidayType']
+        fields: ['calendar_id', 'name', 'description', 'holiday_type']
       },
       {
         label: 'Date',
         columns: 2,
-        fields: ['HolidayDate', 'IsRecurring', 'RecurringMonth', 'RecurringDay']
+        fields: ['holiday_date', 'is_recurring', 'recurring_month', 'recurring_day']
       },
       {
         label: 'Duration',
         columns: 3,
-        fields: ['IsFullDay', 'StartTime', 'EndTime']
+        fields: ['is_full_day', 'start_time', 'end_time']
       },
       {
         label: 'Observance',
         columns: 1,
-        fields: ['IsObserved', 'ObservanceNotes']
+        fields: ['is_observed', 'observance_notes']
       }
     ]
   }

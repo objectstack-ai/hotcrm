@@ -12,20 +12,20 @@ const Unsubscribe = {
   },
   fields: {
     // Contact Information
-    Email: {
+    email: {
       type: 'email',
       label: '邮箱地址',
       required: true,
       searchable: true,
       description: '退订的邮箱地址'
     },
-    LeadId: {
+    lead_id: {
       type: 'lookup',
       label: '线索',
       reference: 'Lead',
       description: '关联的线索记录'
     },
-    ContactId: {
+    contact_id: {
       type: 'lookup',
       label: '联系人',
       reference: 'Contact',
@@ -33,7 +33,7 @@ const Unsubscribe = {
     },
     
     // Unsubscribe Type
-    UnsubscribeType: {
+    unsubscribe_type: {
       type: 'select',
       label: '退订类型',
       required: true,
@@ -46,7 +46,7 @@ const Unsubscribe = {
       ],
       description: '全局=退订所有营销邮件，列表/活动/主题=部分退订'
     },
-    UnsubscribeScope: {
+    unsubscribe_scope: {
       type: 'text',
       label: '退订范围',
       maxLength: 255,
@@ -54,31 +54,31 @@ const Unsubscribe = {
     },
     
     // Reason & Source
-    UnsubscribeReason: {
+    unsubscribe_reason: {
       type: 'select',
       label: '退订原因',
       options: [
         { label: '📬 邮件太频繁', value: 'Too Frequent' },
         { label: '❌ 内容不相关', value: 'Not Relevant' },
         { label: '🚫 从未订阅', value: 'Never Subscribed' },
-        { label: '📧 邮箱地址错误', value: 'Wrong Email' },
+        { label: '📧 邮箱地址错误', value: 'Wrong email' },
         { label: '🔒 隐私顾虑', value: 'Privacy Concerns' },
         { label: '❓ 其他原因', value: 'Other' }
       ]
     },
-    ReasonText: {
+    reason_text: {
       type: 'textarea',
       label: '详细原因',
       maxLength: 2000,
       description: '用户填写的退订原因说明'
     },
-    UnsubscribeSource: {
+    unsubscribe_source: {
       type: 'select',
       label: '退订来源',
       required: true,
-      defaultValue: 'Email Link',
+      defaultValue: 'email Link',
       options: [
-        { label: '📧 邮件退订链接', value: 'Email Link' },
+        { label: '📧 邮件退订链接', value: 'email Link' },
         { label: '🌐 退订中心', value: 'Preference Center' },
         { label: '📞 客户请求', value: 'Customer Request' },
         { label: '🔧 管理员操作', value: 'Admin Action' },
@@ -87,20 +87,20 @@ const Unsubscribe = {
       ]
     },
     
-    // Campaign/Email Context
-    CampaignId: {
+    // Campaign/email Context
+    campaign_id: {
       type: 'lookup',
       label: '触发活动',
       reference: 'Campaign',
       description: '导致退订的营销活动'
     },
-    EmailTemplateId: {
+    email_template_id: {
       type: 'lookup',
       label: '触发邮件模板',
       reference: 'EmailTemplate',
       description: '导致退订的邮件模板'
     },
-    MarketingListId: {
+    marketing_list_id: {
       type: 'lookup',
       label: '营销列表',
       reference: 'MarketingList',
@@ -108,13 +108,13 @@ const Unsubscribe = {
     },
     
     // Bounce Information
-    IsBounce: {
+    is_bounce: {
       type: 'checkbox',
       label: '是退信',
       defaultValue: false,
       description: '此记录是由于邮件退信创建的'
     },
-    BounceType: {
+    bounce_type: {
       type: 'select',
       label: '退信类型',
       options: [
@@ -127,18 +127,18 @@ const Unsubscribe = {
       ],
       description: '硬退信=永久失败，软退信=临时问题'
     },
-    BounceReason: {
+    bounce_reason: {
       type: 'textarea',
       label: '退信原因',
       maxLength: 2000,
       description: '邮件服务器返回的退信详情'
     },
-    BounceDate: {
+    bounce_date: {
       type: 'datetime',
       label: '退信时间',
       readonly: true
     },
-    BounceCount: {
+    bounce_count: {
       type: 'number',
       label: '退信次数',
       precision: 0,
@@ -147,27 +147,27 @@ const Unsubscribe = {
     },
     
     // Re-subscription
-    IsResubscribed: {
+    is_resubscribed: {
       type: 'checkbox',
       label: '已重新订阅',
       defaultValue: false,
       readonly: true,
       description: '用户是否重新订阅'
     },
-    ResubscribeDate: {
+    resubscribe_date: {
       type: 'datetime',
       label: '重新订阅时间',
       readonly: true
     },
-    ResubscribeSource: {
+    resubscribe_source: {
       type: 'text',
       label: '重新订阅来源',
       maxLength: 255,
       readonly: true
     },
     
-    // Status
-    Status: {
+    // status
+    status: {
       type: 'select',
       label: '状态',
       required: true,
@@ -181,14 +181,14 @@ const Unsubscribe = {
     },
     
     // IP & User Agent
-    IpAddress: {
+    ip_address: {
       type: 'text',
       label: 'IP 地址',
       maxLength: 45,
       readonly: true,
       description: '退订时的IP地址'
     },
-    UserAgent: {
+    user_agent: {
       type: 'text',
       label: 'User Agent',
       maxLength: 500,
@@ -197,26 +197,26 @@ const Unsubscribe = {
     },
     
     // Compliance & Legal
-    UnsubscribeDate: {
+    unsubscribe_date: {
       type: 'datetime',
       label: '退订时间',
       required: true,
       defaultValue: 'NOW()',
       description: '退订的日期时间'
     },
-    IsGdprRequest: {
+    is_gdpr_request: {
       type: 'checkbox',
       label: 'GDPR 请求',
       defaultValue: false,
       description: '是否为GDPR数据删除请求'
     },
-    ProcessedDate: {
+    processed_date: {
       type: 'datetime',
       label: '处理时间',
       readonly: true,
       description: '退订请求的处理时间'
     },
-    ProcessedBy: {
+    processed_by: {
       type: 'lookup',
       label: '处理人',
       reference: 'User',
@@ -224,28 +224,28 @@ const Unsubscribe = {
     },
     
     // Analytics
-    SubscriptionDurationDays: {
+    subscription_duration_days: {
       type: 'number',
       label: '订阅持续天数',
       precision: 0,
       readonly: true,
       description: '从订阅到退订的天数'
     },
-    EmailsReceivedBeforeUnsubscribe: {
+    emails_received_before_unsubscribe: {
       type: 'number',
       label: '退订前收到邮件数',
       precision: 0,
       readonly: true,
       description: '退订前总共收到的营销邮件数'
     },
-    LastEmailOpenedDate: {
+    last_email_opened_date: {
       type: 'datetime',
       label: '最后打开邮件时间',
       readonly: true
     },
     
-    // Notes
-    Notes: {
+    // notes
+    notes: {
       type: 'textarea',
       label: '备注',
       maxLength: 2000,
@@ -253,13 +253,13 @@ const Unsubscribe = {
     },
     
     // Preferences (for partial unsubscribe)
-    AllowTransactionalEmails: {
+    allow_transactional_emails: {
       type: 'checkbox',
       label: '允许交易邮件',
       defaultValue: true,
       description: '退订营销邮件但仍允许接收订单确认等交易邮件'
     },
-    AllowSystemNotifications: {
+    allow_system_notifications: {
       type: 'checkbox',
       label: '允许系统通知',
       defaultValue: true,
@@ -271,42 +271,42 @@ const Unsubscribe = {
       name: 'Lead',
       type: 'belongsTo',
       object: 'Lead',
-      foreignKey: 'LeadId',
+      foreignKey: 'lead_id',
       label: '线索'
     },
     {
       name: 'Contact',
       type: 'belongsTo',
       object: 'Contact',
-      foreignKey: 'ContactId',
+      foreignKey: 'contact_id',
       label: '联系人'
     },
     {
       name: 'Campaign',
       type: 'belongsTo',
       object: 'Campaign',
-      foreignKey: 'CampaignId',
+      foreignKey: 'campaign_id',
       label: '营销活动'
     },
     {
       name: 'EmailTemplate',
       type: 'belongsTo',
       object: 'EmailTemplate',
-      foreignKey: 'EmailTemplateId',
+      foreignKey: 'email_template_id',
       label: '邮件模板'
     },
     {
       name: 'MarketingList',
       type: 'belongsTo',
       object: 'MarketingList',
-      foreignKey: 'MarketingListId',
+      foreignKey: 'marketing_list_id',
       label: '营销列表'
     },
     {
-      name: 'ProcessedBy',
+      name: 'processed_by',
       type: 'belongsTo',
       object: 'User',
-      foreignKey: 'ProcessedBy',
+      foreignKey: 'processed_by',
       label: '处理人'
     }
   ],
@@ -315,74 +315,74 @@ const Unsubscribe = {
       name: 'AllUnsubscribes',
       label: '所有退订',
       filters: [],
-      columns: ['Email', 'UnsubscribeType', 'UnsubscribeReason', 'Status', 'UnsubscribeDate', 'CampaignId'],
-      sort: [['UnsubscribeDate', 'desc']]
+      columns: ['email', 'unsubscribe_type', 'unsubscribe_reason', 'status', 'unsubscribe_date', 'campaign_id'],
+      sort: [['unsubscribe_date', 'desc']]
     },
     {
       name: 'GlobalUnsubscribes',
       label: '全局退订',
-      filters: [['UnsubscribeType', '=', 'Global'], ['Status', '=', 'Active']],
-      columns: ['Email', 'UnsubscribeReason', 'UnsubscribeSource', 'UnsubscribeDate', 'ProcessedDate'],
-      sort: [['UnsubscribeDate', 'desc']]
+      filters: [['unsubscribe_type', '=', 'Global'], ['status', '=', 'Active']],
+      columns: ['email', 'unsubscribe_reason', 'unsubscribe_source', 'unsubscribe_date', 'processed_date'],
+      sort: [['unsubscribe_date', 'desc']]
     },
     {
       name: 'RecentUnsubscribes',
       label: '最近退订',
-      filters: [['UnsubscribeDate', '>=', 'LAST_N_DAYS:7']],
-      columns: ['Email', 'UnsubscribeType', 'UnsubscribeReason', 'CampaignId', 'UnsubscribeDate'],
-      sort: [['UnsubscribeDate', 'desc']]
+      filters: [['unsubscribe_date', '>=', 'LAST_N_DAYS:7']],
+      columns: ['email', 'unsubscribe_type', 'unsubscribe_reason', 'campaign_id', 'unsubscribe_date'],
+      sort: [['unsubscribe_date', 'desc']]
     },
     {
       name: 'Bounces',
       label: '退信记录',
-      filters: [['IsBounce', '=', true]],
-      columns: ['Email', 'BounceType', 'BounceCount', 'BounceDate', 'BounceReason'],
-      sort: [['BounceDate', 'desc']]
+      filters: [['is_bounce', '=', true]],
+      columns: ['email', 'bounce_type', 'bounce_count', 'bounce_date', 'bounce_reason'],
+      sort: [['bounce_date', 'desc']]
     },
     {
       name: 'HardBounces',
       label: '硬退信',
-      filters: [['BounceType', '=', 'Hard Bounce']],
-      columns: ['Email', 'BounceCount', 'BounceDate', 'BounceReason', 'CampaignId'],
-      sort: [['BounceDate', 'desc']]
+      filters: [['bounce_type', '=', 'Hard Bounce']],
+      columns: ['email', 'bounce_count', 'bounce_date', 'bounce_reason', 'campaign_id'],
+      sort: [['bounce_date', 'desc']]
     },
     {
       name: 'Resubscribed',
       label: '已重新订阅',
-      filters: [['IsResubscribed', '=', true]],
-      columns: ['Email', 'UnsubscribeDate', 'ResubscribeDate', 'SubscriptionDurationDays'],
-      sort: [['ResubscribeDate', 'desc']]
+      filters: [['is_resubscribed', '=', true]],
+      columns: ['email', 'unsubscribe_date', 'resubscribe_date', 'subscription_duration_days'],
+      sort: [['resubscribe_date', 'desc']]
     },
     {
       name: 'GdprRequests',
       label: 'GDPR 请求',
-      filters: [['IsGdprRequest', '=', true]],
-      columns: ['Email', 'UnsubscribeDate', 'ProcessedDate', 'ProcessedBy', 'Status'],
-      sort: [['UnsubscribeDate', 'desc']]
+      filters: [['is_gdpr_request', '=', true]],
+      columns: ['email', 'unsubscribe_date', 'processed_date', 'processed_by', 'status'],
+      sort: [['unsubscribe_date', 'desc']]
     },
     {
       name: 'NeedProcessing',
       label: '待处理',
-      filters: [['Status', '=', 'Active'], ['ProcessedDate', '=', null]],
-      columns: ['Email', 'UnsubscribeType', 'UnsubscribeDate', 'IsGdprRequest'],
-      sort: [['UnsubscribeDate', 'asc']]
+      filters: [['status', '=', 'Active'], ['processed_date', '=', null]],
+      columns: ['email', 'unsubscribe_type', 'unsubscribe_date', 'is_gdpr_request'],
+      sort: [['unsubscribe_date', 'asc']]
     }
   ],
   validationRules: [
     {
       name: 'RequireLeadOrContact',
       errorMessage: '退订记录必须关联线索或联系人',
-      formula: 'AND(ISBLANK(LeadId), ISBLANK(ContactId))'
+      formula: 'AND(ISBLANK(lead_id), ISBLANK(contact_id))'
     },
     {
       name: 'BounceRequiresBounceType',
       errorMessage: '退信记录必须填写退信类型',
-      formula: 'AND(IsBounce = TRUE, ISBLANK(BounceType))'
+      formula: 'AND(is_bounce = TRUE, ISBLANK(bounce_type))'
     },
     {
       name: 'ListUnsubscribeRequiresList',
       errorMessage: '列表退订必须指定营销列表',
-      formula: 'AND(UnsubscribeType = "List", ISBLANK(MarketingListId))'
+      formula: 'AND(unsubscribe_type = "List", ISBLANK(marketing_list_id))'
     }
   ],
   pageLayout: {
@@ -390,52 +390,52 @@ const Unsubscribe = {
       {
         label: '退订信息',
         columns: 2,
-        fields: ['Email', 'LeadId', 'ContactId', 'UnsubscribeType', 'UnsubscribeScope', 'Status']
+        fields: ['email', 'lead_id', 'contact_id', 'unsubscribe_type', 'unsubscribe_scope', 'status']
       },
       {
         label: '退订原因',
         columns: 2,
-        fields: ['UnsubscribeReason', 'ReasonText', 'UnsubscribeSource', 'UnsubscribeDate']
+        fields: ['unsubscribe_reason', 'reason_text', 'unsubscribe_source', 'unsubscribe_date']
       },
       {
         label: '触发活动',
         columns: 3,
-        fields: ['CampaignId', 'EmailTemplateId', 'MarketingListId']
+        fields: ['campaign_id', 'email_template_id', 'marketing_list_id']
       },
       {
         label: '退信信息',
         columns: 2,
-        fields: ['IsBounce', 'BounceType', 'BounceReason', 'BounceDate', 'BounceCount']
+        fields: ['is_bounce', 'bounce_type', 'bounce_reason', 'bounce_date', 'bounce_count']
       },
       {
         label: '重新订阅',
         columns: 3,
-        fields: ['IsResubscribed', 'ResubscribeDate', 'ResubscribeSource']
+        fields: ['is_resubscribed', 'resubscribe_date', 'resubscribe_source']
       },
       {
         label: '技术信息',
         columns: 2,
-        fields: ['IpAddress', 'UserAgent']
+        fields: ['ip_address', 'user_agent']
       },
       {
         label: '合规处理',
         columns: 3,
-        fields: ['IsGdprRequest', 'ProcessedDate', 'ProcessedBy']
+        fields: ['is_gdpr_request', 'processed_date', 'processed_by']
       },
       {
         label: '分析数据',
         columns: 3,
-        fields: ['SubscriptionDurationDays', 'EmailsReceivedBeforeUnsubscribe', 'LastEmailOpenedDate']
+        fields: ['subscription_duration_days', 'emails_received_before_unsubscribe', 'last_email_opened_date']
       },
       {
         label: '邮件偏好',
         columns: 2,
-        fields: ['AllowTransactionalEmails', 'AllowSystemNotifications']
+        fields: ['allow_transactional_emails', 'allow_system_notifications']
       },
       {
         label: '备注',
         columns: 1,
-        fields: ['Notes']
+        fields: ['notes']
       }
     ]
   }

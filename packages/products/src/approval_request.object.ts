@@ -14,28 +14,28 @@ const ApprovalRequest = {
   },
   fields: {
     // Basic Information
-    RequestNumber: {
+    request_number: {
       type: 'autonumber',
       label: 'Request Number',
       format: 'AR-{YYYY}-{MM}-{00000}',
       readonly: true,
       searchable: true
     },
-    Name: {
+    name: {
       type: 'text',
-      label: 'Request Name',
+      label: 'Request name',
       required: true,
       searchable: true,
       maxLength: 255
     },
-    Description: {
+    description: {
       type: 'textarea',
-      label: 'Description',
+      label: 'description',
       maxLength: 2000,
       description: 'Detailed description of approval request'
     },
     // Request Type
-    RequestType: {
+    request_type: {
       type: 'select',
       label: 'Request Type',
       required: true,
@@ -50,46 +50,46 @@ const ApprovalRequest = {
       ]
     },
     // Related Records
-    QuoteId: {
+    quote_id: {
       type: 'lookup',
       label: 'Quote',
       reference: 'Quote',
       description: 'Quote requiring approval'
     },
-    OpportunityId: {
+    opportunity_id: {
       type: 'lookup',
       label: 'Opportunity',
       reference: 'Opportunity',
       description: 'Related opportunity'
     },
-    AccountId: {
+    account_id: {
       type: 'lookup',
       label: 'Account',
       reference: 'Account',
       description: 'Customer account'
     },
-    ContractId: {
+    contract_id: {
       type: 'lookup',
       label: 'Contract',
       reference: 'Contract',
       description: 'Contract requiring approval'
     },
     // Submitter Information
-    SubmittedById: {
+    submitted_by_id: {
       type: 'lookup',
       label: 'Submitted By',
       reference: 'User',
       readonly: true
     },
-    SubmittedDate: {
+    submitted_date: {
       type: 'datetime',
       label: 'Submitted Date',
       readonly: true
     },
     // Approval Details
-    Status: {
+    status: {
       type: 'select',
-      label: 'Status',
+      label: 'status',
       required: true,
       defaultValue: 'Pending',
       options: [
@@ -101,7 +101,7 @@ const ApprovalRequest = {
         { label: '⏰ Expired', value: 'Expired' }
       ]
     },
-    CurrentApprovalLevel: {
+    current_approval_level: {
       type: 'number',
       label: 'Current Level',
       precision: 0,
@@ -109,14 +109,14 @@ const ApprovalRequest = {
       defaultValue: 1,
       description: 'Current approval level in the chain'
     },
-    TotalApprovalLevels: {
+    total_approval_levels: {
       type: 'number',
       label: 'Total Levels',
       precision: 0,
       readonly: true,
       description: 'Total approval levels required'
     },
-    CurrentApproverId: {
+    current_approver_id: {
       type: 'lookup',
       label: 'Current Approver',
       reference: 'User',
@@ -124,51 +124,51 @@ const ApprovalRequest = {
       description: 'User who needs to approve at current level'
     },
     // Discount Information
-    DiscountPercent: {
+    discount_percent: {
       type: 'percent',
       label: 'Discount %',
       description: 'Requested discount percentage'
     },
-    DiscountAmount: {
+    discount_amount: {
       type: 'currency',
       label: 'Discount Amount',
       precision: 2,
       description: 'Requested discount amount'
     },
-    OriginalPrice: {
+    original_price: {
       type: 'currency',
       label: 'Original Price',
       precision: 2,
       description: 'Original price before discount'
     },
-    ProposedPrice: {
+    proposed_price: {
       type: 'currency',
       label: 'Proposed Price',
       precision: 2,
       description: 'Proposed price after discount'
     },
-    RevenueImpact: {
+    revenue_impact: {
       type: 'currency',
       label: 'Revenue Impact',
       precision: 2,
       readonly: true,
       description: 'Calculated revenue impact'
     },
-    MarginImpact: {
+    margin_impact: {
       type: 'percent',
       label: 'Margin Impact',
       readonly: true,
       description: 'Impact on profit margin'
     },
     // Justification
-    BusinessJustification: {
+    business_justification: {
       type: 'textarea',
       label: 'Business Justification',
       required: true,
       maxLength: 5000,
       description: 'Detailed business justification for the request'
     },
-    ReasonCode: {
+    reason_code: {
       type: 'select',
       label: 'Reason Code',
       required: true,
@@ -184,27 +184,27 @@ const ApprovalRequest = {
         { label: 'Other', value: 'Other' }
       ]
     },
-    CompetitorName: {
+    competitor_name: {
       type: 'text',
-      label: 'Competitor Name',
+      label: 'Competitor name',
       maxLength: 255,
       description: 'Competitor being matched (if applicable)'
     },
-    CompetitorPrice: {
+    competitor_price: {
       type: 'currency',
       label: 'Competitor Price',
       precision: 2,
       description: 'Competitor price being matched'
     },
     // Approval Matrix Criteria
-    RequiredApprovalLevel: {
+    required_approval_level: {
       type: 'number',
       label: 'Required Approval Level',
       precision: 0,
       readonly: true,
       description: 'Calculated based on discount % and amount'
     },
-    ApprovalMatrixRule: {
+    approval_matrix_rule: {
       type: 'text',
       label: 'Approval Matrix Rule',
       maxLength: 255,
@@ -212,7 +212,7 @@ const ApprovalRequest = {
       description: 'Rule that determined approval levels'
     },
     // Decision
-    FinalDecision: {
+    final_decision: {
       type: 'select',
       label: 'Final Decision',
       readonly: true,
@@ -224,72 +224,72 @@ const ApprovalRequest = {
       ],
       defaultValue: 'Pending'
     },
-    ApprovedById: {
+    approved_by_id: {
       type: 'lookup',
       label: 'Approved By',
       reference: 'User',
       readonly: true,
       description: 'Final approver'
     },
-    ApprovedDate: {
+    approved_date: {
       type: 'datetime',
       label: 'Approved Date',
       readonly: true
     },
-    RejectedById: {
+    rejected_by_id: {
       type: 'lookup',
       label: 'Rejected By',
       reference: 'User',
       readonly: true
     },
-    RejectedDate: {
+    rejected_date: {
       type: 'datetime',
       label: 'Rejected Date',
       readonly: true
     },
-    RejectionReason: {
+    rejection_reason: {
       type: 'textarea',
       label: 'Rejection Reason',
       maxLength: 5000,
       readonly: true
     },
-    ApprovalConditions: {
+    approval_conditions: {
       type: 'textarea',
       label: 'Approval Conditions',
       maxLength: 5000,
       description: 'Conditions attached to approval'
     },
     // Escalation
-    IsEscalated: {
+    is_escalated: {
       type: 'checkbox',
       label: 'Escalated',
       defaultValue: false,
       description: 'Request has been escalated'
     },
-    EscalatedDate: {
+    escalated_date: {
       type: 'datetime',
       label: 'Escalated Date',
       readonly: true
     },
-    EscalationReason: {
+    escalation_reason: {
       type: 'textarea',
       label: 'Escalation Reason',
       maxLength: 2000
     },
     // SLA
-    DueDate: {
+    due_date: {
       type: 'datetime',
       label: 'Due Date',
       description: 'SLA due date for approval decision'
     },
-    IsOverdue: {
+    is_overdue: {
       type: 'checkbox',
       label: 'Overdue',
       defaultValue: false,
       readonly: true,
       description: 'Past due date'
     },
-    ResponseTime: {
+    response_time: {
       type: 'number',
       label: 'Response Time (hours)',
       precision: 2,
@@ -297,45 +297,45 @@ const ApprovalRequest = {
       description: 'Time taken from submission to decision'
     },
     // Comments
-    ApproverComments: {
+    approver_comments: {
       type: 'textarea',
       label: 'Approver Comments',
       maxLength: 5000,
       description: 'Comments from approvers'
     },
-    InternalNotes: {
+    internal_notes: {
       type: 'textarea',
       label: 'Internal Notes',
       maxLength: 5000,
       description: 'Internal notes not visible to submitter'
     },
     // Notifications
-    NotifyOnApproval: {
+    notify_on_approval: {
       type: 'checkbox',
       label: 'Notify on Approval',
       defaultValue: true,
       description: 'Send notification when approved'
     },
-    NotifyOnRejection: {
+    notify_on_rejection: {
       type: 'checkbox',
       label: 'Notify on Rejection',
       defaultValue: true,
       description: 'Send notification when rejected'
     },
-    EscalationEmail: {
+    escalation_email: {
       type: 'email',
       label: 'Escalation Email',
       description: 'Email for escalation notifications'
     },
     // AI Enhancement
-    AIRiskScore: {
+    a_i_risk_score: {
       type: 'number',
       label: 'AI Risk Score',
       precision: 2,
       readonly: true,
       description: 'AI-calculated risk score (0-100)'
     },
-    AIRecommendation: {
+    a_i_recommendation: {
       type: 'select',
       label: 'AI Recommendation',
       readonly: true,
@@ -345,14 +345,14 @@ const ApprovalRequest = {
         { label: 'Reject', value: 'Reject' }
       ]
     },
-    AIAnalysis: {
+    a_i_analysis: {
       type: 'textarea',
       label: 'AI Analysis',
       readonly: true,
       maxLength: 2000,
       description: 'AI analysis of approval request'
     },
-    AISimilarRequests: {
+    a_i_similar_requests: {
       type: 'textarea',
       label: 'Similar Requests',
       readonly: true,
@@ -365,14 +365,14 @@ const ApprovalRequest = {
       name: 'ApprovalSteps',
       type: 'hasMany',
       object: 'ApprovalStep',
-      foreignKey: 'ApprovalRequestId',
+      foreignKey: 'approval_request_id',
       label: 'Approval Steps'
     },
     {
       name: 'ApprovalHistory',
       type: 'hasMany',
       object: 'ApprovalHistory',
-      foreignKey: 'ApprovalRequestId',
+      foreignKey: 'approval_request_id',
       label: 'Approval History'
     }
   ],
@@ -381,115 +381,115 @@ const ApprovalRequest = {
       name: 'AllRequests',
       label: 'All Requests',
       filters: [],
-      columns: ['RequestNumber', 'Name', 'RequestType', 'Status', 'SubmittedDate', 'CurrentApproverId'],
-      sort: [['SubmittedDate', 'desc']]
+      columns: ['request_number', 'name', 'request_type', 'status', 'submitted_date', 'current_approver_id'],
+      sort: [['submitted_date', 'desc']]
     },
     {
       name: 'PendingRequests',
       label: 'Pending',
-      filters: [['Status', '=', 'Pending']],
-      columns: ['RequestNumber', 'Name', 'RequestType', 'DiscountPercent', 'CurrentApprovalLevel', 'CurrentApproverId', 'DueDate'],
-      sort: [['SubmittedDate', 'asc']]
+      filters: [['status', '=', 'Pending']],
+      columns: ['request_number', 'name', 'request_type', 'discount_percent', 'current_approval_level', 'current_approver_id', 'due_date'],
+      sort: [['submitted_date', 'asc']]
     },
     {
       name: 'MyApprovals',
       label: 'My Approvals',
       filters: [
-        ['Status', '=', 'Pending'],
-        ['CurrentApproverId', '=', '$currentUser']
+        ['status', '=', 'Pending'],
+        ['current_approver_id', '=', '$currentUser']
       ],
-      columns: ['RequestNumber', 'Name', 'AccountId', 'DiscountPercent', 'BusinessJustification', 'DueDate'],
-      sort: [['DueDate', 'asc']]
+      columns: ['request_number', 'name', 'account_id', 'discount_percent', 'business_justification', 'due_date'],
+      sort: [['due_date', 'asc']]
     },
     {
       name: 'MySubmissions',
       label: 'My Submissions',
-      filters: [['SubmittedById', '=', '$currentUser']],
-      columns: ['RequestNumber', 'Name', 'Status', 'CurrentApprovalLevel', 'SubmittedDate', 'ApprovedDate'],
-      sort: [['SubmittedDate', 'desc']]
+      filters: [['submitted_by_id', '=', '$currentUser']],
+      columns: ['request_number', 'name', 'status', 'current_approval_level', 'submitted_date', 'approved_date'],
+      sort: [['submitted_date', 'desc']]
     },
     {
       name: 'HighValueApprovals',
       label: 'High Value',
       filters: [
-        ['Status', '=', 'Pending'],
-        ['OriginalPrice', '>', 50000]
+        ['status', '=', 'Pending'],
+        ['original_price', '>', 50000]
       ],
-      columns: ['RequestNumber', 'Name', 'AccountId', 'OriginalPrice', 'DiscountPercent', 'CurrentApproverId'],
-      sort: [['OriginalPrice', 'desc']]
+      columns: ['request_number', 'name', 'account_id', 'original_price', 'discount_percent', 'current_approver_id'],
+      sort: [['original_price', 'desc']]
     },
     {
       name: 'HighDiscountApprovals',
       label: 'High Discount',
       filters: [
-        ['Status', '=', 'Pending'],
-        ['DiscountPercent', '>', 0.30]
+        ['status', '=', 'Pending'],
+        ['discount_percent', '>', 0.30]
       ],
-      columns: ['RequestNumber', 'Name', 'AccountId', 'DiscountPercent', 'ReasonCode', 'CurrentApproverId'],
-      sort: [['DiscountPercent', 'desc']]
+      columns: ['request_number', 'name', 'account_id', 'discount_percent', 'reason_code', 'current_approver_id'],
+      sort: [['discount_percent', 'desc']]
     },
     {
       name: 'OverdueApprovals',
       label: 'Overdue',
       filters: [
-        ['Status', '=', 'Pending'],
-        ['IsOverdue', '=', true]
+        ['status', '=', 'Pending'],
+        ['is_overdue', '=', true]
       ],
-      columns: ['RequestNumber', 'Name', 'DueDate', 'CurrentApproverId', 'SubmittedDate'],
-      sort: [['DueDate', 'asc']]
+      columns: ['request_number', 'name', 'due_date', 'current_approver_id', 'submitted_date'],
+      sort: [['due_date', 'asc']]
     },
     {
       name: 'EscalatedRequests',
       label: 'Escalated',
-      filters: [['IsEscalated', '=', true]],
-      columns: ['RequestNumber', 'Name', 'EscalatedDate', 'EscalationReason', 'CurrentApproverId'],
-      sort: [['EscalatedDate', 'desc']]
+      filters: [['is_escalated', '=', true]],
+      columns: ['request_number', 'name', 'escalated_date', 'escalation_reason', 'current_approver_id'],
+      sort: [['escalated_date', 'desc']]
     },
     {
       name: 'ApprovedRequests',
       label: 'Approved',
-      filters: [['Status', '=', 'Approved']],
-      columns: ['RequestNumber', 'Name', 'AccountId', 'DiscountPercent', 'ApprovedById', 'ApprovedDate'],
-      sort: [['ApprovedDate', 'desc']]
+      filters: [['status', '=', 'Approved']],
+      columns: ['request_number', 'name', 'account_id', 'discount_percent', 'approved_by_id', 'approved_date'],
+      sort: [['approved_date', 'desc']]
     },
     {
       name: 'RejectedRequests',
       label: 'Rejected',
-      filters: [['Status', '=', 'Rejected']],
-      columns: ['RequestNumber', 'Name', 'AccountId', 'DiscountPercent', 'RejectedById', 'RejectionReason'],
-      sort: [['RejectedDate', 'desc']]
+      filters: [['status', '=', 'Rejected']],
+      columns: ['request_number', 'name', 'account_id', 'discount_percent', 'rejected_by_id', 'rejection_reason'],
+      sort: [['rejected_date', 'desc']]
     }
   ],
   validationRules: [
     {
       name: 'DiscountAmountOrPercentRequired',
       errorMessage: 'Either discount amount or percentage must be specified',
-      formula: 'AND(RequestType = "DiscountApproval", ISBLANK(DiscountAmount), ISBLANK(DiscountPercent))'
+      formula: 'AND(request_type = "DiscountApproval", ISBLANK(discount_amount), ISBLANK(discount_percent))'
     },
     {
       name: 'BusinessJustificationRequired',
       errorMessage: 'Business justification is required for all approval requests',
-      formula: 'AND(Status != "Draft", ISBLANK(BusinessJustification))'
+      formula: 'AND(status != "Draft", ISBLANK(business_justification))'
     },
     {
       name: 'QuoteOrContractRequired',
       errorMessage: 'Either Quote or Contract must be specified',
-      formula: 'AND(RequestType IN ("DiscountApproval", "PriceOverride"), ISBLANK(QuoteId), ISBLANK(ContractId))'
+      formula: 'AND(request_type IN ("DiscountApproval", "PriceOverride"), ISBLANK(quote_id), ISBLANK(contract_id))'
     },
     {
       name: 'CompetitorInfoRequired',
       errorMessage: 'Competitor information required when reason is competitive match',
-      formula: 'AND(ReasonCode = "CompetitiveMatch", ISBLANK(CompetitorName))'
+      formula: 'AND(reason_code = "CompetitiveMatch", ISBLANK(competitor_name))'
     },
     {
       name: 'CannotRecallApproved',
       errorMessage: 'Cannot recall an approved or rejected request',
-      formula: 'AND(Status = "Recalled", PRIORVALUE(Status) IN ("Approved", "Rejected"))'
+      formula: 'AND(status = "Recalled", PRIORVALUE(status) IN ("Approved", "Rejected"))'
     },
     {
       name: 'DiscountPercentValid',
       errorMessage: 'Discount percentage must be between 0% and 100%',
-      formula: 'AND(NOT(ISBLANK(DiscountPercent)), OR(DiscountPercent < 0, DiscountPercent > 1))'
+      formula: 'AND(NOT(ISBLANK(discount_percent)), OR(discount_percent < 0, discount_percent > 1))'
     }
   ],
   pageLayout: {
@@ -497,67 +497,67 @@ const ApprovalRequest = {
       {
         label: 'Request Information',
         columns: 2,
-        fields: ['RequestNumber', 'Name', 'RequestType', 'Status', 'Description']
+        fields: ['request_number', 'name', 'request_type', 'status', 'description']
       },
       {
         label: 'Related Records',
         columns: 2,
-        fields: ['QuoteId', 'OpportunityId', 'AccountId', 'ContractId']
+        fields: ['quote_id', 'opportunity_id', 'account_id', 'contract_id']
       },
       {
         label: 'Submission',
         columns: 2,
-        fields: ['SubmittedById', 'SubmittedDate']
+        fields: ['submitted_by_id', 'submitted_date']
       },
       {
         label: 'Approval Progress',
         columns: 2,
-        fields: ['CurrentApprovalLevel', 'TotalApprovalLevels', 'CurrentApproverId', 'ApprovalMatrixRule']
+        fields: ['current_approval_level', 'total_approval_levels', 'current_approver_id', 'approval_matrix_rule']
       },
       {
         label: 'Discount Information',
         columns: 2,
-        fields: ['DiscountPercent', 'DiscountAmount', 'OriginalPrice', 'ProposedPrice', 'RevenueImpact', 'MarginImpact']
+        fields: ['discount_percent', 'discount_amount', 'original_price', 'proposed_price', 'revenue_impact', 'margin_impact']
       },
       {
         label: 'Justification',
         columns: 1,
-        fields: ['BusinessJustification', 'ReasonCode', 'CompetitorName', 'CompetitorPrice']
+        fields: ['business_justification', 'reason_code', 'competitor_name', 'competitor_price']
       },
       {
         label: 'Decision',
         columns: 2,
-        fields: ['FinalDecision', 'ApprovedById', 'ApprovedDate', 'RejectedById', 'RejectedDate']
+        fields: ['final_decision', 'approved_by_id', 'approved_date', 'rejected_by_id', 'rejected_date']
       },
       {
         label: 'Rejection/Conditions',
         columns: 1,
-        fields: ['RejectionReason', 'ApprovalConditions']
+        fields: ['rejection_reason', 'approval_conditions']
       },
       {
         label: 'Escalation',
         columns: 2,
-        fields: ['IsEscalated', 'EscalatedDate', 'EscalationReason']
+        fields: ['is_escalated', 'escalated_date', 'escalation_reason']
       },
       {
         label: 'SLA',
         columns: 2,
-        fields: ['DueDate', 'IsOverdue', 'ResponseTime']
+        fields: ['due_date', 'is_overdue', 'response_time']
       },
       {
         label: 'Comments',
         columns: 1,
-        fields: ['ApproverComments', 'InternalNotes']
+        fields: ['approver_comments', 'internal_notes']
       },
       {
         label: 'Notifications',
         columns: 2,
-        fields: ['NotifyOnApproval', 'NotifyOnRejection', 'EscalationEmail']
+        fields: ['notify_on_approval', 'notify_on_rejection', 'escalation_email']
       },
       {
         label: 'AI Insights',
         columns: 1,
-        fields: ['AIRiskScore', 'AIRecommendation', 'AIAnalysis', 'AISimilarRequests']
+        fields: ['a_i_risk_score', 'a_i_recommendation', 'a_i_analysis', 'a_i_similar_requests']
       }
     ]
   }

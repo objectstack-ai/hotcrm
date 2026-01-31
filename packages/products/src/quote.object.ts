@@ -15,23 +15,23 @@ const Quote = {
   },
   fields: {
     // Basic Information
-    QuoteNumber: {
+    quote_number: {
       type: 'autonumber',
       label: 'Quote Number',
       format: 'Q-{YYYY}-{MM}-{0000}',
       readonly: true,
       searchable: true
     },
-    Name: {
+    name: {
       type: 'text',
-      label: 'Quote Name',
+      label: 'Quote name',
       required: true,
       searchable: true,
       maxLength: 255
     },
-    Status: {
+    status: {
       type: 'select',
-      label: 'Status',
+      label: 'status',
       required: true,
       defaultValue: 'Draft',
       options: [
@@ -46,42 +46,42 @@ const Quote = {
       ]
     },
     // Related Records
-    OpportunityId: {
+    opportunity_id: {
       type: 'lookup',
       label: 'Opportunity',
       reference: 'Opportunity',
       required: true
     },
-    AccountId: {
+    account_id: {
       type: 'lookup',
       label: 'Account',
       reference: 'Account',
       required: true
     },
-    ContactId: {
+    contact_id: {
       type: 'lookup',
       label: 'Contact',
       reference: 'Contact'
     },
-    PricebookId: {
+    pricebook_id: {
       type: 'lookup',
       label: 'Price Book',
       reference: 'Pricebook',
       required: true
     },
     // Dates
-    QuoteDate: {
+    quote_date: {
       type: 'date',
       label: 'Quote Date',
       required: true,
       defaultValue: '$today'
     },
-    ExpirationDate: {
+    expiration_date: {
       type: 'date',
       label: 'Expiration Date',
       required: true
     },
-    ValidityPeriodDays: {
+    validity_period_days: {
       type: 'number',
       label: 'Validity Period (Days)',
       precision: 0,
@@ -89,50 +89,50 @@ const Quote = {
       readonly: true
     },
     // Pricing
-    Subtotal: {
+    subtotal: {
       type: 'currency',
-      label: 'Subtotal',
+      label: 'subtotal',
       precision: 2,
       readonly: true,
       description: 'Sum of all line item amounts'
     },
-    DiscountPercent: {
+    discount_percent: {
       type: 'percent',
       label: 'Discount %',
       defaultValue: 0
     },
-    DiscountAmount: {
+    discount_amount: {
       type: 'currency',
       label: 'Discount Amount',
       precision: 2,
       readonly: true
     },
-    TaxPercent: {
+    tax_percent: {
       type: 'percent',
       label: 'Tax %',
       defaultValue: 0
     },
-    TaxAmount: {
+    tax_amount: {
       type: 'currency',
       label: 'Tax Amount',
       precision: 2,
       readonly: true
     },
-    ShippingHandling: {
+    shipping_handling: {
       type: 'currency',
       label: 'Shipping & Handling',
       precision: 2,
       defaultValue: 0
     },
-    TotalPrice: {
+    total_price: {
       type: 'currency',
       label: 'Total Price',
       precision: 2,
       readonly: true,
-      description: 'Subtotal - Discount + Tax + Shipping'
+      description: 'subtotal - Discount + Tax + Shipping'
     },
     // Multi-Currency Support
-    CurrencyCode: {
+    currency_code: {
       type: 'select',
       label: 'Currency',
       defaultValue: 'USD',
@@ -146,7 +146,7 @@ const Quote = {
         { label: 'CAD - Canadian Dollar', value: 'CAD' }
       ]
     },
-    ExchangeRate: {
+    exchange_rate: {
       type: 'number',
       label: 'Exchange Rate',
       precision: 6,
@@ -154,7 +154,7 @@ const Quote = {
       description: 'Conversion rate to base currency'
     },
     // Payment Terms
-    PaymentTerms: {
+    payment_terms: {
       type: 'select',
       label: 'Payment Terms',
       options: [
@@ -168,7 +168,7 @@ const Quote = {
         { label: 'Other', value: 'Other' }
       ]
     },
-    DeliveryTerms: {
+    delivery_terms: {
       type: 'select',
       label: 'Delivery Terms',
       options: [
@@ -181,61 +181,61 @@ const Quote = {
       ]
     },
     // Shipping Address
-    ShippingStreet: {
+    shipping_street: {
       type: 'text',
       label: 'Shipping Street',
       maxLength: 255
     },
-    ShippingCity: {
+    shipping_city: {
       type: 'text',
       label: 'Shipping City',
       maxLength: 40
     },
-    ShippingState: {
+    shipping_state: {
       type: 'text',
       label: 'Shipping State',
       maxLength: 80
     },
-    ShippingPostalCode: {
+    shipping_postal_code: {
       type: 'text',
       label: 'Shipping Postal Code',
       maxLength: 20
     },
-    ShippingCountry: {
+    shipping_country: {
       type: 'text',
       label: 'Shipping Country',
       maxLength: 80
     },
     // Billing Address
-    BillingStreet: {
+    billing_street: {
       type: 'text',
       label: 'Billing Street',
       maxLength: 255
     },
-    BillingCity: {
+    billing_city: {
       type: 'text',
       label: 'Billing City',
       maxLength: 40
     },
-    BillingState: {
+    billing_state: {
       type: 'text',
       label: 'Billing State',
       maxLength: 80
     },
-    BillingPostalCode: {
+    billing_postal_code: {
       type: 'text',
       label: 'Billing Postal Code',
       maxLength: 20
     },
-    BillingCountry: {
+    billing_country: {
       type: 'text',
       label: 'Billing Country',
       maxLength: 80
     },
     // Approval Workflow
-    ApprovalStatus: {
+    approval_status: {
       type: 'select',
-      label: 'Approval Status',
+      label: 'Approval status',
       readonly: true,
       defaultValue: 'Not Submitted',
       options: [
@@ -246,149 +246,149 @@ const Quote = {
         { label: 'Recalled', value: 'Recalled' }
       ]
     },
-    ApprovalLevel: {
+    approval_level: {
       type: 'number',
       label: 'Approval Level',
       precision: 0,
       readonly: true,
       description: 'Required approval level based on discount %'
     },
-    ApprovedById: {
+    approved_by_id: {
       type: 'lookup',
       label: 'Approved By',
       reference: 'User',
       readonly: true
     },
-    ApprovedDate: {
+    approved_date: {
       type: 'datetime',
       label: 'Approved Date',
       readonly: true
     },
-    RejectedById: {
+    rejected_by_id: {
       type: 'lookup',
       label: 'Rejected By',
       reference: 'User',
       readonly: true
     },
-    RejectedDate: {
+    rejected_date: {
       type: 'datetime',
       label: 'Rejected Date',
       readonly: true
     },
-    RejectionReason: {
+    rejection_reason: {
       type: 'textarea',
       label: 'Rejection Reason',
       maxLength: 2000,
       readonly: true
     },
     // Quote Versioning
-    VersionNumber: {
+    version_number: {
       type: 'number',
       label: 'Version',
       precision: 0,
       defaultValue: 1,
       readonly: true
     },
-    IsPrimaryQuote: {
+    is_primary_quote: {
       type: 'checkbox',
       label: 'Primary Quote',
       defaultValue: true,
       description: 'Is this the primary quote for the opportunity?'
     },
-    PreviousVersionId: {
+    previous_version_id: {
       type: 'lookup',
       label: 'Previous Version',
       reference: 'Quote',
       readonly: true
     },
-    LatestVersionId: {
+    latest_version_id: {
       type: 'lookup',
       label: 'Latest Version',
       reference: 'Quote',
       readonly: true
     },
     // Quote Template
-    TemplateId: {
+    template_id: {
       type: 'lookup',
       label: 'Template',
       reference: 'QuoteTemplate',
       description: 'Quote template used for PDF generation'
     },
     // Additional Info
-    Description: {
+    description: {
       type: 'textarea',
-      label: 'Description',
+      label: 'description',
       maxLength: 32000
     },
-    InternalNotes: {
+    internal_notes: {
       type: 'textarea',
       label: 'Internal Notes',
       maxLength: 5000,
       description: 'Internal use only, not visible to customer'
     },
     // PDF Generation
-    PDFGeneratedDate: {
+    p_d_f_generated_date: {
       type: 'datetime',
       label: 'PDF Generated Date',
       readonly: true
     },
-    PDFUrl: {
+    p_d_f_url: {
       type: 'url',
       label: 'PDF URL',
       readonly: true
     },
-    PDFDocumentId: {
+    p_d_f_document_id: {
       type: 'lookup',
       label: 'PDF Document',
       reference: 'Document',
       readonly: true
     },
     // Customer Acceptance
-    AcceptedDate: {
+    accepted_date: {
       type: 'datetime',
       label: 'Accepted Date',
       readonly: true
     },
-    AcceptedById: {
+    accepted_by_id: {
       type: 'lookup',
       label: 'Accepted By',
       reference: 'Contact',
       readonly: true
     },
-    CustomerSignature: {
+    customer_signature: {
       type: 'text',
       label: 'Customer Signature',
       maxLength: 255,
       readonly: true
     },
     // AI Enhancement Fields
-    AIRecommendedBundle: {
+    a_i_recommended_bundle: {
       type: 'textarea',
       label: 'AI Recommended Bundle',
       readonly: true,
       maxLength: 2000,
       description: 'Auto-generated product bundle recommendations based on customer budget'
     },
-    AIOptimalDiscount: {
+    a_i_optimal_discount: {
       type: 'percent',
       label: 'AI Optimal Discount',
       readonly: true,
       description: 'AI-suggested optimal discount based on historical data'
     },
-    AIWinProbability: {
+    a_i_win_probability: {
       type: 'percent',
       label: 'AI Win Probability',
       readonly: true,
       description: 'Predicted win rate based on quote configuration'
     },
-    AIPricingAnalysis: {
+    a_i_pricing_analysis: {
       type: 'textarea',
       label: 'AI Pricing Analysis',
       readonly: true,
       maxLength: 2000,
       description: 'Competitive pricing analysis and recommendations'
     },
-    AIRecommendedUpsells: {
+    a_i_recommended_upsells: {
       type: 'textarea',
       label: 'AI Recommended Upsells',
       readonly: true,
@@ -401,28 +401,28 @@ const Quote = {
       name: 'QuoteLineItems',
       type: 'hasMany',
       object: 'QuoteLineItem',
-      foreignKey: 'QuoteId',
+      foreignKey: 'quote_id',
       label: 'Quote Line Items'
     },
     {
       name: 'Contracts',
       type: 'hasMany',
       object: 'Contract',
-      foreignKey: 'QuoteId',
+      foreignKey: 'quote_id',
       label: 'Contracts'
     },
     {
       name: 'ApprovalHistory',
       type: 'hasMany',
       object: 'ApprovalHistory',
-      foreignKey: 'RecordId',
+      foreignKey: 'record_id',
       label: 'Approval History'
     },
     {
       name: 'QuoteVersions',
       type: 'hasMany',
       object: 'Quote',
-      foreignKey: 'PreviousVersionId',
+      foreignKey: 'previous_version_id',
       label: 'Quote Versions'
     }
   ],
@@ -431,122 +431,122 @@ const Quote = {
       name: 'AllQuotes',
       label: 'All Quotes',
       filters: [],
-      columns: ['QuoteNumber', 'Name', 'AccountId', 'TotalPrice', 'Status', 'QuoteDate', 'ExpirationDate'],
-      sort: [['QuoteDate', 'desc']]
+      columns: ['quote_number', 'name', 'account_id', 'total_price', 'status', 'quote_date', 'expiration_date'],
+      sort: [['quote_date', 'desc']]
     },
     {
       name: 'MyQuotes',
       label: 'My Quotes',
       filters: [['OwnerId', '=', '$currentUser']],
-      columns: ['QuoteNumber', 'Name', 'AccountId', 'TotalPrice', 'Status', 'ExpirationDate'],
-      sort: [['QuoteDate', 'desc']]
+      columns: ['quote_number', 'name', 'account_id', 'total_price', 'status', 'expiration_date'],
+      sort: [['quote_date', 'desc']]
     },
     {
       name: 'DraftQuotes',
       label: 'Draft',
-      filters: [['Status', '=', 'Draft']],
-      columns: ['QuoteNumber', 'Name', 'AccountId', 'TotalPrice', 'QuoteDate', 'OwnerId'],
-      sort: [['QuoteDate', 'desc']]
+      filters: [['status', '=', 'Draft']],
+      columns: ['quote_number', 'name', 'account_id', 'total_price', 'quote_date', 'OwnerId'],
+      sort: [['quote_date', 'desc']]
     },
     {
       name: 'PendingApproval',
       label: 'Pending Approval',
-      filters: [['ApprovalStatus', '=', 'Pending']],
-      columns: ['QuoteNumber', 'Name', 'AccountId', 'TotalPrice', 'DiscountPercent', 'ApprovalLevel', 'OwnerId'],
-      sort: [['QuoteDate', 'asc']]
+      filters: [['approval_status', '=', 'Pending']],
+      columns: ['quote_number', 'name', 'account_id', 'total_price', 'discount_percent', 'approval_level', 'OwnerId'],
+      sort: [['quote_date', 'asc']]
     },
     {
       name: 'ApprovedQuotes',
       label: 'Approved',
       filters: [
-        ['ApprovalStatus', '=', 'Approved'],
-        ['Status', 'not in', ['Accepted', 'Expired', 'Declined']]
+        ['approval_status', '=', 'Approved'],
+        ['status', 'not in', ['Accepted', 'Expired', 'Declined']]
       ],
-      columns: ['QuoteNumber', 'Name', 'AccountId', 'TotalPrice', 'ApprovedDate', 'ExpirationDate'],
-      sort: [['ApprovedDate', 'desc']]
+      columns: ['quote_number', 'name', 'account_id', 'total_price', 'approved_date', 'expiration_date'],
+      sort: [['approved_date', 'desc']]
     },
     {
       name: 'SentQuotes',
       label: 'Sent to Customer',
-      filters: [['Status', '=', 'Sent']],
-      columns: ['QuoteNumber', 'Name', 'AccountId', 'ContactId', 'TotalPrice', 'ExpirationDate', 'OwnerId'],
-      sort: [['QuoteDate', 'desc']]
+      filters: [['status', '=', 'Sent']],
+      columns: ['quote_number', 'name', 'account_id', 'contact_id', 'total_price', 'expiration_date', 'OwnerId'],
+      sort: [['quote_date', 'desc']]
     },
     {
       name: 'AcceptedQuotes',
       label: 'Accepted',
-      filters: [['Status', '=', 'Accepted']],
-      columns: ['QuoteNumber', 'Name', 'AccountId', 'TotalPrice', 'AcceptedDate', 'AcceptedById'],
-      sort: [['AcceptedDate', 'desc']]
+      filters: [['status', '=', 'Accepted']],
+      columns: ['quote_number', 'name', 'account_id', 'total_price', 'accepted_date', 'accepted_by_id'],
+      sort: [['accepted_date', 'desc']]
     },
     {
       name: 'RejectedQuotes',
       label: 'Rejected/Declined',
-      filters: [['Status', 'in', ['Rejected', 'Declined']]],
-      columns: ['QuoteNumber', 'Name', 'AccountId', 'TotalPrice', 'Status', 'RejectionReason'],
+      filters: [['status', 'in', ['Rejected', 'Declined']]],
+      columns: ['quote_number', 'name', 'account_id', 'total_price', 'status', 'rejection_reason'],
       sort: [['ModifiedDate', 'desc']]
     },
     {
       name: 'ExpiringQuotes',
       label: 'Expiring Soon',
       filters: [
-        ['ExpirationDate', 'next_n_days', 7],
-        ['Status', 'not in', ['Accepted', 'Expired', 'Declined']]
+        ['expiration_date', 'next_n_days', 7],
+        ['status', 'not in', ['Accepted', 'Expired', 'Declined']]
       ],
-      columns: ['QuoteNumber', 'Name', 'AccountId', 'TotalPrice', 'ExpirationDate', 'OwnerId'],
-      sort: [['ExpirationDate', 'asc']]
+      columns: ['quote_number', 'name', 'account_id', 'total_price', 'expiration_date', 'OwnerId'],
+      sort: [['expiration_date', 'asc']]
     },
     {
       name: 'HighValueQuotes',
       label: 'High Value',
       filters: [
-        ['TotalPrice', '>', 100000],
-        ['Status', 'not in', ['Expired', 'Declined']]
+        ['total_price', '>', 100000],
+        ['status', 'not in', ['Expired', 'Declined']]
       ],
-      columns: ['QuoteNumber', 'Name', 'AccountId', 'TotalPrice', 'Status', 'AIWinProbability', 'OwnerId'],
-      sort: [['TotalPrice', 'desc']]
+      columns: ['quote_number', 'name', 'account_id', 'total_price', 'status', 'a_i_win_probability', 'OwnerId'],
+      sort: [['total_price', 'desc']]
     }
   ],
   validationRules: [
     {
       name: 'ExpirationAfterQuoteDate',
       errorMessage: 'Expiration date must be after quote date',
-      formula: 'AND(NOT(ISBLANK(QuoteDate)), NOT(ISBLANK(ExpirationDate)), ExpirationDate <= QuoteDate)'
+      formula: 'AND(NOT(ISBLANK(quote_date)), NOT(ISBLANK(expiration_date)), expiration_date <= quote_date)'
     },
     {
       name: 'HighDiscountRequiresApproval',
       errorMessage: 'Discount over 20% requires approval',
-      formula: 'AND(DiscountPercent > 0.20, ApprovalStatus NOT IN ("Approved", "Pending"), Status NOT IN ("Draft", "In Review"))'
+      formula: 'AND(discount_percent > 0.20, approval_status NOT IN ("Approved", "Pending"), status NOT IN ("Draft", "In Review"))'
     },
     {
       name: 'ApprovedQuoteReadOnly',
       errorMessage: 'Approved quotes cannot modify pricing',
-      formula: 'AND(ApprovalStatus = "Approved", OR(Subtotal != PRIORVALUE(Subtotal), DiscountPercent != PRIORVALUE(DiscountPercent), TaxPercent != PRIORVALUE(TaxPercent)))'
+      formula: 'AND(approval_status = "Approved", OR(subtotal != PRIORVALUE(subtotal), discount_percent != PRIORVALUE(discount_percent), tax_percent != PRIORVALUE(tax_percent)))'
     },
     {
       name: 'AcceptedQuoteReadOnly',
       errorMessage: 'Accepted quotes cannot be modified',
-      formula: 'AND(Status = "Accepted", ISCHANGED(Status) = false)'
+      formula: 'AND(status = "Accepted", ISCHANGED(status) = false)'
     },
     {
       name: 'DiscountPercentValid',
       errorMessage: 'Discount percentage must be between 0% and 100%',
-      formula: 'OR(DiscountPercent < 0, DiscountPercent > 1)'
+      formula: 'OR(discount_percent < 0, discount_percent > 1)'
     },
     {
       name: 'TaxPercentValid',
       errorMessage: 'Tax percentage must be between 0% and 100%',
-      formula: 'OR(TaxPercent < 0, TaxPercent > 1)'
+      formula: 'OR(tax_percent < 0, tax_percent > 1)'
     },
     {
       name: 'PrimaryQuoteUnique',
       errorMessage: 'Only one primary quote allowed per opportunity',
-      formula: 'AND(IsPrimaryQuote = true, OpportunityId != null)'
+      formula: 'AND(is_primary_quote = true, opportunity_id != null)'
     },
     {
       name: 'ExchangeRatePositive',
       errorMessage: 'Exchange rate must be positive',
-      formula: 'ExchangeRate <= 0'
+      formula: 'exchange_rate <= 0'
     }
   ],
   pageLayout: {
@@ -554,67 +554,67 @@ const Quote = {
       {
         label: 'Quote Information',
         columns: 2,
-        fields: ['QuoteNumber', 'Name', 'Status', 'VersionNumber', 'IsPrimaryQuote', 'TemplateId']
+        fields: ['quote_number', 'name', 'status', 'version_number', 'is_primary_quote', 'template_id']
       },
       {
         label: 'Related Records',
         columns: 2,
-        fields: ['OpportunityId', 'AccountId', 'ContactId', 'PricebookId']
+        fields: ['opportunity_id', 'account_id', 'contact_id', 'pricebook_id']
       },
       {
         label: 'Dates',
         columns: 2,
-        fields: ['QuoteDate', 'ExpirationDate', 'ValidityPeriodDays']
+        fields: ['quote_date', 'expiration_date', 'validity_period_days']
       },
       {
         label: 'Pricing',
         columns: 2,
-        fields: ['CurrencyCode', 'ExchangeRate', 'Subtotal', 'DiscountPercent', 'DiscountAmount', 'TaxPercent', 'TaxAmount', 'ShippingHandling', 'TotalPrice']
+        fields: ['currency_code', 'exchange_rate', 'subtotal', 'discount_percent', 'discount_amount', 'tax_percent', 'tax_amount', 'shipping_handling', 'total_price']
       },
       {
         label: 'Payment & Delivery',
         columns: 2,
-        fields: ['PaymentTerms', 'DeliveryTerms']
+        fields: ['payment_terms', 'delivery_terms']
       },
       {
         label: 'Shipping Address',
         columns: 2,
-        fields: ['ShippingStreet', 'ShippingCity', 'ShippingState', 'ShippingPostalCode', 'ShippingCountry']
+        fields: ['shipping_street', 'shipping_city', 'shipping_state', 'shipping_postal_code', 'shipping_country']
       },
       {
         label: 'Billing Address',
         columns: 2,
-        fields: ['BillingStreet', 'BillingCity', 'BillingState', 'BillingPostalCode', 'BillingCountry']
+        fields: ['billing_street', 'billing_city', 'billing_state', 'billing_postal_code', 'billing_country']
       },
       {
         label: 'Approval Information',
         columns: 2,
-        fields: ['ApprovalStatus', 'ApprovalLevel', 'ApprovedById', 'ApprovedDate', 'RejectedById', 'RejectedDate', 'RejectionReason']
+        fields: ['approval_status', 'approval_level', 'approved_by_id', 'approved_date', 'rejected_by_id', 'rejected_date', 'rejection_reason']
       },
       {
         label: 'Version Control',
         columns: 2,
-        fields: ['PreviousVersionId', 'LatestVersionId']
+        fields: ['previous_version_id', 'latest_version_id']
       },
       {
         label: 'PDF Document',
         columns: 2,
-        fields: ['PDFGeneratedDate', 'PDFUrl', 'PDFDocumentId']
+        fields: ['p_d_f_generated_date', 'p_d_f_url', 'p_d_f_document_id']
       },
       {
         label: 'Customer Acceptance',
         columns: 2,
-        fields: ['AcceptedDate', 'AcceptedById', 'CustomerSignature']
+        fields: ['accepted_date', 'accepted_by_id', 'customer_signature']
       },
       {
         label: 'AI Smart Pricing',
         columns: 1,
-        fields: ['AIRecommendedBundle', 'AIOptimalDiscount', 'AIWinProbability', 'AIPricingAnalysis', 'AIRecommendedUpsells']
+        fields: ['a_i_recommended_bundle', 'a_i_optimal_discount', 'a_i_win_probability', 'a_i_pricing_analysis', 'a_i_recommended_upsells']
       },
       {
         label: 'Notes',
         columns: 1,
-        fields: ['Description', 'InternalNotes']
+        fields: ['description', 'internal_notes']
       }
     ]
   }

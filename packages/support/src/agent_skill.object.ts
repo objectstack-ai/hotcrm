@@ -11,20 +11,20 @@ const AgentSkill = {
   },
   fields: {
     // Relationships
-    UserId: {
+    user_id: {
       type: 'lookup',
       label: 'Agent',
       reference: 'User',
       required: true
     },
-    SkillId: {
+    skill_id: {
       type: 'lookup',
       label: 'Skill',
       reference: 'Skill',
       required: true
     },
     // Proficiency
-    ProficiencyLevel: {
+    proficiency_level: {
       type: 'select',
       label: 'Proficiency Level',
       required: true,
@@ -37,7 +37,7 @@ const AgentSkill = {
         { label: '📖 Learning', value: 'Learning' }
       ]
     },
-    ProficiencyScore: {
+    proficiency_score: {
       type: 'number',
       label: 'Proficiency Score',
       precision: 0,
@@ -46,78 +46,78 @@ const AgentSkill = {
       description: 'Numeric proficiency score (0-100)'
     },
     // Verification
-    IsVerified: {
+    is_verified: {
       type: 'checkbox',
       label: 'Verified',
       defaultValue: false,
       description: 'Skill has been verified by manager/system'
     },
-    VerifiedDate: {
+    verified_date: {
       type: 'datetime',
       label: 'Verified Date',
       readonly: true
     },
-    VerifiedById: {
+    verified_by_id: {
       type: 'lookup',
       label: 'Verified By',
       reference: 'User',
       readonly: true
     },
     // Certification
-    CertificationNumber: {
+    certification_number: {
       type: 'text',
       label: 'Certification Number',
       maxLength: 100
     },
-    CertificationDate: {
+    certification_date: {
       type: 'date',
       label: 'Certification Date'
     },
-    CertificationExpiry: {
+    certification_expiry: {
       type: 'date',
       label: 'Certification Expiry'
     },
-    IsCertified: {
+    is_certified: {
       type: 'checkbox',
       label: 'Currently Certified',
       readonly: true,
       defaultValue: false
     },
     // Experience
-    YearsOfExperience: {
+    years_of_experience: {
       type: 'number',
       label: 'Years of Experience',
       precision: 1,
       min: 0
     },
-    LastUsedDate: {
+    last_used_date: {
       type: 'datetime',
       label: 'Last Used',
       readonly: true,
       description: 'Last time this skill was used in case resolution'
     },
     // Training
-    LastTrainingDate: {
+    last_training_date: {
       type: 'date',
       label: 'Last Training'
     },
-    NextTrainingDate: {
+    next_training_date: {
       type: 'date',
       label: 'Next Training'
     },
-    TrainingRequired: {
+    training_required: {
       type: 'checkbox',
       label: 'Training Required',
       defaultValue: false
     },
     // Routing Preferences
-    AcceptCases: {
+    accept_cases: {
       type: 'checkbox',
       label: 'Accept Cases',
       defaultValue: true,
       description: 'Accept cases requiring this skill'
     },
-    MaxConcurrentCases: {
+    max_concurrent_cases: {
       type: 'number',
       label: 'Max Concurrent Cases',
       precision: 0,
@@ -125,37 +125,37 @@ const AgentSkill = {
       description: 'Maximum concurrent cases using this skill (0 = unlimited)'
     },
     // Performance Statistics
-    CasesHandled: {
+    cases_handled: {
       type: 'number',
       label: 'Cases Handled',
       precision: 0,
       readonly: true,
       description: 'Total cases handled using this skill'
     },
-    AverageResolutionTime: {
+    average_resolution_time: {
       type: 'number',
       label: 'Avg Resolution Time (Minutes)',
       precision: 2,
       readonly: true
     },
-    CustomerSatisfactionAvg: {
+    customer_satisfaction_avg: {
       type: 'number',
       label: 'Avg CSAT Score',
       precision: 2,
       readonly: true,
       description: 'Average customer satisfaction score (1-5)'
     },
-    SuccessRate: {
+    success_rate: {
       type: 'number',
       label: 'Success Rate (%)',
       precision: 2,
       readonly: true,
       description: 'Percentage of cases resolved within SLA'
     },
-    // Notes
-    Notes: {
+    // notes
+    notes: {
       type: 'textarea',
-      label: 'Notes',
+      label: 'notes',
       maxLength: 2000
     }
   },
@@ -163,22 +163,22 @@ const AgentSkill = {
     {
       name: 'UniqueUserSkill',
       errorMessage: 'This agent already has this skill assigned',
-      formula: 'AND(NOT(ISNEW()), EXISTS(SELECT Id FROM AgentSkill WHERE UserId = $UserId AND SkillId = $SkillId AND Id != $Id))'
+      formula: 'AND(NOT(ISNEW()), EXISTS(SELECT Id FROM AgentSkill WHERE user_id = $user_id AND skill_id = $skill_id AND Id != $Id))'
     },
     {
       name: 'CertificationNumberRequired',
       errorMessage: 'Certification number is required when skill requires certification',
-      formula: 'AND(Skill.RequiresCertification = true, ISBLANK(CertificationNumber))'
+      formula: 'AND(Skill.RequiresCertification = true, ISBLANK(certification_number))'
     },
     {
       name: 'CertificationDateRequired',
       errorMessage: 'Certification date is required when certification number is provided',
-      formula: 'AND(NOT(ISBLANK(CertificationNumber)), ISBLANK(CertificationDate))'
+      formula: 'AND(NOT(ISBLANK(certification_number)), ISBLANK(certification_date))'
     },
     {
       name: 'ProficiencyScoreRange',
       errorMessage: 'Proficiency score must be between 0 and 100',
-      formula: 'OR(ProficiencyScore < 0, ProficiencyScore > 100)'
+      formula: 'OR(proficiency_score < 0, proficiency_score > 100)'
     }
   ],
   listViews: [
@@ -186,52 +186,52 @@ const AgentSkill = {
       name: 'AllAgentSkills',
       label: 'All Agent Skills',
       filters: [],
-      columns: ['UserId', 'SkillId', 'ProficiencyLevel', 'ProficiencyScore', 'IsVerified', 'AcceptCases'],
-      sort: [['UserId', 'asc'], ['ProficiencyScore', 'desc']]
+      columns: ['user_id', 'skill_id', 'proficiency_level', 'proficiency_score', 'is_verified', 'accept_cases'],
+      sort: [['user_id', 'asc'], ['proficiency_score', 'desc']]
     },
     {
       name: 'ByAgent',
       label: 'By Agent',
       filters: [],
-      columns: ['UserId', 'SkillId', 'ProficiencyLevel', 'CasesHandled', 'SuccessRate', 'CustomerSatisfactionAvg'],
-      sort: [['UserId', 'asc']]
+      columns: ['user_id', 'skill_id', 'proficiency_level', 'cases_handled', 'success_rate', 'customer_satisfaction_avg'],
+      sort: [['user_id', 'asc']]
     },
     {
       name: 'BySkill',
       label: 'By Skill',
       filters: [],
-      columns: ['SkillId', 'UserId', 'ProficiencyLevel', 'ProficiencyScore', 'IsVerified', 'AcceptCases'],
-      sort: [['SkillId', 'asc'], ['ProficiencyScore', 'desc']]
+      columns: ['skill_id', 'user_id', 'proficiency_level', 'proficiency_score', 'is_verified', 'accept_cases'],
+      sort: [['skill_id', 'asc'], ['proficiency_score', 'desc']]
     },
     {
       name: 'VerifiedExperts',
       label: 'Verified Experts',
       filters: [
-        ['IsVerified', '=', true],
-        ['ProficiencyLevel', 'in', ['Expert', 'Advanced']],
-        ['AcceptCases', '=', true]
+        ['is_verified', '=', true],
+        ['proficiency_level', 'in', ['Expert', 'Advanced']],
+        ['accept_cases', '=', true]
       ],
-      columns: ['UserId', 'SkillId', 'ProficiencyLevel', 'CasesHandled', 'SuccessRate', 'CustomerSatisfactionAvg'],
-      sort: [['ProficiencyScore', 'desc']]
+      columns: ['user_id', 'skill_id', 'proficiency_level', 'cases_handled', 'success_rate', 'customer_satisfaction_avg'],
+      sort: [['proficiency_score', 'desc']]
     },
     {
       name: 'NeedTraining',
       label: 'Need Training',
       filters: [
-        ['TrainingRequired', '=', true]
+        ['training_required', '=', true]
       ],
-      columns: ['UserId', 'SkillId', 'LastTrainingDate', 'NextTrainingDate', 'ProficiencyLevel'],
-      sort: [['NextTrainingDate', 'asc']]
+      columns: ['user_id', 'skill_id', 'last_training_date', 'next_training_date', 'proficiency_level'],
+      sort: [['next_training_date', 'asc']]
     },
     {
       name: 'ExpiringCertifications',
       label: 'Expiring Certifications',
       filters: [
-        ['CertificationExpiry', 'next_n_days', 90],
-        ['CertificationExpiry', '!=', null]
+        ['certification_expiry', 'next_n_days', 90],
+        ['certification_expiry', '!=', null]
       ],
-      columns: ['UserId', 'SkillId', 'CertificationNumber', 'CertificationExpiry', 'IsCertified'],
-      sort: [['CertificationExpiry', 'asc']]
+      columns: ['user_id', 'skill_id', 'certification_number', 'certification_expiry', 'is_certified'],
+      sort: [['certification_expiry', 'asc']]
     }
   ],
   pageLayout: {
@@ -239,42 +239,42 @@ const AgentSkill = {
       {
         label: 'Agent & Skill',
         columns: 2,
-        fields: ['UserId', 'SkillId']
+        fields: ['user_id', 'skill_id']
       },
       {
         label: 'Proficiency',
         columns: 2,
-        fields: ['ProficiencyLevel', 'ProficiencyScore', 'YearsOfExperience']
+        fields: ['proficiency_level', 'proficiency_score', 'years_of_experience']
       },
       {
         label: 'Verification',
         columns: 3,
-        fields: ['IsVerified', 'VerifiedDate', 'VerifiedById']
+        fields: ['is_verified', 'verified_date', 'verified_by_id']
       },
       {
         label: 'Certification',
         columns: 2,
-        fields: ['CertificationNumber', 'CertificationDate', 'CertificationExpiry', 'IsCertified']
+        fields: ['certification_number', 'certification_date', 'certification_expiry', 'is_certified']
       },
       {
         label: 'Training',
         columns: 3,
-        fields: ['LastTrainingDate', 'NextTrainingDate', 'TrainingRequired']
+        fields: ['last_training_date', 'next_training_date', 'training_required']
       },
       {
         label: 'Routing Preferences',
         columns: 2,
-        fields: ['AcceptCases', 'MaxConcurrentCases', 'LastUsedDate']
+        fields: ['accept_cases', 'max_concurrent_cases', 'last_used_date']
       },
       {
         label: 'Performance',
         columns: 2,
-        fields: ['CasesHandled', 'AverageResolutionTime', 'CustomerSatisfactionAvg', 'SuccessRate']
+        fields: ['cases_handled', 'average_resolution_time', 'customer_satisfaction_avg', 'success_rate']
       },
       {
         label: 'Additional Information',
         columns: 1,
-        fields: ['Notes']
+        fields: ['notes']
       }
     ]
   }

@@ -12,21 +12,21 @@ const MarketingList = {
   },
   fields: {
     // Basic Information
-    Name: {
+    name: {
       type: 'text',
       label: '列表名称',
       required: true,
       maxLength: 255,
       searchable: true
     },
-    ListCode: {
+    list_code: {
       type: 'text',
       label: '列表代码',
       unique: true,
       maxLength: 80,
       description: '用于API调用的唯一标识符'
     },
-    Description: {
+    description: {
       type: 'textarea',
       label: '描述',
       maxLength: 2000,
@@ -34,7 +34,7 @@ const MarketingList = {
     },
     
     // List Type & Configuration
-    ListType: {
+    list_type: {
       type: 'select',
       label: '列表类型',
       required: true,
@@ -46,7 +46,7 @@ const MarketingList = {
       ],
       description: '静态=手动添加，动态=自动更新，混合=两者结合'
     },
-    MemberType: {
+    member_type: {
       type: 'select',
       label: '成员类型',
       required: true,
@@ -60,13 +60,13 @@ const MarketingList = {
     },
     
     // Dynamic List Configuration
-    FilterCriteriaJson: {
+    filter_criteria_json: {
       type: 'textarea',
       label: '筛选条件 JSON',
       maxLength: 65535,
       description: '动态列表的查询条件（ObjectQL格式）'
     },
-    RefreshFrequency: {
+    refresh_frequency: {
       type: 'select',
       label: '刷新频率',
       options: [
@@ -78,14 +78,14 @@ const MarketingList = {
       ],
       description: '动态列表成员更新频率'
     },
-    LastRefreshedDate: {
+    last_refreshed_date: {
       type: 'datetime',
       label: '最后刷新时间',
       readonly: true
     },
     
     // Campaign Association
-    CampaignId: {
+    campaign_id: {
       type: 'lookup',
       label: '关联营销活动',
       reference: 'Campaign',
@@ -93,7 +93,7 @@ const MarketingList = {
     },
     
     // List Segmentation
-    SegmentCategory: {
+    segment_category: {
       type: 'select',
       label: '细分类别',
       options: [
@@ -107,15 +107,15 @@ const MarketingList = {
         { label: '🎨 自定义', value: 'Custom' }
       ]
     },
-    TargetAudience: {
+    target_audience: {
       type: 'textarea',
       label: '目标受众描述',
       maxLength: 2000,
       description: '此列表的目标受众特征'
     },
     
-    // Status & Ownership
-    Status: {
+    // status & Ownership
+    status: {
       type: 'select',
       label: '状态',
       required: true,
@@ -126,12 +126,12 @@ const MarketingList = {
         { label: '📦 已归档', value: 'Archived' }
       ]
     },
-    IsActive: {
+    is_active: {
       type: 'checkbox',
       label: '是否启用',
       defaultValue: true
     },
-    OwnerId: {
+    owner_id: {
       type: 'lookup',
       label: '负责人',
       reference: 'User',
@@ -139,7 +139,7 @@ const MarketingList = {
     },
     
     // Member Statistics
-    TotalMembers: {
+    total_members: {
       type: 'number',
       label: '总成员数',
       precision: 0,
@@ -147,7 +147,7 @@ const MarketingList = {
       readonly: true,
       description: '列表中的总成员数'
     },
-    ActiveMembers: {
+    active_members: {
       type: 'number',
       label: '活跃成员数',
       precision: 0,
@@ -155,14 +155,14 @@ const MarketingList = {
       readonly: true,
       description: '未退订且邮件可送达的成员数'
     },
-    UnsubscribedMembers: {
+    unsubscribed_members: {
       type: 'number',
       label: '已退订成员数',
       precision: 0,
       defaultValue: 0,
       readonly: true
     },
-    BouncedMembers: {
+    bounced_members: {
       type: 'number',
       label: '退信成员数',
       precision: 0,
@@ -171,21 +171,21 @@ const MarketingList = {
     },
     
     // Engagement Metrics
-    AverageEngagementScore: {
+    average_engagement_score: {
       type: 'number',
       label: '平均参与度评分',
       precision: 2,
       readonly: true,
       description: '列表成员的平均参与度评分'
     },
-    AverageLeadScore: {
+    average_lead_score: {
       type: 'number',
       label: '平均线索评分',
       precision: 2,
       readonly: true,
       description: '列表中线索的平均评分'
     },
-    TotalCampaignsSent: {
+    total_campaigns_sent: {
       type: 'number',
       label: '发送活动数',
       precision: 0,
@@ -195,19 +195,19 @@ const MarketingList = {
     },
     
     // Email Deliverability
-    DeliverabilityRate: {
+    deliverability_rate: {
       type: 'percent',
       label: '可送达率',
       readonly: true,
       description: '成功送达的邮件占比'
     },
-    AverageOpenRate: {
+    average_open_rate: {
       type: 'percent',
       label: '平均打开率',
       readonly: true,
       description: '此列表历史营销活动的平均打开率'
     },
-    AverageClickRate: {
+    average_click_rate: {
       type: 'percent',
       label: '平均点击率',
       readonly: true,
@@ -215,25 +215,25 @@ const MarketingList = {
     },
     
     // Suppression & Compliance
-    SuppressDuplicates: {
+    suppress_duplicates: {
       type: 'checkbox',
       label: '去重',
       defaultValue: true,
       description: '自动去除重复成员'
     },
-    SuppressUnsubscribed: {
+    suppress_unsubscribed: {
       type: 'checkbox',
       label: '排除已退订',
       defaultValue: true,
       description: '自动排除已退订的联系人'
     },
-    SuppressBounced: {
+    suppress_bounced: {
       type: 'checkbox',
       label: '排除硬退信',
       defaultValue: true,
       description: '自动排除硬退信的邮箱地址'
     },
-    IncludeOptedOutContacts: {
+    include_opted_out_contacts: {
       type: 'checkbox',
       label: '包含营销退出联系人',
       defaultValue: false,
@@ -241,19 +241,19 @@ const MarketingList = {
     },
     
     // GDPR & Privacy
-    ConsentRequired: {
+    consent_required: {
       type: 'checkbox',
       label: '需要营销同意',
       defaultValue: true,
       description: 'GDPR合规：只包含明确同意营销的联系人'
     },
-    DataRetentionDays: {
+    data_retention_days: {
       type: 'number',
       label: '数据保留天数',
       precision: 0,
       description: '成员数据保留期限（天）'
     },
-    LastComplianceCheck: {
+    last_compliance_check: {
       type: 'datetime',
       label: '最后合规检查',
       readonly: true,
@@ -261,18 +261,18 @@ const MarketingList = {
     },
     
     // Import/Export
-    LastImportDate: {
+    last_import_date: {
       type: 'datetime',
       label: '最后导入时间',
       readonly: true
     },
-    LastImportCount: {
+    last_import_count: {
       type: 'number',
       label: '最后导入数量',
       precision: 0,
       readonly: true
     },
-    SourceSystem: {
+    source_system: {
       type: 'text',
       label: '来源系统',
       maxLength: 100,
@@ -280,21 +280,21 @@ const MarketingList = {
     },
     
     // AI Enhancement
-    AISuggestedSegments: {
+    a_i_suggested_segments: {
       type: 'textarea',
       label: 'AI 建议细分',
       readonly: true,
       maxLength: 2000,
       description: 'AI 分析建议的额外细分维度'
     },
-    AIEngagementPrediction: {
+    a_i_engagement_prediction: {
       type: 'textarea',
       label: 'AI 参与度预测',
       readonly: true,
       maxLength: 2000,
       description: 'AI 预测的列表参与度趋势'
     },
-    AISuggestedContent: {
+    a_i_suggested_content: {
       type: 'textarea',
       label: 'AI 内容建议',
       readonly: true,
@@ -307,14 +307,14 @@ const MarketingList = {
       name: 'Campaign',
       type: 'belongsTo',
       object: 'Campaign',
-      foreignKey: 'CampaignId',
+      foreignKey: 'campaign_id',
       label: '营销活动'
     },
     {
       name: 'Owner',
       type: 'belongsTo',
       object: 'User',
-      foreignKey: 'OwnerId',
+      foreignKey: 'owner_id',
       label: '负责人'
     }
   ],
@@ -323,55 +323,55 @@ const MarketingList = {
       name: 'AllLists',
       label: '所有列表',
       filters: [],
-      columns: ['Name', 'ListType', 'MemberType', 'TotalMembers', 'ActiveMembers', 'Status', 'LastRefreshedDate'],
+      columns: ['name', 'list_type', 'member_type', 'total_members', 'active_members', 'status', 'last_refreshed_date'],
       sort: [['CreatedDate', 'desc']]
     },
     {
       name: 'ActiveLists',
       label: '活跃列表',
-      filters: [['Status', '=', 'Active'], ['IsActive', '=', true]],
-      columns: ['Name', 'ListType', 'TotalMembers', 'AverageOpenRate', 'AverageClickRate', 'TotalCampaignsSent'],
-      sort: [['TotalMembers', 'desc']]
+      filters: [['status', '=', 'Active'], ['is_active', '=', true]],
+      columns: ['name', 'list_type', 'total_members', 'average_open_rate', 'average_click_rate', 'total_campaigns_sent'],
+      sort: [['total_members', 'desc']]
     },
     {
       name: 'DynamicLists',
       label: '动态列表',
-      filters: [['ListType', '=', 'Dynamic']],
-      columns: ['Name', 'MemberType', 'RefreshFrequency', 'TotalMembers', 'LastRefreshedDate'],
-      sort: [['LastRefreshedDate', 'desc']]
+      filters: [['list_type', '=', 'Dynamic']],
+      columns: ['name', 'member_type', 'refresh_frequency', 'total_members', 'last_refreshed_date'],
+      sort: [['last_refreshed_date', 'desc']]
     },
     {
       name: 'MyLists',
       label: '我的列表',
-      filters: [['OwnerId', '=', '$CurrentUser.Id']],
-      columns: ['Name', 'ListType', 'TotalMembers', 'Status', 'ModifiedDate'],
+      filters: [['owner_id', '=', '$CurrentUser.Id']],
+      columns: ['name', 'list_type', 'total_members', 'status', 'ModifiedDate'],
       sort: [['ModifiedDate', 'desc']]
     },
     {
       name: 'HighEngagement',
       label: '高参与度列表',
-      filters: [['AverageOpenRate', '>', 25], ['TotalCampaignsSent', '>', 3]],
-      columns: ['Name', 'TotalMembers', 'AverageOpenRate', 'AverageClickRate', 'AverageEngagementScore'],
-      sort: [['AverageOpenRate', 'desc']]
+      filters: [['average_open_rate', '>', 25], ['total_campaigns_sent', '>', 3]],
+      columns: ['name', 'total_members', 'average_open_rate', 'average_click_rate', 'average_engagement_score'],
+      sort: [['average_open_rate', 'desc']]
     },
     {
       name: 'NeedsCleanup',
       label: '需要清理',
-      filters: [['UnsubscribedMembers', '>', 100]],
-      columns: ['Name', 'TotalMembers', 'UnsubscribedMembers', 'BouncedMembers', 'LastRefreshedDate'],
-      sort: [['UnsubscribedMembers', 'desc']]
+      filters: [['unsubscribed_members', '>', 100]],
+      columns: ['name', 'total_members', 'unsubscribed_members', 'bounced_members', 'last_refreshed_date'],
+      sort: [['unsubscribed_members', 'desc']]
     }
   ],
   validationRules: [
     {
       name: 'DynamicListRequiresFilter',
       errorMessage: '动态列表必须定义筛选条件',
-      formula: 'AND(OR(ListType = "Dynamic", ListType = "Hybrid"), ISBLANK(FilterCriteriaJson))'
+      formula: 'AND(OR(list_type = "Dynamic", list_type = "Hybrid"), ISBLANK(filter_criteria_json))'
     },
     {
       name: 'ConsentRequiredForMarketing',
       errorMessage: '营销列表必须启用同意要求以符合GDPR',
-      formula: 'AND(SegmentCategory = "Product Interest", NOT(ConsentRequired))'
+      formula: 'AND(segment_category = "Product Interest", NOT(consent_required))'
     }
   ],
   pageLayout: {
@@ -379,57 +379,57 @@ const MarketingList = {
       {
         label: '列表信息',
         columns: 2,
-        fields: ['Name', 'ListCode', 'ListType', 'MemberType', 'Status', 'IsActive', 'OwnerId', 'CampaignId']
+        fields: ['name', 'list_code', 'list_type', 'member_type', 'status', 'is_active', 'owner_id', 'campaign_id']
       },
       {
         label: '细分配置',
         columns: 2,
-        fields: ['SegmentCategory', 'TargetAudience']
+        fields: ['segment_category', 'target_audience']
       },
       {
         label: '动态列表配置',
         columns: 2,
-        fields: ['FilterCriteriaJson', 'RefreshFrequency', 'LastRefreshedDate']
+        fields: ['filter_criteria_json', 'refresh_frequency', 'last_refreshed_date']
       },
       {
         label: '成员统计',
         columns: 4,
-        fields: ['TotalMembers', 'ActiveMembers', 'UnsubscribedMembers', 'BouncedMembers']
+        fields: ['total_members', 'active_members', 'unsubscribed_members', 'bounced_members']
       },
       {
         label: '参与度指标',
         columns: 3,
-        fields: ['AverageEngagementScore', 'AverageLeadScore', 'TotalCampaignsSent']
+        fields: ['average_engagement_score', 'average_lead_score', 'total_campaigns_sent']
       },
       {
         label: '邮件绩效',
         columns: 3,
-        fields: ['DeliverabilityRate', 'AverageOpenRate', 'AverageClickRate']
+        fields: ['deliverability_rate', 'average_open_rate', 'average_click_rate']
       },
       {
         label: '排除规则',
         columns: 2,
-        fields: ['SuppressDuplicates', 'SuppressUnsubscribed', 'SuppressBounced', 'IncludeOptedOutContacts']
+        fields: ['suppress_duplicates', 'suppress_unsubscribed', 'suppress_bounced', 'include_opted_out_contacts']
       },
       {
         label: 'GDPR 合规',
         columns: 3,
-        fields: ['ConsentRequired', 'DataRetentionDays', 'LastComplianceCheck']
+        fields: ['consent_required', 'data_retention_days', 'last_compliance_check']
       },
       {
         label: '导入/导出',
         columns: 3,
-        fields: ['LastImportDate', 'LastImportCount', 'SourceSystem']
+        fields: ['last_import_date', 'last_import_count', 'source_system']
       },
       {
         label: 'AI 营销助手',
         columns: 1,
-        fields: ['AISuggestedSegments', 'AIEngagementPrediction', 'AISuggestedContent']
+        fields: ['a_i_suggested_segments', 'a_i_engagement_prediction', 'a_i_suggested_content']
       },
       {
         label: '描述',
         columns: 1,
-        fields: ['Description']
+        fields: ['description']
       }
     ]
   }

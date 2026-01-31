@@ -11,46 +11,46 @@ const PortalUser = {
   },
   fields: {
     // User Information
-    Username: {
+    username: {
       type: 'text',
-      label: 'Username',
+      label: 'username',
       required: true,
       maxLength: 100,
       searchable: true
     },
-    Email: {
+    email: {
       type: 'email',
-      label: 'Email',
+      label: 'email',
       required: true,
       searchable: true
     },
-    FirstName: {
+    first_name: {
       type: 'text',
       label: 'First Name',
       required: true,
       maxLength: 100
     },
-    LastName: {
+    last_name: {
       type: 'text',
       label: 'Last Name',
       required: true,
       maxLength: 100
     },
-    FullName: {
+    full_name: {
       type: 'text',
       label: 'Full Name',
       maxLength: 200,
       readonly: true
     },
     // Contact & Account
-    ContactId: {
+    contact_id: {
       type: 'lookup',
       label: 'Contact',
       reference: 'Contact',
       required: true,
       description: 'Associated contact record'
     },
-    AccountId: {
+    account_id: {
       type: 'lookup',
       label: 'Account',
       reference: 'Account',
@@ -58,14 +58,14 @@ const PortalUser = {
       description: 'Associated account record'
     },
     // Access Control
-    IsActive: {
+    is_active: {
       type: 'checkbox',
       label: 'Active',
       defaultValue: true
     },
-    Status: {
+    status: {
       type: 'select',
-      label: 'Status',
+      label: 'status',
       required: true,
       defaultValue: 'Active',
       options: [
@@ -76,7 +76,7 @@ const PortalUser = {
         { label: '⏳ Pending Approval', value: 'PendingApproval' }
       ]
     },
-    UserRole: {
+    user_role: {
       type: 'select',
       label: 'Portal Role',
       required: true,
@@ -88,7 +88,7 @@ const PortalUser = {
         { label: '🎓 Limited', value: 'Limited' }
       ]
     },
-    CustomerTier: {
+    customer_tier: {
       type: 'select',
       label: 'Customer Tier',
       options: [
@@ -100,79 +100,79 @@ const PortalUser = {
       ]
     },
     // Authentication
-    LastLoginDate: {
+    last_login_date: {
       type: 'datetime',
       label: 'Last Login',
       readonly: true
     },
-    LastLoginIP: {
+    last_login_i_p: {
       type: 'text',
       label: 'Last Login IP',
       maxLength: 45,
       readonly: true
     },
-    LoginCount: {
+    login_count: {
       type: 'number',
       label: 'Login Count',
       precision: 0,
       readonly: true,
       defaultValue: 0
     },
-    FailedLoginAttempts: {
+    failed_login_attempts: {
       type: 'number',
       label: 'Failed Login Attempts',
       precision: 0,
       readonly: true,
       defaultValue: 0
     },
-    PasswordLastChangedDate: {
+    password_last_changed_date: {
       type: 'datetime',
       label: 'Password Last Changed',
       readonly: true
     },
-    MustChangePassword: {
+    must_change_password: {
       type: 'checkbox',
       label: 'Must Change Password',
       defaultValue: false
     },
-    TwoFactorEnabled: {
+    two_factor_enabled: {
       type: 'checkbox',
       label: 'Two-Factor Auth Enabled',
       defaultValue: false
     },
     // Permissions
-    CanSubmitCases: {
+    can_submit_cases: {
       type: 'checkbox',
       label: 'Can Submit Cases',
       defaultValue: true
     },
-    CanViewAllAccountCases: {
+    can_view_all_account_cases: {
       type: 'checkbox',
       label: 'View All Account Cases',
       defaultValue: false,
       description: 'View cases from entire account'
     },
-    CanAccessKnowledgeBase: {
+    can_access_knowledge_base: {
       type: 'checkbox',
       label: 'Access Knowledge Base',
       defaultValue: true
     },
-    CanAccessCommunity: {
+    can_access_community: {
       type: 'checkbox',
       label: 'Access Community Forum',
       defaultValue: true
     },
-    CanDownloadResources: {
+    can_download_resources: {
       type: 'checkbox',
       label: 'Download Resources',
       defaultValue: true
     },
-    CanCommentOnCases: {
+    can_comment_on_cases: {
       type: 'checkbox',
       label: 'Comment on Cases',
       defaultValue: true
     },
-    MaxCasesPerMonth: {
+    max_cases_per_month: {
       type: 'number',
       label: 'Max Cases Per Month',
       precision: 0,
@@ -180,9 +180,9 @@ const PortalUser = {
       description: '0 = unlimited'
     },
     // Preferences
-    Language: {
+    language: {
       type: 'select',
-      label: 'Language',
+      label: 'language',
       defaultValue: 'en',
       options: [
         { label: 'English', value: 'en' },
@@ -195,7 +195,7 @@ const PortalUser = {
         { label: '한국어', value: 'ko' }
       ]
     },
-    TimeZone: {
+    time_zone: {
       type: 'select',
       label: 'Time Zone',
       defaultValue: 'Asia/Shanghai',
@@ -209,29 +209,29 @@ const PortalUser = {
         { label: 'Australia/Sydney', value: 'Australia/Sydney' }
       ]
     },
-    EmailNotifications: {
+    email_notifications: {
       type: 'checkbox',
-      label: 'Email Notifications',
+      label: 'email Notifications',
       defaultValue: true
     },
-    SMSNotifications: {
+    s_m_s_notifications: {
       type: 'checkbox',
       label: 'SMS Notifications',
       defaultValue: false
     },
-    NotifyOnCaseUpdate: {
+    notify_on_case_update: {
       type: 'checkbox',
       label: 'Notify on Case Update',
       defaultValue: true
     },
-    NotifyOnCaseResolved: {
+    notify_on_case_resolved: {
       type: 'checkbox',
       label: 'Notify on Case Resolved',
       defaultValue: true
     },
-    DigestFrequency: {
+    digest_frequency: {
       type: 'select',
-      label: 'Email Digest Frequency',
+      label: 'email Digest Frequency',
       defaultValue: 'Weekly',
       options: [
         { label: 'Daily', value: 'Daily' },
@@ -241,98 +241,98 @@ const PortalUser = {
       ]
     },
     // Usage Statistics
-    CasesSubmitted: {
+    cases_submitted: {
       type: 'number',
       label: 'Cases Submitted',
       precision: 0,
       readonly: true,
       defaultValue: 0
     },
-    CasesThisMonth: {
+    cases_this_month: {
       type: 'number',
       label: 'Cases This Month',
       precision: 0,
       readonly: true,
       defaultValue: 0
     },
-    ArticlesViewed: {
+    articles_viewed: {
       type: 'number',
       label: 'Articles Viewed',
       precision: 0,
       readonly: true,
       defaultValue: 0
     },
-    ForumPostsCreated: {
+    forum_posts_created: {
       type: 'number',
       label: 'Forum Posts',
       precision: 0,
       readonly: true,
       defaultValue: 0
     },
-    ResourcesDownloaded: {
+    resources_downloaded: {
       type: 'number',
       label: 'Resources Downloaded',
       precision: 0,
       readonly: true,
       defaultValue: 0
     },
-    AverageSatisfactionScore: {
+    average_satisfaction_score: {
       type: 'number',
       label: 'Avg Satisfaction Score',
       precision: 2,
       readonly: true,
       description: 'Average CSAT score (1-5)'
     },
-    LastActivityDate: {
+    last_activity_date: {
       type: 'datetime',
       label: 'Last Activity',
       readonly: true
     },
     // Registration
-    RegistrationDate: {
+    registration_date: {
       type: 'datetime',
       label: 'Registration Date',
       readonly: true,
       defaultValue: 'NOW()'
     },
-    ActivationDate: {
+    activation_date: {
       type: 'datetime',
       label: 'Activation Date',
       readonly: true
     },
-    ApprovedById: {
+    approved_by_id: {
       type: 'lookup',
       label: 'Approved By',
       reference: 'User',
       readonly: true
     },
-    ApprovalDate: {
+    approval_date: {
       type: 'datetime',
       label: 'Approval Date',
       readonly: true
     },
-    // Notes
-    Notes: {
+    // notes
+    notes: {
       type: 'textarea',
-      label: 'Notes',
+      label: 'notes',
       maxLength: 2000
     }
   },
   validationRules: [
     {
       name: 'UniqueUsername',
-      errorMessage: 'Username must be unique',
-      formula: 'AND(NOT(ISNEW()), EXISTS(SELECT Id FROM PortalUser WHERE Username = $Username AND Id != $Id))'
+      errorMessage: 'username must be unique',
+      formula: 'AND(NOT(ISNEW()), EXISTS(SELECT Id FROM PortalUser WHERE username = $username AND Id != $Id))'
     },
     {
       name: 'UniqueEmail',
-      errorMessage: 'Email must be unique',
-      formula: 'AND(NOT(ISNEW()), EXISTS(SELECT Id FROM PortalUser WHERE Email = $Email AND Id != $Id))'
+      errorMessage: 'email must be unique',
+      formula: 'AND(NOT(ISNEW()), EXISTS(SELECT Id FROM PortalUser WHERE email = $email AND Id != $Id))'
     },
     {
       name: 'ContactAccountMatch',
       errorMessage: 'Contact must belong to the selected Account',
-      formula: 'AND(NOT(ISBLANK(ContactId)), NOT(ISBLANK(AccountId)))'
+      formula: 'AND(NOT(ISBLANK(contact_id)), NOT(ISBLANK(account_id)))'
     }
   ],
   listViews: [
@@ -340,55 +340,55 @@ const PortalUser = {
       name: 'AllUsers',
       label: 'All Portal Users',
       filters: [],
-      columns: ['Username', 'FullName', 'Email', 'AccountId', 'Status', 'LastLoginDate'],
+      columns: ['username', 'full_name', 'email', 'account_id', 'status', 'last_login_date'],
       sort: [['CreatedDate', 'desc']]
     },
     {
       name: 'ActiveUsers',
       label: 'Active Users',
       filters: [
-        ['IsActive', '=', true],
-        ['Status', '=', 'Active']
+        ['is_active', '=', true],
+        ['status', '=', 'Active']
       ],
-      columns: ['Username', 'FullName', 'Email', 'AccountId', 'UserRole', 'LoginCount', 'LastLoginDate'],
-      sort: [['LastLoginDate', 'desc']]
+      columns: ['username', 'full_name', 'email', 'account_id', 'user_role', 'login_count', 'last_login_date'],
+      sort: [['last_login_date', 'desc']]
     },
     {
       name: 'PendingApproval',
       label: 'Pending Approval',
       filters: [
-        ['Status', '=', 'PendingApproval']
+        ['status', '=', 'PendingApproval']
       ],
-      columns: ['Username', 'FullName', 'Email', 'AccountId', 'RegistrationDate'],
-      sort: [['RegistrationDate', 'asc']]
+      columns: ['username', 'full_name', 'email', 'account_id', 'registration_date'],
+      sort: [['registration_date', 'asc']]
     },
     {
       name: 'RecentlyActive',
       label: 'Recently Active',
       filters: [
-        ['LastActivityDate', 'last_n_days', 7],
-        ['IsActive', '=', true]
+        ['last_activity_date', 'last_n_days', 7],
+        ['is_active', '=', true]
       ],
-      columns: ['Username', 'FullName', 'LastActivityDate', 'CasesThisMonth', 'ArticlesViewed'],
-      sort: [['LastActivityDate', 'desc']]
+      columns: ['username', 'full_name', 'last_activity_date', 'cases_this_month', 'articles_viewed'],
+      sort: [['last_activity_date', 'desc']]
     },
     {
       name: 'HighUsage',
       label: 'High Usage',
       filters: [
-        ['CasesThisMonth', '>', 5],
-        ['IsActive', '=', true]
+        ['cases_this_month', '>', 5],
+        ['is_active', '=', true]
       ],
-      columns: ['Username', 'FullName', 'AccountId', 'CasesThisMonth', 'MaxCasesPerMonth', 'AverageSatisfactionScore'],
-      sort: [['CasesThisMonth', 'desc']]
+      columns: ['username', 'full_name', 'account_id', 'cases_this_month', 'max_cases_per_month', 'average_satisfaction_score'],
+      sort: [['cases_this_month', 'desc']]
     },
     {
       name: 'LockedAccounts',
       label: 'Locked Accounts',
       filters: [
-        ['Status', 'in', ['Locked', 'Suspended']]
+        ['status', 'in', ['Locked', 'Suspended']]
       ],
-      columns: ['Username', 'FullName', 'Email', 'Status', 'FailedLoginAttempts', 'ModifiedDate'],
+      columns: ['username', 'full_name', 'email', 'status', 'failed_login_attempts', 'ModifiedDate'],
       sort: [['ModifiedDate', 'desc']]
     }
   ],
@@ -397,47 +397,47 @@ const PortalUser = {
       {
         label: 'User Information',
         columns: 2,
-        fields: ['Username', 'Email', 'FirstName', 'LastName', 'FullName']
+        fields: ['username', 'email', 'first_name', 'last_name', 'full_name']
       },
       {
         label: 'Associated Records',
         columns: 2,
-        fields: ['ContactId', 'AccountId']
+        fields: ['contact_id', 'account_id']
       },
       {
         label: 'Access Control',
         columns: 2,
-        fields: ['IsActive', 'Status', 'UserRole', 'CustomerTier']
+        fields: ['is_active', 'status', 'user_role', 'customer_tier']
       },
       {
         label: 'Authentication',
         columns: 3,
-        fields: ['LastLoginDate', 'LastLoginIP', 'LoginCount', 'FailedLoginAttempts', 'PasswordLastChangedDate', 'MustChangePassword', 'TwoFactorEnabled']
+        fields: ['last_login_date', 'last_login_i_p', 'login_count', 'failed_login_attempts', 'password_last_changed_date', 'must_change_password', 'two_factor_enabled']
       },
       {
         label: 'Permissions',
         columns: 3,
-        fields: ['CanSubmitCases', 'CanViewAllAccountCases', 'CanAccessKnowledgeBase', 'CanAccessCommunity', 'CanDownloadResources', 'CanCommentOnCases', 'MaxCasesPerMonth']
+        fields: ['can_submit_cases', 'can_view_all_account_cases', 'can_access_knowledge_base', 'can_access_community', 'can_download_resources', 'can_comment_on_cases', 'max_cases_per_month']
       },
       {
         label: 'Preferences',
         columns: 2,
-        fields: ['Language', 'TimeZone', 'EmailNotifications', 'SMSNotifications', 'NotifyOnCaseUpdate', 'NotifyOnCaseResolved', 'DigestFrequency']
+        fields: ['language', 'time_zone', 'email_notifications', 's_m_s_notifications', 'notify_on_case_update', 'notify_on_case_resolved', 'digest_frequency']
       },
       {
         label: 'Usage Statistics',
         columns: 3,
-        fields: ['CasesSubmitted', 'CasesThisMonth', 'ArticlesViewed', 'ForumPostsCreated', 'ResourcesDownloaded', 'AverageSatisfactionScore', 'LastActivityDate']
+        fields: ['cases_submitted', 'cases_this_month', 'articles_viewed', 'forum_posts_created', 'resources_downloaded', 'average_satisfaction_score', 'last_activity_date']
       },
       {
         label: 'Registration',
         columns: 2,
-        fields: ['RegistrationDate', 'ActivationDate', 'ApprovedById', 'ApprovalDate']
+        fields: ['registration_date', 'activation_date', 'approved_by_id', 'approval_date']
       },
       {
         label: 'Additional Information',
         columns: 1,
-        fields: ['Notes']
+        fields: ['notes']
       }
     ]
   }

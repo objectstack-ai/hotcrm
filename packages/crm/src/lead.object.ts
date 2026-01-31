@@ -15,77 +15,77 @@ const Lead = {
   },
   fields: {
     // Basic Information
-    FirstName: {
+    first_name: {
       type: 'text',
       label: '名',
       maxLength: 40
     },
-    LastName: {
+    last_name: {
       type: 'text',
       label: '姓',
       required: true,
       maxLength: 80,
       searchable: true
     },
-    Company: {
+    company: {
       type: 'text',
       label: '公司',
       required: true,
       maxLength: 255,
       searchable: true
     },
-    Title: {
+    title: {
       type: 'text',
       label: '职位',
       maxLength: 128
     },
     // Contact Information
-    Email: {
+    email: {
       type: 'email',
       label: '邮箱',
       unique: true,
       searchable: true
     },
-    Phone: {
+    phone: {
       type: 'phone',
       label: '电话'
     },
-    MobilePhone: {
+    mobile_phone: {
       type: 'phone',
       label: '手机'
     },
-    Website: {
+    website: {
       type: 'url',
       label: '网站'
     },
     // Address
-    Street: {
+    street: {
       type: 'text',
       label: '街道地址',
       maxLength: 255
     },
-    City: {
+    city: {
       type: 'text',
       label: '城市',
       maxLength: 40
     },
-    State: {
+    state: {
       type: 'text',
       label: '省/州',
       maxLength: 80
     },
-    PostalCode: {
+    postal_code: {
       type: 'text',
       label: '邮编',
       maxLength: 20
     },
-    Country: {
+    country: {
       type: 'text',
       label: '国家',
       maxLength: 80
     },
     // Lead Classification
-    Status: {
+    status: {
       type: 'select',
       label: '状态',
       required: true,
@@ -98,7 +98,7 @@ const Lead = {
         { label: '❌ 不合格', value: 'Unqualified' }
       ]
     },
-    Rating: {
+    rating: {
       type: 'select',
       label: '评级',
       options: [
@@ -107,12 +107,12 @@ const Lead = {
         { label: '❄️ Cold (冷)', value: 'Cold' }
       ]
     },
-    LeadSource: {
+    lead_source: {
       type: 'select',
       label: '线索来源',
       options: [
         { label: 'Web 官网', value: 'Web' },
-        { label: 'Phone Inquiry 电话咨询', value: 'Phone Inquiry' },
+        { label: 'phone Inquiry 电话咨询', value: 'phone Inquiry' },
         { label: 'Partner Referral 合作伙伴推荐', value: 'Partner Referral' },
         { label: 'Purchased List 购买名单', value: 'Purchased List' },
         { label: 'Trade Show 展会', value: 'Trade Show' },
@@ -121,7 +121,7 @@ const Lead = {
         { label: 'Other 其他', value: 'Other' }
       ]
     },
-    Industry: {
+    industry: {
       type: 'select',
       label: '行业',
       options: [
@@ -136,7 +136,7 @@ const Lead = {
       ]
     },
     // Lead Scoring & AI
-    LeadScore: {
+    lead_score: {
       type: 'number',
       label: '线索评分',
       precision: 0,
@@ -145,108 +145,108 @@ const Lead = {
       readonly: true,
       description: 'AI 自动计算的线索质量分数 (0-100)'
     },
-    DataCompleteness: {
+    data_completeness: {
       type: 'percent',
       label: '资料完整度',
       readonly: true,
       description: '线索信息填写完整度百分比'
     },
-    LastActivityDate: {
+    last_activity_date: {
       type: 'datetime',
       label: '最后活动时间',
       readonly: true
     },
-    NumberOfActivities: {
+    number_of_activities: {
       type: 'number',
       label: '活动次数',
       readonly: true,
       precision: 0
     },
     // Public Pool (公海池)
-    IsInPublicPool: {
+    is_in_public_pool: {
       type: 'checkbox',
       label: '在公海池中',
       defaultValue: true,
       description: '是否在公海池中等待分配'
     },
-    PoolEntryDate: {
+    pool_entry_date: {
       type: 'datetime',
       label: '进入公海时间',
       readonly: true
     },
-    ClaimedDate: {
+    claimed_date: {
       type: 'datetime',
       label: '认领时间',
       readonly: true
     },
     // Assignment
-    OwnerId: {
+    owner_id: {
       type: 'lookup',
       label: '负责人',
       reference: 'User',
       required: true
     },
     // Conversion
-    ConvertedDate: {
+    converted_date: {
       type: 'datetime',
       label: '转化日期',
       readonly: true
     },
-    ConvertedAccountId: {
+    converted_account_id: {
       type: 'lookup',
       label: '转化后的客户',
       reference: 'Account',
       readonly: true
     },
-    ConvertedContactId: {
+    converted_contact_id: {
       type: 'lookup',
       label: '转化后的联系人',
       reference: 'Contact',
       readonly: true
     },
-    ConvertedOpportunityId: {
+    converted_opportunity_id: {
       type: 'lookup',
       label: '转化后的商机',
       reference: 'Opportunity',
       readonly: true
     },
     // Campaign
-    CampaignId: {
+    campaign_id: {
       type: 'lookup',
       label: '营销活动',
       reference: 'Campaign'
     },
     // Additional Info
-    NumberOfEmployees: {
+    number_of_employees: {
       type: 'number',
       label: '员工数',
       precision: 0
     },
-    AnnualRevenue: {
+    annual_revenue: {
       type: 'currency',
       label: '年营收',
       precision: 2
     },
-    Description: {
+    description: {
       type: 'textarea',
       label: '描述',
       maxLength: 32000
     },
     // AI Enhancement Fields
-    AISummary: {
+    a_i_summary: {
       type: 'textarea',
       label: 'AI 线索分析',
       readonly: true,
       maxLength: 2000,
       description: 'AI 生成的线索质量分析和建议'
     },
-    AIRecommendedAction: {
+    a_i_recommended_action: {
       type: 'text',
       label: 'AI 推荐行动',
       readonly: true,
       maxLength: 255
     },
-    EmailSignatureData: {
+    email_signature_data: {
       type: 'textarea',
       label: '邮件签名提取信息',
       readonly: true,
@@ -258,14 +258,14 @@ const Lead = {
       name: 'Activities',
       type: 'hasMany',
       object: 'Activity',
-      foreignKey: 'WhoId',
+      foreignKey: 'who_id',
       label: '活动记录'
     },
     {
       name: 'CampaignMembers',
       type: 'hasMany',
       object: 'CampaignMember',
-      foreignKey: 'LeadId',
+      foreignKey: 'lead_id',
       label: '营销活动成员'
     }
   ],
@@ -274,92 +274,92 @@ const Lead = {
       name: 'AllLeads',
       label: '所有线索',
       filters: [],
-      columns: ['LastName', 'FirstName', 'Company', 'Email', 'Phone', 'Status', 'Rating', 'LeadScore', 'OwnerId'],
+      columns: ['last_name', 'first_name', 'company', 'email', 'phone', 'status', 'rating', 'lead_score', 'owner_id'],
       sort: [['CreatedDate', 'desc']]
     },
     {
       name: 'MyLeads',
       label: '我的线索',
-      filters: [['OwnerId', '=', '$currentUser']],
-      columns: ['LastName', 'FirstName', 'Company', 'Email', 'Status', 'Rating', 'LeadScore', 'LastActivityDate'],
-      sort: [['LeadScore', 'desc']]
+      filters: [['owner_id', '=', '$currentUser']],
+      columns: ['last_name', 'first_name', 'company', 'email', 'status', 'rating', 'lead_score', 'last_activity_date'],
+      sort: [['lead_score', 'desc']]
     },
     {
       name: 'PublicPool',
       label: '公海池',
       filters: [
-        ['IsInPublicPool', '=', true],
-        ['Status', 'not in', ['Converted', 'Unqualified']]
+        ['is_in_public_pool', '=', true],
+        ['status', 'not in', ['Converted', 'Unqualified']]
       ],
-      columns: ['LastName', 'FirstName', 'Company', 'Email', 'Phone', 'Rating', 'LeadScore', 'PoolEntryDate'],
-      sort: [['LeadScore', 'desc']]
+      columns: ['last_name', 'first_name', 'company', 'email', 'phone', 'rating', 'lead_score', 'pool_entry_date'],
+      sort: [['lead_score', 'desc']]
     },
     {
       name: 'HighScoreLeads',
       label: '高分线索',
       filters: [
-        ['LeadScore', '>', 70],
-        ['Status', '!=', 'Converted']
+        ['lead_score', '>', 70],
+        ['status', '!=', 'Converted']
       ],
-      columns: ['LastName', 'FirstName', 'Company', 'Email', 'LeadScore', 'Rating', 'LastActivityDate', 'OwnerId'],
-      sort: [['LeadScore', 'desc']]
+      columns: ['last_name', 'first_name', 'company', 'email', 'lead_score', 'rating', 'last_activity_date', 'owner_id'],
+      sort: [['lead_score', 'desc']]
     },
     {
       name: 'RecentLeads',
       label: '最近线索',
       filters: [['CreatedDate', 'last_n_days', 7]],
-      columns: ['LastName', 'FirstName', 'Company', 'Email', 'Phone', 'LeadSource', 'Status', 'CreatedDate'],
+      columns: ['last_name', 'first_name', 'company', 'email', 'phone', 'lead_source', 'status', 'CreatedDate'],
       sort: [['CreatedDate', 'desc']]
     },
     {
       name: 'ToBeNurtured',
       label: '待培育',
-      filters: [['Status', '=', 'Nurturing']],
-      columns: ['LastName', 'FirstName', 'Company', 'Email', 'Rating', 'LastActivityDate', 'NumberOfActivities', 'OwnerId'],
-      sort: [['LastActivityDate', 'asc']]
+      filters: [['status', '=', 'Nurturing']],
+      columns: ['last_name', 'first_name', 'company', 'email', 'rating', 'last_activity_date', 'number_of_activities', 'owner_id'],
+      sort: [['last_activity_date', 'asc']]
     },
     {
       name: 'HotLeads',
       label: '热门线索',
       filters: [
-        ['Rating', '=', 'Hot'],
-        ['Status', 'not in', ['Converted', 'Unqualified']]
+        ['rating', '=', 'Hot'],
+        ['status', 'not in', ['Converted', 'Unqualified']]
       ],
-      columns: ['LastName', 'FirstName', 'Company', 'Email', 'Phone', 'LeadScore', 'Status', 'OwnerId'],
-      sort: [['LeadScore', 'desc']]
+      columns: ['last_name', 'first_name', 'company', 'email', 'phone', 'lead_score', 'status', 'owner_id'],
+      sort: [['lead_score', 'desc']]
     },
     {
       name: 'ReadyToConvert',
       label: '待转化',
       filters: [
-        ['LeadScore', '>', 80],
-        ['Status', 'not in', ['Converted', 'Unqualified']],
-        ['DataCompleteness', '>', 80]
+        ['lead_score', '>', 80],
+        ['status', 'not in', ['Converted', 'Unqualified']],
+        ['data_completeness', '>', 80]
       ],
-      columns: ['LastName', 'FirstName', 'Company', 'Email', 'LeadScore', 'DataCompleteness', 'Status', 'OwnerId'],
-      sort: [['LeadScore', 'desc']]
+      columns: ['last_name', 'first_name', 'company', 'email', 'lead_score', 'data_completeness', 'status', 'owner_id'],
+      sort: [['lead_score', 'desc']]
     }
   ],
   validationRules: [
     {
       name: 'EmailOrPhoneRequired',
       errorMessage: '邮箱或电话至少需要填写一个',
-      formula: 'AND(ISBLANK(Email), ISBLANK(Phone), ISBLANK(MobilePhone))'
+      formula: 'AND(ISBLANK(email), ISBLANK(phone), ISBLANK(mobile_phone))'
     },
     {
       name: 'ConvertedLeadReadOnly',
       errorMessage: '已转化的线索不能修改状态',
-      formula: 'AND(Status = "Converted", PRIORVALUE(Status) = "Converted")'
+      formula: 'AND(status = "Converted", PRIORVALUE(status) = "Converted")'
     },
     {
       name: 'HighRevenueRequiresIndustry',
       errorMessage: '年营收超过1000万的线索必须选择行业',
-      formula: 'AND(AnnualRevenue > 10000000, ISBLANK(Industry))'
+      formula: 'AND(annual_revenue > 10000000, ISBLANK(industry))'
     },
     {
       name: 'HighScoreRequiresOwner',
       errorMessage: '高分线索(>70分)必须指定负责人且不能在公海池中',
-      formula: 'AND(LeadScore > 70, IsInPublicPool = true)'
+      formula: 'AND(lead_score > 70, is_in_public_pool = true)'
     }
   ],
   pageLayout: {
@@ -367,47 +367,47 @@ const Lead = {
       {
         label: '基本信息',
         columns: 2,
-        fields: ['FirstName', 'LastName', 'Company', 'Title', 'Email', 'Phone', 'MobilePhone', 'Website', 'Industry']
+        fields: ['first_name', 'last_name', 'company', 'title', 'email', 'phone', 'mobile_phone', 'website', 'industry']
       },
       {
         label: '分类与评分',
         columns: 2,
-        fields: ['Status', 'Rating', 'LeadSource', 'LeadScore', 'DataCompleteness', 'CampaignId']
+        fields: ['status', 'rating', 'lead_source', 'lead_score', 'data_completeness', 'campaign_id']
       },
       {
         label: '地址信息',
         columns: 2,
-        fields: ['Street', 'City', 'State', 'PostalCode', 'Country']
+        fields: ['street', 'city', 'state', 'postal_code', 'country']
       },
       {
         label: '公司信息',
         columns: 2,
-        fields: ['NumberOfEmployees', 'AnnualRevenue']
+        fields: ['number_of_employees', 'annual_revenue']
       },
       {
         label: '活动信息',
         columns: 2,
-        fields: ['LastActivityDate', 'NumberOfActivities']
+        fields: ['last_activity_date', 'number_of_activities']
       },
       {
         label: '公海池管理',
         columns: 2,
-        fields: ['IsInPublicPool', 'PoolEntryDate', 'ClaimedDate', 'OwnerId']
+        fields: ['is_in_public_pool', 'pool_entry_date', 'claimed_date', 'owner_id']
       },
       {
         label: '转化信息',
         columns: 2,
-        fields: ['ConvertedDate', 'ConvertedAccountId', 'ConvertedContactId', 'ConvertedOpportunityId']
+        fields: ['converted_date', 'converted_account_id', 'converted_contact_id', 'converted_opportunity_id']
       },
       {
         label: 'AI 智能分析',
         columns: 1,
-        fields: ['AISummary', 'AIRecommendedAction', 'EmailSignatureData']
+        fields: ['a_i_summary', 'a_i_recommended_action', 'email_signature_data']
       },
       {
         label: '其他信息',
         columns: 1,
-        fields: ['Description']
+        fields: ['description']
       }
     ]
   }

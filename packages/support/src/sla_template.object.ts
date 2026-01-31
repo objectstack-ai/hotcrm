@@ -11,25 +11,25 @@ const SLATemplate = {
   },
   fields: {
     // Basic Information
-    Name: {
+    name: {
       type: 'text',
-      label: 'Template Name',
+      label: 'Template name',
       required: true,
       maxLength: 255,
       searchable: true
     },
-    Description: {
+    description: {
       type: 'textarea',
-      label: 'Description',
+      label: 'description',
       maxLength: 2000
     },
-    IsActive: {
+    is_active: {
       type: 'checkbox',
       label: 'Active',
       defaultValue: true
     },
     // SLA Level
-    SLALevel: {
+    s_l_a_level: {
       type: 'select',
       label: 'SLA Level',
       required: true,
@@ -42,7 +42,7 @@ const SLATemplate = {
       ]
     },
     // Case Type Filters
-    ApplicableCaseTypes: {
+    applicable_case_types: {
       type: 'multiselect',
       label: 'Applicable Case Types',
       options: [
@@ -55,7 +55,7 @@ const SLATemplate = {
         { label: 'Other', value: 'Other' }
       ]
     },
-    ApplicablePriorities: {
+    applicable_priorities: {
       type: 'multiselect',
       label: 'Applicable Priorities',
       options: [
@@ -66,7 +66,7 @@ const SLATemplate = {
       ]
     },
     // Response Time SLA (in minutes)
-    FirstResponseTimeMinutes: {
+    first_response_time_minutes: {
       type: 'number',
       label: 'First Response Time (Minutes)',
       required: true,
@@ -74,7 +74,7 @@ const SLATemplate = {
       min: 1,
       description: 'Time to first agent response'
     },
-    NextResponseTimeMinutes: {
+    next_response_time_minutes: {
       type: 'number',
       label: 'Next Response Time (Minutes)',
       precision: 0,
@@ -82,7 +82,7 @@ const SLATemplate = {
       description: 'Time for subsequent responses'
     },
     // Resolution Time SLA (in minutes)
-    ResolutionTimeMinutes: {
+    resolution_time_minutes: {
       type: 'number',
       label: 'Resolution Time (Minutes)',
       required: true,
@@ -91,7 +91,7 @@ const SLATemplate = {
       description: 'Time to resolve the case'
     },
     // Business Hours
-    BusinessHoursId: {
+    business_hours_id: {
       type: 'lookup',
       label: 'Business Hours',
       reference: 'BusinessHours',
@@ -99,7 +99,7 @@ const SLATemplate = {
       description: 'Working hours calendar for SLA calculation'
     },
     // Warning Thresholds (percentage)
-    WarningThresholdPercent: {
+    warning_threshold_percent: {
       type: 'number',
       label: 'Warning Threshold (%)',
       precision: 0,
@@ -109,12 +109,12 @@ const SLATemplate = {
       description: 'Percentage of SLA time when warning is triggered'
     },
     // Escalation
-    EnableAutoEscalation: {
+    enable_auto_escalation: {
       type: 'checkbox',
       label: 'Enable Auto Escalation',
       defaultValue: false
     },
-    EscalationThresholdPercent: {
+    escalation_threshold_percent: {
       type: 'number',
       label: 'Escalation Threshold (%)',
       precision: 0,
@@ -123,21 +123,21 @@ const SLATemplate = {
       defaultValue: 90,
       description: 'Percentage of SLA time when case is escalated'
     },
-    EscalationRuleId: {
+    escalation_rule_id: {
       type: 'lookup',
       label: 'Escalation Rule',
       reference: 'EscalationRule',
       description: 'Rule to use for escalation'
     },
     // Statistics
-    CasesUsing: {
+    cases_using: {
       type: 'number',
       label: 'Active Cases',
       precision: 0,
       readonly: true,
       description: 'Number of active cases using this template'
     },
-    AverageComplianceRate: {
+    average_compliance_rate: {
       type: 'number',
       label: 'Compliance Rate (%)',
       precision: 2,
@@ -149,17 +149,17 @@ const SLATemplate = {
     {
       name: 'ResponseTimeLessThanResolution',
       errorMessage: 'First response time must be less than resolution time',
-      formula: 'FirstResponseTimeMinutes >= ResolutionTimeMinutes'
+      formula: 'first_response_time_minutes >= resolution_time_minutes'
     },
     {
       name: 'EscalationRuleRequired',
       errorMessage: 'Escalation rule is required when auto escalation is enabled',
-      formula: 'AND(EnableAutoEscalation = true, ISBLANK(EscalationRuleId))'
+      formula: 'AND(enable_auto_escalation = true, ISBLANK(escalation_rule_id))'
     },
     {
       name: 'WarningBeforeEscalation',
       errorMessage: 'Warning threshold must be less than escalation threshold',
-      formula: 'WarningThresholdPercent >= EscalationThresholdPercent'
+      formula: 'warning_threshold_percent >= escalation_threshold_percent'
     }
   ],
   listViews: [
@@ -167,24 +167,24 @@ const SLATemplate = {
       name: 'AllTemplates',
       label: 'All SLA Templates',
       filters: [],
-      columns: ['Name', 'SLALevel', 'FirstResponseTimeMinutes', 'ResolutionTimeMinutes', 'IsActive', 'CasesUsing'],
-      sort: [['SLALevel', 'asc']]
+      columns: ['name', 's_l_a_level', 'first_response_time_minutes', 'resolution_time_minutes', 'is_active', 'cases_using'],
+      sort: [['s_l_a_level', 'asc']]
     },
     {
       name: 'ActiveTemplates',
       label: 'Active Templates',
       filters: [
-        ['IsActive', '=', true]
+        ['is_active', '=', true]
       ],
-      columns: ['Name', 'SLALevel', 'FirstResponseTimeMinutes', 'ResolutionTimeMinutes', 'AverageComplianceRate'],
-      sort: [['SLALevel', 'asc']]
+      columns: ['name', 's_l_a_level', 'first_response_time_minutes', 'resolution_time_minutes', 'average_compliance_rate'],
+      sort: [['s_l_a_level', 'asc']]
     },
     {
       name: 'ByLevel',
       label: 'By SLA Level',
       filters: [],
-      columns: ['Name', 'SLALevel', 'FirstResponseTimeMinutes', 'ResolutionTimeMinutes', 'BusinessHoursId', 'IsActive'],
-      sort: [['SLALevel', 'asc'], ['Name', 'asc']]
+      columns: ['name', 's_l_a_level', 'first_response_time_minutes', 'resolution_time_minutes', 'business_hours_id', 'is_active'],
+      sort: [['s_l_a_level', 'asc'], ['name', 'asc']]
     }
   ],
   pageLayout: {
@@ -192,27 +192,27 @@ const SLATemplate = {
       {
         label: 'Template Information',
         columns: 2,
-        fields: ['Name', 'Description', 'SLALevel', 'IsActive']
+        fields: ['name', 'description', 's_l_a_level', 'is_active']
       },
       {
         label: 'Applicable To',
         columns: 2,
-        fields: ['ApplicableCaseTypes', 'ApplicablePriorities']
+        fields: ['applicable_case_types', 'applicable_priorities']
       },
       {
         label: 'SLA Targets',
         columns: 2,
-        fields: ['FirstResponseTimeMinutes', 'NextResponseTimeMinutes', 'ResolutionTimeMinutes', 'BusinessHoursId']
+        fields: ['first_response_time_minutes', 'next_response_time_minutes', 'resolution_time_minutes', 'business_hours_id']
       },
       {
         label: 'Thresholds & Escalation',
         columns: 2,
-        fields: ['WarningThresholdPercent', 'EnableAutoEscalation', 'EscalationThresholdPercent', 'EscalationRuleId']
+        fields: ['warning_threshold_percent', 'enable_auto_escalation', 'escalation_threshold_percent', 'escalation_rule_id']
       },
       {
         label: 'Performance',
         columns: 2,
-        fields: ['CasesUsing', 'AverageComplianceRate']
+        fields: ['cases_using', 'average_compliance_rate']
       }
     ]
   }

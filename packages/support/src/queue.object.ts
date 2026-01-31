@@ -11,25 +11,25 @@ const Queue = {
   },
   fields: {
     // Basic Information
-    Name: {
+    name: {
       type: 'text',
-      label: 'Queue Name',
+      label: 'Queue name',
       required: true,
       maxLength: 255,
       searchable: true
     },
-    Description: {
+    description: {
       type: 'textarea',
-      label: 'Description',
+      label: 'description',
       maxLength: 2000
     },
-    IsActive: {
+    is_active: {
       type: 'checkbox',
       label: 'Active',
       defaultValue: true
     },
     // Queue Type
-    QueueType: {
+    queue_type: {
       type: 'select',
       label: 'Queue Type',
       required: true,
@@ -45,7 +45,7 @@ const Queue = {
       ]
     },
     // Routing Configuration
-    RoutingMethod: {
+    routing_method: {
       type: 'select',
       label: 'Routing Method',
       required: true,
@@ -58,7 +58,7 @@ const Queue = {
         { label: '🤖 AI Powered', value: 'AI' }
       ]
     },
-    MaxCasesPerAgent: {
+    max_cases_per_agent: {
       type: 'number',
       label: 'Max Cases Per Agent',
       precision: 0,
@@ -67,7 +67,7 @@ const Queue = {
       description: 'Maximum active cases per agent for load balancing'
     },
     // Priority and SLA
-    DefaultPriority: {
+    default_priority: {
       type: 'select',
       label: 'Default Priority',
       defaultValue: 'Medium',
@@ -78,19 +78,19 @@ const Queue = {
         { label: 'Low', value: 'Low' }
       ]
     },
-    SLATemplateId: {
+    s_l_a_template_id: {
       type: 'lookup',
       label: 'SLA Template',
       reference: 'SLATemplate',
       description: 'Default SLA template for cases in this queue'
     },
     // Auto Assignment
-    EnableAutoAssignment: {
+    enable_auto_assignment: {
       type: 'checkbox',
       label: 'Enable Auto Assignment',
       defaultValue: true
     },
-    AssignmentDelayMinutes: {
+    assignment_delay_minutes: {
       type: 'number',
       label: 'Assignment Delay (Minutes)',
       precision: 0,
@@ -99,18 +99,18 @@ const Queue = {
       description: 'Delay before auto-assignment (0 for immediate)'
     },
     // Overflow Management
-    EnableOverflow: {
+    enable_overflow: {
       type: 'checkbox',
       label: 'Enable Overflow',
       defaultValue: false
     },
-    OverflowQueueId: {
+    overflow_queue_id: {
       type: 'lookup',
       label: 'Overflow Queue',
       reference: 'Queue',
       description: 'Queue to route cases when this queue is at capacity'
     },
-    OverflowThreshold: {
+    overflow_threshold: {
       type: 'number',
       label: 'Overflow Threshold',
       precision: 0,
@@ -118,13 +118,13 @@ const Queue = {
       description: 'Number of pending cases that triggers overflow'
     },
     // Business Hours
-    BusinessHoursId: {
+    business_hours_id: {
       type: 'lookup',
       label: 'Business Hours',
       reference: 'BusinessHours',
       description: 'Operating hours for this queue'
     },
-    OutOfHoursBehavior: {
+    out_of_hours_behavior: {
       type: 'select',
       label: 'Out of Hours Behavior',
       defaultValue: 'Queue',
@@ -134,59 +134,59 @@ const Queue = {
         { label: 'Auto-Reply Only', value: 'AutoReply' }
       ]
     },
-    OutOfHoursQueueId: {
+    out_of_hours_queue_id: {
       type: 'lookup',
       label: 'Out of Hours Queue',
       reference: 'Queue',
       description: '24/7 queue for after-hours cases'
     },
     // Email Integration
-    EmailAddress: {
+    email_address: {
       type: 'email',
       label: 'Queue Email',
       description: 'Email address for case submission to this queue'
     },
-    EmailToCase: {
+    email_to_case: {
       type: 'checkbox',
       label: 'Email to Case',
       defaultValue: false
     },
-    AutoResponseTemplate: {
+    auto_response_template: {
       type: 'text',
       label: 'Auto Response Template',
       maxLength: 255,
       description: 'Email template for automatic acknowledgment'
     },
     // Statistics
-    PendingCases: {
+    pending_cases: {
       type: 'number',
       label: 'Pending Cases',
       precision: 0,
       readonly: true,
       description: 'Number of unassigned cases in queue'
     },
-    ActiveCases: {
+    active_cases: {
       type: 'number',
       label: 'Active Cases',
       precision: 0,
       readonly: true,
       description: 'Number of active assigned cases'
     },
-    TotalMembers: {
+    total_members: {
       type: 'number',
       label: 'Total Members',
       precision: 0,
       readonly: true,
       description: 'Number of agents in this queue'
     },
-    AverageWaitTime: {
+    average_wait_time: {
       type: 'number',
       label: 'Avg Wait Time (Minutes)',
       precision: 2,
       readonly: true,
       description: 'Average time cases wait before assignment'
     },
-    AverageResolutionTime: {
+    average_resolution_time: {
       type: 'number',
       label: 'Avg Resolution Time (Minutes)',
       precision: 2,
@@ -199,21 +199,21 @@ const Queue = {
       name: 'QueueMembers',
       type: 'hasMany',
       object: 'QueueMember',
-      foreignKey: 'QueueId',
+      foreignKey: 'queue_id',
       label: 'Queue Members'
     },
     {
       name: 'Cases',
       type: 'hasMany',
       object: 'Case',
-      foreignKey: 'AssignedToQueueId',
+      foreignKey: 'assigned_to_queue_id',
       label: 'Cases'
     },
     {
       name: 'RoutingRules',
       type: 'hasMany',
       object: 'RoutingRule',
-      foreignKey: 'QueueId',
+      foreignKey: 'queue_id',
       label: 'Routing Rules'
     }
   ],
@@ -221,27 +221,27 @@ const Queue = {
     {
       name: 'OverflowQueueRequired',
       errorMessage: 'Overflow queue is required when overflow is enabled',
-      formula: 'AND(EnableOverflow = true, ISBLANK(OverflowQueueId))'
+      formula: 'AND(enable_overflow = true, ISBLANK(overflow_queue_id))'
     },
     {
       name: 'OverflowThresholdRequired',
       errorMessage: 'Overflow threshold is required when overflow is enabled',
-      formula: 'AND(EnableOverflow = true, ISBLANK(OverflowThreshold))'
+      formula: 'AND(enable_overflow = true, ISBLANK(overflow_threshold))'
     },
     {
       name: 'NoSelfOverflow',
       errorMessage: 'Queue cannot overflow to itself',
-      formula: 'OverflowQueueId = Id'
+      formula: 'overflow_queue_id = Id'
     },
     {
       name: 'OutOfHoursQueueRequired',
       errorMessage: 'Out of hours queue is required when routing to 24/7 queue',
-      formula: 'AND(OutOfHoursBehavior = "Route24x7", ISBLANK(OutOfHoursQueueId))'
+      formula: 'AND(out_of_hours_behavior = "Route24x7", ISBLANK(out_of_hours_queue_id))'
     },
     {
       name: 'EmailToCaseRequiresEmail',
       errorMessage: 'Email address is required when Email to Case is enabled',
-      formula: 'AND(EmailToCase = true, ISBLANK(EmailAddress))'
+      formula: 'AND(email_to_case = true, ISBLANK(email_address))'
     }
   ],
   listViews: [
@@ -249,27 +249,27 @@ const Queue = {
       name: 'AllQueues',
       label: 'All Queues',
       filters: [],
-      columns: ['Name', 'QueueType', 'RoutingMethod', 'PendingCases', 'ActiveCases', 'TotalMembers', 'IsActive'],
-      sort: [['Name', 'asc']]
+      columns: ['name', 'queue_type', 'routing_method', 'pending_cases', 'active_cases', 'total_members', 'is_active'],
+      sort: [['name', 'asc']]
     },
     {
       name: 'ActiveQueues',
       label: 'Active Queues',
       filters: [
-        ['IsActive', '=', true]
+        ['is_active', '=', true]
       ],
-      columns: ['Name', 'QueueType', 'PendingCases', 'ActiveCases', 'AverageWaitTime', 'AverageResolutionTime'],
-      sort: [['PendingCases', 'desc']]
+      columns: ['name', 'queue_type', 'pending_cases', 'active_cases', 'average_wait_time', 'average_resolution_time'],
+      sort: [['pending_cases', 'desc']]
     },
     {
       name: 'WithPendingCases',
       label: 'With Pending Cases',
       filters: [
-        ['PendingCases', '>', 0],
-        ['IsActive', '=', true]
+        ['pending_cases', '>', 0],
+        ['is_active', '=', true]
       ],
-      columns: ['Name', 'QueueType', 'PendingCases', 'TotalMembers', 'AverageWaitTime'],
-      sort: [['PendingCases', 'desc']]
+      columns: ['name', 'queue_type', 'pending_cases', 'total_members', 'average_wait_time'],
+      sort: [['pending_cases', 'desc']]
     }
   ],
   pageLayout: {
@@ -277,37 +277,37 @@ const Queue = {
       {
         label: 'Queue Information',
         columns: 2,
-        fields: ['Name', 'Description', 'QueueType', 'IsActive']
+        fields: ['name', 'description', 'queue_type', 'is_active']
       },
       {
         label: 'Routing Configuration',
         columns: 2,
-        fields: ['RoutingMethod', 'MaxCasesPerAgent', 'EnableAutoAssignment', 'AssignmentDelayMinutes']
+        fields: ['routing_method', 'max_cases_per_agent', 'enable_auto_assignment', 'assignment_delay_minutes']
       },
       {
         label: 'Priority & SLA',
         columns: 2,
-        fields: ['DefaultPriority', 'SLATemplateId']
+        fields: ['default_priority', 's_l_a_template_id']
       },
       {
         label: 'Overflow Management',
         columns: 2,
-        fields: ['EnableOverflow', 'OverflowQueueId', 'OverflowThreshold']
+        fields: ['enable_overflow', 'overflow_queue_id', 'overflow_threshold']
       },
       {
         label: 'Business Hours',
         columns: 2,
-        fields: ['BusinessHoursId', 'OutOfHoursBehavior', 'OutOfHoursQueueId']
+        fields: ['business_hours_id', 'out_of_hours_behavior', 'out_of_hours_queue_id']
       },
       {
         label: 'Email Integration',
         columns: 2,
-        fields: ['EmailAddress', 'EmailToCase', 'AutoResponseTemplate']
+        fields: ['email_address', 'email_to_case', 'auto_response_template']
       },
       {
         label: 'Queue Statistics',
         columns: 3,
-        fields: ['PendingCases', 'ActiveCases', 'TotalMembers', 'AverageWaitTime', 'AverageResolutionTime']
+        fields: ['pending_cases', 'active_cases', 'total_members', 'average_wait_time', 'average_resolution_time']
       }
     ]
   }

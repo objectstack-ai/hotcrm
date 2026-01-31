@@ -12,40 +12,40 @@ const KnowledgeArticle = {
   },
   fields: {
     // Basic Information
-    ArticleNumber: {
+    article_number: {
       type: 'autonumber',
       label: 'Article Number',
       format: 'KB-{YYYY}-{0000}',
       readonly: true,
       searchable: true
     },
-    Title: {
+    title: {
       type: 'text',
-      label: 'Title',
+      label: 'title',
       required: true,
       maxLength: 255,
       searchable: true
     },
-    Summary: {
+    summary: {
       type: 'textarea',
-      label: 'Summary',
+      label: 'summary',
       required: true,
       maxLength: 500,
       searchable: true,
       description: 'Brief summary shown in search results'
     },
-    Content: {
+    content: {
       type: 'textarea',
-      label: 'Content',
+      label: 'content',
       required: true,
       searchable: true,
       maxLength: 32000,
       description: 'Full article content with formatting'
     },
     // Categorization
-    Category: {
+    category: {
       type: 'select',
-      label: 'Category',
+      label: 'category',
       required: true,
       options: [
         { label: '🛠️ Technical', value: 'Technical' },
@@ -59,21 +59,21 @@ const KnowledgeArticle = {
         { label: '📚 Other', value: 'Other' }
       ]
     },
-    Subcategory: {
+    subcategory: {
       type: 'text',
-      label: 'Subcategory',
+      label: 'subcategory',
       maxLength: 100
     },
-    Keywords: {
+    keywords: {
       type: 'text',
-      label: 'Keywords',
+      label: 'keywords',
       maxLength: 500,
       searchable: true,
       description: 'Comma-separated keywords for search'
     },
-    Tags: {
+    tags: {
       type: 'multiselect',
-      label: 'Tags',
+      label: 'tags',
       options: [
         { label: 'Getting Started', value: 'GettingStarted' },
         { label: 'Advanced', value: 'Advanced' },
@@ -84,13 +84,13 @@ const KnowledgeArticle = {
       ]
     },
     // Related Records
-    RelatedProductIds: {
+    related_product_ids: {
       type: 'text',
       label: 'Related Products',
       maxLength: 500,
       description: 'Comma-separated product IDs'
     },
-    RelatedCaseTypes: {
+    related_case_types: {
       type: 'multiselect',
       label: 'Related Case Types',
       options: [
@@ -103,9 +103,9 @@ const KnowledgeArticle = {
       ]
     },
     // Publishing
-    Status: {
+    status: {
       type: 'select',
-      label: 'Status',
+      label: 'status',
       required: true,
       defaultValue: 'Draft',
       options: [
@@ -116,59 +116,59 @@ const KnowledgeArticle = {
         { label: '📦 Archived', value: 'Archived' }
       ]
     },
-    PublishDate: {
+    publish_date: {
       type: 'datetime',
       label: 'Publish Date',
       readonly: true
     },
-    PublishedById: {
+    published_by_id: {
       type: 'lookup',
       label: 'Published By',
       reference: 'User',
       readonly: true
     },
-    LastReviewDate: {
+    last_review_date: {
       type: 'date',
       label: 'Last Review Date'
     },
-    NextReviewDate: {
+    next_review_date: {
       type: 'date',
       label: 'Next Review Date',
       description: 'Date when article should be reviewed'
     },
     // Ownership
-    OwnerId: {
+    owner_id: {
       type: 'lookup',
       label: 'Owner',
       reference: 'User',
       required: true
     },
-    AuthorId: {
+    author_id: {
       type: 'lookup',
       label: 'Author',
       reference: 'User',
       required: true
     },
     // Visibility
-    IsInternal: {
+    is_internal: {
       type: 'checkbox',
       label: 'Internal Only',
       defaultValue: false,
       description: 'Visible only to support agents'
     },
-    IsPublic: {
+    is_public: {
       type: 'checkbox',
       label: 'Public',
       defaultValue: true,
       description: 'Visible in customer portal'
     },
-    RequiresAuthentication: {
+    requires_authentication: {
       type: 'checkbox',
       label: 'Requires Login',
       defaultValue: false,
       description: 'Customer must be logged in to view'
     },
-    VisibleToCustomerTiers: {
+    visible_to_customer_tiers: {
       type: 'multiselect',
       label: 'Visible to Customer Tiers',
       options: [
@@ -180,9 +180,9 @@ const KnowledgeArticle = {
       ]
     },
     // Localization
-    Language: {
+    language: {
       type: 'select',
-      label: 'Language',
+      label: 'language',
       required: true,
       defaultValue: 'en',
       options: [
@@ -196,73 +196,73 @@ const KnowledgeArticle = {
         { label: '한국어', value: 'ko' }
       ]
     },
-    TranslationOfId: {
+    translation_of_id: {
       type: 'lookup',
       label: 'Translation Of',
       reference: 'KnowledgeArticle',
       description: 'Original article if this is a translation'
     },
     // Attachments & Media
-    VideoURL: {
+    video_u_r_l: {
       type: 'url',
       label: 'Video URL',
       description: 'YouTube/Vimeo URL for tutorial video'
     },
-    ThumbnailURL: {
+    thumbnail_u_r_l: {
       type: 'url',
       label: 'Thumbnail URL',
       description: 'Article thumbnail image'
     },
     // Analytics
-    ViewCount: {
+    view_count: {
       type: 'number',
       label: 'View Count',
       precision: 0,
       readonly: true,
       defaultValue: 0
     },
-    UniqueViews: {
+    unique_views: {
       type: 'number',
       label: 'Unique Views',
       precision: 0,
       readonly: true,
       defaultValue: 0
     },
-    HelpfulCount: {
+    helpful_count: {
       type: 'number',
       label: 'Helpful Votes',
       precision: 0,
       readonly: true,
       defaultValue: 0
     },
-    NotHelpfulCount: {
+    not_helpful_count: {
       type: 'number',
       label: 'Not Helpful Votes',
       precision: 0,
       readonly: true,
       defaultValue: 0
     },
-    HelpfulRating: {
+    helpful_rating: {
       type: 'number',
       label: 'Helpful Rating (%)',
       precision: 2,
       readonly: true,
       description: 'Percentage of helpful votes'
     },
-    AverageTimeOnPage: {
+    average_time_on_page: {
       type: 'number',
       label: 'Avg Time on Page (Seconds)',
       precision: 0,
       readonly: true
     },
-    LinkedFromCases: {
+    linked_from_cases: {
       type: 'number',
       label: 'Linked from Cases',
       precision: 0,
       readonly: true,
       description: 'Number of cases linking to this article'
     },
-    SearchRank: {
+    search_rank: {
       type: 'number',
       label: 'Search Rank',
       precision: 2,
@@ -270,13 +270,13 @@ const KnowledgeArticle = {
       description: 'Search relevance score'
     },
     // SEO
-    MetaDescription: {
+    meta_description: {
       type: 'text',
       label: 'Meta Description',
       maxLength: 160,
       description: 'SEO meta description'
     },
-    URLSlug: {
+    u_r_l_slug: {
       type: 'text',
       label: 'URL Slug',
       maxLength: 255,
@@ -284,9 +284,9 @@ const KnowledgeArticle = {
       description: 'URL-friendly article identifier'
     },
     // AI-Driven Features
-    AICategory: {
+    a_i_category: {
       type: 'select',
-      label: 'AI Suggested Category',
+      label: 'AI Suggested category',
       readonly: true,
       options: [
         { label: 'Technical', value: 'Technical' },
@@ -301,29 +301,29 @@ const KnowledgeArticle = {
       ],
       description: 'AI-suggested category based on content analysis'
     },
-    AITags: {
+    a_i_tags: {
       type: 'text',
-      label: 'AI Suggested Tags',
+      label: 'AI Suggested tags',
       maxLength: 500,
       readonly: true,
       description: 'Comma-separated AI-generated tags'
     },
-    AISummary: {
+    a_i_summary: {
       type: 'textarea',
-      label: 'AI Generated Summary',
+      label: 'AI Generated summary',
       maxLength: 500,
       readonly: true,
       description: 'AI-generated article summary'
     },
-    AIKeywords: {
+    a_i_keywords: {
       type: 'text',
-      label: 'AI Extracted Keywords',
+      label: 'AI Extracted keywords',
       maxLength: 500,
       readonly: true,
       searchable: true,
-      description: 'Keywords extracted by AI'
+      description: 'keywords extracted by AI'
     },
-    RelatedArticleIds: {
+    related_article_ids: {
       type: 'text',
       label: 'Related Articles',
       maxLength: 1000,
@@ -331,29 +331,29 @@ const KnowledgeArticle = {
       description: 'Comma-separated IDs of AI-suggested related articles'
     },
     // Workflow & Versioning
-    ScheduledPublishDate: {
+    scheduled_publish_date: {
       type: 'datetime',
       label: 'Scheduled Publish Date',
       description: 'When to auto-publish this article'
     },
-    ArchivedDate: {
+    archived_date: {
       type: 'datetime',
       label: 'Archived Date',
       readonly: true
     },
-    ArchivedByUserId: {
+    archived_by_user_id: {
       type: 'lookup',
       label: 'Archived By',
       reference: 'User',
       readonly: true
     },
-    ArchivedReason: {
+    archived_reason: {
       type: 'textarea',
       label: 'Archive Reason',
       maxLength: 1000,
       readonly: true
     },
-    VersionNumber: {
+    version_number: {
       type: 'text',
       label: 'Version',
       maxLength: 50,
@@ -361,7 +361,7 @@ const KnowledgeArticle = {
       defaultValue: '1.0',
       description: 'Article version number'
     },
-    PreviousVersionId: {
+    previous_version_id: {
       type: 'lookup',
       label: 'Previous Version',
       reference: 'KnowledgeArticle',
@@ -369,7 +369,7 @@ const KnowledgeArticle = {
       description: 'Previous version of this article'
     },
     // Quality & Performance Metrics
-    QualityScore: {
+    quality_score: {
       type: 'number',
       label: 'Quality Score',
       precision: 0,
@@ -378,7 +378,7 @@ const KnowledgeArticle = {
       readonly: true,
       description: 'Overall article quality score (0-100)'
     },
-    PopularityScore: {
+    popularity_score: {
       type: 'number',
       label: 'Popularity Score',
       precision: 0,
@@ -387,7 +387,7 @@ const KnowledgeArticle = {
       readonly: true,
       description: 'Article popularity score based on views and engagement'
     },
-    HelpfulnessRating: {
+    helpfulness_rating: {
       type: 'number',
       label: 'Helpfulness %',
       precision: 0,
@@ -396,7 +396,7 @@ const KnowledgeArticle = {
       readonly: true,
       description: 'Percentage of users who found this helpful'
     },
-    CaseResolutionCount: {
+    case_resolution_count: {
       type: 'number',
       label: 'Cases Resolved',
       precision: 0,
@@ -404,13 +404,13 @@ const KnowledgeArticle = {
       defaultValue: 0,
       description: 'Number of cases resolved using this article'
     },
-    LastUsedInCaseDate: {
+    last_used_in_case_date: {
       type: 'datetime',
       label: 'Last Used in Case',
       readonly: true,
       description: 'When this article was last used in case resolution'
     },
-    ViewCountLast6Months: {
+    view_count_last6_months: {
       type: 'number',
       label: 'Views (Last 6 Months)',
       precision: 0,
@@ -418,21 +418,21 @@ const KnowledgeArticle = {
       defaultValue: 0,
       description: 'View count in the last 6 months'
     },
-    // Content Features
-    HasAttachments: {
+    // content Features
+    has_attachments: {
       type: 'checkbox',
       label: 'Has Attachments',
       readonly: true,
       defaultValue: false
     },
-    AttachmentCount: {
+    attachment_count: {
       type: 'number',
       label: 'Attachment Count',
       precision: 0,
       readonly: true,
       defaultValue: 0
     },
-    EstimatedReadTime: {
+    estimated_read_time: {
       type: 'number',
       label: 'Est. Read Time (Minutes)',
       precision: 0,
@@ -445,21 +445,21 @@ const KnowledgeArticle = {
       name: 'CaseArticles',
       type: 'hasMany',
       object: 'CaseArticle',
-      foreignKey: 'ArticleId',
+      foreignKey: 'article_id',
       label: 'Related Cases'
     },
     {
       name: 'Translations',
       type: 'hasMany',
       object: 'KnowledgeArticle',
-      foreignKey: 'TranslationOfId',
+      foreignKey: 'translation_of_id',
       label: 'Translations'
     },
     {
       name: 'Feedback',
       type: 'hasMany',
       object: 'ArticleFeedback',
-      foreignKey: 'ArticleId',
+      foreignKey: 'article_id',
       label: 'Customer Feedback'
     }
   ],
@@ -467,17 +467,17 @@ const KnowledgeArticle = {
     {
       name: 'PublishDateRequired',
       errorMessage: 'Publish date is required for published articles',
-      formula: 'AND(Status = "Published", ISBLANK(PublishDate))'
+      formula: 'AND(status = "Published", ISBLANK(publish_date))'
     },
     {
       name: 'NextReviewRequired',
       errorMessage: 'Next review date is required for published articles',
-      formula: 'AND(Status = "Published", ISBLANK(NextReviewDate))'
+      formula: 'AND(status = "Published", ISBLANK(next_review_date))'
     },
     {
       name: 'CannotPublishInternal',
       errorMessage: 'Internal articles cannot be public',
-      formula: 'AND(IsInternal = true, IsPublic = true)'
+      formula: 'AND(is_internal = true, is_public = true)'
     }
   ],
   listViews: [
@@ -485,112 +485,112 @@ const KnowledgeArticle = {
       name: 'AllArticles',
       label: 'All Articles',
       filters: [],
-      columns: ['ArticleNumber', 'Title', 'Category', 'Status', 'Language', 'ViewCount', 'HelpfulRating'],
+      columns: ['article_number', 'title', 'category', 'status', 'language', 'view_count', 'helpful_rating'],
       sort: [['ModifiedDate', 'desc']]
     },
     {
       name: 'Published',
       label: 'Published',
       filters: [
-        ['Status', '=', 'Published']
+        ['status', '=', 'Published']
       ],
-      columns: ['ArticleNumber', 'Title', 'Category', 'ViewCount', 'HelpfulRating', 'LinkedFromCases'],
-      sort: [['ViewCount', 'desc']]
+      columns: ['article_number', 'title', 'category', 'view_count', 'helpful_rating', 'linked_from_cases'],
+      sort: [['view_count', 'desc']]
     },
     {
       name: 'Draft',
       label: 'Draft',
       filters: [
-        ['Status', '=', 'Draft']
+        ['status', '=', 'Draft']
       ],
-      columns: ['ArticleNumber', 'Title', 'Category', 'OwnerId', 'ModifiedDate'],
+      columns: ['article_number', 'title', 'category', 'owner_id', 'ModifiedDate'],
       sort: [['ModifiedDate', 'desc']]
     },
     {
       name: 'NeedsReview',
       label: 'Needs Review',
       filters: [
-        ['NextReviewDate', 'past_due', null],
-        ['Status', '=', 'Published']
+        ['next_review_date', 'past_due', null],
+        ['status', '=', 'Published']
       ],
-      columns: ['ArticleNumber', 'Title', 'Category', 'LastReviewDate', 'NextReviewDate', 'OwnerId'],
-      sort: [['NextReviewDate', 'asc']]
+      columns: ['article_number', 'title', 'category', 'last_review_date', 'next_review_date', 'owner_id'],
+      sort: [['next_review_date', 'asc']]
     },
     {
       name: 'MostViewed',
       label: 'Most Viewed',
       filters: [
-        ['Status', '=', 'Published']
+        ['status', '=', 'Published']
       ],
-      columns: ['ArticleNumber', 'Title', 'Category', 'ViewCount', 'UniqueViews', 'HelpfulRating'],
-      sort: [['ViewCount', 'desc']]
+      columns: ['article_number', 'title', 'category', 'view_count', 'unique_views', 'helpful_rating'],
+      sort: [['view_count', 'desc']]
     },
     {
       name: 'MostHelpful',
       label: 'Most Helpful',
       filters: [
-        ['Status', '=', 'Published'],
-        ['HelpfulCount', '>', 10]
+        ['status', '=', 'Published'],
+        ['helpful_count', '>', 10]
       ],
-      columns: ['ArticleNumber', 'Title', 'Category', 'HelpfulRating', 'HelpfulCount', 'NotHelpfulCount'],
-      sort: [['HelpfulRating', 'desc']]
+      columns: ['article_number', 'title', 'category', 'helpful_rating', 'helpful_count', 'not_helpful_count'],
+      sort: [['helpful_rating', 'desc']]
     },
     {
       name: 'LowRated',
       label: 'Low Rated',
       filters: [
-        ['Status', '=', 'Published'],
-        ['HelpfulRating', '<', 50],
-        ['HelpfulCount', '>', 5]
+        ['status', '=', 'Published'],
+        ['helpful_rating', '<', 50],
+        ['helpful_count', '>', 5]
       ],
-      columns: ['ArticleNumber', 'Title', 'Category', 'HelpfulRating', 'NotHelpfulCount', 'OwnerId'],
-      sort: [['HelpfulRating', 'asc']]
+      columns: ['article_number', 'title', 'category', 'helpful_rating', 'not_helpful_count', 'owner_id'],
+      sort: [['helpful_rating', 'asc']]
     },
     {
       name: 'ByCategory',
-      label: 'By Category',
+      label: 'By category',
       filters: [],
-      columns: ['Category', 'Title', 'Status', 'ViewCount', 'HelpfulRating'],
-      sort: [['Category', 'asc'], ['Title', 'asc']]
+      columns: ['category', 'title', 'status', 'view_count', 'helpful_rating'],
+      sort: [['category', 'asc'], ['title', 'asc']]
     },
     {
       name: 'ScheduledPublish',
       label: 'Scheduled to Publish',
       filters: [
-        ['Status', '=', 'Draft'],
-        ['ScheduledPublishDate', '!=', null]
+        ['status', '=', 'Draft'],
+        ['scheduled_publish_date', '!=', null]
       ],
-      columns: ['ArticleNumber', 'Title', 'ScheduledPublishDate', 'OwnerId'],
-      sort: [['ScheduledPublishDate', 'asc']]
+      columns: ['article_number', 'title', 'scheduled_publish_date', 'owner_id'],
+      sort: [['scheduled_publish_date', 'asc']]
     },
     {
       name: 'TopQuality',
       label: 'Top Quality',
       filters: [
-        ['Status', '=', 'Published'],
-        ['QualityScore', '>=', 80]
+        ['status', '=', 'Published'],
+        ['quality_score', '>=', 80]
       ],
-      columns: ['ArticleNumber', 'Title', 'QualityScore', 'PopularityScore', 'ViewCount'],
-      sort: [['QualityScore', 'desc']]
+      columns: ['article_number', 'title', 'quality_score', 'popularity_score', 'view_count'],
+      sort: [['quality_score', 'desc']]
     },
     {
       name: 'MostUsedInCases',
       label: 'Most Used in Cases',
       filters: [
-        ['Status', '=', 'Published'],
-        ['CaseResolutionCount', '>', 0]
+        ['status', '=', 'Published'],
+        ['case_resolution_count', '>', 0]
       ],
-      columns: ['ArticleNumber', 'Title', 'CaseResolutionCount', 'LastUsedInCaseDate', 'HelpfulRating'],
-      sort: [['CaseResolutionCount', 'desc']]
+      columns: ['article_number', 'title', 'case_resolution_count', 'last_used_in_case_date', 'helpful_rating'],
+      sort: [['case_resolution_count', 'desc']]
     },
     {
       name: 'Archived',
       label: 'Archived',
       filters: [
-        ['Status', '=', 'Archived']
+        ['status', '=', 'Archived']
       ],
-      columns: ['ArticleNumber', 'Title', 'ArchivedDate', 'ArchivedReason', 'ArchivedByUserId'],
-      sort: [['ArchivedDate', 'desc']]
+      columns: ['article_number', 'title', 'archived_date', 'archived_reason', 'archived_by_user_id'],
+      sort: [['archived_date', 'desc']]
     }
   ],
   pageLayout: {
@@ -598,77 +598,77 @@ const KnowledgeArticle = {
       {
         label: 'Article Information',
         columns: 2,
-        fields: ['ArticleNumber', 'Title', 'Summary', 'Status']
+        fields: ['article_number', 'title', 'summary', 'status']
       },
       {
-        label: 'Content',
+        label: 'content',
         columns: 1,
-        fields: ['Content']
+        fields: ['content']
       },
       {
         label: 'Categorization',
         columns: 2,
-        fields: ['Category', 'Subcategory', 'Keywords', 'Tags']
+        fields: ['category', 'subcategory', 'keywords', 'tags']
       },
       {
         label: 'Related',
         columns: 2,
-        fields: ['RelatedProductIds', 'RelatedCaseTypes']
+        fields: ['related_product_ids', 'related_case_types']
       },
       {
         label: 'Ownership',
         columns: 2,
-        fields: ['OwnerId', 'AuthorId']
+        fields: ['owner_id', 'author_id']
       },
       {
         label: 'Publishing',
         columns: 2,
-        fields: ['PublishDate', 'PublishedById', 'LastReviewDate', 'NextReviewDate']
+        fields: ['publish_date', 'published_by_id', 'last_review_date', 'next_review_date']
       },
       {
         label: 'Visibility',
         columns: 2,
-        fields: ['IsInternal', 'IsPublic', 'RequiresAuthentication', 'VisibleToCustomerTiers']
+        fields: ['is_internal', 'is_public', 'requires_authentication', 'visible_to_customer_tiers']
       },
       {
         label: 'Localization',
         columns: 2,
-        fields: ['Language', 'TranslationOfId']
+        fields: ['language', 'translation_of_id']
       },
       {
         label: 'Media',
         columns: 2,
-        fields: ['VideoURL', 'ThumbnailURL']
+        fields: ['video_u_r_l', 'thumbnail_u_r_l']
       },
       {
         label: 'Analytics',
         columns: 3,
-        fields: ['ViewCount', 'UniqueViews', 'HelpfulCount', 'NotHelpfulCount', 'HelpfulRating', 'AverageTimeOnPage', 'LinkedFromCases', 'SearchRank']
+        fields: ['view_count', 'unique_views', 'helpful_count', 'not_helpful_count', 'helpful_rating', 'average_time_on_page', 'linked_from_cases', 'search_rank']
       },
       {
         label: 'Performance Metrics',
         columns: 3,
-        fields: ['QualityScore', 'PopularityScore', 'CaseResolutionCount', 'LastUsedInCaseDate', 'ViewCountLast6Months']
+        fields: ['quality_score', 'popularity_score', 'case_resolution_count', 'last_used_in_case_date', 'view_count_last6_months']
       },
       {
         label: 'AI Enhancement',
         columns: 2,
-        fields: ['AICategory', 'AITags', 'AISummary', 'AIKeywords', 'RelatedArticleIds']
+        fields: ['a_i_category', 'a_i_tags', 'a_i_summary', 'a_i_keywords', 'related_article_ids']
       },
       {
         label: 'Workflow & Versioning',
         columns: 2,
-        fields: ['ScheduledPublishDate', 'VersionNumber', 'PreviousVersionId', 'ArchivedDate', 'ArchivedByUserId', 'ArchivedReason']
+        fields: ['scheduled_publish_date', 'version_number', 'previous_version_id', 'archived_date', 'archived_by_user_id', 'archived_reason']
       },
       {
-        label: 'Content Details',
+        label: 'content Details',
         columns: 3,
-        fields: ['HasAttachments', 'AttachmentCount', 'EstimatedReadTime']
+        fields: ['has_attachments', 'attachment_count', 'estimated_read_time']
       },
       {
         label: 'SEO',
         columns: 2,
-        fields: ['MetaDescription', 'URLSlug']
+        fields: ['meta_description', 'u_r_l_slug']
       }
     ]
   }

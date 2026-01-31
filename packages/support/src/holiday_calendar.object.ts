@@ -11,27 +11,27 @@ const HolidayCalendar = {
   },
   fields: {
     // Basic Information
-    Name: {
+    name: {
       type: 'text',
-      label: 'Calendar Name',
+      label: 'Calendar name',
       required: true,
       maxLength: 255,
       searchable: true
     },
-    Description: {
+    description: {
       type: 'textarea',
-      label: 'Description',
+      label: 'description',
       maxLength: 2000
     },
-    IsActive: {
+    is_active: {
       type: 'checkbox',
       label: 'Active',
       defaultValue: true
     },
     // Location
-    Country: {
+    country: {
       type: 'select',
-      label: 'Country',
+      label: 'country',
       required: true,
       options: [
         { label: 'United States', value: 'US' },
@@ -46,39 +46,39 @@ const HolidayCalendar = {
         { label: 'Singapore', value: 'SG' }
       ]
     },
-    Region: {
+    region: {
       type: 'text',
-      label: 'Region/State',
+      label: 'region/State',
       maxLength: 100,
       description: 'Specific region or state for regional holidays'
     },
-    Year: {
+    year: {
       type: 'number',
-      label: 'Year',
+      label: 'year',
       precision: 0,
       required: true,
       min: 2020,
       max: 2100
     },
     // Auto-Update
-    AutoUpdateFromPublicAPI: {
+    auto_update_from_public_a_p_i: {
       type: 'checkbox',
       label: 'Auto-Update from Public API',
       defaultValue: false,
       description: 'Automatically sync with public holiday API'
     },
-    LastSyncDate: {
+    last_sync_date: {
       type: 'datetime',
       label: 'Last Sync Date',
       readonly: true
     },
-    NextSyncDate: {
+    next_sync_date: {
       type: 'datetime',
       label: 'Next Sync Date',
       readonly: true
     },
     // Statistics
-    TotalHolidays: {
+    total_holidays: {
       type: 'number',
       label: 'Total Holidays',
       precision: 0,
@@ -92,7 +92,7 @@ const HolidayCalendar = {
       name: 'Holidays',
       type: 'hasMany',
       object: 'Holiday',
-      foreignKey: 'CalendarId',
+      foreignKey: 'calendar_id',
       label: 'Holidays'
     }
   ],
@@ -100,7 +100,7 @@ const HolidayCalendar = {
     {
       name: 'UniqueCalendarYear',
       errorMessage: 'A calendar already exists for this country, region, and year',
-      formula: 'AND(NOT(ISNEW()), EXISTS(SELECT Id FROM HolidayCalendar WHERE Country = $Country AND Region = $Region AND Year = $Year AND Id != $Id))'
+      formula: 'AND(NOT(ISNEW()), EXISTS(SELECT Id FROM HolidayCalendar WHERE country = $country AND region = $region AND year = $year AND Id != $Id))'
     }
   ],
   listViews: [
@@ -108,26 +108,26 @@ const HolidayCalendar = {
       name: 'AllCalendars',
       label: 'All Calendars',
       filters: [],
-      columns: ['Name', 'Country', 'Region', 'Year', 'TotalHolidays', 'IsActive'],
-      sort: [['Year', 'desc'], ['Country', 'asc']]
+      columns: ['name', 'country', 'region', 'year', 'total_holidays', 'is_active'],
+      sort: [['year', 'desc'], ['country', 'asc']]
     },
     {
       name: 'ActiveCalendars',
       label: 'Active Calendars',
       filters: [
-        ['IsActive', '=', true]
+        ['is_active', '=', true]
       ],
-      columns: ['Name', 'Country', 'Year', 'TotalHolidays', 'LastSyncDate'],
-      sort: [['Year', 'desc']]
+      columns: ['name', 'country', 'year', 'total_holidays', 'last_sync_date'],
+      sort: [['year', 'desc']]
     },
     {
       name: 'CurrentYear',
-      label: 'Current Year',
+      label: 'Current year',
       filters: [
-        ['Year', '=', 'YEAR(TODAY())']
+        ['year', '=', 'YEAR(TODAY())']
       ],
-      columns: ['Name', 'Country', 'Region', 'TotalHolidays', 'IsActive'],
-      sort: [['Country', 'asc']]
+      columns: ['name', 'country', 'region', 'total_holidays', 'is_active'],
+      sort: [['country', 'asc']]
     }
   ],
   pageLayout: {
@@ -135,22 +135,22 @@ const HolidayCalendar = {
       {
         label: 'Calendar Information',
         columns: 2,
-        fields: ['Name', 'Description', 'IsActive']
+        fields: ['name', 'description', 'is_active']
       },
       {
         label: 'Location',
         columns: 3,
-        fields: ['Country', 'Region', 'Year']
+        fields: ['country', 'region', 'year']
       },
       {
         label: 'Auto-Update',
         columns: 3,
-        fields: ['AutoUpdateFromPublicAPI', 'LastSyncDate', 'NextSyncDate']
+        fields: ['auto_update_from_public_a_p_i', 'last_sync_date', 'next_sync_date']
       },
       {
         label: 'Statistics',
         columns: 1,
-        fields: ['TotalHolidays']
+        fields: ['total_holidays']
       }
     ]
   }

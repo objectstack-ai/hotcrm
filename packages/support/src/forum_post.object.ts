@@ -11,34 +11,34 @@ const ForumPost = {
   },
   fields: {
     // Relationship
-    TopicId: {
+    topic_id: {
       type: 'lookup',
       label: 'Topic',
       reference: 'ForumTopic',
       required: true
     },
-    ParentPostId: {
+    parent_post_id: {
       type: 'lookup',
       label: 'Parent Post',
       reference: 'ForumPost',
       description: 'Reply to another post'
     },
-    // Content
-    Content: {
+    // content
+    content: {
       type: 'textarea',
-      label: 'Content',
+      label: 'content',
       required: true,
       maxLength: 10000,
       searchable: true
     },
     // Author
-    AuthorId: {
+    author_id: {
       type: 'lookup',
       label: 'Author',
       reference: 'PortalUser',
       required: true
     },
-    AuthorType: {
+    author_type: {
       type: 'select',
       label: 'Author Type',
       required: true,
@@ -51,79 +51,79 @@ const ForumPost = {
       ]
     },
     // Status
-    IsAnswer: {
+    is_answer: {
       type: 'checkbox',
       label: 'Marked as Answer',
       readonly: true,
       defaultValue: false,
       description: 'This post is the accepted answer'
     },
-    IsDeleted: {
+    is_deleted: {
       type: 'checkbox',
       label: 'Deleted',
       defaultValue: false
     },
-    DeletedDate: {
+    deleted_date: {
       type: 'datetime',
       label: 'Deleted Date',
       readonly: true
     },
-    DeletedById: {
+    deleted_by_id: {
       type: 'lookup',
       label: 'Deleted By',
       reference: 'User',
       readonly: true
     },
     // Moderation
-    RequiresModeration: {
+    requires_moderation: {
       type: 'checkbox',
       label: 'Requires Moderation',
       defaultValue: false
     },
-    IsApproved: {
+    is_approved: {
       type: 'checkbox',
       label: 'Approved',
       defaultValue: true
     },
-    ModeratedById: {
+    moderated_by_id: {
       type: 'lookup',
       label: 'Moderated By',
       reference: 'User',
       readonly: true
     },
-    ModerationDate: {
+    moderation_date: {
       type: 'datetime',
       label: 'Moderation Date',
       readonly: true
     },
-    ModerationNotes: {
+    moderation_notes: {
       type: 'textarea',
       label: 'Moderation Notes',
       maxLength: 2000,
       readonly: true
     },
     // Engagement
-    LikeCount: {
+    like_count: {
       type: 'number',
       label: 'Likes',
       precision: 0,
       readonly: true,
       defaultValue: 0
     },
-    ReplyCount: {
+    reply_count: {
       type: 'number',
       label: 'Replies',
       precision: 0,
       readonly: true,
       defaultValue: 0
     },
-    IsHelpful: {
+    is_helpful: {
       type: 'checkbox',
       label: 'Marked Helpful',
       defaultValue: false,
       description: 'Community marked as helpful'
     },
-    HelpfulCount: {
+    helpful_count: {
       type: 'number',
       label: 'Helpful Votes',
       precision: 0,
@@ -131,24 +131,24 @@ const ForumPost = {
       defaultValue: 0
     },
     // Edit History
-    IsEdited: {
+    is_edited: {
       type: 'checkbox',
       label: 'Edited',
       readonly: true,
       defaultValue: false
     },
-    LastEditDate: {
+    last_edit_date: {
       type: 'datetime',
       label: 'Last Edit Date',
       readonly: true
     },
-    LastEditById: {
+    last_edit_by_id: {
       type: 'lookup',
       label: 'Last Edit By',
       reference: 'PortalUser',
       readonly: true
     },
-    EditCount: {
+    edit_count: {
       type: 'number',
       label: 'Edit Count',
       precision: 0,
@@ -156,21 +156,21 @@ const ForumPost = {
       defaultValue: 0
     },
     // Flagging
-    IsFlagged: {
+    is_flagged: {
       type: 'checkbox',
       label: 'Flagged',
       readonly: true,
       defaultValue: false,
       description: 'Community flagged for review'
     },
-    FlagCount: {
+    flag_count: {
       type: 'number',
       label: 'Flag Count',
       precision: 0,
       readonly: true,
       defaultValue: 0
     },
-    FlagReason: {
+    flag_reason: {
       type: 'text',
       label: 'Flag Reason',
       maxLength: 500,
@@ -182,7 +182,7 @@ const ForumPost = {
       name: 'Replies',
       type: 'hasMany',
       object: 'ForumPost',
-      foreignKey: 'ParentPostId',
+      foreignKey: 'parent_post_id',
       label: 'Replies'
     }
   ],
@@ -190,7 +190,7 @@ const ForumPost = {
     {
       name: 'DeletedPostsReadOnly',
       errorMessage: 'Deleted posts cannot be modified',
-      formula: 'AND(PRIORVALUE(IsDeleted) = true, NOT(ISNEW()))'
+      formula: 'AND(PRIORVALUE(is_deleted) = true, NOT(ISNEW()))'
     }
   ],
   listViews: [
@@ -198,7 +198,7 @@ const ForumPost = {
       name: 'AllPosts',
       label: 'All Posts',
       filters: [],
-      columns: ['TopicId', 'AuthorId', 'Content', 'LikeCount', 'ReplyCount', 'CreatedDate'],
+      columns: ['topic_id', 'author_id', 'content', 'like_count', 'reply_count', 'CreatedDate'],
       sort: [['CreatedDate', 'desc']]
     },
     {
@@ -206,49 +206,49 @@ const ForumPost = {
       label: 'Recent Posts',
       filters: [
         ['CreatedDate', 'last_n_days', 7],
-        ['IsDeleted', '=', false]
+        ['is_deleted', '=', false]
       ],
-      columns: ['TopicId', 'AuthorId', 'Content', 'LikeCount', 'CreatedDate'],
+      columns: ['topic_id', 'author_id', 'content', 'like_count', 'CreatedDate'],
       sort: [['CreatedDate', 'desc']]
     },
     {
       name: 'AcceptedAnswers',
       label: 'Accepted Answers',
       filters: [
-        ['IsAnswer', '=', true]
+        ['is_answer', '=', true]
       ],
-      columns: ['TopicId', 'AuthorId', 'Content', 'LikeCount', 'HelpfulCount', 'CreatedDate'],
-      sort: [['HelpfulCount', 'desc']]
+      columns: ['topic_id', 'author_id', 'content', 'like_count', 'helpful_count', 'CreatedDate'],
+      sort: [['helpful_count', 'desc']]
     },
     {
       name: 'MostHelpful',
       label: 'Most Helpful',
       filters: [
-        ['HelpfulCount', '>', 5],
-        ['IsDeleted', '=', false]
+        ['helpful_count', '>', 5],
+        ['is_deleted', '=', false]
       ],
-      columns: ['TopicId', 'AuthorId', 'Content', 'HelpfulCount', 'LikeCount'],
-      sort: [['HelpfulCount', 'desc']]
+      columns: ['topic_id', 'author_id', 'content', 'helpful_count', 'like_count'],
+      sort: [['helpful_count', 'desc']]
     },
     {
       name: 'NeedingModeration',
       label: 'Needing Moderation',
       filters: [
-        ['RequiresModeration', '=', true],
-        ['IsApproved', '=', false]
+        ['requires_moderation', '=', true],
+        ['is_approved', '=', false]
       ],
-      columns: ['TopicId', 'AuthorId', 'Content', 'CreatedDate'],
+      columns: ['topic_id', 'author_id', 'content', 'CreatedDate'],
       sort: [['CreatedDate', 'asc']]
     },
     {
       name: 'Flagged',
       label: 'Flagged for Review',
       filters: [
-        ['IsFlagged', '=', true],
-        ['ModeratedById', '=', null]
+        ['is_flagged', '=', true],
+        ['moderated_by_id', '=', null]
       ],
-      columns: ['TopicId', 'AuthorId', 'Content', 'FlagCount', 'FlagReason', 'CreatedDate'],
-      sort: [['FlagCount', 'desc']]
+      columns: ['topic_id', 'author_id', 'content', 'flag_count', 'flag_reason', 'CreatedDate'],
+      sort: [['flag_count', 'desc']]
     }
   ],
   pageLayout: {
@@ -256,42 +256,42 @@ const ForumPost = {
       {
         label: 'Post Information',
         columns: 2,
-        fields: ['TopicId', 'ParentPostId']
+        fields: ['topic_id', 'parent_post_id']
       },
       {
-        label: 'Content',
+        label: 'content',
         columns: 1,
-        fields: ['Content']
+        fields: ['content']
       },
       {
         label: 'Author',
         columns: 2,
-        fields: ['AuthorId', 'AuthorType']
+        fields: ['author_id', 'author_type']
       },
       {
         label: 'Status',
         columns: 3,
-        fields: ['IsAnswer', 'IsDeleted', 'DeletedDate', 'DeletedById']
+        fields: ['is_answer', 'is_deleted', 'deleted_date', 'deleted_by_id']
       },
       {
         label: 'Moderation',
         columns: 2,
-        fields: ['RequiresModeration', 'IsApproved', 'ModeratedById', 'ModerationDate', 'ModerationNotes']
+        fields: ['requires_moderation', 'is_approved', 'moderated_by_id', 'moderation_date', 'moderation_notes']
       },
       {
         label: 'Engagement',
         columns: 4,
-        fields: ['LikeCount', 'ReplyCount', 'IsHelpful', 'HelpfulCount']
+        fields: ['like_count', 'reply_count', 'is_helpful', 'helpful_count']
       },
       {
         label: 'Edit History',
         columns: 4,
-        fields: ['IsEdited', 'LastEditDate', 'LastEditById', 'EditCount']
+        fields: ['is_edited', 'last_edit_date', 'last_edit_by_id', 'edit_count']
       },
       {
         label: 'Flagging',
         columns: 3,
-        fields: ['IsFlagged', 'FlagCount', 'FlagReason']
+        fields: ['is_flagged', 'flag_count', 'flag_reason']
       }
     ]
   }

@@ -11,26 +11,26 @@ const RoutingRule = {
   },
   fields: {
     // Basic Information
-    Name: {
+    name: {
       type: 'text',
-      label: 'Rule Name',
+      label: 'Rule name',
       required: true,
       maxLength: 255,
       searchable: true
     },
-    Description: {
+    description: {
       type: 'textarea',
-      label: 'Description',
+      label: 'description',
       maxLength: 2000
     },
-    IsActive: {
+    is_active: {
       type: 'checkbox',
       label: 'Active',
       defaultValue: true
     },
-    Priority: {
+    priority: {
       type: 'number',
-      label: 'Rule Priority',
+      label: 'Rule priority',
       required: true,
       precision: 0,
       min: 1,
@@ -38,7 +38,7 @@ const RoutingRule = {
       description: 'Lower number = higher priority (rules evaluated in priority order)'
     },
     // Target Queue
-    QueueId: {
+    queue_id: {
       type: 'lookup',
       label: 'Target Queue',
       reference: 'Queue',
@@ -46,7 +46,7 @@ const RoutingRule = {
       description: 'Queue to route cases to'
     },
     // Matching Criteria
-    MatchCriteria: {
+    match_criteria: {
       type: 'select',
       label: 'Match Criteria',
       required: true,
@@ -57,7 +57,7 @@ const RoutingRule = {
       ]
     },
     // Origin Filters
-    MatchOrigins: {
+    match_origins: {
       type: 'multiselect',
       label: 'Match Origins',
       options: [
@@ -72,7 +72,7 @@ const RoutingRule = {
       ]
     },
     // Case Type Filters
-    MatchCaseTypes: {
+    match_case_types: {
       type: 'multiselect',
       label: 'Match Case Types',
       options: [
@@ -85,8 +85,8 @@ const RoutingRule = {
         { label: 'Other', value: 'Other' }
       ]
     },
-    // Priority Filters
-    MatchPriorities: {
+    // priority Filters
+    match_priorities: {
       type: 'multiselect',
       label: 'Match Priorities',
       options: [
@@ -97,13 +97,13 @@ const RoutingRule = {
       ]
     },
     // Product/Category Filters
-    MatchProductIds: {
+    match_product_ids: {
       type: 'text',
       label: 'Match Products',
       maxLength: 500,
       description: 'Comma-separated product IDs'
     },
-    MatchCategories: {
+    match_categories: {
       type: 'multiselect',
       label: 'Match Categories',
       options: [
@@ -116,20 +116,20 @@ const RoutingRule = {
       ]
     },
     // Customer Filters
-    VIPCustomersOnly: {
+    v_i_p_customers_only: {
       type: 'checkbox',
       label: 'VIP Customers Only',
       defaultValue: false,
       description: 'Route only VIP customer cases'
     },
-    MatchAccountIds: {
+    match_account_ids: {
       type: 'text',
       label: 'Match Accounts',
       maxLength: 1000,
       description: 'Comma-separated account IDs for specific accounts'
     },
     // Geographic Filters
-    MatchRegions: {
+    match_regions: {
       type: 'multiselect',
       label: 'Match Regions',
       options: [
@@ -141,20 +141,20 @@ const RoutingRule = {
         { label: 'Japan', value: 'JP' }
       ]
     },
-    MatchCountries: {
+    match_countries: {
       type: 'text',
       label: 'Match Countries',
       maxLength: 500,
       description: 'Comma-separated country codes (e.g., US, CN, UK)'
     },
     // AI-Based Routing
-    UseAIClassification: {
+    use_a_i_classification: {
       type: 'checkbox',
       label: 'Use AI Classification',
       defaultValue: false,
       description: 'Use AI to classify and route cases'
     },
-    AIConfidenceThreshold: {
+    a_i_confidence_threshold: {
       type: 'number',
       label: 'AI Confidence Threshold (%)',
       precision: 0,
@@ -164,13 +164,13 @@ const RoutingRule = {
       description: 'Minimum AI confidence score to apply this rule'
     },
     // Keyword Matching
-    MatchKeywords: {
+    match_keywords: {
       type: 'text',
       label: 'Match Keywords',
       maxLength: 1000,
       description: 'Comma-separated keywords in subject/description'
     },
-    KeywordMatchType: {
+    keyword_match_type: {
       type: 'select',
       label: 'Keyword Match Type',
       defaultValue: 'Any',
@@ -181,31 +181,31 @@ const RoutingRule = {
       ]
     },
     // Time-Based Routing
-    EnableTimeBasedRouting: {
+    enable_time_based_routing: {
       type: 'checkbox',
       label: 'Enable Time-Based Routing',
       defaultValue: false
     },
-    BusinessHoursId: {
+    business_hours_id: {
       type: 'lookup',
       label: 'Business Hours',
       reference: 'BusinessHours',
       description: 'Apply rule only during these business hours'
     },
     // Statistics
-    CasesRouted: {
+    cases_routed: {
       type: 'number',
       label: 'Cases Routed',
       precision: 0,
       readonly: true,
       description: 'Total cases routed by this rule'
     },
-    LastMatchDate: {
+    last_match_date: {
       type: 'datetime',
       label: 'Last Match',
       readonly: true
     },
-    SuccessRate: {
+    success_rate: {
       type: 'number',
       label: 'Success Rate (%)',
       precision: 2,
@@ -217,17 +217,17 @@ const RoutingRule = {
     {
       name: 'AIThresholdRequired',
       errorMessage: 'AI confidence threshold is required when using AI classification',
-      formula: 'AND(UseAIClassification = true, ISBLANK(AIConfidenceThreshold))'
+      formula: 'AND(use_a_i_classification = true, ISBLANK(a_i_confidence_threshold))'
     },
     {
       name: 'BusinessHoursRequired',
       errorMessage: 'Business hours is required when time-based routing is enabled',
-      formula: 'AND(EnableTimeBasedRouting = true, ISBLANK(BusinessHoursId))'
+      formula: 'AND(enable_time_based_routing = true, ISBLANK(business_hours_id))'
     },
     {
       name: 'AtLeastOneCriteria',
       errorMessage: 'At least one matching criteria must be specified',
-      formula: 'AND(ISBLANK(MatchOrigins), ISBLANK(MatchCaseTypes), ISBLANK(MatchPriorities), ISBLANK(MatchProductIds), ISBLANK(MatchCategories), ISBLANK(MatchAccountIds), ISBLANK(MatchRegions), ISBLANK(MatchCountries), ISBLANK(MatchKeywords), VIPCustomersOnly = false, UseAIClassification = false)'
+      formula: 'AND(ISBLANK(match_origins), ISBLANK(match_case_types), ISBLANK(match_priorities), ISBLANK(match_product_ids), ISBLANK(match_categories), ISBLANK(match_account_ids), ISBLANK(match_regions), ISBLANK(match_countries), ISBLANK(match_keywords), v_i_p_customers_only = false, use_a_i_classification = false)'
     }
   ],
   listViews: [
@@ -235,24 +235,24 @@ const RoutingRule = {
       name: 'AllRules',
       label: 'All Routing Rules',
       filters: [],
-      columns: ['Name', 'Priority', 'QueueId', 'IsActive', 'CasesRouted', 'SuccessRate'],
-      sort: [['Priority', 'asc']]
+      columns: ['name', 'priority', 'queue_id', 'is_active', 'cases_routed', 'success_rate'],
+      sort: [['priority', 'asc']]
     },
     {
       name: 'ActiveRules',
       label: 'Active Rules',
       filters: [
-        ['IsActive', '=', true]
+        ['is_active', '=', true]
       ],
-      columns: ['Name', 'Priority', 'QueueId', 'CasesRouted', 'LastMatchDate', 'SuccessRate'],
-      sort: [['Priority', 'asc']]
+      columns: ['name', 'priority', 'queue_id', 'cases_routed', 'last_match_date', 'success_rate'],
+      sort: [['priority', 'asc']]
     },
     {
       name: 'ByQueue',
       label: 'By Queue',
       filters: [],
-      columns: ['Name', 'QueueId', 'Priority', 'CasesRouted', 'IsActive'],
-      sort: [['QueueId', 'asc'], ['Priority', 'asc']]
+      columns: ['name', 'queue_id', 'priority', 'cases_routed', 'is_active'],
+      sort: [['queue_id', 'asc'], ['priority', 'asc']]
     }
   ],
   pageLayout: {
@@ -260,42 +260,42 @@ const RoutingRule = {
       {
         label: 'Rule Information',
         columns: 2,
-        fields: ['Name', 'Description', 'Priority', 'IsActive']
+        fields: ['name', 'description', 'priority', 'is_active']
       },
       {
         label: 'Target & Criteria',
         columns: 2,
-        fields: ['QueueId', 'MatchCriteria']
+        fields: ['queue_id', 'match_criteria']
       },
       {
         label: 'Case Matching',
         columns: 2,
-        fields: ['MatchOrigins', 'MatchCaseTypes', 'MatchPriorities', 'MatchCategories']
+        fields: ['match_origins', 'match_case_types', 'match_priorities', 'match_categories']
       },
       {
         label: 'Product & Customer',
         columns: 2,
-        fields: ['MatchProductIds', 'VIPCustomersOnly', 'MatchAccountIds']
+        fields: ['match_product_ids', 'v_i_p_customers_only', 'match_account_ids']
       },
       {
         label: 'Geographic Routing',
         columns: 2,
-        fields: ['MatchRegions', 'MatchCountries']
+        fields: ['match_regions', 'match_countries']
       },
       {
         label: 'AI & Keyword Matching',
         columns: 2,
-        fields: ['UseAIClassification', 'AIConfidenceThreshold', 'MatchKeywords', 'KeywordMatchType']
+        fields: ['use_a_i_classification', 'a_i_confidence_threshold', 'match_keywords', 'keyword_match_type']
       },
       {
         label: 'Time-Based Routing',
         columns: 2,
-        fields: ['EnableTimeBasedRouting', 'BusinessHoursId']
+        fields: ['enable_time_based_routing', 'business_hours_id']
       },
       {
         label: 'Performance',
         columns: 3,
-        fields: ['CasesRouted', 'LastMatchDate', 'SuccessRate']
+        fields: ['cases_routed', 'last_match_date', 'success_rate']
       }
     ]
   }

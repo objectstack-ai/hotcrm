@@ -12,23 +12,23 @@ const Contract = {
     files: true
   },
   fields: {
-    ContractNumber: {
+    contract_number: {
       type: 'autonumber',
       label: '合同编号',
       format: 'CT-{YYYY}{MM}{DD}-{0000}'
     },
-    AccountId: {
+    account_id: {
       type: 'lookup',
       label: '客户',
       reference: 'Account',
       required: true
     },
-    OpportunityId: {
+    opportunity_id: {
       type: 'lookup',
       label: '关联商机',
       reference: 'Opportunity'
     },
-    Status: {
+    status: {
       type: 'select',
       label: '状态',
       required: true,
@@ -42,20 +42,20 @@ const Contract = {
         { label: '❌ 已终止', value: 'Terminated' }
       ]
     },
-    StartDate: {
+    start_date: {
       type: 'date',
       label: '开始日期',
       required: true
     },
-    EndDate: {
+    end_date: {
       type: 'date',
       label: '结束日期'
     },
-    ContractTerm: {
+    contract_term: {
       type: 'number',
       label: '合同期限（月）'
     },
-    ContractValue: {
+    contract_value: {
       type: 'currency',
       label: '合同金额',
       precision: 2,
@@ -66,7 +66,7 @@ const Contract = {
     {
       name: 'All',
       label: '所有合同',
-      columns: ['ContractNumber', 'AccountId', 'Status', 'StartDate', 'EndDate', 'ContractValue']
+      columns: ['contract_number', 'account_id', 'status', 'start_date', 'end_date', 'contract_value']
     }
   ]
 };

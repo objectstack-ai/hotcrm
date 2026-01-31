@@ -14,14 +14,14 @@ const DiscountSchedule = {
   },
   fields: {
     // Basic Information
-    Name: {
+    name: {
       type: 'text',
-      label: 'Schedule Name',
+      label: 'Schedule name',
       required: true,
       searchable: true,
       maxLength: 255
     },
-    ScheduleCode: {
+    schedule_code: {
       type: 'text',
       label: 'Schedule Code',
       unique: true,
@@ -29,14 +29,14 @@ const DiscountSchedule = {
       maxLength: 50,
       description: 'Unique identifier for the discount schedule'
     },
-    Description: {
+    description: {
       type: 'textarea',
-      label: 'Description',
+      label: 'description',
       maxLength: 2000
     },
-    Status: {
+    status: {
       type: 'select',
-      label: 'Status',
+      label: 'status',
       required: true,
       defaultValue: 'Active',
       options: [
@@ -48,7 +48,7 @@ const DiscountSchedule = {
       ]
     },
     // Schedule Type
-    ScheduleType: {
+    schedule_type: {
       type: 'select',
       label: 'Schedule Type',
       required: true,
@@ -64,32 +64,32 @@ const DiscountSchedule = {
       ]
     },
     // Date Range
-    StartDate: {
+    start_date: {
       type: 'datetime',
       label: 'Start Date',
       required: true,
       description: 'When discount becomes effective'
     },
-    EndDate: {
+    end_date: {
       type: 'datetime',
       label: 'End Date',
       required: true,
       description: 'When discount expires'
     },
-    IsRecurring: {
+    is_recurring: {
       type: 'checkbox',
       label: 'Recurring',
       defaultValue: false,
       description: 'Schedule repeats annually'
     },
-    RecurrencePattern: {
+    recurrence_pattern: {
       type: 'text',
       label: 'Recurrence Pattern',
       maxLength: 100,
       description: 'e.g., "Every January 1-31", "Q4 Every Year"'
     },
     // Discount Configuration
-    DiscountType: {
+    discount_type: {
       type: 'select',
       label: 'Discount Type',
       required: true,
@@ -99,64 +99,64 @@ const DiscountSchedule = {
         { label: 'Tiered', value: 'Tiered' }
       ]
     },
-    DefaultDiscountPercent: {
+    default_discount_percent: {
       type: 'percent',
       label: 'Default Discount %',
       description: 'Default discount percentage'
     },
-    DefaultDiscountAmount: {
+    default_discount_amount: {
       type: 'currency',
       label: 'Default Discount Amount',
       precision: 2,
       description: 'Default fixed discount amount'
     },
-    MinimumDiscountPercent: {
+    minimum_discount_percent: {
       type: 'percent',
       label: 'Minimum Discount %',
       description: 'Minimum allowed discount percentage'
     },
-    MaximumDiscountPercent: {
+    maximum_discount_percent: {
       type: 'percent',
       label: 'Maximum Discount %',
       description: 'Maximum allowed discount percentage'
     },
     // Applicability
-    AppliesTo: {
+    applies_to: {
       type: 'select',
       label: 'Applies To',
       required: true,
       options: [
         { label: 'All Products', value: 'AllProducts' },
-        { label: 'Product Category', value: 'ProductCategory' },
-        { label: 'Product Family', value: 'ProductFamily' },
+        { label: 'Product Category', value: 'product_category' },
+        { label: 'Product Family', value: 'product_family' },
         { label: 'Specific Products', value: 'SpecificProducts' },
         { label: 'Product Bundles', value: 'ProductBundles' }
       ]
     },
-    ProductCategory: {
+    product_category: {
       type: 'text',
       label: 'Product Category',
       maxLength: 100
     },
-    ProductFamily: {
+    product_family: {
       type: 'text',
       label: 'Product Family',
       maxLength: 100
     },
-    IncludedProducts: {
+    included_products: {
       type: 'textarea',
       label: 'Included Products',
       maxLength: 2000,
       description: 'Comma-separated list of product codes'
     },
-    ExcludedProducts: {
+    excluded_products: {
       type: 'textarea',
       label: 'Excluded Products',
       maxLength: 2000,
       description: 'Comma-separated list of excluded product codes'
     },
     // Customer Scope
-    CustomerScope: {
+    customer_scope: {
       type: 'select',
       label: 'Customer Scope',
       required: true,
@@ -167,82 +167,82 @@ const DiscountSchedule = {
         { label: 'Existing Customers', value: 'ExistingCustomers' },
         { label: 'VIP Customers', value: 'VIPCustomers' },
         { label: 'Specific Accounts', value: 'SpecificAccounts' },
-        { label: 'Customer Segment', value: 'CustomerSegment' },
-        { label: 'Industry', value: 'Industry' }
+        { label: 'Customer Segment', value: 'customer_segment' },
+        { label: 'industry', value: 'industry' }
       ]
     },
-    CustomerSegment: {
+    customer_segment: {
       type: 'text',
       label: 'Customer Segment',
       maxLength: 100
     },
-    Industry: {
+    industry: {
       type: 'text',
-      label: 'Industry',
+      label: 'industry',
       maxLength: 100
     },
-    IncludedAccounts: {
+    included_accounts: {
       type: 'textarea',
       label: 'Included Accounts',
       maxLength: 2000,
       description: 'Comma-separated list of account IDs'
     },
     // Approval Requirements
-    RequiresApproval: {
+    requires_approval: {
       type: 'checkbox',
       label: 'Requires Approval',
       defaultValue: false,
       description: 'Discounts from this schedule require approval'
     },
-    ApprovalLevel: {
+    approval_level: {
       type: 'number',
       label: 'Approval Level',
       precision: 0,
       description: 'Required approval level (1-5)'
     },
-    AutoApproveThreshold: {
+    auto_approve_threshold: {
       type: 'percent',
       label: 'Auto-Approve Threshold',
       description: 'Discount % below which auto-approval applies'
     },
-    ApprovalMatrixId: {
+    approval_matrix_id: {
       type: 'lookup',
       label: 'Approval Matrix',
       reference: 'ApprovalMatrix',
       description: 'Custom approval matrix for this schedule'
     },
     // Margin Protection
-    EnforceMarginRules: {
+    enforce_margin_rules: {
       type: 'checkbox',
       label: 'Enforce Margin Rules',
       defaultValue: true,
       description: 'Enforce minimum margin requirements'
     },
-    MinimumMarginPercent: {
+    minimum_margin_percent: {
       type: 'percent',
       label: 'Minimum Margin %',
       description: 'Minimum acceptable profit margin percentage'
     },
-    MinimumMarginAmount: {
+    minimum_margin_amount: {
       type: 'currency',
       label: 'Minimum Margin Amount',
       precision: 2,
       description: 'Minimum acceptable profit margin amount'
     },
-    AlertBelowMargin: {
+    alert_below_margin: {
       type: 'checkbox',
       label: 'Alert Below Margin',
       defaultValue: true,
       description: 'Alert when margin falls below threshold'
     },
-    BlockBelowMargin: {
+    block_below_margin: {
       type: 'checkbox',
       label: 'Block Below Margin',
       defaultValue: false,
       description: 'Prevent quotes below minimum margin'
     },
     // Usage Limits
-    UsageLimitType: {
+    usage_limit_type: {
       type: 'select',
       label: 'Usage Limit Type',
       options: [
@@ -253,25 +253,25 @@ const DiscountSchedule = {
       ],
       defaultValue: 'Unlimited'
     },
-    MaxTotalUses: {
+    max_total_uses: {
       type: 'number',
       label: 'Max Total Uses',
       precision: 0,
       description: 'Maximum total number of times schedule can be used'
     },
-    MaxUsesPerCustomer: {
+    max_uses_per_customer: {
       type: 'number',
       label: 'Max Uses Per Customer',
       precision: 0,
       description: 'Maximum uses per customer'
     },
-    MaxUsesPerProduct: {
+    max_uses_per_product: {
       type: 'number',
       label: 'Max Uses Per Product',
       precision: 0,
       description: 'Maximum uses per product'
     },
-    CurrentUsageCount: {
+    current_usage_count: {
       type: 'number',
       label: 'Current Usage Count',
       precision: 0,
@@ -280,77 +280,77 @@ const DiscountSchedule = {
       description: 'Current number of uses'
     },
     // Financial Constraints
-    MinimumOrderValue: {
+    minimum_order_value: {
       type: 'currency',
       label: 'Minimum Order Value',
       precision: 2,
       description: 'Minimum order value required to apply discount'
     },
-    MaximumOrderValue: {
+    maximum_order_value: {
       type: 'currency',
       label: 'Maximum Order Value',
       precision: 2,
       description: 'Maximum order value for discount applicability'
     },
-    MinimumQuantity: {
+    minimum_quantity: {
       type: 'number',
       label: 'Minimum Quantity',
       precision: 0,
       description: 'Minimum product quantity required'
     },
     // Combination Rules
-    AllowCombineWithOther: {
+    allow_combine_with_other: {
       type: 'checkbox',
       label: 'Allow Combine with Other Discounts',
       defaultValue: false,
       description: 'Can be combined with other discount schedules'
     },
-    Priority: {
+    priority: {
       type: 'number',
-      label: 'Priority',
+      label: 'priority',
       precision: 0,
       defaultValue: 100,
-      description: 'Priority when multiple schedules apply (lower = higher priority)'
+      description: 'priority when multiple schedules apply (lower = higher priority)'
     },
-    ExclusiveWith: {
+    exclusive_with: {
       type: 'textarea',
       label: 'Exclusive With',
       maxLength: 2000,
       description: 'Comma-separated list of schedule codes that cannot be combined'
     },
     // Analytics & Reporting
-    TargetRevenue: {
+    target_revenue: {
       type: 'currency',
       label: 'Target Revenue',
       precision: 2,
       description: 'Revenue target for this promotion'
     },
-    ActualRevenue: {
+    actual_revenue: {
       type: 'currency',
       label: 'Actual Revenue',
       precision: 2,
       readonly: true,
       description: 'Actual revenue generated'
     },
-    TargetUses: {
+    target_uses: {
       type: 'number',
       label: 'Target Uses',
       precision: 0,
       description: 'Target number of uses'
     },
-    ConversionRate: {
+    conversion_rate: {
       type: 'percent',
       label: 'Conversion Rate',
       readonly: true,
       description: 'Quote to deal conversion rate'
     },
-    AverageDiscountGiven: {
+    average_discount_given: {
       type: 'percent',
       label: 'Average Discount Given',
       readonly: true,
       description: 'Average discount percentage given'
     },
-    TotalDiscountAmount: {
+    total_discount_amount: {
       type: 'currency',
       label: 'Total Discount Amount',
       precision: 2,
@@ -358,26 +358,26 @@ const DiscountSchedule = {
       description: 'Total discount amount given'
     },
     // AI Enhancement
-    AIOptimalDiscountPercent: {
+    a_i_optimal_discount_percent: {
       type: 'percent',
       label: 'AI Optimal Discount',
       readonly: true,
       description: 'AI-recommended optimal discount percentage'
     },
-    AIExpectedROI: {
+    a_i_expected_r_o_i: {
       type: 'percent',
       label: 'AI Expected ROI',
       readonly: true,
       description: 'AI-predicted return on investment'
     },
-    AIRecommendedDuration: {
+    a_i_recommended_duration: {
       type: 'number',
       label: 'AI Recommended Duration (Days)',
       precision: 0,
       readonly: true,
       description: 'AI-suggested optimal campaign duration'
     },
-    AIPerformanceAnalysis: {
+    a_i_performance_analysis: {
       type: 'textarea',
       label: 'AI Performance Analysis',
       readonly: true,
@@ -390,14 +390,14 @@ const DiscountSchedule = {
       name: 'DiscountTiers',
       type: 'hasMany',
       object: 'DiscountTier',
-      foreignKey: 'DiscountScheduleId',
+      foreignKey: 'discount_schedule_id',
       label: 'Discount Tiers'
     },
     {
       name: 'AppliedQuotes',
       type: 'hasMany',
       object: 'Quote',
-      foreignKey: 'DiscountScheduleId',
+      foreignKey: 'discount_schedule_id',
       label: 'Applied Quotes'
     }
   ],
@@ -406,120 +406,120 @@ const DiscountSchedule = {
       name: 'AllSchedules',
       label: 'All Schedules',
       filters: [],
-      columns: ['Name', 'ScheduleCode', 'ScheduleType', 'Status', 'StartDate', 'EndDate'],
-      sort: [['StartDate', 'desc']]
+      columns: ['name', 'schedule_code', 'schedule_type', 'status', 'start_date', 'end_date'],
+      sort: [['start_date', 'desc']]
     },
     {
       name: 'ActiveSchedules',
       label: 'Active Schedules',
-      filters: [['Status', '=', 'Active']],
-      columns: ['Name', 'ScheduleType', 'DefaultDiscountPercent', 'StartDate', 'EndDate', 'CurrentUsageCount'],
-      sort: [['Priority', 'asc']]
+      filters: [['status', '=', 'Active']],
+      columns: ['name', 'schedule_type', 'default_discount_percent', 'start_date', 'end_date', 'current_usage_count'],
+      sort: [['priority', 'asc']]
     },
     {
       name: 'CurrentPromotions',
       label: 'Current Promotions',
       filters: [
-        ['Status', '=', 'Active'],
-        ['StartDate', '<=', '$today'],
-        ['EndDate', '>=', '$today']
+        ['status', '=', 'Active'],
+        ['start_date', '<=', '$today'],
+        ['end_date', '>=', '$today']
       ],
-      columns: ['Name', 'ScheduleType', 'DefaultDiscountPercent', 'EndDate', 'CurrentUsageCount', 'MaxTotalUses'],
-      sort: [['EndDate', 'asc']]
+      columns: ['name', 'schedule_type', 'default_discount_percent', 'end_date', 'current_usage_count', 'max_total_uses'],
+      sort: [['end_date', 'asc']]
     },
     {
       name: 'UpcomingSchedules',
       label: 'Upcoming',
       filters: [
-        ['Status', 'in', ['Active', 'Scheduled']],
-        ['StartDate', '>', '$today']
+        ['status', 'in', ['Active', 'Scheduled']],
+        ['start_date', '>', '$today']
       ],
-      columns: ['Name', 'ScheduleType', 'DefaultDiscountPercent', 'StartDate', 'EndDate'],
-      sort: [['StartDate', 'asc']]
+      columns: ['name', 'schedule_type', 'default_discount_percent', 'start_date', 'end_date'],
+      sort: [['start_date', 'asc']]
     },
     {
       name: 'ExpiringSchedules',
       label: 'Expiring Soon',
       filters: [
-        ['Status', '=', 'Active'],
-        ['EndDate', 'next_n_days', 7]
+        ['status', '=', 'Active'],
+        ['end_date', 'next_n_days', 7]
       ],
-      columns: ['Name', 'ScheduleType', 'EndDate', 'CurrentUsageCount', 'ActualRevenue', 'TargetRevenue'],
-      sort: [['EndDate', 'asc']]
+      columns: ['name', 'schedule_type', 'end_date', 'current_usage_count', 'actual_revenue', 'target_revenue'],
+      sort: [['end_date', 'asc']]
     },
     {
       name: 'HighPerformance',
       label: 'High Performance',
       filters: [
-        ['Status', '=', 'Active'],
-        ['ConversionRate', '>', 0.5]
+        ['status', '=', 'Active'],
+        ['conversion_rate', '>', 0.5]
       ],
-      columns: ['Name', 'ConversionRate', 'ActualRevenue', 'AverageDiscountGiven', 'CurrentUsageCount'],
-      sort: [['ConversionRate', 'desc']]
+      columns: ['name', 'conversion_rate', 'actual_revenue', 'average_discount_given', 'current_usage_count'],
+      sort: [['conversion_rate', 'desc']]
     },
     {
       name: 'RequiringApproval',
       label: 'Requiring Approval',
       filters: [
-        ['Status', '=', 'Active'],
-        ['RequiresApproval', '=', true]
+        ['status', '=', 'Active'],
+        ['requires_approval', '=', true]
       ],
-      columns: ['Name', 'MaximumDiscountPercent', 'ApprovalLevel', 'CurrentUsageCount'],
-      sort: [['ApprovalLevel', 'desc']]
+      columns: ['name', 'maximum_discount_percent', 'approval_level', 'current_usage_count'],
+      sort: [['approval_level', 'desc']]
     },
     {
       name: 'RecurringSchedules',
       label: 'Recurring',
-      filters: [['IsRecurring', '=', true]],
-      columns: ['Name', 'ScheduleType', 'RecurrencePattern', 'DefaultDiscountPercent', 'Status'],
-      sort: [['Name', 'asc']]
+      filters: [['is_recurring', '=', true]],
+      columns: ['name', 'schedule_type', 'recurrence_pattern', 'default_discount_percent', 'status'],
+      sort: [['name', 'asc']]
     }
   ],
   validationRules: [
     {
       name: 'EndDateAfterStartDate',
       errorMessage: 'End date must be after start date',
-      formula: 'EndDate <= StartDate'
+      formula: 'end_date <= start_date'
     },
     {
       name: 'DiscountTypeConfiguration',
       errorMessage: 'Default discount percent or amount must be specified based on discount type',
-      formula: 'AND(DiscountType = "Percentage", ISBLANK(DefaultDiscountPercent))'
+      formula: 'AND(discount_type = "Percentage", ISBLANK(default_discount_percent))'
     },
     {
       name: 'MinMaxDiscountValid',
       errorMessage: 'Maximum discount must be greater than minimum discount',
-      formula: 'AND(NOT(ISBLANK(MinimumDiscountPercent)), NOT(ISBLANK(MaximumDiscountPercent)), MaximumDiscountPercent < MinimumDiscountPercent)'
+      formula: 'AND(NOT(ISBLANK(minimum_discount_percent)), NOT(ISBLANK(maximum_discount_percent)), maximum_discount_percent < minimum_discount_percent)'
     },
     {
       name: 'DiscountPercentValid',
       errorMessage: 'Discount percentages must be between 0% and 100%',
-      formula: 'OR(DefaultDiscountPercent > 1, MinimumDiscountPercent > 1, MaximumDiscountPercent > 1, DefaultDiscountPercent < 0, MinimumDiscountPercent < 0, MaximumDiscountPercent < 0)'
+      formula: 'OR(default_discount_percent > 1, minimum_discount_percent > 1, maximum_discount_percent > 1, default_discount_percent < 0, minimum_discount_percent < 0, maximum_discount_percent < 0)'
     },
     {
       name: 'MinMaxOrderValueValid',
       errorMessage: 'Maximum order value must be greater than minimum order value',
-      formula: 'AND(NOT(ISBLANK(MinimumOrderValue)), NOT(ISBLANK(MaximumOrderValue)), MaximumOrderValue < MinimumOrderValue)'
+      formula: 'AND(NOT(ISBLANK(minimum_order_value)), NOT(ISBLANK(maximum_order_value)), maximum_order_value < minimum_order_value)'
     },
     {
       name: 'ApprovalLevelValid',
       errorMessage: 'Approval level must be between 1 and 5',
-      formula: 'AND(RequiresApproval = true, NOT(ISBLANK(ApprovalLevel)), OR(ApprovalLevel < 1, ApprovalLevel > 5))'
+      formula: 'AND(requires_approval = true, NOT(ISBLANK(approval_level)), OR(approval_level < 1, approval_level > 5))'
     },
     {
       name: 'RecurrencePatternRequired',
       errorMessage: 'Recurrence pattern is required for recurring schedules',
-      formula: 'AND(IsRecurring = true, ISBLANK(RecurrencePattern))'
+      formula: 'AND(is_recurring = true, ISBLANK(recurrence_pattern))'
     },
     {
       name: 'ProductCategoryRequired',
       errorMessage: 'Product category is required when applies to is Product Category',
-      formula: 'AND(AppliesTo = "ProductCategory", ISBLANK(ProductCategory))'
+      formula: 'AND(applies_to = "product_category", ISBLANK(product_category))'
     },
     {
       name: 'MarginPercentValid',
       errorMessage: 'Minimum margin percentage must be between 0% and 100%',
-      formula: 'AND(NOT(ISBLANK(MinimumMarginPercent)), OR(MinimumMarginPercent < 0, MinimumMarginPercent > 1))'
+      formula: 'AND(NOT(ISBLANK(minimum_margin_percent)), OR(minimum_margin_percent < 0, minimum_margin_percent > 1))'
     }
   ],
   pageLayout: {
@@ -527,62 +527,62 @@ const DiscountSchedule = {
       {
         label: 'Schedule Information',
         columns: 2,
-        fields: ['Name', 'ScheduleCode', 'Status', 'ScheduleType', 'Priority', 'Description']
+        fields: ['name', 'schedule_code', 'status', 'schedule_type', 'priority', 'description']
       },
       {
         label: 'Date Range',
         columns: 2,
-        fields: ['StartDate', 'EndDate', 'IsRecurring', 'RecurrencePattern']
+        fields: ['start_date', 'end_date', 'is_recurring', 'recurrence_pattern']
       },
       {
         label: 'Discount Configuration',
         columns: 2,
-        fields: ['DiscountType', 'DefaultDiscountPercent', 'DefaultDiscountAmount', 'MinimumDiscountPercent', 'MaximumDiscountPercent']
+        fields: ['discount_type', 'default_discount_percent', 'default_discount_amount', 'minimum_discount_percent', 'maximum_discount_percent']
       },
       {
         label: 'Applicability',
         columns: 2,
-        fields: ['AppliesTo', 'ProductCategory', 'ProductFamily', 'IncludedProducts', 'ExcludedProducts']
+        fields: ['applies_to', 'product_category', 'product_family', 'included_products', 'excluded_products']
       },
       {
         label: 'Customer Scope',
         columns: 2,
-        fields: ['CustomerScope', 'CustomerSegment', 'Industry', 'IncludedAccounts']
+        fields: ['customer_scope', 'customer_segment', 'industry', 'included_accounts']
       },
       {
         label: 'Approval Requirements',
         columns: 2,
-        fields: ['RequiresApproval', 'ApprovalLevel', 'AutoApproveThreshold', 'ApprovalMatrixId']
+        fields: ['requires_approval', 'approval_level', 'auto_approve_threshold', 'approval_matrix_id']
       },
       {
         label: 'Margin Protection',
         columns: 2,
-        fields: ['EnforceMarginRules', 'MinimumMarginPercent', 'MinimumMarginAmount', 'AlertBelowMargin', 'BlockBelowMargin']
+        fields: ['enforce_margin_rules', 'minimum_margin_percent', 'minimum_margin_amount', 'alert_below_margin', 'block_below_margin']
       },
       {
         label: 'Usage Limits',
         columns: 2,
-        fields: ['UsageLimitType', 'MaxTotalUses', 'MaxUsesPerCustomer', 'MaxUsesPerProduct', 'CurrentUsageCount']
+        fields: ['usage_limit_type', 'max_total_uses', 'max_uses_per_customer', 'max_uses_per_product', 'current_usage_count']
       },
       {
         label: 'Financial Constraints',
         columns: 2,
-        fields: ['MinimumOrderValue', 'MaximumOrderValue', 'MinimumQuantity']
+        fields: ['minimum_order_value', 'maximum_order_value', 'minimum_quantity']
       },
       {
         label: 'Combination Rules',
         columns: 2,
-        fields: ['AllowCombineWithOther', 'ExclusiveWith']
+        fields: ['allow_combine_with_other', 'exclusive_with']
       },
       {
         label: 'Analytics & Targets',
         columns: 2,
-        fields: ['TargetRevenue', 'ActualRevenue', 'TargetUses', 'ConversionRate', 'AverageDiscountGiven', 'TotalDiscountAmount']
+        fields: ['target_revenue', 'actual_revenue', 'target_uses', 'conversion_rate', 'average_discount_given', 'total_discount_amount']
       },
       {
         label: 'AI Insights',
         columns: 1,
-        fields: ['AIOptimalDiscountPercent', 'AIExpectedROI', 'AIRecommendedDuration', 'AIPerformanceAnalysis']
+        fields: ['a_i_optimal_discount_percent', 'a_i_expected_r_o_i', 'a_i_recommended_duration', 'a_i_performance_analysis']
       }
     ]
   }

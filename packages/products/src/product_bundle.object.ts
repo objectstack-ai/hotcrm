@@ -14,14 +14,14 @@ const ProductBundle = {
   },
   fields: {
     // Basic Information
-    Name: {
+    name: {
       type: 'text',
-      label: 'Bundle Name',
+      label: 'Bundle name',
       required: true,
       searchable: true,
       maxLength: 255
     },
-    BundleCode: {
+    bundle_code: {
       type: 'text',
       label: 'Bundle Code',
       unique: true,
@@ -29,14 +29,14 @@ const ProductBundle = {
       maxLength: 50,
       description: 'Unique identifier for the bundle'
     },
-    Description: {
+    description: {
       type: 'textarea',
-      label: 'Description',
+      label: 'description',
       maxLength: 32000
     },
-    Status: {
+    status: {
       type: 'select',
-      label: 'Status',
+      label: 'status',
       required: true,
       defaultValue: 'Active',
       options: [
@@ -46,7 +46,7 @@ const ProductBundle = {
         { label: '📦 Archived', value: 'Archived' }
       ]
     },
-    BundleType: {
+    bundle_type: {
       type: 'select',
       label: 'Bundle Type',
       required: true,
@@ -59,7 +59,7 @@ const ProductBundle = {
       description: 'Type of product bundle'
     },
     // Pricing
-    PricingMethod: {
+    pricing_method: {
       type: 'select',
       label: 'Pricing Method',
       required: true,
@@ -71,119 +71,119 @@ const ProductBundle = {
         { label: 'Amount Discount', value: 'AmountDiscount' }
       ]
     },
-    FixedPrice: {
+    fixed_price: {
       type: 'currency',
       label: 'Fixed Price',
       precision: 2,
-      description: 'Fixed price when PricingMethod is Fixed'
+      description: 'Fixed price when pricing_method is Fixed'
     },
-    DiscountPercent: {
+    discount_percent: {
       type: 'percent',
       label: 'Discount %',
-      description: 'Discount percentage when PricingMethod is PercentageDiscount'
+      description: 'Discount percentage when pricing_method is PercentageDiscount'
     },
-    DiscountAmount: {
+    discount_amount: {
       type: 'currency',
       label: 'Discount Amount',
       precision: 2,
-      description: 'Discount amount when PricingMethod is AmountDiscount'
+      description: 'Discount amount when pricing_method is AmountDiscount'
     },
-    MinimumPrice: {
+    minimum_price: {
       type: 'currency',
       label: 'Minimum Price',
       precision: 2,
       description: 'Minimum allowed price for the bundle'
     },
-    MaximumPrice: {
+    maximum_price: {
       type: 'currency',
       label: 'Maximum Price',
       precision: 2,
       description: 'Maximum allowed price for the bundle'
     },
     // Configuration
-    AllowCustomization: {
+    allow_customization: {
       type: 'checkbox',
       label: 'Allow Customization',
       defaultValue: false,
       description: 'Allow customers to customize bundle components'
     },
-    MinComponents: {
+    min_components: {
       type: 'number',
       label: 'Minimum Components',
       precision: 0,
       defaultValue: 1,
       description: 'Minimum number of components required'
     },
-    MaxComponents: {
+    max_components: {
       type: 'number',
       label: 'Maximum Components',
       precision: 0,
       description: 'Maximum number of components allowed'
     },
     // Availability
-    StartDate: {
+    start_date: {
       type: 'date',
       label: 'Start Date',
       description: 'Date when bundle becomes available'
     },
-    EndDate: {
+    end_date: {
       type: 'date',
       label: 'End Date',
       description: 'Date when bundle expires'
     },
     // Inventory
-    StockLevel: {
+    stock_level: {
       type: 'number',
       label: 'Stock Level',
       precision: 0,
       description: 'Available stock for the bundle'
     },
-    LowStockThreshold: {
+    low_stock_threshold: {
       type: 'number',
       label: 'Low Stock Threshold',
       precision: 0,
       description: 'Alert when stock falls below this level'
     },
-    IsStockTracked: {
+    is_stock_tracked: {
       type: 'checkbox',
       label: 'Track Stock',
       defaultValue: false,
       description: 'Enable stock tracking for this bundle'
     },
     // Marketing
-    FeaturedBundle: {
+    featured_bundle: {
       type: 'checkbox',
       label: 'Featured Bundle',
       defaultValue: false,
       description: 'Display as featured bundle'
     },
-    DisplayOrder: {
+    display_order: {
       type: 'number',
       label: 'Display Order',
       precision: 0,
       description: 'Order to display in bundle list'
     },
-    ImageUrl: {
+    image_url: {
       type: 'url',
       label: 'Image URL',
       description: 'URL to bundle image'
     },
     // AI Enhancement
-    AIRecommendationScore: {
+    a_i_recommendation_score: {
       type: 'number',
       label: 'AI Recommendation Score',
       precision: 2,
       readonly: true,
       description: 'AI-calculated recommendation score based on purchase patterns'
     },
-    AIFrequencyScore: {
+    a_i_frequency_score: {
       type: 'number',
       label: 'Frequency Score',
       precision: 2,
       readonly: true,
       description: 'How frequently this bundle is purchased together'
     },
-    AISuggestedUpgrade: {
+    a_i_suggested_upgrade: {
       type: 'lookup',
       label: 'Suggested Upgrade',
       reference: 'ProductBundle',
@@ -195,21 +195,21 @@ const ProductBundle = {
       name: 'BundleItems',
       type: 'hasMany',
       object: 'ProductBundleItem',
-      foreignKey: 'BundleId',
+      foreignKey: 'bundle_id',
       label: 'Bundle Items'
     },
     {
       name: 'BundleDependencies',
       type: 'hasMany',
       object: 'ProductBundleDependency',
-      foreignKey: 'BundleId',
+      foreignKey: 'bundle_id',
       label: 'Dependencies'
     },
     {
       name: 'BundleConstraints',
       type: 'hasMany',
       object: 'ProductBundleConstraint',
-      foreignKey: 'BundleId',
+      foreignKey: 'bundle_id',
       label: 'Constraints'
     }
   ],
@@ -218,77 +218,77 @@ const ProductBundle = {
       name: 'AllBundles',
       label: 'All Bundles',
       filters: [],
-      columns: ['Name', 'BundleCode', 'BundleType', 'Status', 'PricingMethod', 'FixedPrice'],
-      sort: [['Name', 'asc']]
+      columns: ['name', 'bundle_code', 'bundle_type', 'status', 'pricing_method', 'fixed_price'],
+      sort: [['name', 'asc']]
     },
     {
       name: 'ActiveBundles',
       label: 'Active Bundles',
-      filters: [['Status', '=', 'Active']],
-      columns: ['Name', 'BundleCode', 'BundleType', 'PricingMethod', 'FixedPrice', 'DisplayOrder'],
-      sort: [['DisplayOrder', 'asc']]
+      filters: [['status', '=', 'Active']],
+      columns: ['name', 'bundle_code', 'bundle_type', 'pricing_method', 'fixed_price', 'display_order'],
+      sort: [['display_order', 'asc']]
     },
     {
       name: 'FeaturedBundles',
       label: 'Featured Bundles',
       filters: [
-        ['Status', '=', 'Active'],
-        ['FeaturedBundle', '=', true]
+        ['status', '=', 'Active'],
+        ['featured_bundle', '=', true]
       ],
-      columns: ['Name', 'BundleCode', 'BundleType', 'FixedPrice', 'AIRecommendationScore'],
-      sort: [['DisplayOrder', 'asc']]
+      columns: ['name', 'bundle_code', 'bundle_type', 'fixed_price', 'a_i_recommendation_score'],
+      sort: [['display_order', 'asc']]
     },
     {
       name: 'CustomizableBundles',
       label: 'Customizable Bundles',
       filters: [
-        ['Status', '=', 'Active'],
-        ['AllowCustomization', '=', true]
+        ['status', '=', 'Active'],
+        ['allow_customization', '=', true]
       ],
-      columns: ['Name', 'BundleCode', 'MinComponents', 'MaxComponents', 'FixedPrice'],
-      sort: [['Name', 'asc']]
+      columns: ['name', 'bundle_code', 'min_components', 'max_components', 'fixed_price'],
+      sort: [['name', 'asc']]
     },
     {
       name: 'LowStock',
       label: 'Low Stock',
       filters: [
-        ['IsStockTracked', '=', true],
-        ['Status', '=', 'Active']
+        ['is_stock_tracked', '=', true],
+        ['status', '=', 'Active']
       ],
-      columns: ['Name', 'BundleCode', 'StockLevel', 'LowStockThreshold'],
-      sort: [['StockLevel', 'asc']]
+      columns: ['name', 'bundle_code', 'stock_level', 'low_stock_threshold'],
+      sort: [['stock_level', 'asc']]
     }
   ],
   validationRules: [
     {
       name: 'EndDateAfterStartDate',
       errorMessage: 'End date must be after start date',
-      formula: 'AND(NOT(ISBLANK(StartDate)), NOT(ISBLANK(EndDate)), EndDate <= StartDate)'
+      formula: 'AND(NOT(ISBLANK(start_date)), NOT(ISBLANK(end_date)), end_date <= start_date)'
     },
     {
       name: 'FixedPriceRequired',
       errorMessage: 'Fixed price is required when pricing method is Fixed',
-      formula: 'AND(PricingMethod = "Fixed", ISBLANK(FixedPrice))'
+      formula: 'AND(pricing_method = "Fixed", ISBLANK(fixed_price))'
     },
     {
       name: 'DiscountPercentRequired',
       errorMessage: 'Discount percentage is required when pricing method is PercentageDiscount',
-      formula: 'AND(PricingMethod = "PercentageDiscount", ISBLANK(DiscountPercent))'
+      formula: 'AND(pricing_method = "PercentageDiscount", ISBLANK(discount_percent))'
     },
     {
       name: 'DiscountAmountRequired',
       errorMessage: 'Discount amount is required when pricing method is AmountDiscount',
-      formula: 'AND(PricingMethod = "AmountDiscount", ISBLANK(DiscountAmount))'
+      formula: 'AND(pricing_method = "AmountDiscount", ISBLANK(discount_amount))'
     },
     {
       name: 'MinMaxComponentsValid',
       errorMessage: 'Maximum components must be greater than or equal to minimum components',
-      formula: 'AND(NOT(ISBLANK(MinComponents)), NOT(ISBLANK(MaxComponents)), MaxComponents < MinComponents)'
+      formula: 'AND(NOT(ISBLANK(min_components)), NOT(ISBLANK(max_components)), max_components < min_components)'
     },
     {
       name: 'MinPriceValid',
       errorMessage: 'Minimum price must be less than maximum price',
-      formula: 'AND(NOT(ISBLANK(MinimumPrice)), NOT(ISBLANK(MaximumPrice)), MinimumPrice > MaximumPrice)'
+      formula: 'AND(NOT(ISBLANK(minimum_price)), NOT(ISBLANK(maximum_price)), minimum_price > maximum_price)'
     }
   ],
   pageLayout: {
@@ -296,37 +296,37 @@ const ProductBundle = {
       {
         label: 'Bundle Information',
         columns: 2,
-        fields: ['Name', 'BundleCode', 'Status', 'BundleType', 'Description']
+        fields: ['name', 'bundle_code', 'status', 'bundle_type', 'description']
       },
       {
         label: 'Pricing',
         columns: 2,
-        fields: ['PricingMethod', 'FixedPrice', 'DiscountPercent', 'DiscountAmount', 'MinimumPrice', 'MaximumPrice']
+        fields: ['pricing_method', 'fixed_price', 'discount_percent', 'discount_amount', 'minimum_price', 'maximum_price']
       },
       {
         label: 'Configuration',
         columns: 2,
-        fields: ['AllowCustomization', 'MinComponents', 'MaxComponents']
+        fields: ['allow_customization', 'min_components', 'max_components']
       },
       {
         label: 'Availability',
         columns: 2,
-        fields: ['StartDate', 'EndDate']
+        fields: ['start_date', 'end_date']
       },
       {
         label: 'Inventory',
         columns: 2,
-        fields: ['IsStockTracked', 'StockLevel', 'LowStockThreshold']
+        fields: ['is_stock_tracked', 'stock_level', 'low_stock_threshold']
       },
       {
         label: 'Marketing',
         columns: 2,
-        fields: ['FeaturedBundle', 'DisplayOrder', 'ImageUrl']
+        fields: ['featured_bundle', 'display_order', 'image_url']
       },
       {
         label: 'AI Recommendations',
         columns: 2,
-        fields: ['AIRecommendationScore', 'AIFrequencyScore', 'AISuggestedUpgrade']
+        fields: ['a_i_recommendation_score', 'a_i_frequency_score', 'a_i_suggested_upgrade']
       }
     ]
   }
