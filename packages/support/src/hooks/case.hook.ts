@@ -227,13 +227,13 @@ const CaseCommentFirstResponseTrigger: Hook = {
         const responseTimeMinutes = Math.floor((now.getTime() - createdDate.getTime()) / (1000 * 60));
 
         // Update case with first response info
-        await ctx.db.update('Case', caseRecord[0].id, {
+        await ctx.db.doc.update('Case', caseRecord[0].id, {
           FirstResponseTime: now,
           ResponseTimeMinutes: responseTimeMinutes
         });
 
         // Update comment
-        await ctx.db.update('CaseComment', comment.id, {
+        await ctx.db.doc.update('CaseComment', comment.id, {
           IsFirstResponse: true,
           ResponseTimeMinutes: responseTimeMinutes
         });
@@ -259,7 +259,7 @@ async function findApplicableSLAPolicy(caseRecord: any, ctx: TriggerContext): Pr
       ['IsActive', '=', true],
       ['IsLatestVersion', '=', true]
     ],
-    sort: [['Priority', 'asc']],
+    sort: 'Priority',
     limit: 100
   });
 
@@ -338,7 +338,7 @@ async function createSLAMilestones(caseRecord: any, policy: any, ctx: TriggerCon
 
   // Create milestones
   for (const milestone of milestones) {
-    await ctx.db.create('SLAMilestone', milestone);
+    await ctx.db.doc.create('SLAMilestone', milestone);
   }
 }
 
@@ -372,7 +372,7 @@ async function updateSLAViolationStatus(caseRecord: any, ctx: TriggerContext): P
 async function findMatchingRoutingRule(caseRecord: any, ctx: TriggerContext): Promise<any> {
   const rules = await ctx.db.find('RoutingRule', {
     filters: [['IsActive', '=', true]],
-    sort: [['Priority', 'asc']],
+    sort: 'Priority',
     limit: 100
   });
 
@@ -433,7 +433,7 @@ async function findBestAgent(caseRecord: any, routingRule: any, ctx: TriggerCont
 async function findApplicableEscalationRule(caseRecord: any, ctx: TriggerContext): Promise<any> {
   const rules = await ctx.db.find('EscalationRule', {
     filters: [['IsActive', '=', true]],
-    sort: [['EscalationLevel', 'asc']],
+    sort: 'EscalationLevel',
     limit: 100
   });
 
@@ -476,7 +476,7 @@ function shouldAutoEscalate(caseRecord: any, oldCase: any): boolean {
 
 async function executeEscalation(caseRecord: any, rule: any, ctx: TriggerContext): Promise<void> {
   // Update case with escalation info
-  await ctx.db.update('Case', caseRecord.id, {
+  await ctx.db.doc.update('Case', caseRecord.id, {
     IsEscalated: true,
     EscalatedDate: new Date(),
     EscalationLevel: (caseRecord.EscalationLevel || 0) + 1,
@@ -485,7 +485,7 @@ async function executeEscalation(caseRecord: any, rule: any, ctx: TriggerContext
   });
 
   // Update rule statistics
-  await ctx.db.update('EscalationRule', rule.id, {
+  await ctx.db.doc.update('EscalationRule', rule.id, {
     TimesTriggered: (rule.TimesTriggered || 0) + 1,
     LastTriggeredDate: new Date()
   });
@@ -506,7 +506,7 @@ async function updateSLAMilestone(caseId: string, milestoneType: string, complet
     const targetDate = new Date(milestone.TargetDateTime);
     const isViolated = completedDate > targetDate;
 
-    await ctx.db.update('SLAMilestone', milestone.id, {
+    await ctx.db.doc.update('SLAMilestone', milestone.id, {
       Status: isViolated ? 'Violated' : 'Completed',
       ActualDateTime: completedDate,
       IsViolated: isViolated

@@ -306,7 +306,7 @@ const SalesIntelligenceDashboard: Dashboard = {
     // ========================================================================
     {
       title: '🚨 At-Risk Deals',
-      type: 'list',
+      type: 'table',
       object: 'Opportunity',
       filter: {
         $and: [
@@ -346,7 +346,7 @@ const SalesIntelligenceDashboard: Dashboard = {
     // ========================================================================
     {
       title: '✨ AI-Identified Opportunities',
-      type: 'list',
+      type: 'table',
       object: 'Opportunity',
       filter: {
         $and: [
