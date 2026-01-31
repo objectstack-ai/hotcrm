@@ -10,7 +10,7 @@ const fs = require('fs');
 const path = require('path');
 
 console.log('🔍 HotCRM Plugin Architecture Verification\n');
-console.log('=' .repeat(60));
+console.log('='.repeat(60));
 
 // Expected plugins
 const expectedPlugins = [

@@ -140,8 +140,8 @@ async function startServer() {
         console.log(chalk.green(`✓ HTTP server plugin loaded (port: ${PORT})`));
       }
     } catch (e: any) {
-      console.warn(chalk.yellow(`⚠ HTTP server plugin not available: ${e.message}`));
-      console.warn(chalk.yellow('ℹ Server will run without HTTP endpoint'));
+      console.warn(chalk.yellow(`  ⚠ HTTP server plugin not available: ${e.message}`));
+      console.warn(chalk.yellow('  ℹ Server will run without HTTP endpoint'));
     }
 
     // Boot the kernel
