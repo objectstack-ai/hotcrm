@@ -44,9 +44,9 @@ User Requirement
 ### Basic Object Template
 
 ```typescript
-import type { ObjectDefinition } from '@objectstack/spec/data';
+import type { ObjectSchema } from '@objectstack/spec/data';
 
-export const MyObject: ObjectDefinition = {
+const MyObject: ObjectSchema = {
   name: 'my_object',           // snake_case
   label: 'My Object',
   labelPlural: 'My Objects',
@@ -64,7 +64,6 @@ export const MyObject: ObjectDefinition = {
   
   enable: {
     trackHistory: true,
-    apiEnabled: true,
     searchEnabled: true
   }
 };
@@ -75,9 +74,9 @@ export default MyObject;
 ### Object with Relationships
 
 ```typescript
-import type { ObjectDefinition } from '@objectstack/spec/data';
+import type { ObjectSchema } from '@objectstack/spec/data';
 
-export const Contact: ObjectDefinition = {
+const Contact: ObjectSchema = {
   name: 'contact',
   label: 'Contact',
   
@@ -112,14 +111,12 @@ export const Contact: ObjectDefinition = {
   },
   
   // List views
-  views: [
+  listViews: [
     {
-      type: 'list',
       name: 'all_contacts',
-      viewType: 'grid',
       label: 'All Contacts',
       columns: ['FullName', 'AccountId', 'Email', 'Phone'],
-      defaultSort: { field: 'LastName', direction: 'asc' }
+      sort: [['LastName', 'asc']]
     }
   ]
 };
@@ -130,9 +127,9 @@ export default Contact;
 ### Object with Validation and Workflow
 
 ```typescript
-import type { ObjectDefinition } from '@objectstack/spec/data';
+import type { ObjectSchema } from '@objectstack/spec/data';
 
-export const Opportunity: ObjectDefinition = {
+const Opportunity: ObjectSchema = {
   name: 'opportunity',
   label: 'Opportunity',
   
@@ -162,9 +159,8 @@ export const Opportunity: ObjectDefinition = {
   },
   
   // Validation rules
-  validations: [
+  validationRules: [
     {
-      type: 'script',
       name: 'amount_positive',
       errorMessage: 'Amount must be greater than 0',
       formula: 'Amount > 0'
@@ -317,41 +313,19 @@ TotalValue: {
 ## Validation Rule Templates
 
 ```typescript
-validations: [
+validationRules: [
   // Script validation
   {
-    type: 'script',
     name: 'amount_positive',
     errorMessage: 'Amount must be greater than 0',
-    formula: 'Amount > 0',
-    errorField: 'Amount'
-  },
-  
-  // Uniqueness validation
-  {
-    type: 'uniqueness',
-    fields: ['Email'],
-    errorMessage: 'Email must be unique',
-    scope: 'global'
+    formula: 'Amount > 0'
   },
   
   // Date range validation
   {
-    type: 'script',
     name: 'end_after_start',
     errorMessage: 'End date must be after start date',
     formula: 'EndDate > StartDate'
-  },
-  
-  // State machine validation
-  {
-    type: 'state_machine',
-    field: 'Status',
-    transitions: [
-      { from: 'draft', to: ['submitted'] },
-      { from: 'submitted', to: ['approved', 'rejected'] },
-      { from: 'approved', to: ['active'] }
-    ]
   }
 ]
 ```
@@ -427,18 +401,12 @@ workflows: [
 
 ```typescript
 {
-  type: 'list',
   name: 'all_records',
-  viewType: 'grid',
   label: 'All Records',
   columns: ['Name', 'Status', 'CreatedDate', 'OwnerId'],
-  defaultSort: { field: 'CreatedDate', direction: 'desc' },
+  sort: [['CreatedDate', 'desc']],
   filters: [
-    {
-      field: 'Status',
-      operator: 'equals',
-      value: 'active'
-    }
+    ['Status', '=', 'active']
   ]
 }
 ```
@@ -447,10 +415,9 @@ workflows: [
 
 ```typescript
 {
-  type: 'list',
   name: 'opportunity_kanban',
-  viewType: 'kanban',
   label: 'Sales Pipeline',
+  viewType: 'kanban',
   groupBy: 'Stage',
   cardFields: ['Name', 'Amount', 'AccountId'],
   sumField: 'Amount'
@@ -461,10 +428,9 @@ workflows: [
 
 ```typescript
 {
-  type: 'list',
   name: 'task_calendar',
-  viewType: 'calendar',
   label: 'Task Calendar',
+  viewType: 'calendar',
   dateField: 'DueDate',
   titleField: 'Subject',
   colorField: 'Priority'
@@ -476,9 +442,9 @@ workflows: [
 ## Dashboard Template
 
 ```typescript
-import type { DashboardDefinition } from '@objectstack/spec/ui';
+import type { DashboardSchema } from '@objectstack/spec/ui';
 
-export const SalesDashboard: DashboardDefinition = {
+const SalesDashboard: DashboardSchema = {
   name: 'sales_dashboard',
   label: 'Sales Dashboard',
   
@@ -537,9 +503,9 @@ export default SalesDashboard;
 ## Action Definition Template
 
 ```typescript
-import type { ActionDefinition } from '@objectstack/spec/ui';
+import type { ActionSchema } from '@objectstack/spec/ui';
 
-export const CloneRecord: ActionDefinition = {
+const CloneRecord: ActionSchema = {
   name: 'clone_record',
   label: 'Clone',
   type: 'script',
@@ -653,7 +619,7 @@ defaultValue: 'draft'
 relationshipName: 'contacts'
 
 // Type constant exports: PascalCase
-export const CustomerAccount: ObjectDefinition = ...
+const CustomerAccount: ObjectSchema = ...
 ```
 
 ```typescript
@@ -682,7 +648,7 @@ When issues arise, check in order:
 
 - [ ] File suffix correct? (`*.object.ts`, `*.view.ts`, etc.)
 - [ ] Import statements correct? (from `@objectstack/spec/...`)
-- [ ] Type annotation added? (`: ObjectDefinition`)
+- [ ] Type annotation added? (`: ObjectSchema`)
 - [ ] Object name using snake_case? (`name: 'my_object'`)
 - [ ] Field names using PascalCase? (`FirstName`, `AccountId`)
 - [ ] Config keys using camelCase? (`maxLength`, `defaultValue`)
@@ -758,7 +724,7 @@ pnpm clean && pnpm install
 
 ```typescript
 // Parent: Order
-export const Order: ObjectDefinition = {
+const Order: ObjectSchema = {
   name: 'order',
   label: 'Order',
   fields: {
@@ -773,7 +739,7 @@ export const Order: ObjectDefinition = {
 };
 
 // Child: OrderLine
-export const OrderLine: ObjectDefinition = {
+const OrderLine: ObjectSchema = {
   name: 'order_line',
   label: 'Order Line',
   fields: {
@@ -796,7 +762,7 @@ export const OrderLine: ObjectDefinition = {
 ### Pattern: Status Lifecycle
 
 ```typescript
-export const Task: ObjectDefinition = {
+const Task: ObjectSchema = {
   name: 'task',
   label: 'Task',
   fields: {
@@ -810,10 +776,11 @@ export const Task: ObjectDefinition = {
       ]
     }
   },
-  validations: [
+  validationRules: [
     {
-      type: 'state_machine',
+      name: 'state_machine',
       field: 'Status',
+      errorMessage: 'Invalid status transition',
       transitions: [
         { from: 'not_started', to: ['in_progress', 'cancelled'] },
         { from: 'in_progress', to: ['completed', 'cancelled'] }
@@ -839,7 +806,7 @@ export const Task: ObjectDefinition = {
 ### Pattern: Approval Process
 
 ```typescript
-export const ExpenseReport: ObjectDefinition = {
+const ExpenseReport: ObjectSchema = {
   name: 'expense_report',
   label: 'Expense Report',
   fields: {
@@ -918,7 +885,7 @@ export const ExpenseReport: ObjectDefinition = {
 
 ## Quick Tips
 
-1. **Always import types**: `import type { ObjectDefinition } from '@objectstack/spec/data'`
+1. **Always import types**: `import type { ObjectSchema } from '@objectstack/spec/data'`
 2. **Export as default**: `export default MyObject;`
 3. **Use PascalCase for fields**: `FirstName`, `AccountId`, `TotalAmount`
 4. **Use snake_case for object names**: `customer_account`, `order_line`
