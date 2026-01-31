@@ -1,7 +1,7 @@
 {
   "name": "@hotcrm/monorepo",
   "version": "1.0.0",
-  "description": "Enterprise-level CRM system based on @objectstack/spec with world-class UI/UX - Monorepo Structure",
+  "description": "Enterprise-level CRM system based on @objectstack/spec with world-class UI/UX - Plugin-based Monorepo Architecture",
   "private": true,
   "workspaces": [
     "packages/*"
@@ -21,6 +21,7 @@
     "start": "pnpm --filter @hotcrm/server start",
     "lint": "pnpm -r lint",
     "test": "jest --passWithNoTests",
+    "verify:plugins": "node scripts/verify-plugin-architecture.js",
     "clean": "pnpm -r exec rm -rf dist node_modules",
     "install:all": "pnpm install"
   },
@@ -29,7 +30,8 @@
     "objectstack",
     "salesforce",
     "enterprise",
-    "monorepo"
+    "monorepo",
+    "plugin-architecture"
   ],
   "author": "HotCRM Team",
   "license": "MIT",

@@ -8,6 +8,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Plugin Architecture**: Each business package is now an independent plugin
+  - CRM Plugin: Core CRM functionality (Account, Contact, Lead, Opportunity, Marketing)
+  - Products Plugin: Product catalog and CPQ (depends on CRM)
+  - Finance Plugin: Contract and payment management (depends on CRM)
+  - Support Plugin: Customer support and knowledge base (depends on CRM)
+- Plugin dependency management with topological sort
+- Automatic plugin loading in dependency order
+- Comprehensive plugin architecture documentation (docs/PLUGIN_ARCHITECTURE.md)
+- Enhanced CLI server with plugin loading information
+- Plugin structure validation
+
+### Changed
+- Restructured business packages as independent plugins with plugin.ts files
+- Updated objectstack.config.ts to use plugin-based architecture
+- Enhanced CLI server startup output to show plugin loading details
+- Updated README with plugin architecture section
+
+### Documentation
+- Added docs/PLUGIN_ARCHITECTURE.md - Comprehensive plugin architecture guide
+- Updated README.md with plugin architecture overview
+- Added plugin creation guide with examples
+- Documented plugin dependency management
+- Added troubleshooting section for plugin issues
+
+## [Unreleased - Previous]
+
+### Added
 - Comprehensive development workflow documentation
 - Iterative development strategy guide (5-week MVP path)
 - Version management and release process guide
