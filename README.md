@@ -17,6 +17,7 @@ HotCRM is a **comprehensive, AI-native enterprise CRM** system covering the comp
 
 - **Complete CRM Suite**: 36 core objects (TypeScript) spanning Marketing, Sales, Service, and Finance domains
 - **Metadata-Driven Architecture**: All objects defined through TypeScript (type-safe)
+- **Plugin Architecture**: Each business package is an independent plugin with dependency management
 - **ObjectQL**: Type-safe query language replacing traditional SQL
 - **AI-First Design**: Every major feature enhanced with AI capabilities
 - **Modern UI/UX**: Apple/Linear-inspired design with Tailwind CSS
@@ -28,10 +29,28 @@ HotCRM is a **comprehensive, AI-native enterprise CRM** system covering the comp
 ### Core Principles
 
 1. **Metadata Driven**: All business objects are defined natively in TypeScript (`.object.ts`)
-2. **ObjectQL**: Data queries use ObjectQL syntax for type-safe, flexible queries
-3. **UI Engine**: Frontend rendering based on **ObjectUI** framework with Tailwind CSS styling
-4. **AI Native**: Built-in AI capabilities for intelligent insights and automation
-5. **Modular Packages**: Clean separation of concerns with pnpm workspaces
+2. **Plugin Architecture**: Each business package is an independent plugin with dependency management
+3. **ObjectQL**: Data queries use ObjectQL syntax for type-safe, flexible queries
+4. **UI Engine**: Frontend rendering based on **ObjectUI** framework with Tailwind CSS styling
+5. **AI Native**: Built-in AI capabilities for intelligent insights and automation
+6. **Modular Packages**: Clean separation of concerns with pnpm workspaces
+
+### Plugin Architecture
+
+HotCRM uses a **plugin-based architecture** where each business package (CRM, Products, Finance, Support) is an independent plugin:
+
+- **CRM Plugin**: Core CRM objects (Account, Contact, Lead, Opportunity, etc.)
+- **Products Plugin**: Product catalog and CPQ functionality (depends on CRM)
+- **Finance Plugin**: Contract and payment management (depends on CRM)
+- **Support Plugin**: Customer support and knowledge base (depends on CRM)
+
+Each plugin:
+- Is self-contained with its own business objects
+- Can declare dependencies on other plugins
+- Is loaded automatically in dependency order
+- Can be developed and deployed independently
+
+See [Plugin Architecture Guide](docs/PLUGIN_ARCHITECTURE.md) for detailed documentation.
 
 ### Monorepo Structure
 

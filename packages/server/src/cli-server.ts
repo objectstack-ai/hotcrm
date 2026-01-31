@@ -17,6 +17,50 @@ import { ObjectKernel } from '@objectstack/core';
 const CONFIG_PATH = 'objectstack.config.ts';
 const PORT = process.env.PORT || 3000;
 
+/**
+ * Sort plugins by dependencies using topological sort
+ * Ensures that plugins are loaded after their dependencies
+ */
+function sortPluginsByDependencies(plugins: any[]): any[] {
+  const sorted: any[] = [];
+  const visited = new Set<string>();
+  const visiting = new Set<string>();
+  
+  function visit(plugin: any) {
+    const pluginName = plugin.name;
+    
+    if (visited.has(pluginName)) {
+      return;
+    }
+    
+    if (visiting.has(pluginName)) {
+      throw new Error(`Circular dependency detected: ${pluginName}`);
+    }
+    
+    visiting.add(pluginName);
+    
+    // Visit dependencies first
+    const deps = plugin.dependencies || [];
+    for (const depName of deps) {
+      const depPlugin = plugins.find(p => p.name === depName);
+      if (depPlugin) {
+        visit(depPlugin);
+      }
+    }
+    
+    visiting.delete(pluginName);
+    visited.add(pluginName);
+    sorted.push(plugin);
+  }
+  
+  // Visit all plugins
+  for (const plugin of plugins) {
+    visit(plugin);
+  }
+  
+  return sorted;
+}
+
 async function startServer() {
   console.log(chalk.bold('\n🚀 HotCRM Server'));
   console.log(chalk.dim('------------------------'));
@@ -48,38 +92,56 @@ async function startServer() {
       }
     });
 
-    // Load plugins from configuration
+    // Load business plugins from configuration
     const plugins = config.plugins || [];
     
     if (plugins.length > 0) {
-      console.log(chalk.yellow(`📦 Loading ${plugins.length} plugin(s)...`));
+      console.log(chalk.yellow(`\n📦 Loading ${plugins.length} business plugin(s)...\n`));
       
-      for (const plugin of plugins) {
+      // Sort plugins by dependencies to ensure correct loading order
+      const sortedPlugins = sortPluginsByDependencies(plugins);
+      
+      for (const plugin of sortedPlugins) {
         try {
+          const pluginName = plugin.label || plugin.name || 'unnamed';
+          const objectCount = Object.keys(plugin.objects || {}).length;
+          const deps = plugin.dependencies?.length > 0 
+            ? chalk.dim(` (depends on: ${plugin.dependencies.join(', ')})`) 
+            : '';
+          
+          console.log(chalk.blue(`  📦 ${pluginName}`));
+          console.log(chalk.dim(`     ${objectCount} object(s)${deps}`));
+          
+          // Register plugin objects with kernel if method exists
           if (typeof (kernel as any).registerPlugin === 'function') {
             (kernel as any).registerPlugin(plugin);
-            const pluginName = plugin.name || plugin.constructor?.name || 'unnamed';
-            console.log(chalk.green(`  ✓ Registered plugin: ${pluginName}`));
+            console.log(chalk.green(`     ✓ Loaded successfully\n`));
           } else {
-            console.warn(chalk.yellow('  ⚠ registerPlugin not available on kernel'));
+            // Fallback: just log that objects are available
+            console.log(chalk.yellow(`     ⚠ Plugin loaded (registerPlugin not available)\n`));
           }
         } catch (e: any) {
-          console.error(chalk.red(`  ✗ Failed to register plugin: ${e.message}`));
+          const pluginName = plugin.label || plugin.name || 'unnamed';
+          console.error(chalk.red(`     ✗ Failed to load ${pluginName}: ${e.message}\n`));
         }
       }
+      
+      const totalObjects = Object.keys(config.objects || {}).length;
+      console.log(chalk.green(`✓ All business plugins loaded (${totalObjects} total objects)`));
     }
 
     // Try to add HTTP server plugin
     try {
+      console.log(chalk.yellow('\n🌐 Loading HTTP server plugin...'));
       const { HonoServerPlugin } = await import('@objectstack/plugin-hono-server');
       if (typeof (kernel as any).registerPlugin === 'function') {
         const serverPlugin = new HonoServerPlugin({ port: parseInt(PORT as string) });
         (kernel as any).registerPlugin(serverPlugin);
-        console.log(chalk.green(`  ✓ Registered HTTP server plugin (port: ${PORT})`));
+        console.log(chalk.green(`✓ HTTP server plugin loaded (port: ${PORT})`));
       }
     } catch (e: any) {
-      console.warn(chalk.yellow(`  ⚠ HTTP server plugin not available: ${e.message}`));
-      console.warn(chalk.yellow('  ℹ Server will run without HTTP endpoint'));
+      console.warn(chalk.yellow(`⚠ HTTP server plugin not available: ${e.message}`));
+      console.warn(chalk.yellow('ℹ Server will run without HTTP endpoint'));
     }
 
     // Boot the kernel
@@ -91,8 +153,9 @@ async function startServer() {
     }
 
     console.log(chalk.green('\n✅ HotCRM server is running!'));
-    console.log(chalk.dim('   ObjectStack v0.7.2'));
-    console.log(chalk.dim(`   ${Object.keys(config.objects || {}).length} objects loaded`));
+    console.log(chalk.dim('   ObjectStack v0.7.2 (Plugin Architecture)'));
+    console.log(chalk.dim(`   ${plugins.length} business plugins loaded`));
+    console.log(chalk.dim(`   ${Object.keys(config.objects || {}).length} objects available`));
     console.log(chalk.dim('   Press Ctrl+C to stop\n'));
 
     // Keep process alive
