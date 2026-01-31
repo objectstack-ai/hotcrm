@@ -49,5 +49,8 @@ export { default as ForumPost } from './forum_post.object';
 export { default as CaseHooks } from './hooks/case.hook';
 export { default as KnowledgeHooks } from './hooks/knowledge.hook';
 
+// Export plugin definition
+export { default as SupportPlugin } from './plugin';
+
 // Note: YAML files (Knowledge) are kept for reference
 // TypeScript definitions should be created following the metadata protocol

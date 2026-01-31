@@ -25,5 +25,8 @@ export { default as QuotePricingHook } from './hooks/quote.hook';
 export { default as ProductHook } from './hooks/product.hook';
 export { default as PricebookHook } from './hooks/pricebook.hook';
 
+// Export plugin definition
+export { default as ProductsPlugin } from './plugin';
+
 // Note: YAML files (Product, Pricebook) are kept for reference
 // TypeScript definitions should be created following the metadata protocol
