@@ -10,7 +10,7 @@ const Lead = {
     trackHistory: true,
     activities: true,
     feeds: true,
-    filesEnabled: true,
+    files: true,
     enableDuplicateDetection: true
   },
   fields: {

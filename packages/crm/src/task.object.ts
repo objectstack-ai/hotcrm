@@ -9,7 +9,7 @@ const Task = {
     searchable: true,
     trackHistory: true,
     feeds: true,
-    filesEnabled: true
+    files: true
   },
   fields: {
     // Basic Information

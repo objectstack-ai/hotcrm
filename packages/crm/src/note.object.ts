@@ -9,7 +9,7 @@ const Note = {
     searchable: true,
     trackHistory: false,
     feeds: false,
-    filesEnabled: true
+    files: true
   },
   fields: {
     // Basic Information

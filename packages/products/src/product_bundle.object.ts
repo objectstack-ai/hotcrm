@@ -6,11 +6,11 @@ const ProductBundle = {
   icon: 'box-open',
   description: 'Product bundles and packages with dependencies, constraints, and configuration options',
   enable: {
-    searchEnabled: true,
+    searchable: true,
     trackHistory: true,
     activities: true,
     feeds: true,
-    filesEnabled: true
+    files: true
   },
   fields: {
     // Basic Information
@@ -18,14 +18,14 @@ const ProductBundle = {
       type: 'text',
       label: 'Bundle Name',
       required: true,
-      searchEnabled: true,
+      searchable: true,
       maxLength: 255
     },
     BundleCode: {
       type: 'text',
       label: 'Bundle Code',
       unique: true,
-      searchEnabled: true,
+      searchable: true,
       maxLength: 50,
       description: 'Unique identifier for the bundle'
     },
