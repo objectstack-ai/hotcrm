@@ -8,5 +8,8 @@
 
 export * from './contract.object';
 
+// Export plugin definition
+export { default as FinancePlugin } from './plugin';
+
 // Note: YAML files (Payment) are kept for reference
 // TypeScript definitions should be created following the metadata protocol

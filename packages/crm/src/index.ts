@@ -54,5 +54,8 @@ export * from './hooks/opportunity.hook';
 // Export actions
 export * from './actions/ai_smart_briefing.action';
 
+// Export plugin definition
+export { default as CRMPlugin } from './plugin';
+
 // Note: YAML files (Campaign) are kept for backward compatibility
 // TypeScript definitions are preferred as per the custom instructions
