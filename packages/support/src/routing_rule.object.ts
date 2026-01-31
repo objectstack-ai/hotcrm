@@ -154,7 +154,7 @@ const RoutingRule = {
       defaultValue: false,
       description: 'Use AI to classify and route cases'
     },
-    a_i_confidence_threshold: {
+    ai_confidence_threshold: {
       type: 'number',
       label: 'AI Confidence Threshold (%)',
       precision: 0,
@@ -217,7 +217,7 @@ const RoutingRule = {
     {
       name: 'AIThresholdRequired',
       errorMessage: 'AI confidence threshold is required when using AI classification',
-      formula: 'AND(use_a_i_classification = true, ISBLANK(a_i_confidence_threshold))'
+      formula: 'AND(use_a_i_classification = true, ISBLANK(ai_confidence_threshold))'
     },
     {
       name: 'BusinessHoursRequired',
@@ -285,7 +285,7 @@ const RoutingRule = {
       {
         label: 'AI & Keyword Matching',
         columns: 2,
-        fields: ['use_a_i_classification', 'a_i_confidence_threshold', 'match_keywords', 'keyword_match_type']
+        fields: ['use_a_i_classification', 'ai_confidence_threshold', 'match_keywords', 'keyword_match_type']
       },
       {
         label: 'Time-Based Routing',

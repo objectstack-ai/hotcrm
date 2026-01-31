@@ -328,14 +328,14 @@ const ApprovalRequest = {
       description: 'Email for escalation notifications'
     },
     // AI Enhancement
-    a_i_risk_score: {
+    ai_risk_score: {
       type: 'number',
       label: 'AI Risk Score',
       precision: 2,
       readonly: true,
       description: 'AI-calculated risk score (0-100)'
     },
-    a_i_recommendation: {
+    ai_recommendation: {
       type: 'select',
       label: 'AI Recommendation',
       readonly: true,
@@ -345,14 +345,14 @@ const ApprovalRequest = {
         { label: 'Reject', value: 'Reject' }
       ]
     },
-    a_i_analysis: {
+    ai_analysis: {
       type: 'textarea',
       label: 'AI Analysis',
       readonly: true,
       maxLength: 2000,
       description: 'AI analysis of approval request'
     },
-    a_i_similar_requests: {
+    ai_similar_requests: {
       type: 'textarea',
       label: 'Similar Requests',
       readonly: true,
@@ -557,7 +557,7 @@ const ApprovalRequest = {
       {
         label: 'AI Insights',
         columns: 1,
-        fields: ['a_i_risk_score', 'a_i_recommendation', 'a_i_analysis', 'a_i_similar_requests']
+        fields: ['ai_risk_score', 'ai_recommendation', 'ai_analysis', 'ai_similar_requests']
       }
     ]
   }

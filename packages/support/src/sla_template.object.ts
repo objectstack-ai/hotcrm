@@ -29,7 +29,7 @@ const SLATemplate = {
       defaultValue: true
     },
     // SLA Level
-    s_l_a_level: {
+    sla_level: {
       type: 'select',
       label: 'SLA Level',
       required: true,
@@ -167,8 +167,8 @@ const SLATemplate = {
       name: 'AllTemplates',
       label: 'All SLA Templates',
       filters: [],
-      columns: ['name', 's_l_a_level', 'first_response_time_minutes', 'resolution_time_minutes', 'is_active', 'cases_using'],
-      sort: [['s_l_a_level', 'asc']]
+      columns: ['name', 'sla_level', 'first_response_time_minutes', 'resolution_time_minutes', 'is_active', 'cases_using'],
+      sort: [['sla_level', 'asc']]
     },
     {
       name: 'ActiveTemplates',
@@ -176,15 +176,15 @@ const SLATemplate = {
       filters: [
         ['is_active', '=', true]
       ],
-      columns: ['name', 's_l_a_level', 'first_response_time_minutes', 'resolution_time_minutes', 'average_compliance_rate'],
-      sort: [['s_l_a_level', 'asc']]
+      columns: ['name', 'sla_level', 'first_response_time_minutes', 'resolution_time_minutes', 'average_compliance_rate'],
+      sort: [['sla_level', 'asc']]
     },
     {
       name: 'ByLevel',
       label: 'By SLA Level',
       filters: [],
-      columns: ['name', 's_l_a_level', 'first_response_time_minutes', 'resolution_time_minutes', 'business_hours_id', 'is_active'],
-      sort: [['s_l_a_level', 'asc'], ['name', 'asc']]
+      columns: ['name', 'sla_level', 'first_response_time_minutes', 'resolution_time_minutes', 'business_hours_id', 'is_active'],
+      sort: [['sla_level', 'asc'], ['name', 'asc']]
     }
   ],
   pageLayout: {
@@ -192,7 +192,7 @@ const SLATemplate = {
       {
         label: 'Template Information',
         columns: 2,
-        fields: ['name', 'description', 's_l_a_level', 'is_active']
+        fields: ['name', 'description', 'sla_level', 'is_active']
       },
       {
         label: 'Applicable To',

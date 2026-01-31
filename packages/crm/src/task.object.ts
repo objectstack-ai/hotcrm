@@ -224,7 +224,7 @@ const Task = {
     },
     
     // AI Enhancement
-    a_i_suggested_priority: {
+    ai_suggested_priority: {
       type: 'select',
       label: 'AI Suggested priority',
       readonly: true,
@@ -234,7 +234,7 @@ const Task = {
         { label: '🟢 Low', value: 'Low' }
       ]
     },
-    a_i_estimated_duration: {
+    ai_estimated_duration: {
       type: 'number',
       label: 'AI Estimated Duration (Hours)',
       readonly: true,
@@ -419,7 +419,7 @@ const Task = {
       {
         label: 'AI Insights',
         columns: 2,
-        fields: ['a_i_suggested_priority', 'a_i_estimated_duration']
+        fields: ['ai_suggested_priority', 'ai_estimated_duration']
       },
       {
         label: 'description',

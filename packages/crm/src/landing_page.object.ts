@@ -278,14 +278,14 @@ const LandingPage = {
     },
     
     // AI Enhancement
-    a_i_design_suggestions: {
+    ai_design_suggestions: {
       type: 'textarea',
       label: 'AI 设计建议',
       readonly: true,
       maxLength: 2000,
       description: 'AI 分析的设计和布局优化建议'
     },
-    a_i_copywriting_suggestions: {
+    ai_copywriting_suggestions: {
       type: 'textarea',
       label: 'AI 文案建议',
       readonly: true,
@@ -432,7 +432,7 @@ const LandingPage = {
       {
         label: 'AI 优化助手',
         columns: 1,
-        fields: ['a_i_design_suggestions', 'a_i_copywriting_suggestions']
+        fields: ['ai_design_suggestions', 'ai_copywriting_suggestions']
       },
       {
         label: '描述',

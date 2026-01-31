@@ -150,7 +150,7 @@ const Case = {
       description: 'Support team queue'
     },
     // SLA Management
-    s_l_a_level: {
+    sla_level: {
       type: 'select',
       label: 'SLA Level',
       options: [
@@ -195,13 +195,13 @@ const Case = {
       precision: 0,
       readonly: true
     },
-    is_s_l_a_violated: {
+    is_sla_violated: {
       type: 'checkbox',
       label: 'SLA Violated',
       readonly: true,
       defaultValue: false
     },
-    s_l_a_violation_type: {
+    sla_violation_type: {
       type: 'select',
       label: 'SLA Violation type',
       readonly: true,
@@ -299,7 +299,7 @@ const Case = {
       maxLength: 5000,
       readonly: true
     },
-    c_s_a_t_survey_date: {
+    csat_survey_date: {
       type: 'datetime',
       label: 'CSAT Survey Date',
       readonly: true
@@ -323,7 +323,7 @@ const Case = {
       readonly: true
     },
     // AI Enhancement Fields
-    a_i_auto_category: {
+    ai_auto_category: {
       type: 'select',
       label: 'AI Auto Category',
       readonly: true,
@@ -336,28 +336,28 @@ const Case = {
         { label: 'Other', value: 'Other' }
       ]
     },
-    a_i_suggested_assignee_id: {
+    ai_suggested_assignee_id: {
       type: 'lookup',
       label: 'AI Suggested Assignee',
       reference: 'User',
       readonly: true,
       description: 'AI-recommended agent based on skills and availability'
     },
-    a_i_related_knowledge: {
+    ai_related_knowledge: {
       type: 'text',
       label: 'AI Related Knowledge',
       readonly: true,
       maxLength: 500,
       description: 'Related knowledge base article IDs'
     },
-    a_i_suggested_solution: {
+    ai_suggested_solution: {
       type: 'textarea',
       label: 'AI Suggested Solution',
       readonly: true,
       maxLength: 5000,
       description: 'AI-generated solution based on knowledge base'
     },
-    a_i_sentiment_analysis: {
+    ai_sentiment_analysis: {
       type: 'select',
       label: 'AI Sentiment',
       readonly: true,
@@ -368,7 +368,7 @@ const Case = {
         { label: '😡 Angry', value: 'Angry' }
       ]
     },
-    a_i_urgency_score: {
+    ai_urgency_score: {
       type: 'number',
       label: 'AI Urgency Score',
       precision: 0,
@@ -377,7 +377,7 @@ const Case = {
       readonly: true,
       description: 'AI-calculated urgency score (0-100)'
     },
-    a_i_keywords: {
+    ai_keywords: {
       type: 'text',
       label: 'AI Keywords',
       readonly: true,
@@ -476,9 +476,9 @@ const Case = {
       name: 'SLAViolations',
       label: 'SLA Violations',
       filters: [
-        ['is_s_l_a_violated', '=', true]
+        ['is_sla_violated', '=', true]
       ],
-      columns: ['case_number', 'subject', 'account_id', 's_l_a_level', 's_l_a_violation_type', 'resolution_due_date', 'owner_id'],
+      columns: ['case_number', 'subject', 'account_id', 'sla_level', 'sla_violation_type', 'resolution_due_date', 'owner_id'],
       sort: [['resolution_due_date', 'asc']]
     },
     {
@@ -517,8 +517,8 @@ const Case = {
         ['assigned_to_queue_id', '=', null],
         ['status', '=', 'New']
       ],
-      columns: ['case_number', 'subject', 'account_id', 'priority', 'origin', 'CreatedDate', 'a_i_urgency_score'],
-      sort: [['a_i_urgency_score', 'desc'], ['CreatedDate', 'asc']]
+      columns: ['case_number', 'subject', 'account_id', 'priority', 'origin', 'CreatedDate', 'ai_urgency_score'],
+      sort: [['ai_urgency_score', 'desc'], ['CreatedDate', 'asc']]
     }
   ],
   validationRules: [
@@ -578,7 +578,7 @@ const Case = {
       {
         label: 'SLA Management',
         columns: 2,
-        fields: ['s_l_a_level', 'response_due_date', 'resolution_due_date', 'first_response_time', 'actual_resolution_time', 'response_time_minutes', 'resolution_time_minutes', 'is_s_l_a_violated', 's_l_a_violation_type']
+        fields: ['sla_level', 'response_due_date', 'resolution_due_date', 'first_response_time', 'actual_resolution_time', 'response_time_minutes', 'resolution_time_minutes', 'is_sla_violated', 'sla_violation_type']
       },
       {
         label: 'Escalation',
@@ -593,7 +593,7 @@ const Case = {
       {
         label: 'Customer Satisfaction',
         columns: 2,
-        fields: ['customer_satisfaction', 'satisfaction_score', 'customer_feedback', 'c_s_a_t_survey_date']
+        fields: ['customer_satisfaction', 'satisfaction_score', 'customer_feedback', 'csat_survey_date']
       },
       {
         label: 'Case History',
@@ -603,7 +603,7 @@ const Case = {
       {
         label: 'AI Smart Routing',
         columns: 1,
-        fields: ['a_i_auto_category', 'a_i_suggested_assignee_id', 'a_i_related_knowledge', 'a_i_suggested_solution', 'a_i_sentiment_analysis', 'a_i_urgency_score', 'a_i_keywords']
+        fields: ['ai_auto_category', 'ai_suggested_assignee_id', 'ai_related_knowledge', 'ai_suggested_solution', 'ai_sentiment_analysis', 'ai_urgency_score', 'ai_keywords']
       },
       {
         label: 'description',

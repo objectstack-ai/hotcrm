@@ -17,7 +17,7 @@ const SLAMilestone = {
       reference: 'Case',
       required: true
     },
-    s_l_a_template_id: {
+    sla_template_id: {
       type: 'lookup',
       label: 'SLA Template',
       reference: 'SLATemplate',
@@ -278,7 +278,7 @@ const SLAMilestone = {
       {
         label: 'Milestone Information',
         columns: 2,
-        fields: ['case_id', 's_l_a_template_id', 'milestone_type', 'name', 'description', 'status']
+        fields: ['case_id', 'sla_template_id', 'milestone_type', 'name', 'description', 'status']
       },
       {
         label: 'Timing',

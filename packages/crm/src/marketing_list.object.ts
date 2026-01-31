@@ -280,21 +280,21 @@ const MarketingList = {
     },
     
     // AI Enhancement
-    a_i_suggested_segments: {
+    ai_suggested_segments: {
       type: 'textarea',
       label: 'AI 建议细分',
       readonly: true,
       maxLength: 2000,
       description: 'AI 分析建议的额外细分维度'
     },
-    a_i_engagement_prediction: {
+    ai_engagement_prediction: {
       type: 'textarea',
       label: 'AI 参与度预测',
       readonly: true,
       maxLength: 2000,
       description: 'AI 预测的列表参与度趋势'
     },
-    a_i_suggested_content: {
+    ai_suggested_content: {
       type: 'textarea',
       label: 'AI 内容建议',
       readonly: true,
@@ -424,7 +424,7 @@ const MarketingList = {
       {
         label: 'AI 营销助手',
         columns: 1,
-        fields: ['a_i_suggested_segments', 'a_i_engagement_prediction', 'a_i_suggested_content']
+        fields: ['ai_suggested_segments', 'ai_engagement_prediction', 'ai_suggested_content']
       },
       {
         label: '描述',

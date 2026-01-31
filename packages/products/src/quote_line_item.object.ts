@@ -154,7 +154,7 @@ const QuoteLineItem = {
       description: 'Profit margin percentage'
     },
     // Product Configuration
-    configuration_j_s_o_n: {
+    configuration_json: {
       type: 'textarea',
       label: 'Configuration',
       maxLength: 32000,
@@ -274,21 +274,21 @@ const QuoteLineItem = {
       ]
     },
     // AI Enhancement
-    a_i_recommended_upsell: {
+    ai_recommended_upsell: {
       type: 'lookup',
       label: 'AI Recommended Upsell',
       reference: 'Product',
       readonly: true,
       description: 'AI-suggested upsell product for this line item'
     },
-    a_i_recommended_cross_sell: {
+    ai_recommended_cross_sell: {
       type: 'textarea',
       label: 'AI Cross-Sell Recommendations',
       readonly: true,
       maxLength: 2000,
       description: 'AI-suggested complementary products'
     },
-    a_i_optimal_quantity: {
+    ai_optimal_quantity: {
       type: 'number',
       label: 'AI Optimal quantity',
       precision: 0,
@@ -439,7 +439,7 @@ const QuoteLineItem = {
       {
         label: 'Configuration',
         columns: 1,
-        fields: ['selected_options', 'configuration_j_s_o_n']
+        fields: ['selected_options', 'configuration_json']
       },
       {
         label: 'Notes',
@@ -449,7 +449,7 @@ const QuoteLineItem = {
       {
         label: 'AI Recommendations',
         columns: 1,
-        fields: ['a_i_recommended_upsell', 'a_i_recommended_cross_sell', 'a_i_optimal_quantity']
+        fields: ['ai_recommended_upsell', 'ai_recommended_cross_sell', 'ai_optimal_quantity']
       }
     ]
   }

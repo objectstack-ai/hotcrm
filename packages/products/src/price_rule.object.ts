@@ -321,20 +321,20 @@ const PriceRule = {
       readonly: true
     },
     // AI Enhancement
-    a_i_optimal_discount_percent: {
+    ai_optimal_discount_percent: {
       type: 'percent',
       label: 'AI Optimal Discount',
       readonly: true,
       description: 'AI-recommended optimal discount percentage'
     },
-    a_i_expected_impact: {
+    ai_expected_impact: {
       type: 'textarea',
       label: 'AI Expected Impact',
       readonly: true,
       maxLength: 2000,
       description: 'AI analysis of expected revenue and margin impact'
     },
-    a_i_competitive_analysis: {
+    ai_competitive_analysis: {
       type: 'textarea',
       label: 'AI Competitive Analysis',
       readonly: true,
@@ -529,7 +529,7 @@ const PriceRule = {
       {
         label: 'AI Insights',
         columns: 1,
-        fields: ['a_i_optimal_discount_percent', 'a_i_expected_impact', 'a_i_competitive_analysis']
+        fields: ['ai_optimal_discount_percent', 'ai_expected_impact', 'ai_competitive_analysis']
       }
     ]
   }

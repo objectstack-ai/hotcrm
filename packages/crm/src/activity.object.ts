@@ -195,12 +195,12 @@ const Activity = {
       maxLength: 500
     },
     // SMS Details
-    s_m_s_body: {
+    sms_body: {
       type: 'text',
       label: 'SMS Content',
       maxLength: 1000
     },
-    s_m_s_phone_number: {
+    sms_phone_number: {
       type: 'phone',
       label: 'SMS Phone Number'
     },
@@ -246,21 +246,21 @@ const Activity = {
       searchable: true
     },
     // AI Enhancement Fields
-    a_i_transcription: {
+    ai_transcription: {
       type: 'textarea',
       label: 'AI Transcription',
       readonly: true,
       maxLength: 32000,
       description: 'AI-powered voice-to-text transcription'
     },
-    a_i_action_items: {
+    ai_action_items: {
       type: 'textarea',
       label: 'AI Extracted Action Items',
       readonly: true,
       maxLength: 5000,
       description: 'Auto-extracted action items from meetings/calls'
     },
-    a_i_sentiment_analysis: {
+    ai_sentiment_analysis: {
       type: 'select',
       label: 'AI Sentiment',
       readonly: true,
@@ -270,14 +270,14 @@ const Activity = {
         { label: '😟 Negative', value: 'Negative' }
       ]
     },
-    a_i_key_points: {
+    ai_key_points: {
       type: 'textarea',
       label: 'AI Key Points',
       readonly: true,
       maxLength: 2000,
       description: 'AI summary of key discussion points'
     },
-    a_i_next_step_suggestion: {
+    ai_next_step_suggestion: {
       type: 'text',
       label: 'AI Next Step',
       readonly: true,
@@ -369,7 +369,7 @@ const Activity = {
         ['type', '=', 'Meeting'],
         ['status', '=', 'Completed']
       ],
-      columns: ['subject', 'activity_date', 'location', 'who_id', 'what_id', 'owner_id', 'a_i_key_points'],
+      columns: ['subject', 'activity_date', 'location', 'who_id', 'what_id', 'owner_id', 'ai_key_points'],
       sort: [['activity_date', 'desc']]
     },
     {
@@ -412,7 +412,7 @@ const Activity = {
     {
       name: 'SMSRequiresPhoneNumber',
       errorMessage: 'SMS activities must have a phone number',
-      formula: 'AND(type = "SMS", ISBLANK(s_m_s_phone_number))'
+      formula: 'AND(type = "SMS", ISBLANK(sms_phone_number))'
     },
     {
       name: 'RecurringTaskRequiresPattern',
@@ -470,7 +470,7 @@ const Activity = {
       {
         label: 'SMS Details',
         columns: 2,
-        fields: ['s_m_s_body', 's_m_s_phone_number']
+        fields: ['sms_body', 'sms_phone_number']
       },
       {
         label: 'Recurring Task',
@@ -480,7 +480,7 @@ const Activity = {
       {
         label: 'AI Insights',
         columns: 1,
-        fields: ['a_i_transcription', 'a_i_action_items', 'a_i_key_points', 'a_i_sentiment_analysis', 'a_i_next_step_suggestion']
+        fields: ['ai_transcription', 'ai_action_items', 'ai_key_points', 'ai_sentiment_analysis', 'ai_next_step_suggestion']
       },
       {
         label: 'description & Notes',

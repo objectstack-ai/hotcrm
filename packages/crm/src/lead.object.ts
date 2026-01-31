@@ -233,14 +233,14 @@ const Lead = {
       maxLength: 32000
     },
     // AI Enhancement Fields
-    a_i_summary: {
+    ai_summary: {
       type: 'textarea',
       label: 'AI 线索分析',
       readonly: true,
       maxLength: 2000,
       description: 'AI 生成的线索质量分析和建议'
     },
-    a_i_recommended_action: {
+    ai_recommended_action: {
       type: 'text',
       label: 'AI 推荐行动',
       readonly: true,
@@ -402,7 +402,7 @@ const Lead = {
       {
         label: 'AI 智能分析',
         columns: 1,
-        fields: ['a_i_summary', 'a_i_recommended_action', 'email_signature_data']
+        fields: ['ai_summary', 'ai_recommended_action', 'email_signature_data']
       },
       {
         label: '其他信息',

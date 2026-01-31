@@ -207,7 +207,7 @@ const ForumTopic = {
       readonly: true
     },
     // SEO
-    u_r_l_slug: {
+    url_slug: {
       type: 'text',
       label: 'URL Slug',
       maxLength: 255,

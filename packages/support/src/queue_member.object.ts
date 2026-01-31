@@ -127,7 +127,7 @@ const QueueMember = {
       precision: 2,
       readonly: true
     },
-    s_l_a_compliance_rate: {
+    sla_compliance_rate: {
       type: 'number',
       label: 'SLA Compliance Rate (%)',
       precision: 2,
@@ -197,7 +197,7 @@ const QueueMember = {
       filters: [
         ['is_active', '=', true]
       ],
-      columns: ['queue_id', 'user_id', 'status', 'current_cases', 'max_cases', 's_l_a_compliance_rate', 'customer_satisfaction_avg'],
+      columns: ['queue_id', 'user_id', 'status', 'current_cases', 'max_cases', 'sla_compliance_rate', 'customer_satisfaction_avg'],
       sort: [['queue_id', 'asc']]
     },
     {
@@ -208,7 +208,7 @@ const QueueMember = {
         ['status', '=', 'Available'],
         ['accept_new_cases', '=', true]
       ],
-      columns: ['queue_id', 'user_id', 'current_cases', 'max_cases', 'avg_resolution_time', 's_l_a_compliance_rate'],
+      columns: ['queue_id', 'user_id', 'current_cases', 'max_cases', 'avg_resolution_time', 'sla_compliance_rate'],
       sort: [['current_cases', 'asc']]
     },
     {
@@ -225,8 +225,8 @@ const QueueMember = {
         ['is_active', '=', true],
         ['total_cases_handled', '>', 10]
       ],
-      columns: ['user_id', 'queue_id', 'total_cases_handled', 's_l_a_compliance_rate', 'customer_satisfaction_avg', 'avg_resolution_time'],
-      sort: [['customer_satisfaction_avg', 'desc'], ['s_l_a_compliance_rate', 'desc']]
+      columns: ['user_id', 'queue_id', 'total_cases_handled', 'sla_compliance_rate', 'customer_satisfaction_avg', 'avg_resolution_time'],
+      sort: [['customer_satisfaction_avg', 'desc'], ['sla_compliance_rate', 'desc']]
     },
     {
       name: 'AtCapacity',
@@ -264,7 +264,7 @@ const QueueMember = {
       {
         label: 'Performance Metrics',
         columns: 3,
-        fields: ['total_cases_handled', 'avg_response_time', 'avg_resolution_time', 's_l_a_compliance_rate', 'customer_satisfaction_avg']
+        fields: ['total_cases_handled', 'avg_response_time', 'avg_resolution_time', 'sla_compliance_rate', 'customer_satisfaction_avg']
       },
       {
         label: 'Assignment History',

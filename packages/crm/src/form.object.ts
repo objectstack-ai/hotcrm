@@ -283,14 +283,14 @@ const Form = {
     },
     
     // AI Enhancement
-    a_i_form_optimization: {
+    ai_form_optimization: {
       type: 'textarea',
       label: 'AI 表单优化建议',
       readonly: true,
       maxLength: 2000,
       description: 'AI 分析的表单改进建议（字段顺序、标签文本等）'
     },
-    a_i_field_suggestions: {
+    ai_field_suggestions: {
       type: 'textarea',
       label: 'AI 字段建议',
       readonly: true,
@@ -437,7 +437,7 @@ const Form = {
       {
         label: 'AI 优化助手',
         columns: 1,
-        fields: ['a_i_form_optimization', 'a_i_field_suggestions']
+        fields: ['ai_form_optimization', 'ai_field_suggestions']
       },
       {
         label: '描述',

@@ -155,7 +155,7 @@ const Account = {
       label: '描述',
       rows: 5
     },
-    s_l_a_tier: {
+    sla_tier: {
       type: 'select',
       label: 'SLA等级',
       options: [
@@ -245,7 +245,7 @@ const Account = {
       name: 'ActiveCustomers',
       label: '活跃客户',
       filters: [['customer_status', '=', 'Active Customer']],
-      columns: ['name', 'industry', 'contract_value', 's_l_a_tier', 'health_score', 'next_renewal_date', 'owner_id'],
+      columns: ['name', 'industry', 'contract_value', 'sla_tier', 'health_score', 'next_renewal_date', 'owner_id'],
       sort: [['contract_value', 'desc']]
     },
     {
@@ -255,7 +255,7 @@ const Account = {
         ['customer_status', '=', 'Active Customer'],
         ['health_score', '<', 50]
       ],
-      columns: ['name', 'industry', 'health_score', 'next_renewal_date', 's_l_a_tier', 'owner_id'],
+      columns: ['name', 'industry', 'health_score', 'next_renewal_date', 'sla_tier', 'owner_id'],
       sort: [['health_score', 'asc']]
     },
     {
@@ -265,7 +265,7 @@ const Account = {
         ['customer_status', '=', 'Active Customer'],
         ['contract_value', '>', 100000]
       ],
-      columns: ['name', 'industry', 'contract_value', 'annual_revenue', 's_l_a_tier', 'health_score', 'owner_id'],
+      columns: ['name', 'industry', 'contract_value', 'annual_revenue', 'sla_tier', 'health_score', 'owner_id'],
       sort: [['contract_value', 'desc']]
     },
     {
@@ -288,7 +288,7 @@ const Account = {
     {
       name: 'RequireSLAForActiveCustomers',
       errorMessage: '活跃客户必须设置SLA等级',
-      formula: 'AND(customer_status = "Active Customer", ISBLANK(s_l_a_tier))'
+      formula: 'AND(customer_status = "Active Customer", ISBLANK(sla_tier))'
     },
     {
       name: 'HealthScoreRange',
@@ -306,7 +306,7 @@ const Account = {
       {
         label: '客户状态',
         columns: 2,
-        fields: ['customer_status', 'rating', 's_l_a_tier', 'health_score']
+        fields: ['customer_status', 'rating', 'sla_tier', 'health_score']
       },
       {
         label: '公司信息',

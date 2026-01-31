@@ -137,14 +137,14 @@ const CaseComment = {
       description: 'Minutes since last customer comment'
     },
     // AI Features
-    a_i_generated_suggestion: {
+    ai_generated_suggestion: {
       type: 'textarea',
       label: 'AI Suggested Response',
       maxLength: 5000,
       readonly: true,
       description: 'AI-generated response suggestion'
     },
-    a_i_sentiment: {
+    ai_sentiment: {
       type: 'select',
       label: 'AI Sentiment',
       readonly: true,
@@ -155,7 +155,7 @@ const CaseComment = {
         { label: '😡 Angry', value: 'Angry' }
       ]
     },
-    a_i_confidence_score: {
+    ai_confidence_score: {
       type: 'number',
       label: 'AI Confidence',
       precision: 2,
@@ -164,7 +164,7 @@ const CaseComment = {
       readonly: true,
       description: 'AI confidence in sentiment analysis'
     },
-    a_i_keywords: {
+    ai_keywords: {
       type: 'text',
       label: 'AI Keywords',
       maxLength: 500,
@@ -308,7 +308,7 @@ const CaseComment = {
       filters: [
         ['comment_type', '=', 'Customer']
       ],
-      columns: ['case_id', 'contact_id', 'body', 'a_i_sentiment', 'CreatedDate'],
+      columns: ['case_id', 'contact_id', 'body', 'ai_sentiment', 'CreatedDate'],
       sort: [['CreatedDate', 'desc']]
     },
     {
@@ -365,7 +365,7 @@ const CaseComment = {
       {
         label: 'AI Analysis',
         columns: 2,
-        fields: ['a_i_sentiment', 'a_i_confidence_score', 'a_i_keywords', 'a_i_generated_suggestion']
+        fields: ['ai_sentiment', 'ai_confidence_score', 'ai_keywords', 'ai_generated_suggestion']
       },
       {
         label: 'Engagement',

@@ -105,7 +105,7 @@ const PortalUser = {
       label: 'Last Login',
       readonly: true
     },
-    last_login_i_p: {
+    last_login_ip: {
       type: 'text',
       label: 'Last Login IP',
       maxLength: 45,
@@ -214,7 +214,7 @@ const PortalUser = {
       label: 'email Notifications',
       defaultValue: true
     },
-    s_m_s_notifications: {
+    sms_notifications: {
       type: 'checkbox',
       label: 'SMS Notifications',
       defaultValue: false
@@ -412,7 +412,7 @@ const PortalUser = {
       {
         label: 'Authentication',
         columns: 3,
-        fields: ['last_login_date', 'last_login_i_p', 'login_count', 'failed_login_attempts', 'password_last_changed_date', 'must_change_password', 'two_factor_enabled']
+        fields: ['last_login_date', 'last_login_ip', 'login_count', 'failed_login_attempts', 'password_last_changed_date', 'must_change_password', 'two_factor_enabled']
       },
       {
         label: 'Permissions',
@@ -422,7 +422,7 @@ const PortalUser = {
       {
         label: 'Preferences',
         columns: 2,
-        fields: ['language', 'time_zone', 'email_notifications', 's_m_s_notifications', 'notify_on_case_update', 'notify_on_case_resolved', 'digest_frequency']
+        fields: ['language', 'time_zone', 'email_notifications', 'sms_notifications', 'notify_on_case_update', 'notify_on_case_resolved', 'digest_frequency']
       },
       {
         label: 'Usage Statistics',

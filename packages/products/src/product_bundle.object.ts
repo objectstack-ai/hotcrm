@@ -169,21 +169,21 @@ const ProductBundle = {
       description: 'URL to bundle image'
     },
     // AI Enhancement
-    a_i_recommendation_score: {
+    ai_recommendation_score: {
       type: 'number',
       label: 'AI Recommendation Score',
       precision: 2,
       readonly: true,
       description: 'AI-calculated recommendation score based on purchase patterns'
     },
-    a_i_frequency_score: {
+    ai_frequency_score: {
       type: 'number',
       label: 'Frequency Score',
       precision: 2,
       readonly: true,
       description: 'How frequently this bundle is purchased together'
     },
-    a_i_suggested_upgrade: {
+    ai_suggested_upgrade: {
       type: 'lookup',
       label: 'Suggested Upgrade',
       reference: 'ProductBundle',
@@ -235,7 +235,7 @@ const ProductBundle = {
         ['status', '=', 'Active'],
         ['featured_bundle', '=', true]
       ],
-      columns: ['name', 'bundle_code', 'bundle_type', 'fixed_price', 'a_i_recommendation_score'],
+      columns: ['name', 'bundle_code', 'bundle_type', 'fixed_price', 'ai_recommendation_score'],
       sort: [['display_order', 'asc']]
     },
     {
@@ -326,7 +326,7 @@ const ProductBundle = {
       {
         label: 'AI Recommendations',
         columns: 2,
-        fields: ['a_i_recommendation_score', 'a_i_frequency_score', 'a_i_suggested_upgrade']
+        fields: ['ai_recommendation_score', 'ai_frequency_score', 'ai_suggested_upgrade']
       }
     ]
   }

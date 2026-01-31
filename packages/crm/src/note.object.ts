@@ -146,21 +146,21 @@ const Note = {
     },
     
     // AI Enhancement
-    a_i_summary: {
+    ai_summary: {
       type: 'textarea',
       label: 'AI Summary',
       readonly: true,
       maxLength: 1000,
       description: 'AI-generated summary of the note'
     },
-    a_i_extracted_keywords: {
+    ai_extracted_keywords: {
       type: 'text',
       label: 'AI Extracted Keywords',
       readonly: true,
       maxLength: 500,
       description: 'AI-extracted keywords from the note content'
     },
-    a_i_sentiment: {
+    ai_sentiment: {
       type: 'select',
       label: 'AI Sentiment',
       readonly: true,
@@ -274,7 +274,7 @@ const Note = {
       {
         label: 'AI Insights',
         columns: 2,
-        fields: ['a_i_summary', 'a_i_extracted_keywords', 'a_i_sentiment']
+        fields: ['ai_summary', 'ai_extracted_keywords', 'ai_sentiment']
       },
       {
         label: 'Note Content',

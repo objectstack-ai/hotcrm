@@ -78,7 +78,7 @@ const Queue = {
         { label: 'Low', value: 'Low' }
       ]
     },
-    s_l_a_template_id: {
+    sla_template_id: {
       type: 'lookup',
       label: 'SLA Template',
       reference: 'SLATemplate',
@@ -287,7 +287,7 @@ const Queue = {
       {
         label: 'Priority & SLA',
         columns: 2,
-        fields: ['default_priority', 's_l_a_template_id']
+        fields: ['default_priority', 'sla_template_id']
       },
       {
         label: 'Overflow Management',

@@ -358,26 +358,26 @@ const DiscountSchedule = {
       description: 'Total discount amount given'
     },
     // AI Enhancement
-    a_i_optimal_discount_percent: {
+    ai_optimal_discount_percent: {
       type: 'percent',
       label: 'AI Optimal Discount',
       readonly: true,
       description: 'AI-recommended optimal discount percentage'
     },
-    a_i_expected_r_o_i: {
+    ai_expected_r_o_i: {
       type: 'percent',
       label: 'AI Expected ROI',
       readonly: true,
       description: 'AI-predicted return on investment'
     },
-    a_i_recommended_duration: {
+    ai_recommended_duration: {
       type: 'number',
       label: 'AI Recommended Duration (Days)',
       precision: 0,
       readonly: true,
       description: 'AI-suggested optimal campaign duration'
     },
-    a_i_performance_analysis: {
+    ai_performance_analysis: {
       type: 'textarea',
       label: 'AI Performance Analysis',
       readonly: true,
@@ -582,7 +582,7 @@ const DiscountSchedule = {
       {
         label: 'AI Insights',
         columns: 1,
-        fields: ['a_i_optimal_discount_percent', 'a_i_expected_r_o_i', 'a_i_recommended_duration', 'a_i_performance_analysis']
+        fields: ['ai_optimal_discount_percent', 'ai_expected_r_o_i', 'ai_recommended_duration', 'ai_performance_analysis']
       }
     ]
   }

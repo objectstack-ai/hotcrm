@@ -60,7 +60,7 @@ const EmailToCase = {
       precision: 0,
       defaultValue: 993
     },
-    use_s_s_l: {
+    use_ssl: {
       type: 'checkbox',
       label: 'Use SSL',
       defaultValue: true
@@ -334,7 +334,7 @@ const EmailToCase = {
       {
         label: 'Email Settings',
         columns: 2,
-        fields: ['email_address', 'mailbox_type', 'mail_server', 'mail_port', 'use_s_s_l', 'username']
+        fields: ['email_address', 'mailbox_type', 'mail_server', 'mail_port', 'use_ssl', 'username']
       },
       {
         label: 'Default Case Settings',

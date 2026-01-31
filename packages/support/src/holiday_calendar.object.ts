@@ -61,7 +61,7 @@ const HolidayCalendar = {
       max: 2100
     },
     // Auto-Update
-    auto_update_from_public_a_p_i: {
+    auto_update_from_public_api: {
       type: 'checkbox',
       label: 'Auto-Update from Public API',
       defaultValue: false,
@@ -145,7 +145,7 @@ const HolidayCalendar = {
       {
         label: 'Auto-Update',
         columns: 3,
-        fields: ['auto_update_from_public_a_p_i', 'last_sync_date', 'next_sync_date']
+        fields: ['auto_update_from_public_api', 'last_sync_date', 'next_sync_date']
       },
       {
         label: 'Statistics',

@@ -362,33 +362,33 @@ const Quote = {
       readonly: true
     },
     // AI Enhancement Fields
-    a_i_recommended_bundle: {
+    ai_recommended_bundle: {
       type: 'textarea',
       label: 'AI Recommended Bundle',
       readonly: true,
       maxLength: 2000,
       description: 'Auto-generated product bundle recommendations based on customer budget'
     },
-    a_i_optimal_discount: {
+    ai_optimal_discount: {
       type: 'percent',
       label: 'AI Optimal Discount',
       readonly: true,
       description: 'AI-suggested optimal discount based on historical data'
     },
-    a_i_win_probability: {
+    ai_win_probability: {
       type: 'percent',
       label: 'AI Win Probability',
       readonly: true,
       description: 'Predicted win rate based on quote configuration'
     },
-    a_i_pricing_analysis: {
+    ai_pricing_analysis: {
       type: 'textarea',
       label: 'AI Pricing Analysis',
       readonly: true,
       maxLength: 2000,
       description: 'Competitive pricing analysis and recommendations'
     },
-    a_i_recommended_upsells: {
+    ai_recommended_upsells: {
       type: 'textarea',
       label: 'AI Recommended Upsells',
       readonly: true,
@@ -503,7 +503,7 @@ const Quote = {
         ['total_price', '>', 100000],
         ['status', 'not in', ['Expired', 'Declined']]
       ],
-      columns: ['quote_number', 'name', 'account_id', 'total_price', 'status', 'a_i_win_probability', 'OwnerId'],
+      columns: ['quote_number', 'name', 'account_id', 'total_price', 'status', 'ai_win_probability', 'OwnerId'],
       sort: [['total_price', 'desc']]
     }
   ],
@@ -609,7 +609,7 @@ const Quote = {
       {
         label: 'AI Smart Pricing',
         columns: 1,
-        fields: ['a_i_recommended_bundle', 'a_i_optimal_discount', 'a_i_win_probability', 'a_i_pricing_analysis', 'a_i_recommended_upsells']
+        fields: ['ai_recommended_bundle', 'ai_optimal_discount', 'ai_win_probability', 'ai_pricing_analysis', 'ai_recommended_upsells']
       },
       {
         label: 'Notes',

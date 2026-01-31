@@ -29,7 +29,7 @@ const WebToCase = {
       defaultValue: true
     },
     // Form Configuration
-    form_u_r_l: {
+    form_url: {
       type: 'url',
       label: 'Form URL',
       readonly: true,
@@ -162,7 +162,7 @@ const WebToCase = {
       maxLength: 1000,
       defaultValue: 'Thank you! Your case has been submitted successfully. We will get back to you soon.'
     },
-    redirect_u_r_l: {
+    redirect_url: {
       type: 'url',
       label: 'Redirect URL',
       description: 'URL to redirect after successful submission'
@@ -217,12 +217,12 @@ const WebToCase = {
       label: 'Form Subtitle',
       maxLength: 500
     },
-    logo_u_r_l: {
+    logo_url: {
       type: 'url',
       label: 'Logo URL',
       description: 'URL to company logo for form header'
     },
-    custom_c_s_s: {
+    custom_css: {
       type: 'textarea',
       label: 'Custom CSS',
       maxLength: 5000,
@@ -340,7 +340,7 @@ const WebToCase = {
       {
         label: 'Form Information',
         columns: 2,
-        fields: ['name', 'description', 'is_active', 'form_u_r_l', 'form_key']
+        fields: ['name', 'description', 'is_active', 'form_url', 'form_key']
       },
       {
         label: 'Default Case Settings',
@@ -365,7 +365,7 @@ const WebToCase = {
       {
         label: 'Success Configuration',
         columns: 1,
-        fields: ['success_message', 'redirect_u_r_l']
+        fields: ['success_message', 'redirect_url']
       },
       {
         label: 'Security Settings',
@@ -375,7 +375,7 @@ const WebToCase = {
       {
         label: 'Branding',
         columns: 1,
-        fields: ['form_title', 'form_subtitle', 'logo_u_r_l', 'custom_c_s_s']
+        fields: ['form_title', 'form_subtitle', 'logo_url', 'custom_css']
       },
       {
         label: 'Contact Creation',

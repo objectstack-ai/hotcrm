@@ -203,12 +203,12 @@ const KnowledgeArticle = {
       description: 'Original article if this is a translation'
     },
     // Attachments & Media
-    video_u_r_l: {
+    video_url: {
       type: 'url',
       label: 'Video URL',
       description: 'YouTube/Vimeo URL for tutorial video'
     },
-    thumbnail_u_r_l: {
+    thumbnail_url: {
       type: 'url',
       label: 'Thumbnail URL',
       description: 'Article thumbnail image'
@@ -276,7 +276,7 @@ const KnowledgeArticle = {
       maxLength: 160,
       description: 'SEO meta description'
     },
-    u_r_l_slug: {
+    url_slug: {
       type: 'text',
       label: 'URL Slug',
       maxLength: 255,
@@ -284,7 +284,7 @@ const KnowledgeArticle = {
       description: 'URL-friendly article identifier'
     },
     // AI-Driven Features
-    a_i_category: {
+    ai_category: {
       type: 'select',
       label: 'AI Suggested category',
       readonly: true,
@@ -301,21 +301,21 @@ const KnowledgeArticle = {
       ],
       description: 'AI-suggested category based on content analysis'
     },
-    a_i_tags: {
+    ai_tags: {
       type: 'text',
       label: 'AI Suggested tags',
       maxLength: 500,
       readonly: true,
       description: 'Comma-separated AI-generated tags'
     },
-    a_i_summary: {
+    ai_summary: {
       type: 'textarea',
       label: 'AI Generated summary',
       maxLength: 500,
       readonly: true,
       description: 'AI-generated article summary'
     },
-    a_i_keywords: {
+    ai_keywords: {
       type: 'text',
       label: 'AI Extracted keywords',
       maxLength: 500,
@@ -638,7 +638,7 @@ const KnowledgeArticle = {
       {
         label: 'Media',
         columns: 2,
-        fields: ['video_u_r_l', 'thumbnail_u_r_l']
+        fields: ['video_url', 'thumbnail_url']
       },
       {
         label: 'Analytics',
@@ -653,7 +653,7 @@ const KnowledgeArticle = {
       {
         label: 'AI Enhancement',
         columns: 2,
-        fields: ['a_i_category', 'a_i_tags', 'a_i_summary', 'a_i_keywords', 'related_article_ids']
+        fields: ['ai_category', 'ai_tags', 'ai_summary', 'ai_keywords', 'related_article_ids']
       },
       {
         label: 'Workflow & Versioning',
@@ -668,7 +668,7 @@ const KnowledgeArticle = {
       {
         label: 'SEO',
         columns: 2,
-        fields: ['meta_description', 'u_r_l_slug']
+        fields: ['meta_description', 'url_slug']
       }
     ]
   }

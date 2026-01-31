@@ -230,14 +230,14 @@ const EmailTemplate = {
     },
     
     // AI Enhancement
-    a_i_generated_subject_lines: {
+    ai_generated_subject_lines: {
       type: 'textarea',
       label: 'AI 生成主题行',
       readonly: true,
       maxLength: 2000,
       description: 'AI 推荐的替代主题行选项'
     },
-    a_i_optimization_suggestions: {
+    ai_optimization_suggestions: {
       type: 'textarea',
       label: 'AI 优化建议',
       readonly: true,
@@ -345,7 +345,7 @@ const EmailTemplate = {
       {
         label: 'AI 优化助手',
         columns: 1,
-        fields: ['a_i_generated_subject_lines', 'a_i_optimization_suggestions']
+        fields: ['ai_generated_subject_lines', 'ai_optimization_suggestions']
       },
       {
         label: '描述',
