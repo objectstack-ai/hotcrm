@@ -258,13 +258,13 @@ const Unsubscribe = {
       type: 'checkbox',
       label: '允许交易邮件',
       defaultValue: true,
-      description: '退订营销邮件但仍允许收订单确认等交易邮件'
+      description: '退订营销邮件但仍允许接收订单确认等交易邮件'
     },
     AllowSystemNotifications: {
       type: 'checkbox',
       label: '允许系统通知',
       defaultValue: true,
-      description: '允许收系统重要通知（密码重置等）'
+      description: '允许接收系统重要通知（密码重置等）'
     }
   },
   relationships: [
