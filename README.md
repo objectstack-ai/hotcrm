@@ -137,14 +137,19 @@ Domain Packages (crm, support, products, finance)
 
 ### Prerequisites
 
-- Node.js 18+
-- pnpm 8+ (recommended for monorepo management)
+- **Node.js**: >= 20.9.0
+- **pnpm**: >= 9.0.0
+- **TypeScript**: >= 5.3.0
 
 ### Installation
 
 ```bash
 # Install pnpm if not already installed
 npm install -g pnpm
+
+# Clone the repository
+git clone https://github.com/objectstack-ai/hotcrm.git
+cd hotcrm
 
 # Install all dependencies
 pnpm install
@@ -166,6 +171,15 @@ pnpm --filter @hotcrm/server build
 # Run linting on all packages
 pnpm lint
 
+# Lint and auto-fix
+pnpm lint:fix
+
+# Run tests
+pnpm test
+
+# Validate protocol compliance
+node scripts/validate-protocol.js
+
 # Clean all build artifacts
 pnpm clean
 ```
@@ -178,6 +192,30 @@ pnpm build
 
 # Start the production server
 pnpm start
+```
+
+### 📖 Development Documentation
+
+**Start Here**: [DEVELOPMENT_WORKFLOW.md](./DEVELOPMENT_WORKFLOW.md) - Complete development guide with workflows, best practices, and templates
+
+**Detailed Guides**:
+- **[Development Workflow](.github/prompts/workflow.prompt.md)** - 3-phase development process (Data 60%, Logic 20%, UI 20%)
+- **[Iterative Development](.github/prompts/iteration.prompt.md)** - 5-week MVP development strategy
+- **[Version Management](.github/prompts/versioning.prompt.md)** - Release process and semantic versioning
+- **[Best Practices](.github/prompts/best-practices.prompt.md)** - Data modeling, security, performance, and UX
+- **[Troubleshooting](.github/prompts/troubleshooting.prompt.md)** - Common issues and solutions
+- **[Application Templates](.github/prompts/templates.prompt.md)** - CRM, ERP, Project Management templates
+
+**Reference Docs**:
+- **[AI Quick Reference](.github/prompts/ai-quick-reference.prompt.md)** - Quick lookup for AI agents
+- **[Metadata Protocol](.github/prompts/metadata.prompt.md)** - File suffix system and naming conventions
+- **[Platform Capabilities](.github/prompts/capabilities.prompt.md)** - Feature mapping guide
+
+**Legacy Docs**:
+- **[Development Plan](./CRM_DEVELOPMENT_PLAN.md)** - Historical roadmap and implementation plan
+- **[Quick Start](./QUICKSTART_DEVELOPMENT.md)** - Legacy quick start guide
+- **[Protocol Compliance](./PROTOCOL_COMPLIANCE.md)** - @objectstack/spec v0.6.1 compliance details
+- **[Contributing](./CONTRIBUTING.md)** - Contribution guidelines
 ```
 
 ## 📦 Package Overview

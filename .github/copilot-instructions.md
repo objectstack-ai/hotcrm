@@ -54,6 +54,16 @@ You are an expert developer and CTO working on **HotCRM**, a world-class enterpr
 - **Consistency**: Maintain English-only documentation across all files including README, guides, comments, and inline documentation.
 
 ## Quick References
+
+### Core Development Guides
 - **[AI Quick Reference](.github/prompts/ai-quick-reference.prompt.md)**: Templates and patterns for common ObjectStack development tasks
 - **[Metadata Protocol](.github/prompts/metadata.prompt.md)**: File suffix protocol and coding standards
 - **[Platform Capabilities](.github/prompts/capabilities.prompt.md)**: Feature mapping and design patterns
+
+### Workflow & Process Guides
+- **[Development Workflow](.github/prompts/workflow.prompt.md)**: Complete development workflow (Data Layer 60%, Logic 20%, UI 20%)
+- **[Iterative Development](.github/prompts/iteration.prompt.md)**: MVP development strategy with 5-week iteration plan
+- **[Version Management](.github/prompts/versioning.prompt.md)**: Semantic versioning, changelog, and release process
+- **[Best Practices](.github/prompts/best-practices.prompt.md)**: Data modeling, security, performance, and UX best practices
+- **[Troubleshooting](.github/prompts/troubleshooting.prompt.md)**: Common issues and solutions
+- **[Application Templates](.github/prompts/templates.prompt.md)**: Ready-to-use templates for CRM, ERP, Project Management
