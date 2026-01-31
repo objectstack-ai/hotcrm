@@ -16,7 +16,7 @@ const Quote = {
   fields: {
     // Basic Information
     QuoteNumber: {
-      type: 'autoNumber',
+      type: 'autonumber',
       label: 'Quote Number',
       format: 'Q-{YYYY}-{MM}-{0000}',
       readonly: true,

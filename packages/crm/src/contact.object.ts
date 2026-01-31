@@ -35,7 +35,7 @@ const Contact = {
       ]
     },
     AccountId: {
-      type: 'masterDetail',
+      type: 'master_detail',
       label: '所属客户',
       reference: 'Account',
       required: true,

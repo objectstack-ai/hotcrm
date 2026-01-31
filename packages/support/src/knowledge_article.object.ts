@@ -13,7 +13,7 @@ const KnowledgeArticle = {
   fields: {
     // Basic Information
     ArticleNumber: {
-      type: 'autoNumber',
+      type: 'autonumber',
       label: 'Article Number',
       format: 'KB-{YYYY}-{0000}',
       readonly: true,

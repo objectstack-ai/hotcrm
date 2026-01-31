@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
 /**
- * ObjectStack Spec v0.6.1 Protocol Compliance Validator
+ * ObjectStack Spec v0.7.1 Protocol Compliance Validator
  * 
  * This script validates all .object.ts files in the repository against
- * the @objectstack/spec v0.6.1 protocol requirements.
+ * the @objectstack/spec v0.7.1 protocol requirements.
  * 
  * Usage:
  *   node scripts/validate-protocol.js
@@ -17,22 +17,28 @@
 const fs = require('fs');
 const path = require('path');
 
-// Valid field types according to @objectstack/spec v0.6.1
+// Valid field types according to @objectstack/spec v0.7.1
 const VALID_FIELD_TYPES = new Set([
-  'text', 'textarea', 'email', 'phone', 'url',
+  'text', 'textarea', 'email', 'phone', 'url', 'password',
+  'markdown', 'html', 'richtext',
   'number', 'currency', 'percent',
   'date', 'datetime', 'time',
-  'checkbox', 'select', 'multiselect',
-  'lookup', 'masterDetail',
-  'autoNumber', 'formula', 'rollupSummary',
-  'location', 'file', 'image'
+  'boolean', 'toggle',
+  'checkbox', 'select', 'multiselect', 'radio', 'checkboxes',
+  'lookup', 'master_detail', 'tree',
+  'autonumber', 'formula', 'summary',
+  'location', 'address',
+  'file', 'image', 'avatar', 'video', 'audio',
+  'code', 'json', 'color', 'rating', 'slider',
+  'signature', 'qrcode', 'progress', 'tags', 'vector'
 ]);
 
 // Invalid field types and their correct alternatives
 const INVALID_FIELD_TYPES = {
-  'autonumber': 'autoNumber',
+  'autoNumber': 'autonumber',  // Changed in v0.7.1
   'picklist': 'select',
-  'reference': 'lookup'
+  'reference': 'lookup',
+  'masterDetail': 'master_detail'
 };
 
 // Valid relationship types
@@ -156,7 +162,7 @@ function findObjectFiles(dir) {
 
 function printHeader() {
   console.log('╔' + '═'.repeat(78) + '╗');
-  console.log('║ ObjectStack Spec v0.6.1 Protocol Compliance Validator'.padEnd(79) + '║');
+  console.log('║ ObjectStack Spec v0.7.1 Protocol Compliance Validator'.padEnd(79) + '║');
   console.log('╚' + '═'.repeat(78) + '╝\n');
 }
 
@@ -212,7 +218,7 @@ function printSummary(results) {
   });
 
   if (totalIssues === 0) {
-    console.log('\n✅ ALL OBJECTS COMPLIANT WITH @objectstack/spec v0.6.1');
+    console.log('\n✅ ALL OBJECTS COMPLIANT WITH @objectstack/spec v0.7.1');
     console.log('\nProtocol Requirements Met:');
     console.log('  ✓ All field names use PascalCase');
     console.log('  ✓ All field types are valid');

@@ -16,7 +16,7 @@ const Case = {
   fields: {
     // Basic Information
     CaseNumber: {
-      type: 'autoNumber',
+      type: 'autonumber',
       label: 'Case Number',
       format: 'CASE-{YYYY}-{0000}',
       readonly: true,

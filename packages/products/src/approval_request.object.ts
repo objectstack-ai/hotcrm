@@ -15,7 +15,7 @@ const ApprovalRequest = {
   fields: {
     // Basic Information
     RequestNumber: {
-      type: 'autoNumber',
+      type: 'autonumber',
       label: 'Request Number',
       format: 'AR-{YYYY}-{MM}-{00000}',
       readonly: true,
