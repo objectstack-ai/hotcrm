@@ -1,17 +1,16 @@
-import type { ObjectSchema } from '@objectstack/spec/data';
 
-const ApprovalRequest: ObjectSchema = {
+const ApprovalRequest = {
   name: 'approval_request',
   label: 'Approval Request',
   labelPlural: 'Approval Requests',
   icon: 'clipboard-check',
   description: 'Multi-level approval workflow for discounts and pricing exceptions',
   enable: {
-    searchEnabled: true,
+    searchable: true,
     trackHistory: true,
-    activitiesEnabled: true,
-    feedsEnabled: true,
-    filesEnabled: true
+    activities: true,
+    feeds: true,
+    files: true
   },
   fields: {
     // Basic Information
@@ -20,13 +19,13 @@ const ApprovalRequest: ObjectSchema = {
       label: 'Request Number',
       format: 'AR-{YYYY}-{MM}-{00000}',
       readonly: true,
-      searchEnabled: true
+      searchable: true
     },
     Name: {
       type: 'text',
       label: 'Request Name',
       required: true,
-      searchEnabled: true,
+      searchable: true,
       maxLength: 255
     },
     Description: {

@@ -1,13 +1,12 @@
-import type { ObjectSchema } from '@objectstack/spec/data';
 
-const SocialMediaCase: ObjectSchema = {
+const SocialMediaCase = {
   name: 'social_media_case',
   label: 'Social Media Case',
   labelPlural: 'Social Media Cases',
   icon: 'share-alt',
   description: 'Social media integration for case creation from social channels',
   enable: {
-    searchEnabled: true,
+    searchable: true,
     trackHistory: true
   },
   fields: {
@@ -17,7 +16,7 @@ const SocialMediaCase: ObjectSchema = {
       label: 'Configuration Name',
       required: true,
       maxLength: 255,
-      searchEnabled: true
+      searchable: true
     },
     Description: {
       type: 'textarea',

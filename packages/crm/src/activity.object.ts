@@ -1,16 +1,15 @@
-import type { ObjectSchema } from '@objectstack/spec/data';
 
-const Activity: ObjectSchema = {
+const Activity = {
   name: 'activity',
   label: 'Activity',
   labelPlural: 'Activities',
   icon: 'calendar-check',
   description: 'Sales activity tracking including calls, emails, meetings, and tasks',
   enable: {
-    searchEnabled: true,
+    searchable: true,
     trackHistory: true,
-    feedsEnabled: true,
-    filesEnabled: true
+    feeds: true,
+    files: true
   },
   fields: {
     // Basic Information
@@ -18,7 +17,7 @@ const Activity: ObjectSchema = {
       type: 'text',
       label: 'Subject',
       required: true,
-      searchEnabled: true,
+      searchable: true,
       maxLength: 255
     },
     Type: {
@@ -244,7 +243,7 @@ const Activity: ObjectSchema = {
       type: 'textarea',
       label: 'Description/Notes',
       maxLength: 32000,
-      searchEnabled: true
+      searchable: true
     },
     // AI Enhancement Fields
     AITranscription: {

@@ -1,13 +1,12 @@
-import type { ObjectSchema } from '@objectstack/spec/data';
 
-const Skill: ObjectSchema = {
+const Skill = {
   name: 'skill',
   label: 'Skill',
   labelPlural: 'Skills',
   icon: 'star',
   description: 'Skills for skill-based case routing and assignment',
   enable: {
-    searchEnabled: true,
+    searchable: true,
     trackHistory: true
   },
   fields: {
@@ -17,7 +16,7 @@ const Skill: ObjectSchema = {
       label: 'Skill Name',
       required: true,
       maxLength: 255,
-      searchEnabled: true
+      searchable: true
     },
     Description: {
       type: 'textarea',

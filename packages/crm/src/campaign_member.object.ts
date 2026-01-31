@@ -1,15 +1,14 @@
-import type { ObjectSchema } from '@objectstack/spec/data';
 
-const CampaignMember: ObjectSchema = {
+const CampaignMember = {
   name: 'campaign_member',
   label: 'Campaign Member',
   labelPlural: 'Campaign Members',
   icon: 'users',
   description: 'Many-to-many relationship tracking between Campaigns and Leads/Contacts',
   enable: {
-    searchEnabled: true,
+    searchable: true,
     trackHistory: true,
-    filesEnabled: false
+    files: false
   },
   fields: {
     // Relationship Fields

@@ -88,8 +88,8 @@ importers:
   packages/core:
     dependencies:
       '@objectstack/spec':
-        specifier: ^0.6.1
-        version: 0.6.1
+        specifier: ^0.7.1
+        version: 0.7.1
       typescript:
         specifier: ^5.3.0
         version: 5.9.3
@@ -113,8 +113,8 @@ importers:
         specifier: workspace:*
         version: link:../core
       '@objectstack/spec':
-        specifier: ^0.6.1
-        version: 0.6.1
+        specifier: ^0.7.1
+        version: 0.7.1
       axios:
         specifier: ^1.6.0
         version: 1.13.3
@@ -141,8 +141,8 @@ importers:
         specifier: workspace:*
         version: link:../core
       '@objectstack/spec':
-        specifier: ^0.6.1
-        version: 0.6.1
+        specifier: ^0.7.1
+        version: 0.7.1
       typescript:
         specifier: ^5.3.0
         version: 5.9.3
@@ -166,8 +166,8 @@ importers:
         specifier: workspace:*
         version: link:../core
       '@objectstack/spec':
-        specifier: ^0.6.1
-        version: 0.6.1
+        specifier: ^0.7.1
+        version: 0.7.1
       typescript:
         specifier: ^5.3.0
         version: 5.9.3
@@ -252,8 +252,8 @@ importers:
         specifier: workspace:*
         version: link:../core
       '@objectstack/spec':
-        specifier: ^0.6.1
-        version: 0.6.1
+        specifier: ^0.7.1
+        version: 0.7.1
       typescript:
         specifier: ^5.3.0
         version: 5.9.3
@@ -280,8 +280,8 @@ importers:
         specifier: workspace:*
         version: link:../crm
       '@objectstack/spec':
-        specifier: ^0.6.1
-        version: 0.6.1
+        specifier: ^0.7.1
+        version: 0.7.1
       tailwindcss:
         specifier: ^3.4.0
         version: 3.4.19
@@ -1035,6 +1035,10 @@ packages:
 
   '@objectstack/spec@0.6.1':
     resolution: {integrity: sha512-YLwDazXrV5v7ThcJ9gfM3iae3IXNitE9wc9zuP+ZLsMmkqIWnAkd+l4Y+TGGrsOx/h2FNY74SecKYblD7GJ4Og==}
+    engines: {node: '>=18.0.0'}
+
+  '@objectstack/spec@0.7.1':
+    resolution: {integrity: sha512-QEhb7BUFMuSQFmq65nCEu7iPgEwPcxA35YF26sLSDj2MQwqTNgrIPsVcehvykduZIWB+ueeSz6Oh7qnPuTq+pg==}
     engines: {node: '>=18.0.0'}
 
   '@objectstack/types@0.6.1':
@@ -4871,6 +4875,10 @@ snapshots:
       '@objectstack/types': 0.6.1
 
   '@objectstack/spec@0.6.1':
+    dependencies:
+      zod: 3.25.76
+
+  '@objectstack/spec@0.7.1':
     dependencies:
       zod: 3.25.76
 

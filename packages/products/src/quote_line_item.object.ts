@@ -1,17 +1,16 @@
-import type { ObjectSchema } from '@objectstack/spec/data';
 
-const QuoteLineItem: ObjectSchema = {
+const QuoteLineItem = {
   name: 'quote_line_item',
   label: 'Quote Line Item',
   labelPlural: 'Quote Line Items',
   icon: 'list',
   description: 'Individual line items on quotes with pricing, quantity, and discount information',
   enable: {
-    searchEnabled: true,
+    searchable: true,
     trackHistory: true,
-    activitiesEnabled: false,
-    feedsEnabled: false,
-    filesEnabled: false
+    activities: false,
+    feeds: false,
+    files: false
   },
   fields: {
     // Related Records

@@ -1,6 +1,5 @@
-import type { ObjectSchema } from '@objectstack/spec/data';
 
-const ProductBundle: ObjectSchema = {
+const ProductBundle = {
   name: 'product_bundle',
   label: 'Product Bundle',
   labelPlural: 'Product Bundles',
@@ -9,8 +8,8 @@ const ProductBundle: ObjectSchema = {
   enable: {
     searchEnabled: true,
     trackHistory: true,
-    activitiesEnabled: true,
-    feedsEnabled: true,
+    activities: true,
+    feeds: true,
     filesEnabled: true
   },
   fields: {

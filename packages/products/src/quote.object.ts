@@ -1,17 +1,16 @@
-import type { ObjectSchema } from '@objectstack/spec/data';
 
-const Quote: ObjectSchema = {
+const Quote = {
   name: 'quote',
   label: 'Quote',
   labelPlural: 'Quotes',
   icon: 'file-invoice-dollar',
   description: 'CPQ (Configure, Price, Quote) with complex pricing, discount approval, and PDF generation',
   enable: {
-    searchEnabled: true,
+    searchable: true,
     trackHistory: true,
-    activitiesEnabled: true,
-    feedsEnabled: true,
-    filesEnabled: true,
+    activities: true,
+    feeds: true,
+    files: true,
     approvalProcess: true
   },
   fields: {
@@ -21,13 +20,13 @@ const Quote: ObjectSchema = {
       label: 'Quote Number',
       format: 'Q-{YYYY}-{MM}-{0000}',
       readonly: true,
-      searchEnabled: true
+      searchable: true
     },
     Name: {
       type: 'text',
       label: 'Quote Name',
       required: true,
-      searchEnabled: true,
+      searchable: true,
       maxLength: 255
     },
     Status: {

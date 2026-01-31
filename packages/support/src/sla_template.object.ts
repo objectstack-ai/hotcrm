@@ -1,13 +1,12 @@
-import type { ObjectSchema } from '@objectstack/spec/data';
 
-const SLATemplate: ObjectSchema = {
+const SLATemplate = {
   name: 'sla_template',
   label: 'SLA Template',
   labelPlural: 'SLA Templates',
   icon: 'clock',
   description: 'Service Level Agreement templates defining response and resolution time targets',
   enable: {
-    searchEnabled: true,
+    searchable: true,
     trackHistory: true
   },
   fields: {
@@ -17,7 +16,7 @@ const SLATemplate: ObjectSchema = {
       label: 'Template Name',
       required: true,
       maxLength: 255,
-      searchEnabled: true
+      searchable: true
     },
     Description: {
       type: 'textarea',

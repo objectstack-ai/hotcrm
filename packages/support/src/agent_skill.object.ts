@@ -1,13 +1,12 @@
-import type { ObjectSchema } from '@objectstack/spec/data';
 
-const AgentSkill: ObjectSchema = {
+const AgentSkill = {
   name: 'agent_skill',
   label: 'Agent Skill',
   labelPlural: 'Agent Skills',
   icon: 'user-check',
   description: 'Agent skill proficiency levels for skill-based routing',
   enable: {
-    searchEnabled: true,
+    searchable: true,
     trackHistory: true
   },
   fields: {

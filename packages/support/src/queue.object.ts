@@ -1,13 +1,12 @@
-import type { ObjectSchema } from '@objectstack/spec/data';
 
-const Queue: ObjectSchema = {
+const Queue = {
   name: 'queue',
   label: 'Support Queue',
   labelPlural: 'Support Queues',
   icon: 'inbox',
   description: 'Support team queues for case routing and assignment',
   enable: {
-    searchEnabled: true,
+    searchable: true,
     trackHistory: true
   },
   fields: {
@@ -17,7 +16,7 @@ const Queue: ObjectSchema = {
       label: 'Queue Name',
       required: true,
       maxLength: 255,
-      searchEnabled: true
+      searchable: true
     },
     Description: {
       type: 'textarea',

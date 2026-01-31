@@ -1,20 +1,19 @@
-import type { ObjectSchema } from '@objectstack/spec/data';
 
-const Contract: ObjectSchema = {
+const Contract = {
   name: 'contract',
   label: '合同',
   labelPlural: '合同',
   icon: 'file-text',
   description: '合同管理',
   enable: {
-    searchEnabled: true,
+    searchable: true,
     trackHistory: true,
-    feedsEnabled: true,
-    filesEnabled: true
+    feeds: true,
+    files: true
   },
   fields: {
     ContractNumber: {
-      type: 'autoNumber',
+      type: 'autonumber',
       label: '合同编号',
       format: 'CT-{YYYY}{MM}{DD}-{0000}'
     },

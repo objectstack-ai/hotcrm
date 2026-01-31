@@ -1,15 +1,14 @@
-import type { ObjectSchema } from '@objectstack/spec/data';
 
-const LandingPage: ObjectSchema = {
+const LandingPage = {
   name: 'landing_page',
   label: '着陆页',
   labelPlural: '着陆页',
   icon: 'layout',
   description: '营销着陆页构建器，支持拖放式设计和A/B测试',
   enable: {
-    searchEnabled: true,
+    searchable: true,
     trackHistory: true,
-    filesEnabled: true
+    files: true
   },
   fields: {
     // Basic Information
@@ -18,7 +17,7 @@ const LandingPage: ObjectSchema = {
       label: '着陆页名称',
       required: true,
       maxLength: 255,
-      searchEnabled: true
+      searchable: true
     },
     Title: {
       type: 'text',
