@@ -52,3 +52,8 @@ You are an expert developer and CTO working on **HotCRM**, a world-class enterpr
 - **Language**: All documentation MUST be written in English only.
 - **No Translations**: Do not create or maintain documentation in other languages.
 - **Consistency**: Maintain English-only documentation across all files including README, guides, comments, and inline documentation.
+
+## Quick References
+- **[AI Quick Reference](.github/prompts/ai-quick-reference.prompt.md)**: Templates and patterns for common ObjectStack development tasks
+- **[Metadata Protocol](.github/prompts/metadata.prompt.md)**: File suffix protocol and coding standards
+- **[Platform Capabilities](.github/prompts/capabilities.prompt.md)**: Feature mapping and design patterns
