@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "tsx watch src/cli-server.ts",
     "dev:official-cli": "objectstack serve --port 3000",
-    "dev:legacy": "ts-node-dev --respawn src/server.ts",
+    "dev:legacy": "tsx watch src/server.ts",
     "build": "tsc",
     "start": "node dist/cli-server.js",
     "start:official-cli": "objectstack serve --port 3000",

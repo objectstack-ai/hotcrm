@@ -5,15 +5,15 @@
 [![Code Quality](https://github.com/hotcrm/hotcrm/workflows/Code%20Quality/badge.svg)](https://github.com/hotcrm/hotcrm/actions/workflows/code-quality.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-> A world-class Customer Relationship Management system built on @objectstack/spec v0.6.1 protocol with Salesforce-level functionality and Apple/Linear-level UX.
+> A world-class Customer Relationship Management system built on @objectstack/spec v0.7.2 protocol with Salesforce-level functionality and Apple/Linear-level UX.
 
-> 📝 **Latest Updates**: See [UPGRADE_NOTES.md](UPGRADE_NOTES.md) for information about the v0.6.1 upgrade and runtime migration status.
+> 📝 **Latest Updates**: Upgraded to @objectstack/spec v0.7.2 with CLI-based server startup. See [UPGRADE_NOTES.md](UPGRADE_NOTES.md) for migration details.
 
-> ✅ **Protocol Compliance**: All metadata is fully compliant with @objectstack/spec v0.6.1. See [PROTOCOL_COMPLIANCE.md](PROTOCOL_COMPLIANCE.md) for details.
+> ✅ **Protocol Compliance**: All metadata is fully compliant with @objectstack/spec v0.7.2. See [PROTOCOL_COMPLIANCE.md](PROTOCOL_COMPLIANCE.md) for details.
 
 ## 🌟 Overview
 
-HotCRM is a **comprehensive, AI-native enterprise CRM** system covering the complete Lead-to-Cash lifecycle. Built on the @objectstack/spec v0.6.1 protocol, it delivers:
+HotCRM is a **comprehensive, AI-native enterprise CRM** system covering the complete Lead-to-Cash lifecycle. Built on the @objectstack/spec v0.7.2 protocol, it delivers:
 
 - **Complete CRM Suite**: 36 core objects (TypeScript) spanning Marketing, Sales, Service, and Finance domains
 - **Metadata-Driven Architecture**: All objects defined through TypeScript (type-safe)
@@ -158,8 +158,11 @@ pnpm install
 ### Development
 
 ```bash
-# Start the development server
+# Start the development server (CLI-based with ObjectStack v0.7.2)
 pnpm dev
+
+# Start with legacy Express server (fallback)
+pnpm --filter @hotcrm/server dev:legacy
 
 # Build all packages
 pnpm build
@@ -190,9 +193,27 @@ pnpm clean
 # Build all packages
 pnpm build
 
-# Start the production server
+# Start the production server (CLI-based)
 pnpm start
+
+# Or use legacy Express server
+pnpm --filter @hotcrm/server start:legacy
 ```
+
+### Server Startup Options
+
+HotCRM provides two server startup modes:
+
+1. **CLI-based (Recommended)**: Uses ObjectStack v0.7.2 runtime with `objectstack.config.ts`
+   - `pnpm dev` - Development mode with hot reload
+   - `pnpm start` - Production mode
+   - Loads 20 business objects from configuration
+   - Uses ObjectKernel from @objectstack/core
+
+2. **Legacy Express Server**: Traditional Express.js server with manual API routing
+   - `pnpm --filter @hotcrm/server dev:legacy` - Development mode
+   - `pnpm --filter @hotcrm/server start:legacy` - Production mode
+   - Maintains backward compatibility
 
 ### 📖 Development Documentation
 
