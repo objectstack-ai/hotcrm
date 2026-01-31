@@ -1,13 +1,13 @@
-import type { ServiceObject } from '@objectstack/spec/data';
+import type { ObjectSchema } from '@objectstack/spec/data';
 
-const EscalationRule = {
+const EscalationRule: ObjectSchema = {
   name: 'escalation_rule',
   label: 'Escalation Rule',
   labelPlural: 'Escalation Rules',
   icon: 'arrow-up',
   description: 'Rules for automatic case escalation based on SLA violations or conditions',
-  capabilities: {
-    searchable: true,
+  enable: {
+    searchEnabled: true,
     trackHistory: true
   },
   fields: {
@@ -17,7 +17,7 @@ const EscalationRule = {
       label: 'Rule Name',
       required: true,
       maxLength: 255,
-      searchable: true
+      searchEnabled: true
     },
     Description: {
       type: 'textarea',

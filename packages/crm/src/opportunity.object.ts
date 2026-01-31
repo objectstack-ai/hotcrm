@@ -1,24 +1,24 @@
-import type { ServiceObject } from '@objectstack/spec/data';
+import type { ObjectSchema } from '@objectstack/spec/data';
 
-const Opportunity = {
+const Opportunity: ObjectSchema = {
   name: 'opportunity',
   label: '商机',
   labelPlural: '商机',
   icon: 'briefcase',
   description: '销售商机和管道管理',
-  capabilities: {
-    searchable: true,
+  enable: {
+    searchEnabled: true,
     trackHistory: true,
-    activities: true,
-    feeds: true,
-    files: true
+    activitiesEnabled: true,
+    feedsEnabled: true,
+    filesEnabled: true
   },
   fields: {
     Name: {
       type: 'text',
       label: '商机名称',
       required: true,
-      searchable: true,
+      searchEnabled: true,
       maxLength: 120
     },
     AccountId: {

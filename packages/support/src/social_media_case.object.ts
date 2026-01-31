@@ -1,13 +1,13 @@
-import type { ServiceObject } from '@objectstack/spec/data';
+import type { ObjectSchema } from '@objectstack/spec/data';
 
-const SocialMediaCase = {
+const SocialMediaCase: ObjectSchema = {
   name: 'social_media_case',
   label: 'Social Media Case',
   labelPlural: 'Social Media Cases',
   icon: 'share-alt',
   description: 'Social media integration for case creation from social channels',
-  capabilities: {
-    searchable: true,
+  enable: {
+    searchEnabled: true,
     trackHistory: true
   },
   fields: {
@@ -17,7 +17,7 @@ const SocialMediaCase = {
       label: 'Configuration Name',
       required: true,
       maxLength: 255,
-      searchable: true
+      searchEnabled: true
     },
     Description: {
       type: 'textarea',

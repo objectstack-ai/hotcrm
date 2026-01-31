@@ -1,15 +1,15 @@
-import type { ServiceObject } from '@objectstack/spec/data';
+import type { ObjectSchema } from '@objectstack/spec/data';
 
-const CaseComment = {
+const CaseComment: ObjectSchema = {
   name: 'case_comment',
   label: 'Case Comment',
   labelPlural: 'Case Comments',
   icon: 'comment',
   description: 'Comments, responses, and interaction history for cases',
-  capabilities: {
-    searchable: true,
+  enable: {
+    searchEnabled: true,
     trackHistory: true,
-    files: true
+    filesEnabled: true
   },
   fields: {
     // Relationships
@@ -47,7 +47,7 @@ const CaseComment = {
       label: 'Comment',
       required: true,
       maxLength: 32000,
-      searchable: true,
+      searchEnabled: true,
       description: 'Comment text'
     },
     PlainTextBody: {
@@ -55,7 +55,7 @@ const CaseComment = {
       label: 'Plain Text',
       maxLength: 32000,
       readonly: true,
-      searchable: true,
+      searchEnabled: true,
       description: 'Plain text version for search'
     },
     // Visibility
@@ -106,7 +106,7 @@ const CaseComment = {
       type: 'text',
       label: 'Email Subject',
       maxLength: 255,
-      searchable: true
+      searchEnabled: true
     },
     EmailMessageId: {
       type: 'text',

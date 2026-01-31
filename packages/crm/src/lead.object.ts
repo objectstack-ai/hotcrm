@@ -1,17 +1,17 @@
-import type { ServiceObject } from '@objectstack/spec/data';
+import type { ObjectSchema } from '@objectstack/spec/data';
 
-const Lead = {
+const Lead: ObjectSchema = {
   name: 'lead',
   label: '线索',
   labelPlural: '线索',
   icon: 'user-plus',
   description: '潜在客户线索管理，包括线索打分、公海池和自动分配',
-  capabilities: {
-    searchable: true,
+  enable: {
+    searchEnabled: true,
     trackHistory: true,
-    activities: true,
-    feeds: true,
-    files: true,
+    activitiesEnabled: true,
+    feedsEnabled: true,
+    filesEnabled: true,
     enableDuplicateDetection: true
   },
   fields: {
@@ -26,14 +26,14 @@ const Lead = {
       label: '姓',
       required: true,
       maxLength: 80,
-      searchable: true
+      searchEnabled: true
     },
     Company: {
       type: 'text',
       label: '公司',
       required: true,
       maxLength: 255,
-      searchable: true
+      searchEnabled: true
     },
     Title: {
       type: 'text',
@@ -45,7 +45,7 @@ const Lead = {
       type: 'email',
       label: '邮箱',
       unique: true,
-      searchable: true
+      searchEnabled: true
     },
     Phone: {
       type: 'phone',

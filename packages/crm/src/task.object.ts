@@ -1,16 +1,16 @@
-import type { ServiceObject } from '@objectstack/spec/data';
+import type { ObjectSchema } from '@objectstack/spec/data';
 
-const Task = {
+const Task: ObjectSchema = {
   name: 'task',
   label: 'Task',
   labelPlural: 'Tasks',
   icon: 'check-square',
   description: 'Specialized task management with Kanban boards, dependencies, and time tracking',
-  capabilities: {
-    searchable: true,
+  enable: {
+    searchEnabled: true,
     trackHistory: true,
-    feeds: true,
-    files: true
+    feedsEnabled: true,
+    filesEnabled: true
   },
   fields: {
     // Basic Information
@@ -18,7 +18,7 @@ const Task = {
       type: 'text',
       label: 'Task Subject',
       required: true,
-      searchable: true,
+      searchEnabled: true,
       maxLength: 255
     },
     Priority: {
@@ -195,7 +195,7 @@ const Task = {
       type: 'textarea',
       label: 'Description',
       maxLength: 32000,
-      searchable: true
+      searchEnabled: true
     },
     
     // Kanban Board Fields

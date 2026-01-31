@@ -1,13 +1,13 @@
-import type { ServiceObject } from '@objectstack/spec/data';
+import type { ObjectSchema } from '@objectstack/spec/data';
 
-const Holiday = {
+const Holiday: ObjectSchema = {
   name: 'holiday',
   label: 'Holiday',
   labelPlural: 'Holidays',
   icon: 'star',
   description: 'Public holidays and company closure dates',
-  capabilities: {
-    searchable: true,
+  enable: {
+    searchEnabled: true,
     trackHistory: true
   },
   fields: {
@@ -24,7 +24,7 @@ const Holiday = {
       label: 'Holiday Name',
       required: true,
       maxLength: 255,
-      searchable: true
+      searchEnabled: true
     },
     Description: {
       type: 'textarea',
