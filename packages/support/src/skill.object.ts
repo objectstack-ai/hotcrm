@@ -1,13 +1,13 @@
-import type { ServiceObject } from '@objectstack/spec/data';
+import type { ObjectSchema } from '@objectstack/spec/data';
 
-const Skill = {
+const Skill: ObjectSchema = {
   name: 'skill',
   label: 'Skill',
   labelPlural: 'Skills',
   icon: 'star',
   description: 'Skills for skill-based case routing and assignment',
-  capabilities: {
-    searchable: true,
+  enable: {
+    searchEnabled: true,
     trackHistory: true
   },
   fields: {
@@ -17,7 +17,7 @@ const Skill = {
       label: 'Skill Name',
       required: true,
       maxLength: 255,
-      searchable: true
+      searchEnabled: true
     },
     Description: {
       type: 'textarea',

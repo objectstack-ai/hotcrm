@@ -1,17 +1,17 @@
-import type { ServiceObject } from '@objectstack/spec/data';
+import type { ObjectSchema } from '@objectstack/spec/data';
 
-const PriceRule = {
+const PriceRule: ObjectSchema = {
   name: 'price_rule',
   label: 'Price Rule',
   labelPlural: 'Price Rules',
   icon: 'calculator',
   description: 'Pricing rules for tiered pricing, volume discounts, contract-based pricing, and promotional pricing',
-  capabilities: {
-    searchable: true,
+  enable: {
+    searchEnabled: true,
     trackHistory: true,
-    activities: true,
-    feeds: true,
-    files: false
+    activitiesEnabled: true,
+    feedsEnabled: true,
+    filesEnabled: false
   },
   fields: {
     // Basic Information
@@ -19,14 +19,14 @@ const PriceRule = {
       type: 'text',
       label: 'Rule Name',
       required: true,
-      searchable: true,
+      searchEnabled: true,
       maxLength: 255
     },
     RuleCode: {
       type: 'text',
       label: 'Rule Code',
       unique: true,
-      searchable: true,
+      searchEnabled: true,
       maxLength: 50,
       description: 'Unique identifier for the pricing rule'
     },

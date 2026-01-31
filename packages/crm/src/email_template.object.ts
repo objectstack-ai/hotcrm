@@ -1,15 +1,15 @@
-import type { ServiceObject } from '@objectstack/spec/data';
+import type { ObjectSchema } from '@objectstack/spec/data';
 
-const EmailTemplate = {
+const EmailTemplate: ObjectSchema = {
   name: 'email_template',
   label: '邮件模板',
   labelPlural: '邮件模板',
   icon: 'mail',
   description: '营销邮件模板库，支持个性化令牌和动态内容块',
-  capabilities: {
-    searchable: true,
+  enable: {
+    searchEnabled: true,
     trackHistory: true,
-    files: true
+    filesEnabled: true
   },
   fields: {
     // Basic Information
@@ -18,7 +18,7 @@ const EmailTemplate = {
       label: '模板名称',
       required: true,
       maxLength: 255,
-      searchable: true,
+      searchEnabled: true,
       description: '邮件模板的唯一名称'
     },
     TemplateCode: {

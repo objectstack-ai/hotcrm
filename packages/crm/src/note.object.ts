@@ -1,16 +1,16 @@
-import type { ServiceObject } from '@objectstack/spec/data';
+import type { ObjectSchema } from '@objectstack/spec/data';
 
-const Note = {
+const Note: ObjectSchema = {
   name: 'note',
   label: 'Note',
   labelPlural: 'Notes',
   icon: 'sticky-note',
   description: 'Quick notes with markdown support, @mentions, and full-text search',
-  capabilities: {
-    searchable: true,
+  enable: {
+    searchEnabled: true,
     trackHistory: false,
-    feeds: false,
-    files: true
+    feedsEnabled: false,
+    filesEnabled: true
   },
   fields: {
     // Basic Information
@@ -18,14 +18,14 @@ const Note = {
       type: 'text',
       label: 'Note Title',
       required: true,
-      searchable: true,
+      searchEnabled: true,
       maxLength: 255
     },
     Body: {
       type: 'textarea',
       label: 'Note Body',
       required: true,
-      searchable: true,
+      searchEnabled: true,
       maxLength: 32000,
       description: 'Rich text with Markdown support'
     },

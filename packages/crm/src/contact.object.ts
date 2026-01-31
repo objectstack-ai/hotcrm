@@ -1,16 +1,16 @@
-import type { ServiceObject } from '@objectstack/spec/data';
+import type { ObjectSchema } from '@objectstack/spec/data';
 
-const Contact = {
+const Contact: ObjectSchema = {
   name: 'contact',
   label: '联系人',
   labelPlural: '联系人',
   icon: 'user',
   description: '个人联系人管理',
-  capabilities: {
-    searchable: true,
+  enable: {
+    searchEnabled: true,
     trackHistory: true,
-    activities: true,
-    feeds: true
+    activitiesEnabled: true,
+    feedsEnabled: true
   },
   fields: {
     FirstName: {
@@ -22,7 +22,7 @@ const Contact = {
       type: 'text',
       label: '姓',
       required: true,
-      searchable: true,
+      searchEnabled: true,
       maxLength: 80
     },
     Salutation: {

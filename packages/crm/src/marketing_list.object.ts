@@ -1,15 +1,15 @@
-import type { ServiceObject } from '@objectstack/spec/data';
+import type { ObjectSchema } from '@objectstack/spec/data';
 
-const MarketingList = {
+const MarketingList: ObjectSchema = {
   name: 'marketing_list',
   label: '营销列表',
   labelPlural: '营销列表',
   icon: 'users',
   description: '营销列表/细分管理，支持动态查询和静态成员',
-  capabilities: {
-    searchable: true,
+  enable: {
+    searchEnabled: true,
     trackHistory: true,
-    files: false
+    filesEnabled: false
   },
   fields: {
     // Basic Information
@@ -18,7 +18,7 @@ const MarketingList = {
       label: '列表名称',
       required: true,
       maxLength: 255,
-      searchable: true
+      searchEnabled: true
     },
     ListCode: {
       type: 'text',

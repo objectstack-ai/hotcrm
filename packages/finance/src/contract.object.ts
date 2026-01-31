@@ -1,16 +1,16 @@
-import type { ServiceObject } from '@objectstack/spec/data';
+import type { ObjectSchema } from '@objectstack/spec/data';
 
-const Contract = {
+const Contract: ObjectSchema = {
   name: 'contract',
   label: '合同',
   labelPlural: '合同',
   icon: 'file-text',
   description: '合同管理',
-  capabilities: {
-    searchable: true,
+  enable: {
+    searchEnabled: true,
     trackHistory: true,
-    feeds: true,
-    files: true
+    feedsEnabled: true,
+    filesEnabled: true
   },
   fields: {
     ContractNumber: {

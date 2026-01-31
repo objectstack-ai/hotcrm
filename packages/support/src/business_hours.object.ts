@@ -1,13 +1,13 @@
-import type { ServiceObject } from '@objectstack/spec/data';
+import type { ObjectSchema } from '@objectstack/spec/data';
 
-const BusinessHours = {
+const BusinessHours: ObjectSchema = {
   name: 'business_hours',
   label: 'Business Hours',
   labelPlural: 'Business Hours',
   icon: 'calendar-alt',
   description: 'Working hours calendar for SLA time calculations',
-  capabilities: {
-    searchable: true,
+  enable: {
+    searchEnabled: true,
     trackHistory: true
   },
   fields: {
@@ -17,7 +17,7 @@ const BusinessHours = {
       label: 'Calendar Name',
       required: true,
       maxLength: 255,
-      searchable: true
+      searchEnabled: true
     },
     Description: {
       type: 'textarea',

@@ -1,13 +1,13 @@
-import type { ServiceObject } from '@objectstack/spec/data';
+import type { ObjectSchema } from '@objectstack/spec/data';
 
-const SLAMilestone = {
+const SLAMilestone: ObjectSchema = {
   name: 'sla_milestone',
   label: 'SLA Milestone',
   labelPlural: 'SLA Milestones',
   icon: 'flag-checkered',
   description: 'SLA milestone tracking for case lifecycle events',
-  capabilities: {
-    searchable: true,
+  enable: {
+    searchEnabled: true,
     trackHistory: true
   },
   fields: {

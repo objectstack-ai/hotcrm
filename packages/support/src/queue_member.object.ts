@@ -1,13 +1,13 @@
-import type { ServiceObject } from '@objectstack/spec/data';
+import type { ObjectSchema } from '@objectstack/spec/data';
 
-const QueueMember = {
+const QueueMember: ObjectSchema = {
   name: 'queue_member',
   label: 'Queue Member',
   labelPlural: 'Queue Members',
   icon: 'users',
   description: 'Support agents assigned to queues',
-  capabilities: {
-    searchable: true,
+  enable: {
+    searchEnabled: true,
     trackHistory: true
   },
   fields: {

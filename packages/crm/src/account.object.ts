@@ -1,24 +1,24 @@
-import type { ServiceObject } from '@objectstack/spec/data';
+import type { ObjectSchema } from '@objectstack/spec/data';
 
-const Account = {
+const Account: ObjectSchema = {
   name: 'account',
   label: '客户',
   labelPlural: '客户',
   icon: 'building',
   description: '企业客户和组织管理',
-  capabilities: {
-    searchable: true,
+  enable: {
+    searchEnabled: true,
     trackHistory: true,
-    activities: true,
-    feeds: true,
-    files: true
+    activitiesEnabled: true,
+    feedsEnabled: true,
+    filesEnabled: true
   },
   fields: {
     Name: {
       type: 'text',
       label: '客户名称',
       required: true,
-      searchable: true,
+      searchEnabled: true,
       unique: true,
       maxLength: 255
     },
@@ -42,7 +42,7 @@ const Account = {
     Industry: {
       type: 'select',
       label: '行业',
-      searchable: true,
+      searchEnabled: true,
       options: [
         { label: '科技/互联网', value: 'Technology' },
         { label: '金融服务', value: 'Finance' },

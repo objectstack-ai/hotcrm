@@ -1,13 +1,13 @@
-import type { ServiceObject } from '@objectstack/spec/data';
+import type { ObjectSchema } from '@objectstack/spec/data';
 
-const ForumPost = {
+const ForumPost: ObjectSchema = {
   name: 'forum_post',
   label: 'Forum Post',
   labelPlural: 'Forum Posts',
   icon: 'comment',
   description: 'Forum post replies and comments',
-  capabilities: {
-    searchable: true,
+  enable: {
+    searchEnabled: true,
     trackHistory: true
   },
   fields: {
@@ -30,7 +30,7 @@ const ForumPost = {
       label: 'Content',
       required: true,
       maxLength: 10000,
-      searchable: true
+      searchEnabled: true
     },
     // Author
     AuthorId: {

@@ -1,17 +1,17 @@
-import type { ServiceObject } from '@objectstack/spec/data';
+import type { ObjectSchema } from '@objectstack/spec/data';
 
-const ProductBundle = {
+const ProductBundle: ObjectSchema = {
   name: 'product_bundle',
   label: 'Product Bundle',
   labelPlural: 'Product Bundles',
   icon: 'box-open',
   description: 'Product bundles and packages with dependencies, constraints, and configuration options',
-  capabilities: {
-    searchable: true,
+  enable: {
+    searchEnabled: true,
     trackHistory: true,
-    activities: true,
-    feeds: true,
-    files: true
+    activitiesEnabled: true,
+    feedsEnabled: true,
+    filesEnabled: true
   },
   fields: {
     // Basic Information
@@ -19,14 +19,14 @@ const ProductBundle = {
       type: 'text',
       label: 'Bundle Name',
       required: true,
-      searchable: true,
+      searchEnabled: true,
       maxLength: 255
     },
     BundleCode: {
       type: 'text',
       label: 'Bundle Code',
       unique: true,
-      searchable: true,
+      searchEnabled: true,
       maxLength: 50,
       description: 'Unique identifier for the bundle'
     },

@@ -1,13 +1,13 @@
-import type { ServiceObject } from '@objectstack/spec/data';
+import type { ObjectSchema } from '@objectstack/spec/data';
 
-const SLAPolicy = {
+const SLAPolicy: ObjectSchema = {
   name: 'sla_policy',
   label: 'SLA Policy',
   labelPlural: 'SLA Policies',
   icon: 'shield-check',
   description: 'Comprehensive SLA policy management with multi-tier support and advanced configuration',
-  capabilities: {
-    searchable: true,
+  enable: {
+    searchEnabled: true,
     trackHistory: true
   },
   fields: {
@@ -17,7 +17,7 @@ const SLAPolicy = {
       label: 'Policy Name',
       required: true,
       maxLength: 255,
-      searchable: true
+      searchEnabled: true
     },
     Description: {
       type: 'textarea',

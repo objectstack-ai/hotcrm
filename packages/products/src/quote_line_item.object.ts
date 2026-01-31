@@ -1,17 +1,17 @@
-import type { ServiceObject } from '@objectstack/spec/data';
+import type { ObjectSchema } from '@objectstack/spec/data';
 
-const QuoteLineItem = {
+const QuoteLineItem: ObjectSchema = {
   name: 'quote_line_item',
   label: 'Quote Line Item',
   labelPlural: 'Quote Line Items',
   icon: 'list',
   description: 'Individual line items on quotes with pricing, quantity, and discount information',
-  capabilities: {
-    searchable: true,
+  enable: {
+    searchEnabled: true,
     trackHistory: true,
-    activities: false,
-    feeds: false,
-    files: false
+    activitiesEnabled: false,
+    feedsEnabled: false,
+    filesEnabled: false
   },
   fields: {
     // Related Records

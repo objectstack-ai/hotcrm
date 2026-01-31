@@ -1,17 +1,17 @@
-import type { ServiceObject } from '@objectstack/spec/data';
+import type { ObjectSchema } from '@objectstack/spec/data';
 
-const Case = {
+const Case: ObjectSchema = {
   name: 'case',
   label: 'Case',
   labelPlural: 'Cases',
   icon: 'ticket-alt',
   description: 'Customer service case and support request management with SLA tracking and AI-powered routing',
-  capabilities: {
-    searchable: true,
+  enable: {
+    searchEnabled: true,
     trackHistory: true,
-    activities: true,
-    feeds: true,
-    files: true,
+    activitiesEnabled: true,
+    feedsEnabled: true,
+    filesEnabled: true,
     emailToCase: true
   },
   fields: {
@@ -21,13 +21,13 @@ const Case = {
       label: 'Case Number',
       format: 'CASE-{YYYY}-{0000}',
       readonly: true,
-      searchable: true
+      searchEnabled: true
     },
     Subject: {
       type: 'text',
       label: 'Subject',
       required: true,
-      searchable: true,
+      searchEnabled: true,
       maxLength: 255
     },
     Description: {
@@ -35,7 +35,7 @@ const Case = {
       label: 'Description',
       required: true,
       maxLength: 32000,
-      searchable: true
+      searchEnabled: true
     },
     Status: {
       type: 'select',
@@ -246,7 +246,7 @@ const Case = {
       type: 'textarea',
       label: 'Resolution',
       maxLength: 32000,
-      searchable: true
+      searchEnabled: true
     },
     RootCause: {
       type: 'textarea',

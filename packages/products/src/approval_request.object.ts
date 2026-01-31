@@ -1,17 +1,17 @@
-import type { ServiceObject } from '@objectstack/spec/data';
+import type { ObjectSchema } from '@objectstack/spec/data';
 
-const ApprovalRequest = {
+const ApprovalRequest: ObjectSchema = {
   name: 'approval_request',
   label: 'Approval Request',
   labelPlural: 'Approval Requests',
   icon: 'clipboard-check',
   description: 'Multi-level approval workflow for discounts and pricing exceptions',
-  capabilities: {
-    searchable: true,
+  enable: {
+    searchEnabled: true,
     trackHistory: true,
-    activities: true,
-    feeds: true,
-    files: true
+    activitiesEnabled: true,
+    feedsEnabled: true,
+    filesEnabled: true
   },
   fields: {
     // Basic Information
@@ -20,13 +20,13 @@ const ApprovalRequest = {
       label: 'Request Number',
       format: 'AR-{YYYY}-{MM}-{00000}',
       readonly: true,
-      searchable: true
+      searchEnabled: true
     },
     Name: {
       type: 'text',
       label: 'Request Name',
       required: true,
-      searchable: true,
+      searchEnabled: true,
       maxLength: 255
     },
     Description: {

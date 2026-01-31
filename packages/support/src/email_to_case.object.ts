@@ -1,13 +1,13 @@
-import type { ServiceObject } from '@objectstack/spec/data';
+import type { ObjectSchema } from '@objectstack/spec/data';
 
-const EmailToCase = {
+const EmailToCase: ObjectSchema = {
   name: 'email_to_case',
   label: 'Email-to-Case Configuration',
   labelPlural: 'Email-to-Case Configurations',
   icon: 'envelope',
   description: 'Email-to-case automation configuration for automatic case creation',
-  capabilities: {
-    searchable: true,
+  enable: {
+    searchEnabled: true,
     trackHistory: true
   },
   fields: {
@@ -17,7 +17,7 @@ const EmailToCase = {
       label: 'Configuration Name',
       required: true,
       maxLength: 255,
-      searchable: true
+      searchEnabled: true
     },
     Description: {
       type: 'textarea',

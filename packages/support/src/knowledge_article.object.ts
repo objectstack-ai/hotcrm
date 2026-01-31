@@ -1,15 +1,15 @@
-import type { ServiceObject } from '@objectstack/spec/data';
+import type { ObjectSchema } from '@objectstack/spec/data';
 
-const KnowledgeArticle = {
+const KnowledgeArticle: ObjectSchema = {
   name: 'knowledge_article',
   label: 'Knowledge Article',
   labelPlural: 'Knowledge Articles',
   icon: 'book',
   description: 'Knowledge base articles for customer self-service and agent assistance',
-  capabilities: {
-    searchable: true,
+  enable: {
+    searchEnabled: true,
     trackHistory: true,
-    files: true
+    filesEnabled: true
   },
   fields: {
     // Basic Information
@@ -18,28 +18,28 @@ const KnowledgeArticle = {
       label: 'Article Number',
       format: 'KB-{YYYY}-{0000}',
       readonly: true,
-      searchable: true
+      searchEnabled: true
     },
     Title: {
       type: 'text',
       label: 'Title',
       required: true,
       maxLength: 255,
-      searchable: true
+      searchEnabled: true
     },
     Summary: {
       type: 'textarea',
       label: 'Summary',
       required: true,
       maxLength: 500,
-      searchable: true,
+      searchEnabled: true,
       description: 'Brief summary shown in search results'
     },
     Content: {
       type: 'textarea',
       label: 'Content',
       required: true,
-      searchable: true,
+      searchEnabled: true,
       maxLength: 32000,
       description: 'Full article content with formatting'
     },
@@ -69,7 +69,7 @@ const KnowledgeArticle = {
       type: 'text',
       label: 'Keywords',
       maxLength: 500,
-      searchable: true,
+      searchEnabled: true,
       description: 'Comma-separated keywords for search'
     },
     Tags: {
@@ -321,7 +321,7 @@ const KnowledgeArticle = {
       label: 'AI Extracted Keywords',
       maxLength: 500,
       readonly: true,
-      searchable: true,
+      searchEnabled: true,
       description: 'Keywords extracted by AI'
     },
     RelatedArticleIds: {

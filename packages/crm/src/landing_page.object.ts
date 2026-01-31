@@ -1,15 +1,15 @@
-import type { ServiceObject } from '@objectstack/spec/data';
+import type { ObjectSchema } from '@objectstack/spec/data';
 
-const LandingPage = {
+const LandingPage: ObjectSchema = {
   name: 'landing_page',
   label: '着陆页',
   labelPlural: '着陆页',
   icon: 'layout',
   description: '营销着陆页构建器，支持拖放式设计和A/B测试',
-  capabilities: {
-    searchable: true,
+  enable: {
+    searchEnabled: true,
     trackHistory: true,
-    files: true
+    filesEnabled: true
   },
   fields: {
     // Basic Information
@@ -18,7 +18,7 @@ const LandingPage = {
       label: '着陆页名称',
       required: true,
       maxLength: 255,
-      searchable: true
+      searchEnabled: true
     },
     Title: {
       type: 'text',

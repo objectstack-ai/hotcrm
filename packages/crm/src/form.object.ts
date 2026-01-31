@@ -1,15 +1,15 @@
-import type { ServiceObject } from '@objectstack/spec/data';
+import type { ObjectSchema } from '@objectstack/spec/data';
 
-const Form = {
+const Form: ObjectSchema = {
   name: 'form',
   label: '表单',
   labelPlural: '表单',
   icon: 'file-text',
   description: '营销表单构建器，支持拖放式设计和自动线索创建',
-  capabilities: {
-    searchable: true,
+  enable: {
+    searchEnabled: true,
     trackHistory: true,
-    files: false
+    filesEnabled: false
   },
   fields: {
     // Basic Information
@@ -18,7 +18,7 @@ const Form = {
       label: '表单名称',
       required: true,
       maxLength: 255,
-      searchable: true
+      searchEnabled: true
     },
     FormCode: {
       type: 'text',

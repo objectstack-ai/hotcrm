@@ -1,15 +1,15 @@
-import type { ServiceObject } from '@objectstack/spec/data';
+import type { ObjectSchema } from '@objectstack/spec/data';
 
-const CampaignMember = {
+const CampaignMember: ObjectSchema = {
   name: 'campaign_member',
   label: 'Campaign Member',
   labelPlural: 'Campaign Members',
   icon: 'users',
   description: 'Many-to-many relationship tracking between Campaigns and Leads/Contacts',
-  capabilities: {
-    searchable: true,
+  enable: {
+    searchEnabled: true,
     trackHistory: true,
-    files: false
+    filesEnabled: false
   },
   fields: {
     // Relationship Fields
