@@ -187,19 +187,19 @@ const EmailToCase = {
       description: 'Comma-separated extensions (e.g., pdf,doc,docx,jpg,png)'
     },
     // AI Processing
-    use_a_i_for_categorization: {
+    use_ai_for_categorization: {
       type: 'checkbox',
       label: 'Use AI for Categorization',
       defaultValue: false,
       description: 'Use AI to auto-categorize and route cases'
     },
-    use_a_i_for_priority: {
+    use_ai_for_priority: {
       type: 'checkbox',
       label: 'Use AI for Priority',
       defaultValue: false,
       description: 'Use AI to determine case priority'
     },
-    use_a_i_sentiment_analysis: {
+    use_ai_sentiment_analysis: {
       type: 'checkbox',
       label: 'Use AI Sentiment Analysis',
       defaultValue: false
@@ -364,7 +364,7 @@ const EmailToCase = {
       {
         label: 'AI Processing',
         columns: 2,
-        fields: ['use_a_i_for_categorization', 'use_a_i_for_priority', 'use_a_i_sentiment_analysis']
+        fields: ['use_ai_for_categorization', 'use_ai_for_priority', 'use_ai_sentiment_analysis']
       },
       {
         label: 'Filtering',

@@ -74,12 +74,17 @@ function fixAcronymsInFile(filePath) {
     { from: /thumbnail_u_r_l/g, to: 'thumbnail_url', name: 'thumbnail_u_r_l → thumbnail_url' },
     { from: /u_r_l_slug/g, to: 'url_slug', name: 'u_r_l_slug → url_slug' },
     
-    // AI patterns
+    // AI patterns - including use_a_i_ variants
+    { from: /use_a_i_/g, to: 'use_ai_', name: 'use_a_i_ → use_ai_' },
     { from: /\ba_i_/g, to: 'ai_', name: 'a_i_ → ai_' },
     
-    // SLA patterns
+    // SLA patterns - including allow_s_l_a_ variants
+    { from: /allow_s_l_a_/g, to: 'allow_sla_', name: 'allow_s_l_a_ → allow_sla_' },
     { from: /\bs_l_a_/g, to: 'sla_', name: 's_l_a_ → sla_' },
     { from: /is_s_l_a_/g, to: 'is_sla_', name: 'is_s_l_a_ → is_sla_' },
+    
+    // VIP patterns
+    { from: /\bv_i_p_/g, to: 'vip_', name: 'v_i_p_ → vip_' },
     
     // CSAT patterns
     { from: /\bc_s_a_t_/g, to: 'csat_', name: 'c_s_a_t_ → csat_' },

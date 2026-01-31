@@ -183,19 +183,19 @@ const SocialMediaCase = {
       description: 'Delay before sending auto-response'
     },
     // AI Processing
-    use_a_i_sentiment_analysis: {
+    use_ai_sentiment_analysis: {
       type: 'checkbox',
       label: 'Use AI Sentiment Analysis',
       defaultValue: true,
       description: 'Analyze sentiment of social posts'
     },
-    use_a_i_for_priority: {
+    use_ai_for_priority: {
       type: 'checkbox',
       label: 'Use AI for Priority',
       defaultValue: true,
       description: 'AI determines case priority based on content'
     },
-    use_a_i_for_urgency: {
+    use_ai_for_urgency: {
       type: 'checkbox',
       label: 'Use AI for Urgency',
       defaultValue: true,
@@ -377,7 +377,7 @@ const SocialMediaCase = {
       {
         label: 'AI Processing',
         columns: 3,
-        fields: ['use_a_i_sentiment_analysis', 'use_a_i_for_priority', 'use_a_i_for_urgency']
+        fields: ['use_ai_sentiment_analysis', 'use_ai_for_priority', 'use_ai_for_urgency']
       },
       {
         label: 'Filtering',

@@ -285,7 +285,7 @@ const SLAPolicy = {
       reference: 'EmailTemplate'
     },
     // Pause Rules
-    allow_s_l_a_pause: {
+    allow_sla_pause: {
       type: 'checkbox',
       label: 'Allow SLA Pause',
       defaultValue: true,
@@ -551,7 +551,7 @@ const SLAPolicy = {
       {
         label: 'Pause Rules',
         columns: 2,
-        fields: ['allow_s_l_a_pause', 'auto_pause_on_customer_wait', 'auto_pause_on_hold']
+        fields: ['allow_sla_pause', 'auto_pause_on_customer_wait', 'auto_pause_on_hold']
       },
       {
         label: 'Performance Targets',

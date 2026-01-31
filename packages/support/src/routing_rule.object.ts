@@ -116,7 +116,7 @@ const RoutingRule = {
       ]
     },
     // Customer Filters
-    v_i_p_customers_only: {
+    vip_customers_only: {
       type: 'checkbox',
       label: 'VIP Customers Only',
       defaultValue: false,
@@ -148,7 +148,7 @@ const RoutingRule = {
       description: 'Comma-separated country codes (e.g., US, CN, UK)'
     },
     // AI-Based Routing
-    use_a_i_classification: {
+    use_ai_classification: {
       type: 'checkbox',
       label: 'Use AI Classification',
       defaultValue: false,
@@ -217,7 +217,7 @@ const RoutingRule = {
     {
       name: 'AIThresholdRequired',
       errorMessage: 'AI confidence threshold is required when using AI classification',
-      formula: 'AND(use_a_i_classification = true, ISBLANK(ai_confidence_threshold))'
+      formula: 'AND(use_ai_classification = true, ISBLANK(ai_confidence_threshold))'
     },
     {
       name: 'BusinessHoursRequired',
@@ -227,7 +227,7 @@ const RoutingRule = {
     {
       name: 'AtLeastOneCriteria',
       errorMessage: 'At least one matching criteria must be specified',
-      formula: 'AND(ISBLANK(match_origins), ISBLANK(match_case_types), ISBLANK(match_priorities), ISBLANK(match_product_ids), ISBLANK(match_categories), ISBLANK(match_account_ids), ISBLANK(match_regions), ISBLANK(match_countries), ISBLANK(match_keywords), v_i_p_customers_only = false, use_a_i_classification = false)'
+      formula: 'AND(ISBLANK(match_origins), ISBLANK(match_case_types), ISBLANK(match_priorities), ISBLANK(match_product_ids), ISBLANK(match_categories), ISBLANK(match_account_ids), ISBLANK(match_regions), ISBLANK(match_countries), ISBLANK(match_keywords), vip_customers_only = false, use_ai_classification = false)'
     }
   ],
   listViews: [
@@ -275,7 +275,7 @@ const RoutingRule = {
       {
         label: 'Product & Customer',
         columns: 2,
-        fields: ['match_product_ids', 'v_i_p_customers_only', 'match_account_ids']
+        fields: ['match_product_ids', 'vip_customers_only', 'match_account_ids']
       },
       {
         label: 'Geographic Routing',
@@ -285,7 +285,7 @@ const RoutingRule = {
       {
         label: 'AI & Keyword Matching',
         columns: 2,
-        fields: ['use_a_i_classification', 'ai_confidence_threshold', 'match_keywords', 'keyword_match_type']
+        fields: ['use_ai_classification', 'ai_confidence_threshold', 'match_keywords', 'keyword_match_type']
       },
       {
         label: 'Time-Based Routing',

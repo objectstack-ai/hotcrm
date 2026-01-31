@@ -242,17 +242,17 @@ const WebToCase = {
       description: 'Default account for new contacts'
     },
     // AI Processing
-    use_a_i_for_categorization: {
+    use_ai_for_categorization: {
       type: 'checkbox',
       label: 'Use AI for Categorization',
       defaultValue: false
     },
-    use_a_i_for_priority: {
+    use_ai_for_priority: {
       type: 'checkbox',
       label: 'Use AI for Priority',
       defaultValue: false
     },
-    use_a_i_sentiment_analysis: {
+    use_ai_sentiment_analysis: {
       type: 'checkbox',
       label: 'Use AI Sentiment Analysis',
       defaultValue: false
@@ -385,7 +385,7 @@ const WebToCase = {
       {
         label: 'AI Processing',
         columns: 3,
-        fields: ['use_a_i_for_categorization', 'use_a_i_for_priority', 'use_a_i_sentiment_analysis']
+        fields: ['use_ai_for_categorization', 'use_ai_for_priority', 'use_ai_sentiment_analysis']
       },
       {
         label: 'Statistics',
