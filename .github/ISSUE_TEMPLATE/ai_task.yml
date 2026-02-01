@@ -1,0 +1,35 @@
+name: "🤖 New AI Task"
+description: "Define a task for an AI Agent to execute"
+title: "[TASK]: "
+labels: ["ai-task", "pending-agent"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template to define a task that is clear enough for an AI Agent (Copilot/Windsurf) to pick up and execute autonomously.
+  - type: textarea
+    id: context
+    attributes:
+      label: Context & Goal
+      description: What are we trying to achieve? 
+      placeholder: "We need to add a 'Refund' capability to the Finance package..."
+    validations:
+      required: true
+  - type: textarea
+    id: technical_specs
+    attributes:
+      label: Technical Specifications
+      description: Provide specific constraints using the .github/instructions terminology.
+      value: |
+        - **Package**: `packages/finance`
+        - **Objects**: Modify `Invoice` (add status), Create `Refund` object.
+        - **Logic**: `refund.hook.ts` should validate amount <= invoice balance.
+        - **UI**: Add 'Refund' button to Invoice page layout.
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Acceptance Criteria
+      value: |
+        - [ ] Metadata files created/updated in `packages/finance/src/`
+        - [ ] Unit tests added for the new hook
+        - [ ] Compiles without TypeScript errors

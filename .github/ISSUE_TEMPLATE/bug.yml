@@ -1,0 +1,26 @@
+name: "🐛 Bug Report"
+description: "Create a report to help us improve"
+title: "[BUG]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What happened?
+      placeholder: "When I clicked the save button..."
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction Steps
+      description: How can the AI agent reproduce this?
+      value: |
+        1. Go to '...'
+        2. Click on '...'
+        3. See error '...'
