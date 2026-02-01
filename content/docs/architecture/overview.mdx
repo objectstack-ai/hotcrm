@@ -13,28 +13,37 @@ HotCRM is built on a modern, scalable architecture that emphasizes type safety, 
 ┌─────────────────────────────────────────────────────────────────┐
 │                         Frontend Layer                          │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
-│  │   ObjectUI   │  │   Tailwind   │  │  Components  │          │
-│  │    Engine    │  │     CSS      │  │   Library    │          │
+│  │  Co-Pilot    │  │   ObjectUI   │  │  Components  │          │
 │  └──────────────┘  └──────────────┘  └──────────────┘          │
 └─────────────────────────────────────────────────────────────────┘
                             ▲
-                            │ REST API / JSON
+                            │ REST / GraphQL
+                            ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                      Intelligence Layer                         │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
+│  │  Generative  │  │   Predictive │  │    Audit     │          │
+│  │    Agents    │  │    Models    │  │  Trust Wall  │          │
+│  └──────────────┘  └──────────────┘  └──────────────┘          │
+└─────────────────────────────────────────────────────────────────┘
+                            ▲
+                            │ Context & Actions
                             ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                      Application Layer                          │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
 │  │   Express    │  │   Actions    │  │   Triggers   │          │
-│  │   Server     │  │   (AI/API)   │  │   (Logic)    │          │
+│  │    Server    │  │   (API)      │  │   (Logic)    │          │
 │  └──────────────┘  └──────────────┘  └──────────────┘          │
 └─────────────────────────────────────────────────────────────────┘
                             ▲
-                            │ ObjectQL
+                            │ ObjectQL (Type-Safe)
                             ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                        Data Layer                               │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
-│  │   ObjectQL   │  │   Metadata   │  │   Database   │          │
-│  │   Engine     │  │   Registry   │  │   (Future)   │          │
+│  │   ObjectQL   │  │   Metadata   │  │   Vector     │          │
+│  │   Engine     │  │   Registry   │  │    Store     │          │
 │  └──────────────┘  └──────────────┘  └──────────────┘          │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -42,49 +51,36 @@ HotCRM is built on a modern, scalable architecture that emphasizes type safety, 
 ## Core Components
 
 ### 1. Frontend Layer
-
-The frontend is built using modern web technologies with a focus on user experience.
+The frontend is more than just forms. It includes the **Co-Pilot** interface that overlays every application, allowing users to converse with their data.
 
 **Technologies:**
-- **ObjectUI Engine**: Dynamic UI rendering based on metadata
-- **Tailwind CSS**: Utility-first CSS framework for styling
-- **Components Library**: Reusable UI components
+- **ObjectUI Engine**: Dynamic UI rendering based on metadata.
+- **Tailwind CSS**: Utility-first CSS framework.
+- **React Server Components**: For high-performance rendering.
 
-**Features:**
-- Server-side rendering
-- Dynamic form generation
-- Real-time updates
-- Responsive design
-
-### 2. Application Layer
-
-The middle tier handles business logic, API endpoints, and external integrations.
+### 2. Intelligence Layer
+The distinct layer that processes intent, prediction, and generation.
 
 **Components:**
-- **Express Server**: RESTful API server
-- **Actions**: Custom business actions (AI features, external APIs)
-- **Triggers**: Event-driven business logic
+- **Generative Agents**: Autonomous workers that perform tasks.
+- **Prophet Engine**: Predictive models for scoring and forecasting.
+- **Trust Wall**: Filters PII and toxic content before sending to LLMs.
 
-**Capabilities:**
-- Request routing and validation
-- Authentication and authorization
-- Business rule execution
-- External API integration
-
-### 3. Data Layer
-
-The data layer manages all data operations and persistence.
+### 3. Application Layer
+The middle tier handles business logic validation and orchestration.
 
 **Components:**
-- **ObjectQL Engine**: Type-safe query language
-- **Metadata Registry**: Object and field definitions
-- **Database**: Data persistence (future: PostgreSQL, MongoDB)
+- **ObjectStack Server**: The core runtime.
+- **Triggers**: Transactional logic (e.g., "After Update Opportunity").
+- **Actions**: Callable functions exposed to the API and AI agents.
 
-**Features:**
-- Type-safe queries
-- Relationship management
-- Data validation
-- Audit logging
+### 4. Data Layer
+The foundation. It manages structured (relational) and unstructured (vector) data side-by-side.
+
+**Components:**
+- **ObjectQL Engine**: Translates high-level queries into optimized database calls.
+- **Metadata Registry**: The "DNA" of the system (Objects, Fields, Permissions).
+- **Vector Store**: Stores embeddings for semantic search (RAG).
 
 ## Design Principles
 

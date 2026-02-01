@@ -3,9 +3,8 @@
   "pages": [
     "index",
     "getting-started",
-    "architecture",
     "features",
-    "ai",
+    "architecture",
     "development",
     "api-reference"
   ]
