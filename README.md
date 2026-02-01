@@ -1,8 +1,8 @@
 # HotCRM - Enterprise-Level CRM System
 
-[![CI](https://github.com/hotcrm/hotcrm/workflows/CI/badge.svg)](https://github.com/hotcrm/hotcrm/actions/workflows/ci.yml)
-[![CodeQL](https://github.com/hotcrm/hotcrm/workflows/CodeQL%20Security%20Analysis/badge.svg)](https://github.com/hotcrm/hotcrm/actions/workflows/codeql.yml)
-[![Code Quality](https://github.com/hotcrm/hotcrm/workflows/Code%20Quality/badge.svg)](https://github.com/hotcrm/hotcrm/actions/workflows/code-quality.yml)
+[![CI](https://github.com/objectstack-ai/hotcrm/workflows/CI/badge.svg)](https://github.com/objectstack-ai/hotcrm/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/objectstack-ai/hotcrm/workflows/CodeQL%20Security%20Analysis/badge.svg)](https://github.com/objectstack-ai/hotcrm/actions/workflows/codeql.yml)
+[![Code Quality](https://github.com/objectstack-ai/hotcrm/workflows/Code%20Quality/badge.svg)](https://github.com/objectstack-ai/hotcrm/actions/workflows/code-quality.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 > A world-class Customer Relationship Management system built on @objectstack/spec v0.7.2 protocol with Salesforce-level functionality and Apple/Linear-level UX.
