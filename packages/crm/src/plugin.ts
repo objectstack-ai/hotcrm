@@ -23,6 +23,9 @@ import LeadConvertAction from './actions/lead_convert.action';
 import AssignmentRule from './assignment_rule.object';
 import EmailTemplate from './email_template.object';
 
+// Import hooks
+import { LeadScoringTrigger, LeadStatusChangeTrigger } from './hooks/lead.hook';
+import { OpportunityValidation, OpportunityStageChange } from './hooks/opportunity.hook';
 
 import LandingPage from './landing_page.object';
 import Form from './form.object';
@@ -47,6 +50,14 @@ export const CRMPlugin = {
   // Actions provided by this plugin
   actions: {
     lead_convert: LeadConvertAction
+  },
+
+  // Triggers/Hooks
+  triggers: {
+    lead_scoring: LeadScoringTrigger,
+    lead_status_change: LeadStatusChangeTrigger,
+    opportunity_validation: OpportunityValidation,
+    opportunity_stage_change: OpportunityStageChange,
   },
 
   // Business objects provided by this plugin

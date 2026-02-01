@@ -23,6 +23,8 @@ import PriceRule from './price_rule.object';
 import ApprovalRequest from './approval_request.object';
 import DiscountSchedule from './discount_schedule.object';
 
+import { QuotePricingHook } from './hooks/quote.hook';
+
 /**
  * Products Plugin Definition
  * 
@@ -51,6 +53,10 @@ export const ProductsPlugin = {
     discount_schedule: DiscountSchedule,
   },
   
+  triggers: {
+    quote_pricing: QuotePricingHook
+  },
+
   // Navigation structure for this plugin
   navigation: [
     {

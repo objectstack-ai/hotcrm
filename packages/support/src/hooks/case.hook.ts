@@ -75,4 +75,5 @@ const CaseEntitlementCheck: Hook = {
 };
 
 // Export as an array to maintain compatibility with index.ts which likely expects multiple hooks
+export { CaseEntitlementCheck };
 export default [CaseEntitlementCheck];

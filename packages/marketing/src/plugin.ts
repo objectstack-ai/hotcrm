@@ -1,6 +1,8 @@
 import Campaign from './campaign.object';
 import CampaignMember from './campaign_member.object';
 
+import { CampaignROIHook } from './hooks/roi.hook';
+
 export const MarketingPlugin = {
   name: 'marketing',
   label: 'Marketing Cloud',
@@ -10,6 +12,9 @@ export const MarketingPlugin = {
   objects: {
     campaign: Campaign,
     campaign_member: CampaignMember
+  },
+  triggers: {
+    campaign_roi: CampaignROIHook
   },
   navigation: [
     {

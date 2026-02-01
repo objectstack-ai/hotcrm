@@ -36,6 +36,8 @@ import PortalUser from './portal_user.object';
 import ForumTopic from './forum_topic.object';
 import ForumPost from './forum_post.object';
 
+import { CaseEntitlementCheck } from './hooks/case.hook';
+
 /**
  * Support Plugin Definition
  * 
@@ -76,6 +78,10 @@ export const SupportPlugin = {
     forum_post: ForumPost,
   },
   
+  triggers: {
+    case_entitlement: CaseEntitlementCheck
+  },
+
   // Navigation structure for this plugin
   navigation: [
     {

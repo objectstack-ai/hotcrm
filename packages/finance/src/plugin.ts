@@ -15,6 +15,9 @@ import Payment from './payment.object';
 import Invoice from './invoice.object';
 import InvoiceLine from './invoice_line.object';
 
+// Import hooks
+import { ContractBillingHook } from './hooks/contract.hook';
+
 /**
  * Finance Plugin Definition
  * 
@@ -38,6 +41,11 @@ export const FinancePlugin = {
     payment: Payment,
   },
   
+  // Triggers
+  triggers: {
+    contract_billing: ContractBillingHook
+  },
+
   // Navigation structure for this plugin
   navigation: [
     {

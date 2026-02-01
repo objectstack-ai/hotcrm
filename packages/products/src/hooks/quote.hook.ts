@@ -379,4 +379,5 @@ async function handleApprovalStatusChange(ctx: TriggerContext): Promise<void> {
   }
 }
 
+export { QuotePricingHook };
 export default QuotePricingHook;

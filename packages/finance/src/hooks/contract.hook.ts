@@ -51,4 +51,5 @@ const ContractBillingHook: Hook = {
   }
 };
 
+export { ContractBillingHook };
 export default [ContractBillingHook];
