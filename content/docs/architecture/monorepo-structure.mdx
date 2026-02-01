@@ -31,48 +31,35 @@ HotCRM uses a **multi-package monorepo** architecture powered by pnpm workspaces
 
 ```
 hotcrm/
-├── packages/               # All packages live here
-│   ├── core/              # Foundation package
+├── packages/               # Business Capabilities (Plugins)
 │   ├── crm/               # Marketing & Sales domain
 │   ├── support/           # Service & Support domain
 │   ├── products/          # Product & Pricing domain
-│   ├── finance/           # Contracts & Payments domain
-│   ├── ui/                # UI components
-│   └── server/            # Application server
+│   └── finance/           # Contracts & Payments domain
 │
-├── docs/                  # Documentation
+├── apps/                   # Deployable Applications
+│   └── docs/              # Official Documentation Site
+│
 ├── .github/               # GitHub workflows and configs
 ├── pnpm-workspace.yaml    # Workspace configuration
 ├── package.json           # Root package with scripts
-├── tsconfig.json          # Shared TypeScript config
-└── README.md
+└── base.tsconfig.json     # Standard TypeScript config
 ```
 
 ## Package Overview
 
-### Core Package: `@hotcrm/core`
+### Engine: `@objectstack/runtime`
 
-**Purpose**: Foundation layer with ObjectQL engine and type definitions
+**Purpose**: The core runtime that powers the entire system. It is installed as a dependency, not developed in this repo.
 
-**Contents**:
-```
-packages/core/
-├── src/
-│   ├── objectql.ts           # Query engine
-│   ├── objectstack-spec.d.ts # Type definitions
-│   └── index.ts              # Exports
-├── package.json
-├── tsconfig.json
-└── README.md
-```
+**Capabilities**:
+- **ObjectQL Engine**: Handles database queries.
+- **Metadata Registry**: Loads schemas from `packages/*`.
+- **API Server**: Auto-generates REST/GraphQL endpoints.
 
-**Dependencies**: None (zero dependencies!)
+### Domain Packages (Functions)
 
-**Used by**: All other packages
-
-### Domain Packages (Vertical Slices)
-
-Each domain package is a complete vertical slice with schemas, hooks, and actions.
+Each package in `packages/` is a plugin that contributes functionality to the runtime.
 
 #### `@hotcrm/crm` - Marketing & Sales
 
@@ -92,7 +79,7 @@ packages/crm/
 └── package.json
 ```
 
-**Dependencies**: `@hotcrm/core`
+**Dependencies**: `@objectstack/runtime` (peerDependency)
 
 #### `@hotcrm/support` - Service & Support
 

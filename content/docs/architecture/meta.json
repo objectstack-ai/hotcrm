@@ -1,9 +1,7 @@
 {
-  "title": "Architecture",
+  "title": "Platform Architecture",
   "pages": [
     "overview",
-    "metadata-driven",
-    "objectql",
     "monorepo-structure"
   ]
 }

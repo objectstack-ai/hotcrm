@@ -54,8 +54,7 @@ HotCRM is built on a modern, scalable architecture that emphasizes type safety, 
 The frontend is more than just forms. It includes the **Co-Pilot** interface that overlays every application, allowing users to converse with their data.
 
 **Technologies:**
-- **ObjectUI Engine**: Dynamic UI rendering based on metadata.
-- **Tailwind CSS**: Utility-first CSS framework.
+- **ObjectUI Engine**: Dynamic UI rendering based on metadata. (Part of Runtime)
 - **React Server Components**: For high-performance rendering.
 
 ### 2. Intelligence Layer
@@ -64,22 +63,21 @@ The distinct layer that processes intent, prediction, and generation.
 **Components:**
 - **Generative Agents**: Autonomous workers that perform tasks.
 - **Prophet Engine**: Predictive models for scoring and forecasting.
-- **Trust Wall**: Filters PII and toxic content before sending to LLMs.
 
 ### 3. Application Layer
 The middle tier handles business logic validation and orchestration.
 
 **Components:**
-- **ObjectStack Server**: The core runtime.
-- **Triggers**: Transactional logic (e.g., "After Update Opportunity").
-- **Actions**: Callable functions exposed to the API and AI agents.
+- **ObjectStack Runtime**: The standard engine powering the system.
+- **Triggers**: Transactional logic defined in `packages/*`.
+- **Actions**: Callable functions exposed to the API.
 
 ### 4. Data Layer
 The foundation. It manages structured (relational) and unstructured (vector) data side-by-side.
 
 **Components:**
-- **ObjectQL Engine**: Translates high-level queries into optimized database calls.
-- **Metadata Registry**: The "DNA" of the system (Objects, Fields, Permissions).
+- **ObjectQL Engine**: Translates high-level queries into optimized database calls. (Part of Runtime)
+- **Metadata Registry**: Loads objects from `packages/*`.
 - **Vector Store**: Stores embeddings for semantic search (RAG).
 
 ## Design Principles
