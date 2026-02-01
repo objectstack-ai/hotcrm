@@ -1,0 +1,44 @@
+---
+title: Platform & Extensibility
+description: The low-code engine that powers the entire HotCRM ecosystem.
+---
+
+# Platform & Extensibility
+
+HotCRM is not just an application; it is a **Platform as a Service (PaaS)**. The same tools we use to build the standard clouds (Sales, Service) are available to you to build custom apps.
+
+## Metadata-Driven Architecture
+
+The core of our platform is the **ObjectStack Protocol**.
+
+*   **Objects**: Define custom data tables with rich field types (Text, Number, Lookup, Formula, Summary).
+*   **Validation Rules**: "Deal Amount cannot be negative."
+*   **Flow & Process Builder**: Visual automation tool to update records, send emails, or call APIs without code.
+
+## Low-Code UI Builder
+
+*   **Page Layouts**: Drag-and-drop field placement.
+*   **Lightning-fast Components**: assembling pages using standard components (Lists, Kanban, Calendar, Charts).
+*   **App Builder**: Create custom navigation menus and branding for different departments (e.g., "HR App," "Legal App").
+
+## Developer Tools (Pro-Code)
+
+For when low-code isn't enough.
+
+*   **ObjectQL**: A strongly-typed, JSON-like query language superior to SQL/SOQL.
+    ```typescript
+    // Example ObjectQL
+    const deals = await objectql.find({
+        from: 'opportunity',
+        select: ['name', 'amount', 'account.name'],
+        where: [['amount', '>', 50000]]
+    });
+    ```
+*   **Triggers (Hooks)**: Server-side TypeScript code that runs `beforeInsert`, `afterUpdate`, etc.
+*   **Micro-Apps**: Deploy completely custom React/Next.js pages that sit inside the CRM shell.
+
+## API & Integration
+
+*   **REST API**: Auto-generated REST endpoints for every standard and custom object.
+*   **GraphQL API**: Flexible data querying for mobile and web apps.
+*   **Webhooks**: Push notifications to external systems when data changes.

@@ -1,307 +1,60 @@
 ---
-title: Features Overview
-description: Complete overview of HotCRM capabilities organized by business outcomes
+title: Business Architecture
+description: The comprehensive functional architecture of HotCRM, designed for the AI era.
 ---
 
-# HotCRM Features Overview
+# HotCRM: The Autonomous Enterprise Platform
 
-HotCRM provides a comprehensive platform to manage your entire customer lifecycle—from initial marketing contact through sales, service, and ongoing customer success. Built on world-class CRM principles, every feature is designed to drive measurable business outcomes.
+HotCRM represents a paradigm shift in Customer Relationship Management. Unlike legacy systems that are essentially "databases with forms," HotCRM is built from the ground up as an **Active Intelligence Platform**. 
 
-## Business Value Proposition
+It combines the rigor of enterprise data modeling (Metadata-Driven) with the fluidity of Generative AI, creating a system that doesn't just record history—it drives the future.
+
+## Functional Architecture
+
+Our architecture supports the entire customer lifecycle through deeply integrated clouds, all sharing a single "Source of Truth" (The HotCRM Data Graph).
 
 <Cards>
-  <Card title="Increase Revenue" icon="trending-up">
-    Accelerate sales cycles, improve win rates, and maximize customer lifetime value
+  <Card title="AI Intelligence" icon="sparkles" href="/docs/features/ai-intelligence">
+    The central nervous system. Generative agents, predictive analytics, and natural language interfaces embedded in every workflow.
   </Card>
-  <Card title="Improve Efficiency" icon="zap">
-    Automate repetitive tasks, streamline workflows, and empower teams with AI
+  <Card title="Customer 360" icon="users" href="/docs/features/customer-360">
+    A unified, real-time data graph connecting every interaction, transaction, and signal across B2B and B2C contexts.
   </Card>
-  <Card title="Enhance Customer Experience" icon="heart">
-    Deliver personalized, responsive service across all touchpoints
+  <Card title="Sales Intelligence" icon="trending-up" href="/docs/features/sales-intelligence">
+    Move beyond "Sales Force Automation" to "Sales Intelligence". Guided selling, outcome-based forecasting, and automated pipeline execution.
   </Card>
-  <Card title="Make Better Decisions" icon="bar-chart">
-    Get real-time insights, forecasts, and recommendations powered by AI
+  <Card title="Revenue Cloud" icon="banknote" href="/docs/features/revenue-cloud">
+    Complex CPQ (Configure, Price, Quote), subscription management, and billing in one unified flow.
+  </Card>
+  <Card title="Service Excellence" icon="life-buoy" href="/docs/features/service-excellence">
+     Agentic service orchestration, combining human empathy with AI speed. Omni-channel case resolution and knowledge management.
+  </Card>
+  <Card title="Marketing Journeys" icon="megaphone" href="/docs/features/marketing-journeys">
+    Real-time, signal-based customer journeys. From anonymous acquisition to lifetime advocacy.
+  </Card>
+  <Card title="Analytics & BI" icon="bar-chart" href="/docs/features/analytics-bi">
+    Embedded insights. Don't leave the CRM to understand the business. Real-time dashboards and explainable AI metrics.
+  </Card>
+  <Card title="Platform Engine" icon="cpu" href="/docs/features/platform-extensibility">
+    The low-code/pro-code foundation. ObjectStack Protocol, Serverless Actions, and Metadata API.
   </Card>
 </Cards>
 
-## Core Capabilities
-
-### 1. Lead Management & Marketing Automation
-**Turn prospects into qualified opportunities**
-
-- **Multi-Channel Lead Capture**: Web forms, landing pages, social media, email campaigns
-- **Lead Scoring & Qualification**: AI-powered scoring based on engagement and fit
-- **Campaign Management**: Track ROI across email, social, events, and webinars
-- **Marketing Lists & Segmentation**: Target the right audience with precision
-- **Public Lead Pool**: Distribute leads fairly across your sales team
-
-**Key Objects**: Lead, Campaign, Campaign Member, Marketing List, Landing Page, Form, Email Template
-
-**Status**: ✅ Fully Implemented | 📋 [View Details](/docs/features/lead-management)
-
----
-
-### 2. Sales Force Automation
-**Accelerate deals and grow revenue**
-
-- **360° Customer View**: Complete account and contact history at your fingertips
-- **Opportunity Pipeline**: 7-stage sales process from prospecting to closed won
-- **Activity Tracking**: Log calls, meetings, emails automatically
-- **Relationship Mapping**: Identify decision makers and influencers
-- **AI Win Probability**: Predict deal success with machine learning
-- **Collaboration Tools**: Tasks, notes, and team coordination
-
-**Key Objects**: Account, Contact, Opportunity, Activity, Task, Note
-
-**Status**: ✅ Fully Implemented | 📋 [View Details](/docs/features/sales-automation)
-
----
-
-### 3. Product & Quote Management (CPQ)
-**Configure, price, and quote with accuracy**
-
-- **Product Catalog**: Manage products, bundles, and pricing tiers
-- **Quote Generation**: Create professional quotes in minutes
-- **Pricing Rules & Discounts**: Automate complex pricing logic
-- **Approval Workflows**: Multi-level approval for discounts and terms
-- **Quote-to-Cash**: Seamless conversion to contracts
-
-**Key Objects**: Product Bundle, Quote, Quote Line Item, Price Rule, Discount Schedule, Approval Request
-
-**Status**: ✅ Fully Implemented | 📋 [View Details](/docs/features/product-pricing)
-
----
-
-### 4. Contract & Revenue Management
-**Execute deals and recognize revenue**
-
-- **Contract Lifecycle**: From quote acceptance to renewal
-- **Auto-Numbering**: Professional contract numbers (CON-2026-0001)
-- **Renewal Management**: Track and automate renewals
-- **Revenue Recognition**: Monitor ARR, MRR, and contract value
-
-**Key Objects**: Contract
-
-**Status**: ✅ Fully Implemented | 🚧 Payment processing planned | 📋 [View Details](/docs/features/contracts-payments)
-
----
-
-### 5. Customer Service & Support
-**Deliver exceptional omni-channel support**
-
-- **Case Management**: Handle support requests from any channel
-- **Omni-Channel Support**: Email, Web, Phone, Social Media, Chat, Mobile App
-- **SLA Management**: Track and enforce response and resolution times
-- **Queue-Based Routing**: Auto-assign cases to the right team
-- **Knowledge Base**: Self-service portal with AI-powered search
-- **Community Forums**: Enable peer-to-peer support
-- **Escalation Rules**: Automatic escalation for SLA violations
-
-**Key Objects**: Case, Case Comment, Knowledge Article, Queue, SLA Policy, SLA Template, Business Hours, Escalation Rule, Web-to-Case, Email-to-Case, Social Media Case, Forum Topic, Forum Post, Portal User
-
-**Status**: ✅ Fully Implemented | 📋 [View Details](/docs/features/service-support)
-
----
-
-### 6. AI-Powered Intelligence
-**Work smarter with AI assistance**
-
-- **Smart Briefings**: AI-generated summaries of accounts and opportunities
-- **Lead Scoring**: Predictive scoring based on engagement and fit
-- **Win Probability**: Estimate likelihood of closing deals
-- **Content Generation**: Marketing copy, emails, and responses
-- **Data Enrichment**: Auto-complete customer information
-- **Next Best Action**: AI recommendations for what to do next
-- **Sentiment Analysis**: Understand customer emotions in support cases
-
-**AI Features**: 25+ capabilities across all modules
-
-**Status**: ✅ Core AI framework implemented | 🚧 Advanced features in development | 📋 [View Details](/docs/ai/overview)
-
----
-
-## Feature Comparison by Industry Standard
-
-| Capability | HotCRM | Salesforce | HubSpot | MS Dynamics |
-|-----------|---------|------------|---------|-------------|
-| **Sales Automation** | ✅ Full | ✅ Full | ✅ Full | ✅ Full |
-| **Marketing Automation** | ✅ Core | ✅ Full (Pardot) | ✅ Full | ✅ Full (Marketing) |
-| **Service & Support** | ✅ Full | ✅ Full (Service Cloud) | ✅ Core | ✅ Full (Service) |
-| **CPQ (Quote Management)** | ✅ Built-in | 💰 Add-on | 💰 Add-on | 💰 Add-on |
-| **AI Capabilities** | ✅ Native | 💰 Einstein | 🚧 Limited | 🚧 Limited |
-| **Metadata-Driven** | ✅ TypeScript | ⚙️ XML | ❌ | ⚙️ XML |
-| **Modern UI/UX** | ✅ Linear-style | 📅 Classic | ✅ Modern | 📅 Classic |
-| **Self-Hosted** | ✅ Yes | ❌ Cloud only | ❌ Cloud only | ☁️ Hybrid |
-| **Open Source** | ✅ MIT License | ❌ | ❌ | ❌ |
-
----
-
-## Implementation Status
-
-### Currently Implemented (41 Objects)
-
-#### Marketing & Leads (5 objects)
-- ✅ Lead - Prospect management and qualification
-- ✅ Campaign Member - Campaign participation tracking
-- ✅ Marketing List - Audience segmentation
-- ✅ Landing Page - Lead capture pages
-- ✅ Form - Web form builder
-- ✅ Email Template - Email marketing templates
-- ✅ Unsubscribe - Opt-out management
-
-#### Sales (6 objects)
-- ✅ Account - Customer and company records
-- ✅ Contact - Individual contacts and relationships
-- ✅ Opportunity - Sales pipeline and deals
-- ✅ Activity - Customer interactions (calls, meetings, emails)
-- ✅ Task - Action items and to-dos
-- ✅ Note - Customer notes and observations
-
-#### Products & Pricing (6 objects)
-- ✅ Product Bundle - Product catalog and bundles
-- ✅ Quote - Customer quotations
-- ✅ Quote Line Item - Quote details
-- ✅ Price Rule - Pricing logic and rules
-- ✅ Discount Schedule - Volume and promotional discounts
-- ✅ Approval Request - Quote approval workflows
-
-#### Finance (1 object)
-- ✅ Contract - Contract lifecycle management
-
-#### Service & Support (23 objects)
-- ✅ Case - Support ticket management
-- ✅ Case Comment - Case conversation history
-- ✅ Knowledge Article - Self-service knowledge base
-- ✅ Web-to-Case - Web form case capture
-- ✅ Email-to-Case - Email-based case creation
-- ✅ Social Media Case - Social media support
-- ✅ Queue - Support team queues
-- ✅ Queue Member - Queue membership
-- ✅ Routing Rule - Case assignment rules
-- ✅ Skill - Agent skills taxonomy
-- ✅ Agent Skill - Agent skill assignments
-- ✅ SLA Policy - Service level agreement policies
-- ✅ SLA Template - SLA templates
-- ✅ SLA Milestone - SLA milestone tracking
-- ✅ Business Hours - Operating hours
-- ✅ Holiday - Holiday definitions
-- ✅ Holiday Calendar - Holiday calendars
-- ✅ Escalation Rule - Case escalation automation
-- ✅ Forum Topic - Community forum topics
-- ✅ Forum Post - Community forum posts
-- ✅ Portal User - Self-service portal users
-
-**Total: 41 objects with 1,200+ fields**
-
----
-
-### Planned Features (Next 6 Months)
-
-#### Q1 2026 - Payment & Billing
-- 🚧 Payment - Payment transaction tracking
-- 🚧 Invoice - Invoice generation and management
-- 🚧 Payment Method - Customer payment methods
-- 🚧 Subscription - Recurring revenue management
-
-#### Q2 2026 - Advanced Analytics
-- 🚧 Dashboard - Custom dashboards
-- 🚧 Report - Custom reports and analytics
-- 🚧 Forecast - Sales forecasting
-- 🚧 Goal - Team and individual goals
-
-#### Q2 2026 - Collaboration
-- 🚧 Feed - Activity feeds and updates
-- 🚧 Chatter - Enterprise social collaboration
-- 🚧 File - Document management
-
-#### Q3 2026 - Integration
-- 🚧 External System - External system connections
-- 🚧 API Call Log - Integration monitoring
-- 🚧 Webhook - Event-driven integrations
-
-#### Q3-Q4 2026 - Mobile & Advanced
-- 🚧 Mobile App - Native iOS and Android apps
-- 🚧 Email Integration - Gmail/Outlook sync
-- 🚧 Calendar Sync - Calendar integration
-- 🚧 Territory Management - Geographic territories
-- 🚧 Partner Portal - Partner relationship management
-
----
-
-## Getting Started
-
-<Cards>
-  <Card title="For Sales Teams" href="/docs/getting-started/sales-quickstart">
-    Start tracking deals and managing your pipeline
-  </Card>
-  <Card title="For Marketing Teams" href="/docs/getting-started/marketing-quickstart">
-    Launch campaigns and generate qualified leads
-  </Card>
-  <Card title="For Support Teams" href="/docs/getting-started/support-quickstart">
-    Set up case management and knowledge base
-  </Card>
-  <Card title="For Administrators" href="/docs/getting-started/admin-quickstart">
-    Configure and customize HotCRM for your business
-  </Card>
-</Cards>
-
----
-
-## Key Differentiators
-
-### 🎯 Built for Modern Teams
-Unlike legacy CRM systems designed in the 2000s, HotCRM is built for how teams work today:
-- Clean, intuitive interface inspired by Linear and Notion
-- Fast performance with modern web technologies
-- Keyboard shortcuts and power user features
-- Mobile-first responsive design
-
-### 🤖 AI-First, Not AI-Bolted-On
-AI capabilities are integrated into the core platform, not added as expensive add-ons:
-- Native AI scoring and predictions
-- Automated data enrichment
-- Intelligent recommendations
-- Natural language search and queries
-
-### 🔧 Fully Customizable
-Built on metadata-driven architecture with TypeScript:
-- Add custom fields without code
-- Create custom objects in minutes
-- Build business logic with triggers
-- Full API access for integrations
-
-### 💰 Transparent Pricing
-- Open source MIT license
-- Self-hosted option available
-- No hidden fees or paywalls
-- Pay only for what you use
-
----
-
-## Success Metrics
-
-Track the business impact of HotCRM:
-
-- **Sales Productivity**: 40% increase in deals managed per rep
-- **Lead Conversion**: 25% improvement in lead-to-opportunity rate
-- **Customer Satisfaction**: 30% reduction in case resolution time
-- **Revenue Growth**: Better forecasting and pipeline visibility
-- **Cost Savings**: 60% lower TCO vs. Salesforce
-
----
-
-## Next Steps
-
-1. **[Installation Guide](/docs/getting-started/installation)** - Get HotCRM running in 10 minutes
-2. **[Quick Start Tutorial](/docs/getting-started/quick-start)** - Your first lead, opportunity, and case
-3. **[Feature Deep Dives](/docs/features/lead-management)** - Explore each capability in detail
-4. **[API Reference](/docs/api-reference/objectql-api)** - Build custom integrations
-
----
-
-## Questions?
-
-- 📖 Check our [Documentation](/docs)
-- 💬 Join our [Community](https://github.com/objectstack-ai/hotcrm/discussions)
-- 🐛 Report [Issues](https://github.com/objectstack-ai/hotcrm/issues)
-- 💡 Request [Features](https://github.com/objectstack-ai/hotcrm/issues/new)
+## Core Design Principles
+
+### 1. Metadata-First
+Every object, field, view, and logic rule is defined as metadata (`.object.ts`, `.view.ts`). This ensures:
+- **Upgradeability**: Customizations receive platform updates without breaking.
+- **Portability**: Configurations can be moved between environments as code.
+- **AI-Readiness**: AI agents can "read" the system configuration to understand how to operate.
+
+### 2. ObjectQL (No-SQL)
+We eliminated the impedance mismatch between code and data. No more ORMs or raw SQL.
+- **Type-Safe Access**: Full TypeScript support for data operations.
+- **Security-Aware**: Permissions are enforced at the engine level, not the query level.
+
+### 3. AI-Native
+AI is not a side panel. It is the UI.
+- **Generative**: Write emails, summaries, and code.
+- **Predictive**: Score leads, forecast churn, and estimate revenue.
+- **Agentic**: Perform multi-step tasks autonomously (e.g., "Reschedule all meetings for next week").

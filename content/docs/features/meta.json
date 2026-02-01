@@ -1,11 +1,14 @@
 {
-  "title": "Features",
+  "title": "Capabilities",
   "pages": [
     "overview",
-    "lead-management",
-    "sales-automation",
-    "customer-service",
-    "product-pricing",
-    "contracts-payments"
+    "ai-intelligence",
+    "customer-360",
+    "sales-intelligence",
+    "revenue-cloud",
+    "service-excellence",
+    "marketing-journeys",
+    "analytics-bi",
+    "platform-extensibility"
   ]
 }
