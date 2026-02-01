@@ -100,8 +100,8 @@ importers:
         specifier: workspace:*
         version: link:../core
       '@objectstack/spec':
-        specifier: ^0.8.0
-        version: 0.8.0
+        specifier: ^0.8.1
+        version: 0.8.1
       axios:
         specifier: ^1.6.0
         version: 1.13.3
@@ -128,8 +128,8 @@ importers:
   packages/finance:
     dependencies:
       '@objectstack/spec':
-        specifier: ^0.8.0
-        version: 0.8.0
+        specifier: ^0.8.1
+        version: 0.8.1
       typescript:
         specifier: ^5.3.0
         version: 5.9.3
@@ -150,8 +150,8 @@ importers:
   packages/marketing:
     dependencies:
       '@objectstack/spec':
-        specifier: ^0.8.0
-        version: 0.8.0
+        specifier: ^0.8.1
+        version: 0.8.1
     devDependencies:
       typescript:
         specifier: ^5.0.0
@@ -160,8 +160,8 @@ importers:
   packages/products:
     dependencies:
       '@objectstack/spec':
-        specifier: ^0.8.0
-        version: 0.8.0
+        specifier: ^0.8.1
+        version: 0.8.1
       typescript:
         specifier: ^5.3.0
         version: 5.9.3
@@ -222,8 +222,8 @@ importers:
   packages/support:
     dependencies:
       '@objectstack/spec':
-        specifier: ^0.8.0
-        version: 0.8.0
+        specifier: ^0.8.1
+        version: 0.8.1
       typescript:
         specifier: ^5.3.0
         version: 5.9.3
@@ -978,10 +978,6 @@ packages:
 
   '@objectstack/runtime@0.8.1':
     resolution: {integrity: sha512-uUmgeazfpar2t20drJGzIm495NrX563tsgEKiB2Dt6JicvabAYfojTZUXnNoxIZ/IHJoQpMCGkQ9pcmd7J1rVA==}
-
-  '@objectstack/spec@0.8.0':
-    resolution: {integrity: sha512-OvEceJrWoFE1Ou+j+VavXFy5xWK5L5XptaMsguMKF25J0gudt6Sn/EP/r2zigNMBWIHXmW54EgUC6wniJfaJTg==}
-    engines: {node: '>=18.0.0'}
 
   '@objectstack/spec@0.8.1':
     resolution: {integrity: sha512-GsNWprjYGtO7TM7fLlqp8xtFHLT/6q0Jh3ILPEijxPsIli7aV42qZBgHIjWKsMxH6sGQRqUijfOdgDraZ9IHBA==}
@@ -4518,10 +4514,6 @@ snapshots:
       '@objectstack/types': 0.8.1
     transitivePeerDependencies:
       - pino
-
-  '@objectstack/spec@0.8.0':
-    dependencies:
-      zod: 4.3.6
 
   '@objectstack/spec@0.8.1':
     dependencies:
