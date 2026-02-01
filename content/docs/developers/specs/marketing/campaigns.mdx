@@ -1,0 +1,38 @@
+---
+title: Campaign Architecture
+description: Schema and ROI ROI Calculation Logic.
+---
+
+# Campaign Architecture
+
+## Data Model
+
+The `campaign` object is recursive (Parent/Child).
+
+```typescript
+// packages/marketing/src/campaign.object.ts
+export default {
+  name: 'campaign',
+  fields: {
+    name: { type: 'text' },
+    parent_campaign: { type: 'lookup', reference_to: 'campaign' },
+    budgeted_cost: { type: 'currency' },
+    actual_cost: { type: 'currency' },
+    type: { type: 'select', options: ['Webinar', 'Email', 'Event'] }
+  }
+}
+```
+
+## Attribution Model
+
+We implement a "Primary Source" attribution model by default.
+- **Lead Capture**: When a Lead is created, `lead_source` defaults to the Campaign ID if passed in URL parameters.
+- **Conversion**: When Lead converted, Opportunity inherits `campaign_id`.
+- **Rollup**: `campaign` calculates `total_revenue` by summing `amount` of all won embedded Opportunities.
+
+## Mass Email Service
+
+We do **not** build an SMTP server. We integrate with transactional providers (SendGrid/AWS SES).
+- **Interface**: `EmailProvider` adapter pattern.
+- **Batching**: Jobs are chunked into 1000s to avoid rate limits.
+- **Tracking**: Webhooks receive 'Open'/'Click' events and update `campaign_member` status.

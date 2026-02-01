@@ -1,0 +1,47 @@
+---
+title: Ticket System Architecture
+description: Schema and Logic for Case Management.
+---
+
+# Ticket System Architecture
+
+## Data Model
+
+The `case` object is the core entity.
+
+```typescript
+// packages/service/src/case.object.ts
+export default {
+  name: 'case',
+  fields: {
+    subject: { type: 'text', required: true },
+    description: { type: 'textarea' },
+    status: { type: 'select', options: ['New', 'In Progress', 'Escalated', 'Closed'] },
+    priority: { type: 'select', options: ['Low', 'Medium', 'High', 'Critical'] },
+    origin: { type: 'select', options: ['Email', 'Phone', 'Web'] },
+    contact: { type: 'lookup', reference_to: 'contact' },
+    account: { type: 'lookup', reference_to: 'account' }
+  }
+}
+```
+
+## Email-to-Case Handler
+
+The `EmailHandler` class processes incoming MIME messages.
+
+1.  **Parse**: Extract From, Subject, Body.
+2.  **Match**: Find existing `contact` by email address.
+    - If found: Link to Contact/Account.
+    - If not found: Create new Contact (optional config).
+3.  **Thread**: Check for `[Ref:ID]` in subject.
+    - If exists: Create `email_message` linked to existing Case.
+    - Application updates `case.status` to 'New Response'.
+    - If new: Create new `case`.
+
+## Entitlement Verification
+
+On `case` creation, the system checks for active entitlements.
+
+- **Lookup**: Find active `entitlement` linked to the Account.
+- **Deduct**: If entitlement is incident-based, decrement remaining balance.
+- **SLA**: Calculate `target_resolution_date` based on `entitlement_process`.

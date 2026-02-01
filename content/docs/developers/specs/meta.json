@@ -2,9 +2,9 @@
   "title": "Technical Specs",
   "pages": [
     "foundation",
-    "sales-cloud",
-    "service-cloud",
-    "marketing-cloud",
-    "revenue-cloud"
+    "sales",
+    "service",
+    "marketing",
+    "revenue"
   ]
 }

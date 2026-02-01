@@ -1,0 +1,65 @@
+---
+title: Leads Architecture
+description: Technical specification for Lead Management.
+---
+
+# Leads Architecture
+
+## Data Model
+
+The `lead` object represents a prospect. It serves as a staging area before conversion to `account`, `contact`, and `opportunity`.
+
+```typescript
+// packages/crm/src/lead.object.ts
+export default {
+  name: 'lead',
+  fields: {
+    ...standardFields,
+    company: { type: 'text', required: true },
+    status: { 
+      type: 'select', 
+      options: ['New', 'Working', 'Nurturing', 'Converted', 'Disqualified'],
+      default: 'New' 
+    },
+    lead_source: { type: 'text' },
+    annual_revenue: { type: 'currency' },
+    rating: { type: 'select', options: ['Hot', 'Warm', 'Cold'] },
+    score: { type: 'number', default: 0 }
+  }
+}
+```
+
+## Lead Conversion Service
+
+The conversion process is transactional and irreversible.
+
+**Input**:
+- `lead_id`
+- `owner_id` (optional)
+- `create_opportunity` (boolean)
+
+**Logic**:
+1.  **Validate**: Check if `status` is already 'Converted'.
+2.  **Transact**:
+    - Create `account` from `company` name.
+    - Create `contact` linked to `account`.
+    - (Optional) Create `opportunity` linked to `account`.
+    - Update `lead`: Set `status` = 'Converted', `is_converted` = true.
+3.  **Return**: IDs of created records.
+
+## Assignment Rules Engine
+
+Implemented via `lead.hook.ts` on `beforeInsert`.
+
+```typescript
+// Pseudo-code for assignment logic
+if (!doc.owner) {
+  const rules = await broker.find('assignment_rule', { active: true });
+  for (const rule of rules) {
+    if (matches(doc, rule.criteria)) {
+      doc.owner = rule.assign_to;
+      break;
+    }
+  }
+}
+```

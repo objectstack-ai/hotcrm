@@ -1,0 +1,52 @@
+---
+title: Opportunity Architecture
+description: Technical specification for Opportunity and Pipeline logic.
+---
+
+# Opportunity Architecture
+
+## Data Model
+
+The `opportunity` object tracks revenue potential.
+
+```typescript
+// packages/crm/src/opportunity.object.ts
+export default {
+  name: 'opportunity',
+  fields: {
+    amount: { type: 'currency' },
+    stage: { 
+      type: 'select',
+      options: ['Prospecting', 'Qualification', 'Proposal', 'Negotiation', 'Closed Won', 'Closed Lost']
+    },
+    probability: { type: 'percent' },
+    close_date: { type: 'date' },
+    account: { type: 'lookup', reference_to: 'account' }
+  }
+}
+```
+
+## Stage Transition Logic
+
+We implement strict validators in `opportunity.hook.ts` to enforce entry criteria for stages.
+
+**Validators**:
+- **To Proposal**: Must have at least one `quote` attached.
+- **To Closed Won**: `amount` must be > 0.
+
+```typescript
+// packages/crm/src/opportunity.hook.ts
+export async function beforeUpdate(newItem, oldItem) {
+  if (newItem.stage === 'Closed Won' && newItem.amount <= 0) {
+    throw new Error("Cannot close win a deal with zero amount.");
+  }
+}
+```
+
+## Forecasting Service
+
+A scheduled background job aggregates open opportunities by Close Date.
+
+1.  **Group By**: `owner` + `fiscal_period`.
+2.  **Sum**: `amount` * `probability`.
+3.  **Upsert**: `forecast_item` records.

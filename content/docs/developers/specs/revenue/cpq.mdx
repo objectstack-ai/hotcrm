@@ -1,0 +1,46 @@
+---
+title: CPQ Architecture
+description: Engine for configuration and pricing rules.
+---
+
+# CPQ Architecture
+
+## Rule Engine
+
+The CPQ engine evaluates rules in real-time during the Quote Line Editor session.
+
+### Product Rules (Validation & Selection)
+Evaluates logical constraints between products.
+- **Reference**: `product_rule` object.
+- **Evaluation**: Client-side (UI) for speed, Server-side (Hook) for security.
+- **Example**: `IF Product = 'Laptop' THEN ADD 'Power Cord'`.
+
+### Pricing Rules
+Calculates final `net_price`.
+- **Waterfall**: List Price -> System Discounts -> Volume Discounts -> Manual Discounts -> Net Price.
+- **Block Pricing**: IF Quantity 1-10 THEN Price = $100 (Flat Fee).
+
+## Quote Data Model
+
+The `quote` and `quote_line` objects mirror the Opportunity but with versioning.
+
+```typescript
+// packages/revenue/src/quote_line.object.ts
+export default {
+  name: 'quote_line',
+  fields: {
+    quote: { type: 'lookup', reference_to: 'quote' },
+    product: { type: 'lookup', reference_to: 'product' },
+    quantity: { type: 'number' },
+    list_price: { type: 'currency' },
+    net_price: { type: 'currency' },
+    discount_percent: { type: 'percent' }
+  }
+}
+```
+
+## PDF Generation
+
+We use a template engine (Handlebars/HTML) rendered to PDF via Headless Chrome.
+- **Template Object**: `quote_template` stores the HTML structure.
+- **Renderer**: `QuoteRenderer` class merges `quote` data into the template.

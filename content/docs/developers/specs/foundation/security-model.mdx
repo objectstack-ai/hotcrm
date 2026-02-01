@@ -1,0 +1,29 @@
+---
+title: Security Architecture
+description: Permission Sets, Profiles, and Sharing Rules.
+---
+
+# Security Architecture
+
+HotCRM implements a layered security model indistinguishable from Salesforce.
+
+## 1. Authentication (Identity)
+- **Protocol**: OIDC / OAuth2.
+- **Session**: Stateless JWT with sliding expiration.
+
+## 2. Authorization (Object Level)
+Controls "CRUD" access to Objects and Fields.
+- **Profiles**: Base level access (e.g., "Standard User" can Read Accounts).
+- **Permission Sets**: Additive permissions (e.g., "Export Data" capability).
+- **Field Level Security (FLS)**: Hides specific columns from queries based on user role.
+
+## 3. Sharing (Record Level)
+Controls *which* records a user can see.
+- **Org-Wide Defaults (OWD)**: "Private", "Public Read Only", "Public Read/Write".
+- **Role Hierarchy**: Managers inherit access from subordinates.
+- **Sharing Rules**: "If Industry = 'Gov', share with Gov Team".
+- **Manual Sharing**: Explicit per-record grants.
+
+## Implementation
+The `broker` applies these rules automatically.
+`broker.find('account')` -> Internally appends `WHERE owner = $currentUser OR ...` based on sharing calculation.

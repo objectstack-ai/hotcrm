@@ -1,0 +1,43 @@
+---
+title: Knowledge Base Architecture
+description: Content Management and Versioning for KB.
+---
+
+# Knowledge Architecture
+
+## Data Model
+
+We use a polymorphic structure or specific article types. For simplicity, we use `knowledge_article` as the base.
+
+```typescript
+// packages/service/src/knowledge_article.object.ts
+export default {
+  name: 'knowledge_article',
+  fields: {
+    title: { type: 'text', required: true },
+    url_name: { type: 'text', unique: true }, // Slug
+    content: { type: 'html' },
+    status: { type: 'select', options: ['Draft', 'Review', 'Published', 'Archived'] },
+    version_number: { type: 'number' },
+    is_master: { type: 'boolean' }, // Points to the latest version
+    language: { type: 'text', default: 'en_US' }
+  }
+}
+```
+
+## Publishing Workflow
+
+We implement a "Publish on Approval" workflow.
+
+1.  **Draft**: User edits a `status='Draft'` record.
+2.  **Submit**: User clicks "Submit for Approval". `approval_process` triggers.
+3.  **Approve**: Manager approves.
+    - System sets `status` = 'Published'.
+    - Previous 'Published' version (if any) is set to 'Archived'.
+    - `publish_date` is set to `now()`.
+
+## Search Indexing
+
+We maintain a full-text search index.
+- **Trigger**: `afterUpsert` on `knowledge_article`.
+- **Action**: Push `title` and `content` to the Search Engine (e.g., Elasticsearch or database text index).
