@@ -15,20 +15,20 @@ const CampaignMember = {
     campaign: {
       type: 'lookup',
       label: 'Campaign',
-      reference_to: 'campaign',
+      reference: 'campaign',
       required: true,
       description: 'The marketing campaign this member belongs to'
     },
     lead: {
       type: 'lookup',
       label: 'Lead',
-      reference_to: 'lead',
+      reference: 'lead',
       description: 'Related lead (mutually exclusive with contact)'
     },
     contact: {
       type: 'lookup',
       label: 'Contact',
-      reference_to: 'contact',
+      reference: 'contact',
       description: 'Related contact (mutually exclusive with lead)'
     },
     

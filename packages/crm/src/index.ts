@@ -34,7 +34,6 @@ export { default as Activity } from './activity.object';
 export { default as Contact } from './contact.object';
 export { default as Lead } from './lead.object';
 export { default as Opportunity } from './opportunity.object';
-export { default as CampaignMember } from './campaign_member.object';
 export { default as Task } from './task.object';
 export { default as Note } from './note.object';
 export { default as AssignmentRule } from './assignment_rule.object';
@@ -47,8 +46,6 @@ export { default as MarketingList } from './marketing_list.object';
 export { default as Unsubscribe } from './unsubscribe.object';
 
 // Export hooks
-export * from './hooks/campaign.hook';
-export * from './hooks/campaign_member.hook';
 export * from './hooks/lead.hook';
 export * from './hooks/opportunity.hook';
 

@@ -45,6 +45,7 @@ export default {
     },
     description: { type: 'textarea', label: 'Description' },
     is_active: { type: 'boolean', label: 'Active', defaultValue: true },
-    parent_campaign: { type: 'lookup', reference_to: 'campaign', label: 'Parent Campaign' }
+    parent_campaign: { type: 'lookup', reference: 'campaign', label: 'Parent Campaign' }
   }
 }
+

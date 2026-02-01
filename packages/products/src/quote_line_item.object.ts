@@ -17,25 +17,25 @@ const QuoteLineItem = {
     quote_id: {
       type: 'lookup',
       label: 'Quote',
-      reference_to: 'quote',
+      reference: 'quote',
       required: true
     },
     product_id: {
       type: 'lookup',
       label: 'Product',
-      reference_to: 'product',
+      reference: 'product',
       required: true
     },
     product_bundle_id: {
       type: 'lookup',
       label: 'Product Bundle',
-      reference_to: 'product_bundle',
+      reference: 'product_bundle',
       description: 'Bundle this line item is part of'
     },
     pricebook_entry_id: {
       type: 'lookup',
       label: 'Pricebook Entry',
-      reference_to: 'pricebook_entry',
+      reference: 'pricebook_entry',
       description: 'Reference to the pricebook entry'
     },
     // Line Item Details

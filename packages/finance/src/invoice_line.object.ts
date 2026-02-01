@@ -1,23 +1,21 @@
-import type { ServiceObject } from '@objectstack/spec/data';
-
-const InvoiceLine: ServiceObject = {
+const InvoiceLine = {
   name: 'invoice_line',
   label: 'Invoice Line',
-  label_plural: 'Invoice Lines',
+  labelPlural: 'Invoice Lines',
   icon: 'list',
   description: 'Line items for an invoice',
   fields: {
     invoice: {
       type: 'master_detail',
       label: 'Invoice',
-      reference_to: 'invoice',
+      reference: 'invoice',
       required: true
     },
     // Assuming product object is in 'products' package, but referenced by name is fine
     product: {
       type: 'lookup',
       label: 'Product',
-      reference_to: 'product'
+      reference: 'product'
     },
     description: {
       type: 'text',

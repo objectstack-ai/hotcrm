@@ -1,9 +1,7 @@
-import type { ServiceObject } from '@objectstack/spec/data';
-
-const Invoice: ServiceObject = {
+const Invoice = {
   name: 'invoice',
   label: 'Invoice',
-  label_plural: 'Invoices',
+  labelPlural: 'Invoices',
   icon: 'invoice',
   description: 'Billing Statement for products or services',
   fields: {
@@ -15,18 +13,18 @@ const Invoice: ServiceObject = {
     account: {
       type: 'lookup',
       label: 'Account',
-      reference_to: 'account',
+      reference: 'account',
       required: true
     },
     contract: {
       type: 'lookup',
       label: 'Contract',
-      reference_to: 'contract'
+      reference: 'contract'
     },
     status: {
       type: 'select',
       label: 'Status',
-      default_value: 'Draft',
+      defaultValue: 'Draft',
       options: [
         { label: 'Draft', value: 'Draft' },
         { label: 'Posted', value: 'Posted' },

@@ -17,7 +17,6 @@ import Activity from './activity.object';
 import Contact from './contact.object';
 import Lead from './lead.object';
 import Opportunity from './opportunity.object';
-import CampaignMember from './campaign_member.object';
 import Task from './task.object';
 import Note from './note.object';
 import LeadConvertAction from './actions/lead_convert.action';
@@ -58,7 +57,6 @@ export const CRMPlugin = {
     lead: Lead,
     assignment_rule: AssignmentRule,
     opportunity: Opportunity,
-    campaign_member: CampaignMember,
     task: Task,
     note: Note,
     email_template: EmailTemplate,

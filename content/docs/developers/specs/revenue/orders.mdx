@@ -10,13 +10,13 @@ description: Conversion from Quote to Cash.
 When a `quote` is marked 'Ordered':
 1.  **System**: Creates an `order` record.
 2.  **Lines**: Copies `quote_line` items to `order_item`.
-3.  **Subscriptions**: If `product.type` == 'Subscription', creates `subscription` record.
-4.  **Assets**: If `product.type` == 'Asset', creates `asset` record for the Account.
+3.  **Subscriptions**: If `product.type` is 'Subscription', creates `subscription` record.
+4.  **Assets**: If `product.type` is 'Asset', creates `asset` record for the Account.
 
 ## Invoice Run
 
 The `InvoiceScheduler` runs nightly.
-1.  **Select**: Findings `order` records with `next_billing_date` <= Today.
+1.  **Select**: Findings `order` records with `next_billing_date` on or before Today.
 2.  **Generate**: Creates `invoice` and `invoice_line` records.
 3.  **Delivery**: Sends email with Invoice PDF to `bill_to_contact`.
 4.  **Post**: Updates `order` status to 'Billed'.
