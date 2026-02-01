@@ -208,6 +208,11 @@ const Opportunity = {
       name: 'ContactRequired',
       errorMessage: '商务谈判阶段必须指定主要联系人',
       formula: 'AND(stage = "Negotiation", ISBLANK(contact_id))'
+    },
+    {
+      name: 'NoZeroAmountClosedWon',
+      errorMessage: '成交金额必须大于0',
+      formula: 'AND(stage = "Closed Won", amount <= 0)'
     }
   ],
   pageLayout: {
