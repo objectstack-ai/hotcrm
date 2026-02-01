@@ -214,7 +214,7 @@ const Lead = {
     campaign_id: {
       type: 'lookup',
       label: '营销活动',
-      reference: 'Campaign'
+      reference: 'campaign'
     },
     // Additional Info
     number_of_employees: {

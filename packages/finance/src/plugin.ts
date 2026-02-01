@@ -11,6 +11,7 @@
 
 // Import all Finance objects
 import Contract from './contract.object';
+import Payment from './payment.object';
 
 /**
  * Finance Plugin Definition
@@ -30,6 +31,7 @@ export const FinancePlugin = {
   // Business objects provided by this plugin
   objects: {
     contract: Contract,
+    payment: Payment,
   },
   
   // Navigation structure for this plugin

@@ -14,7 +14,7 @@ const SLAMilestone = {
     case_id: {
       type: 'lookup',
       label: 'Case',
-      reference: 'Case',
+      reference: 'case',
       required: true
     },
     sla_template_id: {

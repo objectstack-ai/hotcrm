@@ -234,7 +234,7 @@ const Activity = {
     recurrence_instance_id: {
       type: 'lookup',
       label: 'Parent Recurring Activity',
-      reference: 'Activity',
+      reference: 'activity',
       readonly: true,
       description: 'Link to the master recurring activity'
     },

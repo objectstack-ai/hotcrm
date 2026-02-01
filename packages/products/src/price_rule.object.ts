@@ -87,7 +87,7 @@ const PriceRule = {
     product_id: {
       type: 'lookup',
       label: 'Product',
-      reference: 'Product',
+      reference: 'product',
       description: 'Specific product this rule applies to'
     },
     product_category: {

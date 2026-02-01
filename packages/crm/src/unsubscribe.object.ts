@@ -91,7 +91,7 @@ const Unsubscribe = {
     campaign_id: {
       type: 'lookup',
       label: '触发活动',
-      reference: 'Campaign',
+      reference: 'campaign',
       description: '导致退订的营销活动'
     },
     email_template_id: {

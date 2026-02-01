@@ -122,7 +122,7 @@ const Case = {
     product_id: {
       type: 'lookup',
       label: 'Product',
-      reference: 'Product'
+      reference: 'product'
     },
     asset_id: {
       type: 'lookup',
@@ -133,7 +133,7 @@ const Case = {
     parent_case_id: {
       type: 'lookup',
       label: 'Parent Case',
-      reference: 'Case',
+      reference: 'case',
       description: 'Parent case if this is a sub-case'
     },
     // Assignment

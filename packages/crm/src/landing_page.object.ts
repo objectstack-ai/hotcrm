@@ -57,7 +57,7 @@ const LandingPage = {
     campaign_id: {
       type: 'lookup',
       label: '关联营销活动',
-      reference: 'Campaign',
+      reference: 'campaign',
       description: '此着陆页所属的营销活动'
     },
     

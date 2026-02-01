@@ -7,6 +7,12 @@
  */
 
 export * from './contract.object';
+import payment from './payment.object';
+
+export const objects = {
+    payment
+};
+
 
 // Export plugin definition
 export { default as FinancePlugin } from './plugin';

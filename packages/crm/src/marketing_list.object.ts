@@ -88,7 +88,7 @@ const MarketingList = {
     campaign_id: {
       type: 'lookup',
       label: '关联营销活动',
-      reference: 'Campaign',
+      reference: 'campaign',
       description: '此列表关联的主要营销活动'
     },
     

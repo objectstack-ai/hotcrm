@@ -13,7 +13,10 @@
  */
 
 // Export business objects
+export { default as Product } from './product.object';
+export { default as Pricebook } from './pricebook.object';
 export { default as Quote } from './quote.object';
+
 export { default as ProductBundle } from './product_bundle.object';
 export { default as PriceRule } from './price_rule.object';
 export { default as QuoteLineItem } from './quote_line_item.object';

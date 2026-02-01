@@ -15,7 +15,7 @@ const CaseComment = {
     case_id: {
       type: 'lookup',
       label: 'Case',
-      reference: 'Case',
+      reference: 'case',
       required: true
     },
     parent_comment_id: {

@@ -1,0 +1,12 @@
+{
+  "name": "@hotcrm/marketing",
+  "version": "0.0.0",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "peerDependencies": {
+    "@hotcrm/core": "workspace:*"
+  },
+  "devDependencies": {
+     "typescript": "^5.0.0"
+  }
+}

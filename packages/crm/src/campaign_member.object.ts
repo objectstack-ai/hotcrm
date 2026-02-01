@@ -15,7 +15,7 @@ const CampaignMember = {
     campaign_id: {
       type: 'lookup',
       label: 'Campaign',
-      reference: 'Campaign',
+      reference: 'campaign',
       required: true,
       description: 'The marketing campaign this member belongs to'
     },

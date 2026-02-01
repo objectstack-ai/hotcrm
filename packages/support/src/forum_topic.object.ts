@@ -122,7 +122,7 @@ const ForumTopic = {
     related_case_id: {
       type: 'lookup',
       label: 'Related Case',
-      reference: 'Case',
+      reference: 'case',
       description: 'Case that originated this topic'
     },
     related_article_id: {

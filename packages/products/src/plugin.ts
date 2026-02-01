@@ -12,7 +12,10 @@
  */
 
 // Import all Products objects
+import Product from './product.object';
+import Pricebook from './pricebook.object';
 import Quote from './quote.object';
+
 import QuoteLineItem from './quote_line_item.object';
 import ProductBundle from './product_bundle.object';
 import PriceRule from './price_rule.object';
@@ -36,6 +39,8 @@ export const ProductsPlugin = {
   
   // Business objects provided by this plugin
   objects: {
+    product: Product,
+    pricebook: Pricebook,
     quote: Quote,
     quote_line_item: QuoteLineItem,
     product_bundle: ProductBundle,

@@ -23,7 +23,7 @@ const QuoteLineItem = {
     product_id: {
       type: 'lookup',
       label: 'Product',
-      reference: 'Product',
+      reference: 'product',
       required: true
     },
     product_bundle_id: {
@@ -277,7 +277,7 @@ const QuoteLineItem = {
     ai_recommended_upsell: {
       type: 'lookup',
       label: 'AI Recommended Upsell',
-      reference: 'Product',
+      reference: 'product',
       readonly: true,
       description: 'AI-suggested upsell product for this line item'
     },
