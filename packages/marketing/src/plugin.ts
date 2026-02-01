@@ -9,6 +9,12 @@ export const MarketingPlugin = {
   version: '1.0.0',
   description: 'Marketing automation and campaign management.',
   dependencies: ['crm'],
+  
+  // Plugin initialization
+  init: async () => {
+    // No initialization required for this plugin
+  },
+  
   objects: {
     campaign: Campaign,
     campaign_member: CampaignMember

@@ -53,6 +53,11 @@ export const SupportPlugin = {
   // Plugin dependencies
   dependencies: ['crm'],
   
+  // Plugin initialization
+  init: async () => {
+    // No initialization required for this plugin
+  },
+  
   // Business objects provided by this plugin
   objects: {
     case: Case,
