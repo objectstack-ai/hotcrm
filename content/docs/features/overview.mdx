@@ -1,60 +1,51 @@
 ---
-title: Business Architecture
-description: The comprehensive functional architecture of HotCRM, designed for the AI era.
+title: System Overview
+description: The HotCRM System of Systems Architecture
 ---
 
-# HotCRM: The Autonomous Enterprise Platform
+# System Overview
 
-HotCRM represents a paradigm shift in Customer Relationship Management. Unlike legacy systems that are essentially "databases with forms," HotCRM is built from the ground up as an **Active Intelligence Platform**. 
+HotCRM is not a monolithic application but a modular "System of Systems". Each subsystem is designed to operate independently while sharing a common Data Core (Customer 360).
 
-It combines the rigor of enterprise data modeling (Metadata-Driven) with the fluidity of Generative AI, creating a system that doesn't just record history—it drives the future.
+## The Business Clouds
 
-## Functional Architecture
+The platform is composed of 4 major Functional Subsystems:
 
-Our architecture supports the entire customer lifecycle through deeply integrated clouds, all sharing a single "Source of Truth" (The HotCRM Data Graph).
+### 1. 🚀 Sales Cloud
+**Target Audience**: Sales Reps, Sales Ops, VPs.
+**Core Function**: Lead-to-Opportunity lifecycle.
+**Key Features**: Pipeline Management, Forecasting, Competitor Tracking.
+[View Design Spec](./sales-cloud)
 
-<Cards>
-  <Card title="AI Intelligence" icon="sparkles" href="/docs/features/ai-intelligence">
-    The central nervous system. Generative agents, predictive analytics, and natural language interfaces embedded in every workflow.
-  </Card>
-  <Card title="Customer 360" icon="users" href="/docs/features/customer-360">
-    A unified, real-time data graph connecting every interaction, transaction, and signal across B2B and B2C contexts.
-  </Card>
-  <Card title="Sales Intelligence" icon="trending-up" href="/docs/features/sales-intelligence">
-    Move beyond "Sales Force Automation" to "Sales Intelligence". Guided selling, outcome-based forecasting, and automated pipeline execution.
-  </Card>
-  <Card title="Revenue Cloud" icon="banknote" href="/docs/features/revenue-cloud">
-    Complex CPQ (Configure, Price, Quote), subscription management, and billing in one unified flow.
-  </Card>
-  <Card title="Service Excellence" icon="life-buoy" href="/docs/features/service-excellence">
-     Agentic service orchestration, combining human empathy with AI speed. Omni-channel case resolution and knowledge management.
-  </Card>
-  <Card title="Marketing Journeys" icon="megaphone" href="/docs/features/marketing-journeys">
-    Real-time, signal-based customer journeys. From anonymous acquisition to lifetime advocacy.
-  </Card>
-  <Card title="Analytics & BI" icon="bar-chart" href="/docs/features/analytics-bi">
-    Embedded insights. Don't leave the CRM to understand the business. Real-time dashboards and explainable AI metrics.
-  </Card>
-  <Card title="Platform Engine" icon="cpu" href="/docs/features/platform-extensibility">
-    The low-code/pro-code foundation. ObjectStack Protocol, Serverless Actions, and Metadata API.
-  </Card>
-</Cards>
+### 2. 🛡️ Service Cloud
+**Target Audience**: Support Agents, Customer Success Managers.
+**Core Function**: Issue resolution and customer retention.
+**Key Features**: Omni-Channel Case Routing, SLA Engine, Knowledge Base.
+[View Design Spec](./service-excellence)
 
-## Core Design Principles
+### 3. 📣 Marketing Cloud
+**Target Audience**: Demand Generation, CMOs.
+**Core Function**: Top-of-funnel acquisition.
+**Key Features**: Campaign ROI, Multi-touch Attribution, Lead Scoring.
+[View Design Spec](./marketing-cloud)
 
-### 1. Metadata-First
-Every object, field, view, and logic rule is defined as metadata (`.object.ts`, `.view.ts`). This ensures:
-- **Upgradeability**: Customizations receive platform updates without breaking.
-- **Portability**: Configurations can be moved between environments as code.
-- **AI-Readiness**: AI agents can "read" the system configuration to understand how to operate.
+### 4. 💸 Revenue Cloud
+**Target Audience**: Finance, Deal Desk.
+**Core Function**: Quote-to-Cash (CPQ & Billing).
+**Key Features**: Product Catalog, Complex Pricing Rules, Contract Renewals.
+[View Design Spec](./revenue-cloud)
 
-### 2. ObjectQL (No-SQL)
-We eliminated the impedance mismatch between code and data. No more ORMs or raw SQL.
-- **Type-Safe Access**: Full TypeScript support for data operations.
-- **Security-Aware**: Permissions are enforced at the engine level, not the query level.
+## The Core Platform
 
-### 3. AI-Native
-AI is not a side panel. It is the UI.
-- **Generative**: Write emails, summaries, and code.
-- **Predictive**: Score leads, forecast churn, and estimate revenue.
-- **Agentic**: Perform multi-step tasks autonomously (e.g., "Reschedule all meetings for next week").
+Underlying these clouds is the **Platform Foundation**:
+
+- **Customer 360**: The shared Account/Contact database.
+- **AI Intelligence**: The co-pilot engine available in all clouds.
+- **Analytics BI**: Cross-cloud reporting.
+
+## Integration Architecture
+
+All subsystems communicate via the **ObjectQL Bus**.
+- **Sales Cloud** creates an Opportunity.
+- **Revenue Cloud** listens for "Closed Won" and generates an Invoice.
+- **Service Cloud** checks "High Value Contract" status from Revenue Cloud to prioritize SLA.

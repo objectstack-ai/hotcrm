@@ -1,14 +1,14 @@
 {
-  "title": "Capabilities",
+  "title": "Subsystems",
   "pages": [
     "overview",
-    "ai-intelligence",
-    "customer-360",
-    "sales-intelligence",
-    "revenue-cloud",
+    "sales-cloud",
     "service-excellence",
-    "marketing-journeys",
+    "marketing-cloud",
+    "revenue-cloud",
+    "customer-360",
     "analytics-bi",
-    "platform-extensibility"
+    "platform-extensibility",
+    "ai-intelligence"
   ]
 }

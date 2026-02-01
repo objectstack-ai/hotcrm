@@ -1,34 +1,70 @@
 ---
 title: Revenue Cloud
-description: Quote-to-Cash, CPQ, and Subscription Management.
+description: The CPQ (Configure, Price, Quote) and Billing subsystem.
 ---
 
-# Revenue Cloud (CPQ & Billing)
+# Revenue Cloud Subsystem
 
-Stop managing quotes in spreadsheets. HotCRM **Revenue Cloud** brings complex product configuration and reliable billing directly into the CRM.
+**Revenue Cloud** handles the "Cash" part of "Lead-to-Cash". It ensures accurate pricing, rapid quoting, and seamless billing.
 
-## CPQ (Configure, Price, Quote)
+## 1. Domain Model (Schema)
 
-### 1. Product Configuration
-*   **Bundles & Kits**: enforce logic like "Hardware A requires Warranty B" or "Product X is incompatible with Product Y."
-*   **Guided Selling**: A wizard-like interface asking needs-based questions to recommend the right SKU mix.
+### 1.1 Core Objects (`packages/finance` + `packages/products`)
 
-### 2. Advanced Pricing Engine
-*   **Multi-Currency Price Books**: Manage global pricing strategies.
-*   **Volume Pricing**: Tiered discounts based on quantity (e.g., 1-10 units @ $100, 11-50 @ $90).
-*   **Contract Pricing**: Customer-specific pre-negotiated prices.
+| Object Name | API Name | Description | Key Fields |
+|-------------|----------|-------------|------------|
+| **Product** | `product` | The catalog item. | `code`, `is_active`, `family` |
+| **Pricebook** | `pricebook` | A list of prices (e.g., USD Standard). | `currency`, `is_standard` |
+| **Pricebook Entry** | `pricebook_entry` | Price of Product A in Pricebook B. | `unit_price`, `product_id`, `pricebook_id` |
+| **Quote** | `quote` | A formal proposal to a customer. | `opportunity_id`, `expiration_date`, `status`, `grand_total` |
+| **Quote Line** | `quote_line_item` | Items on the proposal. | `quantity`, `list_price`, `discount`, `net_price` |
+| **Contract** | `contract` | The signed legal agreement. | `account_id`, `start_date`, `term_months` |
+| **Invoice** | `invoice` | Bill for payment. | `amount_due`, `due_date`, `status` |
 
-### 3. Quote Generation
-*   **One-Click PDF**: Generate professional proposals with dynamic terms and conditions.
-*   **E-Signature**: Integrated signature collection to close deals faster.
+### 1.2 Relationship Diagram
 
-## Subscription Management
+```mermaid
+erDiagram
+    PRODUCT ||--o{ PRICEBOOK_ENTRY : "priced in"
+    PRICEBOOK ||--o{ PRICEBOOK_ENTRY : "contains"
+    OPPORTUNITY ||--o{ QUOTE : "generates"
+    QUOTE ||--o{ QUOTE_LINE : "has"
+    QUOTE_LINE }o--|| PRODUCT : "references"
+    QUOTE ||--|| CONTRACT : "becomes"
+    CONTRACT ||--o{ INVOICE : "bills"
+```
 
-*   **Asset Lifecycle**: Track what the customer owns/subscribes to over time.
-*   **Amendments & Renewals**: Handle "Mid-term Upgrades," "Downgrades," and smooth "Renewal" quoting automation.
-*   **ARR/MRR Tracking**: Real-time visibility into Annual Recurring Revenue and revenue churn.
+## 2. Business Logic (Automation)
 
-## Billing & Finance
-*   **Invoice Generation**: Automatically convert Closed Won Opportunities/Orders into Invoices.
-*   **Payment Gateway**: Integration with Stripe/PayPal to collect payments.
-*   **Revenue Recognition**: ASC 606 / IFRS 15 compliant revenue schedules.
+### 2.1 Pricing Engine (`quote.calculate.action.ts`)
+Calculates the `net_price` for each line item.
+- **Formula**: `Unit Price` - `Volume Discount` - `Partner Discount`.
+- **Constraint**: If `discount > 20%`, trigger Approval Process.
+
+### 2.2 Sync to Opportunity (`quote.sync.hook.ts`)
+- **Trigger**: `after_update` (When Quote is made "Primary").
+- **Logic**: Overwrite `Opportunity.amount` and `OpportunityLineItems` with the Quote's data.
+
+### 2.3 Subscription Renewal (`contract.renew.action.ts`)
+- **Trigger**: Schedule (30 days before `end_date`).
+- **Logic**: 
+    1. Clone the existing Contract.
+    2. Apply "Uplift" (e.g., +5% price).
+    3. Create new Opportunity "Renewal".
+
+## 3. User Experience (UI)
+
+### 3.1 Quote Builder (`quote_builder.page.ts`)
+A specialized UI component (not just a standard form).
+- **Product Picker**: Searchable catalog with images.
+- **Line Editor**: Excel-like grid for editing Quantities and Discounts.
+- **Summary**: Real-time calculation of Grand Total and Margin.
+
+### 3.2 Invoice Generator (`invoice.view.ts`)
+- **Action**: "Generate PDF".
+- **Template**: Uses `packages/finance/src/templates/invoice.html` with merge fields.
+
+## 4. Security & Access
+
+- **Finance Team**: Full access to Pricebooks, Contracts, Invoices.
+- **Sales Rep**: Read Pricebooks, Create Quotes. No access to Invoices.

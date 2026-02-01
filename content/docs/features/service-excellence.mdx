@@ -1,36 +1,68 @@
 ---
-title: Service Excellence
-description: Deliver world-class support with Agentic AI and Omni-channel routing.
+title: Service Cloud
+description: The specifictions for Case Management, Knowledge Base, and SLA Engine.
 ---
 
-# Service Excellence
+# Service Cloud Subsystem
 
-HotCRM Service Cloud transforms your support center from a "cost center" to a "loyalty engine." We empower agents with the right context and tools to solve issues faster.
+The **Service Cloud** delivers high-velocity support capabilities, moving from reactive ticket handling to proactive customer success using Knowledge and AI.
 
-## Omni-Channel Support
+## 1. Domain Model (Schema)
 
-Meet customers where they are. All conversations flow into a unified **Agent Workspace**.
+### 1.1 Core Objects (`packages/support`)
 
-*   **Channels**: Email, Web Portal, Live Chat, WhatsApp, SMS, and Voice (CTI).
-*   **Unified Routing**: "Push" work to the right agent based on skill set, availability, and capacity.
-*   **Persistent Context**: If a customer switches from Chat to Phone, the agent sees the full history instantly.
+| Object Name | API Name | Description | Key Fields |
+|-------------|----------|-------------|------------|
+| **Case** | `case` | A customer issue or request. | `subject`, `priority`, `status`, `origin` |
+| **Case Comment** | `case_comment` | Thread of communication. | `body`, `is_public` |
+| **Knowledge Article** | `knowledge_kav` | Help content. | `title`, `body_html`, `category`, `status` |
+| **SLA Policy** | `entitlement` | Support agreement. | `account_id`, `start_date`, `sla_minutes` |
 
-## Case Management
+### 1.2 Relationship Diagram
 
-*   **SLA Engine**: Define complex Service Level Agreements (e.g., "Premium Support gets 1st response in 1 hour"). Visual countdown timers keep agents on track.
-*   **Escalation Rules**: Automatically escalate "at-risk" cases to managers before they breach SLA.
-*   **Milestones**: Track granular steps in the resolution process.
+```mermaid
+erDiagram
+    ACCOUNT ||--o{ CASE : "logs"
+    CONTACT ||--o{ CASE : "logs"
+    CASE ||--o{ CASE_COMMENT : "has"
+    CASE }o--o{ KNOWLEDGE_KAV : "attaches"
+    ACCOUNT ||--o{ ENTITLEMENT : "purchases"
+```
 
-## Knowledge & Self-Service
+## 2. Business Logic (Automation)
 
-*   **Knowledge Base**: Create, approve, and publish articles.
-*   **Contextual Suggestions**: AI analyzes the Case Subject/Description and side-loads relevant Help Articles for the agent.
-*   **Customer Portal**: A branded site where customers can log tickets, view status, and browse the knowledge base.
+### 2.1 Omni-Channel Routing (`case.route.action.ts`)
+- **Trigger**: `after_create`
+- **Logic**:
+    1.  Check `Case.origin` (Email, Phone, Web).
+    2.  Check `Case.priority`.
+    3.  Find available Agent in `support_queue`.
+    4.  Assign `owner_id` based on "Least Active" or "Skill Match".
 
-## Field Service (FSM)
+### 2.2 SLA Countdown (`case.sla.hook.ts`)
+- **Trigger**: `on_create`, `on_update`.
+- **Logic**:
+    - If `priority` == 'Critical', set `target_resolution_time` = Now + 2 hours.
+    - If `status` != 'Closed' AND `Now > target_resolution_time`, Trigger Escalation alert to Manager.
 
-For teams that work on-site.
+### 2.3 Knowledge Deflection (AI) (`knowledge.search.action.ts`)
+- **Action**: When User is typing case Subject on Portal.
+- **Logic**: Vector Search (`embedding(subject)`) against Knowledge Base.
+- **Output**: Return Top 3 Articles. If user clicks "Solved", abort Case creation.
 
-*   **Work Orders**: Track installations, repairs, and maintenance visits.
-*   **Dispatcher Console**: Drag-and-drop scheduling board for mobile technicians.
-*   **Mobile App**: Technicians can view job details, scan barcodes, and capture signatures offline.
+## 3. User Experience (UI)
+
+### 3.1 Agent Console (`service_console.app.ts`)
+A "Split View" application designed for high-density work.
+- **Left Panel**: List of "My Open Cases".
+- **Center Panel**: Current Case Workspace (Details, Chatter).
+- **Right Panel**: Knowledge Sidebar & AI Agent (Suggested Replies).
+
+### 3.2 Knowledge Editor (`knowledge.page.ts`)
+- **Layout**: Rich Text Editor for Content, Sidebar for Version/Language control.
+
+## 4. Security & Access
+
+- **Public**: Can read `is_public=true` Knowledge Articles.
+- **Customer**: Can Create/Read *own* Cases.
+- **Support Agent**: Can Read/Edit All Cases in assigned Queue.
