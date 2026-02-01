@@ -1,1140 +1,459 @@
 ---
-title: Sales Force Automation
-description: Account, Contact, Opportunity, and Activity management features
+title: Sales Force Automation  
+description: Manage customer relationships, track opportunities, and close more deals
 ---
 
-# Sales Force Automation Domain
+# Sales Force Automation
 
-The Sales Force Automation domain (销售域) standardizes sales activities and improves win rates through comprehensive customer relationship management.
+Empower your sales team with tools to manage customer relationships, track every opportunity, and close deals faster. HotCRM provides a complete view of your customers and pipeline so you can forecast accurately and drive predictable revenue growth.
 
-## Overview
+## What You Can Do
 
-**Key Objects**: `Account`, `Contact`, `Opportunity`, `Activity`, `Task`, `Note`, `CampaignMember`
+<Cards>
+  <Card title="Customer 360" icon="users">
+    Complete view of accounts, contacts, and interaction history
+  </Card>
+  <Card title="Pipeline Management" icon="trending-up">
+    Track deals through a proven 7-stage sales process
+  </Card>
+  <Card title="Activity Tracking" icon="calendar">
+    Log calls, meetings, and emails automatically
+  </Card>
+  <Card title="AI Predictions" icon="zap">
+    Win probability and revenue forecasting powered by AI
+  </Card>
+</Cards>
 
-**Main Goals**:
-- 360-degree customer view
-- Pipeline management with 7 sales stages
-- Activity tracking and collaboration
-- AI-powered win probability prediction
-- Relationship mapping and decision maker identification
+---
 
-## Customer 360 (Account Management)
+## Account Management (Customer 360)
 
-### Account Object
+### What is an Account?
 
-The Account object represents companies and organizations—your customers, prospects, partners, and competitors.
+An Account represents a company or organization—your customers, prospects, partners, or competitors. It's the central hub for all business relationships.
 
-#### Core Fields
+**Account Types:**
+- **Prospect** - Potential customer you're pursuing
+- **Customer** - Active paying customer
+- **Partner** - Business partner or reseller
+- **Competitor** - Market competitor (for competitive intelligence)
+- **Former Customer** - Churned customer
 
-| Field | Type | Description |
-|-------|------|-------------|
-| Name | Text | Company/customer name (required, unique) |
-| AccountNumber | Text | Unique customer account number |
-| Type | Picklist | Prospect, Customer, Partner, Competitor, Other |
-| Industry | Picklist | Technology, Finance, Manufacturing, Retail, etc. |
-| AnnualRevenue | Currency | Annual revenue of the company |
-| NumberOfEmployees | Number | Number of employees |
-| Rating | Picklist | Hot 🔥, Warm ⭐, Cold ❄️ |
-| CustomerStatus | Picklist | Prospect, Active Customer, Churned, On Hold |
-| HealthScore | Number | Customer health score (0-100) |
-| SLATier | Picklist | Platinum, Gold, Silver, Standard |
-| NextRenewalDate | Date | Next contract renewal date |
-| ContractValue | Currency | Total value of all active contracts (read-only) |
-| Phone | Phone | Main phone number |
-| Email | Email | Primary email address |
-| Website | URL | Company website |
-| ParentId | Reference | Parent account for hierarchies |
-| OwnerId | Reference | Account owner (required) |
+---
 
-#### Account Types
+### Key Information Tracked
 
-- **Prospect**: Potential customer, not yet purchased
-- **Customer**: Active paying customer
-- **Partner**: Business partner or reseller
-- **Competitor**: Competitive account
-- **Other**: Other relationship types
+#### Company Details
+- **Company Name** - Official business name
+- **Account Number** - Your internal customer ID
+- **Industry** - Technology, Finance, Healthcare, Manufacturing, etc.
+- **Company Size** - Number of employees
+- **Annual Revenue** - Company's yearly revenue
+- **Website** - Company website
 
-#### Account Hierarchy
+#### Relationship Status
+- **Account Rating** 
+  - 🔥 **Hot** - High priority, active engagement
+  - ⭐ **Warm** - Moderate engagement
+  - ❄️ **Cold** - Low priority or inactive
 
-Accounts support parent-child relationships for enterprise organizations:
+- **Customer Status**
+  - Prospect
+  - Active Customer
+  - Churned Customer
+  - On Hold
 
-```typescript
-// Get account with parent and children
-const account = await db.findOne('Account', accountId, {
-  related: {
-    ParentAccount: { fields: ['Name', 'Industry'] },
-    ChildAccounts: { fields: ['Name', 'CustomerStatus', 'ContractValue'] }
-  }
-});
-```
+- **Health Score** (0-100) - AI-calculated customer health
+  - 80-100: Excellent (expanding)
+  - 60-79: Good (stable)
+  - 40-59: At Risk (needs attention)
+  - 0-39: Critical (likely to churn)
 
-#### Customer Status Flow
+#### Business Value
+- **Contract Value** - Total value of active contracts
+- **SLA Tier** - Platinum, Gold, Silver, Bronze, Standard
+- **Next Renewal Date** - When contracts are up for renewal
+- **Lifetime Value** - Total revenue from this customer
 
-1. **Prospect** - Potential customer, not yet won
-2. **Active Customer** - Has active contract(s)
-3. **Churned** - Lost customer, contract ended
-4. **On Hold** - Temporarily paused engagement
+---
 
-### AI Features
+### Account Health Score
 
-#### News Monitoring & Risk Alerts
+HotCRM automatically calculates a health score (0-100) to identify at-risk accounts:
 
-AI monitors news about your accounts and alerts you to risks:
+**Factors Considered:**
+- **Engagement** (40 points) - Recent meetings, calls, email frequency
+- **Financial** (30 points) - On-time payments, upsell activity, revenue trend
+- **Relationship** (30 points) - Executive sponsor, multiple contacts engaged
 
-```typescript
-// AI automatically updates account risk factors
-{
-  name: 'AINewsMonitoring',
-  type: 'textarea',
-  label: 'AI News & Risk Alerts',
-  readonly: true,
-  description: 'Automatic news monitoring and risk detection'
-}
-```
+**Use Cases:**
+- **80-100**: Upsell opportunity - Engage for expansion
+- **60-79**: Healthy - Maintain regular cadence
+- **40-59**: At risk - Schedule executive review
+- **0-39**: Critical - Immediate intervention required
 
-**Example Alert**:
-```
-🚨 Risk Alert: Customer "Acme Corp" mentioned in news about layoffs.
-Recommend: Contact customer success team to assess renewal risk.
-```
-
-#### Interaction Summary
-
-AI summarizes key interactions and relationship timeline:
-
-```typescript
-const summary = await aiSummarizeAccountInteractions(accountId);
-// Returns:
-{
-  totalInteractions: 45,
-  lastContact: '2026-01-15',
-  keyPeople: ['John Doe (CTO)', 'Jane Smith (VP)'],
-  sentiment: 'Positive',
-  nextActions: ['Follow up on Q2 renewal', 'Demo new features']
-}
-```
-
-### List Views
-
-1. **All Accounts**: All customers in the system
-2. **My Accounts**: Accounts assigned to me
-3. **Active Customers**: CustomerStatus = Active Customer
-4. **At Risk**: Active customers with HealthScore < 50
-5. **High Value**: ContractValue > $100,000
-6. **Renewals Soon**: NextRenewalDate in next 90 days
+---
 
 ## Contact Management
 
-### Contact Object
+### What is a Contact?
 
-The Contact object represents individual people within Account organizations.
+A Contact represents an individual person at an account—your business relationships, decision makers, and influencers.
 
-#### Core Fields
+### Contact Roles
 
-| Field | Type | Description |
-|-------|------|-------------|
-| FirstName | Text | First name |
-| LastName | Text | Last name (required) |
-| Salutation | Picklist | Mr., Ms., Dr., Prof. |
-| AccountId | Master-Detail | Parent account (required) |
-| Title | Text | Job title |
-| Department | Text | Department |
-| Level | Picklist | C-Level, VP, Director, Manager, Individual Contributor |
-| Email | Email | Email address (unique) |
-| Phone | Phone | Work phone number |
-| MobilePhone | Phone | Mobile phone number |
-| IsDecisionMaker | Checkbox | Is this person a decision maker? |
-| InfluenceLevel | Picklist | High, Medium, Low |
-| RelationshipStrength | Picklist | Strong, Medium, Weak, Unknown |
-| PreferredContact | Picklist | Email, Phone, Mobile, WeChat |
-| LastContactDate | Date | Last time contacted (auto-updated) |
+- 👑 **Decision Maker** - Final approval authority
+- ⭐ **Champion** - Internal advocate for your solution
+- 🎯 **Influencer** - Influences decision but doesn't approve
+- 📋 **User** - End user of your product/service
+- ⛔ **Blocker** - Opposes or blocks the deal
 
-#### Job Levels
+---
 
-- **C-Level**: CEO, CTO, CFO, CMO
-- **VP**: Vice President level
-- **Director**: Director level
-- **Manager**: Manager level
-- **Individual Contributor**: Staff, specialist, engineer
+### Relationship Mapping
 
-#### Influence Levels
+Build a complete map of relationships at each account:
 
-- **High**: Final decision maker
-- **Medium**: Key influencer
-- **Low**: Regular participant
-
-### Decision Chain Mapping
-
-Identify and map the decision-making structure:
-
-```typescript
-// Get all decision makers for an account
-const decisionMakers = await db.find('Contact', {
-  filters: [
-    ['AccountId', '=', accountId],
-    ['IsDecisionMaker', '=', true]
-  ],
-  orderBy: { field: 'InfluenceLevel', direction: 'asc' }
-});
-
-// Strong relationships at high influence
-const keyContacts = await db.find('Contact', {
-  filters: [
-    ['AccountId', '=', accountId],
-    ['InfluenceLevel', '=', 'High'],
-    ['RelationshipStrength', '=', 'Strong']
-  ]
-});
+**Example: Enterprise Deal**
+```
+TechCorp Account
+│
+├── Sarah Chen (Decision Maker)
+│   VP of Sales | Budget: $500K+ | Champion ⭐
+│
+├── Mike Johnson (Influencer)
+│   Director of Sales Operations | Strong relationship 👍
+│
+├── Tom Wilson (User)
+│   Sales Manager | Satisfied with demo
+│
+└── Jennifer Lee (Blocker)
+    CFO | Concerned about cost ⚠️
 ```
 
-### AI Features
+**Why It Matters:**
+- Identify who you need to win over
+- Understand decision-making process
+- Build multi-threaded relationships
+- Reduce risk of single point of failure
 
-#### Relationship Graph Analysis
+---
 
-AI analyzes email patterns and interactions to build relationship maps:
+## Opportunity Management (Pipeline)
 
-```typescript
-// AI identifies true decision makers from email patterns
-const insights = await aiAnalyzeContactNetwork(accountId);
-// Returns:
-{
-  decisionMakers: [
-    {
-      name: 'John Doe',
-      title: 'CTO',
-      confidence: 95,
-      reason: 'CC\'d on all critical emails, final approver'
-    }
-  ],
-  influencers: [...],
-  relationshipStrength: {
-    'john.doe@example.com': 'Strong',
-    'jane.smith@example.com': 'Medium'
-  }
-}
+### What is an Opportunity?
+
+An Opportunity represents a specific sales deal—a potential or actual sale to an account. This is where you track deal progress, forecast revenue, and manage your sales pipeline.
+
+---
+
+### The 7-Stage Sales Process
+
+Every opportunity progresses through these stages:
+
+#### Stage 1: Prospecting (10% Win Probability)
+**What's Happening:** Initial contact made, interest confirmed, basic fit established
+
+**Exit Criteria:** Meeting scheduled, budget discussed, timeline identified
+
+**Duration:** 1-2 weeks
+
+---
+
+#### Stage 2: Qualification (20% Win Probability)
+**What's Happening:** BANT qualification (Budget, Authority, Need, Timeline)
+
+**BANT Framework:**
+- ✅ **Budget**: Can they afford it?
+- ✅ **Authority**: Who approves?
+- ✅ **Need**: Why do they need it?
+- ✅ **Timeline**: When will they buy?
+
+**Duration:** 1-2 weeks
+
+---
+
+#### Stage 3: Needs Analysis (40% Win Probability)
+**What's Happening:** Deep discovery, demo/POC, solution design
+
+**Exit Criteria:** Requirements documented, demo successful, technical validation passed
+
+**Duration:** 2-4 weeks
+
+---
+
+#### Stage 4: Proposal (60% Win Probability)
+**What's Happening:** Formal proposal submitted, pricing presented
+
+**Exit Criteria:** Proposal reviewed by stakeholders, questions answered
+
+**Duration:** 1-2 weeks
+
+---
+
+#### Stage 5: Negotiation (80% Win Probability)
+**What's Happening:** Contract negotiations, pricing discussions, implementation planning
+
+**Exit Criteria:** Terms agreed, pricing finalized, legal review complete
+
+**Duration:** 1-3 weeks
+
+---
+
+#### Stage 6: Closed Won (100% - Victory! 🎉)
+**Deal Characteristics:** Contract signed, purchase order received
+
+**Next Steps:** Handoff to customer success, schedule implementation
+
+---
+
+#### Stage 7: Closed Lost (0% - Learn and Move On)
+**Common Reasons:** Lost to competitor, no budget, no decision/timing
+
+**Important Actions:** Document loss reason, request feedback, stay in touch
+
+---
+
+### Opportunity Fields
+
+| Field | Description | Example |
+|-------|-------------|---------|
+| **Opportunity Name** | Descriptive deal name | "TechCorp - CRM Implementation" |
+| **Account** | Which company | TechCorp Inc. |
+| **Primary Contact** | Main contact | Sarah Chen |
+| **Amount** | Deal value | $75,000 |
+| **Close Date** | Expected close | March 31, 2026 |
+| **Stage** | Current stage | Proposal |
+| **Probability** | Win likelihood | 60% |
+| **Lead Source** | How generated | Webinar |
+| **Type** | Deal type | New Business |
+| **Next Steps** | What's next | "Send proposal by Friday" |
+
+---
+
+### AI Win Probability
+
+HotCRM uses AI to predict your likelihood of winning each deal based on:
+- Deal characteristics and engagement metrics
+- Historical patterns and win rates
+- Competitive situation
+
+**Example:**
+```
+Opportunity: TechCorp - CRM Implementation
+Stage: Proposal (default 60%)
+
+AI Adjustments:
++ Champion identified (+10%)
++ Multiple stakeholders engaged (+5%)
+- Competitor in final round (-10%)
+
+AI Win Probability: 65%
+Recommendation: Schedule executive meeting to address competition
 ```
 
-### List Views
-
-1. **All Contacts**: All contacts in the system
-2. **Decision Makers**: IsDecisionMaker = true
-3. **Key Influencers**: InfluenceLevel in [High, Medium]
-4. **Strong Relationships**: RelationshipStrength = Strong
-
-## Opportunity Management
-
-### Opportunity Object
-
-The Opportunity object represents sales deals in your pipeline.
-
-#### Core Fields
-
-| Field | Type | Description |
-|-------|------|-------------|
-| Name | Text | Opportunity name (required) |
-| AccountId | Reference | Related customer account (required) |
-| ContactId | Reference | Primary contact person |
-| Amount | Currency | Deal amount |
-| CloseDate | Date | Expected close date (required) |
-| Stage | Picklist | Sales stage (required) |
-| Probability | Percent | Win probability (%) |
-| NextStep | Text | Next action to take |
-| LeadSource | Picklist | How the opportunity originated |
-| ForecastCategory | Picklist | Pipeline, Best Case, Commit, Omitted, Closed |
-| Type | Picklist | New Business, Upgrade, Renewal, Replacement |
-| ExpectedRevenue | Currency | Amount × Probability (calculated) |
-| DaysOpen | Number | Days since creation (calculated) |
-| OwnerId | Reference | Opportunity owner (required) |
-
-#### Sales Stages with Probabilities
-
-HotCRM uses a 7-stage sales process:
-
-1. **🔍 Prospecting** (10% probability) - Identifying potential opportunities
-2. **📞 Qualification** (20%) - Validating fit and budget
-3. **💡 Needs Analysis** (40%) - Understanding requirements
-4. **📊 Proposal** (60%) - Presenting solution
-5. **💰 Negotiation** (80%) - Finalizing terms
-6. **✅ Closed Won** (100%) - Deal won!
-7. **❌ Closed Lost** (0%) - Deal lost
-
-**Stage Progression**:
-```typescript
-// Move opportunity to next stage
-await db.doc.update('Opportunity', oppId, {
-  Stage: 'Proposal',
-  Probability: 60,
-  NextStep: 'Present demo to decision makers'
-});
-```
-
-#### Opportunity Types
-
-- **New Business**: First-time customer
-- **Existing Business - Upgrade**: Upsell/cross-sell
-- **Existing Business - Renewal**: Contract renewal
-- **Existing Business - Replacement**: Replacing competitor
-
-### Expected Revenue Calculation
-
-Expected revenue is automatically calculated:
-
-```typescript
-ExpectedRevenue = Amount × (Probability / 100)
-```
-
-**Example**:
-- Amount: $100,000
-- Probability: 60%
-- ExpectedRevenue: $60,000
-
-### AI Features
-
-HotCRM provides 5 AI-powered fields for each opportunity:
-
-#### 1. AI Summary (AISummary)
-
-Win/loss analysis and deal insights:
-
-```typescript
-"High-value enterprise deal with strong champion (John Doe, CTO).
-Key risk: Long evaluation cycle (120 days). Competitor: Salesforce.
-Recommendation: Accelerate with executive briefing."
-```
-
-#### 2. AI Next Step Suggestion (AINextStepSuggestion)
-
-Best follow-up tactics:
-
-```typescript
-"Schedule executive briefing with CEO within 2 weeks.
-Prepare ROI analysis showing 300% return over 3 years.
-Address security concerns raised in last meeting."
-```
-
-#### 3. AI Win Probability (AIWinProbability)
-
-Data-driven success prediction:
-
-```typescript
-{
-  winProbability: 72,
-  factors: {
-    positive: [
-      'Strong champion relationship',
-      'Budget confirmed',
-      'Decision date set'
-    ],
-    negative: [
-      'Competitor engaged',
-      'Economic buyer not identified'
-    ]
-  }
-}
-```
-
-#### 4. AI Risk Factors (AIRiskFactors)
-
-Potential deal risks:
-
-```typescript
-"⚠️ Risks:
-1. Long sales cycle (120+ days) - May lose urgency
-2. No executive sponsor identified
-3. Competitor has existing relationship
-4. Budget not yet approved"
-```
-
-#### 5. AI Competitive Intelligence (AICompetitiveIntel)
-
-Competitor insights:
-
-```typescript
-"Competing against Salesforce. Key differentiators:
-- Our pricing is 40% lower
-- Better China deployment options
-- Superior customization
-Weaknesses: Brand recognition, ecosystem size"
-```
-
-### Example Workflow: Moving Through Pipeline
-
-```typescript
-// 1. Create new opportunity
-const opp = await db.doc.create('Opportunity', {
-  Name: 'Acme Corp - CRM Implementation',
-  AccountId: acmeAccountId,
-  ContactId: johndoeContactId,
-  Amount: 150000,
-  CloseDate: '2026-06-30',
-  Stage: 'Prospecting',
-  LeadSource: 'Trade Show',
-  Type: 'New Business',
-  OwnerId: currentUserId
-});
-
-// 2. Qualify the opportunity
-await db.doc.update('Opportunity', opp.Id, {
-  Stage: 'Qualification',
-  Probability: 20,
-  NextStep: 'Conduct discovery call to understand requirements'
-});
-
-// 3. Present proposal
-await db.doc.update('Opportunity', opp.Id, {
-  Stage: 'Proposal',
-  Probability: 60,
-  Amount: 180000, // Adjusted after scoping
-  NextStep: 'Present proposal to decision committee'
-});
-
-// 4. Win the deal!
-await db.doc.update('Opportunity', opp.Id, {
-  Stage: 'Closed Won',
-  Probability: 100,
-  CloseDate: new Date() // Actual close date
-});
-// This automatically triggers contract creation
-```
-
-### List Views
-
-1. **All Opportunities**: All deals in the system
-2. **My Open Opportunities**: My deals not yet closed
-3. **Closing This Month**: CloseDate in current month
-4. **High Value Deals**: Amount > $100,000
-5. **Stagnant Opportunities**: DaysOpen > 90 days
-6. **Won Opportunities**: Stage = Closed Won
+---
 
 ## Activity Tracking
 
-### Activity Object
+### Activity Types
 
-The Activity object logs all sales interactions and tasks.
+📞 **Call** - Phone conversations with duration and notes
 
-#### Core Fields
+📅 **Meeting** - In-person or virtual meetings with attendees
 
-| Field | Type | Description |
-|-------|------|-------------|
-| Subject | Text | Activity subject (required) |
-| Type | Picklist | Call, Email, Meeting, Task, Demo, etc. |
-| Status | Picklist | Planned, In Progress, Completed, Cancelled |
-| Priority | Picklist | High, Medium, Low |
-| ActivityDate | DateTime | When the activity occurs (required) |
-| DueDate | Date | Task due date |
-| EndDateTime | DateTime | Activity end time |
-| DurationInMinutes | Number | How long the activity lasted |
-| WhoId | Reference | Related Contact or Lead |
-| WhatId | Reference | Related Account, Opportunity, or Contract |
-| Location | Text | Where the activity takes place |
-| IsOnline | Checkbox | Is this an online meeting? |
-| MeetingLink | URL | Zoom/Teams/Meeting link |
-| Description | Textarea | Activity notes |
-| OwnerId | Reference | Activity owner (required) |
+📧 **Email** - Email correspondence with tracking
 
-#### Activity Types
+✅ **Task** - Action items with due dates
 
-- **📞 Call**: Phone calls (inbound/outbound)
-- **📧 Email**: Email communications
-- **🤝 Meeting**: In-person or virtual meetings
-- **📝 Task**: To-do items
-- **🎤 Demo**: Product demonstrations
-- **📊 Proposal**: Proposal presentations
-- **🍽️ Business Lunch**: Customer meals
-- **🎯 Other**: Other activities
+📝 **Note** - Important observations and insights
 
-#### Activity Status
+---
 
-1. **📋 Planned** - Scheduled, not started
-2. **🚀 In Progress** - Currently happening
-3. **✅ Completed** - Finished
-4. **❌ Cancelled** - Cancelled
-5. **⏰ Deferred** - Postponed
+### Activity Best Practices
 
-### Check-In Capability (拜访签到)
+**1. Log Every Interaction** - Build complete customer history
 
-For field sales, track visit locations:
+**2. Be Specific in Notes**
+- ❌ Bad: "Talked to Sarah about CRM"
+- ✅ Good: "Sarah confirmed $75K budget. Prefers Q2 implementation. Concerned about Salesforce migration. Next: Send migration plan by Friday."
 
-```typescript
-// Mobile check-in
-await db.doc.create('Activity', {
-  Subject: 'On-site visit to Acme Corp',
-  Type: 'Meeting',
-  WhatId: accountId,
-  WhoId: contactId,
-  ActivityDate: new Date(),
-  CheckInTime: new Date(),
-  CheckInLocation: '123 Main St, San Francisco, CA',
-  CheckInLatitude: 37.7749,
-  CheckInLongitude: -122.4194
-});
+**3. Set Follow-up Tasks** - Every activity should create next action
+
+**4. Update Opportunities** - Change stage when appropriate, update close date if timeline shifts
+
+---
+
+## Sales Reporting & Analytics
+
+### Pipeline Analytics
+
+**Key Metrics:**
+- **Pipeline Value** - Total value of all open opportunities
+- **Pipeline Coverage** - Pipeline Value ÷ Quota (Target: 3-4x)
+- **Win Rate** - Closed Won ÷ (Closed Won + Closed Lost)
+- **Average Sales Cycle** - Time from opportunity creation to close
+
+**Example Pipeline:**
+```
+Total Pipeline: $2.5M
+
+By Stage:
+- Prospecting: $500K (20%)
+- Qualification: $400K (16%)
+- Needs Analysis: $600K (24%)
+- Proposal: $500K (20%)
+- Negotiation: $500K (20%)
 ```
 
-### Call Details
+---
 
-Track detailed call information:
+### Win Rate Analysis
 
-| Field | Description |
-|-------|-------------|
-| CallType | Outbound, Inbound, Internal |
-| CallDurationInSeconds | Actual call duration |
-| CallResult | Connected, Not Connected, Left Message, Call Back Later, Rejected |
+**Industry Benchmarks:**
+- Enterprise B2B: 15-25%
+- Mid-Market: 20-30%
+- SMB: 25-35%
 
-### Email Integration
-
-Track email communications:
-
-| Field | Description |
-|-------|-------------|
-| EmailSubject | Email subject line |
-| EmailBody | Email content |
-| EmailFromAddress | Sender |
-| EmailToAddress | Recipient |
-| EmailCcAddress | CC list |
-
-### AI Features
-
-#### Voice-to-Text Transcription (AITranscription)
-
-Automatically transcribe meeting recordings:
-
-```typescript
-"[Meeting Transcript]
-John (CTO): We need to migrate 500 users by Q2.
-Sales Rep: Our platform supports bulk migration with zero downtime.
-John: What about data security?
-Sales Rep: We're SOC 2 Type II certified and GDPR compliant..."
+**By Stage Conversion:**
+```
+Prospecting → Qualification: 60%
+Qualification → Needs Analysis: 70%
+Needs Analysis → Proposal: 80%
+Proposal → Negotiation: 75%
+Negotiation → Closed Won: 85%
 ```
 
-#### Action Item Extraction (AIActionItems)
+---
 
-AI extracts to-dos from meetings:
+## AI-Powered Sales Features
 
-```typescript
-"Action Items:
-1. [Sales Rep] Send security documentation by Friday
-2. [Sales Rep] Schedule demo for IT team next week
-3. [John] Get budget approval from CFO
-4. [John] Introduce us to VP of Operations"
-```
+### 1. Smart Deal Briefing
+AI-generated summaries of accounts and opportunities for quick context before meetings
 
-#### Sentiment Analysis (AISentimentAnalysis)
+### 2. Next Best Action
+AI suggests what to do next to move deals forward based on historical patterns
 
-Understand customer mood:
+### 3. Relationship Insights
+AI analyzes communication patterns to identify engagement gaps
 
-- **😊 Positive**: Enthusiastic, engaged
-- **😐 Neutral**: Professional, informational
-- **😟 Negative**: Concerned, hesitant
+### 4. Deal Risk Analysis
+Identify at-risk deals before they slip with predictive analytics
 
-#### Key Points Summary (AIKeyPoints)
-
-AI summarizes meeting highlights:
-
-```typescript
-"Key Points:
-- Customer needs 500-user deployment by Q2
-- Budget confirmed at $150K
-- Main concerns: data security, migration complexity
-- Competitor: Currently using Salesforce
-- Next step: Technical demo for IT team"
-```
-
-#### Next Step Suggestions (AINextStepSuggestion)
-
-AI recommends follow-up actions:
-
-```typescript
-"Recommended next steps:
-1. Send security compliance documentation within 24 hours
-2. Schedule technical deep-dive demo for IT team
-3. Prepare ROI analysis comparing total cost vs. Salesforce
-4. Request introduction to VP of Operations"
-```
-
-### Example Workflow: Logging a Customer Meeting
-
-```typescript
-// 1. Create meeting activity
-const meeting = await db.doc.create('Activity', {
-  Subject: 'Discovery Call - CRM Requirements',
-  Type: 'Meeting',
-  Status: 'Planned',
-  Priority: 'High',
-  ActivityDate: '2026-02-15T14:00:00',
-  DurationInMinutes: 60,
-  WhoId: contactId,
-  WhatId: opportunityId,
-  IsOnline: true,
-  MeetingLink: 'https://zoom.us/j/123456789',
-  Description: 'Discuss requirements for CRM implementation'
-});
-
-// 2. After meeting, update with notes
-await db.doc.update('Activity', meeting.Id, {
-  Status: 'Completed',
-  EndDateTime: '2026-02-15T15:00:00',
-  Description: `
-    Discussed current pain points and requirements.
-    Customer needs:
-    - 500 users
-    - Multi-currency support
-    - Integration with existing ERP
-    - Mobile access
-    
-    Concerns:
-    - Data migration complexity
-    - Training requirements
-    
-    Next steps:
-    - Send proposal by EOW
-    - Schedule demo for IT team
-  `
-});
-
-// 3. AI automatically generates insights
-// AITranscription, AIActionItems, AISentimentAnalysis are populated
-```
-
-### List Views
-
-1. **All Activities**: All activities in the system
-2. **My Activities**: Activities owned by me
-3. **Today Activities**: Today's activities
-4. **Upcoming Activities**: Next 7 days
-5. **Overdue Activities**: Past due date and not completed
-6. **Meetings**: Completed meetings with notes
+---
 
 ## Best Practices
 
-### Account Management
+### For Sales Reps
 
-1. **Complete Profiles**: Fill in industry, revenue, employees for better segmentation
-2. **Set Health Scores**: Regularly update health scores for at-risk customer identification
-3. **Maintain Hierarchies**: Use parent-child relationships for enterprise accounts
-4. **Track SLA Tiers**: Assign appropriate service levels
-5. **Monitor Renewals**: Set NextRenewalDate for proactive renewal management
+✅ **Keep CRM Updated**
+- Log all activities same day
+- Update opportunity stages weekly
+- Record next steps after every interaction
 
-### Contact Management
+✅ **Build Relationships**
+- Engage multiple stakeholders
+- Identify champions early
+- Map decision-making process
 
-1. **Identify Decision Makers**: Mark IsDecisionMaker and set InfluenceLevel
-2. **Build Relationships**: Track RelationshipStrength and nurture key contacts
-3. **Keep Current**: Update LastContactDate after each interaction
-4. **Respect Preferences**: Honor PreferredContact settings
-5. **Map Organization**: Understand department and reporting structures
+✅ **Qualify Rigorously**
+- Use BANT framework
+- Understand competition
+- Validate budget and timeline
 
-### Opportunity Management
+---
 
-1. **Update Regularly**: Keep Stage, Amount, and CloseDate current
-2. **Document Next Steps**: Always have clear NextStep defined
-3. **Qualify Thoroughly**: Don't skip the qualification stage
-4. **Monitor Age**: Review DaysOpen to identify stagnant deals
-5. **Use AI Insights**: Leverage AI recommendations for strategy
-6. **Close Loop**: Always mark as Closed Won or Closed Lost
+### For Sales Managers
 
-### Activity Tracking
+✅ **Pipeline Management**
+- Maintain 3-4x pipeline coverage
+- Review pipeline weekly with each rep
+- Identify and remove stalled deals
 
-1. **Log Everything**: Track all customer interactions
-2. **Be Timely**: Log activities within 24 hours
-3. **Use AI Features**: Enable voice transcription for meetings
-4. **Link Properly**: Always link WhoId (Contact) and WhatId (Account/Opportunity)
-5. **Follow Up**: Create follow-up tasks immediately after meetings
-6. **Review Action Items**: Check AI-extracted action items for accuracy
+✅ **Forecasting**
+- Use data, not gut feel
+- Review historical win rates
+- Build in buffer for slippage
 
-## Example Workflows
+✅ **Team Development**
+- Review activity metrics
+- Identify coaching opportunities
+- Share best practices
 
-### New Customer Acquisition
+---
 
-```typescript
-// 1. Create account
-const account = await db.doc.create('Account', {
-  Name: 'Acme Corporation',
-  Type: 'Prospect',
-  Industry: 'Technology',
-  Phone: '+1-555-0100',
-  OwnerId: currentUserId
-});
+## Common Workflows
 
-// 2. Add primary contact
-const contact = await db.doc.create('Contact', {
-  FirstName: 'John',
-  LastName: 'Doe',
-  AccountId: account.Id,
-  Title: 'CTO',
-  Level: 'C-Level',
-  Email: 'john.doe@acme.com',
-  IsDecisionMaker: true,
-  InfluenceLevel: 'High'
-});
-
-// 3. Create opportunity
-const opportunity = await db.doc.create('Opportunity', {
-  Name: 'Acme Corp - CRM Implementation',
-  AccountId: account.Id,
-  ContactId: contact.Id,
-  Amount: 150000,
-  CloseDate: '2026-06-30',
-  Stage: 'Prospecting',
-  Type: 'New Business',
-  OwnerId: currentUserId
-});
-
-// 4. Schedule discovery call
-const activity = await db.doc.create('Activity', {
-  Subject: 'Discovery Call - CRM Requirements',
-  Type: 'Meeting',
-  Priority: 'High',
-  ActivityDate: '2026-02-20T10:00:00',
-  WhoId: contact.Id,
-  WhatId: opportunity.Id,
-  OwnerId: currentUserId
-});
+### New Opportunity Workflow
+```
+Lead converts → Stage: Prospecting
+→ Schedule discovery call
+→ BANT qualification
+→ Stage: Qualification
+→ Conduct demo
+→ Stage: Needs Analysis
+→ Create proposal
+→ Stage: Proposal
+→ Negotiate terms
+→ Stage: Negotiation
+→ Close deal
+→ Stage: Closed Won!
 ```
 
-### Pipeline Review
-
-```typescript
-// Get all my opportunities closing this quarter
-const myPipeline = await db.find('Opportunity', {
-  filters: [
-    ['OwnerId', '=', currentUserId],
-    ['CloseDate', 'this_quarter'],
-    ['Stage', 'not in', ['Closed Won', 'Closed Lost']]
-  ],
-  orderBy: { field: 'Amount', direction: 'desc' }
-});
-
-// Calculate total expected revenue
-const totalExpectedRevenue = myPipeline.reduce(
-  (sum, opp) => sum + (opp.ExpectedRevenue || 0),
-  0
-);
-
-console.log(`Total pipeline: $${totalExpectedRevenue.toLocaleString()}`);
-```
-
-## Task Management
-
-### Task Object
-
-Tasks represent work items, to-dos, and follow-ups for sales reps.
-
-#### Core Fields
-
-| Field | Type | Description |
-|-------|------|-------------|
-| Subject | Text | Task subject (required) |
-| Description | Textarea | Task details |
-| Priority | Picklist | High, Normal, Low |
-| Status | Picklist | Not Started, In Progress, Completed, Waiting, Deferred |
-| DueDate | Date | Due date |
-| ReminderDateTime | DateTime | Reminder time |
-| OwnerId | Reference | Assigned to user (required) |
-| WhatId | Reference | Related Account, Opportunity, etc. |
-| WhoId | Reference | Related Contact or Lead |
-| ActivityType | Picklist | Call, Email, Meeting, Follow-up, Demo |
-| IsRecurring | Checkbox | Recurring task |
-| RecurrencePattern | Text | Daily, Weekly, Monthly pattern |
-| CompletedDate | DateTime | When completed |
-
-**Example Usage**:
-```typescript
-// Create follow-up task
-await db.doc.create('Task', {
-  Subject: 'Follow up on proposal',
-  Description: 'Check if customer has any questions about pricing',
-  Priority: 'High',
-  Status: 'Not Started',
-  DueDate: addDays(new Date(), 2),
-  ReminderDateTime: addDays(new Date(), 1, 14, 0), // Tomorrow at 2pm
-  OwnerId: salesRepId,
-  WhatId: opportunityId,
-  WhoId: decisionMakerId,
-  ActivityType: 'Follow-up'
-});
-
-// Complete task
-await db.doc.update('Task', taskId, {
-  Status: 'Completed',
-  CompletedDate: new Date()
-});
-
-// Create recurring weekly check-in
-await db.doc.create('Task', {
-  Subject: 'Weekly account review',
-  Priority: 'Normal',
-  Status: 'Not Started',
-  DueDate: new Date(),
-  OwnerId: accountManagerId,
-  WhatId: accountId,
-  ActivityType: 'Meeting',
-  IsRecurring: true,
-  RecurrencePattern: 'Weekly on Monday at 9:00 AM'
-});
-```
-
-### Task List Views
-
-1. **My Tasks**: Tasks owned by me, not completed
-2. **Today's Tasks**: Due today
-3. **Overdue Tasks**: Past due date, not completed
-4. **High Priority**: Priority = High, not completed
-5. **This Week**: Due within next 7 days
-6. **Completed Tasks**: Status = Completed
-7. **Account Tasks**: Tasks related to specific account
-
-## Notes & Collaboration
-
-### Note Object
-
-Notes capture important information, insights, and updates on records.
-
-#### Core Fields
-
-| Field | Type | Description |
-|-------|------|-------------|
-| Title | Text | Note title (required) |
-| Body | Textarea | Note content (required) |
-| OwnerId | Reference | Note creator (required) |
-| ParentId | Reference | Related record (Account, Opp, Contact, etc.) |
-| IsPrivate | Checkbox | Private note (only visible to owner) |
-| IsPinned | Checkbox | Pinned to top of timeline |
-| Tags | Text | Comma-separated tags |
-| MentionedUserIds | Text | @mentioned users (comma-separated IDs) |
-
-**Example Usage**:
-```typescript
-// Add customer insight note
-await db.doc.create('Note', {
-  Title: 'Customer Pain Points Discovered',
-  Body: `During today's call, customer mentioned:
-  - Current CRM is too complex
-  - Mobile app is essential (50% of team is remote)
-  - Need better reporting for executives
-  - Budget approved: $50K
-  
-  Next step: Send mobile demo video`,
-  OwnerId: salesRepId,
-  ParentId: opportunityId,
-  IsPrivate: false,
-  IsPinned: true,
-  Tags: 'discovery, pain-points, mobile'
-});
-
-// Private internal note
-await db.doc.create('Note', {
-  Title: 'Competitive Intel',
-  Body: 'Customer is also evaluating Salesforce. Pricing is main concern.',
-  OwnerId: salesRepId,
-  ParentId: accountId,
-  IsPrivate: true, // Only visible to owner
-  Tags: 'competitive, salesforce'
-});
-
-// Collaborate with @mentions
-await db.doc.create('Note', {
-  Title: 'Need Engineering Help',
-  Body: '@john-doe Can you join the demo next week? Customer wants to see API integration capabilities.',
-  OwnerId: salesRepId,
-  ParentId: opportunityId,
-  MentionedUserIds: 'john-doe',
-  Tags: 'demo, api, technical'
-});
-
-// Trigger: Send notification to @mentioned users
-// (Automatic notification sent to john-doe)
-```
-
-**Note Organization**:
-```typescript
-// Pin important notes
-await db.doc.update('Note', noteId, {
-  IsPinned: true
-});
-
-// Tag for easy filtering
-const technicalNotes = await db.find('Note', {
-  filters: [
-    ['ParentId', '=', opportunityId],
-    ['Tags', 'contains', 'technical']
-  ]
-});
-
-// Find notes mentioning you
-const myMentions = await db.find('Note', {
-  filters: [
-    ['MentionedUserIds', 'contains', currentUserId]
-  ],
-  orderBy: { field: 'CreatedDate', direction: 'desc' }
-});
-```
-
-## Campaign Member Management
-
-### Campaign Member Object
-
-Tracks which contacts/leads are part of which marketing campaigns.
-
-#### Core Fields
-
-| Field | Type | Description |
-|-------|------|-------------|
-| CampaignId | Reference | Campaign (required) |
-| ContactId | Reference | Contact (if converted lead) |
-| LeadId | Reference | Lead (if not yet converted) |
-| Status | Picklist | Sent, Responded, Clicked, Opened, Bounced, etc. |
-| MemberStatus | Picklist | Campaign-specific status |
-| HasResponded | Checkbox | Member responded to campaign |
-| FirstRespondedDate | DateTime | First response date |
-| EmailBounced | Checkbox | Email bounced |
-| BouncedReason | Text | Bounce reason |
-| DoNotCall | Checkbox | Do not call this member |
-| DoNotEmail | Checkbox | Do not email this member |
-| OptedOut | Checkbox | Opted out of communications |
-| JoinedDate | DateTime | When added to campaign |
-| Source | Picklist | How added (Manual, Import, Web Form, API) |
-
-**Example Usage**:
-```typescript
-// Add contact to email campaign
-await db.doc.create('CampaignMember', {
-  CampaignId: emailCampaignId,
-  ContactId: contactId,
-  Status: 'Sent',
-  MemberStatus: 'Email Sent',
-  JoinedDate: new Date(),
-  Source: 'Manual'
-});
-
-// Track email engagement
-await db.doc.update('CampaignMember', memberId, {
-  Status: 'Opened',
-  MemberStatus: 'Email Opened'
-});
-
-// Track response
-await db.doc.update('CampaignMember', memberId, {
-  Status: 'Responded',
-  MemberStatus: 'Downloaded Whitepaper',
-  HasResponded: true,
-  FirstRespondedDate: new Date()
-});
-
-// Handle bounced email
-await db.doc.update('CampaignMember', memberId, {
-  Status: 'Bounced',
-  EmailBounced: true,
-  BouncedReason: 'Invalid email address'
-});
-
-// Respect opt-out
-await db.doc.update('CampaignMember', memberId, {
-  OptedOut: true,
-  DoNotEmail: true
-});
-```
-
-### Campaign Member Statuses
-
-Campaign member statuses are campaign-specific and customizable:
-
-**Email Campaign Statuses**:
-- Sent
-- Opened
-- Clicked
-- Downloaded
-- Responded
-- Bounced
-- Unsubscribed
-
-**Event Campaign Statuses**:
-- Invited
-- Registered
-- Attended
-- No-Show
-- Cancelled
-
-**Webinar Campaign Statuses**:
-- Invited
-- Registered
-- Attended Live
-- Watched Recording
-- No-Show
-
-**Example: Event Campaign Workflow**:
-```typescript
-// 1. Invite contacts to event
-const invitees = await getTargetContacts({ industry: 'Technology' });
-for (const contact of invitees) {
-  await db.doc.create('CampaignMember', {
-    CampaignId: techSummitId,
-    ContactId: contact.Id,
-    Status: 'Invited',
-    MemberStatus: 'Invited',
-    Source: 'Manual'
-  });
-}
-
-// 2. Contact registers
-await db.doc.update('CampaignMember', memberId, {
-  Status: 'Registered',
-  MemberStatus: 'Registered',
-  HasResponded: true,
-  FirstRespondedDate: new Date()
-});
-
-// 3. Check-in at event
-await db.doc.update('CampaignMember', memberId, {
-  Status: 'Attended',
-  MemberStatus: 'Attended'
-});
-
-// 4. Measure campaign ROI
-const campaignStats = await db.query(`
-  SELECT 
-    CampaignId,
-    COUNT(Id) as TotalMembers,
-    COUNT(CASE WHEN HasResponded THEN 1 END) as Responders,
-    COUNT(CASE WHEN Status = 'Attended' THEN 1 END) as Attendees
-  FROM CampaignMember
-  WHERE CampaignId = '${techSummitId}'
-  GROUP BY CampaignId
-`);
-
-// 5. Create follow-up tasks for attendees
-const attendees = await db.find('CampaignMember', {
-  filters: [
-    ['CampaignId', '=', techSummitId],
-    ['Status', '=', 'Attended']
-  ]
-});
-
-for (const attendee of attendees) {
-  await db.doc.create('Task', {
-    Subject: 'Follow up on Tech Summit attendance',
-    DueDate: addDays(new Date(), 3),
-    OwnerId: attendee.Contact.OwnerId,
-    WhoId: attendee.ContactId,
-    ActivityType: 'Follow-up'
-  });
-}
-```
-
-### Campaign Attribution
-
-Link campaign members to opportunities for ROI tracking:
-
-```typescript
-// When creating opportunity from campaign member
-await db.doc.create('Opportunity', {
-  Name: `${contact.Account.Name} - CRM Project`,
-  AccountId: contact.AccountId,
-  ContactId: contact.Id,
-  CampaignId: campaignMember.CampaignId, // Track campaign source
-  LeadSource: 'Tech Summit Event',
-  Amount: 50000,
-  Stage: 'Prospecting'
-});
-
-// Report: Campaign ROI
-const campaignROI = await db.query(`
-  SELECT 
-    c.Name as CampaignName,
-    c.BudgetedCost,
-    COUNT(o.Id) as OpportunitiesGenerated,
-    SUM(CASE WHEN o.Stage = 'Closed Won' THEN o.Amount ELSE 0 END) as Revenue,
-    SUM(CASE WHEN o.Stage = 'Closed Won' THEN o.Amount ELSE 0 END) / c.BudgetedCost as ROI
-  FROM Campaign c
-  LEFT JOIN Opportunity o ON o.CampaignId = c.Id
-  WHERE c.Status = 'Completed'
-  GROUP BY c.Id, c.Name, c.BudgetedCost
-  ORDER BY ROI DESC
-`);
-```
-
-## Complete Sales Process Workflow
-
-```typescript
-// 1. Campaign generates lead
-const lead = await db.doc.create('Lead', {
-  FirstName: 'John',
-  LastName: 'Doe',
-  Company: 'ACME Corp',
-  Email: 'john.doe@acme.com',
-  LeadSource: 'Tech Summit Event',
-  Status: 'New'
-});
-
-// 2. Add to campaign
-await db.doc.create('CampaignMember', {
-  CampaignId: techSummitId,
-  LeadId: lead.Id,
-  Status: 'Attended'
-});
-
-// 3. Sales rep qualifies lead
-await db.doc.update('Lead', lead.Id, {
-  Status: 'Qualified',
-  Rating: 'Hot'
-});
-
-// 4. Convert lead to Account, Contact, Opportunity
-const conversion = await convertLead(lead.Id);
-
-// 5. Add discovery notes
-await db.doc.create('Note', {
-  Title: 'Discovery Call Summary',
-  Body: 'Customer needs CRM for 50 users. Budget: $50K. Timeline: Q2.',
-  ParentId: conversion.OpportunityId,
-  Tags: 'discovery, budget-approved'
-});
-
-// 6. Create follow-up task
-await db.doc.create('Task', {
-  Subject: 'Send proposal',
-  DueDate: addDays(new Date(), 2),
-  OwnerId: salesRepId,
-  WhatId: conversion.OpportunityId,
-  ActivityType: 'Email'
-});
-
-// 7. Log sales activity
-await db.doc.create('Activity', {
-  Subject: 'Discovery call with John',
-  ActivityType: 'Call',
-  AccountId: conversion.AccountId,
-  ContactId: conversion.ContactId,
-  OpportunityId: conversion.OpportunityId,
-  Duration: 45,
-  CallResult: 'Qualified',
-  Notes: 'Strong interest. Sending proposal Friday.'
-});
-
-// 8. Move opportunity through stages
-await db.doc.update('Opportunity', conversion.OpportunityId, {
-  Stage: 'Proposal'
-});
-
-// ... create quote, get approval, send proposal ...
-
-// 9. Win the deal
-await db.doc.update('Opportunity', conversion.OpportunityId, {
-  Stage: 'Closed Won',
-  CloseDate: new Date()
-});
-
-// 10. Create onboarding tasks
-await db.doc.create('Task', {
-  Subject: 'Schedule kickoff call',
-  Priority: 'High',
-  DueDate: addDays(new Date(), 1),
-  OwnerId: customerSuccessManagerId,
-  WhatId: conversion.AccountId
-});
-```
-
-## Next Steps
-
-- [Product & Pricing](/docs/features/product-pricing) - Configure products and quotes
-- [Contracts & Payments](/docs/features/contracts-payments) - Manage contracts and collections
-- [Service & Support](/docs/features/service-support) - Handle customer service cases
-- [AI Capabilities](/docs/ai/overview) - Deep dive into AI features
+---
+
+## Roadmap: Planned Features
+
+### Q1 2026
+- 🚧 Territory Management
+- 🚧 Sales Coach (AI-powered)
+- 🚧 Email Integration (Gmail/Outlook)
+
+### Q2 2026
+- 🚧 Revenue Forecasting (ML-based)
+- 🚧 Pipeline Analytics Dashboard
+- 🚧 Call Recording & Transcription
+
+### Q3 2026
+- 🚧 Mobile App (iOS & Android)
+- 🚧 Relationship Intelligence (LinkedIn)
+- 🚧 Sales Playbooks
+
+---
+
+## Success Metrics
+
+**Impact of Sales Automation:**
+- ⬆️ 40% more opportunities managed per rep
+- ⬆️ 25% improvement in win rates
+- ⬆️ 30% faster sales cycles
+- ⬆️ 95% forecast accuracy
+- ⬇️ 50% less time on admin tasks
+
+---
+
+## Getting Started
+
+<Cards>
+  <Card title="Quick Start" href="/docs/getting-started/quick-start">
+    Create your first account and opportunity
+  </Card>
+  <Card title="Sales Process Setup" href="/docs/guides/sales-process">
+    Configure your 7-stage sales process
+  </Card>
+  <Card title="Activity Tracking" href="/docs/guides/activity-tracking">
+    Learn to log and track all interactions
+  </Card>
+  <Card title="Sales Reports" href="/docs/guides/sales-reporting">
+    Build pipeline and forecasting reports
+  </Card>
+</Cards>
+
+---
+
+## Related Topics
+
+- [Lead Management](/docs/features/lead-management) - Generate and qualify leads
+- [Product & Quote Management](/docs/features/product-pricing) - Create quotes and proposals
+- [Contract Management](/docs/features/contracts-payments) - Execute closed deals
+- [AI Capabilities](/docs/ai/overview) - Explore AI-powered sales features
