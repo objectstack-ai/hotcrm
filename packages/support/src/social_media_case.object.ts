@@ -116,7 +116,7 @@ const SocialMediaCase = {
     default_owner_id: {
       type: 'lookup',
       label: 'Default Owner',
-      reference: 'User'
+      reference: 'users'
     },
     default_priority: {
       type: 'select',
@@ -157,7 +157,7 @@ const SocialMediaCase = {
     default_account_id: {
       type: 'lookup',
       label: 'Default Account',
-      reference: 'Account',
+      reference: 'account',
       description: 'Account for new contacts'
     },
     // Response Configuration

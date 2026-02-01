@@ -74,7 +74,7 @@ const EscalationRule = {
     escalate_to_user_id: {
       type: 'lookup',
       label: 'Escalate to User',
-      reference: 'User',
+      reference: 'users',
       description: 'Specific user to escalate to'
     },
     escalate_to_queue_id: {

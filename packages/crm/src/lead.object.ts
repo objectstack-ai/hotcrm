@@ -183,10 +183,16 @@ const Lead = {
     owner_id: {
       type: 'lookup',
       label: '负责人',
-      reference: 'User',
+      reference: 'users',
       required: true
     },
     // Conversion
+    is_converted: {
+      type: 'checkbox',
+      label: '已转化',
+      defaultValue: false,
+      readonly: true
+    },
     converted_date: {
       type: 'datetime',
       label: '转化日期',
@@ -195,19 +201,19 @@ const Lead = {
     converted_account_id: {
       type: 'lookup',
       label: '转化后的客户',
-      reference: 'Account',
+      reference: 'account',
       readonly: true
     },
     converted_contact_id: {
       type: 'lookup',
       label: '转化后的联系人',
-      reference: 'Contact',
+      reference: 'contact',
       readonly: true
     },
     converted_opportunity_id: {
       type: 'lookup',
       label: '转化后的商机',
-      reference: 'Opportunity',
+      reference: 'opportunity',
       readonly: true
     },
     // Campaign

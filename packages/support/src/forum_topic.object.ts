@@ -140,7 +140,7 @@ const ForumTopic = {
     moderated_by_id: {
       type: 'lookup',
       label: 'Moderated By',
-      reference: 'User',
+      reference: 'users',
       readonly: true
     },
     moderation_date: {
@@ -203,7 +203,7 @@ const ForumTopic = {
     closed_by_id: {
       type: 'lookup',
       label: 'Closed By',
-      reference: 'User',
+      reference: 'users',
       readonly: true
     },
     // SEO

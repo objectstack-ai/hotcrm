@@ -22,13 +22,13 @@ const CampaignMember = {
     lead_id: {
       type: 'lookup',
       label: 'Lead',
-      reference: 'Lead',
+      reference: 'lead',
       description: 'Related lead (mutually exclusive with contact_id)'
     },
     contact_id: {
       type: 'lookup',
       label: 'Contact',
-      reference: 'Contact',
+      reference: 'contact',
       description: 'Related contact (mutually exclusive with lead_id)'
     },
     

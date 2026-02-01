@@ -81,7 +81,7 @@ const Note = {
     owner_id: {
       type: 'lookup',
       label: 'Owner',
-      reference: 'User',
+      reference: 'users',
       required: true,
       defaultValue: '$currentUser'
     },
@@ -132,7 +132,7 @@ const Note = {
     last_edited_by_id: {
       type: 'lookup',
       label: 'Last Edited By',
-      reference: 'User',
+      reference: 'users',
       readonly: true
     },
     

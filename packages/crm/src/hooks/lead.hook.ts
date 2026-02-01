@@ -68,6 +68,11 @@ const LeadScoringTrigger: Hook = {
       // Calculate Lead Score
       lead.LeadScore = await calculateLeadScore(lead, ctx);
 
+      // Run Assignment Rules
+      if (!lead.OwnerId && !lead.owner) {
+        await runAssignmentRules(lead, ctx);
+      }
+
       // Manage public pool status
       await managePublicPool(lead, ctx);
 
@@ -177,6 +182,59 @@ async function calculateLeadScore(lead: Record<string, any>, ctx: TriggerContext
 
   // Ensure score is within 0-100 range
   return Math.min(100, Math.max(0, score));
+}
+
+/**
+ * Execute Assignment Rules
+ * Finds active assignment rules for Leads and checks if the lead matches the criteria.
+ * If a match is found, assigns the lead to the specified User or Queue.
+ */
+async function runAssignmentRules(lead: Record<string, any>, ctx: TriggerContext): Promise<void> {
+  try {
+    const rules = await ctx.db.find('assignment_rule', { 
+      filters: [
+        ['object_name', '=', 'lead'], 
+        ['active', '=', true]
+      ],
+      sort: 'sort_order' 
+    });
+
+    for (const rule of rules) {
+      if (evaluateRule(lead, rule)) {
+        if (rule.assign_to) {
+          lead.owner = rule.assign_to;
+          lead.OwnerId = rule.assign_to; // Legacy field support
+        } else if (rule.assign_to_queue) {
+          lead.owner = rule.assign_to_queue;
+          lead.OwnerId = rule.assign_to_queue;
+          // In real implementation we might set type to 'queue'
+        }
+        console.log(`✅ Lead assigned to ${lead.owner} by rule "${rule.name}"`);
+        break; // Stop after first match
+      }
+    }
+  } catch (error) {
+    console.error('⚠️ Failed to run assignment rules:', error);
+  }
+}
+
+/**
+ * Evaluate a single rule against a record
+ */
+function evaluateRule(record: Record<string, any>, rule: Record<string, any>): boolean {
+  const fieldValue = record[rule.criteria_field];
+  const targetValue = rule.criteria_value;
+  
+  if (fieldValue === undefined || fieldValue === null) return false;
+
+  switch (rule.criteria_operator) {
+    case '=': return fieldValue == targetValue;
+    case '!=': return fieldValue != targetValue;
+    case '>': return fieldValue > targetValue;
+    case '<': return fieldValue < targetValue;
+    case 'contains': return String(fieldValue).includes(String(targetValue));
+    default: return false;
+  }
 }
 
 /**

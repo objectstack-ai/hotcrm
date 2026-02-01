@@ -119,7 +119,7 @@ const Task = {
     owner_id: {
       type: 'lookup',
       label: 'Assigned To',
-      reference: 'User',
+      reference: 'users',
       required: true,
       defaultValue: '$currentUser'
     },

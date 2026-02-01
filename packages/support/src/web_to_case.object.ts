@@ -52,7 +52,7 @@ const WebToCase = {
     default_owner_id: {
       type: 'lookup',
       label: 'Default Owner',
-      reference: 'User'
+      reference: 'users'
     },
     default_priority: {
       type: 'select',
@@ -238,7 +238,7 @@ const WebToCase = {
     default_account_id: {
       type: 'lookup',
       label: 'Default Account',
-      reference: 'Account',
+      reference: 'account',
       description: 'Default account for new contacts'
     },
     // AI Processing

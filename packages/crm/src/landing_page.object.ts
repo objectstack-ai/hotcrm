@@ -161,7 +161,7 @@ const LandingPage = {
     owner_id: {
       type: 'lookup',
       label: '负责人',
-      reference: 'User',
+      reference: 'users',
       required: true
     },
     

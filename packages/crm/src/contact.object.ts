@@ -37,7 +37,7 @@ const Contact = {
     account_id: {
       type: 'master_detail',
       label: '所属客户',
-      reference: 'Account',
+      reference: 'account',
       required: true,
       cascadeDelete: true
     },

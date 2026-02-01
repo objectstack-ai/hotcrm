@@ -49,19 +49,19 @@ const Quote = {
     opportunity_id: {
       type: 'lookup',
       label: 'Opportunity',
-      reference: 'Opportunity',
+      reference: 'opportunity',
       required: true
     },
     account_id: {
       type: 'lookup',
       label: 'Account',
-      reference: 'Account',
+      reference: 'account',
       required: true
     },
     contact_id: {
       type: 'lookup',
       label: 'Contact',
-      reference: 'Contact'
+      reference: 'contact'
     },
     pricebook_id: {
       type: 'lookup',
@@ -256,7 +256,7 @@ const Quote = {
     approved_by_id: {
       type: 'lookup',
       label: 'Approved By',
-      reference: 'User',
+      reference: 'users',
       readonly: true
     },
     approved_date: {
@@ -267,7 +267,7 @@ const Quote = {
     rejected_by_id: {
       type: 'lookup',
       label: 'Rejected By',
-      reference: 'User',
+      reference: 'users',
       readonly: true
     },
     rejected_date: {
@@ -352,7 +352,7 @@ const Quote = {
     accepted_by_id: {
       type: 'lookup',
       label: 'Accepted By',
-      reference: 'Contact',
+      reference: 'contact',
       readonly: true
     },
     customer_signature: {

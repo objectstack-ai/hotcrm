@@ -177,7 +177,7 @@ const SLAMilestone = {
     paused_by_user_id: {
       type: 'lookup',
       label: 'Paused By',
-      reference: 'User',
+      reference: 'users',
       readonly: true
     },
     pause_reason: {
@@ -197,7 +197,7 @@ const SLAMilestone = {
     completed_by_user_id: {
       type: 'lookup',
       label: 'Completed By',
-      reference: 'User',
+      reference: 'users',
       readonly: true
     },
     completion_notes: {

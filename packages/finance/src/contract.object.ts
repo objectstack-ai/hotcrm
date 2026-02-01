@@ -20,13 +20,13 @@ const Contract = {
     account_id: {
       type: 'lookup',
       label: '客户',
-      reference: 'Account',
+      reference: 'account',
       required: true
     },
     opportunity_id: {
       type: 'lookup',
       label: '关联商机',
-      reference: 'Opportunity'
+      reference: 'opportunity'
     },
     status: {
       type: 'select',

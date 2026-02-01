@@ -74,13 +74,13 @@ const CaseComment = {
     created_by_id: {
       type: 'lookup',
       label: 'Created By',
-      reference: 'User',
+      reference: 'users',
       readonly: true
     },
     contact_id: {
       type: 'lookup',
       label: 'Contact',
-      reference: 'Contact',
+      reference: 'contact',
       description: 'Customer contact who created this comment'
     },
     // Email Integration
@@ -192,7 +192,7 @@ const CaseComment = {
     edited_by_id: {
       type: 'lookup',
       label: 'Edited By',
-      reference: 'User',
+      reference: 'users',
       readonly: true
     },
     // Engagement

@@ -37,6 +37,7 @@ export { default as Opportunity } from './opportunity.object';
 export { default as CampaignMember } from './campaign_member.object';
 export { default as Task } from './task.object';
 export { default as Note } from './note.object';
+export { default as AssignmentRule } from './assignment_rule.object';
 
 // Export marketing automation objects
 export { default as EmailTemplate } from './email_template.object';
@@ -53,6 +54,7 @@ export * from './hooks/opportunity.hook';
 
 // Export actions
 export * from './actions/ai_smart_briefing.action';
+export { default as LeadConvertAction } from './actions/lead_convert.action';
 
 // Export plugin definition
 export { default as CRMPlugin } from './plugin';

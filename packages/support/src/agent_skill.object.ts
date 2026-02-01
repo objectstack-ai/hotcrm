@@ -14,7 +14,7 @@ const AgentSkill = {
     user_id: {
       type: 'lookup',
       label: 'Agent',
-      reference: 'User',
+      reference: 'users',
       required: true
     },
     skill_id: {
@@ -60,7 +60,7 @@ const AgentSkill = {
     verified_by_id: {
       type: 'lookup',
       label: 'Verified By',
-      reference: 'User',
+      reference: 'users',
       readonly: true
     },
     // Certification

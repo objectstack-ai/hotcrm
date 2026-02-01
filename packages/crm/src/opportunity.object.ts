@@ -23,13 +23,13 @@ const Opportunity = {
     account_id: {
       type: 'lookup',
       label: '客户',
-      reference: 'Account',
+      reference: 'account',
       required: true
     },
     contact_id: {
       type: 'lookup',
       label: '主要联系人',
-      reference: 'Contact'
+      reference: 'contact'
     },
     amount: {
       type: 'currency',
@@ -120,7 +120,7 @@ const Opportunity = {
     owner_id: {
       type: 'lookup',
       label: '负责人',
-      reference: 'User',
+      reference: 'users',
       required: true,
       defaultValue: '$currentUser'
     }

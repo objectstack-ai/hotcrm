@@ -124,7 +124,7 @@ const KnowledgeArticle = {
     published_by_id: {
       type: 'lookup',
       label: 'Published By',
-      reference: 'User',
+      reference: 'users',
       readonly: true
     },
     last_review_date: {
@@ -140,13 +140,13 @@ const KnowledgeArticle = {
     owner_id: {
       type: 'lookup',
       label: 'Owner',
-      reference: 'User',
+      reference: 'users',
       required: true
     },
     author_id: {
       type: 'lookup',
       label: 'Author',
-      reference: 'User',
+      reference: 'users',
       required: true
     },
     // Visibility
@@ -344,7 +344,7 @@ const KnowledgeArticle = {
     archived_by_user_id: {
       type: 'lookup',
       label: 'Archived By',
-      reference: 'User',
+      reference: 'users',
       readonly: true
     },
     archived_reason: {

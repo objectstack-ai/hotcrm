@@ -22,13 +22,13 @@ const Unsubscribe = {
     lead_id: {
       type: 'lookup',
       label: '线索',
-      reference: 'Lead',
+      reference: 'lead',
       description: '关联的线索记录'
     },
     contact_id: {
       type: 'lookup',
       label: '联系人',
-      reference: 'Contact',
+      reference: 'contact',
       description: '关联的联系人记录'
     },
     
@@ -219,7 +219,7 @@ const Unsubscribe = {
     processed_by: {
       type: 'lookup',
       label: '处理人',
-      reference: 'User',
+      reference: 'users',
       readonly: true
     },
     

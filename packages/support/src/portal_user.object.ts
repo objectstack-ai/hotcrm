@@ -46,14 +46,14 @@ const PortalUser = {
     contact_id: {
       type: 'lookup',
       label: 'Contact',
-      reference: 'Contact',
+      reference: 'contact',
       required: true,
       description: 'Associated contact record'
     },
     account_id: {
       type: 'lookup',
       label: 'Account',
-      reference: 'Account',
+      reference: 'account',
       required: true,
       description: 'Associated account record'
     },
@@ -303,7 +303,7 @@ const PortalUser = {
     approved_by_id: {
       type: 'lookup',
       label: 'Approved By',
-      reference: 'User',
+      reference: 'users',
       readonly: true
     },
     approval_date: {

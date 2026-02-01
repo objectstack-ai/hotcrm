@@ -105,13 +105,13 @@ const Case = {
     account_id: {
       type: 'lookup',
       label: 'Account',
-      reference: 'Account',
+      reference: 'account',
       required: true
     },
     contact_id: {
       type: 'lookup',
       label: 'Contact',
-      reference: 'Contact'
+      reference: 'contact'
     },
     contract_id: {
       type: 'lookup',
@@ -140,7 +140,7 @@ const Case = {
     owner_id: {
       type: 'lookup',
       label: 'Owner',
-      reference: 'User',
+      reference: 'users',
       required: true
     },
     assigned_to_queue_id: {
@@ -225,7 +225,7 @@ const Case = {
     escalated_to_id: {
       type: 'lookup',
       label: 'Escalated To',
-      reference: 'User'
+      reference: 'users'
     },
     escalation_reason: {
       type: 'textarea',
@@ -339,7 +339,7 @@ const Case = {
     ai_suggested_assignee_id: {
       type: 'lookup',
       label: 'AI Suggested Assignee',
-      reference: 'User',
+      reference: 'users',
       readonly: true,
       description: 'AI-recommended agent based on skills and availability'
     },

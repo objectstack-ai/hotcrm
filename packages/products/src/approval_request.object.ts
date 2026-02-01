@@ -59,13 +59,13 @@ const ApprovalRequest = {
     opportunity_id: {
       type: 'lookup',
       label: 'Opportunity',
-      reference: 'Opportunity',
+      reference: 'opportunity',
       description: 'Related opportunity'
     },
     account_id: {
       type: 'lookup',
       label: 'Account',
-      reference: 'Account',
+      reference: 'account',
       description: 'Customer account'
     },
     contract_id: {
@@ -78,7 +78,7 @@ const ApprovalRequest = {
     submitted_by_id: {
       type: 'lookup',
       label: 'Submitted By',
-      reference: 'User',
+      reference: 'users',
       readonly: true
     },
     submitted_date: {
@@ -119,7 +119,7 @@ const ApprovalRequest = {
     current_approver_id: {
       type: 'lookup',
       label: 'Current Approver',
-      reference: 'User',
+      reference: 'users',
       readonly: true,
       description: 'User who needs to approve at current level'
     },
@@ -227,7 +227,7 @@ const ApprovalRequest = {
     approved_by_id: {
       type: 'lookup',
       label: 'Approved By',
-      reference: 'User',
+      reference: 'users',
       readonly: true,
       description: 'Final approver'
     },
@@ -239,7 +239,7 @@ const ApprovalRequest = {
     rejected_by_id: {
       type: 'lookup',
       label: 'Rejected By',
-      reference: 'User',
+      reference: 'users',
       readonly: true
     },
     rejected_date: {

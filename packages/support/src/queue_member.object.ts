@@ -20,7 +20,7 @@ const QueueMember = {
     user_id: {
       type: 'lookup',
       label: 'Agent',
-      reference: 'User',
+      reference: 'users',
       required: true
     },
     // Membership status

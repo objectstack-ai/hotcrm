@@ -81,7 +81,7 @@ const EmailToCase = {
     default_owner_id: {
       type: 'lookup',
       label: 'Default Owner',
-      reference: 'User',
+      reference: 'users',
       description: 'Default case owner (if not using queue)'
     },
     default_priority: {
@@ -145,7 +145,7 @@ const EmailToCase = {
     default_account_id: {
       type: 'lookup',
       label: 'Default Account',
-      reference: 'Account',
+      reference: 'account',
       description: 'Account for cases when contact not found'
     },
     // Processing Rules

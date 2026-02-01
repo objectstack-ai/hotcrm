@@ -188,14 +188,14 @@ const Account = {
     owner_id: {
       type: 'lookup',
       label: '负责人',
-      reference: 'User',
+      reference: 'users',
       required: true,
       defaultValue: '$currentUser'
     },
     parent_id: {
       type: 'lookup',
       label: '上级客户',
-      reference: 'Account'
+      reference: 'account'
     }
   },
   relationships: [

@@ -71,7 +71,7 @@ const ForumPost = {
     deleted_by_id: {
       type: 'lookup',
       label: 'Deleted By',
-      reference: 'User',
+      reference: 'users',
       readonly: true
     },
     // Moderation
@@ -88,7 +88,7 @@ const ForumPost = {
     moderated_by_id: {
       type: 'lookup',
       label: 'Moderated By',
-      reference: 'User',
+      reference: 'users',
       readonly: true
     },
     moderation_date: {

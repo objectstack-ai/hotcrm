@@ -125,7 +125,7 @@ const PriceRule = {
     account_id: {
       type: 'lookup',
       label: 'Account',
-      reference: 'Account',
+      reference: 'account',
       description: 'Specific account this rule applies to'
     },
     account_type: {
@@ -312,7 +312,7 @@ const PriceRule = {
     approved_by_id: {
       type: 'lookup',
       label: 'Approved By',
-      reference: 'User',
+      reference: 'users',
       readonly: true
     },
     approved_date: {

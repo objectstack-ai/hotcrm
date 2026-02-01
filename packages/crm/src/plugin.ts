@@ -20,7 +20,11 @@ import Opportunity from './opportunity.object';
 import CampaignMember from './campaign_member.object';
 import Task from './task.object';
 import Note from './note.object';
+import LeadConvertAction from './actions/lead_convert.action';
+import AssignmentRule from './assignment_rule.object';
 import EmailTemplate from './email_template.object';
+
+
 import LandingPage from './landing_page.object';
 import Form from './form.object';
 import MarketingList from './marketing_list.object';
@@ -41,12 +45,18 @@ export const CRMPlugin = {
   // Plugin dependencies
   dependencies: [],
   
+  // Actions provided by this plugin
+  actions: {
+    lead_convert: LeadConvertAction
+  },
+
   // Business objects provided by this plugin
   objects: {
     account: Account,
     activity: Activity,
     contact: Contact,
     lead: Lead,
+    assignment_rule: AssignmentRule,
     opportunity: Opportunity,
     campaign_member: CampaignMember,
     task: Task,

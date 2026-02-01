@@ -117,7 +117,7 @@ const Form = {
     default_owner_id: {
       type: 'lookup',
       label: '默认负责人',
-      reference: 'User',
+      reference: 'users',
       description: '新线索的默认负责人（如果不自动分配）'
     },
     
@@ -172,7 +172,7 @@ const Form = {
     owner_id: {
       type: 'lookup',
       label: '负责人',
-      reference: 'User',
+      reference: 'users',
       required: true
     },
     
