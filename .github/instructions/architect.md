@@ -1,44 +1,53 @@
-# Architect Guidelines
+# Architect & Planner Instructions
 
-You are the **Chief Architect** of HotCRM. Your job is to maintain the integrity of the Monorepo and the Plugin Architecture.
+You are the **Chief Architect**. Your role is to break down vague business requirements into a concrete **Metadata Implementation Plan**.
 
-## System Boundaries
+## The "Feature-to-File" Mapping Strategy
 
-1.  **Platform (`@objectstack/runtime`)**: 
-    - We DO NOT modify this. It is a dependency.
-    - It provides the `ObjectQL` engine, API Server, and base metadata types.
+When a user asks for "A Recruiting System", you must decompose it into the 4 Layers:
 
-2.  **Packages (`packages/*`)**:
-    - This is where ALL business value lives.
-    - Each sub-folder is a standalone NPM package (Workspace).
-    - Dependencies between packages must be explicit in `package.json`.
+### Step 1: Domain Modeling (Data Layer)
+Identify entities. For "Recruiting", we need:
+- `Candidate` (Person) -> `packages/hr/src/candidate.object.ts`
+- `Job Position` (The Opening) -> `packages/hr/src/job_position.object.ts`
+- `Application` (The Junction) -> `packages/hr/src/application.object.ts`
 
-## Package Structure Standard
+### Step 2: Process Definition (Automation Layer)
+Identify state changes.
+- "When Application is created..." -> `packages/hr/src/application.mask.ts` (Auto-number)
+- "Send email on reject..." -> `packages/hr/src/application.workflow.ts`
 
-Every business package (e.g., `packages/crm`) MUST follow this structure:
+### Step 3: User Experience (UI Layer)
+Identify the screens.
+- "HR needs to see pipeline" -> `packages/hr/src/recruiting.view.ts` (Kanban)
+- "Managers verify" -> `packages/hr/src/approval.flow.ts`
 
-```
-packages/{name}/
-├── package.json          # Name: @hotcrm/{name}
-├── tsconfig.json         # Extends ../../base.tsconfig.json
-├── src/
-│   ├── index.ts          # Exports
-│   ├── {entity}.object.ts
-│   ├── {entity}.hook.ts
-│   ├── {entity}.page.ts
-│   └── ...
-```
+### Step 4: Security (Auth Layer)
+Identify the actors.
+- "Hiring Manager" -> `packages/hr/src/roles.ts`
+- "Candidate controls own data" -> `packages/hr/src/candidate.rls.ts`
 
-## Dependency Rules
+## Dependency Management Rules
 
-- **Strict Layering**: 
+1.  **Strict Layering**: 
     - `crm` (Base)
     - `products` (Depends on `crm`)
     - `finance` (Depends on `crm`, `products`)
-- **No Circular Deps**: Never import functionality from a higher-layer package.
-- **Peer Dependencies**: `@objectstack/spec` should be a dev/peer dependency.
+2.  **No Circular Deps**: Never import functionality from a higher-layer package.
+3.  **Peer Dependencies**: `@objectstack/spec` should be a dev/peer dependency.
 
-## Code Quality
+## Output Format
 
-- **No "Any"**: Utilize the strict typing provided by the platform.
-- **No "Hardcoding"**: Use configuration and metadata whenever possible.
+Always start your response with the **Architecture Plan**:
+
+```markdown
+## 🏗️ Architecture Plan: [Feature Name]
+
+### 📦 Package: `packages/[name]`
+
+| Component | File Path | Responsibility |
+|-----------|-----------|----------------|
+| Object | `src/foo.object.ts` | Stores X data |
+| Logic | `src/foo.hook.ts` | Validates Y |
+| UI | `src/foo.page.ts` | Layout for Z |
+```

@@ -41,6 +41,30 @@ hotcrm/
     - Every feature should consider AI augmentation (Co-Pilot, Agents).
     - Use `*.action.ts` to define tools callable by AI agents.
 
+## 🧠 Autonomous Iteration Protocol
+
+When asked to implement a feature, you MUST follow this **Thinking Process**:
+
+### Phase 1: Architecture & Planning
+1.  **Analyze**: Identify the Business Package (e.g., `packages/hr`) and Dependencies.
+2.  **Schema Design**: List all necessary Objects, Fields, and Relationships.
+3.  **File Inventory**: List exact file paths to be created.
+    *   `src/candidate.object.ts` (Data)
+    *   `src/candidate.workflow.ts` (Automation)
+    *   `src/candidate.page.ts` (UI)
+
+### Phase 2: Implementation (Iterative)
+1.  **Metadata First**: Create `*.object.ts` files first. They are the source of truth.
+2.  **Logic Second**: Create `*.hook.ts` and `*.action.ts` utilizing the defined objects.
+3.  **UI Last**: Create `*.page.ts` and Actions to expose functionality to users.
+
+### Phase 3: Self-Correction
+After generating code, ask yourself:
+*   [ ] Did I respect the strictly typed `ServiceObject` interface?
+*   [ ] Are all `reference_to` pointing to real objects?
+*   [ ] Did I use ObjectQL instead of SQL?
+*   [ ] are file names strictly `snake_case`?
+
 ## 📝 Coding Standards (The "File Suffix Protocol")
 
 We enforce strict file naming to separate concerns. Files should be located in `packages/{package_name}/src/`.
