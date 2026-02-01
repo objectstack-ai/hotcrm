@@ -59,17 +59,13 @@ const LeadScoringTrigger: Hook = {
       lead.DataCompleteness = calculateDataCompleteness(lead);
 
       // Calculate Lead Score
-      // @ts-ignore
       lead.LeadScore = await calculateLeadScore(lead, ctx);
 
       // Run Assignment Rules
       if (!lead.OwnerId && !lead.owner) {
-        // @ts-ignore
         await runAssignmentRules(lead, ctx);
       }
 
-      // Manage public pool status
-      // @ts-ignore ctx);
 
       console.log(`✨ Lead scoring completed: Score=${lead.LeadScore}, Completeness=${lead.DataCompleteness}%`);
 
@@ -294,18 +290,15 @@ const LeadStatusChangeTrigger: Hook = {
 
       // Handle conversion
       if (ctx.input.Status === 'Converted') {
-        // @ts-ignore
         await handleLeadConversion(ctx);
       }
 
       // Handle unqualification
       if (ctx.input.Status === 'Unqualified') {
-        // @ts-ignore
         await handleLeadUnqualification(ctx);
       }
 
       // Log activity for status change
-      // @ts-ignore
       await logStatusChange(ctx);
 
     } catch (error) {
@@ -337,6 +330,34 @@ const LeadStatusChangeTrigger: Hook = {
   } catch (error) {
     console.error('❌ Failed to log conversion activity:', error);
   }
+}
+
+/**
+ * Handle lead conversion
+ * TODO: Implement full lead conversion logic using LeadConvertAction
+ */
+async function handleLeadConversion(ctx: HookContext): Promise<void> {
+  console.log('✅ Processing lead conversion...');
+  const lead = ctx.input;
+
+  // Log activity for conversion
+  try {
+    await ctx.ql.doc.create('activity', {
+      Subject: `线索转换: ${lead.FirstName} ${lead.LastName}`,
+      Type: 'Conversion',
+      Status: 'Completed',
+      Priority: 'High',
+      WhoId: lead.Id,
+      OwnerId: ctx.session?.userId,
+      ActivityDate: new Date().toISOString().split('T')[0],
+      Description: `线索 "${lead.FirstName} ${lead.LastName}" 已转换为客户`
+    });
+  } catch (error) {
+    console.error('❌ Failed to log conversion activity:', error);
+  }
+  
+  // TODO: Integrate with LeadConvertAction to create Account, Contact, and Opportunity
+  // For now, this is a placeholder that logs the conversion activity
 }
 
 /**

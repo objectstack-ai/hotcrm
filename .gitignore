@@ -21,3 +21,6 @@ packages/*/.turbo/
 # TypeScript build info
 *.tsbuildinfo
 *.backup
+
+# Build artifacts (compiled .js from .ts in source)
+packages/server/objectstack.config.js
