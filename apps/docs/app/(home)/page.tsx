@@ -195,7 +195,7 @@ export default function HomePage() {
             Start Building
           </Link>
            <Link
-             href="https://github.com/hotcrm/hotcrm"
+             href="https://github.com/objectstack-ai/hotcrm"
              target="_blank"
              className="inline-flex h-12 items-center justify-center rounded-md border border-input bg-background px-8 text-base font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground"
           >

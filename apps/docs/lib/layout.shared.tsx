@@ -3,7 +3,7 @@ import Image from 'next/image';
 
 export const siteConfig = {
   name: 'HotCRM',
-  github: 'https://github.com/hotcrm/hotcrm',
+  github: 'https://github.com/objectstack-ai/hotcrm',
 };
 
 export function baseOptions(): BaseLayoutProps {
