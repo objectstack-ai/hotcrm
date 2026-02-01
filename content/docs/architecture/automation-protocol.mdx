@@ -1,0 +1,30 @@
+---
+title: Automation Protocol
+description: Workflow Rules, Visual Flows, and Event Triggers.
+---
+
+# Automation Protocol
+
+Automate business processes without writing code.
+
+## 3.1 Workflow Rules
+**Location**: `packages/spec/src/automation/workflow.zod.ts`
+
+Rule-based automation. "If [Trigger] and [Condition], then [Action]".
+
+- **Trigger**: `on_create`, `on_update`, `schedule`.
+- **Actions**: Field Update, Email, API Call, Create Record.
+
+## 3.2 Visual Flows
+**Location**: `packages/spec/src/automation/flow.zod.ts`
+
+Orchestration engine.
+
+- **Screen Flows**: Interactive wizards.
+- **Autolaunched Flows**: Background processing.
+- **Nodes**: Decision, Loop, Assignment, Action, Subflow.
+
+## 3.3 Triggers
+**Location**: `packages/spec/src/automation/trigger-registry.zod.ts`
+
+Subscribers to system events.

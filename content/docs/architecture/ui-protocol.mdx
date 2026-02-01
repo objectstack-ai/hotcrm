@@ -1,0 +1,58 @@
+---
+title: UI Layer Protocol (ObjectUI)
+description: The protocol for Views, Apps, Actions, and Analytics.
+---
+
+# UI Layer Protocol (ObjectUI)
+
+HotCRM uses a metadata-driven UI architecture. We define *what* to render, not *how*.
+
+## 2.1 View Definition (`.view.ts`)
+
+**Protocal Location**: `packages/spec/src/ui/view.zod.ts`
+
+Views determine how collections of records are displayed.
+
+| Type | Use Case |
+|------|----------|
+| `list` | Standard Table |
+| `grid` | Excel-like Grid |
+| `kanban` | Stage-based Board |
+| `calendar` | Date-based Events |
+| `gantt` | Project Timeline |
+| `form` | Record Detail/Edit |
+
+**Example (Kanban)**:
+```typescript
+{
+  type: 'kanban',
+  group_by: 'status',
+  columns: ['name', 'amount', 'owner'],
+  card_fields: ['phone', 'email']
+}
+```
+
+## 2.2 App Definition (`objectstack.config.ts`)
+
+**Protocal Location**: `packages/spec/src/ui/app.zod.ts`
+
+An App is a container of navigation items.
+
+## 2.3 Actions (`.action.ts`)
+
+**Protocal Location**: `packages/spec/src/ui/action.zod.ts`
+
+Interactive elements (Buttons, Links).
+
+- `button`: Execute logic
+- `url`: Navigate
+- `modal`: Pop-up form
+- `flow`: Trigger Visual Flow
+
+## 2.4 Analytics (Dashboards & Reports)
+
+**Protocal Location**: `packages/spec/src/ui/dashboard.zod.ts`
+
+- **Dashboard**: A grid of Widgets (Charts, Metrics, Lists).
+- **Report**: A query engine definition (Tabular, Summary, Matrix).
+- **Chart**: Visualization config (Bar, Line, Pie).

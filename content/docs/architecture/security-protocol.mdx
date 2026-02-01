@@ -1,0 +1,34 @@
+---
+title: Security Protocol
+description: Authentication, Roles, Permissions, and Sharing.
+---
+
+# Security Protocol
+
+HotCRM employs a multi-layered security model.
+
+## 4.1 Role-Based Access Control (RBAC)
+**Location**: `packages/spec/src/auth/role.zod.ts`
+
+Defines the organizational hierarchy and baseline functional access.
+
+## 4.2 Permission Sets (Profile)
+**Location**: `packages/spec/src/permission/permission.zod.ts`
+
+Controls access to Metadata Objects and Fields (CRUD + FLS).
+
+- **Object Perms**: Create, Read, Update, Delete.
+- **Field Perms**: Read, Edit.
+
+## 4.3 Row-Level Security (RLS)
+**Location**: `packages/spec/src/permission/rls.zod.ts`
+
+Controls access to specific *records* within an object.
+
+*   "User can only see their own Leads."
+*   "Managers can see their team's Opps."
+
+## 4.4 Sharing Rules
+**Location**: `packages/spec/src/permission/sharing.zod.ts`
+
+Mechanism to grant exceptions to RLS. Share a private record with a specific User or Group.

@@ -3,6 +3,9 @@
   "pages": [
     "overview",
     "data-protocol",
+    "ui-protocol",
+    "automation-protocol",
+    "security-protocol",
     "monorepo-structure"
   ]
 }
