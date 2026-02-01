@@ -11,7 +11,7 @@
  * 5. Sentiment Analysis - Customer emotion tracking
  */
 
-import { db } from '@hotcrm/core';
+import { db } from '../db';
 
 // ============================================================================
 // 1. AUTO-CATEGORIZATION

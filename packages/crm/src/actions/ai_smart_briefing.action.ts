@@ -19,7 +19,7 @@ const RETRY_DELAY_MS = 1000;
  * - Industry-specific sales talking points
  */
 
-import { db } from '@hotcrm/core';
+import { db } from '../db';
 
 export interface SmartBriefingRequest {
   /** Account ID to analyze */

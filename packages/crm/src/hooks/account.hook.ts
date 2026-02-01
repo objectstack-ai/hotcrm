@@ -1,5 +1,5 @@
 import type { Hook } from '@objectstack/spec/data';
-import { db } from '@hotcrm/core';
+import { db } from '../db';
 
 // Types for Context
 interface TriggerContext {
@@ -208,7 +208,7 @@ const AccountStatusAutomationTrigger: Hook = {
  * This would typically be triggered by Contract changes
  * Here we provide the logic for updating account contract values
  */
-export async function updateAccountContractValue(accountId: string, db: typeof import('@hotcrm/core').db): Promise<void> {
+export async function updateAccountContractValue(accountId: string, db: any): Promise<void> {
   console.log(`🔄 Updating contract value rollup for account: ${accountId}`);
   
   // In real implementation, would query all active contracts
@@ -234,7 +234,7 @@ export async function updateAccountContractValue(accountId: string, db: typeof i
  * This would typically be triggered by Contract changes
  * Here we provide the logic for updating renewal dates
  */
-export async function updateAccountRenewalDate(accountId: string, db: typeof import('@hotcrm/core').db): Promise<void> {
+export async function updateAccountRenewalDate(accountId: string, db: any): Promise<void> {
   console.log(`🔄 Updating renewal date for account: ${accountId}`);
   
   // In real implementation, would query all active contracts and find nearest renewal
@@ -263,7 +263,7 @@ export async function updateAccountRenewalDate(accountId: string, db: typeof imp
 /**
  * Create reminder tasks for upcoming renewal
  */
-async function createRenewalReminderTasks(accountId: string, renewalDate: string, db: typeof import('@hotcrm/core').db): Promise<void> {
+async function createRenewalReminderTasks(accountId: string, renewalDate: string, db: any): Promise<void> {
   const reminderDays = [90, 60, 30];
   
   for (const days of reminderDays) {

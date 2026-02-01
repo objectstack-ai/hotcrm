@@ -1,5 +1,5 @@
 import type { Hook } from '@objectstack/spec/data';
-import { db } from '@hotcrm/core';
+import { db } from '../db';
 
 // Types for Context
 interface TriggerContext {
@@ -15,7 +15,7 @@ interface TriggerContext {
  * Automatically completes past-due activities
  * This would typically run as a daily batch job
  */
-export async function autoCompletePastDueActivities(db: typeof import('@hotcrm/core').db): Promise<void> {
+export async function autoCompletePastDueActivities(db: any): Promise<void> {
   console.log('🔄 Running auto-complete for past-due activities...');
   
   // In real implementation:
@@ -247,7 +247,7 @@ async function createNextRecurrence(activity: Record<string, any>, ctx: TriggerC
  * 
  * Daily job to find and notify about overdue activities
  */
-export async function sendOverdueNotifications(db: typeof import('@hotcrm/core').db): Promise<void> {
+export async function sendOverdueNotifications(db: any): Promise<void> {
   console.log('🔄 Finding overdue activities...');
   
   // In real implementation:

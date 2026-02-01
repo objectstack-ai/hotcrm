@@ -1,5 +1,5 @@
 import type { Hook } from '@objectstack/spec/data';
-import { db } from '@hotcrm/core';
+import { db } from '../db';
 
 // Types for Context
 interface TriggerContext {
@@ -61,7 +61,7 @@ const CampaignROICalculationTrigger: Hook = {
  * Update campaign metrics from related opportunities/leads
  * This would typically be called from Opportunity/Lead hooks
  */
-export async function updateCampaignMetrics(campaignId: string, db: typeof import('@hotcrm/core').db): Promise<void> {
+export async function updateCampaignMetrics(campaignId: string, db: any): Promise<void> {
   console.log(`🔄 Updating campaign metrics for: ${campaignId}`);
   
   // In real implementation:
@@ -151,7 +151,7 @@ const CampaignBudgetTrackingTrigger: Hook = {
  * Auto-add leads/contacts based on criteria
  * Track engagement: Sent, Opened, Clicked, Responded
  */
-export async function addCampaignMembersByCriteria(campaignId: string, criteria: Record<string, any>, db: typeof import('@hotcrm/core').db): Promise<void> {
+export async function addCampaignMembersByCriteria(campaignId: string, criteria: Record<string, any>, db: any): Promise<void> {
   console.log(`🔄 Adding campaign members by criteria for: ${campaignId}`);
   
   // In real implementation:
@@ -173,7 +173,7 @@ export async function addCampaignMembersByCriteria(campaignId: string, criteria:
 /**
  * Remove unsubscribed members from campaign
  */
-export async function removeUnsubscribedMembers(campaignId: string, db: typeof import('@hotcrm/core').db): Promise<void> {
+export async function removeUnsubscribedMembers(campaignId: string, db: any): Promise<void> {
   console.log(`🔄 Removing unsubscribed members from: ${campaignId}`);
   
   // In real implementation:
@@ -199,7 +199,7 @@ export async function removeUnsubscribedMembers(campaignId: string, db: typeof i
  * - Response rates by channel
  * - Cost per lead/opportunity/customer
  */
-export async function calculateCampaignPerformance(campaignId: string, db: typeof import('@hotcrm/core').db): Promise<Record<string, any>> {
+export async function calculateCampaignPerformance(campaignId: string, db: any): Promise<Record<string, any>> {
   console.log(`🔄 Calculating campaign performance for: ${campaignId}`);
   
   // In real implementation, would query and calculate:

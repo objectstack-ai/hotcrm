@@ -1,5 +1,5 @@
 import type { Hook } from '@objectstack/spec/data';
-import { db } from '@hotcrm/core';
+import { db } from '../db';
 
 // Types for Context
 export interface TriggerContext {
@@ -268,7 +268,7 @@ async function handleStatusChange(ctx: TriggerContext): Promise<void> {
  */
 async function validateBundleDependencies(
   bundleId: string,
-  db: typeof import('@hotcrm/core').db
+  db: any
 ): Promise<boolean> {
   try {
     // TODO: Query ProductBundleItem and ProductBundleDependency
@@ -287,7 +287,7 @@ async function validateBundleDependencies(
  */
 async function checkBundleConstraints(
   bundleId: string,
-  db: typeof import('@hotcrm/core').db
+  db: any
 ): Promise<boolean> {
   try {
     // TODO: Query ProductBundleConstraint

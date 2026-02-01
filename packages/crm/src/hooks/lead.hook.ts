@@ -1,5 +1,5 @@
 import type { Hook } from '@objectstack/spec/data';
-import { db } from '@hotcrm/core';
+import { db } from '../db';
 
 // Constants for lead scoring
 const HIGH_SCORE_THRESHOLD = 70;

@@ -1,5 +1,5 @@
 import type { Hook } from '@objectstack/spec/data';
-import { db } from '@hotcrm/core';
+import { db } from '../db';
 
 // Types for Context
 interface TriggerContext {
@@ -297,7 +297,7 @@ const CampaignMemberBounceHandlerTrigger: Hook = {
 export async function autoAssignCampaignLeads(
   campaignId: string,
   assignmentRule: 'round-robin' | 'territory' | 'score' | 'capacity',
-  db: typeof import('@hotcrm/core').db
+  db: any
 ): Promise<void> {
   console.log(`🔄 Auto-assigning leads from campaign: ${campaignId}`);
   
@@ -347,7 +347,7 @@ export async function autoAssignCampaignLeads(
 export async function trackMemberEngagementTimeline(
   memberId: string,
   engagementType: 'opened' | 'clicked' | 'responded' | 'unsubscribed',
-  db: typeof import('@hotcrm/core').db
+  db: any
 ): Promise<void> {
   console.log(`🔄 Tracking engagement timeline for member: ${memberId}`);
   

@@ -11,7 +11,7 @@
  * 5. Optimal Close Date Prediction - Realistic timeline forecasting
  */
 
-import { db } from '@hotcrm/core';
+import { db } from '../db';
 
 // ============================================================================
 // 1. WIN PROBABILITY PREDICTION

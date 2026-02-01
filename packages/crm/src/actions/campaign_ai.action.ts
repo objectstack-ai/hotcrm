@@ -10,7 +10,7 @@
  * 4. Channel Recommendations - Email, Social, Events, Direct Mail with ROI
  */
 
-import { db } from '@hotcrm/core';
+import { db } from '../db';
 
 // ============================================================================
 // 1. CONTENT GENERATION

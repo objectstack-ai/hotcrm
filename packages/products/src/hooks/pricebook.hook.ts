@@ -1,5 +1,5 @@
 import type { Hook } from '@objectstack/spec/data';
-import { db } from '@hotcrm/core';
+import { db } from '../db';
 
 // Types for Context
 export interface TriggerContext {
@@ -337,7 +337,7 @@ async function handleCurrencyChange(ctx: TriggerContext): Promise<void> {
  */
 async function activatePricebookEntries(
   pricebookId: string,
-  db: typeof import('@hotcrm/core').db
+  db: any
 ): Promise<void> {
   try {
     console.log(`✅ Activating pricebook entries for pricebook: ${pricebookId}`);
@@ -355,7 +355,7 @@ async function activatePricebookEntries(
  */
 async function expirePricebookEntries(
   pricebookId: string,
-  db: typeof import('@hotcrm/core').db
+  db: any
 ): Promise<void> {
   try {
     console.log(`⏰ Expiring pricebook entries for pricebook: ${pricebookId}`);

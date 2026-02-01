@@ -1,5 +1,5 @@
 import type { Hook } from '@objectstack/spec/data';
-import { db } from '@hotcrm/core';
+import { db } from '../db';
 
 // Types for Context
 interface TriggerContext {
@@ -15,7 +15,7 @@ interface TriggerContext {
  * Updates LastContactDate when activities are created/updated
  * This hook is actually called from Activity hooks
  */
-export async function updateContactLastContactDate(contactId: string, activityDate: string, db: typeof import('@hotcrm/core').db): Promise<void> {
+export async function updateContactLastContactDate(contactId: string, activityDate: string, db: any): Promise<void> {
   console.log(`🔄 Updating last contact date for contact: ${contactId}`);
   
   // Get current contact to check if update is needed
@@ -242,7 +242,7 @@ function getDaysSince(dateString: string): number {
  * Update relationship strength based on activity analysis
  * This is called periodically or after significant activity changes
  */
-export async function analyzeAndUpdateRelationshipStrength(contactId: string, db: typeof import('@hotcrm/core').db): Promise<void> {
+export async function analyzeAndUpdateRelationshipStrength(contactId: string, db: any): Promise<void> {
   console.log(`🔄 Analyzing relationship strength for contact: ${contactId}`);
   
   // In real implementation:

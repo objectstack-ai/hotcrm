@@ -10,7 +10,7 @@
  * 4. Lead Nurturing Recommendations - Next best action suggestions
  */
 
-import { db } from '@hotcrm/core';
+import { db } from '../db';
 
 // ============================================================================
 // 1. EMAIL SIGNATURE DATA EXTRACTION
