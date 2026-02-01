@@ -9,14 +9,14 @@
     "dev": "objectstack dev"
   },
   "dependencies": {
-    "@objectstack/cli": "^0.7.0",
-    "@objectstack/runtime": "^0.7.0",
-    "@objectstack/spec": "^0.7.0",
     "@hotcrm/crm": "workspace:*",
     "@hotcrm/finance": "workspace:*",
     "@hotcrm/marketing": "workspace:*",
     "@hotcrm/products": "workspace:*",
-    "@hotcrm/support": "workspace:*"
+    "@hotcrm/support": "workspace:*",
+    "@objectstack/cli": "^0.8.0",
+    "@objectstack/runtime": "^0.8.0",
+    "@objectstack/spec": "^0.8.0"
   },
   "devDependencies": {
     "typescript": "^5.0.0"

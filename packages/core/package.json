@@ -6,6 +6,6 @@
     "build": "tsc"
   },
   "dependencies": {
-    "@objectstack/spec": "^0.7.0"
+    "@objectstack/spec": "^0.8.0"
   }
 }

@@ -88,14 +88,14 @@ importers:
   packages/core:
     dependencies:
       '@objectstack/spec':
-        specifier: ^0.7.0
-        version: 0.7.2
+        specifier: ^0.8.0
+        version: 0.8.0
 
   packages/crm:
     dependencies:
       '@objectstack/spec':
-        specifier: ^0.7.2
-        version: 0.7.2
+        specifier: ^0.8.0
+        version: 0.8.0
       axios:
         specifier: ^1.6.0
         version: 1.13.3
@@ -119,8 +119,8 @@ importers:
   packages/finance:
     dependencies:
       '@objectstack/spec':
-        specifier: ^0.7.2
-        version: 0.7.2
+        specifier: ^0.8.0
+        version: 0.8.0
       typescript:
         specifier: ^5.3.0
         version: 5.9.3
@@ -141,8 +141,8 @@ importers:
   packages/marketing:
     dependencies:
       '@objectstack/spec':
-        specifier: ^0.7.0
-        version: 0.7.2
+        specifier: ^0.8.0
+        version: 0.8.0
     devDependencies:
       typescript:
         specifier: ^5.0.0
@@ -151,8 +151,8 @@ importers:
   packages/products:
     dependencies:
       '@objectstack/spec':
-        specifier: ^0.7.2
-        version: 0.7.2
+        specifier: ^0.8.0
+        version: 0.8.0
       typescript:
         specifier: ^5.3.0
         version: 5.9.3
@@ -188,14 +188,14 @@ importers:
         specifier: workspace:*
         version: link:../support
       '@objectstack/cli':
-        specifier: ^0.7.0
-        version: 0.7.2(esbuild@0.27.2)
+        specifier: ^0.8.0
+        version: 0.8.0(esbuild@0.27.2)
       '@objectstack/runtime':
-        specifier: ^0.7.0
-        version: 0.7.2
+        specifier: ^0.8.0
+        version: 0.8.0
       '@objectstack/spec':
-        specifier: ^0.7.0
-        version: 0.7.2
+        specifier: ^0.8.0
+        version: 0.8.0
     devDependencies:
       typescript:
         specifier: ^5.0.0
@@ -204,8 +204,8 @@ importers:
   packages/support:
     dependencies:
       '@objectstack/spec':
-        specifier: ^0.7.2
-        version: 0.7.2
+        specifier: ^0.8.0
+        version: 0.8.0
       typescript:
         specifier: ^5.3.0
         version: 5.9.3
@@ -941,25 +941,25 @@ packages:
     resolution: {integrity: sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg==}
     engines: {node: '>= 8'}
 
-  '@objectstack/cli@0.7.2':
-    resolution: {integrity: sha512-ulr7m2dF4VwgHKlYlrhTObs4upaj70pK9wgJUBgku/bOQM/MZJjh59WLDs3ds4BUj5OootcJKdlRHRMcCOgNCw==}
+  '@objectstack/cli@0.8.0':
+    resolution: {integrity: sha512-UToFlqxduSRl6/az0StK5WOgkdziCVRkXVmq0SQJyGEJUFV2qyIewHXg9aBblG74c1SJQ+TfisIZg4JEz4Ce0w==}
     hasBin: true
 
-  '@objectstack/core@0.7.2':
-    resolution: {integrity: sha512-TFzejVZePSpe51PhI10PlsPGfZO5vsL9iN83rcdQX+eEeNwpvNjO45KLMbYUjQoq3bA2VKCarERyRxOpKSgvBg==}
+  '@objectstack/core@0.8.0':
+    resolution: {integrity: sha512-V1mnVnBemTBrTykYGLxYZiCqQ9qBB7BiukZld++m6RKjmVivf4ipyoXQdOuLx5j/fQXo+FziprlMmG5z1sDm9A==}
 
-  '@objectstack/plugin-hono-server@0.7.2':
-    resolution: {integrity: sha512-mnh3K5bR5DaUOal/BaX3NrN0tD79AlIYhps5EUwyFH5+cw55/PFAMUVp77dej3xNl3/ik+XohSk9/5OCvxtLlw==}
+  '@objectstack/plugin-hono-server@0.8.0':
+    resolution: {integrity: sha512-wRo1ZTtmlWTYObp578W0cjuKagp61ho152HwBuVyOau207fGllZqa2oBbHR097h0KEisl7WsMrcYGVkBweO+kA==}
 
-  '@objectstack/runtime@0.7.2':
-    resolution: {integrity: sha512-3pQdj9TOkYiAMKnMIa4i3mAujg8QYNPAd4695owA2tdrGEYcpYuOQv5w/qIKaPP9jUuwOvLPQYH0rnIlGV3lAg==}
+  '@objectstack/runtime@0.8.0':
+    resolution: {integrity: sha512-GZeTN8qR2qdqUl6+qhxPfH0Sqgq0Jsp8leU4sKs9qcMC/WuSpVEHDGQAES2vMZALqrnDIDdpQ1vMY9ZrkwZY3g==}
 
-  '@objectstack/spec@0.7.2':
-    resolution: {integrity: sha512-eJamgBSxzLI/g8jLA7qDo3FOEBe7J89vIVjqdIpS7CoN13nj9FrcRznrvwfGileMV9j59ulgqg4Od0z7IuhOmA==}
+  '@objectstack/spec@0.8.0':
+    resolution: {integrity: sha512-OvEceJrWoFE1Ou+j+VavXFy5xWK5L5XptaMsguMKF25J0gudt6Sn/EP/r2zigNMBWIHXmW54EgUC6wniJfaJTg==}
     engines: {node: '>=18.0.0'}
 
-  '@objectstack/types@0.7.2':
-    resolution: {integrity: sha512-mq18O3OtI0GBFoiPl1/dqN5trpjjYuHDyIjXPf2SOq+JvsWa5BMXoJPP30kygJx4IEo0NwoOI/3h91Bg0b9dCg==}
+  '@objectstack/types@0.8.0':
+    resolution: {integrity: sha512-ZuY9h2/ow8eOmFrW5jwXfZ1YCc6vWnp7DZdPRW9e5g65zZwxig8tXGcyN5c1uYtIU9C3q2AlSAvNuwLeOkgdBQ==}
 
   '@orama/orama@3.1.18':
     resolution: {integrity: sha512-a61ljmRVVyG5MC/698C8/FfFDw5a8LOIvyOLW5fztgUXqUpc1jOfQzOitSCbge657OgXXThmY3Tk8fpiDb4UcA==}
@@ -3728,9 +3728,6 @@ packages:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
 
-  zod@3.25.76:
-    resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
-
   zod@4.3.6:
     resolution: {integrity: sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg==}
 
@@ -4447,47 +4444,47 @@ snapshots:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.20.1
 
-  '@objectstack/cli@0.7.2(esbuild@0.27.2)':
+  '@objectstack/cli@0.8.0(esbuild@0.27.2)':
     dependencies:
-      '@objectstack/core': 0.7.2
-      '@objectstack/plugin-hono-server': 0.7.2
-      '@objectstack/spec': 0.7.2
+      '@objectstack/core': 0.8.0
+      '@objectstack/plugin-hono-server': 0.8.0
+      '@objectstack/spec': 0.8.0
       bundle-require: 5.1.0(esbuild@0.27.2)
       chalk: 5.6.2
       commander: 11.1.0
       tsx: 4.21.0
-      zod: 3.25.76
+      zod: 4.3.6
     transitivePeerDependencies:
       - esbuild
 
-  '@objectstack/core@0.7.2':
+  '@objectstack/core@0.8.0':
     dependencies:
-      '@objectstack/spec': 0.7.2
+      '@objectstack/spec': 0.8.0
       pino: 8.21.0
       pino-pretty: 10.3.1
-      zod: 3.25.76
+      zod: 4.3.6
 
-  '@objectstack/plugin-hono-server@0.7.2':
+  '@objectstack/plugin-hono-server@0.8.0':
     dependencies:
       '@hono/node-server': 1.19.9(hono@4.11.7)
-      '@objectstack/core': 0.7.2
-      '@objectstack/spec': 0.7.2
-      '@objectstack/types': 0.7.2
+      '@objectstack/core': 0.8.0
+      '@objectstack/spec': 0.8.0
+      '@objectstack/types': 0.8.0
       hono: 4.11.7
 
-  '@objectstack/runtime@0.7.2':
+  '@objectstack/runtime@0.8.0':
     dependencies:
-      '@objectstack/core': 0.7.2
-      '@objectstack/spec': 0.7.2
-      '@objectstack/types': 0.7.2
+      '@objectstack/core': 0.8.0
+      '@objectstack/spec': 0.8.0
+      '@objectstack/types': 0.8.0
 
-  '@objectstack/spec@0.7.2':
+  '@objectstack/spec@0.8.0':
     dependencies:
-      zod: 3.25.76
+      zod: 4.3.6
 
-  '@objectstack/types@0.7.2':
+  '@objectstack/types@0.8.0':
     dependencies:
-      '@objectstack/spec': 0.7.2
+      '@objectstack/spec': 0.8.0
 
   '@orama/orama@3.1.18': {}
 
@@ -7802,8 +7799,6 @@ snapshots:
       yargs-parser: 21.1.1
 
   yocto-queue@0.1.0: {}
-
-  zod@3.25.76: {}
 
   zod@4.3.6: {}
 

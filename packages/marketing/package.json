@@ -7,9 +7,9 @@
     "@hotcrm/core": "workspace:*"
   },
   "dependencies": {
-    "@objectstack/spec": "^0.7.0"
+    "@objectstack/spec": "^0.8.0"
   },
   "devDependencies": {
-     "typescript": "^5.0.0"
+    "typescript": "^5.0.0"
   }
 }
