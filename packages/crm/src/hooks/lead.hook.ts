@@ -1,4 +1,5 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
+import type { Lead } from '../schemas/lead.schema';
 
 // Constants for lead scoring
 const HIGH_SCORE_THRESHOLD = 70;
@@ -37,8 +38,8 @@ const SCORING_WEIGHTS = {
 
 const HIGH_PRIORITY_INDUSTRIES = ['Technology', 'Finance', 'Healthcare'];
 
-// Types for Context
-i**
+
+/**
  * Lead Scoring and Data Completeness Trigger
  * 
  * Automatically calculates:
@@ -52,7 +53,7 @@ const LeadScoringTrigger: Hook = {
   events: ['beforeInsert', 'beforeUpdate'],
   handler: async (ctx: HookContext) => {
     try {
-      const lead = ctx.input;
+      const lead = ctx.input as Lead; // Strongly Typed Zod Source!
 
       // Calculate Data Completeness
       lead.DataCompleteness = calculateDataCompleteness(lead);
@@ -82,7 +83,7 @@ const LeadScoringTrigger: Hook = {
 /**
  * Calculate data completeness percentage
  */
-function calculateDataCompleteness(lead: Record<string, any>): number {
+function calculateDataCompleteness(lead: Lead): number {
   const requiredFields = [
     'FirstName', 'LastName', 'Company', 'Title',
     'Email', 'Phone', 'MobilePhone',
@@ -113,15 +114,15 @@ function calculateDataCompleteness(lead: Record<string, any>): number {
  * - Revenue (15 points)
  * - Engagement (20 points)
  */
-async function calculateLeadScore(lead: Record<string, any>, ctx: TriggerContext): Promise<number> {
+async function calculateLeadScore(lead: Lead, ctx: HookContext): Promise<number> {
   let score = 0;
 
   // 1. Data Completeness Score (20 points)
   const completeness = lead.DataCompleteness || 0;
-  score += Math.round(completeness * SCORING_WEIGHTS.DATA_COMPLETEHook
+  score += Math.round(completeness * SCORING_WEIGHTS.DATA_COMPLETENESS);
 
   // 2. Rating Score (20 points)
-  score += SCORING_WEIGHTS.RATING[lead.Rating as keyof typeof SCORING_WEIGHTS.RATING] || 0;
+  score += SCORING_WEIGHTS.RATING[(lead.Rating || 'Cold') as keyof typeof SCORING_WEIGHTS.RATING] || 0;
 
   // 3. Industry Score (10 points)
   if (HIGH_PRIORITY_INDUSTRIES.includes(lead.Industry)) {
@@ -183,9 +184,9 @@ async function calculateLeadScore(lead: Record<string, any>, ctx: TriggerContext
  * Finds active assignment rules for Leads and checks if the lead matches the criteria.
  * If a match is found, assigns the lead to the specified User or Queue.
  */
-async function runAssignmentRules(lead: Record<string, any>, ctx: HookContext): Promise<void> {
+async function runAssignmentRules(lead: Lead, ctx: HookContext): Promise<void> {
   try {
-    const rules = await ctx.ql.find('assignment_rule', { 
+    const rules: any[] = await ctx.ql.find('assignment_rule', {  
       filters: [
         ['object_name', '=', 'lead'], 
         ['active', '=', true]
@@ -234,7 +235,7 @@ function evaluateRule(record: Record<string, any>, rule: Record<string, any>): b
 /**
  * Manage public pool status and dates
  */
-async function managePublicPool(lead: Record<string, any>, ctx: HookContext): Promise<void> {
+async function managePublicPool(lead: Lead, ctx: HookContext): Promise<void> {
   const isNew = !ctx.previous;
 
   // If new lead, set pool entry date
@@ -381,10 +382,7 @@ async function logStatusChange(ctx: HookContext): Promise<void> {
       WhoId: lead.Id,
       OwnerId: ctx.session?.userId,
       ActivityDate: new Date().toISOString().split('T')[0],
-      Description: `线索状态从 "${oldStatus}" 变更为 "${ctx.input
-      OwnerId: ctx.user.id,
-      ActivityDate: new Date().toISOString().split('T')[0],
-      Description: `线索状态从 "${oldStatus}" 变更为 "${ctx.new.Status}"`
+      Description: `线索状态从 "${oldStatus}" 变更为 "${ctx.input.Status}"`
     });
   } catch (error) {
     console.error('❌ Failed to log status change activity:', error);
