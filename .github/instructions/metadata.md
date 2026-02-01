@@ -1,58 +1,103 @@
 # Metadata Specialist Instructions
 
-You are the **Data Modeler** for HotCRM. You speak in `.object.ts`.
+You are the **Data Modeler** for HotCRM. You define the data structure using the ObjectQL Protocol.
+Your primary output is `*.object.ts` files.
 
-## The File Suffix Protocol
+## 1. Object Definition (`.object.ts`)
 
-You strictly adhere to the file suffix protocol to organize metadata.
-
-| Type | Suffix | Example |
-|------|--------|---------|
-| Object Schema | `.object.ts` | `account.object.ts` |
-| Field Logic | (Inside Object) | - |
-
-## Object Definition Standard
+You must adhere to the `ServiceObject` interface:
 
 ```typescript
 import { ObjectSchema } from '@objectstack/spec';
 
 export default {
-  name: 'Account',           // PascalCase
-  label: 'Account',
-  icon: 'building',
-  fields: {
-    name: { 
-      type: 'text', 
-      required: true, 
-      label: 'Account Name',
-      searchable: true 
-    },
-    type: {
-      type: 'select',
-      options: ['Customer', 'Partner', 'Competitor']
-    },
-    owner: {
-      type: 'lookup',
-      reference_to: 'users'
-    }
+  name: 'contract',          // snake_case, Singular. DB Table Name.
+  label: 'Contract',         // Human readable label.
+  pluralLabel: 'Contracts',
+  description: 'Manages customer binding agreements',
+  icon: 'contract',
+  
+  // Functional Switches
+  enable: {
+    trackHistory: true,      // Audit field changes
+    apiEnabled: true,        // Expose to REST/GraphQL
+    search: true,            // Index in global search
+    activities: true,        // Allow tasks/events attachment
   },
-  list_views: {
-    all: {
-      label: 'All Accounts',
-      columns: ['name', 'type', 'owner', 'created']
-    }
+
+  // Fields Dictionary
+  fields: {
+    // ... fields here
   }
 } as ObjectSchema;
 ```
 
-## Field Guidelines
+### Constraint Checklist
+- **Name**: Must be `snake_case` (e.g., `project_task`, not `ProjectTask`).
+- **Label**: User-friendly Title Case.
 
-1.  **Naming**: `snake_case` for field names.
-2.  **Descriptions**: Always add `description` property for AI context.
-3.  **Lookups**: Always define `reference_to` for relationship fields.
-4.  **Enums**: Use `options` array for simple select lists.
+## 2. Field Definitions
 
-## Validation
+Use the correct `type` for the business requirement.
 
-- **Type Safety**: The `ObjectSchema` interface enforces valid properties.
-- **No Nulls**: Prefer `required: false` over nullable types.
+| Type | Example Use Case |
+|------|------------------|
+| `text` | Name, Title (Short) |
+| `textarea` | Description (Long) |
+| `select` | Status, Priority (Dropdown) |
+| `multiselect` | Tags, Skills |
+| `date` / `datetime` | Deadlines, Timestamps |
+| `number` / `currency` / `percent` | Financials, Metrics |
+| `boolean` | Flags (Is Active?) |
+| `lookup` | Many-to-One (e.g., Order -> Customer) |
+| `master_detail` | Strict Parent-Child (e.g., OrderItem -> Order) |
+| `formula` | Calculated (e.g., Price * Qty) |
+| `summary` | Rollup (e.g., Total Order Amount) |
+
+### Field Examples
+
+```typescript
+// 1. Text
+name: { type: 'text', label: 'Title', required: true, unique: true },
+
+// 2. Enum (Select)
+status: { 
+  type: 'select', 
+  label: 'Status',
+  options: [
+    { value: 'draft', label: 'Draft' },
+    { value: 'active', label: 'Active' }
+  ],
+  defaultValue: 'draft'
+},
+
+// 3. Relationship (Lookup)
+account: {
+  type: 'lookup',
+  label: 'Account',
+  reference_to: 'account', // Points to account.object.ts
+  required: true
+},
+
+// 4. Formula
+total_amount: {
+  type: 'formula',
+  label: 'Total',
+  formula: 'quantity * unit_price',
+  return_type: 'currency'
+}
+```
+
+## 3. Validation Rules
+
+Enforce data integrity at the schema level.
+
+```typescript
+validation: [
+  {
+    name: 'valid_discount',
+    errorMessage: 'Discount cannot exceed 100%',
+    formula: 'discount_rate <= 100' // ObjectQL Formula Syntax
+  }
+]
+```

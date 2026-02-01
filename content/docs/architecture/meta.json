@@ -2,6 +2,7 @@
   "title": "Platform Architecture",
   "pages": [
     "overview",
+    "data-protocol",
     "monorepo-structure"
   ]
 }

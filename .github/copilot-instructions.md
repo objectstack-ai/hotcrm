@@ -26,15 +26,16 @@ hotcrm/
 
 ## 💻 Tech Stack & Protocol
 
-1.  **Metadata-First**:
-    - All business objects are defined in **TypeScript** (`*.object.ts`).
+1.  **Metadata-First (`*object.ts`)**:
+    - All business objects are defined in **TypeScript** using the `ServiceObject` interface.
     - strictly typed using `@objectstack/spec`.
     - **NEVER** use YAML or JSON for metadata.
+    - Object names must be `snake_case`.
 
 2.  **ObjectQL (No-SQL)**:
     - Data access MUST use **ObjectQL**.
     - **NEVER** write raw SQL.
-    - Example: `objectql.find({ from: 'opportunity', where: [['amount', '>', 50000]] })`.
+    - Format: `broker.find('opportunity', { filters: [['amount', '>', 50000]] })`.
 
 3.  **AI-Native**:
     - Every feature should consider AI augmentation (Co-Pilot, Agents).

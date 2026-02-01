@@ -1,0 +1,110 @@
+---
+title: Data Layer Protocol (ObjectQL)
+description: The core metadata protocol defining Objects, Fields, Validations, and Logic.
+---
+
+# Data Layer Protocol (ObjectQL)
+
+The HotCRM architecture is Metadata-Driven. All business entities, logic, and limitations are defined in declarative TypeScript files.
+
+## 🟢 P0 Core Metadata
+
+### 1.1 Object Definition
+**Location**: `packages/{pkg}/src/{entity}.object.ts`
+
+The foundational unit of the system. Represents a database table and its business rules.
+
+```typescript
+interface ServiceObject {
+  name: string;              // unique_snake_case (e.g., 'project_task')
+  label: string;             // Human readable (e.g., 'Project Task')
+  description?: string;
+  fields: Record<string, Field>;
+  
+  // Functional Switches
+  enable?: {                 
+    trackHistory?: boolean;  // Audit Log
+    apiEnabled?: boolean;    // REST/GraphQL API
+    search?: boolean;        // Global Search Index
+    activities?: boolean;    // Attach Tasks/Events
+  };
+}
+```
+
+### 1.2 Field Definition
+**Location**: Inside `ServiceObject.fields`
+
+We support 20+ field types to handle rich business data.
+
+| Type | Description | Example |
+|------|-------------|---------|
+| `text` | Short text (<255) | Name, Code |
+| `textarea` | Long text | Description |
+| `number` | Integer/Float | Qty, Age |
+| `currency` | Money | Price, Amount |
+| `percent` | Percentage | Discount Rate |
+| `date` / `datetime` | Temporal | Due Date |
+| `boolean` | True/False | Is Active |
+| `select` | Dropdown | Status |
+| `multiselect` | Multi-Tags | Skills |
+| `lookup` | Reference | -> Customer |
+| `master_detail` | Strong reference | -> Order |
+| `formula` | Calculation | `price * qty` |
+| `summary` | Rollup aggregation | `SUM(amount)` |
+
+### 1.3 Validation Rules
+**Location**: `ServiceObject.validation`
+
+Server-side data integrity rules.
+
+```typescript
+{
+  name: 'valid_discount',
+  errorMessage: 'Discount must be 0-100',
+  formula: 'discount_rate >= 0 && discount_rate <= 100'
+}
+```
+
+### 1.4 Query Protocol (ObjectQL)
+**Location**: `*.hook.ts` or `*.action.ts`
+
+Platform-agnostic data access layer.
+
+**Query Structure**:
+```typescript
+interface Query {
+  object: string;
+  fields?: string[];
+  filters?: Filter;
+  sort?: string[];
+  limit?: number;
+}
+```
+
+**Filter Operators**:
+- `equals` / `=`
+- `not_equals` / `!=`
+- `contains` (LIKE)
+- `starts_with`
+- `greater_than` / `>`
+- `in` (Array include)
+
+### 1.5 Lifecycle Hooks
+**Location**: `packages/{pkg}/src/{entity}.hook.ts`
+
+Triggers that execute custom logic during record changes.
+
+- `before_create` / `after_create`
+- `before_update` / `after_update`
+- `before_delete` / `after_delete`
+
+**Example**:
+```typescript
+// Auto-number generation
+{
+  type: 'before_create',
+  handler: async (context) => {
+    context.record.code = await generateCode();
+  }
+}
+```
