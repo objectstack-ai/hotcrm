@@ -52,58 +52,35 @@ Each plugin:
 
 See [Plugin Architecture Guide](docs/PLUGIN_ARCHITECTURE.md) for detailed documentation.
 
-### Monorepo Structure
+### Repository Structure
 
-HotCRM uses a **multi-package monorepo** architecture powered by pnpm workspaces, allowing for independent development and deployment of different CRM modules:
+HotCRM is built on the **@objectstack/runtime** engine, focusing purely on business capabilities.
 
 ```
 hotcrm/
-├── packages/
-│   ├── core/                 # Core engine and ObjectQL
-│   │   ├── src/
-│   │   │   ├── objectql.ts          # ObjectQL query engine
-│   │   │   ├── objectstack-spec.d.ts # Type definitions
-│   │   │   └── index.ts             # Package exports
-│   │   ├── package.json
-│   │   ├── tsconfig.json
-│   │   └── README.md
-│   │
-│   ├── metadata/             # Business object definitions
-│   │   ├── src/
-│   │   │   ├── account.object.ts    # Account metadata
-│   │   │   ├── contact.object.ts    # Contact metadata
-│   │   │   ├── opportunity.object.ts # Opportunity metadata
-│   │   │   ├── contract.object.ts   # Contract metadata
-│   │   │   └── *.object.yml         # Legacy YAML definitions
-│   │   └── package.json
-│   │
-│   ├── hooks/                # Business logic and triggers
-│   │   ├── src/
-│   │   │   └── opportunity.hook.ts  # Opportunity automation
-│   │   └── package.json
-│   │
-│   ├── actions/              # Custom business actions
-│   │   ├── src/
-│   │   │   └── ai_smart_briefing.action.ts
-│   │   └── package.json
-│   │
-│   ├── ui/                   # UI components and dashboards
-│   │   ├── src/
-│   │   │   ├── dashboard/
-│   │   │   │   └── sales_dashboard.dashboard.ts
-│   │   │   └── components/
-│   │   │       └── AISmartBriefingCard.ts
-│   │   └── package.json
-│   │
-│   └── server/               # Express server and REST APIs
-│       ├── src/
-│       │   └── server.ts
-│       └── package.json
+├── packages/               # Business Capabilities (Plugins)
+│   ├── crm/               # Sales Cloud (Account, Opportunity)
+│   ├── finance/           # Revenue Cloud (Contract, Invoice)
+│   ├── products/          # CPQ Product Catalog
+│   └── support/           # Service Cloud (Case, Knowledge)
 │
-├── pnpm-workspace.yaml       # Workspace configuration
-├── package.json              # Root package with scripts
-└── tsconfig.json             # Root TypeScript config
+├── apps/                   # Deployable Applications
+│   └── docs/              # Official Documentation Site
 ```
+
+### Business Packages
+
+Each package is a self-contained plugin defining:
+- **Objects**: Data models (`.object.ts`)
+- **Logic**: Server-side triggers (`.hook.ts`)
+- **UI**: Page layouts and views (`.page.ts`)
+
+### Platform Core
+
+The project runs on **@objectstack/runtime**, which provides:
+- **ObjectQL**: The ORM replacement.
+- **Metadata Registry**: Loads and validates all business objects.
+- **REST API**: Automatically generates endpoints for all objects.
 
 ### Package Dependencies
 
@@ -112,7 +89,7 @@ hotcrm/
 Each domain package is a self-contained vertical slice with schemas, hooks, and actions:
 
 ```
-@hotcrm/core (Foundation)
+@objectstack/runtime (Foundation)
   ├── @hotcrm/crm (Marketing & Sales Vertical Slice)
   │   ├── Schemas: Account, Contact, Lead, Opportunity, Campaign, Activity
   │   ├── Hooks: Opportunity stage automation

@@ -1,12 +1,10 @@
 {
-  "extends": "../core/tsconfig.json",
+  "extends": "../../base.tsconfig.json",
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src"
   },
-  "references": [
-    { "path": "../core" }
-  ],
+  "references": [],
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
 }
