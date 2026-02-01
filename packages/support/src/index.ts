@@ -49,6 +49,9 @@ export { default as ForumPost } from './forum_post.object';
 export { default as CaseHooks } from './hooks/case.hook';
 export { default as KnowledgeHooks } from './hooks/knowledge.hook';
 
+// Services
+export { EmailHandler } from './services/email_handler.service';
+
 // Export plugin definition
 export { default as SupportPlugin } from './plugin';
 

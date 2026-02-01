@@ -3,19 +3,17 @@
  * 
  * This package contains all finance-related business objects:
  * - Contract: Contract lifecycle management
+ * - Invoice: Billing statements
  * - Payment: Payment tracking and reconciliation
  */
 
-export * from './contract.object';
-import payment from './payment.object';
+export { default as Contract } from './contract.object';
+export { default as Invoice } from './invoice.object';
+export { default as InvoiceLine } from './invoice_line.object';
+export { default as Payment } from './payment.object';
 
-export const objects = {
-    payment
-};
-
+// Export Hooks
+export { default as ContractHooks } from './hooks/contract.hook';
 
 // Export plugin definition
 export { default as FinancePlugin } from './plugin';
-
-// Note: YAML files (Payment) are kept for reference
-// TypeScript definitions should be created following the metadata protocol

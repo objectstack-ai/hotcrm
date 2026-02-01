@@ -12,6 +12,8 @@
 // Import all Finance objects
 import Contract from './contract.object';
 import Payment from './payment.object';
+import Invoice from './invoice.object';
+import InvoiceLine from './invoice_line.object';
 
 /**
  * Finance Plugin Definition
@@ -23,7 +25,7 @@ export const FinancePlugin = {
   name: 'finance',
   label: 'Finance',
   version: '1.0.0',
-  description: 'Financial management - Contracts, Payments, and Revenue Recognition',
+  description: 'Financial management - Contracts, Invoices, Payments, and Revenue Recognition',
   
   // Plugin dependencies
   dependencies: ['crm'],
@@ -31,6 +33,8 @@ export const FinancePlugin = {
   // Business objects provided by this plugin
   objects: {
     contract: Contract,
+    invoice: Invoice,
+    invoice_line: InvoiceLine,
     payment: Payment,
   },
   
@@ -41,6 +45,8 @@ export const FinancePlugin = {
       label: 'Finance',
       children: [
         { type: 'object', object: 'contract' },
+        { type: 'object', object: 'invoice' },
+        { type: 'object', object: 'payment' },
       ]
     }
   ]
