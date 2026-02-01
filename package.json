@@ -7,7 +7,6 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "pnpm --filter @hotcrm/docs dev",
     "dev:docs": "pnpm --filter @hotcrm/docs dev",
     "build": "pnpm -r build",
     "build:crm": "pnpm --filter @hotcrm/crm build",
@@ -18,9 +17,8 @@
     "lint": "pnpm -r lint",
     "test": "jest --passWithNoTests",
     "verify:plugins": "node scripts/verify-plugin-architecture.js",
-    "clean": "pnpm -r exec rm -rf dist node_modules",
-    "install:all": "pnpm install"
-  },
+    "clean": "pnpm -r exec rm -rf dist node_modules"
+},
   "keywords": [
     "crm",
     "objectstack",

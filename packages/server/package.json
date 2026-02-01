@@ -5,8 +5,8 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
-    "start": "objectstack start",
-    "dev": "objectstack dev"
+    "start": "ts-node src/index.ts",
+    "dev": "ts-node src/index.ts"
   },
   "dependencies": {
     "@hotcrm/crm": "workspace:*",
@@ -15,8 +15,11 @@
     "@hotcrm/products": "workspace:*",
     "@hotcrm/support": "workspace:*",
     "@objectstack/cli": "^0.8.0",
-    "@objectstack/runtime": "^0.8.0",
-    "@objectstack/spec": "^0.8.0"
+    "@objectstack/core": "0.8.0",
+    "@objectstack/plugin-hono-server": "0.8.0",
+    "@objectstack/runtime": "0.8.0",
+    "@objectstack/spec": "^0.8.0",
+    "pino": "^10.3.0"
   },
   "devDependencies": {
     "typescript": "^5.0.0"
