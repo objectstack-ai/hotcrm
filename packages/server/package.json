@@ -1,0 +1,24 @@
+{
+  "name": "@hotcrm/server",
+  "version": "1.0.0",
+  "description": "HotCRM Application Server",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "objectstack start",
+    "dev": "objectstack dev"
+  },
+  "dependencies": {
+    "@objectstack/cli": "^0.7.0",
+    "@objectstack/runtime": "^0.7.0",
+    "@objectstack/spec": "^0.7.0",
+    "@hotcrm/crm": "workspace:*",
+    "@hotcrm/finance": "workspace:*",
+    "@hotcrm/marketing": "workspace:*",
+    "@hotcrm/products": "workspace:*",
+    "@hotcrm/support": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

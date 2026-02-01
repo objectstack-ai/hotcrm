@@ -22,7 +22,7 @@ export interface TriggerContext {
  */
 const QuotePricingHook: Hook = {
   name: 'QuotePricingHook',
-  object: 'Quote',
+  object: 'quote',
   events: ['beforeInsert', 'beforeUpdate', 'afterInsert', 'afterUpdate'],
   handler: async (ctx: TriggerContext) => {
     try {

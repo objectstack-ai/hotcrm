@@ -10,7 +10,7 @@ const CampaignROIHook: Hook = {
   name: 'CampaignROIHook',
   object: 'opportunity', // Listening to Opportunity events from Marketing package
   events: ['afterUpdate'],
-  handler: async (ctx) => {
+  handler: async (ctx: any) => {
     const newOpp = ctx.new;
     const oldOpp = ctx.old;
 
@@ -44,7 +44,7 @@ const CampaignROIHook: Hook = {
       // If we can't use $inc, we risk race conditions, but for this prototype:
       const campaigns = await db.find('campaign', { filters: [['_id', '=', newOpp.campaign_id]] });
       if (campaigns && campaigns.length > 0) {
-        const campaign = campaigns[0];
+        const campaign: any = campaigns[0];
         const currentRevenue = campaign.actual_revenue || 0;
         
         await db.update('campaign', newOpp.campaign_id, {

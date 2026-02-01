@@ -6,6 +6,9 @@
   "peerDependencies": {
     "@hotcrm/core": "workspace:*"
   },
+  "dependencies": {
+    "@objectstack/spec": "^0.7.0"
+  },
   "devDependencies": {
      "typescript": "^5.0.0"
   }
