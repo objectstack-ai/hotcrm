@@ -59,17 +59,15 @@ const LeadScoringTrigger: Hook = {
       lead.DataCompleteness = calculateDataCompleteness(lead);
 
       // Calculate Lead Score
-      // @ts-ignore
+      // @ts-expect-error TODO: Fix type definition for calculateLeadScore
       lead.LeadScore = await calculateLeadScore(lead, ctx);
 
       // Run Assignment Rules
       if (!lead.OwnerId && !lead.owner) {
-        // @ts-ignore
+        // @ts-expect-error TODO: Fix type definition for runAssignmentRules
         await runAssignmentRules(lead, ctx);
       }
 
-      // Manage public pool status
-      // @ts-ignore ctx);
 
       console.log(`✨ Lead scoring completed: Score=${lead.LeadScore}, Completeness=${lead.DataCompleteness}%`);
 
@@ -294,18 +292,18 @@ const LeadStatusChangeTrigger: Hook = {
 
       // Handle conversion
       if (ctx.input.Status === 'Converted') {
-        // @ts-ignore
+        // @ts-expect-error TODO: Fix type definition for handleLeadConversion
         await handleLeadConversion(ctx);
       }
 
       // Handle unqualification
       if (ctx.input.Status === 'Unqualified') {
-        // @ts-ignore
+        // @ts-expect-error TODO: Fix type definition for handleLeadUnqualification
         await handleLeadUnqualification(ctx);
       }
 
       // Log activity for status change
-      // @ts-ignore
+      // @ts-expect-error TODO: Fix type definition for logStatusChange
       await logStatusChange(ctx);
 
     } catch (error) {
