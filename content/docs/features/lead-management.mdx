@@ -538,9 +538,9 @@ AI-Identified Segments:
 graph TD
     A[Visitor fills web form] --> B[Lead created automatically]
     B --> C{Lead Score?}
-    C -->|>70| D[Auto-assign to sales rep]
+    C -->|&gt;70| D[Auto-assign to sales rep]
     C -->|30-69| E[Add to nurture campaign]
-    C -->|<30| F[Public pool]
+    C -->|&lt;30| F[Public pool]
     D --> G[Sales rep contacted within 1 hour]
     G --> H{Qualified?}
     H -->|Yes| I[Convert to Opportunity]
