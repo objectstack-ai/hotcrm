@@ -1,8 +1,9 @@
 {
-  "title": "Developer Guide",
+  "title": "Developers",
   "pages": [
-    "creating-objects",
+    "specs",
     "business-logic",
+    "creating-objects",
     "ui-development"
   ]
 }
