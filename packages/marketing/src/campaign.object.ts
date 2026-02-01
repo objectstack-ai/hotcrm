@@ -33,11 +33,18 @@ export default {
     },
     start_date: { type: 'date', label: 'Start Date' },
     end_date: { type: 'date', label: 'End Date' },
-    budgeted_cost: { type: 'currency', label: 'Budgeted Cost' },
-    actual_cost: { type: 'currency', label: 'Actual Cost' },
-    expected_revenue: { type: 'currency', label: 'Expected Revenue' },
+    budgeted_cost: { type: 'currency', label: 'Budgeted Cost', scale: 2 },
+    actual_cost: { type: 'currency', label: 'Actual Cost', scale: 2 },
+    expected_revenue: { type: 'currency', label: 'Expected Revenue', scale: 2 },
+    actual_revenue: { 
+      type: 'currency', 
+      label: 'Actual Revenue', 
+      scale: 2,
+      readonly: true,
+      description: 'Calculated from Won Opportunities' 
+    },
     description: { type: 'textarea', label: 'Description' },
-    isActive: { type: 'boolean', label: 'Active', defaultValue: true },
+    is_active: { type: 'boolean', label: 'Active', defaultValue: true },
     parent_campaign: { type: 'lookup', reference_to: 'campaign', label: 'Parent Campaign' }
   }
 }

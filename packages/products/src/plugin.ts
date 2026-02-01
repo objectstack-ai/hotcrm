@@ -18,6 +18,7 @@ import Quote from './quote.object';
 
 import QuoteLineItem from './quote_line_item.object';
 import ProductBundle from './product_bundle.object';
+import ProductBundleComponent from './product_bundle_component.object';
 import PriceRule from './price_rule.object';
 import ApprovalRequest from './approval_request.object';
 import DiscountSchedule from './discount_schedule.object';
@@ -44,6 +45,7 @@ export const ProductsPlugin = {
     quote: Quote,
     quote_line_item: QuoteLineItem,
     product_bundle: ProductBundle,
+    product_bundle_component: ProductBundleComponent,
     price_rule: PriceRule,
     approval_request: ApprovalRequest,
     discount_schedule: DiscountSchedule,

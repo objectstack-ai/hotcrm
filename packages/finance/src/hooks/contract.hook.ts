@@ -21,7 +21,7 @@ const ContractBillingHook: Hook = {
 
         // Create Invoice
         const invoiceData = {
-            account: newDoc.account_id,
+            account: newDoc.account,
             contract: newDoc._id,
             status: 'Draft',
             due_date: dueDate.toISOString(), // Assuming ObjectQL handles Date types or ISO strings

@@ -12,24 +12,24 @@ const CampaignMember = {
   },
   fields: {
     // Relationship Fields
-    campaign_id: {
+    campaign: {
       type: 'lookup',
       label: 'Campaign',
-      reference: 'campaign',
+      reference_to: 'campaign',
       required: true,
       description: 'The marketing campaign this member belongs to'
     },
-    lead_id: {
+    lead: {
       type: 'lookup',
       label: 'Lead',
-      reference: 'lead',
-      description: 'Related lead (mutually exclusive with contact_id)'
+      reference_to: 'lead',
+      description: 'Related lead (mutually exclusive with contact)'
     },
-    contact_id: {
+    contact: {
       type: 'lookup',
       label: 'Contact',
-      reference: 'contact',
-      description: 'Related contact (mutually exclusive with lead_id)'
+      reference_to: 'contact',
+      description: 'Related contact (mutually exclusive with lead)'
     },
     
     // status & Engagement

@@ -1,4 +1,5 @@
-import campaign from './campaign.object';
+import Campaign from './campaign.object';
+import CampaignMember from './campaign_member.object';
 
 export const MarketingPlugin = {
   name: 'marketing',
@@ -7,7 +8,18 @@ export const MarketingPlugin = {
   description: 'Marketing automation and campaign management.',
   dependencies: ['crm'],
   objects: {
-    campaign
-  }
+    campaign: Campaign,
+    campaign_member: CampaignMember
+  },
+  navigation: [
+    {
+      type: 'group',
+      label: 'Marketing',
+      children: [
+        { type: 'object', object: 'campaign' },
+        { type: 'object', object: 'campaign_member' }
+      ]
+    }
+  ]
 };
 export default MarketingPlugin;

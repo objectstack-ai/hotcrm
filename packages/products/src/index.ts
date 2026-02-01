@@ -18,6 +18,7 @@ export { default as Pricebook } from './pricebook.object';
 export { default as Quote } from './quote.object';
 
 export { default as ProductBundle } from './product_bundle.object';
+export { default as ProductBundleComponent } from './product_bundle_component.object';
 export { default as PriceRule } from './price_rule.object';
 export { default as QuoteLineItem } from './quote_line_item.object';
 export { default as ApprovalRequest } from './approval_request.object';

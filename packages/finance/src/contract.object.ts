@@ -17,13 +17,13 @@ const Contract = {
       label: '合同编号',
       format: 'CT-{YYYY}{MM}{DD}-{0000}'
     },
-    account_id: {
+    account: {
       type: 'lookup',
       label: '客户',
       reference: 'account',
       required: true
     },
-    opportunity_id: {
+    opportunity: {
       type: 'lookup',
       label: '关联商机',
       reference: 'opportunity'

@@ -1,7 +1,17 @@
-import campaign from './campaign.object';
-export { MarketingPlugin } from './plugin';
+/**
+ * @hotcrm/marketing - Marketing Module
+ * 
+ * This package contains all marketing-related business objects:
+ * - Campaign: Marketing campaign management
+ * - CampaignMember: Links leads/contacts to campaigns
+ */
 
-export const objects = {
-    campaign
-};
+export { default as Campaign } from './campaign.object';
+export { default as CampaignMember } from './campaign_member.object';
+
+// Export Hooks
+export { default as CampaignROIHook } from './hooks/roi.hook';
+
+// Export plugin definition
+export { default as MarketingPlugin } from './plugin';
 

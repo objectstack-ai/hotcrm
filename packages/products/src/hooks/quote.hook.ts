@@ -272,8 +272,36 @@ async function handleQuoteAccepted(ctx: TriggerContext): Promise<void> {
       }
     }
 
-    // TODO: Auto-create contract from accepted quote
-    console.log('📝 Contract auto-creation would be triggered here');
+    // Auto-create contract from accepted quote
+    if (quote.AccountId) {
+        const startDate = new Date().toISOString().split('T')[0];
+        const endDate = new Date();
+        endDate.setFullYear(endDate.getFullYear() + 1); // Default 1 year term
+
+        const contractData = {
+            contract_number: `CT-${quote.QuoteNumber}`,
+            account: quote.AccountId,
+            opportunity: quote.OpportunityId,
+            status: 'Draft',
+            start_date: startDate,
+            end_date: endDate.toISOString().split('T')[0],
+            contract_term: 12,
+            contract_value: quote.TotalPrice,
+            description: `Generated from Quote ${quote.QuoteNumber}`
+        };
+
+        try {
+            const contract = await ctx.db.insert('contract', contractData);
+            console.log(`📝 Contract created successfully: ${contract._id}`);
+            
+            // Link Contract back to Quote
+            await ctx.db.doc.update('Quote', quote.Id, {
+                Description: `${quote.Description || ''}\n Contract Created: ${contract.contract_number}`
+            });
+        } catch (err) {
+            console.error('❌ Failed to create contract:', err);
+        }
+    }
   } catch (error) {
     console.error('❌ Error handling quote acceptance:', error);
   }
