@@ -1,4 +1,9 @@
 import type { HookContext } from '@objectstack/spec/data';
+import {
+  EmployeeDataValidationTrigger,
+  EmployeeOnboardingTrigger,
+  EmployeeStatusChangeTrigger
+} from '../../../src/hooks/employee.hook';
 
 // Mock modules
 const mockQlFind = jest.fn();
@@ -29,14 +34,8 @@ const createMockContext = (
 });
 
 describe('Employee Hook - EmployeeDataValidationTrigger', () => {
-  let EmployeeDataValidationTrigger: any;
-
-  beforeEach(async () => {
+  beforeEach(() => {
     jest.clearAllMocks();
-    jest.resetModules();
-    
-    const module = await import('../../../src/hooks/employee.hook');
-    EmployeeDataValidationTrigger = module.EmployeeDataValidationTrigger;
   });
 
   describe('beforeInsert - Data Validation', () => {
@@ -202,14 +201,8 @@ describe('Employee Hook - EmployeeDataValidationTrigger', () => {
 });
 
 describe('Employee Hook - EmployeeOnboardingTrigger', () => {
-  let EmployeeOnboardingTrigger: any;
-
-  beforeEach(async () => {
+  beforeEach(() => {
     jest.clearAllMocks();
-    jest.resetModules();
-    
-    const module = await import('../../../src/hooks/employee.hook');
-    EmployeeOnboardingTrigger = module.EmployeeOnboardingTrigger;
   });
 
   describe('afterInsert - Onboarding Initiation', () => {
@@ -391,14 +384,8 @@ describe('Employee Hook - EmployeeOnboardingTrigger', () => {
 });
 
 describe('Employee Hook - EmployeeStatusChangeTrigger', () => {
-  let EmployeeStatusChangeTrigger: any;
-
-  beforeEach(async () => {
+  beforeEach(() => {
     jest.clearAllMocks();
-    jest.resetModules();
-    
-    const module = await import('../../../src/hooks/employee.hook');
-    EmployeeStatusChangeTrigger = module.EmployeeStatusChangeTrigger;
   });
 
   describe('afterUpdate - Status Change Detection', () => {
