@@ -253,4 +253,4 @@ async function logStatusChange(
 }
 
 export { CandidateScoringTrigger, CandidateStatusChangeTrigger };
-export default CandidateScoringTrigger;
+export default [CandidateScoringTrigger, CandidateStatusChangeTrigger];

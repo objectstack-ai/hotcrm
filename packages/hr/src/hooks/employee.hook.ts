@@ -262,7 +262,7 @@ const EmployeeDataValidationTrigger: Hook = {
         }
       }
 
-      // Auto-set full name if not provided
+      // Auto-set full name if not provided (Chinese naming convention: LastFirst)
       if (!employee.full_name && employee.first_name && employee.last_name) {
         employee.full_name = `${employee.last_name}${employee.first_name}`;
       }
