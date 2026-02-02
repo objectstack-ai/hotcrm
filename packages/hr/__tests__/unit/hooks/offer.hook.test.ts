@@ -80,13 +80,18 @@ describe('Offer Hook - OfferCreationTrigger', () => {
 
     it('should generate sequential offer numbers', async () => {
       // Arrange
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const yearMonth = `${year}${month}`;
+      
       const offer1 = {
         candidate_id: 'cand_123',
-        offer_date: '2024-06-01'
+        offer_date: now.toISOString().split('T')[0]
       };
 
       const existingOffer = {
-        offer_number: 'OFF-202406-0005'
+        offer_number: `OFF-${yearMonth}-0005`
       };
 
       mockQlFind.mockResolvedValue([existingOffer]);
@@ -97,7 +102,7 @@ describe('Offer Hook - OfferCreationTrigger', () => {
       await OfferCreationTrigger.handler(ctx);
 
       // Assert
-      expect(offer1.offer_number).toBe('OFF-202406-0006');
+      expect(offer1.offer_number).toBe(`OFF-${yearMonth}-0006`);
     });
   });
 
