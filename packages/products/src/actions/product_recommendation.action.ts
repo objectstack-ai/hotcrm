@@ -91,7 +91,7 @@ export async function recommendProducts(request: RecommendProductsRequest): Prom
   });
 
   // Build recommendation scoring
-  const recommendations = allProducts.map(product => {
+  const recommendations = allProducts.map((product: any) => {
     let relevanceScore = 50; // Base score
     let reason = '';
     let priority: 'high' | 'medium' | 'low' = 'medium';
@@ -125,7 +125,7 @@ export async function recommendProducts(request: RecommendProductsRequest): Prom
     }
 
     // Avoid duplicate recommendations of existing products
-    const hasProduct = existingOpps.some(o => o.name.includes(product.name));
+    const hasProduct = existingOpps.some((o: any) => o.name.includes(product.name));
     if (hasProduct) {
       relevanceScore -= 50;
       reason = 'Customer already has this product';
@@ -153,7 +153,7 @@ export async function recommendProducts(request: RecommendProductsRequest): Prom
 
   // Sort by relevance and take top N
   const topRecommendations = recommendations
-    .sort((a, b) => b.relevanceScore - a.relevanceScore)
+    .sort((a: any, b: any) => b.relevanceScore - a.relevanceScore)
     .slice(0, maxRecommendations);
 
   return {
@@ -161,13 +161,15 @@ export async function recommendProducts(request: RecommendProductsRequest): Prom
     customerContext: {
       industry: account.industry || 'Unknown',
       size: account.number_of_employees > 1000 ? 'Enterprise' : account.number_of_employees > 100 ? 'Mid-Market' : 'Small Business',
-      currentProducts: existingOpps.map(o => o.name),
-      purchaseHistory: existingOpps.reduce((sum, o) => sum + (o.amount || 0), 0)
+      currentProducts: existingOpps.map((o: any) => o.name),
+      purchaseHistory: existingOpps.reduce((sum: any, o: any) => sum + (o.amount || 0), 0)
     },
     strategy: {
       approach: 'Industry and company size matching with usage pattern analysis',
       factors: ['Industry alignment', 'Company size', 'Revenue capacity', 'Existing product portfolio'],
-      confidence: Math.round(topRecommendations.reduce((sum, r) => sum + r.confidence, 0) / topRecommendations.length)
+      confidence: topRecommendations.length > 0 
+        ? Math.round(topRecommendations.reduce((sum: any, r: any) => sum + r.confidence, 0) / topRecommendations.length)
+        : 0
     }
   };
 }
@@ -250,11 +252,11 @@ export async function findCrossSellOpportunities(request: FindCrossSellOpportuni
   });
 
   const opportunities = [];
-  const currentProductNames = currentProducts.map(p => p.name.toLowerCase());
+  const currentProductNames = currentProducts.map((p: any) => p.name.toLowerCase());
 
   for (const product of allProducts) {
     // Skip if customer already has this product
-    if (currentProductNames.some(name => name.includes(product.name.toLowerCase()))) {
+    if (currentProductNames.some((name: any) => name.includes(product.name.toLowerCase()))) {
       continue;
     }
 
@@ -264,7 +266,7 @@ export async function findCrossSellOpportunities(request: FindCrossSellOpportuni
     let reasoning = '';
 
     // Check for complementary products
-    const hasRelatedProduct = currentProducts.some(cp => {
+    const hasRelatedProduct = currentProducts.some((cp: any) => {
       const cpFamily = cp.name.split(' ')[0];
       return product.family === cpFamily || product.name.includes(cpFamily);
     });
@@ -278,7 +280,7 @@ export async function findCrossSellOpportunities(request: FindCrossSellOpportuni
 
     // Check for premium upgrade opportunity
     if (product.name.includes('Premium') || product.name.includes('Enterprise')) {
-      const hasBasicVersion = currentProducts.some(cp => 
+      const hasBasicVersion = currentProducts.some((cp: any) => 
         product.name.replace('Premium', '').replace('Enterprise', '').trim() === cp.name.trim()
       );
       
@@ -455,7 +457,7 @@ export async function suggestProductBundles(request: SuggestProductBundlesReques
   const bundles = [];
 
   // Bundle 1: Starter Package
-  const starterProducts = products.filter(p => 
+  const starterProducts = products.filter((p: any) => 
     p.name.includes('Basic') || p.name.includes('Starter') || p.family === 'Core'
   ).slice(0, 3);
 
@@ -463,7 +465,7 @@ export async function suggestProductBundles(request: SuggestProductBundlesReques
     const totalValue = starterProducts.length * 15000;
     bundles.push({
       bundle_name: 'Starter Success Package',
-      products: starterProducts.map((p, idx) => ({
+      products: starterProducts.map((p: any, idx: any) => ({
         product_id: p.product_id,
         product_name: p.name,
         role: idx === 0 ? 'core' as const : 'complementary' as const
@@ -477,7 +479,7 @@ export async function suggestProductBundles(request: SuggestProductBundlesReques
   }
 
   // Bundle 2: Growth Package
-  const growthProducts = products.filter(p => 
+  const growthProducts = products.filter((p: any) => 
     p.name.includes('Professional') || p.family === 'Analytics' || p.family === 'Integration'
   ).slice(0, 4);
 
@@ -485,7 +487,7 @@ export async function suggestProductBundles(request: SuggestProductBundlesReques
     const totalValue = growthProducts.length * 35000;
     bundles.push({
       bundle_name: 'Growth Accelerator Bundle',
-      products: growthProducts.map((p, idx) => ({
+      products: growthProducts.map((p: any, idx: any) => ({
         product_id: p.product_id,
         product_name: p.name,
         role: idx < 2 ? 'core' as const : 'complementary' as const
@@ -499,7 +501,7 @@ export async function suggestProductBundles(request: SuggestProductBundlesReques
   }
 
   // Bundle 3: Enterprise Package
-  const enterpriseProducts = products.filter(p => 
+  const enterpriseProducts = products.filter((p: any) => 
     p.name.includes('Enterprise') || p.name.includes('Premium') || p.family === 'Security'
   ).slice(0, 5);
 
@@ -507,7 +509,7 @@ export async function suggestProductBundles(request: SuggestProductBundlesReques
     const totalValue = enterpriseProducts.length * 50000;
     bundles.push({
       bundle_name: 'Enterprise Complete Solution',
-      products: enterpriseProducts.map((p, idx) => ({
+      products: enterpriseProducts.map((p: any, idx: any) => ({
         product_id: p.product_id,
         product_name: p.name,
         role: idx < 2 ? 'core' as const : idx < 4 ? 'complementary' as const : 'optional' as const
@@ -522,7 +524,7 @@ export async function suggestProductBundles(request: SuggestProductBundlesReques
 
   // Industry-specific bundle
   if (account?.industry === 'Healthcare') {
-    const healthcareProducts = products.filter(p => 
+    const healthcareProducts = products.filter((p: any) => 
       p.family === 'Compliance' || p.family === 'Security' || p.name.includes('HIPAA')
     ).slice(0, 3);
 
@@ -530,7 +532,7 @@ export async function suggestProductBundles(request: SuggestProductBundlesReques
       const totalValue = healthcareProducts.length * 40000;
       bundles.push({
         bundle_name: 'Healthcare Compliance Bundle',
-        products: healthcareProducts.map((p, idx) => ({
+        products: healthcareProducts.map((p: any, idx: any) => ({
           product_id: p.product_id,
           product_name: p.name,
           role: idx === 0 ? 'core' as const : 'complementary' as const
@@ -639,7 +641,7 @@ export async function analyzeProductFit(request: AnalyzeProductFitRequest): Prom
   let technicalScore = 60;
   const technicalFactors = [];
 
-  const hasComplementaryProducts = existingProducts.some(p => 
+  const hasComplementaryProducts = existingProducts.some((p: any) => 
     p.name.toLowerCase().includes(product.family?.toLowerCase() || '')
   );
 
@@ -935,9 +937,17 @@ export async function predictProductAdoption(request: PredictProductAdoptionRequ
   // Driver 1: Engagement level
   const engagementScore = Math.min(40, activities.length * 2);
   adoptionScore += engagementScore;
+  let impactValue: 'positive' | 'negative' | 'neutral';
+  if (activities.length > 10) {
+    impactValue = 'positive';
+  } else if (activities.length > 5) {
+    impactValue = 'neutral';
+  } else {
+    impactValue = 'negative';
+  }
   drivers.push({
     driver: 'Recent Engagement',
-    impact: activities.length > 10 ? 'positive' : activities.length > 5 ? 'neutral' : 'negative' as const,
+    impact: impactValue,
     weight: engagementScore
   });
 
@@ -1017,7 +1027,7 @@ export async function predictProductAdoption(request: PredictProductAdoptionRequ
 
   const timelineFactors = [];
   if (purchaseHistory.length > 0) {
-    const avgSalesCycle = purchaseHistory.reduce((sum, p) => {
+    const avgSalesCycle = purchaseHistory.reduce((sum: any, p: any) => {
       const days = (new Date(p.close_date).getTime() - new Date(p.created_date).getTime()) / (1000 * 60 * 60 * 24);
       return sum + days;
     }, 0) / purchaseHistory.length;
