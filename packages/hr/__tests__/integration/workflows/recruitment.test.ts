@@ -22,7 +22,7 @@ import { db } from '../../../src/db';
 
 describe('End-to-End Recruitment Workflow', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    jest.resetAllMocks();
   });
 
   it('should successfully complete full recruitment cycle: Application → Hired', async () => {
