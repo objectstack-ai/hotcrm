@@ -1,5 +1,4 @@
 # HotCRM Quick Wins & Immediate Actions
-# 快速见效措施与即时行动方案
 
 **Version**: 1.0.0  
 **Date**: 2026-02-01  

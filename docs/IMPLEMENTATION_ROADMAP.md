@@ -1,5 +1,4 @@
 # HotCRM Implementation Roadmap
-# 具体实施路线图
 
 **Version**: 1.0.0  
 **Date**: 2026-02-01  

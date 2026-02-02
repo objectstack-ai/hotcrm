@@ -1,5 +1,5 @@
 # HotCRM Strategic Enhancement Plan
-# 打造全球顶级AI-Native CRM系统 - 战略增强计划
+## Transform HotCRM into the World's Leading AI-Native CRM
 
 **Version**: 1.0.0  
 **Date**: 2026-02-01  

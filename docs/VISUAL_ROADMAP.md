@@ -1,9 +1,7 @@
 # HotCRM Strategic Vision - Visual Roadmap
-# HotCRM战略愿景 - 可视化路线图
 
 ```
                     🎯 VISION: World's Leading AI-Native Enterprise CRM
-                    愿景：全球领先的AI-Native企业级CRM系统
 ```
 
 ---
@@ -11,7 +9,7 @@
 ## 📊 Current State vs. Future State
 
 ```
-CURRENT STATE (现状)                    FUTURE STATE (目标状态)
+CURRENT STATE                           FUTURE STATE
 ================                        ==================
 
 Objects: 49                    →        Objects: 150+
@@ -496,4 +494,4 @@ MONTH 9 (GA Launch)
 ---
 
 *This visual roadmap is part of the comprehensive HotCRM Strategic Enhancement Plan.*
-*For detailed information, see: docs/STRATEGIC_PLAN_SUMMARY_CN.md*
+*For detailed information, see the complete documentation set in the docs/ directory.*

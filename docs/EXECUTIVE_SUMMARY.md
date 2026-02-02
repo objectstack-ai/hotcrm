@@ -1,5 +1,4 @@
 # Executive Summary: HotCRM Strategic Enhancement Plan
-# 执行摘要：HotCRM战略增强计划
 
 **Prepared for**: Executive Leadership & Board of Directors  
 **Date**: February 1, 2026  
@@ -344,7 +343,6 @@ We can capture significant market share by offering:
 2. **[Implementation Roadmap](./IMPLEMENTATION_ROADMAP.md)** - Sprint-by-sprint execution
 3. **[Quick Wins Plan](./QUICK_WINS.md)** - 2-week immediate value
 4. **[Visual Roadmap](./VISUAL_ROADMAP.md)** - Graphical overview
-5. **[Summary (Chinese)](./STRATEGIC_PLAN_SUMMARY_CN.md)** - 中文概要
 
 ---
 

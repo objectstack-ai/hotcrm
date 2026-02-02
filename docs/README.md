@@ -1,5 +1,4 @@
 # HotCRM Strategic Planning - Complete Documentation Index
-# HotCRM战略规划 - 完整文档索引
 
 **Last Updated**: February 1, 2026  
 **Version**: 1.0.0  
@@ -22,12 +21,6 @@ Choose the document that best fits your role and time available:
 - ASCII diagrams and charts
 - Timeline visualization
 - Metrics dashboard
-
-### For Chinese Speakers (20 minutes)
-👉 **从这里开始**: [战略计划概要 (中文)](./STRATEGIC_PLAN_SUMMARY_CN.md)
-- 中英文双语概要
-- 完整文档索引
-- 关键指标对比
 
 ### For Product & Engineering Teams (45 minutes)
 👉 **Start here**: [Strategic Enhancement Plan](./STRATEGIC_ENHANCEMENT_PLAN.md)
@@ -57,10 +50,9 @@ Choose the document that best fits your role and time available:
 |---|----------|------|----------|-----------|---------|
 | 1 | [Executive Summary](./EXECUTIVE_SUMMARY.md) | 10KB | Executives, Board | 15 min | Decision making |
 | 2 | [Visual Roadmap](./VISUAL_ROADMAP.md) | 19KB | All stakeholders | 20 min | Visual overview |
-| 3 | [Strategic Plan Summary (CN)](./STRATEGIC_PLAN_SUMMARY_CN.md) | 7KB | Chinese speakers | 20 min | 中文概要 |
-| 4 | [Strategic Enhancement Plan](./STRATEGIC_ENHANCEMENT_PLAN.md) | 29KB | Product, Engineering | 45 min | Detailed roadmap |
-| 5 | [Implementation Roadmap](./IMPLEMENTATION_ROADMAP.md) | 15KB | Project managers | 30 min | Execution plan |
-| 6 | [Quick Wins](./QUICK_WINS.md) | 14KB | Engineering teams | 20 min | Immediate actions |
+| 3 | [Strategic Enhancement Plan](./STRATEGIC_ENHANCEMENT_PLAN.md) | 29KB | Product, Engineering | 45 min | Detailed roadmap |
+| 4 | [Implementation Roadmap](./IMPLEMENTATION_ROADMAP.md) | 15KB | Project managers | 30 min | Execution plan |
+| 5 | [Quick Wins](./QUICK_WINS.md) | 14KB | Engineering teams | 20 min | Immediate actions |
 
 ### Supporting Documentation
 
@@ -69,7 +61,7 @@ Choose the document that best fits your role and time available:
 | [Plugin Architecture](./PLUGIN_ARCHITECTURE.md) | 8KB | Technical architecture guide |
 | [Plugin Implementation Summary](./PLUGIN_IMPLEMENTATION_SUMMARY.md) | 7KB | Plugin system overview |
 
-**Total Documentation**: 109KB across 8 files
+**Total Documentation**: 102KB across 7 files
 
 ---
 
@@ -165,7 +157,7 @@ Transform HotCRM from a solid foundation (49 objects, 5 packages) into the **wor
 5. ⏭️ Set up development infrastructure
 
 ### For Product Managers
-1. ✅ Read [Strategic Plan Summary](./STRATEGIC_PLAN_SUMMARY_CN.md)
+1. ✅ Read [Executive Summary](./EXECUTIVE_SUMMARY.md)
 2. ✅ Review [Quick Wins](./QUICK_WINS.md)
 3. ⏭️ Create detailed feature specs
 4. ⏭️ Define success metrics
@@ -214,8 +206,6 @@ GitHub: [objectstack-ai/hotcrm](https://github.com/objectstack-ai/hotcrm)
 2. Visual Roadmap (20 min)
    ↓
 3. Quick Wins (20 min)
-   ↓
-4. Strategic Plan Summary (5 min)
 ```
 
 ### For Deep Dive (2.5 hours total)
@@ -230,8 +220,6 @@ GitHub: [objectstack-ai/hotcrm](https://github.com/objectstack-ai/hotcrm)
 4. Quick Wins (20 min)
    ↓
 5. Visual Roadmap (20 min)
-   ↓
-6. Strategic Plan Summary (20 min)
 ```
 
 ### For Technical Teams (1.5 hours)
@@ -275,11 +263,6 @@ GitHub: [objectstack-ai/hotcrm](https://github.com/objectstack-ai/hotcrm)
 - [x] Architecture diagrams
 - [x] Comparison matrices
 - [x] Metrics dashboards
-
-### Localization ✅
-- [x] English documentation
-- [x] Chinese summary
-- [x] Bilingual key terms
 
 ---
 

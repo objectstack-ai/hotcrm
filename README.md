@@ -7,7 +7,7 @@
 
 > A world-class Customer Relationship Management system built on @objectstack/spec v0.7.2 protocol with Salesforce-level functionality and Apple/Linear-level UX.
 
-> 🚀 **Strategic Plan Available**: See our comprehensive [Strategic Enhancement Plan](docs/STRATEGIC_PLAN_SUMMARY_CN.md) to transform HotCRM into the world's leading AI-Native CRM
+> 🚀 **Strategic Plan Available**: See our comprehensive [Strategic Enhancement Plan](docs/README.md) to transform HotCRM into the world's leading AI-Native CRM
 
 > 📝 **Latest Updates**: Upgraded to @objectstack/spec v0.7.2 with CLI-based server startup. See [UPGRADE_NOTES.md](UPGRADE_NOTES.md) for migration details.
 
@@ -216,7 +216,7 @@ HotCRM provides two server startup modes:
 ### 📖 Development Documentation
 
 **🚀 Strategic Planning** (NEW):
-- **[Strategic Plan Summary](docs/STRATEGIC_PLAN_SUMMARY_CN.md)** - 完整战略规划概览 (中英文)
+- **[Documentation Index](docs/README.md)** - Complete guide to all strategic planning documents
 - **[Strategic Enhancement Plan](docs/STRATEGIC_ENHANCEMENT_PLAN.md)** - Comprehensive 36-week roadmap to world-class CRM
 - **[Implementation Roadmap](docs/IMPLEMENTATION_ROADMAP.md)** - Detailed sprint-by-sprint execution plan
 - **[Quick Wins](docs/QUICK_WINS.md)** - 10 high-impact features deliverable in 2 weeks
