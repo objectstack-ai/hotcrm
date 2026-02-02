@@ -255,7 +255,7 @@ export async function predictRenewal(request: RenewalPredictionRequest): Promise
     fields: ['priority', 'status']
   });
 
-  const highPriorityCases = recentCases.filter(c => c.priority === 'High' || c.priority === 'Critical');
+  const highPriorityCases = recentCases.filter((c: any) => c.priority === 'High' || c.priority === 'Critical');
   
   if (highPriorityCases.length > 3) {
     factors.push({
@@ -488,7 +488,13 @@ export async function checkCompliance(request: ComplianceCheckRequest): Promise<
   // Fetch contract
   const contract = await db.doc.get('contract', contractId);
 
-  const issues = [];
+  const issues: Array<{
+    framework: string;
+    severity: 'critical' | 'high' | 'medium' | 'low';
+    requirement: string;
+    finding: string;
+    remediation: string;
+  }> = [];
   let passedChecks = 0;
   const totalChecks = frameworks.length * 5; // 5 checks per framework
 

@@ -86,7 +86,7 @@ export async function calculateAccountHealth(request: AccountHealthRequest): Pro
   });
 
   // Calculate engagement score (0-100)
-  const recentActivities = activities.filter(a => {
+  const recentActivities = activities.filter((a: any) => {
     const activityDate = new Date(a.activity_date);
     const daysAgo = (Date.now() - activityDate.getTime()) / (1000 * 60 * 60 * 24);
     return daysAgo <= 30;
@@ -94,13 +94,13 @@ export async function calculateAccountHealth(request: AccountHealthRequest): Pro
   const engagementScore = Math.min(100, recentActivities.length * 5);
 
   // Calculate financial score (0-100)
-  const wonOpps = opportunities.filter(o => o.stage === 'Closed Won');
-  const totalRevenue = wonOpps.reduce((sum, o) => sum + (o.amount || 0), 0);
+  const wonOpps = opportunities.filter((o: any) => o.stage === 'Closed Won');
+  const totalRevenue = wonOpps.reduce((sum: any, o: any) => sum + (o.amount || 0), 0);
   const financialScore = Math.min(100, (totalRevenue / 100000) * 10);
 
   // Calculate support score (0-100)
-  const openCases = cases.filter(c => c.status !== 'Closed');
-  const highPriorityCases = openCases.filter(c => c.priority === 'High' || c.priority === 'Critical');
+  const openCases = cases.filter((c: any) => c.status !== 'Closed');
+  const highPriorityCases = openCases.filter((c: any) => c.priority === 'High' || c.priority === 'Critical');
   const supportScore = Math.max(0, 100 - (openCases.length * 5) - (highPriorityCases.length * 10));
 
   // Calculate product adoption score (0-100)

@@ -71,7 +71,7 @@ export async function recommendArticles(request: ArticleRecommendationRequest): 
   });
 
   // Simple keyword matching (in production, use semantic search)
-  const scoredArticles = articles.map(article => {
+  const scoredArticles = articles.map((article: any) => {
     const titleMatch = article.title?.toLowerCase().includes(searchQuery.toLowerCase()) ? 50 : 0;
     const summaryMatch = article.summary?.toLowerCase().includes(searchQuery.toLowerCase()) ? 30 : 0;
     const relevanceScore = titleMatch + summaryMatch + Math.random() * 20; // Add some variance
@@ -88,13 +88,13 @@ export async function recommendArticles(request: ArticleRecommendationRequest): 
 
   // Sort by relevance and take top N
   const topArticles = scoredArticles
-    .sort((a, b) => b.relevanceScore - a.relevanceScore)
+    .sort((a: any, b: any) => b.relevanceScore - a.relevanceScore)
     .slice(0, limit);
 
   return {
     articles: topArticles,
     metadata: {
-      totalMatches: scoredArticles.filter(a => a.relevanceScore > 30).length,
+      totalMatches: scoredArticles.filter((a: any) => a.relevanceScore > 30).length,
       searchTime: 45,
       algorithmUsed: 'semantic-search-v2'
     }
@@ -439,7 +439,7 @@ export async function analyzeKnowledgeGaps(request: GapAnalysisRequest): Promise
   const topicCounts: { [key: string]: number } = {};
   const topicQuestions: { [key: string]: string[] } = {};
 
-  cases.forEach(c => {
+  cases.forEach((c: any) => {
     const subject = c.subject?.toLowerCase() || '';
     
     // Simple topic extraction (would use NLP in production)

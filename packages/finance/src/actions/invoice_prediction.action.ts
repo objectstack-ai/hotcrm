@@ -82,7 +82,7 @@ export async function predictPaymentDefault(request: PaymentDefaultRequest): Pro
   let defaulted = 0;
   let totalDaysLate = 0;
 
-  historicalInvoices.forEach(inv => {
+  historicalInvoices.forEach((inv: any) => {
     if (inv.status === 'Paid' && inv.payment_date && inv.due_date) {
       const dueDate = new Date(inv.due_date);
       const paymentDate = new Date(inv.payment_date);
@@ -372,8 +372,8 @@ export async function detectAnomalies(request: AnomalyDetectionRequest): Promise
 
   // Check 1: Invoice amount anomaly
   if (historicalInvoices.length > 0) {
-    const amounts = historicalInvoices.map(i => i.amount);
-    const avgAmount = amounts.reduce((a, b) => a + b, 0) / amounts.length;
+    const amounts = historicalInvoices.map((i: any) => i.amount);
+    const avgAmount = amounts.reduce((a: any, b: any) => a + b, 0) / amounts.length;
     const deviation = Math.abs(invoice.amount - avgAmount) / avgAmount;
 
     if (deviation > 2) { // More than 200% different
@@ -399,7 +399,7 @@ export async function detectAnomalies(request: AnomalyDetectionRequest): Promise
 
   // Check 2: Line item validation
   let calculatedTotal = 0;
-  lines.forEach(line => {
+  lines.forEach((line: any) => {
     const lineTotal = line.quantity * line.unit_price;
     if (Math.abs(lineTotal - line.line_amount) > 0.01) {
       anomalies.push({
