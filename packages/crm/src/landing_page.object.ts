@@ -250,8 +250,8 @@ export const LandingPage = ObjectSchema.create({
   },
 
   enable: {
-    searchEnabled: true,
+    searchable: true,
     trackHistory: true,
-    allowAttachments: true
+    files: true
   },
 });

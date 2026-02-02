@@ -174,9 +174,9 @@ export const Note = ObjectSchema.create({
   },
 
   enable: {
-    searchEnabled: true,
+    searchable: true,
     trackHistory: false,
-    allowFeeds: false,
-    allowAttachments: true
+    feeds: false,
+    files: true
   },
 });

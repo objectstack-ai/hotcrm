@@ -281,8 +281,8 @@ export const Unsubscribe = ObjectSchema.create({
   },
 
   enable: {
-    searchEnabled: true,
+    searchable: true,
     trackHistory: true,
-    allowAttachments: false
+    files: false
   },
 });

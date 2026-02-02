@@ -54,7 +54,7 @@ export const Campaign = ObjectSchema.create({
   },
   
   enable: {
-    searchEnabled: true,
+    searchable: true,
     trackHistory: true,
     apiEnabled: true,
   },

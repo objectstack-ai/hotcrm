@@ -220,7 +220,7 @@ export const ForumTopic = ObjectSchema.create({
   },
 
   enable: {
-    searchEnabled: true,
+    searchable: true,
     trackHistory: true
   },
 });

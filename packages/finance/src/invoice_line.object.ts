@@ -8,7 +8,7 @@ export const InvoiceLine = ObjectSchema.create({
   description: 'Line items for an invoice',
 
   fields: {
-    invoice: /* TODO: Unknown type 'master_detail' */ null,
+    invoice: Field.lookup('invoice', { label: 'Invoice', deleteBehavior: 'cascade' }),
     product: Field.lookup('product', { label: 'Product' }),
     description: Field.text({ label: 'Description' }),
     quantity: Field.number({

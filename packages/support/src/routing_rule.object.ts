@@ -49,15 +49,15 @@ export const RoutingRule = ObjectSchema.create({
         }
       ]
     }),
-    match_origins: /* TODO: Unknown type 'multiselect' */ null,
-    match_case_types: /* TODO: Unknown type 'multiselect' */ null,
-    match_priorities: /* TODO: Unknown type 'multiselect' */ null,
+    match_origins: Field.select({ label: 'Match Origins', multiple: true, options: [] }),
+    match_case_types: Field.select({ label: 'Match Case Types', multiple: true, options: [] }),
+    match_priorities: Field.select({ label: 'Match Priorities', multiple: true, options: [] }),
     match_product_ids: Field.text({
       label: 'Match Products',
       description: 'Comma-separated product IDs',
       maxLength: 500
     }),
-    match_categories: /* TODO: Unknown type 'multiselect' */ null,
+    match_categories: Field.select({ label: 'Match Categories', multiple: true, options: [] }),
     vip_customers_only: Field.boolean({
       label: 'VIP Customers Only',
       description: 'Route only VIP customer cases',
@@ -68,7 +68,7 @@ export const RoutingRule = ObjectSchema.create({
       description: 'Comma-separated account IDs for specific accounts',
       maxLength: 1000
     }),
-    match_regions: /* TODO: Unknown type 'multiselect' */ null,
+    match_regions: Field.select({ label: 'Match Regions', multiple: true, options: [] }),
     match_countries: Field.text({
       label: 'Match Countries',
       description: 'Comma-separated country codes (e.g., US, CN, UK)',
@@ -137,7 +137,7 @@ export const RoutingRule = ObjectSchema.create({
   },
 
   enable: {
-    searchEnabled: true,
+    searchable: true,
     trackHistory: true
   },
 });

@@ -38,7 +38,7 @@ export const Contact = ObjectSchema.create({
         }
       ]
     }),
-    account_id: /* TODO: Unknown type 'master_detail' */ null,
+    account_id: Field.lookup('account', { label: 'Account Id', deleteBehavior: 'cascade' }),
     title: Field.text({
       label: '职位',
       maxLength: 128
@@ -154,9 +154,9 @@ export const Contact = ObjectSchema.create({
   },
 
   enable: {
-    searchEnabled: true,
+    searchable: true,
     trackHistory: true,
-    allowActivities: true,
-    allowFeeds: true
+    activities: true,
+    feeds: true
   },
 });

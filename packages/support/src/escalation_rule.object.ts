@@ -170,8 +170,8 @@ export const EscalationRule = ObjectSchema.create({
         }
       ]
     }),
-    applicable_case_types: /* TODO: Unknown type 'multiselect' */ null,
-    applicable_priorities: /* TODO: Unknown type 'multiselect' */ null,
+    applicable_case_types: Field.select({ label: 'Applicable Case Types', multiple: true, options: [] }),
+    applicable_priorities: Field.select({ label: 'Applicable Priorities', multiple: true, options: [] }),
     times_triggered: Field.number({
       label: 'Times Triggered',
       description: 'Number of times this rule has triggered',
@@ -185,7 +185,7 @@ export const EscalationRule = ObjectSchema.create({
   },
 
   enable: {
-    searchEnabled: true,
+    searchable: true,
     trackHistory: true
   },
 });

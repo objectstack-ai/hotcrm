@@ -267,10 +267,10 @@ export const QuoteLineItem = ObjectSchema.create({
   },
 
   enable: {
-    searchEnabled: true,
+    searchable: true,
     trackHistory: true,
-    allowActivities: false,
-    allowFeeds: false,
-    allowAttachments: false
+    activities: false,
+    feeds: false,
+    files: false
   },
 });

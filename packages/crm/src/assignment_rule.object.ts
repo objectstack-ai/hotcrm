@@ -37,7 +37,7 @@ export const AssignmentRule = ObjectSchema.create({
   },
   
   enable: {
-    searchEnabled: true,
+    searchable: true,
     trackHistory: true,
     apiEnabled: true,
   },

@@ -62,9 +62,9 @@ export const Contract = ObjectSchema.create({
   },
 
   enable: {
-    searchEnabled: true,
+    searchable: true,
     trackHistory: true,
-    allowFeeds: true,
-    allowAttachments: true
+    feeds: true,
+    files: true
   },
 });

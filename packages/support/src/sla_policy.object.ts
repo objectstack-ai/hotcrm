@@ -123,9 +123,9 @@ export const SLAPolicy = ObjectSchema.create({
       description: 'Comma-separated account IDs (when Applies To = Accounts)',
       maxLength: 2000
     }),
-    account_tier: /* TODO: Unknown type 'multiselect' */ null,
-    applicable_case_types: /* TODO: Unknown type 'multiselect' */ null,
-    applicable_priorities: /* TODO: Unknown type 'multiselect' */ null,
+    account_tier: Field.select({ label: 'Account Tier', multiple: true, options: [] }),
+    applicable_case_types: Field.select({ label: 'Applicable Case Types', multiple: true, options: [] }),
+    applicable_priorities: Field.select({ label: 'Applicable Priorities', multiple: true, options: [] }),
     enable_first_response: Field.boolean({
       label: 'Track First Response',
       defaultValue: true
@@ -324,7 +324,7 @@ export const SLAPolicy = ObjectSchema.create({
   },
 
   enable: {
-    searchEnabled: true,
+    searchable: true,
     trackHistory: true
   },
 });

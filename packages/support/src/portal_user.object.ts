@@ -359,7 +359,7 @@ export const PortalUser = ObjectSchema.create({
   },
 
   enable: {
-    searchEnabled: true,
+    searchable: true,
     trackHistory: true
   },
 });

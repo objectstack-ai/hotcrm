@@ -268,8 +268,8 @@ export const CaseComment = ObjectSchema.create({
   },
 
   enable: {
-    searchEnabled: true,
+    searchable: true,
     trackHistory: true,
-    allowAttachments: true
+    files: true
   },
 });

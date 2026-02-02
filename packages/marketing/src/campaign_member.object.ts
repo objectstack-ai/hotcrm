@@ -118,8 +118,8 @@ export const CampaignMember = ObjectSchema.create({
   },
 
   enable: {
-    searchEnabled: true,
+    searchable: true,
     trackHistory: true,
-    allowAttachments: false
+    files: false
   },
 });

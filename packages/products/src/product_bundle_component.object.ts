@@ -8,7 +8,7 @@ export const ProductBundleComponent = ObjectSchema.create({
   description: 'Components included in a Product Bundle',
 
   fields: {
-    bundle: /* TODO: Unknown type 'master_detail' */ null,
+    bundle: Field.lookup('product_bundle', { label: 'Bundle', deleteBehavior: 'cascade' }),
     product: Field.lookup('product', {
       label: 'Product',
       required: true
@@ -18,7 +18,7 @@ export const ProductBundleComponent = ObjectSchema.create({
       required: true,
       defaultValue: 1
     }),
-    optional: /* TODO: Unknown type 'boolean' */ null,
+    optional: Field.boolean({ label: 'Optional' }),
     price_override: Field.currency({
       label: 'Price Override',
       description: 'If set, overrides the product unit price when inside this bundle'

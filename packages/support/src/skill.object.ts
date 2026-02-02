@@ -78,7 +78,7 @@ export const Skill = ObjectSchema.create({
       description: 'Comma-separated product IDs this skill applies to',
       maxLength: 500
     }),
-    related_categories: /* TODO: Unknown type 'multiselect' */ null,
+    related_categories: Field.select({ label: 'Related Categories', multiple: true, options: [] }),
     routing_weight: Field.number({
       label: 'Routing Weight',
       description: 'Weight in skill-based routing (1-10, higher = more important)',
@@ -116,7 +116,7 @@ export const Skill = ObjectSchema.create({
   },
 
   enable: {
-    searchEnabled: true,
+    searchable: true,
     trackHistory: true
   },
 });

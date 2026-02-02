@@ -81,13 +81,13 @@ export const KnowledgeArticle = ObjectSchema.create({
       description: 'Comma-separated keywords for search',
       maxLength: 500
     }),
-    tags: /* TODO: Unknown type 'multiselect' */ null,
+    tags: Field.select({ label: 'Tags', multiple: true, options: [] }),
     related_product_ids: Field.text({
       label: 'Related Products',
       description: 'Comma-separated product IDs',
       maxLength: 500
     }),
-    related_case_types: /* TODO: Unknown type 'multiselect' */ null,
+    related_case_types: Field.select({ label: 'Related Case Types', multiple: true, options: [] }),
     status: Field.select({
       label: 'status',
       required: true,
@@ -151,7 +151,7 @@ export const KnowledgeArticle = ObjectSchema.create({
       description: 'Customer must be logged in to view',
       defaultValue: false
     }),
-    visible_to_customer_tiers: /* TODO: Unknown type 'multiselect' */ null,
+    visible_to_customer_tiers: Field.select({ label: 'Visible To Customer Tiers', multiple: true, options: [] }),
     language: Field.select({
       label: 'language',
       required: true,
@@ -420,8 +420,8 @@ export const KnowledgeArticle = ObjectSchema.create({
   },
 
   enable: {
-    searchEnabled: true,
+    searchable: true,
     trackHistory: true,
-    allowAttachments: true
+    files: true
   },
 });

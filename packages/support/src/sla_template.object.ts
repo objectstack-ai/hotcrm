@@ -47,8 +47,8 @@ export const SLATemplate = ObjectSchema.create({
         }
       ]
     }),
-    applicable_case_types: /* TODO: Unknown type 'multiselect' */ null,
-    applicable_priorities: /* TODO: Unknown type 'multiselect' */ null,
+    applicable_case_types: Field.select({ label: 'Applicable Case Types', multiple: true, options: [] }),
+    applicable_priorities: Field.select({ label: 'Applicable Priorities', multiple: true, options: [] }),
     first_response_time_minutes: Field.number({
       label: 'First Response Time (Minutes)',
       description: 'Time to first agent response',
@@ -113,7 +113,7 @@ export const SLATemplate = ObjectSchema.create({
   },
 
   enable: {
-    searchEnabled: true,
+    searchable: true,
     trackHistory: true
   },
 });

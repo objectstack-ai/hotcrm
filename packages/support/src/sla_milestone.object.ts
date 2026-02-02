@@ -196,7 +196,7 @@ export const SLAMilestone = ObjectSchema.create({
   },
 
   enable: {
-    searchEnabled: true,
+    searchable: true,
     trackHistory: true
   },
 });
