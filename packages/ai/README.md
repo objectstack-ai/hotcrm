@@ -1,6 +1,26 @@
 # @hotcrm/ai - Unified AI Service Layer
 
-Central AI/ML infrastructure for HotCRM providing model registry, prediction services, and shared AI utilities.
+Central AI/ML infrastructure for HotCRM providing model registry, prediction services, ML provider integration, caching, monitoring, and explainability.
+
+## 🚀 New Enhanced Capabilities
+
+### Real ML Provider Integration
+
+Connect to production ML services:
+- **AWS SageMaker** - Enterprise ML model hosting
+- **Azure ML** - Microsoft Azure ML services
+- **OpenAI** - GPT models for NLP tasks
+- **Custom** - Extensible for any ML infrastructure
+
+### Advanced Features
+
+- ✅ **Multi-Provider Support** - Switch between providers seamlessly
+- ✅ **Smart Caching** - Redis with in-memory fallback (5-min TTL)
+- ✅ **Performance Monitoring** - Real-time latency and error tracking
+- ✅ **A/B Testing** - Gradual model rollout with traffic splitting
+- ✅ **Explainability** - SHAP-like feature attributions
+- ✅ **Batch Processing** - Efficient bulk predictions
+- ✅ **Health Monitoring** - Automatic status checks
 
 ## Features
 
@@ -9,6 +29,8 @@ Central AI/ML infrastructure for HotCRM providing model registry, prediction ser
 - Model lifecycle management (active, deprecated, training, testing)
 - Performance metrics tracking
 - Multi-provider support (OpenAI, Anthropic, Custom, TensorFlow, PyTorch, etc.)
+- **NEW**: A/B testing configuration
+- **NEW**: Provider integration settings
 
 ### 🔮 Prediction Service
 - Unified interface for all ML predictions
@@ -16,6 +38,9 @@ Central AI/ML infrastructure for HotCRM providing model registry, prediction ser
 - Batch prediction support
 - Performance monitoring and logging
 - Error handling and fallbacks
+- **NEW**: Real ML provider integration
+- **NEW**: Performance tracking and health checks
+- **NEW**: Explainability features
 
 ### 🛠️ AI Utilities
 - Statistical functions (mean, std dev, correlation)
@@ -25,13 +50,157 @@ Central AI/ML infrastructure for HotCRM providing model registry, prediction ser
 - Clustering (K-means)
 - Similarity metrics (cosine similarity, Pearson correlation)
 
+### 📊 Performance Monitoring (NEW)
+- Real-time latency tracking (avg, median, P95, P99)
+- Success/failure rate monitoring
+- Cache hit rate analytics
+- Model health status assessment
+- Automatic degradation detection
+
+### 💾 Caching (NEW)
+- Redis integration with in-memory fallback
+- Configurable TTL (default 5 minutes)
+- Automatic cleanup of expired entries
+- Cache statistics and monitoring
+
+### 🔍 Explainability (NEW)
+- SHAP-like feature attributions
+- Top contributing features
+- Human-readable explanations
+- Prediction comparison
+
 ## Installation
 
 ```bash
 pnpm install @hotcrm/ai
 ```
 
-## Usage
+## Quick Start
+
+### Basic Prediction
+
+```typescript
+import { PredictionService } from '@hotcrm/ai';
+
+// Make a prediction
+const result = await PredictionService.predict({
+  modelId: 'lead-scoring-v1',
+  features: {
+    company_size: 500,
+    industry: 'Technology',
+    engagement_score: 75
+  },
+  useCache: true
+});
+
+console.log(result.prediction); // Model output
+console.log(result.confidence); // Confidence score (0-100)
+console.log(result.processingTime); // Processing time in ms
+console.log(result.cached); // Whether from cache
+```
+
+### Using Real ML Providers
+
+```typescript
+import { ModelRegistry, ProviderFactory } from '@hotcrm/ai';
+
+// Register a model with AWS SageMaker
+ModelRegistry.register({
+  id: 'lead-scoring-v2',
+  name: 'Lead Scoring Model V2',
+  version: '2.0.0',
+  type: 'classification',
+  provider: 'aws-sagemaker',
+  description: 'Production lead scoring model',
+  status: 'active',
+  
+  providerConfig: {
+    provider: 'aws-sagemaker',
+    credentials: {
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+      region: 'us-east-1'
+    }
+  },
+  
+  metrics: {
+    accuracy: 92.5,
+    precision: 90.2,
+    recall: 94.1,
+    f1Score: 92.1
+  }
+});
+
+// Use the model
+const result = await PredictionService.predict({
+  modelId: 'lead-scoring-v2',
+  features: { ... }
+});
+```
+
+### A/B Testing
+
+```typescript
+// Register challenger model with A/B testing
+ModelRegistry.register({
+  id: 'lead-scoring-v3',
+  name: 'Lead Scoring Model V3',
+  version: '3.0.0',
+  type: 'classification',
+  provider: 'azure-ml',
+  status: 'active',
+  
+  // A/B test: 20% traffic to V3, 80% to V2
+  abTest: {
+    enabled: true,
+    trafficPercentage: 20,
+    championModelId: 'lead-scoring-v2'
+  }
+});
+```
+
+### Performance Monitoring
+
+```typescript
+import { PredictionService } from '@hotcrm/ai';
+
+// Get performance stats
+const stats = PredictionService.getPerformanceStats('lead-scoring-v2');
+console.log(stats);
+// {
+//   totalPredictions: 10000,
+//   averageLatency: 85,  // ms
+//   p95Latency: 120,
+//   cacheHitRate: 65,  // %
+//   errorRate: 0.5,    // %
+// }
+
+// Check health
+const health = PredictionService.getModelHealth('lead-scoring-v2');
+// { status: 'healthy' }
+```
+
+### Explainability
+
+```typescript
+import { ExplainabilityService } from '@hotcrm/ai';
+
+// Explain prediction
+const explanation = await ExplainabilityService.explainPrediction(
+  'lead-scoring-v2',
+  features,
+  prediction,
+  confidence
+);
+
+console.log(explanation.explanation);
+// "The prediction was influenced by:
+//
+// Positive factors:
+// • Engagement Score: 85 (impact: +35%)
+// • Company Size: 500 (impact: +25%)
+// ..."
+```
 
 ### Model Registry
 
@@ -167,7 +336,7 @@ const result = await PredictionService.predict({
 });
 
 // Clear all cached predictions
-PredictionService.clearCache();
+await PredictionService.clearCache();
 ```
 
 ## Performance Monitoring
@@ -180,6 +349,25 @@ console.log(result.processingTime); // ms
 console.log(result.cached); // true/false
 ```
 
+## Environment Variables
+
+```bash
+# AWS SageMaker (optional)
+AWS_ACCESS_KEY_ID=your_key
+AWS_SECRET_ACCESS_KEY=your_secret
+AWS_REGION=us-east-1
+
+# Azure ML (optional)
+AZURE_ML_ENDPOINT=https://your-endpoint
+AZURE_ML_API_KEY=your_key
+
+# OpenAI (optional)
+OPENAI_API_KEY=your_key
+
+# Redis (optional)
+REDIS_URL=redis://localhost:6379
+```
+
 ## Best Practices
 
 1. **Use caching for repeated predictions** - Significant performance improvement
@@ -187,6 +375,14 @@ console.log(result.cached); // true/false
 3. **Monitor model metrics** - Track accuracy, precision, recall over time
 4. **Update models regularly** - Retrain with new data to maintain performance
 5. **Handle errors gracefully** - Always have fallback logic for prediction failures
+6. **Use A/B testing** - Gradually roll out model improvements
+7. **Monitor health status** - Set up alerts for degraded models
+8. **Explain predictions** - Build trust with transparent AI
+
+## Documentation
+
+- [AI Capabilities Guide](../../docs/AI_CAPABILITIES.md) - Comprehensive implementation guide
+- [API Reference](./src/) - Full API documentation
 
 ## Contributing
 
