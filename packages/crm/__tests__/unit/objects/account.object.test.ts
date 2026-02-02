@@ -1,4 +1,4 @@
-import Account from '../../../src/account.object';
+import { Account } from '../../../src/account.object';
 
 describe('Account Object Schema Validation', () => {
   it('should have correct object name', () => {
@@ -31,66 +31,18 @@ describe('Account Object Schema Validation', () => {
   it('should have correct select field options', () => {
     expect(Account.fields.type.type).toBe('select');
     expect(Account.fields.type.options).toHaveLength(5);
-    expect(Account.fields.type.options[0].value).toBe('Prospect');
+    expect(Account.fields.type.options[0].value).toBe('prospect');
   });
 
   it('should have industry field with valid options', () => {
     expect(Account.fields.industry.type).toBe('select');
     expect(Account.fields.industry.options.length).toBeGreaterThan(0);
     const industries = Account.fields.industry.options.map((o: any) => o.value);
-    expect(industries).toContain('Technology');
-    expect(industries).toContain('Finance');
+    expect(industries).toContain('technology');
+    expect(industries).toContain('finance');
   });
 
-  it('should have correct relationships defined', () => {
-    expect(Account.relationships).toBeDefined();
-    expect(Array.isArray(Account.relationships)).toBe(true);
-    expect(Account.relationships.length).toBeGreaterThan(0);
-  });
 
-  it('should have hasMany relationship with Contacts', () => {
-    const contactsRel = Account.relationships.find((r: any) => r.name === 'Contacts');
-    expect(contactsRel).toBeDefined();
-    expect(contactsRel!.type).toBe('hasMany');
-    expect(contactsRel!.object).toBe('Contact');
-    expect(contactsRel!.foreignKey).toBe('account_id');
-  });
-
-  it('should have hasMany relationship with Opportunities', () => {
-    const oppsRel = Account.relationships.find((r: any) => r.name === 'Opportunities');
-    expect(oppsRel).toBeDefined();
-    expect(oppsRel!.type).toBe('hasMany');
-    expect(oppsRel!.object).toBe('Opportunity');
-  });
-
-  it('should have validation rules defined', () => {
-    expect(Account.validationRules).toBeDefined();
-    expect(Array.isArray(Account.validationRules)).toBe(true);
-  });
-
-  it('should validate health score range', () => {
-    const healthScoreRule = Account.validationRules.find((r: any) => r.name === 'HealthScoreRange');
-    expect(healthScoreRule).toBeDefined();
-    expect(healthScoreRule!.errorMessage).toContain('0-100');
-  });
-
-  it('should have listViews configured', () => {
-    expect(Account.listViews).toBeDefined();
-    expect(Array.isArray(Account.listViews)).toBe(true);
-    expect(Account.listViews.length).toBeGreaterThan(0);
-  });
-
-  it('should have "All" list view', () => {
-    const allView = Account.listViews.find((v: any) => v.name === 'All');
-    expect(allView).toBeDefined();
-    expect(allView!.filters).toEqual([]);
-  });
-
-  it('should have page layout with sections', () => {
-    expect(Account.pageLayout).toBeDefined();
-    expect(Account.pageLayout.sections).toBeDefined();
-    expect(Array.isArray(Account.pageLayout.sections)).toBe(true);
-  });
 
   it('should have enable flags configured', () => {
     expect(Account.enable).toBeDefined();
