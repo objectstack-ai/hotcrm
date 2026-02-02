@@ -237,9 +237,9 @@ export function kMeansClustering(values: number[], k: number): Array<{ cluster: 
   // Initialize centroids
   const sorted = [...values].sort((a, b) => a - b);
   const step = Math.floor(sorted.length / k);
-  let centroids = Array.from({ length: k }, (_, i) => sorted[Math.min(i * step, sorted.length - 1)]);
+  const centroids = Array.from({ length: k }, (_, i) => sorted[Math.min(i * step, sorted.length - 1)]);
   
-  let assignments = new Array(values.length).fill(0);
+  const assignments = new Array(values.length).fill(0);
   let changed = true;
   let iterations = 0;
   const maxIterations = 100;
