@@ -968,6 +968,11 @@ async function callLLM(prompt: string): Promise<string> {
   }
 
   if (prompt.includes('SMART goals') || prompt.includes('performance coach')) {
+    // Adjust timelines based on goal period
+    const isQuarterly = prompt.includes('quarterly');
+    const isAnnual = prompt.includes('annual');
+    const timelineMultiplier = isQuarterly ? 0.5 : isAnnual ? 1.5 : 1.0;
+    
     return JSON.stringify({
       goals: [
         {
@@ -980,14 +985,22 @@ async function callLLM(prompt: string): Promise<string> {
             'Reduce average deployment time from 2 hours to 1 hour',
             'Document architecture decisions and migration playbook'
           ],
-          timeline_weeks: 24,
+          timeline_weeks: Math.round(24 * timelineMultiplier),
           priority: 'must_have',
           alignment: 'Critical for company cloud-native transformation initiative',
           resources_needed: [
             'Dedicated project team (2-3 engineers)',
             'AWS infrastructure budget ($15K)',
             'Senior architect review support'
-          ]
+          ],
+          smart_score: {
+            specific: 95,
+            measurable: 90,
+            achievable: 85,
+            relevant: 95,
+            time_bound: 90,
+            overall: 91
+          }
         },
         {
           goal_name: 'Mentor 2 Junior Engineers to Productivity',
@@ -999,13 +1012,21 @@ async function callLLM(prompt: string): Promise<string> {
             'Mentees independently deliver 2+ features',
             'Positive feedback from mentees and manager'
           ],
-          timeline_weeks: 26,
+          timeline_weeks: Math.round(26 * timelineMultiplier),
           priority: 'should_have',
           alignment: 'Supports team scaling and develops leadership capabilities',
           resources_needed: [
             'Time allocation (2 hours/week)',
             'Mentorship training materials'
-          ]
+          ],
+          smart_score: {
+            specific: 90,
+            measurable: 85,
+            achievable: 90,
+            relevant: 88,
+            time_bound: 85,
+            overall: 88
+          }
         },
         {
           goal_name: 'Achieve AWS Solutions Architect Professional Certification',
@@ -1017,20 +1038,34 @@ async function callLLM(prompt: string): Promise<string> {
             'Present learnings to team (30-min tech talk)',
             'Apply 3+ new patterns to current projects'
           ],
-          timeline_weeks: 16,
+          timeline_weeks: Math.round(16 * timelineMultiplier),
           priority: 'should_have',
           alignment: 'Aligns with career progression to senior technical role',
           resources_needed: [
             'Training budget ($2,500)',
             'Study time (5 hours/week)',
             'Practice exam licenses'
-          ]
+          ],
+          smart_score: {
+            specific: 92,
+            measurable: 95,
+            achievable: 80,
+            relevant: 90,
+            time_bound: 95,
+            overall: 90
+          }
         }
       ],
       strategy: {
         primary_focus: 'Technical leadership and architecture expertise',
         secondary_focus: 'Team development and mentorship',
         balance_score: 88
+      },
+      context: {
+        employee_level: 'Senior Engineer (IC4)',
+        career_stage: 'Growth phase - ready for technical leadership',
+        recent_performance: 'Consistently exceeds expectations (4.2/5 average)',
+        department_priorities: 'Cloud migration, team scaling, technical excellence'
       }
     });
   }
@@ -1136,16 +1171,100 @@ async function callLLM(prompt: string): Promise<string> {
           measurement_method: 'Certification exam + production implementations'
         }
       ],
-      resources: {
-        budget_needed: 5200,
-        time_commitment_hours_per_week: 5,
-        support_needed: [
-          'Manager approval for training budget and time allocation',
-          'Principal architect mentorship commitment',
-          'Project assignment for architecture review',
-          'Team lead opportunity on upcoming initiative'
+      resources: [
+        {
+          type: 'book',
+          title: 'Designing Data-Intensive Applications',
+          provider: 'O\'Reilly',
+          estimated_hours: 40,
+          priority: 'high',
+          cost: 60
+        },
+        {
+          type: 'course',
+          title: 'AWS Solutions Architect Professional Course',
+          provider: 'A Cloud Guru',
+          estimated_hours: 80,
+          priority: 'high',
+          cost: 1500
+        },
+        {
+          type: 'workshop',
+          title: 'Leadership Fundamentals Workshop',
+          provider: 'Internal L&D',
+          estimated_hours: 16,
+          priority: 'medium',
+          cost: 1200
+        },
+        {
+          type: 'project',
+          title: 'Lead Architecture Review Project',
+          provider: 'Internal',
+          estimated_hours: 160,
+          priority: 'high',
+          cost: 0
+        },
+        {
+          type: 'mentor',
+          title: 'Shadow Senior Architect',
+          provider: 'Internal',
+          estimated_hours: 48,
+          priority: 'medium',
+          cost: 0
+        }
+      ],
+      skillDevelopment: {
+        technical: [
+          'Distributed systems design',
+          'Microservices architecture',
+          'AWS cloud services',
+          'System scalability patterns'
+        ],
+        soft_skills: [
+          'Technical communication',
+          'Stakeholder management',
+          'Conflict resolution',
+          'Presentation skills'
+        ],
+        leadership: [
+          'Team mentoring',
+          'Project planning',
+          'Technical decision-making',
+          'Cross-team collaboration'
+        ],
+        domain_knowledge: [
+          'Cloud-native architecture',
+          'DevOps practices',
+          'System reliability engineering',
+          'Performance optimization'
         ]
-      }
+      },
+      successMetrics: [
+        {
+          metric: 'Skill Acquisition',
+          baseline: 'Intermediate level in 3 areas',
+          target: 'Advanced level in 8+ areas',
+          measurement_method: 'Skills assessment + project work review'
+        },
+        {
+          metric: 'Career Progression',
+          baseline: 'Senior Engineer (IC4)',
+          target: 'Staff Engineer readiness',
+          measurement_method: 'Promotion committee review'
+        },
+        {
+          metric: 'Business Impact',
+          baseline: 'Individual contributor',
+          target: 'Led 2+ successful technical initiatives',
+          measurement_method: 'Project delivery metrics + stakeholder feedback'
+        },
+        {
+          metric: 'Peer Recognition',
+          baseline: '360 feedback score: 4.0',
+          target: '360 feedback score: 4.6+',
+          measurement_method: '360-degree review process'
+        }
+      ]
     });
   }
 
@@ -1173,12 +1292,15 @@ async function callLLM(prompt: string): Promise<string> {
       sentiment: {
         overall: 'positive',
         tone: 'Constructive, supportive, and encouraging',
-        supportiveness: 88
+        supportiveness: 88,
+        score: 0.75,
+        confidence: 92
       },
       themes: [
         {
           theme: 'Technical Excellence',
           frequency: 7,
+          sentiment: 'positive',
           examples: [
             'Deep understanding of system architecture',
             'High-quality, well-tested code',
@@ -1188,6 +1310,7 @@ async function callLLM(prompt: string): Promise<string> {
         {
           theme: 'Collaboration',
           frequency: 5,
+          sentiment: 'positive',
           examples: [
             'Works well across teams',
             'Helps unblock teammates',
@@ -1197,6 +1320,7 @@ async function callLLM(prompt: string): Promise<string> {
         {
           theme: 'Time Management',
           frequency: 3,
+          sentiment: 'neutral',
           examples: [
             'Sometimes underestimates complexity',
             'Could improve project timeline communication'
@@ -1208,6 +1332,20 @@ async function callLLM(prompt: string): Promise<string> {
         'Use Agile estimation techniques (story points, planning poker)',
         'Continue and formalize mentorship activities',
         'Balance quality with delivery timelines using "good enough" principle'
+      ],
+      actionableRecommendations: [
+        'Implement weekly status updates for multi-week projects',
+        'Use Agile estimation techniques (story points, planning poker)',
+        'Continue and formalize mentorship activities',
+        'Balance quality with delivery timelines using "good enough" principle'
+      ],
+      biasIndicators: [
+        {
+          type: 'vague_language',
+          detected: false,
+          severity: 'low',
+          description: 'Feedback is specific and actionable'
+        }
       ],
       summary: 'Outstanding technical performer with excellent problem-solving abilities and strong team collaboration. Demonstrates leadership through effective mentoring. Primary development areas include improving project time estimation and communication cadence for complex initiatives.'
     });
@@ -1225,6 +1363,10 @@ async function callLLM(prompt: string): Promise<string> {
       analysis: {
         follows_curve: true,
         skew: 'balanced',
+        compared_to_org: 'average',
+        concerns: [
+          'Manager A rated all 5 direct reports as "Exceeds Expectations" - possible inflation'
+        ],
         potential_issues: [
           'Manager A rated all 5 direct reports as "Exceeds Expectations" - possible inflation'
         ],
@@ -1239,10 +1381,34 @@ async function callLLM(prompt: string): Promise<string> {
           employee_id: 'emp_001',
           employee_name: 'Jane Smith',
           rating: 5.0,
+          flag_type: 'too_high',
+          reason: 'Perfect 5.0 rating is unusual; ensure rating is well-justified',
           concern: 'Perfect 5.0 rating is unusual; ensure rating is well-justified',
           suggested_action: 'Review supporting evidence with manager'
         }
       ],
+      recommendations: [
+        {
+          type: 'rating_adjustment',
+          description: 'Review Manager A\'s team ratings for potential inflation',
+          priority: 'high',
+          action: 'Schedule calibration session with Manager A'
+        },
+        {
+          type: 'peer_comparison',
+          description: 'Compare ratings across similar roles for consistency',
+          priority: 'medium',
+          action: 'Conduct cross-team calibration meeting'
+        }
+      ],
+      fairnessMetrics: {
+        rating_variance: 0.38,
+        variance_by_manager: 0.45,
+        variance_by_level: 0.32,
+        variance_by_department: 0.28,
+        manager_consistency: 85,
+        overall_consistency: 85
+      },
       suggestions: [
         {
           employee_id: 'emp_003',
@@ -1312,6 +1478,18 @@ async function callLLM(prompt: string): Promise<string> {
         }
       ]
     },
+    agreementAnalysis: {
+      overall_consensus: 'high',
+      areas_of_agreement: [
+        'Outstanding technical skills and problem-solving',
+        'Positive team player and collaborator',
+        'Effective mentor for junior engineers',
+        'High-quality work output'
+      ],
+      areas_of_disagreement: [
+        'Leadership readiness - mixed views on timing for promotion'
+      ]
+    },
     consensus: {
       strong_agreement: [
         'Outstanding technical skills and problem-solving',
@@ -1338,19 +1516,82 @@ async function callLLM(prompt: string): Promise<string> {
     blindSpots: [
       {
         area: 'Communication Frequency',
+        gap_type: 'overestimate',
         self_rating: 4.0,
         others_rating: 3.2,
         gap: 0.8,
+        gap_size: 0.8,
         implication: 'Not fully aware of how communication gaps impact stakeholders'
       },
       {
         area: 'Delegation Skills',
+        gap_type: 'overestimate',
         self_rating: 3.5,
         others_rating: 2.8,
         gap: 0.7,
+        gap_size: 0.7,
         implication: 'Underestimates the bottleneck created by not delegating more'
       }
     ],
+    developmentPriorities: [
+      {
+        area: 'Stakeholder Communication',
+        importance: 'critical',
+        rationale: 'Consistently mentioned across all rater groups as key development area',
+        suggested_actions: [
+          'Implement weekly status update routine',
+          'Enroll in executive communication workshop',
+          'Practice proactive stakeholder updates'
+        ]
+      },
+      {
+        area: 'Delegation and Team Development',
+        importance: 'important',
+        rationale: 'Essential for scaling impact and leadership progression',
+        suggested_actions: [
+          'Work with manager on delegation coaching',
+          'Take on team lead role with mentorship',
+          'Identify tasks to delegate weekly'
+        ]
+      },
+      {
+        area: 'Leadership Development',
+        importance: 'beneficial',
+        rationale: 'Supports career progression to senior technical leadership',
+        suggested_actions: [
+          'Complete leadership fundamentals training',
+          'Shadow senior leaders in decision-making',
+          'Lead cross-team initiative'
+        ]
+      }
+    ],
+    overallSummary: {
+      executive_summary: 'Outstanding technical contributor with exceptional problem-solving skills and strong team collaboration. Demonstrates leadership through effective mentoring. Primary development opportunities lie in improving communication frequency and developing delegation skills to scale impact.',
+      key_strengths: [
+        'Exceptional technical capabilities and problem-solving',
+        'Strong team collaboration and mentorship',
+        'Consistent high-quality delivery',
+        'Positive influence on team culture'
+      ],
+      development_areas: [
+        'Improve stakeholder communication cadence',
+        'Develop delegation skills to scale impact',
+        'Balance quality with timely delivery',
+        'Build formal leadership capabilities'
+      ],
+      recommended_next_steps: [
+        'Implement weekly stakeholder update routine',
+        'Take on team lead role with mentorship on delegation',
+        'Enroll in executive communication workshop',
+        'Work with manager on leadership development plan'
+      ]
+    },
+    confidence: {
+      data_completeness: 92,
+      response_quality: 88,
+      rater_participation: 85,
+      overall: 88
+    },
     summary: {
       key_strengths: [
         'Exceptional technical capabilities and problem-solving',
