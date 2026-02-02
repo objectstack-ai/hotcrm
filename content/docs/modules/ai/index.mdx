@@ -5,41 +5,175 @@ description: The cognitive engine powering every interaction in HotCRM.
 
 # HotCRM AI Intelligence
 
-**HotCRM AI** is the "Brain" of the platform. It is not just a chatbot; it is a pervasive intelligence layer that acts as a co-pilot for every user, from the CEO to the front-line support agent.
+**HotCRM AI** is the "Brain" of the platform. It is not just a chatbot; it is a pervasive intelligence layer that acts as a co-pilot for every user, from the CEO to the front-line support agent. Built as a unified service layer (`@hotcrm/ai`), it provides ML model integration, prediction services, and shared AI utilities across all business clouds.
 
 ## Core Capabilities
 
 ### 1. Generative Co-Pilot
+
 Integrated directly into the workspace, the Co-Pilot assists with content creation and context understanding.
 
 *   **Smart Composition**: Draft personalized sales emails, support responses, and marketing copy based on historical context and best practices.
 *   **Meeting Intelligence**: Analyzes transcripts (Voice/Video) to generate summaries, action items, and sentiment analysis.
 *   **Contextual Q&A**: "What's the status of the Acme deal?" – The AI queries the Object Graph to provide real-time answers.
+*   **Email Drafting**: AI-composed personalized outreach emails with dynamic merge fields.
+*   **Interview Questions**: Auto-generate role-specific interview questions based on job descriptions.
 
 ### 2. Predictive Analytics (Prophet Engine)
+
 Machine learning models that run continuously on your data to predict outcomes.
 
-*   **Lead Scoring 2.0**: Behaviors + Demographics + Intent signals.
-*   **Opportunity Scoring**: Likelihood to close based on deal velocity, stakeholder engagement, and historical win rates.
-*   **Churn Prediction**: Identify at-risk customers before they leave based on usage patterns and support signals.
-*   **Forecasting**: AI-adjusted commit numbers that remove human bias from the pipeline.
+*   **Lead Scoring 2.0**: Behaviors + Demographics + Intent signals (87.5% accuracy)
+*   **Opportunity Scoring**: Likelihood to close based on deal velocity, stakeholder engagement, and historical win rates
+*   **Churn Prediction**: Identify at-risk customers before they leave based on usage patterns and support signals (82.3% accuracy)
+*   **Revenue Forecasting**: AI-adjusted commit numbers that remove human bias from the pipeline (MAE: 8,200)
+*   **Product Recommendations**: Smart product bundling suggestions (75.8% precision)
+*   **Sentiment Analysis**: Detect customer sentiment in emails and support tickets (88.7% accuracy)
+*   **Attrition Prediction**: Early warning system for employee retention risks
 
 ### 3. Agentic Automation (The Doers)
+
 AI Agents that can autonomously execute trusted tasks.
 
 *   **SDR Agent**: Autonomous outreach, follow-up, and meeting qualification.
 *   **Support Agent**: Triage cases, route to the best expert, or solve Tier-1 issues completely autonomously.
 *   **Data Steward Agent**: Automatically de-dupe records, enrich missing data (from external sources), and flag anomalies.
+*   **Resume Parser**: Extract candidate information from resumes and LinkedIn profiles.
+*   **Email Enrichment**: Extract company information from email signatures.
 
 ### 4. Natural Language Query (Text-to-ObjectQL)
+
 Democratizing data access for everyone.
 
 *   **Query**: "Show me all active deals in New York over $50k that haven't been touched in 10 days."
 *   **Execution**: Converts natural language into optimized **ObjectQL** queries.
 *   **Visualization**: Auto-generates the best chart type for the returned data.
 
+### 5. Model Registry & Prediction Service
+
+Centralized AI infrastructure for all HotCRM applications.
+
+*   **Model Registry**: Centralized model configuration, versioning, and lifecycle management
+*   **Prediction Service**: Unified interface for all ML predictions with caching (5-minute TTL)
+*   **Batch Predictions**: Efficient bulk prediction processing
+*   **Performance Monitoring**: Track model accuracy, precision, and recall over time
+*   **Multi-Provider Support**: OpenAI, Anthropic, TensorFlow, PyTorch, and custom models
+
+### 6. AI Utilities
+
+Shared utilities for statistical analysis and feature engineering.
+
+*   **Statistical Functions**: Mean, standard deviation, correlation, weighted averages
+*   **Feature Engineering**: Normalization, scaling, binning
+*   **Time Series Analysis**: Moving averages, exponential smoothing, trend detection
+*   **Outlier Detection**: IQR method for anomaly detection
+*   **Clustering**: K-means clustering for customer segmentation
+*   **Similarity Metrics**: Cosine similarity, Pearson correlation
+
+## Pre-registered AI Models
+
+The following models are pre-registered and ready to use:
+
+| Model ID | Type | Accuracy | Use Case |
+|----------|------|----------|----------|
+| `lead-scoring-v1` | Classification | 87.5% | Lead quality prediction |
+| `churn-prediction-v1` | Classification | 82.3% | Customer churn risk |
+| `sentiment-analysis-v1` | NLP | 88.7% | Email/text sentiment |
+| `revenue-forecast-v1` | Forecasting | MAE: 8,200 | Revenue forecasting |
+| `product-recommendation-v1` | Recommendation | 75.8% | Product recommendations |
+
+## AI Enhancement by Cloud
+
+Every business cloud benefits from AI augmentation:
+
+**Sales Cloud**
+- Lead scoring and enrichment
+- Win probability prediction
+- Next best action recommendations
+- Email personalization
+
+**Marketing Cloud**
+- Campaign content generation
+- Audience segmentation
+- Send time optimization
+- Subject line scoring
+
+**Service Cloud**
+- Auto-classification and routing
+- Solution recommendations
+- Agent assist with response drafting
+- Predictive SLA breach detection
+
+**Revenue Cloud**
+- Smart product bundles
+- Optimal pricing suggestions
+- Renewal prediction
+- Upsell opportunity detection
+
+**HR Cloud**
+- Resume parsing
+- Interview question generation
+- Performance review insights
+- Attrition prediction
+- Skills gap analysis
+
 ## Architecture
 
 *   **LLM Agnostic**: Connects to OpenAI, Anthropic, or open-source models (Llama 3) via the **AI Gateway**.
 *   **Vector Database**: Integrated semantic search for Knowledge Base, past cases, and unstructured data (PDFs, Emails).
+*   **RAG Support**: Retrieval-Augmented Generation with vector embeddings for contextual knowledge retrieval.
 *   **Trust Layer**: Ensures PII masking, toxicity filtering, and audit logging before data leaves the secure boundary.
+*   **Caching**: 5-minute TTL for prediction results to improve performance.
+*   **Batch Processing**: Efficient bulk prediction for large datasets.
+
+## Usage Example
+
+```typescript
+import { PredictionService } from '@hotcrm/ai';
+
+// Predict lead quality
+const result = await PredictionService.predict({
+  modelId: 'lead-scoring-v1',
+  features: {
+    company_size: 500,
+    industry: 'Technology',
+    engagement_score: 75
+  },
+  useCache: true
+});
+
+console.log(result.prediction); // 85 (0-100 score)
+console.log(result.confidence); // 92 (confidence level)
+console.log(result.processingTime); // 45ms
+```
+
+## Integration Points
+
+- **All Business Clouds**: Provides AI capabilities to CRM, Marketing, Service, Revenue, and HR
+- **ObjectQL**: Natural language to query conversion
+- **Knowledge Base**: Vector embeddings for semantic search
+- **External APIs**: Integration with OpenAI, Anthropic, and custom ML endpoints
+
+## AI Performance Metrics
+
+Track AI effectiveness across the platform:
+
+- **Model Accuracy**: Track prediction accuracy over time
+- **Adoption Rate**: Percentage of users leveraging AI features
+- **Time Saved**: Hours saved through automation
+- **Revenue Impact**: Deals influenced by AI recommendations
+- **Customer Satisfaction**: CSAT improvement from AI-powered support
+
+## Next Steps
+
+<Cards>
+  <Card title="Model Registry" href="/docs/modules/ai/models" icon="brain">
+    Explore available AI models
+  </Card>
+  <Card title="Agents" href="/docs/modules/ai/agents" icon="robot">
+    Configure autonomous AI agents
+  </Card>
+  <Card title="Co-Pilot" href="/docs/modules/ai/copilot" icon="sparkles">
+    Implement AI co-pilot features
+  </Card>
+</Cards>

@@ -5,41 +5,47 @@ description: Learn about HotCRM and its capabilities
 
 # Introduction to HotCRM
 
-HotCRM is a world-class **Customer Relationship Management** system that combines Salesforce-level functionality with Apple/Linear-level user experience. Built on the innovative @objectstack/spec protocol, it provides a comprehensive solution for managing the entire customer lifecycle from Lead to Cash.
+HotCRM is a world-class **Customer Relationship Management** system that combines Salesforce-level functionality with Apple/Linear-level user experience. Built on the innovative @objectstack/spec protocol, it provides a comprehensive solution for managing the entire business lifecycle from Lead to Cash, with additional HR and AI capabilities.
 
 ## What is HotCRM?
 
-HotCRM is designed to help businesses of all sizes manage their customer relationships more effectively. It covers five major domains:
+HotCRM is designed to help businesses of all sizes manage their operations more effectively. It covers six major domains with **65 core objects**:
 
-### 🟢 Marketing & Leads (获客域)
+### 🟢 Sales Cloud (销售域)
 
-Capture and nurture leads through multiple channels, with AI-powered lead scoring and intelligent assignment.
+Complete sales pipeline management with 360-degree customer view, opportunity tracking, and activity logging.
 
-**Key Objects**: Lead, Campaign
+**Objects (13)**: Account, Contact, Lead, Opportunity, Activity, Task, Note, Assignment Rule, Email Template, Form, Landing Page, Marketing List, Unsubscribe
 
-### 🔵 Sales Force Automation (销售域)
+### 🎯 Marketing Cloud (营销域)
 
-Complete sales pipeline management with 360-degree customer view, opportunity tracking, and CPQ (Configure, Price, Quote).
+Multi-channel campaign management with ROI tracking and lead nurturing capabilities.
 
-**Key Objects**: Account, Contact, Opportunity, Activity, Product, Pricebook, Quote, Contract, Payment
+**Objects (2)**: Campaign, Campaign Member
 
-### 🟠 Service & Customer Success (服务域)
+### 💰 Revenue Cloud (收益域)
 
-Deliver exceptional customer service with omni-channel case management and AI-powered knowledge base.
+Configure, Price, Quote (CPQ), product catalog, contract management, invoicing, and payment tracking.
 
-**Key Objects**: Case, Knowledge
+**Objects (13)**: Product, Product Bundle, Product Bundle Component, Quote, Quote Line Item, Pricebook, Price Rule, Discount Schedule, Approval Request, Contract, Invoice, Invoice Line, Payment
 
-### 🟣 Platform Foundation (底座域)
+### 🛟 Service Cloud (服务域)
 
-Extensible, metadata-driven platform that allows complete customization without code.
+Omni-channel case management, SLA tracking, knowledge base, and customer self-service portal.
 
-**Components**: Metadata Engine, ObjectQL, Workflow Engine, UI Engine
+**Objects (21)**: Case, Case Comment, Knowledge Article, Forum Topic, Forum Post, Queue, Queue Member, Routing Rule, Escalation Rule, SLA Policy, SLA Milestone, SLA Template, Agent Skill, Skill, Business Hours, Holiday, Holiday Calendar, Portal User, Email to Case, Web to Case, Social Media Case
 
-### 🤖 AI Copilot (智能域)
+### 👥 HR Cloud (人力域)
 
-AI capabilities embedded throughout the system for intelligent automation and insights.
+Human Capital Management covering recruitment, onboarding, performance, payroll, and training.
 
-**Features**: Predictive analytics, NLP, recommendations, automated insights
+**Objects (16)**: Employee, Department, Position, Candidate, Application, Interview, Offer, Recruitment, Onboarding, Time Off, Attendance, Goal, Performance Review, Payroll, Training, Certification
+
+### 🤖 AI Cloud (智能域)
+
+AI capabilities embedded throughout the system with unified model registry and prediction services.
+
+**Features**: Lead scoring, churn prediction, sentiment analysis, revenue forecasting, product recommendations, resume parsing, and more
 
 ## Core Principles
 
@@ -117,10 +123,13 @@ Clean separation of concerns with pnpm workspaces:
 hotcrm/
 ├── packages/
 │   ├── core/       # ObjectQL engine
-│   ├── crm/        # Marketing & Sales
-│   ├── support/    # Service & Support
-│   ├── products/   # Product & Pricing
-│   ├── finance/    # Contracts & Payments
+│   ├── crm/        # Sales Cloud (13 objects)
+│   ├── marketing/  # Marketing Cloud (2 objects)
+│   ├── products/   # Product Catalog (9 objects)
+│   ├── finance/    # Invoicing & Payments (4 objects)
+│   ├── support/    # Service Cloud (21 objects)
+│   ├── hr/         # HR Cloud (16 objects)
+│   ├── ai/         # AI Services
 │   ├── ui/         # UI Components
 │   └── server/     # Application Server
 ```
