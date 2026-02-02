@@ -19,6 +19,7 @@
   "author": "HotCRM Team",
   "license": "MIT",
   "dependencies": {
+    "@hotcrm/ai": "workspace:*",
     "@hotcrm/core": "workspace:*",
     "@objectstack/spec": "^0.9.0",
     "axios": "^1.6.0",
