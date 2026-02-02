@@ -6,6 +6,10 @@
  */
 
 import ModelRegistry, { ModelConfig } from './model-registry';
+import { ProviderFactory } from './providers/provider-factory';
+import { BaseMLProvider } from './providers/base-provider';
+import CacheManager from './cache-manager';
+import PerformanceMonitor from './performance-monitor';
 
 export interface PredictionRequest {
   /** Model ID to use */
@@ -23,6 +27,9 @@ export interface PredictionRequest {
   
   /** Whether to use cached results */
   useCache?: boolean;
+  
+  /** Force provider (override model default) */
+  forceProvider?: BaseMLProvider;
 }
 
 export interface PredictionResponse<T = any> {
@@ -52,60 +59,106 @@ export interface PredictionResponse<T = any> {
  * Prediction Service - Unified model inference
  */
 export class PredictionService {
-  private static cache: Map<string, PredictionResponse> = new Map();
-  private static cacheExpiry: Map<string, number> = new Map();
-  private static readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+  private static cacheManager = CacheManager.getInstance({ defaultTtl: 300 });
+  private static performanceMonitor = PerformanceMonitor.getInstance();
   
   /**
    * Make a prediction using specified model
    */
   static async predict<T = any>(request: PredictionRequest): Promise<PredictionResponse<T>> {
     const startTime = Date.now();
+    let success = true;
+    let error: string | undefined;
     
-    // Get model configuration
-    const model = ModelRegistry.getModel(request.modelId);
-    if (!model) {
-      throw new Error(`Model not found: ${request.modelId}`);
-    }
-    
-    if (model.status !== 'active') {
-      throw new Error(`Model is not active: ${request.modelId} (status: ${model.status})`);
-    }
-    
-    // Check cache if enabled
-    if (request.useCache !== false) {
-      const cacheKey = this.generateCacheKey(request);
-      const cached = this.getFromCache(cacheKey);
-      if (cached) {
-        return cached as PredictionResponse<T>;
+    try {
+      // Get model configuration
+      const model = ModelRegistry.getModel(request.modelId);
+      if (!model) {
+        throw new Error(`Model not found: ${request.modelId}`);
       }
+      
+      if (model.status !== 'active') {
+        throw new Error(`Model is not active: ${request.modelId} (status: ${model.status})`);
+      }
+      
+      // Check A/B test configuration
+      const effectiveModel = this.selectModelForABTest(model);
+      
+      // Check cache if enabled
+      if (request.useCache !== false) {
+        const cacheKey = this.generateCacheKey(request);
+        const cached = await this.cacheManager.get<PredictionResponse<T>>(cacheKey);
+        if (cached) {
+          // Record cache hit
+          this.performanceMonitor.recordPrediction({
+            modelId: request.modelId,
+            timestamp: Date.now(),
+            latency: Date.now() - startTime,
+            confidence: cached.confidence,
+            cached: true,
+            success: true,
+            provider: cached.metadata?.provider
+          });
+          
+          return { ...cached, cached: true };
+        }
+      }
+      
+      // Make prediction using provider or fallback to mock
+      const result = await this.invokePrediction<T>(
+        effectiveModel, 
+        request.features, 
+        request.context,
+        request.forceProvider
+      );
+      
+      const processingTime = Date.now() - startTime;
+      
+      const response: PredictionResponse<T> = {
+        prediction: result.prediction,
+        confidence: result.confidence,
+        modelId: effectiveModel.id,
+        modelVersion: effectiveModel.version,
+        processingTime,
+        cached: false,
+        metadata: result.metadata
+      };
+      
+      // Cache result if enabled
+      if (request.useCache !== false) {
+        const cacheKey = this.generateCacheKey(request);
+        await this.cacheManager.set(cacheKey, response, 300); // 5 minutes
+      }
+      
+      // Record successful prediction
+      this.performanceMonitor.recordPrediction({
+        modelId: request.modelId,
+        timestamp: Date.now(),
+        latency: processingTime,
+        confidence: result.confidence,
+        cached: false,
+        success: true,
+        provider: result.metadata?.provider
+      });
+      
+      return response;
+    } catch (err) {
+      success = false;
+      error = err instanceof Error ? err.message : 'Unknown error';
+      
+      // Record failed prediction
+      this.performanceMonitor.recordPrediction({
+        modelId: request.modelId,
+        timestamp: Date.now(),
+        latency: Date.now() - startTime,
+        confidence: 0,
+        cached: false,
+        success: false,
+        error
+      });
+      
+      throw err;
     }
-    
-    // Make prediction (delegate to specific model implementation)
-    const result = await this.invokePrediction<T>(model, request.features, request.context);
-    
-    const processingTime = Date.now() - startTime;
-    
-    const response: PredictionResponse<T> = {
-      prediction: result.prediction,
-      confidence: result.confidence,
-      modelId: model.id,
-      modelVersion: model.version,
-      processingTime,
-      cached: false,
-      metadata: result.metadata
-    };
-    
-    // Cache result if enabled
-    if (request.useCache !== false) {
-      const cacheKey = this.generateCacheKey(request);
-      this.setCache(cacheKey, response);
-    }
-    
-    // Log prediction for monitoring
-    this.logPrediction(request, response);
-    
-    return response;
   }
   
   /**
@@ -113,12 +166,59 @@ export class PredictionService {
    */
   static async batchPredict<T = any>(
     modelId: string,
-    features: Array<Record<string, any>>
+    features: Array<Record<string, any>>,
+    useCache: boolean = true
   ): Promise<Array<PredictionResponse<T>>> {
+    const model = ModelRegistry.getModel(modelId);
+    if (!model) {
+      throw new Error(`Model not found: ${modelId}`);
+    }
+    
+    // Try to use provider's batch prediction if available
+    if (model.providerConfig) {
+      try {
+        const provider = ProviderFactory.getProvider(model.providerConfig);
+        const inputs = features.map(f => ({ features: f }));
+        const results = await provider.batchPredict<T>(modelId, inputs);
+        
+        return results.map((result, index) => ({
+          prediction: result.prediction,
+          confidence: result.confidence,
+          modelId,
+          modelVersion: model.version,
+          processingTime: result.metadata?.latency || 0,
+          cached: false,
+          metadata: result.metadata
+        }));
+      } catch (error) {
+        console.warn('[PredictionService] Batch prediction failed, falling back to sequential:', error);
+      }
+    }
+    
+    // Fallback to sequential predictions
     const promises = features.map(f => 
-      this.predict<T>({ modelId, features: f })
+      this.predict<T>({ modelId, features: f, useCache })
     );
     return Promise.all(promises);
+  }
+  
+  /**
+   * Select model for A/B testing
+   */
+  private static selectModelForABTest(model: ModelConfig): ModelConfig {
+    if (!model.abTest?.enabled || !model.abTest.championModelId) {
+      return model;
+    }
+    
+    // Random selection based on traffic percentage
+    const random = Math.random() * 100;
+    if (random < model.abTest.trafficPercentage) {
+      return model; // Use challenger model
+    }
+    
+    // Use champion model
+    const championModel = ModelRegistry.getModel(model.abTest.championModelId);
+    return championModel || model;
   }
   
   /**
@@ -127,29 +227,50 @@ export class PredictionService {
   private static async invokePrediction<T>(
     model: ModelConfig,
     features: Record<string, any>,
-    context?: any
+    context?: any,
+    forceProvider?: BaseMLProvider
   ): Promise<{ prediction: T; confidence: number; metadata?: any }> {
-    // In production, this would call actual ML models
-    // For now, return mock predictions based on model type
+    // If provider is configured or forced, use it
+    const provider = forceProvider || (model.providerConfig ? ProviderFactory.getProvider(model.providerConfig) : null);
     
-    switch (model.type) {
+    if (provider) {
+      try {
+        const result = await provider.predict<T>(model.id, { features, context });
+        return result;
+      } catch (error) {
+        console.warn(`[PredictionService] Provider prediction failed for ${model.id}, falling back to mock:`, error);
+      }
+    }
+    
+    // Fallback to mock predictions for development/testing
+    return this.getMockPrediction<T>(model.type, features);
+  }
+  
+  /**
+   * Get mock prediction based on model type
+   */
+  private static getMockPrediction<T>(
+    modelType: string,
+    features: Record<string, any>
+  ): { prediction: T; confidence: number; metadata?: any } {
+    switch (modelType) {
       case 'classification':
-        return this.mockClassification(features);
+        return this.mockClassification(features) as any;
       
       case 'regression':
-        return this.mockRegression(features);
+        return this.mockRegression(features) as any;
       
       case 'recommendation':
-        return this.mockRecommendation(features);
+        return this.mockRecommendation(features) as any;
       
       case 'forecasting':
-        return this.mockForecasting(features);
+        return this.mockForecasting(features) as any;
       
       case 'nlp':
-        return this.mockNLP(features);
+        return this.mockNLP(features) as any;
       
       default:
-        throw new Error(`Unsupported model type: ${model.type}`);
+        throw new Error(`Unsupported model type: ${modelType}`);
     }
   }
   
@@ -229,45 +350,38 @@ export class PredictionService {
    * Generate cache key
    */
   private static generateCacheKey(request: PredictionRequest): string {
-    return `${request.modelId}:${JSON.stringify(request.features)}`;
-  }
-  
-  /**
-   * Get from cache
-   */
-  private static getFromCache(key: string): PredictionResponse | null {
-    const expiry = this.cacheExpiry.get(key);
-    if (expiry && expiry > Date.now()) {
-      const cached = this.cache.get(key);
-      if (cached) {
-        return { ...cached, cached: true };
-      }
-    }
-    return null;
-  }
-  
-  /**
-   * Set cache
-   */
-  private static setCache(key: string, response: PredictionResponse): void {
-    this.cache.set(key, response);
-    this.cacheExpiry.set(key, Date.now() + this.CACHE_TTL);
+    return `pred:${request.modelId}:${JSON.stringify(request.features)}`;
   }
   
   /**
    * Clear cache
    */
-  static clearCache(): void {
-    this.cache.clear();
-    this.cacheExpiry.clear();
+  static async clearCache(): Promise<void> {
+    await this.cacheManager.clear();
   }
   
   /**
-   * Log prediction for monitoring
+   * Get performance stats
    */
-  private static logPrediction(request: PredictionRequest, response: PredictionResponse): void {
-    // In production, would log to monitoring system
-    // console.log('Prediction:', { request, response });
+  static getPerformanceStats(modelId?: string): any {
+    if (modelId) {
+      return this.performanceMonitor.getModelStats(modelId);
+    }
+    return this.performanceMonitor.getAllStats();
+  }
+  
+  /**
+   * Get cache stats
+   */
+  static getCacheStats(): any {
+    return this.cacheManager.getStats();
+  }
+  
+  /**
+   * Get model health status
+   */
+  static getModelHealth(modelId: string): any {
+    return this.performanceMonitor.getHealthStatus(modelId);
   }
 }
 
