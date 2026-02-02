@@ -15,11 +15,11 @@
 // Mock database interface (replace with actual ObjectStack db import)
 const db = {
   doc: {
-    get: async (object: string, id: string, options?: any) => ({}),
-    update: async (object: string, id: string, data: any) => ({}),
-    create: async (object: string, data: any) => ({ id: 'mock-id', ...data })
+    get: async (object: string, id: string, options?: any): Promise<any> => ({}),
+    update: async (object: string, id: string, data: any): Promise<any> => ({}),
+    create: async (object: string, data: any): Promise<any> => ({ id: 'mock-id', ...data })
   },
-  find: async (object: string, options?: any) => []
+  find: async (object: string, options?: any): Promise<any[]> => []
 };
 
 // ============================================================================
