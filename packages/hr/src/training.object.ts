@@ -213,7 +213,7 @@ const Training = {
     {
       name: 'ValidDates',
       errorMessage: '结束时间必须在开始时间之后',
-      formula: 'end_date <= start_date'
+      formula: 'end_date < start_date'
     }
   ],
   pageLayout: {

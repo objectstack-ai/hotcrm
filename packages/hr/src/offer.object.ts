@@ -193,12 +193,12 @@ const Offer = {
     {
       name: 'ValidExpiryDate',
       errorMessage: '截止日期必须在Offer日期之后',
-      formula: 'AND(NOT(ISBLANK(expiry_date)), expiry_date <= offer_date)'
+      formula: 'AND(NOT(ISBLANK(expiry_date)), expiry_date < offer_date)'
     },
     {
       name: 'ValidStartDate',
       errorMessage: '入职日期必须在Offer日期之后',
-      formula: 'start_date <= offer_date'
+      formula: 'start_date < offer_date'
     }
   ],
   pageLayout: {

@@ -190,7 +190,7 @@ const Goal = {
   validationRules: [
     {
       name: 'ValidTargetDate',
-      errorMessage: '目标日期必须在开始日期之后',
+      errorMessage: '目标日期不能早于开始日期',
       formula: 'target_date < start_date'
     },
     {

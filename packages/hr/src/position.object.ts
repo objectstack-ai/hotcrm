@@ -164,7 +164,7 @@ const Position = {
     {
       name: 'ValidSalaryRange',
       errorMessage: '最高薪资必须大于最低薪资',
-      formula: 'AND(NOT(ISBLANK(min_salary)), NOT(ISBLANK(max_salary)), max_salary <= min_salary)'
+      formula: 'AND(NOT(ISBLANK(min_salary)), NOT(ISBLANK(max_salary)), max_salary < min_salary)'
     }
   ],
   pageLayout: {

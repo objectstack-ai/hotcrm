@@ -193,7 +193,7 @@ const TimeOff = {
   validationRules: [
     {
       name: 'ValidDateRange',
-      errorMessage: '结束日期必须在开始日期之后或相同',
+      errorMessage: '结束日期不能早于开始日期',
       formula: 'end_date < start_date'
     }
   ],

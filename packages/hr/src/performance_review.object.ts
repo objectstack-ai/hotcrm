@@ -212,7 +212,7 @@ const PerformanceReview = {
     {
       name: 'ValidReviewPeriod',
       errorMessage: '结束日期必须在开始日期之后',
-      formula: 'end_date <= start_date'
+      formula: 'end_date < start_date'
     },
     {
       name: 'ScoreRange',
