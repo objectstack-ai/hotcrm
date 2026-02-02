@@ -360,16 +360,27 @@ export interface SkillGapResponse {
  * Analyze skill gaps and recommend training
  */
 export async function analyzeSkillGaps(request: SkillGapRequest): Promise<SkillGapResponse> {
-  const { employeeId, targetRole } = request;
+  const { employeeId, teamId, targetRole } = request;
 
-  if (!employeeId) {
-    throw new Error('Employee ID is required');
+  if (!employeeId && !teamId) {
+    throw new Error('Employee ID or Team ID is required');
   }
 
-  // Fetch employee data
-  const employee = await db.doc.get('employee', employeeId, {
-    fields: ['full_name', 'position_title', 'skills', 'certifications']
-  });
+  // Fetch employee or team data
+  let employee: any;
+  if (employeeId) {
+    employee = await db.doc.get('employee', employeeId, {
+      fields: ['full_name', 'position_title', 'skills', 'certifications']
+    });
+  } else {
+    // For team analysis, use a placeholder
+    employee = {
+      full_name: 'Team Analysis',
+      position_title: 'Various roles',
+      skills: [],
+      certifications: []
+    };
+  }
 
   // Fetch target role requirements (if specified)
   let roleRequirements = '';
@@ -1117,6 +1128,43 @@ async function callLLM(prompt: string): Promise<string> {
   }
 
   // Compensation benchmarking
+  if (prompt.includes('compensation analyst') || prompt.includes('market benchmarking')) {
+    return JSON.stringify({
+      currentCompensation: {
+        base_salary: 100000,
+        total_compensation: 120000
+      },
+      marketData: {
+        percentile_25: 95000,
+        percentile_50: 115000,
+        percentile_75: 135000,
+        percentile_90: 155000
+      },
+      marketPosition: {
+        percentile: 35,
+        status: 'below_market',
+        gap_amount: 15000,
+        gap_percentage: 13
+      },
+      recommendations: [
+        {
+          action: 'Market adjustment to P50',
+          timing: 'Next compensation cycle (Q1 2024)',
+          amount: 15000,
+          reasoning: 'Bring to market median for retention; high performer at risk'
+        },
+        {
+          action: 'Performance-based merit increase',
+          timing: 'Annual review',
+          amount: 5000,
+          reasoning: 'Reward consistent high performance (4.5/5 rating)'
+        }
+      ],
+      compensationRetentionRisk: 'high'
+    });
+  }
+
+  // Default return (should not reach here in normal operation)
   return JSON.stringify({
     currentCompensation: {
       base_salary: 100000,
