@@ -254,7 +254,7 @@ export async function estimateResolutionTime(request: ResolutionTimeRequest): Pr
 
   // Calculate statistics
   const avgTime = resolutionTimes.length > 0 
-    ? resolutionTimes.reduce((a: any, b: any) => a + b, 0) / resolutionTimes.length 
+    ? resolutionTimes.reduce((a: number, b: number) => a + b, 0) / resolutionTimes.length 
     : 480; // Default 8 hours
 
   const sortedTimes = [...resolutionTimes].sort((a, b) => a - b);

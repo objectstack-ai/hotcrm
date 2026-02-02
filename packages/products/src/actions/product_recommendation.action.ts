@@ -162,13 +162,13 @@ export async function recommendProducts(request: RecommendProductsRequest): Prom
       industry: account.industry || 'Unknown',
       size: account.number_of_employees > 1000 ? 'Enterprise' : account.number_of_employees > 100 ? 'Mid-Market' : 'Small Business',
       currentProducts: existingOpps.map((o: any) => o.name),
-      purchaseHistory: existingOpps.reduce((sum: any, o: any) => sum + (o.amount || 0), 0)
+      purchaseHistory: existingOpps.reduce((sum: number, o: any) => sum + (o.amount || 0), 0)
     },
     strategy: {
       approach: 'Industry and company size matching with usage pattern analysis',
       factors: ['Industry alignment', 'Company size', 'Revenue capacity', 'Existing product portfolio'],
       confidence: topRecommendations.length > 0 
-        ? Math.round(topRecommendations.reduce((sum: any, r: any) => sum + r.confidence, 0) / topRecommendations.length)
+        ? Math.round(topRecommendations.reduce((sum: number, r: any) => sum + r.confidence, 0) / topRecommendations.length)
         : 0
     }
   };
@@ -1027,7 +1027,7 @@ export async function predictProductAdoption(request: PredictProductAdoptionRequ
 
   const timelineFactors = [];
   if (purchaseHistory.length > 0) {
-    const avgSalesCycle = purchaseHistory.reduce((sum: any, p: any) => {
+    const avgSalesCycle = purchaseHistory.reduce((sum: number, p: any) => {
       const days = (new Date(p.close_date).getTime() - new Date(p.created_date).getTime()) / (1000 * 60 * 60 * 24);
       return sum + days;
     }, 0) / purchaseHistory.length;

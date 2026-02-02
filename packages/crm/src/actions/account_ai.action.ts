@@ -95,7 +95,7 @@ export async function calculateAccountHealth(request: AccountHealthRequest): Pro
 
   // Calculate financial score (0-100)
   const wonOpps = opportunities.filter((o: any) => o.stage === 'Closed Won');
-  const totalRevenue = wonOpps.reduce((sum: any, o: any) => sum + (o.amount || 0), 0);
+  const totalRevenue = wonOpps.reduce((sum: number, o: any) => sum + (o.amount || 0), 0);
   const financialScore = Math.min(100, (totalRevenue / 100000) * 10);
 
   // Calculate support score (0-100)

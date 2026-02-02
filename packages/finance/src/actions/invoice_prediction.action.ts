@@ -373,7 +373,7 @@ export async function detectAnomalies(request: AnomalyDetectionRequest): Promise
   // Check 1: Invoice amount anomaly
   if (historicalInvoices.length > 0) {
     const amounts = historicalInvoices.map((i: any) => i.amount);
-    const avgAmount = amounts.reduce((a: any, b: any) => a + b, 0) / amounts.length;
+    const avgAmount = amounts.reduce((a: number, b: number) => a + b, 0) / amounts.length;
     const deviation = Math.abs(invoice.amount - avgAmount) / avgAmount;
 
     if (deviation > 2) { // More than 200% different
