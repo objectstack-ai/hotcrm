@@ -225,14 +225,14 @@ export async function updateCampaignMetrics(campaignId: string, ctx: HookContext
 
     // Calculate engagement metrics
     const totalMembers = members.length;
-    const opened = members.filter(m => 
+    const opened = members.filter((m: any) => 
       ['Opened', 'Clicked', 'Responded'].includes(m.status)
     ).length;
-    const clicked = members.filter(m => 
+    const clicked = members.filter((m: any) => 
       ['Clicked', 'Responded'].includes(m.status)
     ).length;
-    const responded = members.filter(m => m.status === 'Responded').length;
-    const unsubscribed = members.filter(m => m.status === 'Unsubscribed').length;
+    const responded = members.filter((m: any) => m.status === 'Responded').length;
+    const unsubscribed = members.filter((m: any) => m.status === 'Unsubscribed').length;
 
     // Calculate rates
     const openRate = totalMembers > 0 ? (opened / totalMembers) * 100 : 0;
