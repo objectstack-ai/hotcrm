@@ -184,7 +184,7 @@ export async function detectBuyingIntent(request: BuyingIntentRequest): Promise<
   let intentScore = 0;
 
   // Email engagement signals
-  const emailActivities = activities.filter(a => a.type === 'Email');
+  const emailActivities = activities.filter((a: any) => a.type === 'Email');
   if (emailActivities.length > 5) {
     signals.push({
       signal: 'High Email Engagement',
@@ -196,7 +196,7 @@ export async function detectBuyingIntent(request: BuyingIntentRequest): Promise<
   }
 
   // Meeting signals
-  const meetings = activities.filter(a => a.type === 'Meeting');
+  const meetings = activities.filter((a: any) => a.type === 'Meeting');
   if (meetings.length > 0) {
     signals.push({
       signal: 'Meeting Scheduled',
@@ -209,7 +209,7 @@ export async function detectBuyingIntent(request: BuyingIntentRequest): Promise<
 
   // Opportunity signals
   if (opportunities.length > 0) {
-    const recentOpps = opportunities.filter(o => {
+    const recentOpps = opportunities.filter((o: any) => {
       const created = new Date(o.created_date);
       const daysAgo = (Date.now() - created.getTime()) / (1000 * 60 * 60 * 24);
       return daysAgo <= lookbackDays;
@@ -440,7 +440,7 @@ export async function predictBestContactTime(request: ContactTimingRequest): Pro
     'Evening (17-20)': 0
   };
 
-  activities.forEach(activity => {
+  activities.forEach((activity: any) => {
     const date = new Date(activity.activity_date);
     const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
     const hour = date.getHours();

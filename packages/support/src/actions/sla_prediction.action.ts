@@ -245,8 +245,8 @@ export async function estimateResolutionTime(request: ResolutionTimeRequest): Pr
 
   // Calculate resolution times for similar cases
   const resolutionTimes = similarCases
-    .filter(c => c.closed_date)
-    .map(c => {
+    .filter((c: any) => c.closed_date)
+    .map((c: any) => {
       const created = new Date(c.created_date);
       const closed = new Date(c.closed_date);
       return (closed.getTime() - created.getTime()) / (1000 * 60); // minutes
@@ -254,7 +254,7 @@ export async function estimateResolutionTime(request: ResolutionTimeRequest): Pr
 
   // Calculate statistics
   const avgTime = resolutionTimes.length > 0 
-    ? resolutionTimes.reduce((a, b) => a + b, 0) / resolutionTimes.length 
+    ? resolutionTimes.reduce((a: number, b: number) => a + b, 0) / resolutionTimes.length 
     : 480; // Default 8 hours
 
   const sortedTimes = [...resolutionTimes].sort((a, b) => a - b);
@@ -460,7 +460,7 @@ export async function optimizeWorkload(request: WorkloadOptimizationRequest): Pr
 
   // Group cases by agent
   const agentCases: { [key: string]: any[] } = {};
-  cases.forEach(c => {
+  cases.forEach((c: any) => {
     if (c.owner_id) {
       if (!agentCases[c.owner_id]) {
         agentCases[c.owner_id] = [];
@@ -588,7 +588,7 @@ export async function analyzeSLAPerformance(request: SLAAnalyticsRequest): Promi
 
   const priorityStats: any = {};
 
-  cases.forEach(c => {
+  cases.forEach((c: any) => {
     // Calculate response time
     if (c.first_response_date) {
       const responseTime = (new Date(c.first_response_date).getTime() - new Date(c.created_date).getTime()) / (1000 * 60);
