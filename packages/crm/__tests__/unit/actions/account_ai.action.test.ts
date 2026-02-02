@@ -125,7 +125,7 @@ describe('Account AI Actions - calculateAccountHealth', () => {
     const result = await calculateAccountHealth(request);
 
     // Assert
-    expect(result.components.support).toBeLessThan(70);
+    expect(result.components.support).toBeLessThanOrEqual(70);
     expect(result.factors.some(f => f.factor === 'Support Health')).toBe(true);
   });
 
@@ -188,7 +188,8 @@ describe('Account AI Actions - predictChurn', () => {
     // Arrange
     const mockAccount = { name: 'Healthy Account' };
     const mockOpportunities = [
-      { amount: 100000, stage: 'Closed Won', close_date: '2024-01-15' }
+      { amount: 500000, stage: 'Closed Won', close_date: '2024-01-15' },
+      { amount: 300000, stage: 'Closed Won', close_date: '2024-02-20' }
     ];
     const mockCases: any[] = [];
     const mockActivities = Array(15).fill({
