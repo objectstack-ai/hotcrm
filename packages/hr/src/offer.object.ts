@@ -67,7 +67,6 @@ export const Offer = ObjectSchema.create({
     benefits: Field.textarea({
       label: '福利待遇',
       description: '医疗保险、带薪休假等福利',
-      rows: 4
     }),
     employment_type: Field.select({
       label: '雇佣类型',
@@ -154,12 +153,10 @@ export const Offer = ObjectSchema.create({
     rejection_reason: Field.textarea({
       label: '拒绝原因',
       description: '如果候选人拒绝，记录原因',
-      rows: 3
     }),
     offer_letter_url: Field.url({ label: 'Offer Letter链接' }),
     notes: Field.textarea({
       label: '备注',
-      rows: 4
     })
   },
 

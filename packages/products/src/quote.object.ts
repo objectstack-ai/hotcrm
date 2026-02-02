@@ -8,7 +8,7 @@ export const Quote = ObjectSchema.create({
   description: 'CPQ (Configure, Price, Quote) with complex pricing, discount approval, and PDF generation',
 
   fields: {
-    quote_number: Field.autoNumber({
+    quote_number: Field.autonumber({
       label: 'Quote Number',
       readonly: true,
       format: 'Q-{YYYY}-{MM}-{0000}'
@@ -326,7 +326,7 @@ export const Quote = ObjectSchema.create({
       readonly: true,
       precision: 0
     }),
-    is_primary_quote: Field.checkbox({
+    is_primary_quote: Field.boolean({
       label: 'Primary Quote',
       description: 'Is this the primary quote for the opportunity?',
       defaultValue: true

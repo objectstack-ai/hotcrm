@@ -127,7 +127,7 @@ export const Unsubscribe = ObjectSchema.create({
       label: '营销列表',
       description: '退订的营销列表'
     }),
-    is_bounce: Field.checkbox({
+    is_bounce: Field.boolean({
       label: '是退信',
       description: '此记录是由于邮件退信创建的',
       defaultValue: false
@@ -177,7 +177,7 @@ export const Unsubscribe = ObjectSchema.create({
       defaultValue: 0,
       precision: 0
     }),
-    is_resubscribed: Field.checkbox({
+    is_resubscribed: Field.boolean({
       label: '已重新订阅',
       description: '用户是否重新订阅',
       defaultValue: false,
@@ -233,7 +233,7 @@ export const Unsubscribe = ObjectSchema.create({
       required: true,
       defaultValue: 'NOW()'
     }),
-    is_gdpr_request: Field.checkbox({
+    is_gdpr_request: Field.boolean({
       label: 'GDPR 请求',
       description: '是否为GDPR数据删除请求',
       defaultValue: false
@@ -268,12 +268,12 @@ export const Unsubscribe = ObjectSchema.create({
       description: '内部备注和处理说明',
       maxLength: 2000
     }),
-    allow_transactional_emails: Field.checkbox({
+    allow_transactional_emails: Field.boolean({
       label: '允许交易邮件',
       description: '退订营销邮件但仍允许接收订单确认等交易邮件',
       defaultValue: true
     }),
-    allow_system_notifications: Field.checkbox({
+    allow_system_notifications: Field.boolean({
       label: '允许系统通知',
       description: '允许接收系统重要通知（密码重置等）',
       defaultValue: true

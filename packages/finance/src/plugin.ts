@@ -24,7 +24,7 @@ import { ContractBillingHook } from './hooks/contract.hook';
  * Exports all finance-related business objects, hooks, and actions
  * to be registered with the ObjectStack runtime
  */
-export const FinancePlugin = {
+export const FinancePlugin: any = {
   name: 'finance',
   label: 'Finance',
   version: '1.0.0',

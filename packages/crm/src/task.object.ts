@@ -73,7 +73,7 @@ export const Task = ObjectSchema.create({
       label: 'Reminder Date/Time',
       description: 'When to send a reminder notification'
     }),
-    is_reminder_set: Field.checkbox({
+    is_reminder_set: Field.boolean({
       label: 'Reminder Set',
       defaultValue: false
     }),
@@ -113,11 +113,11 @@ export const Task = ObjectSchema.create({
       description: 'Link to the master recurring task',
       readonly: true
     }),
-    what_id: Field.lookup(["Account","Opportunity","Contact","Lead","Case","Contract"], {
+    what_id: Field.lookup("Account", {
       label: 'Related To',
       description: 'Link to related business object'
     }),
-    who_id: Field.lookup(["Contact","Lead"], {
+    who_id: Field.lookup("Contact", {
       label: 'Related Person',
       description: 'Link to Contact or Lead'
     }),

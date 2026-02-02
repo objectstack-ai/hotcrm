@@ -17,7 +17,7 @@ export const HolidayCalendar = ObjectSchema.create({
       label: 'description',
       maxLength: 2000
     }),
-    is_active: Field.checkbox({
+    is_active: Field.boolean({
       label: 'Active',
       defaultValue: true
     }),
@@ -79,7 +79,7 @@ export const HolidayCalendar = ObjectSchema.create({
       max: 2100,
       precision: 0
     }),
-    auto_update_from_public_api: Field.checkbox({
+    auto_update_from_public_api: Field.boolean({
       label: 'Auto-Update from Public API',
       description: 'Automatically sync with public holiday API',
       defaultValue: false

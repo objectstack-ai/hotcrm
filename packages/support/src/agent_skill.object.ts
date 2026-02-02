@@ -50,7 +50,7 @@ export const AgentSkill = ObjectSchema.create({
       max: 100,
       precision: 0
     }),
-    is_verified: Field.checkbox({
+    is_verified: Field.boolean({
       label: 'Verified',
       description: 'Skill has been verified by manager/system',
       defaultValue: false
@@ -69,7 +69,7 @@ export const AgentSkill = ObjectSchema.create({
     }),
     certification_date: Field.date({ label: 'Certification Date' }),
     certification_expiry: Field.date({ label: 'Certification Expiry' }),
-    is_certified: Field.checkbox({
+    is_certified: Field.boolean({
       label: 'Currently Certified',
       defaultValue: false,
       readonly: true
@@ -86,11 +86,11 @@ export const AgentSkill = ObjectSchema.create({
     }),
     last_training_date: Field.date({ label: 'Last Training' }),
     next_training_date: Field.date({ label: 'Next Training' }),
-    training_required: Field.checkbox({
+    training_required: Field.boolean({
       label: 'Training Required',
       defaultValue: false
     }),
-    accept_cases: Field.checkbox({
+    accept_cases: Field.boolean({
       label: 'Accept Cases',
       description: 'Accept cases requiring this skill',
       defaultValue: true

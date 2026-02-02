@@ -167,7 +167,7 @@ export const MarketingList = ObjectSchema.create({
         }
       ]
     }),
-    is_active: Field.checkbox({
+    is_active: Field.boolean({
       label: '是否启用',
       defaultValue: true
     }),
@@ -235,27 +235,27 @@ export const MarketingList = ObjectSchema.create({
       description: '此列表历史营销活动的平均点击率',
       readonly: true
     }),
-    suppress_duplicates: Field.checkbox({
+    suppress_duplicates: Field.boolean({
       label: '去重',
       description: '自动去除重复成员',
       defaultValue: true
     }),
-    suppress_unsubscribed: Field.checkbox({
+    suppress_unsubscribed: Field.boolean({
       label: '排除已退订',
       description: '自动排除已退订的联系人',
       defaultValue: true
     }),
-    suppress_bounced: Field.checkbox({
+    suppress_bounced: Field.boolean({
       label: '排除硬退信',
       description: '自动排除硬退信的邮箱地址',
       defaultValue: true
     }),
-    include_opted_out_contacts: Field.checkbox({
+    include_opted_out_contacts: Field.boolean({
       label: '包含营销退出联系人',
       description: '是否包含选择退出营销的联系人',
       defaultValue: false
     }),
-    consent_required: Field.checkbox({
+    consent_required: Field.boolean({
       label: '需要营销同意',
       description: 'GDPR合规：只包含明确同意营销的联系人',
       defaultValue: true

@@ -17,7 +17,7 @@ export const Skill = ObjectSchema.create({
       label: 'description',
       maxLength: 2000
     }),
-    is_active: Field.checkbox({
+    is_active: Field.boolean({
       label: 'Active',
       defaultValue: true
     }),
@@ -87,7 +87,7 @@ export const Skill = ObjectSchema.create({
       max: 10,
       precision: 0
     }),
-    requires_certification: Field.checkbox({
+    requires_certification: Field.boolean({
       label: 'Requires Certification',
       defaultValue: false
     }),

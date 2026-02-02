@@ -92,7 +92,7 @@ export const Form = ObjectSchema.create({
       label: '提交后重定向URL',
       description: '表单提交成功后跳转的页面（可选）'
     }),
-    create_lead_on_submit: Field.checkbox({
+    create_lead_on_submit: Field.boolean({
       label: '自动创建线索',
       description: '表单提交时自动创建线索记录',
       defaultValue: true
@@ -102,7 +102,7 @@ export const Form = ObjectSchema.create({
       description: '自动创建线索时设置的来源字段值',
       maxLength: 100
     }),
-    auto_assign_leads: Field.checkbox({
+    auto_assign_leads: Field.boolean({
       label: '自动分配线索',
       description: '根据分配规则自动分配新线索',
       defaultValue: false
@@ -111,7 +111,7 @@ export const Form = ObjectSchema.create({
       label: '默认负责人',
       description: '新线索的默认负责人（如果不自动分配）'
     }),
-    send_confirmation_email: Field.checkbox({
+    send_confirmation_email: Field.boolean({
       label: '发送确认邮件',
       description: '向提交者发送确认邮件',
       defaultValue: false
@@ -120,7 +120,7 @@ export const Form = ObjectSchema.create({
       label: '确认邮件模板',
       description: '使用的确认邮件模板'
     }),
-    notify_owner_on_submit: Field.checkbox({
+    notify_owner_on_submit: Field.boolean({
       label: '通知负责人',
       description: '表单提交时通知线索负责人',
       defaultValue: true
@@ -149,7 +149,7 @@ export const Form = ObjectSchema.create({
         }
       ]
     }),
-    is_active: Field.checkbox({
+    is_active: Field.boolean({
       label: '是否启用',
       defaultValue: true
     }),
@@ -204,12 +204,12 @@ export const Form = ObjectSchema.create({
       label: '最后提交时间',
       readonly: true
     }),
-    enable_captcha: Field.checkbox({
+    enable_captcha: Field.boolean({
       label: '启用验证码',
       description: '防止垃圾提交',
       defaultValue: true
     }),
-    enable_honeypot: Field.checkbox({
+    enable_honeypot: Field.boolean({
       label: '启用蜜罐字段',
       description: '隐藏字段防止机器人提交',
       defaultValue: true
@@ -220,7 +220,7 @@ export const Form = ObjectSchema.create({
       readonly: true,
       precision: 0
     }),
-    enable_progressive_profiling: Field.checkbox({
+    enable_progressive_profiling: Field.boolean({
       label: '启用渐进式表单',
       description: '对已知联系人隐藏已有信息的字段',
       defaultValue: false

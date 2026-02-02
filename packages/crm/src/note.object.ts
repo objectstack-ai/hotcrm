@@ -79,12 +79,12 @@ export const Note = ObjectSchema.create({
         }
       ]
     }),
-    is_private: Field.checkbox({
+    is_private: Field.boolean({
       label: 'Private Note',
       description: 'When true, only the owner can see this note',
       defaultValue: false
     }),
-    is_pinned: Field.checkbox({
+    is_pinned: Field.boolean({
       label: 'Pinned',
       description: 'Pin important notes to the top',
       defaultValue: false
@@ -105,12 +105,12 @@ export const Note = ObjectSchema.create({
       readonly: true,
       maxLength: 1000
     }),
-    has_mentions: Field.checkbox({
+    has_mentions: Field.boolean({
       label: 'Has @Mentions',
       defaultValue: false,
       readonly: true
     }),
-    is_markdown: Field.checkbox({
+    is_markdown: Field.boolean({
       label: 'Markdown Enabled',
       description: 'Enable Markdown formatting for this note',
       defaultValue: true

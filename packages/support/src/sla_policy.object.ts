@@ -17,7 +17,7 @@ export const SLAPolicy = ObjectSchema.create({
       label: 'description',
       maxLength: 2000
     }),
-    is_active: Field.checkbox({
+    is_active: Field.boolean({
       label: 'Active',
       defaultValue: true
     }),
@@ -126,7 +126,7 @@ export const SLAPolicy = ObjectSchema.create({
     account_tier: /* TODO: Unknown type 'multiselect' */ null,
     applicable_case_types: /* TODO: Unknown type 'multiselect' */ null,
     applicable_priorities: /* TODO: Unknown type 'multiselect' */ null,
-    enable_first_response: Field.checkbox({
+    enable_first_response: Field.boolean({
       label: 'Track First Response',
       defaultValue: true
     }),
@@ -144,7 +144,7 @@ export const SLAPolicy = ObjectSchema.create({
       max: 100,
       precision: 0
     }),
-    enable_next_response: Field.checkbox({
+    enable_next_response: Field.boolean({
       label: 'Track Next Response',
       defaultValue: true
     }),
@@ -161,7 +161,7 @@ export const SLAPolicy = ObjectSchema.create({
       max: 100,
       precision: 0
     }),
-    enable_resolution: Field.checkbox({
+    enable_resolution: Field.boolean({
       label: 'Track Resolution',
       defaultValue: true
     }),
@@ -178,7 +178,7 @@ export const SLAPolicy = ObjectSchema.create({
       max: 100,
       precision: 0
     }),
-    enable_closure: Field.checkbox({
+    enable_closure: Field.boolean({
       label: 'Track Closure',
       defaultValue: false
     }),
@@ -188,7 +188,7 @@ export const SLAPolicy = ObjectSchema.create({
       min: 1,
       precision: 0
     }),
-    enable_auto_escalation: Field.checkbox({
+    enable_auto_escalation: Field.boolean({
       label: 'Auto Escalation',
       defaultValue: true
     }),
@@ -220,31 +220,31 @@ export const SLAPolicy = ObjectSchema.create({
       precision: 0
     }),
     escalation_level3_rule_id: Field.lookup('EscalationRule', { label: 'Level 3 Rule' }),
-    notify_on_warning: Field.checkbox({
+    notify_on_warning: Field.boolean({
       label: 'Notify on Warning',
       defaultValue: true
     }),
-    notify_on_violation: Field.checkbox({
+    notify_on_violation: Field.boolean({
       label: 'Notify on Violation',
       defaultValue: true
     }),
-    notify_on_escalation: Field.checkbox({
+    notify_on_escalation: Field.boolean({
       label: 'Notify on Escalation',
       defaultValue: true
     }),
     warning_email_template_id: Field.lookup('EmailTemplate', { label: 'Warning Email Template' }),
     violation_email_template_id: Field.lookup('EmailTemplate', { label: 'Violation Email Template' }),
-    allow_sla_pause: Field.checkbox({
+    allow_sla_pause: Field.boolean({
       label: 'Allow SLA Pause',
       description: 'Allow pausing SLA timer',
       defaultValue: true
     }),
-    auto_pause_on_customer_wait: Field.checkbox({
+    auto_pause_on_customer_wait: Field.boolean({
       label: 'Pause on Customer Wait',
       description: 'Auto-pause when waiting on customer',
       defaultValue: true
     }),
-    auto_pause_on_hold: Field.checkbox({
+    auto_pause_on_hold: Field.boolean({
       label: 'Pause on Hold',
       description: 'Auto-pause when case is on hold',
       defaultValue: false
@@ -316,7 +316,7 @@ export const SLAPolicy = ObjectSchema.create({
       description: 'Previous version of this policy',
       readonly: true
     }),
-    is_latest_version: Field.checkbox({
+    is_latest_version: Field.boolean({
       label: 'Latest version',
       defaultValue: true,
       readonly: true

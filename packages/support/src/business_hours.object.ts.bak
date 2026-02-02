@@ -73,99 +73,85 @@ export const BusinessHours = ObjectSchema.create({
       label: 'Monday Working Day',
       defaultValue: true
     }),
-    monday_start_time: Field.text({
+    monday_start_time: Field.time({
       label: 'Monday Start',
-      defaultValue: '09:00',
-      maxLength: 5
+      defaultValue: '09:00'
     }),
-    monday_end_time: Field.text({
+    monday_end_time: Field.time({
       label: 'Monday End',
-      defaultValue: '18:00',
-      maxLength: 5
+      defaultValue: '18:00'
     }),
     tuesday_enabled: Field.boolean({
       label: 'Tuesday Working Day',
       defaultValue: true
     }),
-    tuesday_start_time: Field.text({
+    tuesday_start_time: Field.time({
       label: 'Tuesday Start',
-      defaultValue: '09:00',
-      maxLength: 5
+      defaultValue: '09:00'
     }),
-    tuesday_end_time: Field.text({
+    tuesday_end_time: Field.time({
       label: 'Tuesday End',
-      defaultValue: '18:00',
-      maxLength: 5
+      defaultValue: '18:00'
     }),
     wednesday_enabled: Field.boolean({
       label: 'Wednesday Working Day',
       defaultValue: true
     }),
-    wednesday_start_time: Field.text({
+    wednesday_start_time: Field.time({
       label: 'Wednesday Start',
-      defaultValue: '09:00',
-      maxLength: 5
+      defaultValue: '09:00'
     }),
-    wednesday_end_time: Field.text({
+    wednesday_end_time: Field.time({
       label: 'Wednesday End',
-      defaultValue: '18:00',
-      maxLength: 5
+      defaultValue: '18:00'
     }),
     thursday_enabled: Field.boolean({
       label: 'Thursday Working Day',
       defaultValue: true
     }),
-    thursday_start_time: Field.text({
+    thursday_start_time: Field.time({
       label: 'Thursday Start',
-      defaultValue: '09:00',
-      maxLength: 5
+      defaultValue: '09:00'
     }),
-    thursday_end_time: Field.text({
+    thursday_end_time: Field.time({
       label: 'Thursday End',
-      defaultValue: '18:00',
-      maxLength: 5
+      defaultValue: '18:00'
     }),
     friday_enabled: Field.boolean({
       label: 'Friday Working Day',
       defaultValue: true
     }),
-    friday_start_time: Field.text({
+    friday_start_time: Field.time({
       label: 'Friday Start',
-      defaultValue: '09:00',
-      maxLength: 5
+      defaultValue: '09:00'
     }),
-    friday_end_time: Field.text({
+    friday_end_time: Field.time({
       label: 'Friday End',
-      defaultValue: '18:00',
-      maxLength: 5
+      defaultValue: '18:00'
     }),
     saturday_enabled: Field.boolean({
       label: 'Saturday Working Day',
       defaultValue: false
     }),
-    saturday_start_time: Field.text({
+    saturday_start_time: Field.time({
       label: 'Saturday Start',
-      defaultValue: '09:00',
-      maxLength: 5
+      defaultValue: '09:00'
     }),
-    saturday_end_time: Field.text({
+    saturday_end_time: Field.time({
       label: 'Saturday End',
-      defaultValue: '13:00',
-      maxLength: 5
+      defaultValue: '13:00'
     }),
     sunday_enabled: Field.boolean({
       label: 'Sunday Working Day',
       defaultValue: false
     }),
-    sunday_start_time: Field.text({
+    sunday_start_time: Field.time({
       label: 'Sunday Start',
-      defaultValue: '09:00',
-      maxLength: 5
+      defaultValue: '09:00'
     }),
-    sunday_end_time: Field.text({
+    sunday_end_time: Field.time({
       label: 'Sunday End',
-      defaultValue: '13:00',
-      maxLength: 5
+      defaultValue: '13:00'
     }),
     exclude_holidays: Field.boolean({
       label: 'Exclude Holidays',

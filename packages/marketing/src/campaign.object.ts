@@ -49,7 +49,7 @@ export const Campaign = ObjectSchema.create({
       description: 'Calculated from Won Opportunities' 
     }),
     description: Field.textarea({ label: 'Description' }),
-    is_active: Field.checkbox({ label: 'Active', defaultValue: true }),
+    is_active: Field.boolean({ label: 'Active', defaultValue: true }),
     parent_campaign: Field.lookup('campaign', { label: 'Parent Campaign' })
   },
   

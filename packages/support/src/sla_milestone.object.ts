@@ -104,7 +104,7 @@ export const SLAMilestone = ObjectSchema.create({
         }
       ]
     }),
-    is_violated: Field.checkbox({
+    is_violated: Field.boolean({
       label: 'SLA Violated',
       defaultValue: false,
       readonly: true
@@ -120,13 +120,13 @@ export const SLAMilestone = ObjectSchema.create({
       description: 'When warning should be triggered',
       readonly: true
     }),
-    is_warning: Field.checkbox({
+    is_warning: Field.boolean({
       label: 'Warning',
       description: 'Past warning threshold',
       defaultValue: false,
       readonly: true
     }),
-    warning_notification_sent: Field.checkbox({
+    warning_notification_sent: Field.boolean({
       label: 'Warning Sent',
       defaultValue: false,
       readonly: true
@@ -135,12 +135,12 @@ export const SLAMilestone = ObjectSchema.create({
       label: 'Escalation Threshold',
       readonly: true
     }),
-    should_escalate: Field.checkbox({
+    should_escalate: Field.boolean({
       label: 'Should Escalate',
       defaultValue: false,
       readonly: true
     }),
-    escalation_triggered: Field.checkbox({
+    escalation_triggered: Field.boolean({
       label: 'Escalation Triggered',
       defaultValue: false,
       readonly: true

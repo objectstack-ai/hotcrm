@@ -8,7 +8,7 @@ export const Contract = ObjectSchema.create({
   description: '合同管理',
 
   fields: {
-    contract_number: Field.autoNumber({
+    contract_number: Field.autonumber({
       label: '合同编号',
       format: 'CT-{YYYY}{MM}{DD}-{0000}'
     }),

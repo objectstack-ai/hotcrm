@@ -17,7 +17,7 @@ export const Queue = ObjectSchema.create({
       label: 'description',
       maxLength: 2000
     }),
-    is_active: Field.checkbox({
+    is_active: Field.boolean({
       label: 'Active',
       defaultValue: true
     }),
@@ -119,7 +119,7 @@ export const Queue = ObjectSchema.create({
       label: 'SLA Template',
       description: 'Default SLA template for cases in this queue'
     }),
-    enable_auto_assignment: Field.checkbox({
+    enable_auto_assignment: Field.boolean({
       label: 'Enable Auto Assignment',
       defaultValue: true
     }),
@@ -130,7 +130,7 @@ export const Queue = ObjectSchema.create({
       min: 0,
       precision: 0
     }),
-    enable_overflow: Field.checkbox({
+    enable_overflow: Field.boolean({
       label: 'Enable Overflow',
       defaultValue: false
     }),
@@ -174,7 +174,7 @@ export const Queue = ObjectSchema.create({
       label: 'Queue Email',
       description: 'Email address for case submission to this queue'
     }),
-    email_to_case: Field.checkbox({
+    email_to_case: Field.boolean({
       label: 'Email to Case',
       defaultValue: false
     }),

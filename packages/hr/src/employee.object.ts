@@ -156,7 +156,6 @@ export const Employee = ObjectSchema.create({
     }),
     street: Field.textarea({
       label: '地址（街道）',
-      rows: 2
     }),
     city: Field.text({
       label: '城市',
@@ -185,7 +184,6 @@ export const Employee = ObjectSchema.create({
     }),
     notes: Field.textarea({
       label: '备注',
-      rows: 4
     })
   },
 

@@ -24,7 +24,7 @@ export const Product = ObjectSchema.create({
         { label: 'Other', value: 'Other' }
       ]
     }),
-    is_active: Field.checkbox({ label: 'Active', defaultValue: true }),
+    is_active: Field.boolean({ label: 'Active', defaultValue: true }),
     list_price: Field.currency({ label: 'List Price' }),
     cost_price: Field.currency({ label: 'Cost Price' }),
     quantity_unit: Field.select({ 

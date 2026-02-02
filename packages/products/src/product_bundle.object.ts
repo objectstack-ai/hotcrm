@@ -116,7 +116,7 @@ export const ProductBundle = ObjectSchema.create({
       description: 'Maximum allowed price for the bundle',
       precision: 2
     }),
-    allow_customization: Field.checkbox({
+    allow_customization: Field.boolean({
       label: 'Allow Customization',
       description: 'Allow customers to customize bundle components',
       defaultValue: false
@@ -150,12 +150,12 @@ export const ProductBundle = ObjectSchema.create({
       description: 'Alert when stock falls below this level',
       precision: 0
     }),
-    is_stock_tracked: Field.checkbox({
+    is_stock_tracked: Field.boolean({
       label: 'Track Stock',
       description: 'Enable stock tracking for this bundle',
       defaultValue: false
     }),
-    featured_bundle: Field.checkbox({
+    featured_bundle: Field.boolean({
       label: 'Featured Bundle',
       description: 'Display as featured bundle',
       defaultValue: false

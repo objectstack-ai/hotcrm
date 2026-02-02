@@ -160,12 +160,10 @@ export const Goal = ObjectSchema.create({
     description: Field.textarea({
       label: '目标描述',
       description: '详细的目标说明和期望结果',
-      rows: 5
     }),
     key_results: Field.textarea({
       label: '关键结果（KR）',
       description: 'OKR的关键结果，可列出多个',
-      rows: 5
     }),
     performance_review_id: Field.lookup('performance_review', { label: '关联绩效评估' }),
     weight: Field.percent({
@@ -174,11 +172,9 @@ export const Goal = ObjectSchema.create({
     }),
     achievement_notes: Field.textarea({
       label: '达成情况说明',
-      rows: 4
     }),
     notes: Field.textarea({
       label: '备注',
-      rows: 4
     })
   },
 

@@ -166,7 +166,7 @@ export const EmailTemplate = ObjectSchema.create({
         }
       ]
     }),
-    is_active: Field.checkbox({
+    is_active: Field.boolean({
       label: '是否启用',
       description: '只有启用的模板才能用于发送',
       defaultValue: true
@@ -175,7 +175,7 @@ export const EmailTemplate = ObjectSchema.create({
       label: '负责人',
       required: true
     }),
-    is_a_b_test: Field.checkbox({
+    is_a_b_test: Field.boolean({
       label: '启用 A/B 测试',
       defaultValue: false
     }),
@@ -238,7 +238,7 @@ export const EmailTemplate = ObjectSchema.create({
       readonly: true,
       precision: 1
     }),
-    has_unsubscribe_link: Field.checkbox({
+    has_unsubscribe_link: Field.boolean({
       label: '包含退订链接',
       description: '自动检测内容中是否包含退订链接',
       defaultValue: false,

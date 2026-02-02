@@ -147,19 +147,15 @@ export const Interview = ObjectSchema.create({
     feedback: Field.textarea({
       label: '面试反馈',
       description: '详细的面试评价和建议',
-      rows: 8
     }),
     strengths: Field.textarea({
       label: '优势',
-      rows: 3
     }),
     weaknesses: Field.textarea({
       label: '不足',
-      rows: 3
     }),
     notes: Field.textarea({
       label: '备注',
-      rows: 4
     })
   },
 

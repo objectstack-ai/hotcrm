@@ -43,7 +43,7 @@ import Payroll from './payroll.object';
  * 
  * Exports all HR/HCM-related business objects to be registered with the ObjectStack runtime
  */
-export const HRPlugin = {
+export const HRPlugin: any = {
   name: 'hr',
   label: 'Human Capital Management',
   version: '1.0.0',

@@ -17,7 +17,7 @@ export const EmailToCase = ObjectSchema.create({
       label: 'description',
       maxLength: 2000
     }),
-    is_active: Field.checkbox({
+    is_active: Field.boolean({
       label: 'Active',
       defaultValue: true
     }),
@@ -63,7 +63,7 @@ export const EmailToCase = ObjectSchema.create({
       defaultValue: 993,
       precision: 0
     }),
-    use_ssl: Field.checkbox({
+    use_ssl: Field.boolean({
       label: 'Use SSL',
       defaultValue: true
     }),
@@ -135,12 +135,12 @@ export const EmailToCase = ObjectSchema.create({
         }
       ]
     }),
-    create_case_per_email: Field.checkbox({
+    create_case_per_email: Field.boolean({
       label: 'Create Case Per Email',
       description: 'Create new case for each email (vs. threading)',
       defaultValue: true
     }),
-    thread_by_subject: Field.checkbox({
+    thread_by_subject: Field.boolean({
       label: 'Thread by Subject',
       description: 'Add to existing case if subject matches',
       defaultValue: true
@@ -152,12 +152,12 @@ export const EmailToCase = ObjectSchema.create({
       min: 1,
       precision: 0
     }),
-    auto_match_contact: Field.checkbox({
+    auto_match_contact: Field.boolean({
       label: 'Auto Match Contact',
       description: 'Automatically match sender to existing contact',
       defaultValue: true
     }),
-    create_contact_if_not_found: Field.checkbox({
+    create_contact_if_not_found: Field.boolean({
       label: 'Create Contact If Not Found',
       description: 'Create new contact for unknown senders',
       defaultValue: true
@@ -166,11 +166,11 @@ export const EmailToCase = ObjectSchema.create({
       label: 'Default Account',
       description: 'Account for cases when contact not found'
     }),
-    process_unread_only: Field.checkbox({
+    process_unread_only: Field.boolean({
       label: 'Process Unread Only',
       defaultValue: true
     }),
-    mark_as_read: Field.checkbox({
+    mark_as_read: Field.boolean({
       label: 'Mark as Read',
       description: 'Mark email as read after processing',
       defaultValue: true
@@ -180,7 +180,7 @@ export const EmailToCase = ObjectSchema.create({
       description: 'IMAP folder to move processed emails',
       maxLength: 255
     }),
-    save_attachments: Field.checkbox({
+    save_attachments: Field.boolean({
       label: 'Save Attachments',
       defaultValue: true
     }),
@@ -196,17 +196,17 @@ export const EmailToCase = ObjectSchema.create({
       description: 'Comma-separated extensions (e.g., pdf,doc,docx,jpg,png)',
       maxLength: 500
     }),
-    use_ai_for_categorization: Field.checkbox({
+    use_ai_for_categorization: Field.boolean({
       label: 'Use AI for Categorization',
       description: 'Use AI to auto-categorize and route cases',
       defaultValue: false
     }),
-    use_ai_for_priority: Field.checkbox({
+    use_ai_for_priority: Field.boolean({
       label: 'Use AI for Priority',
       description: 'Use AI to determine case priority',
       defaultValue: false
     }),
-    use_ai_sentiment_analysis: Field.checkbox({
+    use_ai_sentiment_analysis: Field.boolean({
       label: 'Use AI Sentiment Analysis',
       defaultValue: false
     }),
@@ -220,11 +220,11 @@ export const EmailToCase = ObjectSchema.create({
       description: 'Email addresses or domains to filter (one per line)',
       maxLength: 2000
     }),
-    exclude_auto_replies: Field.checkbox({
+    exclude_auto_replies: Field.boolean({
       label: 'Exclude Auto-Replies',
       defaultValue: true
     }),
-    send_auto_response: Field.checkbox({
+    send_auto_response: Field.boolean({
       label: 'Send Auto Response',
       defaultValue: false
     }),

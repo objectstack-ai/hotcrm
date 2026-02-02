@@ -8,7 +8,7 @@ export const Invoice = ObjectSchema.create({
   description: 'Billing Statement for products or services',
 
   fields: {
-    invoice_number: Field.autoNumber({
+    invoice_number: Field.autonumber({
       label: 'Invoice Number',
       format: 'INV-{YYYY}-{000000}'
     }),

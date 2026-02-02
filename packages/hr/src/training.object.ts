@@ -153,7 +153,7 @@ export const Training = ObjectSchema.create({
       ]
     }),
     completion_percentage: Field.percent({ label: '完成进度' }),
-    is_mandatory: Field.checkbox({
+    is_mandatory: Field.boolean({
       label: '是否必修',
       defaultValue: false
     }),
@@ -169,27 +169,23 @@ export const Training = ObjectSchema.create({
       max: 100,
       precision: 2
     }),
-    passed: Field.checkbox({
+    passed: Field.boolean({
       label: '是否通过',
       defaultValue: false
     }),
     certificate_url: Field.url({ label: '证书链接' }),
     description: Field.textarea({
       label: '培训描述',
-      rows: 4
     }),
     learning_objectives: Field.textarea({
       label: '学习目标',
-      rows: 3
     }),
     feedback: Field.textarea({
       label: '培训反馈',
       description: '员工的培训体验和收获',
-      rows: 5
     }),
     notes: Field.textarea({
       label: '备注',
-      rows: 3
     })
   },
 

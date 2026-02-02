@@ -192,7 +192,6 @@ export const Candidate = ObjectSchema.create({
     }),
     notes: Field.textarea({
       label: '备注',
-      rows: 4
     })
   },
 

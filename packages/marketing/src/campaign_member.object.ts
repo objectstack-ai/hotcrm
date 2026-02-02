@@ -89,7 +89,7 @@ export const CampaignMember = ObjectSchema.create({
       label: 'Email Bounced Date',
       readonly: true
     }),
-    has_responded: Field.checkbox({
+    has_responded: Field.boolean({
       label: 'Has Responded',
       description: 'Auto-set to true when status is Responded',
       defaultValue: false,

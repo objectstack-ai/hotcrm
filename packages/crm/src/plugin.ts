@@ -38,7 +38,7 @@ import { Unsubscribe } from './unsubscribe.object';
  * Exports all CRM-related business objects, hooks, and actions
  * to be registered with the ObjectStack runtime
  */
-export const CRMPlugin = {
+export const CRMPlugin: any = {
   name: 'crm',
   label: 'CRM',
   version: '1.0.0',

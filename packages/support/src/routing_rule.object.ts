@@ -17,7 +17,7 @@ export const RoutingRule = ObjectSchema.create({
       label: 'description',
       maxLength: 2000
     }),
-    is_active: Field.checkbox({
+    is_active: Field.boolean({
       label: 'Active',
       defaultValue: true
     }),
@@ -58,7 +58,7 @@ export const RoutingRule = ObjectSchema.create({
       maxLength: 500
     }),
     match_categories: /* TODO: Unknown type 'multiselect' */ null,
-    vip_customers_only: Field.checkbox({
+    vip_customers_only: Field.boolean({
       label: 'VIP Customers Only',
       description: 'Route only VIP customer cases',
       defaultValue: false
@@ -74,7 +74,7 @@ export const RoutingRule = ObjectSchema.create({
       description: 'Comma-separated country codes (e.g., US, CN, UK)',
       maxLength: 500
     }),
-    use_ai_classification: Field.checkbox({
+    use_ai_classification: Field.boolean({
       label: 'Use AI Classification',
       description: 'Use AI to classify and route cases',
       defaultValue: false
@@ -110,7 +110,7 @@ export const RoutingRule = ObjectSchema.create({
         }
       ]
     }),
-    enable_time_based_routing: Field.checkbox({
+    enable_time_based_routing: Field.boolean({
       label: 'Enable Time-Based Routing',
       defaultValue: false
     }),

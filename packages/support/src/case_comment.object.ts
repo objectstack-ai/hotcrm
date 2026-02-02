@@ -67,12 +67,12 @@ export const CaseComment = ObjectSchema.create({
       readonly: true,
       maxLength: 32000
     }),
-    is_public: Field.checkbox({
+    is_public: Field.boolean({
       label: 'Visible to Customer',
       description: 'Whether this comment is visible in customer portal',
       defaultValue: false
     }),
-    is_internal: Field.checkbox({
+    is_internal: Field.boolean({
       label: 'Internal Only',
       description: 'Internal note not visible to customer',
       defaultValue: false
@@ -115,7 +115,7 @@ export const CaseComment = ObjectSchema.create({
       readonly: true,
       maxLength: 255
     }),
-    is_first_response: Field.checkbox({
+    is_first_response: Field.boolean({
       label: 'Is First Response',
       description: 'First agent response to case',
       defaultValue: false,
@@ -169,12 +169,12 @@ export const CaseComment = ObjectSchema.create({
       readonly: true,
       maxLength: 500
     }),
-    is_solution: Field.checkbox({
+    is_solution: Field.boolean({
       label: 'Marked as Solution',
       description: 'This comment contains the solution',
       defaultValue: false
     }),
-    is_edited: Field.checkbox({
+    is_edited: Field.boolean({
       label: 'Edited',
       defaultValue: false,
       readonly: true
@@ -193,7 +193,7 @@ export const CaseComment = ObjectSchema.create({
       readonly: true,
       precision: 0
     }),
-    is_helpful: Field.checkbox({
+    is_helpful: Field.boolean({
       label: 'Marked Helpful',
       description: 'Customer marked this as helpful',
       defaultValue: false,
@@ -254,7 +254,7 @@ export const CaseComment = ObjectSchema.create({
       readonly: true,
       maxLength: 255
     }),
-    has_attachment: Field.checkbox({
+    has_attachment: Field.boolean({
       label: 'Has Attachment',
       defaultValue: false,
       readonly: true

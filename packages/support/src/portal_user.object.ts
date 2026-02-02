@@ -42,7 +42,7 @@ export const PortalUser = ObjectSchema.create({
       description: 'Associated account record',
       required: true
     }),
-    is_active: Field.checkbox({
+    is_active: Field.boolean({
       label: 'Active',
       defaultValue: true
     }),
@@ -146,36 +146,36 @@ export const PortalUser = ObjectSchema.create({
       label: 'Password Last Changed',
       readonly: true
     }),
-    must_change_password: Field.checkbox({
+    must_change_password: Field.boolean({
       label: 'Must Change Password',
       defaultValue: false
     }),
-    two_factor_enabled: Field.checkbox({
+    two_factor_enabled: Field.boolean({
       label: 'Two-Factor Auth Enabled',
       defaultValue: false
     }),
-    can_submit_cases: Field.checkbox({
+    can_submit_cases: Field.boolean({
       label: 'Can Submit Cases',
       defaultValue: true
     }),
-    can_view_all_account_cases: Field.checkbox({
+    can_view_all_account_cases: Field.boolean({
       label: 'View All Account Cases',
       description: 'View cases from entire account',
       defaultValue: false
     }),
-    can_access_knowledge_base: Field.checkbox({
+    can_access_knowledge_base: Field.boolean({
       label: 'Access Knowledge Base',
       defaultValue: true
     }),
-    can_access_community: Field.checkbox({
+    can_access_community: Field.boolean({
       label: 'Access Community Forum',
       defaultValue: true
     }),
-    can_download_resources: Field.checkbox({
+    can_download_resources: Field.boolean({
       label: 'Download Resources',
       defaultValue: true
     }),
-    can_comment_on_cases: Field.checkbox({
+    can_comment_on_cases: Field.boolean({
       label: 'Comment on Cases',
       defaultValue: true
     }),
@@ -257,19 +257,19 @@ export const PortalUser = ObjectSchema.create({
         }
       ]
     }),
-    email_notifications: Field.checkbox({
+    email_notifications: Field.boolean({
       label: 'email Notifications',
       defaultValue: true
     }),
-    sms_notifications: Field.checkbox({
+    sms_notifications: Field.boolean({
       label: 'SMS Notifications',
       defaultValue: false
     }),
-    notify_on_case_update: Field.checkbox({
+    notify_on_case_update: Field.boolean({
       label: 'Notify on Case Update',
       defaultValue: true
     }),
-    notify_on_case_resolved: Field.checkbox({
+    notify_on_case_resolved: Field.boolean({
       label: 'Notify on Case Resolved',
       defaultValue: true
     }),

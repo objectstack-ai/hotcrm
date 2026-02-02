@@ -221,7 +221,7 @@ export const PriceRule = ObjectSchema.create({
       description: 'Overridden price',
       precision: 2
     }),
-    use_tiered_pricing: Field.checkbox({
+    use_tiered_pricing: Field.boolean({
       label: 'Use Tiered Pricing',
       description: 'Enable quantity-based tiered pricing',
       defaultValue: false
@@ -240,7 +240,7 @@ export const PriceRule = ObjectSchema.create({
       label: 'Contract',
       description: 'Contract this pricing rule is associated with'
     }),
-    require_contract: Field.checkbox({
+    require_contract: Field.boolean({
       label: 'Require Contract',
       description: 'Rule only applies if customer has an active contract',
       defaultValue: false
@@ -250,7 +250,7 @@ export const PriceRule = ObjectSchema.create({
       description: 'Promotion code for customer entry',
       maxLength: 50
     }),
-    is_public: Field.checkbox({
+    is_public: Field.boolean({
       label: 'Public Promotion',
       description: 'Publicly advertised promotion',
       defaultValue: false
@@ -267,7 +267,7 @@ export const PriceRule = ObjectSchema.create({
       readonly: true,
       precision: 0
     }),
-    allow_stacking: Field.checkbox({
+    allow_stacking: Field.boolean({
       label: 'Allow Stacking',
       description: 'Allow combining with other pricing rules',
       defaultValue: false
@@ -313,7 +313,7 @@ export const PriceRule = ObjectSchema.create({
       description: 'Amount to beat competitor price by',
       precision: 2
     }),
-    requires_approval: Field.checkbox({
+    requires_approval: Field.boolean({
       label: 'Requires Approval',
       description: 'Rule requires approval before activation',
       defaultValue: false

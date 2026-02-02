@@ -9,8 +9,8 @@ export const Pricebook = ObjectSchema.create({
   
   fields: {
     name: Field.text({ label: 'Pricebook Name', required: true }),
-    is_active: Field.checkbox({ label: 'Active', defaultValue: true }),
-    is_standard: Field.checkbox({ label: 'Is Standard Pricebook', defaultValue: false }),
+    is_active: Field.boolean({ label: 'Active', defaultValue: true }),
+    is_standard: Field.boolean({ label: 'Is Standard Pricebook', defaultValue: false }),
     currency: Field.select({ 
       label: 'Currency',
       options: [

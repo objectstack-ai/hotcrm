@@ -97,7 +97,7 @@ export const Attendance = ObjectSchema.create({
     }),
     check_in_location: /* TODO: Unknown type 'location' */ null,
     check_out_location: /* TODO: Unknown type 'location' */ null,
-    is_approved: Field.checkbox({
+    is_approved: Field.boolean({
       label: '是否已审核',
       defaultValue: false
     }),
@@ -105,7 +105,6 @@ export const Attendance = ObjectSchema.create({
     notes: Field.textarea({
       label: '备注',
       description: '异常情况说明等',
-      rows: 3
     })
   },
 

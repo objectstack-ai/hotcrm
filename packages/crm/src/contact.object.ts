@@ -79,7 +79,7 @@ export const Contact = ObjectSchema.create({
     phone: Field.phone({ label: '电话' }),
     mobile_phone: Field.phone({ label: '手机' }),
     fax: Field.phone({ label: '传真' }),
-    is_decision_maker: Field.checkbox({
+    is_decision_maker: Field.boolean({
       label: '决策者',
       description: '是否为主要决策者',
       defaultValue: false
@@ -150,7 +150,6 @@ export const Contact = ObjectSchema.create({
     }),
     notes: Field.textarea({
       label: '备注',
-      rows: 4
     })
   },
 

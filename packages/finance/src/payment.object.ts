@@ -8,7 +8,7 @@ export const Payment = ObjectSchema.create({
   description: 'Manage payments, invoices, and collections.',
   
   fields: {
-    payment_number: Field.autoNumber({ label: 'Payment Number', readonly: true }),
+    payment_number: Field.autonumber({ label: 'Payment Number', readonly: true }),
     name: Field.text({ label: 'Payment Name', required: true, searchable: true }),
     type: Field.select({
       label: 'Type',

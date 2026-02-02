@@ -8,7 +8,7 @@ export const ApprovalRequest = ObjectSchema.create({
   description: 'Multi-level approval workflow for discounts and pricing exceptions',
 
   fields: {
-    request_number: Field.autoNumber({
+    request_number: Field.autonumber({
       label: 'Request Number',
       readonly: true,
       format: 'AR-{YYYY}-{MM}-{00000}'
@@ -280,7 +280,7 @@ export const ApprovalRequest = ObjectSchema.create({
       description: 'Conditions attached to approval',
       maxLength: 5000
     }),
-    is_escalated: Field.checkbox({
+    is_escalated: Field.boolean({
       label: 'Escalated',
       description: 'Request has been escalated',
       defaultValue: false
@@ -297,7 +297,7 @@ export const ApprovalRequest = ObjectSchema.create({
       label: 'Due Date',
       description: 'SLA due date for approval decision'
     }),
-    is_overdue: Field.checkbox({
+    is_overdue: Field.boolean({
       label: 'Overdue',
       description: 'Past due date',
       defaultValue: false,
@@ -319,12 +319,12 @@ export const ApprovalRequest = ObjectSchema.create({
       description: 'Internal notes not visible to submitter',
       maxLength: 5000
     }),
-    notify_on_approval: Field.checkbox({
+    notify_on_approval: Field.boolean({
       label: 'Notify on Approval',
       description: 'Send notification when approved',
       defaultValue: true
     }),
-    notify_on_rejection: Field.checkbox({
+    notify_on_rejection: Field.boolean({
       label: 'Notify on Rejection',
       description: 'Send notification when rejected',
       defaultValue: true

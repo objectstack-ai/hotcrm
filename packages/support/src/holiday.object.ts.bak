@@ -124,15 +124,13 @@ export const Holiday = ObjectSchema.create({
       label: 'Full Day',
       defaultValue: true
     }),
-    start_time: Field.text({
+    start_time: Field.time({
       label: 'Start Time',
-      description: 'For partial day holidays',
-      maxLength: 5
+      description: 'For partial day holidays'
     }),
-    end_time: Field.text({
+    end_time: Field.time({
       label: 'End Time',
-      description: 'For partial day holidays',
-      maxLength: 5
+      description: 'For partial day holidays'
     }),
     is_observed: Field.boolean({
       label: 'Observed by Company',

@@ -17,7 +17,7 @@ export const EscalationRule = ObjectSchema.create({
       label: 'description',
       maxLength: 2000
     }),
-    is_active: Field.checkbox({
+    is_active: Field.boolean({
       label: 'Active',
       defaultValue: true
     }),
@@ -100,15 +100,15 @@ export const EscalationRule = ObjectSchema.create({
       label: 'Escalate to Role',
       description: 'Role to escalate to (any user with this role)'
     }),
-    notify_original_owner: Field.checkbox({
+    notify_original_owner: Field.boolean({
       label: 'Notify Original Owner',
       defaultValue: true
     }),
-    notify_escalation_target: Field.checkbox({
+    notify_escalation_target: Field.boolean({
       label: 'Notify Escalation Target',
       defaultValue: true
     }),
-    notify_customer: Field.checkbox({
+    notify_customer: Field.boolean({
       label: 'Notify Customer',
       defaultValue: false
     }),
@@ -116,7 +116,7 @@ export const EscalationRule = ObjectSchema.create({
       label: 'Email Template',
       description: 'Email template for escalation notification'
     }),
-    update_priority: Field.checkbox({
+    update_priority: Field.boolean({
       label: 'Update Priority',
       defaultValue: false
     }),
@@ -141,7 +141,7 @@ export const EscalationRule = ObjectSchema.create({
         }
       ]
     }),
-    update_status: Field.checkbox({
+    update_status: Field.boolean({
       label: 'Update Status',
       defaultValue: false
     }),

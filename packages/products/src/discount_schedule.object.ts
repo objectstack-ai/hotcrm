@@ -98,7 +98,7 @@ export const DiscountSchedule = ObjectSchema.create({
       description: 'When discount expires',
       required: true
     }),
-    is_recurring: Field.checkbox({
+    is_recurring: Field.boolean({
       label: 'Recurring',
       description: 'Schedule repeats annually',
       defaultValue: false
@@ -235,7 +235,7 @@ export const DiscountSchedule = ObjectSchema.create({
       description: 'Comma-separated list of account IDs',
       maxLength: 2000
     }),
-    requires_approval: Field.checkbox({
+    requires_approval: Field.boolean({
       label: 'Requires Approval',
       description: 'Discounts from this schedule require approval',
       defaultValue: false
@@ -253,7 +253,7 @@ export const DiscountSchedule = ObjectSchema.create({
       label: 'Approval Matrix',
       description: 'Custom approval matrix for this schedule'
     }),
-    enforce_margin_rules: Field.checkbox({
+    enforce_margin_rules: Field.boolean({
       label: 'Enforce Margin Rules',
       description: 'Enforce minimum margin requirements',
       defaultValue: true
@@ -267,12 +267,12 @@ export const DiscountSchedule = ObjectSchema.create({
       description: 'Minimum acceptable profit margin amount',
       precision: 2
     }),
-    alert_below_margin: Field.checkbox({
+    alert_below_margin: Field.boolean({
       label: 'Alert Below Margin',
       description: 'Alert when margin falls below threshold',
       defaultValue: true
     }),
-    block_below_margin: Field.checkbox({
+    block_below_margin: Field.boolean({
       label: 'Block Below Margin',
       description: 'Prevent quotes below minimum margin',
       defaultValue: false
@@ -336,7 +336,7 @@ export const DiscountSchedule = ObjectSchema.create({
       description: 'Minimum product quantity required',
       precision: 0
     }),
-    allow_combine_with_other: Field.checkbox({
+    allow_combine_with_other: Field.boolean({
       label: 'Allow Combine with Other Discounts',
       description: 'Can be combined with other discount schedules',
       defaultValue: false

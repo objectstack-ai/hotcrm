@@ -119,22 +119,22 @@ export const ForumTopic = ObjectSchema.create({
         }
       ]
     }),
-    is_pinned: Field.checkbox({
+    is_pinned: Field.boolean({
       label: 'Pinned',
       description: 'Pin to top of category',
       defaultValue: false
     }),
-    is_locked: Field.checkbox({
+    is_locked: Field.boolean({
       label: 'Locked',
       description: 'Prevent new replies',
       defaultValue: false
     }),
-    is_featured: Field.checkbox({
+    is_featured: Field.boolean({
       label: 'Featured',
       description: 'Feature on homepage',
       defaultValue: false
     }),
-    has_accepted_answer: Field.checkbox({
+    has_accepted_answer: Field.boolean({
       label: 'Has Accepted Answer',
       defaultValue: false,
       readonly: true
@@ -155,7 +155,7 @@ export const ForumTopic = ObjectSchema.create({
       label: 'Related Article',
       description: 'Knowledge article related to this topic'
     }),
-    requires_moderation: Field.checkbox({
+    requires_moderation: Field.boolean({
       label: 'Requires Moderation',
       defaultValue: false
     }),

@@ -8,7 +8,7 @@ export const KnowledgeArticle = ObjectSchema.create({
   description: 'Knowledge base articles for customer self-service and agent assistance',
 
   fields: {
-    article_number: Field.autoNumber({
+    article_number: Field.autonumber({
       label: 'Article Number',
       readonly: true,
       format: 'KB-{YYYY}-{0000}'
@@ -136,17 +136,17 @@ export const KnowledgeArticle = ObjectSchema.create({
       label: 'Author',
       required: true
     }),
-    is_internal: Field.checkbox({
+    is_internal: Field.boolean({
       label: 'Internal Only',
       description: 'Visible only to support agents',
       defaultValue: false
     }),
-    is_public: Field.checkbox({
+    is_public: Field.boolean({
       label: 'Public',
       description: 'Visible in customer portal',
       defaultValue: true
     }),
-    requires_authentication: Field.checkbox({
+    requires_authentication: Field.boolean({
       label: 'Requires Login',
       description: 'Customer must be logged in to view',
       defaultValue: false
@@ -400,7 +400,7 @@ export const KnowledgeArticle = ObjectSchema.create({
       readonly: true,
       precision: 0
     }),
-    has_attachments: Field.checkbox({
+    has_attachments: Field.boolean({
       label: 'Has Attachments',
       defaultValue: false,
       readonly: true

@@ -8,7 +8,7 @@ export const Case = ObjectSchema.create({
   description: 'Customer service case and support request management with SLA tracking and AI-powered routing',
 
   fields: {
-    case_number: Field.autoNumber({
+    case_number: Field.autonumber({
       label: 'Case Number',
       readonly: true,
       format: 'CASE-{YYYY}-{0000}'
@@ -252,7 +252,7 @@ export const Case = ObjectSchema.create({
       readonly: true,
       precision: 0
     }),
-    is_sla_violated: Field.checkbox({
+    is_sla_violated: Field.boolean({
       label: 'SLA Violated',
       defaultValue: false,
       readonly: true
@@ -275,7 +275,7 @@ export const Case = ObjectSchema.create({
         }
       ]
     }),
-    is_escalated: Field.checkbox({
+    is_escalated: Field.boolean({
       label: 'Escalated',
       defaultValue: false
     }),
@@ -340,7 +340,7 @@ export const Case = ObjectSchema.create({
         }
       ]
     }),
-    work_around_provided: Field.checkbox({
+    work_around_provided: Field.boolean({
       label: 'Workaround Provided',
       defaultValue: false
     }),

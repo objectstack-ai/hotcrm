@@ -17,7 +17,7 @@ export const SLATemplate = ObjectSchema.create({
       label: 'description',
       maxLength: 2000
     }),
-    is_active: Field.checkbox({
+    is_active: Field.boolean({
       label: 'Active',
       defaultValue: true
     }),
@@ -82,7 +82,7 @@ export const SLATemplate = ObjectSchema.create({
       max: 100,
       precision: 0
     }),
-    enable_auto_escalation: Field.checkbox({
+    enable_auto_escalation: Field.boolean({
       label: 'Enable Auto Escalation',
       defaultValue: false
     }),

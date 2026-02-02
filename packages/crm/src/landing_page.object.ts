@@ -135,7 +135,7 @@ export const LandingPage = ObjectSchema.create({
         }
       ]
     }),
-    is_active: Field.checkbox({
+    is_active: Field.boolean({
       label: '是否启用',
       defaultValue: true
     }),
@@ -151,7 +151,7 @@ export const LandingPage = ObjectSchema.create({
       label: '负责人',
       required: true
     }),
-    is_a_b_test: Field.checkbox({
+    is_a_b_test: Field.boolean({
       label: '启用 A/B 测试',
       defaultValue: false
     }),
@@ -211,7 +211,7 @@ export const LandingPage = ObjectSchema.create({
       description: '跟踪参数：utm_source',
       maxLength: 100
     }),
-    is_mobile_optimized: Field.checkbox({
+    is_mobile_optimized: Field.boolean({
       label: '移动端优化',
       description: '是否针对移动设备优化',
       defaultValue: true

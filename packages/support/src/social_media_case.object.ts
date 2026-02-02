@@ -17,7 +17,7 @@ export const SocialMediaCase = ObjectSchema.create({
       label: 'description',
       maxLength: 2000
     }),
-    is_active: Field.checkbox({
+    is_active: Field.boolean({
       label: 'Active',
       defaultValue: true
     }),
@@ -84,17 +84,17 @@ export const SocialMediaCase = ObjectSchema.create({
       label: 'Token Expiry',
       readonly: true
     }),
-    monitor_mentions: Field.checkbox({
+    monitor_mentions: Field.boolean({
       label: 'Monitor Mentions',
       description: 'Create cases from @mentions',
       defaultValue: true
     }),
-    monitor_direct_messages: Field.checkbox({
+    monitor_direct_messages: Field.boolean({
       label: 'Monitor Direct Messages',
       description: 'Create cases from DMs',
       defaultValue: true
     }),
-    monitor_comments: Field.checkbox({
+    monitor_comments: Field.boolean({
       label: 'Monitor Comments',
       description: 'Create cases from post comments',
       defaultValue: true
@@ -166,12 +166,12 @@ export const SocialMediaCase = ObjectSchema.create({
         }
       ]
     }),
-    auto_match_contact: Field.checkbox({
+    auto_match_contact: Field.boolean({
       label: 'Auto Match Contact',
       description: 'Match social profile to existing contact',
       defaultValue: true
     }),
-    create_contact_if_not_found: Field.checkbox({
+    create_contact_if_not_found: Field.boolean({
       label: 'Create Contact If Not Found',
       defaultValue: true
     }),
@@ -179,7 +179,7 @@ export const SocialMediaCase = ObjectSchema.create({
       label: 'Default Account',
       description: 'Account for new contacts'
     }),
-    send_auto_response: Field.checkbox({
+    send_auto_response: Field.boolean({
       label: 'Send Auto Response',
       description: 'Send automatic acknowledgment message',
       defaultValue: true
@@ -197,17 +197,17 @@ export const SocialMediaCase = ObjectSchema.create({
       max: 300,
       precision: 0
     }),
-    use_ai_sentiment_analysis: Field.checkbox({
+    use_ai_sentiment_analysis: Field.boolean({
       label: 'Use AI Sentiment Analysis',
       description: 'Analyze sentiment of social posts',
       defaultValue: true
     }),
-    use_ai_for_priority: Field.checkbox({
+    use_ai_for_priority: Field.boolean({
       label: 'Use AI for Priority',
       description: 'AI determines case priority based on content',
       defaultValue: true
     }),
-    use_ai_for_urgency: Field.checkbox({
+    use_ai_for_urgency: Field.boolean({
       label: 'Use AI for Urgency',
       description: 'Detect urgent situations (e.g., angry customers)',
       defaultValue: true
@@ -218,7 +218,7 @@ export const SocialMediaCase = ObjectSchema.create({
       min: 0,
       precision: 0
     }),
-    exclude_verified_users: Field.checkbox({
+    exclude_verified_users: Field.boolean({
       label: 'Exclude Verified Users',
       description: 'Do not create cases from verified accounts',
       defaultValue: false

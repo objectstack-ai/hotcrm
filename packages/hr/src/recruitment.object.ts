@@ -98,12 +98,10 @@ export const Recruitment = ObjectSchema.create({
     job_description: Field.textarea({
       label: '职位描述',
       description: '详细的职位职责和要求',
-      rows: 8
     }),
     requirements: Field.textarea({
       label: '任职要求',
       description: '学历、经验、技能等要求',
-      rows: 5
     }),
     salary_range_min: Field.currency({
       label: '薪资范围（最低）',
@@ -115,7 +113,6 @@ export const Recruitment = ObjectSchema.create({
     }),
     notes: Field.textarea({
       label: '备注',
-      rows: 4
     })
   },
 

@@ -118,11 +118,11 @@ export const Activity = ObjectSchema.create({
       label: 'Completed Date',
       readonly: true
     }),
-    who_id: Field.lookup(["Contact","Lead"], {
+    who_id: Field.lookup("Contact", {
       label: 'Related Person',
       description: 'Link to Contact or Lead'
     }),
-    what_id: Field.lookup(["Account","Opportunity","Contract","Case"], {
+    what_id: Field.lookup("Account", {
       label: 'Related To',
       description: 'Link to Account, Opportunity, Contract, or Case'
     }),
@@ -134,7 +134,7 @@ export const Activity = ObjectSchema.create({
       label: 'location',
       maxLength: 255
     }),
-    is_online: Field.checkbox({
+    is_online: Field.boolean({
       label: 'Online Activity',
       defaultValue: false
     }),
@@ -227,7 +227,7 @@ export const Activity = ObjectSchema.create({
       maxLength: 1000
     }),
     sms_phone_number: Field.phone({ label: 'SMS Phone Number' }),
-    is_recurring: Field.checkbox({
+    is_recurring: Field.boolean({
       label: 'Recurring Task',
       defaultValue: false
     }),

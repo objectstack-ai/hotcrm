@@ -67,12 +67,12 @@ export const Certification = ObjectSchema.create({
       label: '到期日期',
       description: '如果证书有效期限制'
     }),
-    is_active: Field.checkbox({
+    is_active: Field.boolean({
       label: '是否有效',
       description: '证书当前是否有效',
       defaultValue: true
     }),
-    renewal_required: Field.checkbox({
+    renewal_required: Field.boolean({
       label: '需要续期',
       defaultValue: false
     }),
@@ -120,11 +120,9 @@ export const Certification = ObjectSchema.create({
     description: Field.textarea({
       label: '认证描述',
       description: '认证的内容和价值',
-      rows: 4
     }),
     notes: Field.textarea({
       label: '备注',
-      rows: 3
     })
   },
 

@@ -152,7 +152,6 @@ export const Payroll = ObjectSchema.create({
     payslip_url: Field.url({ label: '工资条链接' }),
     notes: Field.textarea({
       label: '备注',
-      rows: 3
     })
   },
 

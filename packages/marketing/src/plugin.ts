@@ -3,7 +3,7 @@ import { CampaignMember } from './campaign_member.object';
 
 import { CampaignROIHook } from './hooks/roi.hook';
 
-export const MarketingPlugin = {
+export const MarketingPlugin: any = {
   name: 'marketing',
   label: 'Marketing Cloud',
   version: '1.0.0',

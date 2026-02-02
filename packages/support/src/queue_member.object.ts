@@ -16,11 +16,11 @@ export const QueueMember = ObjectSchema.create({
       label: 'Agent',
       required: true
     }),
-    is_active: Field.checkbox({
+    is_active: Field.boolean({
       label: 'Active',
       defaultValue: true
     }),
-    is_primary: Field.checkbox({
+    is_primary: Field.boolean({
       label: 'Primary Queue',
       description: 'This is the agent\'s primary queue',
       defaultValue: false
@@ -55,7 +55,7 @@ export const QueueMember = ObjectSchema.create({
         }
       ]
     }),
-    accept_new_cases: Field.checkbox({
+    accept_new_cases: Field.boolean({
       label: 'Accept New Cases',
       defaultValue: true
     }),
@@ -86,7 +86,7 @@ export const QueueMember = ObjectSchema.create({
       defaultValue: 'TODAY()'
     }),
     left_date: Field.date({ label: 'Left Date' }),
-    has_custom_schedule: Field.checkbox({
+    has_custom_schedule: Field.boolean({
       label: 'Custom Schedule',
       description: 'Agent has custom working hours',
       defaultValue: false

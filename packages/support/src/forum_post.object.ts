@@ -48,13 +48,13 @@ export const ForumPost = ObjectSchema.create({
         }
       ]
     }),
-    is_answer: Field.checkbox({
+    is_answer: Field.boolean({
       label: 'Marked as Answer',
       description: 'This post is the accepted answer',
       defaultValue: false,
       readonly: true
     }),
-    is_deleted: Field.checkbox({
+    is_deleted: Field.boolean({
       label: 'Deleted',
       defaultValue: false
     }),
@@ -66,11 +66,11 @@ export const ForumPost = ObjectSchema.create({
       label: 'Deleted By',
       readonly: true
     }),
-    requires_moderation: Field.checkbox({
+    requires_moderation: Field.boolean({
       label: 'Requires Moderation',
       defaultValue: false
     }),
-    is_approved: Field.checkbox({
+    is_approved: Field.boolean({
       label: 'Approved',
       defaultValue: true
     }),
@@ -99,7 +99,7 @@ export const ForumPost = ObjectSchema.create({
       readonly: true,
       precision: 0
     }),
-    is_helpful: Field.checkbox({
+    is_helpful: Field.boolean({
       label: 'Marked Helpful',
       description: 'Community marked as helpful',
       defaultValue: false
@@ -110,7 +110,7 @@ export const ForumPost = ObjectSchema.create({
       readonly: true,
       precision: 0
     }),
-    is_edited: Field.checkbox({
+    is_edited: Field.boolean({
       label: 'Edited',
       defaultValue: false,
       readonly: true
@@ -129,7 +129,7 @@ export const ForumPost = ObjectSchema.create({
       readonly: true,
       precision: 0
     }),
-    is_flagged: Field.checkbox({
+    is_flagged: Field.boolean({
       label: 'Flagged',
       description: 'Community flagged for review',
       defaultValue: false,

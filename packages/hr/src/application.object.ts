@@ -138,16 +138,13 @@ export const Application = ObjectSchema.create({
     resume_url: Field.url({ label: '简历链接' }),
     cover_letter: Field.textarea({
       label: '求职信',
-      rows: 6
     }),
     rejection_reason: Field.textarea({
       label: '拒绝原因',
       description: '如果被拒绝，记录原因',
-      rows: 3
     }),
     notes: Field.textarea({
       label: '备注',
-      rows: 4
     })
   },
 

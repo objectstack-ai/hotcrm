@@ -17,7 +17,7 @@ export const AssignmentRule = ObjectSchema.create({
       ],
       required: true 
     }),
-    active: Field.checkbox({ label: 'Active', defaultValue: true }),
+    active: Field.boolean({ label: 'Active', defaultValue: true }),
     sort_order: Field.number({ label: 'Sort Order', defaultValue: 1 }),
     criteria_field: Field.text({ label: 'Criteria Field', required: true, description: 'Field API Name to evaluate' }),
     criteria_operator: Field.select({ 

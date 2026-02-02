@@ -169,12 +169,10 @@ export const Position = ObjectSchema.create({
     description: Field.textarea({
       label: '职位描述',
       description: '职位职责和要求',
-      rows: 5
     }),
     requirements: Field.textarea({
       label: '任职要求',
       description: '学历、技能、经验等要求',
-      rows: 5
     })
   },
 

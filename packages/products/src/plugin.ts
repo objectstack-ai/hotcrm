@@ -31,7 +31,7 @@ import { QuotePricingHook } from './hooks/quote.hook';
  * Exports all product and pricing-related business objects, hooks, and actions
  * to be registered with the ObjectStack runtime
  */
-export const ProductsPlugin = {
+export const ProductsPlugin: any = {
   name: 'products',
   label: 'Products & Pricing',
   version: '1.0.0',

@@ -148,12 +148,10 @@ export const TimeOff = ObjectSchema.create({
     reason: Field.textarea({
       label: '请假原因',
       required: true,
-      rows: 4
     }),
     rejection_reason: Field.textarea({
       label: '拒绝原因',
       description: '如果被拒绝，记录原因',
-      rows: 3
     }),
     contact_info: Field.text({
       label: '请假期间联系方式',
@@ -163,7 +161,7 @@ export const TimeOff = ObjectSchema.create({
       label: '工作交接人',
       description: '临时负责工作的同事'
     }),
-    is_paid: Field.checkbox({
+    is_paid: Field.boolean({
       label: '是否带薪',
       defaultValue: true
     }),
@@ -173,7 +171,6 @@ export const TimeOff = ObjectSchema.create({
     }),
     notes: Field.textarea({
       label: '备注',
-      rows: 3
     })
   },
 

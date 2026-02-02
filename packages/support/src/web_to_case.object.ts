@@ -17,7 +17,7 @@ export const WebToCase = ObjectSchema.create({
       label: 'description',
       maxLength: 2000
     }),
-    is_active: Field.checkbox({
+    is_active: Field.boolean({
       label: 'Active',
       defaultValue: true
     }),
@@ -93,27 +93,27 @@ export const WebToCase = ObjectSchema.create({
         }
       ]
     }),
-    require_contact_info: Field.checkbox({
+    require_contact_info: Field.boolean({
       label: 'Require Contact Information',
       defaultValue: true
     }),
-    require_email: Field.checkbox({
+    require_email: Field.boolean({
       label: 'Require Email',
       defaultValue: true
     }),
-    require_phone: Field.checkbox({
+    require_phone: Field.boolean({
       label: 'Require Phone',
       defaultValue: false
     }),
-    require_company: Field.checkbox({
+    require_company: Field.boolean({
       label: 'Require Company',
       defaultValue: false
     }),
-    allow_priority_selection: Field.checkbox({
+    allow_priority_selection: Field.boolean({
       label: 'Allow Priority Selection',
       defaultValue: false
     }),
-    allow_type_selection: Field.checkbox({
+    allow_type_selection: Field.boolean({
       label: 'Allow Type Selection',
       defaultValue: true
     }),
@@ -122,7 +122,7 @@ export const WebToCase = ObjectSchema.create({
       description: 'JSON configuration for additional form fields',
       maxLength: 5000
     }),
-    allow_attachments: Field.checkbox({
+    allow_attachments: Field.boolean({
       label: 'Allow Attachments',
       defaultValue: true
     }),
@@ -145,7 +145,7 @@ export const WebToCase = ObjectSchema.create({
       description: 'Comma-separated extensions (e.g., pdf,doc,jpg,png)',
       maxLength: 500
     }),
-    send_auto_response: Field.checkbox({
+    send_auto_response: Field.boolean({
       label: 'Send Auto Response',
       defaultValue: true
     }),
@@ -159,16 +159,16 @@ export const WebToCase = ObjectSchema.create({
       label: 'Redirect URL',
       description: 'URL to redirect after successful submission'
     }),
-    require_captcha: Field.checkbox({
+    require_captcha: Field.boolean({
       label: 'Require CAPTCHA',
       description: 'Require CAPTCHA verification to prevent spam',
       defaultValue: true
     }),
-    allow_anonymous: Field.checkbox({
+    allow_anonymous: Field.boolean({
       label: 'Allow Anonymous Submissions',
       defaultValue: true
     }),
-    require_account_match: Field.checkbox({
+    require_account_match: Field.boolean({
       label: 'Require Account Match',
       description: 'Require submitter email to match existing account',
       defaultValue: false
@@ -208,7 +208,7 @@ export const WebToCase = ObjectSchema.create({
       description: 'Custom CSS for form styling',
       maxLength: 5000
     }),
-    auto_create_contact: Field.checkbox({
+    auto_create_contact: Field.boolean({
       label: 'Auto Create Contact',
       description: 'Automatically create contact if not found',
       defaultValue: true
@@ -217,15 +217,15 @@ export const WebToCase = ObjectSchema.create({
       label: 'Default Account',
       description: 'Default account for new contacts'
     }),
-    use_ai_for_categorization: Field.checkbox({
+    use_ai_for_categorization: Field.boolean({
       label: 'Use AI for Categorization',
       defaultValue: false
     }),
-    use_ai_for_priority: Field.checkbox({
+    use_ai_for_priority: Field.boolean({
       label: 'Use AI for Priority',
       defaultValue: false
     }),
-    use_ai_sentiment_analysis: Field.checkbox({
+    use_ai_sentiment_analysis: Field.boolean({
       label: 'Use AI Sentiment Analysis',
       defaultValue: false
     }),

@@ -142,37 +142,30 @@ export const PerformanceReview = ObjectSchema.create({
     achievements: Field.textarea({
       label: '主要成就',
       description: '评估期内的关键成就和贡献',
-      rows: 6
     }),
     strengths: Field.textarea({
       label: '优势',
-      rows: 4
     }),
     areas_for_improvement: Field.textarea({
       label: '改进方向',
-      rows: 4
     }),
     development_plan: Field.textarea({
       label: '发展计划',
       description: '下一阶段的发展目标和行动计划',
-      rows: 5
     }),
     employee_comments: Field.textarea({
       label: '员工自评/反馈',
-      rows: 5
     }),
     manager_comments: Field.textarea({
       label: '经理评语',
-      rows: 5
     }),
-    promotion_recommendation: Field.checkbox({
+    promotion_recommendation: Field.boolean({
       label: '推荐晋升',
       defaultValue: false
     }),
     salary_increase_recommendation: Field.percent({ label: '建议加薪比例' }),
     notes: Field.textarea({
       label: '备注',
-      rows: 4
     })
   },
 

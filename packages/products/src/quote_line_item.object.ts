@@ -183,7 +183,7 @@ export const QuoteLineItem = ObjectSchema.create({
       readonly: true,
       precision: 2
     }),
-    is_taxable: Field.checkbox({
+    is_taxable: Field.boolean({
       label: 'Taxable',
       description: 'Is this line item subject to tax?',
       defaultValue: true
@@ -204,12 +204,12 @@ export const QuoteLineItem = ObjectSchema.create({
       label: 'Required By',
       description: 'Parent line item that requires this item'
     }),
-    is_optional: Field.checkbox({
+    is_optional: Field.boolean({
       label: 'Optional',
       description: 'Is this an optional add-on?',
       defaultValue: false
     }),
-    is_bundle: Field.checkbox({
+    is_bundle: Field.boolean({
       label: 'Bundle',
       description: 'Is this a bundle item?',
       defaultValue: false,

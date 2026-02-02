@@ -93,7 +93,6 @@ export const Department = ObjectSchema.create({
     }),
     description: Field.textarea({
       label: '部门描述',
-      rows: 4
     })
   },
 

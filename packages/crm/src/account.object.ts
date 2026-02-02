@@ -117,7 +117,6 @@ export const Account = ObjectSchema.create({
     email: Field.email({ label: '邮箱' }),
     billing_street: Field.textarea({
       label: '账单地址（街道）',
-      rows: 2
     }),
     billing_city: Field.text({
       label: '账单地址（城市）',
@@ -137,7 +136,6 @@ export const Account = ObjectSchema.create({
     }),
     shipping_street: Field.textarea({
       label: '送货地址（街道）',
-      rows: 2
     }),
     shipping_city: Field.text({
       label: '送货地址（城市）',
@@ -179,7 +177,6 @@ export const Account = ObjectSchema.create({
     }),
     description: Field.textarea({
       label: '描述',
-      rows: 5
     }),
     sla_tier: Field.select({
       label: 'SLA等级',
