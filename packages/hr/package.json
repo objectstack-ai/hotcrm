@@ -1,0 +1,33 @@
+{
+  "name": "@hotcrm/hr",
+  "version": "1.0.0",
+  "description": "Human Capital Management module - Employee lifecycle, recruitment, performance, and payroll",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "eslint src --ext .ts"
+  },
+  "keywords": [
+    "hr",
+    "hcm",
+    "human-capital-management",
+    "recruitment",
+    "performance",
+    "payroll"
+  ],
+  "author": "HotCRM Team",
+  "license": "MIT",
+  "dependencies": {
+    "@hotcrm/core": "workspace:*",
+    "@objectstack/spec": "^0.8.1",
+    "typescript": "^5.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@typescript-eslint/eslint-plugin": "^6.14.0",
+    "@typescript-eslint/parser": "^6.14.0",
+    "eslint": "^8.55.0"
+  }
+}
