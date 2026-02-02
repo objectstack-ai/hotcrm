@@ -11,32 +11,32 @@
  */
 
 // Import organizational objects
-import Department from './department.object';
-import Position from './position.object';
-import Employee from './employee.object';
+import { Department } from './department.object';
+import { Position } from './position.object';
+import { Employee } from './employee.object';
 
 // Import recruitment objects
-import Recruitment from './recruitment.object';
-import Candidate from './candidate.object';
-import Application from './application.object';
-import Interview from './interview.object';
-import Offer from './offer.object';
-import Onboarding from './onboarding.object';
+import { Recruitment } from './recruitment.object';
+import { Candidate } from './candidate.object';
+import { Application } from './application.object';
+import { Interview } from './interview.object';
+import { Offer } from './offer.object';
+import { Onboarding } from './onboarding.object';
 
 // Import performance management objects
-import PerformanceReview from './performance_review.object';
-import Goal from './goal.object';
+import { PerformanceReview } from './performance_review.object';
+import { Goal } from './goal.object';
 
 // Import learning & development objects
-import Training from './training.object';
-import Certification from './certification.object';
+import { Training } from './training.object';
+import { Certification } from './certification.object';
 
 // Import time & attendance objects
-import TimeOff from './time_off.object';
-import Attendance from './attendance.object';
+import { TimeOff } from './time_off.object';
+import { Attendance } from './attendance.object';
 
 // Import payroll object
-import Payroll from './payroll.object';
+import { Payroll } from './payroll.object';
 
 /**
  * HR Plugin Definition
@@ -132,5 +132,3 @@ export const HRPlugin: any = {
     }
   ]
 };
-
-export default HRPlugin;

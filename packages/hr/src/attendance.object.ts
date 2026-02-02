@@ -95,8 +95,6 @@ export const Attendance = ObjectSchema.create({
         }
       ]
     }),
-    check_in_location: /* TODO: Unknown type 'location' */ null,
-    check_out_location: /* TODO: Unknown type 'location' */ null,
     is_approved: Field.boolean({
       label: '是否已审核',
       defaultValue: false
@@ -109,10 +107,9 @@ export const Attendance = ObjectSchema.create({
   },
 
   enable: {
-    searchEnabled: true,
+    searchable: true,
     trackHistory: false,
-    allowActivities: false,
-    allowFeeds: false,
-    allowAttachments: false
+    activities: false,
+    feeds: false,
   },
 });

@@ -161,7 +161,6 @@ export const Training = ObjectSchema.create({
       label: '培训费用',
       precision: 2
     }),
-    rating: /* TODO: Unknown type 'rating' */ null,
     exam_score: Field.number({
       label: '考试成绩',
       description: '如有考试，记录成绩',
@@ -190,10 +189,9 @@ export const Training = ObjectSchema.create({
   },
 
   enable: {
-    searchEnabled: true,
+    searchable: true,
     trackHistory: true,
-    allowActivities: true,
-    allowFeeds: true,
-    allowAttachments: true
+    activities: true,
+    feeds: true,
   },
 });

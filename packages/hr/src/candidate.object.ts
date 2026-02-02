@@ -149,7 +149,6 @@ export const Candidate = ObjectSchema.create({
         }
       ]
     }),
-    rating: /* TODO: Unknown type 'rating' */ null,
     status: Field.select({
       label: '状态',
       defaultValue: 'New',
@@ -180,7 +179,6 @@ export const Candidate = ObjectSchema.create({
         }
       ]
     }),
-    skills: /* TODO: Unknown type 'tags' */ null,
     resume_url: Field.url({ label: '简历链接' }),
     city: Field.text({
       label: '所在城市',
@@ -196,10 +194,9 @@ export const Candidate = ObjectSchema.create({
   },
 
   enable: {
-    searchEnabled: true,
+    searchable: true,
     trackHistory: true,
-    allowActivities: true,
-    allowFeeds: true,
-    allowAttachments: true
+    activities: true,
+    feeds: true,
   },
 });

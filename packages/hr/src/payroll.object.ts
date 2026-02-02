@@ -156,10 +156,9 @@ export const Payroll = ObjectSchema.create({
   },
 
   enable: {
-    searchEnabled: true,
+    searchable: true,
     trackHistory: true,
-    allowActivities: false,
-    allowFeeds: false,
-    allowAttachments: true
+    activities: false,
+    feeds: false,
   },
 });

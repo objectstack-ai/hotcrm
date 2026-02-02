@@ -136,9 +136,6 @@ export const PerformanceReview = ObjectSchema.create({
       max: 100,
       precision: 2
     }),
-    goals_rating: /* TODO: Unknown type 'rating' */ null,
-    competency_rating: /* TODO: Unknown type 'rating' */ null,
-    values_rating: /* TODO: Unknown type 'rating' */ null,
     achievements: Field.textarea({
       label: '主要成就',
       description: '评估期内的关键成就和贡献',
@@ -170,10 +167,9 @@ export const PerformanceReview = ObjectSchema.create({
   },
 
   enable: {
-    searchEnabled: true,
+    searchable: true,
     trackHistory: true,
-    allowActivities: true,
-    allowFeeds: true,
-    allowAttachments: true
+    activities: true,
+    feeds: true,
   },
 });

@@ -134,7 +134,6 @@ export const Application = ObjectSchema.create({
       label: '内推人',
       description: '如果是内推，记录推荐人'
     }),
-    rating: /* TODO: Unknown type 'rating' */ null,
     resume_url: Field.url({ label: '简历链接' }),
     cover_letter: Field.textarea({
       label: '求职信',
@@ -149,10 +148,9 @@ export const Application = ObjectSchema.create({
   },
 
   enable: {
-    searchEnabled: true,
+    searchable: true,
     trackHistory: true,
-    allowActivities: true,
-    allowFeeds: true,
-    allowAttachments: true
+    activities: true,
+    feeds: true,
   },
 });

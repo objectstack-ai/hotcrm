@@ -97,10 +97,9 @@ export const Department = ObjectSchema.create({
   },
 
   enable: {
-    searchEnabled: true,
+    searchable: true,
     trackHistory: true,
-    allowActivities: false,
-    allowFeeds: true,
-    allowAttachments: false
+    activities: false,
+    feeds: true,
   },
 });

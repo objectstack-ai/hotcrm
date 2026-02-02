@@ -175,10 +175,9 @@ export const TimeOff = ObjectSchema.create({
   },
 
   enable: {
-    searchEnabled: true,
+    searchable: true,
     trackHistory: true,
-    allowActivities: true,
-    allowFeeds: true,
-    allowAttachments: true
+    activities: true,
+    feeds: true,
   },
 });

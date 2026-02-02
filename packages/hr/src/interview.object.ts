@@ -140,10 +140,6 @@ export const Interview = ObjectSchema.create({
         }
       ]
     }),
-    overall_rating: /* TODO: Unknown type 'rating' */ null,
-    technical_rating: /* TODO: Unknown type 'rating' */ null,
-    communication_rating: /* TODO: Unknown type 'rating' */ null,
-    cultural_fit_rating: /* TODO: Unknown type 'rating' */ null,
     feedback: Field.textarea({
       label: '面试反馈',
       description: '详细的面试评价和建议',
@@ -160,10 +156,9 @@ export const Interview = ObjectSchema.create({
   },
 
   enable: {
-    searchEnabled: true,
+    searchable: true,
     trackHistory: true,
-    allowActivities: true,
-    allowFeeds: true,
-    allowAttachments: true
+    activities: true,
+    feeds: true,
   },
 });

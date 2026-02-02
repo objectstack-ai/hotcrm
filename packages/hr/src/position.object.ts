@@ -177,10 +177,9 @@ export const Position = ObjectSchema.create({
   },
 
   enable: {
-    searchEnabled: true,
+    searchable: true,
     trackHistory: true,
-    allowActivities: false,
-    allowFeeds: true,
-    allowAttachments: true
+    activities: false,
+    feeds: true,
   },
 });
