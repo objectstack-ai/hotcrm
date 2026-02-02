@@ -558,7 +558,7 @@ export interface PredictiveLeadScoringResponse {
 /**
  * Predict lead conversion probability using AI
  */
-export async function scoreleadsPredictively(request: PredictiveLeadScoringRequest): Promise<PredictiveLeadScoringResponse> {
+export async function scoreLeadsPredictively(request: PredictiveLeadScoringRequest): Promise<PredictiveLeadScoringResponse> {
   const { leadId, leadIds, modelVersion = 'v1.0' } = request;
 
   const leadsToScore = leadId ? [leadId] : (leadIds || []);
@@ -1103,7 +1103,7 @@ export default {
   analyzeAttribution,
   analyzeROI,
   optimizeFunnel,
-  scoreleadsPredictively,
+  scoreLeadsPredictively,
   analyzeCustomerJourney,
   benchmarkPerformance,
   recommendBudgetAllocation

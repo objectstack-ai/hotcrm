@@ -21,40 +21,16 @@ const CampaignMemberEngagementTrigger: Hook = {
 
       const now = new Date().toISOString();
 
-      // Auto-set HasResponded when status becomes Responded
-      if (member.status === 'Responded' && !member.has_responded) {
-        member.has_responded = true;
-
-        // Set first responded date if not already set
-        if (!member.first_responded_date) {
-          member.first_responded_date = now;
-          console.log(`✅ Member responded - setting first_responded_date`);
-        }
-      }
-
-      // Track first opened date
-      if (member.status === 'Opened' && !member.first_opened_date) {
-        member.first_opened_date = now;
-        member.number_of_opens = (member.number_of_opens || 0) + 1;
-        console.log(`👁️ Member opened - setting first_opened_date`);
-      }
-
-      // Track first clicked date
-      if (member.status === 'Clicked' && !member.first_clicked_date) {
-        member.first_clicked_date = now;
-        member.number_of_clicks = (member.number_of_clicks || 0) + 1;
-        console.log(`🖱️ Member clicked - setting first_clicked_date`);
-      }
-
-      // Increment engagement counters on status change
+      // Only process engagement updates on status change
       if (oldMember && oldMember.status !== member.status) {
         console.log(`📊 Member engagement updated: ${oldMember.status} → ${member.status}`);
 
-        // Update counters based on new status
+        // Update engagement metrics based on new status
         switch (member.status) {
           case 'Opened':
             if (!member.first_opened_date) {
               member.first_opened_date = now;
+              console.log(`👁️ Member opened - setting first_opened_date`);
             }
             member.number_of_opens = (member.number_of_opens || 0) + 1;
             break;
@@ -65,6 +41,7 @@ const CampaignMemberEngagementTrigger: Hook = {
             }
             if (!member.first_clicked_date) {
               member.first_clicked_date = now;
+              console.log(`🖱️ Member clicked - setting first_clicked_date`);
             }
             member.number_of_opens = (member.number_of_opens || 0) + 1;
             member.number_of_clicks = (member.number_of_clicks || 0) + 1;
@@ -79,6 +56,7 @@ const CampaignMemberEngagementTrigger: Hook = {
             }
             if (!member.first_responded_date) {
               member.first_responded_date = now;
+              console.log(`✅ Member responded - setting first_responded_date`);
             }
             member.has_responded = true;
             member.number_of_opens = (member.number_of_opens || 0) + 1;
