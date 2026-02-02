@@ -1,28 +1,106 @@
 ---
 title: Marketing Cloud
-description: Intelligent marketing automation.
+description: Intelligent marketing automation and campaign management.
 ---
 
 # Marketing Cloud
 
-The **Marketing Cloud** drives demand generation through multi-channel campaigns and intelligent lead nurturing.
+The **Marketing Cloud** drives demand generation through multi-channel campaigns and intelligent lead nurturing. Built as a modular plugin, it integrates seamlessly with Sales Cloud for end-to-end lead-to-cash workflows.
 
 ## Functional Capabilities
 
 ### 1. Campaign Management
-Plan, execute, and track marketing initiatives.
-- **Multi-Channel**: Email, Social, Events, Ads.
-- **Budget Tracking**: Monitor "Actual Cost" vs "Budgeted Cost".
-- **Hierarchy**: Parent/Child campaigns.
 
-### 2. Lead Nurturing
-- **Drip Campaigns**: Automated email sequences.
-- **Behavioral Scoring**: Score leads based on website visits and email clicks.
+Plan, execute, and track marketing initiatives across all channels.
 
-### 3. ROI Analytics
-- **Attribution**: Link closed revenue back to the originating campaign.
-- **Cost Analysis**: Calculate Cost Per Lead (CPL) and ROI.
+- **Multi-Channel Support**: Email, Social Media, Events, Webinars, Paid Ads, Content Marketing
+- **Budget Tracking**: Monitor "Actual Cost" vs "Budgeted Cost" with real-time ROI
+- **Campaign Hierarchy**: Parent/Child campaign relationships for complex initiatives
+- **Campaign Member Management**: Track individual engagement and conversion
+- **Status Tracking**: From Planning → In Progress → Completed with success metrics
+
+**Objects**: `campaign`, `campaign_member`
+
+### 2. Lead Nurturing & Engagement
+
+- **Drip Campaigns**: Automated email sequences triggered by behavioral signals
+- **Behavioral Scoring**: Score leads based on website visits, email clicks, and content downloads
+- **Marketing Lists**: Segmentation for targeted campaigns
+- **A/B Testing**: Test messaging, offers, and creative variations
+- **Email Templates**: Reusable email templates with personalization tokens
+
+**Objects**: `marketing_list`, `email_template`
+
+### 3. Lead Generation
+
+Capture leads from multiple digital channels.
+
+- **Landing Pages**: Create conversion-optimized landing pages with form builders
+- **Web Forms**: Embed forms on your website with spam protection
+- **Social Lead Ads**: Integrate with LinkedIn, Facebook lead generation
+- **Event Registration**: Capture leads from webinars and conferences
+
+**Objects**: `landing_page`, `form`
+
+### 4. ROI Analytics & Reporting
+
+Measure marketing effectiveness with precision.
+
+- **Attribution Analysis**: Link closed revenue back to the originating campaign
+- **Cost Analysis**: Calculate Cost Per Lead (CPL), Cost Per Acquisition (CPA), and ROI
+- **Funnel Metrics**: Track conversion rates from Lead → MQL → SQL → Opportunity → Closed Won
+- **Channel Performance**: Compare effectiveness across marketing channels
+- **Campaign Dashboard**: Real-time metrics on active campaigns
+
+### 5. Compliance & Consent Management
+
+Stay compliant with data protection regulations.
+
+- **Unsubscribe Management**: One-click unsubscribe with preference center
+- **Consent Tracking**: GDPR and CCPA compliance with audit trails
+- **Data Privacy**: Automatic PII handling and data retention policies
+
+**Objects**: `unsubscribe`
+
+## AI-Powered Features
+
+Every marketing process is enhanced with intelligent automation:
+
+- **Content Generation**: AI-generated email copy, subject lines, and ad headlines
+- **Audience Segmentation**: ML-powered customer clustering for targeted campaigns
+- **Send Time Optimization**: Predict the best time to send emails for each recipient
+- **Channel Recommendations**: AI suggests the best channels for each segment
+- **Subject Line Scoring**: Predict email open rates before sending
+- **Campaign Performance Prediction**: Forecast campaign ROI before launch
 
 ## Integration Points
 
-- **Sales Cloud**: Hands off "Marketing Qualified Leads" (MQL) to sales.
+- **Sales Cloud**: Hands off "Marketing Qualified Leads" (MQL) to sales teams
+- **CRM Cloud**: Links campaigns to accounts, contacts, and opportunities for full attribution
+- **AI Cloud**: Leverages AI models for content generation and predictive analytics
+
+## Key Objects (7 Total)
+
+| Object | Description |
+|--------|-------------|
+| `campaign` | Marketing campaigns with budget and ROI tracking |
+| `campaign_member` | Individual engagement in campaigns |
+| `marketing_list` | Segmented contact lists for targeting |
+| `email_template` | Reusable email templates |
+| `landing_page` | Conversion-optimized landing pages |
+| `form` | Web forms for lead capture |
+| `unsubscribe` | Email unsubscribe and consent management |
+
+## Next Steps
+
+<Cards>
+  <Card title="Campaign Object Reference" href="/docs/developers/specs/marketing/campaigns" icon="megaphone">
+    Detailed schema for Campaign object
+  </Card>
+  <Card title="Lead Nurturing Workflows" href="/docs/developers/specs/marketing/nurturing" icon="mail">
+    Build automated drip campaigns
+  </Card>
+  <Card title="Marketing Analytics" href="/docs/modules/analytics" icon="chart-bar">
+    Campaign performance dashboards
+  </Card>
+</Cards>
