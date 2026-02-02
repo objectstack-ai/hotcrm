@@ -12,16 +12,16 @@
  */
 
 // Import all Products objects
-import Product from './product.object';
-import Pricebook from './pricebook.object';
-import Quote from './quote.object';
+import { Product } from './product.object';
+import { Pricebook } from './pricebook.object';
+import { Quote } from './quote.object';
 
-import QuoteLineItem from './quote_line_item.object';
-import ProductBundle from './product_bundle.object';
-import ProductBundleComponent from './product_bundle_component.object';
-import PriceRule from './price_rule.object';
-import ApprovalRequest from './approval_request.object';
-import DiscountSchedule from './discount_schedule.object';
+import { QuoteLineItem } from './quote_line_item.object';
+import { ProductBundle } from './product_bundle.object';
+import { ProductBundleComponent } from './product_bundle_component.object';
+import { PriceRule } from './price_rule.object';
+import { ApprovalRequest } from './approval_request.object';
+import { DiscountSchedule } from './discount_schedule.object';
 
 import { QuotePricingHook } from './hooks/quote.hook';
 

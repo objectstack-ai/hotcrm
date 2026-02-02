@@ -1,5 +1,5 @@
-import Campaign from './campaign.object';
-import CampaignMember from './campaign_member.object';
+import { Campaign } from './campaign.object';
+import { CampaignMember } from './campaign_member.object';
 
 import { CampaignROIHook } from './hooks/roi.hook';
 

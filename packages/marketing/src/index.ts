@@ -6,8 +6,8 @@
  * - CampaignMember: Links leads/contacts to campaigns
  */
 
-export { default as Campaign } from './campaign.object';
-export { default as CampaignMember } from './campaign_member.object';
+export { Campaign } from './campaign.object';
+export { CampaignMember } from './campaign_member.object';
 
 // Export Hooks
 export { default as CampaignROIHook } from './hooks/roi.hook';

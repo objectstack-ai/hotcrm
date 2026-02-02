@@ -1,27 +1,44 @@
-export default {
+import { ObjectSchema, Field } from '@objectstack/spec/data';
+
+export const AssignmentRule = ObjectSchema.create({
   name: 'assignment_rule',
   label: 'Assignment Rule',
+  pluralLabel: 'Assignment Rules',
   icon: 'flow',
   description: 'Rules to automatically assign records to users or queues.',
+  
   fields: {
-    name: { type: 'text', label: 'Rule Name', required: true },
-    object_name: { 
-      type: 'select', 
+    name: Field.text({ label: 'Rule Name', required: true }),
+    object_name: Field.select({ 
       label: 'Object', 
-      options: ['lead', 'case'],
+      options: [
+        { label: 'lead', value: 'lead' },
+        { label: 'case', value: 'case' }
+      ],
       required: true 
-    },
-    active: { type: 'boolean', label: 'Active', defaultValue: true },
-    sort_order: { type: 'number', label: 'Sort Order', defaultValue: 1 },
-    criteria_field: { type: 'text', label: 'Criteria Field', required: true, description: 'Field API Name to evaluate' },
-    criteria_operator: { 
-      type: 'select', 
+    }),
+    active: Field.checkbox({ label: 'Active', defaultValue: true }),
+    sort_order: Field.number({ label: 'Sort Order', defaultValue: 1 }),
+    criteria_field: Field.text({ label: 'Criteria Field', required: true, description: 'Field API Name to evaluate' }),
+    criteria_operator: Field.select({ 
       label: 'Operator', 
-      options: ['=', '!=', '>', '<', 'contains'], 
+      options: [
+        { label: '=', value: '=' },
+        { label: '!=', value: '!=' },
+        { label: '>', value: '>' },
+        { label: '<', value: '<' },
+        { label: 'contains', value: 'contains' }
+      ], 
       required: true 
-    },
-    criteria_value: { type: 'text', label: 'Value', required: true },
-    assign_to: { type: 'lookup', reference_to: 'users', label: 'Assign To User' },
-    assign_to_queue: { type: 'lookup', reference_to: 'queue', label: 'Assign To Queue' }
-  }
-}
+    }),
+    criteria_value: Field.text({ label: 'Value', required: true }),
+    assign_to: Field.lookup('users', { label: 'Assign To User' }),
+    assign_to_queue: Field.lookup('queue', { label: 'Assign To Queue' })
+  },
+  
+  enable: {
+    searchEnabled: true,
+    trackHistory: true,
+    apiEnabled: true,
+  },
+});
