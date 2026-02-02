@@ -15,7 +15,25 @@
 // Mock database interface
 const db = {
   doc: {
-    get: async (object: string, id: string, options?: any): Promise<any> => ({}),
+    get: async (object: string, id: string, options?: any): Promise<any> => {
+      // Return mock employee data
+      if (object === 'employee') {
+        return {
+          id,
+          full_name: 'Test Employee',
+          position_title: 'Software Engineer',
+          department_name: 'Engineering',
+          base_salary: 100000,
+          years_of_experience: 3,
+          location: 'San Francisco',
+          last_review_rating: 4.5,
+          hire_date: '2021-01-15',
+          tenure_years: 2.5,
+          promotion_count: 1
+        };
+      }
+      return {};
+    },
     update: async (object: string, id: string, data: any): Promise<any> => ({}),
     create: async (object: string, data: any): Promise<any> => ({ id: 'mock-id', ...data })
   },
@@ -860,6 +878,46 @@ async function callLLM(prompt: string): Promise<string> {
   await new Promise(resolve => setTimeout(resolve, 500));
 
   // Mock responses based on prompt type
+  // NOTE: Order matters! More specific checks should come first
+  
+  // Compensation benchmarking - must come before retention risk check
+  // because it mentions "retention risk" in the prompt
+  if (prompt.includes('compensation analyst') || prompt.includes('market benchmarking')) {
+    return JSON.stringify({
+      currentCompensation: {
+        base_salary: 100000,
+        total_compensation: 120000
+      },
+      marketData: {
+        percentile_25: 95000,
+        percentile_50: 115000,
+        percentile_75: 135000,
+        percentile_90: 155000
+      },
+      marketPosition: {
+        percentile: 35,
+        status: 'below_market',
+        gap_amount: 15000,
+        gap_percentage: 13
+      },
+      recommendations: [
+        {
+          action: 'Market adjustment to P50',
+          timing: 'Next compensation cycle (Q1 2024)',
+          amount: 15000,
+          reasoning: 'Bring to market median for retention; high performer at risk'
+        },
+        {
+          action: 'Performance-based merit increase',
+          timing: 'Annual review',
+          amount: 5000,
+          reasoning: 'Reward consistent high performance (4.5/5 rating)'
+        }
+      ],
+      compensationRetentionRisk: 'high'
+    });
+  }
+  
   if (prompt.includes('retention risk') || prompt.includes('predicting employee retention')) {
     return JSON.stringify({
       riskLevel: 'high',
@@ -1124,43 +1182,6 @@ async function callLLM(prompt: string): Promise<string> {
         'Cross-training initiative for backend/frontend',
         'Security awareness training for all engineers'
       ]
-    });
-  }
-
-  // Compensation benchmarking
-  if (prompt.includes('compensation analyst') || prompt.includes('market benchmarking')) {
-    return JSON.stringify({
-      currentCompensation: {
-        base_salary: 100000,
-        total_compensation: 120000
-      },
-      marketData: {
-        percentile_25: 95000,
-        percentile_50: 115000,
-        percentile_75: 135000,
-        percentile_90: 155000
-      },
-      marketPosition: {
-        percentile: 35,
-        status: 'below_market',
-        gap_amount: 15000,
-        gap_percentage: 13
-      },
-      recommendations: [
-        {
-          action: 'Market adjustment to P50',
-          timing: 'Next compensation cycle (Q1 2024)',
-          amount: 15000,
-          reasoning: 'Bring to market median for retention; high performer at risk'
-        },
-        {
-          action: 'Performance-based merit increase',
-          timing: 'Annual review',
-          amount: 5000,
-          reasoning: 'Reward consistent high performance (4.5/5 rating)'
-        }
-      ],
-      compensationRetentionRisk: 'high'
     });
   }
 
