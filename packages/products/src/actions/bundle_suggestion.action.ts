@@ -124,7 +124,7 @@ export async function suggestBundles(request: SuggestBundlesRequest): Promise<Su
       role: p.role as 'core' | 'complementary' | 'optional'
     }));
 
-    const totalListPrice = products.reduce((sum, p) => sum + (p.unit_price * p.quantity), 0);
+    const totalListPrice = products.reduce((sum: any, p: any) => sum + (p.unit_price * p.quantity), 0);
     const bundlePrice = Math.round(totalListPrice * (1 - discountPercent / 100));
     const savings = totalListPrice - bundlePrice;
 
@@ -657,12 +657,12 @@ export async function priceBundleOptimally(request: PriceBundleOptimallyRequest)
   const priceMap = new Map(prices.map(p => [p.product_id, p.list_price || 10000]));
 
   // Calculate component pricing
-  const productPrices = products.map(p => priceMap.get(p.product_id) || 10000);
-  const totalListPrice = productPrices.reduce((sum, p) => sum + p, 0);
-  const averageUnitPrice = totalListPrice / products.length;
+  const productPrices = products.map((p: any) => priceMap.get(p.product_id) || 10000);
+  const totalListPrice = productPrices.reduce((sum: any, p: any) => sum + p, 0);
+  const averageUnitPrice = (totalListPrice as number) / products.length;
   const priceRange = {
-    min: Math.min(...productPrices),
-    max: Math.max(...productPrices)
+    min: Math.min(...productPrices as number[]),
+    max: Math.max(...productPrices as number[])
   };
 
   // Calculate optimal bundle discount based on segment and bundle size
@@ -676,36 +676,36 @@ export async function priceBundleOptimally(request: PriceBundleOptimallyRequest)
   const sizeBonus = Math.min(10, products.length * 2);
   const discountPercent = Math.round(baseDiscount + sizeBonus);
 
-  const recommendedPrice = Math.round(totalListPrice * (1 - discountPercent / 100));
-  const savings = totalListPrice - recommendedPrice;
+  const recommendedPrice = Math.round((totalListPrice as number) * (1 - discountPercent / 100));
+  const savings = (totalListPrice as number) - recommendedPrice;
   const pricePerProduct = Math.round(recommendedPrice / products.length);
 
   // Create pricing tiers
   const tiers = [
     {
       tier: 'Standard',
-      price: Math.round(totalListPrice * 0.85),
+      price: Math.round((totalListPrice as number) * 0.85),
       discountPercent: 15,
       targetSegment: 'Small Business',
       expectedAdoption: 65
     },
     {
       tier: 'Professional',
-      price: Math.round(totalListPrice * 0.80),
+      price: Math.round((totalListPrice as number) * 0.80),
       discountPercent: 20,
       targetSegment: 'Mid-Market',
       expectedAdoption: 75
     },
     {
       tier: 'Enterprise',
-      price: Math.round(totalListPrice * 0.75),
+      price: Math.round((totalListPrice as number) * 0.75),
       discountPercent: 25,
       targetSegment: 'Enterprise',
       expectedAdoption: 85
     },
     {
       tier: 'Strategic',
-      price: Math.round(totalListPrice * 0.70),
+      price: Math.round((totalListPrice as number) * 0.70),
       discountPercent: 30,
       targetSegment: 'Strategic Accounts',
       expectedAdoption: 90
@@ -713,7 +713,7 @@ export async function priceBundleOptimally(request: PriceBundleOptimallyRequest)
   ];
 
   // Competitive positioning
-  const marketAverage = totalListPrice * 0.82; // Market typically offers 18% discount
+  const marketAverage = (totalListPrice as number) * 0.82; // Market typically offers 18% discount
   
   let yourPosition: 'premium' | 'competitive' | 'value';
   let recommendation = '';
@@ -731,7 +731,7 @@ export async function priceBundleOptimally(request: PriceBundleOptimallyRequest)
 
   return {
     componentPricing: {
-      totalListPrice,
+      totalListPrice: totalListPrice as number,
       averageUnitPrice: Math.round(averageUnitPrice),
       priceRange
     },

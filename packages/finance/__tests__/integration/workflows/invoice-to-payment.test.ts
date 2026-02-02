@@ -79,7 +79,7 @@ describe('Invoice to Payment Workflow', () => {
     const payment1 = { id: 'pay_p1', invoice_id: 'inv_partial', amount: 10000, payment_date: new Date().toISOString() };
     const payment2 = { id: 'pay_p2', invoice_id: 'inv_partial', amount: 10000, payment_date: new Date().toISOString() };
 
-    (db.doc.create as jest.Mock()).mockResolvedValueOnce(payment1).mockResolvedValueOnce(payment2);
+    (db.doc.create as jest.Mock).mockResolvedValueOnce(payment1).mockResolvedValueOnce(payment2);
     (db.find as jest.Mock).mockResolvedValue([payment1, payment2]);
     (db.doc.update as jest.Mock).mockResolvedValue({ ...mockInvoice, status: 'Paid' });
 

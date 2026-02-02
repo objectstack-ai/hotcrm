@@ -90,9 +90,9 @@ export async function optimizePricing(request: OptimizePricingRequest): Promise<
   });
 
   // Calculate win rates at different price points
-  const wonDeals = historicalDeals.filter(d => d.stage === 'Closed Won');
+  const wonDeals = historicalDeals.filter((d: any) => d.stage === 'Closed Won');
   const avgWonPrice = wonDeals.length > 0 
-    ? wonDeals.reduce((sum, d) => sum + (d.amount || 0), 0) / wonDeals.length 
+    ? wonDeals.reduce((sum: number, d: any) => sum + (d.amount || 0), 0) / wonDeals.length 
     : listPrice;
 
   const baseWinRate = historicalDeals.length > 0 
@@ -126,7 +126,7 @@ export async function optimizePricing(request: OptimizePricingRequest): Promise<
   let priceAdjustment = 0;
 
   // Factor 1: Market demand
-  const recentDemand = historicalDeals.filter(d => {
+  const recentDemand = historicalDeals.filter((d: any) => {
     const daysAgo = (Date.now() - new Date(d.close_date).getTime()) / (1000 * 60 * 60 * 24);
     return daysAgo <= 90;
   });
@@ -375,7 +375,7 @@ export async function analyzeCompetitivePricing(request: AnalyzeCompetitivePrici
   const sortedPrices = [...competitorPrices].sort((a, b) => a - b);
   const medianPrice = sortedPrices[Math.floor(sortedPrices.length / 2)];
   
-  const variance = competitorPrices.reduce((sum, price) => 
+  const variance = competitorPrices.reduce((sum: number, price: number) => 
     sum + Math.pow(price - averagePrice, 2), 0
   ) / competitorPrices.length;
   const standardDeviation = Math.sqrt(variance);
@@ -548,7 +548,7 @@ export async function suggestDiscounts(request: SuggestDiscountsRequest): Promis
     limit: 500
   });
 
-  const wonDeals = historicalDeals.filter(d => d.stage === 'Closed Won');
+  const wonDeals = historicalDeals.filter((d: any) => d.stage === 'Closed Won');
   const baseWinRate = historicalDeals.length > 0 ? wonDeals.length / historicalDeals.length : 0.25;
 
   // Calculate recommended discount to achieve target win rate
@@ -892,11 +892,11 @@ export async function calculateOptimalPrice(request: CalculateOptimalPriceReques
   });
 
   const baseWinRate = historicalDeals.length > 0
-    ? historicalDeals.filter(d => d.stage === 'Closed Won').length / historicalDeals.length
+    ? historicalDeals.filter((d: any) => d.stage === 'Closed Won').length / historicalDeals.length
     : 0.25;
 
   // Calculate expected revenue for each approach
-  const approaches = [
+  const approaches: Array<{ name: string; price: number; winRate: number; expectedRevenue?: number }> = [
     { name: 'Cost-Plus', price: costPlusPrice, winRate: baseWinRate * 0.9 },
     { name: 'Market', price: marketPrice, winRate: baseWinRate },
     { name: 'Value', price: valuePrice, winRate: baseWinRate * 0.85 },
@@ -909,12 +909,12 @@ export async function calculateOptimalPrice(request: CalculateOptimalPriceReques
 
   // Find optimal (highest expected revenue)
   const optimal = approaches.reduce((best, current) => 
-    current.expectedRevenue > best.expectedRevenue ? current : best
+    (current.expectedRevenue || 0) > (best.expectedRevenue || 0) ? current : best
   );
 
   const optimalPrice = optimal.price;
   const expectedWinRate = Math.min(0.95, optimal.winRate);
-  const expectedRevenue = optimal.expectedRevenue;
+  const expectedRevenue = optimal.expectedRevenue || 0;
 
   // Calculate revenue uplift
   const currentRevenue = Math.round(currentPrice * baseWinRate);

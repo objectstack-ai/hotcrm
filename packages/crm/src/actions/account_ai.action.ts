@@ -122,22 +122,27 @@ export async function calculateAccountHealth(request: AccountHealthRequest): Pro
   else healthStatus = 'critical';
 
   // Build factors
-  const factors = [
+  const factors: Array<{
+    factor: string;
+    impact: 'positive' | 'negative' | 'neutral';
+    score: number;
+    description: string;
+  }> = [
     {
       factor: 'Recent Engagement',
-      impact: engagementScore >= 60 ? 'positive' : 'negative' as const,
+      impact: engagementScore >= 60 ? 'positive' : 'negative',
       score: engagementScore,
       description: `${recentActivities.length} activities in last 30 days`
     },
     {
       factor: 'Financial Performance',
-      impact: financialScore >= 60 ? 'positive' : 'negative' as const,
+      impact: financialScore >= 60 ? 'positive' : 'negative',
       score: financialScore,
       description: `$${totalRevenue.toLocaleString()} in revenue`
     },
     {
       factor: 'Support Health',
-      impact: supportScore >= 70 ? 'positive' : 'negative' as const,
+      impact: supportScore >= 70 ? 'positive' : 'negative',
       score: supportScore,
       description: `${openCases.length} open cases (${highPriorityCases.length} high priority)`
     }

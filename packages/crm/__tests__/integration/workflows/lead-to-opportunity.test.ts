@@ -243,9 +243,7 @@ describe('Lead to Opportunity Conversion Workflow', () => {
     };
 
     (db.doc.get as jest.Mock).mockResolvedValue(mockLead);
-    (db.find as jest.Mock)
-      .mockResolvedValueOnce([]) // No existing account
-      .mockResolvedValueOnce([existingContact]); // Contact exists
+    (db.find as jest.Mock).mockResolvedValueOnce([existingContact]); // Contact exists
 
     // Act
     const lead = await db.doc.get('lead', 'lead_duplicate');
@@ -254,7 +252,7 @@ describe('Lead to Opportunity Conversion Workflow', () => {
       filters: [['email', '=', lead.email]]
     });
 
-    let contact;
+    let contact: any;
     if (existingContacts.length > 0) {
       contact = existingContacts[0];
     } else {
@@ -266,7 +264,7 @@ describe('Lead to Opportunity Conversion Workflow', () => {
     }
 
     // Assert
-    expect(contact.id).toBe('contact_existing');
+    expect(contact!.id).toBe('contact_existing');
     expect(db.doc.create).not.toHaveBeenCalledWith('contact', expect.anything());
   });
 
@@ -297,6 +295,7 @@ describe('Lead to Opportunity Conversion Workflow', () => {
         id: 'opp_999',
         name: 'Startup IO - New Business',
         account_id: 'acc_999',
+        contact_id: 'contact_999',
         stage: 'Qualification',
         probability: 25,
         lead_source: 'Referral'
