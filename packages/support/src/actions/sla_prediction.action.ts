@@ -447,7 +447,7 @@ export async function optimizeWorkload(request: WorkloadOptimizationRequest): Pr
   const { queueId } = request;
 
   // Fetch all active cases
-  let casesQuery: any = {
+  const casesQuery: any = {
     filters: [['status', '!=', 'Closed']],
     fields: ['owner_id', 'created_date', 'priority']
   };
@@ -568,7 +568,7 @@ export async function analyzeSLAPerformance(request: SLAAnalyticsRequest): Promi
   const { periodDays = 30, priority } = request;
 
   // Fetch cases from period
-  let filters: any[] = [
+  const filters: any[] = [
     ['created_date', '>', new Date(Date.now() - periodDays * 24 * 60 * 60 * 1000).toISOString()]
   ];
 
