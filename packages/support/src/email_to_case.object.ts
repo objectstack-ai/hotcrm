@@ -1,388 +1,277 @@
+import { ObjectSchema, Field } from '@objectstack/spec/data';
 
-const EmailToCase = {
+export const EmailToCase = ObjectSchema.create({
   name: 'email_to_case',
   label: 'Email-to-Case Configuration',
-  labelPlural: 'Email-to-Case Configurations',
+  pluralLabel: 'Email-to-Case Configurations',
   icon: 'envelope',
   description: 'Email-to-case automation configuration for automatic case creation',
-  enable: {
-    searchable: true,
-    trackHistory: true
-  },
+
   fields: {
-    // Basic Information
-    name: {
-      type: 'text',
+    name: Field.text({
       label: 'Configuration name',
       required: true,
-      maxLength: 255,
-      searchable: true
-    },
-    description: {
-      type: 'textarea',
+      maxLength: 255
+    }),
+    description: Field.textarea({
       label: 'description',
       maxLength: 2000
-    },
-    is_active: {
-      type: 'checkbox',
+    }),
+    is_active: Field.checkbox({
       label: 'Active',
       defaultValue: true
-    },
-    // Email Configuration
-    email_address: {
-      type: 'email',
+    }),
+    email_address: Field.email({
       label: 'Email Address',
-      required: true,
-      description: 'Support email address to monitor'
-    },
-    mailbox_type: {
-      type: 'select',
+      description: 'Support email address to monitor',
+      required: true
+    }),
+    mailbox_type: Field.select({
       label: 'Mailbox Type',
       required: true,
       defaultValue: 'IMAP',
       options: [
-        { label: 'IMAP', value: 'IMAP' },
-        { label: 'POP3', value: 'POP3' },
-        { label: 'Microsoft 365', value: 'Microsoft365' },
-        { label: 'Gmail', value: 'Gmail' },
-        { label: 'Exchange', value: 'Exchange' }
+        {
+          "label": "IMAP",
+          "value": "IMAP"
+        },
+        {
+          "label": "POP3",
+          "value": "POP3"
+        },
+        {
+          "label": "Microsoft 365",
+          "value": "Microsoft365"
+        },
+        {
+          "label": "Gmail",
+          "value": "Gmail"
+        },
+        {
+          "label": "Exchange",
+          "value": "Exchange"
+        }
       ]
-    },
-    mail_server: {
-      type: 'text',
+    }),
+    mail_server: Field.text({
       label: 'Mail Server',
-      maxLength: 255,
-      description: 'IMAP/POP3 server address'
-    },
-    mail_port: {
-      type: 'number',
+      description: 'IMAP/POP3 server address',
+      maxLength: 255
+    }),
+    mail_port: Field.number({
       label: 'Port',
-      precision: 0,
-      defaultValue: 993
-    },
-    use_ssl: {
-      type: 'checkbox',
+      defaultValue: 993,
+      precision: 0
+    }),
+    use_ssl: Field.checkbox({
       label: 'Use SSL',
       defaultValue: true
-    },
-    username: {
-      type: 'text',
+    }),
+    username: Field.text({
       label: 'username',
       maxLength: 255
-    },
-    // Routing
-    default_queue_id: {
-      type: 'lookup',
+    }),
+    default_queue_id: Field.lookup('Queue', {
       label: 'Default Queue',
-      reference: 'Queue',
-      required: true,
-      description: 'Queue for new cases created from emails'
-    },
-    default_owner_id: {
-      type: 'lookup',
+      description: 'Queue for new cases created from emails',
+      required: true
+    }),
+    default_owner_id: Field.lookup('users', {
       label: 'Default Owner',
-      reference: 'users',
       description: 'Default case owner (if not using queue)'
-    },
-    default_priority: {
-      type: 'select',
+    }),
+    default_priority: Field.select({
       label: 'Default Priority',
       defaultValue: 'Medium',
       options: [
-        { label: 'Critical', value: 'Critical' },
-        { label: 'High', value: 'High' },
-        { label: 'Medium', value: 'Medium' },
-        { label: 'Low', value: 'Low' }
+        {
+          "label": "Critical",
+          "value": "Critical"
+        },
+        {
+          "label": "High",
+          "value": "High"
+        },
+        {
+          "label": "Medium",
+          "value": "Medium"
+        },
+        {
+          "label": "Low",
+          "value": "Low"
+        }
       ]
-    },
-    default_case_type: {
-      type: 'select',
+    }),
+    default_case_type: Field.select({
       label: 'Default Case Type',
       options: [
-        { label: 'Problem', value: 'Problem' },
-        { label: 'Question', value: 'Question' },
-        { label: 'Incident', value: 'Incident' },
-        { label: 'Feature Request', value: 'Feature Request' },
-        { label: 'Training', value: 'Training' },
-        { label: 'Maintenance', value: 'Maintenance' },
-        { label: 'Other', value: 'Other' }
+        {
+          "label": "Problem",
+          "value": "Problem"
+        },
+        {
+          "label": "Question",
+          "value": "Question"
+        },
+        {
+          "label": "Incident",
+          "value": "Incident"
+        },
+        {
+          "label": "Feature Request",
+          "value": "Feature Request"
+        },
+        {
+          "label": "Training",
+          "value": "Training"
+        },
+        {
+          "label": "Maintenance",
+          "value": "Maintenance"
+        },
+        {
+          "label": "Other",
+          "value": "Other"
+        }
       ]
-    },
-    // Case Creation Rules
-    create_case_per_email: {
-      type: 'checkbox',
+    }),
+    create_case_per_email: Field.checkbox({
       label: 'Create Case Per Email',
-      defaultValue: true,
-      description: 'Create new case for each email (vs. threading)'
-    },
-    thread_by_subject: {
-      type: 'checkbox',
+      description: 'Create new case for each email (vs. threading)',
+      defaultValue: true
+    }),
+    thread_by_subject: Field.checkbox({
       label: 'Thread by Subject',
-      defaultValue: true,
-      description: 'Add to existing case if subject matches'
-    },
-    thread_window_hours: {
-      type: 'number',
+      description: 'Add to existing case if subject matches',
+      defaultValue: true
+    }),
+    thread_window_hours: Field.number({
       label: 'Thread Window (Hours)',
-      precision: 0,
-      min: 1,
+      description: 'Time window for threading emails to same case',
       defaultValue: 72,
-      description: 'Time window for threading emails to same case'
-    },
-    // Contact Matching
-    auto_match_contact: {
-      type: 'checkbox',
+      min: 1,
+      precision: 0
+    }),
+    auto_match_contact: Field.checkbox({
       label: 'Auto Match Contact',
-      defaultValue: true,
-      description: 'Automatically match sender to existing contact'
-    },
-    create_contact_if_not_found: {
-      type: 'checkbox',
+      description: 'Automatically match sender to existing contact',
+      defaultValue: true
+    }),
+    create_contact_if_not_found: Field.checkbox({
       label: 'Create Contact If Not Found',
-      defaultValue: true,
-      description: 'Create new contact for unknown senders'
-    },
-    default_account_id: {
-      type: 'lookup',
+      description: 'Create new contact for unknown senders',
+      defaultValue: true
+    }),
+    default_account_id: Field.lookup('account', {
       label: 'Default Account',
-      reference: 'account',
       description: 'Account for cases when contact not found'
-    },
-    // Processing Rules
-    process_unread_only: {
-      type: 'checkbox',
+    }),
+    process_unread_only: Field.checkbox({
       label: 'Process Unread Only',
       defaultValue: true
-    },
-    mark_as_read: {
-      type: 'checkbox',
+    }),
+    mark_as_read: Field.checkbox({
       label: 'Mark as Read',
-      defaultValue: true,
-      description: 'Mark email as read after processing'
-    },
-    move_to_folder: {
-      type: 'text',
+      description: 'Mark email as read after processing',
+      defaultValue: true
+    }),
+    move_to_folder: Field.text({
       label: 'Move to Folder',
-      maxLength: 255,
-      description: 'IMAP folder to move processed emails'
-    },
-    // Attachments
-    save_attachments: {
-      type: 'checkbox',
+      description: 'IMAP folder to move processed emails',
+      maxLength: 255
+    }),
+    save_attachments: Field.checkbox({
       label: 'Save Attachments',
       defaultValue: true
-    },
-    max_attachment_size: {
-      type: 'number',
+    }),
+    max_attachment_size: Field.number({
       label: 'Max Attachment Size (MB)',
-      precision: 0,
+      defaultValue: 25,
       min: 1,
       max: 100,
-      defaultValue: 25
-    },
-    allowed_file_types: {
-      type: 'text',
+      precision: 0
+    }),
+    allowed_file_types: Field.text({
       label: 'Allowed File Types',
-      maxLength: 500,
-      description: 'Comma-separated extensions (e.g., pdf,doc,docx,jpg,png)'
-    },
-    // AI Processing
-    use_ai_for_categorization: {
-      type: 'checkbox',
+      description: 'Comma-separated extensions (e.g., pdf,doc,docx,jpg,png)',
+      maxLength: 500
+    }),
+    use_ai_for_categorization: Field.checkbox({
       label: 'Use AI for Categorization',
-      defaultValue: false,
-      description: 'Use AI to auto-categorize and route cases'
-    },
-    use_ai_for_priority: {
-      type: 'checkbox',
+      description: 'Use AI to auto-categorize and route cases',
+      defaultValue: false
+    }),
+    use_ai_for_priority: Field.checkbox({
       label: 'Use AI for Priority',
-      defaultValue: false,
-      description: 'Use AI to determine case priority'
-    },
-    use_ai_sentiment_analysis: {
-      type: 'checkbox',
+      description: 'Use AI to determine case priority',
+      defaultValue: false
+    }),
+    use_ai_sentiment_analysis: Field.checkbox({
       label: 'Use AI Sentiment Analysis',
       defaultValue: false
-    },
-    // Filtering
-    subject_filters: {
-      type: 'textarea',
+    }),
+    subject_filters: Field.textarea({
       label: 'Subject Filters',
-      maxLength: 2000,
-      description: 'Keywords to filter emails (one per line)'
-    },
-    sender_filters: {
-      type: 'textarea',
+      description: 'Keywords to filter emails (one per line)',
+      maxLength: 2000
+    }),
+    sender_filters: Field.textarea({
       label: 'Sender Filters',
-      maxLength: 2000,
-      description: 'Email addresses or domains to filter (one per line)'
-    },
-    exclude_auto_replies: {
-      type: 'checkbox',
+      description: 'Email addresses or domains to filter (one per line)',
+      maxLength: 2000
+    }),
+    exclude_auto_replies: Field.checkbox({
       label: 'Exclude Auto-Replies',
       defaultValue: true
-    },
-    // Auto Response
-    send_auto_response: {
-      type: 'checkbox',
+    }),
+    send_auto_response: Field.checkbox({
       label: 'Send Auto Response',
       defaultValue: false
-    },
-    auto_response_template_id: {
-      type: 'lookup',
+    }),
+    auto_response_template_id: Field.lookup('EmailTemplate', {
       label: 'Auto Response Template',
-      reference: 'EmailTemplate',
       description: 'Email template for auto-response'
-    },
-    // Polling
-    polling_interval: {
-      type: 'number',
+    }),
+    polling_interval: Field.number({
       label: 'Polling Interval (Minutes)',
-      precision: 0,
+      description: 'How often to check for new emails',
+      defaultValue: 5,
       min: 1,
       max: 60,
-      defaultValue: 5,
-      description: 'How often to check for new emails'
-    },
-    last_polled_date: {
-      type: 'datetime',
+      precision: 0
+    }),
+    last_polled_date: Field.datetime({
       label: 'Last Polled',
       readonly: true
-    },
-    // Statistics
-    total_emails_processed: {
-      type: 'number',
+    }),
+    total_emails_processed: Field.number({
       label: 'Emails Processed',
-      precision: 0,
-      readonly: true
-    },
-    cases_created: {
-      type: 'number',
+      readonly: true,
+      precision: 0
+    }),
+    cases_created: Field.number({
       label: 'Cases Created',
-      precision: 0,
-      readonly: true
-    },
-    failed_emails: {
-      type: 'number',
+      readonly: true,
+      precision: 0
+    }),
+    failed_emails: Field.number({
       label: 'Failed Emails',
-      precision: 0,
-      readonly: true
-    },
-    last_error_date: {
-      type: 'datetime',
+      readonly: true,
+      precision: 0
+    }),
+    last_error_date: Field.datetime({
       label: 'Last Error',
       readonly: true
-    },
-    last_error_message: {
-      type: 'text',
+    }),
+    last_error_message: Field.text({
       label: 'Last Error Message',
-      maxLength: 500,
-      readonly: true
-    }
+      readonly: true,
+      maxLength: 500
+    })
   },
-  validationRules: [
-    {
-      name: 'MailServerRequired',
-      errorMessage: 'Mail server is required for IMAP/POP3 mailbox types',
-      formula: 'AND(mailbox_type IN ("IMAP", "POP3"), ISBLANK(mail_server))'
-    },
-    {
-      name: 'AutoResponseTemplateRequired',
-      errorMessage: 'Auto response template is required when auto response is enabled',
-      formula: 'AND(send_auto_response = true, ISBLANK(auto_response_template_id))'
-    },
-    {
-      name: 'ThreadWindowRequired',
-      errorMessage: 'Thread window is required when threading by subject',
-      formula: 'AND(thread_by_subject = true, ISBLANK(thread_window_hours))'
-    }
-  ],
-  listViews: [
-    {
-      name: 'AllConfigurations',
-      label: 'All Configurations',
-      filters: [],
-      columns: ['name', 'email_address', 'mailbox_type', 'default_queue_id', 'is_active', 'cases_created'],
-      sort: [['name', 'asc']]
-    },
-    {
-      name: 'ActiveConfigurations',
-      label: 'Active',
-      filters: [
-        ['is_active', '=', true]
-      ],
-      columns: ['name', 'email_address', 'default_queue_id', 'last_polled_date', 'cases_created', 'failed_emails'],
-      sort: [['name', 'asc']]
-    },
-    {
-      name: 'WithErrors',
-      label: 'With Errors',
-      filters: [
-        ['failed_emails', '>', 0]
-      ],
-      columns: ['name', 'email_address', 'failed_emails', 'last_error_date', 'last_error_message'],
-      sort: [['last_error_date', 'desc']]
-    }
-  ],
-  pageLayout: {
-    sections: [
-      {
-        label: 'Configuration Information',
-        columns: 2,
-        fields: ['name', 'description', 'is_active']
-      },
-      {
-        label: 'Email Settings',
-        columns: 2,
-        fields: ['email_address', 'mailbox_type', 'mail_server', 'mail_port', 'use_ssl', 'username']
-      },
-      {
-        label: 'Default Case Settings',
-        columns: 2,
-        fields: ['default_queue_id', 'default_owner_id', 'default_priority', 'default_case_type']
-      },
-      {
-        label: 'Case Creation Rules',
-        columns: 2,
-        fields: ['create_case_per_email', 'thread_by_subject', 'thread_window_hours']
-      },
-      {
-        label: 'Contact Matching',
-        columns: 2,
-        fields: ['auto_match_contact', 'create_contact_if_not_found', 'default_account_id']
-      },
-      {
-        label: 'Processing Rules',
-        columns: 2,
-        fields: ['process_unread_only', 'mark_as_read', 'move_to_folder', 'polling_interval']
-      },
-      {
-        label: 'Attachments',
-        columns: 2,
-        fields: ['save_attachments', 'max_attachment_size', 'allowed_file_types']
-      },
-      {
-        label: 'AI Processing',
-        columns: 2,
-        fields: ['use_ai_for_categorization', 'use_ai_for_priority', 'use_ai_sentiment_analysis']
-      },
-      {
-        label: 'Filtering',
-        columns: 2,
-        fields: ['subject_filters', 'sender_filters', 'exclude_auto_replies']
-      },
-      {
-        label: 'Auto Response',
-        columns: 2,
-        fields: ['send_auto_response', 'auto_response_template_id']
-      },
-      {
-        label: 'Statistics',
-        columns: 3,
-        fields: ['last_polled_date', 'total_emails_processed', 'cases_created', 'failed_emails', 'last_error_date', 'last_error_message']
-      }
-    ]
-  }
-};
 
-export default EmailToCase;
+  enable: {
+    searchEnabled: true,
+    trackHistory: true
+  },
+});

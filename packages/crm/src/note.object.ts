@@ -1,288 +1,182 @@
+import { ObjectSchema, Field } from '@objectstack/spec/data';
 
-const Note = {
+export const Note = ObjectSchema.create({
   name: 'note',
   label: 'Note',
-  labelPlural: 'Notes',
+  pluralLabel: 'Notes',
   icon: 'sticky-note',
   description: 'Quick notes with markdown support, @mentions, and full-text search',
-  enable: {
-    searchable: true,
-    trackHistory: false,
-    feeds: false,
-    files: true
-  },
+
   fields: {
-    // Basic Information
-    title: {
-      type: 'text',
+    title: Field.text({
       label: 'Note title',
       required: true,
-      searchable: true,
       maxLength: 255
-    },
-    body: {
-      type: 'textarea',
+    }),
+    body: Field.textarea({
       label: 'Note body',
+      description: 'Rich text with Markdown support',
       required: true,
-      searchable: true,
-      maxLength: 32000,
-      description: 'Rich text with Markdown support'
-    },
-    
-    // Polymorphic Parent Relationship
-    parent_id: {
-      type: 'text',
+      maxLength: 32000
+    }),
+    parent_id: Field.text({
       label: 'Parent Record ID',
+      description: 'ID of the parent record (polymorphic)',
       required: true,
-      maxLength: 18,
-      description: 'ID of the parent record (polymorphic)'
-    },
-    parent_type: {
-      type: 'select',
+      maxLength: 18
+    }),
+    parent_type: Field.select({
       label: 'Parent Type',
       required: true,
       options: [
-        { label: '🏢 Account', value: 'Account' },
-        { label: '👤 Contact', value: 'Contact' },
-        { label: '💼 Opportunity', value: 'Opportunity' },
-        { label: '🎯 Lead', value: 'Lead' },
-        { label: '🎫 Case', value: 'Case' },
-        { label: '📄 Contract', value: 'Contract' },
-        { label: '💰 Quote', value: 'Quote' },
-        { label: '📋 Task', value: 'Task' },
-        { label: '📅 Activity', value: 'Activity' },
-        { label: '📢 Campaign', value: 'Campaign' },
-        { label: '📦 Product', value: 'Product' },
-        { label: '📑 Order', value: 'Order' }
+        {
+          "label": "🏢 Account",
+          "value": "Account"
+        },
+        {
+          "label": "👤 Contact",
+          "value": "Contact"
+        },
+        {
+          "label": "💼 Opportunity",
+          "value": "Opportunity"
+        },
+        {
+          "label": "🎯 Lead",
+          "value": "Lead"
+        },
+        {
+          "label": "🎫 Case",
+          "value": "Case"
+        },
+        {
+          "label": "📄 Contract",
+          "value": "Contract"
+        },
+        {
+          "label": "💰 Quote",
+          "value": "Quote"
+        },
+        {
+          "label": "📋 Task",
+          "value": "Task"
+        },
+        {
+          "label": "📅 Activity",
+          "value": "Activity"
+        },
+        {
+          "label": "📢 Campaign",
+          "value": "Campaign"
+        },
+        {
+          "label": "📦 Product",
+          "value": "Product"
+        },
+        {
+          "label": "📑 Order",
+          "value": "Order"
+        }
       ]
-    },
-    
-    // Privacy & Organization
-    is_private: {
-      type: 'checkbox',
+    }),
+    is_private: Field.checkbox({
       label: 'Private Note',
-      defaultValue: false,
-      description: 'When true, only the owner can see this note'
-    },
-    is_pinned: {
-      type: 'checkbox',
+      description: 'When true, only the owner can see this note',
+      defaultValue: false
+    }),
+    is_pinned: Field.checkbox({
       label: 'Pinned',
-      defaultValue: false,
-      description: 'Pin important notes to the top'
-    },
-    tags: {
-      type: 'text',
+      description: 'Pin important notes to the top',
+      defaultValue: false
+    }),
+    tags: Field.text({
       label: 'tags',
-      maxLength: 500,
-      description: 'Comma-separated tags for categorization and search'
-    },
-    
-    // Ownership
-    owner_id: {
-      type: 'lookup',
+      description: 'Comma-separated tags for categorization and search',
+      maxLength: 500
+    }),
+    owner_id: Field.lookup('users', {
       label: 'Owner',
-      reference: 'users',
       required: true,
       defaultValue: '$currentUser'
-    },
-    
-    // Mentions & Collaboration
-    mentioned_user_ids: {
-      type: 'text',
+    }),
+    mentioned_user_ids: Field.text({
       label: 'Mentioned Users',
-      maxLength: 1000,
+      description: 'Comma-separated User IDs extracted from @mentions in the body',
       readonly: true,
-      description: 'Comma-separated User IDs extracted from @mentions in the body'
-    },
-    has_mentions: {
-      type: 'checkbox',
+      maxLength: 1000
+    }),
+    has_mentions: Field.checkbox({
       label: 'Has @Mentions',
       defaultValue: false,
       readonly: true
-    },
-    
-    // Markdown & Formatting
-    is_markdown: {
-      type: 'checkbox',
+    }),
+    is_markdown: Field.checkbox({
       label: 'Markdown Enabled',
-      defaultValue: true,
-      description: 'Enable Markdown formatting for this note'
-    },
-    rendered_body: {
-      type: 'textarea',
+      description: 'Enable Markdown formatting for this note',
+      defaultValue: true
+    }),
+    rendered_body: Field.textarea({
       label: 'Rendered body',
+      description: 'HTML-rendered version of the markdown body',
       readonly: true,
-      maxLength: 32000,
-      description: 'HTML-rendered version of the markdown body'
-    },
-    
-    // Metadata
-    word_count: {
-      type: 'number',
+      maxLength: 32000
+    }),
+    word_count: Field.number({
       label: 'Word Count',
-      precision: 0,
+      description: 'Approximate word count',
       readonly: true,
-      description: 'Approximate word count'
-    },
-    last_edited_date: {
-      type: 'datetime',
+      precision: 0
+    }),
+    last_edited_date: Field.datetime({
       label: 'Last Edited',
       readonly: true
-    },
-    last_edited_by_id: {
-      type: 'lookup',
+    }),
+    last_edited_by_id: Field.lookup('users', {
       label: 'Last Edited By',
-      reference: 'users',
       readonly: true
-    },
-    
-    // Search & Indexing
-    searchable_text: {
-      type: 'textarea',
+    }),
+    searchable_text: Field.textarea({
       label: 'Searchable Text',
+      description: 'Combined title + body for full-text search indexing',
       readonly: true,
-      maxLength: 32000,
-      description: 'Combined title + body for full-text search indexing'
-    },
-    
-    // AI Enhancement
-    ai_summary: {
-      type: 'textarea',
+      maxLength: 32000
+    }),
+    ai_summary: Field.textarea({
       label: 'AI Summary',
+      description: 'AI-generated summary of the note',
       readonly: true,
-      maxLength: 1000,
-      description: 'AI-generated summary of the note'
-    },
-    ai_extracted_keywords: {
-      type: 'text',
+      maxLength: 1000
+    }),
+    ai_extracted_keywords: Field.text({
       label: 'AI Extracted Keywords',
+      description: 'AI-extracted keywords from the note content',
       readonly: true,
-      maxLength: 500,
-      description: 'AI-extracted keywords from the note content'
-    },
-    ai_sentiment: {
-      type: 'select',
+      maxLength: 500
+    }),
+    ai_sentiment: Field.select({
       label: 'AI Sentiment',
       readonly: true,
       options: [
-        { label: '😊 Positive', value: 'Positive' },
-        { label: '😐 Neutral', value: 'Neutral' },
-        { label: '😟 Negative', value: 'Negative' }
+        {
+          "label": "😊 Positive",
+          "value": "Positive"
+        },
+        {
+          "label": "😐 Neutral",
+          "value": "Neutral"
+        },
+        {
+          "label": "😟 Negative",
+          "value": "Negative"
+        }
       ]
-    }
+    })
   },
-  relationships: [
-    {
-      name: 'Attachments',
-      type: 'hasMany',
-      object: 'Attachment',
-      foreignKey: 'parent_id',
-      label: 'Attachments'
-    }
-  ],
-  listViews: [
-    {
-      name: 'AllNotes',
-      label: 'All Notes',
-      filters: [],
-      columns: ['title', 'parent_type', 'parent_id', 'owner_id', 'is_pinned', 'tags', 'last_edited_date'],
-      sort: [['is_pinned', 'desc'], ['last_edited_date', 'desc']]
-    },
-    {
-      name: 'MyNotes',
-      label: 'My Notes',
-      filters: [['owner_id', '=', '$currentUser']],
-      columns: ['title', 'parent_type', 'parent_id', 'is_pinned', 'tags', 'last_edited_date'],
-      sort: [['is_pinned', 'desc'], ['last_edited_date', 'desc']]
-    },
-    {
-      name: 'PinnedNotes',
-      label: 'Pinned Notes',
-      filters: [['is_pinned', '=', true]],
-      columns: ['title', 'parent_type', 'parent_id', 'owner_id', 'tags', 'last_edited_date'],
-      sort: [['last_edited_date', 'desc']]
-    },
-    {
-      name: 'PrivateNotes',
-      label: 'Private Notes',
-      filters: [
-        ['is_private', '=', true],
-        ['owner_id', '=', '$currentUser']
-      ],
-      columns: ['title', 'parent_type', 'parent_id', 'tags', 'last_edited_date'],
-      sort: [['last_edited_date', 'desc']]
-    },
-    {
-      name: 'RecentNotes',
-      label: 'Recent Notes',
-      filters: [['last_edited_date', 'last_n_days', 7]],
-      columns: ['title', 'parent_type', 'parent_id', 'owner_id', 'tags', 'last_edited_date'],
-      sort: [['last_edited_date', 'desc']]
-    },
-    {
-      name: 'NotesWithMentions',
-      label: 'Notes Mentioning Me',
-      filters: [['mentioned_user_ids', 'contains', '$currentUser']],
-      columns: ['title', 'parent_type', 'parent_id', 'owner_id', 'last_edited_date'],
-      sort: [['last_edited_date', 'desc']]
-    }
-  ],
-  validationRules: [
-    {
-      name: 'RequireParentId',
-      errorMessage: 'Notes must be attached to a parent record',
-      formula: 'ISBLANK(parent_id)'
-    },
-    {
-      name: 'RequireParentType',
-      errorMessage: 'Parent Type is required',
-      formula: 'ISBLANK(parent_type)'
-    },
-    {
-      name: 'TitleMaxLength',
-      errorMessage: 'title cannot exceed 255 characters',
-      formula: 'LEN(title) > 255'
-    },
-    {
-      name: 'BodyMaxLength',
-      errorMessage: 'Note body cannot exceed 32,000 characters',
-      formula: 'LEN(body) > 32000'
-    }
-  ],
-  pageLayout: {
-    sections: [
-      {
-        label: 'Note Information',
-        columns: 2,
-        fields: ['title', 'parent_type', 'parent_id', 'owner_id']
-      },
-      {
-        label: 'Settings',
-        columns: 2,
-        fields: ['is_private', 'is_pinned', 'is_markdown', 'tags']
-      },
-      {
-        label: 'Mentions & Collaboration',
-        columns: 2,
-        fields: ['has_mentions', 'mentioned_user_ids']
-      },
-      {
-        label: 'Metadata',
-        columns: 2,
-        fields: ['word_count', 'last_edited_date', 'last_edited_by_id']
-      },
-      {
-        label: 'AI Insights',
-        columns: 2,
-        fields: ['ai_summary', 'ai_extracted_keywords', 'ai_sentiment']
-      },
-      {
-        label: 'Note Content',
-        columns: 1,
-        fields: ['body']
-      }
-    ]
-  }
-};
 
-export default Note;
+  enable: {
+    searchEnabled: true,
+    trackHistory: false,
+    allowFeeds: false,
+    allowAttachments: true
+  },
+});
