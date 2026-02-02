@@ -1,30 +1,136 @@
 ---
 title: Revenue Cloud
-description: Configure, Price, Quote (CPQ) and Billing.
+description: Configure, Price, Quote (CPQ), Contract Management, and Billing.
 ---
 
 # Revenue Cloud
 
-The **Revenue Cloud** handles the complex financial lifecycle of your customers, bridging the gap between Sales and Finance.
+The **Revenue Cloud** handles the complete financial lifecycle of your customers, bridging the gap between Sales and Finance. It combines product catalog, pricing rules, quoting (CPQ), contract management, invoicing, and payment tracking into a unified revenue engine.
 
 ## Functional Capabilities
 
 ### 1. CPQ (Configure, Price, Quote)
-Generate accurate quotes for complex products.
-- **Product Bundle Configuration**: Rules for valid product combinations.
-- **Price Rules**: Volume discounts, partner pricing, and tiered pricing.
-- **Quote Generation**: One-click PDF creation.
+
+Generate accurate quotes for complex products with intelligent pricing.
+
+- **Product Bundle Configuration**: Define valid product combinations with constraints
+- **Price Rules**: Volume discounts, partner pricing, tiered pricing, and promotional pricing
+- **Multi-Currency Support**: Quote in 8 currencies (CNY, USD, EUR, GBP, JPY, HKD, SGD, AUD)
+- **Discount Management**: Tiered approval workflows for discounts (0-10%, 10-20%, >20%)
+- **Quote Generation**: One-click PDF creation with customizable templates
+- **Product Recommendations**: AI-suggested product bundles based on customer needs
+
+**Objects**: `product`, `product_bundle`, `product_bundle_component`, `quote`, `quote_line_item`, `pricebook`, `price_rule`, `discount_schedule`, `approval_request`
 
 ### 2. Contract Management
-Manage subscriptions, renewals, and legal agreements.
-- **Auto-Renewal**: Automatically generate renewal opportunities.
-- **Amendments**: Handle mid-term upgrades/downgrades.
+
+Manage the entire contract lifecycle from creation to renewal.
+
+- **Contract Creation**: Auto-generate contracts from closed opportunities
+- **Amendment Tracking**: Handle mid-term upgrades, downgrades, and modifications
+- **Auto-Renewal**: Automatically generate renewal opportunities 90 days before expiration
+- **E-Signature Integration**: Ready for DocuSign/Adobe Sign integration
+- **Version Control**: Track contract amendments with full audit trail
+- **Expiry Alerts**: Automated notifications for upcoming renewals
+
+**Objects**: `contract`
 
 ### 3. Billing & Invoicing
-- **Invoice Generation**: Create invoices from closed orders.
-- **Payment Tracking**: Record status of payments.
+
+Streamline invoice generation and payment collection.
+
+- **Invoice Generation**: Create invoices from contracts with line-item detail
+- **Payment Plans**: Support for installment payments and milestones
+- **Payment Tracking**: Record payment status (Pending, Partial, Paid, Overdue)
+- **Automated Reminders**: Email alerts for upcoming and overdue payments
+- **Multi-Currency Invoicing**: Support for international transactions
+- **Tax Calculation**: Automatic tax computation based on jurisdiction
+
+**Objects**: `invoice`, `invoice_line`, `payment`
+
+### 4. Product Catalog Management
+
+Centralized product information for sales and marketing.
+
+- **SKU Management**: Product codes with variants and families
+- **Product Families**: Group related products for easier management
+- **Inventory Tracking**: Stock levels with low-stock alerts
+- **Multi-Unit Support**: Sell by unit, case, pallet, or custom UOM
+- **Product Lifecycle**: Active, Inactive, End of Life status tracking
+- **Sales Collateral**: Attach datasheets, images, and product videos
+
+**Objects**: `product`, `product_bundle`
+
+### 5. Pricing Strategy
+
+Flexible pricing to support any business model.
+
+- **Tiered Pricing**: Volume-based price breaks (e.g., 1-10 units: $100, 11-50: $90)
+- **Regional Pricing**: Different prices by geographic region
+- **Channel Pricing**: Separate pricing for direct, partner, and online channels
+- **Promotional Pricing**: Time-limited special offers
+- **Customer-Specific Pricing**: Contract pricing for enterprise accounts
+- **Cost-Plus Pricing**: Automatic margin calculations
+
+**Objects**: `pricebook`, `price_rule`, `discount_schedule`
+
+## AI-Powered Features
+
+Intelligent automation throughout the revenue cycle:
+
+- **Smart Product Bundles**: AI recommends optimal product combinations based on customer budget
+- **Win Probability**: Predict quote acceptance rate before sending
+- **Optimal Pricing**: AI suggests competitive pricing based on market data
+- **Discount Optimization**: Recommend maximum discount while maintaining target margins
+- **Renewal Prediction**: Identify at-risk renewals for proactive retention
+- **Upsell Opportunities**: Detect expansion opportunities in existing accounts
 
 ## Integration Points
 
-- **Sales Cloud**: Converts Opportunities to Quotes.
-- **Service Cloud**: Validates support entitlements.
+- **Sales Cloud**: Converts Opportunities to Quotes and Contracts
+- **Service Cloud**: Validates support entitlements based on contract status
+- **Finance Systems**: Export invoices to ERP systems (SAP, NetSuite, QuickBooks)
+- **Payment Gateways**: Process payments via Stripe, PayPal, or bank transfers
+
+## Key Objects (13 Total)
+
+| Object | Description |
+|--------|-------------|
+| `product` | Product catalog with SKUs and families |
+| `product_bundle` | Pre-configured product packages |
+| `product_bundle_component` | Individual products within bundles |
+| `quote` | Customer quotes with line items |
+| `quote_line_item` | Individual products on quotes |
+| `pricebook` | Pricing matrices by region/channel |
+| `price_rule` | Automated pricing rules and discounts |
+| `discount_schedule` | Tiered discount structures |
+| `approval_request` | Discount approval workflows |
+| `contract` | Customer contracts and agreements |
+| `invoice` | Invoices generated from contracts |
+| `invoice_line` | Line items on invoices |
+| `payment` | Payment records and tracking |
+
+## Business Metrics
+
+Track revenue health with real-time metrics:
+
+- **Total Contract Value (TCV)**: Sum of all active contracts
+- **Annual Recurring Revenue (ARR)**: Subscription revenue normalized to annual
+- **Quote-to-Close Ratio**: Percentage of quotes that convert to contracts
+- **Average Deal Size**: Mean contract value
+- **Renewal Rate**: Percentage of contracts that renew
+- **Days Sales Outstanding (DSO)**: Average time to collect payment
+
+## Next Steps
+
+<Cards>
+  <Card title="CPQ Configuration" href="/docs/developers/specs/revenue/cpq" icon="calculator">
+    Configure complex pricing rules
+  </Card>
+  <Card title="Quote Object Reference" href="/docs/developers/specs/revenue/quotes" icon="file-text">
+    Detailed Quote object schema
+  </Card>
+  <Card title="Contract Lifecycle" href="/docs/developers/specs/revenue/contracts" icon="file-signature">
+    Manage contracts from creation to renewal
+  </Card>
+</Cards>

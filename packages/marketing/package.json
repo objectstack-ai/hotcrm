@@ -1,12 +1,21 @@
 {
   "name": "@hotcrm/marketing",
   "version": "1.0.0",
+  "description": "Marketing Cloud module - Campaign management and marketing automation",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch"
   },
+  "keywords": [
+    "marketing",
+    "campaign",
+    "automation",
+    "roi"
+  ],
+  "author": "HotCRM Team",
+  "license": "MIT",
   "peerDependencies": {
     "@hotcrm/core": "workspace:*"
   },

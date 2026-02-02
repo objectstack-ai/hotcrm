@@ -171,34 +171,45 @@ Return Result
 
 ## Monorepo Structure
 
-HotCRM uses a **multi-package monorepo** architecture:
+HotCRM uses a **multi-package monorepo** architecture with 9 business packages:
 
 ```
 hotcrm/
 ├── packages/
-│   ├── core/                 # Foundation
-│   ├── crm/                  # Marketing & Sales
-│   ├── support/              # Service & Support
-│   ├── products/             # Product & Pricing
-│   ├── finance/              # Contracts & Payments
+│   ├── core/                 # Foundation & ObjectQL Engine
+│   ├── crm/                  # Sales Cloud (13 objects)
+│   ├── marketing/            # Marketing Cloud (2 objects)
+│   ├── products/             # Product Catalog (9 objects)
+│   ├── finance/              # Finance & Billing (4 objects)
+│   ├── support/              # Service Cloud (21 objects)
+│   ├── hr/                   # HR Cloud (16 objects)
+│   ├── ai/                   # AI Services & ML Models
 │   ├── ui/                   # UI Components
 │   └── server/               # Application Server
 ├── pnpm-workspace.yaml       # Workspace config
 └── package.json              # Root scripts
 ```
 
+**Total**: 65 objects across 6 business clouds
+
 **Package Dependencies:**
 
 ```
 @hotcrm/server (Application Assembly)
   ├── @hotcrm/core
-  ├── @hotcrm/crm
-  ├── @hotcrm/support
-  ├── @hotcrm/products
-  ├── @hotcrm/finance
+  ├── @hotcrm/crm (13 objects)
+  ├── @hotcrm/marketing (2 objects)
+  ├── @hotcrm/products (9 objects)
+  ├── @hotcrm/finance (4 objects)
+  ├── @hotcrm/support (21 objects)
+  ├── @hotcrm/hr (16 objects)
+  ├── @hotcrm/ai (ML models)
   └── @hotcrm/ui
 
-Domain Packages (crm, support, products, finance)
+Domain Packages (crm, marketing, products, finance, support, hr)
+  └── @hotcrm/core
+
+@hotcrm/ai
   └── @hotcrm/core
 
 @hotcrm/ui

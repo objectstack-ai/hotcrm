@@ -5,18 +5,32 @@ description: Strategic direction and upcoming features for HotCRM.
 
 # HotCRM Roadmap
 
-HotCRM is evolving rapidly. Having established the core **4-Cloud Architecture** (Sales, Service, Marketing, Finance), our focus shifts towards deeper intelligence, broader integration, and enhancing the developer experience.
+HotCRM is evolving rapidly. Having established the core **6-Cloud Architecture** (Sales, Marketing, Revenue, Service, HR, AI) with **65 production-ready objects**, our focus shifts towards deeper intelligence, broader integration, and enhancing the developer experience.
 
-## 🚀 Phase 1: Core Foundation (Completed)
+## ✅ Phase 1: Core Foundation (Completed)
 
-We have successfully established the metadata-driven runtime and the core business logic for our primary clouds.
+We have successfully established the metadata-driven runtime and the core business logic for all primary clouds.
 
-- **Platform Core**: Metadata engine, ObjectQL, and Plugin architecture.
-- **Sales Cloud**: Lead-to-Cash capability, Pipeline management, Opportunity lifecycle.
-- **Service Cloud**: Case management and support structure.
-- **Finance Cloud**: Invoice generation and revenue recognition logic.
-- **Marketing Cloud**: Capability for tracking Campaigns and ROI calculation.
-- **Product Cloud**: CPQ foundation with Quotes and Price Books.
+### Business Clouds (6 Completed)
+- **Sales Cloud** ✅: 13 objects - Lead-to-Cash capability, Pipeline management, Opportunity lifecycle, Activity tracking
+- **Marketing Cloud** ✅: 2 objects + 5 CRM marketing objects - Campaign management, Lead nurturing, Email automation
+- **Revenue Cloud** ✅: 13 objects - CPQ (Configure-Price-Quote), Contract lifecycle, Invoice & Payment tracking
+- **Service Cloud** ✅: 21 objects - Case management, SLA tracking, Knowledge base, Omni-channel routing
+- **HR Cloud** ✅: 16 objects - Recruitment, Onboarding, Performance, Payroll, Training
+- **AI Cloud** ✅: Unified AI service layer with 5 pre-registered ML models
+
+### Platform Foundation (Completed)
+- **Metadata Engine** ✅: TypeScript-native object definitions (`.object.ts`)
+- **ObjectQL** ✅: Type-safe query language replacing SQL
+- **Plugin Architecture** ✅: Independent packages with dependency management
+- **Model Registry** ✅: Centralized ML model configuration and versioning
+- **Prediction Service** ✅: Unified interface for all ML predictions with caching
+
+### Total Delivered
+- **65 Core Objects** across 6 business clouds
+- **500+ Fields** for comprehensive data capture
+- **5 AI Models** pre-registered and production-ready
+- **8 Currency Support** for global operations
 
 ## 🔭 Phase 2: Deep Intelligence (Current Focus)
 
@@ -25,26 +39,93 @@ Our next major milestone is "Active Intelligence"—moving from recording data t
 ### 🤖 AI Agent Integration
 - **Inbox Agent**: Automatically categorize emails and draft replies for Support Cases.
 - **Sales Co-Pilot**: Suggest next-best-actions based on Opportunity stage and deal velocity.
+- **Recruitment Assistant**: Auto-screen resumes and schedule interviews based on fit scores.
 - **GenAI Reporting**: Natural language queries for complex data analytics ("Show me Q3 revenue by region vs last year").
+- **Performance Coach**: AI-driven OKR recommendations and performance insights.
 
 ### ⚡ Automation & Workflow
 - **Visual Workflow Builder**: A canvas for defining business logic without code.
 - **Advanced Approvals**: Parallel approval chains and smart delegation.
-- **SLA Enforcement**: Automated escalation triggers for Service Cloud.
+- **SLA Enforcement**: Automated escalation triggers for Service Cloud (already implemented).
+- **HR Workflows**: Onboarding automation, time-off approvals, performance review cycles.
+- **Contract Renewals**: Automatic renewal opportunity creation 90 days before expiration.
+
+### 🎯 Enhanced Analytics
+- **Revenue Dashboards**: TCV, ARR, Quote-to-Close ratios
+- **Sales Performance**: Pipeline metrics, win rates, forecast accuracy
+- **Service Metrics**: First Response Time, CSAT, SLA compliance
+- **HR Analytics**: Time-to-hire, attrition rates, performance trends
+- **Marketing ROI**: Campaign attribution, Cost Per Lead, conversion funnels
 
 ## 🌍 Phase 3: Ecosystem & Connectivity
 
 Expanding HotCRM's reach through integrations and community.
 
-- **Marketplace**: One-click install for community plugins.
-- **Connectors**:
-  - **Stripe**: Bi-directional sync for payments.
-  - **Slack/Discord**: Real-time deal rooms and support swarming.
-  - **Gmail/Outlook**: Deep inbox integration.
-- **Mobile App**: Native React Native shell for iOS and Android.
+### Integration Connectors
+- **Payment Gateways**: Stripe, PayPal bi-directional sync
+- **E-Signature**: DocuSign, Adobe Sign for contract signing
+- **Communication**: Slack, Discord, Microsoft Teams for deal rooms and support
+- **Email**: Gmail, Outlook deep inbox integration with email-to-lead/case
+- **Accounting**: QuickBooks, Xero, NetSuite for invoice export
+- **HR Systems**: BambooHR, Workday, ADP for payroll integration
+- **Recruiting**: LinkedIn integration for candidate sourcing
 
-## 🛠 Developer Experience
+### Mobile & Multi-Platform
+- **Mobile App**: Native React Native shell for iOS and Android
+- **Desktop Apps**: Electron-based desktop application
+- **Browser Extensions**: Chrome/Firefox extensions for LinkedIn enrichment
 
-- **CLI Enhancements**: Better scaffolding generators (`hotcrm create object`).
-- **DevTools**: Browser extension for inspecting ObjectQL queries and metadata in real-time.
-- **Testing Suite**: Automated regression testing tools for custom business logic.
+### Marketplace & Community
+- **Plugin Marketplace**: One-click install for community plugins
+- **Template Library**: Pre-built industry templates (SaaS, Manufacturing, Healthcare)
+- **Custom Object Builder**: Visual designer for new objects and fields
+
+## 🛠 Phase 4: Developer Experience & DevOps
+
+Enhancing developer productivity and operational excellence.
+
+### Developer Tools
+- **CLI Enhancements**: Better scaffolding generators (`hotcrm create object Lead`)
+- **DevTools**: Browser extension for inspecting ObjectQL queries and metadata
+- **Testing Suite**: Automated regression testing for custom business logic
+- **Migration Tools**: Schema versioning and data migration utilities
+- **Documentation Generator**: Auto-generate API docs from object definitions
+
+### DevOps & Observability
+- **Performance Monitoring**: Real-time query performance tracking
+- **Error Tracking**: Integrated error logging and alerting
+- **Audit Logs**: Complete audit trail for all data changes
+- **Health Checks**: System health dashboards and alerting
+- **Load Testing**: Automated performance testing framework
+
+## 📈 Long-Term Vision (6-12 Months)
+
+### Advanced AI Capabilities
+- **Computer Vision**: Business card scanning, document OCR
+- **Voice AI**: Voice-to-text for meeting transcription
+- **Predictive Maintenance**: Proactive system health monitoring
+- **Anomaly Detection**: Fraud detection, unusual activity alerts
+
+### Enterprise Features
+- **Multi-Tenancy**: Support for multiple organizations in one instance
+- **Advanced Security**: SOC 2 compliance, encryption at rest
+- **Data Residency**: Regional data storage for compliance
+- **White-Label**: Customizable branding for partners
+
+### Vertical Solutions
+- **Real Estate CRM**: Property management objects
+- **Healthcare CRM**: Patient management with HIPAA compliance
+- **Financial Services**: Wealth management and advisory
+- **Education**: Student recruitment and enrollment management
+
+## 🎯 Current Priorities
+
+1. **Documentation**: Complete API documentation for all 65 objects
+2. **Testing**: Comprehensive test coverage for all business logic
+3. **Performance**: Optimize ObjectQL query performance
+4. **UI Polish**: Implement Apple/Linear-inspired design system
+5. **Deployment**: Production-ready deployment guides (Docker, Kubernetes)
+
+---
+
+**Want to contribute?** See our [Contributing Guide](https://github.com/objectstack-ai/hotcrm/blob/main/CONTRIBUTING.md) to get started.

@@ -1,30 +1,149 @@
 ---
 title: Service Cloud
-description: Deliver world-class customer support.
+description: Deliver world-class customer support with intelligent case management.
 ---
 
 # Service Cloud
 
-The **Service Cloud** module empowers support teams to resolve issues quickly and deliver personalized service at scale.
+The **Service Cloud** module empowers support teams to resolve issues quickly and deliver personalized service at scale. With 21 comprehensive objects, it provides enterprise-grade case management, SLA tracking, knowledge base, and omni-channel support.
 
 ## Functional Capabilities
 
 ### 1. Case Management
-Centralize support requests from Email, Phone, and Web.
-- **Omni-Channel Routing**: Assign cases to agents based on availability and skills.
-- **Milestones (SLAs)**: Track resolution times against service agreements.
-- **Escalation Rules**: Automatically alert managers for overdue cases.
 
-### 2. Knowledge Base
+Centralize support requests from multiple channels with intelligent routing.
+
+- **Multi-Channel Intake**: Email, Web Forms, Phone, WeChat, Social Media, Chat Bot
+- **Omni-Channel Routing**: Assign cases to agents based on skills, availability, and workload
+- **Case Classification**: Automatic categorization by type, priority, and product
+- **Priority Management**: Critical, High, Medium, Low with visual indicators
+- **Status Tracking**: New → In Progress → Escalated → Resolved → Closed
+- **Case Comments**: Full conversation history with internal notes
+
+**Objects**: `case`, `case_comment`, `email_to_case`, `web_to_case`, `social_media_case`
+
+### 2. SLA Management
+
+Track and enforce service level agreements with precision.
+
+- **SLA Policies**: Define response and resolution times by case priority
+- **SLA Milestones**: Track First Response, Resolution Time, and custom milestones
+- **SLA Templates**: Reusable SLA configurations for different customer tiers
+- **Breach Alerts**: Real-time notifications when SLAs are at risk
+- **Business Hours**: Configure support hours by region and timezone
+- **Holiday Calendars**: Account for regional holidays in SLA calculations
+
+**Objects**: `sla_policy`, `sla_milestone`, `sla_template`, `business_hours`, `holiday`, `holiday_calendar`
+
+### 3. Intelligent Routing
+
+Ensure cases reach the right expert at the right time.
+
+- **Queue Management**: Organize cases by team, product, or region
+- **Queue Members**: Assign agents to queues with capacity management
+- **Routing Rules**: Automatic assignment based on case criteria (product, language, geography)
+- **Skills-Based Routing**: Match cases to agents with required expertise
+- **Load Balancing**: Distribute cases evenly across available agents
+- **Escalation Rules**: Automatically escalate overdue cases to managers
+
+**Objects**: `queue`, `queue_member`, `routing_rule`, `escalation_rule`, `agent_skill`, `skill`
+
+### 4. Knowledge Base
+
 Deflect cases and empower agents with a searchable article library.
-- **Article Versioning**: Manage content lifecycle.
-- **Contextual Search**: AI-driven suggestions based on case subject.
-- **Public Portal**: Expose articles to customers.
 
-### 3. Customer Portal
-Self-service community for customers to log tickets and view status.
+- **Article Management**: Create, publish, and archive help articles
+- **Article Versioning**: Full version control with change tracking
+- **Contextual Search**: AI-driven article suggestions based on case subject
+- **Public Portal**: Expose articles to customers for self-service
+- **Internal Articles**: Agent-only knowledge for internal procedures
+- **RAG Integration**: Vector embeddings for semantic search
+- **Usage Analytics**: Track article views and helpfulness ratings
+
+**Objects**: `knowledge_article`
+
+### 5. Community & Self-Service
+
+Empower customers to help themselves and each other.
+
+- **Customer Portal**: Self-service portal for customers to log tickets and track status
+- **Portal Users**: Customer accounts with role-based permissions
+- **Community Forums**: Public discussion forums for peer-to-peer support
+- **Forum Topics**: Organize discussions by category
+- **Forum Posts**: Customer questions and answers with voting
+- **Gamification**: Badges and reputation for helpful contributors
+
+**Objects**: `portal_user`, `forum_topic`, `forum_post`
+
+## AI-Powered Features
+
+Intelligent automation throughout the support lifecycle:
+
+- **Auto-Classification**: Automatically categorize cases by type and priority
+- **Intelligent Routing**: ML-powered assignment to the best available agent
+- **Solution Recommendations**: AI suggests relevant knowledge articles based on case description
+- **Sentiment Analysis**: Detect customer frustration and escalate proactively
+- **Email Response Drafting**: AI-generated response suggestions for common issues
+- **Case Deflection**: Predict if a case can be resolved via self-service
+- **Agent Assist**: Real-time suggestions while agents work on cases
+- **Predictive SLA Breach**: Forecast which cases will miss SLA targets
 
 ## Integration Points
 
-- **Sales Cloud**: View support history on Account/Contact.
-- **Revenue Cloud**: Check entitlement/subscription status.
+- **Sales Cloud**: View complete support history on Account/Contact records
+- **Revenue Cloud**: Check entitlement and subscription status for SLA tier
+- **HR Cloud**: Link employees to customer accounts for relationship mapping
+- **Marketing Cloud**: Capture NPS and CSAT feedback for campaign insights
+
+## Key Objects (21 Total)
+
+| Object | Description |
+|--------|-------------|
+| `case` | Support tickets and incidents |
+| `case_comment` | Case conversation history |
+| `knowledge_article` | Help articles and FAQs |
+| `forum_topic` | Community discussion topics |
+| `forum_post` | Individual forum responses |
+| `queue` | Case assignment queues |
+| `queue_member` | Agents assigned to queues |
+| `routing_rule` | Automatic case assignment rules |
+| `escalation_rule` | Auto-escalation for overdue cases |
+| `sla_policy` | Service level agreement definitions |
+| `sla_milestone` | SLA checkpoints and timers |
+| `sla_template` | Reusable SLA configurations |
+| `agent_skill` | Skills assigned to agents |
+| `skill` | Skill catalog (e.g., "Spanish", "Billing") |
+| `business_hours` | Support hours by region |
+| `holiday` | Individual holidays |
+| `holiday_calendar` | Regional holiday sets |
+| `portal_user` | Customer portal accounts |
+| `email_to_case` | Email-to-ticket automation |
+| `web_to_case` | Web form submission handling |
+| `social_media_case` | Social media ticket capture |
+
+## Service Metrics
+
+Track support performance with real-time dashboards:
+
+- **Average Response Time**: Mean time to first agent response
+- **Average Resolution Time**: Mean time to close cases
+- **SLA Compliance Rate**: Percentage of cases meeting SLA targets
+- **First Contact Resolution (FCR)**: Cases resolved on first interaction
+- **Customer Satisfaction (CSAT)**: Post-case satisfaction surveys
+- **Net Promoter Score (NPS)**: Customer loyalty metric
+- **Case Backlog**: Open cases by age and priority
+- **Agent Utilization**: Cases per agent with capacity tracking
+
+## Next Steps
+
+<Cards>
+  <Card title="Case Management" href="/docs/developers/specs/service/tickets" icon="inbox">
+    Configure case routing and SLA policies
+  </Card>
+  <Card title="Knowledge Base" href="/docs/developers/specs/service/knowledge" icon="book-open">
+    Build your article library
+  </Card>
+  <Card title="Service Analytics" href="/docs/modules/analytics" icon="chart-line">
+    Track support performance metrics
+  </Card>
+</Cards>

@@ -17,7 +17,7 @@
 
 HotCRM is a **comprehensive, AI-native enterprise CRM** system covering the complete Lead-to-Cash lifecycle. Built on the @objectstack/spec v0.7.2 protocol, it delivers:
 
-- **Complete CRM Suite**: 36 core objects (TypeScript) spanning Marketing, Sales, Service, and Finance domains
+- **Complete CRM Suite**: 65 core objects (TypeScript) spanning Marketing, Sales, Service, Finance, and HR domains
 - **Metadata-Driven Architecture**: All objects defined through TypeScript (type-safe)
 - **Plugin Architecture**: Each business package is an independent plugin with dependency management
 - **ObjectQL**: Type-safe query language replacing traditional SQL
@@ -39,12 +39,14 @@ HotCRM is a **comprehensive, AI-native enterprise CRM** system covering the comp
 
 ### Plugin Architecture
 
-HotCRM uses a **plugin-based architecture** where each business package (CRM, Products, Finance, Support) is an independent plugin:
+HotCRM uses a **plugin-based architecture** where each business package (CRM, Products, Finance, Support, Marketing, HR) is an independent plugin:
 
 - **CRM Plugin**: Core CRM objects (Account, Contact, Lead, Opportunity, etc.)
+- **Marketing Plugin**: Campaign and marketing automation (depends on CRM)
 - **Products Plugin**: Product catalog and CPQ functionality (depends on CRM)
-- **Finance Plugin**: Contract and payment management (depends on CRM)
+- **Finance Plugin**: Contract, invoice, and payment management (depends on CRM)
 - **Support Plugin**: Customer support and knowledge base (depends on CRM)
+- **HR Plugin**: Human Capital Management - Employee lifecycle and talent management
 
 Each plugin:
 - Is self-contained with its own business objects
@@ -61,10 +63,13 @@ HotCRM is built on the **@objectstack/runtime** engine, focusing purely on busin
 ```
 hotcrm/
 ├── packages/               # Business Capabilities (Plugins)
-│   ├── crm/               # Sales Cloud (Account, Opportunity)
-│   ├── finance/           # Revenue Cloud (Contract, Invoice)
-│   ├── products/          # CPQ Product Catalog
-│   └── support/           # Service Cloud (Case, Knowledge)
+│   ├── crm/               # Sales Cloud (Account, Opportunity, Lead, Contact)
+│   ├── marketing/         # Marketing Cloud (Campaign, Marketing List)
+│   ├── finance/           # Revenue Cloud (Contract, Invoice, Payment)
+│   ├── products/          # CPQ Product Catalog (Product, Quote, Pricing)
+│   ├── support/           # Service Cloud (Case, Knowledge, SLA)
+│   ├── hr/                # HR Cloud (Employee, Recruitment, Performance)
+│   └── ai/                # AI Services (ML Models, AI Utilities)
 │
 ├── apps/                   # Deployable Applications
 │   └── docs/              # Official Documentation Site
@@ -264,38 +269,67 @@ Each domain package is a complete vertical slice containing schemas, hooks, and 
 
 #### @hotcrm/crm
 
-**Marketing & Sales Domain** - Complete vertical slice including:
-- **Schemas (TypeScript)**: Account, Contact, Lead, Opportunity
-- **Schemas (Legacy YAML)**: Campaign, Activity
+**Sales Cloud Domain** - Complete vertical slice including:
+- **Objects (13)**: Account, Contact, Lead, Opportunity, Activity, Task, Note, Assignment Rule, Email Template, Form, Landing Page, Marketing List, Unsubscribe
 - **Hooks**: Lead conversion automation, Opportunity stage change automation
 - **Actions**: AI Smart Briefing for account insights
 
 [Read more →](./packages/crm/README.md)
 
-#### @hotcrm/support
+#### @hotcrm/marketing
 
-**Customer Service Domain** - Case management and Knowledge base
-- **Schemas (Legacy YAML)**: Case, Knowledge
-- Package structure prepared for future TypeScript migrations
+**Marketing Cloud Domain** - Campaign management and marketing automation
+- **Objects (2)**: Campaign, Campaign Member
+- ROI tracking and multi-channel campaign support
+- AI-powered content generation and audience analysis
 
-[Read more →](./packages/support/README.md)
+[Read more →](./packages/marketing/README.md)
 
 #### @hotcrm/products
 
 **Product & Pricing Domain** - Product catalog, Pricebook, and Quote (CPQ) management
-- **Schemas (Legacy YAML)**: Product, Pricebook, Quote
-- Package structure prepared for future TypeScript migrations
+- **Objects (9)**: Product, Product Bundle, Product Bundle Component, Quote, Quote Line Item, Pricebook, Price Rule, Discount Schedule, Approval Request
+- Complex quote configuration with approval workflows
+- Multi-currency and tiered pricing support
 
 [Read more →](./packages/products/README.md)
 
 #### @hotcrm/finance
 
-**Financial Operations Domain** - Contract lifecycle and Payment tracking
-- **Schemas (TypeScript)**: Contract
-- **Schemas (Legacy YAML)**: Payment
-- Partial migration to TypeScript in progress
+**Financial Operations Domain** - Contract lifecycle, Invoice, and Payment tracking
+- **Objects (4)**: Contract, Invoice, Invoice Line, Payment
+- Contract lifecycle management with renewal tracking
+- Payment schedule and overdue monitoring
 
 [Read more →](./packages/finance/README.md)
+
+#### @hotcrm/support
+
+**Customer Service Domain** - Case management and Knowledge base
+- **Objects (21)**: Case, Case Comment, Knowledge Article, Forum Topic, Forum Post, Queue, Queue Member, Routing Rule, Escalation Rule, SLA Policy, SLA Milestone, SLA Template, Agent Skill, Skill, Business Hours, Holiday, Holiday Calendar, Portal User, Email to Case, Web to Case, Social Media Case
+- Multi-channel ticket intake with SLA management
+- AI-powered case routing and solution recommendations
+
+[Read more →](./packages/support/README.md)
+
+#### @hotcrm/hr
+
+**Human Capital Management Domain** - Employee lifecycle and talent management
+- **Objects (16)**: Employee, Department, Position, Candidate, Application, Interview, Offer, Recruitment, Onboarding, Time Off, Attendance, Goal, Performance Review, Payroll, Training, Certification
+- Complete recruitment pipeline from job posting to offer
+- Performance management with OKR/KPI tracking
+- Payroll and benefits administration
+
+[Read more →](./packages/hr/README.md)
+
+#### @hotcrm/ai
+
+**AI Services Layer** - Unified AI framework for all modules
+- ML model integration framework
+- Shared AI utilities and prompt management
+- Vector embeddings and RAG support
+
+[Read more →](./packages/ai/README.md)
 
 ### Application Packages
 
@@ -340,7 +374,7 @@ HotCRM includes a comprehensive **Agent System** to accelerate development. Each
 
 ## 📦 Core Features
 
-HotCRM implements a comprehensive enterprise CRM system organized into **5 major domains**:
+HotCRM implements a comprehensive enterprise system organized into **6 major domains**:
 
 ### 1. 🟢 Marketing & Leads
 
@@ -439,7 +473,31 @@ HotCRM implements a comprehensive enterprise CRM system organized into **5 major
 - RAG (Retrieval-Augmented Generation) support with vector embeddings
 - Usage analytics and helpfulness scoring
 
-### 4. 🟣 Platform Foundation
+### 4. 🟣 Human Capital Management
+
+**Recruitment & Talent Acquisition**
+- **Position Management** (`Position`): Job requisitions with requirements
+- **Candidate Pipeline** (`Candidate`, `Application`): Applicant tracking with resume parsing
+- **Interview Scheduling** (`Interview`): Multi-round interview coordination
+- **Offer Management** (`Offer`): Employment offer generation and tracking
+
+**Employee Lifecycle**
+- **Employee Master Data** (`Employee`): Core employee information and records
+- **Onboarding** (`Onboarding`): New hire onboarding workflows
+- **Department Structure** (`Department`): Organizational hierarchy
+
+**Time & Performance**
+- **Time Off Management** (`Time_Off`): PTO, sick leave, vacation tracking
+- **Attendance Tracking** (`Attendance`): Daily attendance with clock in/out
+- **Goal Management** (`Goal`): OKR and KPI tracking
+- **Performance Reviews** (`Performance_Review`): 360-degree feedback and annual reviews
+
+**Compensation & Development**
+- **Payroll Processing** (`Payroll`): Salary calculations and benefits
+- **Training Programs** (`Training`): Learning and development catalog
+- **Certifications** (`Certification`): Professional certification tracking
+
+### 5. 🟤 Platform Foundation
 
 **Metadata-Driven Architecture**
 - All objects defined natively in TypeScript (`.object.ts`)
@@ -453,7 +511,7 @@ HotCRM implements a comprehensive enterprise CRM system organized into **5 major
 - Automatic calculations
 - Cross-object updates
 
-### 5. 🤖 AI Copilot
+### 6. 🤖 AI Copilot
 
 **AI Enhancement Throughout**
 - **Lead**: Auto-scoring, data enrichment from email signatures
@@ -464,18 +522,23 @@ HotCRM implements a comprehensive enterprise CRM system organized into **5 major
 - **Quote**: Smart product combinations, optimal discount suggestions
 - **Case**: Auto-categorization, intelligent routing, solution recommendations
 - **Knowledge**: Content summarization, related article discovery, RAG-ready embeddings
+- **Candidate**: Resume parsing, interview question generation
+- **Employee**: Performance insights, attrition prediction, skills gap analysis
 
 ## 🎯 Key Statistics
 
-- **36 Core Objects** (TypeScript): Complete enterprise CRM coverage across all domains
-  - **CRM**: Account, Contact, Lead, Opportunity, Activity, Task, Note, Campaign Member
-  - **Support**: Case, Case Comment, Knowledge Article, Forum Topic/Post, Queue, Routing/Escalation Rules, SLA Policies, Business Hours, Portal User
-  - **Products**: Quote, Quote Line Item, Product Bundle, Price Rule, Discount Schedule, Approval Request
-  - **Finance**: Contract
+- **65 Core Objects** (TypeScript): Complete enterprise coverage across 6 major clouds
+  - **CRM (13 objects)**: Account, Contact, Lead, Opportunity, Activity, Task, Note, Assignment Rule, Email Template, Form, Landing Page, Marketing List, Unsubscribe
+  - **Marketing (2 objects)**: Campaign, Campaign Member
+  - **Products (9 objects)**: Product, Product Bundle, Product Bundle Component, Quote, Quote Line Item, Pricebook, Price Rule, Discount Schedule, Approval Request
+  - **Finance (4 objects)**: Contract, Invoice, Invoice Line, Payment
+  - **Support (21 objects)**: Case, Case Comment, Knowledge Article, Forum Topic, Forum Post, Queue, Queue Member, Routing Rule, Escalation Rule, SLA Policy, SLA Milestone, SLA Template, Agent Skill, Skill, Business Hours, Holiday, Holiday Calendar, Portal User, Email to Case, Web to Case, Social Media Case
+  - **HR (16 objects)**: Employee, Department, Position, Candidate, Application, Interview, Offer, Recruitment, Onboarding, Time Off, Attendance, Goal, Performance Review, Payroll, Training, Certification
+- **6 Business Clouds**: Sales, Marketing, Revenue (Products + Finance), Service, HR, Platform/AI
 - **7 Sales Stages**: Complete pipeline from Prospecting to Closed Won/Lost
 - **8 Currencies**: Multi-currency support for global operations
 - **6 Service Channels**: Email, Web, Phone, WeChat, Chat Bot, Mobile App
-- **250+ Fields**: Comprehensive data capture across all objects
+- **500+ Fields**: Comprehensive data capture across all objects
 - **AI-First Design**: Every major object has AI enhancement capabilities
 
 - KPI cards with real-time metrics

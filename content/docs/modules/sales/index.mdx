@@ -1,32 +1,154 @@
 ---
 title: Sales Cloud
-description: Automate your sales process from lead to cash.
+description: Automate your sales process from lead to cash with AI-powered insights.
 ---
 
 # Sales Cloud
 
-The **Sales Cloud** module is designed to help sales teams sell faster and smarter. It centralizes customer information, automates interactions, and provides intelligence to drive deal closure.
+The **Sales Cloud** module is designed to help sales teams sell faster and smarter. It centralizes customer information, automates interactions, and provides AI-powered intelligence to drive deal closure. With 13 comprehensive objects in the CRM package, it delivers enterprise-grade sales automation.
 
 ## Functional Capabilities
 
 ### 1. Lead Management
-Capture and qualify leads from multiple channels.
-- **Web-to-Lead**: Automatically capture leads from your website.
-- **Lead Scoring**: Prioritize leads based on engagement and demographics.
-- **Assignment Rules**: Automatically route leads to the right reps.
 
-### 2. Opportunity Management
-Manage the deal lifecycle with a visual pipeline.
-- **Kanban Board**: Drag-and-drop deals across stages.
-- **Sales Path**: Step-by-step guidance for each sales stage.
-- **Deal Health**: AI insight into deal probability.
+Capture and qualify leads from multiple channels with AI-powered scoring.
 
-### 3. Forecasting & Performance
-Predict revenue and track team performance.
-- **Roll-up Forecasting**: View pipeline from individual rep to VP level.
-- **Quota Tracking**: Monitor progress against targets.
+- **Multi-Source Capture**: Web-to-Lead, Email, Manual Entry, API Import
+- **Lead Scoring**: AI-powered scoring (0-100) based on demographics, behavior, and engagement
+- **Duplicate Detection**: Automatic detection and merging of duplicate leads
+- **Lead Assignment**: Automatic routing based on territory, industry, or lead source
+- **Public Pool**: Shared lead pool for unclaimed leads
+- **Lead Conversion**: Convert qualified leads to Account, Contact, and Opportunity
+- **Data Completeness**: Automatic calculation of profile completeness percentage
+
+**Objects**: `lead`, `assignment_rule`
+
+### 2. Account & Contact Management
+
+Build a complete customer 360 view with hierarchical relationships.
+
+- **Account Hierarchy**: Parent-child company relationships for enterprise accounts
+- **Industry Classification**: Standard industry codes with custom taxonomies
+- **Revenue Tracking**: Annual revenue and employee count for prioritization
+- **Contact Roles**: Decision makers, influencers, champions, and blockers
+- **Social Integration**: Link to LinkedIn, Twitter, and other social profiles
+- **Interaction Timeline**: Complete history of emails, calls, meetings, and notes
+- **Account Teams**: Assign multiple team members to strategic accounts
+
+**Objects**: `account`, `contact`
+
+### 3. Opportunity Management
+
+Manage the deal lifecycle with visual pipeline and AI insights.
+
+- **7-Stage Pipeline**: Prospecting → Qualification → Needs Analysis → Proposal → Negotiation → Closed Won/Lost
+- **Kanban Board**: Drag-and-drop deals across stages for visual pipeline management
+- **Sales Path**: Step-by-step guidance for each sales stage
+- **AI Win Probability**: ML-predicted likelihood to close based on deal velocity and engagement
+- **Competitive Intelligence**: Track competitors and win/loss reasons
+- **Deal Health Scoring**: Risk factor identification and next-step recommendations
+- **Revenue Forecasting**: Roll-up forecasting from rep to VP level
+
+**Objects**: `opportunity`
+
+### 4. Activity Tracking
+
+Log every customer interaction with AI-powered insights.
+
+- **Activity Types**: Calls, Emails, Meetings, Tasks, Check-ins
+- **AI Transcription**: Voice-to-text for call recordings
+- **Action Item Extraction**: Automatic to-do creation from meeting notes
+- **Sentiment Analysis**: Detect customer sentiment in communications
+- **GPS Check-in**: Location tracking for field sales visits
+- **Email Integration**: Sync with Gmail, Outlook for automatic activity logging
+- **Timeline View**: Chronological activity feed by account or opportunity
+
+**Objects**: `activity`, `task`, `note`
+
+### 5. Marketing Integration
+
+Seamless handoff from marketing to sales.
+
+- **Marketing Lists**: Targeted lists for campaigns and outreach
+- **Email Templates**: Personalized email templates with merge fields
+- **Landing Pages**: Create conversion-optimized landing pages
+- **Form Builders**: Embed lead capture forms on websites
+- **Campaign Attribution**: Track which marketing campaigns generate revenue
+- **Lead Source Tracking**: Multi-touch attribution from first touch to close
+
+**Objects**: `marketing_list`, `email_template`, `landing_page`, `form`
+
+### 6. Email Compliance
+
+Stay compliant with anti-spam regulations.
+
+- **Unsubscribe Management**: One-click unsubscribe with preference center
+- **Consent Tracking**: GDPR/CCPA compliance with audit trails
+- **Email Blacklist**: Automatic suppression of unsubscribed contacts
+
+**Objects**: `unsubscribe`
+
+## AI-Powered Features
+
+Intelligent automation throughout the sales cycle:
+
+- **Lead Scoring 2.0**: Behavioral + demographic + intent signals
+- **Email Enrichment**: Extract company info from email signatures
+- **Next Best Action**: AI suggests optimal next step for each deal
+- **Win Probability**: Predict likelihood to close with confidence intervals
+- **Talking Points**: AI-generated industry-specific sales suggestions
+- **Email Drafting**: AI-composed personalized outreach emails
+- **Meeting Prep**: Auto-generated briefings before customer meetings
+- **Churn Prediction**: Identify at-risk customers before renewal
 
 ## Integration Points
 
-- **Marketing Cloud**: Receives qualified leads.
-- **Revenue Cloud**: Sends closed deals for quoting/billing.
+- **Marketing Cloud**: Receives qualified leads (MQL) from campaigns
+- **Revenue Cloud**: Sends closed deals for quoting and billing
+- **Service Cloud**: Links support cases to accounts for complete customer view
+- **HR Cloud**: Maps employees to customer accounts for relationship tracking
+
+## Key Objects (13 Total)
+
+| Object | Description |
+|--------|-------------|
+| `account` | Companies and organizations |
+| `contact` | Individual people at accounts |
+| `lead` | Prospective customers |
+| `opportunity` | Sales deals and pipelines |
+| `activity` | Customer interactions (calls, emails, meetings) |
+| `task` | To-dos and action items |
+| `note` | Free-text notes and observations |
+| `assignment_rule` | Automatic lead/case routing rules |
+| `email_template` | Reusable email templates |
+| `form` | Web forms for lead capture |
+| `landing_page` | Marketing landing pages |
+| `marketing_list` | Segmented contact lists |
+| `unsubscribe` | Email opt-out management |
+
+## Sales Metrics
+
+Track sales performance with real-time dashboards:
+
+- **Pipeline Value**: Total value of open opportunities
+- **Win Rate**: Percentage of opportunities closed-won
+- **Average Deal Size**: Mean opportunity amount
+- **Sales Cycle Length**: Average days from create to close
+- **Lead Conversion Rate**: Percentage of leads converted to opportunities
+- **Quota Attainment**: Individual and team progress against targets
+- **Forecast Accuracy**: Predicted vs. actual closed revenue
+- **Activity Metrics**: Calls, emails, meetings per rep
+
+## Next Steps
+
+<Cards>
+  <Card title="Lead Management" href="/docs/developers/specs/sales/leads" icon="user-plus">
+    Configure lead scoring and assignment
+  </Card>
+  <Card title="Opportunity Pipeline" href="/docs/developers/specs/sales/opportunities" icon="trending-up">
+    Build your sales pipeline stages
+  </Card>
+  <Card title="Sales Analytics" href="/docs/modules/analytics" icon="chart-bar">
+    Track sales performance metrics
+  </Card>
+</Cards>

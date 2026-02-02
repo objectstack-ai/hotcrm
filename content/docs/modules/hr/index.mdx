@@ -1,0 +1,139 @@
+---
+title: HR Cloud
+description: Comprehensive Human Capital Management for the modern enterprise.
+---
+
+# HR Cloud
+
+The **HR Cloud** module provides a complete Human Capital Management (HCM) solution, covering the entire employee lifecycle from recruitment to retirement. Built on the same metadata-driven architecture as our other clouds, it delivers enterprise-grade HR functionality with AI augmentation.
+
+## Functional Capabilities
+
+### 1. Recruitment & Talent Acquisition
+
+Streamline your hiring process from job posting to offer acceptance.
+
+- **Position Management**: Define open positions with requirements and budgets
+- **Candidate Pipeline**: Track applicants through interview stages
+- **Application Tracking**: Centralized candidate database with resume parsing
+- **Interview Scheduling**: Coordinate multi-round interviews with feedback capture
+- **Offer Management**: Generate and track offer letters with e-signature support
+
+**Objects**: `position`, `candidate`, `application`, `interview`, `offer`, `recruitment`
+
+### 2. Onboarding & Offboarding
+
+Ensure smooth employee transitions with structured workflows.
+
+- **Onboarding Checklists**: Automated task assignment for new hires
+- **Asset Management**: Track laptops, access cards, and equipment
+- **Training Enrollment**: Auto-assign required courses
+- **Compliance Documentation**: I-9, W-4, and policy acknowledgments
+
+**Objects**: `onboarding`, `employee`
+
+### 3. Time & Attendance
+
+Track work hours, time-off, and attendance with precision.
+
+- **Time Off Requests**: PTO, sick leave, and vacation management
+- **Attendance Tracking**: Clock in/out with location verification
+- **Holiday Calendars**: Regional and company-specific holiday management
+- **Overtime Calculations**: Automatic compliance with labor regulations
+
+**Objects**: `time_off`, `attendance`, `holiday`, `holiday_calendar`
+
+### 4. Performance Management
+
+Drive employee growth with continuous feedback and goal tracking.
+
+- **Goal Setting**: OKR and KPI frameworks with cascading goals
+- **Performance Reviews**: 360-degree feedback and annual reviews
+- **Development Plans**: Personalized growth trajectories
+- **Performance Improvement Plans (PIP)**: Structured support for struggling employees
+
+**Objects**: `goal`, `performance_review`
+
+### 5. Compensation & Payroll
+
+Manage salaries, bonuses, and benefits with accuracy.
+
+- **Payroll Processing**: Automated salary calculations with tax withholding
+- **Bonus Management**: Performance-based incentive tracking
+- **Benefits Administration**: Health, dental, retirement plan enrollment
+- **Salary Reviews**: Merit increase workflows with approval chains
+
+**Objects**: `payroll`, `employee`
+
+### 6. Learning & Development
+
+Invest in your workforce with comprehensive training programs.
+
+- **Training Catalog**: Course library with prerequisites and certifications
+- **Enrollment Management**: Track employee skill development
+- **Certification Tracking**: Monitor compliance certifications and renewals
+- **Skills Matrix**: Identify skill gaps and training needs
+
+**Objects**: `training`, `certification`
+
+### 7. Organization Structure
+
+Define your company hierarchy and departmental structure.
+
+- **Department Management**: Organizational units with cost centers
+- **Reporting Lines**: Manager-employee relationships with matrix support
+- **Headcount Planning**: Budgeted vs. actual FTE tracking
+
+**Objects**: `department`, `employee`
+
+## AI-Powered Features
+
+Every HR process is enhanced with intelligent automation:
+
+- **Resume Parsing**: Automatically extract candidate information
+- **Interview Question Generation**: Role-specific questions based on job description
+- **Performance Review Insights**: AI-detected patterns in feedback
+- **Predictive Attrition**: Early warning system for employee retention risks
+- **Skills Gap Analysis**: AI recommendations for training programs
+- **Compensation Benchmarking**: Market-based salary recommendations
+
+## Integration Points
+
+- **CRM Cloud**: Link employees to customer accounts for relationship mapping
+- **Support Cloud**: Employee self-service portal for HR tickets
+- **Finance Cloud**: Payroll integration with accounting systems
+
+## Key Objects (16 Total)
+
+| Object | Description |
+|--------|-------------|
+| `employee` | Core employee master data |
+| `department` | Organizational units |
+| `position` | Open job requisitions |
+| `candidate` | External applicants |
+| `application` | Job applications |
+| `interview` | Interview schedules and feedback |
+| `offer` | Employment offers |
+| `recruitment` | Recruitment campaigns |
+| `onboarding` | New hire onboarding workflows |
+| `time_off` | PTO and leave requests |
+| `attendance` | Daily attendance records |
+| `goal` | Employee objectives (OKRs) |
+| `performance_review` | Annual/quarterly reviews |
+| `payroll` | Salary and compensation |
+| `training` | Learning programs |
+| `certification` | Professional certifications |
+
+## Next Steps
+
+<Cards>
+  <Card title="Employee Object Reference" href="/docs/developers/specs/hr/employees" icon="user">
+    Detailed schema for the Employee object
+  </Card>
+  <Card title="Recruitment Workflow" href="/docs/developers/specs/hr/recruitment" icon="briefcase">
+    Implement hiring pipelines
+  </Card>
+  <Card title="Performance Reviews" href="/docs/developers/specs/hr/performance" icon="target">
+    Build performance management processes
+  </Card>
+</Cards>
