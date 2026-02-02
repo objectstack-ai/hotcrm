@@ -1,4 +1,9 @@
 import type { HookContext } from '@objectstack/spec/data';
+import {
+  OfferCreationTrigger,
+  OfferStatusChangeTrigger,
+  OfferApprovalTrigger
+} from '../../../src/hooks/offer.hook';
 
 // Mock modules
 const mockQlFind = jest.fn();
@@ -29,14 +34,8 @@ const createMockContext = (
 });
 
 describe('Offer Hook - OfferCreationTrigger', () => {
-  let OfferCreationTrigger: any;
-
-  beforeEach(async () => {
+  beforeEach(() => {
     jest.clearAllMocks();
-    jest.resetModules();
-    
-    const module = await import('../../../src/hooks/offer.hook');
-    OfferCreationTrigger = module.OfferCreationTrigger;
   });
 
   describe('beforeInsert - Offer Number Generation', () => {
@@ -199,14 +198,8 @@ describe('Offer Hook - OfferCreationTrigger', () => {
 });
 
 describe('Offer Hook - OfferApprovalTrigger', () => {
-  let OfferApprovalTrigger: any;
-
-  beforeEach(async () => {
+  beforeEach(() => {
     jest.clearAllMocks();
-    jest.resetModules();
-    
-    const module = await import('../../../src/hooks/offer.hook');
-    OfferApprovalTrigger = module.OfferApprovalTrigger;
   });
 
   describe('beforeUpdate - Approval Status Change', () => {
@@ -379,14 +372,8 @@ describe('Offer Hook - OfferApprovalTrigger', () => {
 });
 
 describe('Offer Hook - OfferStatusChangeTrigger', () => {
-  let OfferStatusChangeTrigger: any;
-
-  beforeEach(async () => {
+  beforeEach(() => {
     jest.clearAllMocks();
-    jest.resetModules();
-    
-    const module = await import('../../../src/hooks/offer.hook');
-    OfferStatusChangeTrigger = module.OfferStatusChangeTrigger;
   });
 
   describe('afterUpdate - Status Change Detection', () => {

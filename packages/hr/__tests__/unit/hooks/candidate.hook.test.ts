@@ -1,4 +1,8 @@
 import type { HookContext } from '@objectstack/spec/data';
+import {
+  CandidateScoringTrigger,
+  CandidateStatusChangeTrigger
+} from '../../../src/hooks/candidate.hook';
 
 // Mock modules
 const mockQlFind = jest.fn();
@@ -29,14 +33,8 @@ const createMockContext = (
 });
 
 describe('Candidate Hook - CandidateScoringTrigger', () => {
-  let CandidateScoringTrigger: any;
-
-  beforeEach(async () => {
+  beforeEach(() => {
     jest.clearAllMocks();
-    jest.resetModules();
-    
-    const module = await import('../../../src/hooks/candidate.hook');
-    CandidateScoringTrigger = module.CandidateScoringTrigger;
   });
 
   describe('beforeInsert - Candidate Scoring', () => {
@@ -421,14 +419,8 @@ describe('Candidate Hook - CandidateScoringTrigger', () => {
 });
 
 describe('Candidate Hook - CandidateStatusChangeTrigger', () => {
-  let CandidateStatusChangeTrigger: any;
-
-  beforeEach(async () => {
+  beforeEach(() => {
     jest.clearAllMocks();
-    jest.resetModules();
-    
-    const module = await import('../../../src/hooks/candidate.hook');
-    CandidateStatusChangeTrigger = module.CandidateStatusChangeTrigger;
   });
 
   describe('afterUpdate - Status Change Detection', () => {
