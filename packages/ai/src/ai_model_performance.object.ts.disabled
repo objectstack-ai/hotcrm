@@ -1,0 +1,137 @@
+/**
+ * AI Model Performance Object
+ * 
+ * Tracks performance metrics for AI models
+ */
+
+import { ObjectSchema, Field } from '@objectstack/spec/data';
+
+export const ai_model_performance = ObjectSchema.create({
+  name: 'ai_model_performance',
+  label: 'AI Model Performance',
+  pluralLabel: 'AI Model Performance Records',
+  description: 'Tracks performance metrics and health status of AI models',
+  
+  fields: {
+    id: Field.id({}),
+    
+    model_id: Field.text({
+      label: 'Model ID',
+      description: 'ID of the model',
+      required: true,
+      maxLength: 255
+    }),
+    
+    model_name: Field.text({
+      label: 'Model Name',
+      description: 'Name of the model',
+      maxLength: 255
+    }),
+    
+    period_start: Field.dateTime({
+      label: 'Period Start',
+      description: 'Start of measurement period',
+      required: true
+    }),
+    
+    period_end: Field.dateTime({
+      label: 'Period End',
+      description: 'End of measurement period',
+      required: true
+    }),
+    
+    total_predictions: Field.number({
+      label: 'Total Predictions',
+      description: 'Total number of predictions made',
+      precision: 10,
+      scale: 0
+    }),
+    
+    successful_predictions: Field.number({
+      label: 'Successful Predictions',
+      description: 'Number of successful predictions',
+      precision: 10,
+      scale: 0
+    }),
+    
+    failed_predictions: Field.number({
+      label: 'Failed Predictions',
+      description: 'Number of failed predictions',
+      precision: 10,
+      scale: 0
+    }),
+    
+    average_latency_ms: Field.number({
+      label: 'Average Latency (ms)',
+      description: 'Average prediction latency in milliseconds',
+      precision: 10,
+      scale: 2
+    }),
+    
+    p95_latency_ms: Field.number({
+      label: 'P95 Latency (ms)',
+      description: '95th percentile latency',
+      precision: 10,
+      scale: 2
+    }),
+    
+    p99_latency_ms: Field.number({
+      label: 'P99 Latency (ms)',
+      description: '99th percentile latency',
+      precision: 10,
+      scale: 2
+    }),
+    
+    average_confidence: Field.number({
+      label: 'Average Confidence',
+      description: 'Average confidence score (0-100)',
+      precision: 5,
+      scale: 2
+    }),
+    
+    cache_hit_rate: Field.number({
+      label: 'Cache Hit Rate (%)',
+      description: 'Percentage of cached predictions',
+      precision: 5,
+      scale: 2
+    }),
+    
+    error_rate: Field.number({
+      label: 'Error Rate (%)',
+      description: 'Percentage of failed predictions',
+      precision: 5,
+      scale: 2
+    }),
+    
+    accuracy: Field.number({
+      label: 'Accuracy (%)',
+      description: 'Model accuracy for predictions with actual outcomes',
+      precision: 5,
+      scale: 2
+    }),
+    
+    health_status: Field.select({
+      label: 'Health Status',
+      description: 'Overall health status',
+      options: [
+        { label: 'Healthy', value: 'healthy' },
+        { label: 'Degraded', value: 'degraded' },
+        { label: 'Unhealthy', value: 'unhealthy' }
+      ]
+    }),
+    
+    health_reason: Field.text({
+      label: 'Health Reason',
+      description: 'Reason for health status',
+      maxLength: 500
+    }),
+    
+    created_date: Field.dateTime({
+      label: 'Created Date',
+      description: 'When record was created',
+      defaultValue: 'NOW'
+    })
+  }
+});
+
+export default ai_model_performance;

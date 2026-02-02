@@ -5,6 +5,8 @@
  * Provides model versioning, configuration, and lifecycle management
  */
 
+import { MLProviderConfig } from './providers/base-provider';
+
 export type ModelType = 
   | 'classification'
   | 'regression'
@@ -14,6 +16,8 @@ export type ModelType =
   | 'forecasting';
 
 export type ModelProvider = 
+  | 'aws-sagemaker'
+  | 'azure-ml'
   | 'openai'
   | 'anthropic'
   | 'custom'
@@ -47,7 +51,13 @@ export interface ModelConfig {
   credentials?: {
     apiKey?: string;
     secretKey?: string;
+    accessKeyId?: string;
+    secretAccessKey?: string;
+    region?: string;
   };
+  
+  /** Provider configuration for ML providers */
+  providerConfig?: MLProviderConfig;
   
   /** Model hyperparameters */
   parameters?: Record<string, any>;
@@ -67,6 +77,13 @@ export interface ModelConfig {
   
   /** Model status */
   status: 'active' | 'deprecated' | 'training' | 'testing';
+  
+  /** A/B testing configuration */
+  abTest?: {
+    enabled: boolean;
+    trafficPercentage: number; // 0-100
+    championModelId?: string;
+  };
 }
 
 /**

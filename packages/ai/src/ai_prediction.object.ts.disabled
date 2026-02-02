@@ -1,0 +1,110 @@
+/**
+ * AI Prediction Record Object
+ * 
+ * Stores AI predictions for audit trail and historical analysis
+ */
+
+import { ObjectSchema, Field } from '@objectstack/spec/data';
+
+export const ai_prediction = ObjectSchema.create({
+  name: 'ai_prediction',
+  label: 'AI Prediction',
+  pluralLabel: 'AI Predictions',
+  description: 'Tracks AI model predictions for audit and performance analysis',
+  
+  fields: {
+    id: Field.id({}),
+    
+    model_id: Field.text({
+      label: 'Model ID',
+      description: 'ID of the model that made the prediction',
+      required: true,
+      maxLength: 255
+    }),
+    
+    model_version: Field.text({
+      label: 'Model Version',
+      description: 'Version of the model',
+      maxLength: 50
+    }),
+    
+    object_type: Field.text({
+      label: 'Object Type',
+      description: 'Type of object being predicted on (Lead, Account, etc.)',
+      maxLength: 100
+    }),
+    
+    object_id: Field.text({
+      label: 'Object ID',
+      description: 'ID of the object being predicted on',
+      maxLength: 255
+    }),
+    
+    prediction_type: Field.text({
+      label: 'Prediction Type',
+      description: 'Type of prediction (classification, regression, etc.)',
+      maxLength: 100
+    }),
+    
+    input_features: Field.textarea({
+      label: 'Input Features',
+      description: 'JSON of input features used for prediction'
+    }),
+    
+    prediction_value: Field.textarea({
+      label: 'Prediction Value',
+      description: 'JSON of prediction result'
+    }),
+    
+    confidence_score: Field.number({
+      label: 'Confidence Score',
+      description: 'Confidence in prediction (0-100)',
+      precision: 5,
+      scale: 2
+    }),
+    
+    processing_time_ms: Field.number({
+      label: 'Processing Time (ms)',
+      description: 'Time taken to make prediction in milliseconds',
+      precision: 10,
+      scale: 0
+    }),
+    
+    was_cached: Field.checkbox({
+      label: 'Was Cached',
+      description: 'Whether result was served from cache',
+      defaultValue: false
+    }),
+    
+    provider: Field.text({
+      label: 'Provider',
+      description: 'ML provider used (aws-sagemaker, azure-ml, etc.)',
+      maxLength: 100
+    }),
+    
+    actual_outcome: Field.text({
+      label: 'Actual Outcome',
+      description: 'Actual outcome for accuracy measurement',
+      maxLength: 255
+    }),
+    
+    is_correct: Field.checkbox({
+      label: 'Is Correct',
+      description: 'Whether prediction matched actual outcome'
+    }),
+    
+    created_date: Field.dateTime({
+      label: 'Created Date',
+      description: 'When prediction was made',
+      defaultValue: 'NOW'
+    }),
+    
+    created_by: Field.text({
+      label: 'Created By',
+      description: 'User who requested prediction',
+      maxLength: 255
+    })
+  }
+});
+
+export default ai_prediction;
