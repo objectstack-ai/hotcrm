@@ -1,316 +1,222 @@
+import { ObjectSchema, Field } from '@objectstack/spec/data';
 
-const Queue = {
+export const Queue = ObjectSchema.create({
   name: 'queue',
   label: 'Support Queue',
-  labelPlural: 'Support Queues',
+  pluralLabel: 'Support Queues',
   icon: 'inbox',
   description: 'Support team queues for case routing and assignment',
-  enable: {
-    searchable: true,
-    trackHistory: true
-  },
+
   fields: {
-    // Basic Information
-    name: {
-      type: 'text',
+    name: Field.text({
       label: 'Queue name',
       required: true,
-      maxLength: 255,
-      searchable: true
-    },
-    description: {
-      type: 'textarea',
+      maxLength: 255
+    }),
+    description: Field.textarea({
       label: 'description',
       maxLength: 2000
-    },
-    is_active: {
-      type: 'checkbox',
+    }),
+    is_active: Field.boolean({
       label: 'Active',
       defaultValue: true
-    },
-    // Queue Type
-    queue_type: {
-      type: 'select',
+    }),
+    queue_type: Field.select({
       label: 'Queue Type',
       required: true,
       options: [
-        { label: '🎯 General Support', value: 'General' },
-        { label: '🔧 Technical Support', value: 'Technical' },
-        { label: '💳 Billing & Payments', value: 'Billing' },
-        { label: '📦 Product Support', value: 'Product' },
-        { label: '⭐ VIP Support', value: 'VIP' },
-        { label: '🌍 Regional Support', value: 'Regional' },
-        { label: '🎓 Training & Onboarding', value: 'Training' },
-        { label: '🔄 Escalation', value: 'Escalation' }
+        {
+          "label": "🎯 General Support",
+          "value": "General"
+        },
+        {
+          "label": "🔧 Technical Support",
+          "value": "Technical"
+        },
+        {
+          "label": "💳 Billing & Payments",
+          "value": "Billing"
+        },
+        {
+          "label": "📦 Product Support",
+          "value": "Product"
+        },
+        {
+          "label": "⭐ VIP Support",
+          "value": "VIP"
+        },
+        {
+          "label": "🌍 Regional Support",
+          "value": "Regional"
+        },
+        {
+          "label": "🎓 Training & Onboarding",
+          "value": "Training"
+        },
+        {
+          "label": "🔄 Escalation",
+          "value": "Escalation"
+        }
       ]
-    },
-    // Routing Configuration
-    routing_method: {
-      type: 'select',
+    }),
+    routing_method: Field.select({
       label: 'Routing Method',
       required: true,
       defaultValue: 'RoundRobin',
       options: [
-        { label: '🔄 Round Robin', value: 'RoundRobin' },
-        { label: '⚖️ Load Balanced', value: 'LoadBalanced' },
-        { label: '🎯 Skill Based', value: 'SkillBased' },
-        { label: '👤 Manual Assignment', value: 'Manual' },
-        { label: '🤖 AI Powered', value: 'AI' }
+        {
+          "label": "🔄 Round Robin",
+          "value": "RoundRobin"
+        },
+        {
+          "label": "⚖️ Load Balanced",
+          "value": "LoadBalanced"
+        },
+        {
+          "label": "🎯 Skill Based",
+          "value": "SkillBased"
+        },
+        {
+          "label": "👤 Manual Assignment",
+          "value": "Manual"
+        },
+        {
+          "label": "🤖 AI Powered",
+          "value": "AI"
+        }
       ]
-    },
-    max_cases_per_agent: {
-      type: 'number',
+    }),
+    max_cases_per_agent: Field.number({
       label: 'Max Cases Per Agent',
-      precision: 0,
-      min: 1,
+      description: 'Maximum active cases per agent for load balancing',
       defaultValue: 50,
-      description: 'Maximum active cases per agent for load balancing'
-    },
-    // Priority and SLA
-    default_priority: {
-      type: 'select',
+      min: 1,
+      precision: 0
+    }),
+    default_priority: Field.select({
       label: 'Default Priority',
       defaultValue: 'Medium',
       options: [
-        { label: 'Critical', value: 'Critical' },
-        { label: 'High', value: 'High' },
-        { label: 'Medium', value: 'Medium' },
-        { label: 'Low', value: 'Low' }
+        {
+          "label": "Critical",
+          "value": "Critical"
+        },
+        {
+          "label": "High",
+          "value": "High"
+        },
+        {
+          "label": "Medium",
+          "value": "Medium"
+        },
+        {
+          "label": "Low",
+          "value": "Low"
+        }
       ]
-    },
-    sla_template_id: {
-      type: 'lookup',
+    }),
+    sla_template_id: Field.lookup('SLATemplate', {
       label: 'SLA Template',
-      reference: 'SLATemplate',
       description: 'Default SLA template for cases in this queue'
-    },
-    // Auto Assignment
-    enable_auto_assignment: {
-      type: 'checkbox',
+    }),
+    enable_auto_assignment: Field.boolean({
       label: 'Enable Auto Assignment',
       defaultValue: true
-    },
-    assignment_delay_minutes: {
-      type: 'number',
+    }),
+    assignment_delay_minutes: Field.number({
       label: 'Assignment Delay (Minutes)',
-      precision: 0,
-      min: 0,
+      description: 'Delay before auto-assignment (0 for immediate)',
       defaultValue: 0,
-      description: 'Delay before auto-assignment (0 for immediate)'
-    },
-    // Overflow Management
-    enable_overflow: {
-      type: 'checkbox',
+      min: 0,
+      precision: 0
+    }),
+    enable_overflow: Field.boolean({
       label: 'Enable Overflow',
       defaultValue: false
-    },
-    overflow_queue_id: {
-      type: 'lookup',
+    }),
+    overflow_queue_id: Field.lookup('Queue', {
       label: 'Overflow Queue',
-      reference: 'Queue',
       description: 'Queue to route cases when this queue is at capacity'
-    },
-    overflow_threshold: {
-      type: 'number',
+    }),
+    overflow_threshold: Field.number({
       label: 'Overflow Threshold',
-      precision: 0,
+      description: 'Number of pending cases that triggers overflow',
       min: 1,
-      description: 'Number of pending cases that triggers overflow'
-    },
-    // Business Hours
-    business_hours_id: {
-      type: 'lookup',
+      precision: 0
+    }),
+    business_hours_id: Field.lookup('BusinessHours', {
       label: 'Business Hours',
-      reference: 'BusinessHours',
       description: 'Operating hours for this queue'
-    },
-    out_of_hours_behavior: {
-      type: 'select',
+    }),
+    out_of_hours_behavior: Field.select({
       label: 'Out of Hours Behavior',
       defaultValue: 'Queue',
       options: [
-        { label: 'Queue for Next Business Day', value: 'Queue' },
-        { label: 'Route to 24/7 Queue', value: 'Route24x7' },
-        { label: 'Auto-Reply Only', value: 'AutoReply' }
+        {
+          "label": "Queue for Next Business Day",
+          "value": "Queue"
+        },
+        {
+          "label": "Route to 24/7 Queue",
+          "value": "Route24x7"
+        },
+        {
+          "label": "Auto-Reply Only",
+          "value": "AutoReply"
+        }
       ]
-    },
-    out_of_hours_queue_id: {
-      type: 'lookup',
+    }),
+    out_of_hours_queue_id: Field.lookup('Queue', {
       label: 'Out of Hours Queue',
-      reference: 'Queue',
       description: '24/7 queue for after-hours cases'
-    },
-    // Email Integration
-    email_address: {
-      type: 'email',
+    }),
+    email_address: Field.email({
       label: 'Queue Email',
       description: 'Email address for case submission to this queue'
-    },
-    email_to_case: {
-      type: 'checkbox',
+    }),
+    email_to_case: Field.boolean({
       label: 'Email to Case',
       defaultValue: false
-    },
-    auto_response_template: {
-      type: 'text',
+    }),
+    auto_response_template: Field.text({
       label: 'Auto Response Template',
-      maxLength: 255,
-      description: 'Email template for automatic acknowledgment'
-    },
-    // Statistics
-    pending_cases: {
-      type: 'number',
+      description: 'Email template for automatic acknowledgment',
+      maxLength: 255
+    }),
+    pending_cases: Field.number({
       label: 'Pending Cases',
-      precision: 0,
+      description: 'Number of unassigned cases in queue',
       readonly: true,
-      description: 'Number of unassigned cases in queue'
-    },
-    active_cases: {
-      type: 'number',
+      precision: 0
+    }),
+    active_cases: Field.number({
       label: 'Active Cases',
-      precision: 0,
+      description: 'Number of active assigned cases',
       readonly: true,
-      description: 'Number of active assigned cases'
-    },
-    total_members: {
-      type: 'number',
+      precision: 0
+    }),
+    total_members: Field.number({
       label: 'Total Members',
-      precision: 0,
+      description: 'Number of agents in this queue',
       readonly: true,
-      description: 'Number of agents in this queue'
-    },
-    average_wait_time: {
-      type: 'number',
+      precision: 0
+    }),
+    average_wait_time: Field.number({
       label: 'Avg Wait Time (Minutes)',
-      precision: 2,
+      description: 'Average time cases wait before assignment',
       readonly: true,
-      description: 'Average time cases wait before assignment'
-    },
-    average_resolution_time: {
-      type: 'number',
+      precision: 2
+    }),
+    average_resolution_time: Field.number({
       label: 'Avg Resolution Time (Minutes)',
-      precision: 2,
+      description: 'Average time to resolve cases in this queue',
       readonly: true,
-      description: 'Average time to resolve cases in this queue'
-    }
+      precision: 2
+    })
   },
-  relationships: [
-    {
-      name: 'QueueMembers',
-      type: 'hasMany',
-      object: 'QueueMember',
-      foreignKey: 'queue_id',
-      label: 'Queue Members'
-    },
-    {
-      name: 'Cases',
-      type: 'hasMany',
-      object: 'Case',
-      foreignKey: 'assigned_to_queue_id',
-      label: 'Cases'
-    },
-    {
-      name: 'RoutingRules',
-      type: 'hasMany',
-      object: 'RoutingRule',
-      foreignKey: 'queue_id',
-      label: 'Routing Rules'
-    }
-  ],
-  validationRules: [
-    {
-      name: 'OverflowQueueRequired',
-      errorMessage: 'Overflow queue is required when overflow is enabled',
-      formula: 'AND(enable_overflow = true, ISBLANK(overflow_queue_id))'
-    },
-    {
-      name: 'OverflowThresholdRequired',
-      errorMessage: 'Overflow threshold is required when overflow is enabled',
-      formula: 'AND(enable_overflow = true, ISBLANK(overflow_threshold))'
-    },
-    {
-      name: 'NoSelfOverflow',
-      errorMessage: 'Queue cannot overflow to itself',
-      formula: 'overflow_queue_id = Id'
-    },
-    {
-      name: 'OutOfHoursQueueRequired',
-      errorMessage: 'Out of hours queue is required when routing to 24/7 queue',
-      formula: 'AND(out_of_hours_behavior = "Route24x7", ISBLANK(out_of_hours_queue_id))'
-    },
-    {
-      name: 'EmailToCaseRequiresEmail',
-      errorMessage: 'Email address is required when Email to Case is enabled',
-      formula: 'AND(email_to_case = true, ISBLANK(email_address))'
-    }
-  ],
-  listViews: [
-    {
-      name: 'AllQueues',
-      label: 'All Queues',
-      filters: [],
-      columns: ['name', 'queue_type', 'routing_method', 'pending_cases', 'active_cases', 'total_members', 'is_active'],
-      sort: [['name', 'asc']]
-    },
-    {
-      name: 'ActiveQueues',
-      label: 'Active Queues',
-      filters: [
-        ['is_active', '=', true]
-      ],
-      columns: ['name', 'queue_type', 'pending_cases', 'active_cases', 'average_wait_time', 'average_resolution_time'],
-      sort: [['pending_cases', 'desc']]
-    },
-    {
-      name: 'WithPendingCases',
-      label: 'With Pending Cases',
-      filters: [
-        ['pending_cases', '>', 0],
-        ['is_active', '=', true]
-      ],
-      columns: ['name', 'queue_type', 'pending_cases', 'total_members', 'average_wait_time'],
-      sort: [['pending_cases', 'desc']]
-    }
-  ],
-  pageLayout: {
-    sections: [
-      {
-        label: 'Queue Information',
-        columns: 2,
-        fields: ['name', 'description', 'queue_type', 'is_active']
-      },
-      {
-        label: 'Routing Configuration',
-        columns: 2,
-        fields: ['routing_method', 'max_cases_per_agent', 'enable_auto_assignment', 'assignment_delay_minutes']
-      },
-      {
-        label: 'Priority & SLA',
-        columns: 2,
-        fields: ['default_priority', 'sla_template_id']
-      },
-      {
-        label: 'Overflow Management',
-        columns: 2,
-        fields: ['enable_overflow', 'overflow_queue_id', 'overflow_threshold']
-      },
-      {
-        label: 'Business Hours',
-        columns: 2,
-        fields: ['business_hours_id', 'out_of_hours_behavior', 'out_of_hours_queue_id']
-      },
-      {
-        label: 'Email Integration',
-        columns: 2,
-        fields: ['email_address', 'email_to_case', 'auto_response_template']
-      },
-      {
-        label: 'Queue Statistics',
-        columns: 3,
-        fields: ['pending_cases', 'active_cases', 'total_members', 'average_wait_time', 'average_resolution_time']
-      }
-    ]
-  }
-};
 
-export default Queue;
+  enable: {
+    searchable: true,
+    trackHistory: true
+  },
+});

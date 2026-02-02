@@ -29,21 +29,21 @@
  */
 
 // Export CRM objects
-export { default as Account } from './account.object';
-export { default as Activity } from './activity.object';
-export { default as Contact } from './contact.object';
+export { Account } from './account.object';
+export { Activity } from './activity.object';
+export { Contact } from './contact.object';
 export { default as Lead } from './lead.object';
-export { default as Opportunity } from './opportunity.object';
-export { default as Task } from './task.object';
-export { default as Note } from './note.object';
-export { default as AssignmentRule } from './assignment_rule.object';
+export { Opportunity } from './opportunity.object';
+export { Task } from './task.object';
+export { Note } from './note.object';
+export { AssignmentRule } from './assignment_rule.object';
 
 // Export marketing automation objects
-export { default as EmailTemplate } from './email_template.object';
-export { default as LandingPage } from './landing_page.object';
-export { default as Form } from './form.object';
-export { default as MarketingList } from './marketing_list.object';
-export { default as Unsubscribe } from './unsubscribe.object';
+export { EmailTemplate } from './email_template.object';
+export { LandingPage } from './landing_page.object';
+export { Form } from './form.object';
+export { MarketingList } from './marketing_list.object';
+export { Unsubscribe } from './unsubscribe.object';
 
 // Export hooks
 export * from './hooks/lead.hook';

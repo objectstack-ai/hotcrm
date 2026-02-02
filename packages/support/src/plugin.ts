@@ -14,27 +14,27 @@
  */
 
 // Import all Support objects
-import Case from './case.object';
-import CaseComment from './case_comment.object';
-import KnowledgeArticle from './knowledge_article.object';
-import SLAPolicy from './sla_policy.object';
-import SLATemplate from './sla_template.object';
-import SLAMilestone from './sla_milestone.object';
-import BusinessHours from './business_hours.object';
-import HolidayCalendar from './holiday_calendar.object';
-import Holiday from './holiday.object';
-import Queue from './queue.object';
-import QueueMember from './queue_member.object';
-import RoutingRule from './routing_rule.object';
-import EscalationRule from './escalation_rule.object';
-import Skill from './skill.object';
-import AgentSkill from './agent_skill.object';
-import EmailToCase from './email_to_case.object';
-import WebToCase from './web_to_case.object';
-import SocialMediaCase from './social_media_case.object';
-import PortalUser from './portal_user.object';
-import ForumTopic from './forum_topic.object';
-import ForumPost from './forum_post.object';
+import { Case } from './case.object';
+import { CaseComment } from './case_comment.object';
+import { KnowledgeArticle } from './knowledge_article.object';
+import { SLAPolicy } from './sla_policy.object';
+import { SLATemplate } from './sla_template.object';
+import { SLAMilestone } from './sla_milestone.object';
+import { BusinessHours } from './business_hours.object';
+import { HolidayCalendar } from './holiday_calendar.object';
+import { Holiday } from './holiday.object';
+import { Queue } from './queue.object';
+import { QueueMember } from './queue_member.object';
+import { RoutingRule } from './routing_rule.object';
+import { EscalationRule } from './escalation_rule.object';
+import { Skill } from './skill.object';
+import { AgentSkill } from './agent_skill.object';
+import { EmailToCase } from './email_to_case.object';
+import { WebToCase } from './web_to_case.object';
+import { SocialMediaCase } from './social_media_case.object';
+import { PortalUser } from './portal_user.object';
+import { ForumTopic } from './forum_topic.object';
+import { ForumPost } from './forum_post.object';
 
 import { CaseEntitlementCheck } from './hooks/case.hook';
 
@@ -44,7 +44,7 @@ import { CaseEntitlementCheck } from './hooks/case.hook';
  * Exports all support-related business objects, hooks, and actions
  * to be registered with the ObjectStack runtime
  */
-export const SupportPlugin = {
+export const SupportPlugin: any = {
   name: 'support',
   label: 'Customer Support',
   version: '1.0.0',

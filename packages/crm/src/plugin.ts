@@ -12,25 +12,25 @@
  */
 
 // Import all CRM objects
-import Account from './account.object';
-import Activity from './activity.object';
-import Contact from './contact.object';
+import { Account } from './account.object';
+import { Activity } from './activity.object';
+import { Contact } from './contact.object';
 import Lead from './lead.object';
-import Opportunity from './opportunity.object';
-import Task from './task.object';
-import Note from './note.object';
+import { Opportunity } from './opportunity.object';
+import { Task } from './task.object';
+import { Note } from './note.object';
 import LeadConvertAction from './actions/lead_convert.action';
-import AssignmentRule from './assignment_rule.object';
-import EmailTemplate from './email_template.object';
+import { AssignmentRule } from './assignment_rule.object';
+import { EmailTemplate } from './email_template.object';
 
 // Import hooks
 import { LeadScoringTrigger, LeadStatusChangeTrigger } from './hooks/lead.hook';
 import { OpportunityValidation, OpportunityStageChange } from './hooks/opportunity.hook';
 
-import LandingPage from './landing_page.object';
-import Form from './form.object';
-import MarketingList from './marketing_list.object';
-import Unsubscribe from './unsubscribe.object';
+import { LandingPage } from './landing_page.object';
+import { Form } from './form.object';
+import { MarketingList } from './marketing_list.object';
+import { Unsubscribe } from './unsubscribe.object';
 
 /**
  * CRM Plugin Definition
@@ -38,7 +38,7 @@ import Unsubscribe from './unsubscribe.object';
  * Exports all CRM-related business objects, hooks, and actions
  * to be registered with the ObjectStack runtime
  */
-export const CRMPlugin = {
+export const CRMPlugin: any = {
   name: 'crm',
   label: 'CRM',
   version: '1.0.0',

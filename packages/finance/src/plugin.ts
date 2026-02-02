@@ -10,10 +10,10 @@
  */
 
 // Import all Finance objects
-import Contract from './contract.object';
-import Payment from './payment.object';
-import Invoice from './invoice.object';
-import InvoiceLine from './invoice_line.object';
+import { Contract } from './contract.object';
+import { Payment } from './payment.object';
+import { Invoice } from './invoice.object';
+import { InvoiceLine } from './invoice_line.object';
 
 // Import hooks
 import { ContractBillingHook } from './hooks/contract.hook';
@@ -24,7 +24,7 @@ import { ContractBillingHook } from './hooks/contract.hook';
  * Exports all finance-related business objects, hooks, and actions
  * to be registered with the ObjectStack runtime
  */
-export const FinancePlugin = {
+export const FinancePlugin: any = {
   name: 'finance',
   label: 'Finance',
   version: '1.0.0',

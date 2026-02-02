@@ -1,384 +1,275 @@
+import { ObjectSchema, Field } from '@objectstack/spec/data';
 
-const CaseComment = {
+export const CaseComment = ObjectSchema.create({
   name: 'case_comment',
   label: 'Case Comment',
-  labelPlural: 'Case Comments',
+  pluralLabel: 'Case Comments',
   icon: 'comment',
   description: 'Comments, responses, and interaction history for cases',
+
+  fields: {
+    case_id: Field.lookup('case', {
+      label: 'Case',
+      required: true
+    }),
+    parent_comment_id: Field.lookup('CaseComment', {
+      label: 'Parent Comment',
+      description: 'Parent comment for threaded discussions'
+    }),
+    comment_type: Field.select({
+      label: 'Comment Type',
+      required: true,
+      defaultValue: 'Internal',
+      options: [
+        {
+          "label": "👤 Customer Response",
+          "value": "Customer"
+        },
+        {
+          "label": "👨‍💼 Agent Response",
+          "value": "Agent"
+        },
+        {
+          "label": "🔒 Internal Note",
+          "value": "Internal"
+        },
+        {
+          "label": "📧 Email",
+          "value": "Email"
+        },
+        {
+          "label": "💬 Chat",
+          "value": "Chat"
+        },
+        {
+          "label": "📞 Phone",
+          "value": "Phone"
+        },
+        {
+          "label": "🤖 System",
+          "value": "System"
+        },
+        {
+          "label": "🎯 Other",
+          "value": "Other"
+        }
+      ]
+    }),
+    body: Field.textarea({
+      label: 'Comment',
+      description: 'Comment text',
+      required: true,
+      maxLength: 32000
+    }),
+    plain_text_body: Field.textarea({
+      label: 'Plain Text',
+      description: 'Plain text version for search',
+      readonly: true,
+      maxLength: 32000
+    }),
+    is_public: Field.boolean({
+      label: 'Visible to Customer',
+      description: 'Whether this comment is visible in customer portal',
+      defaultValue: false
+    }),
+    is_internal: Field.boolean({
+      label: 'Internal Only',
+      description: 'Internal note not visible to customer',
+      defaultValue: false
+    }),
+    created_by_id: Field.lookup('users', {
+      label: 'Created By',
+      readonly: true
+    }),
+    contact_id: Field.lookup('contact', {
+      label: 'Contact',
+      description: 'Customer contact who created this comment'
+    }),
+    from_email: Field.email({
+      label: 'From Email',
+      description: 'Email address of sender (for email comments)'
+    }),
+    to_email: Field.text({
+      label: 'To Email',
+      description: 'Email recipients',
+      maxLength: 500
+    }),
+    cc_email: Field.text({
+      label: 'CC Email',
+      description: 'CC recipients',
+      maxLength: 500
+    }),
+    email_subject: Field.text({
+      label: 'Email Subject',
+      maxLength: 255
+    }),
+    email_message_id: Field.text({
+      label: 'Email Message ID',
+      description: 'Unique email message identifier',
+      readonly: true,
+      maxLength: 255
+    }),
+    in_reply_to_id: Field.text({
+      label: 'In Reply To',
+      description: 'Email thread tracking',
+      readonly: true,
+      maxLength: 255
+    }),
+    is_first_response: Field.boolean({
+      label: 'Is First Response',
+      description: 'First agent response to case',
+      defaultValue: false,
+      readonly: true
+    }),
+    response_time_minutes: Field.number({
+      label: 'Response Time (Minutes)',
+      description: 'Minutes since last customer comment',
+      readonly: true,
+      precision: 0
+    }),
+    ai_generated_suggestion: Field.textarea({
+      label: 'AI Suggested Response',
+      description: 'AI-generated response suggestion',
+      readonly: true,
+      maxLength: 5000
+    }),
+    ai_sentiment: Field.select({
+      label: 'AI Sentiment',
+      readonly: true,
+      options: [
+        {
+          "label": "😊 Positive",
+          "value": "Positive"
+        },
+        {
+          "label": "😐 Neutral",
+          "value": "Neutral"
+        },
+        {
+          "label": "😟 Negative",
+          "value": "Negative"
+        },
+        {
+          "label": "😡 Angry",
+          "value": "Angry"
+        }
+      ]
+    }),
+    ai_confidence_score: Field.number({
+      label: 'AI Confidence',
+      description: 'AI confidence in sentiment analysis',
+      readonly: true,
+      min: 0,
+      max: 100,
+      precision: 2
+    }),
+    ai_keywords: Field.text({
+      label: 'AI Keywords',
+      description: 'Extracted keywords',
+      readonly: true,
+      maxLength: 500
+    }),
+    is_solution: Field.boolean({
+      label: 'Marked as Solution',
+      description: 'This comment contains the solution',
+      defaultValue: false
+    }),
+    is_edited: Field.boolean({
+      label: 'Edited',
+      defaultValue: false,
+      readonly: true
+    }),
+    edited_date: Field.datetime({
+      label: 'Last Edited',
+      readonly: true
+    }),
+    edited_by_id: Field.lookup('users', {
+      label: 'Edited By',
+      readonly: true
+    }),
+    like_count: Field.number({
+      label: 'Likes',
+      defaultValue: 0,
+      readonly: true,
+      precision: 0
+    }),
+    is_helpful: Field.boolean({
+      label: 'Marked Helpful',
+      description: 'Customer marked this as helpful',
+      defaultValue: false,
+      readonly: true
+    }),
+    channel_source: Field.select({
+      label: 'Channel',
+      options: [
+        {
+          "label": "📧 Email",
+          "value": "Email"
+        },
+        {
+          "label": "🌐 Portal",
+          "value": "Portal"
+        },
+        {
+          "label": "📞 Phone",
+          "value": "Phone"
+        },
+        {
+          "label": "💬 Chat",
+          "value": "Chat"
+        },
+        {
+          "label": "💬 WeChat",
+          "value": "WeChat"
+        },
+        {
+          "label": "💬 WhatsApp",
+          "value": "WhatsApp"
+        },
+        {
+          "label": "📱 SMS",
+          "value": "SMS"
+        },
+        {
+          "label": "🐦 Twitter",
+          "value": "Twitter"
+        },
+        {
+          "label": "📘 Facebook",
+          "value": "Facebook"
+        },
+        {
+          "label": "🤖 Bot",
+          "value": "Bot"
+        },
+        {
+          "label": "🎯 Other",
+          "value": "Other"
+        }
+      ]
+    }),
+    channel_message_id: Field.text({
+      label: 'Channel Message ID',
+      description: 'External message ID from source channel',
+      readonly: true,
+      maxLength: 255
+    }),
+    has_attachment: Field.boolean({
+      label: 'Has Attachment',
+      defaultValue: false,
+      readonly: true
+    }),
+    attachment_count: Field.number({
+      label: 'Attachments',
+      defaultValue: 0,
+      readonly: true,
+      precision: 0
+    })
+  },
+
   enable: {
     searchable: true,
     trackHistory: true,
     files: true
   },
-  fields: {
-    // Relationships
-    case_id: {
-      type: 'lookup',
-      label: 'Case',
-      reference: 'case',
-      required: true
-    },
-    parent_comment_id: {
-      type: 'lookup',
-      label: 'Parent Comment',
-      reference: 'CaseComment',
-      description: 'Parent comment for threaded discussions'
-    },
-    // Comment Information
-    comment_type: {
-      type: 'select',
-      label: 'Comment Type',
-      required: true,
-      defaultValue: 'Internal',
-      options: [
-        { label: '👤 Customer Response', value: 'Customer' },
-        { label: '👨‍💼 Agent Response', value: 'Agent' },
-        { label: '🔒 Internal Note', value: 'Internal' },
-        { label: '📧 Email', value: 'Email' },
-        { label: '💬 Chat', value: 'Chat' },
-        { label: '📞 Phone', value: 'Phone' },
-        { label: '🤖 System', value: 'System' },
-        { label: '🎯 Other', value: 'Other' }
-      ]
-    },
-    body: {
-      type: 'textarea',
-      label: 'Comment',
-      required: true,
-      maxLength: 32000,
-      searchable: true,
-      description: 'Comment text'
-    },
-    plain_text_body: {
-      type: 'textarea',
-      label: 'Plain Text',
-      maxLength: 32000,
-      readonly: true,
-      searchable: true,
-      description: 'Plain text version for search'
-    },
-    // Visibility
-    is_public: {
-      type: 'checkbox',
-      label: 'Visible to Customer',
-      defaultValue: false,
-      description: 'Whether this comment is visible in customer portal'
-    },
-    is_internal: {
-      type: 'checkbox',
-      label: 'Internal Only',
-      defaultValue: false,
-      description: 'Internal note not visible to customer'
-    },
-    // User Information
-    created_by_id: {
-      type: 'lookup',
-      label: 'Created By',
-      reference: 'users',
-      readonly: true
-    },
-    contact_id: {
-      type: 'lookup',
-      label: 'Contact',
-      reference: 'contact',
-      description: 'Customer contact who created this comment'
-    },
-    // Email Integration
-    from_email: {
-      type: 'email',
-      label: 'From Email',
-      description: 'Email address of sender (for email comments)'
-    },
-    to_email: {
-      type: 'text',
-      label: 'To Email',
-      maxLength: 500,
-      description: 'Email recipients'
-    },
-    cc_email: {
-      type: 'text',
-      label: 'CC Email',
-      maxLength: 500,
-      description: 'CC recipients'
-    },
-    email_subject: {
-      type: 'text',
-      label: 'Email Subject',
-      maxLength: 255,
-      searchable: true
-    },
-    email_message_id: {
-      type: 'text',
-      label: 'Email Message ID',
-      maxLength: 255,
-      readonly: true,
-      description: 'Unique email message identifier'
-    },
-    in_reply_to_id: {
-      type: 'text',
-      label: 'In Reply To',
-      maxLength: 255,
-      readonly: true,
-      description: 'Email thread tracking'
-    },
-    // SLA & Response Tracking
-    is_first_response: {
-      type: 'checkbox',
-      label: 'Is First Response',
-      readonly: true,
-      defaultValue: false,
-      description: 'First agent response to case'
-    },
-    response_time_minutes: {
-      type: 'number',
-      label: 'Response Time (Minutes)',
-      precision: 0,
-      readonly: true,
-      description: 'Minutes since last customer comment'
-    },
-    // AI Features
-    ai_generated_suggestion: {
-      type: 'textarea',
-      label: 'AI Suggested Response',
-      maxLength: 5000,
-      readonly: true,
-      description: 'AI-generated response suggestion'
-    },
-    ai_sentiment: {
-      type: 'select',
-      label: 'AI Sentiment',
-      readonly: true,
-      options: [
-        { label: '😊 Positive', value: 'Positive' },
-        { label: '😐 Neutral', value: 'Neutral' },
-        { label: '😟 Negative', value: 'Negative' },
-        { label: '😡 Angry', value: 'Angry' }
-      ]
-    },
-    ai_confidence_score: {
-      type: 'number',
-      label: 'AI Confidence',
-      precision: 2,
-      min: 0,
-      max: 100,
-      readonly: true,
-      description: 'AI confidence in sentiment analysis'
-    },
-    ai_keywords: {
-      type: 'text',
-      label: 'AI Keywords',
-      maxLength: 500,
-      readonly: true,
-      description: 'Extracted keywords'
-    },
-    // Metadata
-    is_solution: {
-      type: 'checkbox',
-      label: 'Marked as Solution',
-      defaultValue: false,
-      description: 'This comment contains the solution'
-    },
-    is_edited: {
-      type: 'checkbox',
-      label: 'Edited',
-      readonly: true,
-      defaultValue: false
-    },
-    edited_date: {
-      type: 'datetime',
-      label: 'Last Edited',
-      readonly: true
-    },
-    edited_by_id: {
-      type: 'lookup',
-      label: 'Edited By',
-      reference: 'users',
-      readonly: true
-    },
-    // Engagement
-    like_count: {
-      type: 'number',
-      label: 'Likes',
-      precision: 0,
-      readonly: true,
-      defaultValue: 0
-    },
-    is_helpful: {
-      type: 'checkbox',
-      label: 'Marked Helpful',
-      readonly: true,
-      defaultValue: false,
-      description: 'Customer marked this as helpful'
-    },
-    // Integration
-    channel_source: {
-      type: 'select',
-      label: 'Channel',
-      options: [
-        { label: '📧 Email', value: 'Email' },
-        { label: '🌐 Portal', value: 'Portal' },
-        { label: '📞 Phone', value: 'Phone' },
-        { label: '💬 Chat', value: 'Chat' },
-        { label: '💬 WeChat', value: 'WeChat' },
-        { label: '💬 WhatsApp', value: 'WhatsApp' },
-        { label: '📱 SMS', value: 'SMS' },
-        { label: '🐦 Twitter', value: 'Twitter' },
-        { label: '📘 Facebook', value: 'Facebook' },
-        { label: '🤖 Bot', value: 'Bot' },
-        { label: '🎯 Other', value: 'Other' }
-      ]
-    },
-    channel_message_id: {
-      type: 'text',
-      label: 'Channel Message ID',
-      maxLength: 255,
-      readonly: true,
-      description: 'External message ID from source channel'
-    },
-    // Attachment Info
-    has_attachment: {
-      type: 'checkbox',
-      label: 'Has Attachment',
-      readonly: true,
-      defaultValue: false
-    },
-    attachment_count: {
-      type: 'number',
-      label: 'Attachments',
-      precision: 0,
-      readonly: true,
-      defaultValue: 0
-    }
-  },
-  relationships: [
-    {
-      name: 'ChildComments',
-      type: 'hasMany',
-      object: 'CaseComment',
-      foreignKey: 'parent_comment_id',
-      label: 'Replies'
-    }
-  ],
-  validationRules: [
-    {
-      name: 'PublicNotInternal',
-      errorMessage: 'Comment cannot be both public and internal',
-      formula: 'AND(is_public = true, is_internal = true)'
-    },
-    {
-      name: 'CustomerCommentPublic',
-      errorMessage: 'Customer comments must be public',
-      formula: 'AND(comment_type = "Customer", is_public = false)'
-    },
-    {
-      name: 'InternalNotPublic',
-      errorMessage: 'Internal notes cannot be visible to customer',
-      formula: 'AND(comment_type = "Internal", is_public = true)'
-    }
-  ],
-  listViews: [
-    {
-      name: 'AllComments',
-      label: 'All Comments',
-      filters: [],
-      columns: ['case_id', 'comment_type', 'created_by_id', 'body', 'is_public', 'CreatedDate'],
-      sort: [['CreatedDate', 'desc']]
-    },
-    {
-      name: 'PublicComments',
-      label: 'Public Comments',
-      filters: [
-        ['is_public', '=', true]
-      ],
-      columns: ['case_id', 'comment_type', 'created_by_id', 'body', 'CreatedDate'],
-      sort: [['CreatedDate', 'desc']]
-    },
-    {
-      name: 'InternalNotes',
-      label: 'Internal Notes',
-      filters: [
-        ['is_internal', '=', true]
-      ],
-      columns: ['case_id', 'created_by_id', 'body', 'CreatedDate'],
-      sort: [['CreatedDate', 'desc']]
-    },
-    {
-      name: 'CustomerResponses',
-      label: 'Customer Responses',
-      filters: [
-        ['comment_type', '=', 'Customer']
-      ],
-      columns: ['case_id', 'contact_id', 'body', 'ai_sentiment', 'CreatedDate'],
-      sort: [['CreatedDate', 'desc']]
-    },
-    {
-      name: 'Solutions',
-      label: 'Solutions',
-      filters: [
-        ['is_solution', '=', true]
-      ],
-      columns: ['case_id', 'comment_type', 'created_by_id', 'body', 'CreatedDate'],
-      sort: [['CreatedDate', 'desc']]
-    },
-    {
-      name: 'EmailComments',
-      label: 'Email Thread',
-      filters: [
-        ['comment_type', '=', 'Email']
-      ],
-      columns: ['case_id', 'from_email', 'email_subject', 'CreatedDate'],
-      sort: [['CreatedDate', 'desc']]
-    }
-  ],
-  pageLayout: {
-    sections: [
-      {
-        label: 'Comment Information',
-        columns: 2,
-        fields: ['case_id', 'comment_type', 'channel_source', 'parent_comment_id']
-      },
-      {
-        label: 'Visibility',
-        columns: 2,
-        fields: ['is_public', 'is_internal', 'is_solution']
-      },
-      {
-        label: 'Content',
-        columns: 1,
-        fields: ['body']
-      },
-      {
-        label: 'Email Details',
-        columns: 2,
-        fields: ['from_email', 'to_email', 'cc_email', 'email_subject', 'email_message_id', 'in_reply_to_id']
-      },
-      {
-        label: 'User Information',
-        columns: 2,
-        fields: ['created_by_id', 'contact_id']
-      },
-      {
-        label: 'Response Tracking',
-        columns: 2,
-        fields: ['is_first_response', 'response_time_minutes']
-      },
-      {
-        label: 'AI Analysis',
-        columns: 2,
-        fields: ['ai_sentiment', 'ai_confidence_score', 'ai_keywords', 'ai_generated_suggestion']
-      },
-      {
-        label: 'Engagement',
-        columns: 2,
-        fields: ['like_count', 'is_helpful', 'has_attachment', 'attachment_count']
-      },
-      {
-        label: 'Edit History',
-        columns: 2,
-        fields: ['is_edited', 'edited_date', 'edited_by_id']
-      }
-    ]
-  }
-};
-
-export default CaseComment;
+});

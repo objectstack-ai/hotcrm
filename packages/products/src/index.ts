@@ -13,16 +13,16 @@
  */
 
 // Export business objects
-export { default as Product } from './product.object';
-export { default as Pricebook } from './pricebook.object';
-export { default as Quote } from './quote.object';
+export { Product } from './product.object';
+export { Pricebook } from './pricebook.object';
+export { Quote } from './quote.object';
 
-export { default as ProductBundle } from './product_bundle.object';
-export { default as ProductBundleComponent } from './product_bundle_component.object';
-export { default as PriceRule } from './price_rule.object';
-export { default as QuoteLineItem } from './quote_line_item.object';
-export { default as ApprovalRequest } from './approval_request.object';
-export { default as DiscountSchedule } from './discount_schedule.object';
+export { ProductBundle } from './product_bundle.object';
+export { ProductBundleComponent } from './product_bundle_component.object';
+export { PriceRule } from './price_rule.object';
+export { QuoteLineItem } from './quote_line_item.object';
+export { ApprovalRequest } from './approval_request.object';
+export { DiscountSchedule } from './discount_schedule.object';
 
 // Export hooks
 export { default as QuotePricingHook } from './hooks/quote.hook';

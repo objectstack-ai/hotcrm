@@ -1,51 +1,62 @@
-export default {
+import { ObjectSchema, Field } from '@objectstack/spec/data';
+
+export const Campaign = ObjectSchema.create({
   name: 'campaign',
   label: 'Marketing Campaign',
+  pluralLabel: 'Marketing Campaigns',
   icon: 'megaphone',
   description: 'Plan, execute, and track marketing campaigns.',
+  
   fields: {
-    name: { 
-      type: 'text', 
+    name: Field.text({ 
       label: 'Campaign Name', 
       required: true, 
       searchable: true 
-    },
-    type: {
-      type: 'select',
+    }),
+    type: Field.select({
       label: 'Type',
       options: [
-        'Conference',
-        'Webinar',
-        'Trade Show',
-        'Email',
-        'Social Media',
-        'Advertisement',
-        'Direct Mail',
-        'Partners',
-        'Other'
+        { label: 'Conference', value: 'Conference' },
+        { label: 'Webinar', value: 'Webinar' },
+        { label: 'Trade Show', value: 'Trade Show' },
+        { label: 'Email', value: 'Email' },
+        { label: 'Social Media', value: 'Social Media' },
+        { label: 'Advertisement', value: 'Advertisement' },
+        { label: 'Direct Mail', value: 'Direct Mail' },
+        { label: 'Partners', value: 'Partners' },
+        { label: 'Other', value: 'Other' }
       ]
-    },
-    status: {
-      type: 'select',
+    }),
+    status: Field.select({
       label: 'Status',
-      options: ['Planned', 'In Progress', 'Completed', 'Aborted'],
+      options: [
+        { label: 'Planned', value: 'Planned' },
+        { label: 'In Progress', value: 'In Progress' },
+        { label: 'Completed', value: 'Completed' },
+        { label: 'Aborted', value: 'Aborted' }
+      ],
       defaultValue: 'Planned'
-    },
-    start_date: { type: 'date', label: 'Start Date' },
-    end_date: { type: 'date', label: 'End Date' },
-    budgeted_cost: { type: 'currency', label: 'Budgeted Cost', scale: 2 },
-    actual_cost: { type: 'currency', label: 'Actual Cost', scale: 2 },
-    expected_revenue: { type: 'currency', label: 'Expected Revenue', scale: 2 },
-    actual_revenue: { 
-      type: 'currency', 
+    }),
+    start_date: Field.date({ label: 'Start Date' }),
+    end_date: Field.date({ label: 'End Date' }),
+    budgeted_cost: Field.currency({ label: 'Budgeted Cost', scale: 2 }),
+    actual_cost: Field.currency({ label: 'Actual Cost', scale: 2 }),
+    expected_revenue: Field.currency({ label: 'Expected Revenue', scale: 2 }),
+    actual_revenue: Field.currency({ 
       label: 'Actual Revenue', 
       scale: 2,
       readonly: true,
       description: 'Calculated from Won Opportunities' 
-    },
-    description: { type: 'textarea', label: 'Description' },
-    is_active: { type: 'boolean', label: 'Active', defaultValue: true },
-    parent_campaign: { type: 'lookup', reference: 'campaign', label: 'Parent Campaign' }
-  }
-}
+    }),
+    description: Field.textarea({ label: 'Description' }),
+    is_active: Field.boolean({ label: 'Active', defaultValue: true }),
+    parent_campaign: Field.lookup('campaign', { label: 'Parent Campaign' })
+  },
+  
+  enable: {
+    searchable: true,
+    trackHistory: true,
+    apiEnabled: true,
+  },
+});
 

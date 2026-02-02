@@ -1,300 +1,155 @@
+import { ObjectSchema, Field } from '@objectstack/spec/data';
 
-const ForumPost = {
+export const ForumPost = ObjectSchema.create({
   name: 'forum_post',
   label: 'Forum Post',
-  labelPlural: 'Forum Posts',
+  pluralLabel: 'Forum Posts',
   icon: 'comment',
   description: 'Forum post replies and comments',
-  enable: {
-    searchable: true,
-    trackHistory: true
-  },
+
   fields: {
-    // Relationship
-    topic_id: {
-      type: 'lookup',
+    topic_id: Field.lookup('ForumTopic', {
       label: 'Topic',
-      reference: 'ForumTopic',
       required: true
-    },
-    parent_post_id: {
-      type: 'lookup',
+    }),
+    parent_post_id: Field.lookup('ForumPost', {
       label: 'Parent Post',
-      reference: 'ForumPost',
       description: 'Reply to another post'
-    },
-    // content
-    content: {
-      type: 'textarea',
+    }),
+    content: Field.textarea({
       label: 'content',
       required: true,
-      maxLength: 10000,
-      searchable: true
-    },
-    // Author
-    author_id: {
-      type: 'lookup',
+      maxLength: 10000
+    }),
+    author_id: Field.lookup('PortalUser', {
       label: 'Author',
-      reference: 'PortalUser',
       required: true
-    },
-    author_type: {
-      type: 'select',
+    }),
+    author_type: Field.select({
       label: 'Author Type',
       required: true,
       defaultValue: 'Customer',
       options: [
-        { label: '👤 Customer', value: 'Customer' },
-        { label: '🛡️ Support Agent', value: 'Agent' },
-        { label: '👑 Administrator', value: 'Admin' },
-        { label: '⭐ Community Expert', value: 'Expert' }
+        {
+          "label": "👤 Customer",
+          "value": "Customer"
+        },
+        {
+          "label": "🛡️ Support Agent",
+          "value": "Agent"
+        },
+        {
+          "label": "👑 Administrator",
+          "value": "Admin"
+        },
+        {
+          "label": "⭐ Community Expert",
+          "value": "Expert"
+        }
       ]
-    },
-    // Status
-    is_answer: {
-      type: 'checkbox',
+    }),
+    is_answer: Field.boolean({
       label: 'Marked as Answer',
-      readonly: true,
+      description: 'This post is the accepted answer',
       defaultValue: false,
-      description: 'This post is the accepted answer'
-    },
-    is_deleted: {
-      type: 'checkbox',
+      readonly: true
+    }),
+    is_deleted: Field.boolean({
       label: 'Deleted',
       defaultValue: false
-    },
-    deleted_date: {
-      type: 'datetime',
+    }),
+    deleted_date: Field.datetime({
       label: 'Deleted Date',
       readonly: true
-    },
-    deleted_by_id: {
-      type: 'lookup',
+    }),
+    deleted_by_id: Field.lookup('users', {
       label: 'Deleted By',
-      reference: 'users',
       readonly: true
-    },
-    // Moderation
-    requires_moderation: {
-      type: 'checkbox',
+    }),
+    requires_moderation: Field.boolean({
       label: 'Requires Moderation',
       defaultValue: false
-    },
-    is_approved: {
-      type: 'checkbox',
+    }),
+    is_approved: Field.boolean({
       label: 'Approved',
       defaultValue: true
-    },
-    moderated_by_id: {
-      type: 'lookup',
+    }),
+    moderated_by_id: Field.lookup('users', {
       label: 'Moderated By',
-      reference: 'users',
       readonly: true
-    },
-    moderation_date: {
-      type: 'datetime',
+    }),
+    moderation_date: Field.datetime({
       label: 'Moderation Date',
       readonly: true
-    },
-    moderation_notes: {
-      type: 'textarea',
+    }),
+    moderation_notes: Field.textarea({
       label: 'Moderation Notes',
-      maxLength: 2000,
-      readonly: true
-    },
-    // Engagement
-    like_count: {
-      type: 'number',
+      readonly: true,
+      maxLength: 2000
+    }),
+    like_count: Field.number({
       label: 'Likes',
-      precision: 0,
+      defaultValue: 0,
       readonly: true,
-      defaultValue: 0
-    },
-    reply_count: {
-      type: 'number',
+      precision: 0
+    }),
+    reply_count: Field.number({
       label: 'Replies',
-      precision: 0,
+      defaultValue: 0,
       readonly: true,
-      defaultValue: 0
-    },
-    is_helpful: {
-      type: 'checkbox',
+      precision: 0
+    }),
+    is_helpful: Field.boolean({
       label: 'Marked Helpful',
-      defaultValue: false,
-      description: 'Community marked as helpful'
-    },
-    helpful_count: {
-      type: 'number',
-      label: 'Helpful Votes',
-      precision: 0,
-      readonly: true,
-      defaultValue: 0
-    },
-    // Edit History
-    is_edited: {
-      type: 'checkbox',
-      label: 'Edited',
-      readonly: true,
+      description: 'Community marked as helpful',
       defaultValue: false
-    },
-    last_edit_date: {
-      type: 'datetime',
+    }),
+    helpful_count: Field.number({
+      label: 'Helpful Votes',
+      defaultValue: 0,
+      readonly: true,
+      precision: 0
+    }),
+    is_edited: Field.boolean({
+      label: 'Edited',
+      defaultValue: false,
+      readonly: true
+    }),
+    last_edit_date: Field.datetime({
       label: 'Last Edit Date',
       readonly: true
-    },
-    last_edit_by_id: {
-      type: 'lookup',
+    }),
+    last_edit_by_id: Field.lookup('PortalUser', {
       label: 'Last Edit By',
-      reference: 'PortalUser',
       readonly: true
-    },
-    edit_count: {
-      type: 'number',
+    }),
+    edit_count: Field.number({
       label: 'Edit Count',
-      precision: 0,
+      defaultValue: 0,
       readonly: true,
-      defaultValue: 0
-    },
-    // Flagging
-    is_flagged: {
-      type: 'checkbox',
+      precision: 0
+    }),
+    is_flagged: Field.boolean({
       label: 'Flagged',
-      readonly: true,
+      description: 'Community flagged for review',
       defaultValue: false,
-      description: 'Community flagged for review'
-    },
-    flag_count: {
-      type: 'number',
-      label: 'Flag Count',
-      precision: 0,
-      readonly: true,
-      defaultValue: 0
-    },
-    flag_reason: {
-      type: 'text',
-      label: 'Flag Reason',
-      maxLength: 500,
       readonly: true
-    }
+    }),
+    flag_count: Field.number({
+      label: 'Flag Count',
+      defaultValue: 0,
+      readonly: true,
+      precision: 0
+    }),
+    flag_reason: Field.text({
+      label: 'Flag Reason',
+      readonly: true,
+      maxLength: 500
+    })
   },
-  relationships: [
-    {
-      name: 'Replies',
-      type: 'hasMany',
-      object: 'ForumPost',
-      foreignKey: 'parent_post_id',
-      label: 'Replies'
-    }
-  ],
-  validationRules: [
-    {
-      name: 'DeletedPostsReadOnly',
-      errorMessage: 'Deleted posts cannot be modified',
-      formula: 'AND(PRIORVALUE(is_deleted) = true, NOT(ISNEW()))'
-    }
-  ],
-  listViews: [
-    {
-      name: 'AllPosts',
-      label: 'All Posts',
-      filters: [],
-      columns: ['topic_id', 'author_id', 'content', 'like_count', 'reply_count', 'CreatedDate'],
-      sort: [['CreatedDate', 'desc']]
-    },
-    {
-      name: 'RecentPosts',
-      label: 'Recent Posts',
-      filters: [
-        ['CreatedDate', 'last_n_days', 7],
-        ['is_deleted', '=', false]
-      ],
-      columns: ['topic_id', 'author_id', 'content', 'like_count', 'CreatedDate'],
-      sort: [['CreatedDate', 'desc']]
-    },
-    {
-      name: 'AcceptedAnswers',
-      label: 'Accepted Answers',
-      filters: [
-        ['is_answer', '=', true]
-      ],
-      columns: ['topic_id', 'author_id', 'content', 'like_count', 'helpful_count', 'CreatedDate'],
-      sort: [['helpful_count', 'desc']]
-    },
-    {
-      name: 'MostHelpful',
-      label: 'Most Helpful',
-      filters: [
-        ['helpful_count', '>', 5],
-        ['is_deleted', '=', false]
-      ],
-      columns: ['topic_id', 'author_id', 'content', 'helpful_count', 'like_count'],
-      sort: [['helpful_count', 'desc']]
-    },
-    {
-      name: 'NeedingModeration',
-      label: 'Needing Moderation',
-      filters: [
-        ['requires_moderation', '=', true],
-        ['is_approved', '=', false]
-      ],
-      columns: ['topic_id', 'author_id', 'content', 'CreatedDate'],
-      sort: [['CreatedDate', 'asc']]
-    },
-    {
-      name: 'Flagged',
-      label: 'Flagged for Review',
-      filters: [
-        ['is_flagged', '=', true],
-        ['moderated_by_id', '=', null]
-      ],
-      columns: ['topic_id', 'author_id', 'content', 'flag_count', 'flag_reason', 'CreatedDate'],
-      sort: [['flag_count', 'desc']]
-    }
-  ],
-  pageLayout: {
-    sections: [
-      {
-        label: 'Post Information',
-        columns: 2,
-        fields: ['topic_id', 'parent_post_id']
-      },
-      {
-        label: 'content',
-        columns: 1,
-        fields: ['content']
-      },
-      {
-        label: 'Author',
-        columns: 2,
-        fields: ['author_id', 'author_type']
-      },
-      {
-        label: 'Status',
-        columns: 3,
-        fields: ['is_answer', 'is_deleted', 'deleted_date', 'deleted_by_id']
-      },
-      {
-        label: 'Moderation',
-        columns: 2,
-        fields: ['requires_moderation', 'is_approved', 'moderated_by_id', 'moderation_date', 'moderation_notes']
-      },
-      {
-        label: 'Engagement',
-        columns: 4,
-        fields: ['like_count', 'reply_count', 'is_helpful', 'helpful_count']
-      },
-      {
-        label: 'Edit History',
-        columns: 4,
-        fields: ['is_edited', 'last_edit_date', 'last_edit_by_id', 'edit_count']
-      },
-      {
-        label: 'Flagging',
-        columns: 3,
-        fields: ['is_flagged', 'flag_count', 'flag_reason']
-      }
-    ]
-  }
-};
 
-export default ForumPost;
+  enable: {
+    searchable: true,
+    trackHistory: true
+  },
+});
