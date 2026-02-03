@@ -91,8 +91,8 @@ importers:
         specifier: workspace:*
         version: link:../core
       '@objectstack/spec':
-        specifier: ^0.9.1
-        version: 0.9.1
+        specifier: ^0.9.2
+        version: 0.9.2
       axios:
         specifier: ^1.13.4
         version: 1.13.4
@@ -125,8 +125,8 @@ importers:
   packages/core:
     dependencies:
       '@objectstack/spec':
-        specifier: ^0.9.1
-        version: 0.9.1
+        specifier: ^0.9.2
+        version: 0.9.2
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -140,8 +140,8 @@ importers:
         specifier: workspace:*
         version: link:../core
       '@objectstack/spec':
-        specifier: ^0.9.1
-        version: 0.9.1
+        specifier: ^0.9.2
+        version: 0.9.2
       axios:
         specifier: ^1.13.4
         version: 1.13.4
@@ -168,8 +168,8 @@ importers:
   packages/finance:
     dependencies:
       '@objectstack/spec':
-        specifier: ^0.9.1
-        version: 0.9.1
+        specifier: ^0.9.2
+        version: 0.9.2
       typescript:
         specifier: ^5.3.0
         version: 5.9.3
@@ -193,8 +193,8 @@ importers:
         specifier: workspace:*
         version: link:../core
       '@objectstack/spec':
-        specifier: ^0.9.1
-        version: 0.9.1
+        specifier: ^0.9.2
+        version: 0.9.2
       typescript:
         specifier: ^5.3.0
         version: 5.9.3
@@ -215,8 +215,8 @@ importers:
   packages/marketing:
     dependencies:
       '@objectstack/spec':
-        specifier: ^0.9.1
-        version: 0.9.1
+        specifier: ^0.9.2
+        version: 0.9.2
     devDependencies:
       typescript:
         specifier: ^5.0.0
@@ -225,8 +225,8 @@ importers:
   packages/products:
     dependencies:
       '@objectstack/spec':
-        specifier: ^0.9.1
-        version: 0.9.1
+        specifier: ^0.9.2
+        version: 0.9.2
       typescript:
         specifier: ^5.3.0
         version: 5.9.3
@@ -262,20 +262,20 @@ importers:
         specifier: workspace:*
         version: link:../support
       '@objectstack/cli':
-        specifier: ^0.9.1
-        version: 0.9.1(@objectstack/core@0.9.1(pino@10.3.0))(esbuild@0.27.2)(pino@10.3.0)
+        specifier: ^0.9.2
+        version: 0.9.2(@objectstack/core@0.9.2(pino@10.3.0))(esbuild@0.27.2)(pino@10.3.0)
       '@objectstack/core':
-        specifier: 0.9.1
-        version: 0.9.1(pino@10.3.0)
+        specifier: 0.9.2
+        version: 0.9.2(pino@10.3.0)
       '@objectstack/plugin-hono-server':
-        specifier: 0.9.1
-        version: 0.9.1(pino@10.3.0)
+        specifier: 0.9.2
+        version: 0.9.2(pino@10.3.0)
       '@objectstack/runtime':
-        specifier: 0.9.1
-        version: 0.9.1(pino@10.3.0)
+        specifier: 0.9.2
+        version: 0.9.2(pino@10.3.0)
       '@objectstack/spec':
-        specifier: ^0.9.1
-        version: 0.9.1
+        specifier: ^0.9.2
+        version: 0.9.2
       pino:
         specifier: ^10.3.0
         version: 10.3.0
@@ -287,8 +287,8 @@ importers:
   packages/support:
     dependencies:
       '@objectstack/spec':
-        specifier: ^0.9.1
-        version: 0.9.1
+        specifier: ^0.9.2
+        version: 0.9.2
       typescript:
         specifier: ^5.3.0
         version: 5.9.3
@@ -741,89 +741,105 @@ packages:
     resolution: {integrity: sha512-excjX8DfsIcJ10x1Kzr4RcWe1edC9PquDRRPx3YVCvQv+U5p7Yin2s32ftzikXojb1PIFc/9Mt28/y+iRklkrw==}
     cpu: [arm64]
     os: [linux]
+    libc: [glibc]
 
   '@img/sharp-libvips-linux-arm@1.2.4':
     resolution: {integrity: sha512-bFI7xcKFELdiNCVov8e44Ia4u2byA+l3XtsAj+Q8tfCwO6BQ8iDojYdvoPMqsKDkuoOo+X6HZA0s0q11ANMQ8A==}
     cpu: [arm]
     os: [linux]
+    libc: [glibc]
 
   '@img/sharp-libvips-linux-ppc64@1.2.4':
     resolution: {integrity: sha512-FMuvGijLDYG6lW+b/UvyilUWu5Ayu+3r2d1S8notiGCIyYU/76eig1UfMmkZ7vwgOrzKzlQbFSuQfgm7GYUPpA==}
     cpu: [ppc64]
     os: [linux]
+    libc: [glibc]
 
   '@img/sharp-libvips-linux-riscv64@1.2.4':
     resolution: {integrity: sha512-oVDbcR4zUC0ce82teubSm+x6ETixtKZBh/qbREIOcI3cULzDyb18Sr/Wcyx7NRQeQzOiHTNbZFF1UwPS2scyGA==}
     cpu: [riscv64]
     os: [linux]
+    libc: [glibc]
 
   '@img/sharp-libvips-linux-s390x@1.2.4':
     resolution: {integrity: sha512-qmp9VrzgPgMoGZyPvrQHqk02uyjA0/QrTO26Tqk6l4ZV0MPWIW6LTkqOIov+J1yEu7MbFQaDpwdwJKhbJvuRxQ==}
     cpu: [s390x]
     os: [linux]
+    libc: [glibc]
 
   '@img/sharp-libvips-linux-x64@1.2.4':
     resolution: {integrity: sha512-tJxiiLsmHc9Ax1bz3oaOYBURTXGIRDODBqhveVHonrHJ9/+k89qbLl0bcJns+e4t4rvaNBxaEZsFtSfAdquPrw==}
     cpu: [x64]
     os: [linux]
+    libc: [glibc]
 
   '@img/sharp-libvips-linuxmusl-arm64@1.2.4':
     resolution: {integrity: sha512-FVQHuwx1IIuNow9QAbYUzJ+En8KcVm9Lk5+uGUQJHaZmMECZmOlix9HnH7n1TRkXMS0pGxIJokIVB9SuqZGGXw==}
     cpu: [arm64]
     os: [linux]
+    libc: [musl]
 
   '@img/sharp-libvips-linuxmusl-x64@1.2.4':
     resolution: {integrity: sha512-+LpyBk7L44ZIXwz/VYfglaX/okxezESc6UxDSoyo2Ks6Jxc4Y7sGjpgU9s4PMgqgjj1gZCylTieNamqA1MF7Dg==}
     cpu: [x64]
     os: [linux]
+    libc: [musl]
 
   '@img/sharp-linux-arm64@0.34.5':
     resolution: {integrity: sha512-bKQzaJRY/bkPOXyKx5EVup7qkaojECG6NLYswgktOZjaXecSAeCWiZwwiFf3/Y+O1HrauiE3FVsGxFg8c24rZg==}
     engines: {node: ^18.17.0 || ^20.3.0 || >=21.0.0}
     cpu: [arm64]
     os: [linux]
+    libc: [glibc]
 
   '@img/sharp-linux-arm@0.34.5':
     resolution: {integrity: sha512-9dLqsvwtg1uuXBGZKsxem9595+ujv0sJ6Vi8wcTANSFpwV/GONat5eCkzQo/1O6zRIkh0m/8+5BjrRr7jDUSZw==}
     engines: {node: ^18.17.0 || ^20.3.0 || >=21.0.0}
     cpu: [arm]
     os: [linux]
+    libc: [glibc]
 
   '@img/sharp-linux-ppc64@0.34.5':
     resolution: {integrity: sha512-7zznwNaqW6YtsfrGGDA6BRkISKAAE1Jo0QdpNYXNMHu2+0dTrPflTLNkpc8l7MUP5M16ZJcUvysVWWrMefZquA==}
     engines: {node: ^18.17.0 || ^20.3.0 || >=21.0.0}
     cpu: [ppc64]
     os: [linux]
+    libc: [glibc]
 
   '@img/sharp-linux-riscv64@0.34.5':
     resolution: {integrity: sha512-51gJuLPTKa7piYPaVs8GmByo7/U7/7TZOq+cnXJIHZKavIRHAP77e3N2HEl3dgiqdD/w0yUfiJnII77PuDDFdw==}
     engines: {node: ^18.17.0 || ^20.3.0 || >=21.0.0}
     cpu: [riscv64]
     os: [linux]
+    libc: [glibc]
 
   '@img/sharp-linux-s390x@0.34.5':
     resolution: {integrity: sha512-nQtCk0PdKfho3eC5MrbQoigJ2gd1CgddUMkabUj+rBevs8tZ2cULOx46E7oyX+04WGfABgIwmMC0VqieTiR4jg==}
     engines: {node: ^18.17.0 || ^20.3.0 || >=21.0.0}
     cpu: [s390x]
     os: [linux]
+    libc: [glibc]
 
   '@img/sharp-linux-x64@0.34.5':
     resolution: {integrity: sha512-MEzd8HPKxVxVenwAa+JRPwEC7QFjoPWuS5NZnBt6B3pu7EG2Ge0id1oLHZpPJdn3OQK+BQDiw9zStiHBTJQQQQ==}
     engines: {node: ^18.17.0 || ^20.3.0 || >=21.0.0}
     cpu: [x64]
     os: [linux]
+    libc: [glibc]
 
   '@img/sharp-linuxmusl-arm64@0.34.5':
     resolution: {integrity: sha512-fprJR6GtRsMt6Kyfq44IsChVZeGN97gTD331weR1ex1c1rypDEABN6Tm2xa1wE6lYb5DdEnk03NZPqA7Id21yg==}
     engines: {node: ^18.17.0 || ^20.3.0 || >=21.0.0}
     cpu: [arm64]
     os: [linux]
+    libc: [musl]
 
   '@img/sharp-linuxmusl-x64@0.34.5':
     resolution: {integrity: sha512-Jg8wNT1MUzIvhBFxViqrEhWDGzqymo3sV7z7ZsaWbZNDLXRJZoRGrjulp60YYtV4wfY8VIKcWidjojlLcWrd8Q==}
     engines: {node: ^18.17.0 || ^20.3.0 || >=21.0.0}
     cpu: [x64]
     os: [linux]
+    libc: [musl]
 
   '@img/sharp-wasm32@0.34.5':
     resolution: {integrity: sha512-OdWTEiVkY2PHwqkbBI8frFxQQFekHaSSkUIJkwzclWZe64O1X4UlUjqqqLaPbUpMOQk6FBu/HtlGXNblIs0huw==}
@@ -961,24 +977,28 @@ packages:
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [linux]
+    libc: [glibc]
 
   '@next/swc-linux-arm64-musl@16.1.6':
     resolution: {integrity: sha512-S4J2v+8tT3NIO9u2q+S0G5KdvNDjXfAv06OhfOzNDaBn5rw84DGXWndOEB7d5/x852A20sW1M56vhC/tRVbccQ==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [linux]
+    libc: [musl]
 
   '@next/swc-linux-x64-gnu@16.1.6':
     resolution: {integrity: sha512-2eEBDkFlMMNQnkTyPBhQOAyn2qMxyG2eE7GPH2WIDGEpEILcBPI/jdSv4t6xupSP+ot/jkfrCShLAa7+ZUPcJQ==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [linux]
+    libc: [glibc]
 
   '@next/swc-linux-x64-musl@16.1.6':
     resolution: {integrity: sha512-oicJwRlyOoZXVlxmIMaTq7f8pN9QNbdes0q2FXfRsPhfCi8n8JmOZJm5oo1pwDaFbnnD421rVU409M3evFbIqg==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [linux]
+    libc: [musl]
 
   '@next/swc-win32-arm64-msvc@16.1.6':
     resolution: {integrity: sha512-gQmm8izDTPgs+DCWH22kcDmuUp7NyiJgEl18bcr8irXA5N2m2O+JQIr6f3ct42GOs9c0h8QF3L5SzIxcYAAXXw==}
@@ -1004,38 +1024,38 @@ packages:
     resolution: {integrity: sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg==}
     engines: {node: '>= 8'}
 
-  '@objectstack/cli@0.9.1':
-    resolution: {integrity: sha512-jb4If/PDJzkNRgGIyd+ne6iyXOklNQUysBNYZ2QG20CBEpN+mn/gDl6FuSUZsnwEH0+S9mWBET9HzMYvZiF49w==}
+  '@objectstack/cli@0.9.2':
+    resolution: {integrity: sha512-/T/AJssnB8iC5t3dmRLgO41VKzcMbd3PcWhKsLSgcs1jSZJ+sSbEyHmcDDkh/qQwb9cy9os2jfg8YRNtUjMgtA==}
     hasBin: true
     peerDependencies:
-      '@objectstack/core': ^0.9.1
+      '@objectstack/core': ^0.9.2
 
-  '@objectstack/core@0.9.1':
-    resolution: {integrity: sha512-5roSFMjuRSrt1hPI79TLo1nBiLjYfQWHRucffRD8QU5KIE9ew341rgLGKo7AEZzXERwKWGKmdeTmNlV3k5Wepg==}
+  '@objectstack/core@0.9.2':
+    resolution: {integrity: sha512-6mroMEzn3b+XFZkp2q29W3Js0YUeHFbzolgkojArgO5oZP4X93vAfB2kmE3f4T3tR837exrQqVOiyMmAVGwJxQ==}
     peerDependencies:
       pino: ^8.0.0
     peerDependenciesMeta:
       pino:
         optional: true
 
-  '@objectstack/driver-memory@0.9.1':
-    resolution: {integrity: sha512-zmJK6wr6ELdqQyOqzqUaIrU88QfglIMZHUef31ukeWTbdA5SMQdTejOqC9XH9n5tE3X+BqimpSta4MMCAx5f+g==}
+  '@objectstack/driver-memory@0.9.2':
+    resolution: {integrity: sha512-oQO4tpwpsAijBUyThcEmXe/vlAkeAYaoCHgXX6YdEWMohhSNae4puNJ8PIKacwgUjCleMaM4Ur9h5+PB/BcZZA==}
 
-  '@objectstack/objectql@0.9.1':
-    resolution: {integrity: sha512-wgVbl1PrfEcQQsP/VjKtn9VI/M5ekuNSOk2KORjt4NuknVFRBb823hGCW/94bu9hTa/oLINwhVrHGJcoOpcxfA==}
+  '@objectstack/objectql@0.9.2':
+    resolution: {integrity: sha512-FjVxmnUujULZXzLhJdk4y6a2emBeG8pfzqdoIr+yWsos4di+MOBpbm7yq1+NJuC5G9tqQ5X3sAZtiJkhsMnRew==}
 
-  '@objectstack/plugin-hono-server@0.9.1':
-    resolution: {integrity: sha512-UTFLw2v/ToG15/WfMLgilYUs01vuCe8M1DB/1czAKreHw9on6tXYsYr5pYBD+Cf/iBIZs+l+NvEChIZZiYj0Ng==}
+  '@objectstack/plugin-hono-server@0.9.2':
+    resolution: {integrity: sha512-32G6z2gQUJGxSI7UL6WljmSLh1BGN/xCN30JFL8cPW3U9HbxYoZ3Dw+veSuoSRHmA4Vj0UBAP37mVMmscUTing==}
 
-  '@objectstack/runtime@0.9.1':
-    resolution: {integrity: sha512-5TBy2COvqkcqSCQE8KnqqVGRIPTrCVOz/QkKmQsoTZYVGq2Lf19DuElgOels58FxEUFvJrFqQuWRdsX+s1Rdxw==}
+  '@objectstack/runtime@0.9.2':
+    resolution: {integrity: sha512-hWcNHgXNu0YDQVrT+x3lllApoxUbyW9khMA0nW2/bCJzyvMdsFD+hlid4PTmyEPJrq8y+AZvfGF3o3YCS0S5zg==}
 
-  '@objectstack/spec@0.9.1':
-    resolution: {integrity: sha512-owMaA63IkIIikN6ZmS+Ub32H7e+3K9JPlogvIAFazm0MFG/OTv1e9z11IB1eWQjLa6jnTtRDKeuY2AgRJWgMYQ==}
+  '@objectstack/spec@0.9.2':
+    resolution: {integrity: sha512-XQSBd/vt7XzDufVmOZT30ayqGqCIqzYgiKgqQAF77r9WyksJCql9Z7WDbgbbmQlNchRdHlqRUgdJnGMxEExyIA==}
     engines: {node: '>=18.0.0'}
 
-  '@objectstack/types@0.9.1':
-    resolution: {integrity: sha512-XuT7LW9cZ7BTrY7ap8vbzXNHnjUeK5e2R0wovgJ0N4F56y2zyN9EPOam6YxvpOZT3Q9bnZjO2dJvqNyTdgnWyg==}
+  '@objectstack/types@0.9.2':
+    resolution: {integrity: sha512-9f5gebVZvc8p8/oQ7YVbaKai3+Ox9ErkSSMUl4Snm2ZU52PAiaJ2NIoE8H9T8+mIsGYRyAG8vxAAF6mi51Ei2g==}
 
   '@orama/orama@3.1.18':
     resolution: {integrity: sha512-a61ljmRVVyG5MC/698C8/FfFDw5a8LOIvyOLW5fztgUXqUpc1jOfQzOitSCbge657OgXXThmY3Tk8fpiDb4UcA==}
@@ -1489,24 +1509,28 @@ packages:
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [linux]
+    libc: [glibc]
 
   '@tailwindcss/oxide-linux-arm64-musl@4.1.18':
     resolution: {integrity: sha512-1px92582HkPQlaaCkdRcio71p8bc8i/ap5807tPRDK/uw953cauQBT8c5tVGkOwrHMfc2Yh6UuxaH4vtTjGvHg==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [linux]
+    libc: [musl]
 
   '@tailwindcss/oxide-linux-x64-gnu@4.1.18':
     resolution: {integrity: sha512-v3gyT0ivkfBLoZGF9LyHmts0Isc8jHZyVcbzio6Wpzifg/+5ZJpDiRiUhDLkcr7f/r38SWNe7ucxmGW3j3Kb/g==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [linux]
+    libc: [glibc]
 
   '@tailwindcss/oxide-linux-x64-musl@4.1.18':
     resolution: {integrity: sha512-bhJ2y2OQNlcRwwgOAGMY0xTFStt4/wyU6pvI6LSuZpRgKQwxTec0/3Scu91O8ir7qCR3AuepQKLU/kX99FouqQ==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [linux]
+    libc: [musl]
 
   '@tailwindcss/oxide-wasm32-wasi@4.1.18':
     resolution: {integrity: sha512-LffYTvPjODiP6PT16oNeUQJzNVyJl1cjIebq/rWWBF+3eDst5JGEFSc5cWxyRCJ0Mxl+KyIkqRxk1XPEs9x8TA==}
@@ -2797,24 +2821,28 @@ packages:
     engines: {node: '>= 12.0.0'}
     cpu: [arm64]
     os: [linux]
+    libc: [glibc]
 
   lightningcss-linux-arm64-musl@1.30.2:
     resolution: {integrity: sha512-5Vh9dGeblpTxWHpOx8iauV02popZDsCYMPIgiuw97OJ5uaDsL86cnqSFs5LZkG3ghHoX5isLgWzMs+eD1YzrnA==}
     engines: {node: '>= 12.0.0'}
     cpu: [arm64]
     os: [linux]
+    libc: [musl]
 
   lightningcss-linux-x64-gnu@1.30.2:
     resolution: {integrity: sha512-Cfd46gdmj1vQ+lR6VRTTadNHu6ALuw2pKR9lYq4FnhvgBc4zWY1EtZcAc6EffShbb1MFrIPfLDXD6Xprbnni4w==}
     engines: {node: '>= 12.0.0'}
     cpu: [x64]
     os: [linux]
+    libc: [glibc]
 
   lightningcss-linux-x64-musl@1.30.2:
     resolution: {integrity: sha512-XJaLUUFXb6/QG2lGIW6aIk6jKdtjtcffUT0NKvIqhSBY3hh9Ch+1LCeH80dR9q9LBjG3ewbDjnumefsLsP6aiA==}
     engines: {node: '>= 12.0.0'}
     cpu: [x64]
     os: [linux]
+    libc: [musl]
 
   lightningcss-win32-arm64-msvc@1.30.2:
     resolution: {integrity: sha512-FZn+vaj7zLv//D/192WFFVA0RgHawIcHqLX9xuWiQt7P0PtdFEVaxgF9rjM/IRYHQXNnk61/H/gb2Ei+kUQ4xQ==}
@@ -4533,14 +4561,14 @@ snapshots:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.20.1
 
-  '@objectstack/cli@0.9.1(@objectstack/core@0.9.1(pino@10.3.0))(esbuild@0.27.2)(pino@10.3.0)':
+  '@objectstack/cli@0.9.2(@objectstack/core@0.9.2(pino@10.3.0))(esbuild@0.27.2)(pino@10.3.0)':
     dependencies:
-      '@objectstack/core': 0.9.1(pino@10.3.0)
-      '@objectstack/driver-memory': 0.9.1(pino@10.3.0)
-      '@objectstack/objectql': 0.9.1(pino@10.3.0)
-      '@objectstack/plugin-hono-server': 0.9.1(pino@10.3.0)
-      '@objectstack/runtime': 0.9.1(pino@10.3.0)
-      '@objectstack/spec': 0.9.1
+      '@objectstack/core': 0.9.2(pino@10.3.0)
+      '@objectstack/driver-memory': 0.9.2(pino@10.3.0)
+      '@objectstack/objectql': 0.9.2(pino@10.3.0)
+      '@objectstack/plugin-hono-server': 0.9.2(pino@10.3.0)
+      '@objectstack/runtime': 0.9.2(pino@10.3.0)
+      '@objectstack/spec': 0.9.2
       bundle-require: 5.1.0(esbuild@0.27.2)
       chalk: 5.6.2
       commander: 11.1.0
@@ -4550,54 +4578,54 @@ snapshots:
       - esbuild
       - pino
 
-  '@objectstack/core@0.9.1(pino@10.3.0)':
+  '@objectstack/core@0.9.2(pino@10.3.0)':
     dependencies:
-      '@objectstack/spec': 0.9.1
+      '@objectstack/spec': 0.9.2
       pino-pretty: 10.3.1
       zod: 4.3.6
     optionalDependencies:
       pino: 10.3.0
 
-  '@objectstack/driver-memory@0.9.1(pino@10.3.0)':
+  '@objectstack/driver-memory@0.9.2(pino@10.3.0)':
     dependencies:
-      '@objectstack/core': 0.9.1(pino@10.3.0)
-      '@objectstack/spec': 0.9.1
+      '@objectstack/core': 0.9.2(pino@10.3.0)
+      '@objectstack/spec': 0.9.2
     transitivePeerDependencies:
       - pino
 
-  '@objectstack/objectql@0.9.1(pino@10.3.0)':
+  '@objectstack/objectql@0.9.2(pino@10.3.0)':
     dependencies:
-      '@objectstack/core': 0.9.1(pino@10.3.0)
-      '@objectstack/spec': 0.9.1
-      '@objectstack/types': 0.9.1
+      '@objectstack/core': 0.9.2(pino@10.3.0)
+      '@objectstack/spec': 0.9.2
+      '@objectstack/types': 0.9.2
     transitivePeerDependencies:
       - pino
 
-  '@objectstack/plugin-hono-server@0.9.1(pino@10.3.0)':
+  '@objectstack/plugin-hono-server@0.9.2(pino@10.3.0)':
     dependencies:
       '@hono/node-server': 1.19.9(hono@4.11.7)
-      '@objectstack/core': 0.9.1(pino@10.3.0)
-      '@objectstack/spec': 0.9.1
-      '@objectstack/types': 0.9.1
+      '@objectstack/core': 0.9.2(pino@10.3.0)
+      '@objectstack/spec': 0.9.2
+      '@objectstack/types': 0.9.2
       hono: 4.11.7
     transitivePeerDependencies:
       - pino
 
-  '@objectstack/runtime@0.9.1(pino@10.3.0)':
+  '@objectstack/runtime@0.9.2(pino@10.3.0)':
     dependencies:
-      '@objectstack/core': 0.9.1(pino@10.3.0)
-      '@objectstack/spec': 0.9.1
-      '@objectstack/types': 0.9.1
+      '@objectstack/core': 0.9.2(pino@10.3.0)
+      '@objectstack/spec': 0.9.2
+      '@objectstack/types': 0.9.2
     transitivePeerDependencies:
       - pino
 
-  '@objectstack/spec@0.9.1':
+  '@objectstack/spec@0.9.2':
     dependencies:
       zod: 4.3.6
 
-  '@objectstack/types@0.9.1':
+  '@objectstack/types@0.9.2':
     dependencies:
-      '@objectstack/spec': 0.9.1
+      '@objectstack/spec': 0.9.2
 
   '@orama/orama@3.1.18': {}
 
