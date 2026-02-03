@@ -81,8 +81,9 @@ describe('ProviderFactory', () => {
       expect(provider1).toBe(provider2); // Same instance
     });
 
-    it('should return cached instance for same provider type regardless of credentials', () => {
+    it('should cache providers by provider type and endpoint only', () => {
       // Arrange
+      // Two different credential sets for AWS SageMaker
       const config1 = {
         provider: 'aws-sagemaker',
         credentials: {
@@ -108,7 +109,9 @@ describe('ProviderFactory', () => {
       // Assert
       // ProviderFactory caches by "provider:endpoint" key
       // Without explicit endpoint, both configs get key "aws-sagemaker:default"
-      // So they return the same cached instance
+      // This means credentials are ignored in caching - first instance is reused
+      // Note: This is current implementation behavior; may want different instances
+      // per credential set in production
       expect(provider1).toBe(provider2);
     });
 

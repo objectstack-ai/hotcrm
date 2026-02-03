@@ -43,6 +43,8 @@ describe('PredictionService Integration Tests', () => {
       // Assert
       expect(result).toBeDefined();
       expect(result.prediction).toBeDefined();
+      // Note: PredictionService returns confidence as 0-100 scale (not 0-1)
+      // See PredictionResponse interface: "Confidence score (0-100)"
       expect(result.confidence).toBeGreaterThan(0);
       expect(result.confidence).toBeLessThanOrEqual(100);
     });
