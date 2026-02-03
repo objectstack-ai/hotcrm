@@ -77,6 +77,13 @@ export class ProviderFactory {
   }
   
   /**
+   * Clear all cached providers (alias for clearAll)
+   */
+  static clearCache(): void {
+    this.clearAll();
+  }
+  
+  /**
    * Get all registered providers
    */
   static getAllProviders(): Map<string, BaseMLProvider> {

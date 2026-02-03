@@ -140,6 +140,13 @@ export class ModelRegistry {
   static unregister(modelId: string): void {
     this.models.delete(modelId);
   }
+  
+  /**
+   * Clear all models from registry (for testing)
+   */
+  static clear(): void {
+    this.models.clear();
+  }
 }
 
 // Register default models

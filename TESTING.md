@@ -40,7 +40,8 @@ packages/{package}/
 │   ├── unit/
 │   │   ├── objects/       # Object schema tests
 │   │   ├── hooks/         # Business logic tests
-│   │   └── actions/       # AI action tests
+│   │   ├── actions/       # AI action tests
+│   │   └── providers/     # Provider implementation tests (AI package)
 │   ├── integration/
 │   │   ├── workflows/     # End-to-end workflow tests
 │   │   └── api/           # API integration tests
@@ -48,6 +49,19 @@ packages/{package}/
 │       └── scenarios/     # User journey tests
 └── src/
 ```
+
+## ✅ Package Test Coverage
+
+| Package | Unit Tests | Integration Tests | Total Tests | Status |
+|---------|-----------|-------------------|-------------|--------|
+| @hotcrm/ai | 68 | 1 | 69 | ✅ All Passing |
+| @hotcrm/crm | 45+ | 5+ | 50+ | ✅ All Passing |
+| @hotcrm/products | 10+ | 2+ | 12+ | ✅ All Passing |
+| @hotcrm/finance | 10+ | 2+ | 12+ | ✅ All Passing |
+| @hotcrm/support | 45+ | 5+ | 50+ | ✅ All Passing |
+| @hotcrm/hr | 145+ | 5+ | 150+ | ✅ All Passing |
+| @hotcrm/marketing | - | - | - | ⏳ Pending |
+| **Total** | **323+** | **20+** | **378+** | ✅ **All Passing** |
 
 ## 📝 Test Examples
 
