@@ -252,111 +252,185 @@ HotCRM provides two server startup modes:
 
 ## 📦 Package Overview
 
-### Core Package
+HotCRM is built as a **modular monorepo** with independently developed packages. Each package is self-contained with clear responsibilities and can be used or deployed independently.
+
+### System-Wide Statistics
+
+**Total:** 65 Objects | 23 AI Actions | 29 Automation Hooks
+
+### Infrastructure Packages
 
 #### @hotcrm/core
 
-Core engine providing ObjectQL query language and type definitions for the entire CRM system.
+Shared core utilities and type helpers for all HotCRM packages.
 
-**Key Features:**
-- ObjectQL query engine for type-safe data access
-- TypeScript type definitions for @objectstack/spec
-- Database abstraction layer
+**Purpose:** Common utilities, TypeScript types, Zod integration  
+**Dependencies:** None (foundation layer)
 
 [Read more →](./packages/core/README.md)
 
-### Domain Packages (Vertical Slices)
+#### @hotcrm/server
 
-Each domain package is a complete vertical slice containing schemas, hooks, and actions:
+Application server that orchestrates all business packages and provides REST APIs.
 
-#### @hotcrm/crm
+**Purpose:** Runtime server, plugin orchestration, REST API generation  
+**Integrated Packages:** All 6 business packages (CRM, Finance, HR, Marketing, Products, Support)  
+**Tech Stack:** ObjectStack Runtime, Hono Server, SQLite/MongoDB driver
 
-**Sales Cloud Domain** - Complete vertical slice including:
-- **Objects (13)**: Account, Contact, Lead, Opportunity, Activity, Task, Note, Assignment Rule, Email Template, Form, Landing Page, Marketing List, Unsubscribe
-- **Hooks**: Lead conversion automation, Opportunity stage change automation
-- **Actions**: AI Smart Briefing for account insights
-
-[Read more →](./packages/crm/README.md)
-
-#### @hotcrm/marketing
-
-**Marketing Cloud Domain** - Campaign management and marketing automation
-- **Objects (2)**: Campaign, Campaign Member
-- ROI tracking and multi-channel campaign support
-- AI-powered content generation and audience analysis
-
-[Read more →](./packages/marketing/README.md)
-
-#### @hotcrm/products
-
-**Product & Pricing Domain** - Product catalog, Pricebook, and Quote (CPQ) management
-- **Objects (9)**: Product, Product Bundle, Product Bundle Component, Quote, Quote Line Item, Pricebook, Price Rule, Discount Schedule, Approval Request
-- Complex quote configuration with approval workflows
-- Multi-currency and tiered pricing support
-
-[Read more →](./packages/products/README.md)
-
-#### @hotcrm/finance
-
-**Financial Operations Domain** - Contract lifecycle, Invoice, and Payment tracking
-- **Objects (4)**: Contract, Invoice, Invoice Line, Payment
-- Contract lifecycle management with renewal tracking
-- Payment schedule and overdue monitoring
-
-[Read more →](./packages/finance/README.md)
-
-#### @hotcrm/support
-
-**Customer Service Domain** - Case management and Knowledge base
-- **Objects (21)**: Case, Case Comment, Knowledge Article, Forum Topic, Forum Post, Queue, Queue Member, Routing Rule, Escalation Rule, SLA Policy, SLA Milestone, SLA Template, Agent Skill, Skill, Business Hours, Holiday, Holiday Calendar, Portal User, Email to Case, Web to Case, Social Media Case
-- Multi-channel ticket intake with SLA management
-- AI-powered case routing and solution recommendations
-
-[Read more →](./packages/support/README.md)
-
-#### @hotcrm/hr
-
-**Human Capital Management Domain** - Employee lifecycle and talent management
-- **Objects (16)**: Employee, Department, Position, Candidate, Application, Interview, Offer, Recruitment, Onboarding, Time Off, Attendance, Goal, Performance Review, Payroll, Training, Certification
-- Complete recruitment pipeline from job posting to offer
-- Performance management with OKR/KPI tracking
-- Payroll and benefits administration
-
-[Read more →](./packages/hr/README.md)
+[Read more →](./packages/server/README.md)
 
 #### @hotcrm/ai
 
-**AI Services Layer** - Unified AI framework for all modules
-- ML model integration framework
-- Shared AI utilities and prompt management
-- Vector embeddings and RAG support
+Unified AI/ML service layer providing model registry, prediction services, and ML utilities.
+
+**Features:**
+- Multi-provider ML integration (AWS SageMaker, Azure ML, OpenAI)
+- Model registry with A/B testing
+- Smart caching (Redis + in-memory)
+- Performance monitoring and health checks
+- SHAP-like explainability
+- Pre-registered models (lead scoring, churn prediction, sentiment analysis, revenue forecast, product recommendation)
 
 [Read more →](./packages/ai/README.md)
 
-### Application Packages
+### Business Domain Packages
 
-#### @hotcrm/ui
+Each domain package is a complete vertical slice containing objects, AI actions, and automation hooks:
 
-UI components, dashboards, and page configurations with Apple/Linear-inspired design.
+#### @hotcrm/crm - Sales & Marketing Cloud
 
-**Includes:**
-- Sales Dashboard with KPIs and pipeline visualization
-- AI Smart Briefing Card component
-- Tailwind CSS-based styling
+**13 Objects** | **8 AI Actions** | **7 Automation Hooks**
 
-[Read more →](./packages/ui/README.md)
+Complete Marketing & Sales domain with Account, Contact, Lead, Opportunity management, marketing automation, and activity tracking.
 
-#### @hotcrm/server
+**Objects:** Account, Contact, Lead, Opportunity, Activity, Task, Note, Email Template, Form, Landing Page, Marketing List, Unsubscribe, Assignment Rule
 
-Express server for application assembly and REST API endpoints. Integrates all domain packages.
+**AI Actions:**
+- Enhanced Lead Scoring with ML
+- Account AI (health scoring, churn prediction, cross-sell/upsell)
+- Contact AI (enrichment, buying intent, sentiment analysis)
+- Lead AI (signature parsing, routing, nurturing)
+- Opportunity AI (win probability, risk assessment, next steps)
+- Campaign AI (content generation, segmentation, optimization)
+- AI Smart Briefing (customer insights)
+- Lead Conversion (Lead → Account + Contact + Opportunity)
 
-**Features:**
-- RESTful API endpoints for all CRM objects
-- ObjectQL query interface
-- Dashboard KPIs and metrics
-- AI-powered features integration
+**Automation:**
+- Lead scoring triggers
+- Activity tracking and rollups
+- Contact decision chain validation
+- Account health score calculation
+- Opportunity stage automation
 
-[Read more →](./packages/server/README.md)
+[Read more →](./packages/crm/README.md)
+
+#### @hotcrm/finance - Revenue Cloud
+
+**4 Objects** | **3 AI Actions** | **1 Automation Hook**
+
+Financial operations with contract lifecycle management, invoicing, and payment tracking.
+
+**Objects:** Contract, Invoice, Invoice Line, Payment
+
+**AI Actions:**
+- Revenue Forecasting (monthly/quarterly with risk analysis)
+- Contract AI (risk scoring, renewal prediction, compliance checking)
+- Invoice Prediction (payment default, cash flow forecasting)
+
+**Automation:**
+- Contract billing automation (auto-generate invoices on activation)
+
+[Read more →](./packages/finance/README.md)
+
+#### @hotcrm/hr - Human Capital Management
+
+**16 Objects** | **3 AI Actions** | **4 Automation Hooks**
+
+Complete talent management from recruitment to retirement.
+
+**Objects:** Candidate, Application, Recruitment, Interview, Offer, Onboarding, Employee, Position, Department, Performance Review, Goal, Training, Certification, Attendance, Time Off, Payroll
+
+**AI Actions:**
+- Candidate AI (resume parsing, matching, ranking, interview questions)
+- Employee AI (retention risk, career paths, skill gaps, team optimization)
+- Performance AI (insights, SMART goals, development plans, 360-review synthesis)
+
+**Automation:**
+- Candidate scoring and screening
+- Employee onboarding workflow
+- Performance review rating calculation
+- Offer lifecycle management
+
+[Read more →](./packages/hr/README.md)
+
+#### @hotcrm/marketing - Marketing Automation
+
+**2 Objects** | **3 AI Actions (21 Functions)** | **3 Hook Modules (8 Hooks)**
+
+AI-powered campaign management with content generation and multi-touch attribution.
+
+**Objects:** Campaign, Campaign Member
+
+**AI Actions:**
+- **Content Generator (7 functions):** Email, social media, landing pages, ad copy, personalization, optimization, tone adaptation
+- **Campaign AI (7 functions):** Performance optimization, A/B testing, send-time optimization, channel recommendations
+- **Marketing Analytics (7 functions):** Attribution analysis, ROI forecasting, funnel optimization, lead scoring, journey analytics
+
+**Automation:**
+- Campaign ROI calculation
+- Budget tracking and alerts
+- Member engagement tracking
+- Lead scoring from engagement
+- Statistics aggregation
+- Bounce handling
+
+[Read more →](./packages/marketing/README.md)
+
+#### @hotcrm/products - CPQ & Pricing
+
+**9 Objects** | **3 AI Actions** | **3 Hook Modules**
+
+Complete Configure-Price-Quote with product catalog, intelligent pricing, and bundle optimization.
+
+**Objects:** Product, Product Bundle, Product Bundle Component, Quote, Quote Line Item, Pricebook, Price Rule, Discount Schedule, Approval Request
+
+**AI Actions:**
+- Pricing Optimizer (competitive analysis, optimal discounts, elasticity)
+- Product Recommendation (customer fit, cross-sell, adoption prediction)
+- Bundle Suggestion (tailored bundles, composition optimization)
+
+**Automation:**
+- Product inventory management
+- Pricebook lifecycle (auto-activation/expiration)
+- Quote pricing calculation
+- Approval routing (5-level matrix)
+- Margin protection
+- Contract creation from accepted quotes
+
+[Read more →](./packages/products/README.md)
+
+#### @hotcrm/support - Customer Service Cloud
+
+**21 Objects** | **3 AI Actions** | **2 Hook Modules (6 Hooks)**
+
+Omnichannel case management with SLA tracking, knowledge base, and AI-powered routing.
+
+**Objects:** Case, Case Comment, Knowledge Article, SLA Policy, SLA Template, SLA Milestone, Queue, Queue Member, Routing Rule, Escalation Rule, Skill, Agent Skill, Business Hours, Holiday, Holiday Calendar, Portal User, Forum Topic, Forum Post, Email to Case, Web to Case, Social Media Case
+
+**AI Actions:**
+- Case AI (auto-categorization, intelligent assignment, RAG search, SLA breach prediction)
+- Knowledge AI (article recommendations, auto-tagging, quality scoring, RAG answers)
+- SLA Prediction (breach probability, resolution time, workload optimization)
+
+**Automation:**
+- Case entitlement verification
+- Knowledge article scoring
+- AI enhancement (categorization, tagging, summaries)
+- Article workflow automation
+- Usage tracking
+- Search analytics
+
+[Read more →](./packages/support/README.md)
 
 ## 🤖 AI-Assisted Development
 
