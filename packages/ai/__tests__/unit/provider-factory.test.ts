@@ -81,7 +81,7 @@ describe('ProviderFactory', () => {
       expect(provider1).toBe(provider2); // Same instance
     });
 
-    it('should cache instances with same provider and endpoint', () => {
+    it('should return cached instance for same provider type regardless of credentials', () => {
       // Arrange
       const config1 = {
         provider: 'aws-sagemaker',
@@ -106,8 +106,9 @@ describe('ProviderFactory', () => {
       const provider2 = ProviderFactory.getProvider(config2);
 
       // Assert
-      // Note: Both configs use the same provider without explicit endpoint,
-      // so they get cached with the same key and return the same instance
+      // ProviderFactory caches by "provider:endpoint" key
+      // Without explicit endpoint, both configs get key "aws-sagemaker:default"
+      // So they return the same cached instance
       expect(provider1).toBe(provider2);
     });
 
