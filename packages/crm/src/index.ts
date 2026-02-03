@@ -32,7 +32,7 @@
 export { Account } from './account.object';
 export { Activity } from './activity.object';
 export { Contact } from './contact.object';
-export { default as Lead } from './lead.object';
+export { Lead } from './lead.object';
 export { Opportunity } from './opportunity.object';
 export { Task } from './task.object';
 export { Note } from './note.object';

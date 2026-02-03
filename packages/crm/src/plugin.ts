@@ -15,7 +15,7 @@
 import { Account } from './account.object';
 import { Activity } from './activity.object';
 import { Contact } from './contact.object';
-import Lead from './lead.object';
+import { Lead } from './lead.object';
 import { Opportunity } from './opportunity.object';
 import { Task } from './task.object';
 import { Note } from './note.object';
