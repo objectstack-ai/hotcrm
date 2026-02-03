@@ -5,19 +5,19 @@
 [![Code Quality](https://github.com/objectstack-ai/hotcrm/workflows/Code%20Quality/badge.svg)](https://github.com/objectstack-ai/hotcrm/actions/workflows/code-quality.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-> A world-class Customer Relationship Management system built on @objectstack/spec v0.9.0 protocol with Salesforce-level functionality and Apple/Linear-level UX.
+> A world-class Customer Relationship Management system built on @objectstack/spec v0.9.2 protocol with Salesforce-level functionality and Apple/Linear-level UX.
 
 > 📊 **Development Status**: See [Development Status & Roadmap](DEVELOPMENT_STATUS.md) for current state and next development priorities
 
 > 🚀 **Strategic Plan Available**: See our comprehensive [Strategic Enhancement Plan](docs/README.md) to transform HotCRM into the world's leading AI-Native CRM
 
-> 📝 **Latest Updates**: Upgraded to @objectstack/spec v0.9.0 (February 2, 2026) - all tests passing with zero breaking changes.
+> 📝 **Latest Updates**: Upgraded to @objectstack/spec v0.9.2 (February 3, 2026) - all 378 tests passing with zero breaking changes.
 
-> ✅ **Protocol Compliance**: All metadata is fully compliant with @objectstack/spec v0.9.0.
+> ✅ **Protocol Compliance**: All metadata is fully compliant with @objectstack/spec v0.9.2.
 
 ## 🌟 Overview
 
-HotCRM is a **comprehensive, AI-native enterprise CRM** system covering the complete Lead-to-Cash lifecycle. Built on the @objectstack/spec v0.9.0 protocol, it delivers:
+HotCRM is a **comprehensive, AI-native enterprise CRM** system covering the complete Lead-to-Cash lifecycle. Built on the @objectstack/spec v0.9.2 protocol, it delivers:
 
 - **Complete CRM Suite**: 65 core objects (TypeScript) spanning Marketing, Sales, Service, Finance, and HR domains
 - **Metadata-Driven Architecture**: All objects defined through TypeScript (type-safe)
