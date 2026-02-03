@@ -1,8 +1,8 @@
 # HotCRM Strategic Planning - Complete Documentation Index
 
-**Last Updated**: February 2, 2026  
-**Version**: 1.1.0  
-**ObjectStack Core**: v0.9.0
+**Last Updated**: February 3, 2026  
+**Version**: 1.2.0  
+**ObjectStack Core**: v0.9.1
 **Status**: ✅ Complete and Ready for Executive Review
 
 ---
@@ -48,6 +48,20 @@ Choose the document that best fits your role and time available:
 - Immediate business impact
 - Minimal investment, maximum ROI
 
+### For 2026 Planning (40 minutes) ⭐ NEW
+👉 **Start here**: [Improvement Plan 2026](./IMPROVEMENT_PLAN_2026.md)
+- Based on @objectstack/spec v0.9.1 analysis
+- Comprehensive improvement proposals (中文)
+- Q1-Q4 2026 detailed roadmap
+- Technical architecture enhancements
+
+### For Technical Deep Dive (35 minutes) ⭐ NEW
+👉 **Start here**: [Technical Analysis 2026](./TECHNICAL_ANALYSIS_2026.md)
+- Current codebase analysis
+- Performance optimization strategies
+- Security and compliance recommendations
+- Best practices and patterns
+
 ---
 
 ## 📚 Complete Document List
@@ -63,13 +77,22 @@ Choose the document that best fits your role and time available:
 | 5 | [Implementation Roadmap](./IMPLEMENTATION_ROADMAP.md) | 15KB | Project managers | 30 min | Execution plan |
 | 6 | [Quick Wins](./QUICK_WINS.md) | 14KB | Engineering teams | 20 min | Immediate actions |
 
+### 2026 Improvement Plans ⭐ NEW
+
+| # | Document | Size | Audience | Read Time | Purpose |
+|---|----------|------|----------|-----------|---------|
+| 7 | [Improvement Plan 2026](./IMPROVEMENT_PLAN_2026.md) | 27KB | All teams | 40 min | Comprehensive improvement roadmap (中文) |
+| 8 | [Technical Analysis 2026](./TECHNICAL_ANALYSIS_2026.md) | 20KB | Engineering, CTO | 35 min | Technical debt & architecture analysis |
+
 ### Supporting Documentation
 
 | Document | Size | Purpose |
 |----------|------|---------|
 | [Plugin Architecture](./PLUGIN_ARCHITECTURE.md) | 8KB | Technical architecture guide |
+| [AI Capabilities](./AI_CAPABILITIES.md) | 13KB | AI features documentation |
+| [AI Testing Summary](./AI_TESTING_SUMMARY.md) | 4KB | AI package testing guide |
 
-**Total Documentation**: 107KB across 7 files
+**Total Documentation**: 161KB across 11 files
 
 ---
 
@@ -291,6 +314,8 @@ All strategic planning documents are **complete and ready for executive review**
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 1.2.0 | 2026-02-03 | Added 2026 Improvement Plan and Technical Analysis (based on v0.9.1) |
+| 1.1.0 | 2026-02-02 | Added Development Status document |
 | 1.0.0 | 2026-02-01 | Initial complete strategic planning package |
 
 ---
@@ -304,6 +329,6 @@ Copyright © 2026 HotCRM Team
 
 ---
 
-**Last Updated**: February 1, 2026  
+**Last Updated**: February 3, 2026  
 **Maintained by**: HotCRM Strategic Planning Team  
 **Status**: ✅ Complete
