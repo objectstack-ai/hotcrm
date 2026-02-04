@@ -161,7 +161,7 @@ Critical issues:       0
 Warnings:              0
 Compliant objects:     65/65
 
-✅ ALL OBJECTS COMPLIANT WITH @objectstack/spec v0.7.2+
+✅ ALL OBJECTS COMPLIANT WITH @objectstack/spec v1.0.0
 ```
 
 ---
