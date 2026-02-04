@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
 /**
- * ObjectStack Spec v0.7.2+ Protocol Compliance Validator
+ * ObjectStack Spec v1.0.0+ Protocol Compliance Validator
  * 
  * This script validates all .object.ts files in the repository against
- * the @objectstack/spec v0.7.2+ protocol requirements.
+ * the @objectstack/spec v1.0.0+ protocol requirements.
  * 
  * IMPORTANT: Field names must be lowercase/snake_case (e.g., first_name, account_id)
  * 
@@ -19,7 +19,7 @@
 const fs = require('fs');
 const path = require('path');
 
-// Valid field types according to @objectstack/spec v0.7.1
+// Valid field types according to @objectstack/spec v1.0.0
 const VALID_FIELD_TYPES = new Set([
   'text', 'textarea', 'email', 'phone', 'url', 'password',
   'markdown', 'html', 'richtext',
@@ -166,7 +166,7 @@ function findObjectFiles(dir) {
 
 function printHeader() {
   console.log('╔' + '═'.repeat(78) + '╗');
-  console.log('║ ObjectStack Spec v0.7.2+ Protocol Compliance Validator'.padEnd(79) + '║');
+  console.log('║ ObjectStack Spec v1.0.0+ Protocol Compliance Validator'.padEnd(79) + '║');
   console.log('╚' + '═'.repeat(78) + '╝\n');
 }
 
@@ -222,7 +222,7 @@ function printSummary(results) {
   });
 
   if (totalIssues === 0) {
-    console.log('\n✅ ALL OBJECTS COMPLIANT WITH @objectstack/spec v0.7.2+');
+    console.log('\n✅ ALL OBJECTS COMPLIANT WITH @objectstack/spec v1.0.0+');
     console.log('\nProtocol Requirements Met:');
     console.log('  ✓ All field names use lowercase/snake_case');
     console.log('  ✓ All field types are valid');
