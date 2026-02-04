@@ -68,7 +68,7 @@ export async function recommendProducts(request: RecommendProductsRequest): Prom
   const existingOpps = await db.find('opportunity', {
     filters: [
       ['account_id', '=', accountId],
-      ['stage', '=', 'Closed Won']
+      ['stage', '=', 'closed_won']
     ],
     fields: ['name', 'amount', 'close_date']
   });
@@ -230,7 +230,7 @@ export async function findCrossSellOpportunities(request: FindCrossSellOpportuni
   const currentProducts = await db.find('opportunity', {
     filters: [
       ['account_id', '=', accountId],
-      ['stage', '=', 'Closed Won']
+      ['stage', '=', 'closed_won']
     ],
     fields: ['name', 'amount', 'close_date']
   });
@@ -632,7 +632,7 @@ export async function analyzeProductFit(request: AnalyzeProductFitRequest): Prom
   const existingProducts = await db.find('opportunity', {
     filters: [
       ['account_id', '=', accountId],
-      ['stage', '=', 'Closed Won']
+      ['stage', '=', 'closed_won']
     ],
     fields: ['name', 'close_date']
   });
@@ -925,7 +925,7 @@ export async function predictProductAdoption(request: PredictProductAdoptionRequ
   const purchaseHistory = await db.find('opportunity', {
     filters: [
       ['account_id', '=', accountId],
-      ['stage', '=', 'Closed Won']
+      ['stage', '=', 'closed_won']
     ],
     fields: ['amount', 'close_date', 'created_date']
   });

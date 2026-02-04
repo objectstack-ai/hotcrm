@@ -50,23 +50,23 @@ const ContactDecisionChainTrigger: Hook = {
       if (!contact.InfluenceLevel && contact.Level) {
         switch (contact.Level) {
           case 'C-Level':
-            contact.InfluenceLevel = 'High';
+            contact.InfluenceLevel = 'high';
             console.log(`✅ Auto-set InfluenceLevel to High for C-Level contact`);
             break;
           case 'VP':
-            contact.InfluenceLevel = 'High';
+            contact.InfluenceLevel = 'high';
             console.log(`✅ Auto-set InfluenceLevel to High for VP contact`);
             break;
           case 'Director':
-            contact.InfluenceLevel = 'Medium';
+            contact.InfluenceLevel = 'medium';
             console.log(`✅ Auto-set InfluenceLevel to Medium for Director contact`);
             break;
           case 'Manager':
-            contact.InfluenceLevel = 'Medium';
+            contact.InfluenceLevel = 'medium';
             console.log(`✅ Auto-set InfluenceLevel to Medium for Manager contact`);
             break;
           case 'Individual Contributor':
-            contact.InfluenceLevel = 'Low';
+            contact.InfluenceLevel = 'low';
             console.log(`✅ Auto-set InfluenceLevel to Low for Individual Contributor`);
             break;
         }
@@ -197,9 +197,9 @@ const ContactRelationshipStrengthTrigger: Hook = {
       // Auto-demote if no contact for 90+ days
       if (daysSinceContact > 90) {
         if (currentStrength === 'Strong') {
-          contact.RelationshipStrength = 'Medium';
+          contact.RelationshipStrength = 'medium';
           console.log(`⬇️ Demoted relationship strength: Strong → Medium (${daysSinceContact} days since contact)`);
-        } else if (currentStrength === 'Medium') {
+        } else if (currentStrength === 'medium') {
           contact.RelationshipStrength = 'Weak';
           console.log(`⬇️ Demoted relationship strength: Medium → Weak (${daysSinceContact} days since contact)`);
         }
@@ -210,9 +210,9 @@ const ContactRelationshipStrengthTrigger: Hook = {
       else if (daysSinceContact < 7 && daysSinceContact >= 0) {
         // Recent contact suggests active relationship
         if (currentStrength === 'Weak' || currentStrength === 'Unknown') {
-          contact.RelationshipStrength = 'Medium';
+          contact.RelationshipStrength = 'medium';
           console.log(`⬆️ Promoted relationship strength: ${currentStrength} → Medium (active engagement)`);
-        } else if (currentStrength === 'Medium') {
+        } else if (currentStrength === 'medium') {
           // In real implementation, would check activity count here
           // If many recent activities (e.g., > 10 in last 30 days), promote to Strong
           // For now, we log that this could be promoted
@@ -267,7 +267,7 @@ export async function analyzeAndUpdateRelationshipStrength(contactId: string, db
   // if (activityCount > 20 || hasRecentMeetings) {
   //   newStrength = 'Strong';
   // } else if (activityCount > 10) {
-  //   newStrength = 'Medium';
+  //   newStrength = 'medium';
   // } else if (activityCount > 0) {
   //   newStrength = 'Weak';
   // }

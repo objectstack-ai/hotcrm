@@ -30,12 +30,12 @@ describe('Case Resolution Workflow Integration', () => {
     const newCase = {
       subject: 'Unable to generate reports',
       description: 'Getting error when trying to export analytics report',
-      priority: 'High',
+      priority: 'high',
       type: 'Technical Issue',
       account_id: 'acc_123',
       contact_id: 'contact_456',
-      origin: 'Email',
-      status: 'New'
+      origin: 'email',
+      status: 'new'
     };
 
     const createdCase = {
@@ -67,7 +67,7 @@ describe('Case Resolution Workflow Integration', () => {
     // Act - Step 1: Create case
     const caseRecord = await db.doc.create('case', newCase);
     expect(caseRecord.id).toBe('case_001');
-    expect(caseRecord.status).toBe('New');
+    expect(caseRecord.status).toBe('new');
 
     // Step 2: Auto-assign to agent
     const assigned = await db.doc.update('case', caseRecord.id, {
@@ -96,8 +96,8 @@ describe('Case Resolution Workflow Integration', () => {
     // Arrange
     const mockCase = {
       id: 'case_sla',
-      priority: 'Critical',
-      status: 'New',
+      priority: 'critical',
+      status: 'new',
       created_date: new Date().toISOString()
     };
 
@@ -152,8 +152,8 @@ describe('Case Resolution Workflow Integration', () => {
       id: 'case_escalate',
       case_number: 'C-002',
       subject: 'Critical system outage',
-      priority: 'Critical',
-      status: 'New',
+      priority: 'critical',
+      status: 'new',
       created_date: new Date(Date.now() - 55 * 60 * 1000).toISOString(), // 55 min ago
       owner_id: null,
       escalated: false
@@ -303,8 +303,8 @@ describe('Case Resolution Workflow Integration', () => {
     const mockCase = {
       id: 'case_metrics',
       subject: 'Billing question',
-      priority: 'Medium',
-      status: 'New',
+      priority: 'medium',
+      status: 'new',
       created_date: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(), // 4 hours ago
       first_response_date: null,
       closed_date: null

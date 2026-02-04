@@ -14,14 +14,14 @@ export const Product = ObjectSchema.create({
     family: Field.select({
       label: 'Product Family',
       options: [
-        { label: 'Software', value: 'Software' },
-        { label: 'Hardware', value: 'Hardware' },
-        { label: 'Professional Services', value: 'Professional Services' },
-        { label: 'Consulting', value: 'Consulting' },
-        { label: 'Training', value: 'Training' },
-        { label: 'Support', value: 'Support' },
-        { label: 'Subscription', value: 'Subscription' },
-        { label: 'Other', value: 'Other' }
+        { label: 'Software', value: 'software' },
+        { label: 'Hardware', value: 'hardware' },
+        { label: 'Professional Services', value: 'professional_services' },
+        { label: 'Consulting', value: 'consulting' },
+        { label: 'Training', value: 'training' },
+        { label: 'Support', value: 'support' },
+        { label: 'Subscription', value: 'subscription' },
+        { label: 'Other', value: 'other' }
       ]
     }),
     is_active: Field.boolean({ label: 'Active', defaultValue: true }),
@@ -30,13 +30,13 @@ export const Product = ObjectSchema.create({
     quantity_unit: Field.select({ 
       label: 'Unit',
       options: [
-        { label: 'Unit', value: 'Unit' },
-        { label: 'Set', value: 'Set' },
-        { label: 'Hour', value: 'Hour' },
-        { label: 'Day', value: 'Day' },
-        { label: 'Month', value: 'Month' },
-        { label: 'Year', value: 'Year' },
-        { label: 'License', value: 'License' }
+        { label: 'Unit', value: 'unit' },
+        { label: 'Set', value: 'set' },
+        { label: 'Hour', value: 'hour' },
+        { label: 'Day', value: 'day' },
+        { label: 'Month', value: 'month' },
+        { label: 'Year', value: 'year' },
+        { label: 'License', value: 'license' }
       ]
     })
   },

@@ -211,7 +211,7 @@ describe('Employee Hook - EmployeeOnboardingTrigger', () => {
       const employee = {
         id: 'emp_123',
         employee_number: 'EMP20240001',
-        first_name: 'New',
+        first_name: 'new',
         last_name: 'Employee',
         hire_date: '2024-06-01',
         manager_id: 'mgr_456'
@@ -309,7 +309,7 @@ describe('Employee Hook - EmployeeOnboardingTrigger', () => {
       // Arrange
       const employee = {
         id: 'emp_123',
-        first_name: 'New',
+        first_name: 'new',
         last_name: 'Employee',
         full_name: 'New Employee',
         hire_date: '2024-06-01',

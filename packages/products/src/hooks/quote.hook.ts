@@ -263,7 +263,7 @@ async function handleQuoteAccepted(ctx: TriggerContext): Promise<void> {
     if (quote.OpportunityId) {
       try {
         await ctx.db.doc.update('Opportunity', quote.OpportunityId, {
-          Stage: 'Closed Won',
+          Stage: 'closed_won',
           CloseDate: new Date().toISOString().split('T')[0]
         });
         console.log(`✅ Opportunity stage updated to Closed Won`);

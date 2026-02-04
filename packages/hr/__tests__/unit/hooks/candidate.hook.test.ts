@@ -53,7 +53,7 @@ describe('Candidate Hook - CandidateScoringTrigger', () => {
         resume_url: 'https://example.com/resume.pdf',
         source: 'Employee Referral',
         notice_period: 'Immediate',
-        status: 'New'
+        status: 'new'
       };
 
       mockQlFind.mockResolvedValue([]);
@@ -76,7 +76,7 @@ describe('Candidate Hook - CandidateScoringTrigger', () => {
         first_name: 'John',
         last_name: 'Smith',
         email: 'john@example.com',
-        status: 'New',
+        status: 'new',
         years_of_experience: 1,
         highest_education: 'High School'
       };
@@ -102,7 +102,7 @@ describe('Candidate Hook - CandidateScoringTrigger', () => {
         highest_education: 'PhD',
         years_of_experience: 15,
         resume_url: 'https://example.com/resume.pdf',
-        status: 'New'
+        status: 'new'
       };
 
       mockQlFind.mockResolvedValue([]);
@@ -125,7 +125,7 @@ describe('Candidate Hook - CandidateScoringTrigger', () => {
         years_of_experience: 15,
         highest_education: 'Bachelor',
         resume_url: 'https://example.com/resume.pdf',
-        status: 'New'
+        status: 'new'
       };
 
       mockQlFind.mockResolvedValue([]);
@@ -147,7 +147,7 @@ describe('Candidate Hook - CandidateScoringTrigger', () => {
         first_name: 'Jane',
         last_name: 'Doe',
         email: 'duplicate@example.com',
-        status: 'New'
+        status: 'new'
       };
 
       const duplicateCandidate = {
@@ -186,13 +186,13 @@ describe('Candidate Hook - CandidateScoringTrigger', () => {
         first_name: 'Jane',
         last_name: 'Doe',
         email: 'jane@example.com',
-        status: 'Under Review'
+        status: 'under_review'
       };
 
       const previous = {
         id: 'cand_123',
         email: 'jane@example.com',
-        status: 'New'
+        status: 'new'
       };
 
       const ctx = createMockContext('beforeUpdate', candidate, previous);
@@ -209,13 +209,13 @@ describe('Candidate Hook - CandidateScoringTrigger', () => {
       const candidate = {
         id: 'cand_123',
         email: 'newemail@example.com',
-        status: 'New'
+        status: 'new'
       };
 
       const previous = {
         id: 'cand_123',
         email: 'oldemail@example.com',
-        status: 'New'
+        status: 'new'
       };
 
       mockQlFind.mockResolvedValue([]);
@@ -238,13 +238,13 @@ describe('Candidate Hook - CandidateScoringTrigger', () => {
     it('should pass auto-screening for qualified candidate', async () => {
       // Arrange
       const candidate = {
-        first_name: 'Qualified',
+        first_name: 'qualified',
         last_name: 'Candidate',
         email: 'qualified@example.com',
         mobile_phone: '+8613812345678',
         resume_url: 'https://example.com/resume.pdf',
         years_of_experience: 5,
-        status: 'New'
+        status: 'new'
       };
 
       mockQlFind.mockResolvedValue([]);
@@ -256,7 +256,7 @@ describe('Candidate Hook - CandidateScoringTrigger', () => {
       await CandidateScoringTrigger.handler(ctx);
 
       // Assert
-      expect(candidate.status).toBe('Under Review');
+      expect(candidate.status).toBe('under_review');
       expect(consoleLogSpy).toHaveBeenCalledWith(
         expect.stringContaining('passed auto-screening')
       );
@@ -271,7 +271,7 @@ describe('Candidate Hook - CandidateScoringTrigger', () => {
         last_name: 'Candidate',
         mobile_phone: '+8613812345678',
         resume_url: 'https://example.com/resume.pdf',
-        status: 'New'
+        status: 'new'
       };
 
       mockQlFind.mockResolvedValue([]);
@@ -283,7 +283,7 @@ describe('Candidate Hook - CandidateScoringTrigger', () => {
       await CandidateScoringTrigger.handler(ctx);
 
       // Assert
-      expect(candidate.status).toBe('New');
+      expect(candidate.status).toBe('new');
       expect(consoleLogSpy).toHaveBeenCalledWith(
         expect.stringContaining('did not pass auto-screening')
       );
@@ -295,10 +295,10 @@ describe('Candidate Hook - CandidateScoringTrigger', () => {
       // Arrange
       const candidate = {
         first_name: 'No',
-        last_name: 'Phone',
+        last_name: 'phone',
         email: 'nophone@example.com',
         resume_url: 'https://example.com/resume.pdf',
-        status: 'New'
+        status: 'new'
       };
 
       mockQlFind.mockResolvedValue([]);
@@ -309,7 +309,7 @@ describe('Candidate Hook - CandidateScoringTrigger', () => {
       await CandidateScoringTrigger.handler(ctx);
 
       // Assert
-      expect(candidate.status).toBe('New');
+      expect(candidate.status).toBe('new');
     });
 
     it('should fail auto-screening for candidate without resume', async () => {
@@ -319,7 +319,7 @@ describe('Candidate Hook - CandidateScoringTrigger', () => {
         last_name: 'Resume',
         email: 'noresume@example.com',
         mobile_phone: '+8613812345678',
-        status: 'New'
+        status: 'new'
       };
 
       mockQlFind.mockResolvedValue([]);
@@ -330,7 +330,7 @@ describe('Candidate Hook - CandidateScoringTrigger', () => {
       await CandidateScoringTrigger.handler(ctx);
 
       // Assert
-      expect(candidate.status).toBe('New');
+      expect(candidate.status).toBe('new');
     });
 
     it('should not auto-screen if status is not New', async () => {
@@ -366,7 +366,7 @@ describe('Candidate Hook - CandidateScoringTrigger', () => {
         email: 'jane@example.com',
         years_of_experience: 10,
         highest_education: 'PhD',
-        status: 'Under Review',
+        status: 'under_review',
         score: 50 // Old score
       };
 
@@ -375,7 +375,7 @@ describe('Candidate Hook - CandidateScoringTrigger', () => {
         email: 'jane@example.com',
         years_of_experience: 5,
         highest_education: 'Bachelor',
-        status: 'Under Review',
+        status: 'under_review',
         score: 50
       };
 
@@ -398,7 +398,7 @@ describe('Candidate Hook - CandidateScoringTrigger', () => {
         first_name: 'Test',
         last_name: 'Candidate',
         email: 'test@example.com',
-        status: 'New'
+        status: 'new'
       };
 
       mockQlFind.mockRejectedValue(new Error('Database error'));
@@ -428,12 +428,12 @@ describe('Candidate Hook - CandidateStatusChangeTrigger', () => {
       // Arrange
       const candidate = {
         id: 'cand_123',
-        status: 'Under Review'
+        status: 'under_review'
       };
 
       const previous = {
         id: 'cand_123',
-        status: 'Under Review'
+        status: 'under_review'
       };
 
       const ctx = createMockContext('afterUpdate', candidate, previous);
@@ -461,7 +461,7 @@ describe('Candidate Hook - CandidateStatusChangeTrigger', () => {
 
       const previous = {
         id: 'cand_123',
-        status: 'Under Review'
+        status: 'under_review'
       };
 
       const ctx = createMockContext('afterUpdate', candidate, previous);
@@ -472,7 +472,7 @@ describe('Candidate Hook - CandidateStatusChangeTrigger', () => {
 
       // Assert
       expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Candidate status changed from "Under Review" to "Interviewing"')
+        expect.stringContaining('Candidate status changed from "under_review" to "Interviewing"')
       );
 
       consoleLogSpy.mockRestore();
@@ -491,7 +491,7 @@ describe('Candidate Hook - CandidateStatusChangeTrigger', () => {
 
       const previous = {
         id: 'cand_123',
-        status: 'Under Review'
+        status: 'under_review'
       };
 
       const ctx = createMockContext('afterUpdate', candidate, previous);

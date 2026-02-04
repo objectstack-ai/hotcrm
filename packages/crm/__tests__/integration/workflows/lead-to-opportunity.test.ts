@@ -33,9 +33,9 @@ describe('Lead to Opportunity Conversion Workflow', () => {
       last_name: 'Johnson',
       email: 'sarah.johnson@techcorp.com',
       company: 'TechCorp Solutions',
-      status: 'Qualified',
+      status: 'qualified',
       rating: 'Hot',
-      lead_source: 'Web',
+      lead_source: 'web',
       annual_revenue: 5000000,
       number_of_employees: 200,
       industry: 'Technology'
@@ -65,7 +65,7 @@ describe('Lead to Opportunity Conversion Workflow', () => {
       stage: 'Qualification',
       amount: 50000,
       close_date: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
-      lead_source: 'Web'
+      lead_source: 'web'
     };
 
     (db.doc.get as jest.Mock).mockResolvedValue(mockLead);
@@ -74,7 +74,7 @@ describe('Lead to Opportunity Conversion Workflow', () => {
       .mockResolvedValueOnce(mockAccount)
       .mockResolvedValueOnce(mockContact)
       .mockResolvedValueOnce(mockOpportunity);
-    (db.doc.update as jest.Mock).mockResolvedValue({ ...mockLead, status: 'Converted' });
+    (db.doc.update as jest.Mock).mockResolvedValue({ ...mockLead, status: 'converted' });
 
     // Act - Simulate lead conversion workflow
     const lead = await db.doc.get('lead', 'lead_123');
@@ -107,7 +107,7 @@ describe('Lead to Opportunity Conversion Workflow', () => {
 
     // Step 4: Update Lead status
     const updatedLead = await db.doc.update('lead', lead.id, {
-      status: 'Converted',
+      status: 'converted',
       converted_account_id: account.id,
       converted_contact_id: contact.id,
       converted_opportunity_id: opportunity.id
@@ -124,7 +124,7 @@ describe('Lead to Opportunity Conversion Workflow', () => {
     expect(opportunity.account_id).toBe(account.id);
     expect(opportunity.contact_id).toBe(contact.id);
     
-    expect(updatedLead.status).toBe('Converted');
+    expect(updatedLead.status).toBe('converted');
     
     // Verify all necessary db operations were called
     expect(db.doc.create).toHaveBeenCalledTimes(3);
@@ -139,7 +139,7 @@ describe('Lead to Opportunity Conversion Workflow', () => {
       last_name: 'Brown',
       email: 'michael@existingcorp.com',
       company: 'Existing Corp',
-      status: 'Qualified'
+      status: 'qualified'
     };
 
     const existingAccount = {
@@ -217,7 +217,7 @@ describe('Lead to Opportunity Conversion Workflow', () => {
 
     // Act
     const lead = await db.doc.get('lead', 'lead_789');
-    const isQualified = lead.status === 'Qualified' && lead.rating !== 'Cold';
+    const isQualified = lead.status === 'qualified' && lead.rating !== 'Cold';
 
     // Assert
     expect(isQualified).toBe(false);
@@ -233,7 +233,7 @@ describe('Lead to Opportunity Conversion Workflow', () => {
       last_name: 'Smith',
       email: 'tom@company.com',
       company: 'Test Company',
-      status: 'Qualified'
+      status: 'qualified'
     };
 
     const existingContact = {
@@ -276,7 +276,7 @@ describe('Lead to Opportunity Conversion Workflow', () => {
       last_name: 'Wong',
       email: 'alice@startup.io',
       company: 'Startup IO',
-      status: 'Qualified',
+      status: 'qualified',
       rating: 'Hot',
       annual_revenue: 1000000,
       number_of_employees: 50,
@@ -335,7 +335,7 @@ describe('Lead to Opportunity Conversion Workflow', () => {
       company: 'Tech Firm LLC',
       title: 'VP of Engineering',
       phone: '+1-555-0100',
-      status: 'Qualified',
+      status: 'qualified',
       industry: 'Technology',
       annual_revenue: 25000000,
       description: 'Interested in enterprise plan'

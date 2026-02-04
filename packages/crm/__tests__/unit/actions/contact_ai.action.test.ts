@@ -167,8 +167,8 @@ describe('Contact AI Actions - detectBuyingIntent', () => {
     };
 
     const mockActivities = [
-      { type: 'Email', activity_date: new Date().toISOString() },
-      { type: 'Email', activity_date: new Date().toISOString() },
+      { type: 'email', activity_date: new Date().toISOString() },
+      { type: 'email', activity_date: new Date().toISOString() },
       { type: 'Meeting', activity_date: new Date().toISOString() }
     ];
 
@@ -210,7 +210,7 @@ describe('Contact AI Actions - detectBuyingIntent', () => {
     };
 
     const mockActivities = Array(10).fill({
-      type: 'Email',
+      type: 'email',
       activity_date: new Date().toISOString()
     }).concat([
       { type: 'Meeting', activity_date: new Date().toISOString() },
@@ -290,7 +290,7 @@ describe('Contact AI Actions - detectBuyingIntent', () => {
     const mockContact = { email: 'test@example.com', account_id: 'acc_123' };
     const oldDate = new Date(Date.now() - 100 * 24 * 60 * 60 * 1000).toISOString();
     const mockActivities = [
-      { type: 'Email', activity_date: oldDate }
+      { type: 'email', activity_date: oldDate }
     ];
 
     (db.doc.get as jest.Mock).mockResolvedValue(mockContact);

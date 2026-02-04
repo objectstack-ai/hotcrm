@@ -315,7 +315,7 @@ export async function autoAssignCampaignLeads(
   // for (const member of members) {
   //   if (member.LeadId) {
   //     const lead = await db.doc.get('Lead', member.LeadId);
-  //     if (lead.Status === 'New') {
+  //     if (lead.Status === 'new') {
   //       leads.push(lead);
   //     }
   //   }
@@ -357,7 +357,7 @@ export async function trackMemberEngagementTimeline(
   // const relatedId = member.LeadId || member.ContactId;
   
   // await db.doc.create('Activity', {
-  //   Type: 'Email',
+  //   Type: 'email',
   //   Subject: `Campaign Email ${engagementType}`,
   //   Status: 'Completed',
   //   RelatedTo: relatedTo,

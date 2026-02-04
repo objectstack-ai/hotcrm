@@ -274,7 +274,7 @@ export async function executeSmartBriefing(request: SmartBriefingRequest): Promi
     // 3. Fetch recent Emails (Refactored to Protocol Compliant 'find')
     let emails = [];
     try {
-      emails = await db.find('Email', {
+      emails = await db.find('email', {
         fields: ['Subject', 'SentDate', 'Direction', 'Body'],
         filters: [['AccountId', '=', accountId]],
         sort: 'SentDate desc',
@@ -292,7 +292,7 @@ export async function executeSmartBriefing(request: SmartBriefingRequest): Promi
         fields: ['Name', 'Stage', 'Amount', 'CloseDate', 'Probability'],
         filters: [
           ['AccountId', '=', accountId],
-          ['Stage', 'not in', ['Closed Lost']]
+          ['Stage', 'not in', ['closed_lost']]
         ],
         sort: 'CloseDate asc',
         limit: 5

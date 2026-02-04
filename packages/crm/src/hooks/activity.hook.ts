@@ -273,7 +273,7 @@ export async function sendOverdueNotifications(db: any): Promise<void> {
   //   //   Subject: `Follow-up: ${activity.Subject}`,
   //   //   Type: 'Task',
   //   //   Status: 'Planned',
-  //   //   Priority: 'High',
+  //   //   Priority: 'high',
   //   //   WhoId: activity.WhoId,
   //   //   WhatId: activity.WhatId,
   //   //   OwnerId: activity.OwnerId,
@@ -308,7 +308,7 @@ const ActivityTypeValidationTrigger: Hook = {
             console.warn(`⚠️ Connected call should have duration recorded`);
           }
           break;
-        case 'Email':
+        case 'email':
           if (!activity.EmailSubject && activity.EmailBody) {
             console.warn(`⚠️ Email has body but no subject`);
           }

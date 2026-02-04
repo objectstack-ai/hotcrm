@@ -28,8 +28,8 @@ describe('SLA Prediction - predictSLABreach', () => {
     // Arrange
     const mockCase = {
       subject: 'Production system down',
-      priority: 'Critical',
-      status: 'New',
+      priority: 'critical',
+      status: 'new',
       created_date: new Date(Date.now() - 50 * 60 * 1000).toISOString(), // 50 minutes ago
       type: 'Technical Issue',
       owner_id: null
@@ -59,8 +59,8 @@ describe('SLA Prediction - predictSLABreach', () => {
     // Arrange
     const mockCase = {
       subject: 'Issue requiring attention',
-      priority: 'High',
-      status: 'New',
+      priority: 'high',
+      status: 'new',
       created_date: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
       type: 'General',
       owner_id: null // Unassigned
@@ -87,7 +87,7 @@ describe('SLA Prediction - predictSLABreach', () => {
     // Arrange
     const mockCase = {
       subject: 'Test case',
-      priority: 'Medium',
+      priority: 'medium',
       status: 'In Progress',
       created_date: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(), // 6 hours ago
       type: 'Question',
@@ -116,8 +116,8 @@ describe('SLA Prediction - predictSLABreach', () => {
     // Arrange
     const mockCase = {
       subject: 'Critical production issue',
-      priority: 'Critical',
-      status: 'New',
+      priority: 'critical',
+      status: 'new',
       created_date: new Date(Date.now() - 55 * 60 * 1000).toISOString(), // 55 minutes ago (near 1hr SLA)
       type: 'Technical Issue',
       owner_id: null
@@ -148,7 +148,7 @@ describe('SLA Prediction - predictSLABreach', () => {
     // Arrange
     const mockCase = {
       subject: 'Minor question',
-      priority: 'Low',
+      priority: 'low',
       status: 'In Progress',
       created_date: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(), // 1 hour ago
       type: 'Question',
@@ -181,7 +181,7 @@ describe('SLA Prediction - estimateResolutionTime', () => {
     const mockCase = {
       subject: 'Login issue',
       description: 'Cannot access account',
-      priority: 'High',
+      priority: 'high',
       type: 'Technical Issue',
       created_date: new Date().toISOString()
     };
@@ -189,14 +189,14 @@ describe('SLA Prediction - estimateResolutionTime', () => {
     const mockSimilarCases = [
       {
         type: 'Technical Issue',
-        priority: 'High',
+        priority: 'high',
         status: 'Closed',
         created_date: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
         closed_date: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000).toISOString()
       },
       {
         type: 'Technical Issue',
-        priority: 'High',
+        priority: 'high',
         status: 'Closed',
         created_date: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
         closed_date: new Date(Date.now() - 7.5 * 24 * 60 * 60 * 1000).toISOString()
@@ -223,7 +223,7 @@ describe('SLA Prediction - estimateResolutionTime', () => {
   it('should provide time range estimate', async () => {
     // Arrange
     const mockCase = {
-      priority: 'Medium',
+      priority: 'medium',
       type: 'Question',
       created_date: new Date().toISOString()
     };
@@ -247,7 +247,7 @@ describe('SLA Prediction - estimateResolutionTime', () => {
   it('should identify factors affecting resolution time', async () => {
     // Arrange
     const mockCase = {
-      priority: 'Critical',
+      priority: 'critical',
       type: 'Bug Report',
       description: 'This is a very complex issue with multiple symptoms and unclear root cause. ' + 'x'.repeat(500),
       created_date: new Date().toISOString()
@@ -275,14 +275,14 @@ describe('SLA Prediction - estimateResolutionTime', () => {
   it('should return benchmark statistics', async () => {
     // Arrange
     const mockCase = {
-      priority: 'High',
+      priority: 'high',
       type: 'Technical Issue',
       created_date: new Date().toISOString()
     };
 
     const mockHistoricalCases = Array(10).fill({
       type: 'Technical Issue',
-      priority: 'High',
+      priority: 'high',
       status: 'Closed',
       created_date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
       closed_date: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString()
@@ -308,20 +308,20 @@ describe('SLA Prediction - estimateResolutionTime', () => {
   it('should adjust estimate for priority', async () => {
     // Arrange
     const criticalCase = {
-      priority: 'Critical',
+      priority: 'critical',
       type: 'Issue',
       created_date: new Date().toISOString()
     };
 
     const lowCase = {
-      priority: 'Low',
+      priority: 'low',
       type: 'Issue',
       created_date: new Date().toISOString()
     };
 
     const mockHistorical = [{
       type: 'Issue',
-      priority: 'Critical',
+      priority: 'critical',
       status: 'Closed',
       created_date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
       closed_date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
@@ -354,8 +354,8 @@ describe('SLA Prediction - analyzeEscalationNeeds', () => {
         id: 'case_1',
         case_number: 'C-001',
         subject: 'Critical production issue',
-        status: 'New',
-        priority: 'Critical',
+        status: 'new',
+        priority: 'critical',
         created_date: new Date(Date.now() - 23 * 60 * 60 * 1000).toISOString(),
         owner_id: null
       },
@@ -364,7 +364,7 @@ describe('SLA Prediction - analyzeEscalationNeeds', () => {
         case_number: 'C-002',
         subject: 'Normal request',
         status: 'In Progress',
-        priority: 'Low',
+        priority: 'low',
         created_date: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
         owner_id: 'agent_1'
       }
@@ -420,7 +420,7 @@ describe('SLA Prediction - analyzeEscalationNeeds', () => {
         case_number: 'C-100',
         subject: 'Low risk',
         status: 'In Progress',
-        priority: 'Low',
+        priority: 'low',
         created_date: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
         owner_id: 'agent_1'
       }
@@ -453,8 +453,8 @@ describe('SLA Prediction - analyzeEscalationNeeds', () => {
       id: 'case_action',
       case_number: 'C-200',
       subject: 'Needs escalation',
-      status: 'New',
-      priority: 'High',
+      status: 'new',
+      priority: 'high',
       created_date: new Date(Date.now() - 20 * 60 * 60 * 1000).toISOString(),
       owner_id: null
     };
@@ -486,8 +486,8 @@ describe('SLA Prediction - analyzeEscalationNeeds', () => {
         id: 'case_high',
         case_number: 'C-300',
         subject: 'High risk case',
-        status: 'New',
-        priority: 'Critical',
+        status: 'new',
+        priority: 'critical',
         created_date: new Date(Date.now() - 55 * 60 * 1000).toISOString(),
         owner_id: null,
         type: 'Technical Issue'

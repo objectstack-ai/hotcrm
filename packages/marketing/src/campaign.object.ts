@@ -16,24 +16,24 @@ export const Campaign = ObjectSchema.create({
     type: Field.select({
       label: 'Type',
       options: [
-        { label: 'Conference', value: 'Conference' },
-        { label: 'Webinar', value: 'Webinar' },
-        { label: 'Trade Show', value: 'Trade Show' },
-        { label: 'Email', value: 'Email' },
-        { label: 'Social Media', value: 'Social Media' },
-        { label: 'Advertisement', value: 'Advertisement' },
-        { label: 'Direct Mail', value: 'Direct Mail' },
-        { label: 'Partners', value: 'Partners' },
-        { label: 'Other', value: 'Other' }
+        { label: 'Conference', value: 'conference' },
+        { label: 'Webinar', value: 'webinar' },
+        { label: 'Trade Show', value: 'trade_show' },
+        { label: 'Email', value: 'email' },
+        { label: 'Social Media', value: 'social_media' },
+        { label: 'Advertisement', value: 'advertisement' },
+        { label: 'Direct Mail', value: 'direct_mail' },
+        { label: 'Partners', value: 'partners' },
+        { label: 'Other', value: 'other' }
       ]
     }),
     status: Field.select({
       label: 'Status',
       options: [
-        { label: 'Planned', value: 'Planned' },
-        { label: 'In Progress', value: 'In Progress' },
-        { label: 'Completed', value: 'Completed' },
-        { label: 'Aborted', value: 'Aborted' }
+        { label: 'Planned', value: 'planned' },
+        { label: 'In Progress', value: 'in_progress' },
+        { label: 'Completed', value: 'completed' },
+        { label: 'Aborted', value: 'aborted' }
       ],
       defaultValue: 'Planned'
     }),

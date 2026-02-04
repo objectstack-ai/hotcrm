@@ -30,7 +30,7 @@ describe('Knowledge AI Actions - recommendArticles', () => {
       subject: 'Unable to login to dashboard',
       description: 'Getting authentication error when trying to access dashboard',
       type: 'Technical Issue',
-      priority: 'High'
+      priority: 'high'
     };
 
     const mockArticles = [

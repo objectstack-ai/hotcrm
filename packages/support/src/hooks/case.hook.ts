@@ -46,11 +46,11 @@ const CaseEntitlementCheck: Hook = {
       switch (slaLevel) {
         case 'Platinum':
           hoursToAdd = 4; // 4 Hours resolution
-          caseRec.priority = 'Critical'; // Auto-escalate priority
+          caseRec.priority = 'critical'; // Auto-escalate priority
           break;
         case 'Gold':
           hoursToAdd = 12; // 12 Hours
-          if (caseRec.priority !== 'Critical') caseRec.priority = 'High';
+          if (caseRec.priority !== 'critical') caseRec.priority = 'high';
           break;
         case 'Silver':
           hoursToAdd = 24; // 24 Hours

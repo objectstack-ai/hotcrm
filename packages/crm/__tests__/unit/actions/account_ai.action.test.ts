@@ -35,7 +35,7 @@ describe('Account AI Actions - calculateAccountHealth', () => {
     };
 
     const mockOpportunities = [
-      { amount: 100000, stage: 'Closed Won', close_date: '2024-01-15' }
+      { amount: 100000, stage: 'closed_won', close_date: '2024-01-15' }
     ];
 
     const mockCases: any[] = [];
@@ -109,8 +109,8 @@ describe('Account AI Actions - calculateAccountHealth', () => {
     // Arrange
     const mockAccount = { name: 'Account with Issues' };
     const mockCases = [
-      { status: 'Open', priority: 'High' },
-      { status: 'Open', priority: 'Critical' }
+      { status: 'Open', priority: 'high' },
+      { status: 'Open', priority: 'critical' }
     ];
 
     (db.doc.get as jest.Mock).mockResolvedValue(mockAccount);
@@ -161,8 +161,8 @@ describe('Account AI Actions - predictChurn', () => {
     const mockAccount = { name: 'At Risk Account' };
     const mockOpportunities: any[] = [];
     const mockCases = [
-      { status: 'Open', priority: 'High' },
-      { status: 'Open', priority: 'High' }
+      { status: 'Open', priority: 'high' },
+      { status: 'Open', priority: 'high' }
     ];
     const mockActivities: any[] = [];
 
@@ -188,8 +188,8 @@ describe('Account AI Actions - predictChurn', () => {
     // Arrange
     const mockAccount = { name: 'Healthy Account' };
     const mockOpportunities = [
-      { amount: 500000, stage: 'Closed Won', close_date: '2024-01-15' },
-      { amount: 300000, stage: 'Closed Won', close_date: '2024-02-20' }
+      { amount: 500000, stage: 'closed_won', close_date: '2024-01-15' },
+      { amount: 300000, stage: 'closed_won', close_date: '2024-02-20' }
     ];
     const mockCases: any[] = [];
     const mockActivities = Array(15).fill({
@@ -231,7 +231,7 @@ describe('Account AI Actions - predictChurn', () => {
   it('should provide retention actions for at-risk accounts', async () => {
     // Arrange
     const mockAccount = { name: 'At Risk Account' };
-    const mockCases = Array(5).fill({ status: 'Open', priority: 'High' });
+    const mockCases = Array(5).fill({ status: 'Open', priority: 'high' });
 
     (db.doc.get as jest.Mock).mockResolvedValue(mockAccount);
     (db.find as jest.Mock)

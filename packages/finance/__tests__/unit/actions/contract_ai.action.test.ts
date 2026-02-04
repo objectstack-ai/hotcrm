@@ -252,11 +252,11 @@ describe('Contract AI - predictRenewal', () => {
     };
 
     const mockCases = [
-      { priority: 'High', status: 'Open', created_date: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString() },
-      { priority: 'Critical', status: 'Open', created_date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() },
-      { priority: 'High', status: 'Open', created_date: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString() },
-      { priority: 'High', status: 'Open', created_date: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString() },
-      { priority: 'High', status: 'Closed', created_date: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString() }
+      { priority: 'high', status: 'Open', created_date: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString() },
+      { priority: 'critical', status: 'Open', created_date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() },
+      { priority: 'high', status: 'Open', created_date: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString() },
+      { priority: 'high', status: 'Open', created_date: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString() },
+      { priority: 'high', status: 'Closed', created_date: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString() }
     ];
 
     (db.doc.get as jest.Mock)

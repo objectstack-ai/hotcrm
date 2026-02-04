@@ -77,7 +77,7 @@ export async function predictWinProbability(request: WinProbabilityRequest): Pro
   // Count activities by type
   const activityCounts = {
     calls: activities.filter(a => a.Type === 'Call').length,
-    emails: activities.filter(a => a.Type === 'Email').length,
+    emails: activities.filter(a => a.Type === 'email').length,
     meetings: activities.filter(a => a.Type === 'Meeting').length
   };
 

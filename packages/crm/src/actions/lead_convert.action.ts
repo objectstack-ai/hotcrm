@@ -27,7 +27,7 @@ export const LeadConvertAction = {
     }
     const lead = leads[0];
 
-    if (lead.status === 'Converted') {
+    if (lead.status === 'converted') {
       throw new Error('Lead is already converted.');
     }
 
@@ -75,7 +75,7 @@ export const LeadConvertAction = {
         name: opportunity_name || `${lead.company} - Deal`,
         account: account._id,
         primary_contact: contact._id, // Assuming such field exists or we link via role
-        stage: 'Prospecting',
+        stage: 'prospecting',
         close_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // +30 days
         amount: lead.annual_revenue ? lead.annual_revenue * 0.1 : 0, // Estimate value
         owner: owner,
@@ -87,7 +87,7 @@ export const LeadConvertAction = {
 
     // D. Update Lead
     await db.update('lead', lead_id, {
-      status: 'Converted',
+      status: 'converted',
       is_converted: true,
       converted_date: new Date().toISOString(),
       converted_account_id: result.account_id,

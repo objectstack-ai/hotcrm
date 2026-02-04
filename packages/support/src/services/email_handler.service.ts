@@ -43,15 +43,15 @@ export class EmailHandler {
       // Add email message to existing case
       await this.logEmailMessage(caseId, payload, 'Inbound');
       // Update status if needed
-      await db.update('case', caseId, { status: 'New Response', last_activity_date: new Date().toISOString() });
+      await db.update('case', caseId, { status: 'new_response', last_activity_date: new Date().toISOString() });
     } else {
       // Create new Case
       const newCase = await db.insert('case', {
         subject: payload.subject,
         description: payload.body,
-        origin: 'Email',
-        status: 'New',
-        priority: 'Medium',
+        origin: 'email',
+        status: 'new',
+        priority: 'medium',
         contact: contact._id,
         account: contact.account,
         supplied_email: payload.from_address
@@ -98,7 +98,7 @@ export class EmailHandler {
     // using 'activity' for now as a proxy
     await db.insert('activity', {
       subject: (direction === 'Inbound' ? 'Email Received: ' : 'Email Sent: ') + email.subject,
-      type: 'Email',
+      type: 'email',
       status: 'Completed',
       who_id: caseId, // Polymorphic link simulation
       description: email.body,

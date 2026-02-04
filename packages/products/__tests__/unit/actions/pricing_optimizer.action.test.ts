@@ -33,8 +33,8 @@ describe('Pricing Optimizer - optimizePricing', () => {
     const mockProduct = { name: 'Product X' };
     const mockPriceEntries = [{ list_price: 50000 }];
     const mockDeals = [
-      { amount: 48000, stage: 'Closed Won', close_date: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString() },
-      { amount: 45000, stage: 'Closed Won', close_date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() }
+      { amount: 48000, stage: 'closed_won', close_date: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString() },
+      { amount: 45000, stage: 'closed_won', close_date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() }
     ];
 
     (db.doc.get as jest.Mock).mockResolvedValue(mockProduct);

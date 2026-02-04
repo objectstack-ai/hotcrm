@@ -53,7 +53,7 @@ describe('End-to-End Recruitment Workflow', () => {
       expected_salary: 140000,
       notice_period: '1 Month',
       source: 'Job Board',
-      status: 'New'
+      status: 'new'
     };
 
     const mockApplication = {
@@ -145,7 +145,7 @@ describe('End-to-End Recruitment Workflow', () => {
       .mockResolvedValueOnce(mockEmployee);
 
     (db.doc.update as jest.Mock)
-      .mockResolvedValueOnce({ ...mockCandidate, status: 'Under Review' })
+      .mockResolvedValueOnce({ ...mockCandidate, status: 'under_review' })
       .mockResolvedValueOnce({ ...mockApplication, status: 'Screening', stage: 'Phone Screen' })
       .mockResolvedValueOnce({ ...mockCandidate, status: 'Interviewing' })
       .mockResolvedValueOnce({ ...mockApplication, status: 'Interviewing' })
@@ -169,7 +169,7 @@ describe('End-to-End Recruitment Workflow', () => {
       current_title: 'Software Engineer',
       years_of_experience: 5,
       expected_salary: 140000,
-      status: 'New'
+      status: 'new'
     });
 
     const application = await db.doc.create('application', {
@@ -182,7 +182,7 @@ describe('End-to-End Recruitment Workflow', () => {
 
     // Step 2: Candidate screening → Under Review
     const candidateUnderReview = await db.doc.update('candidate', candidate.id, {
-      status: 'Under Review'
+      status: 'under_review'
     });
 
     const applicationScreening = await db.doc.update('application', application.id, {
@@ -285,14 +285,14 @@ describe('End-to-End Recruitment Workflow', () => {
 
     // Assert - Verify complete workflow
     expect(candidate).toBeDefined();
-    expect(candidate.status).toBe('New');
+    expect(candidate.status).toBe('new');
     expect(candidate.email).toBe('alice.chen@example.com');
 
     expect(application).toBeDefined();
     expect(application.candidate_id).toBe(candidate.id);
     expect(application.recruitment_id).toBe(recruitment.id);
 
-    expect(candidateUnderReview.status).toBe('Under Review');
+    expect(candidateUnderReview.status).toBe('under_review');
     expect(applicationScreening.status).toBe('Screening');
 
     expect(candidateInterviewing.status).toBe('Interviewing');
@@ -325,7 +325,7 @@ describe('End-to-End Recruitment Workflow', () => {
       last_name: 'Smith',
       email: 'bob.smith@example.com',
       mobile_phone: '+1-555-0200',
-      status: 'New'
+      status: 'new'
     };
 
     const mockApplication = {
@@ -340,7 +340,7 @@ describe('End-to-End Recruitment Workflow', () => {
       .mockResolvedValueOnce(mockApplication);
 
     (db.doc.update as jest.Mock)
-      .mockResolvedValueOnce({ ...mockCandidate, status: 'Under Review' })
+      .mockResolvedValueOnce({ ...mockCandidate, status: 'under_review' })
       .mockResolvedValueOnce({ ...mockApplication, status: 'Screening' })
       .mockResolvedValueOnce({ 
         ...mockCandidate, 
@@ -357,7 +357,7 @@ describe('End-to-End Recruitment Workflow', () => {
       first_name: 'Bob',
       last_name: 'Smith',
       email: 'bob.smith@example.com',
-      status: 'New'
+      status: 'new'
     });
 
     const application = await db.doc.create('application', {
@@ -366,7 +366,7 @@ describe('End-to-End Recruitment Workflow', () => {
       status: 'Submitted'
     });
 
-    await db.doc.update('candidate', candidate.id, { status: 'Under Review' });
+    await db.doc.update('candidate', candidate.id, { status: 'under_review' });
     await db.doc.update('application', application.id, { status: 'Screening' });
 
     const rejectedCandidate = await db.doc.update('candidate', candidate.id, {
@@ -645,7 +645,7 @@ describe('End-to-End Recruitment Workflow', () => {
       notice_period: '2 Weeks',
       source: 'Employee Referral',
       linkedin_url: 'https://linkedin.com/in/frankzhang',
-      status: 'New'
+      status: 'new'
     };
 
     const mockEmployee = {

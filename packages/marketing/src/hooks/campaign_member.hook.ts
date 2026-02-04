@@ -298,7 +298,7 @@ export async function trackMemberEngagementTimeline(
     // const relatedId = member.lead || member.contact;
     // 
     // await ctx.ql.create('activity', {
-    //   type: 'Email',
+    //   type: 'email',
     //   subject: `Campaign Email ${engagementType}`,
     //   status: 'Completed',
     //   related_to: relatedTo,

@@ -79,8 +79,8 @@ Return JSON with extracted data and confidence scores (0-100):
     "LastName": "...",
     "Title": "...",
     "Company": "...",
-    "Phone": "...",
-    "Email": "...",
+    "phone": "...",
+    "email": "...",
     "Address": "...",
     "Website": "..."
   },
@@ -169,7 +169,7 @@ export async function enrichLead(request: LeadEnrichmentRequest): Promise<LeadEn
   // If leadId provided, fetch lead to get email domain
   if (request.leadId && !domain) {
     const lead = await db.doc.get('Lead', request.leadId, {
-      fields: ['Email']
+      fields: ['email']
     });
     if (lead?.Email) {
       domain = lead.Email.split('@')[1];

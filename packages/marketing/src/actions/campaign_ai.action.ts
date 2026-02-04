@@ -278,7 +278,7 @@ Create 4-6 audience segments optimized for ${campaign?.type || campaignType || '
       ],
       "expectedEngagement": 45,
       "priority": "high",
-      "channels": ["Email", "LinkedIn", "Direct Mail"]
+      "channels": ["email", "LinkedIn", "Direct Mail"]
     }
   ],
   "distribution": {
@@ -401,7 +401,7 @@ Webinars, Events, Direct Mail, Display Ads, Search Ads, Influencer Marketing
 {
   "channels": [
     {
-      "channel": "Email",
+      "channel": "email",
       "effectiveness": 85,
       "estimatedCost": 5000,
       "expectedReach": 50000,
@@ -423,14 +423,14 @@ Webinars, Events, Direct Mail, Display Ads, Search Ads, Influencer Marketing
   ],
   "channelMix": [
     {
-      "channel": "Email",
+      "channel": "email",
       "budgetAllocation": 20000,
       "budgetPercentage": 40,
       "expectedROI": 250
     }
   ],
   "strategy": {
-    "primary": "Email",
+    "primary": "email",
     "secondary": ["LinkedIn", "Webinars"],
     "reasoning": "Email provides best reach-to-cost ratio for B2B audience, supported by LinkedIn for executive targeting"
   }
@@ -682,7 +682,7 @@ Create optimal budget allocation:
 {
   "allocation": [
     {
-      "channel": "Email",
+      "channel": "email",
       "amount": 20000,
       "percentage": 40,
       "expectedLeads": 800,
@@ -700,15 +700,15 @@ Create optimal budget allocation:
   },
   "scenarios": {
     "conservative": {
-      "allocation": {"Email": 30000, "LinkedIn": 20000},
+      "allocation": {"email": 30000, "LinkedIn": 20000},
       "roi": 200
     },
     "balanced": {
-      "allocation": {"Email": 20000, "LinkedIn": 15000, "Events": 15000},
+      "allocation": {"email": 20000, "LinkedIn": 15000, "Events": 15000},
       "roi": 220
     },
     "aggressive": {
-      "allocation": {"Email": 15000, "LinkedIn": 10000, "Events": 15000, "Display": 10000},
+      "allocation": {"email": 15000, "LinkedIn": 10000, "Events": 15000, "Display": 10000},
       "roi": 240
     }
   },
@@ -775,7 +775,7 @@ You are a marketing timing expert optimizing campaign send schedules.
 
 # Campaign Context
 
-- Type: ${campaignType || 'Email'}
+- Type: ${campaignType || 'email'}
 - Timezone: ${timezone || 'UTC'}
 - Industry: ${industry || 'General B2B'}
 
@@ -1029,7 +1029,7 @@ async function callLLM(prompt: string): Promise<string> {
           ],
           expectedEngagement: 45,
           priority: 'high',
-          channels: ['Email', 'LinkedIn', 'Direct Mail']
+          channels: ['email', 'LinkedIn', 'Direct Mail']
         },
         {
           segmentName: 'Active Engagers',
@@ -1042,7 +1042,7 @@ async function callLLM(prompt: string): Promise<string> {
           ],
           expectedEngagement: 55,
           priority: 'high',
-          channels: ['Email', 'Retargeting Ads']
+          channels: ['email', 'Retargeting Ads']
         },
         {
           segmentName: 'SMB Growth Companies',
@@ -1055,7 +1055,7 @@ async function callLLM(prompt: string): Promise<string> {
           ],
           expectedEngagement: 35,
           priority: 'medium',
-          channels: ['Email', 'Social Media', 'Webinars']
+          channels: ['email', 'Social Media', 'Webinars']
         }
       ],
       distribution: {
@@ -1079,7 +1079,7 @@ async function callLLM(prompt: string): Promise<string> {
     return JSON.stringify({
       channels: [
         {
-          channel: 'Email',
+          channel: 'email',
           effectiveness: 85,
           estimatedCost: 8000,
           expectedReach: 50000,
@@ -1137,7 +1137,7 @@ async function callLLM(prompt: string): Promise<string> {
       ],
       channelMix: [
         {
-          channel: 'Email',
+          channel: 'email',
           budgetAllocation: 20000,
           budgetPercentage: 40,
           expectedROI: 280
@@ -1162,7 +1162,7 @@ async function callLLM(prompt: string): Promise<string> {
         }
       ],
       strategy: {
-        primary: 'Email',
+        primary: 'email',
         secondary: ['LinkedIn Ads', 'Webinars'],
         reasoning: 'Email provides best reach-to-cost ratio and proven ROI. LinkedIn Ads enable precise targeting of decision makers. Webinars offer high-engagement touchpoint for qualified leads. Content marketing supports all channels with thought leadership.'
       }
