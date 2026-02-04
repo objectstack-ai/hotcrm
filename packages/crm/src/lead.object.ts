@@ -45,19 +45,19 @@ export const Lead = ObjectSchema.create({
       label: '状态',
       defaultValue: 'New',
       options: [
-        { label: '新线索', value: 'New' },
-        { label: '已联系', value: 'Contacted' },
-        { label: '已认证', value: 'Qualified' },
-        { label: '未认证', value: 'Unqualified' },
-        { label: '已转化', value: 'Converted' }
+        { label: '新线索', value: 'new' },
+        { label: '已联系', value: 'contacted' },
+        { label: '已认证', value: 'qualified' },
+        { label: '未认证', value: 'unqualified' },
+        { label: '已转化', value: 'converted' }
       ]
     }),
     rating: Field.select({
       label: '等级',
       options: [
-        { label: '热门 🔥', value: 'Hot' },
-        { label: '温暖 ⭐', value: 'Warm' },
-        { label: '冷淡 ❄️', value: 'Cold' }
+        { label: '热门 🔥', value: 'hot' },
+        { label: '温暖 ⭐', value: 'warm' },
+        { label: '冷淡 ❄️', value: 'cold' }
       ]
     }),
     lead_score: Field.number({
@@ -76,16 +76,16 @@ export const Lead = ObjectSchema.create({
     industry: Field.select({
       label: '行业',
       options: [
-        { label: '科技/互联网', value: 'Technology' },
-        { label: '金融服务', value: 'Finance' },
-        { label: '制造业', value: 'Manufacturing' },
-        { label: '零售', value: 'Retail' },
-        { label: '医疗健康', value: 'Healthcare' },
-        { label: '教育', value: 'Education' },
-        { label: '房地产', value: 'RealEstate' },
-        { label: '能源', value: 'Energy' },
-        { label: '咨询服务', value: 'Consulting' },
-        { label: '其他', value: 'Other' }
+        { label: '科技/互联网', value: 'technology' },
+        { label: '金融服务', value: 'finance' },
+        { label: '制造业', value: 'manufacturing' },
+        { label: '零售', value: 'retail' },
+        { label: '医疗健康', value: 'healthcare' },
+        { label: '教育', value: 'education' },
+        { label: '房地产', value: 'realestate' },
+        { label: '能源', value: 'energy' },
+        { label: '咨询服务', value: 'consulting' },
+        { label: '其他', value: 'other' }
       ]
     }),
     number_of_employees: Field.number({
@@ -99,11 +99,11 @@ export const Lead = ObjectSchema.create({
     lead_source: Field.select({
       label: '线索来源',
       options: [
-        { label: 'Web', value: 'Web' },
-        { label: 'Phone Inquiry', value: 'Phone Inquiry' },
-        { label: 'Partner Referral', value: 'Partner Referral' },
-        { label: 'Purchased List', value: 'Purchased List' },
-        { label: 'Other', value: 'Other' }
+        { label: 'Web', value: 'web' },
+        { label: 'Phone Inquiry', value: 'phone_inquiry' },
+        { label: 'Partner Referral', value: 'partner_referral' },
+        { label: 'Purchased List', value: 'purchased_list' },
+        { label: 'Other', value: 'other' }
       ]
     }),
     is_in_public_pool: Field.boolean({

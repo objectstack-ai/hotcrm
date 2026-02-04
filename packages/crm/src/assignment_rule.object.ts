@@ -23,10 +23,10 @@ export const AssignmentRule = ObjectSchema.create({
     criteria_operator: Field.select({ 
       label: 'Operator', 
       options: [
-        { label: '=', value: '=' },
-        { label: '!=', value: '!=' },
-        { label: '>', value: '>' },
-        { label: '<', value: '<' },
+        { label: '=', value: '' },
+        { label: '!=', value: '' },
+        { label: '>', value: '' },
+        { label: '<', value: '' },
         { label: 'contains', value: 'contains' }
       ], 
       required: true 

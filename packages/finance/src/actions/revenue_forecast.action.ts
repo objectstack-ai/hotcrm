@@ -376,7 +376,7 @@ export async function analyzeRevenueRisk(request: AnalyzeRevenueRiskRequest): Pr
   const staleOpps = opportunities.filter(o => {
     const created = new Date(o.created_date);
     const daysOld = (Date.now() - created.getTime()) / (1000 * 60 * 60 * 24);
-    return daysOld > 90 && o.stage !== 'Prospecting';
+    return daysOld > 90 && o.stage !== 'prospecting';
   });
 
   if (staleOpps.length > 0) {

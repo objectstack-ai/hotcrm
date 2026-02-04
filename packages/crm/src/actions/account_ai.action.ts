@@ -100,7 +100,7 @@ export async function calculateAccountHealth(request: AccountHealthRequest): Pro
 
   // Calculate support score (0-100)
   const openCases = cases.filter((c: any) => c.status !== 'Closed');
-  const highPriorityCases = openCases.filter((c: any) => c.priority === 'High' || c.priority === 'Critical');
+  const highPriorityCases = openCases.filter((c: any) => c.priority === 'high' || c.priority === 'critical');
   const supportScore = Math.max(0, 100 - (openCases.length * 5) - (highPriorityCases.length * 10));
 
   // Calculate product adoption score (0-100)

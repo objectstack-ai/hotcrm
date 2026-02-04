@@ -255,7 +255,7 @@ export async function predictRenewal(request: RenewalPredictionRequest): Promise
     fields: ['priority', 'status']
   });
 
-  const highPriorityCases = recentCases.filter((c: any) => c.priority === 'High' || c.priority === 'Critical');
+  const highPriorityCases = recentCases.filter((c: any) => c.priority === 'high' || c.priority === 'critical');
   
   if (highPriorityCases.length > 3) {
     factors.push({

@@ -13,26 +13,26 @@ export const Payment = ObjectSchema.create({
     type: Field.select({
       label: 'Type',
       options: [
-        { label: 'Down Payment', value: 'Down Payment' },
-        { label: 'Milestone Payment', value: 'Milestone Payment' },
-        { label: 'Delivery Payment', value: 'Delivery Payment' },
-        { label: 'Acceptance Payment', value: 'Acceptance Payment' },
-        { label: 'Final Payment', value: 'Final Payment' },
-        { label: 'Recurring Payment', value: 'Recurring Payment' },
-        { label: 'Maintenance Fee', value: 'Maintenance Fee' },
-        { label: 'Other', value: 'Other' }
+        { label: 'Down Payment', value: 'down_payment' },
+        { label: 'Milestone Payment', value: 'milestone_payment' },
+        { label: 'Delivery Payment', value: 'delivery_payment' },
+        { label: 'Acceptance Payment', value: 'acceptance_payment' },
+        { label: 'Final Payment', value: 'final_payment' },
+        { label: 'Recurring Payment', value: 'recurring_payment' },
+        { label: 'Maintenance Fee', value: 'maintenance_fee' },
+        { label: 'Other', value: 'other' }
       ],
       required: true
     }),
     status: Field.select({
       label: 'Status',
       options: [
-        { label: 'Planned', value: 'Planned' },
-        { label: 'Invoiced', value: 'Invoiced' },
-        { label: 'Received', value: 'Received' },
-        { label: 'Overdue', value: 'Overdue' },
-        { label: 'Written Off', value: 'Written Off' },
-        { label: 'Cancelled', value: 'Cancelled' }
+        { label: 'Planned', value: 'planned' },
+        { label: 'Invoiced', value: 'invoiced' },
+        { label: 'Received', value: 'received' },
+        { label: 'Overdue', value: 'overdue' },
+        { label: 'Written Off', value: 'written_off' },
+        { label: 'Cancelled', value: 'cancelled' }
       ],
       defaultValue: 'Planned'
     }),
@@ -48,13 +48,13 @@ export const Payment = ObjectSchema.create({
     
     payment_method: Field.select({ 
       options: [
-        { label: 'Bank Transfer', value: 'Bank Transfer' },
-        { label: 'Check', value: 'Check' },
-        { label: 'Cash', value: 'Cash' },
-        { label: 'Credit Card', value: 'Credit Card' },
-        { label: 'Alipay', value: 'Alipay' },
-        { label: 'WeChat Pay', value: 'WeChat Pay' },
-        { label: 'Other', value: 'Other' }
+        { label: 'Bank Transfer', value: 'bank_transfer' },
+        { label: 'Check', value: 'check' },
+        { label: 'Cash', value: 'cash' },
+        { label: 'Credit Card', value: 'credit_card' },
+        { label: 'Alipay', value: 'alipay' },
+        { label: 'WeChat Pay', value: 'wechat_pay' },
+        { label: 'Other', value: 'other' }
       ],
       label: 'Payment Method'
     }),

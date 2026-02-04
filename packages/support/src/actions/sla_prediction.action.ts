@@ -105,7 +105,7 @@ export async function predictSLABreach(request: SLABreachPredictionRequest): Pro
   }
 
   // Factor 2: Case status (if still unassigned or in queue)
-  if (caseRecord.status === 'New' || !caseRecord.owner_id) {
+  if (caseRecord.status === 'new' || !caseRecord.owner_id) {
     breachProbability += 30;
     riskFactors.push({
       factor: 'Unassigned Case',
@@ -126,7 +126,7 @@ export async function predictSLABreach(request: SLABreachPredictionRequest): Pro
   }
 
   // Factor 4: Priority
-  if (caseRecord.priority === 'Critical') {
+  if (caseRecord.priority === 'critical') {
     breachProbability += 10;
     riskFactors.push({
       factor: 'Critical Priority',
@@ -167,7 +167,7 @@ export async function predictSLABreach(request: SLABreachPredictionRequest): Pro
     });
   }
 
-  if (caseRecord.status === 'New') {
+  if (caseRecord.status === 'new') {
     actions.push({
       action: 'Auto-assign to available agent',
       priority: riskLevel === 'critical' || riskLevel === 'high' ? 'urgent' as const : 'normal' as const,
@@ -269,13 +269,13 @@ export async function estimateResolutionTime(request: ResolutionTimeRequest): Pr
   const factors = [];
   
   // Priority adjustment
-  if (caseRecord.priority === 'Critical') {
+  if (caseRecord.priority === 'critical') {
     estimatedMinutes *= 0.8; // Critical cases get faster attention
     factors.push({
       factor: 'Critical Priority',
       impact: '-20% (prioritized handling)'
     });
-  } else if (caseRecord.priority === 'Low') {
+  } else if (caseRecord.priority === 'low') {
     estimatedMinutes *= 1.3;
     factors.push({
       factor: 'Low Priority',
@@ -595,7 +595,7 @@ export async function analyzeSLAPerformance(request: SLAAnalyticsRequest): Promi
       totalResponseTime += responseTime;
 
       // Check SLA compliance (simplified)
-      const slaTarget = c.priority === 'Critical' ? 60 : c.priority === 'High' ? 240 : 480;
+      const slaTarget = c.priority === 'critical' ? 60 : c.priority === 'high' ? 240 : 480;
       if (responseTime <= slaTarget) {
         casesMetSLA++;
       }

@@ -37,10 +37,10 @@ const CandidateScoringTrigger: Hook = {
       candidate.score = calculateCandidateScore(candidate);
 
       // Auto-screen based on minimum requirements
-      if (ctx.event === 'beforeInsert' && candidate.status === 'New') {
+      if (ctx.event === 'beforeInsert' && candidate.status === 'new') {
         const passedScreening = await autoScreen(candidate, ctx);
         if (passedScreening) {
-          candidate.status = 'Under Review';
+          candidate.status = 'under_review';
           console.log(`✅ Candidate ${candidate.first_name} ${candidate.last_name} passed auto-screening`);
         } else {
           console.log(`❌ Candidate ${candidate.first_name} ${candidate.last_name} did not pass auto-screening`);
