@@ -83,7 +83,7 @@ export async function analyzeAttribution(request: AttributionAnalysisRequest): P
     filters: [
       ['close_date', '>=', startDate],
       ['close_date', '<=', endDate],
-      ['stage', '=', 'Closed Won']
+      ['stage', '=', 'closed_won']
     ]
   });
 
@@ -133,7 +133,7 @@ Analyze attribution using ${model} model:
 {
   "channelAttribution": [
     {
-      "channel": "Email",
+      "channel": "email",
       "touches": 1250,
       "conversions": 85,
       "revenue": 425000,
@@ -155,17 +155,17 @@ Analyze attribution using ${model} model:
   ],
   "modelComparison": {
     "firstTouch": {
-      "Email": 150000,
+      "email": 150000,
       "Social": 80000,
       "Webinar": 195000
     },
     "lastTouch": {
-      "Email": 200000,
+      "email": 200000,
       "Social": 60000,
       "Webinar": 165000
     },
     "linear": {
-      "Email": 180000,
+      "email": 180000,
       "Social": 70000,
       "Webinar": 175000
     },
@@ -301,7 +301,7 @@ Analyze ROI and create forecast:
   },
   "byChannel": [
     {
-      "channel": "Email",
+      "channel": "email",
       "investment": 40000,
       "revenue": 200000,
       "roi": 400,
@@ -748,7 +748,7 @@ Analyze customer journeys to identify patterns:
 {
   "topPaths": [
     {
-      "path": ["Email", "Webinar", "Demo", "Proposal", "Close"],
+      "path": ["email", "Webinar", "Demo", "Proposal", "Close"],
       "frequency": 145,
       "conversionRate": 32,
       "avgTimeToConversion": 45,
@@ -1048,11 +1048,11 @@ Create optimal budget allocation:
   },
   "scenarios": {
     "current": {
-      "allocation": {"Email": 20000, "Social": 30000, "Events": 50000},
+      "allocation": {"email": 20000, "Social": 30000, "Events": 50000},
       "projectedROI": 180
     },
     "recommended": {
-      "allocation": {"Email": 30000, "Social": 25000, "Events": 35000, "Content": 10000},
+      "allocation": {"email": 30000, "Social": 25000, "Events": 35000, "Content": 10000},
       "projectedROI": 245
     },
     "improvement": 36
@@ -1088,7 +1088,7 @@ async function callLLM(prompt: string): Promise<string> {
   // Return contextual mock responses
   return JSON.stringify({
     channelAttribution: [
-      { channel: 'Email', touches: 1250, conversions: 85, revenue: 425000, attributedRevenue: 180000, attributionPercentage: 42.4, roi: 450 },
+      { channel: 'email', touches: 1250, conversions: 85, revenue: 425000, attributedRevenue: 180000, attributionPercentage: 42.4, roi: 450 },
       { channel: 'Webinar', touches: 680, conversions: 52, revenue: 260000, attributedRevenue: 110000, attributionPercentage: 25.9, roi: 380 },
       { channel: 'LinkedIn', touches: 890, conversions: 38, revenue: 190000, attributedRevenue: 80000, attributionPercentage: 18.8, roi: 220 }
     ],

@@ -83,14 +83,14 @@ export async function optimizePricing(request: OptimizePricingRequest): Promise<
   // Fetch historical deals for this product
   const historicalDeals = await db.find('opportunity', {
     filters: [
-      ['stage', 'in', ['Closed Won', 'Closed Lost']]
+      ['stage', 'in', ['closed_won', 'closed_lost']]
     ],
     fields: ['amount', 'stage', 'close_date', 'account_id'],
     limit: 500
   });
 
   // Calculate win rates at different price points
-  const wonDeals = historicalDeals.filter((d: any) => d.stage === 'Closed Won');
+  const wonDeals = historicalDeals.filter((d: any) => d.stage === 'closed_won');
   const avgWonPrice = wonDeals.length > 0 
     ? wonDeals.reduce((sum: number, d: any) => sum + (d.amount || 0), 0) / wonDeals.length 
     : listPrice;
@@ -352,7 +352,7 @@ export async function analyzeCompetitivePricing(request: AnalyzeCompetitivePrici
 
   // Fetch market data from historical opportunities
   const marketDeals = await db.find('opportunity', {
-    filters: [['stage', '=', 'Closed Won']],
+    filters: [['stage', '=', 'closed_won']],
     fields: ['amount', 'close_date'],
     limit: 1000
   });
@@ -541,14 +541,14 @@ export async function suggestDiscounts(request: SuggestDiscountsRequest): Promis
   // Analyze historical discount patterns
   const historicalDeals = await db.find('opportunity', {
     filters: [
-      ['stage', 'in', ['Closed Won', 'Closed Lost']],
+      ['stage', 'in', ['closed_won', 'closed_lost']],
       ['close_date', '>=', new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString()]
     ],
     fields: ['amount', 'stage', 'probability'],
     limit: 500
   });
 
-  const wonDeals = historicalDeals.filter((d: any) => d.stage === 'Closed Won');
+  const wonDeals = historicalDeals.filter((d: any) => d.stage === 'closed_won');
   const baseWinRate = historicalDeals.length > 0 ? wonDeals.length / historicalDeals.length : 0.25;
 
   // Calculate recommended discount to achieve target win rate
@@ -689,7 +689,7 @@ export async function predictPriceElasticity(request: PredictPriceElasticityRequ
 
   // Fetch historical pricing and volume data
   const historicalOpps = await db.find('opportunity', {
-    filters: [['stage', '=', 'Closed Won']],
+    filters: [['stage', '=', 'closed_won']],
     fields: ['amount', 'close_date', 'quantity'],
     limit: 1000
   });
@@ -886,13 +886,13 @@ export async function calculateOptimalPrice(request: CalculateOptimalPriceReques
 
   // Get historical win rates at different price points
   const historicalDeals = await db.find('opportunity', {
-    filters: [['stage', 'in', ['Closed Won', 'Closed Lost']]],
+    filters: [['stage', 'in', ['closed_won', 'closed_lost']]],
     fields: ['amount', 'stage'],
     limit: 500
   });
 
   const baseWinRate = historicalDeals.length > 0
-    ? historicalDeals.filter((d: any) => d.stage === 'Closed Won').length / historicalDeals.length
+    ? historicalDeals.filter((d: any) => d.stage === 'closed_won').length / historicalDeals.length
     : 0.25;
 
   // Calculate expected revenue for each approach

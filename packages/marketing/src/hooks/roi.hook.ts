@@ -17,8 +17,8 @@ const CampaignROIHook: Hook = {
     // Check if Campaign is linked
     if (!newOpp.campaign_id) return;
     
-    const isWon = newOpp.stage_name === 'Closed Won';
-    const wasWon = oldOpp.stage_name === 'Closed Won';
+    const isWon = newOpp.stage_name === 'closed_won';
+    const wasWon = oldOpp.stage_name === 'closed_won';
     
     let delta = 0;
 

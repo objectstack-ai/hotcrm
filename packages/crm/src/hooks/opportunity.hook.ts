@@ -16,8 +16,8 @@ const OpportunityValidation: Hook = {
   handler: async (ctx: TriggerContext) => {
     const opp = ctx.new;
     
-    // 1. Validate "Closed Won"
-    if (opp.stage === 'Closed Won') {
+    // 1. Validate "closed_won"
+    if (opp.stage === 'closed_won') {
       if (!opp.amount || opp.amount <= 0) {
         throw new Error('Validation Error: Cannot close a deal with zero amount. Please update the Amount field.');
       }
@@ -68,13 +68,13 @@ const OpportunityStageChange: Hook = {
       // Validate data completeness for advanced stages
       await validateStageRequirements(ctx);
 
-      // Handle "Closed Won" scenario
-      if (ctx.new.Stage === 'Closed Won') {
+      // Handle "closed_won" scenario
+      if (ctx.new.Stage === 'closed_won') {
         await handleClosedWon(ctx);
       }
 
-      // Handle "Closed Lost" scenario
-      if (ctx.new.Stage === 'Closed Lost') {
+      // Handle "closed_lost" scenario
+      if (ctx.new.Stage === 'closed_lost') {
         await handleClosedLost(ctx);
       }
 
@@ -139,7 +139,7 @@ async function handleClosedWon(ctx: TriggerContext): Promise<void> {
       Subject: `商机成交: ${opportunity.Name}`,
       Type: 'Milestone',
       Status: 'Completed',
-      Priority: 'High',
+      Priority: 'high',
       AccountId: opportunity.AccountId,
       WhatId: opportunity.Id,
       OwnerId: ctx.user.id,
@@ -247,7 +247,7 @@ async function validateStageRequirements(ctx: TriggerContext): Promise<void> {
   }
 
   // Validation for Closed stages
-  if ((stage === 'Closed Won' || stage === 'Closed Lost') && !opportunity.Amount) {
+  if ((stage === 'closed_won' || stage === 'closed_lost') && !opportunity.Amount) {
     warnings.push('Closed opportunities should have an Amount for reporting');
   }
 

@@ -98,7 +98,7 @@ export class EmailHandler {
     // using 'activity' for now as a proxy
     await db.insert('activity', {
       subject: (direction === 'Inbound' ? 'Email Received: ' : 'Email Sent: ') + email.subject,
-      type: 'Email',
+      type: 'email',
       status: 'Completed',
       who_id: caseId, // Polymorphic link simulation
       description: email.body,

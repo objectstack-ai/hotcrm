@@ -82,7 +82,7 @@ const LeadScoringTrigger: Hook = {
 function calculateDataCompleteness(lead: Lead): number {
   const requiredFields = [
     'FirstName', 'LastName', 'Company', 'Title',
-    'Email', 'Phone', 'MobilePhone',
+    'email', 'phone', 'MobilePhone',
     'Street', 'City', 'State', 'Country',
     'Industry', 'LeadSource', 'Rating',
     'NumberOfEmployees', 'AnnualRevenue',
@@ -289,7 +289,7 @@ const LeadStatusChangeTrigger: Hook = {
       console.log(`🔄 Lead status changed from "${ctx.previous.Status}" to "${ctx.input.Status}"`);
 
       // Handle conversion
-      if (ctx.input.Status === 'Converted') {
+      if (ctx.input.Status === 'converted') {
         await handleLeadConversion(ctx);
       }
 
@@ -321,7 +321,7 @@ const LeadStatusChangeTrigger: Hook = {
       Subject: `线索已转化: ${lead.FirstName} ${lead.LastName}`,
       Type: 'Conversion',
       Status: 'Completed',
-      Priority: 'High',
+      Priority: 'high',
       WhoId: lead.Id,
       OwnerId: ctx.session?.userId,
       ActivityDate: new Date().toISOString().split('T')[0],
@@ -346,7 +346,7 @@ async function handleLeadConversion(ctx: HookContext): Promise<void> {
       Subject: `线索转换: ${lead.FirstName} ${lead.LastName}`,
       Type: 'Conversion',
       Status: 'Completed',
-      Priority: 'High',
+      Priority: 'high',
       WhoId: lead.Id,
       OwnerId: ctx.session?.userId,
       ActivityDate: new Date().toISOString().split('T')[0],

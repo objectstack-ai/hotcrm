@@ -73,10 +73,10 @@ export async function predictSLABreach(request: SLABreachPredictionRequest): Pro
 
   // SLA targets based on priority (in minutes)
   const slaTargets: { [key: string]: number } = {
-    'Critical': 60,    // 1 hour
-    'High': 240,       // 4 hours
-    'Medium': 480,     // 8 hours
-    'Low': 1440        // 24 hours
+    'critical': 60,    // 1 hour
+    'high': 240,       // 4 hours
+    'medium': 480,     // 8 hours
+    'low': 1440        // 24 hours
   };
 
   const targetResponseTime = slaTargets[caseRecord.priority] || 480;
@@ -637,7 +637,7 @@ export async function analyzeSLAPerformance(request: SLAAnalyticsRequest): Promi
   if (complianceRate < 80) {
     insights.push('SLA compliance is below target. Consider increasing agent capacity.');
   }
-  if (priorityStats['Critical'] && priorityStats['Critical'].cases > totalCases * 0.3) {
+  if (priorityStats['critical'] && priorityStats['critical'].cases > totalCases * 0.3) {
     insights.push('High proportion of critical cases. Review triage process.');
   }
   insights.push(`Average response time is ${avgResponseTime} minutes`);

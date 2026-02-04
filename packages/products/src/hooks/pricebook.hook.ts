@@ -320,7 +320,7 @@ async function handleCurrencyChange(ctx: TriggerContext): Promise<void> {
         Subject: `Pricebook Currency Updated: ${pricebook.Name}`,
         Type: 'Currency Update',
         Status: 'Completed',
-        Priority: 'High',
+        Priority: 'high',
         WhatId: pricebook.Id,
         OwnerId: ctx.user.id,
         ActivityDate: new Date().toISOString().split('T')[0],

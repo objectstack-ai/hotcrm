@@ -75,7 +75,7 @@ export async function suggestBundles(request: SuggestBundlesRequest): Promise<Su
   const existingProducts = await db.find('opportunity', {
     filters: [
       ['account_id', '=', accountId],
-      ['stage', '=', 'Closed Won']
+      ['stage', '=', 'closed_won']
     ],
     fields: ['name', 'amount']
   });
@@ -839,10 +839,10 @@ export async function analyzeBundlePerformance(request: AnalyzeBundlePerformance
   // Simulate bundle-related opportunities (in reality, would query quote line items)
   const bundleOpportunities = allOpportunities.filter((_, idx) => idx % 5 === 0); // Simulate 20%
 
-  const wonDeals = bundleOpportunities.filter(o => o.stage === 'Closed Won');
-  const lostDeals = bundleOpportunities.filter(o => o.stage === 'Closed Lost');
+  const wonDeals = bundleOpportunities.filter(o => o.stage === 'closed_won');
+  const lostDeals = bundleOpportunities.filter(o => o.stage === 'closed_lost');
   const pipeline = bundleOpportunities.filter(o => 
-    o.stage !== 'Closed Won' && o.stage !== 'Closed Lost'
+    o.stage !== 'closed_won' && o.stage !== 'closed_lost'
   );
 
   // Calculate metrics

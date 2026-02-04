@@ -296,7 +296,7 @@ export interface ChannelRecommendationRequest {
 
 export interface ChannelRecommendationResponse {
   channels: Array<{
-    channel: 'Email' | 'Social Media' | 'Events' | 'Direct Mail' | 'Paid Ads' | 'Webinar' | 'Content Marketing';
+    channel: 'email' | 'Social Media' | 'Events' | 'Direct Mail' | 'Paid Ads' | 'Webinar' | 'Content Marketing';
     priority: number;
     budgetAllocation: number;
     budgetPercentage: number;
@@ -429,9 +429,9 @@ async function callLLM(prompt: string): Promise<string> {
   if (prompt.includes('data scientist') || prompt.includes('segmentation')) {
     return JSON.stringify({
       segments: [
-        { segmentId: 'seg_001', name: 'Enterprise High-Value', size: 2500, characteristics: { industry: ['Tech', 'Finance'], jobTitle: ['VP Sales', 'CRO'], companySize: ['1000+'], geography: ['North America'], engagementLevel: 'High', buyingStage: 'Consideration' }, score: 95, projectedConversion: 12.5, projectedROI: 450 },
-        { segmentId: 'seg_002', name: 'Mid-Market Evaluators', size: 8500, characteristics: { industry: ['Tech', 'Healthcare'], jobTitle: ['Sales Manager'], companySize: ['201-1000'], engagementLevel: 'Medium', buyingStage: 'Awareness' }, score: 82, projectedConversion: 8.2, projectedROI: 280 },
-        { segmentId: 'seg_003', name: 'SMB High-Intent', size: 12000, characteristics: { industry: ['Tech', 'Retail'], jobTitle: ['CEO', 'Founder'], companySize: ['1-200'], engagementLevel: 'High', buyingStage: 'Decision' }, score: 78, projectedConversion: 15.3, projectedROI: 320 }
+        { segmentId: 'seg_001', name: 'Enterprise High-Value', size: 2500, characteristics: { industry: ['Tech', 'Finance'], jobTitle: ['VP Sales', 'CRO'], companySize: ['1000+'], geography: ['North America'], engagementLevel: 'high', buyingStage: 'Consideration' }, score: 95, projectedConversion: 12.5, projectedROI: 450 },
+        { segmentId: 'seg_002', name: 'Mid-Market Evaluators', size: 8500, characteristics: { industry: ['Tech', 'Healthcare'], jobTitle: ['Sales Manager'], companySize: ['201-1000'], engagementLevel: 'medium', buyingStage: 'Awareness' }, score: 82, projectedConversion: 8.2, projectedROI: 280 },
+        { segmentId: 'seg_003', name: 'SMB High-Intent', size: 12000, characteristics: { industry: ['Tech', 'Retail'], jobTitle: ['CEO', 'Founder'], companySize: ['1-200'], engagementLevel: 'high', buyingStage: 'Decision' }, score: 78, projectedConversion: 15.3, projectedROI: 320 }
       ],
       recommendations: { primarySegment: 'seg_001', testSegments: ['seg_002', 'seg_003'], excludeSegments: [], reasoning: 'Focus 60% on enterprise for ROI, test mid-market & SMB for scale' },
       modelInsights: { algorithm: 'K-means with 18 features', confidence: 87, featuresConsidered: ['Job title', 'Company size', 'Industry', 'Engagement', 'Geography'], trainingDataSize: 50000 },
@@ -454,11 +454,11 @@ async function callLLM(prompt: string): Promise<string> {
   if (prompt.includes('marketing strategist') || prompt.includes('channel')) {
     return JSON.stringify({
       channels: [
-        { channel: 'Email', priority: 1, budgetAllocation: 15000, budgetPercentage: 30, expectedReach: 150000, expectedEngagement: 31500, expectedConversions: 1800, projectedROI: 420, confidence: 92, reasoning: 'Highest ROI, scalable, proven' },
+        { channel: 'email', priority: 1, budgetAllocation: 15000, budgetPercentage: 30, expectedReach: 150000, expectedEngagement: 31500, expectedConversions: 1800, projectedROI: 420, confidence: 92, reasoning: 'Highest ROI, scalable, proven' },
         { channel: 'Events', priority: 2, budgetAllocation: 20000, budgetPercentage: 40, expectedReach: 2000, expectedEngagement: 800, expectedConversions: 160, projectedROI: 500, confidence: 85, reasoning: 'Premium leads, high conversion' },
         { channel: 'Social Media', priority: 3, budgetAllocation: 10000, budgetPercentage: 20, expectedReach: 500000, expectedEngagement: 25000, expectedConversions: 400, projectedROI: 300, confidence: 78, reasoning: 'Brand awareness, supports other channels' }
       ],
-      strategy: { approach: 'multi_channel', sequencing: [{ step: 1, channel: 'Social Media', timing: 'Week 1-2', objective: 'Build awareness' }, { step: 2, channel: 'Events', timing: 'Week 3', objective: 'Generate leads' }, { step: 3, channel: 'Email', timing: 'Week 4-8', objective: 'Nurture to close' }], reasoning: 'Multi-touch creates 7-9 touchpoints across buyer journey' },
+      strategy: { approach: 'multi_channel', sequencing: [{ step: 1, channel: 'Social Media', timing: 'Week 1-2', objective: 'Build awareness' }, { step: 2, channel: 'Events', timing: 'Week 3', objective: 'Generate leads' }, { step: 3, channel: 'email', timing: 'Week 4-8', objective: 'Nurture to close' }], reasoning: 'Multi-touch creates 7-9 touchpoints across buyer journey' },
       benchmarks: { industryAvgROI: { Email: 420, Social: 300, Events: 500 }, yourHistoricalROI: { Email: 450, Social: 280, Events: 550 }, recommendations: ['Email exceeds avg by 7%', 'Events exceptional at 550%', 'Focus LinkedIn for B2B'] },
       budgetOptimization: { totalBudget: 50000, allocatedBudget: 45000, reserveBuffer: 5000, expectedTotalROI: 385, expectedRevenue: 192500 }
     });

@@ -277,7 +277,7 @@ async function createRenewalReminderTasks(accountId: string, renewalDate: string
       //   Subject: `Renewal reminder: ${days} days until contract renewal`,
       //   Type: 'Task',
       //   Status: 'Planned',
-      //   Priority: days <= 30 ? 'High' : 'Medium',
+      //   Priority: days <= 30 ? 'high' : 'medium',
       //   WhatId: accountId,
       //   ActivityDate: reminderDate.toISOString().split('T')[0],
       //   Description: `Contract renewal is coming up in ${days} days. Please contact the customer to discuss renewal.`

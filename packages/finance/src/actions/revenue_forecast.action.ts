@@ -67,7 +67,7 @@ export async function forecastRevenue(request: ForecastRevenueRequest): Promise<
   const months = request.months || 12;
   
   // Fetch opportunities
-  const filters: any[] = [['stage', '!=', 'Closed Lost']];
+  const filters: any[] = [['stage', '!=', 'closed_lost']];
   if (request.accountId) {
     filters.push(['account_id', '=', request.accountId]);
   }
@@ -87,13 +87,13 @@ export async function forecastRevenue(request: ForecastRevenueRequest): Promise<
   // Calculate historical win rate
   const closedOpps = await db.find('opportunity', {
     filters: [
-      ['stage', 'in', ['Closed Won', 'Closed Lost']],
+      ['stage', 'in', ['closed_won', 'closed_lost']],
       ['close_date', '>=', new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString()]
     ],
     fields: ['stage', 'amount', 'close_date']
   });
 
-  const wonOpps = closedOpps.filter(o => o.stage === 'Closed Won');
+  const wonOpps = closedOpps.filter(o => o.stage === 'closed_won');
   const historicalWinRate = closedOpps.length > 0 ? wonOpps.length / closedOpps.length : 0.2;
 
   // Generate monthly forecasts
@@ -117,7 +117,7 @@ export async function forecastRevenue(request: ForecastRevenueRequest): Promise<
     // Calculate weighted pipeline
     const pipelineValue = monthOpps.reduce((sum, o) => sum + (o.amount || 0), 0);
     const weightedPipeline = monthOpps.reduce((sum, o) => {
-      const probability = o.probability || (o.stage === 'Closed Won' ? 100 : 50);
+      const probability = o.probability || (o.stage === 'closed_won' ? 100 : 50);
       return sum + ((o.amount || 0) * probability / 100);
     }, 0);
 
@@ -336,7 +336,7 @@ export async function analyzeRevenueRisk(request: AnalyzeRevenueRiskRequest): Pr
 
   // Fetch opportunities in late stages
   const opportunities = await db.find('opportunity', {
-    filters: [['stage', '!=', 'Closed Lost'], ['stage', '!=', 'Closed Won']],
+    filters: [['stage', '!=', 'closed_lost'], ['stage', '!=', 'closed_won']],
     fields: ['name', 'amount', 'stage', 'close_date', 'probability', 'account_id', 'created_date']
   });
 
@@ -524,7 +524,7 @@ export async function recommendRevenueActions(request: RecommendRevenueActionsRe
 
   // Fetch opportunities for analysis
   const opportunities = await db.find('opportunity', {
-    filters: [['stage', '!=', 'Closed Lost'], ['stage', '!=', 'Closed Won']],
+    filters: [['stage', '!=', 'closed_lost'], ['stage', '!=', 'closed_won']],
     fields: ['name', 'amount', 'stage', 'close_date', 'probability', 'account_id']
   });
 
@@ -727,7 +727,7 @@ export async function benchmarkRevenue(request: BenchmarkRevenueRequest): Promis
   const opportunities = await db.find('opportunity', {
     filters: [
       ['close_date', '>=', startDate.toISOString()],
-      ['stage', '=', 'Closed Won']
+      ['stage', '=', 'closed_won']
     ],
     fields: ['name', 'amount', 'close_date', 'created_date', 'stage'],
     limit: 10000
@@ -737,7 +737,7 @@ export async function benchmarkRevenue(request: BenchmarkRevenueRequest): Promis
   const allClosed = await db.find('opportunity', {
     filters: [
       ['close_date', '>=', startDate.toISOString()],
-      ['stage', 'in', ['Closed Won', 'Closed Lost']]
+      ['stage', 'in', ['closed_won', 'closed_lost']]
     ],
     fields: ['stage', 'amount', 'close_date', 'created_date']
   });

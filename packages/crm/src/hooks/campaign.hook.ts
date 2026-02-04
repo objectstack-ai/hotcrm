@@ -70,14 +70,14 @@ export async function updateCampaignMetrics(campaignId: string, db: any): Promis
   //   filters: [['CampaignId', '=', campaignId]]
   // });
   // 
-  // const convertedLeads = leads.filter(l => l.Status === 'Converted');
+  // const convertedLeads = leads.filter(l => l.Status === 'converted');
   
   // 2. Count opportunities from this campaign
   // const opportunities = await db.find('Opportunity', {
   //   filters: [['CampaignId', '=', campaignId]]
   // });
   // 
-  // const wonOpportunities = opportunities.filter(o => o.Stage === 'Closed Won');
+  // const wonOpportunities = opportunities.filter(o => o.Stage === 'closed_won');
   
   // 3. Calculate actual revenue from won opportunities
   // const actualRevenue = wonOpportunities.reduce((sum, opp) => sum + (opp.Amount || 0), 0);
@@ -224,11 +224,11 @@ export async function calculateCampaignPerformance(campaignId: string, db: any):
   // const opportunities = await db.find('Opportunity', { filters: [['CampaignId', '=', campaignId]] });
   
   // performance.totalLeads = leads.length;
-  // performance.convertedLeads = leads.filter(l => l.Status === 'Converted').length;
+  // performance.convertedLeads = leads.filter(l => l.Status === 'converted').length;
   // performance.totalOpportunities = opportunities.length;
-  // performance.wonOpportunities = opportunities.filter(o => o.Stage === 'Closed Won').length;
+  // performance.wonOpportunities = opportunities.filter(o => o.Stage === 'closed_won').length;
   // performance.totalRevenue = opportunities
-  //   .filter(o => o.Stage === 'Closed Won')
+  //   .filter(o => o.Stage === 'closed_won')
   //   .reduce((sum, o) => sum + (o.Amount || 0), 0);
   // performance.totalCost = campaign.ActualCost || 0;
   

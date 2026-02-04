@@ -184,7 +184,7 @@ export async function detectBuyingIntent(request: BuyingIntentRequest): Promise<
   let intentScore = 0;
 
   // Email engagement signals
-  const emailActivities = activities.filter((a: any) => a.type === 'Email');
+  const emailActivities = activities.filter((a: any) => a.type === 'email');
   if (emailActivities.length > 5) {
     signals.push({
       signal: 'High Email Engagement',
