@@ -14,11 +14,11 @@
     "@hotcrm/marketing": "workspace:*",
     "@hotcrm/products": "workspace:*",
     "@hotcrm/support": "workspace:*",
-    "@objectstack/cli": "^1.0.0",
-    "@objectstack/core": "1.0.0",
-    "@objectstack/plugin-hono-server": "1.0.0",
-    "@objectstack/runtime": "1.0.0",
-    "@objectstack/spec": "^1.0.0",
+    "@objectstack/cli": "^1.0.4",
+    "@objectstack/core": "1.0.4",
+    "@objectstack/plugin-hono-server": "1.0.4",
+    "@objectstack/runtime": "1.0.4",
+    "@objectstack/spec": "^1.0.4",
     "pino": "^10.3.0"
   },
   "devDependencies": {
