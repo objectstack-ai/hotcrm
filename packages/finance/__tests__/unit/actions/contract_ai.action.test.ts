@@ -6,12 +6,14 @@ import {
 } from '../../../src/actions/contract_ai.action';
 
 // Mock the db module
-jest.mock('../../../src/db', () => ({
+import { vi, Mock } from 'vitest';
+
+vi.mock('../../../src/db', () => ({
   db: {
     doc: {
-      get: jest.fn()
+      get: vi.fn()
     },
-    find: jest.fn()
+    find: vi.fn()
   }
 }));
 
@@ -19,7 +21,7 @@ import { db } from '../../../src/db';
 
 describe('Contract AI - analyzeContractRisk', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should analyze contract risk factors', async () => {
@@ -41,7 +43,7 @@ describe('Contract AI - analyzeContractRisk', () => {
       number_of_employees: 200
     };
 
-    (db.doc.get as jest.Mock)
+    (db.doc.get as Mock)
       .mockResolvedValueOnce(mockContract)
       .mockResolvedValueOnce(mockAccount);
 
@@ -69,7 +71,7 @@ describe('Contract AI - analyzeContractRisk', () => {
       account_id: 'acc_456'
     };
 
-    (db.doc.get as jest.Mock)
+    (db.doc.get as Mock)
       .mockResolvedValueOnce(longTermContract)
       .mockResolvedValueOnce({ annual_revenue: 1000000 });
 
@@ -94,7 +96,7 @@ describe('Contract AI - analyzeContractRisk', () => {
       account_id: 'acc_789'
     };
 
-    (db.doc.get as jest.Mock)
+    (db.doc.get as Mock)
       .mockResolvedValueOnce(mockContract)
       .mockResolvedValueOnce({ annual_revenue: 500000 });
 
@@ -124,7 +126,7 @@ describe('Contract AI - analyzeContractRisk', () => {
       account_id: 'acc_rec'
     };
 
-    (db.doc.get as jest.Mock)
+    (db.doc.get as Mock)
       .mockResolvedValueOnce(mockContract)
       .mockResolvedValueOnce({ annual_revenue: 2000000 });
 
@@ -154,7 +156,7 @@ describe('Contract AI - analyzeContractRisk', () => {
       account_id: 'acc_impact'
     };
 
-    (db.doc.get as jest.Mock)
+    (db.doc.get as Mock)
       .mockResolvedValueOnce(mockContract)
       .mockResolvedValueOnce({ annual_revenue: 800000 });
 
@@ -175,7 +177,7 @@ describe('Contract AI - analyzeContractRisk', () => {
 
 describe('Contract AI - predictRenewal', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should predict renewal probability', async () => {
@@ -192,10 +194,10 @@ describe('Contract AI - predictRenewal', () => {
     const mockCases: any[] = [];
     const mockOpportunities: any[] = [];
 
-    (db.doc.get as jest.Mock)
+    (db.doc.get as Mock)
       .mockResolvedValueOnce(mockContract)
       .mockResolvedValueOnce(mockAccount);
-    (db.find as jest.Mock)
+    (db.find as Mock)
       .mockResolvedValueOnce(mockCases)
       .mockResolvedValueOnce(mockOpportunities);
 
@@ -223,10 +225,10 @@ describe('Contract AI - predictRenewal', () => {
       contract_term: 36
     };
 
-    (db.doc.get as jest.Mock)
+    (db.doc.get as Mock)
       .mockResolvedValueOnce(longTenureContract)
       .mockResolvedValueOnce({ name: 'Long Time Customer' });
-    (db.find as jest.Mock).mockResolvedValue([]);
+    (db.find as Mock).mockResolvedValue([]);
 
     const request: RenewalPredictionRequest = {
       contractId: 'contract_longtime'
@@ -259,10 +261,10 @@ describe('Contract AI - predictRenewal', () => {
       { priority: 'high', status: 'Closed', created_date: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString() }
     ];
 
-    (db.doc.get as jest.Mock)
+    (db.doc.get as Mock)
       .mockResolvedValueOnce(mockContract)
       .mockResolvedValueOnce({ name: 'Troubled Customer' });
-    (db.find as jest.Mock)
+    (db.find as Mock)
       .mockResolvedValueOnce(mockCases)
       .mockResolvedValueOnce([]);
 
@@ -288,10 +290,10 @@ describe('Contract AI - predictRenewal', () => {
       contract_term: 24
     };
 
-    (db.doc.get as jest.Mock)
+    (db.doc.get as Mock)
       .mockResolvedValueOnce(mockContract)
       .mockResolvedValueOnce({ name: 'Customer' });
-    (db.find as jest.Mock).mockResolvedValue([]);
+    (db.find as Mock).mockResolvedValue([]);
 
     const request: RenewalPredictionRequest = {
       contractId: 'contract_retain'
@@ -320,10 +322,10 @@ describe('Contract AI - predictRenewal', () => {
       contract_term: 36
     };
 
-    (db.doc.get as jest.Mock)
+    (db.doc.get as Mock)
       .mockResolvedValueOnce(mockContract)
       .mockResolvedValueOnce({ name: 'Growth Customer' });
-    (db.find as jest.Mock).mockResolvedValue([]);
+    (db.find as Mock).mockResolvedValue([]);
 
     const request: RenewalPredictionRequest = {
       contractId: 'contract_expand'

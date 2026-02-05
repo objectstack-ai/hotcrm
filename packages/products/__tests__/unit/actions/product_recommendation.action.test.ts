@@ -1,9 +1,11 @@
 import { recommendProducts, RecommendProductsRequest } from '../../../src/actions/product_recommendation.action';
 
-jest.mock('../../../src/db', () => ({
+import { vi, Mock } from 'vitest';
+
+vi.mock('../../../src/db', () => ({
   db: {
-    doc: { get: jest.fn() },
-    find: jest.fn()
+    doc: { get: vi.fn() },
+    find: vi.fn()
   }
 }));
 
@@ -11,7 +13,7 @@ import { db } from '../../../src/db';
 
 describe('Product Recommendation - recommendProducts', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should recommend products for an account', async () => {
@@ -21,8 +23,8 @@ describe('Product Recommendation - recommendProducts', () => {
       { product_id: 'prod_2', name: 'Analytics Platform', product_code: 'ANLY-001', family: 'Software', is_active: true }
     ];
 
-    (db.doc.get as jest.Mock).mockResolvedValue(mockAccount);
-    (db.find as jest.Mock)
+    (db.doc.get as Mock).mockResolvedValue(mockAccount);
+    (db.find as Mock)
       .mockResolvedValueOnce([]) // existing opps
       .mockResolvedValueOnce(mockProducts) // all products
       .mockResolvedValueOnce([]); // similar accounts
@@ -39,8 +41,8 @@ describe('Product Recommendation - recommendProducts', () => {
     const mockAccount = { industry: 'Finance', number_of_employees: 100, annual_revenue: 1000000 };
     const mockProducts = [{ product_id: 'p1', name: 'Product 1', product_code: 'P1', family: 'Software', is_active: true }];
 
-    (db.doc.get as jest.Mock).mockResolvedValue(mockAccount);
-    (db.find as jest.Mock).mockResolvedValue(mockProducts);
+    (db.doc.get as Mock).mockResolvedValue(mockAccount);
+    (db.find as Mock).mockResolvedValue(mockProducts);
 
     const result = await recommendProducts({ accountId: 'acc_456', maxRecommendations: 5 });
 
@@ -55,8 +57,8 @@ describe('Product Recommendation - recommendProducts', () => {
   it('should provide customer context', async () => {
     const mockAccount = { industry: 'Healthcare', number_of_employees: 1000, annual_revenue: 10000000 };
 
-    (db.doc.get as jest.Mock).mockResolvedValue(mockAccount);
-    (db.find as jest.Mock).mockResolvedValue([]);
+    (db.doc.get as Mock).mockResolvedValue(mockAccount);
+    (db.find as Mock).mockResolvedValue([]);
 
     const result = await recommendProducts({ accountId: 'acc_context' });
 
@@ -74,8 +76,8 @@ describe('Product Recommendation - recommendProducts', () => {
       is_active: true
     }));
 
-    (db.doc.get as jest.Mock).mockResolvedValue({ industry: 'Technology' });
-    (db.find as jest.Mock).mockResolvedValue(mockProducts);
+    (db.doc.get as Mock).mockResolvedValue({ industry: 'Technology' });
+    (db.find as Mock).mockResolvedValue(mockProducts);
 
     const result = await recommendProducts({ accountId: 'acc_limit', maxRecommendations: 3 });
 
@@ -83,8 +85,8 @@ describe('Product Recommendation - recommendProducts', () => {
   });
 
   it('should include strategy information', async () => {
-    (db.doc.get as jest.Mock).mockResolvedValue({ industry: 'Retail' });
-    (db.find as jest.Mock).mockResolvedValue([]);
+    (db.doc.get as Mock).mockResolvedValue({ industry: 'Retail' });
+    (db.find as Mock).mockResolvedValue([]);
 
     const result = await recommendProducts({ accountId: 'acc_strategy' });
 

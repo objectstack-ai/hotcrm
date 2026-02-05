@@ -8,12 +8,14 @@ import {
 } from '../../../src/actions/contact_ai.action';
 
 // Mock the db module
-jest.mock('../../../src/db', () => ({
+import { vi, Mock } from 'vitest';
+
+vi.mock('../../../src/db', () => ({
   db: {
     doc: {
-      get: jest.fn()
+      get: vi.fn()
     },
-    find: jest.fn()
+    find: vi.fn()
   }
 }));
 
@@ -21,7 +23,7 @@ import { db } from '../../../src/db';
 
 describe('Contact AI Actions - enrichContact', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should enrich contact with missing data', async () => {
@@ -35,7 +37,7 @@ describe('Contact AI Actions - enrichContact', () => {
       mobile_phone: null
     };
 
-    (db.doc.get as jest.Mock).mockResolvedValue(mockContact);
+    (db.doc.get as Mock).mockResolvedValue(mockContact);
 
     const request: ContactEnrichmentRequest = {
       contactId: 'contact_123'
@@ -62,7 +64,7 @@ describe('Contact AI Actions - enrichContact', () => {
       mobile_phone: '+1-555-5678'
     };
 
-    (db.doc.get as jest.Mock).mockResolvedValue(mockContact);
+    (db.doc.get as Mock).mockResolvedValue(mockContact);
 
     const request: ContactEnrichmentRequest = {
       contactId: 'contact_123'
@@ -85,7 +87,7 @@ describe('Contact AI Actions - enrichContact', () => {
       title: null
     };
 
-    (db.doc.get as jest.Mock).mockResolvedValue(mockContact);
+    (db.doc.get as Mock).mockResolvedValue(mockContact);
 
     const request: ContactEnrichmentRequest = {
       contactId: 'contact_123',
@@ -109,7 +111,7 @@ describe('Contact AI Actions - enrichContact', () => {
       email: 'alice@company.com'
     };
 
-    (db.doc.get as jest.Mock).mockResolvedValue(mockContact);
+    (db.doc.get as Mock).mockResolvedValue(mockContact);
 
     const request: ContactEnrichmentRequest = {
       contactId: 'contact_123'
@@ -134,7 +136,7 @@ describe('Contact AI Actions - enrichContact', () => {
       email: 'bob@example.com'
     };
 
-    (db.doc.get as jest.Mock).mockResolvedValue(mockContact);
+    (db.doc.get as Mock).mockResolvedValue(mockContact);
 
     const request: ContactEnrichmentRequest = {
       contactId: 'contact_123',
@@ -154,7 +156,7 @@ describe('Contact AI Actions - enrichContact', () => {
 
 describe('Contact AI Actions - detectBuyingIntent', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should calculate intent score based on activities', async () => {
@@ -180,8 +182,8 @@ describe('Contact AI Actions - detectBuyingIntent', () => {
       }
     ];
 
-    (db.doc.get as jest.Mock).mockResolvedValue(mockContact);
-    (db.find as jest.Mock)
+    (db.doc.get as Mock).mockResolvedValue(mockContact);
+    (db.find as Mock)
       .mockResolvedValueOnce(mockActivities)
       .mockResolvedValueOnce(mockOpportunities);
 
@@ -225,8 +227,8 @@ describe('Contact AI Actions - detectBuyingIntent', () => {
       }
     ];
 
-    (db.doc.get as jest.Mock).mockResolvedValue(mockContact);
-    (db.find as jest.Mock)
+    (db.doc.get as Mock).mockResolvedValue(mockContact);
+    (db.find as Mock)
       .mockResolvedValueOnce(mockActivities)
       .mockResolvedValueOnce(mockOpportunities);
 
@@ -245,8 +247,8 @@ describe('Contact AI Actions - detectBuyingIntent', () => {
   it('should provide buying signals with weights', async () => {
     // Arrange
     const mockContact = { email: 'test@example.com' };
-    (db.doc.get as jest.Mock).mockResolvedValue(mockContact);
-    (db.find as jest.Mock).mockResolvedValue([]);
+    (db.doc.get as Mock).mockResolvedValue(mockContact);
+    (db.find as Mock).mockResolvedValue([]);
 
     const request: BuyingIntentRequest = {
       contactId: 'contact_123'
@@ -268,8 +270,8 @@ describe('Contact AI Actions - detectBuyingIntent', () => {
   it('should recommend next action based on intent level', async () => {
     // Arrange
     const mockContact = { email: 'test@example.com' };
-    (db.doc.get as jest.Mock).mockResolvedValue(mockContact);
-    (db.find as jest.Mock).mockResolvedValue([]);
+    (db.doc.get as Mock).mockResolvedValue(mockContact);
+    (db.find as Mock).mockResolvedValue([]);
 
     const request: BuyingIntentRequest = {
       contactId: 'contact_123'
@@ -293,8 +295,8 @@ describe('Contact AI Actions - detectBuyingIntent', () => {
       { type: 'email', activity_date: oldDate }
     ];
 
-    (db.doc.get as jest.Mock).mockResolvedValue(mockContact);
-    (db.find as jest.Mock)
+    (db.doc.get as Mock).mockResolvedValue(mockContact);
+    (db.find as Mock)
       .mockResolvedValueOnce(mockActivities)
       .mockResolvedValueOnce([]);
 
@@ -314,7 +316,7 @@ describe('Contact AI Actions - detectBuyingIntent', () => {
 
 describe('Contact AI Actions - analyzeSentiment', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should detect positive sentiment', async () => {

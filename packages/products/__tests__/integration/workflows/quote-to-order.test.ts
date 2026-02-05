@@ -2,10 +2,12 @@
  * Integration Test: Quote to Order Workflow
  */
 
-jest.mock('../../../src/db', () => ({
+import { vi, Mock } from 'vitest';
+
+vi.mock('../../../src/db', () => ({
   db: {
-    doc: { get: jest.fn(), create: jest.fn(), update: jest.fn() },
-    find: jest.fn()
+    doc: { get: vi.fn(), create: vi.fn(), update: vi.fn() },
+    find: vi.fn()
   }
 }));
 
@@ -13,7 +15,7 @@ import { db } from '../../../src/db';
 
 describe('Quote to Order Workflow', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should complete quote to order conversion', async () => {
@@ -36,8 +38,8 @@ describe('Quote to Order Workflow', () => {
       total_amount: 50000
     };
 
-    (db.doc.create as jest.Mock).mockResolvedValueOnce(mockQuote).mockResolvedValueOnce(mockOrder);
-    (db.doc.update as jest.Mock).mockResolvedValue(approvedQuote);
+    (db.doc.create as Mock).mockResolvedValueOnce(mockQuote).mockResolvedValueOnce(mockOrder);
+    (db.doc.update as Mock).mockResolvedValue(approvedQuote);
 
     const quote = await db.doc.create('quote', mockQuote);
     expect(quote.status).toBe('Draft');
@@ -54,7 +56,7 @@ describe('Quote to Order Workflow', () => {
     const mockQuote = { id: 'quote_002' };
     const mockLine = { id: 'qli_001', quote_id: 'quote_002', product_id: 'prod_1', quantity: 5, unit_price: 10000, total_price: 50000 };
 
-    (db.doc.create as jest.Mock).mockResolvedValueOnce(mockQuote).mockResolvedValueOnce(mockLine);
+    (db.doc.create as Mock).mockResolvedValueOnce(mockQuote).mockResolvedValueOnce(mockLine);
 
     const quote = await db.doc.create('quote', mockQuote);
     const line = await db.doc.create('quote_line_item', { quote_id: quote.id, product_id: 'prod_1', quantity: 5, unit_price: 10000, total_price: 50000 });
@@ -68,9 +70,9 @@ describe('Quote to Order Workflow', () => {
     const discountRule = { discount_percent: 10, min_quantity: 5 };
     const discountedQuote = { ...mockQuote, discount_amount: 10000, total_price: 90000 };
 
-    (db.doc.get as jest.Mock).mockResolvedValue(mockQuote);
-    (db.find as jest.Mock).mockResolvedValue([discountRule]);
-    (db.doc.update as jest.Mock).mockResolvedValue(discountedQuote);
+    (db.doc.get as Mock).mockResolvedValue(mockQuote);
+    (db.find as Mock).mockResolvedValue([discountRule]);
+    (db.doc.update as Mock).mockResolvedValue(discountedQuote);
 
     const updated = await db.doc.update('quote', 'quote_discount', { discount_amount: 10000, total_price: 90000 });
 
@@ -83,8 +85,8 @@ describe('Quote to Order Workflow', () => {
     const approvalRequest = { id: 'appr_001', quote_id: 'quote_approval', status: 'Pending', approver_id: 'mgr_123' };
     const approvedRequest = { ...approvalRequest, status: 'Approved', approval_date: new Date().toISOString() };
 
-    (db.doc.create as jest.Mock).mockResolvedValue(approvalRequest);
-    (db.doc.update as jest.Mock).mockResolvedValueOnce(approvedRequest).mockResolvedValueOnce({ ...mockQuote, status: 'Approved' });
+    (db.doc.create as Mock).mockResolvedValue(approvalRequest);
+    (db.doc.update as Mock).mockResolvedValueOnce(approvedRequest).mockResolvedValueOnce({ ...mockQuote, status: 'Approved' });
 
     const approval = await db.doc.create('approval_request', approvalRequest);
     const approved = await db.doc.update('approval_request', approval.id, { status: 'Approved', approval_date: new Date().toISOString() });

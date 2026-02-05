@@ -8,12 +8,14 @@ import {
 } from '../../../src/actions/sla_prediction.action';
 
 // Mock the db module
-jest.mock('../../../src/db', () => ({
+import { vi, Mock } from 'vitest';
+
+vi.mock('../../../src/db', () => ({
   db: {
     doc: {
-      get: jest.fn()
+      get: vi.fn()
     },
-    find: jest.fn()
+    find: vi.fn()
   }
 }));
 
@@ -21,7 +23,7 @@ import { db } from '../../../src/db';
 
 describe('SLA Prediction - predictSLABreach', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should predict breach probability for critical case', async () => {
@@ -37,8 +39,8 @@ describe('SLA Prediction - predictSLABreach', () => {
 
     const mockSlaRecords: any[] = [];
 
-    (db.doc.get as jest.Mock).mockResolvedValue(mockCase);
-    (db.find as jest.Mock).mockResolvedValue(mockSlaRecords);
+    (db.doc.get as Mock).mockResolvedValue(mockCase);
+    (db.find as Mock).mockResolvedValue(mockSlaRecords);
 
     const request: SLABreachPredictionRequest = {
       caseId: 'case_critical'
@@ -66,8 +68,8 @@ describe('SLA Prediction - predictSLABreach', () => {
       owner_id: null // Unassigned
     };
 
-    (db.doc.get as jest.Mock).mockResolvedValue(mockCase);
-    (db.find as jest.Mock).mockResolvedValue([]);
+    (db.doc.get as Mock).mockResolvedValue(mockCase);
+    (db.find as Mock).mockResolvedValue([]);
 
     const request: SLABreachPredictionRequest = {
       caseId: 'case_unassigned'
@@ -94,8 +96,8 @@ describe('SLA Prediction - predictSLABreach', () => {
       owner_id: 'agent_123'
     };
 
-    (db.doc.get as jest.Mock).mockResolvedValue(mockCase);
-    (db.find as jest.Mock).mockResolvedValue([]);
+    (db.doc.get as Mock).mockResolvedValue(mockCase);
+    (db.find as Mock).mockResolvedValue([]);
 
     const request: SLABreachPredictionRequest = {
       caseId: 'case_timing'
@@ -123,8 +125,8 @@ describe('SLA Prediction - predictSLABreach', () => {
       owner_id: null
     };
 
-    (db.doc.get as jest.Mock).mockResolvedValue(mockCase);
-    (db.find as jest.Mock).mockResolvedValue([]);
+    (db.doc.get as Mock).mockResolvedValue(mockCase);
+    (db.find as Mock).mockResolvedValue([]);
 
     const request: SLABreachPredictionRequest = {
       caseId: 'case_highrisk'
@@ -155,8 +157,8 @@ describe('SLA Prediction - predictSLABreach', () => {
       owner_id: 'agent_456'
     };
 
-    (db.doc.get as jest.Mock).mockResolvedValue(mockCase);
-    (db.find as jest.Mock).mockResolvedValue([]);
+    (db.doc.get as Mock).mockResolvedValue(mockCase);
+    (db.find as Mock).mockResolvedValue([]);
 
     const request: SLABreachPredictionRequest = {
       caseId: 'case_lowrisk'
@@ -173,7 +175,7 @@ describe('SLA Prediction - predictSLABreach', () => {
 
 describe('SLA Prediction - estimateResolutionTime', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should estimate resolution time based on similar cases', async () => {
@@ -203,8 +205,8 @@ describe('SLA Prediction - estimateResolutionTime', () => {
       }
     ];
 
-    (db.doc.get as jest.Mock).mockResolvedValue(mockCase);
-    (db.find as jest.Mock).mockResolvedValue(mockSimilarCases);
+    (db.doc.get as Mock).mockResolvedValue(mockCase);
+    (db.find as Mock).mockResolvedValue(mockSimilarCases);
 
     const request: ResolutionTimeRequest = {
       caseId: 'case_estimate'
@@ -228,8 +230,8 @@ describe('SLA Prediction - estimateResolutionTime', () => {
       created_date: new Date().toISOString()
     };
 
-    (db.doc.get as jest.Mock).mockResolvedValue(mockCase);
-    (db.find as jest.Mock).mockResolvedValue([]);
+    (db.doc.get as Mock).mockResolvedValue(mockCase);
+    (db.find as Mock).mockResolvedValue([]);
 
     const request: ResolutionTimeRequest = {
       caseId: 'case_range'
@@ -253,8 +255,8 @@ describe('SLA Prediction - estimateResolutionTime', () => {
       created_date: new Date().toISOString()
     };
 
-    (db.doc.get as jest.Mock).mockResolvedValue(mockCase);
-    (db.find as jest.Mock).mockResolvedValue([]);
+    (db.doc.get as Mock).mockResolvedValue(mockCase);
+    (db.find as Mock).mockResolvedValue([]);
 
     const request: ResolutionTimeRequest = {
       caseId: 'case_factors'
@@ -288,8 +290,8 @@ describe('SLA Prediction - estimateResolutionTime', () => {
       closed_date: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString()
     });
 
-    (db.doc.get as jest.Mock).mockResolvedValue(mockCase);
-    (db.find as jest.Mock).mockResolvedValue(mockHistoricalCases);
+    (db.doc.get as Mock).mockResolvedValue(mockCase);
+    (db.find as Mock).mockResolvedValue(mockHistoricalCases);
 
     const request: ResolutionTimeRequest = {
       caseId: 'case_benchmark'
@@ -327,14 +329,14 @@ describe('SLA Prediction - estimateResolutionTime', () => {
       closed_date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
     }];
 
-    (db.find as jest.Mock).mockResolvedValue(mockHistorical);
+    (db.find as Mock).mockResolvedValue(mockHistorical);
 
     // Act - Critical case
-    (db.doc.get as jest.Mock).mockResolvedValue(criticalCase);
+    (db.doc.get as Mock).mockResolvedValue(criticalCase);
     const criticalResult = await estimateResolutionTime({ caseId: 'critical' });
 
     // Act - Low priority case
-    (db.doc.get as jest.Mock).mockResolvedValue(lowCase);
+    (db.doc.get as Mock).mockResolvedValue(lowCase);
     const lowResult = await estimateResolutionTime({ caseId: 'low' });
 
     // Assert - Low priority should take longer
@@ -344,7 +346,7 @@ describe('SLA Prediction - estimateResolutionTime', () => {
 
 describe('SLA Prediction - analyzeEscalationNeeds', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should identify cases needing escalation', async () => {
@@ -370,14 +372,14 @@ describe('SLA Prediction - analyzeEscalationNeeds', () => {
       }
     ];
 
-    (db.find as jest.Mock).mockResolvedValueOnce(mockCases);
+    (db.find as Mock).mockResolvedValueOnce(mockCases);
     
     // Mock individual case gets for breach prediction
-    (db.doc.get as jest.Mock).mockImplementation((type, id) => {
+    (db.doc.get as Mock).mockImplementation((type, id) => {
       return Promise.resolve(mockCases.find(c => c.id === id));
     });
     
-    (db.find as jest.Mock).mockResolvedValue([]); // For SLA records
+    (db.find as Mock).mockResolvedValue([]); // For SLA records
 
     const request: EscalationAnalysisRequest = {
       periodHours: 24,
@@ -395,7 +397,7 @@ describe('SLA Prediction - analyzeEscalationNeeds', () => {
 
   it('should provide summary statistics', async () => {
     // Arrange
-    (db.find as jest.Mock).mockResolvedValue([]);
+    (db.find as Mock).mockResolvedValue([]);
 
     const request: EscalationAnalysisRequest = {
       periodHours: 24
@@ -426,8 +428,8 @@ describe('SLA Prediction - analyzeEscalationNeeds', () => {
       }
     ];
 
-    (db.find as jest.Mock).mockResolvedValue(mockCases);
-    (db.doc.get as jest.Mock).mockResolvedValue(mockCases[0]);
+    (db.find as Mock).mockResolvedValue(mockCases);
+    (db.doc.get as Mock).mockResolvedValue(mockCases[0]);
 
     const request: EscalationAnalysisRequest = {
       periodHours: 48,
@@ -459,8 +461,8 @@ describe('SLA Prediction - analyzeEscalationNeeds', () => {
       owner_id: null
     };
 
-    (db.find as jest.Mock).mockResolvedValueOnce([mockCase]).mockResolvedValue([]);
-    (db.doc.get as jest.Mock).mockResolvedValue(mockCase);
+    (db.find as Mock).mockResolvedValueOnce([mockCase]).mockResolvedValue([]);
+    (db.doc.get as Mock).mockResolvedValue(mockCase);
 
     const request: EscalationAnalysisRequest = {
       periodHours: 24,
@@ -494,8 +496,8 @@ describe('SLA Prediction - analyzeEscalationNeeds', () => {
       }
     ];
 
-    (db.find as jest.Mock).mockResolvedValue(mockCases);
-    (db.doc.get as jest.Mock).mockResolvedValue(mockCases[0]);
+    (db.find as Mock).mockResolvedValue(mockCases);
+    (db.doc.get as Mock).mockResolvedValue(mockCases[0]);
 
     const highThresholdRequest: EscalationAnalysisRequest = {
       periodHours: 24,
@@ -510,9 +512,9 @@ describe('SLA Prediction - analyzeEscalationNeeds', () => {
     // Act
     const highResult = await analyzeEscalationNeeds(highThresholdRequest);
     
-    jest.clearAllMocks();
-    (db.find as jest.Mock).mockResolvedValue(mockCases);
-    (db.doc.get as jest.Mock).mockResolvedValue(mockCases[0]);
+    vi.clearAllMocks();
+    (db.find as Mock).mockResolvedValue(mockCases);
+    (db.doc.get as Mock).mockResolvedValue(mockCases[0]);
     
     const lowResult = await analyzeEscalationNeeds(lowThresholdRequest);
 

@@ -6,15 +6,17 @@
  */
 
 // Mock the db module
-jest.mock('../../../src/db', () => ({
+import { vi, Mock } from 'vitest';
+
+vi.mock('../../../src/db', () => ({
   db: {
     doc: {
-      get: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn()
+      get: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn()
     },
-    find: jest.fn(),
-    insert: jest.fn()
+    find: vi.fn(),
+    insert: vi.fn()
   }
 }));
 
@@ -22,7 +24,7 @@ import { db } from '../../../src/db';
 
 describe('Lead to Opportunity Conversion Workflow', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should successfully convert qualified lead to opportunity', async () => {
@@ -68,13 +70,13 @@ describe('Lead to Opportunity Conversion Workflow', () => {
       lead_source: 'web'
     };
 
-    (db.doc.get as jest.Mock).mockResolvedValue(mockLead);
-    (db.find as jest.Mock).mockResolvedValue([]); // No existing account/contact
-    (db.doc.create as jest.Mock)
+    (db.doc.get as Mock).mockResolvedValue(mockLead);
+    (db.find as Mock).mockResolvedValue([]); // No existing account/contact
+    (db.doc.create as Mock)
       .mockResolvedValueOnce(mockAccount)
       .mockResolvedValueOnce(mockContact)
       .mockResolvedValueOnce(mockOpportunity);
-    (db.doc.update as jest.Mock).mockResolvedValue({ ...mockLead, status: 'converted' });
+    (db.doc.update as Mock).mockResolvedValue({ ...mockLead, status: 'converted' });
 
     // Act - Simulate lead conversion workflow
     const lead = await db.doc.get('lead', 'lead_123');
@@ -162,9 +164,9 @@ describe('Lead to Opportunity Conversion Workflow', () => {
       contact_id: 'contact_456'
     };
 
-    (db.doc.get as jest.Mock).mockResolvedValue(mockLead);
-    (db.find as jest.Mock).mockResolvedValueOnce([existingAccount]); // Account exists
-    (db.doc.create as jest.Mock)
+    (db.doc.get as Mock).mockResolvedValue(mockLead);
+    (db.find as Mock).mockResolvedValueOnce([existingAccount]); // Account exists
+    (db.doc.create as Mock)
       .mockResolvedValueOnce(mockContact)
       .mockResolvedValueOnce(mockOpportunity);
 
@@ -213,7 +215,7 @@ describe('Lead to Opportunity Conversion Workflow', () => {
       rating: 'Cold'
     };
 
-    (db.doc.get as jest.Mock).mockResolvedValue(unqualifiedLead);
+    (db.doc.get as Mock).mockResolvedValue(unqualifiedLead);
 
     // Act
     const lead = await db.doc.get('lead', 'lead_789');
@@ -242,8 +244,8 @@ describe('Lead to Opportunity Conversion Workflow', () => {
       account_id: 'acc_123'
     };
 
-    (db.doc.get as jest.Mock).mockResolvedValue(mockLead);
-    (db.find as jest.Mock).mockResolvedValueOnce([existingContact]); // Contact exists
+    (db.doc.get as Mock).mockResolvedValue(mockLead);
+    (db.find as Mock).mockResolvedValueOnce([existingContact]); // Contact exists
 
     // Act
     const lead = await db.doc.get('lead', 'lead_duplicate');
@@ -286,9 +288,9 @@ describe('Lead to Opportunity Conversion Workflow', () => {
     const mockAccount = { id: 'acc_999', name: 'Startup IO' };
     const mockContact = { id: 'contact_999', account_id: 'acc_999' };
 
-    (db.doc.get as jest.Mock).mockResolvedValue(mockLead);
-    (db.find as jest.Mock).mockResolvedValue([]);
-    (db.doc.create as jest.Mock)
+    (db.doc.get as Mock).mockResolvedValue(mockLead);
+    (db.find as Mock).mockResolvedValue([]);
+    (db.doc.create as Mock)
       .mockResolvedValueOnce(mockAccount)
       .mockResolvedValueOnce(mockContact)
       .mockResolvedValueOnce({
@@ -341,9 +343,9 @@ describe('Lead to Opportunity Conversion Workflow', () => {
       description: 'Interested in enterprise plan'
     };
 
-    (db.doc.get as jest.Mock).mockResolvedValue(mockLead);
-    (db.find as jest.Mock).mockResolvedValue([]);
-    (db.doc.create as jest.Mock)
+    (db.doc.get as Mock).mockResolvedValue(mockLead);
+    (db.find as Mock).mockResolvedValue([]);
+    (db.doc.create as Mock)
       .mockImplementation((objectType, data) => Promise.resolve({
         id: `${objectType}_new`,
         ...data
