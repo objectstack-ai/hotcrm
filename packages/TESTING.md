@@ -108,30 +108,30 @@ packages/
 
 ### Run All Tests
 ```bash
-npm test
+pnpm test
 ```
 
 ### Run Tests for Specific Package
 ```bash
-npm test -- packages/crm/__tests__
-npm test -- packages/support/__tests__
-npm test -- packages/finance/__tests__
-npm test -- packages/products/__tests__
+pnpm test -- packages/crm/__tests__
+pnpm test -- packages/support/__tests__
+pnpm test -- packages/finance/__tests__
+pnpm test -- packages/products/__tests__
 ```
 
 ### Run Specific Test File
 ```bash
-npm test -- packages/crm/__tests__/unit/objects/account.object.test.ts
+pnpm test -- packages/crm/__tests__/unit/objects/account.object.test.ts
 ```
 
 ### Run with Coverage
 ```bash
-npm test -- --coverage
+pnpm test:coverage
 ```
 
 ### Watch Mode
 ```bash
-npm test -- --watch
+pnpm test:watch
 ```
 
 ## Test Standards
@@ -140,10 +140,12 @@ All tests follow these standards:
 
 ### 1. AAA Pattern (Arrange, Act, Assert)
 ```typescript
+import { vi, Mock } from 'vitest';
+
 it('should calculate health score', async () => {
   // Arrange
   const mockAccount = { name: 'Test Corp' };
-  (db.doc.get as jest.Mock).mockResolvedValue(mockAccount);
+  (db.doc.get as Mock).mockResolvedValue(mockAccount);
   
   // Act
   const result = await calculateAccountHealth({ accountId: 'acc_123' });
@@ -155,10 +157,12 @@ it('should calculate health score', async () => {
 
 ### 2. Proper Mocking
 ```typescript
-jest.mock('../../../src/db', () => ({
+import { vi } from 'vitest';
+
+vi.mock('../../../src/db', () => ({
   db: {
-    doc: { get: jest.fn() },
-    find: jest.fn()
+    doc: { get: vi.fn() },
+    find: vi.fn()
   }
 }));
 ```
@@ -166,7 +170,7 @@ jest.mock('../../../src/db', () => ({
 ### 3. Independent Tests
 ```typescript
 beforeEach(() => {
-  jest.clearAllMocks();
+  vi.clearAllMocks();
 });
 ```
 
@@ -210,7 +214,7 @@ it('should throw error when neither caseId nor query provided', async () => {
 
 ## Coverage Goals
 
-Current coverage targets (jest.config.js):
+Current coverage targets (vitest.config.ts):
 - Branches: 70%
 - Functions: 75%
 - Lines: 80%
@@ -237,8 +241,10 @@ it('should handle async operations', async () => {
 
 ### Testing Error Handling
 ```typescript
+import { vi, Mock } from 'vitest';
+
 it('should handle errors gracefully', async () => {
-  (db.find as jest.Mock).mockRejectedValue(new Error('DB Error'));
+  (db.find as Mock).mockRejectedValue(new Error('DB Error'));
   await expect(someFunction()).rejects.toThrow('DB Error');
 });
 ```
@@ -265,16 +271,16 @@ Tests are automatically run in CI/CD pipeline:
 
 ### TypeScript Errors
 - Ensure proper type imports
-- Use type assertions where needed: `as jest.Mock`
+- Use type assertions where needed: `as Mock`
 - Add `!` for non-null assertions when verified
 
 ### Mock Issues
-- Clear mocks between tests: `jest.clearAllMocks()`
-- Reset modules if needed: `jest.resetModules()`
+- Clear mocks between tests: `vi.clearAllMocks()`
+- Reset modules if needed: `vi.resetModules()`
 - Check mock implementation order
 
 ### Async Test Timeouts
-- Increase timeout: `jest.setTimeout(10000)`
+- Configure timeout in vitest.config.ts
 - Ensure promises are properly awaited
 - Check for hanging async operations
 
@@ -289,10 +295,10 @@ When adding new features:
 
 ## Resources
 
-- [Jest Documentation](https://jestjs.io/)
-- [ts-jest Configuration](https://kulshekhar.github.io/ts-jest/)
+- [Vitest Documentation](https://vitest.dev/)
+- [Vitest API Reference](https://vitest.dev/api/)
 - [Testing Best Practices](https://kentcdodds.com/blog/common-mistakes-with-react-testing-library)
 
 ---
 
-Last Updated: 2024
+Last Updated: 2026

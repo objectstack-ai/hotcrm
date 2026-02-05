@@ -104,15 +104,15 @@ __tests__/
 
 ```bash
 # Run all HR tests
-npm test packages/hr/__tests__
+pnpm test packages/hr/__tests__
 
 # Run specific hook tests
-npm test packages/hr/__tests__/unit/hooks/candidate.hook.test.ts
-npm test packages/hr/__tests__/unit/hooks/employee.hook.test.ts
-npm test packages/hr/__tests__/unit/hooks/offer.hook.test.ts
+pnpm test packages/hr/__tests__/unit/hooks/candidate.hook.test.ts
+pnpm test packages/hr/__tests__/unit/hooks/employee.hook.test.ts
+pnpm test packages/hr/__tests__/unit/hooks/offer.hook.test.ts
 
 # Run with coverage
-npm test -- --coverage packages/hr/__tests__
+pnpm test:coverage -- packages/hr/__tests__
 ```
 
 ## Test Patterns
@@ -120,6 +120,8 @@ npm test -- --coverage packages/hr/__tests__
 All tests follow the **AAA Pattern** (Arrange-Act-Assert):
 
 ```typescript
+import { vi } from 'vitest';
+
 it('should calculate score for complete candidate profile', async () => {
   // Arrange - Setup test data and mocks
   const candidate = { ... };
@@ -166,7 +168,7 @@ const ctx = createMockContext(
 
 ## Notes
 
-- Tests use `jest.mock()` for module mocking
+- Tests use `vi.mock()` for module mocking
 - Dynamic imports used to reload modules between tests
 - Console methods are spied on to verify logging without cluttering output
 - Error tests verify that hooks don't throw to prevent blocking saves
