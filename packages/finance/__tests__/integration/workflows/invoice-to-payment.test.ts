@@ -2,10 +2,12 @@
  * Integration Test: Invoice to Payment Workflow
  */
 
-jest.mock('../../../src/db', () => ({
+import { vi, Mock } from 'vitest';
+
+vi.mock('../../../src/db', () => ({
   db: {
-    doc: { get: jest.fn(), create: jest.fn(), update: jest.fn() },
-    find: jest.fn()
+    doc: { get: vi.fn(), create: vi.fn(), update: vi.fn() },
+    find: vi.fn()
   }
 }));
 
@@ -13,7 +15,7 @@ import { db } from '../../../src/db';
 
 describe('Invoice to Payment Workflow', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should complete full invoice lifecycle', async () => {
@@ -30,8 +32,8 @@ describe('Invoice to Payment Workflow', () => {
     const sentInvoice = { ...mockInvoice, status: 'Sent', sent_date: new Date().toISOString() };
     const paidInvoice = { ...sentInvoice, status: 'Paid', payment_date: new Date().toISOString() };
 
-    (db.doc.create as jest.Mock).mockResolvedValue(mockInvoice);
-    (db.doc.update as jest.Mock)
+    (db.doc.create as Mock).mockResolvedValue(mockInvoice);
+    (db.doc.update as Mock)
       .mockResolvedValueOnce(sentInvoice)
       .mockResolvedValueOnce(paidInvoice);
 
@@ -50,7 +52,7 @@ describe('Invoice to Payment Workflow', () => {
     const mockInvoice = { id: 'inv_002', amount: 30000 };
     const mockLine = { id: 'line_001', invoice_id: 'inv_002', product_id: 'prod_1', quantity: 10, unit_price: 3000, line_amount: 30000 };
 
-    (db.doc.create as jest.Mock).mockResolvedValueOnce(mockInvoice).mockResolvedValueOnce(mockLine);
+    (db.doc.create as Mock).mockResolvedValueOnce(mockInvoice).mockResolvedValueOnce(mockLine);
 
     const invoice = await db.doc.create('invoice', mockInvoice);
     const line = await db.doc.create('invoice_line', { invoice_id: invoice.id, product_id: 'prod_1', quantity: 10, unit_price: 3000, line_amount: 30000 });
@@ -64,9 +66,9 @@ describe('Invoice to Payment Workflow', () => {
     const mockPayment = { id: 'pay_001', invoice_id: 'inv_payment', amount: 10000, payment_date: new Date().toISOString(), payment_method: 'Credit Card' };
     const paidInvoice = { ...mockInvoice, status: 'Paid', payment_date: new Date().toISOString() };
 
-    (db.doc.get as jest.Mock).mockResolvedValue(mockInvoice);
-    (db.doc.create as jest.Mock).mockResolvedValue(mockPayment);
-    (db.doc.update as jest.Mock).mockResolvedValue(paidInvoice);
+    (db.doc.get as Mock).mockResolvedValue(mockInvoice);
+    (db.doc.create as Mock).mockResolvedValue(mockPayment);
+    (db.doc.update as Mock).mockResolvedValue(paidInvoice);
 
     const payment = await db.doc.create('payment', mockPayment);
     const updated = await db.doc.update('invoice', payment.invoice_id, { status: 'Paid', payment_date: payment.payment_date });
@@ -79,9 +81,9 @@ describe('Invoice to Payment Workflow', () => {
     const payment1 = { id: 'pay_p1', invoice_id: 'inv_partial', amount: 10000, payment_date: new Date().toISOString() };
     const payment2 = { id: 'pay_p2', invoice_id: 'inv_partial', amount: 10000, payment_date: new Date().toISOString() };
 
-    (db.doc.create as jest.Mock).mockResolvedValueOnce(payment1).mockResolvedValueOnce(payment2);
-    (db.find as jest.Mock).mockResolvedValue([payment1, payment2]);
-    (db.doc.update as jest.Mock).mockResolvedValue({ ...mockInvoice, status: 'Paid' });
+    (db.doc.create as Mock).mockResolvedValueOnce(payment1).mockResolvedValueOnce(payment2);
+    (db.find as Mock).mockResolvedValue([payment1, payment2]);
+    (db.doc.update as Mock).mockResolvedValue({ ...mockInvoice, status: 'Paid' });
 
     await db.doc.create('payment', payment1);
     await db.doc.create('payment', payment2);

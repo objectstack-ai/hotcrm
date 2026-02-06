@@ -8,12 +8,14 @@ import {
 } from '../../../src/actions/knowledge_ai.action';
 
 // Mock the db module
-jest.mock('../../../src/db', () => ({
+import { vi, Mock } from 'vitest';
+
+vi.mock('../../../src/db', () => ({
   db: {
     doc: {
-      get: jest.fn()
+      get: vi.fn()
     },
-    find: jest.fn()
+    find: vi.fn()
   }
 }));
 
@@ -21,7 +23,7 @@ import { db } from '../../../src/db';
 
 describe('Knowledge AI Actions - recommendArticles', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should recommend articles based on case query', async () => {
@@ -52,8 +54,8 @@ describe('Knowledge AI Actions - recommendArticles', () => {
       }
     ];
 
-    (db.doc.get as jest.Mock).mockResolvedValue(mockCase);
-    (db.find as jest.Mock).mockResolvedValue(mockArticles);
+    (db.doc.get as Mock).mockResolvedValue(mockCase);
+    (db.find as Mock).mockResolvedValue(mockArticles);
 
     const request: ArticleRecommendationRequest = {
       caseId: 'case_123',
@@ -78,7 +80,7 @@ describe('Knowledge AI Actions - recommendArticles', () => {
       { id: '3', title: 'API Best Practices', summary: 'Advanced API', is_published: true }
     ];
 
-    (db.find as jest.Mock).mockResolvedValue(mockArticles);
+    (db.find as Mock).mockResolvedValue(mockArticles);
 
     const request: ArticleRecommendationRequest = {
       query: 'API integration issues',
@@ -105,7 +107,7 @@ describe('Knowledge AI Actions - recommendArticles', () => {
 
   it('should include search metadata', async () => {
     // Arrange
-    (db.find as jest.Mock).mockResolvedValue([
+    (db.find as Mock).mockResolvedValue([
       { id: '1', title: 'Test Article', summary: 'Test', is_published: true }
     ]);
 
@@ -131,8 +133,8 @@ describe('Knowledge AI Actions - recommendArticles', () => {
       type: 'Bug Report'
     };
 
-    (db.doc.get as jest.Mock).mockResolvedValue(mockCase);
-    (db.find as jest.Mock).mockResolvedValue([]);
+    (db.doc.get as Mock).mockResolvedValue(mockCase);
+    (db.find as Mock).mockResolvedValue([]);
 
     const request: ArticleRecommendationRequest = {
       caseId: 'case_456'
@@ -157,7 +159,7 @@ describe('Knowledge AI Actions - recommendArticles', () => {
 
 describe('Knowledge AI Actions - autoTagArticle', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should generate tags for article content', async () => {
@@ -169,7 +171,7 @@ describe('Knowledge AI Actions - autoTagArticle', () => {
       article_type: null
     };
 
-    (db.doc.get as jest.Mock).mockResolvedValue(mockArticle);
+    (db.doc.get as Mock).mockResolvedValue(mockArticle);
 
     const request: AutoTaggingRequest = {
       articleId: 'article_123'
@@ -194,7 +196,7 @@ describe('Knowledge AI Actions - autoTagArticle', () => {
       article_type: 'Troubleshooting'
     };
 
-    (db.doc.get as jest.Mock).mockResolvedValue(mockArticle);
+    (db.doc.get as Mock).mockResolvedValue(mockArticle);
 
     const request: AutoTaggingRequest = {
       articleId: 'article_456'
@@ -221,7 +223,7 @@ describe('Knowledge AI Actions - autoTagArticle', () => {
       article_type: null
     };
 
-    (db.doc.get as jest.Mock).mockResolvedValue(mockArticle);
+    (db.doc.get as Mock).mockResolvedValue(mockArticle);
 
     const request: AutoTaggingRequest = {
       articleId: 'article_789'
@@ -244,7 +246,7 @@ describe('Knowledge AI Actions - autoTagArticle', () => {
       article_type: 'General'
     };
 
-    (db.doc.get as jest.Mock).mockResolvedValue(mockArticle);
+    (db.doc.get as Mock).mockResolvedValue(mockArticle);
 
     const request: AutoTaggingRequest = {
       articleId: 'article_sec'
@@ -261,7 +263,7 @@ describe('Knowledge AI Actions - autoTagArticle', () => {
 
 describe('Knowledge AI Actions - scoreArticleQuality', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should calculate overall quality score', async () => {
@@ -275,7 +277,7 @@ describe('Knowledge AI Actions - scoreArticleQuality', () => {
       not_helpful_count: 5
     };
 
-    (db.doc.get as jest.Mock).mockResolvedValue(mockArticle);
+    (db.doc.get as Mock).mockResolvedValue(mockArticle);
 
     const request: QualityScoringRequest = {
       articleId: 'article_quality'
@@ -303,7 +305,7 @@ describe('Knowledge AI Actions - scoreArticleQuality', () => {
       not_helpful_count: 2
     };
 
-    (db.doc.get as jest.Mock).mockResolvedValue(mockArticle);
+    (db.doc.get as Mock).mockResolvedValue(mockArticle);
 
     const request: QualityScoringRequest = {
       articleId: 'article_comp'
@@ -332,7 +334,7 @@ describe('Knowledge AI Actions - scoreArticleQuality', () => {
       not_helpful_count: 5
     };
 
-    (db.doc.get as jest.Mock).mockResolvedValue(mockArticle);
+    (db.doc.get as Mock).mockResolvedValue(mockArticle);
 
     const request: QualityScoringRequest = {
       articleId: 'article_issues'
@@ -363,7 +365,7 @@ describe('Knowledge AI Actions - scoreArticleQuality', () => {
       not_helpful_count: 5
     };
 
-    (db.doc.get as jest.Mock).mockResolvedValue(mockArticle);
+    (db.doc.get as Mock).mockResolvedValue(mockArticle);
 
     const request: QualityScoringRequest = {
       articleId: 'article_improve'
@@ -389,7 +391,7 @@ describe('Knowledge AI Actions - scoreArticleQuality', () => {
       not_helpful_count: null
     };
 
-    (db.doc.get as jest.Mock).mockResolvedValue(mockArticle);
+    (db.doc.get as Mock).mockResolvedValue(mockArticle);
 
     const request: QualityScoringRequest = {
       articleId: 'article_new'
@@ -414,7 +416,7 @@ describe('Knowledge AI Actions - scoreArticleQuality', () => {
       not_helpful_count: 5
     };
 
-    (db.doc.get as jest.Mock).mockResolvedValue(mockArticle);
+    (db.doc.get as Mock).mockResolvedValue(mockArticle);
 
     const request: QualityScoringRequest = {
       articleId: 'article_excellent'

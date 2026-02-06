@@ -1,4 +1,5 @@
 import type { HookContext } from '@objectstack/spec/data';
+import { vi } from 'vitest';
 import {
   OfferCreationTrigger,
   OfferStatusChangeTrigger,
@@ -6,10 +7,10 @@ import {
 } from '../../../src/hooks/offer.hook';
 
 // Mock modules
-const mockQlFind = jest.fn();
-const mockQlDocGet = jest.fn();
-const mockQlDocCreate = jest.fn();
-const mockQlDocUpdate = jest.fn();
+const mockQlFind = vi.fn();
+const mockQlDocGet = vi.fn();
+const mockQlDocCreate = vi.fn();
+const mockQlDocUpdate = vi.fn();
 
 const createMockContext = (
   event: 'beforeInsert' | 'beforeUpdate' | 'afterUpdate',
@@ -35,7 +36,7 @@ const createMockContext = (
 
 describe('Offer Hook - OfferCreationTrigger', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('beforeInsert - Offer Number Generation', () => {
@@ -204,7 +205,7 @@ describe('Offer Hook - OfferCreationTrigger', () => {
 
 describe('Offer Hook - OfferApprovalTrigger', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('beforeUpdate - Approval Status Change', () => {
@@ -222,7 +223,7 @@ describe('Offer Hook - OfferApprovalTrigger', () => {
       };
 
       const ctx = createMockContext('beforeUpdate', offer, previous);
-      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation();
 
       // Act
       await OfferApprovalTrigger.handler(ctx);
@@ -251,7 +252,7 @@ describe('Offer Hook - OfferApprovalTrigger', () => {
       };
 
       const ctx = createMockContext('beforeUpdate', offer, previous);
-      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation();
 
       // Act
       await OfferApprovalTrigger.handler(ctx);
@@ -307,7 +308,7 @@ describe('Offer Hook - OfferApprovalTrigger', () => {
       };
 
       const ctx = createMockContext('beforeUpdate', offer, previous);
-      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation();
 
       // Act
       await OfferApprovalTrigger.handler(ctx);
@@ -363,7 +364,7 @@ describe('Offer Hook - OfferApprovalTrigger', () => {
       };
 
       const ctx = createMockContext('beforeUpdate', offer, previous);
-      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation();
 
       // Force an error by making offer have no status
       delete offer.status;
@@ -378,7 +379,7 @@ describe('Offer Hook - OfferApprovalTrigger', () => {
 
 describe('Offer Hook - OfferStatusChangeTrigger', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('afterUpdate - Status Change Detection', () => {
@@ -395,7 +396,7 @@ describe('Offer Hook - OfferStatusChangeTrigger', () => {
       };
 
       const ctx = createMockContext('afterUpdate', offer, previous);
-      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation();
 
       // Act
       await OfferStatusChangeTrigger.handler(ctx);
@@ -422,7 +423,7 @@ describe('Offer Hook - OfferStatusChangeTrigger', () => {
       };
 
       const ctx = createMockContext('afterUpdate', offer, previous);
-      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation();
 
       // Act
       await OfferStatusChangeTrigger.handler(ctx);
@@ -455,7 +456,7 @@ describe('Offer Hook - OfferStatusChangeTrigger', () => {
       mockQlDocUpdate.mockResolvedValue({});
 
       const ctx = createMockContext('afterUpdate', offer, previous);
-      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation();
 
       // Act
       await OfferStatusChangeTrigger.handler(ctx);
@@ -532,7 +533,7 @@ describe('Offer Hook - OfferStatusChangeTrigger', () => {
       mockQlDocCreate.mockResolvedValue({ id: 'emp_123' });
 
       const ctx = createMockContext('afterUpdate', offer, previous);
-      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation();
 
       // Act
       await OfferStatusChangeTrigger.handler(ctx);
@@ -625,7 +626,7 @@ describe('Offer Hook - OfferStatusChangeTrigger', () => {
       mockQlFind.mockResolvedValue([]);
 
       const ctx = createMockContext('afterUpdate', offer, previous);
-      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation();
 
       // Act
       await OfferStatusChangeTrigger.handler(ctx);
@@ -710,7 +711,7 @@ describe('Offer Hook - OfferStatusChangeTrigger', () => {
       mockQlDocUpdate.mockResolvedValue({});
 
       const ctx = createMockContext('afterUpdate', offer, previous);
-      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation();
 
       // Act
       await OfferStatusChangeTrigger.handler(ctx);
@@ -776,7 +777,7 @@ describe('Offer Hook - OfferStatusChangeTrigger', () => {
       mockQlDocUpdate.mockResolvedValue({});
 
       const ctx = createMockContext('afterUpdate', offer, previous);
-      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation();
 
       // Act
       await OfferStatusChangeTrigger.handler(ctx);
@@ -811,7 +812,7 @@ describe('Offer Hook - OfferStatusChangeTrigger', () => {
       mockQlDocUpdate.mockResolvedValue({});
 
       const ctx = createMockContext('afterUpdate', offer, previous);
-      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation();
 
       // Act
       await OfferStatusChangeTrigger.handler(ctx);
@@ -847,7 +848,7 @@ describe('Offer Hook - OfferStatusChangeTrigger', () => {
       mockQlDocUpdate.mockRejectedValue(new Error('Database error'));
 
       const ctx = createMockContext('afterUpdate', offer, previous);
-      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation();
 
       // Act & Assert
       await expect(OfferStatusChangeTrigger.handler(ctx)).resolves.not.toThrow();
@@ -874,7 +875,7 @@ describe('Offer Hook - OfferStatusChangeTrigger', () => {
       mockQlDocGet.mockRejectedValue(new Error('Candidate not found'));
 
       const ctx = createMockContext('afterUpdate', offer, previous);
-      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation();
 
       // Act & Assert
       await expect(OfferStatusChangeTrigger.handler(ctx)).resolves.not.toThrow();

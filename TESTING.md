@@ -70,25 +70,26 @@ packages/{package}/
 ```typescript
 // packages/crm/__tests__/unit/actions/account_ai.action.test.ts
 
+import { vi } from 'vitest';
 import { calculateAccountHealth } from '../../../src/actions/account_ai.action';
 import { db } from '../../../src/db';
 
-jest.mock('../../../src/db');
+vi.mock('../../../src/db');
 
 describe('Account AI - calculateAccountHealth', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should calculate health score for healthy account', async () => {
     // Arrange
-    (db.doc.get as jest.Mock).mockResolvedValue({
+    (db.doc.get as Mock).mockResolvedValue({
       name: 'Test Account',
       annual_revenue: 1000000,
       created_date: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString()
     });
 
-    (db.find as jest.Mock).mockImplementation((objectType) => {
+    (db.find as Mock).mockImplementation((objectType) => {
       if (objectType === 'opportunity') {
         return Promise.resolve([
           { amount: 50000, stage: 'Closed Won' }
@@ -145,11 +146,11 @@ describe('Lead to Opportunity Conversion Workflow', () => {
 
 ## 🎯 Coverage Goals
 
-Current coverage thresholds in `jest.config.js`:
+Current coverage thresholds in `vitest.config.ts`:
 
-```javascript
-coverageThreshold: {
-  global: {
+```typescript
+coverage: {
+  thresholds: {
     branches: 70,
     functions: 75,
     lines: 80,
@@ -207,14 +208,12 @@ Test complete workflows for:
 
 ## 🛠️ Testing Tools
 
-### Jest
-- Test runner and framework
-- Coverage reporting
+### Vitest
+- Fast test runner powered by Vite
+- Native TypeScript support
+- Coverage reporting with v8
 - Mocking capabilities
-
-### ts-jest
-- TypeScript support
-- Type checking in tests
+- Compatible with Jest API
 
 ### Future Additions
 - **Playwright** - E2E browser testing
@@ -274,9 +273,11 @@ it('should do something', () => {
 Mock external dependencies:
 
 ```typescript
-jest.mock('../../../src/db');
+import { vi } from 'vitest';
 
-(db.doc.get as jest.Mock).mockResolvedValue({ ... });
+vi.mock('../../../src/db');
+
+(db.doc.get as Mock).mockResolvedValue({ ... });
 ```
 
 ### 4. Test Independence
@@ -285,7 +286,7 @@ Each test should be independent:
 
 ```typescript
 beforeEach(() => {
-  jest.clearAllMocks();
+  vi.clearAllMocks();
   // Reset state
 });
 
@@ -306,28 +307,33 @@ it('should handle null values gracefully', ...)
 
 ## 🔧 Configuration
 
-### jest.config.js
+### vitest.config.ts
 
-```javascript
-module.exports = {
-  preset: 'ts-jest',
-  testEnvironment: 'node',
-  roots: ['<rootDir>/packages'],
-  testMatch: ['**/__tests__/**/*.ts', '**/?(*.)+(spec|test).ts'],
-  collectCoverageFrom: [
-    'packages/**/src/**/*.ts',
-    '!packages/**/src/**/*.d.ts',
-    '!packages/**/src/index.ts'
-  ],
-  coverageThreshold: {
-    global: {
-      branches: 70,
-      functions: 75,
-      lines: 80,
-      statements: 80
+```typescript
+import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+  test: {
+    globals: true,
+    environment: 'node',
+    include: ['packages/**/__tests__/**/*.ts', 'packages/**/?(*.)+(spec|test).ts'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'lcov', 'html', 'json-summary'],
+      include: ['packages/**/src/**/*.ts'],
+      exclude: [
+        'packages/**/src/**/*.d.ts',
+        'packages/**/src/index.ts'
+      ],
+      thresholds: {
+        branches: 70,
+        functions: 75,
+        lines: 80,
+        statements: 80
+      }
     }
   }
-};
+});
 ```
 
 ## 🚨 Continuous Integration
@@ -375,14 +381,14 @@ pnpm test -t "should calculate health score"
 ### Debug mode
 
 ```bash
-node --inspect-brk node_modules/.bin/jest --runInBand
+node --inspect-brk node_modules/.bin/vitest --run
 ```
 
 ## 📚 Resources
 
-- [Jest Documentation](https://jestjs.io/)
+- [Vitest Documentation](https://vitest.dev/)
 - [Testing Best Practices](https://testingjavascript.com/)
-- [TypeScript + Jest Guide](https://kulshekhar.github.io/ts-jest/)
+- [Vitest Migration Guide](https://vitest.dev/guide/migration.html)
 
 ## 🤝 Contributing
 

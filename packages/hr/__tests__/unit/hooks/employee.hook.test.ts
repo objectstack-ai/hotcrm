@@ -1,4 +1,5 @@
 import type { HookContext } from '@objectstack/spec/data';
+import { vi } from 'vitest';
 import {
   EmployeeDataValidationTrigger,
   EmployeeOnboardingTrigger,
@@ -6,10 +7,10 @@ import {
 } from '../../../src/hooks/employee.hook';
 
 // Mock modules
-const mockQlFind = jest.fn();
-const mockQlDocGet = jest.fn();
-const mockQlDocCreate = jest.fn();
-const mockQlDocUpdate = jest.fn();
+const mockQlFind = vi.fn();
+const mockQlDocGet = vi.fn();
+const mockQlDocCreate = vi.fn();
+const mockQlDocUpdate = vi.fn();
 
 const createMockContext = (
   event: 'beforeInsert' | 'beforeUpdate' | 'afterInsert' | 'afterUpdate',
@@ -35,7 +36,7 @@ const createMockContext = (
 
 describe('Employee Hook - EmployeeDataValidationTrigger', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('beforeInsert - Data Validation', () => {
@@ -90,7 +91,7 @@ describe('Employee Hook - EmployeeDataValidationTrigger', () => {
       };
 
       const ctx = createMockContext('beforeInsert', employee);
-      const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
+      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation();
 
       // Act
       await EmployeeDataValidationTrigger.handler(ctx);
@@ -135,7 +136,7 @@ describe('Employee Hook - EmployeeDataValidationTrigger', () => {
       };
 
       const ctx = createMockContext('beforeInsert', employee);
-      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation();
 
       // Act
       await EmployeeDataValidationTrigger.handler(ctx);
@@ -167,7 +168,7 @@ describe('Employee Hook - EmployeeDataValidationTrigger', () => {
       };
 
       const ctx = createMockContext('beforeUpdate', employee, previous);
-      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation();
 
       // Act
       await EmployeeDataValidationTrigger.handler(ctx);
@@ -202,7 +203,7 @@ describe('Employee Hook - EmployeeDataValidationTrigger', () => {
 
 describe('Employee Hook - EmployeeOnboardingTrigger', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('afterInsert - Onboarding Initiation', () => {
@@ -220,7 +221,7 @@ describe('Employee Hook - EmployeeOnboardingTrigger', () => {
       mockQlDocCreate.mockResolvedValue({ id: 'onboarding_123' });
 
       const ctx = createMockContext('afterInsert', employee);
-      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation();
 
       // Act
       await EmployeeOnboardingTrigger.handler(ctx);
@@ -285,7 +286,7 @@ describe('Employee Hook - EmployeeOnboardingTrigger', () => {
       mockQlDocCreate.mockResolvedValue({ id: 'goal_123' });
 
       const ctx = createMockContext('afterInsert', employee);
-      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation();
 
       // Act
       await EmployeeOnboardingTrigger.handler(ctx);
@@ -319,7 +320,7 @@ describe('Employee Hook - EmployeeOnboardingTrigger', () => {
       mockQlDocCreate.mockResolvedValue({ id: 'onboarding_123' });
 
       const ctx = createMockContext('afterInsert', employee);
-      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation();
 
       // Act
       await EmployeeOnboardingTrigger.handler(ctx);
@@ -345,7 +346,7 @@ describe('Employee Hook - EmployeeOnboardingTrigger', () => {
       mockQlDocCreate.mockResolvedValue({ id: 'onboarding_123' });
 
       const ctx = createMockContext('afterInsert', employee);
-      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation();
 
       // Act
       await EmployeeOnboardingTrigger.handler(ctx);
@@ -372,7 +373,7 @@ describe('Employee Hook - EmployeeOnboardingTrigger', () => {
       mockQlDocCreate.mockRejectedValue(new Error('Database error'));
 
       const ctx = createMockContext('afterInsert', employee);
-      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation();
 
       // Act & Assert
       await expect(EmployeeOnboardingTrigger.handler(ctx)).resolves.not.toThrow();
@@ -385,7 +386,7 @@ describe('Employee Hook - EmployeeOnboardingTrigger', () => {
 
 describe('Employee Hook - EmployeeStatusChangeTrigger', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('afterUpdate - Status Change Detection', () => {
@@ -402,7 +403,7 @@ describe('Employee Hook - EmployeeStatusChangeTrigger', () => {
       };
 
       const ctx = createMockContext('afterUpdate', employee, previous);
-      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation();
 
       // Act
       await EmployeeStatusChangeTrigger.handler(ctx);
@@ -429,7 +430,7 @@ describe('Employee Hook - EmployeeStatusChangeTrigger', () => {
       };
 
       const ctx = createMockContext('afterUpdate', employee, previous);
-      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation();
 
       // Act
       await EmployeeStatusChangeTrigger.handler(ctx);
@@ -458,7 +459,7 @@ describe('Employee Hook - EmployeeStatusChangeTrigger', () => {
       };
 
       const ctx = createMockContext('afterUpdate', employee, previous);
-      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation();
 
       // Act
       await EmployeeStatusChangeTrigger.handler(ctx);
@@ -489,7 +490,7 @@ describe('Employee Hook - EmployeeStatusChangeTrigger', () => {
       mockQlDocCreate.mockResolvedValue({ id: 'offboarding_123' });
 
       const ctx = createMockContext('afterUpdate', employee, previous);
-      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation();
 
       // Act
       await EmployeeStatusChangeTrigger.handler(ctx);
@@ -525,7 +526,7 @@ describe('Employee Hook - EmployeeStatusChangeTrigger', () => {
       mockQlDocCreate.mockResolvedValue({ id: 'offboarding_123' });
 
       const ctx = createMockContext('afterUpdate', employee, previous);
-      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation();
 
       // Act
       await EmployeeStatusChangeTrigger.handler(ctx);
@@ -555,7 +556,7 @@ describe('Employee Hook - EmployeeStatusChangeTrigger', () => {
       };
 
       const ctx = createMockContext('afterUpdate', employee, previous);
-      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation();
 
       // Act
       await EmployeeStatusChangeTrigger.handler(ctx);
@@ -586,7 +587,7 @@ describe('Employee Hook - EmployeeStatusChangeTrigger', () => {
       mockQlDocCreate.mockRejectedValue(new Error('Database error'));
 
       const ctx = createMockContext('afterUpdate', employee, previous);
-      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation();
 
       // Act & Assert
       await expect(EmployeeStatusChangeTrigger.handler(ctx)).resolves.not.toThrow();

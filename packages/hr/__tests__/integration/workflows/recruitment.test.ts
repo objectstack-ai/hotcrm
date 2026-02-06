@@ -6,15 +6,17 @@
  */
 
 // Mock the db module
-jest.mock('../../../src/db', () => ({
+import { vi, Mock } from 'vitest';
+
+vi.mock('../../../src/db', () => ({
   db: {
     doc: {
-      get: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn()
+      get: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn()
     },
-    find: jest.fn(),
-    insert: jest.fn()
+    find: vi.fn(),
+    insert: vi.fn()
   }
 }));
 
@@ -22,7 +24,7 @@ import { db } from '../../../src/db';
 
 describe('End-to-End Recruitment Workflow', () => {
   beforeEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
   });
 
   it('should successfully complete full recruitment cycle: Application → Hired', async () => {
@@ -129,14 +131,14 @@ describe('End-to-End Recruitment Workflow', () => {
     };
 
     // Setup mocks
-    (db.doc.get as jest.Mock)
+    (db.doc.get as Mock)
       .mockResolvedValueOnce(mockRecruitment)
       .mockResolvedValueOnce(mockCandidate)
       .mockResolvedValueOnce(mockApplication);
 
-    (db.find as jest.Mock).mockResolvedValue([]);
+    (db.find as Mock).mockResolvedValue([]);
 
-    (db.doc.create as jest.Mock)
+    (db.doc.create as Mock)
       .mockResolvedValueOnce(mockCandidate)
       .mockResolvedValueOnce(mockApplication)
       .mockResolvedValueOnce(mockInterview1)
@@ -144,7 +146,7 @@ describe('End-to-End Recruitment Workflow', () => {
       .mockResolvedValueOnce(mockOffer)
       .mockResolvedValueOnce(mockEmployee);
 
-    (db.doc.update as jest.Mock)
+    (db.doc.update as Mock)
       .mockResolvedValueOnce({ ...mockCandidate, status: 'under_review' })
       .mockResolvedValueOnce({ ...mockApplication, status: 'Screening', stage: 'Phone Screen' })
       .mockResolvedValueOnce({ ...mockCandidate, status: 'Interviewing' })
@@ -335,11 +337,11 @@ describe('End-to-End Recruitment Workflow', () => {
       status: 'Submitted'
     };
 
-    (db.doc.create as jest.Mock)
+    (db.doc.create as Mock)
       .mockResolvedValueOnce(mockCandidate)
       .mockResolvedValueOnce(mockApplication);
 
-    (db.doc.update as jest.Mock)
+    (db.doc.update as Mock)
       .mockResolvedValueOnce({ ...mockCandidate, status: 'under_review' })
       .mockResolvedValueOnce({ ...mockApplication, status: 'Screening' })
       .mockResolvedValueOnce({ 
@@ -411,8 +413,8 @@ describe('End-to-End Recruitment Workflow', () => {
       status: 'Scheduled'
     };
 
-    (db.doc.create as jest.Mock).mockResolvedValue(mockInterview);
-    (db.doc.update as jest.Mock)
+    (db.doc.create as Mock).mockResolvedValue(mockInterview);
+    (db.doc.update as Mock)
       .mockResolvedValueOnce({ 
         ...mockInterview, 
         status: 'Completed',
@@ -483,8 +485,8 @@ describe('End-to-End Recruitment Workflow', () => {
       status: 'Extended'
     };
 
-    (db.doc.create as jest.Mock).mockResolvedValue(mockOffer);
-    (db.doc.update as jest.Mock)
+    (db.doc.create as Mock).mockResolvedValue(mockOffer);
+    (db.doc.update as Mock)
       .mockResolvedValueOnce({ 
         ...mockOffer, 
         status: 'Rejected',
@@ -579,14 +581,14 @@ describe('End-to-End Recruitment Workflow', () => {
       }
     ];
 
-    (db.doc.create as jest.Mock)
+    (db.doc.create as Mock)
       .mockResolvedValueOnce({ ...interviews[0], status: 'Scheduled' })
       .mockResolvedValueOnce({ ...interviews[1], status: 'Scheduled' })
       .mockResolvedValueOnce({ ...interviews[2], status: 'Scheduled' })
       .mockResolvedValueOnce({ ...interviews[3], status: 'Scheduled' })
       .mockResolvedValueOnce({ ...interviews[4], status: 'Scheduled' });
 
-    (db.doc.update as jest.Mock)
+    (db.doc.update as Mock)
       .mockResolvedValueOnce(interviews[0])
       .mockResolvedValueOnce(interviews[1])
       .mockResolvedValueOnce(interviews[2])
@@ -662,7 +664,7 @@ describe('End-to-End Recruitment Workflow', () => {
       base_salary: 155000
     };
 
-    (db.doc.create as jest.Mock)
+    (db.doc.create as Mock)
       .mockResolvedValueOnce(originalCandidate)
       .mockResolvedValueOnce(mockEmployee);
 
@@ -707,10 +709,10 @@ describe('End-to-End Recruitment Workflow', () => {
       { from: 'Shortlisted', to: 'Offer Extended', stage: 'Offer Discussion' }
     ];
 
-    (db.doc.create as jest.Mock).mockResolvedValue(mockApplication);
+    (db.doc.create as Mock).mockResolvedValue(mockApplication);
     
     validTransitions.forEach((transition, index) => {
-      (db.doc.update as jest.Mock).mockResolvedValueOnce({
+      (db.doc.update as Mock).mockResolvedValueOnce({
         ...mockApplication,
         status: transition.to,
         stage: transition.stage
@@ -749,7 +751,7 @@ describe('End-to-End Recruitment Workflow', () => {
       status: 'Hired'
     };
 
-    (db.find as jest.Mock).mockResolvedValueOnce([existingCandidate]);
+    (db.find as Mock).mockResolvedValueOnce([existingCandidate]);
 
     // Act
     const duplicates = await db.find('candidate', {
@@ -798,11 +800,11 @@ describe('End-to-End Recruitment Workflow', () => {
       status: 'Submitted'
     };
 
-    (db.doc.get as jest.Mock)
+    (db.doc.get as Mock)
       .mockResolvedValueOnce(mockRecruitment)
       .mockResolvedValueOnce(mockCandidate);
 
-    (db.doc.create as jest.Mock).mockResolvedValue(mockApplication);
+    (db.doc.create as Mock).mockResolvedValue(mockApplication);
 
     // Act
     const recruitment = await db.doc.get('recruitment', 'rec_link');
@@ -842,7 +844,7 @@ describe('End-to-End Recruitment Workflow', () => {
       status: 'Draft'
     };
 
-    (db.doc.create as jest.Mock).mockResolvedValue(mockOffer);
+    (db.doc.create as Mock).mockResolvedValue(mockOffer);
 
     // Act
     const offer = await db.doc.create('offer', {
@@ -904,11 +906,11 @@ describe('End-to-End Recruitment Workflow', () => {
       base_salary: 140000
     };
 
-    (db.doc.get as jest.Mock)
+    (db.doc.get as Mock)
       .mockResolvedValueOnce(mockOffer)
       .mockResolvedValueOnce(mockCandidate);
 
-    (db.doc.create as jest.Mock).mockResolvedValue(mockEmployee);
+    (db.doc.create as Mock).mockResolvedValue(mockEmployee);
 
     // Act
     const offer = await db.doc.get('offer', 'offer_emp');

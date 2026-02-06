@@ -1,14 +1,15 @@
 import type { HookContext } from '@objectstack/spec/data';
+import { vi } from 'vitest';
 import {
   CandidateScoringTrigger,
   CandidateStatusChangeTrigger
 } from '../../../src/hooks/candidate.hook';
 
 // Mock modules
-const mockQlFind = jest.fn();
-const mockQlDocGet = jest.fn();
-const mockQlDocCreate = jest.fn();
-const mockQlDocUpdate = jest.fn();
+const mockQlFind = vi.fn();
+const mockQlDocGet = vi.fn();
+const mockQlDocCreate = vi.fn();
+const mockQlDocUpdate = vi.fn();
 
 const createMockContext = (
   event: 'beforeInsert' | 'beforeUpdate' | 'afterUpdate',
@@ -34,7 +35,7 @@ const createMockContext = (
 
 describe('Candidate Hook - CandidateScoringTrigger', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('beforeInsert - Candidate Scoring', () => {
@@ -160,7 +161,7 @@ describe('Candidate Hook - CandidateScoringTrigger', () => {
       mockQlFind.mockResolvedValue([duplicateCandidate]);
 
       const ctx = createMockContext('beforeInsert', candidate);
-      const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
+      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation();
 
       // Act
       await CandidateScoringTrigger.handler(ctx);
@@ -250,7 +251,7 @@ describe('Candidate Hook - CandidateScoringTrigger', () => {
       mockQlFind.mockResolvedValue([]);
 
       const ctx = createMockContext('beforeInsert', candidate);
-      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation();
 
       // Act
       await CandidateScoringTrigger.handler(ctx);
@@ -277,7 +278,7 @@ describe('Candidate Hook - CandidateScoringTrigger', () => {
       mockQlFind.mockResolvedValue([]);
 
       const ctx = createMockContext('beforeInsert', candidate);
-      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation();
 
       // Act
       await CandidateScoringTrigger.handler(ctx);
@@ -404,7 +405,7 @@ describe('Candidate Hook - CandidateScoringTrigger', () => {
       mockQlFind.mockRejectedValue(new Error('Database error'));
 
       const ctx = createMockContext('beforeInsert', candidate);
-      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation();
 
       // Act & Assert
       await expect(CandidateScoringTrigger.handler(ctx)).resolves.not.toThrow();
@@ -420,7 +421,7 @@ describe('Candidate Hook - CandidateScoringTrigger', () => {
 
 describe('Candidate Hook - CandidateStatusChangeTrigger', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('afterUpdate - Status Change Detection', () => {
@@ -437,7 +438,7 @@ describe('Candidate Hook - CandidateStatusChangeTrigger', () => {
       };
 
       const ctx = createMockContext('afterUpdate', candidate, previous);
-      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation();
 
       // Act
       await CandidateStatusChangeTrigger.handler(ctx);
@@ -465,7 +466,7 @@ describe('Candidate Hook - CandidateStatusChangeTrigger', () => {
       };
 
       const ctx = createMockContext('afterUpdate', candidate, previous);
-      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation();
 
       // Act
       await CandidateStatusChangeTrigger.handler(ctx);
@@ -495,7 +496,7 @@ describe('Candidate Hook - CandidateStatusChangeTrigger', () => {
       };
 
       const ctx = createMockContext('afterUpdate', candidate, previous);
-      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation();
 
       // Act
       await CandidateStatusChangeTrigger.handler(ctx);
@@ -525,7 +526,7 @@ describe('Candidate Hook - CandidateStatusChangeTrigger', () => {
       };
 
       const ctx = createMockContext('afterUpdate', candidate, previous);
-      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation();
 
       // Act
       await CandidateStatusChangeTrigger.handler(ctx);
@@ -555,7 +556,7 @@ describe('Candidate Hook - CandidateStatusChangeTrigger', () => {
       };
 
       const ctx = createMockContext('afterUpdate', candidate, previous);
-      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation();
 
       // Act
       await CandidateStatusChangeTrigger.handler(ctx);
@@ -585,7 +586,7 @@ describe('Candidate Hook - CandidateStatusChangeTrigger', () => {
       };
 
       const ctx = createMockContext('afterUpdate', candidate, previous);
-      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation();
 
       // Act
       await CandidateStatusChangeTrigger.handler(ctx);
@@ -615,7 +616,7 @@ describe('Candidate Hook - CandidateStatusChangeTrigger', () => {
       };
 
       const ctx = createMockContext('afterUpdate', candidate, previous);
-      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation();
 
       // Act & Assert
       await expect(CandidateStatusChangeTrigger.handler(ctx)).resolves.not.toThrow();

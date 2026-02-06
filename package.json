@@ -16,11 +16,11 @@
     "build:finance": "pnpm --filter @hotcrm/finance build",
     "build:docs": "pnpm --filter @hotcrm/docs build",
     "lint": "pnpm -r lint",
-    "test": "jest --passWithNoTests",
-    "test:coverage": "jest --coverage --passWithNoTests",
-    "test:watch": "jest --watch --passWithNoTests",
-    "test:unit": "jest --testPathPattern=__tests__/unit --passWithNoTests",
-    "test:integration": "jest --testPathPattern=__tests__/integration --passWithNoTests",
+    "test": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage --passWithNoTests",
+    "test:watch": "vitest --passWithNoTests",
+    "test:unit": "vitest run --passWithNoTests __tests__/unit",
+    "test:integration": "vitest run --passWithNoTests __tests__/integration",
     "verify:plugins": "node scripts/verify-plugin-architecture.js",
     "clean": "pnpm -r exec rm -rf dist node_modules"
 },
@@ -35,14 +35,14 @@
   "author": "HotCRM Team",
   "license": "MIT",
   "devDependencies": {
-    "@types/jest": "^29.5.11",
     "@types/node": "^25.2.0",
     "@typescript-eslint/eslint-plugin": "^7.0.0",
     "@typescript-eslint/parser": "^6.14.0",
+    "@vitest/coverage-v8": "^1.2.2",
+    "@vitest/ui": "^1.2.2",
     "eslint": "^8.55.0",
-    "jest": "^29.7.0",
-    "ts-jest": "^29.4.6",
-    "typescript": "^5.3.0"
+    "typescript": "^5.3.0",
+    "vitest": "^1.2.2"
   },
   "engines": {
     "node": ">=20.9.0",

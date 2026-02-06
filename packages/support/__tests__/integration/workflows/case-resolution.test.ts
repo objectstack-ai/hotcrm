@@ -6,15 +6,17 @@
  */
 
 // Mock the db module
-jest.mock('../../../src/db', () => ({
+import { vi, Mock } from 'vitest';
+
+vi.mock('../../../src/db', () => ({
   db: {
     doc: {
-      get: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn()
+      get: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn()
     },
-    find: jest.fn(),
-    insert: jest.fn()
+    find: vi.fn(),
+    insert: vi.fn()
   }
 }));
 
@@ -22,7 +24,7 @@ import { db } from '../../../src/db';
 
 describe('Case Resolution Workflow Integration', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should complete full case lifecycle from creation to resolution', async () => {
@@ -59,8 +61,8 @@ describe('Case Resolution Workflow Integration', () => {
       resolution: 'Applied patch to fix report export functionality'
     };
 
-    (db.doc.create as jest.Mock).mockResolvedValue(createdCase);
-    (db.doc.update as jest.Mock)
+    (db.doc.create as Mock).mockResolvedValue(createdCase);
+    (db.doc.update as Mock)
       .mockResolvedValueOnce(assignedCase)
       .mockResolvedValueOnce(resolvedCase);
 
@@ -123,9 +125,9 @@ describe('Case Resolution Workflow Integration', () => {
       is_violated: false
     };
 
-    (db.doc.get as jest.Mock).mockResolvedValue(mockCase);
-    (db.doc.create as jest.Mock).mockResolvedValue(slaMilestone);
-    (db.doc.update as jest.Mock).mockResolvedValue(completedMilestone);
+    (db.doc.get as Mock).mockResolvedValue(mockCase);
+    (db.doc.create as Mock).mockResolvedValue(slaMilestone);
+    (db.doc.update as Mock).mockResolvedValue(completedMilestone);
 
     // Act - Create SLA milestone
     const milestone = await db.doc.create('sla_milestone', {
@@ -167,9 +169,9 @@ describe('Case Resolution Workflow Integration', () => {
       escalation_date: new Date().toISOString()
     };
 
-    (db.doc.get as jest.Mock).mockResolvedValue(highRiskCase);
-    (db.doc.update as jest.Mock).mockResolvedValue(escalatedCase);
-    (db.find as jest.Mock).mockResolvedValue([]);
+    (db.doc.get as Mock).mockResolvedValue(highRiskCase);
+    (db.doc.update as Mock).mockResolvedValue(escalatedCase);
+    (db.find as Mock).mockResolvedValue([]);
 
     // Act - Check SLA breach risk (would be calculated by predictSLABreach)
     const caseData = await db.doc.get('case', 'case_escalate');
@@ -224,9 +226,9 @@ describe('Case Resolution Workflow Integration', () => {
       created_date: new Date().toISOString()
     };
 
-    (db.doc.get as jest.Mock).mockResolvedValue(mockCase);
-    (db.find as jest.Mock).mockResolvedValue(relevantArticles);
-    (db.doc.create as jest.Mock).mockResolvedValue(caseArticleLink);
+    (db.doc.get as Mock).mockResolvedValue(mockCase);
+    (db.find as Mock).mockResolvedValue(relevantArticles);
+    (db.doc.create as Mock).mockResolvedValue(caseArticleLink);
 
     // Act - Find and link relevant articles
     const articles = await db.find('knowledge_article', {
@@ -271,8 +273,8 @@ describe('Case Resolution Workflow Integration', () => {
       created_date: new Date().toISOString()
     };
 
-    (db.doc.get as jest.Mock).mockResolvedValue(mockCase);
-    (db.doc.create as jest.Mock)
+    (db.doc.get as Mock).mockResolvedValue(mockCase);
+    (db.doc.create as Mock)
       .mockResolvedValueOnce(internalComment)
       .mockResolvedValueOnce(externalComment);
 
@@ -324,8 +326,8 @@ describe('Case Resolution Workflow Integration', () => {
       resolution_time_minutes: 240
     };
 
-    (db.doc.get as jest.Mock).mockResolvedValue(mockCase);
-    (db.doc.update as jest.Mock)
+    (db.doc.get as Mock).mockResolvedValue(mockCase);
+    (db.doc.update as Mock)
       .mockResolvedValueOnce(caseWithFirstResponse)
       .mockResolvedValueOnce(closedCaseWithSurvey);
 

@@ -7,10 +7,12 @@ import {
   AnomalyDetectionRequest
 } from '../../../src/actions/invoice_prediction.action';
 
-jest.mock('../../../src/db', () => ({
+import { vi, Mock } from 'vitest';
+
+vi.mock('../../../src/db', () => ({
   db: {
-    doc: { get: jest.fn() },
-    find: jest.fn()
+    doc: { get: vi.fn() },
+    find: vi.fn()
   }
 }));
 
@@ -18,7 +20,7 @@ import { db } from '../../../src/db';
 
 describe('Invoice Prediction - predictPaymentDefault', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should predict default probability', async () => {
@@ -33,8 +35,8 @@ describe('Invoice Prediction - predictPaymentDefault', () => {
 
     const mockAccount = { name: 'Test Corp', annual_revenue: 5000000, industry: 'Technology' };
 
-    (db.doc.get as jest.Mock).mockResolvedValueOnce(mockInvoice).mockResolvedValueOnce(mockAccount);
-    (db.find as jest.Mock).mockResolvedValue([]);
+    (db.doc.get as Mock).mockResolvedValueOnce(mockInvoice).mockResolvedValueOnce(mockAccount);
+    (db.find as Mock).mockResolvedValue([]);
 
     const result = await predictPaymentDefault({ invoiceId: 'inv_123' });
 
@@ -51,8 +53,8 @@ describe('Invoice Prediction - predictPaymentDefault', () => {
       { status: 'Paid', due_date: '2024-02-01', payment_date: '2024-02-01', amount: 15000 }
     ];
 
-    (db.doc.get as jest.Mock).mockResolvedValueOnce(mockInvoice).mockResolvedValueOnce(mockAccount);
-    (db.find as jest.Mock).mockResolvedValue(historicalInvoices);
+    (db.doc.get as Mock).mockResolvedValueOnce(mockInvoice).mockResolvedValueOnce(mockAccount);
+    (db.find as Mock).mockResolvedValue(historicalInvoices);
 
     const result = await predictPaymentDefault({ invoiceId: 'inv_history' });
 
@@ -73,8 +75,8 @@ describe('Invoice Prediction - predictPaymentDefault', () => {
       { status: 'Cancelled', due_date: '2023-06-01', amount: 8000 }
     ];
 
-    (db.doc.get as jest.Mock).mockResolvedValueOnce(mockInvoice).mockResolvedValueOnce(mockAccount);
-    (db.find as jest.Mock).mockResolvedValue(badHistory);
+    (db.doc.get as Mock).mockResolvedValueOnce(mockInvoice).mockResolvedValueOnce(mockAccount);
+    (db.find as Mock).mockResolvedValue(badHistory);
 
     const result = await predictPaymentDefault({ invoiceId: 'inv_highrisk' });
 
@@ -85,14 +87,14 @@ describe('Invoice Prediction - predictPaymentDefault', () => {
 
 describe('Invoice Prediction - predictPaymentDate', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should predict payment date', async () => {
     const mockInvoice = { due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), account_id: 'acc_date', amount: 10000 };
 
-    (db.doc.get as jest.Mock).mockResolvedValue(mockInvoice);
-    (db.find as jest.Mock).mockResolvedValue([]);
+    (db.doc.get as Mock).mockResolvedValue(mockInvoice);
+    (db.find as Mock).mockResolvedValue([]);
 
     const result = await predictPaymentDate({ invoiceId: 'inv_date' });
 
@@ -106,8 +108,8 @@ describe('Invoice Prediction - predictPaymentDate', () => {
   it('should include influencing factors', async () => {
     const mockInvoice = { due_date: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(), account_id: 'acc_factors', amount: 5000 };
 
-    (db.doc.get as jest.Mock).mockResolvedValue(mockInvoice);
-    (db.find as jest.Mock).mockResolvedValue([]);
+    (db.doc.get as Mock).mockResolvedValue(mockInvoice);
+    (db.find as Mock).mockResolvedValue([]);
 
     const result = await predictPaymentDate({ invoiceId: 'inv_factors' });
 
@@ -118,15 +120,15 @@ describe('Invoice Prediction - predictPaymentDate', () => {
 
 describe('Invoice Prediction - detectAnomalies', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should detect invoice anomalies', async () => {
     const mockInvoice = { amount: 100000, invoice_date: new Date().toISOString(), due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), account_id: 'acc_anom' };
     const mockLines = [{ quantity: 10, unit_price: 10000, line_amount: 100000 }];
 
-    (db.doc.get as jest.Mock).mockResolvedValue(mockInvoice);
-    (db.find as jest.Mock).mockResolvedValueOnce(mockLines).mockResolvedValueOnce([{ amount: 50000 }]);
+    (db.doc.get as Mock).mockResolvedValue(mockInvoice);
+    (db.find as Mock).mockResolvedValueOnce(mockLines).mockResolvedValueOnce([{ amount: 50000 }]);
 
     const result = await detectAnomalies({ invoiceId: 'inv_anom' });
 
@@ -139,8 +141,8 @@ describe('Invoice Prediction - detectAnomalies', () => {
     const mockInvoice = { amount: 100, invoice_date: new Date().toISOString(), due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), account_id: 'acc_calc' };
     const badLines = [{ quantity: 10, unit_price: 10, line_amount: 150 }]; // Wrong calculation
 
-    (db.doc.get as jest.Mock).mockResolvedValue(mockInvoice);
-    (db.find as jest.Mock).mockResolvedValueOnce(badLines).mockResolvedValueOnce([]);
+    (db.doc.get as Mock).mockResolvedValue(mockInvoice);
+    (db.find as Mock).mockResolvedValueOnce(badLines).mockResolvedValueOnce([]);
 
     const result = await detectAnomalies({ invoiceId: 'inv_calc' });
 
