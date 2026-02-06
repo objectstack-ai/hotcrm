@@ -34,7 +34,7 @@ export default function HomePage() {
               <ArrowRight className="ml-2 w-5 h-5" />
             </Link>
             <Link
-              href="/docs/features/overview"
+              href="/docs/modules"
               className="inline-flex h-12 items-center justify-center rounded-md border border-input bg-background px-8 text-base font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             >
               Explore Features
@@ -90,40 +90,40 @@ export default function HomePage() {
           
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             <FeatureCard
-              icon={<UsersIcon />}
-              title="Customer 360"
-              description="Unified B2B & B2C data graph. The single source of truth for every interaction."
-              href="/docs/features/customer-360"
+              icon={<TrendingUpIcon />}
+              title="Sales Cloud"
+              description="Lead management, Opportunity pipelines, and Deal tracking."
+              href="/docs/modules/sales"
             />
             <FeatureCard
-              icon={<TrendingUpIcon />}
-              title="Sales Intelligence"
-              description="AI-guided selling, outcome-based forecasting, and pipeline automation."
-              href="/docs/features/sales-intelligence"
+              icon={<LifeBuoyIcon />}
+              title="Service Cloud"
+              description="Case management, Knowledge base, and SLA tracking."
+              href="/docs/modules/service"
+            />
+            <FeatureCard
+              icon={<MegaphoneIcon />}
+              title="Marketing Cloud"
+              description="Campaign ROI tracking and Customer Journeys."
+              href="/docs/modules/marketing"
             />
             <FeatureCard
               icon={<BanknoteIcon />}
               title="Revenue Cloud"
-              description="CPQ (Configure, Price, Quote), subscription management, and billing."
-              href="/docs/features/revenue-cloud"
+              description="CPQ (Configure, Price, Quote) and Billing."
+              href="/docs/modules/revenue"
             />
             <FeatureCard
-              icon={<LifeBuoyIcon />}
-              title="Service Excellence"
-              description="Omni-channel support with autonomous agent resolution."
-              href="/docs/features/service-excellence"
+              icon={<UsersIcon />}
+              title="HR Cloud"
+              description="Human Capital Management - Recruitment to Retirement."
+              href="/docs/modules/hr"
             />
             <FeatureCard
-              icon={<MegaphoneIcon />}
-              title="Marketing Journeys"
-              description="Real-time, signal-based customer journeys and segmentation."
-              href="/docs/features/marketing-journeys"
-            />
-             <FeatureCard
               icon={<LayoutTemplate />}
-              title="Platform PaaS"
-              description="Build your own apps using the same tools we use for the standard clouds."
-              href="/docs/features/platform-extensibility"
+              title="Platform & AI"
+              description="Metadata engine, ObjectQL, and Agentic capabilities."
+              href="/docs/modules/platform"
             />
           </div>
         </div>
@@ -189,7 +189,7 @@ export default function HomePage() {
         </p>
         <div className="flex justify-center gap-4">
           <Link
-             href="/docs/getting-started/installation"
+             href="/docs/getting-started/introduction"
              className="inline-flex h-12 items-center justify-center rounded-md bg-foreground text-background px-8 text-base font-medium transition-colors hover:bg-foreground/90"
           >
             Start Building
