@@ -1,0 +1,361 @@
+---
+title: Customer 360 & Sales Intelligence
+description: Unified customer data graph with AI-powered sales insights
+---
+
+## Overview
+
+HotCRM's Sales Intelligence combines **Customer 360** (unified customer data) with **AI-powered insights** to help sales teams close deals faster and more predictably.
+
+**Package:** `@hotcrm/crm`  
+**Objects:** 13 | **AI Actions:** 8 | **Hooks:** 7
+
+## Customer 360: The Single Source of Truth
+
+### Account Management
+
+**Object:** `account.object.ts`
+
+Enterprise-grade customer and organization management:
+
+```typescript
+// Account fields
+{
+  name: 'account',
+  fields: [
+    'name',                    // Organization name
+    'account_number',          // Auto-generated
+    'type',                    // Prospect, Customer, Partner, Competitor
+    'industry',                // 15+ industries
+    'annual_revenue',          // Currency field
+    'number_of_employees',     // Number field
+    'billing_address',         // Address field
+    'shipping_address',        // Address field
+    'parent_account_id',       // Self-reference for hierarchies
+    'owner_id',                // User reference
+    'health_score',            // AI-calculated (0-100)
+  ]
+}
+```
+
+**AI Features:**
+- **Health Scoring**: Automated account health calculation based on activity, revenue, support cases
+- **Risk Detection**: Churn prediction and early warning signals
+- **Upsell Opportunities**: AI-identified expansion opportunities
+
+### Contact Management
+
+**Object:** `contact.object.ts`
+
+Individual relationship tracking with decision-maker identification:
+
+```typescript
+// Contact fields
+{
+  name: 'contact',
+  fields: [
+    'first_name', 'last_name', 'email', 'phone',
+    'title',                   // Job title
+    'department',              // Functional area
+    'decision_maker',          // Boolean
+    'influence_level',         // High, Medium, Low
+    'relationship_strength',   // Strong, Developing, Weak
+    'account_id',              // Reference to Account
+    'reports_to_id',           // Self-reference
+    'email_opt_out',           // GDPR compliance
+  ]
+}
+```
+
+**Key Capabilities:**
+- Decision maker identification
+- Organizational hierarchy mapping
+- GDPR-compliant communication preferences
+- Relationship strength scoring
+
+## Sales Intelligence
+
+### Lead Management
+
+**Object:** `lead.object.ts`
+
+AI-native lead capture, scoring, and qualification:
+
+```typescript
+// Lead fields
+{
+  name: 'lead',
+  fields: [
+    'first_name', 'last_name', 'email', 'phone',
+    'company',
+    'title',
+    'lead_source',             // Web, Referral, Partner, etc.
+    'status',                  // New, Working, Qualified, Converted
+    'rating',                  // Hot, Warm, Cold
+    'score',                   // AI-calculated (0-100)
+    'converted',               // Boolean
+    'converted_date',          // DateTime
+    'converted_account_id',    // Reference
+    'converted_contact_id',    // Reference
+    'converted_opportunity_id',// Reference
+  ]
+}
+```
+
+**AI Actions:**
+
+#### 1. Lead Scoring (`lead_scoring.action.ts`)
+```typescript
+// Automatically scores leads based on:
+- Demographic fit (company size, industry)
+- Behavioral signals (email opens, website visits)
+- Firmographic data (revenue, growth stage)
+- Engagement history
+
+// Returns: Score (0-100) + Reasoning
+```
+
+#### 2. Lead Enrichment (`lead_enrichment.action.ts`)
+```typescript
+// Auto-enriches lead data:
+- Company information (revenue, employees, industry)
+- Contact details (phone, LinkedIn, title)
+- Technographic data (tech stack)
+- Intent signals
+
+// Returns: Enriched lead data
+```
+
+#### 3. Duplicate Detection
+```typescript
+// Finds potential duplicates based on:
+- Email matching
+- Phone matching  
+- Name + Company similarity (fuzzy matching)
+
+// Returns: List of potential duplicates with confidence scores
+```
+
+**Automation Hooks:**
+- Auto-score on creation/update
+- Auto-enrich on lead capture
+- Auto-assign based on territory rules
+- Auto-convert when qualified
+
+### Opportunity Pipeline
+
+**Object:** `opportunity.object.ts`
+
+AI-guided sales pipeline with 7-stage forecasting:
+
+```typescript
+// Opportunity fields
+{
+  name: 'opportunity',
+  fields: [
+    'name',                    // Deal name
+    'account_id',              // Reference
+    'amount',                  // Currency
+    'close_date',              // Date
+    'probability',             // AI-calculated
+    'stage',                   // 7 stages
+    'type',                    // New Business, Upsell, Renewal
+    'lead_source',
+    'next_step',               // Text
+    'forecast_category',       // Pipeline, Best Case, Commit, Closed
+  ]
+}
+```
+
+**7-Stage Pipeline:**
+1. **Prospecting** (10% probability)
+2. **Qualification** (20%)
+3. **Needs Analysis** (40%)
+4. **Proposal** (60%)
+5. **Negotiation** (80%)
+6. **Closed Won** (100%)
+7. **Closed Lost** (0%)
+
+**AI Actions:**
+
+#### 1. Win Probability (`opportunity_ai.action.ts`)
+```typescript
+// Calculates win probability based on:
+- Historical win rates by stage
+- Deal characteristics (size, type, source)
+- Engagement metrics
+- Competitive factors
+- Time in stage
+
+// Returns: Probability (0-100%) + Key factors
+```
+
+#### 2. Deal Risk Analysis
+```typescript
+// Identifies at-risk deals:
+- Stalled opportunities (no activity)
+- Slipped close dates
+- Low engagement
+- Missing decision makers
+
+// Returns: Risk score + Recommended actions
+```
+
+#### 3. Revenue Forecasting
+```typescript
+// Forecasts pipeline revenue:
+- By stage (weighted pipeline)
+- By rep/team
+- By time period
+- Confidence intervals
+
+// Returns: Forecast amounts + accuracy metrics
+```
+
+## Activity Intelligence
+
+### Activity Tracking
+
+**Object:** `activity.object.ts`
+
+Complete sales activity tracking with sentiment analysis:
+
+```typescript
+// Activity types
+{
+  types: [
+    'call',           // Phone calls
+    'email',          // Emails
+    'meeting',        // Meetings
+    'task',           // To-dos
+    'event',          // Calendar events
+  ],
+  
+  fields: [
+    'subject',
+    'description',
+    'activity_date',
+    'duration',       // Minutes
+    'status',         // Planned, Completed, Cancelled
+    'priority',       // High, Medium, Low
+    'related_to_id',  // Polymorphic (Account, Contact, Opportunity)
+    'sentiment',      // AI-analyzed: Positive, Neutral, Negative
+  ]
+}
+```
+
+**AI Features:**
+- Sentiment analysis on call transcripts and emails
+- Meeting transcription and summarization
+- Action item extraction
+- Follow-up recommendations
+
+## Marketing Automation
+
+### Email Templates
+
+**Object:** `email_template.object.ts`
+
+Marketing email templates with A/B testing:
+
+- Personalization tokens ({{first_name}}, {{company}})
+- Dynamic content blocks
+- A/B test variants
+- Performance tracking (open rate, click rate)
+
+### Landing Pages
+
+**Object:** `landing_page.object.ts`
+
+Landing page builder with conversion tracking:
+
+- Multi-device optimization
+- A/B testing
+- UTM parameter tracking
+- Conversion metrics
+- Lead auto-creation
+
+### Marketing Lists
+
+**Object:** `marketing_list.object.ts`
+
+Dynamic and static segmentation:
+
+- Dynamic filters (auto-update)
+- Static snapshots
+- Suppression lists (GDPR)
+- Engagement analytics
+- Unsubscribe management
+
+## AI-Powered Insights
+
+### Account Health Scoring
+
+Automated calculation based on:
+- Product usage metrics
+- Support case volume and severity
+- Payment history
+- Engagement trends
+- Renewal likelihood
+
+### Next Best Action
+
+AI recommends next steps:
+- "Call this contact - they opened your email 3 times"
+- "Follow up - no activity in 14 days"
+- "Upsell opportunity - high product usage"
+- "At risk - 2 support cases this week"
+
+### Predictive Analytics
+
+- **Churn Prediction**: Identify at-risk accounts
+- **Upsell Propensity**: Find expansion opportunities
+- **Close Date Prediction**: When will deals close?
+- **Deal Size Prediction**: What's the likely amount?
+
+## Integration Capabilities
+
+### API Access
+
+```typescript
+// Create an opportunity
+POST /api/objects/opportunity
+{
+  "name": "ACME Corp - Enterprise Deal",
+  "account_id": "acc_123",
+  "amount": 250000,
+  "close_date": "2026-06-30",
+  "stage": "qualification"
+}
+
+// Score a lead
+POST /api/actions/lead_scoring
+{
+  "lead_id": "lead_456"
+}
+
+// Get account health
+GET /api/objects/account/acc_123?include=health_score
+```
+
+### Webhooks
+
+Real-time notifications:
+- `opportunity.stage_changed`
+- `lead.converted`
+- `account.health_score_changed`
+- `activity.completed`
+
+## Getting Started
+
+<Cards>
+  <Card title="Quick Start Guide" href="/docs/getting-started/quick-start" />
+  <Card title="CRM Package Docs" href="/docs/packages/crm" />
+  <Card title="API Reference" href="/docs/packages/crm#api-reference" />
+</Cards>
+
+## Learn More
+
+- [Revenue Cloud](/docs/features/revenue-cloud) - CPQ and billing
+- [Marketing Journeys](/docs/features/marketing-journeys) - Campaign automation
+- [Service Excellence](/docs/features/service-excellence) - Customer support

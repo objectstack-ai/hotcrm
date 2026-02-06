@@ -1,0 +1,607 @@
+---
+title: Platform Extensibility
+description: Build your own applications using the ObjectStack Protocol
+---
+
+## Overview
+
+HotCRM is built on the **ObjectStack Protocol**, providing a powerful platform for building custom business applications. Use the same tools we use to build the standard clouds.
+
+**Core Packages:** `@hotcrm/core`, `@hotcrm/server`, `@hotcrm/ai`
+
+## Platform Architecture
+
+### The ObjectStack Runtime
+
+HotCRM runs on `@objectstack/runtime`, which provides:
+
+```
+┌─────────────────────────────────────────────────┐
+│         Your Custom Packages                    │
+│      (Built using the same tools)               │
+├─────────────────────────────────────────────────┤
+│      @objectstack/runtime Engine                │
+│  ┌─────────────┬──────────────┬──────────────┐ │
+│  │  ObjectQL   │   Metadata   │    Vector    │ │
+│  │   Engine    │   Registry   │    Store     │ │
+│  └─────────────┴──────────────┴──────────────┘ │
+├─────────────────────────────────────────────────┤
+│           Database & Infrastructure             │
+│      (SQLite, PostgreSQL, Redis, S3)           │
+└─────────────────────────────────────────────────┘
+```
+
+### Key Components
+
+#### 1. ObjectQL Engine
+
+Type-safe, permission-aware data access:
+
+```typescript
+import { Broker } from '@objectstack/runtime';
+
+// No SQL - just ObjectQL
+const opportunities = await broker.find('opportunity', {
+  filters: [
+    ['amount', '>', 50000],
+    ['stage', 'in', ['proposal', 'negotiation']],
+  ],
+  orderBy: [['close_date', 'asc']],
+  include: ['account', 'owner'], // Auto-join related objects
+  limit: 10,
+});
+```
+
+**Features:**
+- Type-safe queries
+- Permission checking
+- Auto-joins for relationships
+- Aggregations (SUM, AVG, COUNT, etc.)
+- Full-text search
+- No raw SQL needed
+
+#### 2. Metadata Registry
+
+Hot-reloading schema definitions:
+
+```typescript
+import { ObjectSchema, Field } from '@objectstack/spec';
+
+// Define once, use everywhere
+export const CustomObject: ObjectSchema = {
+  name: 'custom_object',
+  label: 'Custom Object',
+  fields: [
+    Field.text({ name: 'name', required: true }),
+    Field.currency({ name: 'amount' }),
+    Field.reference({
+      name: 'account_id',
+      reference_to: 'account',
+    }),
+  ],
+};
+
+// Register in plugin
+context.objectRegistry.register(CustomObject);
+```
+
+**Auto-Generated:**
+- REST APIs (CRUD)
+- Database tables
+- TypeScript types
+- UI forms
+- Validation rules
+
+#### 3. Vector Store Integration
+
+Native RAG (Retrieval-Augmented Generation):
+
+```typescript
+// Automatic vector embeddings for semantic search
+const results = await broker.search('knowledge_article', {
+  query: "How do I configure SSO?",
+  semantic: true,  // Uses vector embeddings
+  max_results: 5,
+});
+
+// Results ranked by semantic similarity
+```
+
+**Use Cases:**
+- Knowledge base search
+- Document similarity
+- Recommendation systems
+- Duplicate detection
+
+## Building Custom Packages
+
+### Package Structure
+
+```
+packages/
+└── my-custom-package/
+    ├── src/
+    │   ├── custom_object.object.ts   # Data model
+    │   ├── custom_logic.hook.ts      # Business logic
+    │   ├── custom_api.action.ts      # API endpoints
+    │   ├── custom_page.page.ts       # UI layout
+    │   └── plugin.ts                 # Package entry
+    ├── __tests__/
+    │   └── unit/
+    │       └── custom.test.ts
+    ├── package.json
+    ├── tsconfig.json
+    └── README.md
+```
+
+### Step 1: Define Objects
+
+Create `src/my_object.object.ts`:
+
+```typescript
+import { ObjectSchema, Field } from '@objectstack/spec';
+
+export const MyObject: ObjectSchema = {
+  name: 'my_object',
+  label: 'My Object',
+  label_plural: 'My Objects',
+  
+  fields: [
+    Field.text({
+      name: 'name',
+      label: 'Name',
+      required: true,
+      unique: true,
+    }),
+    
+    Field.textarea({
+      name: 'description',
+      label: 'Description',
+    }),
+    
+    Field.picklist({
+      name: 'status',
+      label: 'Status',
+      options: [
+        { label: 'Active', value: 'active' },
+        { label: 'Inactive', value: 'inactive' },
+      ],
+      default: 'active',
+    }),
+    
+    Field.reference({
+      name: 'account_id',
+      label: 'Account',
+      reference_to: 'account',
+      required: true,
+    }),
+    
+    Field.currency({
+      name: 'amount',
+      label: 'Amount',
+      default: 0,
+    }),
+    
+    Field.number({
+      name: 'score',
+      label: 'Score',
+      min: 0,
+      max: 100,
+    }),
+  ],
+  
+  // Auto-generate standard fields
+  enable_activities: true,  // Add notes, tasks
+  enable_history: true,     // Track field changes
+  enable_chatter: false,    // Disable comments
+};
+```
+
+**Available Field Types:**
+
+| Type | Usage |
+|------|-------|
+| `Field.text()` | Short text (255 chars) |
+| `Field.textarea()` | Long text |
+| `Field.richtext()` | HTML content |
+| `Field.email()` | Email addresses |
+| `Field.phone()` | Phone numbers |
+| `Field.url()` | URLs |
+| `Field.number()` | Integers/decimals |
+| `Field.currency()` | Money values |
+| `Field.percent()` | Percentages |
+| `Field.date()` | Date only |
+| `Field.datetime()` | Date + time |
+| `Field.boolean()` | True/false |
+| `Field.picklist()` | Dropdown options |
+| `Field.multiselect()` | Multiple selections |
+| `Field.reference()` | Foreign key |
+| `Field.address()` | Street, city, state, zip |
+| `Field.geolocation()` | Lat/long |
+
+### Step 2: Add Business Logic
+
+Create `src/my_logic.hook.ts`:
+
+```typescript
+import { Hook } from '@objectstack/spec';
+
+// Before create/update hook
+export const validateMyObject: Hook = {
+  object: 'my_object',
+  timing: 'before',
+  operations: ['create', 'update'],
+  
+  async execute(data, context) {
+    // Custom validation
+    if (data.amount && data.amount < 0) {
+      throw new Error('Amount cannot be negative');
+    }
+    
+    // Auto-calculate fields
+    if (data.status === 'active') {
+      data.score = 100;
+    }
+    
+    // Enrich data
+    if (data.account_id) {
+      const account = await context.broker.findOne('account', data.account_id);
+      data.enriched_data = account.name;
+    }
+    
+    return data;
+  },
+};
+
+// After create hook
+export const notifyOnCreate: Hook = {
+  object: 'my_object',
+  timing: 'after',
+  operations: ['create'],
+  
+  async execute(record, context) {
+    // Send notification
+    await context.notifications.send({
+      to: record.owner_id,
+      subject: `New ${record.name} created`,
+      body: `A new record was created with amount ${record.amount}`,
+    });
+  },
+};
+```
+
+**Hook Timing:**
+- `before`: Before database write (can modify data)
+- `after`: After database write (cannot modify data)
+
+**Hook Operations:**
+- `create`, `update`, `delete`
+- `*` for all operations
+
+### Step 3: Create API Actions
+
+Create `src/my_action.action.ts`:
+
+```typescript
+import { ActionSchema } from '@objectstack/spec';
+
+export const CustomAnalysisAction: ActionSchema = {
+  name: 'custom_analysis',
+  description: 'Perform custom analysis on my objects',
+  
+  parameters: {
+    account_id: {
+      type: 'string',
+      description: 'Account ID to analyze',
+      required: true,
+    },
+    include_inactive: {
+      type: 'boolean',
+      description: 'Include inactive records',
+      default: false,
+    },
+  },
+  
+  async execute(params, context) {
+    const { account_id, include_inactive } = params;
+    
+    // Query data
+    const filters = [['account_id', '=', account_id]];
+    if (!include_inactive) {
+      filters.push(['status', '=', 'active']);
+    }
+    
+    const records = await context.broker.find('my_object', {
+      filters,
+    });
+    
+    // Perform analysis
+    const totalAmount = records.reduce((sum, r) => sum + r.amount, 0);
+    const avgScore = records.reduce((sum, r) => sum + r.score, 0) / records.length;
+    
+    return {
+      count: records.length,
+      total_amount: totalAmount,
+      average_score: avgScore,
+      records: records.slice(0, 10), // Top 10
+    };
+  },
+};
+```
+
+**Action Use Cases:**
+- Custom calculations
+- External API integration
+- Batch operations
+- Complex workflows
+- AI/ML predictions
+
+### Step 4: Create Plugin
+
+Create `src/plugin.ts`:
+
+```typescript
+import { Plugin } from '@objectstack/spec';
+import { MyObject } from './my_object.object';
+import { validateMyObject, notifyOnCreate } from './my_logic.hook';
+import { CustomAnalysisAction } from './my_action.action';
+
+export const MyCustomPlugin: Plugin = {
+  name: '@hotcrm/my-custom-package',
+  version: '1.0.0',
+  
+  async init(context) {
+    // Register objects
+    context.objectRegistry.register(MyObject);
+    
+    // Register hooks
+    context.hooks.register(validateMyObject);
+    context.hooks.register(notifyOnCreate);
+    
+    // Register actions
+    context.actions.register(CustomAnalysisAction);
+    
+    console.log('My Custom Plugin initialized');
+  },
+};
+```
+
+### Step 5: Load Plugin
+
+In `packages/server/src/index.ts`:
+
+```typescript
+import { MyCustomPlugin } from '@hotcrm/my-custom-package';
+
+// Add to plugin list
+const kernel = await ObjectStackKernel.create({
+  plugins: [
+    CRMPlugin,
+    FinancePlugin,
+    MyCustomPlugin, // Your custom plugin
+  ],
+});
+```
+
+## AI Service Layer
+
+### AI Package
+
+**Package:** `@hotcrm/ai`
+
+Unified AI/ML infrastructure:
+
+```typescript
+import { MLService } from '@hotcrm/ai';
+
+// Register a model
+const model = await MLService.registerModel({
+  name: 'lead_scoring_v2',
+  version: '2.0.0',
+  type: 'classification',
+  provider: 'openai',  // or 'sagemaker', 'azure', 'custom'
+  endpoint: 'gpt-4',
+  features: ['company_size', 'industry', 'engagement'],
+});
+
+// Make predictions
+const prediction = await MLService.predict('lead_scoring_v2', {
+  company_size: 'enterprise',
+  industry: 'technology',
+  engagement: 'high',
+});
+
+// Response:
+{
+  prediction: 'hot_lead',
+  confidence: 0.87,
+  feature_importance: {
+    engagement: 0.5,
+    company_size: 0.3,
+    industry: 0.2,
+  }
+}
+```
+
+**Features:**
+- Multi-provider support (OpenAI, AWS, Azure)
+- Smart caching (Redis with 5-min TTL)
+- A/B testing (gradual rollout)
+- Performance monitoring
+- Explainability (SHAP-like)
+- Batch processing
+
+### Custom AI Actions
+
+```typescript
+import { MLService } from '@hotcrm/ai';
+import { ActionSchema } from '@objectstack/spec';
+
+export const CustomPredictionAction: ActionSchema = {
+  name: 'custom_prediction',
+  description: 'Custom ML prediction',
+  
+  async execute(params, context) {
+    // Call your custom model
+    const result = await MLService.predict('my_custom_model', {
+      input_data: params.data,
+    });
+    
+    // Store prediction
+    await context.broker.update(params.object, params.record_id, {
+      ai_prediction: result.prediction,
+      ai_confidence: result.confidence,
+    });
+    
+    return result;
+  },
+};
+```
+
+## Type Safety
+
+### Generated Types
+
+HotCRM auto-generates TypeScript types:
+
+```typescript
+import type { Account, Opportunity, Contact } from '@hotcrm/crm';
+
+// Fully typed
+const account: Account = await broker.findOne('account', accountId);
+const name: string = account.name;
+const revenue: number = account.annual_revenue;
+
+// TypeScript catches errors
+account.invalid_field = 'value'; // ❌ Compile error
+```
+
+### Zod Validation
+
+All objects use Zod for runtime validation:
+
+```typescript
+import { z } from 'zod';
+import { Field } from '@objectstack/spec';
+
+Field.text({
+  name: 'email',
+  validate: z.string().email(),
+});
+
+Field.number({
+  name: 'age',
+  validate: z.number().min(0).max(120),
+});
+```
+
+## Testing
+
+### Unit Tests
+
+```typescript
+import { describe, it, expect, vi } from 'vitest';
+import { validateMyObject } from '../src/my_logic.hook';
+
+describe('My Object Hook', () => {
+  it('should reject negative amounts', async () => {
+    const data = { amount: -100 };
+    
+    await expect(
+      validateMyObject.execute(data, mockContext)
+    ).rejects.toThrow('Amount cannot be negative');
+  });
+  
+  it('should auto-calculate score for active status', async () => {
+    const data = { status: 'active' };
+    
+    const result = await validateMyObject.execute(data, mockContext);
+    
+    expect(result.score).toBe(100);
+  });
+});
+```
+
+### Integration Tests
+
+```typescript
+import { Broker } from '@objectstack/runtime';
+
+describe('My Object Integration', () => {
+  it('should create and query records', async () => {
+    // Create
+    const record = await broker.create('my_object', {
+      name: 'Test Record',
+      account_id: 'acc_123',
+      amount: 1000,
+    });
+    
+    // Query
+    const found = await broker.findOne('my_object', record.id);
+    
+    expect(found.name).toBe('Test Record');
+    expect(found.score).toBe(100); // Auto-calculated by hook
+  });
+});
+```
+
+## Best Practices
+
+### Object Design
+
+✅ **Do:**
+- Use `snake_case` for object and field names
+- Make required fields truly required
+- Use reference fields for relationships
+- Enable history tracking for audit
+- Add descriptions for documentation
+
+❌ **Don't:**
+- Create circular references
+- Use generic field names (e.g., `field1`)
+- Store binary data in fields
+- Forget to add indexes for lookup fields
+
+### Hook Design
+
+✅ **Do:**
+- Keep hooks focused and single-purpose
+- Use `before` hooks to modify data
+- Use `after` hooks for side effects
+- Handle errors gracefully
+- Log important events
+
+❌ **Don't:**
+- Make external API calls in `before` hooks (slow)
+- Create infinite loops (hook triggers itself)
+- Modify data in `after` hooks (won't save)
+- Block on slow operations
+
+### Action Design
+
+✅ **Do:**
+- Validate parameters
+- Return structured data
+- Use async/await
+- Handle edge cases
+- Document parameters
+
+❌ **Don't:**
+- Return sensitive data
+- Forget authentication checks
+- Ignore rate limits
+- Block indefinitely
+
+## Getting Started
+
+<Cards>
+  <Card title="Core Package Docs" href="/docs/packages/core" />
+  <Card title="AI Package Docs" href="/docs/packages/ai" />
+  <Card title="Server Package Docs" href="/docs/packages/server" />
+</Cards>
+
+## Learn More
+
+- [Architecture Overview](/docs/getting-started/architecture)
+- [Quick Start Guide](/docs/getting-started/quick-start)
+- [ObjectStack Documentation](https://objectstack.dev)

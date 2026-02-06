@@ -1,0 +1,194 @@
+---
+title: Quick Start
+description: Get started with HotCRM in 5 minutes
+---
+
+## Welcome to HotCRM
+
+This guide will help you understand the basics of HotCRM and create your first business object.
+
+## What is HotCRM?
+
+HotCRM is the world's first **AI-Native Enterprise CRM** built on the **ObjectStack Protocol**. It combines:
+
+- **Metadata-Driven Architecture**: Define business logic in TypeScript (`.object.ts` files)
+- **Agentic AI**: AI agents that proactively manage pipelines, draft emails, and enrich data
+- **Developer-First**: Built on `@objectstack/runtime` with zero proprietary languages
+
+## Understanding the Architecture
+
+HotCRM follows a **Plugin-Based Monorepo** structure:
+
+```
+packages/
+├── crm/        # Sales Cloud (Account, Contact, Lead, Opportunity)
+├── finance/    # Revenue Cloud (Contract, Invoice, Payment)
+├── hr/         # Human Capital Management (Employee, Recruitment)
+├── marketing/  # Campaign Management
+├── products/   # CPQ & Product Catalog
+├── support/    # Service Cloud (Case, Knowledge)
+├── ai/         # AI Service Layer
+└── server/     # Application Server
+```
+
+Each package is a **self-contained business capability** with:
+- `*.object.ts` - Data models
+- `*.action.ts` - API endpoints & AI tools
+- `*.hook.ts` - Business logic triggers
+- `*.page.ts` - UI definitions
+
+## Your First Business Object
+
+Let's create a simple `Product` object to understand the basics.
+
+### 1. Define the Object Schema
+
+Create a file `packages/products/src/product.object.ts`:
+
+```typescript
+import { ObjectSchema, Field } from '@objectstack/spec';
+
+export const Product: ObjectSchema = {
+  name: 'product',
+  label: 'Product',
+  label_plural: 'Products',
+  
+  fields: [
+    Field.text({
+      name: 'name',
+      label: 'Product Name',
+      required: true,
+    }),
+    
+    Field.textarea({
+      name: 'description',
+      label: 'Description',
+    }),
+    
+    Field.currency({
+      name: 'price',
+      label: 'Price',
+      required: true,
+    }),
+    
+    Field.picklist({
+      name: 'status',
+      label: 'Status',
+      options: [
+        { label: 'Active', value: 'active' },
+        { label: 'Inactive', value: 'inactive' },
+      ],
+      default: 'active',
+    }),
+  ],
+};
+```
+
+### 2. Register the Object
+
+Export the object in `packages/products/src/plugin.ts`:
+
+```typescript
+import { Product } from './product.object';
+
+export const ProductsPlugin = {
+  name: '@hotcrm/products',
+  
+  async init(context: PluginContext) {
+    context.objectRegistry.register(Product);
+  },
+};
+```
+
+### 3. Use ObjectQL to Query Data
+
+Query your data using **ObjectQL** (never write raw SQL):
+
+```typescript
+import { Broker } from '@objectstack/runtime';
+
+// Create a product
+const newProduct = await broker.create('product', {
+  name: 'Premium Widget',
+  description: 'Our best widget yet',
+  price: 99.99,
+  status: 'active',
+});
+
+// Find products
+const products = await broker.find('product', {
+  filters: [['status', '=', 'active']],
+  orderBy: [['price', 'desc']],
+  limit: 10,
+});
+
+// Update a product
+await broker.update('product', productId, {
+  price: 89.99,
+});
+
+// Delete a product
+await broker.delete('product', productId);
+```
+
+## Key Concepts
+
+### 1. Metadata-First Development
+
+All business objects are defined in **TypeScript** using `ObjectSchema`:
+
+- ✅ Type-safe and validated
+- ✅ Version-controlled
+- ✅ Hot-reloadable
+- ❌ No YAML or JSON
+
+### 2. ObjectQL Query Language
+
+HotCRM uses **ObjectQL** for data access:
+
+```typescript
+// Filter syntax
+filters: [
+  ['amount', '>', 50000],
+  ['stage', '=', 'closed_won'],
+  ['owner_id', 'in', [userId1, userId2]],
+]
+
+// Operators: =, !=, >, >=, <, <=, in, not_in, like, contains
+```
+
+### 3. AI-Native Actions
+
+Expose functionality to AI agents using `*.action.ts`:
+
+```typescript
+import { ActionSchema } from '@objectstack/spec';
+
+export const EnrichProductAction: ActionSchema = {
+  name: 'enrich_product',
+  description: 'Enrich product data using AI',
+  
+  parameters: {
+    product_id: { type: 'string', required: true },
+  },
+  
+  async execute({ product_id }, context) {
+    // AI enrichment logic
+    return { success: true };
+  },
+};
+```
+
+## Next Steps
+
+<Cards>
+  <Card title="Architecture Deep Dive" href="/docs/getting-started/architecture" />
+  <Card title="Features Overview" href="/docs/features/overview" />
+  <Card title="CRM Package Guide" href="/docs/packages/crm" />
+</Cards>
+
+## Learn More
+
+- 📚 [ObjectStack Documentation](https://objectstack.dev)
+- 🎯 [API Reference](/docs/packages/overview)
+- 🤖 [AI Actions Guide](/docs/features/platform-extensibility)

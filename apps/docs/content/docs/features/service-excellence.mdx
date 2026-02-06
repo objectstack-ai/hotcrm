@@ -1,0 +1,580 @@
+---
+title: Service Excellence
+description: Omni-channel customer support with AI-powered routing and SLA management
+---
+
+## Overview
+
+HotCRM's Service Cloud provides comprehensive customer support capabilities including multi-channel case management, SLA tracking with breach prediction, intelligent routing, and RAG-enabled knowledge base.
+
+**Package:** `@hotcrm/support`  
+**Objects:** 21 | **AI Actions:** 3 | **Hooks:** 6
+
+## Case Management
+
+### Multi-Channel Support
+
+**Object:** `case.object.ts`
+
+Support 7 communication channels from a single interface:
+
+```typescript
+// Channels
+{
+  channels: [
+    'Email',           // Traditional email
+    'Web',             // Web forms
+    'Phone',           // Call center
+    'WeChat',          // Chinese social platform
+    'Chat',            // Live chat
+    'Mobile',          // Mobile app
+    'Walk-in',         // In-person support
+  ],
+  
+  fields: [
+    'case_number',       // Auto-generated
+    'subject',
+    'description',
+    'account_id',
+    'contact_id',
+    'status',            // New, Working, Escalated, Resolved, Closed
+    'priority',          // Low, Medium, High, Critical
+    'origin',            // Channel
+    'type',              // Question, Problem, Feature Request
+    'reason',            // Categorization
+    'owner_id',          // Agent assigned
+    'sla_policy_id',     // SLA rules
+    'csat_score',        // Customer satisfaction (1-5)
+  ]
+}
+```
+
+**AI Features:**
+- **Intelligent Routing**: Auto-assign to best agent based on skills, availability, workload
+- **Solution Recommendations**: Suggest knowledge articles
+- **Sentiment Analysis**: Detect customer frustration
+- **Priority Prediction**: Auto-escalate critical cases
+
+### Case Comments & History
+
+**Object:** `case_comment.object.ts`
+
+Complete interaction tracking:
+
+```typescript
+{
+  fields: [
+    'case_id',
+    'body',                // Comment text (rich text)
+    'is_published',        // Internal vs. customer-facing
+    'created_by',
+    'sentiment',           // AI-analyzed: Positive, Neutral, Negative
+    'parent_comment_id',   // Threading support
+  ]
+}
+```
+
+**Features:**
+- Rich text editor
+- File attachments
+- Internal notes vs. customer replies
+- Email threading
+- Sentiment tracking
+
+## SLA Management
+
+### SLA Templates
+
+**Object:** `sla_template.object.ts`
+
+Define response and resolution targets:
+
+```typescript
+{
+  fields: [
+    'name',
+    'priority',            // Critical, High, Medium, Low
+    'first_response_hours', // Target for first response
+    'resolution_hours',    // Target for resolution
+    'business_hours_only', // Boolean
+  ]
+}
+```
+
+**Example SLA Targets:**
+
+| Priority | First Response | Resolution |
+|----------|---------------|------------|
+| Critical | 1 hour | 4 hours |
+| High | 4 hours | 24 hours |
+| Medium | 8 hours | 3 days |
+| Low | 24 hours | 7 days |
+
+### SLA Policies
+
+**Object:** `sla_policy.object.ts`
+
+Multi-tier support with escalation:
+
+```typescript
+{
+  fields: [
+    'name',
+    'tier',                // Platinum, Gold, Silver, Bronze, Standard
+    'is_active',
+    'account_criteria',    // JSON filter
+    'sla_template_id',
+    'escalation_enabled',
+    'escalation_hours',    // Hours before escalation
+    'entitlement_process', // Premium vs. Standard
+  ]
+}
+```
+
+**Support Tiers:**
+- **Platinum**: 24/7, 1hr response, dedicated CSM
+- **Gold**: 24/5, 4hr response, priority queue
+- **Silver**: 12/5, 8hr response
+- **Bronze**: 8/5, 24hr response
+- **Standard**: Best effort
+
+### SLA Milestone Tracking
+
+**Object:** `sla_milestone.object.ts`
+
+Real-time SLA compliance tracking:
+
+```typescript
+{
+  fields: [
+    'case_id',
+    'milestone_type',      // First Response, Resolution
+    'target_date',         // SLA target
+    'actual_date',         // Actual completion
+    'is_violated',         // Boolean
+    'violation_reason',
+    'time_to_breach',      // Hours remaining
+  ]
+}
+```
+
+**AI Features:**
+- **Breach Prediction**: Predict SLA violations before they happen
+- **Auto-Escalation**: Escalate cases at risk
+- **Performance Analytics**: SLA compliance reporting
+
+## Intelligent Routing
+
+### Agent Skills
+
+**Object:** `agent_skill.object.ts`
+
+Skill-based routing:
+
+```typescript
+{
+  fields: [
+    'skill_name',          // e.g., "Billing", "Technical", "Spanish"
+    'description',
+  ]
+}
+```
+
+**Object:** `skill.object.ts` (Agent-Skill Junction)
+
+Link agents to skills with proficiency:
+
+```typescript
+{
+  fields: [
+    'user_id',             // Agent
+    'agent_skill_id',      // Skill
+    'proficiency_level',   // Beginner, Intermediate, Expert
+  ]
+}
+```
+
+### Routing Rules
+
+**Object:** `routing_rule.object.ts`
+
+Define intelligent assignment logic:
+
+```typescript
+{
+  fields: [
+    'name',
+    'is_active',
+    'priority',            // Rule precedence
+    'case_criteria',       // JSON filter (type, priority, origin)
+    'assignment_method',   // Round Robin, Least Busy, Skill Based, AI Powered
+    'skill_requirements',  // Required skills
+    'team_id',             // Target team
+  ]
+}
+```
+
+**Assignment Methods:**
+1. **Round Robin**: Distribute evenly
+2. **Least Busy**: Assign to agent with fewest open cases
+3. **Skill Based**: Match required skills
+4. **AI Powered**: ML-based optimal assignment
+
+### Queues
+
+**Object:** `queue.object.ts`
+
+Case queues for team organization:
+
+```typescript
+{
+  fields: [
+    'name',                // e.g., "Tier 1 Support"
+    'email',               // Queue email address
+    'queue_type',          // Support, Sales, Service
+    'auto_accept',         // Boolean
+  ]
+}
+```
+
+**Object:** `queue_member.object.ts`
+
+Queue membership:
+
+```typescript
+{
+  fields: [
+    'queue_id',
+    'user_id',
+    'is_active',
+  ]
+}
+```
+
+## Knowledge Management
+
+### Knowledge Articles
+
+**Object:** `knowledge_article.object.ts`
+
+RAG-enabled knowledge base:
+
+```typescript
+{
+  fields: [
+    'title',
+    'url_name',            // SEO-friendly slug
+    'summary',
+    'body',                // Rich text content
+    'article_type',        // FAQ, How-To, Troubleshooting, Announcement
+    'status',              // Draft, In Review, Published, Archived
+    'language',            // Multi-language support
+    'categories',          // JSON array
+    'is_featured',
+    'view_count',
+    'helpful_count',
+    'not_helpful_count',
+    'quality_score',       // AI-calculated (0-100)
+    'vector_embedding',    // For RAG semantic search
+  ]
+}
+```
+
+**AI Features:**
+- **Quality Scoring**: Auto-assess article quality
+- **Auto-Categorization**: Suggest categories
+- **Similarity Detection**: Find duplicate articles
+- **Search Ranking**: Semantic search with RAG
+- **Content Suggestions**: Recommend improvements
+
+**RAG Capabilities:**
+```typescript
+// Semantic search
+POST /api/actions/search_knowledge
+{
+  "query": "How do I reset my password?",
+  "max_results": 5
+}
+
+// Returns articles ranked by semantic similarity
+```
+
+## Escalation Management
+
+### Escalation Rules
+
+**Object:** `escalation_rule.object.ts`
+
+Automated escalation workflows:
+
+```typescript
+{
+  fields: [
+    'name',
+    'is_active',
+    'case_criteria',       // When to escalate
+    'escalation_trigger',  // SLA Violation, No Response, Priority Change
+    'escalation_actions',  // JSON array of actions
+    'notify_users',        // Users to notify
+    'reassign_to',         // New owner
+  ]
+}
+```
+
+**Escalation Triggers:**
+- SLA violation imminent
+- No agent response in X hours
+- Customer frustration detected (sentiment)
+- Case reopened multiple times
+
+**Escalation Actions:**
+- Email notifications
+- Slack/Teams alerts
+- Priority increase
+- Reassignment to senior agent
+- Manager involvement
+
+## Customer Portal
+
+### Portal Users
+
+**Object:** `portal_user.object.ts`
+
+Self-service portal access:
+
+```typescript
+{
+  fields: [
+    'contact_id',
+    'username',
+    'email',
+    'is_active',
+    'last_login',
+    'portal_role',         // Standard, Premium
+  ]
+}
+```
+
+### Community Forums
+
+**Object:** `forum_topic.object.ts`
+
+Community discussion topics:
+
+```typescript
+{
+  fields: [
+    'title',
+    'description',
+    'category',
+    'is_locked',
+    'is_featured',
+    'view_count',
+    'post_count',
+  ]
+}
+```
+
+**Object:** `forum_post.object.ts`
+
+Forum posts and replies:
+
+```typescript
+{
+  fields: [
+    'forum_topic_id',
+    'body',
+    'created_by',
+    'is_solution',         // Marked as solution
+    'upvote_count',
+  ]
+}
+```
+
+## Omni-Channel Capture
+
+### Email-to-Case
+
+**Object:** `email_to_case.object.ts`
+
+Automatic case creation from emails:
+
+```typescript
+{
+  fields: [
+    'routing_address',     // support@company.com
+    'is_active',
+    'queue_id',            // Target queue
+    'priority',            // Default priority
+    'auto_respond',        // Send auto-reply
+  ]
+}
+```
+
+### Web-to-Case
+
+**Object:** `web_to_case.object.ts`
+
+Case creation from web forms:
+
+```typescript
+{
+  fields: [
+    'name',
+    'is_active',
+    'form_url',
+    'queue_id',
+    'redirect_url',        // After submission
+    'spam_filter_enabled',
+  ]
+}
+```
+
+### Social-to-Case
+
+**Object:** `social_media_case.object.ts`
+
+Social media monitoring:
+
+```typescript
+{
+  fields: [
+    'case_id',
+    'platform',            // Twitter, Facebook, Instagram, LinkedIn
+    'social_post_id',
+    'social_handle',
+    'message',
+    'sentiment',
+  ]
+}
+```
+
+## Business Hours & Holidays
+
+### Business Hours
+
+**Object:** `business_hours.object.ts`
+
+Define support availability:
+
+```typescript
+{
+  fields: [
+    'name',
+    'timezone',
+    'monday_start', 'monday_end',
+    'tuesday_start', 'tuesday_end',
+    // ... for each day
+    'is_default',
+  ]
+}
+```
+
+### Holiday Calendars
+
+**Object:** `holiday_calendar.object.ts`
+
+```typescript
+{
+  fields: [
+    'name',
+    'description',
+  ]
+}
+```
+
+**Object:** `holiday.object.ts`
+
+```typescript
+{
+  fields: [
+    'holiday_calendar_id',
+    'name',
+    'holiday_date',
+    'is_recurring',        // Annual
+  ]
+}
+```
+
+## Analytics & Reporting
+
+### Key Metrics
+
+- **Case Volume**: Cases by channel, type, priority
+- **SLA Compliance**: % of cases meeting SLA
+- **First Contact Resolution (FCR)**: % resolved on first contact
+- **Average Handle Time (AHT)**: Time to resolve
+- **Customer Satisfaction (CSAT)**: Average CSAT score
+- **Agent Productivity**: Cases per agent per day
+- **Backlog**: Open cases aging report
+
+### AI-Powered Insights
+
+```typescript
+// Case volume forecasting
+POST /api/actions/forecast_case_volume
+{
+  "time_period": "next_30_days"
+}
+
+// Agent capacity planning
+POST /api/actions/agent_capacity
+{
+  "team_id": "team_123"
+}
+
+// Knowledge gap analysis
+POST /api/actions/knowledge_gaps
+// Returns: Topics with many cases but no articles
+```
+
+## API Examples
+
+### Create a Case
+
+```typescript
+POST /api/objects/case
+{
+  "subject": "Password reset issue",
+  "description": "Customer cannot reset password",
+  "account_id": "acc_123",
+  "contact_id": "con_456",
+  "origin": "Email",
+  "priority": "High"
+}
+```
+
+### AI Routing
+
+```typescript
+POST /api/actions/intelligent_routing
+{
+  "case_id": "case_789"
+}
+// Returns: Recommended agent + Reasoning
+```
+
+### Search Knowledge
+
+```typescript
+POST /api/actions/search_knowledge
+{
+  "query": "How to configure SSO?",
+  "max_results": 5
+}
+// Returns: Top 5 articles with similarity scores
+```
+
+## Getting Started
+
+<Cards>
+  <Card title="Support Package Docs" href="/docs/packages/support" />
+  <Card title="AI Actions Guide" href="/docs/packages/ai" />
+  <Card title="API Reference" href="/docs/packages/overview" />
+</Cards>
+
+## Learn More
+
+- [Sales Intelligence](/docs/features/sales-intelligence) - CRM and pipeline
+- [Revenue Cloud](/docs/features/revenue-cloud) - CPQ and billing
+- [Marketing Journeys](/docs/features/marketing-journeys) - Campaign automation
