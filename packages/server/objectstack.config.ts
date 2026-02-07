@@ -1,10 +1,10 @@
 import { defineStack } from '@objectstack/spec';
-import CRMPlugin from '@hotcrm/crm';
-import FinancePlugin from '@hotcrm/finance';
-import MarketingPlugin from '@hotcrm/marketing';
-import ProductsPlugin from '@hotcrm/products';
-import SupportPlugin from '@hotcrm/support';
-import HRPlugin from '@hotcrm/hr';
+import CRM from '@hotcrm/crm';
+import Finance from '@hotcrm/finance';
+import Marketing from '@hotcrm/marketing';
+import Products from '@hotcrm/products';
+import Support from '@hotcrm/support';
+import HR from '@hotcrm/hr';
 
 /**
  * HotCRM Server Configuration
@@ -23,11 +23,11 @@ export default defineStack({
 
   // Register all Plugins
   plugins: [
-    CRMPlugin,
-    FinancePlugin,
-    MarketingPlugin,
-    ProductsPlugin,
-    SupportPlugin,
-    HRPlugin
+    CRM.CRMPlugin,
+    Finance.FinancePlugin,
+    Marketing.MarketingPlugin,
+    Products.ProductsPlugin,
+    Support.SupportPlugin,
+    HR.HRPlugin
   ],
 });
