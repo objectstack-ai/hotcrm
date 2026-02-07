@@ -5,12 +5,15 @@
   "main": "dist/src/index.js",
   "scripts": {
     "build": "tsc",
-    "start": "ts-node src/index.ts",
-    "dev": "ts-node src/index.ts"
+    "start": "objectstack serve",
+    "dev": "objectstack dev",
+    "studio": "objectstack studio",
+    "validate": "objectstack validate"
   },
   "dependencies": {
     "@hotcrm/crm": "workspace:*",
     "@hotcrm/finance": "workspace:*",
+    "@hotcrm/hr": "workspace:*",
     "@hotcrm/marketing": "workspace:*",
     "@hotcrm/products": "workspace:*",
     "@hotcrm/support": "workspace:*",

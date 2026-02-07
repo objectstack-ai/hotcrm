@@ -1,29 +1,25 @@
-
-// import { defineConfig } from '@objectstack/cli';
-// @ts-ignore
-import { CRMPlugin } from '@hotcrm/crm';
-// @ts-ignore
-import { FinancePlugin } from '@hotcrm/finance';
-// @ts-ignore
-import { MarketingPlugin } from '@hotcrm/marketing';
-// @ts-ignore
-import { ProductsPlugin } from '@hotcrm/products';
-// @ts-ignore
-import { SupportPlugin } from '@hotcrm/support';
+import { defineStack } from '@objectstack/spec';
+import CRMPlugin from '@hotcrm/crm';
+import FinancePlugin from '@hotcrm/finance';
+import MarketingPlugin from '@hotcrm/marketing';
+import ProductsPlugin from '@hotcrm/products';
+import SupportPlugin from '@hotcrm/support';
+import HRPlugin from '@hotcrm/hr';
 
 /**
  * HotCRM Server Configuration
  * 
  * Aggregates all business plugins into a single runtime application.
  */
-export default {
-  // Project Metadata
-  name: 'hotcrm-server',
-  description: 'HotCRM Enterprise Server',
-
-  // Database connection provided by environment variables
-  // MONGODB_URI=mongodb://localhost:27017/hotcrm
-  // datasources: ... (handled by env vars in standard ObjectStack)
+export default defineStack({
+  manifest: {
+    id: 'com.hotcrm.server',
+    namespace: 'hotcrm',
+    version: '1.0.0',
+    type: 'app',
+    name: 'HotCRM Enterprise Server',
+    description: 'AI-Native Enterprise CRM with Sales, Marketing, Products, Finance, Service, and HR clouds',
+  },
 
   // Register all Plugins
   plugins: [
@@ -31,17 +27,7 @@ export default {
     FinancePlugin,
     MarketingPlugin,
     ProductsPlugin,
-    SupportPlugin
+    SupportPlugin,
+    HRPlugin
   ],
-
-  // Server Settings
-  dev: {
-    port: process.env.PORT ? parseInt(process.env.PORT) : 5000,
-  },
-  
-  // Build Settings
-  build: {
-    outDir: './dist',
-    target: 'node18'
-  }
-};
+});

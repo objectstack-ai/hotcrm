@@ -7,8 +7,12 @@
     "packages/*"
   ],
   "scripts": {
+    "dev": "pnpm --filter @hotcrm/server dev",
     "dev:docs": "pnpm --filter @hotcrm/docs dev",
+    "dev:studio": "pnpm --filter @hotcrm/server studio",
+    "start": "pnpm --filter @hotcrm/server start",
     "build": "pnpm -r build",
+    "build:server": "pnpm --filter @hotcrm/server build",
     "build:ai": "pnpm --filter @hotcrm/ai build",
     "build:crm": "pnpm --filter @hotcrm/crm build",
     "build:support": "pnpm --filter @hotcrm/support build",
@@ -21,6 +25,7 @@
     "test:watch": "vitest --passWithNoTests",
     "test:unit": "vitest run --passWithNoTests __tests__/unit",
     "test:integration": "vitest run --passWithNoTests __tests__/integration",
+    "validate": "pnpm --filter @hotcrm/server validate",
     "verify:plugins": "node scripts/verify-plugin-architecture.js",
     "clean": "pnpm -r exec rm -rf dist node_modules"
 },
