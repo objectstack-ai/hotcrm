@@ -5,23 +5,31 @@
   "main": "dist/src/index.js",
   "scripts": {
     "build": "tsc",
-    "start": "ts-node src/index.ts",
-    "dev": "ts-node src/index.ts"
+    "start": "node --no-experimental-strip-types dist/src/index.js",
+    "dev": "pnpm build && node --no-experimental-strip-types dist/src/index.js",
+    "studio": "objectstack studio",
+    "validate": "objectstack validate",
+    "compile": "objectstack compile"
   },
   "dependencies": {
     "@hotcrm/crm": "workspace:*",
     "@hotcrm/finance": "workspace:*",
+    "@hotcrm/hr": "workspace:*",
     "@hotcrm/marketing": "workspace:*",
     "@hotcrm/products": "workspace:*",
     "@hotcrm/support": "workspace:*",
     "@objectstack/cli": "^1.1.0",
     "@objectstack/core": "1.1.0",
+    "@objectstack/metadata": "^1.1.0",
+    "@objectstack/objectql": "^1.1.0",
     "@objectstack/plugin-hono-server": "1.1.0",
     "@objectstack/runtime": "1.1.0",
     "@objectstack/spec": "^1.1.0",
     "pino": "^10.3.0"
   },
   "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "ts-node": "^10.9.2",
     "typescript": "^5.0.0"
   }
 }
