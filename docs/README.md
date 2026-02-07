@@ -11,6 +11,14 @@
 
 Choose the document that best fits your role and time available:
 
+### For CTO & Strategic Planning (90 minutes) ⭐ NEW
+👉 **Start here**: [Strategic Design Report](./STRATEGIC_DESIGN_REPORT.md) 
+- Complete market analysis and industry requirements
+- Plugin development roadmap (12 industry + 8 functional plugins)
+- Architecture refactoring recommendations
+- 4-phase implementation plan with $76M ARR projection
+- 中文版: [战略设计报告](./STRATEGIC_DESIGN_REPORT_CN.md)
+
 ### For Current Development Status (10 minutes) ⭐ NEW
 👉 **Start here**: [Development Status & Roadmap](../DEVELOPMENT_STATUS.md)
 - Current project state and metrics
@@ -62,6 +70,8 @@ Choose the document that best fits your role and time available:
 | 4 | [Strategic Enhancement Plan](./STRATEGIC_ENHANCEMENT_PLAN.md) | 29KB | Product, Engineering | 45 min | Detailed roadmap |
 | 5 | [Implementation Roadmap](./IMPLEMENTATION_ROADMAP.md) | 15KB | Project managers | 30 min | Execution plan |
 | 6 | [Quick Wins](./QUICK_WINS.md) | 14KB | Engineering teams | 20 min | Immediate actions |
+| 7 | **[Strategic Design Report](./STRATEGIC_DESIGN_REPORT.md)** ⭐ NEW | 92KB | CTO, Executives | 90 min | Comprehensive plugin strategy |
+| 8 | **[战略设计报告（中文）](./STRATEGIC_DESIGN_REPORT_CN.md)** ⭐ NEW | 16KB | 中文读者 | 30分钟 | 中文摘要版 |
 
 ### Supporting Documentation
 
@@ -69,7 +79,7 @@ Choose the document that best fits your role and time available:
 |----------|------|---------|
 | [Plugin Architecture](./PLUGIN_ARCHITECTURE.md) | 8KB | Technical architecture guide |
 
-**Total Documentation**: 107KB across 7 files
+**Total Documentation**: 215KB across 9 files
 
 ---
 
