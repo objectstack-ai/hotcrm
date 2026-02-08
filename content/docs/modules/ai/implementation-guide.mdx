@@ -1,3 +1,8 @@
+---
+title: AI Implementation Guide
+description: Comprehensive guide to AI/ML infrastructure implementation for HotCRM, covering ML providers, model registry, prediction services, caching, monitoring, and explainability.
+---
+
 # Enhanced AI Capabilities - Implementation Guide
 
 ## Overview
@@ -11,7 +16,7 @@ This implementation provides a comprehensive AI/ML infrastructure for HotCRM wit
 The system supports multiple ML providers through a pluggable architecture:
 
 - **AWS SageMaker** - For production-grade ML models hosted on AWS
-- **Azure ML** - For Azure-hosted machine learning models  
+- **Azure ML** - For Azure-hosted machine learning models
 - **OpenAI** - For NLP tasks like sentiment analysis
 - **Custom** - Extensible for any custom ML infrastructure
 
@@ -50,7 +55,7 @@ ModelRegistry.register({
   provider: 'aws-sagemaker',
   description: 'Real ML model for lead scoring',
   status: 'active',
-  
+
   // Provider configuration
   providerConfig: {
     provider: 'aws-sagemaker',
@@ -61,14 +66,14 @@ ModelRegistry.register({
       region: 'us-east-1'
     }
   },
-  
+
   // A/B Testing configuration
   abTest: {
     enabled: true,
     trafficPercentage: 20, // 20% traffic to new model
     championModelId: 'lead-scoring-v1' // 80% to existing model
   },
-  
+
   metrics: {
     accuracy: 92.5,
     precision: 90.2,
@@ -221,7 +226,7 @@ console.log(explanation);
 //   ],
 //   topFeatures: [ ... top 5 ... ],
 //   explanation: "The prediction was influenced by:
-// 
+//
 // Positive factors:
 // • Engagement Score: 85 (impact: +35%)
 // • Company Size: 500 (impact: +25%)
@@ -244,28 +249,28 @@ console.log(comparison.explanation);
 
 ## Success Metrics Achievement
 
-### ✅ 90%+ Prediction Accuracy for Lead Scoring
+### 90%+ Prediction Accuracy for Lead Scoring
 
 - Model registry tracks accuracy metrics
 - Real ML models can achieve 90%+ accuracy
 - Mock implementation shows 87.5% as baseline
 - A/B testing framework allows gradual rollout of improved models
 
-### ✅ <100ms Response Time for Cached Predictions
+### `<100ms` Response Time for Cached Predictions
 
-- Cache hit typically returns in <10ms
+- Cache hit typically returns in `<10ms`
 - In-memory cache overhead is minimal
 - Redis cache (when available) adds ~5-15ms latency
 
-### ✅ <500ms for Fresh Predictions
+### `<500ms` for Fresh Predictions
 
-- Mock predictions: <5ms
+- Mock predictions: `<5ms`
 - AWS SageMaker: typically 50-200ms (production)
 - Azure ML: typically 40-180ms (production)
 - OpenAI: typically 200-400ms (LLM-based)
 - P95 latency monitoring ensures performance
 
-### ✅ 80%+ User Adoption of AI Features
+### 80%+ User Adoption of AI Features
 
 - Explainability features make AI predictions transparent
 - Real-time performance monitoring builds trust
@@ -377,7 +382,7 @@ import { PredictionService, ExplainabilityService } from '@hotcrm/ai';
 export async function scoreLead(leadId: string) {
   // Get lead data
   const lead = await db.doc.get('Lead', leadId);
-  
+
   // Make prediction
   const result = await PredictionService.predict({
     modelId: 'lead-scoring-v2',
@@ -393,14 +398,14 @@ export async function scoreLead(leadId: string) {
       objectId: leadId
     }
   });
-  
+
   // Get explanation
   const explanation = await ExplainabilityService.explainPrediction(
     'lead-scoring-v2',
     result.prediction,
     result.confidence
   );
-  
+
   // Update lead
   await db.doc.update('Lead', leadId, {
     ai_score: result.prediction.score,
@@ -408,7 +413,7 @@ export async function scoreLead(leadId: string) {
     ai_explanation: explanation.explanation,
     last_scored_date: new Date()
   });
-  
+
   return {
     score: result.prediction.score,
     confidence: result.confidence,
@@ -427,7 +432,7 @@ export async function batchScoreLeads(leadIds: string[]) {
   const leads = await db.find('Lead', {
     filters: [['Id', 'in', leadIds]]
   });
-  
+
   // Prepare features
   const features = leads.map(lead => ({
     company_size: lead.company_size,
@@ -436,13 +441,13 @@ export async function batchScoreLeads(leadIds: string[]) {
     job_title: lead.job_title,
     budget: lead.estimated_budget
   }));
-  
+
   // Batch predict
   const results = await PredictionService.batchPredict(
     'lead-scoring-v2',
     features
   );
-  
+
   // Update leads
   for (let i = 0; i < leads.length; i++) {
     await db.doc.update('Lead', leads[i].Id, {
@@ -450,7 +455,7 @@ export async function batchScoreLeads(leadIds: string[]) {
       ai_confidence: results[i].confidence
     });
   }
-  
+
   return results;
 }
 ```
@@ -527,4 +532,4 @@ for (const [modelId, stats] of Object.entries(allStats)) {
 
 ## API Reference
 
-See the [AI Package Documentation](../packages/ai/README.md) for complete API reference.
+See the [AI Package Documentation](/docs/modules/ai) for complete API reference.
