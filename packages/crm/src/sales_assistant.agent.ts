@@ -1,11 +1,11 @@
-import { Agent } from '@objectstack/spec/ai';
+// Agent definition for @objectstack/spec/ai
 
 /**
  * Sales Assistant AI Agent
  * An intelligent AI assistant to help sales reps with lead qualification,
  * opportunity management, and deal intelligence.
  */
-export const SalesAssistantAgent = Agent.create({
+export const SalesAssistantAgent = {
   name: 'sales_assistant',
   role: 'Sales AI Assistant',
   description: 'Intelligent sales assistant to help reps qualify leads, manage opportunities, and close deals faster',
@@ -273,6 +273,6 @@ Tone: Professional, helpful, and results-oriented.`,
     trackAccuracy: true,
     feedbackLoop: true
   }
-});
+};
 
 export default SalesAssistantAgent;

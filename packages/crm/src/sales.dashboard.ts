@@ -1,10 +1,11 @@
-import { Dashboard } from '@objectstack/spec/ui';
+// Dashboard configuration for Sales Performance
+// Uses @objectstack/spec/ui Dashboard type for reference
 
 /**
  * Sales Performance Dashboard
  * Demonstrates comprehensive dashboard with metrics, charts, and tables
  */
-export const SalesDashboard = Dashboard.create({
+export const SalesDashboard = {
   name: 'sales_overview',
   label: 'Sales Dashboard',
   description: 'Comprehensive overview of sales performance and pipeline health',
@@ -328,6 +329,6 @@ export const SalesDashboard = Dashboard.create({
     enabled: true,
     interval: 300  // 5 minutes
   }
-});
+};
 
 export default SalesDashboard;

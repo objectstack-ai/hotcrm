@@ -1,10 +1,10 @@
-import { WorkflowRule } from '@objectstack/spec/automation';
+// Workflow rules for Advanced Approval automation
 
 /**
  * Parallel Approval Chain Workflow
  * Routes requests to multiple approvers in parallel based on level and request type.
  */
-export const ParallelApprovalChain = WorkflowRule.create({
+export const ParallelApprovalChain = {
   name: 'parallel_approval_chain',
   label: 'Parallel Approval Chain',
   object: 'approval_request',
@@ -78,13 +78,13 @@ export const ParallelApprovalChain = WorkflowRule.create({
 
   executionOrder: 1,
   active: true
-});
+};
 
 /**
  * Smart Delegation Workflow
  * Auto-delegates approval requests when the assigned approver is OOO to their backup.
  */
-export const SmartDelegation = WorkflowRule.create({
+export const SmartDelegation = {
   name: 'smart_delegation',
   label: 'Smart Delegation for Unavailable Approvers',
   object: 'approval_request',
@@ -151,13 +151,13 @@ export const SmartDelegation = WorkflowRule.create({
 
   executionOrder: 2,
   active: true
-});
+};
 
 /**
  * Approval Escalation Workflow
  * Daily scheduled check for overdue approvals; auto-escalates after SLA breach.
  */
-export const ApprovalEscalation = WorkflowRule.create({
+export const ApprovalEscalation = {
   name: 'approval_escalation',
   label: 'Approval SLA Escalation',
   object: 'approval_request',
@@ -223,13 +223,13 @@ export const ApprovalEscalation = WorkflowRule.create({
 
   executionOrder: 3,
   active: true
-});
+};
 
 /**
  * Approval Auto-Resolve Workflow
  * Auto-approves low-risk requests where AI risk score < 20 and discount < 5%.
  */
-export const ApprovalAutoResolve = WorkflowRule.create({
+export const ApprovalAutoResolve = {
   name: 'approval_auto_resolve',
   label: 'Auto-Approve Low-Risk Requests',
   object: 'approval_request',
@@ -292,7 +292,7 @@ export const ApprovalAutoResolve = WorkflowRule.create({
 
   executionOrder: 4,
   active: true
-});
+};
 
 export const ApprovalWorkflows = {
   parallelApprovalChain: ParallelApprovalChain,

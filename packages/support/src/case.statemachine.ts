@@ -1,10 +1,10 @@
-import { StateMachine } from '@objectstack/spec/automation';
+// State machine configuration for case lifecycle
 
 /**
  * Case Lifecycle State Machine
  * Manages the complete lifecycle of support cases from creation to closure
  */
-export const CaseLifecycleStateMachine = StateMachine.create({
+export const CaseLifecycleStateMachine = {
   name: 'case_lifecycle',
   label: 'Case Lifecycle State Machine',
   object: 'case',
@@ -497,6 +497,6 @@ export const CaseLifecycleStateMachine = StateMachine.create({
     auto_close: 'Automatically close due to timeout',
     timeout: 'Timeout occurred'
   }
-});
+};
 
 export default CaseLifecycleStateMachine;

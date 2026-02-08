@@ -1,11 +1,11 @@
-import { Agent } from '@objectstack/spec/ai';
+// Agent definition for @objectstack/spec/ai
 
 /**
  * Inbox Agent
  * Automatically categorizes incoming emails and drafts intelligent replies for Support Cases.
  * Part of Phase 2: Deep Intelligence.
  */
-export const InboxAgent = Agent.create({
+export const InboxAgent = {
   name: 'inbox_agent',
   role: 'Support Inbox AI Agent',
   description: 'Automatically categorizes incoming emails, routes them to the correct queue, and drafts context-aware replies for Support Cases',
@@ -245,6 +245,6 @@ Tone: Professional, empathetic, solution-oriented.`,
     trackAccuracy: true,
     feedbackLoop: true
   }
-});
+};
 
 export default InboxAgent;

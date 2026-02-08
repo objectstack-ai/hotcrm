@@ -1,10 +1,10 @@
-import { WorkflowRule } from '@objectstack/spec/automation';
+// Workflow rules for HR automation
 
 /**
  * Onboarding Automation Workflow
  * Automatically creates onboarding tasks when a new hire record is created
  */
-export const OnboardingAutomation = WorkflowRule.create({
+export const OnboardingAutomation = {
   name: 'onboarding_automation',
   label: 'New Hire Onboarding Automation',
   object: 'onboarding',
@@ -83,13 +83,13 @@ export const OnboardingAutomation = WorkflowRule.create({
   ],
   executionOrder: 1,
   active: true
-});
+};
 
 /**
  * Time-Off Approval Workflow
  * Routes new time-off requests to the employee's manager for approval
  */
-export const TimeOffApproval = WorkflowRule.create({
+export const TimeOffApproval = {
   name: 'time_off_approval',
   label: 'Time-Off Request Approval Routing',
   object: 'time_off',
@@ -135,13 +135,13 @@ export const TimeOffApproval = WorkflowRule.create({
   ],
   executionOrder: 2,
   active: true
-});
+};
 
 /**
  * Time-Off Auto-Approval Workflow
  * Auto-approves short time-off requests when balance is sufficient and no conflicts
  */
-export const TimeOffAutoApproval = WorkflowRule.create({
+export const TimeOffAutoApproval = {
   name: 'time_off_auto_approval',
   label: 'Auto-Approve Short Time-Off Requests',
   object: 'time_off',
@@ -183,13 +183,13 @@ export const TimeOffAutoApproval = WorkflowRule.create({
   ],
   executionOrder: 1,
   active: true
-});
+};
 
 /**
  * Performance Review Cycle Workflow
  * Scheduled quarterly to create performance review records for all active employees
  */
-export const PerformanceReviewCycle = WorkflowRule.create({
+export const PerformanceReviewCycle = {
   name: 'performance_review_cycle',
   label: 'Quarterly Performance Review Cycle',
   object: 'performance_review',
@@ -248,13 +248,13 @@ export const PerformanceReviewCycle = WorkflowRule.create({
   ],
   executionOrder: 1,
   active: true
-});
+};
 
 /**
  * Performance Review Reminder Workflow
  * Weekly check for overdue reviews with escalating reminders to managers
  */
-export const PerformanceReviewReminder = WorkflowRule.create({
+export const PerformanceReviewReminder = {
   name: 'performance_review_reminder',
   label: 'Overdue Performance Review Reminders',
   object: 'performance_review',
@@ -308,7 +308,7 @@ export const PerformanceReviewReminder = WorkflowRule.create({
   ],
   executionOrder: 2,
   active: true
-});
+};
 
 export const HRWorkflows = {
   onboardingAutomation: OnboardingAutomation,

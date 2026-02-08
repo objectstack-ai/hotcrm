@@ -1,11 +1,11 @@
-import { RAGPipelineConfig } from '@objectstack/spec/ai';
+// RAG pipeline configuration for knowledge base
 
 /**
  * Knowledge Base RAG Pipeline
  * Implements Retrieval-Augmented Generation for intelligent knowledge base search
  * and AI-powered customer support responses
  */
-export const KnowledgeBaseRAG = RAGPipelineConfig.create({
+export const KnowledgeBaseRAG = {
   name: 'knowledge_base_rag',
   description: 'RAG pipeline for intelligent knowledge article search and AI-powered answers',
 
@@ -173,13 +173,13 @@ Answer:`,
     trackGenerationQuality: true,
     feedbackEnabled: true
   }
-});
+};
 
 /**
  * Product Documentation RAG Pipeline
  * Specialized RAG pipeline for product documentation and technical specs
  */
-export const ProductDocsRAG = RAGPipelineConfig.create({
+export const ProductDocsRAG = {
   name: 'product_docs_rag',
   description: 'RAG pipeline for product documentation and technical specifications',
 
@@ -251,13 +251,13 @@ Answer:`,
 
     maxContextLength: 3000
   }
-});
+};
 
 /**
  * Sales Battlecards RAG Pipeline
  * RAG pipeline for competitive intelligence and sales positioning
  */
-export const SalesBattlecardsRAG = RAGPipelineConfig.create({
+export const SalesBattlecardsRAG = {
   name: 'sales_battlecards_rag',
   description: 'RAG pipeline for competitive intelligence and objection handling',
 
@@ -345,7 +345,7 @@ Response:`,
       values: ['Competitor Analysis', 'Objection Handling']
     }
   ]
-});
+};
 
 export const RAGPipelines = {
   knowledgeBase: KnowledgeBaseRAG,
