@@ -5,7 +5,6 @@
  * - Account & Contact Management
  * - Lead Management & Qualification
  * - Opportunity & Sales Pipeline
- * - Marketing Automation (Campaigns, Email Templates, Landing Pages)
  * - Activity Tracking
  * 
  * Dependencies: @hotcrm/core (required)
@@ -21,16 +20,10 @@ import { Task } from './task.object';
 import { Note } from './note.object';
 import LeadConvertAction from './actions/lead_convert.action';
 import { AssignmentRule } from './assignment_rule.object';
-import { EmailTemplate } from './email_template.object';
 
 // Import hooks
 import { LeadScoringTrigger, LeadStatusChangeTrigger } from './hooks/lead.hook';
 import { OpportunityValidation, OpportunityStageChange } from './hooks/opportunity.hook';
-
-import { LandingPage } from './landing_page.object';
-import { Form } from './form.object';
-import { MarketingList } from './marketing_list.object';
-import { Unsubscribe } from './unsubscribe.object';
 
 /**
  * CRM Plugin Definition
@@ -42,7 +35,7 @@ export const CRMPlugin: any = {
   name: 'crm',
   label: 'CRM',
   version: '1.0.0',
-  description: 'Core CRM functionality - Accounts, Contacts, Leads, Opportunities, and Marketing Automation',
+  description: 'Core CRM functionality - Accounts, Contacts, Leads, Opportunities, and Activities',
   
   // Plugin dependencies
   dependencies: [],
@@ -75,35 +68,19 @@ export const CRMPlugin: any = {
     opportunity: Opportunity,
     task: Task,
     note: Note,
-    email_template: EmailTemplate,
-    landing_page: LandingPage,
-    form: Form,
-    marketing_list: MarketingList,
-    unsubscribe: Unsubscribe,
   },
   
   // Navigation structure for this plugin
   navigation: [
     {
       type: 'group',
-      label: 'Sales & Marketing',
+      label: 'Sales',
       children: [
         { type: 'object', object: 'account' },
         { type: 'object', object: 'contact' },
         { type: 'object', object: 'lead' },
         { type: 'object', object: 'opportunity' },
         { type: 'object', object: 'activity' },
-      ]
-    },
-    {
-      type: 'group',
-      label: 'Marketing Automation',
-      children: [
-        { type: 'object', object: 'campaign_member' },
-        { type: 'object', object: 'email_template' },
-        { type: 'object', object: 'landing_page' },
-        { type: 'object', object: 'form' },
-        { type: 'object', object: 'marketing_list' },
       ]
     }
   ]
