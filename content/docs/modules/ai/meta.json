@@ -3,6 +3,7 @@
   "pages": [
     "index",
     "copilot",
-    "agents"
+    "agents",
+    "implementation-guide"
   ]
 }
