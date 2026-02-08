@@ -1,5 +1,42 @@
 # @hotcrm/core
 
+> ⚠️ **DEPRECATED**: This package is deprecated and no longer maintained. All functionality has been migrated to use `@objectstack/spec` directly. Please remove this dependency from your projects.
+
+## Migration Guide
+
+If you are using `@hotcrm/core`, please migrate to `@objectstack/spec`:
+
+1. Remove `@hotcrm/core` from your dependencies
+2. Update imports to use `@objectstack/spec` directly
+3. Use ObjectStack's built-in validation and type system
+
+### Before
+```typescript
+import { VERSION } from '@hotcrm/core';
+```
+
+### After
+```typescript
+// Use @objectstack/spec for all type definitions and utilities
+import { ObjectSchema } from '@objectstack/spec';
+```
+
+## Deprecation Notice
+
+This package was deprecated in favor of:
+- Using `@objectstack/spec` directly for all type definitions
+- Removing unnecessary abstraction layers
+- Simplifying the dependency tree
+
+All HotCRM business packages now depend directly on `@objectstack/spec` and `@objectstack/cli`.
+
+---
+
+<details>
+<summary>Original Documentation (Archived)</summary>
+
+# @hotcrm/core
+
 Shared core utilities and type helpers for HotCRM packages.
 
 ## Overview
@@ -66,3 +103,5 @@ pnpm --filter @hotcrm/core build
 `@hotcrm/core` is intentionally kept minimal and lightweight. It provides only essential shared utilities without business logic. Business-specific functionality belongs in the respective business packages.
 
 For the runtime engine and server infrastructure, see `@hotcrm/server` and `@objectstack/runtime`.
+
+</details>

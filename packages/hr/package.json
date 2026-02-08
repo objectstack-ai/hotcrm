@@ -7,7 +7,10 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "lint": "eslint src --ext .ts"
+    "lint": "eslint src --ext .ts",
+    "studio": "objectstack studio",
+    "validate": "objectstack validate",
+    "compile": "objectstack compile"
   },
   "keywords": [
     "hr",
@@ -20,9 +23,11 @@
   "author": "HotCRM Team",
   "license": "MIT",
   "dependencies": {
-    "@hotcrm/core": "workspace:*",
     "@objectstack/spec": "^1.1.0",
     "typescript": "^5.3.0"
+  },
+  "peerDependencies": {
+    "@objectstack/cli": "^1.1.0"
   },
   "devDependencies": {
     "@types/node": "^25.2.0",

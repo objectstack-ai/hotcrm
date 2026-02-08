@@ -113,29 +113,25 @@ Each domain package is a self-contained vertical slice with schemas, hooks, and 
   ├── @hotcrm/finance (Financial Operations Vertical Slice)
   │   └── Schemas: Contract, Payment
   │
-  ├── @hotcrm/ui (UI Components)
-  │
-  └── @hotcrm/server (Application Assembly & Startup)
+  └── @hotcrm/hr (Human Capital Management Vertical Slice)
+      └── Schemas: Employee, Candidate, Performance
 ```
 
 **Simplified Dependencies:**
 
 ```
-@hotcrm/server
-  ├── @hotcrm/core
+HotCRM Application (root objectstack.config.ts)
   ├── @hotcrm/crm (includes schemas + hooks + actions)
-  ├── @hotcrm/support
-  ├── @hotcrm/products
   ├── @hotcrm/finance
-  └── @hotcrm/ui
+  ├── @hotcrm/marketing
+  ├── @hotcrm/products
+  ├── @hotcrm/support
+  ├── @hotcrm/hr
+  └── @hotcrm/ai
 
-Domain Packages (crm, support, products, finance)
-  └── @hotcrm/core
-
-@hotcrm/ui
-  └── @hotcrm/core
-
-@hotcrm/core (no dependencies)
+All Domain Packages
+  ├── @objectstack/spec (type definitions)
+  └── @objectstack/cli (development tools)
 ```
 
 ## 🚀 Getting Started
@@ -163,33 +159,52 @@ pnpm install
 ### Development
 
 ```bash
-# Start the development server (CLI-based with ObjectStack v0.7.2)
+# Start the development server
 pnpm dev
 
-# Start with legacy Express server (fallback)
-pnpm --filter @hotcrm/server dev:legacy
+# Start with studio interface
+pnpm dev:studio
 
 # Build all packages
 pnpm build
 
 # Build a specific package
-pnpm --filter @hotcrm/core build
-pnpm --filter @hotcrm/server build
+pnpm --filter @hotcrm/crm build
+pnpm --filter @hotcrm/finance build
 
 # Run linting on all packages
 pnpm lint
 
-# Lint and auto-fix
-pnpm lint:fix
-
 # Run tests
 pnpm test
 
-# Validate protocol compliance
-node scripts/validate-protocol.js
+# Validate configuration
+pnpm validate
+
+# Compile metadata
+pnpm compile
 
 # Clean all build artifacts
 pnpm clean
+```
+
+### Individual Package Development
+
+Each package can also be run independently:
+
+```bash
+# CRM package
+pnpm --filter @hotcrm/crm studio
+pnpm --filter @hotcrm/crm validate
+
+# Finance package
+pnpm --filter @hotcrm/finance studio
+pnpm --filter @hotcrm/finance validate
+
+# Any package
+pnpm --filter @hotcrm/{package} studio
+pnpm --filter @hotcrm/{package} validate
+pnpm --filter @hotcrm/{package} compile
 ```
 
 ### Production

@@ -1,5 +1,73 @@
 # @hotcrm/server
 
+> ⚠️ **DEPRECATED**: This package is deprecated and no longer maintained. HotCRM now uses `@objectstack/cli` directly for running the application. Please use the root `objectstack.config.ts` instead.
+
+## Migration Guide
+
+If you are using `@hotcrm/server`, please migrate to the new approach:
+
+### Before (Deprecated)
+```bash
+# Running the server
+pnpm --filter @hotcrm/server dev
+pnpm --filter @hotcrm/server start
+pnpm --filter @hotcrm/server studio
+```
+
+### After (Current)
+```bash
+# From the root directory
+pnpm dev           # Development mode
+pnpm start         # Production mode
+pnpm dev:studio    # Studio interface
+pnpm validate      # Validate configuration
+pnpm compile       # Compile metadata
+```
+
+### Configuration Migration
+
+The server configuration has been moved to `/objectstack.config.ts` in the root directory.
+
+**Old location:** `packages/server/objectstack.config.ts`  
+**New location:** `/objectstack.config.ts` (root directory)
+
+The configuration structure remains the same - only the location has changed.
+
+### Individual Package Commands
+
+Each business package now includes CLI commands:
+
+```bash
+# CRM package
+pnpm --filter @hotcrm/crm studio
+pnpm --filter @hotcrm/crm validate
+pnpm --filter @hotcrm/crm compile
+
+# Finance package
+pnpm --filter @hotcrm/finance studio
+# ... and so on for other packages
+```
+
+## Why Was This Deprecated?
+
+1. **Simplified Architecture**: Removed unnecessary abstraction layer
+2. **Direct CLI Usage**: Use `@objectstack/cli` directly without wrapper
+3. **Better Developer Experience**: CLI commands available at both root and package level
+4. **Reduced Dependencies**: Fewer packages to maintain
+
+## Deprecation Timeline
+
+- **Deprecated:** February 2026
+- **Migration Path:** Use root `objectstack.config.ts` + `@objectstack/cli`
+- **Removal:** This package will be removed in a future release
+
+---
+
+<details>
+<summary>Original Documentation (Archived)</summary>
+
+# @hotcrm/server
+
 HotCRM Application Server - The runtime environment that orchestrates all HotCRM packages.
 
 ## Overview
@@ -266,3 +334,5 @@ Server uses `pino` for structured logging:
 ## License
 
 MIT - Part of the HotCRM project
+
+</details>

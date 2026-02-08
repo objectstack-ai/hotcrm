@@ -7,12 +7,11 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "pnpm --filter @hotcrm/server dev",
+    "dev": "objectstack dev",
     "dev:docs": "pnpm --filter @hotcrm/docs dev",
-    "dev:studio": "pnpm --filter @hotcrm/server studio",
-    "start": "pnpm --filter @hotcrm/server start",
+    "dev:studio": "objectstack studio",
+    "start": "objectstack start",
     "build": "pnpm -r build",
-    "build:server": "pnpm --filter @hotcrm/server build",
     "build:ai": "pnpm --filter @hotcrm/ai build",
     "build:crm": "pnpm --filter @hotcrm/crm build",
     "build:support": "pnpm --filter @hotcrm/support build",
@@ -25,7 +24,8 @@
     "test:watch": "vitest --passWithNoTests",
     "test:unit": "vitest run --passWithNoTests __tests__/unit",
     "test:integration": "vitest run --passWithNoTests __tests__/integration",
-    "validate": "pnpm --filter @hotcrm/server validate",
+    "validate": "objectstack validate",
+    "compile": "objectstack compile",
     "verify:plugins": "node scripts/verify-plugin-architecture.js",
     "clean": "pnpm -r exec rm -rf dist node_modules"
 },
@@ -40,6 +40,7 @@
   "author": "HotCRM Team",
   "license": "MIT",
   "devDependencies": {
+    "@objectstack/cli": "^1.1.0",
     "@types/node": "^25.2.0",
     "@typescript-eslint/eslint-plugin": "^7.0.0",
     "@typescript-eslint/parser": "^6.14.0",
