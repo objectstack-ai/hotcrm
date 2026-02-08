@@ -60,5 +60,9 @@ export { Attendance } from './attendance.object';
 // Export payroll object
 export { Payroll } from './payroll.object';
 
+// Export AI Agents
+export { RecruitmentAssistantAgent } from './recruitment_assistant.agent';
+export { PerformanceCoachAgent } from './performance_coach.agent';
+
 // Export plugin definition
 export { HRPlugin } from './plugin';

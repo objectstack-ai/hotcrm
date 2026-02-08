@@ -21,6 +21,21 @@ export { ExplainabilityService } from './explainability-service';
 // export { default as ai_prediction } from './ai_prediction.object';
 // export { default as ai_model_performance } from './ai_model_performance.object';
 
+// GenAI Reporting
+export {
+  processNaturalLanguageQuery,
+  parseNaturalLanguageQuery,
+  recommendVisualization,
+  generateNarrative,
+  suggestFollowUps
+} from './genai_reporting.action';
+export type {
+  NaturalLanguageQueryRequest,
+  NaturalLanguageQueryResponse,
+  ParsedQuery,
+  QueryResult
+} from './genai_reporting.action';
+
 // Re-export all utilities
 export {
   calculateConfidence,
