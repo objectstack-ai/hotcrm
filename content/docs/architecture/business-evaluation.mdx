@@ -13,8 +13,8 @@ HotCRM delivers enterprise CRM capabilities through **6 business clouds** organi
 
 | Cloud | Package | Objects | Focus Area |
 |-------|---------|---------|------------|
-| Sales Cloud | `@hotcrm/crm` | 8 | Account, Contact, Lead, Opportunity management |
-| Marketing Cloud | `@hotcrm/marketing` | 7 | Campaign management, email templates, forms, landing pages, list segmentation |
+| Sales Cloud | `@hotcrm/crm` | 13 | Account, Contact, Lead, Opportunity, marketing automation |
+| Marketing Cloud | `@hotcrm/marketing` | 2 | Campaign management, campaign member tracking |
 | Revenue Cloud | `@hotcrm/products` | 8 | CPQ (Configure-Price-Quote), product catalog, pricing rules |
 | Revenue Cloud | `@hotcrm/finance` | 4 | Contracts, invoices, payments |
 | Service Cloud | `@hotcrm/support` | 21 | Case management, SLA, knowledge base, queues, routing |
@@ -39,24 +39,22 @@ Supporting packages:
 
 5. **Separation of Concerns**: The file suffix protocol (`.object.ts`, `.hook.ts`, `.action.ts`, `.page.ts`) enforces clear responsibility boundaries.
 
-### Issues Identified & Resolved
+### Issues Identified
 
-#### Marketing Objects Misplacement (Resolved)
+#### Marketing Objects Placement
 
-**Problem**: Five marketing automation objects (EmailTemplate, Form, LandingPage, MarketingList, Unsubscribe) were originally placed in the `@hotcrm/crm` package instead of `@hotcrm/marketing`.
+**Current State**: Five marketing automation objects (EmailTemplate, Form, LandingPage, MarketingList, Unsubscribe) are currently placed in the `@hotcrm/crm` package, while the `@hotcrm/marketing` package only contains Campaign and CampaignMember.
 
 **Impact**:
-- The CRM plugin was overloaded with 13 objects spanning two functional domains
-- The Marketing plugin was unnaturally thin with only 2 objects
-- Customers wanting CRM-only deployment were forced to include marketing automation objects
+- The CRM plugin is overloaded with 13 objects spanning two functional domains (sales + marketing automation)
+- The Marketing plugin is unnaturally thin with only 2 objects
+- Customers wanting CRM-only deployment are forced to include marketing automation objects
 
-**Resolution**: These 5 objects have been migrated to `@hotcrm/marketing`, creating a clean separation:
+**Recommendation**: Consider migrating these 5 objects to `@hotcrm/marketing` in a future release to create a clean separation:
 - **CRM (8 objects)**: Account, Contact, Lead, Opportunity, Activity, Task, Note, AssignmentRule
 - **Marketing (7 objects)**: Campaign, CampaignMember, EmailTemplate, LandingPage, Form, MarketingList, Unsubscribe
 
-### Remaining Considerations
-
-#### HR Cloud Independence
+### HR Cloud Independence
 
 The `@hotcrm/hr` package (16 objects) is **functionally independent** from core CRM. It has:
 - No dependency on CRM objects (Account, Contact, Lead, Opportunity)
@@ -71,7 +69,7 @@ The `@hotcrm/hr` package (16 objects) is **functionally independent** from core 
 
 HR should be **licensed and priced separately** from core CRM (see [Editions & Pricing](/docs/editions)).
 
-#### Revenue Cloud Split
+### Revenue Cloud Split
 
 The Revenue Cloud spans two packages (`@hotcrm/products` + `@hotcrm/finance`). This split is correct:
 - **Products** handles pre-sale (catalog, pricing, quoting)
@@ -129,4 +127,4 @@ The Revenue Cloud spans two packages (`@hotcrm/products` + `@hotcrm/finance`). T
 
 ## Conclusion
 
-HotCRM's plugin-based architecture is fundamentally sound. The key improvement — migrating marketing objects to their proper package — strengthens the separation of concerns and enables cleaner edition-based licensing. The HR Cloud is correctly positioned as an independent plugin that can be separately licensed without requiring a project split. See [Editions & Pricing](/docs/editions) for the recommended pricing strategy.
+HotCRM's plugin-based architecture is fundamentally sound. The main recommendation is to migrate marketing automation objects from `@hotcrm/crm` to `@hotcrm/marketing` in a future release, which would strengthen the separation of concerns and enable cleaner edition-based licensing. The HR Cloud is correctly positioned as an independent plugin that can be separately licensed without requiring a project split. See [Editions & Pricing](/docs/editions) for the recommended pricing strategy.

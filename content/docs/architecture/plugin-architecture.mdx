@@ -53,31 +53,19 @@ export default MyPlugin;
 
 ### 1. CRM Plugin (@hotcrm/crm)
 
-**Core CRM functionality** - Accounts, Contacts, Leads, Opportunities, and Activities
+**Core CRM functionality** - Accounts, Contacts, Leads, Opportunities, and Marketing Automation
 
 **Dependencies**: None (core plugin)
 
-**Objects** (8):
+**Objects**:
 - Account, Contact, Lead, Opportunity
 - Activity, Task, Note
-- Assignment Rule
+- Campaign Member
+- Email Template, Landing Page, Form, Marketing List, Unsubscribe
 
 **Location**: `packages/crm/src/plugin.ts`
 
-### 2. Marketing Plugin (@hotcrm/marketing)
-
-**Marketing automation** - Campaigns, Email Templates, Landing Pages, Forms, and List Segmentation
-
-**Dependencies**: `crm` (required for Lead and Contact references)
-
-**Objects** (7):
-- Campaign, Campaign Member
-- Email Template, Landing Page, Form
-- Marketing List, Unsubscribe
-
-**Location**: `packages/marketing/src/plugin.ts`
-
-### 3. Products Plugin (@hotcrm/products)
+### 2. Products Plugin (@hotcrm/products)
 
 **Product catalog, pricing rules, and CPQ** (Configure, Price, Quote)
 
@@ -124,7 +112,6 @@ Plugins are loaded through the `objectstack.config.ts` file:
 
 ```typescript
 import { CRMPlugin } from '@hotcrm/crm/dist/plugin.js';
-import { MarketingPlugin } from '@hotcrm/marketing/dist/plugin.js';
 import { ProductsPlugin } from '@hotcrm/products/dist/plugin.js';
 import { FinancePlugin } from '@hotcrm/finance/dist/plugin.js';
 import { SupportPlugin } from '@hotcrm/support/dist/plugin.js';
@@ -132,7 +119,6 @@ import { SupportPlugin } from '@hotcrm/support/dist/plugin.js';
 export default {
   plugins: [
     CRMPlugin,
-    MarketingPlugin,
     ProductsPlugin,
     FinancePlugin,
     SupportPlugin,
@@ -175,14 +161,10 @@ Example output:
 📂 Config: objectstack.config.ts
 🌐 Port: 3000
 
-📦 Loading 5 business plugin(s)...
+📦 Loading 4 business plugin(s)...
 
   📦 CRM
-     8 object(s)
-     ✓ Loaded successfully
-
-  📦 Marketing Cloud
-     7 object(s) (depends on: crm)
+     13 object(s)
      ✓ Loaded successfully
 
   📦 Products & Pricing
@@ -197,12 +179,12 @@ Example output:
      21 object(s) (depends on: crm)
      ✓ Loaded successfully
 
-✓ All business plugins loaded (43 total objects)
+✓ All business plugins loaded (41 total objects)
 
 ✅ HotCRM server is running!
    ObjectStack v0.7.2 (Plugin Architecture)
-   5 business plugins loaded
-   43 objects available
+   4 business plugins loaded
+   41 objects available
 ```
 
 ## Creating a New Plugin

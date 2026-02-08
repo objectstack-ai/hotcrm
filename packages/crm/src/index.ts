@@ -8,19 +8,24 @@
  * - Contact: Contact information and relationships
  * - Lead: Lead management and qualification
  * - Opportunity: Sales opportunity and pipeline management
+ * - Campaign: Marketing campaign tracking
+ * - CampaignMember: Campaign member engagement tracking
  * - Activity: Activity logging and tracking
- * - Task: Task management
- * - Note: Note management
- * - AssignmentRule: Auto-assignment rules
+ * 
+ * **Marketing Automation Objects:**
+ * - EmailTemplate: Email template library with personalization
+ * - LandingPage: Landing page builder for lead capture
+ * - Form: Form builder with auto-lead creation
+ * - MarketingList: Marketing list/segment management
+ * - Unsubscribe: Unsubscribe and bounce management
  * 
  * **Hooks:**
- * - Lead hooks: Lead scoring, status change automation
- * - Opportunity hooks: Stage change automation, validation
+ * - Campaign hooks: ROI calculation, performance tracking
+ * - CampaignMember hooks: Engagement tracking, lead scoring
+ * - Opportunity hooks: Stage change automation, contract creation
  * 
  * **Actions:**
  * - AI Smart Briefing: Account analysis and insights
- * - Lead Convert: Lead to opportunity conversion
- * - Sales Performance: Sales analytics
  */
 
 // Export CRM objects
@@ -32,6 +37,13 @@ export { Opportunity } from './opportunity.object';
 export { Task } from './task.object';
 export { Note } from './note.object';
 export { AssignmentRule } from './assignment_rule.object';
+
+// Export marketing automation objects
+export { EmailTemplate } from './email_template.object';
+export { LandingPage } from './landing_page.object';
+export { Form } from './form.object';
+export { MarketingList } from './marketing_list.object';
+export { Unsubscribe } from './unsubscribe.object';
 
 // Export hooks
 export * from './hooks/lead.hook';
@@ -48,3 +60,6 @@ export { SalesCoPilotAgent } from './sales_copilot.agent';
 
 // Export plugin definition
 export { default as CRMPlugin } from './plugin';
+
+// Note: YAML files (Campaign) are kept for backward compatibility
+// TypeScript definitions are preferred as per the custom instructions
