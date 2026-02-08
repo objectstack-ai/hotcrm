@@ -1,10 +1,10 @@
-import { PageSchema } from '@objectstack/spec/ui';
+// Page layout configuration for Account object
 
 /**
  * Account Detail Page Layout
  * Demonstrates comprehensive page layout with tabs, sections, and related lists
  */
-export const AccountPage = PageSchema.create({
+export const AccountPage = {
   name: 'account_detail',
   object: 'account',
   type: 'record',
@@ -141,6 +141,6 @@ export const AccountPage = PageSchema.create({
       icon: 'alert-triangle'
     }
   ]
-});
+};
 
 export default AccountPage;

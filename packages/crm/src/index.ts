@@ -53,6 +53,7 @@ export * from './hooks/opportunity.hook';
 // Export actions
 export * from './actions/ai_smart_briefing.action';
 export { default as LeadConvertAction } from './actions/lead_convert.action';
+export { default as SalesPerformanceActions } from './actions/sales_performance.action';
 
 // Export AI Agents
 export { SalesCoPilotAgent } from './sales_copilot.agent';

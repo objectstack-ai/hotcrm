@@ -1,10 +1,10 @@
-import { WorkflowRule } from '@objectstack/spec/automation';
+// Workflow rules for Lead automation
 
 /**
  * Lead Auto-Assignment Workflow
  * Automatically assigns new leads to available sales reps based on territory and workload
  */
-export const LeadAutoAssignment = WorkflowRule.create({
+export const LeadAutoAssignment = {
   name: 'lead_auto_assignment',
   label: 'Auto Assign New Leads',
   object: 'lead',
@@ -80,13 +80,13 @@ export const LeadAutoAssignment = WorkflowRule.create({
 
   // Active status
   active: true
-});
+};
 
 /**
  * Lead Scoring Workflow
  * Automatically score leads when key fields are updated
  */
-export const LeadAutoScoring = WorkflowRule.create({
+export const LeadAutoScoring = {
   name: 'lead_auto_scoring',
   label: 'Auto Score Leads',
   object: 'lead',
@@ -134,13 +134,13 @@ export const LeadAutoScoring = WorkflowRule.create({
 
   executionOrder: 2,
   active: true
-});
+};
 
 /**
  * Lead Nurturing Workflow
  * Send automated nurture emails to leads based on their status
  */
-export const LeadNurturing = WorkflowRule.create({
+export const LeadNurturing = {
   name: 'lead_nurturing',
   label: 'Lead Nurturing Automation',
   object: 'lead',
@@ -183,13 +183,13 @@ export const LeadNurturing = WorkflowRule.create({
   ],
 
   active: true
-});
+};
 
 /**
  * Lead Data Enrichment Workflow
  * Enrich lead data from external sources
  */
-export const LeadEnrichment = WorkflowRule.create({
+export const LeadEnrichment = {
   name: 'lead_data_enrichment',
   label: 'Lead Data Enrichment',
   object: 'lead',
@@ -220,7 +220,7 @@ export const LeadEnrichment = WorkflowRule.create({
   ],
 
   active: true
-});
+};
 
 export const LeadWorkflows = {
   autoAssignment: LeadAutoAssignment,

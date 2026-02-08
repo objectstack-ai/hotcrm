@@ -48,6 +48,7 @@ export { ForumPost } from './forum_post.object';
 // Business Logic Hooks
 export { default as CaseHooks } from './hooks/case.hook';
 export { default as KnowledgeHooks } from './hooks/knowledge.hook';
+export { default as ServiceMetricsActions } from './actions/service_metrics.action';
 
 // Services
 export { EmailHandler } from './services/email_handler.service';

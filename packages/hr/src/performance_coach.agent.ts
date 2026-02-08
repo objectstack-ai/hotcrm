@@ -1,11 +1,11 @@
-import { Agent } from '@objectstack/spec/ai';
+// Agent definition for @objectstack/spec/ai
 
 /**
  * Performance Coach Agent
  * AI-driven OKR recommendations and performance insights.
  * Part of Phase 2: Deep Intelligence.
  */
-export const PerformanceCoachAgent = Agent.create({
+export const PerformanceCoachAgent = {
   name: 'performance_coach',
   role: 'Performance Coach',
   description: 'AI-driven performance coaching agent that provides OKR recommendations, performance insights, and personalized development guidance',
@@ -242,6 +242,6 @@ Tone: Supportive, constructive, and data-informed.`,
     trackAccuracy: true,
     feedbackLoop: true
   }
-});
+};
 
 export default PerformanceCoachAgent;

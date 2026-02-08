@@ -1,4 +1,4 @@
-import { ListView } from '@objectstack/spec/ui';
+// List view configurations for Account object
 
 /**
  * Account List Views
@@ -6,7 +6,7 @@ import { ListView } from '@objectstack/spec/ui';
  */
 
 // All Accounts View
-export const AllAccountsView = ListView.create({
+export const AllAccountsView = {
   name: 'all_accounts',
   label: 'All Accounts',
   object: 'account',
@@ -61,10 +61,10 @@ export const AllAccountsView = ListView.create({
     pageSize: 25,
     options: [10, 25, 50, 100]
   }
-});
+};
 
 // My Accounts View
-export const MyAccountsView = ListView.create({
+export const MyAccountsView = {
   name: 'my_accounts',
   label: 'My Accounts',
   object: 'account',
@@ -84,10 +84,10 @@ export const MyAccountsView = ListView.create({
   sort: [
     { field: 'last_activity_date', direction: 'desc' }
   ]
-});
+};
 
 // Enterprise Accounts View
-export const EnterpriseAccountsView = ListView.create({
+export const EnterpriseAccountsView = {
   name: 'enterprise_accounts',
   label: 'Enterprise Accounts',
   object: 'account',
@@ -109,10 +109,10 @@ export const EnterpriseAccountsView = ListView.create({
   sort: [
     { field: 'annual_revenue', direction: 'desc' }
   ]
-});
+};
 
 // Recently Created Accounts
-export const RecentlyCreatedView = ListView.create({
+export const RecentlyCreatedView = {
   name: 'recently_created_accounts',
   label: 'Recently Created',
   object: 'account',
@@ -132,10 +132,10 @@ export const RecentlyCreatedView = ListView.create({
   sort: [
     { field: 'created_date', direction: 'desc' }
   ]
-});
+};
 
 // Hot Accounts (High Value, Active)
-export const HotAccountsView = ListView.create({
+export const HotAccountsView = {
   name: 'hot_accounts',
   label: 'Hot Accounts',
   object: 'account',
@@ -162,10 +162,10 @@ export const HotAccountsView = ListView.create({
     backgroundColor: '#FEF2F2',
     borderLeft: '3px solid #EF4444'
   }
-});
+};
 
 // Accounts Needing Attention
-export const NeedAttentionView = ListView.create({
+export const NeedAttentionView = {
   name: 'accounts_need_attention',
   label: 'Needs Attention',
   object: 'account',
@@ -191,7 +191,7 @@ export const NeedAttentionView = ListView.create({
     backgroundColor: '#FFFBEB',
     borderLeft: '3px solid #F59E0B'
   }
-});
+};
 
 export const AccountListViews = {
   all: AllAccountsView,

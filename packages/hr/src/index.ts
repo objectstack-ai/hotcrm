@@ -64,5 +64,8 @@ export { Payroll } from './payroll.object';
 export { RecruitmentAssistantAgent } from './recruitment_assistant.agent';
 export { PerformanceCoachAgent } from './performance_coach.agent';
 
+// Export workflows
+export { HRWorkflows } from './hr.workflow';
+
 // Export plugin definition
 export { HRPlugin } from './plugin';

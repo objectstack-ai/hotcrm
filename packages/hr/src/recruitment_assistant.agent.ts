@@ -1,11 +1,11 @@
-import { Agent } from '@objectstack/spec/ai';
+// Agent definition for @objectstack/spec/ai
 
 /**
  * Recruitment Assistant Agent
  * Auto-screens resumes and schedules interviews based on fit scores.
  * Part of Phase 2: Deep Intelligence.
  */
-export const RecruitmentAssistantAgent = Agent.create({
+export const RecruitmentAssistantAgent = {
   name: 'recruitment_assistant',
   role: 'Recruitment AI Assistant',
   description: 'Intelligent recruitment agent that auto-screens resumes, scores candidates against job requirements, and schedules interviews based on fit scores',
@@ -257,6 +257,6 @@ Tone: Professional, objective, and efficient.`,
     trackAccuracy: true,
     feedbackLoop: true
   }
-});
+};
 
 export default RecruitmentAssistantAgent;

@@ -1,11 +1,11 @@
-import { Agent } from '@objectstack/spec/ai';
+// Agent definition for @objectstack/spec/ai
 
 /**
  * Sales Co-Pilot Agent
  * Suggests next-best-actions based on Opportunity stage and deal velocity.
  * Part of Phase 2: Deep Intelligence.
  */
-export const SalesCoPilotAgent = Agent.create({
+export const SalesCoPilotAgent = {
   name: 'sales_copilot',
   role: 'Sales Co-Pilot',
   description: 'Proactive sales intelligence agent that suggests next-best-actions based on opportunity stage, deal velocity, and historical win patterns',
@@ -246,6 +246,6 @@ Tone: Strategic, data-driven, and action-oriented.`,
     trackAccuracy: true,
     feedbackLoop: true
   }
-});
+};
 
 export default SalesCoPilotAgent;

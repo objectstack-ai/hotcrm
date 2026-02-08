@@ -7,7 +7,7 @@
     "strict": false,
     "strictNullChecks": false
   },
-  "references": [{ "path": "../core" }],
+  "references": [{ "path": "../core" }, { "path": "../ai" }],
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
 }
