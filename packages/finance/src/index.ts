@@ -14,6 +14,7 @@ export { Payment } from './payment.object';
 
 // Export Hooks
 export { default as ContractHooks } from './hooks/contract.hook';
+export { default as ContractRenewalHooks } from './hooks/contract_renewal.hook';
 
 // Export plugin definition
 export { default as FinancePlugin } from './plugin';

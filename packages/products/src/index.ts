@@ -29,6 +29,9 @@ export { default as QuotePricingHook } from './hooks/quote.hook';
 export { default as ProductHook } from './hooks/product.hook';
 export { default as PricebookHook } from './hooks/pricebook.hook';
 
+// Export workflows
+export { ApprovalWorkflows } from './approval.workflow';
+
 // Export plugin definition
 export { default as ProductsPlugin } from './plugin';
 

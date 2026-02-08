@@ -17,6 +17,7 @@ import { InvoiceLine } from './invoice_line.object';
 
 // Import hooks
 import { ContractBillingHook } from './hooks/contract.hook';
+import { ContractRenewalCheck, ContractExpirationAlert } from './hooks/contract_renewal.hook';
 
 /**
  * Finance Plugin Definition
@@ -48,7 +49,9 @@ export const FinancePlugin: any = {
   
   // Triggers
   triggers: {
-    contract_billing: ContractBillingHook
+    contract_billing: ContractBillingHook,
+    contract_renewal: ContractRenewalCheck,
+    contract_expiration_alert: ContractExpirationAlert
   },
 
   // Navigation structure for this plugin
