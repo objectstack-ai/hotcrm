@@ -6,6 +6,7 @@
     "ui-protocol",
     "automation-protocol",
     "security-protocol",
-    "monorepo-structure"
+    "monorepo-structure",
+    "plugin-architecture"
   ]
 }
