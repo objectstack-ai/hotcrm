@@ -1,16 +1,16 @@
 # @hotcrm/crm
 
-CRM module for HotCRM - Complete Marketing & Sales domain with Account, Contact, Lead, and Opportunity management.
+CRM module for HotCRM - Core Sales domain with Account, Contact, Lead, and Opportunity management.
 
 ## Overview
 
 This package contains all core CRM functionality for managing the sales pipeline and customer relationships. Following vertical slice architecture, it includes schemas, hooks, and actions all in one cohesive package.
 
-**Package Stats:** 13 Objects | 8 AI Actions | 7 Automation Hooks
+**Package Stats:** 8 Objects | 8 AI Actions | 7 Automation Hooks
 
 ## What's Included
 
-### Business Objects (13 Total)
+### Business Objects (8 Total)
 
 | Object | Label | Description |
 |--------|-------|-------------|
@@ -21,12 +21,9 @@ This package contains all core CRM functionality for managing the sales pipeline
 | **task** | Task | Kanban boards, dependencies, time tracking, recurring tasks, checklist management |
 | **activity** | Activity | Sales activity tracking (calls, emails, meetings, tasks) with geo-check-in, transcription, sentiment |
 | **note** | Note | Markdown-enabled notes with @mentions, pinning, full-text search, sentiment analysis |
-| **email_template** | 邮件模板 | Marketing email templates with A/B testing, personalization tokens, dynamic content blocks |
-| **form** | 表单 | Drag-drop form builder with progressive profiling, lead auto-creation, spam detection |
-| **landing_page** | 着陆页 | Landing page builder with A/B testing, multi-device optimization, UTM tracking, conversion metrics |
-| **marketing_list** | 营销列表 | Dynamic/static segmentation with suppression rules, GDPR compliance, engagement analytics |
-| **unsubscribe** | 退订记录 | Email unsubscribe & bounce management with GDPR requests, resubscribe tracking |
 | **assignment_rule** | Assignment Rule | Auto-assignment rules for leads/cases with operator-based criteria |
+
+> **Note:** Marketing automation objects (Email Template, Form, Landing Page, Marketing List, Unsubscribe) have been moved to `@hotcrm/marketing` for better separation of concerns.
 
 ### AI Actions (8 Total)
 
@@ -61,12 +58,6 @@ This package contains all core CRM functionality for managing the sales pipeline
 - Sales pipeline with 7-stage opportunity forecasting
 - Contact relationship mapping with decision maker identification
 
-### Marketing Automation
-- Email campaign management with templates, A/B testing, segmentation
-- Landing page builder with conversion tracking
-- Dynamic marketing lists with GDPR compliance
-- Lead capture forms with progressive profiling
-
 ### AI/Predictive Intelligence
 - ML-based lead scoring, win probability, churn prediction
 - Intelligent sales rep routing & nurturing recommendations
@@ -81,8 +72,6 @@ This package contains all core CRM functionality for managing the sales pipeline
 
 ### Compliance & Data Quality
 - Duplicate detection & contact deduplication
-- Unsubscribe/bounce management with GDPR requests
-- Email list suppression (unsubscribed, bounced, opted-out)
 - Data enrichment from external sources
 
 ## Usage

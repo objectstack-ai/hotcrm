@@ -87,11 +87,11 @@ export const Unsubscribe = ObjectSchema.create({
     unsubscribe_source: Field.select({
       label: '退订来源',
       required: true,
-      defaultValue: 'email Link',
+      defaultValue: 'Email Link',
       options: [
         {
           "label": "📧 邮件退订链接",
-          "value": "email Link"
+          "value": "Email Link"
         },
         {
           "label": "🌐 退订中心",
