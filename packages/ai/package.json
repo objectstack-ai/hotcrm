@@ -8,7 +8,10 @@
     "build": "tsc",
     "dev": "tsc --watch",
     "lint": "eslint src --ext .ts",
-    "test": "vitest run"
+    "test": "vitest run",
+    "studio": "objectstack studio",
+    "validate": "objectstack validate",
+    "compile": "objectstack compile"
   },
   "keywords": [
     "ai",
@@ -20,11 +23,13 @@
   "author": "HotCRM Team",
   "license": "MIT",
   "dependencies": {
-    "@hotcrm/core": "workspace:*",
     "@objectstack/spec": "^1.1.0",
     "axios": "^1.13.4",
     "typescript": "^5.3.0",
     "zod": "^4.3.6"
+  },
+  "peerDependencies": {
+    "@objectstack/cli": "^1.1.0"
   },
   "devDependencies": {
     "@types/node": "^25.2.0",

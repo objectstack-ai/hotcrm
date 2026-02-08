@@ -6,7 +6,10 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "dev": "tsc --watch"
+    "dev": "tsc --watch",
+    "studio": "objectstack studio",
+    "validate": "objectstack validate",
+    "compile": "objectstack compile"
   },
   "keywords": [
     "marketing",
@@ -21,11 +24,11 @@
   ],
   "author": "HotCRM Team",
   "license": "MIT",
-  "peerDependencies": {
-    "@hotcrm/core": "workspace:*"
-  },
   "dependencies": {
     "@objectstack/spec": "^1.1.0"
+  },
+  "peerDependencies": {
+    "@objectstack/cli": "^1.1.0"
   },
   "devDependencies": {
     "typescript": "^5.0.0"
