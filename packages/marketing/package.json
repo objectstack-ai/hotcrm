@@ -1,7 +1,7 @@
 {
   "name": "@hotcrm/marketing",
   "version": "1.0.0",
-  "description": "Marketing Cloud module - Campaign management and marketing automation",
+  "description": "Marketing Cloud module - Campaigns, email templates, landing pages, forms, and list management",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -12,7 +12,12 @@
     "marketing",
     "campaign",
     "automation",
-    "roi"
+    "roi",
+    "email-template",
+    "landing-page",
+    "form",
+    "marketing-list",
+    "unsubscribe"
   ],
   "author": "HotCRM Team",
   "license": "MIT",

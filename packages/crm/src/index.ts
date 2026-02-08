@@ -1,31 +1,26 @@
 /**
- * @hotcrm/crm - CRM Module
+ * @hotcrm/crm - Sales Cloud Module
  * 
- * This package contains all CRM-related business objects, hooks, and actions:
+ * This package contains all core CRM/Sales business objects, hooks, and actions:
  * 
  * **Objects:**
  * - Account: Customer account management
  * - Contact: Contact information and relationships
  * - Lead: Lead management and qualification
  * - Opportunity: Sales opportunity and pipeline management
- * - Campaign: Marketing campaign tracking
- * - CampaignMember: Campaign member engagement tracking
  * - Activity: Activity logging and tracking
- * 
- * **Marketing Automation Objects:**
- * - EmailTemplate: Email template library with personalization
- * - LandingPage: Landing page builder for lead capture
- * - Form: Form builder with auto-lead creation
- * - MarketingList: Marketing list/segment management
- * - Unsubscribe: Unsubscribe and bounce management
+ * - Task: Task management
+ * - Note: Notes and collaboration
+ * - AssignmentRule: Auto-assignment rules
  * 
  * **Hooks:**
- * - Campaign hooks: ROI calculation, performance tracking
- * - CampaignMember hooks: Engagement tracking, lead scoring
+ * - Lead hooks: Scoring, status change automation
  * - Opportunity hooks: Stage change automation, contract creation
  * 
  * **Actions:**
  * - AI Smart Briefing: Account analysis and insights
+ * - Lead Convert: Lead to Account/Contact/Opportunity conversion
+ * - Sales Performance: Sales metrics and analytics
  */
 
 // Export CRM objects
@@ -38,12 +33,6 @@ export { Task } from './task.object';
 export { Note } from './note.object';
 export { AssignmentRule } from './assignment_rule.object';
 
-// Export marketing automation objects
-export { EmailTemplate } from './email_template.object';
-export { LandingPage } from './landing_page.object';
-export { Form } from './form.object';
-export { MarketingList } from './marketing_list.object';
-export { Unsubscribe } from './unsubscribe.object';
 
 // Export hooks
 export * from './hooks/lead.hook';
