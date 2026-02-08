@@ -1,16 +1,18 @@
 import { defineStack } from '@objectstack/spec';
-import CRM from '@hotcrm/crm';
-import Finance from '@hotcrm/finance';
-import Marketing from '@hotcrm/marketing';
-import Products from '@hotcrm/products';
-import Support from '@hotcrm/support';
-import HR from '@hotcrm/hr';
+import { CRMPlugin } from './packages/crm/src/plugin';
+import { FinancePlugin } from './packages/finance/src/plugin';
+import { MarketingPlugin } from './packages/marketing/src/plugin';
+import { ProductsPlugin } from './packages/products/src/plugin';
+import { SupportPlugin } from './packages/support/src/plugin';
+import { HRPlugin } from './packages/hr/src/plugin';
 
 /**
  * HotCRM Application Configuration
  * 
  * Aggregates all business plugins into a single runtime application.
  * This replaces the deprecated @hotcrm/server package.
+ * 
+ * Note: @hotcrm/ai is a utility library and doesn't need to be registered as a plugin.
  */
 export default defineStack({
   manifest: {
@@ -24,11 +26,11 @@ export default defineStack({
 
   // Register all Business Plugins
   plugins: [
-    CRM.CRMPlugin,
-    Finance.FinancePlugin,
-    Marketing.MarketingPlugin,
-    Products.ProductsPlugin,
-    Support.SupportPlugin,
-    HR.HRPlugin
+    CRMPlugin,
+    FinancePlugin,
+    MarketingPlugin,
+    ProductsPlugin,
+    SupportPlugin,
+    HRPlugin
   ],
 });
