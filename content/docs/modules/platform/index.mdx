@@ -1,44 +1,135 @@
 ---
 title: Platform & Extensibility
-description: The low-code engine that powers the entire HotCRM ecosystem.
+description: The metadata-driven engine that powers the entire HotCRM ecosystem — build custom apps with the same tools we use.
 ---
 
 # Platform & Extensibility
 
-HotCRM is not just an application; it is a **Platform as a Service (PaaS)**. The same tools we use to build the standard clouds (Sales, Service) are available to you to build custom apps.
+HotCRM is not just an application — it is a **Platform as a Service (PaaS)**. The same tools we use to build Sales Cloud, Service Cloud, and every other business module are available to you. Whether you need to add a custom field, create an entirely new business object, or build a full vertical application, the platform provides the building blocks.
 
 ## Metadata-Driven Architecture
 
-The core of our platform is the **ObjectStack Protocol**.
+At the heart of HotCRM is the **ObjectStack Protocol** — a TypeScript-native metadata engine that treats configuration as code.
 
-*   **Objects**: Define custom data tables with rich field types (Text, Number, Lookup, Formula, Summary).
-*   **Validation Rules**: "Deal Amount cannot be negative."
-*   **Flow & Process Builder**: Visual automation tool to update records, send emails, or call APIs without code.
+### Object Definitions
 
-## Low-Code UI Builder
+Every business entity in HotCRM is defined in a `.object.ts` file with full type safety.
 
-*   **Page Layouts**: Drag-and-drop field placement.
-*   **Lightning-fast Components**: assembling pages using standard components (Lists, Kanban, Calendar, Charts).
-*   **App Builder**: Create custom navigation menus and branding for different departments (e.g., "HR App," "Legal App").
+- **Rich Field Types**: Text, Number, Currency, Date, DateTime, Boolean, Lookup, Formula, AutoNumber, Picklist, Email, Phone, URL, Percent, and more
+- **Validation Rules**: Enforce business constraints declaratively — "Deal Amount cannot be negative," "Email must be unique"
+- **Relationships**: Lookup fields create parent-child relationships between objects (e.g., Contact → Account, Opportunity → Account)
+- **Formula Fields**: Computed fields that calculate values from other fields in real-time (e.g., `full_name = first_name + ' ' + last_name`)
+- **Auto-Number**: System-generated sequential identifiers with customizable patterns (e.g., `INV-{YYYY}-{000000}`)
+- **History Tracking**: Opt-in field-level change history for compliance and audit requirements
 
-## Developer Tools (Pro-Code)
+### Why TypeScript, Not YAML?
 
-For when low-code isn't enough.
+Traditional CRM platforms define metadata in XML or YAML. HotCRM uses TypeScript because:
 
-*   **ObjectQL**: A strongly-typed, JSON-like query language superior to SQL/SOQL.
-    ```typescript
-    // Example ObjectQL
-    const deals = await objectql.find({
-        from: 'opportunity',
-        select: ['name', 'amount', 'account.name'],
-        where: [['amount', '>', 50000]]
-    });
-    ```
-*   **Triggers (Hooks)**: Server-side TypeScript code that runs `beforeInsert`, `afterUpdate`, etc.
-*   **Micro-Apps**: Deploy completely custom React/Next.js pages that sit inside the CRM shell.
+- **IDE Support**: Full autocomplete, type checking, and refactoring in VS Code
+- **Compile-Time Validation**: Catch configuration errors before deployment, not in production
+- **Version Control**: Standard Git workflows for reviewing and approving metadata changes
+- **Extensibility**: Import, extend, and compose object definitions programmatically
+
+## ObjectQL — The Query Language
+
+ObjectQL replaces raw SQL with a type-safe, JSON-based query language that AI understands natively.
+
+- **Find Records**: Query any object with filters, sorting, pagination, and field selection
+- **Relationship Queries**: Traverse relationships in a single query (e.g., "Get all Contacts for Accounts in the Technology industry")
+- **Aggregate Queries**: Count, sum, average, min, max across any object or field
+- **Security Aware**: Every query automatically respects the current user's permissions and data visibility rules
+- **AI Compatible**: Natural language questions are converted to ObjectQL queries by the AI engine
+
+## Business Logic — Hooks & Actions
+
+### Server-Side Hooks
+
+Hooks (also known as triggers) run server-side TypeScript code at specific points in the record lifecycle.
+
+- **Before Insert**: Validate data, calculate default values, or enforce business rules before a record is saved
+- **After Insert**: Send notifications, update related records, or trigger downstream workflows
+- **Before Update**: Prevent unauthorized field changes or recalculate dependent values
+- **After Update**: Log changes, sync with external systems, or cascade updates to child records
+- **Before Delete**: Check for dependent records and prevent accidental data loss
+
+### Actions — API Endpoints & AI Tools
+
+Actions expose business logic as callable endpoints — both for external integrations and for AI agents.
+
+- **REST Endpoints**: Auto-generated RESTful APIs for every object and custom action
+- **AI-Callable Tools**: Actions tagged as AI tools can be invoked by the Co-Pilot and autonomous agents
+- **Input Validation**: Schema-based input validation ensures data integrity at the API boundary
+- **Bulk Operations**: Batch processing support for high-volume data operations
+
+## UI Engine
+
+### Page Layouts
+
+Define record detail pages with metadata — no frontend code required.
+
+- **Field Placement**: Organize fields into sections, columns, and tabs
+- **Conditional Visibility**: Show or hide fields based on record type or user role
+- **Related Lists**: Display child records (e.g., Contacts on an Account page, Line Items on a Quote)
+- **Quick Actions**: Context-sensitive buttons for common operations (Log a Call, Send Email, Convert Lead)
+
+### List Views
+
+Configure data grids for browsing and managing records.
+
+- **Column Selection**: Choose which fields appear as columns
+- **Filter Criteria**: Pre-defined filters for common views (My Leads, All Open Cases, High-Value Opportunities)
+- **Sorting & Grouping**: Sort by any column with optional grouping by category
+- **Inline Editing**: Edit records directly in the list without opening a detail page
+
+### Kanban Boards
+
+Visual workflow management with drag-and-drop card interfaces.
+
+- **Stage-Based Views**: Visualize Opportunities by Stage, Tasks by Status, or Cases by Priority
+- **Card Customization**: Configure which fields appear on each card
+- **Drag-and-Drop**: Move records between stages with automatic field updates
+
+## Plugin Architecture
+
+HotCRM's modular design means every business cloud is an independent plugin.
+
+- **Independent Packages**: Each cloud (Sales, Marketing, Service, Revenue, HR) is a self-contained npm package
+- **Dependency Management**: Packages declare dependencies on each other through standard npm conventions
+- **Plugin Registration**: Each plugin registers its objects, hooks, actions, and pages with the runtime
+- **Hot-Swappable**: Enable or disable plugins without affecting other parts of the system
+- **Custom Plugins**: Build your own plugins using the same architecture as standard clouds
 
 ## API & Integration
 
-*   **REST API**: Auto-generated REST endpoints for every standard and custom object.
-*   **GraphQL API**: Flexible data querying for mobile and web apps.
-*   **Webhooks**: Push notifications to external systems when data changes.
+### REST API
+
+Auto-generated REST endpoints for every standard and custom object.
+
+- **CRUD Operations**: Create, Read, Update, Delete for all objects
+- **Bulk APIs**: Process up to 10,000 records in a single API call
+- **Versioned**: API versioning ensures backward compatibility
+
+### Webhooks
+
+Push notifications to external systems when data changes.
+
+- **Event-Driven**: Subscribe to create, update, delete events on any object
+- **Configurable Payloads**: Choose which fields to include in webhook deliveries
+- **Retry Logic**: Automatic retries with exponential backoff for failed deliveries
+
+### Multi-Currency Support
+
+Built-in support for global operations.
+
+- **8 Currencies**: CNY, USD, EUR, GBP, JPY, HKD, SGD, AUD
+- **Per-Record Currency**: Set currency at the record level for Quotes, Invoices, and Contracts
+- **Conversion Rates**: Configurable exchange rates with historical rate tracking
+
+## Best Practices
+
+1. **Metadata First**: Always define your data model in `.object.ts` files before writing business logic
+2. **Use Hooks, Not Scripts**: Enforce business rules in hooks where they run consistently — not in UI code where they can be bypassed
+3. **Leverage ObjectQL**: Never write raw SQL — ObjectQL ensures security, type safety, and AI compatibility
+4. **Modular Design**: Build custom functionality as plugins so it can be versioned, tested, and deployed independently
+5. **Version Control**: Store all metadata in Git — every change should go through code review and CI/CD
