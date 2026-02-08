@@ -52,6 +52,9 @@ export { default as KnowledgeHooks } from './hooks/knowledge.hook';
 // Services
 export { EmailHandler } from './services/email_handler.service';
 
+// Export AI Agents
+export { InboxAgent } from './inbox.agent';
+
 // Export plugin definition
 export { default as SupportPlugin } from './plugin';
 
