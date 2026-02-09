@@ -2,302 +2,302 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 
 export const MarketingList = ObjectSchema.create({
   name: 'marketing_list',
-  label: '营销列表',
-  pluralLabel: '营销列表',
+  label: 'Marketing List',
+  pluralLabel: 'Marketing Lists',
   icon: 'users',
   description: '营销列表/细分管理，支持动态查询和静态成员',
 
   fields: {
     name: Field.text({
-      label: '列表名称',
+      label: 'List Name',
       required: true,
       maxLength: 255
     }),
     list_code: Field.text({
-      label: '列表代码',
+      label: 'List Code',
       description: '用于API调用的唯一标识符',
       unique: true,
       maxLength: 80
     }),
     description: Field.textarea({
-      label: '描述',
+      label: 'Description',
       description: '列表的用途和目标受众说明',
       maxLength: 2000
     }),
     list_type: Field.select({
-      label: '列表类型',
+      label: 'List Type',
       description: '静态=手动添加，动态=自动更新，混合=两者结合',
       required: true,
       defaultValue: 'Static',
       options: [
         {
-          "label": "📌 静态列表",
+          "label": "📌 Static List",
           "value": "Static"
         },
         {
-          "label": "🔄 动态列表",
+          "label": "🔄 Dynamic List",
           "value": "Dynamic"
         },
         {
-          "label": "🔗 混合列表",
+          "label": "🔗 Hybrid List",
           "value": "Hybrid"
         }
       ]
     }),
     member_type: Field.select({
-      label: '成员类型',
+      label: 'Member Type',
       required: true,
       defaultValue: 'Lead',
       options: [
         {
-          "label": "📝 线索",
+          "label": "📝 Lead",
           "value": "Lead"
         },
         {
-          "label": "👤 联系人",
+          "label": "👤 Contact",
           "value": "Contact"
         },
         {
-          "label": "🏢 客户",
+          "label": "🏢 Account",
           "value": "Account"
         },
         {
-          "label": "🔀 混合",
+          "label": "🔀 Mixed",
           "value": "Mixed"
         }
       ]
     }),
     filter_criteria_json: Field.textarea({
-      label: '筛选条件 JSON',
+      label: 'Filter Criteria JSON',
       description: '动态列表的查询条件（ObjectQL格式）',
       maxLength: 65535
     }),
     refresh_frequency: Field.select({
-      label: '刷新频率',
+      label: 'Refresh Frequency',
       description: '动态列表成员更新频率',
       options: [
         {
-          "label": "实时",
+          "label": "Real-time",
           "value": "Real-time"
         },
         {
-          "label": "每小时",
+          "label": "Hourly",
           "value": "Hourly"
         },
         {
-          "label": "每日",
+          "label": "Daily",
           "value": "Daily"
         },
         {
-          "label": "每周",
+          "label": "Weekly",
           "value": "Weekly"
         },
         {
-          "label": "手动",
+          "label": "Manual",
           "value": "Manual"
         }
       ]
     }),
     last_refreshed_date: Field.datetime({
-      label: '最后刷新时间',
+      label: 'Last Refreshed Date',
       readonly: true
     }),
     campaign_id: Field.lookup('campaign', {
-      label: '关联营销活动',
+      label: 'Associated Campaign',
       description: '此列表关联的主要营销活动'
     }),
     segment_category: Field.select({
-      label: '细分类别',
+      label: 'Segment Category',
       options: [
         {
-          "label": "🎯 行业",
+          "label": "🎯 Industry",
           "value": "Industry"
         },
         {
-          "label": "📍 地理位置",
+          "label": "📍 Geographic",
           "value": "Geographic"
         },
         {
-          "label": "💼 公司规模",
+          "label": "💼 Company Size",
           "value": "Company Size"
         },
         {
-          "label": "🔥 参与度",
+          "label": "🔥 Engagement Level",
           "value": "Engagement Level"
         },
         {
-          "label": "📊 线索评分",
+          "label": "📊 Lead Score",
           "value": "Lead Score"
         },
         {
-          "label": "🎓 购买阶段",
+          "label": "🎓 Buyer Journey",
           "value": "Buyer Journey"
         },
         {
-          "label": "🏷️ 产品兴趣",
+          "label": "🏷️ Product Interest",
           "value": "Product Interest"
         },
         {
-          "label": "🎨 自定义",
+          "label": "🎨 Custom",
           "value": "Custom"
         }
       ]
     }),
     target_audience: Field.textarea({
-      label: '目标受众描述',
+      label: 'Target Audience Description',
       description: '此列表的目标受众特征',
       maxLength: 2000
     }),
     status: Field.select({
-      label: '状态',
+      label: 'Status',
       required: true,
       defaultValue: 'Active',
       options: [
         {
-          "label": "✅ 活跃",
+          "label": "✅ Active",
           "value": "Active"
         },
         {
-          "label": "⏸️ 暂停",
+          "label": "⏸️ Paused",
           "value": "Paused"
         },
         {
-          "label": "📦 已归档",
+          "label": "📦 Archived",
           "value": "Archived"
         }
       ]
     }),
     is_active: Field.boolean({
-      label: '是否启用',
+      label: 'Is Active',
       defaultValue: true
     }),
     owner_id: Field.lookup('users', {
-      label: '负责人',
+      label: 'Owner',
       required: true
     }),
     total_members: Field.number({
-      label: '总成员数',
+      label: 'Total Members',
       description: '列表中的总成员数',
       defaultValue: 0,
       readonly: true,
       precision: 0
     }),
     active_members: Field.number({
-      label: '活跃成员数',
+      label: 'Active Members',
       description: '未退订且邮件可送达的成员数',
       defaultValue: 0,
       readonly: true,
       precision: 0
     }),
     unsubscribed_members: Field.number({
-      label: '已退订成员数',
+      label: 'Unsubscribed Members',
       defaultValue: 0,
       readonly: true,
       precision: 0
     }),
     bounced_members: Field.number({
-      label: '退信成员数',
+      label: 'Bounced Members',
       defaultValue: 0,
       readonly: true,
       precision: 0
     }),
     average_engagement_score: Field.number({
-      label: '平均参与度评分',
+      label: 'Average Engagement Score',
       description: '列表成员的平均参与度评分',
       readonly: true,
       precision: 2
     }),
     average_lead_score: Field.number({
-      label: '平均线索评分',
+      label: 'Average Lead Score',
       description: '列表中线索的平均评分',
       readonly: true,
       precision: 2
     }),
     total_campaigns_sent: Field.number({
-      label: '发送活动数',
+      label: 'Campaigns Sent',
       description: '使用此列表发送的营销活动数量',
       defaultValue: 0,
       readonly: true,
       precision: 0
     }),
     deliverability_rate: Field.percent({
-      label: '可送达率',
+      label: 'Deliverability Rate',
       description: '成功送达的邮件占比',
       readonly: true
     }),
     average_open_rate: Field.percent({
-      label: '平均打开率',
+      label: 'Average Open Rate',
       description: '此列表历史营销活动的平均打开率',
       readonly: true
     }),
     average_click_rate: Field.percent({
-      label: '平均点击率',
+      label: 'Average Click Rate',
       description: '此列表历史营销活动的平均点击率',
       readonly: true
     }),
     suppress_duplicates: Field.boolean({
-      label: '去重',
+      label: 'Suppress Duplicates',
       description: '自动去除重复成员',
       defaultValue: true
     }),
     suppress_unsubscribed: Field.boolean({
-      label: '排除已退订',
+      label: 'Suppress Unsubscribed',
       description: '自动排除已退订的联系人',
       defaultValue: true
     }),
     suppress_bounced: Field.boolean({
-      label: '排除硬退信',
+      label: 'Suppress Bounced',
       description: '自动排除硬退信的邮箱地址',
       defaultValue: true
     }),
     include_opted_out_contacts: Field.boolean({
-      label: '包含营销退出联系人',
+      label: 'Include Opted Out Contacts',
       description: '是否包含选择退出营销的联系人',
       defaultValue: false
     }),
     consent_required: Field.boolean({
-      label: '需要营销同意',
+      label: 'Marketing Consent Required',
       description: 'GDPR合规：只包含明确同意营销的联系人',
       defaultValue: true
     }),
     data_retention_days: Field.number({
-      label: '数据保留天数',
+      label: 'Data Retention Days',
       description: '成员数据保留期限（天）',
       precision: 0
     }),
     last_compliance_check: Field.datetime({
-      label: '最后合规检查',
+      label: 'Last Compliance Check',
       description: '最后一次GDPR/隐私合规检查时间',
       readonly: true
     }),
     last_import_date: Field.datetime({
-      label: '最后导入时间',
+      label: 'Last Import Date',
       readonly: true
     }),
     last_import_count: Field.number({
-      label: '最后导入数量',
+      label: 'Last Import Count',
       readonly: true,
       precision: 0
     }),
     source_system: Field.text({
-      label: '来源系统',
+      label: 'Source System',
       description: '成员的来源系统或渠道',
       maxLength: 100
     }),
     ai_suggested_segments: Field.textarea({
-      label: 'AI 建议细分',
+      label: 'AI Suggested Segments',
       description: 'AI 分析建议的额外细分维度',
       readonly: true,
       maxLength: 2000
     }),
     ai_engagement_prediction: Field.textarea({
-      label: 'AI 参与度预测',
+      label: 'AI Engagement Prediction',
       description: 'AI 预测的列表参与度趋势',
       readonly: true,
       maxLength: 2000
     }),
     ai_suggested_content: Field.textarea({
-      label: 'AI 内容建议',
+      label: 'AI Content Suggestions',
       description: 'AI 针对此列表推荐的内容主题',
       readonly: true,
       maxLength: 2000

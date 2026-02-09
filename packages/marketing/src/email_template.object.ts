@@ -2,256 +2,256 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 
 export const EmailTemplate = ObjectSchema.create({
   name: 'email_template',
-  label: '邮件模板',
-  pluralLabel: '邮件模板',
+  label: 'Email Template',
+  pluralLabel: 'Email Templates',
   icon: 'mail',
   description: '营销邮件模板库，支持个性化令牌和动态内容块',
 
   fields: {
     name: Field.text({
-      label: '模板名称',
+      label: 'Template Name',
       description: '邮件模板的唯一名称',
       required: true,
       maxLength: 255
     }),
     template_code: Field.text({
-      label: '模板代码',
+      label: 'Template Code',
       description: '用于API调用的唯一模板标识符',
       unique: true,
       maxLength: 80
     }),
     description: Field.textarea({
-      label: '描述',
+      label: 'Description',
       description: '模板用途和场景说明',
       maxLength: 1000
     }),
     template_type: Field.select({
-      label: '模板类型',
+      label: 'Template Type',
       required: true,
       defaultValue: 'Marketing',
       options: [
         {
-          "label": "📢 营销邮件",
+          "label": "📢 Marketing Email",
           "value": "Marketing"
         },
         {
-          "label": "📧 交易邮件",
+          "label": "📧 Transactional Email",
           "value": "Transactional"
         },
         {
-          "label": "🔔 通知邮件",
+          "label": "🔔 Notification Email",
           "value": "Notification"
         },
         {
-          "label": "👋 欢迎系列",
+          "label": "👋 Welcome Series",
           "value": "Welcome"
         },
         {
-          "label": "🛒 购物车提醒",
+          "label": "🛒 Cart Abandonment",
           "value": "Cart Abandonment"
         },
         {
-          "label": "🎁 售后跟进",
+          "label": "🎁 Post Purchase",
           "value": "Post Purchase"
         },
         {
-          "label": "🔄 重新参与",
+          "label": "🔄 Re-engagement",
           "value": "Re-engagement"
         }
       ]
     }),
     category: Field.select({
-      label: '分类',
+      label: 'Category',
       options: [
         {
-          "label": "产品发布",
+          "label": "Product Launch",
           "value": "Product Launch"
         },
         {
-          "label": "活动邀请",
+          "label": "Event Invitation",
           "value": "Event Invitation"
         },
         {
-          "label": "新闻资讯",
+          "label": "Newsletter",
           "value": "Newsletter"
         },
         {
-          "label": "促销优惠",
+          "label": "Promotion",
           "value": "Promotion"
         },
         {
-          "label": "客户关怀",
+          "label": "Customer Care",
           "value": "Customer Care"
         },
         {
-          "label": "教育培训",
+          "label": "Educational",
           "value": "Educational"
         }
       ]
     }),
     subject: Field.text({
-      label: '邮件主题',
+      label: 'Email Subject',
       description: '支持个性化令牌，如 {{FirstName}}',
       required: true,
       maxLength: 255
     }),
     preheader_text: Field.text({
-      label: '预览文本',
+      label: 'Preview Text',
       description: '邮件客户端显示的预览文本',
       maxLength: 150
     }),
     html_body: Field.textarea({
-      label: 'HTML 内容',
+      label: 'HTML Content',
       description: '邮件的 HTML 内容，支持令牌和动态内容块',
       required: true,
       maxLength: 65535
     }),
     plain_text_body: Field.textarea({
-      label: '纯文本内容',
+      label: 'Plain Text Content',
       description: '纯文本版本，用于不支持HTML的邮件客户端',
       maxLength: 32000
     }),
     personalization_tokens: Field.textarea({
-      label: '个性化令牌',
+      label: 'Personalization Tokens',
       description: '模板中使用的所有令牌列表（自动提取）',
       readonly: true,
       maxLength: 2000
     }),
     dynamic_content_blocks: Field.number({
-      label: '动态内容块数量',
+      label: 'Dynamic Content Block Count',
       description: '基于条件显示的动态内容块数量',
       defaultValue: 0,
       readonly: true,
       precision: 0
     }),
     design_system: Field.select({
-      label: '设计系统',
+      label: 'Design System',
       defaultValue: 'Custom',
       options: [
         {
-          "label": "自定义 HTML",
+          "label": "Custom HTML",
           "value": "Custom"
         },
         {
-          "label": "可视化编辑器",
+          "label": "Visual Builder",
           "value": "Visual Builder"
         },
         {
-          "label": "预设模板",
+          "label": "Preset Template",
           "value": "Preset"
         }
       ]
     }),
     design_json: Field.textarea({
-      label: '设计配置 JSON',
+      label: 'Design Configuration JSON',
       description: '可视化编辑器的设计配置（JSON格式）',
       maxLength: 65535
     }),
     status: Field.select({
-      label: '状态',
+      label: 'Status',
       required: true,
       defaultValue: 'Draft',
       options: [
         {
-          "label": "📝 草稿",
+          "label": "📝 Draft",
           "value": "Draft"
         },
         {
-          "label": "✅ 已发布",
+          "label": "✅ Published",
           "value": "Published"
         },
         {
-          "label": "📦 已归档",
+          "label": "📦 Archived",
           "value": "Archived"
         }
       ]
     }),
     is_active: Field.boolean({
-      label: '是否启用',
+      label: 'Is Active',
       description: '只有启用的模板才能用于发送',
       defaultValue: true
     }),
     owner_id: Field.lookup('users', {
-      label: '负责人',
+      label: 'Owner',
       required: true
     }),
     is_a_b_test: Field.boolean({
-      label: '启用 A/B 测试',
+      label: 'Enable A/B Test',
       defaultValue: false
     }),
     a_b_test_variant_id: Field.lookup('email_template', {
-      label: 'A/B 测试变体',
+      label: 'A/B Test Variant',
       description: '关联的测试变体模板'
     }),
     a_b_test_winner_metric: Field.select({
-      label: 'A/B 测试胜出指标',
+      label: 'A/B Test Winning Metric',
       options: [
         {
-          "label": "打开率",
+          "label": "Open Rate",
           "value": "OpenRate"
         },
         {
-          "label": "点击率",
+          "label": "Click Rate",
           "value": "ClickRate"
         },
         {
-          "label": "转化率",
+          "label": "Conversion Rate",
           "value": "ConversionRate"
         }
       ]
     }),
     total_sent: Field.number({
-      label: '总发送次数',
+      label: 'Total Sent',
       defaultValue: 0,
       readonly: true,
       precision: 0
     }),
     total_opened: Field.number({
-      label: '总打开次数',
+      label: 'Total Opened',
       defaultValue: 0,
       readonly: true,
       precision: 0
     }),
     total_clicked: Field.number({
-      label: '总点击次数',
+      label: 'Total Clicked',
       defaultValue: 0,
       readonly: true,
       precision: 0
     }),
     average_open_rate: Field.percent({
-      label: '平均打开率',
+      label: 'Average Open Rate',
       description: '自动计算：总打开次数 / 总发送次数',
       readonly: true
     }),
     average_click_rate: Field.percent({
-      label: '平均点击率',
+      label: 'Average Click Rate',
       description: '自动计算：总点击次数 / 总打开次数',
       readonly: true
     }),
     last_used_date: Field.datetime({
-      label: '最后使用时间',
+      label: 'Last Used Date',
       readonly: true
     }),
     spam_score: Field.number({
-      label: '垃圾邮件评分',
+      label: 'Spam Score',
       description: '0-10分，分数越低越好',
       readonly: true,
       precision: 1
     }),
     has_unsubscribe_link: Field.boolean({
-      label: '包含退订链接',
+      label: 'Has Unsubscribe Link',
       description: '自动检测内容中是否包含退订链接',
       defaultValue: false,
       readonly: true
     }),
     ai_generated_subject_lines: Field.textarea({
-      label: 'AI 生成主题行',
+      label: 'AI Generated Subject Lines',
       description: 'AI 推荐的替代主题行选项',
       readonly: true,
       maxLength: 2000
     }),
     ai_optimization_suggestions: Field.textarea({
-      label: 'AI 优化建议',
+      label: 'AI Optimization Suggestions',
       description: 'AI 分析的改进建议（内容、设计、发送时间等）',
       readonly: true,
       maxLength: 2000
