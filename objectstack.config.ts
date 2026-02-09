@@ -24,6 +24,11 @@ export default defineStack({
     description: 'AI-Native Enterprise CRM with Sales, Marketing, Products, Finance, Service, and HR clouds',
   },
 
+  // Empty objects array triggers auto-loading of ObjectQL and the memory driver,
+  // which is required by the AppPlugin at startup.
+  // Business objects are defined inside each plugin's objects[] property.
+  objects: [],
+
   // Register all Business Plugins
   plugins: [
     CRMPlugin,
