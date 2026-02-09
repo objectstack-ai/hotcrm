@@ -182,7 +182,7 @@ async function calculateLeadScore(lead: Lead, ctx: HookContext): Promise<number>
  */
 async function runAssignmentRules(lead: Lead, ctx: HookContext): Promise<void> {
   try {
-    const rules: any[] = await ctx.ql.find('assignment_rule', {  
+    const rules: any[] = await (ctx.ql as any).find('assignment_rule', {  
       filters: [
         ['object_name', '=', 'lead'], 
         ['active', '=', true]
@@ -317,7 +317,7 @@ const LeadStatusChangeTrigger: Hook = {
 
   // Log activity
   try {
-    await ctx.ql.doc.create('activity', {
+    await (ctx.ql as any).doc.create('activity', {
       Subject: `线索已转化: ${lead.FirstName} ${lead.LastName}`,
       Type: 'Conversion',
       Status: 'Completed',
@@ -342,7 +342,7 @@ async function handleLeadConversion(ctx: HookContext): Promise<void> {
 
   // Log activity for conversion
   try {
-    await ctx.ql.doc.create('activity', {
+    await (ctx.ql as any).doc.create('activity', {
       Subject: `线索转换: ${lead.FirstName} ${lead.LastName}`,
       Type: 'Conversion',
       Status: 'Completed',
@@ -372,7 +372,7 @@ async function handleLeadUnqualification(ctx: HookContext): Promise<void> {
 
   // Log activity
   try {
-    await ctx.ql.doc.create('activity', {
+    await (ctx.ql as any).doc.create('activity', {
       Subject: `线索不合格: ${lead.FirstName} ${lead.LastName}`,
       Type: 'Disqualification',
       Status: 'Completed',
@@ -395,7 +395,7 @@ async function logStatusChange(ctx: HookContext): Promise<void> {
     const lead = ctx.input;
     const oldStatus = ctx.previous?.Status || 'Unknown';
     
-    await ctx.ql.doc.create('activity', {
+    await (ctx.ql as any).doc.create('activity', {
       Subject: `线索状态变更: ${oldStatus} → ${ctx.input.Status}`,
       Type: 'Status Change',
       Status: 'Completed',

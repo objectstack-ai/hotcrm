@@ -96,8 +96,8 @@ const AccountHierarchyTrigger: Hook = {
   events: ['afterInsert', 'afterUpdate'],
   handler: async (ctx: HookContext) => {
     try {
-      const account = ctx.result;
-      const oldAccount = ctx.previous;
+      const account = ctx.result as Record<string, any>;
+      const oldAccount = ctx.previous as Record<string, any> | undefined;
       
       // Check if parent changed
       const parentChanged = oldAccount && (oldAccount.ParentId !== account.ParentId);

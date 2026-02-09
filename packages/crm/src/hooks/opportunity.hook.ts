@@ -8,7 +8,7 @@ const OpportunityValidation: Hook = {
   object: 'Opportunity',
   events: ['beforeUpdate', 'beforeInsert'],
   handler: async (ctx: HookContext) => {
-    const opp = ctx.input.doc;
+    const opp = ctx.input.doc as Record<string, any>;
     
     // 1. Validate "closed_won"
     if (opp.stage === 'closed_won') {
@@ -19,7 +19,8 @@ const OpportunityValidation: Hook = {
 
     // 2. Validate "Proposal" - Must have a Quote
     // Note: We only check this on Update to avoid issues during initial import
-    if (opp.stage === 'Proposal' && ctx.previous && ctx.previous.stage !== 'Proposal') {
+    const ctxPrevious = ctx.previous as Record<string, any> | undefined;
+    if (opp.stage === 'Proposal' && ctxPrevious && ctxPrevious.stage !== 'Proposal') {
       const quoteCount = await countRelatedQuotes(ctx, opp._id);
       if (quoteCount === 0) {
         throw new Error('Validation Error: Cannot move to Proposal stage without an active Quote. Please create a Quote first.');
@@ -49,12 +50,12 @@ const OpportunityStageChange: Hook = {
       }
 
       // Check if Stage actually changed
-      const stageChanged = ctx.previous.Stage !== ctx.result.Stage;
+      const stageChanged = (ctx.previous as Record<string, any> | undefined)?.Stage !== (ctx.result as Record<string, any>)?.Stage;
       if (!stageChanged) {
         return;
       }
 
-      console.log(`🔄 Stage changed from "${ctx.previous.Stage}" to "${ctx.result.Stage}"`);
+      console.log(`🔄 Stage changed from "${(ctx.previous as Record<string, any> | undefined)?.Stage}" to "${(ctx.result as Record<string, any>)?.Stage}"`);
 
       // Log activity for stage change
       await logStageChange(ctx);
@@ -63,12 +64,12 @@ const OpportunityStageChange: Hook = {
       await validateStageRequirements(ctx);
 
       // Handle "closed_won" scenario
-      if (ctx.result.Stage === 'closed_won') {
+      if ((ctx.result as Record<string, any>)?.Stage === 'closed_won') {
         await handleClosedWon(ctx);
       }
 
       // Handle "closed_lost" scenario
-      if (ctx.result.Stage === 'closed_lost') {
+      if ((ctx.result as Record<string, any>)?.Stage === 'closed_lost') {
         await handleClosedLost(ctx);
       }
 

@@ -130,7 +130,7 @@ const ContactDuplicateDetectionTrigger: Hook = {
   events: ['beforeInsert', 'beforeUpdate'],
   handler: async (ctx: HookContext) => {
     try {
-      const contact = ctx.input.doc;
+      const contact = ctx.input.doc as Record<string, any>;
       const isNew = !ctx.previous;
       
       // Check for potential duplicates by name

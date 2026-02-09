@@ -131,8 +131,8 @@ const ActivityCompletionTrigger: Hook = {
   events: ['beforeUpdate'],
   handler: async (ctx: HookContext) => {
     try {
-      const activity = ctx.input.doc;
-      const oldActivity = ctx.previous;
+      const activity = ctx.input.doc as Record<string, any>;
+      const oldActivity = ctx.previous as Record<string, any> | undefined;
       
       // Check if status changed to Completed
       if (oldActivity && oldActivity.Status !== 'Completed' && activity.Status === 'Completed') {

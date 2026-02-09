@@ -17,8 +17,8 @@ const KnowledgeArticleScoringTrigger: Hook = {
   events: ['beforeInsert', 'beforeUpdate'],
   handler: async (ctx: HookContext) => {
     try {
-      const article = ctx.input.doc;
-      const oldArticle = ctx.previous;
+      const article = ctx.input.doc as Record<string, any>;
+      const oldArticle = ctx.previous as Record<string, any> | undefined;
 
       // Calculate quality score
       article.QualityScore = calculateQualityScore(article);
@@ -59,8 +59,8 @@ const KnowledgeArticleAIEnhancementTrigger: Hook = {
   events: ['beforeInsert', 'beforeUpdate'],
   handler: async (ctx: HookContext) => {
     try {
-      const article = ctx.input.doc;
-      const oldArticle = ctx.previous;
+      const article = ctx.input.doc as Record<string, any>;
+      const oldArticle = ctx.previous as Record<string, any> | undefined;
 
       // Only run AI on new articles or when content changes
       const isNew = !oldArticle;
@@ -115,8 +115,8 @@ const KnowledgeArticleWorkflowTrigger: Hook = {
   events: ['beforeUpdate'],
   handler: async (ctx: HookContext) => {
     try {
-      const article = ctx.input.doc;
-      const oldArticle = ctx.previous;
+      const article = ctx.input.doc as Record<string, any>;
+      const oldArticle = ctx.previous as Record<string, any> | undefined;
 
       // Track status changes
       if (oldArticle && oldArticle.Status !== article.Status) {
@@ -156,8 +156,8 @@ const KnowledgeArticleUsageTracker: Hook = {
   events: ['afterUpdate'],
   handler: async (ctx: HookContext) => {
     try {
-      const caseRecord = ctx.result;
-      const oldCase = ctx.previous;
+      const caseRecord = ctx.result as Record<string, any>;
+      const oldCase = ctx.previous as Record<string, any> | undefined;
 
       // Track when case is resolved and knowledge was used
       if (oldCase && caseRecord.Status === 'Resolved' && oldCase.Status !== 'Resolved') {

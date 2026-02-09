@@ -12,7 +12,7 @@ const CaseEntitlementCheck: Hook = {
   object: 'case', // Lowercase per protocol
   events: ['beforeInsert'],
   handler: async (ctx: HookContext) => {
-    const caseRec = ctx.input.doc;
+    const caseRec = ctx.input.doc as Record<string, any>;
 
     // Skip if no account is linked
     if (!caseRec.account) {
