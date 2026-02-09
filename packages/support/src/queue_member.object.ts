@@ -8,7 +8,7 @@ export const QueueMember = ObjectSchema.create({
   description: 'Support agents assigned to queues',
 
   fields: {
-    queue_id: Field.lookup('Queue', {
+    queue_id: Field.lookup('queue', {
       label: 'Queue',
       required: true
     }),

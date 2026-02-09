@@ -57,7 +57,7 @@ export const ApprovalRequest = ObjectSchema.create({
         }
       ]
     }),
-    quote_id: Field.lookup('Quote', {
+    quote_id: Field.lookup('quote', {
       label: 'Quote',
       description: 'Quote requiring approval'
     }),
@@ -69,7 +69,7 @@ export const ApprovalRequest = ObjectSchema.create({
       label: 'Account',
       description: 'Customer account'
     }),
-    contract_id: Field.lookup('Contract', {
+    contract_id: Field.lookup('contract', {
       label: 'Contract',
       description: 'Contract requiring approval'
     }),

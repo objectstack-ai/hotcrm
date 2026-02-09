@@ -116,7 +116,7 @@ export const Form = ObjectSchema.create({
       description: '向提交者发送确认邮件',
       defaultValue: false
     }),
-    confirmation_email_template_id: Field.lookup('EmailTemplate', {
+    confirmation_email_template_id: Field.lookup('email_template', {
       label: '确认邮件模板',
       description: '使用的确认邮件模板'
     }),

@@ -12,7 +12,7 @@ export const AgentSkill = ObjectSchema.create({
       label: 'Agent',
       required: true
     }),
-    skill_id: Field.lookup('Skill', {
+    skill_id: Field.lookup('skill', {
       label: 'Skill',
       required: true
     }),

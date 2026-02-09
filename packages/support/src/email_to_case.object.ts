@@ -71,7 +71,7 @@ export const EmailToCase = ObjectSchema.create({
       label: 'username',
       maxLength: 255
     }),
-    default_queue_id: Field.lookup('Queue', {
+    default_queue_id: Field.lookup('queue', {
       label: 'Default Queue',
       description: 'Queue for new cases created from emails',
       required: true
@@ -228,7 +228,7 @@ export const EmailToCase = ObjectSchema.create({
       label: 'Send Auto Response',
       defaultValue: false
     }),
-    auto_response_template_id: Field.lookup('EmailTemplate', {
+    auto_response_template_id: Field.lookup('email_template', {
       label: 'Auto Response Template',
       description: 'Email template for auto-response'
     }),

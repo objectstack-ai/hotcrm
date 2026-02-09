@@ -87,7 +87,7 @@ export const SLAPolicy = ObjectSchema.create({
         }
       ]
     }),
-    business_hours_id: Field.lookup('BusinessHours', {
+    business_hours_id: Field.lookup('business_hours', {
       label: 'Business Hours',
       description: 'Business hours calendar for SLA calculation'
     }),
@@ -200,7 +200,7 @@ export const SLAPolicy = ObjectSchema.create({
       max: 100,
       precision: 0
     }),
-    escalation_level1_rule_id: Field.lookup('EscalationRule', {
+    escalation_level1_rule_id: Field.lookup('escalation_rule', {
       label: 'Level 1 Rule',
       description: 'Escalation rule for level 1'
     }),
@@ -211,7 +211,7 @@ export const SLAPolicy = ObjectSchema.create({
       max: 100,
       precision: 0
     }),
-    escalation_level2_rule_id: Field.lookup('EscalationRule', { label: 'Level 2 Rule' }),
+    escalation_level2_rule_id: Field.lookup('escalation_rule', { label: 'Level 2 Rule' }),
     escalation_level3_percent: Field.number({
       label: 'Level 3 Escalation (%)',
       defaultValue: 100,
@@ -219,7 +219,7 @@ export const SLAPolicy = ObjectSchema.create({
       max: 100,
       precision: 0
     }),
-    escalation_level3_rule_id: Field.lookup('EscalationRule', { label: 'Level 3 Rule' }),
+    escalation_level3_rule_id: Field.lookup('escalation_rule', { label: 'Level 3 Rule' }),
     notify_on_warning: Field.boolean({
       label: 'Notify on Warning',
       defaultValue: true
@@ -232,8 +232,8 @@ export const SLAPolicy = ObjectSchema.create({
       label: 'Notify on Escalation',
       defaultValue: true
     }),
-    warning_email_template_id: Field.lookup('EmailTemplate', { label: 'Warning Email Template' }),
-    violation_email_template_id: Field.lookup('EmailTemplate', { label: 'Violation Email Template' }),
+    warning_email_template_id: Field.lookup('email_template', { label: 'Warning Email Template' }),
+    violation_email_template_id: Field.lookup('email_template', { label: 'Violation Email Template' }),
     allow_sla_pause: Field.boolean({
       label: 'Allow SLA Pause',
       description: 'Allow pausing SLA timer',
@@ -311,7 +311,7 @@ export const SLAPolicy = ObjectSchema.create({
       readonly: true,
       maxLength: 50
     }),
-    previous_version_id: Field.lookup('SLAPolicy', {
+    previous_version_id: Field.lookup('sla_policy', {
       label: 'Previous version',
       description: 'Previous version of this policy',
       readonly: true

@@ -103,7 +103,7 @@ export const LandingPage = ObjectSchema.create({
       label: 'Open Graph 图片',
       description: '社交媒体分享时显示的图片URL'
     }),
-    form_id: Field.lookup('Form', {
+    form_id: Field.lookup('form', {
       label: '内嵌表单',
       description: '页面中集成的表单'
     }),
@@ -155,7 +155,7 @@ export const LandingPage = ObjectSchema.create({
       label: '启用 A/B 测试',
       defaultValue: false
     }),
-    a_b_test_variant_id: Field.lookup('LandingPage', {
+    a_b_test_variant_id: Field.lookup('landing_page', {
       label: 'A/B 测试变体',
       description: '关联的测试变体页面'
     }),

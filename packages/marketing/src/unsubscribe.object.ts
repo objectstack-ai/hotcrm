@@ -119,11 +119,11 @@ export const Unsubscribe = ObjectSchema.create({
       label: '触发活动',
       description: '导致退订的营销活动'
     }),
-    email_template_id: Field.lookup('EmailTemplate', {
+    email_template_id: Field.lookup('email_template', {
       label: '触发邮件模板',
       description: '导致退订的邮件模板'
     }),
-    marketing_list_id: Field.lookup('MarketingList', {
+    marketing_list_id: Field.lookup('marketing_list', {
       label: '营销列表',
       description: '退订的营销列表'
     }),

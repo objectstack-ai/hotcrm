@@ -29,7 +29,7 @@ export const RoutingRule = ObjectSchema.create({
       min: 1,
       precision: 0
     }),
-    queue_id: Field.lookup('Queue', {
+    queue_id: Field.lookup('queue', {
       label: 'Target Queue',
       description: 'Queue to route cases to',
       required: true
@@ -114,7 +114,7 @@ export const RoutingRule = ObjectSchema.create({
       label: 'Enable Time-Based Routing',
       defaultValue: false
     }),
-    business_hours_id: Field.lookup('BusinessHours', {
+    business_hours_id: Field.lookup('business_hours', {
       label: 'Business Hours',
       description: 'Apply rule only during these business hours'
     }),

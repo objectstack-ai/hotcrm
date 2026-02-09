@@ -109,7 +109,7 @@ export const SocialMediaCase = ObjectSchema.create({
       description: 'Keywords to trigger case creation (one per line)',
       maxLength: 2000
     }),
-    default_queue_id: Field.lookup('Queue', {
+    default_queue_id: Field.lookup('queue', {
       label: 'Default Queue',
       required: true
     }),

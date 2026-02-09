@@ -172,7 +172,7 @@ export const BusinessHours = ObjectSchema.create({
       description: 'Exclude public holidays from business hours',
       defaultValue: true
     }),
-    holiday_calendar_id: Field.lookup('HolidayCalendar', {
+    holiday_calendar_id: Field.lookup('holiday_calendar', {
       label: 'Holiday Calendar',
       description: 'Calendar containing public holidays'
     })

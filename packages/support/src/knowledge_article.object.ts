@@ -191,7 +191,7 @@ export const KnowledgeArticle = ObjectSchema.create({
         }
       ]
     }),
-    translation_of_id: Field.lookup('KnowledgeArticle', {
+    translation_of_id: Field.lookup('knowledge_article', {
       label: 'Translation Of',
       description: 'Original article if this is a translation'
     }),
@@ -352,7 +352,7 @@ export const KnowledgeArticle = ObjectSchema.create({
       readonly: true,
       maxLength: 50
     }),
-    previous_version_id: Field.lookup('KnowledgeArticle', {
+    previous_version_id: Field.lookup('knowledge_article', {
       label: 'Previous Version',
       description: 'Previous version of this article',
       readonly: true

@@ -179,7 +179,7 @@ export const EmailTemplate = ObjectSchema.create({
       label: '启用 A/B 测试',
       defaultValue: false
     }),
-    a_b_test_variant_id: Field.lookup('EmailTemplate', {
+    a_b_test_variant_id: Field.lookup('email_template', {
       label: 'A/B 测试变体',
       description: '关联的测试变体模板'
     }),

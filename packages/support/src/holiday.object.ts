@@ -8,7 +8,7 @@ export const Holiday = ObjectSchema.create({
   description: 'Public holidays and company closure dates',
 
   fields: {
-    calendar_id: Field.lookup('HolidayCalendar', {
+    calendar_id: Field.lookup('holiday_calendar', {
       label: 'Holiday Calendar',
       required: true
     }),

@@ -102,7 +102,7 @@ export const QuoteLineItem = ObjectSchema.create({
       description: 'Total discount amount for this line',
       precision: 2
     }),
-    price_rule_id: Field.lookup('PriceRule', {
+    price_rule_id: Field.lookup('price_rule', {
       label: 'Applied Price Rule',
       description: 'Pricing rule applied to this line item'
     }),
@@ -200,7 +200,7 @@ export const QuoteLineItem = ObjectSchema.create({
       defaultValue: 0,
       precision: 2
     }),
-    required_by_line_item_id: Field.lookup('QuoteLineItem', {
+    required_by_line_item_id: Field.lookup('quote_line_item', {
       label: 'Required By',
       description: 'Parent line item that requires this item'
     }),
@@ -215,7 +215,7 @@ export const QuoteLineItem = ObjectSchema.create({
       defaultValue: false,
       readonly: true
     }),
-    bundle_parent_id: Field.lookup('QuoteLineItem', {
+    bundle_parent_id: Field.lookup('quote_line_item', {
       label: 'Bundle Parent',
       description: 'Parent bundle line item'
     }),

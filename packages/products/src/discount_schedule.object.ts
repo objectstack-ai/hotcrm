@@ -249,7 +249,7 @@ export const DiscountSchedule = ObjectSchema.create({
       label: 'Auto-Approve Threshold',
       description: 'Discount % below which auto-approval applies'
     }),
-    approval_matrix_id: Field.lookup('ApprovalMatrix', {
+    approval_matrix_id: Field.lookup('approval_matrix', {
       label: 'Approval Matrix',
       description: 'Custom approval matrix for this schedule'
     }),
