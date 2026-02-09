@@ -25,10 +25,10 @@
   "author": "HotCRM Team",
   "license": "MIT",
   "dependencies": {
-    "@objectstack/spec": "^2.0.0"
+    "@objectstack/spec": "^2.0.1"
   },
   "peerDependencies": {
-    "@objectstack/cli": "^2.0.0"
+    "@objectstack/cli": "^2.0.1"
   },
   "devDependencies": {
     "typescript": "^5.0.0"
