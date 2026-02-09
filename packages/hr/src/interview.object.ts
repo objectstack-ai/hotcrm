@@ -5,7 +5,7 @@ export const Interview = ObjectSchema.create({
   label: 'Interview',
   pluralLabel: 'Interviews',
   icon: 'comments',
-  description: '面试安排和记录管理',
+  description: 'Interview scheduling and record management',
 
   fields: {
     title: Field.text({
@@ -69,7 +69,7 @@ export const Interview = ObjectSchema.create({
     }),
     location: Field.text({
       label: 'Interview Location',
-      description: '线下地点或线上会议链接',
+      description: 'Physical location or online meeting link',
       maxLength: 255
     }),
     interviewer_id: Field.lookup('employee', {
@@ -78,7 +78,7 @@ export const Interview = ObjectSchema.create({
     }),
     panel_members: Field.text({
       label: 'Interview Panel',
-      description: '多位面试官用逗号分隔',
+      description: 'Multiple interviewers separated by commas',
       maxLength: 500
     }),
     status: Field.select({
@@ -142,7 +142,7 @@ export const Interview = ObjectSchema.create({
     }),
     feedback: Field.textarea({
       label: 'Interview Feedback',
-      description: '详细的面试评价和建议',
+      description: 'Detailed interview evaluation and recommendations',
     }),
     strengths: Field.textarea({
       label: 'Strengths',

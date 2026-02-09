@@ -5,7 +5,7 @@ export const Goal = ObjectSchema.create({
   label: 'Goal',
   pluralLabel: 'Goals',
   icon: 'bullseye',
-  description: 'OKR和个人目标管理',
+  description: 'OKR and individual goal management',
 
   fields: {
     title: Field.text({
@@ -19,7 +19,7 @@ export const Goal = ObjectSchema.create({
     }),
     manager_id: Field.lookup('employee', {
       label: 'Goal Setter',
-      description: '通常是直属经理'
+      description: 'Typically the direct manager'
     }),
     goal_type: Field.select({
       label: 'Goal Type',
@@ -139,36 +139,36 @@ export const Goal = ObjectSchema.create({
     }),
     progress: Field.percent({
       label: 'Completion Progress',
-      description: '目标完成百分比',
+      description: 'Goal completion percentage',
       defaultValue: 0
     }),
     target_value: Field.number({
       label: 'Target Value',
-      description: '量化的目标数值',
+      description: 'Quantified target value',
       precision: 2
     }),
     current_value: Field.number({
       label: 'Current Value',
-      description: '当前达成的数值',
+      description: 'Current achieved value',
       precision: 2
     }),
     unit: Field.text({
       label: 'Unit',
-      description: '目标值的单位，如：个、万元、%',
+      description: 'Unit of the target value, e.g., items, dollars, %',
       maxLength: 40
     }),
     description: Field.textarea({
       label: 'Goal Description',
-      description: '详细的目标说明和期望结果',
+      description: 'Detailed goal description and expected outcomes',
     }),
     key_results: Field.textarea({
       label: 'Key Results (KR)',
-      description: 'OKR的关键结果，可列出多个',
+      description: 'Key results for OKR; multiple entries allowed',
     }),
     performance_review_id: Field.lookup('performance_review', { label: 'Related Performance Review' }),
     weight: Field.percent({
       label: 'Weight',
-      description: '在绩效考核中的权重'
+      description: 'Weight in performance evaluation'
     }),
     achievement_notes: Field.textarea({
       label: 'Achievement Notes',

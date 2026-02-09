@@ -5,7 +5,7 @@ export const Candidate = ObjectSchema.create({
   label: 'Candidate',
   pluralLabel: 'Candidates',
   icon: 'user-check',
-  description: '求职候选人信息管理',
+  description: 'Job candidate information management',
 
   fields: {
     first_name: Field.text({
@@ -39,7 +39,7 @@ export const Candidate = ObjectSchema.create({
     }),
     years_of_experience: Field.number({
       label: 'Years of Experience',
-      description: '总工作年限',
+      description: 'Total years of work experience',
       precision: 1
     }),
     highest_education: Field.select({

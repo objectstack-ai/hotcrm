@@ -5,7 +5,7 @@ export const Recruitment = ObjectSchema.create({
   label: 'Recruitment Requisition',
   pluralLabel: 'Recruitment Requisitions',
   icon: 'user-plus',
-  description: '职位招聘需求和招聘计划管理',
+  description: 'Job recruitment requisition and hiring plan management',
 
   fields: {
     title: Field.text({
@@ -28,7 +28,7 @@ export const Recruitment = ObjectSchema.create({
     }),
     hiring_manager_id: Field.lookup('employee', {
       label: 'Hiring Manager',
-      description: '负责此次招聘的经理',
+      description: 'Manager responsible for this recruitment',
       required: true
     }),
     headcount: Field.number({
@@ -97,11 +97,11 @@ export const Recruitment = ObjectSchema.create({
     close_date: Field.date({ label: 'Close Date' }),
     job_description: Field.textarea({
       label: 'Position Description',
-      description: '详细的职位职责和要求',
+      description: 'Detailed position responsibilities and requirements',
     }),
     requirements: Field.textarea({
       label: 'Requirements',
-      description: '学历、经验、技能等要求',
+      description: 'Education, experience, skills, and other requirements',
     }),
     salary_range_min: Field.currency({
       label: 'Salary Range (Min)',

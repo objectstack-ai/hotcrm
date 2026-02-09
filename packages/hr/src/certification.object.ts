@@ -5,7 +5,7 @@ export const Certification = ObjectSchema.create({
   label: 'Certification',
   pluralLabel: 'Certifications',
   icon: 'certificate',
-  description: '员工专业认证和资质管理',
+  description: 'Employee professional certification and qualification management',
 
   fields: {
     title: Field.text({
@@ -65,11 +65,11 @@ export const Certification = ObjectSchema.create({
     }),
     expiry_date: Field.date({
       label: 'Expiry Date',
-      description: '如果证书有效期限制'
+      description: 'Applicable if the certificate has an expiration date'
     }),
     is_active: Field.boolean({
       label: 'Is Active',
-      description: '证书当前是否有效',
+      description: 'Whether the certificate is currently valid',
       defaultValue: true
     }),
     renewal_required: Field.boolean({
@@ -79,17 +79,17 @@ export const Certification = ObjectSchema.create({
     next_renewal_date: Field.date({ label: 'Next Renewal Date' }),
     training_id: Field.lookup('training', {
       label: 'Related Training',
-      description: '如果通过培训获得'
+      description: 'If obtained through training'
     }),
     score: Field.number({
       label: 'Exam Score',
-      description: '如适用，记录考试分数',
+      description: 'Records exam score if applicable',
       precision: 2
     }),
     certificate_url: Field.url({ label: 'Certificate URL' }),
     verification_url: Field.url({
       label: 'Verification URL',
-      description: '在线验证证书的链接'
+      description: 'Link to verify the certificate online'
     }),
     cost: Field.currency({
       label: 'Certification Cost',
@@ -119,7 +119,7 @@ export const Certification = ObjectSchema.create({
     }),
     description: Field.textarea({
       label: 'Certification Description',
-      description: '认证的内容和价值',
+      description: 'Content and value of the certification',
     }),
     notes: Field.textarea({
       label: 'Notes',

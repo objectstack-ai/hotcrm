@@ -5,7 +5,7 @@ export const Attendance = ObjectSchema.create({
   label: 'Attendance',
   pluralLabel: 'Attendance Records',
   icon: 'clock',
-  description: '员工考勤和工时跟踪',
+  description: 'Employee attendance and work hour tracking',
 
   fields: {
     employee_id: Field.lookup('employee', {
@@ -20,7 +20,7 @@ export const Attendance = ObjectSchema.create({
     check_out_time: Field.datetime({ label: 'Check-out Time' }),
     work_hours: Field.number({
       label: 'Work Hours',
-      description: '自动计算的工作时长',
+      description: 'Automatically calculated work duration',
       readonly: true,
       precision: 2
     }),
@@ -102,7 +102,7 @@ export const Attendance = ObjectSchema.create({
     approver_id: Field.lookup('employee', { label: 'Approver' }),
     notes: Field.textarea({
       label: 'Notes',
-      description: '异常情况说明等',
+      description: 'Notes for anomalies or exceptions',
     })
   },
 

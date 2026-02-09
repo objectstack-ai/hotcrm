@@ -5,7 +5,7 @@ export const Payroll = ObjectSchema.create({
   label: 'Payroll',
   pluralLabel: 'Payroll Records',
   icon: 'money-bill-wave',
-  description: '员工薪资和工资单管理',
+  description: 'Employee salary and payroll management',
 
   fields: {
     payroll_number: Field.text({
@@ -48,12 +48,12 @@ export const Payroll = ObjectSchema.create({
     }),
     allowances: Field.currency({
       label: 'Allowances',
-      description: '交通、餐饮等补贴',
+      description: 'Transportation, meal, and other allowances',
       precision: 2
     }),
     gross_pay: Field.currency({
       label: 'Gross Pay',
-      description: '税前总收入（自动计算）',
+      description: 'Total gross income before tax (auto-calculated)',
       readonly: true,
       precision: 2
     }),
@@ -75,13 +75,13 @@ export const Payroll = ObjectSchema.create({
     }),
     total_deductions: Field.currency({
       label: 'Total Deductions',
-      description: '总扣款金额（自动计算）',
+      description: 'Total deduction amount (auto-calculated)',
       readonly: true,
       precision: 2
     }),
     net_pay: Field.currency({
       label: 'Net Pay',
-      description: '税后实际到手金额（自动计算）',
+      description: 'Net pay after tax (auto-calculated)',
       readonly: true,
       precision: 2
     }),

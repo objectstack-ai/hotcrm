@@ -5,7 +5,7 @@ export const Position = ObjectSchema.create({
   label: 'Position',
   pluralLabel: 'Positions',
   icon: 'briefcase',
-  description: '职位和岗位定义管理',
+  description: 'Position and role definition management',
 
   fields: {
     title: Field.text({
@@ -98,7 +98,7 @@ export const Position = ObjectSchema.create({
     }),
     reports_to_id: Field.lookup('position', {
       label: 'Reports To',
-      description: '直接汇报的上级职位'
+      description: 'Direct reporting supervisor position'
     }),
     employment_type: Field.select({
       label: 'Employment Type',
@@ -128,12 +128,12 @@ export const Position = ObjectSchema.create({
     }),
     headcount: Field.number({
       label: 'Planned Headcount',
-      description: '该职位的计划人数',
+      description: 'Planned headcount for this position',
       defaultValue: 1
     }),
     current_headcount: Field.number({
       label: 'Current Headcount',
-      description: '当前在职人数（自动计算）',
+      description: 'Current headcount (auto-calculated)',
       readonly: true
     }),
     min_salary: Field.currency({
@@ -168,11 +168,11 @@ export const Position = ObjectSchema.create({
     }),
     description: Field.textarea({
       label: 'Position Description',
-      description: '职位职责和要求',
+      description: 'Position responsibilities and requirements',
     }),
     requirements: Field.textarea({
       label: 'Requirements',
-      description: '学历、技能、经验等要求',
+      description: 'Education, skills, experience, and other requirements',
     })
   },
 

@@ -5,7 +5,7 @@ export const Onboarding = ObjectSchema.create({
   label: 'Onboarding',
   pluralLabel: 'Onboardings',
   icon: 'user-graduate',
-  description: '新员工入职和培训流程管理',
+  description: 'New employee onboarding and orientation process management',
 
   fields: {
     title: Field.text({
@@ -24,7 +24,7 @@ export const Onboarding = ObjectSchema.create({
     }),
     buddy_id: Field.lookup('employee', {
       label: 'Onboarding Buddy',
-      description: '帮助新员工熟悉环境的同事'
+      description: 'Colleague assigned to help the new employee acclimate'
     }),
     manager_id: Field.lookup('employee', {
       label: 'Direct Manager',
@@ -54,17 +54,17 @@ export const Onboarding = ObjectSchema.create({
     }),
     completion_percentage: Field.percent({
       label: 'Completion Progress',
-      description: '入职任务完成百分比',
+      description: 'Onboarding task completion percentage',
       readonly: true
     }),
     paperwork_completed: Field.boolean({
       label: 'Paperwork Completed',
-      description: '劳动合同、保密协议等',
+      description: 'Employment contract, NDA, and related documents',
       defaultValue: false
     }),
     it_setup_completed: Field.boolean({
       label: 'IT Setup Completed',
-      description: '电脑、邮箱、系统权限等',
+      description: 'Computer, email, system access, etc.',
       defaultValue: false
     }),
     workspace_setup_completed: Field.boolean({
@@ -73,7 +73,7 @@ export const Onboarding = ObjectSchema.create({
     }),
     training_completed: Field.boolean({
       label: 'Basic Training Completed',
-      description: '公司文化、规章制度等培训',
+      description: 'Training on company culture, policies, and procedures',
       defaultValue: false
     }),
     system_access_granted: Field.boolean({
@@ -82,7 +82,7 @@ export const Onboarding = ObjectSchema.create({
     }),
     first_day_checklist: Field.textarea({
       label: 'First Day Checklist',
-      description: '第一天需要完成的任务',
+      description: 'Tasks to complete on the first day',
     }),
     first_week_goals: Field.textarea({
       label: 'First Week Goals',
@@ -93,7 +93,7 @@ export const Onboarding = ObjectSchema.create({
     probation_end_date: Field.date({ label: 'Probation End Date' }),
     feedback: Field.textarea({
       label: 'Onboarding Feedback',
-      description: '新员工的入职体验反馈',
+      description: 'New employee onboarding experience feedback',
     }),
     notes: Field.textarea({
       label: 'Notes',

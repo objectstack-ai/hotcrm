@@ -5,7 +5,7 @@ export const Offer = ObjectSchema.create({
   label: 'Offer',
   pluralLabel: 'Offers',
   icon: 'file-contract',
-  description: '录用通知和Offer管理',
+  description: 'Employment offer notification and management',
 
   fields: {
     offer_number: Field.text({
@@ -44,7 +44,7 @@ export const Offer = ObjectSchema.create({
     }),
     expiry_date: Field.date({
       label: 'Expiry Date',
-      description: 'Offer有效期截止日期'
+      description: 'Offer expiration date'
     }),
     start_date: Field.date({
       label: 'Expected Start Date',
@@ -61,12 +61,12 @@ export const Offer = ObjectSchema.create({
     }),
     equity: Field.text({
       label: 'Equity/Stock Options',
-      description: '股权或期权描述',
+      description: 'Equity or stock options description',
       maxLength: 255
     }),
     benefits: Field.textarea({
       label: 'Benefits',
-      description: '医疗保险、带薪休假等福利',
+      description: 'Benefits such as health insurance, paid time off, etc.',
     }),
     employment_type: Field.select({
       label: 'Employment Type',
@@ -152,7 +152,7 @@ export const Offer = ObjectSchema.create({
     response_date: Field.date({ label: 'Candidate Response Date' }),
     rejection_reason: Field.textarea({
       label: 'Rejection Reason',
-      description: '如果候选人拒绝，记录原因',
+      description: 'Records the reason if the candidate declines',
     }),
     offer_letter_url: Field.url({ label: 'Offer Letter URL' }),
     notes: Field.textarea({

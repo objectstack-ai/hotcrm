@@ -5,7 +5,7 @@ export const Application = ObjectSchema.create({
   label: 'Job Application',
   pluralLabel: 'Job Applications',
   icon: 'file-alt',
-  description: '候选人职位申请记录管理',
+  description: 'Candidate job application record management',
 
   fields: {
     application_number: Field.text({
@@ -132,7 +132,7 @@ export const Application = ObjectSchema.create({
     }),
     referrer_id: Field.lookup('employee', {
       label: 'Referrer',
-      description: '如果是内推，记录推荐人'
+      description: 'Records the referrer for employee referrals'
     }),
     resume_url: Field.url({ label: 'Resume URL' }),
     cover_letter: Field.textarea({
@@ -140,7 +140,7 @@ export const Application = ObjectSchema.create({
     }),
     rejection_reason: Field.textarea({
       label: 'Rejection Reason',
-      description: '如果被拒绝，记录原因',
+      description: 'Records the reason if rejected',
     }),
     notes: Field.textarea({
       label: 'Notes',

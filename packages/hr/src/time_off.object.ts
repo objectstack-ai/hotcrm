@@ -5,7 +5,7 @@ export const TimeOff = ObjectSchema.create({
   label: 'Time Off',
   pluralLabel: 'Time Off Records',
   icon: 'calendar-times',
-  description: '员工请假和休假管理',
+  description: 'Employee leave and time-off management',
 
   fields: {
     request_number: Field.text({
@@ -109,7 +109,7 @@ export const TimeOff = ObjectSchema.create({
     }),
     total_days: Field.number({
       label: 'Total Days',
-      description: '自动计算的请假天数',
+      description: 'Automatically calculated leave days',
       readonly: true,
       precision: 1
     }),
@@ -142,7 +142,7 @@ export const TimeOff = ObjectSchema.create({
     }),
     approver_id: Field.lookup('employee', {
       label: 'Approver',
-      description: '负责审批的经理'
+      description: 'Manager responsible for approval'
     }),
     approval_date: Field.date({ label: 'Approval Date' }),
     reason: Field.textarea({
@@ -151,7 +151,7 @@ export const TimeOff = ObjectSchema.create({
     }),
     rejection_reason: Field.textarea({
       label: 'Rejection Reason',
-      description: '如果被拒绝，记录原因',
+      description: 'Records the reason if rejected',
     }),
     contact_info: Field.text({
       label: 'Contact During Leave',
@@ -159,7 +159,7 @@ export const TimeOff = ObjectSchema.create({
     }),
     backup_person_id: Field.lookup('employee', {
       label: 'Backup Person',
-      description: '临时负责工作的同事'
+      description: 'Colleague temporarily covering responsibilities'
     }),
     is_paid: Field.boolean({
       label: 'Is Paid',
@@ -167,7 +167,7 @@ export const TimeOff = ObjectSchema.create({
     }),
     attachment_url: Field.url({
       label: 'Attachment URL',
-      description: '如病假证明等'
+      description: 'Supporting documents such as medical certificates'
     }),
     notes: Field.textarea({
       label: 'Notes',

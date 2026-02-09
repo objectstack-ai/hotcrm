@@ -5,7 +5,7 @@ export const PerformanceReview = ObjectSchema.create({
   label: 'Performance Review',
   pluralLabel: 'Performance Reviews',
   icon: 'chart-line',
-  description: '员工绩效评估和考核管理',
+  description: 'Employee performance evaluation and review management',
 
   fields: {
     review_name: Field.text({
@@ -19,7 +19,7 @@ export const PerformanceReview = ObjectSchema.create({
     }),
     reviewer_id: Field.lookup('employee', {
       label: 'Reviewer',
-      description: '通常是直属经理',
+      description: 'Typically the direct manager',
       required: true
     }),
     review_period: Field.select({
@@ -131,14 +131,14 @@ export const PerformanceReview = ObjectSchema.create({
     }),
     overall_score: Field.number({
       label: 'Overall Score',
-      description: '综合评分（0-100）',
+      description: 'Overall score (0-100)',
       min: 0,
       max: 100,
       precision: 2
     }),
     achievements: Field.textarea({
       label: 'Key Achievements',
-      description: '评估期内的关键成就和贡献',
+      description: 'Key achievements and contributions during the review period',
     }),
     strengths: Field.textarea({
       label: 'Strengths',
@@ -148,7 +148,7 @@ export const PerformanceReview = ObjectSchema.create({
     }),
     development_plan: Field.textarea({
       label: 'Development Plan',
-      description: '下一阶段的发展目标和行动计划',
+      description: 'Development goals and action plan for the next period',
     }),
     employee_comments: Field.textarea({
       label: 'Employee Comments',

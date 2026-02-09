@@ -5,7 +5,7 @@ export const Training = ObjectSchema.create({
   label: 'Training',
   pluralLabel: 'Trainings',
   icon: 'graduation-cap',
-  description: '员工培训和学习发展管理',
+  description: 'Employee training and learning development management',
 
   fields: {
     title: Field.text({
@@ -106,7 +106,7 @@ export const Training = ObjectSchema.create({
     }),
     location: Field.text({
       label: 'Training Location',
-      description: '线下地点或线上会议链接',
+      description: 'Physical location or online meeting link',
       maxLength: 255
     }),
     status: Field.select({
@@ -163,7 +163,7 @@ export const Training = ObjectSchema.create({
     }),
     exam_score: Field.number({
       label: 'Exam Score',
-      description: '如有考试，记录成绩',
+      description: 'Records exam score if applicable',
       min: 0,
       max: 100,
       precision: 2
@@ -181,7 +181,7 @@ export const Training = ObjectSchema.create({
     }),
     feedback: Field.textarea({
       label: 'Training Feedback',
-      description: '员工的培训体验和收获',
+      description: 'Employee training experience and takeaways',
     }),
     notes: Field.textarea({
       label: 'Notes',

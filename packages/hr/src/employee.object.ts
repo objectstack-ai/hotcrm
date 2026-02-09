@@ -5,7 +5,7 @@ export const Employee = ObjectSchema.create({
   label: 'Employee',
   pluralLabel: 'Employees',
   icon: 'user-tie',
-  description: '员工主数据和信息管理',
+  description: 'Employee master data and information management',
 
   fields: {
     employee_number: Field.text({
@@ -60,7 +60,7 @@ export const Employee = ObjectSchema.create({
     }),
     national_id: Field.text({
       label: 'National ID',
-      description: '身份证或护照号码',
+      description: 'National ID or passport number',
       unique: true,
       maxLength: 40
     }),
@@ -95,7 +95,7 @@ export const Employee = ObjectSchema.create({
     }),
     manager_id: Field.lookup('employee', {
       label: 'Direct Manager',
-      description: '直接汇报的上级'
+      description: 'Direct reporting supervisor'
     }),
     hire_date: Field.date({
       label: 'Hire Date',
