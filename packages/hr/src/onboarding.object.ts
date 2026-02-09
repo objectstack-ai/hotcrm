@@ -2,101 +2,101 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 
 export const Onboarding = ObjectSchema.create({
   name: 'onboarding',
-  label: '入职流程',
-  pluralLabel: '入职流程',
+  label: 'Onboarding',
+  pluralLabel: 'Onboardings',
   icon: 'user-graduate',
   description: '新员工入职和培训流程管理',
 
   fields: {
     title: Field.text({
-      label: '入职流程名称',
+      label: 'Onboarding Title',
       required: true,
       maxLength: 255
     }),
     employee_id: Field.lookup('employee', {
-      label: '员工',
+      label: 'Employee',
       required: true
     }),
-    offer_id: Field.lookup('offer', { label: '关联Offer' }),
+    offer_id: Field.lookup('offer', { label: 'Related Offer' }),
     start_date: Field.date({
-      label: '入职日期',
+      label: 'Hire Date',
       required: true
     }),
     buddy_id: Field.lookup('employee', {
-      label: '入职导师',
+      label: 'Onboarding Buddy',
       description: '帮助新员工熟悉环境的同事'
     }),
     manager_id: Field.lookup('employee', {
-      label: '直属经理',
+      label: 'Direct Manager',
       required: true
     }),
     status: Field.select({
-      label: '状态',
+      label: 'Status',
       defaultValue: 'Not Started',
       options: [
         {
-          "label": "未开始",
+          "label": "Not Started",
           "value": "Not Started"
         },
         {
-          "label": "进行中",
+          "label": "In Progress",
           "value": "In Progress"
         },
         {
-          "label": "已完成",
+          "label": "Completed",
           "value": "Completed"
         },
         {
-          "label": "已取消",
+          "label": "Cancelled",
           "value": "Cancelled"
         }
       ]
     }),
     completion_percentage: Field.percent({
-      label: '完成进度',
+      label: 'Completion Progress',
       description: '入职任务完成百分比',
       readonly: true
     }),
     paperwork_completed: Field.boolean({
-      label: '文件签署完成',
+      label: 'Paperwork Completed',
       description: '劳动合同、保密协议等',
       defaultValue: false
     }),
     it_setup_completed: Field.boolean({
-      label: 'IT设备配置完成',
+      label: 'IT Setup Completed',
       description: '电脑、邮箱、系统权限等',
       defaultValue: false
     }),
     workspace_setup_completed: Field.boolean({
-      label: '工位准备完成',
+      label: 'Workspace Setup Completed',
       defaultValue: false
     }),
     training_completed: Field.boolean({
-      label: '基础培训完成',
+      label: 'Basic Training Completed',
       description: '公司文化、规章制度等培训',
       defaultValue: false
     }),
     system_access_granted: Field.boolean({
-      label: '系统访问权限已开通',
+      label: 'System Access Granted',
       defaultValue: false
     }),
     first_day_checklist: Field.textarea({
-      label: '首日任务清单',
+      label: 'First Day Checklist',
       description: '第一天需要完成的任务',
     }),
     first_week_goals: Field.textarea({
-      label: '第一周目标',
+      label: 'First Week Goals',
     }),
     first_month_goals: Field.textarea({
-      label: '第一个月目标',
+      label: 'First Month Goals',
     }),
-    probation_end_date: Field.date({ label: '试用期结束日期' }),
+    probation_end_date: Field.date({ label: 'Probation End Date' }),
     feedback: Field.textarea({
-      label: '入职反馈',
+      label: 'Onboarding Feedback',
       description: '新员工的入职体验反馈',
     }),
     notes: Field.textarea({
-      label: '备注',
+      label: 'Notes',
     })
   },
 

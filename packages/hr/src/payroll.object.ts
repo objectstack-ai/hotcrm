@@ -2,156 +2,156 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 
 export const Payroll = ObjectSchema.create({
   name: 'payroll',
-  label: '工资',
-  pluralLabel: '工资记录',
+  label: 'Payroll',
+  pluralLabel: 'Payroll Records',
   icon: 'money-bill-wave',
   description: '员工薪资和工资单管理',
 
   fields: {
     payroll_number: Field.text({
-      label: '工资单号',
+      label: 'Payroll Number',
       unique: true,
       maxLength: 40
     }),
     employee_id: Field.lookup('employee', {
-      label: '员工',
+      label: 'Employee',
       required: true
     }),
     pay_period_start: Field.date({
-      label: '工资期开始',
+      label: 'Pay Period Start',
       required: true
     }),
     pay_period_end: Field.date({
-      label: '工资期结束',
+      label: 'Pay Period End',
       required: true
     }),
     pay_date: Field.date({
-      label: '发薪日期',
+      label: 'Pay Date',
       required: true
     }),
     base_salary: Field.currency({
-      label: '基本工资',
+      label: 'Base Salary',
       required: true,
       precision: 2
     }),
     overtime_pay: Field.currency({
-      label: '加班工资',
+      label: 'Overtime Pay',
       precision: 2
     }),
     bonus: Field.currency({
-      label: '奖金',
+      label: 'Bonus',
       precision: 2
     }),
     commission: Field.currency({
-      label: '佣金',
+      label: 'Commission',
       precision: 2
     }),
     allowances: Field.currency({
-      label: '津贴',
+      label: 'Allowances',
       description: '交通、餐饮等补贴',
       precision: 2
     }),
     gross_pay: Field.currency({
-      label: '应发工资',
+      label: 'Gross Pay',
       description: '税前总收入（自动计算）',
       readonly: true,
       precision: 2
     }),
     tax: Field.currency({
-      label: '个人所得税',
+      label: 'Income Tax',
       precision: 2
     }),
     social_security: Field.currency({
-      label: '社保',
+      label: 'Social Security',
       precision: 2
     }),
     housing_fund: Field.currency({
-      label: '公积金',
+      label: 'Housing Fund',
       precision: 2
     }),
     other_deductions: Field.currency({
-      label: '其他扣款',
+      label: 'Other Deductions',
       precision: 2
     }),
     total_deductions: Field.currency({
-      label: '扣款合计',
+      label: 'Total Deductions',
       description: '总扣款金额（自动计算）',
       readonly: true,
       precision: 2
     }),
     net_pay: Field.currency({
-      label: '实发工资',
+      label: 'Net Pay',
       description: '税后实际到手金额（自动计算）',
       readonly: true,
       precision: 2
     }),
     worked_days: Field.number({
-      label: '出勤天数',
+      label: 'Worked Days',
       precision: 1
     }),
     overtime_hours: Field.number({
-      label: '加班小时数',
+      label: 'Overtime Hours',
       precision: 1
     }),
     leave_days: Field.number({
-      label: '请假天数',
+      label: 'Leave Days',
       precision: 1
     }),
     status: Field.select({
-      label: '状态',
+      label: 'Status',
       defaultValue: 'Draft',
       options: [
         {
-          "label": "草稿",
+          "label": "Draft",
           "value": "Draft"
         },
         {
-          "label": "待审核",
+          "label": "Pending Approval",
           "value": "Pending Approval"
         },
         {
-          "label": "已批准",
+          "label": "Approved",
           "value": "Approved"
         },
         {
-          "label": "已支付",
+          "label": "Paid",
           "value": "Paid"
         },
         {
-          "label": "已取消",
+          "label": "Cancelled",
           "value": "Cancelled"
         }
       ]
     }),
     payment_method: Field.select({
-      label: '支付方式',
+      label: 'Payment Method',
       defaultValue: 'Bank Transfer',
       options: [
         {
-          "label": "银行转账",
+          "label": "Bank Transfer",
           "value": "Bank Transfer"
         },
         {
-          "label": "支票",
+          "label": "Check",
           "value": "Check"
         },
         {
-          "label": "现金",
+          "label": "Cash",
           "value": "Cash"
         },
         {
-          "label": "其他",
+          "label": "Other",
           "value": "Other"
         }
       ]
     }),
     bank_account: Field.text({
-      label: '银行账号',
+      label: 'Bank Account',
       maxLength: 100
     }),
-    payslip_url: Field.url({ label: '工资条链接' }),
+    payslip_url: Field.url({ label: 'Payslip URL' }),
     notes: Field.textarea({
-      label: '备注',
+      label: 'Notes',
     })
   },
 

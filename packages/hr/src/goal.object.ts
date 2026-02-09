@@ -2,35 +2,35 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 
 export const Goal = ObjectSchema.create({
   name: 'goal',
-  label: '目标',
-  pluralLabel: '目标',
+  label: 'Goal',
+  pluralLabel: 'Goals',
   icon: 'bullseye',
   description: 'OKR和个人目标管理',
 
   fields: {
     title: Field.text({
-      label: '目标名称',
+      label: 'Goal Name',
       required: true,
       maxLength: 255
     }),
     employee_id: Field.lookup('employee', {
-      label: '负责员工',
+      label: 'Assigned Employee',
       required: true
     }),
     manager_id: Field.lookup('employee', {
-      label: '目标设定人',
+      label: 'Goal Setter',
       description: '通常是直属经理'
     }),
     goal_type: Field.select({
-      label: '目标类型',
+      label: 'Goal Type',
       defaultValue: 'Individual',
       options: [
         {
-          "label": "个人目标",
+          "label": "Individual",
           "value": "Individual"
         },
         {
-          "label": "团队目标",
+          "label": "Team",
           "value": "Team"
         },
         {
@@ -38,143 +38,143 @@ export const Goal = ObjectSchema.create({
           "value": "OKR"
         },
         {
-          "label": "发展目标",
+          "label": "Development",
           "value": "Development"
         },
         {
-          "label": "项目目标",
+          "label": "Project",
           "value": "Project"
         }
       ]
     }),
     category: Field.select({
-      label: '目标类别',
+      label: 'Goal Category',
       options: [
         {
-          "label": "业绩",
+          "label": "Performance",
           "value": "Performance"
         },
         {
-          "label": "技能发展",
+          "label": "Skill Development",
           "value": "Skill Development"
         },
         {
-          "label": "领导力",
+          "label": "Leadership",
           "value": "Leadership"
         },
         {
-          "label": "创新",
+          "label": "Innovation",
           "value": "Innovation"
         },
         {
-          "label": "团队协作",
+          "label": "Teamwork",
           "value": "Teamwork"
         },
         {
-          "label": "客户满意度",
+          "label": "Customer Satisfaction",
           "value": "Customer Satisfaction"
         },
         {
-          "label": "其他",
+          "label": "Other",
           "value": "Other"
         }
       ]
     }),
     priority: Field.select({
-      label: '优先级',
+      label: 'Priority',
       defaultValue: 'Medium',
       options: [
         {
-          "label": "高",
+          "label": "High",
           "value": "High"
         },
         {
-          "label": "中",
+          "label": "Medium",
           "value": "Medium"
         },
         {
-          "label": "低",
+          "label": "Low",
           "value": "Low"
         }
       ]
     }),
     start_date: Field.date({
-      label: '开始日期',
+      label: 'Start Date',
       required: true
     }),
     target_date: Field.date({
-      label: '目标日期',
+      label: 'Target Date',
       required: true
     }),
-    completion_date: Field.date({ label: '完成日期' }),
+    completion_date: Field.date({ label: 'Completion Date' }),
     status: Field.select({
-      label: '状态',
+      label: 'Status',
       defaultValue: 'Not Started',
       options: [
         {
-          "label": "未开始",
+          "label": "Not Started",
           "value": "Not Started"
         },
         {
-          "label": "进行中",
+          "label": "In Progress",
           "value": "In Progress"
         },
         {
-          "label": "有风险",
+          "label": "At Risk",
           "value": "At Risk"
         },
         {
-          "label": "已完成",
+          "label": "Completed",
           "value": "Completed"
         },
         {
-          "label": "未完成",
+          "label": "Not Achieved",
           "value": "Not Achieved"
         },
         {
-          "label": "已取消",
+          "label": "Cancelled",
           "value": "Cancelled"
         }
       ]
     }),
     progress: Field.percent({
-      label: '完成进度',
+      label: 'Completion Progress',
       description: '目标完成百分比',
       defaultValue: 0
     }),
     target_value: Field.number({
-      label: '目标值',
+      label: 'Target Value',
       description: '量化的目标数值',
       precision: 2
     }),
     current_value: Field.number({
-      label: '当前值',
+      label: 'Current Value',
       description: '当前达成的数值',
       precision: 2
     }),
     unit: Field.text({
-      label: '单位',
+      label: 'Unit',
       description: '目标值的单位，如：个、万元、%',
       maxLength: 40
     }),
     description: Field.textarea({
-      label: '目标描述',
+      label: 'Goal Description',
       description: '详细的目标说明和期望结果',
     }),
     key_results: Field.textarea({
-      label: '关键结果（KR）',
+      label: 'Key Results (KR)',
       description: 'OKR的关键结果，可列出多个',
     }),
-    performance_review_id: Field.lookup('performance_review', { label: '关联绩效评估' }),
+    performance_review_id: Field.lookup('performance_review', { label: 'Related Performance Review' }),
     weight: Field.percent({
-      label: '权重',
+      label: 'Weight',
       description: '在绩效考核中的权重'
     }),
     achievement_notes: Field.textarea({
-      label: '达成情况说明',
+      label: 'Achievement Notes',
     }),
     notes: Field.textarea({
-      label: '备注',
+      label: 'Notes',
     })
   },
 

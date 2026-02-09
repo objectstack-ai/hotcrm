@@ -2,188 +2,188 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 
 export const Employee = ObjectSchema.create({
   name: 'employee',
-  label: '员工',
-  pluralLabel: '员工',
+  label: 'Employee',
+  pluralLabel: 'Employees',
   icon: 'user-tie',
   description: '员工主数据和信息管理',
 
   fields: {
     employee_number: Field.text({
-      label: '工号',
+      label: 'Employee Number',
       required: true,
       unique: true,
       maxLength: 40
     }),
     first_name: Field.text({
-      label: '名',
+      label: 'First Name',
       required: true,
       maxLength: 40
     }),
     last_name: Field.text({
-      label: '姓',
+      label: 'Last Name',
       required: true,
       maxLength: 80
     }),
     full_name: Field.formula({
-      label: '全名',
+      label: 'Full Name',
       readonly: true,
       expression: 'CONCATENATE(last_name, first_name)'
     }),
     email: Field.email({
-      label: '公司邮箱',
+      label: 'Work Email',
       required: true,
       unique: true
     }),
-    personal_email: Field.email({ label: '个人邮箱' }),
-    phone: Field.phone({ label: '电话' }),
+    personal_email: Field.email({ label: 'Personal Email' }),
+    phone: Field.phone({ label: 'Phone' }),
     mobile_phone: Field.phone({
-      label: '手机',
+      label: 'Mobile',
       required: true
     }),
-    date_of_birth: Field.date({ label: '出生日期' }),
+    date_of_birth: Field.date({ label: 'Date of Birth' }),
     gender: Field.select({
-      label: '性别',
+      label: 'Gender',
       options: [
         {
-          "label": "男",
+          "label": "Male",
           "value": "Male"
         },
         {
-          "label": "女",
+          "label": "Female",
           "value": "Female"
         },
         {
-          "label": "其他",
+          "label": "Other",
           "value": "Other"
         }
       ]
     }),
     national_id: Field.text({
-      label: '身份证号',
+      label: 'National ID',
       description: '身份证或护照号码',
       unique: true,
       maxLength: 40
     }),
     marital_status: Field.select({
-      label: '婚姻状况',
+      label: 'Marital Status',
       options: [
         {
-          "label": "未婚",
+          "label": "Single",
           "value": "Single"
         },
         {
-          "label": "已婚",
+          "label": "Married",
           "value": "Married"
         },
         {
-          "label": "离异",
+          "label": "Divorced",
           "value": "Divorced"
         },
         {
-          "label": "其他",
+          "label": "Other",
           "value": "Other"
         }
       ]
     }),
     department_id: Field.lookup('department', {
-      label: '所属部门',
+      label: 'Department',
       required: true
     }),
     position_id: Field.lookup('position', {
-      label: '职位',
+      label: 'Position',
       required: true
     }),
     manager_id: Field.lookup('employee', {
-      label: '直属经理',
+      label: 'Direct Manager',
       description: '直接汇报的上级'
     }),
     hire_date: Field.date({
-      label: '入职日期',
+      label: 'Hire Date',
       required: true
     }),
-    termination_date: Field.date({ label: '离职日期' }),
+    termination_date: Field.date({ label: 'Termination Date' }),
     employment_status: Field.select({
-      label: '雇佣状态',
+      label: 'Employment Status',
       defaultValue: 'Active',
       options: [
         {
-          "label": "在职",
+          "label": "Active",
           "value": "Active"
         },
         {
-          "label": "试用期",
+          "label": "Probation",
           "value": "Probation"
         },
         {
-          "label": "休假",
+          "label": "On Leave",
           "value": "On Leave"
         },
         {
-          "label": "已离职",
+          "label": "Terminated",
           "value": "Terminated"
         }
       ]
     }),
     employment_type: Field.select({
-      label: '雇佣类型',
+      label: 'Employment Type',
       defaultValue: 'Full-time',
       options: [
         {
-          "label": "全职",
+          "label": "Full-time",
           "value": "Full-time"
         },
         {
-          "label": "兼职",
+          "label": "Part-time",
           "value": "Part-time"
         },
         {
-          "label": "合同",
+          "label": "Contract",
           "value": "Contract"
         },
         {
-          "label": "实习",
+          "label": "Intern",
           "value": "Intern"
         }
       ]
     }),
     work_location: Field.text({
-      label: '工作地点',
+      label: 'Work Location',
       maxLength: 255
     }),
     base_salary: Field.currency({
-      label: '基本工资',
+      label: 'Base Salary',
       precision: 2
     }),
     street: Field.textarea({
-      label: '地址（街道）',
+      label: 'Street Address',
     }),
     city: Field.text({
-      label: '城市',
+      label: 'City',
       maxLength: 40
     }),
     state: Field.text({
-      label: '省份',
+      label: 'State/Province',
       maxLength: 40
     }),
     postal_code: Field.text({
-      label: '邮编',
+      label: 'Postal Code',
       maxLength: 20
     }),
     country: Field.text({
-      label: '国家',
+      label: 'Country',
       maxLength: 40
     }),
     emergency_contact_name: Field.text({
-      label: '紧急联系人',
+      label: 'Emergency Contact Name',
       maxLength: 80
     }),
-    emergency_contact_phone: Field.phone({ label: '紧急联系电话' }),
+    emergency_contact_phone: Field.phone({ label: 'Emergency Contact Phone' }),
     emergency_contact_relationship: Field.text({
-      label: '紧急联系人关系',
+      label: 'Emergency Contact Relationship',
       maxLength: 40
     }),
     notes: Field.textarea({
-      label: '备注',
+      label: 'Notes',
     })
   },
 
