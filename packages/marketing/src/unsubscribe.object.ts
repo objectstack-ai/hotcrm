@@ -2,280 +2,280 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 
 export const Unsubscribe = ObjectSchema.create({
   name: 'unsubscribe',
-  label: '退订记录',
-  pluralLabel: '退订记录',
+  label: 'Unsubscribe Record',
+  pluralLabel: 'Unsubscribe Records',
   icon: 'user-x',
-  description: '邮件退订和退信管理，支持全局和特定列表退订',
+  description: 'Email unsubscribe and bounce management with global and list-specific opt-out support',
 
   fields: {
     email: Field.email({
-      label: '邮箱地址',
-      description: '退订的邮箱地址',
+      label: 'Email Address',
+      description: 'Unsubscribed email address',
       required: true
     }),
     lead_id: Field.lookup('lead', {
-      label: '线索',
-      description: '关联的线索记录'
+      label: 'Lead',
+      description: 'Associated lead record'
     }),
     contact_id: Field.lookup('contact', {
-      label: '联系人',
-      description: '关联的联系人记录'
+      label: 'Contact',
+      description: 'Associated contact record'
     }),
     unsubscribe_type: Field.select({
-      label: '退订类型',
-      description: '全局=退订所有营销邮件，列表/活动/主题=部分退订',
+      label: 'Unsubscribe Type',
+      description: 'Global = unsubscribe from all marketing emails, List/Campaign/Topic = partial unsubscribe',
       required: true,
       defaultValue: 'Global',
       options: [
         {
-          "label": "🌐 全局退订",
+          "label": "🌐 Global Unsubscribe",
           "value": "Global"
         },
         {
-          "label": "📋 列表退订",
+          "label": "📋 List Unsubscribe",
           "value": "List"
         },
         {
-          "label": "📧 活动退订",
+          "label": "📧 Campaign Unsubscribe",
           "value": "Campaign"
         },
         {
-          "label": "📑 主题退订",
+          "label": "📑 Topic Unsubscribe",
           "value": "Topic"
         }
       ]
     }),
     unsubscribe_scope: Field.text({
-      label: '退订范围',
-      description: '具体的列表、活动或主题标识',
+      label: 'Unsubscribe Scope',
+      description: 'Specific list, campaign, or topic identifier',
       maxLength: 255
     }),
     unsubscribe_reason: Field.select({
-      label: '退订原因',
+      label: 'Unsubscribe Reason',
       options: [
         {
-          "label": "📬 邮件太频繁",
+          "label": "📬 Too Frequent",
           "value": "Too Frequent"
         },
         {
-          "label": "❌ 内容不相关",
+          "label": "❌ Not Relevant",
           "value": "Not Relevant"
         },
         {
-          "label": "🚫 从未订阅",
+          "label": "🚫 Never Subscribed",
           "value": "Never Subscribed"
         },
         {
-          "label": "📧 邮箱地址错误",
+          "label": "📧 Wrong Email",
           "value": "Wrong email"
         },
         {
-          "label": "🔒 隐私顾虑",
+          "label": "🔒 Privacy Concerns",
           "value": "Privacy Concerns"
         },
         {
-          "label": "❓ 其他原因",
+          "label": "❓ Other",
           "value": "Other"
         }
       ]
     }),
     reason_text: Field.textarea({
-      label: '详细原因',
-      description: '用户填写的退订原因说明',
+      label: 'Reason Details',
+      description: 'Unsubscribe reason details provided by the user',
       maxLength: 2000
     }),
     unsubscribe_source: Field.select({
-      label: '退订来源',
+      label: 'Unsubscribe Source',
       required: true,
       defaultValue: 'email Link',
       options: [
         {
-          "label": "📧 邮件退订链接",
+          "label": "📧 Email Unsubscribe Link",
           "value": "email Link"
         },
         {
-          "label": "🌐 退订中心",
+          "label": "🌐 Preference Center",
           "value": "Preference Center"
         },
         {
-          "label": "📞 客户请求",
+          "label": "📞 Customer Request",
           "value": "Customer Request"
         },
         {
-          "label": "🔧 管理员操作",
+          "label": "🔧 Admin Action",
           "value": "Admin Action"
         },
         {
-          "label": "📥 退信",
+          "label": "📥 Bounce",
           "value": "Bounce"
         },
         {
-          "label": "🤖 自动化规则",
+          "label": "🤖 Automation",
           "value": "Automation"
         }
       ]
     }),
     campaign_id: Field.lookup('campaign', {
-      label: '触发活动',
-      description: '导致退订的营销活动'
+      label: 'Triggering Campaign',
+      description: 'Campaign that triggered the unsubscribe'
     }),
-    email_template_id: Field.lookup('EmailTemplate', {
-      label: '触发邮件模板',
-      description: '导致退订的邮件模板'
+    email_template_id: Field.lookup('email_template', {
+      label: 'Triggering Email Template',
+      description: 'Email template that triggered the unsubscribe'
     }),
-    marketing_list_id: Field.lookup('MarketingList', {
-      label: '营销列表',
-      description: '退订的营销列表'
+    marketing_list_id: Field.lookup('marketing_list', {
+      label: 'Marketing List',
+      description: 'Marketing list unsubscribed from'
     }),
     is_bounce: Field.boolean({
-      label: '是退信',
-      description: '此记录是由于邮件退信创建的',
+      label: 'Is Bounce',
+      description: 'This record was created due to an email bounce',
       defaultValue: false
     }),
     bounce_type: Field.select({
-      label: '退信类型',
-      description: '硬退信=永久失败，软退信=临时问题',
+      label: 'Bounce Type',
+      description: 'Hard bounce = permanent failure, Soft bounce = temporary issue',
       options: [
         {
-          "label": "🔴 硬退信",
+          "label": "🔴 Hard Bounce",
           "value": "Hard Bounce"
         },
         {
-          "label": "🟡 软退信",
+          "label": "🟡 Soft Bounce",
           "value": "Soft Bounce"
         },
         {
-          "label": "📧 邮箱不存在",
+          "label": "📧 Mailbox Not Found",
           "value": "Mailbox Not Found"
         },
         {
-          "label": "📦 邮箱已满",
+          "label": "📦 Mailbox Full",
           "value": "Mailbox Full"
         },
         {
-          "label": "🚫 被拒绝",
+          "label": "🚫 Rejected",
           "value": "Rejected"
         },
         {
-          "label": "⏱️ 超时",
+          "label": "⏱️ Timeout",
           "value": "Timeout"
         }
       ]
     }),
     bounce_reason: Field.textarea({
-      label: '退信原因',
-      description: '邮件服务器返回的退信详情',
+      label: 'Bounce Reason',
+      description: 'Bounce details returned by the mail server',
       maxLength: 2000
     }),
     bounce_date: Field.datetime({
-      label: '退信时间',
+      label: 'Bounce Date',
       readonly: true
     }),
     bounce_count: Field.number({
-      label: '退信次数',
-      description: '累计退信次数',
+      label: 'Bounce Count',
+      description: 'Cumulative bounce count',
       defaultValue: 0,
       precision: 0
     }),
     is_resubscribed: Field.boolean({
-      label: '已重新订阅',
-      description: '用户是否重新订阅',
+      label: 'Has Resubscribed',
+      description: 'Whether the user has resubscribed',
       defaultValue: false,
       readonly: true
     }),
     resubscribe_date: Field.datetime({
-      label: '重新订阅时间',
+      label: 'Resubscribe Date',
       readonly: true
     }),
     resubscribe_source: Field.text({
-      label: '重新订阅来源',
+      label: 'Resubscribe Source',
       readonly: true,
       maxLength: 255
     }),
     status: Field.select({
-      label: '状态',
+      label: 'Status',
       required: true,
       defaultValue: 'Active',
       options: [
         {
-          "label": "✅ 生效中",
+          "label": "✅ Active",
           "value": "Active"
         },
         {
-          "label": "🔄 已重新订阅",
+          "label": "🔄 Resubscribed",
           "value": "Resubscribed"
         },
         {
-          "label": "⏸️ 已过期",
+          "label": "⏸️ Expired",
           "value": "Expired"
         },
         {
-          "label": "❌ 已取消",
+          "label": "❌ Cancelled",
           "value": "Cancelled"
         }
       ]
     }),
     ip_address: Field.text({
-      label: 'IP 地址',
-      description: '退订时的IP地址',
+      label: 'IP Address',
+      description: 'IP address at the time of unsubscribe',
       readonly: true,
       maxLength: 45
     }),
     user_agent: Field.text({
       label: 'User Agent',
-      description: '退订时的浏览器信息',
+      description: 'Browser information at the time of unsubscribe',
       readonly: true,
       maxLength: 500
     }),
     unsubscribe_date: Field.datetime({
-      label: '退订时间',
-      description: '退订的日期时间',
+      label: 'Unsubscribe Date',
+      description: 'Date and time of the unsubscribe',
       required: true,
       defaultValue: 'NOW()'
     }),
     is_gdpr_request: Field.boolean({
-      label: 'GDPR 请求',
-      description: '是否为GDPR数据删除请求',
+      label: 'GDPR Request',
+      description: 'Whether this is a GDPR data deletion request',
       defaultValue: false
     }),
     processed_date: Field.datetime({
-      label: '处理时间',
-      description: '退订请求的处理时间',
+      label: 'Processed Date',
+      description: 'Processing time of the unsubscribe request',
       readonly: true
     }),
     processed_by: Field.lookup('users', {
-      label: '处理人',
+      label: 'Processed By',
       readonly: true
     }),
     subscription_duration_days: Field.number({
-      label: '订阅持续天数',
-      description: '从订阅到退订的天数',
+      label: 'Subscription Duration (Days)',
+      description: 'Number of days from subscription to unsubscribe',
       readonly: true,
       precision: 0
     }),
     emails_received_before_unsubscribe: Field.number({
-      label: '退订前收到邮件数',
-      description: '退订前总共收到的营销邮件数',
+      label: 'Emails Received Before Unsubscribe',
+      description: 'Total number of marketing emails received before unsubscribe',
       readonly: true,
       precision: 0
     }),
     last_email_opened_date: Field.datetime({
-      label: '最后打开邮件时间',
+      label: 'Last Email Opened Date',
       readonly: true
     }),
     notes: Field.textarea({
-      label: '备注',
-      description: '内部备注和处理说明',
+      label: 'Notes',
+      description: 'Internal notes and processing details',
       maxLength: 2000
     }),
     allow_transactional_emails: Field.boolean({
-      label: '允许交易邮件',
-      description: '退订营销邮件但仍允许接收订单确认等交易邮件',
+      label: 'Allow Transactional Emails',
+      description: 'Unsubscribed from marketing emails but still allows transactional emails such as order confirmations',
       defaultValue: true
     }),
     allow_system_notifications: Field.boolean({
-      label: '允许系统通知',
-      description: '允许接收系统重要通知（密码重置等）',
+      label: 'Allow System Notifications',
+      description: 'Allow receiving important system notifications (password reset, etc.)',
       defaultValue: true
     })
   },

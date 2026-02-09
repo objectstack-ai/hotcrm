@@ -69,7 +69,7 @@ export const SLATemplate = ObjectSchema.create({
       min: 1,
       precision: 0
     }),
-    business_hours_id: Field.lookup('BusinessHours', {
+    business_hours_id: Field.lookup('business_hours', {
       label: 'Business Hours',
       description: 'Working hours calendar for SLA calculation',
       required: true
@@ -94,7 +94,7 @@ export const SLATemplate = ObjectSchema.create({
       max: 100,
       precision: 0
     }),
-    escalation_rule_id: Field.lookup('EscalationRule', {
+    escalation_rule_id: Field.lookup('escalation_rule', {
       label: 'Escalation Rule',
       description: 'Rule to use for escalation'
     }),

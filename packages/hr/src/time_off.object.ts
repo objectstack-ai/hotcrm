@@ -2,175 +2,175 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 
 export const TimeOff = ObjectSchema.create({
   name: 'time_off',
-  label: '请假',
-  pluralLabel: '请假记录',
+  label: 'Time Off',
+  pluralLabel: 'Time Off Records',
   icon: 'calendar-times',
-  description: '员工请假和休假管理',
+  description: 'Employee leave and time-off management',
 
   fields: {
     request_number: Field.text({
-      label: '请假单号',
+      label: 'Request Number',
       unique: true,
       maxLength: 40
     }),
     employee_id: Field.lookup('employee', {
-      label: '员工',
+      label: 'Employee',
       required: true
     }),
     leave_type: Field.select({
-      label: '请假类型',
+      label: 'Leave Type',
       required: true,
       options: [
         {
-          "label": "年假",
+          "label": "Annual Leave",
           "value": "Annual Leave"
         },
         {
-          "label": "病假",
+          "label": "Sick Leave",
           "value": "Sick Leave"
         },
         {
-          "label": "事假",
+          "label": "Personal Leave",
           "value": "Personal Leave"
         },
         {
-          "label": "婚假",
+          "label": "Marriage Leave",
           "value": "Marriage Leave"
         },
         {
-          "label": "产假",
+          "label": "Maternity Leave",
           "value": "Maternity Leave"
         },
         {
-          "label": "陪产假",
+          "label": "Paternity Leave",
           "value": "Paternity Leave"
         },
         {
-          "label": "丧假",
+          "label": "Bereavement Leave",
           "value": "Bereavement Leave"
         },
         {
-          "label": "调休",
+          "label": "Compensatory Leave",
           "value": "Compensatory Leave"
         },
         {
-          "label": "无薪假",
+          "label": "Unpaid Leave",
           "value": "Unpaid Leave"
         },
         {
-          "label": "其他",
+          "label": "Other",
           "value": "Other"
         }
       ]
     }),
     start_date: Field.date({
-      label: '开始日期',
+      label: 'Start Date',
       required: true
     }),
     end_date: Field.date({
-      label: '结束日期',
+      label: 'End Date',
       required: true
     }),
     start_time: Field.select({
-      label: '开始时段',
+      label: 'Start Period',
       defaultValue: 'Full Day',
       options: [
         {
-          "label": "全天",
+          "label": "Full Day",
           "value": "Full Day"
         },
         {
-          "label": "上午",
+          "label": "Morning",
           "value": "Morning"
         },
         {
-          "label": "下午",
+          "label": "Afternoon",
           "value": "Afternoon"
         }
       ]
     }),
     end_time: Field.select({
-      label: '结束时段',
+      label: 'End Period',
       defaultValue: 'Full Day',
       options: [
         {
-          "label": "全天",
+          "label": "Full Day",
           "value": "Full Day"
         },
         {
-          "label": "上午",
+          "label": "Morning",
           "value": "Morning"
         },
         {
-          "label": "下午",
+          "label": "Afternoon",
           "value": "Afternoon"
         }
       ]
     }),
     total_days: Field.number({
-      label: '请假天数',
-      description: '自动计算的请假天数',
+      label: 'Total Days',
+      description: 'Automatically calculated leave days',
       readonly: true,
       precision: 1
     }),
     request_date: Field.date({
-      label: '申请日期',
+      label: 'Application Date',
       required: true,
       defaultValue: '$today'
     }),
     status: Field.select({
-      label: '状态',
+      label: 'Status',
       defaultValue: 'Pending',
       options: [
         {
-          "label": "待审批",
+          "label": "Pending",
           "value": "Pending"
         },
         {
-          "label": "已批准",
+          "label": "Approved",
           "value": "Approved"
         },
         {
-          "label": "已拒绝",
+          "label": "Rejected",
           "value": "Rejected"
         },
         {
-          "label": "已取消",
+          "label": "Cancelled",
           "value": "Cancelled"
         }
       ]
     }),
     approver_id: Field.lookup('employee', {
-      label: '审批人',
-      description: '负责审批的经理'
+      label: 'Approver',
+      description: 'Manager responsible for approval'
     }),
-    approval_date: Field.date({ label: '审批日期' }),
+    approval_date: Field.date({ label: 'Approval Date' }),
     reason: Field.textarea({
-      label: '请假原因',
+      label: 'Leave Reason',
       required: true,
     }),
     rejection_reason: Field.textarea({
-      label: '拒绝原因',
-      description: '如果被拒绝，记录原因',
+      label: 'Rejection Reason',
+      description: 'Records the reason if rejected',
     }),
     contact_info: Field.text({
-      label: '请假期间联系方式',
+      label: 'Contact During Leave',
       maxLength: 255
     }),
     backup_person_id: Field.lookup('employee', {
-      label: '工作交接人',
-      description: '临时负责工作的同事'
+      label: 'Backup Person',
+      description: 'Colleague temporarily covering responsibilities'
     }),
     is_paid: Field.boolean({
-      label: '是否带薪',
+      label: 'Is Paid',
       defaultValue: true
     }),
     attachment_url: Field.url({
-      label: '附件链接',
-      description: '如病假证明等'
+      label: 'Attachment URL',
+      description: 'Supporting documents such as medical certificates'
     }),
     notes: Field.textarea({
-      label: '备注',
+      label: 'Notes',
     })
   },
 

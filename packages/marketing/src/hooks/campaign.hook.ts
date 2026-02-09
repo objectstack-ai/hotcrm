@@ -40,7 +40,7 @@ const CampaignROICalculationTrigger: Hook = {
       }
 
     } catch (error) {
-      console.error('❌ Error in CampaignROICalculationTrigger:', error);
+      console.error(`[campaign.hook] ROI calculation failed:`, error);
     }
   }
 };
@@ -76,20 +76,20 @@ const CampaignBudgetTrackingTrigger: Hook = {
         // Warn at 80%
         if (percentSpent >= 80 && percentSpent < 100) {
           console.warn(`⚠️ Campaign "${campaign.name}" has spent ${percentSpent.toFixed(1)}% of budget!`);
-          // TODO: Create notification/task for campaign manager
+          console.debug(`[campaign.hook] Budget warning pending: notify campaign manager about ${percentSpent.toFixed(1)}% budget usage for campaign "${campaign.name}"`);
         }
 
         // Alert at 100%
         if (percentSpent >= 100) {
           console.error(`🚨 Campaign "${campaign.name}" has exceeded budget! (${percentSpent.toFixed(1)}%)`);
-          // TODO: Create urgent notification
+          console.debug(`[campaign.hook] Budget overspend alert pending: urgent notification for campaign "${campaign.name}" at ${percentSpent.toFixed(1)}% of budget`);
         }
 
         console.log(`💰 Budget status: $${actual.toLocaleString()} / $${budgeted.toLocaleString()} (${percentSpent.toFixed(1)}%)`);
       }
 
     } catch (error) {
-      console.error('❌ Error in CampaignBudgetTrackingTrigger:', error);
+      console.error(`[campaign.hook] budget tracking failed:`, error);
     }
   }
 };
@@ -131,7 +131,7 @@ const CampaignStatusChangeTrigger: Hook = {
       }
 
     } catch (error) {
-      console.error('❌ Error in CampaignStatusChangeTrigger:', error);
+      console.error(`[campaign.hook] status change handling failed:`, error);
     }
   }
 };
@@ -142,9 +142,7 @@ const CampaignStatusChangeTrigger: Hook = {
 async function handleInProgressStatus(campaign: any, ctx: any): Promise<void> {
   console.log(`🚀 Campaign "${campaign.name}" started`);
   
-  // TODO: Send notifications to campaign members
-  // TODO: Activate automated workflows
-  // TODO: Log campaign start event
+  console.debug(`[campaign.hook] Campaign start pending for "${campaign.name}": member notifications, workflow activation, and start event logging`);
 }
 
 /**
@@ -153,10 +151,7 @@ async function handleInProgressStatus(campaign: any, ctx: any): Promise<void> {
 async function handleCompletedStatus(campaign: any, ctx: any): Promise<void> {
   console.log(`✅ Campaign "${campaign.name}" completed`);
   
-  // TODO: Calculate final performance metrics
-  // TODO: Generate campaign report
-  // TODO: Archive campaign data
-  // TODO: Send completion notification to stakeholders
+  console.debug(`[campaign.hook] Campaign completion pending for "${campaign.name}": final metrics calculation, report generation, data archival, and stakeholder notification`);
 }
 
 /**
@@ -165,9 +160,7 @@ async function handleCompletedStatus(campaign: any, ctx: any): Promise<void> {
 async function handleAbortedStatus(campaign: any, ctx: any): Promise<void> {
   console.log(`❌ Campaign "${campaign.name}" was aborted`);
   
-  // TODO: Log abort reason
-  // TODO: Cleanup scheduled activities
-  // TODO: Notify team members
+  console.debug(`[campaign.hook] Campaign abort pending for "${campaign.name}": abort reason logging, scheduled activity cleanup, and team notification`);
 }
 
 /**
@@ -200,7 +193,7 @@ const CampaignDateValidationTrigger: Hook = {
       }
 
     } catch (error) {
-      console.error('❌ Error in CampaignDateValidationTrigger:', error);
+      console.error(`[campaign.hook] date validation failed:`, error);
       throw error;
     }
   }
@@ -256,7 +249,7 @@ export async function updateCampaignMetrics(campaignId: string, ctx: any): Promi
     console.log(`✅ Campaign metrics updated - Open: ${openRate.toFixed(1)}%, Click: ${clickRate.toFixed(1)}%, Response: ${responseRate.toFixed(1)}%`);
 
   } catch (error) {
-    console.error('❌ Error updating campaign metrics:', error);
+    console.error(`[campaign.hook] updateCampaignMetrics failed:`, error);
   }
 }
 
@@ -290,7 +283,7 @@ export async function calculateCostMetrics(campaignId: string, ctx: any): Promis
     };
 
   } catch (error) {
-    console.error('❌ Error calculating cost metrics:', error);
+    console.error(`[campaign.hook] calculateCostMetrics failed:`, error);
     return null;
   }
 }

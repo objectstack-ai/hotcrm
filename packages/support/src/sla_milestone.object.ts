@@ -12,7 +12,7 @@ export const SLAMilestone = ObjectSchema.create({
       label: 'Case',
       required: true
     }),
-    sla_template_id: Field.lookup('SLATemplate', {
+    sla_template_id: Field.lookup('sla_template', {
       label: 'SLA Template',
       required: true
     }),
@@ -149,7 +149,7 @@ export const SLAMilestone = ObjectSchema.create({
       label: 'Escalation Date',
       readonly: true
     }),
-    business_hours_id: Field.lookup('BusinessHours', {
+    business_hours_id: Field.lookup('business_hours', {
       label: 'Business Hours',
       readonly: true
     }),

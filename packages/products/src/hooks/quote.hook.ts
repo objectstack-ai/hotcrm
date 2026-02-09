@@ -312,9 +312,7 @@ async function handleQuoteSent(ctx: any): Promise<void> {
   try {
     console.log('📧 Quote sent to customer');
     
-    // TODO: Send email notification
-    // TODO: Schedule follow-up activity
-    console.log('📧 Email notification would be sent here');
+    console.debug(`[quote.hook] Quote sent pending for ${quote.QuoteNumber}: send email notification and schedule follow-up activity`);
   } catch (error) {
     console.error('❌ Error handling quote sent:', error);
   }
@@ -329,9 +327,7 @@ async function handleQuoteExpired(ctx: any): Promise<void> {
   try {
     console.log('⏰ Quote expired');
     
-    // TODO: Notify owner about expiration
-    // TODO: Suggest creating new version
-    console.log('⏰ Expiration notification would be sent here');
+    console.debug(`[quote.hook] Quote expiration pending for ${quote.QuoteNumber}: notify owner and suggest creating new version`);
   } catch (error) {
     console.error('❌ Error handling quote expiration:', error);
   }

@@ -148,7 +148,7 @@ console.log(Quote.label); // "Quote"
 
 ### Working with Products and Quotes
 ```typescript
-import { db } from '@hotcrm/core';
+import { db } from '../db';
 
 // Create a product
 const product = await db.create('product', {

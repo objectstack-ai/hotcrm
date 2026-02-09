@@ -66,7 +66,7 @@ const CampaignMemberEngagementTrigger: Hook = {
       }
 
     } catch (error) {
-      console.error('❌ Error in CampaignMemberEngagementTrigger:', error);
+      console.error(`[campaign_member.hook] engagement tracking failed:`, error);
     }
   }
 };
@@ -138,7 +138,7 @@ const CampaignMemberLeadScoringTrigger: Hook = {
       }
 
     } catch (error) {
-      console.error('❌ Error in CampaignMemberLeadScoringTrigger:', error);
+      console.error(`[campaign_member.hook] lead scoring failed:`, error);
     }
   }
 };
@@ -165,7 +165,7 @@ const CampaignMemberStatsTrigger: Hook = {
       await updateCampaignMetrics(campaignId, ctx);
 
     } catch (error) {
-      console.error('❌ Error in CampaignMemberStatsTrigger:', error);
+      console.error(`[campaign_member.hook] stats aggregation failed:`, error);
     }
   }
 };
@@ -207,24 +207,7 @@ const CampaignMemberBounceHandlerTrigger: Hook = {
           const recordId = member.lead || member.contact;
 
           if (recordId) {
-            // TODO: In production, create unsubscribe record
-            // const record = await ctx.ql.findOne(objectType, { filters: [['id', '=', recordId]] });
-            // const email = record?.email;
-            // 
-            // await ctx.ql.create('email_unsubscribe', {
-            //   email: email,
-            //   lead_id: member.lead,
-            //   contact_id: member.contact,
-            //   unsubscribe_type: 'Global',
-            //   unsubscribe_source: 'Bounce',
-            //   is_bounce: true,
-            //   bounce_type: 'Hard Bounce',
-            //   bounce_reason: member.email_bounced_reason,
-            //   bounce_date: member.email_bounced_date,
-            //   campaign_id: member.campaign
-            // });
-
-            console.log(`✅ Unsubscribe record should be created for hard bounce`);
+            console.debug(`[campaign_member.hook] Unsubscribe record pending: create hard bounce unsubscribe for ${objectType} ${recordId} in campaign ${member.campaign}`);
           }
         } else {
           console.log(`🟡 Soft bounce detected - no unsubscribe needed`);
@@ -232,7 +215,7 @@ const CampaignMemberBounceHandlerTrigger: Hook = {
       }
 
     } catch (error) {
-      console.error('❌ Error in CampaignMemberBounceHandlerTrigger:', error);
+      console.error(`[campaign_member.hook] bounce handling failed:`, error);
     }
   }
 };
@@ -292,26 +275,10 @@ export async function trackMemberEngagementTimeline(
   try {
     console.log(`🔄 Tracking engagement timeline for member: ${memberId}`);
 
-    // TODO: In production, create activity record
-    // const member = await ctx.ql.findOne('campaign_member', { filters: [['id', '=', memberId]] });
-    // const relatedTo = member.lead ? 'lead' : 'contact';
-    // const relatedId = member.lead || member.contact;
-    // 
-    // await ctx.ql.create('activity', {
-    //   type: 'email',
-    //   subject: `Campaign Email ${engagementType}`,
-    //   status: 'Completed',
-    //   related_to: relatedTo,
-    //   related_id: relatedId,
-    //   campaign_id: member.campaign,
-    //   description: `Member ${engagementType} campaign email`,
-    //   activity_date: new Date().toISOString()
-    // });
-
-    console.log(`✅ Engagement timeline tracked: ${engagementType}`);
+    console.debug(`[campaign_member.hook] Activity record pending: track ${engagementType} engagement for member ${memberId}`);
 
   } catch (error) {
-    console.error('❌ Error tracking engagement timeline:', error);
+    console.error(`[campaign_member.hook] trackMemberEngagementTimeline failed:`, error);
   }
 }
 

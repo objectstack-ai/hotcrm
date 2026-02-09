@@ -2,60 +2,60 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 
 export const Contract = ObjectSchema.create({
   name: 'contract',
-  label: '合同',
-  pluralLabel: '合同',
+  label: 'Contract',
+  pluralLabel: 'Contracts',
   icon: 'file-text',
-  description: '合同管理',
+  description: 'Contract Management',
 
   fields: {
     contract_number: Field.autonumber({
-      label: '合同编号',
+      label: 'Contract Number',
       format: 'CT-{YYYY}{MM}{DD}-{0000}'
     }),
     account: Field.lookup('account', {
-      label: '客户',
+      label: 'Account',
       required: true
     }),
-    opportunity: Field.lookup('opportunity', { label: '关联商机' }),
+    opportunity: Field.lookup('opportunity', { label: 'Opportunity' }),
     status: Field.select({
-      label: '状态',
+      label: 'Status',
       required: true,
       defaultValue: 'Draft',
       options: [
         {
-          "label": "📝 草稿",
+          "label": "📝 Draft",
           "value": "Draft"
         },
         {
-          "label": "🔍 审核中",
+          "label": "🔍 In Approval",
           "value": "In Approval"
         },
         {
-          "label": "✅ 已激活",
+          "label": "✅ Activated",
           "value": "Activated"
         },
         {
-          "label": "⏸️ 暂停",
+          "label": "⏸️ On Hold",
           "value": "On Hold"
         },
         {
-          "label": "✔️ 已完成",
+          "label": "✔️ Completed",
           "value": "Completed"
         },
         {
-          "label": "❌ 已终止",
+          "label": "❌ Terminated",
           "value": "Terminated"
         }
       ]
     }),
     start_date: Field.date({
-      label: '开始日期',
+      label: 'Start Date',
       required: true
     }),
-    end_date: Field.date({ label: '结束日期' }),
-    contract_term: Field.number({ label: '合同期限（月）' }),
+    end_date: Field.date({ label: 'End Date' }),
+    contract_term: Field.number({ label: 'Contract Term (Months)' }),
     contract_value: Field.currency({
-      label: '合同金额',
+      label: 'Contract Value',
       required: true,
       precision: 2
     })

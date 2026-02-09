@@ -2,127 +2,127 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 
 export const Certification = ObjectSchema.create({
   name: 'certification',
-  label: '认证',
-  pluralLabel: '认证',
+  label: 'Certification',
+  pluralLabel: 'Certifications',
   icon: 'certificate',
-  description: '员工专业认证和资质管理',
+  description: 'Employee professional certification and qualification management',
 
   fields: {
     title: Field.text({
-      label: '认证名称',
+      label: 'Certification Name',
       required: true,
       maxLength: 255
     }),
     employee_id: Field.lookup('employee', {
-      label: '员工',
+      label: 'Employee',
       required: true
     }),
     certification_type: Field.select({
-      label: '认证类型',
+      label: 'Certification Type',
       options: [
         {
-          "label": "专业认证",
+          "label": "Professional",
           "value": "Professional"
         },
         {
-          "label": "技术认证",
+          "label": "Technical",
           "value": "Technical"
         },
         {
-          "label": "语言认证",
+          "label": "Language",
           "value": "Language"
         },
         {
-          "label": "管理认证",
+          "label": "Management",
           "value": "Management"
         },
         {
-          "label": "安全认证",
+          "label": "Safety",
           "value": "Safety"
         },
         {
-          "label": "合规认证",
+          "label": "Compliance",
           "value": "Compliance"
         },
         {
-          "label": "其他",
+          "label": "Other",
           "value": "Other"
         }
       ]
     }),
     issuing_organization: Field.text({
-      label: '发证机构',
+      label: 'Issuing Organization',
       required: true,
       maxLength: 255
     }),
     certification_number: Field.text({
-      label: '证书编号',
+      label: 'Certificate Number',
       maxLength: 100
     }),
     issue_date: Field.date({
-      label: '颁发日期',
+      label: 'Issue Date',
       required: true
     }),
     expiry_date: Field.date({
-      label: '到期日期',
-      description: '如果证书有效期限制'
+      label: 'Expiry Date',
+      description: 'Applicable if the certificate has an expiration date'
     }),
     is_active: Field.boolean({
-      label: '是否有效',
-      description: '证书当前是否有效',
+      label: 'Is Active',
+      description: 'Whether the certificate is currently valid',
       defaultValue: true
     }),
     renewal_required: Field.boolean({
-      label: '需要续期',
+      label: 'Renewal Required',
       defaultValue: false
     }),
-    next_renewal_date: Field.date({ label: '下次续期日期' }),
+    next_renewal_date: Field.date({ label: 'Next Renewal Date' }),
     training_id: Field.lookup('training', {
-      label: '关联培训',
-      description: '如果通过培训获得'
+      label: 'Related Training',
+      description: 'If obtained through training'
     }),
     score: Field.number({
-      label: '考试成绩',
-      description: '如适用，记录考试分数',
+      label: 'Exam Score',
+      description: 'Records exam score if applicable',
       precision: 2
     }),
-    certificate_url: Field.url({ label: '证书链接/扫描件' }),
+    certificate_url: Field.url({ label: 'Certificate URL' }),
     verification_url: Field.url({
-      label: '验证链接',
-      description: '在线验证证书的链接'
+      label: 'Verification URL',
+      description: 'Link to verify the certificate online'
     }),
     cost: Field.currency({
-      label: '认证费用',
+      label: 'Certification Cost',
       precision: 2
     }),
     status: Field.select({
-      label: '状态',
+      label: 'Status',
       defaultValue: 'Active',
       options: [
         {
-          "label": "有效",
+          "label": "Active",
           "value": "Active"
         },
         {
-          "label": "即将到期",
+          "label": "Expiring Soon",
           "value": "Expiring Soon"
         },
         {
-          "label": "已过期",
+          "label": "Expired",
           "value": "Expired"
         },
         {
-          "label": "已撤销",
+          "label": "Revoked",
           "value": "Revoked"
         }
       ]
     }),
     description: Field.textarea({
-      label: '认证描述',
-      description: '认证的内容和价值',
+      label: 'Certification Description',
+      description: 'Content and value of the certification',
     }),
     notes: Field.textarea({
-      label: '备注',
+      label: 'Notes',
     })
   },
 

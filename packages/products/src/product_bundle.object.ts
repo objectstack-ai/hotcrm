@@ -181,7 +181,7 @@ export const ProductBundle = ObjectSchema.create({
       readonly: true,
       precision: 2
     }),
-    ai_suggested_upgrade: Field.lookup('ProductBundle', {
+    ai_suggested_upgrade: Field.lookup('product_bundle', {
       label: 'Suggested Upgrade',
       description: 'AI-suggested upgrade bundle'
     })

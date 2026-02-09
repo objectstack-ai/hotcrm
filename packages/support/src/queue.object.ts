@@ -115,7 +115,7 @@ export const Queue = ObjectSchema.create({
         }
       ]
     }),
-    sla_template_id: Field.lookup('SLATemplate', {
+    sla_template_id: Field.lookup('sla_template', {
       label: 'SLA Template',
       description: 'Default SLA template for cases in this queue'
     }),
@@ -134,7 +134,7 @@ export const Queue = ObjectSchema.create({
       label: 'Enable Overflow',
       defaultValue: false
     }),
-    overflow_queue_id: Field.lookup('Queue', {
+    overflow_queue_id: Field.lookup('queue', {
       label: 'Overflow Queue',
       description: 'Queue to route cases when this queue is at capacity'
     }),
@@ -144,7 +144,7 @@ export const Queue = ObjectSchema.create({
       min: 1,
       precision: 0
     }),
-    business_hours_id: Field.lookup('BusinessHours', {
+    business_hours_id: Field.lookup('business_hours', {
       label: 'Business Hours',
       description: 'Operating hours for this queue'
     }),
@@ -166,7 +166,7 @@ export const Queue = ObjectSchema.create({
         }
       ]
     }),
-    out_of_hours_queue_id: Field.lookup('Queue', {
+    out_of_hours_queue_id: Field.lookup('queue', {
       label: 'Out of Hours Queue',
       description: '24/7 queue for after-hours cases'
     }),

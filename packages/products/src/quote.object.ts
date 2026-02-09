@@ -66,7 +66,7 @@ export const Quote = ObjectSchema.create({
       required: true
     }),
     contact_id: Field.lookup('contact', { label: 'Contact' }),
-    pricebook_id: Field.lookup('Pricebook', {
+    pricebook_id: Field.lookup('pricebook', {
       label: 'Price Book',
       required: true
     }),
@@ -331,15 +331,15 @@ export const Quote = ObjectSchema.create({
       description: 'Is this the primary quote for the opportunity?',
       defaultValue: true
     }),
-    previous_version_id: Field.lookup('Quote', {
+    previous_version_id: Field.lookup('quote', {
       label: 'Previous Version',
       readonly: true
     }),
-    latest_version_id: Field.lookup('Quote', {
+    latest_version_id: Field.lookup('quote', {
       label: 'Latest Version',
       readonly: true
     }),
-    template_id: Field.lookup('QuoteTemplate', {
+    template_id: Field.lookup('quote_template', {
       label: 'Template',
       description: 'Quote template used for PDF generation'
     }),
@@ -360,7 +360,7 @@ export const Quote = ObjectSchema.create({
       label: 'PDF URL',
       readonly: true
     }),
-    p_d_f_document_id: Field.lookup('Document', {
+    p_d_f_document_id: Field.lookup('document', {
       label: 'PDF Document',
       readonly: true
     }),

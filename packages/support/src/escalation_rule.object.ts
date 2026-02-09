@@ -92,11 +92,11 @@ export const EscalationRule = ObjectSchema.create({
       label: 'Escalate to User',
       description: 'Specific user to escalate to'
     }),
-    escalate_to_queue_id: Field.lookup('Queue', {
+    escalate_to_queue_id: Field.lookup('queue', {
       label: 'Escalate to Queue',
       description: 'Queue to escalate to'
     }),
-    escalate_to_role_id: Field.lookup('Role', {
+    escalate_to_role_id: Field.lookup('role', {
       label: 'Escalate to Role',
       description: 'Role to escalate to (any user with this role)'
     }),
@@ -112,7 +112,7 @@ export const EscalationRule = ObjectSchema.create({
       label: 'Notify Customer',
       defaultValue: false
     }),
-    email_template_id: Field.lookup('EmailTemplate', {
+    email_template_id: Field.lookup('email_template', {
       label: 'Email Template',
       description: 'Email template for escalation notification'
     }),

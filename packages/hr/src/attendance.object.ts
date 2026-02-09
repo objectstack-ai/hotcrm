@@ -2,107 +2,107 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 
 export const Attendance = ObjectSchema.create({
   name: 'attendance',
-  label: '考勤',
-  pluralLabel: '考勤记录',
+  label: 'Attendance',
+  pluralLabel: 'Attendance Records',
   icon: 'clock',
-  description: '员工考勤和工时跟踪',
+  description: 'Employee attendance and work hour tracking',
 
   fields: {
     employee_id: Field.lookup('employee', {
-      label: '员工',
+      label: 'Employee',
       required: true
     }),
     attendance_date: Field.date({
-      label: '考勤日期',
+      label: 'Attendance Date',
       required: true
     }),
-    check_in_time: Field.datetime({ label: '签到时间' }),
-    check_out_time: Field.datetime({ label: '签退时间' }),
+    check_in_time: Field.datetime({ label: 'Check-in Time' }),
+    check_out_time: Field.datetime({ label: 'Check-out Time' }),
     work_hours: Field.number({
-      label: '工作时长（小时）',
-      description: '自动计算的工作时长',
+      label: 'Work Hours',
+      description: 'Automatically calculated work duration',
       readonly: true,
       precision: 2
     }),
     status: Field.select({
-      label: '考勤状态',
+      label: 'Attendance Status',
       defaultValue: 'Present',
       options: [
         {
-          "label": "正常",
+          "label": "Present",
           "value": "Present"
         },
         {
-          "label": "迟到",
+          "label": "Late",
           "value": "Late"
         },
         {
-          "label": "早退",
+          "label": "Early Leave",
           "value": "Early Leave"
         },
         {
-          "label": "缺勤",
+          "label": "Absent",
           "value": "Absent"
         },
         {
-          "label": "请假",
+          "label": "Time Off",
           "value": "On Leave"
         },
         {
-          "label": "出差",
+          "label": "Business Trip",
           "value": "Business Trip"
         },
         {
-          "label": "远程办公",
+          "label": "Remote Work",
           "value": "Remote Work"
         },
         {
-          "label": "加班",
+          "label": "Overtime",
           "value": "Overtime"
         }
       ]
     }),
     late_minutes: Field.number({
-      label: '迟到分钟数',
+      label: 'Late Minutes',
       precision: 0
     }),
     early_leave_minutes: Field.number({
-      label: '早退分钟数',
+      label: 'Early Leave Minutes',
       precision: 0
     }),
     overtime_hours: Field.number({
-      label: '加班时长（小时）',
+      label: 'Overtime Hours',
       precision: 2
     }),
     location: Field.select({
-      label: '工作地点',
+      label: 'Work Location',
       options: [
         {
-          "label": "办公室",
+          "label": "Office",
           "value": "Office"
         },
         {
-          "label": "远程",
+          "label": "Remote",
           "value": "Remote"
         },
         {
-          "label": "客户现场",
+          "label": "Client Site",
           "value": "Client Site"
         },
         {
-          "label": "出差",
+          "label": "Business Trip",
           "value": "Business Trip"
         }
       ]
     }),
     is_approved: Field.boolean({
-      label: '是否已审核',
+      label: 'Is Approved',
       defaultValue: false
     }),
-    approver_id: Field.lookup('employee', { label: '审核人' }),
+    approver_id: Field.lookup('employee', { label: 'Approver' }),
     notes: Field.textarea({
-      label: '备注',
-      description: '异常情况说明等',
+      label: 'Notes',
+      description: 'Notes for anomalies or exceptions',
     })
   },
 

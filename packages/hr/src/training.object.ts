@@ -2,189 +2,189 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 
 export const Training = ObjectSchema.create({
   name: 'training',
-  label: '培训',
-  pluralLabel: '培训',
+  label: 'Training',
+  pluralLabel: 'Trainings',
   icon: 'graduation-cap',
-  description: '员工培训和学习发展管理',
+  description: 'Employee training and learning development management',
 
   fields: {
     title: Field.text({
-      label: '培训名称',
+      label: 'Training Name',
       required: true,
       maxLength: 255
     }),
     training_code: Field.text({
-      label: '培训编号',
+      label: 'Training Code',
       unique: true,
       maxLength: 40
     }),
     employee_id: Field.lookup('employee', {
-      label: '参训员工',
+      label: 'Trainee',
       required: true
     }),
     training_type: Field.select({
-      label: '培训类型',
+      label: 'Training Type',
       options: [
         {
-          "label": "入职培训",
+          "label": "Onboarding",
           "value": "Onboarding"
         },
         {
-          "label": "技能培训",
+          "label": "Skills Training",
           "value": "Skills Training"
         },
         {
-          "label": "领导力培训",
+          "label": "Leadership",
           "value": "Leadership"
         },
         {
-          "label": "合规培训",
+          "label": "Compliance",
           "value": "Compliance"
         },
         {
-          "label": "产品培训",
+          "label": "Product",
           "value": "Product"
         },
         {
-          "label": "销售培训",
+          "label": "Sales",
           "value": "Sales"
         },
         {
-          "label": "安全培训",
+          "label": "Safety",
           "value": "Safety"
         },
         {
-          "label": "其他",
+          "label": "Other",
           "value": "Other"
         }
       ]
     }),
     category: Field.select({
-      label: '培训分类',
+      label: 'Training Category',
       options: [
         {
-          "label": "内部培训",
+          "label": "Internal",
           "value": "Internal"
         },
         {
-          "label": "外部培训",
+          "label": "External",
           "value": "External"
         },
         {
-          "label": "在线课程",
+          "label": "Online",
           "value": "Online"
         },
         {
-          "label": "研讨会",
+          "label": "Workshop",
           "value": "Workshop"
         },
         {
-          "label": "会议",
+          "label": "Conference",
           "value": "Conference"
         },
         {
-          "label": "认证课程",
+          "label": "Certification",
           "value": "Certification"
         }
       ]
     }),
     provider: Field.text({
-      label: '培训机构/讲师',
+      label: 'Training Provider/Instructor',
       maxLength: 255
     }),
     start_date: Field.datetime({
-      label: '开始时间',
+      label: 'Start Time',
       required: true
     }),
     end_date: Field.datetime({
-      label: '结束时间',
+      label: 'End Time',
       required: true
     }),
     duration_hours: Field.number({
-      label: '培训时长（小时）',
+      label: 'Duration (Hours)',
       precision: 1
     }),
     location: Field.text({
-      label: '培训地点',
-      description: '线下地点或线上会议链接',
+      label: 'Training Location',
+      description: 'Physical location or online meeting link',
       maxLength: 255
     }),
     status: Field.select({
-      label: '状态',
+      label: 'Status',
       defaultValue: 'Scheduled',
       options: [
         {
-          "label": "已安排",
+          "label": "Scheduled",
           "value": "Scheduled"
         },
         {
-          "label": "进行中",
+          "label": "In Progress",
           "value": "In Progress"
         },
         {
-          "label": "已完成",
+          "label": "Completed",
           "value": "Completed"
         },
         {
-          "label": "已取消",
+          "label": "Cancelled",
           "value": "Cancelled"
         },
         {
-          "label": "未参加",
+          "label": "Absent",
           "value": "No Show"
         }
       ]
     }),
     attendance_status: Field.select({
-      label: '出勤状态',
+      label: 'Attendance Status',
       options: [
         {
-          "label": "已参加",
+          "label": "Attended",
           "value": "Attended"
         },
         {
-          "label": "部分参加",
+          "label": "Partial",
           "value": "Partial"
         },
         {
-          "label": "未参加",
+          "label": "Absent",
           "value": "Absent"
         }
       ]
     }),
-    completion_percentage: Field.percent({ label: '完成进度' }),
+    completion_percentage: Field.percent({ label: 'Completion Progress' }),
     is_mandatory: Field.boolean({
-      label: '是否必修',
+      label: 'Is Mandatory',
       defaultValue: false
     }),
     cost: Field.currency({
-      label: '培训费用',
+      label: 'Training Cost',
       precision: 2
     }),
     exam_score: Field.number({
-      label: '考试成绩',
-      description: '如有考试，记录成绩',
+      label: 'Exam Score',
+      description: 'Records exam score if applicable',
       min: 0,
       max: 100,
       precision: 2
     }),
     passed: Field.boolean({
-      label: '是否通过',
+      label: 'Passed',
       defaultValue: false
     }),
-    certificate_url: Field.url({ label: '证书链接' }),
+    certificate_url: Field.url({ label: 'Certificate URL' }),
     description: Field.textarea({
-      label: '培训描述',
+      label: 'Training Description',
     }),
     learning_objectives: Field.textarea({
-      label: '学习目标',
+      label: 'Learning Objectives',
     }),
     feedback: Field.textarea({
-      label: '培训反馈',
-      description: '员工的培训体验和收获',
+      label: 'Training Feedback',
+      description: 'Employee training experience and takeaways',
     }),
     notes: Field.textarea({
-      label: '备注',
+      label: 'Notes',
     })
   },
 

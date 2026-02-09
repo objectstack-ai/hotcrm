@@ -2,97 +2,97 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 
 export const Department = ObjectSchema.create({
   name: 'department',
-  label: '部门',
-  pluralLabel: '部门',
+  label: 'Department',
+  pluralLabel: 'Departments',
   icon: 'sitemap',
-  description: '组织部门和团队结构管理',
+  description: 'Organization department and team structure management',
 
   fields: {
     name: Field.text({
-      label: '部门名称',
+      label: 'Department Name',
       required: true,
       unique: true,
       maxLength: 255
     }),
     code: Field.text({
-      label: '部门编码',
-      description: '部门唯一标识代码',
+      label: 'Department Code',
+      description: 'Unique identifier code for the department',
       unique: true,
       maxLength: 40
     }),
     type: Field.select({
-      label: '部门类型',
+      label: 'Department Type',
       options: [
         {
-          "label": "总部",
+          "label": "Headquarters",
           "value": "Headquarters"
         },
         {
-          "label": "分公司",
+          "label": "Branch",
           "value": "Branch"
         },
         {
-          "label": "事业部",
+          "label": "Division",
           "value": "Division"
         },
         {
-          "label": "部门",
+          "label": "Department",
           "value": "Department"
         },
         {
-          "label": "团队",
+          "label": "Team",
           "value": "Team"
         }
       ]
     }),
     parent_id: Field.lookup('department', {
-      label: '上级部门',
-      description: '组织层级结构中的上级部门'
+      label: 'Parent Department',
+      description: 'Parent department in the organizational hierarchy'
     }),
     manager_id: Field.lookup('employee', {
-      label: '部门负责人',
-      description: '管理该部门的员工'
+      label: 'Department Manager',
+      description: 'Employee who manages this department'
     }),
     cost_center: Field.text({
-      label: '成本中心',
-      description: '财务成本核算中心代码',
+      label: 'Cost Center',
+      description: 'Financial cost center code',
       maxLength: 40
     }),
     location: Field.text({
-      label: '办公地点',
+      label: 'Office Location',
       maxLength: 255
     }),
-    phone: Field.phone({ label: '部门电话' }),
-    email: Field.email({ label: '部门邮箱' }),
+    phone: Field.phone({ label: 'Department Phone' }),
+    email: Field.email({ label: 'Department Email' }),
     employee_count: Field.number({
-      label: '员工人数',
-      description: '部门内员工总数（自动计算）',
+      label: 'Employee Count',
+      description: 'Total number of employees in the department (auto-calculated)',
       readonly: true
     }),
     budget_amount: Field.currency({
-      label: '年度预算',
+      label: 'Annual Budget',
       precision: 2
     }),
     status: Field.select({
-      label: '状态',
+      label: 'Status',
       defaultValue: 'Active',
       options: [
         {
-          "label": "活跃",
+          "label": "Active",
           "value": "Active"
         },
         {
-          "label": "已关闭",
+          "label": "Closed",
           "value": "Closed"
         },
         {
-          "label": "合并中",
+          "label": "Merging",
           "value": "Merging"
         }
       ]
     }),
     description: Field.textarea({
-      label: '部门描述',
+      label: 'Department Description',
     })
   },
 

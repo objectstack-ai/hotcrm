@@ -39,7 +39,7 @@ const KnowledgeArticleScoringTrigger: Hook = {
       console.log(`📊 Article scoring completed: Quality=${article.QualityScore}, Popularity=${article.PopularityScore}`);
 
     } catch (error) {
-      console.error('❌ Error in KnowledgeArticleScoringTrigger:', error);
+      console.error(`[knowledge.hook] article scoring failed:`, error);
     }
   }
 };
@@ -96,7 +96,7 @@ const KnowledgeArticleAIEnhancementTrigger: Hook = {
       }
 
     } catch (error) {
-      console.error('❌ Error in KnowledgeArticleAIEnhancementTrigger:', error);
+      console.error(`[knowledge.hook] AI enhancement failed:`, error);
     }
   }
 };
@@ -140,7 +140,7 @@ const KnowledgeArticleWorkflowTrigger: Hook = {
       }
 
     } catch (error) {
-      console.error('❌ Error in KnowledgeArticleWorkflowTrigger:', error);
+      console.error(`[knowledge.hook] workflow processing failed:`, error);
     }
   }
 };
@@ -173,7 +173,7 @@ const KnowledgeArticleUsageTracker: Hook = {
       }
 
     } catch (error) {
-      console.error('❌ Error in KnowledgeArticleUsageTracker:', error);
+      console.error(`[knowledge.hook] usage tracking failed:`, error);
     }
   }
 };
@@ -194,7 +194,7 @@ const KnowledgeArticleSearchAnalytics: Hook = {
       console.log('📈 Search analytics tracked');
 
     } catch (error) {
-      console.error('❌ Error in KnowledgeArticleSearchAnalytics:', error);
+      console.error(`[knowledge.hook] search analytics failed:`, error);
     }
   }
 };
@@ -517,7 +517,7 @@ async function incrementArticleUsage(articleId: string, ctx: any): Promise<void>
       });
     }
   } catch (error) {
-    console.error('Error incrementing article usage:', error);
+    console.error(`[knowledge.hook] incrementArticleUsage failed:`, error);
   }
 }
 

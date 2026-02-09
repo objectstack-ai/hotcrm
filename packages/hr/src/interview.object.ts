@@ -2,156 +2,156 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 
 export const Interview = ObjectSchema.create({
   name: 'interview',
-  label: '面试',
-  pluralLabel: '面试',
+  label: 'Interview',
+  pluralLabel: 'Interviews',
   icon: 'comments',
-  description: '面试安排和记录管理',
+  description: 'Interview scheduling and record management',
 
   fields: {
     title: Field.text({
-      label: '面试标题',
+      label: 'Interview Title',
       required: true,
       maxLength: 255
     }),
     candidate_id: Field.lookup('candidate', {
-      label: '候选人',
+      label: 'Candidate',
       required: true
     }),
     application_id: Field.lookup('application', {
-      label: '申请',
+      label: 'Application',
       required: true
     }),
     recruitment_id: Field.lookup('recruitment', {
-      label: '招聘需求',
+      label: 'Recruitment Requisition',
       required: true
     }),
     interview_type: Field.select({
-      label: '面试类型',
+      label: 'Interview Type',
       defaultValue: 'First Round',
       options: [
         {
-          "label": "电话面试",
+          "label": "Phone Screen",
           "value": "Phone Screen"
         },
         {
-          "label": "视频面试",
+          "label": "Video Interview",
           "value": "Video Interview"
         },
         {
-          "label": "初试",
+          "label": "First Interview",
           "value": "First Round"
         },
         {
-          "label": "复试",
+          "label": "Second Interview",
           "value": "Second Round"
         },
         {
-          "label": "终试",
+          "label": "Final Interview",
           "value": "Final Round"
         },
         {
-          "label": "技术面试",
+          "label": "Technical",
           "value": "Technical"
         },
         {
-          "label": "HR面试",
+          "label": "HR Interview",
           "value": "HR"
         }
       ]
     }),
     scheduled_date: Field.datetime({
-      label: '面试时间',
+      label: 'Interview Date',
       required: true
     }),
     duration: Field.number({
-      label: '时长（分钟）',
+      label: 'Duration (Minutes)',
       defaultValue: 60
     }),
     location: Field.text({
-      label: '面试地点',
-      description: '线下地点或线上会议链接',
+      label: 'Interview Location',
+      description: 'Physical location or online meeting link',
       maxLength: 255
     }),
     interviewer_id: Field.lookup('employee', {
-      label: '主面试官',
+      label: 'Lead Interviewer',
       required: true
     }),
     panel_members: Field.text({
-      label: '面试官小组',
-      description: '多位面试官用逗号分隔',
+      label: 'Interview Panel',
+      description: 'Multiple interviewers separated by commas',
       maxLength: 500
     }),
     status: Field.select({
-      label: '状态',
+      label: 'Status',
       defaultValue: 'Scheduled',
       options: [
         {
-          "label": "已安排",
+          "label": "Scheduled",
           "value": "Scheduled"
         },
         {
-          "label": "已确认",
+          "label": "Confirmed",
           "value": "Confirmed"
         },
         {
-          "label": "进行中",
+          "label": "In Progress",
           "value": "In Progress"
         },
         {
-          "label": "已完成",
+          "label": "Completed",
           "value": "Completed"
         },
         {
-          "label": "已取消",
+          "label": "Cancelled",
           "value": "Cancelled"
         },
         {
-          "label": "候选人未到",
+          "label": "No Show",
           "value": "No Show"
         },
         {
-          "label": "需重新安排",
+          "label": "Rescheduled",
           "value": "Rescheduled"
         }
       ]
     }),
     result: Field.select({
-      label: '面试结果',
+      label: 'Interview Result',
       options: [
         {
-          "label": "强烈推荐",
+          "label": "Strong Hire",
           "value": "Strong Hire"
         },
         {
-          "label": "推荐",
+          "label": "Hire",
           "value": "Hire"
         },
         {
-          "label": "待定",
+          "label": "Maybe",
           "value": "Maybe"
         },
         {
-          "label": "不推荐",
+          "label": "No Hire",
           "value": "No Hire"
         },
         {
-          "label": "强烈不推荐",
+          "label": "Strong No Hire",
           "value": "Strong No Hire"
         }
       ]
     }),
     feedback: Field.textarea({
-      label: '面试反馈',
-      description: '详细的面试评价和建议',
+      label: 'Interview Feedback',
+      description: 'Detailed interview evaluation and recommendations',
     }),
     strengths: Field.textarea({
-      label: '优势',
+      label: 'Strengths',
     }),
     weaknesses: Field.textarea({
-      label: '不足',
+      label: 'Weaknesses',
     }),
     notes: Field.textarea({
-      label: '备注',
+      label: 'Notes',
     })
   },
 

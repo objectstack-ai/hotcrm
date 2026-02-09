@@ -2,177 +2,177 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 
 export const Position = ObjectSchema.create({
   name: 'position',
-  label: '职位',
-  pluralLabel: '职位',
+  label: 'Position',
+  pluralLabel: 'Positions',
   icon: 'briefcase',
-  description: '职位和岗位定义管理',
+  description: 'Position and role definition management',
 
   fields: {
     title: Field.text({
-      label: '职位名称',
+      label: 'Position Title',
       required: true,
       maxLength: 255
     }),
     code: Field.text({
-      label: '职位编码',
+      label: 'Position Code',
       unique: true,
       maxLength: 40
     }),
     department_id: Field.lookup('department', {
-      label: '所属部门',
+      label: 'Department',
       required: true
     }),
     level: Field.select({
-      label: '职级',
+      label: 'Job Level',
       options: [
         {
-          "label": "C级高管",
+          "label": "C-Level",
           "value": "C-Level"
         },
         {
-          "label": "VP级",
+          "label": "VP",
           "value": "VP"
         },
         {
-          "label": "总监",
+          "label": "Director",
           "value": "Director"
         },
         {
-          "label": "经理",
+          "label": "Manager",
           "value": "Manager"
         },
         {
-          "label": "主管",
+          "label": "Supervisor",
           "value": "Supervisor"
         },
         {
-          "label": "专员",
+          "label": "Staff",
           "value": "Staff"
         },
         {
-          "label": "助理",
+          "label": "Assistant",
           "value": "Assistant"
         }
       ]
     }),
     job_family: Field.select({
-      label: '职位族',
+      label: 'Job Family',
       options: [
         {
-          "label": "管理",
+          "label": "Management",
           "value": "Management"
         },
         {
-          "label": "技术",
+          "label": "Technical",
           "value": "Technical"
         },
         {
-          "label": "销售",
+          "label": "Sales",
           "value": "Sales"
         },
         {
-          "label": "营销",
+          "label": "Marketing",
           "value": "Marketing"
         },
         {
-          "label": "财务",
+          "label": "Finance",
           "value": "Finance"
         },
         {
-          "label": "人力资源",
+          "label": "HR",
           "value": "HR"
         },
         {
-          "label": "运营",
+          "label": "Operations",
           "value": "Operations"
         },
         {
-          "label": "客户服务",
+          "label": "Customer Service",
           "value": "Customer Service"
         },
         {
-          "label": "其他",
+          "label": "Other",
           "value": "Other"
         }
       ]
     }),
     reports_to_id: Field.lookup('position', {
-      label: '汇报给',
-      description: '直接汇报的上级职位'
+      label: 'Reports To',
+      description: 'Direct reporting supervisor position'
     }),
     employment_type: Field.select({
-      label: '雇佣类型',
+      label: 'Employment Type',
       defaultValue: 'Full-time',
       options: [
         {
-          "label": "全职",
+          "label": "Full-time",
           "value": "Full-time"
         },
         {
-          "label": "兼职",
+          "label": "Part-time",
           "value": "Part-time"
         },
         {
-          "label": "合同",
+          "label": "Contract",
           "value": "Contract"
         },
         {
-          "label": "实习",
+          "label": "Intern",
           "value": "Intern"
         },
         {
-          "label": "临时",
+          "label": "Ad-hoc",
           "value": "Temporary"
         }
       ]
     }),
     headcount: Field.number({
-      label: '计划编制',
-      description: '该职位的计划人数',
+      label: 'Planned Headcount',
+      description: 'Planned headcount for this position',
       defaultValue: 1
     }),
     current_headcount: Field.number({
-      label: '当前人数',
-      description: '当前在职人数（自动计算）',
+      label: 'Current Headcount',
+      description: 'Current headcount (auto-calculated)',
       readonly: true
     }),
     min_salary: Field.currency({
-      label: '最低薪资',
+      label: 'Minimum Salary',
       precision: 2
     }),
     max_salary: Field.currency({
-      label: '最高薪资',
+      label: 'Maximum Salary',
       precision: 2
     }),
     status: Field.select({
-      label: '状态',
+      label: 'Status',
       defaultValue: 'Active',
       options: [
         {
-          "label": "活跃",
+          "label": "Active",
           "value": "Active"
         },
         {
-          "label": "招聘中",
+          "label": "Hiring",
           "value": "Hiring"
         },
         {
-          "label": "暂停",
+          "label": "On Hold",
           "value": "On Hold"
         },
         {
-          "label": "已关闭",
+          "label": "Closed",
           "value": "Closed"
         }
       ]
     }),
     description: Field.textarea({
-      label: '职位描述',
-      description: '职位职责和要求',
+      label: 'Position Description',
+      description: 'Position responsibilities and requirements',
     }),
     requirements: Field.textarea({
-      label: '任职要求',
-      description: '学历、技能、经验等要求',
+      label: 'Requirements',
+      description: 'Education, skills, experience, and other requirements',
     })
   },
 

@@ -32,7 +32,7 @@ Hooks can fire at different points in the record lifecycle:
 
 ```typescript
 import type { HookSchema } from '@objectstack/spec/data';
-import { db } from '@hotcrm/core';
+import { db } from '../db';
 
 export interface TriggerContext {
   old?: Record<string, any>;   // Previous record state (updates only)
@@ -63,7 +63,7 @@ This is a real example from HotCRM that handles opportunity stage changes:
 
 ```typescript
 import type { HookSchema } from '@objectstack/spec/data';
-import { db } from '@hotcrm/core';
+import { db } from '../db';
 
 export interface TriggerContext {
   old?: Record<string, any>;
@@ -694,6 +694,131 @@ describe('OpportunityStageChange', () => {
     }));
   });
 });
+```
+
+## Practical Examples
+
+### Example 1: Cascade Update Hook
+
+Update related records when a parent record changes status.
+
+```typescript
+// packages/crm/src/opportunity_cascade.hook.ts
+import type { Hook, HookContext } from '@objectstack/spec/data';
+
+const OpportunityCascadeUpdate: Hook = {
+  name: 'OpportunityCascadeUpdate',
+  object: 'opportunity',
+  events: ['afterUpdate'],
+  handler: async (ctx: HookContext) => {
+    const opp = ctx.result as Record<string, any>;
+    const prev = ctx.previous as Record<string, any>;
+
+    // Only trigger when stage changes to 'closed_won'
+    if (opp.stage !== 'closed_won' || prev?.stage === 'closed_won') return;
+
+    // Update the account's last_won_date
+    await ctx.ql.update('account', opp.account_id, {
+      last_won_date: new Date().toISOString(),
+      total_won_amount: { $inc: opp.amount }
+    });
+
+    // Create a follow-up task for the sales rep
+    await ctx.ql.insert('task', {
+      subject: `Post-Sale Follow-up: ${opp.name}`,
+      assigned_to: opp.owner_id,
+      due_date: new Date(Date.now() + 7 * 86400000).toISOString(),
+      priority: 'High',
+      related_to: opp._id
+    });
+  }
+};
+
+export default [OpportunityCascadeUpdate];
+```
+
+### Example 2: Validation Hook with Cross-Object Checks
+
+Prevent actions based on related record state.
+
+```typescript
+// packages/finance/src/payment_validation.hook.ts
+import type { Hook, HookContext } from '@objectstack/spec/data';
+
+const PaymentValidation: Hook = {
+  name: 'PaymentValidation',
+  object: 'payment',
+  events: ['beforeInsert'],
+  handler: async (ctx: HookContext) => {
+    const payment = ctx.input.doc as Record<string, any>;
+
+    // Fetch the related invoice
+    const invoice = await ctx.ql.findOne('invoice', payment.invoice_id);
+
+    if (!invoice) {
+      throw new Error('Cannot create payment: Invoice not found.');
+    }
+
+    if (invoice.status === 'Paid') {
+      throw new Error('Cannot create payment: Invoice is already fully paid.');
+    }
+
+    // Calculate remaining balance
+    const existingPayments = await ctx.ql.find('payment', {
+      filters: [['invoice_id', '=', payment.invoice_id]]
+    });
+    const totalPaid = existingPayments.reduce((sum: number, p: any) => sum + p.amount, 0);
+    const remaining = invoice.total_amount - totalPaid;
+
+    if (payment.amount > remaining) {
+      throw new Error(`Payment amount ($${payment.amount}) exceeds remaining balance ($${remaining}).`);
+    }
+  }
+};
+
+export default [PaymentValidation];
+```
+
+### Example 3: Action with AI Integration
+
+Define an action callable by AI agents and API endpoints.
+
+```typescript
+// packages/crm/src/deal_summary.action.ts
+import type { ActionDefinition } from '@objectstack/spec';
+
+export const generateDealSummary: ActionDefinition = {
+  name: 'generate_deal_summary',
+  label: 'Generate Deal Summary',
+  object: 'opportunity',
+  handler: async (params: { opportunityId: string }, ctx: any) => {
+    const opp = await ctx.ql.findOne('opportunity', params.opportunityId);
+    const activities = await ctx.ql.find('activity', {
+      filters: [['related_to', '=', params.opportunityId]],
+      sort: { created_at: -1 },
+      limit: 10
+    });
+
+    const summary = {
+      deal_name: opp.name,
+      stage: opp.stage,
+      amount: opp.amount,
+      days_in_pipeline: Math.floor(
+        (Date.now() - new Date(opp.created_at).getTime()) / 86400000
+      ),
+      recent_activities: activities.map((a: any) => ({
+        type: a.type,
+        subject: a.subject,
+        date: a.activity_date
+      })),
+      risk_factors: opp.amount > 100000 && activities.length < 3
+        ? ['Low engagement for high-value deal']
+        : []
+    };
+
+    return summary;
+  }
+};
 ```
 
 ## Next Steps

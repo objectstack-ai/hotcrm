@@ -2,148 +2,148 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 
 export const Application = ObjectSchema.create({
   name: 'application',
-  label: '求职申请',
-  pluralLabel: '求职申请',
+  label: 'Job Application',
+  pluralLabel: 'Job Applications',
   icon: 'file-alt',
-  description: '候选人职位申请记录管理',
+  description: 'Candidate job application record management',
 
   fields: {
     application_number: Field.text({
-      label: '申请编号',
+      label: 'Application Number',
       unique: true,
       maxLength: 40
     }),
     candidate_id: Field.lookup('candidate', {
-      label: '候选人',
+      label: 'Candidate',
       required: true
     }),
     recruitment_id: Field.lookup('recruitment', {
-      label: '招聘需求',
+      label: 'Recruitment Requisition',
       required: true
     }),
     applied_date: Field.date({
-      label: '申请日期',
+      label: 'Application Date',
       required: true,
       defaultValue: '$today'
     }),
     status: Field.select({
-      label: '状态',
+      label: 'Status',
       defaultValue: 'Submitted',
       options: [
         {
-          "label": "已提交",
+          "label": "Submitted",
           "value": "Submitted"
         },
         {
-          "label": "筛选中",
+          "label": "Screening",
           "value": "Screening"
         },
         {
-          "label": "待面试",
+          "label": "Interview Scheduled",
           "value": "Interview Scheduled"
         },
         {
-          "label": "面试中",
+          "label": "Interviewing",
           "value": "Interviewing"
         },
         {
-          "label": "通过初选",
+          "label": "Shortlisted",
           "value": "Shortlisted"
         },
         {
-          "label": "已录用",
+          "label": "Hired",
           "value": "Offer Extended"
         },
         {
-          "label": "已拒绝",
+          "label": "Rejected",
           "value": "Rejected"
         },
         {
-          "label": "已撤回",
+          "label": "Withdrawn",
           "value": "Withdrawn"
         }
       ]
     }),
     stage: Field.select({
-      label: '当前阶段',
+      label: 'Current Stage',
       options: [
         {
-          "label": "简历筛选",
+          "label": "Resume Review",
           "value": "Resume Review"
         },
         {
-          "label": "电话面试",
+          "label": "Phone Screen",
           "value": "Phone Screen"
         },
         {
-          "label": "初试",
+          "label": "First Interview",
           "value": "First Interview"
         },
         {
-          "label": "复试",
+          "label": "Second Interview",
           "value": "Second Interview"
         },
         {
-          "label": "终试",
+          "label": "Final Interview",
           "value": "Final Interview"
         },
         {
-          "label": "Offer沟通",
+          "label": "Offer Discussion",
           "value": "Offer Discussion"
         },
         {
-          "label": "背景调查",
+          "label": "Background Check",
           "value": "Background Check"
         }
       ]
     }),
     source: Field.select({
-      label: '来源渠道',
+      label: 'Source Channel',
       options: [
         {
-          "label": "招聘网站",
+          "label": "Job Board",
           "value": "Job Board"
         },
         {
-          "label": "内推",
+          "label": "Employee Referral",
           "value": "Employee Referral"
         },
         {
-          "label": "猎头",
+          "label": "Headhunter",
           "value": "Headhunter"
         },
         {
-          "label": "社交媒体",
+          "label": "Social Media",
           "value": "Social Media"
         },
         {
-          "label": "校园招聘",
+          "label": "Campus",
           "value": "Campus"
         },
         {
-          "label": "主动投递",
+          "label": "Direct Application",
           "value": "Direct Application"
         },
         {
-          "label": "其他",
+          "label": "Other",
           "value": "Other"
         }
       ]
     }),
     referrer_id: Field.lookup('employee', {
-      label: '内推人',
-      description: '如果是内推，记录推荐人'
+      label: 'Referrer',
+      description: 'Records the referrer for employee referrals'
     }),
-    resume_url: Field.url({ label: '简历链接' }),
+    resume_url: Field.url({ label: 'Resume URL' }),
     cover_letter: Field.textarea({
-      label: '求职信',
+      label: 'Cover Letter',
     }),
     rejection_reason: Field.textarea({
-      label: '拒绝原因',
-      description: '如果被拒绝，记录原因',
+      label: 'Rejection Reason',
+      description: 'Records the reason if rejected',
     }),
     notes: Field.textarea({
-      label: '备注',
+      label: 'Notes',
     })
   },
 

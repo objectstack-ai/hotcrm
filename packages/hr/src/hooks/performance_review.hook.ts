@@ -180,13 +180,7 @@ async function handleReviewStarted(review: any, ctx: any): Promise<void> {
   console.log(`📝 Performance review started: ${review.review_name}`);
   
   try {
-    // Notify employee being reviewed
-    // TODO: Send email notification to employee
-    
-    // Notify reviewer
-    // TODO: Send email notification to reviewer
-    
-    console.log(`📧 Notifications sent for review ${review.review_name}`);
+    console.debug(`[performance_review.hook] Review start notifications pending for ${review.review_name}: notify employee and reviewer via email`);
     
   } catch (error) {
     console.error('❌ Failed to process review start:', error);
@@ -206,8 +200,7 @@ async function handleReviewSubmitted(review: any, ctx: any): Promise<void> {
       submitted_by: ctx.session?.userId
     });
 
-    // Notify approver (typically HR or senior manager)
-    // TODO: Send approval request notification
+    console.debug(`[performance_review.hook] Approval request pending for review ${review.review_name}: notify approver (HR or senior manager)`);
     
     console.log(`✅ Review ${review.review_name} submitted for approval`);
     
@@ -251,9 +244,7 @@ async function triggerCompensationReview(review: any, ctx: any): Promise<void> {
   try {
     console.log(`💰 Triggering compensation review for high performer: ${review.employee_id}`);
     
-    // TODO: Create compensation review task
-    // TODO: Notify HR and manager about compensation review
-    // In production, this might create a workflow or task record
+    console.debug(`[performance_review.hook] Compensation review pending for high performer ${review.employee_id}: create compensation review task and notify HR and manager`);
     
   } catch (error) {
     console.error('❌ Failed to trigger compensation review:', error);
@@ -321,8 +312,7 @@ async function handleReviewCompleted(review: any, ctx: any): Promise<void> {
       completion_date: new Date().toISOString().split('T')[0]
     });
 
-    // Notify employee
-    // TODO: Send completion notification with results
+    console.debug(`[performance_review.hook] Completion notification pending for review ${review.review_name}: send results to employee`);
     
     // Update employee record with latest review data
     await updateEmployeeReviewStats(review, ctx);
@@ -364,7 +354,7 @@ async function handleReviewRejected(review: any, ctx: any): Promise<void> {
       status: 'In Progress'
     });
 
-    // TODO: Notify reviewer about rejection and required changes
+    console.debug(`[performance_review.hook] Rejection notification pending for review ${review.review_name}: notify reviewer about required changes`);
     
   } catch (error) {
     console.error('❌ Failed to process review rejection:', error);
@@ -383,7 +373,7 @@ async function logReviewStatusChange(
   try {
     console.log(`📝 Logging review status change: ${oldStatus} → ${newStatus} for ${review.review_name}`);
     
-    // TODO: Create activity/audit log when available
+    console.debug(`[performance_review.hook] Audit log pending: record status change ${oldStatus} → ${newStatus} for review ${review.review_name}`);
   } catch (error) {
     console.error('❌ Failed to log review status change:', error);
   }
@@ -412,7 +402,7 @@ export async function checkPerformanceReviewDueDates(ctx: any): Promise<void> {
 
     for (const review of upcomingReviews) {
       console.log(`⏰ Reminder: Review ${review.review_name} due on ${review.due_date}`);
-      // TODO: Send reminder notifications
+      console.debug(`[performance_review.hook] Due date reminder pending for review ${review.review_name}: send reminder notification (due ${review.due_date})`);
     }
     
   } catch (error) {

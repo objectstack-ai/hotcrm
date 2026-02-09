@@ -165,7 +165,7 @@ console.log(KnowledgeArticle.label); // "Knowledge Article"
 
 ### Working with Cases
 ```typescript
-import { db } from '@hotcrm/core';
+import { db } from '../db';
 
 // Create a case (auto-checks entitlement and assigns SLA)
 const supportCase = await db.create('case', {

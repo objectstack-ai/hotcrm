@@ -32,7 +32,7 @@ export const WebToCase = ObjectSchema.create({
       readonly: true,
       maxLength: 100
     }),
-    default_queue_id: Field.lookup('Queue', {
+    default_queue_id: Field.lookup('queue', {
       label: 'Default Queue',
       required: true
     }),
@@ -149,7 +149,7 @@ export const WebToCase = ObjectSchema.create({
       label: 'Send Auto Response',
       defaultValue: true
     }),
-    auto_response_template_id: Field.lookup('EmailTemplate', { label: 'Auto Response Template' }),
+    auto_response_template_id: Field.lookup('email_template', { label: 'Auto Response Template' }),
     success_message: Field.textarea({
       label: 'Success Message',
       defaultValue: 'Thank you! Your case has been submitted successfully. We will get back to you soon.',

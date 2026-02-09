@@ -61,7 +61,7 @@ export const ForumTopic = ObjectSchema.create({
       description: 'Comma-separated tags',
       maxLength: 500
     }),
-    author_id: Field.lookup('PortalUser', {
+    author_id: Field.lookup('portal_user', {
       label: 'Author',
       required: true
     }),
@@ -139,7 +139,7 @@ export const ForumTopic = ObjectSchema.create({
       defaultValue: false,
       readonly: true
     }),
-    accepted_answer_post_id: Field.lookup('ForumPost', {
+    accepted_answer_post_id: Field.lookup('forum_post', {
       label: 'Accepted Answer',
       readonly: true
     }),
@@ -151,7 +151,7 @@ export const ForumTopic = ObjectSchema.create({
       label: 'Related Case',
       description: 'Case that originated this topic'
     }),
-    related_article_id: Field.lookup('KnowledgeArticle', {
+    related_article_id: Field.lookup('knowledge_article', {
       label: 'Related Article',
       description: 'Knowledge article related to this topic'
     }),
@@ -200,7 +200,7 @@ export const ForumTopic = ObjectSchema.create({
       label: 'Last Post',
       readonly: true
     }),
-    last_post_by_id: Field.lookup('PortalUser', {
+    last_post_by_id: Field.lookup('portal_user', {
       label: 'Last Post By',
       readonly: true
     }),

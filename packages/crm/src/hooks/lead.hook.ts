@@ -356,8 +356,7 @@ async function handleLeadConversion(ctx: HookContext): Promise<void> {
     console.error('❌ Failed to log conversion activity:', error);
   }
   
-  // TODO: Integrate with LeadConvertAction to create Account, Contact, and Opportunity
-  // For now, this is a placeholder that logs the conversion activity
+  console.debug(`[lead.hook] Lead conversion integration pending: create Account, Contact, and Opportunity for lead ${lead.Id}`);
 }
 
 /**

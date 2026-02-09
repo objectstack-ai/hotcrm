@@ -12,7 +12,7 @@ export const CaseComment = ObjectSchema.create({
       label: 'Case',
       required: true
     }),
-    parent_comment_id: Field.lookup('CaseComment', {
+    parent_comment_id: Field.lookup('case_comment', {
       label: 'Parent Comment',
       description: 'Parent comment for threaded discussions'
     }),

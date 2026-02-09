@@ -108,7 +108,7 @@ export const Task = ObjectSchema.create({
       label: 'Recurrence End Date',
       description: 'When the recurring task should stop'
     }),
-    recurrence_parent_id: Field.lookup('Task', {
+    recurrence_parent_id: Field.lookup('task', {
       label: 'Recurring Parent Task',
       description: 'Link to the master recurring task',
       readonly: true
@@ -126,7 +126,7 @@ export const Task = ObjectSchema.create({
       required: true,
       defaultValue: '$currentUser'
     }),
-    parent_task_id: Field.lookup('Task', {
+    parent_task_id: Field.lookup('task', {
       label: 'Parent Task',
       description: 'For creating task hierarchies and subtasks'
     }),

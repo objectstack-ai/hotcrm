@@ -131,7 +131,7 @@ export const PriceRule = ObjectSchema.create({
       description: 'Product family this rule applies to',
       maxLength: 100
     }),
-    product_bundle_id: Field.lookup('ProductBundle', {
+    product_bundle_id: Field.lookup('product_bundle', {
       label: 'Product Bundle',
       description: 'Product bundle this rule applies to'
     }),
@@ -236,7 +236,7 @@ export const PriceRule = ObjectSchema.create({
       description: 'Maximum quantity for rule applicability',
       precision: 0
     }),
-    contract_id: Field.lookup('Contract', {
+    contract_id: Field.lookup('contract', {
       label: 'Contract',
       description: 'Contract this pricing rule is associated with'
     }),

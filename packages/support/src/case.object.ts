@@ -178,12 +178,12 @@ export const Case = ObjectSchema.create({
       required: true
     }),
     contact_id: Field.lookup('contact', { label: 'Contact' }),
-    contract_id: Field.lookup('Contract', {
+    contract_id: Field.lookup('contract', {
       label: 'Contract',
       description: 'Service contract'
     }),
     product_id: Field.lookup('product', { label: 'Product' }),
-    asset_id: Field.lookup('Asset', {
+    asset_id: Field.lookup('asset', {
       label: 'Asset',
       description: 'Related asset or equipment'
     }),
@@ -195,7 +195,7 @@ export const Case = ObjectSchema.create({
       label: 'Owner',
       required: true
     }),
-    assigned_to_queue_id: Field.lookup('Queue', {
+    assigned_to_queue_id: Field.lookup('queue', {
       label: 'Queue',
       description: 'Support team queue'
     }),

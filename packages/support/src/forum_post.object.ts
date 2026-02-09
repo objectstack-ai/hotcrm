@@ -8,11 +8,11 @@ export const ForumPost = ObjectSchema.create({
   description: 'Forum post replies and comments',
 
   fields: {
-    topic_id: Field.lookup('ForumTopic', {
+    topic_id: Field.lookup('forum_topic', {
       label: 'Topic',
       required: true
     }),
-    parent_post_id: Field.lookup('ForumPost', {
+    parent_post_id: Field.lookup('forum_post', {
       label: 'Parent Post',
       description: 'Reply to another post'
     }),
@@ -21,7 +21,7 @@ export const ForumPost = ObjectSchema.create({
       required: true,
       maxLength: 10000
     }),
-    author_id: Field.lookup('PortalUser', {
+    author_id: Field.lookup('portal_user', {
       label: 'Author',
       required: true
     }),
@@ -119,7 +119,7 @@ export const ForumPost = ObjectSchema.create({
       label: 'Last Edit Date',
       readonly: true
     }),
-    last_edit_by_id: Field.lookup('PortalUser', {
+    last_edit_by_id: Field.lookup('portal_user', {
       label: 'Last Edit By',
       readonly: true
     }),

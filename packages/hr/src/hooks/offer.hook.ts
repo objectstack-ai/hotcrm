@@ -146,9 +146,7 @@ async function handleOfferSent(offer: any, ctx: any): Promise<void> {
 
     console.log(`✅ Candidate and application status updated for offer ${offer.offer_number}`);
     
-    // TODO: Send offer email to candidate
-    // TODO: Notify hiring manager
-    // TODO: Schedule follow-up reminder
+    console.debug(`[offer.hook] Offer sent pending for ${offer.offer_number}: send offer email to candidate, notify hiring manager, and schedule follow-up reminder`);
 
   } catch (error) {
     console.error('❌ Failed to process offer sent:', error);
@@ -184,9 +182,7 @@ async function handleOfferAccepted(offer: any, ctx: any): Promise<void> {
 
     console.log(`✅ Employee record created from accepted offer ${offer.offer_number}`);
     
-    // TODO: Send welcome email
-    // TODO: Initiate background check if required
-    // TODO: Create onboarding checklist
+    console.debug(`[offer.hook] Offer acceptance pending for ${offer.offer_number}: send welcome email, initiate background check, and create onboarding checklist`);
 
   } catch (error) {
     console.error('❌ Failed to process offer acceptance:', error);
@@ -291,9 +287,7 @@ async function handleOfferRejected(offer: any, ctx: any): Promise<void> {
       });
     }
 
-    // TODO: Notify hiring manager
-    // TODO: Trigger recruitment to continue with other candidates
-    // TODO: Analyze rejection reasons for improvement
+    console.debug(`[offer.hook] Offer rejection pending for ${offer.offer_number}: notify hiring manager, continue with other candidates, and analyze rejection reasons`);
 
   } catch (error) {
     console.error('❌ Failed to process offer rejection:', error);
@@ -312,8 +306,7 @@ async function handleOfferExpired(offer: any, ctx: any): Promise<void> {
       status: 'Offer Expired'
     });
 
-    // TODO: Notify hiring manager
-    // TODO: Decide whether to extend or withdraw
+    console.debug(`[offer.hook] Offer expiry pending for ${offer.offer_number}: notify hiring manager and decide whether to extend or withdraw`);
     
   } catch (error) {
     console.error('❌ Failed to process offer expiry:', error);
@@ -332,8 +325,7 @@ async function handleOfferWithdrawn(offer: any, ctx: any): Promise<void> {
       status: 'Offer Withdrawn'
     });
 
-    // TODO: Send notification to candidate (if appropriate)
-    // TODO: Log withdrawal reason
+    console.debug(`[offer.hook] Offer withdrawal pending for ${offer.offer_number}: send notification to candidate and log withdrawal reason`);
     
   } catch (error) {
     console.error('❌ Failed to process offer withdrawal:', error);
@@ -352,7 +344,7 @@ async function logOfferStatusChange(
   try {
     console.log(`📝 Logging offer status change: ${oldStatus} → ${newStatus} for offer ${offer.offer_number}`);
     
-    // TODO: Create activity/audit log when available
+    console.debug(`[offer.hook] Audit log pending: record status change ${oldStatus} → ${newStatus} for offer ${offer.offer_number}`);
   } catch (error) {
     console.error('❌ Failed to log offer status change:', error);
   }

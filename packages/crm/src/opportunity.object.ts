@@ -2,67 +2,67 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 
 export const Opportunity = ObjectSchema.create({
   name: 'opportunity',
-  label: '商机',
-  pluralLabel: '商机',
+  label: 'Opportunity',
+  pluralLabel: 'Opportunities',
   icon: 'briefcase',
-  description: '销售商机和管道管理',
+  description: 'Sales opportunity and pipeline management',
 
   fields: {
     name: Field.text({
-      label: '商机名称',
+      label: 'Opportunity Name',
       required: true,
       maxLength: 120
     }),
     account_id: Field.lookup('account', {
-      label: '客户',
+      label: 'Account',
       required: true
     }),
-    contact_id: Field.lookup('contact', { label: '主要联系人' }),
+    contact_id: Field.lookup('contact', { label: 'Primary Contact' }),
     amount: Field.currency({
-      label: '金额',
+      label: 'Amount',
       precision: 2
     }),
     close_date: Field.date({
-      label: '预计成交日期',
+      label: 'Expected Close Date',
       required: true
     }),
     stage: Field.select({
-      label: '阶段',
+      label: 'Stage',
       required: true,
       options: [
         {
-          "label": "🔍 潜在客户",
+          "label": "🔍 Prospecting",
           "value": "Prospecting",
           "probability": 10
         },
         {
-          "label": "📞 需求确认",
+          "label": "📞 Qualification",
           "value": "Qualification",
           "probability": 20
         },
         {
-          "label": "💡 方案设计",
+          "label": "💡 Needs Analysis",
           "value": "Needs Analysis",
           "probability": 40
         },
         {
-          "label": "📊 方案展示",
+          "label": "📊 Proposal",
           "value": "Proposal",
           "probability": 60
         },
         {
-          "label": "💰 商务谈判",
+          "label": "💰 Negotiation",
           "value": "Negotiation",
           "probability": 80
         },
         {
-          "label": "✅ 成交",
+          "label": "✅ Closed Won",
           "value": "Closed Won",
           "probability": 100,
           "isWon": true
         },
         {
-          "label": "❌ 失败",
+          "label": "❌ Closed Lost",
           "value": "Closed Lost",
           "probability": 0,
           "isLost": true
@@ -70,111 +70,111 @@ export const Opportunity = ObjectSchema.create({
       ]
     }),
     probability: Field.percent({
-      label: '赢单概率',
-      description: '赢单概率百分比'
+      label: 'Win Probability',
+      description: 'Win probability percentage'
     }),
     next_step: Field.text({
-      label: '下一步行动',
-      description: '明确的下一步行动计划',
+      label: 'Next Step',
+      description: 'Clear next action plan',
       maxLength: 255
     }),
     lead_source: Field.select({
-      label: '线索来源',
+      label: 'Lead Source',
       options: [
         {
-          "label": "Web 官网",
+          "label": "Web",
           "value": "Web"
         },
         {
-          "label": "电话咨询",
+          "label": "Phone Inquiry",
           "value": "Phone Inquiry"
         },
         {
-          "label": "合作伙伴推荐",
+          "label": "Partner Referral",
           "value": "Partner Referral"
         },
         {
-          "label": "展会",
+          "label": "Trade Show",
           "value": "Trade Show"
         },
         {
-          "label": "社交媒体",
+          "label": "Social Media",
           "value": "Social Media"
         },
         {
-          "label": "广告",
+          "label": "Advertisement",
           "value": "Advertisement"
         },
         {
-          "label": "老客户推荐",
+          "label": "Customer Referral",
           "value": "Customer Referral"
         },
         {
-          "label": "其他",
+          "label": "Other",
           "value": "Other"
         }
       ]
     }),
     forecast_category: Field.select({
-      label: '预测类别',
+      label: 'Forecast Category',
       defaultValue: 'Pipeline',
       options: [
         {
-          "label": "渠道",
+          "label": "Pipeline",
           "value": "Pipeline"
         },
         {
-          "label": "最佳情况",
+          "label": "Best Case",
           "value": "Best Case"
         },
         {
-          "label": "承诺",
+          "label": "Commit",
           "value": "Commit"
         },
         {
-          "label": "已忽略",
+          "label": "Omitted",
           "value": "Omitted"
         },
         {
-          "label": "已成交",
+          "label": "Closed",
           "value": "Closed"
         }
       ]
     }),
     type: Field.select({
-      label: '商机类型',
+      label: 'Opportunity Type',
       options: [
         {
-          "label": "新业务",
+          "label": "New Business",
           "value": "New Business"
         },
         {
-          "label": "现有业务-升级",
+          "label": "Existing Business - Upgrade",
           "value": "Existing Business - Upgrade"
         },
         {
-          "label": "现有业务-续约",
+          "label": "Existing Business - Renewal",
           "value": "Existing Business - Renewal"
         },
         {
-          "label": "现有业务-更换",
+          "label": "Existing Business - Replacement",
           "value": "Existing Business - Replacement"
         }
       ]
     }),
     expected_revenue: Field.currency({
-      label: '预期营收',
-      description: '基于金额和赢单概率计算',
+      label: 'Expected Revenue',
+      description: 'Calculated from amount and win probability',
       readonly: true,
       precision: 2
     }),
     days_open: Field.number({
-      label: '开放天数',
+      label: 'Days Open',
       readonly: true,
       precision: 0
     }),
     owner_id: Field.lookup('users', {
-      label: '负责人',
+      label: 'Owner',
       required: true,
       defaultValue: '$currentUser'
     })

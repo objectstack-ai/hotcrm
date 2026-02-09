@@ -76,12 +76,7 @@ async function notifyManager(employee: any, ctx: any): Promise<void> {
     // In production, this would send an email or create a notification
     console.log(`📧 Notification sent to manager ${employee.manager_id} about new employee ${employee.full_name}`);
     
-    // TODO: Integrate with notification system
-    // await sendEmail({
-    //   to: manager.email,
-    //   subject: `New Team Member: ${employee.full_name}`,
-    //   body: `Welcome ${employee.full_name} to your team...`
-    // });
+    console.debug(`[employee.hook] Notification system integration pending: notify manager ${employee.manager_id} about new employee ${employee.full_name}`);
 
   } catch (error) {
     console.error('❌ Failed to notify manager:', error);
@@ -165,9 +160,7 @@ const EmployeeStatusChangeTrigger: Hook = {
 async function handleActivation(employee: any, ctx: any): Promise<void> {
   console.log(`✅ Employee ${employee.full_name} activated`);
   
-  // TODO: Enable system accounts
-  // TODO: Grant access permissions
-  // TODO: Add to team channels
+  console.debug(`[employee.hook] Activation pending for ${employee.full_name}: enable system accounts, grant access permissions, and add to team channels`);
 }
 
 /**
@@ -188,10 +181,7 @@ async function handleTermination(employee: any, ctx: any): Promise<void> {
 
     console.log(`📋 Created offboarding record for ${employee.full_name}`);
     
-    // TODO: Revoke system access
-    // TODO: Schedule exit interview
-    // TODO: Process final payroll
-    // TODO: Return equipment checklist
+    console.debug(`[employee.hook] Exit process initiated for ${employee.full_name}: access revocation, exit interview, final payroll, and equipment return pending`);
 
   } catch (error) {
     console.error('❌ Failed to process termination:', error);
@@ -204,9 +194,7 @@ async function handleTermination(employee: any, ctx: any): Promise<void> {
 async function handleLeaveStart(employee: any, ctx: any): Promise<void> {
   console.log(`🏖️ Employee ${employee.full_name} started leave`);
   
-  // TODO: Update team calendars
-  // TODO: Set up out-of-office auto-responder
-  // TODO: Reassign urgent tasks
+  console.debug(`[employee.hook] Leave process pending for ${employee.full_name}: update team calendars, set up out-of-office auto-responder, and reassign urgent tasks`);
 }
 
 /**
@@ -221,7 +209,7 @@ async function logEmployeeStatusChange(
   try {
     console.log(`📝 Logging status change: ${oldStatus} → ${newStatus} for ${employee.full_name}`);
     
-    // TODO: Create activity/audit log when available for HR module
+    console.debug(`[employee.hook] Audit log pending: record status change ${oldStatus} → ${newStatus} for employee ${employee.full_name}`);
   } catch (error) {
     console.error('❌ Failed to log status change:', error);
   }
@@ -269,7 +257,7 @@ const EmployeeDataValidationTrigger: Hook = {
 
       // Validate email domain for company email
       if (employee.email && ctx.event === 'beforeInsert') {
-        // TODO: Validate against allowed company email domains
+        console.debug(`[employee.hook] Email domain validation pending: validate ${employee.email} against allowed company email domains`);
       }
 
       console.log(`✅ Employee data validation passed for ${employee.first_name} ${employee.last_name}`);

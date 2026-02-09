@@ -2,117 +2,117 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 
 export const Recruitment = ObjectSchema.create({
   name: 'recruitment',
-  label: '招聘需求',
-  pluralLabel: '招聘需求',
+  label: 'Recruitment Requisition',
+  pluralLabel: 'Recruitment Requisitions',
   icon: 'user-plus',
-  description: '职位招聘需求和招聘计划管理',
+  description: 'Job recruitment requisition and hiring plan management',
 
   fields: {
     title: Field.text({
-      label: '招聘标题',
+      label: 'Recruitment Title',
       required: true,
       maxLength: 255
     }),
     requisition_number: Field.text({
-      label: '需求编号',
+      label: 'Requisition Number',
       unique: true,
       maxLength: 40
     }),
     position_id: Field.lookup('position', {
-      label: '招聘职位',
+      label: 'Position',
       required: true
     }),
     department_id: Field.lookup('department', {
-      label: '所属部门',
+      label: 'Department',
       required: true
     }),
     hiring_manager_id: Field.lookup('employee', {
-      label: '招聘负责人',
-      description: '负责此次招聘的经理',
+      label: 'Hiring Manager',
+      description: 'Manager responsible for this recruitment',
       required: true
     }),
     headcount: Field.number({
-      label: '招聘人数',
+      label: 'Headcount',
       required: true,
       defaultValue: 1
     }),
     priority: Field.select({
-      label: '优先级',
+      label: 'Priority',
       defaultValue: 'Medium',
       options: [
         {
-          "label": "紧急",
+          "label": "Urgent",
           "value": "Urgent"
         },
         {
-          "label": "高",
+          "label": "High",
           "value": "High"
         },
         {
-          "label": "中",
+          "label": "Medium",
           "value": "Medium"
         },
         {
-          "label": "低",
+          "label": "Low",
           "value": "Low"
         }
       ]
     }),
     status: Field.select({
-      label: '状态',
+      label: 'Status',
       defaultValue: 'Open',
       options: [
         {
-          "label": "草稿",
+          "label": "Draft",
           "value": "Draft"
         },
         {
-          "label": "审批中",
+          "label": "Pending Approval",
           "value": "Pending Approval"
         },
         {
-          "label": "开放",
+          "label": "Open",
           "value": "Open"
         },
         {
-          "label": "进行中",
+          "label": "In Progress",
           "value": "In Progress"
         },
         {
-          "label": "暂停",
+          "label": "On Hold",
           "value": "On Hold"
         },
         {
-          "label": "已完成",
+          "label": "Completed",
           "value": "Filled"
         },
         {
-          "label": "已取消",
+          "label": "Cancelled",
           "value": "Cancelled"
         }
       ]
     }),
-    target_start_date: Field.date({ label: '期望到岗日期' }),
-    posted_date: Field.date({ label: '发布日期' }),
-    close_date: Field.date({ label: '关闭日期' }),
+    target_start_date: Field.date({ label: 'Target Start Date' }),
+    posted_date: Field.date({ label: 'Posted Date' }),
+    close_date: Field.date({ label: 'Close Date' }),
     job_description: Field.textarea({
-      label: '职位描述',
-      description: '详细的职位职责和要求',
+      label: 'Position Description',
+      description: 'Detailed position responsibilities and requirements',
     }),
     requirements: Field.textarea({
-      label: '任职要求',
-      description: '学历、经验、技能等要求',
+      label: 'Requirements',
+      description: 'Education, experience, skills, and other requirements',
     }),
     salary_range_min: Field.currency({
-      label: '薪资范围（最低）',
+      label: 'Salary Range (Min)',
       precision: 2
     }),
     salary_range_max: Field.currency({
-      label: '薪资范围（最高）',
+      label: 'Salary Range (Max)',
       precision: 2
     }),
     notes: Field.textarea({
-      label: '备注',
+      label: 'Notes',
     })
   },
 

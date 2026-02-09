@@ -82,7 +82,7 @@ console.log(Invoice.label); // "Invoice"
 
 ### Working with Contracts
 ```typescript
-import { db } from '@hotcrm/core';
+import { db } from '../db';
 
 // Create a contract from an opportunity
 const contract = await db.create('contract', {

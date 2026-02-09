@@ -195,9 +195,7 @@ const CandidateStatusChangeTrigger: Hook = {
 async function handleInterviewingStatus(candidate: any, ctx: any): Promise<void> {
   console.log(`📅 Candidate ${candidate.first_name} ${candidate.last_name} moved to interviewing stage`);
   
-  // TODO: Schedule first interview
-  // TODO: Send email notification to hiring manager
-  // TODO: Create interview records
+  console.debug(`[candidate.hook] Interview process pending for ${candidate.first_name} ${candidate.last_name}: schedule first interview, notify hiring manager, and create interview records`);
 }
 
 /**
@@ -206,10 +204,7 @@ async function handleInterviewingStatus(candidate: any, ctx: any): Promise<void>
 async function handleHiredStatus(candidate: any, ctx: any): Promise<void> {
   console.log(`🎉 Candidate ${candidate.first_name} ${candidate.last_name} has been hired`);
   
-  // TODO: Create offer record if not exists
-  // TODO: Create onboarding record
-  // TODO: Send welcome email
-  // TODO: Notify HR team
+  console.debug(`[candidate.hook] Hiring process pending for ${candidate.first_name} ${candidate.last_name}: create offer record, initiate onboarding, send welcome email, and notify HR team`);
 }
 
 /**
@@ -218,8 +213,7 @@ async function handleHiredStatus(candidate: any, ctx: any): Promise<void> {
 async function handleRejectedStatus(candidate: any, ctx: any): Promise<void> {
   console.log(`❌ Candidate ${candidate.first_name} ${candidate.last_name} has been rejected`);
   
-  // TODO: Send rejection email (if configured)
-  // TODO: Archive candidate data
+  console.debug(`[candidate.hook] Rejection process pending for ${candidate.first_name} ${candidate.last_name}: send rejection email and archive candidate data`);
 }
 
 /**
@@ -228,8 +222,7 @@ async function handleRejectedStatus(candidate: any, ctx: any): Promise<void> {
 async function handleWithdrawnStatus(candidate: any, ctx: any): Promise<void> {
   console.log(`🚪 Candidate ${candidate.first_name} ${candidate.last_name} has withdrawn`);
   
-  // TODO: Log withdrawal reason
-  // TODO: Update recruitment metrics
+  console.debug(`[candidate.hook] Withdrawal process pending for ${candidate.first_name} ${candidate.last_name}: log withdrawal reason and update recruitment metrics`);
 }
 
 /**
@@ -246,7 +239,7 @@ async function logStatusChange(
     // This is a placeholder implementation
     console.log(`📝 Logging status change: ${oldStatus} → ${newStatus}`);
     
-    // TODO: Create activity record when activity system is available for HR
+    console.debug(`[candidate.hook] Activity record pending: log status change ${oldStatus} → ${newStatus} for candidate ${candidate.first_name} ${candidate.last_name}`);
   } catch (error) {
     console.error('❌ Failed to log status change:', error);
   }
