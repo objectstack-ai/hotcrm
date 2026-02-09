@@ -15,24 +15,43 @@ const mockQlDocUpdate = vi.fn();
 const createMockContext = (
   event: 'beforeInsert' | 'beforeUpdate' | 'afterUpdate',
   input: any,
-  previous?: any
-): HookContext => ({
-  event,
-  input,
-  previous,
-  ql: {
-    find: mockQlFind,
-    doc: {
-      get: mockQlDocGet,
-      create: mockQlDocCreate,
-      update: mockQlDocUpdate
-    }
-  } as any,
-  session: {
-    userId: 'user_123',
-    tenantId: 'tenant_123'
-  } as any
-});
+  previous?: any,
+  result?: any
+): any => {
+  const baseContext = {
+    object: 'offer',
+    event,
+    ql: {
+      find: mockQlFind,
+      doc: {
+        get: mockQlDocGet,
+        create: mockQlDocCreate,
+        update: mockQlDocUpdate
+      }
+    } as any,
+    session: {
+      userId: 'user_123',
+      tenantId: 'tenant_123'
+    } as any
+  };
+
+  if (event === 'beforeInsert' || event === 'beforeUpdate') {
+    return {
+      ...baseContext,
+      input: { doc: input },
+      previous
+    };
+  } else if (event === 'afterUpdate') {
+    return {
+      ...baseContext,
+      input: { doc: input },
+      result: result || input,
+      previous
+    };
+  }
+
+  return baseContext;
+};
 
 describe('Offer Hook - OfferCreationTrigger', () => {
   beforeEach(() => {
@@ -58,8 +77,8 @@ describe('Offer Hook - OfferCreationTrigger', () => {
       await OfferCreationTrigger.handler(ctx);
 
       // Assert
-      expect(offer.offer_number).toBeDefined();
-      expect(offer.offer_number).toMatch(/^OFF-\d{6}-\d{4}$/);
+      expect(ctx.input.doc.offer_number).toBeDefined();
+      expect(ctx.input.doc.offer_number).toMatch(/^OFF-\d{6}-\d{4}$/);
     });
 
     it('should not override existing offer number', async () => {
@@ -76,7 +95,7 @@ describe('Offer Hook - OfferCreationTrigger', () => {
       await OfferCreationTrigger.handler(ctx);
 
       // Assert
-      expect(offer.offer_number).toBe('CUSTOM-001');
+      expect(ctx.input.doc.offer_number).toBe('CUSTOM-001');
     });
 
     it('should generate sequential offer numbers', async () => {
@@ -103,7 +122,7 @@ describe('Offer Hook - OfferCreationTrigger', () => {
       await OfferCreationTrigger.handler(ctx);
 
       // Assert
-      expect(offer1.offer_number).toBe(`OFF-${yearMonth}-0006`);
+      expect(ctx.input.doc.offer_number).toBe(`OFF-${yearMonth}-0006`);
     });
   });
 
@@ -123,7 +142,7 @@ describe('Offer Hook - OfferCreationTrigger', () => {
       await OfferCreationTrigger.handler(ctx);
 
       // Assert
-      expect(offer.expiry_date).toBe('2024-06-08'); // 7 days after 2024-06-01
+      expect(ctx.input.doc.expiry_date).toBe('2024-06-08'); // 7 days after 2024-06-01
     });
 
     it('should not override existing expiry date', async () => {
@@ -142,7 +161,7 @@ describe('Offer Hook - OfferCreationTrigger', () => {
       await OfferCreationTrigger.handler(ctx);
 
       // Assert
-      expect(offer.expiry_date).toBe('2024-06-15');
+      expect(ctx.input.doc.expiry_date).toBe('2024-06-15');
     });
   });
 
@@ -162,7 +181,7 @@ describe('Offer Hook - OfferCreationTrigger', () => {
       await OfferCreationTrigger.handler(ctx);
 
       // Assert
-      expect(offer.status).toBe('Draft');
+      expect(ctx.input.doc.status).toBe('Draft');
     });
 
     it('should not override existing status', async () => {
@@ -181,7 +200,7 @@ describe('Offer Hook - OfferCreationTrigger', () => {
       await OfferCreationTrigger.handler(ctx);
 
       // Assert
-      expect(offer.status).toBe('Approved');
+      expect(ctx.input.doc.status).toBe('Approved');
     });
   });
 
@@ -258,9 +277,9 @@ describe('Offer Hook - OfferApprovalTrigger', () => {
       await OfferApprovalTrigger.handler(ctx);
 
       // Assert
-      expect(offer.status).toBe('Approved');
-      expect(offer.approved_date).toBeDefined();
-      expect(offer.approved_by).toBe('user_123');
+      expect(ctx.input.doc.status).toBe('Approved');
+      expect(ctx.input.doc.approved_date).toBeDefined();
+      expect(ctx.input.doc.approved_by).toBe('user_123');
       expect(consoleLogSpy).toHaveBeenCalledWith(
         expect.stringContaining('approved by user_123')
       );
@@ -289,7 +308,7 @@ describe('Offer Hook - OfferApprovalTrigger', () => {
       await OfferApprovalTrigger.handler(ctx);
 
       // Assert
-      expect(offer.status).toBe('Sent'); // Should remain Sent
+      expect(ctx.input.doc.status).toBe('Sent'); // Should remain Sent
     });
 
     it('should handle offer rejection', async () => {
@@ -314,7 +333,7 @@ describe('Offer Hook - OfferApprovalTrigger', () => {
       await OfferApprovalTrigger.handler(ctx);
 
       // Assert
-      expect(offer.status).toBe('Draft');
+      expect(ctx.input.doc.status).toBe('Draft');
       expect(consoleLogSpy).toHaveBeenCalledWith(
         expect.stringContaining('rejected in approval')
       );
@@ -345,7 +364,7 @@ describe('Offer Hook - OfferApprovalTrigger', () => {
 
       // Assert
       // Should not update approved_date since it was already approved
-      expect(offer.approved_date).toBe('2024-05-15');
+      expect(ctx.input.doc.approved_date).toBe('2024-05-15');
     });
   });
 
@@ -367,7 +386,7 @@ describe('Offer Hook - OfferApprovalTrigger', () => {
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation();
 
       // Force an error by making offer have no status
-      delete offer.status;
+      delete ctx.input.doc.status;
 
       // Act & Assert
       await expect(OfferApprovalTrigger.handler(ctx)).resolves.not.toThrow();
@@ -395,7 +414,7 @@ describe('Offer Hook - OfferStatusChangeTrigger', () => {
         status: 'Draft'
       };
 
-      const ctx = createMockContext('afterUpdate', offer, previous);
+      const ctx = createMockContext('afterUpdate', offer, previous, offer);
       const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation();
 
       // Act
@@ -422,7 +441,7 @@ describe('Offer Hook - OfferStatusChangeTrigger', () => {
         status: 'Draft'
       };
 
-      const ctx = createMockContext('afterUpdate', offer, previous);
+      const ctx = createMockContext('afterUpdate', offer, previous, offer);
       const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation();
 
       // Act
@@ -455,7 +474,7 @@ describe('Offer Hook - OfferStatusChangeTrigger', () => {
 
       mockQlDocUpdate.mockResolvedValue({});
 
-      const ctx = createMockContext('afterUpdate', offer, previous);
+      const ctx = createMockContext('afterUpdate', offer, previous, offer);
       const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation();
 
       // Act
@@ -492,7 +511,7 @@ describe('Offer Hook - OfferStatusChangeTrigger', () => {
 
       mockQlDocUpdate.mockResolvedValue({});
 
-      const ctx = createMockContext('afterUpdate', offer, previous);
+      const ctx = createMockContext('afterUpdate', offer, previous, offer);
 
       // Act
       await OfferStatusChangeTrigger.handler(ctx);
@@ -532,7 +551,7 @@ describe('Offer Hook - OfferStatusChangeTrigger', () => {
       mockQlDocGet.mockResolvedValue(mockCandidate);
       mockQlDocCreate.mockResolvedValue({ id: 'emp_123' });
 
-      const ctx = createMockContext('afterUpdate', offer, previous);
+      const ctx = createMockContext('afterUpdate', offer, previous, offer);
       const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation();
 
       // Act
@@ -578,7 +597,7 @@ describe('Offer Hook - OfferStatusChangeTrigger', () => {
       mockQlDocGet.mockResolvedValue(mockCandidate);
       mockQlDocCreate.mockResolvedValue({ id: 'emp_123' });
 
-      const ctx = createMockContext('afterUpdate', offer, previous);
+      const ctx = createMockContext('afterUpdate', offer, previous, offer);
 
       // Act
       await OfferStatusChangeTrigger.handler(ctx);
@@ -625,7 +644,7 @@ describe('Offer Hook - OfferStatusChangeTrigger', () => {
       mockQlDocCreate.mockResolvedValue({ id: 'emp_123' });
       mockQlFind.mockResolvedValue([]);
 
-      const ctx = createMockContext('afterUpdate', offer, previous);
+      const ctx = createMockContext('afterUpdate', offer, previous, offer);
       const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation();
 
       // Act
@@ -680,7 +699,7 @@ describe('Offer Hook - OfferStatusChangeTrigger', () => {
       mockQlDocCreate.mockResolvedValue({ id: 'emp_123' });
       mockQlFind.mockResolvedValue([]);
 
-      const ctx = createMockContext('afterUpdate', offer, previous);
+      const ctx = createMockContext('afterUpdate', offer, previous, offer);
 
       // Act
       await OfferStatusChangeTrigger.handler(ctx);
@@ -710,7 +729,7 @@ describe('Offer Hook - OfferStatusChangeTrigger', () => {
 
       mockQlDocUpdate.mockResolvedValue({});
 
-      const ctx = createMockContext('afterUpdate', offer, previous);
+      const ctx = createMockContext('afterUpdate', offer, previous, offer);
       const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation();
 
       // Act
@@ -747,7 +766,7 @@ describe('Offer Hook - OfferStatusChangeTrigger', () => {
 
       mockQlDocUpdate.mockResolvedValue({});
 
-      const ctx = createMockContext('afterUpdate', offer, previous);
+      const ctx = createMockContext('afterUpdate', offer, previous, offer);
 
       // Act
       await OfferStatusChangeTrigger.handler(ctx);
@@ -776,7 +795,7 @@ describe('Offer Hook - OfferStatusChangeTrigger', () => {
 
       mockQlDocUpdate.mockResolvedValue({});
 
-      const ctx = createMockContext('afterUpdate', offer, previous);
+      const ctx = createMockContext('afterUpdate', offer, previous, offer);
       const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation();
 
       // Act
@@ -811,7 +830,7 @@ describe('Offer Hook - OfferStatusChangeTrigger', () => {
 
       mockQlDocUpdate.mockResolvedValue({});
 
-      const ctx = createMockContext('afterUpdate', offer, previous);
+      const ctx = createMockContext('afterUpdate', offer, previous, offer);
       const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation();
 
       // Act
@@ -847,7 +866,7 @@ describe('Offer Hook - OfferStatusChangeTrigger', () => {
 
       mockQlDocUpdate.mockRejectedValue(new Error('Database error'));
 
-      const ctx = createMockContext('afterUpdate', offer, previous);
+      const ctx = createMockContext('afterUpdate', offer, previous, offer);
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation();
 
       // Act & Assert
@@ -874,7 +893,7 @@ describe('Offer Hook - OfferStatusChangeTrigger', () => {
       mockQlDocUpdate.mockResolvedValue({});
       mockQlDocGet.mockRejectedValue(new Error('Candidate not found'));
 
-      const ctx = createMockContext('afterUpdate', offer, previous);
+      const ctx = createMockContext('afterUpdate', offer, previous, offer);
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation();
 
       // Act & Assert
