@@ -5,7 +5,7 @@ export const Contact = ObjectSchema.create({
   label: 'Contact',
   pluralLabel: 'Contacts',
   icon: 'user',
-  description: '个人联系人管理',
+  description: 'Individual contact management',
 
   fields: {
     first_name: Field.text({
@@ -81,7 +81,7 @@ export const Contact = ObjectSchema.create({
     fax: Field.phone({ label: 'Fax' }),
     is_decision_maker: Field.boolean({
       label: 'Decision Maker',
-      description: '是否为主要决策者',
+      description: 'Whether this contact is a primary decision maker',
       defaultValue: false
     }),
     influence_level: Field.select({

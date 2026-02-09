@@ -80,7 +80,7 @@ export const Form = ObjectSchema.create({
     }),
     submit_button_text: Field.text({
       label: 'Submit Button Text',
-      defaultValue: '提交',
+      defaultValue: 'Submit',
       maxLength: 50
     }),
     submit_success_message: Field.textarea({

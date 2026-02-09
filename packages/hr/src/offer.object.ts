@@ -110,7 +110,7 @@ export const Offer = ObjectSchema.create({
           "value": "3 Months"
         },
         {
-          "label": "6个月",
+          "label": "6 Months",
           "value": "6 Months"
         }
       ]

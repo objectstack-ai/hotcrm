@@ -5,7 +5,7 @@ export const Account = ObjectSchema.create({
   label: 'Account',
   pluralLabel: 'Accounts',
   icon: 'building',
-  description: '企业客户和组织管理',
+  description: 'Enterprise customer and organization management',
 
   fields: {
     name: Field.text({
@@ -180,7 +180,7 @@ export const Account = ObjectSchema.create({
     }),
     sla_tier: Field.select({
       label: 'SLA Tier',
-      description: '服务等级协议层级',
+      description: 'Service level agreement tier',
       options: [
         {
           "label": "Platinum",
@@ -202,7 +202,7 @@ export const Account = ObjectSchema.create({
     }),
     health_score: Field.number({
       label: 'Health Score',
-      description: '客户健康度评分 (0-100)',
+      description: 'Customer health score (0-100)',
       min: 0,
       max: 100,
       precision: 0
@@ -210,7 +210,7 @@ export const Account = ObjectSchema.create({
     next_renewal_date: Field.date({ label: 'Next Renewal Date' }),
     contract_value: Field.currency({
       label: 'Contract Value',
-      description: '所有有效合同的总价值',
+      description: 'Total value of all active contracts',
       readonly: true,
       precision: 2
     }),

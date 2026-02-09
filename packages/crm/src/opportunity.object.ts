@@ -5,7 +5,7 @@ export const Opportunity = ObjectSchema.create({
   label: 'Opportunity',
   pluralLabel: 'Opportunities',
   icon: 'briefcase',
-  description: '销售商机和管道管理',
+  description: 'Sales opportunity and pipeline management',
 
   fields: {
     name: Field.text({
@@ -71,11 +71,11 @@ export const Opportunity = ObjectSchema.create({
     }),
     probability: Field.percent({
       label: 'Win Probability',
-      description: '赢单概率百分比'
+      description: 'Win probability percentage'
     }),
     next_step: Field.text({
       label: 'Next Step',
-      description: '明确的下一步行动计划',
+      description: 'Clear next action plan',
       maxLength: 255
     }),
     lead_source: Field.select({
@@ -164,7 +164,7 @@ export const Opportunity = ObjectSchema.create({
     }),
     expected_revenue: Field.currency({
       label: 'Expected Revenue',
-      description: '基于金额和赢单概率计算',
+      description: 'Calculated from amount and win probability',
       readonly: true,
       precision: 2
     }),
