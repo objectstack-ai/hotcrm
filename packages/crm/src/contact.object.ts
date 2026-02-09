@@ -2,154 +2,154 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 
 export const Contact = ObjectSchema.create({
   name: 'contact',
-  label: '联系人',
-  pluralLabel: '联系人',
+  label: 'Contact',
+  pluralLabel: 'Contacts',
   icon: 'user',
   description: '个人联系人管理',
 
   fields: {
     first_name: Field.text({
-      label: '名',
+      label: 'First Name',
       maxLength: 40
     }),
     last_name: Field.text({
-      label: '姓',
+      label: 'Last Name',
       required: true,
       maxLength: 80
     }),
     salutation: Field.select({
-      label: '称谓',
+      label: 'Salutation',
       options: [
         {
-          "label": "先生",
+          "label": "Mr.",
           "value": "Mr."
         },
         {
-          "label": "女士",
+          "label": "Ms.",
           "value": "Ms."
         },
         {
-          "label": "博士",
+          "label": "Dr.",
           "value": "Dr."
         },
         {
-          "label": "教授",
+          "label": "Prof.",
           "value": "Prof."
         }
       ]
     }),
     account_id: Field.lookup('account', { label: 'Account Id', deleteBehavior: 'cascade' }),
     title: Field.text({
-      label: '职位',
+      label: 'Title',
       maxLength: 128
     }),
     department: Field.text({
-      label: '部门',
+      label: 'Department',
       maxLength: 80
     }),
     level: Field.select({
-      label: '职级',
+      label: 'Level',
       options: [
         {
-          "label": "C级高管",
+          "label": "C-Level",
           "value": "C-level"
         },
         {
-          "label": "VP级",
+          "label": "VP",
           "value": "VP"
         },
         {
-          "label": "总监",
+          "label": "Director",
           "value": "Director"
         },
         {
-          "label": "经理",
+          "label": "Manager",
           "value": "Manager"
         },
         {
-          "label": "专员",
+          "label": "Individual Contributor",
           "value": "Individual Contributor"
         }
       ]
     }),
     email: Field.email({
-      label: '邮箱',
+      label: 'Email',
       unique: true
     }),
-    phone: Field.phone({ label: '电话' }),
-    mobile_phone: Field.phone({ label: '手机' }),
-    fax: Field.phone({ label: '传真' }),
+    phone: Field.phone({ label: 'Phone' }),
+    mobile_phone: Field.phone({ label: 'Mobile' }),
+    fax: Field.phone({ label: 'Fax' }),
     is_decision_maker: Field.boolean({
-      label: '决策者',
+      label: 'Decision Maker',
       description: '是否为主要决策者',
       defaultValue: false
     }),
     influence_level: Field.select({
-      label: '影响力',
+      label: 'Influence Level',
       options: [
         {
-          "label": "高 - 最终决策者",
+          "label": "High - Final Decision Maker",
           "value": "High"
         },
         {
-          "label": "中 - 关键影响者",
+          "label": "Medium - Key Influencer",
           "value": "Medium"
         },
         {
-          "label": "低 - 普通参与者",
+          "label": "Low - General Participant",
           "value": "Low"
         }
       ]
     }),
     relationship_strength: Field.select({
-      label: '关系强度',
+      label: 'Relationship Strength',
       defaultValue: 'Unknown',
       options: [
         {
-          "label": "强 - 战略伙伴",
+          "label": "Strong - Strategic Partner",
           "value": "Strong"
         },
         {
-          "label": "中 - 良好关系",
+          "label": "Medium - Good Relationship",
           "value": "Medium"
         },
         {
-          "label": "弱 - 初步接触",
+          "label": "Weak - Initial Contact",
           "value": "Weak"
         },
         {
-          "label": "未知",
+          "label": "Unknown",
           "value": "Unknown"
         }
       ]
     }),
     preferred_contact: Field.select({
-      label: '首选联系方式',
+      label: 'Preferred Contact Method',
       options: [
         {
-          "label": "邮箱",
+          "label": "Email",
           "value": "email"
         },
         {
-          "label": "电话",
+          "label": "Phone",
           "value": "phone"
         },
         {
-          "label": "手机",
+          "label": "Mobile",
           "value": "Mobile"
         },
         {
-          "label": "微信",
+          "label": "WeChat",
           "value": "WeChat"
         }
       ]
     }),
     last_contact_date: Field.date({
-      label: '最后联系日期',
+      label: 'Last Contact Date',
       readonly: true
     }),
     notes: Field.textarea({
-      label: '备注',
+      label: 'Notes',
     })
   },
 
