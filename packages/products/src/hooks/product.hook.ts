@@ -125,8 +125,7 @@ async function handleStockLevelChange(ctx: any): Promise<void> {
       console.warn(`⚠️ Low stock alert: ${product.Name} (${product.StockLevel} units)`);
       
       // Create alert/notification
-      // TODO: Send notification to inventory manager
-      console.log('📧 Low stock notification would be sent here');
+      console.debug(`[product.hook] Inventory notification pending: stock below threshold for product ${product.Name} (${product.StockLevel} units remaining)`);
     }
 
     // Check if out of stock
@@ -184,11 +183,9 @@ async function handlePriceChange(ctx: any): Promise<void> {
       });
       console.log('✅ Price change activity logged');
 
-      // TODO: Update all active pricebook entries
-      console.log('💰 Pricebook entries would be updated here');
+      console.debug(`[product.hook] Pricebook update pending: update active pricebook entries for product ${product.Name} with new list price ${product.ListPrice}`);
       
-      // TODO: Notify sales team about price change
-      console.log('📧 Price change notification would be sent here');
+      console.debug(`[product.hook] Sales team notification pending: price change for product ${product.Name} from ${ctx.previous.ListPrice} to ${product.ListPrice}`);
     }
 
     if (costPriceChanged) {
@@ -227,11 +224,7 @@ async function handleStatusChange(ctx: any): Promise<void> {
     if (product.Status === 'Inactive' || product.Status === 'Discontinued') {
       console.log(`🚫 Product deactivated: ${product.Name}`);
       
-      // TODO: Remove from active price books
-      console.log('💰 Would remove from active price books');
-      
-      // TODO: Notify users with open quotes containing this product
-      console.log('📧 Would notify users with affected quotes');
+      console.debug(`[product.hook] Deactivation pending for product ${product.Name}: remove from active price books and notify users with affected quotes`);
     }
 
     // Handle reactivation
@@ -239,8 +232,7 @@ async function handleStatusChange(ctx: any): Promise<void> {
         product.Status === 'Active') {
       console.log(`✅ Product reactivated: ${product.Name}`);
       
-      // TODO: Add to default price book
-      console.log('💰 Would add to default price book');
+      console.debug(`[product.hook] Reactivation pending for product ${product.Name}: add to default price book`);
     }
 
     // Log activity for status change
@@ -268,9 +260,7 @@ async function validateBundleDependencies(
   db: any
 ): Promise<boolean> {
   try {
-    // TODO: Query ProductBundleItem and ProductBundleDependency
-    // Validate that all dependencies are satisfied
-    console.log(`🔗 Validating bundle dependencies for ${bundleId}`);
+    console.debug(`[product.hook] Bundle dependency validation pending: query ProductBundleItem and ProductBundleDependency for bundle ${bundleId}`);
     return true;
   } catch (error) {
     console.error('❌ Error validating bundle dependencies:', error);
@@ -287,9 +277,7 @@ async function checkBundleConstraints(
   db: any
 ): Promise<boolean> {
   try {
-    // TODO: Query ProductBundleConstraint
-    // Validate that no constraints are violated
-    console.log(`⚠️ Checking bundle constraints for ${bundleId}`);
+    console.debug(`[product.hook] Bundle constraint check pending: query ProductBundleConstraint for bundle ${bundleId}`);
     return true;
   } catch (error) {
     console.error('❌ Error checking bundle constraints:', error);

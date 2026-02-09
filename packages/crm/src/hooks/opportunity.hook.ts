@@ -149,8 +149,7 @@ async function handleClosedWon(ctx: any): Promise<void> {
 
   // 4. Send notification (placeholder)
   try {
-    // TODO: Implement notification system
-    console.log(`📧 Notification sent to ${ctx.user.email} about won opportunity`);
+    console.debug(`[opportunity.hook] Notification pending: notify ${ctx.user.email} about won opportunity ${opportunity.Id}`);
   } catch (error) {
     console.error('❌ Failed to send notification:', error);
   }
@@ -188,8 +187,7 @@ async function handleClosedLost(ctx: any): Promise<void> {
     console.error('❌ Failed to log activity:', error);
   }
 
-  // TODO: Trigger loss analysis workflow
-  console.log('📊 Loss analysis workflow should be triggered');
+  console.debug(`[opportunity.hook] Loss analysis workflow pending: analyze loss reasons for opportunity ${opportunity.Id}, amount: ${opportunity.Amount?.toLocaleString() || 0}`);
 }
 
 /**

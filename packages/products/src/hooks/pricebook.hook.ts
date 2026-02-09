@@ -236,8 +236,7 @@ async function handleStatusChange(ctx: any): Promise<void> {
         }
       }
 
-      // TODO: Notify sales team about new active pricebook
-      console.log('📧 Activation notification would be sent here');
+      console.debug(`[pricebook.hook] Activation notification pending: notify sales team about new active pricebook "${pricebook.Name}"`);
     }
 
     // Handle expiration
@@ -251,8 +250,7 @@ async function handleStatusChange(ctx: any): Promise<void> {
         });
       }
 
-      // TODO: Notify users about pricebook expiration
-      console.log('📧 Expiration notification would be sent here');
+      console.debug(`[pricebook.hook] Expiration notification pending: notify users about expired pricebook "${pricebook.Name}"`);
     }
 
     // Log activity for status change
@@ -288,11 +286,7 @@ async function handleCurrencyChange(ctx: any): Promise<void> {
     if (currencyChanged) {
       console.log(`💱 Currency changed from ${ctx.previous.CurrencyCode} to ${pricebook.CurrencyCode}`);
       
-      // TODO: Update all pricebook entries to reflect new currency
-      console.log('💱 Pricebook entries would be updated for new currency');
-      
-      // TODO: Notify users about currency change
-      console.log('📧 Currency change notification would be sent here');
+      console.debug(`[pricebook.hook] Currency update pending: update pricebook entries and notify users about currency change from ${ctx.previous.CurrencyCode} to ${pricebook.CurrencyCode} for pricebook "${pricebook.Name}"`);
     }
 
     if (rateChanged) {
@@ -339,9 +333,7 @@ async function activatePricebookEntries(
   try {
     console.log(`✅ Activating pricebook entries for pricebook: ${pricebookId}`);
     
-    // TODO: Query and activate all PricebookEntry records for this pricebook
-    // This would set their status to Active
-    console.log('💰 Pricebook entry activation would be performed here');
+    console.debug(`[pricebook.hook] Entry activation pending: activate all PricebookEntry records for pricebook ${pricebookId}`);
   } catch (error) {
     console.error('❌ Error activating pricebook entries:', error);
   }
@@ -357,9 +349,7 @@ async function expirePricebookEntries(
   try {
     console.log(`⏰ Expiring pricebook entries for pricebook: ${pricebookId}`);
     
-    // TODO: Query and expire all PricebookEntry records for this pricebook
-    // This would set their status to Expired
-    console.log('⏰ Pricebook entry expiration would be performed here');
+    console.debug(`[pricebook.hook] Entry expiration pending: expire all PricebookEntry records for pricebook ${pricebookId}`);
   } catch (error) {
     console.error('❌ Error expiring pricebook entries:', error);
   }
