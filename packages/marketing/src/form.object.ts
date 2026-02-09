@@ -60,6 +60,7 @@ export const Form = ObjectSchema.create({
     }),
     campaign_id: Field.lookup('campaign', {
       label: 'Associated Campaign',
+      description: 'Leads collected through this form will be associated with this campaign'
     }),
     fields_json: Field.textarea({
       label: 'Fields Configuration JSON',
@@ -89,6 +90,7 @@ export const Form = ObjectSchema.create({
     }),
     redirect_url: Field.url({
       label: 'Redirect URL',
+      description: 'Page to redirect to after successful form submission (optional)'
     }),
     create_lead_on_submit: Field.boolean({
       label: 'Auto Create Lead',
