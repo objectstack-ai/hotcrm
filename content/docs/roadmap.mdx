@@ -128,15 +128,49 @@ Enhancing developer productivity and operational excellence.
 - ✅ **Enhanced Analytics**: Revenue Dashboards (TCV, ARR, Quote-to-Close), Sales Performance (pipeline, win rates, forecast accuracy), Service Metrics (FRT, CSAT, SLA compliance), HR Analytics (time-to-hire, attrition, performance trends), and Marketing ROI (attribution, CPL, funnels).
 - ✅ **Documentation Cleanup**: Consolidated all scattered documentation into the official documentation site. Removed 20+ internal reports, moved customer-facing guides (Plugin Architecture, AI Implementation, Metadata Reference) into the official docs.
 - ✅ **Protocol Compliance**: All 65 objects fully compliant with snake_case field naming convention.
+- ✅ **TypeScript Config**: Fixed root tsconfig.json path mappings — added missing `@hotcrm/ai`, `@hotcrm/hr`, `@hotcrm/marketing` paths and removed stale `@hotcrm/ui` reference.
 
-### Next Steps
-1. **API Documentation**: Generate comprehensive API reference docs for all 65 objects with field-level documentation.
-2. **Test Coverage**: Increase test coverage to 80%+ across all packages, focusing on critical business workflows.
-3. **Visual Workflow Builder**: Deliver no-code automation for business users.
-4. **Integration Connectors**: Build first-party connectors for Stripe, DocuSign, and Slack.
-5. **Performance Optimization**: Benchmark and optimize ObjectQL query performance for production workloads.
-6. **UI Design System**: Implement the Apple/Linear-inspired component library for consistent UI.
-7. **Deployment Guides**: Create production-ready Docker and Kubernetes deployment documentation.
+## 🚀 Next Phase: Optimization & Improvement Roadmap
+
+Based on a comprehensive code scan of the entire monorepo, the following improvement areas have been identified and prioritized.
+
+### 🔴 P0 — Code Quality & Consistency
+
+These issues affect correctness and should be addressed first.
+
+1. **Standardize `Field.lookup()` References**: Approximately 30 object files use PascalCase lookup references (e.g., `'SLATemplate'`, `'KnowledgeArticle'`, `'ForumTopic'`) instead of the correct snake_case convention (e.g., `'sla_template'`). Audit and fix all packages: CRM, Support, Products, Marketing, Finance.
+2. **Resolve 60+ TODO/FIXME Items**: Hook implementations across Marketing (15 TODOs), HR (11), Products (8), and other packages contain placeholder logic for notifications, automated workflows, and integrations. Prioritize and either implement or remove.
+3. **Replace Temporary DB Shims**: Five packages (`crm`, `finance`, `support`, `products`, `hr`) contain `db.ts` shim files with TODO comments to refactor to `@objectstack/runtime` broker. Migrate all to the official runtime API.
+
+### 🟡 P1 — Test Coverage & Reliability
+
+4. **Marketing Package Tests**: The `@hotcrm/marketing` package has zero test coverage. Add tests for campaign hooks, email template logic, and campaign member workflows.
+5. **Products Hook Tests**: The `@hotcrm/products` package has no hook tests (0 of 3 hooks tested). Add tests for pricebook, product, and quote hooks.
+6. **Support Hook Tests**: Only 1 of 4 hooks tested in `@hotcrm/support`. Add tests for queue, knowledge article, and SLA hooks.
+7. **Increase Overall Coverage**: Current target is 80%+. Focus on untested hooks and action files to meet the threshold across all 6 active business packages.
+
+### 🟢 P2 — Documentation & Developer Experience
+
+8. **HR Cloud Technical Specs**: No `developers/specs/hr/` directory exists. Create architecture documentation for Recruitment, Performance, Payroll, and Employee objects.
+9. **AI Cloud Technical Specs**: No `developers/specs/ai/` directory exists. Create architecture documentation for the AI service layer, Model Registry, and Prediction Service.
+10. **Developer Specs Navigation**: Update `developers/specs/meta.json` to include HR and AI entries for proper documentation navigation.
+11. **Field-Level API Reference**: Generate comprehensive per-object field documentation for all 65 objects with types, validations, and relationship mappings.
+12. **Code Examples**: Add practical hook and action code examples to `developers/business-logic.mdx` and `developers/creating-objects.mdx`.
+
+### 🔵 P3 — Architecture & Tooling
+
+13. **Hook Error Handling**: Improve error handling in hooks — several hook files in Marketing and Products have empty catch blocks or no try-catch at all. Establish a consistent error handling pattern with context.
+14. **Standardize Field Labels with i18n Support**: Some object fields mix Chinese and English labels inconsistently. Introduce a proper i18n strategy — default labels in English with locale-based overrides — to ensure consistency while supporting multilingual users.
+15. **Add Workflow Coverage**: Only 3 workflow files exist across 8 packages. Identify and implement missing automation workflows for Marketing (campaign automation), Support (case escalation), and Finance (payment reminders).
+16. **Remove Stale Comments**: CRM plugin documentation references a dependency on `@hotcrm/core` that no longer exists. Audit and clean up outdated comments across all packages.
+
+### ⚪ P4 — Feature Development
+
+17. **Visual Workflow Builder**: The only remaining Phase 2 item — deliver a no-code canvas for defining business logic.
+18. **Integration Connectors**: Build first-party connectors for Stripe, DocuSign, and Slack.
+19. **Performance Optimization**: Benchmark and optimize ObjectQL query performance for production workloads.
+20. **UI Design System**: Implement the Apple/Linear-inspired component library for consistent UI.
+21. **Deployment Guides**: Create production-ready Docker and Kubernetes deployment documentation.
 
 ---
 
