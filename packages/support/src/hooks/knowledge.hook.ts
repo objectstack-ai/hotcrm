@@ -25,7 +25,7 @@ const KnowledgeArticleScoringTrigger: Hook = {
 
       // Calculate popularity score (only if article has been published)
       if (article.Status === 'Published') {
-        article.PopularityScore = await calculatePopularityScore(article);
+        article.PopularityScore = calculatePopularityScore(article);
       }
 
       // Update helpfulness rating
