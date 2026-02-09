@@ -857,6 +857,153 @@ listViews: [
 }
 ```
 
+## Practical Examples
+
+### Example 1: Complete Object with Relationships
+
+A real-world object definition with multiple relationship types and validations.
+
+```typescript
+// packages/support/src/service_request.object.ts
+import { Field, ServiceObject } from '@objectstack/spec';
+
+const ServiceRequest: ServiceObject = {
+  name: 'service_request',
+  label: 'Service Request',
+  icon: 'ticket',
+  description: 'Customer service request tracking with SLA management',
+  fields: {
+    subject: Field.text({ label: 'Subject', required: true, searchable: true }),
+    description: Field.textarea({ label: 'Description' }),
+    status: Field.select({
+      label: 'Status',
+      options: ['New', 'In Progress', 'Pending Customer', 'Resolved', 'Closed'],
+      defaultValue: 'New'
+    }),
+    priority: Field.select({
+      label: 'Priority',
+      options: ['Low', 'Medium', 'High', 'Critical'],
+      defaultValue: 'Medium'
+    }),
+    category: Field.select({
+      label: 'Category',
+      options: ['Bug', 'Feature Request', 'Question', 'Documentation']
+    }),
+    account_id: Field.lookup('account', { label: 'Account' }),
+    contact_id: Field.lookup('contact', { label: 'Contact' }),
+    assigned_to: Field.lookup('employee', { label: 'Assigned To' }),
+    resolution_target: Field.datetime({ label: 'Resolution Target' }),
+    resolved_at: Field.datetime({ label: 'Resolved At' }),
+    resolution_time_hours: Field.number({
+      label: 'Resolution Time (Hours)',
+      formula: 'HOURS_DIFF(created_at, resolved_at)',
+      precision: 1
+    }),
+    sla_met: Field.boolean({
+      label: 'SLA Met',
+      formula: 'resolved_at <= resolution_target'
+    }),
+    satisfaction_rating: Field.number({
+      label: 'Satisfaction Rating',
+      min: 1,
+      max: 5
+    })
+  }
+};
+
+export default ServiceRequest;
+```
+
+### Example 2: Junction Object for Many-to-Many
+
+Link two objects with additional metadata on the relationship.
+
+```typescript
+// packages/crm/src/opportunity_team_member.object.ts
+import { Field, ServiceObject } from '@objectstack/spec';
+
+const OpportunityTeamMember: ServiceObject = {
+  name: 'opportunity_team_member',
+  label: 'Opportunity Team Member',
+  description: 'Links team members to opportunities with role-based access',
+  fields: {
+    opportunity_id: Field.lookup('opportunity', {
+      label: 'Opportunity',
+      required: true
+    }),
+    user_id: Field.lookup('employee', {
+      label: 'Team Member',
+      required: true
+    }),
+    role: Field.select({
+      label: 'Team Role',
+      options: [
+        'Account Executive',
+        'Solutions Engineer',
+        'Executive Sponsor',
+        'Partner'
+      ],
+      required: true
+    }),
+    access_level: Field.select({
+      label: 'Access Level',
+      options: ['Read Only', 'Read/Write'],
+      defaultValue: 'Read Only'
+    }),
+    added_date: Field.date({ label: 'Date Added', defaultValue: 'TODAY' })
+  }
+};
+
+export default OpportunityTeamMember;
+```
+
+### Example 3: Object with AI-Enhanced Fields
+
+Leverage AI for automatic field population and insights.
+
+```typescript
+// packages/crm/src/competitor.object.ts
+import { Field, ServiceObject } from '@objectstack/spec';
+
+const Competitor: ServiceObject = {
+  name: 'competitor',
+  label: 'Competitor',
+  icon: 'shield',
+  description: 'Competitive intelligence with AI-powered analysis',
+  fields: {
+    name: Field.text({ label: 'Competitor Name', required: true }),
+    website: Field.url({ label: 'Website' }),
+    industry: Field.text({ label: 'Industry' }),
+    strengths: Field.textarea({ label: 'Key Strengths' }),
+    weaknesses: Field.textarea({ label: 'Key Weaknesses' }),
+    market_position: Field.select({
+      label: 'Market Position',
+      options: ['Leader', 'Challenger', 'Niche Player', 'Emerging']
+    }),
+    threat_level: Field.select({
+      label: 'Threat Level',
+      options: ['Low', 'Medium', 'High', 'Critical']
+    }),
+    // AI-enhanced fields
+    ai_battlecard: Field.textarea({
+      label: 'AI Battle Card',
+      description: 'Auto-generated competitive talking points'
+    }),
+    ai_win_rate: Field.percent({
+      label: 'AI Win Rate',
+      description: 'Historical win rate against this competitor'
+    }),
+    last_seen_date: Field.date({ label: 'Last Seen in Deal' }),
+    deal_count: Field.number({
+      label: 'Active Deals',
+      formula: 'COUNT(opportunity WHERE competitor_id = _id AND stage != "closed_lost")'
+    })
+  }
+};
+
+export default Competitor;
+```
+
 ## Next Steps
 
 - [Business Logic](/docs/development/business-logic) - Add hooks and triggers
