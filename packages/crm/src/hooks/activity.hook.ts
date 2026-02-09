@@ -48,7 +48,7 @@ const ActivityRelatedObjectUpdatesTrigger: Hook = {
   events: ['afterInsert', 'afterUpdate'],
   handler: async (ctx: HookContext) => {
     try {
-      const activity = ctx.input.doc as Record<string, any>;
+      const activity = ctx.result as Record<string, any>;
       const oldActivity = ctx.previous as Record<string, any> | undefined;
       
       // Only process if activity is completed or date changed

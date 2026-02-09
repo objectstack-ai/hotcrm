@@ -18,16 +18,18 @@ const ProductHook: Hook = {
   events: ['beforeInsert', 'beforeUpdate', 'afterUpdate'],
   handler: async (ctx: HookContext) => {
     try {
-      const event = ctx.event || (ctx.previous ? 'afterUpdate' : 'afterInsert');
+      // Determine if this is a before or after hook based on available properties
+      const isBeforeHook = !!ctx.input;
+      const isAfterHook = !!ctx.result;
       
       // Before Insert/Update: Validate product configuration
-      if (event === 'beforeInsert' || event === 'beforeUpdate') {
+      if (isBeforeHook) {
         await validateProductConfiguration(ctx);
         await validateBundleConfiguration(ctx);
       }
 
       // After Update: Handle stock and price changes
-      if (event === 'afterUpdate') {
+      if (isAfterHook) {
         await handleStockLevelChange(ctx);
         await handlePriceChange(ctx);
         await handleStatusChange(ctx);

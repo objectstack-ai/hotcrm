@@ -19,25 +19,27 @@ const QuotePricingHook: Hook = {
   events: ['beforeInsert', 'beforeUpdate', 'afterInsert', 'afterUpdate'],
   handler: async (ctx: HookContext) => {
     try {
-      const event = ctx.event || (ctx.previous ? 'afterUpdate' : 'afterInsert');
+      // Determine if this is a before or after hook based on available properties
+      const isBeforeHook = !!ctx.input;
+      const isAfterHook = !!ctx.result;
       const isInsert = !ctx.previous;
       const isUpdate = !!ctx.previous;
-      const quote = ctx.input?.doc || ctx.result;
+      const quote = (isBeforeHook ? ctx.input?.doc : ctx.result) as Record<string, any>;
 
       // Before Insert/Update: Calculate pricing
-      if (event === 'beforeInsert' || event === 'beforeUpdate') {
+      if (isBeforeHook) {
         await calculateQuotePricing(ctx);
         await determineApprovalRequirements(ctx);
         await validateMarginProtection(ctx);
       }
 
       // After Insert: Initialize quote
-      if (event === 'afterInsert') {
+      if (isAfterHook && isInsert) {
         await initializeQuote(ctx);
       }
 
       // After Update: Handle status changes
-      if (event === 'afterUpdate') {
+      if (isAfterHook && isUpdate) {
         await handleQuoteStatusChange(ctx);
         await handleApprovalStatusChange(ctx);
       }

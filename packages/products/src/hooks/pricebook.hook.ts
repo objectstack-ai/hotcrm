@@ -18,16 +18,18 @@ const PricebookHook: Hook = {
   events: ['beforeInsert', 'beforeUpdate', 'afterUpdate'],
   handler: async (ctx: HookContext) => {
     try {
-      const event = ctx.event || (ctx.previous ? 'afterUpdate' : 'afterInsert');
+      // Determine if this is a before or after hook based on available properties
+      const isBeforeHook = !!ctx.input;
+      const isAfterHook = !!ctx.result;
       
       // Before Insert/Update: Validate pricebook configuration
-      if (event === 'beforeInsert' || event === 'beforeUpdate') {
+      if (isBeforeHook) {
         await validatePricebookDates(ctx);
         await validateCurrencyConfiguration(ctx);
       }
 
       // After Update: Handle effective date and status changes
-      if (event === 'afterUpdate') {
+      if (isAfterHook) {
         await handleEffectiveDateChange(ctx);
         await handleStatusChange(ctx);
         await handleCurrencyChange(ctx);

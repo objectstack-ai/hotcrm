@@ -89,7 +89,7 @@ const ContactDecisionMakerValidationTrigger: Hook = {
   events: ['afterInsert', 'afterUpdate'],
   handler: async (ctx: HookContext) => {
     try {
-      const contact = ctx.input.doc as Record<string, any>;
+      const contact = ctx.result as Record<string, any>;
       
       if (!contact.AccountId) {
         return;
