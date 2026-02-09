@@ -1,13 +1,7 @@
-import type { Hook } from '@objectstack/spec/data';
+import type { Hook, HookContext } from '@objectstack/spec/data';
 import { db } from '../db';
 
-// Types for Context
-interface TriggerContext {
-  old?: Record<string, any>;
-  new: Record<string, any>;
-  db: typeof db;
-  user: { id: string; name: string; email: string; };
-}
+
 
 /**
  * Account Health Score Calculation Trigger
@@ -22,9 +16,9 @@ const AccountHealthScoreTrigger: Hook = {
   name: 'AccountHealthScoreTrigger',
   object: 'Account',
   events: ['beforeInsert', 'beforeUpdate'],
-  handler: async (ctx: TriggerContext) => {
+  handler: async (ctx: HookContext) => {
     try {
-      const account = ctx.new;
+      const account = ctx.input.doc as Record<string, any>;
       
       // Calculate health score
       account.HealthScore = await calculateHealthScore(account, ctx);
@@ -48,7 +42,7 @@ const AccountHealthScoreTrigger: Hook = {
 /**
  * Calculate account health score (0-100)
  */
-async function calculateHealthScore(account: Record<string, any>, ctx: TriggerContext): Promise<number> {
+async function calculateHealthScore(account: Record<string, any>, ctx: any): Promise<number> {
   let score = 0;
   
   // Base score for active customer status (20 points)
@@ -100,10 +94,10 @@ const AccountHierarchyTrigger: Hook = {
   name: 'AccountHierarchyTrigger',
   object: 'Account',
   events: ['afterInsert', 'afterUpdate'],
-  handler: async (ctx: TriggerContext) => {
+  handler: async (ctx: HookContext) => {
     try {
-      const account = ctx.new;
-      const oldAccount = ctx.old;
+      const account = ctx.result as Record<string, any>;
+      const oldAccount = ctx.previous as Record<string, any> | undefined;
       
       // Check if parent changed
       const parentChanged = oldAccount && (oldAccount.ParentId !== account.ParentId);
@@ -132,7 +126,7 @@ const AccountHierarchyTrigger: Hook = {
 /**
  * Update parent account metrics by aggregating child account data
  */
-async function updateParentAccountMetrics(parentId: string, ctx: TriggerContext): Promise<void> {
+async function updateParentAccountMetrics(parentId: string, ctx: any): Promise<void> {
   console.log(`🔄 Updating parent account metrics: ${parentId}`);
   
   // In real implementation, would query all child accounts and aggregate
@@ -153,7 +147,7 @@ async function updateParentAccountMetrics(parentId: string, ctx: TriggerContext)
 /**
  * Cascade ownership changes to child accounts
  */
-async function cascadeOwnershipChange(accountId: string, newOwnerId: string, ctx: TriggerContext): Promise<void> {
+async function cascadeOwnershipChange(accountId: string, newOwnerId: string, ctx: any): Promise<void> {
   console.log(`🔄 Cascading ownership change to child accounts of ${accountId}`);
   
   // In real implementation, would query and update all child accounts
@@ -180,9 +174,9 @@ const AccountStatusAutomationTrigger: Hook = {
   name: 'AccountStatusAutomationTrigger',
   object: 'Account',
   events: ['beforeUpdate'],
-  handler: async (ctx: TriggerContext) => {
+  handler: async (ctx: HookContext) => {
     try {
-      const account = ctx.new;
+      const account = ctx.input.doc as Record<string, any>;
       
       // Auto-upgrade to Active Customer if has contract value
       if (account.CustomerStatus === 'Prospect' && account.ContractValue > 0) {

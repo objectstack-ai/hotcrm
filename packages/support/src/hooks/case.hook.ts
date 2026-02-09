@@ -1,4 +1,4 @@
-import type { Hook } from '@objectstack/spec/data';
+import type { Hook, HookContext } from '@objectstack/spec/data';
 import { db } from '../db'; // Ensure this points to the correct db instance
 
 /**
@@ -11,8 +11,8 @@ const CaseEntitlementCheck: Hook = {
   name: 'CaseEntitlementCheck',
   object: 'case', // Lowercase per protocol
   events: ['beforeInsert'],
-  handler: async (ctx) => {
-    const caseRec = ctx.new;
+  handler: async (ctx: HookContext) => {
+    const caseRec = ctx.input.doc as Record<string, any>;
 
     // Skip if no account is linked
     if (!caseRec.account) {

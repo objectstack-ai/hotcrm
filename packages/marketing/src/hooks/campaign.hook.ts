@@ -1,4 +1,4 @@
-import type { Hook, HookContext } from '@objectstack/spec/data';
+import type { Hook } from '@objectstack/spec/data';
 
 /**
  * Campaign Lifecycle and ROI Management Trigger
@@ -13,9 +13,9 @@ const CampaignROICalculationTrigger: Hook = {
   name: 'CampaignROICalculationTrigger',
   object: 'campaign',
   events: ['beforeInsert', 'beforeUpdate'],
-  handler: async (ctx: HookContext) => {
+  handler: async (ctx: any) => {
     try {
-      const campaign = ctx.input;
+      const campaign = ctx.input?.doc || ctx.input;
 
       // Calculate ROI: (ActualRevenue - ActualCost) / ActualCost * 100
       const actualRevenue = campaign.actual_revenue || 0;
@@ -57,9 +57,9 @@ const CampaignBudgetTrackingTrigger: Hook = {
   name: 'CampaignBudgetTrackingTrigger',
   object: 'campaign',
   events: ['beforeUpdate'],
-  handler: async (ctx: HookContext) => {
+  handler: async (ctx: any) => {
     try {
-      const campaign = ctx.input;
+      const campaign = ctx.input?.doc || ctx.input;
       const oldCampaign = ctx.previous;
 
       // Only process if actual cost changed
@@ -106,9 +106,9 @@ const CampaignStatusChangeTrigger: Hook = {
   name: 'CampaignStatusChangeTrigger',
   object: 'campaign',
   events: ['afterUpdate'],
-  handler: async (ctx: HookContext) => {
+  handler: async (ctx: any) => {
     try {
-      const campaign = ctx.input;
+      const campaign = ctx.result || ctx.input?.doc || ctx.input;
       const oldCampaign = ctx.previous;
 
       // Check if status changed
@@ -139,7 +139,7 @@ const CampaignStatusChangeTrigger: Hook = {
 /**
  * Handle campaign transition to In Progress
  */
-async function handleInProgressStatus(campaign: any, ctx: HookContext): Promise<void> {
+async function handleInProgressStatus(campaign: any, ctx: any): Promise<void> {
   console.log(`🚀 Campaign "${campaign.name}" started`);
   
   // TODO: Send notifications to campaign members
@@ -150,7 +150,7 @@ async function handleInProgressStatus(campaign: any, ctx: HookContext): Promise<
 /**
  * Handle campaign completion
  */
-async function handleCompletedStatus(campaign: any, ctx: HookContext): Promise<void> {
+async function handleCompletedStatus(campaign: any, ctx: any): Promise<void> {
   console.log(`✅ Campaign "${campaign.name}" completed`);
   
   // TODO: Calculate final performance metrics
@@ -162,7 +162,7 @@ async function handleCompletedStatus(campaign: any, ctx: HookContext): Promise<v
 /**
  * Handle campaign abortion
  */
-async function handleAbortedStatus(campaign: any, ctx: HookContext): Promise<void> {
+async function handleAbortedStatus(campaign: any, ctx: any): Promise<void> {
   console.log(`❌ Campaign "${campaign.name}" was aborted`);
   
   // TODO: Log abort reason
@@ -179,9 +179,9 @@ const CampaignDateValidationTrigger: Hook = {
   name: 'CampaignDateValidationTrigger',
   object: 'campaign',
   events: ['beforeInsert', 'beforeUpdate'],
-  handler: async (ctx: HookContext) => {
+  handler: async (ctx: any) => {
     try {
-      const campaign = ctx.input;
+      const campaign = ctx.input?.doc || ctx.input;
 
       if (campaign.start_date && campaign.end_date) {
         const startDate = new Date(campaign.start_date);
@@ -210,12 +210,12 @@ const CampaignDateValidationTrigger: Hook = {
  * Update campaign metrics from member engagement
  * Called by campaign_member hooks
  */
-export async function updateCampaignMetrics(campaignId: string, ctx: HookContext): Promise<void> {
+export async function updateCampaignMetrics(campaignId: string, ctx: any): Promise<void> {
   try {
     console.log(`🔄 Updating campaign metrics for: ${campaignId}`);
 
     // Aggregate campaign member statistics
-    const members = await ctx.ql.find('campaign_member', {
+    const members = await (ctx.ql as any).find('campaign_member', {
       filters: [['campaign', '=', campaignId]]
     });
 
@@ -241,7 +241,7 @@ export async function updateCampaignMetrics(campaignId: string, ctx: HookContext
     const unsubscribeRate = totalMembers > 0 ? (unsubscribed / totalMembers) * 100 : 0;
 
     // Update campaign with aggregated metrics
-    await ctx.ql.update('campaign', campaignId, {
+    await (ctx.ql as any).update('campaign', campaignId, {
       total_members: totalMembers,
       total_opened: opened,
       total_clicked: clicked,
@@ -263,9 +263,9 @@ export async function updateCampaignMetrics(campaignId: string, ctx: HookContext
 /**
  * Calculate cost per lead/opportunity/customer
  */
-export async function calculateCostMetrics(campaignId: string, ctx: HookContext): Promise<any> {
+export async function calculateCostMetrics(campaignId: string, ctx: any): Promise<any> {
   try {
-    const campaign = await ctx.ql.findOne('campaign', {
+    const campaign = await (ctx.ql as any).findOne('campaign', {
       filters: [['id', '=', campaignId]]
     });
 

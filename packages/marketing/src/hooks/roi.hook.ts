@@ -11,14 +11,14 @@ const CampaignROIHook: Hook = {
   object: 'opportunity', // Listening to Opportunity events from Marketing package
   events: ['afterUpdate'],
   handler: async (ctx: any) => {
-    const newOpp = ctx.new;
-    const oldOpp = ctx.old;
+    const newOpp = ctx.result as Record<string, any>;
+    const oldOpp = ctx.previous as Record<string, any> | undefined;
 
     // Check if Campaign is linked
     if (!newOpp.campaign_id) return;
     
     const isWon = newOpp.stage_name === 'closed_won';
-    const wasWon = oldOpp.stage_name === 'closed_won';
+    const wasWon = oldOpp?.stage_name === 'closed_won';
     
     let delta = 0;
 
@@ -28,11 +28,11 @@ const CampaignROIHook: Hook = {
     }
     // Case 2: Just Lost (or moved out of Won)
     else if (!isWon && wasWon) {
-      delta = -(oldOpp.amount || 0);
+      delta = -(oldOpp?.amount || 0);
     }
     // Case 3: Amount changed while Won
-    else if (isWon && wasWon && newOpp.amount !== oldOpp.amount) {
-      delta = (newOpp.amount || 0) - (oldOpp.amount || 0);
+    else if (isWon && wasWon && newOpp.amount !== oldOpp?.amount) {
+      delta = (newOpp.amount || 0) - (oldOpp?.amount || 0);
     }
 
     if (delta !== 0) {

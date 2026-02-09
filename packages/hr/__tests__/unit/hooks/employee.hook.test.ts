@@ -15,24 +15,41 @@ const mockQlDocUpdate = vi.fn();
 const createMockContext = (
   event: 'beforeInsert' | 'beforeUpdate' | 'afterInsert' | 'afterUpdate',
   input: any,
-  previous?: any
-): HookContext => ({
-  event,
-  input,
-  previous,
-  ql: {
-    find: mockQlFind,
-    doc: {
-      get: mockQlDocGet,
-      create: mockQlDocCreate,
-      update: mockQlDocUpdate
-    }
-  } as any,
-  session: {
-    userId: 'user_123',
-    tenantId: 'tenant_123'
-  } as any
-});
+  previous?: any,
+  result?: any
+): HookContext => {
+  const baseContext = {
+    event,
+    ql: {
+      find: mockQlFind,
+      doc: {
+        get: mockQlDocGet,
+        create: mockQlDocCreate,
+        update: mockQlDocUpdate
+      }
+    } as any,
+    session: {
+      userId: 'user_123',
+      tenantId: 'tenant_123'
+    } as any
+  };
+
+  if (event === 'beforeInsert' || event === 'beforeUpdate') {
+    return {
+      ...baseContext,
+      input: { doc: input },
+      previous
+    };
+  } else if (event === 'afterInsert' || event === 'afterUpdate') {
+    return {
+      ...baseContext,
+      input: { doc: input },
+      result: result || input,
+      previous
+    };
+  }
+  return baseContext;
+};
 
 describe('Employee Hook - EmployeeDataValidationTrigger', () => {
   beforeEach(() => {
@@ -55,7 +72,7 @@ describe('Employee Hook - EmployeeDataValidationTrigger', () => {
       await EmployeeDataValidationTrigger.handler(ctx);
 
       // Assert
-      expect(employee.full_name).toBe('李明'); // LastFirst format
+      expect(ctx.input.doc.full_name).toBe('李明'); // LastFirst format
     });
 
     it('should not override existing full name', async () => {
@@ -74,7 +91,7 @@ describe('Employee Hook - EmployeeDataValidationTrigger', () => {
       await EmployeeDataValidationTrigger.handler(ctx);
 
       // Assert
-      expect(employee.full_name).toBe('Li Ming');
+      expect(ctx.input.doc.full_name).toBe('Li Ming');
     });
 
     it('should allow future hire dates for pre-boarding', async () => {

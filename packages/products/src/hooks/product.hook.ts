@@ -1,14 +1,7 @@
-import type { Hook } from '@objectstack/spec/data';
+import type { Hook, HookContext } from '@objectstack/spec/data';
 import { db } from '../db';
 
-// Types for Context
-export interface TriggerContext {
-  old?: Record<string, any>;
-  new: Record<string, any>;
-  db: typeof db;
-  user: { id: string; name: string; email: string; };
-  event?: string; // Event type: beforeInsert, beforeUpdate, afterUpdate
-}
+
 
 /**
  * Product Hook
@@ -23,16 +16,20 @@ const ProductHook: Hook = {
   name: 'ProductHook',
   object: 'Product',
   events: ['beforeInsert', 'beforeUpdate', 'afterUpdate'],
-  handler: async (ctx: TriggerContext) => {
+  handler: async (ctx: HookContext) => {
     try {
+      // Determine if this is a before or after hook based on available properties
+      const isBeforeHook = !!ctx.input;
+      const isAfterHook = !!ctx.result;
+      
       // Before Insert/Update: Validate product configuration
-      if (ctx.event === 'beforeInsert' || ctx.event === 'beforeUpdate') {
+      if (isBeforeHook) {
         await validateProductConfiguration(ctx);
         await validateBundleConfiguration(ctx);
       }
 
       // After Update: Handle stock and price changes
-      if (ctx.event === 'afterUpdate') {
+      if (isAfterHook) {
         await handleStockLevelChange(ctx);
         await handlePriceChange(ctx);
         await handleStatusChange(ctx);
@@ -48,8 +45,8 @@ const ProductHook: Hook = {
 /**
  * Validate product configuration
  */
-async function validateProductConfiguration(ctx: TriggerContext): Promise<void> {
-  const product = ctx.new;
+async function validateProductConfiguration(ctx: any): Promise<void> {
+  const product = ctx.input?.doc || ctx.result;
   
   try {
     // Ensure product code is unique
@@ -83,8 +80,8 @@ async function validateProductConfiguration(ctx: TriggerContext): Promise<void> 
 /**
  * Validate bundle configuration and dependencies
  */
-async function validateBundleConfiguration(ctx: TriggerContext): Promise<void> {
-  const product = ctx.new;
+async function validateBundleConfiguration(ctx: any): Promise<void> {
+  const product = ctx.input?.doc || ctx.result;
   
   try {
     // If this is a bundle product, validate bundle items
@@ -112,16 +109,16 @@ async function validateBundleConfiguration(ctx: TriggerContext): Promise<void> {
 /**
  * Handle stock level changes
  */
-async function handleStockLevelChange(ctx: TriggerContext): Promise<void> {
-  if (!ctx.old || !ctx.new) return;
+async function handleStockLevelChange(ctx: any): Promise<void> {
+  if (!ctx.previous || !ctx.result) return;
   
-  const stockChanged = ctx.old.StockLevel !== ctx.new.StockLevel;
+  const stockChanged = ctx.previous.StockLevel !== ctx.result.StockLevel;
   if (!stockChanged) return;
 
-  const product = ctx.new;
+  const product = ctx.result;
   
   try {
-    console.log(`📊 Stock level changed from ${ctx.old.StockLevel} to ${product.StockLevel}`);
+    console.log(`📊 Stock level changed from ${ctx.previous.StockLevel} to ${product.StockLevel}`);
 
     // Check if stock is low
     if (product.LowStockThreshold && product.StockLevel <= product.LowStockThreshold) {
@@ -146,7 +143,7 @@ async function handleStockLevelChange(ctx: TriggerContext): Promise<void> {
     }
 
     // If stock was replenished, reactivate product
-    if (ctx.old.StockLevel === 0 && product.StockLevel > 0 && product.Status === 'Out of Stock') {
+    if (ctx.previous.StockLevel === 0 && product.StockLevel > 0 && product.Status === 'Out of Stock') {
       await ctx.db.doc.update('Product', product.Id, {
         Status: 'Active'
       });
@@ -160,19 +157,19 @@ async function handleStockLevelChange(ctx: TriggerContext): Promise<void> {
 /**
  * Handle price changes
  */
-async function handlePriceChange(ctx: TriggerContext): Promise<void> {
-  if (!ctx.old || !ctx.new) return;
+async function handlePriceChange(ctx: any): Promise<void> {
+  if (!ctx.previous || !ctx.result) return;
   
-  const listPriceChanged = ctx.old.ListPrice !== ctx.new.ListPrice;
-  const costPriceChanged = ctx.old.CostPrice !== ctx.new.CostPrice;
+  const listPriceChanged = ctx.previous.ListPrice !== ctx.result.ListPrice;
+  const costPriceChanged = ctx.previous.CostPrice !== ctx.result.CostPrice;
   
   if (!listPriceChanged && !costPriceChanged) return;
 
-  const product = ctx.new;
+  const product = ctx.result;
   
   try {
     if (listPriceChanged) {
-      console.log(`💰 List price changed from ${ctx.old.ListPrice} to ${product.ListPrice}`);
+      console.log(`💰 List price changed from ${ctx.previous.ListPrice} to ${product.ListPrice}`);
       
       // Log price change activity
       await ctx.db.doc.create('Activity', {
@@ -183,7 +180,7 @@ async function handlePriceChange(ctx: TriggerContext): Promise<void> {
         WhatId: product.Id,
         OwnerId: ctx.user.id,
         ActivityDate: new Date().toISOString().split('T')[0],
-        Description: `List price changed from ${ctx.old.ListPrice} to ${product.ListPrice}`
+        Description: `List price changed from ${ctx.previous.ListPrice} to ${product.ListPrice}`
       });
       console.log('✅ Price change activity logged');
 
@@ -195,7 +192,7 @@ async function handlePriceChange(ctx: TriggerContext): Promise<void> {
     }
 
     if (costPriceChanged) {
-      console.log(`💵 Cost price changed from ${ctx.old.CostPrice} to ${product.CostPrice}`);
+      console.log(`💵 Cost price changed from ${ctx.previous.CostPrice} to ${product.CostPrice}`);
       
       // Recalculate margin
       if (product.ListPrice && product.CostPrice) {
@@ -215,16 +212,16 @@ async function handlePriceChange(ctx: TriggerContext): Promise<void> {
 /**
  * Handle product status changes
  */
-async function handleStatusChange(ctx: TriggerContext): Promise<void> {
-  if (!ctx.old || !ctx.new) return;
+async function handleStatusChange(ctx: any): Promise<void> {
+  if (!ctx.previous || !ctx.result) return;
   
-  const statusChanged = ctx.old.Status !== ctx.new.Status;
+  const statusChanged = ctx.previous.Status !== ctx.result.Status;
   if (!statusChanged) return;
 
-  const product = ctx.new;
+  const product = ctx.result;
   
   try {
-    console.log(`🔄 Product status changed from "${ctx.old.Status}" to "${product.Status}"`);
+    console.log(`🔄 Product status changed from "${ctx.previous.Status}" to "${product.Status}"`);
 
     // Handle deactivation
     if (product.Status === 'Inactive' || product.Status === 'Discontinued') {
@@ -238,7 +235,7 @@ async function handleStatusChange(ctx: TriggerContext): Promise<void> {
     }
 
     // Handle reactivation
-    if ((ctx.old.Status === 'Inactive' || ctx.old.Status === 'Discontinued') && 
+    if ((ctx.previous.Status === 'Inactive' || ctx.previous.Status === 'Discontinued') && 
         product.Status === 'Active') {
       console.log(`✅ Product reactivated: ${product.Name}`);
       
@@ -248,14 +245,14 @@ async function handleStatusChange(ctx: TriggerContext): Promise<void> {
 
     // Log activity for status change
     await ctx.db.doc.create('Activity', {
-      Subject: `Product Status Changed: ${ctx.old.Status} → ${product.Status}`,
+      Subject: `Product Status Changed: ${ctx.previous.Status} → ${product.Status}`,
       Type: 'Status Change',
       Status: 'Completed',
       Priority: 'Normal',
       WhatId: product.Id,
       OwnerId: ctx.user.id,
       ActivityDate: new Date().toISOString().split('T')[0],
-      Description: `Product "${product.Name}" status changed from "${ctx.old.Status}" to "${product.Status}"`
+      Description: `Product "${product.Name}" status changed from "${ctx.previous.Status}" to "${product.Status}"`
     });
   } catch (error) {
     console.error('❌ Error handling status change:', error);
