@@ -7,7 +7,7 @@
  * - Opportunity & Sales Pipeline
  * - Activity Tracking
  * 
- * Dependencies: @hotcrm/core (required)
+ * Dependencies: @objectstack/spec (required)
  */
 
 // Import all CRM objects

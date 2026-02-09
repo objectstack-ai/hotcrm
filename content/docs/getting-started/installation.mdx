@@ -67,7 +67,7 @@ pnpm build
 ```
 
 This command will:
-1. Build `@hotcrm/core` first (foundation)
+1. Build `@objectstack/spec` first (foundation)
 2. Build domain packages (`@hotcrm/crm`, `@hotcrm/support`, etc.)
 3. Build `@hotcrm/ui` (UI components)
 4. Build `@hotcrm/server` (application server)
@@ -87,9 +87,6 @@ The server will start at `http://localhost:3000` (or another port if 3000 is in 
 You can also build individual packages:
 
 ```bash
-# Build core package only
-pnpm --filter @hotcrm/core build
-
 # Build CRM domain package
 pnpm --filter @hotcrm/crm build
 

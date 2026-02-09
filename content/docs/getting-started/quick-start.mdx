@@ -44,7 +44,7 @@ You should see the HotCRM Sales Dashboard with KPI cards showing:
 ### Using ObjectQL (Developer Mode)
 
 ```typescript
-import { db } from '@hotcrm/core';
+import { db } from '../db';
 
 const newLead = await db.doc.create('Lead', {
   FirstName: 'John',

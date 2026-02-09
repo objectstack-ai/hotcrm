@@ -122,7 +122,7 @@ The Marketing package provides comprehensive campaign management capabilities wi
 
 ### Creating a Campaign
 ```typescript
-import { db } from '@hotcrm/core';
+import { db } from '../db';
 
 const campaign = await db.create('campaign', {
   name: 'Q1 Product Launch',

@@ -32,7 +32,7 @@ Hooks can fire at different points in the record lifecycle:
 
 ```typescript
 import type { HookSchema } from '@objectstack/spec/data';
-import { db } from '@hotcrm/core';
+import { db } from '../db';
 
 export interface TriggerContext {
   old?: Record<string, any>;   // Previous record state (updates only)
@@ -63,7 +63,7 @@ This is a real example from HotCRM that handles opportunity stage changes:
 
 ```typescript
 import type { HookSchema } from '@objectstack/spec/data';
-import { db } from '@hotcrm/core';
+import { db } from '../db';
 
 export interface TriggerContext {
   old?: Record<string, any>;
