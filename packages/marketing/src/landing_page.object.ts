@@ -5,7 +5,7 @@ export const LandingPage = ObjectSchema.create({
   label: 'Landing Page',
   pluralLabel: 'Landing Pages',
   icon: 'layout',
-  description: '营销着陆页构建器，支持拖放式设计和A/B测试',
+  description: 'Marketing landing page builder with drag-and-drop design and A/B testing',
 
   fields: {
     name: Field.text({
@@ -15,13 +15,13 @@ export const LandingPage = ObjectSchema.create({
     }),
     title: Field.text({
       label: 'Page Title',
-      description: '浏览器标题栏显示的标题',
+      description: 'Title displayed in the browser title bar',
       required: true,
       maxLength: 255
     }),
     slug: Field.text({
       label: 'URL slug',
-      description: '页面URL路径，如：/landing/product-launch',
+      description: 'Page URL path, e.g. /landing/product-launch',
       unique: true,
       maxLength: 100
     }),
@@ -62,59 +62,59 @@ export const LandingPage = ObjectSchema.create({
     }),
     campaign_id: Field.lookup('campaign', {
       label: 'Associated Campaign',
-      description: '此着陆页所属的营销活动'
+      description: 'Campaign this landing page belongs to'
     }),
     html_content: Field.textarea({
       label: 'HTML Content',
-      description: '页面的完整 HTML 内容',
+      description: 'Full HTML content of the page',
       maxLength: 65535
     }),
     design_json: Field.textarea({
       label: 'Design Configuration JSON',
-      description: '可视化编辑器的设计配置（组件、样式等）',
+      description: 'Design configuration for the visual editor (components, styles, etc.)',
       maxLength: 65535
     }),
     custom_css: Field.textarea({
       label: 'Custom CSS',
-      description: '自定义样式代码',
+      description: 'Custom style code',
       maxLength: 32000
     }),
     custom_javascript: Field.textarea({
       label: 'Custom JavaScript',
-      description: '自定义脚本代码（追踪、互动等）',
+      description: 'Custom script code (tracking, interaction, etc.)',
       maxLength: 32000
     }),
     meta_title: Field.text({
       label: 'SEO Title',
-      description: '搜索引擎结果显示的标题',
+      description: 'Title displayed in search engine results',
       maxLength: 70
     }),
     meta_description: Field.textarea({
       label: 'SEO Description',
-      description: '搜索引擎结果显示的描述',
+      description: 'Description displayed in search engine results',
       maxLength: 160
     }),
     meta_keywords: Field.text({
       label: 'SEO Keywords',
-      description: '逗号分隔的关键词',
+      description: 'Comma-separated keywords',
       maxLength: 255
     }),
     og_image: Field.url({
       label: 'Open Graph Image',
-      description: '社交媒体分享时显示的图片URL'
+      description: 'Image URL displayed when shared on social media'
     }),
     form_id: Field.lookup('form', {
       label: 'Embedded Form',
-      description: '页面中集成的表单'
+      description: 'Form embedded in the page'
     }),
     thank_you_message: Field.textarea({
       label: 'Thank You Message',
-      description: '表单提交后显示的消息',
+      description: 'Message displayed after form submission',
       maxLength: 2000
     }),
     redirect_url: Field.url({
       label: 'Redirect URL',
-      description: '表单提交后跳转的页面（可选）'
+      description: 'Page to redirect to after form submission (optional)'
     }),
     status: Field.select({
       label: 'Status',
@@ -145,7 +145,7 @@ export const LandingPage = ObjectSchema.create({
     }),
     expiry_date: Field.datetime({
       label: 'Expiry Date',
-      description: '页面自动下线时间（可选）'
+      description: 'Automatic page expiry time (optional)'
     }),
     owner_id: Field.lookup('users', {
       label: 'Owner',
@@ -157,11 +157,11 @@ export const LandingPage = ObjectSchema.create({
     }),
     a_b_test_variant_id: Field.lookup('landing_page', {
       label: 'A/B Test Variant',
-      description: '关联的测试变体页面'
+      description: 'Associated A/B test variant page'
     }),
     traffic_split_percent: Field.percent({
       label: 'Traffic Split Percent',
-      description: 'A/B测试时此版本的流量占比'
+      description: 'Traffic split percentage for this version during A/B testing'
     }),
     total_views: Field.number({
       label: 'Total Views',
@@ -183,7 +183,7 @@ export const LandingPage = ObjectSchema.create({
     }),
     conversion_rate: Field.percent({
       label: 'Conversion Rate',
-      description: '自动计算：提交次数 / 独立访客数',
+      description: 'Auto-calculated: submissions / unique visitors',
       readonly: true
     }),
     average_time_on_page: Field.number({
@@ -193,27 +193,27 @@ export const LandingPage = ObjectSchema.create({
     }),
     bounce_rate: Field.percent({
       label: 'Bounce Rate',
-      description: '访问后立即离开的访客比例',
+      description: 'Percentage of visitors who leave immediately after landing',
       readonly: true
     }),
     source_utm_campaign: Field.text({
       label: 'UTM Campaign',
-      description: '跟踪参数：utm_campaign',
+      description: 'Tracking parameter: utm_campaign',
       maxLength: 100
     }),
     source_utm_medium: Field.text({
       label: 'UTM Medium',
-      description: '跟踪参数：utm_medium',
+      description: 'Tracking parameter: utm_medium',
       maxLength: 100
     }),
     source_utm_source: Field.text({
       label: 'UTM Source',
-      description: '跟踪参数：utm_source',
+      description: 'Tracking parameter: utm_source',
       maxLength: 100
     }),
     is_mobile_optimized: Field.boolean({
       label: 'Mobile Optimized',
-      description: '是否针对移动设备优化',
+      description: 'Whether the page is optimized for mobile devices',
       defaultValue: true
     }),
     mobile_conversion_rate: Field.percent({
@@ -226,7 +226,7 @@ export const LandingPage = ObjectSchema.create({
     }),
     page_load_time: Field.number({
       label: 'Page Load Time (ms)',
-      description: '平均加载时间（毫秒）',
+      description: 'Average load time (milliseconds)',
       readonly: true,
       precision: 0
     }),
@@ -237,13 +237,13 @@ export const LandingPage = ObjectSchema.create({
     }),
     ai_design_suggestions: Field.textarea({
       label: 'AI Design Suggestions',
-      description: 'AI 分析的设计和布局优化建议',
+      description: 'AI-analyzed design and layout optimization suggestions',
       readonly: true,
       maxLength: 2000
     }),
     ai_copywriting_suggestions: Field.textarea({
       label: 'AI Copywriting Suggestions',
-      description: 'AI 生成的标题、CTA等文案优化建议',
+      description: 'AI-generated copywriting suggestions for headlines, CTAs, etc.',
       readonly: true,
       maxLength: 2000
     })

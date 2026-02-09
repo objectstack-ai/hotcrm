@@ -5,7 +5,7 @@ export const MarketingList = ObjectSchema.create({
   label: 'Marketing List',
   pluralLabel: 'Marketing Lists',
   icon: 'users',
-  description: '营销列表/细分管理，支持动态查询和静态成员',
+  description: 'Marketing list and segmentation management with dynamic queries and static members',
 
   fields: {
     name: Field.text({
@@ -15,18 +15,18 @@ export const MarketingList = ObjectSchema.create({
     }),
     list_code: Field.text({
       label: 'List Code',
-      description: '用于API调用的唯一标识符',
+      description: 'Unique identifier for API calls',
       unique: true,
       maxLength: 80
     }),
     description: Field.textarea({
       label: 'Description',
-      description: '列表的用途和目标受众说明',
+      description: 'Purpose and target audience description for the list',
       maxLength: 2000
     }),
     list_type: Field.select({
       label: 'List Type',
-      description: '静态=手动添加，动态=自动更新，混合=两者结合',
+      description: 'Static = manually added, Dynamic = auto-updated, Hybrid = both combined',
       required: true,
       defaultValue: 'Static',
       options: [
@@ -69,12 +69,12 @@ export const MarketingList = ObjectSchema.create({
     }),
     filter_criteria_json: Field.textarea({
       label: 'Filter Criteria JSON',
-      description: '动态列表的查询条件（ObjectQL格式）',
+      description: 'Query criteria for dynamic lists (ObjectQL format)',
       maxLength: 65535
     }),
     refresh_frequency: Field.select({
       label: 'Refresh Frequency',
-      description: '动态列表成员更新频率',
+      description: 'Member refresh frequency for dynamic lists',
       options: [
         {
           "label": "Real-time",
@@ -104,7 +104,7 @@ export const MarketingList = ObjectSchema.create({
     }),
     campaign_id: Field.lookup('campaign', {
       label: 'Associated Campaign',
-      description: '此列表关联的主要营销活动'
+      description: 'Primary campaign associated with this list'
     }),
     segment_category: Field.select({
       label: 'Segment Category',
@@ -145,7 +145,7 @@ export const MarketingList = ObjectSchema.create({
     }),
     target_audience: Field.textarea({
       label: 'Target Audience Description',
-      description: '此列表的目标受众特征',
+      description: 'Target audience characteristics for this list',
       maxLength: 2000
     }),
     status: Field.select({
@@ -177,14 +177,14 @@ export const MarketingList = ObjectSchema.create({
     }),
     total_members: Field.number({
       label: 'Total Members',
-      description: '列表中的总成员数',
+      description: 'Total number of members in the list',
       defaultValue: 0,
       readonly: true,
       precision: 0
     }),
     active_members: Field.number({
       label: 'Active Members',
-      description: '未退订且邮件可送达的成员数',
+      description: 'Number of members who have not unsubscribed and have deliverable emails',
       defaultValue: 0,
       readonly: true,
       precision: 0
@@ -203,71 +203,71 @@ export const MarketingList = ObjectSchema.create({
     }),
     average_engagement_score: Field.number({
       label: 'Average Engagement Score',
-      description: '列表成员的平均参与度评分',
+      description: 'Average engagement score of list members',
       readonly: true,
       precision: 2
     }),
     average_lead_score: Field.number({
       label: 'Average Lead Score',
-      description: '列表中线索的平均评分',
+      description: 'Average lead score of leads in the list',
       readonly: true,
       precision: 2
     }),
     total_campaigns_sent: Field.number({
       label: 'Campaigns Sent',
-      description: '使用此列表发送的营销活动数量',
+      description: 'Number of campaigns sent using this list',
       defaultValue: 0,
       readonly: true,
       precision: 0
     }),
     deliverability_rate: Field.percent({
       label: 'Deliverability Rate',
-      description: '成功送达的邮件占比',
+      description: 'Percentage of emails successfully delivered',
       readonly: true
     }),
     average_open_rate: Field.percent({
       label: 'Average Open Rate',
-      description: '此列表历史营销活动的平均打开率',
+      description: 'Average open rate of past campaigns for this list',
       readonly: true
     }),
     average_click_rate: Field.percent({
       label: 'Average Click Rate',
-      description: '此列表历史营销活动的平均点击率',
+      description: 'Average click rate of past campaigns for this list',
       readonly: true
     }),
     suppress_duplicates: Field.boolean({
       label: 'Suppress Duplicates',
-      description: '自动去除重复成员',
+      description: 'Automatically remove duplicate members',
       defaultValue: true
     }),
     suppress_unsubscribed: Field.boolean({
       label: 'Suppress Unsubscribed',
-      description: '自动排除已退订的联系人',
+      description: 'Automatically exclude unsubscribed contacts',
       defaultValue: true
     }),
     suppress_bounced: Field.boolean({
       label: 'Suppress Bounced',
-      description: '自动排除硬退信的邮箱地址',
+      description: 'Automatically exclude hard-bounced email addresses',
       defaultValue: true
     }),
     include_opted_out_contacts: Field.boolean({
       label: 'Include Opted Out Contacts',
-      description: '是否包含选择退出营销的联系人',
+      description: 'Whether to include contacts who opted out of marketing',
       defaultValue: false
     }),
     consent_required: Field.boolean({
       label: 'Marketing Consent Required',
-      description: 'GDPR合规：只包含明确同意营销的联系人',
+      description: 'GDPR compliance: only include contacts who explicitly consented to marketing',
       defaultValue: true
     }),
     data_retention_days: Field.number({
       label: 'Data Retention Days',
-      description: '成员数据保留期限（天）',
+      description: 'Member data retention period (days)',
       precision: 0
     }),
     last_compliance_check: Field.datetime({
       label: 'Last Compliance Check',
-      description: '最后一次GDPR/隐私合规检查时间',
+      description: 'Last GDPR/privacy compliance check date',
       readonly: true
     }),
     last_import_date: Field.datetime({
@@ -281,24 +281,24 @@ export const MarketingList = ObjectSchema.create({
     }),
     source_system: Field.text({
       label: 'Source System',
-      description: '成员的来源系统或渠道',
+      description: 'Source system or channel for members',
       maxLength: 100
     }),
     ai_suggested_segments: Field.textarea({
       label: 'AI Suggested Segments',
-      description: 'AI 分析建议的额外细分维度',
+      description: 'AI-suggested additional segmentation dimensions',
       readonly: true,
       maxLength: 2000
     }),
     ai_engagement_prediction: Field.textarea({
       label: 'AI Engagement Prediction',
-      description: 'AI 预测的列表参与度趋势',
+      description: 'AI-predicted engagement trends for the list',
       readonly: true,
       maxLength: 2000
     }),
     ai_suggested_content: Field.textarea({
       label: 'AI Content Suggestions',
-      description: 'AI 针对此列表推荐的内容主题',
+      description: 'AI-recommended content topics for this list',
       readonly: true,
       maxLength: 2000
     })

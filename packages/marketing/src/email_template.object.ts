@@ -5,24 +5,24 @@ export const EmailTemplate = ObjectSchema.create({
   label: 'Email Template',
   pluralLabel: 'Email Templates',
   icon: 'mail',
-  description: '营销邮件模板库，支持个性化令牌和动态内容块',
+  description: 'Marketing email template library with personalization tokens and dynamic content blocks',
 
   fields: {
     name: Field.text({
       label: 'Template Name',
-      description: '邮件模板的唯一名称',
+      description: 'Unique name for the email template',
       required: true,
       maxLength: 255
     }),
     template_code: Field.text({
       label: 'Template Code',
-      description: '用于API调用的唯一模板标识符',
+      description: 'Unique template identifier for API calls',
       unique: true,
       maxLength: 80
     }),
     description: Field.textarea({
       label: 'Description',
-      description: '模板用途和场景说明',
+      description: 'Template purpose and usage description',
       maxLength: 1000
     }),
     template_type: Field.select({
@@ -91,35 +91,35 @@ export const EmailTemplate = ObjectSchema.create({
     }),
     subject: Field.text({
       label: 'Email Subject',
-      description: '支持个性化令牌，如 {{FirstName}}',
+      description: 'Supports personalization tokens such as {{FirstName}}',
       required: true,
       maxLength: 255
     }),
     preheader_text: Field.text({
       label: 'Preview Text',
-      description: '邮件客户端显示的预览文本',
+      description: 'Preview text displayed in email clients',
       maxLength: 150
     }),
     html_body: Field.textarea({
       label: 'HTML Content',
-      description: '邮件的 HTML 内容，支持令牌和动态内容块',
+      description: 'HTML content of the email with support for tokens and dynamic content blocks',
       required: true,
       maxLength: 65535
     }),
     plain_text_body: Field.textarea({
       label: 'Plain Text Content',
-      description: '纯文本版本，用于不支持HTML的邮件客户端',
+      description: 'Plain text version for email clients that do not support HTML',
       maxLength: 32000
     }),
     personalization_tokens: Field.textarea({
       label: 'Personalization Tokens',
-      description: '模板中使用的所有令牌列表（自动提取）',
+      description: 'List of all tokens used in the template (auto-extracted)',
       readonly: true,
       maxLength: 2000
     }),
     dynamic_content_blocks: Field.number({
       label: 'Dynamic Content Block Count',
-      description: '基于条件显示的动态内容块数量',
+      description: 'Number of dynamic content blocks displayed based on conditions',
       defaultValue: 0,
       readonly: true,
       precision: 0
@@ -144,7 +144,7 @@ export const EmailTemplate = ObjectSchema.create({
     }),
     design_json: Field.textarea({
       label: 'Design Configuration JSON',
-      description: '可视化编辑器的设计配置（JSON格式）',
+      description: 'Design configuration for the visual editor (JSON format)',
       maxLength: 65535
     }),
     status: Field.select({
@@ -168,7 +168,7 @@ export const EmailTemplate = ObjectSchema.create({
     }),
     is_active: Field.boolean({
       label: 'Is Active',
-      description: '只有启用的模板才能用于发送',
+      description: 'Only active templates can be used for sending',
       defaultValue: true
     }),
     owner_id: Field.lookup('users', {
@@ -181,7 +181,7 @@ export const EmailTemplate = ObjectSchema.create({
     }),
     a_b_test_variant_id: Field.lookup('email_template', {
       label: 'A/B Test Variant',
-      description: '关联的测试变体模板'
+      description: 'Associated A/B test variant template'
     }),
     a_b_test_winner_metric: Field.select({
       label: 'A/B Test Winning Metric',
@@ -220,12 +220,12 @@ export const EmailTemplate = ObjectSchema.create({
     }),
     average_open_rate: Field.percent({
       label: 'Average Open Rate',
-      description: '自动计算：总打开次数 / 总发送次数',
+      description: 'Auto-calculated: total opens / total sends',
       readonly: true
     }),
     average_click_rate: Field.percent({
       label: 'Average Click Rate',
-      description: '自动计算：总点击次数 / 总打开次数',
+      description: 'Auto-calculated: total clicks / total opens',
       readonly: true
     }),
     last_used_date: Field.datetime({
@@ -234,25 +234,25 @@ export const EmailTemplate = ObjectSchema.create({
     }),
     spam_score: Field.number({
       label: 'Spam Score',
-      description: '0-10分，分数越低越好',
+      description: 'Score from 0-10, lower is better',
       readonly: true,
       precision: 1
     }),
     has_unsubscribe_link: Field.boolean({
       label: 'Has Unsubscribe Link',
-      description: '自动检测内容中是否包含退订链接',
+      description: 'Auto-detects whether the content contains an unsubscribe link',
       defaultValue: false,
       readonly: true
     }),
     ai_generated_subject_lines: Field.textarea({
       label: 'AI Generated Subject Lines',
-      description: 'AI 推荐的替代主题行选项',
+      description: 'AI-recommended alternative subject line options',
       readonly: true,
       maxLength: 2000
     }),
     ai_optimization_suggestions: Field.textarea({
       label: 'AI Optimization Suggestions',
-      description: 'AI 分析的改进建议（内容、设计、发送时间等）',
+      description: 'AI-analyzed improvement suggestions (content, design, send time, etc.)',
       readonly: true,
       maxLength: 2000
     })

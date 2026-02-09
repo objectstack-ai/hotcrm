@@ -5,7 +5,7 @@ export const Form = ObjectSchema.create({
   label: 'Form',
   pluralLabel: 'Forms',
   icon: 'file-text',
-  description: '营销表单构建器，支持拖放式设计和自动线索创建',
+  description: 'Marketing form builder with drag-and-drop design and automatic lead creation',
 
   fields: {
     name: Field.text({
@@ -15,7 +15,7 @@ export const Form = ObjectSchema.create({
     }),
     form_code: Field.text({
       label: 'Form Code',
-      description: '用于嵌入和API调用的唯一标识符',
+      description: 'Unique identifier for embedding and API calls',
       unique: true,
       maxLength: 80
     }),
@@ -64,18 +64,18 @@ export const Form = ObjectSchema.create({
     }),
     fields_json: Field.textarea({
       label: 'Fields Configuration JSON',
-      description: '表单字段定义（类型、标签、验证规则等）',
+      description: 'Form field definitions (type, label, validation rules, etc.)',
       required: true,
       maxLength: 65535
     }),
     layout_json: Field.textarea({
       label: 'Layout Configuration JSON',
-      description: '字段布局和样式配置',
+      description: 'Field layout and style configuration',
       maxLength: 32000
     }),
     validation_rules_json: Field.textarea({
       label: 'Validation Rules JSON',
-      description: '自定义字段验证规则',
+      description: 'Custom field validation rules',
       maxLength: 32000
     }),
     submit_button_text: Field.text({
@@ -85,7 +85,7 @@ export const Form = ObjectSchema.create({
     }),
     submit_success_message: Field.textarea({
       label: 'Success Message',
-      description: '表单提交成功后显示的消息',
+      description: 'Message displayed after successful form submission',
       maxLength: 1000
     }),
     redirect_url: Field.url({
@@ -94,40 +94,40 @@ export const Form = ObjectSchema.create({
     }),
     create_lead_on_submit: Field.boolean({
       label: 'Auto Create Lead',
-      description: '表单提交时自动创建线索记录',
+      description: 'Automatically create a lead record on form submission',
       defaultValue: true
     }),
     lead_source: Field.text({
       label: 'Lead Source',
-      description: '自动创建线索时设置的来源字段值',
+      description: 'Lead source value set when auto-creating leads',
       maxLength: 100
     }),
     auto_assign_leads: Field.boolean({
       label: 'Auto Assign Leads',
-      description: '根据分配规则自动分配新线索',
+      description: 'Automatically assign new leads based on assignment rules',
       defaultValue: false
     }),
     default_owner_id: Field.lookup('users', {
       label: 'Default Owner',
-      description: '新线索的默认负责人（如果不自动分配）'
+      description: 'Default owner for new leads (if not auto-assigned)'
     }),
     send_confirmation_email: Field.boolean({
       label: 'Send Confirmation Email',
-      description: '向提交者发送确认邮件',
+      description: 'Send confirmation email to submitter',
       defaultValue: false
     }),
     confirmation_email_template_id: Field.lookup('email_template', {
       label: 'Confirmation Email Template',
-      description: '使用的确认邮件模板'
+      description: 'Confirmation email template to use'
     }),
     notify_owner_on_submit: Field.boolean({
       label: 'Notify Owner on Submit',
-      description: '表单提交时通知线索负责人',
+      description: 'Notify lead owner on form submission',
       defaultValue: true
     }),
     notification_email_list: Field.text({
       label: 'Notification Email List',
-      description: '逗号分隔的邮箱地址，收到表单提交通知',
+      description: 'Comma-separated email addresses to receive form submission notifications',
       maxLength: 500
     }),
     status: Field.select({
@@ -163,13 +163,13 @@ export const Form = ObjectSchema.create({
     }),
     embed_code: Field.textarea({
       label: 'Embed Code',
-      description: '用于嵌入网站的HTML/JavaScript代码',
+      description: 'HTML/JavaScript code for embedding on websites',
       readonly: true,
       maxLength: 2000
     }),
     allowed_domains: Field.text({
       label: 'Allowed Domains',
-      description: '可以嵌入此表单的域名列表（逗号分隔）',
+      description: 'List of domains allowed to embed this form (comma-separated)',
       maxLength: 500
     }),
     total_submissions: Field.number({
@@ -186,18 +186,18 @@ export const Form = ObjectSchema.create({
     }),
     conversion_rate: Field.percent({
       label: 'Conversion Rate',
-      description: '自动计算：提交次数 / 浏览次数',
+      description: 'Auto-calculated: submissions / views',
       readonly: true
     }),
     average_completion_time: Field.number({
       label: 'Average Completion Time (sec)',
-      description: '用户完成表单的平均时长',
+      description: 'Average time for users to complete the form',
       readonly: true,
       precision: 0
     }),
     abandonment_rate: Field.percent({
       label: 'Abandonment Rate',
-      description: '开始填写但未提交的比例',
+      description: 'Percentage of users who started but did not submit',
       readonly: true
     }),
     last_submission_date: Field.datetime({
@@ -206,12 +206,12 @@ export const Form = ObjectSchema.create({
     }),
     enable_captcha: Field.boolean({
       label: 'Enable Captcha',
-      description: '防止垃圾提交',
+      description: 'Prevent spam submissions',
       defaultValue: true
     }),
     enable_honeypot: Field.boolean({
       label: 'Enable Honeypot Field',
-      description: '隐藏字段防止机器人提交',
+      description: 'Hidden field to prevent bot submissions',
       defaultValue: true
     }),
     spam_submissions_blocked: Field.number({
@@ -222,35 +222,35 @@ export const Form = ObjectSchema.create({
     }),
     enable_progressive_profiling: Field.boolean({
       label: 'Enable Progressive Profiling',
-      description: '对已知联系人隐藏已有信息的字段',
+      description: 'Hide fields with existing data for known contacts',
       defaultValue: false
     }),
     max_fields_to_show: Field.number({
       label: 'Max Fields to Show',
-      description: '渐进式表单每次最多显示的新字段数',
+      description: 'Maximum number of new fields shown per progressive form visit',
       precision: 0
     }),
     most_abandoned_field: Field.text({
       label: 'Most Abandoned Field',
-      description: '用户最常在此字段处放弃表单',
+      description: 'Field where users most frequently abandon the form',
       readonly: true,
       maxLength: 100
     }),
     field_completion_rates_json: Field.textarea({
       label: 'Field Completion Rates JSON',
-      description: '每个字段的完成率统计数据',
+      description: 'Completion rate statistics for each field',
       readonly: true,
       maxLength: 10000
     }),
     ai_form_optimization: Field.textarea({
       label: 'AI Form Optimization Suggestions',
-      description: 'AI 分析的表单改进建议（字段顺序、标签文本等）',
+      description: 'AI-analyzed form optimization suggestions (field order, label text, etc.)',
       readonly: true,
       maxLength: 2000
     }),
     ai_field_suggestions: Field.textarea({
       label: 'AI Field Suggestions',
-      description: 'AI 推荐添加或删除的字段',
+      description: 'AI-recommended fields to add or remove',
       readonly: true,
       maxLength: 2000
     })
