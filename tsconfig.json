@@ -15,23 +15,27 @@
     "composite": true,
     "baseUrl": ".",
     "paths": {
+      "@hotcrm/ai": ["packages/ai/src"],
       "@hotcrm/core": ["packages/core/src"],
       "@hotcrm/crm": ["packages/crm/src"],
-      "@hotcrm/support": ["packages/support/src"],
-      "@hotcrm/products": ["packages/products/src"],
       "@hotcrm/finance": ["packages/finance/src"],
-      "@hotcrm/ui": ["packages/ui/src"],
-      "@hotcrm/server": ["packages/server/src"]
+      "@hotcrm/hr": ["packages/hr/src"],
+      "@hotcrm/marketing": ["packages/marketing/src"],
+      "@hotcrm/products": ["packages/products/src"],
+      "@hotcrm/server": ["packages/server/src"],
+      "@hotcrm/support": ["packages/support/src"]
     }
   },
   "references": [
+    { "path": "./packages/ai" },
     { "path": "./packages/core" },
     { "path": "./packages/crm" },
-    { "path": "./packages/support" },
-    { "path": "./packages/products" },
     { "path": "./packages/finance" },
-    { "path": "./packages/ui" },
-    { "path": "./packages/server" }
+    { "path": "./packages/hr" },
+    { "path": "./packages/marketing" },
+    { "path": "./packages/products" },
+    { "path": "./packages/server" },
+    { "path": "./packages/support" }
   ],
   "files": [],
   "include": [],
