@@ -1,14 +1,7 @@
-import type { Hook } from '@objectstack/spec/data';
+import type { Hook, HookContext } from '@objectstack/spec/data';
 import { db } from '../db';
 
-// Types for Context
-export interface TriggerContext {
-  old?: Record<string, any>;
-  new: Record<string, any>;
-  db: typeof db;
-  user: { id: string; name: string; email: string; };
-  event?: string; // Event type: beforeInsert, beforeUpdate, afterInsert, afterUpdate
-}
+
 
 /**
  * Quote Pricing Calculation and Approval Routing Hook
@@ -24,26 +17,27 @@ const QuotePricingHook: Hook = {
   name: 'QuotePricingHook',
   object: 'quote',
   events: ['beforeInsert', 'beforeUpdate', 'afterInsert', 'afterUpdate'],
-  handler: async (ctx: TriggerContext) => {
+  handler: async (ctx: HookContext) => {
     try {
-      const isInsert = !ctx.old;
-      const isUpdate = !!ctx.old;
-      const quote = ctx.new;
+      const event = ctx.event || (ctx.previous ? 'afterUpdate' : 'afterInsert');
+      const isInsert = !ctx.previous;
+      const isUpdate = !!ctx.previous;
+      const quote = ctx.input?.doc || ctx.result;
 
       // Before Insert/Update: Calculate pricing
-      if (ctx.event === 'beforeInsert' || ctx.event === 'beforeUpdate') {
+      if (event === 'beforeInsert' || event === 'beforeUpdate') {
         await calculateQuotePricing(ctx);
         await determineApprovalRequirements(ctx);
         await validateMarginProtection(ctx);
       }
 
       // After Insert: Initialize quote
-      if (ctx.event === 'afterInsert') {
+      if (event === 'afterInsert') {
         await initializeQuote(ctx);
       }
 
       // After Update: Handle status changes
-      if (ctx.event === 'afterUpdate') {
+      if (event === 'afterUpdate') {
         await handleQuoteStatusChange(ctx);
         await handleApprovalStatusChange(ctx);
       }
@@ -58,8 +52,8 @@ const QuotePricingHook: Hook = {
 /**
  * Calculate quote pricing based on line items and discounts
  */
-async function calculateQuotePricing(ctx: TriggerContext): Promise<void> {
-  const quote = ctx.new;
+async function calculateQuotePricing(ctx: any): Promise<void> {
+  const quote = ctx.input?.doc || ctx.result;
   
   try {
     // Calculate Discount Amount from Percent or vice versa
@@ -93,8 +87,8 @@ async function calculateQuotePricing(ctx: TriggerContext): Promise<void> {
 /**
  * Determine approval requirements based on discount percentage
  */
-async function determineApprovalRequirements(ctx: TriggerContext): Promise<void> {
-  const quote = ctx.new;
+async function determineApprovalRequirements(ctx: any): Promise<void> {
+  const quote = ctx.input?.doc || ctx.result;
   const discountPercent = quote.DiscountPercent || 0;
 
   try {
@@ -122,8 +116,8 @@ async function determineApprovalRequirements(ctx: TriggerContext): Promise<void>
       quote.ApprovalLevel = approvalLevel;
       
       // Set approval status to Pending if discount increased
-      if (ctx.old) {
-        const oldDiscount = ctx.old.DiscountPercent || 0;
+      if (ctx.previous) {
+        const oldDiscount = ctx.previous.DiscountPercent || 0;
         if (discountPercent > oldDiscount && quote.ApprovalStatus !== 'Approved' && quote.ApprovalStatus !== 'Pending') {
           quote.ApprovalStatus = 'Pending';
           console.log(`🔄 Quote requires Level ${approvalLevel} approval (${(discountPercent * 100).toFixed(1)}% discount)`);
@@ -141,8 +135,8 @@ async function determineApprovalRequirements(ctx: TriggerContext): Promise<void>
 /**
  * Validate margin protection rules
  */
-async function validateMarginProtection(ctx: TriggerContext): Promise<void> {
-  const quote = ctx.new;
+async function validateMarginProtection(ctx: any): Promise<void> {
+  const quote = ctx.input?.doc || ctx.result;
   
   try {
     // Calculate margin if we have cost information
@@ -161,8 +155,8 @@ async function validateMarginProtection(ctx: TriggerContext): Promise<void> {
 /**
  * Initialize quote after creation
  */
-async function initializeQuote(ctx: TriggerContext): Promise<void> {
-  const quote = ctx.new;
+async function initializeQuote(ctx: any): Promise<void> {
+  const quote = ctx.result;
   
   try {
     // Log activity for new quote
@@ -200,16 +194,16 @@ async function initializeQuote(ctx: TriggerContext): Promise<void> {
 /**
  * Handle quote status changes
  */
-async function handleQuoteStatusChange(ctx: TriggerContext): Promise<void> {
-  if (!ctx.old || !ctx.new) return;
+async function handleQuoteStatusChange(ctx: any): Promise<void> {
+  if (!ctx.previous || !ctx.result) return;
   
-  const statusChanged = ctx.old.Status !== ctx.new.Status;
+  const statusChanged = ctx.previous.Status !== ctx.result.Status;
   if (!statusChanged) return;
 
-  const quote = ctx.new;
+  const quote = ctx.result;
   
   try {
-    console.log(`🔄 Quote status changed from "${ctx.old.Status}" to "${quote.Status}"`);
+    console.log(`🔄 Quote status changed from "${ctx.previous.Status}" to "${quote.Status}"`);
 
     // Handle Accepted status
     if (quote.Status === 'Accepted') {
@@ -229,7 +223,7 @@ async function handleQuoteStatusChange(ctx: TriggerContext): Promise<void> {
     // Log activity for status change
     if (quote.AccountId) {
       await ctx.db.doc.create('Activity', {
-        Subject: `Quote Status Changed: ${ctx.old.Status} → ${quote.Status}`,
+        Subject: `Quote Status Changed: ${ctx.previous.Status} → ${quote.Status}`,
         Type: 'Quote Status Change',
         Status: 'Completed',
         Priority: 'Normal',
@@ -237,7 +231,7 @@ async function handleQuoteStatusChange(ctx: TriggerContext): Promise<void> {
         WhatId: quote.Id,
         OwnerId: ctx.user.id,
         ActivityDate: new Date().toISOString().split('T')[0],
-        Description: `Quote ${quote.QuoteNumber} status changed from "${ctx.old.Status}" to "${quote.Status}"`
+        Description: `Quote ${quote.QuoteNumber} status changed from "${ctx.previous.Status}" to "${quote.Status}"`
       });
     }
   } catch (error) {
@@ -248,8 +242,8 @@ async function handleQuoteStatusChange(ctx: TriggerContext): Promise<void> {
 /**
  * Handle quote accepted
  */
-async function handleQuoteAccepted(ctx: TriggerContext): Promise<void> {
-  const quote = ctx.new;
+async function handleQuoteAccepted(ctx: any): Promise<void> {
+  const quote = ctx.result;
   
   try {
     console.log('✅ Processing quote acceptance...');
@@ -310,8 +304,8 @@ async function handleQuoteAccepted(ctx: TriggerContext): Promise<void> {
 /**
  * Handle quote sent to customer
  */
-async function handleQuoteSent(ctx: TriggerContext): Promise<void> {
-  const quote = ctx.new;
+async function handleQuoteSent(ctx: any): Promise<void> {
+  const quote = ctx.result;
   
   try {
     console.log('📧 Quote sent to customer');
@@ -327,8 +321,8 @@ async function handleQuoteSent(ctx: TriggerContext): Promise<void> {
 /**
  * Handle quote expiration
  */
-async function handleQuoteExpired(ctx: TriggerContext): Promise<void> {
-  const quote = ctx.new;
+async function handleQuoteExpired(ctx: any): Promise<void> {
+  const quote = ctx.result;
   
   try {
     console.log('⏰ Quote expired');
@@ -344,16 +338,16 @@ async function handleQuoteExpired(ctx: TriggerContext): Promise<void> {
 /**
  * Handle approval status changes
  */
-async function handleApprovalStatusChange(ctx: TriggerContext): Promise<void> {
-  if (!ctx.old || !ctx.new) return;
+async function handleApprovalStatusChange(ctx: any): Promise<void> {
+  if (!ctx.previous || !ctx.result) return;
   
-  const approvalStatusChanged = ctx.old.ApprovalStatus !== ctx.new.ApprovalStatus;
+  const approvalStatusChanged = ctx.previous.ApprovalStatus !== ctx.result.ApprovalStatus;
   if (!approvalStatusChanged) return;
 
-  const quote = ctx.new;
+  const quote = ctx.result;
   
   try {
-    console.log(`🔄 Approval status changed from "${ctx.old.ApprovalStatus}" to "${quote.ApprovalStatus}"`);
+    console.log(`🔄 Approval status changed from "${ctx.previous.ApprovalStatus}" to "${quote.ApprovalStatus}"`);
 
     // Handle approved
     if (quote.ApprovalStatus === 'Approved') {

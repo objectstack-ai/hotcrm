@@ -1,13 +1,7 @@
-import type { Hook } from '@objectstack/spec/data';
+import type { Hook, HookContext } from '@objectstack/spec/data';
 import { db } from '../db';
 
-// Types for Context
-interface TriggerContext {
-  old?: Record<string, any>;
-  new: Record<string, any>;
-  db: typeof db;
-  user: { id: string; name: string; email: string; };
-}
+
 
 /**
  * Knowledge Article Scoring Trigger
@@ -21,17 +15,17 @@ const KnowledgeArticleScoringTrigger: Hook = {
   name: 'KnowledgeArticleScoringTrigger',
   object: 'KnowledgeArticle',
   events: ['beforeInsert', 'beforeUpdate'],
-  handler: async (ctx: TriggerContext) => {
+  handler: async (ctx: HookContext) => {
     try {
-      const article = ctx.new;
-      const oldArticle = ctx.old;
+      const article = ctx.input.doc;
+      const oldArticle = ctx.previous;
 
       // Calculate quality score
       article.QualityScore = calculateQualityScore(article);
 
       // Calculate popularity score (only if article has been published)
       if (article.Status === 'Published') {
-        article.PopularityScore = await calculatePopularityScore(article, ctx);
+        article.PopularityScore = await calculatePopularityScore(article);
       }
 
       // Update helpfulness rating
@@ -63,10 +57,10 @@ const KnowledgeArticleAIEnhancementTrigger: Hook = {
   name: 'KnowledgeArticleAIEnhancementTrigger',
   object: 'KnowledgeArticle',
   events: ['beforeInsert', 'beforeUpdate'],
-  handler: async (ctx: TriggerContext) => {
+  handler: async (ctx: HookContext) => {
     try {
-      const article = ctx.new;
-      const oldArticle = ctx.old;
+      const article = ctx.input.doc;
+      const oldArticle = ctx.previous;
 
       // Only run AI on new articles or when content changes
       const isNew = !oldArticle;
@@ -119,10 +113,10 @@ const KnowledgeArticleWorkflowTrigger: Hook = {
   name: 'KnowledgeArticleWorkflowTrigger',
   object: 'KnowledgeArticle',
   events: ['beforeUpdate'],
-  handler: async (ctx: TriggerContext) => {
+  handler: async (ctx: HookContext) => {
     try {
-      const article = ctx.new;
-      const oldArticle = ctx.old;
+      const article = ctx.input.doc;
+      const oldArticle = ctx.previous;
 
       // Track status changes
       if (oldArticle && oldArticle.Status !== article.Status) {
@@ -160,10 +154,10 @@ const KnowledgeArticleUsageTracker: Hook = {
   name: 'KnowledgeArticleUsageTracker',
   object: 'Case',
   events: ['afterUpdate'],
-  handler: async (ctx: TriggerContext) => {
+  handler: async (ctx: HookContext) => {
     try {
-      const caseRecord = ctx.new;
-      const oldCase = ctx.old;
+      const caseRecord = ctx.result;
+      const oldCase = ctx.previous;
 
       // Track when case is resolved and knowledge was used
       if (oldCase && caseRecord.Status === 'Resolved' && oldCase.Status !== 'Resolved') {
@@ -193,7 +187,7 @@ const KnowledgeArticleSearchAnalytics: Hook = {
   name: 'KnowledgeArticleSearchAnalytics',
   object: 'KnowledgeArticle',
   events: ['afterFind'],
-  handler: async (ctx: TriggerContext) => {
+  handler: async (ctx: HookContext) => {
     try {
       // Track search queries and results
       // This would be implemented at the search API level
@@ -276,7 +270,7 @@ function calculateQualityScore(article: any): number {
   return Math.min(score, maxScore);
 }
 
-async function calculatePopularityScore(article: any, ctx: TriggerContext): Promise<number> {
+async function calculatePopularityScore(article: any): Promise<number> {
   let score = 0;
   const maxScore = 100;
 
@@ -429,7 +423,7 @@ async function extractArticleKeywords(content: string): Promise<string> {
   return sortedWords.join(', ');
 }
 
-async function findRelatedArticles(article: any, ctx: TriggerContext): Promise<any[]> {
+async function findRelatedArticles(article: any, ctx: any): Promise<any[]> {
   const keywords = article.AIKeywords?.split(',').map((k: string) => k.trim()) || [];
   
   if (keywords.length === 0) return [];
@@ -446,7 +440,7 @@ async function findRelatedArticles(article: any, ctx: TriggerContext): Promise<a
   return relatedArticles;
 }
 
-async function trackStatusChange(article: any, oldArticle: any, ctx: TriggerContext): Promise<void> {
+async function trackStatusChange(article: any, oldArticle: any, ctx: any): Promise<void> {
   const statusChange = {
     ArticleId: article.id,
     OldStatus: oldArticle.Status,
@@ -470,7 +464,7 @@ async function trackStatusChange(article: any, oldArticle: any, ctx: TriggerCont
   }
 }
 
-async function checkForAutoArchive(article: any, ctx: TriggerContext): Promise<boolean> {
+async function checkForAutoArchive(article: any, ctx: any): Promise<boolean> {
   // Auto-archive if:
   // 1. Article is older than 2 years
   // 2. Low views in last 6 months
@@ -508,7 +502,7 @@ function calculateNextReviewDate(article: any): Date {
   return reviewDate;
 }
 
-async function incrementArticleUsage(articleId: string, ctx: TriggerContext): Promise<void> {
+async function incrementArticleUsage(articleId: string, ctx: any): Promise<void> {
   try {
     const article = await ctx.db.find('KnowledgeArticle', {
       filters: [['id', '=', articleId]],

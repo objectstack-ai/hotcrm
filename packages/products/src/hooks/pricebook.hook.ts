@@ -1,14 +1,7 @@
-import type { Hook } from '@objectstack/spec/data';
+import type { Hook, HookContext } from '@objectstack/spec/data';
 import { db } from '../db';
 
-// Types for Context
-export interface TriggerContext {
-  old?: Record<string, any>;
-  new: Record<string, any>;
-  db: typeof db;
-  user: { id: string; name: string; email: string; };
-  event?: string; // Event type: beforeInsert, beforeUpdate, afterUpdate
-}
+
 
 /**
  * Pricebook Hook
@@ -23,16 +16,18 @@ const PricebookHook: Hook = {
   name: 'PricebookHook',
   object: 'Pricebook',
   events: ['beforeInsert', 'beforeUpdate', 'afterUpdate'],
-  handler: async (ctx: TriggerContext) => {
+  handler: async (ctx: HookContext) => {
     try {
+      const event = ctx.event || (ctx.previous ? 'afterUpdate' : 'afterInsert');
+      
       // Before Insert/Update: Validate pricebook configuration
-      if (ctx.event === 'beforeInsert' || ctx.event === 'beforeUpdate') {
+      if (event === 'beforeInsert' || event === 'beforeUpdate') {
         await validatePricebookDates(ctx);
         await validateCurrencyConfiguration(ctx);
       }
 
       // After Update: Handle effective date and status changes
-      if (ctx.event === 'afterUpdate') {
+      if (event === 'afterUpdate') {
         await handleEffectiveDateChange(ctx);
         await handleStatusChange(ctx);
         await handleCurrencyChange(ctx);
@@ -48,8 +43,8 @@ const PricebookHook: Hook = {
 /**
  * Validate pricebook date ranges
  */
-async function validatePricebookDates(ctx: TriggerContext): Promise<void> {
-  const pricebook = ctx.new;
+async function validatePricebookDates(ctx: any): Promise<void> {
+  const pricebook = ctx.input?.doc || ctx.result;
   
   try {
     // Validate effective dates
@@ -88,8 +83,8 @@ async function validatePricebookDates(ctx: TriggerContext): Promise<void> {
 /**
  * Validate currency configuration
  */
-async function validateCurrencyConfiguration(ctx: TriggerContext): Promise<void> {
-  const pricebook = ctx.new;
+async function validateCurrencyConfiguration(ctx: any): Promise<void> {
+  const pricebook = ctx.input?.doc || ctx.result;
   
   try {
     // Validate currency code
@@ -120,15 +115,15 @@ async function validateCurrencyConfiguration(ctx: TriggerContext): Promise<void>
 /**
  * Handle effective date changes
  */
-async function handleEffectiveDateChange(ctx: TriggerContext): Promise<void> {
-  if (!ctx.old || !ctx.new) return;
+async function handleEffectiveDateChange(ctx: any): Promise<void> {
+  if (!ctx.previous || !ctx.result) return;
   
-  const effectiveDateChanged = ctx.old.EffectiveDate !== ctx.new.EffectiveDate;
-  const expirationDateChanged = ctx.old.ExpirationDate !== ctx.new.ExpirationDate;
+  const effectiveDateChanged = ctx.previous.EffectiveDate !== ctx.result.EffectiveDate;
+  const expirationDateChanged = ctx.previous.ExpirationDate !== ctx.result.ExpirationDate;
   
   if (!effectiveDateChanged && !expirationDateChanged) return;
 
-  const pricebook = ctx.new;
+  const pricebook = ctx.result;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   
@@ -190,16 +185,16 @@ async function handleEffectiveDateChange(ctx: TriggerContext): Promise<void> {
 /**
  * Handle pricebook status changes
  */
-async function handleStatusChange(ctx: TriggerContext): Promise<void> {
-  if (!ctx.old || !ctx.new) return;
+async function handleStatusChange(ctx: any): Promise<void> {
+  if (!ctx.previous || !ctx.result) return;
   
-  const statusChanged = ctx.old.Status !== ctx.new.Status;
+  const statusChanged = ctx.previous.Status !== ctx.result.Status;
   if (!statusChanged) return;
 
-  const pricebook = ctx.new;
+  const pricebook = ctx.result;
   
   try {
-    console.log(`🔄 Pricebook status changed from "${ctx.old.Status}" to "${pricebook.Status}"`);
+    console.log(`🔄 Pricebook status changed from "${ctx.previous.Status}" to "${pricebook.Status}"`);
 
     // Handle activation
     if (pricebook.Status === 'Active') {
@@ -260,14 +255,14 @@ async function handleStatusChange(ctx: TriggerContext): Promise<void> {
 
     // Log activity for status change
     await ctx.db.doc.create('Activity', {
-      Subject: `Pricebook Status Changed: ${ctx.old.Status} → ${pricebook.Status}`,
+      Subject: `Pricebook Status Changed: ${ctx.previous.Status} → ${pricebook.Status}`,
       Type: 'Status Change',
       Status: 'Completed',
       Priority: 'Normal',
       WhatId: pricebook.Id,
       OwnerId: ctx.user.id,
       ActivityDate: new Date().toISOString().split('T')[0],
-      Description: `Pricebook "${pricebook.Name}" status changed from "${ctx.old.Status}" to "${pricebook.Status}"`
+      Description: `Pricebook "${pricebook.Name}" status changed from "${ctx.previous.Status}" to "${pricebook.Status}"`
     });
   } catch (error) {
     console.error('❌ Error handling status change:', error);
@@ -277,19 +272,19 @@ async function handleStatusChange(ctx: TriggerContext): Promise<void> {
 /**
  * Handle currency or exchange rate changes
  */
-async function handleCurrencyChange(ctx: TriggerContext): Promise<void> {
-  if (!ctx.old || !ctx.new) return;
+async function handleCurrencyChange(ctx: any): Promise<void> {
+  if (!ctx.previous || !ctx.result) return;
   
-  const currencyChanged = ctx.old.CurrencyCode !== ctx.new.CurrencyCode;
-  const rateChanged = ctx.old.ExchangeRate !== ctx.new.ExchangeRate;
+  const currencyChanged = ctx.previous.CurrencyCode !== ctx.result.CurrencyCode;
+  const rateChanged = ctx.previous.ExchangeRate !== ctx.result.ExchangeRate;
   
   if (!currencyChanged && !rateChanged) return;
 
-  const pricebook = ctx.new;
+  const pricebook = ctx.result;
   
   try {
     if (currencyChanged) {
-      console.log(`💱 Currency changed from ${ctx.old.CurrencyCode} to ${pricebook.CurrencyCode}`);
+      console.log(`💱 Currency changed from ${ctx.previous.CurrencyCode} to ${pricebook.CurrencyCode}`);
       
       // TODO: Update all pricebook entries to reflect new currency
       console.log('💱 Pricebook entries would be updated for new currency');
@@ -299,7 +294,7 @@ async function handleCurrencyChange(ctx: TriggerContext): Promise<void> {
     }
 
     if (rateChanged) {
-      console.log(`💱 Exchange rate changed from ${ctx.old.ExchangeRate} to ${pricebook.ExchangeRate}`);
+      console.log(`💱 Exchange rate changed from ${ctx.previous.ExchangeRate} to ${pricebook.ExchangeRate}`);
       
       // Recalculate all prices based on new exchange rate
       // This would update all PricebookEntry records
@@ -310,10 +305,10 @@ async function handleCurrencyChange(ctx: TriggerContext): Promise<void> {
     if (currencyChanged || rateChanged) {
       const changes = [];
       if (currencyChanged) {
-        changes.push(`Currency: ${ctx.old.CurrencyCode} → ${pricebook.CurrencyCode}`);
+        changes.push(`Currency: ${ctx.previous.CurrencyCode} → ${pricebook.CurrencyCode}`);
       }
       if (rateChanged) {
-        changes.push(`Exchange Rate: ${ctx.old.ExchangeRate} → ${pricebook.ExchangeRate}`);
+        changes.push(`Exchange Rate: ${ctx.previous.ExchangeRate} → ${pricebook.ExchangeRate}`);
       }
       
       await ctx.db.doc.create('Activity', {

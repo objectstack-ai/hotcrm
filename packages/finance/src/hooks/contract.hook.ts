@@ -1,16 +1,16 @@
-import type { Hook } from '@objectstack/spec/data';
+import type { Hook, HookContext } from '@objectstack/spec/data';
 import { db } from '../db';
 
 const ContractBillingHook: Hook = {
   name: 'ContractBillingAutomation',
   object: 'contract',
   events: ['afterUpdate'],
-  handler: async (ctx) => {
-    const newDoc = ctx.new;
-    const oldDoc = ctx.old;
+  handler: async (ctx: HookContext) => {
+    const newDoc = ctx.result as Record<string, any>;
+    const oldDoc = ctx.previous as Record<string, any> | undefined;
 
     // Trigger only when status changes to 'Activated'
-    if (newDoc.status === 'Activated' && oldDoc.status !== 'Activated') {
+    if (newDoc.status === 'Activated' && oldDoc?.status !== 'Activated') {
       console.log(`Starting Billing Process for Contract ${newDoc.contract_number}`);
 
       try {

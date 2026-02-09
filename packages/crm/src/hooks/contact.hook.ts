@@ -1,13 +1,7 @@
-import type { Hook } from '@objectstack/spec/data';
+import type { Hook, HookContext } from '@objectstack/spec/data';
 import { db } from '../db';
 
-// Types for Context
-interface TriggerContext {
-  old?: Record<string, any>;
-  new: Record<string, any>;
-  db: typeof db;
-  user: { id: string; name: string; email: string; };
-}
+
 
 /**
  * Contact Last Contact Date Tracking Trigger
@@ -42,9 +36,9 @@ const ContactDecisionChainTrigger: Hook = {
   name: 'ContactDecisionChainTrigger',
   object: 'Contact',
   events: ['beforeInsert', 'beforeUpdate'],
-  handler: async (ctx: TriggerContext) => {
+  handler: async (ctx: HookContext) => {
     try {
-      const contact = ctx.new;
+      const contact = ctx.input.doc as Record<string, any>;
       
       // Auto-set InfluenceLevel based on Level
       if (!contact.InfluenceLevel && contact.Level) {
@@ -93,9 +87,9 @@ const ContactDecisionMakerValidationTrigger: Hook = {
   name: 'ContactDecisionMakerValidationTrigger',
   object: 'Contact',
   events: ['afterInsert', 'afterUpdate'],
-  handler: async (ctx: TriggerContext) => {
+  handler: async (ctx: HookContext) => {
     try {
-      const contact = ctx.new;
+      const contact = ctx.input.doc as Record<string, any>;
       
       if (!contact.AccountId) {
         return;
@@ -134,10 +128,10 @@ const ContactDuplicateDetectionTrigger: Hook = {
   name: 'ContactDuplicateDetectionTrigger',
   object: 'Contact',
   events: ['beforeInsert', 'beforeUpdate'],
-  handler: async (ctx: TriggerContext) => {
+  handler: async (ctx: HookContext) => {
     try {
-      const contact = ctx.new;
-      const isNew = !ctx.old;
+      const contact = ctx.input.doc;
+      const isNew = !ctx.previous;
       
       // Check for potential duplicates by name
       if (contact.FirstName && contact.LastName && contact.AccountId) {
@@ -182,9 +176,9 @@ const ContactRelationshipStrengthTrigger: Hook = {
   name: 'ContactRelationshipStrengthTrigger',
   object: 'Contact',
   events: ['beforeUpdate'],
-  handler: async (ctx: TriggerContext) => {
+  handler: async (ctx: HookContext) => {
     try {
-      const contact = ctx.new;
+      const contact = ctx.input.doc as Record<string, any>;
       
       // Only update if LastContactDate changed or this is a periodic update
       if (!contact.LastContactDate) {

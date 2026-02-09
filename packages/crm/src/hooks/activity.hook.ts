@@ -1,13 +1,7 @@
-import type { Hook } from '@objectstack/spec/data';
+import type { Hook, HookContext } from '@objectstack/spec/data';
 import { db } from '../db';
 
-// Types for Context
-interface TriggerContext {
-  old?: Record<string, any>;
-  new: Record<string, any>;
-  db: typeof db;
-  user: { id: string; name: string; email: string; };
-}
+
 
 /**
  * Activity Auto-Complete Trigger
@@ -52,10 +46,10 @@ const ActivityRelatedObjectUpdatesTrigger: Hook = {
   name: 'ActivityRelatedObjectUpdatesTrigger',
   object: 'Activity',
   events: ['afterInsert', 'afterUpdate'],
-  handler: async (ctx: TriggerContext) => {
+  handler: async (ctx: HookContext) => {
     try {
-      const activity = ctx.new;
-      const oldActivity = ctx.old;
+      const activity = ctx.input.doc as Record<string, any>;
+      const oldActivity = ctx.previous as Record<string, any> | undefined;
       
       // Only process if activity is completed or date changed
       const isCompleted = activity.Status === 'Completed';
@@ -88,7 +82,7 @@ const ActivityRelatedObjectUpdatesTrigger: Hook = {
 /**
  * Update Contact's last activity date
  */
-async function updateContactLastActivityDate(whoId: string, activityDate: string, ctx: TriggerContext): Promise<void> {
+async function updateContactLastActivityDate(whoId: string, activityDate: string, ctx: any): Promise<void> {
   console.log(`🔄 Updating LastContactDate for contact: ${whoId}`);
   
   // In real implementation:
@@ -105,7 +99,7 @@ async function updateContactLastActivityDate(whoId: string, activityDate: string
 /**
  * Update related object's last activity date
  */
-async function updateWhatObjectLastActivityDate(whatId: string, activityDate: string, ctx: TriggerContext): Promise<void> {
+async function updateWhatObjectLastActivityDate(whatId: string, activityDate: string, ctx: any): Promise<void> {
   console.log(`🔄 Updating LastActivityDate for related object: ${whatId}`);
   
   // In real implementation, would need to determine object type from WhatId
@@ -135,10 +129,10 @@ const ActivityCompletionTrigger: Hook = {
   name: 'ActivityCompletionTrigger',
   object: 'Activity',
   events: ['beforeUpdate'],
-  handler: async (ctx: TriggerContext) => {
+  handler: async (ctx: HookContext) => {
     try {
-      const activity = ctx.new;
-      const oldActivity = ctx.old;
+      const activity = ctx.input.doc;
+      const oldActivity = ctx.previous;
       
       // Check if status changed to Completed
       if (oldActivity && oldActivity.Status !== 'Completed' && activity.Status === 'Completed') {
@@ -161,7 +155,7 @@ const ActivityCompletionTrigger: Hook = {
 /**
  * Create next recurrence of a recurring activity
  */
-async function createNextRecurrence(activity: Record<string, any>, ctx: TriggerContext): Promise<void> {
+async function createNextRecurrence(activity: Record<string, any>, ctx: any): Promise<void> {
   console.log(`🔄 Creating next recurrence for: ${activity.Subject}`);
   
   // Calculate next occurrence date based on pattern
@@ -294,9 +288,9 @@ const ActivityTypeValidationTrigger: Hook = {
   name: 'ActivityTypeValidationTrigger',
   object: 'Activity',
   events: ['beforeInsert', 'beforeUpdate'],
-  handler: async (ctx: TriggerContext) => {
+  handler: async (ctx: HookContext) => {
     try {
-      const activity = ctx.new;
+      const activity = ctx.input.doc as Record<string, any>;
       
       // Log activity type for tracking
       console.log(`📝 Activity: ${activity.Type} - ${activity.Subject}`);

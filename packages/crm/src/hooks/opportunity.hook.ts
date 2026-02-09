@@ -1,20 +1,14 @@
-import type { Hook } from '@objectstack/spec/data';
+import type { Hook, HookContext } from '@objectstack/spec/data';
 import { db } from '../db';
 
-// Types for Context embedded here or imported if available
-export interface TriggerContext {
-  old?: Record<string, any>;
-  new: Record<string, any>;
-  db: typeof db;
-  user: { id: string; name: string; email: string; };
-}
+
 
 const OpportunityValidation: Hook = {
   name: 'OpportunityValidation',
   object: 'Opportunity',
   events: ['beforeUpdate', 'beforeInsert'],
-  handler: async (ctx: TriggerContext) => {
-    const opp = ctx.new;
+  handler: async (ctx: HookContext) => {
+    const opp = ctx.input.doc;
     
     // 1. Validate "closed_won"
     if (opp.stage === 'closed_won') {
@@ -25,7 +19,7 @@ const OpportunityValidation: Hook = {
 
     // 2. Validate "Proposal" - Must have a Quote
     // Note: We only check this on Update to avoid issues during initial import
-    if (opp.stage === 'Proposal' && ctx.old && ctx.old.stage !== 'Proposal') {
+    if (opp.stage === 'Proposal' && ctx.previous && ctx.previous.stage !== 'Proposal') {
       const quoteCount = await countRelatedQuotes(ctx, opp._id);
       if (quoteCount === 0) {
         throw new Error('Validation Error: Cannot move to Proposal stage without an active Quote. Please create a Quote first.');
@@ -46,21 +40,21 @@ const OpportunityStageChange: Hook = {
   name: 'OpportunityStageChange',
   object: 'Opportunity',
   events: ['afterUpdate'],
-  handler: async (ctx: TriggerContext) => {
+  handler: async (ctx: HookContext) => {
     try {
       // Defensive check
-      if (!ctx.old || !ctx.new) {
-        console.warn('⚠️ Trigger called without old/new context');
+      if (!ctx.previous || !ctx.result) {
+        console.warn('⚠️ Trigger called without previous/result context');
         return;
       }
 
       // Check if Stage actually changed
-      const stageChanged = ctx.old.Stage !== ctx.new.Stage;
+      const stageChanged = ctx.previous.Stage !== ctx.result.Stage;
       if (!stageChanged) {
         return;
       }
 
-      console.log(`🔄 Stage changed from "${ctx.old.Stage}" to "${ctx.new.Stage}"`);
+      console.log(`🔄 Stage changed from "${ctx.previous.Stage}" to "${ctx.result.Stage}"`);
 
       // Log activity for stage change
       await logStageChange(ctx);
@@ -69,12 +63,12 @@ const OpportunityStageChange: Hook = {
       await validateStageRequirements(ctx);
 
       // Handle "closed_won" scenario
-      if (ctx.new.Stage === 'closed_won') {
+      if (ctx.result.Stage === 'closed_won') {
         await handleClosedWon(ctx);
       }
 
       // Handle "closed_lost" scenario
-      if (ctx.new.Stage === 'closed_lost') {
+      if (ctx.result.Stage === 'closed_lost') {
         await handleClosedLost(ctx);
       }
 
@@ -88,9 +82,9 @@ const OpportunityStageChange: Hook = {
 /**
  * Handle Closed Won automation
  */
-async function handleClosedWon(ctx: TriggerContext): Promise<void> {
+async function handleClosedWon(ctx: any): Promise<void> {
   console.log('✅ Processing Closed Won automation...');
-  const opportunity = ctx.new;
+  const opportunity = ctx.result;
 
   if (!opportunity.AccountId) {
     console.error('❌ Cannot process: Opportunity has no AccountId');
@@ -167,9 +161,9 @@ async function handleClosedWon(ctx: TriggerContext): Promise<void> {
   }
 }
 
-async function handleClosedLost(ctx: TriggerContext): Promise<void> {
+async function handleClosedLost(ctx: any): Promise<void> {
   console.log('❌ Processing Closed Lost automation...');
-  const opportunity = ctx.new;
+  const opportunity = ctx.result;
 
   if (!opportunity.AccountId) {
     return;
@@ -200,12 +194,12 @@ async function handleClosedLost(ctx: TriggerContext): Promise<void> {
 /**
  * Log activity when stage changes
  */
-async function logStageChange(ctx: TriggerContext): Promise<void> {
+async function logStageChange(ctx: any): Promise<void> {
   try {
-    const opportunity = ctx.new;
-    const oldStage = ctx.old?.Stage || 'Unknown';
+    const opportunity = ctx.result;
+    const oldStage = ctx.previous?.Stage || 'Unknown';
     await ctx.db.doc.create('Activity', {
-      Subject: `商机阶段变更: ${oldStage} → ${ctx.new.Stage}`,
+      Subject: `商机阶段变更: ${oldStage} → ${ctx.result.Stage}`,
       Type: 'Stage Change',
       Status: 'Completed',
       Priority: 'Normal',
@@ -213,7 +207,7 @@ async function logStageChange(ctx: TriggerContext): Promise<void> {
       WhatId: opportunity.Id,
       OwnerId: ctx.user.id,
       ActivityDate: new Date().toISOString().split('T')[0],
-      Description: `商机阶段从 "${oldStage}" 变更为 "${ctx.new.Stage}"`
+      Description: `商机阶段从 "${oldStage}" 变更为 "${ctx.result.Stage}"`
     });
   } catch (error) {
     console.error('❌ Failed to log stage change activity:', error);
@@ -223,8 +217,8 @@ async function logStageChange(ctx: TriggerContext): Promise<void> {
 /**
  * Validate required fields for advanced stages
  */
-async function validateStageRequirements(ctx: TriggerContext): Promise<void> {
-  const opportunity = ctx.new;
+async function validateStageRequirements(ctx: any): Promise<void> {
+  const opportunity = ctx.result;
   const stage = opportunity.Stage;
   const warnings: string[] = [];
 
@@ -260,7 +254,7 @@ async function validateStageRequirements(ctx: TriggerContext): Promise<void> {
 /**
  * Helper: Count related quotes
  */
-async function countRelatedQuotes(ctx: TriggerContext, opportunityId: string): Promise<number> {
+async function countRelatedQuotes(ctx: any, opportunityId: string): Promise<number> {
   // Check if quote object exists first (it's in products package)
   try {
      // In a real monorepo with strict boundaries, we might use a decoupled service.

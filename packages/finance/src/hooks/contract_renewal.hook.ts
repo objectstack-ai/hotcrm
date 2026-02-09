@@ -1,4 +1,4 @@
-import type { Hook } from '@objectstack/spec/data';
+import type { Hook, HookContext } from '@objectstack/spec/data';
 import { db } from '../db';
 
 const RENEWAL_WINDOW_DAYS = 90;
@@ -8,12 +8,12 @@ const ContractRenewalCheck: Hook = {
   name: 'ContractRenewalCheck',
   object: 'contract',
   events: ['afterUpdate'],
-  handler: async (ctx) => {
-    const newDoc = ctx.new;
-    const oldDoc = ctx.old;
+  handler: async (ctx: HookContext) => {
+    const newDoc = ctx.result as Record<string, any>;
+    const oldDoc = ctx.previous as Record<string, any> | undefined;
 
-    const isActivated = newDoc.status === 'Activated' && oldDoc.status !== 'Activated';
-    const endDateChanged = newDoc.end_date !== oldDoc.end_date && newDoc.status === 'Activated';
+    const isActivated = newDoc.status === 'Activated' && oldDoc?.status !== 'Activated';
+    const endDateChanged = newDoc.end_date !== oldDoc?.end_date && newDoc.status === 'Activated';
 
     if (!isActivated && !endDateChanged) return;
     if (!newDoc.end_date) return;
@@ -79,16 +79,16 @@ const ContractExpirationAlert: Hook = {
   name: 'ContractExpirationAlert',
   object: 'contract',
   events: ['afterUpdate'],
-  handler: async (ctx) => {
-    const newDoc = ctx.new;
-    const oldDoc = ctx.old;
+  handler: async (ctx: HookContext) => {
+    const newDoc = ctx.result as Record<string, any>;
+    const oldDoc = ctx.previous as Record<string, any> | undefined;
 
     if (newDoc.status !== 'Activated') return;
     if (newDoc.renewal_reminder_sent) return;
     if (!newDoc.end_date) return;
 
-    const endDateChanged = newDoc.end_date !== oldDoc.end_date;
-    const statusChanged = newDoc.status !== oldDoc.status;
+    const endDateChanged = newDoc.end_date !== oldDoc?.end_date;
+    const statusChanged = newDoc.status !== oldDoc?.status;
     if (!endDateChanged && !statusChanged) return;
 
     try {

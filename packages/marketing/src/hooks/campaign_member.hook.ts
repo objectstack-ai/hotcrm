@@ -16,8 +16,8 @@ const CampaignMemberEngagementTrigger: Hook = {
   events: ['beforeInsert', 'beforeUpdate'],
   handler: async (ctx: HookContext) => {
     try {
-      const member = ctx.input;
-      const oldMember = ctx.previous;
+      const member = ctx.input.doc as Record<string, any>;
+      const oldMember = ctx.previous as Record<string, any> | undefined;
 
       const now = new Date().toISOString();
 
@@ -86,8 +86,8 @@ const CampaignMemberLeadScoringTrigger: Hook = {
   events: ['afterUpdate'],
   handler: async (ctx: HookContext) => {
     try {
-      const member = ctx.input;
-      const oldMember = ctx.previous;
+      const member = ctx.result as Record<string, any>;
+      const oldMember = ctx.previous as Record<string, any> | undefined;
 
       // Only process if status changed
       if (!oldMember || oldMember.status === member.status) {
@@ -154,7 +154,7 @@ const CampaignMemberStatsTrigger: Hook = {
   events: ['afterInsert', 'afterUpdate', 'afterDelete'],
   handler: async (ctx: HookContext) => {
     try {
-      const member = ctx.input;
+      const member = ctx.result as Record<string, any>;
       const campaignId = member?.campaign || ctx.previous?.campaign;
 
       if (!campaignId) {
@@ -184,8 +184,8 @@ const CampaignMemberBounceHandlerTrigger: Hook = {
   events: ['beforeUpdate'],
   handler: async (ctx: HookContext) => {
     try {
-      const member = ctx.input;
-      const oldMember = ctx.previous;
+      const member = ctx.input.doc as Record<string, any>;
+      const oldMember = ctx.previous as Record<string, any> | undefined;
 
       // Check if bounce information was added
       if (!oldMember?.email_bounced_date && member.email_bounced_date) {
