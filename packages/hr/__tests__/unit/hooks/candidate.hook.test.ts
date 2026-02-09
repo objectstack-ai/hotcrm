@@ -14,24 +14,41 @@ const mockQlDocUpdate = vi.fn();
 const createMockContext = (
   event: 'beforeInsert' | 'beforeUpdate' | 'afterUpdate',
   input: any,
-  previous?: any
-): HookContext => ({
-  event,
-  input,
-  previous,
-  ql: {
-    find: mockQlFind,
-    doc: {
-      get: mockQlDocGet,
-      create: mockQlDocCreate,
-      update: mockQlDocUpdate
-    }
-  } as any,
-  session: {
-    userId: 'user_123',
-    tenantId: 'tenant_123'
-  } as any
-});
+  previous?: any,
+  result?: any
+): HookContext => {
+  const baseContext = {
+    event,
+    ql: {
+      find: mockQlFind,
+      doc: {
+        get: mockQlDocGet,
+        create: mockQlDocCreate,
+        update: mockQlDocUpdate
+      }
+    } as any,
+    session: {
+      userId: 'user_123',
+      tenantId: 'tenant_123'
+    } as any
+  };
+
+  if (event === 'beforeInsert' || event === 'beforeUpdate') {
+    return {
+      ...baseContext,
+      input: { doc: input },
+      previous
+    };
+  } else if (event === 'afterUpdate') {
+    return {
+      ...baseContext,
+      input: { doc: input },
+      result: result || input,
+      previous
+    };
+  }
+  return baseContext;
+};
 
 describe('Candidate Hook - CandidateScoringTrigger', () => {
   beforeEach(() => {
@@ -65,10 +82,10 @@ describe('Candidate Hook - CandidateScoringTrigger', () => {
       await CandidateScoringTrigger.handler(ctx);
 
       // Assert
-      expect(candidate.score).toBeDefined();
-      expect(candidate.score).toBeGreaterThan(0);
-      expect(candidate.score).toBeLessThanOrEqual(100);
-      expect(candidate.score).toBeGreaterThan(70); // Should be high score for complete profile
+      expect(ctx.input.doc.score).toBeDefined();
+      expect(ctx.input.doc.score).toBeGreaterThan(0);
+      expect(ctx.input.doc.score).toBeLessThanOrEqual(100);
+      expect(ctx.input.doc.score).toBeGreaterThan(70); // Should be high score for complete profile
     });
 
     it('should assign lower score for incomplete profile', async () => {
@@ -90,8 +107,8 @@ describe('Candidate Hook - CandidateScoringTrigger', () => {
       await CandidateScoringTrigger.handler(ctx);
 
       // Assert
-      expect(candidate.score).toBeDefined();
-      expect(candidate.score).toBeLessThan(50); // Should be lower for incomplete profile
+      expect(ctx.input.doc.score).toBeDefined();
+      expect(ctx.input.doc.score).toBeLessThan(50); // Should be lower for incomplete profile
     });
 
     it('should give maximum education points for PhD', async () => {
@@ -114,7 +131,7 @@ describe('Candidate Hook - CandidateScoringTrigger', () => {
       await CandidateScoringTrigger.handler(ctx);
 
       // Assert
-      expect(candidate.score).toBeGreaterThan(60); // PhD + 15 years should score high
+      expect(ctx.input.doc.score).toBeGreaterThan(60); // PhD + 15 years should score high
     });
 
     it('should award maximum experience points for 10+ years', async () => {
@@ -137,7 +154,7 @@ describe('Candidate Hook - CandidateScoringTrigger', () => {
       await CandidateScoringTrigger.handler(ctx);
 
       // Assert
-      expect(candidate.score).toBeGreaterThan(50);
+      expect(ctx.input.doc.score).toBeGreaterThan(50);
     });
   });
 
@@ -257,7 +274,7 @@ describe('Candidate Hook - CandidateScoringTrigger', () => {
       await CandidateScoringTrigger.handler(ctx);
 
       // Assert
-      expect(candidate.status).toBe('under_review');
+      expect(ctx.input.doc.status).toBe('under_review');
       expect(consoleLogSpy).toHaveBeenCalledWith(
         expect.stringContaining('passed auto-screening')
       );
@@ -284,7 +301,7 @@ describe('Candidate Hook - CandidateScoringTrigger', () => {
       await CandidateScoringTrigger.handler(ctx);
 
       // Assert
-      expect(candidate.status).toBe('new');
+      expect(ctx.input.doc.status).toBe('new');
       expect(consoleLogSpy).toHaveBeenCalledWith(
         expect.stringContaining('did not pass auto-screening')
       );
@@ -310,7 +327,7 @@ describe('Candidate Hook - CandidateScoringTrigger', () => {
       await CandidateScoringTrigger.handler(ctx);
 
       // Assert
-      expect(candidate.status).toBe('new');
+      expect(ctx.input.doc.status).toBe('new');
     });
 
     it('should fail auto-screening for candidate without resume', async () => {
@@ -331,7 +348,7 @@ describe('Candidate Hook - CandidateScoringTrigger', () => {
       await CandidateScoringTrigger.handler(ctx);
 
       // Assert
-      expect(candidate.status).toBe('new');
+      expect(ctx.input.doc.status).toBe('new');
     });
 
     it('should not auto-screen if status is not New', async () => {
@@ -353,7 +370,7 @@ describe('Candidate Hook - CandidateScoringTrigger', () => {
       await CandidateScoringTrigger.handler(ctx);
 
       // Assert
-      expect(candidate.status).toBe('Interviewing'); // Should remain unchanged
+      expect(ctx.input.doc.status).toBe('Interviewing'); // Should remain unchanged
     });
   });
 
@@ -388,7 +405,7 @@ describe('Candidate Hook - CandidateScoringTrigger', () => {
       await CandidateScoringTrigger.handler(ctx);
 
       // Assert
-      expect(candidate.score).toBeGreaterThan(previous.score);
+      expect(ctx.input.doc.score).toBeGreaterThan(previous.score);
     });
   });
 

@@ -22,23 +22,25 @@ describe('ContractRenewalCheck', () => {
   });
 
   it('should create renewal opportunity when contract is activated and expires within 90 days', async () => {
+    const newDoc = {
+      _id: 'contract_1',
+      status: 'Activated',
+      end_date: daysFromNow(60),
+      contract_number: 'CNT-001',
+      account: 'acc_1',
+      contract_value: 50000
+    };
+    const oldDoc = {
+      _id: 'contract_1',
+      status: 'Draft',
+      end_date: daysFromNow(60),
+      contract_number: 'CNT-001',
+      account: 'acc_1',
+      contract_value: 50000
+    };
     const ctx = {
-      new: {
-        _id: 'contract_1',
-        status: 'Activated',
-        end_date: daysFromNow(60),
-        contract_number: 'CNT-001',
-        account: 'acc_1',
-        contract_value: 50000
-      },
-      old: {
-        _id: 'contract_1',
-        status: 'Draft',
-        end_date: daysFromNow(60),
-        contract_number: 'CNT-001',
-        account: 'acc_1',
-        contract_value: 50000
-      }
+      result: newDoc,
+      previous: oldDoc
     };
 
     // No existing renewal opportunity
@@ -46,7 +48,7 @@ describe('ContractRenewalCheck', () => {
     // Insert opportunity returns new record
     (db.insert as Mock).mockResolvedValueOnce({
       _id: 'opp_1',
-      name: `Renewal: ${ctx.new.contract_number}`
+      name: `Renewal: ${newDoc.contract_number}`
     });
     // Insert task
     (db.insert as Mock).mockResolvedValueOnce({ _id: 'task_1' });
@@ -85,7 +87,7 @@ describe('ContractRenewalCheck', () => {
 
   it('should not create opportunity when contract expires after 90 days', async () => {
     const ctx = {
-      new: {
+      result: {
         _id: 'contract_2',
         status: 'Activated',
         end_date: daysFromNow(120),
@@ -93,7 +95,7 @@ describe('ContractRenewalCheck', () => {
         account: 'acc_2',
         contract_value: 30000
       },
-      old: {
+      previous: {
         _id: 'contract_2',
         status: 'Draft',
         end_date: daysFromNow(120),
@@ -111,7 +113,7 @@ describe('ContractRenewalCheck', () => {
 
   it('should not trigger when status does not change to Activated', async () => {
     const ctx = {
-      new: {
+      result: {
         _id: 'contract_3',
         status: 'Draft',
         end_date: daysFromNow(30),
@@ -119,7 +121,7 @@ describe('ContractRenewalCheck', () => {
         account: 'acc_3',
         contract_value: 10000
       },
-      old: {
+      previous: {
         _id: 'contract_3',
         status: 'Draft',
         end_date: daysFromNow(30),
@@ -137,7 +139,7 @@ describe('ContractRenewalCheck', () => {
 
   it('should not create a duplicate opportunity if one already exists', async () => {
     const ctx = {
-      new: {
+      result: {
         _id: 'contract_4',
         status: 'Activated',
         end_date: daysFromNow(45),
@@ -145,7 +147,7 @@ describe('ContractRenewalCheck', () => {
         account: 'acc_4',
         contract_value: 80000
       },
-      old: {
+      previous: {
         _id: 'contract_4',
         status: 'Draft',
         end_date: daysFromNow(45),
@@ -165,7 +167,7 @@ describe('ContractRenewalCheck', () => {
 
   it('should handle errors gracefully', async () => {
     const ctx = {
-      new: {
+      result: {
         _id: 'contract_5',
         status: 'Activated',
         end_date: daysFromNow(30),
@@ -173,7 +175,7 @@ describe('ContractRenewalCheck', () => {
         account: 'acc_5',
         contract_value: 20000
       },
-      old: {
+      previous: {
         _id: 'contract_5',
         status: 'Draft',
         end_date: daysFromNow(30),
@@ -199,7 +201,7 @@ describe('ContractRenewalCheck', () => {
 
   it('should set task priority to High when contract expires within 30 days', async () => {
     const ctx = {
-      new: {
+      result: {
         _id: 'contract_6',
         status: 'Activated',
         end_date: daysFromNow(20),
@@ -207,7 +209,7 @@ describe('ContractRenewalCheck', () => {
         account: 'acc_6',
         contract_value: 60000
       },
-      old: {
+      previous: {
         _id: 'contract_6',
         status: 'Draft',
         end_date: daysFromNow(20),
@@ -236,7 +238,7 @@ describe('ContractExpirationAlert', () => {
 
   it('should send alert when contract expires within 30 days', async () => {
     const ctx = {
-      new: {
+      result: {
         _id: 'contract_10',
         status: 'Activated',
         end_date: daysFromNow(15),
@@ -245,7 +247,7 @@ describe('ContractExpirationAlert', () => {
         contract_value: 100000,
         renewal_reminder_sent: false
       },
-      old: {
+      previous: {
         _id: 'contract_10',
         status: 'Draft',
         end_date: daysFromNow(15),
@@ -278,7 +280,7 @@ describe('ContractExpirationAlert', () => {
 
   it('should not alert when contract expires after 30 days', async () => {
     const ctx = {
-      new: {
+      result: {
         _id: 'contract_11',
         status: 'Activated',
         end_date: daysFromNow(60),
@@ -287,7 +289,7 @@ describe('ContractExpirationAlert', () => {
         contract_value: 50000,
         renewal_reminder_sent: false
       },
-      old: {
+      previous: {
         _id: 'contract_11',
         status: 'Draft',
         end_date: daysFromNow(60),
@@ -306,7 +308,7 @@ describe('ContractExpirationAlert', () => {
 
   it('should not alert when renewal_reminder_sent is already true', async () => {
     const ctx = {
-      new: {
+      result: {
         _id: 'contract_12',
         status: 'Activated',
         end_date: daysFromNow(10),
@@ -315,7 +317,7 @@ describe('ContractExpirationAlert', () => {
         contract_value: 70000,
         renewal_reminder_sent: true
       },
-      old: {
+      previous: {
         _id: 'contract_12',
         status: 'Draft',
         end_date: daysFromNow(10),
@@ -334,7 +336,7 @@ describe('ContractExpirationAlert', () => {
 
   it('should not alert when status is not Activated', async () => {
     const ctx = {
-      new: {
+      result: {
         _id: 'contract_13',
         status: 'Draft',
         end_date: daysFromNow(10),
@@ -343,7 +345,7 @@ describe('ContractExpirationAlert', () => {
         contract_value: 25000,
         renewal_reminder_sent: false
       },
-      old: {
+      previous: {
         _id: 'contract_13',
         status: 'Draft',
         end_date: daysFromNow(20),
@@ -362,7 +364,7 @@ describe('ContractExpirationAlert', () => {
 
   it('should handle errors gracefully', async () => {
     const ctx = {
-      new: {
+      result: {
         _id: 'contract_14',
         status: 'Activated',
         end_date: daysFromNow(5),
@@ -371,7 +373,7 @@ describe('ContractExpirationAlert', () => {
         contract_value: 30000,
         renewal_reminder_sent: false
       },
-      old: {
+      previous: {
         _id: 'contract_14',
         status: 'Draft',
         end_date: daysFromNow(5),
