@@ -8,6 +8,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- **Upgraded @objectstack to v2.0.1**: All packages upgraded to v2.0.1 (February 9, 2026)
+  - @objectstack/spec: ^2.0.1
+  - @objectstack/cli: ^2.0.1
+  - @objectstack/core: 2.0.1
+  - @objectstack/runtime: 2.0.1
+  - @objectstack/plugin-hono-server: 2.0.1
+  - @objectstack/metadata: ^2.0.1
+  - @objectstack/objectql: ^2.0.1
+- All packages (10 total) now use latest @objectstack v2.0.1 dependencies
+- Updated pnpm lockfile with new dependencies
+- All 496 tests passing with zero breaking changes
+- Protocol compliance validated: All 65 business objects fully compliant
+- Previous upgrades: v0.8.1 → v0.9.0 → v0.9.1 → v0.9.2 → v1.0.0 → v1.0.4 → v1.1.0 → v2.0.0 → v2.0.1
+
+## [Previous]
+
+### Changed
 - **Upgraded @objectstack core to v1.0.0**: All packages upgraded to v1.0.0 (February 4, 2026)
   - @objectstack/spec: ^1.0.0
   - @objectstack/runtime: 1.0.0
