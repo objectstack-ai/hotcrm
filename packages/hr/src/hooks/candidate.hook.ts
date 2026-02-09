@@ -13,13 +13,13 @@ const CandidateScoringTrigger: Hook = {
   name: 'CandidateScoringTrigger',
   object: 'candidate',
   events: ['beforeInsert', 'beforeUpdate'],
-  handler: async (ctx: HookContext) => {
+  handler: async (ctx: any) => {
     try {
-      const candidate = ctx.input;
+      const candidate = (ctx.input.doc as any) || ctx.input;
 
       // Check for duplicate candidates (same email)
-      if (ctx.event === 'beforeInsert' || (ctx.previous && candidate.email !== ctx.previous.email)) {
-        const duplicates = await ctx.ql.find('candidate', {
+      if (ctx.event === 'beforeInsert' || (ctx.previous && candidate.email !== (ctx.previous as any).email)) {
+        const duplicates = await (ctx.ql as any).find('candidate', {
           filters: [
             ['email', '=', candidate.email],
             ['id', '!=', candidate.id || '']
@@ -122,7 +122,7 @@ function calculateCandidateScore(candidate: any): number {
 /**
  * Auto-screen candidate against minimum requirements
  */
-async function autoScreen(candidate: any, ctx: HookContext): Promise<boolean> {
+async function autoScreen(candidate: any, ctx: any): Promise<boolean> {
   // Basic validation
   if (!candidate.email || !candidate.mobile_phone) {
     return false;
@@ -151,15 +151,15 @@ const CandidateStatusChangeTrigger: Hook = {
   name: 'CandidateStatusChangeTrigger',
   object: 'candidate',
   events: ['afterUpdate'],
-  handler: async (ctx: HookContext) => {
+  handler: async (ctx: any) => {
     try {
       // Check if status changed
-      if (!ctx.previous || ctx.previous.status === ctx.input.status) {
+      if (!ctx.previous || (ctx.previous as any).status === (ctx.result as any).status) {
         return;
       }
 
-      const candidate = ctx.input;
-      const oldStatus = ctx.previous.status;
+      const candidate = ctx.result as any;
+      const oldStatus = (ctx.previous as any).status;
       const newStatus = candidate.status;
 
       console.log(`🔄 Candidate status changed from "${oldStatus}" to "${newStatus}"`);
@@ -192,7 +192,7 @@ const CandidateStatusChangeTrigger: Hook = {
 /**
  * Handle transition to Interviewing status
  */
-async function handleInterviewingStatus(candidate: any, ctx: HookContext): Promise<void> {
+async function handleInterviewingStatus(candidate: any, ctx: any): Promise<void> {
   console.log(`📅 Candidate ${candidate.first_name} ${candidate.last_name} moved to interviewing stage`);
   
   // TODO: Schedule first interview
@@ -203,7 +203,7 @@ async function handleInterviewingStatus(candidate: any, ctx: HookContext): Promi
 /**
  * Handle transition to Hired status
  */
-async function handleHiredStatus(candidate: any, ctx: HookContext): Promise<void> {
+async function handleHiredStatus(candidate: any, ctx: any): Promise<void> {
   console.log(`🎉 Candidate ${candidate.first_name} ${candidate.last_name} has been hired`);
   
   // TODO: Create offer record if not exists
@@ -215,7 +215,7 @@ async function handleHiredStatus(candidate: any, ctx: HookContext): Promise<void
 /**
  * Handle transition to Rejected status
  */
-async function handleRejectedStatus(candidate: any, ctx: HookContext): Promise<void> {
+async function handleRejectedStatus(candidate: any, ctx: any): Promise<void> {
   console.log(`❌ Candidate ${candidate.first_name} ${candidate.last_name} has been rejected`);
   
   // TODO: Send rejection email (if configured)
@@ -225,7 +225,7 @@ async function handleRejectedStatus(candidate: any, ctx: HookContext): Promise<v
 /**
  * Handle transition to Withdrawn status
  */
-async function handleWithdrawnStatus(candidate: any, ctx: HookContext): Promise<void> {
+async function handleWithdrawnStatus(candidate: any, ctx: any): Promise<void> {
   console.log(`🚪 Candidate ${candidate.first_name} ${candidate.last_name} has withdrawn`);
   
   // TODO: Log withdrawal reason
@@ -239,7 +239,7 @@ async function logStatusChange(
   candidate: any,
   oldStatus: string,
   newStatus: string,
-  ctx: HookContext
+  ctx: any
 ): Promise<void> {
   try {
     // Note: Activity object might need to be adapted for HR module

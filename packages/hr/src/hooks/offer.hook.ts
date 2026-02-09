@@ -13,9 +13,9 @@ const OfferCreationTrigger: Hook = {
   name: 'OfferCreationTrigger',
   object: 'offer',
   events: ['beforeInsert'],
-  handler: async (ctx: HookContext) => {
+  handler: async (ctx: any) => {
     try {
-      const offer = ctx.input;
+      const offer = (ctx.input.doc as any) || ctx.input;
 
       // Generate offer number if not provided
       if (!offer.offer_number) {
@@ -47,12 +47,12 @@ const OfferCreationTrigger: Hook = {
 /**
  * Generate unique offer number
  */
-async function generateOfferNumber(ctx: HookContext): Promise<string> {
+async function generateOfferNumber(ctx: any): Promise<string> {
   const year = new Date().getFullYear();
   const month = String(new Date().getMonth() + 1).padStart(2, '0');
   
   // Find latest offer number for this year/month
-  const latestOffers = await ctx.ql.find('offer', {
+  const latestOffers = await (ctx.ql as any).find('offer', {
     filters: [
       ['offer_number', 'like', `OFF-${year}${month}%`]
     ],
@@ -79,15 +79,15 @@ const OfferStatusChangeTrigger: Hook = {
   name: 'OfferStatusChangeTrigger',
   object: 'offer',
   events: ['afterUpdate'],
-  handler: async (ctx: HookContext) => {
+  handler: async (ctx: any) => {
     try {
       // Check if status changed
-      if (!ctx.previous || ctx.previous.status === ctx.input.status) {
+      if (!ctx.previous || (ctx.previous as any).status === (ctx.result as any).status) {
         return;
       }
 
-      const offer = ctx.input;
-      const oldStatus = ctx.previous.status;
+      const offer = ctx.result as any;
+      const oldStatus = (ctx.previous as any).status;
       const newStatus = offer.status;
 
       console.log(`🔄 Offer ${offer.offer_number} status changed from "${oldStatus}" to "${newStatus}"`);
@@ -123,23 +123,23 @@ const OfferStatusChangeTrigger: Hook = {
 /**
  * Handle offer sent
  */
-async function handleOfferSent(offer: any, ctx: HookContext): Promise<void> {
+async function handleOfferSent(offer: any, ctx: any): Promise<void> {
   console.log(`📧 Offer ${offer.offer_number} sent to candidate`);
   
   try {
     // Update candidate status
-    await ctx.ql.doc.update('candidate', offer.candidate_id, {
+    await (ctx.ql as any).doc.update('candidate', offer.candidate_id, {
       status: 'Offer Sent'
     });
 
     // Update application status
-    await ctx.ql.doc.update('application', offer.application_id, {
+    await (ctx.ql as any).doc.update('application', offer.application_id, {
       status: 'Offer Sent'
     });
 
     // Set sent date if not already set
     if (!offer.sent_date) {
-      await ctx.ql.doc.update('offer', offer.id, {
+      await (ctx.ql as any).doc.update('offer', offer.id, {
         sent_date: new Date().toISOString().split('T')[0]
       });
     }
@@ -158,23 +158,23 @@ async function handleOfferSent(offer: any, ctx: HookContext): Promise<void> {
 /**
  * Handle offer accepted
  */
-async function handleOfferAccepted(offer: any, ctx: HookContext): Promise<void> {
+async function handleOfferAccepted(offer: any, ctx: any): Promise<void> {
   console.log(`🎉 Offer ${offer.offer_number} accepted by candidate`);
   
   try {
     // Update candidate status
-    await ctx.ql.doc.update('candidate', offer.candidate_id, {
+    await (ctx.ql as any).doc.update('candidate', offer.candidate_id, {
       status: 'Hired'
     });
 
     // Update application status
-    await ctx.ql.doc.update('application', offer.application_id, {
+    await (ctx.ql as any).doc.update('application', offer.application_id, {
       status: 'Hired'
     });
 
     // Set acceptance date if not already set
     if (!offer.acceptance_date) {
-      await ctx.ql.doc.update('offer', offer.id, {
+      await (ctx.ql as any).doc.update('offer', offer.id, {
         acceptance_date: new Date().toISOString().split('T')[0]
       });
     }
@@ -196,10 +196,10 @@ async function handleOfferAccepted(offer: any, ctx: HookContext): Promise<void> 
 /**
  * Create employee record from accepted offer
  */
-async function createEmployeeFromOffer(offer: any, ctx: HookContext): Promise<void> {
+async function createEmployeeFromOffer(offer: any, ctx: any): Promise<void> {
   try {
     // Fetch candidate details
-    const candidate = await ctx.ql.doc.get('candidate', offer.candidate_id, {
+    const candidate = await (ctx.ql as any).doc.get('candidate', offer.candidate_id, {
       fields: ['first_name', 'last_name', 'email', 'mobile_phone', 'date_of_birth', 'gender']
     });
 
@@ -211,7 +211,7 @@ async function createEmployeeFromOffer(offer: any, ctx: HookContext): Promise<vo
     const employeeNumber = await generateEmployeeNumber(ctx);
 
     // Create employee record
-    const employee = await ctx.ql.doc.create('employee', {
+    const employee = await (ctx.ql as any).doc.create('employee', {
       employee_number: employeeNumber,
       first_name: candidate.first_name,
       last_name: candidate.last_name,
@@ -230,7 +230,7 @@ async function createEmployeeFromOffer(offer: any, ctx: HookContext): Promise<vo
     });
 
     // Link employee to offer
-    await ctx.ql.doc.update('offer', offer.id, {
+    await (ctx.ql as any).doc.update('offer', offer.id, {
       employee_id: employee.id
     });
 
@@ -245,11 +245,11 @@ async function createEmployeeFromOffer(offer: any, ctx: HookContext): Promise<vo
 /**
  * Generate unique employee number
  */
-async function generateEmployeeNumber(ctx: HookContext): Promise<string> {
+async function generateEmployeeNumber(ctx: any): Promise<string> {
   const year = new Date().getFullYear();
   
   // Find latest employee number for this year
-  const latestEmployees = await ctx.ql.find('employee', {
+  const latestEmployees = await (ctx.ql as any).find('employee', {
     filters: [
       ['employee_number', 'like', `EMP${year}%`]
     ],
@@ -270,23 +270,23 @@ async function generateEmployeeNumber(ctx: HookContext): Promise<string> {
 /**
  * Handle offer rejected
  */
-async function handleOfferRejected(offer: any, ctx: HookContext): Promise<void> {
+async function handleOfferRejected(offer: any, ctx: any): Promise<void> {
   console.log(`❌ Offer ${offer.offer_number} rejected by candidate`);
   
   try {
     // Update candidate status
-    await ctx.ql.doc.update('candidate', offer.candidate_id, {
+    await (ctx.ql as any).doc.update('candidate', offer.candidate_id, {
       status: 'Offer Rejected'
     });
 
     // Update application status
-    await ctx.ql.doc.update('application', offer.application_id, {
+    await (ctx.ql as any).doc.update('application', offer.application_id, {
       status: 'Rejected'
     });
 
     // Set rejection date if not already set
     if (!offer.rejection_date) {
-      await ctx.ql.doc.update('offer', offer.id, {
+      await (ctx.ql as any).doc.update('offer', offer.id, {
         rejection_date: new Date().toISOString().split('T')[0]
       });
     }
@@ -303,7 +303,7 @@ async function handleOfferRejected(offer: any, ctx: HookContext): Promise<void> 
 /**
  * Handle offer expired
  */
-async function handleOfferExpired(offer: any, ctx: HookContext): Promise<void> {
+async function handleOfferExpired(offer: any, ctx: any): Promise<void> {
   console.log(`⏰ Offer ${offer.offer_number} has expired`);
   
   try {
@@ -323,12 +323,12 @@ async function handleOfferExpired(offer: any, ctx: HookContext): Promise<void> {
 /**
  * Handle offer withdrawn
  */
-async function handleOfferWithdrawn(offer: any, ctx: HookContext): Promise<void> {
+async function handleOfferWithdrawn(offer: any, ctx: any): Promise<void> {
   console.log(`🚫 Offer ${offer.offer_number} has been withdrawn`);
   
   try {
     // Update candidate status
-    await ctx.ql.doc.update('candidate', offer.candidate_id, {
+    await (ctx.ql as any).doc.update('candidate', offer.candidate_id, {
       status: 'Offer Withdrawn'
     });
 
@@ -347,7 +347,7 @@ async function logOfferStatusChange(
   offer: any,
   oldStatus: string,
   newStatus: string,
-  ctx: HookContext
+  ctx: any
 ): Promise<void> {
   try {
     console.log(`📝 Logging offer status change: ${oldStatus} → ${newStatus} for offer ${offer.offer_number}`);
@@ -367,10 +367,10 @@ const OfferApprovalTrigger: Hook = {
   name: 'OfferApprovalTrigger',
   object: 'offer',
   events: ['beforeUpdate'],
-  handler: async (ctx: HookContext) => {
+  handler: async (ctx: any) => {
     try {
-      const offer = ctx.input;
-      const previousOffer = ctx.previous;
+      const offer = (ctx.input.doc as any) || ctx.input;
+      const previousOffer = ctx.previous as any;
 
       // Check if approval status changed
       if (!previousOffer || previousOffer.approval_status === offer.approval_status) {

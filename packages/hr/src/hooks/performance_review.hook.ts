@@ -22,9 +22,9 @@ const PerformanceReviewRatingTrigger: Hook = {
   name: 'PerformanceReviewRatingTrigger',
   object: 'performance_review',
   events: ['beforeInsert', 'beforeUpdate'],
-  handler: async (ctx: HookContext) => {
+  handler: async (ctx: any) => {
     try {
-      const review = ctx.input;
+      const review = (ctx.input.doc as any) || ctx.input;
 
       // Calculate overall rating from component scores
       if (hasAllComponentScores(review)) {
@@ -132,15 +132,15 @@ const PerformanceReviewWorkflowTrigger: Hook = {
   name: 'PerformanceReviewWorkflowTrigger',
   object: 'performance_review',
   events: ['afterUpdate'],
-  handler: async (ctx: HookContext) => {
+  handler: async (ctx: any) => {
     try {
       // Check if status changed
-      if (!ctx.previous || ctx.previous.status === ctx.input.status) {
+      if (!ctx.previous || (ctx.previous as any).status === (ctx.result as any).status) {
         return;
       }
 
-      const review = ctx.input;
-      const oldStatus = ctx.previous.status;
+      const review = ctx.result as any;
+      const oldStatus = (ctx.previous as any).status;
       const newStatus = review.status;
 
       console.log(`🔄 Performance review ${review.review_name} status changed from "${oldStatus}" to "${newStatus}"`);
@@ -176,7 +176,7 @@ const PerformanceReviewWorkflowTrigger: Hook = {
 /**
  * Handle review started
  */
-async function handleReviewStarted(review: any, ctx: HookContext): Promise<void> {
+async function handleReviewStarted(review: any, ctx: any): Promise<void> {
   console.log(`📝 Performance review started: ${review.review_name}`);
   
   try {
@@ -196,12 +196,12 @@ async function handleReviewStarted(review: any, ctx: HookContext): Promise<void>
 /**
  * Handle review submitted for approval
  */
-async function handleReviewSubmitted(review: any, ctx: HookContext): Promise<void> {
+async function handleReviewSubmitted(review: any, ctx: any): Promise<void> {
   console.log(`📤 Performance review submitted for approval: ${review.review_name}`);
   
   try {
     // Set submission date
-    await ctx.ql.doc.update('performance_review', review.id, {
+    await (ctx.ql as any).doc.update('performance_review', review.id, {
       submitted_date: new Date().toISOString().split('T')[0],
       submitted_by: ctx.session?.userId
     });
@@ -219,12 +219,12 @@ async function handleReviewSubmitted(review: any, ctx: HookContext): Promise<voi
 /**
  * Handle review approved
  */
-async function handleReviewApproved(review: any, ctx: HookContext): Promise<void> {
+async function handleReviewApproved(review: any, ctx: any): Promise<void> {
   console.log(`✅ Performance review approved: ${review.review_name}`);
   
   try {
     // Set approval date
-    await ctx.ql.doc.update('performance_review', review.id, {
+    await (ctx.ql as any).doc.update('performance_review', review.id, {
       approved_date: new Date().toISOString().split('T')[0],
       approved_by: ctx.session?.userId
     });
@@ -247,7 +247,7 @@ async function handleReviewApproved(review: any, ctx: HookContext): Promise<void
 /**
  * Trigger compensation review for high performers
  */
-async function triggerCompensationReview(review: any, ctx: HookContext): Promise<void> {
+async function triggerCompensationReview(review: any, ctx: any): Promise<void> {
   try {
     console.log(`💰 Triggering compensation review for high performer: ${review.employee_id}`);
     
@@ -263,7 +263,7 @@ async function triggerCompensationReview(review: any, ctx: HookContext): Promise
 /**
  * Create development goals from review feedback
  */
-async function createDevelopmentGoals(review: any, ctx: HookContext): Promise<void> {
+async function createDevelopmentGoals(review: any, ctx: any): Promise<void> {
   try {
     if (!review.development_plan || review.development_plan.trim() === '') {
       console.log('ℹ️ No development plan specified, skipping goal creation');
@@ -290,7 +290,7 @@ async function createDevelopmentGoals(review: any, ctx: HookContext): Promise<vo
     }
 
     // Create development goal
-    await ctx.ql.doc.create('goal', {
+    await (ctx.ql as any).doc.create('goal', {
       employee_id: review.employee_id,
       goal_name: `Development Plan - ${review.review_period} Review`,
       description: review.development_plan,
@@ -312,12 +312,12 @@ async function createDevelopmentGoals(review: any, ctx: HookContext): Promise<vo
 /**
  * Handle review completed
  */
-async function handleReviewCompleted(review: any, ctx: HookContext): Promise<void> {
+async function handleReviewCompleted(review: any, ctx: any): Promise<void> {
   console.log(`🎉 Performance review completed: ${review.review_name}`);
   
   try {
     // Set completion date
-    await ctx.ql.doc.update('performance_review', review.id, {
+    await (ctx.ql as any).doc.update('performance_review', review.id, {
       completion_date: new Date().toISOString().split('T')[0]
     });
 
@@ -337,9 +337,9 @@ async function handleReviewCompleted(review: any, ctx: HookContext): Promise<voi
 /**
  * Update employee record with review statistics
  */
-async function updateEmployeeReviewStats(review: any, ctx: HookContext): Promise<void> {
+async function updateEmployeeReviewStats(review: any, ctx: any): Promise<void> {
   try {
-    await ctx.ql.doc.update('employee', review.employee_id, {
+    await (ctx.ql as any).doc.update('employee', review.employee_id, {
       last_review_date: review.end_date,
       last_review_rating: review.overall_rating,
       last_review_level: review.performance_level
@@ -355,12 +355,12 @@ async function updateEmployeeReviewStats(review: any, ctx: HookContext): Promise
 /**
  * Handle review rejected
  */
-async function handleReviewRejected(review: any, ctx: HookContext): Promise<void> {
+async function handleReviewRejected(review: any, ctx: any): Promise<void> {
   console.log(`❌ Performance review rejected: ${review.review_name}`);
   
   try {
     // Send back to reviewer for revision
-    await ctx.ql.doc.update('performance_review', review.id, {
+    await (ctx.ql as any).doc.update('performance_review', review.id, {
       status: 'In Progress'
     });
 
@@ -378,7 +378,7 @@ async function logReviewStatusChange(
   review: any,
   oldStatus: string,
   newStatus: string,
-  ctx: HookContext
+  ctx: any
 ): Promise<void> {
   try {
     console.log(`📝 Logging review status change: ${oldStatus} → ${newStatus} for ${review.review_name}`);
@@ -395,14 +395,14 @@ async function logReviewStatusChange(
  * Checks for upcoming due dates and sends reminders
  * (This would typically be called by a scheduled job, not a trigger)
  */
-export async function checkPerformanceReviewDueDates(ctx: HookContext): Promise<void> {
+export async function checkPerformanceReviewDueDates(ctx: any): Promise<void> {
   try {
     const today = new Date();
     const reminderDate = new Date(today);
     reminderDate.setDate(reminderDate.getDate() + 7); // 7 days before due
 
     // Find reviews due soon
-    const upcomingReviews = await ctx.ql.find('performance_review', {
+    const upcomingReviews = await (ctx.ql as any).find('performance_review', {
       filters: [
         ['status', 'in', ['Not Started', 'In Progress']],
         ['due_date', '<=', reminderDate.toISOString().split('T')[0]],
