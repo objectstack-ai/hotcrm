@@ -1,4 +1,4 @@
-import type { Hook, HookContext } from '@objectstack/spec/data';
+import type { Hook } from '@objectstack/spec/data';
 import { db } from '../db';
 
 /**
@@ -10,7 +10,7 @@ const CampaignROIHook: Hook = {
   name: 'CampaignROIHook',
   object: 'opportunity', // Listening to Opportunity events from Marketing package
   events: ['afterUpdate'],
-  handler: async (ctx: HookContext) => {
+  handler: async (ctx: any) => {
     const newOpp = ctx.result as Record<string, any>;
     const oldOpp = ctx.previous as Record<string, any> | undefined;
 

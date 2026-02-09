@@ -1,4 +1,4 @@
-import type { Hook, HookContext } from '@objectstack/spec/data';
+import type { Hook } from '@objectstack/spec/data';
 import { updateCampaignMetrics } from './campaign.hook';
 
 /**
@@ -14,7 +14,7 @@ const CampaignMemberEngagementTrigger: Hook = {
   name: 'CampaignMemberEngagementTrigger',
   object: 'campaign_member',
   events: ['beforeInsert', 'beforeUpdate'],
-  handler: async (ctx: HookContext) => {
+  handler: async (ctx: any) => {
     try {
       const member = ctx.input.doc as Record<string, any>;
       const oldMember = ctx.previous as Record<string, any> | undefined;
@@ -84,7 +84,7 @@ const CampaignMemberLeadScoringTrigger: Hook = {
   name: 'CampaignMemberLeadScoringTrigger',
   object: 'campaign_member',
   events: ['afterUpdate'],
-  handler: async (ctx: HookContext) => {
+  handler: async (ctx: any) => {
     try {
       const member = ctx.result as Record<string, any>;
       const oldMember = ctx.previous as Record<string, any> | undefined;
@@ -152,7 +152,7 @@ const CampaignMemberStatsTrigger: Hook = {
   name: 'CampaignMemberStatsTrigger',
   object: 'campaign_member',
   events: ['afterInsert', 'afterUpdate', 'afterDelete'],
-  handler: async (ctx: HookContext) => {
+  handler: async (ctx: any) => {
     try {
       const member = ctx.result as Record<string, any>;
       const campaignId = member?.campaign || ctx.previous?.campaign;
@@ -182,7 +182,7 @@ const CampaignMemberBounceHandlerTrigger: Hook = {
   name: 'CampaignMemberBounceHandlerTrigger',
   object: 'campaign_member',
   events: ['beforeUpdate'],
-  handler: async (ctx: HookContext) => {
+  handler: async (ctx: any) => {
     try {
       const member = ctx.input.doc as Record<string, any>;
       const oldMember = ctx.previous as Record<string, any> | undefined;
@@ -287,7 +287,7 @@ export function calculateEngagementScore(member: any): number {
 export async function trackMemberEngagementTimeline(
   memberId: string,
   engagementType: 'opened' | 'clicked' | 'responded' | 'unsubscribed',
-  ctx: HookContext
+  ctx: any
 ): Promise<void> {
   try {
     console.log(`🔄 Tracking engagement timeline for member: ${memberId}`);
