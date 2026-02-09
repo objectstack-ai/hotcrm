@@ -454,7 +454,7 @@ describe('PricebookHook', () => {
     );
 
     expect(consoleSpy).toHaveBeenCalledWith(
-      '❌ Error in PricebookHook:',
+      '[pricebook.hook] handler execution failed:',
       expect.any(Error)
     );
     consoleSpy.mockRestore();

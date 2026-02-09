@@ -390,7 +390,7 @@ describe('ProductHook', () => {
     await expect(ProductHook.handler(ctx as any)).rejects.toThrow('DB failure');
 
     expect(consoleSpy).toHaveBeenCalledWith(
-      '❌ Error in ProductHook:',
+      '[product.hook] handler execution failed:',
       expect.any(Error)
     );
     consoleSpy.mockRestore();

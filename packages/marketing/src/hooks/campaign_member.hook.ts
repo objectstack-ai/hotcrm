@@ -66,7 +66,7 @@ const CampaignMemberEngagementTrigger: Hook = {
       }
 
     } catch (error) {
-      console.error('❌ Error in CampaignMemberEngagementTrigger:', error);
+      console.error(`[campaign_member.hook] engagement tracking failed:`, error);
     }
   }
 };
@@ -138,7 +138,7 @@ const CampaignMemberLeadScoringTrigger: Hook = {
       }
 
     } catch (error) {
-      console.error('❌ Error in CampaignMemberLeadScoringTrigger:', error);
+      console.error(`[campaign_member.hook] lead scoring failed:`, error);
     }
   }
 };
@@ -165,7 +165,7 @@ const CampaignMemberStatsTrigger: Hook = {
       await updateCampaignMetrics(campaignId, ctx);
 
     } catch (error) {
-      console.error('❌ Error in CampaignMemberStatsTrigger:', error);
+      console.error(`[campaign_member.hook] stats aggregation failed:`, error);
     }
   }
 };
@@ -215,7 +215,7 @@ const CampaignMemberBounceHandlerTrigger: Hook = {
       }
 
     } catch (error) {
-      console.error('❌ Error in CampaignMemberBounceHandlerTrigger:', error);
+      console.error(`[campaign_member.hook] bounce handling failed:`, error);
     }
   }
 };
@@ -278,7 +278,7 @@ export async function trackMemberEngagementTimeline(
     console.debug(`[campaign_member.hook] Activity record pending: track ${engagementType} engagement for member ${memberId}`);
 
   } catch (error) {
-    console.error('❌ Error tracking engagement timeline:', error);
+    console.error(`[campaign_member.hook] trackMemberEngagementTimeline failed:`, error);
   }
 }
 

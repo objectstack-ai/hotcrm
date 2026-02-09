@@ -137,7 +137,7 @@ describe('KnowledgeArticleScoringTrigger', () => {
     await KnowledgeArticleScoringTrigger.handler(ctx as any);
 
     expect(consoleSpy).toHaveBeenCalledWith(
-      '❌ Error in KnowledgeArticleScoringTrigger:',
+      '[knowledge.hook] article scoring failed:',
       expect.any(Error)
     );
 
@@ -335,7 +335,7 @@ describe('KnowledgeArticleAIEnhancementTrigger', () => {
     await KnowledgeArticleAIEnhancementTrigger.handler(ctx as any);
 
     expect(consoleSpy).toHaveBeenCalledWith(
-      '❌ Error in KnowledgeArticleAIEnhancementTrigger:',
+      '[knowledge.hook] AI enhancement failed:',
       expect.any(Error)
     );
 
@@ -496,7 +496,7 @@ describe('KnowledgeArticleWorkflowTrigger', () => {
     await KnowledgeArticleWorkflowTrigger.handler(ctx as any);
 
     expect(consoleSpy).toHaveBeenCalledWith(
-      '❌ Error in KnowledgeArticleWorkflowTrigger:',
+      '[knowledge.hook] workflow processing failed:',
       expect.any(Error)
     );
 
@@ -643,7 +643,7 @@ describe('KnowledgeArticleUsageTracker', () => {
     await KnowledgeArticleUsageTracker.handler(ctx as any);
 
     expect(consoleSpy).toHaveBeenCalledWith(
-      'Error incrementing article usage:',
+      '[knowledge.hook] incrementArticleUsage failed:',
       expect.any(Error)
     );
 
@@ -685,7 +685,7 @@ describe('KnowledgeArticleSearchAnalytics', () => {
     await KnowledgeArticleSearchAnalytics.handler(ctx as any);
 
     expect(consoleSpy).toHaveBeenCalledWith(
-      '❌ Error in KnowledgeArticleSearchAnalytics:',
+      '[knowledge.hook] search analytics failed:',
       expect.any(Error)
     );
 

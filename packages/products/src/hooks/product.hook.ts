@@ -36,7 +36,7 @@ const ProductHook: Hook = {
       }
 
     } catch (error) {
-      console.error('❌ Error in ProductHook:', error);
+      console.error(`[product.hook] handler execution failed:`, error);
       throw error;
     }
   }
@@ -72,7 +72,7 @@ async function validateProductConfiguration(ctx: any): Promise<void> {
 
     console.log(`✅ Product configuration validated: ${product.Name}`);
   } catch (error) {
-    console.error('❌ Error validating product configuration:', error);
+    console.error(`[product.hook] validateProductConfiguration failed:`, error);
     throw error;
   }
 }
@@ -102,7 +102,7 @@ async function validateBundleConfiguration(ctx: any): Promise<void> {
       console.log('🔗 Dependency validation would be performed here');
     }
   } catch (error) {
-    console.error('❌ Error validating bundle configuration:', error);
+    console.error(`[product.hook] validateBundleConfiguration failed:`, error);
   }
 }
 
@@ -149,7 +149,7 @@ async function handleStockLevelChange(ctx: any): Promise<void> {
       console.log('✅ Product reactivated after stock replenishment');
     }
   } catch (error) {
-    console.error('❌ Error handling stock level change:', error);
+    console.error(`[product.hook] handleStockLevelChange failed:`, error);
   }
 }
 
@@ -202,7 +202,7 @@ async function handlePriceChange(ctx: any): Promise<void> {
       }
     }
   } catch (error) {
-    console.error('❌ Error handling price change:', error);
+    console.error(`[product.hook] handlePriceChange failed:`, error);
   }
 }
 
@@ -247,7 +247,7 @@ async function handleStatusChange(ctx: any): Promise<void> {
       Description: `Product "${product.Name}" status changed from "${ctx.previous.Status}" to "${product.Status}"`
     });
   } catch (error) {
-    console.error('❌ Error handling status change:', error);
+    console.error(`[product.hook] handleStatusChange failed:`, error);
   }
 }
 
@@ -263,7 +263,7 @@ async function validateBundleDependencies(
     console.debug(`[product.hook] Bundle dependency validation pending: query ProductBundleItem and ProductBundleDependency for bundle ${bundleId}`);
     return true;
   } catch (error) {
-    console.error('❌ Error validating bundle dependencies:', error);
+    console.error(`[product.hook] validateBundleDependencies failed:`, error);
     return false;
   }
 }
@@ -280,7 +280,7 @@ async function checkBundleConstraints(
     console.debug(`[product.hook] Bundle constraint check pending: query ProductBundleConstraint for bundle ${bundleId}`);
     return true;
   } catch (error) {
-    console.error('❌ Error checking bundle constraints:', error);
+    console.error(`[product.hook] checkBundleConstraints failed:`, error);
     return false;
   }
 }

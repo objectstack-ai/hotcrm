@@ -363,7 +363,7 @@ describe('CampaignStatusChangeTrigger', () => {
     await CampaignStatusChangeTrigger.handler(ctx as any);
 
     expect(errorSpy).toHaveBeenCalledWith(
-      '❌ Error in CampaignStatusChangeTrigger:',
+      '[campaign.hook] status change handling failed:',
       expect.any(Error)
     );
     errorSpy.mockRestore();

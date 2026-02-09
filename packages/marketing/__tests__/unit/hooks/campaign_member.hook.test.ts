@@ -142,7 +142,7 @@ describe('CampaignMemberEngagementTrigger', () => {
     await CampaignMemberEngagementTrigger.handler(ctx as any);
 
     expect(errorSpy).toHaveBeenCalledWith(
-      '❌ Error in CampaignMemberEngagementTrigger:',
+      '[campaign_member.hook] engagement tracking failed:',
       expect.any(Error)
     );
     errorSpy.mockRestore();
@@ -300,7 +300,7 @@ describe('CampaignMemberLeadScoringTrigger', () => {
     await CampaignMemberLeadScoringTrigger.handler(ctx as any);
 
     expect(errorSpy).toHaveBeenCalledWith(
-      '❌ Error in CampaignMemberLeadScoringTrigger:',
+      '[campaign_member.hook] lead scoring failed:',
       expect.any(Error)
     );
     errorSpy.mockRestore();
@@ -439,7 +439,7 @@ describe('CampaignMemberStatsTrigger', () => {
     await CampaignMemberStatsTrigger.handler(ctx as any);
 
     expect(errorSpy).toHaveBeenCalledWith(
-      '❌ Error updating campaign metrics:',
+      '[campaign.hook] updateCampaignMetrics failed:',
       expect.any(Error)
     );
     errorSpy.mockRestore();
@@ -619,7 +619,7 @@ describe('CampaignMemberBounceHandlerTrigger', () => {
     await CampaignMemberBounceHandlerTrigger.handler(ctx as any);
 
     expect(errorSpy).toHaveBeenCalledWith(
-      '❌ Error in CampaignMemberBounceHandlerTrigger:',
+      '[campaign_member.hook] bounce handling failed:',
       expect.any(Error)
     );
     errorSpy.mockRestore();

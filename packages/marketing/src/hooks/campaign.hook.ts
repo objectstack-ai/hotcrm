@@ -40,7 +40,7 @@ const CampaignROICalculationTrigger: Hook = {
       }
 
     } catch (error) {
-      console.error('❌ Error in CampaignROICalculationTrigger:', error);
+      console.error(`[campaign.hook] ROI calculation failed:`, error);
     }
   }
 };
@@ -89,7 +89,7 @@ const CampaignBudgetTrackingTrigger: Hook = {
       }
 
     } catch (error) {
-      console.error('❌ Error in CampaignBudgetTrackingTrigger:', error);
+      console.error(`[campaign.hook] budget tracking failed:`, error);
     }
   }
 };
@@ -131,7 +131,7 @@ const CampaignStatusChangeTrigger: Hook = {
       }
 
     } catch (error) {
-      console.error('❌ Error in CampaignStatusChangeTrigger:', error);
+      console.error(`[campaign.hook] status change handling failed:`, error);
     }
   }
 };
@@ -193,7 +193,7 @@ const CampaignDateValidationTrigger: Hook = {
       }
 
     } catch (error) {
-      console.error('❌ Error in CampaignDateValidationTrigger:', error);
+      console.error(`[campaign.hook] date validation failed:`, error);
       throw error;
     }
   }
@@ -249,7 +249,7 @@ export async function updateCampaignMetrics(campaignId: string, ctx: any): Promi
     console.log(`✅ Campaign metrics updated - Open: ${openRate.toFixed(1)}%, Click: ${clickRate.toFixed(1)}%, Response: ${responseRate.toFixed(1)}%`);
 
   } catch (error) {
-    console.error('❌ Error updating campaign metrics:', error);
+    console.error(`[campaign.hook] updateCampaignMetrics failed:`, error);
   }
 }
 
@@ -283,7 +283,7 @@ export async function calculateCostMetrics(campaignId: string, ctx: any): Promis
     };
 
   } catch (error) {
-    console.error('❌ Error calculating cost metrics:', error);
+    console.error(`[campaign.hook] calculateCostMetrics failed:`, error);
     return null;
   }
 }
