@@ -1,19 +1,19 @@
 import { describe, it, expect, vi, beforeEach, Mock } from 'vitest';
 
-vi.mock('../../../src/db', () => ({
-  db: {
-    find: vi.fn(),
-    insert: vi.fn(),
-    update: vi.fn()
-  }
-}));
-
-import { db } from '../../../src/db';
 import { CaseEntitlementCheck } from '../../../src/hooks/case.hook';
 
 describe('CaseEntitlementCheck', () => {
+  let mockQl: any;
+
   beforeEach(() => {
-    vi.resetAllMocks();
+    mockQl = {
+      find: vi.fn(),
+      doc: {
+        create: vi.fn(),
+        update: vi.fn(),
+        get: vi.fn()
+      }
+    };
   });
 
   it('should assign Platinum SLA with 4-hour resolution and critical priority', async () => {
@@ -22,13 +22,16 @@ describe('CaseEntitlementCheck', () => {
       subject: 'Urgent Issue',
       priority: 'high'
     };
-    const ctx = { input: { doc: caseDoc } };
+    const ctx = { 
+      input: { doc: caseDoc },
+      ql: mockQl
+    };
 
-    (db.find as Mock).mockResolvedValueOnce([{ _id: 'acc_1', sla: 'Platinum' }]);
+    mockQl.find.mockResolvedValueOnce([{ _id: 'acc_1', sla: 'Platinum' }]);
 
     await CaseEntitlementCheck.handler(ctx as any);
 
-    expect(db.find).toHaveBeenCalledWith('account', {
+    expect(mockQl.find).toHaveBeenCalledWith('account', {
       filters: [['_id', '=', 'acc_1']]
     });
     expect(caseDoc.entitlement_name).toBe('Platinum Support');
@@ -49,9 +52,12 @@ describe('CaseEntitlementCheck', () => {
       subject: 'Gold Issue',
       priority: 'medium'
     } as Record<string, any>;
-    const ctx = { input: { doc: caseDoc } };
+    const ctx = { 
+      input: { doc: caseDoc },
+      ql: mockQl
+    };
 
-    (db.find as Mock).mockResolvedValueOnce([{ _id: 'acc_2', sla: 'Gold' }]);
+    mockQl.find.mockResolvedValueOnce([{ _id: 'acc_2', sla: 'Gold' }]);
 
     await CaseEntitlementCheck.handler(ctx as any);
 
@@ -70,9 +76,12 @@ describe('CaseEntitlementCheck', () => {
       subject: 'Critical Gold',
       priority: 'critical'
     } as Record<string, any>;
-    const ctx = { input: { doc: caseDoc } };
+    const ctx = { 
+      input: { doc: caseDoc },
+      ql: mockQl
+    };
 
-    (db.find as Mock).mockResolvedValueOnce([{ _id: 'acc_gold', sla: 'Gold' }]);
+    mockQl.find.mockResolvedValueOnce([{ _id: 'acc_gold', sla: 'Gold' }]);
 
     await CaseEntitlementCheck.handler(ctx as any);
 
@@ -86,9 +95,12 @@ describe('CaseEntitlementCheck', () => {
       subject: 'Silver Issue',
       priority: 'medium'
     } as Record<string, any>;
-    const ctx = { input: { doc: caseDoc } };
+    const ctx = { 
+      input: { doc: caseDoc },
+      ql: mockQl
+    };
 
-    (db.find as Mock).mockResolvedValueOnce([{ _id: 'acc_3', sla: 'Silver' }]);
+    mockQl.find.mockResolvedValueOnce([{ _id: 'acc_3', sla: 'Silver' }]);
 
     await CaseEntitlementCheck.handler(ctx as any);
 
@@ -107,10 +119,13 @@ describe('CaseEntitlementCheck', () => {
       subject: 'Standard Issue',
       priority: 'low'
     } as Record<string, any>;
-    const ctx = { input: { doc: caseDoc } };
+    const ctx = { 
+      input: { doc: caseDoc },
+      ql: mockQl
+    };
 
     // Account without sla field
-    (db.find as Mock).mockResolvedValueOnce([{ _id: 'acc_4' }]);
+    mockQl.find.mockResolvedValueOnce([{ _id: 'acc_4' }]);
 
     await CaseEntitlementCheck.handler(ctx as any);
 
@@ -125,11 +140,14 @@ describe('CaseEntitlementCheck', () => {
 
   it('should skip entitlement check when no account is linked', async () => {
     const caseDoc = { subject: 'No account case' } as Record<string, any>;
-    const ctx = { input: { doc: caseDoc } };
+    const ctx = { 
+      input: { doc: caseDoc },
+      ql: mockQl
+    };
 
     await CaseEntitlementCheck.handler(ctx as any);
 
-    expect(db.find).not.toHaveBeenCalled();
+    expect(mockQl.find).not.toHaveBeenCalled();
     expect(caseDoc.entitlement_name).toBeUndefined();
     expect(caseDoc.target_resolution_date).toBeUndefined();
   });
@@ -139,13 +157,16 @@ describe('CaseEntitlementCheck', () => {
       account: 'acc_missing',
       subject: 'Orphan case'
     } as Record<string, any>;
-    const ctx = { input: { doc: caseDoc } };
+    const ctx = { 
+      input: { doc: caseDoc },
+      ql: mockQl
+    };
 
-    (db.find as Mock).mockResolvedValueOnce([]);
+    mockQl.find.mockResolvedValueOnce([]);
 
     await CaseEntitlementCheck.handler(ctx as any);
 
-    expect(db.find).toHaveBeenCalled();
+    expect(mockQl.find).toHaveBeenCalled();
     expect(caseDoc.entitlement_name).toBeUndefined();
     expect(caseDoc.target_resolution_date).toBeUndefined();
   });
@@ -155,9 +176,12 @@ describe('CaseEntitlementCheck', () => {
       account: 'acc_null',
       subject: 'Null result case'
     } as Record<string, any>;
-    const ctx = { input: { doc: caseDoc } };
+    const ctx = { 
+      input: { doc: caseDoc },
+      ql: mockQl
+    };
 
-    (db.find as Mock).mockResolvedValueOnce(null);
+    mockQl.find.mockResolvedValueOnce(null);
 
     await CaseEntitlementCheck.handler(ctx as any);
 
@@ -169,9 +193,12 @@ describe('CaseEntitlementCheck', () => {
       account: 'acc_err',
       subject: 'Error case'
     } as Record<string, any>;
-    const ctx = { input: { doc: caseDoc } };
+    const ctx = { 
+      input: { doc: caseDoc },
+      ql: mockQl
+    };
 
-    (db.find as Mock).mockRejectedValueOnce(new Error('DB connection failed'));
+    mockQl.find.mockRejectedValueOnce(new Error('DB connection failed'));
 
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
@@ -190,9 +217,12 @@ describe('CaseEntitlementCheck', () => {
       account: 'acc_iso',
       subject: 'ISO date test'
     } as Record<string, any>;
-    const ctx = { input: { doc: caseDoc } };
+    const ctx = { 
+      input: { doc: caseDoc },
+      ql: mockQl
+    };
 
-    (db.find as Mock).mockResolvedValueOnce([{ _id: 'acc_iso', sla: 'Silver' }]);
+    mockQl.find.mockResolvedValueOnce([{ _id: 'acc_iso', sla: 'Silver' }]);
 
     await CaseEntitlementCheck.handler(ctx as any);
 
@@ -213,9 +243,12 @@ describe('CaseEntitlementCheck', () => {
       subject: 'Explicit Standard',
       priority: 'medium'
     } as Record<string, any>;
-    const ctx = { input: { doc: caseDoc } };
+    const ctx = { 
+      input: { doc: caseDoc },
+      ql: mockQl
+    };
 
-    (db.find as Mock).mockResolvedValueOnce([{ _id: 'acc_std', sla: 'Standard' }]);
+    mockQl.find.mockResolvedValueOnce([{ _id: 'acc_std', sla: 'Standard' }]);
 
     await CaseEntitlementCheck.handler(ctx as any);
 
