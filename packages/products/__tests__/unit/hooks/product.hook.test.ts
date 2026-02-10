@@ -39,7 +39,7 @@ describe('ProductHook', () => {
 
     await ProductHook.handler(ctx as any);
 
-    expect(mockQl.find).toHaveBeenCalledWith('Product', {
+    expect(mockQl.find).toHaveBeenCalledWith('product', {
       filters: [
         ['ProductCode', '=', 'WGT-001'],
         ['Id', '!=', 'prod_1']
@@ -175,7 +175,7 @@ describe('ProductHook', () => {
 
     await ProductHook.handler(ctx as any);
 
-    expect(mockQl.doc.update).toHaveBeenCalledWith('Product', 'prod_6', {
+    expect(mockQl.doc.update).toHaveBeenCalledWith('product', 'prod_6', {
       Status: 'Out of Stock'
     });
   });
@@ -238,7 +238,7 @@ describe('ProductHook', () => {
 
     await ProductHook.handler(ctx as any);
 
-    expect(mockQl.doc.update).toHaveBeenCalledWith('Product', 'prod_8', {
+    expect(mockQl.doc.update).toHaveBeenCalledWith('product', 'prod_8', {
       Status: 'Active'
     });
   });

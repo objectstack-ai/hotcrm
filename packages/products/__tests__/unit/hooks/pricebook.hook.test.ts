@@ -95,7 +95,7 @@ describe('PricebookHook', () => {
 
     await PricebookHook.handler(ctx as any);
 
-    expect(mockQl.find).toHaveBeenCalledWith('Pricebook', {
+    expect(mockQl.find).toHaveBeenCalledWith('pricebook', {
       filters: [
         ['IsStandard', '=', true],
         ['Status', '=', 'Active'],
@@ -208,7 +208,7 @@ describe('PricebookHook', () => {
 
     await PricebookHook.handler(ctx as any);
 
-    expect(mockQl.doc.update).toHaveBeenCalledWith('Pricebook', 'pb_8', {
+    expect(mockQl.doc.update).toHaveBeenCalledWith('pricebook', 'pb_8', {
       Status: 'Active'
     });
   });
@@ -241,7 +241,7 @@ describe('PricebookHook', () => {
 
     await PricebookHook.handler(ctx as any);
 
-    expect(mockQl.doc.update).toHaveBeenCalledWith('Pricebook', 'pb_9', {
+    expect(mockQl.doc.update).toHaveBeenCalledWith('pricebook', 'pb_9', {
       Status: 'Expired'
     });
   });
@@ -269,7 +269,7 @@ describe('PricebookHook', () => {
 
     await PricebookHook.handler(ctx as any);
 
-    expect(mockQl.doc.update).toHaveBeenCalledWith('Pricebook', 'pb_10', {
+    expect(mockQl.doc.update).toHaveBeenCalledWith('pricebook', 'pb_10', {
       EffectiveDate: expect.any(String)
     });
   });
@@ -301,17 +301,17 @@ describe('PricebookHook', () => {
 
     await PricebookHook.handler(ctx as any);
 
-    expect(mockQl.find).toHaveBeenCalledWith('Pricebook', {
+    expect(mockQl.find).toHaveBeenCalledWith('pricebook', {
       filters: [
         ['IsStandard', '=', true],
         ['Status', '=', 'Active'],
         ['Id', '!=', 'pb_11']
       ]
     });
-    expect(mockQl.doc.update).toHaveBeenCalledWith('Pricebook', 'pb_old_std1', expect.objectContaining({
+    expect(mockQl.doc.update).toHaveBeenCalledWith('pricebook', 'pb_old_std1', expect.objectContaining({
       Status: 'Inactive'
     }));
-    expect(mockQl.doc.update).toHaveBeenCalledWith('Pricebook', 'pb_old_std2', expect.objectContaining({
+    expect(mockQl.doc.update).toHaveBeenCalledWith('pricebook', 'pb_old_std2', expect.objectContaining({
       Status: 'Inactive'
     }));
   });
@@ -337,7 +337,7 @@ describe('PricebookHook', () => {
 
     await PricebookHook.handler(ctx as any);
 
-    expect(mockQl.doc.update).toHaveBeenCalledWith('Pricebook', 'pb_12', {
+    expect(mockQl.doc.update).toHaveBeenCalledWith('pricebook', 'pb_12', {
       ExpirationDate: expect.any(String)
     });
   });

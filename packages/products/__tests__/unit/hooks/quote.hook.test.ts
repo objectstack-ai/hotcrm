@@ -219,15 +219,15 @@ describe('QuotePricingHook', () => {
     await QuotePricingHook.handler(ctx as any);
 
     // Should create activity
-    expect(mockQl.doc.create).toHaveBeenCalledWith('Activity', expect.objectContaining({
+    expect(mockQl.doc.create).toHaveBeenCalledWith('activity', expect.objectContaining({
       Subject: 'New Quote Created: New Quote',
-      Type: 'Quote',
+      Type: 'quote',
       AccountId: 'acc_1',
       WhatId: 'q_9'
     }));
 
     // Should set expiration date (45 days from 2025-01-15)
-    expect(mockQl.doc.update).toHaveBeenCalledWith('Quote', 'q_9', {
+    expect(mockQl.doc.update).toHaveBeenCalledWith('quote', 'q_9', {
       ExpirationDate: '2025-03-01'
     });
   });
@@ -249,7 +249,7 @@ describe('QuotePricingHook', () => {
     await QuotePricingHook.handler(ctx as any);
 
     // 30 days from 2025-01-01 = 2025-01-31
-    expect(mockQl.doc.update).toHaveBeenCalledWith('Quote', 'q_10', {
+    expect(mockQl.doc.update).toHaveBeenCalledWith('quote', 'q_10', {
       ExpirationDate: '2025-01-31'
     });
   });
@@ -284,12 +284,12 @@ describe('QuotePricingHook', () => {
     await QuotePricingHook.handler(ctx as any);
 
     // Should update accepted date
-    expect(mockQl.doc.update).toHaveBeenCalledWith('Quote', 'q_11', {
+    expect(mockQl.doc.update).toHaveBeenCalledWith('quote', 'q_11', {
       AcceptedDate: expect.any(String)
     });
 
     // Should update opportunity stage to closed_won
-    expect(mockQl.doc.update).toHaveBeenCalledWith('Opportunity', 'opp_1', {
+    expect(mockQl.doc.update).toHaveBeenCalledWith('opportunity', 'opp_1', {
       Stage: 'closed_won',
       CloseDate: expect.any(String)
     });
@@ -304,7 +304,7 @@ describe('QuotePricingHook', () => {
     }));
 
     // Should log status change activity
-    expect(mockQl.doc.create).toHaveBeenCalledWith('Activity', expect.objectContaining({
+    expect(mockQl.doc.create).toHaveBeenCalledWith('activity', expect.objectContaining({
       Subject: 'Quote Status Changed: Draft → Accepted',
       Type: 'Quote Status Change',
       AccountId: 'acc_3'
@@ -333,7 +333,7 @@ describe('QuotePricingHook', () => {
 
     // handleQuoteSent runs but only logs
     // No activity should be created since no AccountId
-    expect(mockQl.doc.create).not.toHaveBeenCalledWith('Activity', expect.objectContaining({
+    expect(mockQl.doc.create).not.toHaveBeenCalledWith('activity', expect.objectContaining({
       Type: 'Quote Status Change'
     }));
   });
@@ -364,7 +364,7 @@ describe('QuotePricingHook', () => {
 
     await QuotePricingHook.handler(ctx as any);
 
-    expect(mockQl.doc.update).toHaveBeenCalledWith('Quote', 'q_13', {
+    expect(mockQl.doc.update).toHaveBeenCalledWith('quote', 'q_13', {
       ApprovedDate: expect.any(String),
       ApprovedById: 'user_1',
       Status: 'Approved'
@@ -395,7 +395,7 @@ describe('QuotePricingHook', () => {
 
     await QuotePricingHook.handler(ctx as any);
 
-    expect(mockQl.doc.update).toHaveBeenCalledWith('Quote', 'q_14', {
+    expect(mockQl.doc.update).toHaveBeenCalledWith('quote', 'q_14', {
       RejectedDate: expect.any(String),
       RejectedById: 'user_1',
       Status: 'Rejected'
