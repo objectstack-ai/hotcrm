@@ -1,4 +1,4 @@
-import type { Hook } from '@objectstack/spec/data';
+import type { Hook, HookContext } from '@objectstack/spec/data';
 
 /**
  * Campaign Lifecycle and ROI Management Trigger
@@ -15,7 +15,7 @@ const CampaignROICalculationTrigger: Hook = {
   events: ['beforeInsert', 'beforeUpdate'],
   handler: async (ctx: HookContext) => {
     try {
-      const campaign = ctx.input.doc as Record<string, any>;
+      const campaign = ctx.input as Record<string, any>;
 
       // Calculate ROI: (ActualRevenue - ActualCost) / ActualCost * 100
       const actualRevenue = campaign.actual_revenue || 0;
@@ -59,7 +59,7 @@ const CampaignBudgetTrackingTrigger: Hook = {
   events: ['beforeUpdate'],
   handler: async (ctx: HookContext) => {
     try {
-      const campaign = ctx.input.doc as Record<string, any>;
+      const campaign = ctx.input as Record<string, any>;
       const oldCampaign = ctx.previous as Record<string, any> | undefined;
 
       // Only process if actual cost changed
@@ -174,7 +174,7 @@ const CampaignDateValidationTrigger: Hook = {
   events: ['beforeInsert', 'beforeUpdate'],
   handler: async (ctx: HookContext) => {
     try {
-      const campaign = ctx.input.doc as Record<string, any>;
+      const campaign = ctx.input as Record<string, any>;
 
       if (campaign.start_date && campaign.end_date) {
         const startDate = new Date(campaign.start_date);
@@ -301,4 +301,4 @@ export default [
   CampaignBudgetTrackingTrigger,
   CampaignStatusChangeTrigger,
   CampaignDateValidationTrigger
-];
+] as Hook[];

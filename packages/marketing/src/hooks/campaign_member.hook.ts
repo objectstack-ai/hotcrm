@@ -1,4 +1,4 @@
-import type { Hook } from '@objectstack/spec/data';
+import type { Hook, HookContext } from '@objectstack/spec/data';
 import { updateCampaignMetrics } from './campaign.hook';
 
 /**
@@ -16,7 +16,7 @@ const CampaignMemberEngagementTrigger: Hook = {
   events: ['beforeInsert', 'beforeUpdate'],
   handler: async (ctx: HookContext) => {
     try {
-      const member = ctx.input.doc as Record<string, any>;
+      const member = ctx.input as Record<string, any>;
       const oldMember = ctx.previous as Record<string, any> | undefined;
 
       const now = new Date().toISOString();
@@ -184,7 +184,7 @@ const CampaignMemberBounceHandlerTrigger: Hook = {
   events: ['beforeUpdate'],
   handler: async (ctx: HookContext) => {
     try {
-      const member = ctx.input.doc as Record<string, any>;
+      const member = ctx.input as Record<string, any>;
       const oldMember = ctx.previous as Record<string, any> | undefined;
 
       // Check if bounce information was added
@@ -295,4 +295,4 @@ export default [
   CampaignMemberLeadScoringTrigger,
   CampaignMemberStatsTrigger,
   CampaignMemberBounceHandlerTrigger
-];
+] as Hook[];
