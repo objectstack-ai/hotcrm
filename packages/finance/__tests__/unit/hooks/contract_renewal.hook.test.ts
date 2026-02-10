@@ -1,14 +1,5 @@
 import { describe, it, expect, vi, beforeEach, Mock } from 'vitest';
 
-vi.mock('../../../src/db', () => ({
-  db: {
-    find: vi.fn(),
-    insert: vi.fn(),
-    update: vi.fn()
-  }
-}));
-
-import { db } from '../../../src/db';
 import { ContractRenewalCheck, ContractExpirationAlert } from '../../../src/hooks/contract_renewal.hook';
 
 // Helper to build a date N days from now
@@ -17,8 +8,18 @@ function daysFromNow(days: number): string {
 }
 
 describe('ContractRenewalCheck', () => {
+  let mockQl: any;
+
   beforeEach(() => {
     vi.resetAllMocks();
+    mockQl = {
+      find: vi.fn(),
+      doc: {
+        create: vi.fn(),
+        update: vi.fn(),
+        get: vi.fn()
+      }
+    };
   });
 
   it('should create renewal opportunity when contract is activated and expires within 90 days', async () => {
@@ -40,32 +41,33 @@ describe('ContractRenewalCheck', () => {
     };
     const ctx = {
       result: newDoc,
-      previous: oldDoc
+      previous: oldDoc,
+      ql: mockQl
     };
 
     // No existing renewal opportunity
-    (db.find as Mock).mockResolvedValueOnce([]);
+    mockQl.find.mockResolvedValueOnce([]);
     // Insert opportunity returns new record
-    (db.insert as Mock).mockResolvedValueOnce({
+    mockQl.doc.create.mockResolvedValueOnce({
       _id: 'opp_1',
       name: `Renewal: ${newDoc.contract_number}`
     });
     // Insert task
-    (db.insert as Mock).mockResolvedValueOnce({ _id: 'task_1' });
+    mockQl.doc.create.mockResolvedValueOnce({ _id: 'task_1' });
 
     await ContractRenewalCheck.handler(ctx as any);
 
-    expect(db.find).toHaveBeenCalledWith('opportunity', {
+    expect(mockQl.find).toHaveBeenCalledWith('opportunity', {
       filters: [
         ['source_contract', '=', 'contract_1'],
         ['type', '=', 'Renewal']
       ]
     });
 
-    expect(db.insert).toHaveBeenCalledTimes(2);
+    expect(mockQl.doc.create).toHaveBeenCalledTimes(2);
 
     // Verify opportunity creation
-    const oppCall = (db.insert as Mock).mock.calls[0];
+    const oppCall = mockQl.doc.create.mock.calls[0];
     expect(oppCall[0]).toBe('opportunity');
     expect(oppCall[1]).toMatchObject({
       name: 'Renewal: CNT-001',
@@ -77,7 +79,7 @@ describe('ContractRenewalCheck', () => {
     });
 
     // Verify task creation
-    const taskCall = (db.insert as Mock).mock.calls[1];
+    const taskCall = mockQl.doc.create.mock.calls[1];
     expect(taskCall[0]).toBe('task');
     expect(taskCall[1]).toMatchObject({
       related_to: 'acc_1',
@@ -102,13 +104,14 @@ describe('ContractRenewalCheck', () => {
         contract_number: 'CNT-002',
         account: 'acc_2',
         contract_value: 30000
-      }
+      },
+      ql: mockQl
     };
 
     await ContractRenewalCheck.handler(ctx as any);
 
-    expect(db.find).not.toHaveBeenCalled();
-    expect(db.insert).not.toHaveBeenCalled();
+    expect(mockQl.find).not.toHaveBeenCalled();
+    expect(mockQl.doc.create).not.toHaveBeenCalled();
   });
 
   it('should not trigger when status does not change to Activated', async () => {
@@ -128,13 +131,14 @@ describe('ContractRenewalCheck', () => {
         contract_number: 'CNT-003',
         account: 'acc_3',
         contract_value: 10000
-      }
+      },
+      ql: mockQl
     };
 
     await ContractRenewalCheck.handler(ctx as any);
 
-    expect(db.find).not.toHaveBeenCalled();
-    expect(db.insert).not.toHaveBeenCalled();
+    expect(mockQl.find).not.toHaveBeenCalled();
+    expect(mockQl.doc.create).not.toHaveBeenCalled();
   });
 
   it('should not create a duplicate opportunity if one already exists', async () => {
@@ -154,15 +158,16 @@ describe('ContractRenewalCheck', () => {
         contract_number: 'CNT-004',
         account: 'acc_4',
         contract_value: 80000
-      }
+      },
+      ql: mockQl
     };
 
-    (db.find as Mock).mockResolvedValueOnce([{ _id: 'existing_opp' }]);
+    mockQl.find.mockResolvedValueOnce([{ _id: 'existing_opp' }]);
 
     await ContractRenewalCheck.handler(ctx as any);
 
-    expect(db.find).toHaveBeenCalled();
-    expect(db.insert).not.toHaveBeenCalled();
+    expect(mockQl.find).toHaveBeenCalled();
+    expect(mockQl.doc.create).not.toHaveBeenCalled();
   });
 
   it('should handle errors gracefully', async () => {
@@ -182,10 +187,11 @@ describe('ContractRenewalCheck', () => {
         contract_number: 'CNT-005',
         account: 'acc_5',
         contract_value: 20000
-      }
+      },
+      ql: mockQl
     };
 
-    (db.find as Mock).mockRejectedValueOnce(new Error('DB connection failed'));
+    mockQl.find.mockRejectedValueOnce(new Error('DB connection failed'));
 
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
@@ -216,24 +222,35 @@ describe('ContractRenewalCheck', () => {
         contract_number: 'CNT-006',
         account: 'acc_6',
         contract_value: 60000
-      }
+      },
+      ql: mockQl
     };
 
-    (db.find as Mock).mockResolvedValueOnce([]);
-    (db.insert as Mock)
+    mockQl.find.mockResolvedValueOnce([]);
+    mockQl.doc.create
       .mockResolvedValueOnce({ _id: 'opp_6', name: 'Renewal: CNT-006' })
       .mockResolvedValueOnce({ _id: 'task_6' });
 
     await ContractRenewalCheck.handler(ctx as any);
 
-    const taskCall = (db.insert as Mock).mock.calls[1];
+    const taskCall = mockQl.doc.create.mock.calls[1];
     expect(taskCall[1].priority).toBe('High');
   });
 });
 
 describe('ContractExpirationAlert', () => {
+  let mockQl: any;
+
   beforeEach(() => {
     vi.resetAllMocks();
+    mockQl = {
+      find: vi.fn(),
+      doc: {
+        create: vi.fn(),
+        update: vi.fn(),
+        get: vi.fn()
+      }
+    };
   });
 
   it('should send alert when contract expires within 30 days', async () => {
@@ -255,16 +272,17 @@ describe('ContractExpirationAlert', () => {
         account: 'acc_10',
         contract_value: 100000,
         renewal_reminder_sent: false
-      }
+      },
+      ql: mockQl
     };
 
-    (db.insert as Mock).mockResolvedValueOnce({ _id: 'activity_1' });
-    (db.update as Mock).mockResolvedValueOnce({});
+    mockQl.doc.create.mockResolvedValueOnce({ _id: 'activity_1' });
+    mockQl.doc.update.mockResolvedValueOnce({});
 
     await ContractExpirationAlert.handler(ctx as any);
 
     // Should insert an alert activity
-    expect(db.insert).toHaveBeenCalledWith('activity', expect.objectContaining({
+    expect(mockQl.doc.create).toHaveBeenCalledWith('activity', expect.objectContaining({
       type: 'Alert',
       related_to: 'acc_10',
       contract: 'contract_10',
@@ -273,7 +291,7 @@ describe('ContractExpirationAlert', () => {
     }));
 
     // Should flag the contract to prevent duplicate reminders
-    expect(db.update).toHaveBeenCalledWith('contract', 'contract_10', {
+    expect(mockQl.doc.update).toHaveBeenCalledWith('contract', 'contract_10', {
       renewal_reminder_sent: true
     });
   });
@@ -297,13 +315,14 @@ describe('ContractExpirationAlert', () => {
         account: 'acc_11',
         contract_value: 50000,
         renewal_reminder_sent: false
-      }
+      },
+      ql: mockQl
     };
 
     await ContractExpirationAlert.handler(ctx as any);
 
-    expect(db.insert).not.toHaveBeenCalled();
-    expect(db.update).not.toHaveBeenCalled();
+    expect(mockQl.doc.create).not.toHaveBeenCalled();
+    expect(mockQl.doc.update).not.toHaveBeenCalled();
   });
 
   it('should not alert when renewal_reminder_sent is already true', async () => {
@@ -325,13 +344,14 @@ describe('ContractExpirationAlert', () => {
         account: 'acc_12',
         contract_value: 70000,
         renewal_reminder_sent: false
-      }
+      },
+      ql: mockQl
     };
 
     await ContractExpirationAlert.handler(ctx as any);
 
-    expect(db.insert).not.toHaveBeenCalled();
-    expect(db.update).not.toHaveBeenCalled();
+    expect(mockQl.doc.create).not.toHaveBeenCalled();
+    expect(mockQl.doc.update).not.toHaveBeenCalled();
   });
 
   it('should not alert when status is not Activated', async () => {
@@ -353,13 +373,14 @@ describe('ContractExpirationAlert', () => {
         account: 'acc_13',
         contract_value: 25000,
         renewal_reminder_sent: false
-      }
+      },
+      ql: mockQl
     };
 
     await ContractExpirationAlert.handler(ctx as any);
 
-    expect(db.insert).not.toHaveBeenCalled();
-    expect(db.update).not.toHaveBeenCalled();
+    expect(mockQl.doc.create).not.toHaveBeenCalled();
+    expect(mockQl.doc.update).not.toHaveBeenCalled();
   });
 
   it('should handle errors gracefully', async () => {
@@ -381,10 +402,11 @@ describe('ContractExpirationAlert', () => {
         account: 'acc_14',
         contract_value: 30000,
         renewal_reminder_sent: false
-      }
+      },
+      ql: mockQl
     };
 
-    (db.insert as Mock).mockRejectedValueOnce(new Error('Insert failed'));
+    mockQl.doc.create.mockRejectedValueOnce(new Error('Insert failed'));
 
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 

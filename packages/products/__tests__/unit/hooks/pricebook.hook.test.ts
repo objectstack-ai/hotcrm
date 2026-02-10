@@ -2,16 +2,17 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import PricebookHook from '../../../src/hooks/pricebook.hook';
 
 describe('PricebookHook', () => {
-  let mockDb: any;
+  let mockQl: any;
   let mockUser: any;
 
   beforeEach(() => {
     vi.resetAllMocks();
-    mockDb = {
+    mockQl = {
       find: vi.fn().mockResolvedValue([]),
       doc: {
         update: vi.fn().mockResolvedValue({}),
-        create: vi.fn().mockResolvedValue({ _id: 'activity_1' })
+        create: vi.fn().mockResolvedValue({ _id: 'activity_1' }),
+        get: vi.fn()
       }
     };
     mockUser = { id: 'user_1' };
@@ -29,7 +30,7 @@ describe('PricebookHook', () => {
           ExpirationDate: '2025-05-01'
         }
       },
-      db: mockDb,
+      ql: mockQl,
       user: mockUser
     };
 
@@ -48,7 +49,7 @@ describe('PricebookHook', () => {
           ExpirationDate: '2025-06-01'
         }
       },
-      db: mockDb,
+      ql: mockQl,
       user: mockUser
     };
 
@@ -67,7 +68,7 @@ describe('PricebookHook', () => {
           ExpirationDate: '2025-12-31'
         }
       },
-      db: mockDb,
+      ql: mockQl,
       user: mockUser
     };
 
@@ -76,7 +77,7 @@ describe('PricebookHook', () => {
 
   it('should warn when multiple active standard pricebooks overlap', async () => {
     const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    mockDb.find.mockResolvedValueOnce([{ Id: 'pb_other', IsStandard: true }]);
+    mockQl.find.mockResolvedValueOnce([{ Id: 'pb_other', IsStandard: true }]);
 
     const ctx = {
       input: {
@@ -88,13 +89,13 @@ describe('PricebookHook', () => {
           ExpirationDate: '2025-12-31'
         }
       },
-      db: mockDb,
+      ql: mockQl,
       user: mockUser
     };
 
     await PricebookHook.handler(ctx as any);
 
-    expect(mockDb.find).toHaveBeenCalledWith('Pricebook', {
+    expect(mockQl.find).toHaveBeenCalledWith('Pricebook', {
       filters: [
         ['IsStandard', '=', true],
         ['Status', '=', 'Active'],
@@ -119,7 +120,7 @@ describe('PricebookHook', () => {
           CurrencyCode: 'EUR'
         }
       },
-      db: mockDb,
+      ql: mockQl,
       user: mockUser
     };
 
@@ -140,7 +141,7 @@ describe('PricebookHook', () => {
           ExchangeRate: 1.5
         }
       },
-      db: mockDb,
+      ql: mockQl,
       user: mockUser
     };
 
@@ -164,7 +165,7 @@ describe('PricebookHook', () => {
           ExchangeRate: 5.0
         }
       },
-      db: mockDb,
+      ql: mockQl,
       user: mockUser
     };
 
@@ -201,13 +202,13 @@ describe('PricebookHook', () => {
         EffectiveDate: '2030-01-01',
         ExpirationDate: futureDate
       },
-      db: mockDb,
+      ql: mockQl,
       user: mockUser
     };
 
     await PricebookHook.handler(ctx as any);
 
-    expect(mockDb.doc.update).toHaveBeenCalledWith('Pricebook', 'pb_8', {
+    expect(mockQl.doc.update).toHaveBeenCalledWith('Pricebook', 'pb_8', {
       Status: 'Active'
     });
   });
@@ -234,13 +235,13 @@ describe('PricebookHook', () => {
         EffectiveDate: '2019-01-01',
         ExpirationDate: '2030-12-31'
       },
-      db: mockDb,
+      ql: mockQl,
       user: mockUser
     };
 
     await PricebookHook.handler(ctx as any);
 
-    expect(mockDb.doc.update).toHaveBeenCalledWith('Pricebook', 'pb_9', {
+    expect(mockQl.doc.update).toHaveBeenCalledWith('Pricebook', 'pb_9', {
       Status: 'Expired'
     });
   });
@@ -262,19 +263,19 @@ describe('PricebookHook', () => {
         IsStandard: false
       },
       old: {},
-      db: mockDb,
+      ql: mockQl,
       user: mockUser
     };
 
     await PricebookHook.handler(ctx as any);
 
-    expect(mockDb.doc.update).toHaveBeenCalledWith('Pricebook', 'pb_10', {
+    expect(mockQl.doc.update).toHaveBeenCalledWith('Pricebook', 'pb_10', {
       EffectiveDate: expect.any(String)
     });
   });
 
   it('should deactivate other standard pricebooks when a standard pricebook is activated', async () => {
-    mockDb.find.mockResolvedValueOnce([
+    mockQl.find.mockResolvedValueOnce([
       { Id: 'pb_old_std1' },
       { Id: 'pb_old_std2' }
     ]);
@@ -294,23 +295,23 @@ describe('PricebookHook', () => {
         IsStandard: true
       },
       old: {},
-      db: mockDb,
+      ql: mockQl,
       user: mockUser
     };
 
     await PricebookHook.handler(ctx as any);
 
-    expect(mockDb.find).toHaveBeenCalledWith('Pricebook', {
+    expect(mockQl.find).toHaveBeenCalledWith('Pricebook', {
       filters: [
         ['IsStandard', '=', true],
         ['Status', '=', 'Active'],
         ['Id', '!=', 'pb_11']
       ]
     });
-    expect(mockDb.doc.update).toHaveBeenCalledWith('Pricebook', 'pb_old_std1', expect.objectContaining({
+    expect(mockQl.doc.update).toHaveBeenCalledWith('Pricebook', 'pb_old_std1', expect.objectContaining({
       Status: 'Inactive'
     }));
-    expect(mockDb.doc.update).toHaveBeenCalledWith('Pricebook', 'pb_old_std2', expect.objectContaining({
+    expect(mockQl.doc.update).toHaveBeenCalledWith('Pricebook', 'pb_old_std2', expect.objectContaining({
       Status: 'Inactive'
     }));
   });
@@ -330,13 +331,13 @@ describe('PricebookHook', () => {
         IsStandard: false
       },
       old: {},
-      db: mockDb,
+      ql: mockQl,
       user: mockUser
     };
 
     await PricebookHook.handler(ctx as any);
 
-    expect(mockDb.doc.update).toHaveBeenCalledWith('Pricebook', 'pb_12', {
+    expect(mockQl.doc.update).toHaveBeenCalledWith('Pricebook', 'pb_12', {
       ExpirationDate: expect.any(String)
     });
   });
@@ -357,13 +358,13 @@ describe('PricebookHook', () => {
         IsStandard: false
       },
       old: {},
-      db: mockDb,
+      ql: mockQl,
       user: mockUser
     };
 
     await PricebookHook.handler(ctx as any);
 
-    expect(mockDb.doc.create).toHaveBeenCalledWith('Activity', expect.objectContaining({
+    expect(mockQl.doc.create).toHaveBeenCalledWith('Activity', expect.objectContaining({
       Subject: 'Pricebook Status Changed: Draft → Active',
       Type: 'Status Change',
       WhatId: 'pb_13'
@@ -389,13 +390,13 @@ describe('PricebookHook', () => {
         Status: 'Active'
       },
       old: {},
-      db: mockDb,
+      ql: mockQl,
       user: mockUser
     };
 
     await PricebookHook.handler(ctx as any);
 
-    expect(mockDb.doc.create).toHaveBeenCalledWith('Activity', expect.objectContaining({
+    expect(mockQl.doc.create).toHaveBeenCalledWith('Activity', expect.objectContaining({
       Subject: 'Pricebook Currency Updated: Currency PB',
       Type: 'Currency Update',
       Priority: 'high'
@@ -423,14 +424,14 @@ describe('PricebookHook', () => {
         ExpirationDate: '2025-12-31'
       },
       old: {},
-      db: mockDb,
+      ql: mockQl,
       user: mockUser
     };
 
     await PricebookHook.handler(ctx as any);
 
-    expect(mockDb.doc.update).not.toHaveBeenCalled();
-    expect(mockDb.doc.create).not.toHaveBeenCalled();
+    expect(mockQl.doc.update).not.toHaveBeenCalled();
+    expect(mockQl.doc.create).not.toHaveBeenCalled();
   });
 
   it('should handle errors gracefully and rethrow', async () => {
@@ -445,7 +446,7 @@ describe('PricebookHook', () => {
           ExpirationDate: '2025-01-01'
         }
       },
-      db: mockDb,
+      ql: mockQl,
       user: mockUser
     };
 

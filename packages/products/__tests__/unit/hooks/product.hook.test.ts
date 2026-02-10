@@ -2,16 +2,17 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import ProductHook from '../../../src/hooks/product.hook';
 
 describe('ProductHook', () => {
-  let mockDb: any;
+  let mockQl: any;
   let mockUser: any;
 
   beforeEach(() => {
     vi.resetAllMocks();
-    mockDb = {
+    mockQl = {
       find: vi.fn().mockResolvedValue([]),
       doc: {
         update: vi.fn().mockResolvedValue({}),
-        create: vi.fn().mockResolvedValue({ _id: 'activity_1' })
+        create: vi.fn().mockResolvedValue({ _id: 'activity_1' }),
+        get: vi.fn()
       }
     };
     mockUser = { id: 'user_1' };
@@ -20,7 +21,7 @@ describe('ProductHook', () => {
   // ── Before Hook: Product Validation ──
 
   it('should validate product with unique product code (no duplicates)', async () => {
-    mockDb.find.mockResolvedValueOnce([]);
+    mockQl.find.mockResolvedValueOnce([]);
 
     const ctx = {
       input: {
@@ -32,13 +33,13 @@ describe('ProductHook', () => {
           CostPrice: 50
         }
       },
-      db: mockDb,
+      ql: mockQl,
       user: mockUser
     };
 
     await ProductHook.handler(ctx as any);
 
-    expect(mockDb.find).toHaveBeenCalledWith('Product', {
+    expect(mockQl.find).toHaveBeenCalledWith('Product', {
       filters: [
         ['ProductCode', '=', 'WGT-001'],
         ['Id', '!=', 'prod_1']
@@ -47,7 +48,7 @@ describe('ProductHook', () => {
   });
 
   it('should throw error when product code already exists', async () => {
-    mockDb.find.mockResolvedValueOnce([{ Id: 'prod_existing' }]);
+    mockQl.find.mockResolvedValueOnce([{ Id: 'prod_existing' }]);
 
     const ctx = {
       input: {
@@ -59,7 +60,7 @@ describe('ProductHook', () => {
           CostPrice: 50
         }
       },
-      db: mockDb,
+      ql: mockQl,
       user: mockUser
     };
 
@@ -70,7 +71,7 @@ describe('ProductHook', () => {
 
   it('should warn when cost price exceeds list price', async () => {
     const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    mockDb.find.mockResolvedValueOnce([]);
+    mockQl.find.mockResolvedValueOnce([]);
 
     const ctx = {
       input: {
@@ -82,7 +83,7 @@ describe('ProductHook', () => {
           CostPrice: 100
         }
       },
-      db: mockDb,
+      ql: mockQl,
       user: mockUser
     };
 
@@ -96,7 +97,7 @@ describe('ProductHook', () => {
 
   it('should validate bundle configuration for bundle products', async () => {
     const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-    mockDb.find.mockResolvedValueOnce([]);
+    mockQl.find.mockResolvedValueOnce([]);
 
     const ctx = {
       input: {
@@ -108,7 +109,7 @@ describe('ProductHook', () => {
           ListPrice: 200
         }
       },
-      db: mockDb,
+      ql: mockQl,
       user: mockUser
     };
 
@@ -122,7 +123,7 @@ describe('ProductHook', () => {
 
   it('should log dependency info for products with required products', async () => {
     const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-    mockDb.find.mockResolvedValueOnce([]);
+    mockQl.find.mockResolvedValueOnce([]);
 
     const ctx = {
       input: {
@@ -134,7 +135,7 @@ describe('ProductHook', () => {
           ListPrice: 100
         }
       },
-      db: mockDb,
+      ql: mockQl,
       user: mockUser
     };
 
@@ -168,13 +169,13 @@ describe('ProductHook', () => {
         ListPrice: 100,
         CostPrice: 50
       },
-      db: mockDb,
+      ql: mockQl,
       user: mockUser
     };
 
     await ProductHook.handler(ctx as any);
 
-    expect(mockDb.doc.update).toHaveBeenCalledWith('Product', 'prod_6', {
+    expect(mockQl.doc.update).toHaveBeenCalledWith('Product', 'prod_6', {
       Status: 'Out of Stock'
     });
   });
@@ -201,7 +202,7 @@ describe('ProductHook', () => {
         ListPrice: 100,
         CostPrice: 50
       },
-      db: mockDb,
+      ql: mockQl,
       user: mockUser
     };
 
@@ -231,13 +232,13 @@ describe('ProductHook', () => {
         ListPrice: 100,
         CostPrice: 50
       },
-      db: mockDb,
+      ql: mockQl,
       user: mockUser
     };
 
     await ProductHook.handler(ctx as any);
 
-    expect(mockDb.doc.update).toHaveBeenCalledWith('Product', 'prod_8', {
+    expect(mockQl.doc.update).toHaveBeenCalledWith('Product', 'prod_8', {
       Status: 'Active'
     });
   });
@@ -262,13 +263,13 @@ describe('ProductHook', () => {
         StockLevel: 100,
         Status: 'Active'
       },
-      db: mockDb,
+      ql: mockQl,
       user: mockUser
     };
 
     await ProductHook.handler(ctx as any);
 
-    expect(mockDb.doc.create).toHaveBeenCalledWith('Activity', expect.objectContaining({
+    expect(mockQl.doc.create).toHaveBeenCalledWith('Activity', expect.objectContaining({
       Subject: 'Price Change: Price Change Widget',
       Type: 'Price Update',
       Status: 'Completed',
@@ -297,13 +298,13 @@ describe('ProductHook', () => {
         CostPrice: 50,
         StockLevel: 100
       },
-      db: mockDb,
+      ql: mockQl,
       user: mockUser
     };
 
     await ProductHook.handler(ctx as any);
 
-    expect(mockDb.doc.create).toHaveBeenCalledWith('Activity', expect.objectContaining({
+    expect(mockQl.doc.create).toHaveBeenCalledWith('Activity', expect.objectContaining({
       Subject: 'Product Status Changed: Active → Inactive',
       Type: 'Status Change',
       WhatId: 'prod_10'
@@ -330,7 +331,7 @@ describe('ProductHook', () => {
         CostPrice: 50,
         StockLevel: 100
       },
-      db: mockDb,
+      ql: mockQl,
       user: mockUser
     };
 
@@ -360,18 +361,18 @@ describe('ProductHook', () => {
         CostPrice: 50,
         StockLevel: 100
       },
-      db: mockDb,
+      ql: mockQl,
       user: mockUser
     };
 
     await ProductHook.handler(ctx as any);
 
-    expect(mockDb.doc.update).not.toHaveBeenCalled();
-    expect(mockDb.doc.create).not.toHaveBeenCalled();
+    expect(mockQl.doc.update).not.toHaveBeenCalled();
+    expect(mockQl.doc.create).not.toHaveBeenCalled();
   });
 
   it('should handle errors gracefully and rethrow', async () => {
-    mockDb.find.mockRejectedValueOnce(new Error('DB failure'));
+    mockQl.find.mockRejectedValueOnce(new Error('DB failure'));
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     const ctx = {
@@ -383,7 +384,7 @@ describe('ProductHook', () => {
           ListPrice: 100
         }
       },
-      db: mockDb,
+      ql: mockQl,
       user: mockUser
     };
 
