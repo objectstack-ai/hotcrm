@@ -1,5 +1,4 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
-import { db } from '../db';
 
 const ContractBillingHook: Hook = {
   name: 'ContractBillingAutomation',
@@ -29,10 +28,10 @@ const ContractBillingHook: Hook = {
             payment_terms: 'Net 30'
         };
 
-        const invoice = await db.insert('invoice', invoiceData);
+        const invoice = await (ctx.ql as any).insert('invoice', invoiceData);
         
         // Create a single line item for the full contract value (since we don't have contract lines yet)
-        await db.insert('invoice_line', {
+        await (ctx.ql as any).insert('invoice_line', {
             invoice: invoice._id,
             description: `Contract ${newDoc.contract_number} Billing`,
             quantity: 1,

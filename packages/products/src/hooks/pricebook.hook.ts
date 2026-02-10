@@ -1,5 +1,4 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
-import { db } from '../db';
 
 
 
@@ -14,7 +13,7 @@ import { db } from '../db';
  */
 const PricebookHook: Hook = {
   name: 'PricebookHook',
-  object: 'Pricebook',
+  object: 'pricebook',
   events: ['beforeInsert', 'beforeUpdate', 'afterUpdate'],
   handler: async (ctx: HookContext) => {
     try {
@@ -328,7 +327,7 @@ async function handleCurrencyChange(ctx: any): Promise<void> {
  */
 async function activatePricebookEntries(
   pricebookId: string,
-  db: any
+  ql: any
 ): Promise<void> {
   try {
     console.log(`✅ Activating pricebook entries for pricebook: ${pricebookId}`);
@@ -344,7 +343,7 @@ async function activatePricebookEntries(
  */
 async function expirePricebookEntries(
   pricebookId: string,
-  db: any
+  ql: any
 ): Promise<void> {
   try {
     console.log(`⏰ Expiring pricebook entries for pricebook: ${pricebookId}`);

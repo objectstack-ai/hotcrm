@@ -318,14 +318,14 @@ const LeadStatusChangeTrigger: Hook = {
   // Log activity
   try {
     await (ctx.ql as any).doc.create('activity', {
-      Subject: `线索已转化: ${lead.FirstName} ${lead.LastName}`,
+      Subject: `Lead Converted: ${lead.FirstName} ${lead.LastName}`,
       Type: 'Conversion',
       Status: 'Completed',
       Priority: 'high',
       WhoId: lead.Id,
       OwnerId: ctx.session?.userId,
       ActivityDate: new Date().toISOString().split('T')[0],
-      Description: `线索 "${lead.FirstName} ${lead.LastName}" 来自 "${lead.Company}" 已成功转化`
+      Description: `Lead "${lead.FirstName} ${lead.LastName}" from "${lead.Company}" successfully converted`
     });
   } catch (error) {
     console.error('❌ Failed to log conversion activity:', error);
@@ -343,14 +343,14 @@ async function handleLeadConversion(ctx: HookContext): Promise<void> {
   // Log activity for conversion
   try {
     await (ctx.ql as any).doc.create('activity', {
-      Subject: `线索转换: ${lead.FirstName} ${lead.LastName}`,
+      Subject: `Lead Conversion: ${lead.FirstName} ${lead.LastName}`,
       Type: 'Conversion',
       Status: 'Completed',
       Priority: 'high',
       WhoId: lead.Id,
       OwnerId: ctx.session?.userId,
       ActivityDate: new Date().toISOString().split('T')[0],
-      Description: `线索 "${lead.FirstName} ${lead.LastName}" 已转换为客户`
+      Description: `Lead "${lead.FirstName} ${lead.LastName}" converted to customer`
     });
   } catch (error) {
     console.error('❌ Failed to log conversion activity:', error);
@@ -372,14 +372,14 @@ async function handleLeadUnqualification(ctx: HookContext): Promise<void> {
   // Log activity
   try {
     await (ctx.ql as any).doc.create('activity', {
-      Subject: `线索不合格: ${lead.FirstName} ${lead.LastName}`,
+      Subject: `Lead Unqualified: ${lead.FirstName} ${lead.LastName}`,
       Type: 'Disqualification',
       Status: 'Completed',
       Priority: 'Normal',
       WhoId: lead.Id,
       OwnerId: ctx.session?.userId,
       ActivityDate: new Date().toISOString().split('T')[0],
-      Description: `线索 "${lead.FirstName} ${lead.LastName}" 已标记为不合格`
+      Description: `Lead "${lead.FirstName} ${lead.LastName}" marked as unqualified`
     });
   } catch (error) {
     console.error('❌ Failed to log unqualification activity:', error);
@@ -395,14 +395,14 @@ async function logStatusChange(ctx: HookContext): Promise<void> {
     const oldStatus = ctx.previous?.Status || 'Unknown';
     
     await (ctx.ql as any).doc.create('activity', {
-      Subject: `线索状态变更: ${oldStatus} → ${ctx.input.Status}`,
+      Subject: `Lead Status Change: ${oldStatus} → ${ctx.input.Status}`,
       Type: 'Status Change',
       Status: 'Completed',
       Priority: 'Normal',
       WhoId: lead.Id,
       OwnerId: ctx.session?.userId,
       ActivityDate: new Date().toISOString().split('T')[0],
-      Description: `线索状态从 "${oldStatus}" 变更为 "${ctx.input.Status}"`
+      Description: `Lead status changed from "${oldStatus}" to "${ctx.input.Status}"`
     });
   } catch (error) {
     console.error('❌ Failed to log status change activity:', error);

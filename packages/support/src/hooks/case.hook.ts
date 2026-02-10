@@ -1,5 +1,4 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
-import { db } from '../db'; // Ensure this points to the correct db instance
 
 /**
  * Entitlement Verification Hook
@@ -23,7 +22,7 @@ const CaseEntitlementCheck: Hook = {
     try {
       // 1. Fetch Account to get SLA Level
       // Using direct ObjectQL find
-      const accounts = await db.find('account', { filters: [['_id', '=', caseRec.account]] });
+      const accounts = await (ctx.ql as any).find('account', { filters: [['_id', '=', caseRec.account]] });
       
       if (!accounts || accounts.length === 0) {
         console.warn(`Warning: Linked Account ${caseRec.account} not found.`);

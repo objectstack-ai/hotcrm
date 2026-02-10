@@ -1,5 +1,4 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
-import { db } from '../db';
 
 
 
@@ -9,7 +8,7 @@ import { db } from '../db';
  * Automatically completes past-due activities
  * This would typically run as a daily batch job
  */
-export async function autoCompletePastDueActivities(db: any): Promise<void> {
+export async function autoCompletePastDueActivities(ql: any): Promise<void> {
   console.log('🔄 Running auto-complete for past-due activities...');
   
   // In real implementation:
@@ -44,7 +43,7 @@ export async function autoCompletePastDueActivities(db: any): Promise<void> {
  */
 const ActivityRelatedObjectUpdatesTrigger: Hook = {
   name: 'ActivityRelatedObjectUpdatesTrigger',
-  object: 'Activity',
+  object: 'activity',
   events: ['afterInsert', 'afterUpdate'],
   handler: async (ctx: HookContext) => {
     try {
@@ -127,7 +126,7 @@ async function updateWhatObjectLastActivityDate(whatId: string, activityDate: st
  */
 const ActivityCompletionTrigger: Hook = {
   name: 'ActivityCompletionTrigger',
-  object: 'Activity',
+  object: 'activity',
   events: ['beforeUpdate'],
   handler: async (ctx: HookContext) => {
     try {
@@ -241,7 +240,7 @@ async function createNextRecurrence(activity: Record<string, any>, ctx: any): Pr
  * 
  * Daily job to find and notify about overdue activities
  */
-export async function sendOverdueNotifications(db: any): Promise<void> {
+export async function sendOverdueNotifications(ql: any): Promise<void> {
   console.log('🔄 Finding overdue activities...');
   
   // In real implementation:
@@ -286,7 +285,7 @@ export async function sendOverdueNotifications(db: any): Promise<void> {
  */
 const ActivityTypeValidationTrigger: Hook = {
   name: 'ActivityTypeValidationTrigger',
-  object: 'Activity',
+  object: 'activity',
   events: ['beforeInsert', 'beforeUpdate'],
   handler: async (ctx: HookContext) => {
     try {

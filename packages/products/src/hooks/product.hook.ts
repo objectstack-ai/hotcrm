@@ -1,5 +1,4 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
-import { db } from '../db';
 
 
 
@@ -14,7 +13,7 @@ import { db } from '../db';
  */
 const ProductHook: Hook = {
   name: 'ProductHook',
-  object: 'Product',
+  object: 'product',
   events: ['beforeInsert', 'beforeUpdate', 'afterUpdate'],
   handler: async (ctx: HookContext) => {
     try {
@@ -257,7 +256,7 @@ async function handleStatusChange(ctx: any): Promise<void> {
  */
 async function validateBundleDependencies(
   bundleId: string,
-  db: any
+  ql: any
 ): Promise<boolean> {
   try {
     console.debug(`[product.hook] Bundle dependency validation pending: query ProductBundleItem and ProductBundleDependency for bundle ${bundleId}`);
@@ -274,7 +273,7 @@ async function validateBundleDependencies(
  */
 async function checkBundleConstraints(
   bundleId: string,
-  db: any
+  ql: any
 ): Promise<boolean> {
   try {
     console.debug(`[product.hook] Bundle constraint check pending: query ProductBundleConstraint for bundle ${bundleId}`);
