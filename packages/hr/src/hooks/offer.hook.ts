@@ -14,7 +14,7 @@ const OfferCreationTrigger: Hook = {
   object: 'offer',
   events: ['beforeInsert'],
   handler: async (ctx: HookContext) => {
-    try:
+    try {
       const offer = ctx.input.doc as Record<string, any>;
 
       // Generate offer number if not provided
