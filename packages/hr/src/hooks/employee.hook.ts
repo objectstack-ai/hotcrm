@@ -13,9 +13,9 @@ const EmployeeOnboardingTrigger: Hook = {
   name: 'EmployeeOnboardingTrigger',
   object: 'employee',
   events: ['afterInsert'],
-  handler: async (ctx: any) => {
+  handler: async (ctx: HookContext) => {
     try {
-      const employee = ctx.result as any;
+      const employee = ctx.result as Record<string, any>;
 
       console.log(`👋 Initiating onboarding for employee: ${employee.first_name} ${employee.last_name}`);
 
@@ -92,7 +92,7 @@ async function createProbationGoals(employee: any, ctx: any): Promise<void> {
     const probationEndDate = new Date(hireDate);
     probationEndDate.setDate(probationEndDate.getDate() + 90); // 90-day probation
 
-    await (ctx.ql as any).doc.create('goal', {
+    await ctx.ql.doc.create('goal', {
       employee_id: employee.id,
       goal_name: `Complete Onboarding - ${employee.full_name}`,
       description: 'Successfully complete all onboarding tasks and probation requirements',
@@ -118,15 +118,15 @@ const EmployeeStatusChangeTrigger: Hook = {
   name: 'EmployeeStatusChangeTrigger',
   object: 'employee',
   events: ['afterUpdate'],
-  handler: async (ctx: any) => {
+  handler: async (ctx: HookContext) => {
     try {
       // Check if employment status changed
-      if (!ctx.previous || (ctx.previous as any).employment_status === (ctx.result as any).employment_status) {
+      if (!ctx.previous || (ctx.previous as Record<string, any>).employment_status === (ctx.result as Record<string, any>).employment_status) {
         return;
       }
 
-      const employee = ctx.result as any;
-      const oldStatus = (ctx.previous as any).employment_status;
+      const employee = ctx.result as Record<string, any>;
+      const oldStatus = (ctx.previous as Record<string, any>).employment_status;
       const newStatus = employee.employment_status;
 
       console.log(`🔄 Employee status changed from "${oldStatus}" to "${newStatus}"`);
@@ -224,9 +224,9 @@ const EmployeeDataValidationTrigger: Hook = {
   name: 'EmployeeDataValidationTrigger',
   object: 'employee',
   events: ['beforeInsert', 'beforeUpdate'],
-  handler: async (ctx: any) => {
+  handler: async (ctx: HookContext) => {
     try {
-      const employee = (ctx.input.doc as any) || ctx.input;
+      const employee = ctx.input.doc as Record<string, any>;
 
       // Validate hire date is not in future
       if (employee.hire_date) {

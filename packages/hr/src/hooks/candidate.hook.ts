@@ -13,13 +13,13 @@ const CandidateScoringTrigger: Hook = {
   name: 'CandidateScoringTrigger',
   object: 'candidate',
   events: ['beforeInsert', 'beforeUpdate'],
-  handler: async (ctx: any) => {
+  handler: async (ctx: HookContext) => {
     try {
-      const candidate = (ctx.input.doc as any) || ctx.input;
+      const candidate = ctx.input.doc as Record<string, any>;
 
       // Check for duplicate candidates (same email)
-      if (ctx.event === 'beforeInsert' || (ctx.previous && candidate.email !== (ctx.previous as any).email)) {
-        const duplicates = await (ctx.ql as any).find('candidate', {
+      if (ctx.event === 'beforeInsert' || (ctx.previous && candidate.email !== (ctx.previous as Record<string, any>).email)) {
+        const duplicates = await ctx.ql.find('candidate', {
           filters: [
             ['email', '=', candidate.email],
             ['id', '!=', candidate.id || '']
@@ -151,15 +151,15 @@ const CandidateStatusChangeTrigger: Hook = {
   name: 'CandidateStatusChangeTrigger',
   object: 'candidate',
   events: ['afterUpdate'],
-  handler: async (ctx: any) => {
+  handler: async (ctx: HookContext) => {
     try {
       // Check if status changed
-      if (!ctx.previous || (ctx.previous as any).status === (ctx.result as any).status) {
+      if (!ctx.previous || (ctx.previous as Record<string, any>).status === (ctx.result as Record<string, any>).status) {
         return;
       }
 
-      const candidate = ctx.result as any;
-      const oldStatus = (ctx.previous as any).status;
+      const candidate = ctx.result as Record<string, any>;
+      const oldStatus = (ctx.previous as Record<string, any>).status;
       const newStatus = candidate.status;
 
       console.log(`🔄 Candidate status changed from "${oldStatus}" to "${newStatus}"`);

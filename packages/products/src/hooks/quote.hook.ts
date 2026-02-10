@@ -1,5 +1,4 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
-import { db } from '../db';
 
 
 
@@ -163,7 +162,7 @@ async function initializeQuote(ctx: any): Promise<void> {
   try {
     // Log activity for new quote
     if (quote.AccountId) {
-      await ctx.db.doc.create('Activity', {
+      await ctx.ql.doc.create('activity', {
         Subject: `New Quote Created: ${quote.Name}`,
         Type: 'Quote',
         Status: 'Completed',
@@ -183,7 +182,7 @@ async function initializeQuote(ctx: any): Promise<void> {
       const quoteDate = new Date(quote.QuoteDate);
       const expirationDate = new Date(quoteDate.getTime() + validityDays * 24 * 60 * 60 * 1000);
       
-      await ctx.db.doc.update('Quote', quote.Id, {
+      await ctx.ql.doc.update('quote', quote.Id, {
         ExpirationDate: expirationDate.toISOString().split('T')[0]
       });
       console.log(`📅 Expiration date set to: ${expirationDate.toISOString().split('T')[0]}`);
@@ -224,7 +223,7 @@ async function handleQuoteStatusChange(ctx: any): Promise<void> {
 
     // Log activity for status change
     if (quote.AccountId) {
-      await ctx.db.doc.create('Activity', {
+      await ctx.ql.doc.create('activity', {
         Subject: `Quote Status Changed: ${ctx.previous.Status} → ${quote.Status}`,
         Type: 'Quote Status Change',
         Status: 'Completed',
@@ -251,14 +250,14 @@ async function handleQuoteAccepted(ctx: any): Promise<void> {
     console.log('✅ Processing quote acceptance...');
 
     // Update accepted date and timestamp
-    await ctx.db.doc.update('Quote', quote.Id, {
+    await ctx.ql.doc.update('quote', quote.Id, {
       AcceptedDate: new Date().toISOString()
     });
 
     // Update opportunity stage if linked
     if (quote.OpportunityId) {
       try {
-        await ctx.db.doc.update('Opportunity', quote.OpportunityId, {
+        await ctx.ql.doc.update('opportunity', quote.OpportunityId, {
           Stage: 'closed_won',
           CloseDate: new Date().toISOString().split('T')[0]
         });
@@ -287,11 +286,11 @@ async function handleQuoteAccepted(ctx: any): Promise<void> {
         };
 
         try {
-            const contract = await ctx.db.insert('contract', contractData);
+            const contract = await ctx.ql.doc.create('contract', contractData);
             console.log(`📝 Contract created successfully: ${contract._id}`);
             
             // Link Contract back to Quote
-            await ctx.db.doc.update('Quote', quote.Id, {
+            await ctx.ql.doc.update('quote', quote.Id, {
                 Description: `${quote.Description || ''}\n Contract Created: ${contract.contract_number}`
             });
         } catch (err) {
@@ -349,7 +348,7 @@ async function handleApprovalStatusChange(ctx: any): Promise<void> {
 
     // Handle approved
     if (quote.ApprovalStatus === 'Approved') {
-      await ctx.db.doc.update('Quote', quote.Id, {
+      await ctx.ql.doc.update('quote', quote.Id, {
         ApprovedDate: new Date().toISOString(),
         ApprovedById: ctx.user.id,
         Status: quote.Status === 'In Review' ? 'Approved' : quote.Status
@@ -359,7 +358,7 @@ async function handleApprovalStatusChange(ctx: any): Promise<void> {
 
     // Handle rejected
     if (quote.ApprovalStatus === 'Rejected') {
-      await ctx.db.doc.update('Quote', quote.Id, {
+      await ctx.ql.doc.update('quote', quote.Id, {
         RejectedDate: new Date().toISOString(),
         RejectedById: ctx.user.id,
         Status: 'Rejected'

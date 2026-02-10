@@ -1,19 +1,20 @@
 import { describe, it, expect, vi, beforeEach, Mock } from 'vitest';
 
-vi.mock('../../../src/db', () => ({
-  db: {
-    find: vi.fn(),
-    insert: vi.fn(),
-    update: vi.fn()
-  }
-}));
-
-import { db } from '../../../src/db';
 import { CampaignROIHook } from '../../../src/hooks/roi.hook';
 
 describe('CampaignROIHook', () => {
+  let mockQl: any;
+
   beforeEach(() => {
     vi.resetAllMocks();
+    mockQl = {
+      find: vi.fn(),
+      doc: {
+        create: vi.fn(),
+        update: vi.fn(),
+        get: vi.fn()
+      }
+    };
   });
 
   it('should increase campaign revenue when opportunity is won', async () => {
@@ -29,20 +30,21 @@ describe('CampaignROIHook', () => {
         campaign_id: 'campaign_1',
         stage_name: 'negotiation',
         amount: 50000
-      }
+      },
+      ql: mockQl
     };
 
-    (db.find as Mock).mockResolvedValueOnce([
+    mockQl.find.mockResolvedValueOnce([
       { _id: 'campaign_1', actual_revenue: 10000 }
     ]);
-    (db.update as Mock).mockResolvedValueOnce({});
+    mockQl.doc.update.mockResolvedValueOnce({});
 
     await CampaignROIHook.handler(ctx as any);
 
-    expect(db.find).toHaveBeenCalledWith('campaign', {
+    expect(mockQl.find).toHaveBeenCalledWith('campaign', {
       filters: [['_id', '=', 'campaign_1']]
     });
-    expect(db.update).toHaveBeenCalledWith('campaign', 'campaign_1', {
+    expect(mockQl.doc.update).toHaveBeenCalledWith('campaign', 'campaign_1', {
       actual_revenue: 60000
     });
   });
@@ -60,17 +62,18 @@ describe('CampaignROIHook', () => {
         campaign_id: 'campaign_2',
         stage_name: 'closed_won',
         amount: 30000
-      }
+      },
+      ql: mockQl
     };
 
-    (db.find as Mock).mockResolvedValueOnce([
+    mockQl.find.mockResolvedValueOnce([
       { _id: 'campaign_2', actual_revenue: 80000 }
     ]);
-    (db.update as Mock).mockResolvedValueOnce({});
+    mockQl.doc.update.mockResolvedValueOnce({});
 
     await CampaignROIHook.handler(ctx as any);
 
-    expect(db.update).toHaveBeenCalledWith('campaign', 'campaign_2', {
+    expect(mockQl.doc.update).toHaveBeenCalledWith('campaign', 'campaign_2', {
       actual_revenue: 50000
     });
   });
@@ -88,18 +91,19 @@ describe('CampaignROIHook', () => {
         campaign_id: 'campaign_3',
         stage_name: 'closed_won',
         amount: 50000
-      }
+      },
+      ql: mockQl
     };
 
-    (db.find as Mock).mockResolvedValueOnce([
+    mockQl.find.mockResolvedValueOnce([
       { _id: 'campaign_3', actual_revenue: 100000 }
     ]);
-    (db.update as Mock).mockResolvedValueOnce({});
+    mockQl.doc.update.mockResolvedValueOnce({});
 
     await CampaignROIHook.handler(ctx as any);
 
     // Delta = 70000 - 50000 = 20000; 100000 + 20000 = 120000
-    expect(db.update).toHaveBeenCalledWith('campaign', 'campaign_3', {
+    expect(mockQl.doc.update).toHaveBeenCalledWith('campaign', 'campaign_3', {
       actual_revenue: 120000
     });
   });
@@ -115,13 +119,14 @@ describe('CampaignROIHook', () => {
         _id: 'opp_4',
         stage_name: 'negotiation',
         amount: 50000
-      }
+      },
+      ql: mockQl
     };
 
     await CampaignROIHook.handler(ctx as any);
 
-    expect(db.find).not.toHaveBeenCalled();
-    expect(db.update).not.toHaveBeenCalled();
+    expect(mockQl.find).not.toHaveBeenCalled();
+    expect(mockQl.doc.update).not.toHaveBeenCalled();
   });
 
   it('should not process when stage did not change and amount is same', async () => {
@@ -137,13 +142,14 @@ describe('CampaignROIHook', () => {
         campaign_id: 'campaign_5',
         stage_name: 'negotiation',
         amount: 50000
-      }
+      },
+      ql: mockQl
     };
 
     await CampaignROIHook.handler(ctx as any);
 
-    expect(db.find).not.toHaveBeenCalled();
-    expect(db.update).not.toHaveBeenCalled();
+    expect(mockQl.find).not.toHaveBeenCalled();
+    expect(mockQl.doc.update).not.toHaveBeenCalled();
   });
 
   it('should handle campaign with no existing revenue (zero)', async () => {
@@ -159,17 +165,18 @@ describe('CampaignROIHook', () => {
         campaign_id: 'campaign_6',
         stage_name: 'prospecting',
         amount: 25000
-      }
+      },
+      ql: mockQl
     };
 
-    (db.find as Mock).mockResolvedValueOnce([
+    mockQl.find.mockResolvedValueOnce([
       { _id: 'campaign_6' }
     ]);
-    (db.update as Mock).mockResolvedValueOnce({});
+    mockQl.doc.update.mockResolvedValueOnce({});
 
     await CampaignROIHook.handler(ctx as any);
 
-    expect(db.update).toHaveBeenCalledWith('campaign', 'campaign_6', {
+    expect(mockQl.doc.update).toHaveBeenCalledWith('campaign', 'campaign_6', {
       actual_revenue: 25000
     });
   });
@@ -187,15 +194,16 @@ describe('CampaignROIHook', () => {
         campaign_id: 'campaign_7',
         stage_name: 'negotiation',
         amount: 10000
-      }
+      },
+      ql: mockQl
     };
 
-    (db.find as Mock).mockResolvedValueOnce([]);
+    mockQl.find.mockResolvedValueOnce([]);
 
     await CampaignROIHook.handler(ctx as any);
 
-    expect(db.find).toHaveBeenCalled();
-    expect(db.update).not.toHaveBeenCalled();
+    expect(mockQl.find).toHaveBeenCalled();
+    expect(mockQl.doc.update).not.toHaveBeenCalled();
   });
 
   it('should handle zero amount on won opportunity', async () => {
@@ -211,14 +219,15 @@ describe('CampaignROIHook', () => {
         campaign_id: 'campaign_8',
         stage_name: 'negotiation',
         amount: 0
-      }
+      },
+      ql: mockQl
     };
 
     // delta = 0, so no update should happen
     await CampaignROIHook.handler(ctx as any);
 
-    expect(db.find).not.toHaveBeenCalled();
-    expect(db.update).not.toHaveBeenCalled();
+    expect(mockQl.find).not.toHaveBeenCalled();
+    expect(mockQl.doc.update).not.toHaveBeenCalled();
   });
 
   it('should handle missing amount as zero when won', async () => {
@@ -232,14 +241,15 @@ describe('CampaignROIHook', () => {
         _id: 'opp_9',
         campaign_id: 'campaign_9',
         stage_name: 'negotiation'
-      }
+      },
+      ql: mockQl
     };
 
     // amount is undefined → defaults to 0, delta = 0
     await CampaignROIHook.handler(ctx as any);
 
-    expect(db.find).not.toHaveBeenCalled();
-    expect(db.update).not.toHaveBeenCalled();
+    expect(mockQl.find).not.toHaveBeenCalled();
+    expect(mockQl.doc.update).not.toHaveBeenCalled();
   });
 
   it('should handle no previous state (new record)', async () => {
@@ -249,19 +259,20 @@ describe('CampaignROIHook', () => {
         campaign_id: 'campaign_10',
         stage_name: 'closed_won',
         amount: 30000
-      }
+      },
+      ql: mockQl
     };
 
     // wasWon = undefined?.stage_name === 'closed_won' → false
     // isWon = true, !wasWon = true → delta = 30000
-    (db.find as Mock).mockResolvedValueOnce([
+    mockQl.find.mockResolvedValueOnce([
       { _id: 'campaign_10', actual_revenue: 5000 }
     ]);
-    (db.update as Mock).mockResolvedValueOnce({});
+    mockQl.doc.update.mockResolvedValueOnce({});
 
     await CampaignROIHook.handler(ctx as any);
 
-    expect(db.update).toHaveBeenCalledWith('campaign', 'campaign_10', {
+    expect(mockQl.doc.update).toHaveBeenCalledWith('campaign', 'campaign_10', {
       actual_revenue: 35000
     });
   });
@@ -279,18 +290,19 @@ describe('CampaignROIHook', () => {
         campaign_id: 'campaign_11',
         stage_name: 'closed_won',
         amount: 40000
-      }
+      },
+      ql: mockQl
     };
 
-    (db.find as Mock).mockResolvedValueOnce([
+    mockQl.find.mockResolvedValueOnce([
       { _id: 'campaign_11', actual_revenue: 100000 }
     ]);
-    (db.update as Mock).mockResolvedValueOnce({});
+    mockQl.doc.update.mockResolvedValueOnce({});
 
     await CampaignROIHook.handler(ctx as any);
 
     // delta = -(oldOpp.amount) = -40000
-    expect(db.update).toHaveBeenCalledWith('campaign', 'campaign_11', {
+    expect(mockQl.doc.update).toHaveBeenCalledWith('campaign', 'campaign_11', {
       actual_revenue: 60000
     });
   });
@@ -308,18 +320,19 @@ describe('CampaignROIHook', () => {
         campaign_id: 'campaign_12',
         stage_name: 'closed_won',
         amount: 50000
-      }
+      },
+      ql: mockQl
     };
 
-    (db.find as Mock).mockResolvedValueOnce([
+    mockQl.find.mockResolvedValueOnce([
       { _id: 'campaign_12', actual_revenue: 100000 }
     ]);
-    (db.update as Mock).mockResolvedValueOnce({});
+    mockQl.doc.update.mockResolvedValueOnce({});
 
     await CampaignROIHook.handler(ctx as any);
 
     // delta = 30000 - 50000 = -20000; 100000 + (-20000) = 80000
-    expect(db.update).toHaveBeenCalledWith('campaign', 'campaign_12', {
+    expect(mockQl.doc.update).toHaveBeenCalledWith('campaign', 'campaign_12', {
       actual_revenue: 80000
     });
   });

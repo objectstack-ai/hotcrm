@@ -1,5 +1,4 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
-import { db } from '../db';
 
 
 
@@ -13,7 +12,7 @@ import { db } from '../db';
  */
 const KnowledgeArticleScoringTrigger: Hook = {
   name: 'KnowledgeArticleScoringTrigger',
-  object: 'KnowledgeArticle',
+  object: 'knowledge_article',
   events: ['beforeInsert', 'beforeUpdate'],
   handler: async (ctx: HookContext) => {
     try {
@@ -55,7 +54,7 @@ const KnowledgeArticleScoringTrigger: Hook = {
  */
 const KnowledgeArticleAIEnhancementTrigger: Hook = {
   name: 'KnowledgeArticleAIEnhancementTrigger',
-  object: 'KnowledgeArticle',
+  object: 'knowledge_article',
   events: ['beforeInsert', 'beforeUpdate'],
   handler: async (ctx: HookContext) => {
     try {
@@ -111,7 +110,7 @@ const KnowledgeArticleAIEnhancementTrigger: Hook = {
  */
 const KnowledgeArticleWorkflowTrigger: Hook = {
   name: 'KnowledgeArticleWorkflowTrigger',
-  object: 'KnowledgeArticle',
+  object: 'knowledge_article',
   events: ['beforeUpdate'],
   handler: async (ctx: HookContext) => {
     try {
@@ -152,7 +151,7 @@ const KnowledgeArticleWorkflowTrigger: Hook = {
  */
 const KnowledgeArticleUsageTracker: Hook = {
   name: 'KnowledgeArticleUsageTracker',
-  object: 'Case',
+  object: 'case',
   events: ['afterUpdate'],
   handler: async (ctx: HookContext) => {
     try {
@@ -185,7 +184,7 @@ const KnowledgeArticleUsageTracker: Hook = {
  */
 const KnowledgeArticleSearchAnalytics: Hook = {
   name: 'KnowledgeArticleSearchAnalytics',
-  object: 'KnowledgeArticle',
+  object: 'knowledge_article',
   events: ['afterFind'],
   handler: async (ctx: HookContext) => {
     try {
@@ -429,7 +428,7 @@ async function findRelatedArticles(article: any, ctx: any): Promise<any[]> {
   if (keywords.length === 0) return [];
 
   // Find articles with similar keywords or category
-  const relatedArticles = await ctx.db.find('KnowledgeArticle', {
+  const relatedArticles = await ctx.ql.find('knowledge_article', {
     filters: [
       ['Status', '=', 'Published'],
       ['id', '!=', article.id]
@@ -504,14 +503,14 @@ function calculateNextReviewDate(article: any): Date {
 
 async function incrementArticleUsage(articleId: string, ctx: any): Promise<void> {
   try {
-    const article = await ctx.db.find('KnowledgeArticle', {
+    const article = await ctx.ql.find('knowledge_article', {
       filters: [['id', '=', articleId]],
       limit: 1
     });
 
     if (article && article.length > 0) {
       const currentCount = article[0].CaseResolutionCount || 0;
-      await ctx.db.doc.update('KnowledgeArticle', articleId, {
+      await ctx.ql.doc.update('knowledge_article', articleId, {
         CaseResolutionCount: currentCount + 1,
         LastUsedInCaseDate: new Date()
       });

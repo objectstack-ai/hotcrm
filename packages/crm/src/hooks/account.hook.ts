@@ -1,5 +1,4 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
-import { db } from '../db';
 
 
 
@@ -14,7 +13,7 @@ import { db } from '../db';
  */
 const AccountHealthScoreTrigger: Hook = {
   name: 'AccountHealthScoreTrigger',
-  object: 'Account',
+  object: 'account',
   events: ['beforeInsert', 'beforeUpdate'],
   handler: async (ctx: HookContext) => {
     try {
@@ -92,7 +91,7 @@ async function calculateHealthScore(account: Record<string, any>, ctx: any): Pro
  */
 const AccountHierarchyTrigger: Hook = {
   name: 'AccountHierarchyTrigger',
-  object: 'Account',
+  object: 'account',
   events: ['afterInsert', 'afterUpdate'],
   handler: async (ctx: HookContext) => {
     try {
@@ -172,7 +171,7 @@ async function cascadeOwnershipChange(accountId: string, newOwnerId: string, ctx
  */
 const AccountStatusAutomationTrigger: Hook = {
   name: 'AccountStatusAutomationTrigger',
-  object: 'Account',
+  object: 'account',
   events: ['beforeUpdate'],
   handler: async (ctx: HookContext) => {
     try {

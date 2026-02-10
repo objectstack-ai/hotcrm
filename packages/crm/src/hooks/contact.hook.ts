@@ -1,5 +1,4 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
-import { db } from '../db';
 
 
 
@@ -9,7 +8,7 @@ import { db } from '../db';
  * Updates LastContactDate when activities are created/updated
  * This hook is actually called from Activity hooks
  */
-export async function updateContactLastContactDate(contactId: string, activityDate: string, db: any): Promise<void> {
+export async function updateContactLastContactDate(contactId: string, activityDate: string, ql: any): Promise<void> {
   console.log(`🔄 Updating last contact date for contact: ${contactId}`);
   
   // Get current contact to check if update is needed
@@ -34,7 +33,7 @@ export async function updateContactLastContactDate(contactId: string, activityDa
  */
 const ContactDecisionChainTrigger: Hook = {
   name: 'ContactDecisionChainTrigger',
-  object: 'Contact',
+  object: 'contact',
   events: ['beforeInsert', 'beforeUpdate'],
   handler: async (ctx: HookContext) => {
     try {
@@ -85,7 +84,7 @@ const ContactDecisionChainTrigger: Hook = {
  */
 const ContactDecisionMakerValidationTrigger: Hook = {
   name: 'ContactDecisionMakerValidationTrigger',
-  object: 'Contact',
+  object: 'contact',
   events: ['afterInsert', 'afterUpdate'],
   handler: async (ctx: HookContext) => {
     try {
@@ -126,7 +125,7 @@ const ContactDecisionMakerValidationTrigger: Hook = {
  */
 const ContactDuplicateDetectionTrigger: Hook = {
   name: 'ContactDuplicateDetectionTrigger',
-  object: 'Contact',
+  object: 'contact',
   events: ['beforeInsert', 'beforeUpdate'],
   handler: async (ctx: HookContext) => {
     try {
@@ -174,7 +173,7 @@ const ContactDuplicateDetectionTrigger: Hook = {
  */
 const ContactRelationshipStrengthTrigger: Hook = {
   name: 'ContactRelationshipStrengthTrigger',
-  object: 'Contact',
+  object: 'contact',
   events: ['beforeUpdate'],
   handler: async (ctx: HookContext) => {
     try {
@@ -236,7 +235,7 @@ function getDaysSince(dateString: string): number {
  * Update relationship strength based on activity analysis
  * This is called periodically or after significant activity changes
  */
-export async function analyzeAndUpdateRelationshipStrength(contactId: string, db: any): Promise<void> {
+export async function analyzeAndUpdateRelationshipStrength(contactId: string, ql: any): Promise<void> {
   console.log(`🔄 Analyzing relationship strength for contact: ${contactId}`);
   
   // In real implementation:

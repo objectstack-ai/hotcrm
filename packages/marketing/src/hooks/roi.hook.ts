@@ -1,5 +1,4 @@
-import type { Hook } from '@objectstack/spec/data';
-import { db } from '../db';
+import type { Hook, HookContext } from '@objectstack/spec/data';
 
 /**
  * Campaign ROI Calculator
@@ -42,12 +41,12 @@ const CampaignROIHook: Hook = {
       // Note: In a real concurrent system, use $inc operator. 
       // objectstack/runtime usually supports partial updates.
       // If we can't use $inc, we risk race conditions, but for this prototype:
-      const campaigns = await db.find('campaign', { filters: [['_id', '=', newOpp.campaign_id]] });
+      const campaigns = await ctx.ql.find('campaign', { filters: [['_id', '=', newOpp.campaign_id]] });
       if (campaigns && campaigns.length > 0) {
         const campaign: any = campaigns[0];
         const currentRevenue = campaign.actual_revenue || 0;
         
-        await db.update('campaign', newOpp.campaign_id, {
+        await ctx.ql.doc.update('campaign', newOpp.campaign_id, {
           actual_revenue: currentRevenue + delta
         });
       }

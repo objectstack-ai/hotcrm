@@ -1,5 +1,4 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
-import { db } from '../db';
 
 
 
@@ -14,7 +13,7 @@ import { db } from '../db';
  */
 const PricebookHook: Hook = {
   name: 'PricebookHook',
-  object: 'Pricebook',
+  object: 'pricebook',
   events: ['beforeInsert', 'beforeUpdate', 'afterUpdate'],
   handler: async (ctx: HookContext) => {
     try {
@@ -61,7 +60,7 @@ async function validatePricebookDates(ctx: any): Promise<void> {
 
     // Check for overlapping pricebooks (if this is a standard pricebook)
     if (pricebook.IsStandard && pricebook.EffectiveDate) {
-      const overlapping = await ctx.db.find('Pricebook', {
+      const overlapping = await ctx.ql.find('pricebook', {
         filters: [
           ['IsStandard', '=', true],
           ['Status', '=', 'Active'],
@@ -138,7 +137,7 @@ async function handleEffectiveDateChange(ctx: any): Promise<void> {
       if (effectiveDateOnly <= today && pricebook.Status === 'Draft') {
         console.log(`✅ Pricebook effective date reached, activating: ${pricebook.Name}`);
         
-        await ctx.db.doc.update('Pricebook', pricebook.Id, {
+        await ctx.ql.doc.update('pricebook', pricebook.Id, {
           Status: 'Active'
         });
       }
@@ -152,7 +151,7 @@ async function handleEffectiveDateChange(ctx: any): Promise<void> {
       if (expirationDateOnly < today && pricebook.Status === 'Active') {
         console.log(`⏰ Pricebook expired, deactivating: ${pricebook.Name}`);
         
-        await ctx.db.doc.update('Pricebook', pricebook.Id, {
+        await ctx.ql.doc.update('pricebook', pricebook.Id, {
           Status: 'Expired'
         });
       }
@@ -168,7 +167,7 @@ async function handleEffectiveDateChange(ctx: any): Promise<void> {
         changes.push(`Expiration Date: ${ctx.old.ExpirationDate} → ${pricebook.ExpirationDate}`);
       }
       
-      await ctx.db.doc.create('Activity', {
+      await ctx.ql.doc.create('activity', {
         Subject: `Pricebook Dates Updated: ${pricebook.Name}`,
         Type: 'Pricebook Update',
         Status: 'Completed',
@@ -204,7 +203,7 @@ async function handleStatusChange(ctx: any): Promise<void> {
       
       // Set effective date if not already set
       if (!pricebook.EffectiveDate) {
-        await ctx.db.doc.update('Pricebook', pricebook.Id, {
+        await ctx.ql.doc.update('pricebook', pricebook.Id, {
           EffectiveDate: new Date().toISOString().split('T')[0]
         });
         console.log('📅 Effective date set to today');
@@ -213,7 +212,7 @@ async function handleStatusChange(ctx: any): Promise<void> {
       // If this is a standard pricebook, deactivate other standard pricebooks
       if (pricebook.IsStandard) {
         try {
-          const otherStandard = await ctx.db.find('Pricebook', {
+          const otherStandard = await ctx.ql.find('pricebook', {
             filters: [
               ['IsStandard', '=', true],
               ['Status', '=', 'Active'],
@@ -225,7 +224,7 @@ async function handleStatusChange(ctx: any): Promise<void> {
           if (otherPricebooks.length > 0) {
             console.log(`⚠️ Deactivating ${otherPricebooks.length} other standard pricebook(s)`);
             for (const pb of otherPricebooks) {
-              await ctx.db.doc.update('Pricebook', pb.Id, {
+              await ctx.ql.doc.update('pricebook', pb.Id, {
                 Status: 'Inactive',
                 ExpirationDate: new Date().toISOString().split('T')[0]
               });
@@ -245,7 +244,7 @@ async function handleStatusChange(ctx: any): Promise<void> {
       
       // Set expiration date if not already set
       if (!pricebook.ExpirationDate) {
-        await ctx.db.doc.update('Pricebook', pricebook.Id, {
+        await ctx.ql.doc.update('pricebook', pricebook.Id, {
           ExpirationDate: new Date().toISOString().split('T')[0]
         });
       }
@@ -254,7 +253,7 @@ async function handleStatusChange(ctx: any): Promise<void> {
     }
 
     // Log activity for status change
-    await ctx.db.doc.create('Activity', {
+    await ctx.ql.doc.create('activity', {
       Subject: `Pricebook Status Changed: ${ctx.previous.Status} → ${pricebook.Status}`,
       Type: 'Status Change',
       Status: 'Completed',
@@ -307,7 +306,7 @@ async function handleCurrencyChange(ctx: any): Promise<void> {
         changes.push(`Exchange Rate: ${ctx.previous.ExchangeRate} → ${pricebook.ExchangeRate}`);
       }
       
-      await ctx.db.doc.create('Activity', {
+      await ctx.ql.doc.create('activity', {
         Subject: `Pricebook Currency Updated: ${pricebook.Name}`,
         Type: 'Currency Update',
         Status: 'Completed',
@@ -328,7 +327,7 @@ async function handleCurrencyChange(ctx: any): Promise<void> {
  */
 async function activatePricebookEntries(
   pricebookId: string,
-  db: any
+  ql: any
 ): Promise<void> {
   try {
     console.log(`✅ Activating pricebook entries for pricebook: ${pricebookId}`);
@@ -344,7 +343,7 @@ async function activatePricebookEntries(
  */
 async function expirePricebookEntries(
   pricebookId: string,
-  db: any
+  ql: any
 ): Promise<void> {
   try {
     console.log(`⏰ Expiring pricebook entries for pricebook: ${pricebookId}`);

@@ -1,14 +1,5 @@
 import { describe, it, expect, vi, beforeEach, Mock } from 'vitest';
 
-vi.mock('../../../src/db', () => ({
-  db: {
-    find: vi.fn(),
-    insert: vi.fn(),
-    update: vi.fn()
-  }
-}));
-
-import { db } from '../../../src/db';
 import {
   CampaignROICalculationTrigger,
   CampaignBudgetTrackingTrigger,

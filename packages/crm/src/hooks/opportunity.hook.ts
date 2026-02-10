@@ -1,11 +1,10 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
-import { db } from '../db';
 
 
 
 const OpportunityValidation: Hook = {
   name: 'OpportunityValidation',
-  object: 'Opportunity',
+  object: 'opportunity',
   events: ['beforeUpdate', 'beforeInsert'],
   handler: async (ctx: HookContext) => {
     const opp = ctx.input.doc as Record<string, any>;
@@ -39,7 +38,7 @@ const OpportunityValidation: Hook = {
  */
 const OpportunityStageChange: Hook = {
   name: 'OpportunityStageChange',
-  object: 'Opportunity',
+  object: 'opportunity',
   events: ['afterUpdate'],
   handler: async (ctx: HookContext) => {
     try {
@@ -97,7 +96,7 @@ async function handleClosedWon(ctx: any): Promise<void> {
   // 1. Create Contract
   let contractId;
   try {
-    const contract = await ctx.db.doc.create('Contract', {
+    const contract = await ctx.ql.doc.create('contract', {
       AccountId: opportunity.AccountId,
       OpportunityId: opportunity.Id,
       Status: 'Draft',
@@ -119,7 +118,7 @@ async function handleClosedWon(ctx: any): Promise<void> {
 
   // 2. Update Account Status
   try {
-    await ctx.db.doc.update('Account', opportunity.AccountId, {
+    await ctx.ql.doc.update('account', opportunity.AccountId, {
       CustomerStatus: 'Active Customer'
     });
     console.log('✅ Account status updated to Active Customer');
@@ -130,8 +129,8 @@ async function handleClosedWon(ctx: any): Promise<void> {
 
   // 3. Log activity
   try {
-    await ctx.db.doc.create('Activity', {
-      Subject: `商机成交: ${opportunity.Name}`,
+    await ctx.ql.doc.create('activity', {
+      Subject: `Deal Won: ${opportunity.Name}`,
       Type: 'Milestone',
       Status: 'Completed',
       Priority: 'high',
@@ -139,7 +138,7 @@ async function handleClosedWon(ctx: any): Promise<void> {
       WhatId: opportunity.Id,
       OwnerId: ctx.user.id,
       ActivityDate: new Date().toISOString().split('T')[0],
-      Description: `商机 "${opportunity.Name}" 已成功成交，金额: ${opportunity.Amount?.toLocaleString() || 0}`
+      Description: `Opportunity "${opportunity.Name}" was successfully closed, amount: ${opportunity.Amount?.toLocaleString() || 0}`
     });
     console.log('✅ Activity logged for Closed Won');
   } catch (error) {
@@ -171,8 +170,8 @@ async function handleClosedLost(ctx: any): Promise<void> {
 
   // Log activity for lost opportunity
   try {
-    await ctx.db.doc.create('Activity', {
-      Subject: `商机丢失: ${opportunity.Name}`,
+    await ctx.ql.doc.create('activity', {
+      Subject: `Deal Lost: ${opportunity.Name}`,
       Type: 'Milestone',
       Status: 'Completed',
       Priority: 'Normal',
@@ -180,7 +179,7 @@ async function handleClosedLost(ctx: any): Promise<void> {
       WhatId: opportunity.Id,
       OwnerId: ctx.user.id,
       ActivityDate: new Date().toISOString().split('T')[0],
-      Description: `商机 "${opportunity.Name}" 已丢失，金额: ${opportunity.Amount?.toLocaleString() || 0}。原因待分析。`
+      Description: `Opportunity "${opportunity.Name}" was lost, amount: ${opportunity.Amount?.toLocaleString() || 0}. Reason pending analysis.`
     });
     console.log('✅ Activity logged for Closed Lost');
   } catch (error) {
@@ -197,8 +196,8 @@ async function logStageChange(ctx: any): Promise<void> {
   try {
     const opportunity = ctx.result;
     const oldStage = ctx.previous?.Stage || 'Unknown';
-    await ctx.db.doc.create('Activity', {
-      Subject: `商机阶段变更: ${oldStage} → ${ctx.result.Stage}`,
+    await ctx.ql.doc.create('activity', {
+      Subject: `Opportunity Stage Change: ${oldStage} → ${ctx.result.Stage}`,
       Type: 'Stage Change',
       Status: 'Completed',
       Priority: 'Normal',
@@ -206,7 +205,7 @@ async function logStageChange(ctx: any): Promise<void> {
       WhatId: opportunity.Id,
       OwnerId: ctx.user.id,
       ActivityDate: new Date().toISOString().split('T')[0],
-      Description: `商机阶段从 "${oldStage}" 变更为 "${ctx.result.Stage}"`
+      Description: `Opportunity stage changed from "${oldStage}" to "${ctx.result.Stage}"`
     });
   } catch (error) {
     console.error('❌ Failed to log stage change activity:', error);
@@ -259,7 +258,7 @@ async function countRelatedQuotes(ctx: any, opportunityId: string): Promise<numb
      // In a real monorepo with strict boundaries, we might use a decoupled service.
      // Here we assume the broker can find 'quote' across packages.
      // Mocking for now since we don't have the full runtime
-     const quotes = await ctx.db.find('quote', { 
+     const quotes = await ctx.ql.find('quote', { 
        filters: [['opportunity', '=', opportunityId]] 
      });
      return quotes.length;

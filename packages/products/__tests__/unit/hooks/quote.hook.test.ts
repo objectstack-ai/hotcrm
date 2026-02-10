@@ -2,17 +2,18 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { QuotePricingHook } from '../../../src/hooks/quote.hook';
 
 describe('QuotePricingHook', () => {
-  let mockDb: any;
+  let mockQl: any;
   let mockUser: any;
 
   beforeEach(() => {
     vi.resetAllMocks();
-    mockDb = {
+    mockQl = {
       find: vi.fn().mockResolvedValue([]),
       insert: vi.fn().mockResolvedValue({ _id: 'contract_1', contract_number: 'CT-Q001' }),
       doc: {
         update: vi.fn().mockResolvedValue({}),
-        create: vi.fn().mockResolvedValue({ _id: 'activity_1' })
+        create: vi.fn().mockResolvedValue({ _id: 'activity_1' }),
+        get: vi.fn()
       }
     };
     mockUser = { id: 'user_1' };
@@ -32,7 +33,7 @@ describe('QuotePricingHook', () => {
 
     const ctx = {
       input: { doc },
-      db: mockDb,
+      ql: mockQl,
       user: mockUser
     };
 
@@ -55,7 +56,7 @@ describe('QuotePricingHook', () => {
 
     const ctx = {
       input: { doc },
-      db: mockDb,
+      ql: mockQl,
       user: mockUser
     };
 
@@ -79,7 +80,7 @@ describe('QuotePricingHook', () => {
 
     const ctx = {
       input: { doc },
-      db: mockDb,
+      ql: mockQl,
       user: mockUser
     };
 
@@ -101,7 +102,7 @@ describe('QuotePricingHook', () => {
 
     const ctx = {
       input: { doc },
-      db: mockDb,
+      ql: mockQl,
       user: mockUser
     };
 
@@ -123,7 +124,7 @@ describe('QuotePricingHook', () => {
 
     const ctx = {
       input: { doc },
-      db: mockDb,
+      ql: mockQl,
       user: mockUser
     };
 
@@ -142,7 +143,7 @@ describe('QuotePricingHook', () => {
 
     const ctx = {
       input: { doc },
-      db: mockDb,
+      ql: mockQl,
       user: mockUser
     };
 
@@ -162,7 +163,7 @@ describe('QuotePricingHook', () => {
 
     const ctx = {
       input: { doc },
-      db: mockDb,
+      ql: mockQl,
       user: mockUser
     };
 
@@ -186,7 +187,7 @@ describe('QuotePricingHook', () => {
 
     const ctx = {
       input: { doc },
-      db: mockDb,
+      ql: mockQl,
       user: mockUser
     };
 
@@ -211,22 +212,22 @@ describe('QuotePricingHook', () => {
         TotalPrice: 5000,
         ValidityPeriodDays: 45
       },
-      db: mockDb,
+      ql: mockQl,
       user: mockUser
     };
 
     await QuotePricingHook.handler(ctx as any);
 
     // Should create activity
-    expect(mockDb.doc.create).toHaveBeenCalledWith('Activity', expect.objectContaining({
+    expect(mockQl.doc.create).toHaveBeenCalledWith('activity', expect.objectContaining({
       Subject: 'New Quote Created: New Quote',
-      Type: 'Quote',
+      Type: 'quote',
       AccountId: 'acc_1',
       WhatId: 'q_9'
     }));
 
     // Should set expiration date (45 days from 2025-01-15)
-    expect(mockDb.doc.update).toHaveBeenCalledWith('Quote', 'q_9', {
+    expect(mockQl.doc.update).toHaveBeenCalledWith('quote', 'q_9', {
       ExpirationDate: '2025-03-01'
     });
   });
@@ -241,14 +242,14 @@ describe('QuotePricingHook', () => {
         AccountId: 'acc_2',
         TotalPrice: 3000
       },
-      db: mockDb,
+      ql: mockQl,
       user: mockUser
     };
 
     await QuotePricingHook.handler(ctx as any);
 
     // 30 days from 2025-01-01 = 2025-01-31
-    expect(mockDb.doc.update).toHaveBeenCalledWith('Quote', 'q_10', {
+    expect(mockQl.doc.update).toHaveBeenCalledWith('quote', 'q_10', {
       ExpirationDate: '2025-01-31'
     });
   });
@@ -276,25 +277,25 @@ describe('QuotePricingHook', () => {
         OpportunityId: 'opp_1',
         TotalPrice: 25000
       },
-      db: mockDb,
+      ql: mockQl,
       user: mockUser
     };
 
     await QuotePricingHook.handler(ctx as any);
 
     // Should update accepted date
-    expect(mockDb.doc.update).toHaveBeenCalledWith('Quote', 'q_11', {
+    expect(mockQl.doc.update).toHaveBeenCalledWith('quote', 'q_11', {
       AcceptedDate: expect.any(String)
     });
 
     // Should update opportunity stage to closed_won
-    expect(mockDb.doc.update).toHaveBeenCalledWith('Opportunity', 'opp_1', {
+    expect(mockQl.doc.update).toHaveBeenCalledWith('opportunity', 'opp_1', {
       Stage: 'closed_won',
       CloseDate: expect.any(String)
     });
 
     // Should create contract
-    expect(mockDb.insert).toHaveBeenCalledWith('contract', expect.objectContaining({
+    expect(mockQl.insert).toHaveBeenCalledWith('contract', expect.objectContaining({
       contract_number: 'CT-Q-003',
       account: 'acc_3',
       opportunity: 'opp_1',
@@ -303,7 +304,7 @@ describe('QuotePricingHook', () => {
     }));
 
     // Should log status change activity
-    expect(mockDb.doc.create).toHaveBeenCalledWith('Activity', expect.objectContaining({
+    expect(mockQl.doc.create).toHaveBeenCalledWith('activity', expect.objectContaining({
       Subject: 'Quote Status Changed: Draft → Accepted',
       Type: 'Quote Status Change',
       AccountId: 'acc_3'
@@ -324,7 +325,7 @@ describe('QuotePricingHook', () => {
         QuoteNumber: 'Q-004',
         Status: 'Draft'
       },
-      db: mockDb,
+      ql: mockQl,
       user: mockUser
     };
 
@@ -332,7 +333,7 @@ describe('QuotePricingHook', () => {
 
     // handleQuoteSent runs but only logs
     // No activity should be created since no AccountId
-    expect(mockDb.doc.create).not.toHaveBeenCalledWith('Activity', expect.objectContaining({
+    expect(mockQl.doc.create).not.toHaveBeenCalledWith('activity', expect.objectContaining({
       Type: 'Quote Status Change'
     }));
   });
@@ -357,13 +358,13 @@ describe('QuotePricingHook', () => {
         ApprovalStatus: 'Pending',
         AccountId: 'acc_4'
       },
-      db: mockDb,
+      ql: mockQl,
       user: mockUser
     };
 
     await QuotePricingHook.handler(ctx as any);
 
-    expect(mockDb.doc.update).toHaveBeenCalledWith('Quote', 'q_13', {
+    expect(mockQl.doc.update).toHaveBeenCalledWith('quote', 'q_13', {
       ApprovedDate: expect.any(String),
       ApprovedById: 'user_1',
       Status: 'Approved'
@@ -388,13 +389,13 @@ describe('QuotePricingHook', () => {
         ApprovalStatus: 'Pending',
         AccountId: 'acc_5'
       },
-      db: mockDb,
+      ql: mockQl,
       user: mockUser
     };
 
     await QuotePricingHook.handler(ctx as any);
 
-    expect(mockDb.doc.update).toHaveBeenCalledWith('Quote', 'q_14', {
+    expect(mockQl.doc.update).toHaveBeenCalledWith('quote', 'q_14', {
       RejectedDate: expect.any(String),
       RejectedById: 'user_1',
       Status: 'Rejected'
@@ -417,15 +418,15 @@ describe('QuotePricingHook', () => {
         ApprovalStatus: 'None',
         AccountId: 'acc_6'
       },
-      db: mockDb,
+      ql: mockQl,
       user: mockUser
     };
 
     await QuotePricingHook.handler(ctx as any);
 
-    expect(mockDb.doc.update).not.toHaveBeenCalled();
-    expect(mockDb.doc.create).not.toHaveBeenCalled();
-    expect(mockDb.insert).not.toHaveBeenCalled();
+    expect(mockQl.doc.update).not.toHaveBeenCalled();
+    expect(mockQl.doc.create).not.toHaveBeenCalled();
+    expect(mockQl.insert).not.toHaveBeenCalled();
   });
 
   it('should handle errors gracefully and rethrow', async () => {
@@ -438,7 +439,7 @@ describe('QuotePricingHook', () => {
           throw new Error('Unexpected error');
         }
       },
-      db: mockDb,
+      ql: mockQl,
       user: mockUser
     };
 

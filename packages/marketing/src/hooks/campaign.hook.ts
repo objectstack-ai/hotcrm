@@ -13,9 +13,9 @@ const CampaignROICalculationTrigger: Hook = {
   name: 'CampaignROICalculationTrigger',
   object: 'campaign',
   events: ['beforeInsert', 'beforeUpdate'],
-  handler: async (ctx: any) => {
+  handler: async (ctx: HookContext) => {
     try {
-      const campaign = ctx.input?.doc || ctx.input;
+      const campaign = ctx.input.doc as Record<string, any>;
 
       // Calculate ROI: (ActualRevenue - ActualCost) / ActualCost * 100
       const actualRevenue = campaign.actual_revenue || 0;
@@ -57,10 +57,10 @@ const CampaignBudgetTrackingTrigger: Hook = {
   name: 'CampaignBudgetTrackingTrigger',
   object: 'campaign',
   events: ['beforeUpdate'],
-  handler: async (ctx: any) => {
+  handler: async (ctx: HookContext) => {
     try {
-      const campaign = ctx.input?.doc || ctx.input;
-      const oldCampaign = ctx.previous;
+      const campaign = ctx.input.doc as Record<string, any>;
+      const oldCampaign = ctx.previous as Record<string, any> | undefined;
 
       // Only process if actual cost changed
       if (!oldCampaign || oldCampaign.actual_cost === campaign.actual_cost) {
@@ -106,10 +106,10 @@ const CampaignStatusChangeTrigger: Hook = {
   name: 'CampaignStatusChangeTrigger',
   object: 'campaign',
   events: ['afterUpdate'],
-  handler: async (ctx: any) => {
+  handler: async (ctx: HookContext) => {
     try {
-      const campaign = ctx.result || ctx.input?.doc || ctx.input;
-      const oldCampaign = ctx.previous;
+      const campaign = ctx.result as Record<string, any>;
+      const oldCampaign = ctx.previous as Record<string, any> | undefined;
 
       // Check if status changed
       if (!oldCampaign || oldCampaign.status === campaign.status) {
@@ -172,9 +172,9 @@ const CampaignDateValidationTrigger: Hook = {
   name: 'CampaignDateValidationTrigger',
   object: 'campaign',
   events: ['beforeInsert', 'beforeUpdate'],
-  handler: async (ctx: any) => {
+  handler: async (ctx: HookContext) => {
     try {
-      const campaign = ctx.input?.doc || ctx.input;
+      const campaign = ctx.input.doc as Record<string, any>;
 
       if (campaign.start_date && campaign.end_date) {
         const startDate = new Date(campaign.start_date);
@@ -208,7 +208,7 @@ export async function updateCampaignMetrics(campaignId: string, ctx: any): Promi
     console.log(`🔄 Updating campaign metrics for: ${campaignId}`);
 
     // Aggregate campaign member statistics
-    const members = await (ctx.ql as any).find('campaign_member', {
+    const members = await ctx.ql.find('campaign_member', {
       filters: [['campaign', '=', campaignId]]
     });
 
@@ -234,7 +234,7 @@ export async function updateCampaignMetrics(campaignId: string, ctx: any): Promi
     const unsubscribeRate = totalMembers > 0 ? (unsubscribed / totalMembers) * 100 : 0;
 
     // Update campaign with aggregated metrics
-    await (ctx.ql as any).update('campaign', campaignId, {
+    await ctx.ql.update('campaign', campaignId, {
       total_members: totalMembers,
       total_opened: opened,
       total_clicked: clicked,
@@ -258,7 +258,7 @@ export async function updateCampaignMetrics(campaignId: string, ctx: any): Promi
  */
 export async function calculateCostMetrics(campaignId: string, ctx: any): Promise<any> {
   try {
-    const campaign = await (ctx.ql as any).findOne('campaign', {
+    const campaign = await ctx.ql.findOne('campaign', {
       filters: [['id', '=', campaignId]]
     });
 
