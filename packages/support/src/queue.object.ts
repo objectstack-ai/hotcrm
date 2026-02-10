@@ -27,62 +27,62 @@ export const Queue = ObjectSchema.create({
       options: [
         {
           "label": "🎯 General Support",
-          "value": "General"
+          "value": "general"
         },
         {
           "label": "🔧 Technical Support",
-          "value": "Technical"
+          "value": "technical"
         },
         {
           "label": "💳 Billing & Payments",
-          "value": "Billing"
+          "value": "billing"
         },
         {
           "label": "📦 Product Support",
-          "value": "Product"
+          "value": "product"
         },
         {
           "label": "⭐ VIP Support",
-          "value": "VIP"
+          "value": "vip"
         },
         {
           "label": "🌍 Regional Support",
-          "value": "Regional"
+          "value": "regional"
         },
         {
           "label": "🎓 Training & Onboarding",
-          "value": "Training"
+          "value": "training"
         },
         {
           "label": "🔄 Escalation",
-          "value": "Escalation"
+          "value": "escalation"
         }
       ]
     }),
     routing_method: Field.select({
       label: 'Routing Method',
       required: true,
-      defaultValue: 'RoundRobin',
+      defaultValue: 'roundrobin',
       options: [
         {
           "label": "🔄 Round Robin",
-          "value": "RoundRobin"
+          "value": "roundrobin"
         },
         {
           "label": "⚖️ Load Balanced",
-          "value": "LoadBalanced"
+          "value": "loadbalanced"
         },
         {
           "label": "🎯 Skill Based",
-          "value": "SkillBased"
+          "value": "skillbased"
         },
         {
           "label": "👤 Manual Assignment",
-          "value": "Manual"
+          "value": "manual"
         },
         {
           "label": "🤖 AI Powered",
-          "value": "AI"
+          "value": "ai"
         }
       ]
     }),
@@ -95,23 +95,23 @@ export const Queue = ObjectSchema.create({
     }),
     default_priority: Field.select({
       label: 'Default Priority',
-      defaultValue: 'Medium',
+      defaultValue: 'medium',
       options: [
         {
           "label": "Critical",
-          "value": "Critical"
+          "value": "critical"
         },
         {
           "label": "High",
-          "value": "High"
+          "value": "high"
         },
         {
           "label": "Medium",
-          "value": "Medium"
+          "value": "medium"
         },
         {
           "label": "Low",
-          "value": "Low"
+          "value": "low"
         }
       ]
     }),
@@ -150,19 +150,19 @@ export const Queue = ObjectSchema.create({
     }),
     out_of_hours_behavior: Field.select({
       label: 'Out of Hours Behavior',
-      defaultValue: 'Queue',
+      defaultValue: 'queue',
       options: [
         {
           "label": "Queue for Next Business Day",
-          "value": "Queue"
+          "value": "queue"
         },
         {
           "label": "Route to 24/7 Queue",
-          "value": "Route24x7"
+          "value": "route24x7"
         },
         {
           "label": "Auto-Reply Only",
-          "value": "AutoReply"
+          "value": "autoreply"
         }
       ]
     }),

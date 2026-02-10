@@ -359,7 +359,7 @@ describe('Candidate Hook - CandidateScoringTrigger', () => {
         email: 'reviewed@example.com',
         mobile_phone: '+8613812345678',
         resume_url: 'https://example.com/resume.pdf',
-        status: 'Interviewing'
+        status: 'interviewing'
       };
 
       mockQlFind.mockResolvedValue([]);
@@ -370,7 +370,7 @@ describe('Candidate Hook - CandidateScoringTrigger', () => {
       await CandidateScoringTrigger.handler(ctx);
 
       // Assert
-      expect(ctx.input.status).toBe('Interviewing'); // Should remain unchanged
+      expect(ctx.input.status).toBe('interviewing'); // Should remain unchanged
     });
   });
 
@@ -474,7 +474,7 @@ describe('Candidate Hook - CandidateStatusChangeTrigger', () => {
         id: 'cand_123',
         first_name: 'Jane',
         last_name: 'Doe',
-        status: 'Interviewing'
+        status: 'interviewing'
       };
 
       const previous = {
@@ -490,7 +490,7 @@ describe('Candidate Hook - CandidateStatusChangeTrigger', () => {
 
       // Assert
       expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Candidate status changed from "under_review" to "Interviewing"')
+        expect.stringContaining('Candidate status changed from "under_review" to "interviewing"')
       );
 
       consoleLogSpy.mockRestore();
@@ -504,7 +504,7 @@ describe('Candidate Hook - CandidateStatusChangeTrigger', () => {
         id: 'cand_123',
         first_name: 'Jane',
         last_name: 'Doe',
-        status: 'Interviewing'
+        status: 'interviewing'
       };
 
       const previous = {
@@ -534,12 +534,12 @@ describe('Candidate Hook - CandidateStatusChangeTrigger', () => {
         id: 'cand_123',
         first_name: 'Jane',
         last_name: 'Doe',
-        status: 'Hired'
+        status: 'hired'
       };
 
       const previous = {
         id: 'cand_123',
-        status: 'Interviewing'
+        status: 'interviewing'
       };
 
       const ctx = createMockContext('afterUpdate', candidate, previous);
@@ -564,12 +564,12 @@ describe('Candidate Hook - CandidateStatusChangeTrigger', () => {
         id: 'cand_123',
         first_name: 'John',
         last_name: 'Smith',
-        status: 'Rejected'
+        status: 'rejected'
       };
 
       const previous = {
         id: 'cand_123',
-        status: 'Interviewing'
+        status: 'interviewing'
       };
 
       const ctx = createMockContext('afterUpdate', candidate, previous);
@@ -599,7 +599,7 @@ describe('Candidate Hook - CandidateStatusChangeTrigger', () => {
 
       const previous = {
         id: 'cand_123',
-        status: 'Interviewing'
+        status: 'interviewing'
       };
 
       const ctx = createMockContext('afterUpdate', candidate, previous);
@@ -624,12 +624,12 @@ describe('Candidate Hook - CandidateStatusChangeTrigger', () => {
         id: 'cand_123',
         first_name: undefined, // This will cause error in logging
         last_name: undefined,
-        status: 'Hired'
+        status: 'hired'
       };
 
       const previous = {
         id: 'cand_123',
-        status: 'Interviewing'
+        status: 'interviewing'
       };
 
       const ctx = createMockContext('afterUpdate', candidate, previous);

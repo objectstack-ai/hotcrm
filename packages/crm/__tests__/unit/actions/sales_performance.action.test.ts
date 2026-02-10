@@ -21,10 +21,10 @@ describe('analyzePipeline', () => {
   it('should return pipeline metrics by stage', async () => {
     const now = Date.now();
     const mockOpportunities = [
-      { Id: '1', Name: 'Deal A', Stage: 'Prospecting', Amount: 10000, CreatedDate: new Date(now - 10 * 86400000).toISOString(), CloseDate: new Date(now + 30 * 86400000).toISOString(), Age: 10, DaysInStage: 5 },
-      { Id: '2', Name: 'Deal B', Stage: 'Prospecting', Amount: 20000, CreatedDate: new Date(now - 15 * 86400000).toISOString(), CloseDate: new Date(now + 45 * 86400000).toISOString(), Age: 15, DaysInStage: 8 },
-      { Id: '3', Name: 'Deal C', Stage: 'Qualification', Amount: 50000, CreatedDate: new Date(now - 20 * 86400000).toISOString(), CloseDate: new Date(now + 20 * 86400000).toISOString(), Age: 20, DaysInStage: 12 },
-      { Id: '4', Name: 'Deal D', Stage: 'Proposal', Amount: 75000, CreatedDate: new Date(now - 40 * 86400000).toISOString(), CloseDate: new Date(now + 10 * 86400000).toISOString(), Age: 40, DaysInStage: 10 },
+      { Id: '1', Name: 'Deal A', Stage: 'prospecting', Amount: 10000, CreatedDate: new Date(now - 10 * 86400000).toISOString(), CloseDate: new Date(now + 30 * 86400000).toISOString(), Age: 10, DaysInStage: 5 },
+      { Id: '2', Name: 'Deal B', Stage: 'prospecting', Amount: 20000, CreatedDate: new Date(now - 15 * 86400000).toISOString(), CloseDate: new Date(now + 45 * 86400000).toISOString(), Age: 15, DaysInStage: 8 },
+      { Id: '3', Name: 'Deal C', Stage: 'qualification', Amount: 50000, CreatedDate: new Date(now - 20 * 86400000).toISOString(), CloseDate: new Date(now + 20 * 86400000).toISOString(), Age: 20, DaysInStage: 12 },
+      { Id: '4', Name: 'Deal D', Stage: 'proposal', Amount: 75000, CreatedDate: new Date(now - 40 * 86400000).toISOString(), CloseDate: new Date(now + 10 * 86400000).toISOString(), Age: 40, DaysInStage: 10 },
     ];
 
     (db.find as Mock).mockResolvedValueOnce(mockOpportunities);
@@ -34,12 +34,12 @@ describe('analyzePipeline', () => {
     expect(result.stageMetrics).toBeDefined();
     expect(result.stageMetrics.length).toBeGreaterThan(0);
 
-    const prospecting = result.stageMetrics.find(s => s.stage === 'Prospecting');
+    const prospecting = result.stageMetrics.find(s => s.stage === 'prospecting');
     expect(prospecting).toBeDefined();
     expect(prospecting!.count).toBe(2);
     expect(prospecting!.totalValue).toBe(30000);
 
-    const qualification = result.stageMetrics.find(s => s.stage === 'Qualification');
+    const qualification = result.stageMetrics.find(s => s.stage === 'qualification');
     expect(qualification).toBeDefined();
     expect(qualification!.count).toBe(1);
 
@@ -49,9 +49,9 @@ describe('analyzePipeline', () => {
   it('should calculate pipeline health score', async () => {
     const now = Date.now();
     const mockOpportunities = [
-      { Id: '1', Stage: 'Prospecting', Amount: 100000, CreatedDate: new Date(now - 5 * 86400000).toISOString(), Age: 5, DaysInStage: 5 },
-      { Id: '2', Stage: 'Qualification', Amount: 200000, CreatedDate: new Date(now - 10 * 86400000).toISOString(), Age: 10, DaysInStage: 10 },
-      { Id: '3', Stage: 'Negotiation', Amount: 150000, CreatedDate: new Date(now - 25 * 86400000).toISOString(), Age: 25, DaysInStage: 5 },
+      { Id: '1', Stage: 'prospecting', Amount: 100000, CreatedDate: new Date(now - 5 * 86400000).toISOString(), Age: 5, DaysInStage: 5 },
+      { Id: '2', Stage: 'qualification', Amount: 200000, CreatedDate: new Date(now - 10 * 86400000).toISOString(), Age: 10, DaysInStage: 10 },
+      { Id: '3', Stage: 'negotiation', Amount: 150000, CreatedDate: new Date(now - 25 * 86400000).toISOString(), Age: 25, DaysInStage: 5 },
     ];
 
     (db.find as Mock).mockResolvedValueOnce(mockOpportunities);
@@ -81,10 +81,10 @@ describe('analyzePipeline', () => {
   it('should calculate aging buckets correctly', async () => {
     const now = Date.now();
     const mockOpportunities = [
-      { Id: '1', Stage: 'Prospecting', Amount: 10000, CreatedDate: new Date(now - 10 * 86400000).toISOString(), Age: 10, DaysInStage: 5 },
-      { Id: '2', Stage: 'Qualification', Amount: 20000, CreatedDate: new Date(now - 50 * 86400000).toISOString(), Age: 50, DaysInStage: 20 },
-      { Id: '3', Stage: 'Proposal', Amount: 30000, CreatedDate: new Date(now - 75 * 86400000).toISOString(), Age: 75, DaysInStage: 15 },
-      { Id: '4', Stage: 'Negotiation', Amount: 40000, CreatedDate: new Date(now - 100 * 86400000).toISOString(), Age: 100, DaysInStage: 10 },
+      { Id: '1', Stage: 'prospecting', Amount: 10000, CreatedDate: new Date(now - 10 * 86400000).toISOString(), Age: 10, DaysInStage: 5 },
+      { Id: '2', Stage: 'qualification', Amount: 20000, CreatedDate: new Date(now - 50 * 86400000).toISOString(), Age: 50, DaysInStage: 20 },
+      { Id: '3', Stage: 'proposal', Amount: 30000, CreatedDate: new Date(now - 75 * 86400000).toISOString(), Age: 75, DaysInStage: 15 },
+      { Id: '4', Stage: 'negotiation', Amount: 40000, CreatedDate: new Date(now - 100 * 86400000).toISOString(), Age: 100, DaysInStage: 10 },
     ];
 
     (db.find as Mock).mockResolvedValueOnce(mockOpportunities);
@@ -119,8 +119,8 @@ describe('analyzeWinRates', () => {
     const mockOpportunities = [
       { Id: '1', IsWon: true, Amount: 50000, CloseDate: '2024-01-15', Industry: 'Tech', LeadSource: 'Web' },
       { Id: '2', IsWon: true, Amount: 80000, CloseDate: '2024-02-10', Industry: 'Tech', LeadSource: 'Referral' },
-      { Id: '3', IsWon: false, Amount: 30000, CloseDate: '2024-01-20', Industry: 'Finance', LeadSource: 'Web', LossReason: 'Price' },
-      { Id: '4', IsWon: false, Amount: 60000, CloseDate: '2024-03-05', Industry: 'Finance', LeadSource: 'Web', LossReason: 'Competitor' },
+      { Id: '3', IsWon: false, Amount: 30000, CloseDate: '2024-01-20', Industry: 'finance', LeadSource: 'Web', LossReason: 'Price' },
+      { Id: '4', IsWon: false, Amount: 60000, CloseDate: '2024-03-05', Industry: 'finance', LeadSource: 'Web', LossReason: 'Competitor' },
     ];
 
     (db.find as Mock).mockResolvedValueOnce(mockOpportunities);
@@ -223,13 +223,13 @@ describe('analyzeForecastAccuracy', () => {
 
   it('should calculate forecast accuracy', async () => {
     const mockClosedWon = [
-      { Id: '1', Amount: 50000, ForecastAmount: 55000, CloseDate: '2024-01-15', Stage: 'Closed Won', OwnerId: 'rep_1', ProductFamily: 'Software' },
-      { Id: '2', Amount: 80000, ForecastAmount: 75000, CloseDate: '2024-02-10', Stage: 'Closed Won', OwnerId: 'rep_1', ProductFamily: 'Services' },
+      { Id: '1', Amount: 50000, ForecastAmount: 55000, CloseDate: '2024-01-15', Stage: 'closed_won', OwnerId: 'rep_1', ProductFamily: 'software' },
+      { Id: '2', Amount: 80000, ForecastAmount: 75000, CloseDate: '2024-02-10', Stage: 'closed_won', OwnerId: 'rep_1', ProductFamily: 'Services' },
     ];
 
     const mockOpenOpps = [
-      { Id: '3', Amount: 40000, ForecastCategory: 'Commit', Stage: 'Negotiation', OwnerId: 'rep_1' },
-      { Id: '4', Amount: 60000, ForecastCategory: 'Best Case', Stage: 'Proposal', OwnerId: 'rep_2' },
+      { Id: '3', Amount: 40000, ForecastCategory: 'commit', Stage: 'negotiation', OwnerId: 'rep_1' },
+      { Id: '4', Amount: 60000, ForecastCategory: 'best_case', Stage: 'proposal', OwnerId: 'rep_2' },
     ];
 
     (db.find as Mock)
@@ -248,8 +248,8 @@ describe('analyzeForecastAccuracy', () => {
 
   it('should identify over forecasting bias', async () => {
     const mockClosedWon = [
-      { Id: '1', Amount: 40000, ForecastAmount: 60000, CloseDate: '2024-01-15', Stage: 'Closed Won', OwnerId: 'rep_1', ProductFamily: 'Software' },
-      { Id: '2', Amount: 50000, ForecastAmount: 70000, CloseDate: '2024-02-10', Stage: 'Closed Won', OwnerId: 'rep_1', ProductFamily: 'Software' },
+      { Id: '1', Amount: 40000, ForecastAmount: 60000, CloseDate: '2024-01-15', Stage: 'closed_won', OwnerId: 'rep_1', ProductFamily: 'software' },
+      { Id: '2', Amount: 50000, ForecastAmount: 70000, CloseDate: '2024-02-10', Stage: 'closed_won', OwnerId: 'rep_1', ProductFamily: 'software' },
     ];
 
     (db.find as Mock)
@@ -266,8 +266,8 @@ describe('analyzeForecastAccuracy', () => {
 
   it('should identify under forecasting bias', async () => {
     const mockClosedWon = [
-      { Id: '1', Amount: 80000, ForecastAmount: 50000, CloseDate: '2024-01-15', Stage: 'Closed Won', OwnerId: 'rep_1', ProductFamily: 'Services' },
-      { Id: '2', Amount: 100000, ForecastAmount: 70000, CloseDate: '2024-02-10', Stage: 'Closed Won', OwnerId: 'rep_2', ProductFamily: 'Services' },
+      { Id: '1', Amount: 80000, ForecastAmount: 50000, CloseDate: '2024-01-15', Stage: 'closed_won', OwnerId: 'rep_1', ProductFamily: 'Services' },
+      { Id: '2', Amount: 100000, ForecastAmount: 70000, CloseDate: '2024-02-10', Stage: 'closed_won', OwnerId: 'rep_2', ProductFamily: 'Services' },
     ];
 
     (db.find as Mock)
@@ -283,8 +283,8 @@ describe('analyzeForecastAccuracy', () => {
 
   it('should break down accuracy by rep', async () => {
     const mockClosedWon = [
-      { Id: '1', Amount: 50000, ForecastAmount: 50000, CloseDate: '2024-01-15', Stage: 'Closed Won', OwnerId: 'rep_1', ProductFamily: 'Software' },
-      { Id: '2', Amount: 80000, ForecastAmount: 100000, CloseDate: '2024-02-10', Stage: 'Closed Won', OwnerId: 'rep_2', ProductFamily: 'Software' },
+      { Id: '1', Amount: 50000, ForecastAmount: 50000, CloseDate: '2024-01-15', Stage: 'closed_won', OwnerId: 'rep_1', ProductFamily: 'software' },
+      { Id: '2', Amount: 80000, ForecastAmount: 100000, CloseDate: '2024-02-10', Stage: 'closed_won', OwnerId: 'rep_2', ProductFamily: 'software' },
     ];
 
     (db.find as Mock)
@@ -323,12 +323,12 @@ describe('analyzeForecastAccuracy', () => {
 
   it('should produce coverage analysis when open opportunities exist', async () => {
     const mockClosedWon = [
-      { Id: '1', Amount: 100000, ForecastAmount: 100000, CloseDate: '2024-01-15', Stage: 'Closed Won', OwnerId: 'rep_1' },
+      { Id: '1', Amount: 100000, ForecastAmount: 100000, CloseDate: '2024-01-15', Stage: 'closed_won', OwnerId: 'rep_1' },
     ];
     const mockOpenOpps = [
-      { Id: '2', Amount: 50000, ForecastCategory: 'Commit', Stage: 'Negotiation', OwnerId: 'rep_1' },
-      { Id: '3', Amount: 30000, ForecastCategory: 'Best Case', Stage: 'Proposal', OwnerId: 'rep_1' },
-      { Id: '4', Amount: 20000, ForecastCategory: 'Pipeline', Stage: 'Prospecting', OwnerId: 'rep_2' },
+      { Id: '2', Amount: 50000, ForecastCategory: 'commit', Stage: 'negotiation', OwnerId: 'rep_1' },
+      { Id: '3', Amount: 30000, ForecastCategory: 'best_case', Stage: 'proposal', OwnerId: 'rep_1' },
+      { Id: '4', Amount: 20000, ForecastCategory: 'Pipeline', Stage: 'prospecting', OwnerId: 'rep_2' },
     ];
 
     (db.find as Mock)

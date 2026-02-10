@@ -68,7 +68,7 @@ describe('PredictionService Integration Tests', () => {
         version: '1.0.0',
         type: 'classification',
         provider: 'custom',
-        description: 'Inactive',
+        description: 'inactive',
         status: 'deprecated'
       });
 

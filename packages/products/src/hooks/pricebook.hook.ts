@@ -63,7 +63,7 @@ async function validatePricebookDates(ctx: any): Promise<void> {
       const overlapping = await ctx.ql.find('pricebook', {
         filters: [
           ['IsStandard', '=', true],
-          ['Status', '=', 'Active'],
+          ['Status', '=', 'active'],
           ['Id', '!=', pricebook.Id || '']
         ]
       });
@@ -134,11 +134,11 @@ async function handleEffectiveDateChange(ctx: any): Promise<void> {
       const effectiveDate = new Date(pricebook.EffectiveDate);
       const effectiveDateOnly = new Date(effectiveDate.getFullYear(), effectiveDate.getMonth(), effectiveDate.getDate());
       
-      if (effectiveDateOnly <= today && pricebook.Status === 'Draft') {
+      if (effectiveDateOnly <= today && pricebook.Status === 'draft') {
         console.log(`✅ Pricebook effective date reached, activating: ${pricebook.Name}`);
         
         await ctx.ql.doc.update('pricebook', pricebook.Id, {
-          Status: 'Active'
+          Status: 'active'
         });
       }
     }
@@ -148,11 +148,11 @@ async function handleEffectiveDateChange(ctx: any): Promise<void> {
       const expirationDate = new Date(pricebook.ExpirationDate);
       const expirationDateOnly = new Date(expirationDate.getFullYear(), expirationDate.getMonth(), expirationDate.getDate());
       
-      if (expirationDateOnly < today && pricebook.Status === 'Active') {
+      if (expirationDateOnly < today && pricebook.Status === 'active') {
         console.log(`⏰ Pricebook expired, deactivating: ${pricebook.Name}`);
         
         await ctx.ql.doc.update('pricebook', pricebook.Id, {
-          Status: 'Expired'
+          Status: 'expired'
         });
       }
     }
@@ -170,8 +170,8 @@ async function handleEffectiveDateChange(ctx: any): Promise<void> {
       await ctx.ql.doc.create('activity', {
         Subject: `Pricebook Dates Updated: ${pricebook.Name}`,
         Type: 'Pricebook Update',
-        Status: 'Completed',
-        Priority: 'Normal',
+        Status: 'completed',
+        Priority: 'normal',
         WhatId: pricebook.Id,
         OwnerId: ctx.user.id,
         ActivityDate: new Date().toISOString().split('T')[0],
@@ -198,7 +198,7 @@ async function handleStatusChange(ctx: any): Promise<void> {
     console.log(`🔄 Pricebook status changed from "${ctx.previous.Status}" to "${pricebook.Status}"`);
 
     // Handle activation
-    if (pricebook.Status === 'Active') {
+    if (pricebook.Status === 'active') {
       console.log(`✅ Pricebook activated: ${pricebook.Name}`);
       
       // Set effective date if not already set
@@ -215,7 +215,7 @@ async function handleStatusChange(ctx: any): Promise<void> {
           const otherStandard = await ctx.ql.find('pricebook', {
             filters: [
               ['IsStandard', '=', true],
-              ['Status', '=', 'Active'],
+              ['Status', '=', 'active'],
               ['Id', '!=', pricebook.Id]
             ]
           });
@@ -225,7 +225,7 @@ async function handleStatusChange(ctx: any): Promise<void> {
             console.log(`⚠️ Deactivating ${otherPricebooks.length} other standard pricebook(s)`);
             for (const pb of otherPricebooks) {
               await ctx.ql.doc.update('pricebook', pb.Id, {
-                Status: 'Inactive',
+                Status: 'inactive',
                 ExpirationDate: new Date().toISOString().split('T')[0]
               });
             }
@@ -239,7 +239,7 @@ async function handleStatusChange(ctx: any): Promise<void> {
     }
 
     // Handle expiration
-    if (pricebook.Status === 'Expired') {
+    if (pricebook.Status === 'expired') {
       console.log(`⏰ Pricebook expired: ${pricebook.Name}`);
       
       // Set expiration date if not already set
@@ -256,8 +256,8 @@ async function handleStatusChange(ctx: any): Promise<void> {
     await ctx.ql.doc.create('activity', {
       Subject: `Pricebook Status Changed: ${ctx.previous.Status} → ${pricebook.Status}`,
       Type: 'Status Change',
-      Status: 'Completed',
-      Priority: 'Normal',
+      Status: 'completed',
+      Priority: 'normal',
       WhatId: pricebook.Id,
       OwnerId: ctx.user.id,
       ActivityDate: new Date().toISOString().split('T')[0],
@@ -309,7 +309,7 @@ async function handleCurrencyChange(ctx: any): Promise<void> {
       await ctx.ql.doc.create('activity', {
         Subject: `Pricebook Currency Updated: ${pricebook.Name}`,
         Type: 'Currency Update',
-        Status: 'Completed',
+        Status: 'completed',
         Priority: 'high',
         WhatId: pricebook.Id,
         OwnerId: ctx.user.id,

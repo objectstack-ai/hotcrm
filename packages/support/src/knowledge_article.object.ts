@@ -36,39 +36,39 @@ export const KnowledgeArticle = ObjectSchema.create({
       options: [
         {
           "label": "🛠️ Technical",
-          "value": "Technical"
+          "value": "technical"
         },
         {
           "label": "📦 Product",
-          "value": "Product"
+          "value": "product"
         },
         {
           "label": "💳 Billing",
-          "value": "Billing"
+          "value": "billing"
         },
         {
           "label": "🎓 How-To",
-          "value": "HowTo"
+          "value": "howto"
         },
         {
           "label": "❓ FAQ",
-          "value": "FAQ"
+          "value": "faq"
         },
         {
           "label": "🐛 Troubleshooting",
-          "value": "Troubleshooting"
+          "value": "troubleshooting"
         },
         {
           "label": "📋 Best Practices",
-          "value": "BestPractices"
+          "value": "bestpractices"
         },
         {
           "label": "🆕 Release Notes",
-          "value": "ReleaseNotes"
+          "value": "releasenotes"
         },
         {
           "label": "📚 Other",
-          "value": "Other"
+          "value": "other"
         }
       ]
     }),
@@ -91,27 +91,27 @@ export const KnowledgeArticle = ObjectSchema.create({
     status: Field.select({
       label: 'status',
       required: true,
-      defaultValue: 'Draft',
+      defaultValue: 'draft',
       options: [
         {
           "label": "📝 Draft",
-          "value": "Draft"
+          "value": "draft"
         },
         {
           "label": "👀 In Review",
-          "value": "InReview"
+          "value": "inreview"
         },
         {
           "label": "✅ Published",
-          "value": "Published"
+          "value": "published"
         },
         {
           "label": "🔄 Needs Update",
-          "value": "NeedsUpdate"
+          "value": "needsupdate"
         },
         {
           "label": "📦 Archived",
-          "value": "Archived"
+          "value": "archived"
         }
       ]
     }),
@@ -163,11 +163,11 @@ export const KnowledgeArticle = ObjectSchema.create({
         },
         {
           "label": "简体中文",
-          "value": "zh-CN"
+          "value": "zh_cn"
         },
         {
           "label": "繁體中文",
-          "value": "zh-TW"
+          "value": "zh_tw"
         },
         {
           "label": "Español",
@@ -268,39 +268,39 @@ export const KnowledgeArticle = ObjectSchema.create({
       options: [
         {
           "label": "Technical",
-          "value": "Technical"
+          "value": "technical"
         },
         {
           "label": "Product",
-          "value": "Product"
+          "value": "product"
         },
         {
           "label": "Billing",
-          "value": "Billing"
+          "value": "billing"
         },
         {
           "label": "How-To",
-          "value": "HowTo"
+          "value": "howto"
         },
         {
           "label": "FAQ",
-          "value": "FAQ"
+          "value": "faq"
         },
         {
           "label": "Troubleshooting",
-          "value": "Troubleshooting"
+          "value": "troubleshooting"
         },
         {
           "label": "Best Practices",
-          "value": "BestPractices"
+          "value": "bestpractices"
         },
         {
           "label": "Release Notes",
-          "value": "ReleaseNotes"
+          "value": "releasenotes"
         },
         {
           "label": "Other",
-          "value": "Other"
+          "value": "other"
         }
       ]
     }),

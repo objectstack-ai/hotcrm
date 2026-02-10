@@ -36,23 +36,23 @@ export const SLAPolicy = ObjectSchema.create({
       options: [
         {
           "label": "🏆 Platinum - Premium 24/7",
-          "value": "Platinum"
+          "value": "platinum"
         },
         {
           "label": "🥇 Gold - Business Critical",
-          "value": "Gold"
+          "value": "gold"
         },
         {
           "label": "🥈 Silver - Standard Support",
-          "value": "Silver"
+          "value": "silver"
         },
         {
           "label": "🥉 Bronze - Basic Support",
-          "value": "Bronze"
+          "value": "bronze"
         },
         {
           "label": "📋 Standard - Community",
-          "value": "Standard"
+          "value": "standard"
         }
       ]
     }),
@@ -67,23 +67,23 @@ export const SLAPolicy = ObjectSchema.create({
     coverage_type: Field.select({
       label: 'Coverage Type',
       required: true,
-      defaultValue: 'BusinessHours',
+      defaultValue: 'businesshours',
       options: [
         {
           "label": "🌐 24/7 Support",
-          "value": "24x7"
+          "value": "v_24x7"
         },
         {
           "label": "💼 Business Hours",
-          "value": "BusinessHours"
+          "value": "businesshours"
         },
         {
           "label": "🌙 Extended Hours",
-          "value": "Extended"
+          "value": "extended"
         },
         {
           "label": "🎯 Custom Schedule",
-          "value": "Custom"
+          "value": "custom"
         }
       ]
     }),
@@ -94,15 +94,15 @@ export const SLAPolicy = ObjectSchema.create({
     applies_to: Field.select({
       label: 'Applies To',
       required: true,
-      defaultValue: 'All',
+      defaultValue: 'all',
       options: [
         {
           "label": "All Accounts",
-          "value": "All"
+          "value": "all"
         },
         {
           "label": "Specific Accounts",
-          "value": "Accounts"
+          "value": "accounts"
         },
         {
           "label": "Account tier",
@@ -110,11 +110,11 @@ export const SLAPolicy = ObjectSchema.create({
         },
         {
           "label": "Product Category",
-          "value": "Product"
+          "value": "product"
         },
         {
           "label": "Geographic Region",
-          "value": "Region"
+          "value": "region"
         }
       ]
     }),

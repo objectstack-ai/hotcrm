@@ -18,7 +18,7 @@ export const CaseLifecycleStateMachine = {
     // New State
     {
       name: 'new',
-      label: 'New',
+      label: 'new',
       description: 'Case has been created but not yet assigned',
 
       // Actions when entering this state
@@ -26,7 +26,7 @@ export const CaseLifecycleStateMachine = {
         {
           type: 'fieldUpdate',
           field: 'status',
-          value: 'New'
+          value: 'new'
         },
         {
           type: 'fieldUpdate',
@@ -64,7 +64,7 @@ export const CaseLifecycleStateMachine = {
         {
           to: 'auto_resolved',
           event: 'auto_resolve',
-          guard: 'priority = "Low" AND auto_resolvable = true',
+          guard: 'priority = "low" AND auto_resolvable = true',
           description: 'Automatically resolve simple cases'
         }
       ]
@@ -80,7 +80,7 @@ export const CaseLifecycleStateMachine = {
         {
           type: 'fieldUpdate',
           field: 'status',
-          value: 'In Progress'
+          value: 'in_progress'
         },
         {
           type: 'fieldUpdate',
@@ -122,7 +122,7 @@ export const CaseLifecycleStateMachine = {
         {
           to: 'escalated',
           event: 'escalate',
-          guard: 'sla_violation = true OR priority = "Critical" OR escalated_by_customer = true',
+          guard: 'sla_violation = true OR priority = "critical" OR escalated_by_customer = true',
           actions: [
             {
               type: 'fieldUpdate',
@@ -150,21 +150,21 @@ export const CaseLifecycleStateMachine = {
         unit: 'hours',
         event: 'auto_escalate',
         to: 'escalated',
-        condition: 'priority IN ["High", "Critical"] AND owner_responded = false'
+        condition: 'priority IN ["high", "critical"] AND owner_responded = false'
       }
     },
 
     // Waiting on Customer State
     {
       name: 'waiting_customer',
-      label: 'Waiting on Customer',
+      label: 'waiting_on_customer',
       description: 'Waiting for customer response or additional information',
 
       onEntry: [
         {
           type: 'fieldUpdate',
           field: 'status',
-          value: 'Waiting on Customer'
+          value: 'waiting_on_customer'
         }
       ],
 
@@ -242,14 +242,14 @@ export const CaseLifecycleStateMachine = {
     // Escalated State
     {
       name: 'escalated',
-      label: 'Escalated',
+      label: 'escalated',
       description: 'Case has been escalated to management',
 
       onEntry: [
         {
           type: 'fieldUpdate',
           field: 'status',
-          value: 'Escalated'
+          value: 'escalated'
         },
         {
           type: 'fieldUpdate',
@@ -259,7 +259,7 @@ export const CaseLifecycleStateMachine = {
         {
           type: 'fieldUpdate',
           field: 'priority',
-          value: 'Critical'
+          value: 'critical'
         },
         {
           type: 'emailAlert',
@@ -286,14 +286,14 @@ export const CaseLifecycleStateMachine = {
     // Resolved State
     {
       name: 'resolved',
-      label: 'Resolved',
+      label: 'resolved',
       description: 'Case has been resolved, awaiting customer confirmation',
 
       onEntry: [
         {
           type: 'fieldUpdate',
           field: 'status',
-          value: 'Resolved'
+          value: 'resolved'
         },
         {
           type: 'fieldUpdate',
@@ -349,7 +349,7 @@ export const CaseLifecycleStateMachine = {
     // Closed State (Final State)
     {
       name: 'closed',
-      label: 'Closed',
+      label: 'closed',
       description: 'Case is closed and archived',
       type: 'final',
 
@@ -357,7 +357,7 @@ export const CaseLifecycleStateMachine = {
         {
           type: 'fieldUpdate',
           field: 'status',
-          value: 'Closed'
+          value: 'closed'
         },
         {
           type: 'fieldUpdate',
@@ -476,8 +476,8 @@ export const CaseLifecycleStateMachine = {
   // Global guards that apply across all transitions
   globalGuards: {
     hasOwner: 'owner != NULL',
-    isNotClosed: 'status NOT IN ["Closed", "Auto-Closed"]',
-    isHighPriority: 'priority IN ["High", "Critical"]'
+    isNotClosed: 'status NOT IN ["closed", "Auto-Closed"]',
+    isHighPriority: 'priority IN ["high", "critical"]'
   },
 
   // Event handlers

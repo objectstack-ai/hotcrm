@@ -73,23 +73,23 @@ export const QuoteLineItem = ObjectSchema.create({
     }),
     discount_type: Field.select({
       label: 'Discount Type',
-      defaultValue: 'None',
+      defaultValue: 'none',
       options: [
         {
           "label": "None",
-          "value": "None"
+          "value": "none"
         },
         {
           "label": "Percentage",
-          "value": "Percentage"
+          "value": "percentage"
         },
         {
           "label": "Amount per Unit",
-          "value": "AmountPerUnit"
+          "value": "amountperunit"
         },
         {
           "label": "Total Amount",
-          "value": "TotalAmount"
+          "value": "totalamount"
         }
       ]
     }),
@@ -149,27 +149,27 @@ export const QuoteLineItem = ObjectSchema.create({
     }),
     billing_frequency: Field.select({
       label: 'Billing Frequency',
-      defaultValue: 'OneTime',
+      defaultValue: 'onetime',
       options: [
         {
           "label": "One-Time",
-          "value": "OneTime"
+          "value": "onetime"
         },
         {
           "label": "Monthly",
-          "value": "Monthly"
+          "value": "monthly"
         },
         {
           "label": "Quarterly",
-          "value": "Quarterly"
+          "value": "quarterly"
         },
         {
           "label": "Semi-Annual",
-          "value": "SemiAnnual"
+          "value": "semiannual"
         },
         {
           "label": "Annual",
-          "value": "Annual"
+          "value": "annual"
         }
       ]
     }),
@@ -231,19 +231,19 @@ export const QuoteLineItem = ObjectSchema.create({
     }),
     status: Field.select({
       label: 'status',
-      defaultValue: 'Active',
+      defaultValue: 'active',
       options: [
         {
           "label": "Active",
-          "value": "Active"
+          "value": "active"
         },
         {
           "label": "Deleted",
-          "value": "Deleted"
+          "value": "deleted"
         },
         {
           "label": "Alternate",
-          "value": "Alternate"
+          "value": "alternate"
         }
       ]
     }),

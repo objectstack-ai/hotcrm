@@ -28,35 +28,35 @@ export const EmailTemplate = ObjectSchema.create({
     template_type: Field.select({
       label: 'Template Type',
       required: true,
-      defaultValue: 'Marketing',
+      defaultValue: 'marketing',
       options: [
         {
           "label": "📢 Marketing Email",
-          "value": "Marketing"
+          "value": "marketing"
         },
         {
           "label": "📧 Transactional Email",
-          "value": "Transactional"
+          "value": "transactional"
         },
         {
           "label": "🔔 Notification Email",
-          "value": "Notification"
+          "value": "notification"
         },
         {
           "label": "👋 Welcome Series",
-          "value": "Welcome"
+          "value": "welcome"
         },
         {
           "label": "🛒 Cart Abandonment",
-          "value": "Cart Abandonment"
+          "value": "cart_abandonment"
         },
         {
           "label": "🎁 Post Purchase",
-          "value": "Post Purchase"
+          "value": "post_purchase"
         },
         {
           "label": "🔄 Re-engagement",
-          "value": "Re-engagement"
+          "value": "re_engagement"
         }
       ]
     }),
@@ -65,27 +65,27 @@ export const EmailTemplate = ObjectSchema.create({
       options: [
         {
           "label": "Product Launch",
-          "value": "Product Launch"
+          "value": "product_launch"
         },
         {
           "label": "Event Invitation",
-          "value": "Event Invitation"
+          "value": "event_invitation"
         },
         {
           "label": "Newsletter",
-          "value": "Newsletter"
+          "value": "newsletter"
         },
         {
           "label": "Promotion",
-          "value": "Promotion"
+          "value": "promotion"
         },
         {
           "label": "Customer Care",
-          "value": "Customer Care"
+          "value": "customer_care"
         },
         {
           "label": "Educational",
-          "value": "Educational"
+          "value": "educational"
         }
       ]
     }),
@@ -126,19 +126,19 @@ export const EmailTemplate = ObjectSchema.create({
     }),
     design_system: Field.select({
       label: 'Design System',
-      defaultValue: 'Custom',
+      defaultValue: 'custom',
       options: [
         {
           "label": "Custom HTML",
-          "value": "Custom"
+          "value": "custom"
         },
         {
           "label": "Visual Builder",
-          "value": "Visual Builder"
+          "value": "visual_builder"
         },
         {
           "label": "Preset Template",
-          "value": "Preset"
+          "value": "preset"
         }
       ]
     }),
@@ -150,19 +150,19 @@ export const EmailTemplate = ObjectSchema.create({
     status: Field.select({
       label: 'Status',
       required: true,
-      defaultValue: 'Draft',
+      defaultValue: 'draft',
       options: [
         {
           "label": "📝 Draft",
-          "value": "Draft"
+          "value": "draft"
         },
         {
           "label": "✅ Published",
-          "value": "Published"
+          "value": "published"
         },
         {
           "label": "📦 Archived",
-          "value": "Archived"
+          "value": "archived"
         }
       ]
     }),
@@ -188,15 +188,15 @@ export const EmailTemplate = ObjectSchema.create({
       options: [
         {
           "label": "Open Rate",
-          "value": "OpenRate"
+          "value": "openrate"
         },
         {
           "label": "Click Rate",
-          "value": "ClickRate"
+          "value": "clickrate"
         },
         {
           "label": "Conversion Rate",
-          "value": "ConversionRate"
+          "value": "conversionrate"
         }
       ]
     }),

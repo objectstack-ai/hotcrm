@@ -26,11 +26,11 @@ describe('Invoice to Payment Workflow', () => {
       amount: 50000,
       invoice_date: new Date().toISOString(),
       due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-      status: 'Draft'
+      status: 'draft'
     };
 
-    const sentInvoice = { ...mockInvoice, status: 'Sent', sent_date: new Date().toISOString() };
-    const paidInvoice = { ...sentInvoice, status: 'Paid', payment_date: new Date().toISOString() };
+    const sentInvoice = { ...mockInvoice, status: 'sent', sent_date: new Date().toISOString() };
+    const paidInvoice = { ...sentInvoice, status: 'paid', payment_date: new Date().toISOString() };
 
     (db.doc.create as Mock).mockResolvedValue(mockInvoice);
     (db.doc.update as Mock)
@@ -38,13 +38,13 @@ describe('Invoice to Payment Workflow', () => {
       .mockResolvedValueOnce(paidInvoice);
 
     const invoice = await db.doc.create('invoice', mockInvoice);
-    expect(invoice.status).toBe('Draft');
+    expect(invoice.status).toBe('draft');
 
-    const sent = await db.doc.update('invoice', invoice.id, { status: 'Sent', sent_date: new Date().toISOString() });
-    expect(sent.status).toBe('Sent');
+    const sent = await db.doc.update('invoice', invoice.id, { status: 'sent', sent_date: new Date().toISOString() });
+    expect(sent.status).toBe('sent');
 
-    const paid = await db.doc.update('invoice', invoice.id, { status: 'Paid', payment_date: new Date().toISOString() });
-    expect(paid.status).toBe('Paid');
+    const paid = await db.doc.update('invoice', invoice.id, { status: 'paid', payment_date: new Date().toISOString() });
+    expect(paid.status).toBe('paid');
     expect(paid.payment_date).toBeDefined();
   });
 
@@ -62,28 +62,28 @@ describe('Invoice to Payment Workflow', () => {
   });
 
   it('should handle payment application', async () => {
-    const mockInvoice = { id: 'inv_payment', amount: 10000, status: 'Sent' };
+    const mockInvoice = { id: 'inv_payment', amount: 10000, status: 'sent' };
     const mockPayment = { id: 'pay_001', invoice_id: 'inv_payment', amount: 10000, payment_date: new Date().toISOString(), payment_method: 'Credit Card' };
-    const paidInvoice = { ...mockInvoice, status: 'Paid', payment_date: new Date().toISOString() };
+    const paidInvoice = { ...mockInvoice, status: 'paid', payment_date: new Date().toISOString() };
 
     (db.doc.get as Mock).mockResolvedValue(mockInvoice);
     (db.doc.create as Mock).mockResolvedValue(mockPayment);
     (db.doc.update as Mock).mockResolvedValue(paidInvoice);
 
     const payment = await db.doc.create('payment', mockPayment);
-    const updated = await db.doc.update('invoice', payment.invoice_id, { status: 'Paid', payment_date: payment.payment_date });
+    const updated = await db.doc.update('invoice', payment.invoice_id, { status: 'paid', payment_date: payment.payment_date });
 
-    expect(updated.status).toBe('Paid');
+    expect(updated.status).toBe('paid');
   });
 
   it('should track partial payments', async () => {
-    const mockInvoice = { id: 'inv_partial', amount: 20000, status: 'Sent' };
+    const mockInvoice = { id: 'inv_partial', amount: 20000, status: 'sent' };
     const payment1 = { id: 'pay_p1', invoice_id: 'inv_partial', amount: 10000, payment_date: new Date().toISOString() };
     const payment2 = { id: 'pay_p2', invoice_id: 'inv_partial', amount: 10000, payment_date: new Date().toISOString() };
 
     (db.doc.create as Mock).mockResolvedValueOnce(payment1).mockResolvedValueOnce(payment2);
     (db.find as Mock).mockResolvedValue([payment1, payment2]);
-    (db.doc.update as Mock).mockResolvedValue({ ...mockInvoice, status: 'Paid' });
+    (db.doc.update as Mock).mockResolvedValue({ ...mockInvoice, status: 'paid' });
 
     await db.doc.create('payment', payment1);
     await db.doc.create('payment', payment2);

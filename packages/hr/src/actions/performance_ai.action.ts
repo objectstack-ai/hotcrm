@@ -1365,10 +1365,10 @@ async function callLLM(prompt: string): Promise<string> {
         skew: 'balanced',
         compared_to_org: 'average',
         concerns: [
-          'Manager A rated all 5 direct reports as "Exceeds Expectations" - possible inflation'
+          'Manager A rated all 5 direct reports as "exceeds_expectations" - possible inflation'
         ],
         potential_issues: [
-          'Manager A rated all 5 direct reports as "Exceeds Expectations" - possible inflation'
+          'Manager A rated all 5 direct reports as "exceeds_expectations" - possible inflation'
         ],
         recommendations: [
           'Overall distribution is healthy (10% outstanding, 25% exceeds, 55% meets, 10% needs improvement)',
@@ -1414,7 +1414,7 @@ async function callLLM(prompt: string): Promise<string> {
           employee_id: 'emp_003',
           current_rating: 4.5,
           suggested_rating: 4.0,
-          reasoning: 'Rating may be inflated compared to peers with similar achievements; consider recalibration to "Exceeds Expectations" (4.0) vs "Outstanding" (4.5+)'
+          reasoning: 'Rating may be inflated compared to peers with similar achievements; consider recalibration to "exceeds_expectations" (4.0) vs "outstanding" (4.5+)'
         }
       ]
     });

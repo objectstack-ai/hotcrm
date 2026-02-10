@@ -37,15 +37,15 @@ export const RoutingRule = ObjectSchema.create({
     match_criteria: Field.select({
       label: 'Match Criteria',
       required: true,
-      defaultValue: 'All',
+      defaultValue: 'all',
       options: [
         {
           "label": "Match All Conditions (AND)",
-          "value": "All"
+          "value": "all"
         },
         {
           "label": "Match Any Condition (OR)",
-          "value": "Any"
+          "value": "any"
         }
       ]
     }),
@@ -94,19 +94,19 @@ export const RoutingRule = ObjectSchema.create({
     }),
     keyword_match_type: Field.select({
       label: 'Keyword Match Type',
-      defaultValue: 'Any',
+      defaultValue: 'any',
       options: [
         {
           "label": "Match Any Keyword",
-          "value": "Any"
+          "value": "any"
         },
         {
           "label": "Match All Keywords",
-          "value": "All"
+          "value": "all"
         },
         {
           "label": "Exact Phrase",
-          "value": "Exact"
+          "value": "exact"
         }
       ]
     }),

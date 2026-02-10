@@ -27,31 +27,31 @@ export const Position = ObjectSchema.create({
       options: [
         {
           "label": "C-Level",
-          "value": "C-Level"
+          "value": "c_level"
         },
         {
           "label": "VP",
-          "value": "VP"
+          "value": "vp"
         },
         {
           "label": "Director",
-          "value": "Director"
+          "value": "director"
         },
         {
           "label": "Manager",
-          "value": "Manager"
+          "value": "manager"
         },
         {
           "label": "Supervisor",
-          "value": "Supervisor"
+          "value": "supervisor"
         },
         {
           "label": "Staff",
-          "value": "Staff"
+          "value": "staff"
         },
         {
           "label": "Assistant",
-          "value": "Assistant"
+          "value": "assistant"
         }
       ]
     }),
@@ -60,39 +60,39 @@ export const Position = ObjectSchema.create({
       options: [
         {
           "label": "Management",
-          "value": "Management"
+          "value": "management"
         },
         {
           "label": "Technical",
-          "value": "Technical"
+          "value": "technical"
         },
         {
           "label": "Sales",
-          "value": "Sales"
+          "value": "sales"
         },
         {
           "label": "Marketing",
-          "value": "Marketing"
+          "value": "marketing"
         },
         {
           "label": "Finance",
-          "value": "Finance"
+          "value": "finance"
         },
         {
           "label": "HR",
-          "value": "HR"
+          "value": "hr"
         },
         {
           "label": "Operations",
-          "value": "Operations"
+          "value": "operations"
         },
         {
           "label": "Customer Service",
-          "value": "Customer Service"
+          "value": "customer_service"
         },
         {
           "label": "Other",
-          "value": "Other"
+          "value": "other"
         }
       ]
     }),
@@ -102,27 +102,27 @@ export const Position = ObjectSchema.create({
     }),
     employment_type: Field.select({
       label: 'Employment Type',
-      defaultValue: 'Full-time',
+      defaultValue: 'full_time',
       options: [
         {
           "label": "Full-time",
-          "value": "Full-time"
+          "value": "full_time"
         },
         {
           "label": "Part-time",
-          "value": "Part-time"
+          "value": "part_time"
         },
         {
           "label": "Contract",
-          "value": "Contract"
+          "value": "contract"
         },
         {
           "label": "Intern",
-          "value": "Intern"
+          "value": "intern"
         },
         {
           "label": "Ad-hoc",
-          "value": "Temporary"
+          "value": "temporary"
         }
       ]
     }),
@@ -146,23 +146,23 @@ export const Position = ObjectSchema.create({
     }),
     status: Field.select({
       label: 'Status',
-      defaultValue: 'Active',
+      defaultValue: 'active',
       options: [
         {
           "label": "Active",
-          "value": "Active"
+          "value": "active"
         },
         {
           "label": "Hiring",
-          "value": "Hiring"
+          "value": "hiring"
         },
         {
           "label": "On Hold",
-          "value": "On Hold"
+          "value": "on_hold"
         },
         {
           "label": "Closed",
-          "value": "Closed"
+          "value": "closed"
         }
       ]
     }),

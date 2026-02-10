@@ -16,46 +16,46 @@ export const Task = ObjectSchema.create({
     priority: Field.select({
       label: 'priority',
       required: true,
-      defaultValue: 'Normal',
+      defaultValue: 'normal',
       options: [
         {
           "label": "🔴 High",
-          "value": "High"
+          "value": "high"
         },
         {
           "label": "🟡 Normal",
-          "value": "Normal"
+          "value": "normal"
         },
         {
           "label": "🟢 Low",
-          "value": "Low"
+          "value": "low"
         }
       ]
     }),
     status: Field.select({
       label: 'status',
       required: true,
-      defaultValue: 'Not Started',
+      defaultValue: 'not_started',
       options: [
         {
           "label": "📋 Not Started",
-          "value": "Not Started"
+          "value": "not_started"
         },
         {
           "label": "🚀 In Progress",
-          "value": "In Progress"
+          "value": "in_progress"
         },
         {
           "label": "✅ Completed",
-          "value": "Completed"
+          "value": "completed"
         },
         {
           "label": "⏰ Waiting",
-          "value": "Waiting"
+          "value": "waiting"
         },
         {
           "label": "⏸️ Deferred",
-          "value": "Deferred"
+          "value": "deferred"
         }
       ]
     }),
@@ -82,19 +82,19 @@ export const Task = ObjectSchema.create({
       options: [
         {
           "label": "📅 Daily",
-          "value": "Daily"
+          "value": "daily"
         },
         {
           "label": "📆 Weekly",
-          "value": "Weekly"
+          "value": "weekly"
         },
         {
           "label": "🗓️ Monthly",
-          "value": "Monthly"
+          "value": "monthly"
         },
         {
           "label": "📊 Yearly",
-          "value": "Yearly"
+          "value": "yearly"
         }
       ]
     }),
@@ -214,15 +214,15 @@ export const Task = ObjectSchema.create({
       options: [
         {
           "label": "🔴 High",
-          "value": "High"
+          "value": "high"
         },
         {
           "label": "🟡 Normal",
-          "value": "Normal"
+          "value": "normal"
         },
         {
           "label": "🟢 Low",
-          "value": "Low"
+          "value": "low"
         }
       ]
     }),

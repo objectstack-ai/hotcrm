@@ -99,49 +99,49 @@ export const Payroll = ObjectSchema.create({
     }),
     status: Field.select({
       label: 'Status',
-      defaultValue: 'Draft',
+      defaultValue: 'draft',
       options: [
         {
           "label": "Draft",
-          "value": "Draft"
+          "value": "draft"
         },
         {
           "label": "Pending Approval",
-          "value": "Pending Approval"
+          "value": "pending_approval"
         },
         {
           "label": "Approved",
-          "value": "Approved"
+          "value": "approved"
         },
         {
           "label": "Paid",
-          "value": "Paid"
+          "value": "paid"
         },
         {
           "label": "Cancelled",
-          "value": "Cancelled"
+          "value": "cancelled"
         }
       ]
     }),
     payment_method: Field.select({
       label: 'Payment Method',
-      defaultValue: 'Bank Transfer',
+      defaultValue: 'bank_transfer',
       options: [
         {
           "label": "Bank Transfer",
-          "value": "Bank Transfer"
+          "value": "bank_transfer"
         },
         {
           "label": "Check",
-          "value": "Check"
+          "value": "check"
         },
         {
           "label": "Cash",
-          "value": "Cash"
+          "value": "cash"
         },
         {
           "label": "Other",
-          "value": "Other"
+          "value": "other"
         }
       ]
     }),

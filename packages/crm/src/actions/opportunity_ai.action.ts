@@ -76,9 +76,9 @@ export async function predictWinProbability(request: WinProbabilityRequest): Pro
 
   // Count activities by type
   const activityCounts = {
-    calls: activities.filter(a => a.Type === 'Call').length,
+    calls: activities.filter(a => a.Type === 'call').length,
     emails: activities.filter(a => a.Type === 'email').length,
-    meetings: activities.filter(a => a.Type === 'Meeting').length
+    meetings: activities.filter(a => a.Type === 'meeting').length
   };
 
   // Days since last activity
@@ -101,9 +101,9 @@ You are an expert sales forecasting AI trained on thousands of deals.
 - Source: ${opp.LeadSource}
 
 **Account Context:**
-- Industry: ${account?.Industry || 'Unknown'}
-- Revenue: $${account?.AnnualRevenue?.toLocaleString() || 'Unknown'}
-- Size: ${account?.NumberOfEmployees || 'Unknown'} employees
+- Industry: ${account?.Industry || 'unknown'}
+- Revenue: $${account?.AnnualRevenue?.toLocaleString() || 'unknown'}
+- Size: ${account?.NumberOfEmployees || 'unknown'} employees
 
 **Engagement Metrics:**
 - Total Activities: ${activities.length}
@@ -445,7 +445,7 @@ You are a competitive intelligence analyst.
 # Opportunity Context
 
 - Name: ${opp.Name}
-- Industry: ${opp.Industry || 'Unknown'}
+- Industry: ${opp.Industry || 'unknown'}
 - Amount: $${opp.Amount?.toLocaleString()}
 
 # Activities/Notes (analyze for competitor mentions)
@@ -531,7 +531,7 @@ export interface CloseDatePredictionResponse {
     daysInCurrentStage: number;
   };
   /** Recommended forecast category */
-  forecastCategory: 'Pipeline' | 'Best Case' | 'Commit' | 'Omitted';
+  forecastCategory: 'Pipeline' | 'best_case' | 'commit' | 'Omitted';
 }
 
 /**
@@ -559,7 +559,7 @@ You are a sales forecasting expert specializing in timeline prediction.
 - Current Close Date: ${opp.CloseDate}
 - Deal Age: ${dealAge} days
 - Amount: $${opp.Amount?.toLocaleString()}
-- Industry: ${account?.Industry || 'Unknown'}
+- Industry: ${account?.Industry || 'unknown'}
 
 # Historical Sales Cycle Data
 
@@ -603,7 +603,7 @@ Predict realistic close date and assess if current forecast is achievable.
     "currentStage": "${opp.Stage}",
     "daysInCurrentStage": 12
   },
-  "forecastCategory": "Best Case"
+  "forecastCategory": "best_case"
 }
 
 **Forecast Categories:**
@@ -796,11 +796,11 @@ async function callLLM(prompt: string): Promise<string> {
     factors: {
       avgSalesCycle: 45,
       dealSize: '$100K-$500K',
-      industry: 'Technology',
-      currentStage: 'Proposal',
+      industry: 'technology',
+      currentStage: 'proposal',
       daysInCurrentStage: 8
     },
-    forecastCategory: 'Best Case'
+    forecastCategory: 'best_case'
   });
 }
 

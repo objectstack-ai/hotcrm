@@ -10,17 +10,17 @@ export const OnboardingAutomation = {
   object: 'onboarding',
   description: 'Create onboarding tasks for IT setup, HR orientation, manager welcome, benefits, and training',
   triggerType: 'onCreate',
-  condition: 'status = "New" AND employee_id != NULL',
+  condition: 'status = "new" AND employee_id != NULL',
   actions: [
-    { type: 'fieldUpdate', field: 'status', value: 'In Progress' },
+    { type: 'fieldUpdate', field: 'status', value: 'in_progress' },
     {
       type: 'taskCreation',
       subject: 'IT Setup for ${employee.name}',
       description: 'Provision laptop, email, software licenses, VPN access, and security credentials',
       assignee: '${department.it_contact_id}',
       dueDate: 'TODAY() + 2',
-      priority: 'High',
-      status: 'Not Started'
+      priority: 'high',
+      status: 'not_started'
     },
     {
       type: 'taskCreation',
@@ -28,8 +28,8 @@ export const OnboardingAutomation = {
       description: 'Company policies, code of conduct, emergency procedures, and handbook review',
       assignee: '${hr_specialist_id}',
       dueDate: 'TODAY() + 3',
-      priority: 'High',
-      status: 'Not Started'
+      priority: 'high',
+      status: 'not_started'
     },
     {
       type: 'taskCreation',
@@ -37,8 +37,8 @@ export const OnboardingAutomation = {
       description: 'Role expectations, team structure, first-week goals, and key stakeholder introductions',
       assignee: '${employee.manager_id}',
       dueDate: 'TODAY() + 1',
-      priority: 'High',
-      status: 'Not Started'
+      priority: 'high',
+      status: 'not_started'
     },
     {
       type: 'taskCreation',
@@ -46,8 +46,8 @@ export const OnboardingAutomation = {
       description: 'Health insurance, retirement plan, life insurance, and additional perks enrollment',
       assignee: '${hr_specialist_id}',
       dueDate: 'TODAY() + 5',
-      priority: 'Medium',
-      status: 'Not Started'
+      priority: 'medium',
+      status: 'not_started'
     },
     {
       type: 'taskCreation',
@@ -55,8 +55,8 @@ export const OnboardingAutomation = {
       description: 'Compliance training, role-specific modules, tool walkthroughs, and mentorship pairing',
       assignee: '${employee.manager_id}',
       dueDate: 'TODAY() + 5',
-      priority: 'Medium',
-      status: 'Not Started'
+      priority: 'medium',
+      status: 'not_started'
     },
     {
       type: 'emailAlert',
@@ -95,7 +95,7 @@ export const TimeOffApproval = {
   object: 'time_off',
   description: 'Route time-off requests to manager for approval based on leave type and balance',
   triggerType: 'onCreate',
-  condition: 'status = "Pending" AND employee_id != NULL AND days_requested > 0',
+  condition: 'status = "pending" AND employee_id != NULL AND days_requested > 0',
   actions: [
     {
       type: 'customAction',
@@ -129,8 +129,8 @@ export const TimeOffApproval = {
       description: '${employee.name} requested ${days_requested} day(s) of ${leave_type} from ${start_date} to ${end_date}',
       assignee: '${approver_id}',
       dueDate: 'TODAY() + 2',
-      priority: 'High',
-      status: 'Not Started'
+      priority: 'high',
+      status: 'not_started'
     }
   ],
   executionOrder: 2,
@@ -147,9 +147,9 @@ export const TimeOffAutoApproval = {
   object: 'time_off',
   description: 'Auto-approve requests for 1 day or less with sufficient balance and no scheduling conflicts',
   triggerType: 'onCreate',
-  condition: 'status = "Pending" AND days_requested <= 1 AND leave_balance >= days_requested AND has_scheduling_conflict = false',
+  condition: 'status = "pending" AND days_requested <= 1 AND leave_balance >= days_requested AND has_scheduling_conflict = false',
   actions: [
-    { type: 'fieldUpdate', field: 'status', value: 'Approved' },
+    { type: 'fieldUpdate', field: 'status', value: 'approved' },
     { type: 'fieldUpdate', field: 'approved_date', value: 'NOW()' },
     { type: 'fieldUpdate', field: 'approval_notes', value: 'Auto-approved: 1 day or less with sufficient balance and no conflicts' },
     {
@@ -204,7 +204,7 @@ export const PerformanceReviewCycle = {
       parameters: {
         review_period: '${CURRENT_QUARTER()}',
         year: '${YEAR(TODAY())}',
-        employee_filter: 'status = "Active" AND employment_type IN ("Full-Time", "Part-Time")',
+        employee_filter: 'status = "active" AND employment_type IN ("Full-Time", "Part-Time")',
         template: 'quarterly_performance_review'
       }
     },
@@ -261,7 +261,7 @@ export const PerformanceReviewReminder = {
   description: 'Send weekly reminders for overdue or approaching-deadline performance reviews',
   triggerType: 'scheduled',
   schedule: { frequency: 'weekly', dayOfWeek: 'Monday', time: '09:00', timezone: 'UTC' },
-  condition: 'status IN ("Not Started", "In Progress", "Self-Review Pending", "Manager Review Pending") AND deadline <= TODAY() + 7',
+  condition: 'status IN ("not_started", "in_progress", "Self-Review Pending", "Manager Review Pending") AND deadline <= TODAY() + 7',
   actions: [
     {
       type: 'emailAlert',
@@ -280,7 +280,7 @@ export const PerformanceReviewReminder = {
       template: 'overdue_review_escalation',
       recipients: ['${env.HR_TEAM_EMAIL}'],
       cc: ['${reviewer.manager_email}'],
-      condition: 'deadline < TODAY() AND status != "Completed"'
+      condition: 'deadline < TODAY() AND status != "completed"'
     },
     {
       type: 'taskCreation',
@@ -288,8 +288,8 @@ export const PerformanceReviewReminder = {
       description: 'Review for ${employee.name} (${review_period}) was due ${deadline}. Please complete immediately.',
       assignee: '${reviewer_id}',
       dueDate: 'TODAY() + 2',
-      priority: 'High',
-      status: 'Not Started',
+      priority: 'high',
+      status: 'not_started',
       condition: 'deadline < TODAY() AND status = "Manager Review Pending"'
     },
     {
@@ -297,10 +297,10 @@ export const PerformanceReviewReminder = {
       field: 'escalation_level',
       formula: `
         CASE
-          WHEN DAYS_BETWEEN(deadline, TODAY()) > 14 THEN 'Critical'
-          WHEN DAYS_BETWEEN(deadline, TODAY()) > 7 THEN 'High'
-          WHEN DAYS_BETWEEN(deadline, TODAY()) > 0 THEN 'Medium'
-          ELSE 'Normal'
+          WHEN DAYS_BETWEEN(deadline, TODAY()) > 14 THEN 'critical'
+          WHEN DAYS_BETWEEN(deadline, TODAY()) > 7 THEN 'high'
+          WHEN DAYS_BETWEEN(deadline, TODAY()) > 0 THEN 'medium'
+          ELSE 'normal'
         END
       `,
       condition: 'deadline < TODAY()'

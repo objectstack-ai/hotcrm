@@ -27,23 +27,23 @@ export const SLATemplate = ObjectSchema.create({
       options: [
         {
           "label": "🏆 Platinum",
-          "value": "Platinum"
+          "value": "platinum"
         },
         {
           "label": "🥇 Gold",
-          "value": "Gold"
+          "value": "gold"
         },
         {
           "label": "🥈 Silver",
-          "value": "Silver"
+          "value": "silver"
         },
         {
           "label": "🥉 Bronze",
-          "value": "Bronze"
+          "value": "bronze"
         },
         {
           "label": "📋 Standard",
-          "value": "Standard"
+          "value": "standard"
         }
       ]
     }),

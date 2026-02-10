@@ -64,7 +64,7 @@ describe('SLA Prediction - predictSLABreach', () => {
       priority: 'high',
       status: 'new',
       created_date: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
-      type: 'General',
+      type: 'general',
       owner_id: null // Unassigned
     };
 
@@ -90,7 +90,7 @@ describe('SLA Prediction - predictSLABreach', () => {
     const mockCase = {
       subject: 'Test case',
       priority: 'medium',
-      status: 'In Progress',
+      status: 'in_progress',
       created_date: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(), // 6 hours ago
       type: 'Question',
       owner_id: 'agent_123'
@@ -151,7 +151,7 @@ describe('SLA Prediction - predictSLABreach', () => {
     const mockCase = {
       subject: 'Minor question',
       priority: 'low',
-      status: 'In Progress',
+      status: 'in_progress',
       created_date: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(), // 1 hour ago
       type: 'Question',
       owner_id: 'agent_456'
@@ -192,14 +192,14 @@ describe('SLA Prediction - estimateResolutionTime', () => {
       {
         type: 'Technical Issue',
         priority: 'high',
-        status: 'Closed',
+        status: 'closed',
         created_date: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
         closed_date: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000).toISOString()
       },
       {
         type: 'Technical Issue',
         priority: 'high',
-        status: 'Closed',
+        status: 'closed',
         created_date: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
         closed_date: new Date(Date.now() - 7.5 * 24 * 60 * 60 * 1000).toISOString()
       }
@@ -285,7 +285,7 @@ describe('SLA Prediction - estimateResolutionTime', () => {
     const mockHistoricalCases = Array(10).fill({
       type: 'Technical Issue',
       priority: 'high',
-      status: 'Closed',
+      status: 'closed',
       created_date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
       closed_date: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString()
     });
@@ -324,7 +324,7 @@ describe('SLA Prediction - estimateResolutionTime', () => {
     const mockHistorical = [{
       type: 'Issue',
       priority: 'critical',
-      status: 'Closed',
+      status: 'closed',
       created_date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
       closed_date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
     }];
@@ -365,7 +365,7 @@ describe('SLA Prediction - analyzeEscalationNeeds', () => {
         id: 'case_2',
         case_number: 'C-002',
         subject: 'Normal request',
-        status: 'In Progress',
+        status: 'in_progress',
         priority: 'low',
         created_date: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
         owner_id: 'agent_1'
@@ -421,7 +421,7 @@ describe('SLA Prediction - analyzeEscalationNeeds', () => {
         id: 'case_low',
         case_number: 'C-100',
         subject: 'Low risk',
-        status: 'In Progress',
+        status: 'in_progress',
         priority: 'low',
         created_date: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
         owner_id: 'agent_1'

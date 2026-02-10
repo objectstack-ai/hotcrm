@@ -257,10 +257,10 @@ describe('CampaignStatusChangeTrigger', () => {
   });
 
   it('should handle transition to In Progress', async () => {
-    const campaign = { _id: 'c1', name: 'Spring Campaign', status: 'In Progress' };
+    const campaign = { _id: 'c1', name: 'Spring Campaign', status: 'in_progress' };
     const ctx = {
       result: campaign,
-      previous: { status: 'Planned' }
+      previous: { status: 'planned' }
     };
 
     const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
@@ -268,7 +268,7 @@ describe('CampaignStatusChangeTrigger', () => {
     await CampaignStatusChangeTrigger.handler(ctx as any);
 
     expect(logSpy).toHaveBeenCalledWith(
-      expect.stringContaining('Planned → In Progress')
+      expect.stringContaining('planned → in_progress')
     );
     expect(logSpy).toHaveBeenCalledWith(
       expect.stringContaining('started')
@@ -277,10 +277,10 @@ describe('CampaignStatusChangeTrigger', () => {
   });
 
   it('should handle transition to Completed', async () => {
-    const campaign = { _id: 'c2', name: 'Spring Campaign', status: 'Completed' };
+    const campaign = { _id: 'c2', name: 'Spring Campaign', status: 'completed' };
     const ctx = {
       result: campaign,
-      previous: { status: 'In Progress' }
+      previous: { status: 'in_progress' }
     };
 
     const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
@@ -297,7 +297,7 @@ describe('CampaignStatusChangeTrigger', () => {
     const campaign = { _id: 'c3', name: 'Spring Campaign', status: 'Aborted' };
     const ctx = {
       result: campaign,
-      previous: { status: 'In Progress' }
+      previous: { status: 'in_progress' }
     };
 
     const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
@@ -311,10 +311,10 @@ describe('CampaignStatusChangeTrigger', () => {
   });
 
   it('should not trigger when status does not change', async () => {
-    const campaign = { _id: 'c4', name: 'Test', status: 'Planned' };
+    const campaign = { _id: 'c4', name: 'Test', status: 'planned' };
     const ctx = {
       result: campaign,
-      previous: { status: 'Planned' }
+      previous: { status: 'planned' }
     };
 
     const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
@@ -328,7 +328,7 @@ describe('CampaignStatusChangeTrigger', () => {
   });
 
   it('should not trigger when there is no previous state', async () => {
-    const campaign = { _id: 'c5', name: 'Test', status: 'In Progress' };
+    const campaign = { _id: 'c5', name: 'Test', status: 'in_progress' };
     const ctx = {
       result: campaign
     };
@@ -346,7 +346,7 @@ describe('CampaignStatusChangeTrigger', () => {
   it('should handle errors gracefully', async () => {
     const ctx = {
       result: null,
-      previous: { status: 'Planned' }
+      previous: { status: 'planned' }
     };
 
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});

@@ -26,7 +26,7 @@ describe('CampaignMemberEngagementTrigger', () => {
     const member = { status: 'Opened', number_of_opens: 0 } as any;
     const ctx = {
       input: member,
-      previous: { status: 'Sent' }
+      previous: { status: 'sent' }
     };
 
     await CampaignMemberEngagementTrigger.handler(ctx as any);
@@ -44,7 +44,7 @@ describe('CampaignMemberEngagementTrigger', () => {
     } as any;
     const ctx = {
       input: member,
-      previous: { status: 'Sent' }
+      previous: { status: 'sent' }
     };
 
     await CampaignMemberEngagementTrigger.handler(ctx as any);
@@ -57,7 +57,7 @@ describe('CampaignMemberEngagementTrigger', () => {
     const member = { status: 'Clicked', number_of_opens: 0, number_of_clicks: 0 } as any;
     const ctx = {
       input: member,
-      previous: { status: 'Sent' }
+      previous: { status: 'sent' }
     };
 
     await CampaignMemberEngagementTrigger.handler(ctx as any);
@@ -134,7 +134,7 @@ describe('CampaignMemberEngagementTrigger', () => {
   it('should handle errors gracefully', async () => {
     const ctx = {
       input: null,
-      previous: { status: 'Sent' }
+      previous: { status: 'sent' }
     };
 
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -158,7 +158,7 @@ describe('CampaignMemberLeadScoringTrigger', () => {
     const member = { status: 'Opened', lead: 'lead_1' };
     const ctx = {
       result: member,
-      previous: { status: 'Sent' }
+      previous: { status: 'sent' }
     };
 
     const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
@@ -259,7 +259,7 @@ describe('CampaignMemberLeadScoringTrigger', () => {
     const member = { status: 'Opened' };
     const ctx = {
       result: member,
-      previous: { status: 'Sent' }
+      previous: { status: 'sent' }
     };
 
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
@@ -292,7 +292,7 @@ describe('CampaignMemberLeadScoringTrigger', () => {
   it('should handle errors gracefully', async () => {
     const ctx = {
       result: null,
-      previous: { status: 'Sent' }
+      previous: { status: 'sent' }
     };
 
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -316,7 +316,7 @@ describe('CampaignMemberStatsTrigger', () => {
     const member = { campaign: 'campaign_1', status: 'Opened' };
     const mockFind = vi.fn().mockResolvedValueOnce([
       { status: 'Opened' },
-      { status: 'Sent' },
+      { status: 'sent' },
       { status: 'Clicked' }
     ]);
     const mockUpdate = vi.fn().mockResolvedValueOnce({});
@@ -344,7 +344,7 @@ describe('CampaignMemberStatsTrigger', () => {
 
   it('should use previous campaign id when result has no campaign', async () => {
     const member = {} as any;
-    const mockFind = vi.fn().mockResolvedValueOnce([{ status: 'Sent' }]);
+    const mockFind = vi.fn().mockResolvedValueOnce([{ status: 'sent' }]);
     const mockUpdate = vi.fn().mockResolvedValueOnce({});
 
     const ctx = {
@@ -379,7 +379,7 @@ describe('CampaignMemberStatsTrigger', () => {
       { status: 'Responded' },
       { status: 'Clicked' },
       { status: 'Opened' },
-      { status: 'Sent' },
+      { status: 'sent' },
       { status: 'Unsubscribed' }
     ]);
     const mockUpdate = vi.fn().mockResolvedValueOnce({});
@@ -655,7 +655,7 @@ describe('calculateEngagementScore', () => {
   });
 
   it('should return 20 for Sent status', () => {
-    expect(calculateEngagementScore({ status: 'Sent' })).toBe(20);
+    expect(calculateEngagementScore({ status: 'sent' })).toBe(20);
   });
 
   it('should return 40 for Opened status', () => {

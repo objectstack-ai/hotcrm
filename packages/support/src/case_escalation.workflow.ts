@@ -14,7 +14,7 @@ export const CaseAutoEscalation = {
   triggerType: 'onUpdate',
 
   // Condition: SLA violated and case is still open
-  condition: 'is_sla_violated = true AND status != "Closed" AND status != "Resolved" AND is_escalated = false',
+  condition: 'is_sla_violated = true AND status != "closed" AND status != "resolved" AND is_escalated = false',
 
   // Actions to execute
   actions: [
@@ -24,9 +24,9 @@ export const CaseAutoEscalation = {
       field: 'priority',
       formula: `
         CASE
-          WHEN priority = 'Low' THEN 'Medium'
-          WHEN priority = 'Medium' THEN 'High'
-          WHEN priority = 'High' THEN 'Critical'
+          WHEN priority = 'low' THEN 'medium'
+          WHEN priority = 'medium' THEN 'high'
+          WHEN priority = 'high' THEN 'critical'
           ELSE priority
         END
       `
@@ -103,7 +103,7 @@ export const CaseHighPriorityAlert = {
   triggerType: 'onCreateOrUpdate',
 
   // Condition: Priority is Critical
-  condition: 'priority = "Critical" AND ISCHANGED(priority)',
+  condition: 'priority = "critical" AND ISCHANGED(priority)',
 
   actions: [
     // 1. Send alert to support manager
@@ -121,8 +121,8 @@ export const CaseHighPriorityAlert = {
       description: 'Case ${case_number} has been escalated to Critical priority.\nSubject: ${subject}\nAccount: ${account_id.name}',
       assignee: '${owner_id}',
       dueDate: 'NOW() + 0.125',
-      priority: 'Critical',
-      status: 'Not Started'
+      priority: 'critical',
+      status: 'not_started'
     },
 
     // 3. Post to Slack urgent channel
@@ -171,7 +171,7 @@ export const CaseStaleCheck = {
   },
 
   // Condition: Case is in progress with no updates in 3 days
-  condition: 'status = "In Progress" AND modified_date < TODAY() - 3',
+  condition: 'status = "in_progress" AND modified_date < TODAY() - 3',
 
   actions: [
     // 1. Create follow-up task for case owner
@@ -181,8 +181,8 @@ export const CaseStaleCheck = {
       description: 'Case ${case_number} (${subject}) has had no updates in 3+ days. Please review and provide an update or resolution.',
       assignee: '${owner_id}',
       dueDate: 'TODAY() + 1',
-      priority: 'High',
-      status: 'Not Started'
+      priority: 'high',
+      status: 'not_started'
     },
 
     // 2. Send reminder email to case owner
@@ -212,7 +212,7 @@ export const CaseFirstResponseSLA = {
   triggerType: 'onCreate',
 
   // Condition: Case has a response due date set
-  condition: 'response_due_date != NULL AND status = "New"',
+  condition: 'response_due_date != NULL AND status = "new"',
 
   actions: [
     // 1. Create first response task
@@ -223,7 +223,7 @@ export const CaseFirstResponseSLA = {
       assignee: '${owner_id}',
       dueDate: '${response_due_date}',
       priority: '${priority}',
-      status: 'Not Started'
+      status: 'not_started'
     },
 
     // 2. Send assignment notification
@@ -238,7 +238,7 @@ export const CaseFirstResponseSLA = {
     {
       type: 'fieldUpdate',
       field: 'status',
-      value: 'In Progress'
+      value: 'in_progress'
     }
   ],
 

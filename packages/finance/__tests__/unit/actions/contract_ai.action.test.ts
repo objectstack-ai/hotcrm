@@ -29,10 +29,10 @@ describe('Contract AI - analyzeContractRisk', () => {
     const mockContract = {
       contract_number: 'CNT-001',
       contract_term: 24,
-      status: 'Active',
+      status: 'active',
       start_date: new Date(Date.now() - 12 * 30 * 24 * 60 * 60 * 1000).toISOString(),
       end_date: new Date(Date.now() + 12 * 30 * 24 * 60 * 60 * 1000).toISOString(),
-      billing_frequency: 'Monthly',
+      billing_frequency: 'monthly',
       payment_terms: '30',
       account_id: 'acc_123'
     };
@@ -66,7 +66,7 @@ describe('Contract AI - analyzeContractRisk', () => {
     // Arrange
     const longTermContract = {
       contract_term: 48, // 4 years
-      status: 'Active',
+      status: 'active',
       payment_terms: '30',
       account_id: 'acc_456'
     };
@@ -91,7 +91,7 @@ describe('Contract AI - analyzeContractRisk', () => {
     // Arrange
     const mockContract = {
       contract_term: 12,
-      status: 'Active',
+      status: 'active',
       payment_terms: '90', // Extended terms
       account_id: 'acc_789'
     };
@@ -108,10 +108,10 @@ describe('Contract AI - analyzeContractRisk', () => {
     const result = await analyzeContractRisk(request);
 
     // Assert
-    const hasPaymentRisk = result.risks.some(r => r.category === 'Payment Terms');
+    const hasPaymentRisk = result.risks.some(r => r.category === 'payment_terms');
     expect(hasPaymentRisk).toBe(true);
     if (hasPaymentRisk) {
-      const paymentRisk = result.risks.find(r => r.category === 'Payment Terms');
+      const paymentRisk = result.risks.find(r => r.category === 'payment_terms');
       expect(paymentRisk!.severity).toMatch(/high|medium/);
     }
   });
@@ -120,7 +120,7 @@ describe('Contract AI - analyzeContractRisk', () => {
     // Arrange
     const mockContract = {
       contract_term: 12,
-      status: 'Active',
+      status: 'active',
       end_date: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(), // 60 days
       payment_terms: '30',
       account_id: 'acc_rec'
@@ -151,7 +151,7 @@ describe('Contract AI - analyzeContractRisk', () => {
     // Arrange
     const mockContract = {
       contract_term: 24,
-      status: 'Draft',
+      status: 'draft',
       payment_terms: '60',
       account_id: 'acc_impact'
     };
@@ -184,7 +184,7 @@ describe('Contract AI - predictRenewal', () => {
     // Arrange
     const mockContract = {
       account_id: 'acc_renewal',
-      status: 'Active',
+      status: 'active',
       start_date: new Date(Date.now() - 18 * 30 * 24 * 60 * 60 * 1000).toISOString(),
       end_date: new Date(Date.now() + 6 * 30 * 24 * 60 * 60 * 1000).toISOString(),
       contract_term: 24
@@ -219,7 +219,7 @@ describe('Contract AI - predictRenewal', () => {
     // Arrange
     const longTenureContract = {
       account_id: 'acc_longtime',
-      status: 'Active',
+      status: 'active',
       start_date: new Date(Date.now() - 36 * 30 * 24 * 60 * 60 * 1000).toISOString(), // 3 years
       end_date: new Date(Date.now() + 6 * 30 * 24 * 60 * 60 * 1000).toISOString(),
       contract_term: 36
@@ -247,18 +247,18 @@ describe('Contract AI - predictRenewal', () => {
     // Arrange
     const mockContract = {
       account_id: 'acc_issues',
-      status: 'Active',
+      status: 'active',
       start_date: new Date(Date.now() - 12 * 30 * 24 * 60 * 60 * 1000).toISOString(),
       end_date: new Date(Date.now() + 12 * 30 * 24 * 60 * 60 * 1000).toISOString(),
       contract_term: 24
     };
 
     const mockCases = [
-      { priority: 'high', status: 'Open', created_date: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString() },
-      { priority: 'critical', status: 'Open', created_date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() },
-      { priority: 'high', status: 'Open', created_date: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString() },
-      { priority: 'high', status: 'Open', created_date: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString() },
-      { priority: 'high', status: 'Closed', created_date: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString() }
+      { priority: 'high', status: 'open', created_date: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString() },
+      { priority: 'critical', status: 'open', created_date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() },
+      { priority: 'high', status: 'open', created_date: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString() },
+      { priority: 'high', status: 'open', created_date: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString() },
+      { priority: 'high', status: 'closed', created_date: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString() }
     ];
 
     (db.doc.get as Mock)
@@ -284,7 +284,7 @@ describe('Contract AI - predictRenewal', () => {
     // Arrange
     const mockContract = {
       account_id: 'acc_retain',
-      status: 'Active',
+      status: 'active',
       start_date: new Date(Date.now() - 12 * 30 * 24 * 60 * 60 * 1000).toISOString(),
       end_date: new Date(Date.now() + 6 * 30 * 24 * 60 * 60 * 1000).toISOString(),
       contract_term: 24
@@ -292,7 +292,7 @@ describe('Contract AI - predictRenewal', () => {
 
     (db.doc.get as Mock)
       .mockResolvedValueOnce(mockContract)
-      .mockResolvedValueOnce({ name: 'Customer' });
+      .mockResolvedValueOnce({ name: 'customer' });
     (db.find as Mock).mockResolvedValue([]);
 
     const request: RenewalPredictionRequest = {
@@ -316,7 +316,7 @@ describe('Contract AI - predictRenewal', () => {
     // Arrange
     const mockContract = {
       account_id: 'acc_expand',
-      status: 'Active',
+      status: 'active',
       start_date: new Date(Date.now() - 24 * 30 * 24 * 60 * 60 * 1000).toISOString(),
       end_date: new Date(Date.now() + 12 * 30 * 24 * 60 * 60 * 1000).toISOString(),
       contract_term: 36

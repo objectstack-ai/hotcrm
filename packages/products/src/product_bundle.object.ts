@@ -26,23 +26,23 @@ export const ProductBundle = ObjectSchema.create({
     status: Field.select({
       label: 'status',
       required: true,
-      defaultValue: 'Active',
+      defaultValue: 'active',
       options: [
         {
           "label": "✅ Active",
-          "value": "Active"
+          "value": "active"
         },
         {
           "label": "📝 Draft",
-          "value": "Draft"
+          "value": "draft"
         },
         {
           "label": "🚫 Inactive",
-          "value": "Inactive"
+          "value": "inactive"
         },
         {
           "label": "📦 Archived",
-          "value": "Archived"
+          "value": "archived"
         }
       ]
     }),
@@ -53,42 +53,42 @@ export const ProductBundle = ObjectSchema.create({
       options: [
         {
           "label": "Fixed Bundle",
-          "value": "Fixed"
+          "value": "fixed"
         },
         {
           "label": "Customizable Bundle",
-          "value": "Customizable"
+          "value": "customizable"
         },
         {
           "label": "Recommended Package",
-          "value": "Recommended"
+          "value": "recommended"
         },
         {
           "label": "Frequently Bought Together",
-          "value": "FrequentlyBought"
+          "value": "frequentlybought"
         }
       ]
     }),
     pricing_method: Field.select({
       label: 'Pricing Method',
       required: true,
-      defaultValue: 'Sum',
+      defaultValue: 'sum',
       options: [
         {
           "label": "Sum of Components",
-          "value": "Sum"
+          "value": "sum"
         },
         {
           "label": "Fixed Price",
-          "value": "Fixed"
+          "value": "fixed"
         },
         {
           "label": "Percentage Discount",
-          "value": "PercentageDiscount"
+          "value": "percentagediscount"
         },
         {
           "label": "Amount Discount",
-          "value": "AmountDiscount"
+          "value": "amountdiscount"
         }
       ]
     }),

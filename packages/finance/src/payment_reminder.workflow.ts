@@ -2,7 +2,7 @@
 
 /**
  * Invoice Payment Reminder Workflow
- * Scheduled daily - when invoice is overdue and status is 'Sent', send reminder email
+ * Scheduled daily - when invoice is overdue and status is 'sent', send reminder email
  */
 export const InvoicePaymentReminder = {
   name: 'invoice_payment_reminder',
@@ -19,7 +19,7 @@ export const InvoicePaymentReminder = {
   },
 
   // Condition: Invoice is overdue and still in Sent status
-  condition: 'due_date < TODAY() AND status = "Sent"',
+  condition: 'due_date < TODAY() AND status = "sent"',
 
   // Actions to execute
   actions: [
@@ -90,14 +90,14 @@ export const InvoiceOverdueEscalation = {
   },
 
   // Condition: Invoice is 30+ days overdue and still unpaid
-  condition: 'due_date < TODAY() - 30 AND status = "Sent"',
+  condition: 'due_date < TODAY() - 30 AND status = "sent"',
 
   actions: [
     // 1. Update status to Overdue
     {
       type: 'fieldUpdate',
       field: 'status',
-      value: 'Overdue'
+      value: 'overdue'
     },
 
     // 2. Send escalation email to finance manager
@@ -115,8 +115,8 @@ export const InvoiceOverdueEscalation = {
       description: 'Invoice ${invoice_number} for account ${account.name} is over 30 days past due.\nAmount: ${total_amount}\nDue Date: ${due_date}\nPlease initiate collection procedures.',
       assignee: '${created_by.manager_id}',
       dueDate: 'TODAY() + 3',
-      priority: 'High',
-      status: 'Not Started'
+      priority: 'high',
+      status: 'not_started'
     },
 
     // 4. Post to Slack
@@ -148,7 +148,7 @@ export const InvoiceOverdueEscalation = {
 
 /**
  * Payment Confirmation Workflow
- * When payment is received (status changes to 'Paid'), send confirmation email
+ * When payment is received (status changes to 'paid'), send confirmation email
  */
 export const PaymentConfirmation = {
   name: 'payment_confirmation',
@@ -160,7 +160,7 @@ export const PaymentConfirmation = {
   triggerType: 'onUpdate',
 
   // Condition: Status changed to Paid
-  condition: 'status = "Paid" AND ISCHANGED(status)',
+  condition: 'status = "paid" AND ISCHANGED(status)',
 
   actions: [
     // 1. Send payment confirmation to customer
@@ -231,7 +231,7 @@ export const ContractRenewalReminder = {
   },
 
   // Condition: Contract is active and end_date is within 90 days
-  condition: 'status = "Active" AND end_date <= TODAY() + 90 AND end_date >= TODAY()',
+  condition: 'status = "active" AND end_date <= TODAY() + 90 AND end_date >= TODAY()',
 
   actions: [
     // 1. Create renewal task
@@ -241,8 +241,8 @@ export const ContractRenewalReminder = {
       description: 'Contract ${contract_number} for ${account.name} expires on ${end_date}.\nContract Value: ${contract_value}\nPlease initiate renewal discussions with the customer.',
       assignee: '${created_by}',
       dueDate: '${end_date} - 30',
-      priority: 'High',
-      status: 'Not Started'
+      priority: 'high',
+      status: 'not_started'
     },
 
     // 2. Notify account owner

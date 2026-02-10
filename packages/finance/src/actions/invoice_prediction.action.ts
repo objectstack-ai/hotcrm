@@ -83,7 +83,7 @@ export async function predictPaymentDefault(request: PaymentDefaultRequest): Pro
   let totalDaysLate = 0;
 
   historicalInvoices.forEach((inv: any) => {
-    if (inv.status === 'Paid' && inv.payment_date && inv.due_date) {
+    if (inv.status === 'paid' && inv.payment_date && inv.due_date) {
       const dueDate = new Date(inv.due_date);
       const paymentDate = new Date(inv.payment_date);
       const daysLate = Math.max(0, (paymentDate.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
@@ -94,7 +94,7 @@ export async function predictPaymentDefault(request: PaymentDefaultRequest): Pro
         paidLate++;
         totalDaysLate += daysLate;
       }
-    } else if (inv.status === 'Cancelled' || inv.status === 'Written Off') {
+    } else if (inv.status === 'cancelled' || inv.status === 'written_off') {
       defaulted++;
     }
   });
@@ -158,7 +158,7 @@ export async function predictPaymentDefault(request: PaymentDefaultRequest): Pro
     } else if (daysOverdue > 30) {
       defaultProbability += 20;
       riskFactors.push({
-        factor: 'Overdue',
+        factor: 'overdue',
         impact: 20,
         description: `Invoice is ${Math.round(daysOverdue)} days overdue`
       });
@@ -378,7 +378,7 @@ export async function detectAnomalies(request: AnomalyDetectionRequest): Promise
 
     if (deviation > 2) { // More than 200% different
       anomalies.push({
-        type: 'Unusual Amount',
+        type: 'unusual_amount',
         severity: 'high' as const,
         description: 'Invoice amount significantly differs from historical average',
         expectedValue: `$${avgAmount.toLocaleString()}`,
@@ -459,7 +459,7 @@ export async function detectAnomalies(request: AnomalyDetectionRequest): Promise
     actions.push('Review invoice for errors before sending');
     actions.push('Verify calculations with accounting team');
   }
-  if (anomalies.some(a => a.type === 'Unusual Amount')) {
+  if (anomalies.some(a => a.type === 'unusual_amount')) {
     actions.push('Confirm pricing and quantities with customer');
   }
 
@@ -647,7 +647,7 @@ export async function forecastCashFlow(request: CashFlowForecastRequest): Promis
   const { forecastDays = 30, accountId } = request;
 
   // Fetch outstanding invoices
-  const filters: any[] = [['status', '!=', 'Paid']];
+  const filters: any[] = [['status', '!=', 'paid']];
   if (accountId) {
     filters.push(['account_id', '=', accountId]);
   }

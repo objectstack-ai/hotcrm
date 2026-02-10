@@ -42,13 +42,13 @@ export async function scoreLeadEnhanced(
   // Extract features for ML model
   const features = {
     company_size: lead.company_size || 0,
-    industry: lead.industry || 'Unknown',
+    industry: lead.industry || 'unknown',
     engagement_score: calculateEngagementScore(lead),
     job_title: lead.job_title || '',
     job_level: extractJobLevel(lead.job_title),
     estimated_budget: lead.estimated_budget || 0,
     email_domain: extractDomain(lead.email),
-    lead_source: lead.source || 'Unknown',
+    lead_source: lead.source || 'unknown',
     days_since_created: daysSince(lead.created_date),
     activity_count: lead.activity_count || 0,
     website_visits: lead.website_visits || 0,
@@ -128,13 +128,13 @@ export async function batchScoreLeads(
   // Extract features for all leads
   const featuresArray = leads.map(lead => ({
     company_size: lead.company_size || 0,
-    industry: lead.industry || 'Unknown',
+    industry: lead.industry || 'unknown',
     engagement_score: calculateEngagementScore(lead),
     job_title: lead.job_title || '',
     job_level: extractJobLevel(lead.job_title),
     estimated_budget: lead.estimated_budget || 0,
     email_domain: extractDomain(lead.email),
-    lead_source: lead.source || 'Unknown',
+    lead_source: lead.source || 'unknown',
     days_since_created: daysSince(lead.created_date),
     activity_count: lead.activity_count || 0,
     website_visits: lead.website_visits || 0,
@@ -204,7 +204,7 @@ function calculateEngagementScore(lead: any): number {
 }
 
 function extractJobLevel(title: string): string {
-  if (!title) return 'Unknown';
+  if (!title) return 'unknown';
   
   const lower = title.toLowerCase();
   
@@ -225,9 +225,9 @@ function extractJobLevel(title: string): string {
 }
 
 function extractDomain(email: string): string {
-  if (!email) return 'Unknown';
+  if (!email) return 'unknown';
   const parts = email.split('@');
-  return parts.length > 1 ? parts[1] : 'Unknown';
+  return parts.length > 1 ? parts[1] : 'unknown';
 }
 
 function daysSince(date: Date | string): number {
@@ -315,7 +315,7 @@ async function fetchLead(leadId: string): Promise<any> {
   return {
     id: leadId,
     company_size: 500,
-    industry: 'Technology',
+    industry: 'technology',
     job_title: 'CTO',
     email: 'cto@example.com',
     estimated_budget: 100000,

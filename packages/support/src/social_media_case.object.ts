@@ -27,35 +27,35 @@ export const SocialMediaCase = ObjectSchema.create({
       options: [
         {
           "label": "💬 WeChat",
-          "value": "WeChat"
+          "value": "wechat"
         },
         {
           "label": "📱 WhatsApp",
-          "value": "WhatsApp"
+          "value": "whatsapp"
         },
         {
           "label": "🐦 Twitter/X",
-          "value": "Twitter"
+          "value": "twitter"
         },
         {
           "label": "👍 Facebook",
-          "value": "Facebook"
+          "value": "facebook"
         },
         {
           "label": "📷 Instagram",
-          "value": "Instagram"
+          "value": "instagram"
         },
         {
           "label": "💼 LinkedIn",
-          "value": "LinkedIn"
+          "value": "linkedin"
         },
         {
           "label": "📺 YouTube",
-          "value": "YouTube"
+          "value": "youtube"
         },
         {
           "label": "🎵 TikTok",
-          "value": "TikTok"
+          "value": "tiktok"
         }
       ]
     }),
@@ -116,53 +116,53 @@ export const SocialMediaCase = ObjectSchema.create({
     default_owner_id: Field.lookup('users', { label: 'Default Owner' }),
     default_priority: Field.select({
       label: 'Default Priority',
-      defaultValue: 'Medium',
+      defaultValue: 'medium',
       options: [
         {
           "label": "Critical",
-          "value": "Critical"
+          "value": "critical"
         },
         {
           "label": "High",
-          "value": "High"
+          "value": "high"
         },
         {
           "label": "Medium",
-          "value": "Medium"
+          "value": "medium"
         },
         {
           "label": "Low",
-          "value": "Low"
+          "value": "low"
         }
       ]
     }),
     default_case_type: Field.select({
       label: 'Default Case Type',
-      defaultValue: 'Question',
+      defaultValue: 'question',
       options: [
         {
           "label": "Problem",
-          "value": "Problem"
+          "value": "problem"
         },
         {
           "label": "Question",
-          "value": "Question"
+          "value": "question"
         },
         {
           "label": "Incident",
-          "value": "Incident"
+          "value": "incident"
         },
         {
           "label": "Feature Request",
-          "value": "Feature Request"
+          "value": "feature_request"
         },
         {
           "label": "Complaint",
-          "value": "Complaint"
+          "value": "complaint"
         },
         {
           "label": "Other",
-          "value": "Other"
+          "value": "other"
         }
       ]
     }),

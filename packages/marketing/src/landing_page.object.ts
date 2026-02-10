@@ -32,31 +32,31 @@ export const LandingPage = ObjectSchema.create({
     page_type: Field.select({
       label: 'Page Type',
       required: true,
-      defaultValue: 'Lead Generation',
+      defaultValue: 'lead_generation',
       options: [
         {
           "label": "📝 Lead Generation",
-          "value": "Lead Generation"
+          "value": "lead_generation"
         },
         {
           "label": "🎯 Event Registration",
-          "value": "Event Registration"
+          "value": "event_registration"
         },
         {
           "label": "📥 Resource Download",
-          "value": "Resource Download"
+          "value": "resource_download"
         },
         {
           "label": "🛒 Product Showcase",
-          "value": "Product Showcase"
+          "value": "product_showcase"
         },
         {
           "label": "📺 Webinar",
-          "value": "Webinar"
+          "value": "webinar"
         },
         {
           "label": "🎁 Promotion",
-          "value": "Promotion"
+          "value": "promotion"
         }
       ]
     }),
@@ -119,19 +119,19 @@ export const LandingPage = ObjectSchema.create({
     status: Field.select({
       label: 'Status',
       required: true,
-      defaultValue: 'Draft',
+      defaultValue: 'draft',
       options: [
         {
           "label": "📝 Draft",
-          "value": "Draft"
+          "value": "draft"
         },
         {
           "label": "✅ Published",
-          "value": "Published"
+          "value": "published"
         },
         {
           "label": "📦 Archived",
-          "value": "Archived"
+          "value": "archived"
         }
       ]
     }),

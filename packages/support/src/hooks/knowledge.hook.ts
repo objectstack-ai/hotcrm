@@ -159,7 +159,7 @@ const KnowledgeArticleUsageTracker: Hook = {
       const oldCase = ctx.previous as Record<string, any> | undefined;
 
       // Track when case is resolved and knowledge was used
-      if (oldCase && caseRecord.Status === 'Resolved' && oldCase.Status !== 'Resolved') {
+      if (oldCase && caseRecord.Status === 'resolved' && oldCase.Status !== 'resolved') {
         if (caseRecord.AIRelatedKnowledge) {
           const articleIds = caseRecord.AIRelatedKnowledge.split(',');
           

@@ -42,7 +42,7 @@ const ContactDecisionChainTrigger: Hook = {
       // Auto-set InfluenceLevel based on Level
       if (!contact.InfluenceLevel && contact.Level) {
         switch (contact.Level) {
-          case 'C-Level':
+          case 'c_level':
             contact.InfluenceLevel = 'high';
             console.log(`✅ Auto-set InfluenceLevel to High for C-Level contact`);
             break;
@@ -66,7 +66,7 @@ const ContactDecisionChainTrigger: Hook = {
       }
       
       // Auto-set IsDecisionMaker for C-Level
-      if (contact.Level === 'C-Level' && !contact.IsDecisionMaker) {
+      if (contact.Level === 'c_level' && !contact.IsDecisionMaker) {
         contact.IsDecisionMaker = true;
         console.log(`✅ Auto-set IsDecisionMaker for C-Level contact`);
       }
@@ -185,15 +185,15 @@ const ContactRelationshipStrengthTrigger: Hook = {
       }
       
       const daysSinceContact = getDaysSince(contact.LastContactDate);
-      const currentStrength = contact.RelationshipStrength || 'Unknown';
+      const currentStrength = contact.RelationshipStrength || 'unknown';
       
       // Auto-demote if no contact for 90+ days
       if (daysSinceContact > 90) {
-        if (currentStrength === 'Strong') {
+        if (currentStrength === 'strong') {
           contact.RelationshipStrength = 'medium';
           console.log(`⬇️ Demoted relationship strength: Strong → Medium (${daysSinceContact} days since contact)`);
         } else if (currentStrength === 'medium') {
-          contact.RelationshipStrength = 'Weak';
+          contact.RelationshipStrength = 'weak';
           console.log(`⬇️ Demoted relationship strength: Medium → Weak (${daysSinceContact} days since contact)`);
         }
       }
@@ -202,7 +202,7 @@ const ContactRelationshipStrengthTrigger: Hook = {
       // This is simplified logic - real implementation would count activities
       else if (daysSinceContact < 7 && daysSinceContact >= 0) {
         // Recent contact suggests active relationship
-        if (currentStrength === 'Weak' || currentStrength === 'Unknown') {
+        if (currentStrength === 'weak' || currentStrength === 'unknown') {
           contact.RelationshipStrength = 'medium';
           console.log(`⬆️ Promoted relationship strength: ${currentStrength} → Medium (active engagement)`);
         } else if (currentStrength === 'medium') {
@@ -254,15 +254,15 @@ export async function analyzeAndUpdateRelationshipStrength(contactId: string, ql
   // });
   
   // const activityCount = activities.length;
-  // const hasRecentMeetings = activities.some(a => a.Type === 'Meeting' && getDaysSince(a.ActivityDate) < 14);
+  // const hasRecentMeetings = activities.some(a => a.Type === 'meeting' && getDaysSince(a.ActivityDate) < 14);
   // 
-  // let newStrength = 'Unknown';
+  // let newStrength = 'unknown';
   // if (activityCount > 20 || hasRecentMeetings) {
-  //   newStrength = 'Strong';
+  //   newStrength = 'strong';
   // } else if (activityCount > 10) {
   //   newStrength = 'medium';
   // } else if (activityCount > 0) {
-  //   newStrength = 'Weak';
+  //   newStrength = 'weak';
   // }
   // 
   // await db.doc.update('Contact', contactId, {

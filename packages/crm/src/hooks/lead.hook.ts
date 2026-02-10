@@ -36,7 +36,7 @@ const SCORING_WEIGHTS = {
   RECENT_ACTIVITY_DAYS: 7
 };
 
-const HIGH_PRIORITY_INDUSTRIES = ['Technology', 'Finance', 'Healthcare'];
+const HIGH_PRIORITY_INDUSTRIES = ['technology', 'finance', 'healthcare'];
 
 
 /**
@@ -294,7 +294,7 @@ const LeadStatusChangeTrigger: Hook = {
       }
 
       // Handle unqualification
-      if (ctx.input.Status === 'Unqualified') {
+      if (ctx.input.Status === 'unqualified') {
         await handleLeadUnqualification(ctx);
       }
 
@@ -320,7 +320,7 @@ const LeadStatusChangeTrigger: Hook = {
     await (ctx.ql as any).doc.create('activity', {
       Subject: `Lead Converted: ${lead.FirstName} ${lead.LastName}`,
       Type: 'Conversion',
-      Status: 'Completed',
+      Status: 'completed',
       Priority: 'high',
       WhoId: lead.Id,
       OwnerId: ctx.session?.userId,
@@ -345,7 +345,7 @@ async function handleLeadConversion(ctx: HookContext): Promise<void> {
     await ctx.ql.doc.create('activity', {
       Subject: `Lead Conversion: ${lead.FirstName} ${lead.LastName}`,
       Type: 'Conversion',
-      Status: 'Completed',
+      Status: 'completed',
       Priority: 'high',
       WhoId: lead.Id,
       OwnerId: ctx.session?.userId,
@@ -374,8 +374,8 @@ async function handleLeadUnqualification(ctx: HookContext): Promise<void> {
     await ctx.ql.doc.create('activity', {
       Subject: `Lead Unqualified: ${lead.FirstName} ${lead.LastName}`,
       Type: 'Disqualification',
-      Status: 'Completed',
-      Priority: 'Normal',
+      Status: 'completed',
+      Priority: 'normal',
       WhoId: lead.Id,
       OwnerId: ctx.session?.userId,
       ActivityDate: new Date().toISOString().split('T')[0],
@@ -392,13 +392,13 @@ async function handleLeadUnqualification(ctx: HookContext): Promise<void> {
 async function logStatusChange(ctx: HookContext): Promise<void> {
   try {
     const lead = ctx.input;
-    const oldStatus = ctx.previous?.Status || 'Unknown';
+    const oldStatus = ctx.previous?.Status || 'unknown';
     
     await ctx.ql.doc.create('activity', {
       Subject: `Lead Status Change: ${oldStatus} → ${ctx.input.Status}`,
       Type: 'Status Change',
-      Status: 'Completed',
-      Priority: 'Normal',
+      Status: 'completed',
+      Priority: 'normal',
       WhoId: lead.Id,
       OwnerId: ctx.session?.userId,
       ActivityDate: new Date().toISOString().split('T')[0],

@@ -25,23 +25,23 @@ export const Unsubscribe = ObjectSchema.create({
       label: 'Unsubscribe Type',
       description: 'Global = unsubscribe from all marketing emails, List/Campaign/Topic = partial unsubscribe',
       required: true,
-      defaultValue: 'Global',
+      defaultValue: 'global',
       options: [
         {
           "label": "🌐 Global Unsubscribe",
-          "value": "Global"
+          "value": "global"
         },
         {
           "label": "📋 List Unsubscribe",
-          "value": "List"
+          "value": "list"
         },
         {
           "label": "📧 Campaign Unsubscribe",
-          "value": "Campaign"
+          "value": "campaign"
         },
         {
           "label": "📑 Topic Unsubscribe",
-          "value": "Topic"
+          "value": "topic"
         }
       ]
     }),
@@ -55,27 +55,27 @@ export const Unsubscribe = ObjectSchema.create({
       options: [
         {
           "label": "📬 Too Frequent",
-          "value": "Too Frequent"
+          "value": "too_frequent"
         },
         {
           "label": "❌ Not Relevant",
-          "value": "Not Relevant"
+          "value": "not_relevant"
         },
         {
           "label": "🚫 Never Subscribed",
-          "value": "Never Subscribed"
+          "value": "never_subscribed"
         },
         {
           "label": "📧 Wrong Email",
-          "value": "Wrong email"
+          "value": "wrong_email"
         },
         {
           "label": "🔒 Privacy Concerns",
-          "value": "Privacy Concerns"
+          "value": "privacy_concerns"
         },
         {
           "label": "❓ Other",
-          "value": "Other"
+          "value": "other"
         }
       ]
     }),
@@ -87,31 +87,31 @@ export const Unsubscribe = ObjectSchema.create({
     unsubscribe_source: Field.select({
       label: 'Unsubscribe Source',
       required: true,
-      defaultValue: 'email Link',
+      defaultValue: 'email_link',
       options: [
         {
           "label": "📧 Email Unsubscribe Link",
-          "value": "email Link"
+          "value": "email_link"
         },
         {
           "label": "🌐 Preference Center",
-          "value": "Preference Center"
+          "value": "preference_center"
         },
         {
           "label": "📞 Customer Request",
-          "value": "Customer Request"
+          "value": "customer_request"
         },
         {
           "label": "🔧 Admin Action",
-          "value": "Admin Action"
+          "value": "admin_action"
         },
         {
           "label": "📥 Bounce",
-          "value": "Bounce"
+          "value": "bounce"
         },
         {
           "label": "🤖 Automation",
-          "value": "Automation"
+          "value": "automation"
         }
       ]
     }),
@@ -138,27 +138,27 @@ export const Unsubscribe = ObjectSchema.create({
       options: [
         {
           "label": "🔴 Hard Bounce",
-          "value": "Hard Bounce"
+          "value": "hard_bounce"
         },
         {
           "label": "🟡 Soft Bounce",
-          "value": "Soft Bounce"
+          "value": "soft_bounce"
         },
         {
           "label": "📧 Mailbox Not Found",
-          "value": "Mailbox Not Found"
+          "value": "mailbox_not_found"
         },
         {
           "label": "📦 Mailbox Full",
-          "value": "Mailbox Full"
+          "value": "mailbox_full"
         },
         {
           "label": "🚫 Rejected",
-          "value": "Rejected"
+          "value": "rejected"
         },
         {
           "label": "⏱️ Timeout",
-          "value": "Timeout"
+          "value": "timeout"
         }
       ]
     }),
@@ -195,23 +195,23 @@ export const Unsubscribe = ObjectSchema.create({
     status: Field.select({
       label: 'Status',
       required: true,
-      defaultValue: 'Active',
+      defaultValue: 'active',
       options: [
         {
           "label": "✅ Active",
-          "value": "Active"
+          "value": "active"
         },
         {
           "label": "🔄 Resubscribed",
-          "value": "Resubscribed"
+          "value": "resubscribed"
         },
         {
           "label": "⏸️ Expired",
-          "value": "Expired"
+          "value": "expired"
         },
         {
           "label": "❌ Cancelled",
-          "value": "Cancelled"
+          "value": "cancelled"
         }
       ]
     }),

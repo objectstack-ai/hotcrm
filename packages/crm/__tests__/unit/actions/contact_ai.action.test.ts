@@ -171,7 +171,7 @@ describe('Contact AI Actions - detectBuyingIntent', () => {
     const mockActivities = [
       { type: 'email', activity_date: new Date().toISOString() },
       { type: 'email', activity_date: new Date().toISOString() },
-      { type: 'Meeting', activity_date: new Date().toISOString() }
+      { type: 'meeting', activity_date: new Date().toISOString() }
     ];
 
     const mockOpportunities = [
@@ -215,8 +215,8 @@ describe('Contact AI Actions - detectBuyingIntent', () => {
       type: 'email',
       activity_date: new Date().toISOString()
     }).concat([
-      { type: 'Meeting', activity_date: new Date().toISOString() },
-      { type: 'Meeting', activity_date: new Date().toISOString() }
+      { type: 'meeting', activity_date: new Date().toISOString() },
+      { type: 'meeting', activity_date: new Date().toISOString() }
     ]);
 
     const mockOpportunities = [

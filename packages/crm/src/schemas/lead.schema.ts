@@ -23,7 +23,7 @@ export const LeadSchema = z.object({
   Website: z.string().url().optional().describe('网站'),
 
   // Status & Priority
-  Status: z.enum(['new', 'contacted', 'qualified', 'Unqualified', 'converted'])
+  Status: z.enum(['new', 'contacted', 'qualified', 'unqualified', 'converted'])
     .default('new')
     .describe('状态'),
   Rating: z.enum(['Hot', 'Warm', 'Cold']).optional().describe('等级'),

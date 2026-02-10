@@ -19,27 +19,27 @@ export const AgentSkill = ObjectSchema.create({
     proficiency_level: Field.select({
       label: 'Proficiency Level',
       required: true,
-      defaultValue: 'Intermediate',
+      defaultValue: 'intermediate',
       options: [
         {
           "label": "🌟 Expert",
-          "value": "Expert"
+          "value": "expert"
         },
         {
           "label": "⭐ Advanced",
-          "value": "Advanced"
+          "value": "advanced"
         },
         {
           "label": "📚 Intermediate",
-          "value": "Intermediate"
+          "value": "intermediate"
         },
         {
           "label": "🎓 Beginner",
-          "value": "Beginner"
+          "value": "beginner"
         },
         {
           "label": "📖 Learning",
-          "value": "Learning"
+          "value": "learning"
         }
       ]
     }),

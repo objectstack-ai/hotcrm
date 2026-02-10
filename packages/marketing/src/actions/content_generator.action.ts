@@ -669,7 +669,7 @@ Create ${variantCount} personalized variants:
     {
       "token": "{{Industry}}",
       "description": "Recipient's industry",
-      "example": "Technology"
+      "example": "technology"
     }
   ],
   "strategy": "Focus on industry-specific pain points and use cases to increase relevance and engagement"

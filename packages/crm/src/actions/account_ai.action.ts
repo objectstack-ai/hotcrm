@@ -99,7 +99,7 @@ export async function calculateAccountHealth(request: AccountHealthRequest): Pro
   const financialScore = Math.min(100, (totalRevenue / 100000) * 10);
 
   // Calculate support score (0-100)
-  const openCases = cases.filter((c: any) => c.status !== 'Closed');
+  const openCases = cases.filter((c: any) => c.status !== 'closed');
   const highPriorityCases = openCases.filter((c: any) => c.priority === 'high' || c.priority === 'critical');
   const supportScore = Math.max(0, 100 - (openCases.length * 5) - (highPriorityCases.length * 10));
 
@@ -358,7 +358,7 @@ export async function generateRecommendations(request: RecommendationRequest): P
   }
 
   // Industry-specific recommendation
-  if (account.industry === 'Technology' || account.industry === 'Software') {
+  if (account.industry === 'technology' || account.industry === 'software') {
     recommendations.push({
       product: 'API Integration Suite',
       confidence: 82,
@@ -487,7 +487,7 @@ export async function enrichAccount(request: EnrichmentRequest): Promise<Enrichm
 
   // Mock enrichment
   if (!account.industry) {
-    enrichedData.industry = 'Technology';
+    enrichedData.industry = 'technology';
     fieldsUpdated.push('industry');
     confidence.industry = 85;
   }

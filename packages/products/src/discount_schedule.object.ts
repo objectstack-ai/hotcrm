@@ -26,27 +26,27 @@ export const DiscountSchedule = ObjectSchema.create({
     status: Field.select({
       label: 'status',
       required: true,
-      defaultValue: 'Active',
+      defaultValue: 'active',
       options: [
         {
           "label": "✅ Active",
-          "value": "Active"
+          "value": "active"
         },
         {
           "label": "📝 Draft",
-          "value": "Draft"
+          "value": "draft"
         },
         {
           "label": "🚫 Inactive",
-          "value": "Inactive"
+          "value": "inactive"
         },
         {
           "label": "⏰ Scheduled",
-          "value": "Scheduled"
+          "value": "scheduled"
         },
         {
           "label": "⌛ Expired",
-          "value": "Expired"
+          "value": "expired"
         }
       ]
     }),
@@ -56,35 +56,35 @@ export const DiscountSchedule = ObjectSchema.create({
       options: [
         {
           "label": "Seasonal Discount",
-          "value": "Seasonal"
+          "value": "seasonal"
         },
         {
           "label": "Promotional Campaign",
-          "value": "Promotional"
+          "value": "promotional"
         },
         {
           "label": "Clearance Sale",
-          "value": "Clearance"
+          "value": "clearance"
         },
         {
           "label": "Early Bird Discount",
-          "value": "EarlyBird"
+          "value": "earlybird"
         },
         {
           "label": "End of Quarter",
-          "value": "EndOfQuarter"
+          "value": "endofquarter"
         },
         {
           "label": "Volume-Based",
-          "value": "VolumeBased"
+          "value": "volumebased"
         },
         {
           "label": "Loyalty Program",
-          "value": "LoyaltyProgram"
+          "value": "loyaltyprogram"
         },
         {
           "label": "New Customer",
-          "value": "NewCustomer"
+          "value": "newcustomer"
         }
       ]
     }),
@@ -114,15 +114,15 @@ export const DiscountSchedule = ObjectSchema.create({
       options: [
         {
           "label": "Percentage",
-          "value": "Percentage"
+          "value": "percentage"
         },
         {
           "label": "Fixed Amount",
-          "value": "FixedAmount"
+          "value": "fixedamount"
         },
         {
           "label": "Tiered",
-          "value": "Tiered"
+          "value": "tiered"
         }
       ]
     }),
@@ -149,7 +149,7 @@ export const DiscountSchedule = ObjectSchema.create({
       options: [
         {
           "label": "All Products",
-          "value": "AllProducts"
+          "value": "allproducts"
         },
         {
           "label": "Product Category",
@@ -161,11 +161,11 @@ export const DiscountSchedule = ObjectSchema.create({
         },
         {
           "label": "Specific Products",
-          "value": "SpecificProducts"
+          "value": "specificproducts"
         },
         {
           "label": "Product Bundles",
-          "value": "ProductBundles"
+          "value": "productbundles"
         }
       ]
     }),
@@ -190,27 +190,27 @@ export const DiscountSchedule = ObjectSchema.create({
     customer_scope: Field.select({
       label: 'Customer Scope',
       required: true,
-      defaultValue: 'AllCustomers',
+      defaultValue: 'allcustomers',
       options: [
         {
           "label": "All Customers",
-          "value": "AllCustomers"
+          "value": "allcustomers"
         },
         {
           "label": "New Customers",
-          "value": "NewCustomers"
+          "value": "newcustomers"
         },
         {
           "label": "Existing Customers",
-          "value": "ExistingCustomers"
+          "value": "existingcustomers"
         },
         {
           "label": "VIP Customers",
-          "value": "VIPCustomers"
+          "value": "vipcustomers"
         },
         {
           "label": "Specific Accounts",
-          "value": "SpecificAccounts"
+          "value": "specificaccounts"
         },
         {
           "label": "Customer Segment",
@@ -279,23 +279,23 @@ export const DiscountSchedule = ObjectSchema.create({
     }),
     usage_limit_type: Field.select({
       label: 'Usage Limit Type',
-      defaultValue: 'Unlimited',
+      defaultValue: 'unlimited',
       options: [
         {
           "label": "Unlimited",
-          "value": "Unlimited"
+          "value": "unlimited"
         },
         {
           "label": "Total Uses",
-          "value": "TotalUses"
+          "value": "totaluses"
         },
         {
           "label": "Per Customer",
-          "value": "PerCustomer"
+          "value": "percustomer"
         },
         {
           "label": "Per Product",
-          "value": "PerProduct"
+          "value": "perproduct"
         }
       ]
     }),

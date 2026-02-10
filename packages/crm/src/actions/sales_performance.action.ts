@@ -104,13 +104,13 @@ export async function analyzePipeline(request: PipelineAnalysisRequest): Promise
 
   // --- Stage funnel ---
   const stageOrder = [
-    'Prospecting', 'Qualification', 'Needs Analysis',
-    'Proposal', 'Negotiation', 'Verbal Commit'
+    'prospecting', 'qualification', 'needs_analysis',
+    'proposal', 'negotiation', 'Verbal Commit'
   ];
 
   const stageGroups: Record<string, any[]> = {};
   for (const opp of opportunities) {
-    const stage = opp.Stage || 'Unknown';
+    const stage = opp.Stage || 'unknown';
     if (!stageGroups[stage]) stageGroups[stage] = [];
     stageGroups[stage].push(opp);
   }
@@ -212,8 +212,8 @@ export async function analyzePipeline(request: PipelineAnalysisRequest): Promise
   if (staleRatio > 0.3) { healthScore -= 15; observations.push('Over 30% of deals are older than 90 days — review for cleanup.'); }
   else if (staleRatio < 0.1) { healthScore += 5; observations.push('Minimal deal aging — pipeline is fresh.'); }
 
-  const topHeavy = (stageGroups['Negotiation'] || []).length + (stageGroups['Verbal Commit'] || []).length;
-  const earlyStage = (stageGroups['Prospecting'] || []).length + (stageGroups['Qualification'] || []).length;
+  const topHeavy = (stageGroups['negotiation'] || []).length + (stageGroups['Verbal Commit'] || []).length;
+  const earlyStage = (stageGroups['prospecting'] || []).length + (stageGroups['qualification'] || []).length;
   if (earlyStage === 0 && topHeavy > 0) {
     healthScore -= 10;
     observations.push('No early-stage pipeline — future quarters at risk.');
@@ -528,7 +528,7 @@ export async function analyzeForecastAccuracy(request: ForecastAccuracyRequest):
   // --- By rep ---
   const repMap: Record<string, { forecasted: number; actual: number }> = {};
   for (const opp of closedWon) {
-    const id = opp.OwnerId || 'Unknown';
+    const id = opp.OwnerId || 'unknown';
     if (!repMap[id]) repMap[id] = { forecasted: 0, actual: 0 };
     repMap[id].forecasted += opp.ForecastAmount ?? opp.Amount ?? 0;
     repMap[id].actual += opp.Amount ?? 0;
@@ -545,7 +545,7 @@ export async function analyzeForecastAccuracy(request: ForecastAccuracyRequest):
   // --- By stage ---
   const stageMap: Record<string, { forecasted: number; actual: number }> = {};
   for (const opp of closedWon) {
-    const stage = opp.Stage || 'Unknown';
+    const stage = opp.Stage || 'unknown';
     if (!stageMap[stage]) stageMap[stage] = { forecasted: 0, actual: 0 };
     stageMap[stage].forecasted += opp.ForecastAmount ?? opp.Amount ?? 0;
     stageMap[stage].actual += opp.Amount ?? 0;
@@ -580,10 +580,10 @@ export async function analyzeForecastAccuracy(request: ForecastAccuracyRequest):
   let coverageAnalysis: ForecastCoverageAnalysis | null = null;
   if (openOpps.length > 0) {
     const commit = openOpps
-      .filter(o => o.ForecastCategory === 'Commit')
+      .filter(o => o.ForecastCategory === 'commit')
       .reduce((s: number, o: any) => s + (o.Amount || 0), 0);
     const bestCase = openOpps
-      .filter(o => o.ForecastCategory === 'Best Case')
+      .filter(o => o.ForecastCategory === 'best_case')
       .reduce((s: number, o: any) => s + (o.Amount || 0), 0);
     const pipeline = openOpps
       .reduce((s: number, o: any) => s + (o.Amount || 0), 0);
@@ -646,7 +646,7 @@ export async function analyzeForecastAccuracy(request: ForecastAccuracyRequest):
 function buildSegmentBreakdown(opportunities: any[], field: string): WinRateBySegment[] {
   const groups: Record<string, { won: number; lost: number }> = {};
   for (const opp of opportunities) {
-    const key = opp[field] || 'Unknown';
+    const key = opp[field] || 'unknown';
     if (!groups[key]) groups[key] = { won: 0, lost: 0 };
     if (opp.IsWon) groups[key].won++;
     else groups[key].lost++;

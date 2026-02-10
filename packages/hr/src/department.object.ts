@@ -25,23 +25,23 @@ export const Department = ObjectSchema.create({
       options: [
         {
           "label": "Headquarters",
-          "value": "Headquarters"
+          "value": "headquarters"
         },
         {
           "label": "Branch",
-          "value": "Branch"
+          "value": "branch"
         },
         {
           "label": "Division",
-          "value": "Division"
+          "value": "division"
         },
         {
           "label": "Department",
-          "value": "Department"
+          "value": "department"
         },
         {
           "label": "Team",
-          "value": "Team"
+          "value": "team"
         }
       ]
     }),
@@ -75,19 +75,19 @@ export const Department = ObjectSchema.create({
     }),
     status: Field.select({
       label: 'Status',
-      defaultValue: 'Active',
+      defaultValue: 'active',
       options: [
         {
           "label": "Active",
-          "value": "Active"
+          "value": "active"
         },
         {
           "label": "Closed",
-          "value": "Closed"
+          "value": "closed"
         },
         {
           "label": "Merging",
-          "value": "Merging"
+          "value": "merging"
         }
       ]
     }),

@@ -72,7 +72,7 @@ export const AccountPage = {
         type: 'related_list',
         object: 'opportunity',
         columns: ['name', 'stage', 'amount', 'close_date', 'probability'],
-        filters: [['stage', '!=', 'Closed Lost']],
+        filters: [['stage', '!=', 'closed_lost']],
         sort: [{ field: 'close_date', direction: 'asc' }],
         actions: ['new', 'edit', 'delete']
       },
@@ -92,7 +92,7 @@ export const AccountPage = {
         type: 'related_list',
         object: 'case',
         columns: ['case_number', 'subject', 'status', 'priority', 'created_date'],
-        filters: [['status', '!=', 'Closed']],
+        filters: [['status', '!=', 'closed']],
         sort: [{ field: 'created_date', direction: 'desc' }],
         actions: ['new', 'edit']
       },

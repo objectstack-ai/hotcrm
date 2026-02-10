@@ -243,7 +243,7 @@ describe('Knowledge AI Actions - autoTagArticle', () => {
       title: 'Security Best Practices',
       summary: 'Security guidelines',
       body: 'Security configuration and authentication setup',
-      article_type: 'General'
+      article_type: 'general'
     };
 
     (db.doc.get as Mock).mockResolvedValue(mockArticle);

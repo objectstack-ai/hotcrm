@@ -24,35 +24,35 @@ export const ForumTopic = ObjectSchema.create({
       options: [
         {
           "label": "💬 General Discussion",
-          "value": "General"
+          "value": "general"
         },
         {
           "label": "❓ Questions & Answers",
-          "value": "QA"
+          "value": "qa"
         },
         {
           "label": "🛠️ Technical Support",
-          "value": "Technical"
+          "value": "technical"
         },
         {
           "label": "📦 Product Feedback",
-          "value": "Feedback"
+          "value": "feedback"
         },
         {
           "label": "💡 Feature Requests",
-          "value": "FeatureRequest"
+          "value": "featurerequest"
         },
         {
           "label": "📢 Announcements",
-          "value": "Announcements"
+          "value": "announcements"
         },
         {
           "label": "🎓 Tips & Tricks",
-          "value": "Tips"
+          "value": "tips"
         },
         {
           "label": "🐛 Bug Reports",
-          "value": "BugReports"
+          "value": "bugreports"
         }
       ]
     }),
@@ -68,54 +68,54 @@ export const ForumTopic = ObjectSchema.create({
     author_type: Field.select({
       label: 'Author Type',
       required: true,
-      defaultValue: 'Customer',
+      defaultValue: 'customer',
       options: [
         {
           "label": "👤 Customer",
-          "value": "Customer"
+          "value": "customer"
         },
         {
           "label": "🛡️ Support Agent",
-          "value": "Agent"
+          "value": "agent"
         },
         {
           "label": "👑 Administrator",
-          "value": "Admin"
+          "value": "admin"
         },
         {
           "label": "⭐ Community Expert",
-          "value": "Expert"
+          "value": "expert"
         }
       ]
     }),
     status: Field.select({
       label: 'status',
       required: true,
-      defaultValue: 'Open',
+      defaultValue: 'open',
       options: [
         {
           "label": "🆕 Open",
-          "value": "Open"
+          "value": "open"
         },
         {
           "label": "✅ Answered",
-          "value": "Answered"
+          "value": "answered"
         },
         {
           "label": "🔒 Closed",
-          "value": "Closed"
+          "value": "closed"
         },
         {
           "label": "📌 Pinned",
-          "value": "Pinned"
+          "value": "pinned"
         },
         {
           "label": "🔒 Locked",
-          "value": "Locked"
+          "value": "locked"
         },
         {
           "label": "🗑️ Deleted",
-          "value": "Deleted"
+          "value": "deleted"
         }
       ]
     }),

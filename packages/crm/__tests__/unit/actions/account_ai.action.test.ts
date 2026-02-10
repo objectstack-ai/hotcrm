@@ -32,8 +32,8 @@ describe('Account AI Actions - calculateAccountHealth', () => {
       name: 'Tech Corp',
       annual_revenue: 5000000,
       number_of_employees: 500,
-      industry: 'Technology',
-      type: 'Customer'
+      industry: 'technology',
+      type: 'customer'
     };
 
     const mockOpportunities = [
@@ -111,8 +111,8 @@ describe('Account AI Actions - calculateAccountHealth', () => {
     // Arrange
     const mockAccount = { name: 'Account with Issues' };
     const mockCases = [
-      { status: 'Open', priority: 'high' },
-      { status: 'Open', priority: 'critical' }
+      { status: 'open', priority: 'high' },
+      { status: 'open', priority: 'critical' }
     ];
 
     (db.doc.get as Mock).mockResolvedValue(mockAccount);
@@ -163,8 +163,8 @@ describe('Account AI Actions - predictChurn', () => {
     const mockAccount = { name: 'At Risk Account' };
     const mockOpportunities: any[] = [];
     const mockCases = [
-      { status: 'Open', priority: 'high' },
-      { status: 'Open', priority: 'high' }
+      { status: 'open', priority: 'high' },
+      { status: 'open', priority: 'high' }
     ];
     const mockActivities: any[] = [];
 
@@ -233,7 +233,7 @@ describe('Account AI Actions - predictChurn', () => {
   it('should provide retention actions for at-risk accounts', async () => {
     // Arrange
     const mockAccount = { name: 'At Risk Account' };
-    const mockCases = Array(5).fill({ status: 'Open', priority: 'high' });
+    const mockCases = Array(5).fill({ status: 'open', priority: 'high' });
 
     (db.doc.get as Mock).mockResolvedValue(mockAccount);
     (db.find as Mock)
@@ -282,7 +282,7 @@ describe('Account AI Actions - generateRecommendations', () => {
   it('should recommend products for large enterprises', async () => {
     // Arrange
     const mockAccount = {
-      industry: 'Technology',
+      industry: 'technology',
       annual_revenue: 50000000,
       number_of_employees: 1000
     };
@@ -304,7 +304,7 @@ describe('Account AI Actions - generateRecommendations', () => {
   it('should include confidence scores in recommendations', async () => {
     // Arrange
     const mockAccount = {
-      industry: 'Finance',
+      industry: 'finance',
       annual_revenue: 10000000,
       number_of_employees: 200
     };
@@ -327,7 +327,7 @@ describe('Account AI Actions - generateRecommendations', () => {
   it('should provide industry-specific recommendations', async () => {
     // Arrange
     const mockAccount = {
-      industry: 'Technology',
+      industry: 'technology',
       annual_revenue: 5000000,
       number_of_employees: 100
     };
@@ -350,7 +350,7 @@ describe('Account AI Actions - generateRecommendations', () => {
   it('should return timing recommendations', async () => {
     // Arrange
     const mockAccount = {
-      industry: 'Healthcare',
+      industry: 'healthcare',
       annual_revenue: 15000000,
       number_of_employees: 500
     };

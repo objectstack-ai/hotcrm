@@ -27,49 +27,49 @@ export const Skill = ObjectSchema.create({
       options: [
         {
           "label": "💻 Technical",
-          "value": "Technical"
+          "value": "technical"
         },
         {
           "label": "📦 Product",
-          "value": "Product"
+          "value": "product"
         },
         {
           "label": "🌍 Language",
-          "value": "Language"
+          "value": "language"
         },
         {
           "label": "🏢 Industry",
-          "value": "Industry"
+          "value": "industry"
         },
         {
           "label": "🛠️ Tool/Platform",
-          "value": "Tool"
+          "value": "tool"
         },
         {
           "label": "🎯 Soft Skill",
-          "value": "Soft"
+          "value": "soft"
         },
         {
           "label": "📚 Other",
-          "value": "Other"
+          "value": "other"
         }
       ]
     }),
     skill_type: Field.select({
       label: 'Skill Type',
-      defaultValue: 'Required',
+      defaultValue: 'required',
       options: [
         {
           "label": "✅ Required",
-          "value": "Required"
+          "value": "required"
         },
         {
           "label": "⭐ Preferred",
-          "value": "Preferred"
+          "value": "preferred"
         },
         {
           "label": "📋 Optional",
-          "value": "Optional"
+          "value": "optional"
         }
       ]
     }),

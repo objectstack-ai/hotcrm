@@ -346,7 +346,7 @@ export async function matchCandidateToPositions(request: CandidateMatchingReques
     positions = [position];
   } else {
     positions = await db.find('position', {
-      filters: [['status', '=', 'Open']],
+      filters: [['status', '=', 'open']],
       limit: 10
     });
   }
@@ -554,7 +554,7 @@ export async function rankCandidates(request: CandidateRankingRequest): Promise<
   const position = await db.doc.get('position', positionId);
 
   // Fetch candidates
-  const filters: any[] = [['status', 'in', ['under_review', 'Interviewing', 'Offer Sent']]];
+  const filters: any[] = [['status', 'in', ['under_review', 'interviewing', 'Offer Sent']]];
   if (candidateIds && candidateIds.length > 0) {
     filters.push(['id', 'in', candidateIds]);
   }

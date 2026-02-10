@@ -70,23 +70,23 @@ export const Offer = ObjectSchema.create({
     }),
     employment_type: Field.select({
       label: 'Employment Type',
-      defaultValue: 'Full-time',
+      defaultValue: 'full_time',
       options: [
         {
           "label": "Full-time",
-          "value": "Full-time"
+          "value": "full_time"
         },
         {
           "label": "Part-time",
-          "value": "Part-time"
+          "value": "part_time"
         },
         {
           "label": "Contract",
-          "value": "Contract"
+          "value": "contract"
         },
         {
           "label": "Intern",
-          "value": "Intern"
+          "value": "intern"
         }
       ]
     }),
@@ -95,57 +95,57 @@ export const Offer = ObjectSchema.create({
       options: [
         {
           "label": "None",
-          "value": "None"
+          "value": "none"
         },
         {
           "label": "1 Month",
-          "value": "1 Month"
+          "value": "v_1_month"
         },
         {
           "label": "2 Months",
-          "value": "2 Months"
+          "value": "v_2_months"
         },
         {
           "label": "3 Months",
-          "value": "3 Months"
+          "value": "v_3_months"
         },
         {
           "label": "6 Months",
-          "value": "6 Months"
+          "value": "v_6_months"
         }
       ]
     }),
     status: Field.select({
       label: 'Status',
-      defaultValue: 'Draft',
+      defaultValue: 'draft',
       options: [
         {
           "label": "Draft",
-          "value": "Draft"
+          "value": "draft"
         },
         {
           "label": "Pending Approval",
-          "value": "Pending Approval"
+          "value": "pending_approval"
         },
         {
           "label": "Extended",
-          "value": "Extended"
+          "value": "extended"
         },
         {
           "label": "Accepted",
-          "value": "Accepted"
+          "value": "accepted"
         },
         {
           "label": "Rejected",
-          "value": "Rejected"
+          "value": "rejected"
         },
         {
           "label": "Withdrawn",
-          "value": "Withdrawn"
+          "value": "withdrawn"
         },
         {
           "label": "Expired",
-          "value": "Expired"
+          "value": "expired"
         }
       ]
     }),

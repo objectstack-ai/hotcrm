@@ -19,39 +19,39 @@ export const CaseComment = ObjectSchema.create({
     comment_type: Field.select({
       label: 'Comment Type',
       required: true,
-      defaultValue: 'Internal',
+      defaultValue: 'internal',
       options: [
         {
           "label": "👤 Customer Response",
-          "value": "Customer"
+          "value": "customer"
         },
         {
           "label": "👨‍💼 Agent Response",
-          "value": "Agent"
+          "value": "agent"
         },
         {
           "label": "🔒 Internal Note",
-          "value": "Internal"
+          "value": "internal"
         },
         {
           "label": "📧 Email",
-          "value": "Email"
+          "value": "email"
         },
         {
           "label": "💬 Chat",
-          "value": "Chat"
+          "value": "chat"
         },
         {
           "label": "📞 Phone",
-          "value": "Phone"
+          "value": "phone"
         },
         {
           "label": "🤖 System",
-          "value": "System"
+          "value": "system"
         },
         {
           "label": "🎯 Other",
-          "value": "Other"
+          "value": "other"
         }
       ]
     }),
@@ -139,19 +139,19 @@ export const CaseComment = ObjectSchema.create({
       options: [
         {
           "label": "😊 Positive",
-          "value": "Positive"
+          "value": "positive"
         },
         {
           "label": "😐 Neutral",
-          "value": "Neutral"
+          "value": "neutral"
         },
         {
           "label": "😟 Negative",
-          "value": "Negative"
+          "value": "negative"
         },
         {
           "label": "😡 Angry",
-          "value": "Angry"
+          "value": "angry"
         }
       ]
     }),
@@ -204,47 +204,47 @@ export const CaseComment = ObjectSchema.create({
       options: [
         {
           "label": "📧 Email",
-          "value": "Email"
+          "value": "email"
         },
         {
           "label": "🌐 Portal",
-          "value": "Portal"
+          "value": "portal"
         },
         {
           "label": "📞 Phone",
-          "value": "Phone"
+          "value": "phone"
         },
         {
           "label": "💬 Chat",
-          "value": "Chat"
+          "value": "chat"
         },
         {
           "label": "💬 WeChat",
-          "value": "WeChat"
+          "value": "wechat"
         },
         {
           "label": "💬 WhatsApp",
-          "value": "WhatsApp"
+          "value": "whatsapp"
         },
         {
           "label": "📱 SMS",
-          "value": "SMS"
+          "value": "sms"
         },
         {
           "label": "🐦 Twitter",
-          "value": "Twitter"
+          "value": "twitter"
         },
         {
           "label": "📘 Facebook",
-          "value": "Facebook"
+          "value": "facebook"
         },
         {
           "label": "🤖 Bot",
-          "value": "Bot"
+          "value": "bot"
         },
         {
           "label": "🎯 Other",
-          "value": "Other"
+          "value": "other"
         }
       ]
     }),

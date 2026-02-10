@@ -246,7 +246,7 @@ describe('Employee Hook - EmployeeOnboardingTrigger', () => {
       // Assert
       expect(mockQlDocCreate).toHaveBeenCalledWith('onboarding', expect.objectContaining({
         employee_id: 'emp_123',
-        status: 'In Progress',
+        status: 'in_progress',
         onboarding_type: 'New Hire'
       }));
 
@@ -312,7 +312,7 @@ describe('Employee Hook - EmployeeOnboardingTrigger', () => {
       expect(mockQlDocCreate).toHaveBeenCalledWith('goal', expect.objectContaining({
         employee_id: 'emp_123',
         goal_type: 'Onboarding',
-        status: 'In Progress',
+        status: 'in_progress',
         progress: 0
       }));
 
@@ -411,12 +411,12 @@ describe('Employee Hook - EmployeeStatusChangeTrigger', () => {
       // Arrange
       const employee = {
         id: 'emp_123',
-        employment_status: 'Active'
+        employment_status: 'active'
       };
 
       const previous = {
         id: 'emp_123',
-        employment_status: 'Active'
+        employment_status: 'active'
       };
 
       const ctx = createMockContext('afterUpdate', employee, previous);
@@ -438,12 +438,12 @@ describe('Employee Hook - EmployeeStatusChangeTrigger', () => {
       const employee = {
         id: 'emp_123',
         full_name: 'Jane Doe',
-        employment_status: 'Terminated'
+        employment_status: 'terminated'
       };
 
       const previous = {
         id: 'emp_123',
-        employment_status: 'Active'
+        employment_status: 'active'
       };
 
       const ctx = createMockContext('afterUpdate', employee, previous);
@@ -454,7 +454,7 @@ describe('Employee Hook - EmployeeStatusChangeTrigger', () => {
 
       // Assert
       expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Employee status changed from "Active" to "Terminated"')
+        expect.stringContaining('Employee status changed from "active" to "terminated"')
       );
 
       consoleLogSpy.mockRestore();
@@ -467,12 +467,12 @@ describe('Employee Hook - EmployeeStatusChangeTrigger', () => {
       const employee = {
         id: 'emp_123',
         full_name: 'Activated Employee',
-        employment_status: 'Active'
+        employment_status: 'active'
       };
 
       const previous = {
         id: 'emp_123',
-        employment_status: 'Inactive'
+        employment_status: 'inactive'
       };
 
       const ctx = createMockContext('afterUpdate', employee, previous);
@@ -496,12 +496,12 @@ describe('Employee Hook - EmployeeStatusChangeTrigger', () => {
       const employee = {
         id: 'emp_123',
         full_name: 'Terminated Employee',
-        employment_status: 'Terminated'
+        employment_status: 'terminated'
       };
 
       const previous = {
         id: 'emp_123',
-        employment_status: 'Active'
+        employment_status: 'active'
       };
 
       mockQlDocCreate.mockResolvedValue({ id: 'offboarding_123' });
@@ -515,7 +515,7 @@ describe('Employee Hook - EmployeeStatusChangeTrigger', () => {
       // Assert
       expect(mockQlDocCreate).toHaveBeenCalledWith('onboarding', expect.objectContaining({
         employee_id: 'emp_123',
-        status: 'In Progress',
+        status: 'in_progress',
         onboarding_type: 'Offboarding',
         hr_coordinator_id: 'user_123'
       }));
@@ -532,12 +532,12 @@ describe('Employee Hook - EmployeeStatusChangeTrigger', () => {
       const employee = {
         id: 'emp_123',
         full_name: 'Inactive Employee',
-        employment_status: 'Inactive'
+        employment_status: 'inactive'
       };
 
       const previous = {
         id: 'emp_123',
-        employment_status: 'Active'
+        employment_status: 'active'
       };
 
       mockQlDocCreate.mockResolvedValue({ id: 'offboarding_123' });
@@ -569,7 +569,7 @@ describe('Employee Hook - EmployeeStatusChangeTrigger', () => {
 
       const previous = {
         id: 'emp_123',
-        employment_status: 'Active'
+        employment_status: 'active'
       };
 
       const ctx = createMockContext('afterUpdate', employee, previous);
@@ -593,12 +593,12 @@ describe('Employee Hook - EmployeeStatusChangeTrigger', () => {
       const employee = {
         id: 'emp_123',
         full_name: 'Test Employee',
-        employment_status: 'Terminated'
+        employment_status: 'terminated'
       };
 
       const previous = {
         id: 'emp_123',
-        employment_status: 'Active'
+        employment_status: 'active'
       };
 
       mockQlDocCreate.mockRejectedValue(new Error('Database error'));

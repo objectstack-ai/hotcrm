@@ -32,38 +32,38 @@ export const Opportunity = ObjectSchema.create({
       options: [
         {
           "label": "🔍 Prospecting",
-          "value": "Prospecting",
+          "value": "prospecting",
           "probability": 10
         },
         {
           "label": "📞 Qualification",
-          "value": "Qualification",
+          "value": "qualification",
           "probability": 20
         },
         {
           "label": "💡 Needs Analysis",
-          "value": "Needs Analysis",
+          "value": "needs_analysis",
           "probability": 40
         },
         {
           "label": "📊 Proposal",
-          "value": "Proposal",
+          "value": "proposal",
           "probability": 60
         },
         {
           "label": "💰 Negotiation",
-          "value": "Negotiation",
+          "value": "negotiation",
           "probability": 80
         },
         {
           "label": "✅ Closed Won",
-          "value": "Closed Won",
+          "value": "closed_won",
           "probability": 100,
           "isWon": true
         },
         {
           "label": "❌ Closed Lost",
-          "value": "Closed Lost",
+          "value": "closed_lost",
           "probability": 0,
           "isLost": true
         }
@@ -83,61 +83,61 @@ export const Opportunity = ObjectSchema.create({
       options: [
         {
           "label": "Web",
-          "value": "Web"
+          "value": "web"
         },
         {
           "label": "Phone Inquiry",
-          "value": "Phone Inquiry"
+          "value": "phone_inquiry"
         },
         {
           "label": "Partner Referral",
-          "value": "Partner Referral"
+          "value": "partner_referral"
         },
         {
           "label": "Trade Show",
-          "value": "Trade Show"
+          "value": "trade_show"
         },
         {
           "label": "Social Media",
-          "value": "Social Media"
+          "value": "social_media"
         },
         {
           "label": "Advertisement",
-          "value": "Advertisement"
+          "value": "advertisement"
         },
         {
           "label": "Customer Referral",
-          "value": "Customer Referral"
+          "value": "customer_referral"
         },
         {
           "label": "Other",
-          "value": "Other"
+          "value": "other"
         }
       ]
     }),
     forecast_category: Field.select({
       label: 'Forecast Category',
-      defaultValue: 'Pipeline',
+      defaultValue: 'pipeline',
       options: [
         {
           "label": "Pipeline",
-          "value": "Pipeline"
+          "value": "pipeline"
         },
         {
           "label": "Best Case",
-          "value": "Best Case"
+          "value": "best_case"
         },
         {
           "label": "Commit",
-          "value": "Commit"
+          "value": "commit"
         },
         {
           "label": "Omitted",
-          "value": "Omitted"
+          "value": "omitted"
         },
         {
           "label": "Closed",
-          "value": "Closed"
+          "value": "closed"
         }
       ]
     }),
@@ -146,19 +146,19 @@ export const Opportunity = ObjectSchema.create({
       options: [
         {
           "label": "New Business",
-          "value": "New Business"
+          "value": "new_business"
         },
         {
           "label": "Existing Business - Upgrade",
-          "value": "Existing Business - Upgrade"
+          "value": "existing_business_upgrade"
         },
         {
           "label": "Existing Business - Renewal",
-          "value": "Existing Business - Renewal"
+          "value": "existing_business_renewal"
         },
         {
           "label": "Existing Business - Replacement",
-          "value": "Existing Business - Replacement"
+          "value": "existing_business_replacement"
         }
       ]
     }),

@@ -2,7 +2,7 @@
 
 /**
  * Campaign Auto-Activation Workflow
- * When start_date is today and status is 'Planned', auto-activate the campaign
+ * When start_date is today and status is 'planned', auto-activate the campaign
  */
 export const CampaignAutoActivation = {
   name: 'campaign_auto_activation',
@@ -19,7 +19,7 @@ export const CampaignAutoActivation = {
   },
 
   // Condition: Campaign is planned and start_date is today
-  condition: 'status = "Planned" AND start_date = TODAY()',
+  condition: 'status = "planned" AND start_date = TODAY()',
 
   // Actions to execute
   actions: [
@@ -27,7 +27,7 @@ export const CampaignAutoActivation = {
     {
       type: 'fieldUpdate',
       field: 'status',
-      value: 'In Progress'
+      value: 'in_progress'
     },
 
     // 2. Mark campaign as active
@@ -64,7 +64,7 @@ export const CampaignBudgetAlert = {
   triggerType: 'onCreateOrUpdate',
 
   // Condition: Actual cost exceeds 80% of budget
-  condition: 'actual_cost > (budgeted_cost * 0.8) AND budgeted_cost > 0 AND status = "In Progress"',
+  condition: 'actual_cost > (budgeted_cost * 0.8) AND budgeted_cost > 0 AND status = "in_progress"',
 
   actions: [
     // 1. Send budget alert email
@@ -122,14 +122,14 @@ export const CampaignCompletionCheck = {
   },
 
   // Condition: End date has passed and campaign is still active
-  condition: 'end_date < TODAY() AND status = "In Progress"',
+  condition: 'end_date < TODAY() AND status = "in_progress"',
 
   actions: [
     // 1. Update status to Completed
     {
       type: 'fieldUpdate',
       field: 'status',
-      value: 'Completed'
+      value: 'completed'
     },
 
     // 2. Deactivate the campaign
@@ -191,7 +191,7 @@ export const CampaignMemberWelcome = {
     {
       type: 'fieldUpdate',
       field: 'status',
-      value: 'Sent'
+      value: 'sent'
     },
 
     // 3. Create follow-up task for campaign owner
@@ -201,8 +201,8 @@ export const CampaignMemberWelcome = {
       description: 'New member added to campaign ${campaign.name}. Review engagement.',
       assignee: '${campaign.created_by}',
       dueDate: 'TODAY() + 3',
-      priority: 'Normal',
-      status: 'Not Started'
+      priority: 'normal',
+      status: 'not_started'
     }
   ],
 

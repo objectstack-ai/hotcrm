@@ -24,23 +24,23 @@ export const Account = ObjectSchema.create({
       options: [
         {
           "label": "Prospect",
-          "value": "Prospect"
+          "value": "prospect"
         },
         {
           "label": "Customer",
-          "value": "Customer"
+          "value": "customer"
         },
         {
           "label": "Partner",
-          "value": "Partner"
+          "value": "partner"
         },
         {
           "label": "Competitor",
-          "value": "Competitor"
+          "value": "competitor"
         },
         {
           "label": "Other",
-          "value": "Other"
+          "value": "other"
         }
       ]
     }),
@@ -49,43 +49,43 @@ export const Account = ObjectSchema.create({
       options: [
         {
           "label": "Technology",
-          "value": "Technology"
+          "value": "technology"
         },
         {
           "label": "Finance",
-          "value": "Finance"
+          "value": "finance"
         },
         {
           "label": "Manufacturing",
-          "value": "Manufacturing"
+          "value": "manufacturing"
         },
         {
           "label": "Retail",
-          "value": "Retail"
+          "value": "retail"
         },
         {
           "label": "Healthcare",
-          "value": "Healthcare"
+          "value": "healthcare"
         },
         {
           "label": "Education",
-          "value": "Education"
+          "value": "education"
         },
         {
           "label": "Real Estate",
-          "value": "RealEstate"
+          "value": "realestate"
         },
         {
           "label": "Energy",
-          "value": "Energy"
+          "value": "energy"
         },
         {
           "label": "Consulting",
-          "value": "Consulting"
+          "value": "consulting"
         },
         {
           "label": "Other",
-          "value": "Other"
+          "value": "other"
         }
       ]
     }),
@@ -99,15 +99,15 @@ export const Account = ObjectSchema.create({
       options: [
         {
           "label": "Hot 🔥",
-          "value": "Hot"
+          "value": "hot"
         },
         {
           "label": "Warm ⭐",
-          "value": "Warm"
+          "value": "warm"
         },
         {
           "label": "Cold ❄️",
-          "value": "Cold"
+          "value": "cold"
         }
       ]
     }),
@@ -155,23 +155,23 @@ export const Account = ObjectSchema.create({
     }),
     customer_status: Field.select({
       label: 'Customer Status',
-      defaultValue: 'Prospect',
+      defaultValue: 'prospect',
       options: [
         {
           "label": "Prospect",
-          "value": "Prospect"
+          "value": "prospect"
         },
         {
           "label": "Active Customer",
-          "value": "Active Customer"
+          "value": "active_customer"
         },
         {
           "label": "Churned",
-          "value": "Churned"
+          "value": "churned"
         },
         {
           "label": "On Hold",
-          "value": "On Hold"
+          "value": "on_hold"
         }
       ]
     }),
@@ -184,19 +184,19 @@ export const Account = ObjectSchema.create({
       options: [
         {
           "label": "Platinum",
-          "value": "Platinum"
+          "value": "platinum"
         },
         {
           "label": "Gold",
-          "value": "Gold"
+          "value": "gold"
         },
         {
           "label": "Silver",
-          "value": "Silver"
+          "value": "silver"
         },
         {
           "label": "Standard",
-          "value": "Standard"
+          "value": "standard"
         }
       ]
     }),

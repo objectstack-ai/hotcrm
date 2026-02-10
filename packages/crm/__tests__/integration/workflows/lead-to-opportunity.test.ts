@@ -40,13 +40,13 @@ describe('Lead to Opportunity Conversion Workflow', () => {
       lead_source: 'web',
       annual_revenue: 5000000,
       number_of_employees: 200,
-      industry: 'Technology'
+      industry: 'technology'
     };
 
     const mockAccount = {
       id: 'acc_123',
       name: 'TechCorp Solutions',
-      industry: 'Technology',
+      industry: 'technology',
       annual_revenue: 5000000,
       number_of_employees: 200
     };
@@ -64,7 +64,7 @@ describe('Lead to Opportunity Conversion Workflow', () => {
       name: 'TechCorp Solutions - New Business',
       account_id: 'acc_123',
       contact_id: 'contact_123',
-      stage: 'Qualification',
+      stage: 'qualification',
       amount: 50000,
       close_date: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
       lead_source: 'web'
@@ -102,7 +102,7 @@ describe('Lead to Opportunity Conversion Workflow', () => {
       name: `${account.name} - New Business`,
       account_id: account.id,
       contact_id: contact.id,
-      stage: 'Qualification',
+      stage: 'qualification',
       lead_source: lead.lead_source,
       amount: 50000
     });
@@ -147,7 +147,7 @@ describe('Lead to Opportunity Conversion Workflow', () => {
     const existingAccount = {
       id: 'acc_existing',
       name: 'Existing Corp',
-      industry: 'Finance'
+      industry: 'finance'
     };
 
     const mockContact = {
@@ -211,7 +211,7 @@ describe('Lead to Opportunity Conversion Workflow', () => {
       last_name: 'Doe',
       email: 'jane@example.com',
       company: 'Example Inc',
-      status: 'Open', // Not qualified
+      status: 'open', // Not qualified
       rating: 'Cold'
     };
 
@@ -298,7 +298,7 @@ describe('Lead to Opportunity Conversion Workflow', () => {
         name: 'Startup IO - New Business',
         account_id: 'acc_999',
         contact_id: 'contact_999',
-        stage: 'Qualification',
+        stage: 'qualification',
         probability: 25,
         lead_source: 'Referral'
       });
@@ -312,7 +312,7 @@ describe('Lead to Opportunity Conversion Workflow', () => {
       name: `${account.name} - New Business`,
       account_id: account.id,
       contact_id: contact.id,
-      stage: 'Qualification',
+      stage: 'qualification',
       probability: 25,
       lead_source: lead.lead_source,
       close_date: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString()
@@ -320,7 +320,7 @@ describe('Lead to Opportunity Conversion Workflow', () => {
 
     // Assert
     expect(opportunity).toBeDefined();
-    expect(opportunity.stage).toBe('Qualification');
+    expect(opportunity.stage).toBe('qualification');
     expect(opportunity.probability).toBe(25);
     expect(opportunity.lead_source).toBe('Referral');
     expect(opportunity.account_id).toBe(account.id);
@@ -338,7 +338,7 @@ describe('Lead to Opportunity Conversion Workflow', () => {
       title: 'VP of Engineering',
       phone: '+1-555-0100',
       status: 'qualified',
-      industry: 'Technology',
+      industry: 'technology',
       annual_revenue: 25000000,
       description: 'Interested in enterprise plan'
     };

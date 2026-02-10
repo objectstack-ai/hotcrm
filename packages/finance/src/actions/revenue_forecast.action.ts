@@ -79,7 +79,7 @@ export async function forecastRevenue(request: ForecastRevenueRequest): Promise<
 
   // Fetch historical revenue data from contracts
   const historicalContracts = await db.find('contract', {
-    filters: [['status', '=', 'Activated']],
+    filters: [['status', '=', 'activated']],
     fields: ['start_date', 'end_date', 'billing_frequency', 'account_id'],
     limit: 1000
   });
@@ -265,7 +265,7 @@ export async function predictQuarterlyRevenue(request: PredictQuarterlyRevenueRe
     },
     drivers: [
       {
-        driver: 'New Business',
+        driver: 'new_business',
         contribution: Math.round(currentYearRevenue * 0.4),
         percentage: 40
       },
@@ -342,7 +342,7 @@ export async function analyzeRevenueRisk(request: AnalyzeRevenueRiskRequest): Pr
 
   // Fetch contracts near renewal
   const contracts = await db.find('contract', {
-    filters: [['status', '=', 'Activated']],
+    filters: [['status', '=', 'activated']],
     fields: ['contract_number', 'end_date', 'account_id', 'status']
   });
 
@@ -453,7 +453,7 @@ export async function analyzeRevenueRisk(request: AnalyzeRevenueRiskRequest): Pr
     },
     concentrationRisks: [
       {
-        type: 'Customer',
+        type: 'customer',
         concentration: Math.round(maxAccountConcentration * 100),
         description: `Top customer represents ${Math.round(maxAccountConcentration * 100)}% of pipeline`,
         recommendation: 'Target is <25% concentration per customer'
@@ -551,7 +551,7 @@ export async function recommendRevenueActions(request: RecommendRevenueActionsRe
   }
 
   // Recommendation 2: Increase win rates
-  const proposalStage = opportunities.filter(o => o.stage === 'Proposal' || o.stage === 'Negotiation');
+  const proposalStage = opportunities.filter(o => o.stage === 'proposal' || o.stage === 'negotiation');
   if (proposalStage.length > 5) {
     const potentialImpact = proposalStage.reduce((sum, o) => sum + (o.amount || 0) * 0.15, 0);
     recommendations.push({
@@ -572,7 +572,7 @@ export async function recommendRevenueActions(request: RecommendRevenueActionsRe
 
   // Recommendation 3: Expand existing accounts
   const existingAccounts = await db.find('account', {
-    filters: [['type', '=', 'Customer']],
+    filters: [['type', '=', 'customer']],
     fields: ['name', 'account_id'],
     limit: 100
   });

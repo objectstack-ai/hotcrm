@@ -26,58 +26,58 @@ export const Case = ObjectSchema.create({
     status: Field.select({
       label: 'status',
       required: true,
-      defaultValue: 'New',
+      defaultValue: 'new',
       options: [
         {
           "label": "🆕 New",
-          "value": "New"
+          "value": "new"
         },
         {
           "label": "📋 Open",
-          "value": "Open"
+          "value": "open"
         },
         {
           "label": "🔄 In Progress",
-          "value": "In Progress"
+          "value": "in_progress"
         },
         {
           "label": "⏸️ Waiting on Customer",
-          "value": "Waiting on Customer"
+          "value": "waiting_on_customer"
         },
         {
           "label": "⏰ Escalated",
-          "value": "Escalated"
+          "value": "escalated"
         },
         {
           "label": "✅ Resolved",
-          "value": "Resolved"
+          "value": "resolved"
         },
         {
           "label": "🔒 Closed",
-          "value": "Closed"
+          "value": "closed"
         }
       ]
     }),
     priority: Field.select({
       label: 'priority',
       required: true,
-      defaultValue: 'Medium',
+      defaultValue: 'medium',
       options: [
         {
           "label": "🔴 Critical",
-          "value": "Critical"
+          "value": "critical"
         },
         {
           "label": "🟠 High",
-          "value": "High"
+          "value": "high"
         },
         {
           "label": "🟡 Medium",
-          "value": "Medium"
+          "value": "medium"
         },
         {
           "label": "🟢 Low",
-          "value": "Low"
+          "value": "low"
         }
       ]
     }),
@@ -86,19 +86,19 @@ export const Case = ObjectSchema.create({
       options: [
         {
           "label": "S1 - Critical Impact",
-          "value": "S1"
+          "value": "s1"
         },
         {
           "label": "S2 - High Impact",
-          "value": "S2"
+          "value": "s2"
         },
         {
           "label": "S3 - Medium Impact",
-          "value": "S3"
+          "value": "s3"
         },
         {
           "label": "S4 - Low Impact",
-          "value": "S4"
+          "value": "s4"
         }
       ]
     }),
@@ -107,31 +107,31 @@ export const Case = ObjectSchema.create({
       options: [
         {
           "label": "🐛 Problem",
-          "value": "Problem"
+          "value": "problem"
         },
         {
           "label": "❓ Question",
-          "value": "Question"
+          "value": "question"
         },
         {
           "label": "🆘 Incident",
-          "value": "Incident"
+          "value": "incident"
         },
         {
           "label": "💡 Feature Request",
-          "value": "Feature Request"
+          "value": "feature_request"
         },
         {
           "label": "🎓 Training",
-          "value": "Training"
+          "value": "training"
         },
         {
           "label": "🔧 Maintenance",
-          "value": "Maintenance"
+          "value": "maintenance"
         },
         {
           "label": "📖 Other",
-          "value": "Other"
+          "value": "other"
         }
       ]
     }),
@@ -141,35 +141,35 @@ export const Case = ObjectSchema.create({
       options: [
         {
           "label": "📧 Email",
-          "value": "Email"
+          "value": "email"
         },
         {
           "label": "🌐 Web",
-          "value": "Web"
+          "value": "web"
         },
         {
           "label": "📞 Phone",
-          "value": "Phone"
+          "value": "phone"
         },
         {
           "label": "💬 WeChat",
-          "value": "WeChat"
+          "value": "wechat"
         },
         {
           "label": "🤖 Chat Bot",
-          "value": "Chat Bot"
+          "value": "chat_bot"
         },
         {
           "label": "📱 Mobile App",
-          "value": "Mobile App"
+          "value": "mobile_app"
         },
         {
           "label": "👤 Walk-in",
-          "value": "Walk-in"
+          "value": "walk_in"
         },
         {
           "label": "🎯 Other",
-          "value": "Other"
+          "value": "other"
         }
       ]
     }),
@@ -204,23 +204,23 @@ export const Case = ObjectSchema.create({
       options: [
         {
           "label": "🏆 Platinum",
-          "value": "Platinum"
+          "value": "platinum"
         },
         {
           "label": "🥇 Gold",
-          "value": "Gold"
+          "value": "gold"
         },
         {
           "label": "🥈 Silver",
-          "value": "Silver"
+          "value": "silver"
         },
         {
           "label": "🥉 Bronze",
-          "value": "Bronze"
+          "value": "bronze"
         },
         {
           "label": "📋 Standard",
-          "value": "Standard"
+          "value": "standard"
         }
       ]
     }),
@@ -263,7 +263,7 @@ export const Case = ObjectSchema.create({
       options: [
         {
           "label": "Response Time Violation",
-          "value": "Response"
+          "value": "response"
         },
         {
           "label": "resolution Time Violation",
@@ -271,7 +271,7 @@ export const Case = ObjectSchema.create({
         },
         {
           "label": "Both",
-          "value": "Both"
+          "value": "both"
         }
       ]
     }),
@@ -308,35 +308,35 @@ export const Case = ObjectSchema.create({
       options: [
         {
           "label": "💻 Technical Support",
-          "value": "Technical Support"
+          "value": "technical_support"
         },
         {
           "label": "📚 Product Guidance",
-          "value": "Product Guidance"
+          "value": "product_guidance"
         },
         {
           "label": "🔧 Configuration Change",
-          "value": "Configuration Change"
+          "value": "configuration_change"
         },
         {
           "label": "🐛 Bug Fix",
-          "value": "Bug Fix"
+          "value": "bug_fix"
         },
         {
           "label": "📦 Product Update",
-          "value": "Product Update"
+          "value": "product_update"
         },
         {
           "label": "🎓 Training",
-          "value": "Training"
+          "value": "training"
         },
         {
           "label": "❌ No Fix Needed",
-          "value": "No Fix Needed"
+          "value": "no_fix_needed"
         },
         {
           "label": "🎯 Other",
-          "value": "Other"
+          "value": "other"
         }
       ]
     }),
@@ -350,23 +350,23 @@ export const Case = ObjectSchema.create({
       options: [
         {
           "label": "😄 Very Satisfied",
-          "value": "Very Satisfied"
+          "value": "very_satisfied"
         },
         {
           "label": "🙂 Satisfied",
-          "value": "Satisfied"
+          "value": "satisfied"
         },
         {
           "label": "😐 Neutral",
-          "value": "Neutral"
+          "value": "neutral"
         },
         {
           "label": "😟 Dissatisfied",
-          "value": "Dissatisfied"
+          "value": "dissatisfied"
         },
         {
           "label": "😡 Very Dissatisfied",
-          "value": "Very Dissatisfied"
+          "value": "very_dissatisfied"
         }
       ]
     }),
@@ -407,27 +407,27 @@ export const Case = ObjectSchema.create({
       options: [
         {
           "label": "Technical",
-          "value": "Technical"
+          "value": "technical"
         },
         {
           "label": "Product",
-          "value": "Product"
+          "value": "product"
         },
         {
           "label": "Billing",
-          "value": "Billing"
+          "value": "billing"
         },
         {
           "label": "Feature",
-          "value": "Feature"
+          "value": "feature"
         },
         {
           "label": "Complaint",
-          "value": "Complaint"
+          "value": "complaint"
         },
         {
           "label": "Other",
-          "value": "Other"
+          "value": "other"
         }
       ]
     }),
@@ -454,19 +454,19 @@ export const Case = ObjectSchema.create({
       options: [
         {
           "label": "😊 Positive",
-          "value": "Positive"
+          "value": "positive"
         },
         {
           "label": "😐 Neutral",
-          "value": "Neutral"
+          "value": "neutral"
         },
         {
           "label": "😟 Negative",
-          "value": "Negative"
+          "value": "negative"
         },
         {
           "label": "😡 Angry",
-          "value": "Angry"
+          "value": "angry"
         }
       ]
     }),
@@ -491,7 +491,6 @@ export const Case = ObjectSchema.create({
     trackHistory: true,
     activities: true,
     feeds: true,
-    files: true,
-    emailToCase: true
+    files: true
   },
 });

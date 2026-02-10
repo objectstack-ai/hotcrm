@@ -94,7 +94,7 @@ export const EnterpriseAccountsView = {
 
   filters: [
     { field: 'annual_revenue', operator: '>', value: 10000000 },
-    { field: 'type', operator: '=', value: 'Customer' }
+    { field: 'type', operator: '=', value: 'customer' }
   ],
 
   columns: [
@@ -142,7 +142,7 @@ export const HotAccountsView = {
 
   filters: [
     { field: 'rating', operator: '=', value: 'Hot' },
-    { field: 'type', operator: 'IN', value: ['Customer', 'Prospect'] }
+    { field: 'type', operator: 'IN', value: ['customer', 'prospect'] }
   ],
 
   columns: [
@@ -167,12 +167,12 @@ export const HotAccountsView = {
 // Accounts Needing Attention
 export const NeedAttentionView = {
   name: 'accounts_need_attention',
-  label: 'Needs Attention',
+  label: 'needs_attention',
   object: 'account',
 
   filters: [
     { field: 'last_activity_date', operator: '<', value: 'LAST_60_DAYS' },
-    { field: 'type', operator: '=', value: 'Customer' }
+    { field: 'type', operator: '=', value: 'customer' }
   ],
 
   columns: [

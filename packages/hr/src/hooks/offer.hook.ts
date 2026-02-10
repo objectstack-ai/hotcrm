@@ -32,7 +32,7 @@ const OfferCreationTrigger: Hook = {
 
       // Set default status
       if (!offer.status) {
-        offer.status = 'Draft';
+        offer.status = 'draft';
       }
 
       console.log(`✨ Offer ${offer.offer_number} prepared for candidate ${offer.candidate_id}`);
@@ -94,16 +94,16 @@ const OfferStatusChangeTrigger: Hook = {
 
       // Handle different status transitions
       switch (newStatus) {
-        case 'Sent':
+        case 'sent':
           await handleOfferSent(offer, ctx);
           break;
-        case 'Accepted':
+        case 'accepted':
           await handleOfferAccepted(offer, ctx);
           break;
-        case 'Rejected':
+        case 'rejected':
           await handleOfferRejected(offer, ctx);
           break;
-        case 'Expired':
+        case 'expired':
           await handleOfferExpired(offer, ctx);
           break;
         case 'Withdrawn':
@@ -162,12 +162,12 @@ async function handleOfferAccepted(offer: any, ctx: any): Promise<void> {
   try {
     // Update candidate status
     await ctx.ql.doc.update('candidate', offer.candidate_id, {
-      status: 'Hired'
+      status: 'hired'
     });
 
     // Update application status
     await ctx.ql.doc.update('application', offer.application_id, {
-      status: 'Hired'
+      status: 'hired'
     });
 
     // Set acceptance date if not already set
@@ -220,7 +220,7 @@ async function createEmployeeFromOffer(offer: any, ctx: any): Promise<void> {
       position_id: offer.position_id,
       manager_id: offer.hiring_manager_id,
       employment_type: offer.employment_type,
-      employment_status: 'Active',
+      employment_status: 'active',
       base_salary: offer.base_salary,
       salary_currency: offer.salary_currency || 'CNY'
     });
@@ -277,7 +277,7 @@ async function handleOfferRejected(offer: any, ctx: any): Promise<void> {
 
     // Update application status
     await ctx.ql.doc.update('application', offer.application_id, {
-      status: 'Rejected'
+      status: 'rejected'
     });
 
     // Set rejection date if not already set
@@ -372,10 +372,10 @@ const OfferApprovalTrigger: Hook = {
       console.log(`📋 Offer ${offer.offer_number} approval status changed to ${offer.approval_status}`);
 
       // Handle approval
-      if (offer.approval_status === 'Approved' && previousOffer.approval_status !== 'Approved') {
+      if (offer.approval_status === 'approved' && previousOffer.approval_status !== 'approved') {
         // Auto-change status to Ready to Send if still in Draft
-        if (offer.status === 'Draft') {
-          offer.status = 'Approved';
+        if (offer.status === 'draft') {
+          offer.status = 'approved';
         }
         
         offer.approved_date = new Date().toISOString().split('T')[0];
@@ -385,8 +385,8 @@ const OfferApprovalTrigger: Hook = {
       }
 
       // Handle rejection
-      if (offer.approval_status === 'Rejected') {
-        offer.status = 'Draft'; // Send back to draft
+      if (offer.approval_status === 'rejected') {
+        offer.status = 'draft'; // Send back to draft
         console.log(`❌ Offer ${offer.offer_number} rejected in approval`);
       }
 

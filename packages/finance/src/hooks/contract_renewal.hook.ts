@@ -11,8 +11,8 @@ const ContractRenewalCheck: Hook = {
     const newDoc = ctx.result as Record<string, any>;
     const oldDoc = ctx.previous as Record<string, any> | undefined;
 
-    const isActivated = newDoc.status === 'Activated' && oldDoc?.status !== 'Activated';
-    const endDateChanged = newDoc.end_date !== oldDoc?.end_date && newDoc.status === 'Activated';
+    const isActivated = newDoc.status === 'activated' && oldDoc?.status !== 'activated';
+    const endDateChanged = newDoc.end_date !== oldDoc?.end_date && newDoc.status === 'activated';
 
     if (!isActivated && !endDateChanged) return;
     if (!newDoc.end_date) return;
@@ -48,7 +48,7 @@ const ContractRenewalCheck: Hook = {
         account: newDoc.account,
         source_contract: newDoc._id,
         type: 'Renewal',
-        stage: 'Prospecting',
+        stage: 'prospecting',
         amount: newDoc.contract_value,
         close_date: closeDate.toISOString()
       });
@@ -61,8 +61,8 @@ const ContractRenewalCheck: Hook = {
         description: `Contract ${newDoc.contract_number} expires on ${endDate.toISOString().split('T')[0]}. Please reach out to the customer to discuss renewal.`,
         related_to: newDoc.account,
         opportunity: opportunity._id,
-        status: 'Open',
-        priority: daysUntilExpiry <= ALERT_WINDOW_DAYS ? 'High' : 'Normal',
+        status: 'open',
+        priority: daysUntilExpiry <= ALERT_WINDOW_DAYS ? 'high' : 'normal',
         due_date: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString()
       });
 
@@ -82,7 +82,7 @@ const ContractExpirationAlert: Hook = {
     const newDoc = ctx.result as Record<string, any>;
     const oldDoc = ctx.previous as Record<string, any> | undefined;
 
-    if (newDoc.status !== 'Activated') return;
+    if (newDoc.status !== 'activated') return;
     if (newDoc.renewal_reminder_sent) return;
     if (!newDoc.end_date) return;
 
@@ -106,8 +106,8 @@ const ContractExpirationAlert: Hook = {
         description: `Contract ${newDoc.contract_number} with value ${newDoc.contract_value} is expiring on ${endDate.toISOString().split('T')[0]}. Immediate action required for renewal.`,
         related_to: newDoc.account,
         contract: newDoc._id,
-        priority: 'High',
-        status: 'Open'
+        priority: 'high',
+        status: 'open'
       });
 
       // Flag contract so we don't send duplicate reminders

@@ -205,7 +205,7 @@ describe('ModelRegistry', () => {
         version: '1.0.0',
         type: 'classification',
         provider: 'custom',
-        description: 'Active',
+        description: 'active',
         status: 'active'
       };
 

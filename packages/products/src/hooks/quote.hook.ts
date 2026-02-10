@@ -119,12 +119,12 @@ async function determineApprovalRequirements(ctx: any): Promise<void> {
       // Set approval status to Pending if discount increased
       if (ctx.previous) {
         const oldDiscount = ctx.previous.DiscountPercent || 0;
-        if (discountPercent > oldDiscount && quote.ApprovalStatus !== 'Approved' && quote.ApprovalStatus !== 'Pending') {
-          quote.ApprovalStatus = 'Pending';
+        if (discountPercent > oldDiscount && quote.ApprovalStatus !== 'approved' && quote.ApprovalStatus !== 'pending') {
+          quote.ApprovalStatus = 'pending';
           console.log(`🔄 Quote requires Level ${approvalLevel} approval (${(discountPercent * 100).toFixed(1)}% discount)`);
         }
-      } else if (quote.ApprovalStatus !== 'Pending') {
-        quote.ApprovalStatus = 'Pending';
+      } else if (quote.ApprovalStatus !== 'pending') {
+        quote.ApprovalStatus = 'pending';
         console.log(`🔄 New quote requires Level ${approvalLevel} approval (${(discountPercent * 100).toFixed(1)}% discount)`);
       }
     }
@@ -165,8 +165,8 @@ async function initializeQuote(ctx: any): Promise<void> {
       await ctx.ql.doc.create('activity', {
         Subject: `New Quote Created: ${quote.Name}`,
         Type: 'Quote',
-        Status: 'Completed',
-        Priority: 'Normal',
+        Status: 'completed',
+        Priority: 'normal',
         AccountId: quote.AccountId,
         WhatId: quote.Id,
         OwnerId: ctx.user.id,
@@ -207,17 +207,17 @@ async function handleQuoteStatusChange(ctx: any): Promise<void> {
     console.log(`🔄 Quote status changed from "${ctx.previous.Status}" to "${quote.Status}"`);
 
     // Handle Accepted status
-    if (quote.Status === 'Accepted') {
+    if (quote.Status === 'accepted') {
       await handleQuoteAccepted(ctx);
     }
 
     // Handle Sent status
-    if (quote.Status === 'Sent') {
+    if (quote.Status === 'sent') {
       await handleQuoteSent(ctx);
     }
 
     // Handle Expired status
-    if (quote.Status === 'Expired') {
+    if (quote.Status === 'expired') {
       await handleQuoteExpired(ctx);
     }
 
@@ -226,8 +226,8 @@ async function handleQuoteStatusChange(ctx: any): Promise<void> {
       await ctx.ql.doc.create('activity', {
         Subject: `Quote Status Changed: ${ctx.previous.Status} → ${quote.Status}`,
         Type: 'Quote Status Change',
-        Status: 'Completed',
-        Priority: 'Normal',
+        Status: 'completed',
+        Priority: 'normal',
         AccountId: quote.AccountId,
         WhatId: quote.Id,
         OwnerId: ctx.user.id,
@@ -277,7 +277,7 @@ async function handleQuoteAccepted(ctx: any): Promise<void> {
             contract_number: `CT-${quote.QuoteNumber}`,
             account: quote.AccountId,
             opportunity: quote.OpportunityId,
-            status: 'Draft',
+            status: 'draft',
             start_date: startDate,
             end_date: endDate.toISOString().split('T')[0],
             contract_term: 12,
@@ -347,21 +347,21 @@ async function handleApprovalStatusChange(ctx: any): Promise<void> {
     console.log(`🔄 Approval status changed from "${ctx.previous.ApprovalStatus}" to "${quote.ApprovalStatus}"`);
 
     // Handle approved
-    if (quote.ApprovalStatus === 'Approved') {
+    if (quote.ApprovalStatus === 'approved') {
       await ctx.ql.doc.update('quote', quote.Id, {
         ApprovedDate: new Date().toISOString(),
         ApprovedById: ctx.user.id,
-        Status: quote.Status === 'In Review' ? 'Approved' : quote.Status
+        Status: quote.Status === 'in_review' ? 'approved' : quote.Status
       });
       console.log('✅ Quote approved');
     }
 
     // Handle rejected
-    if (quote.ApprovalStatus === 'Rejected') {
+    if (quote.ApprovalStatus === 'rejected') {
       await ctx.ql.doc.update('quote', quote.Id, {
         RejectedDate: new Date().toISOString(),
         RejectedById: ctx.user.id,
-        Status: 'Rejected'
+        Status: 'rejected'
       });
       console.log('❌ Quote rejected');
     }

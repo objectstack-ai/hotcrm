@@ -181,7 +181,7 @@ describe('Offer Hook - OfferCreationTrigger', () => {
       await OfferCreationTrigger.handler(ctx);
 
       // Assert
-      expect(ctx.input.doc.status).toBe('Draft');
+      expect(ctx.input.doc.status).toBe('draft');
     });
 
     it('should not override existing status', async () => {
@@ -189,7 +189,7 @@ describe('Offer Hook - OfferCreationTrigger', () => {
       const offer = {
         candidate_id: 'cand_123',
         offer_date: '2024-06-01',
-        status: 'Approved'
+        status: 'approved'
       };
 
       mockQlFind.mockResolvedValue([]);
@@ -200,7 +200,7 @@ describe('Offer Hook - OfferCreationTrigger', () => {
       await OfferCreationTrigger.handler(ctx);
 
       // Assert
-      expect(ctx.input.doc.status).toBe('Approved');
+      expect(ctx.input.doc.status).toBe('approved');
     });
   });
 
@@ -233,12 +233,12 @@ describe('Offer Hook - OfferApprovalTrigger', () => {
       const offer = {
         id: 'off_123',
         offer_number: 'OFF-202406-0001',
-        approval_status: 'Pending'
+        approval_status: 'pending'
       };
 
       const previous = {
         id: 'off_123',
-        approval_status: 'Pending'
+        approval_status: 'pending'
       };
 
       const ctx = createMockContext('beforeUpdate', offer, previous);
@@ -260,14 +260,14 @@ describe('Offer Hook - OfferApprovalTrigger', () => {
       const offer = {
         id: 'off_123',
         offer_number: 'OFF-202406-0001',
-        approval_status: 'Approved',
-        status: 'Draft'
+        approval_status: 'approved',
+        status: 'draft'
       };
 
       const previous = {
         id: 'off_123',
-        approval_status: 'Pending',
-        status: 'Draft'
+        approval_status: 'pending',
+        status: 'draft'
       };
 
       const ctx = createMockContext('beforeUpdate', offer, previous);
@@ -277,7 +277,7 @@ describe('Offer Hook - OfferApprovalTrigger', () => {
       await OfferApprovalTrigger.handler(ctx);
 
       // Assert
-      expect(ctx.input.doc.status).toBe('Approved');
+      expect(ctx.input.doc.status).toBe('approved');
       expect(ctx.input.doc.approved_date).toBeDefined();
       expect(ctx.input.doc.approved_by).toBe('user_123');
       expect(consoleLogSpy).toHaveBeenCalledWith(
@@ -292,14 +292,14 @@ describe('Offer Hook - OfferApprovalTrigger', () => {
       const offer = {
         id: 'off_123',
         offer_number: 'OFF-202406-0001',
-        approval_status: 'Approved',
-        status: 'Sent'
+        approval_status: 'approved',
+        status: 'sent'
       };
 
       const previous = {
         id: 'off_123',
-        approval_status: 'Pending',
-        status: 'Sent'
+        approval_status: 'pending',
+        status: 'sent'
       };
 
       const ctx = createMockContext('beforeUpdate', offer, previous);
@@ -308,7 +308,7 @@ describe('Offer Hook - OfferApprovalTrigger', () => {
       await OfferApprovalTrigger.handler(ctx);
 
       // Assert
-      expect(ctx.input.doc.status).toBe('Sent'); // Should remain Sent
+      expect(ctx.input.doc.status).toBe('sent'); // Should remain Sent
     });
 
     it('should handle offer rejection', async () => {
@@ -316,14 +316,14 @@ describe('Offer Hook - OfferApprovalTrigger', () => {
       const offer = {
         id: 'off_123',
         offer_number: 'OFF-202406-0001',
-        approval_status: 'Rejected',
-        status: 'Pending Approval'
+        approval_status: 'rejected',
+        status: 'pending_approval'
       };
 
       const previous = {
         id: 'off_123',
-        approval_status: 'Pending',
-        status: 'Pending Approval'
+        approval_status: 'pending',
+        status: 'pending_approval'
       };
 
       const ctx = createMockContext('beforeUpdate', offer, previous);
@@ -333,7 +333,7 @@ describe('Offer Hook - OfferApprovalTrigger', () => {
       await OfferApprovalTrigger.handler(ctx);
 
       // Assert
-      expect(ctx.input.doc.status).toBe('Draft');
+      expect(ctx.input.doc.status).toBe('draft');
       expect(consoleLogSpy).toHaveBeenCalledWith(
         expect.stringContaining('rejected in approval')
       );
@@ -346,15 +346,15 @@ describe('Offer Hook - OfferApprovalTrigger', () => {
       const offer = {
         id: 'off_123',
         offer_number: 'OFF-202406-0001',
-        approval_status: 'Approved',
-        status: 'Draft',
+        approval_status: 'approved',
+        status: 'draft',
         approved_date: '2024-05-15'
       };
 
       const previous = {
         id: 'off_123',
-        approval_status: 'Approved', // Already approved
-        status: 'Draft'
+        approval_status: 'approved', // Already approved
+        status: 'draft'
       };
 
       const ctx = createMockContext('beforeUpdate', offer, previous);
@@ -374,12 +374,12 @@ describe('Offer Hook - OfferApprovalTrigger', () => {
       const offer = {
         id: 'off_123',
         offer_number: 'OFF-202406-0001',
-        approval_status: 'Approved'
+        approval_status: 'approved'
       };
 
       const previous = {
         id: 'off_123',
-        approval_status: 'Pending'
+        approval_status: 'pending'
       };
 
       const ctx = createMockContext('beforeUpdate', offer, previous);
@@ -406,12 +406,12 @@ describe('Offer Hook - OfferStatusChangeTrigger', () => {
       // Arrange
       const offer = {
         id: 'off_123',
-        status: 'Draft'
+        status: 'draft'
       };
 
       const previous = {
         id: 'off_123',
-        status: 'Draft'
+        status: 'draft'
       };
 
       const ctx = createMockContext('afterUpdate', offer, previous, offer);
@@ -433,12 +433,12 @@ describe('Offer Hook - OfferStatusChangeTrigger', () => {
       const offer = {
         id: 'off_123',
         offer_number: 'OFF-202406-0001',
-        status: 'Sent'
+        status: 'sent'
       };
 
       const previous = {
         id: 'off_123',
-        status: 'Draft'
+        status: 'draft'
       };
 
       const ctx = createMockContext('afterUpdate', offer, previous, offer);
@@ -449,7 +449,7 @@ describe('Offer Hook - OfferStatusChangeTrigger', () => {
 
       // Assert
       expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Offer OFF-202406-0001 status changed from "Draft" to "Sent"')
+        expect.stringContaining('Offer OFF-202406-0001 status changed from "draft" to "sent"')
       );
 
       consoleLogSpy.mockRestore();
@@ -464,12 +464,12 @@ describe('Offer Hook - OfferStatusChangeTrigger', () => {
         offer_number: 'OFF-202406-0001',
         candidate_id: 'cand_123',
         application_id: 'app_123',
-        status: 'Sent'
+        status: 'sent'
       };
 
       const previous = {
         id: 'off_123',
-        status: 'Draft'
+        status: 'draft'
       };
 
       mockQlDocUpdate.mockResolvedValue({});
@@ -501,12 +501,12 @@ describe('Offer Hook - OfferStatusChangeTrigger', () => {
         offer_number: 'OFF-202406-0001',
         candidate_id: 'cand_123',
         application_id: 'app_123',
-        status: 'Sent'
+        status: 'sent'
       };
 
       const previous = {
         id: 'off_123',
-        status: 'Draft'
+        status: 'draft'
       };
 
       mockQlDocUpdate.mockResolvedValue({});
@@ -531,12 +531,12 @@ describe('Offer Hook - OfferStatusChangeTrigger', () => {
         offer_number: 'OFF-202406-0001',
         candidate_id: 'cand_123',
         application_id: 'app_123',
-        status: 'Accepted'
+        status: 'accepted'
       };
 
       const previous = {
         id: 'off_123',
-        status: 'Sent'
+        status: 'sent'
       };
 
       const mockCandidate = {
@@ -559,10 +559,10 @@ describe('Offer Hook - OfferStatusChangeTrigger', () => {
 
       // Assert
       expect(mockQlDocUpdate).toHaveBeenCalledWith('candidate', 'cand_123', {
-        status: 'Hired'
+        status: 'hired'
       });
       expect(mockQlDocUpdate).toHaveBeenCalledWith('application', 'app_123', {
-        status: 'Hired'
+        status: 'hired'
       });
       expect(consoleLogSpy).toHaveBeenCalledWith(
         expect.stringContaining('Offer OFF-202406-0001 accepted by candidate')
@@ -578,12 +578,12 @@ describe('Offer Hook - OfferStatusChangeTrigger', () => {
         offer_number: 'OFF-202406-0001',
         candidate_id: 'cand_123',
         application_id: 'app_123',
-        status: 'Accepted'
+        status: 'accepted'
       };
 
       const previous = {
         id: 'off_123',
-        status: 'Sent'
+        status: 'sent'
       };
 
       const mockCandidate = {
@@ -621,12 +621,12 @@ describe('Offer Hook - OfferStatusChangeTrigger', () => {
         employment_type: 'Full-time',
         base_salary: 250000,
         start_date: '2024-07-01',
-        status: 'Accepted'
+        status: 'accepted'
       };
 
       const previous = {
         id: 'off_123',
-        status: 'Sent'
+        status: 'sent'
       };
 
       const mockCandidate = {
@@ -661,7 +661,7 @@ describe('Offer Hook - OfferStatusChangeTrigger', () => {
         position_id: 'pos_123',
         manager_id: 'mgr_123',
         employment_type: 'Full-time',
-        employment_status: 'Active',
+        employment_status: 'active',
         base_salary: 250000
       }));
 
@@ -679,12 +679,12 @@ describe('Offer Hook - OfferStatusChangeTrigger', () => {
         offer_number: 'OFF-202406-0001',
         candidate_id: 'cand_123',
         application_id: 'app_123',
-        status: 'Accepted'
+        status: 'accepted'
       };
 
       const previous = {
         id: 'off_123',
-        status: 'Sent'
+        status: 'sent'
       };
 
       const mockCandidate = {
@@ -719,12 +719,12 @@ describe('Offer Hook - OfferStatusChangeTrigger', () => {
         offer_number: 'OFF-202406-0001',
         candidate_id: 'cand_123',
         application_id: 'app_123',
-        status: 'Rejected'
+        status: 'rejected'
       };
 
       const previous = {
         id: 'off_123',
-        status: 'Sent'
+        status: 'sent'
       };
 
       mockQlDocUpdate.mockResolvedValue({});
@@ -740,7 +740,7 @@ describe('Offer Hook - OfferStatusChangeTrigger', () => {
         status: 'Offer Rejected'
       });
       expect(mockQlDocUpdate).toHaveBeenCalledWith('application', 'app_123', {
-        status: 'Rejected'
+        status: 'rejected'
       });
       expect(consoleLogSpy).toHaveBeenCalledWith(
         expect.stringContaining('Offer OFF-202406-0001 rejected by candidate')
@@ -756,12 +756,12 @@ describe('Offer Hook - OfferStatusChangeTrigger', () => {
         offer_number: 'OFF-202406-0001',
         candidate_id: 'cand_123',
         application_id: 'app_123',
-        status: 'Rejected'
+        status: 'rejected'
       };
 
       const previous = {
         id: 'off_123',
-        status: 'Sent'
+        status: 'sent'
       };
 
       mockQlDocUpdate.mockResolvedValue({});
@@ -785,12 +785,12 @@ describe('Offer Hook - OfferStatusChangeTrigger', () => {
         id: 'off_123',
         offer_number: 'OFF-202406-0001',
         candidate_id: 'cand_123',
-        status: 'Expired'
+        status: 'expired'
       };
 
       const previous = {
         id: 'off_123',
-        status: 'Sent'
+        status: 'sent'
       };
 
       mockQlDocUpdate.mockResolvedValue({});
@@ -825,7 +825,7 @@ describe('Offer Hook - OfferStatusChangeTrigger', () => {
 
       const previous = {
         id: 'off_123',
-        status: 'Sent'
+        status: 'sent'
       };
 
       mockQlDocUpdate.mockResolvedValue({});
@@ -856,12 +856,12 @@ describe('Offer Hook - OfferStatusChangeTrigger', () => {
         offer_number: 'OFF-202406-0001',
         candidate_id: 'cand_123',
         application_id: 'app_123',
-        status: 'Sent'
+        status: 'sent'
       };
 
       const previous = {
         id: 'off_123',
-        status: 'Draft'
+        status: 'draft'
       };
 
       mockQlDocUpdate.mockRejectedValue(new Error('Database error'));
@@ -882,12 +882,12 @@ describe('Offer Hook - OfferStatusChangeTrigger', () => {
         offer_number: 'OFF-202406-0001',
         candidate_id: 'cand_123',
         application_id: 'app_123',
-        status: 'Accepted'
+        status: 'accepted'
       };
 
       const previous = {
         id: 'off_123',
-        status: 'Sent'
+        status: 'sent'
       };
 
       mockQlDocUpdate.mockResolvedValue({});

@@ -30,9 +30,9 @@ describe('analyzeFirstResponseTime', () => {
   it('should calculate response time metrics', async () => {
     const now = Date.now();
     const mockCases = [
-      { priority: 'high', channel: 'email', created_date: new Date(now - 120 * 60000).toISOString(), first_response_date: new Date(now - 90 * 60000).toISOString(), status: 'Closed', owner_id: 'agent_1' },
-      { priority: 'medium', channel: 'chat', created_date: new Date(now - 200 * 60000).toISOString(), first_response_date: new Date(now - 190 * 60000).toISOString(), status: 'Closed', owner_id: 'agent_2' },
-      { priority: 'low', channel: 'email', created_date: new Date(now - 600 * 60000).toISOString(), first_response_date: new Date(now - 300 * 60000).toISOString(), status: 'Closed', owner_id: 'agent_1' },
+      { priority: 'high', channel: 'email', created_date: new Date(now - 120 * 60000).toISOString(), first_response_date: new Date(now - 90 * 60000).toISOString(), status: 'closed', owner_id: 'agent_1' },
+      { priority: 'medium', channel: 'chat', created_date: new Date(now - 200 * 60000).toISOString(), first_response_date: new Date(now - 190 * 60000).toISOString(), status: 'closed', owner_id: 'agent_2' },
+      { priority: 'low', channel: 'email', created_date: new Date(now - 600 * 60000).toISOString(), first_response_date: new Date(now - 300 * 60000).toISOString(), status: 'closed', owner_id: 'agent_1' },
     ];
 
     (db.find as Mock).mockResolvedValueOnce(mockCases);
@@ -52,9 +52,9 @@ describe('analyzeFirstResponseTime', () => {
   it('should break down by priority', async () => {
     const now = Date.now();
     const mockCases = [
-      { priority: 'critical', channel: 'phone', created_date: new Date(now - 60 * 60000).toISOString(), first_response_date: new Date(now - 50 * 60000).toISOString(), status: 'Closed', owner_id: 'agent_1' },
-      { priority: 'critical', channel: 'phone', created_date: new Date(now - 90 * 60000).toISOString(), first_response_date: new Date(now - 55 * 60000).toISOString(), status: 'Closed', owner_id: 'agent_2' },
-      { priority: 'low', channel: 'email', created_date: new Date(now - 500 * 60000).toISOString(), first_response_date: new Date(now - 200 * 60000).toISOString(), status: 'Closed', owner_id: 'agent_1' },
+      { priority: 'critical', channel: 'phone', created_date: new Date(now - 60 * 60000).toISOString(), first_response_date: new Date(now - 50 * 60000).toISOString(), status: 'closed', owner_id: 'agent_1' },
+      { priority: 'critical', channel: 'phone', created_date: new Date(now - 90 * 60000).toISOString(), first_response_date: new Date(now - 55 * 60000).toISOString(), status: 'closed', owner_id: 'agent_2' },
+      { priority: 'low', channel: 'email', created_date: new Date(now - 500 * 60000).toISOString(), first_response_date: new Date(now - 200 * 60000).toISOString(), status: 'closed', owner_id: 'agent_1' },
     ];
 
     (db.find as Mock).mockResolvedValueOnce(mockCases);
@@ -89,11 +89,11 @@ describe('analyzeFirstResponseTime', () => {
     const now = Date.now();
     const mockCases = [
       // Under 15 min response
-      { priority: 'high', channel: 'chat', created_date: new Date(now - 20 * 60000).toISOString(), first_response_date: new Date(now - 10 * 60000).toISOString(), status: 'Closed', owner_id: 'a1' },
+      { priority: 'high', channel: 'chat', created_date: new Date(now - 20 * 60000).toISOString(), first_response_date: new Date(now - 10 * 60000).toISOString(), status: 'closed', owner_id: 'a1' },
       // Under 1 hr response (45 min)
-      { priority: 'medium', channel: 'email', created_date: new Date(now - 60 * 60000).toISOString(), first_response_date: new Date(now - 15 * 60000).toISOString(), status: 'Closed', owner_id: 'a2' },
+      { priority: 'medium', channel: 'email', created_date: new Date(now - 60 * 60000).toISOString(), first_response_date: new Date(now - 15 * 60000).toISOString(), status: 'closed', owner_id: 'a2' },
       // Over 8 hr response (600 min)
-      { priority: 'low', channel: 'email', created_date: new Date(now - 700 * 60000).toISOString(), first_response_date: new Date(now - 100 * 60000).toISOString(), status: 'Closed', owner_id: 'a3' },
+      { priority: 'low', channel: 'email', created_date: new Date(now - 700 * 60000).toISOString(), first_response_date: new Date(now - 100 * 60000).toISOString(), status: 'closed', owner_id: 'a3' },
     ];
 
     (db.find as Mock).mockResolvedValueOnce(mockCases);
@@ -108,8 +108,8 @@ describe('analyzeFirstResponseTime', () => {
     const now = Date.now();
     // All cases with very long response times (over 4 hours = 240 min)
     const mockCases = [
-      { priority: 'critical', channel: 'email', created_date: new Date(now - 600 * 60000).toISOString(), first_response_date: new Date(now - 300 * 60000).toISOString(), status: 'Closed', owner_id: 'a1' },
-      { priority: 'high', channel: 'email', created_date: new Date(now - 700 * 60000).toISOString(), first_response_date: new Date(now - 200 * 60000).toISOString(), status: 'Closed', owner_id: 'a2' },
+      { priority: 'critical', channel: 'email', created_date: new Date(now - 600 * 60000).toISOString(), first_response_date: new Date(now - 300 * 60000).toISOString(), status: 'closed', owner_id: 'a1' },
+      { priority: 'high', channel: 'email', created_date: new Date(now - 700 * 60000).toISOString(), first_response_date: new Date(now - 200 * 60000).toISOString(), status: 'closed', owner_id: 'a2' },
     ];
 
     (db.find as Mock).mockResolvedValueOnce(mockCases);
@@ -129,10 +129,10 @@ describe('analyzeCSAT', () => {
   it('should calculate CSAT score', async () => {
     const now = Date.now();
     const mockCases = [
-      { satisfaction_rating: 5, owner_id: 'agent_1', category: 'billing', priority: 'medium', created_date: new Date(now - 2 * 86400000).toISOString(), closed_date: new Date(now - 1 * 86400000).toISOString(), first_response_date: new Date(now - 1.5 * 86400000).toISOString(), status: 'Closed', is_escalated: false, resolution_type: 'first_contact', channel: 'chat' },
-      { satisfaction_rating: 4, owner_id: 'agent_2', category: 'technical', priority: 'high', created_date: new Date(now - 3 * 86400000).toISOString(), closed_date: new Date(now - 2 * 86400000).toISOString(), first_response_date: new Date(now - 2.5 * 86400000).toISOString(), status: 'Closed', is_escalated: false, resolution_type: 'resolved', channel: 'email' },
-      { satisfaction_rating: 2, owner_id: 'agent_1', category: 'billing', priority: 'low', created_date: new Date(now - 4 * 86400000).toISOString(), closed_date: new Date(now - 3 * 86400000).toISOString(), first_response_date: new Date(now - 3.5 * 86400000).toISOString(), status: 'Closed', is_escalated: true, resolution_type: 'resolved', channel: 'email' },
-      { satisfaction_rating: 5, owner_id: 'agent_2', category: 'technical', priority: 'medium', created_date: new Date(now - 5 * 86400000).toISOString(), closed_date: new Date(now - 4 * 86400000).toISOString(), first_response_date: new Date(now - 4.5 * 86400000).toISOString(), status: 'Closed', is_escalated: false, resolution_type: 'first_contact', channel: 'chat' },
+      { satisfaction_rating: 5, owner_id: 'agent_1', category: 'billing', priority: 'medium', created_date: new Date(now - 2 * 86400000).toISOString(), closed_date: new Date(now - 1 * 86400000).toISOString(), first_response_date: new Date(now - 1.5 * 86400000).toISOString(), status: 'closed', is_escalated: false, resolution_type: 'first_contact', channel: 'chat' },
+      { satisfaction_rating: 4, owner_id: 'agent_2', category: 'technical', priority: 'high', created_date: new Date(now - 3 * 86400000).toISOString(), closed_date: new Date(now - 2 * 86400000).toISOString(), first_response_date: new Date(now - 2.5 * 86400000).toISOString(), status: 'closed', is_escalated: false, resolution_type: 'resolved', channel: 'email' },
+      { satisfaction_rating: 2, owner_id: 'agent_1', category: 'billing', priority: 'low', created_date: new Date(now - 4 * 86400000).toISOString(), closed_date: new Date(now - 3 * 86400000).toISOString(), first_response_date: new Date(now - 3.5 * 86400000).toISOString(), status: 'closed', is_escalated: true, resolution_type: 'resolved', channel: 'email' },
+      { satisfaction_rating: 5, owner_id: 'agent_2', category: 'technical', priority: 'medium', created_date: new Date(now - 5 * 86400000).toISOString(), closed_date: new Date(now - 4 * 86400000).toISOString(), first_response_date: new Date(now - 4.5 * 86400000).toISOString(), status: 'closed', is_escalated: false, resolution_type: 'first_contact', channel: 'chat' },
     ];
 
     const mockAllClosed = [{ id: '1' }, { id: '2' }, { id: '3' }, { id: '4' }, { id: '5' }];
@@ -157,11 +157,11 @@ describe('analyzeCSAT', () => {
     const now = Date.now();
     // 2 promoters (5), 1 passive (4), 2 detractors (1, 3)
     const mockCases = [
-      { satisfaction_rating: 5, owner_id: 'a1', category: 'billing', priority: 'medium', created_date: new Date(now - 86400000).toISOString(), closed_date: new Date(now).toISOString(), status: 'Closed', is_escalated: false, resolution_type: 'first_contact', channel: 'chat' },
-      { satisfaction_rating: 5, owner_id: 'a2', category: 'billing', priority: 'medium', created_date: new Date(now - 86400000).toISOString(), closed_date: new Date(now).toISOString(), status: 'Closed', is_escalated: false, resolution_type: 'resolved', channel: 'email' },
-      { satisfaction_rating: 4, owner_id: 'a1', category: 'tech', priority: 'low', created_date: new Date(now - 86400000).toISOString(), closed_date: new Date(now).toISOString(), status: 'Closed', is_escalated: false, resolution_type: 'resolved', channel: 'email' },
-      { satisfaction_rating: 1, owner_id: 'a2', category: 'tech', priority: 'high', created_date: new Date(now - 86400000).toISOString(), closed_date: new Date(now).toISOString(), status: 'Closed', is_escalated: true, resolution_type: 'resolved', channel: 'phone' },
-      { satisfaction_rating: 3, owner_id: 'a1', category: 'billing', priority: 'medium', created_date: new Date(now - 86400000).toISOString(), closed_date: new Date(now).toISOString(), status: 'Closed', is_escalated: false, resolution_type: 'resolved', channel: 'email' },
+      { satisfaction_rating: 5, owner_id: 'a1', category: 'billing', priority: 'medium', created_date: new Date(now - 86400000).toISOString(), closed_date: new Date(now).toISOString(), status: 'closed', is_escalated: false, resolution_type: 'first_contact', channel: 'chat' },
+      { satisfaction_rating: 5, owner_id: 'a2', category: 'billing', priority: 'medium', created_date: new Date(now - 86400000).toISOString(), closed_date: new Date(now).toISOString(), status: 'closed', is_escalated: false, resolution_type: 'resolved', channel: 'email' },
+      { satisfaction_rating: 4, owner_id: 'a1', category: 'tech', priority: 'low', created_date: new Date(now - 86400000).toISOString(), closed_date: new Date(now).toISOString(), status: 'closed', is_escalated: false, resolution_type: 'resolved', channel: 'email' },
+      { satisfaction_rating: 1, owner_id: 'a2', category: 'tech', priority: 'high', created_date: new Date(now - 86400000).toISOString(), closed_date: new Date(now).toISOString(), status: 'closed', is_escalated: true, resolution_type: 'resolved', channel: 'phone' },
+      { satisfaction_rating: 3, owner_id: 'a1', category: 'billing', priority: 'medium', created_date: new Date(now - 86400000).toISOString(), closed_date: new Date(now).toISOString(), status: 'closed', is_escalated: false, resolution_type: 'resolved', channel: 'email' },
     ];
 
     (db.find as Mock)
@@ -193,8 +193,8 @@ describe('analyzeCSAT', () => {
   it('should break down by category and priority', async () => {
     const now = Date.now();
     const mockCases = [
-      { satisfaction_rating: 5, owner_id: 'a1', category: 'billing', priority: 'high', created_date: new Date(now - 86400000).toISOString(), closed_date: new Date(now).toISOString(), status: 'Closed', is_escalated: false, resolution_type: 'resolved', channel: 'email' },
-      { satisfaction_rating: 3, owner_id: 'a2', category: 'technical', priority: 'low', created_date: new Date(now - 86400000).toISOString(), closed_date: new Date(now).toISOString(), status: 'Closed', is_escalated: false, resolution_type: 'resolved', channel: 'chat' },
+      { satisfaction_rating: 5, owner_id: 'a1', category: 'billing', priority: 'high', created_date: new Date(now - 86400000).toISOString(), closed_date: new Date(now).toISOString(), status: 'closed', is_escalated: false, resolution_type: 'resolved', channel: 'email' },
+      { satisfaction_rating: 3, owner_id: 'a2', category: 'technical', priority: 'low', created_date: new Date(now - 86400000).toISOString(), closed_date: new Date(now).toISOString(), status: 'closed', is_escalated: false, resolution_type: 'resolved', channel: 'chat' },
     ];
 
     (db.find as Mock)

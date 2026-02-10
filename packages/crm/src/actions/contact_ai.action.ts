@@ -196,7 +196,7 @@ export async function detectBuyingIntent(request: BuyingIntentRequest): Promise<
   }
 
   // Meeting signals
-  const meetings = activities.filter((a: any) => a.type === 'Meeting');
+  const meetings = activities.filter((a: any) => a.type === 'meeting');
   if (meetings.length > 0) {
     signals.push({
       signal: 'Meeting Scheduled',

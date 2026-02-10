@@ -37,7 +37,7 @@ describe('End-to-End Recruitment Workflow', () => {
       department_id: 'dept_eng',
       hiring_manager_id: 'emp_manager',
       headcount: 1,
-      status: 'Open',
+      status: 'open',
       salary_range_min: 120000,
       salary_range_max: 160000
     };
@@ -64,7 +64,7 @@ describe('End-to-End Recruitment Workflow', () => {
       candidate_id: 'cand_123',
       recruitment_id: 'rec_123',
       applied_date: '2024-01-15',
-      status: 'Submitted',
+      status: 'submitted',
       stage: 'Resume Review',
       source: 'Job Board'
     };
@@ -111,7 +111,7 @@ describe('End-to-End Recruitment Workflow', () => {
       bonus: 20000,
       employment_type: 'Full-time',
       probation_period: '3 Months',
-      status: 'Draft'
+      status: 'draft'
     };
 
     const mockEmployee = {
@@ -148,14 +148,14 @@ describe('End-to-End Recruitment Workflow', () => {
 
     (db.doc.update as Mock)
       .mockResolvedValueOnce({ ...mockCandidate, status: 'under_review' })
-      .mockResolvedValueOnce({ ...mockApplication, status: 'Screening', stage: 'Phone Screen' })
-      .mockResolvedValueOnce({ ...mockCandidate, status: 'Interviewing' })
-      .mockResolvedValueOnce({ ...mockApplication, status: 'Interviewing' })
-      .mockResolvedValueOnce({ ...mockInterview1, status: 'Completed', result: 'Hire' })
-      .mockResolvedValueOnce({ ...mockInterview2, status: 'Completed', result: 'Strong Hire' })
+      .mockResolvedValueOnce({ ...mockApplication, status: 'screening', stage: 'Phone Screen' })
+      .mockResolvedValueOnce({ ...mockCandidate, status: 'interviewing' })
+      .mockResolvedValueOnce({ ...mockApplication, status: 'interviewing' })
+      .mockResolvedValueOnce({ ...mockInterview1, status: 'completed', result: 'Hire' })
+      .mockResolvedValueOnce({ ...mockInterview2, status: 'completed', result: 'Strong Hire' })
       .mockResolvedValueOnce({ ...mockOffer, status: 'Extended' })
-      .mockResolvedValueOnce({ ...mockOffer, status: 'Accepted', response_date: '2024-02-05' })
-      .mockResolvedValueOnce({ ...mockCandidate, status: 'Hired' })
+      .mockResolvedValueOnce({ ...mockOffer, status: 'accepted', response_date: '2024-02-05' })
+      .mockResolvedValueOnce({ ...mockCandidate, status: 'hired' })
       .mockResolvedValueOnce({ ...mockApplication, status: 'Offer Extended' });
 
     // Act - Execute complete workflow
@@ -178,7 +178,7 @@ describe('End-to-End Recruitment Workflow', () => {
       candidate_id: candidate.id,
       recruitment_id: recruitment.id,
       applied_date: '2024-01-15',
-      status: 'Submitted',
+      status: 'submitted',
       stage: 'Resume Review'
     });
 
@@ -188,17 +188,17 @@ describe('End-to-End Recruitment Workflow', () => {
     });
 
     const applicationScreening = await db.doc.update('application', application.id, {
-      status: 'Screening',
+      status: 'screening',
       stage: 'Phone Screen'
     });
 
     // Step 3: Schedule and complete interviews → Interviewing
     const candidateInterviewing = await db.doc.update('candidate', candidate.id, {
-      status: 'Interviewing'
+      status: 'interviewing'
     });
 
     const applicationInterviewing = await db.doc.update('application', application.id, {
-      status: 'Interviewing'
+      status: 'interviewing'
     });
 
     const interview1 = await db.doc.create('interview', {
@@ -225,13 +225,13 @@ describe('End-to-End Recruitment Workflow', () => {
 
     // Complete interviews
     const completedInterview1 = await db.doc.update('interview', interview1.id, {
-      status: 'Completed',
+      status: 'completed',
       result: 'Hire',
       feedback: 'Strong technical skills, good problem solving'
     });
 
     const completedInterview2 = await db.doc.update('interview', interview2.id, {
-      status: 'Completed',
+      status: 'completed',
       result: 'Strong Hire',
       feedback: 'Excellent cultural fit, leadership potential'
     });
@@ -249,7 +249,7 @@ describe('End-to-End Recruitment Workflow', () => {
       base_salary: 145000,
       bonus: 20000,
       employment_type: 'Full-time',
-      status: 'Draft'
+      status: 'draft'
     });
 
     const extendedOffer = await db.doc.update('offer', offer.id, {
@@ -258,7 +258,7 @@ describe('End-to-End Recruitment Workflow', () => {
 
     // Step 5: Offer acceptance → Accepted
     const acceptedOffer = await db.doc.update('offer', offer.id, {
-      status: 'Accepted',
+      status: 'accepted',
       response_date: '2024-02-05'
     });
 
@@ -278,7 +278,7 @@ describe('End-to-End Recruitment Workflow', () => {
     });
 
     const hiredCandidate = await db.doc.update('candidate', candidate.id, {
-      status: 'Hired'
+      status: 'hired'
     });
 
     const finalApplication = await db.doc.update('application', application.id, {
@@ -295,10 +295,10 @@ describe('End-to-End Recruitment Workflow', () => {
     expect(application.recruitment_id).toBe(recruitment.id);
 
     expect(candidateUnderReview.status).toBe('under_review');
-    expect(applicationScreening.status).toBe('Screening');
+    expect(applicationScreening.status).toBe('screening');
 
-    expect(candidateInterviewing.status).toBe('Interviewing');
-    expect(applicationInterviewing.status).toBe('Interviewing');
+    expect(candidateInterviewing.status).toBe('interviewing');
+    expect(applicationInterviewing.status).toBe('interviewing');
 
     expect(interview1).toBeDefined();
     expect(interview2).toBeDefined();
@@ -306,13 +306,13 @@ describe('End-to-End Recruitment Workflow', () => {
     expect(completedInterview2.result).toBe('Strong Hire');
 
     expect(extendedOffer.status).toBe('Extended');
-    expect(acceptedOffer.status).toBe('Accepted');
+    expect(acceptedOffer.status).toBe('accepted');
 
     expect(employee).toBeDefined();
     expect(employee.first_name).toBe(candidate.first_name);
     expect(employee.base_salary).toBe(145000);
 
-    expect(hiredCandidate.status).toBe('Hired');
+    expect(hiredCandidate.status).toBe('hired');
 
     // Verify database operations count
     expect(db.doc.create).toHaveBeenCalledTimes(6); // candidate, application, 2 interviews, offer, employee
@@ -334,7 +334,7 @@ describe('End-to-End Recruitment Workflow', () => {
       id: 'app_reject_1',
       candidate_id: 'cand_reject_1',
       recruitment_id: 'rec_123',
-      status: 'Submitted'
+      status: 'submitted'
     };
 
     (db.doc.create as Mock)
@@ -343,14 +343,14 @@ describe('End-to-End Recruitment Workflow', () => {
 
     (db.doc.update as Mock)
       .mockResolvedValueOnce({ ...mockCandidate, status: 'under_review' })
-      .mockResolvedValueOnce({ ...mockApplication, status: 'Screening' })
+      .mockResolvedValueOnce({ ...mockApplication, status: 'screening' })
       .mockResolvedValueOnce({ 
         ...mockCandidate, 
-        status: 'Rejected'
+        status: 'rejected'
       })
       .mockResolvedValueOnce({ 
         ...mockApplication, 
-        status: 'Rejected',
+        status: 'rejected',
         rejection_reason: 'Insufficient experience'
       });
 
@@ -365,24 +365,24 @@ describe('End-to-End Recruitment Workflow', () => {
     const application = await db.doc.create('application', {
       candidate_id: candidate.id,
       recruitment_id: 'rec_123',
-      status: 'Submitted'
+      status: 'submitted'
     });
 
     await db.doc.update('candidate', candidate.id, { status: 'under_review' });
-    await db.doc.update('application', application.id, { status: 'Screening' });
+    await db.doc.update('application', application.id, { status: 'screening' });
 
     const rejectedCandidate = await db.doc.update('candidate', candidate.id, {
-      status: 'Rejected'
+      status: 'rejected'
     });
 
     const rejectedApplication = await db.doc.update('application', application.id, {
-      status: 'Rejected',
+      status: 'rejected',
       rejection_reason: 'Insufficient experience'
     });
 
     // Assert
-    expect(rejectedCandidate.status).toBe('Rejected');
-    expect(rejectedApplication.status).toBe('Rejected');
+    expect(rejectedCandidate.status).toBe('rejected');
+    expect(rejectedApplication.status).toBe('rejected');
     expect(rejectedApplication.rejection_reason).toBe('Insufficient experience');
     expect(db.doc.create).toHaveBeenCalledTimes(2);
     expect(db.doc.update).toHaveBeenCalledTimes(4);
@@ -395,14 +395,14 @@ describe('End-to-End Recruitment Workflow', () => {
       first_name: 'Carol',
       last_name: 'Williams',
       email: 'carol.williams@example.com',
-      status: 'Interviewing'
+      status: 'interviewing'
     };
 
     const mockApplication = {
       id: 'app_reject_2',
       candidate_id: 'cand_reject_2',
       recruitment_id: 'rec_123',
-      status: 'Interviewing'
+      status: 'interviewing'
     };
 
     const mockInterview = {
@@ -417,14 +417,14 @@ describe('End-to-End Recruitment Workflow', () => {
     (db.doc.update as Mock)
       .mockResolvedValueOnce({ 
         ...mockInterview, 
-        status: 'Completed',
+        status: 'completed',
         result: 'No Hire',
         feedback: 'Technical skills below requirements'
       })
-      .mockResolvedValueOnce({ ...mockCandidate, status: 'Rejected' })
+      .mockResolvedValueOnce({ ...mockCandidate, status: 'rejected' })
       .mockResolvedValueOnce({ 
         ...mockApplication, 
-        status: 'Rejected',
+        status: 'rejected',
         rejection_reason: 'Did not pass technical interview'
       });
 
@@ -437,24 +437,24 @@ describe('End-to-End Recruitment Workflow', () => {
     });
 
     const completedInterview = await db.doc.update('interview', interview.id, {
-      status: 'Completed',
+      status: 'completed',
       result: 'No Hire',
       feedback: 'Technical skills below requirements'
     });
 
     const rejectedCandidate = await db.doc.update('candidate', mockCandidate.id, {
-      status: 'Rejected'
+      status: 'rejected'
     });
 
     const rejectedApplication = await db.doc.update('application', mockApplication.id, {
-      status: 'Rejected',
+      status: 'rejected',
       rejection_reason: 'Did not pass technical interview'
     });
 
     // Assert
     expect(completedInterview.result).toBe('No Hire');
-    expect(rejectedCandidate.status).toBe('Rejected');
-    expect(rejectedApplication.status).toBe('Rejected');
+    expect(rejectedCandidate.status).toBe('rejected');
+    expect(rejectedApplication.status).toBe('rejected');
     expect(db.doc.create).toHaveBeenCalledTimes(1);
     expect(db.doc.update).toHaveBeenCalledTimes(3);
   });
@@ -466,14 +466,14 @@ describe('End-to-End Recruitment Workflow', () => {
       first_name: 'David',
       last_name: 'Lee',
       email: 'david.lee@example.com',
-      status: 'Interviewing'
+      status: 'interviewing'
     };
 
     const mockApplication = {
       id: 'app_offer_reject',
       candidate_id: 'cand_offer_reject',
       recruitment_id: 'rec_123',
-      status: 'Interviewing'
+      status: 'interviewing'
     };
 
     const mockOffer = {
@@ -489,7 +489,7 @@ describe('End-to-End Recruitment Workflow', () => {
     (db.doc.update as Mock)
       .mockResolvedValueOnce({ 
         ...mockOffer, 
-        status: 'Rejected',
+        status: 'rejected',
         response_date: '2024-02-01',
         rejection_reason: 'Accepted another offer with better compensation'
       })
@@ -506,7 +506,7 @@ describe('End-to-End Recruitment Workflow', () => {
     });
 
     const rejectedOffer = await db.doc.update('offer', offer.id, {
-      status: 'Rejected',
+      status: 'rejected',
       response_date: '2024-02-01',
       rejection_reason: 'Accepted another offer with better compensation'
     });
@@ -520,7 +520,7 @@ describe('End-to-End Recruitment Workflow', () => {
     });
 
     // Assert
-    expect(rejectedOffer.status).toBe('Rejected');
+    expect(rejectedOffer.status).toBe('rejected');
     expect(rejectedOffer.rejection_reason).toBe('Accepted another offer with better compensation');
     expect(withdrawnCandidate.status).toBe('Withdrawn');
     expect(withdrawnApplication.status).toBe('Withdrawn');
@@ -533,14 +533,14 @@ describe('End-to-End Recruitment Workflow', () => {
       first_name: 'Emma',
       last_name: 'Johnson',
       email: 'emma.johnson@example.com',
-      status: 'Interviewing'
+      status: 'interviewing'
     };
 
     const mockApplication = {
       id: 'app_multi_int',
       candidate_id: 'cand_multi_int',
       recruitment_id: 'rec_123',
-      status: 'Interviewing'
+      status: 'interviewing'
     };
 
     const interviews = [
@@ -548,35 +548,35 @@ describe('End-to-End Recruitment Workflow', () => {
         id: 'int_phone',
         title: 'Phone Screen',
         interview_type: 'Phone Screen',
-        status: 'Completed',
+        status: 'completed',
         result: 'Hire'
       },
       {
         id: 'int_tech',
         title: 'Technical Interview',
         interview_type: 'Technical',
-        status: 'Completed',
+        status: 'completed',
         result: 'Hire'
       },
       {
         id: 'int_round1',
         title: 'First Round',
         interview_type: 'First Round',
-        status: 'Completed',
+        status: 'completed',
         result: 'Hire'
       },
       {
         id: 'int_round2',
         title: 'Second Round',
         interview_type: 'Second Round',
-        status: 'Completed',
+        status: 'completed',
         result: 'Strong Hire'
       },
       {
         id: 'int_final',
         title: 'Final Round',
         interview_type: 'Final Round',
-        status: 'Completed',
+        status: 'completed',
         result: 'Strong Hire'
       }
     ];
@@ -612,7 +612,7 @@ describe('End-to-End Recruitment Workflow', () => {
     const completedInterviews = [];
     for (let i = 0; i < createdInterviews.length; i++) {
       const completed = await db.doc.update('interview', createdInterviews[i].id, {
-        status: 'Completed',
+        status: 'completed',
         result: interviews[i].result
       });
       completedInterviews.push(completed);
@@ -621,7 +621,7 @@ describe('End-to-End Recruitment Workflow', () => {
     // Assert
     expect(createdInterviews).toHaveLength(5);
     expect(completedInterviews).toHaveLength(5);
-    expect(completedInterviews.every(int => int.status === 'Completed')).toBe(true);
+    expect(completedInterviews.every(int => int.status === 'completed')).toBe(true);
     expect(completedInterviews[3].result).toBe('Strong Hire');
     expect(completedInterviews[4].result).toBe('Strong Hire');
     expect(db.doc.create).toHaveBeenCalledTimes(5);
@@ -697,16 +697,16 @@ describe('End-to-End Recruitment Workflow', () => {
       id: 'app_validate',
       candidate_id: 'cand_123',
       recruitment_id: 'rec_123',
-      status: 'Submitted',
+      status: 'submitted',
       stage: 'Resume Review'
     };
 
     const validTransitions = [
-      { from: 'Submitted', to: 'Screening', stage: 'Phone Screen' },
-      { from: 'Screening', to: 'Interview Scheduled', stage: 'First Interview' },
-      { from: 'Interview Scheduled', to: 'Interviewing', stage: 'First Interview' },
-      { from: 'Interviewing', to: 'Shortlisted', stage: 'Final Interview' },
-      { from: 'Shortlisted', to: 'Offer Extended', stage: 'Offer Discussion' }
+      { from: 'submitted', to: 'screening', stage: 'Phone Screen' },
+      { from: 'screening', to: 'Interview Scheduled', stage: 'First Interview' },
+      { from: 'Interview Scheduled', to: 'interviewing', stage: 'First Interview' },
+      { from: 'interviewing', to: 'shortlisted', stage: 'Final Interview' },
+      { from: 'shortlisted', to: 'Offer Extended', stage: 'Offer Discussion' }
     ];
 
     (db.doc.create as Mock).mockResolvedValue(mockApplication);
@@ -733,10 +733,10 @@ describe('End-to-End Recruitment Workflow', () => {
 
     // Assert
     expect(transitions).toHaveLength(5);
-    expect(transitions[0].status).toBe('Screening');
+    expect(transitions[0].status).toBe('screening');
     expect(transitions[1].status).toBe('Interview Scheduled');
-    expect(transitions[2].status).toBe('Interviewing');
-    expect(transitions[3].status).toBe('Shortlisted');
+    expect(transitions[2].status).toBe('interviewing');
+    expect(transitions[3].status).toBe('shortlisted');
     expect(transitions[4].status).toBe('Offer Extended');
     expect(db.doc.update).toHaveBeenCalledTimes(5);
   });
@@ -748,7 +748,7 @@ describe('End-to-End Recruitment Workflow', () => {
       email: 'duplicate@example.com',
       first_name: 'John',
       last_name: 'Doe',
-      status: 'Hired'
+      status: 'hired'
     };
 
     (db.find as Mock).mockResolvedValueOnce([existingCandidate]);
@@ -797,7 +797,7 @@ describe('End-to-End Recruitment Workflow', () => {
       candidate_id: 'cand_link',
       recruitment_id: 'rec_link',
       applied_date: '2024-02-01',
-      status: 'Submitted'
+      status: 'submitted'
     };
 
     (db.doc.get as Mock)
@@ -814,7 +814,7 @@ describe('End-to-End Recruitment Workflow', () => {
       candidate_id: candidate.id,
       recruitment_id: recruitment.id,
       applied_date: '2024-02-01',
-      status: 'Submitted'
+      status: 'submitted'
     });
 
     // Assert
@@ -841,7 +841,7 @@ describe('End-to-End Recruitment Workflow', () => {
       benefits: 'Health insurance, 401k matching, unlimited PTO',
       employment_type: 'Full-time',
       probation_period: '3 Months',
-      status: 'Draft'
+      status: 'draft'
     };
 
     (db.doc.create as Mock).mockResolvedValue(mockOffer);
@@ -859,7 +859,7 @@ describe('End-to-End Recruitment Workflow', () => {
       benefits: 'Health insurance, 401k matching, unlimited PTO',
       employment_type: 'Full-time',
       probation_period: '3 Months',
-      status: 'Draft'
+      status: 'draft'
     });
 
     // Assert
@@ -879,7 +879,7 @@ describe('End-to-End Recruitment Workflow', () => {
       employment_type: 'Full-time',
       start_date: '2024-03-01',
       probation_period: '3 Months',
-      status: 'Accepted'
+      status: 'accepted'
     };
 
     const mockCandidate = {

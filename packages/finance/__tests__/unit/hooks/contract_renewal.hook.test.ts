@@ -25,7 +25,7 @@ describe('ContractRenewalCheck', () => {
   it('should create renewal opportunity when contract is activated and expires within 90 days', async () => {
     const newDoc = {
       _id: 'contract_1',
-      status: 'Activated',
+      status: 'activated',
       end_date: daysFromNow(60),
       contract_number: 'CNT-001',
       account: 'acc_1',
@@ -33,7 +33,7 @@ describe('ContractRenewalCheck', () => {
     };
     const oldDoc = {
       _id: 'contract_1',
-      status: 'Draft',
+      status: 'draft',
       end_date: daysFromNow(60),
       contract_number: 'CNT-001',
       account: 'acc_1',
@@ -74,7 +74,7 @@ describe('ContractRenewalCheck', () => {
       account: 'acc_1',
       source_contract: 'contract_1',
       type: 'Renewal',
-      stage: 'Prospecting',
+      stage: 'prospecting',
       amount: 50000
     });
 
@@ -83,7 +83,7 @@ describe('ContractRenewalCheck', () => {
     expect(taskCall[0]).toBe('task');
     expect(taskCall[1]).toMatchObject({
       related_to: 'acc_1',
-      status: 'Open'
+      status: 'open'
     });
   });
 
@@ -91,7 +91,7 @@ describe('ContractRenewalCheck', () => {
     const ctx = {
       result: {
         _id: 'contract_2',
-        status: 'Activated',
+        status: 'activated',
         end_date: daysFromNow(120),
         contract_number: 'CNT-002',
         account: 'acc_2',
@@ -99,7 +99,7 @@ describe('ContractRenewalCheck', () => {
       },
       previous: {
         _id: 'contract_2',
-        status: 'Draft',
+        status: 'draft',
         end_date: daysFromNow(120),
         contract_number: 'CNT-002',
         account: 'acc_2',
@@ -118,7 +118,7 @@ describe('ContractRenewalCheck', () => {
     const ctx = {
       result: {
         _id: 'contract_3',
-        status: 'Draft',
+        status: 'draft',
         end_date: daysFromNow(30),
         contract_number: 'CNT-003',
         account: 'acc_3',
@@ -126,7 +126,7 @@ describe('ContractRenewalCheck', () => {
       },
       previous: {
         _id: 'contract_3',
-        status: 'Draft',
+        status: 'draft',
         end_date: daysFromNow(30),
         contract_number: 'CNT-003',
         account: 'acc_3',
@@ -145,7 +145,7 @@ describe('ContractRenewalCheck', () => {
     const ctx = {
       result: {
         _id: 'contract_4',
-        status: 'Activated',
+        status: 'activated',
         end_date: daysFromNow(45),
         contract_number: 'CNT-004',
         account: 'acc_4',
@@ -153,7 +153,7 @@ describe('ContractRenewalCheck', () => {
       },
       previous: {
         _id: 'contract_4',
-        status: 'Draft',
+        status: 'draft',
         end_date: daysFromNow(45),
         contract_number: 'CNT-004',
         account: 'acc_4',
@@ -174,7 +174,7 @@ describe('ContractRenewalCheck', () => {
     const ctx = {
       result: {
         _id: 'contract_5',
-        status: 'Activated',
+        status: 'activated',
         end_date: daysFromNow(30),
         contract_number: 'CNT-005',
         account: 'acc_5',
@@ -182,7 +182,7 @@ describe('ContractRenewalCheck', () => {
       },
       previous: {
         _id: 'contract_5',
-        status: 'Draft',
+        status: 'draft',
         end_date: daysFromNow(30),
         contract_number: 'CNT-005',
         account: 'acc_5',
@@ -209,7 +209,7 @@ describe('ContractRenewalCheck', () => {
     const ctx = {
       result: {
         _id: 'contract_6',
-        status: 'Activated',
+        status: 'activated',
         end_date: daysFromNow(20),
         contract_number: 'CNT-006',
         account: 'acc_6',
@@ -217,7 +217,7 @@ describe('ContractRenewalCheck', () => {
       },
       previous: {
         _id: 'contract_6',
-        status: 'Draft',
+        status: 'draft',
         end_date: daysFromNow(20),
         contract_number: 'CNT-006',
         account: 'acc_6',
@@ -234,7 +234,7 @@ describe('ContractRenewalCheck', () => {
     await ContractRenewalCheck.handler(ctx as any);
 
     const taskCall = mockQl.doc.create.mock.calls[1];
-    expect(taskCall[1].priority).toBe('High');
+    expect(taskCall[1].priority).toBe('high');
   });
 });
 
@@ -257,7 +257,7 @@ describe('ContractExpirationAlert', () => {
     const ctx = {
       result: {
         _id: 'contract_10',
-        status: 'Activated',
+        status: 'activated',
         end_date: daysFromNow(15),
         contract_number: 'CNT-010',
         account: 'acc_10',
@@ -266,7 +266,7 @@ describe('ContractExpirationAlert', () => {
       },
       previous: {
         _id: 'contract_10',
-        status: 'Draft',
+        status: 'draft',
         end_date: daysFromNow(15),
         contract_number: 'CNT-010',
         account: 'acc_10',
@@ -286,8 +286,8 @@ describe('ContractExpirationAlert', () => {
       type: 'Alert',
       related_to: 'acc_10',
       contract: 'contract_10',
-      priority: 'High',
-      status: 'Open'
+      priority: 'high',
+      status: 'open'
     }));
 
     // Should flag the contract to prevent duplicate reminders
@@ -300,7 +300,7 @@ describe('ContractExpirationAlert', () => {
     const ctx = {
       result: {
         _id: 'contract_11',
-        status: 'Activated',
+        status: 'activated',
         end_date: daysFromNow(60),
         contract_number: 'CNT-011',
         account: 'acc_11',
@@ -309,7 +309,7 @@ describe('ContractExpirationAlert', () => {
       },
       previous: {
         _id: 'contract_11',
-        status: 'Draft',
+        status: 'draft',
         end_date: daysFromNow(60),
         contract_number: 'CNT-011',
         account: 'acc_11',
@@ -329,7 +329,7 @@ describe('ContractExpirationAlert', () => {
     const ctx = {
       result: {
         _id: 'contract_12',
-        status: 'Activated',
+        status: 'activated',
         end_date: daysFromNow(10),
         contract_number: 'CNT-012',
         account: 'acc_12',
@@ -338,7 +338,7 @@ describe('ContractExpirationAlert', () => {
       },
       previous: {
         _id: 'contract_12',
-        status: 'Draft',
+        status: 'draft',
         end_date: daysFromNow(10),
         contract_number: 'CNT-012',
         account: 'acc_12',
@@ -358,7 +358,7 @@ describe('ContractExpirationAlert', () => {
     const ctx = {
       result: {
         _id: 'contract_13',
-        status: 'Draft',
+        status: 'draft',
         end_date: daysFromNow(10),
         contract_number: 'CNT-013',
         account: 'acc_13',
@@ -367,7 +367,7 @@ describe('ContractExpirationAlert', () => {
       },
       previous: {
         _id: 'contract_13',
-        status: 'Draft',
+        status: 'draft',
         end_date: daysFromNow(20),
         contract_number: 'CNT-013',
         account: 'acc_13',
@@ -387,7 +387,7 @@ describe('ContractExpirationAlert', () => {
     const ctx = {
       result: {
         _id: 'contract_14',
-        status: 'Activated',
+        status: 'activated',
         end_date: daysFromNow(5),
         contract_number: 'CNT-014',
         account: 'acc_14',
@@ -396,7 +396,7 @@ describe('ContractExpirationAlert', () => {
       },
       previous: {
         _id: 'contract_14',
-        status: 'Draft',
+        status: 'draft',
         end_date: daysFromNow(5),
         contract_number: 'CNT-014',
         account: 'acc_14',

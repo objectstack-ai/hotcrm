@@ -38,8 +38,8 @@ const PerformanceReviewRatingTrigger: Hook = {
       review.completion_percentage = calculateCompletionPercentage(review);
 
       // Auto-update status based on completion
-      if (review.completion_percentage === 100 && review.status === 'In Progress') {
-        review.status = 'Pending Approval';
+      if (review.completion_percentage === 100 && review.status === 'in_progress') {
+        review.status = 'pending_approval';
         console.log(`📋 Review auto-advanced to Pending Approval`);
       }
 
@@ -91,10 +91,10 @@ function calculateOverallRating(review: any): number {
  * Determine performance level based on overall rating
  */
 function determinePerformanceLevel(rating: number): string {
-  if (rating >= 4.5) return 'Outstanding';
-  if (rating >= 3.5) return 'Exceeds Expectations';
-  if (rating >= 2.5) return 'Meets Expectations';
-  if (rating >= 1.5) return 'Needs Improvement';
+  if (rating >= 4.5) return 'outstanding';
+  if (rating >= 3.5) return 'exceeds_expectations';
+  if (rating >= 2.5) return 'meets_expectations';
+  if (rating >= 1.5) return 'needs_improvement';
   return 'Unsatisfactory';
 }
 
@@ -147,19 +147,19 @@ const PerformanceReviewWorkflowTrigger: Hook = {
 
       // Handle different status transitions
       switch (newStatus) {
-        case 'In Progress':
+        case 'in_progress':
           await handleReviewStarted(review, ctx);
           break;
-        case 'Pending Approval':
+        case 'pending_approval':
           await handleReviewSubmitted(review, ctx);
           break;
-        case 'Approved':
+        case 'approved':
           await handleReviewApproved(review, ctx);
           break;
-        case 'Completed':
+        case 'completed':
           await handleReviewCompleted(review, ctx);
           break;
-        case 'Rejected':
+        case 'rejected':
           await handleReviewRejected(review, ctx);
           break;
       }
@@ -223,7 +223,7 @@ async function handleReviewApproved(review: any, ctx: any): Promise<void> {
     });
 
     // Trigger compensation review if high performance
-    if (review.performance_level === 'Outstanding' || review.performance_level === 'Exceeds Expectations') {
+    if (review.performance_level === 'outstanding' || review.performance_level === 'exceeds_expectations') {
       await triggerCompensationReview(review, ctx);
     }
 
@@ -267,7 +267,7 @@ async function createDevelopmentGoals(review: any, ctx: any): Promise<void> {
     
     // Set goal period based on review period
     switch (review.review_period) {
-      case 'Quarterly':
+      case 'quarterly':
         goalEndDate.setMonth(goalEndDate.getMonth() + 3);
         break;
       case 'Semi-Annual':
@@ -288,7 +288,7 @@ async function createDevelopmentGoals(review: any, ctx: any): Promise<void> {
       goal_type: 'Development',
       start_date: today.toISOString().split('T')[0],
       target_date: goalEndDate.toISOString().split('T')[0],
-      status: 'In Progress',
+      status: 'in_progress',
       progress: 0,
       related_review_id: review.id
     });
@@ -351,7 +351,7 @@ async function handleReviewRejected(review: any, ctx: any): Promise<void> {
   try {
     // Send back to reviewer for revision
     await ctx.ql.doc.update('performance_review', review.id, {
-      status: 'In Progress'
+      status: 'in_progress'
     });
 
     console.debug(`[performance_review.hook] Rejection notification pending for review ${review.review_name}: notify reviewer about required changes`);
@@ -394,7 +394,7 @@ export async function checkPerformanceReviewDueDates(ctx: any): Promise<void> {
     // Find reviews due soon
     const upcomingReviews = await ctx.ql.find('performance_review', {
       filters: [
-        ['status', 'in', ['Not Started', 'In Progress']],
+        ['status', 'in', ['not_started', 'in_progress']],
         ['due_date', '<=', reminderDate.toISOString().split('T')[0]],
         ['due_date', '>=', today.toISOString().split('T')[0]]
       ]

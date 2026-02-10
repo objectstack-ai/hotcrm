@@ -7,7 +7,7 @@ describe('ExplainabilityService', () => {
       const modelId = 'lead-scoring';
       const features = {
         company_size: 500,
-        industry: 'Technology',
+        industry: 'technology',
         engagement_score: 85,
         job_title: 'CTO',
         budget: 100000

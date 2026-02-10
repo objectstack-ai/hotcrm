@@ -231,7 +231,7 @@ ${campaign ? `
 - Type: ${campaign.type}
 - Budget: $${campaign.budgeted_cost?.toLocaleString() || 0}
 ` : `
-- Campaign Type: ${campaignType || 'General'}
+- Campaign Type: ${campaignType || 'general'}
 `}
 
 # Segmentation Criteria

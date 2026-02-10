@@ -27,35 +27,35 @@ export const Training = ObjectSchema.create({
       options: [
         {
           "label": "Onboarding",
-          "value": "Onboarding"
+          "value": "onboarding"
         },
         {
           "label": "Skills Training",
-          "value": "Skills Training"
+          "value": "skills_training"
         },
         {
           "label": "Leadership",
-          "value": "Leadership"
+          "value": "leadership"
         },
         {
           "label": "Compliance",
-          "value": "Compliance"
+          "value": "compliance"
         },
         {
           "label": "Product",
-          "value": "Product"
+          "value": "product"
         },
         {
           "label": "Sales",
-          "value": "Sales"
+          "value": "sales"
         },
         {
           "label": "Safety",
-          "value": "Safety"
+          "value": "safety"
         },
         {
           "label": "Other",
-          "value": "Other"
+          "value": "other"
         }
       ]
     }),
@@ -64,27 +64,27 @@ export const Training = ObjectSchema.create({
       options: [
         {
           "label": "Internal",
-          "value": "Internal"
+          "value": "internal"
         },
         {
           "label": "External",
-          "value": "External"
+          "value": "external"
         },
         {
           "label": "Online",
-          "value": "Online"
+          "value": "online"
         },
         {
           "label": "Workshop",
-          "value": "Workshop"
+          "value": "workshop"
         },
         {
           "label": "Conference",
-          "value": "Conference"
+          "value": "conference"
         },
         {
           "label": "Certification",
-          "value": "Certification"
+          "value": "certification"
         }
       ]
     }),
@@ -111,27 +111,27 @@ export const Training = ObjectSchema.create({
     }),
     status: Field.select({
       label: 'Status',
-      defaultValue: 'Scheduled',
+      defaultValue: 'scheduled',
       options: [
         {
           "label": "Scheduled",
-          "value": "Scheduled"
+          "value": "scheduled"
         },
         {
           "label": "In Progress",
-          "value": "In Progress"
+          "value": "in_progress"
         },
         {
           "label": "Completed",
-          "value": "Completed"
+          "value": "completed"
         },
         {
           "label": "Cancelled",
-          "value": "Cancelled"
+          "value": "cancelled"
         },
         {
           "label": "Absent",
-          "value": "No Show"
+          "value": "no_show"
         }
       ]
     }),
@@ -140,15 +140,15 @@ export const Training = ObjectSchema.create({
       options: [
         {
           "label": "Attended",
-          "value": "Attended"
+          "value": "attended"
         },
         {
           "label": "Partial",
-          "value": "Partial"
+          "value": "partial"
         },
         {
           "label": "Absent",
-          "value": "Absent"
+          "value": "absent"
         }
       ]
     }),

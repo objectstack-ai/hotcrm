@@ -238,7 +238,7 @@ export async function estimateResolutionTime(request: ResolutionTimeRequest): Pr
     filters: [
       ['type', '=', caseRecord.type],
       ['priority', '=', caseRecord.priority],
-      ['status', '=', 'Closed']
+      ['status', '=', 'closed']
     ],
     limit: 50
   });
@@ -353,7 +353,7 @@ export async function analyzeEscalationNeeds(request: EscalationAnalysisRequest)
   // Fetch open cases from the period
   const cases = await db.find('case', {
     filters: [
-      ['status', '!=', 'Closed'],
+      ['status', '!=', 'closed'],
       ['created_date', '>', new Date(Date.now() - periodHours * 60 * 60 * 1000).toISOString()]
     ]
   });
@@ -448,7 +448,7 @@ export async function optimizeWorkload(request: WorkloadOptimizationRequest): Pr
 
   // Fetch all active cases
   const casesQuery: any = {
-    filters: [['status', '!=', 'Closed']],
+    filters: [['status', '!=', 'closed']],
     fields: ['owner_id', 'created_date', 'priority']
   };
 
