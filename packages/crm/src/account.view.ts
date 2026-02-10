@@ -167,7 +167,7 @@ export const HotAccountsView = {
 // Accounts Needing Attention
 export const NeedAttentionView = {
   name: 'accounts_need_attention',
-  label: 'needs_attention',
+  label: 'Needs Attention',
   object: 'account',
 
   filters: [

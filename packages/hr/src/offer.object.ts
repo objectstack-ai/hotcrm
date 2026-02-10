@@ -99,19 +99,19 @@ export const Offer = ObjectSchema.create({
         },
         {
           "label": "1 Month",
-          "value": "v_1_month"
+          "value": "one_month"
         },
         {
           "label": "2 Months",
-          "value": "v_2_months"
+          "value": "two_months"
         },
         {
           "label": "3 Months",
-          "value": "v_3_months"
+          "value": "three_months"
         },
         {
           "label": "6 Months",
-          "value": "v_6_months"
+          "value": "six_months"
         }
       ]
     }),

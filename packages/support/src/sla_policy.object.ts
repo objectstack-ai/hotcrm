@@ -71,7 +71,7 @@ export const SLAPolicy = ObjectSchema.create({
       options: [
         {
           "label": "🌐 24/7 Support",
-          "value": "v_24x7"
+          "value": "coverage_24x7"
         },
         {
           "label": "💼 Business Hours",

@@ -61,7 +61,7 @@ export const PerformanceReview = ObjectSchema.create({
         },
         {
           "label": "360 Review",
-          "value": "v_360_review"
+          "value": "peer_360_review"
         },
         {
           "label": "Probation Review",

@@ -18,7 +18,7 @@ export const CaseLifecycleStateMachine = {
     // New State
     {
       name: 'new',
-      label: 'new',
+      label: 'New',
       description: 'Case has been created but not yet assigned',
 
       // Actions when entering this state
@@ -157,7 +157,7 @@ export const CaseLifecycleStateMachine = {
     // Waiting on Customer State
     {
       name: 'waiting_customer',
-      label: 'waiting_on_customer',
+      label: 'Waiting on Customer',
       description: 'Waiting for customer response or additional information',
 
       onEntry: [
@@ -242,7 +242,7 @@ export const CaseLifecycleStateMachine = {
     // Escalated State
     {
       name: 'escalated',
-      label: 'escalated',
+      label: 'Escalated',
       description: 'Case has been escalated to management',
 
       onEntry: [
@@ -286,7 +286,7 @@ export const CaseLifecycleStateMachine = {
     // Resolved State
     {
       name: 'resolved',
-      label: 'resolved',
+      label: 'Resolved',
       description: 'Case has been resolved, awaiting customer confirmation',
 
       onEntry: [
@@ -349,7 +349,7 @@ export const CaseLifecycleStateMachine = {
     // Closed State (Final State)
     {
       name: 'closed',
-      label: 'closed',
+      label: 'Closed',
       description: 'Case is closed and archived',
       type: 'final',
 

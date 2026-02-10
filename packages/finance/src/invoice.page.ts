@@ -7,7 +7,7 @@ const InvoicePage = {
     type: 'tabs',
     sections: [
       {
-        label: 'general',
+        label: 'General',
         columns: 2,
         fields: ['invoice_number', 'account', 'contract', 'status', 'due_date', 'total_amount', 'payment_terms']
       },

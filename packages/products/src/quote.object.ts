@@ -169,11 +169,11 @@ export const Quote = ObjectSchema.create({
         },
         {
           "label": "30% Prepay, 70% on Acceptance",
-          "value": "v_30_70_split"
+          "value": "split_30_70"
         },
         {
           "label": "50% Prepay, 50% on Acceptance",
-          "value": "v_50_50_split"
+          "value": "split_50_50"
         },
         {
           "label": "Net 30",

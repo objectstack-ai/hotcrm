@@ -42,51 +42,51 @@ export const Holiday = ObjectSchema.create({
       options: [
         {
           "label": "January",
-          "value": "v_1_val"
+          "value": "month_01"
         },
         {
           "label": "February",
-          "value": "v_2_val"
+          "value": "month_02"
         },
         {
           "label": "March",
-          "value": "v_3_val"
+          "value": "month_03"
         },
         {
           "label": "April",
-          "value": "v_4_val"
+          "value": "month_04"
         },
         {
           "label": "May",
-          "value": "v_5_val"
+          "value": "month_05"
         },
         {
           "label": "June",
-          "value": "v_6_val"
+          "value": "month_06"
         },
         {
           "label": "July",
-          "value": "v_7_val"
+          "value": "month_07"
         },
         {
           "label": "August",
-          "value": "v_8_val"
+          "value": "month_08"
         },
         {
           "label": "September",
-          "value": "v_9_val"
+          "value": "month_09"
         },
         {
           "label": "October",
-          "value": "v_10"
+          "value": "month_10"
         },
         {
           "label": "November",
-          "value": "v_11"
+          "value": "month_11"
         },
         {
           "label": "December",
-          "value": "v_12"
+          "value": "month_12"
         }
       ]
     }),

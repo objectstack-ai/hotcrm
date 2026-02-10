@@ -27,7 +27,7 @@ import { ContractRenewalCheck, ContractExpirationAlert } from './hooks/contract_
  */
 export const FinancePlugin: any = {
   name: 'finance',
-  label: 'finance',
+  label: 'Finance',
   version: '1.0.0',
   description: 'Financial management - Contracts, Invoices, Payments, and Revenue Recognition',
   
@@ -58,7 +58,7 @@ export const FinancePlugin: any = {
   navigation: [
     {
       type: 'group',
-      label: 'finance',
+      label: 'Finance',
       children: [
         { type: 'object', object: 'contract' },
         { type: 'object', object: 'invoice' },

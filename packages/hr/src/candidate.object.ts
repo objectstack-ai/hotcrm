@@ -96,23 +96,23 @@ export const Candidate = ObjectSchema.create({
         },
         {
           "label": "1 Week",
-          "value": "v_1_week"
+          "value": "one_week"
         },
         {
           "label": "2 Weeks",
-          "value": "v_2_weeks"
+          "value": "two_weeks"
         },
         {
           "label": "1 Month",
-          "value": "v_1_month"
+          "value": "one_month"
         },
         {
           "label": "2 Months",
-          "value": "v_2_months"
+          "value": "two_months"
         },
         {
           "label": "3 Months",
-          "value": "v_3_months"
+          "value": "three_months"
         }
       ]
     }),
