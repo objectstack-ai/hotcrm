@@ -28,7 +28,7 @@ describe('KnowledgeArticleScoringTrigger', () => {
 
   it('should have correct hook metadata', () => {
     expect(KnowledgeArticleScoringTrigger.name).toBe('KnowledgeArticleScoringTrigger');
-    expect(KnowledgeArticleScoringTrigger.object).toBe('KnowledgeArticle');
+    expect(KnowledgeArticleScoringTrigger.object).toBe('knowledge_article');
     expect(KnowledgeArticleScoringTrigger.events).toEqual(['beforeInsert', 'beforeUpdate']);
   });
 
@@ -318,7 +318,7 @@ describe('KnowledgeArticleAIEnhancementTrigger', () => {
     const ctx = {
       input: { doc: article },
       previous: undefined,
-      db: { find: vi.fn().mockResolvedValue([relatedArticle]) }
+      ql: { find: vi.fn().mockResolvedValue([relatedArticle]) }
     };
 
     await KnowledgeArticleAIEnhancementTrigger.handler(ctx as any);
@@ -513,7 +513,7 @@ describe('KnowledgeArticleUsageTracker', () => {
 
   it('should have correct hook metadata', () => {
     expect(KnowledgeArticleUsageTracker.name).toBe('KnowledgeArticleUsageTracker');
-    expect(KnowledgeArticleUsageTracker.object).toBe('Case');
+    expect(KnowledgeArticleUsageTracker.object).toBe('case');
     expect(KnowledgeArticleUsageTracker.events).toEqual(['afterUpdate']);
   });
 
@@ -531,7 +531,7 @@ describe('KnowledgeArticleUsageTracker', () => {
     const ctx = {
       result: caseRecord,
       previous: oldCase,
-      db: {
+      ql: {
         find: mockDbFind,
         doc: { update: mockDbUpdate }
       }
@@ -541,10 +541,10 @@ describe('KnowledgeArticleUsageTracker', () => {
 
     expect(mockDbFind).toHaveBeenCalledTimes(2);
     expect(mockDbUpdate).toHaveBeenCalledTimes(2);
-    expect(mockDbUpdate).toHaveBeenCalledWith('KnowledgeArticle', 'art_1', expect.objectContaining({
+    expect(mockDbUpdate).toHaveBeenCalledWith('knowledge_article', 'art_1', expect.objectContaining({
       CaseResolutionCount: 6
     }));
-    expect(mockDbUpdate).toHaveBeenCalledWith('KnowledgeArticle', 'art_2', expect.objectContaining({
+    expect(mockDbUpdate).toHaveBeenCalledWith('knowledge_article', 'art_2', expect.objectContaining({
       CaseResolutionCount: 11
     }));
   });
@@ -558,12 +558,12 @@ describe('KnowledgeArticleUsageTracker', () => {
     const ctx = {
       result: caseRecord,
       previous: { Status: 'New' },
-      db: { find: vi.fn(), doc: { update: vi.fn() } }
+      ql: { find: vi.fn(), doc: { update: vi.fn() } }
     };
 
     await KnowledgeArticleUsageTracker.handler(ctx as any);
 
-    expect(ctx.db.find).not.toHaveBeenCalled();
+    expect(ctx.ql.find).not.toHaveBeenCalled();
   });
 
   it('should not track when case was already resolved', async () => {
@@ -575,12 +575,12 @@ describe('KnowledgeArticleUsageTracker', () => {
     const ctx = {
       result: caseRecord,
       previous: { Status: 'Resolved' },
-      db: { find: vi.fn(), doc: { update: vi.fn() } }
+      ql: { find: vi.fn(), doc: { update: vi.fn() } }
     };
 
     await KnowledgeArticleUsageTracker.handler(ctx as any);
 
-    expect(ctx.db.find).not.toHaveBeenCalled();
+    expect(ctx.ql.find).not.toHaveBeenCalled();
   });
 
   it('should not track when no knowledge articles are linked', async () => {
@@ -610,7 +610,7 @@ describe('KnowledgeArticleUsageTracker', () => {
     const ctx = {
       result: caseRecord,
       previous: { Status: 'Open' },
-      db: {
+      ql: {
         find: mockDbFind,
         doc: { update: mockDbUpdate }
       }
@@ -660,7 +660,7 @@ describe('KnowledgeArticleSearchAnalytics', () => {
 
   it('should have correct hook metadata', () => {
     expect(KnowledgeArticleSearchAnalytics.name).toBe('KnowledgeArticleSearchAnalytics');
-    expect(KnowledgeArticleSearchAnalytics.object).toBe('KnowledgeArticle');
+    expect(KnowledgeArticleSearchAnalytics.object).toBe('knowledge_article');
     expect(KnowledgeArticleSearchAnalytics.events).toEqual(['afterFind']);
   });
 
