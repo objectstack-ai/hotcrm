@@ -527,4 +527,4 @@ export default [
   KnowledgeArticleWorkflowTrigger,
   KnowledgeArticleUsageTracker,
   KnowledgeArticleSearchAnalytics
-];
+] as Hook[];

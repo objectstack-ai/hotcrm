@@ -55,4 +55,4 @@ const CampaignROIHook: Hook = {
 };
 
 export { CampaignROIHook };
-export default [CampaignROIHook];
+export default [CampaignROIHook] as Hook[];

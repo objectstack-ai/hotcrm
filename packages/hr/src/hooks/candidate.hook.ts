@@ -15,11 +15,11 @@ const CandidateScoringTrigger: Hook = {
   events: ['beforeInsert', 'beforeUpdate'],
   handler: async (ctx: HookContext) => {
     try {
-      const candidate = ctx.input.doc as Record<string, any>;
+      const candidate = ctx.input as Record<string, any>;
 
       // Check for duplicate candidates (same email)
       if (ctx.event === 'beforeInsert' || (ctx.previous && candidate.email !== (ctx.previous as Record<string, any>).email)) {
-        const duplicates = await ctx.ql.find('candidate', {
+        const duplicates = await (ctx.ql as any).find('candidate', {
           filters: [
             ['email', '=', candidate.email],
             ['id', '!=', candidate.id || '']
@@ -246,4 +246,4 @@ async function logStatusChange(
 }
 
 export { CandidateScoringTrigger, CandidateStatusChangeTrigger };
-export default [CandidateScoringTrigger, CandidateStatusChangeTrigger];
+export default [CandidateScoringTrigger, CandidateStatusChangeTrigger] as Hook[];

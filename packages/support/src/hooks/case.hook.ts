@@ -22,7 +22,7 @@ const CaseEntitlementCheck: Hook = {
     try {
       // 1. Fetch Account to get SLA Level
       // Using direct ObjectQL find
-      const accounts = await ctx.ql.find('account', { filters: [['_id', '=', caseRec.account]] });
+      const accounts = await (ctx.ql as any).find('account', { filters: [['_id', '=', caseRec.account]] });
       
       if (!accounts || accounts.length === 0) {
         console.warn(`Warning: Linked Account ${caseRec.account} not found.`);
@@ -75,4 +75,4 @@ const CaseEntitlementCheck: Hook = {
 
 // Export as an array to maintain compatibility with index.ts which likely expects multiple hooks
 export { CaseEntitlementCheck };
-export default [CaseEntitlementCheck];
+export default [CaseEntitlementCheck] as Hook[];
