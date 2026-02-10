@@ -25,7 +25,7 @@ describe('CampaignMemberEngagementTrigger', () => {
   it('should set first_opened_date when status changes to Opened', async () => {
     const member = { status: 'Opened', number_of_opens: 0 } as any;
     const ctx = {
-      input: { doc: member },
+      input: member,
       previous: { status: 'Sent' }
     };
 
@@ -43,7 +43,7 @@ describe('CampaignMemberEngagementTrigger', () => {
       number_of_opens: 1
     } as any;
     const ctx = {
-      input: { doc: member },
+      input: member,
       previous: { status: 'Sent' }
     };
 
@@ -56,7 +56,7 @@ describe('CampaignMemberEngagementTrigger', () => {
   it('should set first_clicked_date and first_opened_date when status changes to Clicked', async () => {
     const member = { status: 'Clicked', number_of_opens: 0, number_of_clicks: 0 } as any;
     const ctx = {
-      input: { doc: member },
+      input: member,
       previous: { status: 'Sent' }
     };
 
@@ -71,7 +71,7 @@ describe('CampaignMemberEngagementTrigger', () => {
   it('should set first_responded_date and has_responded when status changes to Responded', async () => {
     const member = { status: 'Responded', number_of_opens: 0, number_of_clicks: 0 } as any;
     const ctx = {
-      input: { doc: member },
+      input: member,
       previous: { status: 'Clicked' }
     };
 
@@ -88,7 +88,7 @@ describe('CampaignMemberEngagementTrigger', () => {
   it('should not process when status did not change', async () => {
     const member = { status: 'Opened', number_of_opens: 1 } as any;
     const ctx = {
-      input: { doc: member },
+      input: member,
       previous: { status: 'Opened' }
     };
 
@@ -101,7 +101,7 @@ describe('CampaignMemberEngagementTrigger', () => {
   it('should not process when there is no previous state', async () => {
     const member = { status: 'Opened', number_of_opens: 0 } as any;
     const ctx = {
-      input: { doc: member }
+      input: member
     };
 
     await CampaignMemberEngagementTrigger.handler(ctx as any);
@@ -120,7 +120,7 @@ describe('CampaignMemberEngagementTrigger', () => {
       number_of_clicks: 1
     } as any;
     const ctx = {
-      input: { doc: member },
+      input: member,
       previous: { status: 'Clicked' }
     };
 
@@ -133,7 +133,7 @@ describe('CampaignMemberEngagementTrigger', () => {
 
   it('should handle errors gracefully', async () => {
     const ctx = {
-      input: { doc: null },
+      input: null,
       previous: { status: 'Sent' }
     };
 
@@ -460,7 +460,7 @@ describe('CampaignMemberBounceHandlerTrigger', () => {
       campaign: 'campaign_1'
     };
     const ctx = {
-      input: { doc: member },
+      input: member,
       previous: {}
     };
 
@@ -483,7 +483,7 @@ describe('CampaignMemberBounceHandlerTrigger', () => {
       campaign: 'campaign_1'
     };
     const ctx = {
-      input: { doc: member },
+      input: member,
       previous: {}
     };
 
@@ -506,7 +506,7 @@ describe('CampaignMemberBounceHandlerTrigger', () => {
       campaign: 'campaign_1'
     };
     const ctx = {
-      input: { doc: member },
+      input: member,
       previous: {}
     };
 
@@ -529,7 +529,7 @@ describe('CampaignMemberBounceHandlerTrigger', () => {
       campaign: 'campaign_1'
     };
     const ctx = {
-      input: { doc: member },
+      input: member,
       previous: {}
     };
 
@@ -552,7 +552,7 @@ describe('CampaignMemberBounceHandlerTrigger', () => {
       campaign: 'campaign_1'
     };
     const ctx = {
-      input: { doc: member },
+      input: member,
       previous: {}
     };
 
@@ -574,7 +574,7 @@ describe('CampaignMemberBounceHandlerTrigger', () => {
       lead: 'lead_5'
     };
     const ctx = {
-      input: { doc: member },
+      input: member,
       previous: { email_bounced_date: '2025-05-01' }
     };
 
@@ -594,7 +594,7 @@ describe('CampaignMemberBounceHandlerTrigger', () => {
       lead: 'lead_6'
     };
     const ctx = {
-      input: { doc: member },
+      input: member,
       previous: {}
     };
 
@@ -610,7 +610,7 @@ describe('CampaignMemberBounceHandlerTrigger', () => {
 
   it('should handle errors gracefully', async () => {
     const ctx = {
-      input: { doc: null },
+      input: null,
       previous: {}
     };
 
@@ -634,7 +634,7 @@ describe('CampaignMemberBounceHandlerTrigger', () => {
       campaign: 'campaign_1'
     };
     const ctx = {
-      input: { doc: member },
+      input: member,
       previous: {}
     };
 

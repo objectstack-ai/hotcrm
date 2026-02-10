@@ -364,7 +364,7 @@ describe('PricebookHook', () => {
 
     await PricebookHook.handler(ctx as any);
 
-    expect(mockQl.doc.create).toHaveBeenCalledWith('Activity', expect.objectContaining({
+    expect(mockQl.doc.create).toHaveBeenCalledWith('activity', expect.objectContaining({
       Subject: 'Pricebook Status Changed: Draft → Active',
       Type: 'Status Change',
       WhatId: 'pb_13'
@@ -396,7 +396,7 @@ describe('PricebookHook', () => {
 
     await PricebookHook.handler(ctx as any);
 
-    expect(mockQl.doc.create).toHaveBeenCalledWith('Activity', expect.objectContaining({
+    expect(mockQl.doc.create).toHaveBeenCalledWith('activity', expect.objectContaining({
       Subject: 'Pricebook Currency Updated: Currency PB',
       Type: 'Currency Update',
       Priority: 'high'
