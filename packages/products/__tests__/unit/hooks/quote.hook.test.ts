@@ -221,7 +221,7 @@ describe('QuotePricingHook', () => {
     // Should create activity
     expect(mockQl.doc.create).toHaveBeenCalledWith('activity', expect.objectContaining({
       Subject: 'New Quote Created: New Quote',
-      Type: 'quote',
+      Type: 'Quote',
       AccountId: 'acc_1',
       WhatId: 'q_9'
     }));
@@ -295,7 +295,7 @@ describe('QuotePricingHook', () => {
     });
 
     // Should create contract
-    expect(mockQl.insert).toHaveBeenCalledWith('contract', expect.objectContaining({
+    expect(mockQl.doc.create).toHaveBeenCalledWith('contract', expect.objectContaining({
       contract_number: 'CT-Q-003',
       account: 'acc_3',
       opportunity: 'opp_1',

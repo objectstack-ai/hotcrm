@@ -279,4 +279,4 @@ export default [
   EmployeeOnboardingTrigger,
   EmployeeStatusChangeTrigger,
   EmployeeDataValidationTrigger
-];
+] as Hook[];

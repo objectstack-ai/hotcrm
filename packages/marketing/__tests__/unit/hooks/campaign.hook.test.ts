@@ -18,7 +18,7 @@ describe('CampaignROICalculationTrigger', () => {
       actual_cost: 10000,
       budgeted_cost: 20000
     };
-    const ctx = { input: { doc: campaign } };
+    const ctx = { input: campaign };
 
     await CampaignROICalculationTrigger.handler(ctx as any);
 
@@ -32,7 +32,7 @@ describe('CampaignROICalculationTrigger', () => {
       actual_cost: 10000,
       budgeted_cost: 20000
     };
-    const ctx = { input: { doc: campaign } };
+    const ctx = { input: campaign };
 
     await CampaignROICalculationTrigger.handler(ctx as any);
 
@@ -45,7 +45,7 @@ describe('CampaignROICalculationTrigger', () => {
       actual_cost: 0,
       budgeted_cost: 0
     };
-    const ctx = { input: { doc: campaign } };
+    const ctx = { input: campaign };
 
     await CampaignROICalculationTrigger.handler(ctx as any);
 
@@ -57,7 +57,7 @@ describe('CampaignROICalculationTrigger', () => {
       actual_revenue: 0,
       actual_cost: 0
     };
-    const ctx = { input: { doc: campaign } };
+    const ctx = { input: campaign };
 
     await CampaignROICalculationTrigger.handler(ctx as any);
 
@@ -70,7 +70,7 @@ describe('CampaignROICalculationTrigger', () => {
       actual_cost: 10000,
       budgeted_cost: 10000
     };
-    const ctx = { input: { doc: campaign } };
+    const ctx = { input: campaign };
 
     await CampaignROICalculationTrigger.handler(ctx as any);
 
@@ -83,7 +83,7 @@ describe('CampaignROICalculationTrigger', () => {
       actual_cost: 15000,
       budgeted_cost: 10000
     };
-    const ctx = { input: { doc: campaign } };
+    const ctx = { input: campaign };
 
     await CampaignROICalculationTrigger.handler(ctx as any);
 
@@ -96,7 +96,7 @@ describe('CampaignROICalculationTrigger', () => {
       actual_cost: 5000,
       budgeted_cost: 0
     } as any;
-    const ctx = { input: { doc: campaign } };
+    const ctx = { input: campaign };
 
     await CampaignROICalculationTrigger.handler(ctx as any);
 
@@ -105,7 +105,7 @@ describe('CampaignROICalculationTrigger', () => {
 
   it('should handle missing fields gracefully', async () => {
     const campaign = {} as any;
-    const ctx = { input: { doc: campaign } };
+    const ctx = { input: campaign };
 
     await CampaignROICalculationTrigger.handler(ctx as any);
 
@@ -138,7 +138,7 @@ describe('CampaignBudgetTrackingTrigger', () => {
       actual_cost: 8500
     };
     const ctx = {
-      input: { doc: campaign },
+      input: campaign,
       previous: { actual_cost: 5000 }
     };
 
@@ -159,7 +159,7 @@ describe('CampaignBudgetTrackingTrigger', () => {
       actual_cost: 12000
     };
     const ctx = {
-      input: { doc: campaign },
+      input: campaign,
       previous: { actual_cost: 9000 }
     };
 
@@ -180,7 +180,7 @@ describe('CampaignBudgetTrackingTrigger', () => {
       actual_cost: 5000
     };
     const ctx = {
-      input: { doc: campaign },
+      input: campaign,
       previous: { actual_cost: 5000 }
     };
 
@@ -201,7 +201,7 @@ describe('CampaignBudgetTrackingTrigger', () => {
       actual_cost: 8500
     };
     const ctx = {
-      input: { doc: campaign }
+      input: campaign
     };
 
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
@@ -219,7 +219,7 @@ describe('CampaignBudgetTrackingTrigger', () => {
       actual_cost: 5000
     };
     const ctx = {
-      input: { doc: campaign },
+      input: campaign,
       previous: { actual_cost: 3000 }
     };
 
@@ -241,7 +241,7 @@ describe('CampaignBudgetTrackingTrigger', () => {
       actual_cost: 500
     };
     const ctx = {
-      input: { doc: campaign },
+      input: campaign,
       previous: { actual_cost: 0 }
     };
 
@@ -371,7 +371,7 @@ describe('CampaignDateValidationTrigger', () => {
       start_date: '2025-06-01',
       end_date: '2025-05-01'
     };
-    const ctx = { input: { doc: campaign } };
+    const ctx = { input: campaign };
 
     await expect(CampaignDateValidationTrigger.handler(ctx as any))
       .rejects.toThrow('Campaign end date must be after start date');
@@ -382,7 +382,7 @@ describe('CampaignDateValidationTrigger', () => {
       start_date: '2025-06-01',
       end_date: '2025-06-11'
     };
-    const ctx = { input: { doc: campaign } };
+    const ctx = { input: campaign };
 
     await CampaignDateValidationTrigger.handler(ctx as any);
 
@@ -394,7 +394,7 @@ describe('CampaignDateValidationTrigger', () => {
       start_date: '2025-06-01T00:00:00Z',
       end_date: '2025-06-01T12:00:00Z'
     };
-    const ctx = { input: { doc: campaign } };
+    const ctx = { input: campaign };
 
     await CampaignDateValidationTrigger.handler(ctx as any);
 
@@ -405,7 +405,7 @@ describe('CampaignDateValidationTrigger', () => {
     const campaign = {
       end_date: '2025-06-01'
     } as any;
-    const ctx = { input: { doc: campaign } };
+    const ctx = { input: campaign };
 
     await CampaignDateValidationTrigger.handler(ctx as any);
 
@@ -416,7 +416,7 @@ describe('CampaignDateValidationTrigger', () => {
     const campaign = {
       start_date: '2025-06-01'
     } as any;
-    const ctx = { input: { doc: campaign } };
+    const ctx = { input: campaign };
 
     await CampaignDateValidationTrigger.handler(ctx as any);
 
@@ -440,7 +440,7 @@ describe('CampaignDateValidationTrigger', () => {
       start_date: '2025-01-01',
       end_date: '2025-12-31'
     };
-    const ctx = { input: { doc: campaign } };
+    const ctx = { input: campaign };
 
     await CampaignDateValidationTrigger.handler(ctx as any);
 
@@ -452,7 +452,7 @@ describe('CampaignDateValidationTrigger', () => {
       start_date: '2025-06-01T00:00:00Z',
       end_date: '2025-06-01T00:00:00Z'
     };
-    const ctx = { input: { doc: campaign } };
+    const ctx = { input: campaign };
 
     // end_date is NOT after start_date (they are equal), duration is 0
     // The code uses endDate < startDate, so equal dates pass validation

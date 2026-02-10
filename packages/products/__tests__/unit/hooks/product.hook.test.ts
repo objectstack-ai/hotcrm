@@ -269,7 +269,7 @@ describe('ProductHook', () => {
 
     await ProductHook.handler(ctx as any);
 
-    expect(mockQl.doc.create).toHaveBeenCalledWith('Activity', expect.objectContaining({
+    expect(mockQl.doc.create).toHaveBeenCalledWith('activity', expect.objectContaining({
       Subject: 'Price Change: Price Change Widget',
       Type: 'Price Update',
       Status: 'Completed',
@@ -304,7 +304,7 @@ describe('ProductHook', () => {
 
     await ProductHook.handler(ctx as any);
 
-    expect(mockQl.doc.create).toHaveBeenCalledWith('Activity', expect.objectContaining({
+    expect(mockQl.doc.create).toHaveBeenCalledWith('activity', expect.objectContaining({
       Subject: 'Product Status Changed: Active → Inactive',
       Type: 'Status Change',
       WhatId: 'prod_10'

@@ -418,4 +418,4 @@ export {
 export default [
   PerformanceReviewRatingTrigger,
   PerformanceReviewWorkflowTrigger
-];
+] as Hook[];

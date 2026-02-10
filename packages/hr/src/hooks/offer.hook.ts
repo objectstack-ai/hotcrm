@@ -406,4 +406,4 @@ export default [
   OfferCreationTrigger,
   OfferStatusChangeTrigger,
   OfferApprovalTrigger
-];
+] as Hook[];
