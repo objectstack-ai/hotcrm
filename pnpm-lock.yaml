@@ -9,14 +9,14 @@ importers:
   .:
     devDependencies:
       '@objectstack/cli':
-        specifier: ^2.0.2
-        version: 2.0.2(esbuild@0.27.2)
+        specifier: ^2.0.3
+        version: 2.0.3(esbuild@0.27.2)
       '@objectstack/spec':
-        specifier: ^2.0.2
-        version: 2.0.2
+        specifier: ^2.0.3
+        version: 2.0.3
       '@objectstack/studio':
-        specifier: ^2.0.2
-        version: 2.0.2(@types/node@25.2.0)(@types/react-dom@19.2.3(@types/react@19.2.9))(@types/react@19.2.9)(typescript@5.9.3)
+        specifier: ^2.0.3
+        version: 2.0.3(@types/node@25.2.0)(@types/react-dom@19.2.3(@types/react@19.2.9))(@types/react@19.2.9)(typescript@5.9.3)
       '@types/node':
         specifier: ^25.2.0
         version: 25.2.0
@@ -97,8 +97,8 @@ importers:
   packages/ai:
     dependencies:
       '@objectstack/spec':
-        specifier: ^2.0.2
-        version: 2.0.2
+        specifier: ^2.0.3
+        version: 2.0.3
       axios:
         specifier: ^1.13.4
         version: 1.13.4
@@ -128,8 +128,8 @@ importers:
         specifier: workspace:*
         version: link:../ai
       '@objectstack/spec':
-        specifier: ^2.0.2
-        version: 2.0.2
+        specifier: ^2.0.3
+        version: 2.0.3
       axios:
         specifier: ^1.13.4
         version: 1.13.4
@@ -156,8 +156,8 @@ importers:
   packages/finance:
     dependencies:
       '@objectstack/spec':
-        specifier: ^2.0.2
-        version: 2.0.2
+        specifier: ^2.0.3
+        version: 2.0.3
       typescript:
         specifier: ^5.3.0
         version: 5.9.3
@@ -178,8 +178,8 @@ importers:
   packages/hr:
     dependencies:
       '@objectstack/spec':
-        specifier: ^2.0.2
-        version: 2.0.2
+        specifier: ^2.0.3
+        version: 2.0.3
       typescript:
         specifier: ^5.3.0
         version: 5.9.3
@@ -200,8 +200,8 @@ importers:
   packages/marketing:
     dependencies:
       '@objectstack/spec':
-        specifier: ^2.0.2
-        version: 2.0.2
+        specifier: ^2.0.3
+        version: 2.0.3
     devDependencies:
       typescript:
         specifier: ^5.0.0
@@ -210,8 +210,8 @@ importers:
   packages/products:
     dependencies:
       '@objectstack/spec':
-        specifier: ^2.0.2
-        version: 2.0.2
+        specifier: ^2.0.3
+        version: 2.0.3
       typescript:
         specifier: ^5.3.0
         version: 5.9.3
@@ -232,8 +232,8 @@ importers:
   packages/support:
     dependencies:
       '@objectstack/spec':
-        specifier: ^2.0.2
-        version: 2.0.2
+        specifier: ^2.0.3
+        version: 2.0.3
       typescript:
         specifier: ^5.3.0
         version: 5.9.3
@@ -938,53 +938,53 @@ packages:
     resolution: {integrity: sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg==}
     engines: {node: '>= 8'}
 
-  '@objectstack/cli@2.0.2':
-    resolution: {integrity: sha512-KSHly4uFZAM7078U4Et7yrijpkA/rvmpbEay7vlfQYywA6HenjXB6qLYpaRuEZmM1kqsl/kWbp8eumUQf4geug==}
+  '@objectstack/cli@2.0.3':
+    resolution: {integrity: sha512-BC/etSz1YotODIhjyUvdMkmhhQ2wO6M9tXiFlKi2PV3QKxLXLXSVstkExAHdk0aIheCAVsTqYZOfNCb68mSSgA==}
     hasBin: true
 
-  '@objectstack/client-react@2.0.2':
-    resolution: {integrity: sha512-DfEslKE1xjACchFviRdya8W77R5AWOt4Vf0UowKq09Hbb9L/FEupQSF9UrCqKQsf95Rn+ZDbRUWivzjF6opWyA==}
+  '@objectstack/client-react@2.0.3':
+    resolution: {integrity: sha512-ioll3X8xVkjaHHqOxgFacQNfJEh76f3I7h2+V/dAHomzPw6WP7Rls6a2uXodRyWJfyIiMpRQGNDzdtwshu7iHg==}
     peerDependencies:
       react: '>=18.0.0'
 
-  '@objectstack/client@2.0.2':
-    resolution: {integrity: sha512-GX6lmvjh1XzbG0rJVPIWrr/bQMGpS7zbn3hDgbl6GqtojXEBbFdlZsiTOjl6r9zbsvz9rEp+pNHmQulXguLoMw==}
+  '@objectstack/client@2.0.3':
+    resolution: {integrity: sha512-doWPL4IW/HZa+SnANQScRbGC9ouxOs+fiZRd5oSnuae760f+9+TtKSKSFtLejHuoC8kq2dmVpYDcT6IpfE9qDQ==}
 
-  '@objectstack/core@2.0.2':
-    resolution: {integrity: sha512-QXmF+vUBcKiEnOmUuZr18Ei/eSLO2qH/BsdXFkPPx4qut5qWWY1GtLJnAKpu1uu86jgWZyUGmI7R8yxZ98/u/g==}
+  '@objectstack/core@2.0.3':
+    resolution: {integrity: sha512-6nhxTS9OUYhHAtrbFKmWs16CM0gLQkPk2Qdc6YwIM1f84XnfofXMetLV9bJSTlmElOpKbz0s1YBugFdxbPtXOg==}
 
-  '@objectstack/driver-memory@2.0.2':
-    resolution: {integrity: sha512-aAXzifFu46d2ujXAw9NF3JkukkIGVby3zOm3tct0c0GIUyrBrUqyoTImVdqbArH4M8PdHRTaJogrlgRSuhMqhw==}
+  '@objectstack/driver-memory@2.0.3':
+    resolution: {integrity: sha512-jjrXMiwOs+vtSwdbmHrl9Oamkkl59COxyzCj6qltbycFr5z/Q9gTsNJUX5eZMysc+cJWm0Mru0xffDgat3K0kQ==}
 
-  '@objectstack/metadata@2.0.2':
-    resolution: {integrity: sha512-JSSotVz4JMSTx6uKBeHNrkTNKS178uGtzR8E9CijcCcr6iI61hYpvy4xmLR6sxV6Q3046/bieDiegVvXf6EPKw==}
+  '@objectstack/metadata@2.0.3':
+    resolution: {integrity: sha512-h9T0P22uerAqBdmB3Pz/2aKjf8CvbmMjoBH2KYNGD8lZtQYwG8Nq8o/v1QWnTAcgPyvvXs9rsYPCiirAUvnT7g==}
 
-  '@objectstack/objectql@2.0.2':
-    resolution: {integrity: sha512-YzlzB+vL+cLDynfAgw9cQSPLbCz4AWfynK6TBrRA4blyMq8tDtrjV9qIUT9UmKUYMvsUC9VgUSvTyfL4f3T+Fg==}
+  '@objectstack/objectql@2.0.3':
+    resolution: {integrity: sha512-7wY9WuxlFNMmSzW6xamAkrVSHxhbBkqHewYVnLIyelctG9yRKdCe6QBg+wyzIOIZ640nCXqEWBU9qBkzbdVMnQ==}
 
-  '@objectstack/plugin-hono-server@2.0.2':
-    resolution: {integrity: sha512-M06LLEnPsFHq7I6xo7Nvu9/1yQHMu8NjCaL7DeHdXx7B/LEEZrbwC9DHPcRCk6Afp2nr/I+fjSNYVoRid8FBGQ==}
+  '@objectstack/plugin-hono-server@2.0.3':
+    resolution: {integrity: sha512-hbn+1LALGq1jp6szsKDlITit5eTyaDx4jdTNrtcluBIn3/6ccNqsol64hm4GdhEb3QjQCAQBunmAaS7RbboaTw==}
 
-  '@objectstack/plugin-msw@2.0.2':
-    resolution: {integrity: sha512-dXQHMpbIgsTofqGr/TJlXU8AC79oOVLKriQLXD9PO/o8kHk+3TdpsKNKF4S6fQllt7Dm63yjo1TTGI/PUm+zug==}
+  '@objectstack/plugin-msw@2.0.3':
+    resolution: {integrity: sha512-9MVdOU/u1m1drUirM1ddygfI/88/RHHE69Nq0rZ6BGBUppBcju6Z+7iqFDqrwOjisyaJeOZVNV7LjSgF4CDRjA==}
     peerDependencies:
-      '@objectstack/runtime': 2.0.2
+      '@objectstack/runtime': 2.0.3
 
-  '@objectstack/rest@2.0.2':
-    resolution: {integrity: sha512-tAXuzKJbj9bpMr/Acy41pjszAwKfG51wh2FKkO4Z2M7UmMGRyyOd8jgXK7CDaqz0DwJ4wnqWM3rRvzuxtSOOLg==}
+  '@objectstack/rest@2.0.3':
+    resolution: {integrity: sha512-DEOjyg8d/Kf4hEBZah5XdqmVFyiURrfg9hNWhbV/PtgZyDC9NynnHpzkegNOzdbj8gnwhunF2iVgXWaKbFEmBQ==}
 
-  '@objectstack/runtime@2.0.2':
-    resolution: {integrity: sha512-MgUwdZ+xhEFuiM1PPXhF3SfIbZo5XBl2BWxZJCjsMsdSPykFhpV4plvJMlYeXtiCWk+RXuZHzYpH0yk0JeWFrQ==}
+  '@objectstack/runtime@2.0.3':
+    resolution: {integrity: sha512-/ZVu84XhMOC+wUuPZfEhDJLVvj3GC/3avrt1uey5ePFSn+3s+mxpHOYRs30mtmn20j5pzpgqiCiBPMY0Mzidwg==}
 
-  '@objectstack/spec@2.0.2':
-    resolution: {integrity: sha512-aHzpjOs0GwtX7VPN2IJkInt/xr+5KfsJ4su91WreF/way6vInNRuRGc8/Ul5/52DUpWFkB4650sM1v6G5MgQ0w==}
+  '@objectstack/spec@2.0.3':
+    resolution: {integrity: sha512-i0Vk4X0+dYHL+bqG1lKqztARBousVARlDqN+ZsMhGMRpAWL8kNKTBYIoFNYXRLI8Ov8WI0slhCI8bkk1EGOrjQ==}
     engines: {node: '>=18.0.0'}
 
-  '@objectstack/studio@2.0.2':
-    resolution: {integrity: sha512-IZjz4Na2TxyUiCeK4jX9pw/nFtT3mDvAaPWS/QsW5HtcYQCGRhlB4YOzAnwWhurOj2U00W836yTJMbO4s6H1nw==}
+  '@objectstack/studio@2.0.3':
+    resolution: {integrity: sha512-3JFoL+gs5SKRy5zt+4QKwWY+ED2U/Y7N46yBu6QBO3IjTJjWZRoHi4Gtw/HQTgawUglTcQsX/rWrlq/JP+N8qw==}
 
-  '@objectstack/types@2.0.2':
-    resolution: {integrity: sha512-cdGkIQ2vCoh2HfsOgAlV+6WtgGzscxhtM9UJJirX7LxXyGx7Z784hLmfr4zEPnknXaAgVh3MakMlUW4THMw7zA==}
+  '@objectstack/types@2.0.3':
+    resolution: {integrity: sha512-YnhawhAlCZq4fxil2FNB578VS052nSHq0PLDPksuAkl6LgJa3W2CF0cP496mkca6LK5hTfEn11IqB7Z6VzE8Pw==}
 
   '@open-draft/deferred-promise@2.2.0':
     resolution: {integrity: sha512-CecwLWx3rhxVQF6V4bAgPS5t+So2sTbPgAzafKkVizyi7tlwpcFpdFqq+wqF2OwNBmqFuu6tOyouTuxgpMfzmA==}
@@ -4347,15 +4347,15 @@ snapshots:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.20.1
 
-  '@objectstack/cli@2.0.2(esbuild@0.27.2)':
+  '@objectstack/cli@2.0.3(esbuild@0.27.2)':
     dependencies:
-      '@objectstack/core': 2.0.2
-      '@objectstack/driver-memory': 2.0.2
-      '@objectstack/objectql': 2.0.2
-      '@objectstack/plugin-hono-server': 2.0.2
-      '@objectstack/rest': 2.0.2
-      '@objectstack/runtime': 2.0.2
-      '@objectstack/spec': 2.0.2
+      '@objectstack/core': 2.0.3
+      '@objectstack/driver-memory': 2.0.3
+      '@objectstack/objectql': 2.0.3
+      '@objectstack/plugin-hono-server': 2.0.3
+      '@objectstack/rest': 2.0.3
+      '@objectstack/runtime': 2.0.3
+      '@objectstack/spec': 2.0.3
       bundle-require: 5.1.0(esbuild@0.27.2)
       chalk: 5.6.2
       commander: 14.0.3
@@ -4364,93 +4364,93 @@ snapshots:
     transitivePeerDependencies:
       - esbuild
 
-  '@objectstack/client-react@2.0.2(react@19.2.4)':
+  '@objectstack/client-react@2.0.3(react@19.2.4)':
     dependencies:
-      '@objectstack/client': 2.0.2
-      '@objectstack/core': 2.0.2
-      '@objectstack/spec': 2.0.2
+      '@objectstack/client': 2.0.3
+      '@objectstack/core': 2.0.3
+      '@objectstack/spec': 2.0.3
       react: 19.2.4
 
-  '@objectstack/client@2.0.2':
+  '@objectstack/client@2.0.3':
     dependencies:
-      '@objectstack/core': 2.0.2
-      '@objectstack/spec': 2.0.2
+      '@objectstack/core': 2.0.3
+      '@objectstack/spec': 2.0.3
 
-  '@objectstack/core@2.0.2':
+  '@objectstack/core@2.0.3':
     dependencies:
-      '@objectstack/spec': 2.0.2
+      '@objectstack/spec': 2.0.3
       pino: 10.3.0
       pino-pretty: 13.1.3
       zod: 4.3.6
 
-  '@objectstack/driver-memory@2.0.2':
+  '@objectstack/driver-memory@2.0.3':
     dependencies:
-      '@objectstack/core': 2.0.2
-      '@objectstack/spec': 2.0.2
+      '@objectstack/core': 2.0.3
+      '@objectstack/spec': 2.0.3
 
-  '@objectstack/metadata@2.0.2':
+  '@objectstack/metadata@2.0.3':
     dependencies:
-      '@objectstack/core': 2.0.2
-      '@objectstack/spec': 2.0.2
-      '@objectstack/types': 2.0.2
+      '@objectstack/core': 2.0.3
+      '@objectstack/spec': 2.0.3
+      '@objectstack/types': 2.0.3
       chokidar: 5.0.0
       glob: 13.0.1
       js-yaml: 4.1.1
       zod: 4.3.6
 
-  '@objectstack/objectql@2.0.2':
+  '@objectstack/objectql@2.0.3':
     dependencies:
-      '@objectstack/core': 2.0.2
-      '@objectstack/spec': 2.0.2
-      '@objectstack/types': 2.0.2
+      '@objectstack/core': 2.0.3
+      '@objectstack/spec': 2.0.3
+      '@objectstack/types': 2.0.3
 
-  '@objectstack/plugin-hono-server@2.0.2':
+  '@objectstack/plugin-hono-server@2.0.3':
     dependencies:
       '@hono/node-server': 1.19.9(hono@4.11.9)
-      '@objectstack/core': 2.0.2
-      '@objectstack/spec': 2.0.2
+      '@objectstack/core': 2.0.3
+      '@objectstack/spec': 2.0.3
       hono: 4.11.9
 
-  '@objectstack/plugin-msw@2.0.2(@objectstack/runtime@2.0.2)(@types/node@25.2.0)(typescript@5.9.3)':
+  '@objectstack/plugin-msw@2.0.3(@objectstack/runtime@2.0.3)(@types/node@25.2.0)(typescript@5.9.3)':
     dependencies:
-      '@objectstack/core': 2.0.2
-      '@objectstack/objectql': 2.0.2
-      '@objectstack/runtime': 2.0.2
-      '@objectstack/spec': 2.0.2
-      '@objectstack/types': 2.0.2
+      '@objectstack/core': 2.0.3
+      '@objectstack/objectql': 2.0.3
+      '@objectstack/runtime': 2.0.3
+      '@objectstack/spec': 2.0.3
+      '@objectstack/types': 2.0.3
       msw: 2.12.9(@types/node@25.2.0)(typescript@5.9.3)
     transitivePeerDependencies:
       - '@types/node'
       - typescript
 
-  '@objectstack/rest@2.0.2':
+  '@objectstack/rest@2.0.3':
     dependencies:
-      '@objectstack/core': 2.0.2
-      '@objectstack/spec': 2.0.2
+      '@objectstack/core': 2.0.3
+      '@objectstack/spec': 2.0.3
       zod: 4.3.6
 
-  '@objectstack/runtime@2.0.2':
+  '@objectstack/runtime@2.0.3':
     dependencies:
-      '@objectstack/core': 2.0.2
-      '@objectstack/rest': 2.0.2
-      '@objectstack/spec': 2.0.2
-      '@objectstack/types': 2.0.2
+      '@objectstack/core': 2.0.3
+      '@objectstack/rest': 2.0.3
+      '@objectstack/spec': 2.0.3
+      '@objectstack/types': 2.0.3
       zod: 4.3.6
 
-  '@objectstack/spec@2.0.2':
+  '@objectstack/spec@2.0.3':
     dependencies:
       zod: 4.3.6
 
-  '@objectstack/studio@2.0.2(@types/node@25.2.0)(@types/react-dom@19.2.3(@types/react@19.2.9))(@types/react@19.2.9)(typescript@5.9.3)':
+  '@objectstack/studio@2.0.3(@types/node@25.2.0)(@types/react-dom@19.2.3(@types/react@19.2.9))(@types/react@19.2.9)(typescript@5.9.3)':
     dependencies:
-      '@objectstack/client': 2.0.2
-      '@objectstack/client-react': 2.0.2(react@19.2.4)
-      '@objectstack/driver-memory': 2.0.2
-      '@objectstack/metadata': 2.0.2
-      '@objectstack/objectql': 2.0.2
-      '@objectstack/plugin-msw': 2.0.2(@objectstack/runtime@2.0.2)(@types/node@25.2.0)(typescript@5.9.3)
-      '@objectstack/runtime': 2.0.2
-      '@objectstack/spec': 2.0.2
+      '@objectstack/client': 2.0.3
+      '@objectstack/client-react': 2.0.3(react@19.2.4)
+      '@objectstack/driver-memory': 2.0.3
+      '@objectstack/metadata': 2.0.3
+      '@objectstack/objectql': 2.0.3
+      '@objectstack/plugin-msw': 2.0.3(@objectstack/runtime@2.0.3)(@types/node@25.2.0)(typescript@5.9.3)
+      '@objectstack/runtime': 2.0.3
+      '@objectstack/spec': 2.0.3
       '@radix-ui/react-avatar': 1.1.11(@types/react-dom@19.2.3(@types/react@19.2.9))(@types/react@19.2.9)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@radix-ui/react-checkbox': 1.3.3(@types/react-dom@19.2.3(@types/react@19.2.9))(@types/react@19.2.9)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@radix-ui/react-collapsible': 1.1.12(@types/react-dom@19.2.3(@types/react@19.2.9))(@types/react@19.2.9)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -4479,9 +4479,9 @@ snapshots:
       - '@types/react-dom'
       - typescript
 
-  '@objectstack/types@2.0.2':
+  '@objectstack/types@2.0.3':
     dependencies:
-      '@objectstack/spec': 2.0.2
+      '@objectstack/spec': 2.0.3
 
   '@open-draft/deferred-promise@2.2.0': {}
 
