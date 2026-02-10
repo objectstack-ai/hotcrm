@@ -22,9 +22,9 @@ const PerformanceReviewRatingTrigger: Hook = {
   name: 'PerformanceReviewRatingTrigger',
   object: 'performance_review',
   events: ['beforeInsert', 'beforeUpdate'],
-  handler: async (ctx: any) => {
+  handler: async (ctx: HookContext) => {
     try {
-      const review = (ctx.input.doc as any) || ctx.input;
+      const review = ctx.input.doc as Record<string, any>;
 
       // Calculate overall rating from component scores
       if (hasAllComponentScores(review)) {
@@ -132,15 +132,15 @@ const PerformanceReviewWorkflowTrigger: Hook = {
   name: 'PerformanceReviewWorkflowTrigger',
   object: 'performance_review',
   events: ['afterUpdate'],
-  handler: async (ctx: any) => {
+  handler: async (ctx: HookContext) => {
     try {
       // Check if status changed
-      if (!ctx.previous || (ctx.previous as any).status === (ctx.result as any).status) {
+      if (!ctx.previous || (ctx.previous as Record<string, any>).status === (ctx.result as Record<string, any>).status) {
         return;
       }
 
-      const review = ctx.result as any;
-      const oldStatus = (ctx.previous as any).status;
+      const review = ctx.result as Record<string, any>;
+      const oldStatus = (ctx.previous as Record<string, any>).status;
       const newStatus = review.status;
 
       console.log(`🔄 Performance review ${review.review_name} status changed from "${oldStatus}" to "${newStatus}"`);
@@ -195,7 +195,7 @@ async function handleReviewSubmitted(review: any, ctx: any): Promise<void> {
   
   try {
     // Set submission date
-    await (ctx.ql as any).doc.update('performance_review', review.id, {
+    await ctx.ql.doc.update('performance_review', review.id, {
       submitted_date: new Date().toISOString().split('T')[0],
       submitted_by: ctx.session?.userId
     });
@@ -217,7 +217,7 @@ async function handleReviewApproved(review: any, ctx: any): Promise<void> {
   
   try {
     // Set approval date
-    await (ctx.ql as any).doc.update('performance_review', review.id, {
+    await ctx.ql.doc.update('performance_review', review.id, {
       approved_date: new Date().toISOString().split('T')[0],
       approved_by: ctx.session?.userId
     });
@@ -281,7 +281,7 @@ async function createDevelopmentGoals(review: any, ctx: any): Promise<void> {
     }
 
     // Create development goal
-    await (ctx.ql as any).doc.create('goal', {
+    await ctx.ql.doc.create('goal', {
       employee_id: review.employee_id,
       goal_name: `Development Plan - ${review.review_period} Review`,
       description: review.development_plan,
@@ -308,7 +308,7 @@ async function handleReviewCompleted(review: any, ctx: any): Promise<void> {
   
   try {
     // Set completion date
-    await (ctx.ql as any).doc.update('performance_review', review.id, {
+    await ctx.ql.doc.update('performance_review', review.id, {
       completion_date: new Date().toISOString().split('T')[0]
     });
 
@@ -329,7 +329,7 @@ async function handleReviewCompleted(review: any, ctx: any): Promise<void> {
  */
 async function updateEmployeeReviewStats(review: any, ctx: any): Promise<void> {
   try {
-    await (ctx.ql as any).doc.update('employee', review.employee_id, {
+    await ctx.ql.doc.update('employee', review.employee_id, {
       last_review_date: review.end_date,
       last_review_rating: review.overall_rating,
       last_review_level: review.performance_level
@@ -350,7 +350,7 @@ async function handleReviewRejected(review: any, ctx: any): Promise<void> {
   
   try {
     // Send back to reviewer for revision
-    await (ctx.ql as any).doc.update('performance_review', review.id, {
+    await ctx.ql.doc.update('performance_review', review.id, {
       status: 'In Progress'
     });
 
@@ -392,7 +392,7 @@ export async function checkPerformanceReviewDueDates(ctx: any): Promise<void> {
     reminderDate.setDate(reminderDate.getDate() + 7); // 7 days before due
 
     // Find reviews due soon
-    const upcomingReviews = await (ctx.ql as any).find('performance_review', {
+    const upcomingReviews = await ctx.ql.find('performance_review', {
       filters: [
         ['status', 'in', ['Not Started', 'In Progress']],
         ['due_date', '<=', reminderDate.toISOString().split('T')[0]],

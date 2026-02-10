@@ -14,7 +14,7 @@ const CampaignMemberEngagementTrigger: Hook = {
   name: 'CampaignMemberEngagementTrigger',
   object: 'campaign_member',
   events: ['beforeInsert', 'beforeUpdate'],
-  handler: async (ctx: any) => {
+  handler: async (ctx: HookContext) => {
     try {
       const member = ctx.input.doc as Record<string, any>;
       const oldMember = ctx.previous as Record<string, any> | undefined;
@@ -84,7 +84,7 @@ const CampaignMemberLeadScoringTrigger: Hook = {
   name: 'CampaignMemberLeadScoringTrigger',
   object: 'campaign_member',
   events: ['afterUpdate'],
-  handler: async (ctx: any) => {
+  handler: async (ctx: HookContext) => {
     try {
       const member = ctx.result as Record<string, any>;
       const oldMember = ctx.previous as Record<string, any> | undefined;
@@ -152,7 +152,7 @@ const CampaignMemberStatsTrigger: Hook = {
   name: 'CampaignMemberStatsTrigger',
   object: 'campaign_member',
   events: ['afterInsert', 'afterUpdate', 'afterDelete'],
-  handler: async (ctx: any) => {
+  handler: async (ctx: HookContext) => {
     try {
       const member = ctx.result as Record<string, any>;
       const campaignId = member?.campaign || ctx.previous?.campaign;
@@ -182,7 +182,7 @@ const CampaignMemberBounceHandlerTrigger: Hook = {
   name: 'CampaignMemberBounceHandlerTrigger',
   object: 'campaign_member',
   events: ['beforeUpdate'],
-  handler: async (ctx: any) => {
+  handler: async (ctx: HookContext) => {
     try {
       const member = ctx.input.doc as Record<string, any>;
       const oldMember = ctx.previous as Record<string, any> | undefined;
