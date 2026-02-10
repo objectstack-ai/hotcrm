@@ -96,7 +96,7 @@ async function handleClosedWon(ctx: any): Promise<void> {
   // 1. Create Contract
   let contractId;
   try {
-    const contract = await ctx.db.doc.create('Contract', {
+    const contract = await ctx.ql.doc.create('contract', {
       AccountId: opportunity.AccountId,
       OpportunityId: opportunity.Id,
       Status: 'Draft',
@@ -118,7 +118,7 @@ async function handleClosedWon(ctx: any): Promise<void> {
 
   // 2. Update Account Status
   try {
-    await ctx.db.doc.update('Account', opportunity.AccountId, {
+    await ctx.ql.doc.update('account', opportunity.AccountId, {
       CustomerStatus: 'Active Customer'
     });
     console.log('✅ Account status updated to Active Customer');
@@ -129,7 +129,7 @@ async function handleClosedWon(ctx: any): Promise<void> {
 
   // 3. Log activity
   try {
-    await ctx.db.doc.create('Activity', {
+    await ctx.ql.doc.create('activity', {
       Subject: `Deal Won: ${opportunity.Name}`,
       Type: 'Milestone',
       Status: 'Completed',
@@ -170,7 +170,7 @@ async function handleClosedLost(ctx: any): Promise<void> {
 
   // Log activity for lost opportunity
   try {
-    await ctx.db.doc.create('Activity', {
+    await ctx.ql.doc.create('activity', {
       Subject: `Deal Lost: ${opportunity.Name}`,
       Type: 'Milestone',
       Status: 'Completed',
@@ -196,7 +196,7 @@ async function logStageChange(ctx: any): Promise<void> {
   try {
     const opportunity = ctx.result;
     const oldStage = ctx.previous?.Stage || 'Unknown';
-    await ctx.db.doc.create('Activity', {
+    await ctx.ql.doc.create('activity', {
       Subject: `Opportunity Stage Change: ${oldStage} → ${ctx.result.Stage}`,
       Type: 'Stage Change',
       Status: 'Completed',
@@ -258,7 +258,7 @@ async function countRelatedQuotes(ctx: any, opportunityId: string): Promise<numb
      // In a real monorepo with strict boundaries, we might use a decoupled service.
      // Here we assume the broker can find 'quote' across packages.
      // Mocking for now since we don't have the full runtime
-     const quotes = await ctx.db.find('quote', { 
+     const quotes = await ctx.ql.find('quote', { 
        filters: [['opportunity', '=', opportunityId]] 
      });
      return quotes.length;

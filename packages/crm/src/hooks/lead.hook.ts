@@ -182,7 +182,7 @@ async function calculateLeadScore(lead: Lead, ctx: HookContext): Promise<number>
  */
 async function runAssignmentRules(lead: Lead, ctx: HookContext): Promise<void> {
   try {
-    const rules: any[] = await (ctx.ql as any).find('assignment_rule', {  
+    const rules: any[] = await ctx.ql.find('assignment_rule', {  
       filters: [
         ['object_name', '=', 'lead'], 
         ['active', '=', true]
@@ -342,7 +342,7 @@ async function handleLeadConversion(ctx: HookContext): Promise<void> {
 
   // Log activity for conversion
   try {
-    await (ctx.ql as any).doc.create('activity', {
+    await ctx.ql.doc.create('activity', {
       Subject: `Lead Conversion: ${lead.FirstName} ${lead.LastName}`,
       Type: 'Conversion',
       Status: 'Completed',
@@ -371,7 +371,7 @@ async function handleLeadUnqualification(ctx: HookContext): Promise<void> {
 
   // Log activity
   try {
-    await (ctx.ql as any).doc.create('activity', {
+    await ctx.ql.doc.create('activity', {
       Subject: `Lead Unqualified: ${lead.FirstName} ${lead.LastName}`,
       Type: 'Disqualification',
       Status: 'Completed',
@@ -394,7 +394,7 @@ async function logStatusChange(ctx: HookContext): Promise<void> {
     const lead = ctx.input;
     const oldStatus = ctx.previous?.Status || 'Unknown';
     
-    await (ctx.ql as any).doc.create('activity', {
+    await ctx.ql.doc.create('activity', {
       Subject: `Lead Status Change: ${oldStatus} → ${ctx.input.Status}`,
       Type: 'Status Change',
       Status: 'Completed',

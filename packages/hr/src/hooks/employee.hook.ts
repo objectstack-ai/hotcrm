@@ -92,7 +92,7 @@ async function createProbationGoals(employee: any, ctx: any): Promise<void> {
     const probationEndDate = new Date(hireDate);
     probationEndDate.setDate(probationEndDate.getDate() + 90); // 90-day probation
 
-    await (ctx.ql as any).doc.create('goal', {
+    await ctx.ql.doc.create('goal', {
       employee_id: employee.id,
       goal_name: `Complete Onboarding - ${employee.full_name}`,
       description: 'Successfully complete all onboarding tasks and probation requirements',

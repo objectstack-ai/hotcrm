@@ -28,10 +28,10 @@ const ContractBillingHook: Hook = {
             payment_terms: 'Net 30'
         };
 
-        const invoice = await (ctx.ql as any).insert('invoice', invoiceData);
+        const invoice = await ctx.ql.doc.create('invoice', invoiceData);
         
         // Create a single line item for the full contract value (since we don't have contract lines yet)
-        await (ctx.ql as any).insert('invoice_line', {
+        await ctx.ql.doc.create('invoice_line', {
             invoice: invoice._id,
             description: `Contract ${newDoc.contract_number} Billing`,
             quantity: 1,

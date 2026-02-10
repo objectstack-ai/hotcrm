@@ -428,7 +428,7 @@ async function findRelatedArticles(article: any, ctx: any): Promise<any[]> {
   if (keywords.length === 0) return [];
 
   // Find articles with similar keywords or category
-  const relatedArticles = await (ctx.ql as any).find('knowledge_article', {
+  const relatedArticles = await ctx.ql.find('knowledge_article', {
     filters: [
       ['Status', '=', 'Published'],
       ['id', '!=', article.id]
@@ -503,14 +503,14 @@ function calculateNextReviewDate(article: any): Date {
 
 async function incrementArticleUsage(articleId: string, ctx: any): Promise<void> {
   try {
-    const article = await (ctx.ql as any).find('knowledge_article', {
+    const article = await ctx.ql.find('knowledge_article', {
       filters: [['id', '=', articleId]],
       limit: 1
     });
 
     if (article && article.length > 0) {
       const currentCount = article[0].CaseResolutionCount || 0;
-      await (ctx.ql as any).doc.update('knowledge_article', articleId, {
+      await ctx.ql.doc.update('knowledge_article', articleId, {
         CaseResolutionCount: currentCount + 1,
         LastUsedInCaseDate: new Date()
       });

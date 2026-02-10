@@ -27,7 +27,7 @@ const ContractRenewalCheck: Hook = {
       console.log(`🔄 Contract ${newDoc.contract_number} expires in ${daysUntilExpiry} days — creating renewal opportunity`);
 
       // Check if a renewal opportunity already exists for this contract
-      const existing = await (ctx.ql as any).find('opportunity', {
+      const existing = await ctx.ql.find('opportunity', {
         filters: [
           ['source_contract', '=', newDoc._id],
           ['type', '=', 'Renewal']
@@ -43,7 +43,7 @@ const ContractRenewalCheck: Hook = {
       const closeDate = new Date(endDate);
       closeDate.setDate(closeDate.getDate() - 30);
 
-      const opportunity = await (ctx.ql as any).insert('opportunity', {
+      const opportunity = await ctx.ql.doc.create('opportunity', {
         name: `Renewal: ${newDoc.contract_number}`,
         account: newDoc.account,
         source_contract: newDoc._id,
@@ -56,7 +56,7 @@ const ContractRenewalCheck: Hook = {
       console.log(`✅ Created renewal opportunity ${opportunity.name} for Contract ${newDoc.contract_number}`);
 
       // Create a task for the account owner to initiate renewal conversation
-      await (ctx.ql as any).insert('task', {
+      await ctx.ql.doc.create('task', {
         subject: `Initiate renewal for Contract ${newDoc.contract_number}`,
         description: `Contract ${newDoc.contract_number} expires on ${endDate.toISOString().split('T')[0]}. Please reach out to the customer to discuss renewal.`,
         related_to: newDoc.account,
@@ -100,7 +100,7 @@ const ContractExpirationAlert: Hook = {
       console.log(`⚠️ Contract ${newDoc.contract_number} expires in ${daysUntilExpiry} days — sending expiration alert`);
 
       // Log urgent renewal activity
-      await (ctx.ql as any).insert('activity', {
+      await ctx.ql.doc.create('activity', {
         type: 'Alert',
         subject: `Urgent: Contract ${newDoc.contract_number} expiring in ${daysUntilExpiry} days`,
         description: `Contract ${newDoc.contract_number} with value ${newDoc.contract_value} is expiring on ${endDate.toISOString().split('T')[0]}. Immediate action required for renewal.`,
@@ -111,7 +111,7 @@ const ContractExpirationAlert: Hook = {
       });
 
       // Flag contract so we don't send duplicate reminders
-      await (ctx.ql as any).update('contract', newDoc._id, {
+      await ctx.ql.doc.update('contract', newDoc._id, {
         renewal_reminder_sent: true
       });
 

@@ -50,7 +50,7 @@ async function validateProductConfiguration(ctx: any): Promise<void> {
   try {
     // Ensure product code is unique
     if (product.ProductCode) {
-      const existing = await ctx.db.find('Product', {
+      const existing = await ctx.ql.find('product', {
         filters: [
           ['ProductCode', '=', product.ProductCode],
           ['Id', '!=', product.Id || '']
@@ -133,7 +133,7 @@ async function handleStockLevelChange(ctx: any): Promise<void> {
       
       // Update product status to Out of Stock
       if (product.Status === 'Active') {
-        await ctx.db.doc.update('Product', product.Id, {
+        await ctx.ql.doc.update('product', product.Id, {
           Status: 'Out of Stock'
         });
         console.log('🚫 Product status updated to Out of Stock');
@@ -142,7 +142,7 @@ async function handleStockLevelChange(ctx: any): Promise<void> {
 
     // If stock was replenished, reactivate product
     if (ctx.previous.StockLevel === 0 && product.StockLevel > 0 && product.Status === 'Out of Stock') {
-      await ctx.db.doc.update('Product', product.Id, {
+      await ctx.ql.doc.update('product', product.Id, {
         Status: 'Active'
       });
       console.log('✅ Product reactivated after stock replenishment');
@@ -170,7 +170,7 @@ async function handlePriceChange(ctx: any): Promise<void> {
       console.log(`💰 List price changed from ${ctx.previous.ListPrice} to ${product.ListPrice}`);
       
       // Log price change activity
-      await ctx.db.doc.create('Activity', {
+      await ctx.ql.doc.create('activity', {
         Subject: `Price Change: ${product.Name}`,
         Type: 'Price Update',
         Status: 'Completed',
@@ -235,7 +235,7 @@ async function handleStatusChange(ctx: any): Promise<void> {
     }
 
     // Log activity for status change
-    await ctx.db.doc.create('Activity', {
+    await ctx.ql.doc.create('activity', {
       Subject: `Product Status Changed: ${ctx.previous.Status} → ${product.Status}`,
       Type: 'Status Change',
       Status: 'Completed',
