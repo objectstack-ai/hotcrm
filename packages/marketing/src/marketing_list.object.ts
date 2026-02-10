@@ -28,42 +28,42 @@ export const MarketingList = ObjectSchema.create({
       label: 'List Type',
       description: 'Static = manually added, Dynamic = auto-updated, Hybrid = both combined',
       required: true,
-      defaultValue: 'Static',
+      defaultValue: 'static',
       options: [
         {
           "label": "📌 Static List",
-          "value": "Static"
+          "value": "static"
         },
         {
           "label": "🔄 Dynamic List",
-          "value": "Dynamic"
+          "value": "dynamic"
         },
         {
           "label": "🔗 Hybrid List",
-          "value": "Hybrid"
+          "value": "hybrid"
         }
       ]
     }),
     member_type: Field.select({
       label: 'Member Type',
       required: true,
-      defaultValue: 'Lead',
+      defaultValue: 'lead',
       options: [
         {
           "label": "📝 Lead",
-          "value": "Lead"
+          "value": "lead"
         },
         {
           "label": "👤 Contact",
-          "value": "Contact"
+          "value": "contact"
         },
         {
           "label": "🏢 Account",
-          "value": "Account"
+          "value": "account"
         },
         {
           "label": "🔀 Mixed",
-          "value": "Mixed"
+          "value": "mixed"
         }
       ]
     }),
@@ -78,23 +78,23 @@ export const MarketingList = ObjectSchema.create({
       options: [
         {
           "label": "Real-time",
-          "value": "Real-time"
+          "value": "real_time"
         },
         {
           "label": "Hourly",
-          "value": "Hourly"
+          "value": "hourly"
         },
         {
           "label": "Daily",
-          "value": "Daily"
+          "value": "daily"
         },
         {
           "label": "Weekly",
-          "value": "Weekly"
+          "value": "weekly"
         },
         {
           "label": "Manual",
-          "value": "Manual"
+          "value": "manual"
         }
       ]
     }),
@@ -111,35 +111,35 @@ export const MarketingList = ObjectSchema.create({
       options: [
         {
           "label": "🎯 Industry",
-          "value": "Industry"
+          "value": "industry"
         },
         {
           "label": "📍 Geographic",
-          "value": "Geographic"
+          "value": "geographic"
         },
         {
           "label": "💼 Company Size",
-          "value": "Company Size"
+          "value": "company_size"
         },
         {
           "label": "🔥 Engagement Level",
-          "value": "Engagement Level"
+          "value": "engagement_level"
         },
         {
           "label": "📊 Lead Score",
-          "value": "Lead Score"
+          "value": "lead_score"
         },
         {
           "label": "🎓 Buyer Journey",
-          "value": "Buyer Journey"
+          "value": "buyer_journey"
         },
         {
           "label": "🏷️ Product Interest",
-          "value": "Product Interest"
+          "value": "product_interest"
         },
         {
           "label": "🎨 Custom",
-          "value": "Custom"
+          "value": "custom"
         }
       ]
     }),
@@ -151,19 +151,19 @@ export const MarketingList = ObjectSchema.create({
     status: Field.select({
       label: 'Status',
       required: true,
-      defaultValue: 'Active',
+      defaultValue: 'active',
       options: [
         {
           "label": "✅ Active",
-          "value": "Active"
+          "value": "active"
         },
         {
           "label": "⏸️ Paused",
-          "value": "Paused"
+          "value": "paused"
         },
         {
           "label": "📦 Archived",
-          "value": "Archived"
+          "value": "archived"
         }
       ]
     }),

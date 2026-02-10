@@ -23,27 +23,27 @@ export const Goal = ObjectSchema.create({
     }),
     goal_type: Field.select({
       label: 'Goal Type',
-      defaultValue: 'Individual',
+      defaultValue: 'individual',
       options: [
         {
           "label": "Individual",
-          "value": "Individual"
+          "value": "individual"
         },
         {
           "label": "Team",
-          "value": "Team"
+          "value": "team"
         },
         {
           "label": "OKR",
-          "value": "OKR"
+          "value": "okr"
         },
         {
           "label": "Development",
-          "value": "Development"
+          "value": "development"
         },
         {
           "label": "Project",
-          "value": "Project"
+          "value": "project"
         }
       ]
     }),
@@ -52,49 +52,49 @@ export const Goal = ObjectSchema.create({
       options: [
         {
           "label": "Performance",
-          "value": "Performance"
+          "value": "performance"
         },
         {
           "label": "Skill Development",
-          "value": "Skill Development"
+          "value": "skill_development"
         },
         {
           "label": "Leadership",
-          "value": "Leadership"
+          "value": "leadership"
         },
         {
           "label": "Innovation",
-          "value": "Innovation"
+          "value": "innovation"
         },
         {
           "label": "Teamwork",
-          "value": "Teamwork"
+          "value": "teamwork"
         },
         {
           "label": "Customer Satisfaction",
-          "value": "Customer Satisfaction"
+          "value": "customer_satisfaction"
         },
         {
           "label": "Other",
-          "value": "Other"
+          "value": "other"
         }
       ]
     }),
     priority: Field.select({
       label: 'Priority',
-      defaultValue: 'Medium',
+      defaultValue: 'medium',
       options: [
         {
           "label": "High",
-          "value": "High"
+          "value": "high"
         },
         {
           "label": "Medium",
-          "value": "Medium"
+          "value": "medium"
         },
         {
           "label": "Low",
-          "value": "Low"
+          "value": "low"
         }
       ]
     }),
@@ -109,31 +109,31 @@ export const Goal = ObjectSchema.create({
     completion_date: Field.date({ label: 'Completion Date' }),
     status: Field.select({
       label: 'Status',
-      defaultValue: 'Not Started',
+      defaultValue: 'not_started',
       options: [
         {
           "label": "Not Started",
-          "value": "Not Started"
+          "value": "not_started"
         },
         {
           "label": "In Progress",
-          "value": "In Progress"
+          "value": "in_progress"
         },
         {
           "label": "At Risk",
-          "value": "At Risk"
+          "value": "at_risk"
         },
         {
           "label": "Completed",
-          "value": "Completed"
+          "value": "completed"
         },
         {
           "label": "Not Achieved",
-          "value": "Not Achieved"
+          "value": "not_achieved"
         },
         {
           "label": "Cancelled",
-          "value": "Cancelled"
+          "value": "cancelled"
         }
       ]
     }),

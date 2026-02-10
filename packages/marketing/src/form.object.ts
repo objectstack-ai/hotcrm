@@ -26,35 +26,35 @@ export const Form = ObjectSchema.create({
     form_type: Field.select({
       label: 'Form Type',
       required: true,
-      defaultValue: 'Lead Capture',
+      defaultValue: 'lead_capture',
       options: [
         {
           "label": "📝 Lead Capture",
-          "value": "Lead Capture"
+          "value": "lead_capture"
         },
         {
           "label": "📅 Event Registration",
-          "value": "Event Registration"
+          "value": "event_registration"
         },
         {
           "label": "🎁 Resource Download",
-          "value": "Resource Download"
+          "value": "resource_download"
         },
         {
           "label": "📞 Contact Us",
-          "value": "Contact Us"
+          "value": "contact_us"
         },
         {
           "label": "💬 Feedback Survey",
-          "value": "Feedback Survey"
+          "value": "feedback_survey"
         },
         {
           "label": "🎯 Needs Assessment",
-          "value": "Needs Assessment"
+          "value": "needs_assessment"
         },
         {
           "label": "📺 Webinar Registration",
-          "value": "Webinar Registration"
+          "value": "webinar_registration"
         }
       ]
     }),
@@ -133,19 +133,19 @@ export const Form = ObjectSchema.create({
     status: Field.select({
       label: 'Status',
       required: true,
-      defaultValue: 'Draft',
+      defaultValue: 'draft',
       options: [
         {
           "label": "📝 Draft",
-          "value": "Draft"
+          "value": "draft"
         },
         {
           "label": "✅ Published",
-          "value": "Published"
+          "value": "published"
         },
         {
           "label": "📦 Archived",
-          "value": "Archived"
+          "value": "archived"
         }
       ]
     }),

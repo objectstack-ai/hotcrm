@@ -22,19 +22,19 @@ export const SLAMilestone = ObjectSchema.create({
       options: [
         {
           "label": "🎯 First Response",
-          "value": "FirstResponse"
+          "value": "firstresponse"
         },
         {
           "label": "🔄 Next Response",
-          "value": "NextResponse"
+          "value": "nextresponse"
         },
         {
           "label": "✅ Resolution",
-          "value": "Resolution"
+          "value": "resolution"
         },
         {
           "label": "🔒 Closure",
-          "value": "Closure"
+          "value": "closure"
         }
       ]
     }),
@@ -80,27 +80,27 @@ export const SLAMilestone = ObjectSchema.create({
     status: Field.select({
       label: 'status',
       required: true,
-      defaultValue: 'InProgress',
+      defaultValue: 'inprogress',
       options: [
         {
           "label": "⏳ In Progress",
-          "value": "InProgress"
+          "value": "inprogress"
         },
         {
           "label": "✅ Completed",
-          "value": "Completed"
+          "value": "completed"
         },
         {
           "label": "❌ Violated",
-          "value": "Violated"
+          "value": "violated"
         },
         {
           "label": "⏸️ Paused",
-          "value": "Paused"
+          "value": "paused"
         },
         {
           "label": "🔄 Reset",
-          "value": "Reset"
+          "value": "reset"
         }
       ]
     }),

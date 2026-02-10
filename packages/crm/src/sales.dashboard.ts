@@ -26,7 +26,7 @@ export const SalesDashboard = {
       dataSource: {
         object: 'opportunity',
         filters: [
-          ['stage', '=', 'Closed Won'],
+          ['stage', '=', 'closed_won'],
           ['close_date', '>=', 'THIS_YEAR']
         ],
         aggregate: {
@@ -53,7 +53,7 @@ export const SalesDashboard = {
       dataSource: {
         object: 'opportunity',
         filters: [
-          ['stage', 'NOT IN', ['Closed Won', 'Closed Lost']]
+          ['stage', 'NOT IN', ['closed_won', 'closed_lost']]
         ],
         aggregate: {
           field: 'amount',
@@ -77,7 +77,7 @@ export const SalesDashboard = {
       title: 'Win Rate',
       position: { row: 1, col: 7, width: 3, height: 2 },
       dataSource: {
-        formula: 'COUNT(stage = "Closed Won") / COUNT(stage IN ["Closed Won", "Closed Lost"]) * 100'
+        formula: 'COUNT(stage = "closed_won") / COUNT(stage IN ["closed_won", "closed_lost"]) * 100'
       },
       format: {
         type: 'percent',
@@ -97,7 +97,7 @@ export const SalesDashboard = {
       dataSource: {
         object: 'opportunity',
         filters: [
-          ['stage', '=', 'Closed Won'],
+          ['stage', '=', 'closed_won'],
           ['close_date', '>=', 'THIS_QUARTER']
         ],
         aggregate: {
@@ -121,7 +121,7 @@ export const SalesDashboard = {
       chartType: 'funnel',
       dataSource: {
         object: 'opportunity',
-        filters: [['stage', '!=', 'Closed Lost']],
+        filters: [['stage', '!=', 'closed_lost']],
         groupBy: 'stage',
         aggregate: {
           field: 'amount',
@@ -148,7 +148,7 @@ export const SalesDashboard = {
       dataSource: {
         object: 'opportunity',
         filters: [
-          ['stage', '=', 'Closed Won'],
+          ['stage', '=', 'closed_won'],
           ['close_date', '>=', 'LAST_12_MONTHS']
         ],
         groupBy: {
@@ -178,7 +178,7 @@ export const SalesDashboard = {
       dataSource: {
         object: 'opportunity',
         filters: [
-          ['stage', '=', 'Closed Won'],
+          ['stage', '=', 'closed_won'],
           ['close_date', '>=', 'THIS_YEAR']
         ],
         groupBy: 'account.industry',
@@ -204,7 +204,7 @@ export const SalesDashboard = {
       dataSource: {
         object: 'opportunity',
         filters: [
-          ['stage', 'IN', ['Closed Won', 'Closed Lost']],
+          ['stage', 'IN', ['closed_won', 'closed_lost']],
           ['close_date', '>=', 'THIS_QUARTER']
         ],
         groupBy: 'stage',
@@ -217,8 +217,8 @@ export const SalesDashboard = {
         showLegend: true,
         showPercentages: true,
         colors: {
-          'Closed Won': '#10b981',
-          'Closed Lost': '#ef4444'
+          'closed_won': '#10b981',
+          'closed_lost': '#ef4444'
         }
       }
     },
@@ -231,7 +231,7 @@ export const SalesDashboard = {
       position: { row: 12, col: 1, width: 12, height: 5 },
       dataSource: {
         object: 'opportunity',
-        filters: [['stage', '!=', 'Closed Lost']],
+        filters: [['stage', '!=', 'closed_lost']],
         fields: ['name', 'account.name', 'amount', 'stage', 'close_date', 'probability', 'owner.name'],
         orderBy: [
           { field: 'amount', direction: 'desc' }
@@ -258,7 +258,7 @@ export const SalesDashboard = {
       dataSource: {
         object: 'opportunity',
         filters: [
-          ['stage', '=', 'Closed Won'],
+          ['stage', '=', 'closed_won'],
           ['close_date', '>=', 'THIS_QUARTER']
         ],
         groupBy: 'owner.name',

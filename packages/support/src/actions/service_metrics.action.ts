@@ -348,7 +348,7 @@ export async function analyzeCSAT(
   const allCases = await db.find('case', {
     filters: [
       ['created_date', '>', cutoffDate],
-      ['status', '=', 'Closed']
+      ['status', '=', 'closed']
     ],
     fields: ['id']
   });
@@ -769,7 +769,7 @@ export async function analyzeSLACompliance(
   const entityBreachCount: Record<string, number> = {};
 
   for (const m of breached) {
-    const reason = (m as any).breach_reason || 'Unknown';
+    const reason = (m as any).breach_reason || 'unknown';
     breachReasonCounts[reason] = (breachReasonCounts[reason] || 0) + 1;
 
     if ((m as any).completed_date) {

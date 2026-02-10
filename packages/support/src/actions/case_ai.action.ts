@@ -1062,9 +1062,9 @@ async function callLLM(prompt: string): Promise<string> {
 
   // Default fallback
   return JSON.stringify({
-    caseType: 'General',
-    product: 'Unknown',
-    feature: 'Unknown',
+    caseType: 'general',
+    product: 'unknown',
+    feature: 'unknown',
     issueType: 'question',
     priority: 'medium',
     severity: 'sev-3',

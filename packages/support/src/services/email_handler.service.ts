@@ -81,7 +81,7 @@ export class EmailHandler {
     const nameParts = name.split(' ');
     const newContact = await db.insert('contact', {
       first_name: nameParts[0],
-      last_name: nameParts.slice(1).join(' ') || 'Unknown',
+      last_name: nameParts.slice(1).join(' ') || 'unknown',
       email: email,
       lead_source: 'Email/Support'
     });
@@ -99,7 +99,7 @@ export class EmailHandler {
     await db.insert('activity', {
       subject: (direction === 'Inbound' ? 'Email Received: ' : 'Email Sent: ') + email.subject,
       type: 'email',
-      status: 'Completed',
+      status: 'completed',
       who_id: caseId, // Polymorphic link simulation
       description: email.body,
       activity_date: new Date().toISOString()

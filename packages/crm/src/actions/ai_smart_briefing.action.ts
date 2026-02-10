@@ -70,12 +70,12 @@ You are an expert sales intelligence assistant for a world-class CRM system. You
 # Customer Context
 
 **Company:** ${account.Name}
-**Industry:** ${account.Industry || 'Unknown'}
-**Annual Revenue:** ${account.AnnualRevenue ? `$${account.AnnualRevenue.toLocaleString()}` : 'Unknown'}
-**Customer Status:** ${account.CustomerStatus || 'Unknown'}
-**Rating:** ${account.Rating || 'Unknown'}
-**Health Score:** ${account.HealthScore || 'Unknown'}
-**SLA Tier:** ${account.SLATier || 'Unknown'}
+**Industry:** ${account.Industry || 'unknown'}
+**Annual Revenue:** ${account.AnnualRevenue ? `$${account.AnnualRevenue.toLocaleString()}` : 'unknown'}
+**Customer Status:** ${account.CustomerStatus || 'unknown'}
+**Rating:** ${account.Rating || 'unknown'}
+**Health Score:** ${account.HealthScore || 'unknown'}
+**SLA Tier:** ${account.SLATier || 'unknown'}
 
 # Active Opportunities
 

@@ -45,9 +45,9 @@ async function calculateHealthScore(account: Record<string, any>, ctx: any): Pro
   let score = 0;
   
   // Base score for active customer status (20 points)
-  if (account.CustomerStatus === 'Active Customer') {
+  if (account.CustomerStatus === 'active_customer') {
     score += 20;
-  } else if (account.CustomerStatus === 'Prospect') {
+  } else if (account.CustomerStatus === 'prospect') {
     score += 10;
   }
   
@@ -178,13 +178,13 @@ const AccountStatusAutomationTrigger: Hook = {
       const account = ctx.input.doc as Record<string, any>;
       
       // Auto-upgrade to Active Customer if has contract value
-      if (account.CustomerStatus === 'Prospect' && account.ContractValue > 0) {
-        account.CustomerStatus = 'Active Customer';
+      if (account.CustomerStatus === 'prospect' && account.ContractValue > 0) {
+        account.CustomerStatus = 'active_customer';
         console.log(`✅ Auto-upgraded ${account.Name} from Prospect to Active Customer`);
       }
       
       // Flag at-risk based on health score
-      if (account.CustomerStatus === 'Active Customer' && account.HealthScore < 50) {
+      if (account.CustomerStatus === 'active_customer' && account.HealthScore < 50) {
         console.warn(`🚨 Account ${account.Name} is at risk! Health Score: ${account.HealthScore}`);
         // In real implementation, could create a task or send notification
       }
@@ -208,7 +208,7 @@ export async function updateAccountContractValue(accountId: string, db: any): Pr
   // const activeContracts = await db.find('Contract', {
   //   filters: [
   //     ['AccountId', '=', accountId],
-  //     ['Status', 'in', ['Activated', 'Draft', 'In Approval']]
+  //     ['Status', 'in', ['activated', 'draft', 'in_approval']]
   //   ]
   // });
   
@@ -234,7 +234,7 @@ export async function updateAccountRenewalDate(accountId: string, db: any): Prom
   // const activeContracts = await db.find('Contract', {
   //   filters: [
   //     ['AccountId', '=', accountId],
-  //     ['Status', '=', 'Activated']
+  //     ['Status', '=', 'activated']
   //   ],
   //   sort: ['EndDate']
   // });
@@ -268,8 +268,8 @@ async function createRenewalReminderTasks(accountId: string, renewalDate: string
       console.log(`📅 Would create reminder task ${days} days before renewal`);
       // await db.doc.create('Activity', {
       //   Subject: `Renewal reminder: ${days} days until contract renewal`,
-      //   Type: 'Task',
-      //   Status: 'Planned',
+      //   Type: 'task',
+      //   Status: 'planned',
       //   Priority: days <= 30 ? 'high' : 'medium',
       //   WhatId: accountId,
       //   ActivityDate: reminderDate.toISOString().split('T')[0],

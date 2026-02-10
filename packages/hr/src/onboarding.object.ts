@@ -32,23 +32,23 @@ export const Onboarding = ObjectSchema.create({
     }),
     status: Field.select({
       label: 'Status',
-      defaultValue: 'Not Started',
+      defaultValue: 'not_started',
       options: [
         {
           "label": "Not Started",
-          "value": "Not Started"
+          "value": "not_started"
         },
         {
           "label": "In Progress",
-          "value": "In Progress"
+          "value": "in_progress"
         },
         {
           "label": "Completed",
-          "value": "Completed"
+          "value": "completed"
         },
         {
           "label": "Cancelled",
-          "value": "Cancelled"
+          "value": "cancelled"
         }
       ]
     }),

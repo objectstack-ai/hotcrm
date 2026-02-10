@@ -298,7 +298,7 @@ export async function routeLead(request: LeadRoutingRequest): Promise<LeadRoutin
     {
       userId: 'user_001',
       userName: 'John Smith',
-      industry: lead?.Industry || 'Technology',
+      industry: lead?.Industry || 'technology',
       geography: ['CA', 'WA', 'OR'],
       currentLeads: 15,
       winRate: 0.65,
@@ -307,7 +307,7 @@ export async function routeLead(request: LeadRoutingRequest): Promise<LeadRoutin
     {
       userId: 'user_002',
       userName: 'Sarah Johnson',
-      industry: 'Finance',
+      industry: 'finance',
       geography: ['NY', 'NJ', 'CT'],
       currentLeads: 12,
       winRate: 0.72,
@@ -316,7 +316,7 @@ export async function routeLead(request: LeadRoutingRequest): Promise<LeadRoutin
     {
       userId: 'user_003',
       userName: 'Mike Chen',
-      industry: lead?.Industry || 'Technology',
+      industry: lead?.Industry || 'technology',
       geography: ['CA', 'TX', 'FL'],
       currentLeads: 8,
       winRate: 0.58,
@@ -329,10 +329,10 @@ You are an expert at matching leads to sales representatives.
 
 # Lead Information
 
-- Industry: ${lead?.Industry || 'Unknown'}
-- State: ${lead?.State || 'Unknown'}
+- Industry: ${lead?.Industry || 'unknown'}
+- State: ${lead?.State || 'unknown'}
 - Lead Score: ${lead?.LeadScore || 0}
-- Estimated Value: ${lead?.AnnualRevenue || 'Unknown'}
+- Estimated Value: ${lead?.AnnualRevenue || 'unknown'}
 
 # Available Sales Reps
 
@@ -557,7 +557,7 @@ async function callLLM(prompt: string): Promise<string> {
       companyData: {
         name: 'Acme Corporation',
         domain: 'acme.com',
-        industry: 'Technology',
+        industry: 'technology',
         employeeCount: '201-500',
         revenue: '$50M-$100M',
         description: 'Enterprise software solutions provider',

@@ -147,7 +147,7 @@ export async function analyzeTimeToHire(request: AnalyzeTimeToHireRequest): Prom
   // Breakdown by department
   const deptMap = new Map<string, { total: number; count: number; apps: number }>();
   hiredRecords.forEach((r: any) => {
-    const dept = r.department || 'Unknown';
+    const dept = r.department || 'unknown';
     const existing = deptMap.get(dept) || { total: 0, count: 0, apps: 0 };
     const posted = new Date(r.posting_date);
     const accepted = new Date(r.acceptance_date || r.start_date);
@@ -156,7 +156,7 @@ export async function analyzeTimeToHire(request: AnalyzeTimeToHireRequest): Prom
     deptMap.set(dept, existing);
   });
   applications.forEach((a: any) => {
-    const dept = a.department || 'Unknown';
+    const dept = a.department || 'unknown';
     const existing = deptMap.get(dept);
     if (existing) existing.apps += 1;
   });
@@ -473,7 +473,7 @@ export async function analyzeAttrition(request: AnalyzeAttritionRequest): Promis
   // Breakdown by department
   const deptAttrition = new Map<string, { departures: number; headcount: number }>();
   employees.forEach((e: any) => {
-    const dept = e.department || 'Unknown';
+    const dept = e.department || 'unknown';
     const existing = deptAttrition.get(dept) || { departures: 0, headcount: 0 };
     if (e.status === 'active') existing.headcount += 1;
     if (e.termination_date && new Date(e.termination_date) >= cutoffDate) existing.departures += 1;
@@ -521,7 +521,7 @@ export async function analyzeAttrition(request: AnalyzeAttritionRequest): Promis
 
   // Breakdown by performance rating
   const ratingMap = new Map<string, { departures: number; total: number }>();
-  const highPerformanceRatings = ['Exceptional', 'Exceeds Expectations'];
+  const highPerformanceRatings = ['exceptional', 'exceeds_expectations'];
 
   employees.forEach((e: any) => {
     const rating = e.performance_rating || 'Unrated';
@@ -826,11 +826,11 @@ export async function analyzePerformanceTrends(request: AnalyzePerformanceTrends
   });
 
   // Rating scale
-  const ratingScale = ['Exceptional', 'Exceeds Expectations', 'Meets Expectations', 'Below Expectations', 'Unsatisfactory'];
+  const ratingScale = ['exceptional', 'exceeds_expectations', 'meets_expectations', 'Below Expectations', 'Unsatisfactory'];
   const ratingNumeric: Record<string, number> = {
-    'Exceptional': 5,
-    'Exceeds Expectations': 4,
-    'Meets Expectations': 3,
+    'exceptional': 5,
+    'exceeds_expectations': 4,
+    'meets_expectations': 3,
     'Below Expectations': 2,
     'Unsatisfactory': 1
   };
@@ -855,7 +855,7 @@ export async function analyzePerformanceTrends(request: AnalyzePerformanceTrends
   // Rating trends over review cycles
   const cycleMap = new Map<string, { ratings: number[]; distribution: Record<string, number>; count: number }>();
   reviews.forEach((r: any) => {
-    const cycle = r.review_cycle || 'Unknown';
+    const cycle = r.review_cycle || 'unknown';
     const existing = cycleMap.get(cycle) || { ratings: [], distribution: {}, count: 0 };
     const numericRating = ratingNumeric[r.rating] || 3;
     existing.ratings.push(numericRating);
@@ -877,10 +877,10 @@ export async function analyzePerformanceTrends(request: AnalyzePerformanceTrends
   // Breakdown by department
   const deptPerfMap = new Map<string, { ratings: number[]; topCount: number; lowCount: number }>();
   reviews.forEach((r: any) => {
-    const dept = r.department || 'Unknown';
+    const dept = r.department || 'unknown';
     const existing = deptPerfMap.get(dept) || { ratings: [] as number[], topCount: 0, lowCount: 0 };
     existing.ratings.push(ratingNumeric[r.rating] || 3);
-    if (r.rating === 'Exceptional' || r.rating === 'Exceeds Expectations') existing.topCount += 1;
+    if (r.rating === 'exceptional' || r.rating === 'exceeds_expectations') existing.topCount += 1;
     if (r.rating === 'Below Expectations' || r.rating === 'Unsatisfactory') existing.lowCount += 1;
     deptPerfMap.set(dept, existing);
   });
@@ -898,7 +898,7 @@ export async function analyzePerformanceTrends(request: AnalyzePerformanceTrends
   if (request.includeManagerBreakdown) {
     reviews.forEach((r: any) => {
       if (!r.manager_id) return;
-      const existing = mgrMap.get(r.manager_id) || { name: r.manager_name || 'Unknown', ratings: [] as number[] };
+      const existing = mgrMap.get(r.manager_id) || { name: r.manager_name || 'unknown', ratings: [] as number[] };
       existing.ratings.push(ratingNumeric[r.rating] || 3);
       mgrMap.set(r.manager_id, existing);
     });
@@ -949,7 +949,7 @@ export async function analyzePerformanceTrends(request: AnalyzePerformanceTrends
   // Goal completion metrics
   const goalCycleMap = new Map<string, { set: number; completed: number }>();
   reviews.forEach((r: any) => {
-    const cycle = r.review_cycle || 'Unknown';
+    const cycle = r.review_cycle || 'unknown';
     const existing = goalCycleMap.get(cycle) || { set: 0, completed: 0 };
     existing.set += r.goals_set || 0;
     existing.completed += r.goals_completed || 0;
@@ -983,7 +983,7 @@ export async function analyzePerformanceTrends(request: AnalyzePerformanceTrends
       : 0;
 
     let flightRisk: 'low' | 'medium' | 'high';
-    if (rating === 'Exceptional' && retentionRate < 90) flightRisk = 'high';
+    if (rating === 'exceptional' && retentionRate < 90) flightRisk = 'high';
     else if (retentionRate < 70) flightRisk = 'high';
     else if (retentionRate < 85) flightRisk = 'medium';
     else flightRisk = 'low';
@@ -998,7 +998,7 @@ export async function analyzePerformanceTrends(request: AnalyzePerformanceTrends
 
   // High performer insights
   const highPerformers = employees.filter((e: any) =>
-    e.performance_rating === 'Exceptional' || e.performance_rating === 'Exceeds Expectations'
+    e.performance_rating === 'exceptional' || e.performance_rating === 'exceeds_expectations'
   );
   const atRiskHighPerformers = highPerformers.filter((e: any) => {
     const tenure = employeeTenure.get(e.employee_id) || 0;

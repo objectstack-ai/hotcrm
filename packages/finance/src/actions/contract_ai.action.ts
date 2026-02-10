@@ -76,7 +76,7 @@ export async function analyzeContractRisk(request: ContractRiskRequest): Promise
   // Check payment terms
   if (contract.payment_terms && parseInt(contract.payment_terms) > 60) {
     risks.push({
-      category: 'Payment Terms',
+      category: 'payment_terms',
       severity: 'high' as const,
       description: `Extended payment terms (Net ${contract.payment_terms}) increase AR risk`,
       mitigation: 'Require partial upfront payment or personal guarantee'
@@ -85,7 +85,7 @@ export async function analyzeContractRisk(request: ContractRiskRequest): Promise
   }
 
   // Check contract status
-  if (contract.status === 'Draft' || contract.status === 'InApproval') {
+  if (contract.status === 'draft' || contract.status === 'in_approval') {
     risks.push({
       category: 'Contract Status',
       severity: 'low' as const,
@@ -102,7 +102,7 @@ export async function analyzeContractRisk(request: ContractRiskRequest): Promise
     
     if (daysUntilEnd < 90 && daysUntilEnd > 0) {
       risks.push({
-        category: 'Contract Expiration',
+        category: 'contract_expiration',
         severity: 'high' as const,
         description: `Contract expires in ${Math.round(daysUntilEnd)} days`,
         mitigation: 'Initiate renewal discussions immediately'
@@ -141,14 +141,14 @@ export async function analyzeContractRisk(request: ContractRiskRequest): Promise
 
   // Build recommendations
   const recommendations = [];
-  if (risks.some(r => r.category === 'Contract Expiration')) {
+  if (risks.some(r => r.category === 'contract_expiration')) {
     recommendations.push({
       action: 'Schedule renewal negotiation meeting',
       priority: 'high' as const,
       timeline: 'Within 2 weeks'
     });
   }
-  if (risks.some(r => r.category === 'Payment Terms')) {
+  if (risks.some(r => r.category === 'payment_terms')) {
     recommendations.push({
       action: 'Review and tighten payment terms',
       priority: 'high' as const,
@@ -414,7 +414,7 @@ export async function extractContractTerms(request: ContractExtractionRequest): 
       effectiveDate: '2024-01-01',
       expirationDate: '2026-01-01',
       value: 120000,
-      paymentTerms: 'Net 30',
+      paymentTerms: 'net_30',
       termLength: 24,
       autoRenewal: true,
       noticePeriod: 90
@@ -570,9 +570,9 @@ export async function optimizeContract(request: ContractOptimizationRequest): Pr
   // Payment terms optimization
   if (contract.payment_terms && parseInt(contract.payment_terms) > 30) {
     opportunities.push({
-      category: 'Payment Terms',
+      category: 'payment_terms',
       currentValue: `Net ${contract.payment_terms}`,
-      suggestedValue: 'Net 30',
+      suggestedValue: 'net_30',
       rationale: 'Shorter payment terms improve cash flow',
       estimatedImpact: '$15,000 improved cash flow',
       priority: 'high' as const

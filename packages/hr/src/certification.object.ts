@@ -22,31 +22,31 @@ export const Certification = ObjectSchema.create({
       options: [
         {
           "label": "Professional",
-          "value": "Professional"
+          "value": "professional"
         },
         {
           "label": "Technical",
-          "value": "Technical"
+          "value": "technical"
         },
         {
           "label": "Language",
-          "value": "Language"
+          "value": "language"
         },
         {
           "label": "Management",
-          "value": "Management"
+          "value": "management"
         },
         {
           "label": "Safety",
-          "value": "Safety"
+          "value": "safety"
         },
         {
           "label": "Compliance",
-          "value": "Compliance"
+          "value": "compliance"
         },
         {
           "label": "Other",
-          "value": "Other"
+          "value": "other"
         }
       ]
     }),
@@ -97,23 +97,23 @@ export const Certification = ObjectSchema.create({
     }),
     status: Field.select({
       label: 'Status',
-      defaultValue: 'Active',
+      defaultValue: 'active',
       options: [
         {
           "label": "Active",
-          "value": "Active"
+          "value": "active"
         },
         {
           "label": "Expiring Soon",
-          "value": "Expiring Soon"
+          "value": "expiring_soon"
         },
         {
           "label": "Expired",
-          "value": "Expired"
+          "value": "expired"
         },
         {
           "label": "Revoked",
-          "value": "Revoked"
+          "value": "revoked"
         }
       ]
     }),

@@ -28,39 +28,39 @@ export const Application = ObjectSchema.create({
     }),
     status: Field.select({
       label: 'Status',
-      defaultValue: 'Submitted',
+      defaultValue: 'submitted',
       options: [
         {
           "label": "Submitted",
-          "value": "Submitted"
+          "value": "submitted"
         },
         {
           "label": "Screening",
-          "value": "Screening"
+          "value": "screening"
         },
         {
           "label": "Interview Scheduled",
-          "value": "Interview Scheduled"
+          "value": "interview_scheduled"
         },
         {
           "label": "Interviewing",
-          "value": "Interviewing"
+          "value": "interviewing"
         },
         {
           "label": "Shortlisted",
-          "value": "Shortlisted"
+          "value": "shortlisted"
         },
         {
           "label": "Hired",
-          "value": "Offer Extended"
+          "value": "offer_extended"
         },
         {
           "label": "Rejected",
-          "value": "Rejected"
+          "value": "rejected"
         },
         {
           "label": "Withdrawn",
-          "value": "Withdrawn"
+          "value": "withdrawn"
         }
       ]
     }),
@@ -69,31 +69,31 @@ export const Application = ObjectSchema.create({
       options: [
         {
           "label": "Resume Review",
-          "value": "Resume Review"
+          "value": "resume_review"
         },
         {
           "label": "Phone Screen",
-          "value": "Phone Screen"
+          "value": "phone_screen"
         },
         {
           "label": "First Interview",
-          "value": "First Interview"
+          "value": "first_interview"
         },
         {
           "label": "Second Interview",
-          "value": "Second Interview"
+          "value": "second_interview"
         },
         {
           "label": "Final Interview",
-          "value": "Final Interview"
+          "value": "final_interview"
         },
         {
           "label": "Offer Discussion",
-          "value": "Offer Discussion"
+          "value": "offer_discussion"
         },
         {
           "label": "Background Check",
-          "value": "Background Check"
+          "value": "background_check"
         }
       ]
     }),
@@ -102,31 +102,31 @@ export const Application = ObjectSchema.create({
       options: [
         {
           "label": "Job Board",
-          "value": "Job Board"
+          "value": "job_board"
         },
         {
           "label": "Employee Referral",
-          "value": "Employee Referral"
+          "value": "employee_referral"
         },
         {
           "label": "Headhunter",
-          "value": "Headhunter"
+          "value": "headhunter"
         },
         {
           "label": "Social Media",
-          "value": "Social Media"
+          "value": "social_media"
         },
         {
           "label": "Campus",
-          "value": "Campus"
+          "value": "campus"
         },
         {
           "label": "Direct Application",
-          "value": "Direct Application"
+          "value": "direct_application"
         },
         {
           "label": "Other",
-          "value": "Other"
+          "value": "other"
         }
       ]
     }),

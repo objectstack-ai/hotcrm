@@ -132,7 +132,7 @@ async function handleStockLevelChange(ctx: any): Promise<void> {
       console.warn(`🚫 Out of stock: ${product.Name}`);
       
       // Update product status to Out of Stock
-      if (product.Status === 'Active') {
+      if (product.Status === 'active') {
         await ctx.ql.doc.update('product', product.Id, {
           Status: 'Out of Stock'
         });
@@ -143,7 +143,7 @@ async function handleStockLevelChange(ctx: any): Promise<void> {
     // If stock was replenished, reactivate product
     if (ctx.previous.StockLevel === 0 && product.StockLevel > 0 && product.Status === 'Out of Stock') {
       await ctx.ql.doc.update('product', product.Id, {
-        Status: 'Active'
+        Status: 'active'
       });
       console.log('✅ Product reactivated after stock replenishment');
     }
@@ -173,8 +173,8 @@ async function handlePriceChange(ctx: any): Promise<void> {
       await ctx.ql.doc.create('activity', {
         Subject: `Price Change: ${product.Name}`,
         Type: 'Price Update',
-        Status: 'Completed',
-        Priority: 'Normal',
+        Status: 'completed',
+        Priority: 'normal',
         WhatId: product.Id,
         OwnerId: ctx.user.id,
         ActivityDate: new Date().toISOString().split('T')[0],
@@ -220,15 +220,15 @@ async function handleStatusChange(ctx: any): Promise<void> {
     console.log(`🔄 Product status changed from "${ctx.previous.Status}" to "${product.Status}"`);
 
     // Handle deactivation
-    if (product.Status === 'Inactive' || product.Status === 'Discontinued') {
+    if (product.Status === 'inactive' || product.Status === 'discontinued') {
       console.log(`🚫 Product deactivated: ${product.Name}`);
       
       console.debug(`[product.hook] Deactivation pending for product ${product.Name}: remove from active price books and notify users with affected quotes`);
     }
 
     // Handle reactivation
-    if ((ctx.previous.Status === 'Inactive' || ctx.previous.Status === 'Discontinued') && 
-        product.Status === 'Active') {
+    if ((ctx.previous.Status === 'inactive' || ctx.previous.Status === 'discontinued') && 
+        product.Status === 'active') {
       console.log(`✅ Product reactivated: ${product.Name}`);
       
       console.debug(`[product.hook] Reactivation pending for product ${product.Name}: add to default price book`);
@@ -238,8 +238,8 @@ async function handleStatusChange(ctx: any): Promise<void> {
     await ctx.ql.doc.create('activity', {
       Subject: `Product Status Changed: ${ctx.previous.Status} → ${product.Status}`,
       Type: 'Status Change',
-      Status: 'Completed',
-      Priority: 'Normal',
+      Status: 'completed',
+      Priority: 'normal',
       WhatId: product.Id,
       OwnerId: ctx.user.id,
       ActivityDate: new Date().toISOString().split('T')[0],

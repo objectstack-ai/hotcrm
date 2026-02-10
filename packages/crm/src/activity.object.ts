@@ -19,88 +19,88 @@ export const Activity = ObjectSchema.create({
       options: [
         {
           "label": "📞 Call",
-          "value": "Call"
+          "value": "call"
         },
         {
           "label": "📧 Email",
-          "value": "Email"
+          "value": "email"
         },
         {
           "label": "🤝 Meeting",
-          "value": "Meeting"
+          "value": "meeting"
         },
         {
           "label": "📝 Task",
-          "value": "Task"
+          "value": "task"
         },
         {
           "label": "📋 Note",
-          "value": "Note"
+          "value": "note"
         },
         {
           "label": "📱 SMS",
-          "value": "SMS"
+          "value": "sms"
         },
         {
           "label": "🎤 Demo",
-          "value": "Demo"
+          "value": "demo"
         },
         {
           "label": "📊 Proposal",
-          "value": "Proposal"
+          "value": "proposal"
         },
         {
           "label": "🍽️ Lunch",
-          "value": "Lunch"
+          "value": "lunch"
         },
         {
           "label": "🎯 Other",
-          "value": "Other"
+          "value": "other"
         }
       ]
     }),
     status: Field.select({
       label: 'status',
       required: true,
-      defaultValue: 'Planned',
+      defaultValue: 'planned',
       options: [
         {
           "label": "📋 Planned",
-          "value": "Planned"
+          "value": "planned"
         },
         {
           "label": "🚀 In Progress",
-          "value": "In Progress"
+          "value": "in_progress"
         },
         {
           "label": "✅ Completed",
-          "value": "Completed"
+          "value": "completed"
         },
         {
           "label": "❌ Cancelled",
-          "value": "Cancelled"
+          "value": "cancelled"
         },
         {
           "label": "⏰ Deferred",
-          "value": "Deferred"
+          "value": "deferred"
         }
       ]
     }),
     priority: Field.select({
       label: 'priority',
-      defaultValue: 'Medium',
+      defaultValue: 'medium',
       options: [
         {
           "label": "🔴 High",
-          "value": "High"
+          "value": "high"
         },
         {
           "label": "🟡 Medium",
-          "value": "Medium"
+          "value": "medium"
         },
         {
           "label": "🟢 Low",
-          "value": "Low"
+          "value": "low"
         }
       ]
     }),
@@ -166,15 +166,15 @@ export const Activity = ObjectSchema.create({
       options: [
         {
           "label": "Outbound",
-          "value": "Outbound"
+          "value": "outbound"
         },
         {
           "label": "Inbound",
-          "value": "Inbound"
+          "value": "inbound"
         },
         {
           "label": "Internal",
-          "value": "Internal"
+          "value": "internal"
         }
       ]
     }),
@@ -188,23 +188,23 @@ export const Activity = ObjectSchema.create({
       options: [
         {
           "label": "✅ Connected",
-          "value": "Connected"
+          "value": "connected"
         },
         {
           "label": "❌ Not Connected",
-          "value": "Not Connected"
+          "value": "not_connected"
         },
         {
           "label": "📧 Left Message",
-          "value": "Left Message"
+          "value": "left_message"
         },
         {
           "label": "⏰ Call Back Later",
-          "value": "Call Back Later"
+          "value": "call_back_later"
         },
         {
           "label": "🚫 Rejected",
-          "value": "Rejected"
+          "value": "rejected"
         }
       ]
     }),
@@ -236,19 +236,19 @@ export const Activity = ObjectSchema.create({
       options: [
         {
           "label": "Daily",
-          "value": "Daily"
+          "value": "daily"
         },
         {
           "label": "Weekly",
-          "value": "Weekly"
+          "value": "weekly"
         },
         {
           "label": "Monthly",
-          "value": "Monthly"
+          "value": "monthly"
         },
         {
           "label": "Yearly",
-          "value": "Yearly"
+          "value": "yearly"
         }
       ]
     }),
@@ -286,15 +286,15 @@ export const Activity = ObjectSchema.create({
       options: [
         {
           "label": "😊 Positive",
-          "value": "Positive"
+          "value": "positive"
         },
         {
           "label": "😐 Neutral",
-          "value": "Neutral"
+          "value": "neutral"
         },
         {
           "label": "😟 Negative",
-          "value": "Negative"
+          "value": "negative"
         }
       ]
     }),

@@ -51,12 +51,12 @@ describe('Case Resolution Workflow Integration', () => {
     const assignedCase = {
       ...createdCase,
       owner_id: 'agent_789',
-      status: 'In Progress'
+      status: 'in_progress'
     };
 
     const resolvedCase = {
       ...assignedCase,
-      status: 'Closed',
+      status: 'closed',
       closed_date: new Date().toISOString(),
       resolution: 'Applied patch to fix report export functionality'
     };
@@ -74,20 +74,20 @@ describe('Case Resolution Workflow Integration', () => {
     // Step 2: Auto-assign to agent
     const assigned = await db.doc.update('case', caseRecord.id, {
       owner_id: 'agent_789',
-      status: 'In Progress'
+      status: 'in_progress'
     });
     expect(assigned.owner_id).toBe('agent_789');
-    expect(assigned.status).toBe('In Progress');
+    expect(assigned.status).toBe('in_progress');
 
     // Step 3: Resolve case
     const resolved = await db.doc.update('case', caseRecord.id, {
-      status: 'Closed',
+      status: 'closed',
       closed_date: new Date().toISOString(),
       resolution: 'Applied patch to fix report export functionality'
     });
 
     // Assert
-    expect(resolved.status).toBe('Closed');
+    expect(resolved.status).toBe('closed');
     expect(resolved.closed_date).toBeDefined();
     expect(resolved.resolution).toBeDefined();
     expect(db.doc.create).toHaveBeenCalledTimes(1);
@@ -165,7 +165,7 @@ describe('Case Resolution Workflow Integration', () => {
       ...highRiskCase,
       escalated: true,
       owner_id: 'senior_agent_456',
-      status: 'Escalated',
+      status: 'escalated',
       escalation_date: new Date().toISOString()
     };
 
@@ -183,13 +183,13 @@ describe('Case Resolution Workflow Integration', () => {
       const escalated = await db.doc.update('case', caseData.id, {
         escalated: true,
         owner_id: 'senior_agent_456',
-        status: 'Escalated',
+        status: 'escalated',
         escalation_date: new Date().toISOString()
       });
 
       // Assert
       expect(escalated.escalated).toBe(true);
-      expect(escalated.status).toBe('Escalated');
+      expect(escalated.status).toBe('escalated');
     }
 
     expect(shouldEscalate).toBe(true);
@@ -201,7 +201,7 @@ describe('Case Resolution Workflow Integration', () => {
       id: 'case_kb',
       subject: 'Password reset not working',
       description: 'User cannot reset password via email',
-      status: 'In Progress'
+      status: 'in_progress'
     };
 
     const relevantArticles = [
@@ -251,7 +251,7 @@ describe('Case Resolution Workflow Integration', () => {
     const mockCase = {
       id: 'case_collab',
       subject: 'Complex technical issue',
-      status: 'In Progress',
+      status: 'in_progress',
       owner_id: 'agent_1'
     };
 
@@ -315,12 +315,12 @@ describe('Case Resolution Workflow Integration', () => {
     const caseWithFirstResponse = {
       ...mockCase,
       first_response_date: new Date(Date.now() - 3.5 * 60 * 60 * 1000).toISOString(),
-      status: 'In Progress'
+      status: 'in_progress'
     };
 
     const closedCaseWithSurvey = {
       ...caseWithFirstResponse,
-      status: 'Closed',
+      status: 'closed',
       closed_date: new Date().toISOString(),
       customer_satisfaction_rating: 5,
       resolution_time_minutes: 240
@@ -334,12 +334,12 @@ describe('Case Resolution Workflow Integration', () => {
     // Act - Record first response
     const withResponse = await db.doc.update('case', mockCase.id, {
       first_response_date: new Date(Date.now() - 3.5 * 60 * 60 * 1000).toISOString(),
-      status: 'In Progress'
+      status: 'in_progress'
     });
 
     // Close case and record metrics
     const closed = await db.doc.update('case', mockCase.id, {
-      status: 'Closed',
+      status: 'closed',
       closed_date: new Date().toISOString(),
       customer_satisfaction_rating: 5,
       resolution_time_minutes: 240

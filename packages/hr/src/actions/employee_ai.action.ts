@@ -655,7 +655,7 @@ export async function analyzeTeamComposition(request: TeamAnalysisRequest): Prom
   const employees = await db.find('employee', {
     filters: [
       ['department_id', '=', departmentId],
-      ['employment_status', '=', 'Active']
+      ['employment_status', '=', 'active']
     ]
   });
 

@@ -27,43 +27,43 @@ export const HolidayCalendar = ObjectSchema.create({
       options: [
         {
           "label": "United States",
-          "value": "US"
+          "value": "us"
         },
         {
           "label": "China",
-          "value": "CN"
+          "value": "cn"
         },
         {
           "label": "United Kingdom",
-          "value": "UK"
+          "value": "uk"
         },
         {
           "label": "Canada",
-          "value": "CA"
+          "value": "ca"
         },
         {
           "label": "Australia",
-          "value": "AU"
+          "value": "au"
         },
         {
           "label": "Germany",
-          "value": "DE"
+          "value": "de"
         },
         {
           "label": "France",
-          "value": "FR"
+          "value": "fr"
         },
         {
           "label": "Japan",
-          "value": "JP"
+          "value": "jp"
         },
         {
           "label": "India",
-          "value": "IN"
+          "value": "in"
         },
         {
           "label": "Singapore",
-          "value": "SG"
+          "value": "sg"
         }
       ]
     }),

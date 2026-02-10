@@ -23,43 +23,43 @@ export const TimeOff = ObjectSchema.create({
       options: [
         {
           "label": "Annual Leave",
-          "value": "Annual Leave"
+          "value": "annual_leave"
         },
         {
           "label": "Sick Leave",
-          "value": "Sick Leave"
+          "value": "sick_leave"
         },
         {
           "label": "Personal Leave",
-          "value": "Personal Leave"
+          "value": "personal_leave"
         },
         {
           "label": "Marriage Leave",
-          "value": "Marriage Leave"
+          "value": "marriage_leave"
         },
         {
           "label": "Maternity Leave",
-          "value": "Maternity Leave"
+          "value": "maternity_leave"
         },
         {
           "label": "Paternity Leave",
-          "value": "Paternity Leave"
+          "value": "paternity_leave"
         },
         {
           "label": "Bereavement Leave",
-          "value": "Bereavement Leave"
+          "value": "bereavement_leave"
         },
         {
           "label": "Compensatory Leave",
-          "value": "Compensatory Leave"
+          "value": "compensatory_leave"
         },
         {
           "label": "Unpaid Leave",
-          "value": "Unpaid Leave"
+          "value": "unpaid_leave"
         },
         {
           "label": "Other",
-          "value": "Other"
+          "value": "other"
         }
       ]
     }),
@@ -73,37 +73,37 @@ export const TimeOff = ObjectSchema.create({
     }),
     start_time: Field.select({
       label: 'Start Period',
-      defaultValue: 'Full Day',
+      defaultValue: 'full_day',
       options: [
         {
           "label": "Full Day",
-          "value": "Full Day"
+          "value": "full_day"
         },
         {
           "label": "Morning",
-          "value": "Morning"
+          "value": "morning"
         },
         {
           "label": "Afternoon",
-          "value": "Afternoon"
+          "value": "afternoon"
         }
       ]
     }),
     end_time: Field.select({
       label: 'End Period',
-      defaultValue: 'Full Day',
+      defaultValue: 'full_day',
       options: [
         {
           "label": "Full Day",
-          "value": "Full Day"
+          "value": "full_day"
         },
         {
           "label": "Morning",
-          "value": "Morning"
+          "value": "morning"
         },
         {
           "label": "Afternoon",
-          "value": "Afternoon"
+          "value": "afternoon"
         }
       ]
     }),
@@ -120,23 +120,23 @@ export const TimeOff = ObjectSchema.create({
     }),
     status: Field.select({
       label: 'Status',
-      defaultValue: 'Pending',
+      defaultValue: 'pending',
       options: [
         {
           "label": "Pending",
-          "value": "Pending"
+          "value": "pending"
         },
         {
           "label": "Approved",
-          "value": "Approved"
+          "value": "approved"
         },
         {
           "label": "Rejected",
-          "value": "Rejected"
+          "value": "rejected"
         },
         {
           "label": "Cancelled",
-          "value": "Cancelled"
+          "value": "cancelled"
         }
       ]
     }),

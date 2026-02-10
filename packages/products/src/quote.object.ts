@@ -21,39 +21,39 @@ export const Quote = ObjectSchema.create({
     status: Field.select({
       label: 'status',
       required: true,
-      defaultValue: 'Draft',
+      defaultValue: 'draft',
       options: [
         {
           "label": "📝 Draft",
-          "value": "Draft"
+          "value": "draft"
         },
         {
           "label": "🔄 In Review",
-          "value": "In Review"
+          "value": "in_review"
         },
         {
           "label": "✅ Approved",
-          "value": "Approved"
+          "value": "approved"
         },
         {
           "label": "❌ Rejected",
-          "value": "Rejected"
+          "value": "rejected"
         },
         {
           "label": "📧 Sent",
-          "value": "Sent"
+          "value": "sent"
         },
         {
           "label": "🤝 Accepted",
-          "value": "Accepted"
+          "value": "accepted"
         },
         {
           "label": "🚫 Declined",
-          "value": "Declined"
+          "value": "declined"
         },
         {
           "label": "⏰ Expired",
-          "value": "Expired"
+          "value": "expired"
         }
       ]
     }),
@@ -122,35 +122,35 @@ export const Quote = ObjectSchema.create({
     }),
     currency_code: Field.select({
       label: 'Currency',
-      defaultValue: 'USD',
+      defaultValue: 'usd',
       options: [
         {
           "label": "USD - US Dollar",
-          "value": "USD"
+          "value": "usd"
         },
         {
           "label": "EUR - Euro",
-          "value": "EUR"
+          "value": "eur"
         },
         {
           "label": "GBP - British Pound",
-          "value": "GBP"
+          "value": "gbp"
         },
         {
           "label": "JPY - Japanese Yen",
-          "value": "JPY"
+          "value": "jpy"
         },
         {
           "label": "CNY - Chinese Yuan",
-          "value": "CNY"
+          "value": "cny"
         },
         {
           "label": "AUD - Australian Dollar",
-          "value": "AUD"
+          "value": "aud"
         },
         {
           "label": "CAD - Canadian Dollar",
-          "value": "CAD"
+          "value": "cad"
         }
       ]
     }),
@@ -165,35 +165,35 @@ export const Quote = ObjectSchema.create({
       options: [
         {
           "label": "Full Prepayment",
-          "value": "Full Prepayment"
+          "value": "full_prepayment"
         },
         {
           "label": "30% Prepay, 70% on Acceptance",
-          "value": "30/70 Split"
+          "value": "split_30_70"
         },
         {
           "label": "50% Prepay, 50% on Acceptance",
-          "value": "50/50 Split"
+          "value": "split_50_50"
         },
         {
           "label": "Net 30",
-          "value": "Net 30"
+          "value": "net_30"
         },
         {
           "label": "Net 60",
-          "value": "Net 60"
+          "value": "net_60"
         },
         {
           "label": "Net 90",
-          "value": "Net 90"
+          "value": "net_90"
         },
         {
           "label": "Installments",
-          "value": "Installments"
+          "value": "installments"
         },
         {
           "label": "Other",
-          "value": "Other"
+          "value": "other"
         }
       ]
     }),
@@ -202,27 +202,27 @@ export const Quote = ObjectSchema.create({
       options: [
         {
           "label": "On-site Delivery",
-          "value": "On-site Delivery"
+          "value": "on_site_delivery"
         },
         {
           "label": "Remote Delivery",
-          "value": "Remote Delivery"
+          "value": "remote_delivery"
         },
         {
           "label": "Cloud Deployment",
-          "value": "Cloud Deployment"
+          "value": "cloud_deployment"
         },
         {
           "label": "Shipping",
-          "value": "Shipping"
+          "value": "shipping"
         },
         {
           "label": "Digital Download",
-          "value": "Digital Download"
+          "value": "digital_download"
         },
         {
           "label": "Other",
-          "value": "Other"
+          "value": "other"
         }
       ]
     }),
@@ -268,28 +268,28 @@ export const Quote = ObjectSchema.create({
     }),
     approval_status: Field.select({
       label: 'Approval status',
-      defaultValue: 'Not Submitted',
+      defaultValue: 'not_submitted',
       readonly: true,
       options: [
         {
           "label": "Not Submitted",
-          "value": "Not Submitted"
+          "value": "not_submitted"
         },
         {
           "label": "Pending",
-          "value": "Pending"
+          "value": "pending"
         },
         {
           "label": "Approved",
-          "value": "Approved"
+          "value": "approved"
         },
         {
           "label": "Rejected",
-          "value": "Rejected"
+          "value": "rejected"
         },
         {
           "label": "Recalled",
-          "value": "Recalled"
+          "value": "recalled"
         }
       ]
     }),
@@ -412,7 +412,6 @@ export const Quote = ObjectSchema.create({
     trackHistory: true,
     activities: true,
     feeds: true,
-    files: true,
-    approvalProcess: true
+    files: true
   },
 });

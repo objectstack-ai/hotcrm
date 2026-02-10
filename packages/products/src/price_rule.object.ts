@@ -26,27 +26,27 @@ export const PriceRule = ObjectSchema.create({
     status: Field.select({
       label: 'status',
       required: true,
-      defaultValue: 'Active',
+      defaultValue: 'active',
       options: [
         {
           "label": "✅ Active",
-          "value": "Active"
+          "value": "active"
         },
         {
           "label": "📝 Draft",
-          "value": "Draft"
+          "value": "draft"
         },
         {
           "label": "🚫 Inactive",
-          "value": "Inactive"
+          "value": "inactive"
         },
         {
           "label": "⏰ Scheduled",
-          "value": "Scheduled"
+          "value": "scheduled"
         },
         {
           "label": "⌛ Expired",
-          "value": "Expired"
+          "value": "expired"
         }
       ]
     }),
@@ -56,31 +56,31 @@ export const PriceRule = ObjectSchema.create({
       options: [
         {
           "label": "Tiered Pricing",
-          "value": "Tiered"
+          "value": "tiered"
         },
         {
           "label": "Volume Discount",
-          "value": "VolumeDiscount"
+          "value": "volumediscount"
         },
         {
           "label": "Contract Pricing",
-          "value": "ContractBased"
+          "value": "contractbased"
         },
         {
           "label": "Customer Specific",
-          "value": "CustomerSpecific"
+          "value": "customerspecific"
         },
         {
           "label": "Promotional Pricing",
-          "value": "Promotional"
+          "value": "promotional"
         },
         {
           "label": "Competitive Pricing",
-          "value": "Competitive"
+          "value": "competitive"
         },
         {
           "label": "Bundle Discount",
-          "value": "BundleDiscount"
+          "value": "bundlediscount"
         }
       ]
     }),
@@ -97,11 +97,11 @@ export const PriceRule = ObjectSchema.create({
       options: [
         {
           "label": "All Products",
-          "value": "AllProducts"
+          "value": "allproducts"
         },
         {
           "label": "Specific Product",
-          "value": "SpecificProduct"
+          "value": "specificproduct"
         },
         {
           "label": "Product Category",
@@ -113,7 +113,7 @@ export const PriceRule = ObjectSchema.create({
         },
         {
           "label": "Product Bundle",
-          "value": "ProductBundle"
+          "value": "productbundle"
         }
       ]
     }),
@@ -138,15 +138,15 @@ export const PriceRule = ObjectSchema.create({
     customer_scope: Field.select({
       label: 'Customer Scope',
       required: true,
-      defaultValue: 'AllCustomers',
+      defaultValue: 'allcustomers',
       options: [
         {
           "label": "All Customers",
-          "value": "AllCustomers"
+          "value": "allcustomers"
         },
         {
           "label": "Specific Account",
-          "value": "SpecificAccount"
+          "value": "specificaccount"
         },
         {
           "label": "Account Type",
@@ -195,11 +195,11 @@ export const PriceRule = ObjectSchema.create({
       options: [
         {
           "label": "Percentage",
-          "value": "Percentage"
+          "value": "percentage"
         },
         {
           "label": "Fixed Amount",
-          "value": "FixedAmount"
+          "value": "fixedamount"
         },
         {
           "label": "New Price",
@@ -292,7 +292,7 @@ export const PriceRule = ObjectSchema.create({
       options: [
         {
           "label": "Match Competitor",
-          "value": "Match"
+          "value": "match"
         },
         {
           "label": "Beat by %",
@@ -320,24 +320,24 @@ export const PriceRule = ObjectSchema.create({
     }),
     approval_status: Field.select({
       label: 'Approval status',
-      defaultValue: 'Not Required',
+      defaultValue: 'not_required',
       readonly: true,
       options: [
         {
           "label": "Not Required",
-          "value": "Not Required"
+          "value": "not_required"
         },
         {
           "label": "Pending",
-          "value": "Pending"
+          "value": "pending"
         },
         {
           "label": "Approved",
-          "value": "Approved"
+          "value": "approved"
         },
         {
           "label": "Rejected",
-          "value": "Rejected"
+          "value": "rejected"
         }
       ]
     }),

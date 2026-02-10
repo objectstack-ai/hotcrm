@@ -29,31 +29,31 @@ export const ApprovalRequest = ObjectSchema.create({
       options: [
         {
           "label": "Discount Approval",
-          "value": "DiscountApproval"
+          "value": "discountapproval"
         },
         {
           "label": "Price Override",
-          "value": "PriceOverride"
+          "value": "priceoverride"
         },
         {
           "label": "Contract Terms",
-          "value": "ContractTerms"
+          "value": "contractterms"
         },
         {
           "label": "Credit Limit",
-          "value": "CreditLimit"
+          "value": "creditlimit"
         },
         {
           "label": "Payment Terms",
-          "value": "PaymentTerms"
+          "value": "paymentterms"
         },
         {
           "label": "Custom Pricing",
-          "value": "CustomPricing"
+          "value": "custompricing"
         },
         {
           "label": "Other",
-          "value": "Other"
+          "value": "other"
         }
       ]
     }),
@@ -84,31 +84,31 @@ export const ApprovalRequest = ObjectSchema.create({
     status: Field.select({
       label: 'status',
       required: true,
-      defaultValue: 'Pending',
+      defaultValue: 'pending',
       options: [
         {
           "label": "📝 Draft",
-          "value": "Draft"
+          "value": "draft"
         },
         {
           "label": "🔄 Pending",
-          "value": "Pending"
+          "value": "pending"
         },
         {
           "label": "✅ Approved",
-          "value": "Approved"
+          "value": "approved"
         },
         {
           "label": "❌ Rejected",
-          "value": "Rejected"
+          "value": "rejected"
         },
         {
           "label": "🔙 Recalled",
-          "value": "Recalled"
+          "value": "recalled"
         },
         {
           "label": "⏰ Expired",
-          "value": "Expired"
+          "value": "expired"
         }
       ]
     }),
@@ -172,39 +172,39 @@ export const ApprovalRequest = ObjectSchema.create({
       options: [
         {
           "label": "Competitive Match",
-          "value": "CompetitiveMatch"
+          "value": "competitivematch"
         },
         {
           "label": "Volume Discount",
-          "value": "VolumeDiscount"
+          "value": "volumediscount"
         },
         {
           "label": "Strategic Account",
-          "value": "StrategicAccount"
+          "value": "strategicaccount"
         },
         {
           "label": "End of Quarter",
-          "value": "EndOfQuarter"
+          "value": "endofquarter"
         },
         {
           "label": "Closeout Sale",
-          "value": "CloseoutSale"
+          "value": "closeoutsale"
         },
         {
           "label": "Customer Loyalty",
-          "value": "CustomerLoyalty"
+          "value": "customerloyalty"
         },
         {
           "label": "Upsell Opportunity",
-          "value": "UpsellOpportunity"
+          "value": "upsellopportunity"
         },
         {
           "label": "Market Conditions",
-          "value": "MarketConditions"
+          "value": "marketconditions"
         },
         {
           "label": "Other",
-          "value": "Other"
+          "value": "other"
         }
       ]
     }),
@@ -232,24 +232,24 @@ export const ApprovalRequest = ObjectSchema.create({
     }),
     final_decision: Field.select({
       label: 'Final Decision',
-      defaultValue: 'Pending',
+      defaultValue: 'pending',
       readonly: true,
       options: [
         {
           "label": "Pending",
-          "value": "Pending"
+          "value": "pending"
         },
         {
           "label": "Approved",
-          "value": "Approved"
+          "value": "approved"
         },
         {
           "label": "Rejected",
-          "value": "Rejected"
+          "value": "rejected"
         },
         {
           "label": "Approved with Conditions",
-          "value": "ApprovedWithConditions"
+          "value": "approvedwithconditions"
         }
       ]
     }),
@@ -345,15 +345,15 @@ export const ApprovalRequest = ObjectSchema.create({
       options: [
         {
           "label": "Approve",
-          "value": "Approve"
+          "value": "approve"
         },
         {
           "label": "Review",
-          "value": "Review"
+          "value": "review"
         },
         {
           "label": "Reject",
-          "value": "Reject"
+          "value": "reject"
         }
       ]
     }),

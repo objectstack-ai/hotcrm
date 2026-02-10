@@ -65,7 +65,7 @@ const CaseEntitlementCheck: Hook = {
       // Set the field
       caseRec.target_resolution_date = targetDate.toISOString();
       
-      console.log(`✅ Applied ${slaLevel} SLA to Case ${caseRec.subject || 'Unknown'}. Target: ${caseRec.target_resolution_date}`);
+      console.log(`✅ Applied ${slaLevel} SLA to Case ${caseRec.subject || 'unknown'}. Target: ${caseRec.target_resolution_date}`);
 
     } catch (error) {
       console.error('❌ Error executing CaseEntitlementCheck:', error);

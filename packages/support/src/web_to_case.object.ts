@@ -39,57 +39,57 @@ export const WebToCase = ObjectSchema.create({
     default_owner_id: Field.lookup('users', { label: 'Default Owner' }),
     default_priority: Field.select({
       label: 'Default Priority',
-      defaultValue: 'Medium',
+      defaultValue: 'medium',
       options: [
         {
           "label": "Critical",
-          "value": "Critical"
+          "value": "critical"
         },
         {
           "label": "High",
-          "value": "High"
+          "value": "high"
         },
         {
           "label": "Medium",
-          "value": "Medium"
+          "value": "medium"
         },
         {
           "label": "Low",
-          "value": "Low"
+          "value": "low"
         }
       ]
     }),
     default_case_type: Field.select({
       label: 'Default Case Type',
-      defaultValue: 'Question',
+      defaultValue: 'question',
       options: [
         {
           "label": "Problem",
-          "value": "Problem"
+          "value": "problem"
         },
         {
           "label": "Question",
-          "value": "Question"
+          "value": "question"
         },
         {
           "label": "Incident",
-          "value": "Incident"
+          "value": "incident"
         },
         {
           "label": "Feature Request",
-          "value": "Feature Request"
+          "value": "feature_request"
         },
         {
           "label": "Training",
-          "value": "Training"
+          "value": "training"
         },
         {
           "label": "Maintenance",
-          "value": "Maintenance"
+          "value": "maintenance"
         },
         {
           "label": "Other",
-          "value": "Other"
+          "value": "other"
         }
       ]
     }),

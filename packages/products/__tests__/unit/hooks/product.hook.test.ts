@@ -156,7 +156,7 @@ describe('ProductHook', () => {
         Name: 'Empty Widget',
         StockLevel: 0,
         LowStockThreshold: 10,
-        Status: 'Active',
+        Status: 'active',
         ListPrice: 100,
         CostPrice: 50
       },
@@ -165,7 +165,7 @@ describe('ProductHook', () => {
         Name: 'Empty Widget',
         StockLevel: 5,
         LowStockThreshold: 10,
-        Status: 'Active',
+        Status: 'active',
         ListPrice: 100,
         CostPrice: 50
       },
@@ -189,7 +189,7 @@ describe('ProductHook', () => {
         Name: 'Low Stock Widget',
         StockLevel: 3,
         LowStockThreshold: 10,
-        Status: 'Active',
+        Status: 'active',
         ListPrice: 100,
         CostPrice: 50
       },
@@ -198,7 +198,7 @@ describe('ProductHook', () => {
         Name: 'Low Stock Widget',
         StockLevel: 15,
         LowStockThreshold: 10,
-        Status: 'Active',
+        Status: 'active',
         ListPrice: 100,
         CostPrice: 50
       },
@@ -239,7 +239,7 @@ describe('ProductHook', () => {
     await ProductHook.handler(ctx as any);
 
     expect(mockQl.doc.update).toHaveBeenCalledWith('product', 'prod_8', {
-      Status: 'Active'
+      Status: 'active'
     });
   });
 
@@ -253,7 +253,7 @@ describe('ProductHook', () => {
         ListPrice: 150,
         CostPrice: 50,
         StockLevel: 100,
-        Status: 'Active'
+        Status: 'active'
       },
       previous: {
         Id: 'prod_9',
@@ -261,7 +261,7 @@ describe('ProductHook', () => {
         ListPrice: 100,
         CostPrice: 50,
         StockLevel: 100,
-        Status: 'Active'
+        Status: 'active'
       },
       ql: mockQl,
       user: mockUser
@@ -272,7 +272,7 @@ describe('ProductHook', () => {
     expect(mockQl.doc.create).toHaveBeenCalledWith('activity', expect.objectContaining({
       Subject: 'Price Change: Price Change Widget',
       Type: 'Price Update',
-      Status: 'Completed',
+      Status: 'completed',
       WhatId: 'prod_9',
       OwnerId: 'user_1'
     }));
@@ -285,7 +285,7 @@ describe('ProductHook', () => {
       result: {
         Id: 'prod_10',
         Name: 'Deactivated Widget',
-        Status: 'Inactive',
+        Status: 'inactive',
         ListPrice: 100,
         CostPrice: 50,
         StockLevel: 100
@@ -293,7 +293,7 @@ describe('ProductHook', () => {
       previous: {
         Id: 'prod_10',
         Name: 'Deactivated Widget',
-        Status: 'Active',
+        Status: 'active',
         ListPrice: 100,
         CostPrice: 50,
         StockLevel: 100
@@ -305,7 +305,7 @@ describe('ProductHook', () => {
     await ProductHook.handler(ctx as any);
 
     expect(mockQl.doc.create).toHaveBeenCalledWith('activity', expect.objectContaining({
-      Subject: 'Product Status Changed: Active → Inactive',
+      Subject: 'Product Status Changed: active → inactive',
       Type: 'Status Change',
       WhatId: 'prod_10'
     }));
@@ -318,7 +318,7 @@ describe('ProductHook', () => {
       result: {
         Id: 'prod_11',
         Name: 'Reactivated Widget',
-        Status: 'Active',
+        Status: 'active',
         ListPrice: 100,
         CostPrice: 50,
         StockLevel: 100
@@ -326,7 +326,7 @@ describe('ProductHook', () => {
       previous: {
         Id: 'prod_11',
         Name: 'Reactivated Widget',
-        Status: 'Inactive',
+        Status: 'inactive',
         ListPrice: 100,
         CostPrice: 50,
         StockLevel: 100
@@ -348,7 +348,7 @@ describe('ProductHook', () => {
       result: {
         Id: 'prod_12',
         Name: 'Unchanged Widget',
-        Status: 'Active',
+        Status: 'active',
         ListPrice: 100,
         CostPrice: 50,
         StockLevel: 100
@@ -356,7 +356,7 @@ describe('ProductHook', () => {
       previous: {
         Id: 'prod_12',
         Name: 'Unchanged Widget',
-        Status: 'Active',
+        Status: 'active',
         ListPrice: 100,
         CostPrice: 50,
         StockLevel: 100

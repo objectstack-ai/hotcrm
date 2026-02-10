@@ -47,27 +47,27 @@ export const Candidate = ObjectSchema.create({
       options: [
         {
           "label": "PhD",
-          "value": "PhD"
+          "value": "phd"
         },
         {
           "label": "Master",
-          "value": "Master"
+          "value": "master"
         },
         {
           "label": "Bachelor",
-          "value": "Bachelor"
+          "value": "bachelor"
         },
         {
           "label": "Associate",
-          "value": "Associate"
+          "value": "associate"
         },
         {
           "label": "High School",
-          "value": "High School"
+          "value": "high_school"
         },
         {
           "label": "Other",
-          "value": "Other"
+          "value": "other"
         }
       ]
     }),
@@ -92,27 +92,27 @@ export const Candidate = ObjectSchema.create({
       options: [
         {
           "label": "Immediate",
-          "value": "Immediate"
+          "value": "immediate"
         },
         {
           "label": "1 Week",
-          "value": "1 Week"
+          "value": "one_week"
         },
         {
           "label": "2 Weeks",
-          "value": "2 Weeks"
+          "value": "two_weeks"
         },
         {
           "label": "1 Month",
-          "value": "1 Month"
+          "value": "one_month"
         },
         {
           "label": "2 Months",
-          "value": "2 Months"
+          "value": "two_months"
         },
         {
           "label": "3 Months",
-          "value": "3 Months"
+          "value": "three_months"
         }
       ]
     }),
@@ -121,61 +121,61 @@ export const Candidate = ObjectSchema.create({
       options: [
         {
           "label": "Job Board",
-          "value": "Job Board"
+          "value": "job_board"
         },
         {
           "label": "Employee Referral",
-          "value": "Employee Referral"
+          "value": "employee_referral"
         },
         {
           "label": "Headhunter",
-          "value": "Headhunter"
+          "value": "headhunter"
         },
         {
           "label": "Social Media",
-          "value": "Social Media"
+          "value": "social_media"
         },
         {
           "label": "Campus",
-          "value": "Campus"
+          "value": "campus"
         },
         {
           "label": "Direct Application",
-          "value": "Direct Application"
+          "value": "direct_application"
         },
         {
           "label": "Other",
-          "value": "Other"
+          "value": "other"
         }
       ]
     }),
     status: Field.select({
       label: 'Status',
-      defaultValue: 'New',
+      defaultValue: 'new',
       options: [
         {
           "label": "New",
-          "value": "New"
+          "value": "new"
         },
         {
           "label": "Under Review",
-          "value": "Under Review"
+          "value": "under_review"
         },
         {
           "label": "Interviewing",
-          "value": "Interviewing"
+          "value": "interviewing"
         },
         {
           "label": "Hired",
-          "value": "Hired"
+          "value": "hired"
         },
         {
           "label": "Rejected",
-          "value": "Rejected"
+          "value": "rejected"
         },
         {
           "label": "Withdrawn",
-          "value": "Withdrawn"
+          "value": "withdrawn"
         }
       ]
     }),

@@ -10,7 +10,7 @@ export const ParallelApprovalChain = {
   object: 'approval_request',
   description: 'Route approval requests to multiple approvers in parallel based on level and type',
   triggerType: 'onCreateOrUpdate',
-  condition: 'status = "Pending" AND ISCHANGED(status)',
+  condition: 'status = "pending" AND ISCHANGED(status)',
   actions: [
     {
       type: 'customAction',
@@ -62,8 +62,8 @@ export const ParallelApprovalChain = {
       description: 'Type: ${request_type}\nDiscount: ${discount_percent}%\nRevenue Impact: ${revenue_impact}\nJustification: ${business_justification}',
       assignee: '${current_approver_id}',
       dueDate: '${due_date}',
-      priority: 'High',
-      status: 'Not Started'
+      priority: 'high',
+      status: 'not_started'
     },
     {
       type: 'httpCall',
@@ -90,7 +90,7 @@ export const SmartDelegation = {
   object: 'approval_request',
   description: 'Auto-delegate to backup approver when primary approver is out of office',
   triggerType: 'onCreateOrUpdate',
-  condition: 'status = "Pending" AND current_approver_id != NULL AND current_approver_id.is_out_of_office = true',
+  condition: 'status = "pending" AND current_approver_id != NULL AND current_approver_id.is_out_of_office = true',
   actions: [
     {
       type: 'customAction',
@@ -129,8 +129,8 @@ export const SmartDelegation = {
       description: 'Delegated from ${current_approver_id.delegated_from_id.name} (OOO).\nType: ${request_type} | Discount: ${discount_percent}%',
       assignee: '${current_approver_id}',
       dueDate: '${due_date}',
-      priority: 'High',
-      status: 'Not Started'
+      priority: 'high',
+      status: 'not_started'
     },
     {
       type: 'httpCall',
@@ -169,7 +169,7 @@ export const ApprovalEscalation = {
     timezone: 'UTC'
   },
 
-  condition: 'status = "Pending" AND due_date < NOW() AND is_escalated = false',
+  condition: 'status = "pending" AND due_date < NOW() AND is_escalated = false',
   actions: [
     { type: 'fieldUpdate', field: 'is_overdue', value: true },
     { type: 'fieldUpdate', field: 'is_escalated', value: true },
@@ -207,8 +207,8 @@ export const ApprovalEscalation = {
       description: 'SLA breached. Approver: ${current_approver_id.name}\nDue: ${due_date} | Discount: ${discount_percent}% | Impact: ${revenue_impact}',
       assignee: '${current_approver_id.manager_id}',
       dueDate: 'TODAY() + 1',
-      priority: 'Urgent',
-      status: 'Not Started'
+      priority: 'urgent',
+      status: 'not_started'
     },
     {
       type: 'httpCall',
@@ -235,10 +235,10 @@ export const ApprovalAutoResolve = {
   object: 'approval_request',
   description: 'Auto-approve requests with low AI risk score and minimal discount',
   triggerType: 'onCreateOrUpdate',
-  condition: 'status = "Pending" AND ai_risk_score != NULL AND ai_risk_score < 20 AND discount_percent < 5 AND ai_recommendation = "Approve"',
+  condition: 'status = "pending" AND ai_risk_score != NULL AND ai_risk_score < 20 AND discount_percent < 5 AND ai_recommendation = "Approve"',
   actions: [
-    { type: 'fieldUpdate', field: 'final_decision', value: 'Approved' },
-    { type: 'fieldUpdate', field: 'status', value: 'Approved' },
+    { type: 'fieldUpdate', field: 'final_decision', value: 'approved' },
+    { type: 'fieldUpdate', field: 'status', value: 'approved' },
     { type: 'fieldUpdate', field: 'approved_date', value: 'NOW()' },
     {
       type: 'fieldUpdate',

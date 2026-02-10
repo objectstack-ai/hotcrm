@@ -15,13 +15,13 @@ export async function autoCompletePastDueActivities(ql: any): Promise<void> {
   // const pastDueActivities = await db.find('Activity', {
   //   filters: [
   //     ['DueDate', '<', new Date().toISOString().split('T')[0]],
-  //     ['Status', 'not in', ['Completed', 'Cancelled']]
+  //     ['Status', 'not in', ['completed', 'cancelled']]
   //   ]
   // });
   
   // for (const activity of pastDueActivities) {
   //   await db.doc.update('Activity', activity.Id, {
-  //     Status: 'Completed',
+  //     Status: 'completed',
   //     CompletedDate: new Date().toISOString()
   //   });
   //   
@@ -51,7 +51,7 @@ const ActivityRelatedObjectUpdatesTrigger: Hook = {
       const oldActivity = ctx.previous as Record<string, any> | undefined;
       
       // Only process if activity is completed or date changed
-      const isCompleted = activity.Status === 'Completed';
+      const isCompleted = activity.Status === 'completed';
       const dateChanged = !oldActivity || oldActivity.ActivityDate !== activity.ActivityDate;
       
       if (!isCompleted && !dateChanged) {
@@ -134,7 +134,7 @@ const ActivityCompletionTrigger: Hook = {
       const oldActivity = ctx.previous as Record<string, any> | undefined;
       
       // Check if status changed to Completed
-      if (oldActivity && oldActivity.Status !== 'Completed' && activity.Status === 'Completed') {
+      if (oldActivity && oldActivity.Status !== 'completed' && activity.Status === 'completed') {
         // Set CompletedDate
         activity.CompletedDate = new Date().toISOString();
         console.log(`✅ Activity completed: ${activity.Subject}`);
@@ -164,20 +164,20 @@ async function createNextRecurrence(activity: Record<string, any>, ctx: any): Pr
   const interval = activity.RecurrenceInterval || 1;
   
   // Validate recurrence pattern
-  const validPatterns = ['Daily', 'Weekly', 'Monthly', 'Yearly'];
+  const validPatterns = ['daily', 'weekly', 'monthly', 'yearly'];
   if (!validPatterns.includes(activity.RecurrencePattern)) {
     console.error(`❌ Invalid recurrence pattern: ${activity.RecurrencePattern}`);
     return;
   }
   
   switch (activity.RecurrencePattern) {
-    case 'Daily':
+    case 'daily':
       nextDate.setDate(nextDate.getDate() + interval);
       break;
-    case 'Weekly':
+    case 'weekly':
       nextDate.setDate(nextDate.getDate() + (7 * interval));
       break;
-    case 'Monthly': {
+    case 'monthly': {
       // Handle month overflow properly (e.g., Jan 31 + 1 month = Feb 28/29)
       const targetMonth = nextDate.getMonth() + interval;
       const targetYear = nextDate.getFullYear() + Math.floor(targetMonth / 12);
@@ -193,7 +193,7 @@ async function createNextRecurrence(activity: Record<string, any>, ctx: any): Pr
       }
       break;
     }
-    case 'Yearly':
+    case 'yearly':
       nextDate.setFullYear(nextDate.getFullYear() + interval);
       break;
   }
@@ -216,7 +216,7 @@ async function createNextRecurrence(activity: Record<string, any>, ctx: any): Pr
   const nextActivity = {
     Subject: activity.Subject,
     Type: activity.Type,
-    Status: 'Planned',
+    Status: 'planned',
     Priority: activity.Priority,
     ActivityDate: nextDate.toISOString(),
     DueDate: nextDate.toISOString().split('T')[0],
@@ -247,7 +247,7 @@ export async function sendOverdueNotifications(ql: any): Promise<void> {
   // const overdueActivities = await db.find('Activity', {
   //   filters: [
   //     ['DueDate', '<', new Date().toISOString().split('T')[0]],
-  //     ['Status', 'not in', ['Completed', 'Cancelled']]
+  //     ['Status', 'not in', ['completed', 'cancelled']]
   //   ]
   // });
   
@@ -264,8 +264,8 @@ export async function sendOverdueNotifications(ql: any): Promise<void> {
   //   // Optionally create follow-up task
   //   // await db.doc.create('Activity', {
   //   //   Subject: `Follow-up: ${activity.Subject}`,
-  //   //   Type: 'Task',
-  //   //   Status: 'Planned',
+  //   //   Type: 'task',
+  //   //   Status: 'planned',
   //   //   Priority: 'high',
   //   //   WhoId: activity.WhoId,
   //   //   WhatId: activity.WhatId,
@@ -296,8 +296,8 @@ const ActivityTypeValidationTrigger: Hook = {
       
       // Type-specific processing could go here
       switch (activity.Type) {
-        case 'Call':
-          if (activity.CallResult === 'Connected' && !activity.CallDurationInSeconds) {
+        case 'call':
+          if (activity.CallResult === 'connected' && !activity.CallDurationInSeconds) {
             console.warn(`⚠️ Connected call should have duration recorded`);
           }
           break;
@@ -306,7 +306,7 @@ const ActivityTypeValidationTrigger: Hook = {
             console.warn(`⚠️ Email has body but no subject`);
           }
           break;
-        case 'Meeting':
+        case 'meeting':
           if (!activity.IsOnline && !activity.Location) {
             console.warn(`⚠️ In-person meeting should have location`);
           }

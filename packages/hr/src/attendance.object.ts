@@ -26,39 +26,39 @@ export const Attendance = ObjectSchema.create({
     }),
     status: Field.select({
       label: 'Attendance Status',
-      defaultValue: 'Present',
+      defaultValue: 'present',
       options: [
         {
           "label": "Present",
-          "value": "Present"
+          "value": "present"
         },
         {
           "label": "Late",
-          "value": "Late"
+          "value": "late"
         },
         {
           "label": "Early Leave",
-          "value": "Early Leave"
+          "value": "early_leave"
         },
         {
           "label": "Absent",
-          "value": "Absent"
+          "value": "absent"
         },
         {
           "label": "Time Off",
-          "value": "On Leave"
+          "value": "on_leave"
         },
         {
           "label": "Business Trip",
-          "value": "Business Trip"
+          "value": "business_trip"
         },
         {
           "label": "Remote Work",
-          "value": "Remote Work"
+          "value": "remote_work"
         },
         {
           "label": "Overtime",
-          "value": "Overtime"
+          "value": "overtime"
         }
       ]
     }),
@@ -79,19 +79,19 @@ export const Attendance = ObjectSchema.create({
       options: [
         {
           "label": "Office",
-          "value": "Office"
+          "value": "office"
         },
         {
           "label": "Remote",
-          "value": "Remote"
+          "value": "remote"
         },
         {
           "label": "Client Site",
-          "value": "Client Site"
+          "value": "client_site"
         },
         {
           "label": "Business Trip",
-          "value": "Business Trip"
+          "value": "business_trip"
         }
       ]
     }),

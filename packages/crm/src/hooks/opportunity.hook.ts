@@ -16,10 +16,10 @@ const OpportunityValidation: Hook = {
       }
     }
 
-    // 2. Validate "Proposal" - Must have a Quote
+    // 2. Validate "proposal" - Must have a Quote
     // Note: We only check this on Update to avoid issues during initial import
     const ctxPrevious = ctx.previous as Record<string, any> | undefined;
-    if (opp.stage === 'Proposal' && ctxPrevious && ctxPrevious.stage !== 'Proposal') {
+    if (opp.stage === 'proposal' && ctxPrevious && ctxPrevious.stage !== 'proposal') {
       const quoteCount = await countRelatedQuotes(ctx, opp._id);
       if (quoteCount === 0) {
         throw new Error('Validation Error: Cannot move to Proposal stage without an active Quote. Please create a Quote first.');
@@ -99,7 +99,7 @@ async function handleClosedWon(ctx: any): Promise<void> {
     const contract = await ctx.ql.doc.create('contract', {
       AccountId: opportunity.AccountId,
       OpportunityId: opportunity.Id,
-      Status: 'Draft',
+      Status: 'draft',
       ContractValue: opportunity.Amount || 0,
       StartDate: new Date().toISOString().split('T')[0],
       OwnerId: opportunity.OwnerId || ctx.user.id,
@@ -119,7 +119,7 @@ async function handleClosedWon(ctx: any): Promise<void> {
   // 2. Update Account Status
   try {
     await ctx.ql.doc.update('account', opportunity.AccountId, {
-      CustomerStatus: 'Active Customer'
+      CustomerStatus: 'active_customer'
     });
     console.log('✅ Account status updated to Active Customer');
   } catch (error) {
@@ -132,7 +132,7 @@ async function handleClosedWon(ctx: any): Promise<void> {
     await ctx.ql.doc.create('activity', {
       Subject: `Deal Won: ${opportunity.Name}`,
       Type: 'Milestone',
-      Status: 'Completed',
+      Status: 'completed',
       Priority: 'high',
       AccountId: opportunity.AccountId,
       WhatId: opportunity.Id,
@@ -173,8 +173,8 @@ async function handleClosedLost(ctx: any): Promise<void> {
     await ctx.ql.doc.create('activity', {
       Subject: `Deal Lost: ${opportunity.Name}`,
       Type: 'Milestone',
-      Status: 'Completed',
-      Priority: 'Normal',
+      Status: 'completed',
+      Priority: 'normal',
       AccountId: opportunity.AccountId,
       WhatId: opportunity.Id,
       OwnerId: ctx.user.id,
@@ -195,12 +195,12 @@ async function handleClosedLost(ctx: any): Promise<void> {
 async function logStageChange(ctx: any): Promise<void> {
   try {
     const opportunity = ctx.result;
-    const oldStage = ctx.previous?.Stage || 'Unknown';
+    const oldStage = ctx.previous?.Stage || 'unknown';
     await ctx.ql.doc.create('activity', {
       Subject: `Opportunity Stage Change: ${oldStage} → ${ctx.result.Stage}`,
       Type: 'Stage Change',
-      Status: 'Completed',
-      Priority: 'Normal',
+      Status: 'completed',
+      Priority: 'normal',
       AccountId: opportunity.AccountId,
       WhatId: opportunity.Id,
       OwnerId: ctx.user.id,
@@ -221,12 +221,12 @@ async function validateStageRequirements(ctx: any): Promise<void> {
   const warnings: string[] = [];
 
   // Validation for Proposal stage
-  if (stage === 'Proposal' && !opportunity.Amount) {
+  if (stage === 'proposal' && !opportunity.Amount) {
     warnings.push('Proposal stage should have an Amount specified');
   }
 
   // Validation for Negotiation stage
-  if (stage === 'Negotiation') {
+  if (stage === 'negotiation') {
     if (!opportunity.Amount) {
       warnings.push('Negotiation stage requires Amount');
     }

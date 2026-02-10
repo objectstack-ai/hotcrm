@@ -97,13 +97,13 @@ export async function recommendProducts(request: RecommendProductsRequest): Prom
     let priority: 'high' | 'medium' | 'low' = 'medium';
 
     // Industry fit scoring
-    if (account.industry === 'Technology' && product.family === 'Software') {
+    if (account.industry === 'technology' && product.family === 'software') {
       relevanceScore += 20;
       reason = 'Strong fit for technology sector';
     } else if (account.industry === 'Manufacturing' && product.family === 'Hardware') {
       relevanceScore += 20;
       reason = 'Ideal for manufacturing operations';
-    } else if (account.industry === 'Healthcare' && product.family === 'Compliance') {
+    } else if (account.industry === 'healthcare' && product.family === 'Compliance') {
       relevanceScore += 25;
       reason = 'Essential for healthcare compliance';
     }
@@ -159,7 +159,7 @@ export async function recommendProducts(request: RecommendProductsRequest): Prom
   return {
     recommendations: topRecommendations,
     customerContext: {
-      industry: account.industry || 'Unknown',
+      industry: account.industry || 'unknown',
       size: account.number_of_employees > 1000 ? 'Enterprise' : account.number_of_employees > 100 ? 'Mid-Market' : 'Small Business',
       currentProducts: existingOpps.map((o: any) => o.name),
       purchaseHistory: existingOpps.reduce((sum: number, o: any) => sum + (o.amount || 0), 0)
@@ -523,7 +523,7 @@ export async function suggestProductBundles(request: SuggestProductBundlesReques
   }
 
   // Industry-specific bundle
-  if (account?.industry === 'Healthcare') {
+  if (account?.industry === 'healthcare') {
     const healthcareProducts = products.filter((p: any) => 
       p.family === 'Compliance' || p.family === 'Security' || p.name.includes('HIPAA')
     ).slice(0, 3);
@@ -652,7 +652,7 @@ export async function analyzeProductFit(request: AnalyzeProductFitRequest): Prom
     technicalFactors.push('May require additional integration setup');
   }
 
-  if (product.family === 'Cloud' && account.industry === 'Technology') {
+  if (product.family === 'Cloud' && account.industry === 'technology') {
     technicalScore += 15;
     technicalFactors.push('Cloud-native architecture aligns with technology sector needs');
   }
@@ -661,7 +661,7 @@ export async function analyzeProductFit(request: AnalyzeProductFitRequest): Prom
   let businessScore = 50;
   const businessFactors = [];
 
-  if (account.industry === 'Healthcare' && product.family === 'Compliance') {
+  if (account.industry === 'healthcare' && product.family === 'Compliance') {
     businessScore += 30;
     businessFactors.push('Addresses critical healthcare compliance requirements');
   } else if (account.industry === 'Financial Services' && product.family === 'Security') {
@@ -711,7 +711,7 @@ export async function analyzeProductFit(request: AnalyzeProductFitRequest): Prom
     strategicFactors.push('Strengthens existing relationship and platform adoption');
   }
 
-  if (account.type === 'Customer') {
+  if (account.type === 'customer') {
     strategicScore += 10;
     strategicFactors.push('Expansion opportunity with proven customer');
   }
@@ -764,7 +764,7 @@ export async function analyzeProductFit(request: AnalyzeProductFitRequest): Prom
     {
       factor: 'Executive Sponsorship',
       importance: 'critical' as const,
-      status: account.type === 'Customer' ? 'met' as const : 'partial' as const
+      status: account.type === 'customer' ? 'met' as const : 'partial' as const
     },
     {
       factor: 'Budget Availability',
@@ -992,8 +992,8 @@ export async function predictProductAdoption(request: PredictProductAdoptionRequ
 
   // Driver 4: Industry alignment
   if (
-    (account.industry === 'Technology' && product.family === 'Software') ||
-    (account.industry === 'Healthcare' && product.family === 'Compliance') ||
+    (account.industry === 'technology' && product.family === 'software') ||
+    (account.industry === 'healthcare' && product.family === 'Compliance') ||
     (account.industry === 'Financial Services' && product.family === 'Security')
   ) {
     adoptionScore += 15;

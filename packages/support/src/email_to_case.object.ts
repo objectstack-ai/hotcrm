@@ -29,27 +29,27 @@ export const EmailToCase = ObjectSchema.create({
     mailbox_type: Field.select({
       label: 'Mailbox Type',
       required: true,
-      defaultValue: 'IMAP',
+      defaultValue: 'imap',
       options: [
         {
           "label": "IMAP",
-          "value": "IMAP"
+          "value": "imap"
         },
         {
           "label": "POP3",
-          "value": "POP3"
+          "value": "pop3"
         },
         {
           "label": "Microsoft 365",
-          "value": "Microsoft365"
+          "value": "microsoft365"
         },
         {
           "label": "Gmail",
-          "value": "Gmail"
+          "value": "gmail"
         },
         {
           "label": "Exchange",
-          "value": "Exchange"
+          "value": "exchange"
         }
       ]
     }),
@@ -82,23 +82,23 @@ export const EmailToCase = ObjectSchema.create({
     }),
     default_priority: Field.select({
       label: 'Default Priority',
-      defaultValue: 'Medium',
+      defaultValue: 'medium',
       options: [
         {
           "label": "Critical",
-          "value": "Critical"
+          "value": "critical"
         },
         {
           "label": "High",
-          "value": "High"
+          "value": "high"
         },
         {
           "label": "Medium",
-          "value": "Medium"
+          "value": "medium"
         },
         {
           "label": "Low",
-          "value": "Low"
+          "value": "low"
         }
       ]
     }),
@@ -107,31 +107,31 @@ export const EmailToCase = ObjectSchema.create({
       options: [
         {
           "label": "Problem",
-          "value": "Problem"
+          "value": "problem"
         },
         {
           "label": "Question",
-          "value": "Question"
+          "value": "question"
         },
         {
           "label": "Incident",
-          "value": "Incident"
+          "value": "incident"
         },
         {
           "label": "Feature Request",
-          "value": "Feature Request"
+          "value": "feature_request"
         },
         {
           "label": "Training",
-          "value": "Training"
+          "value": "training"
         },
         {
           "label": "Maintenance",
-          "value": "Maintenance"
+          "value": "maintenance"
         },
         {
           "label": "Other",
-          "value": "Other"
+          "value": "other"
         }
       ]
     }),

@@ -27,27 +27,27 @@ export const EscalationRule = ObjectSchema.create({
       options: [
         {
           "label": "SLA Violation",
-          "value": "SLAViolation"
+          "value": "slaviolation"
         },
         {
           "label": "Response Time Exceeded",
-          "value": "ResponseTime"
+          "value": "responsetime"
         },
         {
           "label": "Resolution Time Exceeded",
-          "value": "ResolutionTime"
+          "value": "resolutiontime"
         },
         {
           "label": "No Activity",
-          "value": "NoActivity"
+          "value": "noactivity"
         },
         {
           "label": "Customer Sentiment",
-          "value": "Sentiment"
+          "value": "sentiment"
         },
         {
           "label": "Manual Trigger",
-          "value": "Manual"
+          "value": "manual"
         }
       ]
     }),
@@ -72,19 +72,19 @@ export const EscalationRule = ObjectSchema.create({
       options: [
         {
           "label": "User",
-          "value": "User"
+          "value": "user"
         },
         {
           "label": "Queue",
-          "value": "Queue"
+          "value": "queue"
         },
         {
           "label": "Role",
-          "value": "Role"
+          "value": "role"
         },
         {
           "label": "Manager",
-          "value": "Manager"
+          "value": "manager"
         }
       ]
     }),
@@ -125,19 +125,19 @@ export const EscalationRule = ObjectSchema.create({
       options: [
         {
           "label": "Critical",
-          "value": "Critical"
+          "value": "critical"
         },
         {
           "label": "High",
-          "value": "High"
+          "value": "high"
         },
         {
           "label": "Medium",
-          "value": "Medium"
+          "value": "medium"
         },
         {
           "label": "Low",
-          "value": "Low"
+          "value": "low"
         }
       ]
     }),
@@ -150,23 +150,23 @@ export const EscalationRule = ObjectSchema.create({
       options: [
         {
           "label": "New",
-          "value": "New"
+          "value": "new"
         },
         {
           "label": "Open",
-          "value": "Open"
+          "value": "open"
         },
         {
           "label": "In Progress",
-          "value": "In Progress"
+          "value": "in_progress"
         },
         {
           "label": "Escalated",
-          "value": "Escalated"
+          "value": "escalated"
         },
         {
           "label": "Waiting on Customer",
-          "value": "Waiting on Customer"
+          "value": "waiting_on_customer"
         }
       ]
     }),

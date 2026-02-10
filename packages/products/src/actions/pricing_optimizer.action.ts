@@ -198,7 +198,7 @@ export async function optimizePricing(request: OptimizePricingRequest): Promise<
       });
     }
 
-    if (opportunity.stage === 'Negotiation') {
+    if (opportunity.stage === 'negotiation') {
       priceAdjustment -= 3;
       factors.push({
         factor: 'Active Negotiation',

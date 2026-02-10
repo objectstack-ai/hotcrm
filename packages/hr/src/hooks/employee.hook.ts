@@ -51,7 +51,7 @@ async function createOnboardingRecord(employee: any, ctx: any): Promise<void> {
       employee_id: employee.id,
       start_date: startDate.toISOString().split('T')[0],
       target_completion_date: targetDate.toISOString().split('T')[0],
-      status: 'In Progress',
+      status: 'in_progress',
       onboarding_type: 'New Hire',
       buddy_id: null, // Can be assigned later
       hr_coordinator_id: ctx.session?.userId
@@ -99,7 +99,7 @@ async function createProbationGoals(employee: any, ctx: any): Promise<void> {
       goal_type: 'Onboarding',
       start_date: hireDate.toISOString().split('T')[0],
       target_date: probationEndDate.toISOString().split('T')[0],
-      status: 'In Progress',
+      status: 'in_progress',
       progress: 0
     });
 
@@ -133,11 +133,11 @@ const EmployeeStatusChangeTrigger: Hook = {
 
       // Handle different status transitions
       switch (newStatus) {
-        case 'Active':
+        case 'active':
           await handleActivation(employee, ctx);
           break;
-        case 'Inactive':
-        case 'Terminated':
+        case 'inactive':
+        case 'terminated':
           await handleTermination(employee, ctx);
           break;
         case 'On Leave':
@@ -174,7 +174,7 @@ async function handleTermination(employee: any, ctx: any): Promise<void> {
     await (ctx.ql as any).doc.create('onboarding', {
       employee_id: employee.id,
       start_date: new Date().toISOString().split('T')[0],
-      status: 'In Progress',
+      status: 'in_progress',
       onboarding_type: 'Offboarding',
       hr_coordinator_id: ctx.session?.userId
     });

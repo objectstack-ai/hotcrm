@@ -46,15 +46,15 @@ export const Employee = ObjectSchema.create({
       options: [
         {
           "label": "Male",
-          "value": "Male"
+          "value": "male"
         },
         {
           "label": "Female",
-          "value": "Female"
+          "value": "female"
         },
         {
           "label": "Other",
-          "value": "Other"
+          "value": "other"
         }
       ]
     }),
@@ -69,19 +69,19 @@ export const Employee = ObjectSchema.create({
       options: [
         {
           "label": "Single",
-          "value": "Single"
+          "value": "single"
         },
         {
           "label": "Married",
-          "value": "Married"
+          "value": "married"
         },
         {
           "label": "Divorced",
-          "value": "Divorced"
+          "value": "divorced"
         },
         {
           "label": "Other",
-          "value": "Other"
+          "value": "other"
         }
       ]
     }),
@@ -104,45 +104,45 @@ export const Employee = ObjectSchema.create({
     termination_date: Field.date({ label: 'Termination Date' }),
     employment_status: Field.select({
       label: 'Employment Status',
-      defaultValue: 'Active',
+      defaultValue: 'active',
       options: [
         {
           "label": "Active",
-          "value": "Active"
+          "value": "active"
         },
         {
           "label": "Probation",
-          "value": "Probation"
+          "value": "probation"
         },
         {
           "label": "On Leave",
-          "value": "On Leave"
+          "value": "on_leave"
         },
         {
           "label": "Terminated",
-          "value": "Terminated"
+          "value": "terminated"
         }
       ]
     }),
     employment_type: Field.select({
       label: 'Employment Type',
-      defaultValue: 'Full-time',
+      defaultValue: 'full_time',
       options: [
         {
           "label": "Full-time",
-          "value": "Full-time"
+          "value": "full_time"
         },
         {
           "label": "Part-time",
-          "value": "Part-time"
+          "value": "part_time"
         },
         {
           "label": "Contract",
-          "value": "Contract"
+          "value": "contract"
         },
         {
           "label": "Intern",
-          "value": "Intern"
+          "value": "intern"
         }
       ]
     }),

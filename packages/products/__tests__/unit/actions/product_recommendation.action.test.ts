@@ -17,10 +17,10 @@ describe('Product Recommendation - recommendProducts', () => {
   });
 
   it('should recommend products for an account', async () => {
-    const mockAccount = { name: 'Tech Corp', industry: 'Technology', number_of_employees: 500, annual_revenue: 5000000, type: 'Customer' };
+    const mockAccount = { name: 'Tech Corp', industry: 'technology', number_of_employees: 500, annual_revenue: 5000000, type: 'customer' };
     const mockProducts = [
-      { product_id: 'prod_1', name: 'Enterprise CRM', product_code: 'ECRM-001', family: 'Software', is_active: true },
-      { product_id: 'prod_2', name: 'Analytics Platform', product_code: 'ANLY-001', family: 'Software', is_active: true }
+      { product_id: 'prod_1', name: 'Enterprise CRM', product_code: 'ECRM-001', family: 'software', is_active: true },
+      { product_id: 'prod_2', name: 'Analytics Platform', product_code: 'ANLY-001', family: 'software', is_active: true }
     ];
 
     (db.doc.get as Mock).mockResolvedValue(mockAccount);
@@ -38,8 +38,8 @@ describe('Product Recommendation - recommendProducts', () => {
   });
 
   it('should include relevance scores', async () => {
-    const mockAccount = { industry: 'Finance', number_of_employees: 100, annual_revenue: 1000000 };
-    const mockProducts = [{ product_id: 'p1', name: 'Product 1', product_code: 'P1', family: 'Software', is_active: true }];
+    const mockAccount = { industry: 'finance', number_of_employees: 100, annual_revenue: 1000000 };
+    const mockProducts = [{ product_id: 'p1', name: 'Product 1', product_code: 'P1', family: 'software', is_active: true }];
 
     (db.doc.get as Mock).mockResolvedValue(mockAccount);
     (db.find as Mock).mockResolvedValue(mockProducts);
@@ -55,7 +55,7 @@ describe('Product Recommendation - recommendProducts', () => {
   });
 
   it('should provide customer context', async () => {
-    const mockAccount = { industry: 'Healthcare', number_of_employees: 1000, annual_revenue: 10000000 };
+    const mockAccount = { industry: 'healthcare', number_of_employees: 1000, annual_revenue: 10000000 };
 
     (db.doc.get as Mock).mockResolvedValue(mockAccount);
     (db.find as Mock).mockResolvedValue([]);
@@ -72,11 +72,11 @@ describe('Product Recommendation - recommendProducts', () => {
       product_id: `prod_${i}`,
       name: `Product ${i}`,
       product_code: `P${i}`,
-      family: 'Software',
+      family: 'software',
       is_active: true
     }));
 
-    (db.doc.get as Mock).mockResolvedValue({ industry: 'Technology' });
+    (db.doc.get as Mock).mockResolvedValue({ industry: 'technology' });
     (db.find as Mock).mockResolvedValue(mockProducts);
 
     const result = await recommendProducts({ accountId: 'acc_limit', maxRecommendations: 3 });

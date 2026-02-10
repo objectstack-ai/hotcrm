@@ -17,7 +17,7 @@ describe('Pricing Optimizer - optimizePricing', () => {
   });
 
   it('should optimize pricing for a product', async () => {
-    const mockProduct = { name: 'Enterprise Suite', product_code: 'ENT-001', family: 'Software', is_active: true };
+    const mockProduct = { name: 'Enterprise Suite', product_code: 'ENT-001', family: 'software', is_active: true };
     const mockPriceBookEntries = [{ list_price: 100000, price_book_id: 'pb_1' }];
 
     (db.doc.get as Mock).mockResolvedValue(mockProduct);

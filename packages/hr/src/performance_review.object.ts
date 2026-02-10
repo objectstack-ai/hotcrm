@@ -24,27 +24,27 @@ export const PerformanceReview = ObjectSchema.create({
     }),
     review_period: Field.select({
       label: 'Review Period',
-      defaultValue: 'Annual',
+      defaultValue: 'annual',
       options: [
         {
           "label": "Quarterly",
-          "value": "Quarterly"
+          "value": "quarterly"
         },
         {
           "label": "Semi-Annual",
-          "value": "Semi-Annual"
+          "value": "semi_annual"
         },
         {
           "label": "Annual",
-          "value": "Annual"
+          "value": "annual"
         },
         {
           "label": "Probation",
-          "value": "Probation"
+          "value": "probation"
         },
         {
           "label": "Ad-hoc",
-          "value": "Ad-hoc"
+          "value": "ad_hoc"
         }
       ]
     }),
@@ -53,19 +53,19 @@ export const PerformanceReview = ObjectSchema.create({
       options: [
         {
           "label": "Self Review",
-          "value": "Self Review"
+          "value": "self_review"
         },
         {
           "label": "Manager Review",
-          "value": "Manager Review"
+          "value": "manager_review"
         },
         {
           "label": "360 Review",
-          "value": "360 Review"
+          "value": "peer_360_review"
         },
         {
           "label": "Probation Review",
-          "value": "Probation Review"
+          "value": "probation_review"
         }
       ]
     }),
@@ -80,27 +80,27 @@ export const PerformanceReview = ObjectSchema.create({
     due_date: Field.date({ label: 'Due Date' }),
     status: Field.select({
       label: 'Status',
-      defaultValue: 'Not Started',
+      defaultValue: 'not_started',
       options: [
         {
           "label": "Not Started",
-          "value": "Not Started"
+          "value": "not_started"
         },
         {
           "label": "In Progress",
-          "value": "In Progress"
+          "value": "in_progress"
         },
         {
           "label": "Pending Review",
-          "value": "Pending Review"
+          "value": "pending_review"
         },
         {
           "label": "Completed",
-          "value": "Completed"
+          "value": "completed"
         },
         {
           "label": "Cancelled",
-          "value": "Cancelled"
+          "value": "cancelled"
         }
       ]
     }),
@@ -109,23 +109,23 @@ export const PerformanceReview = ObjectSchema.create({
       options: [
         {
           "label": "Outstanding",
-          "value": "Outstanding"
+          "value": "outstanding"
         },
         {
           "label": "Exceeds Expectations",
-          "value": "Exceeds Expectations"
+          "value": "exceeds_expectations"
         },
         {
           "label": "Meets Expectations",
-          "value": "Meets Expectations"
+          "value": "meets_expectations"
         },
         {
           "label": "Needs Improvement",
-          "value": "Needs Improvement"
+          "value": "needs_improvement"
         },
         {
           "label": "Unsatisfactory",
-          "value": "Unsatisfactory"
+          "value": "unsatisfactory"
         }
       ]
     }),

@@ -76,7 +76,7 @@ export interface CalculateTCVResponse {
  */
 export async function calculateTCV(request: CalculateTCVRequest): Promise<CalculateTCVResponse> {
   // Build filters for active contracts
-  const filters: any[] = [['status', 'in', ['Activated', 'Draft', 'InApproval']]];
+  const filters: any[] = [['status', 'in', ['activated', 'draft', 'in_approval']]];
   if (request.accountId) {
     filters.push(['account_id', '=', request.accountId]);
   }
@@ -145,7 +145,7 @@ export async function calculateTCV(request: CalculateTCVRequest): Promise<Calcul
   // --- By Status ---
   const statusMap = new Map<string, { count: number; total: number }>();
   contracts.forEach((c: any) => {
-    const status = c.status || 'Unknown';
+    const status = c.status || 'unknown';
     const entry = statusMap.get(status) || { count: 0, total: 0 };
     entry.count += 1;
     entry.total += c.total_value || 0;
@@ -163,7 +163,7 @@ export async function calculateTCV(request: CalculateTCVRequest): Promise<Calcul
   const segmentMap = new Map<string, { count: number; total: number }>();
   contracts.forEach((c: any) => {
     const acct = accountMap.get(c.account_id);
-    const segment = acct?.type || 'Unknown';
+    const segment = acct?.type || 'unknown';
     const entry = segmentMap.get(segment) || { count: 0, total: 0 };
     entry.count += 1;
     entry.total += c.total_value || 0;
@@ -211,7 +211,7 @@ export async function calculateTCV(request: CalculateTCVRequest): Promise<Calcul
 
   const priorContracts = await db.find('contract', {
     filters: [
-      ['status', 'in', ['Activated', 'Draft', 'InApproval']],
+      ['status', 'in', ['activated', 'draft', 'in_approval']],
       ['created_date', '>=', priorStart.toISOString()],
       ['created_date', '<', periodStart.toISOString()]
     ],
@@ -303,8 +303,8 @@ export async function calculateARR(request: CalculateARRRequest): Promise<Calcul
 
   // Fetch all activated recurring contracts
   const filters: any[] = [
-    ['status', '=', 'Activated'],
-    ['billing_frequency', 'in', ['Monthly', 'Quarterly', 'Annually']]
+    ['status', '=', 'activated'],
+    ['billing_frequency', 'in', ['monthly', 'quarterly', 'annually']]
   ];
   if (request.accountId) {
     filters.push(['account_id', '=', request.accountId]);
@@ -325,9 +325,9 @@ export async function calculateARR(request: CalculateARRRequest): Promise<Calcul
 
   const churnedContracts = await db.find('contract', {
     filters: [
-      ['status', 'in', ['Cancelled', 'Expired']],
+      ['status', 'in', ['cancelled', 'expired']],
       ['end_date', '>=', trendStart.toISOString()],
-      ['billing_frequency', 'in', ['Monthly', 'Quarterly', 'Annually']]
+      ['billing_frequency', 'in', ['monthly', 'quarterly', 'annually']]
     ],
     fields: [
       'contract_number', 'account_id', 'total_value', 'billing_frequency',
@@ -340,8 +340,8 @@ export async function calculateARR(request: CalculateARRRequest): Promise<Calcul
   const annualize = (contract: any): number => {
     const value = contract.total_value || 0;
     const freq = contract.billing_frequency;
-    if (freq === 'Monthly') return value * 12;
-    if (freq === 'Quarterly') return value * 4;
+    if (freq === 'monthly') return value * 12;
+    if (freq === 'quarterly') return value * 4;
     return value; // Annually or lump-sum treated as annual
   };
 
@@ -459,7 +459,7 @@ export async function calculateARR(request: CalculateARRRequest): Promise<Calcul
       .filter((c: any) => {
         if (!c.end_date) return false;
         const end = new Date(c.end_date);
-        return end >= monthDate && end <= monthEnd && (c.status === 'Cancelled' || c.status === 'Expired');
+        return end >= monthDate && end <= monthEnd && (c.status === 'cancelled' || c.status === 'expired');
       })
       .reduce((s: number, c: any) => s + annualize(c), 0);
 
@@ -680,10 +680,10 @@ export async function calculateQuoteToClose(request: CalculateQuoteToCloseReques
   const totalClosedValue = wonQuotes.reduce((s: number, q: any) => s + (q.total_amount || 0), 0);
 
   // --- Funnel ---
-  const statusOrder = ['Draft', 'Sent', 'Viewed', 'Accepted', 'ClosedWon'];
+  const statusOrder = ['draft', 'sent', 'viewed', 'accepted', 'closed_won'];
   const statusCounts = new Map<string, { count: number; value: number }>();
   enriched.forEach((q: any) => {
-    const status = q.isWon ? 'ClosedWon' : (q.status || 'Draft');
+    const status = q.isWon ? 'closed_won' : (q.status || 'draft');
     const entry = statusCounts.get(status) || { count: 0, value: 0 };
     entry.count += 1;
     entry.value += q.total_amount || 0;
@@ -698,13 +698,13 @@ export async function calculateQuoteToClose(request: CalculateQuoteToCloseReques
 
   const funnel = statusOrder.map((stage, idx) => {
     const reachedStage = enriched.filter((q: any) => {
-      const qStage = q.isWon ? 'ClosedWon' : (q.status || 'Draft');
+      const qStage = q.isWon ? 'closed_won' : (q.status || 'draft');
       return stageIndex(qStage) >= idx;
     });
     const count = reachedStage.length;
     const value = reachedStage.reduce((s: number, q: any) => s + (q.total_amount || 0), 0);
     const prevCount = idx === 0 ? enriched.length : enriched.filter((q: any) => {
-      const qStage = q.isWon ? 'ClosedWon' : (q.status || 'Draft');
+      const qStage = q.isWon ? 'closed_won' : (q.status || 'draft');
       return stageIndex(qStage) >= idx - 1;
     }).length;
     const dropOffRate = prevCount > 0 ? Math.round(((prevCount - count) / prevCount) * 1000) / 10 : 0;

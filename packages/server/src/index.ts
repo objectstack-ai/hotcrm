@@ -101,7 +101,7 @@ async function main() {
 
   for (const plugin of businessPlugins) {
     if (plugin) {
-      console.log(`Registering plugin: ${plugin.name || 'Unknown'}`);
+      console.log(`Registering plugin: ${plugin.name || 'unknown'}`);
       kernel.use(new AppPlugin(plugin));
     }
   }

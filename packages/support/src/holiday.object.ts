@@ -42,51 +42,51 @@ export const Holiday = ObjectSchema.create({
       options: [
         {
           "label": "January",
-          "value": "1"
+          "value": "month_01"
         },
         {
           "label": "February",
-          "value": "2"
+          "value": "month_02"
         },
         {
           "label": "March",
-          "value": "3"
+          "value": "month_03"
         },
         {
           "label": "April",
-          "value": "4"
+          "value": "month_04"
         },
         {
           "label": "May",
-          "value": "5"
+          "value": "month_05"
         },
         {
           "label": "June",
-          "value": "6"
+          "value": "month_06"
         },
         {
           "label": "July",
-          "value": "7"
+          "value": "month_07"
         },
         {
           "label": "August",
-          "value": "8"
+          "value": "month_08"
         },
         {
           "label": "September",
-          "value": "9"
+          "value": "month_09"
         },
         {
           "label": "October",
-          "value": "10"
+          "value": "month_10"
         },
         {
           "label": "November",
-          "value": "11"
+          "value": "month_11"
         },
         {
           "label": "December",
-          "value": "12"
+          "value": "month_12"
         }
       ]
     }),
@@ -96,27 +96,27 @@ export const Holiday = ObjectSchema.create({
       options: [
         {
           "label": "🎉 National Holiday",
-          "value": "National"
+          "value": "national"
         },
         {
           "label": "📅 Regional Holiday",
-          "value": "Regional"
+          "value": "regional"
         },
         {
           "label": "🏢 Company Holiday",
-          "value": "Company"
+          "value": "company"
         },
         {
           "label": "🙏 Religious Holiday",
-          "value": "Religious"
+          "value": "religious"
         },
         {
           "label": "🎊 Cultural Event",
-          "value": "Cultural"
+          "value": "cultural"
         },
         {
           "label": "🏖️ Company Closure",
-          "value": "Closure"
+          "value": "closure"
         }
       ]
     }),

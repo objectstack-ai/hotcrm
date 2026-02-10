@@ -31,51 +31,51 @@ export const Note = ObjectSchema.create({
       options: [
         {
           "label": "🏢 Account",
-          "value": "Account"
+          "value": "account"
         },
         {
           "label": "👤 Contact",
-          "value": "Contact"
+          "value": "contact"
         },
         {
           "label": "💼 Opportunity",
-          "value": "Opportunity"
+          "value": "opportunity"
         },
         {
           "label": "🎯 Lead",
-          "value": "Lead"
+          "value": "lead"
         },
         {
           "label": "🎫 Case",
-          "value": "Case"
+          "value": "case"
         },
         {
           "label": "📄 Contract",
-          "value": "Contract"
+          "value": "contract"
         },
         {
           "label": "💰 Quote",
-          "value": "Quote"
+          "value": "quote"
         },
         {
           "label": "📋 Task",
-          "value": "Task"
+          "value": "task"
         },
         {
           "label": "📅 Activity",
-          "value": "Activity"
+          "value": "activity"
         },
         {
           "label": "📢 Campaign",
-          "value": "Campaign"
+          "value": "campaign"
         },
         {
           "label": "📦 Product",
-          "value": "Product"
+          "value": "product"
         },
         {
           "label": "📑 Order",
-          "value": "Order"
+          "value": "order"
         }
       ]
     }),
@@ -159,15 +159,15 @@ export const Note = ObjectSchema.create({
       options: [
         {
           "label": "😊 Positive",
-          "value": "Positive"
+          "value": "positive"
         },
         {
           "label": "😐 Neutral",
-          "value": "Neutral"
+          "value": "neutral"
         },
         {
           "label": "😟 Negative",
-          "value": "Negative"
+          "value": "negative"
         }
       ]
     })

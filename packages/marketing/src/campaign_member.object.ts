@@ -24,27 +24,27 @@ export const CampaignMember = ObjectSchema.create({
     status: Field.select({
       label: 'Member status',
       required: true,
-      defaultValue: 'Sent',
+      defaultValue: 'sent',
       options: [
         {
           "label": "📤 Sent",
-          "value": "Sent"
+          "value": "sent"
         },
         {
           "label": "👁️ Opened",
-          "value": "Opened"
+          "value": "opened"
         },
         {
           "label": "🖱️ Clicked",
-          "value": "Clicked"
+          "value": "clicked"
         },
         {
           "label": "✅ Responded",
-          "value": "Responded"
+          "value": "responded"
         },
         {
           "label": "🚫 Unsubscribed",
-          "value": "Unsubscribed"
+          "value": "unsubscribed"
         }
       ]
     }),
@@ -55,23 +55,23 @@ export const CampaignMember = ObjectSchema.create({
     }),
     member_source: Field.select({
       label: 'Member Source',
-      defaultValue: 'Manual',
+      defaultValue: 'manual',
       options: [
         {
           "label": "✍️ Manual",
-          "value": "Manual"
+          "value": "manual"
         },
         {
           "label": "📥 Import",
-          "value": "Import"
+          "value": "import"
         },
         {
           "label": "🔌 API",
-          "value": "API"
+          "value": "api"
         },
         {
           "label": "🤖 Automation",
-          "value": "Automation"
+          "value": "automation"
         }
       ]
     }),

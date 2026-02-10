@@ -8,8 +8,8 @@ const ContractBillingHook: Hook = {
     const newDoc = ctx.result as Record<string, any>;
     const oldDoc = ctx.previous as Record<string, any> | undefined;
 
-    // Trigger only when status changes to 'Activated'
-    if (newDoc.status === 'Activated' && oldDoc?.status !== 'Activated') {
+    // Trigger only when status changes to 'activated'
+    if (newDoc.status === 'activated' && oldDoc?.status !== 'activated') {
       console.log(`Starting Billing Process for Contract ${newDoc.contract_number}`);
 
       try {
@@ -22,10 +22,10 @@ const ContractBillingHook: Hook = {
         const invoiceData = {
             account: newDoc.account,
             contract: newDoc._id,
-            status: 'Draft',
+            status: 'draft',
             due_date: dueDate.toISOString(), // Assuming ObjectQL handles Date types or ISO strings
             total_amount: newDoc.contract_value,
-            payment_terms: 'Net 30'
+            payment_terms: 'net_30'
         };
 
         const invoice = await (ctx.ql as any).doc.create('invoice', invoiceData);

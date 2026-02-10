@@ -150,7 +150,6 @@ export const Lead = ObjectSchema.create({
     trackHistory: true,
     activities: true,
     feeds: true,
-    files: true,
-    enableDuplicateDetection: true
+    files: true
   }
 });

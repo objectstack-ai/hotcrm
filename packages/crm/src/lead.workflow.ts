@@ -14,7 +14,7 @@ export const LeadAutoAssignment = {
   triggerType: 'onCreate',
 
   // Condition: Only auto-assign if owner is not set and status is New
-  condition: 'status = "New" AND owner = NULL',
+  condition: 'status = "new" AND owner = NULL',
 
   // Actions to execute
   actions: [
@@ -48,8 +48,8 @@ export const LeadAutoAssignment = {
       description: 'Initial contact and qualification',
       assignee: '${owner_id}',
       dueDate: 'TODAY() + 1',
-      priority: 'High',
-      status: 'Not Started'
+      priority: 'high',
+      status: 'not_started'
     },
 
     // 5. Log to Slack (via webhook)
@@ -118,7 +118,7 @@ export const LeadAutoScoring = {
           WHEN lead_score >= 80 THEN 'Hot'
           WHEN lead_score >= 60 THEN 'Warm'
           WHEN lead_score >= 40 THEN 'Cold'
-          ELSE 'Unqualified'
+          ELSE 'unqualified'
         END
       `
     },

@@ -38,57 +38,57 @@ export const Recruitment = ObjectSchema.create({
     }),
     priority: Field.select({
       label: 'Priority',
-      defaultValue: 'Medium',
+      defaultValue: 'medium',
       options: [
         {
           "label": "Urgent",
-          "value": "Urgent"
+          "value": "urgent"
         },
         {
           "label": "High",
-          "value": "High"
+          "value": "high"
         },
         {
           "label": "Medium",
-          "value": "Medium"
+          "value": "medium"
         },
         {
           "label": "Low",
-          "value": "Low"
+          "value": "low"
         }
       ]
     }),
     status: Field.select({
       label: 'Status',
-      defaultValue: 'Open',
+      defaultValue: 'open',
       options: [
         {
           "label": "Draft",
-          "value": "Draft"
+          "value": "draft"
         },
         {
           "label": "Pending Approval",
-          "value": "Pending Approval"
+          "value": "pending_approval"
         },
         {
           "label": "Open",
-          "value": "Open"
+          "value": "open"
         },
         {
           "label": "In Progress",
-          "value": "In Progress"
+          "value": "in_progress"
         },
         {
           "label": "On Hold",
-          "value": "On Hold"
+          "value": "on_hold"
         },
         {
           "label": "Completed",
-          "value": "Filled"
+          "value": "filled"
         },
         {
           "label": "Cancelled",
-          "value": "Cancelled"
+          "value": "cancelled"
         }
       ]
     }),

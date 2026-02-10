@@ -29,11 +29,11 @@ describe('Invoice Prediction - predictPaymentDefault', () => {
       amount: 50000,
       invoice_date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
       due_date: new Date().toISOString(),
-      status: 'Sent',
+      status: 'sent',
       account_id: 'acc_123'
     };
 
-    const mockAccount = { name: 'Test Corp', annual_revenue: 5000000, industry: 'Technology' };
+    const mockAccount = { name: 'Test Corp', annual_revenue: 5000000, industry: 'technology' };
 
     (db.doc.get as Mock).mockResolvedValueOnce(mockInvoice).mockResolvedValueOnce(mockAccount);
     (db.find as Mock).mockResolvedValue([]);
@@ -46,11 +46,11 @@ describe('Invoice Prediction - predictPaymentDefault', () => {
   });
 
   it('should analyze payment history', async () => {
-    const mockInvoice = { invoice_number: 'INV-002', amount: 25000, due_date: new Date().toISOString(), status: 'Sent', account_id: 'acc_history' };
+    const mockInvoice = { invoice_number: 'INV-002', amount: 25000, due_date: new Date().toISOString(), status: 'sent', account_id: 'acc_history' };
     const mockAccount = { name: 'History Corp', annual_revenue: 2000000 };
     const historicalInvoices = [
-      { status: 'Paid', due_date: '2024-01-01', payment_date: '2024-01-05', amount: 10000 },
-      { status: 'Paid', due_date: '2024-02-01', payment_date: '2024-02-01', amount: 15000 }
+      { status: 'paid', due_date: '2024-01-01', payment_date: '2024-01-05', amount: 10000 },
+      { status: 'paid', due_date: '2024-02-01', payment_date: '2024-02-01', amount: 15000 }
     ];
 
     (db.doc.get as Mock).mockResolvedValueOnce(mockInvoice).mockResolvedValueOnce(mockAccount);
@@ -66,13 +66,13 @@ describe('Invoice Prediction - predictPaymentDefault', () => {
     const mockInvoice = {
       amount: 100000,
       due_date: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(), // 90 days overdue
-      status: 'Sent',
+      status: 'sent',
       account_id: 'acc_highrisk'
     };
     const mockAccount = { annual_revenue: 500000 };
     const badHistory = [
-      { status: 'Written Off', due_date: '2023-01-01', amount: 5000 },
-      { status: 'Cancelled', due_date: '2023-06-01', amount: 8000 }
+      { status: 'written_off', due_date: '2023-01-01', amount: 5000 },
+      { status: 'cancelled', due_date: '2023-06-01', amount: 8000 }
     ];
 
     (db.doc.get as Mock).mockResolvedValueOnce(mockInvoice).mockResolvedValueOnce(mockAccount);

@@ -20,31 +20,31 @@ export const Contract = ObjectSchema.create({
     status: Field.select({
       label: 'Status',
       required: true,
-      defaultValue: 'Draft',
+      defaultValue: 'draft',
       options: [
         {
           "label": "📝 Draft",
-          "value": "Draft"
+          "value": "draft"
         },
         {
           "label": "🔍 In Approval",
-          "value": "In Approval"
+          "value": "in_approval"
         },
         {
           "label": "✅ Activated",
-          "value": "Activated"
+          "value": "activated"
         },
         {
           "label": "⏸️ On Hold",
-          "value": "On Hold"
+          "value": "on_hold"
         },
         {
           "label": "✔️ Completed",
-          "value": "Completed"
+          "value": "completed"
         },
         {
           "label": "❌ Terminated",
-          "value": "Terminated"
+          "value": "terminated"
         }
       ]
     }),

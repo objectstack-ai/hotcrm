@@ -27,35 +27,35 @@ export const Interview = ObjectSchema.create({
     }),
     interview_type: Field.select({
       label: 'Interview Type',
-      defaultValue: 'First Round',
+      defaultValue: 'first_round',
       options: [
         {
           "label": "Phone Screen",
-          "value": "Phone Screen"
+          "value": "phone_screen"
         },
         {
           "label": "Video Interview",
-          "value": "Video Interview"
+          "value": "video_interview"
         },
         {
           "label": "First Interview",
-          "value": "First Round"
+          "value": "first_round"
         },
         {
           "label": "Second Interview",
-          "value": "Second Round"
+          "value": "second_round"
         },
         {
           "label": "Final Interview",
-          "value": "Final Round"
+          "value": "final_round"
         },
         {
           "label": "Technical",
-          "value": "Technical"
+          "value": "technical"
         },
         {
           "label": "HR Interview",
-          "value": "HR"
+          "value": "hr"
         }
       ]
     }),
@@ -83,35 +83,35 @@ export const Interview = ObjectSchema.create({
     }),
     status: Field.select({
       label: 'Status',
-      defaultValue: 'Scheduled',
+      defaultValue: 'scheduled',
       options: [
         {
           "label": "Scheduled",
-          "value": "Scheduled"
+          "value": "scheduled"
         },
         {
           "label": "Confirmed",
-          "value": "Confirmed"
+          "value": "confirmed"
         },
         {
           "label": "In Progress",
-          "value": "In Progress"
+          "value": "in_progress"
         },
         {
           "label": "Completed",
-          "value": "Completed"
+          "value": "completed"
         },
         {
           "label": "Cancelled",
-          "value": "Cancelled"
+          "value": "cancelled"
         },
         {
           "label": "No Show",
-          "value": "No Show"
+          "value": "no_show"
         },
         {
           "label": "Rescheduled",
-          "value": "Rescheduled"
+          "value": "rescheduled"
         }
       ]
     }),
@@ -120,23 +120,23 @@ export const Interview = ObjectSchema.create({
       options: [
         {
           "label": "Strong Hire",
-          "value": "Strong Hire"
+          "value": "strong_hire"
         },
         {
           "label": "Hire",
-          "value": "Hire"
+          "value": "hire"
         },
         {
           "label": "Maybe",
-          "value": "Maybe"
+          "value": "maybe"
         },
         {
           "label": "No Hire",
-          "value": "No Hire"
+          "value": "no_hire"
         },
         {
           "label": "Strong No Hire",
-          "value": "Strong No Hire"
+          "value": "strong_no_hire"
         }
       ]
     }),

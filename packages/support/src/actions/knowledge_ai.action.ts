@@ -181,7 +181,7 @@ export async function autoTagArticle(request: AutoTaggingRequest): Promise<AutoT
     } else if (content.includes('troubleshoot') || content.includes('error')) {
       suggestedType = 'Troubleshooting';
     } else {
-      suggestedType = 'General';
+      suggestedType = 'general';
     }
   }
 

@@ -27,31 +27,31 @@ export const QueueMember = ObjectSchema.create({
     }),
     status: Field.select({
       label: 'status',
-      defaultValue: 'Available',
+      defaultValue: 'available',
       options: [
         {
           "label": "✅ Available",
-          "value": "Available"
+          "value": "available"
         },
         {
           "label": "🔴 Busy",
-          "value": "Busy"
+          "value": "busy"
         },
         {
           "label": "⏸️ On Break",
-          "value": "On Break"
+          "value": "on_break"
         },
         {
           "label": "🍽️ At Lunch",
-          "value": "At Lunch"
+          "value": "at_lunch"
         },
         {
           "label": "📚 In Training",
-          "value": "In Training"
+          "value": "in_training"
         },
         {
           "label": "🏠 Offline",
-          "value": "Offline"
+          "value": "offline"
         }
       ]
     }),

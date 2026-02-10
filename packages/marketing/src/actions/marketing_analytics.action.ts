@@ -748,7 +748,7 @@ Analyze customer journeys to identify patterns:
 {
   "topPaths": [
     {
-      "path": ["email", "Webinar", "Demo", "Proposal", "Close"],
+      "path": ["email", "Webinar", "Demo", "proposal", "Close"],
       "frequency": 145,
       "conversionRate": 32,
       "avgTimeToConversion": 45,

@@ -19,23 +19,23 @@ export const Invoice = ObjectSchema.create({
     contract: Field.lookup('contract', { label: 'Contract' }),
     status: Field.select({
       label: 'Status',
-      defaultValue: 'Draft',
+      defaultValue: 'draft',
       options: [
         {
           "label": "Draft",
-          "value": "Draft"
+          "value": "draft"
         },
         {
           "label": "Posted",
-          "value": "Posted"
+          "value": "posted"
         },
         {
           "label": "Paid",
-          "value": "Paid"
+          "value": "paid"
         },
         {
           "label": "Void",
-          "value": "Void"
+          "value": "void"
         }
       ]
     }),
@@ -46,19 +46,19 @@ export const Invoice = ObjectSchema.create({
       options: [
         {
           "label": "Due on Receipt",
-          "value": "Due on Receipt"
+          "value": "due_on_receipt"
         },
         {
           "label": "Net 15",
-          "value": "Net 15"
+          "value": "net_15"
         },
         {
           "label": "Net 30",
-          "value": "Net 30"
+          "value": "net_30"
         },
         {
           "label": "Net 60",
-          "value": "Net 60"
+          "value": "net_60"
         }
       ]
     })

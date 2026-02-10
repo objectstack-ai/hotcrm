@@ -166,13 +166,13 @@ const CandidateStatusChangeTrigger: Hook = {
 
       // Handle different status transitions
       switch (newStatus) {
-        case 'Interviewing':
+        case 'interviewing':
           await handleInterviewingStatus(candidate, ctx);
           break;
-        case 'Hired':
+        case 'hired':
           await handleHiredStatus(candidate, ctx);
           break;
-        case 'Rejected':
+        case 'rejected':
           await handleRejectedStatus(candidate, ctx);
           break;
         case 'Withdrawn':

@@ -29,43 +29,43 @@ export const BusinessHours = ObjectSchema.create({
     time_zone: Field.select({
       label: 'Time Zone',
       required: true,
-      defaultValue: 'Asia/Shanghai',
+      defaultValue: 'asia_shanghai',
       options: [
         {
           "label": "UTC",
-          "value": "UTC"
+          "value": "utc"
         },
         {
           "label": "America/New_York",
-          "value": "America/New_York"
+          "value": "america_new_york"
         },
         {
           "label": "America/Los_Angeles",
-          "value": "America/Los_Angeles"
+          "value": "america_los_angeles"
         },
         {
           "label": "Europe/London",
-          "value": "Europe/London"
+          "value": "europe_london"
         },
         {
           "label": "Europe/Paris",
-          "value": "Europe/Paris"
+          "value": "europe_paris"
         },
         {
           "label": "Asia/Shanghai",
-          "value": "Asia/Shanghai"
+          "value": "asia_shanghai"
         },
         {
           "label": "Asia/Tokyo",
-          "value": "Asia/Tokyo"
+          "value": "asia_tokyo"
         },
         {
           "label": "Asia/Singapore",
-          "value": "Asia/Singapore"
+          "value": "asia_singapore"
         },
         {
           "label": "Australia/Sydney",
-          "value": "Australia/Sydney"
+          "value": "australia_sydney"
         }
       ]
     }),

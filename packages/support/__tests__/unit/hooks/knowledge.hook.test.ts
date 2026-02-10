@@ -42,7 +42,7 @@ describe('KnowledgeArticleScoringTrigger', () => {
       Tags: ['networking', 'troubleshooting', 'guide'],
       RelatedProductIds: 'prod_1',
       HasAttachments: true,
-      Status: 'Draft'
+      Status: 'draft'
     };
     const ctx = { input: { doc: article }, previous: undefined };
 
@@ -56,7 +56,7 @@ describe('KnowledgeArticleScoringTrigger', () => {
   it('should calculate lower quality score for a minimal article', async () => {
     const article = {
       Title: 'Short',
-      Status: 'Draft'
+      Status: 'draft'
     } as Record<string, any>;
     const ctx = { input: { doc: article }, previous: undefined };
 
@@ -89,7 +89,7 @@ describe('KnowledgeArticleScoringTrigger', () => {
     const article = {
       Title: 'Draft article',
       Content: 'Some content.',
-      Status: 'Draft',
+      Status: 'draft',
       ViewCount: 500
     } as Record<string, any>;
     const ctx = { input: { doc: article }, previous: undefined };
@@ -103,7 +103,7 @@ describe('KnowledgeArticleScoringTrigger', () => {
     const article = {
       Title: 'Helpful article test',
       Content: 'Content.',
-      Status: 'Draft',
+      Status: 'draft',
       HelpfulCount: 75,
       NotHelpfulCount: 25
     } as Record<string, any>;
@@ -118,7 +118,7 @@ describe('KnowledgeArticleScoringTrigger', () => {
     const article = {
       Title: 'No feedback article',
       Content: 'Content.',
-      Status: 'Draft',
+      Status: 'draft',
       HelpfulCount: 0,
       NotHelpfulCount: 0
     } as Record<string, any>;
@@ -361,7 +361,7 @@ describe('KnowledgeArticleWorkflowTrigger', () => {
       Status: 'Published',
       ArticleNumber: 'KA-001'
     } as Record<string, any>;
-    const oldArticle = { Status: 'Draft' };
+    const oldArticle = { Status: 'draft' };
     const ctx = {
       input: { doc: article },
       previous: oldArticle,
@@ -381,7 +381,7 @@ describe('KnowledgeArticleWorkflowTrigger', () => {
       Category: 'Technical',
       ArticleNumber: 'KA-002'
     } as Record<string, any>;
-    const oldArticle = { Status: 'Draft' };
+    const oldArticle = { Status: 'draft' };
     const ctx = {
       input: { doc: article },
       previous: oldArticle,
@@ -487,7 +487,7 @@ describe('KnowledgeArticleWorkflowTrigger', () => {
   it('should handle errors gracefully', async () => {
     const ctx = {
       input: { doc: null },
-      previous: { Status: 'Draft' },
+      previous: { Status: 'draft' },
       user: { id: 'user_1' }
     };
 
@@ -520,10 +520,10 @@ describe('KnowledgeArticleUsageTracker', () => {
   it('should increment article usage when case is resolved with linked knowledge', async () => {
     const caseRecord = {
       CaseNumber: 'CS-001',
-      Status: 'Resolved',
+      Status: 'resolved',
       AIRelatedKnowledge: 'art_1, art_2'
     };
-    const oldCase = { Status: 'Open' };
+    const oldCase = { Status: 'open' };
     const mockDbFind = vi.fn()
       .mockResolvedValueOnce([{ id: 'art_1', CaseResolutionCount: 5 }])
       .mockResolvedValueOnce([{ id: 'art_2', CaseResolutionCount: 10 }]);
@@ -552,12 +552,12 @@ describe('KnowledgeArticleUsageTracker', () => {
   it('should not track when case is not resolved', async () => {
     const caseRecord = {
       CaseNumber: 'CS-002',
-      Status: 'Open',
+      Status: 'open',
       AIRelatedKnowledge: 'art_1'
     };
     const ctx = {
       result: caseRecord,
-      previous: { Status: 'New' },
+      previous: { Status: 'new' },
       ql: { find: vi.fn(), doc: { update: vi.fn() } }
     };
 
@@ -569,12 +569,12 @@ describe('KnowledgeArticleUsageTracker', () => {
   it('should not track when case was already resolved', async () => {
     const caseRecord = {
       CaseNumber: 'CS-003',
-      Status: 'Resolved',
+      Status: 'resolved',
       AIRelatedKnowledge: 'art_1'
     };
     const ctx = {
       result: caseRecord,
-      previous: { Status: 'Resolved' },
+      previous: { Status: 'resolved' },
       ql: { find: vi.fn(), doc: { update: vi.fn() } }
     };
 
@@ -586,11 +586,11 @@ describe('KnowledgeArticleUsageTracker', () => {
   it('should not track when no knowledge articles are linked', async () => {
     const caseRecord = {
       CaseNumber: 'CS-004',
-      Status: 'Resolved'
+      Status: 'resolved'
     };
     const ctx = {
       result: caseRecord,
-      previous: { Status: 'Open' },
+      previous: { Status: 'open' },
       db: { find: vi.fn(), doc: { update: vi.fn() } }
     };
 
@@ -602,14 +602,14 @@ describe('KnowledgeArticleUsageTracker', () => {
   it('should handle article not found during usage increment', async () => {
     const caseRecord = {
       CaseNumber: 'CS-005',
-      Status: 'Resolved',
+      Status: 'resolved',
       AIRelatedKnowledge: 'art_missing'
     };
     const mockDbFind = vi.fn().mockResolvedValueOnce([]);
     const mockDbUpdate = vi.fn();
     const ctx = {
       result: caseRecord,
-      previous: { Status: 'Open' },
+      previous: { Status: 'open' },
       ql: {
         find: mockDbFind,
         doc: { update: mockDbUpdate }
@@ -625,13 +625,13 @@ describe('KnowledgeArticleUsageTracker', () => {
   it('should handle errors gracefully', async () => {
     const caseRecord = {
       CaseNumber: 'CS-ERR',
-      Status: 'Resolved',
+      Status: 'resolved',
       AIRelatedKnowledge: 'art_err'
     };
     const mockDbFind = vi.fn().mockRejectedValueOnce(new Error('DB error'));
     const ctx = {
       result: caseRecord,
-      previous: { Status: 'Open' },
+      previous: { Status: 'open' },
       db: {
         find: mockDbFind,
         doc: { update: vi.fn() }

@@ -150,7 +150,7 @@ describe('QuotePricingHook', () => {
     await QuotePricingHook.handler(ctx as any);
 
     expect(doc).toHaveProperty('ApprovalLevel', 5);
-    expect(doc).toHaveProperty('ApprovalStatus', 'Pending');
+    expect(doc).toHaveProperty('ApprovalStatus', 'pending');
   });
 
   it('should not require approval for ≤5% discount', async () => {
@@ -262,7 +262,7 @@ describe('QuotePricingHook', () => {
         Id: 'q_11',
         Name: 'Accepted Quote',
         QuoteNumber: 'Q-003',
-        Status: 'Accepted',
+        Status: 'accepted',
         AccountId: 'acc_3',
         OpportunityId: 'opp_1',
         TotalPrice: 25000,
@@ -272,7 +272,7 @@ describe('QuotePricingHook', () => {
         Id: 'q_11',
         Name: 'Accepted Quote',
         QuoteNumber: 'Q-003',
-        Status: 'Draft',
+        Status: 'draft',
         AccountId: 'acc_3',
         OpportunityId: 'opp_1',
         TotalPrice: 25000
@@ -299,13 +299,13 @@ describe('QuotePricingHook', () => {
       contract_number: 'CT-Q-003',
       account: 'acc_3',
       opportunity: 'opp_1',
-      status: 'Draft',
+      status: 'draft',
       contract_value: 25000
     }));
 
     // Should log status change activity
     expect(mockQl.doc.create).toHaveBeenCalledWith('activity', expect.objectContaining({
-      Subject: 'Quote Status Changed: Draft → Accepted',
+      Subject: 'Quote Status Changed: draft → accepted',
       Type: 'Quote Status Change',
       AccountId: 'acc_3'
     }));
@@ -317,13 +317,13 @@ describe('QuotePricingHook', () => {
         Id: 'q_12',
         Name: 'No Account Quote',
         QuoteNumber: 'Q-004',
-        Status: 'Sent'
+        Status: 'sent'
       },
       previous: {
         Id: 'q_12',
         Name: 'No Account Quote',
         QuoteNumber: 'Q-004',
-        Status: 'Draft'
+        Status: 'draft'
       },
       ql: mockQl,
       user: mockUser
@@ -346,16 +346,16 @@ describe('QuotePricingHook', () => {
         Id: 'q_13',
         Name: 'Approved Quote',
         QuoteNumber: 'Q-005',
-        Status: 'In Review',
-        ApprovalStatus: 'Approved',
+        Status: 'in_review',
+        ApprovalStatus: 'approved',
         AccountId: 'acc_4'
       },
       previous: {
         Id: 'q_13',
         Name: 'Approved Quote',
         QuoteNumber: 'Q-005',
-        Status: 'In Review',
-        ApprovalStatus: 'Pending',
+        Status: 'in_review',
+        ApprovalStatus: 'pending',
         AccountId: 'acc_4'
       },
       ql: mockQl,
@@ -367,7 +367,7 @@ describe('QuotePricingHook', () => {
     expect(mockQl.doc.update).toHaveBeenCalledWith('quote', 'q_13', {
       ApprovedDate: expect.any(String),
       ApprovedById: 'user_1',
-      Status: 'Approved'
+      Status: 'approved'
     });
   });
 
@@ -377,16 +377,16 @@ describe('QuotePricingHook', () => {
         Id: 'q_14',
         Name: 'Rejected Quote',
         QuoteNumber: 'Q-006',
-        Status: 'In Review',
-        ApprovalStatus: 'Rejected',
+        Status: 'in_review',
+        ApprovalStatus: 'rejected',
         AccountId: 'acc_5'
       },
       previous: {
         Id: 'q_14',
         Name: 'Rejected Quote',
         QuoteNumber: 'Q-006',
-        Status: 'In Review',
-        ApprovalStatus: 'Pending',
+        Status: 'in_review',
+        ApprovalStatus: 'pending',
         AccountId: 'acc_5'
       },
       ql: mockQl,
@@ -398,7 +398,7 @@ describe('QuotePricingHook', () => {
     expect(mockQl.doc.update).toHaveBeenCalledWith('quote', 'q_14', {
       RejectedDate: expect.any(String),
       RejectedById: 'user_1',
-      Status: 'Rejected'
+      Status: 'rejected'
     });
   });
 
@@ -407,14 +407,14 @@ describe('QuotePricingHook', () => {
       result: {
         Id: 'q_15',
         Name: 'Unchanged Quote',
-        Status: 'Draft',
+        Status: 'draft',
         ApprovalStatus: 'None',
         AccountId: 'acc_6'
       },
       previous: {
         Id: 'q_15',
         Name: 'Unchanged Quote',
-        Status: 'Draft',
+        Status: 'draft',
         ApprovalStatus: 'None',
         AccountId: 'acc_6'
       },

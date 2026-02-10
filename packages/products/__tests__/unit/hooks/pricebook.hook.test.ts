@@ -98,7 +98,7 @@ describe('PricebookHook', () => {
     expect(mockQl.find).toHaveBeenCalledWith('pricebook', {
       filters: [
         ['IsStandard', '=', true],
-        ['Status', '=', 'Active'],
+        ['Status', '=', 'active'],
         ['Id', '!=', 'pb_4']
       ]
     });
@@ -189,14 +189,14 @@ describe('PricebookHook', () => {
         Name: 'Ready PB',
         EffectiveDate: pastDate,
         ExpirationDate: futureDate,
-        Status: 'Draft'
+        Status: 'draft'
       },
       previous: {
         Id: 'pb_8',
         Name: 'Ready PB',
         EffectiveDate: '2030-01-01',
         ExpirationDate: futureDate,
-        Status: 'Draft'
+        Status: 'draft'
       },
       old: {
         EffectiveDate: '2030-01-01',
@@ -209,7 +209,7 @@ describe('PricebookHook', () => {
     await PricebookHook.handler(ctx as any);
 
     expect(mockQl.doc.update).toHaveBeenCalledWith('pricebook', 'pb_8', {
-      Status: 'Active'
+      Status: 'active'
     });
   });
 
@@ -222,14 +222,14 @@ describe('PricebookHook', () => {
         Name: 'Expired PB',
         EffectiveDate: '2019-01-01',
         ExpirationDate: pastDate,
-        Status: 'Active'
+        Status: 'active'
       },
       previous: {
         Id: 'pb_9',
         Name: 'Expired PB',
         EffectiveDate: '2019-01-01',
         ExpirationDate: '2030-12-31',
-        Status: 'Active'
+        Status: 'active'
       },
       old: {
         EffectiveDate: '2019-01-01',
@@ -242,7 +242,7 @@ describe('PricebookHook', () => {
     await PricebookHook.handler(ctx as any);
 
     expect(mockQl.doc.update).toHaveBeenCalledWith('pricebook', 'pb_9', {
-      Status: 'Expired'
+      Status: 'expired'
     });
   });
 
@@ -253,13 +253,13 @@ describe('PricebookHook', () => {
       result: {
         Id: 'pb_10',
         Name: 'Activated PB',
-        Status: 'Active',
+        Status: 'active',
         IsStandard: false
       },
       previous: {
         Id: 'pb_10',
         Name: 'Activated PB',
-        Status: 'Draft',
+        Status: 'draft',
         IsStandard: false
       },
       old: {},
@@ -284,14 +284,14 @@ describe('PricebookHook', () => {
       result: {
         Id: 'pb_11',
         Name: 'New Standard PB',
-        Status: 'Active',
+        Status: 'active',
         IsStandard: true,
         EffectiveDate: '2025-01-01'
       },
       previous: {
         Id: 'pb_11',
         Name: 'New Standard PB',
-        Status: 'Draft',
+        Status: 'draft',
         IsStandard: true
       },
       old: {},
@@ -304,15 +304,15 @@ describe('PricebookHook', () => {
     expect(mockQl.find).toHaveBeenCalledWith('pricebook', {
       filters: [
         ['IsStandard', '=', true],
-        ['Status', '=', 'Active'],
+        ['Status', '=', 'active'],
         ['Id', '!=', 'pb_11']
       ]
     });
     expect(mockQl.doc.update).toHaveBeenCalledWith('pricebook', 'pb_old_std1', expect.objectContaining({
-      Status: 'Inactive'
+      Status: 'inactive'
     }));
     expect(mockQl.doc.update).toHaveBeenCalledWith('pricebook', 'pb_old_std2', expect.objectContaining({
-      Status: 'Inactive'
+      Status: 'inactive'
     }));
   });
 
@@ -321,13 +321,13 @@ describe('PricebookHook', () => {
       result: {
         Id: 'pb_12',
         Name: 'Expired PB',
-        Status: 'Expired',
+        Status: 'expired',
         IsStandard: false
       },
       previous: {
         Id: 'pb_12',
         Name: 'Expired PB',
-        Status: 'Active',
+        Status: 'active',
         IsStandard: false
       },
       old: {},
@@ -347,14 +347,14 @@ describe('PricebookHook', () => {
       result: {
         Id: 'pb_13',
         Name: 'Status PB',
-        Status: 'Active',
+        Status: 'active',
         IsStandard: false,
         EffectiveDate: '2025-01-01'
       },
       previous: {
         Id: 'pb_13',
         Name: 'Status PB',
-        Status: 'Draft',
+        Status: 'draft',
         IsStandard: false
       },
       old: {},
@@ -365,7 +365,7 @@ describe('PricebookHook', () => {
     await PricebookHook.handler(ctx as any);
 
     expect(mockQl.doc.create).toHaveBeenCalledWith('activity', expect.objectContaining({
-      Subject: 'Pricebook Status Changed: Draft → Active',
+      Subject: 'Pricebook Status Changed: draft → active',
       Type: 'Status Change',
       WhatId: 'pb_13'
     }));
@@ -380,14 +380,14 @@ describe('PricebookHook', () => {
         Name: 'Currency PB',
         CurrencyCode: 'EUR',
         ExchangeRate: 0.85,
-        Status: 'Active'
+        Status: 'active'
       },
       previous: {
         Id: 'pb_14',
         Name: 'Currency PB',
         CurrencyCode: 'USD',
         ExchangeRate: 1.0,
-        Status: 'Active'
+        Status: 'active'
       },
       old: {},
       ql: mockQl,
@@ -408,7 +408,7 @@ describe('PricebookHook', () => {
       result: {
         Id: 'pb_15',
         Name: 'Unchanged PB',
-        Status: 'Active',
+        Status: 'active',
         CurrencyCode: 'USD',
         ExchangeRate: 1.0,
         EffectiveDate: '2025-01-01',
@@ -417,7 +417,7 @@ describe('PricebookHook', () => {
       previous: {
         Id: 'pb_15',
         Name: 'Unchanged PB',
-        Status: 'Active',
+        Status: 'active',
         CurrencyCode: 'USD',
         ExchangeRate: 1.0,
         EffectiveDate: '2025-01-01',

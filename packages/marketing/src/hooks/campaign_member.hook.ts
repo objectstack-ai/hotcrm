@@ -231,7 +231,7 @@ export function calculateEngagementScore(member: any): number {
 
   // Engagement progression
   switch (member.status) {
-    case 'Sent':
+    case 'sent':
       score += 10;
       break;
     case 'Opened':

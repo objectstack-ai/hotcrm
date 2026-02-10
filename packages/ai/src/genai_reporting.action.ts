@@ -508,14 +508,14 @@ function generateMockResults(parsed: ParsedQuery, limit: number): QueryResult {
   const sampleGroups: Record<string, string[]> = {
     region: ['North America', 'Europe', 'Asia Pacific', 'Latin America'],
     country: ['USA', 'UK', 'Germany', 'Japan', 'Brazil'],
-    industry: ['Technology', 'Finance', 'Healthcare', 'Manufacturing', 'Retail'],
-    stage: ['Prospecting', 'Qualification', 'Proposal', 'Negotiation', 'Closed Won'],
+    industry: ['technology', 'finance', 'healthcare', 'Manufacturing', 'Retail'],
+    stage: ['prospecting', 'qualification', 'proposal', 'negotiation', 'closed_won'],
     quarter: ['Q1', 'Q2', 'Q3', 'Q4'],
     month: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-    status: ['Open', 'In Progress', 'Resolved', 'Closed'],
-    priority: ['Low', 'Medium', 'High', 'Critical'],
+    status: ['open', 'in_progress', 'resolved', 'closed'],
+    priority: ['low', 'medium', 'high', 'critical'],
     department: ['Engineering', 'Sales', 'Marketing', 'Support', 'HR'],
-    type: ['New Business', 'Renewal', 'Upsell', 'Cross-sell'],
+    type: ['new_business', 'Renewal', 'Upsell', 'Cross-sell'],
   };
 
   // Create rows based on group by

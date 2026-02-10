@@ -119,10 +119,10 @@ const CampaignStatusChangeTrigger: Hook = {
       console.log(`🔄 Campaign status changed: ${oldCampaign.status} → ${campaign.status}`);
 
       switch (campaign.status) {
-        case 'In Progress':
+        case 'in_progress':
           await handleInProgressStatus(campaign, ctx);
           break;
-        case 'Completed':
+        case 'completed':
           await handleCompletedStatus(campaign, ctx);
           break;
         case 'Aborted':

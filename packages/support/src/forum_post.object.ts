@@ -28,23 +28,23 @@ export const ForumPost = ObjectSchema.create({
     author_type: Field.select({
       label: 'Author Type',
       required: true,
-      defaultValue: 'Customer',
+      defaultValue: 'customer',
       options: [
         {
           "label": "👤 Customer",
-          "value": "Customer"
+          "value": "customer"
         },
         {
           "label": "🛡️ Support Agent",
-          "value": "Agent"
+          "value": "agent"
         },
         {
           "label": "👑 Administrator",
-          "value": "Admin"
+          "value": "admin"
         },
         {
           "label": "⭐ Community Expert",
-          "value": "Expert"
+          "value": "expert"
         }
       ]
     }),

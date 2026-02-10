@@ -22,19 +22,19 @@ export const Contact = ObjectSchema.create({
       options: [
         {
           "label": "Mr.",
-          "value": "Mr."
+          "value": "mr."
         },
         {
           "label": "Ms.",
-          "value": "Ms."
+          "value": "ms."
         },
         {
           "label": "Dr.",
-          "value": "Dr."
+          "value": "dr."
         },
         {
           "label": "Prof.",
-          "value": "Prof."
+          "value": "prof."
         }
       ]
     }),
@@ -52,23 +52,23 @@ export const Contact = ObjectSchema.create({
       options: [
         {
           "label": "C-Level",
-          "value": "C-level"
+          "value": "c_level"
         },
         {
           "label": "VP",
-          "value": "VP"
+          "value": "vp"
         },
         {
           "label": "Director",
-          "value": "Director"
+          "value": "director"
         },
         {
           "label": "Manager",
-          "value": "Manager"
+          "value": "manager"
         },
         {
           "label": "Individual Contributor",
-          "value": "Individual Contributor"
+          "value": "individual_contributor"
         }
       ]
     }),
@@ -89,37 +89,37 @@ export const Contact = ObjectSchema.create({
       options: [
         {
           "label": "High - Final Decision Maker",
-          "value": "High"
+          "value": "high"
         },
         {
           "label": "Medium - Key Influencer",
-          "value": "Medium"
+          "value": "medium"
         },
         {
           "label": "Low - General Participant",
-          "value": "Low"
+          "value": "low"
         }
       ]
     }),
     relationship_strength: Field.select({
       label: 'Relationship Strength',
-      defaultValue: 'Unknown',
+      defaultValue: 'unknown',
       options: [
         {
           "label": "Strong - Strategic Partner",
-          "value": "Strong"
+          "value": "strong"
         },
         {
           "label": "Medium - Good Relationship",
-          "value": "Medium"
+          "value": "medium"
         },
         {
           "label": "Weak - Initial Contact",
-          "value": "Weak"
+          "value": "weak"
         },
         {
           "label": "Unknown",
-          "value": "Unknown"
+          "value": "unknown"
         }
       ]
     }),
@@ -136,11 +136,11 @@ export const Contact = ObjectSchema.create({
         },
         {
           "label": "Mobile",
-          "value": "Mobile"
+          "value": "mobile"
         },
         {
           "label": "WeChat",
-          "value": "WeChat"
+          "value": "wechat"
         }
       ]
     }),

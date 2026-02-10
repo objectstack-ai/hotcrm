@@ -24,17 +24,17 @@ describe('Quote to Order Workflow', () => {
       quote_number: 'Q-00001',
       opportunity_id: 'opp_123',
       account_id: 'acc_123',
-      status: 'Draft',
+      status: 'draft',
       total_price: 50000
     };
 
-    const approvedQuote = { ...mockQuote, status: 'Approved', approval_date: new Date().toISOString() };
+    const approvedQuote = { ...mockQuote, status: 'approved', approval_date: new Date().toISOString() };
     const mockOrder = {
       id: 'order_001',
       order_number: 'ORD-00001',
       quote_id: 'quote_001',
       account_id: 'acc_123',
-      status: 'Activated',
+      status: 'activated',
       total_amount: 50000
     };
 
@@ -42,14 +42,14 @@ describe('Quote to Order Workflow', () => {
     (db.doc.update as Mock).mockResolvedValue(approvedQuote);
 
     const quote = await db.doc.create('quote', mockQuote);
-    expect(quote.status).toBe('Draft');
+    expect(quote.status).toBe('draft');
 
-    const approved = await db.doc.update('quote', quote.id, { status: 'Approved', approval_date: new Date().toISOString() });
-    expect(approved.status).toBe('Approved');
+    const approved = await db.doc.update('quote', quote.id, { status: 'approved', approval_date: new Date().toISOString() });
+    expect(approved.status).toBe('approved');
 
-    const order = await db.doc.create('order', { quote_id: approved.id, account_id: approved.account_id, status: 'Activated', total_amount: approved.total_price });
+    const order = await db.doc.create('order', { quote_id: approved.id, account_id: approved.account_id, status: 'activated', total_amount: approved.total_price });
     expect(order.quote_id).toBe(quote.id);
-    expect(order.status).toBe('Activated');
+    expect(order.status).toBe('activated');
   });
 
   it('should create quote line items', async () => {
@@ -81,18 +81,18 @@ describe('Quote to Order Workflow', () => {
   });
 
   it('should handle quote approval workflow', async () => {
-    const mockQuote = { id: 'quote_approval', total_price: 200000, status: 'Pending Approval' };
-    const approvalRequest = { id: 'appr_001', quote_id: 'quote_approval', status: 'Pending', approver_id: 'mgr_123' };
-    const approvedRequest = { ...approvalRequest, status: 'Approved', approval_date: new Date().toISOString() };
+    const mockQuote = { id: 'quote_approval', total_price: 200000, status: 'pending_approval' };
+    const approvalRequest = { id: 'appr_001', quote_id: 'quote_approval', status: 'pending', approver_id: 'mgr_123' };
+    const approvedRequest = { ...approvalRequest, status: 'approved', approval_date: new Date().toISOString() };
 
     (db.doc.create as Mock).mockResolvedValue(approvalRequest);
-    (db.doc.update as Mock).mockResolvedValueOnce(approvedRequest).mockResolvedValueOnce({ ...mockQuote, status: 'Approved' });
+    (db.doc.update as Mock).mockResolvedValueOnce(approvedRequest).mockResolvedValueOnce({ ...mockQuote, status: 'approved' });
 
     const approval = await db.doc.create('approval_request', approvalRequest);
-    const approved = await db.doc.update('approval_request', approval.id, { status: 'Approved', approval_date: new Date().toISOString() });
-    const quote = await db.doc.update('quote', mockQuote.id, { status: 'Approved' });
+    const approved = await db.doc.update('approval_request', approval.id, { status: 'approved', approval_date: new Date().toISOString() });
+    const quote = await db.doc.update('quote', mockQuote.id, { status: 'approved' });
 
-    expect(approved.status).toBe('Approved');
-    expect(quote.status).toBe('Approved');
+    expect(approved.status).toBe('approved');
+    expect(quote.status).toBe('approved');
   });
 });

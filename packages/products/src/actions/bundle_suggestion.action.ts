@@ -118,7 +118,7 @@ export async function suggestBundles(request: SuggestBundlesRequest): Promise<Su
     const products = productsList.map(p => ({
       product_id: p.product_id,
       product_name: p.name,
-      product_family: p.family || 'General',
+      product_family: p.family || 'general',
       quantity: 1,
       unit_price: priceMap.get(p.product_id) || 10000,
       role: p.role as 'core' | 'complementary' | 'optional'
@@ -150,9 +150,9 @@ export async function suggestBundles(request: SuggestBundlesRequest): Promise<Su
     }
 
     // Industry fit
-    if (account.industry === 'Technology' && products.some(p => p.product_family === 'Software')) {
+    if (account.industry === 'technology' && products.some(p => p.product_family === 'software')) {
       fitScore += 10;
-    } else if (account.industry === 'Healthcare' && products.some(p => p.product_family === 'Compliance')) {
+    } else if (account.industry === 'healthcare' && products.some(p => p.product_family === 'Compliance')) {
       fitScore += 10;
     }
 
@@ -259,7 +259,7 @@ export async function suggestBundles(request: SuggestBundlesRequest): Promise<Su
   }
 
   // Bundle 4: Industry-specific bundle
-  if (account.industry === 'Healthcare') {
+  if (account.industry === 'healthcare') {
     const healthcareProducts = allProducts
       .filter(p => 
         p.family === 'Compliance' || 
@@ -290,7 +290,7 @@ export async function suggestBundles(request: SuggestBundlesRequest): Promise<Su
       .filter(p => 
         p.family === 'Security' || 
         p.family === 'Compliance' ||
-        p.name.includes('Finance') ||
+        p.name.includes('finance') ||
         p.name.includes('Audit')
       )
       .slice(0, 4)
@@ -321,7 +321,7 @@ export async function suggestBundles(request: SuggestBundlesRequest): Promise<Su
   return {
     bundles: topBundles,
     context: {
-      industry: account.industry || 'General',
+      industry: account.industry || 'general',
       companySize: companySize === 'large' ? 'Enterprise' : companySize === 'medium' ? 'Mid-Market' : 'Small Business',
       existingProducts: existingProductNames,
       budget: maxBudget

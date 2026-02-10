@@ -49,50 +49,50 @@ export const PortalUser = ObjectSchema.create({
     status: Field.select({
       label: 'status',
       required: true,
-      defaultValue: 'Active',
+      defaultValue: 'active',
       options: [
         {
           "label": "✅ Active",
-          "value": "Active"
+          "value": "active"
         },
         {
           "label": "⏸️ Suspended",
-          "value": "Suspended"
+          "value": "suspended"
         },
         {
           "label": "🔒 Locked",
-          "value": "Locked"
+          "value": "locked"
         },
         {
           "label": "❌ Deactivated",
-          "value": "Deactivated"
+          "value": "deactivated"
         },
         {
           "label": "⏳ Pending Approval",
-          "value": "PendingApproval"
+          "value": "pendingapproval"
         }
       ]
     }),
     user_role: Field.select({
       label: 'Portal Role',
       required: true,
-      defaultValue: 'Standard',
+      defaultValue: 'standard',
       options: [
         {
           "label": "👑 Admin",
-          "value": "Admin"
+          "value": "admin"
         },
         {
           "label": "👤 Standard",
-          "value": "Standard"
+          "value": "standard"
         },
         {
           "label": "👁️ Read Only",
-          "value": "ReadOnly"
+          "value": "readonly"
         },
         {
           "label": "🎓 Limited",
-          "value": "Limited"
+          "value": "limited"
         }
       ]
     }),
@@ -101,23 +101,23 @@ export const PortalUser = ObjectSchema.create({
       options: [
         {
           "label": "Free",
-          "value": "Free"
+          "value": "free"
         },
         {
           "label": "Basic",
-          "value": "Basic"
+          "value": "basic"
         },
         {
           "label": "Professional",
-          "value": "Professional"
+          "value": "professional"
         },
         {
           "label": "Enterprise",
-          "value": "Enterprise"
+          "value": "enterprise"
         },
         {
           "label": "Premium",
-          "value": "Premium"
+          "value": "premium"
         }
       ]
     }),
@@ -195,11 +195,11 @@ export const PortalUser = ObjectSchema.create({
         },
         {
           "label": "简体中文",
-          "value": "zh-CN"
+          "value": "zh_cn"
         },
         {
           "label": "繁體中文",
-          "value": "zh-TW"
+          "value": "zh_tw"
         },
         {
           "label": "Español",
@@ -225,35 +225,35 @@ export const PortalUser = ObjectSchema.create({
     }),
     time_zone: Field.select({
       label: 'Time Zone',
-      defaultValue: 'Asia/Shanghai',
+      defaultValue: 'asia_shanghai',
       options: [
         {
           "label": "UTC",
-          "value": "UTC"
+          "value": "utc"
         },
         {
           "label": "America/New_York",
-          "value": "America/New_York"
+          "value": "america_new_york"
         },
         {
           "label": "America/Los_Angeles",
-          "value": "America/Los_Angeles"
+          "value": "america_los_angeles"
         },
         {
           "label": "Europe/London",
-          "value": "Europe/London"
+          "value": "europe_london"
         },
         {
           "label": "Asia/Shanghai",
-          "value": "Asia/Shanghai"
+          "value": "asia_shanghai"
         },
         {
           "label": "Asia/Tokyo",
-          "value": "Asia/Tokyo"
+          "value": "asia_tokyo"
         },
         {
           "label": "Australia/Sydney",
-          "value": "Australia/Sydney"
+          "value": "australia_sydney"
         }
       ]
     }),
@@ -275,23 +275,23 @@ export const PortalUser = ObjectSchema.create({
     }),
     digest_frequency: Field.select({
       label: 'email Digest Frequency',
-      defaultValue: 'Weekly',
+      defaultValue: 'weekly',
       options: [
         {
           "label": "Daily",
-          "value": "Daily"
+          "value": "daily"
         },
         {
           "label": "Weekly",
-          "value": "Weekly"
+          "value": "weekly"
         },
         {
           "label": "Monthly",
-          "value": "Monthly"
+          "value": "monthly"
         },
         {
           "label": "Never",
-          "value": "Never"
+          "value": "never"
         }
       ]
     }),
