@@ -113,11 +113,11 @@ export const Task = ObjectSchema.create({
       description: 'Link to the master recurring task',
       readonly: true
     }),
-    what_id: Field.lookup("Account", {
+    what_id: Field.lookup("account", {
       label: 'Related To',
       description: 'Link to related business object'
     }),
-    who_id: Field.lookup("Contact", {
+    who_id: Field.lookup("contact", {
       label: 'Related Person',
       description: 'Link to Contact or Lead'
     }),

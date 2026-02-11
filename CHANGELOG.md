@@ -8,19 +8,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
-- **Upgraded @objectstack to v2.0.1**: All packages upgraded to v2.0.1 (February 9, 2026)
-  - @objectstack/spec: ^2.0.1
-  - @objectstack/cli: ^2.0.1
-  - @objectstack/core: 2.0.1
-  - @objectstack/runtime: 2.0.1
-  - @objectstack/plugin-hono-server: 2.0.1
-  - @objectstack/metadata: ^2.0.1
-  - @objectstack/objectql: ^2.0.1
-- All packages (10 total) now use latest @objectstack v2.0.1 dependencies
+- **Upgraded @objectstack to v2.0.6**: All packages upgraded to v2.0.6 (February 11, 2026)
+  - @objectstack/spec: ^2.0.6
+  - @objectstack/cli: ^2.0.6
+  - @objectstack/studio: ^2.0.6
+  - @objectstack/core: ^2.0.6
+  - @objectstack/runtime: ^2.0.6
+  - @objectstack/plugin-hono-server: ^2.0.6
+  - @objectstack/metadata: ^2.0.6
+  - @objectstack/objectql: ^2.0.6
+- All packages (10 total) now use latest @objectstack v2.0.6 dependencies
 - Updated pnpm lockfile with new dependencies
-- All 496 tests passing with zero breaking changes
+- All 933 tests passing with zero breaking changes
 - Protocol compliance validated: All 65 business objects fully compliant
-- Previous upgrades: v0.8.1 → v0.9.0 → v0.9.1 → v0.9.2 → v1.0.0 → v1.0.4 → v1.1.0 → v2.0.0 → v2.0.1
+- Previous upgrades: v0.8.1 → v0.9.0 → v0.9.1 → v0.9.2 → v1.0.0 → v1.0.4 → v1.1.0 → v2.0.0 → v2.0.1 → v2.0.3 → v2.0.6
+
+### Fixed
+- Fixed 4 remaining PascalCase `Field.lookup()` references in CRM package
+  - `activity.object.ts`: `"Contact"` → `"contact"`, `"Account"` → `"account"`
+  - `task.object.ts`: `"Account"` → `"account"`, `"Contact"` → `"contact"`
+- All `Field.lookup()` references now consistently use snake_case across all 65 objects
 
 ## [Previous]
 

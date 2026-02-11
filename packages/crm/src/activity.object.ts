@@ -118,11 +118,11 @@ export const Activity = ObjectSchema.create({
       label: 'Completed Date',
       readonly: true
     }),
-    who_id: Field.lookup("Contact", {
+    who_id: Field.lookup("contact", {
       label: 'Related Person',
       description: 'Link to Contact or Lead'
     }),
-    what_id: Field.lookup("Account", {
+    what_id: Field.lookup("account", {
       label: 'Related To',
       description: 'Link to Account, Opportunity, Contract, or Case'
     }),
