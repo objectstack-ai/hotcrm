@@ -270,12 +270,95 @@
 - [ ] Add code examples for hooks, actions, and workflows
 - [ ] Update developer guides with latest patterns
 
-### Phase 5: Ecosystem & Advanced Features (Week 11+)
-- [ ] Visual Workflow Builder (no-code canvas)
+### Phase 5: Integration & Business Features (Week 11+)
 - [ ] Integration connectors (Stripe, DocuSign, Slack)
+- [ ] Business Intelligence & Analytics package (2027 roadmap)
+- [ ] Advanced AI Agent workflows
 - [ ] Performance benchmarking and optimization
-- [ ] UI Design System implementation
 - [ ] Production deployment guides (Docker, Kubernetes)
+
+**Note**: Visual Workflow Builder and other low-code platform features are out of scope for HotCRM. These are platform-level capabilities provided by `@objectstack/runtime`.
+
+---
+
+## Future Business Packages (2027+)
+
+These independent business packages are planned for future development:
+
+### 📦 Analytics Package (`@hotcrm/analytics`) — Business Intelligence Cloud
+
+**Planned for:** Q1 2027  
+**Dependencies:** All business packages (CRM, Finance, HR, Marketing, Products, Support)
+
+#### Scope
+- **Reporting Engine**: Custom report builder with aggregations, grouping, and filtering
+- **Dashboard Framework**: KPI cards, charts, and widgets
+- **Predictive Analytics**: Forecasting models for revenue, churn, and growth
+- **Data Visualization**: Charts, graphs, heatmaps, funnels
+- **Cross-Object Analytics**: Join data across multiple business objects
+
+#### Planned Objects
+- `report` - Saved report definitions with filters and groupings
+- `dashboard` - Dashboard layouts with widget configurations
+- `kpi` - Key Performance Indicator definitions
+- `metric` - Business metric calculations
+- `forecast` - Predictive forecast models and results
+- `data_source` - External data source connectors
+
+#### AI Capabilities
+- **Report AI**: Natural language report generation ("Show me top 10 customers by revenue")
+- **Dashboard AI**: Auto-generate dashboard layouts based on role
+- **Insight AI**: Automatic anomaly detection and trend alerts
+- **Forecast AI**: ML-powered revenue and churn predictions
+
+#### Integration Points
+- Pull data from CRM (Accounts, Opportunities, Leads)
+- Pull data from Finance (Revenue, Invoices, Contracts)
+- Pull data from HR (Headcount, Performance, Turnover)
+- Pull data from Marketing (Campaigns, ROI, Attribution)
+- Pull data from Products (Sales, Quotes, Product Mix)
+- Pull data from Support (Case Volume, Resolution Time, CSAT)
+
+### 📦 Integration Package (`@hotcrm/integration`) — iPaaS Connectors
+
+**Planned for:** Q2 2027  
+**Dependencies:** Core business packages
+
+#### Scope
+- **External System Connectors**: Pre-built integrations for popular SaaS
+- **Webhook Management**: Outbound webhooks for real-time events
+- **Data Sync**: Bi-directional sync with external systems
+- **API Middleware**: Transform and route data between systems
+
+#### Planned Connectors
+- Stripe (Payments)
+- DocuSign (E-Signatures)
+- Slack (Notifications)
+- Gmail/Outlook (Email)
+- Zoom (Video Calls)
+- LinkedIn (Lead Enrichment)
+- HubSpot (Marketing Data)
+- Salesforce (Migration)
+
+### 📦 Community Package (`@hotcrm/community`) — Customer Community Portal
+
+**Planned for:** Q3 2027  
+**Dependencies:** Support, CRM packages
+
+#### Scope
+- **Community Forums**: Discussion boards and Q&A
+- **Idea Management**: Customer feature requests and voting
+- **User Groups**: Customer communities by region, industry, etc.
+- **Events Calendar**: User group meetings and webinars
+- **Reputation System**: Badges, points, and leaderboards
+
+#### Planned Objects
+- `community` - Community portal configuration
+- `forum_category` - Forum organization
+- `idea` - Customer feature requests
+- `user_group` - Community segmentation
+- `event` - Community events
+- `badge` - Gamification rewards
 
 ---
 
