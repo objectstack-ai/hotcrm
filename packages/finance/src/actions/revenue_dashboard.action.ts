@@ -9,7 +9,7 @@
  * 3. Quote-to-Close - Conversion funnel from quote to closed deal
  */
 
-import { db } from '../db';
+import { broker } from '../db';
 
 // ============================================================================
 // 1. TOTAL CONTRACT VALUE (TCV)
@@ -84,7 +84,7 @@ export async function calculateTCV(request: CalculateTCVRequest): Promise<Calcul
     filters.push(['contract_type', '=', request.contractType]);
   }
 
-  const contracts = await db.find('contract', {
+  const contracts = await broker.find('contract', {
     filters,
     fields: [
       'contract_number', 'status', 'total_value', 'contract_type',
@@ -96,7 +96,7 @@ export async function calculateTCV(request: CalculateTCVRequest): Promise<Calcul
   // Fetch account data for segmentation
   const accountIds = [...new Set(contracts.map((c: any) => c.account_id).filter(Boolean))];
   const accounts = accountIds.length > 0
-    ? await db.find('account', {
+    ? await broker.find('account', {
         filters: [['account_id', 'in', accountIds]],
         fields: ['account_id', 'name', 'industry', 'type', 'annual_revenue']
       })
@@ -209,7 +209,7 @@ export async function calculateTCV(request: CalculateTCVRequest): Promise<Calcul
   });
   const currentPeriodValue = currentPeriodContracts.reduce((s: number, c: any) => s + (c.total_value || 0), 0);
 
-  const priorContracts = await db.find('contract', {
+  const priorContracts = await broker.find('contract', {
     filters: [
       ['status', 'in', ['activated', 'draft', 'in_approval']],
       ['created_date', '>=', priorStart.toISOString()],
@@ -310,7 +310,7 @@ export async function calculateARR(request: CalculateARRRequest): Promise<Calcul
     filters.push(['account_id', '=', request.accountId]);
   }
 
-  const contracts = await db.find('contract', {
+  const contracts = await broker.find('contract', {
     filters,
     fields: [
       'contract_number', 'account_id', 'total_value', 'billing_frequency',
@@ -323,7 +323,7 @@ export async function calculateARR(request: CalculateARRRequest): Promise<Calcul
   const trendStart = new Date(asOf);
   trendStart.setMonth(trendStart.getMonth() - trendMonths);
 
-  const churnedContracts = await db.find('contract', {
+  const churnedContracts = await broker.find('contract', {
     filters: [
       ['status', 'in', ['cancelled', 'expired']],
       ['end_date', '>=', trendStart.toISOString()],
@@ -361,7 +361,7 @@ export async function calculateARR(request: CalculateARRRequest): Promise<Calcul
   // Fetch account names for top-customer breakdown
   const customerIds = [...uniqueCustomers];
   const accountRecords = customerIds.length > 0
-    ? await db.find('account', {
+    ? await broker.find('account', {
         filters: [['account_id', 'in', customerIds]],
         fields: ['account_id', 'name']
       })
@@ -599,7 +599,7 @@ export async function calculateQuoteToClose(request: CalculateQuoteToCloseReques
     quoteFilters.push(['owner_id', '=', request.salesRepId]);
   }
 
-  const quotes = await db.find('quote', {
+  const quotes = await broker.find('quote', {
     filters: quoteFilters,
     fields: [
       'quote_id', 'quote_number', 'status', 'total_amount', 'opportunity_id',
@@ -612,7 +612,7 @@ export async function calculateQuoteToClose(request: CalculateQuoteToCloseReques
   // Fetch linked opportunities to determine closed-won status and close date
   const oppIds = [...new Set(quotes.map((q: any) => q.opportunity_id).filter(Boolean))];
   const opportunities = oppIds.length > 0
-    ? await db.find('opportunity', {
+    ? await broker.find('opportunity', {
         filters: [['opportunity_id', 'in', oppIds]],
         fields: ['opportunity_id', 'stage', 'close_date', 'amount', 'owner_id']
       })
@@ -624,7 +624,7 @@ export async function calculateQuoteToClose(request: CalculateQuoteToCloseReques
   // Fetch product names
   const productIds = [...new Set(quotes.map((q: any) => q.product_id).filter(Boolean))];
   const products = productIds.length > 0
-    ? await db.find('product', {
+    ? await broker.find('product', {
         filters: [['product_id', 'in', productIds]],
         fields: ['product_id', 'name']
       })
@@ -635,7 +635,7 @@ export async function calculateQuoteToClose(request: CalculateQuoteToCloseReques
   // Fetch rep names
   const repIds = [...new Set(quotes.map((q: any) => q.owner_id).filter(Boolean))];
   const reps = repIds.length > 0
-    ? await db.find('user', {
+    ? await broker.find('user', {
         filters: [['user_id', 'in', repIds]],
         fields: ['user_id', 'name']
       })
