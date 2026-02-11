@@ -53,7 +53,7 @@ const CampaignROIHook: Hook = {
         }
       }
     } catch (error) {
-      console.error('❌ Error in CampaignROIHook:', error);
+      console.error(`❌ Error in CampaignROIHook for campaign ${ctx.result?.campaign_id}:`, error);
       // Don't throw - allow opportunity update to complete even if ROI calculation fails
     }
   }

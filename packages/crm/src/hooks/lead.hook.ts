@@ -3,6 +3,8 @@ import type { Lead } from '../schemas/lead.schema';
 
 // Constants for lead scoring
 const HIGH_SCORE_THRESHOLD = 70;
+const DEFAULT_OPPORTUNITY_CLOSE_DAYS = 30;
+const REVENUE_TO_OPPORTUNITY_RATIO = 0.1;
 const SCORING_WEIGHTS = {
   DATA_COMPLETENESS: 0.2,
   RATING: {
@@ -347,11 +349,11 @@ async function handleLeadConversion(ctx: HookContext): Promise<void> {
 
     // Create Opportunity linked to the new Account
     const opportunity = await ctx.ql.doc.create('opportunity', {
-      Name: `${lead.Company} - Opportunity`,
+      Name: `${lead.Company} - Opportunity (${lead.Id})`,
       AccountId: account?._id,
       StageName: 'prospecting',
-      CloseDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      Amount: lead.AnnualRevenue ? lead.AnnualRevenue * 0.1 : 0,
+      CloseDate: new Date(Date.now() + DEFAULT_OPPORTUNITY_CLOSE_DAYS * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      Amount: lead.AnnualRevenue ? lead.AnnualRevenue * REVENUE_TO_OPPORTUNITY_RATIO : 0,
       LeadSource: lead.LeadSource,
       OwnerId: ctx.session?.userId,
     });
