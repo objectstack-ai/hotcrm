@@ -9,7 +9,9 @@
 
 > 📊 **Development Status**: See [Development Status & Roadmap](DEVELOPMENT_STATUS.md) for current state and next development priorities
 
-> 🚀 **Strategic Plan Available**: See our comprehensive [Strategic Enhancement Plan](docs/README.md) to transform HotCRM into the world's leading AI-Native CRM
+> 🎯 **NEW: Strategic Design Report**: See our comprehensive [Strategic Design Report](docs/STRATEGIC_DESIGN_REPORT.md) with plugin roadmap, industry verticals, and $76M ARR plan ([中文版](docs/STRATEGIC_DESIGN_REPORT_CN.md))
+
+> 🚀 **Strategic Planning**: Complete [Strategic Enhancement Plan](docs/README.md) to transform HotCRM into the world's leading AI-Native CRM
 
 > 📝 **Latest Updates**: Upgraded to @objectstack v2.0.6 (February 11, 2026) - all 933 tests passing with zero breaking changes.
 
