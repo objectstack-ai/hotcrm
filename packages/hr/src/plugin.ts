@@ -47,6 +47,10 @@ import { ApplicationStatusWorkflowTrigger, ApplicationScreeningTrigger } from '.
 import { InterviewSchedulingTrigger, InterviewFeedbackTrigger } from './hooks/interview.hook';
 import { OnboardingChecklistTrigger, OnboardingProgressTrigger } from './hooks/onboarding.hook';
 import { TimeOffBalanceValidationTrigger, TimeOffApprovalTrigger } from './hooks/time_off.hook';
+import { RecruitmentPipelineValidationTrigger, RecruitmentMetricsTrigger } from './hooks/recruitment.hook';
+import { PayrollCalculationValidationTrigger, PayrollApprovalTrigger } from './hooks/payroll.hook';
+import { AttendanceValidationTrigger, AttendanceDuplicateCheckTrigger } from './hooks/attendance.hook';
+import { GoalProgressTrackingTrigger, GoalAlignmentValidationTrigger } from './hooks/goal.hook';
 
 // Import actions
 import CandidateAIAction from './actions/candidate_ai.action';
@@ -101,6 +105,14 @@ export const HRPlugin: any = {
     onboarding_progress: OnboardingProgressTrigger,
     time_off_balance_validation: TimeOffBalanceValidationTrigger,
     time_off_approval: TimeOffApprovalTrigger,
+    recruitment_pipeline_validation: RecruitmentPipelineValidationTrigger,
+    recruitment_metrics: RecruitmentMetricsTrigger,
+    payroll_calculation_validation: PayrollCalculationValidationTrigger,
+    payroll_approval: PayrollApprovalTrigger,
+    attendance_validation: AttendanceValidationTrigger,
+    attendance_duplicate_check: AttendanceDuplicateCheckTrigger,
+    goal_progress_tracking: GoalProgressTrackingTrigger,
+    goal_alignment_validation: GoalAlignmentValidationTrigger,
   },
 
   // Business objects provided by this plugin
