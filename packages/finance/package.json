@@ -2,15 +2,20 @@
   "name": "@hotcrm/finance",
   "version": "1.0.0",
   "description": "Finance module - Contract and payment management",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "license": "MIT",
+  "private": true,
+  "main": "./objectstack.config.ts",
+  "types": "./objectstack.config.ts",
+  "exports": {
+    ".": "./objectstack.config.ts",
+    "./objectstack.config": "./objectstack.config.ts"
+  },
   "scripts": {
-    "build": "tsc",
-    "dev": "tsc --watch",
-    "lint": "eslint src --ext .ts",
-    "studio": "objectstack studio",
-    "validate": "objectstack validate",
-    "compile": "objectstack compile"
+    "dev": "objectstack dev",
+    "start": "objectstack serve",
+    "build": "objectstack compile",
+    "typecheck": "tsc --noEmit",
+    "test": "objectstack test"
   },
   "keywords": [
     "crm",
@@ -19,18 +24,11 @@
     "payments"
   ],
   "author": "HotCRM Team",
-  "license": "MIT",
   "dependencies": {
-    "@objectstack/spec": "^2.0.3",
-    "typescript": "^5.3.0"
-  },
-  "peerDependencies": {
-    "@objectstack/cli": "^2.0.3"
+    "@objectstack/spec": "^2.0.3"
   },
   "devDependencies": {
-    "@types/node": "^25.2.2",
-    "@typescript-eslint/eslint-plugin": "^7.0.0",
-    "@typescript-eslint/parser": "^6.14.0",
-    "eslint": "^8.55.0"
+    "typescript": "^5.0.0",
+    "@objectstack/cli": "^2.0.3"
   }
 }

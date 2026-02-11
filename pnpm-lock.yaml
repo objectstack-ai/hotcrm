@@ -102,25 +102,16 @@ importers:
       axios:
         specifier: ^1.13.5
         version: 1.13.5
-      typescript:
-        specifier: ^5.3.0
-        version: 5.9.3
       zod:
         specifier: ^4.3.6
         version: 4.3.6
     devDependencies:
-      '@types/node':
-        specifier: ^25.2.2
-        version: 25.2.2
-      '@typescript-eslint/eslint-plugin':
-        specifier: ^7.0.0
-        version: 7.0.0(@typescript-eslint/parser@6.21.0(eslint@8.57.1)(typescript@5.9.3))(eslint@8.57.1)(typescript@5.9.3)
-      '@typescript-eslint/parser':
-        specifier: ^6.14.0
-        version: 6.21.0(eslint@8.57.1)(typescript@5.9.3)
-      eslint:
-        specifier: ^8.55.0
-        version: 8.57.1
+      '@objectstack/cli':
+        specifier: ^2.0.3
+        version: 2.0.3(esbuild@0.27.2)
+      typescript:
+        specifier: ^5.0.0
+        version: 5.9.3
 
   packages/crm:
     dependencies:
@@ -130,72 +121,42 @@ importers:
       '@objectstack/spec':
         specifier: ^2.0.3
         version: 2.0.3
-      axios:
-        specifier: ^1.13.5
-        version: 1.13.5
-      typescript:
-        specifier: ^5.3.0
-        version: 5.9.3
       zod:
         specifier: ^4.3.6
         version: 4.3.6
     devDependencies:
-      '@types/node':
-        specifier: ^25.2.2
-        version: 25.2.2
-      '@typescript-eslint/eslint-plugin':
-        specifier: ^7.0.0
-        version: 7.0.0(@typescript-eslint/parser@6.21.0(eslint@8.57.1)(typescript@5.9.3))(eslint@8.57.1)(typescript@5.9.3)
-      '@typescript-eslint/parser':
-        specifier: ^6.14.0
-        version: 6.21.0(eslint@8.57.1)(typescript@5.9.3)
-      eslint:
-        specifier: ^8.55.0
-        version: 8.57.1
+      '@objectstack/cli':
+        specifier: ^2.0.3
+        version: 2.0.3(esbuild@0.27.2)
+      typescript:
+        specifier: ^5.0.0
+        version: 5.9.3
 
   packages/finance:
     dependencies:
       '@objectstack/spec':
         specifier: ^2.0.3
         version: 2.0.3
-      typescript:
-        specifier: ^5.3.0
-        version: 5.9.3
     devDependencies:
-      '@types/node':
-        specifier: ^25.2.2
-        version: 25.2.2
-      '@typescript-eslint/eslint-plugin':
-        specifier: ^7.0.0
-        version: 7.0.0(@typescript-eslint/parser@6.21.0(eslint@8.57.1)(typescript@5.9.3))(eslint@8.57.1)(typescript@5.9.3)
-      '@typescript-eslint/parser':
-        specifier: ^6.14.0
-        version: 6.21.0(eslint@8.57.1)(typescript@5.9.3)
-      eslint:
-        specifier: ^8.55.0
-        version: 8.57.1
+      '@objectstack/cli':
+        specifier: ^2.0.3
+        version: 2.0.3(esbuild@0.27.2)
+      typescript:
+        specifier: ^5.0.0
+        version: 5.9.3
 
   packages/hr:
     dependencies:
       '@objectstack/spec':
         specifier: ^2.0.3
         version: 2.0.3
-      typescript:
-        specifier: ^5.3.0
-        version: 5.9.3
     devDependencies:
-      '@types/node':
-        specifier: ^25.2.2
-        version: 25.2.2
-      '@typescript-eslint/eslint-plugin':
-        specifier: ^7.0.0
-        version: 7.0.0(@typescript-eslint/parser@6.21.0(eslint@8.57.1)(typescript@5.9.3))(eslint@8.57.1)(typescript@5.9.3)
-      '@typescript-eslint/parser':
-        specifier: ^6.14.0
-        version: 6.21.0(eslint@8.57.1)(typescript@5.9.3)
-      eslint:
-        specifier: ^8.55.0
-        version: 8.57.1
+      '@objectstack/cli':
+        specifier: ^2.0.3
+        version: 2.0.3(esbuild@0.27.2)
+      typescript:
+        specifier: ^5.0.0
+        version: 5.9.3
 
   packages/marketing:
     dependencies:
@@ -203,6 +164,9 @@ importers:
         specifier: ^2.0.3
         version: 2.0.3
     devDependencies:
+      '@objectstack/cli':
+        specifier: ^2.0.3
+        version: 2.0.3(esbuild@0.27.2)
       typescript:
         specifier: ^5.0.0
         version: 5.9.3
@@ -212,44 +176,26 @@ importers:
       '@objectstack/spec':
         specifier: ^2.0.3
         version: 2.0.3
-      typescript:
-        specifier: ^5.3.0
-        version: 5.9.3
     devDependencies:
-      '@types/node':
-        specifier: ^25.2.2
-        version: 25.2.2
-      '@typescript-eslint/eslint-plugin':
-        specifier: ^7.0.0
-        version: 7.0.0(@typescript-eslint/parser@6.21.0(eslint@8.57.1)(typescript@5.9.3))(eslint@8.57.1)(typescript@5.9.3)
-      '@typescript-eslint/parser':
-        specifier: ^6.14.0
-        version: 6.21.0(eslint@8.57.1)(typescript@5.9.3)
-      eslint:
-        specifier: ^8.55.0
-        version: 8.57.1
+      '@objectstack/cli':
+        specifier: ^2.0.3
+        version: 2.0.3(esbuild@0.27.2)
+      typescript:
+        specifier: ^5.0.0
+        version: 5.9.3
 
   packages/support:
     dependencies:
       '@objectstack/spec':
         specifier: ^2.0.3
         version: 2.0.3
-      typescript:
-        specifier: ^5.3.0
-        version: 5.9.3
     devDependencies:
-      '@types/node':
-        specifier: ^25.2.2
-        version: 25.2.2
-      '@typescript-eslint/eslint-plugin':
-        specifier: ^7.0.0
-        version: 7.0.0(@typescript-eslint/parser@6.21.0(eslint@8.57.1)(typescript@5.9.3))(eslint@8.57.1)(typescript@5.9.3)
-      '@typescript-eslint/parser':
-        specifier: ^6.14.0
-        version: 6.21.0(eslint@8.57.1)(typescript@5.9.3)
-      eslint:
-        specifier: ^8.55.0
-        version: 8.57.1
+      '@objectstack/cli':
+        specifier: ^2.0.3
+        version: 2.0.3(esbuild@0.27.2)
+      typescript:
+        specifier: ^5.0.0
+        version: 5.9.3
 
 packages:
 
