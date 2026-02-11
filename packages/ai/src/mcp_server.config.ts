@@ -290,11 +290,11 @@ const mcpPrompts: MCPPrompt[] = [
 // ---------------------------------------------------------------------------
 
 export const hotcrmMCPServerConfig: MCPServerConfig = MCPServerConfigSchema.parse({
-  name: 'hotcrm-ai-server',
+  name: 'hotcrm_ai_server',
   label: 'HotCRM AI Server',
   description: 'Model Context Protocol server exposing HotCRM AI capabilities across CRM, Support, HR, Finance, Marketing, and Products',
   serverInfo: {
-    name: 'hotcrm-ai-server',
+    name: 'hotcrm_ai_server',
     version: '1.0.0',
     description: 'HotCRM unified AI server',
     capabilities: {
