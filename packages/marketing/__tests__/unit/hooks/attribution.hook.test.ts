@@ -169,7 +169,8 @@ describe('Attribution Hook - RevenueAttributionTrigger', () => {
     const touchpoint = {
       _id: 'tp_004',
       campaign: 'camp_004',
-      is_conversion: true
+      is_conversion: true,
+      revenue_attributed: 1000
     };
     const allTouchpoints = [
       { _id: 'tp_a', campaign: 'camp_004', attribution_model: 'linear' },
