@@ -38,6 +38,18 @@ import { Attendance } from './attendance.object';
 // Import payroll object
 import { Payroll } from './payroll.object';
 
+// Import hooks
+import { CandidateScoringTrigger, CandidateStatusChangeTrigger } from './hooks/candidate.hook';
+import { EmployeeOnboardingTrigger, EmployeeStatusChangeTrigger, EmployeeDataValidationTrigger } from './hooks/employee.hook';
+import { OfferCreationTrigger, OfferStatusChangeTrigger, OfferApprovalTrigger } from './hooks/offer.hook';
+import { PerformanceReviewRatingTrigger, PerformanceReviewWorkflowTrigger } from './hooks/performance_review.hook';
+
+// Import actions
+import CandidateAIAction from './actions/candidate_ai.action';
+import EmployeeAIAction from './actions/employee_ai.action';
+import PerformanceAIAction from './actions/performance_ai.action';
+import HRAnalyticsAction from './actions/hr_analytics.action';
+
 /**
  * HR Plugin Definition
  * 
@@ -57,6 +69,28 @@ export const HRPlugin: any = {
     // No initialization required for this plugin
   },
   
+  // Actions provided by this plugin
+  actions: {
+    candidate_ai: CandidateAIAction,
+    employee_ai: EmployeeAIAction,
+    performance_ai: PerformanceAIAction,
+    hr_analytics: HRAnalyticsAction,
+  },
+
+  // Triggers/Hooks
+  triggers: {
+    candidate_scoring: CandidateScoringTrigger,
+    candidate_status_change: CandidateStatusChangeTrigger,
+    employee_onboarding: EmployeeOnboardingTrigger,
+    employee_status_change: EmployeeStatusChangeTrigger,
+    employee_data_validation: EmployeeDataValidationTrigger,
+    offer_creation: OfferCreationTrigger,
+    offer_status_change: OfferStatusChangeTrigger,
+    offer_approval: OfferApprovalTrigger,
+    performance_review_rating: PerformanceReviewRatingTrigger,
+    performance_review_workflow: PerformanceReviewWorkflowTrigger,
+  },
+
   // Business objects provided by this plugin
   objects: {
     // Organizational structure

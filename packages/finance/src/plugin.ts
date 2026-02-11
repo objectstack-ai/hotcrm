@@ -19,6 +19,12 @@ import { InvoiceLine } from './invoice_line.object';
 import { ContractBillingHook } from './hooks/contract.hook';
 import { ContractRenewalCheck, ContractExpirationAlert } from './hooks/contract_renewal.hook';
 
+// Import actions
+import RevenueDashboardAction from './actions/revenue_dashboard.action';
+import RevenueForecastAction from './actions/revenue_forecast.action';
+import { analyzeContractRisk, predictRenewal, extractContractTerms, checkCompliance, optimizeContract } from './actions/contract_ai.action';
+import { predictPaymentDefault, predictPaymentDate, detectAnomalies, optimizeCollectionStrategy, forecastCashFlow } from './actions/invoice_prediction.action';
+
 /**
  * Finance Plugin Definition
  * 
@@ -47,6 +53,14 @@ export const FinancePlugin: any = {
     payment: Payment,
   },
   
+  // Actions provided by this plugin
+  actions: {
+    revenue_dashboard: RevenueDashboardAction,
+    revenue_forecast: RevenueForecastAction,
+    contract_ai: { analyzeContractRisk, predictRenewal, extractContractTerms, checkCompliance, optimizeContract },
+    invoice_prediction: { predictPaymentDefault, predictPaymentDate, detectAnomalies, optimizeCollectionStrategy, forecastCashFlow },
+  },
+
   // Triggers
   triggers: {
     contract_billing: ContractBillingHook,

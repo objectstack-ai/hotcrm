@@ -161,72 +161,72 @@ Provide your response in JSON format:
 const INDUSTRY_INSIGHTS: Record<string, { painPoints: string[]; opportunities: string[] }> = {
   Technology: {
     painPoints: [
-      '技术债务和系统现代化需求',
-      '快速扩展和性能优化挑战',
-      '数据安全和合规要求',
-      '人才获取和团队协作效率'
+      'Technical debt and system modernization needs',
+      'Rapid scaling and performance optimization challenges',
+      'Data security and compliance requirements',
+      'Talent acquisition and team collaboration efficiency'
     ],
     opportunities: [
-      '强调云原生架构和可扩展性',
-      '突出API优先设计和集成能力',
-      '展示安全性和合规性认证',
-      '提供技术培训和持续支持'
+      'Emphasize cloud-native architecture and scalability',
+      'Highlight API-first design and integration capabilities',
+      'Showcase security and compliance certifications',
+      'Provide technical training and ongoing support'
     ]
   },
   Finance: {
     painPoints: [
-      '监管合规和风险管理',
-      '数据安全和隐私保护',
-      '系统集成和遗留系统现代化',
-      '客户体验和数字化转型'
+      'Regulatory compliance and risk management',
+      'Data security and privacy protection',
+      'System integration and legacy system modernization',
+      'Customer experience and digital transformation'
     ],
     opportunities: [
-      '强调金融级安全和合规性',
-      '展示审计跟踪和数据治理能力',
-      '提供无缝集成方案',
-      '突出移动优先和现代化UI'
+      'Emphasize financial-grade security and compliance',
+      'Showcase audit trail and data governance capabilities',
+      'Provide seamless integration solutions',
+      'Highlight mobile-first and modern UI'
     ]
   },
   Healthcare: {
     painPoints: [
-      'HIPAA合规和患者隐私',
-      '系统互操作性和数据交换',
-      '运营效率和成本控制',
-      '患者体验和满意度'
+      'HIPAA compliance and patient privacy',
+      'System interoperability and data exchange',
+      'Operational efficiency and cost control',
+      'Patient experience and satisfaction'
     ],
     opportunities: [
-      '强调医疗行业合规性',
-      '展示HL7/FHIR集成能力',
-      '提供工作流程优化方案',
-      '突出患者门户和移动访问'
+      'Emphasize healthcare industry compliance',
+      'Showcase HL7/FHIR integration capabilities',
+      'Provide workflow optimization solutions',
+      'Highlight patient portal and mobile access'
     ]
   },
   Retail: {
     painPoints: [
-      '全渠道客户体验',
-      '库存管理和供应链优化',
-      '客户数据整合和个性化',
-      '季节性需求波动'
+      'Omni-channel customer experience',
+      'Inventory management and supply chain optimization',
+      'Customer data integration and personalization',
+      'Seasonal demand fluctuations'
     ],
     opportunities: [
-      '强调全渠道营销能力',
-      '展示实时库存可见性',
-      '提供AI驱动的个性化推荐',
-      '突出弹性扩展能力'
+      'Emphasize omni-channel marketing capabilities',
+      'Showcase real-time inventory visibility',
+      'Provide AI-driven personalized recommendations',
+      'Highlight elastic scaling capabilities'
     ]
   },
   Manufacturing: {
     painPoints: [
-      'ERP系统集成和数据孤岛',
-      '供应链可见性和管理',
-      '质量控制和合规',
-      '设备维护和停机时间'
+      'ERP system integration and data silos',
+      'Supply chain visibility and management',
+      'Quality control and compliance',
+      'Equipment maintenance and downtime'
     ],
     opportunities: [
-      '强调企业系统集成能力',
-      '展示供应链协作功能',
-      '提供质量管理模块',
-      '突出预测性维护和IoT集成'
+      'Emphasize enterprise system integration capabilities',
+      'Showcase supply chain collaboration features',
+      'Provide quality management modules',
+      'Highlight predictive maintenance and IoT integration'
     ]
   }
 };
@@ -382,24 +382,24 @@ async function callLLM(prompt: string): Promise<string> {
   
   // Mock response for demonstration
   const mockResponse = {
-    summary: "该客户目前处于积极的商机评估阶段。最近的互动显示出对我们解决方案的浓厚兴趣，特别是在数据集成和自动化工作流方面。客户的IT团队已经参与技术评估，这是一个积极信号。需要注意的是，他们正在与2-3家供应商进行比较，价格敏感度较高。建议在下次沟通中强调ROI和长期价值，而非单纯的功能对比。客户的决策时间线预计在本季度末，需要保持积极跟进但避免过度推销。",
+    summary: "The customer is currently in an active opportunity evaluation phase. Recent interactions show strong interest in our solution, particularly in data integration and workflow automation. The customer's IT team is already involved in technical evaluation, which is a positive signal. It's worth noting that they are comparing 2-3 vendors with relatively high price sensitivity. It is recommended to emphasize ROI and long-term value in the next communication rather than pure feature comparison. The customer's decision timeline is expected by end of this quarter, requiring active follow-up while avoiding over-selling.",
     nextSteps: [
-      "安排技术深度演示，重点展示数据集成和自动化功能",
-      "准备定制化的ROI分析报告，基于客户的具体使用场景",
-      "邀请现有同行业客户进行成功案例分享",
-      "与决策者进行一对一会议，了解他们的核心关注点",
-      "提供试用环境，让客户IT团队进行实际测试"
+      "Schedule an in-depth technical demo focusing on data integration and automation features",
+      "Prepare a customized ROI analysis report based on the customer's specific use cases",
+      "Invite existing customers from the same industry to share success stories",
+      "Arrange a one-on-one meeting with the decision maker to understand their core concerns",
+      "Provide a trial environment for the customer's IT team to conduct hands-on testing"
     ],
     talkingPoints: [
-      "强调我们的API优先架构如何简化与现有系统的集成",
-      "展示自动化工作流如何减少人工操作，提高团队效率30-40%",
-      "分享同行业客户在6-12个月内实现正向ROI的案例",
-      "突出我们的安全性和合规性认证，特别是对数据隐私的保护",
-      "提供灵活的定价方案和分阶段实施计划，降低初期投入风险"
+      "Emphasize how our API-first architecture simplifies integration with existing systems",
+      "Demonstrate how automated workflows reduce manual operations and improve team efficiency by 30-40%",
+      "Share case studies of same-industry customers achieving positive ROI within 6-12 months",
+      "Highlight our security and compliance certifications, especially data privacy protection",
+      "Offer flexible pricing plans and phased implementation to reduce initial investment risk"
     ],
     sentiment: "positive",
     engagementScore: 75,
-    reasoning: "客户积极参与评估，IT团队深度介入，但存在价格顾虑和竞争压力"
+    reasoning: "Customer is actively participating in evaluation, IT team is deeply involved, but there are price concerns and competitive pressure"
   };
 
   // Simulate API delay

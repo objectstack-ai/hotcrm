@@ -24,6 +24,18 @@ import { AssignmentRule } from './assignment_rule.object';
 // Import hooks
 import { LeadScoringTrigger, LeadStatusChangeTrigger } from './hooks/lead.hook';
 import { OpportunityValidation, OpportunityStageChange } from './hooks/opportunity.hook';
+import { AccountHealthScoreTrigger, AccountHierarchyTrigger, AccountStatusAutomationTrigger } from './hooks/account.hook';
+import { ActivityRelatedObjectUpdatesTrigger, ActivityCompletionTrigger, ActivityTypeValidationTrigger } from './hooks/activity.hook';
+import { ContactDecisionChainTrigger, ContactDecisionMakerValidationTrigger, ContactDuplicateDetectionTrigger, ContactRelationshipStrengthTrigger } from './hooks/contact.hook';
+
+// Import actions
+import EnhancedLeadScoringAction from './actions/enhanced_lead_scoring.action';
+import LeadAIAction from './actions/lead_ai.action';
+import OpportunityAIAction from './actions/opportunity_ai.action';
+import SmartBriefingAction from './actions/ai_smart_briefing.action';
+import SalesPerformanceAction from './actions/sales_performance.action';
+import { calculateAccountHealth, predictChurn, generateRecommendations, assignTerritory, enrichAccount } from './actions/account_ai.action';
+import { enrichContact, detectBuyingIntent, analyzeSentiment, predictBestContactTime, findDuplicates } from './actions/contact_ai.action';
 
 /**
  * CRM Plugin Definition
@@ -47,7 +59,14 @@ export const CRMPlugin: any = {
   
   // Actions provided by this plugin
   actions: {
-    lead_convert: LeadConvertAction
+    lead_convert: LeadConvertAction,
+    enhanced_lead_scoring: EnhancedLeadScoringAction,
+    lead_ai: LeadAIAction,
+    opportunity_ai: OpportunityAIAction,
+    ai_smart_briefing: SmartBriefingAction,
+    sales_performance: SalesPerformanceAction,
+    account_ai: { calculateAccountHealth, predictChurn, generateRecommendations, assignTerritory, enrichAccount },
+    contact_ai: { enrichContact, detectBuyingIntent, analyzeSentiment, predictBestContactTime, findDuplicates },
   },
 
   // Triggers/Hooks
@@ -56,6 +75,16 @@ export const CRMPlugin: any = {
     lead_status_change: LeadStatusChangeTrigger,
     opportunity_validation: OpportunityValidation,
     opportunity_stage_change: OpportunityStageChange,
+    account_health_score: AccountHealthScoreTrigger,
+    account_hierarchy: AccountHierarchyTrigger,
+    account_status_automation: AccountStatusAutomationTrigger,
+    activity_related_updates: ActivityRelatedObjectUpdatesTrigger,
+    activity_completion: ActivityCompletionTrigger,
+    activity_type_validation: ActivityTypeValidationTrigger,
+    contact_decision_chain: ContactDecisionChainTrigger,
+    contact_decision_maker_validation: ContactDecisionMakerValidationTrigger,
+    contact_duplicate_detection: ContactDuplicateDetectionTrigger,
+    contact_relationship_strength: ContactRelationshipStrengthTrigger,
   },
 
   // Business objects provided by this plugin

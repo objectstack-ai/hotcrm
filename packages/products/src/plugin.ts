@@ -24,6 +24,13 @@ import { ApprovalRequest } from './approval_request.object';
 import { DiscountSchedule } from './discount_schedule.object';
 
 import { QuotePricingHook } from './hooks/quote.hook';
+import ProductHook from './hooks/product.hook';
+import PricebookHook from './hooks/pricebook.hook';
+
+// Import actions
+import BundleSuggestionAction from './actions/bundle_suggestion.action';
+import PricingOptimizerAction from './actions/pricing_optimizer.action';
+import ProductRecommendationAction from './actions/product_recommendation.action';
 
 /**
  * Products Plugin Definition
@@ -58,8 +65,17 @@ export const ProductsPlugin: any = {
     discount_schedule: DiscountSchedule,
   },
   
+  // Actions provided by this plugin
+  actions: {
+    bundle_suggestion: BundleSuggestionAction,
+    pricing_optimizer: PricingOptimizerAction,
+    product_recommendation: ProductRecommendationAction,
+  },
+
   triggers: {
-    quote_pricing: QuotePricingHook
+    quote_pricing: QuotePricingHook,
+    product_validation: ProductHook,
+    pricebook_validation: PricebookHook,
   },
 
   // Navigation structure for this plugin
