@@ -28,6 +28,9 @@ import ProductHook from './hooks/product.hook';
 import PricebookHook from './hooks/pricebook.hook';
 import { QuoteLineCalculationTrigger, QuoteLineTotalUpdateTrigger } from './hooks/quote_line_item.hook';
 import { ApprovalRequestCreationTrigger, ApprovalDecisionTrigger } from './hooks/approval_request.hook';
+import { ProductBundleValidationTrigger, ProductBundleComponentCompletenessTrigger } from './hooks/product_bundle.hook';
+import { PriceRuleValidationTrigger, PriceRuleConflictDetectionTrigger } from './hooks/price_rule.hook';
+import { DiscountScheduleActivationTrigger, DiscountScheduleOverlapDetectionTrigger } from './hooks/discount_schedule.hook';
 
 // Import actions
 import BundleSuggestionAction from './actions/bundle_suggestion.action';
@@ -82,6 +85,12 @@ export const ProductsPlugin: any = {
     quote_line_total_update: QuoteLineTotalUpdateTrigger,
     approval_request_creation: ApprovalRequestCreationTrigger,
     approval_decision: ApprovalDecisionTrigger,
+    product_bundle_validation: ProductBundleValidationTrigger,
+    product_bundle_component_completeness: ProductBundleComponentCompletenessTrigger,
+    price_rule_validation: PriceRuleValidationTrigger,
+    price_rule_conflict_detection: PriceRuleConflictDetectionTrigger,
+    discount_schedule_activation: DiscountScheduleActivationTrigger,
+    discount_schedule_overlap_detection: DiscountScheduleOverlapDetectionTrigger,
   },
 
   // Navigation structure for this plugin
