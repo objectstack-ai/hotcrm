@@ -1,0 +1,85 @@
+---
+title: Customization Guide
+description: Learn how to tailor HotCRM to your business needs — custom fields, objects, layouts, views, and workflow automation for admins and power users.
+---
+
+# Customization Guide
+
+HotCRM is designed to be customized without writing code. As an admin or power user, you can add fields, create objects, redesign page layouts, and automate business processes — all from the setup interface.
+
+## Custom Fields
+
+Add fields to any standard or custom object to capture data unique to your business.
+
+### Supported Field Types
+- **Text**: Single-line or multi-line text for names, descriptions, and notes
+- **Number**: Integer or decimal values for quantities and scores
+- **Currency**: Monetary values with automatic currency formatting
+- **Date**: Date or Date/Time for deadlines, milestones, and timestamps
+- **Picklist**: Dropdown selections for standardized values (e.g., Industry, Lead Source)
+- **Checkbox**: True/false toggles for flags and opt-ins
+- **Lookup**: Reference fields that link records to other objects (e.g., Contact → Account)
+
+### Field Configuration
+- **Required vs Optional**: Mark fields as required to enforce data entry at the point of creation
+- **Validation Rules**: Define conditions that data must meet — "Discount cannot exceed 40%," "Close Date must be in the future"
+- **Formula Fields**: Create calculated values from other fields in real-time (e.g., `annual_revenue = monthly_revenue * 12`)
+- **Field-Level Security**: Control which user profiles can view or edit sensitive fields such as salary, commission, or SSN
+
+## Custom Objects
+
+When your data doesn't fit into standard objects like Account, Contact, or Opportunity, create a custom object.
+
+### When to Create a Custom Object
+- Tracking information that has no natural home in existing objects (e.g., Projects, Assets, Certifications)
+- Managing many-to-many relationships between existing objects (junction objects)
+- Building a vertical application on top of HotCRM (e.g., Property Management, Event Planning)
+
+### Configuration Options
+- **Naming Conventions**: Use clear, singular names that describe the record (e.g., `Project`, `Certification`)
+- **Relationships**: Define Lookup or Master-Detail relationships to connect your object to existing data
+- **Enable Features**: Turn on search indexing, REST API access, and field history tracking per object
+
+## Page Layouts
+
+Control how record detail pages appear to users by organizing fields, sections, and related data.
+
+- **Sections & Tabs**: Group related fields into collapsible sections or separate tabs for a clean interface
+- **Conditional Visibility**: Show or hide fields based on record type or user role — sales reps see different fields than support agents
+- **Related Lists**: Display child records on a parent page (e.g., Contacts and Opportunities on an Account page)
+- **Quick Actions**: Add buttons for common tasks like Log a Call, Send Email, Create Follow-Up Task, or Change Owner
+
+## List Views
+
+List views let users browse, filter, and manage records in a table format.
+
+- **Custom Views**: Create views tailored to specific workflows — "My Open Opportunities," "Unassigned Leads," "High-Priority Cases"
+- **Column Selection**: Choose which fields appear as columns and set their display order
+- **Filter Criteria**: Combine multiple conditions to narrow results (e.g., Stage = Negotiation AND Amount > 50,000)
+- **Sorting & Grouping**: Sort by any column and optionally group records by a category field
+- **Sharing**: Share views with your team, a specific role, or the entire organization
+- **Inline Editing**: Edit field values directly in the list view without opening the full record
+
+## Workflow Automation
+
+Automate repetitive tasks and enforce business rules without writing code.
+
+### Approval Processes
+Route records for approval based on criteria — for example, any discount above 20% requires manager sign-off before the quote is finalized.
+
+### Validation Rules
+Prevent invalid data from being saved. Examples: "Close Date cannot be in the past," "Phone number must include a country code."
+
+### Assignment Rules
+Automatically route new records to the right owner based on territory, round-robin, or custom criteria.
+
+### Escalation Rules
+Auto-escalate overdue items — if a support case is not resolved within 24 hours, reassign it to a senior agent and notify the manager.
+
+## Best Practices
+
+1. **Plan Before You Build**: Map out your data model and relationships on paper before creating custom objects and fields
+2. **Use Picklists Over Free Text**: Standardized values improve reporting accuracy and make filtering reliable
+3. **Limit Required Fields**: Too many required fields slow down data entry — only require what is truly essential
+4. **Review Regularly**: Audit unused fields and objects quarterly to keep your org clean and performant
+5. **Document Your Changes**: Maintain a changelog of customizations so future admins understand why each field or rule exists
