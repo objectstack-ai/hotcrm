@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: hotcrm
-          image: hotcrm/app:latest
+          image: hotcrm/app:1.0.0
           ports:
             - containerPort: 3000
               protocol: TCP

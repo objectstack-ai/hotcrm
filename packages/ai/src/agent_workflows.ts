@@ -8,6 +8,10 @@
  * These workflows define multi-step agent pipelines that coordinate
  * AI tools, resources, and prompts from the MCP server to deliver
  * end-to-end business outcomes.
+ *
+ * Note: Parameter values using ${...} syntax are workflow engine
+ * template placeholders resolved at runtime, not JavaScript template
+ * literals.
  */
 
 // ---------------------------------------------------------------------------
