@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: hotcrm
+  labels:
+    app.kubernetes.io/name: hotcrm
+    app.kubernetes.io/part-of: hotcrm

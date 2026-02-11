@@ -39,6 +39,22 @@ export type {
 // MCP Server Configuration
 export { hotcrmMCPServerConfig } from './mcp_server.config';
 
+// Agent Workflows
+export {
+  AgentWorkflows,
+  LeadToClosePipeline,
+  Customer360Intelligence,
+  ChurnPreventionWorkflow,
+  IntelligentCaseResolution,
+  TalentAcquisitionPipeline,
+  RevenueOptimizationWorkflow,
+} from './agent_workflows';
+export type { AgentWorkflow, AgentStep } from './agent_workflows';
+
+// Performance Benchmarking
+export { Benchmark, BenchmarkSuite, formatBenchmarkResults } from './benchmark';
+export type { BenchmarkResult, BenchmarkOptions, BenchmarkSuiteEntry } from './benchmark';
+
 // Re-export all utilities
 export {
   calculateConfidence,
