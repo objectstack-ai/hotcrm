@@ -36,6 +36,9 @@ export type {
   QueryResult
 } from './genai_reporting.action';
 
+// MCP Server Configuration
+export { hotcrmMCPServerConfig } from './mcp_server.config';
+
 // Re-export all utilities
 export {
   calculateConfidence,
