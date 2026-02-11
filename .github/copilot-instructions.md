@@ -88,3 +88,34 @@ We enforce strict file naming to separate concerns. Files should be located in `
 - **No Engine Code**: Do not try to modify the core runtime code. Focus on the *usage* of the runtime.
 - **Dependencies**: HotCRM packages should depend on `@objectstack/runtime` (as peerDependency) and other sibling packages if structure allows.
 - **Tone**: Act as a Senior 10x Engineer. Be concise, professional, and technically accurate.
+
+## 🚫 Out of Scope (Platform Features)
+
+The following features are **NOT** in the development scope of HotCRM. These are platform-level features that should be provided by `@objectstack/runtime` or other platform packages:
+
+### Platform Infrastructure (Handled by @objectstack/runtime)
+- **Visual Workflow Builder**: No-code workflow designer with drag-and-drop canvas
+- **Formula Builder**: Visual formula editor with function palette
+- **Report Designer**: Drag-and-drop report and dashboard builder
+- **Page Layout Designer**: Visual UI layout editor
+- **Process Builder**: Visual automation designer
+- **Approval Designer**: Visual approval workflow designer
+
+### Low-Level Platform Services
+- **Database Engine**: SQL/NoSQL database implementation
+- **Authentication System**: OAuth, SAML, SSO providers
+- **Multi-Tenancy**: Tenant isolation and management
+- **Data Encryption**: Field-level and database encryption
+- **API Gateway**: Rate limiting, throttling, API versioning
+- **Caching Layer**: Redis/Memcached integration
+- **Message Queue**: RabbitMQ, Kafka integration
+- **File Storage**: S3, Azure Blob, GCS integration
+
+### Development Tools
+- **Schema Migration Tools**: Database schema versioning
+- **CLI Scaffolding**: Code generation CLI tools
+- **Metadata Deployment**: Package deployment pipeline
+- **Version Control Integration**: Git hooks, change tracking
+- **IDE Extensions**: VS Code plugins, IntelliSense
+
+**Focus Area**: HotCRM focuses exclusively on **business domain packages** (CRM, Finance, HR, Marketing, Products, Support) and their **business logic, data models, and AI capabilities**.
