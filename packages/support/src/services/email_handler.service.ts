@@ -1,4 +1,4 @@
-import { db } from '../db';
+import { broker } from '../db';
 
 /**
  * Service: EmailHandler
@@ -43,10 +43,10 @@ export class EmailHandler {
       // Add email message to existing case
       await this.logEmailMessage(caseId, payload, 'Inbound');
       // Update status if needed
-      await db.update('case', caseId, { status: 'new_response', last_activity_date: new Date().toISOString() });
+      await broker.update('case', caseId, { status: 'new_response', last_activity_date: new Date().toISOString() });
     } else {
       // Create new Case
-      const newCase = await db.insert('case', {
+      const newCase = await broker.insert('case', {
         subject: payload.subject,
         description: payload.body,
         origin: 'email',
@@ -70,7 +70,7 @@ export class EmailHandler {
   }
 
   private static async findOrCreateContact(email: string, name: string) {
-    const contacts = await db.find('contact', { filters: [['email', '=', email]] });
+    const contacts = await broker.find('contact', { filters: [['email', '=', email]] });
     if (contacts.length > 0) {
       return contacts[0];
     }
@@ -79,7 +79,7 @@ export class EmailHandler {
     // For now, we assume we create a standalone contact or lead
     // Here we'll just create a contact without an account for simplicity
     const nameParts = name.split(' ');
-    const newContact = await db.insert('contact', {
+    const newContact = await broker.insert('contact', {
       first_name: nameParts[0],
       last_name: nameParts.slice(1).join(' ') || 'unknown',
       email: email,
@@ -89,14 +89,14 @@ export class EmailHandler {
   }
 
   private static async findCaseByNumber(caseNumber: string) {
-    const cases = await db.find('case', { filters: [['case_number', '=', caseNumber]] });
+    const cases = await broker.find('case', { filters: [['case_number', '=', caseNumber]] });
     return cases.length > 0 ? cases[0] : null;
   }
 
   private static async logEmailMessage(caseId: string, email: any, direction: 'Inbound' | 'Outbound') {
     // In a real system, we would have an 'email_message' object
     // using 'activity' for now as a proxy
-    await db.insert('activity', {
+    await broker.insert('activity', {
       subject: (direction === 'Inbound' ? 'Email Received: ' : 'Email Sent: ') + email.subject,
       type: 'email',
       status: 'completed',

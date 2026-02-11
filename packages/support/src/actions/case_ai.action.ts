@@ -11,7 +11,7 @@
  * 5. Sentiment Analysis - Customer emotion tracking
  */
 
-import { db } from '../db';
+import { broker } from '../db';
 
 // ============================================================================
 // 1. AUTO-CATEGORIZATION
@@ -54,7 +54,7 @@ export async function autoCategorizeCase(request: AutoCategorizationRequest): Pr
 
   // If case ID provided, fetch case details
   if (request.caseId) {
-    const caseRecord = await db.doc.get('Case', request.caseId, {
+    const caseRecord = await broker.findOne('Case', request.caseId, {
       fields: ['Subject', 'Description']
     });
     subject = caseRecord.Subject;
@@ -139,7 +139,7 @@ Classify the case and recommend routing.
   // Auto-update case if ID provided
   let updated = false;
   if (request.caseId) {
-    await db.doc.update('Case', request.caseId, {
+    await broker.update('Case', request.caseId, {
       Type: parsed.caseType,
       Product: parsed.product,
       Feature: parsed.feature,
@@ -198,7 +198,7 @@ export async function assignCaseIntelligently(request: IntelligentAssignmentRequ
   const { caseId } = request;
 
   // Fetch case data
-  const caseRecord = await db.doc.get('Case', caseId, {
+  const caseRecord = await broker.findOne('Case', caseId, {
     fields: ['Subject', 'Description', 'Type', 'Product', 'Priority', 'Severity']
   });
 
@@ -316,12 +316,12 @@ Select the best agent and provide top 3 alternatives with detailed scoring.
   const parsed = JSON.parse(llmResponse);
 
   // Auto-assign case to recommended agent only if not already assigned
-  const currentCase = await db.doc.get('Case', caseId, {
+  const currentCase = await broker.findOne('Case', caseId, {
     fields: ['OwnerId']
   });
 
   if (!currentCase.OwnerId) {
-    await db.doc.update('Case', caseId, {
+    await broker.update('Case', caseId, {
       OwnerId: parsed.recommendedAgent.userId
     });
   }
@@ -372,7 +372,7 @@ export async function searchKnowledgeBase(request: KnowledgeBaseRequest): Promis
 
   // If case ID provided, build query from case
   if (request.caseId && !query) {
-    const caseRecord = await db.doc.get('Case', request.caseId, {
+    const caseRecord = await broker.findOne('Case', request.caseId, {
       fields: ['Subject', 'Description']
     });
     query = `${caseRecord.Subject} ${caseRecord.Description}`;
@@ -462,7 +462,7 @@ Perform semantic search across our knowledge base and identify the most relevant
   let responsePosted = false;
   if (request.caseId && parsed.suggestedResponse.confidence > 75) {
     // Note: Using system user ID - in production, configure actual AI assistant user
-    await db.doc.create('CaseComment', {
+    await broker.insert('CaseComment', {
       ParentId: request.caseId,
       CommentBody: parsed.suggestedResponse.response,
       IsPublished: false, // Internal suggestion only
@@ -531,7 +531,7 @@ export async function predictSLABreach(request: SLABreachPredictionRequest): Pro
   const { caseId } = request;
 
   // Fetch case data
-  const caseRecord = await db.doc.get('Case', caseId, {
+  const caseRecord = await broker.findOne('Case', caseId, {
     fields: [
       'CreatedDate', 'Priority', 'Severity', 'Status', 'Type', 
       'Product', 'OwnerId', 'FirstResponseDate'
@@ -563,7 +563,7 @@ export async function predictSLABreach(request: SLABreachPredictionRequest): Pro
   const resolutionRemaining = targets.resolution - hoursOpen;
 
   // Fetch recent activities to assess progress
-  const activities = await db.find('Activity', {
+  const activities = await broker.find('Activity', {
     filters: [['WhatId', '=', caseId]],
     sort: 'ActivityDate desc',
     limit: 10
@@ -666,12 +666,12 @@ Assess breach probability (0-100) and risk level:
 
   // Auto-escalate if breach probability is high and not already escalated
   if (parsed.breachProbability > 70) {
-    const currentCase = await db.doc.get('Case', caseId, {
+    const currentCase = await broker.findOne('Case', caseId, {
       fields: ['IsEscalated']
     });
 
     if (!currentCase.IsEscalated) {
-      await db.doc.update('Case', caseId, {
+      await broker.update('Case', caseId, {
         IsEscalated: true,
         EscalationReason: `AI Predicted SLA Breach: ${parsed.breachProbability}% probability`
       });
@@ -732,12 +732,12 @@ export async function analyzeSentiment(request: SentimentAnalysisRequest): Promi
 
   // If case ID provided, fetch case description and comments
   if (request.caseId && !textToAnalyze) {
-    const caseRecord = await db.doc.get('Case', request.caseId, {
+    const caseRecord = await broker.findOne('Case', request.caseId, {
       fields: ['Subject', 'Description']
     });
 
     // Fetch recent comments
-    const comments = await db.find('CaseComment', {
+    const comments = await broker.find('CaseComment', {
       filters: [['ParentId', '=', request.caseId]],
       sort: 'CreatedDate desc',
       limit: 5
@@ -854,7 +854,7 @@ Provide comprehensive sentiment analysis with:
   // Note: SentimentScore and ChurnRisk are custom fields that should be added to Case schema
   let priorityAdjusted = false;
   if (request.caseId) {
-    const caseRecord = await db.doc.get('Case', request.caseId, {
+    const caseRecord = await broker.findOne('Case', request.caseId, {
       fields: ['Priority', 'IsEscalated']
     });
 
@@ -864,7 +864,7 @@ Provide comprehensive sentiment analysis with:
       parsed.customerHealth.churnRisk;
 
     if (shouldEscalate && caseRecord.Priority !== 'critical' && !caseRecord.IsEscalated) {
-      await db.doc.update('Case', request.caseId, {
+      await broker.update('Case', request.caseId, {
         Priority: parsed.urgency === 'critical' ? 'critical' : 'high',
         SentimentScore: parsed.sentimentScore, // Custom field
         ChurnRisk: parsed.customerHealth.churnRisk // Custom field
@@ -872,7 +872,7 @@ Provide comprehensive sentiment analysis with:
       priorityAdjusted = true;
     } else {
       // Just update sentiment tracking fields
-      await db.doc.update('Case', request.caseId, {
+      await broker.update('Case', request.caseId, {
         SentimentScore: parsed.sentimentScore,
         ChurnRisk: parsed.customerHealth.churnRisk
       });

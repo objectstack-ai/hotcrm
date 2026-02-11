@@ -9,7 +9,7 @@
  * 3. SLA Compliance Metrics - Measure adherence to service level agreements
  */
 
-import { db } from '../db';
+import { broker } from '../db';
 
 // ============================================================================
 // SHARED UTILITIES
@@ -117,7 +117,7 @@ export async function analyzeFirstResponseTime(
   if (priority) filters.push(['priority', '=', priority]);
   if (channel) filters.push(['channel', '=', channel]);
 
-  const cases = await db.find('case', {
+  const cases = await broker.find('case', {
     filters,
     fields: [
       'priority', 'channel', 'created_date', 'first_response_date',
@@ -335,7 +335,7 @@ export async function analyzeCSAT(
   ];
   if (category) caseFilters.push(['category', '=', category]);
 
-  const cases = await db.find('case', {
+  const cases = await broker.find('case', {
     filters: caseFilters,
     fields: [
       'satisfaction_rating', 'owner_id', 'category', 'priority',
@@ -345,7 +345,7 @@ export async function analyzeCSAT(
   });
 
   // Fetch total cases for response rate calculation
-  const allCases = await db.find('case', {
+  const allCases = await broker.find('case', {
     filters: [
       ['created_date', '>', cutoffDate],
       ['status', '=', 'closed']
@@ -356,7 +356,7 @@ export async function analyzeCSAT(
   // Filter by team if specified
   let filteredCases = cases;
   if (teamId) {
-    const teamMembers = await db.find('team_member', {
+    const teamMembers = await broker.find('team_member', {
       filters: [['team_id', '=', teamId]],
       fields: ['user_id']
     });
@@ -644,7 +644,7 @@ export async function analyzeSLACompliance(
   ];
   if (slaType) milestoneFilters.push(['type', '=', slaType]);
 
-  const milestones = await db.find('sla_milestone', {
+  const milestones = await broker.find('sla_milestone', {
     filters: milestoneFilters,
     fields: [
       'type', 'target_date', 'completed_date', 'status', 'priority',
@@ -830,7 +830,7 @@ export async function analyzeSLACompliance(
   }
 
   // Risk analysis
-  const openMilestones = await db.find('sla_milestone', {
+  const openMilestones = await broker.find('sla_milestone', {
     filters: [
       ['status', '=', 'in_progress'],
       ['target_date', '!=', null]

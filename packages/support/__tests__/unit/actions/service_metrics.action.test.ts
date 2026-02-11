@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeEach, Mock } from 'vitest';
 
 vi.mock('../../../src/db', () => ({
-  db: {
+  broker: {
     find: vi.fn()
   }
 }));
 
-import { db } from '../../../src/db';
+import { broker } from '../../../src/db';
 import {
   analyzeFirstResponseTime,
   analyzeCSAT,
@@ -35,7 +35,7 @@ describe('analyzeFirstResponseTime', () => {
       { priority: 'low', channel: 'email', created_date: new Date(now - 600 * 60000).toISOString(), first_response_date: new Date(now - 300 * 60000).toISOString(), status: 'closed', owner_id: 'agent_1' },
     ];
 
-    (db.find as Mock).mockResolvedValueOnce(mockCases);
+    (broker.find as Mock).mockResolvedValueOnce(mockCases);
 
     const result = await analyzeFirstResponseTime({ periodDays: 30 });
 
@@ -57,7 +57,7 @@ describe('analyzeFirstResponseTime', () => {
       { priority: 'low', channel: 'email', created_date: new Date(now - 500 * 60000).toISOString(), first_response_date: new Date(now - 200 * 60000).toISOString(), status: 'closed', owner_id: 'agent_1' },
     ];
 
-    (db.find as Mock).mockResolvedValueOnce(mockCases);
+    (broker.find as Mock).mockResolvedValueOnce(mockCases);
 
     const result = await analyzeFirstResponseTime({ periodDays: 30 });
 
@@ -71,7 +71,7 @@ describe('analyzeFirstResponseTime', () => {
   });
 
   it('should handle cases with no response (empty result set)', async () => {
-    (db.find as Mock).mockResolvedValueOnce([]);
+    (broker.find as Mock).mockResolvedValueOnce([]);
 
     const result = await analyzeFirstResponseTime({ periodDays: 30 });
 
@@ -96,7 +96,7 @@ describe('analyzeFirstResponseTime', () => {
       { priority: 'low', channel: 'email', created_date: new Date(now - 700 * 60000).toISOString(), first_response_date: new Date(now - 100 * 60000).toISOString(), status: 'closed', owner_id: 'a3' },
     ];
 
-    (db.find as Mock).mockResolvedValueOnce(mockCases);
+    (broker.find as Mock).mockResolvedValueOnce(mockCases);
 
     const result = await analyzeFirstResponseTime({ periodDays: 30 });
 
@@ -112,7 +112,7 @@ describe('analyzeFirstResponseTime', () => {
       { priority: 'high', channel: 'email', created_date: new Date(now - 700 * 60000).toISOString(), first_response_date: new Date(now - 200 * 60000).toISOString(), status: 'closed', owner_id: 'a2' },
     ];
 
-    (db.find as Mock).mockResolvedValueOnce(mockCases);
+    (broker.find as Mock).mockResolvedValueOnce(mockCases);
 
     const result = await analyzeFirstResponseTime({ periodDays: 30 });
 
@@ -137,7 +137,7 @@ describe('analyzeCSAT', () => {
 
     const mockAllClosed = [{ id: '1' }, { id: '2' }, { id: '3' }, { id: '4' }, { id: '5' }];
 
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce(mockCases)    // cases with satisfaction data
       .mockResolvedValueOnce(mockAllClosed); // all closed cases
 
@@ -164,7 +164,7 @@ describe('analyzeCSAT', () => {
       { satisfaction_rating: 3, owner_id: 'a1', category: 'billing', priority: 'medium', created_date: new Date(now - 86400000).toISOString(), closed_date: new Date(now).toISOString(), status: 'closed', is_escalated: false, resolution_type: 'resolved', channel: 'email' },
     ];
 
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce(mockCases)
       .mockResolvedValueOnce(mockCases); // all closed = same as rated
 
@@ -175,7 +175,7 @@ describe('analyzeCSAT', () => {
   });
 
   it('should handle no survey data', async () => {
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce([])   // no cases with satisfaction data
       .mockResolvedValueOnce([]);  // no closed cases
 
@@ -197,7 +197,7 @@ describe('analyzeCSAT', () => {
       { satisfaction_rating: 3, owner_id: 'a2', category: 'technical', priority: 'low', created_date: new Date(now - 86400000).toISOString(), closed_date: new Date(now).toISOString(), status: 'closed', is_escalated: false, resolution_type: 'resolved', channel: 'chat' },
     ];
 
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce(mockCases)
       .mockResolvedValueOnce(mockCases);
 
@@ -229,7 +229,7 @@ describe('analyzeSLACompliance', () => {
 
     const mockOpenMilestones: any[] = [];
 
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce(mockMilestones)
       .mockResolvedValueOnce(mockOpenMilestones);
 
@@ -250,7 +250,7 @@ describe('analyzeSLACompliance', () => {
       { type: 'first_response', target_date: new Date(now - 120000).toISOString(), completed_date: new Date(now - 180000).toISOString(), status: 'met', priority: 'low', owner_id: 'a2', team_id: 'team_2', target_object_id: 'case_3', created_date: new Date(now - 600000).toISOString() },
     ];
 
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce(mockMilestones)
       .mockResolvedValueOnce([]);
 
@@ -268,7 +268,7 @@ describe('analyzeSLACompliance', () => {
   });
 
   it('should handle empty milestone data', async () => {
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([]);
 
@@ -290,7 +290,7 @@ describe('analyzeSLACompliance', () => {
       { type: 'resolution', target_date: new Date(now - 60000).toISOString(), completed_date: new Date(now - 120000).toISOString(), status: 'met', priority: 'medium', owner_id: 'a2', team_id: 't1', target_object_id: 'c3', created_date: new Date(now - 500000).toISOString() },
     ];
 
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce(mockMilestones)
       .mockResolvedValueOnce([]);
 
@@ -320,7 +320,7 @@ describe('analyzeSLACompliance', () => {
       { target_date: new Date(now + 30000).toISOString(), created_date: new Date(now - 7200000).toISOString(), priority: 'critical' },
     ];
 
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce(mockMilestones)
       .mockResolvedValueOnce(mockOpenMilestones);
 

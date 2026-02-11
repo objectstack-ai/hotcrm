@@ -11,15 +11,13 @@ import {
 import { vi, Mock } from 'vitest';
 
 vi.mock('../../../src/db', () => ({
-  db: {
-    doc: {
-      get: vi.fn()
-    },
+  broker: {
+    findOne: vi.fn(),
     find: vi.fn()
   }
 }));
 
-import { db } from '../../../src/db';
+import { broker } from '../../../src/db';
 
 describe('SLA Prediction - predictSLABreach', () => {
   beforeEach(() => {
@@ -39,8 +37,8 @@ describe('SLA Prediction - predictSLABreach', () => {
 
     const mockSlaRecords: any[] = [];
 
-    (db.doc.get as Mock).mockResolvedValue(mockCase);
-    (db.find as Mock).mockResolvedValue(mockSlaRecords);
+    (broker.findOne as Mock).mockResolvedValue(mockCase);
+    (broker.find as Mock).mockResolvedValue(mockSlaRecords);
 
     const request: SLABreachPredictionRequest = {
       caseId: 'case_critical'
@@ -68,8 +66,8 @@ describe('SLA Prediction - predictSLABreach', () => {
       owner_id: null // Unassigned
     };
 
-    (db.doc.get as Mock).mockResolvedValue(mockCase);
-    (db.find as Mock).mockResolvedValue([]);
+    (broker.findOne as Mock).mockResolvedValue(mockCase);
+    (broker.find as Mock).mockResolvedValue([]);
 
     const request: SLABreachPredictionRequest = {
       caseId: 'case_unassigned'
@@ -96,8 +94,8 @@ describe('SLA Prediction - predictSLABreach', () => {
       owner_id: 'agent_123'
     };
 
-    (db.doc.get as Mock).mockResolvedValue(mockCase);
-    (db.find as Mock).mockResolvedValue([]);
+    (broker.findOne as Mock).mockResolvedValue(mockCase);
+    (broker.find as Mock).mockResolvedValue([]);
 
     const request: SLABreachPredictionRequest = {
       caseId: 'case_timing'
@@ -125,8 +123,8 @@ describe('SLA Prediction - predictSLABreach', () => {
       owner_id: null
     };
 
-    (db.doc.get as Mock).mockResolvedValue(mockCase);
-    (db.find as Mock).mockResolvedValue([]);
+    (broker.findOne as Mock).mockResolvedValue(mockCase);
+    (broker.find as Mock).mockResolvedValue([]);
 
     const request: SLABreachPredictionRequest = {
       caseId: 'case_highrisk'
@@ -157,8 +155,8 @@ describe('SLA Prediction - predictSLABreach', () => {
       owner_id: 'agent_456'
     };
 
-    (db.doc.get as Mock).mockResolvedValue(mockCase);
-    (db.find as Mock).mockResolvedValue([]);
+    (broker.findOne as Mock).mockResolvedValue(mockCase);
+    (broker.find as Mock).mockResolvedValue([]);
 
     const request: SLABreachPredictionRequest = {
       caseId: 'case_lowrisk'
@@ -205,8 +203,8 @@ describe('SLA Prediction - estimateResolutionTime', () => {
       }
     ];
 
-    (db.doc.get as Mock).mockResolvedValue(mockCase);
-    (db.find as Mock).mockResolvedValue(mockSimilarCases);
+    (broker.findOne as Mock).mockResolvedValue(mockCase);
+    (broker.find as Mock).mockResolvedValue(mockSimilarCases);
 
     const request: ResolutionTimeRequest = {
       caseId: 'case_estimate'
@@ -230,8 +228,8 @@ describe('SLA Prediction - estimateResolutionTime', () => {
       created_date: new Date().toISOString()
     };
 
-    (db.doc.get as Mock).mockResolvedValue(mockCase);
-    (db.find as Mock).mockResolvedValue([]);
+    (broker.findOne as Mock).mockResolvedValue(mockCase);
+    (broker.find as Mock).mockResolvedValue([]);
 
     const request: ResolutionTimeRequest = {
       caseId: 'case_range'
@@ -255,8 +253,8 @@ describe('SLA Prediction - estimateResolutionTime', () => {
       created_date: new Date().toISOString()
     };
 
-    (db.doc.get as Mock).mockResolvedValue(mockCase);
-    (db.find as Mock).mockResolvedValue([]);
+    (broker.findOne as Mock).mockResolvedValue(mockCase);
+    (broker.find as Mock).mockResolvedValue([]);
 
     const request: ResolutionTimeRequest = {
       caseId: 'case_factors'
@@ -290,8 +288,8 @@ describe('SLA Prediction - estimateResolutionTime', () => {
       closed_date: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString()
     });
 
-    (db.doc.get as Mock).mockResolvedValue(mockCase);
-    (db.find as Mock).mockResolvedValue(mockHistoricalCases);
+    (broker.findOne as Mock).mockResolvedValue(mockCase);
+    (broker.find as Mock).mockResolvedValue(mockHistoricalCases);
 
     const request: ResolutionTimeRequest = {
       caseId: 'case_benchmark'
@@ -329,14 +327,14 @@ describe('SLA Prediction - estimateResolutionTime', () => {
       closed_date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
     }];
 
-    (db.find as Mock).mockResolvedValue(mockHistorical);
+    (broker.find as Mock).mockResolvedValue(mockHistorical);
 
     // Act - Critical case
-    (db.doc.get as Mock).mockResolvedValue(criticalCase);
+    (broker.findOne as Mock).mockResolvedValue(criticalCase);
     const criticalResult = await estimateResolutionTime({ caseId: 'critical' });
 
     // Act - Low priority case
-    (db.doc.get as Mock).mockResolvedValue(lowCase);
+    (broker.findOne as Mock).mockResolvedValue(lowCase);
     const lowResult = await estimateResolutionTime({ caseId: 'low' });
 
     // Assert - Low priority should take longer
@@ -372,14 +370,14 @@ describe('SLA Prediction - analyzeEscalationNeeds', () => {
       }
     ];
 
-    (db.find as Mock).mockResolvedValueOnce(mockCases);
+    (broker.find as Mock).mockResolvedValueOnce(mockCases);
     
     // Mock individual case gets for breach prediction
-    (db.doc.get as Mock).mockImplementation((type, id) => {
+    (broker.findOne as Mock).mockImplementation((type, id) => {
       return Promise.resolve(mockCases.find(c => c.id === id));
     });
     
-    (db.find as Mock).mockResolvedValue([]); // For SLA records
+    (broker.find as Mock).mockResolvedValue([]); // For SLA records
 
     const request: EscalationAnalysisRequest = {
       periodHours: 24,
@@ -397,7 +395,7 @@ describe('SLA Prediction - analyzeEscalationNeeds', () => {
 
   it('should provide summary statistics', async () => {
     // Arrange
-    (db.find as Mock).mockResolvedValue([]);
+    (broker.find as Mock).mockResolvedValue([]);
 
     const request: EscalationAnalysisRequest = {
       periodHours: 24
@@ -428,8 +426,8 @@ describe('SLA Prediction - analyzeEscalationNeeds', () => {
       }
     ];
 
-    (db.find as Mock).mockResolvedValue(mockCases);
-    (db.doc.get as Mock).mockResolvedValue(mockCases[0]);
+    (broker.find as Mock).mockResolvedValue(mockCases);
+    (broker.findOne as Mock).mockResolvedValue(mockCases[0]);
 
     const request: EscalationAnalysisRequest = {
       periodHours: 48,
@@ -461,8 +459,8 @@ describe('SLA Prediction - analyzeEscalationNeeds', () => {
       owner_id: null
     };
 
-    (db.find as Mock).mockResolvedValueOnce([mockCase]).mockResolvedValue([]);
-    (db.doc.get as Mock).mockResolvedValue(mockCase);
+    (broker.find as Mock).mockResolvedValueOnce([mockCase]).mockResolvedValue([]);
+    (broker.findOne as Mock).mockResolvedValue(mockCase);
 
     const request: EscalationAnalysisRequest = {
       periodHours: 24,
@@ -496,8 +494,8 @@ describe('SLA Prediction - analyzeEscalationNeeds', () => {
       }
     ];
 
-    (db.find as Mock).mockResolvedValue(mockCases);
-    (db.doc.get as Mock).mockResolvedValue(mockCases[0]);
+    (broker.find as Mock).mockResolvedValue(mockCases);
+    (broker.findOne as Mock).mockResolvedValue(mockCases[0]);
 
     const highThresholdRequest: EscalationAnalysisRequest = {
       periodHours: 24,
@@ -513,8 +511,8 @@ describe('SLA Prediction - analyzeEscalationNeeds', () => {
     const highResult = await analyzeEscalationNeeds(highThresholdRequest);
     
     vi.clearAllMocks();
-    (db.find as Mock).mockResolvedValue(mockCases);
-    (db.doc.get as Mock).mockResolvedValue(mockCases[0]);
+    (broker.find as Mock).mockResolvedValue(mockCases);
+    (broker.findOne as Mock).mockResolvedValue(mockCases[0]);
     
     const lowResult = await analyzeEscalationNeeds(lowThresholdRequest);
 

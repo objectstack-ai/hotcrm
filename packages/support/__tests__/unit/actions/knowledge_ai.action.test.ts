@@ -11,15 +11,13 @@ import {
 import { vi, Mock } from 'vitest';
 
 vi.mock('../../../src/db', () => ({
-  db: {
-    doc: {
-      get: vi.fn()
-    },
+  broker: {
+    findOne: vi.fn(),
     find: vi.fn()
   }
 }));
 
-import { db } from '../../../src/db';
+import { broker } from '../../../src/db';
 
 describe('Knowledge AI Actions - recommendArticles', () => {
   beforeEach(() => {
@@ -54,8 +52,8 @@ describe('Knowledge AI Actions - recommendArticles', () => {
       }
     ];
 
-    (db.doc.get as Mock).mockResolvedValue(mockCase);
-    (db.find as Mock).mockResolvedValue(mockArticles);
+    (broker.findOne as Mock).mockResolvedValue(mockCase);
+    (broker.find as Mock).mockResolvedValue(mockArticles);
 
     const request: ArticleRecommendationRequest = {
       caseId: 'case_123',
@@ -80,7 +78,7 @@ describe('Knowledge AI Actions - recommendArticles', () => {
       { id: '3', title: 'API Best Practices', summary: 'Advanced API', is_published: true }
     ];
 
-    (db.find as Mock).mockResolvedValue(mockArticles);
+    (broker.find as Mock).mockResolvedValue(mockArticles);
 
     const request: ArticleRecommendationRequest = {
       query: 'API integration issues',
@@ -107,7 +105,7 @@ describe('Knowledge AI Actions - recommendArticles', () => {
 
   it('should include search metadata', async () => {
     // Arrange
-    (db.find as Mock).mockResolvedValue([
+    (broker.find as Mock).mockResolvedValue([
       { id: '1', title: 'Test Article', summary: 'Test', is_published: true }
     ]);
 
@@ -133,8 +131,8 @@ describe('Knowledge AI Actions - recommendArticles', () => {
       type: 'Bug Report'
     };
 
-    (db.doc.get as Mock).mockResolvedValue(mockCase);
-    (db.find as Mock).mockResolvedValue([]);
+    (broker.findOne as Mock).mockResolvedValue(mockCase);
+    (broker.find as Mock).mockResolvedValue([]);
 
     const request: ArticleRecommendationRequest = {
       caseId: 'case_456'
@@ -144,7 +142,7 @@ describe('Knowledge AI Actions - recommendArticles', () => {
     const result = await recommendArticles(request);
 
     // Assert
-    expect(db.doc.get).toHaveBeenCalledWith('case', 'case_456', expect.anything());
+    expect(broker.findOne).toHaveBeenCalledWith('case', 'case_456', expect.anything());
     expect(result).toBeDefined();
   });
 
@@ -171,7 +169,7 @@ describe('Knowledge AI Actions - autoTagArticle', () => {
       article_type: null
     };
 
-    (db.doc.get as Mock).mockResolvedValue(mockArticle);
+    (broker.findOne as Mock).mockResolvedValue(mockArticle);
 
     const request: AutoTaggingRequest = {
       articleId: 'article_123'
@@ -196,7 +194,7 @@ describe('Knowledge AI Actions - autoTagArticle', () => {
       article_type: 'Troubleshooting'
     };
 
-    (db.doc.get as Mock).mockResolvedValue(mockArticle);
+    (broker.findOne as Mock).mockResolvedValue(mockArticle);
 
     const request: AutoTaggingRequest = {
       articleId: 'article_456'
@@ -223,7 +221,7 @@ describe('Knowledge AI Actions - autoTagArticle', () => {
       article_type: null
     };
 
-    (db.doc.get as Mock).mockResolvedValue(mockArticle);
+    (broker.findOne as Mock).mockResolvedValue(mockArticle);
 
     const request: AutoTaggingRequest = {
       articleId: 'article_789'
@@ -246,7 +244,7 @@ describe('Knowledge AI Actions - autoTagArticle', () => {
       article_type: 'general'
     };
 
-    (db.doc.get as Mock).mockResolvedValue(mockArticle);
+    (broker.findOne as Mock).mockResolvedValue(mockArticle);
 
     const request: AutoTaggingRequest = {
       articleId: 'article_sec'
@@ -277,7 +275,7 @@ describe('Knowledge AI Actions - scoreArticleQuality', () => {
       not_helpful_count: 5
     };
 
-    (db.doc.get as Mock).mockResolvedValue(mockArticle);
+    (broker.findOne as Mock).mockResolvedValue(mockArticle);
 
     const request: QualityScoringRequest = {
       articleId: 'article_quality'
@@ -305,7 +303,7 @@ describe('Knowledge AI Actions - scoreArticleQuality', () => {
       not_helpful_count: 2
     };
 
-    (db.doc.get as Mock).mockResolvedValue(mockArticle);
+    (broker.findOne as Mock).mockResolvedValue(mockArticle);
 
     const request: QualityScoringRequest = {
       articleId: 'article_comp'
@@ -334,7 +332,7 @@ describe('Knowledge AI Actions - scoreArticleQuality', () => {
       not_helpful_count: 5
     };
 
-    (db.doc.get as Mock).mockResolvedValue(mockArticle);
+    (broker.findOne as Mock).mockResolvedValue(mockArticle);
 
     const request: QualityScoringRequest = {
       articleId: 'article_issues'
@@ -365,7 +363,7 @@ describe('Knowledge AI Actions - scoreArticleQuality', () => {
       not_helpful_count: 5
     };
 
-    (db.doc.get as Mock).mockResolvedValue(mockArticle);
+    (broker.findOne as Mock).mockResolvedValue(mockArticle);
 
     const request: QualityScoringRequest = {
       articleId: 'article_improve'
@@ -391,7 +389,7 @@ describe('Knowledge AI Actions - scoreArticleQuality', () => {
       not_helpful_count: null
     };
 
-    (db.doc.get as Mock).mockResolvedValue(mockArticle);
+    (broker.findOne as Mock).mockResolvedValue(mockArticle);
 
     const request: QualityScoringRequest = {
       articleId: 'article_new'
@@ -416,7 +414,7 @@ describe('Knowledge AI Actions - scoreArticleQuality', () => {
       not_helpful_count: 5
     };
 
-    (db.doc.get as Mock).mockResolvedValue(mockArticle);
+    (broker.findOne as Mock).mockResolvedValue(mockArticle);
 
     const request: QualityScoringRequest = {
       articleId: 'article_excellent'

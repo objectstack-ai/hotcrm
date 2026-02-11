@@ -11,7 +11,7 @@
  * 5. Article Gap Analysis - Identify missing knowledge base content
  */
 
-import { db } from '../db';
+import { broker } from '../db';
 
 // ============================================================================
 // 1. ARTICLE RECOMMENDATION
@@ -53,7 +53,7 @@ export async function recommendArticles(request: ArticleRecommendationRequest): 
 
   // If case ID provided, fetch case details
   if (caseId) {
-    const caseRecord = await db.doc.get('case', caseId, {
+    const caseRecord = await broker.findOne('case', caseId, {
       fields: ['subject', 'description', 'type', 'priority']
     });
     searchQuery = `${caseRecord.subject} ${caseRecord.description}`;
@@ -65,7 +65,7 @@ export async function recommendArticles(request: ArticleRecommendationRequest): 
 
   // Fetch knowledge articles
   // In production, would use vector search/semantic similarity
-  const articles = await db.find('knowledge_article', {
+  const articles = await broker.find('knowledge_article', {
     filters: [['is_published', '=', true]],
     limit: 20
   });
@@ -130,7 +130,7 @@ export async function autoTagArticle(request: AutoTaggingRequest): Promise<AutoT
   const { articleId } = request;
 
   // Fetch article content
-  const article = await db.doc.get('knowledge_article', articleId, {
+  const article = await broker.findOne('knowledge_article', articleId, {
     fields: ['title', 'summary', 'body', 'article_type']
   });
 
@@ -231,7 +231,7 @@ export async function scoreArticleQuality(request: QualityScoringRequest): Promi
   const { articleId } = request;
 
   // Fetch article and usage metrics
-  const article = await db.doc.get('knowledge_article', articleId, {
+  const article = await broker.findOne('knowledge_article', articleId, {
     fields: ['title', 'summary', 'body', 'view_count', 'helpful_count', 'not_helpful_count']
   });
 
@@ -428,7 +428,7 @@ export async function analyzeKnowledgeGaps(request: GapAnalysisRequest): Promise
   const { periodDays = 90, minCaseCount = 5 } = request;
 
   // Fetch recent cases
-  const cases = await db.find('case', {
+  const cases = await broker.find('case', {
     filters: [
       ['created_date', '>', new Date(Date.now() - periodDays * 24 * 60 * 60 * 1000).toISOString()]
     ],
@@ -465,7 +465,7 @@ export async function analyzeKnowledgeGaps(request: GapAnalysisRequest): Promise
   for (const [topic, count] of Object.entries(topicCounts)) {
     if (count >= minCaseCount) {
       // Check if articles exist for this topic
-      const existingArticles = await db.find('knowledge_article', {
+      const existingArticles = await broker.find('knowledge_article', {
         filters: [
           ['is_published', '=', true]
           // Would add topic filter in production
