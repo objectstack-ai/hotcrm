@@ -31,6 +31,7 @@ import { ApprovalRequestCreationTrigger, ApprovalDecisionTrigger } from './hooks
 import { ProductBundleValidationTrigger, ProductBundleComponentCompletenessTrigger } from './hooks/product_bundle.hook';
 import { PriceRuleValidationTrigger, PriceRuleConflictDetectionTrigger } from './hooks/price_rule.hook';
 import { DiscountScheduleActivationTrigger, DiscountScheduleOverlapDetectionTrigger } from './hooks/discount_schedule.hook';
+import { ApprovalWorkflows } from './approval.workflow';
 
 // Import actions
 import BundleSuggestionAction from './actions/bundle_suggestion.action';
@@ -91,6 +92,14 @@ export const ProductsPlugin: any = {
     price_rule_conflict_detection: PriceRuleConflictDetectionTrigger,
     discount_schedule_activation: DiscountScheduleActivationTrigger,
     discount_schedule_overlap_detection: DiscountScheduleOverlapDetectionTrigger,
+  },
+
+  // Workflows
+  workflows: {
+    parallel_approval_chain: ApprovalWorkflows.parallelApprovalChain,
+    smart_delegation: ApprovalWorkflows.smartDelegation,
+    approval_escalation: ApprovalWorkflows.approvalEscalation,
+    approval_auto_resolve: ApprovalWorkflows.approvalAutoResolve,
   },
 
   // Navigation structure for this plugin

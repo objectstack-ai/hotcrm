@@ -42,6 +42,7 @@ import SLAHooks from './hooks/sla.hook';
 import RoutingHooks from './hooks/routing.hook';
 import QueueHooks from './hooks/queue.hook';
 import { ForumTopicValidationTrigger, ForumTopicModerationTrigger, ForumPostCreationTrigger, ForumPostModerationTrigger } from './hooks/forum.hook';
+import { CaseEscalationWorkflows } from './case_escalation.workflow';
 
 // Import actions
 import CaseAIAction from './actions/case_ai.action';
@@ -112,6 +113,14 @@ export const SupportPlugin: any = {
     forum_topic_moderation: ForumTopicModerationTrigger,
     forum_post_creation: ForumPostCreationTrigger,
     forum_post_moderation: ForumPostModerationTrigger,
+  },
+
+  // Workflows
+  workflows: {
+    case_auto_escalation: CaseEscalationWorkflows.autoEscalation,
+    case_high_priority_alert: CaseEscalationWorkflows.highPriorityAlert,
+    case_stale_check: CaseEscalationWorkflows.staleCheck,
+    case_first_response_sla: CaseEscalationWorkflows.firstResponseSLA,
   },
 
   // Navigation structure for this plugin

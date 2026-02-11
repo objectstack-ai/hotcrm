@@ -5,19 +5,17 @@ import {
   RenewalPredictionRequest
 } from '../../../src/actions/contract_ai.action';
 
-// Mock the db module
+
 import { vi, Mock } from 'vitest';
 
 vi.mock('../../../src/db', () => ({
-  db: {
-    doc: {
-      get: vi.fn()
-    },
+  broker: {
+    findOne: vi.fn(),
     find: vi.fn()
   }
 }));
 
-import { db } from '../../../src/db';
+import { broker } from '../../../src/db';
 
 describe('Contract AI - analyzeContractRisk', () => {
   beforeEach(() => {
@@ -43,7 +41,7 @@ describe('Contract AI - analyzeContractRisk', () => {
       number_of_employees: 200
     };
 
-    (db.doc.get as Mock)
+    (broker.findOne as Mock)
       .mockResolvedValueOnce(mockContract)
       .mockResolvedValueOnce(mockAccount);
 
@@ -71,7 +69,7 @@ describe('Contract AI - analyzeContractRisk', () => {
       account_id: 'acc_456'
     };
 
-    (db.doc.get as Mock)
+    (broker.findOne as Mock)
       .mockResolvedValueOnce(longTermContract)
       .mockResolvedValueOnce({ annual_revenue: 1000000 });
 
@@ -96,7 +94,7 @@ describe('Contract AI - analyzeContractRisk', () => {
       account_id: 'acc_789'
     };
 
-    (db.doc.get as Mock)
+    (broker.findOne as Mock)
       .mockResolvedValueOnce(mockContract)
       .mockResolvedValueOnce({ annual_revenue: 500000 });
 
@@ -126,7 +124,7 @@ describe('Contract AI - analyzeContractRisk', () => {
       account_id: 'acc_rec'
     };
 
-    (db.doc.get as Mock)
+    (broker.findOne as Mock)
       .mockResolvedValueOnce(mockContract)
       .mockResolvedValueOnce({ annual_revenue: 2000000 });
 
@@ -156,7 +154,7 @@ describe('Contract AI - analyzeContractRisk', () => {
       account_id: 'acc_impact'
     };
 
-    (db.doc.get as Mock)
+    (broker.findOne as Mock)
       .mockResolvedValueOnce(mockContract)
       .mockResolvedValueOnce({ annual_revenue: 800000 });
 
@@ -194,10 +192,10 @@ describe('Contract AI - predictRenewal', () => {
     const mockCases: any[] = [];
     const mockOpportunities: any[] = [];
 
-    (db.doc.get as Mock)
+    (broker.findOne as Mock)
       .mockResolvedValueOnce(mockContract)
       .mockResolvedValueOnce(mockAccount);
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce(mockCases)
       .mockResolvedValueOnce(mockOpportunities);
 
@@ -225,10 +223,10 @@ describe('Contract AI - predictRenewal', () => {
       contract_term: 36
     };
 
-    (db.doc.get as Mock)
+    (broker.findOne as Mock)
       .mockResolvedValueOnce(longTenureContract)
       .mockResolvedValueOnce({ name: 'Long Time Customer' });
-    (db.find as Mock).mockResolvedValue([]);
+    (broker.find as Mock).mockResolvedValue([]);
 
     const request: RenewalPredictionRequest = {
       contractId: 'contract_longtime'
@@ -261,10 +259,10 @@ describe('Contract AI - predictRenewal', () => {
       { priority: 'high', status: 'closed', created_date: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString() }
     ];
 
-    (db.doc.get as Mock)
+    (broker.findOne as Mock)
       .mockResolvedValueOnce(mockContract)
       .mockResolvedValueOnce({ name: 'Troubled Customer' });
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce(mockCases)
       .mockResolvedValueOnce([]);
 
@@ -290,10 +288,10 @@ describe('Contract AI - predictRenewal', () => {
       contract_term: 24
     };
 
-    (db.doc.get as Mock)
+    (broker.findOne as Mock)
       .mockResolvedValueOnce(mockContract)
       .mockResolvedValueOnce({ name: 'customer' });
-    (db.find as Mock).mockResolvedValue([]);
+    (broker.find as Mock).mockResolvedValue([]);
 
     const request: RenewalPredictionRequest = {
       contractId: 'contract_retain'
@@ -322,10 +320,10 @@ describe('Contract AI - predictRenewal', () => {
       contract_term: 36
     };
 
-    (db.doc.get as Mock)
+    (broker.findOne as Mock)
       .mockResolvedValueOnce(mockContract)
       .mockResolvedValueOnce({ name: 'Growth Customer' });
-    (db.find as Mock).mockResolvedValue([]);
+    (broker.find as Mock).mockResolvedValue([]);
 
     const request: RenewalPredictionRequest = {
       contractId: 'contract_expand'

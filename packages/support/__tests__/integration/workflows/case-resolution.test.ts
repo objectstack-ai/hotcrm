@@ -9,18 +9,15 @@
 import { vi, Mock } from 'vitest';
 
 vi.mock('../../../src/db', () => ({
-  db: {
-    doc: {
-      get: vi.fn(),
-      create: vi.fn(),
-      update: vi.fn()
-    },
+  broker: {
+    findOne: vi.fn(),
     find: vi.fn(),
-    insert: vi.fn()
+    insert: vi.fn(),
+    update: vi.fn()
   }
 }));
 
-import { db } from '../../../src/db';
+import { broker } from '../../../src/db';
 
 describe('Case Resolution Workflow Integration', () => {
   beforeEach(() => {
@@ -61,18 +58,18 @@ describe('Case Resolution Workflow Integration', () => {
       resolution: 'Applied patch to fix report export functionality'
     };
 
-    (db.doc.create as Mock).mockResolvedValue(createdCase);
-    (db.doc.update as Mock)
+    (broker.insert as Mock).mockResolvedValue(createdCase);
+    (broker.update as Mock)
       .mockResolvedValueOnce(assignedCase)
       .mockResolvedValueOnce(resolvedCase);
 
     // Act - Step 1: Create case
-    const caseRecord = await db.doc.create('case', newCase);
+    const caseRecord = await broker.insert('case', newCase);
     expect(caseRecord.id).toBe('case_001');
     expect(caseRecord.status).toBe('new');
 
     // Step 2: Auto-assign to agent
-    const assigned = await db.doc.update('case', caseRecord.id, {
+    const assigned = await broker.update('case', caseRecord.id, {
       owner_id: 'agent_789',
       status: 'in_progress'
     });
@@ -80,7 +77,7 @@ describe('Case Resolution Workflow Integration', () => {
     expect(assigned.status).toBe('in_progress');
 
     // Step 3: Resolve case
-    const resolved = await db.doc.update('case', caseRecord.id, {
+    const resolved = await broker.update('case', caseRecord.id, {
       status: 'closed',
       closed_date: new Date().toISOString(),
       resolution: 'Applied patch to fix report export functionality'
@@ -90,8 +87,8 @@ describe('Case Resolution Workflow Integration', () => {
     expect(resolved.status).toBe('closed');
     expect(resolved.closed_date).toBeDefined();
     expect(resolved.resolution).toBeDefined();
-    expect(db.doc.create).toHaveBeenCalledTimes(1);
-    expect(db.doc.update).toHaveBeenCalledTimes(2);
+    expect(broker.insert).toHaveBeenCalledTimes(1);
+    expect(broker.update).toHaveBeenCalledTimes(2);
   });
 
   it('should track SLA milestones throughout case lifecycle', async () => {
@@ -125,19 +122,19 @@ describe('Case Resolution Workflow Integration', () => {
       is_violated: false
     };
 
-    (db.doc.get as Mock).mockResolvedValue(mockCase);
-    (db.doc.create as Mock).mockResolvedValue(slaMilestone);
-    (db.doc.update as Mock).mockResolvedValue(completedMilestone);
+    (broker.findOne as Mock).mockResolvedValue(mockCase);
+    (broker.insert as Mock).mockResolvedValue(slaMilestone);
+    (broker.update as Mock).mockResolvedValue(completedMilestone);
 
     // Act - Create SLA milestone
-    const milestone = await db.doc.create('sla_milestone', {
+    const milestone = await broker.insert('sla_milestone', {
       target_object_id: mockCase.id,
       milestone_type: 'First Response',
       target_date: new Date(Date.now() + 60 * 60 * 1000).toISOString()
     });
 
     // Simulate first response
-    const updated = await db.doc.update('sla_milestone', milestone.id, {
+    const updated = await broker.update('sla_milestone', milestone.id, {
       completion_date: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
       is_violated: false
     });
@@ -169,18 +166,18 @@ describe('Case Resolution Workflow Integration', () => {
       escalation_date: new Date().toISOString()
     };
 
-    (db.doc.get as Mock).mockResolvedValue(highRiskCase);
-    (db.doc.update as Mock).mockResolvedValue(escalatedCase);
-    (db.find as Mock).mockResolvedValue([]);
+    (broker.findOne as Mock).mockResolvedValue(highRiskCase);
+    (broker.update as Mock).mockResolvedValue(escalatedCase);
+    (broker.find as Mock).mockResolvedValue([]);
 
     // Act - Check SLA breach risk (would be calculated by predictSLABreach)
-    const caseData = await db.doc.get('case', 'case_escalate');
+    const caseData = await broker.findOne('case', 'case_escalate');
     const elapsedMinutes = (Date.now() - new Date(caseData.created_date).getTime()) / (60 * 1000);
     const slaTarget = 60; // 1 hour for critical
     const shouldEscalate = elapsedMinutes > (slaTarget * 0.8) && !caseData.owner_id;
 
     if (shouldEscalate) {
-      const escalated = await db.doc.update('case', caseData.id, {
+      const escalated = await broker.update('case', caseData.id, {
         escalated: true,
         owner_id: 'senior_agent_456',
         status: 'escalated',
@@ -226,16 +223,16 @@ describe('Case Resolution Workflow Integration', () => {
       created_date: new Date().toISOString()
     };
 
-    (db.doc.get as Mock).mockResolvedValue(mockCase);
-    (db.find as Mock).mockResolvedValue(relevantArticles);
-    (db.doc.create as Mock).mockResolvedValue(caseArticleLink);
+    (broker.findOne as Mock).mockResolvedValue(mockCase);
+    (broker.find as Mock).mockResolvedValue(relevantArticles);
+    (broker.insert as Mock).mockResolvedValue(caseArticleLink);
 
     // Act - Find and link relevant articles
-    const articles = await db.find('knowledge_article', {
+    const articles = await broker.find('knowledge_article', {
       filters: [['is_published', '=', true]]
     });
 
-    const link = await db.doc.create('case_article', {
+    const link = await broker.insert('case_article', {
       case_id: mockCase.id,
       article_id: articles[0].id
     });
@@ -273,13 +270,13 @@ describe('Case Resolution Workflow Integration', () => {
       created_date: new Date().toISOString()
     };
 
-    (db.doc.get as Mock).mockResolvedValue(mockCase);
-    (db.doc.create as Mock)
+    (broker.findOne as Mock).mockResolvedValue(mockCase);
+    (broker.insert as Mock)
       .mockResolvedValueOnce(internalComment)
       .mockResolvedValueOnce(externalComment);
 
     // Act - Add internal comment
-    const internal = await db.doc.create('case_comment', {
+    const internal = await broker.insert('case_comment', {
       case_id: mockCase.id,
       comment_body: 'I need help from engineering team on this',
       is_published: false,
@@ -287,7 +284,7 @@ describe('Case Resolution Workflow Integration', () => {
     });
 
     // Add customer-facing comment
-    const external = await db.doc.create('case_comment', {
+    const external = await broker.insert('case_comment', {
       case_id: mockCase.id,
       comment_body: 'We are investigating the issue and will update you soon',
       is_published: true,
@@ -297,7 +294,7 @@ describe('Case Resolution Workflow Integration', () => {
     // Assert
     expect(internal.is_published).toBe(false);
     expect(external.is_published).toBe(true);
-    expect(db.doc.create).toHaveBeenCalledTimes(2);
+    expect(broker.insert).toHaveBeenCalledTimes(2);
   });
 
   it('should track resolution time and customer satisfaction', async () => {
@@ -326,19 +323,19 @@ describe('Case Resolution Workflow Integration', () => {
       resolution_time_minutes: 240
     };
 
-    (db.doc.get as Mock).mockResolvedValue(mockCase);
-    (db.doc.update as Mock)
+    (broker.findOne as Mock).mockResolvedValue(mockCase);
+    (broker.update as Mock)
       .mockResolvedValueOnce(caseWithFirstResponse)
       .mockResolvedValueOnce(closedCaseWithSurvey);
 
     // Act - Record first response
-    const withResponse = await db.doc.update('case', mockCase.id, {
+    const withResponse = await broker.update('case', mockCase.id, {
       first_response_date: new Date(Date.now() - 3.5 * 60 * 60 * 1000).toISOString(),
       status: 'in_progress'
     });
 
     // Close case and record metrics
-    const closed = await db.doc.update('case', mockCase.id, {
+    const closed = await broker.update('case', mockCase.id, {
       status: 'closed',
       closed_date: new Date().toISOString(),
       customer_satisfaction_rating: 5,

@@ -11,15 +11,13 @@ import {
 import { vi, Mock } from 'vitest';
 
 vi.mock('../../../src/db', () => ({
-  db: {
-    doc: {
-      get: vi.fn()
-    },
+  broker: {
+    findOne: vi.fn(),
     find: vi.fn()
   }
 }));
 
-import { db } from '../../../src/db';
+import { broker } from '../../../src/db';
 
 describe('Account AI Actions - calculateAccountHealth', () => {
   beforeEach(() => {
@@ -48,8 +46,8 @@ describe('Account AI Actions - calculateAccountHealth', () => {
       { activity_date: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString() }
     ];
 
-    (db.doc.get as Mock).mockResolvedValue(mockAccount);
-    (db.find as Mock)
+    (broker.findOne as Mock).mockResolvedValue(mockAccount);
+    (broker.find as Mock)
       .mockResolvedValueOnce(mockOpportunities)
       .mockResolvedValueOnce(mockCases)
       .mockResolvedValueOnce(mockActivities);
@@ -70,8 +68,8 @@ describe('Account AI Actions - calculateAccountHealth', () => {
   it('should return component scores', async () => {
     // Arrange
     const mockAccount = { name: 'Test Account' };
-    (db.doc.get as Mock).mockResolvedValue(mockAccount);
-    (db.find as Mock).mockResolvedValue([]);
+    (broker.findOne as Mock).mockResolvedValue(mockAccount);
+    (broker.find as Mock).mockResolvedValue([]);
 
     const request: AccountHealthRequest = { accountId: 'acc_123' };
 
@@ -91,8 +89,8 @@ describe('Account AI Actions - calculateAccountHealth', () => {
     const mockAccount = { name: 'Low Engagement Account' };
     const mockActivities: any[] = []; // No recent activities
 
-    (db.doc.get as Mock).mockResolvedValue(mockAccount);
-    (db.find as Mock)
+    (broker.findOne as Mock).mockResolvedValue(mockAccount);
+    (broker.find as Mock)
       .mockResolvedValueOnce([]) // opportunities
       .mockResolvedValueOnce([]) // cases
       .mockResolvedValueOnce(mockActivities);
@@ -115,8 +113,8 @@ describe('Account AI Actions - calculateAccountHealth', () => {
       { status: 'open', priority: 'critical' }
     ];
 
-    (db.doc.get as Mock).mockResolvedValue(mockAccount);
-    (db.find as Mock)
+    (broker.findOne as Mock).mockResolvedValue(mockAccount);
+    (broker.find as Mock)
       .mockResolvedValueOnce([]) // opportunities
       .mockResolvedValueOnce(mockCases)
       .mockResolvedValueOnce([]); // activities
@@ -134,8 +132,8 @@ describe('Account AI Actions - calculateAccountHealth', () => {
   it('should provide actionable recommendations', async () => {
     // Arrange
     const mockAccount = { name: 'Test Account' };
-    (db.doc.get as Mock).mockResolvedValue(mockAccount);
-    (db.find as Mock).mockResolvedValue([]);
+    (broker.findOne as Mock).mockResolvedValue(mockAccount);
+    (broker.find as Mock).mockResolvedValue([]);
 
     const request: AccountHealthRequest = { accountId: 'acc_123' };
 
@@ -168,8 +166,8 @@ describe('Account AI Actions - predictChurn', () => {
     ];
     const mockActivities: any[] = [];
 
-    (db.doc.get as Mock).mockResolvedValue(mockAccount);
-    (db.find as Mock)
+    (broker.findOne as Mock).mockResolvedValue(mockAccount);
+    (broker.find as Mock)
       .mockResolvedValueOnce(mockOpportunities)
       .mockResolvedValueOnce(mockCases)
       .mockResolvedValueOnce(mockActivities);
@@ -198,8 +196,8 @@ describe('Account AI Actions - predictChurn', () => {
       activity_date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString()
     });
 
-    (db.doc.get as Mock).mockResolvedValue(mockAccount);
-    (db.find as Mock)
+    (broker.findOne as Mock).mockResolvedValue(mockAccount);
+    (broker.find as Mock)
       .mockResolvedValueOnce(mockOpportunities)
       .mockResolvedValueOnce(mockCases)
       .mockResolvedValueOnce(mockActivities);
@@ -217,8 +215,8 @@ describe('Account AI Actions - predictChurn', () => {
   it('should identify churn indicators', async () => {
     // Arrange
     const mockAccount = { name: 'Test Account' };
-    (db.doc.get as Mock).mockResolvedValue(mockAccount);
-    (db.find as Mock).mockResolvedValue([]);
+    (broker.findOne as Mock).mockResolvedValue(mockAccount);
+    (broker.find as Mock).mockResolvedValue([]);
 
     const request: ChurnPredictionRequest = { accountId: 'acc_123' };
 
@@ -235,8 +233,8 @@ describe('Account AI Actions - predictChurn', () => {
     const mockAccount = { name: 'At Risk Account' };
     const mockCases = Array(5).fill({ status: 'open', priority: 'high' });
 
-    (db.doc.get as Mock).mockResolvedValue(mockAccount);
-    (db.find as Mock)
+    (broker.findOne as Mock).mockResolvedValue(mockAccount);
+    (broker.find as Mock)
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce(mockCases)
       .mockResolvedValueOnce([]);
@@ -259,8 +257,8 @@ describe('Account AI Actions - predictChurn', () => {
   it('should handle accounts with no historical data', async () => {
     // Arrange
     const mockAccount = { name: 'New Account' };
-    (db.doc.get as Mock).mockResolvedValue(mockAccount);
-    (db.find as Mock).mockResolvedValue([]);
+    (broker.findOne as Mock).mockResolvedValue(mockAccount);
+    (broker.find as Mock).mockResolvedValue([]);
 
     const request: ChurnPredictionRequest = { accountId: 'acc_123' };
 
@@ -287,7 +285,7 @@ describe('Account AI Actions - generateRecommendations', () => {
       number_of_employees: 1000
     };
 
-    (db.doc.get as Mock).mockResolvedValue(mockAccount);
+    (broker.findOne as Mock).mockResolvedValue(mockAccount);
 
     const request: RecommendationRequest = { accountId: 'acc_123' };
 
@@ -309,7 +307,7 @@ describe('Account AI Actions - generateRecommendations', () => {
       number_of_employees: 200
     };
 
-    (db.doc.get as Mock).mockResolvedValue(mockAccount);
+    (broker.findOne as Mock).mockResolvedValue(mockAccount);
 
     const request: RecommendationRequest = { accountId: 'acc_123' };
 
@@ -332,7 +330,7 @@ describe('Account AI Actions - generateRecommendations', () => {
       number_of_employees: 100
     };
 
-    (db.doc.get as Mock).mockResolvedValue(mockAccount);
+    (broker.findOne as Mock).mockResolvedValue(mockAccount);
 
     const request: RecommendationRequest = { accountId: 'acc_123' };
 
@@ -355,7 +353,7 @@ describe('Account AI Actions - generateRecommendations', () => {
       number_of_employees: 500
     };
 
-    (db.doc.get as Mock).mockResolvedValue(mockAccount);
+    (broker.findOne as Mock).mockResolvedValue(mockAccount);
 
     const request: RecommendationRequest = { accountId: 'acc_123' };
 
@@ -376,7 +374,7 @@ describe('Account AI Actions - generateRecommendations', () => {
       number_of_employees: null
     };
 
-    (db.doc.get as Mock).mockResolvedValue(mockAccount);
+    (broker.findOne as Mock).mockResolvedValue(mockAccount);
 
     const request: RecommendationRequest = { accountId: 'acc_123' };
 

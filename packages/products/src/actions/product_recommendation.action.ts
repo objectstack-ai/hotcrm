@@ -11,7 +11,7 @@
  * 5. Product Adoption Prediction - Predict product adoption likelihood
  */
 
-import { db } from '../db';
+import { broker } from '../db';
 
 // ============================================================================
 // 1. PRODUCT RECOMMENDATIONS
@@ -60,12 +60,12 @@ export async function recommendProducts(request: RecommendProductsRequest): Prom
   const { accountId, maxRecommendations = 5 } = request;
 
   // Fetch account data
-  const account = await db.doc.get('account', accountId, {
+  const account = await broker.findOne('account', accountId, {
     fields: ['name', 'industry', 'number_of_employees', 'annual_revenue', 'type']
   });
 
   // Fetch customer's current products (via opportunities or contracts)
-  const existingOpps = await db.find('opportunity', {
+  const existingOpps = await broker.find('opportunity', {
     filters: [
       ['account_id', '=', accountId],
       ['stage', '=', 'closed_won']
@@ -74,14 +74,14 @@ export async function recommendProducts(request: RecommendProductsRequest): Prom
   });
 
   // Fetch all available products
-  const allProducts = await db.find('product', {
+  const allProducts = await broker.find('product', {
     filters: [['is_active', '=', true]],
     fields: ['product_id', 'name', 'product_code', 'description', 'family', 'is_active'],
     limit: 100
   });
 
   // Get product usage patterns from similar accounts
-  const similarAccounts = await db.find('account', {
+  const similarAccounts = await broker.find('account', {
     filters: [
       ['industry', '=', account.industry],
       ['account_id', '!=', accountId]
@@ -222,12 +222,12 @@ export async function findCrossSellOpportunities(request: FindCrossSellOpportuni
   const { accountId, minValue = 10000 } = request;
 
   // Get account and current products
-  const account = await db.doc.get('account', accountId, {
+  const account = await broker.findOne('account', accountId, {
     fields: ['name', 'industry', 'number_of_employees', 'annual_revenue']
   });
 
   // Get existing products
-  const currentProducts = await db.find('opportunity', {
+  const currentProducts = await broker.find('opportunity', {
     filters: [
       ['account_id', '=', accountId],
       ['stage', '=', 'closed_won']
@@ -236,13 +236,13 @@ export async function findCrossSellOpportunities(request: FindCrossSellOpportuni
   });
 
   // Get all products
-  const allProducts = await db.find('product', {
+  const allProducts = await broker.find('product', {
     filters: [['is_active', '=', true]],
     fields: ['product_id', 'name', 'product_code', 'family', 'description']
   });
 
   // Get customer engagement data
-  const recentActivities = await db.find('activity', {
+  const recentActivities = await broker.find('activity', {
     filters: [
       ['account_id', '=', accountId],
       ['activity_date', '>=', new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()]
@@ -436,20 +436,20 @@ export async function suggestProductBundles(request: SuggestProductBundlesReques
 
   let account = null;
   if (accountId) {
-    account = await db.doc.get('account', accountId, {
+    account = await broker.findOne('account', accountId, {
       fields: ['name', 'industry', 'number_of_employees']
     });
   }
 
   // Fetch available products
-  const products = await db.find('product', {
+  const products = await broker.find('product', {
     filters: [['is_active', '=', true]],
     fields: ['product_id', 'name', 'product_code', 'family', 'description'],
     limit: 100
   });
 
   // Fetch existing bundles for reference
-  const existingBundles = await db.find('product_bundle', {
+  const existingBundles = await broker.find('product_bundle', {
     filters: [['is_active', '=', true]],
     fields: ['name', 'bundle_id', 'discount_percent', 'description']
   });
@@ -620,16 +620,16 @@ export async function analyzeProductFit(request: AnalyzeProductFitRequest): Prom
   const { accountId, productId } = request;
 
   // Fetch account and product
-  const account = await db.doc.get('account', accountId, {
+  const account = await broker.findOne('account', accountId, {
     fields: ['name', 'industry', 'number_of_employees', 'annual_revenue', 'type']
   });
 
-  const product = await db.doc.get('product', productId, {
+  const product = await broker.findOne('product', productId, {
     fields: ['name', 'product_code', 'family', 'description', 'is_active']
   });
 
   // Fetch account's tech stack and existing products
-  const existingProducts = await db.find('opportunity', {
+  const existingProducts = await broker.find('opportunity', {
     filters: [
       ['account_id', '=', accountId],
       ['stage', '=', 'closed_won']
@@ -903,16 +903,16 @@ export async function predictProductAdoption(request: PredictProductAdoptionRequ
   const { accountId, productId, includeBenchmarks = true } = request;
 
   // Fetch account and product
-  const account = await db.doc.get('account', accountId, {
+  const account = await broker.findOne('account', accountId, {
     fields: ['name', 'industry', 'number_of_employees', 'annual_revenue', 'created_date']
   });
 
-  const product = await db.doc.get('product', productId, {
+  const product = await broker.findOne('product', productId, {
     fields: ['name', 'family', 'description']
   });
 
   // Fetch account engagement history
-  const activities = await db.find('activity', {
+  const activities = await broker.find('activity', {
     filters: [
       ['account_id', '=', accountId],
       ['activity_date', '>=', new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()]
@@ -922,7 +922,7 @@ export async function predictProductAdoption(request: PredictProductAdoptionRequ
   });
 
   // Fetch purchase history
-  const purchaseHistory = await db.find('opportunity', {
+  const purchaseHistory = await broker.find('opportunity', {
     filters: [
       ['account_id', '=', accountId],
       ['stage', '=', 'closed_won']

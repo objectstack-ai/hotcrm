@@ -36,6 +36,15 @@
 | **Copilot Instructions** | Development standards and protocols | [/.github/copilot-instructions.md](../.github/copilot-instructions.md) |
 | **Testing Guide** | Testing standards and practices | [/TESTING.md](../TESTING.md) |
 | **Package Testing** | Per-package testing documentation | [/packages/TESTING.md](../packages/TESTING.md) |
+| **API Reference** | Per-object field reference for all packages | [developers/api_reference.md](developers/api_reference.md) |
+| **Code Examples** | Hooks, actions, workflows, MCP examples | [developers/code_examples.md](developers/code_examples.md) |
+
+### Package Technical Specs
+
+| Package | Documentation | Contents |
+|---------|--------------|----------|
+| **HR** | [developers/specs/hr/](developers/specs/hr/README.md) | Recruitment pipeline, payroll calculations |
+| **AI** | [developers/specs/ai/](developers/specs/ai/README.md) | Model registry, agent architecture, MCP integration |
 
 ### AI Transformation Analysis
 

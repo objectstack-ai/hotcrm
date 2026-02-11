@@ -19,7 +19,7 @@ const RETRY_DELAY_MS = 1000;
  * - Industry-specific sales talking points
  */
 
-import { db } from '../db';
+import { broker } from '../db';
 
 export interface SmartBriefingRequest {
   /** Account ID to analyze */
@@ -246,7 +246,7 @@ export async function executeSmartBriefing(request: SmartBriefingRequest): Promi
     // 1. Fetch Account data with error handling
     let account;
     try {
-      account = await db.doc.get('Account', accountId, {
+      account = await broker.findOne('Account', accountId, {
         fields: ['Name', 'Industry', 'AnnualRevenue', 'CustomerStatus', 'Rating', 'Description', 'HealthScore', 'SLATier']
       });
     } catch (error) {
@@ -260,7 +260,7 @@ export async function executeSmartBriefing(request: SmartBriefingRequest): Promi
     // 2. Fetch recent Activities (Refactored to Protocol Compliant 'find')
     let activities = [];
     try {
-      activities = await db.find('Activity', {
+      activities = await broker.find('Activity', {
         fields: ['Type', 'Subject', 'ActivityDate', 'Status', 'Description'],
         filters: [['AccountId', '=', accountId]],
         sort: 'ActivityDate desc',
@@ -274,7 +274,7 @@ export async function executeSmartBriefing(request: SmartBriefingRequest): Promi
     // 3. Fetch recent Emails (Refactored to Protocol Compliant 'find')
     let emails = [];
     try {
-      emails = await db.find('email', {
+      emails = await broker.find('email', {
         fields: ['Subject', 'SentDate', 'Direction', 'Body'],
         filters: [['AccountId', '=', accountId]],
         sort: 'SentDate desc',
@@ -288,7 +288,7 @@ export async function executeSmartBriefing(request: SmartBriefingRequest): Promi
     // 4. Fetch recent Opportunities for context
     let opportunities = [];
     try {
-      opportunities = await db.find('Opportunity', {
+      opportunities = await broker.find('Opportunity', {
         fields: ['Name', 'Stage', 'Amount', 'CloseDate', 'Probability'],
         filters: [
           ['AccountId', '=', accountId],

@@ -11,7 +11,7 @@
  * 5. Revenue Benchmarking - Compare revenue to historical trends
  */
 
-import { db } from '../db';
+import { broker } from '../db';
 
 // ============================================================================
 // 1. REVENUE FORECASTING
@@ -72,20 +72,20 @@ export async function forecastRevenue(request: ForecastRevenueRequest): Promise<
     filters.push(['account_id', '=', request.accountId]);
   }
   
-  const opportunities = await db.find('opportunity', {
+  const opportunities = await broker.find('opportunity', {
     filters,
     fields: ['name', 'amount', 'stage', 'close_date', 'probability', 'account_id', 'created_date']
   });
 
   // Fetch historical revenue data from contracts
-  const historicalContracts = await db.find('contract', {
+  const historicalContracts = await broker.find('contract', {
     filters: [['status', '=', 'activated']],
     fields: ['start_date', 'end_date', 'billing_frequency', 'account_id'],
     limit: 1000
   });
 
   // Calculate historical win rate
-  const closedOpps = await db.find('opportunity', {
+  const closedOpps = await broker.find('opportunity', {
     filters: [
       ['stage', 'in', ['closed_won', 'closed_lost']],
       ['close_date', '>=', new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString()]
@@ -335,13 +335,13 @@ export async function analyzeRevenueRisk(request: AnalyzeRevenueRiskRequest): Pr
   const minRiskScore = request.minRiskScore || 0;
 
   // Fetch opportunities in late stages
-  const opportunities = await db.find('opportunity', {
+  const opportunities = await broker.find('opportunity', {
     filters: [['stage', '!=', 'closed_lost'], ['stage', '!=', 'closed_won']],
     fields: ['name', 'amount', 'stage', 'close_date', 'probability', 'account_id', 'created_date']
   });
 
   // Fetch contracts near renewal
-  const contracts = await db.find('contract', {
+  const contracts = await broker.find('contract', {
     filters: [['status', '=', 'activated']],
     fields: ['contract_number', 'end_date', 'account_id', 'status']
   });
@@ -523,7 +523,7 @@ export async function recommendRevenueActions(request: RecommendRevenueActionsRe
   const gapPercentage = (gap / revenueGoal) * 100;
 
   // Fetch opportunities for analysis
-  const opportunities = await db.find('opportunity', {
+  const opportunities = await broker.find('opportunity', {
     filters: [['stage', '!=', 'closed_lost'], ['stage', '!=', 'closed_won']],
     fields: ['name', 'amount', 'stage', 'close_date', 'probability', 'account_id']
   });
@@ -571,7 +571,7 @@ export async function recommendRevenueActions(request: RecommendRevenueActionsRe
   }
 
   // Recommendation 3: Expand existing accounts
-  const existingAccounts = await db.find('account', {
+  const existingAccounts = await broker.find('account', {
     filters: [['type', '=', 'customer']],
     fields: ['name', 'account_id'],
     limit: 100
@@ -724,7 +724,7 @@ export async function benchmarkRevenue(request: BenchmarkRevenueRequest): Promis
   startDate.setMonth(startDate.getMonth() - months);
 
   // Fetch historical opportunities
-  const opportunities = await db.find('opportunity', {
+  const opportunities = await broker.find('opportunity', {
     filters: [
       ['close_date', '>=', startDate.toISOString()],
       ['stage', '=', 'closed_won']
@@ -734,7 +734,7 @@ export async function benchmarkRevenue(request: BenchmarkRevenueRequest): Promis
   });
 
   // Fetch all closed opportunities for win rate
-  const allClosed = await db.find('opportunity', {
+  const allClosed = await broker.find('opportunity', {
     filters: [
       ['close_date', '>=', startDate.toISOString()],
       ['stage', 'in', ['closed_won', 'closed_lost']]

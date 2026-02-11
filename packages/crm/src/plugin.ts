@@ -20,6 +20,7 @@ import { Task } from './task.object';
 import { Note } from './note.object';
 import LeadConvertAction from './actions/lead_convert.action';
 import { AssignmentRule } from './assignment_rule.object';
+import { LeadWorkflows } from './lead.workflow';
 
 // Import hooks
 import { LeadScoringTrigger, LeadStatusChangeTrigger } from './hooks/lead.hook';
@@ -95,6 +96,14 @@ export const CRMPlugin: any = {
     note_edit_tracking: NoteEditTrackingTrigger,
     assignment_rule_validation: AssignmentRuleValidationTrigger,
     assignment_rule_sort_order: AssignmentRuleSortOrderTrigger,
+  },
+
+  // Workflows
+  workflows: {
+    lead_auto_assignment: LeadWorkflows.autoAssignment,
+    lead_auto_scoring: LeadWorkflows.autoScoring,
+    lead_nurturing: LeadWorkflows.nurturing,
+    lead_enrichment: LeadWorkflows.enrichment,
   },
 
   // Business objects provided by this plugin

@@ -3,13 +3,13 @@ import { optimizePricing, OptimizePricingRequest } from '../../../src/actions/pr
 import { vi, Mock } from 'vitest';
 
 vi.mock('../../../src/db', () => ({
-  db: {
-    doc: { get: vi.fn() },
+  broker: {
+    findOne: vi.fn(),
     find: vi.fn()
   }
 }));
 
-import { db } from '../../../src/db';
+import { broker } from '../../../src/db';
 
 describe('Pricing Optimizer - optimizePricing', () => {
   beforeEach(() => {
@@ -20,8 +20,8 @@ describe('Pricing Optimizer - optimizePricing', () => {
     const mockProduct = { name: 'Enterprise Suite', product_code: 'ENT-001', family: 'software', is_active: true };
     const mockPriceBookEntries = [{ list_price: 100000, price_book_id: 'pb_1' }];
 
-    (db.doc.get as Mock).mockResolvedValue(mockProduct);
-    (db.find as Mock).mockResolvedValueOnce(mockPriceBookEntries).mockResolvedValueOnce([]);
+    (broker.findOne as Mock).mockResolvedValue(mockProduct);
+    (broker.find as Mock).mockResolvedValueOnce(mockPriceBookEntries).mockResolvedValueOnce([]);
 
     const result = await optimizePricing({ productId: 'prod_123' });
 
@@ -39,8 +39,8 @@ describe('Pricing Optimizer - optimizePricing', () => {
       { amount: 45000, stage: 'closed_won', close_date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() }
     ];
 
-    (db.doc.get as Mock).mockResolvedValue(mockProduct);
-    (db.find as Mock)
+    (broker.findOne as Mock).mockResolvedValue(mockProduct);
+    (broker.find as Mock)
       .mockResolvedValueOnce(mockPriceEntries)
       .mockResolvedValueOnce(mockDeals);
 
@@ -53,8 +53,8 @@ describe('Pricing Optimizer - optimizePricing', () => {
   it('should provide sensitivity analysis', async () => {
     const mockProduct = { name: 'Product Y' };
 
-    (db.doc.get as Mock).mockResolvedValue(mockProduct);
-    (db.find as Mock).mockResolvedValue([{ list_price: 75000 }]);
+    (broker.findOne as Mock).mockResolvedValue(mockProduct);
+    (broker.find as Mock).mockResolvedValue([{ list_price: 75000 }]);
 
     const result = await optimizePricing({ productId: 'prod_sens' });
 
@@ -64,8 +64,8 @@ describe('Pricing Optimizer - optimizePricing', () => {
   });
 
   it('should include rationale', async () => {
-    (db.doc.get as Mock).mockResolvedValue({ name: 'Product Z' });
-    (db.find as Mock).mockResolvedValue([{ list_price: 25000 }]);
+    (broker.findOne as Mock).mockResolvedValue({ name: 'Product Z' });
+    (broker.find as Mock).mockResolvedValue([{ list_price: 25000 }]);
 
     const result = await optimizePricing({ productId: 'prod_rationale' });
 

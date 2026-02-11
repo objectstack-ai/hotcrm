@@ -1,12 +1,12 @@
 import { vi, Mock } from 'vitest';
 
 vi.mock('../../../src/db', () => ({
-  db: {
+  broker: {
     find: vi.fn()
   }
 }));
 
-import { db } from '../../../src/db';
+import { broker } from '../../../src/db';
 import {
   calculateTCV,
   calculateARR,
@@ -32,7 +32,7 @@ describe('Revenue Dashboard - calculateTCV', () => {
     ];
     const mockPriorContracts: any[] = [];
 
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce(mockContracts)
       .mockResolvedValueOnce(mockAccounts)
       .mockResolvedValueOnce(mockPriorContracts);
@@ -51,7 +51,7 @@ describe('Revenue Dashboard - calculateTCV', () => {
       { contract_number: 'C-003', status: 'activated', total_value: 200000, contract_type: 'Premium', account_id: 'acc_3', created_date: new Date().toISOString() },
     ];
 
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce(mockContracts)
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([]);
@@ -71,7 +71,7 @@ describe('Revenue Dashboard - calculateTCV', () => {
       { contract_number: 'C-003', status: 'draft', total_value: 50000, contract_type: 'Standard', account_id: 'acc_3', created_date: new Date().toISOString() },
     ];
 
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce(mockContracts)
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([]);
@@ -85,7 +85,7 @@ describe('Revenue Dashboard - calculateTCV', () => {
   });
 
   it('should filter by accountId when provided', async () => {
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([]);
@@ -95,7 +95,7 @@ describe('Revenue Dashboard - calculateTCV', () => {
 
     expect(result.summary.activeContracts).toBe(0);
     expect(result.summary.totalContractValue).toBe(0);
-    const callArgs = (db.find as Mock).mock.calls[0];
+    const callArgs = (broker.find as Mock).mock.calls[0];
     expect(callArgs[1].filters).toEqual(
       expect.arrayContaining([['account_id', '=', 'acc_123']])
     );
@@ -110,7 +110,7 @@ describe('Revenue Dashboard - calculateTCV', () => {
       { total_value: 150000 },
     ];
 
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce(mockContracts)
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce(mockPriorContracts);
@@ -137,7 +137,7 @@ describe('Revenue Dashboard - calculateARR', () => {
       { contract_number: 'C-001', account_id: 'acc_1', total_value: 10000, billing_frequency: 'monthly', start_date: pastDate, end_date: futureDate, status: 'activated', created_date: pastDate },
     ];
 
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce(mockContracts)  // active contracts
       .mockResolvedValueOnce([])             // churned contracts
       .mockResolvedValueOnce([{ account_id: 'acc_1', name: 'Test Co' }]); // accounts
@@ -159,7 +159,7 @@ describe('Revenue Dashboard - calculateARR', () => {
       { contract_number: 'C-001', account_id: 'acc_1', total_value: 10000, billing_frequency: 'monthly', start_date: farPast, end_date: futureDate, status: 'activated', created_date: farPast },
     ];
 
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce(mockContracts)
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([{ account_id: 'acc_1', name: 'Test Co' }]);
@@ -172,7 +172,7 @@ describe('Revenue Dashboard - calculateARR', () => {
   });
 
   it('should handle empty dataset', async () => {
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([]);
@@ -193,7 +193,7 @@ describe('Revenue Dashboard - calculateARR', () => {
       { contract_number: 'C-001', account_id: 'acc_1', total_value: 5000, billing_frequency: 'monthly', start_date: pastDate, end_date: futureDate, status: 'activated', created_date: pastDate },
     ];
 
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce(mockContracts)
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([{ account_id: 'acc_1', name: 'Test' }]);
@@ -218,7 +218,7 @@ describe('Revenue Dashboard - calculateARR', () => {
       { contract_number: 'C-002', account_id: 'acc_2', total_value: 5000, billing_frequency: 'monthly', start_date: pastDate, end_date: futureDate, status: 'activated', created_date: pastDate },
     ];
 
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce(mockContracts)
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([
@@ -252,7 +252,7 @@ describe('Revenue Dashboard - calculateQuoteToClose', () => {
       { opportunity_id: 'opp_2', stage: 'proposal', amount: 30000 },
     ];
 
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce(mockQuotes)   // quotes
       .mockResolvedValueOnce(mockOpps)     // opportunities
       .mockResolvedValueOnce([])           // products
@@ -278,7 +278,7 @@ describe('Revenue Dashboard - calculateQuoteToClose', () => {
       { opportunity_id: 'opp_1', stage: 'closed_won', close_date: now.toISOString(), amount: 100000 },
     ];
 
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce(mockQuotes)
       .mockResolvedValueOnce(mockOpps)
       .mockResolvedValueOnce([{ product_id: 'p1', name: 'Product A' }, { product_id: 'p2', name: 'Product B' }])
@@ -293,7 +293,7 @@ describe('Revenue Dashboard - calculateQuoteToClose', () => {
   });
 
   it('should handle empty quotes dataset', async () => {
-    (db.find as Mock).mockResolvedValueOnce([]); // quotes - no further finds since empty
+    (broker.find as Mock).mockResolvedValueOnce([]); // quotes - no further finds since empty
 
     const result = await calculateQuoteToClose({});
 
@@ -315,7 +315,7 @@ describe('Revenue Dashboard - calculateQuoteToClose', () => {
       { opportunity_id: 'opp_2', stage: 'proposal' },
     ];
 
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce(mockQuotes)
       .mockResolvedValueOnce(mockOpps)
       .mockResolvedValueOnce([])  // products
@@ -344,7 +344,7 @@ describe('Revenue Dashboard - calculateQuoteToClose', () => {
       { opportunity_id: 'opp_3', stage: 'proposal' },
     ];
 
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce(mockQuotes)
       .mockResolvedValueOnce(mockOpps)
       .mockResolvedValueOnce([{ product_id: 'p1', name: 'Product A' }, { product_id: 'p2', name: 'Product B' }])

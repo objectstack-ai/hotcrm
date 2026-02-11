@@ -11,7 +11,7 @@
  * 5. SLA Performance Analytics - Track and analyze SLA metrics
  */
 
-import { db } from '../db';
+import { broker } from '../db';
 
 // ============================================================================
 // 1. SLA BREACH PREDICTION
@@ -57,12 +57,12 @@ export async function predictSLABreach(request: SLABreachPredictionRequest): Pro
   const { caseId } = request;
 
   // Fetch case data
-  const caseRecord = await db.doc.get('case', caseId, {
+  const caseRecord = await broker.findOne('case', caseId, {
     fields: ['subject', 'priority', 'status', 'created_date', 'type', 'owner_id']
   });
 
   // Fetch SLA milestone data if available
-  const slaRecords = await db.find('sla_milestone', {
+  const slaRecords = await broker.find('sla_milestone', {
     filters: [['target_object_id', '=', caseId]],
     limit: 1
   });
@@ -229,12 +229,12 @@ export async function estimateResolutionTime(request: ResolutionTimeRequest): Pr
   const { caseId } = request;
 
   // Fetch case data
-  const caseRecord = await db.doc.get('case', caseId, {
+  const caseRecord = await broker.findOne('case', caseId, {
     fields: ['subject', 'description', 'priority', 'type', 'created_date']
   });
 
   // Fetch historical similar cases
-  const similarCases = await db.find('case', {
+  const similarCases = await broker.find('case', {
     filters: [
       ['type', '=', caseRecord.type],
       ['priority', '=', caseRecord.priority],
@@ -351,7 +351,7 @@ export async function analyzeEscalationNeeds(request: EscalationAnalysisRequest)
   const { periodHours = 24, riskThreshold = 50 } = request;
 
   // Fetch open cases from the period
-  const cases = await db.find('case', {
+  const cases = await broker.find('case', {
     filters: [
       ['status', '!=', 'closed'],
       ['created_date', '>', new Date(Date.now() - periodHours * 60 * 60 * 1000).toISOString()]
@@ -456,7 +456,7 @@ export async function optimizeWorkload(request: WorkloadOptimizationRequest): Pr
     casesQuery.filters.push(['queue_id', '=', queueId]);
   }
 
-  const cases = await db.find('case', casesQuery);
+  const cases = await broker.find('case', casesQuery);
 
   // Group cases by agent
   const agentCases: { [key: string]: any[] } = {};
@@ -576,7 +576,7 @@ export async function analyzeSLAPerformance(request: SLAAnalyticsRequest): Promi
     filters.push(['priority', '=', priority]);
   }
 
-  const cases = await db.find('case', {
+  const cases = await broker.find('case', {
     filters,
     fields: ['priority', 'status', 'created_date', 'closed_date', 'first_response_date']
   });

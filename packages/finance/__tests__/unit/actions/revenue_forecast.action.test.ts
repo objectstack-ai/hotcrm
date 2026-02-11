@@ -1,12 +1,12 @@
 import { vi, Mock } from 'vitest';
 
 vi.mock('../../../src/db', () => ({
-  db: {
+  broker: {
     find: vi.fn()
   }
 }));
 
-import { db } from '../../../src/db';
+import { broker } from '../../../src/db';
 import {
   forecastRevenue,
   predictQuarterlyRevenue,
@@ -32,7 +32,7 @@ describe('Revenue Forecast - forecastRevenue', () => {
       { name: 'Deal B', amount: 50000, stage: 'negotiation', close_date: futureClose.toISOString(), probability: 80, account_id: 'acc_2' },
     ];
 
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce(mockOpportunities)  // open opportunities
       .mockResolvedValueOnce([])                  // historical contracts
       .mockResolvedValueOnce([]);                 // closed opps for win rate
@@ -46,7 +46,7 @@ describe('Revenue Forecast - forecastRevenue', () => {
   });
 
   it('should include confidence levels in forecasts', async () => {
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([]);
@@ -68,7 +68,7 @@ describe('Revenue Forecast - forecastRevenue', () => {
       { name: 'Big Deal', amount: 200000, stage: 'closed_won', close_date: nextMonth.toISOString(), probability: 100, account_id: 'acc_1' },
     ];
 
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce(mockOpportunities)
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([]);
@@ -83,7 +83,7 @@ describe('Revenue Forecast - forecastRevenue', () => {
   });
 
   it('should list key assumptions', async () => {
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([]);
@@ -100,7 +100,7 @@ describe('Revenue Forecast - forecastRevenue', () => {
   });
 
   it('should handle filter by accountId', async () => {
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([]);
@@ -108,7 +108,7 @@ describe('Revenue Forecast - forecastRevenue', () => {
     const request: ForecastRevenueRequest = { accountId: 'acc_filter', months: 2 };
     await forecastRevenue(request);
 
-    const firstCall = (db.find as Mock).mock.calls[0];
+    const firstCall = (broker.find as Mock).mock.calls[0];
     expect(firstCall[1].filters).toEqual(
       expect.arrayContaining([['account_id', '=', 'acc_filter']])
     );
@@ -127,7 +127,7 @@ describe('Revenue Forecast - analyzeRevenueRisk', () => {
     ];
     const mockContracts: any[] = [];
 
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce(mockOpportunities)
       .mockResolvedValueOnce(mockContracts);
 
@@ -147,7 +147,7 @@ describe('Revenue Forecast - analyzeRevenueRisk', () => {
       { name: 'Old Deal', amount: 100000, stage: 'proposal', close_date: new Date().toISOString(), probability: 50, account_id: 'acc_1', created_date: staleDate },
     ];
 
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce(mockOpportunities)
       .mockResolvedValueOnce([]);
 
@@ -165,7 +165,7 @@ describe('Revenue Forecast - analyzeRevenueRisk', () => {
       { name: 'Deal B', amount: 100000, stage: 'negotiation', probability: 50, account_id: 'acc_2', created_date: staleDate, close_date: new Date().toISOString() },
     ];
 
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce(mockOpportunities)
       .mockResolvedValueOnce([]);
 
@@ -180,7 +180,7 @@ describe('Revenue Forecast - analyzeRevenueRisk', () => {
       { name: 'D1', amount: 100000, stage: 'proposal', probability: 50, account_id: 'acc_1', created_date: new Date().toISOString(), close_date: new Date().toISOString() },
     ];
 
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce(mockOpportunities)
       .mockResolvedValueOnce([]);
 
@@ -198,7 +198,7 @@ describe('Revenue Forecast - analyzeRevenueRisk', () => {
       { name: 'D2', amount: 50000, stage: 'prospecting', probability: 50, account_id: 'acc_2', created_date: recentDate, close_date: new Date().toISOString() },
     ];
 
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce(mockOpportunities)
       .mockResolvedValueOnce([]);
 
@@ -224,7 +224,7 @@ describe('Revenue Forecast - benchmarkRevenue', () => {
       { stage: 'closed_lost', amount: 60000, close_date: new Date(now.getFullYear(), now.getMonth() - 1, 5).toISOString(), created_date: new Date(now.getFullYear(), now.getMonth() - 3, 1).toISOString() },
     ];
 
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce(mockWonOpps)
       .mockResolvedValueOnce(mockAllClosed);
 
@@ -241,7 +241,7 @@ describe('Revenue Forecast - benchmarkRevenue', () => {
       { name: 'W1', amount: 50000, close_date: new Date(now.getFullYear(), now.getMonth() - 2, 15).toISOString(), created_date: new Date(now.getFullYear(), now.getMonth() - 5, 1).toISOString(), stage: 'closed_won' },
     ];
 
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce(mockWonOpps)
       .mockResolvedValueOnce(mockWonOpps);
 
@@ -256,7 +256,7 @@ describe('Revenue Forecast - benchmarkRevenue', () => {
   });
 
   it('should include industry benchmark comparisons', async () => {
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([]);
 
@@ -282,7 +282,7 @@ describe('Revenue Forecast - benchmarkRevenue', () => {
       })),
     ];
 
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce(mockWonOpps)
       .mockResolvedValueOnce(mockAllClosed);
 
@@ -296,7 +296,7 @@ describe('Revenue Forecast - benchmarkRevenue', () => {
   });
 
   it('should handle empty dataset gracefully', async () => {
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([]);
 

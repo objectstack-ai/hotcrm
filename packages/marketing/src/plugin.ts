@@ -23,6 +23,7 @@ import { UnsubscribeComplianceTrigger, UnsubscribeValidationTrigger, GlobalSuppr
 import CampaignAIAction from './actions/campaign_ai.action';
 import ContentGeneratorAction from './actions/content_generator.action';
 import MarketingAnalyticsAction from './actions/marketing_analytics.action';
+import { CampaignWorkflows } from './campaign.workflow';
 
 export const MarketingPlugin: any = {
   name: 'marketing',
@@ -75,6 +76,14 @@ export const MarketingPlugin: any = {
     unsubscribe_compliance: UnsubscribeComplianceTrigger,
     unsubscribe_validation: UnsubscribeValidationTrigger,
     global_suppression: GlobalSuppressionTrigger,
+  },
+
+  // Workflows
+  workflows: {
+    campaign_auto_activation: CampaignWorkflows.autoActivation,
+    campaign_budget_alert: CampaignWorkflows.budgetAlert,
+    campaign_completion_check: CampaignWorkflows.completionCheck,
+    campaign_member_welcome: CampaignWorkflows.memberWelcome,
   },
   navigation: [
     {

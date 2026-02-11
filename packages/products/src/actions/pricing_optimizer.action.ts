@@ -11,7 +11,7 @@
  * 5. Optimal Price Calculation - Calculate revenue-maximizing price
  */
 
-import { db } from '../db';
+import { broker } from '../db';
 
 // ============================================================================
 // 1. PRICING OPTIMIZATION
@@ -67,12 +67,12 @@ export async function optimizePricing(request: OptimizePricingRequest): Promise<
   const { productId, accountId, opportunityId } = request;
 
   // Fetch product
-  const product = await db.doc.get('product', productId, {
+  const product = await broker.findOne('product', productId, {
     fields: ['name', 'product_code', 'family', 'is_active']
   });
 
   // Fetch price book entries for this product
-  const priceBookEntries = await db.find('price_book_entry', {
+  const priceBookEntries = await broker.find('price_book_entry', {
     filters: [['product_id', '=', productId]],
     fields: ['list_price', 'price_book_id'],
     limit: 10
@@ -81,7 +81,7 @@ export async function optimizePricing(request: OptimizePricingRequest): Promise<
   const listPrice = priceBookEntries.length > 0 ? priceBookEntries[0].list_price : 50000;
 
   // Fetch historical deals for this product
-  const historicalDeals = await db.find('opportunity', {
+  const historicalDeals = await broker.find('opportunity', {
     filters: [
       ['stage', 'in', ['closed_won', 'closed_lost']]
     ],
@@ -105,14 +105,14 @@ export async function optimizePricing(request: OptimizePricingRequest): Promise<
 
   // Get account-specific context
   if (accountId) {
-    account = await db.doc.get('account', accountId, {
+    account = await broker.findOne('account', accountId, {
       fields: ['name', 'industry', 'number_of_employees', 'annual_revenue']
     });
   }
 
   // Get opportunity-specific context
   if (opportunityId) {
-    opportunity = await db.doc.get('opportunity', opportunityId, {
+    opportunity = await broker.findOne('opportunity', opportunityId, {
       fields: ['amount', 'stage', 'probability', 'close_date']
     });
     
@@ -337,12 +337,12 @@ export async function analyzeCompetitivePricing(request: AnalyzeCompetitivePrici
   const { productId, segment = 'mid-market' } = request;
 
   // Fetch product
-  const product = await db.doc.get('product', productId, {
+  const product = await broker.findOne('product', productId, {
     fields: ['name', 'product_code', 'family']
   });
 
   // Fetch price book entry
-  const priceEntries = await db.find('price_book_entry', {
+  const priceEntries = await broker.find('price_book_entry', {
     filters: [['product_id', '=', productId]],
     fields: ['list_price'],
     limit: 1
@@ -351,7 +351,7 @@ export async function analyzeCompetitivePricing(request: AnalyzeCompetitivePrici
   const yourPrice = priceEntries.length > 0 ? priceEntries[0].list_price : 50000;
 
   // Fetch market data from historical opportunities
-  const marketDeals = await db.find('opportunity', {
+  const marketDeals = await broker.find('opportunity', {
     filters: [['stage', '=', 'closed_won']],
     fields: ['amount', 'close_date'],
     limit: 1000
@@ -517,17 +517,17 @@ export async function suggestDiscounts(request: SuggestDiscountsRequest): Promis
   const { opportunityId, targetWinRate = 70 } = request;
 
   // Fetch opportunity
-  const opportunity = await db.doc.get('opportunity', opportunityId, {
+  const opportunity = await broker.findOne('opportunity', opportunityId, {
     fields: ['name', 'amount', 'stage', 'probability', 'close_date', 'account_id']
   });
 
   // Fetch account
-  const account = await db.doc.get('account', opportunity.account_id, {
+  const account = await broker.findOne('account', opportunity.account_id, {
     fields: ['name', 'industry', 'number_of_employees', 'annual_revenue']
   });
 
   // Get quote line items if available
-  const quotes = await db.find('quote', {
+  const quotes = await broker.find('quote', {
     filters: [['opportunity_id', '=', opportunityId]],
     fields: ['total_price', 'discount', 'status'],
     limit: 10
@@ -539,7 +539,7 @@ export async function suggestDiscounts(request: SuggestDiscountsRequest): Promis
   const currentDiscountPercent = (currentDiscountAmount / listPrice) * 100;
 
   // Analyze historical discount patterns
-  const historicalDeals = await db.find('opportunity', {
+  const historicalDeals = await broker.find('opportunity', {
     filters: [
       ['stage', 'in', ['closed_won', 'closed_lost']],
       ['close_date', '>=', new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString()]
@@ -683,12 +683,12 @@ export async function predictPriceElasticity(request: PredictPriceElasticityRequ
   const { productId, segment = 'mid-market' } = request;
 
   // Fetch product
-  const product = await db.doc.get('product', productId, {
+  const product = await broker.findOne('product', productId, {
     fields: ['name', 'product_code', 'family']
   });
 
   // Fetch historical pricing and volume data
-  const historicalOpps = await db.find('opportunity', {
+  const historicalOpps = await broker.find('opportunity', {
     filters: [['stage', '=', 'closed_won']],
     fields: ['amount', 'close_date', 'quantity'],
     limit: 1000
@@ -843,12 +843,12 @@ export async function calculateOptimalPrice(request: CalculateOptimalPriceReques
   const { productId, accountId, costBasis = 20000, targetMargin = 60 } = request;
 
   // Fetch product
-  const product = await db.doc.get('product', productId, {
+  const product = await broker.findOne('product', productId, {
     fields: ['name', 'product_code', 'family']
   });
 
   // Get current price
-  const priceEntries = await db.find('price_book_entry', {
+  const priceEntries = await broker.find('price_book_entry', {
     filters: [['product_id', '=', productId]],
     fields: ['list_price'],
     limit: 1
@@ -859,7 +859,7 @@ export async function calculateOptimalPrice(request: CalculateOptimalPriceReques
   // Get account context if provided
   let account = null;
   if (accountId) {
-    account = await db.doc.get('account', accountId, {
+    account = await broker.findOne('account', accountId, {
       fields: ['name', 'industry', 'number_of_employees', 'annual_revenue']
     });
   }
@@ -885,7 +885,7 @@ export async function calculateOptimalPrice(request: CalculateOptimalPriceReques
   const competitivePrice = Math.round(marketPrice * 0.95);
 
   // Get historical win rates at different price points
-  const historicalDeals = await db.find('opportunity', {
+  const historicalDeals = await broker.find('opportunity', {
     filters: [['stage', 'in', ['closed_won', 'closed_lost']]],
     fields: ['amount', 'stage'],
     limit: 500

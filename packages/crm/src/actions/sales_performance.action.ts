@@ -9,7 +9,7 @@
  * 3. Forecast Accuracy Metrics - Bias, accuracy by rep/stage/product
  */
 
-import { db } from '../db';
+import { broker } from '../db';
 
 // ============================================================================
 // SHARED TYPES
@@ -94,7 +94,7 @@ export async function analyzePipeline(request: PipelineAnalysisRequest): Promise
     filters.push(['CreatedDate', '<=', dateRange.endDate]);
   }
 
-  const opportunities: any[] = await db.find('Opportunity', {
+  const opportunities: any[] = await broker.find('Opportunity', {
     filters,
     fields: [
       'Id', 'Name', 'Stage', 'Amount', 'CreatedDate', 'CloseDate',
@@ -300,7 +300,7 @@ export async function analyzeWinRates(request: WinRateAnalysisRequest): Promise<
     filters.push(['CloseDate', '<=', dateRange.endDate]);
   }
 
-  const opportunities: any[] = await db.find('Opportunity', {
+  const opportunities: any[] = await broker.find('Opportunity', {
     filters,
     fields: [
       'Id', 'Name', 'Stage', 'Amount', 'CloseDate', 'IsWon',
@@ -477,7 +477,7 @@ export async function analyzeForecastAccuracy(request: ForecastAccuracyRequest):
     closedFilters.push(['CloseDate', '<=', dateRange.endDate]);
   }
 
-  const closedWon: any[] = await db.find('Opportunity', {
+  const closedWon: any[] = await broker.find('Opportunity', {
     filters: closedFilters,
     fields: [
       'Id', 'Name', 'Amount', 'ForecastAmount', 'CloseDate',
@@ -486,7 +486,7 @@ export async function analyzeForecastAccuracy(request: ForecastAccuracyRequest):
   });
 
   // Fetch current open opportunities for coverage analysis
-  const openOpps: any[] = await db.find('Opportunity', {
+  const openOpps: any[] = await broker.find('Opportunity', {
     filters: [['IsClosed', '=', false]],
     fields: ['Id', 'Amount', 'ForecastCategory', 'Stage', 'OwnerId']
   });

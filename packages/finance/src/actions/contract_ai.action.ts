@@ -11,7 +11,7 @@
  * 5. Contract Optimization - Suggest better terms
  */
 
-import { db } from '../db';
+import { broker } from '../db';
 
 // ============================================================================
 // 1. CONTRACT RISK ANALYSIS
@@ -54,7 +54,7 @@ export async function analyzeContractRisk(request: ContractRiskRequest): Promise
   const { contractId } = request;
 
   // Fetch contract data
-  const contract = await db.doc.get('contract', contractId, {
+  const contract = await broker.findOne('contract', contractId, {
     fields: ['contract_number', 'contract_term', 'status', 'start_date', 'end_date', 
              'billing_frequency', 'payment_terms', 'account_id']
   });
@@ -113,7 +113,7 @@ export async function analyzeContractRisk(request: ContractRiskRequest): Promise
 
   // Fetch account data for credit risk
   if (contract.account_id) {
-    const account = await db.doc.get('account', contract.account_id, {
+    const account = await broker.findOne('account', contract.account_id, {
       fields: ['name', 'annual_revenue', 'number_of_employees']
     });
 
@@ -209,12 +209,12 @@ export async function predictRenewal(request: RenewalPredictionRequest): Promise
   const { contractId } = request;
 
   // Fetch contract data
-  const contract = await db.doc.get('contract', contractId, {
+  const contract = await broker.findOne('contract', contractId, {
     fields: ['account_id', 'status', 'start_date', 'end_date', 'contract_term']
   });
 
   // Fetch account data
-  const account = await db.doc.get('account', contract.account_id, {
+  const account = await broker.findOne('account', contract.account_id, {
     fields: ['name']
   });
 
@@ -247,7 +247,7 @@ export async function predictRenewal(request: RenewalPredictionRequest): Promise
   }
 
   // Factor 2: Support cases
-  const recentCases = await db.find('case', {
+  const recentCases = await broker.find('case', {
     filters: [
       ['account_id', '=', contract.account_id],
       ['created_date', '>', new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()]
@@ -288,7 +288,7 @@ export async function predictRenewal(request: RenewalPredictionRequest): Promise
   }
 
   // Factor 4: Recent opportunities (upsell interest)
-  const recentOpps = await db.find('opportunity', {
+  const recentOpps = await broker.find('opportunity', {
     filters: [
       ['account_id', '=', contract.account_id],
       ['created_date', '>', new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()]
@@ -404,7 +404,7 @@ export async function extractContractTerms(request: ContractExtractionRequest): 
   let text = documentText;
   if (contractId && !text) {
     // Fetch contract
-    const contract = await db.doc.get('contract', contractId);
+    const contract = await broker.findOne('contract', contractId);
     text = `Contract between parties effective ${contract.start_date}`;
   }
 
@@ -486,7 +486,7 @@ export async function checkCompliance(request: ComplianceCheckRequest): Promise<
   const { contractId, frameworks = ['gdpr', 'soc2'] } = request;
 
   // Fetch contract
-  const contract = await db.doc.get('contract', contractId);
+  const contract = await broker.findOne('contract', contractId);
 
   const issues: Array<{
     framework: string;
@@ -560,7 +560,7 @@ export async function optimizeContract(request: ContractOptimizationRequest): Pr
   const { contractId } = request;
 
   // Fetch contract
-  const contract = await db.doc.get('contract', contractId, {
+  const contract = await broker.findOne('contract', contractId, {
     fields: ['payment_terms', 'billing_frequency', 'contract_term']
   });
 

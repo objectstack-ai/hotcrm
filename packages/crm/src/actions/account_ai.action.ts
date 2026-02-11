@@ -11,7 +11,7 @@
  * 5. Account Enrichment - Auto-fill missing data from external sources
  */
 
-import { db } from '../db';
+import { broker } from '../db';
 
 // ============================================================================
 // 1. ACCOUNT HEALTH SCORING
@@ -62,24 +62,24 @@ export async function calculateAccountHealth(request: AccountHealthRequest): Pro
   const { accountId } = request;
 
   // Fetch account data
-  const account = await db.doc.get('account', accountId, {
+  const account = await broker.findOne('account', accountId, {
     fields: ['name', 'annual_revenue', 'number_of_employees', 'industry', 'created_date', 'type']
   });
 
   // Fetch related opportunities
-  const opportunities = await db.find('opportunity', {
+  const opportunities = await broker.find('opportunity', {
     filters: [['account_id', '=', accountId]],
     fields: ['amount', 'stage', 'close_date', 'created_date']
   });
 
   // Fetch cases
-  const cases = await db.find('case', {
+  const cases = await broker.find('case', {
     filters: [['account_id', '=', accountId]],
     fields: ['status', 'priority', 'created_date', 'closed_date']
   });
 
   // Fetch activities
-  const activities = await db.find('activity', {
+  const activities = await broker.find('activity', {
     filters: [['account_id', '=', accountId]],
     sort: 'activity_date desc',
     limit: 100
@@ -326,7 +326,7 @@ export async function generateRecommendations(request: RecommendationRequest): P
   const { accountId } = request;
 
   // Fetch account data
-  const account = await db.doc.get('account', accountId, {
+  const account = await broker.findOne('account', accountId, {
     fields: ['industry', 'annual_revenue', 'number_of_employees']
   });
 
@@ -410,7 +410,7 @@ export async function assignTerritory(request: TerritoryAssignmentRequest): Prom
   const { accountId } = request;
 
   // Fetch account data
-  const account = await db.doc.get('account', accountId, {
+  const account = await broker.findOne('account', accountId, {
     fields: ['industry', 'annual_revenue', 'billing_state', 'billing_country']
   });
 
@@ -474,7 +474,7 @@ export async function enrichAccount(request: EnrichmentRequest): Promise<Enrichm
   const { accountId, sources = ['all'] } = request;
 
   // Fetch current account data
-  const account = await db.doc.get('account', accountId, {
+  const account = await broker.findOne('account', accountId, {
     fields: ['name', 'website', 'industry', 'annual_revenue', 'number_of_employees']
   });
 

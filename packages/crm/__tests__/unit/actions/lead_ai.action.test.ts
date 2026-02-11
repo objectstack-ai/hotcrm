@@ -12,16 +12,14 @@ import {
 import { vi, Mock } from 'vitest';
 
 vi.mock('../../../src/db', () => ({
-  db: {
-    doc: {
-      get: vi.fn(),
-      update: vi.fn()
-    },
+  broker: {
+    findOne: vi.fn(),
+    update: vi.fn(),
     find: vi.fn()
   }
 }));
 
-import { db } from '../../../src/db';
+import { broker } from '../../../src/db';
 
 describe('Lead AI Actions - extractEmailSignature', () => {
   beforeEach(() => {
@@ -42,7 +40,7 @@ describe('Lead AI Actions - extractEmailSignature', () => {
   });
 
   it('should auto-update lead when leadId is provided and confidence is high', async () => {
-    (db.doc.update as Mock).mockResolvedValue({});
+    (broker.update as Mock).mockResolvedValue({});
 
     const request: EmailSignatureRequest = {
       emailBody: 'Best regards,\nJohn Doe\nVP of Sales\njohn.doe@acme.com',
@@ -52,7 +50,7 @@ describe('Lead AI Actions - extractEmailSignature', () => {
     const result = await extractEmailSignature(request);
 
     expect(result.leadUpdated).toBe(true);
-    expect(db.doc.update).toHaveBeenCalledWith('Lead', 'lead_001', expect.any(Object));
+    expect(broker.update).toHaveBeenCalledWith('Lead', 'lead_001', expect.any(Object));
   });
 
   it('should return confidence scores for each extracted field', async () => {
@@ -90,7 +88,7 @@ describe('Lead AI Actions - enrichLead', () => {
   });
 
   it('should throw error when no domain is available', async () => {
-    (db.doc.get as Mock).mockResolvedValue({ Email: null });
+    (broker.findOne as Mock).mockResolvedValue({ Email: null });
 
     const request: LeadEnrichmentRequest = {
       leadId: 'lead_001'
@@ -100,8 +98,8 @@ describe('Lead AI Actions - enrichLead', () => {
   });
 
   it('should fetch domain from lead record when leadId provided', async () => {
-    (db.doc.get as Mock).mockResolvedValue({ Email: 'john@acme.com' });
-    (db.doc.update as Mock).mockResolvedValue({});
+    (broker.findOne as Mock).mockResolvedValue({ Email: 'john@acme.com' });
+    (broker.update as Mock).mockResolvedValue({});
 
     const request: LeadEnrichmentRequest = {
       leadId: 'lead_001'
@@ -109,9 +107,9 @@ describe('Lead AI Actions - enrichLead', () => {
 
     const result = await enrichLead(request);
 
-    expect(db.doc.get).toHaveBeenCalledWith('Lead', 'lead_001', { fields: ['email'] });
+    expect(broker.findOne).toHaveBeenCalledWith('Lead', 'lead_001', { fields: ['email'] });
     expect(result.companyData).toBeDefined();
-    expect(db.doc.update).toHaveBeenCalledWith('Lead', 'lead_001', expect.any(Object));
+    expect(broker.update).toHaveBeenCalledWith('Lead', 'lead_001', expect.any(Object));
   });
 });
 
@@ -121,7 +119,7 @@ describe('Lead AI Actions - routeLead', () => {
   });
 
   it('should recommend a sales rep and auto-assign the lead', async () => {
-    (db.doc.get as Mock).mockResolvedValue({
+    (broker.findOne as Mock).mockResolvedValue({
       Company: 'Acme Corp',
       Industry: 'technology',
       State: 'CA',
@@ -129,7 +127,7 @@ describe('Lead AI Actions - routeLead', () => {
       LeadScore: 80,
       AnnualRevenue: 5000000
     });
-    (db.doc.update as Mock).mockResolvedValue({});
+    (broker.update as Mock).mockResolvedValue({});
 
     const request: LeadRoutingRequest = { leadId: 'lead_001' };
 
@@ -140,17 +138,17 @@ describe('Lead AI Actions - routeLead', () => {
     expect(result.recommendedOwner.userId).toBeDefined();
     expect(result.recommendedOwner.matchScore).toBeGreaterThan(0);
     expect(result.assigned).toBe(true);
-    expect(db.doc.update).toHaveBeenCalledWith('Lead', 'lead_001', expect.objectContaining({
+    expect(broker.update).toHaveBeenCalledWith('Lead', 'lead_001', expect.objectContaining({
       OwnerId: expect.any(String)
     }));
   });
 
   it('should provide alternative recommendations with reasoning', async () => {
-    (db.doc.get as Mock).mockResolvedValue({
+    (broker.findOne as Mock).mockResolvedValue({
       Industry: 'technology',
       State: 'CA'
     });
-    (db.doc.update as Mock).mockResolvedValue({});
+    (broker.update as Mock).mockResolvedValue({});
 
     const request: LeadRoutingRequest = { leadId: 'lead_002' };
 
@@ -170,7 +168,7 @@ describe('Lead AI Actions - generateNurturingRecommendations', () => {
   });
 
   it('should generate personalized nurturing recommendations', async () => {
-    (db.doc.get as Mock).mockResolvedValue({
+    (broker.findOne as Mock).mockResolvedValue({
       FirstName: 'John',
       LastName: 'Doe',
       Company: 'Acme Corp',
@@ -180,7 +178,7 @@ describe('Lead AI Actions - generateNurturingRecommendations', () => {
       Status: 'working',
       LeadSource: 'Website'
     });
-    (db.find as Mock).mockResolvedValue([
+    (broker.find as Mock).mockResolvedValue([
       { Type: 'email', Subject: 'Follow up', ActivityDate: '2024-01-15' }
     ]);
 
@@ -200,7 +198,7 @@ describe('Lead AI Actions - generateNurturingRecommendations', () => {
   });
 
   it('should include content recommendations with relevance scores', async () => {
-    (db.doc.get as Mock).mockResolvedValue({
+    (broker.findOne as Mock).mockResolvedValue({
       FirstName: 'Jane',
       LastName: 'Smith',
       Company: 'Tech Co',
@@ -210,7 +208,7 @@ describe('Lead AI Actions - generateNurturingRecommendations', () => {
       Status: 'new',
       LeadSource: 'Referral'
     });
-    (db.find as Mock).mockResolvedValue([]);
+    (broker.find as Mock).mockResolvedValue([]);
 
     const request: LeadNurturingRequest = { leadId: 'lead_002' };
 

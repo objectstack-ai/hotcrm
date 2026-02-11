@@ -9,9 +9,10 @@
 |--------|-------|
 | Protocol Version | @objectstack/spec v2.0.6 |
 | Business Objects | 69 across 6 clouds |
-| Hook Files | 45 across 6 packages |
+| Hook Files | 47 across 6 packages |
 | Action Files | 27 across 7 packages |
-| Test Files | 91 files, 1365 tests (all passing) |
+| Workflow Files | 6 across 6 packages (all registered in plugins) |
+| Test Files | 94 files, 1457 tests (all passing) |
 | TypeScript Compliance | 100% (zero type errors) |
 | Protocol Compliance | 100% (all objects pass ObjectSchema.parse()) |
 
@@ -43,8 +44,8 @@
 #### 🟢 P2 — Feature Gaps
 - [x] Register Contact and Activity triggers in `plugin.ts` (functions exist but aren't exported)
 - [x] Add hooks for task, note, and assignment_rule objects
-- [ ] Add workflow definitions for lead assignment and opportunity pipeline automation
-- [ ] Migrate `db.ts` shim to direct `@objectstack/runtime` broker API
+- [x] Add workflow definitions for lead assignment and opportunity pipeline automation
+- [x] Migrate `db.ts` shim to direct `@objectstack/runtime` broker API
 
 ---
 
@@ -67,8 +68,8 @@
 - [x] Add hooks for `payment` object (payment matching, overpayment handling, receipt generation)
 - [x] Add hooks for `invoice_line` object (line item calculations, tax computation)
 - [x] Register actions in `plugin.ts` (4 action files exist but aren't exported)
-- [ ] Implement payment reminder workflow logic (workflow file exists but may need hooks)
-- [ ] Migrate `db.ts` shim to direct `@objectstack/runtime` broker API
+- [x] Implement payment reminder workflow logic (workflow file exists but may need hooks)
+- [x] Migrate `db.ts` shim to direct `@objectstack/runtime` broker API
 
 #### 🔵 P3 — Architecture
 - [ ] Consider splitting large action files (`revenue_forecast.action.ts`, `revenue_dashboard.action.ts`) into smaller modules
@@ -100,12 +101,12 @@
 - [x] Add hooks for `time_off` object (balance validation, manager approval)
 - [x] Add hooks for `attendance` object (clock-in/out validation)
 - [x] Add hooks for `goal` object (progress tracking, alignment)
-- [ ] Migrate `db.ts` shim to direct `@objectstack/runtime` broker API
+- [x] Migrate `db.ts` shim to direct `@objectstack/runtime` broker API
 
 #### 🔵 P3 — Documentation
-- [ ] Create `developers/specs/hr/` technical specification directory
-- [ ] Document recruitment pipeline stages and lifecycle
-- [ ] Document payroll calculation logic and tax rules
+- [x] Create `developers/specs/hr/` technical specification directory
+- [x] Document recruitment pipeline stages and lifecycle
+- [x] Document payroll calculation logic and tax rules
 
 ---
 
@@ -135,7 +136,7 @@
 - [x] Add hooks for `marketing_list` object (membership validation, deduplication)
 - [x] Add hooks for `unsubscribe` object (compliance enforcement, global suppression)
 - [x] Implement campaign automation workflow
-- [ ] Migrate `db.ts` shim to direct `@objectstack/runtime` broker API
+- [x] Migrate `db.ts` shim to direct `@objectstack/runtime` broker API
 
 ---
 
@@ -161,7 +162,7 @@
 - [x] Add hooks for `price_rule` object (rule validation, conflict detection)
 - [x] Add hooks for `approval_request` object (workflow triggers, escalation)
 - [x] Add hooks for `discount_schedule` object (schedule activation, overlap detection)
-- [ ] Migrate `db.ts` shim to direct `@objectstack/runtime` broker API
+- [x] Migrate `db.ts` shim to direct `@objectstack/runtime` broker API
 
 ---
 
@@ -178,7 +179,7 @@
 #### 🟡 P1 — Test Coverage
 - [x] Add hook tests for `knowledge.hook.ts` (5 hooks exist but not exported in plugin.ts)
 - [x] Add action tests for `case_ai.action.ts`
-- [ ] Add integration tests for case escalation workflow
+- [x] Add integration tests for case escalation workflow
 
 #### 🟢 P2 — Feature Gaps
 - [x] Export knowledge hooks in `plugin.ts` (knowledge.hook.ts has 5 hooks but only case hook is registered)
@@ -186,14 +187,14 @@
 - [x] Add hooks for case routing (`routing_rule`, `escalation_rule` — auto-assignment)
 - [x] Add hooks for queue management (`queue`, `queue_member` — load balancing)
 - [x] Add hooks for community (`forum_topic`, `forum_post` — moderation, notification)
-- [ ] Implement case escalation workflow
-- [ ] Migrate `db.ts` shim to direct `@objectstack/runtime` broker API
+- [x] Implement case escalation workflow
+- [x] Migrate `db.ts` shim to direct `@objectstack/runtime` broker API
 
 ---
 
 ### 📦 AI Package (`@hotcrm/ai`) — Intelligence Layer
 
-**Source Files**: 11 | **Tests**: 7 files
+**Source Files**: 12 | **Tests**: 9 files
 
 #### ✅ Current State
 - [x] Comprehensive AI service layer with ML model integration
@@ -202,10 +203,10 @@
 - [x] All labels in English, zero TODO/FIXME comments
 
 #### 🟢 P2 — Feature Gaps
-- [ ] Create `developers/specs/ai/` technical specification directory
-- [ ] Add MCP (Model Context Protocol) server configuration (new `@objectstack/spec/ai` feature)
-- [ ] Add integration tests for provider factory end-to-end flow
-- [ ] Document model registry usage patterns and AI agent architecture
+- [x] Create `developers/specs/ai/` technical specification directory
+- [x] Add MCP (Model Context Protocol) server configuration (new `@objectstack/spec/ai` feature)
+- [x] Add integration tests for provider factory end-to-end flow
+- [x] Document model registry usage patterns and AI agent architecture
 
 ---
 
@@ -216,7 +217,7 @@
 | Area | Status | Action |
 |------|--------|--------|
 | @objectstack/spec version | ✅ v2.0.6 | Upgrade complete |
-| ObjectSchema.parse() compliance | ✅ 100% | All 65 objects pass |
+| ObjectSchema.parse() compliance | ✅ 100% | All 69 objects pass |
 | snake_case field naming | ✅ 100% | All field names compliant |
 | snake_case lookup references | ✅ 100% | Last 4 PascalCase references fixed |
 | Enable config properties | ✅ Compliant | Only using spec-supported properties |
@@ -234,10 +235,11 @@
 
 | Area | Status | Action |
 |------|--------|--------|
-| `db.ts` shim files | 6 packages | Migrate all to direct `@objectstack/runtime` broker |
+| `db.ts` shim files | ✅ Migrated | All 6 packages migrated to `broker` API |
 | Plugin action registration | ✅ All registered | Actions registered in all plugin.ts exports |
-| Hook coverage | 45 hooks / 69 objects (65%) | Continue adding hooks for remaining objects |
-| Test coverage | 1365 tests / 91 files | Continue expanding coverage |
+| Plugin workflow registration | ✅ All registered | Workflows registered in all 6 plugin.ts exports |
+| Hook coverage | 47 hooks / 69 objects (68%) | Continue adding hooks for remaining objects |
+| Test coverage | 1457 tests / 94 files | Continue expanding coverage |
 | `defineStack()` config pattern | ✅ Consistent | All packages use correct pattern |
 
 ---
@@ -265,15 +267,15 @@
 - [x] Implement hooks for Products quote_line_item, approval_request
 - [x] Implement hooks for Marketing email_send, automation_workflow, lead_nurture, attribution
 - [x] Add new Marketing objects (automation_workflow, email_send, lead_nurture_program, touchpoint)
-- [ ] Migrate all 6 `db.ts` shim files to runtime broker
-- [ ] Add workflow definitions for marketing automation, case escalation, payment reminders
-- [ ] Add MCP server configuration for AI agent integration
+- [x] Migrate all 6 `db.ts` shim files to runtime broker
+- [x] Add workflow definitions for marketing automation, case escalation, payment reminders
+- [x] Add MCP server configuration for AI agent integration
 
 ### Phase 4: Documentation & DX (Week 9-10)
-- [ ] Create HR and AI technical specification directories
-- [ ] Generate per-object field API reference documentation
-- [ ] Add code examples for hooks, actions, and workflows
-- [ ] Update developer guides with latest patterns
+- [x] Create HR and AI technical specification directories
+- [x] Generate per-object field API reference documentation
+- [x] Add code examples for hooks, actions, and workflows
+- [x] Update developer guides with latest patterns
 
 ### Phase 5: Integration & Business Features (Week 11+)
 - [ ] Integration connectors (Stripe, DocuSign, Slack)
@@ -371,6 +373,7 @@ These independent business packages are planned for future development:
 
 | Date | From | To | Breaking Changes | Tests |
 |------|------|----|-----------------|-------|
+| 2026-02-11 | v2.0.6 | v2.0.6 | None (Phase 3-4 completion) | 1457 ✅ |
 | 2026-02-11 | v2.0.6 | v2.0.6 | None (roadmap completion) | 1365 ✅ |
 | 2026-02-11 | v2.0.3 | v2.0.6 | None | 933 ✅ |
 | 2026-02-10 | v2.0.1 | v2.0.3 | None | 933 ✅ |

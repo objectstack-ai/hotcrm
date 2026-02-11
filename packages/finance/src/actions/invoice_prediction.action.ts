@@ -11,7 +11,7 @@
  * 5. Cash Flow Forecasting - Predict incoming payments
  */
 
-import { db } from '../db';
+import { broker } from '../db';
 
 // ============================================================================
 // 1. PAYMENT DEFAULT PREDICTION
@@ -56,17 +56,17 @@ export async function predictPaymentDefault(request: PaymentDefaultRequest): Pro
   const { invoiceId } = request;
 
   // Fetch invoice data
-  const invoice = await db.doc.get('invoice', invoiceId, {
+  const invoice = await broker.findOne('invoice', invoiceId, {
     fields: ['invoice_number', 'amount', 'invoice_date', 'due_date', 'status', 'account_id']
   });
 
   // Fetch account data
-  const account = await db.doc.get('account', invoice.account_id, {
+  const account = await broker.findOne('account', invoice.account_id, {
     fields: ['name', 'annual_revenue', 'industry']
   });
 
   // Fetch payment history for this account
-  const historicalInvoices = await db.find('invoice', {
+  const historicalInvoices = await broker.find('invoice', {
     filters: [
       ['account_id', '=', invoice.account_id],
       ['id', '!=', invoiceId]
@@ -261,7 +261,7 @@ export async function predictPaymentDate(request: PaymentDateRequest): Promise<P
   const { invoiceId } = request;
 
   // Fetch invoice
-  const invoice = await db.doc.get('invoice', invoiceId, {
+  const invoice = await broker.findOne('invoice', invoiceId, {
     fields: ['due_date', 'account_id', 'amount']
   });
 
@@ -347,18 +347,18 @@ export async function detectAnomalies(request: AnomalyDetectionRequest): Promise
   const { invoiceId } = request;
 
   // Fetch invoice
-  const invoice = await db.doc.get('invoice', invoiceId, {
+  const invoice = await broker.findOne('invoice', invoiceId, {
     fields: ['amount', 'invoice_date', 'due_date', 'account_id']
   });
 
   // Fetch invoice lines
-  const lines = await db.find('invoice_line', {
+  const lines = await broker.find('invoice_line', {
     filters: [['invoice_id', '=', invoiceId]],
     fields: ['quantity', 'unit_price', 'line_amount']
   });
 
   // Fetch historical invoices for comparison
-  const historicalInvoices = await db.find('invoice', {
+  const historicalInvoices = await broker.find('invoice', {
     filters: [
       ['account_id', '=', invoice.account_id],
       ['id', '!=', invoiceId]
@@ -652,7 +652,7 @@ export async function forecastCashFlow(request: CashFlowForecastRequest): Promis
     filters.push(['account_id', '=', accountId]);
   }
 
-  const invoices = await db.find('invoice', {
+  const invoices = await broker.find('invoice', {
     filters,
     fields: ['id', 'amount', 'due_date', 'account_id']
   });

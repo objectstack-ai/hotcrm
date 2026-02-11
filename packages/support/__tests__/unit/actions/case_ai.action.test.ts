@@ -1,17 +1,15 @@
 import { vi, Mock } from 'vitest';
 
 vi.mock('../../../src/db', () => ({
-  db: {
-    doc: {
-      get: vi.fn(),
-      update: vi.fn(),
-      create: vi.fn()
-    },
-    find: vi.fn()
+  broker: {
+    findOne: vi.fn(),
+    find: vi.fn(),
+    insert: vi.fn(),
+    update: vi.fn()
   }
 }));
 
-import { db } from '../../../src/db';
+import { broker } from '../../../src/db';
 import {
   autoCategorizeCase,
   assignCaseIntelligently,
@@ -31,11 +29,11 @@ describe('Case AI - autoCategorizeCase', () => {
   });
 
   it('should categorize a case by caseId', async () => {
-    (db.doc.get as Mock).mockResolvedValueOnce({
+    (broker.findOne as Mock).mockResolvedValueOnce({
       Subject: 'API integration failing',
       Description: 'Our Salesforce sync stopped working after the latest update'
     });
-    (db.doc.update as Mock).mockResolvedValueOnce({});
+    (broker.update as Mock).mockResolvedValueOnce({});
 
     const result = await autoCategorizeCase({ caseId: 'case_001' });
 
@@ -76,11 +74,11 @@ describe('Case AI - autoCategorizeCase', () => {
   });
 
   it('should recommend a queue for routing', async () => {
-    (db.doc.get as Mock).mockResolvedValueOnce({
+    (broker.findOne as Mock).mockResolvedValueOnce({
       Subject: 'Need help with reports',
       Description: 'How do I create custom dashboards?'
     });
-    (db.doc.update as Mock).mockResolvedValueOnce({});
+    (broker.update as Mock).mockResolvedValueOnce({});
 
     const result = await autoCategorizeCase({ caseId: 'case_002' });
 
@@ -95,7 +93,7 @@ describe('Case AI - assignCaseIntelligently', () => {
   });
 
   it('should recommend an agent for a case', async () => {
-    (db.doc.get as Mock)
+    (broker.findOne as Mock)
       .mockResolvedValueOnce({
         Subject: 'Sales Cloud bug',
         Description: 'Opportunities not saving',
@@ -106,7 +104,7 @@ describe('Case AI - assignCaseIntelligently', () => {
       })
       .mockResolvedValueOnce({ OwnerId: null }); // not assigned yet
 
-    (db.doc.update as Mock).mockResolvedValueOnce({});
+    (broker.update as Mock).mockResolvedValueOnce({});
 
     const result = await assignCaseIntelligently({ caseId: 'case_010' });
 
@@ -117,7 +115,7 @@ describe('Case AI - assignCaseIntelligently', () => {
   });
 
   it('should provide alternative agents', async () => {
-    (db.doc.get as Mock)
+    (broker.findOne as Mock)
       .mockResolvedValueOnce({
         Subject: 'Marketing issue',
         Description: 'Email campaigns failing',
@@ -128,7 +126,7 @@ describe('Case AI - assignCaseIntelligently', () => {
       })
       .mockResolvedValueOnce({ OwnerId: null });
 
-    (db.doc.update as Mock).mockResolvedValueOnce({});
+    (broker.update as Mock).mockResolvedValueOnce({});
 
     const result = await assignCaseIntelligently({ caseId: 'case_011' });
 
@@ -138,7 +136,7 @@ describe('Case AI - assignCaseIntelligently', () => {
   });
 
   it('should include reasoning breakdown', async () => {
-    (db.doc.get as Mock)
+    (broker.findOne as Mock)
       .mockResolvedValueOnce({
         Subject: 'Performance problem',
         Description: 'Dashboard loading slowly',
@@ -149,7 +147,7 @@ describe('Case AI - assignCaseIntelligently', () => {
       })
       .mockResolvedValueOnce({ OwnerId: null });
 
-    (db.doc.update as Mock).mockResolvedValueOnce({});
+    (broker.update as Mock).mockResolvedValueOnce({});
 
     const result = await assignCaseIntelligently({ caseId: 'case_012' });
 
@@ -161,7 +159,7 @@ describe('Case AI - assignCaseIntelligently', () => {
   });
 
   it('should not reassign already-assigned cases', async () => {
-    (db.doc.get as Mock)
+    (broker.findOne as Mock)
       .mockResolvedValueOnce({
         Subject: 'Test case',
         Description: 'Already assigned',
@@ -175,11 +173,11 @@ describe('Case AI - assignCaseIntelligently', () => {
     const result = await assignCaseIntelligently({ caseId: 'case_013' });
 
     expect(result.assigned).toBe(false);
-    expect(db.doc.update).not.toHaveBeenCalled();
+    expect(broker.update).not.toHaveBeenCalled();
   });
 
   it('should auto-assign unassigned cases', async () => {
-    (db.doc.get as Mock)
+    (broker.findOne as Mock)
       .mockResolvedValueOnce({
         Subject: 'New bug',
         Description: 'Something broken',
@@ -190,12 +188,12 @@ describe('Case AI - assignCaseIntelligently', () => {
       })
       .mockResolvedValueOnce({ OwnerId: null });
 
-    (db.doc.update as Mock).mockResolvedValueOnce({});
+    (broker.update as Mock).mockResolvedValueOnce({});
 
     const result = await assignCaseIntelligently({ caseId: 'case_014' });
 
     expect(result.assigned).toBe(true);
-    expect(db.doc.update).toHaveBeenCalledWith(
+    expect(broker.update).toHaveBeenCalledWith(
       'Case', 'case_014',
       expect.objectContaining({ OwnerId: expect.any(String) })
     );
@@ -229,7 +227,7 @@ describe('Case AI - searchKnowledgeBase', () => {
   });
 
   it('should search by caseId', async () => {
-    (db.doc.get as Mock).mockResolvedValueOnce({
+    (broker.findOne as Mock).mockResolvedValueOnce({
       Subject: 'API token expired',
       Description: 'Getting 401 errors when calling the REST API'
     });
@@ -263,7 +261,7 @@ describe('Case AI - predictSLABreach', () => {
   it('should predict SLA breach probability', async () => {
     const hoursAgo = (h: number) => new Date(Date.now() - h * 60 * 60 * 1000).toISOString();
 
-    (db.doc.get as Mock)
+    (broker.findOne as Mock)
       .mockResolvedValueOnce({
         CreatedDate: hoursAgo(20),
         Priority: 'high',
@@ -275,11 +273,11 @@ describe('Case AI - predictSLABreach', () => {
         FirstResponseDate: hoursAgo(18)
       });
 
-    (db.find as Mock).mockResolvedValueOnce([]); // activities
+    (broker.find as Mock).mockResolvedValueOnce([]); // activities
 
     // Second get for escalation check
-    (db.doc.get as Mock).mockResolvedValueOnce({ IsEscalated: false });
-    (db.doc.update as Mock).mockResolvedValueOnce({});
+    (broker.findOne as Mock).mockResolvedValueOnce({ IsEscalated: false });
+    (broker.update as Mock).mockResolvedValueOnce({});
 
     const result = await predictSLABreach({ caseId: 'case_030' });
 
@@ -291,7 +289,7 @@ describe('Case AI - predictSLABreach', () => {
   it('should include SLA status for response and resolution', async () => {
     const hoursAgo = (h: number) => new Date(Date.now() - h * 60 * 60 * 1000).toISOString();
 
-    (db.doc.get as Mock).mockResolvedValueOnce({
+    (broker.findOne as Mock).mockResolvedValueOnce({
       CreatedDate: hoursAgo(2),
       Priority: 'medium',
       Severity: 'sev-3',
@@ -301,7 +299,7 @@ describe('Case AI - predictSLABreach', () => {
       OwnerId: 'agent_001',
       FirstResponseDate: hoursAgo(1)
     });
-    (db.find as Mock).mockResolvedValueOnce([
+    (broker.find as Mock).mockResolvedValueOnce([
       { ActivityDate: hoursAgo(0.5) }
     ]);
 
@@ -316,7 +314,7 @@ describe('Case AI - predictSLABreach', () => {
   it('should identify risk factors', async () => {
     const hoursAgo = (h: number) => new Date(Date.now() - h * 60 * 60 * 1000).toISOString();
 
-    (db.doc.get as Mock).mockResolvedValueOnce({
+    (broker.findOne as Mock).mockResolvedValueOnce({
       CreatedDate: hoursAgo(22),
       Priority: 'high',
       Severity: 'sev-2',
@@ -325,9 +323,9 @@ describe('Case AI - predictSLABreach', () => {
       Product: 'Sales Cloud',
       OwnerId: 'agent_001'
     });
-    (db.find as Mock).mockResolvedValueOnce([]);
-    (db.doc.get as Mock).mockResolvedValueOnce({ IsEscalated: false });
-    (db.doc.update as Mock).mockResolvedValueOnce({});
+    (broker.find as Mock).mockResolvedValueOnce([]);
+    (broker.findOne as Mock).mockResolvedValueOnce({ IsEscalated: false });
+    (broker.update as Mock).mockResolvedValueOnce({});
 
     const result = await predictSLABreach({ caseId: 'case_032' });
 
@@ -342,7 +340,7 @@ describe('Case AI - predictSLABreach', () => {
   it('should provide recommendations to prevent breach', async () => {
     const hoursAgo = (h: number) => new Date(Date.now() - h * 60 * 60 * 1000).toISOString();
 
-    (db.doc.get as Mock).mockResolvedValueOnce({
+    (broker.findOne as Mock).mockResolvedValueOnce({
       CreatedDate: hoursAgo(3),
       Priority: 'critical',
       Severity: 'sev-1',
@@ -352,9 +350,9 @@ describe('Case AI - predictSLABreach', () => {
       OwnerId: 'agent_001',
       FirstResponseDate: hoursAgo(2.5)
     });
-    (db.find as Mock).mockResolvedValueOnce([]);
-    (db.doc.get as Mock).mockResolvedValueOnce({ IsEscalated: false });
-    (db.doc.update as Mock).mockResolvedValueOnce({});
+    (broker.find as Mock).mockResolvedValueOnce([]);
+    (broker.findOne as Mock).mockResolvedValueOnce({ IsEscalated: false });
+    (broker.update as Mock).mockResolvedValueOnce({});
 
     const result = await predictSLABreach({ caseId: 'case_033' });
 
@@ -369,7 +367,7 @@ describe('Case AI - predictSLABreach', () => {
   it('should suggest escalation for high breach probability', async () => {
     const hoursAgo = (h: number) => new Date(Date.now() - h * 60 * 60 * 1000).toISOString();
 
-    (db.doc.get as Mock).mockResolvedValueOnce({
+    (broker.findOne as Mock).mockResolvedValueOnce({
       CreatedDate: hoursAgo(23),
       Priority: 'high',
       Severity: 'sev-2',
@@ -378,9 +376,9 @@ describe('Case AI - predictSLABreach', () => {
       Product: 'Sales Cloud',
       OwnerId: 'agent_001'
     });
-    (db.find as Mock).mockResolvedValueOnce([]);
-    (db.doc.get as Mock).mockResolvedValueOnce({ IsEscalated: false });
-    (db.doc.update as Mock).mockResolvedValueOnce({});
+    (broker.find as Mock).mockResolvedValueOnce([]);
+    (broker.findOne as Mock).mockResolvedValueOnce({ IsEscalated: false });
+    (broker.update as Mock).mockResolvedValueOnce({});
 
     const result = await predictSLABreach({ caseId: 'case_034' });
 
@@ -434,15 +432,15 @@ describe('Case AI - analyzeSentiment', () => {
   });
 
   it('should analyze sentiment from caseId', async () => {
-    (db.doc.get as Mock)
+    (broker.findOne as Mock)
       .mockResolvedValueOnce({
         Subject: 'Great support experience',
         Description: 'Thank you for resolving my issue so quickly!'
       })
       .mockResolvedValueOnce({ Priority: 'low', IsEscalated: false }); // for priority check
 
-    (db.find as Mock).mockResolvedValueOnce([]); // comments
-    (db.doc.update as Mock).mockResolvedValueOnce({});
+    (broker.find as Mock).mockResolvedValueOnce([]); // comments
+    (broker.update as Mock).mockResolvedValueOnce({});
 
     const result = await analyzeSentiment({ caseId: 'case_040' });
 

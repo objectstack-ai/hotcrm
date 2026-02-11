@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeEach, Mock } from 'vitest';
 
 vi.mock('../../../src/db', () => ({
-  db: {
+  broker: {
     find: vi.fn()
   }
 }));
 
-import { db } from '../../../src/db';
+import { broker } from '../../../src/db';
 import {
   analyzePipeline,
   analyzeWinRates,
@@ -27,7 +27,7 @@ describe('analyzePipeline', () => {
       { Id: '4', Name: 'Deal D', Stage: 'proposal', Amount: 75000, CreatedDate: new Date(now - 40 * 86400000).toISOString(), CloseDate: new Date(now + 10 * 86400000).toISOString(), Age: 40, DaysInStage: 10 },
     ];
 
-    (db.find as Mock).mockResolvedValueOnce(mockOpportunities);
+    (broker.find as Mock).mockResolvedValueOnce(mockOpportunities);
 
     const result = await analyzePipeline({});
 
@@ -54,7 +54,7 @@ describe('analyzePipeline', () => {
       { Id: '3', Stage: 'negotiation', Amount: 150000, CreatedDate: new Date(now - 25 * 86400000).toISOString(), Age: 25, DaysInStage: 5 },
     ];
 
-    (db.find as Mock).mockResolvedValueOnce(mockOpportunities);
+    (broker.find as Mock).mockResolvedValueOnce(mockOpportunities);
 
     const result = await analyzePipeline({ quota: 100000 });
 
@@ -66,7 +66,7 @@ describe('analyzePipeline', () => {
   });
 
   it('should handle empty pipeline', async () => {
-    (db.find as Mock).mockResolvedValueOnce([]);
+    (broker.find as Mock).mockResolvedValueOnce([]);
 
     const result = await analyzePipeline({});
 
@@ -87,7 +87,7 @@ describe('analyzePipeline', () => {
       { Id: '4', Stage: 'negotiation', Amount: 40000, CreatedDate: new Date(now - 100 * 86400000).toISOString(), Age: 100, DaysInStage: 10 },
     ];
 
-    (db.find as Mock).mockResolvedValueOnce(mockOpportunities);
+    (broker.find as Mock).mockResolvedValueOnce(mockOpportunities);
 
     const result = await analyzePipeline({});
 
@@ -98,11 +98,11 @@ describe('analyzePipeline', () => {
   });
 
   it('should filter by ownerId when provided', async () => {
-    (db.find as Mock).mockResolvedValueOnce([]);
+    (broker.find as Mock).mockResolvedValueOnce([]);
 
     await analyzePipeline({ ownerId: 'rep_123' });
 
-    expect(db.find).toHaveBeenCalledWith('Opportunity', expect.objectContaining({
+    expect(broker.find).toHaveBeenCalledWith('Opportunity', expect.objectContaining({
       filters: expect.arrayContaining([
         ['OwnerId', '=', 'rep_123']
       ])
@@ -123,7 +123,7 @@ describe('analyzeWinRates', () => {
       { Id: '4', IsWon: false, Amount: 60000, CloseDate: '2024-03-05', Industry: 'finance', LeadSource: 'Web', LossReason: 'Competitor' },
     ];
 
-    (db.find as Mock).mockResolvedValueOnce(mockOpportunities);
+    (broker.find as Mock).mockResolvedValueOnce(mockOpportunities);
 
     const result = await analyzeWinRates({});
 
@@ -143,7 +143,7 @@ describe('analyzeWinRates', () => {
       { Id: '5', IsWon: false, Amount: 600000, CloseDate: '2024-03-15' },
     ];
 
-    (db.find as Mock).mockResolvedValueOnce(mockOpportunities);
+    (broker.find as Mock).mockResolvedValueOnce(mockOpportunities);
 
     const result = await analyzeWinRates({});
 
@@ -164,7 +164,7 @@ describe('analyzeWinRates', () => {
   });
 
   it('should handle zero closed opportunities', async () => {
-    (db.find as Mock).mockResolvedValueOnce([]);
+    (broker.find as Mock).mockResolvedValueOnce([]);
 
     const result = await analyzeWinRates({});
 
@@ -185,7 +185,7 @@ describe('analyzeWinRates', () => {
       { Id: '4', IsWon: true, Amount: 20000, CloseDate: '2024-01-20' },
     ];
 
-    (db.find as Mock).mockResolvedValueOnce(mockOpportunities);
+    (broker.find as Mock).mockResolvedValueOnce(mockOpportunities);
 
     const result = await analyzeWinRates({});
 
@@ -202,7 +202,7 @@ describe('analyzeWinRates', () => {
       { Id: '3', IsWon: true, Amount: 30000, CloseDate: '2024-02-10' },
     ];
 
-    (db.find as Mock).mockResolvedValueOnce(mockOpportunities);
+    (broker.find as Mock).mockResolvedValueOnce(mockOpportunities);
 
     const result = await analyzeWinRates({});
 
@@ -232,7 +232,7 @@ describe('analyzeForecastAccuracy', () => {
       { Id: '4', Amount: 60000, ForecastCategory: 'best_case', Stage: 'proposal', OwnerId: 'rep_2' },
     ];
 
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce(mockClosedWon)
       .mockResolvedValueOnce(mockOpenOpps);
 
@@ -252,7 +252,7 @@ describe('analyzeForecastAccuracy', () => {
       { Id: '2', Amount: 50000, ForecastAmount: 70000, CloseDate: '2024-02-10', Stage: 'closed_won', OwnerId: 'rep_1', ProductFamily: 'software' },
     ];
 
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce(mockClosedWon)
       .mockResolvedValueOnce([]);
 
@@ -270,7 +270,7 @@ describe('analyzeForecastAccuracy', () => {
       { Id: '2', Amount: 100000, ForecastAmount: 70000, CloseDate: '2024-02-10', Stage: 'closed_won', OwnerId: 'rep_2', ProductFamily: 'Services' },
     ];
 
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce(mockClosedWon)
       .mockResolvedValueOnce([]);
 
@@ -287,7 +287,7 @@ describe('analyzeForecastAccuracy', () => {
       { Id: '2', Amount: 80000, ForecastAmount: 100000, CloseDate: '2024-02-10', Stage: 'closed_won', OwnerId: 'rep_2', ProductFamily: 'software' },
     ];
 
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce(mockClosedWon)
       .mockResolvedValueOnce([]);
 
@@ -305,7 +305,7 @@ describe('analyzeForecastAccuracy', () => {
   });
 
   it('should handle no closed-won opportunities', async () => {
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([]);
 
@@ -331,7 +331,7 @@ describe('analyzeForecastAccuracy', () => {
       { Id: '4', Amount: 20000, ForecastCategory: 'Pipeline', Stage: 'prospecting', OwnerId: 'rep_2' },
     ];
 
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce(mockClosedWon)
       .mockResolvedValueOnce(mockOpenOpps);
 

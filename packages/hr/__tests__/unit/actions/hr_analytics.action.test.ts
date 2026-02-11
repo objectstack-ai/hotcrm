@@ -1,12 +1,12 @@
 import { vi, Mock } from 'vitest';
 
 vi.mock('../../../src/db', () => ({
-  db: {
+  broker: {
     find: vi.fn()
   }
 }));
 
-import { db } from '../../../src/db';
+import { broker } from '../../../src/db';
 import {
   analyzeTimeToHire,
   analyzeAttrition,
@@ -32,7 +32,7 @@ describe('HR Analytics - analyzeTimeToHire', () => {
       { requisition_id: 'R-002', status: 'hired', applied_date: '2024-02-02', source: 'Referral', department: 'Sales' },
     ];
 
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce(mockRecruitments)
       .mockResolvedValueOnce(mockApplications);
 
@@ -51,7 +51,7 @@ describe('HR Analytics - analyzeTimeToHire', () => {
       { requisition_id: 'R-003', department: 'Sales', position_level: 'Mid', source: 'Direct', posting_date: '2024-02-01', acceptance_date: '2024-02-20', status: 'hired', cost: 2000 },
     ];
 
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce(mockRecruitments)
       .mockResolvedValueOnce([]);
 
@@ -67,7 +67,7 @@ describe('HR Analytics - analyzeTimeToHire', () => {
       { requisition_id: 'R-001', department: 'Engineering', position_level: 'Senior', source: 'LinkedIn', posting_date: '2024-01-01', screening_date: '2024-01-25', interview_date: '2024-02-10', offer_date: '2024-02-20', acceptance_date: '2024-02-25', start_date: '2024-03-01', status: 'hired', cost: 5000 },
     ];
 
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce(mockRecruitments)
       .mockResolvedValueOnce([]);
 
@@ -93,7 +93,7 @@ describe('HR Analytics - analyzeTimeToHire', () => {
       { requisition_id: 'R-001', status: 'rejected', applied_date: '2024-01-04', source: 'Direct', department: 'Engineering' },
     ];
 
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce(mockRecruitments)
       .mockResolvedValueOnce(mockApplications);
 
@@ -106,7 +106,7 @@ describe('HR Analytics - analyzeTimeToHire', () => {
   });
 
   it('should handle empty recruitment data', async () => {
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([]);
 
@@ -134,7 +134,7 @@ describe('HR Analytics - analyzeAttrition', () => {
       { employee_id: 'e3', department: 'Sales', hire_date: '2019-03-01', termination_date: recentTermination, status: 'terminated', termination_type: 'voluntary', performance_rating: 'meets_expectations' },
     ];
 
-    (db.find as Mock).mockResolvedValueOnce(mockEmployees);
+    (broker.find as Mock).mockResolvedValueOnce(mockEmployees);
 
     const result = await analyzeAttrition({});
 
@@ -154,7 +154,7 @@ describe('HR Analytics - analyzeAttrition', () => {
       { employee_id: 'e3', department: 'Sales', hire_date: '2020-06-01', status: 'active', performance_rating: 'exceeds_expectations' },
     ];
 
-    (db.find as Mock).mockResolvedValueOnce(mockEmployees);
+    (broker.find as Mock).mockResolvedValueOnce(mockEmployees);
 
     const result = await analyzeAttrition({});
 
@@ -173,7 +173,7 @@ describe('HR Analytics - analyzeAttrition', () => {
       { employee_id: 'e3', department: 'Engineering', hire_date: '2020-06-01', status: 'active', performance_rating: 'meets_expectations' },
     ];
 
-    (db.find as Mock).mockResolvedValueOnce(mockEmployees);
+    (broker.find as Mock).mockResolvedValueOnce(mockEmployees);
 
     const result = await analyzeAttrition({});
 
@@ -190,7 +190,7 @@ describe('HR Analytics - analyzeAttrition', () => {
       { employee_id: 'e2', department: 'Engineering', hire_date: '2021-01-01', status: 'active', performance_rating: 'exceeds_expectations' },
     ];
 
-    (db.find as Mock).mockResolvedValueOnce(mockEmployees);
+    (broker.find as Mock).mockResolvedValueOnce(mockEmployees);
 
     const result = await analyzeAttrition({});
 
@@ -208,7 +208,7 @@ describe('HR Analytics - analyzeAttrition', () => {
       { employee_id: 'e2', department: 'Sales', hire_date: '2021-01-01', status: 'active', performance_rating: 'exceeds_expectations' },
     ];
 
-    (db.find as Mock).mockResolvedValueOnce(mockEmployees);
+    (broker.find as Mock).mockResolvedValueOnce(mockEmployees);
 
     const result = await analyzeAttrition({});
 
@@ -234,7 +234,7 @@ describe('HR Analytics - analyzePerformanceTrends', () => {
       { employee_id: 'e3', department: 'Sales', hire_date: '2019-06-01', status: 'active', performance_rating: 'exceptional', manager_id: 'm2' },
     ];
 
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce(mockReviews)
       .mockResolvedValueOnce(mockEmployees);
 
@@ -252,7 +252,7 @@ describe('HR Analytics - analyzePerformanceTrends', () => {
       { employee_id: 'e1', review_cycle: '2024-H1', rating: 'exceeds_expectations', department: 'Engineering', manager_id: 'm1', manager_name: 'Manager A', goals_set: 5, goals_completed: 4, review_date: '2024-06-01' },
     ];
 
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce(mockReviews)
       .mockResolvedValueOnce([{ employee_id: 'e1', department: 'Engineering', hire_date: '2020-01-01', status: 'active', performance_rating: 'exceeds_expectations', manager_id: 'm1' }]);
 
@@ -272,7 +272,7 @@ describe('HR Analytics - analyzePerformanceTrends', () => {
       { employee_id: 'e2', review_cycle: '2024-H1', rating: 'exceeds_expectations', department: 'Sales', manager_id: 'm2', manager_name: 'Mgr B', goals_set: 3, goals_completed: 3, review_date: '2024-06-01' },
     ];
 
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce(mockReviews)
       .mockResolvedValueOnce([]);
 
@@ -293,7 +293,7 @@ describe('HR Analytics - analyzePerformanceTrends', () => {
       { employee_id: 'e2', department: 'Sales', hire_date: '2021-01-01', status: 'active', performance_rating: 'meets_expectations', manager_id: 'm2' },
     ];
 
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce(mockReviews)
       .mockResolvedValueOnce(mockEmployees);
 
@@ -305,7 +305,7 @@ describe('HR Analytics - analyzePerformanceTrends', () => {
   });
 
   it('should handle empty review data', async () => {
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([]);
 
