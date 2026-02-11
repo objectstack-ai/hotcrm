@@ -3,6 +3,7 @@
   "pages": [
     "index",
     "ticket-management",
-    "knowledge-base"
+    "knowledge-base",
+    "sla-management"
   ]
 }

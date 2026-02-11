@@ -1,0 +1,81 @@
+---
+title: SLA Management
+description: Define, track, and enforce Service Level Agreements to guarantee customer satisfaction.
+---
+
+# SLA Management
+
+Service Level Agreements (SLAs) set clear expectations for response and resolution times. HotCRM's SLA
+Management ensures your team meets its commitments and takes action before deadlines are missed. Whether you
+support a handful of enterprise accounts or thousands of customers across multiple tiers, SLA Management gives
+you the tools to stay accountable.
+
+## Features
+
+HotCRM provides everything you need to define, monitor, and enforce SLAs — from policy creation to real-time
+milestone tracking and automated escalations. Below are the key capabilities available to your support team.
+
+### Defining SLA Policies
+Create policies that match your support commitments. An SLA policy is a set of rules that defines the maximum
+time your team has to respond to and resolve a case. Each policy defines target times based on case priority.
+
+- **What is an SLA?**: A Service Level Agreement is a measurable commitment between your support organization and your customers. It guarantees that issues will be acknowledged and resolved within agreed-upon timeframes.
+- **Creating a Policy**: Navigate to **Settings → Service → SLA Policies** and click **New Policy**. Give it a name, select the working hours calendar, and define milestones for each priority level.
+- **Response & Resolution Targets**: Set separate goals for first response and full resolution.
+  - *Critical*: 1-hour response / 4-hour resolution.
+  - *High*: 4-hour response / 24-hour resolution.
+  - *Medium*: 8-hour response / 48-hour resolution.
+  - *Low*: 24-hour response / 72-hour resolution.
+- **Customer Tier Templates**: Assign different policies based on the customer's service tier.
+  - *Gold*: Fastest targets with 24/7 coverage and dedicated escalation paths.
+  - *Silver*: Standard business-hours targets with next-business-day escalation.
+  - *Bronze*: Best-effort targets during business hours only.
+- **Auto-Assignment**: SLA policies are automatically applied when a case is created based on its priority and the customer's tier. You can also manually override the assigned policy on any case.
+
+### SLA Milestones
+Track progress toward each commitment with milestone timers. Milestones appear on the case detail page as
+countdown indicators so agents always know how much time remains.
+
+- **First Response**: Time from case creation until an agent sends the first meaningful reply to the customer.
+- **Resolution**: Total elapsed working time from case creation until the case is marked as resolved.
+- **Custom Milestones**: Define additional checkpoints such as "Engineer Assigned," "Root Cause Identified," or "Fix Deployed."
+- **Milestone Tracking**: Each milestone shows a live countdown on the case record with color-coded status — green (on track), yellow (at risk), and red (breached).
+- **Breach Warnings**: Visual indicators turn yellow when a milestone reaches a configurable warning threshold (e.g., 75% of target time elapsed).
+- **Escalation Triggers**: Automatically escalate or reassign a case when a milestone warning threshold is reached.
+
+### Business Hours & Holidays
+SLA timers only count working hours so your team isn't penalized for off-hours or holidays.
+
+- **Support Schedules**: Configure working hours per region or team (e.g., 9 AM–6 PM EST, 8 AM–5 PM GMT). You can create multiple schedules and assign them to different queues.
+- **Holiday Calendars**: Create calendars for each region with public holidays and company closures. Navigate to **Settings → Service → Holiday Calendars** to manage them.
+- **Timer Pausing**: SLA clocks automatically pause outside of business hours and resume when the next working period begins. If a case is created at 7 PM and business hours end at 6 PM, the timer starts the following morning.
+- **Regional Assignment**: Assign the correct calendar to each support queue or team so timers reflect local schedules.
+- **Multi-Region Support**: For global teams, create separate business-hours schedules per region and let the system apply the right one based on the assigned queue.
+
+### Escalation Rules
+Prevent breaches with automatic escalation paths that keep the right people informed.
+
+- **At-Risk Escalation**: When a milestone reaches 75% of its target time, notify the assigned agent and team lead via email and in-app alert.
+- **Breach Escalation**: If a milestone is breached, reassign the case to a senior agent and alert the support manager immediately.
+- **Multi-Level Paths**: Define up to three escalation levels (Agent → Team Lead → Support Director) with configurable time intervals between each level.
+- **Notification Channels**: Send escalation alerts via email, in-app notification, or Slack integration.
+- **Escalation Actions**: Beyond notifications, escalation rules can automatically change case priority, reassign ownership, or add the case to a critical review queue.
+
+### SLA Reporting
+Measure performance and identify areas for improvement with built-in dashboards.
+
+- **Compliance Rate**: Percentage of cases resolved within SLA targets over a given period. Filter by team, priority, or customer tier.
+- **Breach Analysis**: Drill down into breached cases by priority, team, or customer tier to find recurring patterns and root causes.
+- **Response Time Trends**: Track average first-response and resolution times week over week to spot improvements or regressions.
+- **Team Performance**: Compare SLA attainment across agents and queues to balance workloads and identify coaching opportunities.
+- **Scheduled Reports**: Set up automated weekly or monthly SLA reports delivered to stakeholders via email.
+
+## Best Practices
+
+Following these guidelines will help you get the most out of SLA Management and continuously improve your support operations.
+
+1. **Start Simple**: Begin with three or four priority levels and refine targets after collecting at least one month of baseline data. Over-engineering policies from day one leads to confusion.
+2. **Align with Contracts**: Ensure SLA policies match the commitments in your customer agreements to avoid gaps between what you promise and what the system enforces.
+3. **Review Monthly**: Analyze breach reports each month and adjust targets or staffing as needed. Consistent breaches on a specific priority level may indicate that the target is unrealistic or that the team needs additional resources.
+4. **Use Warnings, Not Just Breaches**: Configure at-risk alerts early enough — ideally at 50% and 75% of the target — so agents have time to act before a breach occurs.
+5. **Keep Calendars Current**: Update holiday calendars at the start of each year so timers remain accurate. Assign a calendar owner in each region to ensure nothing is missed.
