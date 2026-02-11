@@ -3,6 +3,8 @@ import type { Lead } from '../schemas/lead.schema';
 
 // Constants for lead scoring
 const HIGH_SCORE_THRESHOLD = 70;
+const DEFAULT_OPPORTUNITY_CLOSE_DAYS = 30;
+const REVENUE_TO_OPPORTUNITY_RATIO = 0.1;
 const SCORING_WEIGHTS = {
   DATA_COMPLETENESS: 0.2,
   RATING: {
@@ -311,13 +313,53 @@ const LeadStatusChangeTrigger: Hook = {
 /**
  * Handle lead conversion
  * 
- * Note: Called from afterUpdate trigger,HookContext): Promise<void> {
+ * Creates Account, Contact, and Opportunity records from the converted lead.
+ * Called from afterUpdate trigger when status changes to 'converted'.
+ */
+async function handleLeadConversion(ctx: HookContext): Promise<void> {
   console.log('✅ Processing lead conversion...');
   const lead = ctx.input;
 
-  // Log activity
   try {
-    await (ctx.ql as any).doc.create('activity', {
+    // Create Account from Lead data
+    const account = await ctx.ql.doc.create('account', {
+      Name: lead.Company,
+      Phone: lead.Phone,
+      Website: lead.Website,
+      Industry: lead.Industry,
+      AnnualRevenue: lead.AnnualRevenue,
+      NumberOfEmployees: lead.NumberOfEmployees,
+      BillingCity: lead.City,
+      BillingState: lead.State,
+      BillingCountry: lead.Country,
+      OwnerId: ctx.session?.userId,
+    });
+
+    // Create Contact linked to the new Account
+    const contact = await ctx.ql.doc.create('contact', {
+      FirstName: lead.FirstName,
+      LastName: lead.LastName,
+      AccountId: account?._id,
+      Email: lead.Email,
+      Phone: lead.Phone,
+      MobilePhone: lead.MobilePhone,
+      Title: lead.Title,
+      OwnerId: ctx.session?.userId,
+    });
+
+    // Create Opportunity linked to the new Account
+    const opportunity = await ctx.ql.doc.create('opportunity', {
+      Name: `${lead.Company} - Opportunity (${lead.Id})`,
+      AccountId: account?._id,
+      StageName: 'prospecting',
+      CloseDate: new Date(Date.now() + DEFAULT_OPPORTUNITY_CLOSE_DAYS * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      Amount: lead.AnnualRevenue ? lead.AnnualRevenue * REVENUE_TO_OPPORTUNITY_RATIO : 0,
+      LeadSource: lead.LeadSource,
+      OwnerId: ctx.session?.userId,
+    });
+
+    // Log conversion activity
+    await ctx.ql.doc.create('activity', {
       Subject: `Lead Converted: ${lead.FirstName} ${lead.LastName}`,
       Type: 'Conversion',
       Status: 'completed',
@@ -325,38 +367,13 @@ const LeadStatusChangeTrigger: Hook = {
       WhoId: lead.Id,
       OwnerId: ctx.session?.userId,
       ActivityDate: new Date().toISOString().split('T')[0],
-      Description: `Lead "${lead.FirstName} ${lead.LastName}" from "${lead.Company}" successfully converted`
+      Description: `Lead "${lead.FirstName} ${lead.LastName}" from "${lead.Company}" converted. Account: ${account?._id}, Contact: ${contact?._id}, Opportunity: ${opportunity?._id}`
     });
-  } catch (error) {
-    console.error('❌ Failed to log conversion activity:', error);
-  }
-}
 
-/**
- * Handle lead conversion
- * TODO: Implement full lead conversion logic using LeadConvertAction
- */
-async function handleLeadConversion(ctx: HookContext): Promise<void> {
-  console.log('✅ Processing lead conversion...');
-  const lead = ctx.input;
-
-  // Log activity for conversion
-  try {
-    await ctx.ql.doc.create('activity', {
-      Subject: `Lead Conversion: ${lead.FirstName} ${lead.LastName}`,
-      Type: 'Conversion',
-      Status: 'completed',
-      Priority: 'high',
-      WhoId: lead.Id,
-      OwnerId: ctx.session?.userId,
-      ActivityDate: new Date().toISOString().split('T')[0],
-      Description: `Lead "${lead.FirstName} ${lead.LastName}" converted to customer`
-    });
+    console.log(`✅ Lead conversion complete: Account=${account?._id}, Contact=${contact?._id}, Opportunity=${opportunity?._id}`);
   } catch (error) {
-    console.error('❌ Failed to log conversion activity:', error);
+    console.error('❌ Failed to convert lead:', error);
   }
-  
-  console.debug(`[lead.hook] Lead conversion integration pending: create Account, Contact, and Opportunity for lead ${lead.Id}`);
 }
 
 /**

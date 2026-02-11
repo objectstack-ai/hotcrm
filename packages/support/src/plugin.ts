@@ -37,6 +37,13 @@ import { ForumTopic } from './forum_topic.object';
 import { ForumPost } from './forum_post.object';
 
 import { CaseEntitlementCheck } from './hooks/case.hook';
+import KnowledgeHooks from './hooks/knowledge.hook';
+
+// Import actions
+import CaseAIAction from './actions/case_ai.action';
+import ServiceMetricsAction from './actions/service_metrics.action';
+import { recommendArticles, autoTagArticle, scoreArticleQuality, generateAnswer, analyzeKnowledgeGaps } from './actions/knowledge_ai.action';
+import { predictSLABreach, estimateResolutionTime, analyzeEscalationNeeds, optimizeWorkload, analyzeSLAPerformance } from './actions/sla_prediction.action';
 
 /**
  * Support Plugin Definition
@@ -83,8 +90,17 @@ export const SupportPlugin: any = {
     forum_post: ForumPost,
   },
   
+  // Actions provided by this plugin
+  actions: {
+    case_ai: CaseAIAction,
+    service_metrics: ServiceMetricsAction,
+    knowledge_ai: { recommendArticles, autoTagArticle, scoreArticleQuality, generateAnswer, analyzeKnowledgeGaps },
+    sla_prediction: { predictSLABreach, estimateResolutionTime, analyzeEscalationNeeds, optimizeWorkload, analyzeSLAPerformance },
+  },
+
   triggers: {
-    case_entitlement: CaseEntitlementCheck
+    case_entitlement: CaseEntitlementCheck,
+    knowledge_hooks: KnowledgeHooks,
   },
 
   // Navigation structure for this plugin
