@@ -13,6 +13,10 @@ import { Touchpoint } from './touchpoint.object';
 import { CampaignROIHook } from './hooks/roi.hook';
 import { CampaignROICalculationTrigger, CampaignBudgetTrackingTrigger, CampaignStatusChangeTrigger, CampaignDateValidationTrigger } from './hooks/campaign.hook';
 import { CampaignMemberEngagementTrigger, CampaignMemberLeadScoringTrigger, CampaignMemberStatsTrigger, CampaignMemberBounceHandlerTrigger } from './hooks/campaign_member.hook';
+import { EmailSendTrackingTrigger, EmailSendValidationTrigger } from './hooks/email_send.hook';
+import { AutomationWorkflowValidationTrigger, AutomationWorkflowMetricsTrigger } from './hooks/automation_workflow.hook';
+import { NurtureEnrollmentTrigger, NurtureGraduationTrigger } from './hooks/lead_nurture.hook';
+import { TouchpointRecordingTrigger, RevenueAttributionTrigger } from './hooks/attribution.hook';
 
 // Import actions
 import CampaignAIAction from './actions/campaign_ai.action';
@@ -59,6 +63,14 @@ export const MarketingPlugin: any = {
     campaign_member_lead_scoring: CampaignMemberLeadScoringTrigger,
     campaign_member_stats: CampaignMemberStatsTrigger,
     campaign_member_bounce_handler: CampaignMemberBounceHandlerTrigger,
+    email_send_tracking: EmailSendTrackingTrigger,
+    email_send_validation: EmailSendValidationTrigger,
+    automation_workflow_validation: AutomationWorkflowValidationTrigger,
+    automation_workflow_metrics: AutomationWorkflowMetricsTrigger,
+    nurture_enrollment: NurtureEnrollmentTrigger,
+    nurture_graduation: NurtureGraduationTrigger,
+    touchpoint_recording: TouchpointRecordingTrigger,
+    revenue_attribution: RevenueAttributionTrigger,
   },
   navigation: [
     {
