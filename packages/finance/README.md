@@ -14,7 +14,7 @@ This package provides comprehensive financial operations automation including co
 
 | Object | Label | Description |
 |--------|-------|-------------|
-| **contract** | 合同 | Contract lifecycle management (Draft → In Approval → Activated → Completed/Terminated) with terms, dates, and value tracking |
+| **contract** | Contract | Contract lifecycle management (Draft → In Approval → Activated → Completed/Terminated) with terms, dates, and value tracking |
 | **invoice** | Invoice | Billing statements with auto-generated numbers (INV-YYYY-000000), status tracking (Draft/Posted/Paid/Void), due dates, payment terms |
 | **invoice_line** | Invoice Line | Line items for invoices with product lookup, quantity, unit price, amount calculation |
 | **payment** | Payment | Payment tracking with 8 types (Down Payment, Milestone, Delivery, Acceptance, Final, Recurring, Maintenance, Other), planned vs received amounts, multiple payment methods |
@@ -76,7 +76,7 @@ This package provides comprehensive financial operations automation including co
 ```typescript
 import { Contract, Invoice, InvoiceLine, Payment } from '@hotcrm/finance';
 
-console.log(Contract.label); // "合同"
+console.log(Contract.label); // "Contract"
 console.log(Invoice.label); // "Invoice"
 ```
 
