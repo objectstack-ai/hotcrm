@@ -6,6 +6,10 @@ import { Form } from '../../../src/form.object';
 import { LandingPage } from '../../../src/landing_page.object';
 import { MarketingList } from '../../../src/marketing_list.object';
 import { Unsubscribe } from '../../../src/unsubscribe.object';
+import { AutomationWorkflow } from '../../../src/automation_workflow.object';
+import { EmailSend } from '../../../src/email_send.object';
+import { LeadNurtureProgram } from '../../../src/lead_nurture_program.object';
+import { Touchpoint } from '../../../src/touchpoint.object';
 
 const IDENTIFIER_RE = /^[a-z][a-z0-9_.]+$/;
 
@@ -17,6 +21,10 @@ const OBJECTS = [
   { name: 'LandingPage', schema: LandingPage },
   { name: 'MarketingList', schema: MarketingList },
   { name: 'Unsubscribe', schema: Unsubscribe },
+  { name: 'AutomationWorkflow', schema: AutomationWorkflow },
+  { name: 'EmailSend', schema: EmailSend },
+  { name: 'LeadNurtureProgram', schema: LeadNurtureProgram },
+  { name: 'Touchpoint', schema: Touchpoint },
 ];
 
 describe('Marketing Package - Spec Compliance', () => {
