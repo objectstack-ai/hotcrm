@@ -9,7 +9,7 @@
  * 3. Performance Trend Analytics - Monitor performance patterns over time
  */
 
-import { db } from '../db';
+import { broker } from '../db';
 
 // ============================================================================
 // 1. TIME-TO-HIRE ANALYTICS
@@ -113,7 +113,7 @@ export async function analyzeTimeToHire(request: AnalyzeTimeToHireRequest): Prom
     recruitmentFilters.push(['posting_date', '<=', request.endDate]);
   }
 
-  const recruitments = await db.find('recruitment', {
+  const recruitments = await broker.find('recruitment', {
     filters: recruitmentFilters,
     fields: [
       'requisition_id', 'department', 'position_level', 'source',
@@ -123,7 +123,7 @@ export async function analyzeTimeToHire(request: AnalyzeTimeToHireRequest): Prom
   });
 
   // Fetch all applications for pipeline efficiency
-  const applications = await db.find('job_application', {
+  const applications = await broker.find('job_application', {
     filters: request.department ? [['department', '=', request.department]] : [],
     fields: ['requisition_id', 'status', 'applied_date', 'source']
   });
@@ -438,7 +438,7 @@ export async function analyzeAttrition(request: AnalyzeAttritionRequest): Promis
     employeeFilters.push(['department', '=', request.department]);
   }
 
-  const employees = await db.find('employee', {
+  const employees = await broker.find('employee', {
     filters: employeeFilters,
     fields: [
       'employee_id', 'department', 'hire_date', 'termination_date',
@@ -807,7 +807,7 @@ export async function analyzePerformanceTrends(request: AnalyzePerformanceTrends
     reviewFilters.push(['department', '=', request.department]);
   }
 
-  const reviews = await db.find('performance_review', {
+  const reviews = await broker.find('performance_review', {
     filters: reviewFilters,
     fields: [
       'employee_id', 'review_cycle', 'rating', 'department', 'manager_id',
@@ -817,7 +817,7 @@ export async function analyzePerformanceTrends(request: AnalyzePerformanceTrends
   });
 
   // Fetch employee data for tenure and retention correlation
-  const employees = await db.find('employee', {
+  const employees = await broker.find('employee', {
     filters: request.department ? [['department', '=', request.department]] : [],
     fields: [
       'employee_id', 'department', 'hire_date', 'status',
