@@ -17,6 +17,7 @@ import { EmailSendTrackingTrigger, EmailSendValidationTrigger } from './hooks/em
 import { AutomationWorkflowValidationTrigger, AutomationWorkflowMetricsTrigger } from './hooks/automation_workflow.hook';
 import { NurtureEnrollmentTrigger, NurtureGraduationTrigger } from './hooks/lead_nurture.hook';
 import { TouchpointRecordingTrigger, RevenueAttributionTrigger } from './hooks/attribution.hook';
+import { UnsubscribeComplianceTrigger, UnsubscribeValidationTrigger, GlobalSuppressionTrigger } from './hooks/unsubscribe.hook';
 
 // Import actions
 import CampaignAIAction from './actions/campaign_ai.action';
@@ -71,6 +72,9 @@ export const MarketingPlugin: any = {
     nurture_graduation: NurtureGraduationTrigger,
     touchpoint_recording: TouchpointRecordingTrigger,
     revenue_attribution: RevenueAttributionTrigger,
+    unsubscribe_compliance: UnsubscribeComplianceTrigger,
+    unsubscribe_validation: UnsubscribeValidationTrigger,
+    global_suppression: GlobalSuppressionTrigger,
   },
   navigation: [
     {
