@@ -26,6 +26,8 @@ import { DiscountSchedule } from './discount_schedule.object';
 import { QuotePricingHook } from './hooks/quote.hook';
 import ProductHook from './hooks/product.hook';
 import PricebookHook from './hooks/pricebook.hook';
+import { QuoteLineCalculationTrigger, QuoteLineTotalUpdateTrigger } from './hooks/quote_line_item.hook';
+import { ApprovalRequestCreationTrigger, ApprovalDecisionTrigger } from './hooks/approval_request.hook';
 
 // Import actions
 import BundleSuggestionAction from './actions/bundle_suggestion.action';
@@ -76,6 +78,10 @@ export const ProductsPlugin: any = {
     quote_pricing: QuotePricingHook,
     product_validation: ProductHook,
     pricebook_validation: PricebookHook,
+    quote_line_calculation: QuoteLineCalculationTrigger,
+    quote_line_total_update: QuoteLineTotalUpdateTrigger,
+    approval_request_creation: ApprovalRequestCreationTrigger,
+    approval_decision: ApprovalDecisionTrigger,
   },
 
   // Navigation structure for this plugin
