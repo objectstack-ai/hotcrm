@@ -41,6 +41,7 @@ import KnowledgeHooks from './hooks/knowledge.hook';
 import SLAHooks from './hooks/sla.hook';
 import RoutingHooks from './hooks/routing.hook';
 import QueueHooks from './hooks/queue.hook';
+import { ForumTopicValidationTrigger, ForumTopicModerationTrigger, ForumPostCreationTrigger, ForumPostModerationTrigger } from './hooks/forum.hook';
 
 // Import actions
 import CaseAIAction from './actions/case_ai.action';
@@ -107,6 +108,10 @@ export const SupportPlugin: any = {
     sla_hooks: SLAHooks,
     routing_hooks: RoutingHooks,
     queue_hooks: QueueHooks,
+    forum_topic_validation: ForumTopicValidationTrigger,
+    forum_topic_moderation: ForumTopicModerationTrigger,
+    forum_post_creation: ForumPostCreationTrigger,
+    forum_post_moderation: ForumPostModerationTrigger,
   },
 
   // Navigation structure for this plugin

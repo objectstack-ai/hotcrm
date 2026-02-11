@@ -27,6 +27,9 @@ import { OpportunityValidation, OpportunityStageChange } from './hooks/opportuni
 import { AccountHealthScoreTrigger, AccountHierarchyTrigger, AccountStatusAutomationTrigger } from './hooks/account.hook';
 import { ActivityRelatedObjectUpdatesTrigger, ActivityCompletionTrigger, ActivityTypeValidationTrigger } from './hooks/activity.hook';
 import { ContactDecisionChainTrigger, ContactDecisionMakerValidationTrigger, ContactDuplicateDetectionTrigger, ContactRelationshipStrengthTrigger } from './hooks/contact.hook';
+import { TaskValidationTrigger, TaskCompletionTrigger, TaskOverdueTrigger } from './hooks/task.hook';
+import { NoteValidationTrigger, NoteEditTrackingTrigger } from './hooks/note.hook';
+import { AssignmentRuleValidationTrigger, AssignmentRuleSortOrderTrigger } from './hooks/assignment_rule.hook';
 
 // Import actions
 import EnhancedLeadScoringAction from './actions/enhanced_lead_scoring.action';
@@ -85,6 +88,13 @@ export const CRMPlugin: any = {
     contact_decision_maker_validation: ContactDecisionMakerValidationTrigger,
     contact_duplicate_detection: ContactDuplicateDetectionTrigger,
     contact_relationship_strength: ContactRelationshipStrengthTrigger,
+    task_validation: TaskValidationTrigger,
+    task_completion: TaskCompletionTrigger,
+    task_overdue: TaskOverdueTrigger,
+    note_validation: NoteValidationTrigger,
+    note_edit_tracking: NoteEditTrackingTrigger,
+    assignment_rule_validation: AssignmentRuleValidationTrigger,
+    assignment_rule_sort_order: AssignmentRuleSortOrderTrigger,
   },
 
   // Business objects provided by this plugin

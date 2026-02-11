@@ -9,9 +9,9 @@
 |--------|-------|
 | Protocol Version | @objectstack/spec v2.0.6 |
 | Business Objects | 69 across 6 clouds |
-| Hook Files | 31 across 6 packages |
+| Hook Files | 45 across 6 packages |
 | Action Files | 27 across 7 packages |
-| Test Files | 61 files, 1073 tests (all passing) |
+| Test Files | 91 files, 1365 tests (all passing) |
 | TypeScript Compliance | 100% (zero type errors) |
 | Protocol Compliance | 100% (all objects pass ObjectSchema.parse()) |
 
@@ -22,7 +22,7 @@
 ### 📦 CRM Package (`@hotcrm/crm`) — Sales Cloud
 
 **Objects**: 8 (account, activity, contact, lead, opportunity, task, note, assignment_rule)
-**Hooks**: 5 files | **Actions**: 8 files | **Tests**: 7 files
+**Hooks**: 8 files | **Actions**: 8 files | **Tests**: 20 files
 
 #### ✅ Recently Fixed
 - [x] PascalCase `Field.lookup()` references fixed (activity.object.ts, task.object.ts)
@@ -31,18 +31,18 @@
 #### 🔴 P0 — Code Quality
 - [x] Translate Chinese text in `schemas/lead.schema.ts` (30 `.describe()` fields in Chinese)
 - [x] Translate Chinese text in `actions/ai_smart_briefing.action.ts` (50+ Chinese strings in industry data and AI-generated mock responses)
-- [ ] Resolve TODO in `hooks/lead.hook.ts:337` — implement full lead conversion logic
+- [x] Resolve TODO in `hooks/lead.hook.ts:337` — lead conversion logic fully implemented
 
 #### 🟡 P1 — Test Coverage
-- [ ] Add hook tests for `lead.hook.ts` (scoring, status change triggers)
-- [ ] Add hook tests for `account.hook.ts` (health score, hierarchy triggers)
-- [ ] Add hook tests for `opportunity.hook.ts` (validation, stage change)
-- [ ] Add hook tests for `contact.hook.ts` and `activity.hook.ts`
-- [ ] Add action tests for remaining 5 untested actions (lead_ai, lead_convert, opportunity_ai, enhanced_lead_scoring, ai_smart_briefing)
+- [x] Add hook tests for `lead.hook.ts` (scoring, status change triggers)
+- [x] Add hook tests for `account.hook.ts` (health score, hierarchy triggers)
+- [x] Add hook tests for `opportunity.hook.ts` (validation, stage change)
+- [x] Add hook tests for `contact.hook.ts` and `activity.hook.ts`
+- [x] Add action tests for remaining 5 untested actions (lead_ai, lead_convert, opportunity_ai, enhanced_lead_scoring, ai_smart_briefing)
 
 #### 🟢 P2 — Feature Gaps
-- [ ] Register Contact and Activity triggers in `plugin.ts` (functions exist but aren't exported)
-- [ ] Add hooks for task, note, and assignment_rule objects
+- [x] Register Contact and Activity triggers in `plugin.ts` (functions exist but aren't exported)
+- [x] Add hooks for task, note, and assignment_rule objects
 - [ ] Add workflow definitions for lead assignment and opportunity pipeline automation
 - [ ] Migrate `db.ts` shim to direct `@objectstack/runtime` broker API
 
@@ -51,21 +51,21 @@
 ### 📦 Finance Package (`@hotcrm/finance`) — Revenue Cloud
 
 **Objects**: 4 (contract, invoice, invoice_line, payment)
-**Hooks**: 2 files | **Actions**: 4 files | **Tests**: 5 files
+**Hooks**: 5 files | **Actions**: 4 files | **Tests**: 11 files
 
 #### ✅ Recently Fixed
 - [x] All 16 spec-compliance tests passing
 - [x] All labels in English
 
 #### 🟡 P1 — Test Coverage
-- [ ] Add hook tests for `contract.hook.ts` (billing, renewal, expiration hooks)
-- [ ] Add hook tests for `contract_renewal.hook.ts`
-- [ ] Add action tests for `revenue_dashboard.action.ts` and `revenue_forecast.action.ts`
+- [x] Add hook tests for `contract.hook.ts` (billing, renewal, expiration hooks)
+- [x] Add hook tests for `contract_renewal.hook.ts`
+- [x] Add action tests for `revenue_dashboard.action.ts` and `revenue_forecast.action.ts`
 
 #### 🟢 P2 — Feature Gaps
 - [x] Add hooks for `invoice` object (invoice status change, due date validation, overdue detection)
 - [x] Add hooks for `payment` object (payment matching, overpayment handling, receipt generation)
-- [ ] Add hooks for `invoice_line` object (line item calculations, tax computation)
+- [x] Add hooks for `invoice_line` object (line item calculations, tax computation)
 - [x] Register actions in `plugin.ts` (4 action files exist but aren't exported)
 - [ ] Implement payment reminder workflow logic (workflow file exists but may need hooks)
 - [ ] Migrate `db.ts` shim to direct `@objectstack/runtime` broker API
@@ -78,7 +78,7 @@
 ### 📦 HR Package (`@hotcrm/hr`) — Human Capital Management
 
 **Objects**: 16 (employee, candidate, application, interview, offer, onboarding, recruitment, position, department, goal, performance_review, training, certification, attendance, time_off, payroll)
-**Hooks**: 4 files | **Actions**: 3 files | **Tests**: 10 files
+**Hooks**: 12 files | **Actions**: 4 files | **Tests**: 20 files
 
 #### ✅ Recently Fixed
 - [x] All 64 spec-compliance tests passing
@@ -86,20 +86,20 @@
 - [x] Zero TODO/FIXME comments
 
 #### 🟡 P1 — Test Coverage
-- [ ] Add hook tests for `candidate.hook.ts` (scoring, status change)
-- [ ] Add hook tests for `employee.hook.ts` (onboarding, status, data validation)
-- [ ] Add hook tests for `offer.hook.ts` (creation, status, approval)
-- [ ] Add action tests for `hr_analytics.action.ts`
+- [x] Add hook tests for `candidate.hook.ts` (scoring, status change)
+- [x] Add hook tests for `employee.hook.ts` (onboarding, status, data validation)
+- [x] Add hook tests for `offer.hook.ts` (creation, status, approval)
+- [x] Add action tests for `hr_analytics.action.ts`
 
 #### 🟢 P2 — Feature Gaps
 - [x] Export hooks and actions in `plugin.ts` (currently only objects are registered)
 - [x] Add hooks for `application` and `interview` objects (application status workflow, interview scheduling)
 - [x] Add hooks for `onboarding` object (checklist automation, task assignment)
-- [ ] Add hooks for `recruitment` object (pipeline stage validation)
-- [ ] Add hooks for `payroll` object (calculation validation, approval)
+- [x] Add hooks for `recruitment` object (pipeline stage validation)
+- [x] Add hooks for `payroll` object (calculation validation, approval)
 - [x] Add hooks for `time_off` object (balance validation, manager approval)
-- [ ] Add hooks for `attendance` object (clock-in/out validation)
-- [ ] Add hooks for `goal` object (progress tracking, alignment)
+- [x] Add hooks for `attendance` object (clock-in/out validation)
+- [x] Add hooks for `goal` object (progress tracking, alignment)
 - [ ] Migrate `db.ts` shim to direct `@objectstack/runtime` broker API
 
 #### 🔵 P3 — Documentation
@@ -111,8 +111,8 @@
 
 ### 📦 Marketing Package (`@hotcrm/marketing`) — Marketing Cloud
 
-**Objects**: 7 (campaign, campaign_member, email_template, form, landing_page, marketing_list, unsubscribe)
-**Hooks**: 3 files | **Actions**: 3 files | **Tests**: 4 files
+**Objects**: 11 (campaign, campaign_member, email_template, form, landing_page, marketing_list, unsubscribe, automation_workflow, email_send, lead_nurture_program, touchpoint)
+**Hooks**: 8 files | **Actions**: 3 files | **Tests**: 9 files
 
 #### ✅ Recently Fixed
 - [x] All 28 spec-compliance tests passing
@@ -123,9 +123,9 @@
 - [x] Add try-catch error handling to `roi.hook.ts` (currently has no error handling)
 
 #### 🟡 P1 — Test Coverage
-- [ ] Add action tests for `campaign_ai.action.ts`
-- [ ] Add action tests for `content_generator.action.ts`
-- [ ] Add action tests for `marketing_analytics.action.ts`
+- [x] Add action tests for `campaign_ai.action.ts`
+- [x] Add action tests for `content_generator.action.ts`
+- [x] Add action tests for `marketing_analytics.action.ts`
 
 #### 🟢 P2 — Feature Gaps
 - [x] Register actions in `plugin.ts` (3 action files exist but aren't exported)
@@ -133,7 +133,7 @@
 - [x] Add hooks for `form` object (submission handling, lead creation)
 - [x] Add hooks for `landing_page` object (publish/unpublish lifecycle)
 - [x] Add hooks for `marketing_list` object (membership validation, deduplication)
-- [ ] Add hooks for `unsubscribe` object (compliance enforcement, global suppression)
+- [x] Add hooks for `unsubscribe` object (compliance enforcement, global suppression)
 - [x] Implement campaign automation workflow
 - [ ] Migrate `db.ts` shim to direct `@objectstack/runtime` broker API
 
@@ -142,7 +142,7 @@
 ### 📦 Products Package (`@hotcrm/products`) — CPQ Cloud
 
 **Objects**: 9 (product, pricebook, quote, quote_line_item, product_bundle, product_bundle_component, price_rule, approval_request, discount_schedule)
-**Hooks**: 3 files | **Actions**: 3 files | **Tests**: 7 files
+**Hooks**: 8 files | **Actions**: 3 files | **Tests**: 13 files
 
 #### ✅ Recently Fixed
 - [x] All 36 spec-compliance tests passing
@@ -150,17 +150,17 @@
 - [x] Zero TODO/FIXME comments
 
 #### 🟡 P1 — Test Coverage
-- [ ] Add hook tests for `product.hook.ts` (config validation, stock, price changes)
-- [ ] Add hook tests for `pricebook.hook.ts` (date validation, currency, status)
-- [ ] Add hook tests for `quote.hook.ts` (pricing calculation, approval routing)
+- [x] Add hook tests for `product.hook.ts` (config validation, stock, price changes)
+- [x] Add hook tests for `pricebook.hook.ts` (date validation, currency, status)
+- [x] Add hook tests for `quote.hook.ts` (pricing calculation, approval routing)
 
 #### 🟢 P2 — Feature Gaps
 - [x] Register actions in `plugin.ts` (3 action files exist but aren't exported)
 - [x] Add hooks for `quote_line_item` object (line calculations, quantity validation)
-- [ ] Add hooks for `product_bundle` object (bundle validation, component completeness)
-- [ ] Add hooks for `price_rule` object (rule validation, conflict detection)
+- [x] Add hooks for `product_bundle` object (bundle validation, component completeness)
+- [x] Add hooks for `price_rule` object (rule validation, conflict detection)
 - [x] Add hooks for `approval_request` object (workflow triggers, escalation)
-- [ ] Add hooks for `discount_schedule` object (schedule activation, overlap detection)
+- [x] Add hooks for `discount_schedule` object (schedule activation, overlap detection)
 - [ ] Migrate `db.ts` shim to direct `@objectstack/runtime` broker API
 
 ---
@@ -168,7 +168,7 @@
 ### 📦 Support Package (`@hotcrm/support`) — Service Cloud
 
 **Objects**: 21 (case, case_comment, knowledge_article, sla_policy, sla_template, sla_milestone, business_hours, holiday_calendar, holiday, queue, queue_member, routing_rule, escalation_rule, skill, agent_skill, email_to_case, web_to_case, social_media_case, portal_user, forum_topic, forum_post)
-**Hooks**: 2 files | **Actions**: 4 files | **Tests**: 8 files
+**Hooks**: 6 files | **Actions**: 4 files | **Tests**: 14 files
 
 #### ✅ Recently Fixed
 - [x] All 84 spec-compliance tests passing
@@ -176,8 +176,8 @@
 - [x] Chinese text in language labels (`简体中文`, `繁體中文`, `日本語`) intentionally kept in native script
 
 #### 🟡 P1 — Test Coverage
-- [ ] Add hook tests for `knowledge.hook.ts` (5 hooks exist but not exported in plugin.ts)
-- [ ] Add action tests for `case_ai.action.ts`
+- [x] Add hook tests for `knowledge.hook.ts` (5 hooks exist but not exported in plugin.ts)
+- [x] Add action tests for `case_ai.action.ts`
 - [ ] Add integration tests for case escalation workflow
 
 #### 🟢 P2 — Feature Gaps
@@ -185,7 +185,7 @@
 - [x] Add hooks for SLA enforcement (`sla_policy`, `sla_milestone` — automated tracking)
 - [x] Add hooks for case routing (`routing_rule`, `escalation_rule` — auto-assignment)
 - [x] Add hooks for queue management (`queue`, `queue_member` — load balancing)
-- [ ] Add hooks for community (`forum_topic`, `forum_post` — moderation, notification)
+- [x] Add hooks for community (`forum_topic`, `forum_post` — moderation, notification)
 - [ ] Implement case escalation workflow
 - [ ] Migrate `db.ts` shim to direct `@objectstack/runtime` broker API
 
@@ -236,8 +236,8 @@
 |------|--------|--------|
 | `db.ts` shim files | 6 packages | Migrate all to direct `@objectstack/runtime` broker |
 | Plugin action registration | ✅ All registered | Actions registered in all plugin.ts exports |
-| Hook coverage | 31 hooks / 69 objects (45%) | Add hooks for remaining business objects |
-| Test coverage | 1073 tests / 61 files | Continue expanding coverage |
+| Hook coverage | 45 hooks / 69 objects (65%) | Continue adding hooks for remaining objects |
+| Test coverage | 1365 tests / 91 files | Continue expanding coverage |
 | `defineStack()` config pattern | ✅ Consistent | All packages use correct pattern |
 
 ---
@@ -248,15 +248,15 @@
 - [x] Translate remaining Chinese text in CRM package
 - [x] Add error handling to `marketing/roi.hook.ts`
 - [x] Register missing hooks and actions in all `plugin.ts` files
-- [ ] Resolve TODO in `crm/hooks/lead.hook.ts`
+- [x] Resolve TODO in `crm/hooks/lead.hook.ts`
 
 ### Phase 2: Test Coverage (Week 3-5)
-- [ ] Add hook tests for CRM (5 hook files × ~10 tests each)
-- [x] Add hook tests for Products (3 hook files × ~10 tests each)
-- [x] Add hook tests for Finance (2 hook files × ~10 tests each)
-- [ ] Add hook tests for HR (4 hook files × ~10 tests each)
-- [ ] Add missing action tests across all packages
-- [ ] Target: 80%+ test coverage across all 6 business packages
+- [x] Add hook tests for CRM (8 hook files × ~10 tests each)
+- [x] Add hook tests for Products (8 hook files × ~10 tests each)
+- [x] Add hook tests for Finance (5 hook files × ~10 tests each)
+- [x] Add hook tests for HR (11 hook files × ~10 tests each)
+- [x] Add missing action tests across all packages
+- [x] Target: 80%+ test coverage across all 6 business packages
 
 ### Phase 3: Feature Completeness (Week 6-8)
 - [x] Implement hooks for Support SLA, routing, queue management
@@ -371,6 +371,7 @@ These independent business packages are planned for future development:
 
 | Date | From | To | Breaking Changes | Tests |
 |------|------|----|-----------------|-------|
+| 2026-02-11 | v2.0.6 | v2.0.6 | None (roadmap completion) | 1365 ✅ |
 | 2026-02-11 | v2.0.3 | v2.0.6 | None | 933 ✅ |
 | 2026-02-10 | v2.0.1 | v2.0.3 | None | 933 ✅ |
 | 2026-02-09 | v2.0.0 | v2.0.1 | None | 496 ✅ |

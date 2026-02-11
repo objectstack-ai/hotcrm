@@ -18,7 +18,8 @@ import { InvoiceLine } from './invoice_line.object';
 // Import hooks
 import { ContractBillingHook } from './hooks/contract.hook';
 import { ContractRenewalCheck, ContractExpirationAlert } from './hooks/contract_renewal.hook';
-import { InvoiceStatusLifecycleTrigger, InvoiceLineCalculationTrigger } from './hooks/invoice.hook';
+import { InvoiceStatusLifecycleTrigger } from './hooks/invoice.hook';
+import { InvoiceLineCalculationTrigger, InvoiceLineTotalUpdateTrigger } from './hooks/invoice_line.hook';
 import { PaymentMatchingTrigger, PaymentValidationTrigger } from './hooks/payment.hook';
 
 // Import actions
@@ -70,6 +71,7 @@ export const FinancePlugin: any = {
     contract_expiration_alert: ContractExpirationAlert,
     invoice_status_lifecycle: InvoiceStatusLifecycleTrigger,
     invoice_line_calculation: InvoiceLineCalculationTrigger,
+    invoice_line_total_update: InvoiceLineTotalUpdateTrigger,
     payment_matching: PaymentMatchingTrigger,
     payment_validation: PaymentValidationTrigger
   },
