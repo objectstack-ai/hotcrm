@@ -11,7 +11,7 @@
  * 5. Optimal Close Date Prediction - Realistic timeline forecasting
  */
 
-import { db } from '../db';
+import { broker } from '../db';
 
 // ============================================================================
 // 1. WIN PROBABILITY PREDICTION
@@ -55,7 +55,7 @@ export async function predictWinProbability(request: WinProbabilityRequest): Pro
   const { opportunityId } = request;
 
   // Fetch opportunity data
-  const opp = await db.doc.get('Opportunity', opportunityId, {
+  const opp = await broker.findOne('Opportunity', opportunityId, {
     fields: [
       'Name', 'Stage', 'Amount', 'CloseDate', 'Probability', 'Type',
       'LeadSource', 'CreatedDate', 'AccountId', 'ContactId', 'Age'
@@ -63,12 +63,12 @@ export async function predictWinProbability(request: WinProbabilityRequest): Pro
   });
 
   // Fetch account data
-  const account = await db.doc.get('Account', opp.AccountId, {
+  const account = await broker.findOne('Account', opp.AccountId, {
     fields: ['Industry', 'AnnualRevenue', 'NumberOfEmployees']
   });
 
   // Fetch recent activities
-  const activities = await db.find('Activity', {
+  const activities = await broker.find('Activity', {
     filters: [['WhatId', '=', opportunityId]],
     sort: 'ActivityDate desc',
     limit: 20
@@ -163,7 +163,7 @@ Predict win probability (0-100) and explain key factors.
   const parsed = JSON.parse(llmResponse);
 
   // Update opportunity with AI probability
-  await db.doc.update('Opportunity', opportunityId, {
+  await broker.update('Opportunity', opportunityId, {
     AIProbability: parsed.winProbability
   });
 
@@ -206,10 +206,10 @@ export async function assessDealRisk(request: DealRiskRequest): Promise<DealRisk
   const { opportunityId } = request;
 
   // Fetch opportunity
-  const opp = await db.doc.get('Opportunity', opportunityId);
+  const opp = await broker.findOne('Opportunity', opportunityId);
 
   // Fetch activities
-  const activities = await db.find('Activity', {
+  const activities = await broker.find('Activity', {
     filters: [['WhatId', '=', opportunityId]],
     sort: 'ActivityDate desc',
     limit: 30
@@ -333,8 +333,8 @@ export interface NextStepResponse {
 export async function recommendNextStep(request: NextStepRequest): Promise<NextStepResponse> {
   const { opportunityId } = request;
 
-  const opp = await db.doc.get('Opportunity', opportunityId);
-  const activities = await db.find('Activity', {
+  const opp = await broker.findOne('Opportunity', opportunityId);
+  const activities = await broker.find('Activity', {
     filters: [['WhatId', '=', opportunityId]],
     sort: 'ActivityDate desc',
     limit: 10
@@ -433,8 +433,8 @@ export async function analyzeCompetition(request: CompetitiveIntelRequest): Prom
   const { opportunityId } = request;
 
   // Fetch opportunity and notes/activities that might mention competitors
-  const opp = await db.doc.get('Opportunity', opportunityId);
-  const activities = await db.find('Activity', {
+  const opp = await broker.findOne('Opportunity', opportunityId);
+  const activities = await broker.find('Activity', {
     filters: [['WhatId', '=', opportunityId]],
     limit: 50
   });
@@ -540,8 +540,8 @@ export interface CloseDatePredictionResponse {
 export async function predictCloseDate(request: CloseDatePredictionRequest): Promise<CloseDatePredictionResponse> {
   const { opportunityId } = request;
 
-  const opp = await db.doc.get('Opportunity', opportunityId);
-  const account = await db.doc.get('Account', opp.AccountId, {
+  const opp = await broker.findOne('Opportunity', opportunityId);
+  const account = await broker.findOne('Account', opp.AccountId, {
     fields: ['Industry']
   });
 
@@ -618,7 +618,7 @@ Predict realistic close date and assess if current forecast is achievable.
 
   // Update opportunity with predicted date if variance is significant
   if (Math.abs(parsed.variance) > 7) {
-    await db.doc.update('Opportunity', opportunityId, {
+    await broker.update('Opportunity', opportunityId, {
       AIPredictedCloseDate: parsed.predictedCloseDate,
       ForecastCategory: parsed.forecastCategory
     });

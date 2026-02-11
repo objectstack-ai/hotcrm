@@ -1,4 +1,4 @@
-import { db } from '../db';
+import { broker } from '../db';
 
 /**
  * Lead Conversion Service
@@ -21,7 +21,7 @@ export const LeadConvertAction = {
     
     // 1. Fetch Lead
     // Using simple find, in real db we might need query syntax
-    const leads = await db.find('lead', { filters: [['_id', '=', lead_id]] });
+    const leads = await broker.find('lead', { filters: [['_id', '=', lead_id]] });
     if (!leads || leads.length === 0) {
       throw new Error(`Lead not found: ${lead_id}`);
     }
@@ -52,7 +52,7 @@ export const LeadConvertAction = {
       billing_address_country: lead.country
       // ... map other fields
     };
-    const account = await db.insert('account', accountData);
+    const account = await broker.insert('account', accountData);
     result.account_id = account._id;
 
     // B. Create Contact
@@ -66,7 +66,7 @@ export const LeadConvertAction = {
       title: lead.title,
       owner: owner
     };
-    const contact = await db.insert('contact', contactData);
+    const contact = await broker.insert('contact', contactData);
     result.contact_id = contact._id;
 
     // C. Create Opportunity (Optional)
@@ -81,12 +81,12 @@ export const LeadConvertAction = {
         owner: owner,
         lead_source: lead.lead_source
       };
-      const opp = await db.insert('opportunity', oppData);
+      const opp = await broker.insert('opportunity', oppData);
       result.opportunity_id = opp._id;
     }
 
     // D. Update Lead
-    await db.update('lead', lead_id, {
+    await broker.update('lead', lead_id, {
       status: 'converted',
       is_converted: true,
       converted_date: new Date().toISOString(),

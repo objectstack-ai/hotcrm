@@ -14,16 +14,14 @@ import {
 import { vi, Mock } from 'vitest';
 
 vi.mock('../../../src/db', () => ({
-  db: {
-    doc: {
-      get: vi.fn(),
-      update: vi.fn()
-    },
+  broker: {
+    findOne: vi.fn(),
+    update: vi.fn(),
     find: vi.fn()
   }
 }));
 
-import { db } from '../../../src/db';
+import { broker } from '../../../src/db';
 
 describe('Opportunity AI Actions - predictWinProbability', () => {
   beforeEach(() => {
@@ -31,7 +29,7 @@ describe('Opportunity AI Actions - predictWinProbability', () => {
   });
 
   it('should predict win probability and update opportunity', async () => {
-    (db.doc.get as Mock)
+    (broker.findOne as Mock)
       .mockResolvedValueOnce({
         Name: 'Big Deal',
         Stage: 'proposal',
@@ -50,12 +48,12 @@ describe('Opportunity AI Actions - predictWinProbability', () => {
         AnnualRevenue: 5000000,
         NumberOfEmployees: 200
       });
-    (db.find as Mock).mockResolvedValue([
+    (broker.find as Mock).mockResolvedValue([
       { Type: 'call', ActivityDate: new Date().toISOString() },
       { Type: 'email', ActivityDate: new Date().toISOString() },
       { Type: 'meeting', ActivityDate: new Date().toISOString() }
     ]);
-    (db.doc.update as Mock).mockResolvedValue({});
+    (broker.update as Mock).mockResolvedValue({});
 
     const request: WinProbabilityRequest = { opportunityId: 'opp_001' };
 
@@ -69,17 +67,17 @@ describe('Opportunity AI Actions - predictWinProbability', () => {
     expect(Array.isArray(result.factors)).toBe(true);
     expect(result.stageComparison).toBeDefined();
     expect(result.historicalContext).toBeDefined();
-    expect(db.doc.update).toHaveBeenCalledWith('Opportunity', 'opp_001', expect.objectContaining({
+    expect(broker.update).toHaveBeenCalledWith('Opportunity', 'opp_001', expect.objectContaining({
       AIProbability: expect.any(Number)
     }));
   });
 
   it('should return factors with impact and weight', async () => {
-    (db.doc.get as Mock)
+    (broker.findOne as Mock)
       .mockResolvedValueOnce({ Stage: 'qualification', AccountId: 'acc_001', Probability: 30 })
       .mockResolvedValueOnce({ Industry: 'finance' });
-    (db.find as Mock).mockResolvedValue([]);
-    (db.doc.update as Mock).mockResolvedValue({});
+    (broker.find as Mock).mockResolvedValue([]);
+    (broker.update as Mock).mockResolvedValue({});
 
     const request: WinProbabilityRequest = { opportunityId: 'opp_002' };
 
@@ -101,13 +99,13 @@ describe('Opportunity AI Actions - assessDealRisk', () => {
   });
 
   it('should assess deal risk and return risk level', async () => {
-    (db.doc.get as Mock).mockResolvedValue({
+    (broker.findOne as Mock).mockResolvedValue({
       Stage: 'proposal',
       Amount: 75000,
       CloseDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(),
       Age: 30
     });
-    (db.find as Mock).mockResolvedValue([
+    (broker.find as Mock).mockResolvedValue([
       { Type: 'call', ActivityDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() }
     ]);
 
@@ -126,8 +124,8 @@ describe('Opportunity AI Actions - assessDealRisk', () => {
   });
 
   it('should provide mitigation actions with priority', async () => {
-    (db.doc.get as Mock).mockResolvedValue({ Stage: 'negotiation', Amount: 50000 });
-    (db.find as Mock).mockResolvedValue([]);
+    (broker.findOne as Mock).mockResolvedValue({ Stage: 'negotiation', Amount: 50000 });
+    (broker.find as Mock).mockResolvedValue([]);
 
     const request: DealRiskRequest = { opportunityId: 'opp_002' };
 
@@ -147,12 +145,12 @@ describe('Opportunity AI Actions - recommendNextStep', () => {
   });
 
   it('should recommend next steps based on deal stage', async () => {
-    (db.doc.get as Mock).mockResolvedValue({
+    (broker.findOne as Mock).mockResolvedValue({
       Stage: 'proposal',
       Amount: 100000,
       CloseDate: '2024-03-15'
     });
-    (db.find as Mock).mockResolvedValue([
+    (broker.find as Mock).mockResolvedValue([
       { Type: 'meeting', Subject: 'Demo call' },
       { Type: 'email', Subject: 'Proposal sent' }
     ]);
@@ -178,12 +176,12 @@ describe('Opportunity AI Actions - analyzeCompetition', () => {
   });
 
   it('should analyze competitive landscape and return positioning', async () => {
-    (db.doc.get as Mock).mockResolvedValue({
+    (broker.findOne as Mock).mockResolvedValue({
       Name: 'Enterprise Deal',
       Industry: 'technology',
       Amount: 200000
     });
-    (db.find as Mock).mockResolvedValue([
+    (broker.find as Mock).mockResolvedValue([
       { Type: 'meeting', Subject: 'Competitive review', Description: 'Discussed Salesforce comparison' }
     ]);
 
@@ -210,7 +208,7 @@ describe('Opportunity AI Actions - predictCloseDate', () => {
   });
 
   it('should predict close date and update opportunity when variance is significant', async () => {
-    (db.doc.get as Mock)
+    (broker.findOne as Mock)
       .mockResolvedValueOnce({
         Stage: 'proposal',
         CloseDate: '2024-02-28',
@@ -221,7 +219,7 @@ describe('Opportunity AI Actions - predictCloseDate', () => {
       .mockResolvedValueOnce({
         Industry: 'technology'
       });
-    (db.doc.update as Mock).mockResolvedValue({});
+    (broker.update as Mock).mockResolvedValue({});
 
     const request: CloseDatePredictionRequest = { opportunityId: 'opp_001' };
 
@@ -235,7 +233,7 @@ describe('Opportunity AI Actions - predictCloseDate', () => {
     expect(result.confidence).toBeGreaterThan(0);
     expect(result.factors).toBeDefined();
     expect(result.forecastCategory).toBeDefined();
-    expect(db.doc.update).toHaveBeenCalledWith('Opportunity', 'opp_001', expect.objectContaining({
+    expect(broker.update).toHaveBeenCalledWith('Opportunity', 'opp_001', expect.objectContaining({
       AIPredictedCloseDate: expect.any(String),
       ForecastCategory: expect.any(String)
     }));

@@ -11,15 +11,13 @@ import {
 import { vi, Mock } from 'vitest';
 
 vi.mock('../../../src/db', () => ({
-  db: {
-    doc: {
-      get: vi.fn()
-    },
+  broker: {
+    findOne: vi.fn(),
     find: vi.fn()
   }
 }));
 
-import { db } from '../../../src/db';
+import { broker } from '../../../src/db';
 
 describe('Contact AI Actions - enrichContact', () => {
   beforeEach(() => {
@@ -37,7 +35,7 @@ describe('Contact AI Actions - enrichContact', () => {
       mobile_phone: null
     };
 
-    (db.doc.get as Mock).mockResolvedValue(mockContact);
+    (broker.findOne as Mock).mockResolvedValue(mockContact);
 
     const request: ContactEnrichmentRequest = {
       contactId: 'contact_123'
@@ -64,7 +62,7 @@ describe('Contact AI Actions - enrichContact', () => {
       mobile_phone: '+1-555-5678'
     };
 
-    (db.doc.get as Mock).mockResolvedValue(mockContact);
+    (broker.findOne as Mock).mockResolvedValue(mockContact);
 
     const request: ContactEnrichmentRequest = {
       contactId: 'contact_123'
@@ -87,7 +85,7 @@ describe('Contact AI Actions - enrichContact', () => {
       title: null
     };
 
-    (db.doc.get as Mock).mockResolvedValue(mockContact);
+    (broker.findOne as Mock).mockResolvedValue(mockContact);
 
     const request: ContactEnrichmentRequest = {
       contactId: 'contact_123',
@@ -111,7 +109,7 @@ describe('Contact AI Actions - enrichContact', () => {
       email: 'alice@company.com'
     };
 
-    (db.doc.get as Mock).mockResolvedValue(mockContact);
+    (broker.findOne as Mock).mockResolvedValue(mockContact);
 
     const request: ContactEnrichmentRequest = {
       contactId: 'contact_123'
@@ -136,7 +134,7 @@ describe('Contact AI Actions - enrichContact', () => {
       email: 'bob@example.com'
     };
 
-    (db.doc.get as Mock).mockResolvedValue(mockContact);
+    (broker.findOne as Mock).mockResolvedValue(mockContact);
 
     const request: ContactEnrichmentRequest = {
       contactId: 'contact_123',
@@ -182,8 +180,8 @@ describe('Contact AI Actions - detectBuyingIntent', () => {
       }
     ];
 
-    (db.doc.get as Mock).mockResolvedValue(mockContact);
-    (db.find as Mock)
+    (broker.findOne as Mock).mockResolvedValue(mockContact);
+    (broker.find as Mock)
       .mockResolvedValueOnce(mockActivities)
       .mockResolvedValueOnce(mockOpportunities);
 
@@ -227,8 +225,8 @@ describe('Contact AI Actions - detectBuyingIntent', () => {
       }
     ];
 
-    (db.doc.get as Mock).mockResolvedValue(mockContact);
-    (db.find as Mock)
+    (broker.findOne as Mock).mockResolvedValue(mockContact);
+    (broker.find as Mock)
       .mockResolvedValueOnce(mockActivities)
       .mockResolvedValueOnce(mockOpportunities);
 
@@ -247,8 +245,8 @@ describe('Contact AI Actions - detectBuyingIntent', () => {
   it('should provide buying signals with weights', async () => {
     // Arrange
     const mockContact = { email: 'test@example.com' };
-    (db.doc.get as Mock).mockResolvedValue(mockContact);
-    (db.find as Mock).mockResolvedValue([]);
+    (broker.findOne as Mock).mockResolvedValue(mockContact);
+    (broker.find as Mock).mockResolvedValue([]);
 
     const request: BuyingIntentRequest = {
       contactId: 'contact_123'
@@ -270,8 +268,8 @@ describe('Contact AI Actions - detectBuyingIntent', () => {
   it('should recommend next action based on intent level', async () => {
     // Arrange
     const mockContact = { email: 'test@example.com' };
-    (db.doc.get as Mock).mockResolvedValue(mockContact);
-    (db.find as Mock).mockResolvedValue([]);
+    (broker.findOne as Mock).mockResolvedValue(mockContact);
+    (broker.find as Mock).mockResolvedValue([]);
 
     const request: BuyingIntentRequest = {
       contactId: 'contact_123'
@@ -295,8 +293,8 @@ describe('Contact AI Actions - detectBuyingIntent', () => {
       { type: 'email', activity_date: oldDate }
     ];
 
-    (db.doc.get as Mock).mockResolvedValue(mockContact);
-    (db.find as Mock)
+    (broker.findOne as Mock).mockResolvedValue(mockContact);
+    (broker.find as Mock)
       .mockResolvedValueOnce(mockActivities)
       .mockResolvedValueOnce([]);
 
@@ -310,7 +308,7 @@ describe('Contact AI Actions - detectBuyingIntent', () => {
 
     // Assert
     expect(result).toBeDefined();
-    expect(db.find).toHaveBeenCalled();
+    expect(broker.find).toHaveBeenCalled();
   });
 });
 

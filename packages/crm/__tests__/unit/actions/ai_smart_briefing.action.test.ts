@@ -6,15 +6,13 @@ import {
 import { vi, Mock } from 'vitest';
 
 vi.mock('../../../src/db', () => ({
-  db: {
-    doc: {
-      get: vi.fn()
-    },
+  broker: {
+    findOne: vi.fn(),
     find: vi.fn()
   }
 }));
 
-import { db } from '../../../src/db';
+import { broker } from '../../../src/db';
 
 describe('AI Smart Briefing - executeSmartBriefing', () => {
   beforeEach(() => {
@@ -22,7 +20,7 @@ describe('AI Smart Briefing - executeSmartBriefing', () => {
   });
 
   it('should generate a smart briefing for an account', async () => {
-    (db.doc.get as Mock).mockResolvedValue({
+    (broker.findOne as Mock).mockResolvedValue({
       Name: 'Acme Corp',
       Industry: 'Technology',
       AnnualRevenue: 5000000,
@@ -32,7 +30,7 @@ describe('AI Smart Briefing - executeSmartBriefing', () => {
       HealthScore: 85,
       SLATier: 'Premium'
     });
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce([
         { Type: 'meeting', Subject: 'Quarterly Review', ActivityDate: '2024-01-15', Status: 'completed', Description: 'Good meeting' }
       ])
@@ -68,7 +66,7 @@ describe('AI Smart Briefing - executeSmartBriefing', () => {
   });
 
   it('should throw error when account is not found', async () => {
-    (db.doc.get as Mock).mockResolvedValue(null);
+    (broker.findOne as Mock).mockResolvedValue(null);
 
     const request: SmartBriefingRequest = { accountId: 'nonexistent' };
 
@@ -76,7 +74,7 @@ describe('AI Smart Briefing - executeSmartBriefing', () => {
   });
 
   it('should include metadata with activity and email counts', async () => {
-    (db.doc.get as Mock).mockResolvedValue({
+    (broker.findOne as Mock).mockResolvedValue({
       Name: 'Beta Inc',
       Industry: 'Finance'
     });
@@ -87,7 +85,7 @@ describe('AI Smart Briefing - executeSmartBriefing', () => {
     const mockEmails = [
       { Subject: 'Pricing', SentDate: '2024-01-12', Direction: 'inbound', Body: 'Need pricing info' }
     ];
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce(mockActivities)
       .mockResolvedValueOnce(mockEmails)
       .mockResolvedValueOnce([]);
@@ -102,11 +100,11 @@ describe('AI Smart Briefing - executeSmartBriefing', () => {
   });
 
   it('should handle missing activities and emails gracefully', async () => {
-    (db.doc.get as Mock).mockResolvedValue({
+    (broker.findOne as Mock).mockResolvedValue({
       Name: 'Gamma LLC',
       Industry: 'Retail'
     });
-    (db.find as Mock)
+    (broker.find as Mock)
       .mockResolvedValueOnce([])   // activities
       .mockResolvedValueOnce([])   // emails
       .mockResolvedValueOnce([]);  // opportunities

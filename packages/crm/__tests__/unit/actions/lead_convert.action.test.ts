@@ -1,14 +1,14 @@
 import { vi, Mock } from 'vitest';
 
 vi.mock('../../../src/db', () => ({
-  db: {
+  broker: {
     find: vi.fn(),
     insert: vi.fn(),
     update: vi.fn()
   }
 }));
 
-import { db } from '../../../src/db';
+import { broker } from '../../../src/db';
 import { LeadConvertAction } from '../../../src/actions/lead_convert.action';
 
 describe('LeadConvertAction', () => {
@@ -37,12 +37,12 @@ describe('LeadConvertAction', () => {
       owner: 'user_001'
     };
 
-    (db.find as Mock).mockResolvedValue([mockLead]);
-    (db.insert as Mock)
+    (broker.find as Mock).mockResolvedValue([mockLead]);
+    (broker.insert as Mock)
       .mockResolvedValueOnce({ _id: 'acc_001' })   // account
       .mockResolvedValueOnce({ _id: 'con_001' })   // contact
       .mockResolvedValueOnce({ _id: 'opp_001' });  // opportunity
-    (db.update as Mock).mockResolvedValue({});
+    (broker.update as Mock).mockResolvedValue({});
 
     const ctx = {
       params: {
@@ -58,15 +58,15 @@ describe('LeadConvertAction', () => {
     expect(result.account_id).toBe('acc_001');
     expect(result.contact_id).toBe('con_001');
     expect(result.opportunity_id).toBe('opp_001');
-    expect(db.insert).toHaveBeenCalledTimes(3);
-    expect(db.update).toHaveBeenCalledWith('lead', 'lead_001', expect.objectContaining({
+    expect(broker.insert).toHaveBeenCalledTimes(3);
+    expect(broker.update).toHaveBeenCalledWith('lead', 'lead_001', expect.objectContaining({
       status: 'converted',
       is_converted: true
     }));
   });
 
   it('should throw error when lead is not found', async () => {
-    (db.find as Mock).mockResolvedValue([]);
+    (broker.find as Mock).mockResolvedValue([]);
 
     const ctx = {
       params: { lead_id: 'nonexistent' },
@@ -77,7 +77,7 @@ describe('LeadConvertAction', () => {
   });
 
   it('should throw error when lead is already converted', async () => {
-    (db.find as Mock).mockResolvedValue([{ _id: 'lead_001', status: 'converted' }]);
+    (broker.find as Mock).mockResolvedValue([{ _id: 'lead_001', status: 'converted' }]);
 
     const ctx = {
       params: { lead_id: 'lead_001' },
@@ -98,11 +98,11 @@ describe('LeadConvertAction', () => {
       owner: 'user_002'
     };
 
-    (db.find as Mock).mockResolvedValue([mockLead]);
-    (db.insert as Mock)
+    (broker.find as Mock).mockResolvedValue([mockLead]);
+    (broker.insert as Mock)
       .mockResolvedValueOnce({ _id: 'acc_002' })
       .mockResolvedValueOnce({ _id: 'con_002' });
-    (db.update as Mock).mockResolvedValue({});
+    (broker.update as Mock).mockResolvedValue({});
 
     const ctx = {
       params: {
@@ -117,7 +117,7 @@ describe('LeadConvertAction', () => {
     expect(result.account_id).toBe('acc_002');
     expect(result.contact_id).toBe('con_002');
     expect(result.opportunity_id).toBeNull();
-    expect(db.insert).toHaveBeenCalledTimes(2);
+    expect(broker.insert).toHaveBeenCalledTimes(2);
   });
 
   it('should use lead owner when no owner_id is specified', async () => {
@@ -131,11 +131,11 @@ describe('LeadConvertAction', () => {
       owner: 'lead_owner_id'
     };
 
-    (db.find as Mock).mockResolvedValue([mockLead]);
-    (db.insert as Mock)
+    (broker.find as Mock).mockResolvedValue([mockLead]);
+    (broker.insert as Mock)
       .mockResolvedValueOnce({ _id: 'acc_003' })
       .mockResolvedValueOnce({ _id: 'con_003' });
-    (db.update as Mock).mockResolvedValue({});
+    (broker.update as Mock).mockResolvedValue({});
 
     const ctx = {
       params: {
@@ -147,7 +147,7 @@ describe('LeadConvertAction', () => {
 
     await handler(ctx);
 
-    expect(db.insert).toHaveBeenCalledWith('account', expect.objectContaining({
+    expect(broker.insert).toHaveBeenCalledWith('account', expect.objectContaining({
       owner: 'lead_owner_id'
     }));
   });

@@ -10,7 +10,7 @@
  * 4. Lead Nurturing Recommendations - Next best action suggestions
  */
 
-import { db } from '../db';
+import { broker } from '../db';
 
 // ============================================================================
 // 1. EMAIL SIGNATURE DATA EXTRACTION
@@ -112,7 +112,7 @@ Only include fields you find. Use confidence scores to indicate certainty.
     }
 
     if (Object.keys(updates).length > 0) {
-      await db.doc.update('Lead', leadId, updates);
+      await broker.update('Lead', leadId, updates);
       leadUpdated = true;
     }
   }
@@ -168,7 +168,7 @@ export async function enrichLead(request: LeadEnrichmentRequest): Promise<LeadEn
 
   // If leadId provided, fetch lead to get email domain
   if (request.leadId && !domain) {
-    const lead = await db.doc.get('Lead', request.leadId, {
+    const lead = await broker.findOne('Lead', request.leadId, {
       fields: ['email']
     });
     if (lead?.Email) {
@@ -232,7 +232,7 @@ Return JSON:
     if (parsed.companyData.revenue) updates.AnnualRevenue = parsed.companyData.revenue;
     if (parsed.companyData.description) updates.Description = parsed.companyData.description;
 
-    await db.doc.update('Lead', request.leadId, updates);
+    await broker.update('Lead', request.leadId, updates);
   }
 
   return {
@@ -288,7 +288,7 @@ export async function routeLead(request: LeadRoutingRequest): Promise<LeadRoutin
   const { leadId } = request;
 
   // 1. Fetch lead data
-  const lead = await db.doc.get('Lead', leadId, {
+  const lead = await broker.findOne('Lead', leadId, {
     fields: ['Company', 'Industry', 'State', 'Country', 'LeadScore', 'AnnualRevenue']
   });
 
@@ -381,7 +381,7 @@ Recommend the best sales rep and provide top 3 alternatives.
   const parsed = JSON.parse(llmResponse);
 
   // Auto-assign lead to recommended owner
-  await db.doc.update('Lead', leadId, {
+  await broker.update('Lead', leadId, {
     OwnerId: parsed.recommendedOwner.userId
   });
 
@@ -435,12 +435,12 @@ export async function generateNurturingRecommendations(request: LeadNurturingReq
   const { leadId } = request;
 
   // Fetch lead data
-  const lead = await db.doc.get('Lead', leadId, {
+  const lead = await broker.findOne('Lead', leadId, {
     fields: ['FirstName', 'LastName', 'Company', 'Industry', 'Title', 'LeadScore', 'Status', 'LeadSource']
   });
 
   // Fetch recent activities
-  const activities = await db.find('Activity', {
+  const activities = await broker.find('Activity', {
     filters: [['WhoId', '=', leadId]],
     sort: 'ActivityDate desc',
     limit: 5

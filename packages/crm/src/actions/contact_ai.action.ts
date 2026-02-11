@@ -11,7 +11,7 @@
  * 5. Contact Deduplication - Smart matching and merging of duplicate contacts
  */
 
-import { db } from '../db';
+import { broker } from '../db';
 
 // ============================================================================
 // 1. CONTACT ENRICHMENT
@@ -58,7 +58,7 @@ export async function enrichContact(request: ContactEnrichmentRequest): Promise<
   const { contactId, sources = ['all'] } = request;
 
   // Fetch current contact data
-  const contact = await db.doc.get('contact', contactId, {
+  const contact = await broker.findOne('contact', contactId, {
     fields: ['first_name', 'last_name', 'email', 'title', 'account_id', 'phone', 'mobile_phone']
   });
 
@@ -158,12 +158,12 @@ export async function detectBuyingIntent(request: BuyingIntentRequest): Promise<
   const { contactId, lookbackDays = 30 } = request;
 
   // Fetch contact data
-  const contact = await db.doc.get('contact', contactId, {
+  const contact = await broker.findOne('contact', contactId, {
     fields: ['first_name', 'last_name', 'email', 'account_id']
   });
 
   // Fetch recent activities
-  const activities = await db.find('activity', {
+  const activities = await broker.find('activity', {
     filters: [
       ['who_id', '=', contactId],
       ['activity_date', '>', new Date(Date.now() - lookbackDays * 24 * 60 * 60 * 1000).toISOString()]
@@ -172,7 +172,7 @@ export async function detectBuyingIntent(request: BuyingIntentRequest): Promise<
   });
 
   // Fetch related opportunities
-  const opportunities = await db.find('opportunity', {
+  const opportunities = await broker.find('opportunity', {
     filters: [
       ['contact_id', '=', contactId],
       ['is_closed', '=', false]
@@ -418,12 +418,12 @@ export async function predictBestContactTime(request: ContactTimingRequest): Pro
   const { contactId } = request;
 
   // Fetch contact and account data for timezone
-  const contact = await db.doc.get('contact', contactId, {
+  const contact = await broker.findOne('contact', contactId, {
     fields: ['account_id']
   });
 
   // Fetch historical activities
-  const activities = await db.find('activity', {
+  const activities = await broker.find('activity', {
     filters: [['who_id', '=', contactId]],
     sort: 'activity_date desc',
     limit: 100
@@ -513,12 +513,12 @@ export async function findDuplicates(request: DeduplicationRequest): Promise<Ded
   const { contactId, threshold = 70 } = request;
 
   // Fetch the contact to check
-  const contact = await db.doc.get('contact', contactId, {
+  const contact = await broker.findOne('contact', contactId, {
     fields: ['first_name', 'last_name', 'email', 'phone', 'account_id']
   });
 
   // Find potential duplicates based on name and email
-  const potentialDuplicates = await db.find('contact', {
+  const potentialDuplicates = await broker.find('contact', {
     filters: [
       ['id', '!=', contactId],
       // In real implementation, would use fuzzy matching
