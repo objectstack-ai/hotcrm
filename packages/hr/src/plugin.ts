@@ -43,6 +43,10 @@ import { CandidateScoringTrigger, CandidateStatusChangeTrigger } from './hooks/c
 import { EmployeeOnboardingTrigger, EmployeeStatusChangeTrigger, EmployeeDataValidationTrigger } from './hooks/employee.hook';
 import { OfferCreationTrigger, OfferStatusChangeTrigger, OfferApprovalTrigger } from './hooks/offer.hook';
 import { PerformanceReviewRatingTrigger, PerformanceReviewWorkflowTrigger } from './hooks/performance_review.hook';
+import { ApplicationStatusWorkflowTrigger, ApplicationScreeningTrigger } from './hooks/application.hook';
+import { InterviewSchedulingTrigger, InterviewFeedbackTrigger } from './hooks/interview.hook';
+import { OnboardingChecklistTrigger, OnboardingProgressTrigger } from './hooks/onboarding.hook';
+import { TimeOffBalanceValidationTrigger, TimeOffApprovalTrigger } from './hooks/time_off.hook';
 
 // Import actions
 import CandidateAIAction from './actions/candidate_ai.action';
@@ -89,6 +93,14 @@ export const HRPlugin: any = {
     offer_approval: OfferApprovalTrigger,
     performance_review_rating: PerformanceReviewRatingTrigger,
     performance_review_workflow: PerformanceReviewWorkflowTrigger,
+    application_status_workflow: ApplicationStatusWorkflowTrigger,
+    application_screening: ApplicationScreeningTrigger,
+    interview_scheduling: InterviewSchedulingTrigger,
+    interview_feedback: InterviewFeedbackTrigger,
+    onboarding_checklist: OnboardingChecklistTrigger,
+    onboarding_progress: OnboardingProgressTrigger,
+    time_off_balance_validation: TimeOffBalanceValidationTrigger,
+    time_off_approval: TimeOffApprovalTrigger,
   },
 
   // Business objects provided by this plugin

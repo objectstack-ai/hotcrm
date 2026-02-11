@@ -38,6 +38,9 @@ import { ForumPost } from './forum_post.object';
 
 import { CaseEntitlementCheck } from './hooks/case.hook';
 import KnowledgeHooks from './hooks/knowledge.hook';
+import SLAHooks from './hooks/sla.hook';
+import RoutingHooks from './hooks/routing.hook';
+import QueueHooks from './hooks/queue.hook';
 
 // Import actions
 import CaseAIAction from './actions/case_ai.action';
@@ -101,6 +104,9 @@ export const SupportPlugin: any = {
   triggers: {
     case_entitlement: CaseEntitlementCheck,
     knowledge_hooks: KnowledgeHooks,
+    sla_hooks: SLAHooks,
+    routing_hooks: RoutingHooks,
+    queue_hooks: QueueHooks,
   },
 
   // Navigation structure for this plugin

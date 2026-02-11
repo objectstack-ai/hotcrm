@@ -15,34 +15,34 @@ The HR/HCM module provides comprehensive human capital management functionality 
 #### Talent Acquisition & Recruitment
 | Object | Label | Description |
 |--------|-------|-------------|
-| **candidate** | 候选人 | Job candidate profiles with education, experience, salary expectations, recruitment source |
-| **application** | 求职申请 | Job applications with status tracking and stage progression through pipeline |
-| **recruitment** | 招聘需求 | Open job requisitions with headcount, salary ranges, hiring priorities |
-| **interview** | 面试 | Interview schedules, interviewer feedback, assessment results, hiring decisions |
+| **candidate** | Candidate | Job candidate profiles with education, experience, salary expectations, recruitment source |
+| **application** | Application | Job applications with status tracking and stage progression through pipeline |
+| **recruitment** | Recruitment | Open job requisitions with headcount, salary ranges, hiring priorities |
+| **interview** | Interview | Interview schedules, interviewer feedback, assessment results, hiring decisions |
 | **offer** | Offer | Job offers with salary, benefits, expiry dates, acceptance tracking, onboarding linkage |
-| **onboarding** | 入职流程 | New hire onboarding with paperwork, IT setup, training, 90-day probation activities |
+| **onboarding** | Onboarding | New hire onboarding with paperwork, IT setup, training, 90-day probation activities |
 
 #### Organization & Workforce Management
 | Object | Label | Description |
 |--------|-------|-------------|
-| **employee** | 员工 | Employee master data with personal info, employment status, compensation, emergency contacts |
-| **position** | 职位 | Job positions, levels, salary ranges, reporting relationships, employment types |
-| **department** | 部门 | Organizational departments, hierarchies, managers, budget allocation, office locations |
+| **employee** | Employee | Employee master data with personal info, employment status, compensation, emergency contacts |
+| **position** | Position | Job positions, levels, salary ranges, reporting relationships, employment types |
+| **department** | Department | Organizational departments, hierarchies, managers, budget allocation, office locations |
 
 #### Performance & Development
 | Object | Label | Description |
 |--------|-------|-------------|
-| **performance_review** | 绩效评估 | Performance reviews with ratings, feedback, development plans, promotion recommendations |
-| **goal** | 目标 | OKR, individual goals, KPIs with progress tracking and performance weighting |
-| **training** | 培训 | Training programs, attendance, completion status, exam scores, learning outcomes |
-| **certification** | 认证 | Professional certifications, expiry dates, verification, renewal requirements |
+| **performance_review** | Performance Review | Performance reviews with ratings, feedback, development plans, promotion recommendations |
+| **goal** | Goal | OKR, individual goals, KPIs with progress tracking and performance weighting |
+| **training** | Training | Training programs, attendance, completion status, exam scores, learning outcomes |
+| **certification** | Certification | Professional certifications, expiry dates, verification, renewal requirements |
 
 #### Time & Compensation
 | Object | Label | Description |
 |--------|-------|-------------|
-| **attendance** | 考勤 | Employee attendance, check-in/out times, work hours, status (late, absent, overtime) |
-| **time_off** | 请假 | Leave requests (annual, sick, personal, maternity) with approval workflows |
-| **payroll** | 工资 | Salary calculations with allowances, deductions, taxes, pay period tracking |
+| **attendance** | Attendance | Employee attendance, check-in/out times, work hours, status (late, absent, overtime) |
+| **time_off** | Time Off | Leave requests (annual, sick, personal, maternity) with approval workflows |
+| **payroll** | Payroll | Salary calculations with allowances, deductions, taxes, pay period tracking |
 
 ### AI Actions (3 Total)
 
@@ -119,8 +119,8 @@ import {
   Training
 } from '@hotcrm/hr';
 
-console.log(Employee.label); // "员工"
-console.log(Candidate.label); // "候选人"
+console.log(Employee.label); // "Employee"
+console.log(Candidate.label); // "Candidate"
 ```
 
 ### Using AI Actions

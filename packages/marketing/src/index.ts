@@ -21,6 +21,10 @@ export { LandingPage } from './landing_page.object';
 export { Form } from './form.object';
 export { MarketingList } from './marketing_list.object';
 export { Unsubscribe } from './unsubscribe.object';
+export { AutomationWorkflow } from './automation_workflow.object';
+export { EmailSend } from './email_send.object';
+export { LeadNurtureProgram } from './lead_nurture_program.object';
+export { Touchpoint } from './touchpoint.object';
 
 // Export Hooks
 export { default as CampaignROIHook } from './hooks/roi.hook';

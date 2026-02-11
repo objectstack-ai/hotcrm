@@ -14,18 +14,18 @@ This package contains all core CRM functionality for managing the sales pipeline
 
 | Object | Label | Description |
 |--------|-------|-------------|
-| **account** | 客户 | Enterprise customer & organization management with multi-level support, SLA tiers, health scoring |
-| **contact** | 联系人 | Individual contact records with decision maker tracking, influence levels, relationship strength |
-| **lead** | 线索 | AI-Native lead management with duplicate detection, scoring, enrichment capabilities |
-| **opportunity** | 商机 | Sales pipeline management with 7-stage forecasting, win probability, revenue tracking |
+| **account** | Account | Enterprise customer & organization management with multi-level support, SLA tiers, health scoring |
+| **contact** | Contact | Individual contact records with decision maker tracking, influence levels, relationship strength |
+| **lead** | Lead | AI-Native lead management with duplicate detection, scoring, enrichment capabilities |
+| **opportunity** | Opportunity | Sales pipeline management with 7-stage forecasting, win probability, revenue tracking |
 | **task** | Task | Kanban boards, dependencies, time tracking, recurring tasks, checklist management |
 | **activity** | Activity | Sales activity tracking (calls, emails, meetings, tasks) with geo-check-in, transcription, sentiment |
 | **note** | Note | Markdown-enabled notes with @mentions, pinning, full-text search, sentiment analysis |
-| **email_template** | 邮件模板 | Marketing email templates with A/B testing, personalization tokens, dynamic content blocks |
-| **form** | 表单 | Drag-drop form builder with progressive profiling, lead auto-creation, spam detection |
-| **landing_page** | 着陆页 | Landing page builder with A/B testing, multi-device optimization, UTM tracking, conversion metrics |
-| **marketing_list** | 营销列表 | Dynamic/static segmentation with suppression rules, GDPR compliance, engagement analytics |
-| **unsubscribe** | 退订记录 | Email unsubscribe & bounce management with GDPR requests, resubscribe tracking |
+| **email_template** | Email Template | Marketing email templates with A/B testing, personalization tokens, dynamic content blocks |
+| **form** | Form | Drag-drop form builder with progressive profiling, lead auto-creation, spam detection |
+| **landing_page** | Landing Page | Landing page builder with A/B testing, multi-device optimization, UTM tracking, conversion metrics |
+| **marketing_list** | Marketing List | Dynamic/static segmentation with suppression rules, GDPR compliance, engagement analytics |
+| **unsubscribe** | Unsubscribe Record | Email unsubscribe & bounce management with GDPR requests, resubscribe tracking |
 | **assignment_rule** | Assignment Rule | Auto-assignment rules for leads/cases with operator-based criteria |
 
 ### AI Actions (8 Total)
@@ -99,8 +99,8 @@ import {
   Note
 } from '@hotcrm/crm';
 
-console.log(Account.label); // "客户"
-console.log(Lead.label); // "线索"
+console.log(Account.label); // "Account"
+console.log(Lead.label); // "Lead"
 console.log(Activity.label); // "Activity"
 ```
 
