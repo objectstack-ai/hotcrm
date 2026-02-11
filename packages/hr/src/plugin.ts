@@ -57,6 +57,7 @@ import CandidateAIAction from './actions/candidate_ai.action';
 import EmployeeAIAction from './actions/employee_ai.action';
 import PerformanceAIAction from './actions/performance_ai.action';
 import HRAnalyticsAction from './actions/hr_analytics.action';
+import { HRWorkflows } from './hr.workflow';
 
 /**
  * HR Plugin Definition
@@ -113,6 +114,15 @@ export const HRPlugin: any = {
     attendance_duplicate_check: AttendanceDuplicateCheckTrigger,
     goal_progress_tracking: GoalProgressTrackingTrigger,
     goal_alignment_validation: GoalAlignmentValidationTrigger,
+  },
+
+  // Workflows
+  workflows: {
+    onboarding_automation: HRWorkflows.onboardingAutomation,
+    time_off_approval: HRWorkflows.timeOffApproval,
+    time_off_auto_approval: HRWorkflows.timeOffAutoApproval,
+    performance_review_cycle: HRWorkflows.performanceReviewCycle,
+    performance_review_reminder: HRWorkflows.performanceReviewReminder,
   },
 
   // Business objects provided by this plugin

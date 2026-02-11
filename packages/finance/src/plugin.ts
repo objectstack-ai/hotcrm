@@ -21,6 +21,7 @@ import { ContractRenewalCheck, ContractExpirationAlert } from './hooks/contract_
 import { InvoiceStatusLifecycleTrigger } from './hooks/invoice.hook';
 import { InvoiceLineCalculationTrigger, InvoiceLineTotalUpdateTrigger } from './hooks/invoice_line.hook';
 import { PaymentMatchingTrigger, PaymentValidationTrigger } from './hooks/payment.hook';
+import { PaymentReminderWorkflows } from './payment_reminder.workflow';
 
 // Import actions
 import RevenueDashboardAction from './actions/revenue_dashboard.action';
@@ -74,6 +75,14 @@ export const FinancePlugin: any = {
     invoice_line_total_update: InvoiceLineTotalUpdateTrigger,
     payment_matching: PaymentMatchingTrigger,
     payment_validation: PaymentValidationTrigger
+  },
+
+  // Workflows
+  workflows: {
+    invoice_payment_reminder: PaymentReminderWorkflows.invoicePaymentReminder,
+    invoice_overdue_escalation: PaymentReminderWorkflows.invoiceOverdueEscalation,
+    payment_confirmation: PaymentReminderWorkflows.paymentConfirmation,
+    contract_renewal_reminder: PaymentReminderWorkflows.contractRenewalReminder,
   },
 
   // Navigation structure for this plugin
