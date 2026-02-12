@@ -43,7 +43,7 @@ export const AccountPage = {
           properties: {
             fields: [
               'name', 'account_number', 'type', 'industry',
-              'phone', 'website', 'annual_revenue', 'employees',
+              'phone', 'website', 'annual_revenue', 'number_of_employees',
               'parent_account', 'ownership'
             ],
             columns: 2
