@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowRight, Bot, Database,  LayoutTemplate,  Code2, Sparkles, Box, Workflow, BarChart3, ShieldCheck } from 'lucide-react';
+import { ArrowRight, Bot, Database, LayoutTemplate, Code2, Sparkles, Box, ShieldCheck, TrendingUp, LifeBuoy, Megaphone, Banknote, Users, GitBranch, TestTube, Blocks, Cpu } from 'lucide-react';
 import { siteConfig } from '@/lib/layout.shared';
 
 export default function HomePage() {
@@ -7,7 +7,7 @@ export default function HomePage() {
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
       <section className="relative overflow-hidden pt-20 pb-32 md:pt-32 md:pb-48">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/20 via-background to-background" />
+        <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at top, rgba(23, 23, 23, 0.08), transparent 70%)' }} />
         
         <div className="container relative mx-auto px-4 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 mb-8 text-sm font-medium bg-primary/10 text-primary rounded-full border border-primary/20 animate-in fade-in slide-in-from-bottom-4 duration-1000">
@@ -15,7 +15,7 @@ export default function HomePage() {
             <span>The World's First AI-Native CRM</span>
           </div>
           
-          <h1 className="max-w-5xl mx-auto text-5xl md:text-7xl font-bold tracking-tight mb-8 bg-gradient-to-br from-foreground to-muted-foreground bg-clip-text text-transparent animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-100">
+          <h1 className="max-w-5xl mx-auto text-5xl md:text-7xl font-bold tracking-tight mb-8 text-foreground animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-100">
             Enterprise Power.<br/>
             Start-up Speed.<br/>
             <span className="text-primary">AI Intelligence.</span>
@@ -34,10 +34,12 @@ export default function HomePage() {
               <ArrowRight className="ml-2 w-5 h-5" />
             </Link>
             <Link
-              href="/docs/modules"
+              href="https://github.com/objectstack-ai/hotcrm"
+              target="_blank"
               className="inline-flex h-12 items-center justify-center rounded-md border border-input bg-background px-8 text-base font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             >
-              Explore Features
+              <GitBranch className="mr-2 w-5 h-5" />
+              View on GitHub
             </Link>
           </div>
         </div>
@@ -90,42 +92,52 @@ export default function HomePage() {
           
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             <FeatureCard
-              icon={<TrendingUpIcon />}
+              icon={<TrendingUp className="w-6 h-6" />}
               title="Sales Cloud"
               description="Lead management, Opportunity pipelines, and Deal tracking."
               href="/docs/modules/sales"
             />
             <FeatureCard
-              icon={<LifeBuoyIcon />}
+              icon={<LifeBuoy className="w-6 h-6" />}
               title="Service Cloud"
               description="Case management, Knowledge base, and SLA tracking."
               href="/docs/modules/service"
             />
             <FeatureCard
-              icon={<MegaphoneIcon />}
+              icon={<Megaphone className="w-6 h-6" />}
               title="Marketing Cloud"
               description="Campaign ROI tracking and Customer Journeys."
               href="/docs/modules/marketing"
             />
             <FeatureCard
-              icon={<BanknoteIcon />}
+              icon={<Banknote className="w-6 h-6" />}
               title="Revenue Cloud"
               description="CPQ (Configure, Price, Quote) and Billing."
               href="/docs/modules/revenue"
             />
             <FeatureCard
-              icon={<UsersIcon />}
+              icon={<Users className="w-6 h-6" />}
               title="HR Cloud"
               description="Human Capital Management - Recruitment to Retirement."
               href="/docs/modules/hr"
             />
             <FeatureCard
-              icon={<LayoutTemplate />}
+              icon={<LayoutTemplate className="w-6 h-6" />}
               title="Platform & AI"
               description="Metadata engine, ObjectQL, and Agentic capabilities."
               href="/docs/modules/platform"
             />
           </div>
+        </div>
+      </section>
+
+      {/* Stats Section */}
+      <section className="container mx-auto px-4 py-16 border-t border-border/50">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+          <StatItem icon={<Blocks className="w-6 h-6" />} value="69" label="Business Objects" />
+          <StatItem icon={<GitBranch className="w-6 h-6" />} value="59" label="Server Hooks" />
+          <StatItem icon={<TestTube className="w-6 h-6" />} value="1,629" label="Tests Passing" />
+          <StatItem icon={<Cpu className="w-6 h-6" />} value="6" label="AI Agent Workflows" />
         </div>
       </section>
 
@@ -165,17 +177,18 @@ export default function HomePage() {
                 <Box className="w-4 h-4" />
                 <span>packages/crm/src/opportunity.object.ts</span>
               </div>
-              <div className="text-blue-400">import <span className="text-foreground">type</span> <span className="text-yellow-400">{'{ ObjectSchema }'}</span> <span className="text-purple-400">from</span> <span className="text-green-400">'@objectstack/spec'</span>;</div>
-              <div className="text-purple-400">export default const <span className="text-yellow-400">Opportunity</span>: <span className="text-yellow-400">ObjectSchema</span> = {'{'}</div>
-              <div className="pl-4 text-sky-300">name: <span className="text-green-400">'Opportunity'</span>,</div>
-              <div className="pl-4 text-sky-300">fields: {'['}</div>
-              <div className="pl-8 text-sky-300">{' { '}</div>
-              <div className="pl-12 text-sky-300">name: <span className="text-green-400">'amount'</span>,</div>
-              <div className="pl-12 text-sky-300">type: <span className="text-green-400">'currency'</span>,</div>
-              <div className="pl-12 text-sky-300">required: <span className="text-blue-400">true</span></div>
-              <div className="pl-8 text-sky-300">{' } '}</div>
-              <div className="pl-4 text-sky-300">{']'}</div>
-              <div className="text-foreground">{'}'}</div>
+              <div className="text-blue-400">import {'{'} <span className="text-yellow-400">ObjectSchema, Field</span> {'}'} <span className="text-purple-400">from</span> <span className="text-green-400">'@objectstack/spec/data'</span>;</div>
+              <div className="mt-2" />
+              <div className="text-purple-400">export const <span className="text-yellow-400">Opportunity</span> = <span className="text-blue-400">ObjectSchema</span>.<span className="text-yellow-400">create</span>({'{'}</div>
+              <div className="pl-4 text-sky-300">name: <span className="text-green-400">'opportunity'</span>,</div>
+              <div className="pl-4 text-sky-300">label: <span className="text-green-400">'Opportunity'</span>,</div>
+              <div className="pl-4 text-sky-300">fields: {'{'}</div>
+              <div className="pl-8 text-sky-300">amount: <span className="text-blue-400">Field</span>.<span className="text-yellow-400">currency</span>({'{'}</div>
+              <div className="pl-12 text-sky-300">label: <span className="text-green-400">'Amount'</span>,</div>
+              <div className="pl-12 text-sky-300">required: <span className="text-blue-400">true</span>,</div>
+              <div className="pl-8 text-sky-300">{'}'}),</div>
+              <div className="pl-4 text-sky-300">{'}'}</div>
+              <div className="text-foreground">{'}'});</div>
             </div>
           </div>
         </div>
@@ -244,9 +257,12 @@ function ArchitectureItem({ title, description }: { title: string, description: 
   );
 }
 
-// Icons
-function UsersIcon() { return <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>; }
-function TrendingUpIcon() { return <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>; }
-function BanknoteIcon() { return <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>; }
-function LifeBuoyIcon() { return <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m4.93 19.07 4.24-4.24"/></svg>; }
-function MegaphoneIcon() { return <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>; }
+function StatItem({ icon, value, label }: { icon: React.ReactNode, value: string, label: string }) {
+  return (
+    <div className="flex flex-col items-center gap-2">
+      <div className="text-primary">{icon}</div>
+      <div className="text-3xl md:text-4xl font-bold">{value}</div>
+      <div className="text-sm text-muted-foreground">{label}</div>
+    </div>
+  );
+}
