@@ -1,5 +1,7 @@
 {
   "title": "Platform Architecture",
+  "description": "Deep-dive into HotCRM platform design and protocols",
+  "root": true,
   "pages": [
     "overview",
     "data-protocol",

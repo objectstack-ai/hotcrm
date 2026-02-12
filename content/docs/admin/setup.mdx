@@ -1,0 +1,55 @@
+---
+title: Setup & Configuration
+description: Initial setup and environment configuration for HotCRM administrators.
+---
+
+# Setup & Configuration
+
+This guide walks system administrators through the initial setup and ongoing configuration of a HotCRM environment.
+
+## Prerequisites
+
+Before you begin, ensure you have:
+
+- **Node.js** 18+ installed
+- **pnpm** package manager
+- Access to a supported database (PostgreSQL recommended)
+- Administrator credentials for your HotCRM instance
+
+## Environment Configuration
+
+HotCRM is configured through the `objectstack.config.ts` file at the repository root. This file defines:
+
+| Setting | Description |
+|---------|-------------|
+| **Database** | Connection string and pool settings |
+| **Packages** | Business packages to load (CRM, Finance, HR, etc.) |
+| **Plugins** | Active plugin registrations |
+| **AI Models** | ML model configurations and API keys |
+
+## Package Management
+
+HotCRM uses a modular package architecture. Each business cloud is an independent package:
+
+- **@hotcrm/crm** — Sales Cloud (Leads, Opportunities, Accounts)
+- **@hotcrm/support** — Service Cloud (Cases, Knowledge, SLA)
+- **@hotcrm/marketing** — Marketing Cloud (Campaigns, Journeys)
+- **@hotcrm/finance** — Revenue Cloud (Quotes, Contracts, Invoices)
+- **@hotcrm/hr** — HR Cloud (Recruitment, Performance, Payroll)
+- **@hotcrm/products** — Product Catalog (CPQ)
+
+Enable or disable packages based on your organization's needs by updating the plugin configuration.
+
+## System Health
+
+Monitor system health through:
+
+- **Object Registry** — Verify all business objects are loaded correctly
+- **Hook Registration** — Confirm automation triggers are active
+- **AI Model Status** — Check ML model availability and performance
+
+## Next Steps
+
+- [Security Configuration](/docs/admin/security) — Set up authentication and authorization
+- [User Management](/docs/admin/users-permissions) — Configure user access
+- [Installation Guide](/docs/getting-started/installation) — Detailed installation steps

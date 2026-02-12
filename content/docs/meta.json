@@ -1,11 +1,12 @@
 {
-  "title": "Documentation",
+  "title": "HotCRM Documentation",
   "pages": [
     "index",
     "getting-started",
     "modules",
-    "architecture",
+    "admin",
     "developers",
+    "architecture",
     "editions",
     "roadmap"
   ]

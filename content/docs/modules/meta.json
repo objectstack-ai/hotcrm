@@ -1,6 +1,9 @@
 {
-  "title": "Business Modules",
+  "title": "User Guide",
+  "description": "Business module guides for end users and business professionals",
+  "root": true,
   "pages": [
+    "index",
     "foundation",
     "sales",
     "service",

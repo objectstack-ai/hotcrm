@@ -1,0 +1,12 @@
+{
+  "title": "Administration",
+  "description": "Setup, configuration, and system management guides for administrators",
+  "root": true,
+  "pages": [
+    "index",
+    "setup",
+    "security",
+    "data-management",
+    "users-permissions"
+  ]
+}
