@@ -7,8 +7,8 @@
 
 ```
 2025       ████████████████████████████████  Phases 1-9: Foundation → AI → Quality → Test → Integration → Schema → v3.0 → UI → DX
-2026 H1    ████████████████░░░░░░░░░░░░░░░  Phase 10: Salesforce Feature Parity    ← CURRENT FOCUS
-2026 H2    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  Phase 11: Ecosystem & Connectivity
+2026 Q1-Q2 ████████████████░░░░░░░░░░░░░░░  Phase 10: Salesforce Feature Parity    ← CURRENT FOCUS
+2026 Q3-Q4 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  Phase 11: Ecosystem & Connectivity
 2027       ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  Phase 12: Vertical Solutions & Advanced AI
 ```
 
