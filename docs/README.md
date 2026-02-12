@@ -19,6 +19,7 @@
 |----------|---------|----------|--------------|
 | [IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md) | Executive summary of current state and next steps | All stakeholders | 5 min |
 | [CURRENT_STATE_ASSESSMENT.md](CURRENT_STATE_ASSESSMENT.md) | Comprehensive analysis of all 6 business packages | Product, Engineering | 15 min |
+| [SALESFORCE_FEATURE_COMPARISON.md](SALESFORCE_FEATURE_COMPARISON.md) | Deep feature comparison with Salesforce and gap-driven roadmap | Product, Engineering, Leadership | 20 min |
 | [NEXT_SPRINT_GUIDE.md](NEXT_SPRINT_GUIDE.md) | Detailed 12-week sprint plan with weekly tasks | Engineering | 30 min |
 
 ### Roadmap & Vision
@@ -83,26 +84,48 @@ Overall Grade:       A+    █████████████████�
 
 ## 🗺️ Roadmap Overview
 
-### Current: Phase 9 — Developer Experience & Documentation Governance
+### Current: Phase 10 — Salesforce Feature Parity & Business Expansion
 
-Improving onboarding, documentation consistency, and developer tooling.
-
-### 2027: New Business Packages
+Closing the most critical Salesforce feature gaps across all 6 business clouds. See [SALESFORCE_FEATURE_COMPARISON.md](SALESFORCE_FEATURE_COMPARISON.md) for the detailed gap analysis driving this phase.
 
 ```
-Q1 2027 → Analytics Package (@hotcrm/analytics)
+Phase 10A (Weeks 1-4)  → Sales & Revenue Parity (P0 gaps)
+                         ├─ Sales Forecasting, Opportunity Line Items
+                         ├─ Order Management, Credit Notes
+                         └─ Billing Schedules
+
+Phase 10B (Weeks 5-8)  → Marketing & Advanced Sales (P1 gaps)
+                         ├─ Journey Builder, A/B Testing
+                         ├─ Territory Management
+                         └─ Competitor Tracking
+
+Phase 10C (Weeks 9-12) → Revenue Maturity (P1 gaps)
+                         ├─ Revenue Recognition (ASC 606)
+                         ├─ Subscription Management
+                         └─ Multi-Currency Support
+
+Phase 10D (Weeks 13-16)→ Maturity & Cross-Cloud Integration (P2 gaps)
+                         ├─ Chatbot Config, Agent Macros
+                         ├─ Benefits, Compensation
+                         └─ End-to-end lifecycle automation
+```
+
+### 2026 H2: Phase 11 — Ecosystem & Connectivity
+
+```
+Q3 2026 → Analytics Package (@hotcrm/analytics)
           ├─ Reporting Engine
           ├─ Dashboard Framework
           ├─ Predictive Analytics
           └─ Cross-Object Insights
 
-Q2 2027 → Integration Package (@hotcrm/integration)
+Q4 2026 → Integration Package (@hotcrm/integration)
           ├─ Stripe (Payments)
           ├─ DocuSign (E-Signatures)
           ├─ Slack (Notifications)
           └─ 5+ more connectors
 
-Q3 2027 → Community Package (@hotcrm/community)
+Q4 2026 → Community Package (@hotcrm/community)
           ├─ Discussion Forums
           ├─ Idea Management
           ├─ User Groups
