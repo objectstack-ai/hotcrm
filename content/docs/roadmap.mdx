@@ -1,192 +1,130 @@
 ---
 title: Product Roadmap
-description: Strategic direction and upcoming features for HotCRM.
+description: Strategic direction and upcoming features for HotCRM — 2026 and beyond.
 ---
 
 # HotCRM Roadmap
 
-HotCRM has completed **9 development phases**, establishing a full-featured **6-Cloud CRM** with **69 production-ready objects**, schema-validated metadata, AI agent workflows, enterprise security foundations, full UI metadata coverage, cross-cloud integration tests, and comprehensive developer experience tooling. Our focus now shifts to **ecosystem expansion** planned for 2027.
+HotCRM has completed **9 development phases**, establishing a full-featured, production-ready **6-Cloud CRM** with **69 business objects**, AI agent workflows, enterprise security, full UI metadata, and comprehensive developer tooling. Our roadmap now focuses on **ecosystem growth**, **vertical solutions**, and **advanced AI** for 2026–2027+.
 
-> **Protocol Version**: @objectstack/spec v3.0.0 | **Tests**: 1,629 passing (113 files) | **Last Updated**: February 12, 2026
+> **Protocol Version**: @objectstack/spec v3.0.0 | **Tests**: 1,629 passing (113 files) | **Last Updated**: February 2026
 
-## ✅ Phase 1: Core Foundation (Completed)
+---
 
-Established the metadata-driven runtime and core business logic for all primary clouds.
+## 🗺️ Strategic Direction
 
-### Business Clouds (6 Completed)
-- **Sales Cloud** ✅: 8 objects — Lead-to-Cash, Pipeline management, Opportunity lifecycle, Activity tracking
-- **Marketing Cloud** ✅: 11 objects — Campaign management, Lead nurturing, Email automation, Attribution, Touchpoints
-- **Revenue Cloud** ✅: 13 objects — CPQ (Configure-Price-Quote), Contract lifecycle, Invoice & Payment tracking
-- **Service Cloud** ✅: 21 objects — Case management, SLA tracking, Knowledge base, Omni-channel routing
-- **HR Cloud** ✅: 16 objects — Recruitment, Onboarding, Performance, Payroll, Training
-- **AI Cloud** ✅: Unified AI service layer with 5 pre-registered ML models
+```
+2025  ███████████████████████████████████████████████████████████  Foundation → AI → Quality → Test → Integration → Schema → v3.0 → UI → DX
+2026  ██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  Ecosystem & Connectivity    ← YOU ARE HERE
+2027  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  Vertical Solutions & Advanced AI
+```
 
-### Platform Foundation (Completed)
-- **Metadata Engine** ✅: TypeScript-native object definitions (`.object.ts`)
-- **ObjectQL** ✅: Type-safe query language replacing SQL
-- **Plugin Architecture** ✅: Independent packages with dependency management
-- **Model Registry** ✅: Centralized ML model configuration and versioning
-- **Prediction Service** ✅: Unified interface for all ML predictions with caching
+---
 
-## ✅ Phase 2: Deep Intelligence (Completed)
+## 🚀 Phase 10: Ecosystem & Connectivity (2026)
 
-"Active Intelligence"—moving from recording data to acting on it.
-
-- **6 AI Agent Workflows** ✅: Lead-to-Close, Customer 360, Churn Prevention, Case Resolution, Talent Acquisition, Revenue Optimization
-- **MCP Integration** ✅: Model Context Protocol server with 8 tools, 4 resources, 3 prompts
-- **Automation & Workflow** ✅: 6 workflow files, 3 state machines, 1 approval process, 1 time trigger
-- **Enhanced Analytics** ✅: Revenue, Sales, Service, HR, and Marketing dashboards with AI-powered insights
-
-## ✅ Phase 3: Quality & Protocol Compliance (Completed)
-
-- **100% Protocol Compliance** ✅: All 69 objects pass `ObjectSchema.parse()` validation
-- **100% TypeScript Compliance** ✅: Zero type errors across all packages
-- **Chinese Text Translated** ✅: All business labels in English
-- **Error Handling** ✅: Try-catch in all hook files, no unhandled promises
-- **Lead Conversion** ✅: Full lead-to-opportunity conversion logic implemented
-
-## ✅ Phase 4: Test Coverage & Documentation (Completed)
-
-- **1,629 Tests Passing** ✅: 113 test files across all packages (up from 48 files / 933 tests)
-- **Hook Tests** ✅: All 47 hook files have corresponding tests
-- **Action Tests** ✅: All 27 action files have corresponding tests
-- **Technical Specs** ✅: Developer documentation for all 6 clouds + AI package
-- **Deployment Guides** ✅: Docker, Kubernetes, and docker-compose configurations
-
-## ✅ Phase 5: Integration & Business Features (Completed)
-
-- **47 Server-Side Hooks** ✅: ~68% object hook coverage across all packages
-- **Plugin Registration** ✅: All hooks, actions, and workflows registered in plugin.ts
-- **Broker API Migration** ✅: All 6 `db.ts` shim files migrated to runtime broker
-- **Performance Benchmarking** ✅: Benchmark/BenchmarkSuite utilities with percentile tracking
-
-## ✅ Phase 6: @objectstack/spec Deep Adoption (Completed)
-
-Increased spec schema adoption from ~3.4% to ~15%.
-
-- **UI Schema Typing** ✅: 4 pages, 1 view, 4 dashboards, 1 form — all validated via `PageSchema`/`ViewSchema`/`DashboardSchema`/`FormViewSchema`
-- **Automation Schemas** ✅: 6 workflows (`WorkflowRuleSchema`), 3 state machines (`StateMachineSchema`), 1 approval process (`ApprovalProcessSchema`), 1 time trigger (`TimeTriggerSchema`)
-- **Plugin & Kernel Typing** ✅: All plugins validated via `PluginSchema`, 6 capability manifests, 6 event definitions
-- **Advanced Field Types** ✅: `masterDetail`, `summary`, `select({multiple})`, `file`, `image`, `location`, `address`
-- **AI Schema Formalization** ✅: 6 agents via `AgentSchema`, RAG pipeline, model registry, NLQ schemas
-- **Security Metadata** ✅: 6 permission sets, sharing rules, territory model
-
-## ✅ Phase 7: @objectstack/spec v3.0.0 Upgrade (Completed)
-
-Major version upgrade from v2.0.6 to v3.0.0 — Zod 4 validation engine, new `ObjectSchema.create()` API, Studio plugin extensibility.
-
-- **Core Upgrade** ✅: All 10 packages upgraded to @objectstack/spec v3.0.0, @objectstack/cli v3.0.0, @objectstack/studio v3.0.0
-- **Zero Breaking Changes** ✅: All 1,604 tests passing, 0 TypeScript errors
-- **Module Cleanup** ✅: Removed modules (`hub`, `auth`, `driver`, `permission`) not used by HotCRM
-- **v3.0 API Adoption** 🔧: `ObjectSchema.create()` migration, Studio plugin contributions (in progress)
-
-## ✅ Phase 8: UI Completeness & Cross-Cloud Integration (Completed)
-
-With the data layer, business logic, and AI capabilities mature, Phase 8 delivered **UI metadata coverage** for all primary objects and **cross-cloud data flow patterns**.
-
-### Page Layouts & List Views (Completed)
-
-All key business objects now have full page layouts and list views:
-
-| Object | Page | View | Priority |
-|--------|------|------|----------|
-| Opportunity | ✅ | ✅ | High — Core CRM |
-| Contact | ✅ | ✅ | High — Core CRM |
-| Lead | ✅ | ✅ | High — Core CRM |
-| Case | ✅ | ✅ | High — Service |
-| Employee | ✅ | ✅ | High — HR |
-| Candidate | ✅ | ✅ | Medium — Recruiting |
-| Contract | ✅ | ✅ | Medium — Revenue |
-| Quote | ✅ | ✅ | Medium — CPQ |
-| Product | ✅ | ✅ | Medium — Catalog |
-| Knowledge Article | ✅ | ✅ | Medium — Self-service |
-
-### Dashboards & Forms (Completed)
-
-| Item | Status | Package |
-|------|--------|---------|
-| Marketing Dashboard | ✅ Complete | Marketing |
-| Finance Dashboard | ✅ Complete | Finance |
-| CPQ Dashboard | ✅ Complete | Products |
-| Executive Dashboard | ✅ Complete | Cross-cloud |
-| Opportunity Form | ✅ Complete | CRM |
-| Contact Form | ✅ Complete | CRM |
-| Lead Form | ✅ Complete | CRM |
-| Case Form | ✅ Complete | Support |
-| Employee Form | ✅ Complete | HR |
-
-### Hook & Integration Expansion (Completed)
-
-- **Hook Coverage**: Expanded to 86% (59 hooks / 69 objects)
-- **Cross-Cloud Tests**: Lead→Opportunity, Quote→Contract→Invoice, Campaign→Lead, Case→Knowledge, Employee→Onboarding→Training, AI agent pipelines
-- **Advanced Validations**: Cross-field, conditional required, async duplicate detection
-- **System & API Configuration**: Audit trail, notification channels, API endpoints, webhooks, cache config
-
-## ✅ Phase 9: Developer Experience & Documentation Governance (Completed)
-
-Comprehensive DX audit identified onboarding friction from broken links, stale statistics, and inconsistent tooling references. This phase improved documentation integrity and developer workflows.
-
-### 🔴 P0 — Documentation Integrity (Completed)
-- [x] Fix README.md broken links — removed 20+ references to non-existent files
-- [x] Update README.md statistics — corrected object count (65→69), per-cloud breakdowns
-- [x] Fix CONTRIBUTING.md — updated `npm`→`pnpm`, Node.js 18→20.9.0
-- [x] Audit remaining documentation for broken cross-references
-- [x] Add link-checking CI step to prevent future broken links
-
-### 🟡 P1 — Onboarding Experience (Completed)
-- [x] Create `DEVELOPMENT_WORKFLOW.md` — single-page quickstart for new developers
-- [x] Add "first contribution" tutorial with step-by-step guide
-- [x] Add package scaffolding guide for new business packages
-- [x] Add troubleshooting FAQ for common issues
-
-### 🟢 P2 — Documentation Governance (Completed)
-- [x] Add automated stat extraction — single source of truth for counts
-- [x] Consolidate strategic docs in `docs/` directory
-- [x] Add architecture diagram (Mermaid) to README
-- [x] Add `docs/ARCHITECTURE.md` — consolidated architecture and plugin guide
-- [x] Ensure consistent metrics across README.md, ROADMAP.md, roadmap.mdx, and index.mdx
-
-### 🔵 P3 — Developer Tooling (Completed)
-- [x] Add `pnpm typecheck` root script
-- [x] Add `pnpm test:changed` for incremental testing
-- [x] Add `pnpm stats` for automated metric extraction
-- [x] Add Quick Start section and badges to README
-- [x] Evaluate pre-commit hooks and `changeset` — deferred, current workflow sufficient
-
-## 🌍 Phase 10: Ecosystem & Connectivity (Planned — 2027)
+The next major chapter: connecting HotCRM to the tools businesses already use.
 
 ### Integration Connectors
-- **Payment Gateways**: Stripe, PayPal bi-directional sync
-- **E-Signature**: DocuSign, Adobe Sign for contract signing
-- **Communication**: Slack, Microsoft Teams for deal rooms and support
-- **Email**: Gmail, Outlook inbox integration with email-to-lead/case
-- **Accounting**: QuickBooks, Xero for invoice export
-- **HR Systems**: BambooHR, Workday for payroll integration
-- **Recruiting**: LinkedIn integration for candidate sourcing
+
+| Connector | Type | Priority | Status |
+|-----------|------|----------|--------|
+| **Stripe** | Payment Gateway | High | Planned |
+| **PayPal** | Payment Gateway | Medium | Planned |
+| **DocuSign** | E-Signature | High | Planned |
+| **Adobe Sign** | E-Signature | Medium | Planned |
+| **Slack** | Communication | High | Planned |
+| **Microsoft Teams** | Communication | High | Planned |
+| **Gmail / Outlook** | Email | High | Planned |
+| **QuickBooks / Xero** | Accounting | Medium | Planned |
+| **BambooHR / Workday** | HR Systems | Medium | Planned |
+| **LinkedIn** | Recruiting | Medium | Planned |
 
 ### New Business Packages
-- **Analytics Package** (`@hotcrm/analytics`): Business Intelligence Cloud — reports, dashboards, KPIs, forecasting
-- **Integration Package** (`@hotcrm/integration`): iPaaS Connectors — webhooks, data sync, API middleware
-- **Community Package** (`@hotcrm/community`): Customer Community Portal — forums, ideas, events, reputation
 
-## 📈 Long-Term Vision (2027+)
+| Package | Description | Status |
+|---------|-------------|--------|
+| `@hotcrm/analytics` | Business Intelligence Cloud — reports, dashboards, KPIs, forecasting | Planned |
+| `@hotcrm/integration` | iPaaS Connectors — webhooks, data sync, API middleware | Planned |
+| `@hotcrm/community` | Customer Community Portal — forums, ideas, events, reputation | Planned |
 
-### Advanced AI
-- **Computer Vision**: Business card scanning, document OCR
-- **Voice AI**: Voice-to-text for meeting transcription
-- **Anomaly Detection**: Fraud detection, unusual activity alerts
+### Platform Enhancements
 
-### Enterprise Features
-- **Multi-Tenancy**: Multiple organizations in one instance
-- **Advanced Security**: SOC 2 compliance, encryption at rest
-- **Data Residency**: Regional data storage for compliance
-- **White-Label**: Customizable branding for partners
+- **Webhook Framework**: Outbound webhooks with retry logic and event filtering
+- **API Rate Limiting**: Per-tenant rate limiting with configurable thresholds
+- **Bulk Data API**: High-volume data import/export (100K+ records)
+- **Real-time Events**: Server-Sent Events (SSE) for live dashboard updates
 
-### Vertical Solutions
-- **Real Estate CRM**: Property management objects
-- **Healthcare CRM**: HIPAA-compliant patient management
-- **Financial Services**: Wealth management and advisory
-- **Education**: Student recruitment and enrollment management
+---
+
+## 🔮 Phase 11: Vertical Solutions (2027)
+
+Industry-specific editions built on the HotCRM platform.
+
+| Vertical | Key Objects | Target Users |
+|----------|-------------|-------------|
+| **Real Estate CRM** | Property, Listing, Showing, Offer, Commission | Brokerages, Agents |
+| **Healthcare CRM** | Patient, Appointment, Insurance, Referral, HIPAA Audit | Clinics, Providers |
+| **Financial Services** | Wealth Account, Portfolio, Advisory, Compliance, KYC | Wealth Management, Banks |
+| **Education CRM** | Student, Enrollment, Course, Alumni, Scholarship | Universities, EdTech |
+
+### Advanced AI (2027+)
+
+| Capability | Description |
+|------------|-------------|
+| **Computer Vision** | Business card scanning, document OCR, invoice parsing |
+| **Voice AI** | Meeting transcription, voice-to-text for call notes |
+| **Anomaly Detection** | Fraud detection, unusual activity alerts, data quality scoring |
+| **Predictive Forecasting** | Revenue forecasting with confidence intervals |
+| **Multi-Modal Agents** | Agents that can see, hear, and reason across modalities |
+
+### Enterprise Features (2027+)
+
+- **Multi-Tenancy**: Multiple organizations in a single instance with data isolation
+- **SOC 2 Compliance**: Audit logging, encryption at rest, access controls
+- **Data Residency**: Regional data storage for GDPR, CCPA, and local regulations
+- **White-Label**: Customizable branding for partners and resellers
+- **Marketplace**: Third-party app marketplace for community-built extensions
+
+---
+
+## ✅ What's Been Delivered (Phases 1–9)
+
+All 9 foundation phases are complete. See [What's New](/docs/whats-new) for detailed release notes.
+
+### Phase 9: Developer Experience & Documentation Governance ✅
+- Fixed 20+ broken documentation links, updated statistics
+- Created DEVELOPMENT_WORKFLOW.md, ARCHITECTURE.md
+- Added `pnpm typecheck`, `pnpm test:changed`, `pnpm stats` scripts
+- Link-checking CI to prevent future broken docs
+
+### Phase 8: UI Completeness & Cross-Cloud Integration ✅
+- 14 page layouts, 11 list views, 8 dashboards, 6 forms
+- 86% hook coverage (59 hooks / 69 objects)
+- Cross-cloud data flow tests (Lead→Opportunity, Quote→Contract→Invoice, etc.)
+
+### Phase 7: @objectstack/spec v3.0.0 Upgrade ✅
+- All 10 packages upgraded to v3.0.0, zero breaking changes
+- Studio plugin contributions, module cleanup
+
+### Phase 6: Deep Schema Adoption ✅
+- UI, Automation, Security, AI, Plugin schemas all validated via spec
+- Advanced field types: masterDetail, summary, file, image, location, address
+
+### Phase 5: Integration & Business Features ✅
+- 47 hooks, full plugin registration, broker API migration, performance benchmarks
+
+### Phase 4: Test Coverage & Documentation ✅
+- 1,629 tests (113 files), full hook/action test coverage, deployment guides
+
+### Phase 3: Quality & Protocol Compliance ✅
+- 100% ObjectSchema compliance, zero type errors, all labels in English
+
+### Phase 2: Deep Intelligence ✅
+- 6 AI agent workflows, MCP integration, analytics dashboards
+
+### Phase 1: Core Foundation ✅
+- 6 business clouds, 69 objects, metadata engine, ObjectQL, plugin architecture
 
 ## Per-Module Status
 
@@ -200,9 +138,7 @@ Comprehensive DX audit identified onboarding friction from broken links, stale s
 | **Support** (Service Cloud) | 21 | 6 | 4 | 2 | 2 | 1 | 1 | 18 |
 | **AI** (Intelligence Layer) | — | — | 1 | — | — | 1 | — | 9 |
 | **Cross-cloud** | — | — | — | 2 | 1 | — | — | 5 |
-| **Total** | **69** | **59**(1) | **27** | **14** | **11** | **8** | **6** | **113 files / 1,629 tests** |
-
-(1) 59 hook files covering 86% of objects
+| **Total** | **69** | **59** | **27** | **14** | **11** | **8** | **6** | **113 files / 1,629 tests** |
 
 ---
 
