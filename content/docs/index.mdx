@@ -1,88 +1,121 @@
 ---
-title: Introduction
-description: The World's First AI-Native, Metadata-Driven CRM.
+title: HotCRM Documentation
+description: The World's First AI-Native, Metadata-Driven CRM — Find the docs you need by role.
 ---
 
-# Welcome to HotCRM
+# HotCRM Documentation
 
-**HotCRM** is the open-source alternative to Salesforce, re-engineered for the AI era.
+Welcome to the **HotCRM** documentation hub. Choose the path that matches your role to find the most relevant guides and references.
 
-We combine the enterprise-grade reliability of a **Metadata-Driven Architecture** with the revolutionary power of **Agentic AI** — delivering 66 business objects across 6 clouds, all powered by a unified AI intelligence layer.
-
-## The HotCRM Difference
+## Choose Your Path
 
 <Cards>
-  <Card title="No-SQL Data Layer" icon="database">
-    Built on **ObjectStack Protocol**. We replaced complex SQL with **ObjectQL** — a type-safe, JSON-based query language that AI understands perfectly.
+  <Card title="I'm a Business User" href="/docs/modules" icon="briefcase">
+    Learn how to use Sales, Service, Marketing, Revenue, and HR clouds to manage your day-to-day business operations.
   </Card>
-  <Card title="AI as a Colleague" icon="sparkles">
-    Not just a chatbot. AI Agents proactively score leads, draft emails, route cases, predict churn, and optimize pricing — all autonomously.
+  <Card title="I'm an Administrator" href="/docs/admin" icon="settings">
+    Set up, configure, and maintain your HotCRM environment — manage users, security, and data.
   </Card>
-  <Card title="Code-Based & Low-Code" icon="code">
-    Define your entire business logic in **TypeScript** files (`.object.ts`, `.hook.ts`, `.action.ts`) for version control, or use the UI for quick changes.
-  </Card>
-  <Card title="100% Extensible" icon="blocks">
-    Everything is an object. Extend standard clouds or build completely new ones using the same platform tools we use.
+  <Card title="I'm a Developer" href="/docs/developers" icon="code">
+    Build and extend HotCRM with custom objects, hooks, actions, and AI-powered features.
   </Card>
 </Cards>
 
-## Explore the 6-Cloud Architecture
+## New to HotCRM?
 
-Our platform helps you manage the entire customer and employee lifecycle.
+Start here regardless of your role.
+
+<Cards>
+  <Card title="Introduction" href="/docs/getting-started/introduction" icon="book-open">
+    Understand what HotCRM is and how it works.
+  </Card>
+  <Card title="Installation" href="/docs/getting-started/installation" icon="download">
+    Get HotCRM up and running in your environment.
+  </Card>
+  <Card title="Quick Start" href="/docs/getting-started/quick-start" icon="zap">
+    Create your first lead and close your first deal in minutes.
+  </Card>
+</Cards>
+
+## For Business Users
+
+Guides for sales reps, service agents, marketers, and other business professionals who use HotCRM daily.
 
 <Cards>
   <Card title="Sales Cloud" href="/docs/modules/sales" icon="trending-up">
-    Lead management, Opportunity pipelines, Activity tracking, and AI-powered deal intelligence. 13 objects.
+    Lead management, Opportunity pipelines, and AI-powered deal intelligence.
   </Card>
   <Card title="Service Cloud" href="/docs/modules/service" icon="life-buoy">
-    Case management, SLA tracking, Knowledge base, and Omni-channel routing. 21 objects.
+    Case management, SLA tracking, Knowledge base, and Omni-channel routing.
   </Card>
   <Card title="Marketing Cloud" href="/docs/modules/marketing" icon="megaphone">
-    Campaign management, Email automation, Lead nurturing, and ROI analytics. 7 objects.
+    Campaign management, Email automation, and Lead nurturing.
   </Card>
   <Card title="Revenue Cloud" href="/docs/modules/revenue" icon="banknote">
-    CPQ (Configure, Price, Quote), Contract lifecycle, and Billing. 13 objects.
+    CPQ (Configure, Price, Quote), Contracts, and Billing.
   </Card>
   <Card title="HR Cloud" href="/docs/modules/hr" icon="users">
-    Recruitment, Onboarding, Performance, Payroll, and Training. 16 objects.
+    Recruitment, Onboarding, Performance, and Payroll.
   </Card>
-  <Card title="AI Intelligence" href="/docs/modules/ai" icon="cpu">
-    Co-Pilot, Autonomous Agents, Predictive Analytics, and 5 pre-registered ML models.
+  <Card title="Analytics & BI" href="/docs/modules/analytics" icon="bar-chart">
+    Dashboards, reports, and AI-powered insights.
   </Card>
 </Cards>
 
-## Platform Highlights
+## For Administrators
+
+Guides for IT administrators and system managers who configure and maintain HotCRM.
 
 <Cards>
-  <Card title="Analytics & BI" href="/docs/modules/analytics" icon="bar-chart">
-    Embedded dashboards and AI-powered insights across every cloud.
+  <Card title="Setup & Configuration" href="/docs/admin/setup" icon="settings">
+    Environment setup, package management, and system preferences.
   </Card>
-  <Card title="Platform & Extensibility" href="/docs/modules/platform" icon="server">
-    Metadata engine, ObjectQL, Hooks, Actions, and Plugin architecture.
+  <Card title="Security" href="/docs/admin/security" icon="shield">
+    Authentication, authorization, and data protection policies.
+  </Card>
+  <Card title="Users & Permissions" href="/docs/admin/users-permissions" icon="user-check">
+    User provisioning, roles, profiles, and permission sets.
+  </Card>
+  <Card title="Data Management" href="/docs/admin/data-management" icon="database">
+    Data import/export, backups, and data quality.
+  </Card>
+</Cards>
+
+## For Developers
+
+Guides for engineers building custom business logic, integrations, and extensions.
+
+<Cards>
+  <Card title="Creating Objects" href="/docs/developers/creating-objects" icon="file-code">
+    Define business objects using the metadata-first `.object.ts` protocol.
+  </Card>
+  <Card title="Business Logic" href="/docs/developers/business-logic" icon="workflow">
+    Write server-side hooks and automation triggers.
+  </Card>
+  <Card title="Platform Architecture" href="/docs/architecture/overview" icon="layers">
+    Understand the ObjectStack Protocol and plugin architecture.
+  </Card>
+  <Card title="AI Intelligence" href="/docs/modules/ai" icon="cpu">
+    Build AI agents, Co-Pilot features, and ML model integrations.
+  </Card>
+</Cards>
+
+## Platform Overview
+
+| Metric | Value |
+|--------|-------|
+| **Business Clouds** | 6 (Sales, Marketing, Revenue, Service, HR, AI) |
+| **Core Objects** | 69 production-ready business objects |
+| **Business Fields** | 500+ fields for comprehensive data capture |
+| **AI Models** | 5 pre-registered ML models |
+| **AI Agent Workflows** | 6 autonomous workflows |
+| **Server-Side Hooks** | 47 hooks enforcing business logic |
+
+<Cards>
+  <Card title="Editions & Licensing" href="/docs/editions" icon="package">
+    Compare HotCRM editions and plan features.
   </Card>
   <Card title="Roadmap" href="/docs/roadmap" icon="map">
     See what's coming next for HotCRM.
   </Card>
 </Cards>
-
-## By the Numbers
-
-| Metric | Value |
-|--------|-------|
-| **Business Clouds** | 6 (Sales, Marketing, Revenue, Service, HR, AI) |
-| **Core Objects** | 66 production-ready business objects |
-| **Business Fields** | 500+ fields for comprehensive data capture |
-| **AI Models** | 5 pre-registered ML models (Lead Scoring, Churn Prediction, Sentiment, Revenue Forecast, Product Recommendations) |
-| **Currencies Supported** | 8 (CNY, USD, EUR, GBP, JPY, HKD, SGD, AUD) |
-| **AI Actions** | 24 AI-powered actions across all clouds |
-| **Server-Side Hooks** | 21 hooks enforcing business logic |
-
-## Developer First
-
-HotCRM is built by developers, for developers.
-
-*   **[Getting Started](/docs/getting-started/introduction)**: Understand HotCRM's capabilities and architecture.
-*   **[Installation Guide](/docs/getting-started/installation)**: Get up and running in minutes.
-*   **[Quick Start](/docs/getting-started/quick-start)**: Create your first lead and close your first deal.
-*   **[Platform Architecture](/docs/architecture/overview)**: Understand the ObjectStack Protocol.
-*   **[Developer Guide](/docs/developers/creating-objects)**: Learn how to create Objects, Hooks, and Actions.

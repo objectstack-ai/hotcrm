@@ -1,5 +1,7 @@
 {
-  "title": "Developers",
+  "title": "Developer Guide",
+  "description": "Technical documentation for building and extending HotCRM",
+  "root": true,
   "pages": [
     "specs",
     "business-logic",

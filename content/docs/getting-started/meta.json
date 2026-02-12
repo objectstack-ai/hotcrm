@@ -1,5 +1,7 @@
 {
   "title": "Getting Started",
+  "description": "Quick introduction to HotCRM for all users",
+  "root": true,
   "pages": [
     "introduction",
     "installation",
