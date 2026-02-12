@@ -244,6 +244,21 @@
 | Test coverage | 1506 tests / 96 files | Continue expanding coverage |
 | `defineStack()` config pattern | ✅ Consistent | All packages use correct pattern |
 
+### 🔵 P3 — @objectstack/spec Adoption (NEW — see [Evaluation Report](/docs/architecture/spec-capability-evaluation))
+
+| Area | Status | Action |
+|------|--------|--------|
+| Spec schema adoption rate | ⚠️ ~3.4% (43/1,256 schemas) | Target 15% via Phase 6 |
+| UI schema typing | ❌ Not typed | Page/View/Dashboard files use plain objects instead of spec schemas |
+| Workflow schema validation | ❌ Not validated | 6 workflow files lack `WorkflowRuleSchema.parse()` |
+| Plugin type safety | ❌ `any` type | All plugins typed as `any` instead of `PluginSchema` |
+| State machine definitions | ❌ Not defined | Case/Lead/Opportunity lifecycles not formalized |
+| Approval process schema | ❌ Custom code | Products approval uses ad-hoc approach |
+| Agent schema adoption | ❌ Custom classes | 6 AI agents don't use `AgentSchema` |
+| Security metadata | ❌ Not defined | No permission sets, sharing rules, or RLS policies |
+| Advanced field types | ⚠️ 15/44 used | master_detail, summary, multiselect, tags, file, location unused |
+| Advanced validations | ❌ Not used | Cross-field, conditional, async validations unavailable |
+
 ---
 
 ## Phased Execution Plan
@@ -285,6 +300,55 @@
 - [x] Production deployment guides (Docker, Kubernetes — Dockerfile, docker-compose.yml, K8s manifests, DEPLOYMENT.md)
 - [ ] Integration connectors (Stripe, DocuSign, Slack) — deferred to 2027 roadmap
 - [ ] Business Intelligence & Analytics package — deferred to 2027 roadmap
+
+### Phase 6: @objectstack/spec Deep Adoption (Week 12-16)
+
+> Based on the [Spec Capability Evaluation](/docs/architecture/spec-capability-evaluation) — only ~3.4% of available spec schemas are currently used. This phase aims to increase adoption to ~15% by targeting high-impact gaps.
+
+#### 6A: UI Schema Typing (P0 — Type Safety)
+- [ ] Convert page layouts to use `PageSchema` from `@objectstack/spec/ui` (4 files: account, invoice, campaign, product_bundle)
+- [ ] Convert list views to use `ViewSchema` from `@objectstack/spec/ui` (1 file: account.view.ts)
+- [ ] Add `AppSchema` definition for navigation and branding configuration
+- [ ] Add `DashboardSchema` definitions for CRM pipeline, support metrics, and HR dashboards
+- [ ] Add `FormViewSchema` definitions for key data entry forms
+
+#### 6B: Automation Schema Adoption (P0 — Correctness)
+- [ ] Validate all 6 workflow files against `WorkflowRuleSchema.parse()`
+- [ ] Define `StateMachineSchema` for case status lifecycle
+- [ ] Define `StateMachineSchema` for lead qualification lifecycle
+- [ ] Define `StateMachineSchema` for opportunity pipeline stages
+- [ ] Convert products approval workflow to use `ApprovalProcessSchema`
+- [ ] Add `TimeTriggerSchema` for scheduled workflow configurations
+
+#### 6C: Plugin & Kernel Typing (P0 — Type Safety)
+- [ ] Replace `any` type on all plugin definitions with proper `PluginSchema` typing
+- [ ] Add `PluginCapabilityManifest` declarations to each business package
+- [ ] Define `EventSchema` for cross-package event communication
+
+#### 6D: Advanced Field Types (P1 — Data Model Completeness)
+- [ ] Adopt `Field.master_detail()` for parent-child relationships (e.g., invoice→invoice_line)
+- [ ] Adopt `Field.summary()` for rollup/aggregate fields (e.g., account→total contract value)
+- [ ] Adopt `Field.multiselect()` where multiple selections are needed
+- [ ] Adopt `Field.tags()` for free-form tagging (e.g., case tags, knowledge article tags)
+- [ ] Adopt `Field.file()` and `Field.image()` for attachment fields
+- [ ] Adopt `Field.location()` and `Field.address()` for geographic data
+
+#### 6E: AI Schema Formalization (P1 — Agent Architecture)
+- [ ] Convert 6 AI agent workflows to use `AgentSchema` from `@objectstack/spec/ai`
+- [ ] Define `RAGPipelineConfig` for knowledge base AI integration
+- [ ] Adopt `ModelConfig` / `ModelRegistry` schemas for model management
+- [ ] Add `NLQRequest`/`NLQResponse` schemas for natural language query interface
+
+#### 6F: Security Metadata (P2 — Enterprise Readiness)
+- [ ] Define `PermissionSet` for each business cloud (CRM, Finance, HR, Marketing, Products, Support)
+- [ ] Define `ObjectPermission` and `FieldPermission` for sensitive objects
+- [ ] Define `SharingRule` configurations for account/opportunity sharing
+- [ ] Add `TerritoryModel` for CRM territory-based access control
+
+#### 6G: Prompt & Instruction Updates
+- [ ] Update `.github/copilot-instructions.md` with schema validation requirements for UI/workflow/plugin files
+- [ ] Add expanded field type guidance to coding conventions
+- [ ] Add new file suffix conventions: `*.dashboard.ts`, `*.report.ts`, `*.form.ts`, `*.permission.ts`, `*.statemachine.ts`
 
 **Note**: Visual Workflow Builder and other low-code platform features are out of scope for HotCRM. These are platform-level capabilities provided by `@objectstack/runtime`.
 
@@ -375,6 +439,7 @@ These independent business packages are planned for future development:
 
 | Date | From | To | Breaking Changes | Tests |
 |------|------|----|-----------------|-------|
+| 2026-02-12 | v2.0.6 | v2.0.6 | None (Spec capability evaluation, Phase 6 roadmap) | 1506 ✅ |
 | 2026-02-11 | v2.0.6 | v2.0.6 | None (Phase 5: AI agent workflows, benchmarking, deployment) | 1506 ✅ |
 | 2026-02-11 | v2.0.6 | v2.0.6 | None (Phase 3-4 completion) | 1457 ✅ |
 | 2026-02-11 | v2.0.6 | v2.0.6 | None (roadmap completion) | 1365 ✅ |

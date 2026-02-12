@@ -10,6 +10,7 @@
     "security-protocol",
     "monorepo-structure",
     "plugin-architecture",
-    "business-evaluation"
+    "business-evaluation",
+    "spec-capability-evaluation"
   ]
 }
