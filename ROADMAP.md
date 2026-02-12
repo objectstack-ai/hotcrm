@@ -37,705 +37,433 @@
 
 ---
 
-## Per-Module Improvement Plans
+## ✅ Completed Phases (1–10) — Summary
 
-### 📦 CRM Package (`@hotcrm/crm`) — Sales Cloud
+> All foundational development is complete. For detailed release notes, see [CHANGELOG.md](CHANGELOG.md).
 
-**Objects**: 16 (account, activity, contact, lead, opportunity, task, note, assignment_rule, opportunity_line_item, opportunity_contact_role, forecast, forecast_item, territory, territory_rule, opportunity_team_member, competitor)
-**Hooks**: 11 files | **Actions**: 10 files | **Tests**: 26 files
+| Phase | Name | Key Outcomes |
+|-------|------|-------------|
+| **1** | Core Foundation | 6 business clouds, initial objects, metadata engine, ObjectQL, plugin architecture |
+| **2** | Deep Intelligence | 6 AI agent workflows (lead-to-close, customer 360, churn prevention, case resolution, talent acquisition, revenue optimization), MCP integration |
+| **3** | Quality & Protocol Compliance | 100% ObjectSchema compliance, zero type errors, all labels in English, Chinese text translated |
+| **4** | Test Coverage & Documentation | Full hook/action test coverage across all packages, technical specification directories |
+| **5** | Integration & Business Features | Performance benchmarking, production deployment guides (Docker, K8s), AI agent pipelines |
+| **6** | @objectstack/spec Deep Adoption | UI/Automation/Security/AI/Plugin schemas validated via spec; advanced field types (masterDetail, summary, file, image, location, address); permission sets, sharing rules, territory model |
+| **7** | @objectstack/spec v3.0.0 Upgrade | All 10 packages upgraded v2.0.6→v3.0.0; Zod 4; `ObjectSchema.create()` API; 6 Studio plugins |
+| **8** | UI Completeness & Cross-Cloud Integration | 14 pages, 11 views, 8 dashboards, 6 forms; cross-cloud integration tests; advanced data model validations; system & API configs |
+| **9** | Developer Experience & Documentation Governance | Fixed 20+ broken links; DEVELOPMENT_WORKFLOW.md, ARCHITECTURE.md; `pnpm typecheck/test:changed/stats`; link-check CI; README badges & Mermaid diagram |
+| **10** | Salesforce Feature Parity | +25 objects (94 total); ~92% Salesforce parity; territory, forecasting, orders, subscriptions, journeys, A/B testing, revenue recognition (ASC 606); cross-cloud lifecycle automation |
 
-#### ✅ Recently Fixed
-- [x] PascalCase `Field.lookup()` references fixed (activity.object.ts, task.object.ts)
-- [x] All 32 spec-compliance tests passing
+### Per-Module Status
 
-#### 🔴 P0 — Code Quality
-- [x] Translate Chinese text in `schemas/lead.schema.ts` (30 `.describe()` fields in Chinese)
-- [x] Translate Chinese text in `actions/ai_smart_briefing.action.ts` (50+ Chinese strings in industry data and AI-generated mock responses)
-- [x] Resolve TODO in `hooks/lead.hook.ts:337` — lead conversion logic fully implemented
-
-#### 🟡 P1 — Test Coverage
-- [x] Add hook tests for `lead.hook.ts` (scoring, status change triggers)
-- [x] Add hook tests for `account.hook.ts` (health score, hierarchy triggers)
-- [x] Add hook tests for `opportunity.hook.ts` (validation, stage change)
-- [x] Add hook tests for `contact.hook.ts` and `activity.hook.ts`
-- [x] Add action tests for remaining 5 untested actions (lead_ai, lead_convert, opportunity_ai, enhanced_lead_scoring, ai_smart_briefing)
-
-#### 🟢 P2 — Feature Gaps
-- [x] Register Contact and Activity triggers in `plugin.ts` (functions exist but aren't exported)
-- [x] Add hooks for task, note, and assignment_rule objects
-- [x] Add workflow definitions for lead assignment and opportunity pipeline automation
-- [x] Migrate `db.ts` shim to direct `@objectstack/runtime` broker API
-
----
-
-### 📦 Finance Package (`@hotcrm/finance`) — Revenue Cloud
-
-**Objects**: 9 (contract, invoice, invoice_line, payment, credit_note, billing_schedule, revenue_schedule, revenue_recognition_rule, payment_method)
-**Hooks**: 8 files | **Actions**: 5 files | **Tests**: 14 files
-
-#### ✅ Recently Fixed
-- [x] All 16 spec-compliance tests passing
-- [x] All labels in English
-
-#### 🟡 P1 — Test Coverage
-- [x] Add hook tests for `contract.hook.ts` (billing, renewal, expiration hooks)
-- [x] Add hook tests for `contract_renewal.hook.ts`
-- [x] Add action tests for `revenue_dashboard.action.ts` and `revenue_forecast.action.ts`
-
-#### 🟢 P2 — Feature Gaps
-- [x] Add hooks for `invoice` object (invoice status change, due date validation, overdue detection)
-- [x] Add hooks for `payment` object (payment matching, overpayment handling, receipt generation)
-- [x] Add hooks for `invoice_line` object (line item calculations, tax computation)
-- [x] Register actions in `plugin.ts` (4 action files exist but aren't exported)
-- [x] Implement payment reminder workflow logic (workflow file exists but may need hooks)
-- [x] Migrate `db.ts` shim to direct `@objectstack/runtime` broker API
-
-#### 🔵 P3 — Architecture
-- [x] Consider splitting large action files (`revenue_forecast.action.ts`, `revenue_dashboard.action.ts`) — evaluated: files are well-organized with clear section boundaries; splitting deferred to avoid unnecessary import churn
+| Package | Objects | Hooks | Actions | Pages | Views | Dashboards | Forms | Tests |
+|---------|---------|-------|---------|-------|-------|------------|-------|-------|
+| **CRM** (Sales Cloud) | 16 | 11 | 10 | 4 | 4 | 2 | 3 | 26 |
+| **Finance** (Revenue Cloud) | 9 | 8 | 5 | 2 | 1 | 1 | — | 14 |
+| **HR** (Human Capital) | 18 | 18 | 4 | 2 | 1 | 1 | 1 | 21 |
+| **Marketing** (Marketing Cloud) | 15 | 15 | 4 | 1 | 1 | 1 | — | 11 |
+| **Products** (CPQ Cloud) | 13 | 10 | 4 | 3 | 2 | 1 | 1 | 16 |
+| **Support** (Service Cloud) | 23 | 9 | 4 | 2 | 2 | 1 | 1 | 17 |
+| **AI** (Intelligence Layer) | — | — | 1 | — | — | 1 | — | 13 |
+| **Total** | **94** | **71** | **32** | **14** | **11** | **8** | **6** | **118 files / 1,759 tests** |
 
 ---
 
-### 📦 HR Package (`@hotcrm/hr`) — Human Capital Management
+## Phase 11: Ecosystem & Connectivity (2026 Q3-Q4) ← NEXT
 
-**Objects**: 18 (employee, candidate, application, interview, offer, onboarding, recruitment, position, department, goal, performance_review, training, certification, attendance, time_off, payroll, benefit, compensation_plan)
-**Hooks**: 18 files | **Actions**: 4 files | **Tests**: 21 files
-
-#### ✅ Recently Fixed
-- [x] All 64 spec-compliance tests passing
-- [x] All labels in English
-- [x] Zero TODO/FIXME comments
-
-#### 🟡 P1 — Test Coverage
-- [x] Add hook tests for `candidate.hook.ts` (scoring, status change)
-- [x] Add hook tests for `employee.hook.ts` (onboarding, status, data validation)
-- [x] Add hook tests for `offer.hook.ts` (creation, status, approval)
-- [x] Add action tests for `hr_analytics.action.ts`
-
-#### 🟢 P2 — Feature Gaps
-- [x] Export hooks and actions in `plugin.ts` (currently only objects are registered)
-- [x] Add hooks for `application` and `interview` objects (application status workflow, interview scheduling)
-- [x] Add hooks for `onboarding` object (checklist automation, task assignment)
-- [x] Add hooks for `recruitment` object (pipeline stage validation)
-- [x] Add hooks for `payroll` object (calculation validation, approval)
-- [x] Add hooks for `time_off` object (balance validation, manager approval)
-- [x] Add hooks for `attendance` object (clock-in/out validation)
-- [x] Add hooks for `goal` object (progress tracking, alignment)
-- [x] Migrate `db.ts` shim to direct `@objectstack/runtime` broker API
-
-#### 🔵 P3 — Documentation
-- [x] Create `developers/specs/hr/` technical specification directory
-- [x] Document recruitment pipeline stages and lifecycle
-- [x] Document payroll calculation logic and tax rules
-
----
-
-### 📦 Marketing Package (`@hotcrm/marketing`) — Marketing Cloud
-
-**Objects**: 15 (campaign, campaign_member, email_template, form, landing_page, marketing_list, unsubscribe, automation_workflow, email_send, lead_nurture_program, touchpoint, journey, journey_step, ab_test, ab_test_variant)
-**Hooks**: 15 files | **Actions**: 4 files | **Tests**: 11 files
-
-#### ✅ Recently Fixed
-- [x] All 28 spec-compliance tests passing
-- [x] All labels in English
-- [x] Zero TODO/FIXME comments
-
-#### 🔴 P0 — Code Quality
-- [x] Add try-catch error handling to `roi.hook.ts` (currently has no error handling)
-
-#### 🟡 P1 — Test Coverage
-- [x] Add action tests for `campaign_ai.action.ts`
-- [x] Add action tests for `content_generator.action.ts`
-- [x] Add action tests for `marketing_analytics.action.ts`
-
-#### 🟢 P2 — Feature Gaps
-- [x] Register actions in `plugin.ts` (3 action files exist but aren't exported)
-- [x] Add hooks for `email_template` object (content validation, personalization)
-- [x] Add hooks for `form` object (submission handling, lead creation)
-- [x] Add hooks for `landing_page` object (publish/unpublish lifecycle)
-- [x] Add hooks for `marketing_list` object (membership validation, deduplication)
-- [x] Add hooks for `unsubscribe` object (compliance enforcement, global suppression)
-- [x] Implement campaign automation workflow
-- [x] Migrate `db.ts` shim to direct `@objectstack/runtime` broker API
-
----
-
-### 📦 Products Package (`@hotcrm/products`) — CPQ Cloud
-
-**Objects**: 13 (product, pricebook, quote, quote_line_item, product_bundle, product_bundle_component, price_rule, approval_request, discount_schedule, order, order_item, subscription, product_option)
-**Hooks**: 10 files | **Actions**: 4 files | **Tests**: 16 files
-
-#### ✅ Recently Fixed
-- [x] All 36 spec-compliance tests passing
-- [x] All labels in English
-- [x] Zero TODO/FIXME comments
-
-#### 🟡 P1 — Test Coverage
-- [x] Add hook tests for `product.hook.ts` (config validation, stock, price changes)
-- [x] Add hook tests for `pricebook.hook.ts` (date validation, currency, status)
-- [x] Add hook tests for `quote.hook.ts` (pricing calculation, approval routing)
-
-#### 🟢 P2 — Feature Gaps
-- [x] Register actions in `plugin.ts` (3 action files exist but aren't exported)
-- [x] Add hooks for `quote_line_item` object (line calculations, quantity validation)
-- [x] Add hooks for `product_bundle` object (bundle validation, component completeness)
-- [x] Add hooks for `price_rule` object (rule validation, conflict detection)
-- [x] Add hooks for `approval_request` object (workflow triggers, escalation)
-- [x] Add hooks for `discount_schedule` object (schedule activation, overlap detection)
-- [x] Migrate `db.ts` shim to direct `@objectstack/runtime` broker API
-
----
-
-### 📦 Support Package (`@hotcrm/support`) — Service Cloud
-
-**Objects**: 23 (case, case_comment, knowledge_article, sla_policy, sla_template, sla_milestone, business_hours, holiday_calendar, holiday, queue, queue_member, routing_rule, escalation_rule, skill, agent_skill, email_to_case, web_to_case, social_media_case, portal_user, forum_topic, forum_post, chatbot_config, macro)
-**Hooks**: 9 files | **Actions**: 4 files | **Tests**: 17 files
-
-#### ✅ Recently Fixed
-- [x] All 84 spec-compliance tests passing
-- [x] Zero TODO/FIXME comments
-- [x] Chinese text in language labels (`简体中文`, `繁體中文`, `日本語`) intentionally kept in native script
-
-#### 🟡 P1 — Test Coverage
-- [x] Add hook tests for `knowledge.hook.ts` (5 hooks exist but not exported in plugin.ts)
-- [x] Add action tests for `case_ai.action.ts`
-- [x] Add integration tests for case escalation workflow
-
-#### 🟢 P2 — Feature Gaps
-- [x] Export knowledge hooks in `plugin.ts` (knowledge.hook.ts has 5 hooks but only case hook is registered)
-- [x] Add hooks for SLA enforcement (`sla_policy`, `sla_milestone` — automated tracking)
-- [x] Add hooks for case routing (`routing_rule`, `escalation_rule` — auto-assignment)
-- [x] Add hooks for queue management (`queue`, `queue_member` — load balancing)
-- [x] Add hooks for community (`forum_topic`, `forum_post` — moderation, notification)
-- [x] Implement case escalation workflow
-- [x] Migrate `db.ts` shim to direct `@objectstack/runtime` broker API
-
----
-
-### 📦 AI Package (`@hotcrm/ai`) — Intelligence Layer
-
-**Source Files**: 12 | **Tests**: 9 files
-
-#### ✅ Current State
-- [x] Comprehensive AI service layer with ML model integration
-- [x] Provider factory supporting OpenAI, AWS SageMaker, Azure ML
-- [x] Cache manager, performance monitor, and explainability service
-- [x] All labels in English, zero TODO/FIXME comments
-
-#### 🟢 P2 — Feature Gaps
-- [x] Create `developers/specs/ai/` technical specification directory
-- [x] Add MCP (Model Context Protocol) server configuration (new `@objectstack/spec/ai` feature)
-- [x] Add integration tests for provider factory end-to-end flow
-- [x] Document model registry usage patterns and AI agent architecture
-- [x] Add advanced AI agent workflows (6 cross-package orchestration pipelines)
-- [x] Add performance benchmarking utilities (Benchmark, BenchmarkSuite, formatBenchmarkResults)
-
----
-
-## Cross-Cutting Improvement Areas
-
-### 🔴 P0 — Protocol Compliance
-
-| Area | Status | Action |
-|------|--------|--------|
-| @objectstack/spec version | ✅ v3.0.0 | Upgrade complete |
-| ObjectSchema.parse() compliance | ✅ 100% | All 94 objects pass |
-| snake_case field naming | ✅ 100% | All field names compliant |
-| snake_case lookup references | ✅ 100% | Last 4 PascalCase references fixed |
-| Enable config properties | ✅ Compliant | Only using spec-supported properties |
-
-### 🟡 P1 — Internationalization
-
-| Package | Chinese Text | Action |
-|---------|-------------|--------|
-| CRM | `lead.schema.ts` (30 fields), `ai_smart_briefing.action.ts` (50+ strings) | ✅ Translated to English |
-| Support | Language labels in `portal_user.object.ts`, `knowledge_article.object.ts` | Keep as-is (native script names) |
-| HR | Test data in `employee.hook.test.ts` | Keep as-is (valid test data) |
-| Others | None | ✅ Clean |
-
-### 🟢 P2 — Architecture & Tooling
-
-| Area | Status | Action |
-|------|--------|--------|
-| `db.ts` shim files | ✅ Migrated | All 6 packages migrated to `broker` API |
-| Plugin action registration | ✅ All registered | Actions registered in all plugin.ts exports |
-| Plugin workflow registration | ✅ All registered | Workflows registered in all 6 plugin.ts exports |
-| Hook coverage | 71 hooks / 94 objects (76%) | ✅ Target 80%+ met at package level |
-| Test coverage | 1759 tests / 118 files | Continue expanding coverage |
-| `defineStack()` config pattern | ✅ Consistent | All packages use correct pattern |
-| State machine definitions | ✅ 3 defined | Case, Lead, Opportunity lifecycles |
-| Event definitions | ✅ 6 defined | All business packages have event contracts |
-| Capability manifests | ✅ 6 defined | All business packages declare capabilities |
-| Permission sets | ✅ 6 defined | All business packages have permission sets |
-
-### 🔵 P3 — @objectstack/spec Adoption (see [Evaluation Report](/docs/architecture/spec-capability-evaluation))
-
-| Area | Status | Action |
-|------|--------|--------|
-| Spec schema adoption rate | ✅ ~25% | Phase 8 target met |
-| UI schema typing | ✅ Typed | 14 pages, 11 views, 8 dashboards, 6 forms use spec schemas |
-| Workflow schema validation | ✅ Validated | All 6 workflow files use `WorkflowRuleSchema.parse()` |
-| Plugin type safety | ✅ `PluginDefinition` | All plugins typed and validated with `PluginSchema.parse()` |
-| State machine definitions | ✅ Defined | Case, Lead, Opportunity lifecycles formalized |
-| Approval process schema | ✅ `ApprovalProcessSchema` | Products approval uses spec schema |
-| Agent schema adoption | ✅ `AgentSchema` | 6 AI agents use spec schema |
-| Security metadata | ✅ Defined | Permission sets, sharing rules, territory model |
-| Advanced field types | ✅ 20+/44 used | masterDetail, summary, select({multiple}), file, image, location, address |
-| Advanced validations | ❌ Not used | Cross-field, conditional, async validations — deferred |
-
----
-
-## Phased Execution Plan
-
-### Phase 1: Quality & Compliance (Week 1-2)
-- [x] Translate remaining Chinese text in CRM package
-- [x] Add error handling to `marketing/roi.hook.ts`
-- [x] Register missing hooks and actions in all `plugin.ts` files
-- [x] Resolve TODO in `crm/hooks/lead.hook.ts`
-
-### Phase 2: Test Coverage (Week 3-5)
-- [x] Add hook tests for CRM (8 hook files × ~10 tests each)
-- [x] Add hook tests for Products (8 hook files × ~10 tests each)
-- [x] Add hook tests for Finance (5 hook files × ~10 tests each)
-- [x] Add hook tests for HR (11 hook files × ~10 tests each)
-- [x] Add missing action tests across all packages
-- [x] Target: 80%+ test coverage across all 6 business packages
-
-### Phase 3: Feature Completeness (Week 6-8)
-- [x] Implement hooks for Support SLA, routing, queue management
-- [x] Implement hooks for HR application, interview, onboarding, time-off
-- [x] Implement hooks for Finance invoice, payment
-- [x] Implement hooks for Products quote_line_item, approval_request
-- [x] Implement hooks for Marketing email_send, automation_workflow, lead_nurture, attribution
-- [x] Add new Marketing objects (automation_workflow, email_send, lead_nurture_program, touchpoint)
-- [x] Migrate all 6 `db.ts` shim files to runtime broker
-- [x] Add workflow definitions for marketing automation, case escalation, payment reminders
-- [x] Add MCP server configuration for AI agent integration
-
-### Phase 4: Documentation & DX (Week 9-10)
-- [x] Create HR and AI technical specification directories
-- [x] Generate per-object field API reference documentation
-- [x] Add code examples for hooks, actions, and workflows
-- [x] Update developer guides with latest patterns
-
-### Phase 5: Integration & Business Features (Week 11+)
-- [x] Advanced AI Agent workflows (6 cross-package agent pipelines: lead-to-close, customer 360, churn prevention, case resolution, talent acquisition, revenue optimization)
-- [x] Performance benchmarking and optimization (Benchmark/BenchmarkSuite utilities with percentile tracking)
-- [x] Production deployment guides (Docker, Kubernetes — Dockerfile, docker-compose.yml, K8s manifests, DEPLOYMENT.md)
-- [ ] Integration connectors (Stripe, DocuSign, Slack) — deferred to 2027 roadmap
-- [ ] Business Intelligence & Analytics package — deferred to 2027 roadmap
-
-### Phase 6: @objectstack/spec Deep Adoption (Week 12-16)
-
-> Based on the [Spec Capability Evaluation](/docs/architecture/spec-capability-evaluation) — only ~3.4% of available spec schemas are currently used. This phase aims to increase adoption to ~15% by targeting high-impact gaps.
-
-#### 6A: UI Schema Typing (P0 — Type Safety)
-- [x] Convert page layouts to use `PageSchema` from `@objectstack/spec/ui` (4 files: account, invoice, campaign, product_bundle)
-- [x] Convert list views to use `ViewSchema` from `@objectstack/spec/ui` (1 file: account.view.ts)
-- [x] Add `AppSchema` definition for navigation and branding configuration
-- [x] Add `DashboardSchema` definitions for CRM pipeline, sales, support metrics, and HR dashboards
-- [x] Add `FormViewSchema` definitions for key data entry forms (account.form.ts)
-
-#### 6B: Automation Schema Adoption (P0 — Correctness)
-- [x] Validate all 6 workflow files against `WorkflowRuleSchema.parse()`
-- [x] Define `StateMachineSchema` for case status lifecycle
-- [x] Define `StateMachineSchema` for lead qualification lifecycle
-- [x] Define `StateMachineSchema` for opportunity pipeline stages
-- [x] Convert products approval workflow to use `ApprovalProcessSchema` (quote_approval.process.ts)
-- [x] Add `TimeTriggerSchema` for scheduled workflow configurations (case_sla.timetrigger.ts)
-
-#### 6C: Plugin & Kernel Typing (P0 — Type Safety)
-- [x] Replace `any` type on all plugin definitions with proper `PluginSchema` typing
-- [x] Add `PluginCapabilityManifest` declarations to each business package
-- [x] Define `EventSchema` for cross-package event communication (all 6 packages)
-
-#### 6D: Advanced Field Types (P1 — Data Model Completeness)
-- [x] Adopt `Field.masterDetail()` for parent-child relationships (invoice→invoice_line, quote→quote_line_item, product_bundle→component, case→case_comment)
-- [x] Adopt `Field.summary()` for rollup/aggregate fields (e.g., account→total contract value)
-- [x] Adopt `Field.select({ multiple: true })` where multiple selections are needed
-- [x] Adopt `Field.file()` and `Field.image()` for attachment fields
-- [x] Adopt `Field.location()` and `Field.address()` for geographic data
-
-#### 6E: AI Schema Formalization (P1 — Agent Architecture)
-- [x] Convert 6 AI agent workflows to use `AgentSchema` from `@objectstack/spec/ai`
-- [x] Define `RAGPipelineConfig` for knowledge base AI integration
-- [x] Adopt `ModelConfig` / `ModelRegistry` schemas for model management
-- [x] Add `NLQRequest`/`NLQResponse` schemas for natural language query interface
-
-#### 6F: Security Metadata (P2 — Enterprise Readiness)
-- [x] Define `PermissionSet` for each business cloud (CRM, Finance, HR, Marketing, Products, Support)
-- [x] Define `ObjectPermission` and `FieldPermission` for sensitive objects
-- [x] Define `SharingRule` configurations for account/opportunity sharing
-- [x] Add `TerritoryModel` for CRM territory-based access control
-
-#### 6G: Prompt & Instruction Updates
-- [x] Update `.github/copilot-instructions.md` with schema validation requirements for UI/workflow/plugin files
-- [x] Add expanded field type guidance to coding conventions
-- [x] Add new file suffix conventions: `*.dashboard.ts`, `*.form.ts`, `*.permission.ts`, `*.statemachine.ts`, `*.capabilities.ts`, `*.events.ts`
-
-**Note**: Visual Workflow Builder and other low-code platform features are out of scope for HotCRM. These are platform-level capabilities provided by `@objectstack/runtime`.
-
-### Phase 7: @objectstack/spec v3.0.0 Upgrade (Week 17)
-
-> Major version upgrade from v2.0.6 → v3.0.0, adopting new APIs and Zod 4 validation engine.
-
-#### 7A: Core Upgrade (P0 — Platform Currency)
-- [x] Upgrade `@objectstack/spec` from v2.0.6 to v3.0.0 across all 10 packages
-- [x] Upgrade `@objectstack/cli` from v2.0.6 to v3.0.0 across all 10 packages
-- [x] Upgrade `@objectstack/studio` from v2.0.6 to v3.0.0
-- [x] Verify TypeScript compilation (0 errors)
-- [x] Verify all 1604 tests passing (108 test files)
-- [x] Update version references in ROADMAP.md, README.md, CHANGELOG.md, docs
-
-#### 7B: v3.0.0 API Adoption (P1 — New Features)
-- [x] Migrate `ObjectSchema.parse()` to `ObjectSchema.create()` for all 69 object definitions (new recommended API — lighter output, no default filling)
-- [x] Adopt `defineStudioPlugin()` from `@objectstack/spec/studio` for Studio extensibility (6 studio plugins: crm, finance, hr, marketing, products, support)
-- [x] Adopt `StudioPluginManifestSchema` for studio plugin validation
-- [x] Evaluate new `@objectstack/spec/studio` contributions API (ActionContribution, PanelContribution, SidebarGroupContribution, CommandContribution, MetadataViewerContribution)
-
-#### 7C: v3.0.0 Breaking Change Cleanup (P1 — Maintenance)
-- [x] Verify no imports from removed modules (`hub`, `auth`, `driver`, `permission`)
-- [x] Verify `@objectstack/spec/contracts` usage (empty in v3.0.0 — no HotCRM imports)
-- [x] Update spec capability evaluation docs for v3.0.0 module map (12 modules, down from 16)
-- [x] Audit Zod 4 compatibility for packages using zod directly (ai, core, crm) — all compatible with Zod 4
-
-### Phase 8: UI Completeness & Cross-Cloud Integration (Week 18-24)
-
-> Currently only 4 page layouts, 1 list view, 4 dashboards, and 1 form view exist for 69 objects. This phase aims to provide UI metadata coverage for all primary business objects and establish cross-cloud data flow patterns.
-
-#### 8A: Page Layout Expansion (P0 — UI Completeness)
-- [x] Add `opportunity.page.ts` — Deal details, amount, stage, close date, related contacts and activities
-- [x] Add `contact.page.ts` — Contact details, related accounts, opportunities, and activities
-- [x] Add `lead.page.ts` — Lead details, scoring, conversion history, and related activities
-- [x] Add `case.page.ts` — Case details, SLA status, comments, knowledge suggestions
-- [x] Add `employee.page.ts` — Employee profile, department, manager, training, certifications
-- [x] Add `candidate.page.ts` — Candidate profile, applications, interviews, offer history
-- [x] Add `contract.page.ts` — Contract terms, line items, renewal timeline, related invoices
-- [x] Add `quote.page.ts` — Quote details, line items, pricing, discount schedule, approval status
-- [x] Add `product.page.ts` — Product catalog detail, pricing, bundles, availability
-- [x] Add `knowledge_article.page.ts` — Article content, version history, categories, related cases
-
-#### 8B: List View Expansion (P0 — Navigation)
-- [x] Add `opportunity.view.ts` — Pipeline board, filters by stage/owner/amount/close date
-- [x] Add `contact.view.ts` — Contact directory with account grouping, last activity
-- [x] Add `lead.view.ts` — Lead queue with score, status, source filters
-- [x] Add `case.view.ts` — Case queue with priority, SLA countdown, assignment
-- [x] Add `employee.view.ts` — Organization directory with department/role filters
-- [x] Add `campaign.view.ts` — Campaign list with status, budget, ROI metrics
-- [x] Add `contract.view.ts` — Contract list with renewal dates, value, status
-- [x] Add `quote.view.ts` — Quote pipeline with approval status, value, expiry
-- [x] Add `product.view.ts` — Product catalog with category, price, availability filters
-- [x] Add `knowledge_article.view.ts` — Knowledge base with search, categories, popularity
-
-#### 8C: Dashboard Expansion (P1 — Analytics)
-- [x] Add `marketing.dashboard.ts` — Campaign Performance, Email Metrics, Lead Funnel, ROI Trends
-- [x] Add `finance.dashboard.ts` — Revenue Pipeline, Collections Aging, Cash Flow, Contract Renewals
-- [x] Add `cpq.dashboard.ts` — Quote Pipeline, Win/Loss Analysis, Discount Usage, Approval Cycle Time
-- [x] Add `executive.dashboard.ts` — Cross-cloud executive summary combining Sales, Service, Revenue, and HR KPIs
-
-#### 8D: Form View Expansion (P1 — Data Entry)
-- [x] Add `opportunity.form.ts` — Deal creation wizard with stage-driven required fields
-- [x] Add `contact.form.ts` — Contact creation with account auto-link and duplicate detection UI
-- [x] Add `lead.form.ts` — Lead capture form with source tracking and assignment preview
-- [x] Add `case.form.ts` — Case submission form with category-driven field visibility
-- [x] Add `employee.form.ts` — Employee onboarding form with department/manager lookup
-
-#### 8E: Hook Coverage Expansion (P1 — Business Logic)
-- [x] Add hooks for Marketing: `email_template`, `form`, `landing_page`, `marketing_list`, `touchpoint`
-- [x] Add hooks for HR: `certification`, `department`, `position`, `training`
-- [x] Add hooks for Support: `agent_skill`, `portal_user`, `social_media_case`
-- [x] Target: 80%+ object hook coverage (71 hooks / 94 objects = 76% — target met at package level)
-
-#### 8F: Cross-Cloud Integration Tests (P1 — Reliability)
-- [x] Lead-to-Opportunity conversion flow (CRM cross-object)
-- [x] Quote-to-Contract-to-Invoice conversion flow (Products → Finance)
-- [x] Campaign-to-Lead attribution flow (Marketing → CRM)
-- [x] Case-to-Knowledge self-service flow (Support cross-object)
-- [x] Employee-Onboarding-to-Training flow (HR cross-object)
-- [x] AI agent end-to-end pipeline tests (AI → CRM/Support/HR)
-
-#### 8G: Advanced Data Model (P2 — Data Quality)
-- [x] Cross-field validations (e.g., close_date required when stage = 'Closed Won')
-- [x] Conditional required fields using spec `ConditionalValidation` schema
-- [x] Async validation patterns (duplicate detection for leads, contacts)
-- [x] `DataQualityRules` for email format, phone normalization, address standardization
-
-#### 8H: System & API Configuration (P2 — Enterprise Readiness)
-- [x] Define `AuditConfig` for sensitive objects using `@objectstack/spec/system`
-- [x] Define `NotificationChannel` configurations for workflow email alerts
-- [x] Define `ApiEndpoint` declarations for external API surface using `@objectstack/spec/api`
-- [x] Define `WebhookConfig` for outbound event notifications using `@objectstack/spec/integration`
-- [x] Define `CacheConfig` for high-read objects (product catalog, knowledge articles)
-
-#### 8I: Documentation Refresh (P2 — DX)
-- [x] Update `docs/roadmap.mdx` with current metrics (94 objects, 1759 tests, 71 hooks)
-- [x] Update `docs/modules/index.mdx` with accurate object counts per cloud
-- [x] Add cross-cloud integration pattern guides
-- [x] Add UI metadata authoring guide (page, view, dashboard, form patterns)
-- [x] Add field type selection guide with decision tree
-
-### Phase 9: Developer Experience & Documentation Governance (Week 25-28)
-
-> Comprehensive DX audit identified significant onboarding friction from broken links, stale statistics, and inconsistent tooling references across documentation. This phase addresses documentation governance and developer workflow improvements.
-
-#### 9A: Documentation Integrity (P0 — Onboarding)
-- [x] Fix README.md broken links — removed 20+ references to non-existent files (`DEVELOPMENT_STATUS.md`, `DEVELOPMENT_WORKFLOW.md`, `.github/prompts/*.md`, `.github/agents/*.md`, legacy docs)
-- [x] Update README.md statistics — corrected object count (65→69), action/hook counts, per-cloud breakdowns (CRM 13→8, Marketing 2→11)
-- [x] Fix CONTRIBUTING.md tooling references — updated `npm`→`pnpm`, Node.js 18→20.9.0
-- [x] Clean orphaned content in README.md — removed duplicate section fragments
-- [x] Audit remaining documentation for broken cross-references (`docs/*.md` internal links)
-- [x] Add link-checking CI step to prevent future broken links (`.github/workflows/link-check.yml`)
-
-#### 9B: Onboarding Experience (P1 — New Developer Friction)
-- [x] Create `DEVELOPMENT_WORKFLOW.md` — single-page development quickstart covering setup, package development, testing, and contribution flow
-- [x] Add "first contribution" tutorial — step-by-step guide to add a new field to an existing object
-- [x] Add package scaffolding guide — how to create a new business package from scratch
-- [x] Add troubleshooting FAQ — common `pnpm install`, TypeScript, and test failures
-
-#### 9C: Documentation Consistency (P1 — Single Source of Truth)
-- [x] Consolidate root-level `docs/` strategic documents — ensure `docs/README.md` index matches actual files
-- [x] Ensure README.md, ROADMAP.md, `content/docs/roadmap.mdx`, and `content/docs/index.mdx` share consistent metrics
-- [x] Add automated stat extraction script — single source of truth for object/hook/test counts (`scripts/check-stats.sh`)
-- [x] Add `docs/ARCHITECTURE.md` — consolidated architecture and plugin guide (replaces references to missing `PLUGIN_ARCHITECTURE.md`)
-
-#### 9D: Developer Tooling (P2 — Productivity)
-- [x] Add `pnpm typecheck` root script — run `tsc --noEmit` across all packages
-- [x] Add `pnpm test:changed` — run tests only for packages with uncommitted changes
-- [x] Add `pnpm stats` — automated stat extraction for documentation consistency
-- [x] Evaluate adding `changeset` for automated version management — deferred, current workflow sufficient
-- [x] Evaluate pre-commit hooks — deferred, CI-based checks sufficient for current team size
-
-#### 9E: README Modernization (P2 — First Impression)
-- [x] Add "Quick Start in 60 seconds" section at the top — `pnpm install && pnpm dev` with expected output
-- [x] Add architecture diagram (Mermaid) — visual package dependency graph
-- [x] Add badges for test count, object count, and spec version
-- [x] Reduce README length — moved detailed getting-started content to `DEVELOPMENT_WORKFLOW.md`
-
----
-
-## Phase 10: Salesforce Feature Parity & Business Expansion (2026)
-
-> Close the most critical Salesforce feature gaps across all 6 business clouds. Driven by the deep comparison analysis in [docs/SALESFORCE_FEATURE_COMPARISON.md](docs/SALESFORCE_FEATURE_COMPARISON.md).
->
-> **Scope**: Business package features only. Platform features (Flow Builder, App Builder, Report Designer, Authentication, Multi-Tenancy, etc.) are developed in `@objectstack/runtime`.
-
-### Current Salesforce Parity: ~92% ✅
-
-### Phase 10A: Sales & Revenue Parity (Weeks 1-4) — P0 Gaps
-
-> Goal: Close the most critical Sales Cloud and Revenue Cloud gaps.
-
-#### Sales Cloud Enhancements (`@hotcrm/crm`)
-- [x] Add `opportunity_line_item.object.ts` — link products to opportunities (Salesforce: OpportunityLineItem)
-- [x] Add `opportunity_contact_role.object.ts` — contact roles on opportunities (Salesforce: OpportunityContactRole)
-- [x] Add `forecast.object.ts` + `forecast_item.object.ts` — sales forecasting (Salesforce: ForecastingItem)
-- [x] Add hooks for opportunity line items (amount rollup to opportunity, validation)
-- [x] Add hooks for forecasting (auto-aggregate from opportunities, period management)
-- [x] Add `forecast_ai.action.ts` — AI-powered forecast adjustment and predictions
-
-#### Revenue Cloud Enhancements (`@hotcrm/finance`)
-- [x] Add `credit_note.object.ts` — credit notes and refunds
-- [x] Add `billing_schedule.object.ts` — recurring billing schedules
-- [x] Add hooks for credit notes (balance adjustment, invoice linking)
-- [x] Add hooks for billing schedules (auto-invoice generation)
-
-#### Products / CPQ Enhancements (`@hotcrm/products`)
-- [x] Add `order.object.ts` + `order_item.object.ts` — order management (Salesforce: Order/OrderItem)
-- [x] Add hooks for orders (status lifecycle, fulfillment tracking)
-- [x] Add `order_ai.action.ts` — order analytics and predictions
-
-### Phase 10B: Marketing & Advanced Sales (Weeks 5-8) — P1 Gaps
-
-> Goal: Add journey orchestration and territory management data models.
-
-#### Marketing Enhancements (`@hotcrm/marketing`)
-- [x] Add `journey.object.ts` + `journey_step.object.ts` — journey builder data model (Salesforce: Journey Builder)
-- [x] Add `ab_test.object.ts` + `ab_test_variant.object.ts` — A/B testing
-- [x] Add hooks for journey execution (step transitions, entry criteria evaluation)
-- [x] Add hooks for A/B tests (variant assignment, statistical winner selection)
-- [x] Add `journey_ai.action.ts` — AI journey optimization
-
-#### Sales Cloud Advanced (`@hotcrm/crm`)
-- [x] Add `territory.object.ts` + `territory_rule.object.ts` — territory management
-- [x] Add `opportunity_team_member.object.ts` — team selling
-- [x] Add `competitor.object.ts` — competitive tracking on opportunities
-- [x] Add hooks for territory assignment and team collaboration
-
-### Phase 10C: Revenue Maturity (Weeks 9-12) — P1 Gaps
-
-> Goal: Enterprise-grade revenue operations.
-
-#### Finance Enhancements (`@hotcrm/finance`)
-- [x] Add `revenue_schedule.object.ts` — revenue recognition schedules (ASC 606)
-- [x] Add `revenue_recognition_rule.object.ts` — ASC 606 compliance rules
-- [x] Add `payment_method.object.ts` — stored payment methods
-- [x] Add hooks for revenue recognition (auto-schedule, compliance checks)
-- [x] Add `revenue_recognition_ai.action.ts` — AI compliance assistance
-
-#### Products / CPQ Enhancements (`@hotcrm/products`)
-- [x] Add `subscription.object.ts` — subscription management (renewal, amendment, cancellation)
-- [x] Add `product_option.object.ts` — advanced bundle configuration options
-- [x] Enhance `pricebook` for multi-currency support
-- [x] Add hooks for subscriptions (renewal reminders, amendment validation, cancellation flow)
-
-### Phase 10D: Package Maturity & Cross-Cloud Integration (Weeks 13-16) — P2 Gaps
-
-> Goal: Round out remaining gaps and strengthen cross-cloud data flows.
-
-#### Service Enhancements (`@hotcrm/support`)
-- [x] Add `chatbot_config.object.ts` — chatbot configuration for AI-powered case deflection
-- [x] Add `macro.object.ts` — agent productivity macros
-- [x] Enhance service AI actions with chatbot integration
-
-#### HR Enhancements (`@hotcrm/hr`)
-- [x] Add `benefit.object.ts` — benefits administration
-- [x] Add `compensation_plan.object.ts` — compensation management
-- [x] Add hooks for benefits enrollment and compensation rules
-
-#### Cross-Cloud Lifecycle Automation
-- [x] Opportunity → Order → Invoice lifecycle automation (CRM → Products → Finance)
-- [x] Campaign → Lead → Opportunity full attribution chain (Marketing → CRM)
-- [x] Forecast → Revenue Recognition alignment (CRM → Finance)
-- [x] Case → Knowledge Article feedback loop (Support auto-improvement)
-
-### Phase 10 Timeline
-
-```
-Week  1-4   ████████  Phase 10A: Sales & Revenue Parity         (+~10 objects)
-Week  5-8   ████████  Phase 10B: Marketing & Advanced Sales      (+~8 objects)
-Week  9-12  ████████  Phase 10C: Revenue Maturity                (+~5 objects)
-Week 13-16  ████████  Phase 10D: Maturity & Cross-Cloud          (+~4 objects)
-```
-
-### Phase 10 Expected Outcomes
-
-| Metric | Before Phase 10 | After Phase 10 | Change |
-|--------|---------|----------------|--------|
-| Business Objects | 69 | 94 | +25 objects |
-| Salesforce Parity | ~75% | ~92% | +17% |
-| Sales Cloud Parity | ~65% | ~90% | +25% |
-| Revenue Cloud Parity | ~70% | ~90% | +20% |
-| Marketing Cloud Parity | ~70% | ~85% | +15% |
-
----
-
-## Phase 11: Ecosystem & Connectivity (2026 Q3-Q4)
-
-> Connecting HotCRM to external tools and building new business packages.
+> Connecting HotCRM to external tools, building new business packages, and establishing the integration layer. This phase adds 3 new packages and 10+ external connectors.
 >
 > **Note**: Platform-level enhancements (Webhook Framework, API Rate Limiting, Bulk Data API, Real-time Events) are developed in `@objectstack/runtime`.
 
-### Integration Connectors
+### Phase 11 Timeline
 
-| Connector | Type | Priority | Status |
-|-----------|------|----------|--------|
-| Stripe | Payment Gateway | High | Planned |
-| PayPal | Payment Gateway | Medium | Planned |
-| DocuSign | E-Signature | High | Planned |
-| Adobe Sign | E-Signature | Medium | Planned |
-| Slack | Communication | High | Planned |
-| Microsoft Teams | Communication | High | Planned |
-| Gmail / Outlook | Email | High | Planned |
-| QuickBooks / Xero | Accounting | Medium | Planned |
-| BambooHR / Workday | HR Systems | Medium | Planned |
-| LinkedIn | Recruiting | Medium | Planned |
+```
+Q3 2026 Week 1-4   ████████  Phase 11A: Analytics Package               (+~10 objects)
+Q3 2026 Week 5-8   ████████  Phase 11B: Integration Package & Connectors (+~8 objects)
+Q4 2026 Week 9-12  ████████  Phase 11C: Community Package               (+~8 objects)
+Q4 2026 Week 13-16 ████████  Phase 11D: Cross-Ecosystem Tests & DX      (hardening)
+```
 
-### New Business Packages
+### Phase 11A: Analytics Package (Q3 2026, Weeks 1-4) — P0
 
-#### 📦 Analytics Package (`@hotcrm/analytics`) — Business Intelligence Cloud
+> Goal: Build the `@hotcrm/analytics` Business Intelligence Cloud from scratch.
 
-**Planned for:** Q3 2026  
-**Dependencies:** All business packages (CRM, Finance, HR, Marketing, Products, Support)
+#### 11A-1: Package Scaffolding & Core Objects
 
-##### Scope
-- **Reporting Engine**: Custom report builder with aggregations, grouping, and filtering
-- **Dashboard Framework**: KPI cards, charts, and widgets
-- **Predictive Analytics**: Forecasting models for revenue, churn, and growth
-- **Data Visualization**: Charts, graphs, heatmaps, funnels
-- **Cross-Object Analytics**: Join data across multiple business objects
+- [ ] Initialize `packages/analytics/` package with `package.json`, `tsconfig.json`, `plugin.ts`
+- [ ] Add `packages/analytics/src/report.object.ts` — saved report definitions (name, description, object_name, filters, groupings, aggregations, columns, sort_order, report_type)
+- [ ] Add `packages/analytics/src/report_schedule.object.ts` — scheduled report delivery (report_id, frequency, recipients, format, next_run, last_run, timezone)
+- [ ] Add `packages/analytics/src/analytics_dashboard.object.ts` — dashboard layouts (name, description, widgets, layout_config, refresh_interval, owner, shared_with)
+- [ ] Add `packages/analytics/src/kpi.object.ts` — KPI definitions (name, metric_type, target_value, current_value, period, trend, threshold_warning, threshold_critical)
+- [ ] Add `packages/analytics/src/metric.object.ts` — business metric calculations (name, formula, source_object, aggregation_type, time_grain, filters)
+- [ ] Add `packages/analytics/src/data_source.object.ts` — external data source connectors (name, type, connection_string, sync_status, last_sync, schema_mapping)
+- [ ] Add `packages/analytics/src/saved_filter.object.ts` — reusable filter presets (name, object_name, filter_conditions, is_global, created_by)
+- [ ] Validate all objects with `ObjectSchema.create()` — 100% spec compliance
 
-##### Planned Objects
-- `report` - Saved report definitions with filters and groupings
-- `dashboard` - Dashboard layouts with widget configurations
-- `kpi` - Key Performance Indicator definitions
-- `metric` - Business metric calculations
-- `forecast` - Predictive forecast models and results
-- `data_source` - External data source connectors
+#### 11A-2: Hooks & Business Logic
 
-##### AI Capabilities
-- **Report AI**: Natural language report generation ("Show me top 10 customers by revenue")
-- **Dashboard AI**: Auto-generate dashboard layouts based on role
-- **Insight AI**: Automatic anomaly detection and trend alerts
-- **Forecast AI**: ML-powered revenue and churn predictions
+- [ ] Add `packages/analytics/src/report.hook.ts` — report execution, filter validation, access control, cache invalidation
+- [ ] Add `packages/analytics/src/analytics_dashboard.hook.ts` — widget validation, layout constraint checks, auto-refresh scheduling
+- [ ] Add `packages/analytics/src/kpi.hook.ts` — threshold alerts (trigger notifications when KPI crosses warning/critical), trend calculation, auto-refresh
+- [ ] Add `packages/analytics/src/metric.hook.ts` — formula validation, circular dependency detection, aggregation computation
+- [ ] Add `packages/analytics/src/report_schedule.hook.ts` — schedule validation, next run calculation, delivery execution
+- [ ] Add `packages/analytics/src/data_source.hook.ts` — connection health checks, sync lifecycle, schema drift detection
 
-#### 📦 Integration Package (`@hotcrm/integration`) — iPaaS Connectors
+#### 11A-3: Actions & AI Capabilities
 
-**Planned for:** Q4 2026  
-**Dependencies:** Core business packages
+- [ ] Add `packages/analytics/src/report_ai.action.ts` — natural language report generation ("Show me top 10 customers by revenue"), report suggestion, auto-filter
+- [ ] Add `packages/analytics/src/dashboard_ai.action.ts` — auto-generate dashboard layouts based on user role, KPI anomaly detection, smart widget recommendations
+- [ ] Add `packages/analytics/src/insight_ai.action.ts` — automatic anomaly detection, trend analysis, root cause suggestions, executive summary generation
+- [ ] Add `packages/analytics/src/forecast_analytics.action.ts` — ML-powered revenue and churn predictions, confidence intervals, what-if scenarios
 
-##### Scope
-- **External System Connectors**: Pre-built integrations for popular SaaS
-- **Webhook Management**: Outbound webhooks for real-time events
-- **Data Sync**: Bi-directional sync with external systems
-- **API Middleware**: Transform and route data between systems
+#### 11A-4: UI Metadata
 
-##### Planned Connectors
-- Stripe (Payments)
-- DocuSign (E-Signatures)
-- Slack (Notifications)
-- Gmail/Outlook (Email)
-- Zoom (Video Calls)
-- LinkedIn (Lead Enrichment)
-- HubSpot (Marketing Data)
-- Salesforce (Migration)
+- [ ] Add `packages/analytics/src/report.page.ts` — report builder UI with filter panels, column selector, preview, export
+- [ ] Add `packages/analytics/src/report.view.ts` — report library with category filters, favorites, recent, shared
+- [ ] Add `packages/analytics/src/analytics_dashboard.page.ts` — dashboard canvas with drag-and-drop widget placement
+- [ ] Add `packages/analytics/src/kpi.view.ts` — KPI scorecard with trend sparklines and RAG status
+- [ ] Add `packages/analytics/src/analytics.dashboard.ts` — meta-dashboard: system health, data freshness, usage analytics
 
-#### 📦 Community Package (`@hotcrm/community`) — Customer Community Portal
+#### 11A-5: Tests
 
-**Planned for:** Q4 2026  
-**Dependencies:** Support, CRM packages
+- [ ] Add `packages/analytics/__tests__/unit/objects/spec-compliance.test.ts` — validate all ~8 objects against spec
+- [ ] Add `packages/analytics/__tests__/unit/hooks/report.hook.test.ts` — report execution, filter validation, access control
+- [ ] Add `packages/analytics/__tests__/unit/hooks/kpi.hook.test.ts` — threshold alerts, trend calculation
+- [ ] Add `packages/analytics/__tests__/unit/hooks/metric.hook.test.ts` — formula validation, aggregation
+- [ ] Add `packages/analytics/__tests__/unit/actions/report_ai.action.test.ts` — NL report generation
+- [ ] Add `packages/analytics/__tests__/unit/actions/insight_ai.action.test.ts` — anomaly detection
+- [ ] Add `packages/analytics/__tests__/integration/cross-cloud-analytics.test.ts` — analytics queries across CRM, Finance, Support data
 
-##### Scope
-- **Community Forums**: Discussion boards and Q&A
-- **Idea Management**: Customer feature requests and voting
-- **User Groups**: Customer communities by region, industry, etc.
-- **Events Calendar**: User group meetings and webinars
-- **Reputation System**: Badges, points, and leaderboards
+### Phase 11B: Integration Package & Connectors (Q3 2026, Weeks 5-8) — P0
 
-##### Planned Objects
-- `community` - Community portal configuration
-- `forum_category` - Forum organization
-- `idea` - Customer feature requests
-- `user_group` - Community segmentation
-- `event` - Community events
-- `badge` - Gamification rewards
+> Goal: Build the `@hotcrm/integration` iPaaS layer and deliver the first 5 high-priority connectors.
+
+#### 11B-1: Package Scaffolding & Core Objects
+
+- [ ] Initialize `packages/integration/` package with `package.json`, `tsconfig.json`, `plugin.ts`
+- [ ] Add `packages/integration/src/connector.object.ts` — connector definitions (name, type, provider, auth_type, credentials_ref, base_url, status, version)
+- [ ] Add `packages/integration/src/connection.object.ts` — active connection instances (connector_id, tenant_id, status, auth_token_ref, refresh_token_ref, expires_at, last_used)
+- [ ] Add `packages/integration/src/sync_config.object.ts` — bi-directional sync configuration (connection_id, source_object, target_object, field_mapping, direction, frequency, conflict_resolution)
+- [ ] Add `packages/integration/src/sync_log.object.ts` — sync execution audit log (sync_config_id, started_at, completed_at, records_processed, records_failed, error_details, status)
+- [ ] Add `packages/integration/src/webhook_subscription.object.ts` — outbound webhook subscriptions (event_type, target_url, secret, status, retry_policy, filters, last_triggered)
+- [ ] Add `packages/integration/src/webhook_delivery.object.ts` — webhook delivery log (subscription_id, event_payload, response_status, response_body, attempt_number, delivered_at)
+- [ ] Add `packages/integration/src/api_key.object.ts` — API key management (name, key_hash, scopes, rate_limit, expires_at, last_used, created_by)
+- [ ] Add `packages/integration/src/field_mapping.object.ts` — field mapping templates (name, source_object, target_object, mappings, transform_rules, default_values)
+- [ ] Validate all objects with `ObjectSchema.create()` — 100% spec compliance
+
+#### 11B-2: Hooks & Business Logic
+
+- [ ] Add `packages/integration/src/connector.hook.ts` — connector lifecycle (activation, deactivation, health check scheduling)
+- [ ] Add `packages/integration/src/connection.hook.ts` — connection validation, token refresh, expiry alerts
+- [ ] Add `packages/integration/src/sync_config.hook.ts` — mapping validation, schedule management, conflict resolution
+- [ ] Add `packages/integration/src/sync_log.hook.ts` — sync monitoring, failure alerts, retry logic
+- [ ] Add `packages/integration/src/webhook_subscription.hook.ts` — subscription validation, secret rotation, endpoint verification
+- [ ] Add `packages/integration/src/webhook_delivery.hook.ts` — delivery tracking, retry scheduling, dead-letter handling
+- [ ] Add `packages/integration/src/api_key.hook.ts` — key generation, expiry alerts, usage tracking, rate limit enforcement
+
+#### 11B-3: High-Priority Connectors (5 initial connectors)
+
+Each connector includes: `*.action.ts` (API operations), `*.hook.ts` (event mapping), tests.
+
+- [ ] **Stripe Connector** — `packages/integration/src/connectors/stripe.action.ts`
+  - Payment intent creation, refund processing, subscription sync
+  - Map Stripe webhooks → Finance package (invoice.paid, payment.failed, subscription.updated)
+  - Sync: Stripe Customer ↔ Account, Stripe Invoice ↔ Invoice, Stripe Subscription ↔ Subscription
+- [ ] **DocuSign Connector** — `packages/integration/src/connectors/docusign.action.ts`
+  - Envelope creation from Quote/Contract, signing status tracking
+  - Map DocuSign webhooks → Products/Finance (envelope.completed → contract.status = 'Signed')
+  - Sync: DocuSign Envelope ↔ Contract, signing events → Activity
+- [ ] **Slack Connector** — `packages/integration/src/connectors/slack.action.ts`
+  - Send notifications for deal closures, case escalations, approval requests
+  - Slash commands for quick CRM lookups (`/hotcrm account Acme Corp`)
+  - Map Slack events → Activity (message sent, channel mention)
+- [ ] **Gmail Connector** — `packages/integration/src/connectors/gmail.action.ts`
+  - Email-to-Activity logging, thread tracking, attachment linking
+  - Email template send via Gmail API, tracking pixels for open/click
+  - Sync: Gmail threads ↔ Activity, contacts ↔ Contact
+- [ ] **Microsoft Teams Connector** — `packages/integration/src/connectors/teams.action.ts`
+  - Meeting scheduling from CRM, meeting notes → Activity
+  - Adaptive card notifications for pipeline changes, approval requests
+  - Sync: Teams meetings ↔ Activity, Teams contacts ↔ Contact
+
+#### 11B-4: Actions & AI Capabilities
+
+- [ ] Add `packages/integration/src/sync_ai.action.ts` — AI-powered field mapping suggestions, conflict resolution recommendations, data quality assessment for sync
+- [ ] Add `packages/integration/src/connector_ai.action.ts` — natural language connector configuration ("Connect my Stripe account"), troubleshooting assistant
+
+#### 11B-5: UI Metadata
+
+- [ ] Add `packages/integration/src/connector.page.ts` — connector marketplace with setup wizard
+- [ ] Add `packages/integration/src/connector.view.ts` — connector library with status, health, last sync
+- [ ] Add `packages/integration/src/sync_config.page.ts` — sync configuration with field mapping editor
+- [ ] Add `packages/integration/src/integration.dashboard.ts` — integration health: sync success rates, webhook deliveries, API usage
+
+#### 11B-6: Tests
+
+- [ ] Add `packages/integration/__tests__/unit/objects/spec-compliance.test.ts` — validate all ~8 objects against spec
+- [ ] Add `packages/integration/__tests__/unit/hooks/connector.hook.test.ts` — lifecycle, health check
+- [ ] Add `packages/integration/__tests__/unit/hooks/sync_config.hook.test.ts` — mapping validation, scheduling
+- [ ] Add `packages/integration/__tests__/unit/hooks/webhook_subscription.hook.test.ts` — validation, retry
+- [ ] Add `packages/integration/__tests__/unit/connectors/stripe.action.test.ts` — payment operations, webhook mapping
+- [ ] Add `packages/integration/__tests__/unit/connectors/docusign.action.test.ts` — envelope operations
+- [ ] Add `packages/integration/__tests__/unit/connectors/slack.action.test.ts` — notifications, slash commands
+- [ ] Add `packages/integration/__tests__/integration/sync-flow.test.ts` — end-to-end sync lifecycle
+
+### Phase 11C: Community Package (Q4 2026, Weeks 9-12) — P1
+
+> Goal: Build the `@hotcrm/community` Customer Community Portal for self-service and engagement.
+
+#### 11C-1: Package Scaffolding & Core Objects
+
+- [ ] Initialize `packages/community/` package with `package.json`, `tsconfig.json`, `plugin.ts`
+- [ ] Add `packages/community/src/community.object.ts` — community portal configuration (name, description, domain, theme, features_enabled, status, branding)
+- [ ] Add `packages/community/src/forum_category.object.ts` — forum organization (name, description, parent_category, sort_order, icon, is_archived)
+- [ ] Add `packages/community/src/topic.object.ts` — discussion topics (title, body, category_id, author_id, status, is_pinned, is_locked, view_count, reply_count)
+- [ ] Add `packages/community/src/reply.object.ts` — topic replies (topic_id, body, author_id, is_accepted_answer, upvotes, is_flagged)
+- [ ] Add `packages/community/src/idea.object.ts` — feature requests (title, description, category, status, vote_count, priority_score, assigned_release)
+- [ ] Add `packages/community/src/user_group.object.ts` — community segmentation (name, description, type, criteria, member_count, access_level)
+- [ ] Add `packages/community/src/community_event.object.ts` — community events (title, description, event_type, start_date, end_date, location, capacity, rsvp_count, recording_url)
+- [ ] Add `packages/community/src/badge.object.ts` — gamification rewards (name, description, icon, criteria, points_value, is_automatic)
+- [ ] Validate all objects with `ObjectSchema.create()` — 100% spec compliance
+
+#### 11C-2: Hooks & Business Logic
+
+- [ ] Add `packages/community/src/topic.hook.ts` — content moderation (profanity filter, spam detection), notification to subscribers, auto-tagging, view counting
+- [ ] Add `packages/community/src/reply.hook.ts` — answer acceptance, upvote tracking, author reputation update, spam detection
+- [ ] Add `packages/community/src/idea.hook.ts` — vote aggregation, status transitions (Submitted → Under Review → Planned → Released), notification on status change
+- [ ] Add `packages/community/src/user_group.hook.ts` — membership validation, auto-assignment based on criteria, access level enforcement
+- [ ] Add `packages/community/src/community_event.hook.ts` — RSVP management, capacity enforcement, reminder scheduling, recording link notification
+- [ ] Add `packages/community/src/badge.hook.ts` — auto-award based on activity criteria (first post, 10 replies, accepted answer), points calculation
+- [ ] Add `packages/community/src/community.hook.ts` — portal configuration validation, feature toggle enforcement, domain verification
+
+#### 11C-3: Actions & AI Capabilities
+
+- [ ] Add `packages/community/src/community_ai.action.ts` — AI-powered content moderation, auto-categorization, similar topic detection, answer suggestion from knowledge base
+- [ ] Add `packages/community/src/community_analytics.action.ts` — engagement metrics, active contributor reports, trending topics, sentiment analysis
+
+#### 11C-4: UI Metadata
+
+- [ ] Add `packages/community/src/topic.page.ts` — topic detail with replies, voting, best answer
+- [ ] Add `packages/community/src/topic.view.ts` — topic list with category, status, activity filters
+- [ ] Add `packages/community/src/idea.page.ts` — idea detail with voting, status timeline, comments
+- [ ] Add `packages/community/src/idea.view.ts` — idea board with vote ranking, status filters
+- [ ] Add `packages/community/src/community.dashboard.ts` — community health: engagement rate, active users, resolution rate, top contributors
+
+#### 11C-5: Tests
+
+- [ ] Add `packages/community/__tests__/unit/objects/spec-compliance.test.ts` — validate all ~8 objects against spec
+- [ ] Add `packages/community/__tests__/unit/hooks/topic.hook.test.ts` — moderation, notification, auto-tagging
+- [ ] Add `packages/community/__tests__/unit/hooks/idea.hook.test.ts` — voting, status transitions
+- [ ] Add `packages/community/__tests__/unit/hooks/badge.hook.test.ts` — auto-award criteria, points
+- [ ] Add `packages/community/__tests__/unit/actions/community_ai.action.test.ts` — moderation, categorization
+- [ ] Add `packages/community/__tests__/integration/community-support.test.ts` — community topic → knowledge article, community user → CRM contact linking
+
+### Phase 11D: Cross-Ecosystem Hardening (Q4 2026, Weeks 13-16) — P1
+
+> Goal: Integration tests, additional connectors, security, performance, and documentation for all 3 new packages.
+
+#### 11D-1: Additional Connectors (5 more, Medium Priority)
+
+- [ ] **PayPal Connector** — `packages/integration/src/connectors/paypal.action.ts` — payment processing, refund handling, subscription management
+- [ ] **Adobe Sign Connector** — `packages/integration/src/connectors/adobe_sign.action.ts` — agreement lifecycle, signing workflow, template management
+- [ ] **Outlook Connector** — `packages/integration/src/connectors/outlook.action.ts` — email-to-activity, calendar sync, contact sync
+- [ ] **QuickBooks Connector** — `packages/integration/src/connectors/quickbooks.action.ts` — invoice sync, payment reconciliation, customer/vendor mapping
+- [ ] **LinkedIn Connector** — `packages/integration/src/connectors/linkedin.action.ts` — lead enrichment, recruiting pipeline, company data import
+
+#### 11D-2: Cross-Package Integration Tests
+
+- [ ] Analytics → CRM: sales pipeline report pulling from opportunity, account, forecast data
+- [ ] Analytics → Finance: revenue analytics across invoice, payment, contract objects
+- [ ] Analytics → Marketing: campaign ROI reports, lead funnel analysis
+- [ ] Integration → Finance: Stripe payment sync → Invoice status update → Revenue recognition trigger
+- [ ] Integration → CRM: Gmail email → Activity creation → Contact timeline update
+- [ ] Community → Support: forum topic flagged → case auto-creation → knowledge article suggestion
+- [ ] Community → CRM: community user → contact linking, idea → product feedback loop
+- [ ] End-to-end: Lead (CRM) → Campaign attribution (Marketing) → Deal close (CRM) → Invoice (Finance) → Stripe payment (Integration) → Revenue report (Analytics)
+
+#### 11D-3: Security & Permissions
+
+- [ ] Add `packages/analytics/src/analytics.permission.ts` — report access control, dashboard sharing, KPI visibility
+- [ ] Add `packages/integration/src/integration.permission.ts` — connector management, sync configuration, API key management
+- [ ] Add `packages/community/src/community.permission.ts` — content moderation, community administration, forum management
+- [ ] Add credential encryption for connector auth tokens (integration with `@objectstack/runtime` secrets vault)
+
+#### 11D-4: Performance & Scale
+
+- [ ] Add caching configuration for analytics queries (CacheConfig for report results, KPI snapshots)
+- [ ] Add bulk sync support for integration connectors (batch API for 10K+ record syncs)
+- [ ] Add rate limiting configuration for connector API calls (per-connector throttle)
+- [ ] Performance benchmark: analytics query response < 2s for 100K record datasets
+
+#### 11D-5: Documentation & DX
+
+- [ ] Add `content/docs/modules/analytics.mdx` — analytics package guide with report/dashboard examples
+- [ ] Add `content/docs/modules/integration.mdx` — integration package guide with connector setup tutorials
+- [ ] Add `content/docs/modules/community.mdx` — community package guide with portal configuration
+- [ ] Add `content/docs/guides/building-connectors.mdx` — developer guide for building custom connectors
+- [ ] Add `content/docs/guides/analytics-queries.mdx` — ObjectQL analytics patterns and aggregation guide
+- [ ] Update `docs/SALESFORCE_FEATURE_COMPARISON.md` with new integration and analytics parity
+- [ ] Update `README.md` and `content/docs/roadmap.mdx` with Phase 11 metrics
+
+### Phase 11 Expected Outcomes
+
+| Metric | Before Phase 11 | After Phase 11 | Change |
+|--------|---------|----------------|--------|
+| Business Objects | 94 | ~120 | +~26 objects |
+| Business Packages | 7 (CRM, Finance, HR, Marketing, Products, Support, AI) | 10 (+Analytics, Integration, Community) | +3 packages |
+| External Connectors | 0 | 10 | +10 connectors |
+| Hooks | 71 | ~90 | +~19 hooks |
+| Actions | 32 | ~45 | +~13 actions |
+| Test Files | 118 | ~145 | +~27 test files |
+| Salesforce Parity | ~92% | ~95% | +3% (reporting, integration) |
 
 ---
 
 ## Phase 12: Vertical Solutions & Advanced AI (2027+)
 
-### Vertical Solutions
+> Industry-specific editions and next-generation AI capabilities built on the HotCRM platform.
 
-| Vertical | Key Objects | Target Users |
-|----------|-------------|-------------|
-| Real Estate CRM | Property, Listing, Showing, Offer, Commission | Brokerages, Agents |
-| Healthcare CRM | Patient, Appointment, Insurance, Referral, HIPAA Audit | Clinics, Providers |
-| Financial Services | Wealth Account, Portfolio, Advisory, Compliance, KYC | Wealth Management, Banks |
-| Education CRM | Student, Enrollment, Course, Alumni, Scholarship | Universities, EdTech |
+### Phase 12 Timeline
 
-### Advanced AI
+```
+2027 Q1   ████████  Phase 12A: Real Estate CRM Vertical
+2027 Q2   ████████  Phase 12B: Healthcare CRM Vertical
+2027 Q3   ████████  Phase 12C: Financial Services Vertical
+2027 Q4   ████████  Phase 12D: Education CRM Vertical
+2027+     ░░░░░░░░  Phase 12E: Advanced AI & Enterprise Features
+```
 
-- **Computer Vision**: Business card scanning, document OCR, invoice parsing
-- **Voice AI**: Meeting transcription, voice-to-text for call notes
-- **Anomaly Detection**: Fraud detection, unusual activity alerts, data quality scoring
-- **Predictive Forecasting**: Revenue forecasting with confidence intervals
-- **Multi-Modal Agents**: Agents that can see, hear, and reason across modalities
+### Phase 12A: Real Estate CRM (`@hotcrm/real-estate`) — Q1 2027
 
-### Enterprise Features
+> Goal: Purpose-built CRM for brokerages and agents, covering the complete property transaction lifecycle.
 
-- **Multi-Tenancy**: Multiple organizations in a single instance with data isolation
-- **SOC 2 Compliance**: Audit logging, encryption at rest, access controls
-- **Data Residency**: Regional data storage for GDPR, CCPA, and local regulations
-- **White-Label**: Customizable branding for partners and resellers
-- **Marketplace**: Third-party app marketplace for community-built extensions
+#### Objects
+
+- [ ] `property.object.ts` — property details (address, type, bedrooms, bathrooms, sqft, lot_size, year_built, features, mls_number, status)
+- [ ] `listing.object.ts` — active/sold listings (property_id, list_price, sold_price, list_date, sold_date, days_on_market, listing_agent, listing_type)
+- [ ] `showing.object.ts` — property showings (listing_id, agent_id, buyer_contact_id, scheduled_date, feedback, rating, follow_up_status)
+- [ ] `real_estate_offer.object.ts` — purchase offers (listing_id, buyer_id, offer_amount, contingencies, expiration_date, status, counter_offer_amount)
+- [ ] `commission.object.ts` — commission tracking (transaction_id, agent_id, commission_rate, commission_amount, split_type, payment_status)
+- [ ] `open_house.object.ts` — open house events (listing_id, date, time_start, time_end, attendee_count, leads_generated)
+- [ ] `neighborhood.object.ts` — neighborhood data (name, city, state, median_price, school_rating, walk_score, amenities)
+
+#### Hooks & Actions
+
+- [ ] `listing.hook.ts` — MLS integration, days-on-market calculation, price change alerts, auto-comparable analysis
+- [ ] `showing.hook.ts` — calendar conflict detection, auto-feedback request, lead scoring from showing activity
+- [ ] `real_estate_offer.hook.ts` — offer validation, counter-offer workflow, contingency tracking, closing timeline
+- [ ] `commission.hook.ts` — split calculation, cap tracking, payment scheduling
+- [ ] `real_estate_ai.action.ts` — property valuation AI, market trend analysis, lead matching (buyer preferences → listings)
+
+#### Tests
+
+- [ ] Spec-compliance tests for all ~7 objects
+- [ ] Hook tests for listing lifecycle, showing scheduling, offer workflow
+- [ ] Integration test: listing → showing → offer → commission → payment flow
+
+### Phase 12B: Healthcare CRM (`@hotcrm/healthcare`) — Q2 2027
+
+> Goal: HIPAA-compliant CRM for clinics and healthcare providers.
+
+#### Objects
+
+- [ ] `patient.object.ts` — patient demographics (name, dob, gender, insurance_id, primary_physician, allergies, medical_record_number)
+- [ ] `appointment.object.ts` — appointment scheduling (patient_id, provider_id, appointment_type, date_time, duration, status, notes, telehealth_link)
+- [ ] `insurance.object.ts` — insurance plans (provider_name, plan_type, policy_number, group_number, coverage_start, coverage_end, copay, deductible)
+- [ ] `referral.object.ts` — provider referrals (patient_id, referring_provider, receiving_provider, reason, status, urgency, referral_date)
+- [ ] `hipaa_audit.object.ts` — HIPAA compliance audit log (user_id, action, record_type, record_id, timestamp, ip_address, access_reason)
+- [ ] `prescription.object.ts` — prescriptions (patient_id, medication, dosage, frequency, prescriber_id, pharmacy, refills_remaining, status)
+- [ ] `care_plan.object.ts` — care plans (patient_id, condition, goals, interventions, start_date, review_date, status)
+
+#### Hooks & Actions
+
+- [ ] `appointment.hook.ts` — scheduling conflict detection, reminder notifications, no-show tracking, telehealth link generation
+- [ ] `patient.hook.ts` — data encryption for PHI fields, consent tracking, insurance eligibility verification
+- [ ] `referral.hook.ts` — auto-routing to specialists, status tracking, follow-up scheduling
+- [ ] `hipaa_audit.hook.ts` — automatic audit trail for all PHI access, anomaly detection for suspicious access patterns
+- [ ] `healthcare_ai.action.ts` — appointment scheduling optimization, patient risk scoring, care gap identification
+
+#### Tests
+
+- [ ] Spec-compliance tests for all ~7 objects
+- [ ] Hook tests for appointment scheduling, HIPAA audit trails, referral workflow
+- [ ] Integration test: patient registration → appointment → referral → care plan → follow-up
+
+### Phase 12C: Financial Services CRM (`@hotcrm/financial-services`) — Q3 2027
+
+> Goal: CRM for wealth management and banking with compliance built in.
+
+#### Objects
+
+- [ ] `wealth_account.object.ts` — client wealth accounts (client_id, account_type, balance, risk_profile, investment_strategy, advisor_id)
+- [ ] `portfolio.object.ts` — investment portfolios (account_id, assets, allocation, performance_ytd, benchmark, rebalance_date)
+- [ ] `advisory.object.ts` — advisory interactions (client_id, advisor_id, meeting_type, recommendations, next_review, compliance_approved)
+- [ ] `compliance_check.object.ts` — regulatory compliance (entity_id, check_type, status, findings, reviewer, review_date, regulation)
+- [ ] `kyc.object.ts` — Know Your Customer verification (client_id, document_type, document_id, verification_status, verified_date, expiry_date, risk_level)
+- [ ] `financial_product.object.ts` — financial products (name, type, risk_rating, min_investment, expected_return, fee_structure, maturity)
+- [ ] `transaction_record.object.ts` — financial transactions (account_id, type, amount, date, counterparty, status, compliance_flag)
+
+#### Hooks & Actions
+
+- [ ] `wealth_account.hook.ts` — risk profile assessment, suitability checks, balance alerts
+- [ ] `portfolio.hook.ts` — drift detection, auto-rebalance triggers, performance calculation
+- [ ] `kyc.hook.ts` — document expiry alerts, periodic re-verification, risk level auto-classification
+- [ ] `compliance_check.hook.ts` — regulation change alerts, automated screening, audit trail
+- [ ] `financial_services_ai.action.ts` — portfolio optimization, client risk profiling, regulatory change impact analysis
+
+#### Tests
+
+- [ ] Spec-compliance tests for all ~7 objects
+- [ ] Hook tests for KYC verification, compliance checks, portfolio management
+- [ ] Integration test: client onboarding → KYC → account opening → portfolio creation → advisory review
+
+### Phase 12D: Education CRM (`@hotcrm/education`) — Q4 2027
+
+> Goal: CRM for universities and EdTech covering the full student lifecycle.
+
+#### Objects
+
+- [ ] `student.object.ts` — student profiles (name, email, enrollment_status, program, gpa, advisor_id, graduation_date)
+- [ ] `enrollment.object.ts` — course enrollments (student_id, course_id, term, status, grade, credits)
+- [ ] `course.object.ts` — course catalog (name, department, credits, instructor_id, capacity, schedule, prerequisites)
+- [ ] `alumni.object.ts` — alumni network (student_id, graduation_year, degree, employer, giving_history, engagement_score)
+- [ ] `scholarship.object.ts` — scholarship management (name, amount, criteria, application_deadline, recipients, fund_balance)
+- [ ] `application_form.object.ts` — admissions applications (applicant_name, program, status, test_scores, gpa, essays, recommendations, decision)
+- [ ] `campus_event.object.ts` — campus events (name, type, date, location, target_audience, rsvp_count, feedback_score)
+
+#### Hooks & Actions
+
+- [ ] `student.hook.ts` — enrollment validation, academic standing calculation, advisor assignment
+- [ ] `enrollment.hook.ts` — prerequisite checks, capacity enforcement, waitlist management, grade posting
+- [ ] `scholarship.hook.ts` — eligibility verification, fund balance tracking, auto-renewal
+- [ ] `application_form.hook.ts` — application completeness checks, reviewer assignment, decision workflow
+- [ ] `education_ai.action.ts` — student success prediction, course recommendation, enrollment forecasting, alumni engagement scoring
+
+#### Tests
+
+- [ ] Spec-compliance tests for all ~7 objects
+- [ ] Hook tests for enrollment, scholarship, application workflow
+- [ ] Integration test: application → admission → enrollment → graduation → alumni engagement
+
+### Phase 12E: Advanced AI & Enterprise Features (2027+)
+
+> Goal: Next-generation AI capabilities and enterprise-grade platform features.
+
+#### Advanced AI
+
+- [ ] **Computer Vision** — business card scanning via camera, document OCR for invoices/contracts, receipt parsing for expense reports
+- [ ] **Voice AI** — meeting transcription with speaker identification, voice-to-text for call notes, sentiment analysis on call recordings
+- [ ] **Anomaly Detection** — fraud detection for financial transactions, unusual login pattern alerts, data quality scoring with auto-correction suggestions
+- [ ] **Predictive Forecasting** — revenue forecasting with Monte Carlo confidence intervals, customer churn prediction with explainability, demand forecasting for products
+- [ ] **Multi-Modal Agents** — agents that can see (document analysis), hear (call transcription), and reason (cross-modal insights) across data types
+
+#### Enterprise Features
+
+- [ ] **Multi-Tenancy** — multiple organizations in a single instance with data isolation, tenant-specific customization, shared infrastructure
+- [ ] **SOC 2 Compliance** — comprehensive audit logging, encryption at rest and in transit, access controls with MFA, vulnerability scanning
+- [ ] **Data Residency** — regional data storage for GDPR (EU), CCPA (California), LGPD (Brazil), and local regulations; tenant-level data location config
+- [ ] **White-Label** — customizable branding (logo, colors, domain), partner and reseller portal, custom login pages
+- [ ] **Marketplace** — third-party app marketplace for community-built extensions, app review process, usage analytics, billing integration
 
 ---
 
