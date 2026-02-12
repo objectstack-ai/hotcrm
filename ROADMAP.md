@@ -445,7 +445,7 @@
 - [ ] Async validation patterns (duplicate detection for leads, contacts)
 - [ ] `DataQualityRules` for email format, phone normalization, address standardization
 
-#### 8H: System #### 7H: System & API API Configuration (P2 — Enterprise Readiness)
+#### 8H: System & API Configuration (P2 — Enterprise Readiness)
 - [ ] Define `AuditConfig` for sensitive objects using `@objectstack/spec/system`
 - [ ] Define `NotificationChannel` configurations for workflow email alerts
 - [ ] Define `ApiEndpoint` declarations for external API surface using `@objectstack/spec/api`
