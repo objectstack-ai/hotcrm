@@ -296,7 +296,7 @@ Based on the gap analysis, the following improvements to the project's AI coding
 
 **Proposed addition**:
 ```
-- Use Field.master_detail() for parent-child relationships (not Field.lookup() with cascading)
+- Use Field.master_detail() for parent-child relationships where the child cannot exist without the parent (e.g., invoice_line→invoice). This enforces cascade delete and enables Field.summary() rollups on the parent. Use Field.lookup() for optional associations where records are independent.
 - Use Field.summary() for rollup/aggregate fields on parent objects
 - Use Field.multiselect() when multiple options can be selected
 - Use Field.tags() for free-form tagging
