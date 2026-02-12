@@ -8,7 +8,7 @@ export const ProductBundleComponent = ObjectSchema.create({
   description: 'Components included in a Product Bundle',
 
   fields: {
-    bundle: Field.masterDetail({ label: 'Bundle', reference_to: 'product_bundle', required: true }),
+    bundle: Field.lookup({ label: 'Bundle', reference_to: 'product_bundle', required: true }),
     product: Field.lookup('product', {
       label: 'Product',
       required: true
