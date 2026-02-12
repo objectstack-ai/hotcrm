@@ -26,7 +26,17 @@ export const Pricebook = ObjectSchema.create({
     }),
     start_date: Field.date({ label: 'Start Date' }),
     end_date: Field.date({ label: 'End Date' }),
-    description: Field.textarea({ label: 'Description' })
+    description: Field.textarea({ label: 'Description' }),
+    supported_currencies: Field.text({ label: 'Supported Currencies', maxLength: 500, description: 'Comma-separated currency codes (e.g., USD,EUR,GBP)' }),
+    default_currency: Field.text({ label: 'Default Currency', maxLength: 3, defaultValue: 'USD' }),
+    exchange_rate_type: Field.select({
+      label: 'Exchange Rate Type',
+      options: [
+        { label: 'Fixed', value: 'fixed' },
+        { label: 'Daily', value: 'daily' },
+        { label: 'Custom', value: 'custom' }
+      ]
+    })
   },
   
   enable: {

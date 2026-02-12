@@ -19,6 +19,9 @@ import { Invoice } from './invoice.object';
 import { InvoiceLine } from './invoice_line.object';
 import { CreditNote } from './credit_note.object';
 import { BillingSchedule } from './billing_schedule.object';
+import { RevenueSchedule } from './revenue_schedule.object';
+import { RevenueRecognitionRule } from './revenue_recognition_rule.object';
+import { PaymentMethod } from './payment_method.object';
 
 // Import hooks
 import { ContractBillingHook } from './hooks/contract.hook';
@@ -28,6 +31,7 @@ import { InvoiceLineCalculationTrigger, InvoiceLineTotalUpdateTrigger } from './
 import { PaymentMatchingTrigger, PaymentValidationTrigger } from './hooks/payment.hook';
 import { CreditNoteValidationTrigger, CreditNoteBalanceAdjustmentTrigger } from './hooks/credit_note.hook';
 import { BillingScheduleValidationTrigger, BillingScheduleInvoiceGenerationTrigger } from './hooks/billing_schedule.hook';
+import { RevenueScheduleValidationTrigger, RevenueRecognitionComplianceTrigger } from './hooks/revenue_recognition.hook';
 import { PaymentReminderWorkflows } from './payment_reminder.workflow';
 
 // Import actions
@@ -35,6 +39,7 @@ import RevenueDashboardAction from './actions/revenue_dashboard.action';
 import RevenueForecastAction from './actions/revenue_forecast.action';
 import { analyzeContractRisk, predictRenewal, extractContractTerms, checkCompliance, optimizeContract } from './actions/contract_ai.action';
 import { predictPaymentDefault, predictPaymentDate, detectAnomalies, optimizeCollectionStrategy, forecastCashFlow } from './actions/invoice_prediction.action';
+import RevenueRecognitionAIAction from './actions/revenue_recognition_ai.action';
 
 /**
  * Finance Plugin Definition
@@ -64,6 +69,9 @@ export const FinancePlugin = {
     payment: Payment,
     credit_note: CreditNote,
     billing_schedule: BillingSchedule,
+    revenue_schedule: RevenueSchedule,
+    revenue_recognition_rule: RevenueRecognitionRule,
+    payment_method: PaymentMethod,
   },
   
   // Actions provided by this plugin
@@ -72,6 +80,7 @@ export const FinancePlugin = {
     revenue_forecast: RevenueForecastAction,
     contract_ai: { analyzeContractRisk, predictRenewal, extractContractTerms, checkCompliance, optimizeContract },
     invoice_prediction: { predictPaymentDefault, predictPaymentDate, detectAnomalies, optimizeCollectionStrategy, forecastCashFlow },
+    revenue_recognition_ai: RevenueRecognitionAIAction,
   },
 
   // Triggers
@@ -88,6 +97,8 @@ export const FinancePlugin = {
     credit_note_balance_adjustment: CreditNoteBalanceAdjustmentTrigger,
     billing_schedule_validation: BillingScheduleValidationTrigger,
     billing_schedule_invoice_generation: BillingScheduleInvoiceGenerationTrigger,
+    revenue_schedule_validation: RevenueScheduleValidationTrigger,
+    revenue_recognition_compliance: RevenueRecognitionComplianceTrigger,
   },
 
   // Workflows
@@ -109,6 +120,15 @@ export const FinancePlugin = {
         { type: 'object', object: 'payment' },
         { type: 'object', object: 'credit_note' },
         { type: 'object', object: 'billing_schedule' },
+      ]
+    },
+    {
+      type: 'group',
+      label: 'Revenue Recognition',
+      children: [
+        { type: 'object', object: 'revenue_schedule' },
+        { type: 'object', object: 'revenue_recognition_rule' },
+        { type: 'object', object: 'payment_method' },
       ]
     }
   ]
