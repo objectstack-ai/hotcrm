@@ -9,19 +9,19 @@ HotCRM is a world-class **Customer Relationship Management** system that combine
 
 ## What is HotCRM?
 
-HotCRM is designed to help businesses of all sizes manage their operations more effectively. It covers six major domains with **65 core objects**:
+HotCRM is designed to help businesses of all sizes manage their operations more effectively. It covers six major domains with **69 core objects**:
 
 ### 🟢 Sales Cloud (销售域)
 
 Complete sales pipeline management with 360-degree customer view, opportunity tracking, and activity logging.
 
-**Objects (13)**: Account, Contact, Lead, Opportunity, Activity, Task, Note, Assignment Rule, Email Template, Form, Landing Page, Marketing List, Unsubscribe
+**Objects (8)**: Account, Contact, Lead, Opportunity, Activity, Task, Note, Assignment Rule
 
 ### 🎯 Marketing Cloud (营销域)
 
 Multi-channel campaign management with ROI tracking and lead nurturing capabilities.
 
-**Objects (2)**: Campaign, Campaign Member
+**Objects (11)**: Campaign, Campaign Member, Email Template, Email Send, Form, Landing Page, Marketing List, Unsubscribe, Lead Nurture Program, Touchpoint, Automation Workflow
 
 ### 💰 Revenue Cloud (收益域)
 
@@ -61,21 +61,19 @@ All business objects are defined natively in **TypeScript** (`.object.ts` files)
 - Native JavaScript/TypeScript development experience
 
 ```typescript
-import type { ObjectSchema } from '@objectstack/spec/data';
+import { ObjectSchema, Field } from '@objectstack/spec/data';
 
-export default const Account: ObjectSchema = {
-  name: 'Account',
+export const Account = ObjectSchema.create({
+  name: 'account',
   label: 'Account',
-  fields: [
-    {
-      name: 'Name',
-      type: 'text',
+  fields: {
+    name: Field.text({
       label: 'Account Name',
-      required: true
-    }
+      required: true,
+    }),
     // ... more fields
-  ]
-};
+  },
+});
 ```
 
 ### 2. ObjectQL Query Language
@@ -122,16 +120,14 @@ Clean separation of concerns with pnpm workspaces:
 ```
 hotcrm/
 ├── packages/
-│   ├── core/       # ObjectQL engine
-│   ├── crm/        # Sales Cloud (13 objects)
-│   ├── marketing/  # Marketing Cloud (2 objects)
+│   ├── crm/        # Sales Cloud (8 objects)
+│   ├── marketing/  # Marketing Cloud (11 objects)
 │   ├── products/   # Product Catalog (9 objects)
 │   ├── finance/    # Invoicing & Payments (4 objects)
 │   ├── support/    # Service Cloud (21 objects)
-│   ├── hr/         # HR Cloud (16 objects)
-│   ├── ai/         # AI Services
-│   ├── ui/         # UI Components
-│   └── server/     # Application Server
+│   └── hr/         # HR Cloud (16 objects)
+├── apps/
+│   └── docs/       # Documentation site
 ```
 
 ## Who Should Use HotCRM?
