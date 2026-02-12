@@ -1,4 +1,5 @@
 // Workflow rules for Payment reminder automation
+import { WorkflowRuleSchema, type WorkflowRule } from '@objectstack/spec/automation';
 
 /**
  * Invoice Payment Reminder Workflow
@@ -289,3 +290,38 @@ export const PaymentReminderWorkflows = {
 };
 
 export default PaymentReminderWorkflows;
+
+// Spec-validated workflow definitions
+export const ValidatedWorkflows = {
+  invoicePaymentReminder: WorkflowRuleSchema.parse({
+    name: 'invoice_payment_reminder',
+    objectName: 'invoice',
+    triggerType: 'schedule',
+    active: true,
+    actions: [{ type: 'email_alert', name: 'send_reminder', template: 'invoice_payment_reminder', recipients: ['billing_email'] }],
+  } satisfies WorkflowRule),
+
+  invoiceOverdueEscalation: WorkflowRuleSchema.parse({
+    name: 'invoice_overdue_escalation',
+    objectName: 'invoice',
+    triggerType: 'schedule',
+    active: true,
+    actions: [{ type: 'field_update', name: 'set_overdue_status', field: 'status', value: 'overdue' }],
+  } satisfies WorkflowRule),
+
+  paymentConfirmation: WorkflowRuleSchema.parse({
+    name: 'payment_confirmation',
+    objectName: 'payment',
+    triggerType: 'on_update',
+    active: true,
+    actions: [{ type: 'email_alert', name: 'send_confirmation', template: 'payment_confirmation', recipients: ['billing_email'] }],
+  } satisfies WorkflowRule),
+
+  contractRenewalReminder: WorkflowRuleSchema.parse({
+    name: 'contract_renewal_reminder',
+    objectName: 'contract',
+    triggerType: 'schedule',
+    active: true,
+    actions: [{ type: 'task_creation', name: 'create_renewal_task', taskObject: 'task', subject: 'Contract renewal due' }],
+  } satisfies WorkflowRule),
+};

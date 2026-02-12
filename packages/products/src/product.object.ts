@@ -38,7 +38,8 @@ export const Product = ObjectSchema.create({
         { label: 'Year', value: 'year' },
         { label: 'License', value: 'license' }
       ]
-    })
+    }),
+    product_image: Field.image({ label: 'Product Image' })
   },
   
   enable: {

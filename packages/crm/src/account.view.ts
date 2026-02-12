@@ -1,4 +1,5 @@
-// List view configurations for Account object
+import type { View } from '@objectstack/spec/ui';
+import { ViewSchema } from '@objectstack/spec/ui';
 
 /**
  * Account List Views
@@ -7,191 +8,131 @@
 
 // All Accounts View
 export const AllAccountsView = {
-  name: 'all_accounts',
-  label: 'All Accounts',
-  object: 'account',
-
-  columns: [
-    {
-      field: 'name',
-      width: 250,
-      sortable: true,
-      link: true
-    },
-    {
-      field: 'type',
-      width: 120,
-      sortable: true
-    },
-    {
-      field: 'industry',
-      width: 150,
-      sortable: true
-    },
-    {
-      field: 'annual_revenue',
-      width: 150,
-      sortable: true,
-      align: 'right'
-    },
-    {
-      field: 'phone',
-      width: 150
-    },
-    {
-      field: 'owner',
-      width: 150
-    },
-    {
-      field: 'created_date',
-      width: 150,
-      sortable: true,
-      format: 'YYYY-MM-DD'
-    }
-  ],
-
-  sort: [
-    { field: 'name', direction: 'asc' }
-  ],
-
-  bulkActions: ['delete', 'update_owner', 'export'],
-  inlineEdit: true,
-
-  pagination: {
-    pageSize: 25,
-    options: [10, 25, 50, 100]
+  list: {
+    name: 'all_accounts',
+    label: 'All Accounts',
+    columns: [
+      { field: 'name', width: 250, sortable: true, link: true },
+      { field: 'type', width: 120, sortable: true },
+      { field: 'industry', width: 150, sortable: true },
+      { field: 'annual_revenue', width: 150, sortable: true, align: 'right' as const },
+      { field: 'phone', width: 150 },
+      { field: 'owner', width: 150 },
+      { field: 'created_date', width: 150, sortable: true }
+    ],
+    sort: [{ field: 'name', order: 'asc' as const }],
+    bulkActions: ['delete', 'update_owner', 'export'],
+    inlineEdit: true,
+    pagination: { pageSize: 25, pageSizeOptions: [10, 25, 50, 100] }
   }
-};
+} satisfies View;
 
 // My Accounts View
 export const MyAccountsView = {
-  name: 'my_accounts',
-  label: 'My Accounts',
-  object: 'account',
-
-  filters: [
-    { field: 'owner', operator: '=', value: '${currentUser.id}' }
-  ],
-
-  columns: [
-    { field: 'name', width: 250, link: true },
-    { field: 'type', width: 120 },
-    { field: 'industry', width: 150 },
-    { field: 'last_activity_date', width: 150 },
-    { field: 'annual_revenue', width: 150, align: 'right' }
-  ],
-
-  sort: [
-    { field: 'last_activity_date', direction: 'desc' }
-  ]
-};
+  list: {
+    name: 'my_accounts',
+    label: 'My Accounts',
+    filter: [['owner', '=', '${currentUser.id}']],
+    columns: [
+      { field: 'name', width: 250, link: true },
+      { field: 'type', width: 120 },
+      { field: 'industry', width: 150 },
+      { field: 'last_activity_date', width: 150 },
+      { field: 'annual_revenue', width: 150, align: 'right' as const }
+    ],
+    sort: [{ field: 'last_activity_date', order: 'desc' as const }]
+  }
+} satisfies View;
 
 // Enterprise Accounts View
 export const EnterpriseAccountsView = {
-  name: 'enterprise_accounts',
-  label: 'Enterprise Accounts',
-  object: 'account',
-
-  filters: [
-    { field: 'annual_revenue', operator: '>', value: 10000000 },
-    { field: 'type', operator: '=', value: 'customer' }
-  ],
-
-  columns: [
-    { field: 'name', width: 250, link: true },
-    { field: 'annual_revenue', width: 150, align: 'right' },
-    { field: 'employees', width: 100 },
-    { field: 'industry', width: 150 },
-    { field: 'rating', width: 100 },
-    { field: 'owner', width: 150 }
-  ],
-
-  sort: [
-    { field: 'annual_revenue', direction: 'desc' }
-  ]
-};
+  list: {
+    name: 'enterprise_accounts',
+    label: 'Enterprise Accounts',
+    filter: [
+      ['annual_revenue', '>', 10000000],
+      ['type', '=', 'customer']
+    ],
+    columns: [
+      { field: 'name', width: 250, link: true },
+      { field: 'annual_revenue', width: 150, align: 'right' as const },
+      { field: 'employees', width: 100 },
+      { field: 'industry', width: 150 },
+      { field: 'rating', width: 100 },
+      { field: 'owner', width: 150 }
+    ],
+    sort: [{ field: 'annual_revenue', order: 'desc' as const }]
+  }
+} satisfies View;
 
 // Recently Created Accounts
 export const RecentlyCreatedView = {
-  name: 'recently_created_accounts',
-  label: 'Recently Created',
-  object: 'account',
-
-  filters: [
-    { field: 'created_date', operator: '>=', value: 'LAST_30_DAYS' }
-  ],
-
-  columns: [
-    { field: 'name', width: 250, link: true },
-    { field: 'type', width: 120 },
-    { field: 'owner', width: 150 },
-    { field: 'created_by', width: 150 },
-    { field: 'created_date', width: 150 }
-  ],
-
-  sort: [
-    { field: 'created_date', direction: 'desc' }
-  ]
-};
+  list: {
+    name: 'recently_created_accounts',
+    label: 'Recently Created',
+    filter: [['created_date', '>=', 'LAST_30_DAYS']],
+    columns: [
+      { field: 'name', width: 250, link: true },
+      { field: 'type', width: 120 },
+      { field: 'owner', width: 150 },
+      { field: 'created_by', width: 150 },
+      { field: 'created_date', width: 150 }
+    ],
+    sort: [{ field: 'created_date', order: 'desc' as const }]
+  }
+} satisfies View;
 
 // Hot Accounts (High Value, Active)
 export const HotAccountsView = {
-  name: 'hot_accounts',
-  label: 'Hot Accounts',
-  object: 'account',
-
-  filters: [
-    { field: 'rating', operator: '=', value: 'Hot' },
-    { field: 'type', operator: 'IN', value: ['customer', 'prospect'] }
-  ],
-
-  columns: [
-    { field: 'name', width: 250, link: true },
-    { field: 'annual_revenue', width: 150, align: 'right' },
-    { field: 'industry', width: 150 },
-    { field: 'last_activity_date', width: 150 },
-    { field: 'owner', width: 150 }
-  ],
-
-  sort: [
-    { field: 'annual_revenue', direction: 'desc' }
-  ],
-
-  // Highlight hot accounts in red
-  rowStyles: {
-    backgroundColor: '#FEF2F2',
-    borderLeft: '3px solid #EF4444'
+  list: {
+    name: 'hot_accounts',
+    label: 'Hot Accounts',
+    filter: [
+      ['rating', '=', 'Hot'],
+      ['type', 'IN', ['customer', 'prospect']]
+    ],
+    columns: [
+      { field: 'name', width: 250, link: true },
+      { field: 'annual_revenue', width: 150, align: 'right' as const },
+      { field: 'industry', width: 150 },
+      { field: 'last_activity_date', width: 150 },
+      { field: 'owner', width: 150 }
+    ],
+    sort: [{ field: 'annual_revenue', order: 'desc' as const }],
+    conditionalFormatting: [
+      { condition: 'rating == "Hot"', style: { backgroundColor: '#FEF2F2', borderLeft: '3px solid #EF4444' } }
+    ]
   }
-};
+} satisfies View;
 
 // Accounts Needing Attention
 export const NeedAttentionView = {
-  name: 'accounts_need_attention',
-  label: 'Needs Attention',
-  object: 'account',
-
-  filters: [
-    { field: 'last_activity_date', operator: '<', value: 'LAST_60_DAYS' },
-    { field: 'type', operator: '=', value: 'customer' }
-  ],
-
-  columns: [
-    { field: 'name', width: 250, link: true },
-    { field: 'last_activity_date', width: 150 },
-    { field: 'annual_revenue', width: 150, align: 'right' },
-    { field: 'owner', width: 150 }
-  ],
-
-  sort: [
-    { field: 'last_activity_date', direction: 'asc' }
-  ],
-
-  // Warning styling
-  rowStyles: {
-    backgroundColor: '#FFFBEB',
-    borderLeft: '3px solid #F59E0B'
+  list: {
+    name: 'accounts_need_attention',
+    label: 'Needs Attention',
+    filter: [
+      ['last_activity_date', '<', 'LAST_60_DAYS'],
+      ['type', '=', 'customer']
+    ],
+    columns: [
+      { field: 'name', width: 250, link: true },
+      { field: 'last_activity_date', width: 150 },
+      { field: 'annual_revenue', width: 150, align: 'right' as const },
+      { field: 'owner', width: 150 }
+    ],
+    sort: [{ field: 'last_activity_date', order: 'asc' as const }],
+    conditionalFormatting: [
+      { condition: 'last_activity_date < LAST_60_DAYS', style: { backgroundColor: '#FFFBEB', borderLeft: '3px solid #F59E0B' } }
+    ]
   }
-};
+} satisfies View;
+
+ViewSchema.parse(AllAccountsView);
+ViewSchema.parse(MyAccountsView);
+ViewSchema.parse(EnterpriseAccountsView);
+ViewSchema.parse(RecentlyCreatedView);
+ViewSchema.parse(HotAccountsView);
+ViewSchema.parse(NeedAttentionView);
 
 export const AccountListViews = {
   all: AllAccountsView,

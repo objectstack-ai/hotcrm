@@ -13,6 +13,9 @@
  * Dependencies: @hotcrm/crm (required for Account and Contact references)
  */
 
+import { PluginSchema } from '@objectstack/spec/kernel';
+import type { PluginDefinition } from '@objectstack/spec/kernel';
+
 // Import all Support objects
 import { Case } from './case.object';
 import { CaseComment } from './case_comment.object';
@@ -56,7 +59,7 @@ import { predictSLABreach, estimateResolutionTime, analyzeEscalationNeeds, optim
  * Exports all support-related business objects, hooks, and actions
  * to be registered with the ObjectStack runtime
  */
-export const SupportPlugin: any = {
+export const SupportPlugin = {
   name: 'support',
   label: 'Customer Support',
   version: '1.0.0',
@@ -154,5 +157,13 @@ export const SupportPlugin: any = {
     }
   ]
 };
+
+/** Spec-validated plugin metadata */
+export const SupportPluginMetadata: PluginDefinition = PluginSchema.parse({
+  name: 'support',
+  label: 'Customer Support',
+  version: '1.0.0',
+  description: 'Customer support management - Cases, Knowledge Base, SLA, Queues, and Multi-Channel Integration',
+});
 
 export default SupportPlugin;

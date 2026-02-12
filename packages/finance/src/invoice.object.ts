@@ -61,6 +61,18 @@ export const Invoice = ObjectSchema.create({
           "value": "net_60"
         }
       ]
+    }),
+    line_item_count: Field.summary({
+      label: 'Line Item Count',
+      summary_object: 'invoice_line',
+      summary_field: 'id',
+      summary_type: 'count'
+    }),
+    calculated_subtotal: Field.summary({
+      label: 'Calculated Subtotal',
+      summary_object: 'invoice_line',
+      summary_field: 'amount',
+      summary_type: 'sum'
     })
   },
 });

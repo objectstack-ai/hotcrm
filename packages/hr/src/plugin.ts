@@ -10,6 +10,9 @@
  * - Compensation (Payroll)
  */
 
+import { PluginSchema } from '@objectstack/spec/kernel';
+import type { PluginDefinition } from '@objectstack/spec/kernel';
+
 // Import organizational objects
 import { Department } from './department.object';
 import { Position } from './position.object';
@@ -64,7 +67,7 @@ import { HRWorkflows } from './hr.workflow';
  * 
  * Exports all HR/HCM-related business objects to be registered with the ObjectStack runtime
  */
-export const HRPlugin: any = {
+export const HRPlugin = {
   name: 'hr',
   label: 'Human Capital Management',
   version: '1.0.0',
@@ -200,3 +203,11 @@ export const HRPlugin: any = {
     }
   ]
 };
+
+/** Spec-validated plugin metadata */
+export const HRPluginMetadata: PluginDefinition = PluginSchema.parse({
+  name: 'hr',
+  label: 'Human Capital Management',
+  version: '1.0.0',
+  description: 'Complete HR/HCM solution - Employee lifecycle management from recruitment to retirement',
+});

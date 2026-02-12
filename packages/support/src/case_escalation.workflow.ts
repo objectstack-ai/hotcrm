@@ -1,4 +1,5 @@
 // Workflow rules for Case escalation automation
+import { WorkflowRuleSchema, type WorkflowRule } from '@objectstack/spec/automation';
 
 /**
  * Case Auto-Escalation Workflow
@@ -254,3 +255,38 @@ export const CaseEscalationWorkflows = {
 };
 
 export default CaseEscalationWorkflows;
+
+// Spec-validated workflow definitions
+export const ValidatedWorkflows = {
+  caseAutoEscalation: WorkflowRuleSchema.parse({
+    name: 'case_auto_escalation',
+    objectName: 'case',
+    triggerType: 'on_update',
+    active: true,
+    actions: [{ type: 'field_update', name: 'escalate_priority', field: 'priority', value: 'critical' }],
+  } satisfies WorkflowRule),
+
+  caseHighPriorityAlert: WorkflowRuleSchema.parse({
+    name: 'case_high_priority_alert',
+    objectName: 'case',
+    triggerType: 'on_create_or_update',
+    active: true,
+    actions: [{ type: 'email_alert', name: 'alert_manager', template: 'critical_case_alert', recipients: ['owner_id'] }],
+  } satisfies WorkflowRule),
+
+  caseStaleCheck: WorkflowRuleSchema.parse({
+    name: 'case_stale_check',
+    objectName: 'case',
+    triggerType: 'schedule',
+    active: true,
+    actions: [{ type: 'task_creation', name: 'create_followup', taskObject: 'task', subject: 'Follow up on stale case' }],
+  } satisfies WorkflowRule),
+
+  caseFirstResponseSLA: WorkflowRuleSchema.parse({
+    name: 'case_first_response_sla',
+    objectName: 'case',
+    triggerType: 'on_create',
+    active: true,
+    actions: [{ type: 'field_update', name: 'set_in_progress', field: 'status', value: 'in_progress' }],
+  } satisfies WorkflowRule),
+};

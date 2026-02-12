@@ -51,6 +51,36 @@ export {
 } from './agent_workflows';
 export type { AgentWorkflow, AgentStep } from './agent_workflows';
 
+// Agent Definitions (AgentSchema-validated)
+export {
+  AgentDefinitions,
+  LeadToCloseAgent,
+  Customer360Agent,
+  ChurnPreventionAgent,
+  CaseResolutionAgent,
+  TalentAcquisitionAgent,
+  RevenueOptimizationAgent,
+} from './agent_definitions';
+
+// RAG Pipeline Configurations
+export { RAGPipelines, KnowledgeBaseRAG, SalesIntelligenceRAG } from './rag_pipeline.config';
+
+// Model Registry Configuration
+export { HotCRMModelRegistry } from './model_registry.config';
+
+// NLQ Configuration
+export {
+  hotcrmNLQConfig,
+  crmAccountsQuery,
+  crmOpportunitiesQuery,
+  supportCasesQuery,
+  hrPositionsQuery,
+  crmFieldMappings,
+  supportFieldMappings,
+  hrFieldMappings,
+} from './nlq.config';
+export type { NLQConfig } from './nlq.config';
+
 // Performance Benchmarking
 export { Benchmark, BenchmarkSuite, formatBenchmarkResults } from './benchmark';
 export type { BenchmarkResult, BenchmarkOptions, BenchmarkSuiteEntry } from './benchmark';

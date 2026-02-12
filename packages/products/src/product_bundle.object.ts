@@ -184,6 +184,12 @@ export const ProductBundle = ObjectSchema.create({
     ai_suggested_upgrade: Field.lookup('product_bundle', {
       label: 'Suggested Upgrade',
       description: 'AI-suggested upgrade bundle'
+    }),
+    component_count: Field.summary({
+      label: 'Component Count',
+      summary_object: 'product_bundle_component',
+      summary_field: 'id',
+      summary_type: 'count'
     })
   },
 

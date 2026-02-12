@@ -11,6 +11,9 @@
  * Dependencies: @hotcrm/crm (required for Account and Opportunity references)
  */
 
+import { PluginSchema } from '@objectstack/spec/kernel';
+import type { PluginDefinition } from '@objectstack/spec/kernel';
+
 // Import all Products objects
 import { Product } from './product.object';
 import { Pricebook } from './pricebook.object';
@@ -44,7 +47,7 @@ import ProductRecommendationAction from './actions/product_recommendation.action
  * Exports all product and pricing-related business objects, hooks, and actions
  * to be registered with the ObjectStack runtime
  */
-export const ProductsPlugin: any = {
+export const ProductsPlugin = {
   name: 'products',
   label: 'Products & Pricing',
   version: '1.0.0',
@@ -117,5 +120,13 @@ export const ProductsPlugin: any = {
     }
   ]
 };
+
+/** Spec-validated plugin metadata */
+export const ProductsPluginMetadata: PluginDefinition = PluginSchema.parse({
+  name: 'products',
+  label: 'Products & Pricing',
+  version: '1.0.0',
+  description: 'Product catalog, pricing rules, and CPQ (Configure, Price, Quote) functionality',
+});
 
 export default ProductsPlugin;

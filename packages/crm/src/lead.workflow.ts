@@ -1,4 +1,5 @@
 // Workflow rules for Lead automation
+import { WorkflowRuleSchema, type WorkflowRule } from '@objectstack/spec/automation';
 
 /**
  * Lead Auto-Assignment Workflow
@@ -230,3 +231,38 @@ export const LeadWorkflows = {
 };
 
 export default LeadWorkflows;
+
+// Spec-validated workflow definitions
+export const ValidatedWorkflows = {
+  leadAutoAssignment: WorkflowRuleSchema.parse({
+    name: 'lead_auto_assignment',
+    objectName: 'lead',
+    triggerType: 'on_create',
+    active: true,
+    actions: [{ type: 'field_update', name: 'assign_owner', field: 'owner_id', value: 'next_available_rep' }],
+  } satisfies WorkflowRule),
+
+  leadAutoScoring: WorkflowRuleSchema.parse({
+    name: 'lead_auto_scoring',
+    objectName: 'lead',
+    triggerType: 'on_create_or_update',
+    active: true,
+    actions: [{ type: 'field_update', name: 'update_rating', field: 'rating', value: 'calculated' }],
+  } satisfies WorkflowRule),
+
+  leadNurturing: WorkflowRuleSchema.parse({
+    name: 'lead_nurturing',
+    objectName: 'lead',
+    triggerType: 'schedule',
+    active: true,
+    actions: [{ type: 'field_update', name: 'set_nurture_date', field: 'last_nurture_date', value: 'NOW()' }],
+  } satisfies WorkflowRule),
+
+  leadEnrichment: WorkflowRuleSchema.parse({
+    name: 'lead_data_enrichment',
+    objectName: 'lead',
+    triggerType: 'on_create',
+    active: true,
+    actions: [{ type: 'field_update', name: 'set_enriched_date', field: 'data_enriched_date', value: 'NOW()' }],
+  } satisfies WorkflowRule),
+};

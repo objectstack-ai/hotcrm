@@ -184,7 +184,9 @@ export const Employee = ObjectSchema.create({
     }),
     notes: Field.textarea({
       label: 'Notes',
-    })
+    }),
+    photo: Field.image({ label: 'Photo' }),
+    home_address: Field.address({ label: 'Home Address' })
   },
 
   enable: {
