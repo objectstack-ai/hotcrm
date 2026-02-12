@@ -21,7 +21,7 @@
 | List Views | 11 files (~49 individual views) |
 | Dashboards | 8 across 5 packages |
 | Form Views | 6 across 3 packages |
-| Test Files | 113+ files, 1629+ tests (all passing) |
+| Test Files | 113 files, 1629 tests (all passing) |
 | TypeScript Compliance | 100% (zero type errors) |
 | Protocol Compliance | 100% (all objects pass ObjectSchema.create()) |
 | Spec Schema Adoption | ~25% (Phase 8 target met) |
@@ -251,7 +251,7 @@
 | Plugin action registration | ✅ All registered | Actions registered in all plugin.ts exports |
 | Plugin workflow registration | ✅ All registered | Workflows registered in all 6 plugin.ts exports |
 | Hook coverage | 59 hooks / 69 objects (86%) | ✅ Target 80%+ met |
-| Test coverage | 1629+ tests / 113+ files | Continue expanding coverage |
+| Test coverage | 1629 tests / 113 files | Continue expanding coverage |
 | `defineStack()` config pattern | ✅ Consistent | All packages use correct pattern |
 | State machine definitions | ✅ 3 defined | Case, Lead, Opportunity lifecycles |
 | Event definitions | ✅ 6 defined | All business packages have event contracts |
@@ -458,11 +458,47 @@
 - [x] Define `CacheConfig` for high-read objects (product catalog, knowledge articles)
 
 #### 8I: Documentation Refresh (P2 — DX)
-- [x] Update `docs/roadmap.mdx` with current metrics (69 objects, 1604 tests, 47 hooks)
+- [x] Update `docs/roadmap.mdx` with current metrics (69 objects, 1629 tests, 59 hooks)
 - [x] Update `docs/modules/index.mdx` with accurate object counts per cloud
 - [x] Add cross-cloud integration pattern guides
 - [x] Add UI metadata authoring guide (page, view, dashboard, form patterns)
 - [x] Add field type selection guide with decision tree
+
+### Phase 9: Developer Experience & Documentation Governance (Week 25-28)
+
+> Comprehensive DX audit identified significant onboarding friction from broken links, stale statistics, and inconsistent tooling references across documentation. This phase addresses documentation governance and developer workflow improvements.
+
+#### 9A: Documentation Integrity (P0 — Onboarding)
+- [x] Fix README.md broken links — removed 20+ references to non-existent files (`DEVELOPMENT_STATUS.md`, `DEVELOPMENT_WORKFLOW.md`, `.github/prompts/*.md`, `.github/agents/*.md`, legacy docs)
+- [x] Update README.md statistics — corrected object count (65→69), action/hook counts, per-cloud breakdowns (CRM 13→8, Marketing 2→11)
+- [x] Fix CONTRIBUTING.md tooling references — updated `npm`→`pnpm`, Node.js 18→20.9.0
+- [x] Clean orphaned content in README.md — removed duplicate section fragments
+- [ ] Audit remaining documentation for broken cross-references (`docs/*.md` internal links)
+- [ ] Add link-checking CI step to prevent future broken links (e.g., `markdown-link-check`)
+
+#### 9B: Onboarding Experience (P1 — New Developer Friction)
+- [ ] Create `DEVELOPMENT_WORKFLOW.md` — single-page development quickstart covering setup, package development, testing, and contribution flow
+- [ ] Add "first contribution" tutorial — step-by-step guide to add a new field to an existing object
+- [ ] Add package scaffolding guide — how to create a new business package from scratch
+- [ ] Add troubleshooting FAQ — common `pnpm install`, TypeScript, and test failures
+
+#### 9C: Documentation Consistency (P1 — Single Source of Truth)
+- [ ] Consolidate root-level `docs/` strategic documents — ensure `docs/README.md` index matches actual files
+- [ ] Ensure README.md, ROADMAP.md, `content/docs/roadmap.mdx`, and `content/docs/index.mdx` share consistent metrics
+- [ ] Add automated stat extraction script — single source of truth for object/hook/test counts
+- [ ] Add `docs/ARCHITECTURE.md` — consolidated architecture and plugin guide (replaces references to missing `PLUGIN_ARCHITECTURE.md`)
+
+#### 9D: Developer Tooling (P2 — Productivity)
+- [ ] Add `pnpm typecheck` root script — run `tsc --noEmit` across all packages
+- [ ] Add `pnpm test:changed` — run tests only for packages with uncommitted changes
+- [ ] Add pre-commit hook — lint and typecheck staged files before commit
+- [ ] Evaluate adding `changeset` for automated version management and changelogs
+
+#### 9E: README Modernization (P2 — First Impression)
+- [ ] Add "Quick Start in 60 seconds" section at the top — `pnpm install && pnpm dev` with expected output
+- [ ] Add architecture diagram (Mermaid) — visual package dependency graph
+- [ ] Add badges for test count, object count, and spec version
+- [ ] Reduce README length — move detailed feature lists to docs site, keep README focused on getting started
 
 ---
 
@@ -551,7 +587,8 @@ These independent business packages are planned for future development:
 
 | Date | From | To | Breaking Changes | Tests |
 |------|------|----|-----------------|-------|
-| 2026-02-12 | v3.0.0 | v3.0.0 | None (Phase 7B-8: Studio plugins, UI completeness, hooks, integration tests, system configs, docs) | 1629+ ✅ |
+| 2026-02-12 | v3.0.0 | v3.0.0 | None (Phase 9: DX audit — fixed 20+ broken README links, updated stats, CONTRIBUTING.md pnpm migration) | 1629 ✅ |
+| 2026-02-12 | v3.0.0 | v3.0.0 | None (Phase 7B-8: Studio plugins, UI completeness, hooks, integration tests, system configs, docs) | 1629 ✅ |
 | 2026-02-12 | v2.0.6 | v3.0.0 | Zod 3→4, removed hub/auth/driver/permission modules, new ObjectSchema.create() API | 1604 ✅ |
 | 2026-02-12 | v2.0.6 | v2.0.6 | None (Phase 7 roadmap: UI completeness, cross-cloud integration, hook expansion) | 1604 ✅ |
 | 2026-02-12 | v2.0.6 | v2.0.6 | None (Phase 6: spec deep adoption, Field.masterDetail, DashboardSchema, EventSchema) | 1604 ✅ |
