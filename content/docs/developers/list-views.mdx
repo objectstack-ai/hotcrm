@@ -1,0 +1,345 @@
+---
+title: List Views
+description: How to configure record list views in HotCRM using *.view.ts files
+---
+
+# List Views
+
+List views define how **record tables** are displayed in HotCRM. They control column layout, filtering, sorting, pagination, bulk actions, and visual styling. Every list view is defined in a `*.view.ts` file.
+
+## File Convention
+
+```
+packages/{package}/src/{object_name}.view.ts
+```
+
+Example from the codebase:
+
+| Package | View File | Purpose |
+|---------|----------|---------|
+| CRM | `account.view.ts` | Multiple list views for the Account object |
+
+A single `*.view.ts` file typically exports multiple named views for the same object, giving users different perspectives on the data.
+
+## Basic View Structure
+
+A list view declares the object, visible columns, sort order, and optional filters:
+
+```typescript
+// packages/crm/src/account.view.ts
+
+export const AllAccountsView = {
+  name: 'all_accounts',
+  label: 'All Accounts',
+  object: 'account',
+
+  columns: [
+    { field: 'name', width: 250, sortable: true, link: true },
+    { field: 'type', width: 120, sortable: true },
+    { field: 'industry', width: 150, sortable: true },
+    { field: 'annual_revenue', width: 150, sortable: true, align: 'right' },
+    { field: 'phone', width: 150 },
+    { field: 'owner', width: 150 },
+    { field: 'created_date', width: 150, sortable: true, format: 'YYYY-MM-DD' },
+  ],
+
+  sort: [{ field: 'name', direction: 'asc' }],
+
+  bulkActions: ['delete', 'update_owner', 'export'],
+  inlineEdit: true,
+
+  pagination: {
+    pageSize: 25,
+    options: [10, 25, 50, 100],
+  },
+};
+
+export default AllAccountsView;
+```
+
+## Column Configuration
+
+Each column defines how a field is displayed in the table:
+
+```typescript
+{
+  field: 'name',           // Field API name from the object definition
+  width: 250,              // Column width in pixels
+  sortable: true,          // Allow sorting by this column
+  link: true,              // Render as clickable link to the record detail
+  align: 'right',          // Text alignment: 'left' (default), 'center', 'right'
+  format: 'YYYY-MM-DD',   // Display format (for dates, currencies, etc.)
+}
+```
+
+## Filtered Views
+
+Views can pre-filter data to show only relevant records:
+
+### My Records View
+
+```typescript
+export const MyAccountsView = {
+  name: 'my_accounts',
+  label: 'My Accounts',
+  object: 'account',
+
+  filters: [
+    { field: 'owner', operator: '=', value: '${currentUser.id}' },
+  ],
+
+  columns: [
+    { field: 'name', width: 250, link: true },
+    { field: 'type', width: 120 },
+    { field: 'industry', width: 150 },
+    { field: 'last_activity_date', width: 150 },
+    { field: 'annual_revenue', width: 150, align: 'right' },
+  ],
+
+  sort: [{ field: 'last_activity_date', direction: 'desc' }],
+};
+```
+
+### Value-Based Filter
+
+```typescript
+export const EnterpriseAccountsView = {
+  name: 'enterprise_accounts',
+  label: 'Enterprise Accounts',
+  object: 'account',
+
+  filters: [
+    { field: 'annual_revenue', operator: '>', value: 10000000 },
+    { field: 'type', operator: '=', value: 'customer' },
+  ],
+
+  columns: [
+    { field: 'name', width: 250, link: true },
+    { field: 'annual_revenue', width: 150, align: 'right' },
+    { field: 'employees', width: 100 },
+    { field: 'industry', width: 150 },
+    { field: 'rating', width: 100 },
+    { field: 'owner', width: 150 },
+  ],
+
+  sort: [{ field: 'annual_revenue', direction: 'desc' }],
+};
+```
+
+### Date-Based Filter
+
+```typescript
+export const RecentlyCreatedView = {
+  name: 'recently_created_accounts',
+  label: 'Recently Created',
+  object: 'account',
+
+  filters: [
+    { field: 'created_date', operator: '>=', value: 'LAST_30_DAYS' },
+  ],
+
+  columns: [
+    { field: 'name', width: 250, link: true },
+    { field: 'type', width: 120 },
+    { field: 'owner', width: 150 },
+    { field: 'created_by', width: 150 },
+    { field: 'created_date', width: 150 },
+  ],
+
+  sort: [{ field: 'created_date', direction: 'desc' }],
+};
+```
+
+### Multi-Value Filter
+
+```typescript
+export const HotAccountsView = {
+  name: 'hot_accounts',
+  label: 'Hot Accounts',
+  object: 'account',
+
+  filters: [
+    { field: 'rating', operator: '=', value: 'Hot' },
+    { field: 'type', operator: 'IN', value: ['customer', 'prospect'] },
+  ],
+
+  columns: [
+    { field: 'name', width: 250, link: true },
+    { field: 'annual_revenue', width: 150, align: 'right' },
+    { field: 'industry', width: 150 },
+    { field: 'last_activity_date', width: 150 },
+    { field: 'owner', width: 150 },
+  ],
+
+  sort: [{ field: 'annual_revenue', direction: 'desc' }],
+};
+```
+
+## Filter Operators
+
+List view filters support the following operators:
+
+| Operator | Description | Example |
+|----------|-------------|---------|
+| `=` | Equals | `{ field: 'status', operator: '=', value: 'active' }` |
+| `!=` | Not equals | `{ field: 'stage', operator: '!=', value: 'closed_lost' }` |
+| `>` | Greater than | `{ field: 'amount', operator: '>', value: 50000 }` |
+| `>=` | Greater or equal | `{ field: 'score', operator: '>=', value: 70 }` |
+| `<` | Less than | `{ field: 'days_open', operator: '<', value: 30 }` |
+| `<=` | Less or equal | `{ field: 'priority', operator: '<=', value: 2 }` |
+| `IN` | In list | `{ field: 'type', operator: 'IN', value: ['a', 'b'] }` |
+| `NOT IN` | Not in list | `{ field: 'status', operator: 'NOT IN', value: ['closed'] }` |
+
+### Date Value Shortcuts
+
+| Value | Meaning |
+|-------|---------|
+| `LAST_7_DAYS` | Records from the last 7 days |
+| `LAST_30_DAYS` | Records from the last 30 days |
+| `LAST_60_DAYS` | Records from the last 60 days |
+| `THIS_MONTH` | Records from the current month |
+| `THIS_QUARTER` | Records from the current quarter |
+| `THIS_YEAR` | Records from the current year |
+| `TODAY` | Today's records |
+
+## Row Styling
+
+Apply visual emphasis to highlight important records:
+
+```typescript
+export const HotAccountsView = {
+  name: 'hot_accounts',
+  label: 'Hot Accounts',
+  object: 'account',
+  // ...
+
+  // Highlight rows with red accent
+  rowStyles: {
+    backgroundColor: '#FEF2F2',
+    borderLeft: '3px solid #EF4444',
+  },
+};
+
+export const NeedAttentionView = {
+  name: 'accounts_need_attention',
+  label: 'Needs Attention',
+  object: 'account',
+  filters: [
+    { field: 'last_activity_date', operator: '<', value: 'LAST_60_DAYS' },
+    { field: 'type', operator: '=', value: 'customer' },
+  ],
+  // ...
+
+  // Warning styling with amber accent
+  rowStyles: {
+    backgroundColor: '#FFFBEB',
+    borderLeft: '3px solid #F59E0B',
+  },
+};
+```
+
+## Real-World Example: Multiple Views in One File
+
+The CRM package exports six views for the Account object in a single file:
+
+```typescript
+// packages/crm/src/account.view.ts
+
+export const AllAccountsView = { /* all accounts, no filters */ };
+export const MyAccountsView = { /* current user's accounts */ };
+export const EnterpriseAccountsView = { /* revenue > $10M, customer type */ };
+export const RecentlyCreatedView = { /* created in last 30 days */ };
+export const HotAccountsView = { /* hot rating, red styling */ };
+export const NeedAttentionView = { /* inactive 60+ days, amber styling */ };
+
+// Export as a collection
+export const AccountListViews = {
+  all: AllAccountsView,
+  my: MyAccountsView,
+  enterprise: EnterpriseAccountsView,
+  recent: RecentlyCreatedView,
+  hot: HotAccountsView,
+  needAttention: NeedAttentionView,
+};
+
+export default AccountListViews;
+```
+
+## Best Practices
+
+### 1. Provide Multiple Views Per Object
+
+Give users different perspectives on the same data:
+
+```typescript
+// ✅ Good — multiple useful views
+export const AccountListViews = {
+  all: AllAccountsView,              // Default: everything
+  my: MyAccountsView,               // Personal: my records
+  enterprise: EnterpriseAccountsView, // Segment: high-value
+  recent: RecentlyCreatedView,       // Time-based: new records
+  hot: HotAccountsView,             // Priority: needs action
+  needAttention: NeedAttentionView,  // Alert: dormant accounts
+};
+```
+
+### 2. Choose Columns Wisely
+
+Show 5–7 columns that answer "what do I need to know at a glance?":
+
+```typescript
+// ✅ Good — focused columns
+columns: [
+  { field: 'name', width: 250, link: true },
+  { field: 'stage', width: 120 },
+  { field: 'amount', width: 150, align: 'right' },
+  { field: 'close_date', width: 150 },
+  { field: 'owner', width: 150 },
+]
+
+// ❌ Bad — too many columns
+columns: [
+  { field: 'name' }, { field: 'type' }, { field: 'industry' },
+  { field: 'phone' }, { field: 'email' }, { field: 'website' },
+  { field: 'revenue' }, { field: 'employees' }, { field: 'rating' },
+  { field: 'owner' }, { field: 'created' }, { field: 'modified' },
+]
+```
+
+### 3. Enable Sorting on Key Fields
+
+```typescript
+// ✅ Good — sort on actionable fields
+{ field: 'close_date', sortable: true }
+{ field: 'amount', sortable: true }
+{ field: 'created_date', sortable: true }
+```
+
+### 4. Use Link on Name/Title Fields
+
+Make the primary identifier field clickable:
+
+```typescript
+// ✅ Good
+{ field: 'name', link: true }
+```
+
+### 5. Set Sensible Default Sort
+
+```typescript
+// Time-sensitive views: sort by date descending
+sort: [{ field: 'created_date', direction: 'desc' }]
+
+// Value-based views: sort by amount descending
+sort: [{ field: 'annual_revenue', direction: 'desc' }]
+
+// Alphabetical views: sort by name ascending
+sort: [{ field: 'name', direction: 'asc' }]
+```
+
+## Next Steps
+
+- [Page Layouts](/docs/developers/page-layouts) — Configure record detail pages
+- [UI Development](/docs/developers/ui-development) — Dashboards and custom components
+- [Creating Objects](/docs/developers/creating-objects) — Define the data model for your views
+- [Metadata Reference](/docs/developers/metadata-reference) — Complete spec reference

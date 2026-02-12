@@ -1,0 +1,535 @@
+---
+title: Workflows
+description: How to build automation workflows in HotCRM using *.workflow.ts files
+---
+
+# Workflows
+
+Workflows are the **rule-based automation** layer of HotCRM. They trigger actions automatically when records are created, updated, or on a schedule — without writing imperative code. Every workflow is defined in a `*.workflow.ts` file.
+
+## File Convention
+
+```
+packages/{package}/src/{name}.workflow.ts
+```
+
+Examples from the codebase:
+
+| Package | Workflow File | Purpose |
+|---------|--------------|---------|
+| CRM | `lead.workflow.ts` | Lead auto-assignment, scoring, nurturing |
+| Support | `case_escalation.workflow.ts` | SLA escalation and auto-resolution |
+| Finance | `payment_reminder.workflow.ts` | Payment due date reminders |
+| Marketing | `campaign.workflow.ts` | Campaign lifecycle automation |
+| Products | `approval.workflow.ts` | Quote/discount approval flows |
+| HR | `hr.workflow.ts` | Employee onboarding and reviews |
+
+HotCRM currently has **6 workflow files** across the business packages.
+
+## Basic Workflow Structure
+
+A workflow defines a trigger, a condition, and a list of actions:
+
+```typescript
+// packages/crm/src/lead.workflow.ts
+
+export const LeadAutoAssignment = {
+  name: 'lead_auto_assignment',
+  label: 'Auto Assign New Leads',
+  object: 'lead',
+  description: 'Assign new leads to the next available sales rep',
+
+  // When does it fire?
+  triggerType: 'onCreate',
+
+  // Under what conditions?
+  condition: 'status = "new" AND owner = NULL',
+
+  // What happens?
+  actions: [
+    {
+      type: 'fieldUpdate',
+      field: 'owner_id',
+      formula: 'getNextAvailableRep(territory, industry)',
+    },
+    {
+      type: 'fieldUpdate',
+      field: 'assigned_date',
+      value: 'NOW()',
+    },
+    {
+      type: 'emailAlert',
+      template: 'new_lead_assigned',
+      recipients: ['owner_id'],
+    },
+    {
+      type: 'taskCreation',
+      subject: 'Follow up with new lead: ${name}',
+      assignee: '${owner_id}',
+      dueDate: 'TODAY() + 1',
+      priority: 'high',
+    },
+  ],
+
+  executionOrder: 1,
+  active: true,
+};
+```
+
+## Trigger Types
+
+Workflows support several trigger types:
+
+| Trigger Type | Fires When | Use Case |
+|-------------|------------|----------|
+| `onCreate` | A new record is created | Lead assignment, welcome emails |
+| `onUpdate` | An existing record is updated | SLA escalation, status changes |
+| `onDelete` | A record is deleted | Cleanup, notifications |
+| `scheduled` | On a time-based schedule | Payment reminders, report generation |
+| `onFieldChange` | A specific field value changes | Stage progression, approval requests |
+
+### Scheduled Trigger Example
+
+```typescript
+// packages/finance/src/payment_reminder.workflow.ts
+
+export const PaymentDueReminder = {
+  name: 'payment_due_reminder',
+  label: 'Payment Due Reminder',
+  object: 'invoice',
+  description: 'Send reminders 7 days before invoice due date',
+
+  triggerType: 'scheduled',
+  schedule: {
+    frequency: 'daily',
+    time: '09:00',
+    timezone: 'UTC',
+  },
+
+  // Find invoices due in 7 days
+  condition: 'status = "sent" AND due_date = TODAY() + 7',
+
+  actions: [
+    {
+      type: 'emailAlert',
+      template: 'payment_reminder',
+      recipients: ['${contact_id.email}'],
+      cc: ['${owner_id.email}'],
+    },
+    {
+      type: 'fieldUpdate',
+      field: 'reminder_sent',
+      value: true,
+    },
+    {
+      type: 'fieldUpdate',
+      field: 'reminder_sent_date',
+      value: 'NOW()',
+    },
+  ],
+
+  active: true,
+};
+```
+
+## Action Types
+
+Workflow actions define what happens when the workflow fires:
+
+### 1. Field Update
+
+Set or compute a field value:
+
+```typescript
+// Static value
+{ type: 'fieldUpdate', field: 'status', value: 'In Progress' }
+
+// Dynamic value with NOW()
+{ type: 'fieldUpdate', field: 'assigned_date', value: 'NOW()' }
+
+// Computed with formula
+{
+  type: 'fieldUpdate',
+  field: 'priority',
+  formula: `
+    CASE
+      WHEN priority = 'low' THEN 'medium'
+      WHEN priority = 'medium' THEN 'high'
+      WHEN priority = 'high' THEN 'critical'
+      ELSE priority
+    END
+  `
+}
+```
+
+### 2. Email Alert
+
+Send templated email notifications:
+
+```typescript
+{
+  type: 'emailAlert',
+  template: 'case_sla_escalation',
+  recipients: ['${owner_id}'],
+  cc: ['${owner_id.manager_email}'],
+  description: 'Alert support manager of SLA breach escalation'
+}
+```
+
+### 3. Task Creation
+
+Create follow-up tasks automatically:
+
+```typescript
+{
+  type: 'taskCreation',
+  subject: 'Follow up with new lead: ${name}',
+  description: 'Initial contact and qualification',
+  assignee: '${owner_id}',
+  dueDate: 'TODAY() + 1',
+  priority: 'high',
+  status: 'not_started'
+}
+```
+
+### 4. HTTP Call (Webhook)
+
+Call external services:
+
+```typescript
+{
+  type: 'httpCall',
+  method: 'POST',
+  url: '${env.SLACK_WEBHOOK_URL}',
+  headers: { 'Content-Type': 'application/json' },
+  body: {
+    text: '🎯 New lead assigned',
+    blocks: [
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: '*Lead:* ${name}\n*Company:* ${company}\n*Assigned to:* ${owner.name}'
+        }
+      }
+    ]
+  }
+}
+```
+
+### 5. Custom Handler
+
+Call a custom function for complex logic:
+
+```typescript
+{
+  type: 'customHandler',
+  handler: 'assignTerritoryBasedOwner',
+  parameters: {
+    territory: '${territory}',
+    industry: '${industry}',
+  }
+}
+```
+
+## Real-World Examples
+
+### Case SLA Escalation
+
+Automatically escalate support cases when SLA targets are breached:
+
+```typescript
+// packages/support/src/case_escalation.workflow.ts
+
+export const CaseAutoEscalation = {
+  name: 'case_auto_escalation',
+  label: 'Auto Escalate SLA Breached Cases',
+  object: 'case',
+  description: 'Escalate case priority when SLA resolution target is exceeded',
+
+  triggerType: 'onUpdate',
+  condition:
+    'is_sla_violated = true AND status != "closed" AND status != "resolved" AND is_escalated = false',
+
+  actions: [
+    // Escalate priority one level up
+    {
+      type: 'fieldUpdate',
+      field: 'priority',
+      formula: `
+        CASE
+          WHEN priority = 'low' THEN 'medium'
+          WHEN priority = 'medium' THEN 'high'
+          WHEN priority = 'high' THEN 'critical'
+          ELSE priority
+        END
+      `,
+    },
+    // Mark as escalated
+    { type: 'fieldUpdate', field: 'is_escalated', value: true },
+    { type: 'fieldUpdate', field: 'escalated_date', value: 'NOW()' },
+    { type: 'fieldUpdate', field: 'escalation_reason', value: 'SLA resolution target exceeded' },
+    // Notify manager
+    {
+      type: 'emailAlert',
+      template: 'case_sla_escalation',
+      recipients: ['${owner_id}'],
+      cc: ['${owner_id.manager_email}'],
+    },
+    // Post to Slack
+    {
+      type: 'httpCall',
+      method: 'POST',
+      url: '${env.SLACK_WEBHOOK_URL}',
+      headers: { 'Content-Type': 'application/json' },
+      body: {
+        text: '🚨 Case Escalated - SLA Breach: ${case_number}',
+      },
+    },
+  ],
+
+  executionOrder: 1,
+  active: true,
+};
+```
+
+### Campaign Lifecycle Automation
+
+Automate campaign state transitions and notifications:
+
+```typescript
+// packages/marketing/src/campaign.workflow.ts
+
+export const CampaignAutoActivation = {
+  name: 'campaign_auto_activation',
+  label: 'Auto Activate Scheduled Campaigns',
+  object: 'campaign',
+  description: 'Activate campaigns when their start date arrives',
+
+  triggerType: 'scheduled',
+  schedule: { frequency: 'hourly' },
+  condition: 'status = "scheduled" AND start_date <= NOW()',
+
+  actions: [
+    { type: 'fieldUpdate', field: 'status', value: 'active' },
+    { type: 'fieldUpdate', field: 'actual_start_date', value: 'NOW()' },
+    {
+      type: 'emailAlert',
+      template: 'campaign_activated',
+      recipients: ['${owner_id}'],
+    },
+  ],
+
+  active: true,
+};
+
+export const CampaignBudgetAlert = {
+  name: 'campaign_budget_alert',
+  label: 'Campaign Budget Threshold Alert',
+  object: 'campaign',
+  description: 'Alert when campaign spend reaches 80% of budget',
+
+  triggerType: 'onUpdate',
+  condition:
+    'status = "active" AND actual_cost >= (budgeted_cost * 0.8) AND budget_alert_sent = false',
+
+  actions: [
+    {
+      type: 'emailAlert',
+      template: 'campaign_budget_alert',
+      recipients: ['${owner_id}'],
+      cc: ['${env.MARKETING_DIRECTOR_EMAIL}'],
+    },
+    { type: 'fieldUpdate', field: 'budget_alert_sent', value: true },
+  ],
+
+  active: true,
+};
+```
+
+### Quote Approval Process
+
+Multi-step approval flow for high-discount quotes:
+
+```typescript
+// packages/products/src/approval.workflow.ts
+
+export const QuoteDiscountApproval = {
+  name: 'quote_discount_approval',
+  object: 'quote',
+  triggerType: 'onUpdate',
+  condition: 'discount_percent > 10 AND status = "draft"',
+
+  initialSubmissionActions: [
+    { type: 'fieldUpdate', field: 'approval_status', value: 'pending' },
+    {
+      type: 'emailAlert',
+      template: 'approval_request_submitted',
+      recipients: ['${submitter}'],
+    },
+  ],
+
+  steps: [
+    {
+      stepNumber: 1,
+      name: 'sales_manager_approval',
+      approverType: 'user',
+      approver: '${owner.manager}',
+      skipCondition: 'discount_percent <= 15',
+      approvalActions: [
+        { type: 'fieldUpdate', field: 'approval_status', value: 'manager_approved' },
+      ],
+      rejectionActions: [
+        { type: 'fieldUpdate', field: 'approval_status', value: 'rejected' },
+        { type: 'emailAlert', template: 'approval_rejected', recipients: ['${owner}'] },
+      ],
+    },
+    {
+      stepNumber: 2,
+      name: 'sales_director_approval',
+      approverType: 'role',
+      approver: 'sales_director',
+      skipCondition: 'discount_percent <= 20',
+      approvalActions: [
+        { type: 'fieldUpdate', field: 'approval_status', value: 'director_approved' },
+        { type: 'fieldUpdate', field: 'status', value: 'approved' },
+      ],
+      rejectionActions: [
+        { type: 'fieldUpdate', field: 'approval_status', value: 'rejected' },
+      ],
+    },
+  ],
+
+  finalApprovalActions: [
+    { type: 'emailAlert', template: 'quote_approved', recipients: ['${owner}'] },
+  ],
+  finalRejectionActions: [
+    { type: 'emailAlert', template: 'quote_rejected', recipients: ['${owner}'] },
+  ],
+};
+```
+
+## Registering Workflows in Plugins
+
+Workflows are exported and registered in the package's `plugin.ts`:
+
+```typescript
+// packages/crm/src/plugin.ts
+import { LeadWorkflows } from './lead.workflow';
+
+export const CRMPlugin = {
+  name: '@hotcrm/crm',
+  // ...
+  workflows: [
+    LeadWorkflows.LeadAutoAssignment,
+    LeadWorkflows.LeadAutoScoring,
+    LeadWorkflows.LeadNurturing,
+    LeadWorkflows.LeadEnrichment,
+  ],
+};
+```
+
+## Conditions & Formulas
+
+Workflow conditions use a formula language to evaluate when the workflow should fire:
+
+```typescript
+// Simple comparisons
+'status = "new"'
+'amount > 50000'
+'priority = "critical"'
+
+// Compound conditions
+'status = "new" AND owner = NULL'
+'is_sla_violated = true AND status != "closed"'
+'actual_cost >= (budgeted_cost * 0.8) AND budget_alert_sent = false'
+
+// Date comparisons
+'due_date = TODAY() + 7'
+'start_date <= NOW()'
+'close_date >= TODAY()'
+
+// Field change detection (in onUpdate workflows)
+'ISCHANGED(stage)'
+'ISCHANGED(priority) AND priority = "critical"'
+
+// Null checks
+'owner = NULL'
+'resolved_date != NULL'
+```
+
+## Best Practices
+
+### 1. Set Execution Order
+
+When multiple workflows can fire on the same object, control the order:
+
+```typescript
+// Assignment first, scoring second
+export const LeadAutoAssignment = {
+  // ...
+  executionOrder: 1,
+};
+
+export const LeadAutoScoring = {
+  // ...
+  executionOrder: 2,
+};
+```
+
+### 2. Use Guard Conditions
+
+Prevent duplicate or recursive execution:
+
+```typescript
+// ✅ Good — check is_escalated flag to prevent re-escalation
+condition: 'is_sla_violated = true AND is_escalated = false'
+
+// ❌ Bad — could fire repeatedly
+condition: 'is_sla_violated = true'
+```
+
+### 3. Keep Actions Atomic
+
+Each action should be independent and idempotent when possible:
+
+```typescript
+// ✅ Good — each action is self-contained
+actions: [
+  { type: 'fieldUpdate', field: 'status', value: 'active' },
+  { type: 'fieldUpdate', field: 'actual_start_date', value: 'NOW()' },
+  { type: 'emailAlert', template: 'campaign_activated', recipients: ['${owner_id}'] },
+]
+```
+
+### 4. Use Environment Variables for External URLs
+
+Never hardcode webhook URLs or API keys:
+
+```typescript
+// ✅ Good
+{ type: 'httpCall', url: '${env.SLACK_WEBHOOK_URL}' }
+
+// ❌ Bad
+{ type: 'httpCall', url: 'https://hooks.slack.com/services/T00000/B000/XXXX' }
+```
+
+### 5. Provide Descriptions
+
+Add clear descriptions for maintainability:
+
+```typescript
+export const PaymentOverdueEscalation = {
+  name: 'payment_overdue_escalation',
+  label: 'Overdue Payment Escalation',
+  description: 'Escalate invoices overdue by 30+ days to finance manager',
+  // ...
+};
+```
+
+## Next Steps
+
+- [Actions](/docs/developers/actions) — Build custom API endpoints and AI tools
+- [Business Logic](/docs/developers/business-logic) — Add imperative hooks for complex logic
+- [Creating Objects](/docs/developers/creating-objects) — Define the data model workflows operate on
+- [Metadata Reference](/docs/developers/metadata-reference) — Complete spec reference
