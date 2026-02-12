@@ -25,6 +25,10 @@ import { Forecast } from './forecast.object';
 import { ForecastItem } from './forecast_item.object';
 import { Task } from './task.object';
 import { Note } from './note.object';
+import { Territory } from './territory.object';
+import { TerritoryRule } from './territory_rule.object';
+import { OpportunityTeamMember } from './opportunity_team_member.object';
+import { Competitor } from './competitor.object';
 import LeadConvertAction from './actions/lead_convert.action';
 import { AssignmentRule } from './assignment_rule.object';
 import { LeadWorkflows } from './lead.workflow';
@@ -37,6 +41,7 @@ import { ActivityRelatedObjectUpdatesTrigger, ActivityCompletionTrigger, Activit
 import { ContactDecisionChainTrigger, ContactDecisionMakerValidationTrigger, ContactDuplicateDetectionTrigger, ContactRelationshipStrengthTrigger } from './hooks/contact.hook';
 import { TaskValidationTrigger, TaskCompletionTrigger, TaskOverdueTrigger } from './hooks/task.hook';
 import { NoteValidationTrigger, NoteEditTrackingTrigger } from './hooks/note.hook';
+import { TerritoryValidationTrigger, TerritoryMetricsTrigger } from './hooks/territory.hook';
 import { AssignmentRuleValidationTrigger, AssignmentRuleSortOrderTrigger } from './hooks/assignment_rule.hook';
 import { OpportunityLineItemCalculationTrigger, OpportunityLineItemRollupTrigger } from './hooks/opportunity_line_item.hook';
 import { ForecastCalculationTrigger, ForecastAggregationTrigger } from './hooks/forecast.hook';
@@ -111,6 +116,8 @@ export const CRMPlugin = {
     opportunity_line_item_rollup: OpportunityLineItemRollupTrigger,
     forecast_calculation: ForecastCalculationTrigger,
     forecast_aggregation: ForecastAggregationTrigger,
+    territory_validation: TerritoryValidationTrigger,
+    territory_metrics: TerritoryMetricsTrigger,
   },
 
   // Workflows
@@ -135,6 +142,10 @@ export const CRMPlugin = {
     forecast_item: ForecastItem,
     task: Task,
     note: Note,
+    territory: Territory,
+    territory_rule: TerritoryRule,
+    opportunity_team_member: OpportunityTeamMember,
+    competitor: Competitor,
   },
   
   // Navigation structure for this plugin
@@ -148,6 +159,14 @@ export const CRMPlugin = {
         { type: 'object', object: 'lead' },
         { type: 'object', object: 'opportunity' },
         { type: 'object', object: 'activity' },
+      ]
+    },
+    {
+      type: 'group',
+      label: 'Territories',
+      children: [
+        { type: 'object', object: 'territory' },
+        { type: 'object', object: 'territory_rule' },
       ]
     }
   ]
