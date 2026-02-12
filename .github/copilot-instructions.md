@@ -69,11 +69,50 @@ After generating code, ask yourself:
 
 We enforce strict file naming to separate concerns. Files should be located in `packages/{package_name}/src/`.
 
-- `*.object.ts`: Data Model (Schema).
-- `*.hook.ts`: Server-side Business Logic (Triggers).
-- `*.action.ts`: API Endpoints & AI Tools.
-- `*.page.ts`: UI Page Layouts (Metadata).
-- `*.view.ts`: List View Configurations.
+### Core File Types
+- `*.object.ts`: Data Model (Schema) — validated with `ObjectSchema.parse()`
+- `*.hook.ts`: Server-side Business Logic (Triggers)
+- `*.action.ts`: API Endpoints & AI Tools
+- `*.page.ts`: UI Page Layouts — validated with `PageSchema` from `@objectstack/spec/ui`
+- `*.view.ts`: List View Configurations — validated with `ViewSchema` from `@objectstack/spec/ui`
+
+### Extended File Types (Phase 6+)
+- `*.dashboard.ts`: Dashboard Definitions — validated with `DashboardSchema` from `@objectstack/spec/ui`
+- `*.form.ts`: Form View Definitions — validated with `FormViewSchema` from `@objectstack/spec/ui`
+- `*.statemachine.ts`: State Machine Definitions — validated with `StateMachineSchema` from `@objectstack/spec/automation`
+- `*.permission.ts`: Permission Set Definitions — validated with `PermissionSetSchema` from `@objectstack/spec/security`
+- `*.capabilities.ts`: Plugin Capability Manifests — validated with `PluginCapabilityManifestSchema` from `@objectstack/spec/kernel`
+- `*.events.ts`: Domain Event Definitions — validated with `EventSchema` from `@objectstack/spec/kernel`
+
+## 🔒 Schema Validation Requirements
+
+All metadata files MUST be validated against their corresponding `@objectstack/spec` schemas:
+
+1. **Objects**: Use `ObjectSchema.parse()` from `@objectstack/spec/data`
+2. **Pages/Views/Dashboards/Forms**: Use schemas from `@objectstack/spec/ui`
+3. **Workflows**: Use `WorkflowRuleSchema.parse()` from `@objectstack/spec/automation`
+4. **State Machines**: Use `StateMachineSchema.parse()` from `@objectstack/spec/automation`
+5. **Plugins**: Use `PluginSchema.parse()` from `@objectstack/spec/kernel` (remove `: any` annotations)
+6. **Permissions**: Use `PermissionSetSchema.parse()` from `@objectstack/spec/security`
+7. **AI Agents**: Use `AgentSchema.parse()` from `@objectstack/spec/ai`
+
+## 🏷️ Field Type Guidance
+
+Use the most specific `Field` type available from `@objectstack/spec/data`:
+
+| Relationship | Field Type | When to Use |
+|---|---|---|
+| Parent reference | `Field.lookup()` | Optional association to another object |
+| Child of parent | `Field.masterDetail()` | Required parent-child with cascade delete |
+| Rollup value | `Field.summary()` | Aggregate child records (sum, count, min, max) |
+
+| Data Type | Field Type | When to Use |
+|---|---|---|
+| Multiple choices | `Field.select({ multiple: true })` | Multi-select picklist |
+| File upload | `Field.file()` | Document/attachment fields |
+| Image upload | `Field.image()` | Photo/avatar fields |
+| GPS coordinates | `Field.location()` | Geographic location data |
+| Mailing address | `Field.address()` | Structured postal address |
 
 ## 🚀 Development Workflow
 
