@@ -6,9 +6,10 @@
 ## Strategic Direction
 
 ```
-2025  ████████████████████████████████  Phases 1-9: Foundation → AI → Quality → Test → Integration → Schema → v3.0 → UI → DX
-2026  ████████░░░░░░░░░░░░░░░░░░░░░░░  Phase 10: Ecosystem & Connectivity    ← CURRENT FOCUS
-2027  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  Phase 11: Vertical Solutions & Advanced AI
+2025       ████████████████████████████████  Phases 1-9: Foundation → AI → Quality → Test → Integration → Schema → v3.0 → UI → DX
+2026 Q1-Q2 ████████████████░░░░░░░░░░░░░░░  Phase 10: Salesforce Feature Parity    ← CURRENT FOCUS
+2026 Q3-Q4 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  Phase 11: Ecosystem & Connectivity
+2027       ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  Phase 12: Vertical Solutions & Advanced AI
 ```
 
 ## Current State Summary
@@ -511,9 +512,117 @@
 
 ---
 
-## Phase 10: Ecosystem & Connectivity (2026)
+## Phase 10: Salesforce Feature Parity & Business Expansion (2026)
 
-The next major chapter: connecting HotCRM to the tools businesses already use.
+> Close the most critical Salesforce feature gaps across all 6 business clouds. Driven by the deep comparison analysis in [docs/SALESFORCE_FEATURE_COMPARISON.md](docs/SALESFORCE_FEATURE_COMPARISON.md).
+>
+> **Scope**: Business package features only. Platform features (Flow Builder, App Builder, Report Designer, Authentication, Multi-Tenancy, etc.) are developed in `@objectstack/runtime`.
+
+### Current Salesforce Parity: ~75% → Target: ~92%
+
+### Phase 10A: Sales & Revenue Parity (Weeks 1-4) — P0 Gaps
+
+> Goal: Close the most critical Sales Cloud and Revenue Cloud gaps.
+
+#### Sales Cloud Enhancements (`@hotcrm/crm`)
+- [ ] Add `opportunity_line_item.object.ts` — link products to opportunities (Salesforce: OpportunityLineItem)
+- [ ] Add `opportunity_contact_role.object.ts` — contact roles on opportunities (Salesforce: OpportunityContactRole)
+- [ ] Add `forecast.object.ts` + `forecast_item.object.ts` — sales forecasting (Salesforce: ForecastingItem)
+- [ ] Add hooks for opportunity line items (amount rollup to opportunity, validation)
+- [ ] Add hooks for forecasting (auto-aggregate from opportunities, period management)
+- [ ] Add `forecast_ai.action.ts` — AI-powered forecast adjustment and predictions
+
+#### Revenue Cloud Enhancements (`@hotcrm/finance`)
+- [ ] Add `credit_note.object.ts` — credit notes and refunds
+- [ ] Add `billing_schedule.object.ts` — recurring billing schedules
+- [ ] Add hooks for credit notes (balance adjustment, invoice linking)
+- [ ] Add hooks for billing schedules (auto-invoice generation)
+
+#### Products / CPQ Enhancements (`@hotcrm/products`)
+- [ ] Add `order.object.ts` + `order_item.object.ts` — order management (Salesforce: Order/OrderItem)
+- [ ] Add hooks for orders (status lifecycle, fulfillment tracking)
+- [ ] Add `order_ai.action.ts` — order analytics and predictions
+
+### Phase 10B: Marketing & Advanced Sales (Weeks 5-8) — P1 Gaps
+
+> Goal: Add journey orchestration and territory management data models.
+
+#### Marketing Enhancements (`@hotcrm/marketing`)
+- [ ] Add `journey.object.ts` + `journey_step.object.ts` — journey builder data model (Salesforce: Journey Builder)
+- [ ] Add `ab_test.object.ts` + `ab_test_variant.object.ts` — A/B testing
+- [ ] Add hooks for journey execution (step transitions, entry criteria evaluation)
+- [ ] Add hooks for A/B tests (variant assignment, statistical winner selection)
+- [ ] Add `journey_ai.action.ts` — AI journey optimization
+
+#### Sales Cloud Advanced (`@hotcrm/crm`)
+- [ ] Add `territory.object.ts` + `territory_rule.object.ts` — territory management
+- [ ] Add `opportunity_team_member.object.ts` — team selling
+- [ ] Add `competitor.object.ts` — competitive tracking on opportunities
+- [ ] Add hooks for territory assignment and team collaboration
+
+### Phase 10C: Revenue Maturity (Weeks 9-12) — P1 Gaps
+
+> Goal: Enterprise-grade revenue operations.
+
+#### Finance Enhancements (`@hotcrm/finance`)
+- [ ] Add `revenue_schedule.object.ts` — revenue recognition schedules (ASC 606)
+- [ ] Add `revenue_recognition_rule.object.ts` — ASC 606 compliance rules
+- [ ] Add `payment_method.object.ts` — stored payment methods
+- [ ] Add hooks for revenue recognition (auto-schedule, compliance checks)
+- [ ] Add `revenue_recognition_ai.action.ts` — AI compliance assistance
+
+#### Products / CPQ Enhancements (`@hotcrm/products`)
+- [ ] Add `subscription.object.ts` — subscription management (renewal, amendment, cancellation)
+- [ ] Add `product_option.object.ts` — advanced bundle configuration options
+- [ ] Enhance `pricebook` for multi-currency support
+- [ ] Add hooks for subscriptions (renewal reminders, amendment validation, cancellation flow)
+
+### Phase 10D: Package Maturity & Cross-Cloud Integration (Weeks 13-16) — P2 Gaps
+
+> Goal: Round out remaining gaps and strengthen cross-cloud data flows.
+
+#### Service Enhancements (`@hotcrm/support`)
+- [ ] Add `chatbot_config.object.ts` — chatbot configuration for AI-powered case deflection
+- [ ] Add `macro.object.ts` — agent productivity macros
+- [ ] Enhance service AI actions with chatbot integration
+
+#### HR Enhancements (`@hotcrm/hr`)
+- [ ] Add `benefit.object.ts` — benefits administration
+- [ ] Add `compensation_plan.object.ts` — compensation management
+- [ ] Add hooks for benefits enrollment and compensation rules
+
+#### Cross-Cloud Lifecycle Automation
+- [ ] Opportunity → Order → Invoice lifecycle automation (CRM → Products → Finance)
+- [ ] Campaign → Lead → Opportunity full attribution chain (Marketing → CRM)
+- [ ] Forecast → Revenue Recognition alignment (CRM → Finance)
+- [ ] Case → Knowledge Article feedback loop (Support auto-improvement)
+
+### Phase 10 Timeline
+
+```
+Week  1-4   ████████  Phase 10A: Sales & Revenue Parity         (+~10 objects)
+Week  5-8   ████████  Phase 10B: Marketing & Advanced Sales      (+~8 objects)
+Week  9-12  ████████  Phase 10C: Revenue Maturity                (+~5 objects)
+Week 13-16  ████████  Phase 10D: Maturity & Cross-Cloud          (+~4 objects)
+```
+
+### Phase 10 Expected Outcomes
+
+| Metric | Current | After Phase 10 | Change |
+|--------|---------|----------------|--------|
+| Business Objects | 69 | ~96 | +27 objects |
+| Salesforce Parity | ~75% | ~92% | +17% |
+| Sales Cloud Parity | ~65% | ~90% | +25% |
+| Revenue Cloud Parity | ~70% | ~90% | +20% |
+| Marketing Cloud Parity | ~70% | ~85% | +15% |
+
+---
+
+## Phase 11: Ecosystem & Connectivity (2026 Q3-Q4)
+
+> Connecting HotCRM to external tools and building new business packages.
+>
+> **Note**: Platform-level enhancements (Webhook Framework, API Rate Limiting, Bulk Data API, Real-time Events) are developed in `@objectstack/runtime`.
 
 ### Integration Connectors
 
@@ -530,28 +639,21 @@ The next major chapter: connecting HotCRM to the tools businesses already use.
 | BambooHR / Workday | HR Systems | Medium | Planned |
 | LinkedIn | Recruiting | Medium | Planned |
 
-### Platform Enhancements
-
-- **Webhook Framework**: Outbound webhooks with retry logic and event filtering
-- **API Rate Limiting**: Per-tenant rate limiting with configurable thresholds
-- **Bulk Data API**: High-volume data import/export (100K+ records)
-- **Real-time Events**: Server-Sent Events (SSE) for live dashboard updates
-
 ### New Business Packages
 
-### 📦 Analytics Package (`@hotcrm/analytics`) — Business Intelligence Cloud
+#### 📦 Analytics Package (`@hotcrm/analytics`) — Business Intelligence Cloud
 
-**Planned for:** Q1 2027  
+**Planned for:** Q3 2026  
 **Dependencies:** All business packages (CRM, Finance, HR, Marketing, Products, Support)
 
-#### Scope
+##### Scope
 - **Reporting Engine**: Custom report builder with aggregations, grouping, and filtering
 - **Dashboard Framework**: KPI cards, charts, and widgets
 - **Predictive Analytics**: Forecasting models for revenue, churn, and growth
 - **Data Visualization**: Charts, graphs, heatmaps, funnels
 - **Cross-Object Analytics**: Join data across multiple business objects
 
-#### Planned Objects
+##### Planned Objects
 - `report` - Saved report definitions with filters and groupings
 - `dashboard` - Dashboard layouts with widget configurations
 - `kpi` - Key Performance Indicator definitions
@@ -559,32 +661,24 @@ The next major chapter: connecting HotCRM to the tools businesses already use.
 - `forecast` - Predictive forecast models and results
 - `data_source` - External data source connectors
 
-#### AI Capabilities
+##### AI Capabilities
 - **Report AI**: Natural language report generation ("Show me top 10 customers by revenue")
 - **Dashboard AI**: Auto-generate dashboard layouts based on role
 - **Insight AI**: Automatic anomaly detection and trend alerts
 - **Forecast AI**: ML-powered revenue and churn predictions
 
-#### Integration Points
-- Pull data from CRM (Accounts, Opportunities, Leads)
-- Pull data from Finance (Revenue, Invoices, Contracts)
-- Pull data from HR (Headcount, Performance, Turnover)
-- Pull data from Marketing (Campaigns, ROI, Attribution)
-- Pull data from Products (Sales, Quotes, Product Mix)
-- Pull data from Support (Case Volume, Resolution Time, CSAT)
+#### 📦 Integration Package (`@hotcrm/integration`) — iPaaS Connectors
 
-### 📦 Integration Package (`@hotcrm/integration`) — iPaaS Connectors
-
-**Planned for:** Q2 2027  
+**Planned for:** Q4 2026  
 **Dependencies:** Core business packages
 
-#### Scope
+##### Scope
 - **External System Connectors**: Pre-built integrations for popular SaaS
 - **Webhook Management**: Outbound webhooks for real-time events
 - **Data Sync**: Bi-directional sync with external systems
 - **API Middleware**: Transform and route data between systems
 
-#### Planned Connectors
+##### Planned Connectors
 - Stripe (Payments)
 - DocuSign (E-Signatures)
 - Slack (Notifications)
@@ -594,19 +688,19 @@ The next major chapter: connecting HotCRM to the tools businesses already use.
 - HubSpot (Marketing Data)
 - Salesforce (Migration)
 
-### 📦 Community Package (`@hotcrm/community`) — Customer Community Portal
+#### 📦 Community Package (`@hotcrm/community`) — Customer Community Portal
 
-**Planned for:** Q3 2027  
+**Planned for:** Q4 2026  
 **Dependencies:** Support, CRM packages
 
-#### Scope
+##### Scope
 - **Community Forums**: Discussion boards and Q&A
 - **Idea Management**: Customer feature requests and voting
 - **User Groups**: Customer communities by region, industry, etc.
 - **Events Calendar**: User group meetings and webinars
 - **Reputation System**: Badges, points, and leaderboards
 
-#### Planned Objects
+##### Planned Objects
 - `community` - Community portal configuration
 - `forum_category` - Forum organization
 - `idea` - Customer feature requests
@@ -616,7 +710,7 @@ The next major chapter: connecting HotCRM to the tools businesses already use.
 
 ---
 
-## Phase 11: Vertical Solutions & Advanced AI (2027+)
+## Phase 12: Vertical Solutions & Advanced AI (2027+)
 
 ### Vertical Solutions
 
