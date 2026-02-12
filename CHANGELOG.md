@@ -8,20 +8,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
-- **Upgraded @objectstack to v2.0.6**: All packages upgraded to v2.0.6 (February 11, 2026)
-  - @objectstack/spec: ^2.0.6
-  - @objectstack/cli: ^2.0.6
-  - @objectstack/studio: ^2.0.6
-  - @objectstack/core: ^2.0.6
-  - @objectstack/runtime: ^2.0.6
-  - @objectstack/plugin-hono-server: ^2.0.6
-  - @objectstack/metadata: ^2.0.6
-  - @objectstack/objectql: ^2.0.6
-- All packages (10 total) now use latest @objectstack v2.0.6 dependencies
-- Updated pnpm lockfile with new dependencies
-- All 933 tests passing with zero breaking changes
-- Protocol compliance validated: All 65 business objects fully compliant
-- Previous upgrades: v0.8.1 → v0.9.0 → v0.9.1 → v0.9.2 → v1.0.0 → v1.0.4 → v1.1.0 → v2.0.0 → v2.0.1 → v2.0.3 → v2.0.6
+- **Upgraded @objectstack to v3.0.0**: Major version upgrade (February 12, 2026)
+  - @objectstack/spec: ^2.0.6 → ^3.0.0 (Zod 4 validation engine, new ObjectSchema.create() API)
+  - @objectstack/cli: ^2.0.6 → ^3.0.0
+  - @objectstack/studio: ^2.0.6 → ^3.0.0 (new Studio plugin extensibility API)
+  - @objectstack/core: ^2.0.6 → ^3.0.0
+  - @objectstack/runtime: ^2.0.6 → ^3.0.0
+  - @objectstack/plugin-hono-server: ^2.0.6 → ^3.0.0
+  - @objectstack/metadata: ^2.0.6 → ^3.0.0
+  - @objectstack/objectql: ^2.0.6 → ^3.0.0
+- All 10 packages upgraded to @objectstack v3.0.0 dependencies
+- Updated pnpm lockfile for v3.0.0
+- All 1604 tests passing (108 test files) with zero breaking changes
+- Protocol compliance validated: All 69 business objects fully compliant with v3.0.0
+- Updated ROADMAP.md with Phase 7 (v3.0.0 Upgrade) and re-organized Phase 8 (UI Completeness)
+- Updated documentation version references across README.md, roadmap.mdx, spec evaluation
+- Upgrade history: v0.8.1 → ... → v2.0.6 → v3.0.0
+
+### Notable in @objectstack/spec v3.0.0
+- **New API**: `ObjectSchema.create()` — recommended lighter alternative to `ObjectSchema.parse()`
+- **Zod 4**: Internal validation engine upgraded from Zod 3 to Zod 4.3.6
+- **Studio Module**: New `@objectstack/spec/studio` with `defineStudioPlugin()`, contribution schemas
+- **Removed Modules**: `hub`, `auth`, `driver`, `permission` (none used by HotCRM)
+- **Streamlined Exports**: 12 modules (down from 16), contracts module now empty
+
+## [Previous - v2.0.6]
 
 ### Fixed
 - Fixed 4 remaining PascalCase `Field.lookup()` references in CRM package

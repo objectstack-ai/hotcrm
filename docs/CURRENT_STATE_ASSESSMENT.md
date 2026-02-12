@@ -1,7 +1,7 @@
 # HotCRM Current State Assessment
 
 > **Assessment Date**: February 11, 2026  
-> **Protocol Version**: @objectstack/spec v2.0.6  
+> **Protocol Version**: @objectstack/spec v3.0.0  
 > **Assessment Status**: ✅ All systems operational
 
 ## Executive Summary

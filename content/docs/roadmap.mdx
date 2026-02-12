@@ -7,7 +7,7 @@ description: Strategic direction and upcoming features for HotCRM.
 
 HotCRM has completed **6 development phases**, establishing a full-featured **6-Cloud CRM** with **69 production-ready objects**, schema-validated metadata, AI agent workflows, and enterprise security foundations. Our focus now shifts to **UI completeness**, **cross-cloud integration**, and preparing for the **ecosystem expansion** planned for 2027.
 
-> **Protocol Version**: @objectstack/spec v2.0.6 | **Tests**: 1,604 passing (108 files) | **Last Updated**: February 12, 2026
+> **Protocol Version**: @objectstack/spec v3.0.0 | **Tests**: 1,604 passing (108 files) | **Last Updated**: February 12, 2026
 
 ## ✅ Phase 1: Core Foundation (Completed)
 
@@ -71,9 +71,18 @@ Increased spec schema adoption from ~3.4% to ~15%.
 - **AI Schema Formalization** ✅: 6 agents via `AgentSchema`, RAG pipeline, model registry, NLQ schemas
 - **Security Metadata** ✅: 6 permission sets, sharing rules, territory model
 
-## 🔧 Phase 7: UI Completeness & Cross-Cloud Integration (Current Focus)
+## ✅ Phase 7: @objectstack/spec v3.0.0 Upgrade (Completed)
 
-With the data layer, business logic, and AI capabilities mature, Phase 7 focuses on **UI metadata coverage** for all primary objects and **cross-cloud data flow patterns**.
+Major version upgrade from v2.0.6 to v3.0.0 — Zod 4 validation engine, new `ObjectSchema.create()` API, Studio plugin extensibility.
+
+- **Core Upgrade** ✅: All 10 packages upgraded to @objectstack/spec v3.0.0, @objectstack/cli v3.0.0, @objectstack/studio v3.0.0
+- **Zero Breaking Changes** ✅: All 1,604 tests passing, 0 TypeScript errors
+- **Module Cleanup** ✅: Removed modules (`hub`, `auth`, `driver`, `permission`) not used by HotCRM
+- **v3.0 API Adoption** 🔧: `ObjectSchema.create()` migration, Studio plugin contributions (in progress)
+
+## 🔧 Phase 8: UI Completeness & Cross-Cloud Integration (Current Focus)
+
+With the data layer, business logic, and AI capabilities mature, Phase 8 focuses on **UI metadata coverage** for all primary objects and **cross-cloud data flow patterns**.
 
 ### 🔴 P0 — Page Layouts & List Views
 
@@ -120,7 +129,7 @@ Currently only **4 pages** and **1 list view** exist for **69 objects**. Key bus
 - **Webhook Outbound Events**: Event notification using `@objectstack/spec/integration`
 - **Cache Configuration**: High-read object caching (product catalog, knowledge articles)
 
-## 🌍 Phase 8: Ecosystem & Connectivity (Planned — 2027)
+## 🌍 Phase 9: Ecosystem & Connectivity (Planned — 2027)
 
 ### Integration Connectors
 - **Payment Gateways**: Stripe, PayPal bi-directional sync
