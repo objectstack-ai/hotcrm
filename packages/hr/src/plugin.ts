@@ -41,6 +41,10 @@ import { Attendance } from './attendance.object';
 // Import payroll object
 import { Payroll } from './payroll.object';
 
+// Import benefits & compensation objects
+import { Benefit } from './benefit.object';
+import { CompensationPlan } from './compensation_plan.object';
+
 // Import hooks
 import { CandidateScoringTrigger, CandidateStatusChangeTrigger } from './hooks/candidate.hook';
 import { EmployeeOnboardingTrigger, EmployeeStatusChangeTrigger, EmployeeDataValidationTrigger } from './hooks/employee.hook';
@@ -58,6 +62,8 @@ import { CertificationExpirationValidationTrigger, CertificationRenewalReminderT
 import { DepartmentManagerValidationTrigger, DepartmentHeadcountTrackingTrigger } from './hooks/department.hook';
 import { PositionStatusChangeValidationTrigger, PositionVacancyTrackingTrigger } from './hooks/position.hook';
 import { TrainingEnrollmentValidationTrigger, TrainingCompletionTrackingTrigger } from './hooks/training.hook';
+import { BenefitEnrollmentValidationTrigger, BenefitExpirationCheckTrigger } from './hooks/benefit.hook';
+import { CompensationPlanValidationTrigger, CompensationPlanApprovalTrigger } from './hooks/compensation_plan.hook';
 
 // Import actions
 import CandidateAIAction from './actions/candidate_ai.action';
@@ -129,6 +135,10 @@ export const HRPlugin = {
     position_vacancy_tracking: PositionVacancyTrackingTrigger,
     training_enrollment_validation: TrainingEnrollmentValidationTrigger,
     training_completion_tracking: TrainingCompletionTrackingTrigger,
+    benefit_enrollment_validation: BenefitEnrollmentValidationTrigger,
+    benefit_expiration_check: BenefitExpirationCheckTrigger,
+    compensation_plan_validation: CompensationPlanValidationTrigger,
+    compensation_plan_approval: CompensationPlanApprovalTrigger,
   },
 
   // Workflows
@@ -169,6 +179,10 @@ export const HRPlugin = {
     
     // Compensation
     payroll: Payroll,
+
+    // Benefits & Compensation
+    benefit: Benefit,
+    compensation_plan: CompensationPlan,
   },
   
   // Navigation structure for this plugin
@@ -211,6 +225,14 @@ export const HRPlugin = {
         { type: 'object', object: 'time_off' },
         { type: 'object', object: 'attendance' },
         { type: 'object', object: 'payroll' },
+      ]
+    },
+    {
+      type: 'group',
+      label: 'Benefits & Compensation',
+      children: [
+        { type: 'object', object: 'benefit' },
+        { type: 'object', object: 'compensation_plan' },
       ]
     }
   ]

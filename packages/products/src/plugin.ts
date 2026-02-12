@@ -25,6 +25,10 @@ import { ProductBundleComponent } from './product_bundle_component.object';
 import { PriceRule } from './price_rule.object';
 import { ApprovalRequest } from './approval_request.object';
 import { DiscountSchedule } from './discount_schedule.object';
+import { Order } from './order.object';
+import { OrderItem } from './order_item.object';
+import { Subscription } from './subscription.object';
+import { ProductOption } from './product_option.object';
 
 import { QuotePricingHook } from './hooks/quote.hook';
 import ProductHook from './hooks/product.hook';
@@ -34,12 +38,15 @@ import { ApprovalRequestCreationTrigger, ApprovalDecisionTrigger } from './hooks
 import { ProductBundleValidationTrigger, ProductBundleComponentCompletenessTrigger } from './hooks/product_bundle.hook';
 import { PriceRuleValidationTrigger, PriceRuleConflictDetectionTrigger } from './hooks/price_rule.hook';
 import { DiscountScheduleActivationTrigger, DiscountScheduleOverlapDetectionTrigger } from './hooks/discount_schedule.hook';
+import { OrderValidationTrigger, OrderStatusLifecycleTrigger } from './hooks/order.hook';
+import { SubscriptionValidationTrigger, SubscriptionRenewalReminderTrigger } from './hooks/subscription.hook';
 import { ApprovalWorkflows } from './approval.workflow';
 
 // Import actions
 import BundleSuggestionAction from './actions/bundle_suggestion.action';
 import PricingOptimizerAction from './actions/pricing_optimizer.action';
 import ProductRecommendationAction from './actions/product_recommendation.action';
+import OrderAIAction from './actions/order_ai.action';
 
 /**
  * Products Plugin Definition
@@ -72,6 +79,10 @@ export const ProductsPlugin = {
     price_rule: PriceRule,
     approval_request: ApprovalRequest,
     discount_schedule: DiscountSchedule,
+    order: Order,
+    order_item: OrderItem,
+    subscription: Subscription,
+    product_option: ProductOption,
   },
   
   // Actions provided by this plugin
@@ -79,6 +90,7 @@ export const ProductsPlugin = {
     bundle_suggestion: BundleSuggestionAction,
     pricing_optimizer: PricingOptimizerAction,
     product_recommendation: ProductRecommendationAction,
+    order_ai: OrderAIAction,
   },
 
   triggers: {
@@ -95,6 +107,10 @@ export const ProductsPlugin = {
     price_rule_conflict_detection: PriceRuleConflictDetectionTrigger,
     discount_schedule_activation: DiscountScheduleActivationTrigger,
     discount_schedule_overlap_detection: DiscountScheduleOverlapDetectionTrigger,
+    order_validation: OrderValidationTrigger,
+    order_status_lifecycle: OrderStatusLifecycleTrigger,
+    subscription_validation: SubscriptionValidationTrigger,
+    subscription_renewal_reminder: SubscriptionRenewalReminderTrigger,
   },
 
   // Workflows
@@ -116,6 +132,15 @@ export const ProductsPlugin = {
         { type: 'object', object: 'price_rule' },
         { type: 'object', object: 'discount_schedule' },
         { type: 'object', object: 'approval_request' },
+        { type: 'object', object: 'order' },
+      ]
+    },
+    {
+      type: 'group',
+      label: 'Subscriptions',
+      children: [
+        { type: 'object', object: 'subscription' },
+        { type: 'object', object: 'product_option' },
       ]
     }
   ]

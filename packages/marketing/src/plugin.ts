@@ -12,6 +12,10 @@ import { AutomationWorkflow } from './automation_workflow.object';
 import { EmailSend } from './email_send.object';
 import { LeadNurtureProgram } from './lead_nurture_program.object';
 import { Touchpoint } from './touchpoint.object';
+import { Journey } from './journey.object';
+import { JourneyStep } from './journey_step.object';
+import { AbTest } from './ab_test.object';
+import { AbTestVariant } from './ab_test_variant.object';
 
 import { CampaignROIHook } from './hooks/roi.hook';
 import { CampaignROICalculationTrigger, CampaignBudgetTrackingTrigger, CampaignStatusChangeTrigger, CampaignDateValidationTrigger } from './hooks/campaign.hook';
@@ -26,11 +30,14 @@ import { FormFieldValidationTrigger, FormSubmissionTrackingTrigger } from './hoo
 import { LandingPageLifecycleValidationTrigger, LandingPageMetricsTrigger } from './hooks/landing_page.hook';
 import { MarketingListDuplicateDetectionTrigger, MarketingListMembershipCountTrigger } from './hooks/marketing_list.hook';
 import { TouchpointTimestampValidationTrigger, TouchpointAttributionScoringTrigger } from './hooks/touchpoint.hook';
+import { JourneyValidationTrigger, JourneyMetricsTrigger } from './hooks/journey.hook';
+import { AbTestValidationTrigger, AbTestWinnerSelectionTrigger } from './hooks/ab_test.hook';
 
 // Import actions
 import CampaignAIAction from './actions/campaign_ai.action';
 import ContentGeneratorAction from './actions/content_generator.action';
 import MarketingAnalyticsAction from './actions/marketing_analytics.action';
+import JourneyAIAction from './actions/journey_ai.action';
 import { CampaignWorkflows } from './campaign.workflow';
 
 export const MarketingPlugin = {
@@ -57,11 +64,16 @@ export const MarketingPlugin = {
     email_send: EmailSend,
     lead_nurture_program: LeadNurtureProgram,
     touchpoint: Touchpoint,
+    journey: Journey,
+    journey_step: JourneyStep,
+    ab_test: AbTest,
+    ab_test_variant: AbTestVariant,
   },
   actions: {
     campaign_ai: CampaignAIAction,
     content_generator: ContentGeneratorAction,
     marketing_analytics: MarketingAnalyticsAction,
+    journey_ai: JourneyAIAction,
   },
   triggers: {
     campaign_roi: CampaignROIHook,
@@ -94,6 +106,10 @@ export const MarketingPlugin = {
     marketing_list_membership_count: MarketingListMembershipCountTrigger,
     touchpoint_timestamp_validation: TouchpointTimestampValidationTrigger,
     touchpoint_attribution_scoring: TouchpointAttributionScoringTrigger,
+    journey_validation: JourneyValidationTrigger,
+    journey_metrics: JourneyMetricsTrigger,
+    ab_test_validation: AbTestValidationTrigger,
+    ab_test_winner_selection: AbTestWinnerSelectionTrigger,
   },
 
   // Workflows
@@ -125,6 +141,16 @@ export const MarketingPlugin = {
         { type: 'object', object: 'automation_workflow' },
         { type: 'object', object: 'lead_nurture_program' },
         { type: 'object', object: 'touchpoint' },
+      ]
+    },
+    {
+      type: 'group',
+      label: 'Journey & Testing',
+      children: [
+        { type: 'object', object: 'journey' },
+        { type: 'object', object: 'journey_step' },
+        { type: 'object', object: 'ab_test' },
+        { type: 'object', object: 'ab_test_variant' },
       ]
     }
   ]

@@ -3,6 +3,11 @@ import { Contract } from '../../../src/contract.object';
 import { Invoice } from '../../../src/invoice.object';
 import { InvoiceLine } from '../../../src/invoice_line.object';
 import { Payment } from '../../../src/payment.object';
+import { CreditNote } from '../../../src/credit_note.object';
+import { BillingSchedule } from '../../../src/billing_schedule.object';
+import { RevenueSchedule } from '../../../src/revenue_schedule.object';
+import { RevenueRecognitionRule } from '../../../src/revenue_recognition_rule.object';
+import { PaymentMethod } from '../../../src/payment_method.object';
 
 const IDENTIFIER_RE = /^[a-z][a-z0-9_.]+$/;
 
@@ -11,6 +16,11 @@ const OBJECTS = [
   { name: 'Invoice', schema: Invoice },
   { name: 'InvoiceLine', schema: InvoiceLine },
   { name: 'Payment', schema: Payment },
+  { name: 'CreditNote', schema: CreditNote },
+  { name: 'BillingSchedule', schema: BillingSchedule },
+  { name: 'RevenueSchedule', schema: RevenueSchedule },
+  { name: 'RevenueRecognitionRule', schema: RevenueRecognitionRule },
+  { name: 'PaymentMethod', schema: PaymentMethod },
 ];
 
 describe('Finance Package - Spec Compliance', () => {

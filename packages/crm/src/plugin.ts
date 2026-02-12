@@ -19,8 +19,16 @@ import { Activity } from './activity.object';
 import { Contact } from './contact.object';
 import { Lead } from './lead.object';
 import { Opportunity } from './opportunity.object';
+import { OpportunityLineItem } from './opportunity_line_item.object';
+import { OpportunityContactRole } from './opportunity_contact_role.object';
+import { Forecast } from './forecast.object';
+import { ForecastItem } from './forecast_item.object';
 import { Task } from './task.object';
 import { Note } from './note.object';
+import { Territory } from './territory.object';
+import { TerritoryRule } from './territory_rule.object';
+import { OpportunityTeamMember } from './opportunity_team_member.object';
+import { Competitor } from './competitor.object';
 import LeadConvertAction from './actions/lead_convert.action';
 import { AssignmentRule } from './assignment_rule.object';
 import { LeadWorkflows } from './lead.workflow';
@@ -33,7 +41,10 @@ import { ActivityRelatedObjectUpdatesTrigger, ActivityCompletionTrigger, Activit
 import { ContactDecisionChainTrigger, ContactDecisionMakerValidationTrigger, ContactDuplicateDetectionTrigger, ContactRelationshipStrengthTrigger } from './hooks/contact.hook';
 import { TaskValidationTrigger, TaskCompletionTrigger, TaskOverdueTrigger } from './hooks/task.hook';
 import { NoteValidationTrigger, NoteEditTrackingTrigger } from './hooks/note.hook';
+import { TerritoryValidationTrigger, TerritoryMetricsTrigger } from './hooks/territory.hook';
 import { AssignmentRuleValidationTrigger, AssignmentRuleSortOrderTrigger } from './hooks/assignment_rule.hook';
+import { OpportunityLineItemCalculationTrigger, OpportunityLineItemRollupTrigger } from './hooks/opportunity_line_item.hook';
+import { ForecastCalculationTrigger, ForecastAggregationTrigger } from './hooks/forecast.hook';
 
 // Import actions
 import EnhancedLeadScoringAction from './actions/enhanced_lead_scoring.action';
@@ -43,6 +54,8 @@ import SmartBriefingAction from './actions/ai_smart_briefing.action';
 import SalesPerformanceAction from './actions/sales_performance.action';
 import { calculateAccountHealth, predictChurn, generateRecommendations, assignTerritory, enrichAccount } from './actions/account_ai.action';
 import { enrichContact, detectBuyingIntent, analyzeSentiment, predictBestContactTime, findDuplicates } from './actions/contact_ai.action';
+import ForecastAIAction from './actions/forecast_ai.action';
+import CrossCloudLifecycleAction from './actions/cross_cloud_lifecycle.action';
 
 /**
  * CRM Plugin Definition
@@ -74,6 +87,8 @@ export const CRMPlugin = {
     sales_performance: SalesPerformanceAction,
     account_ai: { calculateAccountHealth, predictChurn, generateRecommendations, assignTerritory, enrichAccount },
     contact_ai: { enrichContact, detectBuyingIntent, analyzeSentiment, predictBestContactTime, findDuplicates },
+    forecast_ai: ForecastAIAction,
+    cross_cloud_lifecycle: CrossCloudLifecycleAction,
   },
 
   // Triggers/Hooks
@@ -99,6 +114,12 @@ export const CRMPlugin = {
     note_edit_tracking: NoteEditTrackingTrigger,
     assignment_rule_validation: AssignmentRuleValidationTrigger,
     assignment_rule_sort_order: AssignmentRuleSortOrderTrigger,
+    opportunity_line_item_calculation: OpportunityLineItemCalculationTrigger,
+    opportunity_line_item_rollup: OpportunityLineItemRollupTrigger,
+    forecast_calculation: ForecastCalculationTrigger,
+    forecast_aggregation: ForecastAggregationTrigger,
+    territory_validation: TerritoryValidationTrigger,
+    territory_metrics: TerritoryMetricsTrigger,
   },
 
   // Workflows
@@ -117,8 +138,16 @@ export const CRMPlugin = {
     lead: Lead,
     assignment_rule: AssignmentRule,
     opportunity: Opportunity,
+    opportunity_line_item: OpportunityLineItem,
+    opportunity_contact_role: OpportunityContactRole,
+    forecast: Forecast,
+    forecast_item: ForecastItem,
     task: Task,
     note: Note,
+    territory: Territory,
+    territory_rule: TerritoryRule,
+    opportunity_team_member: OpportunityTeamMember,
+    competitor: Competitor,
   },
   
   // Navigation structure for this plugin
@@ -132,6 +161,14 @@ export const CRMPlugin = {
         { type: 'object', object: 'lead' },
         { type: 'object', object: 'opportunity' },
         { type: 'object', object: 'activity' },
+      ]
+    },
+    {
+      type: 'group',
+      label: 'Territories',
+      children: [
+        { type: 'object', object: 'territory' },
+        { type: 'object', object: 'territory_rule' },
       ]
     }
   ]

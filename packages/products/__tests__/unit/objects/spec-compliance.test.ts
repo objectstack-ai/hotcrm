@@ -8,6 +8,10 @@ import { ProductBundle } from '../../../src/product_bundle.object';
 import { ProductBundleComponent } from '../../../src/product_bundle_component.object';
 import { Quote } from '../../../src/quote.object';
 import { QuoteLineItem } from '../../../src/quote_line_item.object';
+import { Order } from '../../../src/order.object';
+import { OrderItem } from '../../../src/order_item.object';
+import { Subscription } from '../../../src/subscription.object';
+import { ProductOption } from '../../../src/product_option.object';
 
 const IDENTIFIER_RE = /^[a-z][a-z0-9_.]+$/;
 
@@ -21,6 +25,10 @@ const OBJECTS = [
   { name: 'ProductBundleComponent', schema: ProductBundleComponent },
   { name: 'DiscountSchedule', schema: DiscountSchedule },
   { name: 'ApprovalRequest', schema: ApprovalRequest },
+  { name: 'Order', schema: Order },
+  { name: 'OrderItem', schema: OrderItem },
+  { name: 'Subscription', schema: Subscription },
+  { name: 'ProductOption', schema: ProductOption },
 ];
 
 describe('Products Package - Spec Compliance', () => {
