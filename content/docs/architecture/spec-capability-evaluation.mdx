@@ -1,14 +1,14 @@
 ---
 title: "@objectstack/spec Metadata Capability Evaluation"
-description: "Detailed analysis of @objectstack/spec v2.0.6 metadata capabilities used and unused in HotCRM, with improvement recommendations."
+description: "Detailed analysis of @objectstack/spec v3.0.0 metadata capabilities used and unused in HotCRM, with improvement recommendations."
 ---
 
 # @objectstack/spec Metadata Capability Evaluation
 
-> **Version**: @objectstack/spec v2.0.6 | **Evaluated**: February 12, 2026  
-> **Scope**: All 16 spec modules evaluated against HotCRM's 6 business packages + AI package
+> **Version**: @objectstack/spec v3.0.0 | **Evaluated**: February 12, 2026  
+> **Scope**: All 12 spec modules evaluated against HotCRM's 6 business packages + AI package (v3.0.0 removed `hub`, `auth`, `driver`, `permission` modules)
 
-This document provides a comprehensive gap analysis between the metadata capabilities offered by `@objectstack/spec` and their actual adoption in HotCRM. It covers all 16 exported modules, categorizes each capability as **Used**, **Partially Used**, or **Not Used**, and proposes an actionable improvement plan.
+This document provides a comprehensive gap analysis between the metadata capabilities offered by `@objectstack/spec` and their actual adoption in HotCRM. It covers all 12 exported modules (v3.0.0), categorizes each capability as **Used**, **Partially Used**, or **Not Used**, and proposes an actionable improvement plan.
 
 ---
 
@@ -338,7 +338,7 @@ Based on the gap analysis, the following improvements to the project's AI coding
 
 ### How This Evaluation Was Conducted
 
-1. **Spec Module Inventory**: All 16 exported modules of `@objectstack/spec` v2.0.6 were cataloged from `package.json` exports and their `.d.ts` type definitions.
+1. **Spec Module Inventory**: All 12 exported modules of `@objectstack/spec` v3.0.0 were cataloged from `package.json` exports and their `.d.ts` type definitions.
 2. **Import Analysis**: All `from '@objectstack/spec/*'` imports across HotCRM's 6 business packages + AI package were collected and categorized.
 3. **Pattern Matching**: Untyped metadata patterns (plain objects for pages, views, workflows, plugins) were identified by examining file contents against corresponding spec schemas.
 4. **JSON Schema Cross-Reference**: The 1,256 JSON schemas in `@objectstack/spec/json-schema/` were cross-referenced against HotCRM's metadata usage.

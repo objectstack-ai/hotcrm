@@ -1,13 +1,13 @@
 # HotCRM Development Roadmap
 
-> Comprehensive improvement plan based on @objectstack/spec v2.0.6 protocol compliance scan.
-> Generated: February 11, 2026 | Protocol: @objectstack/spec v2.0.6
+> Comprehensive improvement plan based on @objectstack/spec v3.0.0 protocol compliance scan.
+> Generated: February 12, 2026 | Protocol: @objectstack/spec v3.0.0
 
 ## Current State Summary
 
 | Metric | Value |
 |--------|-------|
-| Protocol Version | @objectstack/spec v2.0.6 |
+| Protocol Version | @objectstack/spec v3.0.0 |
 | Business Objects | 69 across 6 clouds |
 | Hook Files | 47 across 6 packages |
 | Action Files | 27 across 7 packages |
@@ -223,7 +223,7 @@
 
 | Area | Status | Action |
 |------|--------|--------|
-| @objectstack/spec version | ✅ v2.0.6 | Upgrade complete |
+| @objectstack/spec version | ✅ v3.0.0 | Upgrade complete |
 | ObjectSchema.parse() compliance | ✅ 100% | All 69 objects pass |
 | snake_case field naming | ✅ 100% | All field names compliant |
 | snake_case lookup references | ✅ 100% | Last 4 PascalCase references fixed |
@@ -360,11 +360,35 @@
 
 **Note**: Visual Workflow Builder and other low-code platform features are out of scope for HotCRM. These are platform-level capabilities provided by `@objectstack/runtime`.
 
-### Phase 7: UI Completeness & Cross-Cloud Integration (Week 17-24)
+### Phase 7: @objectstack/spec v3.0.0 Upgrade (Week 17)
+
+> Major version upgrade from v2.0.6 → v3.0.0, adopting new APIs and Zod 4 validation engine.
+
+#### 7A: Core Upgrade (P0 — Platform Currency)
+- [x] Upgrade `@objectstack/spec` from v2.0.6 to v3.0.0 across all 10 packages
+- [x] Upgrade `@objectstack/cli` from v2.0.6 to v3.0.0 across all 10 packages
+- [x] Upgrade `@objectstack/studio` from v2.0.6 to v3.0.0
+- [x] Verify TypeScript compilation (0 errors)
+- [x] Verify all 1604 tests passing (108 test files)
+- [x] Update version references in ROADMAP.md, README.md, CHANGELOG.md, docs
+
+#### 7B: v3.0.0 API Adoption (P1 — New Features)
+- [ ] Migrate `ObjectSchema.parse()` to `ObjectSchema.create()` for all 69 object definitions (new recommended API — lighter output, no default filling)
+- [ ] Adopt `defineStudioPlugin()` from `@objectstack/spec/studio` for Studio extensibility
+- [ ] Adopt `StudioPluginManifestSchema` for studio plugin validation
+- [ ] Evaluate new `@objectstack/spec/studio` contributions API (ActionContribution, PanelContribution, SidebarGroupContribution, CommandContribution, MetadataViewerContribution)
+
+#### 7C: v3.0.0 Breaking Change Cleanup (P1 — Maintenance)
+- [x] Verify no imports from removed modules (`hub`, `auth`, `driver`, `permission`)
+- [x] Verify `@objectstack/spec/contracts` usage (empty in v3.0.0 — no HotCRM imports)
+- [ ] Update spec capability evaluation docs for v3.0.0 module map (12 modules, down from 16)
+- [ ] Audit Zod 4 compatibility for packages using zod directly (ai, core, crm)
+
+### Phase 8: UI Completeness & Cross-Cloud Integration (Week 18-24)
 
 > Currently only 4 page layouts, 1 list view, 4 dashboards, and 1 form view exist for 69 objects. This phase aims to provide UI metadata coverage for all primary business objects and establish cross-cloud data flow patterns.
 
-#### 7A: Page Layout Expansion (P0 — UI Completeness)
+#### 8A: Page Layout Expansion (P0 — UI Completeness)
 - [ ] Add `opportunity.page.ts` — Deal details, amount, stage, close date, related contacts and activities
 - [ ] Add `contact.page.ts` — Contact details, related accounts, opportunities, and activities
 - [ ] Add `lead.page.ts` — Lead details, scoring, conversion history, and related activities
@@ -376,7 +400,7 @@
 - [ ] Add `product.page.ts` — Product catalog detail, pricing, bundles, availability
 - [ ] Add `knowledge_article.page.ts` — Article content, version history, categories, related cases
 
-#### 7B: List View Expansion (P0 — Navigation)
+#### 8B: List View Expansion (P0 — Navigation)
 - [ ] Add `opportunity.view.ts` — Pipeline board, filters by stage/owner/amount/close date
 - [ ] Add `contact.view.ts` — Contact directory with account grouping, last activity
 - [ ] Add `lead.view.ts` — Lead queue with score, status, source filters
@@ -388,26 +412,26 @@
 - [ ] Add `product.view.ts` — Product catalog with category, price, availability filters
 - [ ] Add `knowledge_article.view.ts` — Knowledge base with search, categories, popularity
 
-#### 7C: Dashboard Expansion (P1 — Analytics)
+#### 8C: Dashboard Expansion (P1 — Analytics)
 - [ ] Add `marketing.dashboard.ts` — Campaign Performance, Email Metrics, Lead Funnel, ROI Trends
 - [ ] Add `finance.dashboard.ts` — Revenue Pipeline, Collections Aging, Cash Flow, Contract Renewals
 - [ ] Add `cpq.dashboard.ts` — Quote Pipeline, Win/Loss Analysis, Discount Usage, Approval Cycle Time
 - [ ] Add `executive.dashboard.ts` — Cross-cloud executive summary combining Sales, Service, Revenue, and HR KPIs
 
-#### 7D: Form View Expansion (P1 — Data Entry)
+#### 8D: Form View Expansion (P1 — Data Entry)
 - [ ] Add `opportunity.form.ts` — Deal creation wizard with stage-driven required fields
 - [ ] Add `contact.form.ts` — Contact creation with account auto-link and duplicate detection UI
 - [ ] Add `lead.form.ts` — Lead capture form with source tracking and assignment preview
 - [ ] Add `case.form.ts` — Case submission form with category-driven field visibility
 - [ ] Add `employee.form.ts` — Employee onboarding form with department/manager lookup
 
-#### 7E: Hook Coverage Expansion (P1 — Business Logic)
+#### 8E: Hook Coverage Expansion (P1 — Business Logic)
 - [ ] Add hooks for Marketing: `email_template`, `form`, `landing_page`, `marketing_list`, `touchpoint`
 - [ ] Add hooks for HR: `certification`, `department`, `position`, `training`
 - [ ] Add hooks for Support: `agent_skill`, `portal_user`, `social_media_case`
 - [ ] Target: 80%+ object hook coverage (currently ~68%, 47 hooks / 69 objects)
 
-#### 7F: Cross-Cloud Integration Tests (P1 — Reliability)
+#### 8F: Cross-Cloud Integration Tests (P1 — Reliability)
 - [ ] Lead-to-Opportunity conversion flow (CRM cross-object)
 - [ ] Quote-to-Contract-to-Invoice conversion flow (Products → Finance)
 - [ ] Campaign-to-Lead attribution flow (Marketing → CRM)
@@ -415,20 +439,20 @@
 - [ ] Employee-Onboarding-to-Training flow (HR cross-object)
 - [ ] AI agent end-to-end pipeline tests (AI → CRM/Support/HR)
 
-#### 7G: Advanced Data Model (P2 — Data Quality)
+#### 8G: Advanced Data Model (P2 — Data Quality)
 - [ ] Cross-field validations (e.g., close_date required when stage = 'Closed Won')
 - [ ] Conditional required fields using spec `ConditionalValidation` schema
 - [ ] Async validation patterns (duplicate detection for leads, contacts)
 - [ ] `DataQualityRules` for email format, phone normalization, address standardization
 
-#### 7H: System & API Configuration (P2 — Enterprise Readiness)
+#### 8H: System #### 7H: System & API API Configuration (P2 — Enterprise Readiness)
 - [ ] Define `AuditConfig` for sensitive objects using `@objectstack/spec/system`
 - [ ] Define `NotificationChannel` configurations for workflow email alerts
 - [ ] Define `ApiEndpoint` declarations for external API surface using `@objectstack/spec/api`
 - [ ] Define `WebhookConfig` for outbound event notifications using `@objectstack/spec/integration`
 - [ ] Define `CacheConfig` for high-read objects (product catalog, knowledge articles)
 
-#### 7I: Documentation Refresh (P2 — DX)
+#### 8I: Documentation Refresh (P2 — DX)
 - [x] Update `docs/roadmap.mdx` with current metrics (69 objects, 1604 tests, 47 hooks)
 - [x] Update `docs/modules/index.mdx` with accurate object counts per cloud
 - [ ] Add cross-cloud integration pattern guides
@@ -522,6 +546,7 @@ These independent business packages are planned for future development:
 
 | Date | From | To | Breaking Changes | Tests |
 |------|------|----|-----------------|-------|
+| 2026-02-12 | v2.0.6 | v3.0.0 | Zod 3→4, removed hub/auth/driver/permission modules, new ObjectSchema.create() API | 1604 ✅ |
 | 2026-02-12 | v2.0.6 | v2.0.6 | None (Phase 7 roadmap: UI completeness, cross-cloud integration, hook expansion) | 1604 ✅ |
 | 2026-02-12 | v2.0.6 | v2.0.6 | None (Phase 6: spec deep adoption, Field.masterDetail, DashboardSchema, EventSchema) | 1604 ✅ |
 | 2026-02-12 | v2.0.6 | v2.0.6 | None (Spec capability evaluation, Phase 6 roadmap) | 1506 ✅ |
