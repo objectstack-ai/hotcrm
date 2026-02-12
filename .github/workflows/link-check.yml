@@ -1,0 +1,32 @@
+name: Link Check
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '**/*.md'
+      - '**/*.mdx'
+  pull_request:
+    paths:
+      - '**/*.md'
+      - '**/*.mdx'
+  schedule:
+    - cron: '0 6 * * 1' # Weekly on Monday at 6am UTC
+
+permissions:
+  contents: read
+
+jobs:
+  link-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check Markdown links
+        uses: gaurav-nelson/github-action-markdown-link-check@v1
+        with:
+          use-quiet-mode: 'yes'
+          config-file: '.github/markdown-link-check-config.json'
+          folder-path: '.'
+          file-extension: '.md'
+          check-modified-files-only: ${{ github.event_name == 'pull_request' && 'yes' || 'no' }}

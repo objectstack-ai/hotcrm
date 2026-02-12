@@ -26,7 +26,10 @@
     "test:integration": "vitest run --passWithNoTests __tests__/integration",
     "validate": "objectstack validate",
     "compile": "objectstack compile",
+    "typecheck": "pnpm exec tsc --noEmit",
+    "test:changed": "pnpm --filter '...[HEAD~1]' exec vitest run --passWithNoTests",
     "verify:plugins": "node scripts/verify-plugin-architecture.js",
+    "stats": "bash scripts/check-stats.sh",
     "clean": "pnpm -r exec rm -rf dist node_modules"
 },
   "keywords": [
