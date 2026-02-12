@@ -21,6 +21,11 @@ import { AutomationWorkflowValidationTrigger, AutomationWorkflowMetricsTrigger }
 import { NurtureEnrollmentTrigger, NurtureGraduationTrigger } from './hooks/lead_nurture.hook';
 import { TouchpointRecordingTrigger, RevenueAttributionTrigger } from './hooks/attribution.hook';
 import { UnsubscribeComplianceTrigger, UnsubscribeValidationTrigger, GlobalSuppressionTrigger } from './hooks/unsubscribe.hook';
+import { EmailTemplateContentValidationTrigger, EmailTemplateTokenValidationTrigger } from './hooks/email_template.hook';
+import { FormFieldValidationTrigger, FormSubmissionTrackingTrigger } from './hooks/form.hook';
+import { LandingPageLifecycleValidationTrigger, LandingPageMetricsTrigger } from './hooks/landing_page.hook';
+import { MarketingListDuplicateDetectionTrigger, MarketingListMembershipCountTrigger } from './hooks/marketing_list.hook';
+import { TouchpointTimestampValidationTrigger, TouchpointAttributionScoringTrigger } from './hooks/touchpoint.hook';
 
 // Import actions
 import CampaignAIAction from './actions/campaign_ai.action';
@@ -79,6 +84,16 @@ export const MarketingPlugin = {
     unsubscribe_compliance: UnsubscribeComplianceTrigger,
     unsubscribe_validation: UnsubscribeValidationTrigger,
     global_suppression: GlobalSuppressionTrigger,
+    email_template_content_validation: EmailTemplateContentValidationTrigger,
+    email_template_token_validation: EmailTemplateTokenValidationTrigger,
+    form_field_validation: FormFieldValidationTrigger,
+    form_submission_tracking: FormSubmissionTrackingTrigger,
+    landing_page_lifecycle_validation: LandingPageLifecycleValidationTrigger,
+    landing_page_metrics: LandingPageMetricsTrigger,
+    marketing_list_duplicate_detection: MarketingListDuplicateDetectionTrigger,
+    marketing_list_membership_count: MarketingListMembershipCountTrigger,
+    touchpoint_timestamp_validation: TouchpointTimestampValidationTrigger,
+    touchpoint_attribution_scoring: TouchpointAttributionScoringTrigger,
   },
 
   // Workflows

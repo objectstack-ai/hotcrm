@@ -45,6 +45,9 @@ import SLAHooks from './hooks/sla.hook';
 import RoutingHooks from './hooks/routing.hook';
 import QueueHooks from './hooks/queue.hook';
 import { ForumTopicValidationTrigger, ForumTopicModerationTrigger, ForumPostCreationTrigger, ForumPostModerationTrigger } from './hooks/forum.hook';
+import { AgentSkillLevelValidationTrigger, AgentCapacityTrackingTrigger } from './hooks/agent_skill.hook';
+import { PortalUserAccountValidationTrigger, PortalUserAccessLevelTrigger } from './hooks/portal_user.hook';
+import { SocialMediaCasePlatformValidationTrigger, SocialMediaCaseSentimentAnalysisTrigger, SocialMediaCaseCreationTrigger } from './hooks/social_media_case.hook';
 import { CaseEscalationWorkflows } from './case_escalation.workflow';
 
 // Import actions
@@ -116,6 +119,13 @@ export const SupportPlugin = {
     forum_topic_moderation: ForumTopicModerationTrigger,
     forum_post_creation: ForumPostCreationTrigger,
     forum_post_moderation: ForumPostModerationTrigger,
+    agent_skill_level_validation: AgentSkillLevelValidationTrigger,
+    agent_capacity_tracking: AgentCapacityTrackingTrigger,
+    portal_user_account_validation: PortalUserAccountValidationTrigger,
+    portal_user_access_level: PortalUserAccessLevelTrigger,
+    social_media_case_platform_validation: SocialMediaCasePlatformValidationTrigger,
+    social_media_case_sentiment_analysis: SocialMediaCaseSentimentAnalysisTrigger,
+    social_media_case_creation: SocialMediaCaseCreationTrigger,
   },
 
   // Workflows
