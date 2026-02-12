@@ -41,6 +41,10 @@ import { Attendance } from './attendance.object';
 // Import payroll object
 import { Payroll } from './payroll.object';
 
+// Import benefits & compensation objects
+import { Benefit } from './benefit.object';
+import { CompensationPlan } from './compensation_plan.object';
+
 // Import hooks
 import { CandidateScoringTrigger, CandidateStatusChangeTrigger } from './hooks/candidate.hook';
 import { EmployeeOnboardingTrigger, EmployeeStatusChangeTrigger, EmployeeDataValidationTrigger } from './hooks/employee.hook';
@@ -169,6 +173,10 @@ export const HRPlugin = {
     
     // Compensation
     payroll: Payroll,
+
+    // Benefits & Compensation
+    benefit: Benefit,
+    compensation_plan: CompensationPlan,
   },
   
   // Navigation structure for this plugin
@@ -211,6 +219,14 @@ export const HRPlugin = {
         { type: 'object', object: 'time_off' },
         { type: 'object', object: 'attendance' },
         { type: 'object', object: 'payroll' },
+      ]
+    },
+    {
+      type: 'group',
+      label: 'Benefits & Compensation',
+      children: [
+        { type: 'object', object: 'benefit' },
+        { type: 'object', object: 'compensation_plan' },
       ]
     }
   ]

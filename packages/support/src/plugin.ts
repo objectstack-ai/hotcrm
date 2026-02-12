@@ -38,6 +38,8 @@ import { SocialMediaCase } from './social_media_case.object';
 import { PortalUser } from './portal_user.object';
 import { ForumTopic } from './forum_topic.object';
 import { ForumPost } from './forum_post.object';
+import { ChatbotConfig } from './chatbot_config.object';
+import { Macro } from './macro.object';
 
 import { CaseEntitlementCheck } from './hooks/case.hook';
 import KnowledgeHooks from './hooks/knowledge.hook';
@@ -99,6 +101,8 @@ export const SupportPlugin = {
     portal_user: PortalUser,
     forum_topic: ForumTopic,
     forum_post: ForumPost,
+    chatbot_config: ChatbotConfig,
+    macro: Macro,
   },
   
   // Actions provided by this plugin
@@ -154,6 +158,14 @@ export const SupportPlugin = {
         { type: 'object', object: 'sla_policy' },
         { type: 'object', object: 'sla_template' },
         { type: 'object', object: 'business_hours' },
+      ]
+    },
+    {
+      type: 'group',
+      label: 'Automation & AI',
+      children: [
+        { type: 'object', object: 'chatbot_config' },
+        { type: 'object', object: 'macro' },
       ]
     },
     {
