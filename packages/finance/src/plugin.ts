@@ -17,6 +17,8 @@ import { Contract } from './contract.object';
 import { Payment } from './payment.object';
 import { Invoice } from './invoice.object';
 import { InvoiceLine } from './invoice_line.object';
+import { CreditNote } from './credit_note.object';
+import { BillingSchedule } from './billing_schedule.object';
 
 // Import hooks
 import { ContractBillingHook } from './hooks/contract.hook';
@@ -58,6 +60,8 @@ export const FinancePlugin = {
     invoice: Invoice,
     invoice_line: InvoiceLine,
     payment: Payment,
+    credit_note: CreditNote,
+    billing_schedule: BillingSchedule,
   },
   
   // Actions provided by this plugin
@@ -97,6 +101,8 @@ export const FinancePlugin = {
         { type: 'object', object: 'contract' },
         { type: 'object', object: 'invoice' },
         { type: 'object', object: 'payment' },
+        { type: 'object', object: 'credit_note' },
+        { type: 'object', object: 'billing_schedule' },
       ]
     }
   ]
