@@ -25,6 +25,8 @@ import { ProductBundleComponent } from './product_bundle_component.object';
 import { PriceRule } from './price_rule.object';
 import { ApprovalRequest } from './approval_request.object';
 import { DiscountSchedule } from './discount_schedule.object';
+import { Order } from './order.object';
+import { OrderItem } from './order_item.object';
 
 import { QuotePricingHook } from './hooks/quote.hook';
 import ProductHook from './hooks/product.hook';
@@ -72,6 +74,8 @@ export const ProductsPlugin = {
     price_rule: PriceRule,
     approval_request: ApprovalRequest,
     discount_schedule: DiscountSchedule,
+    order: Order,
+    order_item: OrderItem,
   },
   
   // Actions provided by this plugin
@@ -116,6 +120,7 @@ export const ProductsPlugin = {
         { type: 'object', object: 'price_rule' },
         { type: 'object', object: 'discount_schedule' },
         { type: 'object', object: 'approval_request' },
+        { type: 'object', object: 'order' },
       ]
     }
   ]

@@ -23,6 +23,8 @@ export { PriceRule } from './price_rule.object';
 export { QuoteLineItem } from './quote_line_item.object';
 export { ApprovalRequest } from './approval_request.object';
 export { DiscountSchedule } from './discount_schedule.object';
+export { Order } from './order.object';
+export { OrderItem } from './order_item.object';
 
 // Export hooks
 export { default as QuotePricingHook } from './hooks/quote.hook';
