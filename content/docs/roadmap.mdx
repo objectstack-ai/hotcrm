@@ -5,20 +5,20 @@ description: Strategic direction and upcoming features for HotCRM.
 
 # HotCRM Roadmap
 
-HotCRM is evolving rapidly. Having established the core **6-Cloud Architecture** (Sales, Marketing, Revenue, Service, HR, AI) with **65 production-ready objects**, our focus shifts towards deeper intelligence, broader integration, and enhancing the developer experience.
+HotCRM has completed **6 development phases**, establishing a full-featured **6-Cloud CRM** with **69 production-ready objects**, schema-validated metadata, AI agent workflows, and enterprise security foundations. Our focus now shifts to **UI completeness**, **cross-cloud integration**, and preparing for the **ecosystem expansion** planned for 2027.
 
-> **Protocol Version**: @objectstack/spec v2.0.6 | **Tests**: 933 passing | **Last Updated**: February 11, 2026
+> **Protocol Version**: @objectstack/spec v2.0.6 | **Tests**: 1,604 passing (108 files) | **Last Updated**: February 12, 2026
 
 ## ✅ Phase 1: Core Foundation (Completed)
 
-We have successfully established the metadata-driven runtime and the core business logic for all primary clouds.
+Established the metadata-driven runtime and core business logic for all primary clouds.
 
 ### Business Clouds (6 Completed)
-- **Sales Cloud** ✅: 8 objects - Lead-to-Cash capability, Pipeline management, Opportunity lifecycle, Activity tracking
-- **Marketing Cloud** ✅: 7 objects - Campaign management, Lead nurturing, Email automation, Form & Landing page
-- **Revenue Cloud** ✅: 13 objects - CPQ (Configure-Price-Quote), Contract lifecycle, Invoice & Payment tracking
-- **Service Cloud** ✅: 21 objects - Case management, SLA tracking, Knowledge base, Omni-channel routing
-- **HR Cloud** ✅: 16 objects - Recruitment, Onboarding, Performance, Payroll, Training
+- **Sales Cloud** ✅: 8 objects — Lead-to-Cash, Pipeline management, Opportunity lifecycle, Activity tracking
+- **Marketing Cloud** ✅: 11 objects — Campaign management, Lead nurturing, Email automation, Attribution, Touchpoints
+- **Revenue Cloud** ✅: 13 objects — CPQ (Configure-Price-Quote), Contract lifecycle, Invoice & Payment tracking
+- **Service Cloud** ✅: 21 objects — Case management, SLA tracking, Knowledge base, Omni-channel routing
+- **HR Cloud** ✅: 16 objects — Recruitment, Onboarding, Performance, Payroll, Training
 - **AI Cloud** ✅: Unified AI service layer with 5 pre-registered ML models
 
 ### Platform Foundation (Completed)
@@ -28,145 +28,145 @@ We have successfully established the metadata-driven runtime and the core busine
 - **Model Registry** ✅: Centralized ML model configuration and versioning
 - **Prediction Service** ✅: Unified interface for all ML predictions with caching
 
-### Total Delivered
-- **65 Core Objects** across 6 business clouds
-- **500+ Fields** for comprehensive data capture
-- **5 AI Models** pre-registered and production-ready
-- **8 Currency Support** for global operations
-
 ## ✅ Phase 2: Deep Intelligence (Completed)
 
 "Active Intelligence"—moving from recording data to acting on it.
 
-### 🤖 AI Agent Integration
-- **Inbox Agent** ✅: Automatically categorize emails and draft replies for Support Cases.
-- **Sales Co-Pilot** ✅: Suggest next-best-actions based on Opportunity stage and deal velocity.
-- **Recruitment Assistant** ✅: Auto-screen resumes and schedule interviews based on fit scores.
-- **GenAI Reporting** ✅: Natural language queries for complex data analytics ("Show me Q3 revenue by region vs last year").
-- **Performance Coach** ✅: AI-driven OKR recommendations and performance insights.
+- **6 AI Agent Workflows** ✅: Lead-to-Close, Customer 360, Churn Prevention, Case Resolution, Talent Acquisition, Revenue Optimization
+- **MCP Integration** ✅: Model Context Protocol server with 8 tools, 4 resources, 3 prompts
+- **Automation & Workflow** ✅: 6 workflow files, 3 state machines, 1 approval process, 1 time trigger
+- **Enhanced Analytics** ✅: Revenue, Sales, Service, HR, and Marketing dashboards with AI-powered insights
 
-### ⚡ Automation & Workflow
-- **Advanced Approvals** ✅: Parallel approval chains and smart delegation.
-- **SLA Enforcement** ✅: Automated escalation triggers for Service Cloud.
-- **HR Workflows** ✅: Onboarding automation, time-off approvals, performance review cycles.
-- **Contract Renewals** ✅: Automatic renewal opportunity creation 90 days before expiration.
+## ✅ Phase 3: Quality & Protocol Compliance (Completed)
 
-### 🎯 Enhanced Analytics
-- **Revenue Dashboards** ✅: TCV, ARR, Quote-to-Close ratios
-- **Sales Performance** ✅: Pipeline metrics, win rates, forecast accuracy
-- **Service Metrics** ✅: First Response Time, CSAT, SLA compliance
-- **HR Analytics** ✅: Time-to-hire, attrition rates, performance trends
-- **Marketing ROI** ✅: Campaign attribution, Cost Per Lead, conversion funnels
+- **100% Protocol Compliance** ✅: All 69 objects pass `ObjectSchema.parse()` validation
+- **100% TypeScript Compliance** ✅: Zero type errors across all packages
+- **Chinese Text Translated** ✅: All business labels in English
+- **Error Handling** ✅: Try-catch in all hook files, no unhandled promises
+- **Lead Conversion** ✅: Full lead-to-opportunity conversion logic implemented
 
-## 🔧 Phase 3: Quality & Protocol Compliance (Current Focus)
+## ✅ Phase 4: Test Coverage & Documentation (Completed)
 
-Ensuring every module strictly follows the @objectstack/spec v2.0.6 protocol and meets enterprise quality standards.
+- **1,604 Tests Passing** ✅: 108 test files across all packages (up from 48 files / 933 tests)
+- **Hook Tests** ✅: All 47 hook files have corresponding tests
+- **Action Tests** ✅: All 27 action files have corresponding tests
+- **Technical Specs** ✅: Developer documentation for all 6 clouds + AI package
+- **Deployment Guides** ✅: Docker, Kubernetes, and docker-compose configurations
 
-### Recently Completed
-- ✅ **@objectstack v2.0.6 Upgrade**: All 10 packages upgraded with zero breaking changes and 933 tests passing.
-- ✅ **@objectstack v2.0.0 Migration**: Major version upgrade with Hook API migration (HookContext redesign).
-- ✅ **Protocol Compliance**: All 65 objects fully compliant with ObjectSchema.parse() validation.
-- ✅ **Field.lookup() Standardization**: All lookup references now use snake_case consistently.
-- ✅ **TypeScript Config**: Root tsconfig.json with correct path mappings for all 9 packages.
+## ✅ Phase 5: Integration & Business Features (Completed)
 
-### 🔴 P0 — Code Quality & Consistency
+- **47 Server-Side Hooks** ✅: ~68% object hook coverage across all packages
+- **Plugin Registration** ✅: All hooks, actions, and workflows registered in plugin.ts
+- **Broker API Migration** ✅: All 6 `db.ts` shim files migrated to runtime broker
+- **Performance Benchmarking** ✅: Benchmark/BenchmarkSuite utilities with percentile tracking
 
-1. **Translate Chinese Text**: CRM package has Chinese text in `lead.schema.ts` (30 fields) and `ai_smart_briefing.action.ts` (50+ strings). All labels should be in English.
-2. **Error Handling**: Add try-catch to `marketing/roi.hook.ts` (currently has no error handling).
-3. **Resolve TODO**: Implement full lead conversion logic in `crm/hooks/lead.hook.ts`.
+## ✅ Phase 6: @objectstack/spec Deep Adoption (Completed)
 
-### 🟡 P1 — Test Coverage & Reliability
+Increased spec schema adoption from ~3.4% to ~15%.
 
-4. **Hook Tests**: Add tests for 19 hook files across all 6 packages. Priority: CRM (5 hooks), Products (3 hooks), Finance (2 hooks).
-5. **Action Tests**: Add tests for remaining untested action files. Priority: CRM (5 actions), Marketing (3 actions), Finance (2 actions).
-6. **Target**: 80%+ test coverage across all 6 active business packages (currently 48 test files, 933 tests).
+- **UI Schema Typing** ✅: 4 pages, 1 view, 4 dashboards, 1 form — all validated via `PageSchema`/`ViewSchema`/`DashboardSchema`/`FormViewSchema`
+- **Automation Schemas** ✅: 6 workflows (`WorkflowRuleSchema`), 3 state machines (`StateMachineSchema`), 1 approval process (`ApprovalProcessSchema`), 1 time trigger (`TimeTriggerSchema`)
+- **Plugin & Kernel Typing** ✅: All plugins validated via `PluginSchema`, 6 capability manifests, 6 event definitions
+- **Advanced Field Types** ✅: `masterDetail`, `summary`, `select({multiple})`, `file`, `image`, `location`, `address`
+- **AI Schema Formalization** ✅: 6 agents via `AgentSchema`, RAG pipeline, model registry, NLQ schemas
+- **Security Metadata** ✅: 6 permission sets, sharing rules, territory model
 
-### 🟢 P2 — Architecture Improvements
+## 🔧 Phase 7: UI Completeness & Cross-Cloud Integration (Current Focus)
 
-7. **Plugin Registration**: Register missing hooks and actions in `plugin.ts` for HR, Marketing, Products, and Support packages.
-8. **DB Shim Migration**: Migrate 6 `db.ts` shim files to direct `@objectstack/runtime` broker API.
-9. **Hook Coverage**: Add hooks for 40+ unhook-ed business objects (only 29% of objects currently have hooks).
-10. **Workflow Coverage**: Add missing automation workflows for Marketing (campaign automation), Support (case escalation), and Finance (payment reminders).
+With the data layer, business logic, and AI capabilities mature, Phase 7 focuses on **UI metadata coverage** for all primary objects and **cross-cloud data flow patterns**.
 
-### 🔵 P3 — Documentation
+### 🔴 P0 — Page Layouts & List Views
 
-11. **HR Cloud Technical Specs**: Create architecture documentation for Recruitment, Performance, Payroll, and Employee objects.
-12. **AI Cloud Technical Specs**: Create architecture documentation for AI service layer, Model Registry, and Prediction Service.
-13. **Field-Level API Reference**: Generate per-object field documentation for all 65 objects.
+Currently only **4 pages** and **1 list view** exist for **69 objects**. Key business objects need full page layouts and list views.
 
-## 🌍 Phase 4: Ecosystem & Connectivity
+| Object | Page | View | Priority |
+|--------|------|------|----------|
+| Opportunity | ❌ | ❌ | High — Core CRM |
+| Contact | ❌ | ❌ | High — Core CRM |
+| Lead | ❌ | ❌ | High — Core CRM |
+| Case | ❌ | ❌ | High — Service |
+| Employee | ❌ | ❌ | High — HR |
+| Candidate | ❌ | ❌ | Medium — Recruiting |
+| Contract | ❌ | ❌ | Medium — Revenue |
+| Quote | ❌ | ❌ | Medium — CPQ |
+| Product | ❌ | ❌ | Medium — Catalog |
+| Knowledge Article | ❌ | ❌ | Medium — Self-service |
 
-Expanding HotCRM's reach through integrations and community.
+### 🟡 P1 — Dashboards & Forms
+
+| Item | Status | Package |
+|------|--------|---------|
+| Marketing Dashboard | ❌ Missing | Marketing |
+| Finance Dashboard | ❌ Missing | Finance |
+| CPQ Dashboard | ❌ Missing | Products |
+| Executive Dashboard | ❌ Missing | Cross-cloud |
+| Opportunity Form | ❌ Missing | CRM |
+| Contact Form | ❌ Missing | CRM |
+| Lead Form | ❌ Missing | CRM |
+| Case Form | ❌ Missing | Support |
+| Employee Form | ❌ Missing | HR |
+
+### 🟢 P2 — Hook & Integration Expansion
+
+- **Hook Coverage**: Expand from ~68% to 80%+ by adding hooks for `email_template`, `form`, `landing_page`, `marketing_list`, `touchpoint` (Marketing), `certification`, `department`, `position`, `training` (HR), `agent_skill`, `portal_user`, `social_media_case` (Support)
+- **Cross-Cloud Tests**: Lead→Opportunity, Quote→Contract→Invoice, Campaign→Lead, Case→Knowledge
+- **Advanced Validations**: Cross-field, conditional required, async duplicate detection
+
+### 🔵 P3 — System & API Configuration
+
+- **Audit Configuration**: Define audit trail metadata for sensitive objects
+- **Notification Channels**: Configure email, Slack, webhook notification destinations
+- **API Endpoint Declarations**: External API surface using `@objectstack/spec/api`
+- **Webhook Outbound Events**: Event notification using `@objectstack/spec/integration`
+- **Cache Configuration**: High-read object caching (product catalog, knowledge articles)
+
+## 🌍 Phase 8: Ecosystem & Connectivity (Planned — 2027)
 
 ### Integration Connectors
 - **Payment Gateways**: Stripe, PayPal bi-directional sync
 - **E-Signature**: DocuSign, Adobe Sign for contract signing
-- **Communication**: Slack, Discord, Microsoft Teams for deal rooms and support
-- **Email**: Gmail, Outlook deep inbox integration with email-to-lead/case
-- **Accounting**: QuickBooks, Xero, NetSuite for invoice export
-- **HR Systems**: BambooHR, Workday, ADP for payroll integration
+- **Communication**: Slack, Microsoft Teams for deal rooms and support
+- **Email**: Gmail, Outlook inbox integration with email-to-lead/case
+- **Accounting**: QuickBooks, Xero for invoice export
+- **HR Systems**: BambooHR, Workday for payroll integration
 - **Recruiting**: LinkedIn integration for candidate sourcing
 
-### Mobile & Multi-Platform
-- **Mobile App**: Native React Native shell for iOS and Android
-- **Desktop Apps**: Electron-based desktop application
-- **Browser Extensions**: Chrome/Firefox extensions for LinkedIn enrichment
+### New Business Packages
+- **Analytics Package** (`@hotcrm/analytics`): Business Intelligence Cloud — reports, dashboards, KPIs, forecasting
+- **Integration Package** (`@hotcrm/integration`): iPaaS Connectors — webhooks, data sync, API middleware
+- **Community Package** (`@hotcrm/community`): Customer Community Portal — forums, ideas, events, reputation
 
-### Marketplace & Community
-- **Plugin Marketplace**: One-click install for community plugins
-- **Template Library**: Pre-built industry templates (SaaS, Manufacturing, Healthcare)
-- **Custom Object Builder**: Visual designer for new objects and fields
+## 📈 Long-Term Vision (2027+)
 
-## 🛠 Phase 5: Developer Experience & DevOps
-
-### Developer Tools
-- **Visual Workflow Builder**: No-code canvas for defining business logic
-- **CLI Enhancements**: Better scaffolding generators
-- **DevTools**: Browser extension for inspecting ObjectQL queries and metadata
-- **Testing Suite**: Automated regression testing for custom business logic
-- **Migration Tools**: Schema versioning and data migration utilities
-- **Documentation Generator**: Auto-generate API docs from object definitions
-
-### DevOps & Observability
-- **Performance Monitoring**: Real-time query performance tracking
-- **Error Tracking**: Integrated error logging and alerting
-- **Audit Logs**: Complete audit trail for all data changes
-- **Health Checks**: System health dashboards and alerting
-- **Load Testing**: Automated performance testing framework
-
-## 📈 Long-Term Vision (6-12 Months)
-
-### Advanced AI Capabilities
-- **MCP Integration**: Model Context Protocol for AI agent connectivity
+### Advanced AI
 - **Computer Vision**: Business card scanning, document OCR
 - **Voice AI**: Voice-to-text for meeting transcription
-- **Predictive Maintenance**: Proactive system health monitoring
 - **Anomaly Detection**: Fraud detection, unusual activity alerts
 
 ### Enterprise Features
-- **Multi-Tenancy**: Support for multiple organizations in one instance
+- **Multi-Tenancy**: Multiple organizations in one instance
 - **Advanced Security**: SOC 2 compliance, encryption at rest
 - **Data Residency**: Regional data storage for compliance
 - **White-Label**: Customizable branding for partners
 
 ### Vertical Solutions
 - **Real Estate CRM**: Property management objects
-- **Healthcare CRM**: Patient management with HIPAA compliance
+- **Healthcare CRM**: HIPAA-compliant patient management
 - **Financial Services**: Wealth management and advisory
 - **Education**: Student recruitment and enrollment management
 
 ## Per-Module Status
 
-| Package | Objects | Hooks | Actions | Tests | Coverage |
-|---------|---------|-------|---------|-------|----------|
-| **CRM** (Sales Cloud) | 8 | 5 | 8 | 7 | Good |
-| **Finance** (Revenue Cloud) | 4 | 2 | 4 | 5 | Moderate |
-| **HR** (Human Capital) | 16 | 4 | 3 | 10 | Moderate |
-| **Marketing** (Marketing Cloud) | 7 | 3 | 3 | 4 | Moderate |
-| **Products** (CPQ Cloud) | 9 | 3 | 3 | 7 | Moderate |
-| **Support** (Service Cloud) | 21 | 2 | 4 | 8 | Moderate |
-| **AI** (Intelligence Layer) | — | — | 1 | 7 | Good |
-| **Total** | **65** | **19** | **26** | **48** | **933 tests** |
+| Package | Objects | Hooks | Actions | Pages | Views | Dashboards | Tests |
+|---------|---------|-------|---------|-------|-------|------------|-------|
+| **CRM** (Sales Cloud) | 8 | 8 | 8 | 1 | 1 | 2 | 20 |
+| **Finance** (Revenue Cloud) | 4 | 5 | 4 | 1 | — | — | 11 |
+| **HR** (Human Capital) | 16 | 12 | 4 | — | — | 1 | 20 |
+| **Marketing** (Marketing Cloud) | 11 | 8 | 3 | 1 | — | — | 14 |
+| **Products** (CPQ Cloud) | 9 | 8 | 3 | 1 | — | — | 16 |
+| **Support** (Service Cloud) | 21 | 6 | 4 | — | — | 1 | 18 |
+| **AI** (Intelligence Layer) | — | — | 1 | — | — | — | 9 |
+| **Total** | **69** | **47** | **27** | **4** | **1** | **4** | **108 files / 1,604 tests** |
 
 ---
 

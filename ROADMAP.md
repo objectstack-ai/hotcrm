@@ -360,6 +360,81 @@
 
 **Note**: Visual Workflow Builder and other low-code platform features are out of scope for HotCRM. These are platform-level capabilities provided by `@objectstack/runtime`.
 
+### Phase 7: UI Completeness & Cross-Cloud Integration (Week 17-24)
+
+> Currently only 4 page layouts, 1 list view, 4 dashboards, and 1 form view exist for 69 objects. This phase aims to provide UI metadata coverage for all primary business objects and establish cross-cloud data flow patterns.
+
+#### 7A: Page Layout Expansion (P0 — UI Completeness)
+- [ ] Add `opportunity.page.ts` — Deal details, amount, stage, close date, related contacts and activities
+- [ ] Add `contact.page.ts` — Contact details, related accounts, opportunities, and activities
+- [ ] Add `lead.page.ts` — Lead details, scoring, conversion history, and related activities
+- [ ] Add `case.page.ts` — Case details, SLA status, comments, knowledge suggestions
+- [ ] Add `employee.page.ts` — Employee profile, department, manager, training, certifications
+- [ ] Add `candidate.page.ts` — Candidate profile, applications, interviews, offer history
+- [ ] Add `contract.page.ts` — Contract terms, line items, renewal timeline, related invoices
+- [ ] Add `quote.page.ts` — Quote details, line items, pricing, discount schedule, approval status
+- [ ] Add `product.page.ts` — Product catalog detail, pricing, bundles, availability
+- [ ] Add `knowledge_article.page.ts` — Article content, version history, categories, related cases
+
+#### 7B: List View Expansion (P0 — Navigation)
+- [ ] Add `opportunity.view.ts` — Pipeline board, filters by stage/owner/amount/close date
+- [ ] Add `contact.view.ts` — Contact directory with account grouping, last activity
+- [ ] Add `lead.view.ts` — Lead queue with score, status, source filters
+- [ ] Add `case.view.ts` — Case queue with priority, SLA countdown, assignment
+- [ ] Add `employee.view.ts` — Organization directory with department/role filters
+- [ ] Add `campaign.view.ts` — Campaign list with status, budget, ROI metrics
+- [ ] Add `contract.view.ts` — Contract list with renewal dates, value, status
+- [ ] Add `quote.view.ts` — Quote pipeline with approval status, value, expiry
+- [ ] Add `product.view.ts` — Product catalog with category, price, availability filters
+- [ ] Add `knowledge_article.view.ts` — Knowledge base with search, categories, popularity
+
+#### 7C: Dashboard Expansion (P1 — Analytics)
+- [ ] Add `marketing.dashboard.ts` — Campaign Performance, Email Metrics, Lead Funnel, ROI Trends
+- [ ] Add `finance.dashboard.ts` — Revenue Pipeline, Collections Aging, Cash Flow, Contract Renewals
+- [ ] Add `cpq.dashboard.ts` — Quote Pipeline, Win/Loss Analysis, Discount Usage, Approval Cycle Time
+- [ ] Add `executive.dashboard.ts` — Cross-cloud executive summary combining Sales, Service, Revenue, and HR KPIs
+
+#### 7D: Form View Expansion (P1 — Data Entry)
+- [ ] Add `opportunity.form.ts` — Deal creation wizard with stage-driven required fields
+- [ ] Add `contact.form.ts` — Contact creation with account auto-link and duplicate detection UI
+- [ ] Add `lead.form.ts` — Lead capture form with source tracking and assignment preview
+- [ ] Add `case.form.ts` — Case submission form with category-driven field visibility
+- [ ] Add `employee.form.ts` — Employee onboarding form with department/manager lookup
+
+#### 7E: Hook Coverage Expansion (P1 — Business Logic)
+- [ ] Add hooks for Marketing: `email_template`, `form`, `landing_page`, `marketing_list`, `touchpoint`
+- [ ] Add hooks for HR: `certification`, `department`, `position`, `training`
+- [ ] Add hooks for Support: `agent_skill`, `portal_user`, `social_media_case`
+- [ ] Target: 80%+ object hook coverage (currently ~68%, 47 hooks / 69 objects)
+
+#### 7F: Cross-Cloud Integration Tests (P1 — Reliability)
+- [ ] Lead-to-Opportunity conversion flow (CRM cross-object)
+- [ ] Quote-to-Contract-to-Invoice conversion flow (Products → Finance)
+- [ ] Campaign-to-Lead attribution flow (Marketing → CRM)
+- [ ] Case-to-Knowledge self-service flow (Support cross-object)
+- [ ] Employee-Onboarding-to-Training flow (HR cross-object)
+- [ ] AI agent end-to-end pipeline tests (AI → CRM/Support/HR)
+
+#### 7G: Advanced Data Model (P2 — Data Quality)
+- [ ] Cross-field validations (e.g., close_date required when stage = 'Closed Won')
+- [ ] Conditional required fields using spec `ConditionalValidation` schema
+- [ ] Async validation patterns (duplicate detection for leads, contacts)
+- [ ] `DataQualityRules` for email format, phone normalization, address standardization
+
+#### 7H: System & API Configuration (P2 — Enterprise Readiness)
+- [ ] Define `AuditConfig` for sensitive objects using `@objectstack/spec/system`
+- [ ] Define `NotificationChannel` configurations for workflow email alerts
+- [ ] Define `ApiEndpoint` declarations for external API surface using `@objectstack/spec/api`
+- [ ] Define `WebhookConfig` for outbound event notifications using `@objectstack/spec/integration`
+- [ ] Define `CacheConfig` for high-read objects (product catalog, knowledge articles)
+
+#### 7I: Documentation Refresh (P2 — DX)
+- [ ] Update `docs/roadmap.mdx` with current metrics (69 objects, 1604 tests, 47 hooks)
+- [ ] Update `docs/modules/index.mdx` with accurate object counts per cloud
+- [ ] Add cross-cloud integration pattern guides
+- [ ] Add UI metadata authoring guide (page, view, dashboard, form patterns)
+- [ ] Add field type selection guide with decision tree
+
 ---
 
 ## Future Business Packages (2027+)
@@ -447,6 +522,7 @@ These independent business packages are planned for future development:
 
 | Date | From | To | Breaking Changes | Tests |
 |------|------|----|-----------------|-------|
+| 2026-02-12 | v2.0.6 | v2.0.6 | None (Phase 7 roadmap: UI completeness, cross-cloud integration, hook expansion) | 1604 ✅ |
 | 2026-02-12 | v2.0.6 | v2.0.6 | None (Phase 6: spec deep adoption, Field.masterDetail, DashboardSchema, EventSchema) | 1604 ✅ |
 | 2026-02-12 | v2.0.6 | v2.0.6 | None (Spec capability evaluation, Phase 6 roadmap) | 1506 ✅ |
 | 2026-02-11 | v2.0.6 | v2.0.6 | None (Phase 5: AI agent workflows, benchmarking, deployment) | 1506 ✅ |
