@@ -11,8 +11,8 @@
 | Business Objects | 69 across 6 clouds |
 | Hook Files | 47 across 6 packages |
 | Action Files | 27 across 7 packages |
-| Workflow Files | 6 across 6 packages (all registered in plugins) |
-| Test Files | 94 files, 1457 tests (all passing) |
+| Workflow Files | 6 across 6 packages + 6 AI agent workflows (all registered) |
+| Test Files | 96 files, 1506 tests (all passing) |
 | TypeScript Compliance | 100% (zero type errors) |
 | Protocol Compliance | 100% (all objects pass ObjectSchema.parse()) |
 
@@ -72,7 +72,7 @@
 - [x] Migrate `db.ts` shim to direct `@objectstack/runtime` broker API
 
 #### 🔵 P3 — Architecture
-- [ ] Consider splitting large action files (`revenue_forecast.action.ts`, `revenue_dashboard.action.ts`) into smaller modules
+- [x] Consider splitting large action files (`revenue_forecast.action.ts`, `revenue_dashboard.action.ts`) — evaluated: files are well-organized with clear section boundaries; splitting deferred to avoid unnecessary import churn
 
 ---
 
@@ -207,6 +207,8 @@
 - [x] Add MCP (Model Context Protocol) server configuration (new `@objectstack/spec/ai` feature)
 - [x] Add integration tests for provider factory end-to-end flow
 - [x] Document model registry usage patterns and AI agent architecture
+- [x] Add advanced AI agent workflows (6 cross-package orchestration pipelines)
+- [x] Add performance benchmarking utilities (Benchmark, BenchmarkSuite, formatBenchmarkResults)
 
 ---
 
@@ -239,7 +241,7 @@
 | Plugin action registration | ✅ All registered | Actions registered in all plugin.ts exports |
 | Plugin workflow registration | ✅ All registered | Workflows registered in all 6 plugin.ts exports |
 | Hook coverage | 47 hooks / 69 objects (68%) | Continue adding hooks for remaining objects |
-| Test coverage | 1457 tests / 94 files | Continue expanding coverage |
+| Test coverage | 1506 tests / 96 files | Continue expanding coverage |
 | `defineStack()` config pattern | ✅ Consistent | All packages use correct pattern |
 
 ---
@@ -278,11 +280,11 @@
 - [x] Update developer guides with latest patterns
 
 ### Phase 5: Integration & Business Features (Week 11+)
-- [ ] Integration connectors (Stripe, DocuSign, Slack)
-- [ ] Business Intelligence & Analytics package (2027 roadmap)
-- [ ] Advanced AI Agent workflows
-- [ ] Performance benchmarking and optimization
-- [ ] Production deployment guides (Docker, Kubernetes)
+- [x] Advanced AI Agent workflows (6 cross-package agent pipelines: lead-to-close, customer 360, churn prevention, case resolution, talent acquisition, revenue optimization)
+- [x] Performance benchmarking and optimization (Benchmark/BenchmarkSuite utilities with percentile tracking)
+- [x] Production deployment guides (Docker, Kubernetes — Dockerfile, docker-compose.yml, K8s manifests, DEPLOYMENT.md)
+- [ ] Integration connectors (Stripe, DocuSign, Slack) — deferred to 2027 roadmap
+- [ ] Business Intelligence & Analytics package — deferred to 2027 roadmap
 
 **Note**: Visual Workflow Builder and other low-code platform features are out of scope for HotCRM. These are platform-level capabilities provided by `@objectstack/runtime`.
 
@@ -373,6 +375,7 @@ These independent business packages are planned for future development:
 
 | Date | From | To | Breaking Changes | Tests |
 |------|------|----|-----------------|-------|
+| 2026-02-11 | v2.0.6 | v2.0.6 | None (Phase 5: AI agent workflows, benchmarking, deployment) | 1506 ✅ |
 | 2026-02-11 | v2.0.6 | v2.0.6 | None (Phase 3-4 completion) | 1457 ✅ |
 | 2026-02-11 | v2.0.6 | v2.0.6 | None (roadmap completion) | 1365 ✅ |
 | 2026-02-11 | v2.0.3 | v2.0.6 | None | 933 ✅ |
