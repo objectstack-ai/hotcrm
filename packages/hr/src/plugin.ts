@@ -185,54 +185,65 @@ export const HRPlugin = {
     compensation_plan: CompensationPlan,
   },
   
-  // Navigation structure for this plugin
-  navigation: [
+  // Apps provided by this plugin
+  apps: [
     {
-      type: 'group',
-      label: 'Organization',
-      children: [
-        { type: 'object', object: 'employee' },
-        { type: 'object', object: 'department' },
-        { type: 'object', object: 'position' },
-      ]
-    },
-    {
-      type: 'group',
-      label: 'Talent Acquisition',
-      children: [
-        { type: 'object', object: 'recruitment' },
-        { type: 'object', object: 'candidate' },
-        { type: 'object', object: 'application' },
-        { type: 'object', object: 'interview' },
-        { type: 'object', object: 'offer' },
-        { type: 'object', object: 'onboarding' },
-      ]
-    },
-    {
-      type: 'group',
-      label: 'Performance & Development',
-      children: [
-        { type: 'object', object: 'performance_review' },
-        { type: 'object', object: 'goal' },
-        { type: 'object', object: 'training' },
-        { type: 'object', object: 'certification' },
-      ]
-    },
-    {
-      type: 'group',
-      label: 'Time & Payroll',
-      children: [
-        { type: 'object', object: 'time_off' },
-        { type: 'object', object: 'attendance' },
-        { type: 'object', object: 'payroll' },
-      ]
-    },
-    {
-      type: 'group',
-      label: 'Benefits & Compensation',
-      children: [
-        { type: 'object', object: 'benefit' },
-        { type: 'object', object: 'compensation_plan' },
+      name: 'hr',
+      label: 'Human Capital Management',
+      navigation: [
+        {
+          id: 'organization',
+          type: 'group',
+          label: 'Organization',
+          children: [
+            { id: 'employee', label: 'Employee', type: 'object', objectName: 'employee' },
+            { id: 'department', label: 'Department', type: 'object', objectName: 'department' },
+            { id: 'position', label: 'Position', type: 'object', objectName: 'position' },
+          ]
+        },
+        {
+          id: 'talent_acquisition',
+          type: 'group',
+          label: 'Talent Acquisition',
+          children: [
+            { id: 'recruitment', label: 'Recruitment', type: 'object', objectName: 'recruitment' },
+            { id: 'candidate', label: 'Candidate', type: 'object', objectName: 'candidate' },
+            { id: 'application', label: 'Application', type: 'object', objectName: 'application' },
+            { id: 'interview', label: 'Interview', type: 'object', objectName: 'interview' },
+            { id: 'offer', label: 'Offer', type: 'object', objectName: 'offer' },
+            { id: 'onboarding', label: 'Onboarding', type: 'object', objectName: 'onboarding' },
+          ]
+        },
+        {
+          id: 'performance_and_development',
+          type: 'group',
+          label: 'Performance & Development',
+          children: [
+            { id: 'performance_review', label: 'Performance Review', type: 'object', objectName: 'performance_review' },
+            { id: 'goal', label: 'Goal', type: 'object', objectName: 'goal' },
+            { id: 'training', label: 'Training', type: 'object', objectName: 'training' },
+            { id: 'certification', label: 'Certification', type: 'object', objectName: 'certification' },
+          ]
+        },
+        {
+          id: 'time_and_payroll',
+          type: 'group',
+          label: 'Time & Payroll',
+          children: [
+            { id: 'time_off', label: 'Time Off', type: 'object', objectName: 'time_off' },
+            { id: 'attendance', label: 'Attendance', type: 'object', objectName: 'attendance' },
+            { id: 'payroll', label: 'Payroll', type: 'object', objectName: 'payroll' },
+          ]
+        },
+        {
+          id: 'benefits_and_compensation',
+          type: 'group',
+          label: 'Benefits & Compensation',
+          children: [
+            { id: 'benefit', label: 'Benefit', type: 'object', objectName: 'benefit' },
+            { id: 'compensation_plan', label: 'Compensation Plan', type: 'object', objectName: 'compensation_plan' },
+          ]
+        }
       ]
     }
   ]
