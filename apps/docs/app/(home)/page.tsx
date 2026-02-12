@@ -7,7 +7,7 @@ export default function HomePage() {
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
       <section className="relative overflow-hidden pt-20 pb-32 md:pt-32 md:pb-48">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/20 via-background to-background" />
+        <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at top, rgba(23, 23, 23, 0.08), transparent 70%)' }} />
         
         <div className="container relative mx-auto px-4 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 mb-8 text-sm font-medium bg-primary/10 text-primary rounded-full border border-primary/20 animate-in fade-in slide-in-from-bottom-4 duration-1000">
@@ -15,7 +15,7 @@ export default function HomePage() {
             <span>The World's First AI-Native CRM</span>
           </div>
           
-          <h1 className="max-w-5xl mx-auto text-5xl md:text-7xl font-bold tracking-tight mb-8 bg-gradient-to-br from-foreground to-muted-foreground bg-clip-text text-transparent animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-100">
+          <h1 className="max-w-5xl mx-auto text-5xl md:text-7xl font-bold tracking-tight mb-8 text-foreground animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-100">
             Enterprise Power.<br/>
             Start-up Speed.<br/>
             <span className="text-primary">AI Intelligence.</span>
