@@ -8,9 +8,8 @@ export const CaseComment = ObjectSchema.create({
   description: 'Comments, responses, and interaction history for cases',
 
   fields: {
-    case_id: Field.lookup({
+    case_id: Field.masterDetail('case', {
       label: 'Case',
-      reference_to: 'case',
       required: true
     }),
     parent_comment_id: Field.lookup('case_comment', {

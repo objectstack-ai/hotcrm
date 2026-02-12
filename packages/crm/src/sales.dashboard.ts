@@ -1,5 +1,5 @@
-// Dashboard configuration for Sales Performance
-// Uses @objectstack/spec/ui Dashboard type for reference
+import type { Dashboard } from '@objectstack/spec/ui';
+import { DashboardSchema } from '@objectstack/spec/ui';
 
 /**
  * Sales Performance Dashboard
@@ -329,6 +329,8 @@ export const SalesDashboard = {
     enabled: true,
     interval: 300  // 5 minutes
   }
-};
+} satisfies Dashboard;
+
+DashboardSchema.parse(SalesDashboard);
 
 export default SalesDashboard;
