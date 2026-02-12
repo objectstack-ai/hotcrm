@@ -10,6 +10,9 @@
  * Dependencies: @objectstack/spec (required)
  */
 
+import { PluginSchema } from '@objectstack/spec/kernel';
+import type { PluginDefinition } from '@objectstack/spec/kernel';
+
 // Import all CRM objects
 import { Account } from './account.object';
 import { Activity } from './activity.object';
@@ -47,7 +50,7 @@ import { enrichContact, detectBuyingIntent, analyzeSentiment, predictBestContact
  * Exports all CRM-related business objects, hooks, and actions
  * to be registered with the ObjectStack runtime
  */
-export const CRMPlugin: any = {
+export const CRMPlugin = {
   name: 'crm',
   label: 'Sales Cloud',
   version: '1.0.0',
@@ -133,5 +136,13 @@ export const CRMPlugin: any = {
     }
   ]
 };
+
+/** Spec-validated plugin metadata */
+export const CRMPluginMetadata: PluginDefinition = PluginSchema.parse({
+  name: 'crm',
+  label: 'Sales Cloud',
+  version: '1.0.0',
+  description: 'Core Sales Cloud - Accounts, Contacts, Leads, Opportunities, and Activity Tracking',
+});
 
 export default CRMPlugin;

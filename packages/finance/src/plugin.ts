@@ -9,6 +9,9 @@
  * Dependencies: @hotcrm/crm (required for Account and Opportunity references)
  */
 
+import { PluginSchema } from '@objectstack/spec/kernel';
+import type { PluginDefinition } from '@objectstack/spec/kernel';
+
 // Import all Finance objects
 import { Contract } from './contract.object';
 import { Payment } from './payment.object';
@@ -35,7 +38,7 @@ import { predictPaymentDefault, predictPaymentDate, detectAnomalies, optimizeCol
  * Exports all finance-related business objects, hooks, and actions
  * to be registered with the ObjectStack runtime
  */
-export const FinancePlugin: any = {
+export const FinancePlugin = {
   name: 'finance',
   label: 'Finance',
   version: '1.0.0',
@@ -98,5 +101,13 @@ export const FinancePlugin: any = {
     }
   ]
 };
+
+/** Spec-validated plugin metadata */
+export const FinancePluginMetadata: PluginDefinition = PluginSchema.parse({
+  name: 'finance',
+  label: 'Finance',
+  version: '1.0.0',
+  description: 'Financial management - Contracts, Invoices, Payments, and Revenue Recognition',
+});
 
 export default FinancePlugin;

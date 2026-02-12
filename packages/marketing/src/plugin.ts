@@ -1,3 +1,6 @@
+import { PluginSchema } from '@objectstack/spec/kernel';
+import type { PluginDefinition } from '@objectstack/spec/kernel';
+
 import { Campaign } from './campaign.object';
 import { CampaignMember } from './campaign_member.object';
 import { EmailTemplate } from './email_template.object';
@@ -25,7 +28,7 @@ import ContentGeneratorAction from './actions/content_generator.action';
 import MarketingAnalyticsAction from './actions/marketing_analytics.action';
 import { CampaignWorkflows } from './campaign.workflow';
 
-export const MarketingPlugin: any = {
+export const MarketingPlugin = {
   name: 'marketing',
   label: 'Marketing Cloud',
   version: '1.0.0',
@@ -111,4 +114,12 @@ export const MarketingPlugin: any = {
     }
   ]
 };
+/** Spec-validated plugin metadata */
+export const MarketingPluginMetadata: PluginDefinition = PluginSchema.parse({
+  name: 'marketing',
+  label: 'Marketing Cloud',
+  version: '1.0.0',
+  description: 'Marketing automation, campaign management, email templates, landing pages, and list management.',
+});
+
 export default MarketingPlugin;
