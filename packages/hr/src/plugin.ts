@@ -54,6 +54,10 @@ import { RecruitmentPipelineValidationTrigger, RecruitmentMetricsTrigger } from 
 import { PayrollCalculationValidationTrigger, PayrollApprovalTrigger } from './hooks/payroll.hook';
 import { AttendanceValidationTrigger, AttendanceDuplicateCheckTrigger } from './hooks/attendance.hook';
 import { GoalProgressTrackingTrigger, GoalAlignmentValidationTrigger } from './hooks/goal.hook';
+import { CertificationExpirationValidationTrigger, CertificationRenewalReminderTrigger } from './hooks/certification.hook';
+import { DepartmentManagerValidationTrigger, DepartmentHeadcountTrackingTrigger } from './hooks/department.hook';
+import { PositionStatusChangeValidationTrigger, PositionVacancyTrackingTrigger } from './hooks/position.hook';
+import { TrainingEnrollmentValidationTrigger, TrainingCompletionTrackingTrigger } from './hooks/training.hook';
 
 // Import actions
 import CandidateAIAction from './actions/candidate_ai.action';
@@ -117,6 +121,14 @@ export const HRPlugin = {
     attendance_duplicate_check: AttendanceDuplicateCheckTrigger,
     goal_progress_tracking: GoalProgressTrackingTrigger,
     goal_alignment_validation: GoalAlignmentValidationTrigger,
+    certification_expiration_validation: CertificationExpirationValidationTrigger,
+    certification_renewal_reminder: CertificationRenewalReminderTrigger,
+    department_manager_validation: DepartmentManagerValidationTrigger,
+    department_headcount_tracking: DepartmentHeadcountTrackingTrigger,
+    position_status_change_validation: PositionStatusChangeValidationTrigger,
+    position_vacancy_tracking: PositionVacancyTrackingTrigger,
+    training_enrollment_validation: TrainingEnrollmentValidationTrigger,
+    training_completion_tracking: TrainingCompletionTrackingTrigger,
   },
 
   // Workflows

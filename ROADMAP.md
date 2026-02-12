@@ -9,17 +9,22 @@
 |--------|-------|
 | Protocol Version | @objectstack/spec v3.0.0 |
 | Business Objects | 69 across 6 clouds |
-| Hook Files | 47 across 6 packages |
+| Hook Files | 59 across 6 packages |
 | Action Files | 27 across 7 packages |
 | Workflow Files | 6 across 6 packages + 6 AI agent workflows (all registered) |
 | State Machines | 3 (case, lead, opportunity) |
 | Permission Sets | 6 (one per business cloud) |
 | Event Definitions | 6 (one per business cloud) |
 | Capability Manifests | 6 (one per business cloud) |
-| Test Files | 108 files, 1604 tests (all passing) |
+| Studio Plugins | 6 (one per business cloud) |
+| Page Layouts | 14 across 6 packages |
+| List Views | 11 files (~49 individual views) |
+| Dashboards | 8 across 5 packages |
+| Form Views | 6 across 3 packages |
+| Test Files | 113+ files, 1629+ tests (all passing) |
 | TypeScript Compliance | 100% (zero type errors) |
-| Protocol Compliance | 100% (all objects pass ObjectSchema.parse()) |
-| Spec Schema Adoption | ~15% (Phase 6 target met) |
+| Protocol Compliance | 100% (all objects pass ObjectSchema.create()) |
+| Spec Schema Adoption | ~25% (Phase 8 target met) |
 
 ---
 
@@ -245,8 +250,8 @@
 | `db.ts` shim files | ✅ Migrated | All 6 packages migrated to `broker` API |
 | Plugin action registration | ✅ All registered | Actions registered in all plugin.ts exports |
 | Plugin workflow registration | ✅ All registered | Workflows registered in all 6 plugin.ts exports |
-| Hook coverage | 47 hooks / 69 objects (68%) | Continue adding hooks for remaining objects |
-| Test coverage | 1604 tests / 108 files | Continue expanding coverage |
+| Hook coverage | 59 hooks / 69 objects (86%) | ✅ Target 80%+ met |
+| Test coverage | 1629+ tests / 113+ files | Continue expanding coverage |
 | `defineStack()` config pattern | ✅ Consistent | All packages use correct pattern |
 | State machine definitions | ✅ 3 defined | Case, Lead, Opportunity lifecycles |
 | Event definitions | ✅ 6 defined | All business packages have event contracts |
@@ -257,8 +262,8 @@
 
 | Area | Status | Action |
 |------|--------|--------|
-| Spec schema adoption rate | ✅ ~15% | Phase 6 target met |
-| UI schema typing | ✅ Typed | Page/View/Dashboard/Form/App files use spec schemas |
+| Spec schema adoption rate | ✅ ~25% | Phase 8 target met |
+| UI schema typing | ✅ Typed | 14 pages, 11 views, 8 dashboards, 6 forms use spec schemas |
 | Workflow schema validation | ✅ Validated | All 6 workflow files use `WorkflowRuleSchema.parse()` |
 | Plugin type safety | ✅ `PluginDefinition` | All plugins typed and validated with `PluginSchema.parse()` |
 | State machine definitions | ✅ Defined | Case, Lead, Opportunity lifecycles formalized |
@@ -373,91 +378,91 @@
 - [x] Update version references in ROADMAP.md, README.md, CHANGELOG.md, docs
 
 #### 7B: v3.0.0 API Adoption (P1 — New Features)
-- [ ] Migrate `ObjectSchema.parse()` to `ObjectSchema.create()` for all 69 object definitions (new recommended API — lighter output, no default filling)
-- [ ] Adopt `defineStudioPlugin()` from `@objectstack/spec/studio` for Studio extensibility
-- [ ] Adopt `StudioPluginManifestSchema` for studio plugin validation
-- [ ] Evaluate new `@objectstack/spec/studio` contributions API (ActionContribution, PanelContribution, SidebarGroupContribution, CommandContribution, MetadataViewerContribution)
+- [x] Migrate `ObjectSchema.parse()` to `ObjectSchema.create()` for all 69 object definitions (new recommended API — lighter output, no default filling)
+- [x] Adopt `defineStudioPlugin()` from `@objectstack/spec/studio` for Studio extensibility (6 studio plugins: crm, finance, hr, marketing, products, support)
+- [x] Adopt `StudioPluginManifestSchema` for studio plugin validation
+- [x] Evaluate new `@objectstack/spec/studio` contributions API (ActionContribution, PanelContribution, SidebarGroupContribution, CommandContribution, MetadataViewerContribution)
 
 #### 7C: v3.0.0 Breaking Change Cleanup (P1 — Maintenance)
 - [x] Verify no imports from removed modules (`hub`, `auth`, `driver`, `permission`)
 - [x] Verify `@objectstack/spec/contracts` usage (empty in v3.0.0 — no HotCRM imports)
-- [ ] Update spec capability evaluation docs for v3.0.0 module map (12 modules, down from 16)
-- [ ] Audit Zod 4 compatibility for packages using zod directly (ai, core, crm)
+- [x] Update spec capability evaluation docs for v3.0.0 module map (12 modules, down from 16)
+- [x] Audit Zod 4 compatibility for packages using zod directly (ai, core, crm) — all compatible with Zod 4
 
 ### Phase 8: UI Completeness & Cross-Cloud Integration (Week 18-24)
 
 > Currently only 4 page layouts, 1 list view, 4 dashboards, and 1 form view exist for 69 objects. This phase aims to provide UI metadata coverage for all primary business objects and establish cross-cloud data flow patterns.
 
 #### 8A: Page Layout Expansion (P0 — UI Completeness)
-- [ ] Add `opportunity.page.ts` — Deal details, amount, stage, close date, related contacts and activities
-- [ ] Add `contact.page.ts` — Contact details, related accounts, opportunities, and activities
-- [ ] Add `lead.page.ts` — Lead details, scoring, conversion history, and related activities
-- [ ] Add `case.page.ts` — Case details, SLA status, comments, knowledge suggestions
-- [ ] Add `employee.page.ts` — Employee profile, department, manager, training, certifications
-- [ ] Add `candidate.page.ts` — Candidate profile, applications, interviews, offer history
-- [ ] Add `contract.page.ts` — Contract terms, line items, renewal timeline, related invoices
-- [ ] Add `quote.page.ts` — Quote details, line items, pricing, discount schedule, approval status
-- [ ] Add `product.page.ts` — Product catalog detail, pricing, bundles, availability
-- [ ] Add `knowledge_article.page.ts` — Article content, version history, categories, related cases
+- [x] Add `opportunity.page.ts` — Deal details, amount, stage, close date, related contacts and activities
+- [x] Add `contact.page.ts` — Contact details, related accounts, opportunities, and activities
+- [x] Add `lead.page.ts` — Lead details, scoring, conversion history, and related activities
+- [x] Add `case.page.ts` — Case details, SLA status, comments, knowledge suggestions
+- [x] Add `employee.page.ts` — Employee profile, department, manager, training, certifications
+- [x] Add `candidate.page.ts` — Candidate profile, applications, interviews, offer history
+- [x] Add `contract.page.ts` — Contract terms, line items, renewal timeline, related invoices
+- [x] Add `quote.page.ts` — Quote details, line items, pricing, discount schedule, approval status
+- [x] Add `product.page.ts` — Product catalog detail, pricing, bundles, availability
+- [x] Add `knowledge_article.page.ts` — Article content, version history, categories, related cases
 
 #### 8B: List View Expansion (P0 — Navigation)
-- [ ] Add `opportunity.view.ts` — Pipeline board, filters by stage/owner/amount/close date
-- [ ] Add `contact.view.ts` — Contact directory with account grouping, last activity
-- [ ] Add `lead.view.ts` — Lead queue with score, status, source filters
-- [ ] Add `case.view.ts` — Case queue with priority, SLA countdown, assignment
-- [ ] Add `employee.view.ts` — Organization directory with department/role filters
-- [ ] Add `campaign.view.ts` — Campaign list with status, budget, ROI metrics
-- [ ] Add `contract.view.ts` — Contract list with renewal dates, value, status
-- [ ] Add `quote.view.ts` — Quote pipeline with approval status, value, expiry
-- [ ] Add `product.view.ts` — Product catalog with category, price, availability filters
-- [ ] Add `knowledge_article.view.ts` — Knowledge base with search, categories, popularity
+- [x] Add `opportunity.view.ts` — Pipeline board, filters by stage/owner/amount/close date
+- [x] Add `contact.view.ts` — Contact directory with account grouping, last activity
+- [x] Add `lead.view.ts` — Lead queue with score, status, source filters
+- [x] Add `case.view.ts` — Case queue with priority, SLA countdown, assignment
+- [x] Add `employee.view.ts` — Organization directory with department/role filters
+- [x] Add `campaign.view.ts` — Campaign list with status, budget, ROI metrics
+- [x] Add `contract.view.ts` — Contract list with renewal dates, value, status
+- [x] Add `quote.view.ts` — Quote pipeline with approval status, value, expiry
+- [x] Add `product.view.ts` — Product catalog with category, price, availability filters
+- [x] Add `knowledge_article.view.ts` — Knowledge base with search, categories, popularity
 
 #### 8C: Dashboard Expansion (P1 — Analytics)
-- [ ] Add `marketing.dashboard.ts` — Campaign Performance, Email Metrics, Lead Funnel, ROI Trends
-- [ ] Add `finance.dashboard.ts` — Revenue Pipeline, Collections Aging, Cash Flow, Contract Renewals
-- [ ] Add `cpq.dashboard.ts` — Quote Pipeline, Win/Loss Analysis, Discount Usage, Approval Cycle Time
-- [ ] Add `executive.dashboard.ts` — Cross-cloud executive summary combining Sales, Service, Revenue, and HR KPIs
+- [x] Add `marketing.dashboard.ts` — Campaign Performance, Email Metrics, Lead Funnel, ROI Trends
+- [x] Add `finance.dashboard.ts` — Revenue Pipeline, Collections Aging, Cash Flow, Contract Renewals
+- [x] Add `cpq.dashboard.ts` — Quote Pipeline, Win/Loss Analysis, Discount Usage, Approval Cycle Time
+- [x] Add `executive.dashboard.ts` — Cross-cloud executive summary combining Sales, Service, Revenue, and HR KPIs
 
 #### 8D: Form View Expansion (P1 — Data Entry)
-- [ ] Add `opportunity.form.ts` — Deal creation wizard with stage-driven required fields
-- [ ] Add `contact.form.ts` — Contact creation with account auto-link and duplicate detection UI
-- [ ] Add `lead.form.ts` — Lead capture form with source tracking and assignment preview
-- [ ] Add `case.form.ts` — Case submission form with category-driven field visibility
-- [ ] Add `employee.form.ts` — Employee onboarding form with department/manager lookup
+- [x] Add `opportunity.form.ts` — Deal creation wizard with stage-driven required fields
+- [x] Add `contact.form.ts` — Contact creation with account auto-link and duplicate detection UI
+- [x] Add `lead.form.ts` — Lead capture form with source tracking and assignment preview
+- [x] Add `case.form.ts` — Case submission form with category-driven field visibility
+- [x] Add `employee.form.ts` — Employee onboarding form with department/manager lookup
 
 #### 8E: Hook Coverage Expansion (P1 — Business Logic)
-- [ ] Add hooks for Marketing: `email_template`, `form`, `landing_page`, `marketing_list`, `touchpoint`
-- [ ] Add hooks for HR: `certification`, `department`, `position`, `training`
-- [ ] Add hooks for Support: `agent_skill`, `portal_user`, `social_media_case`
-- [ ] Target: 80%+ object hook coverage (currently ~68%, 47 hooks / 69 objects)
+- [x] Add hooks for Marketing: `email_template`, `form`, `landing_page`, `marketing_list`, `touchpoint`
+- [x] Add hooks for HR: `certification`, `department`, `position`, `training`
+- [x] Add hooks for Support: `agent_skill`, `portal_user`, `social_media_case`
+- [x] Target: 80%+ object hook coverage (59 hooks / 69 objects = 86%)
 
 #### 8F: Cross-Cloud Integration Tests (P1 — Reliability)
-- [ ] Lead-to-Opportunity conversion flow (CRM cross-object)
-- [ ] Quote-to-Contract-to-Invoice conversion flow (Products → Finance)
-- [ ] Campaign-to-Lead attribution flow (Marketing → CRM)
-- [ ] Case-to-Knowledge self-service flow (Support cross-object)
-- [ ] Employee-Onboarding-to-Training flow (HR cross-object)
-- [ ] AI agent end-to-end pipeline tests (AI → CRM/Support/HR)
+- [x] Lead-to-Opportunity conversion flow (CRM cross-object)
+- [x] Quote-to-Contract-to-Invoice conversion flow (Products → Finance)
+- [x] Campaign-to-Lead attribution flow (Marketing → CRM)
+- [x] Case-to-Knowledge self-service flow (Support cross-object)
+- [x] Employee-Onboarding-to-Training flow (HR cross-object)
+- [x] AI agent end-to-end pipeline tests (AI → CRM/Support/HR)
 
 #### 8G: Advanced Data Model (P2 — Data Quality)
-- [ ] Cross-field validations (e.g., close_date required when stage = 'Closed Won')
-- [ ] Conditional required fields using spec `ConditionalValidation` schema
-- [ ] Async validation patterns (duplicate detection for leads, contacts)
-- [ ] `DataQualityRules` for email format, phone normalization, address standardization
+- [x] Cross-field validations (e.g., close_date required when stage = 'Closed Won')
+- [x] Conditional required fields using spec `ConditionalValidation` schema
+- [x] Async validation patterns (duplicate detection for leads, contacts)
+- [x] `DataQualityRules` for email format, phone normalization, address standardization
 
 #### 8H: System & API Configuration (P2 — Enterprise Readiness)
-- [ ] Define `AuditConfig` for sensitive objects using `@objectstack/spec/system`
-- [ ] Define `NotificationChannel` configurations for workflow email alerts
-- [ ] Define `ApiEndpoint` declarations for external API surface using `@objectstack/spec/api`
-- [ ] Define `WebhookConfig` for outbound event notifications using `@objectstack/spec/integration`
-- [ ] Define `CacheConfig` for high-read objects (product catalog, knowledge articles)
+- [x] Define `AuditConfig` for sensitive objects using `@objectstack/spec/system`
+- [x] Define `NotificationChannel` configurations for workflow email alerts
+- [x] Define `ApiEndpoint` declarations for external API surface using `@objectstack/spec/api`
+- [x] Define `WebhookConfig` for outbound event notifications using `@objectstack/spec/integration`
+- [x] Define `CacheConfig` for high-read objects (product catalog, knowledge articles)
 
 #### 8I: Documentation Refresh (P2 — DX)
 - [x] Update `docs/roadmap.mdx` with current metrics (69 objects, 1604 tests, 47 hooks)
 - [x] Update `docs/modules/index.mdx` with accurate object counts per cloud
-- [ ] Add cross-cloud integration pattern guides
-- [ ] Add UI metadata authoring guide (page, view, dashboard, form patterns)
-- [ ] Add field type selection guide with decision tree
+- [x] Add cross-cloud integration pattern guides
+- [x] Add UI metadata authoring guide (page, view, dashboard, form patterns)
+- [x] Add field type selection guide with decision tree
 
 ---
 
@@ -546,6 +551,7 @@ These independent business packages are planned for future development:
 
 | Date | From | To | Breaking Changes | Tests |
 |------|------|----|-----------------|-------|
+| 2026-02-12 | v3.0.0 | v3.0.0 | None (Phase 7B-8: Studio plugins, UI completeness, hooks, integration tests, system configs, docs) | 1629+ ✅ |
 | 2026-02-12 | v2.0.6 | v3.0.0 | Zod 3→4, removed hub/auth/driver/permission modules, new ObjectSchema.create() API | 1604 ✅ |
 | 2026-02-12 | v2.0.6 | v2.0.6 | None (Phase 7 roadmap: UI completeness, cross-cloud integration, hook expansion) | 1604 ✅ |
 | 2026-02-12 | v2.0.6 | v2.0.6 | None (Phase 6: spec deep adoption, Field.masterDetail, DashboardSchema, EventSchema) | 1604 ✅ |
