@@ -122,7 +122,7 @@ export default function HomePage() {
               href="/docs/modules/hr"
             />
             <FeatureCard
-              icon={<Cpu className="w-6 h-6" />}
+              icon={<LayoutTemplate className="w-6 h-6" />}
               title="Platform & AI"
               description="Metadata engine, ObjectQL, and Agentic capabilities."
               href="/docs/modules/platform"
