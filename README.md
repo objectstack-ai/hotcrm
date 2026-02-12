@@ -4,33 +4,70 @@
 [![CodeQL](https://github.com/objectstack-ai/hotcrm/workflows/CodeQL%20Security%20Analysis/badge.svg)](https://github.com/objectstack-ai/hotcrm/actions/workflows/codeql.yml)
 [![Code Quality](https://github.com/objectstack-ai/hotcrm/workflows/Code%20Quality/badge.svg)](https://github.com/objectstack-ai/hotcrm/actions/workflows/code-quality.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+![Objects](https://img.shields.io/badge/Objects-69-brightgreen)
+![Tests](https://img.shields.io/badge/Tests-1629%20passing-brightgreen)
+![Spec](https://img.shields.io/badge/%40objectstack%2Fspec-v3.0.0-blue)
 
 > A world-class Customer Relationship Management system built on @objectstack/spec v3.0.0 protocol with Salesforce-level functionality and Apple/Linear-level UX.
 
-> 📊 **Development Status**: See [Development Roadmap](ROADMAP.md) for current state and next development priorities
+## ⚡ Quick Start in 60 Seconds
 
-> 🎯 **Strategic Design Report**: See our comprehensive [Strategic Design Report](docs/STRATEGIC_DESIGN_REPORT.md) with plugin roadmap, industry verticals, and $76M ARR plan
+```bash
+# Prerequisites: Node.js >= 20.9.0, pnpm >= 9.0.0
+git clone https://github.com/objectstack-ai/hotcrm.git
+cd hotcrm
+pnpm install
+pnpm dev           # Start development server
+# Open http://localhost:3000 — all 69 business objects loaded
+```
 
-> 🚀 **Strategic Planning**: Complete [Strategic Enhancement Plan](docs/README.md) to transform HotCRM into the world's leading AI-Native CRM
+```bash
+# Verify everything works
+pnpm typecheck     # TypeScript — expect 0 errors
+pnpm test          # Vitest — expect 1,629 tests passing
+```
 
-> 📝 **Latest Updates**: Upgraded to @objectstack v3.0.0 (February 12, 2026) — 1629 tests passing across 113 files with zero breaking changes.
-
-> ✅ **Protocol Compliance**: All metadata is fully compliant with @objectstack/spec v3.0.0.
+> 📖 **New developers**: See [DEVELOPMENT_WORKFLOW.md](DEVELOPMENT_WORKFLOW.md) for the full quickstart, first contribution tutorial, and troubleshooting FAQ.
 
 ## 🌟 Overview
 
-HotCRM is a **comprehensive, AI-native enterprise CRM** system covering the complete Lead-to-Cash lifecycle. Built on the @objectstack/spec v3.0.0 protocol, it delivers:
+HotCRM is a **comprehensive, AI-native enterprise CRM** covering the complete Lead-to-Cash lifecycle. Built on @objectstack/spec v3.0.0:
 
-- **Complete CRM Suite**: 69 core objects (TypeScript) spanning Marketing, Sales, Service, Finance, and HR domains
-- **Metadata-Driven Architecture**: All objects defined through TypeScript (type-safe)
-- **Plugin Architecture**: Each business package is an independent plugin with dependency management
+- **69 Business Objects** across 6 clouds: Sales, Marketing, Revenue, Service, HR, AI
+- **Metadata-Driven**: All objects defined in TypeScript (`.object.ts`) — the single source of truth
+- **Plugin Architecture**: Each business cloud is an independent, deployable plugin
 - **ObjectQL**: Type-safe query language replacing traditional SQL
-- **AI-First Design**: Every major feature enhanced with AI capabilities
-- **Modern UI/UX**: Apple/Linear-inspired design with Tailwind CSS
+- **AI-Native**: Every major feature enhanced with AI capabilities
 - **Enterprise-Ready**: SLA management, approval workflows, multi-currency support
-- **Monorepo Architecture**: Modular package structure for deep customization
 
 ## 📚 Architecture
+
+### Package Dependency Graph
+
+```mermaid
+graph TD
+    APP["HotCRM Application<br/>(objectstack.config.ts)"]
+    RT["@objectstack/runtime"]
+    CORE["@hotcrm/core<br/>Shared Utilities"]
+    CRM["@hotcrm/crm<br/>Sales Cloud · 8 objects"]
+    MKT["@hotcrm/marketing<br/>Marketing Cloud · 11 objects"]
+    FIN["@hotcrm/finance<br/>Revenue Cloud · 4 objects"]
+    PRD["@hotcrm/products<br/>CPQ Cloud · 9 objects"]
+    SUP["@hotcrm/support<br/>Service Cloud · 21 objects"]
+    HR["@hotcrm/hr<br/>HR Cloud · 16 objects"]
+    AI["@hotcrm/ai<br/>Intelligence Layer"]
+
+    APP --> CRM & MKT & FIN & PRD & SUP & HR & AI
+    CRM --> RT & CORE
+    MKT --> RT & CORE & CRM
+    FIN --> RT & CORE & CRM
+    PRD --> RT & CORE & CRM
+    SUP --> RT & CORE & CRM
+    HR --> RT & CORE
+    AI --> RT & CORE
+```
+
+> For detailed architecture documentation, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ### Core Principles
 
@@ -247,6 +284,7 @@ HotCRM provides two server startup modes:
 - **[Deployment Guide](docs/DEPLOYMENT.md)** — Docker, Kubernetes production deployment
 
 **Developer Reference**:
+- **[Development Workflow](DEVELOPMENT_WORKFLOW.md)** — Quickstart, first contribution tutorial, package scaffolding, troubleshooting
 - **[Development Roadmap](ROADMAP.md)** — Full development roadmap with phased execution plan
 - **[Quick Reference](QUICK_REFERENCE.md)** — Quick lookup for commands, file conventions, and patterns
 - **[Testing Guide](TESTING.md)** — Test organization, patterns, and coverage targets
@@ -703,7 +741,7 @@ HotCRM includes comprehensive GitHub Actions workflows for automation:
 - **Issue Management**: Auto-greeting for first-time contributors
 - **PR Automation**: Auto-labeling based on changed files
 
-For detailed workflow documentation, see [.github/README.md](.github/README.md) and [.github/AUTOMATION_SUMMARY.md](.github/AUTOMATION_SUMMARY.md).
+For workflow configuration details, see the individual workflow files in [.github/workflows/](.github/workflows/).
 
 ## 📄 License
 

@@ -5,7 +5,7 @@ description: Strategic direction and upcoming features for HotCRM.
 
 # HotCRM Roadmap
 
-HotCRM has completed **8 development phases**, establishing a full-featured **6-Cloud CRM** with **69 production-ready objects**, schema-validated metadata, AI agent workflows, enterprise security foundations, full UI metadata coverage, and cross-cloud integration tests. Our focus now shifts to **developer experience & documentation governance** and preparing for the **ecosystem expansion** planned for 2027.
+HotCRM has completed **9 development phases**, establishing a full-featured **6-Cloud CRM** with **69 production-ready objects**, schema-validated metadata, AI agent workflows, enterprise security foundations, full UI metadata coverage, cross-cloud integration tests, and comprehensive developer experience tooling. Our focus now shifts to **ecosystem expansion** planned for 2027.
 
 > **Protocol Version**: @objectstack/spec v3.0.0 | **Tests**: 1,629 passing (113 files) | **Last Updated**: February 12, 2026
 
@@ -122,31 +122,36 @@ All key business objects now have full page layouts and list views:
 - **Advanced Validations**: Cross-field, conditional required, async duplicate detection
 - **System & API Configuration**: Audit trail, notification channels, API endpoints, webhooks, cache config
 
-## 🔧 Phase 9: Developer Experience & Documentation Governance (Current Focus)
+## ✅ Phase 9: Developer Experience & Documentation Governance (Completed)
 
-Comprehensive DX audit identified onboarding friction from broken links, stale statistics, and inconsistent tooling references. This phase improves documentation integrity and developer workflows.
+Comprehensive DX audit identified onboarding friction from broken links, stale statistics, and inconsistent tooling references. This phase improved documentation integrity and developer workflows.
 
 ### 🔴 P0 — Documentation Integrity (Completed)
 - [x] Fix README.md broken links — removed 20+ references to non-existent files
 - [x] Update README.md statistics — corrected object count (65→69), per-cloud breakdowns
 - [x] Fix CONTRIBUTING.md — updated `npm`→`pnpm`, Node.js 18→20.9.0
+- [x] Audit remaining documentation for broken cross-references
+- [x] Add link-checking CI step to prevent future broken links
 
-### 🟡 P1 — Onboarding Experience
-- [ ] Create `DEVELOPMENT_WORKFLOW.md` — single-page quickstart for new developers
-- [ ] Add "first contribution" tutorial with step-by-step guide
-- [ ] Add package scaffolding guide for new business packages
-- [ ] Add troubleshooting FAQ for common issues
+### 🟡 P1 — Onboarding Experience (Completed)
+- [x] Create `DEVELOPMENT_WORKFLOW.md` — single-page quickstart for new developers
+- [x] Add "first contribution" tutorial with step-by-step guide
+- [x] Add package scaffolding guide for new business packages
+- [x] Add troubleshooting FAQ for common issues
 
-### 🟢 P2 — Documentation Governance
-- [ ] Add link-checking CI step to prevent future broken links
-- [ ] Add automated stat extraction — single source of truth for counts
-- [ ] Consolidate strategic docs in `docs/` directory
-- [ ] Add architecture diagram (Mermaid) to README
+### 🟢 P2 — Documentation Governance (Completed)
+- [x] Add automated stat extraction — single source of truth for counts
+- [x] Consolidate strategic docs in `docs/` directory
+- [x] Add architecture diagram (Mermaid) to README
+- [x] Add `docs/ARCHITECTURE.md` — consolidated architecture and plugin guide
+- [x] Ensure consistent metrics across README.md, ROADMAP.md, roadmap.mdx, and index.mdx
 
-### 🔵 P3 — Developer Tooling
-- [ ] Add `pnpm typecheck` root script
-- [ ] Add `pnpm test:changed` for incremental testing
-- [ ] Evaluate pre-commit hooks and `changeset` for version management
+### 🔵 P3 — Developer Tooling (Completed)
+- [x] Add `pnpm typecheck` root script
+- [x] Add `pnpm test:changed` for incremental testing
+- [x] Add `pnpm stats` for automated metric extraction
+- [x] Add Quick Start section and badges to README
+- [x] Evaluate pre-commit hooks and `changeset` — deferred, current workflow sufficient
 
 ## 🌍 Phase 10: Ecosystem & Connectivity (Planned — 2027)
 
