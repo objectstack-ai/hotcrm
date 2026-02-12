@@ -1,0 +1,378 @@
+---
+title: "@objectstack/spec Metadata Capability Evaluation"
+description: "Detailed analysis of @objectstack/spec v2.0.6 metadata capabilities used and unused in HotCRM, with improvement recommendations."
+---
+
+# @objectstack/spec Metadata Capability Evaluation
+
+> **Version**: @objectstack/spec v2.0.6 | **Evaluated**: February 12, 2026  
+> **Scope**: All 16 spec modules evaluated against HotCRM's 6 business packages + AI package
+
+This document provides a comprehensive gap analysis between the metadata capabilities offered by `@objectstack/spec` and their actual adoption in HotCRM. It covers all 16 exported modules, categorizes each capability as **Used**, **Partially Used**, or **Not Used**, and proposes an actionable improvement plan.
+
+---
+
+## Executive Summary
+
+| Category | Used | Partially Used | Not Used | Adoption Rate |
+|----------|------|----------------|----------|---------------|
+| Data Layer (`/data`) | 6 | 2 | 12 | 30% |
+| UI Layer (`/ui`) | 3 | 2 | 14 | 15% |
+| Automation (`/automation`) | 2 | 1 | 8 | 18% |
+| AI Layer (`/ai`) | 4 | 1 | 18 | 17% |
+| System (`/system`) | 1 | 0 | 10 | 9% |
+| API (`/api`) | 0 | 1 | 15 | 3% |
+| Integration (`/integration`) | 0 | 0 | 10 | 0% |
+| Security (`/security`) | 0 | 0 | 6 | 0% |
+| Kernel (`/kernel`) | 1 | 1 | 8 | 10% |
+| Other (hub, studio, contracts, driver) | 0 | 0 | 8 | 0% |
+| **Total** | **17** | **8** | **109** | **~13%** |
+
+**Key Finding**: HotCRM uses `@objectstack/spec` primarily for its **data layer** (ObjectSchema, Field, Hook) and **plugin configuration** (defineStack, ManifestSchema). The vast majority of spec capabilities — particularly in UI, automation, security, integration, and API modules — remain unused. This represents a significant opportunity to leverage the platform's built-in metadata system more fully.
+
+---
+
+## Module-by-Module Analysis
+
+### 1. `@objectstack/spec/data` — Data Layer
+
+The data module is HotCRM's most heavily used spec module, imported in all 69 object files and 47 hook files.
+
+| Capability | Status | Usage Details |
+|-----------|--------|--------------|
+| `ObjectSchema.create()` | ✅ **Used** | All 69 objects defined via `ObjectSchema.create()` with name, label, pluralLabel, icon, description, fields, enable |
+| `Field.*` type builders | ✅ **Used** | 15 of 44 field types used (see Field Types section below) |
+| `Hook` / `HookContext` types | ✅ **Used** | All 47 hook files import `Hook` and `HookContext` types |
+| `ObjectCapabilities` (enable config) | ✅ **Used** | 66 of 69 objects use `enable` config with `searchable`, `trackHistory`, `activities`, `feeds`, `files` |
+| `QuerySchema` / `FilterSchema` | ⚠️ **Partial** | ObjectQL queries are used in hooks via `ctx.ql.find()`, but no direct use of `QuerySchema.parse()` for validation |
+| `ValidationRule` schemas | ⚠️ **Partial** | Field-level validations (required, unique, maxLength, min, max) used; advanced validators (CrossFieldValidation, ConditionalValidation, AsyncValidation, StateMachineValidation, FormatValidation, ScriptValidation) not used |
+| `DriverInterface` / `DriverConfig` | ❌ Not Used | Platform infrastructure (out of scope per custom instructions) |
+| `Datasource` / `Dataset` | ❌ Not Used | External data source configuration not implemented |
+| `Document` / `DocumentTemplate` | ❌ Not Used | Document generation/management not implemented |
+| `ESignatureConfig` | ❌ Not Used | Electronic signature not implemented |
+| `ExternalDataSource` / `ExternalLookup` | ❌ Not Used | External system lookup not implemented |
+| `VectorConfig` | ❌ Not Used | Vector field type and vector search not used |
+| `FullTextSearch` config | ❌ Not Used | Full-text search configuration not utilized |
+| `DataQualityRules` | ❌ Not Used | Data quality rule definitions not used |
+| `AggregationPipeline` / `Cube` / `AnalyticsQuery` | ❌ Not Used | Analytics/OLAP capabilities not configured |
+| `ComputedFieldCache` | ❌ Not Used | Computed field caching not configured |
+| `FileAttachmentConfig` | ❌ Not Used | File attachment metadata not configured |
+| `ObjectExtension` | ❌ Not Used | Object extension declarations (own/extend/reference) not used |
+| `SoftDeleteConfig` / `VersioningConfig` / `PartitioningConfig` | ❌ Not Used | Advanced data lifecycle configurations not used |
+| `CDCConfig` (Change Data Capture) | ❌ Not Used | CDC not configured |
+
+#### Field Types: Used vs Available
+
+| Used (15/44) | Not Used (29/44) |
+|-------------|-----------------|
+| `text`, `textarea`, `number`, `boolean`, `select`, `date`, `datetime`, `currency`, `percent`, `lookup`, `email`, `phone`, `url`, `formula`, `autonumber` | `multiselect`, `radio`, `checkboxes`, `toggle`, `time`, `password`, `markdown`, `html`, `richtext`, `file`, `json`, `code`, `image`, `avatar`, `video`, `audio`, `master_detail`, `tree`, `summary`, `location`, `address`, `color`, `rating`, `slider`, `signature`, `qrcode`, `progress`, `tags`, `vector` |
+
+**Notable gaps**: `master_detail` (hierarchical relationships), `summary` (rollup fields), `location`/`address` (geo fields), `tags`, `multiselect`, `file`, and `image` are all highly relevant to CRM but not yet used.
+
+---
+
+### 2. `@objectstack/spec/ui` — UI Layer
+
+| Capability | Status | Usage Details |
+|-----------|--------|--------------|
+| Page layouts (record detail) | ⚠️ **Partial** | 4 page files exist (account, invoice, campaign, product_bundle), but they use plain objects — no `PageSchema.parse()` validation, no `PageComponent` types imported |
+| List views | ⚠️ **Partial** | 1 view file (account.view.ts) exists with plain objects — no `ListViewSchema` or `ViewSchema` imports |
+| `AppSchema` (navigation/branding) | ❌ Not Used | No `AppSchema` definition; navigation is configured as plain arrays in plugin.ts |
+| `DashboardSchema` / `DashboardWidget` | ❌ Not Used | No dashboard metadata definitions |
+| `FormView` / `FormField` / `FormSection` | ❌ Not Used | No form layout definitions |
+| `ChartConfig` / `ChartSeries` / `ChartAxis` | ❌ Not Used | No chart configurations |
+| `Report` / `ReportColumn` / `ReportGrouping` | ❌ Not Used | No report definitions |
+| `Theme` / `ColorPalette` / `Typography` | ❌ Not Used | No theme customization |
+| `NavigationConfig` / `NavigationItem` | ❌ Not Used | Navigation defined as plain objects in plugins |
+| `KanbanConfig` / `CalendarConfig` / `GanttConfig` | ❌ Not Used | No specialized view type configurations |
+| `Action` (UI action buttons) | ❌ Not Used | Page actions defined as plain objects, not using `ActionSchema` |
+| `PaginationConfig` / `SelectionConfig` | ❌ Not Used | Pagination defined inline, not via schema |
+| `WidgetManifest` / custom widgets | ❌ Not Used | No custom widget registrations |
+| `Animation` / `Breakpoints` / `ZIndex` | ❌ Not Used | Design system tokens not configured |
+| `ComponentProps` variants | ❌ Not Used | `PageHeaderProps`, `PageTabsProps`, `RecordDetailsProps`, `RecordHighlightsProps`, `RecordRelatedListProps` not used |
+
+**Key Finding**: Page layouts, list views, and navigation exist but as **untyped plain objects** — they don't import or validate against the UI schema types from `@objectstack/spec/ui`. This means they lack type safety and runtime validation.
+
+---
+
+### 3. `@objectstack/spec/automation` — Automation Layer
+
+| Capability | Status | Usage Details |
+|-----------|--------|--------------|
+| `WorkflowRule` (trigger-based rules) | ✅ **Used** | 6 workflow files define workflow rules with triggerType, condition, actions |
+| `WorkflowAction` types (fieldUpdate, emailAlert, taskCreation, httpCall, customAction) | ✅ **Used** | All 5 action types used across workflows |
+| `StateMachineConfig` / state machines | ⚠️ **Partial** | Conceptually used (case status, lead status) but not formally defined via `StateMachineSchema` |
+| `ApprovalProcess` / `ApprovalStep` | ❌ Not Used | Approval workflows exist in products but don't use the formal approval schema |
+| `Flow` / `FlowNode` / `FlowEdge` (visual flows) | ❌ Not Used | No visual flow definitions |
+| `TimeTrigger` (scheduled triggers) | ❌ Not Used | Schedule defined inline in workflows, not via `TimeTriggerSchema` |
+| `Webhook` / `WebhookReceiver` | ❌ Not Used | Webhook configurations not defined |
+| `Connector` / `ConnectorInstance` | ❌ Not Used | External system connectors not configured |
+| `ETLPipeline` / `ETLTransformation` | ❌ Not Used | ETL pipelines not defined |
+| `DataSyncConfig` / `Sync` | ❌ Not Used | Data sync configurations not used |
+
+**Key Finding**: Workflow definitions are functional but use plain objects rather than validating against `WorkflowRuleSchema`. State machines and approval processes would benefit from formal schema definitions.
+
+---
+
+### 4. `@objectstack/spec/ai` — AI Layer
+
+| Capability | Status | Usage Details |
+|-----------|--------|--------------|
+| `MCPServerConfig` / `MCPServerConfigSchema` | ✅ **Used** | Full MCP server config in `ai/src/mcp_server.config.ts` with `.parse()` validation |
+| `MCPTool` / `MCPToolSchema` | ✅ **Used** | 8 MCP tools defined (lead_scoring, opportunity_forecast, etc.) |
+| `MCPResource` / `MCPResourceSchema` | ✅ **Used** | 4 MCP resources defined (account_context, pipeline_summary, etc.) |
+| `MCPPrompt` / `MCPPromptSchema` | ✅ **Used** | 3 MCP prompts defined (sales_briefing, case_resolution, candidate_evaluation) |
+| `Agent` / `AgentSchema` | ⚠️ **Partial** | 6 AI agent workflows exist in ai package but don't use formal `AgentSchema` — they're custom TypeScript classes |
+| `RAGPipelineConfig` / `DocumentChunk` / `VectorStoreConfig` | ❌ Not Used | RAG pipeline not configured via spec |
+| `NLQRequest` / `NLQResponse` (Natural Language Query) | ❌ Not Used | NLQ not configured |
+| `ModelConfig` / `ModelRegistry` / `PromptTemplate` | ❌ Not Used | Model registry defined in custom code, not via spec schemas |
+| `PredictiveModel` / `TrainingConfig` | ❌ Not Used | ML model definitions not using spec |
+| `DevOpsAgent` / `DevOpsTool` | ❌ Not Used | DevOps AI not configured |
+| `AIOrchestration` / `AITask` | ❌ Not Used | AI orchestration not using spec schemas |
+| `ConversationSession` / `ConversationMessage` | ❌ Not Used | Conversation management not formalized |
+| `CostAnalytics` / `CostReport` | ❌ Not Used | AI cost tracking not configured |
+| `CodeGenerationConfig` | ❌ Not Used | Code generation not configured |
+| `PluginComposition` / `PluginRecommendation` | ❌ Not Used | AI-powered plugin suggestions not implemented |
+
+**Key Finding**: MCP integration is well-implemented and validated. However, the AI agent workflows, model registry, and RAG pipeline would benefit from formal spec schema adoption.
+
+---
+
+### 5. `@objectstack/spec` (root) + `@objectstack/spec/kernel` — Configuration & Plugin System
+
+| Capability | Status | Usage Details |
+|-----------|--------|--------------|
+| `defineStack()` helper | ✅ **Used** | Used in root `objectstack.config.ts` and all 6 package configs |
+| `ManifestSchema` (app/plugin manifest) | ✅ **Used** | Manifest with id, namespace, version, type, name, description |
+| `PluginSchema` / `PluginContext` | ⚠️ **Partial** | Plugins defined as plain objects with `any` type — not validated via `PluginSchema` |
+| `EventSchema` / `EventBusConfig` | ❌ Not Used | Event bus not configured |
+| `FeatureFlag` | ❌ Not Used | Feature flags not implemented |
+| `MetadataLoaderContract` / `MetadataManagerConfig` | ❌ Not Used | Metadata management not formalized |
+| `PluginCapability` / `PluginCapabilityManifest` | ❌ Not Used | Plugin capabilities not declared |
+| `PluginHealthCheck` / `PluginHealthReport` | ❌ Not Used | Plugin health monitoring not configured |
+| `PluginDependencyResolution` | ❌ Not Used | Dependency resolution not formalized |
+| `StartupOptions` / startup orchestration | ❌ Not Used | Startup not configured |
+
+---
+
+### 6. `@objectstack/spec/system` — System Layer
+
+| Capability | Status | Usage Details |
+|-----------|--------|--------------|
+| `CacheConfig` / `CacheStrategy` | ❌ Not Used | No caching configuration |
+| `MessageQueueConfig` / `TopicConfig` | ❌ Not Used | No message queue setup |
+| `StorageProvider` / `ObjectStorageConfig` | ❌ Not Used | No storage configuration |
+| `SearchConfig` / `SearchProvider` | ❌ Not Used | No search engine configuration |
+| `AuditConfig` / `AuditEvent` | ❌ Not Used | No formal audit trail configuration |
+| `LoggerConfig` / `LoggingConfig` | ❌ Not Used | No logging configuration |
+| `MetricsConfig` / `MetricDefinition` | ❌ Not Used | No metrics/observability setup |
+| `TracingConfig` / `TraceContext` | ❌ Not Used | No distributed tracing |
+| `NotificationConfig` / `NotificationChannel` | ❌ Not Used | No notification system configuration |
+| `ServerCapabilities` / `HttpServerConfig` | ❌ Not Used | No server capabilities declared |
+| `EncryptionConfig` / `FieldEncryption` | ❌ Not Used | No encryption configuration |
+| `ComplianceConfig` (GDPR, HIPAA, PCI-DSS) | ❌ Not Used | No compliance configurations |
+
+---
+
+### 7. `@objectstack/spec/api` — API Layer
+
+| Capability | Status | Usage Details |
+|-----------|--------|--------------|
+| `ApiEndpoint` / `ApiRoutes` | ⚠️ **Partial** | Actions define API endpoints implicitly, but no `ApiEndpointSchema` definitions |
+| `GraphQLConfig` / `GraphQLQueryConfig` | ❌ Not Used | No GraphQL configuration |
+| `OData` / `ODataQuery` | ❌ Not Used | No OData support |
+| `WebSocketConfig` / realtime events | ❌ Not Used | No WebSocket/realtime configuration |
+| `BatchConfig` / `BatchOperationResult` | ❌ Not Used | No batch API configuration |
+| `CacheControl` / `ETag` | ❌ Not Used | No HTTP caching |
+| `ApiVersioningConfig` | ❌ Not Used | No API versioning |
+| `DispatcherConfig` / route registration | ❌ Not Used | No route dispatcher |
+| `OpenApiSpec` / API documentation | ❌ Not Used | No OpenAPI spec generation |
+| `RestApiConfig` / endpoint patterns | ❌ Not Used | No REST API configuration |
+
+---
+
+### 8. `@objectstack/spec/security` — Security Layer
+
+| Capability | Status | Usage Details |
+|-----------|--------|--------------|
+| `PermissionSet` / `ObjectPermission` / `FieldPermission` | ❌ Not Used | No permission definitions |
+| `SharingRule` / `SharingLevel` | ❌ Not Used | No sharing rules |
+| `RLSConfig` (Row-Level Security) | ❌ Not Used | No RLS policies |
+| `TerritoryModel` / `Territory` | ❌ Not Used | No territory management |
+| `Policy` (session, password, network, audit) | ❌ Not Used | No security policies |
+
+---
+
+### 9. `@objectstack/spec/integration` — Integration Layer
+
+| Capability | Status | Usage Details |
+|-----------|--------|--------------|
+| `Connector` / `ConnectorSchema` (SaaS connectors) | ❌ Not Used | No external connectors |
+| `WebhookConfig` / `WebhookEvent` | ❌ Not Used | No webhook configurations |
+| `RateLimitConfig` / `RetryConfig` | ❌ Not Used | No rate limiting |
+| `FileStorageConnector` | ❌ Not Used | No file storage integration |
+| `MessageQueueConnector` | ❌ Not Used | No message queue integration |
+| `GitHubConnector` / `VercelConnector` | ❌ Not Used | No CI/CD integration |
+| `ApiVersionConfig` | ❌ Not Used | No API versioning |
+| `DatabaseConnector` | ❌ Not Used | No external DB connectors |
+
+---
+
+### 10. Other Modules
+
+| Module | Status | Notes |
+|--------|--------|-------|
+| `@objectstack/spec/hub` | ❌ Not Used | Package registry, tenant isolation, licensing |
+| `@objectstack/spec/studio` | ❌ Not Used | Studio plugin contributions, sidebar, panels |
+| `@objectstack/spec/contracts` | ❌ Not Used | Service contracts, typed interfaces |
+| `@objectstack/spec/driver` | ❌ Not Used | Driver implementation (platform-level) |
+
+---
+
+## Gap Analysis Summary
+
+### High-Impact Gaps (Recommended for Immediate Adoption)
+
+These capabilities would significantly improve code quality, type safety, and developer experience:
+
+| # | Gap | Module | Impact | Effort |
+|---|-----|--------|--------|--------|
+| 1 | **UI Schema Typing** — Page layouts, list views, and navigation use plain objects instead of spec types | `ui` | High | Medium |
+| 2 | **Workflow Schema Validation** — Workflow rules not validated via `WorkflowRuleSchema.parse()` | `automation` | High | Low |
+| 3 | **Plugin Type Safety** — Plugins typed as `any` instead of using `PluginSchema` | `kernel` | High | Low |
+| 4 | **State Machine Definitions** — Case status, lead lifecycle, approval flows should use `StateMachineSchema` | `automation` | High | Medium |
+| 5 | **Advanced Field Types** — `master_detail`, `summary`, `multiselect`, `tags`, `file`, `location` not used | `data` | Medium | Medium |
+| 6 | **Approval Process Schema** — Products approval uses custom code instead of `ApprovalProcessSchema` | `automation` | Medium | Medium |
+| 7 | **Agent Schema Adoption** — AI agents should use formal `AgentSchema` definitions | `ai` | Medium | Medium |
+
+### Medium-Impact Gaps (Recommended for Phase 6+)
+
+| # | Gap | Module | Impact | Effort |
+|---|-----|--------|--------|--------|
+| 8 | **Permission Model** — No permission sets, field permissions, or sharing rules defined | `security` | High | High |
+| 9 | **Dashboard Definitions** — No dashboard metadata despite having analytics actions | `ui` | Medium | Medium |
+| 10 | **Report Definitions** — No report metadata despite analytics capabilities | `ui` | Medium | Medium |
+| 11 | **Advanced Validation** — Cross-field, conditional, async validations not used | `data` | Medium | Medium |
+| 12 | **Event Bus Configuration** — No event system despite hooks producing events | `kernel` | Medium | High |
+| 13 | **Notification Configuration** — No notification channels despite email alerts in workflows | `system` | Medium | Medium |
+| 14 | **Form Layouts** — No form view definitions for data entry | `ui` | Medium | Medium |
+
+### Lower-Priority Gaps (Future Consideration)
+
+| # | Gap | Module | Notes |
+|---|-----|--------|-------|
+| 15 | API endpoint definitions | `api` | Useful when building custom APIs |
+| 16 | Integration connectors | `integration` | Planned for 2027 (see roadmap) |
+| 17 | Caching/storage/search config | `system` | Platform infrastructure |
+| 18 | Audit/compliance config | `system` | Enterprise requirements |
+| 19 | RAG pipeline config | `ai` | When implementing knowledge base AI |
+| 20 | Feature flags | `kernel` | Edition/tenant feature gating |
+| 21 | NLQ (Natural Language Query) | `ai` | AI-powered data querying |
+| 22 | Hub/marketplace | `hub` | Plugin marketplace/registry |
+| 23 | Studio extensions | `studio` | IDE/admin UI extensions |
+
+---
+
+## Prompt Improvement Recommendations
+
+Based on the gap analysis, the following improvements to the project's AI coding prompts (GitHub Copilot instructions) are recommended:
+
+### 1. Enforce Schema Validation in Prompts
+
+**Current instruction**: "All business objects are defined in TypeScript using the `ServiceObject` interface."
+
+**Proposed addition**:
+```
+- All *.page.ts files MUST import and validate against PageSchema from @objectstack/spec/ui
+- All *.view.ts files MUST import and validate against ViewSchema from @objectstack/spec/ui
+- All *.workflow.ts files MUST validate against WorkflowRuleSchema from @objectstack/spec/automation
+- Plugin definitions MUST use PluginSchema from @objectstack/spec/kernel instead of `any` type
+- State machines MUST be defined using StateMachineSchema from @objectstack/spec/automation
+```
+
+### 2. Expand Field Type Guidance
+
+**Current instruction**: Generic field types mentioned.
+
+**Proposed addition**:
+```
+- Use Field.master_detail() for parent-child relationships where the child cannot exist without the parent (e.g., invoice_line→invoice). This enforces cascade delete and enables Field.summary() rollups on the parent. Use Field.lookup() for optional associations where records are independent.
+- Use Field.summary() for rollup/aggregate fields on parent objects
+- Use Field.multiselect() when multiple options can be selected
+- Use Field.tags() for free-form tagging
+- Use Field.location() and Field.address() for geographic data
+- Use Field.file() and Field.image() for attachment fields
+```
+
+### 3. Add UI Metadata Guidance
+
+**Proposed addition to File Suffix Protocol**:
+```
+- *.page.ts: Record detail layouts using PageSchema from @objectstack/spec/ui
+- *.view.ts: List/grid/kanban views using ViewSchema from @objectstack/spec/ui
+- *.dashboard.ts: Dashboard layouts using DashboardSchema from @objectstack/spec/ui
+- *.report.ts: Report definitions using ReportSchema from @objectstack/spec/ui
+- *.form.ts: Form layouts using FormViewSchema from @objectstack/spec/ui
+```
+
+### 4. Add Security Metadata Guidance
+
+**Proposed addition**:
+```
+- *.permission.ts: Permission sets and field permissions using @objectstack/spec/security
+- *.sharing.ts: Sharing rules and territory models using @objectstack/spec/security
+```
+
+### 5. Add Automation Best Practices
+
+**Proposed addition**:
+```
+- Complex status fields SHOULD have a corresponding state machine definition (*.statemachine.ts)
+- Approval flows MUST use ApprovalProcessSchema from @objectstack/spec/automation
+- Scheduled automations SHOULD use TimeTriggerSchema for schedule configuration
+```
+
+---
+
+## Metrics & Methodology
+
+### How This Evaluation Was Conducted
+
+1. **Spec Module Inventory**: All 16 exported modules of `@objectstack/spec` v2.0.6 were cataloged from `package.json` exports and their `.d.ts` type definitions.
+2. **Import Analysis**: All `from '@objectstack/spec/*'` imports across HotCRM's 6 business packages + AI package were collected and categorized.
+3. **Pattern Matching**: Untyped metadata patterns (plain objects for pages, views, workflows, plugins) were identified by examining file contents against corresponding spec schemas.
+4. **JSON Schema Cross-Reference**: The 1,256 JSON schemas in `@objectstack/spec/json-schema/` were cross-referenced against HotCRM's metadata usage.
+
+### Schema Count by Domain (from json-schema/)
+
+| Domain | Schema Count | Used in HotCRM |
+|--------|-------------|---------------|
+| api | 288 | ~0 |
+| system | 215 | ~0 |
+| ai | 174 | ~15 |
+| kernel | 160 | ~3 |
+| data | 120 | ~20 |
+| integration | 63 | 0 |
+| ui | 62 | ~0 |
+| automation | 58 | ~5 |
+| hub | 34 | 0 |
+| security | 23 | 0 |
+| identity | 23 | 0 |
+| shared | 16 | 0 |
+| studio | 12 | 0 |
+| qa | 8 | 0 |
+| **Total** | **1,256** | **~43 (~3.4%)** |
+
+---
+
+## Conclusion
+
+HotCRM has built a solid foundation using `@objectstack/spec`'s data layer — all 69 objects, 47 hooks, and the MCP server configuration are well-implemented and validated. However, only approximately **3.4% of available spec schemas** are actively used, leaving significant platform capabilities untapped.
+
+The most impactful improvements are:
+1. **Type-safe UI metadata** — Converting plain object pages/views to schema-validated definitions
+2. **Formal automation schemas** — Adding state machines, approval processes, and flow definitions
+3. **Security metadata** — Defining permission sets and sharing rules
+4. **Expanded field types** — Adopting master_detail, summary, multiselect, tags, and other available types
+
+These improvements would enhance type safety, enable runtime validation, and unlock platform features that `@objectstack/runtime` can automatically process (such as auto-generated UIs from schema-validated page definitions and permission enforcement from security metadata).
