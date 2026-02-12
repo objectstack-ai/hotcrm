@@ -429,8 +429,8 @@
 - [ ] Define `CacheConfig` for high-read objects (product catalog, knowledge articles)
 
 #### 7I: Documentation Refresh (P2 — DX)
-- [ ] Update `docs/roadmap.mdx` with current metrics (69 objects, 1604 tests, 47 hooks)
-- [ ] Update `docs/modules/index.mdx` with accurate object counts per cloud
+- [x] Update `docs/roadmap.mdx` with current metrics (69 objects, 1604 tests, 47 hooks)
+- [x] Update `docs/modules/index.mdx` with accurate object counts per cloud
 - [ ] Add cross-cloud integration pattern guides
 - [ ] Add UI metadata authoring guide (page, view, dashboard, form patterns)
 - [ ] Add field type selection guide with decision tree
