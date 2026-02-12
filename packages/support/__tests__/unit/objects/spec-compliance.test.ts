@@ -20,6 +20,8 @@ import { SLAPolicy } from '../../../src/sla_policy.object';
 import { SLATemplate } from '../../../src/sla_template.object';
 import { SocialMediaCase } from '../../../src/social_media_case.object';
 import { WebToCase } from '../../../src/web_to_case.object';
+import { ChatbotConfig } from '../../../src/chatbot_config.object';
+import { Macro } from '../../../src/macro.object';
 
 const IDENTIFIER_RE = /^[a-z][a-z0-9_.]+$/;
 
@@ -45,6 +47,8 @@ const OBJECTS = [
   { name: 'SocialMediaCase', schema: SocialMediaCase },
   { name: 'PortalUser', schema: PortalUser },
   { name: 'QueueMember', schema: QueueMember },
+  { name: 'ChatbotConfig', schema: ChatbotConfig },
+  { name: 'Macro', schema: Macro },
 ];
 
 describe('Support Package - Spec Compliance', () => {

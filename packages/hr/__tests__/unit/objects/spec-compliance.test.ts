@@ -15,6 +15,8 @@ import { Position } from '../../../src/position.object';
 import { Recruitment } from '../../../src/recruitment.object';
 import { TimeOff } from '../../../src/time_off.object';
 import { Training } from '../../../src/training.object';
+import { Benefit } from '../../../src/benefit.object';
+import { CompensationPlan } from '../../../src/compensation_plan.object';
 
 const IDENTIFIER_RE = /^[a-z][a-z0-9_.]+$/;
 
@@ -35,6 +37,8 @@ const OBJECTS = [
   { name: 'Recruitment', schema: Recruitment },
   { name: 'TimeOff', schema: TimeOff },
   { name: 'Training', schema: Training },
+  { name: 'Benefit', schema: Benefit },
+  { name: 'CompensationPlan', schema: CompensationPlan },
 ];
 
 describe('HR Package - Spec Compliance', () => {

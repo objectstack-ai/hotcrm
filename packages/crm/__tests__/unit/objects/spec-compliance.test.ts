@@ -7,6 +7,14 @@ import { Lead } from '../../../src/lead.object';
 import { Note } from '../../../src/note.object';
 import { Opportunity } from '../../../src/opportunity.object';
 import { Task } from '../../../src/task.object';
+import { OpportunityLineItem } from '../../../src/opportunity_line_item.object';
+import { OpportunityContactRole } from '../../../src/opportunity_contact_role.object';
+import { Forecast } from '../../../src/forecast.object';
+import { ForecastItem } from '../../../src/forecast_item.object';
+import { Territory } from '../../../src/territory.object';
+import { TerritoryRule } from '../../../src/territory_rule.object';
+import { OpportunityTeamMember } from '../../../src/opportunity_team_member.object';
+import { Competitor } from '../../../src/competitor.object';
 
 const IDENTIFIER_RE = /^[a-z][a-z0-9_.]+$/;
 
@@ -19,6 +27,14 @@ const CRM_OBJECTS = [
   { name: 'Note', schema: Note },
   { name: 'Opportunity', schema: Opportunity },
   { name: 'Task', schema: Task },
+  { name: 'OpportunityLineItem', schema: OpportunityLineItem },
+  { name: 'OpportunityContactRole', schema: OpportunityContactRole },
+  { name: 'Forecast', schema: Forecast },
+  { name: 'ForecastItem', schema: ForecastItem },
+  { name: 'Territory', schema: Territory },
+  { name: 'TerritoryRule', schema: TerritoryRule },
+  { name: 'OpportunityTeamMember', schema: OpportunityTeamMember },
+  { name: 'Competitor', schema: Competitor },
 ];
 
 describe('CRM Package - Spec Compliance', () => {

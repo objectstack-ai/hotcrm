@@ -10,6 +10,10 @@ import { AutomationWorkflow } from '../../../src/automation_workflow.object';
 import { EmailSend } from '../../../src/email_send.object';
 import { LeadNurtureProgram } from '../../../src/lead_nurture_program.object';
 import { Touchpoint } from '../../../src/touchpoint.object';
+import { Journey } from '../../../src/journey.object';
+import { JourneyStep } from '../../../src/journey_step.object';
+import { AbTest } from '../../../src/ab_test.object';
+import { AbTestVariant } from '../../../src/ab_test_variant.object';
 
 const IDENTIFIER_RE = /^[a-z][a-z0-9_.]+$/;
 
@@ -25,6 +29,10 @@ const OBJECTS = [
   { name: 'EmailSend', schema: EmailSend },
   { name: 'LeadNurtureProgram', schema: LeadNurtureProgram },
   { name: 'Touchpoint', schema: Touchpoint },
+  { name: 'Journey', schema: Journey },
+  { name: 'JourneyStep', schema: JourneyStep },
+  { name: 'AbTest', schema: AbTest },
+  { name: 'AbTestVariant', schema: AbTestVariant },
 ];
 
 describe('Marketing Package - Spec Compliance', () => {
