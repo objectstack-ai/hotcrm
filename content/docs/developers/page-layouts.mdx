@@ -125,7 +125,7 @@ The most common section — displays object fields in a column layout:
 
 ### Related List Section
 
-Displays child records in a table with inline actions:
+Displays child records in a table with inline actions. Filters use the array format `[field, operator, value]`:
 
 ```typescript
 {
@@ -133,7 +133,7 @@ Displays child records in a table with inline actions:
   type: 'related_list',
   object: 'opportunity',
   columns: ['name', 'stage', 'amount', 'close_date', 'probability'],
-  filters: [['stage', '!=', 'closed_lost']],
+  filters: [['stage', '!=', 'closed_lost']],   // [field, operator, value]
   sort: [{ field: 'close_date', direction: 'asc' }],
   actions: ['new', 'edit', 'delete'],
 }

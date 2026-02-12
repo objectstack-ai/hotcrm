@@ -338,7 +338,7 @@ export const CampaignBudgetAlert = {
       type: 'emailAlert',
       template: 'campaign_budget_alert',
       recipients: ['${owner_id}'],
-      cc: ['marketing_director@company.com'],
+      cc: ['${env.MARKETING_DIRECTOR_EMAIL}'],
     },
     { type: 'fieldUpdate', field: 'budget_alert_sent', value: true },
   ],
