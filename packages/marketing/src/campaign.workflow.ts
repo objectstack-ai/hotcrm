@@ -1,4 +1,5 @@
 // Workflow rules for Campaign automation
+import { WorkflowRuleSchema, type WorkflowRule } from '@objectstack/spec/automation';
 
 /**
  * Campaign Auto-Activation Workflow
@@ -218,3 +219,38 @@ export const CampaignWorkflows = {
 };
 
 export default CampaignWorkflows;
+
+// Spec-validated workflow definitions
+export const ValidatedWorkflows = {
+  campaignAutoActivation: WorkflowRuleSchema.parse({
+    name: 'campaign_auto_activation',
+    objectName: 'campaign',
+    triggerType: 'schedule',
+    active: true,
+    actions: [{ type: 'field_update', name: 'activate_campaign', field: 'status', value: 'in_progress' }],
+  } satisfies WorkflowRule),
+
+  campaignBudgetAlert: WorkflowRuleSchema.parse({
+    name: 'campaign_budget_alert',
+    objectName: 'campaign',
+    triggerType: 'on_create_or_update',
+    active: true,
+    actions: [{ type: 'email_alert', name: 'budget_warning', template: 'campaign_budget_warning', recipients: ['created_by'] }],
+  } satisfies WorkflowRule),
+
+  campaignCompletionCheck: WorkflowRuleSchema.parse({
+    name: 'campaign_completion_check',
+    objectName: 'campaign',
+    triggerType: 'schedule',
+    active: true,
+    actions: [{ type: 'field_update', name: 'complete_campaign', field: 'status', value: 'completed' }],
+  } satisfies WorkflowRule),
+
+  campaignMemberWelcome: WorkflowRuleSchema.parse({
+    name: 'campaign_member_welcome',
+    objectName: 'campaign_member',
+    triggerType: 'on_create',
+    active: true,
+    actions: [{ type: 'email_alert', name: 'send_welcome', template: 'campaign_member_welcome', recipients: ['contact_email'] }],
+  } satisfies WorkflowRule),
+};

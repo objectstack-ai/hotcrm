@@ -1,4 +1,5 @@
 // Workflow rules for HR automation
+import { WorkflowRuleSchema, type WorkflowRule } from '@objectstack/spec/automation';
 
 /**
  * Onboarding Automation Workflow
@@ -319,3 +320,46 @@ export const HRWorkflows = {
 };
 
 export default HRWorkflows;
+
+// Spec-validated workflow definitions
+export const ValidatedWorkflows = {
+  onboardingAutomation: WorkflowRuleSchema.parse({
+    name: 'onboarding_automation',
+    objectName: 'onboarding',
+    triggerType: 'on_create',
+    active: true,
+    actions: [{ type: 'field_update', name: 'set_in_progress', field: 'status', value: 'in_progress' }],
+  } satisfies WorkflowRule),
+
+  timeOffApproval: WorkflowRuleSchema.parse({
+    name: 'time_off_approval',
+    objectName: 'time_off',
+    triggerType: 'on_create',
+    active: true,
+    actions: [{ type: 'field_update', name: 'set_approver', field: 'approver_id', value: 'manager_id' }],
+  } satisfies WorkflowRule),
+
+  timeOffAutoApproval: WorkflowRuleSchema.parse({
+    name: 'time_off_auto_approval',
+    objectName: 'time_off',
+    triggerType: 'on_create',
+    active: true,
+    actions: [{ type: 'field_update', name: 'auto_approve', field: 'status', value: 'approved' }],
+  } satisfies WorkflowRule),
+
+  performanceReviewCycle: WorkflowRuleSchema.parse({
+    name: 'performance_review_cycle',
+    objectName: 'performance_review',
+    triggerType: 'schedule',
+    active: true,
+    actions: [{ type: 'email_alert', name: 'notify_managers', template: 'performance_review_cycle_start', recipients: ['ALL_MANAGERS'] }],
+  } satisfies WorkflowRule),
+
+  performanceReviewReminder: WorkflowRuleSchema.parse({
+    name: 'performance_review_reminder',
+    objectName: 'performance_review',
+    triggerType: 'schedule',
+    active: true,
+    actions: [{ type: 'email_alert', name: 'send_reminder', template: 'self_review_reminder', recipients: ['employee_email'] }],
+  } satisfies WorkflowRule),
+};

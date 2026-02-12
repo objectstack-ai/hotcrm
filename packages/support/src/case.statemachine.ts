@@ -1,4 +1,5 @@
 // State machine configuration for case lifecycle
+import { StateMachineSchema, type StateMachineConfig } from '@objectstack/spec/automation';
 
 /**
  * Case Lifecycle State Machine
@@ -500,3 +501,20 @@ export const CaseLifecycleStateMachine = {
 };
 
 export default CaseLifecycleStateMachine;
+
+// Spec-validated state machine definition
+export const ValidatedCaseLifecycleStateMachine = StateMachineSchema.parse({
+  id: 'case_lifecycle',
+  initial: 'new',
+  states: {
+    new: { type: 'atomic' },
+    assigned: { type: 'atomic' },
+    waiting_customer: { type: 'atomic' },
+    waiting_internal: { type: 'atomic' },
+    escalated: { type: 'atomic' },
+    resolved: { type: 'atomic' },
+    closed: { type: 'final' },
+    auto_closed: { type: 'final' },
+    auto_resolved: { type: 'final' },
+  },
+} satisfies StateMachineConfig);

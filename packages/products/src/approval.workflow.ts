@@ -1,4 +1,5 @@
 // Workflow rules for Advanced Approval automation
+import { WorkflowRuleSchema, type WorkflowRule } from '@objectstack/spec/automation';
 
 /**
  * Parallel Approval Chain Workflow
@@ -302,3 +303,38 @@ export const ApprovalWorkflows = {
 };
 
 export default ApprovalWorkflows;
+
+// Spec-validated workflow definitions
+export const ValidatedWorkflows = {
+  parallelApprovalChain: WorkflowRuleSchema.parse({
+    name: 'parallel_approval_chain',
+    objectName: 'approval_request',
+    triggerType: 'on_create_or_update',
+    active: true,
+    actions: [{ type: 'field_update', name: 'set_approval_levels', field: 'total_approval_levels', value: '1' }],
+  } satisfies WorkflowRule),
+
+  smartDelegation: WorkflowRuleSchema.parse({
+    name: 'smart_delegation',
+    objectName: 'approval_request',
+    triggerType: 'on_create_or_update',
+    active: true,
+    actions: [{ type: 'field_update', name: 'delegate_approver', field: 'current_approver_id', value: 'delegate' }],
+  } satisfies WorkflowRule),
+
+  approvalEscalation: WorkflowRuleSchema.parse({
+    name: 'approval_escalation',
+    objectName: 'approval_request',
+    triggerType: 'schedule',
+    active: true,
+    actions: [{ type: 'field_update', name: 'mark_escalated', field: 'is_escalated', value: 'true' }],
+  } satisfies WorkflowRule),
+
+  approvalAutoResolve: WorkflowRuleSchema.parse({
+    name: 'approval_auto_resolve',
+    objectName: 'approval_request',
+    triggerType: 'on_create_or_update',
+    active: true,
+    actions: [{ type: 'field_update', name: 'auto_approve', field: 'status', value: 'approved' }],
+  } satisfies WorkflowRule),
+};
