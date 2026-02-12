@@ -40,6 +40,10 @@ const leadScoring: MCPTool = {
   ],
   returns: { type: 'object', description: 'Lead score with breakdown factors' },
   sideEffects: 'read',
+  async: false,
+  requiresConfirmation: false,
+  deprecated: false,
+  version: '1.0.0',
   category: 'crm',
   tags: ['sales', 'lead', 'scoring'],
 };
@@ -55,6 +59,10 @@ const opportunityForecast: MCPTool = {
   ],
   returns: { type: 'object', description: 'Close probability, expected date, and confidence interval' },
   sideEffects: 'read',
+  async: false,
+  requiresConfirmation: false,
+  deprecated: false,
+  version: '1.0.0',
   category: 'crm',
   tags: ['sales', 'opportunity', 'forecast'],
 };
@@ -69,6 +77,10 @@ const caseClassification: MCPTool = {
   ],
   returns: { type: 'object', description: 'Classification with category, priority, sentiment, and confidence' },
   sideEffects: 'read',
+  async: false,
+  requiresConfirmation: false,
+  deprecated: false,
+  version: '1.0.0',
   category: 'support',
   tags: ['support', 'case', 'classification', 'nlp'],
 };
@@ -85,6 +97,10 @@ const knowledgeSearch: MCPTool = {
   ],
   returns: { type: 'array', description: 'Ranked list of knowledge articles with relevance scores' },
   sideEffects: 'read',
+  async: false,
+  requiresConfirmation: false,
+  deprecated: false,
+  version: '1.0.0',
   category: 'support',
   tags: ['support', 'knowledge', 'search', 'semantic'],
 };
@@ -100,6 +116,10 @@ const candidateScreening: MCPTool = {
   ],
   returns: { type: 'object', description: 'Screening result with skills match, experience fit, and recommendation' },
   sideEffects: 'read',
+  async: false,
+  requiresConfirmation: false,
+  deprecated: false,
+  version: '1.0.0',
   category: 'hr',
   tags: ['hr', 'candidate', 'screening', 'recruitment'],
 };
@@ -115,6 +135,10 @@ const revenueForecast: MCPTool = {
   ],
   returns: { type: 'object', description: 'Revenue forecast with projections, confidence intervals, and drivers' },
   sideEffects: 'read',
+  async: false,
+  requiresConfirmation: false,
+  deprecated: false,
+  version: '1.0.0',
   category: 'finance',
   tags: ['finance', 'revenue', 'forecast'],
 };
@@ -130,6 +154,10 @@ const campaignOptimization: MCPTool = {
   ],
   returns: { type: 'object', description: 'Optimization recommendations with projected impact' },
   sideEffects: 'read',
+  async: false,
+  requiresConfirmation: false,
+  deprecated: false,
+  version: '1.0.0',
   category: 'marketing',
   tags: ['marketing', 'campaign', 'optimization', 'roi'],
 };
@@ -146,6 +174,10 @@ const pricingRecommendation: MCPTool = {
   ],
   returns: { type: 'object', description: 'Recommended price, margin analysis, and competitive positioning' },
   sideEffects: 'read',
+  async: false,
+  requiresConfirmation: false,
+  deprecated: false,
+  version: '1.0.0',
   category: 'products',
   tags: ['products', 'pricing', 'cpq', 'recommendation'],
 };
@@ -236,6 +268,7 @@ const mcpPrompts: MCPPrompt[] = [
     ],
     category: 'crm',
     tags: ['sales', 'briefing', 'meeting-prep'],
+    version: '1.0.0',
   },
   {
     name: 'case_resolution',
@@ -259,6 +292,7 @@ const mcpPrompts: MCPPrompt[] = [
     ],
     category: 'support',
     tags: ['support', 'resolution', 'knowledge-base'],
+    version: '1.0.0',
   },
   {
     name: 'candidate_evaluation',
@@ -282,6 +316,7 @@ const mcpPrompts: MCPPrompt[] = [
     ],
     category: 'hr',
     tags: ['hr', 'candidate', 'evaluation'],
+    version: '1.0.0',
   },
 ];
 

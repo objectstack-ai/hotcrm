@@ -138,7 +138,7 @@ export const RevenueOptimizationAgent: Agent = AgentSchema.parse({
 // Collection Export
 // ---------------------------------------------------------------------------
 
-export const AgentDefinitions = {
+export const AgentDefinitions: Record<string, Agent> = {
   leadToClose: LeadToCloseAgent,
   customer360: Customer360Agent,
   churnPrevention: ChurnPreventionAgent,
