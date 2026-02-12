@@ -98,6 +98,7 @@ export async function predictForecast(params: PredictForecastRequest): Promise<P
   };
 
   let weightedTotal = 0;
+  const pipelineTotal = opportunities.reduce((sum: number, opp: any) => sum + (opp.amount || 0), 0);
 
   for (const opp of opportunities) {
     const amount = opp.amount || 0;
@@ -116,8 +117,19 @@ export async function predictForecast(params: PredictForecastRequest): Promise<P
   }
 
   const predicted_amount = Math.round(weightedTotal);
-  const quota = 500000; // Would come from forecast settings
   const confidence = Math.min(Math.round(65 + (historicalDeals.length / 100) * 25), 95);
+
+  // Fetch quota from forecast settings, default to weighted pipeline if unavailable
+  const forecasts = await broker.find('forecast', {
+    filters: [
+      ['owner_id', '=', owner_id],
+      ['period_start', '<=', period_end],
+      ['period_end', '>=', period_start]
+    ],
+    fields: ['quota_amount'],
+    limit: 1
+  });
+  const quota = (forecasts.length > 0 && forecasts[0].quota_amount) ? forecasts[0].quota_amount : pipelineTotal;
 
   // Determine influencing factors
   const factors = [
@@ -212,7 +224,7 @@ export async function adjustForecast(params: AdjustForecastRequest): Promise<Adj
   });
 
   const pipelineTotal = pipeline.reduce((sum: number, opp: any) => sum + (opp.amount || 0), 0);
-  const original_amount = current_amount || pipelineTotal;
+  const original_amount = current_amount ?? pipelineTotal;
 
   // Fetch historical data for same period in prior years
   const historicalDeals = await broker.find('opportunity', {

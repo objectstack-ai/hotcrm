@@ -433,6 +433,47 @@ export async function analyzeOrderPatterns(params: AnalyzeOrderPatternsRequest):
 
   const spendDirection = changePercent > 10 ? 'increasing' : changePercent < -10 ? 'decreasing' : 'stable';
 
+  // Fetch order items with product details for preference analysis
+  const allOrderIds = orders.map((o: any) => o._id || o.id).filter(Boolean);
+  const orderItemsForPrefs = allOrderIds.length > 0
+    ? await broker.find('order_item', {
+        filters: [['order_id', 'in', allOrderIds]],
+        fields: ['product_id', 'quantity', 'unit_price']
+      })
+    : [];
+
+  const productIds = [...new Set(orderItemsForPrefs.map((item: any) => item.product_id).filter(Boolean))];
+  const productsForPrefs = productIds.length > 0
+    ? await broker.find('product', {
+        filters: [['_id', 'in', productIds]],
+        fields: ['name', 'family']
+      })
+    : [];
+
+  const productFamilyMap = new Map<string, string>();
+  for (const p of productsForPrefs) {
+    productFamilyMap.set(p._id || p.id, p.family || 'General');
+  }
+
+  // Aggregate preferences by product family
+  const familyStats = new Map<string, { order_count: number; total_spend: number }>();
+  for (const item of orderItemsForPrefs) {
+    const family = productFamilyMap.get(item.product_id) || 'General';
+    const existing = familyStats.get(family) || { order_count: 0, total_spend: 0 };
+    existing.order_count += 1;
+    existing.total_spend += (item.unit_price || 0) * (item.quantity || 1);
+    familyStats.set(family, existing);
+  }
+
+  const product_preferences: AnalyzeOrderPatternsResponse['product_preferences'] = Array.from(familyStats.entries())
+    .map(([family, stats]) => ({
+      product_family: family,
+      order_count: stats.order_count,
+      total_spend: Math.round(stats.total_spend),
+      trend: 'stable' as const
+    }))
+    .sort((a, b) => b.total_spend - a.total_spend);
+
   // Seasonal patterns by quarter
   const quarterNames = ['Q1 (Jan-Mar)', 'Q2 (Apr-Jun)', 'Q3 (Jul-Sep)', 'Q4 (Oct-Dec)'];
   const quarterSpend: number[] = [0, 0, 0, 0];
@@ -475,23 +516,11 @@ export async function analyzeOrderPatterns(params: AnalyzeOrderPatternsRequest):
       total_spend: Math.round(totalSpend),
       change_percent: changePercent
     },
-    product_preferences: currentFamilyPreferences(orders),
+    product_preferences,
     seasonal_patterns,
     health_score,
     summary
   };
-}
-
-/** Extract product family preferences from orders */
-function currentFamilyPreferences(orders: any[]): AnalyzeOrderPatternsResponse['product_preferences'] {
-  // Simulated product family aggregation based on order data
-  const families = ['Software', 'Services', 'Hardware', 'Support'];
-  return families.map(family => ({
-    product_family: family,
-    order_count: Math.floor(Math.random() * orders.length) + 1,
-    total_spend: Math.round(Math.random() * 50000) + 5000,
-    trend: (['growing', 'declining', 'stable'] as const)[Math.floor(Math.random() * 3)]
-  })).sort((a, b) => b.total_spend - a.total_spend);
 }
 
 // ============================================================================
