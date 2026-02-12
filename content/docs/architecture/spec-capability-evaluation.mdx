@@ -28,7 +28,7 @@ This document provides a comprehensive gap analysis between the metadata capabil
 | security | `@objectstack/spec/security` | Permissions, sharing rules |
 | studio | `@objectstack/spec/studio` | Studio plugins, contributions API |
 
-> **Note on `ObjectSchema.create()` vs `ObjectSchema.parse()`**: v3.0.0 introduced `ObjectSchema.create()` as the recommended lightweight API for defining objects. It provides the same type safety with less overhead than `parse()`. All 69 HotCRM objects use `ObjectSchema.create()`.
+> **Note on `ObjectSchema.create()` vs `ObjectSchema.parse()`**: v3.0.0 introduced `ObjectSchema.create()` as the recommended lightweight API for defining objects. It provides the same type safety with less overhead than `parse()`. All 94 HotCRM objects use `ObjectSchema.create()`.
 
 > **Zod 4 Compatibility**: `@objectstack/spec` v3.0.0 uses Zod 4.3.6 as its validation engine. Zod 4 is largely backward-compatible with Zod 3 patterns (`z.string()`, `z.object()`, `z.enum()`, etc.). Nine files across HotCRM import `zod` directly (see [Zod 4 Compatibility](#zod-4-compatibility) section below). All existing patterns are compatible with Zod 4.
 
@@ -59,14 +59,14 @@ This document provides a comprehensive gap analysis between the metadata capabil
 
 ### 1. `@objectstack/spec/data` — Data Layer
 
-The data module is HotCRM's most heavily used spec module, imported in all 69 object files and 47 hook files.
+The data module is HotCRM's most heavily used spec module, imported in all 94 object files and 71 hook files.
 
 | Capability | Status | Usage Details |
 |-----------|--------|--------------|
-| `ObjectSchema.create()` | ✅ **Used** | All 69 objects defined via `ObjectSchema.create()` — the recommended v3.0.0 lightweight API |
+| `ObjectSchema.create()` | ✅ **Used** | All 94 objects defined via `ObjectSchema.create()` — the recommended v3.0.0 lightweight API |
 | `Field.*` type builders | ✅ **Used** | 22 of 44 field types used (see Field Types section below) |
 | `Hook` / `HookContext` types | ✅ **Used** | All 47 hook files import `Hook` and `HookContext` types |
-| `ObjectCapabilities` (enable config) | ✅ **Used** | 66 of 69 objects use `enable` config with `searchable`, `trackHistory`, `activities`, `feeds`, `files` |
+| `ObjectCapabilities` (enable config) | ✅ **Used** | 91 of 94 objects use `enable` config with `searchable`, `trackHistory`, `activities`, `feeds`, `files` |
 | `Field.masterDetail()` | ✅ **Used** | Used in invoice_line→invoice, case_comment→case, product_bundle_component→bundle, quote_line_item→quote |
 | `Field.summary()` | ✅ **Used** | Used in invoice (line_item_count, calculated_subtotal), account (total_opportunities, total_open_opportunities_amount), product_bundle (component_count) |
 | `Field.image()` / `Field.file()` | ✅ **Used** | employee.photo, product.product_image (image); case.attachments, knowledge_article.attachment (file) |

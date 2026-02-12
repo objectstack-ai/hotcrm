@@ -4,8 +4,8 @@
 [![CodeQL](https://github.com/objectstack-ai/hotcrm/workflows/CodeQL%20Security%20Analysis/badge.svg)](https://github.com/objectstack-ai/hotcrm/actions/workflows/codeql.yml)
 [![Code Quality](https://github.com/objectstack-ai/hotcrm/workflows/Code%20Quality/badge.svg)](https://github.com/objectstack-ai/hotcrm/actions/workflows/code-quality.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-![Objects](https://img.shields.io/badge/Objects-69-brightgreen)
-![Tests](https://img.shields.io/badge/Tests-1629%20passing-brightgreen)
+![Objects](https://img.shields.io/badge/Objects-94-brightgreen)
+![Tests](https://img.shields.io/badge/Tests-1759%20passing-brightgreen)
 ![Spec](https://img.shields.io/badge/%40objectstack%2Fspec-v3.0.0-blue)
 
 > A world-class Customer Relationship Management system built on @objectstack/spec v3.0.0 protocol with Salesforce-level functionality and Apple/Linear-level UX.
@@ -18,13 +18,13 @@ git clone https://github.com/objectstack-ai/hotcrm.git
 cd hotcrm
 pnpm install
 pnpm dev           # Start development server
-# Open http://localhost:3000 — all 69 business objects loaded
+# Open http://localhost:3000 — all 94 business objects loaded
 ```
 
 ```bash
 # Verify everything works
 pnpm typecheck     # TypeScript — expect 0 errors
-pnpm test          # Vitest — expect 1,629 tests passing
+pnpm test          # Vitest — expect 1,759 tests passing
 ```
 
 > 📖 **New developers**: See [DEVELOPMENT_WORKFLOW.md](DEVELOPMENT_WORKFLOW.md) for the full quickstart, first contribution tutorial, and troubleshooting FAQ.
@@ -33,7 +33,7 @@ pnpm test          # Vitest — expect 1,629 tests passing
 
 HotCRM is a **comprehensive, AI-native enterprise CRM** covering the complete Lead-to-Cash lifecycle. Built on @objectstack/spec v3.0.0:
 
-- **69 Business Objects** across 6 clouds: Sales, Marketing, Revenue, Service, HR, AI
+- **94 Business Objects** across 6 clouds: Sales, Marketing, Revenue, Service, HR, AI
 - **Metadata-Driven**: All objects defined in TypeScript (`.object.ts`) — the single source of truth
 - **Plugin Architecture**: Each business cloud is an independent, deployable plugin
 - **ObjectQL**: Type-safe query language replacing traditional SQL
@@ -49,12 +49,12 @@ graph TD
     APP["HotCRM Application<br/>(objectstack.config.ts)"]
     RT["@objectstack/runtime"]
     CORE["@hotcrm/core<br/>Shared Utilities"]
-    CRM["@hotcrm/crm<br/>Sales Cloud · 8 objects"]
-    MKT["@hotcrm/marketing<br/>Marketing Cloud · 11 objects"]
-    FIN["@hotcrm/finance<br/>Revenue Cloud · 4 objects"]
-    PRD["@hotcrm/products<br/>CPQ Cloud · 9 objects"]
-    SUP["@hotcrm/support<br/>Service Cloud · 21 objects"]
-    HR["@hotcrm/hr<br/>HR Cloud · 16 objects"]
+    CRM["@hotcrm/crm<br/>Sales Cloud · 16 objects"]
+    MKT["@hotcrm/marketing<br/>Marketing Cloud · 15 objects"]
+    FIN["@hotcrm/finance<br/>Revenue Cloud · 9 objects"]
+    PRD["@hotcrm/products<br/>CPQ Cloud · 13 objects"]
+    SUP["@hotcrm/support<br/>Service Cloud · 23 objects"]
+    HR["@hotcrm/hr<br/>HR Cloud · 18 objects"]
     AI["@hotcrm/ai<br/>Intelligence Layer"]
 
     APP --> CRM & MKT & FIN & PRD & SUP & HR & AI
@@ -297,7 +297,7 @@ HotCRM is built as a **modular monorepo** with independently developed packages.
 
 ### System-Wide Statistics
 
-**Total:** 69 Objects | 27 AI Actions | 59 Automation Hooks
+**Total:** 94 Objects | 32 AI Actions | 71 Automation Hooks
 
 ### Infrastructure Packages
 
@@ -338,13 +338,13 @@ Unified AI/ML service layer providing model registry, prediction services, and M
 
 Each domain package is a complete vertical slice containing objects, AI actions, and automation hooks:
 
-#### @hotcrm/crm - Sales & Marketing Cloud
+#### @hotcrm/crm - Sales Cloud
 
-**13 Objects** | **8 AI Actions** | **7 Automation Hooks**
+**16 Objects** | **10 AI Actions** | **11 Automation Hooks**
 
-Complete Marketing & Sales domain with Account, Contact, Lead, Opportunity management, marketing automation, and activity tracking.
+Complete Sales Cloud with Account, Contact, Lead, Opportunity management, forecasting, territory management, team selling, and competitive tracking.
 
-**Objects:** Account, Contact, Lead, Opportunity, Activity, Task, Note, Email Template, Form, Landing Page, Marketing List, Unsubscribe, Assignment Rule
+**Objects:** Account, Contact, Lead, Opportunity, Activity, Task, Note, Assignment Rule, Opportunity Line Item, Opportunity Contact Role, Forecast, Forecast Item, Territory, Territory Rule, Opportunity Team Member, Competitor
 
 **AI Actions:**
 - Enhanced Lead Scoring with ML
@@ -352,9 +352,11 @@ Complete Marketing & Sales domain with Account, Contact, Lead, Opportunity manag
 - Contact AI (enrichment, buying intent, sentiment analysis)
 - Lead AI (signature parsing, routing, nurturing)
 - Opportunity AI (win probability, risk assessment, next steps)
-- Campaign AI (content generation, segmentation, optimization)
+- Forecast AI (AI-powered forecast adjustment and predictions)
 - AI Smart Briefing (customer insights)
 - Lead Conversion (Lead → Account + Contact + Opportunity)
+- Sales Performance Analytics
+- Cross-Cloud Lifecycle Automation
 
 **Automation:**
 - Lead scoring triggers
@@ -362,34 +364,45 @@ Complete Marketing & Sales domain with Account, Contact, Lead, Opportunity manag
 - Contact decision chain validation
 - Account health score calculation
 - Opportunity stage automation
+- Opportunity line item amount rollup
+- Forecast auto-aggregation
+- Territory assignment
 
 [Read more →](./packages/crm/README.md)
 
 #### @hotcrm/finance - Revenue Cloud
 
-**4 Objects** | **3 AI Actions** | **1 Automation Hook**
+**9 Objects** | **5 AI Actions** | **8 Automation Hooks**
 
-Financial operations with contract lifecycle management, invoicing, and payment tracking.
+Financial operations with contract lifecycle, invoicing, billing schedules, revenue recognition, and payment methods.
 
-**Objects:** Contract, Invoice, Invoice Line, Payment
+**Objects:** Contract, Invoice, Invoice Line, Payment, Credit Note, Billing Schedule, Revenue Schedule, Revenue Recognition Rule, Payment Method
 
 **AI Actions:**
 - Revenue Forecasting (monthly/quarterly with risk analysis)
 - Contract AI (risk scoring, renewal prediction, compliance checking)
 - Invoice Prediction (payment default, cash flow forecasting)
+- Revenue Dashboard Analytics
+- Revenue Recognition AI (ASC 606 compliance assistance)
 
 **Automation:**
 - Contract billing automation (auto-generate invoices on activation)
+- Invoice status lifecycle management
+- Invoice line calculations and total updates
+- Payment matching and validation
+- Credit note balance adjustments
+- Billing schedule validation and invoice generation
+- Revenue schedule validation and compliance checks
 
 [Read more →](./packages/finance/README.md)
 
 #### @hotcrm/hr - Human Capital Management
 
-**16 Objects** | **3 AI Actions** | **4 Automation Hooks**
+**18 Objects** | **4 AI Actions** | **18 Automation Hooks**
 
-Complete talent management from recruitment to retirement.
+Complete talent management from recruitment to retirement, including benefits and compensation.
 
-**Objects:** Candidate, Application, Recruitment, Interview, Offer, Onboarding, Employee, Position, Department, Performance Review, Goal, Training, Certification, Attendance, Time Off, Payroll
+**Objects:** Candidate, Application, Recruitment, Interview, Offer, Onboarding, Employee, Position, Department, Performance Review, Goal, Training, Certification, Attendance, Time Off, Payroll, Benefit, Compensation Plan
 
 **AI Actions:**
 - Candidate AI (resume parsing, matching, ranking, interview questions)
@@ -404,18 +417,19 @@ Complete talent management from recruitment to retirement.
 
 [Read more →](./packages/hr/README.md)
 
-#### @hotcrm/marketing - Marketing Automation
+#### @hotcrm/marketing - Marketing Cloud
 
-**2 Objects** | **3 AI Actions (21 Functions)** | **3 Hook Modules (8 Hooks)**
+**15 Objects** | **4 AI Actions** | **15 Automation Hooks**
 
-AI-powered campaign management with content generation and multi-touch attribution.
+AI-powered marketing automation with journey orchestration, A/B testing, and multi-touch attribution.
 
-**Objects:** Campaign, Campaign Member
+**Objects:** Campaign, Campaign Member, Email Template, Form, Landing Page, Marketing List, Unsubscribe, Automation Workflow, Email Send, Lead Nurture Program, Touchpoint, Journey, Journey Step, A/B Test, A/B Test Variant
 
 **AI Actions:**
 - **Content Generator (7 functions):** Email, social media, landing pages, ad copy, personalization, optimization, tone adaptation
 - **Campaign AI (7 functions):** Performance optimization, A/B testing, send-time optimization, channel recommendations
 - **Marketing Analytics (7 functions):** Attribution analysis, ROI forecasting, funnel optimization, lead scoring, journey analytics
+- **Journey AI:** AI-powered journey optimization and personalization
 
 **Automation:**
 - Campaign ROI calculation
@@ -429,34 +443,39 @@ AI-powered campaign management with content generation and multi-touch attributi
 
 #### @hotcrm/products - CPQ & Pricing
 
-**9 Objects** | **3 AI Actions** | **3 Hook Modules**
+**13 Objects** | **4 AI Actions** | **10 Automation Hooks**
 
-Complete Configure-Price-Quote with product catalog, intelligent pricing, and bundle optimization.
+Complete Configure-Price-Quote with product catalog, intelligent pricing, order management, and subscriptions.
 
-**Objects:** Product, Product Bundle, Product Bundle Component, Quote, Quote Line Item, Pricebook, Price Rule, Discount Schedule, Approval Request
+**Objects:** Product, Product Bundle, Product Bundle Component, Quote, Quote Line Item, Pricebook, Price Rule, Discount Schedule, Approval Request, Order, Order Item, Subscription, Product Option
 
 **AI Actions:**
 - Pricing Optimizer (competitive analysis, optimal discounts, elasticity)
 - Product Recommendation (customer fit, cross-sell, adoption prediction)
 - Bundle Suggestion (tailored bundles, composition optimization)
+- Order AI (order analytics and predictions)
 
 **Automation:**
 - Product inventory management
 - Pricebook lifecycle (auto-activation/expiration)
 - Quote pricing calculation
+- Quote line item calculations
 - Approval routing (5-level matrix)
 - Margin protection
 - Contract creation from accepted quotes
+- Order status lifecycle
+- Subscription renewal reminders
+- Discount schedule overlap detection
 
 [Read more →](./packages/products/README.md)
 
 #### @hotcrm/support - Customer Service Cloud
 
-**21 Objects** | **3 AI Actions** | **2 Hook Modules (6 Hooks)**
+**23 Objects** | **4 AI Actions** | **9 Automation Hooks**
 
-Omnichannel case management with SLA tracking, knowledge base, and AI-powered routing.
+Omnichannel case management with SLA tracking, knowledge base, chatbot configuration, and AI-powered routing.
 
-**Objects:** Case, Case Comment, Knowledge Article, SLA Policy, SLA Template, SLA Milestone, Queue, Queue Member, Routing Rule, Escalation Rule, Skill, Agent Skill, Business Hours, Holiday, Holiday Calendar, Portal User, Forum Topic, Forum Post, Email to Case, Web to Case, Social Media Case
+**Objects:** Case, Case Comment, Knowledge Article, SLA Policy, SLA Template, SLA Milestone, Queue, Queue Member, Routing Rule, Escalation Rule, Skill, Agent Skill, Business Hours, Holiday, Holiday Calendar, Portal User, Forum Topic, Forum Post, Email to Case, Web to Case, Social Media Case, Chatbot Config, Macro
 
 **AI Actions:**
 - Case AI (auto-categorization, intelligent assignment, RAG search, SLA breach prediction)
@@ -634,13 +653,13 @@ HotCRM implements a comprehensive enterprise system organized into **6 major dom
 
 ## 🎯 Key Statistics
 
-- **69 Core Objects** (TypeScript): Complete enterprise coverage across 6 major clouds
-  - **CRM (8 objects)**: Account, Contact, Lead, Opportunity, Activity, Task, Note, Assignment Rule
-  - **Marketing (11 objects)**: Campaign, Campaign Member, Email Template, Form, Landing Page, Marketing List, Unsubscribe, Automation Workflow, Email Send, Lead Nurture Program, Touchpoint
-  - **Products (9 objects)**: Product, Product Bundle, Product Bundle Component, Quote, Quote Line Item, Pricebook, Price Rule, Discount Schedule, Approval Request
-  - **Finance (4 objects)**: Contract, Invoice, Invoice Line, Payment
-  - **Support (21 objects)**: Case, Case Comment, Knowledge Article, Forum Topic, Forum Post, Queue, Queue Member, Routing Rule, Escalation Rule, SLA Policy, SLA Milestone, SLA Template, Agent Skill, Skill, Business Hours, Holiday, Holiday Calendar, Portal User, Email to Case, Web to Case, Social Media Case
-  - **HR (16 objects)**: Employee, Department, Position, Candidate, Application, Interview, Offer, Recruitment, Onboarding, Time Off, Attendance, Goal, Performance Review, Payroll, Training, Certification
+- **94 Core Objects** (TypeScript): Complete enterprise coverage across 6 major clouds
+  - **CRM (16 objects)**: Account, Contact, Lead, Opportunity, Activity, Task, Note, Assignment Rule, Opportunity Line Item, Opportunity Contact Role, Forecast, Forecast Item, Territory, Territory Rule, Opportunity Team Member, Competitor
+  - **Marketing (15 objects)**: Campaign, Campaign Member, Email Template, Form, Landing Page, Marketing List, Unsubscribe, Automation Workflow, Email Send, Lead Nurture Program, Touchpoint, Journey, Journey Step, A/B Test, A/B Test Variant
+  - **Products (13 objects)**: Product, Product Bundle, Product Bundle Component, Quote, Quote Line Item, Pricebook, Price Rule, Discount Schedule, Approval Request, Order, Order Item, Subscription, Product Option
+  - **Finance (9 objects)**: Contract, Invoice, Invoice Line, Payment, Credit Note, Billing Schedule, Revenue Schedule, Revenue Recognition Rule, Payment Method
+  - **Support (23 objects)**: Case, Case Comment, Knowledge Article, Forum Topic, Forum Post, Queue, Queue Member, Routing Rule, Escalation Rule, SLA Policy, SLA Milestone, SLA Template, Agent Skill, Skill, Business Hours, Holiday, Holiday Calendar, Portal User, Email to Case, Web to Case, Social Media Case, Chatbot Config, Macro
+  - **HR (18 objects)**: Employee, Department, Position, Candidate, Application, Interview, Offer, Recruitment, Onboarding, Time Off, Attendance, Goal, Performance Review, Payroll, Training, Certification, Benefit, Compensation Plan
 - **6 Business Clouds**: Sales, Marketing, Revenue (Products + Finance), Service, HR, Platform/AI
 - **7 Sales Stages**: Complete pipeline from Prospecting to Closed Won/Lost
 - **8 Currencies**: Multi-currency support for global operations

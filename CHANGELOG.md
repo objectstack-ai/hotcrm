@@ -20,7 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - All 10 packages upgraded to @objectstack v3.0.0 dependencies
 - Updated pnpm lockfile for v3.0.0
 - All 1604 tests passing (108 test files) with zero breaking changes
-- Protocol compliance validated: All 69 business objects fully compliant with v3.0.0
+- Protocol compliance validated: All 94 business objects fully compliant with v3.0.0
 - Updated ROADMAP.md with Phase 7 (v3.0.0 Upgrade) and re-organized Phase 8 (UI Completeness)
 - Updated documentation version references across README.md, roadmap.mdx, spec evaluation
 - Upgrade history: v0.8.1 → ... → v2.0.6 → v3.0.0
