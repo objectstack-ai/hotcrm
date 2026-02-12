@@ -375,7 +375,7 @@ pnpm test
 | `pnpm test:watch` | Run tests in watch mode |
 | `pnpm test:coverage` | Run tests with coverage report |
 | `pnpm typecheck` | TypeScript type checking |
-| `pnpm test:changed` | Run tests for changed packages only |
+| `pnpm test:changed` | Run tests for packages with uncommitted changes |
 | `pnpm lint` | Run ESLint on all packages |
 | `pnpm validate` | Validate ObjectStack configuration |
 | `pnpm compile` | Compile metadata |
