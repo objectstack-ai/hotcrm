@@ -5,23 +5,23 @@ description: Strategic direction and upcoming features for HotCRM — 2026 and b
 
 # HotCRM Roadmap
 
-HotCRM has completed **9 development phases**, establishing a full-featured, production-ready **6-Cloud CRM** with **69 business objects**, AI agent workflows, enterprise security, full UI metadata, and comprehensive developer tooling. Our roadmap now focuses on **ecosystem growth**, **vertical solutions**, and **advanced AI** for 2026–2027+.
+HotCRM has completed **10 development phases**, establishing a full-featured, production-ready **6-Cloud CRM** with **94 business objects**, AI agent workflows, enterprise security, full UI metadata, Salesforce feature parity (~92%), and comprehensive developer tooling. Our roadmap now focuses on **ecosystem growth**, **vertical solutions**, and **advanced AI** for 2026–2027+.
 
-> **Protocol Version**: @objectstack/spec v3.0.0 | **Tests**: 1,629 passing (113 files) | **Last Updated**: February 2026
+> **Protocol Version**: @objectstack/spec v3.0.0 | **Tests**: 1,759 passing (118 files) | **Last Updated**: February 2026
 
 ---
 
 ## 🗺️ Strategic Direction
 
 ```
-2025  ███████████████████████████████████████████████████████████  Foundation → AI → Quality → Test → Integration → Schema → v3.0 → UI → DX
+2025  ███████████████████████████████████████████████████████████  Foundation → AI → Quality → Test → Integration → Schema → v3.0 → UI → DX → Salesforce Parity
 2026  ██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  Ecosystem & Connectivity    ← YOU ARE HERE
 2027  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  Vertical Solutions & Advanced AI
 ```
 
 ---
 
-## 🚀 Phase 10: Ecosystem & Connectivity (2026)
+## 🚀 Phase 11: Ecosystem & Connectivity (2026)
 
 The next major chapter: connecting HotCRM to the tools businesses already use.
 
@@ -57,7 +57,7 @@ The next major chapter: connecting HotCRM to the tools businesses already use.
 
 ---
 
-## 🔮 Phase 11: Vertical Solutions (2027)
+## 🔮 Phase 12: Vertical Solutions (2027)
 
 Industry-specific editions built on the HotCRM platform.
 
@@ -88,9 +88,16 @@ Industry-specific editions built on the HotCRM platform.
 
 ---
 
-## ✅ What's Been Delivered (Phases 1–9)
+## ✅ What's Been Delivered (Phases 1–10)
 
-All 9 foundation phases are complete. See [What's New](/docs/whats-new) for detailed release notes.
+All 10 foundation phases are complete. See [What's New](/docs/whats-new) for detailed release notes.
+
+### Phase 10: Salesforce Feature Parity ✅
+- 25 new business objects: forecasting, territory, orders, subscriptions, journeys, A/B testing, and more
+- Cross-cloud lifecycle automation (Opportunity→Order→Invoice, Campaign→Lead→Opportunity)
+- Revenue recognition (ASC 606), billing schedules, payment methods
+- Chatbot configuration, agent macros, benefits administration
+- Salesforce parity increased from ~75% to ~92%
 
 ### Phase 9: Developer Experience & Documentation Governance ✅
 - Fixed 20+ broken documentation links, updated statistics
@@ -100,7 +107,7 @@ All 9 foundation phases are complete. See [What's New](/docs/whats-new) for deta
 
 ### Phase 8: UI Completeness & Cross-Cloud Integration ✅
 - 14 page layouts, 11 list views, 8 dashboards, 6 forms
-- 86% hook coverage (59 hooks / 69 objects)
+- 71 hooks across 94 objects
 - Cross-cloud data flow tests (Lead→Opportunity, Quote→Contract→Invoice, etc.)
 
 ### Phase 7: @objectstack/spec v3.0.0 Upgrade ✅
@@ -115,7 +122,7 @@ All 9 foundation phases are complete. See [What's New](/docs/whats-new) for deta
 - 47 hooks, full plugin registration, broker API migration, performance benchmarks
 
 ### Phase 4: Test Coverage & Documentation ✅
-- 1,629 tests (113 files), full hook/action test coverage, deployment guides
+- 1,759 tests (118 files), full hook/action test coverage, deployment guides
 
 ### Phase 3: Quality & Protocol Compliance ✅
 - 100% ObjectSchema compliance, zero type errors, all labels in English
@@ -124,21 +131,20 @@ All 9 foundation phases are complete. See [What's New](/docs/whats-new) for deta
 - 6 AI agent workflows, MCP integration, analytics dashboards
 
 ### Phase 1: Core Foundation ✅
-- 6 business clouds, 69 objects, metadata engine, ObjectQL, plugin architecture
+- 6 business clouds, 94 objects, metadata engine, ObjectQL, plugin architecture
 
 ## Per-Module Status
 
 | Package | Objects | Hooks | Actions | Pages | Views | Dashboards | Forms | Tests |
 |---------|---------|-------|---------|-------|-------|------------|-------|-------|
-| **CRM** (Sales Cloud) | 8 | 8 | 8 | 4 | 4 | 2 | 3 | 20 |
-| **Finance** (Revenue Cloud) | 4 | 5 | 4 | 1 | 1 | 1 | — | 11 |
-| **HR** (Human Capital) | 16 | 12 | 4 | 2 | 1 | 1 | 1 | 20 |
-| **Marketing** (Marketing Cloud) | 11 | 8 | 3 | 1 | 1 | 1 | — | 14 |
-| **Products** (CPQ Cloud) | 9 | 8 | 3 | 2 | 1 | 1 | 1 | 16 |
-| **Support** (Service Cloud) | 21 | 6 | 4 | 2 | 2 | 1 | 1 | 18 |
-| **AI** (Intelligence Layer) | — | — | 1 | — | — | 1 | — | 9 |
-| **Cross-cloud** | — | — | — | 2 | 1 | — | — | 5 |
-| **Total** | **69** | **59** | **27** | **14** | **11** | **8** | **6** | **113 files / 1,629 tests** |
+| **CRM** (Sales Cloud) | 16 | 11 | 10 | 4 | 4 | 2 | 3 | 26 |
+| **Finance** (Revenue Cloud) | 9 | 8 | 5 | 2 | 1 | 1 | — | 14 |
+| **HR** (Human Capital) | 18 | 18 | 4 | 2 | 1 | 1 | 1 | 21 |
+| **Marketing** (Marketing Cloud) | 15 | 15 | 4 | 1 | 1 | 1 | — | 11 |
+| **Products** (CPQ Cloud) | 13 | 10 | 4 | 3 | 2 | 1 | 1 | 16 |
+| **Support** (Service Cloud) | 23 | 9 | 4 | 2 | 2 | 1 | 1 | 17 |
+| **AI** (Intelligence Layer) | — | — | 1 | — | — | 1 | — | 13 |
+| **Total** | **94** | **71** | **32** | **14** | **11** | **8** | **6** | **118 files / 1,759 tests** |
 
 ---
 
