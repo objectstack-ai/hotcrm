@@ -62,6 +62,8 @@ import { CertificationExpirationValidationTrigger, CertificationRenewalReminderT
 import { DepartmentManagerValidationTrigger, DepartmentHeadcountTrackingTrigger } from './hooks/department.hook';
 import { PositionStatusChangeValidationTrigger, PositionVacancyTrackingTrigger } from './hooks/position.hook';
 import { TrainingEnrollmentValidationTrigger, TrainingCompletionTrackingTrigger } from './hooks/training.hook';
+import { BenefitEnrollmentValidationTrigger, BenefitExpirationCheckTrigger } from './hooks/benefit.hook';
+import { CompensationPlanValidationTrigger, CompensationPlanApprovalTrigger } from './hooks/compensation_plan.hook';
 
 // Import actions
 import CandidateAIAction from './actions/candidate_ai.action';
@@ -133,6 +135,10 @@ export const HRPlugin = {
     position_vacancy_tracking: PositionVacancyTrackingTrigger,
     training_enrollment_validation: TrainingEnrollmentValidationTrigger,
     training_completion_tracking: TrainingCompletionTrackingTrigger,
+    benefit_enrollment_validation: BenefitEnrollmentValidationTrigger,
+    benefit_expiration_check: BenefitExpirationCheckTrigger,
+    compensation_plan_validation: CompensationPlanValidationTrigger,
+    compensation_plan_approval: CompensationPlanApprovalTrigger,
   },
 
   // Workflows

@@ -55,6 +55,7 @@ import SalesPerformanceAction from './actions/sales_performance.action';
 import { calculateAccountHealth, predictChurn, generateRecommendations, assignTerritory, enrichAccount } from './actions/account_ai.action';
 import { enrichContact, detectBuyingIntent, analyzeSentiment, predictBestContactTime, findDuplicates } from './actions/contact_ai.action';
 import ForecastAIAction from './actions/forecast_ai.action';
+import CrossCloudLifecycleAction from './actions/cross_cloud_lifecycle.action';
 
 /**
  * CRM Plugin Definition
@@ -87,6 +88,7 @@ export const CRMPlugin = {
     account_ai: { calculateAccountHealth, predictChurn, generateRecommendations, assignTerritory, enrichAccount },
     contact_ai: { enrichContact, detectBuyingIntent, analyzeSentiment, predictBestContactTime, findDuplicates },
     forecast_ai: ForecastAIAction,
+    cross_cloud_lifecycle: CrossCloudLifecycleAction,
   },
 
   // Triggers/Hooks
