@@ -5,12 +5,15 @@
   "pages": [
     "specs",
     "creating-objects",
+    "field-type-guide",
     "business-logic",
     "actions",
     "workflows",
     "page-layouts",
     "list-views",
+    "ui-metadata-guide",
     "ui-development",
+    "cross-cloud-integration",
     "metadata-reference"
   ]
 }

@@ -1,0 +1,370 @@
+---
+title: Cross-Cloud Integration Patterns
+description: How data flows between HotCRM business packages across Sales, Finance, Marketing, Support, HR, and AI clouds
+---
+
+# Cross-Cloud Integration Patterns
+
+HotCRM is organized into independent business packages (clouds), but real-world processes span multiple clouds. This guide documents the key cross-cloud data flow patterns and best practices for building integrations between packages.
+
+## Overview
+
+HotCRM's cross-cloud integration relies on **object relationships** — not direct package imports. Packages connect through `Field.lookup()` and `Field.masterDetail()` references to objects owned by other packages. The `@objectstack/runtime` engine resolves these relationships at runtime.
+
+| Source Cloud | Target Cloud | Integration Pattern |
+|-------------|-------------|-------------------|
+| CRM | CRM | Lead → Opportunity → Account |
+| Products → Finance | Finance | Quote → Contract → Invoice |
+| Marketing → CRM | CRM | Campaign → Lead Attribution |
+| Support | Support | Case → Knowledge Article |
+| HR | HR | Job Requisition → Employee Onboarding |
+| AI | All | AI Pipeline Orchestration |
+
+---
+
+## Pattern 1: Lead-to-Opportunity (CRM)
+
+The most common CRM flow: qualifying a Lead and converting it into an Opportunity, Contact, and optionally an Account.
+
+### Data Flow
+
+```
+Lead (new) → Lead (qualified) → Opportunity + Contact + Account
+```
+
+### Implementation
+
+The conversion is handled via a hook on the Lead object:
+
+```typescript
+// packages/crm/src/lead.hook.ts
+const LeadConversionTrigger: Hook = {
+  name: 'LeadConversionTrigger',
+  object: 'lead',
+  events: ['beforeUpdate'],
+  handler: async (ctx: HookContext) => {
+    const lead = ctx.input as Record<string, any>;
+    const oldLead = ctx.previous as Record<string, any>;
+
+    if (oldLead?.status !== 'converted' && lead.status === 'converted') {
+      // Create Account if not existing
+      const account = await ctx.ql.create('account', {
+        name: lead.company,
+        industry: lead.industry,
+        phone: lead.phone
+      });
+
+      // Create Contact from Lead data
+      const contact = await ctx.ql.create('contact', {
+        first_name: lead.first_name,
+        last_name: lead.last_name,
+        email: lead.email,
+        account: account.id
+      });
+
+      // Create Opportunity
+      await ctx.ql.create('opportunity', {
+        name: `${lead.company} - New Business`,
+        account: account.id,
+        contact: contact.id,
+        stage: 'prospecting',
+        source: lead.lead_source
+      });
+    }
+  }
+};
+```
+
+### Key Objects
+
+| Object | Package | Role |
+|--------|---------|------|
+| `lead` | crm | Source record |
+| `account` | crm | Created/linked organization |
+| `contact` | crm | Created individual |
+| `opportunity` | crm | Sales pipeline entry |
+
+---
+
+## Pattern 2: Quote-to-Contract-to-Invoice (Products → Finance)
+
+The revenue lifecycle: a sales Quote is accepted, generating a Contract, which then triggers Invoice creation.
+
+### Data Flow
+
+```
+Quote (accepted) → Contract (active) → Invoice (draft) → Invoice Lines
+```
+
+### Implementation
+
+Cross-cloud references use `Field.lookup()`:
+
+```typescript
+// packages/finance/src/invoice.object.ts (references CRM account)
+account: Field.lookup('account', { label: 'Account', required: true }),
+contract: Field.lookup('contract', { label: 'Contract' }),
+
+// packages/finance/src/invoice_line.object.ts (child of invoice)
+invoice: Field.masterDetail('invoice', { label: 'Invoice', required: true }),
+product: Field.lookup('product', { label: 'Product' }),
+```
+
+The contract-to-invoice automation is handled via workflow:
+
+```typescript
+// packages/finance/src/contract.workflow.ts
+export const ContractActivationWorkflow = {
+  name: 'contract_activation_invoice',
+  object: 'contract',
+  triggerType: 'onUpdate',
+  condition: 'status = "active" AND PREVIOUS(status) != "active"',
+  actions: [
+    {
+      type: 'customAction',
+      action: 'generate_invoice',
+      description: 'Auto-generate first invoice from contract terms'
+    }
+  ]
+};
+```
+
+### Key Objects
+
+| Object | Package | Role |
+|--------|---------|------|
+| `quote` | products | Sales proposal |
+| `quote_line_item` | products | Line items (masterDetail → quote) |
+| `contract` | finance | Signed agreement |
+| `invoice` | finance | Billing document |
+| `invoice_line` | finance | Line items (masterDetail → invoice) |
+
+---
+
+## Pattern 3: Campaign-to-Lead Attribution (Marketing → CRM)
+
+Marketing campaigns generate and track leads. Attribution links campaign interactions to lead conversions and pipeline revenue.
+
+### Data Flow
+
+```
+Campaign → Campaign Member (contact/lead) → Lead Source Attribution → Opportunity
+```
+
+### Implementation
+
+The Campaign Member hook tracks engagement across clouds:
+
+```typescript
+// packages/marketing/src/hooks/campaign_member.hook.ts
+const CampaignMemberEngagementTrigger: Hook = {
+  name: 'CampaignMemberEngagementTrigger',
+  object: 'campaign_member',
+  events: ['beforeInsert', 'beforeUpdate'],
+  handler: async (ctx: HookContext) => {
+    const member = ctx.input as Record<string, any>;
+    const oldMember = ctx.previous as Record<string, any> | undefined;
+    const now = new Date().toISOString();
+
+    if (oldMember && oldMember.status !== member.status) {
+      switch (member.status) {
+        case 'Responded':
+          member.has_responded = true;
+          member.first_responded_date = member.first_responded_date || now;
+          break;
+      }
+    }
+  }
+};
+```
+
+### Key Objects
+
+| Object | Package | Role |
+|--------|---------|------|
+| `campaign` | marketing | Marketing initiative |
+| `campaign_member` | marketing | Links contacts/leads to campaigns |
+| `lead` | crm | Generated lead |
+| `opportunity` | crm | Attributed revenue |
+
+---
+
+## Pattern 4: Case-to-Knowledge (Support)
+
+Support cases drive knowledge article creation. Resolved cases generate or update knowledge base content for future self-service.
+
+### Data Flow
+
+```
+Case (resolved) → Knowledge Article (draft) → Article Published → Case Deflection
+```
+
+### Implementation
+
+Cases reference knowledge articles, and resolution data feeds back:
+
+```typescript
+// packages/support/src/case.object.ts
+knowledge_article: Field.lookup('knowledge_article', {
+  label: 'Related Article'
+}),
+
+// packages/support/src/knowledge_article.object.ts
+related_case_types: Field.select({
+  label: 'Related Case Types',
+  multiple: true,
+  options: []
+}),
+attachment: Field.file({ label: 'Attachment' })
+```
+
+### Key Objects
+
+| Object | Package | Role |
+|--------|---------|------|
+| `case` | support | Customer issue |
+| `case_comment` | support | Resolution details (masterDetail → case) |
+| `knowledge_article` | support | Self-service content |
+
+---
+
+## Pattern 5: Employee Onboarding (HR)
+
+The HR onboarding flow connects recruitment to employee provisioning.
+
+### Data Flow
+
+```
+Job Requisition → Candidate → Offer → Employee Record → Onboarding Tasks
+```
+
+### Implementation
+
+```typescript
+// packages/hr/src/employee.object.ts
+photo: Field.image({ label: 'Photo' }),
+home_address: Field.address({ label: 'Home Address' }),
+department: Field.lookup('department', { label: 'Department' }),
+manager: Field.lookup('employee', { label: 'Manager' }),
+```
+
+### Key Objects
+
+| Object | Package | Role |
+|--------|---------|------|
+| `job_requisition` | hr | Open position |
+| `candidate` | hr | Applicant |
+| `employee` | hr | Active employee |
+| `department` | hr | Organizational unit |
+
+---
+
+## Pattern 6: AI Pipeline Orchestration
+
+The AI package orchestrates cross-cloud intelligence by reading from all packages via MCP tools and resources.
+
+### Data Flow
+
+```
+All Objects → MCP Resources → AI Agent → MCP Tools → Actions
+```
+
+### Implementation
+
+MCP tools access cross-cloud data through ObjectQL:
+
+```typescript
+// packages/ai/src/mcp_server.config.ts
+tools: [
+  {
+    name: 'lead_scoring',
+    description: 'Score a lead based on engagement and fit',
+    inputSchema: { leadId: 'string' }
+  },
+  {
+    name: 'opportunity_forecast',
+    description: 'Forecast opportunity close probability',
+    inputSchema: { opportunityId: 'string' }
+  }
+],
+resources: [
+  {
+    name: 'account_context',
+    description: 'Full account context with related records',
+    uri: 'hotcrm://account/{id}/context'
+  },
+  {
+    name: 'pipeline_summary',
+    description: 'Current sales pipeline summary',
+    uri: 'hotcrm://pipeline/summary'
+  }
+]
+```
+
+### Key MCP Integration Points
+
+| MCP Component | Cloud Source | Purpose |
+|--------------|-------------|---------|
+| `lead_scoring` tool | CRM | AI-powered lead qualification |
+| `opportunity_forecast` tool | CRM | Win probability prediction |
+| `account_context` resource | CRM + Finance | 360° account view |
+| `pipeline_summary` resource | CRM | Sales metrics aggregation |
+| `sales_briefing` prompt | CRM | Pre-meeting intelligence |
+| `case_resolution` prompt | Support | AI-assisted case handling |
+| `candidate_evaluation` prompt | HR | Recruitment screening |
+
+---
+
+## Best Practices
+
+### 1. Use Object Relationships, Not Package Imports
+
+Cross-cloud integration should happen through `Field.lookup()` and `Field.masterDetail()` — never through direct TypeScript imports between packages.
+
+```typescript
+// ✅ Correct: Reference via field relationship
+account: Field.lookup('account', { label: 'Account', required: true })
+
+// ❌ Wrong: Direct import from another package
+import { Account } from '@hotcrm/crm/src/account.object';
+```
+
+### 2. Use Hooks for Cross-Cloud Side Effects
+
+When a record change in one cloud needs to trigger actions in another, use hooks with ObjectQL:
+
+```typescript
+// Hook in finance package creates activity in CRM
+handler: async (ctx: HookContext) => {
+  if (invoice.status === 'overdue') {
+    await ctx.ql.create('task', {
+      subject: `Follow up on overdue invoice ${invoice.invoice_number}`,
+      related_to: invoice.account,
+      priority: 'high'
+    });
+  }
+}
+```
+
+### 3. Use Workflows for Declarative Cross-Cloud Automation
+
+For simple cross-cloud triggers, prefer workflows over hooks:
+
+```typescript
+{
+  triggerType: 'onUpdate',
+  condition: 'status = "closed_won"',
+  actions: [
+    { type: 'customAction', action: 'generate_contract' },
+    { type: 'emailAlert', template: 'deal_won_notification' }
+  ]
+}
+```
+
+### 4. Use MCP for AI-Powered Cross-Cloud Intelligence
+
+When building AI features that need to aggregate data from multiple clouds, use the MCP resource pattern to provide context to AI agents rather than building custom aggregation logic.
+
+### 5. Respect Package Boundaries
+
+Each package owns its objects. Cross-cloud queries should use ObjectQL filters, not direct database joins. The `@objectstack/runtime` engine handles query optimization across package boundaries.
