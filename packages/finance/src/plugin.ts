@@ -112,23 +112,25 @@ export const FinancePlugin = {
   // Navigation structure for this plugin
   navigation: [
     {
+      id: 'finance',
       type: 'group',
       label: 'Finance',
       children: [
-        { type: 'object', object: 'contract' },
-        { type: 'object', object: 'invoice' },
-        { type: 'object', object: 'payment' },
-        { type: 'object', object: 'credit_note' },
-        { type: 'object', object: 'billing_schedule' },
+        { id: 'contract', label: 'Contract', type: 'object', objectName: 'contract' },
+        { id: 'invoice', label: 'Invoice', type: 'object', objectName: 'invoice' },
+        { id: 'payment', label: 'Payment', type: 'object', objectName: 'payment' },
+        { id: 'credit_note', label: 'Credit Note', type: 'object', objectName: 'credit_note' },
+        { id: 'billing_schedule', label: 'Billing Schedule', type: 'object', objectName: 'billing_schedule' },
       ]
     },
     {
+      id: 'revenue_recognition',
       type: 'group',
       label: 'Revenue Recognition',
       children: [
-        { type: 'object', object: 'revenue_schedule' },
-        { type: 'object', object: 'revenue_recognition_rule' },
-        { type: 'object', object: 'payment_method' },
+        { id: 'revenue_schedule', label: 'Revenue Schedule', type: 'object', objectName: 'revenue_schedule' },
+        { id: 'revenue_recognition_rule', label: 'Revenue Recognition Rule', type: 'object', objectName: 'revenue_recognition_rule' },
+        { id: 'payment_method', label: 'Payment Method', type: 'object', objectName: 'payment_method' },
       ]
     }
   ]

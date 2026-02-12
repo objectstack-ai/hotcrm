@@ -153,22 +153,24 @@ export const CRMPlugin = {
   // Navigation structure for this plugin
   navigation: [
     {
+      id: 'sales',
       type: 'group',
       label: 'Sales',
       children: [
-        { type: 'object', object: 'account' },
-        { type: 'object', object: 'contact' },
-        { type: 'object', object: 'lead' },
-        { type: 'object', object: 'opportunity' },
-        { type: 'object', object: 'activity' },
+        { id: 'account', label: 'Account', type: 'object', objectName: 'account' },
+        { id: 'contact', label: 'Contact', type: 'object', objectName: 'contact' },
+        { id: 'lead', label: 'Lead', type: 'object', objectName: 'lead' },
+        { id: 'opportunity', label: 'Opportunity', type: 'object', objectName: 'opportunity' },
+        { id: 'activity', label: 'Activity', type: 'object', objectName: 'activity' },
       ]
     },
     {
+      id: 'territories',
       type: 'group',
       label: 'Territories',
       children: [
-        { type: 'object', object: 'territory' },
-        { type: 'object', object: 'territory_rule' },
+        { id: 'territory', label: 'Territory', type: 'object', objectName: 'territory' },
+        { id: 'territory_rule', label: 'Territory Rule', type: 'object', objectName: 'territory_rule' },
       ]
     }
   ]

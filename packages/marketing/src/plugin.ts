@@ -121,36 +121,39 @@ export const MarketingPlugin = {
   },
   navigation: [
     {
+      id: 'campaigns',
       type: 'group',
       label: 'Campaigns',
       children: [
-        { type: 'object', object: 'campaign' },
-        { type: 'object', object: 'campaign_member' }
+        { id: 'campaign', label: 'Campaign', type: 'object', objectName: 'campaign' },
+        { id: 'campaign_member', label: 'Campaign Member', type: 'object', objectName: 'campaign_member' }
       ]
     },
     {
+      id: 'marketing_automation',
       type: 'group',
       label: 'Marketing Automation',
       children: [
-        { type: 'object', object: 'email_template' },
-        { type: 'object', object: 'email_send' },
-        { type: 'object', object: 'landing_page' },
-        { type: 'object', object: 'form' },
-        { type: 'object', object: 'marketing_list' },
-        { type: 'object', object: 'unsubscribe' },
-        { type: 'object', object: 'automation_workflow' },
-        { type: 'object', object: 'lead_nurture_program' },
-        { type: 'object', object: 'touchpoint' },
+        { id: 'email_template', label: 'Email Template', type: 'object', objectName: 'email_template' },
+        { id: 'email_send', label: 'Email Send', type: 'object', objectName: 'email_send' },
+        { id: 'landing_page', label: 'Landing Page', type: 'object', objectName: 'landing_page' },
+        { id: 'form', label: 'Form', type: 'object', objectName: 'form' },
+        { id: 'marketing_list', label: 'Marketing List', type: 'object', objectName: 'marketing_list' },
+        { id: 'unsubscribe', label: 'Unsubscribe', type: 'object', objectName: 'unsubscribe' },
+        { id: 'automation_workflow', label: 'Automation Workflow', type: 'object', objectName: 'automation_workflow' },
+        { id: 'lead_nurture_program', label: 'Lead Nurture Program', type: 'object', objectName: 'lead_nurture_program' },
+        { id: 'touchpoint', label: 'Touchpoint', type: 'object', objectName: 'touchpoint' },
       ]
     },
     {
+      id: 'journey_and_testing',
       type: 'group',
       label: 'Journey & Testing',
       children: [
-        { type: 'object', object: 'journey' },
-        { type: 'object', object: 'journey_step' },
-        { type: 'object', object: 'ab_test' },
-        { type: 'object', object: 'ab_test_variant' },
+        { id: 'journey', label: 'Journey', type: 'object', objectName: 'journey' },
+        { id: 'journey_step', label: 'Journey Step', type: 'object', objectName: 'journey_step' },
+        { id: 'ab_test', label: 'A/B Test', type: 'object', objectName: 'ab_test' },
+        { id: 'ab_test_variant', label: 'A/B Test Variant', type: 'object', objectName: 'ab_test_variant' },
       ]
     }
   ]
