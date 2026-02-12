@@ -81,7 +81,20 @@ export const KnowledgeArticle = ObjectSchema.create({
       description: 'Comma-separated keywords for search',
       maxLength: 500
     }),
-    tags: Field.select({ label: 'Tags', multiple: true, options: [] }),
+    tags: Field.select({
+      label: 'Tags',
+      multiple: true,
+      options: [
+        { label: 'Getting Started', value: 'getting_started' },
+        { label: 'Advanced', value: 'advanced' },
+        { label: 'API', value: 'api' },
+        { label: 'Integration', value: 'integration' },
+        { label: 'Security', value: 'security' },
+        { label: 'Performance', value: 'performance' },
+        { label: 'Migration', value: 'migration' },
+        { label: 'Deprecated', value: 'deprecated' }
+      ]
+    }),
     related_product_ids: Field.text({
       label: 'Related Products',
       description: 'Comma-separated product IDs',
@@ -416,7 +429,8 @@ export const KnowledgeArticle = ObjectSchema.create({
       description: 'Estimated time to read article',
       readonly: true,
       precision: 0
-    })
+    }),
+    attachment: Field.file({ label: 'Attachment' })
   },
 
   enable: {

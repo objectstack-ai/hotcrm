@@ -190,6 +190,24 @@ export const Candidate = ObjectSchema.create({
     }),
     notes: Field.textarea({
       label: 'Notes',
+    }),
+    skills: Field.select({
+      label: 'Skills',
+      multiple: true,
+      options: [
+        { label: 'JavaScript', value: 'javascript' },
+        { label: 'TypeScript', value: 'typescript' },
+        { label: 'Python', value: 'python' },
+        { label: 'Java', value: 'java' },
+        { label: 'Go', value: 'go' },
+        { label: 'React', value: 'react' },
+        { label: 'Node.js', value: 'nodejs' },
+        { label: 'SQL', value: 'sql' },
+        { label: 'Cloud (AWS/Azure/GCP)', value: 'cloud' },
+        { label: 'DevOps', value: 'devops' },
+        { label: 'Machine Learning', value: 'machine_learning' },
+        { label: 'Project Management', value: 'project_management' }
+      ]
     })
   },
 

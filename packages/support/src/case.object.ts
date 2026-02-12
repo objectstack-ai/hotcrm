@@ -483,7 +483,22 @@ export const Case = ObjectSchema.create({
       description: 'Extracted keywords from case description',
       readonly: true,
       maxLength: 500
-    })
+    }),
+    tags: Field.select({
+      label: 'Tags',
+      multiple: true,
+      options: [
+        { label: 'Bug', value: 'bug' },
+        { label: 'Feature Request', value: 'feature_request' },
+        { label: 'Documentation', value: 'documentation' },
+        { label: 'Billing', value: 'billing' },
+        { label: 'Urgent', value: 'urgent' },
+        { label: 'VIP', value: 'vip' },
+        { label: 'Regression', value: 'regression' },
+        { label: 'Security', value: 'security' }
+      ]
+    }),
+    attachments: Field.file({ label: 'Attachments' })
   },
 
   enable: {

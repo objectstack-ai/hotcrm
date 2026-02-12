@@ -8,8 +8,9 @@ export const QuoteLineItem = ObjectSchema.create({
   description: 'Individual line items on quotes with pricing, quantity, and discount information',
 
   fields: {
-    quote_id: Field.lookup('quote', {
+    quote_id: Field.masterDetail({
       label: 'Quote',
+      reference_to: 'quote',
       required: true
     }),
     product_id: Field.lookup('product', {
