@@ -18,7 +18,7 @@
     "build:products": "pnpm --filter @hotcrm/products build",
     "build:finance": "pnpm --filter @hotcrm/finance build",
     "build:docs": "pnpm --filter @hotcrm/docs build",
-    "lint": "pnpm -r lint",
+    "lint": "pnpm -r --if-present lint",
     "test": "vitest run --passWithNoTests",
     "test:coverage": "vitest run --coverage --passWithNoTests",
     "test:watch": "vitest --passWithNoTests",
