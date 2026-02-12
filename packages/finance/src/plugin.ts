@@ -26,6 +26,8 @@ import { ContractRenewalCheck, ContractExpirationAlert } from './hooks/contract_
 import { InvoiceStatusLifecycleTrigger } from './hooks/invoice.hook';
 import { InvoiceLineCalculationTrigger, InvoiceLineTotalUpdateTrigger } from './hooks/invoice_line.hook';
 import { PaymentMatchingTrigger, PaymentValidationTrigger } from './hooks/payment.hook';
+import { CreditNoteValidationTrigger, CreditNoteBalanceAdjustmentTrigger } from './hooks/credit_note.hook';
+import { BillingScheduleValidationTrigger, BillingScheduleInvoiceGenerationTrigger } from './hooks/billing_schedule.hook';
 import { PaymentReminderWorkflows } from './payment_reminder.workflow';
 
 // Import actions
@@ -81,7 +83,11 @@ export const FinancePlugin = {
     invoice_line_calculation: InvoiceLineCalculationTrigger,
     invoice_line_total_update: InvoiceLineTotalUpdateTrigger,
     payment_matching: PaymentMatchingTrigger,
-    payment_validation: PaymentValidationTrigger
+    payment_validation: PaymentValidationTrigger,
+    credit_note_validation: CreditNoteValidationTrigger,
+    credit_note_balance_adjustment: CreditNoteBalanceAdjustmentTrigger,
+    billing_schedule_validation: BillingScheduleValidationTrigger,
+    billing_schedule_invoice_generation: BillingScheduleInvoiceGenerationTrigger,
   },
 
   // Workflows

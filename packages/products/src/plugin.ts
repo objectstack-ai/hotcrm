@@ -36,12 +36,14 @@ import { ApprovalRequestCreationTrigger, ApprovalDecisionTrigger } from './hooks
 import { ProductBundleValidationTrigger, ProductBundleComponentCompletenessTrigger } from './hooks/product_bundle.hook';
 import { PriceRuleValidationTrigger, PriceRuleConflictDetectionTrigger } from './hooks/price_rule.hook';
 import { DiscountScheduleActivationTrigger, DiscountScheduleOverlapDetectionTrigger } from './hooks/discount_schedule.hook';
+import { OrderValidationTrigger, OrderStatusLifecycleTrigger } from './hooks/order.hook';
 import { ApprovalWorkflows } from './approval.workflow';
 
 // Import actions
 import BundleSuggestionAction from './actions/bundle_suggestion.action';
 import PricingOptimizerAction from './actions/pricing_optimizer.action';
 import ProductRecommendationAction from './actions/product_recommendation.action';
+import OrderAIAction from './actions/order_ai.action';
 
 /**
  * Products Plugin Definition
@@ -83,6 +85,7 @@ export const ProductsPlugin = {
     bundle_suggestion: BundleSuggestionAction,
     pricing_optimizer: PricingOptimizerAction,
     product_recommendation: ProductRecommendationAction,
+    order_ai: OrderAIAction,
   },
 
   triggers: {
@@ -99,6 +102,8 @@ export const ProductsPlugin = {
     price_rule_conflict_detection: PriceRuleConflictDetectionTrigger,
     discount_schedule_activation: DiscountScheduleActivationTrigger,
     discount_schedule_overlap_detection: DiscountScheduleOverlapDetectionTrigger,
+    order_validation: OrderValidationTrigger,
+    order_status_lifecycle: OrderStatusLifecycleTrigger,
   },
 
   // Workflows

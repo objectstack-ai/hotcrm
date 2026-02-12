@@ -19,6 +19,10 @@ import { Activity } from './activity.object';
 import { Contact } from './contact.object';
 import { Lead } from './lead.object';
 import { Opportunity } from './opportunity.object';
+import { OpportunityLineItem } from './opportunity_line_item.object';
+import { OpportunityContactRole } from './opportunity_contact_role.object';
+import { Forecast } from './forecast.object';
+import { ForecastItem } from './forecast_item.object';
 import { Task } from './task.object';
 import { Note } from './note.object';
 import LeadConvertAction from './actions/lead_convert.action';
@@ -34,6 +38,8 @@ import { ContactDecisionChainTrigger, ContactDecisionMakerValidationTrigger, Con
 import { TaskValidationTrigger, TaskCompletionTrigger, TaskOverdueTrigger } from './hooks/task.hook';
 import { NoteValidationTrigger, NoteEditTrackingTrigger } from './hooks/note.hook';
 import { AssignmentRuleValidationTrigger, AssignmentRuleSortOrderTrigger } from './hooks/assignment_rule.hook';
+import { OpportunityLineItemCalculationTrigger, OpportunityLineItemRollupTrigger } from './hooks/opportunity_line_item.hook';
+import { ForecastCalculationTrigger, ForecastAggregationTrigger } from './hooks/forecast.hook';
 
 // Import actions
 import EnhancedLeadScoringAction from './actions/enhanced_lead_scoring.action';
@@ -43,6 +49,7 @@ import SmartBriefingAction from './actions/ai_smart_briefing.action';
 import SalesPerformanceAction from './actions/sales_performance.action';
 import { calculateAccountHealth, predictChurn, generateRecommendations, assignTerritory, enrichAccount } from './actions/account_ai.action';
 import { enrichContact, detectBuyingIntent, analyzeSentiment, predictBestContactTime, findDuplicates } from './actions/contact_ai.action';
+import ForecastAIAction from './actions/forecast_ai.action';
 
 /**
  * CRM Plugin Definition
@@ -74,6 +81,7 @@ export const CRMPlugin = {
     sales_performance: SalesPerformanceAction,
     account_ai: { calculateAccountHealth, predictChurn, generateRecommendations, assignTerritory, enrichAccount },
     contact_ai: { enrichContact, detectBuyingIntent, analyzeSentiment, predictBestContactTime, findDuplicates },
+    forecast_ai: ForecastAIAction,
   },
 
   // Triggers/Hooks
@@ -99,6 +107,10 @@ export const CRMPlugin = {
     note_edit_tracking: NoteEditTrackingTrigger,
     assignment_rule_validation: AssignmentRuleValidationTrigger,
     assignment_rule_sort_order: AssignmentRuleSortOrderTrigger,
+    opportunity_line_item_calculation: OpportunityLineItemCalculationTrigger,
+    opportunity_line_item_rollup: OpportunityLineItemRollupTrigger,
+    forecast_calculation: ForecastCalculationTrigger,
+    forecast_aggregation: ForecastAggregationTrigger,
   },
 
   // Workflows
@@ -117,6 +129,10 @@ export const CRMPlugin = {
     lead: Lead,
     assignment_rule: AssignmentRule,
     opportunity: Opportunity,
+    opportunity_line_item: OpportunityLineItem,
+    opportunity_contact_role: OpportunityContactRole,
+    forecast: Forecast,
+    forecast_item: ForecastItem,
     task: Task,
     note: Note,
   },
