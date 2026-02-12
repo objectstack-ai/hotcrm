@@ -4,8 +4,12 @@
   "root": true,
   "pages": [
     "specs",
-    "business-logic",
     "creating-objects",
+    "business-logic",
+    "actions",
+    "workflows",
+    "page-layouts",
+    "list-views",
     "ui-development",
     "metadata-reference"
   ]

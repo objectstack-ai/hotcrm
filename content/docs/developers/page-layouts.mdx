@@ -1,0 +1,360 @@
+---
+title: Page Layouts
+description: How to configure record detail pages in HotCRM using *.page.ts files
+---
+
+# Page Layouts
+
+Page layouts define how **record detail pages** are rendered in HotCRM. They control field arrangement, related lists, custom components, and page-level actions. Every page layout is defined in a `*.page.ts` file.
+
+## File Convention
+
+```
+packages/{package}/src/{object_name}.page.ts
+```
+
+Examples from the codebase:
+
+| Package | Page File | Purpose |
+|---------|----------|---------|
+| CRM | `account.page.ts` | Account detail page with related lists |
+| Finance | `invoice.page.ts` | Invoice detail with line items |
+| Marketing | `campaign.page.ts` | Campaign detail with member lists |
+| Products | `product_bundle.page.ts` | Product bundle configuration page |
+
+HotCRM currently has **4 page layout files** across the business packages.
+
+## Basic Page Structure
+
+A page layout declares the object it belongs to, a layout type, field sections, and page-level actions:
+
+```typescript
+// packages/crm/src/account.page.ts
+
+export const AccountPage = {
+  name: 'account_detail',
+  object: 'account',
+  type: 'record',
+  label: 'Account Detail Page',
+
+  layout: {
+    type: 'tabs',  // Layout type: 'tabs', 'accordion', or 'wizard'
+    sections: [
+      // ... section definitions
+    ],
+  },
+
+  actions: [
+    // ... page-level action buttons
+  ],
+};
+
+export default AccountPage;
+```
+
+## Layout Types
+
+### Tabs Layout
+
+Organizes sections into horizontal tabs — ideal for record detail pages:
+
+```typescript
+layout: {
+  type: 'tabs',
+  sections: [
+    { label: 'Account Information', columns: 2, fields: ['name', 'type', ...] },
+    { label: 'Address', columns: 2, fields: ['billing_street', ...] },
+    { label: 'Opportunities', type: 'related_list', object: 'opportunity', ... },
+  ]
+}
+```
+
+### Accordion Layout
+
+Collapsible sections stacked vertically — useful for long forms:
+
+```typescript
+layout: {
+  type: 'accordion',
+  sections: [
+    { label: 'Basic Info', columns: 2, fields: [...], expanded: true },
+    { label: 'Details', columns: 2, fields: [...], expanded: false },
+  ]
+}
+```
+
+### Wizard Layout
+
+Step-by-step guided flow — great for creation or onboarding pages:
+
+```typescript
+layout: {
+  type: 'wizard',
+  sections: [
+    { label: 'Step 1: Contact Info', columns: 1, fields: ['name', 'email', 'phone'] },
+    { label: 'Step 2: Company Info', columns: 1, fields: ['company', 'industry'] },
+    { label: 'Step 3: Review', type: 'summary' },
+  ]
+}
+```
+
+## Section Types
+
+### Field Section
+
+The most common section — displays object fields in a column layout:
+
+```typescript
+{
+  label: 'Account Information',
+  columns: 2,    // 1 or 2 column layout
+  fields: [
+    'name',
+    'account_number',
+    'type',
+    'industry',
+    'phone',
+    'website',
+    'annual_revenue',
+    'employees',
+    'parent_account',
+    'ownership',
+  ]
+}
+```
+
+### Related List Section
+
+Displays child records in a table with inline actions:
+
+```typescript
+{
+  label: 'Opportunities',
+  type: 'related_list',
+  object: 'opportunity',
+  columns: ['name', 'stage', 'amount', 'close_date', 'probability'],
+  filters: [['stage', '!=', 'closed_lost']],
+  sort: [{ field: 'close_date', direction: 'asc' }],
+  actions: ['new', 'edit', 'delete'],
+}
+```
+
+### Custom Component Section
+
+Embed custom UI components (e.g., AI insights, charts):
+
+```typescript
+{
+  label: 'AI Insights',
+  type: 'component',
+  component: 'AccountAIInsights',
+  props: {
+    showHealthScore: true,
+    showChurnRisk: true,
+  }
+}
+```
+
+## Real-World Example: Account Detail Page
+
+This is the actual `account.page.ts` from the CRM package:
+
+```typescript
+// packages/crm/src/account.page.ts
+
+export const AccountPage = {
+  name: 'account_detail',
+  object: 'account',
+  type: 'record',
+  label: 'Account Detail Page',
+
+  layout: {
+    type: 'tabs',
+    sections: [
+      // Tab 1: Account Information
+      {
+        label: 'Account Information',
+        columns: 2,
+        fields: [
+          'name', 'account_number', 'type', 'industry',
+          'phone', 'website', 'annual_revenue', 'employees',
+          'parent_account', 'ownership',
+        ],
+      },
+
+      // Tab 2: Address
+      {
+        label: 'Address Information',
+        columns: 2,
+        fields: [
+          'billing_street', 'billing_city', 'billing_state',
+          'billing_postal_code', 'billing_country',
+          'shipping_street', 'shipping_city', 'shipping_state',
+          'shipping_postal_code', 'shipping_country',
+        ],
+      },
+
+      // Tab 3: Additional Information
+      {
+        label: 'Additional Information',
+        columns: 2,
+        fields: [
+          'description', 'rating', 'sic_code', 'ticker_symbol',
+          'fax', 'created_by', 'created_date',
+          'last_modified_by', 'last_modified_date',
+        ],
+      },
+
+      // Related List: Opportunities
+      {
+        label: 'Opportunities',
+        type: 'related_list',
+        object: 'opportunity',
+        columns: ['name', 'stage', 'amount', 'close_date', 'probability'],
+        filters: [['stage', '!=', 'closed_lost']],
+        sort: [{ field: 'close_date', direction: 'asc' }],
+        actions: ['new', 'edit', 'delete'],
+      },
+
+      // Related List: Contacts
+      {
+        label: 'Contacts',
+        type: 'related_list',
+        object: 'contact',
+        columns: ['name', 'title', 'email', 'phone', 'is_decision_maker'],
+        actions: ['new', 'edit', 'delete'],
+      },
+
+      // Related List: Cases
+      {
+        label: 'Cases',
+        type: 'related_list',
+        object: 'case',
+        columns: ['case_number', 'subject', 'status', 'priority', 'created_date'],
+        filters: [['status', '!=', 'closed']],
+        sort: [{ field: 'created_date', direction: 'desc' }],
+        actions: ['new', 'edit'],
+      },
+
+      // Related List: Contracts
+      {
+        label: 'Contracts',
+        type: 'related_list',
+        object: 'contract',
+        columns: ['contract_number', 'status', 'start_date', 'end_date', 'contract_term'],
+        actions: ['new', 'edit'],
+      },
+    ],
+  },
+
+  // Page-level action buttons
+  actions: [
+    { name: 'edit', label: 'Edit', type: 'standard' },
+    { name: 'delete', label: 'Delete', type: 'standard' },
+    { name: 'clone', label: 'Clone', type: 'custom', handler: 'cloneAccount' },
+    {
+      name: 'ai_analyze',
+      label: 'AI Health Score',
+      type: 'custom',
+      handler: 'analyzeAccountHealth',
+      icon: 'sparkles',
+    },
+    {
+      name: 'ai_predict_churn',
+      label: 'Predict Churn',
+      type: 'custom',
+      handler: 'predictChurn',
+      icon: 'alert-triangle',
+    },
+  ],
+};
+
+export default AccountPage;
+```
+
+## Page Actions
+
+Actions appear as buttons in the page header. They can be standard CRUD actions or custom handlers:
+
+### Standard Actions
+
+Built-in operations provided by the runtime:
+
+```typescript
+{ name: 'edit', label: 'Edit', type: 'standard' }
+{ name: 'delete', label: 'Delete', type: 'standard' }
+```
+
+### Custom Actions
+
+Trigger custom logic, including AI-powered features:
+
+```typescript
+{
+  name: 'ai_analyze',
+  label: 'AI Health Score',
+  type: 'custom',
+  handler: 'analyzeAccountHealth',   // References a registered action
+  icon: 'sparkles',                   // Optional icon
+}
+```
+
+Custom action handlers are defined in `*.action.ts` files and registered in the plugin. See [Actions](/docs/developers/actions) for details.
+
+## Best Practices
+
+### 1. Organize Fields Logically
+
+Group related fields together and put the most important fields first:
+
+```typescript
+// ✅ Good — grouped by category
+sections: [
+  { label: 'Contact Info', fields: ['name', 'email', 'phone'] },
+  { label: 'Company Info', fields: ['company', 'industry', 'revenue'] },
+  { label: 'Status', fields: ['stage', 'priority', 'owner'] },
+]
+```
+
+### 2. Use 2-Column Layout for Dense Data
+
+```typescript
+// ✅ Good — compact layout for many fields
+{ label: 'Account Information', columns: 2, fields: [...] }
+
+// Use 1-column for text-heavy fields
+{ label: 'Description', columns: 1, fields: ['description', 'notes'] }
+```
+
+### 3. Filter Related Lists
+
+Only show relevant child records to reduce noise:
+
+```typescript
+// ✅ Good — exclude closed items
+{
+  type: 'related_list',
+  object: 'opportunity',
+  filters: [['stage', '!=', 'closed_lost']],
+  sort: [{ field: 'close_date', direction: 'asc' }],
+}
+```
+
+### 4. Add AI Actions Where Valuable
+
+Surface AI capabilities directly on record pages:
+
+```typescript
+actions: [
+  { name: 'edit', label: 'Edit', type: 'standard' },
+  { name: 'ai_analyze', label: 'AI Health Score', type: 'custom', handler: 'analyzeAccountHealth', icon: 'sparkles' },
+  { name: 'ai_predict_churn', label: 'Predict Churn', type: 'custom', handler: 'predictChurn', icon: 'alert-triangle' },
+]
+```
+
+## Next Steps
+
+- [List Views](/docs/developers/list-views) — Configure how records appear in list tables
+- [UI Development](/docs/developers/ui-development) — Dashboards and custom components
+- [Actions](/docs/developers/actions) — Build the custom handlers for page actions
+- [Metadata Reference](/docs/developers/metadata-reference) — Complete spec reference
