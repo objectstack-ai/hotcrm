@@ -387,7 +387,7 @@ This document provides a systematic comparison between **HotCRM** (94 business o
 | AI Workflow Integration | Einstein in Flow | AI actions in workflows | 🟢 Comparable |
 | Model Training | Einstein Model Builder | External models via MCP | 🟡 Salesforce leads |
 
-**Summary**: HotCRM has a **significant AI advantage** as an AI-native system. With 27 AI actions across all 6 clouds and MCP-based agent architecture, HotCRM provides deeper AI integration than Salesforce Einstein, which was retrofitted onto an existing platform.
+**Summary**: HotCRM has a **significant AI advantage** as an AI-native system. With 32 AI actions across all 6 clouds and MCP-based agent architecture, HotCRM provides deeper AI integration than Salesforce Einstein, which was retrofitted onto an existing platform.
 
 ---
 

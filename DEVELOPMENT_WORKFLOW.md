@@ -9,7 +9,7 @@
 git clone https://github.com/objectstack-ai/hotcrm.git
 cd hotcrm
 pnpm install
-pnpm test          # Run all 1,629 tests
+pnpm test          # Run all 1,759 tests
 pnpm dev           # Start development server
 ```
 
