@@ -5,9 +5,9 @@ description: Strategic direction and upcoming features for HotCRM.
 
 # HotCRM Roadmap
 
-HotCRM has completed **6 development phases**, establishing a full-featured **6-Cloud CRM** with **69 production-ready objects**, schema-validated metadata, AI agent workflows, and enterprise security foundations. Our focus now shifts to **UI completeness**, **cross-cloud integration**, and preparing for the **ecosystem expansion** planned for 2027.
+HotCRM has completed **8 development phases**, establishing a full-featured **6-Cloud CRM** with **69 production-ready objects**, schema-validated metadata, AI agent workflows, enterprise security foundations, full UI metadata coverage, and cross-cloud integration tests. Our focus now shifts to **developer experience & documentation governance** and preparing for the **ecosystem expansion** planned for 2027.
 
-> **Protocol Version**: @objectstack/spec v3.0.0 | **Tests**: 1,604 passing (108 files) | **Last Updated**: February 12, 2026
+> **Protocol Version**: @objectstack/spec v3.0.0 | **Tests**: 1,629 passing (113 files) | **Last Updated**: February 12, 2026
 
 ## ✅ Phase 1: Core Foundation (Completed)
 
@@ -47,7 +47,7 @@ Established the metadata-driven runtime and core business logic for all primary 
 
 ## ✅ Phase 4: Test Coverage & Documentation (Completed)
 
-- **1,604 Tests Passing** ✅: 108 test files across all packages (up from 48 files / 933 tests)
+- **1,629 Tests Passing** ✅: 113 test files across all packages (up from 48 files / 933 tests)
 - **Hook Tests** ✅: All 47 hook files have corresponding tests
 - **Action Tests** ✅: All 27 action files have corresponding tests
 - **Technical Specs** ✅: Developer documentation for all 6 clouds + AI package
@@ -80,56 +80,75 @@ Major version upgrade from v2.0.6 to v3.0.0 — Zod 4 validation engine, new `Ob
 - **Module Cleanup** ✅: Removed modules (`hub`, `auth`, `driver`, `permission`) not used by HotCRM
 - **v3.0 API Adoption** 🔧: `ObjectSchema.create()` migration, Studio plugin contributions (in progress)
 
-## 🔧 Phase 8: UI Completeness & Cross-Cloud Integration (Current Focus)
+## ✅ Phase 8: UI Completeness & Cross-Cloud Integration (Completed)
 
-With the data layer, business logic, and AI capabilities mature, Phase 8 focuses on **UI metadata coverage** for all primary objects and **cross-cloud data flow patterns**.
+With the data layer, business logic, and AI capabilities mature, Phase 8 delivered **UI metadata coverage** for all primary objects and **cross-cloud data flow patterns**.
 
-### 🔴 P0 — Page Layouts & List Views
+### Page Layouts & List Views (Completed)
 
-Currently only **4 pages** and **1 list view** exist for **69 objects**. Key business objects need full page layouts and list views.
+All key business objects now have full page layouts and list views:
 
 | Object | Page | View | Priority |
 |--------|------|------|----------|
-| Opportunity | ❌ | ❌ | High — Core CRM |
-| Contact | ❌ | ❌ | High — Core CRM |
-| Lead | ❌ | ❌ | High — Core CRM |
-| Case | ❌ | ❌ | High — Service |
-| Employee | ❌ | ❌ | High — HR |
-| Candidate | ❌ | ❌ | Medium — Recruiting |
-| Contract | ❌ | ❌ | Medium — Revenue |
-| Quote | ❌ | ❌ | Medium — CPQ |
-| Product | ❌ | ❌ | Medium — Catalog |
-| Knowledge Article | ❌ | ❌ | Medium — Self-service |
+| Opportunity | ✅ | ✅ | High — Core CRM |
+| Contact | ✅ | ✅ | High — Core CRM |
+| Lead | ✅ | ✅ | High — Core CRM |
+| Case | ✅ | ✅ | High — Service |
+| Employee | ✅ | ✅ | High — HR |
+| Candidate | ✅ | ✅ | Medium — Recruiting |
+| Contract | ✅ | ✅ | Medium — Revenue |
+| Quote | ✅ | ✅ | Medium — CPQ |
+| Product | ✅ | ✅ | Medium — Catalog |
+| Knowledge Article | ✅ | ✅ | Medium — Self-service |
 
-### 🟡 P1 — Dashboards & Forms
+### Dashboards & Forms (Completed)
 
 | Item | Status | Package |
 |------|--------|---------|
-| Marketing Dashboard | ❌ Missing | Marketing |
-| Finance Dashboard | ❌ Missing | Finance |
-| CPQ Dashboard | ❌ Missing | Products |
-| Executive Dashboard | ❌ Missing | Cross-cloud |
-| Opportunity Form | ❌ Missing | CRM |
-| Contact Form | ❌ Missing | CRM |
-| Lead Form | ❌ Missing | CRM |
-| Case Form | ❌ Missing | Support |
-| Employee Form | ❌ Missing | HR |
+| Marketing Dashboard | ✅ Complete | Marketing |
+| Finance Dashboard | ✅ Complete | Finance |
+| CPQ Dashboard | ✅ Complete | Products |
+| Executive Dashboard | ✅ Complete | Cross-cloud |
+| Opportunity Form | ✅ Complete | CRM |
+| Contact Form | ✅ Complete | CRM |
+| Lead Form | ✅ Complete | CRM |
+| Case Form | ✅ Complete | Support |
+| Employee Form | ✅ Complete | HR |
 
-### 🟢 P2 — Hook & Integration Expansion
+### Hook & Integration Expansion (Completed)
 
-- **Hook Coverage**: Expand from ~68% to 80%+ by adding hooks for `email_template`, `form`, `landing_page`, `marketing_list`, `touchpoint` (Marketing), `certification`, `department`, `position`, `training` (HR), `agent_skill`, `portal_user`, `social_media_case` (Support)
-- **Cross-Cloud Tests**: Lead→Opportunity, Quote→Contract→Invoice, Campaign→Lead, Case→Knowledge
+- **Hook Coverage**: Expanded to 86% (59 hooks / 69 objects)
+- **Cross-Cloud Tests**: Lead→Opportunity, Quote→Contract→Invoice, Campaign→Lead, Case→Knowledge, Employee→Onboarding→Training, AI agent pipelines
 - **Advanced Validations**: Cross-field, conditional required, async duplicate detection
+- **System & API Configuration**: Audit trail, notification channels, API endpoints, webhooks, cache config
 
-### 🔵 P3 — System & API Configuration
+## 🔧 Phase 9: Developer Experience & Documentation Governance (Current Focus)
 
-- **Audit Configuration**: Define audit trail metadata for sensitive objects
-- **Notification Channels**: Configure email, Slack, webhook notification destinations
-- **API Endpoint Declarations**: External API surface using `@objectstack/spec/api`
-- **Webhook Outbound Events**: Event notification using `@objectstack/spec/integration`
-- **Cache Configuration**: High-read object caching (product catalog, knowledge articles)
+Comprehensive DX audit identified onboarding friction from broken links, stale statistics, and inconsistent tooling references. This phase improves documentation integrity and developer workflows.
 
-## 🌍 Phase 9: Ecosystem & Connectivity (Planned — 2027)
+### 🔴 P0 — Documentation Integrity (Completed)
+- [x] Fix README.md broken links — removed 20+ references to non-existent files
+- [x] Update README.md statistics — corrected object count (65→69), per-cloud breakdowns
+- [x] Fix CONTRIBUTING.md — updated `npm`→`pnpm`, Node.js 18→20.9.0
+
+### 🟡 P1 — Onboarding Experience
+- [ ] Create `DEVELOPMENT_WORKFLOW.md` — single-page quickstart for new developers
+- [ ] Add "first contribution" tutorial with step-by-step guide
+- [ ] Add package scaffolding guide for new business packages
+- [ ] Add troubleshooting FAQ for common issues
+
+### 🟢 P2 — Documentation Governance
+- [ ] Add link-checking CI step to prevent future broken links
+- [ ] Add automated stat extraction — single source of truth for counts
+- [ ] Consolidate strategic docs in `docs/` directory
+- [ ] Add architecture diagram (Mermaid) to README
+
+### 🔵 P3 — Developer Tooling
+- [ ] Add `pnpm typecheck` root script
+- [ ] Add `pnpm test:changed` for incremental testing
+- [ ] Evaluate pre-commit hooks and `changeset` for version management
+
+## 🌍 Phase 10: Ecosystem & Connectivity (Planned — 2027)
 
 ### Integration Connectors
 - **Payment Gateways**: Stripe, PayPal bi-directional sync
@@ -166,16 +185,19 @@ Currently only **4 pages** and **1 list view** exist for **69 objects**. Key bus
 
 ## Per-Module Status
 
-| Package | Objects | Hooks | Actions | Pages | Views | Dashboards | Tests |
-|---------|---------|-------|---------|-------|-------|------------|-------|
-| **CRM** (Sales Cloud) | 8 | 8 | 8 | 1 | 1 | 2 | 20 |
-| **Finance** (Revenue Cloud) | 4 | 5 | 4 | 1 | — | — | 11 |
-| **HR** (Human Capital) | 16 | 12 | 4 | — | — | 1 | 20 |
-| **Marketing** (Marketing Cloud) | 11 | 8 | 3 | 1 | — | — | 14 |
-| **Products** (CPQ Cloud) | 9 | 8 | 3 | 1 | — | — | 16 |
-| **Support** (Service Cloud) | 21 | 6 | 4 | — | — | 1 | 18 |
-| **AI** (Intelligence Layer) | — | — | 1 | — | — | — | 9 |
-| **Total** | **69** | **47** | **27** | **4** | **1** | **4** | **108 files / 1,604 tests** |
+| Package | Objects | Hooks | Actions | Pages | Views | Dashboards | Forms | Tests |
+|---------|---------|-------|---------|-------|-------|------------|-------|-------|
+| **CRM** (Sales Cloud) | 8 | 8 | 8 | 4 | 4 | 2 | 3 | 20 |
+| **Finance** (Revenue Cloud) | 4 | 5 | 4 | 1 | 1 | 1 | — | 11 |
+| **HR** (Human Capital) | 16 | 12 | 4 | 2 | 1 | 1 | 1 | 20 |
+| **Marketing** (Marketing Cloud) | 11 | 8 | 3 | 1 | 1 | 1 | — | 14 |
+| **Products** (CPQ Cloud) | 9 | 8 | 3 | 2 | 1 | 1 | 1 | 16 |
+| **Support** (Service Cloud) | 21 | 6 | 4 | 2 | 2 | 1 | 1 | 18 |
+| **AI** (Intelligence Layer) | — | — | 1 | — | — | 1 | — | 9 |
+| **Cross-cloud** | — | — | — | 2 | 1 | — | — | 5 |
+| **Total** | **69** | **59**(1) | **27** | **14** | **11** | **8** | **6** | **113 files / 1,629 tests** |
+
+(1) 59 hook files covering 86% of objects
 
 ---
 

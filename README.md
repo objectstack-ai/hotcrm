@@ -7,13 +7,13 @@
 
 > A world-class Customer Relationship Management system built on @objectstack/spec v3.0.0 protocol with Salesforce-level functionality and Apple/Linear-level UX.
 
-> 📊 **Development Status**: See [Development Status & Roadmap](DEVELOPMENT_STATUS.md) for current state and next development priorities
+> 📊 **Development Status**: See [Development Roadmap](ROADMAP.md) for current state and next development priorities
 
-> 🎯 **NEW: Strategic Design Report**: See our comprehensive [Strategic Design Report](docs/STRATEGIC_DESIGN_REPORT.md) with plugin roadmap, industry verticals, and $76M ARR plan ([中文版](docs/STRATEGIC_DESIGN_REPORT_CN.md))
+> 🎯 **Strategic Design Report**: See our comprehensive [Strategic Design Report](docs/STRATEGIC_DESIGN_REPORT.md) with plugin roadmap, industry verticals, and $76M ARR plan
 
 > 🚀 **Strategic Planning**: Complete [Strategic Enhancement Plan](docs/README.md) to transform HotCRM into the world's leading AI-Native CRM
 
-> 📝 **Latest Updates**: Upgraded to @objectstack v3.0.0 (February 12, 2026) - all 1604 tests passing with zero breaking changes.
+> 📝 **Latest Updates**: Upgraded to @objectstack v3.0.0 (February 12, 2026) — 1629 tests passing across 113 files with zero breaking changes.
 
 > ✅ **Protocol Compliance**: All metadata is fully compliant with @objectstack/spec v3.0.0.
 
@@ -21,7 +21,7 @@
 
 HotCRM is a **comprehensive, AI-native enterprise CRM** system covering the complete Lead-to-Cash lifecycle. Built on the @objectstack/spec v3.0.0 protocol, it delivers:
 
-- **Complete CRM Suite**: 65 core objects (TypeScript) spanning Marketing, Sales, Service, Finance, and HR domains
+- **Complete CRM Suite**: 69 core objects (TypeScript) spanning Marketing, Sales, Service, Finance, and HR domains
 - **Metadata-Driven Architecture**: All objects defined through TypeScript (type-safe)
 - **Plugin Architecture**: Each business package is an independent plugin with dependency management
 - **ObjectQL**: Type-safe query language replacing traditional SQL
@@ -58,7 +58,7 @@ Each plugin:
 - Is loaded automatically in dependency order
 - Can be developed and deployed independently
 
-See [Plugin Architecture Guide](docs/PLUGIN_ARCHITECTURE.md) for detailed documentation.
+See [ROADMAP.md](ROADMAP.md) for the full plugin architecture guide.
 
 ### Repository Structure
 
@@ -239,33 +239,19 @@ HotCRM provides two server startup modes:
 
 ### 📖 Development Documentation
 
-**🚀 Strategic Planning** (NEW):
-- **[Documentation Index](docs/README.md)** - Complete guide to all strategic planning documents
-- **[Strategic Enhancement Plan](docs/STRATEGIC_ENHANCEMENT_PLAN.md)** - Comprehensive 36-week roadmap to world-class CRM
-- **[Implementation Roadmap](docs/IMPLEMENTATION_ROADMAP.md)** - Detailed sprint-by-sprint execution plan
-- **[Quick Wins](docs/QUICK_WINS.md)** - 10 high-impact features deliverable in 2 weeks
+**Strategic Planning**:
+- **[Documentation Index](docs/README.md)** — Complete guide to all strategic planning documents
+- **[Strategic Design Report](docs/STRATEGIC_DESIGN_REPORT.md)** — Plugin roadmap, industry verticals, and growth plan
+- **[Current State Assessment](docs/CURRENT_STATE_ASSESSMENT.md)** — Detailed architecture analysis
+- **[Next Sprint Guide](docs/NEXT_SPRINT_GUIDE.md)** — 12-week sprint execution plan
+- **[Deployment Guide](docs/DEPLOYMENT.md)** — Docker, Kubernetes production deployment
 
-**Start Here**: [DEVELOPMENT_WORKFLOW.md](./DEVELOPMENT_WORKFLOW.md) - Complete development guide with workflows, best practices, and templates
-
-**Detailed Guides**:
-- **[Development Workflow](.github/prompts/workflow.prompt.md)** - 3-phase development process (Data 60%, Logic 20%, UI 20%)
-- **[Iterative Development](.github/prompts/iteration.prompt.md)** - 5-week MVP development strategy
-- **[Version Management](.github/prompts/versioning.prompt.md)** - Release process and semantic versioning
-- **[Best Practices](.github/prompts/best-practices.prompt.md)** - Data modeling, security, performance, and UX
-- **[Troubleshooting](.github/prompts/troubleshooting.prompt.md)** - Common issues and solutions
-- **[Application Templates](.github/prompts/templates.prompt.md)** - CRM, ERP, Project Management templates
-
-**Reference Docs**:
-- **[AI Quick Reference](.github/prompts/ai-quick-reference.prompt.md)** - Quick lookup for AI agents
-- **[Metadata Protocol](.github/prompts/metadata.prompt.md)** - File suffix system and naming conventions
-- **[Platform Capabilities](.github/prompts/capabilities.prompt.md)** - Feature mapping guide
-
-**Legacy Docs**:
-- **[Development Plan](./CRM_DEVELOPMENT_PLAN.md)** - Historical roadmap and implementation plan
-- **[Quick Start](./QUICKSTART_DEVELOPMENT.md)** - Legacy quick start guide
-- **[Protocol Compliance](./PROTOCOL_COMPLIANCE.md)** - @objectstack/spec v0.6.1 compliance details
-- **[Contributing](./CONTRIBUTING.md)** - Contribution guidelines
-```
+**Developer Reference**:
+- **[Development Roadmap](ROADMAP.md)** — Full development roadmap with phased execution plan
+- **[Quick Reference](QUICK_REFERENCE.md)** — Quick lookup for commands, file conventions, and patterns
+- **[Testing Guide](TESTING.md)** — Test organization, patterns, and coverage targets
+- **[Contributing](CONTRIBUTING.md)** — Contribution guidelines and coding standards
+- **[Changelog](CHANGELOG.md)** — Version history and release notes
 
 ## 📦 Package Overview
 
@@ -273,7 +259,7 @@ HotCRM is built as a **modular monorepo** with independently developed packages.
 
 ### System-Wide Statistics
 
-**Total:** 65 Objects | 23 AI Actions | 29 Automation Hooks
+**Total:** 69 Objects | 27 AI Actions | 59 Automation Hooks
 
 ### Infrastructure Packages
 
@@ -451,19 +437,9 @@ Omnichannel case management with SLA tracking, knowledge base, and AI-powered ro
 
 ## 🤖 AI-Assisted Development
 
-HotCRM includes a comprehensive **Agent System** to accelerate development. Each agent is an expert in a specific domain:
+HotCRM includes a comprehensive **Agent System** to accelerate development. See the **[Agent Guide](.github/AGENT_GUIDE.md)** for examples and workflows.
 
-- **[Metadata Developer](.github/agents/metadata-developer.md)** - Object definitions, fields, relationships
-- **[Business Logic](.github/agents/business-logic-agent.md)** - Hooks, triggers, automation
-- **[UI Developer](.github/agents/ui-developer.md)** - Views, dashboards, forms
-- **[Integration](.github/agents/integration-agent.md)** - APIs, webhooks, external systems
-- **[AI Features](.github/agents/ai-features-agent.md)** - ML models, predictions, intelligence
-- **[Testing](.github/agents/testing-agent.md)** - Test generation and validation
-- **[Documentation](.github/agents/documentation-agent.md)** - Technical writing and guides
-
-**Quick Start**: See the **[Agent Guide](.github/AGENT_GUIDE.md)** for examples and workflows.
-
-**For Complex Tasks**: Use the **[Orchestrator](.github/agents/ORCHESTRATOR.md)** to coordinate multiple agents.
+The project uses [GitHub Copilot Instructions](.github/copilot-instructions.md) to provide AI agents with domain-specific context for code generation, review, and debugging across all business packages.
 
 ## 📦 Core Features
 
@@ -620,9 +596,9 @@ HotCRM implements a comprehensive enterprise system organized into **6 major dom
 
 ## 🎯 Key Statistics
 
-- **65 Core Objects** (TypeScript): Complete enterprise coverage across 6 major clouds
-  - **CRM (13 objects)**: Account, Contact, Lead, Opportunity, Activity, Task, Note, Assignment Rule, Email Template, Form, Landing Page, Marketing List, Unsubscribe
-  - **Marketing (2 objects)**: Campaign, Campaign Member
+- **69 Core Objects** (TypeScript): Complete enterprise coverage across 6 major clouds
+  - **CRM (8 objects)**: Account, Contact, Lead, Opportunity, Activity, Task, Note, Assignment Rule
+  - **Marketing (11 objects)**: Campaign, Campaign Member, Email Template, Form, Landing Page, Marketing List, Unsubscribe, Automation Workflow, Email Send, Lead Nurture Program, Touchpoint
   - **Products (9 objects)**: Product, Product Bundle, Product Bundle Component, Quote, Quote Line Item, Pricebook, Price Rule, Discount Schedule, Approval Request
   - **Finance (4 objects)**: Contract, Invoice, Invoice Line, Payment
   - **Support (21 objects)**: Case, Case Comment, Knowledge Article, Forum Topic, Forum Post, Queue, Queue Member, Routing Rule, Escalation Rule, SLA Policy, SLA Milestone, SLA Template, Agent Skill, Skill, Business Hours, Holiday, Holiday Calendar, Portal User, Email to Case, Web to Case, Social Media Case
@@ -633,17 +609,6 @@ HotCRM implements a comprehensive enterprise system organized into **6 major dom
 - **6 Service Channels**: Email, Web, Phone, WeChat, Chat Bot, Mobile App
 - **500+ Fields**: Comprehensive data capture across all objects
 - **AI-First Design**: Every major object has AI enhancement capabilities
-
-- KPI cards with real-time metrics
-- Interactive pipeline funnel charts
-- Activity timeline with team collaboration
-- Apple-inspired minimalist design
-
-### 4. AI-Powered Features
-
-- **Smart Briefing**: AI-generated customer summaries and next-step recommendations
-- **Personalized Sales Talk**: Industry-specific sales suggestions
-- **Predictive Analytics**: Deal scoring and win probability
 
 ## 🎨 Design Philosophy
 

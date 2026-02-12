@@ -6,8 +6,8 @@ Thank you for your interest in contributing to HotCRM! This document provides gu
 
 ### Prerequisites
 
-- Node.js 18 or higher
-- npm or yarn
+- Node.js 20.9.0 or higher
+- pnpm 9.0.0 or higher
 - Git
 
 ### Setting Up Development Environment
@@ -20,7 +20,7 @@ Thank you for your interest in contributing to HotCRM! This document provides gu
    ```
 3. Install dependencies:
    ```bash
-   npm install
+   pnpm install
    ```
 4. Create a branch for your changes:
    ```bash
@@ -32,25 +32,25 @@ Thank you for your interest in contributing to HotCRM! This document provides gu
 ### Running the Development Server
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
 ### Building the Project
 
 ```bash
-npm run build
+pnpm build
 ```
 
 ### Running Tests
 
 ```bash
-npm test
+pnpm test
 ```
 
 ### Linting
 
 ```bash
-npm run lint
+pnpm lint
 ```
 
 ## 🎯 Coding Standards
