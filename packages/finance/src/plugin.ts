@@ -109,28 +109,34 @@ export const FinancePlugin = {
     contract_renewal_reminder: PaymentReminderWorkflows.contractRenewalReminder,
   },
 
-  // Navigation structure for this plugin
-  navigation: [
+  // Apps provided by this plugin
+  apps: [
     {
-      id: 'finance',
-      type: 'group',
+      name: 'finance',
       label: 'Finance',
-      children: [
-        { id: 'contract', label: 'Contract', type: 'object', objectName: 'contract' },
-        { id: 'invoice', label: 'Invoice', type: 'object', objectName: 'invoice' },
-        { id: 'payment', label: 'Payment', type: 'object', objectName: 'payment' },
-        { id: 'credit_note', label: 'Credit Note', type: 'object', objectName: 'credit_note' },
-        { id: 'billing_schedule', label: 'Billing Schedule', type: 'object', objectName: 'billing_schedule' },
-      ]
-    },
-    {
-      id: 'revenue_recognition',
-      type: 'group',
-      label: 'Revenue Recognition',
-      children: [
-        { id: 'revenue_schedule', label: 'Revenue Schedule', type: 'object', objectName: 'revenue_schedule' },
-        { id: 'revenue_recognition_rule', label: 'Revenue Recognition Rule', type: 'object', objectName: 'revenue_recognition_rule' },
-        { id: 'payment_method', label: 'Payment Method', type: 'object', objectName: 'payment_method' },
+      navigation: [
+        {
+          id: 'finance',
+          type: 'group',
+          label: 'Finance',
+          children: [
+            { id: 'contract', label: 'Contract', type: 'object', objectName: 'contract' },
+            { id: 'invoice', label: 'Invoice', type: 'object', objectName: 'invoice' },
+            { id: 'payment', label: 'Payment', type: 'object', objectName: 'payment' },
+            { id: 'credit_note', label: 'Credit Note', type: 'object', objectName: 'credit_note' },
+            { id: 'billing_schedule', label: 'Billing Schedule', type: 'object', objectName: 'billing_schedule' },
+          ]
+        },
+        {
+          id: 'revenue_recognition',
+          type: 'group',
+          label: 'Revenue Recognition',
+          children: [
+            { id: 'revenue_schedule', label: 'Revenue Schedule', type: 'object', objectName: 'revenue_schedule' },
+            { id: 'revenue_recognition_rule', label: 'Revenue Recognition Rule', type: 'object', objectName: 'revenue_recognition_rule' },
+            { id: 'payment_method', label: 'Payment Method', type: 'object', objectName: 'payment_method' },
+          ]
+        }
       ]
     }
   ]

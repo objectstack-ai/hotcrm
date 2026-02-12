@@ -121,28 +121,34 @@ export const ProductsPlugin = {
     approval_auto_resolve: ApprovalWorkflows.approvalAutoResolve,
   },
 
-  // Navigation structure for this plugin
-  navigation: [
+  // Apps provided by this plugin
+  apps: [
     {
-      id: 'products_and_pricing',
-      type: 'group',
+      name: 'products',
       label: 'Products & Pricing',
-      children: [
-        { id: 'quote', label: 'Quote', type: 'object', objectName: 'quote' },
-        { id: 'product_bundle', label: 'Product Bundle', type: 'object', objectName: 'product_bundle' },
-        { id: 'price_rule', label: 'Price Rule', type: 'object', objectName: 'price_rule' },
-        { id: 'discount_schedule', label: 'Discount Schedule', type: 'object', objectName: 'discount_schedule' },
-        { id: 'approval_request', label: 'Approval Request', type: 'object', objectName: 'approval_request' },
-        { id: 'order', label: 'Order', type: 'object', objectName: 'order' },
-      ]
-    },
-    {
-      id: 'subscriptions',
-      type: 'group',
-      label: 'Subscriptions',
-      children: [
-        { id: 'subscription', label: 'Subscription', type: 'object', objectName: 'subscription' },
-        { id: 'product_option', label: 'Product Option', type: 'object', objectName: 'product_option' },
+      navigation: [
+        {
+          id: 'products_and_pricing',
+          type: 'group',
+          label: 'Products & Pricing',
+          children: [
+            { id: 'quote', label: 'Quote', type: 'object', objectName: 'quote' },
+            { id: 'product_bundle', label: 'Product Bundle', type: 'object', objectName: 'product_bundle' },
+            { id: 'price_rule', label: 'Price Rule', type: 'object', objectName: 'price_rule' },
+            { id: 'discount_schedule', label: 'Discount Schedule', type: 'object', objectName: 'discount_schedule' },
+            { id: 'approval_request', label: 'Approval Request', type: 'object', objectName: 'approval_request' },
+            { id: 'order', label: 'Order', type: 'object', objectName: 'order' },
+          ]
+        },
+        {
+          id: 'subscriptions',
+          type: 'group',
+          label: 'Subscriptions',
+          children: [
+            { id: 'subscription', label: 'Subscription', type: 'object', objectName: 'subscription' },
+            { id: 'product_option', label: 'Product Option', type: 'object', objectName: 'product_option' },
+          ]
+        }
       ]
     }
   ]

@@ -140,45 +140,51 @@ export const SupportPlugin = {
     case_first_response_sla: CaseEscalationWorkflows.firstResponseSLA,
   },
 
-  // Navigation structure for this plugin
-  navigation: [
+  // Apps provided by this plugin
+  apps: [
     {
-      id: 'support',
-      type: 'group',
-      label: 'Support',
-      children: [
-        { id: 'case', label: 'Case', type: 'object', objectName: 'case' },
-        { id: 'knowledge_article', label: 'Knowledge Article', type: 'object', objectName: 'knowledge_article' },
-        { id: 'queue', label: 'Queue', type: 'object', objectName: 'queue' },
-      ]
-    },
-    {
-      id: 'sla_management',
-      type: 'group',
-      label: 'SLA Management',
-      children: [
-        { id: 'sla_policy', label: 'SLA Policy', type: 'object', objectName: 'sla_policy' },
-        { id: 'sla_template', label: 'SLA Template', type: 'object', objectName: 'sla_template' },
-        { id: 'business_hours', label: 'Business Hours', type: 'object', objectName: 'business_hours' },
-      ]
-    },
-    {
-      id: 'automation_and_ai',
-      type: 'group',
-      label: 'Automation & AI',
-      children: [
-        { id: 'chatbot_config', label: 'Chatbot Config', type: 'object', objectName: 'chatbot_config' },
-        { id: 'macro', label: 'Macro', type: 'object', objectName: 'macro' },
-      ]
-    },
-    {
-      id: 'community_portal',
-      type: 'group',
-      label: 'Community Portal',
-      children: [
-        { id: 'portal_user', label: 'Portal User', type: 'object', objectName: 'portal_user' },
-        { id: 'forum_topic', label: 'Forum Topic', type: 'object', objectName: 'forum_topic' },
-        { id: 'forum_post', label: 'Forum Post', type: 'object', objectName: 'forum_post' },
+      name: 'support',
+      label: 'Customer Support',
+      navigation: [
+        {
+          id: 'support',
+          type: 'group',
+          label: 'Support',
+          children: [
+            { id: 'case', label: 'Case', type: 'object', objectName: 'case' },
+            { id: 'knowledge_article', label: 'Knowledge Article', type: 'object', objectName: 'knowledge_article' },
+            { id: 'queue', label: 'Queue', type: 'object', objectName: 'queue' },
+          ]
+        },
+        {
+          id: 'sla_management',
+          type: 'group',
+          label: 'SLA Management',
+          children: [
+            { id: 'sla_policy', label: 'SLA Policy', type: 'object', objectName: 'sla_policy' },
+            { id: 'sla_template', label: 'SLA Template', type: 'object', objectName: 'sla_template' },
+            { id: 'business_hours', label: 'Business Hours', type: 'object', objectName: 'business_hours' },
+          ]
+        },
+        {
+          id: 'automation_and_ai',
+          type: 'group',
+          label: 'Automation & AI',
+          children: [
+            { id: 'chatbot_config', label: 'Chatbot Config', type: 'object', objectName: 'chatbot_config' },
+            { id: 'macro', label: 'Macro', type: 'object', objectName: 'macro' },
+          ]
+        },
+        {
+          id: 'community_portal',
+          type: 'group',
+          label: 'Community Portal',
+          children: [
+            { id: 'portal_user', label: 'Portal User', type: 'object', objectName: 'portal_user' },
+            { id: 'forum_topic', label: 'Forum Topic', type: 'object', objectName: 'forum_topic' },
+            { id: 'forum_post', label: 'Forum Post', type: 'object', objectName: 'forum_post' },
+          ]
+        }
       ]
     }
   ]
