@@ -1,0 +1,10 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "pnpm build:msw",
+  "outputDirectory": "dist/studio",
+  "installCommand": "pnpm install",
+  "framework": null,
+  "rewrites": [
+    { "source": "/((?!assets|objectstack\\.json|mockServiceWorker\\.js|vite\\.svg).*)", "destination": "/index.html" }
+  ]
+}
