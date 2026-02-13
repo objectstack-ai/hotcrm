@@ -30,10 +30,10 @@
   ],
   "author": "HotCRM Team",
   "dependencies": {
-    "@objectstack/spec": "^3.0.0"
+    "@objectstack/spec": "^3.0.2"
   },
   "devDependencies": {
-    "typescript": "^5.0.0",
-    "@objectstack/cli": "^3.0.0"
+    "@objectstack/cli": "^3.0.2",
+    "typescript": "^5.9.3"
   }
 }
