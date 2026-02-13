@@ -176,6 +176,17 @@ export const CRMPlugin = {
             { id: 'territory', label: 'Territory', type: 'object', objectName: 'territory' },
             { id: 'territory_rule', label: 'Territory Rule', type: 'object', objectName: 'territory_rule' },
           ]
+        },
+        {
+          id: 'views_and_dashboards',
+          type: 'group',
+          label: 'Views & Dashboards',
+          children: [
+            { id: 'opportunity_kanban', label: 'Pipeline Board', type: 'object', objectName: 'opportunity', viewName: 'opportunity_kanban' },
+            { id: 'activity_calendar', label: 'Activity Calendar', type: 'object', objectName: 'activity', viewName: 'activity_calendar' },
+            { id: 'sales_dashboard', label: 'Sales Dashboard', type: 'dashboard', dashboardName: 'sales_overview' },
+            { id: 'executive_dashboard', label: 'Executive Dashboard', type: 'dashboard', dashboardName: 'executive_dashboard' },
+          ]
         }
       ]
     }

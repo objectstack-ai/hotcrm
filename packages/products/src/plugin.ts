@@ -148,6 +148,15 @@ export const ProductsPlugin = {
             { id: 'subscription', label: 'Subscription', type: 'object', objectName: 'subscription' },
             { id: 'product_option', label: 'Product Option', type: 'object', objectName: 'product_option' },
           ]
+        },
+        {
+          id: 'views_and_dashboards',
+          type: 'group',
+          label: 'Views & Dashboards',
+          children: [
+            { id: 'quote_gantt', label: 'Quote Approval Timeline', type: 'object', objectName: 'quote', viewName: 'quote_gantt' },
+            { id: 'cpq_dashboard', label: 'CPQ Dashboard', type: 'dashboard', dashboardName: 'cpq_dashboard' },
+          ]
         }
       ]
     }

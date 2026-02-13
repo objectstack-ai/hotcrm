@@ -184,6 +184,15 @@ export const SupportPlugin = {
             { id: 'forum_topic', label: 'Forum Topic', type: 'object', objectName: 'forum_topic' },
             { id: 'forum_post', label: 'Forum Post', type: 'object', objectName: 'forum_post' },
           ]
+        },
+        {
+          id: 'views_and_dashboards',
+          type: 'group',
+          label: 'Views & Dashboards',
+          children: [
+            { id: 'case_kanban', label: 'Case Board', type: 'object', objectName: 'case', viewName: 'case_kanban' },
+            { id: 'support_dashboard', label: 'Support Dashboard', type: 'dashboard', dashboardName: 'support_dashboard' },
+          ]
         }
       ]
     }

@@ -155,6 +155,14 @@ export const IntegrationPlugin = {
           children: [
             { id: 'api_key', label: 'API Key', type: 'object', objectName: 'api_key' },
           ]
+        },
+        {
+          id: 'views_and_dashboards',
+          type: 'group',
+          label: 'Views & Dashboards',
+          children: [
+            { id: 'integration_dashboard', label: 'Integration Dashboard', type: 'dashboard', dashboardName: 'integration_dashboard' },
+          ]
         }
       ]
     }

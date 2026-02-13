@@ -243,6 +243,15 @@ export const HRPlugin = {
             { id: 'benefit', label: 'Benefit', type: 'object', objectName: 'benefit' },
             { id: 'compensation_plan', label: 'Compensation Plan', type: 'object', objectName: 'compensation_plan' },
           ]
+        },
+        {
+          id: 'views_and_dashboards',
+          type: 'group',
+          label: 'Views & Dashboards',
+          children: [
+            { id: 'recruitment_kanban', label: 'Recruitment Pipeline', type: 'object', objectName: 'candidate', viewName: 'recruitment_kanban' },
+            { id: 'hr_dashboard', label: 'HR Dashboard', type: 'dashboard', dashboardName: 'hr_dashboard' },
+          ]
         }
       ]
     }
