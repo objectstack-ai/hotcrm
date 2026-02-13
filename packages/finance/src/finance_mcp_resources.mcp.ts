@@ -16,7 +16,7 @@ export const InvoiceAgingSummaryResource = {
   uri: 'objectstack://finance/invoices/aging',
   name: 'invoice_aging_summary',
   description:
-    'Accounts-receivable aging summary with outstanding balances bucketed by age (current, 30, 60, 90+ days), total receivables, and collection rate.',
+    'Accounts receivable aging summary with outstanding balances bucketed by age (current, 30, 60, 90+ days), total receivables, and collection rate.',
   mimeType: 'application/json',
   resourceType: 'json' as const,
   tags: ['finance', 'invoice', 'aging', 'accounts_receivable'],

@@ -25,6 +25,23 @@ describe('Phase 10.5A Report Definitions Metadata Compliance', () => {
     expect(reports.length).toBe(8);
   });
 
+  it('should include all expected Phase 10.5A reports', () => {
+    const names = reports.map((r) => r.report.name);
+    const expected = [
+      'pipeline_report',
+      'forecast_report',
+      'revenue_report',
+      'ar_aging_report',
+      'headcount_report',
+      'campaign_roi_report',
+      'product_mix_report',
+      'case_volume_report',
+    ];
+    for (const name of expected) {
+      expect(names).toContain(name);
+    }
+  });
+
   describe.each(reports)('$name', ({ report }) => {
     it('should be defined', () => {
       expect(report).toBeDefined();
