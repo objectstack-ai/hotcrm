@@ -8,8 +8,8 @@
 ```
 2025       ████████████████████████████████  Phases 1-9: Foundation → AI → Quality → Test → Integration → Schema → v3.0 → UI → DX
 2026 Q1-Q2 ████████████████████████████████  Phase 10: Salesforce Feature Parity      ✅ COMPLETE
-2026 Q2-Q3 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  Phase 10.5: Deep Metadata Adoption       ← NEXT
-2026 Q3-Q4 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  Phase 11: Ecosystem & Connectivity
+2026 Q2-Q3 ████████████████████████████████  Phase 10.5: Deep Metadata Adoption       ✅ COMPLETE
+2026 Q3-Q4 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  Phase 11: Ecosystem & Connectivity       ← NEXT
 2027       ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  Phase 12: Vertical Solutions & Advanced AI
 ```
 
@@ -22,6 +22,7 @@
 | Hook Files | 71 across 6 packages |
 | Action Files | 32 across 7 packages |
 | Workflow Files | 6 across 6 packages + 6 AI agent workflows (all registered) |
+| Flow Definitions | 6 across 5 packages (CRM, Finance, HR, Marketing, Support) |
 | State Machines | 3 (case, lead, opportunity) |
 | Permission Sets | 6 (one per business cloud) |
 | Event Definitions | 6 (one per business cloud) |
@@ -31,10 +32,25 @@
 | List Views | 11 files (~49 individual views) |
 | Dashboards | 8 across 5 packages |
 | Form Views | 6 across 3 packages |
-| Test Files | 118 files, 1759 tests (all passing) |
+| Report Definitions | 8 across 6 packages |
+| Chart Configurations | 6 across 6 packages |
+| MCP Tools | 24 across 6 packages |
+| MCP Resources | 8 across 2 packages |
+| MCP Prompts | 10 across 3 packages |
+| AI Orchestrations | 2 (sales, support) |
+| Predictive Models | 3 (lead scoring, churn, deal forecast) |
+| RLS Policies | 4 across 4 packages |
+| Security Policies | 3 (password, session, composite) |
+| Email Templates | 16 across 4 packages |
+| Notification Channels | 4 (email, SMS, push, in-app) |
+| Scheduled Jobs | 12 across 4 packages |
+| Connector Metadata | 3 (email, payment, social) |
+| UI Actions | 10 across 3 packages |
+| Dashboard Widgets | 3 (pipeline, SLA, headcount) |
+| Test Files | 132 files, 2271 tests (all passing) |
 | TypeScript Compliance | 100% (zero type errors) |
 | Protocol Compliance | 100% (all objects pass ObjectSchema.create()) |
-| Spec Schema Adoption | 28 of ~80 application-level schemas used (~35%) — see [Metadata Evaluation](#metadata-type-evaluation) |
+| Spec Schema Adoption | ~55 of ~80 application-level schemas used (~69%) — see [Metadata Evaluation](#metadata-type-evaluation) |
 
 ---
 

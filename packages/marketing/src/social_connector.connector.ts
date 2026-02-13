@@ -69,7 +69,7 @@ export const SocialConnector = {
         { name: 'account_id', label: 'Account ID', type: 'string', required: true },
         { name: 'content', label: 'Content', type: 'string', required: true },
         { name: 'media_url', label: 'Media URL', type: 'string', required: false },
-        { name: 'schedule_at', label: 'Schedule At', type: 'datetime', required: false },
+        { name: 'schedule_at', label: 'Schedule At', type: 'string', required: false },
       ],
       supportsPagination: false,
       supportsFiltering: false,

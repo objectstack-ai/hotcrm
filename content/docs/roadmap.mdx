@@ -7,7 +7,7 @@ description: Strategic direction and upcoming features for HotCRM — 2026 and b
 
 HotCRM has completed **10 development phases**, establishing a full-featured, production-ready **6-Cloud CRM** with **94 business objects**, AI agent workflows, enterprise security, full UI metadata, Salesforce feature parity (~92%), and comprehensive developer tooling. Our roadmap now focuses on **deep metadata adoption**, **ecosystem growth**, **vertical solutions**, and **advanced AI** for 2026–2027+.
 
-> **Protocol Version**: @objectstack/spec v3.0.0 | **Tests**: 1,759 passing (118 files) | **Spec Schema Adoption**: 28 / ~80 (35%) | **Last Updated**: February 2026
+> **Protocol Version**: @objectstack/spec v3.0.0 | **Tests**: 2,200+ passing (132+ files) | **Spec Schema Adoption**: 55 / ~80 (69%) | **Last Updated**: June 2026
 
 ---
 
@@ -15,21 +15,21 @@ HotCRM has completed **10 development phases**, establishing a full-featured, pr
 
 ```
 2025  ███████████████████████████████████████████████████████████  Foundation → AI → Quality → Test → Integration → Schema → v3.0 → UI → DX → Salesforce Parity
-2026  ████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  Deep Metadata Adoption → Ecosystem & Connectivity    ← YOU ARE HERE
+2026  ████████████████████████████████████░░░░░░░░░░░░░░░░░░░░░░  Deep Metadata Adoption (✅ 10.5) → Ecosystem & Connectivity    ← YOU ARE HERE
 2027  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  Vertical Solutions & Advanced AI
 ```
 
 ---
 
-## 🔬 Phase 10.5: Deep Metadata Adoption (2026 Q2-Q3) ← NEXT
+## ✅ Phase 10.5: Deep Metadata Adoption (2026 Q2-Q3) — COMPLETE
 
-Maximize @objectstack/spec schema adoption across existing 6 clouds before building new packages. Currently using **28 of ~80 application-level schemas (35%)**. This phase targets **69%** adoption.
+Phase 10.5 maximized @objectstack/spec schema adoption across all 6 clouds, growing from **28 to 55 application-level schemas (35% → 69%)**.
 
 ```
-Q2 2026 Week 1-3   ████████  Phase 10.5A: Reports, Advanced Views & Charts    (UI depth)
-Q2 2026 Week 4-6   ████████  Phase 10.5B: Flows, MCP Tools & AI Orchestration (Automation + AI)
-Q3 2026 Week 7-9   ████████  Phase 10.5C: Enterprise Security & Notifications (Security + System)
-Q3 2026 Week 10-12 ████████  Phase 10.5D: Validation, Tests & Documentation   (Hardening)
+Q2 2026 Week 1-3   ████████  Phase 10.5A: Reports, Advanced Views & Charts    ✅
+Q2 2026 Week 4-6   ████████  Phase 10.5B: Flows, MCP Tools & AI Orchestration ✅
+Q3 2026 Week 7-9   ████████  Phase 10.5C: Enterprise Security & Notifications ✅
+Q3 2026 Week 10-12 ████████  Phase 10.5D: Validation, Tests & Documentation   ✅
 ```
 
 ### Key New Schema Adoptions
@@ -50,20 +50,30 @@ Q3 2026 Week 10-12 ████████  Phase 10.5D: Validation, Tests & Do
 
 **Tier 3 (P2)**: Encryption, Masking, Compliance (GDPR/HIPAA/PCI), Multi-Tenancy, Tracing, Metrics, Feature Flags, Event Definitions, Rate Limiting, Circuit Breakers, DnD Config, Offline Config — **12 schemas**
 
-### Phase 10.5 Expected Outcomes
+### Phase 10.5 Final Outcomes
 
 | Metric | Before | After | Change |
 |--------|--------|-------|--------|
-| Application Schema Adoption | 28 / ~80 (35%) | ~55 / ~80 (69%) | +27 schemas |
+| Application Schema Adoption | 28 / ~80 (35%) | 55 / ~80 (69%) | +27 schemas |
+| Test Files | 118 | 132+ | +14 files |
+| Tests Passing | 1,759 | 2,200+ | +441 tests |
 | Report Definitions | 0 | 8 | +8 reports |
 | Advanced Views (Kanban/Calendar/Gantt) | 0 | 6 | +6 views |
 | Chart Configurations | 0 | 6 | +6 charts |
 | Flow Definitions | 0 | 6 | +6 flows |
-| MCP Tools | 0 | ~24 | +24 tools |
-| MCP Resources + Prompts | 0 | ~18 | +18 |
+| MCP Tools | 0 | 24 | +24 tools |
+| MCP Resources | 0 | 8 | +8 resources |
+| MCP Prompts | 0 | 10 | +10 prompts |
+| AI Orchestrations | 0 | 2 | +2 orchestrations |
+| Predictive Models | 0 | 3 | +3 models |
 | RLS Policies | 0 | 4 | +4 policies |
-| Email Templates | 0 | ~16 | +16 templates |
-| Scheduled Jobs | 0 | ~12 | +12 jobs |
+| Security Policies (Password/Session/Composite) | 0 | 3 | +3 policies |
+| Email Templates | 0 | 16 | +16 templates |
+| Notification Channels | 0 | 4 | +4 channels |
+| Scheduled Jobs | 0 | 12 | +12 jobs |
+| UI Actions | 0 | 10 | +10 actions |
+| Widgets | 0 | 3 | +3 widgets |
+| Connectors | 0 | 3 | +3 connectors |
 
 > For the full metadata evaluation (gap analysis, tier breakdown, per-cloud plans), see the [detailed ROADMAP.md](https://github.com/objectstack-ai/hotcrm/blob/main/ROADMAP.md#metadata-type-evaluation).
 
@@ -199,9 +209,20 @@ Industry-specific CRM editions and next-generation AI capabilities.
 
 ---
 
-## ✅ What's Been Delivered (Phases 1–10)
+## ✅ What's Been Delivered (Phases 1–10.5)
 
-All 10 foundation phases are complete. See [What's New](/docs/whats-new) for detailed release notes.
+All 10 foundation phases and Phase 10.5 are complete. See [What's New](/docs/whats-new) for detailed release notes.
+
+### Phase 10.5: Deep Metadata Adoption ✅
+- 27 new schema adoptions across all 6 clouds (35% → 69% coverage)
+- 8 report definitions, 6 advanced views (Kanban/Calendar/Gantt), 6 chart configurations
+- 6 flow definitions, 24 MCP tools, 8 resources, 10 prompts
+- 2 AI orchestrations, 3 predictive models (lead scoring, churn, deal forecast)
+- 4 RLS policies, 3 security policies (password, session, composite)
+- 16 email templates, 4 notification channels, 12 scheduled jobs
+- 10 UI actions, 3 widgets, 3 connectors
+- 132+ test files, 2,200+ tests passing
+- See [Metadata Types Guide](/docs/guides/metadata-types) and [MCP Integration Guide](/docs/guides/mcp-integration)
 
 ### Phase 10: Salesforce Feature Parity ✅
 - 25 new business objects: forecasting, territory, orders, subscriptions, journeys, A/B testing, and more
@@ -255,7 +276,7 @@ All 10 foundation phases are complete. See [What's New](/docs/whats-new) for det
 | **Products** (CPQ Cloud) | 13 | 10 | 4 | 3 | 2 | 1 | 1 | 16 |
 | **Support** (Service Cloud) | 23 | 9 | 4 | 2 | 2 | 1 | 1 | 17 |
 | **AI** (Intelligence Layer) | — | — | 1 | — | — | 1 | — | 13 |
-| **Total** | **94** | **71** | **32** | **14** | **11** | **8** | **6** | **118 files / 1,759 tests** |
+| **Total** | **94** | **71** | **32** | **14** | **11** | **8** | **6** | **132+ files / 2,200+ tests** |
 
 ---
 

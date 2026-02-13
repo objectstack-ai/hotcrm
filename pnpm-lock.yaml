@@ -113,6 +113,25 @@ importers:
         specifier: ^5.0.0
         version: 5.9.3
 
+  packages/analytics:
+    dependencies:
+      '@hotcrm/ai':
+        specifier: workspace:*
+        version: link:../ai
+      '@objectstack/spec':
+        specifier: ^3.0.0
+        version: 3.0.0
+      zod:
+        specifier: ^4.3.6
+        version: 4.3.6
+    devDependencies:
+      '@objectstack/cli':
+        specifier: ^3.0.0
+        version: 3.0.0(esbuild@0.27.2)
+      typescript:
+        specifier: ^5.0.0
+        version: 5.9.3
+
   packages/crm:
     dependencies:
       '@hotcrm/ai':
