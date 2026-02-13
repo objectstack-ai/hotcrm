@@ -17,9 +17,18 @@ set -euo pipefail
 STUDIO_PKG="node_modules/@objectstack/studio/dist"
 OUT_DIR="dist/studio"
 
+# 0. Verify Studio package is installed
+if [ ! -d "$STUDIO_PKG" ]; then
+  echo "✗ Studio package not found at $STUDIO_PKG. Run pnpm install first." >&2
+  exit 1
+fi
+
 # 1. Compile metadata
 echo "▸ Compiling ObjectStack metadata..."
-pnpm exec objectstack compile --output dist/objectstack.json
+if ! pnpm exec objectstack compile --output dist/objectstack.json; then
+  echo "✗ Failed to compile ObjectStack metadata. Check objectstack.config.ts for errors." >&2
+  exit 1
+fi
 
 # 2. Prepare output directory
 rm -rf "$OUT_DIR"
