@@ -16,7 +16,7 @@ export const LogACallAction = {
     { name: 'subject', label: 'Subject', type: 'text' as const, required: true },
     { name: 'description', label: 'Notes', type: 'textarea' as const },
     { name: 'duration_minutes', label: 'Duration (min)', type: 'number' as const },
-    { name: 'call_result', label: 'Result', type: 'select' as const, options: ['connected', 'left_voicemail', 'no_answer', 'busy'] }
+    { name: 'call_result', label: 'Result', type: 'select' as const, options: [{ label: 'Connected', value: 'connected' }, { label: 'Left Voicemail', value: 'left_voicemail' }, { label: 'No Answer', value: 'no_answer' }, { label: 'Busy', value: 'busy' }] }
   ],
   variant: 'secondary' as const,
   successMessage: 'Call logged successfully'
@@ -47,7 +47,7 @@ export const CreateFollowUpTaskAction = {
   params: [
     { name: 'subject', label: 'Task Subject', type: 'text' as const, required: true },
     { name: 'due_date', label: 'Due Date', type: 'date' as const, required: true },
-    { name: 'priority', label: 'Priority', type: 'select' as const, options: ['high', 'medium', 'low'] },
+    { name: 'priority', label: 'Priority', type: 'select' as const, options: [{ label: 'High', value: 'high' }, { label: 'Medium', value: 'medium' }, { label: 'Low', value: 'low' }] },
     { name: 'description', label: 'Description', type: 'textarea' as const }
   ],
   variant: 'secondary' as const,

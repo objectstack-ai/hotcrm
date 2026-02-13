@@ -13,7 +13,7 @@ export const EscalateCaseAction = {
   type: 'modal' as const,
   locations: ['record_header' as const, 'list_item' as const],
   params: [
-    { name: 'escalation_reason', label: 'Reason', type: 'select' as const, required: true, options: ['sla_breach', 'customer_request', 'technical_complexity', 'executive_escalation'] },
+    { name: 'escalation_reason', label: 'Reason', type: 'select' as const, required: true, options: [{ label: 'SLA Breach', value: 'sla_breach' }, { label: 'Customer Request', value: 'customer_request' }, { label: 'Technical Complexity', value: 'technical_complexity' }, { label: 'Executive Escalation', value: 'executive_escalation' }] },
     { name: 'notes', label: 'Escalation Notes', type: 'textarea' as const, required: true },
     { name: 'escalate_to', label: 'Escalate To', type: 'lookup' as const }
   ],
@@ -46,7 +46,7 @@ export const CreateKnowledgeArticleAction = {
   locations: ['record_header' as const, 'record_more' as const],
   params: [
     { name: 'title', label: 'Article Title', type: 'text' as const, required: true },
-    { name: 'article_type', label: 'Article Type', type: 'select' as const, options: ['how_to', 'faq', 'troubleshooting', 'best_practice'] },
+    { name: 'article_type', label: 'Article Type', type: 'select' as const, options: [{ label: 'How To', value: 'how_to' }, { label: 'FAQ', value: 'faq' }, { label: 'Troubleshooting', value: 'troubleshooting' }, { label: 'Best Practice', value: 'best_practice' }] },
     { name: 'include_resolution', label: 'Include Case Resolution', type: 'boolean' as const }
   ],
   variant: 'secondary' as const,
