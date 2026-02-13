@@ -81,6 +81,15 @@ export {
 } from './nlq.config';
 export type { NLQConfig } from './nlq.config';
 
+// AI Orchestrations
+export { SalesOrchestration } from './sales_orchestration.orchestration';
+export { SupportOrchestration } from './support_orchestration.orchestration';
+
+// Predictive Models
+export { LeadScoringModel } from './lead_scoring.predictive';
+export { ChurnPredictionModel } from './churn_prediction.predictive';
+export { DealForecastModel } from './deal_forecast.predictive';
+
 // Performance Benchmarking
 export { Benchmark, BenchmarkSuite, formatBenchmarkResults } from './benchmark';
 export type { BenchmarkResult, BenchmarkOptions, BenchmarkSuiteEntry } from './benchmark';
