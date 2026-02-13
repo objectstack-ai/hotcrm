@@ -9,6 +9,9 @@ export const LeadPage = {
   object: 'lead',
   type: 'record' as const,
   label: 'Lead Detail Page',
+  template: 'record_detail',
+  isDefault: true,
+  assignedProfiles: ['sales_rep', 'sales_manager', 'admin'],
 
   regions: [
     {

@@ -10,6 +10,9 @@ export const ReportPage = {
   object: 'report',
   type: 'record' as const,
   label: 'Report Builder',
+  template: 'record_detail',
+  isDefault: true,
+  assignedProfiles: ['analyst', 'manager', 'admin'],
 
   regions: [
     {

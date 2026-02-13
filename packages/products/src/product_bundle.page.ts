@@ -6,6 +6,9 @@ const ProductBundlePage = {
   object: 'product_bundle',
   type: 'record' as const,
   label: 'Bundle Configuration',
+  template: 'record_detail',
+  isDefault: true,
+  assignedProfiles: ['sales_rep', 'product_manager', 'admin'],
 
   regions: [
     {

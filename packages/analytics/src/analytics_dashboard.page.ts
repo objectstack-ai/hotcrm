@@ -10,6 +10,9 @@ export const AnalyticsDashboardPage = {
   object: 'analytics_dashboard',
   type: 'record' as const,
   label: 'Dashboard Canvas',
+  template: 'record_detail',
+  isDefault: true,
+  assignedProfiles: ['analyst', 'manager', 'admin'],
 
   regions: [
     {

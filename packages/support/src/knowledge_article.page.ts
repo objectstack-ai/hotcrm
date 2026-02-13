@@ -9,6 +9,9 @@ export const KnowledgeArticlePage = {
   object: 'knowledge_article',
   type: 'record' as const,
   label: 'Knowledge Article Detail Page',
+  template: 'record_detail',
+  isDefault: true,
+  assignedProfiles: ['support_agent', 'knowledge_manager', 'admin'],
 
   regions: [
     {

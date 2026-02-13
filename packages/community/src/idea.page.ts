@@ -10,6 +10,9 @@ export const IdeaPage = {
   object: 'idea',
   type: 'record' as const,
   label: 'Idea Detail',
+  template: 'record_detail',
+  isDefault: true,
+  assignedProfiles: ['community_manager', 'admin'],
 
   regions: [
     {

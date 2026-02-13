@@ -9,6 +9,9 @@ export const ContactPage = {
   object: 'contact',
   type: 'record' as const,
   label: 'Contact Detail Page',
+  template: 'record_detail',
+  isDefault: true,
+  assignedProfiles: ['sales_rep', 'sales_manager', 'admin'],
 
   regions: [
     {
