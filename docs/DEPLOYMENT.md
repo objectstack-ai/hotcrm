@@ -203,7 +203,7 @@ Browser
 
 ```bash
 # 1. Build the MSW bundle locally to verify
-pnpm build:msw
+pnpm -w run build:msw
 
 # 2. Preview locally
 npx serve dist/studio
@@ -217,7 +217,7 @@ The repository includes a `vercel.json` that configures the build automatically.
 
 1. Push the repository to GitHub.
 2. Import the repository in the [Vercel Dashboard](https://vercel.com/new).
-3. Vercel detects `vercel.json` and runs `pnpm build:msw` automatically.
+3. Vercel detects `vercel.json` and runs `pnpm -w run build:msw` automatically.
 4. Every push to the default branch triggers a new deployment.
 
 **Option B — Vercel CLI**
@@ -234,7 +234,7 @@ vercel
 
 | Field | Value | Purpose |
 |-------|-------|---------|
-| `buildCommand` | `pnpm build:msw` | Compiles metadata and assembles the Studio SPA |
+| `buildCommand` | `pnpm -w run build:msw` | Compiles metadata and assembles the Studio SPA |
 | `outputDirectory` | `dist/studio` | Static files served by Vercel |
 | `installCommand` | `pnpm install` | Installs all workspace dependencies |
 | `rewrites` | `/* → /index.html` | SPA client-side routing (excludes static assets) |

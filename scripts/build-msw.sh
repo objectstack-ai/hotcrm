@@ -7,7 +7,7 @@
 #   3. Places objectstack.json alongside the SPA so it can be loaded at runtime
 #
 # Usage:
-#   pnpm build:msw
+#   pnpm -w run build:msw
 #
 # The output in dist/studio/ is a fully self-contained static site that runs
 # entirely in the browser — no server, database, or Redis required.

@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "pnpm build:msw",
+  "buildCommand": "pnpm -w run build:msw",
   "outputDirectory": "dist/studio",
   "installCommand": "pnpm install",
   "framework": null,
