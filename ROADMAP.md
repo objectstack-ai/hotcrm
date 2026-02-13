@@ -226,45 +226,45 @@ Q3 2026 Week 10-12 ████████  Phase 10.5D: Validation, Tests & Do
 
 #### 10.5A-1: Report Definitions (ReportSchema)
 
-- [ ] Add `packages/crm/src/pipeline_report.report.ts` — Sales pipeline report (stage breakdown, win rate, average deal size)
-- [ ] Add `packages/crm/src/forecast_report.report.ts` — Revenue forecast report (by period, rep, territory)
-- [ ] Add `packages/finance/src/revenue_report.report.ts` — Revenue recognition report (ASC 606 compliance, deferred/recognized)
-- [ ] Add `packages/finance/src/ar_aging_report.report.ts` — Accounts receivable aging report
-- [ ] Add `packages/hr/src/headcount_report.report.ts` — Headcount analytics (by department, location, tenure)
-- [ ] Add `packages/marketing/src/campaign_roi_report.report.ts` — Campaign ROI report (spend vs revenue, attribution)
-- [ ] Add `packages/products/src/product_mix_report.report.ts` — Product mix analysis (revenue by product, discount analysis)
-- [ ] Add `packages/support/src/case_volume_report.report.ts` — Case volume report (by priority, category, SLA compliance)
-- [ ] Validate all reports with `ReportSchema.parse()` — 100% spec compliance
+- [x] Add `packages/crm/src/pipeline_report.report.ts` — Sales pipeline report (stage breakdown, win rate, average deal size)
+- [x] Add `packages/crm/src/forecast_report.report.ts` — Revenue forecast report (by period, rep, territory)
+- [x] Add `packages/finance/src/revenue_report.report.ts` — Revenue recognition report (ASC 606 compliance, deferred/recognized)
+- [x] Add `packages/finance/src/ar_aging_report.report.ts` — Accounts receivable aging report
+- [x] Add `packages/hr/src/headcount_report.report.ts` — Headcount analytics (by department, location, tenure)
+- [x] Add `packages/marketing/src/campaign_roi_report.report.ts` — Campaign ROI report (spend vs revenue, attribution)
+- [x] Add `packages/products/src/product_mix_report.report.ts` — Product mix analysis (revenue by product, discount analysis)
+- [x] Add `packages/support/src/case_volume_report.report.ts` — Case volume report (by priority, category, SLA compliance)
+- [x] Validate all reports with `ReportSchema.parse()` — 100% spec compliance
 
 #### 10.5A-2: Advanced List Views (ListViewSchema with Kanban, Calendar, Gantt, Timeline)
 
-- [ ] Add `packages/crm/src/opportunity_kanban.view.ts` — Kanban view for opportunity pipeline (drag across stages)
-- [ ] Add `packages/crm/src/activity_calendar.view.ts` — Calendar view for tasks and events
-- [ ] Add `packages/hr/src/recruitment_kanban.view.ts` — Kanban view for candidate pipeline
-- [ ] Add `packages/support/src/case_kanban.view.ts` — Kanban view for case triage (by priority/status)
-- [ ] Add `packages/marketing/src/campaign_timeline.view.ts` — Timeline view for campaign schedules
-- [ ] Add `packages/products/src/quote_gantt.view.ts` — Gantt view for quote approval workflow timeline
-- [ ] Validate all views with `ListViewSchema.parse()` or `ViewSchema.parse()` — 100% spec compliance
+- [x] Add `packages/crm/src/opportunity_kanban.view.ts` — Kanban view for opportunity pipeline (drag across stages)
+- [x] Add `packages/crm/src/activity_calendar.view.ts` — Calendar view for tasks and events
+- [x] Add `packages/hr/src/recruitment_kanban.view.ts` — Kanban view for candidate pipeline
+- [x] Add `packages/support/src/case_kanban.view.ts` — Kanban view for case triage (by priority/status)
+- [x] Add `packages/marketing/src/campaign_timeline.view.ts` — Timeline view for campaign schedules
+- [x] Add `packages/products/src/quote_gantt.view.ts` — Gantt view for quote approval workflow timeline
+- [x] Validate all views with `ListViewSchema.parse()` or `ViewSchema.parse()` — 100% spec compliance
 
 #### 10.5A-3: Chart Configurations (ChartConfigSchema)
 
-- [ ] Add `packages/crm/src/pipeline_funnel.chart.ts` — Sales funnel chart (Lead → Qualified → Proposal → Closed)
-- [ ] Add `packages/crm/src/revenue_trend.chart.ts` — Monthly revenue trend line chart
-- [ ] Add `packages/finance/src/cash_flow.chart.ts` — Cash flow waterfall chart
-- [ ] Add `packages/support/src/case_resolution.chart.ts` — Case resolution time distribution chart
-- [ ] Add `packages/marketing/src/channel_performance.chart.ts` — Marketing channel performance bar chart
-- [ ] Add `packages/hr/src/attrition_trend.chart.ts` — Employee attrition trend chart
-- [ ] Validate all charts with `ChartConfigSchema.parse()` — 100% spec compliance
+- [x] Add `packages/crm/src/pipeline_funnel.chart.ts` — Sales funnel chart (Lead → Qualified → Proposal → Closed)
+- [x] Add `packages/crm/src/revenue_trend.chart.ts` — Monthly revenue trend line chart
+- [x] Add `packages/finance/src/cash_flow.chart.ts` — Cash flow waterfall chart
+- [x] Add `packages/support/src/case_resolution.chart.ts` — Case resolution time distribution chart
+- [x] Add `packages/marketing/src/channel_performance.chart.ts` — Marketing channel performance bar chart
+- [x] Add `packages/hr/src/attrition_trend.chart.ts` — Employee attrition trend chart
+- [x] Validate all charts with `ChartConfigSchema.parse()` — 100% spec compliance
 
 #### 10.5A-4: UI Actions & Widgets (ActionSchema, WidgetManifestSchema)
 
-- [ ] Add `packages/crm/src/crm_actions.action_ui.ts` — Quick actions: "Log a Call", "Convert Lead", "Create Follow-up Task", "Send Quote"
-- [ ] Add `packages/finance/src/finance_actions.action_ui.ts` — Quick actions: "Create Invoice", "Record Payment", "Send Reminder"
-- [ ] Add `packages/support/src/support_actions.action_ui.ts` — Quick actions: "Escalate Case", "Merge Cases", "Create Knowledge Article"
-- [ ] Add `packages/crm/src/pipeline_widget.widget.ts` — Pipeline summary widget (total value, count by stage, trend)
-- [ ] Add `packages/support/src/sla_widget.widget.ts` — SLA compliance widget (met/breached/at-risk counts)
-- [ ] Add `packages/hr/src/headcount_widget.widget.ts` — Headcount widget (total, new hires, departures this month)
-- [ ] Validate all actions with `ActionSchema.parse()` and widgets with `WidgetManifestSchema.parse()` — 100% spec compliance
+- [x] Add `packages/crm/src/crm_actions.action_ui.ts` — Quick actions: "Log a Call", "Convert Lead", "Create Follow-up Task", "Send Quote"
+- [x] Add `packages/finance/src/finance_actions.action_ui.ts` — Quick actions: "Create Invoice", "Record Payment", "Send Reminder"
+- [x] Add `packages/support/src/support_actions.action_ui.ts` — Quick actions: "Escalate Case", "Merge Cases", "Create Knowledge Article"
+- [x] Add `packages/crm/src/pipeline_widget.widget.ts` — Pipeline summary widget (total value, count by stage, trend)
+- [x] Add `packages/support/src/sla_widget.widget.ts` — SLA compliance widget (met/breached/at-risk counts)
+- [x] Add `packages/hr/src/headcount_widget.widget.ts` — Headcount widget (total, new hires, departures this month)
+- [x] Validate all actions with `ActionSchema.parse()` and widgets with `WidgetManifestSchema.parse()` — 100% spec compliance
 
 ### Phase 10.5B: Flows, MCP Tools & AI Orchestration (Weeks 4-6) — P0
 
@@ -272,48 +272,49 @@ Q3 2026 Week 10-12 ████████  Phase 10.5D: Validation, Tests & Do
 
 #### 10.5B-1: Flow Definitions (FlowSchema)
 
-- [ ] Add `packages/crm/src/lead_qualification.flow.ts` — Lead qualification flow (score → route → assign → notify)
-- [ ] Add `packages/crm/src/deal_close.flow.ts` — Deal close flow (approval → contract → invoice → handoff to support)
-- [ ] Add `packages/finance/src/invoice_collection.flow.ts` — Invoice collection flow (send → remind → escalate → write-off)
-- [ ] Add `packages/hr/src/onboarding.flow.ts` — Employee onboarding flow (offer → docs → IT setup → training → 30-day check-in)
-- [ ] Add `packages/support/src/case_escalation.flow.ts` — Case escalation flow (SLA breach → notify manager → reassign → exec alert)
-- [ ] Add `packages/marketing/src/lead_nurture.flow.ts` — Lead nurture flow (subscribe → drip emails → score → MQL handoff)
-- [ ] Validate all flows with `FlowSchema.parse()` — 100% spec compliance
+- [x] Add `packages/crm/src/lead_qualification.flow.ts` — Lead qualification flow (score → route → assign → notify)
+- [x] Add `packages/crm/src/deal_close.flow.ts` — Deal close flow (approval → contract → invoice → handoff to support)
+- [x] Add `packages/finance/src/invoice_collection.flow.ts` — Invoice collection flow (send → remind → escalate → write-off)
+- [x] Add `packages/hr/src/onboarding.flow.ts` — Employee onboarding flow (offer → docs → IT setup → training → 30-day check-in)
+- [x] Add `packages/support/src/case_escalation.flow.ts` — Case escalation flow (SLA breach → notify manager → reassign → exec alert)
+- [x] Add `packages/marketing/src/lead_nurture.flow.ts` — Lead nurture flow (subscribe → drip emails → score → MQL handoff)
+- [x] Validate all flows with `FlowSchema.parse()` — 100% spec compliance
 
 #### 10.5B-2: MCP Tool Definitions (MCPToolSchema)
 
-- [ ] Add `packages/crm/src/crm_mcp_tools.mcp.ts` — MCP tools: search_accounts, get_opportunity, update_deal_stage, create_activity
-- [ ] Add `packages/finance/src/finance_mcp_tools.mcp.ts` — MCP tools: get_invoice, record_payment, calculate_revenue, get_ar_aging
-- [ ] Add `packages/support/src/support_mcp_tools.mcp.ts` — MCP tools: search_cases, escalate_case, get_knowledge_article, suggest_resolution
-- [ ] Add `packages/hr/src/hr_mcp_tools.mcp.ts` — MCP tools: search_employees, get_org_chart, check_pto_balance, submit_request
-- [ ] Add `packages/marketing/src/marketing_mcp_tools.mcp.ts` — MCP tools: get_campaign_metrics, search_leads, get_engagement_data
-- [ ] Add `packages/products/src/products_mcp_tools.mcp.ts` — MCP tools: search_products, get_pricing, configure_bundle, calculate_quote
-- [ ] Validate all MCP tools with `MCPToolSchema.parse()` — 100% spec compliance
+- [x] Add `packages/crm/src/crm_mcp_tools.mcp.ts` — MCP tools: search_accounts, get_opportunity, update_deal_stage, create_activity
+- [x] Add `packages/finance/src/finance_mcp_tools.mcp.ts` — MCP tools: get_invoice, record_payment, calculate_revenue, get_ar_aging
+- [x] Add `packages/support/src/support_mcp_tools.mcp.ts` — MCP tools: search_cases, escalate_case, get_knowledge_article, suggest_resolution
+- [x] Add `packages/hr/src/hr_mcp_tools.mcp.ts` — MCP tools: search_employees, get_org_chart, check_pto_balance, submit_request
+- [x] Add `packages/marketing/src/marketing_mcp_tools.mcp.ts` — MCP tools: get_campaign_metrics, search_leads, get_engagement_data
+- [x] Add `packages/products/src/products_mcp_tools.mcp.ts` — MCP tools: search_products, get_pricing, configure_bundle, calculate_quote
+- [x] Validate all MCP tools with `MCPToolSchema.parse()` — 100% spec compliance
 
 #### 10.5B-3: MCP Resources & Prompts (MCPResourceSchema, MCPPromptSchema)
 
-- [ ] Add `packages/crm/src/crm_mcp_resources.mcp.ts` — MCP resources: account_list, pipeline_summary, forecast_data, territory_map
-- [ ] Add `packages/support/src/support_mcp_resources.mcp.ts` — MCP resources: knowledge_base, case_queue, sla_dashboard
-- [ ] Add `packages/ai/src/crm_prompts.mcp.ts` — MCP prompts: deal_analysis, customer_360_summary, next_best_action, win_loss_analysis
-- [ ] Add `packages/ai/src/support_prompts.mcp.ts` — MCP prompts: case_resolution_suggestion, customer_sentiment, escalation_assessment
-- [ ] Add `packages/ai/src/hr_prompts.mcp.ts` — MCP prompts: candidate_assessment, performance_review_draft, succession_analysis
-- [ ] Validate with `MCPResourceSchema.parse()` and `MCPPromptSchema.parse()` — 100% spec compliance
+- [x] Add `packages/crm/src/crm_mcp_resources.mcp.ts` — MCP resources: account_list, pipeline_summary, forecast_data, territory_map
+- [x] Add `packages/finance/src/finance_mcp_resources.mcp.ts` — MCP resources: invoice_aging_summary
+- [x] Add `packages/support/src/support_mcp_resources.mcp.ts` — MCP resources: knowledge_base, case_queue, sla_dashboard
+- [x] Add `packages/ai/src/crm_prompts.mcp.ts` — MCP prompts: deal_analysis, customer_360_summary, next_best_action, win_loss_analysis
+- [x] Add `packages/ai/src/support_prompts.mcp.ts` — MCP prompts: case_resolution_suggestion, customer_sentiment, escalation_assessment
+- [x] Add `packages/ai/src/hr_prompts.mcp.ts` — MCP prompts: candidate_assessment, performance_review_draft, succession_analysis
+- [x] Validate with `MCPResourceSchema.parse()` and `MCPPromptSchema.parse()` — 100% spec compliance
 
 #### 10.5B-4: AI Orchestration & Predictive Models (AIOrchestrationSchema, PredictiveModelSchema)
 
-- [ ] Add `packages/ai/src/sales_orchestration.orchestration.ts` — Multi-step AI: analyze pipeline → identify risks → generate recommendations → draft outreach
-- [ ] Add `packages/ai/src/support_orchestration.orchestration.ts` — Multi-step AI: classify case → search KB → suggest resolution → draft response
-- [ ] Add `packages/ai/src/lead_scoring.predictive.ts` — Predictive lead scoring model definition (features, weights, threshold, training config)
-- [ ] Add `packages/ai/src/churn_prediction.predictive.ts` — Churn prediction model definition (engagement signals, usage patterns, health score)
-- [ ] Add `packages/ai/src/deal_forecast.predictive.ts` — Deal win probability model definition (stage, activity, engagement, historical patterns)
-- [ ] Validate with `AIOrchestrationSchema.parse()` and `PredictiveModelSchema.parse()` — 100% spec compliance
+- [x] Add `packages/ai/src/sales_orchestration.orchestration.ts` — Multi-step AI: analyze pipeline → identify risks → generate recommendations → draft outreach
+- [x] Add `packages/ai/src/support_orchestration.orchestration.ts` — Multi-step AI: classify case → search KB → suggest resolution → draft response
+- [x] Add `packages/ai/src/lead_scoring.predictive.ts` — Predictive lead scoring model definition (features, weights, threshold, training config)
+- [x] Add `packages/ai/src/churn_prediction.predictive.ts` — Churn prediction model definition (engagement signals, usage patterns, health score)
+- [x] Add `packages/ai/src/deal_forecast.predictive.ts` — Deal win probability model definition (stage, activity, engagement, historical patterns)
+- [x] Validate with `AIOrchestrationSchema.parse()` and `PredictiveModelSchema.parse()` — 100% spec compliance
 
 #### 10.5B-5: Connector Metadata (ConnectorSchema from automation)
 
-- [ ] Add `packages/crm/src/email_connector.connector.ts` — Email connector metadata (Gmail, Outlook) for activity logging
-- [ ] Add `packages/finance/src/payment_connector.connector.ts` — Payment connector metadata (Stripe, PayPal) for invoice sync
-- [ ] Add `packages/marketing/src/social_connector.connector.ts` — Social media connector metadata (LinkedIn, Twitter) for campaign tracking
-- [ ] Validate with `ConnectorSchema.parse()` — 100% spec compliance
+- [x] Add `packages/crm/src/email_connector.connector.ts` — Email connector metadata (Gmail, Outlook) for activity logging
+- [x] Add `packages/finance/src/payment_connector.connector.ts` — Payment connector metadata (Stripe, PayPal) for invoice sync
+- [x] Add `packages/marketing/src/social_connector.connector.ts` — Social media connector metadata (LinkedIn, Twitter) for campaign tracking
+- [x] Validate with `ConnectorSchema.parse()` — 100% spec compliance
 
 ### Phase 10.5C: Enterprise Security & Notifications (Weeks 7-9) — P1
 
@@ -321,35 +322,35 @@ Q3 2026 Week 10-12 ████████  Phase 10.5D: Validation, Tests & Do
 
 #### 10.5C-1: Row-Level Security (RowLevelSecurityPolicySchema, RLSConfigSchema)
 
-- [ ] Add `packages/crm/src/crm_rls.security.ts` — CRM RLS: reps see own accounts/opportunities; managers see team; execs see all
-- [ ] Add `packages/finance/src/finance_rls.security.ts` — Finance RLS: accountants see assigned invoices; controllers see all; auditors read-only
-- [ ] Add `packages/support/src/support_rls.security.ts` — Support RLS: agents see assigned cases; supervisors see queue; admins see all
-- [ ] Add `packages/hr/src/hr_rls.security.ts` — HR RLS: employees see own records; managers see direct reports; HR sees all; payroll restricted
-- [ ] Validate with `RowLevelSecurityPolicySchema.parse()` — 100% spec compliance
+- [x] Add `packages/crm/src/crm_rls.security.ts` — CRM RLS: reps see own accounts/opportunities; managers see team; execs see all
+- [x] Add `packages/finance/src/finance_rls.security.ts` — Finance RLS: accountants see assigned invoices; controllers see all; auditors read-only
+- [x] Add `packages/support/src/support_rls.security.ts` — Support RLS: agents see assigned cases; supervisors see queue; admins see all
+- [x] Add `packages/hr/src/hr_rls.security.ts` — HR RLS: employees see own records; managers see direct reports; HR sees all; payroll restricted
+- [x] Validate with `RowLevelSecurityPolicySchema.parse()` — 100% spec compliance
 
 #### 10.5C-2: Security Policies (PolicySchema, PasswordPolicySchema, SessionPolicySchema)
 
-- [ ] Add `packages/core/src/password_policy.security.ts` — Password policy: min 12 chars, complexity rules, rotation every 90 days, no reuse of last 5
-- [ ] Add `packages/core/src/session_policy.security.ts` — Session policy: 8-hour timeout, max 3 concurrent sessions, re-auth for sensitive ops
-- [ ] Add `packages/core/src/security_policy.security.ts` — Composite security policy combining password, session, and audit policies
-- [ ] Validate with `PasswordPolicySchema.parse()`, `SessionPolicySchema.parse()`, `PolicySchema.parse()` — 100% spec compliance
+- [x] Add `packages/core/src/password_policy.security.ts` — Password policy: min 12 chars, complexity rules, rotation every 90 days, no reuse of last 5
+- [x] Add `packages/core/src/session_policy.security.ts` — Session policy: 8-hour timeout, max 3 concurrent sessions, re-auth for sensitive ops
+- [x] Add `packages/core/src/security_policy.security.ts` — Composite security policy combining password, session, and audit policies
+- [x] Validate with `PasswordPolicySchema.parse()`, `SessionPolicySchema.parse()`, `PolicySchema.parse()` — 100% spec compliance
 
 #### 10.5C-3: Email & Notification Templates (EmailTemplateSchema, NotificationChannelSchema)
 
-- [ ] Add `packages/crm/src/crm_email_templates.notification.ts` — Templates: welcome email, deal won notification, quote approval request, meeting reminder
-- [ ] Add `packages/finance/src/finance_email_templates.notification.ts` — Templates: invoice sent, payment received, payment overdue reminder, statement
-- [ ] Add `packages/support/src/support_email_templates.notification.ts` — Templates: case created confirmation, case resolved, CSAT survey, SLA warning
-- [ ] Add `packages/hr/src/hr_email_templates.notification.ts` — Templates: offer letter, onboarding welcome, PTO approved, performance review reminder
-- [ ] Add `packages/core/src/notification_channels.notification.ts` — Channel configuration: email (SMTP), SMS (Twilio), push (FCM/APNs), in-app (WebSocket)
-- [ ] Validate with `EmailTemplateSchema.parse()` and `NotificationChannelSchema.parse()` — 100% spec compliance
+- [x] Add `packages/crm/src/crm_email_templates.notification.ts` — Templates: welcome email, deal won notification, quote approval request, meeting reminder
+- [x] Add `packages/finance/src/finance_email_templates.notification.ts` — Templates: invoice sent, payment received, payment overdue reminder, statement
+- [x] Add `packages/support/src/support_email_templates.notification.ts` — Templates: case created confirmation, case resolved, CSAT survey, SLA warning
+- [x] Add `packages/hr/src/hr_email_templates.notification.ts` — Templates: offer letter, onboarding welcome, PTO approved, performance review reminder
+- [x] Add `packages/core/src/notification_channels.notification.ts` — Channel configuration: email (SMTP), SMS (Twilio), push (FCM/APNs), in-app (WebSocket)
+- [x] Validate with `EmailTemplateSchema.parse()` and `NotificationChannelSchema.parse()` — 100% spec compliance
 
 #### 10.5C-4: Scheduled Jobs (ScheduleSchema, JobSchema)
 
-- [ ] Add `packages/crm/src/crm_jobs.schedule.ts` — Scheduled jobs: daily forecast recalc, weekly pipeline digest, monthly territory rebalance
-- [ ] Add `packages/finance/src/finance_jobs.schedule.ts` — Scheduled jobs: daily revenue recognition, weekly AR aging update, monthly close tasks
-- [ ] Add `packages/support/src/support_jobs.schedule.ts` — Scheduled jobs: hourly SLA check, daily case assignment rebalance, weekly CSAT digest
-- [ ] Add `packages/marketing/src/marketing_jobs.schedule.ts` — Scheduled jobs: daily lead scoring refresh, weekly campaign report, hourly email queue processing
-- [ ] Validate with `ScheduleSchema.parse()` and `JobSchema.parse()` — 100% spec compliance
+- [x] Add `packages/crm/src/crm_jobs.schedule.ts` — Scheduled jobs: daily forecast recalc, weekly pipeline digest, monthly territory rebalance
+- [x] Add `packages/finance/src/finance_jobs.schedule.ts` — Scheduled jobs: daily revenue recognition, weekly AR aging update, monthly close tasks
+- [x] Add `packages/support/src/support_jobs.schedule.ts` — Scheduled jobs: hourly SLA check, daily case assignment rebalance, weekly CSAT digest
+- [x] Add `packages/marketing/src/marketing_jobs.schedule.ts` — Scheduled jobs: daily lead scoring refresh, weekly campaign report, hourly email queue processing
+- [x] Validate with `ScheduleSchema.parse()` and `JobSchema.parse()` — 100% spec compliance
 
 ### Phase 10.5D: Validation, Tests & Documentation (Weeks 10-12) — P1
 
@@ -357,30 +358,30 @@ Q3 2026 Week 10-12 ████████  Phase 10.5D: Validation, Tests & Do
 
 #### 10.5D-1: Spec-Compliance Tests
 
-- [ ] Add `packages/crm/__tests__/unit/metadata/reports.test.ts` — validate all CRM reports against ReportSchema
-- [ ] Add `packages/crm/__tests__/unit/metadata/advanced-views.test.ts` — validate Kanban, Calendar views against ListViewSchema
-- [ ] Add `packages/crm/__tests__/unit/metadata/charts.test.ts` — validate chart configs against ChartConfigSchema
-- [ ] Add `packages/crm/__tests__/unit/metadata/mcp-tools.test.ts` — validate MCP tools against MCPToolSchema
-- [ ] Add `packages/crm/__tests__/unit/metadata/flows.test.ts` — validate flows against FlowSchema
-- [ ] Add `packages/crm/__tests__/unit/metadata/rls.test.ts` — validate RLS policies against RowLevelSecurityPolicySchema
-- [ ] Add per-package spec-compliance tests for Finance, HR, Marketing, Products, Support metadata
-- [ ] Add `packages/core/__tests__/unit/metadata/security-policies.test.ts` — validate password/session/security policies
-- [ ] Add `packages/ai/__tests__/unit/metadata/orchestration.test.ts` — validate AI orchestrations and predictive models
-- [ ] Add `packages/ai/__tests__/unit/metadata/mcp-prompts.test.ts` — validate MCP prompts and resources
+- [x] Add `packages/crm/__tests__/unit/metadata/reports.test.ts` — validate all CRM reports against ReportSchema
+- [x] Add `packages/crm/__tests__/unit/metadata/advanced-views.test.ts` — validate Kanban, Calendar views against ListViewSchema
+- [x] Add `packages/crm/__tests__/unit/metadata/charts.test.ts` — validate chart configs against ChartConfigSchema
+- [x] Add `packages/crm/__tests__/unit/metadata/mcp-tools.test.ts` — validate MCP tools against MCPToolSchema
+- [x] Add `packages/crm/__tests__/unit/metadata/flows.test.ts` — validate flows against FlowSchema
+- [x] Add `packages/crm/__tests__/unit/metadata/rls.test.ts` — validate RLS policies against RowLevelSecurityPolicySchema
+- [x] Add per-package spec-compliance tests for Finance, HR, Marketing, Products, Support metadata
+- [x] Add `packages/core/__tests__/unit/metadata/security-policies.test.ts` — validate password/session/security policies
+- [x] Add `packages/ai/__tests__/unit/metadata/orchestration.test.ts` — validate AI orchestrations and predictive models
+- [x] Add `packages/ai/__tests__/unit/metadata/mcp-prompts.test.ts` — validate MCP prompts and resources
 
 #### 10.5D-2: Cross-Cloud Metadata Integration Tests
 
-- [ ] Test: CRM report → references Finance invoice data → validates cross-cloud report columns
-- [ ] Test: Support case escalation flow → triggers CRM notification → sends email template
-- [ ] Test: MCP tools across clouds → AI orchestration chains CRM + Finance + Support tools
-- [ ] Test: RLS policies → ensure permission sets + sharing rules + RLS compose correctly
+- [x] Test: CRM report → references Finance invoice data → validates cross-cloud report columns
+- [x] Test: Support case escalation flow → triggers CRM notification → sends email template
+- [x] Test: MCP tools across clouds → AI orchestration chains CRM + Finance + Support tools
+- [x] Test: RLS policies → ensure permission sets + sharing rules + RLS compose correctly
 
 #### 10.5D-3: Documentation
 
-- [ ] Update `docs/SALESFORCE_FEATURE_COMPARISON.md` with new metadata coverage (reports, flows, RLS, MCP)
-- [ ] Add `content/docs/guides/metadata-types.mdx` — complete guide to all metadata types used in HotCRM
-- [ ] Add `content/docs/guides/mcp-integration.mdx` — MCP tools, resources, and prompts guide
-- [ ] Update `README.md` and `content/docs/roadmap.mdx` with Phase 10.5 metrics
+- [x] Update `docs/SALESFORCE_FEATURE_COMPARISON.md` with new metadata coverage (reports, flows, RLS, MCP)
+- [x] Add `content/docs/guides/metadata-types.mdx` — complete guide to all metadata types used in HotCRM
+- [x] Add `content/docs/guides/mcp-integration.mdx` — MCP tools, resources, and prompts guide
+- [x] Update `README.md` and `content/docs/roadmap.mdx` with Phase 10.5 metrics
 
 ### Phase 10.5 Expected Outcomes
 
