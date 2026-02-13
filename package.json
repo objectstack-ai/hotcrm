@@ -17,6 +17,7 @@
     "build:support": "pnpm --filter @hotcrm/support build",
     "build:products": "pnpm --filter @hotcrm/products build",
     "build:finance": "pnpm --filter @hotcrm/finance build",
+    "build:msw": "bash scripts/build-msw.sh",
     "build:docs": "pnpm --filter @hotcrm/docs build",
     "lint": "pnpm -r --if-present lint",
     "test": "vitest run --passWithNoTests",
