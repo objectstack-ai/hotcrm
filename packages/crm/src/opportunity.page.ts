@@ -3,12 +3,16 @@ import { PageSchema } from '@objectstack/spec/ui';
 
 /**
  * Opportunity Detail Page Layout
+ * Leverages PageSchema features: isDefault, assignedProfiles, record:path, ai:suggestion, ai:chat_window.
  */
 export const OpportunityPage = {
   name: 'opportunity_detail',
   object: 'opportunity',
   type: 'record' as const,
   label: 'Opportunity Detail Page',
+  template: 'record_detail',
+  isDefault: true,
+  assignedProfiles: ['sales_rep', 'sales_manager', 'account_executive', 'admin'],
 
   regions: [
     {
@@ -18,6 +22,28 @@ export const OpportunityPage = {
           type: 'record:highlights' as const,
           properties: {
             fields: ['name', 'stage', 'amount', 'close_date', 'probability']
+          }
+        }
+      ]
+    },
+    {
+      name: 'path',
+      components: [
+        {
+          type: 'record:path' as const,
+          label: 'Sales Path',
+          properties: {}
+        }
+      ]
+    },
+    {
+      name: 'ai_insights',
+      components: [
+        {
+          type: 'ai:suggestion' as const,
+          label: 'Deal Insights',
+          properties: {
+            context: 'opportunity_coaching'
           }
         }
       ]
@@ -95,6 +121,18 @@ export const OpportunityPage = {
             object: 'quote',
             columns: ['quote_number', 'name', 'status', 'total_price', 'expiration_date'],
             actions: ['new', 'edit']
+          }
+        }
+      ]
+    },
+    {
+      name: 'ai_assistant',
+      components: [
+        {
+          type: 'ai:chat_window' as const,
+          label: 'Deal Coach',
+          properties: {
+            mode: 'sidebar'
           }
         }
       ]

@@ -9,6 +9,9 @@ export const ProductPage = {
   object: 'product',
   type: 'record' as const,
   label: 'Product Detail Page',
+  template: 'record_detail',
+  isDefault: true,
+  assignedProfiles: ['sales_rep', 'product_manager', 'admin'],
 
   regions: [
     {

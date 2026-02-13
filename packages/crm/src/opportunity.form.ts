@@ -3,10 +3,11 @@ import { FormViewSchema } from '@objectstack/spec/ui';
 
 /**
  * Opportunity Form Definition
- * Layout for creating and editing Opportunity records
+ * Tabbed layout for creating and editing Opportunity records.
+ * Leverages FormView features: tabbed layout, visibleOn, placeholder, helpText.
  */
 export const OpportunityForm = {
-  type: 'simple' as const,
+  type: 'tabbed' as const,
   data: {
     provider: 'object' as const,
     object: 'opportunity'
@@ -16,13 +17,13 @@ export const OpportunityForm = {
       label: 'Deal Information',
       columns: '2' as const,
       fields: [
-        { field: 'name', required: true },
+        { field: 'name', required: true, placeholder: 'Enter deal name' },
         { field: 'account_id', label: 'Account' },
         { field: 'contact_id', label: 'Contact' },
-        { field: 'amount' },
+        { field: 'amount', helpText: 'Total deal value in base currency' },
         { field: 'close_date', required: true },
         { field: 'stage', required: true },
-        { field: 'probability' },
+        { field: 'probability', readonly: true, helpText: 'Auto-calculated from stage' },
         { field: 'lead_source' },
         { field: 'type' }
       ]
@@ -31,9 +32,9 @@ export const OpportunityForm = {
       label: 'Forecast Details',
       columns: '2' as const,
       fields: [
-        { field: 'forecast_category' },
-        { field: 'expected_revenue' },
-        { field: 'next_step', colSpan: 2 }
+        { field: 'forecast_category', visibleOn: "stage != 'Prospecting'" },
+        { field: 'expected_revenue', readonly: true, helpText: 'Amount × Probability' },
+        { field: 'next_step', colSpan: 2, placeholder: 'Describe the next action to advance this deal' }
       ]
     }
   ]

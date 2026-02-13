@@ -10,6 +10,9 @@ export const TopicPage = {
   object: 'topic',
   type: 'record' as const,
   label: 'Topic Detail',
+  template: 'record_detail',
+  isDefault: true,
+  assignedProfiles: ['community_manager', 'admin'],
 
   regions: [
     {

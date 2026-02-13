@@ -9,6 +9,9 @@ export const ContractPage = {
   object: 'contract',
   type: 'record' as const,
   label: 'Contract Detail Page',
+  template: 'record_detail',
+  isDefault: true,
+  assignedProfiles: ['finance_analyst', 'finance_manager', 'admin'],
 
   regions: [
     {

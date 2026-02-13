@@ -6,6 +6,9 @@ const CampaignPage = {
   object: 'campaign',
   type: 'record' as const,
   label: 'Campaign Layout',
+  template: 'record_detail',
+  isDefault: true,
+  assignedProfiles: ['marketing_specialist', 'marketing_manager', 'admin'],
 
   regions: [
     {

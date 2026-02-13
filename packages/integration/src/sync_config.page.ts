@@ -10,6 +10,9 @@ export const SyncConfigPage = {
   object: 'sync_config',
   type: 'record' as const,
   label: 'Sync Configuration Detail Page',
+  template: 'record_detail',
+  isDefault: true,
+  assignedProfiles: ['integration_admin', 'admin'],
 
   regions: [
     {

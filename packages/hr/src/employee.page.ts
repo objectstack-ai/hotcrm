@@ -9,6 +9,9 @@ export const EmployeePage = {
   object: 'employee',
   type: 'record' as const,
   label: 'Employee Detail Page',
+  template: 'record_detail',
+  isDefault: true,
+  assignedProfiles: ['hr_specialist', 'hr_manager', 'admin'],
 
   regions: [
     {

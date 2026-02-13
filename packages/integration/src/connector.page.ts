@@ -10,6 +10,9 @@ export const ConnectorPage = {
   object: 'connector',
   type: 'record' as const,
   label: 'Connector Detail Page',
+  template: 'record_detail',
+  isDefault: true,
+  assignedProfiles: ['integration_admin', 'admin'],
 
   regions: [
     {

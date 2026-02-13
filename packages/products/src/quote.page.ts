@@ -9,6 +9,9 @@ export const QuotePage = {
   object: 'quote',
   type: 'record' as const,
   label: 'Quote Detail Page',
+  template: 'record_detail',
+  isDefault: true,
+  assignedProfiles: ['sales_rep', 'product_manager', 'admin'],
 
   regions: [
     {

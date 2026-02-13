@@ -3,7 +3,8 @@ import { FormViewSchema } from '@objectstack/spec/ui';
 
 /**
  * Case Form Definition
- * Layout for creating and editing Case records
+ * Layout for creating and editing Case records.
+ * Leverages FormView features: collapsible sections, widget, placeholder, helpText.
  */
 export const CaseForm = {
   type: 'simple' as const,
@@ -16,9 +17,9 @@ export const CaseForm = {
       label: 'Case Information',
       columns: '2' as const,
       fields: [
-        { field: 'subject', required: true },
+        { field: 'subject', required: true, placeholder: 'Brief summary of the issue' },
         { field: 'status', required: true },
-        { field: 'priority', required: true },
+        { field: 'priority', required: true, helpText: 'Determines SLA response time' },
         { field: 'severity' },
         { field: 'type' },
         { field: 'origin' },
@@ -28,17 +29,18 @@ export const CaseForm = {
     },
     {
       label: 'Description',
-      columns: '2' as const,
+      columns: '1' as const,
       fields: [
-        { field: 'description', colSpan: 2 }
+        { field: 'description', widget: 'richtext', placeholder: 'Describe the issue in detail' }
       ]
     },
     {
       label: 'Assignment',
       columns: '2' as const,
+      collapsible: true,
       fields: [
         { field: 'owner_id', label: 'Owner' },
-        { field: 'sla_level' }
+        { field: 'sla_level', readonly: true, helpText: 'Auto-determined from account SLA tier' }
       ]
     }
   ]

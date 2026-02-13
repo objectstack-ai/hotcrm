@@ -6,6 +6,9 @@ const InvoicePage = {
   object: 'invoice',
   type: 'record' as const,
   label: 'Invoice Layout',
+  template: 'record_detail',
+  isDefault: true,
+  assignedProfiles: ['finance_analyst', 'finance_manager', 'admin'],
 
   regions: [
     {
