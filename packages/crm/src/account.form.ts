@@ -18,7 +18,7 @@ export const AccountForm = {
       columns: '2' as const,
       fields: [
         { field: 'name', required: true, placeholder: 'Enter account name' },
-        { field: 'account_number', readonly: true, helpText: 'Auto-generated on save' },
+        { field: 'account_number', readonly: true, helpText: 'Auto-generated when the account is created' },
         { field: 'type' },
         { field: 'industry' },
         { field: 'phone', placeholder: '+1 (555) 000-0000' },
