@@ -127,14 +127,17 @@ const KPIAutoRefresh: Hook = {
 
     console.log(`⏰ Scheduling ${frequency} refresh for KPI "${kpi.name}"`);
 
+    // Log a scheduling activity — report_schedule requires a report reference,
+    // so KPI refresh scheduling is tracked via activity records instead.
     try {
-      await ctx.ql.doc.create('report_schedule', {
-        name: `KPI Refresh: ${kpi.name}`,
-        report_id: kpi._id,
-        frequency,
-        is_active: true,
-        next_run: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-        owner_id: kpi.owner_id
+      await ctx.ql.doc.create('activity', {
+        Subject: `KPI Refresh Scheduled: ${kpi.name}`,
+        Type: 'Schedule',
+        Status: 'open',
+        Priority: 'normal',
+        OwnerId: kpi.owner_id,
+        ActivityDate: new Date().toISOString().split('T')[0],
+        Description: `Auto-refresh scheduled for KPI "${kpi.name}" with ${frequency} frequency.`
       });
     } catch (error) {
       console.warn('⚠️ Failed to schedule KPI auto-refresh:', error);

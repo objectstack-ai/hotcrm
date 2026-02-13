@@ -112,14 +112,17 @@ const DashboardRefreshScheduling: Hook = {
 
     console.log(`⏰ Scheduling auto-refresh for dashboard ${dashboard._id} every ${interval}s`);
 
+    // Log a scheduling activity — report_schedule requires a report reference,
+    // so dashboard refresh scheduling is tracked via activity records instead.
     try {
-      await ctx.ql.doc.create('report_schedule', {
-        name: `Auto-refresh: ${dashboard.name}`,
-        report_id: dashboard._id,
-        frequency: interval <= 3600 ? 'daily' : 'weekly',
-        is_active: true,
-        next_run: new Date(Date.now() + interval * 1000).toISOString(),
-        owner_id: dashboard.owner_id
+      await ctx.ql.doc.create('activity', {
+        Subject: `Dashboard Refresh Scheduled: ${dashboard.name}`,
+        Type: 'Schedule',
+        Status: 'open',
+        Priority: 'normal',
+        OwnerId: dashboard.owner_id,
+        ActivityDate: new Date().toISOString().split('T')[0],
+        Description: `Auto-refresh scheduled for dashboard "${dashboard.name}" every ${interval} seconds.`
       });
     } catch (error) {
       console.warn('⚠️ Failed to schedule dashboard refresh:', error);
