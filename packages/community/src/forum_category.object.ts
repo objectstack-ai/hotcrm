@@ -6,7 +6,7 @@ export const ForumCategory = ObjectSchema.create({
   fields: {
     name: Field.text({ label: 'Category Name', required: true, maxLength: 255 }),
     description: Field.textarea({ label: 'Description' }),
-    parent_category_id: Field.lookup({ label: 'Parent Category', reference_to: 'forum_category' }),
+    parent_category_id: Field.lookup('forum_category', { label: 'Parent Category' }),
     sort_order: Field.number({ label: 'Sort Order', defaultValue: 0 }),
     icon: Field.text({ label: 'Icon', maxLength: 100 }),
     is_archived: Field.boolean({ label: 'Archived', defaultValue: false }),

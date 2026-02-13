@@ -18,6 +18,6 @@ export const Snapshot = ObjectSchema.create({
       ],
       defaultValue: 'pending'
     }),
-    owner_id: Field.lookup({ label: 'Owner', reference_to: 'users' })
+    owner_id: Field.lookup('users', { label: 'Owner' })
   }
 });

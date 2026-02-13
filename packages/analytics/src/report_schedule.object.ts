@@ -5,7 +5,7 @@ export const ReportSchedule = ObjectSchema.create({
   label: 'Report Schedule',
   fields: {
     name: Field.text({ label: 'Schedule Name', required: true, maxLength: 255 }),
-    report_id: Field.lookup({ label: 'Report', reference_to: 'report', required: true }),
+    report_id: Field.lookup('report', { label: 'Report', required: true }),
     frequency: Field.select({
       label: 'Frequency',
       required: true,
@@ -30,6 +30,6 @@ export const ReportSchedule = ObjectSchema.create({
     last_run: Field.datetime({ label: 'Last Run' }),
     timezone: Field.text({ label: 'Timezone', maxLength: 50, defaultValue: 'UTC' }),
     is_active: Field.boolean({ label: 'Active', defaultValue: true }),
-    owner_id: Field.lookup({ label: 'Owner', reference_to: 'users' })
+    owner_id: Field.lookup('users', { label: 'Owner' })
   }
 });

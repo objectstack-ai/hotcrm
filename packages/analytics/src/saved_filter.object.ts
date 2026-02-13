@@ -9,7 +9,7 @@ export const SavedFilter = ObjectSchema.create({
     object_name: Field.text({ label: 'Object Name', required: true, maxLength: 100 }),
     filter_conditions: Field.textarea({ label: 'Filter Conditions (JSON)', required: true, maxLength: 10000 }),
     is_global: Field.boolean({ label: 'Global Filter', defaultValue: false }),
-    created_by: Field.lookup({ label: 'Created By', reference_to: 'users' }),
+    created_by: Field.lookup('users', { label: 'Created By' }),
     usage_count: Field.number({ label: 'Usage Count', defaultValue: 0, min: 0 })
   }
 });

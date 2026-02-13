@@ -9,7 +9,7 @@ export const AnalyticsDashboard = ObjectSchema.create({
     widgets: Field.textarea({ label: 'Widgets (JSON)', maxLength: 20000 }),
     layout_config: Field.textarea({ label: 'Layout Config (JSON)', maxLength: 10000 }),
     refresh_interval: Field.number({ label: 'Refresh Interval (sec)', defaultValue: 300, min: 0 }),
-    owner_id: Field.lookup({ label: 'Owner', reference_to: 'users' }),
+    owner_id: Field.lookup('users', { label: 'Owner' }),
     shared_with: Field.textarea({ label: 'Shared With (JSON)', maxLength: 5000 }),
     is_default: Field.boolean({ label: 'Default Dashboard', defaultValue: false }),
     folder: Field.text({ label: 'Folder', maxLength: 255 }),

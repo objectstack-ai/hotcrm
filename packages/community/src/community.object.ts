@@ -29,6 +29,6 @@ export const Community = ObjectSchema.create({
     branding: Field.textarea({ label: 'Branding (JSON)' }),
     default_language: Field.text({ label: 'Default Language', defaultValue: 'en' }),
     max_members: Field.number({ label: 'Max Members', min: 0 }),
-    owner_id: Field.lookup({ label: 'Owner', reference_to: 'users' })
+    owner_id: Field.lookup('users', { label: 'Owner' })
   }
 });

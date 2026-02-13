@@ -6,8 +6,8 @@ export const Topic = ObjectSchema.create({
   fields: {
     title: Field.text({ label: 'Title', required: true, maxLength: 500 }),
     body: Field.textarea({ label: 'Body', required: true }),
-    category_id: Field.lookup({ label: 'Category', reference_to: 'forum_category', required: true }),
-    author_id: Field.lookup({ label: 'Author', reference_to: 'users', required: true }),
+    category_id: Field.lookup('forum_category', { label: 'Category', required: true }),
+    author_id: Field.lookup('users', { label: 'Author', required: true }),
     status: Field.select({
       label: 'Status',
       options: [
