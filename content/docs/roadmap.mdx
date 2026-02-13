@@ -5,9 +5,9 @@ description: Strategic direction and upcoming features for HotCRM — 2026 and b
 
 # HotCRM Roadmap
 
-HotCRM has completed **10 development phases**, establishing a full-featured, production-ready **6-Cloud CRM** with **94 business objects**, AI agent workflows, enterprise security, full UI metadata, Salesforce feature parity (~92%), and comprehensive developer tooling. Our roadmap now focuses on **ecosystem growth**, **vertical solutions**, and **advanced AI** for 2026–2027+.
+HotCRM has completed **10 development phases**, establishing a full-featured, production-ready **6-Cloud CRM** with **94 business objects**, AI agent workflows, enterprise security, full UI metadata, Salesforce feature parity (~92%), and comprehensive developer tooling. Our roadmap now focuses on **deep metadata adoption**, **ecosystem growth**, **vertical solutions**, and **advanced AI** for 2026–2027+.
 
-> **Protocol Version**: @objectstack/spec v3.0.0 | **Tests**: 1,759 passing (118 files) | **Last Updated**: February 2026
+> **Protocol Version**: @objectstack/spec v3.0.0 | **Tests**: 1,759 passing (118 files) | **Spec Schema Adoption**: 28 / ~80 (35%) | **Last Updated**: February 2026
 
 ---
 
@@ -15,9 +15,57 @@ HotCRM has completed **10 development phases**, establishing a full-featured, pr
 
 ```
 2025  ███████████████████████████████████████████████████████████  Foundation → AI → Quality → Test → Integration → Schema → v3.0 → UI → DX → Salesforce Parity
-2026  ██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  Ecosystem & Connectivity    ← YOU ARE HERE
+2026  ████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  Deep Metadata Adoption → Ecosystem & Connectivity    ← YOU ARE HERE
 2027  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  Vertical Solutions & Advanced AI
 ```
+
+---
+
+## 🔬 Phase 10.5: Deep Metadata Adoption (2026 Q2-Q3) ← NEXT
+
+Maximize @objectstack/spec schema adoption across existing 6 clouds before building new packages. Currently using **28 of ~80 application-level schemas (35%)**. This phase targets **69%** adoption.
+
+```
+Q2 2026 Week 1-3   ████████  Phase 10.5A: Reports, Advanced Views & Charts    (UI depth)
+Q2 2026 Week 4-6   ████████  Phase 10.5B: Flows, MCP Tools & AI Orchestration (Automation + AI)
+Q3 2026 Week 7-9   ████████  Phase 10.5C: Enterprise Security & Notifications (Security + System)
+Q3 2026 Week 10-12 ████████  Phase 10.5D: Validation, Tests & Documentation   (Hardening)
+```
+
+### Key New Schema Adoptions
+
+| Category | New Schemas | Business Value |
+|----------|------------|----------------|
+| **UI** | `ReportSchema`, `ListViewSchema` (Kanban/Calendar/Gantt), `ChartConfigSchema`, `ActionSchema`, `WidgetManifestSchema` | Reports, pipeline Kanban, revenue charts, quick actions, custom widgets |
+| **Automation** | `FlowSchema`, `ConnectorSchema` | Visual process flows (lead qual, deal close, onboarding), connector metadata |
+| **AI** | `MCPToolSchema`, `MCPResourceSchema`, `MCPPromptSchema`, `AIOrchestrationSchema`, `PredictiveModelSchema`, `ConversationSessionSchema` | Full MCP integration, multi-step AI workflows, ML model definitions |
+| **Security** | `RowLevelSecurityPolicySchema`, `PolicySchema`, `PasswordPolicySchema`, `SessionPolicySchema` | Enterprise data isolation, composable security policies |
+| **System** | `EmailTemplateSchema`, `NotificationChannelSchema`, `ScheduleSchema`, `JobSchema` | Communication templates, multi-channel notifications, scheduled tasks |
+
+### Metadata Evaluation Summary
+
+**Tier 1 (P0)**: Reports, Advanced Views, Charts, Flows, MCP Tools/Resources/Prompts, RLS, Email Templates, Notification Channels, Scheduled Jobs — **13 schemas**
+
+**Tier 2 (P1)**: UI Actions, Widgets, Themes, Responsive Config, ETL Pipelines, Data Sync, Password/Session/Network/Audit Policies, AI Orchestration, Predictive Models, Conversation Sessions, Multi-Agent Groups, AI Cost Analytics — **14 schemas**
+
+**Tier 3 (P2)**: Encryption, Masking, Compliance (GDPR/HIPAA/PCI), Multi-Tenancy, Tracing, Metrics, Feature Flags, Event Definitions, Rate Limiting, Circuit Breakers, DnD Config, Offline Config — **12 schemas**
+
+### Phase 10.5 Expected Outcomes
+
+| Metric | Before | After | Change |
+|--------|--------|-------|--------|
+| Application Schema Adoption | 28 / ~80 (35%) | ~55 / ~80 (69%) | +27 schemas |
+| Report Definitions | 0 | 8 | +8 reports |
+| Advanced Views (Kanban/Calendar/Gantt) | 0 | 6 | +6 views |
+| Chart Configurations | 0 | 6 | +6 charts |
+| Flow Definitions | 0 | 6 | +6 flows |
+| MCP Tools | 0 | ~24 | +24 tools |
+| MCP Resources + Prompts | 0 | ~18 | +18 |
+| RLS Policies | 0 | 4 | +4 policies |
+| Email Templates | 0 | ~16 | +16 templates |
+| Scheduled Jobs | 0 | ~12 | +12 jobs |
+
+> For the full metadata evaluation (gap analysis, tier breakdown, per-cloud plans), see the [detailed ROADMAP.md](https://github.com/objectstack-ai/hotcrm/blob/main/ROADMAP.md#metadata-type-evaluation).
 
 ---
 
@@ -82,11 +130,12 @@ Security, performance, documentation, and end-to-end integration testing for all
 
 ### Phase 11 Expected Outcomes
 
-| Metric | Before | After | Change |
+| Metric | Before (after 10.5) | After | Change |
 |--------|--------|-------|--------|
 | Business Objects | 94 | ~120 | +~26 |
 | Business Packages | 7 | 10 | +3 |
-| External Connectors | 0 | 10 | +10 |
+| Schema Adoption | ~55 / ~80 (69%) | ~65 / ~80 (81%) | +10 schemas |
+| External Connectors | 3 | 13 | +10 |
 | Salesforce Parity | ~92% | ~95% | +3% |
 
 ---

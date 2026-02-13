@@ -7,8 +7,9 @@
 
 ```
 2025       ████████████████████████████████  Phases 1-9: Foundation → AI → Quality → Test → Integration → Schema → v3.0 → UI → DX
-2026 Q1-Q2 ████████████████████████████████  Phase 10: Salesforce Feature Parity    ✅ COMPLETE
-2026 Q3-Q4 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  Phase 11: Ecosystem & Connectivity     ← NEXT
+2026 Q1-Q2 ████████████████████████████████  Phase 10: Salesforce Feature Parity      ✅ COMPLETE
+2026 Q2-Q3 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  Phase 10.5: Deep Metadata Adoption       ← NEXT
+2026 Q3-Q4 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  Phase 11: Ecosystem & Connectivity
 2027       ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  Phase 12: Vertical Solutions & Advanced AI
 ```
 
@@ -33,7 +34,7 @@
 | Test Files | 118 files, 1759 tests (all passing) |
 | TypeScript Compliance | 100% (zero type errors) |
 | Protocol Compliance | 100% (all objects pass ObjectSchema.create()) |
-| Spec Schema Adoption | ~25% (Phase 8 target met) |
+| Spec Schema Adoption | 28 of ~80 application-level schemas used (~35%) — see [Metadata Evaluation](#metadata-type-evaluation) |
 
 ---
 
@@ -69,7 +70,328 @@
 
 ---
 
-## Phase 11: Ecosystem & Connectivity (2026 Q3-Q4) ← NEXT
+## Metadata Type Evaluation
+
+> Comprehensive assessment of all @objectstack/spec application metadata types.
+> Goal: Identify high-value schemas not yet adopted and plan deep integration for Phase 10.5.
+
+### Assessment Methodology
+
+@objectstack/spec v3.0.0 exports **12 subpaths** with ~1,269 total schema types. Most are internal/transport schemas (API request/response envelopes, low-level configs). We focus on **~80 application-level metadata schemas** — the ones that define business configurations, UI layouts, automations, security policies, and AI capabilities.
+
+**Current adoption: 28 of ~80 application-level schemas (35%)**
+
+### Currently Adopted Schemas (28 types)
+
+| Subpath | Schema | Usage | Files |
+|---------|--------|-------|-------|
+| `spec/data` | `ObjectSchema` | Business object definitions | 84 |
+| `spec/data` | `Field` | Field type builders | 84 |
+| `spec/ui` | `PageSchema` | Record page layouts | 18 |
+| `spec/ui` | `ViewSchema` | List view configurations | 18 |
+| `spec/ui` | `FormViewSchema` | Form-based editing views | 7 |
+| `spec/ui` | `DashboardSchema` | Dashboard definitions | 11 |
+| `spec/ui` | `AppSchema` | Application configurations | 5 |
+| `spec/automation` | `WorkflowRuleSchema` | Workflow rule definitions | 8 |
+| `spec/automation` | `StateMachineSchema` | State machine definitions | 3 |
+| `spec/automation` | `ApprovalProcessSchema` | Approval workflows | 2 |
+| `spec/automation` | `TimeTriggerSchema` | Time-based triggers | 2 |
+| `spec/security` | `PermissionSetSchema` | Permission set definitions | 7 |
+| `spec/security` | `SharingRuleSchema` | Record sharing rules | 2 |
+| `spec/security` | `TerritoryModelSchema` | Territory model definitions | 2 |
+| `spec/security` | `TerritorySchema` | Territory configurations | 11 |
+| `spec/ai` | `AgentSchema` | AI agent definitions | 13 |
+| `spec/ai` | `MCPServerConfigSchema` | MCP server configuration | 7 |
+| `spec/ai` | `RAGPipelineConfigSchema` | RAG pipeline definitions | 9 |
+| `spec/ai` | `ModelRegistrySchema` | AI model registry | 6 |
+| `spec/ai` | `NLQRequestSchema` | Natural language query | 21 |
+| `spec/ai` | `NLQFieldMappingSchema` | NLQ field mappings | 21 |
+| `spec/kernel` | `PluginSchema` | Plugin definitions | 7 |
+| `spec/kernel` | `PluginCapabilityManifestSchema` | Plugin capabilities | 7 |
+| `spec/system` | `AuditConfigSchema` | Audit logging | 3 |
+| `spec/system` | `CacheConfigSchema` | Caching configuration | 4 |
+| `spec/system` | `NotificationConfigSchema` | Notification settings | 5 |
+| `spec/api` | `ApiEndpointRegistrationSchema` | API endpoint registration | 13 |
+| `spec/integration` | `WebhookConfigSchema` | Webhook definitions | 5 |
+| `spec/studio` | `StudioPluginManifestSchema` | Studio plugin metadata | 18 |
+
+### Gap Analysis: High-Value Unused Schemas
+
+#### Tier 1 — Critical for Enterprise CRM (P0)
+
+| Subpath | Schema | Business Value | CRM Justification |
+|---------|--------|---------------|-------------------|
+| `spec/ui` | `ReportSchema` | Reports with columns, groupings, charts | Every CRM requires saved report definitions; Salesforce's #1 feature |
+| `spec/ui` | `ListViewSchema` | Advanced list views (Kanban, Calendar, Gantt, Timeline) | Beyond basic views; Kanban for pipeline, Calendar for activities |
+| `spec/ui` | `ChartConfigSchema` | Standalone chart definitions | Revenue charts, pipeline funnels, trend lines |
+| `spec/automation` | `FlowSchema` | Visual flow/process definitions | Salesforce Flow equivalent; complex multi-step business processes |
+| `spec/automation` | `ConnectorSchema` | Connector metadata definitions | Integration connectors for Stripe, DocuSign, Slack |
+| `spec/security` | `RowLevelSecurityPolicySchema` | Row-level security (RLS) | Enterprise data isolation: reps see only their records |
+| `spec/security` | `PolicySchema` | Composable security policies | Unified security policy framework |
+| `spec/system` | `EmailTemplateSchema` | Email template definitions | Sales outreach, case notifications, marketing emails |
+| `spec/system` | `NotificationChannelSchema` | Multi-channel notification routing | Email + SMS + Push + In-app notification orchestration |
+| `spec/system` | `ScheduleSchema` / `JobSchema` | Scheduled task definitions | Report scheduling, data sync jobs, reminders |
+| `spec/ai` | `MCPToolSchema` | MCP tool definitions | Expose CRM actions as AI-callable tools |
+| `spec/ai` | `MCPResourceSchema` | MCP resource definitions | Expose CRM data as AI-readable resources |
+| `spec/ai` | `MCPPromptSchema` | MCP prompt templates | Pre-built AI prompts for sales, support, HR |
+
+#### Tier 2 — High Value for Competitive Differentiation (P1)
+
+| Subpath | Schema | Business Value | CRM Justification |
+|---------|--------|---------------|-------------------|
+| `spec/ui` | `ActionSchema` (UI) | UI action definitions with parameters | Quick actions: "Log a Call", "Convert Lead", "Send Quote" |
+| `spec/ui` | `WidgetManifestSchema` | Custom dashboard widget definitions | Extensible dashboard components for each Cloud |
+| `spec/ui` | `ThemeSchema` | Branding/theming configuration | White-label CRM with customer branding |
+| `spec/ui` | `ResponsiveConfigSchema` | Mobile-responsive layouts | Mobile CRM for field sales |
+| `spec/automation` | `ETLPipelineSchema` | ETL data pipeline definitions | Data import/export, migration, enrichment pipelines |
+| `spec/automation` | `DataSyncConfigSchema` | Data synchronization configuration | Bi-directional sync with external systems |
+| `spec/security` | `PasswordPolicySchema` | Password complexity rules | Enterprise security compliance |
+| `spec/security` | `SessionPolicySchema` | Session management policies | Timeout, concurrent session limits |
+| `spec/security` | `NetworkPolicySchema` | IP allowlist/blocklist | Enterprise network access control |
+| `spec/security` | `AuditPolicySchema` | Audit trail policies | SOC 2 / compliance audit requirements |
+| `spec/ai` | `AIOrchestrationSchema` | Multi-step AI task orchestration | Complex AI workflows: analyze → recommend → execute |
+| `spec/ai` | `PredictiveModelSchema` | ML model definitions | Lead scoring, churn prediction, forecasting models |
+| `spec/ai` | `ConversationSessionSchema` | Conversation/chat session management | AI copilot conversation context and history |
+| `spec/ai` | `MultiAgentGroupSchema` | Multi-agent coordination | Collaborative AI agents for complex tasks |
+| `spec/ai` | `CostAnalyticsSchema` | AI usage cost tracking | AI spend management per tenant/feature |
+
+#### Tier 3 — Platform Maturity & Future-Proofing (P2)
+
+| Subpath | Schema | Business Value | CRM Justification |
+|---------|--------|---------------|-------------------|
+| `spec/system` | `EncryptionConfigSchema` | Field-level encryption | PHI/PII protection for healthcare/finance verticals |
+| `spec/system` | `MaskingConfigSchema` | Data masking rules | Demo environments, developer access to prod data |
+| `spec/system` | `ComplianceConfigSchema` | GDPR/HIPAA/PCI-DSS configs | Regulatory compliance for vertical solutions |
+| `spec/system` | `TenantSchema` | Multi-tenancy definitions | SaaS multi-tenant deployment |
+| `spec/system` | `TracingConfigSchema` | Distributed tracing | Performance monitoring, debugging |
+| `spec/system` | `MetricsConfigSchema` | Business metrics definitions | Operational KPIs, SLAs |
+| `spec/kernel` | `EventSchema` | Domain event definitions | Event-driven architecture, CDC |
+| `spec/kernel` | `FeatureFlagSchema` | Feature flag management | Gradual rollouts, A/B testing |
+| `spec/integration` | `ConnectorSchema` (integration) | External connector definitions | Structured connector metadata |
+| `spec/integration` | `RateLimitConfigSchema` | Rate limiting configuration | API abuse prevention |
+| `spec/integration` | `CircuitBreakerConfigSchema` | Circuit breaker patterns | Resilient external integrations |
+| `spec/ui` | `DndConfigSchema` | Drag-and-drop configuration | Pipeline drag-and-drop, dashboard layout editing |
+| `spec/ui` | `OfflineConfigSchema` | Offline-first configuration | Field sales offline CRM |
+| `spec/ui` | `NotificationSchema` (UI) | In-app notification definitions | Real-time in-app alerts and toasts |
+
+### Impact Assessment
+
+| Metric | Current | After Phase 10.5 | After Phase 11 |
+|--------|---------|-------------------|----------------|
+| Application Schema Adoption | 28 / ~80 (35%) | ~55 / ~80 (69%) | ~65 / ~80 (81%) |
+| UI Metadata Types | 5 (Page, View, Form, Dashboard, App) | 10 (+Report, ListViewAdv, Chart, Action, Widget) | 12 (+Theme, Responsive) |
+| Automation Types | 4 (Workflow, StateMachine, Approval, TimeTrigger) | 7 (+Flow, Connector, ETL) | 8 (+DataSync) |
+| Security Types | 4 (Permission, Sharing, Territory, TerritoryModel) | 8 (+RLS, Policy, Password, Session) | 10 (+Network, Audit) |
+| AI Types | 6 (Agent, MCP, RAG, ModelRegistry, NLQ×2) | 12 (+MCPTool, MCPResource, MCPPrompt, Orchestration, Predictive, Conversation) | 14 (+MultiAgent, Cost) |
+| System Types | 3 (Audit, Cache, Notification) | 7 (+Email, NotifChannel, Schedule, Job) | 10 (+Encryption, Masking, Compliance) |
+
+---
+
+## Phase 10.5: Deep Metadata Adoption (2026 Q2-Q3) ← NEXT
+
+> Maximize adoption of @objectstack/spec application-level metadata types before building new packages.
+> This phase deepens the metadata foundation across existing 6 business clouds, making each cloud richer and more enterprise-ready without adding new objects.
+>
+> **Goal**: Raise spec schema adoption from 35% → 69% by adopting 27 additional high-value schemas.
+
+### Phase 10.5 Timeline
+
+```
+Q2 2026 Week 1-3   ████████  Phase 10.5A: Reports, Advanced Views & Charts   (UI depth)
+Q2 2026 Week 4-6   ████████  Phase 10.5B: Flows, MCP Tools & AI Orchestration (Automation + AI depth)
+Q3 2026 Week 7-9   ████████  Phase 10.5C: Enterprise Security & Notifications (Security + System depth)
+Q3 2026 Week 10-12 ████████  Phase 10.5D: Validation, Tests & Documentation   (Hardening)
+```
+
+### Phase 10.5A: Reports, Advanced Views & Charts (Weeks 1-3) — P0
+
+> Goal: Add ReportSchema, advanced ListViewSchema, ChartConfigSchema, UI ActionSchema, and WidgetManifestSchema across all 6 clouds.
+
+#### 10.5A-1: Report Definitions (ReportSchema)
+
+- [ ] Add `packages/crm/src/pipeline_report.report.ts` — Sales pipeline report (stage breakdown, win rate, average deal size)
+- [ ] Add `packages/crm/src/forecast_report.report.ts` — Revenue forecast report (by period, rep, territory)
+- [ ] Add `packages/finance/src/revenue_report.report.ts` — Revenue recognition report (ASC 606 compliance, deferred/recognized)
+- [ ] Add `packages/finance/src/ar_aging_report.report.ts` — Accounts receivable aging report
+- [ ] Add `packages/hr/src/headcount_report.report.ts` — Headcount analytics (by department, location, tenure)
+- [ ] Add `packages/marketing/src/campaign_roi_report.report.ts` — Campaign ROI report (spend vs revenue, attribution)
+- [ ] Add `packages/products/src/product_mix_report.report.ts` — Product mix analysis (revenue by product, discount analysis)
+- [ ] Add `packages/support/src/case_volume_report.report.ts` — Case volume report (by priority, category, SLA compliance)
+- [ ] Validate all reports with `ReportSchema.parse()` — 100% spec compliance
+
+#### 10.5A-2: Advanced List Views (ListViewSchema with Kanban, Calendar, Gantt, Timeline)
+
+- [ ] Add `packages/crm/src/opportunity_kanban.view.ts` — Kanban view for opportunity pipeline (drag across stages)
+- [ ] Add `packages/crm/src/activity_calendar.view.ts` — Calendar view for tasks and events
+- [ ] Add `packages/hr/src/recruitment_kanban.view.ts` — Kanban view for candidate pipeline
+- [ ] Add `packages/support/src/case_kanban.view.ts` — Kanban view for case triage (by priority/status)
+- [ ] Add `packages/marketing/src/campaign_timeline.view.ts` — Timeline view for campaign schedules
+- [ ] Add `packages/products/src/quote_gantt.view.ts` — Gantt view for quote approval workflow timeline
+- [ ] Validate all views with `ListViewSchema.parse()` or `ViewSchema.parse()` — 100% spec compliance
+
+#### 10.5A-3: Chart Configurations (ChartConfigSchema)
+
+- [ ] Add `packages/crm/src/pipeline_funnel.chart.ts` — Sales funnel chart (Lead → Qualified → Proposal → Closed)
+- [ ] Add `packages/crm/src/revenue_trend.chart.ts` — Monthly revenue trend line chart
+- [ ] Add `packages/finance/src/cash_flow.chart.ts` — Cash flow waterfall chart
+- [ ] Add `packages/support/src/case_resolution.chart.ts` — Case resolution time distribution chart
+- [ ] Add `packages/marketing/src/channel_performance.chart.ts` — Marketing channel performance bar chart
+- [ ] Add `packages/hr/src/attrition_trend.chart.ts` — Employee attrition trend chart
+- [ ] Validate all charts with `ChartConfigSchema.parse()` — 100% spec compliance
+
+#### 10.5A-4: UI Actions & Widgets (ActionSchema, WidgetManifestSchema)
+
+- [ ] Add `packages/crm/src/crm_actions.action_ui.ts` — Quick actions: "Log a Call", "Convert Lead", "Create Follow-up Task", "Send Quote"
+- [ ] Add `packages/finance/src/finance_actions.action_ui.ts` — Quick actions: "Create Invoice", "Record Payment", "Send Reminder"
+- [ ] Add `packages/support/src/support_actions.action_ui.ts` — Quick actions: "Escalate Case", "Merge Cases", "Create Knowledge Article"
+- [ ] Add `packages/crm/src/pipeline_widget.widget.ts` — Pipeline summary widget (total value, count by stage, trend)
+- [ ] Add `packages/support/src/sla_widget.widget.ts` — SLA compliance widget (met/breached/at-risk counts)
+- [ ] Add `packages/hr/src/headcount_widget.widget.ts` — Headcount widget (total, new hires, departures this month)
+- [ ] Validate all actions with `ActionSchema.parse()` and widgets with `WidgetManifestSchema.parse()` — 100% spec compliance
+
+### Phase 10.5B: Flows, MCP Tools & AI Orchestration (Weeks 4-6) — P0
+
+> Goal: Add FlowSchema for visual process automation, full MCP tool/resource/prompt definitions, and AIOrchestrationSchema.
+
+#### 10.5B-1: Flow Definitions (FlowSchema)
+
+- [ ] Add `packages/crm/src/lead_qualification.flow.ts` — Lead qualification flow (score → route → assign → notify)
+- [ ] Add `packages/crm/src/deal_close.flow.ts` — Deal close flow (approval → contract → invoice → handoff to support)
+- [ ] Add `packages/finance/src/invoice_collection.flow.ts` — Invoice collection flow (send → remind → escalate → write-off)
+- [ ] Add `packages/hr/src/onboarding.flow.ts` — Employee onboarding flow (offer → docs → IT setup → training → 30-day check-in)
+- [ ] Add `packages/support/src/case_escalation.flow.ts` — Case escalation flow (SLA breach → notify manager → reassign → exec alert)
+- [ ] Add `packages/marketing/src/lead_nurture.flow.ts` — Lead nurture flow (subscribe → drip emails → score → MQL handoff)
+- [ ] Validate all flows with `FlowSchema.parse()` — 100% spec compliance
+
+#### 10.5B-2: MCP Tool Definitions (MCPToolSchema)
+
+- [ ] Add `packages/crm/src/crm_mcp_tools.mcp.ts` — MCP tools: search_accounts, get_opportunity, update_deal_stage, create_activity
+- [ ] Add `packages/finance/src/finance_mcp_tools.mcp.ts` — MCP tools: get_invoice, record_payment, calculate_revenue, get_ar_aging
+- [ ] Add `packages/support/src/support_mcp_tools.mcp.ts` — MCP tools: search_cases, escalate_case, get_knowledge_article, suggest_resolution
+- [ ] Add `packages/hr/src/hr_mcp_tools.mcp.ts` — MCP tools: search_employees, get_org_chart, check_pto_balance, submit_request
+- [ ] Add `packages/marketing/src/marketing_mcp_tools.mcp.ts` — MCP tools: get_campaign_metrics, search_leads, get_engagement_data
+- [ ] Add `packages/products/src/products_mcp_tools.mcp.ts` — MCP tools: search_products, get_pricing, configure_bundle, calculate_quote
+- [ ] Validate all MCP tools with `MCPToolSchema.parse()` — 100% spec compliance
+
+#### 10.5B-3: MCP Resources & Prompts (MCPResourceSchema, MCPPromptSchema)
+
+- [ ] Add `packages/crm/src/crm_mcp_resources.mcp.ts` — MCP resources: account_list, pipeline_summary, forecast_data, territory_map
+- [ ] Add `packages/support/src/support_mcp_resources.mcp.ts` — MCP resources: knowledge_base, case_queue, sla_dashboard
+- [ ] Add `packages/ai/src/crm_prompts.mcp.ts` — MCP prompts: deal_analysis, customer_360_summary, next_best_action, win_loss_analysis
+- [ ] Add `packages/ai/src/support_prompts.mcp.ts` — MCP prompts: case_resolution_suggestion, customer_sentiment, escalation_assessment
+- [ ] Add `packages/ai/src/hr_prompts.mcp.ts` — MCP prompts: candidate_assessment, performance_review_draft, succession_analysis
+- [ ] Validate with `MCPResourceSchema.parse()` and `MCPPromptSchema.parse()` — 100% spec compliance
+
+#### 10.5B-4: AI Orchestration & Predictive Models (AIOrchestrationSchema, PredictiveModelSchema)
+
+- [ ] Add `packages/ai/src/sales_orchestration.orchestration.ts` — Multi-step AI: analyze pipeline → identify risks → generate recommendations → draft outreach
+- [ ] Add `packages/ai/src/support_orchestration.orchestration.ts` — Multi-step AI: classify case → search KB → suggest resolution → draft response
+- [ ] Add `packages/ai/src/lead_scoring.predictive.ts` — Predictive lead scoring model definition (features, weights, threshold, training config)
+- [ ] Add `packages/ai/src/churn_prediction.predictive.ts` — Churn prediction model definition (engagement signals, usage patterns, health score)
+- [ ] Add `packages/ai/src/deal_forecast.predictive.ts` — Deal win probability model definition (stage, activity, engagement, historical patterns)
+- [ ] Validate with `AIOrchestrationSchema.parse()` and `PredictiveModelSchema.parse()` — 100% spec compliance
+
+#### 10.5B-5: Connector Metadata (ConnectorSchema from automation)
+
+- [ ] Add `packages/crm/src/email_connector.connector.ts` — Email connector metadata (Gmail, Outlook) for activity logging
+- [ ] Add `packages/finance/src/payment_connector.connector.ts` — Payment connector metadata (Stripe, PayPal) for invoice sync
+- [ ] Add `packages/marketing/src/social_connector.connector.ts` — Social media connector metadata (LinkedIn, Twitter) for campaign tracking
+- [ ] Validate with `ConnectorSchema.parse()` — 100% spec compliance
+
+### Phase 10.5C: Enterprise Security & Notifications (Weeks 7-9) — P1
+
+> Goal: Add row-level security, security policies, email templates, notification channels, and scheduled jobs.
+
+#### 10.5C-1: Row-Level Security (RowLevelSecurityPolicySchema, RLSConfigSchema)
+
+- [ ] Add `packages/crm/src/crm_rls.security.ts` — CRM RLS: reps see own accounts/opportunities; managers see team; execs see all
+- [ ] Add `packages/finance/src/finance_rls.security.ts` — Finance RLS: accountants see assigned invoices; controllers see all; auditors read-only
+- [ ] Add `packages/support/src/support_rls.security.ts` — Support RLS: agents see assigned cases; supervisors see queue; admins see all
+- [ ] Add `packages/hr/src/hr_rls.security.ts` — HR RLS: employees see own records; managers see direct reports; HR sees all; payroll restricted
+- [ ] Validate with `RowLevelSecurityPolicySchema.parse()` — 100% spec compliance
+
+#### 10.5C-2: Security Policies (PolicySchema, PasswordPolicySchema, SessionPolicySchema)
+
+- [ ] Add `packages/core/src/password_policy.security.ts` — Password policy: min 12 chars, complexity rules, rotation every 90 days, no reuse of last 5
+- [ ] Add `packages/core/src/session_policy.security.ts` — Session policy: 8-hour timeout, max 3 concurrent sessions, re-auth for sensitive ops
+- [ ] Add `packages/core/src/security_policy.security.ts` — Composite security policy combining password, session, and audit policies
+- [ ] Validate with `PasswordPolicySchema.parse()`, `SessionPolicySchema.parse()`, `PolicySchema.parse()` — 100% spec compliance
+
+#### 10.5C-3: Email & Notification Templates (EmailTemplateSchema, NotificationChannelSchema)
+
+- [ ] Add `packages/crm/src/crm_email_templates.notification.ts` — Templates: welcome email, deal won notification, quote approval request, meeting reminder
+- [ ] Add `packages/finance/src/finance_email_templates.notification.ts` — Templates: invoice sent, payment received, payment overdue reminder, statement
+- [ ] Add `packages/support/src/support_email_templates.notification.ts` — Templates: case created confirmation, case resolved, CSAT survey, SLA warning
+- [ ] Add `packages/hr/src/hr_email_templates.notification.ts` — Templates: offer letter, onboarding welcome, PTO approved, performance review reminder
+- [ ] Add `packages/core/src/notification_channels.notification.ts` — Channel configuration: email (SMTP), SMS (Twilio), push (FCM/APNs), in-app (WebSocket)
+- [ ] Validate with `EmailTemplateSchema.parse()` and `NotificationChannelSchema.parse()` — 100% spec compliance
+
+#### 10.5C-4: Scheduled Jobs (ScheduleSchema, JobSchema)
+
+- [ ] Add `packages/crm/src/crm_jobs.schedule.ts` — Scheduled jobs: daily forecast recalc, weekly pipeline digest, monthly territory rebalance
+- [ ] Add `packages/finance/src/finance_jobs.schedule.ts` — Scheduled jobs: daily revenue recognition, weekly AR aging update, monthly close tasks
+- [ ] Add `packages/support/src/support_jobs.schedule.ts` — Scheduled jobs: hourly SLA check, daily case assignment rebalance, weekly CSAT digest
+- [ ] Add `packages/marketing/src/marketing_jobs.schedule.ts` — Scheduled jobs: daily lead scoring refresh, weekly campaign report, hourly email queue processing
+- [ ] Validate with `ScheduleSchema.parse()` and `JobSchema.parse()` — 100% spec compliance
+
+### Phase 10.5D: Validation, Tests & Documentation (Weeks 10-12) — P1
+
+> Goal: Comprehensive test coverage, spec-compliance validation, and documentation for all new metadata.
+
+#### 10.5D-1: Spec-Compliance Tests
+
+- [ ] Add `packages/crm/__tests__/unit/metadata/reports.test.ts` — validate all CRM reports against ReportSchema
+- [ ] Add `packages/crm/__tests__/unit/metadata/advanced-views.test.ts` — validate Kanban, Calendar views against ListViewSchema
+- [ ] Add `packages/crm/__tests__/unit/metadata/charts.test.ts` — validate chart configs against ChartConfigSchema
+- [ ] Add `packages/crm/__tests__/unit/metadata/mcp-tools.test.ts` — validate MCP tools against MCPToolSchema
+- [ ] Add `packages/crm/__tests__/unit/metadata/flows.test.ts` — validate flows against FlowSchema
+- [ ] Add `packages/crm/__tests__/unit/metadata/rls.test.ts` — validate RLS policies against RowLevelSecurityPolicySchema
+- [ ] Add per-package spec-compliance tests for Finance, HR, Marketing, Products, Support metadata
+- [ ] Add `packages/core/__tests__/unit/metadata/security-policies.test.ts` — validate password/session/security policies
+- [ ] Add `packages/ai/__tests__/unit/metadata/orchestration.test.ts` — validate AI orchestrations and predictive models
+- [ ] Add `packages/ai/__tests__/unit/metadata/mcp-prompts.test.ts` — validate MCP prompts and resources
+
+#### 10.5D-2: Cross-Cloud Metadata Integration Tests
+
+- [ ] Test: CRM report → references Finance invoice data → validates cross-cloud report columns
+- [ ] Test: Support case escalation flow → triggers CRM notification → sends email template
+- [ ] Test: MCP tools across clouds → AI orchestration chains CRM + Finance + Support tools
+- [ ] Test: RLS policies → ensure permission sets + sharing rules + RLS compose correctly
+
+#### 10.5D-3: Documentation
+
+- [ ] Update `docs/SALESFORCE_FEATURE_COMPARISON.md` with new metadata coverage (reports, flows, RLS, MCP)
+- [ ] Add `content/docs/guides/metadata-types.mdx` — complete guide to all metadata types used in HotCRM
+- [ ] Add `content/docs/guides/mcp-integration.mdx` — MCP tools, resources, and prompts guide
+- [ ] Update `README.md` and `content/docs/roadmap.mdx` with Phase 10.5 metrics
+
+### Phase 10.5 Expected Outcomes
+
+| Metric | Before Phase 10.5 | After Phase 10.5 | Change |
+|--------|-------------------|-------------------|--------|
+| Application Schema Adoption | 28 / ~80 (35%) | ~55 / ~80 (69%) | +27 schemas (+34%) |
+| Report Definitions | 0 | 8 (one per cloud + cross-cloud) | +8 reports |
+| Advanced Views (Kanban/Calendar/Gantt) | 0 | 6 | +6 advanced views |
+| Chart Configurations | 0 | 6 | +6 charts |
+| Flow Definitions | 0 | 6 (one per cloud) | +6 flows |
+| MCP Tools | 0 | ~24 tools across 6 clouds | +24 tools |
+| MCP Resources | 0 | ~8 resources | +8 resources |
+| MCP Prompts | 0 | ~10 prompts | +10 prompts |
+| AI Orchestrations | 0 | 2 (sales, support) | +2 orchestrations |
+| Predictive Models | 0 | 3 (lead scoring, churn, deal forecast) | +3 models |
+| RLS Policies | 0 | 4 (one per major cloud) | +4 policies |
+| Security Policies | 0 | 3 (password, session, composite) | +3 policies |
+| Email Templates | 0 | ~16 (4 per cloud) | +16 templates |
+| Notification Channels | 0 | 4 (email, SMS, push, in-app) | +4 channels |
+| Scheduled Jobs | 0 | ~12 (3 per cloud) | +12 jobs |
+| UI Actions | 0 | ~10 quick actions | +10 actions |
+| Dashboard Widgets | 0 | 3 custom widgets | +3 widgets |
+| Connector Metadata | 0 | 3 (email, payment, social) | +3 connectors |
+| Test Files | 118 | ~135 | +~17 test files |
+
+---
+
+## Phase 11: Ecosystem & Connectivity (2026 Q3-Q4)
 
 > Connecting HotCRM to external tools, building new business packages, and establishing the integration layer. This phase adds 3 new packages and 10+ external connectors.
 >
@@ -307,14 +629,15 @@ Each connector includes: `*.action.ts` (API operations), `*.hook.ts` (event mapp
 
 ### Phase 11 Expected Outcomes
 
-| Metric | Before Phase 11 | After Phase 11 | Change |
+| Metric | Before Phase 11 (after 10.5) | After Phase 11 | Change |
 |--------|---------|----------------|--------|
 | Business Objects | 94 | ~120 | +~26 objects |
 | Business Packages | 7 (CRM, Finance, HR, Marketing, Products, Support, AI) | 10 (+Analytics, Integration, Community) | +3 packages |
-| External Connectors | 0 | 10 | +10 connectors |
+| Application Schema Adoption | ~55 / ~80 (69%) | ~65 / ~80 (81%) | +10 schemas |
+| External Connectors | 3 (from 10.5) | 13 | +10 connectors |
 | Hooks | 71 | ~90 | +~19 hooks |
 | Actions | 32 | ~45 | +~13 actions |
-| Test Files | 118 | ~145 | +~27 test files |
+| Test Files | ~135 | ~162 | +~27 test files |
 | Salesforce Parity | ~92% | ~95% | +3% (reporting, integration) |
 
 ---
@@ -471,6 +794,7 @@ Each connector includes: `*.action.ts` (API operations), `*.hook.ts` (event mapp
 
 | Date | From | To | Breaking Changes | Tests |
 |------|------|----|-----------------|-------|
+| 2026-02-13 | v3.0.0 | v3.0.0 | None (Metadata evaluation: assessed all @objectstack/spec schemas, identified 27 high-value unused types, added Phase 10.5 Deep Metadata Adoption roadmap) | 1759 ✅ |
 | 2026-02-12 | v3.0.0 | v3.0.0 | None (Phase 10: Salesforce Feature Parity — +25 objects, cross-cloud lifecycle, forecast/territory/journey/subscription/order models) | 1759 ✅ |
 | 2026-02-12 | v3.0.0 | v3.0.0 | None (Phase 9: DX — DEVELOPMENT_WORKFLOW.md, ARCHITECTURE.md, link-check CI, pnpm typecheck/test:changed/stats, README badges and Mermaid diagram, metrics sync) | 1629 ✅ |
 | 2026-02-12 | v3.0.0 | v3.0.0 | None (Phase 9: DX audit — fixed 20+ broken README links, updated stats, CONTRIBUTING.md pnpm migration) | 1629 ✅ |
