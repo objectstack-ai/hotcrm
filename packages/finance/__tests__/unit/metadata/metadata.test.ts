@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { MCPToolSchema } from '@objectstack/spec/ai';
+import { MCPToolSchema, MCPResourceSchema } from '@objectstack/spec/ai';
 import { FlowSchema, ConnectorSchema } from '@objectstack/spec/automation';
 import { RowLevelSecurityPolicySchema } from '@objectstack/spec/security';
 import { EmailTemplateSchema, JobSchema } from '@objectstack/spec/system';
@@ -10,6 +10,9 @@ import {
   CalculateRevenueTool,
   GetArAgingTool,
 } from '../../../src/finance_mcp_tools.mcp';
+import {
+  InvoiceAgingSummaryResource,
+} from '../../../src/finance_mcp_resources.mcp';
 import { InvoiceCollectionFlow } from '../../../src/invoice_collection.flow';
 import {
   FinanceAccountantAccess,
@@ -57,6 +60,30 @@ describe('Finance MCP Tools Metadata Compliance', () => {
 
     it('should validate against MCPToolSchema', () => {
       expect(() => MCPToolSchema.parse(tool)).not.toThrow();
+    });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// MCP Resources
+// ---------------------------------------------------------------------------
+
+describe('Finance MCP Resources Metadata Compliance', () => {
+  const resources = [
+    { name: 'InvoiceAgingSummaryResource', resource: InvoiceAgingSummaryResource },
+  ];
+
+  it('should export a collection of resources', () => {
+    expect(resources.length).toBeGreaterThan(0);
+  });
+
+  describe.each(resources)('$name', ({ resource }) => {
+    it('should be defined', () => {
+      expect(resource).toBeDefined();
+    });
+
+    it('should validate against MCPResourceSchema', () => {
+      expect(() => MCPResourceSchema.parse(resource)).not.toThrow();
     });
   });
 });
