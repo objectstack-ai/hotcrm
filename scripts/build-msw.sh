@@ -45,7 +45,7 @@ cp dist/objectstack.json "$OUT_DIR"/objectstack.json
 #    When vercel build detects .vercel/output it uses it directly, which
 #    guarantees the SPA rewrite rule is included in the deployment config.
 VERCEL_OUT=".vercel/output"
-rm -rf "$VERCEL_OUT"
+rm -rf "${VERCEL_OUT:?}"
 mkdir -p "$VERCEL_OUT/static"
 cp -r "$OUT_DIR"/* "$VERCEL_OUT/static"/
 
