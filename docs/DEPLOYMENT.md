@@ -235,9 +235,9 @@ vercel
 | Field | Value | Purpose |
 |-------|-------|---------|
 | `buildCommand` | `pnpm -w run build:msw` | Compiles metadata and assembles the Studio SPA |
-| `outputDirectory` | `dist/studio` | Static files served by Vercel |
 | `installCommand` | `pnpm install` | Installs all workspace dependencies |
-| `rewrites` | `/* → /index.html` | SPA client-side routing (excludes static assets) |
+
+The build script produces a [Vercel Build Output API v3](https://vercel.com/docs/build-output-api/v3) structure in `.vercel/output/` with SPA routing (all non-static-file requests are rewritten to `/index.html`).
 
 ### Limitations
 

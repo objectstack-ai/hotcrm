@@ -41,6 +41,24 @@ cp -r "$STUDIO_PKG"/* "$OUT_DIR"/
 # 4. Place compiled metadata where Studio expects it
 cp dist/objectstack.json "$OUT_DIR"/objectstack.json
 
+# 5. Produce Vercel Build Output API v3 structure
+#    When vercel build detects .vercel/output it uses it directly, which
+#    guarantees the SPA rewrite rule is included in the deployment config.
+VERCEL_OUT=".vercel/output"
+rm -rf "${VERCEL_OUT:?}"
+mkdir -p "$VERCEL_OUT/static"
+cp -r "$OUT_DIR"/* "$VERCEL_OUT/static"/
+
+cat > "$VERCEL_OUT/config.json" << 'VERCEL_CONFIG'
+{
+  "version": 3,
+  "routes": [
+    { "handle": "filesystem" },
+    { "src": "/(.*)", "dest": "/index.html" }
+  ]
+}
+VERCEL_CONFIG
+
 echo ""
 echo "✓ MSW build complete → $OUT_DIR/"
 echo "  Serve with: npx serve $OUT_DIR"

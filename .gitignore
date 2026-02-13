@@ -24,3 +24,6 @@ packages/*/.turbo/
 
 # Build artifacts (compiled .js from .ts in source)
 packages/server/objectstack.config.js
+
+# Vercel
+.vercel/
