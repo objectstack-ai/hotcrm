@@ -1,0 +1,81 @@
+import type { Dashboard } from '@objectstack/spec/ui';
+import { DashboardSchema } from '@objectstack/spec/ui';
+
+/**
+ * Integration Health Dashboard
+ * Sync success rates, webhook deliveries, API usage metrics
+ */
+export const IntegrationDashboard = {
+  name: 'integration_dashboard',
+  label: 'Integration Health Dashboard',
+  description: 'Monitor sync success rates, webhook deliveries, and API key usage',
+  widgets: [
+    {
+      title: 'Active Connectors',
+      type: 'metric' as const,
+      object: 'connector',
+      aggregate: 'count' as const,
+      filter: ['status', '=', 'active'],
+      layout: { x: 0, y: 0, w: 3, h: 2 }
+    },
+    {
+      title: 'Active Connections',
+      type: 'metric' as const,
+      object: 'connection',
+      aggregate: 'count' as const,
+      filter: ['status', '=', 'connected'],
+      layout: { x: 3, y: 0, w: 3, h: 2 }
+    },
+    {
+      title: 'Active Syncs',
+      type: 'metric' as const,
+      object: 'sync_config',
+      aggregate: 'count' as const,
+      filter: ['is_active', '=', true],
+      layout: { x: 6, y: 0, w: 3, h: 2 }
+    },
+    {
+      title: 'Active API Keys',
+      type: 'metric' as const,
+      object: 'api_key',
+      aggregate: 'count' as const,
+      filter: ['is_active', '=', true],
+      layout: { x: 9, y: 0, w: 3, h: 2 }
+    },
+    {
+      title: 'Sync Success Rate',
+      type: 'pie' as const,
+      object: 'sync_log',
+      categoryField: 'status',
+      aggregate: 'count' as const,
+      layout: { x: 0, y: 2, w: 6, h: 4 }
+    },
+    {
+      title: 'Webhook Delivery Status',
+      type: 'bar' as const,
+      object: 'webhook_delivery',
+      categoryField: 'status',
+      aggregate: 'count' as const,
+      layout: { x: 6, y: 2, w: 6, h: 4 }
+    },
+    {
+      title: 'Connectors by Category',
+      type: 'pie' as const,
+      object: 'connector',
+      categoryField: 'category',
+      aggregate: 'count' as const,
+      layout: { x: 0, y: 6, w: 6, h: 4 }
+    },
+    {
+      title: 'Recent Sync Logs',
+      type: 'table' as const,
+      object: 'sync_log',
+      filter: ['status', '!=', 'cancelled'],
+      layout: { x: 6, y: 6, w: 6, h: 4 }
+    }
+  ]
+} satisfies Dashboard;
+
+DashboardSchema.parse(IntegrationDashboard);
+
+export default IntegrationDashboard;
