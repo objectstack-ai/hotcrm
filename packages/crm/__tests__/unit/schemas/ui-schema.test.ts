@@ -1,9 +1,17 @@
 import { describe, it, expect } from 'vitest';
-import { PageSchema, ViewSchema, FormViewSchema, AppSchema } from '@objectstack/spec/ui';
+import { PageSchema, ViewSchema, FormViewSchema, AppSchema, ReportSchema, ChartConfigSchema, ActionSchema, WidgetManifestSchema } from '@objectstack/spec/ui';
 import { AccountPage } from '../../../src/account.page';
 import { AllAccountsView, MyAccountsView, EnterpriseAccountsView, RecentlyCreatedView, HotAccountsView, NeedAttentionView } from '../../../src/account.view';
 import { AccountForm } from '../../../src/account.form';
 import { HotCrmApp } from '../../../src/hotcrm.app';
+import { PipelineReport } from '../../../src/pipeline_report.report';
+import { ForecastReport } from '../../../src/forecast_report.report';
+import { OpportunityKanbanView } from '../../../src/opportunity_kanban.view';
+import { ActivityCalendarView } from '../../../src/activity_calendar.view';
+import { PipelineFunnelChart } from '../../../src/pipeline_funnel.chart';
+import { RevenueTrendChart } from '../../../src/revenue_trend.chart';
+import { LogACallAction, ConvertLeadAction, CreateFollowUpTaskAction, SendQuoteAction } from '../../../src/crm_actions.action_ui';
+import { PipelineWidget } from '../../../src/pipeline_widget.widget';
 
 describe('CRM UI Schema Compliance', () => {
   describe('AccountPage', () => {
@@ -63,6 +71,91 @@ describe('CRM UI Schema Compliance', () => {
 
     it('should validate against AppSchema', () => {
       expect(() => AppSchema.parse(HotCrmApp)).not.toThrow();
+    });
+  });
+
+  describe('Reports', () => {
+    const reports = [
+      { name: 'PipelineReport', report: PipelineReport },
+      { name: 'ForecastReport', report: ForecastReport },
+    ];
+
+    describe.each(reports)('$name', ({ report }) => {
+      it('should be defined', () => {
+        expect(report).toBeDefined();
+      });
+
+      it('should validate against ReportSchema', () => {
+        expect(() => ReportSchema.parse(report)).not.toThrow();
+      });
+
+      it('should have snake_case name', () => {
+        expect(report.name).toMatch(/^[a-z][a-z0-9_]*$/);
+      });
+    });
+  });
+
+  describe('Advanced Views', () => {
+    const views = [
+      { name: 'OpportunityKanbanView', view: OpportunityKanbanView },
+      { name: 'ActivityCalendarView', view: ActivityCalendarView },
+    ];
+
+    describe.each(views)('$name', ({ view }) => {
+      it('should be defined', () => {
+        expect(view).toBeDefined();
+      });
+
+      it('should validate against ViewSchema', () => {
+        expect(() => ViewSchema.parse(view)).not.toThrow();
+      });
+    });
+  });
+
+  describe('Charts', () => {
+    const charts = [
+      { name: 'PipelineFunnelChart', chart: PipelineFunnelChart },
+      { name: 'RevenueTrendChart', chart: RevenueTrendChart },
+    ];
+
+    describe.each(charts)('$name', ({ chart }) => {
+      it('should be defined', () => {
+        expect(chart).toBeDefined();
+      });
+
+      it('should validate against ChartConfigSchema', () => {
+        expect(() => ChartConfigSchema.parse(chart)).not.toThrow();
+      });
+    });
+  });
+
+  describe('UI Actions', () => {
+    const actions = [
+      { name: 'LogACallAction', action: LogACallAction },
+      { name: 'ConvertLeadAction', action: ConvertLeadAction },
+      { name: 'CreateFollowUpTaskAction', action: CreateFollowUpTaskAction },
+      { name: 'SendQuoteAction', action: SendQuoteAction },
+    ];
+
+    describe.each(actions)('$name', ({ action }) => {
+      it('should be defined', () => {
+        expect(action).toBeDefined();
+      });
+
+      it('should validate against ActionSchema', () => {
+        expect(() => ActionSchema.parse(action)).not.toThrow();
+      });
+
+      it('should have snake_case name', () => {
+        expect(action.name).toMatch(/^[a-z][a-z0-9_]*$/);
+      });
+    });
+  });
+
+  describe('Widgets', () => {
+    it('should validate PipelineWidget against WidgetManifestSchema', () => {
+      expect(PipelineWidget).toBeDefined();
+      expect(() => WidgetManifestSchema.parse(PipelineWidget)).not.toThrow();
     });
   });
 });
