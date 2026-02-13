@@ -57,7 +57,7 @@ describe('Report Object Spec Compliance', () => {
 
   it('should have owner_id lookup referencing users', () => {
     expect(Report.fields.owner_id.type).toBe('lookup');
-    expect(Report.fields.owner_id.reference.reference_to).toBe('users');
+    expect(Report.fields.owner_id.reference).toBe('users');
   });
 
   it('should enforce maxLength on text fields', () => {
@@ -116,7 +116,7 @@ describe('KPI Object Spec Compliance', () => {
 
   it('should have owner_id lookup referencing users', () => {
     expect(KPI.fields.owner_id.type).toBe('lookup');
-    expect(KPI.fields.owner_id.reference.reference_to).toBe('users');
+    expect(KPI.fields.owner_id.reference).toBe('users');
   });
 });
 
@@ -163,7 +163,7 @@ describe('Metric Object Spec Compliance', () => {
 
   it('should have owner_id lookup referencing users', () => {
     expect(Metric.fields.owner_id.type).toBe('lookup');
-    expect(Metric.fields.owner_id.reference.reference_to).toBe('users');
+    expect(Metric.fields.owner_id.reference).toBe('users');
   });
 });
 
@@ -203,7 +203,7 @@ describe('AnalyticsDashboard Object Spec Compliance', () => {
 
   it('should have owner_id lookup referencing users', () => {
     expect(AnalyticsDashboard.fields.owner_id.type).toBe('lookup');
-    expect(AnalyticsDashboard.fields.owner_id.reference.reference_to).toBe('users');
+    expect(AnalyticsDashboard.fields.owner_id.reference).toBe('users');
   });
 });
 
@@ -248,7 +248,7 @@ describe('DataSource Object Spec Compliance', () => {
 
   it('should have owner_id lookup referencing users', () => {
     expect(DataSource.fields.owner_id.type).toBe('lookup');
-    expect(DataSource.fields.owner_id.reference.reference_to).toBe('users');
+    expect(DataSource.fields.owner_id.reference).toBe('users');
   });
 });
 
@@ -284,7 +284,7 @@ describe('Snapshot Object Spec Compliance', () => {
 
   it('should have owner_id lookup referencing users', () => {
     expect(Snapshot.fields.owner_id.type).toBe('lookup');
-    expect(Snapshot.fields.owner_id.reference.reference_to).toBe('users');
+    expect(Snapshot.fields.owner_id.reference).toBe('users');
   });
 });
 
@@ -298,13 +298,13 @@ describe('ReportSchedule Object Spec Compliance', () => {
 
   it('should have required fields', () => {
     expect(ReportSchedule.fields.name.required).toBe(true);
-    expect(ReportSchedule.fields.report_id.reference.required).toBe(true);
+    expect(ReportSchedule.fields.report_id.required).toBe(true);
     expect(ReportSchedule.fields.frequency.required).toBe(true);
   });
 
   it('should have report_id lookup referencing report', () => {
     expect(ReportSchedule.fields.report_id.type).toBe('lookup');
-    expect(ReportSchedule.fields.report_id.reference.reference_to).toBe('report');
+    expect(ReportSchedule.fields.report_id.reference).toBe('report');
   });
 
   it('should have frequency select with valid options', () => {
@@ -331,7 +331,7 @@ describe('ReportSchedule Object Spec Compliance', () => {
 
   it('should have owner_id lookup referencing users', () => {
     expect(ReportSchedule.fields.owner_id.type).toBe('lookup');
-    expect(ReportSchedule.fields.owner_id.reference.reference_to).toBe('users');
+    expect(ReportSchedule.fields.owner_id.reference).toBe('users');
   });
 });
 
@@ -359,7 +359,7 @@ describe('SavedFilter Object Spec Compliance', () => {
 
   it('should have created_by lookup referencing users', () => {
     expect(SavedFilter.fields.created_by.type).toBe('lookup');
-    expect(SavedFilter.fields.created_by.reference.reference_to).toBe('users');
+    expect(SavedFilter.fields.created_by.reference).toBe('users');
   });
 
   it('should default is_global to false', () => {

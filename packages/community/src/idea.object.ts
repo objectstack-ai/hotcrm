@@ -30,7 +30,7 @@ export const Idea = ObjectSchema.create({
     vote_count: Field.number({ label: 'Vote Count', defaultValue: 0, min: 0 }),
     priority_score: Field.number({ label: 'Priority Score', defaultValue: 0 }),
     assigned_release: Field.text({ label: 'Assigned Release', maxLength: 100 }),
-    author_id: Field.lookup({ label: 'Author', reference_to: 'users', required: true }),
+    author_id: Field.lookup('users', { label: 'Author', required: true }),
     product_area: Field.text({ label: 'Product Area', maxLength: 255 })
   }
 });

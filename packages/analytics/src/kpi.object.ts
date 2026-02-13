@@ -41,6 +41,6 @@ export const KPI = ObjectSchema.create({
     threshold_critical: Field.number({ label: 'Critical Threshold' }),
     source_object: Field.text({ label: 'Source Object', maxLength: 100 }),
     source_field: Field.text({ label: 'Source Field', maxLength: 100 }),
-    owner_id: Field.lookup({ label: 'Owner', reference_to: 'users' })
+    owner_id: Field.lookup('users', { label: 'Owner' })
   }
 });

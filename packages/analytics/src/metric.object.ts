@@ -34,6 +34,6 @@ export const Metric = ObjectSchema.create({
     filters: Field.textarea({ label: 'Filters (JSON)', maxLength: 5000 }),
     is_calculated: Field.boolean({ label: 'Calculated Metric', defaultValue: false }),
     unit: Field.text({ label: 'Unit', maxLength: 50 }),
-    owner_id: Field.lookup({ label: 'Owner', reference_to: 'users' })
+    owner_id: Field.lookup('users', { label: 'Owner' })
   }
 });

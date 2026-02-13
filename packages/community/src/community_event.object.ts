@@ -23,6 +23,6 @@ export const CommunityEvent = ObjectSchema.create({
     capacity: Field.number({ label: 'Capacity', min: 0 }),
     rsvp_count: Field.number({ label: 'RSVP Count', defaultValue: 0, min: 0 }),
     recording_url: Field.url({ label: 'Recording URL' }),
-    organizer_id: Field.lookup({ label: 'Organizer', reference_to: 'users', required: true })
+    organizer_id: Field.lookup('users', { label: 'Organizer', required: true })
   }
 });

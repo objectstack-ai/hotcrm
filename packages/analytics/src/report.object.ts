@@ -37,7 +37,7 @@ export const Report = ObjectSchema.create({
     }),
     is_public: Field.boolean({ label: 'Public', defaultValue: false }),
     folder: Field.text({ label: 'Folder', maxLength: 255 }),
-    owner_id: Field.lookup({ label: 'Owner', reference_to: 'users' }),
+    owner_id: Field.lookup('users', { label: 'Owner' }),
     last_run_at: Field.datetime({ label: 'Last Run At' }),
     run_count: Field.number({ label: 'Run Count', defaultValue: 0, min: 0 })
   }
