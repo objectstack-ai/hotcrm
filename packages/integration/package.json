@@ -1,0 +1,31 @@
+{
+  "name": "@hotcrm/integration",
+  "version": "1.0.0",
+  "description": "Integration module - Connectors, Sync, Webhooks, and API management",
+  "license": "MIT",
+  "private": true,
+  "main": "./objectstack.config.ts",
+  "types": "./objectstack.config.ts",
+  "exports": {
+    ".": "./objectstack.config.ts",
+    "./objectstack.config": "./objectstack.config.ts"
+  },
+  "scripts": {
+    "dev": "objectstack dev",
+    "start": "objectstack serve",
+    "build": "objectstack compile",
+    "typecheck": "tsc --noEmit",
+    "test": "objectstack test"
+  },
+  "keywords": ["integration", "connectors", "sync", "webhooks", "api"],
+  "author": "HotCRM Team",
+  "dependencies": {
+    "@hotcrm/ai": "workspace:*",
+    "@objectstack/spec": "^3.0.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@objectstack/cli": "^3.0.0"
+  }
+}
