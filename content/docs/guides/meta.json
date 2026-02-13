@@ -1,0 +1,9 @@
+{
+  "title": "Guides",
+  "description": "In-depth guides for building with HotCRM",
+  "root": true,
+  "pages": [
+    "metadata-types",
+    "mcp-integration"
+  ]
+}
