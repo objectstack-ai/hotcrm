@@ -160,6 +160,15 @@ export const MarketingPlugin = {
             { id: 'ab_test', label: 'A/B Test', type: 'object', objectName: 'ab_test' },
             { id: 'ab_test_variant', label: 'A/B Test Variant', type: 'object', objectName: 'ab_test_variant' },
           ]
+        },
+        {
+          id: 'views_and_dashboards',
+          type: 'group',
+          label: 'Views & Dashboards',
+          children: [
+            { id: 'campaign_timeline', label: 'Campaign Timeline', type: 'object', objectName: 'campaign', viewName: 'campaign_timeline' },
+            { id: 'marketing_dashboard', label: 'Marketing Dashboard', type: 'dashboard', dashboardName: 'marketing_dashboard' },
+          ]
         }
       ]
     }

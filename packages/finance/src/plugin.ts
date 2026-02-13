@@ -136,6 +136,14 @@ export const FinancePlugin = {
             { id: 'revenue_recognition_rule', label: 'Revenue Recognition Rule', type: 'object', objectName: 'revenue_recognition_rule' },
             { id: 'payment_method', label: 'Payment Method', type: 'object', objectName: 'payment_method' },
           ]
+        },
+        {
+          id: 'views_and_dashboards',
+          type: 'group',
+          label: 'Views & Dashboards',
+          children: [
+            { id: 'finance_dashboard', label: 'Finance Dashboard', type: 'dashboard', dashboardName: 'finance_dashboard' },
+          ]
         }
       ]
     }

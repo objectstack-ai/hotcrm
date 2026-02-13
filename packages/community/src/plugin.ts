@@ -137,6 +137,14 @@ export const CommunityPlugin = {
             { id: 'community_event', label: 'Event', type: 'object', objectName: 'community_event' },
             { id: 'badge', label: 'Badge', type: 'object', objectName: 'badge' },
           ]
+        },
+        {
+          id: 'views_and_dashboards',
+          type: 'group',
+          label: 'Views & Dashboards',
+          children: [
+            { id: 'community_dashboard', label: 'Community Dashboard', type: 'dashboard', dashboardName: 'community_dashboard' },
+          ]
         }
       ]
     }
