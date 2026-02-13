@@ -18,7 +18,7 @@ export const ReportPage = {
         {
           type: 'record:highlights' as const,
           properties: {
-            fields: ['name', 'type', 'status', 'data_source', 'last_run_at']
+            fields: ['name', 'report_type', 'object_name', 'chart_type', 'last_run_at']
           }
         }
       ]
@@ -42,8 +42,8 @@ export const ReportPage = {
           label: 'Filter Panel',
           properties: {
             fields: [
-              'data_source', 'type', 'date_range_start', 'date_range_end',
-              'filters', 'group_by', 'sort_by'
+              'object_name', 'report_type', 'filters',
+              'groupings', 'sort_order'
             ],
             columns: 2
           }
@@ -53,7 +53,7 @@ export const ReportPage = {
           label: 'Column Selector',
           properties: {
             fields: [
-              'columns', 'aggregations', 'calculated_fields'
+              'columns', 'aggregations', 'chart_type'
             ],
             columns: 1
           }
@@ -68,8 +68,8 @@ export const ReportPage = {
           label: 'Report Preview',
           properties: {
             fields: [
-              'name', 'type', 'row_count', 'last_run_at',
-              'execution_time_ms', 'output_format'
+              'name', 'report_type', 'run_count', 'last_run_at',
+              'is_public', 'folder'
             ],
             columns: 2
           }
@@ -84,8 +84,8 @@ export const ReportPage = {
           label: 'Scheduled Deliveries',
           properties: {
             object: 'report_schedule',
-            columns: ['name', 'frequency', 'next_run_at', 'recipients', 'is_active'],
-            sort: [{ field: 'next_run_at', direction: 'asc' }],
+            columns: ['name', 'frequency', 'next_run', 'recipients', 'is_active'],
+            sort: [{ field: 'next_run', direction: 'asc' }],
             actions: ['new', 'edit', 'delete']
           }
         }
@@ -99,7 +99,7 @@ export const ReportPage = {
           label: 'Execution History',
           properties: {
             object: 'snapshot',
-            columns: ['name', 'snapshot_date', 'record_count', 'created_by'],
+            columns: ['name', 'snapshot_date', 'record_count', 'status'],
             sort: [{ field: 'snapshot_date', direction: 'desc' }],
             actions: ['new']
           }

@@ -13,12 +13,12 @@ export const AllReportsView = {
     label: 'All Reports',
     columns: [
       { field: 'name', width: 250, sortable: true, link: true },
-      { field: 'type', width: 120, sortable: true },
-      { field: 'data_source', width: 150, sortable: true },
-      { field: 'status', width: 120, sortable: true },
+      { field: 'report_type', width: 120, sortable: true },
+      { field: 'object_name', width: 150, sortable: true },
+      { field: 'chart_type', width: 120, sortable: true },
       { field: 'last_run_at', width: 150, sortable: true },
-      { field: 'owner', width: 150 },
-      { field: 'created_date', width: 150, sortable: true }
+      { field: 'owner_id', width: 150 },
+      { field: 'folder', width: 150, sortable: true }
     ],
     sort: [{ field: 'name', order: 'asc' as const }],
     bulkActions: ['delete', 'export'],
@@ -31,30 +31,30 @@ export const MyReportsView = {
   list: {
     name: 'my_reports',
     label: 'My Reports',
-    filter: [['owner', '=', '${currentUser.id}']],
+    filter: [['owner_id', '=', '${currentUser.id}']],
     columns: [
       { field: 'name', width: 250, link: true },
-      { field: 'type', width: 120 },
-      { field: 'status', width: 120 },
+      { field: 'report_type', width: 120 },
+      { field: 'chart_type', width: 120 },
       { field: 'last_run_at', width: 150 },
-      { field: 'row_count', width: 100, align: 'right' as const }
+      { field: 'run_count', width: 100, align: 'right' as const }
     ],
     sort: [{ field: 'last_run_at', order: 'desc' as const }]
   }
 } satisfies View;
 
-// Favorite Reports View
-export const FavoriteReportsView = {
+// Public Reports View
+export const PublicReportsView = {
   list: {
-    name: 'favorite_reports',
-    label: 'Favorites',
-    filter: [['is_favorite', '=', true]],
+    name: 'public_reports',
+    label: 'Public Reports',
+    filter: [['is_public', '=', true]],
     columns: [
       { field: 'name', width: 250, link: true },
-      { field: 'type', width: 120 },
-      { field: 'data_source', width: 150 },
+      { field: 'report_type', width: 120 },
+      { field: 'object_name', width: 150 },
       { field: 'last_run_at', width: 150 },
-      { field: 'owner', width: 150 }
+      { field: 'owner_id', width: 150 }
     ],
     sort: [{ field: 'name', order: 'asc' as const }]
   }
@@ -68,44 +68,43 @@ export const RecentReportsView = {
     filter: [['last_run_at', '>=', 'LAST_30_DAYS']],
     columns: [
       { field: 'name', width: 250, link: true },
-      { field: 'type', width: 120 },
+      { field: 'report_type', width: 120 },
       { field: 'last_run_at', width: 150 },
-      { field: 'execution_time_ms', width: 120, align: 'right' as const },
-      { field: 'row_count', width: 100, align: 'right' as const }
+      { field: 'run_count', width: 120, align: 'right' as const },
+      { field: 'folder', width: 150 }
     ],
     sort: [{ field: 'last_run_at', order: 'desc' as const }]
   }
 } satisfies View;
 
-// Shared Reports View
-export const SharedReportsView = {
+// Reports by Folder View
+export const ReportsByFolderView = {
   list: {
-    name: 'shared_reports',
-    label: 'Shared With Me',
-    filter: [['visibility', '=', 'shared']],
+    name: 'reports_by_folder',
+    label: 'By Folder',
     columns: [
       { field: 'name', width: 250, link: true },
-      { field: 'type', width: 120 },
-      { field: 'data_source', width: 150 },
-      { field: 'owner', width: 150 },
+      { field: 'report_type', width: 120 },
+      { field: 'object_name', width: 150 },
+      { field: 'owner_id', width: 150 },
       { field: 'last_run_at', width: 150 }
     ],
-    sort: [{ field: 'last_run_at', order: 'desc' as const }]
+    sort: [{ field: 'folder', order: 'asc' as const }]
   }
 } satisfies View;
 
 ViewSchema.parse(AllReportsView);
 ViewSchema.parse(MyReportsView);
-ViewSchema.parse(FavoriteReportsView);
+ViewSchema.parse(PublicReportsView);
 ViewSchema.parse(RecentReportsView);
-ViewSchema.parse(SharedReportsView);
+ViewSchema.parse(ReportsByFolderView);
 
 export const ReportListViews = {
   all: AllReportsView,
   my: MyReportsView,
-  favorites: FavoriteReportsView,
+  public: PublicReportsView,
   recent: RecentReportsView,
-  shared: SharedReportsView
+  byFolder: ReportsByFolderView
 };
 
 export default ReportListViews;

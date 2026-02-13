@@ -22,7 +22,7 @@ export const AnalyticsDashboard = {
       type: 'metric' as const,
       object: 'analytics_dashboard',
       aggregate: 'count' as const,
-      filter: ['status', '=', 'published'],
+      filter: ['is_default', '=', true],
       layout: { x: 3, y: 0, w: 3, h: 2 }
     },
     {
@@ -30,7 +30,7 @@ export const AnalyticsDashboard = {
       type: 'kpi' as const,
       object: 'kpi',
       aggregate: 'count' as const,
-      filter: ['status', 'IN', ['critical', 'warning']],
+      filter: ['trend', '=', 'declining'],
       layout: { x: 6, y: 0, w: 3, h: 2 }
     },
     {
@@ -38,14 +38,14 @@ export const AnalyticsDashboard = {
       type: 'metric' as const,
       object: 'data_source',
       aggregate: 'count' as const,
-      filter: ['status', '=', 'connected'],
+      filter: ['sync_status', '=', 'connected'],
       layout: { x: 9, y: 0, w: 3, h: 2 }
     },
     {
       title: 'Reports by Type',
       type: 'pie' as const,
       object: 'report',
-      categoryField: 'type',
+      categoryField: 'report_type',
       aggregate: 'count' as const,
       layout: { x: 0, y: 2, w: 6, h: 4 }
     },
@@ -61,9 +61,9 @@ export const AnalyticsDashboard = {
       title: 'Data Source Health',
       type: 'bar' as const,
       object: 'data_source',
-      categoryField: 'type',
-      valueField: 'last_sync_record_count',
-      aggregate: 'sum' as const,
+      categoryField: 'source_type',
+      valueField: 'last_sync',
+      aggregate: 'count' as const,
       layout: { x: 0, y: 6, w: 6, h: 4 }
     },
     {

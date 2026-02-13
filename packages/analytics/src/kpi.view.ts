@@ -17,17 +17,16 @@ export const AllKPIsView = {
       { field: 'current_value', width: 120, sortable: true, align: 'right' as const },
       { field: 'target_value', width: 120, align: 'right' as const },
       { field: 'unit', width: 80 },
-      { field: 'trend_direction', width: 100, sortable: true },
-      { field: 'status', width: 100, sortable: true },
-      { field: 'owner', width: 150 }
+      { field: 'trend', width: 100, sortable: true },
+      { field: 'owner_id', width: 150 }
     ],
     sort: [{ field: 'name', order: 'asc' as const }],
     bulkActions: ['delete', 'export'],
     pagination: { pageSize: 25, pageSizeOptions: [10, 25, 50, 100] },
     conditionalFormatting: [
-      { condition: 'status == "critical"', style: { backgroundColor: '#FEF2F2', borderLeft: '3px solid #EF4444' } },
-      { condition: 'status == "warning"', style: { backgroundColor: '#FFFBEB', borderLeft: '3px solid #F59E0B' } },
-      { condition: 'status == "on_track"', style: { backgroundColor: '#F0FDF4', borderLeft: '3px solid #22C55E' } }
+      { condition: 'trend == "declining"', style: { backgroundColor: '#FEF2F2', borderLeft: '3px solid #EF4444' } },
+      { condition: 'trend == "stable"', style: { backgroundColor: '#FFFBEB', borderLeft: '3px solid #F59E0B' } },
+      { condition: 'trend == "improving"', style: { backgroundColor: '#F0FDF4', borderLeft: '3px solid #22C55E' } }
     ]
   }
 } satisfies View;
@@ -37,19 +36,18 @@ export const KPIsAtRiskView = {
   list: {
     name: 'kpis_at_risk',
     label: 'At Risk',
-    filter: [['status', 'IN', ['critical', 'warning']]],
+    filter: [['trend', '=', 'declining']],
     columns: [
       { field: 'name', width: 200, link: true },
       { field: 'current_value', width: 120, align: 'right' as const },
       { field: 'target_value', width: 120, align: 'right' as const },
-      { field: 'threshold_red', width: 100, align: 'right' as const },
-      { field: 'trend_direction', width: 100 },
-      { field: 'owner', width: 150 }
+      { field: 'threshold_critical', width: 100, align: 'right' as const },
+      { field: 'trend', width: 100 },
+      { field: 'owner_id', width: 150 }
     ],
-    sort: [{ field: 'status', order: 'asc' as const }],
+    sort: [{ field: 'trend', order: 'asc' as const }],
     conditionalFormatting: [
-      { condition: 'status == "critical"', style: { backgroundColor: '#FEF2F2', borderLeft: '3px solid #EF4444' } },
-      { condition: 'status == "warning"', style: { backgroundColor: '#FFFBEB', borderLeft: '3px solid #F59E0B' } }
+      { condition: 'trend == "declining"', style: { backgroundColor: '#FEF2F2', borderLeft: '3px solid #EF4444' } }
     ]
   }
 } satisfies View;
@@ -59,14 +57,14 @@ export const KPIsOnTrackView = {
   list: {
     name: 'kpis_on_track',
     label: 'On Track',
-    filter: [['status', '=', 'on_track']],
+    filter: [['trend', '=', 'improving']],
     columns: [
       { field: 'name', width: 200, link: true },
-      { field: 'category', width: 120 },
+      { field: 'metric_type', width: 120 },
       { field: 'current_value', width: 120, align: 'right' as const },
       { field: 'target_value', width: 120, align: 'right' as const },
-      { field: 'trend_direction', width: 100 },
-      { field: 'last_calculated_at', width: 150 }
+      { field: 'trend', width: 100 },
+      { field: 'period', width: 150 }
     ],
     sort: [{ field: 'name', order: 'asc' as const }]
   }
@@ -77,16 +75,16 @@ export const MyKPIsView = {
   list: {
     name: 'my_kpis',
     label: 'My KPIs',
-    filter: [['owner', '=', '${currentUser.id}']],
+    filter: [['owner_id', '=', '${currentUser.id}']],
     columns: [
       { field: 'name', width: 200, link: true },
-      { field: 'category', width: 120 },
+      { field: 'metric_type', width: 120 },
       { field: 'current_value', width: 120, align: 'right' as const },
       { field: 'target_value', width: 120, align: 'right' as const },
-      { field: 'status', width: 100 },
-      { field: 'trend_direction', width: 100 }
+      { field: 'trend', width: 100 },
+      { field: 'threshold_warning', width: 100, align: 'right' as const }
     ],
-    sort: [{ field: 'status', order: 'asc' as const }]
+    sort: [{ field: 'trend', order: 'asc' as const }]
   }
 } satisfies View;
 

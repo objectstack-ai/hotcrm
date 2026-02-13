@@ -18,7 +18,7 @@ export const AnalyticsDashboardPage = {
         {
           type: 'record:highlights' as const,
           properties: {
-            fields: ['name', 'status', 'layout_type', 'auto_refresh_interval', 'owner']
+            fields: ['name', 'theme', 'refresh_interval', 'is_default', 'owner_id']
           }
         }
       ]
@@ -42,8 +42,8 @@ export const AnalyticsDashboardPage = {
           label: 'Dashboard Layout',
           properties: {
             fields: [
-              'name', 'description', 'layout_type', 'theme',
-              'column_count', 'row_height'
+              'name', 'description', 'layout_config', 'theme',
+              'folder', 'is_default'
             ],
             columns: 2
           }
@@ -58,8 +58,8 @@ export const AnalyticsDashboardPage = {
           label: 'Dashboard Configuration',
           properties: {
             fields: [
-              'auto_refresh_interval', 'default_date_range',
-              'status', 'is_public', 'tags'
+              'refresh_interval', 'theme',
+              'is_default', 'folder'
             ],
             columns: 2
           }
@@ -74,7 +74,7 @@ export const AnalyticsDashboardPage = {
           label: 'Widget Configuration',
           properties: {
             fields: [
-              'widgets', 'widget_count', 'data_sources'
+              'widgets', 'layout_config'
             ],
             columns: 1
           }
@@ -89,9 +89,8 @@ export const AnalyticsDashboardPage = {
           label: 'Access & Sharing',
           properties: {
             fields: [
-              'owner', 'is_public', 'shared_with',
-              'created_by', 'created_date',
-              'last_modified_by', 'last_modified_date'
+              'owner_id', 'shared_with',
+              'is_default'
             ],
             columns: 2
           }
