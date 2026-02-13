@@ -3,13 +3,17 @@ import { PageSchema } from '@objectstack/spec/ui';
 
 /**
  * Account Detail Page Layout
- * Demonstrates comprehensive page layout with tabs, sections, and related lists
+ * Comprehensive page layout with tabs, sections, related lists, and AI assistant.
+ * Leverages PageSchema features: isDefault, assignedProfiles, visibility, ai:chat_window, record:activity.
  */
 export const AccountPage = {
   name: 'account_detail',
   object: 'account',
   type: 'record' as const,
   label: 'Account Detail Page',
+  template: 'record_detail',
+  isDefault: true,
+  assignedProfiles: ['sales_rep', 'sales_manager', 'account_executive', 'admin'],
 
   regions: [
     {
@@ -87,6 +91,16 @@ export const AccountPage = {
       ]
     },
     {
+      name: 'activity',
+      components: [
+        {
+          type: 'record:activity' as const,
+          label: 'Activity Timeline',
+          properties: {}
+        }
+      ]
+    },
+    {
       name: 'related_lists',
       components: [
         {
@@ -112,6 +126,7 @@ export const AccountPage = {
         {
           type: 'record:related_list' as const,
           label: 'Cases',
+          visibility: "record.sla_tier != null",
           properties: {
             object: 'case',
             columns: ['case_number', 'subject', 'status', 'priority', 'created_date'],
@@ -127,6 +142,18 @@ export const AccountPage = {
             object: 'contract',
             columns: ['contract_number', 'status', 'start_date', 'end_date', 'contract_term'],
             actions: ['new', 'edit']
+          }
+        }
+      ]
+    },
+    {
+      name: 'ai_assistant',
+      components: [
+        {
+          type: 'ai:chat_window' as const,
+          label: 'Account Intelligence',
+          properties: {
+            mode: 'sidebar'
           }
         }
       ]

@@ -3,12 +3,16 @@ import { PageSchema } from '@objectstack/spec/ui';
 
 /**
  * Case Detail Page Layout
+ * Leverages PageSchema features: isDefault, assignedProfiles, visibility, ai:chat_window, record:activity.
  */
 export const CasePage = {
   name: 'case_detail',
   object: 'case',
   type: 'record' as const,
   label: 'Case Detail Page',
+  template: 'record_detail',
+  isDefault: true,
+  assignedProfiles: ['support_agent', 'support_manager', 'admin'],
 
   regions: [
     {
@@ -72,12 +76,23 @@ export const CasePage = {
         {
           type: 'record:details' as const,
           label: 'Resolution Information',
+          visibility: "record.status == 'Resolved' || record.status == 'Closed'",
           properties: {
             fields: [
               'resolution', 'root_cause', 'customer_satisfaction', 'tags'
             ],
             columns: 2
           }
+        }
+      ]
+    },
+    {
+      name: 'activity',
+      components: [
+        {
+          type: 'record:activity' as const,
+          label: 'Case Activity',
+          properties: {}
         }
       ]
     },
@@ -101,6 +116,18 @@ export const CasePage = {
             object: 'knowledge_article',
             columns: ['article_number', 'title', 'category', 'status', 'helpful_rating'],
             actions: ['new', 'edit']
+          }
+        }
+      ]
+    },
+    {
+      name: 'ai_assistant',
+      components: [
+        {
+          type: 'ai:chat_window' as const,
+          label: 'Resolution Assistant',
+          properties: {
+            mode: 'sidebar'
           }
         }
       ]

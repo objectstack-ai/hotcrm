@@ -9,6 +9,7 @@
 2025       ████████████████████████████████  Phases 1-9: Foundation → AI → Quality → Test → Integration → Schema → v3.0 → UI → DX
 2026 Q1-Q2 ████████████████████████████████  Phase 10: Salesforce Feature Parity      ✅ COMPLETE
 2026 Q2-Q3 ████████████████████████████████  Phase 10.5: Deep Metadata Adoption       ✅ COMPLETE
+2026 Q3    ████████████████████████████████  Phase 10.6: FormView & Page Layout Enhancement  ← CURRENT
 2026 Q3-Q4 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  Phase 11: Ecosystem & Connectivity       ← NEXT
 2027       ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  Phase 12: Vertical Solutions & Advanced AI
 ```
@@ -192,14 +193,14 @@
 
 ### Impact Assessment
 
-| Metric | Current | After Phase 10.5 | After Phase 11 |
-|--------|---------|-------------------|----------------|
-| Application Schema Adoption | 28 / ~80 (35%) | ~55 / ~80 (69%) | ~65 / ~80 (81%) |
-| UI Metadata Types | 5 (Page, View, Form, Dashboard, App) | 10 (+Report, ListViewAdv, Chart, Action, Widget) | 12 (+Theme, Responsive) |
-| Automation Types | 4 (Workflow, StateMachine, Approval, TimeTrigger) | 7 (+Flow, Connector, ETL) | 8 (+DataSync) |
-| Security Types | 4 (Permission, Sharing, Territory, TerritoryModel) | 8 (+RLS, Policy, Password, Session) | 10 (+Network, Audit) |
-| AI Types | 6 (Agent, MCP, RAG, ModelRegistry, NLQ×2) | 12 (+MCPTool, MCPResource, MCPPrompt, Orchestration, Predictive, Conversation) | 14 (+MultiAgent, Cost) |
-| System Types | 3 (Audit, Cache, Notification) | 7 (+Email, NotifChannel, Schedule, Job) | 10 (+Encryption, Masking, Compliance) |
+| Metric | Current | After Phase 10.5 | After Phase 10.6 | After Phase 11 |
+|--------|---------|-------------------|-------------------|----------------|
+| Application Schema Adoption | 28 / ~80 (35%) | ~55 / ~80 (69%) | ~58 / ~80 (73%) | ~65 / ~80 (81%) |
+| UI Metadata Types | 5 (Page, View, Form, Dashboard, App) | 10 (+Report, ListViewAdv, Chart, Action, Widget) | 10 (deepened: FormView 6 layouts, Page 4 types, 10+ component types) | 12 (+Theme, Responsive) |
+| Automation Types | 4 (Workflow, StateMachine, Approval, TimeTrigger) | 7 (+Flow, Connector, ETL) | 7 (unchanged) | 8 (+DataSync) |
+| Security Types | 4 (Permission, Sharing, Territory, TerritoryModel) | 8 (+RLS, Policy, Password, Session) | 8 (unchanged) | 10 (+Network, Audit) |
+| AI Types | 6 (Agent, MCP, RAG, ModelRegistry, NLQ×2) | 12 (+MCPTool, MCPResource, MCPPrompt, Orchestration, Predictive, Conversation) | 12 (deepened: ai:chat_window, ai:suggestion embedded in pages) | 14 (+MultiAgent, Cost) |
+| System Types | 3 (Audit, Cache, Notification) | 7 (+Email, NotifChannel, Schedule, Job) | 7 (unchanged) | 10 (+Encryption, Masking, Compliance) |
 
 ---
 
@@ -404,6 +405,167 @@ Q3 2026 Week 10-12 ████████  Phase 10.5D: Validation, Tests & Do
 | Dashboard Widgets | 0 | 3 custom widgets | +3 widgets |
 | Connector Metadata | 0 | 3 (email, payment, social) | +3 connectors |
 | Test Files | 118 | ~135 | +~17 test files |
+
+---
+
+## Phase 10.6: FormView & Page Layout Deep Enhancement (2026 Q3)
+
+> Fully leverage `@objectstack/spec/ui` platform capabilities for FormView, PageSchema, and Component properties.
+> Current forms use only `type: 'simple'` with basic fields; current pages use minimal component types. This phase upgrades all existing UI metadata to exploit the full feature set of the spec schemas.
+>
+> **Goal**: Transform basic UI metadata into enterprise-grade, Salesforce-equivalent page layouts with conditional visibility, multi-layout forms, AI-embedded pages, and profile-based page assignment.
+
+### Platform Capability Gap Analysis
+
+#### FormView (view.zod.ts) — Current vs. Available
+
+| Feature | Spec Support | Current Usage | Gap |
+|---------|-------------|---------------|-----|
+| **Layout Types** | `simple`, `tabbed`, `wizard`, `split`, `drawer`, `modal` | `simple` only | 5 layout types unused |
+| **Section Collapsible** | `collapsible: true/false`, `collapsed: true/false` | Not used (defaults to false) | Address/detail sections should be collapsible |
+| **Section Columns** | `'1'`, `'2'`, `'3'`, `'4'` | `'2'` only | 3 column options unused |
+| **Field readonly** | `readonly: boolean` | Not used | Computed/system fields should be read-only |
+| **Field hidden** | `hidden: boolean` | Not used | Internal fields should be hidden |
+| **Field visibleOn** | `visibleOn: string` (expression) | Not used | Conditional visibility needed for dynamic forms |
+| **Field dependsOn** | `dependsOn: string` (field dependency) | Not used | Cascade picklists not configured |
+| **Field widget** | `widget: string` (custom widget) | Not used | Rating, rich-text, color-picker widgets available |
+| **Field placeholder** | `placeholder: string` | Not used | Input hints missing |
+| **Field helpText** | `helpText: string` | Not used | Field-level guidance missing |
+| **Named FormViews** | Multiple exports per object | 1 form per object | No create/edit/quick-create variants |
+
+#### PageSchema (page.zod.ts) — Current vs. Available
+
+| Feature | Spec Support | Current Usage | Gap |
+|---------|-------------|---------------|-----|
+| **Page Types** | `record`, `home`, `app`, `utility` | `record` only | 3 page types unused |
+| **Template** | `template: string` (default: 'default') | Not set | Template system not leveraged |
+| **isDefault** | `isDefault: boolean` | Not set | Default page not declared |
+| **assignedProfiles** | `assignedProfiles: string[]` | Not used | No profile-based page assignment |
+| **Component visibility** | `visibility: string` (expression) | Not used | No conditional component display |
+| **Component responsive** | `responsive: { breakpoint, hiddenOn, columns, order }` | Not used | No mobile-responsive layouts |
+| **Region width** | `width: 'small' \| 'medium' \| 'large' \| 'full'` | Not used | No region sizing |
+| **Component events** | `events: Record<string, string>` | Not used | No event bindings |
+| **Component style** | `style: Record<string, string>` | Not used | No inline styles |
+| **PageVariable** | `variables: [{ name, type, defaultValue }]` | Not used | No page-level state |
+| **ai:chat_window** | `mode: 'float' \| 'inline' \| 'sidebar'` | Not used | No embedded AI assistant |
+| **ai:suggestion** | `context: string` | Not used | No AI suggestions |
+| **page:accordion** | Supported | Not used | No collapsible component groups |
+| **page:card** | `title, bordered, actions, body, footer` | Not used | No card-based layouts |
+| **record:activity** | Supported | Not used | No activity timeline |
+| **record:chatter** | Supported | Not used | No collaboration feed |
+| **record:path** | Supported | Not used | No guided selling path |
+
+#### Component Properties (component.zod.ts) — Current vs. Available
+
+| Component | Spec Props | Current Props | Gap |
+|-----------|-----------|---------------|-----|
+| **RecordDetailsProps** | `columns: '1'-'4'`, `layout: 'auto'\|'custom'`, `sections: string[]` | `fields: string[]`, `columns: number` | Using non-standard `fields` prop; missing `layout` and `sections` |
+| **RecordHighlightsProps** | `fields: string[]` | `fields: string[]` | ✅ Aligned |
+| **RecordRelatedListProps** | `objectName`, `relationshipField`, `columns`, `sort?`, `limit` | `object`, `columns`, `filters`, `sort` (array), `actions` | Using non-standard prop names |
+| **PageTabsProps** | `type: 'line'\|'card'\|'pill'`, `position: 'left'\|'top'`, `items: [{label, icon?, children}]` | `tabs: string[]` | Using simplified `tabs` array instead of structured `items` |
+
+### Phase 10.6 Timeline
+
+```
+Q3 2026 Week 1-2  ████████  Phase 10.6A: FormView Enhancement          (6 form upgrades + 6 new variant forms)
+Q3 2026 Week 3-4  ████████  Phase 10.6B: Page Layout Enhancement        (20 page upgrades + 3 new page types)
+Q3 2026 Week 5-6  ████████  Phase 10.6C: Tests, Validation & Docs       (hardening)
+```
+
+### Phase 10.6A: FormView Enhancement (Weeks 1-2) — P0
+
+> Goal: Upgrade all 6 existing forms to use advanced FormView features and add scenario-specific form variants.
+
+#### 10.6A-1: Enhance Existing Forms with Advanced Features
+
+- [ ] Upgrade `packages/crm/src/account.form.ts` — add collapsible address sections, helpText on key fields, placeholder on text inputs
+- [ ] Upgrade `packages/crm/src/lead.form.ts` — add visibleOn for conditional fields (show company fields only when lead type is 'Business'), dependsOn for state→country cascade
+- [ ] Upgrade `packages/crm/src/contact.form.ts` — add readonly on computed fields, hidden on internal fields, helpText on communication preferences
+- [ ] Upgrade `packages/crm/src/opportunity.form.ts` — convert to `tabbed` layout (Deal Info | Forecast | Products | Notes), add visibleOn for forecast fields based on stage
+- [ ] Upgrade `packages/support/src/case.form.ts` — add collapsible sections, widget: 'richtext' for description, placeholder on all text fields
+- [ ] Upgrade `packages/hr/src/employee.form.ts` — convert to `wizard` layout (Personal → Employment → Emergency → Review), add readonly on employee_number
+
+#### 10.6A-2: Add Form Variants (Named Multiple FormViews)
+
+- [ ] Add `packages/crm/src/lead_quick_create.form.ts` — `modal` layout with essential fields only (name, company, email, phone, source)
+- [ ] Add `packages/crm/src/opportunity_quick_create.form.ts` — `drawer` layout for quick deal creation from pipeline view
+- [ ] Add `packages/support/src/case_quick_create.form.ts` — `modal` layout for quick case logging (subject, priority, description)
+- [ ] Add `packages/crm/src/account_split.form.ts` — `split` layout with account info on left, address/billing on right
+- [ ] Add `packages/hr/src/employee_onboarding.form.ts` — `wizard` layout for new hire onboarding (4 steps: personal → role → IT setup → review)
+- [ ] Add `packages/finance/src/invoice.form.ts` — `tabbed` layout (Invoice Details | Line Items | Payment Terms)
+- [ ] Validate all forms with `FormViewSchema.parse()` — 100% spec compliance
+
+### Phase 10.6B: Page Layout Enhancement (Weeks 3-4) — P0
+
+> Goal: Upgrade all 20 existing pages to use full PageSchema features, add new page types (home, app, utility), and embed AI components.
+
+#### 10.6B-1: Enhance Existing Record Pages
+
+- [ ] Upgrade all record pages to include `isDefault: true` and `template: 'record_detail'`
+- [ ] Add `assignedProfiles` to key pages:
+  - Account page: `['sales_rep', 'sales_manager', 'admin']`
+  - Case page: `['support_agent', 'support_manager', 'admin']`
+  - Employee page: `['hr_specialist', 'hr_manager', 'admin']`
+- [ ] Add `visibility` rules to components:
+  - Hide financial sections for non-finance profiles on Account page
+  - Show escalation section only when case priority is 'Critical' on Case page
+  - Hide salary details for non-HR profiles on Employee page
+- [ ] Add `ai:chat_window` component (sidebar mode) to high-traffic record pages:
+  - Account detail page — context-aware account insights
+  - Opportunity detail page — deal coaching and next-best-action
+  - Case detail page — resolution suggestions from knowledge base
+- [ ] Add `ai:suggestion` component to relevant pages for proactive AI recommendations
+- [ ] Add `record:activity` component to Account, Contact, Opportunity pages for activity timeline
+- [ ] Add `record:path` component to Opportunity page for guided selling stages
+- [ ] Add `page:card` components for visual grouping of related information
+
+#### 10.6B-2: Add New Page Types
+
+- [ ] Add `packages/crm/src/crm_home.page.ts` — `type: 'home'` with pipeline summary, today's activities, AI insights, top deals widgets
+- [ ] Add `packages/support/src/support_home.page.ts` — `type: 'home'` with open cases queue, SLA alerts, CSAT trends, AI case routing
+- [ ] Add `packages/hr/src/hr_home.page.ts` — `type: 'home'` with headcount overview, open positions, pending approvals, onboarding tracker
+- [ ] Add `packages/crm/src/crm_utility.page.ts` — `type: 'utility'` with quick lookup, global search, recent records, favorites
+- [ ] Add `packages/core/src/settings.page.ts` — `type: 'app'` with system settings, user preferences, notification settings
+
+#### 10.6B-3: Component Properties Alignment
+
+- [ ] Migrate `record:details` components to use RecordDetailsProps format: `{ columns: '2', layout: 'custom', sections: ['section_name'] }`
+- [ ] Migrate `record:related_list` components to use RecordRelatedListProps format: `{ objectName, relationshipField, columns, sort?, limit }`
+- [ ] Migrate `page:tabs` components to use PageTabsProps format: `{ type: 'line', position: 'top', items: [{ label, children }] }`
+- [ ] Add `responsive` config to all components for mobile breakpoints
+- [ ] Add `aria` accessibility props to all interactive components
+
+### Phase 10.6C: Tests, Validation & Documentation (Weeks 5-6) — P1
+
+#### 10.6C-1: Spec-Compliance Tests
+
+- [ ] Add `packages/crm/__tests__/unit/schemas/formview-enhanced.test.ts` — validate all enhanced CRM forms including layout types, collapsible sections, field controls
+- [ ] Add `packages/crm/__tests__/unit/schemas/page-enhanced.test.ts` — validate enhanced pages including assignedProfiles, visibility, AI components
+- [ ] Add per-package enhanced UI tests for Support, HR, Finance, Products, Marketing
+- [ ] Add `packages/crm/__tests__/unit/schemas/component-props.test.ts` — validate component properties match ComponentPropsMap types
+
+#### 10.6C-2: Documentation
+
+- [ ] Add `content/docs/guides/formview-layouts.mdx` — guide to all 6 FormView layout types with examples
+- [ ] Add `content/docs/guides/page-components.mdx` — guide to all 21 component types with property reference
+- [ ] Update `docs/SALESFORCE_FEATURE_COMPARISON.md` with page layout and form builder parity
+- [ ] Update `README.md` and `content/docs/roadmap.mdx` with Phase 10.6 metrics
+
+### Phase 10.6 Expected Outcomes
+
+| Metric | Before Phase 10.6 | After Phase 10.6 | Change |
+|--------|-------------------|-------------------|--------|
+| FormView Layout Types Used | 1 (`simple`) | 6 (`simple`, `tabbed`, `wizard`, `split`, `drawer`, `modal`) | +5 layout types |
+| Form Definitions | 6 | 12 (+ quick-create, onboarding, split variants) | +6 form variants |
+| FormView Features Used | 3 (field, required, colSpan) | 10 (+ readonly, hidden, visibleOn, dependsOn, widget, placeholder, helpText) | +7 field-level features |
+| Collapsible Sections | 0 | ~15 sections across 12 forms | +15 collapsible sections |
+| Page Types Used | 1 (`record`) | 4 (`record`, `home`, `app`, `utility`) | +3 page types |
+| Pages with assignedProfiles | 0 | ~10 | +10 profile-assigned pages |
+| Pages with AI Components | 0 | ~6 (ai:chat_window + ai:suggestion) | +6 AI-embedded pages |
+| Component Types Used | 4 (highlights, details, tabs, related_list) | 10 (+ activity, path, card, accordion, ai:chat_window, ai:suggestion) | +6 component types |
+| Components with Visibility Rules | 0 | ~12 | +12 conditional components |
+| ComponentPropsMap-Aligned Components | 0 | ~60 (all existing + new) | Full alignment |
+| Test Files | ~135 | ~142 | +~7 test files |
 
 ---
 
@@ -810,6 +972,7 @@ Each connector includes: `*.action.ts` (API operations), `*.hook.ts` (event mapp
 
 | Date | From | To | Breaking Changes | Tests |
 |------|------|----|-----------------|-------|
+| 2026-02-13 | v3.0.0 | v3.0.0 | None (Phase 10.6 roadmap: FormView & Page Layout Deep Enhancement — 6 form layout types, collapsible sections, field-level controls, 4 page types, AI components, assignedProfiles, component visibility, ComponentPropsMap alignment) | 2271 ✅ |
 | 2026-02-13 | v3.0.0 | v3.0.0 | None (Metadata evaluation: assessed all @objectstack/spec schemas, identified 27 high-value unused types, added Phase 10.5 Deep Metadata Adoption roadmap) | 1759 ✅ |
 | 2026-02-12 | v3.0.0 | v3.0.0 | None (Phase 10: Salesforce Feature Parity — +25 objects, cross-cloud lifecycle, forecast/territory/journey/subscription/order models) | 1759 ✅ |
 | 2026-02-12 | v3.0.0 | v3.0.0 | None (Phase 9: DX — DEVELOPMENT_WORKFLOW.md, ARCHITECTURE.md, link-check CI, pnpm typecheck/test:changed/stats, README badges and Mermaid diagram, metrics sync) | 1629 ✅ |
