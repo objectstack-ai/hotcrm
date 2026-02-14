@@ -5,7 +5,7 @@ import { MarketingPlugin } from './packages/marketing/src/plugin';
 import { ProductsPlugin } from './packages/products/src/plugin';
 import { SupportPlugin } from './packages/support/src/plugin';
 import { HRPlugin } from './packages/hr/src/plugin';
-import { ConsolePlugin } from '@object-ui/console';
+// import { ConsolePlugin } from '@object-ui/console';
 
 /**
  * HotCRM Application Configuration
@@ -49,7 +49,7 @@ export default defineStack({
     ProductsPlugin,
     SupportPlugin,
     HRPlugin,
-    new ConsolePlugin(),
+    // new ConsolePlugin(),
   ],
   // Uses 'as any' because defineStack schema doesn't include runtime plugins
   // like ConsolePlugin — consistent with objectstack.shared.ts pattern.
