@@ -18,7 +18,7 @@ const OfferValidation: Hook = {
 
     if (doc.listing_id) {
       try {
-        const listing = await ctx.ql.findOne('listing', doc.listing_id);
+        const listing = await (ctx.ql as any).findOne('listing', doc.listing_id);
         if (listing && listing.status !== 'active') {
           throw new Error(`Validation Error: Cannot submit offer on a ${listing.status} listing`);
         }

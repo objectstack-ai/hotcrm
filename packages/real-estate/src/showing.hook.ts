@@ -15,7 +15,7 @@ const ShowingConflictDetection: Hook = {
     if (!doc.listing_id || !doc.scheduled_date) return;
 
     try {
-      const existingShowings = await ctx.ql.find('showing', {
+      const existingShowings = await (ctx.ql as any).find('showing', {
         filters: [
           ['listing_id', '=', doc.listing_id],
           ['scheduled_date', '=', doc.scheduled_date]

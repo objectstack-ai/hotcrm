@@ -14,7 +14,7 @@ const CommissionSplitCalculation: Hook = {
 
     if (doc.transaction_id && doc.commission_rate && !doc.commission_amount) {
       try {
-        const listing = await ctx.ql.findOne('listing', doc.transaction_id);
+        const listing = await (ctx.ql as any).findOne('listing', doc.transaction_id);
         if (listing?.sold_price) {
           doc.commission_amount = listing.sold_price * (doc.commission_rate / 100);
         }
@@ -40,7 +40,7 @@ const CommissionCapTracking: Hook = {
 
     try {
       const yearStart = new Date(new Date().getFullYear(), 0, 1).toISOString();
-      const agentCommissions = await ctx.ql.find('commission', {
+      const agentCommissions = await (ctx.ql as any).find('commission', {
         filters: [['agent_id', '=', commission.agent_id]]
       });
 
@@ -74,7 +74,7 @@ const CommissionPaymentScheduling: Hook = {
 
       if (!doc.payment_date) {
         try {
-          await ctx.ql.doc.update('commission', result._id, {
+          await (ctx.ql as any).doc.update('commission', result._id, {
             payment_date: paymentDate
           });
         } catch (error) {
