@@ -42,7 +42,7 @@ const KeyGeneration: Hook = {
 const ExpiryAlert: Hook = {
   name: 'ApiKeyExpiryAlert',
   object: 'api_key',
-  events: ['afterRead'],
+  events: ['afterFind'],
   handler: async (ctx: HookContext) => {
     const doc = ctx.result as Record<string, any>;
     if (!doc?._id || !doc.expires_at) return;
@@ -67,13 +67,13 @@ const ExpiryAlert: Hook = {
 const UsageTracking: Hook = {
   name: 'UsageTracking',
   object: 'api_key',
-  events: ['afterRead'],
+  events: ['afterFind'],
   handler: async (ctx: HookContext) => {
     const doc = ctx.result as Record<string, any>;
     if (!doc?._id || !doc.is_active) return;
 
     try {
-      await ctx.ql.doc.update('api_key', doc._id, {
+      await (ctx.ql as any).doc.update('api_key', doc._id, {
         usage_count: (doc.usage_count || 0) + 1,
         last_used: new Date().toISOString()
       });

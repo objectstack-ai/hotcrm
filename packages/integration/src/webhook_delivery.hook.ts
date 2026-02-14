@@ -15,7 +15,7 @@ const DeliveryTracking: Hook = {
     if (!doc?.subscription_id) return;
 
     try {
-      await ctx.ql.doc.update('webhook_subscription', doc.subscription_id, {
+      await (ctx.ql as any).doc.update('webhook_subscription', doc.subscription_id, {
         last_triggered: new Date().toISOString()
       });
     } catch (error) {
@@ -39,13 +39,13 @@ const RetryScheduling: Hook = {
     if (!doc?._id || doc.status !== 'failed') return;
 
     try {
-      const subscription = await ctx.ql.findOne('webhook_subscription', doc.subscription_id);
+      const subscription = await (ctx.ql as any).findOne('webhook_subscription', doc.subscription_id);
       if (!subscription || subscription.retry_policy === 'none') return;
 
       const maxRetries = subscription.max_retries || 3;
       if ((doc.attempt_number || 1) < maxRetries) {
         console.log(`🔄 Scheduling retry ${(doc.attempt_number || 1) + 1}/${maxRetries} for delivery ${doc._id}`);
-        await ctx.ql.doc.update('webhook_delivery', doc._id, { status: 'retrying' });
+        await (ctx.ql as any).doc.update('webhook_delivery', doc._id, { status: 'retrying' });
       }
     } catch (error) {
       console.warn('⚠️ Failed to schedule retry:', error);
@@ -68,13 +68,13 @@ const DeadLetterHandling: Hook = {
     if (!doc?._id || doc.status !== 'failed') return;
 
     try {
-      const subscription = await ctx.ql.findOne('webhook_subscription', doc.subscription_id);
+      const subscription = await (ctx.ql as any).findOne('webhook_subscription', doc.subscription_id);
       if (!subscription) return;
 
       const maxRetries = subscription.max_retries || 3;
       if ((doc.attempt_number || 1) >= maxRetries) {
         console.log(`💀 Dead letter: delivery ${doc._id} exhausted all ${maxRetries} retries`);
-        await ctx.ql.doc.update('webhook_subscription', doc.subscription_id, { status: 'failed' });
+        await (ctx.ql as any).doc.update('webhook_subscription', doc.subscription_id, { status: 'failed' });
       }
     } catch (error) {
       console.warn('⚠️ Failed to handle dead letter:', error);

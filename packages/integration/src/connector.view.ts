@@ -9,6 +9,7 @@ import { ViewSchema } from '@objectstack/spec/ui';
 // All Connectors View
 export const AllConnectorsView = {
   list: {
+    type: 'grid' as const,
     name: 'all_connectors',
     label: 'All Connectors',
     columns: [
@@ -30,6 +31,7 @@ export const AllConnectorsView = {
 // Active Connectors View
 export const ActiveConnectorsView = {
   list: {
+    type: 'grid' as const,
     name: 'active_connectors',
     label: 'Active Connectors',
     filter: [['status', '=', 'active']],
@@ -50,6 +52,7 @@ export const ActiveConnectorsView = {
 // Connectors with Errors View
 export const ErrorConnectorsView = {
   list: {
+    type: 'grid' as const,
     name: 'error_connectors',
     label: 'Connectors with Errors',
     filter: [['status', '=', 'error']],

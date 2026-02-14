@@ -40,11 +40,11 @@ const ConnectorDeactivation: Hook = {
     if (!doc?._id || doc.status !== 'inactive') return;
 
     try {
-      const connections = await ctx.ql.find('connection', {
+      const connections = await (ctx.ql as any).find('connection', {
         filters: [['connector_id', '=', doc._id], ['status', '=', 'connected']]
       });
       for (const conn of connections) {
-        await ctx.ql.doc.update('connection', conn._id, { status: 'disconnected' });
+        await (ctx.ql as any).doc.update('connection', conn._id, { status: 'disconnected' });
       }
       console.log(`🔌 Deactivated ${connections.length} connections for connector ${doc._id}`);
     } catch (error) {

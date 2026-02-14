@@ -17,8 +17,8 @@ const SyncMonitoring: Hook = {
     if (doc.status === 'completed' && doc.started_at && doc.completed_at) {
       const duration = new Date(doc.completed_at).getTime() - new Date(doc.started_at).getTime();
       try {
-        await ctx.ql.doc.update('sync_log', doc._id, { duration_ms: duration });
-        await ctx.ql.doc.update('sync_config', doc.sync_config_id, {
+        await (ctx.ql as any).doc.update('sync_log', doc._id, { duration_ms: duration });
+        await (ctx.ql as any).doc.update('sync_config', doc.sync_config_id, {
           last_sync: doc.completed_at
         });
       } catch (error) {
@@ -61,7 +61,7 @@ const RetryLogic: Hook = {
     if (!doc?._id || doc.status !== 'failed') return;
 
     try {
-      const config = await ctx.ql.findOne('sync_config', doc.sync_config_id);
+      const config = await (ctx.ql as any).findOne('sync_config', doc.sync_config_id);
       if (config?.is_active && config.frequency !== 'manual') {
         console.log(`🔄 Scheduling retry for sync config ${doc.sync_config_id}`);
       }
