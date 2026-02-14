@@ -1,15 +1,20 @@
+/**
+ * @deprecated This package is deprecated and no longer maintained.
+ * Please use the root objectstack.config.ts with @objectstack/cli instead.
+ * 
+ * This file is kept for reference purposes only and should not be used.
+ * See packages/server/README.md for migration instructions.
+ */
+
 import { defineStack } from '@objectstack/spec';
-import CRM from '@hotcrm/crm';
-import Finance from '@hotcrm/finance';
-import Marketing from '@hotcrm/marketing';
-import Products from '@hotcrm/products';
-import Support from '@hotcrm/support';
-import HR from '@hotcrm/hr';
 
 /**
- * HotCRM Server Configuration
+ * HotCRM Server Configuration (DEPRECATED)
  * 
- * Aggregates all business plugins into a single runtime application.
+ * This configuration is deprecated. The application now uses the root
+ * objectstack.config.ts file instead.
+ * 
+ * Migration: Use /objectstack.config.ts in the root directory
  */
 export default defineStack({
   manifest: {
@@ -17,17 +22,11 @@ export default defineStack({
     namespace: 'hotcrm',
     version: '1.0.0',
     type: 'app',
-    name: 'HotCRM Enterprise Server',
-    description: 'AI-Native Enterprise CRM with Sales, Marketing, Products, Finance, Service, and HR clouds',
+    name: 'HotCRM Enterprise Server (DEPRECATED)',
+    description: 'This configuration is deprecated. Use root objectstack.config.ts instead.',
   },
 
-  // Register all Plugins
-  plugins: [
-    CRM.CRMPlugin,
-    Finance.FinancePlugin,
-    Marketing.MarketingPlugin,
-    Products.ProductsPlugin,
-    Support.SupportPlugin,
-    HR.HRPlugin
-  ],
+  // This configuration is no longer used
+  // All plugins are now registered in /objectstack.config.ts
+  plugins: [],
 });

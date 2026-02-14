@@ -1,7 +1,8 @@
 {
   "name": "@hotcrm/server",
   "version": "1.0.0",
-  "description": "HotCRM Application Server",
+  "description": "HotCRM Application Server (DEPRECATED - Use root objectstack.config.ts instead)",
+  "private": true,
   "main": "dist/src/index.js",
   "scripts": {
     "build": "tsc",
@@ -12,12 +13,6 @@
     "compile": "objectstack compile"
   },
   "dependencies": {
-    "@hotcrm/crm": "workspace:*",
-    "@hotcrm/finance": "workspace:*",
-    "@hotcrm/hr": "workspace:*",
-    "@hotcrm/marketing": "workspace:*",
-    "@hotcrm/products": "workspace:*",
-    "@hotcrm/support": "workspace:*",
     "@objectstack/cli": "^3.0.2",
     "@objectstack/core": "^3.0.2",
     "@objectstack/metadata": "^3.0.2",
