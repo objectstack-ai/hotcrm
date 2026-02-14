@@ -7,7 +7,11 @@
     "strict": false,
     "strictNullChecks": false
   },
-  "references": [{ "path": "../core" }, { "path": "../support" }],
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }

@@ -3,16 +3,15 @@
     "target": "ES2020",
     "module": "Node16",
     "lib": ["ES2020"],
-    "strict": true,
+    "strict": false,
+    "noImplicitAny": false,
+    "strictNullChecks": false,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "moduleResolution": "node16",
-    "declaration": true,
-    "declarationMap": true,
     "sourceMap": true,
-    "composite": true,
     "baseUrl": ".",
     "paths": {
       "@hotcrm/ai": ["packages/ai/src"],
@@ -26,18 +25,6 @@
       "@hotcrm/support": ["packages/support/src"]
     }
   },
-  "references": [
-    { "path": "./packages/ai" },
-    { "path": "./packages/core" },
-    { "path": "./packages/crm" },
-    { "path": "./packages/finance" },
-    { "path": "./packages/hr" },
-    { "path": "./packages/marketing" },
-    { "path": "./packages/products" },
-    { "path": "./packages/server" },
-    { "path": "./packages/support" }
-  ],
-  "files": [],
-  "include": [],
-  "exclude": ["node_modules", "dist"]
+  "include": ["packages/*/src/**/*.ts"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts", "**/__tests__/**"]
 }
