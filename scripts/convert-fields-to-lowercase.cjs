@@ -14,7 +14,7 @@
  * 5. Foreign keys in relationships
  * 
  * Usage:
- *   node scripts/convert-fields-to-lowercase.js
+ *   node scripts/convert-fields-to-lowercase.cjs
  */
 
 const fs = require('fs');
@@ -234,7 +234,7 @@ function main() {
   
   console.log('\n✅ Conversion completed!');
   console.log('\n💡 Next steps:');
-  console.log('   1. Run: node scripts/validate-protocol.js');
+  console.log('   1. Run: node scripts/validate-protocol.cjs');
   console.log('   2. Build packages: pnpm build');
   console.log('   3. Review and commit changes');
 }

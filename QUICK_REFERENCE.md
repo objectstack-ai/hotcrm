@@ -99,7 +99,7 @@ pnpm lint                  # 检查所有代码 | Lint all code
 pnpm lint --fix            # 自动修复 | Auto-fix
 
 # 验证 | Validation
-node scripts/validate-protocol.js  # 验证元数据 | Validate metadata
+node scripts/validate-protocol.cjs  # 验证元数据 | Validate metadata
 ```
 
 ### 包管理 | Package Management
@@ -373,7 +373,7 @@ import { ObjectSchema } from '@objectstack/spec';  // 缺少子路径
 
 ```bash
 # 运行验证脚本
-node scripts/validate-protocol.js
+node scripts/validate-protocol.cjs
 
 # 检查输出，修正所有snake_case问题
 # 对象名称: snake_case (例如: account, sales_lead)

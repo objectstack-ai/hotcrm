@@ -9,7 +9,7 @@
  * IMPORTANT: Field names must be lowercase/snake_case (e.g., first_name, account_id)
  * 
  * Usage:
- *   node scripts/validate-protocol.js
+ *   node scripts/validate-protocol.cjs
  * 
  * Exit codes:
  *   0 - All objects are compliant

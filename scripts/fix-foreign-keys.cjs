@@ -6,7 +6,7 @@
  * This script converts all foreignKey references in relationships from PascalCase to snake_case.
  * 
  * Usage:
- *   node scripts/fix-foreign-keys.js
+ *   node scripts/fix-foreign-keys.cjs
  */
 
 const fs = require('fs');
