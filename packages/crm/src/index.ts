@@ -50,5 +50,8 @@ export { SalesCoPilotAgent } from './sales_copilot.agent';
 // Export plugin definition
 export { default as CRMPlugin } from './plugin';
 
+// Export translations
+export { CrmTranslations } from './translations';
+
 // Note: YAML files (Campaign) are kept for backward compatibility
 // TypeScript definitions are preferred as per the custom instructions
