@@ -61,11 +61,13 @@ async function bootstrap(): Promise<Hono> {
     version: '1.0.0',
     init: async (ctx: any) => {
       const store = new Map<string, { value: unknown; expiresAt: number | null }>();
+      const isExpired = (entry: { expiresAt: number | null }) =>
+        entry.expiresAt !== null && Date.now() > entry.expiresAt;
       ctx.registerService('cache', {
         async get(key: string) {
           const entry = store.get(key);
           if (!entry) return undefined;
-          if (entry.expiresAt !== null && Date.now() > entry.expiresAt) {
+          if (isExpired(entry)) {
             store.delete(key);
             return undefined;
           }
@@ -86,7 +88,7 @@ async function bootstrap(): Promise<Hono> {
         async has(key: string) {
           const entry = store.get(key);
           if (!entry) return false;
-          if (entry.expiresAt !== null && Date.now() > entry.expiresAt) {
+          if (isExpired(entry)) {
             store.delete(key);
             return false;
           }
