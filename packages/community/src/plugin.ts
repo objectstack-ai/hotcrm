@@ -17,27 +17,27 @@ import { PluginSchema } from '@objectstack/spec/kernel';
 import type { PluginDefinition } from '@objectstack/spec/kernel';
 
 // Import all Community objects
-import { Community } from './community.object';
-import { ForumCategory } from './forum_category.object';
-import { Topic } from './topic.object';
-import { Reply } from './reply.object';
-import { Idea } from './idea.object';
-import { UserGroup } from './user_group.object';
-import { CommunityEvent } from './community_event.object';
-import { Badge } from './badge.object';
+import { Community } from './community.object.js';
+import { ForumCategory } from './forum_category.object.js';
+import { Topic } from './topic.object.js';
+import { Reply } from './reply.object.js';
+import { Idea } from './idea.object.js';
+import { UserGroup } from './user_group.object.js';
+import { CommunityEvent } from './community_event.object.js';
+import { Badge } from './badge.object.js';
 
 // Import hooks
-import { TopicContentModeration, TopicNotification, TopicAutoTagging, TopicViewCounting } from './topic.hook';
-import { ReplyAnswerAcceptance, ReplyUpvoteTracking, ReplyAuthorReputation, ReplySpamDetection } from './reply.hook';
-import { IdeaVoteAggregation, IdeaStatusTransition, IdeaNotification } from './idea.hook';
-import { GroupMembershipValidation, GroupAutoAssignment, GroupAccessEnforcement } from './user_group.hook';
-import { EventRSVPManagement, EventCapacityEnforcement, EventReminderScheduling } from './community_event.hook';
-import { BadgeAutoAward, BadgePointsCalculation } from './badge.hook';
-import { CommunityConfigValidation, CommunityFeatureToggle, CommunityDomainVerification } from './community.hook';
+import { TopicContentModeration, TopicNotification, TopicAutoTagging, TopicViewCounting } from './topic.hook.js';
+import { ReplyAnswerAcceptance, ReplyUpvoteTracking, ReplyAuthorReputation, ReplySpamDetection } from './reply.hook.js';
+import { IdeaVoteAggregation, IdeaStatusTransition, IdeaNotification } from './idea.hook.js';
+import { GroupMembershipValidation, GroupAutoAssignment, GroupAccessEnforcement } from './user_group.hook.js';
+import { EventRSVPManagement, EventCapacityEnforcement, EventReminderScheduling } from './community_event.hook.js';
+import { BadgeAutoAward, BadgePointsCalculation } from './badge.hook.js';
+import { CommunityConfigValidation, CommunityFeatureToggle, CommunityDomainVerification } from './community.hook.js';
 
 // Import actions
-import CommunityAIAction from './community_ai.action';
-import CommunityAnalyticsAction from './community_analytics.action';
+import CommunityAIAction from './community_ai.action.js';
+import CommunityAnalyticsAction from './community_analytics.action.js';
 
 /**
  * Community Plugin Definition

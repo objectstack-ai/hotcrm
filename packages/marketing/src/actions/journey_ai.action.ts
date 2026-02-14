@@ -10,7 +10,7 @@
  * 4. Analyze Dropoff - Analyze where contacts drop off in the journey
  */
 
-import { broker } from '../db';
+import { broker } from '../db.js';
 
 // ============================================================================
 // 1. OPTIMIZE JOURNEY

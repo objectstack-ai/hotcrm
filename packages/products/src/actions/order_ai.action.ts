@@ -10,7 +10,7 @@
  * 4. Optimize Fulfillment - Suggest fulfillment optimization strategies
  */
 
-import { broker } from '../db';
+import { broker } from '../db.js';
 
 // ============================================================================
 // 1. PREDICT DELIVERY

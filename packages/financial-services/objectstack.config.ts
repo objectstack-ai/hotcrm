@@ -1,5 +1,5 @@
 import { defineStack } from '@objectstack/spec';
-import { FinancialServicesPlugin } from './src/plugin';
+import { FinancialServicesPlugin } from './src/plugin.js';
 
 /**
  * Financial Services Package Configuration

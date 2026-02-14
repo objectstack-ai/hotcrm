@@ -1,5 +1,5 @@
 import { defineStack } from '@objectstack/spec';
-import { SupportPlugin } from './src/plugin';
+import { SupportPlugin } from './src/plugin.js';
 
 /**
  * Support Package Configuration

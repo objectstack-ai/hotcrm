@@ -11,7 +11,7 @@
  * 5. Cash Flow Forecasting - Predict incoming payments
  */
 
-import { broker } from '../db';
+import { broker } from '../db.js';
 
 // ============================================================================
 // 1. PAYMENT DEFAULT PREDICTION

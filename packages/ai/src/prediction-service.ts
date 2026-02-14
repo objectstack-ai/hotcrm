@@ -5,11 +5,11 @@
  * Handles model invocation, caching, monitoring, and error handling
  */
 
-import ModelRegistry, { ModelConfig } from './model-registry';
-import { ProviderFactory } from './providers/provider-factory';
-import { BaseMLProvider } from './providers/base-provider';
-import CacheManager from './cache-manager';
-import PerformanceMonitor from './performance-monitor';
+import ModelRegistry, { ModelConfig } from './model-registry.js';
+import { ProviderFactory } from './providers/provider-factory.js';
+import { BaseMLProvider } from './providers/base-provider.js';
+import CacheManager from './cache-manager.js';
+import PerformanceMonitor from './performance-monitor.js';
 
 export interface PredictionRequest {
   /** Model ID to use */

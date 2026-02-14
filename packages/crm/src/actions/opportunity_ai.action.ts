@@ -11,7 +11,7 @@
  * 5. Optimal Close Date Prediction - Realistic timeline forecasting
  */
 
-import { broker } from '../db';
+import { broker } from '../db.js';
 
 // ============================================================================
 // 1. WIN PROBABILITY PREDICTION

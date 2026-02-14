@@ -1,44 +1,44 @@
 import { PluginSchema } from '@objectstack/spec/kernel';
 import type { PluginDefinition } from '@objectstack/spec/kernel';
 
-import { Campaign } from './campaign.object';
-import { CampaignMember } from './campaign_member.object';
-import { EmailTemplate } from './email_template.object';
-import { LandingPage } from './landing_page.object';
-import { Form } from './form.object';
-import { MarketingList } from './marketing_list.object';
-import { Unsubscribe } from './unsubscribe.object';
-import { AutomationWorkflow } from './automation_workflow.object';
-import { EmailSend } from './email_send.object';
-import { LeadNurtureProgram } from './lead_nurture_program.object';
-import { Touchpoint } from './touchpoint.object';
-import { Journey } from './journey.object';
-import { JourneyStep } from './journey_step.object';
-import { AbTest } from './ab_test.object';
-import { AbTestVariant } from './ab_test_variant.object';
+import { Campaign } from './campaign.object.js';
+import { CampaignMember } from './campaign_member.object.js';
+import { EmailTemplate } from './email_template.object.js';
+import { LandingPage } from './landing_page.object.js';
+import { Form } from './form.object.js';
+import { MarketingList } from './marketing_list.object.js';
+import { Unsubscribe } from './unsubscribe.object.js';
+import { AutomationWorkflow } from './automation_workflow.object.js';
+import { EmailSend } from './email_send.object.js';
+import { LeadNurtureProgram } from './lead_nurture_program.object.js';
+import { Touchpoint } from './touchpoint.object.js';
+import { Journey } from './journey.object.js';
+import { JourneyStep } from './journey_step.object.js';
+import { AbTest } from './ab_test.object.js';
+import { AbTestVariant } from './ab_test_variant.object.js';
 
-import { CampaignROIHook } from './hooks/roi.hook';
-import { CampaignROICalculationTrigger, CampaignBudgetTrackingTrigger, CampaignStatusChangeTrigger, CampaignDateValidationTrigger } from './hooks/campaign.hook';
-import { CampaignMemberEngagementTrigger, CampaignMemberLeadScoringTrigger, CampaignMemberStatsTrigger, CampaignMemberBounceHandlerTrigger } from './hooks/campaign_member.hook';
-import { EmailSendTrackingTrigger, EmailSendValidationTrigger } from './hooks/email_send.hook';
-import { AutomationWorkflowValidationTrigger, AutomationWorkflowMetricsTrigger } from './hooks/automation_workflow.hook';
-import { NurtureEnrollmentTrigger, NurtureGraduationTrigger } from './hooks/lead_nurture.hook';
-import { TouchpointRecordingTrigger, RevenueAttributionTrigger } from './hooks/attribution.hook';
-import { UnsubscribeComplianceTrigger, UnsubscribeValidationTrigger, GlobalSuppressionTrigger } from './hooks/unsubscribe.hook';
-import { EmailTemplateContentValidationTrigger, EmailTemplateTokenValidationTrigger } from './hooks/email_template.hook';
-import { FormFieldValidationTrigger, FormSubmissionTrackingTrigger } from './hooks/form.hook';
-import { LandingPageLifecycleValidationTrigger, LandingPageMetricsTrigger } from './hooks/landing_page.hook';
-import { MarketingListDuplicateDetectionTrigger, MarketingListMembershipCountTrigger } from './hooks/marketing_list.hook';
-import { TouchpointTimestampValidationTrigger, TouchpointAttributionScoringTrigger } from './hooks/touchpoint.hook';
-import { JourneyValidationTrigger, JourneyMetricsTrigger } from './hooks/journey.hook';
-import { AbTestValidationTrigger, AbTestWinnerSelectionTrigger } from './hooks/ab_test.hook';
+import { CampaignROIHook } from './hooks/roi.hook.js';
+import { CampaignROICalculationTrigger, CampaignBudgetTrackingTrigger, CampaignStatusChangeTrigger, CampaignDateValidationTrigger } from './hooks/campaign.hook.js';
+import { CampaignMemberEngagementTrigger, CampaignMemberLeadScoringTrigger, CampaignMemberStatsTrigger, CampaignMemberBounceHandlerTrigger } from './hooks/campaign_member.hook.js';
+import { EmailSendTrackingTrigger, EmailSendValidationTrigger } from './hooks/email_send.hook.js';
+import { AutomationWorkflowValidationTrigger, AutomationWorkflowMetricsTrigger } from './hooks/automation_workflow.hook.js';
+import { NurtureEnrollmentTrigger, NurtureGraduationTrigger } from './hooks/lead_nurture.hook.js';
+import { TouchpointRecordingTrigger, RevenueAttributionTrigger } from './hooks/attribution.hook.js';
+import { UnsubscribeComplianceTrigger, UnsubscribeValidationTrigger, GlobalSuppressionTrigger } from './hooks/unsubscribe.hook.js';
+import { EmailTemplateContentValidationTrigger, EmailTemplateTokenValidationTrigger } from './hooks/email_template.hook.js';
+import { FormFieldValidationTrigger, FormSubmissionTrackingTrigger } from './hooks/form.hook.js';
+import { LandingPageLifecycleValidationTrigger, LandingPageMetricsTrigger } from './hooks/landing_page.hook.js';
+import { MarketingListDuplicateDetectionTrigger, MarketingListMembershipCountTrigger } from './hooks/marketing_list.hook.js';
+import { TouchpointTimestampValidationTrigger, TouchpointAttributionScoringTrigger } from './hooks/touchpoint.hook.js';
+import { JourneyValidationTrigger, JourneyMetricsTrigger } from './hooks/journey.hook.js';
+import { AbTestValidationTrigger, AbTestWinnerSelectionTrigger } from './hooks/ab_test.hook.js';
 
 // Import actions
-import CampaignAIAction from './actions/campaign_ai.action';
-import ContentGeneratorAction from './actions/content_generator.action';
-import MarketingAnalyticsAction from './actions/marketing_analytics.action';
-import JourneyAIAction from './actions/journey_ai.action';
-import { CampaignWorkflows } from './campaign.workflow';
+import CampaignAIAction from './actions/campaign_ai.action.js';
+import ContentGeneratorAction from './actions/content_generator.action.js';
+import MarketingAnalyticsAction from './actions/marketing_analytics.action.js';
+import JourneyAIAction from './actions/journey_ai.action.js';
+import { CampaignWorkflows } from './campaign.workflow.js';
 
 export const MarketingPlugin = {
   name: 'marketing',

@@ -1,7 +1,7 @@
 import type { TranslationBundle } from '@objectstack/spec/system';
-import { en } from './en';
-import { zhCN } from './zh-CN';
-import { jaJP } from './ja-JP';
+import { en } from './en.js';
+import { zhCN } from './zh-CN.js';
+import { jaJP } from './ja-JP.js';
 
 /**
  * CRM Sales Cloud — Internationalization (i18n)

@@ -7,7 +7,7 @@
  * 3. Assess Data Quality - AI-powered data quality assessment for sync pipelines
  */
 
-import { broker } from '../db';
+import { broker } from '../db.js';
 
 // ============================================================================
 // 1. SUGGEST FIELD MAPPINGS

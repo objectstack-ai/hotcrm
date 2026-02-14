@@ -9,7 +9,7 @@
  * 3. SLA Compliance Metrics - Measure adherence to service level agreements
  */
 
-import { broker } from '../db';
+import { broker } from '../db.js';
 
 // ============================================================================
 // SHARED UTILITIES

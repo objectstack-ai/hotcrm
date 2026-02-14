@@ -4,7 +4,7 @@
  * Integration with Azure Machine Learning for real-time inference
  */
 
-import BaseMLProvider, { MLProviderConfig, PredictionInput, PredictionOutput } from './base-provider';
+import BaseMLProvider, { MLProviderConfig, PredictionInput, PredictionOutput } from './base-provider.js';
 
 // Type stubs for when axios is not available
 interface AxiosInstance {

@@ -11,7 +11,7 @@
  * 5. Product Adoption Prediction - Predict product adoption likelihood
  */
 
-import { broker } from '../db';
+import { broker } from '../db.js';
 
 // ============================================================================
 // 1. PRODUCT RECOMMENDATIONS

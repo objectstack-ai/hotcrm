@@ -8,7 +8,7 @@
  * 4. Handle Stripe Webhook
  */
 
-import { broker } from '../db';
+import { broker } from '../db.js';
 
 // ============================================================================
 // 1. CREATE PAYMENT INTENT

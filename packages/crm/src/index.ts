@@ -24,34 +24,34 @@
  */
 
 // Export CRM objects
-export { Account } from './account.object';
-export { Activity } from './activity.object';
-export { Contact } from './contact.object';
-export { Lead } from './lead.object';
-export { Opportunity } from './opportunity.object';
-export { Task } from './task.object';
-export { Note } from './note.object';
-export { AssignmentRule } from './assignment_rule.object';
+export { Account } from './account.object.js';
+export { Activity } from './activity.object.js';
+export { Contact } from './contact.object.js';
+export { Lead } from './lead.object.js';
+export { Opportunity } from './opportunity.object.js';
+export { Task } from './task.object.js';
+export { Note } from './note.object.js';
+export { AssignmentRule } from './assignment_rule.object.js';
 
 
 // Export hooks
-export * from './hooks/lead.hook';
-export * from './hooks/opportunity.hook';
+export * from './hooks/lead.hook.js';
+export * from './hooks/opportunity.hook.js';
 
 
 // Export actions
-export * from './actions/ai_smart_briefing.action';
-export { default as LeadConvertAction } from './actions/lead_convert.action';
-export { default as SalesPerformanceActions } from './actions/sales_performance.action';
+export * from './actions/ai_smart_briefing.action.js';
+export { default as LeadConvertAction } from './actions/lead_convert.action.js';
+export { default as SalesPerformanceActions } from './actions/sales_performance.action.js';
 
 // Export AI Agents
-export { SalesCoPilotAgent } from './sales_copilot.agent';
+export { SalesCoPilotAgent } from './sales_copilot.agent.js';
 
 // Export plugin definition
-export { default as CRMPlugin } from './plugin';
+export { default as CRMPlugin } from './plugin.js';
 
 // Export translations
-export { CrmTranslations } from './translations';
+export { CrmTranslations } from './translations/index.js';
 
 // Note: YAML files (Campaign) are kept for backward compatibility
 // TypeScript definitions are preferred as per the custom instructions

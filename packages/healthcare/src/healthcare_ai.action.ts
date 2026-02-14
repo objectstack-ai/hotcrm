@@ -8,7 +8,7 @@
  * 4. Readmission Prediction - Predict likelihood of patient readmission
  */
 
-import { broker } from './db';
+import { broker } from './db.js';
 
 // ============================================================================
 // 1. SCHEDULING OPTIMIZATION

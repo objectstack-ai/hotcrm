@@ -18,22 +18,22 @@ import { PluginSchema } from '@objectstack/spec/kernel';
 import type { PluginDefinition } from '@objectstack/spec/kernel';
 
 // Import all Healthcare objects
-import { Patient } from './patient.object';
-import { Appointment } from './appointment.object';
-import { Insurance } from './insurance.object';
-import { Referral } from './referral.object';
-import { HipaaAudit } from './hipaa_audit.object';
-import { Prescription } from './prescription.object';
-import { CarePlan } from './care_plan.object';
+import { Patient } from './patient.object.js';
+import { Appointment } from './appointment.object.js';
+import { Insurance } from './insurance.object.js';
+import { Referral } from './referral.object.js';
+import { HipaaAudit } from './hipaa_audit.object.js';
+import { Prescription } from './prescription.object.js';
+import { CarePlan } from './care_plan.object.js';
 
 // Import hooks
-import { AppointmentConflictDetection, AppointmentReminderNotification, AppointmentNoShowTracking, AppointmentTelehealthLink } from './appointment.hook';
-import { PatientDataEncryption, PatientConsentTracking, PatientInsuranceVerification } from './patient.hook';
-import { ReferralAutoRouting, ReferralStatusTracking, ReferralFollowUpScheduling } from './referral.hook';
-import { HipaaAuditTrail, HipaaAnomalyDetection } from './hipaa_audit.hook';
+import { AppointmentConflictDetection, AppointmentReminderNotification, AppointmentNoShowTracking, AppointmentTelehealthLink } from './appointment.hook.js';
+import { PatientDataEncryption, PatientConsentTracking, PatientInsuranceVerification } from './patient.hook.js';
+import { ReferralAutoRouting, ReferralStatusTracking, ReferralFollowUpScheduling } from './referral.hook.js';
+import { HipaaAuditTrail, HipaaAnomalyDetection } from './hipaa_audit.hook.js';
 
 // Import actions
-import HealthcareAIAction from './healthcare_ai.action';
+import HealthcareAIAction from './healthcare_ai.action.js';
 
 /**
  * Healthcare Plugin Definition

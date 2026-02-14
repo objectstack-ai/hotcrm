@@ -7,7 +7,7 @@
  * 3. Executive Summary - generate executive summary from KPIs and metrics
  */
 
-import { broker } from '../db';
+import { broker } from '../db.js';
 
 // ============================================================================
 // 1. ANOMALY DETECTION

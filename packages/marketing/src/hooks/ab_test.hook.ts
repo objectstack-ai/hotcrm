@@ -1,6 +1,6 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
-import { broker } from '../db';
+import { broker } from '../db.js';
 
 
 /**

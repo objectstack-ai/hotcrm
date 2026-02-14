@@ -17,34 +17,34 @@ import { PluginSchema } from '@objectstack/spec/kernel';
 import type { PluginDefinition } from '@objectstack/spec/kernel';
 
 // Import all Integration objects
-import { Connector } from './connector.object';
-import { Connection } from './connection.object';
-import { SyncConfig } from './sync_config.object';
-import { SyncLog } from './sync_log.object';
-import { WebhookSubscription } from './webhook_subscription.object';
-import { WebhookDelivery } from './webhook_delivery.object';
-import { ApiKey } from './api_key.object';
-import { FieldMapping } from './field_mapping.object';
+import { Connector } from './connector.object.js';
+import { Connection } from './connection.object.js';
+import { SyncConfig } from './sync_config.object.js';
+import { SyncLog } from './sync_log.object.js';
+import { WebhookSubscription } from './webhook_subscription.object.js';
+import { WebhookDelivery } from './webhook_delivery.object.js';
+import { ApiKey } from './api_key.object.js';
+import { FieldMapping } from './field_mapping.object.js';
 
 // Import hooks
-import { ConnectorActivation, ConnectorDeactivation, ConnectorHealthCheck } from './connector.hook';
-import { ConnectionValidation, TokenRefresh, ExpiryAlert } from './connection.hook';
-import { MappingValidation, ScheduleManagement, ConflictResolution } from './sync_config.hook';
-import { SyncMonitoring, FailureAlert, RetryLogic } from './sync_log.hook';
-import { SubscriptionValidation, SecretRotation, EndpointVerification } from './webhook_subscription.hook';
-import { DeliveryTracking, RetryScheduling, DeadLetterHandling } from './webhook_delivery.hook';
-import { KeyGeneration, ExpiryAlert as ApiKeyExpiryAlert, UsageTracking } from './api_key.hook';
+import { ConnectorActivation, ConnectorDeactivation, ConnectorHealthCheck } from './connector.hook.js';
+import { ConnectionValidation, TokenRefresh, ExpiryAlert } from './connection.hook.js';
+import { MappingValidation, ScheduleManagement, ConflictResolution } from './sync_config.hook.js';
+import { SyncMonitoring, FailureAlert, RetryLogic } from './sync_log.hook.js';
+import { SubscriptionValidation, SecretRotation, EndpointVerification } from './webhook_subscription.hook.js';
+import { DeliveryTracking, RetryScheduling, DeadLetterHandling } from './webhook_delivery.hook.js';
+import { KeyGeneration, ExpiryAlert as ApiKeyExpiryAlert, UsageTracking } from './api_key.hook.js';
 
 // Import actions
-import SyncAIAction from './actions/sync_ai.action';
-import ConnectorAIAction from './actions/connector_ai.action';
+import SyncAIAction from './actions/sync_ai.action.js';
+import ConnectorAIAction from './actions/connector_ai.action.js';
 
 // Import connector actions
-import StripeAction from './connectors/stripe.action';
-import DocuSignAction from './connectors/docusign.action';
-import SlackAction from './connectors/slack.action';
-import GmailAction from './connectors/gmail.action';
-import TeamsAction from './connectors/teams.action';
+import StripeAction from './connectors/stripe.action.js';
+import DocuSignAction from './connectors/docusign.action.js';
+import SlackAction from './connectors/slack.action.js';
+import GmailAction from './connectors/gmail.action.js';
+import TeamsAction from './connectors/teams.action.js';
 
 /**
  * Integration Plugin Definition

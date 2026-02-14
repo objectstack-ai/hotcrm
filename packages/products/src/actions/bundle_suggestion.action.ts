@@ -11,7 +11,7 @@
  * 5. Bundle Improvement Recommendations - Suggest bundle improvements
  */
 
-import { broker } from '../db';
+import { broker } from '../db.js';
 
 // ============================================================================
 // 1. BUNDLE SUGGESTIONS

@@ -1,5 +1,5 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
-import { updateCampaignMetrics } from './campaign.hook';
+import { updateCampaignMetrics } from './campaign.hook.js';
 
 /**
  * Campaign Member Engagement Tracking Trigger

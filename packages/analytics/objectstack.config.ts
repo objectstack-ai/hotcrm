@@ -1,5 +1,5 @@
 import { defineStack } from '@objectstack/spec';
-import { AnalyticsPlugin } from './src/plugin';
+import { AnalyticsPlugin } from './src/plugin.js';
 
 /**
  * Analytics Package Configuration

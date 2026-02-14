@@ -8,7 +8,7 @@
  * 4. Handle Outlook Webhook
  */
 
-import { broker } from '../db';
+import { broker } from '../db.js';
 
 // ============================================================================
 // 1. LOG OUTLOOK EMAIL

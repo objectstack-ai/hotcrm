@@ -8,7 +8,7 @@
  * 4. Investment Recommendation - Generate personalized investment recommendations
  */
 
-import { broker } from './db';
+import { broker } from './db.js';
 
 // ============================================================================
 // 1. PORTFOLIO OPTIMIZATION

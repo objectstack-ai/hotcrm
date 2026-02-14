@@ -15,38 +15,38 @@ import { PluginSchema } from '@objectstack/spec/kernel';
 import type { PluginDefinition } from '@objectstack/spec/kernel';
 
 // Import all Products objects
-import { Product } from './product.object';
-import { Pricebook } from './pricebook.object';
-import { Quote } from './quote.object';
+import { Product } from './product.object.js';
+import { Pricebook } from './pricebook.object.js';
+import { Quote } from './quote.object.js';
 
-import { QuoteLineItem } from './quote_line_item.object';
-import { ProductBundle } from './product_bundle.object';
-import { ProductBundleComponent } from './product_bundle_component.object';
-import { PriceRule } from './price_rule.object';
-import { ApprovalRequest } from './approval_request.object';
-import { DiscountSchedule } from './discount_schedule.object';
-import { Order } from './order.object';
-import { OrderItem } from './order_item.object';
-import { Subscription } from './subscription.object';
-import { ProductOption } from './product_option.object';
+import { QuoteLineItem } from './quote_line_item.object.js';
+import { ProductBundle } from './product_bundle.object.js';
+import { ProductBundleComponent } from './product_bundle_component.object.js';
+import { PriceRule } from './price_rule.object.js';
+import { ApprovalRequest } from './approval_request.object.js';
+import { DiscountSchedule } from './discount_schedule.object.js';
+import { Order } from './order.object.js';
+import { OrderItem } from './order_item.object.js';
+import { Subscription } from './subscription.object.js';
+import { ProductOption } from './product_option.object.js';
 
-import { QuotePricingHook } from './hooks/quote.hook';
-import ProductHook from './hooks/product.hook';
-import PricebookHook from './hooks/pricebook.hook';
-import { QuoteLineCalculationTrigger, QuoteLineTotalUpdateTrigger } from './hooks/quote_line_item.hook';
-import { ApprovalRequestCreationTrigger, ApprovalDecisionTrigger } from './hooks/approval_request.hook';
-import { ProductBundleValidationTrigger, ProductBundleComponentCompletenessTrigger } from './hooks/product_bundle.hook';
-import { PriceRuleValidationTrigger, PriceRuleConflictDetectionTrigger } from './hooks/price_rule.hook';
-import { DiscountScheduleActivationTrigger, DiscountScheduleOverlapDetectionTrigger } from './hooks/discount_schedule.hook';
-import { OrderValidationTrigger, OrderStatusLifecycleTrigger } from './hooks/order.hook';
-import { SubscriptionValidationTrigger, SubscriptionRenewalReminderTrigger } from './hooks/subscription.hook';
-import { ApprovalWorkflows } from './approval.workflow';
+import { QuotePricingHook } from './hooks/quote.hook.js';
+import ProductHook from './hooks/product.hook.js';
+import PricebookHook from './hooks/pricebook.hook.js';
+import { QuoteLineCalculationTrigger, QuoteLineTotalUpdateTrigger } from './hooks/quote_line_item.hook.js';
+import { ApprovalRequestCreationTrigger, ApprovalDecisionTrigger } from './hooks/approval_request.hook.js';
+import { ProductBundleValidationTrigger, ProductBundleComponentCompletenessTrigger } from './hooks/product_bundle.hook.js';
+import { PriceRuleValidationTrigger, PriceRuleConflictDetectionTrigger } from './hooks/price_rule.hook.js';
+import { DiscountScheduleActivationTrigger, DiscountScheduleOverlapDetectionTrigger } from './hooks/discount_schedule.hook.js';
+import { OrderValidationTrigger, OrderStatusLifecycleTrigger } from './hooks/order.hook.js';
+import { SubscriptionValidationTrigger, SubscriptionRenewalReminderTrigger } from './hooks/subscription.hook.js';
+import { ApprovalWorkflows } from './approval.workflow.js';
 
 // Import actions
-import BundleSuggestionAction from './actions/bundle_suggestion.action';
-import PricingOptimizerAction from './actions/pricing_optimizer.action';
-import ProductRecommendationAction from './actions/product_recommendation.action';
-import OrderAIAction from './actions/order_ai.action';
+import BundleSuggestionAction from './actions/bundle_suggestion.action.js';
+import PricingOptimizerAction from './actions/pricing_optimizer.action.js';
+import ProductRecommendationAction from './actions/product_recommendation.action.js';
+import OrderAIAction from './actions/order_ai.action.js';
 
 /**
  * Products Plugin Definition

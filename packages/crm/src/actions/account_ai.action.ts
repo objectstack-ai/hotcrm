@@ -11,7 +11,7 @@
  * 5. Account Enrichment - Auto-fill missing data from external sources
  */
 
-import { broker } from '../db';
+import { broker } from '../db.js';
 
 // ============================================================================
 // 1. ACCOUNT HEALTH SCORING

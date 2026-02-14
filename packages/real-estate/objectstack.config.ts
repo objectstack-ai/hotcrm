@@ -1,5 +1,5 @@
 import { defineStack } from '@objectstack/spec';
-import { RealEstatePlugin } from './src/plugin';
+import { RealEstatePlugin } from './src/plugin.js';
 
 /**
  * Real Estate Package Configuration

@@ -17,46 +17,46 @@ import { PluginSchema } from '@objectstack/spec/kernel';
 import type { PluginDefinition } from '@objectstack/spec/kernel';
 
 // Import all Support objects
-import { Case } from './case.object';
-import { CaseComment } from './case_comment.object';
-import { KnowledgeArticle } from './knowledge_article.object';
-import { SLAPolicy } from './sla_policy.object';
-import { SLATemplate } from './sla_template.object';
-import { SLAMilestone } from './sla_milestone.object';
-import { BusinessHours } from './business_hours.object';
-import { HolidayCalendar } from './holiday_calendar.object';
-import { Holiday } from './holiday.object';
-import { Queue } from './queue.object';
-import { QueueMember } from './queue_member.object';
-import { RoutingRule } from './routing_rule.object';
-import { EscalationRule } from './escalation_rule.object';
-import { Skill } from './skill.object';
-import { AgentSkill } from './agent_skill.object';
-import { EmailToCase } from './email_to_case.object';
-import { WebToCase } from './web_to_case.object';
-import { SocialMediaCase } from './social_media_case.object';
-import { PortalUser } from './portal_user.object';
-import { ForumTopic } from './forum_topic.object';
-import { ForumPost } from './forum_post.object';
-import { ChatbotConfig } from './chatbot_config.object';
-import { Macro } from './macro.object';
+import { Case } from './case.object.js';
+import { CaseComment } from './case_comment.object.js';
+import { KnowledgeArticle } from './knowledge_article.object.js';
+import { SLAPolicy } from './sla_policy.object.js';
+import { SLATemplate } from './sla_template.object.js';
+import { SLAMilestone } from './sla_milestone.object.js';
+import { BusinessHours } from './business_hours.object.js';
+import { HolidayCalendar } from './holiday_calendar.object.js';
+import { Holiday } from './holiday.object.js';
+import { Queue } from './queue.object.js';
+import { QueueMember } from './queue_member.object.js';
+import { RoutingRule } from './routing_rule.object.js';
+import { EscalationRule } from './escalation_rule.object.js';
+import { Skill } from './skill.object.js';
+import { AgentSkill } from './agent_skill.object.js';
+import { EmailToCase } from './email_to_case.object.js';
+import { WebToCase } from './web_to_case.object.js';
+import { SocialMediaCase } from './social_media_case.object.js';
+import { PortalUser } from './portal_user.object.js';
+import { ForumTopic } from './forum_topic.object.js';
+import { ForumPost } from './forum_post.object.js';
+import { ChatbotConfig } from './chatbot_config.object.js';
+import { Macro } from './macro.object.js';
 
-import { CaseEntitlementCheck } from './hooks/case.hook';
-import KnowledgeHooks from './hooks/knowledge.hook';
-import SLAHooks from './hooks/sla.hook';
-import RoutingHooks from './hooks/routing.hook';
-import QueueHooks from './hooks/queue.hook';
-import { ForumTopicValidationTrigger, ForumTopicModerationTrigger, ForumPostCreationTrigger, ForumPostModerationTrigger } from './hooks/forum.hook';
-import { AgentSkillLevelValidationTrigger, AgentCapacityTrackingTrigger } from './hooks/agent_skill.hook';
-import { PortalUserAccountValidationTrigger, PortalUserAccessLevelTrigger } from './hooks/portal_user.hook';
-import { SocialMediaCasePlatformValidationTrigger, SocialMediaCaseSentimentAnalysisTrigger, SocialMediaCaseCreationTrigger } from './hooks/social_media_case.hook';
-import { CaseEscalationWorkflows } from './case_escalation.workflow';
+import { CaseEntitlementCheck } from './hooks/case.hook.js';
+import KnowledgeHooks from './hooks/knowledge.hook.js';
+import SLAHooks from './hooks/sla.hook.js';
+import RoutingHooks from './hooks/routing.hook.js';
+import QueueHooks from './hooks/queue.hook.js';
+import { ForumTopicValidationTrigger, ForumTopicModerationTrigger, ForumPostCreationTrigger, ForumPostModerationTrigger } from './hooks/forum.hook.js';
+import { AgentSkillLevelValidationTrigger, AgentCapacityTrackingTrigger } from './hooks/agent_skill.hook.js';
+import { PortalUserAccountValidationTrigger, PortalUserAccessLevelTrigger } from './hooks/portal_user.hook.js';
+import { SocialMediaCasePlatformValidationTrigger, SocialMediaCaseSentimentAnalysisTrigger, SocialMediaCaseCreationTrigger } from './hooks/social_media_case.hook.js';
+import { CaseEscalationWorkflows } from './case_escalation.workflow.js';
 
 // Import actions
-import CaseAIAction from './actions/case_ai.action';
-import ServiceMetricsAction from './actions/service_metrics.action';
-import { recommendArticles, autoTagArticle, scoreArticleQuality, generateAnswer, analyzeKnowledgeGaps } from './actions/knowledge_ai.action';
-import { predictSLABreach, estimateResolutionTime, analyzeEscalationNeeds, optimizeWorkload, analyzeSLAPerformance } from './actions/sla_prediction.action';
+import CaseAIAction from './actions/case_ai.action.js';
+import ServiceMetricsAction from './actions/service_metrics.action.js';
+import { recommendArticles, autoTagArticle, scoreArticleQuality, generateAnswer, analyzeKnowledgeGaps } from './actions/knowledge_ai.action.js';
+import { predictSLABreach, estimateResolutionTime, analyzeEscalationNeeds, optimizeWorkload, analyzeSLAPerformance } from './actions/sla_prediction.action.js';
 
 /**
  * Support Plugin Definition

@@ -8,7 +8,7 @@
  * 4. Investment Analysis - ROI analysis for investment properties
  */
 
-import { broker } from './db';
+import { broker } from './db.js';
 
 // ============================================================================
 // 1. PROPERTY VALUATION

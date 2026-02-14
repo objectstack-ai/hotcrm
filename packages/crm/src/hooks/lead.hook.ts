@@ -1,5 +1,5 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
-import type { Lead } from '../schemas/lead.schema';
+import type { Lead } from '../schemas/lead.schema.js';
 
 // Constants for lead scoring
 const HIGH_SCORE_THRESHOLD = 70;

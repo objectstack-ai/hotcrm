@@ -18,22 +18,22 @@ import { PluginSchema } from '@objectstack/spec/kernel';
 import type { PluginDefinition } from '@objectstack/spec/kernel';
 
 // Import all Real Estate objects
-import { Property } from './property.object';
-import { Listing } from './listing.object';
-import { Showing } from './showing.object';
-import { RealEstateOffer } from './real_estate_offer.object';
-import { Commission } from './commission.object';
-import { OpenHouse } from './open_house.object';
-import { Neighborhood } from './neighborhood.object';
+import { Property } from './property.object.js';
+import { Listing } from './listing.object.js';
+import { Showing } from './showing.object.js';
+import { RealEstateOffer } from './real_estate_offer.object.js';
+import { Commission } from './commission.object.js';
+import { OpenHouse } from './open_house.object.js';
+import { Neighborhood } from './neighborhood.object.js';
 
 // Import hooks
-import { ListingDaysOnMarket, ListingPriceChangeAlert, ListingMlsSync, ListingAutoComparable } from './listing.hook';
-import { ShowingConflictDetection, ShowingFeedbackRequest, ShowingLeadScoring } from './showing.hook';
-import { OfferValidation, OfferCounterWorkflow, OfferExpirationCheck } from './real_estate_offer.hook';
-import { CommissionSplitCalculation, CommissionCapTracking, CommissionPaymentScheduling } from './commission.hook';
+import { ListingDaysOnMarket, ListingPriceChangeAlert, ListingMlsSync, ListingAutoComparable } from './listing.hook.js';
+import { ShowingConflictDetection, ShowingFeedbackRequest, ShowingLeadScoring } from './showing.hook.js';
+import { OfferValidation, OfferCounterWorkflow, OfferExpirationCheck } from './real_estate_offer.hook.js';
+import { CommissionSplitCalculation, CommissionCapTracking, CommissionPaymentScheduling } from './commission.hook.js';
 
 // Import actions
-import RealEstateAIAction from './real_estate_ai.action';
+import RealEstateAIAction from './real_estate_ai.action.js';
 
 /**
  * Real Estate Plugin Definition

@@ -18,22 +18,22 @@ import { PluginSchema } from '@objectstack/spec/kernel';
 import type { PluginDefinition } from '@objectstack/spec/kernel';
 
 // Import all Education objects
-import { Student } from './student.object';
-import { Enrollment } from './enrollment.object';
-import { Course } from './course.object';
-import { Alumni } from './alumni.object';
-import { Scholarship } from './scholarship.object';
-import { ApplicationForm } from './application_form.object';
-import { CampusEvent } from './campus_event.object';
+import { Student } from './student.object.js';
+import { Enrollment } from './enrollment.object.js';
+import { Course } from './course.object.js';
+import { Alumni } from './alumni.object.js';
+import { Scholarship } from './scholarship.object.js';
+import { ApplicationForm } from './application_form.object.js';
+import { CampusEvent } from './campus_event.object.js';
 
 // Import hooks
-import { StudentEnrollmentValidation, StudentAcademicStanding, StudentAdvisorAssignment } from './student.hook';
-import { EnrollmentPrerequisiteCheck, EnrollmentCapacityEnforcement, EnrollmentWaitlistManagement, EnrollmentGradePosting } from './enrollment.hook';
-import { ScholarshipEligibilityVerification, ScholarshipFundTracking, ScholarshipAutoRenewal } from './scholarship.hook';
-import { ApplicationCompletenessCheck, ApplicationReviewerAssignment, ApplicationDecisionWorkflow } from './application_form.hook';
+import { StudentEnrollmentValidation, StudentAcademicStanding, StudentAdvisorAssignment } from './student.hook.js';
+import { EnrollmentPrerequisiteCheck, EnrollmentCapacityEnforcement, EnrollmentWaitlistManagement, EnrollmentGradePosting } from './enrollment.hook.js';
+import { ScholarshipEligibilityVerification, ScholarshipFundTracking, ScholarshipAutoRenewal } from './scholarship.hook.js';
+import { ApplicationCompletenessCheck, ApplicationReviewerAssignment, ApplicationDecisionWorkflow } from './application_form.hook.js';
 
 // Import actions
-import EducationAIAction from './education_ai.action';
+import EducationAIAction from './education_ai.action.js';
 
 /**
  * Education Plugin Definition

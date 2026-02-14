@@ -11,7 +11,7 @@
  * 5. Contract Optimization - Suggest better terms
  */
 
-import { broker } from '../db';
+import { broker } from '../db.js';
 
 // ============================================================================
 // 1. CONTRACT RISK ANALYSIS

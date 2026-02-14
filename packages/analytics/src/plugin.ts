@@ -16,28 +16,28 @@ import { PluginSchema } from '@objectstack/spec/kernel';
 import type { PluginDefinition } from '@objectstack/spec/kernel';
 
 // Import all Analytics objects
-import { Report } from './report.object';
-import { ReportSchedule } from './report_schedule.object';
-import { AnalyticsDashboard } from './analytics_dashboard.object';
-import { KPI } from './kpi.object';
-import { Metric } from './metric.object';
-import { DataSource } from './data_source.object';
-import { SavedFilter } from './saved_filter.object';
-import { Snapshot } from './snapshot.object';
+import { Report } from './report.object.js';
+import { ReportSchedule } from './report_schedule.object.js';
+import { AnalyticsDashboard } from './analytics_dashboard.object.js';
+import { KPI } from './kpi.object.js';
+import { Metric } from './metric.object.js';
+import { DataSource } from './data_source.object.js';
+import { SavedFilter } from './saved_filter.object.js';
+import { Snapshot } from './snapshot.object.js';
 
 // Import hooks
-import { ReportFilterValidation, ReportAccessControl, ReportCacheInvalidation, ReportExecutionTracking } from './report.hook';
-import { ScheduleValidation, NextRunCalculation, ScheduleDeactivation } from './report_schedule.hook';
-import { DashboardWidgetValidation, DashboardLayoutConstraints, DashboardRefreshScheduling } from './analytics_dashboard.hook';
-import { KPIThresholdAlert, KPITrendCalculation, KPIAutoRefresh } from './kpi.hook';
-import { MetricFormulaValidation, MetricCircularDependency, MetricAggregationComputation } from './metric.hook';
-import { ConnectionHealthCheck, SyncLifecycle, SchemaDriftDetection } from './data_source.hook';
+import { ReportFilterValidation, ReportAccessControl, ReportCacheInvalidation, ReportExecutionTracking } from './report.hook.js';
+import { ScheduleValidation, NextRunCalculation, ScheduleDeactivation } from './report_schedule.hook.js';
+import { DashboardWidgetValidation, DashboardLayoutConstraints, DashboardRefreshScheduling } from './analytics_dashboard.hook.js';
+import { KPIThresholdAlert, KPITrendCalculation, KPIAutoRefresh } from './kpi.hook.js';
+import { MetricFormulaValidation, MetricCircularDependency, MetricAggregationComputation } from './metric.hook.js';
+import { ConnectionHealthCheck, SyncLifecycle, SchemaDriftDetection } from './data_source.hook.js';
 
 // Import actions
-import DashboardAIAction from './actions/dashboard_ai.action';
-import ForecastAnalyticsAction from './actions/forecast_analytics.action';
-import InsightAIAction from './actions/insight_ai.action';
-import ReportAIAction from './actions/report_ai.action';
+import DashboardAIAction from './actions/dashboard_ai.action.js';
+import ForecastAnalyticsAction from './actions/forecast_analytics.action.js';
+import InsightAIAction from './actions/insight_ai.action.js';
+import ReportAIAction from './actions/report_ai.action.js';
 
 /**
  * Analytics Plugin Definition

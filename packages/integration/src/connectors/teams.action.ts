@@ -8,7 +8,7 @@
  * 4. Handle Teams Event
  */
 
-import { broker } from '../db';
+import { broker } from '../db.js';
 
 // ============================================================================
 // 1. SCHEDULE MEETING

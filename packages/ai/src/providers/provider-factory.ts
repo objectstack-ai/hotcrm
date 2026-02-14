@@ -4,10 +4,10 @@
  * Factory for creating and managing ML provider instances
  */
 
-import BaseMLProvider, { MLProviderConfig } from './base-provider';
-import { AWSSageMakerProvider, SageMakerConfig } from './aws-sagemaker-provider';
-import { AzureMLProvider, AzureMLConfig } from './azure-ml-provider';
-import { OpenAIProvider, OpenAIConfig } from './openai-provider';
+import BaseMLProvider, { MLProviderConfig } from './base-provider.js';
+import { AWSSageMakerProvider, SageMakerConfig } from './aws-sagemaker-provider.js';
+import { AzureMLProvider, AzureMLConfig } from './azure-ml-provider.js';
+import { OpenAIProvider, OpenAIConfig } from './openai-provider.js';
 
 /**
  * Provider Factory - Creates and caches provider instances

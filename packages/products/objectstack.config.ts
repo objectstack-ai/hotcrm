@@ -1,5 +1,5 @@
 import { defineStack } from '@objectstack/spec';
-import { ProductsPlugin } from './src/plugin';
+import { ProductsPlugin } from './src/plugin.js';
 
 /**
  * Products Package Configuration

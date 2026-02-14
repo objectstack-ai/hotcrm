@@ -11,7 +11,7 @@
  * 5. Contact Deduplication - Smart matching and merging of duplicate contacts
  */
 
-import { broker } from '../db';
+import { broker } from '../db.js';
 
 // ============================================================================
 // 1. CONTACT ENRICHMENT

@@ -1,8 +1,8 @@
 import type { Policy } from '@objectstack/spec/security';
 import { PolicySchema } from '@objectstack/spec/security';
 
-import { EnterprisePasswordPolicy } from './password_policy.security';
-import { EnterpriseSessionPolicy } from './session_policy.security';
+import { EnterprisePasswordPolicy } from './password_policy.security.js';
+import { EnterpriseSessionPolicy } from './session_policy.security.js';
 
 export const EnterpriseSecurityPolicy = {
   name: 'enterprise_security_policy',

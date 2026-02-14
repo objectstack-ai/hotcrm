@@ -19,7 +19,7 @@ const RETRY_DELAY_MS = 1000;
  * - Industry-specific sales talking points
  */
 
-import { broker } from '../db';
+import { broker } from '../db.js';
 
 export interface SmartBriefingRequest {
   /** Account ID to analyze */

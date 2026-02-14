@@ -11,7 +11,7 @@
  * 5. Revenue Benchmarking - Compare revenue to historical trends
  */
 
-import { broker } from '../db';
+import { broker } from '../db.js';
 
 // ============================================================================
 // 1. REVENUE FORECASTING

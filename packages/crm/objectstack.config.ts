@@ -1,5 +1,5 @@
 import { defineStack } from '@objectstack/spec';
-import { CRMPlugin } from './src/plugin';
+import { CRMPlugin } from './src/plugin.js';
 
 /**
  * CRM Package Configuration

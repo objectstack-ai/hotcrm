@@ -1,4 +1,4 @@
-import { broker } from '../db';
+import { broker } from '../db.js';
 
 /**
  * Opportunity → Order → Invoice lifecycle automation (CRM → Products → Finance)

@@ -1,5 +1,5 @@
 import { defineStack } from '@objectstack/spec';
-import { EducationPlugin } from './src/plugin';
+import { EducationPlugin } from './src/plugin.js';
 
 /**
  * Education Package Configuration

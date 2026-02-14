@@ -33,39 +33,39 @@
  */
 
 // Export organizational objects
-export { Department } from './department.object';
-export { Position } from './position.object';
-export { Employee } from './employee.object';
+export { Department } from './department.object.js';
+export { Position } from './position.object.js';
+export { Employee } from './employee.object.js';
 
 // Export recruitment objects
-export { Recruitment } from './recruitment.object';
-export { Candidate } from './candidate.object';
-export { Application } from './application.object';
-export { Interview } from './interview.object';
-export { Offer } from './offer.object';
-export { Onboarding } from './onboarding.object';
+export { Recruitment } from './recruitment.object.js';
+export { Candidate } from './candidate.object.js';
+export { Application } from './application.object.js';
+export { Interview } from './interview.object.js';
+export { Offer } from './offer.object.js';
+export { Onboarding } from './onboarding.object.js';
 
 // Export performance management objects
-export { PerformanceReview } from './performance_review.object';
-export { Goal } from './goal.object';
+export { PerformanceReview } from './performance_review.object.js';
+export { Goal } from './goal.object.js';
 
 // Export learning & development objects
-export { Training } from './training.object';
-export { Certification } from './certification.object';
+export { Training } from './training.object.js';
+export { Certification } from './certification.object.js';
 
 // Export time & attendance objects
-export { TimeOff } from './time_off.object';
-export { Attendance } from './attendance.object';
+export { TimeOff } from './time_off.object.js';
+export { Attendance } from './attendance.object.js';
 
 // Export payroll object
-export { Payroll } from './payroll.object';
+export { Payroll } from './payroll.object.js';
 
 // Export AI Agents
-export { RecruitmentAssistantAgent } from './recruitment_assistant.agent';
-export { PerformanceCoachAgent } from './performance_coach.agent';
+export { RecruitmentAssistantAgent } from './recruitment_assistant.agent.js';
+export { PerformanceCoachAgent } from './performance_coach.agent.js';
 
 // Export workflows
-export { HRWorkflows } from './hr.workflow';
+export { HRWorkflows } from './hr.workflow.js';
 
 // Export plugin definition
-export { HRPlugin } from './plugin';
+export { HRPlugin } from './plugin.js';

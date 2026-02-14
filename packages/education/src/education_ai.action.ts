@@ -8,7 +8,7 @@
  * 4. Alumni Engagement Scoring - Score alumni engagement for outreach prioritization
  */
 
-import { broker } from './db';
+import { broker } from './db.js';
 
 // ============================================================================
 // 1. STUDENT SUCCESS PREDICTION

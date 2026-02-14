@@ -10,7 +10,7 @@
  * 4. Generate Insights - Natural language insights about forecast trends
  */
 
-import { broker } from '../db';
+import { broker } from '../db.js';
 
 // ============================================================================
 // 1. PREDICT FORECAST

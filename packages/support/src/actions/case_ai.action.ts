@@ -11,7 +11,7 @@
  * 5. Sentiment Analysis - Customer emotion tracking
  */
 
-import { broker } from '../db';
+import { broker } from '../db.js';
 
 // ============================================================================
 // 1. AUTO-CATEGORIZATION

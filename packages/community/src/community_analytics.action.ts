@@ -8,7 +8,7 @@
  * 4. Sentiment Analysis - community mood tracking
  */
 
-import { broker } from './db';
+import { broker } from './db.js';
 
 // ============================================================================
 // 1. GET ENGAGEMENT METRICS

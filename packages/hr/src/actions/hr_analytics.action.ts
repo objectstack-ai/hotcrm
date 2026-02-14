@@ -9,7 +9,7 @@
  * 3. Performance Trend Analytics - Monitor performance patterns over time
  */
 
-import { broker } from '../db';
+import { broker } from '../db.js';
 
 // ============================================================================
 // 1. TIME-TO-HIRE ANALYTICS

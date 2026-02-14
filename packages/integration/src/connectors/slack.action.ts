@@ -8,7 +8,7 @@
  * 4. Handle Slack Event
  */
 
-import { broker } from '../db';
+import { broker } from '../db.js';
 
 // ============================================================================
 // 1. SEND NOTIFICATION

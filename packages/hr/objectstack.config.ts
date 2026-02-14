@@ -1,5 +1,5 @@
 import { defineStack } from '@objectstack/spec';
-import { HRPlugin } from './src/plugin';
+import { HRPlugin } from './src/plugin.js';
 
 /**
  * HR Package Configuration

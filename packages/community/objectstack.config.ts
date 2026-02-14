@@ -1,5 +1,5 @@
 import { defineStack } from '@objectstack/spec';
-import { CommunityPlugin } from './src/plugin';
+import { CommunityPlugin } from './src/plugin.js';
 
 /**
  * Community Package Configuration

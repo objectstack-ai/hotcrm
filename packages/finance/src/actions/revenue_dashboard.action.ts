@@ -9,7 +9,7 @@
  * 3. Quote-to-Close - Conversion funnel from quote to closed deal
  */
 
-import { broker } from '../db';
+import { broker } from '../db.js';
 
 // ============================================================================
 // 1. TOTAL CONTRACT VALUE (TCV)

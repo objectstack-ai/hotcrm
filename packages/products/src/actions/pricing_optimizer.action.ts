@@ -11,7 +11,7 @@
  * 5. Optimal Price Calculation - Calculate revenue-maximizing price
  */
 
-import { broker } from '../db';
+import { broker } from '../db.js';
 
 // ============================================================================
 // 1. PRICING OPTIMIZATION

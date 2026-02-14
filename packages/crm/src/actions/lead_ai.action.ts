@@ -10,7 +10,7 @@
  * 4. Lead Nurturing Recommendations - Next best action suggestions
  */
 
-import { broker } from '../db';
+import { broker } from '../db.js';
 
 // ============================================================================
 // 1. EMAIL SIGNATURE DATA EXTRACTION

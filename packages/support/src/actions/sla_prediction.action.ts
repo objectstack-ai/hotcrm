@@ -11,7 +11,7 @@
  * 5. SLA Performance Analytics - Track and analyze SLA metrics
  */
 
-import { broker } from '../db';
+import { broker } from '../db.js';
 
 // ============================================================================
 // 1. SLA BREACH PREDICTION

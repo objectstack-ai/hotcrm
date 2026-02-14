@@ -7,7 +7,7 @@
  * 3. Auto-Generate Report - create reports from object schema automatically
  */
 
-import { broker } from '../db';
+import { broker } from '../db.js';
 
 // ============================================================================
 // 1. NATURAL LANGUAGE TO REPORT

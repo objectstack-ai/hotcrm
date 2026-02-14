@@ -5,7 +5,7 @@
  * Processes records in configurable batches with conflict resolution.
  */
 
-import { broker } from './db';
+import { broker } from './db.js';
 
 // ============================================================================
 // INTERFACES

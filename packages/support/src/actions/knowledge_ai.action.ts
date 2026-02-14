@@ -11,7 +11,7 @@
  * 5. Article Gap Analysis - Identify missing knowledge base content
  */
 
-import { broker } from '../db';
+import { broker } from '../db.js';
 
 // ============================================================================
 // 1. ARTICLE RECOMMENDATION

@@ -1,5 +1,5 @@
 import { defineStack } from '@objectstack/spec';
-import { MarketingPlugin } from './src/plugin';
+import { MarketingPlugin } from './src/plugin.js';
 
 /**
  * Marketing Package Configuration

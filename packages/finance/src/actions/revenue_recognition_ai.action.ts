@@ -10,7 +10,7 @@
  * 4. Forecast Deferred - Forecast deferred revenue trends
  */
 
-import { broker } from '../db';
+import { broker } from '../db.js';
 
 // ============================================================================
 // 1. PREDICT REVENUE

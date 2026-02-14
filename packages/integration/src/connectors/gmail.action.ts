@@ -8,7 +8,7 @@
  * 4. Handle Gmail Webhook
  */
 
-import { broker } from '../db';
+import { broker } from '../db.js';
 
 // ============================================================================
 // 1. LOG EMAIL ACTIVITY

@@ -17,22 +17,22 @@ import { PluginSchema } from '@objectstack/spec/kernel';
 import type { PluginDefinition } from '@objectstack/spec/kernel';
 
 // Import all Financial Services objects
-import { WealthAccount } from './wealth_account.object';
-import { Portfolio } from './portfolio.object';
-import { Advisory } from './advisory.object';
-import { ComplianceCheck } from './compliance_check.object';
-import { Kyc } from './kyc.object';
-import { FinancialProduct } from './financial_product.object';
-import { TransactionRecord } from './transaction_record.object';
+import { WealthAccount } from './wealth_account.object.js';
+import { Portfolio } from './portfolio.object.js';
+import { Advisory } from './advisory.object.js';
+import { ComplianceCheck } from './compliance_check.object.js';
+import { Kyc } from './kyc.object.js';
+import { FinancialProduct } from './financial_product.object.js';
+import { TransactionRecord } from './transaction_record.object.js';
 
 // Import hooks
-import { WealthAccountRiskAssessment, WealthAccountSuitabilityCheck, WealthAccountBalanceAlert } from './wealth_account.hook';
-import { PortfolioDriftDetection, PortfolioRebalanceTrigger, PortfolioPerformanceCalc } from './portfolio.hook';
-import { KycDocumentExpiryAlert, KycPeriodicReverification, KycRiskAutoClassification } from './kyc.hook';
-import { ComplianceRegulationAlert, ComplianceAutoScreening, ComplianceAuditTrail } from './compliance_check.hook';
+import { WealthAccountRiskAssessment, WealthAccountSuitabilityCheck, WealthAccountBalanceAlert } from './wealth_account.hook.js';
+import { PortfolioDriftDetection, PortfolioRebalanceTrigger, PortfolioPerformanceCalc } from './portfolio.hook.js';
+import { KycDocumentExpiryAlert, KycPeriodicReverification, KycRiskAutoClassification } from './kyc.hook.js';
+import { ComplianceRegulationAlert, ComplianceAutoScreening, ComplianceAuditTrail } from './compliance_check.hook.js';
 
 // Import actions
-import FinancialServicesAIAction from './financial_services_ai.action';
+import FinancialServicesAIAction from './financial_services_ai.action.js';
 
 /**
  * Financial Services Plugin Definition

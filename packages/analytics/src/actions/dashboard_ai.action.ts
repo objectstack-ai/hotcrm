@@ -7,7 +7,7 @@
  * 3. Widget Recommendations - suggest widgets based on user activity
  */
 
-import { broker } from '../db';
+import { broker } from '../db.js';
 
 // ============================================================================
 // 1. AUTO-GENERATE DASHBOARD

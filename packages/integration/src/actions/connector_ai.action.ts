@@ -7,7 +7,7 @@
  * 3. Suggest Connector - recommend the best connector for a use case
  */
 
-import { broker } from '../db';
+import { broker } from '../db.js';
 
 // ============================================================================
 // 1. CONFIGURE FROM NATURAL LANGUAGE

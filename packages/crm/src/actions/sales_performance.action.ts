@@ -9,7 +9,7 @@
  * 3. Forecast Accuracy Metrics - Bias, accuracy by rep/stage/product
  */
 
-import { broker } from '../db';
+import { broker } from '../db.js';
 
 // ============================================================================
 // SHARED TYPES

@@ -8,7 +8,7 @@
  * 4. Answer Suggestion - suggest answers based on existing knowledge
  */
 
-import { broker } from './db';
+import { broker } from './db.js';
 
 // ============================================================================
 // 1. MODERATE CONTENT

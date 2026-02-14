@@ -7,7 +7,7 @@
  * 3. What-If Scenario - scenario modelling
  */
 
-import { broker } from '../db';
+import { broker } from '../db.js';
 
 // ============================================================================
 // 1. REVENUE FORECAST

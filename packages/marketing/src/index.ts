@@ -12,23 +12,23 @@
  */
 
 // Export Campaign objects
-export { Campaign } from './campaign.object';
-export { CampaignMember } from './campaign_member.object';
+export { Campaign } from './campaign.object.js';
+export { CampaignMember } from './campaign_member.object.js';
 
 // Export Marketing Automation objects
-export { EmailTemplate } from './email_template.object';
-export { LandingPage } from './landing_page.object';
-export { Form } from './form.object';
-export { MarketingList } from './marketing_list.object';
-export { Unsubscribe } from './unsubscribe.object';
-export { AutomationWorkflow } from './automation_workflow.object';
-export { EmailSend } from './email_send.object';
-export { LeadNurtureProgram } from './lead_nurture_program.object';
-export { Touchpoint } from './touchpoint.object';
+export { EmailTemplate } from './email_template.object.js';
+export { LandingPage } from './landing_page.object.js';
+export { Form } from './form.object.js';
+export { MarketingList } from './marketing_list.object.js';
+export { Unsubscribe } from './unsubscribe.object.js';
+export { AutomationWorkflow } from './automation_workflow.object.js';
+export { EmailSend } from './email_send.object.js';
+export { LeadNurtureProgram } from './lead_nurture_program.object.js';
+export { Touchpoint } from './touchpoint.object.js';
 
 // Export Hooks
-export { default as CampaignROIHook } from './hooks/roi.hook';
+export { default as CampaignROIHook } from './hooks/roi.hook.js';
 
 // Export plugin definition
-export { default as MarketingPlugin } from './plugin';
+export { default as MarketingPlugin } from './plugin.js';
 

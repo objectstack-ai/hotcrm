@@ -1,5 +1,5 @@
 import { defineStack } from '@objectstack/spec';
-import { IntegrationPlugin } from './src/plugin';
+import { IntegrationPlugin } from './src/plugin.js';
 
 /**
  * Integration Package Configuration

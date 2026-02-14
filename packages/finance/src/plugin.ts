@@ -13,33 +13,33 @@ import { PluginSchema } from '@objectstack/spec/kernel';
 import type { PluginDefinition } from '@objectstack/spec/kernel';
 
 // Import all Finance objects
-import { Contract } from './contract.object';
-import { Payment } from './payment.object';
-import { Invoice } from './invoice.object';
-import { InvoiceLine } from './invoice_line.object';
-import { CreditNote } from './credit_note.object';
-import { BillingSchedule } from './billing_schedule.object';
-import { RevenueSchedule } from './revenue_schedule.object';
-import { RevenueRecognitionRule } from './revenue_recognition_rule.object';
-import { PaymentMethod } from './payment_method.object';
+import { Contract } from './contract.object.js';
+import { Payment } from './payment.object.js';
+import { Invoice } from './invoice.object.js';
+import { InvoiceLine } from './invoice_line.object.js';
+import { CreditNote } from './credit_note.object.js';
+import { BillingSchedule } from './billing_schedule.object.js';
+import { RevenueSchedule } from './revenue_schedule.object.js';
+import { RevenueRecognitionRule } from './revenue_recognition_rule.object.js';
+import { PaymentMethod } from './payment_method.object.js';
 
 // Import hooks
-import { ContractBillingHook } from './hooks/contract.hook';
-import { ContractRenewalCheck, ContractExpirationAlert } from './hooks/contract_renewal.hook';
-import { InvoiceStatusLifecycleTrigger } from './hooks/invoice.hook';
-import { InvoiceLineCalculationTrigger, InvoiceLineTotalUpdateTrigger } from './hooks/invoice_line.hook';
-import { PaymentMatchingTrigger, PaymentValidationTrigger } from './hooks/payment.hook';
-import { CreditNoteValidationTrigger, CreditNoteBalanceAdjustmentTrigger } from './hooks/credit_note.hook';
-import { BillingScheduleValidationTrigger, BillingScheduleInvoiceGenerationTrigger } from './hooks/billing_schedule.hook';
-import { RevenueScheduleValidationTrigger, RevenueRecognitionComplianceTrigger } from './hooks/revenue_recognition.hook';
-import { PaymentReminderWorkflows } from './payment_reminder.workflow';
+import { ContractBillingHook } from './hooks/contract.hook.js';
+import { ContractRenewalCheck, ContractExpirationAlert } from './hooks/contract_renewal.hook.js';
+import { InvoiceStatusLifecycleTrigger } from './hooks/invoice.hook.js';
+import { InvoiceLineCalculationTrigger, InvoiceLineTotalUpdateTrigger } from './hooks/invoice_line.hook.js';
+import { PaymentMatchingTrigger, PaymentValidationTrigger } from './hooks/payment.hook.js';
+import { CreditNoteValidationTrigger, CreditNoteBalanceAdjustmentTrigger } from './hooks/credit_note.hook.js';
+import { BillingScheduleValidationTrigger, BillingScheduleInvoiceGenerationTrigger } from './hooks/billing_schedule.hook.js';
+import { RevenueScheduleValidationTrigger, RevenueRecognitionComplianceTrigger } from './hooks/revenue_recognition.hook.js';
+import { PaymentReminderWorkflows } from './payment_reminder.workflow.js';
 
 // Import actions
-import RevenueDashboardAction from './actions/revenue_dashboard.action';
-import RevenueForecastAction from './actions/revenue_forecast.action';
-import { analyzeContractRisk, predictRenewal, extractContractTerms, checkCompliance, optimizeContract } from './actions/contract_ai.action';
-import { predictPaymentDefault, predictPaymentDate, detectAnomalies, optimizeCollectionStrategy, forecastCashFlow } from './actions/invoice_prediction.action';
-import RevenueRecognitionAIAction from './actions/revenue_recognition_ai.action';
+import RevenueDashboardAction from './actions/revenue_dashboard.action.js';
+import RevenueForecastAction from './actions/revenue_forecast.action.js';
+import { analyzeContractRisk, predictRenewal, extractContractTerms, checkCompliance, optimizeContract } from './actions/contract_ai.action.js';
+import { predictPaymentDefault, predictPaymentDate, detectAnomalies, optimizeCollectionStrategy, forecastCashFlow } from './actions/invoice_prediction.action.js';
+import RevenueRecognitionAIAction from './actions/revenue_recognition_ai.action.js';
 
 /**
  * Finance Plugin Definition

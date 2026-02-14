@@ -8,7 +8,7 @@
  * 4. Handle LinkedIn Webhook
  */
 
-import { broker } from '../db';
+import { broker } from '../db.js';
 
 // ============================================================================
 // 1. ENRICH LEAD DATA

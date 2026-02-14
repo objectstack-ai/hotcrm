@@ -14,63 +14,63 @@ import { PluginSchema } from '@objectstack/spec/kernel';
 import type { PluginDefinition } from '@objectstack/spec/kernel';
 
 // Import organizational objects
-import { Department } from './department.object';
-import { Position } from './position.object';
-import { Employee } from './employee.object';
+import { Department } from './department.object.js';
+import { Position } from './position.object.js';
+import { Employee } from './employee.object.js';
 
 // Import recruitment objects
-import { Recruitment } from './recruitment.object';
-import { Candidate } from './candidate.object';
-import { Application } from './application.object';
-import { Interview } from './interview.object';
-import { Offer } from './offer.object';
-import { Onboarding } from './onboarding.object';
+import { Recruitment } from './recruitment.object.js';
+import { Candidate } from './candidate.object.js';
+import { Application } from './application.object.js';
+import { Interview } from './interview.object.js';
+import { Offer } from './offer.object.js';
+import { Onboarding } from './onboarding.object.js';
 
 // Import performance management objects
-import { PerformanceReview } from './performance_review.object';
-import { Goal } from './goal.object';
+import { PerformanceReview } from './performance_review.object.js';
+import { Goal } from './goal.object.js';
 
 // Import learning & development objects
-import { Training } from './training.object';
-import { Certification } from './certification.object';
+import { Training } from './training.object.js';
+import { Certification } from './certification.object.js';
 
 // Import time & attendance objects
-import { TimeOff } from './time_off.object';
-import { Attendance } from './attendance.object';
+import { TimeOff } from './time_off.object.js';
+import { Attendance } from './attendance.object.js';
 
 // Import payroll object
-import { Payroll } from './payroll.object';
+import { Payroll } from './payroll.object.js';
 
 // Import benefits & compensation objects
-import { Benefit } from './benefit.object';
-import { CompensationPlan } from './compensation_plan.object';
+import { Benefit } from './benefit.object.js';
+import { CompensationPlan } from './compensation_plan.object.js';
 
 // Import hooks
-import { CandidateScoringTrigger, CandidateStatusChangeTrigger } from './hooks/candidate.hook';
-import { EmployeeOnboardingTrigger, EmployeeStatusChangeTrigger, EmployeeDataValidationTrigger } from './hooks/employee.hook';
-import { OfferCreationTrigger, OfferStatusChangeTrigger, OfferApprovalTrigger } from './hooks/offer.hook';
-import { PerformanceReviewRatingTrigger, PerformanceReviewWorkflowTrigger } from './hooks/performance_review.hook';
-import { ApplicationStatusWorkflowTrigger, ApplicationScreeningTrigger } from './hooks/application.hook';
-import { InterviewSchedulingTrigger, InterviewFeedbackTrigger } from './hooks/interview.hook';
-import { OnboardingChecklistTrigger, OnboardingProgressTrigger } from './hooks/onboarding.hook';
-import { TimeOffBalanceValidationTrigger, TimeOffApprovalTrigger } from './hooks/time_off.hook';
-import { RecruitmentPipelineValidationTrigger, RecruitmentMetricsTrigger } from './hooks/recruitment.hook';
-import { PayrollCalculationValidationTrigger, PayrollApprovalTrigger } from './hooks/payroll.hook';
-import { AttendanceValidationTrigger, AttendanceDuplicateCheckTrigger } from './hooks/attendance.hook';
-import { GoalProgressTrackingTrigger, GoalAlignmentValidationTrigger } from './hooks/goal.hook';
-import { CertificationExpirationValidationTrigger, CertificationRenewalReminderTrigger } from './hooks/certification.hook';
-import { DepartmentManagerValidationTrigger, DepartmentHeadcountTrackingTrigger } from './hooks/department.hook';
-import { PositionStatusChangeValidationTrigger, PositionVacancyTrackingTrigger } from './hooks/position.hook';
-import { TrainingEnrollmentValidationTrigger, TrainingCompletionTrackingTrigger } from './hooks/training.hook';
-import { BenefitEnrollmentValidationTrigger, BenefitExpirationCheckTrigger } from './hooks/benefit.hook';
-import { CompensationPlanValidationTrigger, CompensationPlanApprovalTrigger } from './hooks/compensation_plan.hook';
+import { CandidateScoringTrigger, CandidateStatusChangeTrigger } from './hooks/candidate.hook.js';
+import { EmployeeOnboardingTrigger, EmployeeStatusChangeTrigger, EmployeeDataValidationTrigger } from './hooks/employee.hook.js';
+import { OfferCreationTrigger, OfferStatusChangeTrigger, OfferApprovalTrigger } from './hooks/offer.hook.js';
+import { PerformanceReviewRatingTrigger, PerformanceReviewWorkflowTrigger } from './hooks/performance_review.hook.js';
+import { ApplicationStatusWorkflowTrigger, ApplicationScreeningTrigger } from './hooks/application.hook.js';
+import { InterviewSchedulingTrigger, InterviewFeedbackTrigger } from './hooks/interview.hook.js';
+import { OnboardingChecklistTrigger, OnboardingProgressTrigger } from './hooks/onboarding.hook.js';
+import { TimeOffBalanceValidationTrigger, TimeOffApprovalTrigger } from './hooks/time_off.hook.js';
+import { RecruitmentPipelineValidationTrigger, RecruitmentMetricsTrigger } from './hooks/recruitment.hook.js';
+import { PayrollCalculationValidationTrigger, PayrollApprovalTrigger } from './hooks/payroll.hook.js';
+import { AttendanceValidationTrigger, AttendanceDuplicateCheckTrigger } from './hooks/attendance.hook.js';
+import { GoalProgressTrackingTrigger, GoalAlignmentValidationTrigger } from './hooks/goal.hook.js';
+import { CertificationExpirationValidationTrigger, CertificationRenewalReminderTrigger } from './hooks/certification.hook.js';
+import { DepartmentManagerValidationTrigger, DepartmentHeadcountTrackingTrigger } from './hooks/department.hook.js';
+import { PositionStatusChangeValidationTrigger, PositionVacancyTrackingTrigger } from './hooks/position.hook.js';
+import { TrainingEnrollmentValidationTrigger, TrainingCompletionTrackingTrigger } from './hooks/training.hook.js';
+import { BenefitEnrollmentValidationTrigger, BenefitExpirationCheckTrigger } from './hooks/benefit.hook.js';
+import { CompensationPlanValidationTrigger, CompensationPlanApprovalTrigger } from './hooks/compensation_plan.hook.js';
 
 // Import actions
-import CandidateAIAction from './actions/candidate_ai.action';
-import EmployeeAIAction from './actions/employee_ai.action';
-import PerformanceAIAction from './actions/performance_ai.action';
-import HRAnalyticsAction from './actions/hr_analytics.action';
-import { HRWorkflows } from './hr.workflow';
+import CandidateAIAction from './actions/candidate_ai.action.js';
+import EmployeeAIAction from './actions/employee_ai.action.js';
+import PerformanceAIAction from './actions/performance_ai.action.js';
+import HRAnalyticsAction from './actions/hr_analytics.action.js';
+import { HRWorkflows } from './hr.workflow.js';
 
 /**
  * HR Plugin Definition

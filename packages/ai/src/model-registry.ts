@@ -5,7 +5,7 @@
  * Provides model versioning, configuration, and lifecycle management
  */
 
-import { MLProviderConfig } from './providers/base-provider';
+import { MLProviderConfig } from './providers/base-provider.js';
 
 export type ModelType = 
   | 'classification'

@@ -14,51 +14,51 @@ import { PluginSchema } from '@objectstack/spec/kernel';
 import type { PluginDefinition } from '@objectstack/spec/kernel';
 
 // Import translations
-import { CrmTranslations } from './translations';
+import { CrmTranslations } from './translations/index.js';
 
 // Import all CRM objects
-import { Account } from './account.object';
-import { Activity } from './activity.object';
-import { Contact } from './contact.object';
-import { Lead } from './lead.object';
-import { Opportunity } from './opportunity.object';
-import { OpportunityLineItem } from './opportunity_line_item.object';
-import { OpportunityContactRole } from './opportunity_contact_role.object';
-import { Forecast } from './forecast.object';
-import { ForecastItem } from './forecast_item.object';
-import { Task } from './task.object';
-import { Note } from './note.object';
-import { Territory } from './territory.object';
-import { TerritoryRule } from './territory_rule.object';
-import { OpportunityTeamMember } from './opportunity_team_member.object';
-import { Competitor } from './competitor.object';
-import LeadConvertAction from './actions/lead_convert.action';
-import { AssignmentRule } from './assignment_rule.object';
-import { LeadWorkflows } from './lead.workflow';
+import { Account } from './account.object.js';
+import { Activity } from './activity.object.js';
+import { Contact } from './contact.object.js';
+import { Lead } from './lead.object.js';
+import { Opportunity } from './opportunity.object.js';
+import { OpportunityLineItem } from './opportunity_line_item.object.js';
+import { OpportunityContactRole } from './opportunity_contact_role.object.js';
+import { Forecast } from './forecast.object.js';
+import { ForecastItem } from './forecast_item.object.js';
+import { Task } from './task.object.js';
+import { Note } from './note.object.js';
+import { Territory } from './territory.object.js';
+import { TerritoryRule } from './territory_rule.object.js';
+import { OpportunityTeamMember } from './opportunity_team_member.object.js';
+import { Competitor } from './competitor.object.js';
+import LeadConvertAction from './actions/lead_convert.action.js';
+import { AssignmentRule } from './assignment_rule.object.js';
+import { LeadWorkflows } from './lead.workflow.js';
 
 // Import hooks
-import { LeadScoringTrigger, LeadStatusChangeTrigger } from './hooks/lead.hook';
-import { OpportunityValidation, OpportunityStageChange } from './hooks/opportunity.hook';
-import { AccountHealthScoreTrigger, AccountHierarchyTrigger, AccountStatusAutomationTrigger } from './hooks/account.hook';
-import { ActivityRelatedObjectUpdatesTrigger, ActivityCompletionTrigger, ActivityTypeValidationTrigger } from './hooks/activity.hook';
-import { ContactDecisionChainTrigger, ContactDecisionMakerValidationTrigger, ContactDuplicateDetectionTrigger, ContactRelationshipStrengthTrigger } from './hooks/contact.hook';
-import { TaskValidationTrigger, TaskCompletionTrigger, TaskOverdueTrigger } from './hooks/task.hook';
-import { NoteValidationTrigger, NoteEditTrackingTrigger } from './hooks/note.hook';
-import { TerritoryValidationTrigger, TerritoryMetricsTrigger } from './hooks/territory.hook';
-import { AssignmentRuleValidationTrigger, AssignmentRuleSortOrderTrigger } from './hooks/assignment_rule.hook';
-import { OpportunityLineItemCalculationTrigger, OpportunityLineItemRollupTrigger } from './hooks/opportunity_line_item.hook';
-import { ForecastCalculationTrigger, ForecastAggregationTrigger } from './hooks/forecast.hook';
+import { LeadScoringTrigger, LeadStatusChangeTrigger } from './hooks/lead.hook.js';
+import { OpportunityValidation, OpportunityStageChange } from './hooks/opportunity.hook.js';
+import { AccountHealthScoreTrigger, AccountHierarchyTrigger, AccountStatusAutomationTrigger } from './hooks/account.hook.js';
+import { ActivityRelatedObjectUpdatesTrigger, ActivityCompletionTrigger, ActivityTypeValidationTrigger } from './hooks/activity.hook.js';
+import { ContactDecisionChainTrigger, ContactDecisionMakerValidationTrigger, ContactDuplicateDetectionTrigger, ContactRelationshipStrengthTrigger } from './hooks/contact.hook.js';
+import { TaskValidationTrigger, TaskCompletionTrigger, TaskOverdueTrigger } from './hooks/task.hook.js';
+import { NoteValidationTrigger, NoteEditTrackingTrigger } from './hooks/note.hook.js';
+import { TerritoryValidationTrigger, TerritoryMetricsTrigger } from './hooks/territory.hook.js';
+import { AssignmentRuleValidationTrigger, AssignmentRuleSortOrderTrigger } from './hooks/assignment_rule.hook.js';
+import { OpportunityLineItemCalculationTrigger, OpportunityLineItemRollupTrigger } from './hooks/opportunity_line_item.hook.js';
+import { ForecastCalculationTrigger, ForecastAggregationTrigger } from './hooks/forecast.hook.js';
 
 // Import actions
-import EnhancedLeadScoringAction from './actions/enhanced_lead_scoring.action';
-import LeadAIAction from './actions/lead_ai.action';
-import OpportunityAIAction from './actions/opportunity_ai.action';
-import SmartBriefingAction from './actions/ai_smart_briefing.action';
-import SalesPerformanceAction from './actions/sales_performance.action';
-import { calculateAccountHealth, predictChurn, generateRecommendations, assignTerritory, enrichAccount } from './actions/account_ai.action';
-import { enrichContact, detectBuyingIntent, analyzeSentiment, predictBestContactTime, findDuplicates } from './actions/contact_ai.action';
-import ForecastAIAction from './actions/forecast_ai.action';
-import CrossCloudLifecycleAction from './actions/cross_cloud_lifecycle.action';
+import EnhancedLeadScoringAction from './actions/enhanced_lead_scoring.action.js';
+import LeadAIAction from './actions/lead_ai.action.js';
+import OpportunityAIAction from './actions/opportunity_ai.action.js';
+import SmartBriefingAction from './actions/ai_smart_briefing.action.js';
+import SalesPerformanceAction from './actions/sales_performance.action.js';
+import { calculateAccountHealth, predictChurn, generateRecommendations, assignTerritory, enrichAccount } from './actions/account_ai.action.js';
+import { enrichContact, detectBuyingIntent, analyzeSentiment, predictBestContactTime, findDuplicates } from './actions/contact_ai.action.js';
+import ForecastAIAction from './actions/forecast_ai.action.js';
+import CrossCloudLifecycleAction from './actions/cross_cloud_lifecycle.action.js';
 
 /**
  * CRM Plugin Definition

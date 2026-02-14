@@ -1,5 +1,5 @@
 import { defineStack } from '@objectstack/spec';
-import { HealthcarePlugin } from './src/plugin';
+import { HealthcarePlugin } from './src/plugin.js';
 
 /**
  * Healthcare Package Configuration

@@ -13,29 +13,29 @@
  */
 
 // Export business objects
-export { Product } from './product.object';
-export { Pricebook } from './pricebook.object';
-export { Quote } from './quote.object';
+export { Product } from './product.object.js';
+export { Pricebook } from './pricebook.object.js';
+export { Quote } from './quote.object.js';
 
-export { ProductBundle } from './product_bundle.object';
-export { ProductBundleComponent } from './product_bundle_component.object';
-export { PriceRule } from './price_rule.object';
-export { QuoteLineItem } from './quote_line_item.object';
-export { ApprovalRequest } from './approval_request.object';
-export { DiscountSchedule } from './discount_schedule.object';
-export { Order } from './order.object';
-export { OrderItem } from './order_item.object';
+export { ProductBundle } from './product_bundle.object.js';
+export { ProductBundleComponent } from './product_bundle_component.object.js';
+export { PriceRule } from './price_rule.object.js';
+export { QuoteLineItem } from './quote_line_item.object.js';
+export { ApprovalRequest } from './approval_request.object.js';
+export { DiscountSchedule } from './discount_schedule.object.js';
+export { Order } from './order.object.js';
+export { OrderItem } from './order_item.object.js';
 
 // Export hooks
-export { default as QuotePricingHook } from './hooks/quote.hook';
-export { default as ProductHook } from './hooks/product.hook';
-export { default as PricebookHook } from './hooks/pricebook.hook';
+export { default as QuotePricingHook } from './hooks/quote.hook.js';
+export { default as ProductHook } from './hooks/product.hook.js';
+export { default as PricebookHook } from './hooks/pricebook.hook.js';
 
 // Export workflows
-export { ApprovalWorkflows } from './approval.workflow';
+export { ApprovalWorkflows } from './approval.workflow.js';
 
 // Export plugin definition
-export { default as ProductsPlugin } from './plugin';
+export { default as ProductsPlugin } from './plugin.js';
 
 // Note: YAML files (Product, Pricebook) are kept for reference
 // TypeScript definitions should be created following the metadata protocol

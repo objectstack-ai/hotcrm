@@ -4,7 +4,7 @@
  * Integration with AWS SageMaker for real-time inference
  */
 
-import BaseMLProvider, { MLProviderConfig, PredictionInput, PredictionOutput } from './base-provider';
+import BaseMLProvider, { MLProviderConfig, PredictionInput, PredictionOutput } from './base-provider.js';
 
 export interface SageMakerConfig extends MLProviderConfig {
   provider: 'aws-sagemaker';
