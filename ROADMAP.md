@@ -479,22 +479,22 @@ Q3 2026 Week 5-6  ████████  Phase 10.6C: Tests, Validation & Doc
 
 #### 10.6A-1: Enhance Existing Forms with Advanced Features
 
-- [ ] Upgrade `packages/crm/src/account.form.ts` — add collapsible address sections, helpText on key fields, placeholder on text inputs
-- [ ] Upgrade `packages/crm/src/lead.form.ts` — add visibleOn for conditional fields (show company fields only when lead type is 'Business'), dependsOn for state→country cascade
-- [ ] Upgrade `packages/crm/src/contact.form.ts` — add readonly on computed fields, hidden on internal fields, helpText on communication preferences
-- [ ] Upgrade `packages/crm/src/opportunity.form.ts` — convert to `tabbed` layout (Deal Info | Forecast | Products | Notes), add visibleOn for forecast fields based on stage
-- [ ] Upgrade `packages/support/src/case.form.ts` — add collapsible sections, widget: 'richtext' for description, placeholder on all text fields
-- [ ] Upgrade `packages/hr/src/employee.form.ts` — convert to `wizard` layout (Personal → Employment → Emergency → Review), add readonly on employee_number
+- [x] Upgrade `packages/crm/src/account.form.ts` — add collapsible address sections, helpText on key fields, placeholder on text inputs
+- [x] Upgrade `packages/crm/src/lead.form.ts` — add visibleOn for conditional fields (show company fields only when lead type is 'Business'), dependsOn for state→country cascade
+- [x] Upgrade `packages/crm/src/contact.form.ts` — add readonly on computed fields, hidden on internal fields, helpText on communication preferences
+- [x] Upgrade `packages/crm/src/opportunity.form.ts` — convert to `tabbed` layout (Deal Info | Forecast | Products | Notes), add visibleOn for forecast fields based on stage
+- [x] Upgrade `packages/support/src/case.form.ts` — add collapsible sections, widget: 'richtext' for description, placeholder on all text fields
+- [x] Upgrade `packages/hr/src/employee.form.ts` — convert to `wizard` layout (Personal → Employment → Emergency → Review), add readonly on employee_number
 
 #### 10.6A-2: Add Form Variants (Named Multiple FormViews)
 
-- [ ] Add `packages/crm/src/lead_quick_create.form.ts` — `modal` layout with essential fields only (name, company, email, phone, source)
-- [ ] Add `packages/crm/src/opportunity_quick_create.form.ts` — `drawer` layout for quick deal creation from pipeline view
-- [ ] Add `packages/support/src/case_quick_create.form.ts` — `modal` layout for quick case logging (subject, priority, description)
-- [ ] Add `packages/crm/src/account_split.form.ts` — `split` layout with account info on left, address/billing on right
-- [ ] Add `packages/hr/src/employee_onboarding.form.ts` — `wizard` layout for new hire onboarding (4 steps: personal → role → IT setup → review)
-- [ ] Add `packages/finance/src/invoice.form.ts` — `tabbed` layout (Invoice Details | Line Items | Payment Terms)
-- [ ] Validate all forms with `FormViewSchema.parse()` — 100% spec compliance
+- [x] Add `packages/crm/src/lead_quick_create.form.ts` — `modal` layout with essential fields only (name, company, email, phone, source)
+- [x] Add `packages/crm/src/opportunity_quick_create.form.ts` — `drawer` layout for quick deal creation from pipeline view
+- [x] Add `packages/support/src/case_quick_create.form.ts` — `modal` layout for quick case logging (subject, priority, description)
+- [x] Add `packages/crm/src/account_split.form.ts` — `split` layout with account info on left, address/billing on right
+- [x] Add `packages/hr/src/employee_onboarding.form.ts` — `wizard` layout for new hire onboarding (4 steps: personal → role → IT setup → review)
+- [x] Add `packages/finance/src/invoice.form.ts` — `tabbed` layout (Invoice Details | Line Items | Payment Terms)
+- [x] Validate all forms with `FormViewSchema.parse()` — 100% spec compliance
 
 ### Phase 10.6B: Page Layout Enhancement (Weeks 3-4) — P0
 
@@ -502,53 +502,53 @@ Q3 2026 Week 5-6  ████████  Phase 10.6C: Tests, Validation & Doc
 
 #### 10.6B-1: Enhance Existing Record Pages
 
-- [ ] Upgrade all record pages to include `isDefault: true` and `template: 'record_detail'`
-- [ ] Add `assignedProfiles` to key pages:
+- [x] Upgrade all record pages to include `isDefault: true` and `template: 'record_detail'`
+- [x] Add `assignedProfiles` to key pages:
   - Account page: `['sales_rep', 'sales_manager', 'admin']`
   - Case page: `['support_agent', 'support_manager', 'admin']`
   - Employee page: `['hr_specialist', 'hr_manager', 'admin']`
-- [ ] Add `visibility` rules to components:
+- [x] Add `visibility` rules to components:
   - Hide financial sections for non-finance profiles on Account page
   - Show escalation section only when case priority is 'Critical' on Case page
   - Hide salary details for non-HR profiles on Employee page
-- [ ] Add `ai:chat_window` component (sidebar mode) to high-traffic record pages:
+- [x] Add `ai:chat_window` component (sidebar mode) to high-traffic record pages:
   - Account detail page — context-aware account insights
   - Opportunity detail page — deal coaching and next-best-action
   - Case detail page — resolution suggestions from knowledge base
-- [ ] Add `ai:suggestion` component to relevant pages for proactive AI recommendations
-- [ ] Add `record:activity` component to Account, Contact, Opportunity pages for activity timeline
-- [ ] Add `record:path` component to Opportunity page for guided selling stages
-- [ ] Add `page:card` components for visual grouping of related information
+- [x] Add `ai:suggestion` component to relevant pages for proactive AI recommendations
+- [x] Add `record:activity` component to Account, Contact, Opportunity pages for activity timeline
+- [x] Add `record:path` component to Opportunity page for guided selling stages
+- [x] Add `page:card` components for visual grouping of related information
 
 #### 10.6B-2: Add New Page Types
 
-- [ ] Add `packages/crm/src/crm_home.page.ts` — `type: 'home'` with pipeline summary, today's activities, AI insights, top deals widgets
-- [ ] Add `packages/support/src/support_home.page.ts` — `type: 'home'` with open cases queue, SLA alerts, CSAT trends, AI case routing
-- [ ] Add `packages/hr/src/hr_home.page.ts` — `type: 'home'` with headcount overview, open positions, pending approvals, onboarding tracker
-- [ ] Add `packages/crm/src/crm_utility.page.ts` — `type: 'utility'` with quick lookup, global search, recent records, favorites
-- [ ] Add `packages/core/src/settings.page.ts` — `type: 'app'` with system settings, user preferences, notification settings
+- [x] Add `packages/crm/src/crm_home.page.ts` — `type: 'home'` with pipeline summary, today's activities, AI insights, top deals widgets
+- [x] Add `packages/support/src/support_home.page.ts` — `type: 'home'` with open cases queue, SLA alerts, CSAT trends, AI case routing
+- [x] Add `packages/hr/src/hr_home.page.ts` — `type: 'home'` with headcount overview, open positions, pending approvals, onboarding tracker
+- [x] Add `packages/crm/src/crm_utility.page.ts` — `type: 'utility'` with quick lookup, global search, recent records, favorites
+- [x] Add `packages/core/src/settings.page.ts` — `type: 'app'` with system settings, user preferences, notification settings
 
 #### 10.6B-3: Component Properties Alignment
 
-- [ ] Migrate `record:details` components to use RecordDetailsProps format: `{ columns: '2', layout: 'custom', sections: ['section_name'] }`
-- [ ] Migrate `record:related_list` components to use RecordRelatedListProps format: `{ objectName, relationshipField, columns, sort?, limit }`
-- [ ] Migrate `page:tabs` components to use PageTabsProps format: `{ type: 'line', position: 'top', items: [{ label, children }] }`
-- [ ] Add `responsive` config to all components for mobile breakpoints
-- [ ] Add `aria` accessibility props to all interactive components
+- [x] Migrate `record:details` components to use RecordDetailsProps format: `{ columns: '2', layout: 'custom', sections: ['section_name'] }`
+- [x] Migrate `record:related_list` components to use RecordRelatedListProps format: `{ objectName, relationshipField, columns, sort?, limit }`
+- [x] Migrate `page:tabs` components to use PageTabsProps format: `{ type: 'line', position: 'top', items: [{ label, children }] }`
+- [x] Add `responsive` config to all components for mobile breakpoints
+- [x] Add `aria` accessibility props to all interactive components
 
 ### Phase 10.6C: Tests, Validation & Documentation (Weeks 5-6) — P1
 
 #### 10.6C-1: Spec-Compliance Tests
 
-- [ ] Add `packages/crm/__tests__/unit/schemas/formview-enhanced.test.ts` — validate all enhanced CRM forms including layout types, collapsible sections, field controls
-- [ ] Add `packages/crm/__tests__/unit/schemas/page-enhanced.test.ts` — validate enhanced pages including assignedProfiles, visibility, AI components
-- [ ] Add per-package enhanced UI tests for Support, HR, Finance, Products, Marketing
-- [ ] Add `packages/crm/__tests__/unit/schemas/component-props.test.ts` — validate component properties match ComponentPropsMap types
+- [x] Add `packages/crm/__tests__/unit/schemas/formview-enhanced.test.ts` — validate all enhanced CRM forms including layout types, collapsible sections, field controls
+- [x] Add `packages/crm/__tests__/unit/schemas/page-enhanced.test.ts` — validate enhanced pages including assignedProfiles, visibility, AI components
+- [x] Add per-package enhanced UI tests for Support, HR, Finance, Products, Marketing
+- [x] Add `packages/crm/__tests__/unit/schemas/component-props.test.ts` — validate component properties match ComponentPropsMap types
 
 #### 10.6C-2: Documentation
 
-- [ ] Add `content/docs/guides/formview-layouts.mdx` — guide to all 6 FormView layout types with examples
-- [ ] Add `content/docs/guides/page-components.mdx` — guide to all 21 component types with property reference
+- [x] Add `content/docs/guides/formview-layouts.mdx` — guide to all 6 FormView layout types with examples
+- [x] Add `content/docs/guides/page-components.mdx` — guide to all 21 component types with property reference
 - [ ] Update `docs/SALESFORCE_FEATURE_COMPARISON.md` with page layout and form builder parity
 - [ ] Update `README.md` and `content/docs/roadmap.mdx` with Phase 10.6 metrics
 
@@ -591,49 +591,49 @@ Q4 2026 Week 13-16 ████████  Phase 11D: Cross-Ecosystem Tests & 
 
 #### 11A-1: Package Scaffolding & Core Objects
 
-- [ ] Initialize `packages/analytics/` package with `package.json`, `tsconfig.json`, `plugin.ts`
-- [ ] Add `packages/analytics/src/report.object.ts` — saved report definitions (name, description, object_name, filters, groupings, aggregations, columns, sort_order, report_type)
-- [ ] Add `packages/analytics/src/report_schedule.object.ts` — scheduled report delivery (report_id, frequency, recipients, format, next_run, last_run, timezone)
-- [ ] Add `packages/analytics/src/analytics_dashboard.object.ts` — dashboard layouts (name, description, widgets, layout_config, refresh_interval, owner, shared_with)
-- [ ] Add `packages/analytics/src/kpi.object.ts` — KPI definitions (name, metric_type, target_value, current_value, period, trend, threshold_warning, threshold_critical)
-- [ ] Add `packages/analytics/src/metric.object.ts` — business metric calculations (name, formula, source_object, aggregation_type, time_grain, filters)
-- [ ] Add `packages/analytics/src/data_source.object.ts` — external data source connectors (name, type, connection_string, sync_status, last_sync, schema_mapping)
-- [ ] Add `packages/analytics/src/saved_filter.object.ts` — reusable filter presets (name, object_name, filter_conditions, is_global, created_by)
-- [ ] Validate all objects with `ObjectSchema.create()` — 100% spec compliance
+- [x] Initialize `packages/analytics/` package with `package.json`, `tsconfig.json`, `plugin.ts`
+- [x] Add `packages/analytics/src/report.object.ts` — saved report definitions (name, description, object_name, filters, groupings, aggregations, columns, sort_order, report_type)
+- [x] Add `packages/analytics/src/report_schedule.object.ts` — scheduled report delivery (report_id, frequency, recipients, format, next_run, last_run, timezone)
+- [x] Add `packages/analytics/src/analytics_dashboard.object.ts` — dashboard layouts (name, description, widgets, layout_config, refresh_interval, owner, shared_with)
+- [x] Add `packages/analytics/src/kpi.object.ts` — KPI definitions (name, metric_type, target_value, current_value, period, trend, threshold_warning, threshold_critical)
+- [x] Add `packages/analytics/src/metric.object.ts` — business metric calculations (name, formula, source_object, aggregation_type, time_grain, filters)
+- [x] Add `packages/analytics/src/data_source.object.ts` — external data source connectors (name, type, connection_string, sync_status, last_sync, schema_mapping)
+- [x] Add `packages/analytics/src/saved_filter.object.ts` — reusable filter presets (name, object_name, filter_conditions, is_global, created_by)
+- [x] Validate all objects with `ObjectSchema.create()` — 100% spec compliance
 
 #### 11A-2: Hooks & Business Logic
 
-- [ ] Add `packages/analytics/src/report.hook.ts` — report execution, filter validation, access control, cache invalidation
-- [ ] Add `packages/analytics/src/analytics_dashboard.hook.ts` — widget validation, layout constraint checks, auto-refresh scheduling
-- [ ] Add `packages/analytics/src/kpi.hook.ts` — threshold alerts (trigger notifications when KPI crosses warning/critical), trend calculation, auto-refresh
-- [ ] Add `packages/analytics/src/metric.hook.ts` — formula validation, circular dependency detection, aggregation computation
-- [ ] Add `packages/analytics/src/report_schedule.hook.ts` — schedule validation, next run calculation, delivery execution
-- [ ] Add `packages/analytics/src/data_source.hook.ts` — connection health checks, sync lifecycle, schema drift detection
+- [x] Add `packages/analytics/src/report.hook.ts` — report execution, filter validation, access control, cache invalidation
+- [x] Add `packages/analytics/src/analytics_dashboard.hook.ts` — widget validation, layout constraint checks, auto-refresh scheduling
+- [x] Add `packages/analytics/src/kpi.hook.ts` — threshold alerts (trigger notifications when KPI crosses warning/critical), trend calculation, auto-refresh
+- [x] Add `packages/analytics/src/metric.hook.ts` — formula validation, circular dependency detection, aggregation computation
+- [x] Add `packages/analytics/src/report_schedule.hook.ts` — schedule validation, next run calculation, delivery execution
+- [x] Add `packages/analytics/src/data_source.hook.ts` — connection health checks, sync lifecycle, schema drift detection
 
 #### 11A-3: Actions & AI Capabilities
 
-- [ ] Add `packages/analytics/src/report_ai.action.ts` — natural language report generation ("Show me top 10 customers by revenue"), report suggestion, auto-filter
-- [ ] Add `packages/analytics/src/dashboard_ai.action.ts` — auto-generate dashboard layouts based on user role, KPI anomaly detection, smart widget recommendations
-- [ ] Add `packages/analytics/src/insight_ai.action.ts` — automatic anomaly detection, trend analysis, root cause suggestions, executive summary generation
-- [ ] Add `packages/analytics/src/forecast_analytics.action.ts` — ML-powered revenue and churn predictions, confidence intervals, what-if scenarios
+- [x] Add `packages/analytics/src/report_ai.action.ts` — natural language report generation ("Show me top 10 customers by revenue"), report suggestion, auto-filter
+- [x] Add `packages/analytics/src/dashboard_ai.action.ts` — auto-generate dashboard layouts based on user role, KPI anomaly detection, smart widget recommendations
+- [x] Add `packages/analytics/src/insight_ai.action.ts` — automatic anomaly detection, trend analysis, root cause suggestions, executive summary generation
+- [x] Add `packages/analytics/src/forecast_analytics.action.ts` — ML-powered revenue and churn predictions, confidence intervals, what-if scenarios
 
 #### 11A-4: UI Metadata
 
-- [ ] Add `packages/analytics/src/report.page.ts` — report builder UI with filter panels, column selector, preview, export
-- [ ] Add `packages/analytics/src/report.view.ts` — report library with category filters, favorites, recent, shared
-- [ ] Add `packages/analytics/src/analytics_dashboard.page.ts` — dashboard canvas with drag-and-drop widget placement
-- [ ] Add `packages/analytics/src/kpi.view.ts` — KPI scorecard with trend sparklines and RAG status
-- [ ] Add `packages/analytics/src/analytics.dashboard.ts` — meta-dashboard: system health, data freshness, usage analytics
+- [x] Add `packages/analytics/src/report.page.ts` — report builder UI with filter panels, column selector, preview, export
+- [x] Add `packages/analytics/src/report.view.ts` — report library with category filters, favorites, recent, shared
+- [x] Add `packages/analytics/src/analytics_dashboard.page.ts` — dashboard canvas with drag-and-drop widget placement
+- [x] Add `packages/analytics/src/kpi.view.ts` — KPI scorecard with trend sparklines and RAG status
+- [x] Add `packages/analytics/src/analytics.dashboard.ts` — meta-dashboard: system health, data freshness, usage analytics
 
 #### 11A-5: Tests
 
-- [ ] Add `packages/analytics/__tests__/unit/objects/spec-compliance.test.ts` — validate all ~8 objects against spec
-- [ ] Add `packages/analytics/__tests__/unit/hooks/report.hook.test.ts` — report execution, filter validation, access control
-- [ ] Add `packages/analytics/__tests__/unit/hooks/kpi.hook.test.ts` — threshold alerts, trend calculation
-- [ ] Add `packages/analytics/__tests__/unit/hooks/metric.hook.test.ts` — formula validation, aggregation
-- [ ] Add `packages/analytics/__tests__/unit/actions/report_ai.action.test.ts` — NL report generation
-- [ ] Add `packages/analytics/__tests__/unit/actions/insight_ai.action.test.ts` — anomaly detection
-- [ ] Add `packages/analytics/__tests__/integration/cross-cloud-analytics.test.ts` — analytics queries across CRM, Finance, Support data
+- [x] Add `packages/analytics/__tests__/unit/objects/spec-compliance.test.ts` — validate all ~8 objects against spec
+- [x] Add `packages/analytics/__tests__/unit/hooks/report.hook.test.ts` — report execution, filter validation, access control
+- [x] Add `packages/analytics/__tests__/unit/hooks/kpi.hook.test.ts` — threshold alerts, trend calculation
+- [x] Add `packages/analytics/__tests__/unit/hooks/metric.hook.test.ts` — formula validation, aggregation
+- [x] Add `packages/analytics/__tests__/unit/actions/report_ai.action.test.ts` — NL report generation
+- [x] Add `packages/analytics/__tests__/unit/actions/insight_ai.action.test.ts` — anomaly detection
+- [x] Add `packages/analytics/__tests__/integration/cross-cloud-analytics.test.ts` — analytics queries across CRM, Finance, Support data
 
 ### Phase 11B: Integration Package & Connectors (Q3 2026, Weeks 5-8) — P0
 
@@ -641,74 +641,74 @@ Q4 2026 Week 13-16 ████████  Phase 11D: Cross-Ecosystem Tests & 
 
 #### 11B-1: Package Scaffolding & Core Objects
 
-- [ ] Initialize `packages/integration/` package with `package.json`, `tsconfig.json`, `plugin.ts`
-- [ ] Add `packages/integration/src/connector.object.ts` — connector definitions (name, type, provider, auth_type, credentials_ref, base_url, status, version)
-- [ ] Add `packages/integration/src/connection.object.ts` — active connection instances (connector_id, tenant_id, status, auth_token_ref, refresh_token_ref, expires_at, last_used)
-- [ ] Add `packages/integration/src/sync_config.object.ts` — bi-directional sync configuration (connection_id, source_object, target_object, field_mapping, direction, frequency, conflict_resolution)
-- [ ] Add `packages/integration/src/sync_log.object.ts` — sync execution audit log (sync_config_id, started_at, completed_at, records_processed, records_failed, error_details, status)
-- [ ] Add `packages/integration/src/webhook_subscription.object.ts` — outbound webhook subscriptions (event_type, target_url, secret, status, retry_policy, filters, last_triggered)
-- [ ] Add `packages/integration/src/webhook_delivery.object.ts` — webhook delivery log (subscription_id, event_payload, response_status, response_body, attempt_number, delivered_at)
-- [ ] Add `packages/integration/src/api_key.object.ts` — API key management (name, key_hash, scopes, rate_limit, expires_at, last_used, created_by)
-- [ ] Add `packages/integration/src/field_mapping.object.ts` — field mapping templates (name, source_object, target_object, mappings, transform_rules, default_values)
-- [ ] Validate all objects with `ObjectSchema.create()` — 100% spec compliance
+- [x] Initialize `packages/integration/` package with `package.json`, `tsconfig.json`, `plugin.ts`
+- [x] Add `packages/integration/src/connector.object.ts` — connector definitions (name, type, provider, auth_type, credentials_ref, base_url, status, version)
+- [x] Add `packages/integration/src/connection.object.ts` — active connection instances (connector_id, tenant_id, status, auth_token_ref, refresh_token_ref, expires_at, last_used)
+- [x] Add `packages/integration/src/sync_config.object.ts` — bi-directional sync configuration (connection_id, source_object, target_object, field_mapping, direction, frequency, conflict_resolution)
+- [x] Add `packages/integration/src/sync_log.object.ts` — sync execution audit log (sync_config_id, started_at, completed_at, records_processed, records_failed, error_details, status)
+- [x] Add `packages/integration/src/webhook_subscription.object.ts` — outbound webhook subscriptions (event_type, target_url, secret, status, retry_policy, filters, last_triggered)
+- [x] Add `packages/integration/src/webhook_delivery.object.ts` — webhook delivery log (subscription_id, event_payload, response_status, response_body, attempt_number, delivered_at)
+- [x] Add `packages/integration/src/api_key.object.ts` — API key management (name, key_hash, scopes, rate_limit, expires_at, last_used, created_by)
+- [x] Add `packages/integration/src/field_mapping.object.ts` — field mapping templates (name, source_object, target_object, mappings, transform_rules, default_values)
+- [x] Validate all objects with `ObjectSchema.create()` — 100% spec compliance
 
 #### 11B-2: Hooks & Business Logic
 
-- [ ] Add `packages/integration/src/connector.hook.ts` — connector lifecycle (activation, deactivation, health check scheduling)
-- [ ] Add `packages/integration/src/connection.hook.ts` — connection validation, token refresh, expiry alerts
-- [ ] Add `packages/integration/src/sync_config.hook.ts` — mapping validation, schedule management, conflict resolution
-- [ ] Add `packages/integration/src/sync_log.hook.ts` — sync monitoring, failure alerts, retry logic
-- [ ] Add `packages/integration/src/webhook_subscription.hook.ts` — subscription validation, secret rotation, endpoint verification
-- [ ] Add `packages/integration/src/webhook_delivery.hook.ts` — delivery tracking, retry scheduling, dead-letter handling
-- [ ] Add `packages/integration/src/api_key.hook.ts` — key generation, expiry alerts, usage tracking, rate limit enforcement
+- [x] Add `packages/integration/src/connector.hook.ts` — connector lifecycle (activation, deactivation, health check scheduling)
+- [x] Add `packages/integration/src/connection.hook.ts` — connection validation, token refresh, expiry alerts
+- [x] Add `packages/integration/src/sync_config.hook.ts` — mapping validation, schedule management, conflict resolution
+- [x] Add `packages/integration/src/sync_log.hook.ts` — sync monitoring, failure alerts, retry logic
+- [x] Add `packages/integration/src/webhook_subscription.hook.ts` — subscription validation, secret rotation, endpoint verification
+- [x] Add `packages/integration/src/webhook_delivery.hook.ts` — delivery tracking, retry scheduling, dead-letter handling
+- [x] Add `packages/integration/src/api_key.hook.ts` — key generation, expiry alerts, usage tracking, rate limit enforcement
 
 #### 11B-3: High-Priority Connectors (5 initial connectors)
 
 Each connector includes: `*.action.ts` (API operations), `*.hook.ts` (event mapping), tests.
 
-- [ ] **Stripe Connector** — `packages/integration/src/connectors/stripe.action.ts`
+- [x] **Stripe Connector** — `packages/integration/src/connectors/stripe.action.ts`
   - Payment intent creation, refund processing, subscription sync
   - Map Stripe webhooks → Finance package (invoice.paid, payment.failed, subscription.updated)
   - Sync: Stripe Customer ↔ Account, Stripe Invoice ↔ Invoice, Stripe Subscription ↔ Subscription
-- [ ] **DocuSign Connector** — `packages/integration/src/connectors/docusign.action.ts`
+- [x] **DocuSign Connector** — `packages/integration/src/connectors/docusign.action.ts`
   - Envelope creation from Quote/Contract, signing status tracking
   - Map DocuSign webhooks → Products/Finance (envelope.completed → contract.status = 'Signed')
   - Sync: DocuSign Envelope ↔ Contract, signing events → Activity
-- [ ] **Slack Connector** — `packages/integration/src/connectors/slack.action.ts`
+- [x] **Slack Connector** — `packages/integration/src/connectors/slack.action.ts`
   - Send notifications for deal closures, case escalations, approval requests
   - Slash commands for quick CRM lookups (`/hotcrm account Acme Corp`)
   - Map Slack events → Activity (message sent, channel mention)
-- [ ] **Gmail Connector** — `packages/integration/src/connectors/gmail.action.ts`
+- [x] **Gmail Connector** — `packages/integration/src/connectors/gmail.action.ts`
   - Email-to-Activity logging, thread tracking, attachment linking
   - Email template send via Gmail API, tracking pixels for open/click
   - Sync: Gmail threads ↔ Activity, contacts ↔ Contact
-- [ ] **Microsoft Teams Connector** — `packages/integration/src/connectors/teams.action.ts`
+- [x] **Microsoft Teams Connector** — `packages/integration/src/connectors/teams.action.ts`
   - Meeting scheduling from CRM, meeting notes → Activity
   - Adaptive card notifications for pipeline changes, approval requests
   - Sync: Teams meetings ↔ Activity, Teams contacts ↔ Contact
 
 #### 11B-4: Actions & AI Capabilities
 
-- [ ] Add `packages/integration/src/sync_ai.action.ts` — AI-powered field mapping suggestions, conflict resolution recommendations, data quality assessment for sync
-- [ ] Add `packages/integration/src/connector_ai.action.ts` — natural language connector configuration ("Connect my Stripe account"), troubleshooting assistant
+- [x] Add `packages/integration/src/sync_ai.action.ts` — AI-powered field mapping suggestions, conflict resolution recommendations, data quality assessment for sync
+- [x] Add `packages/integration/src/connector_ai.action.ts` — natural language connector configuration ("Connect my Stripe account"), troubleshooting assistant
 
 #### 11B-5: UI Metadata
 
-- [ ] Add `packages/integration/src/connector.page.ts` — connector marketplace with setup wizard
-- [ ] Add `packages/integration/src/connector.view.ts` — connector library with status, health, last sync
-- [ ] Add `packages/integration/src/sync_config.page.ts` — sync configuration with field mapping editor
-- [ ] Add `packages/integration/src/integration.dashboard.ts` — integration health: sync success rates, webhook deliveries, API usage
+- [x] Add `packages/integration/src/connector.page.ts` — connector marketplace with setup wizard
+- [x] Add `packages/integration/src/connector.view.ts` — connector library with status, health, last sync
+- [x] Add `packages/integration/src/sync_config.page.ts` — sync configuration with field mapping editor
+- [x] Add `packages/integration/src/integration.dashboard.ts` — integration health: sync success rates, webhook deliveries, API usage
 
 #### 11B-6: Tests
 
-- [ ] Add `packages/integration/__tests__/unit/objects/spec-compliance.test.ts` — validate all ~8 objects against spec
-- [ ] Add `packages/integration/__tests__/unit/hooks/connector.hook.test.ts` — lifecycle, health check
-- [ ] Add `packages/integration/__tests__/unit/hooks/sync_config.hook.test.ts` — mapping validation, scheduling
-- [ ] Add `packages/integration/__tests__/unit/hooks/webhook_subscription.hook.test.ts` — validation, retry
-- [ ] Add `packages/integration/__tests__/unit/connectors/stripe.action.test.ts` — payment operations, webhook mapping
-- [ ] Add `packages/integration/__tests__/unit/connectors/docusign.action.test.ts` — envelope operations
-- [ ] Add `packages/integration/__tests__/unit/connectors/slack.action.test.ts` — notifications, slash commands
-- [ ] Add `packages/integration/__tests__/integration/sync-flow.test.ts` — end-to-end sync lifecycle
+- [x] Add `packages/integration/__tests__/unit/objects/spec-compliance.test.ts` — validate all ~8 objects against spec
+- [x] Add `packages/integration/__tests__/unit/hooks/connector.hook.test.ts` — lifecycle, health check
+- [x] Add `packages/integration/__tests__/unit/hooks/sync_config.hook.test.ts` — mapping validation, scheduling
+- [x] Add `packages/integration/__tests__/unit/hooks/webhook_subscription.hook.test.ts` — validation, retry
+- [x] Add `packages/integration/__tests__/unit/connectors/stripe.action.test.ts` — payment operations, webhook mapping
+- [x] Add `packages/integration/__tests__/unit/connectors/docusign.action.test.ts` — envelope operations
+- [x] Add `packages/integration/__tests__/unit/connectors/slack.action.test.ts` — notifications, slash commands
+- [x] Add `packages/integration/__tests__/integration/sync-flow.test.ts` — end-to-end sync lifecycle
 
 ### Phase 11C: Community Package (Q4 2026, Weeks 9-12) — P1
 
@@ -716,48 +716,48 @@ Each connector includes: `*.action.ts` (API operations), `*.hook.ts` (event mapp
 
 #### 11C-1: Package Scaffolding & Core Objects
 
-- [ ] Initialize `packages/community/` package with `package.json`, `tsconfig.json`, `plugin.ts`
-- [ ] Add `packages/community/src/community.object.ts` — community portal configuration (name, description, domain, theme, features_enabled, status, branding)
-- [ ] Add `packages/community/src/forum_category.object.ts` — forum organization (name, description, parent_category, sort_order, icon, is_archived)
-- [ ] Add `packages/community/src/topic.object.ts` — discussion topics (title, body, category_id, author_id, status, is_pinned, is_locked, view_count, reply_count)
-- [ ] Add `packages/community/src/reply.object.ts` — topic replies (topic_id, body, author_id, is_accepted_answer, upvotes, is_flagged)
-- [ ] Add `packages/community/src/idea.object.ts` — feature requests (title, description, category, status, vote_count, priority_score, assigned_release)
-- [ ] Add `packages/community/src/user_group.object.ts` — community segmentation (name, description, type, criteria, member_count, access_level)
-- [ ] Add `packages/community/src/community_event.object.ts` — community events (title, description, event_type, start_date, end_date, location, capacity, rsvp_count, recording_url)
-- [ ] Add `packages/community/src/badge.object.ts` — gamification rewards (name, description, icon, criteria, points_value, is_automatic)
-- [ ] Validate all objects with `ObjectSchema.create()` — 100% spec compliance
+- [x] Initialize `packages/community/` package with `package.json`, `tsconfig.json`, `plugin.ts`
+- [x] Add `packages/community/src/community.object.ts` — community portal configuration (name, description, domain, theme, features_enabled, status, branding)
+- [x] Add `packages/community/src/forum_category.object.ts` — forum organization (name, description, parent_category, sort_order, icon, is_archived)
+- [x] Add `packages/community/src/topic.object.ts` — discussion topics (title, body, category_id, author_id, status, is_pinned, is_locked, view_count, reply_count)
+- [x] Add `packages/community/src/reply.object.ts` — topic replies (topic_id, body, author_id, is_accepted_answer, upvotes, is_flagged)
+- [x] Add `packages/community/src/idea.object.ts` — feature requests (title, description, category, status, vote_count, priority_score, assigned_release)
+- [x] Add `packages/community/src/user_group.object.ts` — community segmentation (name, description, type, criteria, member_count, access_level)
+- [x] Add `packages/community/src/community_event.object.ts` — community events (title, description, event_type, start_date, end_date, location, capacity, rsvp_count, recording_url)
+- [x] Add `packages/community/src/badge.object.ts` — gamification rewards (name, description, icon, criteria, points_value, is_automatic)
+- [x] Validate all objects with `ObjectSchema.create()` — 100% spec compliance
 
 #### 11C-2: Hooks & Business Logic
 
-- [ ] Add `packages/community/src/topic.hook.ts` — content moderation (profanity filter, spam detection), notification to subscribers, auto-tagging, view counting
-- [ ] Add `packages/community/src/reply.hook.ts` — answer acceptance, upvote tracking, author reputation update, spam detection
-- [ ] Add `packages/community/src/idea.hook.ts` — vote aggregation, status transitions (Submitted → Under Review → Planned → Released), notification on status change
-- [ ] Add `packages/community/src/user_group.hook.ts` — membership validation, auto-assignment based on criteria, access level enforcement
-- [ ] Add `packages/community/src/community_event.hook.ts` — RSVP management, capacity enforcement, reminder scheduling, recording link notification
-- [ ] Add `packages/community/src/badge.hook.ts` — auto-award based on activity criteria (first post, 10 replies, accepted answer), points calculation
-- [ ] Add `packages/community/src/community.hook.ts` — portal configuration validation, feature toggle enforcement, domain verification
+- [x] Add `packages/community/src/topic.hook.ts` — content moderation (profanity filter, spam detection), notification to subscribers, auto-tagging, view counting
+- [x] Add `packages/community/src/reply.hook.ts` — answer acceptance, upvote tracking, author reputation update, spam detection
+- [x] Add `packages/community/src/idea.hook.ts` — vote aggregation, status transitions (Submitted → Under Review → Planned → Released), notification on status change
+- [x] Add `packages/community/src/user_group.hook.ts` — membership validation, auto-assignment based on criteria, access level enforcement
+- [x] Add `packages/community/src/community_event.hook.ts` — RSVP management, capacity enforcement, reminder scheduling, recording link notification
+- [x] Add `packages/community/src/badge.hook.ts` — auto-award based on activity criteria (first post, 10 replies, accepted answer), points calculation
+- [x] Add `packages/community/src/community.hook.ts` — portal configuration validation, feature toggle enforcement, domain verification
 
 #### 11C-3: Actions & AI Capabilities
 
-- [ ] Add `packages/community/src/community_ai.action.ts` — AI-powered content moderation, auto-categorization, similar topic detection, answer suggestion from knowledge base
-- [ ] Add `packages/community/src/community_analytics.action.ts` — engagement metrics, active contributor reports, trending topics, sentiment analysis
+- [x] Add `packages/community/src/community_ai.action.ts` — AI-powered content moderation, auto-categorization, similar topic detection, answer suggestion from knowledge base
+- [x] Add `packages/community/src/community_analytics.action.ts` — engagement metrics, active contributor reports, trending topics, sentiment analysis
 
 #### 11C-4: UI Metadata
 
-- [ ] Add `packages/community/src/topic.page.ts` — topic detail with replies, voting, best answer
-- [ ] Add `packages/community/src/topic.view.ts` — topic list with category, status, activity filters
-- [ ] Add `packages/community/src/idea.page.ts` — idea detail with voting, status timeline, comments
-- [ ] Add `packages/community/src/idea.view.ts` — idea board with vote ranking, status filters
-- [ ] Add `packages/community/src/community.dashboard.ts` — community health: engagement rate, active users, resolution rate, top contributors
+- [x] Add `packages/community/src/topic.page.ts` — topic detail with replies, voting, best answer
+- [x] Add `packages/community/src/topic.view.ts` — topic list with category, status, activity filters
+- [x] Add `packages/community/src/idea.page.ts` — idea detail with voting, status timeline, comments
+- [x] Add `packages/community/src/idea.view.ts` — idea board with vote ranking, status filters
+- [x] Add `packages/community/src/community.dashboard.ts` — community health: engagement rate, active users, resolution rate, top contributors
 
 #### 11C-5: Tests
 
-- [ ] Add `packages/community/__tests__/unit/objects/spec-compliance.test.ts` — validate all ~8 objects against spec
-- [ ] Add `packages/community/__tests__/unit/hooks/topic.hook.test.ts` — moderation, notification, auto-tagging
-- [ ] Add `packages/community/__tests__/unit/hooks/idea.hook.test.ts` — voting, status transitions
-- [ ] Add `packages/community/__tests__/unit/hooks/badge.hook.test.ts` — auto-award criteria, points
-- [ ] Add `packages/community/__tests__/unit/actions/community_ai.action.test.ts` — moderation, categorization
-- [ ] Add `packages/community/__tests__/integration/community-support.test.ts` — community topic → knowledge article, community user → CRM contact linking
+- [x] Add `packages/community/__tests__/unit/objects/spec-compliance.test.ts` — validate all ~8 objects against spec
+- [x] Add `packages/community/__tests__/unit/hooks/topic.hook.test.ts` — moderation, notification, auto-tagging
+- [x] Add `packages/community/__tests__/unit/hooks/idea.hook.test.ts` — voting, status transitions
+- [x] Add `packages/community/__tests__/unit/hooks/badge.hook.test.ts` — auto-award criteria, points
+- [x] Add `packages/community/__tests__/unit/actions/community_ai.action.test.ts` — moderation, categorization
+- [x] Add `packages/community/__tests__/integration/community-support.test.ts` — community topic → knowledge article, community user → CRM contact linking
 
 ### Phase 11D: Cross-Ecosystem Hardening (Q4 2026, Weeks 13-16) — P1
 
@@ -765,28 +765,28 @@ Each connector includes: `*.action.ts` (API operations), `*.hook.ts` (event mapp
 
 #### 11D-1: Additional Connectors (5 more, Medium Priority)
 
-- [ ] **PayPal Connector** — `packages/integration/src/connectors/paypal.action.ts` — payment processing, refund handling, subscription management
-- [ ] **Adobe Sign Connector** — `packages/integration/src/connectors/adobe_sign.action.ts` — agreement lifecycle, signing workflow, template management
-- [ ] **Outlook Connector** — `packages/integration/src/connectors/outlook.action.ts` — email-to-activity, calendar sync, contact sync
-- [ ] **QuickBooks Connector** — `packages/integration/src/connectors/quickbooks.action.ts` — invoice sync, payment reconciliation, customer/vendor mapping
-- [ ] **LinkedIn Connector** — `packages/integration/src/connectors/linkedin.action.ts` — lead enrichment, recruiting pipeline, company data import
+- [x] **PayPal Connector** — `packages/integration/src/connectors/paypal.action.ts` — payment processing, refund handling, subscription management
+- [x] **Adobe Sign Connector** — `packages/integration/src/connectors/adobe_sign.action.ts` — agreement lifecycle, signing workflow, template management
+- [x] **Outlook Connector** — `packages/integration/src/connectors/outlook.action.ts` — email-to-activity, calendar sync, contact sync
+- [x] **QuickBooks Connector** — `packages/integration/src/connectors/quickbooks.action.ts` — invoice sync, payment reconciliation, customer/vendor mapping
+- [x] **LinkedIn Connector** — `packages/integration/src/connectors/linkedin.action.ts` — lead enrichment, recruiting pipeline, company data import
 
 #### 11D-2: Cross-Package Integration Tests
 
-- [ ] Analytics → CRM: sales pipeline report pulling from opportunity, account, forecast data
-- [ ] Analytics → Finance: revenue analytics across invoice, payment, contract objects
-- [ ] Analytics → Marketing: campaign ROI reports, lead funnel analysis
-- [ ] Integration → Finance: Stripe payment sync → Invoice status update → Revenue recognition trigger
-- [ ] Integration → CRM: Gmail email → Activity creation → Contact timeline update
-- [ ] Community → Support: forum topic flagged → case auto-creation → knowledge article suggestion
-- [ ] Community → CRM: community user → contact linking, idea → product feedback loop
+- [x] Analytics → CRM: sales pipeline report pulling from opportunity, account, forecast data
+- [x] Analytics → Finance: revenue analytics across invoice, payment, contract objects
+- [x] Analytics → Marketing: campaign ROI reports, lead funnel analysis
+- [x] Integration → Finance: Stripe payment sync → Invoice status update → Revenue recognition trigger
+- [x] Integration → CRM: Gmail email → Activity creation → Contact timeline update
+- [x] Community → Support: forum topic flagged → case auto-creation → knowledge article suggestion
+- [x] Community → CRM: community user → contact linking, idea → product feedback loop
 - [ ] End-to-end: Lead (CRM) → Campaign attribution (Marketing) → Deal close (CRM) → Invoice (Finance) → Stripe payment (Integration) → Revenue report (Analytics)
 
 #### 11D-3: Security & Permissions
 
-- [ ] Add `packages/analytics/src/analytics.permission.ts` — report access control, dashboard sharing, KPI visibility
-- [ ] Add `packages/integration/src/integration.permission.ts` — connector management, sync configuration, API key management
-- [ ] Add `packages/community/src/community.permission.ts` — content moderation, community administration, forum management
+- [x] Add `packages/analytics/src/analytics.permission.ts` — report access control, dashboard sharing, KPI visibility
+- [x] Add `packages/integration/src/integration.permission.ts` — connector management, sync configuration, API key management
+- [x] Add `packages/community/src/community.permission.ts` — content moderation, community administration, forum management
 - [ ] Add credential encryption for connector auth tokens (integration with `@objectstack/runtime` secrets vault)
 
 #### 11D-4: Performance & Scale
@@ -798,11 +798,11 @@ Each connector includes: `*.action.ts` (API operations), `*.hook.ts` (event mapp
 
 #### 11D-5: Documentation & DX
 
-- [ ] Add `content/docs/modules/analytics.mdx` — analytics package guide with report/dashboard examples
-- [ ] Add `content/docs/modules/integration.mdx` — integration package guide with connector setup tutorials
-- [ ] Add `content/docs/modules/community.mdx` — community package guide with portal configuration
-- [ ] Add `content/docs/guides/building-connectors.mdx` — developer guide for building custom connectors
-- [ ] Add `content/docs/guides/analytics-queries.mdx` — ObjectQL analytics patterns and aggregation guide
+- [x] Add `content/docs/modules/analytics.mdx` — analytics package guide with report/dashboard examples
+- [x] Add `content/docs/modules/integration.mdx` — integration package guide with connector setup tutorials
+- [x] Add `content/docs/modules/community.mdx` — community package guide with portal configuration
+- [x] Add `content/docs/guides/building-connectors.mdx` — developer guide for building custom connectors
+- [x] Add `content/docs/guides/analytics-queries.mdx` — ObjectQL analytics patterns and aggregation guide
 - [ ] Update `docs/SALESFORCE_FEATURE_COMPARISON.md` with new integration and analytics parity
 - [ ] Update `README.md` and `content/docs/roadmap.mdx` with Phase 11 metrics
 

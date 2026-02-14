@@ -1,0 +1,160 @@
+---
+title: Community & Engagement
+description: Build vibrant customer communities with forums, ideas, events, and gamification — all integrated with your CRM.
+---
+
+# Community & Engagement
+
+Turn customers into advocates. HotCRM's Community Cloud provides a full-featured platform for building branded customer communities — with discussion forums, ideation portals, events, and gamification — all natively connected to your CRM data. When a customer asks a question in the forum, your support agents see it alongside their case history. When they vote on a feature idea, your product team has the data to prioritize.
+
+## Package Overview
+
+The `packages/community` package provides eight core objects:
+
+| Object | Description |
+|--------|-------------|
+| **community** | Top-level community definition with branding, domain, and member settings |
+| **forum_category** | Hierarchical forum categories for organizing discussions |
+| **topic** | Discussion topics with status tracking, pinning, and tagging |
+| **reply** | Threaded replies with voting, accepted answers, and moderation flags |
+| **idea** | Feature requests and improvement suggestions with voting and status tracking |
+| **user_group** | Member groups with access levels (public, private, hidden) |
+| **community_event** | Events — webinars, meetups, workshops, hackathons, AMAs |
+| **badge** | Gamification badges with automatic or manual award criteria |
+
+## Forum Capabilities
+
+### Discussion Topics
+
+The forum is the heart of the community. Topics support rich content, tagging, and status management:
+
+- **Status Lifecycle**: `open` → `closed`, with `pinned` and `archived` states
+- **Pinning & Locking**: Pin important announcements to the top; lock resolved topics to prevent further replies
+- **Tags**: Flexible tagging for cross-category discovery
+- **View & Reply Counts**: Built-in engagement metrics per topic
+- **Categories**: Organize topics into hierarchical categories with parent-child relationships and sort ordering
+
+### Threaded Replies
+
+Replies support nested threading for natural conversation flow:
+
+- **Accepted Answers**: Mark the best reply as the accepted answer — highlighted for future visitors
+- **Voting**: Upvote and downvote replies to surface the most helpful content
+- **Moderation**: Flag inappropriate content with a reason for review
+- **Nested Threads**: Reply to replies with `parent_reply_id` for contextual sub-discussions
+
+## Ideation Portal
+
+Capture the voice of your customers and channel it into product decisions.
+
+### Feature Requests
+
+The `idea` object powers a structured ideation workflow:
+
+| Field | Description |
+|-------|-------------|
+| `title` | Short, descriptive idea title |
+| `description` | Detailed explanation of the idea |
+| `category` | Product area or theme |
+| `status` | Lifecycle status: submitted → under review → planned → in progress → delivered → declined |
+| `vote_count` | Community votes — the primary signal for prioritization |
+| `priority_score` | Calculated priority based on votes, engagement, and business value |
+| `assigned_release` | Target release or version for delivery |
+| `product_area` | Maps the idea to a specific product domain |
+
+### Voting & Prioritization
+
+- Community members vote on ideas they want to see built
+- `priority_score` combines vote count with engagement signals for a balanced ranking
+- Product teams can filter and sort by status, category, or priority to build data-driven roadmaps
+
+## Events & Engagement
+
+### Community Events
+
+Host and manage events directly within the community:
+
+| Event Type | Description |
+|------------|-------------|
+| **Webinar** | Online presentations and demos |
+| **Meetup** | Local or virtual gatherings |
+| **Workshop** | Hands-on learning sessions |
+| **Hackathon** | Build-and-ship challenges |
+| **AMA** | Ask Me Anything sessions with product or leadership teams |
+
+Events include capacity management and RSVP tracking to keep attendance organized.
+
+### User Groups
+
+Organize community members into groups for targeted content and access control:
+
+- **Public Groups**: Open to all community members
+- **Private Groups**: Visible but require approval to join
+- **Hidden Groups**: Invitation-only, not visible in group listings
+- Built-in member counting and access level management
+
+## Gamification
+
+Reward active community members with badges to encourage participation and recognize contributions.
+
+### Badge System
+
+| Property | Description |
+|----------|-------------|
+| `name` | Badge display name |
+| `description` | What the badge represents |
+| `icon` | Visual icon for the badge |
+| `criteria` | JSON-defined award rules |
+| `points_value` | Points awarded when the badge is earned |
+| `is_automatic` | Whether the badge is awarded automatically based on criteria |
+| `badge_type` | Category: `achievement`, `milestone`, `special`, `seasonal` |
+| `rarity` | Rarity level to create aspiration and exclusivity |
+
+**Badge Types**:
+
+- **Achievement**: Earned by completing specific actions (e.g., "First Post", "Helpful Answer")
+- **Milestone**: Earned by reaching cumulative thresholds (e.g., "100 Replies", "1000 Upvotes")
+- **Special**: Manually awarded for exceptional contributions
+- **Seasonal**: Limited-time badges tied to events or campaigns
+
+## AI Capabilities
+
+### Content Moderation
+
+AI automatically reviews new topics and replies for policy violations, spam, and inappropriate content — flagging issues for moderator review before they reach the community.
+
+### Auto-Categorization
+
+When a member creates a new topic, AI suggests the most appropriate forum category based on content analysis, reducing miscategorized posts and improving discoverability.
+
+### Answer Suggestion
+
+For unanswered questions, AI searches existing topics, documentation, and knowledge base articles to suggest potential answers — reducing response time and surfacing institutional knowledge.
+
+## Cross-Cloud Integration
+
+The Community Cloud connects deeply with other HotCRM modules:
+
+| Integration | Description |
+|-------------|-------------|
+| **Community → Support** | Escalate forum topics to support cases when community answers aren't enough |
+| **Community → Product** | Route voted ideas to product feedback channels for roadmap planning |
+| **Community → Marketing** | Identify community champions for advocacy programs and case studies |
+| **Community → Sales** | Surface community engagement data on account and contact records |
+
+### Topic-to-Case Escalation
+
+When a community discussion reveals a product issue or a member needs direct support, topics can be escalated to the Service Cloud as a new case — carrying full context from the discussion thread.
+
+### Idea-to-Product Feedback
+
+Top-voted ideas automatically feed into the product feedback pipeline, connecting customer voice directly to product planning with full vote counts and discussion context.
+
+## Getting Started
+
+1. **Create a Community**: Define your community with branding, domain, and language settings
+2. **Set Up Categories**: Organize your forum with a category hierarchy
+3. **Configure User Groups**: Set up access levels and member groups
+4. **Enable Gamification**: Define badges and award criteria to encourage participation
+5. **Launch Events**: Schedule your first community event
+6. **Connect to CRM**: Configure cross-cloud integrations for support escalation and product feedback

@@ -1,0 +1,408 @@
+---
+title: Page Components Reference
+description: Guide to all component types available in HotCRM page layouts — record, page, and AI components with property reference.
+---
+
+# Page Components Reference
+
+Page layouts define how record detail pages, home pages, and app pages are rendered. Every `*.page.ts` file exports a `Page` validated against `PageSchema` from `@objectstack/spec/ui`. This guide covers all available component types and their properties.
+
+> **File convention**: `packages/{package}/src/{object}.page.ts`
+
+## Schema Overview
+
+```typescript
+import type { Page } from '@objectstack/spec/ui';
+import { PageSchema } from '@objectstack/spec/ui';
+
+export const MyPage = {
+  name: 'my_object_detail',
+  object: 'my_object',
+  type: 'record',
+  label: 'My Object Detail Page',
+  template: 'record_detail',
+  isDefault: true,
+  assignedProfiles: ['admin', 'standard_user'],
+
+  regions: [
+    {
+      name: 'header',
+      components: [ /* ... */ ]
+    }
+  ]
+} satisfies Page;
+
+PageSchema.parse(MyPage);
+export default MyPage;
+```
+
+---
+
+## Page Types
+
+| Type | Description | Use Case |
+|------|-------------|----------|
+| `record` | Detail page for a single record | Account, Opportunity, Case detail views |
+| `home` | Landing page for a module or app | Sales Home, Service Console |
+| `app` | Application-level page | Admin settings, configuration pages |
+| `utility` | Utility or tool page | Calculators, data import wizards |
+
+---
+
+## Page-Level Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `name` | `string` | Unique identifier for the page (snake_case). |
+| `object` | `string` | The business object this page is associated with. |
+| `type` | `string` | Page type: `record`, `home`, `app`, or `utility`. |
+| `label` | `string` | Human-readable page title. |
+| `template` | `string` | Base template to extend (e.g., `'record_detail'`). |
+| `isDefault` | `boolean` | Whether this is the default page for the object. |
+| `assignedProfiles` | `string[]` | Security profiles that can access this page. |
+| `regions` | `array` | Array of regions containing components. |
+
+---
+
+## Component Reference
+
+Components are organized into regions. Each component has a `type`, optional `label`, optional `visibility` expression, and a `properties` object.
+
+### Page Components
+
+#### `page:header`
+
+Top-of-page header area for branding, navigation, or contextual information.
+
+#### `page:footer`
+
+Bottom-of-page footer for actions, status information, or navigation links.
+
+#### `page:sidebar`
+
+Side panel region for supplementary content like AI assistants or quick actions.
+
+#### `page:tabs`
+
+Horizontal tab navigation that organizes content into switchable panes. Each tab name corresponds to a region in the page.
+
+```typescript
+{
+  type: 'page:tabs' as const,
+  properties: {
+    tabs: ['account_info', 'address_info', 'additional_info']
+  }
+}
+```
+
+**PageTabsProps**:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `tabs` | `string[]` | Array of region names to render as tabs. |
+
+#### `page:accordion`
+
+Collapsible sections stacked vertically. Each section can be expanded or collapsed independently.
+
+#### `page:card`
+
+A bordered content card for grouping related information within a region.
+
+#### `page:section`
+
+A labeled section divider for organizing content within a region.
+
+---
+
+### Record Components
+
+#### `record:details`
+
+Displays a set of fields for the current record in a columnar grid layout.
+
+```typescript
+{
+  type: 'record:details' as const,
+  label: 'Account Information',
+  properties: {
+    fields: [
+      'name', 'account_number', 'type', 'industry',
+      'phone', 'website', 'annual_revenue', 'number_of_employees',
+      'parent_account', 'ownership'
+    ],
+    columns: 2
+  }
+}
+```
+
+**RecordDetailsProps**:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `fields` | `string[]` | Field API names to display. |
+| `columns` | `number` | Number of columns in the grid layout (typically `1` or `2`). |
+
+#### `record:highlights`
+
+A prominent header strip showing key fields for at-a-glance identification of the record.
+
+```typescript
+{
+  type: 'record:highlights' as const,
+  properties: {
+    fields: ['name', 'type', 'industry', 'annual_revenue', 'phone']
+  }
+}
+```
+
+**RecordHighlightsProps**:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `fields` | `string[]` | Key fields to display in the highlights bar (typically 4–6 fields). |
+
+#### `record:related_list`
+
+Displays a table of related child records with filtering, sorting, and inline actions.
+
+```typescript
+{
+  type: 'record:related_list' as const,
+  label: 'Opportunities',
+  visibility: "record.type == 'Customer'",
+  properties: {
+    object: 'opportunity',
+    columns: ['name', 'stage', 'amount', 'close_date', 'probability'],
+    filters: [['stage', '!=', 'closed_lost']],
+    sort: [{ field: 'close_date', direction: 'asc' }],
+    actions: ['new', 'edit', 'delete']
+  }
+}
+```
+
+**RecordRelatedListProps**:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `object` | `string` | API name of the related object. |
+| `columns` | `string[]` | Fields to display as table columns. |
+| `filters` | `array` | ObjectQL-style filter conditions. |
+| `sort` | `array` | Sort order: `{ field, direction }`. |
+| `actions` | `string[]` | Available actions: `'new'`, `'edit'`, `'delete'`. |
+
+#### `record:activity`
+
+A timeline of activities (calls, emails, meetings, tasks) associated with the record.
+
+```typescript
+{
+  type: 'record:activity' as const,
+  label: 'Activity Timeline',
+  properties: {}
+}
+```
+
+#### `record:chatter`
+
+A collaboration feed for posting comments, mentions, and file attachments on the record.
+
+#### `record:path`
+
+A visual progress indicator showing the record's position in a stage-based process (e.g., Opportunity stages).
+
+---
+
+### AI Components
+
+#### `ai:chat_window`
+
+An embedded AI assistant for context-aware help, record analysis, and natural language queries.
+
+```typescript
+{
+  type: 'ai:chat_window' as const,
+  label: 'Account Intelligence',
+  properties: {
+    mode: 'sidebar'
+  }
+}
+```
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `mode` | `string` | Display mode: `'sidebar'` for a side panel, or `'inline'` for embedded within the page. |
+
+#### `ai:suggestion`
+
+Displays AI-generated suggestions or recommendations contextual to the current record.
+
+---
+
+## Complete Page Example
+
+The Account detail page demonstrates how regions and components work together:
+
+```typescript
+// packages/crm/src/account.page.ts
+import type { Page } from '@objectstack/spec/ui';
+import { PageSchema } from '@objectstack/spec/ui';
+
+export const AccountPage = {
+  name: 'account_detail',
+  object: 'account',
+  type: 'record' as const,
+  label: 'Account Detail Page',
+  template: 'record_detail',
+  isDefault: true,
+  assignedProfiles: ['sales_rep', 'sales_manager', 'account_executive', 'admin'],
+
+  regions: [
+    {
+      name: 'header',
+      components: [
+        {
+          type: 'record:highlights' as const,
+          properties: {
+            fields: ['name', 'type', 'industry', 'annual_revenue', 'phone']
+          }
+        }
+      ]
+    },
+    {
+      name: 'tabs',
+      components: [
+        {
+          type: 'page:tabs' as const,
+          properties: {
+            tabs: ['account_info', 'address_info', 'additional_info']
+          }
+        }
+      ]
+    },
+    {
+      name: 'account_info',
+      components: [
+        {
+          type: 'record:details' as const,
+          label: 'Account Information',
+          properties: {
+            fields: [
+              'name', 'account_number', 'type', 'industry',
+              'phone', 'website', 'annual_revenue', 'number_of_employees',
+              'parent_account', 'ownership'
+            ],
+            columns: 2
+          }
+        }
+      ]
+    },
+    {
+      name: 'related_lists',
+      components: [
+        {
+          type: 'record:related_list' as const,
+          label: 'Opportunities',
+          properties: {
+            object: 'opportunity',
+            columns: ['name', 'stage', 'amount', 'close_date', 'probability'],
+            filters: [['stage', '!=', 'closed_lost']],
+            sort: [{ field: 'close_date', direction: 'asc' }],
+            actions: ['new', 'edit', 'delete']
+          }
+        },
+        {
+          type: 'record:related_list' as const,
+          label: 'Contacts',
+          properties: {
+            object: 'contact',
+            columns: ['name', 'title', 'email', 'phone', 'is_decision_maker'],
+            actions: ['new', 'edit', 'delete']
+          }
+        },
+        {
+          type: 'record:related_list' as const,
+          label: 'Cases',
+          visibility: "record.sla_tier != null",
+          properties: {
+            object: 'case',
+            columns: ['case_number', 'subject', 'status', 'priority', 'created_date'],
+            filters: [['status', '!=', 'closed']],
+            sort: [{ field: 'created_date', direction: 'desc' }],
+            actions: ['new', 'edit']
+          }
+        }
+      ]
+    },
+    {
+      name: 'activity',
+      components: [
+        {
+          type: 'record:activity' as const,
+          label: 'Activity Timeline',
+          properties: {}
+        }
+      ]
+    },
+    {
+      name: 'ai_assistant',
+      components: [
+        {
+          type: 'ai:chat_window' as const,
+          label: 'Account Intelligence',
+          properties: {
+            mode: 'sidebar'
+          }
+        }
+      ]
+    }
+  ]
+} satisfies Page;
+
+PageSchema.parse(AccountPage);
+export default AccountPage;
+```
+
+---
+
+## Component Visibility
+
+Any component can include a `visibility` expression to conditionally show or hide it based on record data:
+
+```typescript
+{
+  type: 'record:related_list' as const,
+  label: 'Cases',
+  visibility: "record.sla_tier != null",
+  properties: { /* ... */ }
+}
+```
+
+The expression is evaluated at render time against the current record context.
+
+---
+
+## Profile Assignment
+
+Use `assignedProfiles` at the page level to control which user profiles see this layout:
+
+```typescript
+assignedProfiles: ['sales_rep', 'sales_manager', 'account_executive', 'admin']
+```
+
+When `isDefault: true`, this page layout is used for all profiles unless a more specific layout is assigned.
+
+---
+
+## Quick Reference
+
+| What you want | How to do it |
+|---------------|-------------|
+| Key field header | `record:highlights` with 4–6 fields |
+| Tabbed content | `page:tabs` with region names as tab IDs |
+| Field display grid | `record:details` with `fields` and `columns` |
+| Related child records | `record:related_list` with `object`, `columns`, `filters` |
+| Activity feed | `record:activity` in its own region |
+| AI assistant | `ai:chat_window` with `mode: 'sidebar'` |
+| Conditional component | Add `visibility` expression to any component |
+| Profile-restricted page | Set `assignedProfiles` at the page level |

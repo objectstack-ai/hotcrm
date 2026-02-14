@@ -4,6 +4,10 @@
   "root": true,
   "pages": [
     "metadata-types",
-    "mcp-integration"
+    "mcp-integration",
+    "formview-layouts",
+    "page-components",
+    "building-connectors",
+    "analytics-queries"
   ]
 }
