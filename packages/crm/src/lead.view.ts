@@ -7,6 +7,7 @@ import { ViewSchema } from '@objectstack/spec/ui';
 
 export const AllLeadsView = {
   list: {
+    type: 'grid' as const,
     name: 'all_leads',
     label: 'All Leads',
     columns: [
@@ -28,6 +29,7 @@ export const AllLeadsView = {
 
 export const MyLeadsView = {
   list: {
+    type: 'grid' as const,
     name: 'my_leads',
     label: 'My Leads',
     filter: [['owner_id', '=', '${currentUser.id}']],
@@ -46,6 +48,7 @@ export const MyLeadsView = {
 
 export const HotLeadsView = {
   list: {
+    type: 'grid' as const,
     name: 'hot_leads',
     label: 'Hot Leads',
     filter: [['rating', '=', 'hot']],
@@ -67,6 +70,7 @@ export const HotLeadsView = {
 
 export const OpenLeadsView = {
   list: {
+    type: 'grid' as const,
     name: 'open_leads',
     label: 'Open Leads',
     filter: [['status', 'IN', ['new', 'contacted']]],
@@ -85,6 +89,7 @@ export const OpenLeadsView = {
 
 export const QualifiedLeadsView = {
   list: {
+    type: 'grid' as const,
     name: 'qualified_leads',
     label: 'Qualified Leads',
     filter: [['status', '=', 'qualified']],
@@ -103,6 +108,7 @@ export const QualifiedLeadsView = {
 
 export const PublicPoolView = {
   list: {
+    type: 'grid' as const,
     name: 'public_pool',
     label: 'Public Pool',
     filter: [['is_in_public_pool', '=', true]],

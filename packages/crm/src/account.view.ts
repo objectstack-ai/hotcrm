@@ -9,6 +9,7 @@ import { ViewSchema } from '@objectstack/spec/ui';
 // All Accounts View
 export const AllAccountsView = {
   list: {
+    type: 'grid' as const,
     name: 'all_accounts',
     label: 'All Accounts',
     columns: [
@@ -30,6 +31,7 @@ export const AllAccountsView = {
 // My Accounts View
 export const MyAccountsView = {
   list: {
+    type: 'grid' as const,
     name: 'my_accounts',
     label: 'My Accounts',
     filter: [['owner', '=', '${currentUser.id}']],
@@ -47,6 +49,7 @@ export const MyAccountsView = {
 // Enterprise Accounts View
 export const EnterpriseAccountsView = {
   list: {
+    type: 'grid' as const,
     name: 'enterprise_accounts',
     label: 'Enterprise Accounts',
     filter: [
@@ -68,6 +71,7 @@ export const EnterpriseAccountsView = {
 // Recently Created Accounts
 export const RecentlyCreatedView = {
   list: {
+    type: 'grid' as const,
     name: 'recently_created_accounts',
     label: 'Recently Created',
     filter: [['created_date', '>=', 'LAST_30_DAYS']],
@@ -85,6 +89,7 @@ export const RecentlyCreatedView = {
 // Hot Accounts (High Value, Active)
 export const HotAccountsView = {
   list: {
+    type: 'grid' as const,
     name: 'hot_accounts',
     label: 'Hot Accounts',
     filter: [
@@ -108,6 +113,7 @@ export const HotAccountsView = {
 // Accounts Needing Attention
 export const NeedAttentionView = {
   list: {
+    type: 'grid' as const,
     name: 'accounts_need_attention',
     label: 'Needs Attention',
     filter: [
