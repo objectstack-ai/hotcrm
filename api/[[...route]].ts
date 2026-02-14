@@ -14,6 +14,7 @@
 import { ObjectKernel, DriverPlugin, AppPlugin, createDispatcherPlugin, createRestApiPlugin } from '@objectstack/runtime';
 import { HonoHttpServer } from '@objectstack/plugin-hono-server';
 import { InMemoryDriver } from '@objectstack/driver-memory';
+import { ObjectQLPlugin } from '@objectstack/objectql';
 // import { ConsolePlugin } from '@object-ui/console';
 import { handle } from '@hono/node-server/vercel';
 import type { Hono } from 'hono';
@@ -36,10 +37,13 @@ let bootstrapPromise: Promise<Hono> | null = null;
 async function bootstrap(): Promise<Hono> {
   const kernel = new ObjectKernel();
 
-  // 1. In-memory data driver (no external DB required)
-  kernel.use(new DriverPlugin(new InMemoryDriver()));
+  // 1. ObjectQL engine (provides metadata, data, and protocol services)
+  kernel.use(new ObjectQLPlugin());
 
-  // 2. HTTP server adapter — register the Hono app without TCP listener
+  // 2. In-memory data driver (no external DB required)
+  kernel.use(new DriverPlugin(new InMemoryDriver(), 'memory'));
+
+  // 3. HTTP server adapter — register the Hono app without TCP listener
   const httpServer = new HonoHttpServer();
   kernel.use({
     name: 'vercel-http',
@@ -51,7 +55,51 @@ async function bootstrap(): Promise<Hono> {
     start: async () => {},
   });
 
-  // 3. Application config (business objects & plugins)
+  // 4. In-memory cache service (satisfies the 'cache' core service requirement)
+  kernel.use({
+    name: 'com.hotcrm.cache.memory',
+    version: '1.0.0',
+    init: async (ctx: any) => {
+      const store = new Map<string, { value: unknown; expiresAt: number | null }>();
+      const isExpired = (entry: { expiresAt: number | null }) =>
+        entry.expiresAt !== null && Date.now() > entry.expiresAt;
+      ctx.registerService('cache', {
+        async get(key: string) {
+          const entry = store.get(key);
+          if (!entry) return undefined;
+          if (isExpired(entry)) {
+            store.delete(key);
+            return undefined;
+          }
+          return entry.value;
+        },
+        async set(key: string, value: unknown, ttl?: number) {
+          store.set(key, {
+            value,
+            expiresAt: ttl ? Date.now() + ttl * 1000 : null,
+          });
+        },
+        async del(key: string) {
+          store.delete(key);
+        },
+        async clear() {
+          store.clear();
+        },
+        async has(key: string) {
+          const entry = store.get(key);
+          if (!entry) return false;
+          if (isExpired(entry)) {
+            store.delete(key);
+            return false;
+          }
+          return true;
+        },
+      });
+    },
+    start: async () => {},
+  });
+
+  // 5. Application config (business objects & plugins)
   kernel.use(new AppPlugin({
     manifest: {
       id: 'com.hotcrm.app',
@@ -64,7 +112,7 @@ async function bootstrap(): Promise<Hono> {
     plugins: [],
   }));
 
-  // 4. Register business plugins
+  // 6. Register business plugins
   const businessPlugins = [
     CRMPlugin, FinancePlugin, MarketingPlugin,
     ProductsPlugin, SupportPlugin, HRPlugin,
@@ -75,16 +123,16 @@ async function bootstrap(): Promise<Hono> {
     }
   }
 
-  // 5. REST API endpoints (auto-generated CRUD for all objects)
+  // 7. REST API endpoints (auto-generated CRUD for all objects)
   kernel.use(createRestApiPlugin());
 
-  // 6. Dispatcher (auth, graphql, analytics routes)
+  // 8. Dispatcher (auth, graphql, analytics routes)
   kernel.use(createDispatcherPlugin());
 
-  // 7. Console UI (serves the ObjectStack Console SPA for data browsing and management)
+  // 9. Console UI (serves the ObjectStack Console SPA for data browsing and management)
   // kernel.use(new ConsolePlugin());
 
-  // 8. Bootstrap kernel (init + start all plugins, fire kernel:ready)
+  // 10. Bootstrap kernel (init + start all plugins, fire kernel:ready)
   await kernel.bootstrap();
 
   return httpServer.getRawApp();
