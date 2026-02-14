@@ -13,6 +13,9 @@
 import { PluginSchema } from '@objectstack/spec/kernel';
 import type { PluginDefinition } from '@objectstack/spec/kernel';
 
+// Import translations
+import { CrmTranslations } from './translations';
+
 // Import all CRM objects
 import { Account } from './account.object';
 import { Activity } from './activity.object';
@@ -150,6 +153,9 @@ export const CRMPlugin = {
     competitor: Competitor,
   },
   
+  // Translations (i18n)
+  translations: CrmTranslations,
+
   // Apps provided by this plugin
   apps: [
     {

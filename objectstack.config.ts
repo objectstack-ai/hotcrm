@@ -28,6 +28,14 @@ export default defineStack({
     description: 'AI-Native Enterprise CRM with Sales, Marketing, Products, Finance, Service, and HR clouds',
   },
 
+  // Internationalization (i18n) configuration
+  i18n: {
+    defaultLocale: 'en',
+    supportedLocales: ['en', 'zh-CN', 'ja-JP'],
+    fallbackLocale: 'en',
+    fileOrganization: 'per_locale',
+  },
+
   // Empty objects array triggers auto-loading of ObjectQL and the memory driver,
   // which is required by the AppPlugin at startup.
   // Business objects are defined inside each plugin's objects[] property.
