@@ -14,7 +14,7 @@
 import { ObjectKernel, DriverPlugin, AppPlugin, createDispatcherPlugin, createRestApiPlugin } from '@objectstack/runtime';
 import { HonoHttpServer } from '@objectstack/plugin-hono-server';
 import { InMemoryDriver } from '@objectstack/driver-memory';
-import { ConsolePlugin } from '@object-ui/console';
+// import { ConsolePlugin } from '@object-ui/console';
 import { handle } from '@hono/node-server/vercel';
 import type { Hono } from 'hono';
 
@@ -82,7 +82,7 @@ async function bootstrap(): Promise<Hono> {
   kernel.use(createDispatcherPlugin());
 
   // 7. Console UI (serves the ObjectStack Console SPA for data browsing and management)
-  kernel.use(new ConsolePlugin());
+  // kernel.use(new ConsolePlugin());
 
   // 8. Bootstrap kernel (init + start all plugins, fire kernel:ready)
   await kernel.bootstrap();
