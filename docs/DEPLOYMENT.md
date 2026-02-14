@@ -242,6 +242,7 @@ vercel deploy
 | Field | Value | Purpose |
 |-------|-------|---------|
 | `installCommand` | `pnpm install` | Installs all workspace dependencies |
+| `buildCommand` | (no-op) | No build step — Vercel compiles `api/` TypeScript automatically |
 | `functions.memory` | `1024` MB | Memory allocated to the serverless function |
 | `functions.maxDuration` | `60` s | Maximum execution time per request (Pro plan) |
 | `rewrites` | `/(.*) → /api/[[...route]]` | Routes all requests to the catch-all handler |
