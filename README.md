@@ -4,8 +4,8 @@
 [![CodeQL](https://github.com/objectstack-ai/hotcrm/workflows/CodeQL%20Security%20Analysis/badge.svg)](https://github.com/objectstack-ai/hotcrm/actions/workflows/codeql.yml)
 [![Code Quality](https://github.com/objectstack-ai/hotcrm/workflows/Code%20Quality/badge.svg)](https://github.com/objectstack-ai/hotcrm/actions/workflows/code-quality.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-![Objects](https://img.shields.io/badge/Objects-~120-brightgreen)
-![Tests](https://img.shields.io/badge/Tests-2880%2B%20passing-brightgreen)
+![Objects](https://img.shields.io/badge/Objects-~148-brightgreen)
+![Tests](https://img.shields.io/badge/Tests-3318%2B%20passing-brightgreen)
 ![Spec](https://img.shields.io/badge/%40objectstack%2Fspec-v3.0.0-blue)
 
 > A world-class Customer Relationship Management system built on @objectstack/spec v3.0.0 protocol with Salesforce-level functionality and Apple/Linear-level UX.
@@ -18,13 +18,13 @@ git clone https://github.com/objectstack-ai/hotcrm.git
 cd hotcrm
 pnpm install
 pnpm dev           # Start development server
-# Open http://localhost:3000 — all ~120 business objects loaded
+# Open http://localhost:3000 — all ~148 business objects loaded
 ```
 
 ```bash
 # Verify everything works
 pnpm typecheck     # TypeScript — expect 0 errors
-pnpm test          # Vitest — expect 2,880+ tests passing
+pnpm test          # Vitest — expect 3,318+ tests passing
 ```
 
 > 📖 **New developers**: See [DEVELOPMENT_WORKFLOW.md](DEVELOPMENT_WORKFLOW.md) for the full quickstart, first contribution tutorial, and troubleshooting FAQ.
@@ -33,7 +33,7 @@ pnpm test          # Vitest — expect 2,880+ tests passing
 
 HotCRM is a **comprehensive, AI-native enterprise CRM** covering the complete Lead-to-Cash lifecycle. Built on @objectstack/spec v3.0.0:
 
-- **~120 Business Objects** across 9 packages: Sales, Marketing, Revenue, Service, HR, AI, Analytics, Integration, Community
+- **~148 Business Objects** across 13 packages: Sales, Marketing, Revenue, Service, HR, AI, Analytics, Integration, Community, Real Estate, Healthcare, Financial Services, Education
 - **Metadata-Driven**: All objects defined in TypeScript (`.object.ts`) — the single source of truth
 - **Plugin Architecture**: Each business cloud is an independent, deployable plugin
 - **ObjectQL**: Type-safe query language replacing traditional SQL
@@ -303,7 +303,7 @@ HotCRM is built as a **modular monorepo** with independently developed packages.
 
 ### System-Wide Statistics
 
-**Total:** ~120 Objects | 32 AI Actions | 71 Automation Hooks | 12 Form Definitions | 19 Page Layouts | 10 Integration Connectors | 8 Community Objects | 8 Analytics Objects
+**Total:** ~148 Objects | 48 AI Actions | 121 Automation Hooks | 12 Form Definitions | 19 Page Layouts | 10 Integration Connectors | 8 Community Objects | 8 Analytics Objects | 28 Vertical Solution Objects
 
 ### Infrastructure Packages
 
@@ -498,6 +498,70 @@ Omnichannel case management with SLA tracking, knowledge base, chatbot configura
 
 [Read more →](./packages/support/README.md)
 
+#### @hotcrm/analytics - Business Intelligence Cloud
+
+**8 Objects** | **4 AI Actions** | **6 Automation Hooks**
+
+Business Intelligence Cloud with saved reports, scheduled delivery, dashboards, KPIs, metrics, and AI-powered insights.
+
+**Objects:** Report, Report Schedule, Analytics Dashboard, KPI, Metric, Data Source, Saved Filter
+
+#### @hotcrm/integration - Integration Hub
+
+**8 Objects** | **2 AI Actions** | **7 Automation Hooks** | **10 Connectors**
+
+iPaaS integration layer with bi-directional sync, webhook management, API key management, and pre-built connectors for Stripe, DocuSign, Slack, Gmail, Teams, PayPal, Adobe Sign, Outlook, QuickBooks, LinkedIn.
+
+**Objects:** Connector, Connection, Sync Config, Sync Log, Webhook Subscription, Webhook Delivery, API Key, Field Mapping
+
+#### @hotcrm/community - Community Portal
+
+**8 Objects** | **2 AI Actions** | **7 Automation Hooks**
+
+Customer community portal with discussion forums, ideation, gamification, events, and AI-powered moderation.
+
+**Objects:** Community, Forum Category, Topic, Reply, Idea, User Group, Community Event, Badge
+
+#### @hotcrm/real-estate - Real Estate CRM
+
+**7 Objects** | **1 AI Action (4 functions)** | **13 Automation Hooks**
+
+Purpose-built CRM for brokerages and agents covering the complete property transaction lifecycle from listing through closing.
+
+**Objects:** Property, Listing, Showing, Real Estate Offer, Commission, Open House, Neighborhood
+
+**AI Actions:** Property valuation, market trend analysis, lead matching, investment analysis
+
+#### @hotcrm/healthcare - Healthcare CRM
+
+**7 Objects** | **1 AI Action (4 functions)** | **12 Automation Hooks**
+
+HIPAA-compliant CRM for clinics and healthcare providers with patient management, appointment scheduling, and compliance tracking.
+
+**Objects:** Patient, Appointment, Insurance, Referral, HIPAA Audit, Prescription, Care Plan
+
+**AI Actions:** Scheduling optimization, patient risk scoring, care gap identification, readmission prediction
+
+#### @hotcrm/financial-services - Financial Services CRM
+
+**7 Objects** | **1 AI Action (4 functions)** | **12 Automation Hooks**
+
+CRM for wealth management and banking with KYC verification, compliance checking, and portfolio management.
+
+**Objects:** Wealth Account, Portfolio, Advisory, Compliance Check, KYC, Financial Product, Transaction Record
+
+**AI Actions:** Portfolio optimization, client risk profiling, regulatory impact analysis, investment recommendation
+
+#### @hotcrm/education - Education CRM
+
+**7 Objects** | **1 AI Action (4 functions)** | **13 Automation Hooks**
+
+CRM for universities and EdTech covering the full student lifecycle from application through alumni engagement.
+
+**Objects:** Student, Enrollment, Course, Alumni, Scholarship, Application Form, Campus Event
+
+**AI Actions:** Student success prediction, course recommendation, enrollment forecasting, alumni engagement scoring
+
 ## 🤖 AI-Assisted Development
 
 HotCRM includes a comprehensive **Agent System** to accelerate development. See the **[Agent Guide](.github/AGENT_GUIDE.md)** for examples and workflows.
@@ -677,9 +741,9 @@ HotCRM implements a comprehensive enterprise system organized into **6 major dom
 - **8 Currencies**: Multi-currency support for global operations
 - **6 Service Channels**: Email, Web, Phone, WeChat, Chat Bot, Mobile App
 - **500+ Fields**: Comprehensive data capture across all objects
-- **~160+ Test Files**: Comprehensive test coverage across all packages
-- **~2,880+ Tests Passing**: Full spec compliance, hook, action, and integration tests
-- **~95% Salesforce Parity**: Comprehensive coverage across all clouds including analytics, integration, and community
+- **~173+ Test Files**: Comprehensive test coverage across all packages
+- **~3,318+ Tests Passing**: Full spec compliance, hook, action, and integration tests
+- **~95% Salesforce Parity**: Comprehensive coverage across all clouds including analytics, integration, community, and 4 vertical solutions
 - **AI-First Design**: Every major object has AI enhancement capabilities
 
 ## 🎨 Design Philosophy

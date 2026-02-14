@@ -1,0 +1,36 @@
+{
+  "name": "@hotcrm/real-estate",
+  "version": "1.0.0",
+  "description": "Real Estate module - Property Management, Listings, Showings, Offers, and Commission Tracking",
+  "license": "MIT",
+  "private": true,
+  "main": "./objectstack.config.ts",
+  "types": "./objectstack.config.ts",
+  "exports": {
+    ".": "./objectstack.config.ts",
+    "./objectstack.config": "./objectstack.config.ts"
+  },
+  "scripts": {
+    "dev": "objectstack dev",
+    "start": "objectstack serve",
+    "build": "objectstack compile",
+    "typecheck": "tsc --noEmit",
+    "test": "objectstack test"
+  },
+  "keywords": [
+    "real-estate",
+    "property",
+    "listing",
+    "showing",
+    "commission"
+  ],
+  "author": "HotCRM Team",
+  "dependencies": {
+    "@objectstack/spec": "^3.0.2",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@objectstack/cli": "^3.0.2",
+    "typescript": "^5.9.3"
+  }
+}

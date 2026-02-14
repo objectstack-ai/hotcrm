@@ -1,0 +1,36 @@
+{
+  "name": "@hotcrm/financial-services",
+  "version": "1.0.0",
+  "description": "Financial Services module - Wealth Management, Portfolio, KYC, Compliance, and Advisory",
+  "license": "MIT",
+  "private": true,
+  "main": "./objectstack.config.ts",
+  "types": "./objectstack.config.ts",
+  "exports": {
+    ".": "./objectstack.config.ts",
+    "./objectstack.config": "./objectstack.config.ts"
+  },
+  "scripts": {
+    "dev": "objectstack dev",
+    "start": "objectstack serve",
+    "build": "objectstack compile",
+    "typecheck": "tsc --noEmit",
+    "test": "objectstack test"
+  },
+  "keywords": [
+    "financial-services",
+    "wealth",
+    "portfolio",
+    "kyc",
+    "compliance"
+  ],
+  "author": "HotCRM Team",
+  "dependencies": {
+    "@objectstack/spec": "^3.0.2",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@objectstack/cli": "^3.0.2",
+    "typescript": "^5.9.3"
+  }
+}
