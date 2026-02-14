@@ -4,7 +4,9 @@
  * Bootstraps the full ObjectStack kernel with all HotCRM plugins,
  * using @objectstack/driver-memory for zero-config in-memory data.
  *
- * Exports a Web Standard fetch handler — Vercel natively recognises this.
+ * Uses @hono/node-server/vercel `handle()` adapter to convert the Hono app
+ * into a Node.js serverless handler that Vercel's @vercel/node runtime
+ * recognises (IncomingMessage / ServerResponse).
  *
  * Data lives in the function instance's memory and persists across
  * warm invocations (Vercel Fluid Compute) but resets on cold start.
@@ -13,6 +15,8 @@ import { ObjectKernel, DriverPlugin, AppPlugin, createDispatcherPlugin, createRe
 import { HonoHttpServer } from '@objectstack/plugin-hono-server';
 import { InMemoryDriver } from '@objectstack/driver-memory';
 import { ConsolePlugin } from '@object-ui/console';
+import { handle } from '@hono/node-server/vercel';
+import type { Hono } from 'hono';
 
 // Business plugins
 import { CRMPlugin } from '../packages/crm/src/plugin';
@@ -26,10 +30,10 @@ import { HRPlugin } from '../packages/hr/src/plugin';
 // Singleton bootstrap — reused across warm invocations
 // ---------------------------------------------------------------------------
 
-let honoApp: { fetch: (request: Request) => Promise<Response> } | null = null;
-let bootstrapPromise: Promise<typeof honoApp> | null = null;
+let honoApp: Hono | null = null;
+let bootstrapPromise: Promise<Hono> | null = null;
 
-async function bootstrap() {
+async function bootstrap(): Promise<Hono> {
   const kernel = new ObjectKernel();
 
   // 1. In-memory data driver (no external DB required)
@@ -86,7 +90,7 @@ async function bootstrap() {
   return httpServer.getRawApp();
 }
 
-async function getApp() {
+async function getApp(): Promise<Hono> {
   if (honoApp) return honoApp;
   if (!bootstrapPromise) {
     bootstrapPromise = bootstrap().then((app) => {
@@ -94,16 +98,28 @@ async function getApp() {
       return app;
     });
   }
-  return bootstrapPromise;
+  return bootstrapPromise as Promise<Hono>;
 }
 
 // ---------------------------------------------------------------------------
-// Vercel Web Standard fetch handler
+// Vercel Node.js serverless handler via @hono/node-server/vercel adapter
 // ---------------------------------------------------------------------------
 
-export default {
-  async fetch(request: Request): Promise<Response> {
-    const app = await getApp();
-    return app!.fetch(request);
-  },
-};
+const handler = handle(
+  // Lazy-init proxy: the real Hono app is created on first request.
+  // handle() only invokes app.fetch() at request time, so the proxy
+  // forwards that call to the bootstrapped singleton.
+  new Proxy({} as Hono, {
+    get(_target, prop, receiver) {
+      if (prop === 'fetch') {
+        return async (request: Request) => {
+          const app = await getApp();
+          return app.fetch(request);
+        };
+      }
+      return Reflect.get(_target, prop, receiver);
+    },
+  })
+);
+
+export default handler;
