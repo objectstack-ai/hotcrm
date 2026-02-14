@@ -7,9 +7,10 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "objectstack dev",
+    "dev": "objectstack serve --dev",
     "dev:docs": "pnpm --filter @hotcrm/docs dev",
     "dev:studio": "objectstack studio",
+    "serve": "objectstack serve",
     "start": "objectstack start",
     "build": "pnpm -r build",
     "build:ai": "pnpm --filter @hotcrm/ai build",
@@ -48,6 +49,7 @@
   "license": "MIT",
   "devDependencies": {
     "@changesets/cli": "^2.29.8",
+    "@object-ui/console": "^3.0.1",
     "@objectstack/cli": "^3.0.3",
     "@objectstack/driver-memory": "^3.0.3",
     "@objectstack/plugin-hono-server": "^3.0.3",

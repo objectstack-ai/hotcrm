@@ -5,6 +5,7 @@ import { MarketingPlugin } from './packages/marketing/src/plugin';
 import { ProductsPlugin } from './packages/products/src/plugin';
 import { SupportPlugin } from './packages/support/src/plugin';
 import { HRPlugin } from './packages/hr/src/plugin';
+import { ConsolePlugin } from '@object-ui/console';
 
 /**
  * HotCRM Application Configuration
@@ -13,6 +14,9 @@ import { HRPlugin } from './packages/hr/src/plugin';
  * This replaces the deprecated @hotcrm/server package.
  * 
  * Note: @hotcrm/ai is a utility library and doesn't need to be registered as a plugin.
+ * 
+ * ConsolePlugin is embedded in the plugins array so that the CLI `serve`
+ * command loads the Console UI automatically — no custom server.ts needed.
  */
 export default defineStack({
   manifest: {
@@ -36,6 +40,7 @@ export default defineStack({
     MarketingPlugin,
     ProductsPlugin,
     SupportPlugin,
-    HRPlugin
+    HRPlugin,
+    new ConsolePlugin(),
   ],
-});
+} as any);

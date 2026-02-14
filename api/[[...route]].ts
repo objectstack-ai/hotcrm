@@ -12,6 +12,7 @@
 import { ObjectKernel, DriverPlugin, AppPlugin, createDispatcherPlugin, createRestApiPlugin } from '@objectstack/runtime';
 import { HonoHttpServer } from '@objectstack/plugin-hono-server';
 import { InMemoryDriver } from '@objectstack/driver-memory';
+import { ConsolePlugin } from '@object-ui/console';
 
 // Business plugins
 import { CRMPlugin } from '../packages/crm/src/plugin';
@@ -76,7 +77,10 @@ async function bootstrap() {
   // 6. Dispatcher (auth, graphql, analytics routes)
   kernel.use(createDispatcherPlugin());
 
-  // 7. Bootstrap kernel (init + start all plugins, fire kernel:ready)
+  // 7. Console UI (serves the pre-built Console SPA)
+  kernel.use(new ConsolePlugin());
+
+  // 8. Bootstrap kernel (init + start all plugins, fire kernel:ready)
   await kernel.bootstrap();
 
   return httpServer.getRawApp();
