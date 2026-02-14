@@ -44,9 +44,9 @@
   "author": "HotCRM Team",
   "license": "MIT",
   "devDependencies": {
-    "@objectstack/cli": "^3.0.2",
-    "@objectstack/spec": "^3.0.2",
-    "@objectstack/studio": "^3.0.2",
+    "@objectstack/cli": "^3.0.3",
+    "@objectstack/spec": "^3.0.3",
+    "@objectstack/studio": "^3.0.3",
     "@types/node": "^25.2.3",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^6.21.0",
