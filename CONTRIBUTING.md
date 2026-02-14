@@ -89,6 +89,51 @@ fix: resolve memory leak in ObjectQL engine
 docs: update README with new features
 ```
 
+## 📦 Version Management
+
+We use [Changesets](https://github.com/changesets/changesets) to manage versions and changelogs across all packages in the monorepo.
+
+### Adding a Changeset
+
+When you make a change that affects the public API or user-facing behavior, add a changeset:
+
+```bash
+pnpm changeset
+```
+
+This will prompt you to:
+1. Select which packages are affected
+2. Choose the version bump type (major, minor, patch)
+3. Write a summary of the changes
+
+The changeset will be saved as a file in `.changeset/` and should be committed with your PR.
+
+### Changeset Guidelines
+
+- **Major**: Breaking changes or significant new features
+- **Minor**: New features that are backward compatible
+- **Patch**: Bug fixes and small improvements
+
+All packages in the monorepo use **linked releases** - when one package is released, all packages are released together with the same version number.
+
+### Version Bumping
+
+Maintainers will run this command to consume all changesets and update package versions:
+
+```bash
+pnpm version
+```
+
+### Publishing
+
+After versions are updated, maintainers can publish all packages:
+
+```bash
+pnpm release
+```
+
+> **Note**: All HotCRM packages are currently marked as `private: true` and are not published to npm.
+
 ## 🔄 Pull Request Process
 
 1. **Before Creating a PR**
@@ -96,6 +141,7 @@ docs: update README with new features
    - Run linting and fix any issues
    - Update documentation if needed
    - Add tests for new features
+   - **Add a changeset** if your changes affect package behavior
 
 2. **Creating a PR**
    - Use a clear, descriptive title
