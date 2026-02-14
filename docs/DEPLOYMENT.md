@@ -227,6 +227,22 @@ The repository includes a `vercel.json` that configures the deployment automatic
 3. Vercel detects `vercel.json` and deploys the serverless function automatically.
 4. Every push to the default branch triggers a new deployment.
 
+> **⚠️ IMPORTANT: Verify Vercel project settings**
+>
+> After importing the repository, go to **Project Settings → General → Build & Development Settings**
+> in the Vercel Dashboard and ensure:
+>
+> - **Build Command**: Leave blank or set to `pnpm --filter @hotcrm/ai build` — do NOT set a custom
+>   override. Vercel project settings **override** `vercel.json`, so any stale value here
+>   (e.g. an old `echo 'Server mode — no build step required'`) will prevent the correct build
+>   from running.
+> - **Output Directory**: Leave blank (auto-detected).
+> - **Install Command**: Leave blank or set to `pnpm install`.
+> - **Framework Preset**: "Other" (no framework).
+>
+> If these fields have custom values from a previous configuration, **clear them** so that
+> `vercel.json` is used as the source of truth.
+
 **Option B — Vercel CLI**
 
 ```bash
@@ -237,14 +253,30 @@ npm i -g vercel
 vercel deploy
 ```
 
+### Build Process
+
+The build step compiles only the `@hotcrm/ai` utility library (the only workspace dependency that
+other plugins import from its `dist/` output). The 6 business plugin packages (CRM, Finance,
+Marketing, Products, Support, HR) are imported directly from TypeScript source — Vercel's
+`@vercel/node` runtime compiles them automatically using esbuild when building the serverless
+function.
+
+```
+Build pipeline:
+  pnpm install                            ← install all workspace deps
+  pnpm --filter @hotcrm/ai build          ← compile @hotcrm/ai → dist/
+  @vercel/node compiles api/[[...route]].ts  ← bundles function + TS imports
+```
+
 ### Configuration Reference (`vercel.json`)
 
 | Field | Value | Purpose |
 |-------|-------|---------|
 | `installCommand` | `pnpm install` | Installs all workspace dependencies |
-| `buildCommand` | (no-op) | No build step — Vercel compiles `api/` TypeScript automatically |
+| `buildCommand` | `pnpm --filter @hotcrm/ai build` | Compiles the AI utility library (only dependency that needs pre-built `dist/`) |
 | `functions.memory` | `1024` MB | Memory allocated to the serverless function |
 | `functions.maxDuration` | `60` s | Maximum execution time per request (Pro plan) |
+| `functions.includeFiles` | `packages/*/src/**` | Ensures workspace TypeScript sources are bundled with the function |
 | `rewrites` | `/(.*) → /api/[[...route]]` | Routes all requests to the catch-all handler |
 
 ### Architecture Details
@@ -275,6 +307,38 @@ Web Standard handler that Vercel recognises natively.
 - **Demo / staging only** — designed for demos, design reviews, and CI previews, not production workloads.
 
 For production deployments with persistent data, see [Docker Deployment](#docker-deployment) or [Kubernetes Deployment](#kubernetes-deployment) above.
+
+### Troubleshooting
+
+**Deployment shows 404 for all routes**
+
+1. **Check build command override**: Go to Vercel Dashboard → Project Settings → General →
+   Build & Development Settings. If the Build Command field has a custom value, clear it so
+   `vercel.json` is used. The most common cause of 404 is an overridden build command that
+   prevents `@hotcrm/ai` from being compiled.
+
+2. **Verify the build log**: The build log should show:
+   ```
+   Running "pnpm --filter @hotcrm/ai build"
+   > @hotcrm/ai@1.0.0 build
+   > tsc
+   ```
+   If it instead shows `Server mode — no build step required` or any other message, the
+   `vercel.json` buildCommand is being overridden by project settings.
+
+3. **Check function deployment**: After deployment, go to the Vercel Dashboard → Project →
+   Functions tab. You should see `api/[[...route]]` listed as a serverless function. If it's
+   not listed, the function was not compiled — check for TypeScript errors in the build log.
+
+4. **Cold start timeout**: The first request after deployment can take 2–5 seconds. If you get
+   a 504 timeout, consider increasing `maxDuration` in `vercel.json`.
+
+**Build command fails**
+
+- The `@hotcrm/ai` package must build successfully before the function can be bundled.
+  If it fails, check for TypeScript errors in `packages/ai/src/`.
+- Do NOT use `pnpm -r build` — several packages have TypeScript errors that prevent
+  compilation. Only `@hotcrm/ai` needs to be built.
 
 ### Legacy: MSW (Static) Mode
 
