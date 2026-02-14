@@ -62,9 +62,9 @@ export async function calculateAccountHealth(request: AccountHealthRequest): Pro
   const { accountId } = request;
 
   // Fetch account data
-  const account = await broker.findOne('account', accountId, {
-    fields: ['name', 'annual_revenue', 'number_of_employees', 'industry', 'created_date', 'type']
-  });
+  const account = await broker.findOne('account', accountId,
+    ['name', 'annual_revenue', 'number_of_employees', 'industry', 'created_date', 'type']
+  );
 
   // Fetch related opportunities
   const opportunities = await broker.find('opportunity', {
@@ -81,7 +81,7 @@ export async function calculateAccountHealth(request: AccountHealthRequest): Pro
   // Fetch activities
   const activities = await broker.find('activity', {
     filters: [['account_id', '=', accountId]],
-    sort: 'activity_date desc',
+    sort: { activity_date: -1 },
     limit: 100
   });
 
@@ -326,9 +326,9 @@ export async function generateRecommendations(request: RecommendationRequest): P
   const { accountId } = request;
 
   // Fetch account data
-  const account = await broker.findOne('account', accountId, {
-    fields: ['industry', 'annual_revenue', 'number_of_employees']
-  });
+  const account = await broker.findOne('account', accountId,
+    ['industry', 'annual_revenue', 'number_of_employees']
+  );
 
   // Fetch existing products (would need to track this)
   // For now, generate recommendations based on account characteristics
@@ -410,9 +410,9 @@ export async function assignTerritory(request: TerritoryAssignmentRequest): Prom
   const { accountId } = request;
 
   // Fetch account data
-  const account = await broker.findOne('account', accountId, {
-    fields: ['industry', 'annual_revenue', 'billing_state', 'billing_country']
-  });
+  const account = await broker.findOne('account', accountId,
+    ['industry', 'annual_revenue', 'billing_state', 'billing_country']
+  );
 
   // In a real implementation, this would:
   // 1. Fetch all sales reps
@@ -474,9 +474,9 @@ export async function enrichAccount(request: EnrichmentRequest): Promise<Enrichm
   const { accountId, sources = ['all'] } = request;
 
   // Fetch current account data
-  const account = await broker.findOne('account', accountId, {
-    fields: ['name', 'website', 'industry', 'annual_revenue', 'number_of_employees']
-  });
+  const account = await broker.findOne('account', accountId,
+    ['name', 'website', 'industry', 'annual_revenue', 'number_of_employees']
+  );
 
   // In a real implementation, this would call external APIs
   // For now, return mock enriched data

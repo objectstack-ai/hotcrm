@@ -55,22 +55,22 @@ export async function predictWinProbability(request: WinProbabilityRequest): Pro
   const { opportunityId } = request;
 
   // Fetch opportunity data
-  const opp = await broker.findOne('Opportunity', opportunityId, {
-    fields: [
+  const opp = await broker.findOne('Opportunity', opportunityId,
+    [
       'Name', 'Stage', 'Amount', 'CloseDate', 'Probability', 'Type',
       'LeadSource', 'CreatedDate', 'AccountId', 'ContactId', 'Age'
     ]
-  });
+  );
 
   // Fetch account data
-  const account = await broker.findOne('Account', opp.AccountId, {
-    fields: ['Industry', 'AnnualRevenue', 'NumberOfEmployees']
-  });
+  const account = await broker.findOne('Account', opp.AccountId,
+    ['Industry', 'AnnualRevenue', 'NumberOfEmployees']
+  );
 
   // Fetch recent activities
   const activities = await broker.find('Activity', {
     filters: [['WhatId', '=', opportunityId]],
-    sort: 'ActivityDate desc',
+    sort: { ActivityDate: -1 },
     limit: 20
   });
 
@@ -211,7 +211,7 @@ export async function assessDealRisk(request: DealRiskRequest): Promise<DealRisk
   // Fetch activities
   const activities = await broker.find('Activity', {
     filters: [['WhatId', '=', opportunityId]],
-    sort: 'ActivityDate desc',
+    sort: { ActivityDate: -1 },
     limit: 30
   });
 
@@ -336,7 +336,7 @@ export async function recommendNextStep(request: NextStepRequest): Promise<NextS
   const opp = await broker.findOne('Opportunity', opportunityId);
   const activities = await broker.find('Activity', {
     filters: [['WhatId', '=', opportunityId]],
-    sort: 'ActivityDate desc',
+    sort: { ActivityDate: -1 },
     limit: 10
   });
 
@@ -541,9 +541,9 @@ export async function predictCloseDate(request: CloseDatePredictionRequest): Pro
   const { opportunityId } = request;
 
   const opp = await broker.findOne('Opportunity', opportunityId);
-  const account = await broker.findOne('Account', opp.AccountId, {
-    fields: ['Industry']
-  });
+  const account = await broker.findOne('Account', opp.AccountId,
+    ['Industry']
+  );
 
   // Calculate deal age
   const dealAge = Math.floor(

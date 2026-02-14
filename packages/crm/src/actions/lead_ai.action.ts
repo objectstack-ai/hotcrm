@@ -168,9 +168,9 @@ export async function enrichLead(request: LeadEnrichmentRequest): Promise<LeadEn
 
   // If leadId provided, fetch lead to get email domain
   if (request.leadId && !domain) {
-    const lead = await broker.findOne('Lead', request.leadId, {
-      fields: ['email']
-    });
+    const lead = await broker.findOne('Lead', request.leadId,
+      ['email']
+    );
     if (lead?.Email) {
       domain = lead.Email.split('@')[1];
     }
@@ -288,9 +288,9 @@ export async function routeLead(request: LeadRoutingRequest): Promise<LeadRoutin
   const { leadId } = request;
 
   // 1. Fetch lead data
-  const lead = await broker.findOne('Lead', leadId, {
-    fields: ['Company', 'Industry', 'State', 'Country', 'LeadScore', 'AnnualRevenue']
-  });
+  const lead = await broker.findOne('Lead', leadId,
+    ['Company', 'Industry', 'State', 'Country', 'LeadScore', 'AnnualRevenue']
+  );
 
   // 2. Fetch available sales reps (mock - in production, query User object)
   // For now, we'll simulate with mock data
@@ -435,14 +435,14 @@ export async function generateNurturingRecommendations(request: LeadNurturingReq
   const { leadId } = request;
 
   // Fetch lead data
-  const lead = await broker.findOne('Lead', leadId, {
-    fields: ['FirstName', 'LastName', 'Company', 'Industry', 'Title', 'LeadScore', 'Status', 'LeadSource']
-  });
+  const lead = await broker.findOne('Lead', leadId,
+    ['FirstName', 'LastName', 'Company', 'Industry', 'Title', 'LeadScore', 'Status', 'LeadSource']
+  );
 
   // Fetch recent activities
   const activities = await broker.find('Activity', {
     filters: [['WhoId', '=', leadId]],
-    sort: 'ActivityDate desc',
+    sort: { ActivityDate: -1 },
     limit: 5
   });
 

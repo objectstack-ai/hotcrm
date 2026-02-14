@@ -85,7 +85,7 @@ export async function analyzePipeline(request: PipelineAnalysisRequest): Promise
   const { dateRange, ownerId, quota } = request;
 
   // Build filters for open opportunities
-  const filters: any[][] = [['IsClosed', '=', false]];
+  const filters: [string, string, any][] = [['IsClosed', '=', false]];
   if (ownerId) {
     filters.push(['OwnerId', '=', ownerId]);
   }
@@ -291,7 +291,7 @@ export interface WinRateAnalysisResponse {
 export async function analyzeWinRates(request: WinRateAnalysisRequest): Promise<WinRateAnalysisResponse> {
   const { dateRange, ownerId } = request;
 
-  const filters: any[][] = [['IsClosed', '=', true]];
+  const filters: [string, string, any][] = [['IsClosed', '=', true]];
   if (ownerId) {
     filters.push(['OwnerId', '=', ownerId]);
   }
@@ -470,7 +470,7 @@ export async function analyzeForecastAccuracy(request: ForecastAccuracyRequest):
   const { dateRange, ownerId } = request;
 
   // Fetch closed-won opportunities for actuals
-  const closedFilters: any[][] = [['IsClosed', '=', true], ['IsWon', '=', true]];
+  const closedFilters: [string, string, any][] = [['IsClosed', '=', true], ['IsWon', '=', true]];
   if (ownerId) closedFilters.push(['OwnerId', '=', ownerId]);
   if (dateRange) {
     closedFilters.push(['CloseDate', '>=', dateRange.startDate]);

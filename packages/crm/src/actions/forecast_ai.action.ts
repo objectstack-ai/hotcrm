@@ -78,7 +78,7 @@ export async function predictForecast(params: PredictForecastRequest): Promise<P
       ['stage', 'in', ['closed_won', 'closed_lost']],
     ],
     fields: ['amount', 'stage', 'close_date', 'probability', 'forecast_category'],
-    sort: 'close_date desc',
+    sort: { close_date: -1 },
     limit: 100
   });
 
@@ -233,7 +233,7 @@ export async function adjustForecast(params: AdjustForecastRequest): Promise<Adj
       ['stage', '=', 'closed_won']
     ],
     fields: ['amount', 'close_date'],
-    sort: 'close_date desc',
+    sort: { close_date: -1 },
     limit: 200
   });
 
@@ -534,7 +534,7 @@ export async function generateInsights(params: GenerateInsightsRequest): Promise
       ['stage', '=', 'closed_won']
     ],
     fields: ['amount', 'close_date', 'type', 'lead_source'],
-    sort: 'close_date desc',
+    sort: { close_date: -1 },
     limit: 50
   });
 
