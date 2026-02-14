@@ -1,14 +1,14 @@
 # Production Deployment Guide
 
-This guide covers deploying HotCRM to production using Docker, Kubernetes, or Vercel (MSW mode).
+This guide covers deploying HotCRM to production using Docker, Kubernetes, or Vercel.
 
 ## Prerequisites
 
 - Node.js ≥ 20.9.0
-- Docker ≥ 24.0
+- Docker ≥ 24.0 (for Docker/K8s deployments)
 - kubectl ≥ 1.28 (for Kubernetes deployments)
-- PostgreSQL 16+
-- Redis 7+
+- PostgreSQL 16+ (for Docker/K8s deployments)
+- Redis 7+ (for Docker/K8s deployments)
 
 ## Docker Deployment
 
@@ -169,28 +169,32 @@ kubectl logs -n hotcrm <pod-name> --previous
 - Review the Redis `maxmemory` setting (default: 256MB)
 - Check for memory leaks with `kubectl top pods -n hotcrm`
 
-## Vercel Deployment (MSW Mode)
+## Vercel Deployment (Serverless Mode)
 
-HotCRM can be deployed to **Vercel** as a fully client-side demo using **MSW (Mock Service Worker)** mode.
-In this mode the ObjectStack Studio UI runs entirely in the browser — no server, database, or Redis required.
-All API calls are intercepted by a service worker and served from an in-memory store.
+HotCRM can be deployed to **Vercel** as a serverless application using **Hono + Memory Driver** mode.
+In this mode the full ObjectStack kernel runs server-side inside a Vercel Serverless Function — no external
+database or Redis required. All data is stored in the function instance's memory.
 
 ### How It Works
 
-1. `objectstack compile` produces a `dist/objectstack.json` artifact containing all metadata (objects, plugins, actions, triggers).
-2. The pre-built `@objectstack/studio` SPA is a static Vite application that loads this artifact.
-3. `@objectstack/plugin-msw` registers a Service Worker (`mockServiceWorker.js`) that intercepts REST requests.
-4. `@objectstack/driver-memory` provides an in-memory data store so CRUD operations work without a real database.
+1. A catch-all Vercel Serverless Function (`api/[[...route]].ts`) bootstraps the ObjectStack kernel on first request.
+2. `@objectstack/driver-memory` provides an in-memory data store — zero external infrastructure needed.
+3. `HonoHttpServer` from `@objectstack/plugin-hono-server` handles HTTP routing (without TCP listener).
+4. `createRestApiPlugin()` auto-generates CRUD endpoints for all 65+ business objects.
+5. The kernel instance is reused across warm invocations (Vercel Fluid Compute).
 
 ```
-Browser
+Vercel Serverless Function
 ┌──────────────────────────────────────────┐
-│  Studio UI (React SPA)                   │
-│        ↓  fetch("/api/...")              │
-│  MSW Service Worker intercepts request   │
+│  Request  →  Hono (Web Standard fetch)   │
 │        ↓                                 │
-│  ObjectQL + Memory Driver                │
-│  (reads objectstack.json metadata)       │
+│  ObjectStack Kernel                      │
+│  ├── REST API Plugin (auto CRUD)         │
+│  ├── Dispatcher Plugin (auth, graphql)   │
+│  ├── 6 Business Plugins                  │
+│  └── InMemoryDriver (data store)         │
+│        ↓                                 │
+│  Response                                │
 └──────────────────────────────────────────┘
 ```
 
@@ -202,22 +206,25 @@ Browser
 ### Quick Start
 
 ```bash
-# 1. Build the MSW bundle locally to verify
-pnpm -w run build:msw
+# 1. Install dependencies
+pnpm install
 
-# 2. Preview locally
-npx serve dist/studio
+# 2. Preview locally with Vercel CLI
+npx vercel dev
+
+# 3. Test API endpoints
+curl http://localhost:3000/api/v1/account
 ```
 
 ### Deploy to Vercel
 
-The repository includes a `vercel.json` that configures the build automatically.
+The repository includes a `vercel.json` that configures the deployment automatically.
 
 **Option A — Git Integration (recommended)**
 
 1. Push the repository to GitHub.
 2. Import the repository in the [Vercel Dashboard](https://vercel.com/new).
-3. Vercel detects `vercel.json` and runs `pnpm -w run build:msw` automatically.
+3. Vercel detects `vercel.json` and deploys the serverless function automatically.
 4. Every push to the default branch triggers a new deployment.
 
 **Option B — Vercel CLI**
@@ -227,22 +234,55 @@ The repository includes a `vercel.json` that configures the build automatically.
 npm i -g vercel
 
 # Deploy from the project root
-vercel
+vercel deploy
 ```
 
 ### Configuration Reference (`vercel.json`)
 
 | Field | Value | Purpose |
 |-------|-------|---------|
-| `buildCommand` | `pnpm -w run build:msw` | Compiles metadata and assembles the Studio SPA |
 | `installCommand` | `pnpm install` | Installs all workspace dependencies |
+| `functions.memory` | `1024` MB | Memory allocated to the serverless function |
+| `functions.maxDuration` | `60` s | Maximum execution time per request (Pro plan) |
+| `rewrites` | `/(.*) → /api/[[...route]]` | Routes all requests to the catch-all handler |
 
-The build script produces a [Vercel Build Output API v3](https://vercel.com/docs/build-output-api/v3) structure in `.vercel/output/` with SPA routing (all non-static-file requests are rewritten to `/index.html`).
+### Architecture Details
+
+The serverless function at `api/[[...route]].ts` uses a **singleton bootstrap pattern**:
+
+- **First request (cold start)**: bootstraps the ObjectStack kernel, registers all plugins, creates the Hono app
+- **Subsequent requests (warm)**: reuses the existing kernel and in-memory data (Vercel Fluid Compute)
+- **Cold start after idle**: data resets — a fresh kernel is bootstrapped
+
+The function does **not** use `HonoServerPlugin` (which binds to a TCP port). Instead, it manually creates
+a `HonoHttpServer`, registers it as the `http.server` service, and exports its `.fetch()` method as the
+Web Standard handler that Vercel recognises natively.
+
+### Data Behavior
+
+- Data lives in the function instance's process memory
+- Warm invocations **share data** — records created in one request are visible in the next
+- After ~5–15 minutes of inactivity, Vercel recycles the instance (cold start) and data resets
+- For persistent data, see [Docker Deployment](#docker-deployment) or configure an external database
 
 ### Limitations
 
-- **Data is ephemeral** — all records are stored in browser memory and lost on page refresh.
-- **No authentication** — MSW mode does not enforce permissions or user sessions.
-- **Demo / preview only** — this mode is designed for demos, design reviews, and CI previews, not production workloads.
+- **Data is ephemeral** — records persist only while the function instance is warm; data resets on cold start.
+- **No authentication** — this mode does not enforce permissions or user sessions out of the box.
+- **No WebSocket** — Vercel Serverless Functions do not support persistent connections.
+- **Cold start latency** — the first request after idle may take 2–5 seconds for kernel bootstrap.
+- **Demo / staging only** — designed for demos, design reviews, and CI previews, not production workloads.
 
 For production deployments with persistent data, see [Docker Deployment](#docker-deployment) or [Kubernetes Deployment](#kubernetes-deployment) above.
+
+### Legacy: MSW (Static) Mode
+
+The previous MSW deployment mode (fully client-side with Service Worker) is still available via:
+
+```bash
+pnpm -w run build:msw
+npx serve dist/studio
+```
+
+This produces a static SPA where all API calls are intercepted by a browser Service Worker.
+Data is stored in browser memory and lost on page refresh. See `scripts/build-msw.sh` for details.
