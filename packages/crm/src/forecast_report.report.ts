@@ -28,7 +28,9 @@ export const ForecastReport = {
     type: 'stacked-bar' as const,
     title: 'Forecast vs Closed by Quarter',
     xAxis: 'period',
-    yAxis: 'forecast_amount'
+    yAxis: 'forecast_amount',
+    showLegend: true,
+    showDataLabels: false
   }
 } satisfies Report;
 

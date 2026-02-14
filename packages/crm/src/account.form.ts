@@ -15,7 +15,9 @@ export const AccountForm = {
   sections: [
     {
       label: 'Account Information',
-      columns: '2' as const,
+      columns: '2' as any,
+      collapsible: false,
+      collapsed: false,
       fields: [
         { field: 'name', required: true, placeholder: 'Enter account name' },
         { field: 'account_number', readonly: true, helpText: 'Auto-generated when the account is created' },
@@ -31,8 +33,9 @@ export const AccountForm = {
     },
     {
       label: 'Billing Address',
-      columns: '2' as const,
+      columns: '2' as any,
       collapsible: true,
+      collapsed: false,
       fields: [
         { field: 'billing_street', colSpan: 2 },
         { field: 'billing_city' },
@@ -43,7 +46,7 @@ export const AccountForm = {
     },
     {
       label: 'Shipping Address',
-      columns: '2' as const,
+      columns: '2' as any,
       collapsible: true,
       collapsed: true,
       fields: [
@@ -56,8 +59,9 @@ export const AccountForm = {
     },
     {
       label: 'Additional Details',
-      columns: '2' as const,
+      columns: '2' as any,
       collapsible: true,
+      collapsed: false,
       fields: [
         { field: 'rating' },
         { field: 'sla_tier', helpText: 'Service level agreement tier for this account' },

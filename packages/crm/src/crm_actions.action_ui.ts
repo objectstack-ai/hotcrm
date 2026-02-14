@@ -14,11 +14,12 @@ export const LogACallAction = {
   locations: ['record_header' as const, 'list_item' as const],
   params: [
     { name: 'subject', label: 'Subject', type: 'text' as const, required: true },
-    { name: 'description', label: 'Notes', type: 'textarea' as const },
-    { name: 'duration_minutes', label: 'Duration (min)', type: 'number' as const },
-    { name: 'call_result', label: 'Result', type: 'select' as const, options: [{ label: 'Connected', value: 'connected' }, { label: 'Left Voicemail', value: 'left_voicemail' }, { label: 'No Answer', value: 'no_answer' }, { label: 'Busy', value: 'busy' }] }
+    { name: 'description', label: 'Notes', type: 'textarea' as const, required: false },
+    { name: 'duration_minutes', label: 'Duration (min)', type: 'number' as const, required: false },
+    { name: 'call_result', label: 'Result', type: 'select' as const, required: false, options: [{ label: 'Connected', value: 'connected' }, { label: 'Left Voicemail', value: 'left_voicemail' }, { label: 'No Answer', value: 'no_answer' }, { label: 'Busy', value: 'busy' }] }
   ],
   variant: 'secondary' as const,
+  refreshAfter: true,
   successMessage: 'Call logged successfully'
 } satisfies Action;
 
@@ -30,11 +31,12 @@ export const ConvertLeadAction = {
   locations: ['record_header' as const],
   params: [
     { name: 'create_account', label: 'Create Account', type: 'boolean' as const, required: true },
-    { name: 'create_opportunity', label: 'Create Opportunity', type: 'boolean' as const },
-    { name: 'opportunity_name', label: 'Opportunity Name', type: 'text' as const }
+    { name: 'create_opportunity', label: 'Create Opportunity', type: 'boolean' as const, required: false },
+    { name: 'opportunity_name', label: 'Opportunity Name', type: 'text' as const, required: false }
   ],
   variant: 'primary' as const,
   confirmText: 'Are you sure you want to convert this lead?',
+  refreshAfter: true,
   successMessage: 'Lead converted successfully'
 } satisfies Action;
 
@@ -47,10 +49,11 @@ export const CreateFollowUpTaskAction = {
   params: [
     { name: 'subject', label: 'Task Subject', type: 'text' as const, required: true },
     { name: 'due_date', label: 'Due Date', type: 'date' as const, required: true },
-    { name: 'priority', label: 'Priority', type: 'select' as const, options: [{ label: 'High', value: 'high' }, { label: 'Medium', value: 'medium' }, { label: 'Low', value: 'low' }] },
-    { name: 'description', label: 'Description', type: 'textarea' as const }
+    { name: 'priority', label: 'Priority', type: 'select' as const, required: false, options: [{ label: 'High', value: 'high' }, { label: 'Medium', value: 'medium' }, { label: 'Low', value: 'low' }] },
+    { name: 'description', label: 'Description', type: 'textarea' as const, required: false }
   ],
   variant: 'secondary' as const,
+  refreshAfter: true,
   successMessage: 'Follow-up task created'
 } satisfies Action;
 
@@ -62,11 +65,12 @@ export const SendQuoteAction = {
   locations: ['record_header' as const],
   params: [
     { name: 'recipient_email', label: 'Recipient Email', type: 'email' as const, required: true },
-    { name: 'message', label: 'Message', type: 'textarea' as const },
-    { name: 'include_terms', label: 'Include Terms & Conditions', type: 'boolean' as const }
+    { name: 'message', label: 'Message', type: 'textarea' as const, required: false },
+    { name: 'include_terms', label: 'Include Terms & Conditions', type: 'boolean' as const, required: false }
   ],
   variant: 'primary' as const,
   confirmText: 'Send this quote to the customer?',
+  refreshAfter: true,
   successMessage: 'Quote sent successfully'
 } satisfies Action;
 

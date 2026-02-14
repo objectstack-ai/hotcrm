@@ -14,7 +14,9 @@ export const AccountSplitForm = {
   sections: [
     {
       label: 'Account Information',
-      columns: '1' as const,
+      columns: '1' as any,
+      collapsible: false,
+      collapsed: false,
       fields: [
         { field: 'name', required: true },
         { field: 'type' },
@@ -27,7 +29,9 @@ export const AccountSplitForm = {
     },
     {
       label: 'Billing & Shipping',
-      columns: '1' as const,
+      columns: '1' as any,
+      collapsible: false,
+      collapsed: false,
       fields: [
         { field: 'billing_street' },
         { field: 'billing_city' },

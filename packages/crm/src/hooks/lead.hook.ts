@@ -184,7 +184,7 @@ async function calculateLeadScore(lead: Lead, ctx: HookContext): Promise<number>
  */
 async function runAssignmentRules(lead: Lead, ctx: HookContext): Promise<void> {
   try {
-    const rules: any[] = await ctx.ql.find('assignment_rule', {  
+    const rules: any[] = await (ctx.ql as any).find('assignment_rule', {  
       filters: [
         ['object_name', '=', 'lead'], 
         ['active', '=', true]
@@ -322,7 +322,7 @@ async function handleLeadConversion(ctx: HookContext): Promise<void> {
 
   try {
     // Create Account from Lead data
-    const account = await ctx.ql.doc.create('account', {
+    const account = await (ctx.ql as any).doc.create('account', {
       Name: lead.Company,
       Phone: lead.Phone,
       Website: lead.Website,
@@ -336,7 +336,7 @@ async function handleLeadConversion(ctx: HookContext): Promise<void> {
     });
 
     // Create Contact linked to the new Account
-    const contact = await ctx.ql.doc.create('contact', {
+    const contact = await (ctx.ql as any).doc.create('contact', {
       FirstName: lead.FirstName,
       LastName: lead.LastName,
       AccountId: account?._id,
@@ -348,18 +348,18 @@ async function handleLeadConversion(ctx: HookContext): Promise<void> {
     });
 
     // Create Opportunity linked to the new Account
-    const opportunity = await ctx.ql.doc.create('opportunity', {
+    const opportunity = await (ctx.ql as any).doc.create('opportunity', {
       Name: `${lead.Company} - Opportunity (${lead.Id})`,
       AccountId: account?._id,
       StageName: 'prospecting',
       CloseDate: new Date(Date.now() + DEFAULT_OPPORTUNITY_CLOSE_DAYS * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      Amount: lead.AnnualRevenue ? lead.AnnualRevenue * REVENUE_TO_OPPORTUNITY_RATIO : 0,
+      Amount: lead.AnnualRevenue ? Number(lead.AnnualRevenue) * REVENUE_TO_OPPORTUNITY_RATIO : 0,
       LeadSource: lead.LeadSource,
       OwnerId: ctx.session?.userId,
     });
 
     // Log conversion activity
-    await ctx.ql.doc.create('activity', {
+    await (ctx.ql as any).doc.create('activity', {
       Subject: `Lead Converted: ${lead.FirstName} ${lead.LastName}`,
       Type: 'Conversion',
       Status: 'completed',
@@ -388,7 +388,7 @@ async function handleLeadUnqualification(ctx: HookContext): Promise<void> {
 
   // Log activity
   try {
-    await ctx.ql.doc.create('activity', {
+    await (ctx.ql as any).doc.create('activity', {
       Subject: `Lead Unqualified: ${lead.FirstName} ${lead.LastName}`,
       Type: 'Disqualification',
       Status: 'completed',
@@ -411,7 +411,7 @@ async function logStatusChange(ctx: HookContext): Promise<void> {
     const lead = ctx.input;
     const oldStatus = ctx.previous?.Status || 'unknown';
     
-    await ctx.ql.doc.create('activity', {
+    await (ctx.ql as any).doc.create('activity', {
       Subject: `Lead Status Change: ${oldStatus} → ${ctx.input.Status}`,
       Type: 'Status Change',
       Status: 'completed',

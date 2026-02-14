@@ -222,15 +222,19 @@ export const Account = ObjectSchema.create({
     parent_id: Field.lookup('account', { label: 'Parent Account' }),
     total_opportunities: Field.summary({
       label: 'Total Opportunities',
-      summary_object: 'opportunity',
-      summary_field: 'id',
-      summary_type: 'count'
+      summaryOperations: {
+        object: 'opportunity',
+        field: 'id',
+        function: 'count'
+      }
     }),
     total_open_opportunities_amount: Field.summary({
       label: 'Total Open Opportunities Amount',
-      summary_object: 'opportunity',
-      summary_field: 'amount',
-      summary_type: 'sum'
+      summaryOperations: {
+        object: 'opportunity',
+        field: 'amount',
+        function: 'sum'
+      }
     }),
     headquarters_location: Field.location({ label: 'Headquarters Location' }),
     billing_address: Field.address({ label: 'Billing Address' }),

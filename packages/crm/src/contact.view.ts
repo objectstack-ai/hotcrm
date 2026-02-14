@@ -7,6 +7,7 @@ import { ViewSchema } from '@objectstack/spec/ui';
 
 export const AllContactsView = {
   list: {
+    type: 'grid' as const,
     name: 'all_contacts',
     label: 'All Contacts',
     columns: [
@@ -27,6 +28,7 @@ export const AllContactsView = {
 
 export const MyContactsView = {
   list: {
+    type: 'grid' as const,
     name: 'my_contacts',
     label: 'My Contacts',
     filter: [['owner', '=', '${currentUser.id}']],
@@ -44,6 +46,7 @@ export const MyContactsView = {
 
 export const DecisionMakersView = {
   list: {
+    type: 'grid' as const,
     name: 'decision_makers',
     label: 'Decision Makers',
     filter: [['is_decision_maker', '=', true]],
@@ -65,6 +68,7 @@ export const DecisionMakersView = {
 
 export const RecentContactsView = {
   list: {
+    type: 'grid' as const,
     name: 'recent_contacts',
     label: 'Recent Contacts',
     filter: [['last_contact_date', '>=', 'LAST_30_DAYS']],

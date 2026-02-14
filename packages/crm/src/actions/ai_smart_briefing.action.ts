@@ -246,9 +246,9 @@ export async function executeSmartBriefing(request: SmartBriefingRequest): Promi
     // 1. Fetch Account data with error handling
     let account;
     try {
-      account = await broker.findOne('Account', accountId, {
-        fields: ['Name', 'Industry', 'AnnualRevenue', 'CustomerStatus', 'Rating', 'Description', 'HealthScore', 'SLATier']
-      });
+      account = await broker.findOne('Account', accountId,
+        ['Name', 'Industry', 'AnnualRevenue', 'CustomerStatus', 'Rating', 'Description', 'HealthScore', 'SLATier']
+      );
     } catch (error) {
       throw new Error(`Failed to fetch account: ${error}`);
     }
@@ -263,7 +263,7 @@ export async function executeSmartBriefing(request: SmartBriefingRequest): Promi
       activities = await broker.find('Activity', {
         fields: ['Type', 'Subject', 'ActivityDate', 'Status', 'Description'],
         filters: [['AccountId', '=', accountId]],
-        sort: 'ActivityDate desc',
+        sort: { ActivityDate: -1 },
         limit: activityLimit
       });
     } catch (error) {
@@ -277,7 +277,7 @@ export async function executeSmartBriefing(request: SmartBriefingRequest): Promi
       emails = await broker.find('email', {
         fields: ['Subject', 'SentDate', 'Direction', 'Body'],
         filters: [['AccountId', '=', accountId]],
-        sort: 'SentDate desc',
+        sort: { SentDate: -1 },
         limit: 5
       });
     } catch (error) {
@@ -294,7 +294,7 @@ export async function executeSmartBriefing(request: SmartBriefingRequest): Promi
           ['AccountId', '=', accountId],
           ['Stage', 'not in', ['closed_lost']]
         ],
-        sort: 'CloseDate asc',
+        sort: { CloseDate: 1 },
         limit: 5
       });
     } catch (error) {

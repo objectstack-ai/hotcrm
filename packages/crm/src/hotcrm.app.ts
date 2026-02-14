@@ -10,6 +10,8 @@ export const HotCrmApp = {
   label: 'HotCRM',
   description: 'AI-Native Enterprise CRM',
   icon: 'briefcase',
+  active: true,
+  isDefault: true,
   branding: {
     primaryColor: '#2563EB'
   },

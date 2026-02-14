@@ -202,12 +202,12 @@ describe('TopicViewCounting', () => {
   it('should have correct hook metadata', () => {
     expect(TopicViewCounting.name).toBe('TopicViewCounting');
     expect(TopicViewCounting.object).toBe('topic');
-    expect(TopicViewCounting.events).toContain('afterRead');
+    expect(TopicViewCounting.events).toContain('afterFind');
   });
 
   it('should increment view_count after read', async () => {
     mockQlDocUpdate.mockResolvedValue({});
-    const ctx = createMockContext('afterRead', {}, { _id: 'topic_1', view_count: 10 });
+    const ctx = createMockContext('afterFind', {}, { _id: 'topic_1', view_count: 10 });
 
     await TopicViewCounting.handler(ctx);
 
@@ -220,7 +220,7 @@ describe('TopicViewCounting', () => {
 
   it('should set last_activity_at to an ISO string', async () => {
     mockQlDocUpdate.mockResolvedValue({});
-    const ctx = createMockContext('afterRead', {}, { _id: 'topic_1', view_count: 0 });
+    const ctx = createMockContext('afterFind', {}, { _id: 'topic_1', view_count: 0 });
 
     await TopicViewCounting.handler(ctx);
 
@@ -229,14 +229,14 @@ describe('TopicViewCounting', () => {
   });
 
   it('should skip when result has no _id', async () => {
-    const ctx = createMockContext('afterRead', {}, {});
+    const ctx = createMockContext('afterFind', {}, {});
     await TopicViewCounting.handler(ctx);
     expect(mockQlDocUpdate).not.toHaveBeenCalled();
   });
 
   it('should not throw when update fails', async () => {
     mockQlDocUpdate.mockRejectedValue(new Error('DB error'));
-    const ctx = createMockContext('afterRead', {}, { _id: 'topic_1', view_count: 5 });
+    const ctx = createMockContext('afterFind', {}, { _id: 'topic_1', view_count: 5 });
     await expect(TopicViewCounting.handler(ctx)).resolves.toBeUndefined();
   });
 });

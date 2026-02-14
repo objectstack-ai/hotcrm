@@ -240,6 +240,8 @@ export const ValidatedWorkflows = {
     triggerType: 'on_create',
     active: true,
     actions: [{ type: 'field_update', name: 'assign_owner', field: 'owner_id', value: 'next_available_rep' }],
+    executionOrder: 1,
+    reevaluateOnChange: false,
   } satisfies WorkflowRule),
 
   leadAutoScoring: WorkflowRuleSchema.parse({
@@ -248,6 +250,8 @@ export const ValidatedWorkflows = {
     triggerType: 'on_create_or_update',
     active: true,
     actions: [{ type: 'field_update', name: 'update_rating', field: 'rating', value: 'calculated' }],
+    executionOrder: 2,
+    reevaluateOnChange: false,
   } satisfies WorkflowRule),
 
   leadNurturing: WorkflowRuleSchema.parse({
@@ -256,6 +260,8 @@ export const ValidatedWorkflows = {
     triggerType: 'schedule',
     active: true,
     actions: [{ type: 'field_update', name: 'set_nurture_date', field: 'last_nurture_date', value: 'NOW()' }],
+    executionOrder: 3,
+    reevaluateOnChange: false,
   } satisfies WorkflowRule),
 
   leadEnrichment: WorkflowRuleSchema.parse({
@@ -264,5 +270,7 @@ export const ValidatedWorkflows = {
     triggerType: 'on_create',
     active: true,
     actions: [{ type: 'field_update', name: 'set_enriched_date', field: 'data_enriched_date', value: 'NOW()' }],
+    executionOrder: 4,
+    reevaluateOnChange: false,
   } satisfies WorkflowRule),
 };

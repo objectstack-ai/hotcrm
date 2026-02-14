@@ -58,9 +58,9 @@ export async function enrichContact(request: ContactEnrichmentRequest): Promise<
   const { contactId, sources = ['all'] } = request;
 
   // Fetch current contact data
-  const contact = await broker.findOne('contact', contactId, {
-    fields: ['first_name', 'last_name', 'email', 'title', 'account_id', 'phone', 'mobile_phone']
-  });
+  const contact = await broker.findOne('contact', contactId,
+    ['first_name', 'last_name', 'email', 'title', 'account_id', 'phone', 'mobile_phone']
+  );
 
   // Calculate initial completeness
   const totalFields = 10;
@@ -158,9 +158,9 @@ export async function detectBuyingIntent(request: BuyingIntentRequest): Promise<
   const { contactId, lookbackDays = 30 } = request;
 
   // Fetch contact data
-  const contact = await broker.findOne('contact', contactId, {
-    fields: ['first_name', 'last_name', 'email', 'account_id']
-  });
+  const contact = await broker.findOne('contact', contactId,
+    ['first_name', 'last_name', 'email', 'account_id']
+  );
 
   // Fetch recent activities
   const activities = await broker.find('activity', {
@@ -168,7 +168,7 @@ export async function detectBuyingIntent(request: BuyingIntentRequest): Promise<
       ['who_id', '=', contactId],
       ['activity_date', '>', new Date(Date.now() - lookbackDays * 24 * 60 * 60 * 1000).toISOString()]
     ],
-    sort: 'activity_date desc'
+    sort: { activity_date: -1 }
   });
 
   // Fetch related opportunities
@@ -418,14 +418,14 @@ export async function predictBestContactTime(request: ContactTimingRequest): Pro
   const { contactId } = request;
 
   // Fetch contact and account data for timezone
-  const contact = await broker.findOne('contact', contactId, {
-    fields: ['account_id']
-  });
+  const contact = await broker.findOne('contact', contactId,
+    ['account_id']
+  );
 
   // Fetch historical activities
   const activities = await broker.find('activity', {
     filters: [['who_id', '=', contactId]],
-    sort: 'activity_date desc',
+    sort: { activity_date: -1 },
     limit: 100
   });
 
@@ -513,9 +513,9 @@ export async function findDuplicates(request: DeduplicationRequest): Promise<Ded
   const { contactId, threshold = 70 } = request;
 
   // Fetch the contact to check
-  const contact = await broker.findOne('contact', contactId, {
-    fields: ['first_name', 'last_name', 'email', 'phone', 'account_id']
-  });
+  const contact = await broker.findOne('contact', contactId,
+    ['first_name', 'last_name', 'email', 'phone', 'account_id']
+  );
 
   // Find potential duplicates based on name and email
   const potentialDuplicates = await broker.find('contact', {

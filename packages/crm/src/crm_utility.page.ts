@@ -9,6 +9,8 @@ export const CrmUtilityPage = {
   name: 'crm_utility',
   type: 'utility' as const,
   label: 'CRM Utility Bar',
+  template: 'default',
+  isDefault: false,
   assignedProfiles: ['sales_rep', 'sales_manager', 'account_executive', 'admin'],
 
   regions: [

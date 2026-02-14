@@ -7,6 +7,7 @@ import { ViewSchema } from '@objectstack/spec/ui';
 
 export const AllOpportunitiesView = {
   list: {
+    type: 'grid' as const,
     name: 'all_opportunities',
     label: 'All Opportunities',
     columns: [
@@ -27,6 +28,7 @@ export const AllOpportunitiesView = {
 
 export const MyOpportunitiesView = {
   list: {
+    type: 'grid' as const,
     name: 'my_opportunities',
     label: 'My Opportunities',
     filter: [['owner_id', '=', '${currentUser.id}']],
@@ -44,6 +46,7 @@ export const MyOpportunitiesView = {
 
 export const OpenPipelineView = {
   list: {
+    type: 'grid' as const,
     name: 'open_pipeline',
     label: 'Open Pipeline',
     filter: [['stage', 'NOT IN', ['closed_won', 'closed_lost']]],
@@ -62,6 +65,7 @@ export const OpenPipelineView = {
 
 export const ClosingThisMonthView = {
   list: {
+    type: 'grid' as const,
     name: 'closing_this_month',
     label: 'Closing This Month',
     filter: [
@@ -85,6 +89,7 @@ export const ClosingThisMonthView = {
 
 export const HighValueDealsView = {
   list: {
+    type: 'grid' as const,
     name: 'high_value_deals',
     label: 'High Value Deals',
     filter: [['amount', '>', 100000]],
@@ -106,6 +111,7 @@ export const HighValueDealsView = {
 
 export const LostDealsView = {
   list: {
+    type: 'grid' as const,
     name: 'lost_deals',
     label: 'Lost Deals',
     filter: [['stage', '=', 'closed_lost']],
