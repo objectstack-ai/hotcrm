@@ -77,7 +77,7 @@ async function bootstrap() {
   // 6. Dispatcher (auth, graphql, analytics routes)
   kernel.use(createDispatcherPlugin());
 
-  // 7. Console UI (serves the pre-built Console SPA)
+  // 7. Console UI (serves the ObjectStack Console SPA for data browsing and management)
   kernel.use(new ConsolePlugin());
 
   // 8. Bootstrap kernel (init + start all plugins, fire kernel:ready)

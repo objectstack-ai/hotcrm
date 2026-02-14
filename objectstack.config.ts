@@ -43,4 +43,6 @@ export default defineStack({
     HRPlugin,
     new ConsolePlugin(),
   ],
+  // Uses 'as any' because defineStack schema doesn't include runtime plugins
+  // like ConsolePlugin — consistent with objectstack.shared.ts pattern.
 } as any);
