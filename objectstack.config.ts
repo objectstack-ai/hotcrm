@@ -5,18 +5,20 @@ import { MarketingPlugin } from './packages/marketing/src/plugin';
 import { ProductsPlugin } from './packages/products/src/plugin';
 import { SupportPlugin } from './packages/support/src/plugin';
 import { HRPlugin } from './packages/hr/src/plugin';
-import { ConsolePlugin } from '@object-ui/console';
 
 /**
  * HotCRM Application Configuration
  * 
  * Aggregates all business plugins into a single runtime application.
- * This replaces the deprecated @hotcrm/server package.
  * 
  * Note: @hotcrm/ai is a utility library and doesn't need to be registered as a plugin.
  * 
- * ConsolePlugin is embedded in the plugins array so that the CLI `serve`
- * command loads the Console UI automatically — no custom server.ts needed.
+ * For local development, use `pnpm dev` which runs serve.ts with proper plugin ordering.
+ * The Console UI plugin must load AFTER RestAPI and Dispatcher to avoid route conflicts,
+ * which is handled in serve.ts and api/[[...route]].ts (Vercel deployment).
+ * 
+ * This config is used by the ObjectStack CLI for validation, compilation, and other
+ * metadata operations. UI plugins are NOT included here as they're runtime-only.
  */
 export default defineStack({
   manifest: {
@@ -42,6 +44,8 @@ export default defineStack({
   objects: [],
 
   // Register all Business Plugins
+  // Infrastructure plugins (RestAPI, Dispatcher, Console UI) are added at runtime
+  // in serve.ts and api/[[...route]].ts with explicit ordering.
   plugins: [
     CRMPlugin,
     FinancePlugin,
@@ -49,8 +53,5 @@ export default defineStack({
     ProductsPlugin,
     SupportPlugin,
     HRPlugin,
-    new ConsolePlugin(),
   ],
-  // Uses 'as any' because defineStack schema doesn't include runtime plugins
-  // like ConsolePlugin — consistent with objectstack.shared.ts pattern.
-} as any);
+});

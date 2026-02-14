@@ -8,7 +8,8 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "objectstack serve --dev",
+    "postinstall": "node scripts/patch-console-plugin.cjs",
+    "dev": "tsx serve.ts",
     "dev:docs": "pnpm --filter @hotcrm/docs dev",
     "dev:studio": "objectstack studio",
     "serve": "objectstack serve",
@@ -20,7 +21,7 @@
     "build:products": "pnpm --filter @hotcrm/products build",
     "build:finance": "pnpm --filter @hotcrm/finance build",
     "build:msw": "bash scripts/build-msw.sh",
-    "build:docs": "pnpm --filter @hotcrm/docs build",
+    "build:docs": "pnpm --filter @hotcrm/docs dev",
     "lint": "pnpm -r --if-present lint",
     "test": "vitest run --passWithNoTests",
     "test:coverage": "vitest run --coverage --passWithNoTests",
@@ -65,6 +66,7 @@
     "@vitest/ui": "^1.6.1",
     "eslint": "^8.57.1",
     "hono": "^4.11.9",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "vitest": "^1.6.1"
   },
