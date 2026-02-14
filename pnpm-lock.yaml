@@ -15,8 +15,8 @@ importers:
         specifier: ^1.19.9
         version: 1.19.9(hono@4.11.9)
       '@object-ui/console':
-        specifier: ^3.0.1
-        version: 3.0.1
+        specifier: ^3.0.2
+        version: 3.0.2
       '@objectstack/cli':
         specifier: ^3.0.3
         version: 3.0.3(esbuild@0.27.3)
@@ -1093,8 +1093,8 @@ packages:
     resolution: {integrity: sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg==}
     engines: {node: '>= 8'}
 
-  '@object-ui/console@3.0.1':
-    resolution: {integrity: sha512-TqPDGeKSlLuNpgOxlNtHXwwk21zATwksYXqgYXPefYUbspKr3MmgwHN5YoFFyJiRfGc1u0PUZcZe6mSwibwowA==}
+  '@object-ui/console@3.0.2':
+    resolution: {integrity: sha512-Q6mebYg4JHdE5iHp9g7I5SbnhVI19bhESZb7ICrMG6ymyAE0PYmp5280RfssoycvvqlEBle3omGX2AsofbNp6w==}
 
   '@objectstack/cli@3.0.3':
     resolution: {integrity: sha512-30yr6fkXiN601TZ+q0Kjj8fpgMABimJHEQgpKV4KGYuUEKfJNt3AWrmjBc7Ief0e3fKPwFI2AlLqR9YGNyfZMw==}
@@ -4848,7 +4848,7 @@ snapshots:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.20.1
 
-  '@object-ui/console@3.0.1': {}
+  '@object-ui/console@3.0.2': {}
 
   '@objectstack/cli@3.0.3(esbuild@0.27.3)':
     dependencies:
