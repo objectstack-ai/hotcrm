@@ -60,7 +60,7 @@ const PatientInsuranceVerification: Hook = {
     if (!doc.insurance_id) return;
 
     try {
-      const insurance = await ctx.ql.findOne('insurance', doc.insurance_id);
+      const insurance = await (ctx.ql as any).findOne('insurance', doc.insurance_id);
       if (insurance && insurance.status !== 'active') {
         console.warn(`⚠️ Insurance ${doc.insurance_id} is not active (status: ${insurance.status})`);
       }

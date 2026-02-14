@@ -32,7 +32,7 @@ const HipaaAnomalyDetection: Hook = {
 
     try {
       // Check for high-volume access
-      const recentAccess = await ctx.ql.find('hipaa_audit', {
+      const recentAccess = await (ctx.ql as any).find('hipaa_audit', {
         filters: [['user_id', '=', audit.user_id]],
         limit: 100
       });
