@@ -9,6 +9,7 @@ import { ViewSchema } from '@objectstack/spec/ui';
 // All Ideas View
 export const AllIdeasView = {
   list: {
+    type: 'grid' as const,
     name: 'all_ideas',
     label: 'All Ideas',
     columns: [
@@ -29,6 +30,7 @@ export const AllIdeasView = {
 // Top Voted Ideas View
 export const TopVotedIdeasView = {
   list: {
+    type: 'grid' as const,
     name: 'top_voted_ideas',
     label: 'Top Voted',
     columns: [
@@ -45,6 +47,7 @@ export const TopVotedIdeasView = {
 // Planned Ideas View
 export const PlannedIdeasView = {
   list: {
+    type: 'grid' as const,
     name: 'planned_ideas',
     label: 'Planned',
     filter: [['status', '=', 'planned']],
@@ -62,6 +65,7 @@ export const PlannedIdeasView = {
 // New Submissions View
 export const NewSubmissionsView = {
   list: {
+    type: 'grid' as const,
     name: 'new_submissions',
     label: 'New Submissions',
     filter: [['status', '=', 'submitted']],
@@ -79,6 +83,7 @@ export const NewSubmissionsView = {
 // Released Ideas View
 export const ReleasedIdeasView = {
   list: {
+    type: 'grid' as const,
     name: 'released_ideas',
     label: 'Released',
     filter: [['status', '=', 'released']],

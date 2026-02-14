@@ -45,7 +45,7 @@ const EventCapacityEnforcement: Hook = {
 
     if (doc.rsvp_count !== undefined && ctx.input.id) {
       try {
-        const event = await ctx.ql.findOne('community_event', ctx.input.id);
+        const event = await (ctx.ql as any).findOne('community_event', ctx.input.id);
         if (event && event.capacity && doc.rsvp_count > event.capacity) {
           throw new Error(`Capacity Exceeded: Event "${event.title}" is full (${event.capacity} max)`);
         }
