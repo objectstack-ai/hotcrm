@@ -9,7 +9,7 @@
   ],
   "scripts": {
     "postinstall": "node scripts/patch-console-plugin.cjs",
-    "dev": "tsx serve.ts",
+    "dev": "objectstack serve --dev",
     "dev:docs": "pnpm --filter @hotcrm/docs dev",
     "dev:studio": "objectstack studio",
     "serve": "objectstack serve",
