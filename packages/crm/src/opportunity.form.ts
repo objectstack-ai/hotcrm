@@ -15,7 +15,9 @@ export const OpportunityForm = {
   sections: [
     {
       label: 'Deal Information',
-      columns: '2' as const,
+      columns: 2,
+      collapsible: false,
+      collapsed: false,
       fields: [
         { field: 'name', required: true, placeholder: 'Enter deal name' },
         { field: 'account_id', label: 'Account' },
@@ -30,7 +32,9 @@ export const OpportunityForm = {
     },
     {
       label: 'Forecast Details',
-      columns: '2' as const,
+      columns: 2,
+      collapsible: false,
+      collapsed: false,
       fields: [
         { field: 'forecast_category', visibleOn: "stage != 'Prospecting'" },
         { field: 'expected_revenue', readonly: true, helpText: 'Amount × Probability' },

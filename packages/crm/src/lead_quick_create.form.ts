@@ -14,7 +14,9 @@ export const LeadQuickCreateForm = {
   sections: [
     {
       label: 'Lead Information',
-      columns: '2' as const,
+      columns: 2,
+      collapsible: false,
+      collapsed: false,
       fields: [
         { field: 'first_name', required: true },
         { field: 'last_name', required: true },

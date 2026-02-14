@@ -15,7 +15,9 @@ export const ContactForm = {
   sections: [
     {
       label: 'Contact Information',
-      columns: '2' as const,
+      columns: 2,
+      collapsible: false,
+      collapsed: false,
       fields: [
         { field: 'first_name', required: true, placeholder: 'First name' },
         { field: 'last_name', required: true, placeholder: 'Last name' },
@@ -29,8 +31,9 @@ export const ContactForm = {
     },
     {
       label: 'Communication Preferences',
-      columns: '2' as const,
+      columns: 2,
       collapsible: true,
+      collapsed: false,
       fields: [
         { field: 'mobile_phone' },
         { field: 'fax' },
@@ -40,8 +43,9 @@ export const ContactForm = {
     },
     {
       label: 'Role Details',
-      columns: '2' as const,
+      columns: 2,
       collapsible: true,
+      collapsed: false,
       fields: [
         { field: 'level' },
         { field: 'is_decision_maker', helpText: 'Whether this contact has purchasing authority' },
