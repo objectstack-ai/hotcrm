@@ -45,6 +45,9 @@
   "license": "MIT",
   "devDependencies": {
     "@objectstack/cli": "^3.0.2",
+    "@objectstack/driver-memory": "^3.0.2",
+    "@objectstack/plugin-hono-server": "^3.0.2",
+    "@objectstack/runtime": "^3.0.2",
     "@objectstack/spec": "^3.0.2",
     "@objectstack/studio": "^3.0.2",
     "@types/node": "^25.2.3",

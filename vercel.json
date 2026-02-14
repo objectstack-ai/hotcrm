@@ -1,6 +1,15 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "pnpm -w run build:msw",
   "installCommand": "pnpm install",
-  "framework": null
+  "framework": null,
+  "functions": {
+    "api/**/*.ts": {
+      "memory": 1024,
+      "maxDuration": 60
+    }
+  },
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "/api/[[...route]]" },
+    { "source": "/(.*)", "destination": "/api/[[...route]]" }
+  ]
 }
