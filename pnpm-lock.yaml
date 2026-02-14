@@ -180,6 +180,22 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
 
+  packages/healthcare:
+    dependencies:
+      '@objectstack/spec':
+        specifier: ^3.0.2
+        version: 3.0.2
+      zod:
+        specifier: ^4.3.6
+        version: 4.3.6
+    devDependencies:
+      '@objectstack/cli':
+        specifier: ^3.0.2
+        version: 3.0.2(esbuild@0.27.3)
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
   packages/hr:
     dependencies:
       '@objectstack/spec':
