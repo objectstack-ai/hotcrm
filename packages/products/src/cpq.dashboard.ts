@@ -71,6 +71,7 @@ export const CpqDashboard = {
       title: 'Recent Quotes',
       type: 'table' as const,
       object: 'quote',
+      aggregate: 'count' as const,
       filter: ['status', '!=', 'cancelled'],
       layout: { x: 6, y: 6, w: 6, h: 4 }
     }

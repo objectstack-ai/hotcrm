@@ -7,6 +7,7 @@ import { ViewSchema } from '@objectstack/spec/ui';
 
 export const AllProductsView = {
   list: {
+    type: 'grid' as const,
     name: 'all_products',
     label: 'All Products',
     columns: [
@@ -26,6 +27,7 @@ export const AllProductsView = {
 
 export const ActiveProductsView = {
   list: {
+    type: 'grid' as const,
     name: 'active_products',
     label: 'Active Products',
     filter: [['is_active', '=', true]],
@@ -42,6 +44,7 @@ export const ActiveProductsView = {
 
 export const InactiveProductsView = {
   list: {
+    type: 'grid' as const,
     name: 'inactive_products',
     label: 'Inactive Products',
     filter: [['is_active', '=', false]],
@@ -58,6 +61,7 @@ export const InactiveProductsView = {
 
 export const ByFamilyView = {
   list: {
+    type: 'grid' as const,
     name: 'by_family',
     label: 'By Family',
     columns: [

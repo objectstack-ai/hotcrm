@@ -25,7 +25,9 @@ export const ProductMixReport = {
     type: 'pie' as const,
     title: 'Revenue by Product',
     xAxis: 'product_id',
-    yAxis: 'total_price'
+    yAxis: 'total_price',
+    showLegend: true,
+    showDataLabels: true
   }
 } satisfies Report;
 

@@ -53,9 +53,7 @@ export async function predictDelivery(params: PredictDeliveryRequest): Promise<P
   console.log('🤖 AI Delivery Prediction:', params);
 
   // Fetch order details
-  const order = await broker.findOne('order', order_id, {
-    fields: ['account_id', 'status', 'order_date', 'total_amount', 'shipping_method', 'shipping_address']
-  });
+  const order = await broker.findOne('order', order_id, ['account_id', 'status', 'order_date', 'total_amount', 'shipping_method', 'shipping_address']);
 
   // Fetch order items
   const orderItems = await broker.find('order_item', {
@@ -70,7 +68,7 @@ export async function predictDelivery(params: PredictDeliveryRequest): Promise<P
       ['status', '=', 'delivered']
     ],
     fields: ['order_date', 'delivery_date', 'total_amount', 'shipping_method'],
-    sort: 'order_date desc',
+    sort: { order_date: -1 },
     limit: 50
   });
 
@@ -215,9 +213,7 @@ export async function recommendUpsell(params: RecommendUpsellRequest): Promise<R
   console.log('🤖 AI Upsell Recommendation:', params);
 
   // Fetch order and items
-  const order = await broker.findOne('order', order_id, {
-    fields: ['account_id', 'total_amount']
-  });
+  const order = await broker.findOne('order', order_id, ['account_id', 'total_amount']);
 
   const orderItems = await broker.find('order_item', {
     filters: [['order_id', '=', order_id]],
@@ -382,13 +378,11 @@ export async function analyzeOrderPatterns(params: AnalyzeOrderPatternsRequest):
       ['order_date', '>=', lookbackDate.toISOString().split('T')[0]]
     ],
     fields: ['order_date', 'total_amount', 'status', 'item_count'],
-    sort: 'order_date asc'
+    sort: { order_date: 1 }
   });
 
   // Fetch account info
-  const account = await broker.findOne('account', account_id, {
-    fields: ['name', 'industry', 'annual_revenue']
-  });
+  const account = await broker.findOne('account', account_id, ['name', 'industry', 'annual_revenue']);
 
   // Calculate order frequency
   const orderDates = orders
@@ -570,9 +564,7 @@ export async function optimizeFulfillment(params: OptimizeFulfillmentRequest): P
   console.log('🤖 AI Fulfillment Optimization:', params);
 
   // Fetch order details
-  const order = await broker.findOne('order', order_id, {
-    fields: ['account_id', 'status', 'total_amount', 'shipping_method', 'shipping_address', 'order_date']
-  });
+  const order = await broker.findOne('order', order_id, ['account_id', 'status', 'total_amount', 'shipping_method', 'shipping_address', 'order_date']);
 
   // Fetch order items
   const orderItems = await broker.find('order_item', {
@@ -587,7 +579,7 @@ export async function optimizeFulfillment(params: OptimizeFulfillmentRequest): P
       ['status', '=', 'delivered']
     ],
     fields: ['total_amount', 'order_date', 'delivery_date', 'shipping_method'],
-    sort: 'order_date desc',
+    sort: { order_date: -1 },
     limit: 30
   });
 

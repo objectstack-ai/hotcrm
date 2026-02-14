@@ -67,9 +67,7 @@ export async function optimizePricing(request: OptimizePricingRequest): Promise<
   const { productId, accountId, opportunityId } = request;
 
   // Fetch product
-  const product = await broker.findOne('product', productId, {
-    fields: ['name', 'product_code', 'family', 'is_active']
-  });
+  const product = await broker.findOne('product', productId, ['name', 'product_code', 'family', 'is_active']);
 
   // Fetch price book entries for this product
   const priceBookEntries = await broker.find('price_book_entry', {
@@ -105,16 +103,12 @@ export async function optimizePricing(request: OptimizePricingRequest): Promise<
 
   // Get account-specific context
   if (accountId) {
-    account = await broker.findOne('account', accountId, {
-      fields: ['name', 'industry', 'number_of_employees', 'annual_revenue']
-    });
+    account = await broker.findOne('account', accountId, ['name', 'industry', 'number_of_employees', 'annual_revenue']);
   }
 
   // Get opportunity-specific context
   if (opportunityId) {
-    opportunity = await broker.findOne('opportunity', opportunityId, {
-      fields: ['amount', 'stage', 'probability', 'close_date']
-    });
+    opportunity = await broker.findOne('opportunity', opportunityId, ['amount', 'stage', 'probability', 'close_date']);
     
     if (opportunity.amount && listPrice > 0) {
       currentDiscount = ((listPrice - opportunity.amount) / listPrice) * 100;
@@ -337,9 +331,7 @@ export async function analyzeCompetitivePricing(request: AnalyzeCompetitivePrici
   const { productId, segment = 'mid-market' } = request;
 
   // Fetch product
-  const product = await broker.findOne('product', productId, {
-    fields: ['name', 'product_code', 'family']
-  });
+  const product = await broker.findOne('product', productId, ['name', 'product_code', 'family']);
 
   // Fetch price book entry
   const priceEntries = await broker.find('price_book_entry', {
@@ -517,14 +509,10 @@ export async function suggestDiscounts(request: SuggestDiscountsRequest): Promis
   const { opportunityId, targetWinRate = 70 } = request;
 
   // Fetch opportunity
-  const opportunity = await broker.findOne('opportunity', opportunityId, {
-    fields: ['name', 'amount', 'stage', 'probability', 'close_date', 'account_id']
-  });
+  const opportunity = await broker.findOne('opportunity', opportunityId, ['name', 'amount', 'stage', 'probability', 'close_date', 'account_id']);
 
   // Fetch account
-  const account = await broker.findOne('account', opportunity.account_id, {
-    fields: ['name', 'industry', 'number_of_employees', 'annual_revenue']
-  });
+  const account = await broker.findOne('account', opportunity.account_id, ['name', 'industry', 'number_of_employees', 'annual_revenue']);
 
   // Get quote line items if available
   const quotes = await broker.find('quote', {
@@ -683,9 +671,7 @@ export async function predictPriceElasticity(request: PredictPriceElasticityRequ
   const { productId, segment = 'mid-market' } = request;
 
   // Fetch product
-  const product = await broker.findOne('product', productId, {
-    fields: ['name', 'product_code', 'family']
-  });
+  const product = await broker.findOne('product', productId, ['name', 'product_code', 'family']);
 
   // Fetch historical pricing and volume data
   const historicalOpps = await broker.find('opportunity', {
@@ -843,9 +829,7 @@ export async function calculateOptimalPrice(request: CalculateOptimalPriceReques
   const { productId, accountId, costBasis = 20000, targetMargin = 60 } = request;
 
   // Fetch product
-  const product = await broker.findOne('product', productId, {
-    fields: ['name', 'product_code', 'family']
-  });
+  const product = await broker.findOne('product', productId, ['name', 'product_code', 'family']);
 
   // Get current price
   const priceEntries = await broker.find('price_book_entry', {
@@ -859,9 +843,7 @@ export async function calculateOptimalPrice(request: CalculateOptimalPriceReques
   // Get account context if provided
   let account = null;
   if (accountId) {
-    account = await broker.findOne('account', accountId, {
-      fields: ['name', 'industry', 'number_of_employees', 'annual_revenue']
-    });
+    account = await broker.findOne('account', accountId, ['name', 'industry', 'number_of_employees', 'annual_revenue']);
   }
 
   // Calculate different pricing approaches
