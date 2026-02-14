@@ -4,12 +4,33 @@
  * The published package exposes a TypeScript entry point (plugin.ts).
  * Node.js cannot execute .ts files natively, so we transpile it to
  * JavaScript and update the package exports before deployment.
+ *
+ * pnpm stores packages behind symlinks which can cause Vercel's serverless
+ * packager to fail ("files in symlinked directories").  When a symlink is
+ * detected we replace it with a real copy of the directory contents.
  */
 const { execFileSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
 const consolePkgDir = path.resolve(__dirname, '..', 'node_modules', '@object-ui', 'console');
+
+// ── Step 0: Dereference pnpm symlink ────────────────────────────────────────
+// pnpm links node_modules/@object-ui/console → .pnpm/…/node_modules/…
+// Vercel rejects symlinked dirs in the deployment package, so replace the
+// symlink with a real directory containing the actual files.
+try {
+  const stat = fs.lstatSync(consolePkgDir);
+  if (stat.isSymbolicLink()) {
+    const realDir = fs.realpathSync(consolePkgDir);
+    console.log('[patch-console-plugin] Replacing symlink with real copy ...');
+    fs.unlinkSync(consolePkgDir);
+    fs.cpSync(realDir, consolePkgDir, { recursive: true });
+  }
+} catch {
+  // Not a symlink or doesn't exist yet – continue normally
+}
+
 const pkgJsonPath = path.join(consolePkgDir, 'package.json');
 const pluginTs = path.join(consolePkgDir, 'plugin.ts');
 const pluginJs = path.join(consolePkgDir, 'plugin.js');

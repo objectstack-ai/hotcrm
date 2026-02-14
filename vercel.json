@@ -7,7 +7,7 @@
     "api/**/*.ts": {
       "memory": 1024,
       "maxDuration": 60,
-      "includeFiles": "{packages/*/src,node_modules/@object-ui/console}/**"
+      "includeFiles": "packages/*/src/**"
     }
   },
   "rewrites": [
