@@ -26,7 +26,9 @@ export const PipelineReport = {
     type: 'funnel' as const,
     title: 'Pipeline by Stage',
     xAxis: 'stage',
-    yAxis: 'amount'
+    yAxis: 'amount',
+    showLegend: true,
+    showDataLabels: false
   }
 } satisfies Report;
 

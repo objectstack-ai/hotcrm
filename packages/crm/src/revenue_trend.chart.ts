@@ -10,11 +10,11 @@ export const RevenueTrendChart = {
   title: 'Monthly Revenue Trend',
   subtitle: 'Revenue performance over time',
   description: 'Line chart showing monthly revenue trends with period-over-period comparison',
-  xAxis: { field: 'month', title: 'Month' },
-  yAxis: [{ field: 'revenue', title: 'Revenue ($)' }],
+  xAxis: { field: 'month', title: 'Month', showGridLines: false, logarithmic: false },
+  yAxis: [{ field: 'revenue', title: 'Revenue ($)', showGridLines: false, logarithmic: false }],
   series: [
-    { name: 'closed_won', label: 'Closed Won Revenue', color: '#22C55E' },
-    { name: 'pipeline', label: 'Pipeline Value', color: '#3B82F6' }
+    { name: 'closed_won', label: 'Closed Won Revenue', color: '#22C55E', yAxis: 'left' as const },
+    { name: 'pipeline', label: 'Pipeline Value', color: '#3B82F6', yAxis: 'left' as const }
   ],
   height: 350,
   showLegend: true,

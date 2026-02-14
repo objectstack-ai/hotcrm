@@ -16,8 +16,8 @@ export const PipelineWidget = {
     { name: 'objectName', label: 'Object', type: 'string' as const, required: true, default: 'opportunity', description: 'Source object for pipeline data' },
     { name: 'stageField', label: 'Stage Field', type: 'string' as const, required: true, default: 'stage', description: 'Field used for stage grouping' },
     { name: 'valueField', label: 'Value Field', type: 'string' as const, required: true, default: 'amount', description: 'Field for value aggregation' },
-    { name: 'refreshInterval', label: 'Refresh Interval (s)', type: 'number' as const, default: 60, description: 'Auto-refresh interval in seconds' },
-    { name: 'showTrend', label: 'Show Trend', type: 'boolean' as const, default: true, description: 'Display period-over-period trend' }
+    { name: 'refreshInterval', label: 'Refresh Interval (s)', type: 'number' as const, required: false, default: 60, description: 'Auto-refresh interval in seconds' },
+    { name: 'showTrend', label: 'Show Trend', type: 'boolean' as const, required: false, default: true, description: 'Display period-over-period trend' }
   ]
 } satisfies WidgetManifest;
 
