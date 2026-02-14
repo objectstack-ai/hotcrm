@@ -1,0 +1,297 @@
+---
+title: Building Custom Connectors
+description: Step-by-step guide to building integration connectors for HotCRM.
+---
+
+# Building Custom Connectors
+
+HotCRM ships with 10 pre-built connectors, but your business may need to integrate with systems not yet supported. This guide walks you through building a custom connector — from defining the connector metadata to implementing sync operations and handling errors.
+
+> **Pre-built connectors**: Stripe, DocuSign, Slack, Gmail, Teams, PayPal, Adobe Sign, Outlook, QuickBooks, LinkedIn. See the [Integration Cloud](/docs/modules/integration) docs for details.
+
+## Connector Architecture
+
+Every connector in HotCRM follows a consistent pattern:
+
+1. **Connector Object** — A `connector` record that describes the external service (type, auth method, endpoints)
+2. **Connection Object** — An active, authenticated session with the external service
+3. **Connector Action** — The implementation file that handles authentication, data fetching, and sync operations
+4. **Sync Config** — Rules that define how data maps between HotCRM and the external system
+
+```
+packages/integration/src/
+├── connector.object.ts           # Connector metadata schema
+├── connection.object.ts          # Active connection tracking
+├── sync_config.object.ts         # Sync rules and schedules
+├── field_mapping.object.ts       # Field mapping templates
+└── connectors/
+    ├── stripe.action.ts          # Stripe connector implementation
+    ├── slack.action.ts           # Slack connector implementation
+    └── my_service.action.ts      # Your custom connector
+```
+
+## Step 1: Create the Connector Action
+
+Create a new action file in `packages/integration/src/connectors/`:
+
+```typescript
+// packages/integration/src/connectors/my_service.action.ts
+import type { Action } from '@objectstack/spec/kernel';
+import { ActionSchema } from '@objectstack/spec/kernel';
+
+export const MyServiceConnector = {
+  name: 'my_service_connector',
+  label: 'My Service Connector',
+  description: 'Connects HotCRM to My Service for data synchronization',
+
+  // Define the operations this connector supports
+  operations: {
+    authenticate: {
+      label: 'Authenticate',
+      description: 'Establish connection with My Service',
+      input: {
+        api_key: { type: 'string', required: true },
+        environment: { type: 'string', required: false }
+      }
+    },
+    fetch_records: {
+      label: 'Fetch Records',
+      description: 'Retrieve records from My Service',
+      input: {
+        object_type: { type: 'string', required: true },
+        since: { type: 'datetime', required: false }
+      }
+    },
+    push_record: {
+      label: 'Push Record',
+      description: 'Send a record to My Service',
+      input: {
+        object_type: { type: 'string', required: true },
+        data: { type: 'object', required: true }
+      }
+    }
+  }
+} satisfies Action;
+
+ActionSchema.parse(MyServiceConnector);
+export default MyServiceConnector;
+```
+
+## Step 2: Choose an Authentication Type
+
+HotCRM connectors support four authentication methods. Choose the one that matches your external service:
+
+### OAuth2
+
+Best for services that use token-based auth with refresh flows (e.g., Google, Microsoft, Salesforce).
+
+```typescript
+operations: {
+  authenticate: {
+    label: 'OAuth2 Authentication',
+    input: {
+      client_id: { type: 'string', required: true },
+      client_secret: { type: 'string', required: true },
+      redirect_uri: { type: 'string', required: true },
+      scope: { type: 'string', required: false }
+    }
+  }
+}
+```
+
+The `connection` object stores the resulting `auth_token`, `refresh_token`, and `token_expiry` for automatic token refresh.
+
+### API Key
+
+Best for services with static key-based access (e.g., Stripe, SendGrid).
+
+```typescript
+operations: {
+  authenticate: {
+    label: 'API Key Authentication',
+    input: {
+      api_key: { type: 'string', required: true },
+      environment: { type: 'string', required: false }  // 'sandbox' | 'production'
+    }
+  }
+}
+```
+
+### Basic Authentication
+
+Best for legacy systems or internal APIs.
+
+```typescript
+operations: {
+  authenticate: {
+    label: 'Basic Authentication',
+    input: {
+      username: { type: 'string', required: true },
+      password: { type: 'string', required: true },
+      base_url: { type: 'string', required: true }
+    }
+  }
+}
+```
+
+### Bearer Token
+
+Best for services that issue long-lived tokens.
+
+```typescript
+operations: {
+  authenticate: {
+    label: 'Token Authentication',
+    input: {
+      token: { type: 'string', required: true },
+      base_url: { type: 'string', required: true }
+    }
+  }
+}
+```
+
+## Step 3: Implement Sync Operations
+
+Define the data operations your connector supports. The three core patterns are:
+
+### Inbound Sync (External → HotCRM)
+
+Fetch records from the external service and create/update them in HotCRM:
+
+```typescript
+operations: {
+  fetch_records: {
+    label: 'Fetch Records',
+    description: 'Pull records from external service into HotCRM',
+    input: {
+      object_type: { type: 'string', required: true },
+      since: { type: 'datetime', required: false },
+      limit: { type: 'number', required: false }
+    }
+  }
+}
+```
+
+### Outbound Sync (HotCRM → External)
+
+Push HotCRM records to the external service:
+
+```typescript
+operations: {
+  push_record: {
+    label: 'Push Record',
+    description: 'Send a HotCRM record to the external service',
+    input: {
+      object_type: { type: 'string', required: true },
+      record_id: { type: 'string', required: true },
+      data: { type: 'object', required: true }
+    }
+  }
+}
+```
+
+### Bidirectional Sync
+
+Combine both operations and rely on the `sync_config` object's `conflict_resolution` strategy to handle conflicts:
+
+- **Last Write Wins**: Most recent timestamp takes precedence
+- **Source Wins**: External system's value is kept
+- **Target Wins**: HotCRM's value is kept
+- **Manual**: Flag for human review
+
+## Step 4: Configure Field Mapping
+
+Use the `field_mapping` object to define how fields translate between systems:
+
+```typescript
+// Example: Mapping HotCRM Account fields to an external CRM
+{
+  name: 'account_to_external_crm',
+  source_object: 'account',
+  target_object: 'external_company',
+  mappings: [
+    { source: 'name', target: 'company_name' },
+    { source: 'phone', target: 'phone_number' },
+    { source: 'annual_revenue', target: 'revenue', transform: 'number_to_string' },
+    { source: 'industry', target: 'sector', default_value: 'Other' }
+  ]
+}
+```
+
+Field mappings support:
+- **Direct mapping**: Source field → target field
+- **Transformations**: Type conversions and format changes
+- **Default values**: Fallback values when the source field is empty
+
+## Step 5: Error Handling and Retry Logic
+
+Robust connectors must handle failures gracefully. Follow these patterns:
+
+### HTTP Error Handling
+
+| Status Code | Action |
+|-------------|--------|
+| `200-299` | Success — process the response |
+| `401` | Re-authenticate and retry once |
+| `429` | Rate limited — back off and retry with exponential delay |
+| `500-599` | Server error — retry with exponential backoff (max 3 attempts) |
+| Other | Log the error and mark the sync as failed |
+
+### Exponential Backoff
+
+For transient failures, use exponential backoff with jitter:
+
+- Attempt 1: Immediate
+- Attempt 2: Wait 1–2 seconds
+- Attempt 3: Wait 4–8 seconds
+- Give up after `max_retries` (configured on the `webhook_subscription` or `sync_config`)
+
+### Logging
+
+All sync operations are logged in the `sync_log` object with:
+- Timestamp, direction, status (success/failure)
+- Record counts (created, updated, failed)
+- Error details for failed operations
+
+## Step 6: Testing Connectors
+
+### Unit Testing
+
+Test each operation in isolation:
+
+1. **Authentication**: Verify credentials are validated and tokens are stored
+2. **Fetch**: Verify records are correctly transformed from external format to HotCRM format
+3. **Push**: Verify HotCRM records are correctly transformed to external format
+4. **Error handling**: Verify retry logic and error logging
+
+### Integration Testing
+
+Test the full sync flow against a sandbox environment:
+
+1. Create a connector record with sandbox credentials
+2. Establish a connection
+3. Configure a sync with field mappings
+4. Run a full sync cycle and verify data in both systems
+5. Test conflict resolution by modifying the same record in both systems
+
+### Monitoring
+
+After deployment, use the integration dashboard and AI-powered troubleshooting assistant to monitor:
+
+- Sync success/failure rates
+- Average sync duration
+- Error patterns and root causes
+
+## Connector Checklist
+
+Before shipping your connector, verify:
+
+- [ ] Authentication works for all supported auth types
+- [ ] Inbound sync correctly creates and updates records
+- [ ] Outbound sync correctly pushes records to the external service
+- [ ] Field mappings handle all data types (strings, numbers, dates, booleans)
+- [ ] Error handling covers all HTTP status codes
+- [ ] Retry logic uses exponential backoff
+- [ ] All operations are logged to `sync_log`
+- [ ] Sandbox and production environments are supported
+- [ ] The action file is validated with `ActionSchema.parse()`
