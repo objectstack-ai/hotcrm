@@ -115,7 +115,7 @@ function main() {
     console.log('   2. Update any code that references these values');
     console.log('   3. Update test data to use new lowercase values');
     console.log('   4. Run tests to verify everything still works');
-    console.log('   5. Run: node scripts/scan-select-values.js to verify compliance\n');
+    console.log('   5. Run: node scripts/scan-select-values.cjs to verify compliance\n');
   }
 }
 

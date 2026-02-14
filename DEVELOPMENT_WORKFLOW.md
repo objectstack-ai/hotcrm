@@ -354,7 +354,7 @@ pnpm exec vitest run --reporter=verbose path/to/failing.test.ts
 
 ```bash
 # Run the validation script
-node scripts/validate-protocol.js
+node scripts/validate-protocol.cjs
 
 # Type-check all packages
 pnpm typecheck

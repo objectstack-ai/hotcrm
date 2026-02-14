@@ -13,7 +13,7 @@
  *   s_l_a_ → sla_
  *   
  * Usage:
- *   node scripts/fix-acronym-field-names.js
+ *   node scripts/fix-acronym-field-names.cjs
  */
 
 const fs = require('fs');
