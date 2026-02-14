@@ -3,17 +3,29 @@
   "version": "1.0.0",
   "description": "Products module - Product catalog, pricing, and quotes",
   "license": "MIT",
-  "private": true,
-  "main": "./objectstack.config.ts",
-  "types": "./objectstack.config.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./objectstack.config.ts",
-    "./objectstack.config": "./objectstack.config.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./plugin": {
+      "types": "./dist/plugin.d.ts",
+      "default": "./dist/plugin.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "restricted",
+    "registry": "https://npm.pkg.github.com"
   },
   "scripts": {
     "dev": "objectstack dev",
     "start": "objectstack serve",
-    "build": "objectstack compile",
+    "build": "tsc && objectstack compile",
     "typecheck": "tsc --noEmit",
     "test": "objectstack test"
   },
