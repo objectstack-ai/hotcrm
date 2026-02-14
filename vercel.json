@@ -1,7 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "installCommand": "pnpm install",
-  "buildCommand": "pnpm -w run build:msw",
+  "buildCommand": "bash scripts/build-msw.sh",
   "framework": null,
   "functions": {
     "api/**/*.ts": {
