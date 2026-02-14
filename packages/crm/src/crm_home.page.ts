@@ -9,6 +9,8 @@ export const CrmHomePage = {
   name: 'crm_home',
   type: 'home' as const,
   label: 'CRM Home Page',
+  template: 'default',
+  isDefault: false,
   assignedProfiles: ['sales_rep', 'sales_manager', 'account_executive', 'admin'],
 
   regions: [

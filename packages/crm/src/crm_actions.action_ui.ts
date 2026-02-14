@@ -19,6 +19,7 @@ export const LogACallAction = {
     { name: 'call_result', label: 'Result', type: 'select' as const, required: false, options: [{ label: 'Connected', value: 'connected' }, { label: 'Left Voicemail', value: 'left_voicemail' }, { label: 'No Answer', value: 'no_answer' }, { label: 'Busy', value: 'busy' }] }
   ],
   variant: 'secondary' as const,
+  refreshAfter: true,
   successMessage: 'Call logged successfully'
 } satisfies Action;
 
@@ -35,6 +36,7 @@ export const ConvertLeadAction = {
   ],
   variant: 'primary' as const,
   confirmText: 'Are you sure you want to convert this lead?',
+  refreshAfter: true,
   successMessage: 'Lead converted successfully'
 } satisfies Action;
 
@@ -51,6 +53,7 @@ export const CreateFollowUpTaskAction = {
     { name: 'description', label: 'Description', type: 'textarea' as const, required: false }
   ],
   variant: 'secondary' as const,
+  refreshAfter: true,
   successMessage: 'Follow-up task created'
 } satisfies Action;
 
@@ -67,6 +70,7 @@ export const SendQuoteAction = {
   ],
   variant: 'primary' as const,
   confirmText: 'Send this quote to the customer?',
+  refreshAfter: true,
   successMessage: 'Quote sent successfully'
 } satisfies Action;
 

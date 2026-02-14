@@ -45,6 +45,7 @@ export const SearchAccountsTool = {
   timeout: 15000,
   version: '1.0.0',
   category: 'crm',
+  deprecated: false,
   tags: ['sales', 'account', 'search'],
   examples: [
     {
@@ -80,6 +81,7 @@ export const GetOpportunityTool = {
   timeout: 10000,
   version: '1.0.0',
   category: 'crm',
+  deprecated: false,
   tags: ['sales', 'opportunity', 'detail'],
   examples: [
     {
@@ -121,6 +123,7 @@ export const UpdateDealStageTool = {
   timeout: 15000,
   version: '1.0.0',
   category: 'crm',
+  deprecated: false,
   tags: ['sales', 'opportunity', 'pipeline', 'update'],
   examples: [
     {
@@ -169,6 +172,7 @@ export const CreateActivityTool = {
   timeout: 10000,
   version: '1.0.0',
   category: 'crm',
+  deprecated: false,
   tags: ['sales', 'activity', 'logging'],
   examples: [
     {

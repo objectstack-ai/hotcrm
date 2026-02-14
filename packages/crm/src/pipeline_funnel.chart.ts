@@ -14,6 +14,7 @@ export const PipelineFunnelChart = {
   yAxis: [{ field: 'deal_count', title: 'Number of Deals', showGridLines: false, logarithmic: false }],
   colors: ['#3B82F6', '#6366F1', '#8B5CF6', '#A855F7', '#22C55E', '#EF4444'],
   height: 400,
+  showLegend: true,
   showDataLabels: true
 } satisfies ChartConfig;
 
