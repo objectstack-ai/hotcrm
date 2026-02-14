@@ -312,6 +312,8 @@ export const ValidatedWorkflows = {
     triggerType: 'on_create_or_update',
     active: true,
     actions: [{ type: 'field_update', name: 'set_approval_levels', field: 'total_approval_levels', value: '1' }],
+    executionOrder: 1,
+    reevaluateOnChange: false,
   } satisfies WorkflowRule),
 
   smartDelegation: WorkflowRuleSchema.parse({
@@ -320,6 +322,8 @@ export const ValidatedWorkflows = {
     triggerType: 'on_create_or_update',
     active: true,
     actions: [{ type: 'field_update', name: 'delegate_approver', field: 'current_approver_id', value: 'delegate' }],
+    executionOrder: 2,
+    reevaluateOnChange: false,
   } satisfies WorkflowRule),
 
   approvalEscalation: WorkflowRuleSchema.parse({
@@ -328,6 +332,8 @@ export const ValidatedWorkflows = {
     triggerType: 'schedule',
     active: true,
     actions: [{ type: 'field_update', name: 'mark_escalated', field: 'is_escalated', value: 'true' }],
+    executionOrder: 3,
+    reevaluateOnChange: false,
   } satisfies WorkflowRule),
 
   approvalAutoResolve: WorkflowRuleSchema.parse({
@@ -336,5 +342,7 @@ export const ValidatedWorkflows = {
     triggerType: 'on_create_or_update',
     active: true,
     actions: [{ type: 'field_update', name: 'auto_approve', field: 'status', value: 'approved' }],
+    executionOrder: 4,
+    reevaluateOnChange: false,
   } satisfies WorkflowRule),
 };

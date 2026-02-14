@@ -28,7 +28,9 @@ export const CaseVolumeReport = {
     title: 'Case Volume by Priority and Category',
     xAxis: 'category',
     yAxis: 'case_number',
-    groupBy: 'priority'
+    groupBy: 'priority',
+    showLegend: true,
+    showDataLabels: false
   }
 } satisfies Report;
 

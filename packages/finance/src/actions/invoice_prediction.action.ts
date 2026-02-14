@@ -56,14 +56,14 @@ export async function predictPaymentDefault(request: PaymentDefaultRequest): Pro
   const { invoiceId } = request;
 
   // Fetch invoice data
-  const invoice = await broker.findOne('invoice', invoiceId, {
-    fields: ['invoice_number', 'amount', 'invoice_date', 'due_date', 'status', 'account_id']
-  });
+  const invoice = await broker.findOne('invoice', invoiceId, 
+    ['invoice_number', 'amount', 'invoice_date', 'due_date', 'status', 'account_id']
+  );
 
   // Fetch account data
-  const account = await broker.findOne('account', invoice.account_id, {
-    fields: ['name', 'annual_revenue', 'industry']
-  });
+  const account = await broker.findOne('account', invoice.account_id, 
+    ['name', 'annual_revenue', 'industry']
+  );
 
   // Fetch payment history for this account
   const historicalInvoices = await broker.find('invoice', {
@@ -261,9 +261,9 @@ export async function predictPaymentDate(request: PaymentDateRequest): Promise<P
   const { invoiceId } = request;
 
   // Fetch invoice
-  const invoice = await broker.findOne('invoice', invoiceId, {
-    fields: ['due_date', 'account_id', 'amount']
-  });
+  const invoice = await broker.findOne('invoice', invoiceId, 
+    ['due_date', 'account_id', 'amount']
+  );
 
   // Get default prediction to understand risk
   const defaultPred = await predictPaymentDefault({ invoiceId });
@@ -347,9 +347,9 @@ export async function detectAnomalies(request: AnomalyDetectionRequest): Promise
   const { invoiceId } = request;
 
   // Fetch invoice
-  const invoice = await broker.findOne('invoice', invoiceId, {
-    fields: ['amount', 'invoice_date', 'due_date', 'account_id']
-  });
+  const invoice = await broker.findOne('invoice', invoiceId, 
+    ['amount', 'invoice_date', 'due_date', 'account_id']
+  );
 
   // Fetch invoice lines
   const lines = await broker.find('invoice_line', {

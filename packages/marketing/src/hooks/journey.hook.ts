@@ -42,7 +42,7 @@ const JourneyValidationTrigger: Hook = {
           throw new Error(`Validation Error: Invalid journey status "${doc.status}".`);
         }
 
-        const previousStatus = ctx.input.previousDoc?.status;
+        const previousStatus = (ctx.input.previousDoc as Record<string, any>)?.status;
         if (previousStatus && previousStatus !== doc.status) {
           const allowed = VALID_STATUS_TRANSITIONS[previousStatus] || [];
           if (!allowed.includes(doc.status)) {

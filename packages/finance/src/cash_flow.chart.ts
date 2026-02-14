@@ -10,11 +10,12 @@ export const CashFlowChart = {
   title: 'Cash Flow Waterfall',
   subtitle: 'Cash inflows and outflows by category',
   description: 'Waterfall chart showing cash flow breakdown by revenue, expenses, and net position',
-  xAxis: { field: 'category', title: 'Category' },
-  yAxis: [{ field: 'amount', title: 'Amount ($)' }],
+  xAxis: { field: 'category', title: 'Category', showGridLines: false, logarithmic: false },
+  yAxis: [{ field: 'amount', title: 'Amount ($)', showGridLines: false, logarithmic: false }],
   colors: ['#22C55E', '#EF4444', '#3B82F6'],
   height: 400,
-  showDataLabels: true
+  showDataLabels: true,
+  showLegend: true
 } satisfies ChartConfig;
 
 ChartConfigSchema.parse(CashFlowChart);

@@ -70,6 +70,7 @@ export const IntegrationDashboard = {
       title: 'Recent Sync Logs',
       type: 'table' as const,
       object: 'sync_log',
+      aggregate: 'count' as const,
       filter: ['status', '!=', 'cancelled'],
       layout: { x: 6, y: 6, w: 6, h: 4 }
     }

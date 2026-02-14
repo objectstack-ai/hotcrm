@@ -39,6 +39,7 @@ export const SearchProductsTool = {
   version: '1.0.0',
   category: 'products',
   tags: ['product', 'catalogue', 'search'],
+  deprecated: false,
   examples: [
     {
       description: 'Search for enterprise licence products',
@@ -80,6 +81,7 @@ export const GetPricingTool = {
   version: '1.0.0',
   category: 'products',
   tags: ['pricing', 'cpq', 'discount'],
+  deprecated: false,
   examples: [
     {
       description: 'Get pricing for 50 units',
@@ -121,6 +123,7 @@ export const ConfigureBundleTool = {
   version: '1.0.0',
   category: 'products',
   tags: ['bundle', 'configuration', 'cpq'],
+  deprecated: false,
   examples: [
     {
       description: 'Configure an enterprise starter bundle',
@@ -162,6 +165,7 @@ export const CalculateQuoteTool = {
   version: '1.0.0',
   category: 'products',
   tags: ['quote', 'pricing', 'cpq'],
+  deprecated: false,
   examples: [
     {
       description: 'Calculate a quote with two line items',

@@ -96,7 +96,7 @@ const CommunityDomainVerification: Hook = {
 
       // Check uniqueness
       try {
-        const existing = await ctx.ql.find('community', {
+        const existing = await (ctx.ql as any).find('community', {
           filters: [['domain', '=', doc.domain]]
         });
         const isDuplicate = existing.some((c: any) => c._id !== ctx.input.id);

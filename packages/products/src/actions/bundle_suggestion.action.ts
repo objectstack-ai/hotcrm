@@ -67,9 +67,7 @@ export async function suggestBundles(request: SuggestBundlesRequest): Promise<Su
   const { accountId, maxBudget = 200000, maxSuggestions = 3 } = request;
 
   // Fetch account
-  const account = await broker.findOne('account', accountId, {
-    fields: ['name', 'industry', 'number_of_employees', 'annual_revenue', 'type']
-  });
+  const account = await broker.findOne('account', accountId, ['name', 'industry', 'number_of_employees', 'annual_revenue', 'type']);
 
   // Fetch existing products
   const existingProducts = await broker.find('opportunity', {
@@ -388,9 +386,7 @@ export async function optimizeBundleComposition(request: OptimizeBundleCompositi
 
   // Fetch bundle if ID provided
   if (bundleId) {
-    const bundle = await broker.findOne('product_bundle', bundleId, {
-      fields: ['name', 'bundle_id', 'discount_percent']
-    });
+    const bundle = await broker.findOne('product_bundle', bundleId, ['name', 'bundle_id', 'discount_percent']);
 
     const components = await broker.find('product_bundle_component', {
       filters: [['bundle_id', '=', bundleId]],
@@ -399,9 +395,7 @@ export async function optimizeBundleComposition(request: OptimizeBundleCompositi
 
     currentProducts = await Promise.all(
       components.map(async c => {
-        const product = await broker.findOne('product', c.product_id, {
-          fields: ['product_id', 'name', 'family']
-        });
+        const product = await broker.findOne('product', c.product_id, ['product_id', 'name', 'family']);
         return { ...product, is_required: c.is_required };
       })
     );
@@ -409,9 +403,7 @@ export async function optimizeBundleComposition(request: OptimizeBundleCompositi
     // Fetch products by IDs
     currentProducts = await Promise.all(
       productIds.map(id => 
-        broker.findOne('product', id, {
-          fields: ['product_id', 'name', 'family']
-        })
+        broker.findOne('product', id, ['product_id', 'name', 'family'])
       )
     );
   }
@@ -632,17 +624,13 @@ export async function priceBundleOptimally(request: PriceBundleOptimallyRequest)
 
     products = await Promise.all(
       components.map(c => 
-        broker.findOne('product', c.product_id, {
-          fields: ['product_id', 'name', 'family']
-        })
+        broker.findOne('product', c.product_id, ['product_id', 'name', 'family'])
       )
     );
   } else if (productIds.length > 0) {
     products = await Promise.all(
       productIds.map(id => 
-        broker.findOne('product', id, {
-          fields: ['product_id', 'name', 'family']
-        })
+        broker.findOne('product', id, ['product_id', 'name', 'family'])
       )
     );
   }
@@ -813,9 +801,7 @@ export async function analyzeBundlePerformance(request: AnalyzeBundlePerformance
   const { bundleId, periodDays = 90 } = request;
 
   // Fetch bundle
-  const bundle = await broker.findOne('product_bundle', bundleId, {
-    fields: ['name', 'bundle_id', 'discount_percent', 'is_active']
-  });
+  const bundle = await broker.findOne('product_bundle', bundleId, ['name', 'bundle_id', 'discount_percent', 'is_active']);
 
   // Fetch bundle components
   const components = await broker.find('product_bundle_component', {
@@ -865,9 +851,7 @@ export async function analyzeBundlePerformance(request: AnalyzeBundlePerformance
   // Product mix analysis
   const products = await Promise.all(
     components.map(c => 
-      broker.findOne('product', c.product_id, {
-        fields: ['name', 'product_id']
-      })
+      broker.findOne('product', c.product_id, ['name', 'product_id'])
     )
   );
 

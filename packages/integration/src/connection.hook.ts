@@ -15,7 +15,7 @@ const ConnectionValidation: Hook = {
 
     if (doc.connector_id) {
       try {
-        const connector = await ctx.ql.findOne('connector', doc.connector_id);
+        const connector = await (ctx.ql as any).findOne('connector', doc.connector_id);
         if (!connector) {
           throw new Error('Validation Error: Referenced connector does not exist');
         }
@@ -40,7 +40,7 @@ const ConnectionValidation: Hook = {
 const TokenRefresh: Hook = {
   name: 'TokenRefresh',
   object: 'connection',
-  events: ['afterRead'],
+  events: ['afterFind'],
   handler: async (ctx: HookContext) => {
     const doc = ctx.result as Record<string, any>;
     if (!doc?._id || !doc.expires_at) return;
@@ -52,7 +52,7 @@ const TokenRefresh: Hook = {
     if (expiresAt.getTime() - now.getTime() < bufferMs && doc.status === 'connected') {
       console.log(`🔄 Token nearing expiry for connection ${doc._id}, triggering refresh`);
       try {
-        await ctx.ql.doc.update('connection', doc._id, { status: 'expired' });
+        await (ctx.ql as any).doc.update('connection', doc._id, { status: 'expired' });
       } catch (error) {
         console.warn('⚠️ Failed to mark connection as expired:', error);
       }

@@ -62,7 +62,7 @@ export async function optimizeJourney(params: OptimizeJourneyRequest): Promise<O
   const steps = await broker.find('journey_step', {
     filters: [['journey_id', '=', journey_id]],
     fields: ['name', 'step_type', 'step_order', 'wait_duration', 'contacts_entered', 'contacts_completed'],
-    sort: 'step_order asc'
+    sort: { step_order: 1 }
   });
 
   // Analyze bottlenecks
@@ -195,7 +195,7 @@ export async function predictEngagement(params: PredictEngagementRequest): Promi
   const touchpoints = await broker.find('touchpoint', {
     filters: [['contact_id', '=', contact_id]],
     fields: ['channel', 'engagement_type', 'created_date'],
-    sort: 'created_date desc',
+    sort: { created_date: -1 },
     limit: 50
   });
 
@@ -292,7 +292,7 @@ export async function suggestNextBestAction(params: SuggestNextBestActionRequest
   const recentTouchpoints = await broker.find('touchpoint', {
     filters: [['contact_id', '=', contact_id]],
     fields: ['channel', 'engagement_type', 'created_date'],
-    sort: 'created_date desc',
+    sort: { created_date: -1 },
     limit: 10
   });
 
@@ -442,7 +442,7 @@ export async function analyzeDropoff(params: AnalyzeDropoffRequest): Promise<Ana
   const steps = await broker.find('journey_step', {
     filters: [['journey_id', '=', journey_id]],
     fields: ['name', 'step_type', 'step_order', 'contacts_entered', 'contacts_completed'],
-    sort: 'step_order asc'
+    sort: { step_order: 1 }
   });
 
   // Build funnel analysis

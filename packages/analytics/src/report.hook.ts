@@ -36,7 +36,7 @@ const ReportFilterValidation: Hook = {
     // Ensure object_name references a valid object
     if (doc.object_name) {
       try {
-        const results = await ctx.ql.find(doc.object_name, { limit: 0 });
+        const results = await (ctx.ql as any).find(doc.object_name, { limit: 0 });
         if (results === undefined) {
           throw new Error(`Validation Error: Source object "${doc.object_name}" does not exist`);
         }
@@ -59,7 +59,7 @@ const ReportFilterValidation: Hook = {
 const ReportAccessControl: Hook = {
   name: 'ReportAccessControl',
   object: 'report',
-  events: ['beforeRead'],
+  events: ['beforeFind'],
   handler: async (ctx: HookContext) => {
     const doc = ctx.result as Record<string, any> | undefined;
     if (!doc) return;
@@ -91,11 +91,11 @@ const ReportCacheInvalidation: Hook = {
 
     // Remove any cached snapshots tied to this report
     try {
-      const snapshots = await ctx.ql.find('snapshot', {
+      const snapshots = await (ctx.ql as any).find('snapshot', {
         filters: [['report_id', '=', report._id]]
       });
       for (const snap of snapshots) {
-        await ctx.ql.doc.update('snapshot', snap._id, { is_stale: true });
+        await (ctx.ql as any).doc.update('snapshot', snap._id, { is_stale: true });
       }
     } catch (error) {
       console.warn('⚠️ Failed to invalidate report cache:', error);
@@ -112,13 +112,13 @@ const ReportCacheInvalidation: Hook = {
 const ReportExecutionTracking: Hook = {
   name: 'ReportExecutionTracking',
   object: 'report',
-  events: ['afterRead'],
+  events: ['afterFind'],
   handler: async (ctx: HookContext) => {
     const report = ctx.result as Record<string, any>;
     if (!report?._id) return;
 
     try {
-      await ctx.ql.doc.update('report', report._id, {
+      await (ctx.ql as any).doc.update('report', report._id, {
         run_count: (report.run_count || 0) + 1,
         last_run_at: new Date().toISOString()
       });

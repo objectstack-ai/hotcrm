@@ -55,7 +55,7 @@ const ListingMlsSync: Hook = {
     if (!listing?._id || !listing?.property_id) return;
 
     try {
-      const property = await ctx.ql.findOne('property', listing.property_id);
+      const property = await (ctx.ql as any).findOne('property', listing.property_id);
       if (!property?.mls_number) {
         console.warn(`⚠️ Property ${listing.property_id} has no MLS number for listing ${listing._id}`);
       }
@@ -79,10 +79,10 @@ const ListingAutoComparable: Hook = {
     if (!listing?._id || !listing?.property_id) return;
 
     try {
-      const property = await ctx.ql.findOne('property', listing.property_id);
+      const property = await (ctx.ql as any).findOne('property', listing.property_id);
       if (!property) return;
 
-      const comparables = await ctx.ql.find('listing', {
+      const comparables = await (ctx.ql as any).find('listing', {
         filters: [['status', '=', 'active']],
         limit: 5
       });

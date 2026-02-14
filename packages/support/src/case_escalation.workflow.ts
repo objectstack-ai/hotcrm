@@ -264,6 +264,8 @@ export const ValidatedWorkflows = {
     triggerType: 'on_update',
     active: true,
     actions: [{ type: 'field_update', name: 'escalate_priority', field: 'priority', value: 'critical' }],
+    executionOrder: 1,
+    reevaluateOnChange: false,
   } satisfies WorkflowRule),
 
   caseHighPriorityAlert: WorkflowRuleSchema.parse({
@@ -272,6 +274,8 @@ export const ValidatedWorkflows = {
     triggerType: 'on_create_or_update',
     active: true,
     actions: [{ type: 'email_alert', name: 'alert_manager', template: 'critical_case_alert', recipients: ['owner_id'] }],
+    executionOrder: 2,
+    reevaluateOnChange: false,
   } satisfies WorkflowRule),
 
   caseStaleCheck: WorkflowRuleSchema.parse({
@@ -280,6 +284,8 @@ export const ValidatedWorkflows = {
     triggerType: 'schedule',
     active: true,
     actions: [{ type: 'task_creation', name: 'create_followup', taskObject: 'task', subject: 'Follow up on stale case' }],
+    executionOrder: 3,
+    reevaluateOnChange: false,
   } satisfies WorkflowRule),
 
   caseFirstResponseSLA: WorkflowRuleSchema.parse({
@@ -288,5 +294,7 @@ export const ValidatedWorkflows = {
     triggerType: 'on_create',
     active: true,
     actions: [{ type: 'field_update', name: 'set_in_progress', field: 'status', value: 'in_progress' }],
+    executionOrder: 4,
+    reevaluateOnChange: false,
   } satisfies WorkflowRule),
 };

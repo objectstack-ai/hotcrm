@@ -15,7 +15,7 @@ const GroupMembershipValidation: Hook = {
 
     if (doc.name) {
       try {
-        const existing = await ctx.ql.find('user_group', {
+        const existing = await (ctx.ql as any).find('user_group', {
           filters: [['name', '=', doc.name]]
         });
         const isDuplicate = existing.some((g: any) => g._id !== ctx.input.id);
@@ -71,7 +71,7 @@ const GroupAutoAssignment: Hook = {
 const GroupAccessEnforcement: Hook = {
   name: 'GroupAccessEnforcement',
   object: 'user_group',
-  events: ['beforeRead'],
+  events: ['beforeFind'],
   handler: async (ctx: HookContext) => {
     const doc = ctx.result as Record<string, any> | undefined;
     if (!doc) return;

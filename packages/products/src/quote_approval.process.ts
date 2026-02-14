@@ -128,6 +128,7 @@ export const ValidatedQuoteApprovalProcess = ApprovalProcessSchema.parse({
   label: 'Quote Approval Process',
   object: 'quote',
   active: true,
+  lockRecord: true,
   steps: [
     {
       name: 'manager_approval',

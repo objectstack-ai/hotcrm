@@ -329,6 +329,8 @@ export const ValidatedWorkflows = {
     triggerType: 'on_create',
     active: true,
     actions: [{ type: 'field_update', name: 'set_in_progress', field: 'status', value: 'in_progress' }],
+    executionOrder: 1,
+    reevaluateOnChange: false,
   } satisfies WorkflowRule),
 
   timeOffApproval: WorkflowRuleSchema.parse({
@@ -337,6 +339,8 @@ export const ValidatedWorkflows = {
     triggerType: 'on_create',
     active: true,
     actions: [{ type: 'field_update', name: 'set_approver', field: 'approver_id', value: 'manager_id' }],
+    executionOrder: 1,
+    reevaluateOnChange: false,
   } satisfies WorkflowRule),
 
   timeOffAutoApproval: WorkflowRuleSchema.parse({
@@ -345,6 +349,8 @@ export const ValidatedWorkflows = {
     triggerType: 'on_create',
     active: true,
     actions: [{ type: 'field_update', name: 'auto_approve', field: 'status', value: 'approved' }],
+    executionOrder: 1,
+    reevaluateOnChange: false,
   } satisfies WorkflowRule),
 
   performanceReviewCycle: WorkflowRuleSchema.parse({
@@ -353,6 +359,8 @@ export const ValidatedWorkflows = {
     triggerType: 'schedule',
     active: true,
     actions: [{ type: 'email_alert', name: 'notify_managers', template: 'performance_review_cycle_start', recipients: ['ALL_MANAGERS'] }],
+    executionOrder: 1,
+    reevaluateOnChange: false,
   } satisfies WorkflowRule),
 
   performanceReviewReminder: WorkflowRuleSchema.parse({
@@ -361,5 +369,7 @@ export const ValidatedWorkflows = {
     triggerType: 'schedule',
     active: true,
     actions: [{ type: 'email_alert', name: 'send_reminder', template: 'self_review_reminder', recipients: ['employee_email'] }],
+    executionOrder: 1,
+    reevaluateOnChange: false,
   } satisfies WorkflowRule),
 };

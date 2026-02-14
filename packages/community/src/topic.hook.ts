@@ -49,9 +49,9 @@ const TopicNotification: Hook = {
 
     // Increment topic_count on the category
     try {
-      const category = await ctx.ql.findOne('forum_category', topic.category_id);
+      const category = await (ctx.ql as any).findOne('forum_category', topic.category_id);
       if (category) {
-        await ctx.ql.doc.update('forum_category', topic.category_id, {
+        await (ctx.ql as any).doc.update('forum_category', topic.category_id, {
           topic_count: (category.topic_count || 0) + 1
         });
       }
@@ -106,13 +106,13 @@ const TopicAutoTagging: Hook = {
 const TopicViewCounting: Hook = {
   name: 'TopicViewCounting',
   object: 'topic',
-  events: ['afterRead'],
+  events: ['afterFind'],
   handler: async (ctx: HookContext) => {
     const topic = ctx.result as Record<string, any>;
     if (!topic?._id) return;
 
     try {
-      await ctx.ql.doc.update('topic', topic._id, {
+      await (ctx.ql as any).doc.update('topic', topic._id, {
         view_count: (topic.view_count || 0) + 1,
         last_activity_at: new Date().toISOString()
       });

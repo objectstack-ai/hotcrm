@@ -1,7 +1,5 @@
 import { JobSchema } from '@objectstack/spec/system';
-import type { z } from 'zod';
-
-type Job = z.infer<typeof JobSchema>;
+import type { Job } from '@objectstack/spec/system';
 
 /**
  * Processes daily revenue recognition entries at 1:00 AM UTC.

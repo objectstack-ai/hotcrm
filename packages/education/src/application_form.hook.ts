@@ -35,7 +35,7 @@ const ApplicationReviewerAssignment: Hook = {
     if (!application?._id || !application?.program) return;
 
     try {
-      const reviewers = await ctx.ql.find('contact', {
+      const reviewers = await (ctx.ql as any).find('contact', {
         filters: [['role', '=', 'reviewer']],
         limit: 1
       });

@@ -30,7 +30,7 @@ const KPIThresholdAlert: Hook = {
       if (crossedCritical) {
         console.error(`🚨 CRITICAL: KPI "${kpi.name}" dropped below critical threshold (${currentValue} < ${kpi.threshold_critical})`);
         try {
-          await ctx.ql.doc.create('activity', {
+          await (ctx.ql as any).doc.create('activity', {
             Subject: `KPI Critical Alert: ${kpi.name}`,
             Type: 'Alert',
             Status: 'open',
@@ -55,7 +55,7 @@ const KPIThresholdAlert: Hook = {
       if (crossedWarning) {
         console.warn(`⚠️ WARNING: KPI "${kpi.name}" dropped below warning threshold (${currentValue} < ${kpi.threshold_warning})`);
         try {
-          await ctx.ql.doc.create('activity', {
+          await (ctx.ql as any).doc.create('activity', {
             Subject: `KPI Warning Alert: ${kpi.name}`,
             Type: 'Alert',
             Status: 'open',
@@ -130,7 +130,7 @@ const KPIAutoRefresh: Hook = {
     // Log a scheduling activity — report_schedule requires a report reference,
     // so KPI refresh scheduling is tracked via activity records instead.
     try {
-      await ctx.ql.doc.create('activity', {
+      await (ctx.ql as any).doc.create('activity', {
         Subject: `KPI Refresh Scheduled: ${kpi.name}`,
         Type: 'Schedule',
         Status: 'open',

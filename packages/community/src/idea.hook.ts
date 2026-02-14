@@ -23,7 +23,7 @@ const IdeaVoteAggregation: Hook = {
     const priorityScore = Math.round((voteCount / Math.sqrt(daysSinceCreation)) * 100);
 
     try {
-      await ctx.ql.doc.update('idea', idea._id, { priority_score: priorityScore });
+      await (ctx.ql as any).doc.update('idea', idea._id, { priority_score: priorityScore });
     } catch (error) {
       console.warn('⚠️ Failed to update idea priority score:', error);
     }
@@ -54,7 +54,7 @@ const IdeaStatusTransition: Hook = {
     };
 
     try {
-      const current = await ctx.ql.findOne('idea', ctx.input.id);
+      const current = await (ctx.ql as any).findOne('idea', ctx.input.id);
       if (current && current.status) {
         const allowed = allowedTransitions[current.status] || [];
         if (!allowed.includes(doc.status)) {

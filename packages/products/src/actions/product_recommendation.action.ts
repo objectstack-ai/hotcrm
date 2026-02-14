@@ -60,9 +60,7 @@ export async function recommendProducts(request: RecommendProductsRequest): Prom
   const { accountId, maxRecommendations = 5 } = request;
 
   // Fetch account data
-  const account = await broker.findOne('account', accountId, {
-    fields: ['name', 'industry', 'number_of_employees', 'annual_revenue', 'type']
-  });
+  const account = await broker.findOne('account', accountId, ['name', 'industry', 'number_of_employees', 'annual_revenue', 'type']);
 
   // Fetch customer's current products (via opportunities or contracts)
   const existingOpps = await broker.find('opportunity', {
@@ -222,9 +220,7 @@ export async function findCrossSellOpportunities(request: FindCrossSellOpportuni
   const { accountId, minValue = 10000 } = request;
 
   // Get account and current products
-  const account = await broker.findOne('account', accountId, {
-    fields: ['name', 'industry', 'number_of_employees', 'annual_revenue']
-  });
+  const account = await broker.findOne('account', accountId, ['name', 'industry', 'number_of_employees', 'annual_revenue']);
 
   // Get existing products
   const currentProducts = await broker.find('opportunity', {
@@ -436,9 +432,7 @@ export async function suggestProductBundles(request: SuggestProductBundlesReques
 
   let account = null;
   if (accountId) {
-    account = await broker.findOne('account', accountId, {
-      fields: ['name', 'industry', 'number_of_employees']
-    });
+    account = await broker.findOne('account', accountId, ['name', 'industry', 'number_of_employees']);
   }
 
   // Fetch available products
@@ -620,13 +614,9 @@ export async function analyzeProductFit(request: AnalyzeProductFitRequest): Prom
   const { accountId, productId } = request;
 
   // Fetch account and product
-  const account = await broker.findOne('account', accountId, {
-    fields: ['name', 'industry', 'number_of_employees', 'annual_revenue', 'type']
-  });
+  const account = await broker.findOne('account', accountId, ['name', 'industry', 'number_of_employees', 'annual_revenue', 'type']);
 
-  const product = await broker.findOne('product', productId, {
-    fields: ['name', 'product_code', 'family', 'description', 'is_active']
-  });
+  const product = await broker.findOne('product', productId, ['name', 'product_code', 'family', 'description', 'is_active']);
 
   // Fetch account's tech stack and existing products
   const existingProducts = await broker.find('opportunity', {
@@ -903,13 +893,9 @@ export async function predictProductAdoption(request: PredictProductAdoptionRequ
   const { accountId, productId, includeBenchmarks = true } = request;
 
   // Fetch account and product
-  const account = await broker.findOne('account', accountId, {
-    fields: ['name', 'industry', 'number_of_employees', 'annual_revenue', 'created_date']
-  });
+  const account = await broker.findOne('account', accountId, ['name', 'industry', 'number_of_employees', 'annual_revenue', 'created_date']);
 
-  const product = await broker.findOne('product', productId, {
-    fields: ['name', 'family', 'description']
-  });
+  const product = await broker.findOne('product', productId, ['name', 'family', 'description']);
 
   // Fetch account engagement history
   const activities = await broker.find('activity', {

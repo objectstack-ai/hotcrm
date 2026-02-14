@@ -7,6 +7,7 @@ import { ViewSchema } from '@objectstack/spec/ui';
 
 export const AllContractsView = {
   list: {
+    type: 'grid' as const,
     name: 'all_contracts',
     label: 'All Contracts',
     columns: [
@@ -27,6 +28,7 @@ export const AllContractsView = {
 
 export const ActiveContractsView = {
   list: {
+    type: 'grid' as const,
     name: 'active_contracts',
     label: 'Active Contracts',
     filter: [['status', '=', 'activated']],
@@ -44,6 +46,7 @@ export const ActiveContractsView = {
 
 export const ExpiringContractsView = {
   list: {
+    type: 'grid' as const,
     name: 'expiring_contracts',
     label: 'Expiring Contracts',
     filter: [
@@ -66,6 +69,7 @@ export const ExpiringContractsView = {
 
 export const DraftContractsView = {
   list: {
+    type: 'grid' as const,
     name: 'draft_contracts',
     label: 'Draft Contracts',
     filter: [['status', '=', 'draft']],

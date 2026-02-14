@@ -187,9 +187,11 @@ export const ProductBundle = ObjectSchema.create({
     }),
     component_count: Field.summary({
       label: 'Component Count',
-      summary_object: 'product_bundle_component',
-      summary_field: 'id',
-      summary_type: 'count'
+      summaryOperations: {
+        object: 'product_bundle_component',
+        field: 'id',
+        function: 'count'
+      }
     })
   },
 

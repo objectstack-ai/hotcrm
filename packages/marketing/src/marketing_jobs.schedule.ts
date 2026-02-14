@@ -1,7 +1,6 @@
 import { JobSchema } from '@objectstack/spec/system';
-import type { z } from 'zod';
 
-type Job = z.infer<typeof JobSchema>;
+type Job = ReturnType<typeof JobSchema['parse']>;
 
 /**
  * Refreshes lead scores daily at 3:00 AM UTC.

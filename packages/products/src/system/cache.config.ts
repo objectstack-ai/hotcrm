@@ -1,7 +1,4 @@
-import { CacheConfigSchema } from '@objectstack/spec/system';
-import type { z } from 'zod';
-
-type CacheConfig = z.infer<typeof CacheConfigSchema>;
+import { CacheConfigSchema, type CacheConfig } from '@objectstack/spec/system';
 
 /**
  * Cache configuration for the product catalog.

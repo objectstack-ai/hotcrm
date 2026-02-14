@@ -69,6 +69,7 @@ export const AnalyticsDashboard = {
     {
       title: 'Recent Report Activity',
       type: 'table' as const,
+      aggregate: 'count' as const,
       object: 'report',
       filter: ['last_run_at', '>=', 'LAST_7_DAYS'],
       layout: { x: 6, y: 6, w: 6, h: 4 }

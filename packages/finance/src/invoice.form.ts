@@ -14,7 +14,9 @@ export const InvoiceForm = {
   sections: [
     {
       label: 'Invoice Details',
-      columns: '2' as const,
+      columns: 2,
+      collapsible: false,
+      collapsed: false,
       fields: [
         { field: 'invoice_number', readonly: true, helpText: 'Auto-generated' },
         { field: 'account_id', label: 'Account', required: true },
@@ -27,7 +29,9 @@ export const InvoiceForm = {
     },
     {
       label: 'Line Items',
-      columns: '1' as const,
+      columns: 1,
+      collapsible: false,
+      collapsed: false,
       fields: [
         { field: 'description', widget: 'richtext' },
         { field: 'subtotal', readonly: true },
@@ -37,7 +41,9 @@ export const InvoiceForm = {
     },
     {
       label: 'Payment Terms',
-      columns: '2' as const,
+      columns: 2,
+      collapsible: false,
+      collapsed: false,
       fields: [
         { field: 'payment_terms' },
         { field: 'payment_method' },

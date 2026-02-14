@@ -33,6 +33,7 @@ export const GetInvoiceTool = {
   version: '1.0.0',
   category: 'finance',
   tags: ['invoice', 'billing', 'detail'],
+  deprecated: false,
   examples: [
     {
       description: 'Get invoice by ID',
@@ -81,6 +82,7 @@ export const RecordPaymentTool = {
   version: '1.0.0',
   category: 'finance',
   tags: ['payment', 'billing', 'transaction'],
+  deprecated: false,
   examples: [
     {
       description: 'Record a wire payment of $5,000',
@@ -124,6 +126,7 @@ export const CalculateRevenueTool = {
   version: '1.0.0',
   category: 'finance',
   tags: ['revenue', 'reporting', 'forecast'],
+  deprecated: false,
   examples: [
     {
       description: 'Calculate Q1 recurring revenue',
@@ -159,6 +162,7 @@ export const GetArAgingTool = {
   version: '1.0.0',
   category: 'finance',
   tags: ['accounts_receivable', 'aging', 'reporting'],
+  deprecated: false,
   examples: [
     {
       description: 'Get AR aging as of end of quarter',

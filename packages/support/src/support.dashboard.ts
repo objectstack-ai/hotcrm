@@ -78,6 +78,7 @@ export const SupportDashboard = {
       title: 'Recent Escalated Cases',
       type: 'table' as const,
       object: 'case',
+      aggregate: 'count' as const,
       filter: ['priority', '=', 'critical'],
       layout: { x: 8, y: 6, w: 4, h: 4 }
     }

@@ -15,7 +15,7 @@ const AppointmentConflictDetection: Hook = {
     if (!doc.provider_id || !doc.scheduled_date) return;
 
     try {
-      const conflicts = await ctx.ql.find('appointment', {
+      const conflicts = await (ctx.ql as any).find('appointment', {
         filters: [
           ['provider_id', '=', doc.provider_id],
           ['scheduled_date', '=', doc.scheduled_date],
@@ -68,7 +68,7 @@ const AppointmentNoShowTracking: Hook = {
     if (doc.status !== 'no_show') return;
 
     try {
-      const patient = await ctx.ql.findOne('patient', result?.patient_id);
+      const patient = await (ctx.ql as any).findOne('patient', result?.patient_id);
       if (patient) {
         console.log(`⚠️ No-show recorded for patient ${result?.patient_id} - Appointment ${result?._id}`);
       }

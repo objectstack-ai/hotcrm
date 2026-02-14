@@ -26,7 +26,9 @@ export const CampaignRoiReport = {
     type: 'bar' as const,
     title: 'Campaign Spend vs Expected Revenue',
     xAxis: 'name',
-    yAxis: 'actual_cost'
+    yAxis: 'actual_cost',
+    showLegend: true,
+    showDataLabels: false
   }
 } satisfies Report;
 

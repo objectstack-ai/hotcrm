@@ -7,6 +7,7 @@ import { ViewSchema } from '@objectstack/spec/ui';
 
 export const AllQuotesView = {
   list: {
+    type: 'grid' as const,
     name: 'all_quotes',
     label: 'All Quotes',
     columns: [
@@ -27,6 +28,7 @@ export const AllQuotesView = {
 
 export const DraftQuotesView = {
   list: {
+    type: 'grid' as const,
     name: 'draft_quotes',
     label: 'Draft Quotes',
     filter: [['status', '=', 'draft']],
@@ -43,6 +45,7 @@ export const DraftQuotesView = {
 
 export const PendingApprovalView = {
   list: {
+    type: 'grid' as const,
     name: 'pending_approval',
     label: 'Pending Approval',
     filter: [['approval_status', '=', 'pending']],
@@ -64,6 +67,7 @@ export const PendingApprovalView = {
 
 export const AcceptedQuotesView = {
   list: {
+    type: 'grid' as const,
     name: 'accepted_quotes',
     label: 'Accepted Quotes',
     filter: [['status', '=', 'accepted']],
@@ -81,6 +85,7 @@ export const AcceptedQuotesView = {
 
 export const ExpiredQuotesView = {
   list: {
+    type: 'grid' as const,
     name: 'expired_quotes',
     label: 'Expired Quotes',
     filter: [['status', '=', 'expired']],

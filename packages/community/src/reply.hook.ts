@@ -16,12 +16,12 @@ const ReplyAnswerAcceptance: Hook = {
     if (doc.is_accepted_answer === true && doc.topic_id) {
       // Unset any existing accepted answer for this topic
       try {
-        const existing = await ctx.ql.find('reply', {
+        const existing = await (ctx.ql as any).find('reply', {
           filters: [['topic_id', '=', doc.topic_id], ['is_accepted_answer', '=', true]]
         });
         for (const reply of existing) {
           if (reply._id !== ctx.input.id) {
-            await ctx.ql.doc.update('reply', reply._id, { is_accepted_answer: false });
+            await (ctx.ql as any).doc.update('reply', reply._id, { is_accepted_answer: false });
           }
         }
       } catch (error) {
@@ -45,10 +45,10 @@ const ReplyUpvoteTracking: Hook = {
     if (!reply?._id || !reply?.topic_id) return;
 
     try {
-      const replyCount = await ctx.ql.find('reply', {
+      const replyCount = await (ctx.ql as any).find('reply', {
         filters: [['topic_id', '=', reply.topic_id]]
       });
-      await ctx.ql.doc.update('topic', reply.topic_id, {
+      await (ctx.ql as any).doc.update('topic', reply.topic_id, {
         reply_count: replyCount.length,
         last_activity_at: new Date().toISOString()
       });
@@ -105,7 +105,7 @@ const ReplySpamDetection: Hook = {
     // Rate limiting: check for rapid posting by the same author
     if (doc.author_id) {
       try {
-        const recentReplies = await ctx.ql.find('reply', {
+        const recentReplies = await (ctx.ql as any).find('reply', {
           filters: [['author_id', '=', doc.author_id]],
           sort: { created_at: -1 },
           limit: 5

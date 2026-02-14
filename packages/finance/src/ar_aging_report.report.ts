@@ -29,7 +29,9 @@ export const ArAgingReport = {
     type: 'bar' as const,
     title: 'Outstanding Balance by Aging Bucket',
     xAxis: 'aging_bucket',
-    yAxis: 'balance_due'
+    yAxis: 'balance_due',
+    showLegend: true,
+    showDataLabels: true
   }
 } satisfies Report;
 

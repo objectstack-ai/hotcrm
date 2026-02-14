@@ -14,10 +14,10 @@ export const HeadcountWidget = {
   icon: 'users',
   properties: [
     { name: 'objectName', label: 'Object', type: 'string' as const, required: true, default: 'employee', description: 'Source object for headcount data' },
-    { name: 'departmentField', label: 'Department Field', type: 'string' as const, default: 'department', description: 'Field for department grouping' },
+    { name: 'departmentField', label: 'Department Field', type: 'string' as const, required: false, default: 'department', description: 'Field for department grouping' },
     { name: 'statusField', label: 'Status Field', type: 'string' as const, required: true, default: 'status', description: 'Employment status field' },
-    { name: 'hireDateField', label: 'Hire Date Field', type: 'string' as const, default: 'hire_date', description: 'Date of hire field' },
-    { name: 'showDepartmentBreakdown', label: 'Show Department Breakdown', type: 'boolean' as const, default: false, description: 'Show headcount by department' }
+    { name: 'hireDateField', label: 'Hire Date Field', type: 'string' as const, required: false, default: 'hire_date', description: 'Date of hire field' },
+    { name: 'showDepartmentBreakdown', label: 'Show Department Breakdown', type: 'boolean' as const, required: false, default: false, description: 'Show headcount by department' }
   ]
 } satisfies WidgetManifest;
 

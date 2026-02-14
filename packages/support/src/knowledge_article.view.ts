@@ -7,6 +7,7 @@ import { ViewSchema } from '@objectstack/spec/ui';
 
 export const AllArticlesView = {
   list: {
+    type: 'grid' as const,
     name: 'all_articles',
     label: 'All Articles',
     columns: [
@@ -27,6 +28,7 @@ export const AllArticlesView = {
 
 export const PublishedArticlesView = {
   list: {
+    type: 'grid' as const,
     name: 'published_articles',
     label: 'Published Articles',
     filter: [['status', '=', 'published']],
@@ -44,6 +46,7 @@ export const PublishedArticlesView = {
 
 export const DraftArticlesView = {
   list: {
+    type: 'grid' as const,
     name: 'draft_articles',
     label: 'Draft Articles',
     filter: [['status', '=', 'draft']],
@@ -60,6 +63,7 @@ export const DraftArticlesView = {
 
 export const InternalArticlesView = {
   list: {
+    type: 'grid' as const,
     name: 'internal_articles',
     label: 'Internal Articles',
     filter: [['is_internal', '=', true]],
@@ -77,6 +81,7 @@ export const InternalArticlesView = {
 
 export const PopularArticlesView = {
   list: {
+    type: 'grid' as const,
     name: 'popular_articles',
     label: 'Popular Articles',
     filter: [['view_count', '>', 100]],

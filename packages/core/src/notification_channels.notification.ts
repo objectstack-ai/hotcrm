@@ -1,7 +1,6 @@
 import { NotificationChannelSchema } from '@objectstack/spec/system';
-import type { z } from 'zod';
 
-type NotificationChannel = z.infer<typeof NotificationChannelSchema>;
+type NotificationChannel = typeof NotificationChannelSchema extends { _output: infer T } ? T : never;
 
 /**
  * Standard email notification channel.

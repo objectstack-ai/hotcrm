@@ -10,7 +10,6 @@ export const Order = ObjectSchema.create({
   fields: {
     order_number: Field.autonumber({
       label: 'Order Number',
-      prefix: 'ORD-',
       description: 'Auto-generated order number'
     }),
     account_id: Field.lookup('account', {

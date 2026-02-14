@@ -98,7 +98,7 @@ const MetricCircularDependency: Hook = {
       visited.add(ref);
 
       try {
-        const depMetrics = await ctx.ql.find('metric', {
+        const depMetrics = await (ctx.ql as any).find('metric', {
           filters: [['name', '=', ref]],
           limit: 1
         });
@@ -142,7 +142,7 @@ const MetricAggregationComputation: Hook = {
         }
       }
 
-      const records = await ctx.ql.find(metric.source_object, { filters });
+      const records = await (ctx.ql as any).find(metric.source_object, { filters });
 
       if (records.length === 0) return;
 
@@ -180,7 +180,7 @@ const MetricAggregationComputation: Hook = {
       }
 
       if (result != null) {
-        await ctx.ql.doc.update('metric', metric._id, {
+        await (ctx.ql as any).doc.update('metric', metric._id, {
           description: `${metric.description || ''}\n[Initial value: ${result}]`.trim()
         });
         console.log(`✅ Metric "${metric.name}" initial aggregation: ${result}`);

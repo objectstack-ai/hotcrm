@@ -10,14 +10,15 @@ export const AttritionTrendChart = {
   title: 'Employee Attrition Trend',
   subtitle: 'Monthly attrition rate over time',
   description: 'Line chart tracking employee attrition rate with trend analysis and department breakdown',
-  xAxis: { field: 'month', title: 'Month' },
-  yAxis: [{ field: 'attrition_rate', title: 'Attrition Rate (%)' }],
+  xAxis: { field: 'month', title: 'Month', showGridLines: false, logarithmic: false },
+  yAxis: [{ field: 'attrition_rate', title: 'Attrition Rate (%)', showGridLines: false, logarithmic: false }],
   series: [
-    { name: 'voluntary', label: 'Voluntary', color: '#F97316' },
-    { name: 'involuntary', label: 'Involuntary', color: '#EF4444' }
+    { name: 'voluntary', label: 'Voluntary', color: '#F97316', yAxis: 'left' as const },
+    { name: 'involuntary', label: 'Involuntary', color: '#EF4444', yAxis: 'left' as const }
   ],
   height: 350,
-  showLegend: true
+  showLegend: true,
+  showDataLabels: false
 } satisfies ChartConfig;
 
 ChartConfigSchema.parse(AttritionTrendChart);

@@ -115,7 +115,7 @@ const DashboardRefreshScheduling: Hook = {
     // Log a scheduling activity — report_schedule requires a report reference,
     // so dashboard refresh scheduling is tracked via activity records instead.
     try {
-      await ctx.ql.doc.create('activity', {
+      await (ctx.ql as any).doc.create('activity', {
         Subject: `Dashboard Refresh Scheduled: ${dashboard.name}`,
         Type: 'Schedule',
         Status: 'open',

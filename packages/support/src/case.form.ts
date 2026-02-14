@@ -15,7 +15,9 @@ export const CaseForm = {
   sections: [
     {
       label: 'Case Information',
-      columns: '2' as const,
+      columns: 2,
+      collapsible: false,
+      collapsed: false,
       fields: [
         { field: 'subject', required: true, placeholder: 'Brief summary of the issue' },
         { field: 'status', required: true },
@@ -29,15 +31,18 @@ export const CaseForm = {
     },
     {
       label: 'Description',
-      columns: '1' as const,
+      columns: 1,
+      collapsible: false,
+      collapsed: false,
       fields: [
         { field: 'description', widget: 'richtext', placeholder: 'Describe the issue in detail' }
       ]
     },
     {
       label: 'Assignment',
-      columns: '2' as const,
+      columns: 2,
       collapsible: true,
+      collapsed: false,
       fields: [
         { field: 'owner_id', label: 'Owner' },
         { field: 'sla_level', readonly: true, helpText: 'Auto-determined from account SLA tier' }

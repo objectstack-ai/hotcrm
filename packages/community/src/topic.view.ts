@@ -9,6 +9,7 @@ import { ViewSchema } from '@objectstack/spec/ui';
 // All Topics View
 export const AllTopicsView = {
   list: {
+    type: 'grid' as const,
     name: 'all_topics',
     label: 'All Topics',
     columns: [
@@ -29,6 +30,7 @@ export const AllTopicsView = {
 // Open Topics View
 export const OpenTopicsView = {
   list: {
+    type: 'grid' as const,
     name: 'open_topics',
     label: 'Open Topics',
     filter: [['status', '=', 'open']],
@@ -46,6 +48,7 @@ export const OpenTopicsView = {
 // Pinned Topics View
 export const PinnedTopicsView = {
   list: {
+    type: 'grid' as const,
     name: 'pinned_topics',
     label: 'Pinned Topics',
     filter: [['is_pinned', '=', true]],
@@ -62,6 +65,7 @@ export const PinnedTopicsView = {
 // Unanswered Topics View
 export const UnansweredTopicsView = {
   list: {
+    type: 'grid' as const,
     name: 'unanswered_topics',
     label: 'Unanswered',
     filter: [['reply_count', '=', 0]],
@@ -79,6 +83,7 @@ export const UnansweredTopicsView = {
 // Most Active Topics View
 export const MostActiveTopicsView = {
   list: {
+    type: 'grid' as const,
     name: 'most_active_topics',
     label: 'Most Active',
     columns: [

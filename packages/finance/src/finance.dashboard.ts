@@ -73,6 +73,7 @@ export const FinanceDashboard = {
       title: 'Upcoming Renewals',
       type: 'table' as const,
       object: 'contract',
+      aggregate: 'count' as const,
       filter: ['status', '=', 'activated'],
       layout: { x: 6, y: 6, w: 6, h: 4 }
     }

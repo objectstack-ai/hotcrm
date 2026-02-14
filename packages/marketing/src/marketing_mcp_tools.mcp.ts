@@ -34,6 +34,7 @@ export const GetCampaignMetricsTool = {
   version: '1.0.0',
   category: 'marketing',
   tags: ['campaign', 'metrics', 'analytics'],
+  deprecated: false,
   examples: [
     {
       description: 'Get metrics for a product-launch campaign',
@@ -76,6 +77,7 @@ export const SearchLeadsTool = {
   version: '1.0.0',
   category: 'marketing',
   tags: ['lead', 'search', 'acquisition'],
+  deprecated: false,
   examples: [
     {
       description: 'Search for leads from web source',
@@ -111,6 +113,7 @@ export const GetEngagementDataTool = {
   version: '1.0.0',
   category: 'marketing',
   tags: ['engagement', 'contact', 'tracking'],
+  deprecated: false,
   examples: [
     {
       description: 'Get engagement data for a contact',
@@ -159,6 +162,7 @@ export const CreateCampaignTool = {
   version: '1.0.0',
   category: 'marketing',
   tags: ['campaign', 'create', 'planning'],
+  deprecated: false,
   examples: [
     {
       description: 'Create a webinar campaign',

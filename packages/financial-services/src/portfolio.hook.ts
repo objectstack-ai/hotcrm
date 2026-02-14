@@ -15,7 +15,7 @@ const PortfolioDriftDetection: Hook = {
     if (result?.allocation) {
       try {
         const allocation = JSON.parse(result.allocation);
-        const totalPercent = Object.values(allocation).reduce((sum: number, val: any) => sum + Number(val), 0);
+        const totalPercent = Object.values(allocation).reduce((sum: number, val: any) => sum + Number(val), 0) as number;
         if (Math.abs(totalPercent - 100) > 5) {
           console.log(`📊 Drift detected for portfolio ${result._id}: allocation totals ${totalPercent}%`);
         }
@@ -41,7 +41,7 @@ const PortfolioRebalanceTrigger: Hook = {
     if (doc.allocation) {
       try {
         const allocation = JSON.parse(doc.allocation);
-        const totalPercent = Object.values(allocation).reduce((sum: number, val: any) => sum + Number(val), 0);
+        const totalPercent = Object.values(allocation).reduce((sum: number, val: any) => sum + Number(val), 0) as number;
         if (Math.abs(totalPercent - 100) > 10) {
           console.log(`🔄 Rebalance triggered for portfolio: drift exceeds 10% threshold`);
           doc.rebalance_date = new Date().toISOString().split('T')[0];

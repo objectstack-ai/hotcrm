@@ -9,6 +9,7 @@ import { ViewSchema } from '@objectstack/spec/ui';
 // All KPIs View
 export const AllKPIsView = {
   list: {
+    type: 'grid' as const,
     name: 'all_kpis',
     label: 'All KPIs',
     columns: [
@@ -34,6 +35,7 @@ export const AllKPIsView = {
 // KPIs At Risk View
 export const KPIsAtRiskView = {
   list: {
+    type: 'grid' as const,
     name: 'kpis_at_risk',
     label: 'At Risk',
     filter: [['trend', '=', 'declining']],
@@ -55,6 +57,7 @@ export const KPIsAtRiskView = {
 // KPIs On Track View
 export const KPIsOnTrackView = {
   list: {
+    type: 'grid' as const,
     name: 'kpis_on_track',
     label: 'On Track',
     filter: [['trend', '=', 'improving']],
@@ -73,6 +76,7 @@ export const KPIsOnTrackView = {
 // My KPIs View
 export const MyKPIsView = {
   list: {
+    type: 'grid' as const,
     name: 'my_kpis',
     label: 'My KPIs',
     filter: [['owner_id', '=', '${currentUser.id}']],

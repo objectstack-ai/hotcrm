@@ -42,7 +42,7 @@ const WealthAccountSuitabilityCheck: Hook = {
 
     if (doc.investment_strategy && !doc.risk_profile) {
       try {
-        const existing = await ctx.ql.findOne('wealth_account', doc._id);
+        const existing = await (ctx.ql as any).findOne('wealth_account', doc._id);
         if (existing?.risk_profile === 'conservative' && doc.investment_strategy === 'growth') {
           console.warn(`⚠️ Suitability concern: changing conservative account to growth strategy`);
         }

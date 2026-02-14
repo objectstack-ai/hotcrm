@@ -298,6 +298,8 @@ export const ValidatedWorkflows = {
     objectName: 'invoice',
     triggerType: 'schedule',
     active: true,
+    executionOrder: 1,
+    reevaluateOnChange: false,
     actions: [{ type: 'email_alert', name: 'send_reminder', template: 'invoice_payment_reminder', recipients: ['billing_email'] }],
   } satisfies WorkflowRule),
 
@@ -306,6 +308,8 @@ export const ValidatedWorkflows = {
     objectName: 'invoice',
     triggerType: 'schedule',
     active: true,
+    executionOrder: 2,
+    reevaluateOnChange: false,
     actions: [{ type: 'field_update', name: 'set_overdue_status', field: 'status', value: 'overdue' }],
   } satisfies WorkflowRule),
 
@@ -314,6 +318,8 @@ export const ValidatedWorkflows = {
     objectName: 'payment',
     triggerType: 'on_update',
     active: true,
+    executionOrder: 3,
+    reevaluateOnChange: false,
     actions: [{ type: 'email_alert', name: 'send_confirmation', template: 'payment_confirmation', recipients: ['billing_email'] }],
   } satisfies WorkflowRule),
 
@@ -322,6 +328,8 @@ export const ValidatedWorkflows = {
     objectName: 'contract',
     triggerType: 'schedule',
     active: true,
+    executionOrder: 4,
+    reevaluateOnChange: false,
     actions: [{ type: 'task_creation', name: 'create_renewal_task', taskObject: 'task', subject: 'Contract renewal due' }],
   } satisfies WorkflowRule),
 };

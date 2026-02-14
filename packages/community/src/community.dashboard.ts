@@ -67,6 +67,7 @@ export const CommunityDashboard = {
       title: 'Recent Topics',
       type: 'table' as const,
       object: 'topic',
+      aggregate: 'count' as const,
       filter: ['last_activity_at', '>=', 'LAST_7_DAYS'],
       layout: { x: 6, y: 6, w: 6, h: 4 }
     }
