@@ -1,7 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "installCommand": "pnpm install",
-  "buildCommand": "echo 'Server mode — no build step required'",
+  "buildCommand": "pnpm -r build",
   "framework": null,
   "functions": {
     "api/**/*.ts": {
