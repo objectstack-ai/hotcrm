@@ -28,7 +28,9 @@ export const HeadcountReport = {
     type: 'bar' as const,
     title: 'Headcount by Department',
     xAxis: 'department',
-    yAxis: 'employee_id'
+    yAxis: 'employee_id',
+    showLegend: true,
+    showDataLabels: false
   }
 } satisfies Report;
 

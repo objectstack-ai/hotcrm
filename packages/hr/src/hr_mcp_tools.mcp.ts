@@ -39,6 +39,7 @@ export const SearchEmployeesTool = {
   timeout: 15000,
   version: '1.0.0',
   category: 'hr',
+  deprecated: false,
   tags: ['employee', 'directory', 'search'],
   examples: [
     {
@@ -74,6 +75,7 @@ export const GetOrgChartTool = {
   timeout: 20000,
   version: '1.0.0',
   category: 'hr',
+  deprecated: false,
   tags: ['org_chart', 'hierarchy', 'organisation'],
   examples: [
     {
@@ -109,6 +111,7 @@ export const CheckPtoBalanceTool = {
   timeout: 10000,
   version: '1.0.0',
   category: 'hr',
+  deprecated: false,
   tags: ['pto', 'leave', 'balance'],
   examples: [
     {
@@ -157,6 +160,7 @@ export const SubmitRequestTool = {
   timeout: 15000,
   version: '1.0.0',
   category: 'hr',
+  deprecated: false,
   tags: ['request', 'workflow', 'approval'],
   examples: [
     {

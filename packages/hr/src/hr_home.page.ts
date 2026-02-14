@@ -9,6 +9,8 @@ export const HrHomePage = {
   name: 'hr_home',
   type: 'home' as const,
   label: 'HR Home Page',
+  template: 'default',
+  isDefault: false,
   assignedProfiles: ['hr_manager', 'hr_admin', 'recruiter', 'admin'],
 
   regions: [

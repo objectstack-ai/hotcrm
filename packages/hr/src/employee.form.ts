@@ -15,7 +15,9 @@ export const EmployeeForm = {
   sections: [
     {
       label: 'Personal Information',
-      columns: '2' as const,
+      columns: 2,
+      collapsible: false,
+      collapsed: false,
       fields: [
         { field: 'first_name', required: true, placeholder: 'First name' },
         { field: 'last_name', required: true, placeholder: 'Last name' },
@@ -29,7 +31,9 @@ export const EmployeeForm = {
     },
     {
       label: 'Employment Details',
-      columns: '2' as const,
+      columns: 2,
+      collapsible: false,
+      collapsed: false,
       fields: [
         { field: 'employee_number', readonly: true, helpText: 'Auto-generated on creation' },
         { field: 'department_id', label: 'Department', required: true },
@@ -44,8 +48,9 @@ export const EmployeeForm = {
     },
     {
       label: 'Emergency Contact',
-      columns: '2' as const,
+      columns: 2,
       collapsible: true,
+      collapsed: false,
       fields: [
         { field: 'emergency_contact_name', placeholder: 'Full name of emergency contact' },
         { field: 'emergency_contact_phone', placeholder: '+1 (555) 000-0000' },

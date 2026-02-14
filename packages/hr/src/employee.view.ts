@@ -7,6 +7,7 @@ import { ViewSchema } from '@objectstack/spec/ui';
 
 export const AllEmployeesView = {
   list: {
+    type: 'grid' as const,
     name: 'all_employees',
     label: 'All Employees',
     columns: [
@@ -27,6 +28,7 @@ export const AllEmployeesView = {
 
 export const ActiveEmployeesView = {
   list: {
+    type: 'grid' as const,
     name: 'active_employees',
     label: 'Active Employees',
     filter: [['employment_status', '=', 'active']],
@@ -44,6 +46,7 @@ export const ActiveEmployeesView = {
 
 export const ByDepartmentView = {
   list: {
+    type: 'grid' as const,
     name: 'by_department',
     label: 'By Department',
     columns: [
@@ -63,6 +66,7 @@ export const ByDepartmentView = {
 
 export const RecentHiresView = {
   list: {
+    type: 'grid' as const,
     name: 'recent_hires',
     label: 'Recent Hires',
     filter: [['hire_date', '>=', 'LAST_90_DAYS']],
@@ -80,6 +84,7 @@ export const RecentHiresView = {
 
 export const OnLeaveView = {
   list: {
+    type: 'grid' as const,
     name: 'on_leave',
     label: 'On Leave',
     filter: [['employment_status', '=', 'on_leave']],

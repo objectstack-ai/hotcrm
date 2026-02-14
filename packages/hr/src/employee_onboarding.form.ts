@@ -14,7 +14,9 @@ export const EmployeeOnboardingForm = {
   sections: [
     {
       label: 'Personal Information',
-      columns: '2' as const,
+      columns: 2,
+      collapsible: false,
+      collapsed: false,
       fields: [
         { field: 'first_name', required: true },
         { field: 'last_name', required: true },
@@ -27,7 +29,9 @@ export const EmployeeOnboardingForm = {
     },
     {
       label: 'Role & Department',
-      columns: '2' as const,
+      columns: 2,
+      collapsible: false,
+      collapsed: false,
       fields: [
         { field: 'department_id', label: 'Department', required: true },
         { field: 'position_id', label: 'Position', required: true },
@@ -39,7 +43,9 @@ export const EmployeeOnboardingForm = {
     },
     {
       label: 'IT Setup',
-      columns: '2' as const,
+      columns: 2,
+      collapsible: false,
+      collapsed: false,
       fields: [
         { field: 'employee_number', readonly: true, helpText: 'Auto-generated after provisioning' },
         { field: 'work_location' }
@@ -47,7 +53,9 @@ export const EmployeeOnboardingForm = {
     },
     {
       label: 'Review & Confirm',
-      columns: '1' as const,
+      columns: 1,
+      collapsible: false,
+      collapsed: false,
       fields: [
         { field: 'first_name', readonly: true },
         { field: 'last_name', readonly: true },
