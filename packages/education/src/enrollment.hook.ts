@@ -15,13 +15,13 @@ const EnrollmentPrerequisiteCheck: Hook = {
     if (!doc.course_id || !doc.student_id) return;
 
     try {
-      const course = await ctx.ql.findOne('course', doc.course_id);
+      const course = await (ctx.ql as any).findOne('course', doc.course_id);
       if (!course?.prerequisites) return;
 
       const prereqs = JSON.parse(course.prerequisites);
       if (!Array.isArray(prereqs) || prereqs.length === 0) return;
 
-      const completedEnrollments = await ctx.ql.find('enrollment', {
+      const completedEnrollments = await (ctx.ql as any).find('enrollment', {
         filters: [
           ['student_id', '=', doc.student_id],
           ['status', '=', 'completed']
@@ -56,10 +56,10 @@ const EnrollmentCapacityEnforcement: Hook = {
     if (!doc.course_id) return;
 
     try {
-      const course = await ctx.ql.findOne('course', doc.course_id);
+      const course = await (ctx.ql as any).findOne('course', doc.course_id);
       if (!course?.capacity) return;
 
-      const enrolledCount = await ctx.ql.count('enrollment', {
+      const enrolledCount = await (ctx.ql as any).count('enrollment', {
         filters: [
           ['course_id', '=', doc.course_id],
           ['status', '=', 'enrolled']
@@ -90,10 +90,10 @@ const EnrollmentWaitlistManagement: Hook = {
     if (!enrollment?._id || !enrollment?.course_id) return;
 
     try {
-      const course = await ctx.ql.findOne('course', enrollment.course_id);
+      const course = await (ctx.ql as any).findOne('course', enrollment.course_id);
       if (!course?.capacity) return;
 
-      const enrolledCount = await ctx.ql.count('enrollment', {
+      const enrolledCount = await (ctx.ql as any).count('enrollment', {
         filters: [
           ['course_id', '=', enrollment.course_id],
           ['status', '=', 'enrolled']
@@ -130,7 +130,7 @@ const EnrollmentGradePosting: Hook = {
     };
 
     try {
-      const enrollments = await ctx.ql.find('enrollment', {
+      const enrollments = await (ctx.ql as any).find('enrollment', {
         filters: [
           ['student_id', '=', result.student_id],
           ['status', '=', 'completed']
@@ -149,7 +149,7 @@ const EnrollmentGradePosting: Hook = {
 
       if (totalCredits > 0) {
         const gpa = Math.round((totalPoints / totalCredits) * 100) / 100;
-        await ctx.ql.doc.update('student', result.student_id, { gpa });
+        await (ctx.ql as any).doc.update('student', result.student_id, { gpa });
         console.log(`📊 Updated GPA for student ${result.student_id}: ${gpa}`);
       }
     } catch (error) {

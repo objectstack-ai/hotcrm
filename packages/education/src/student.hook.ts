@@ -78,13 +78,13 @@ const StudentAdvisorAssignment: Hook = {
     }
 
     try {
-      const advisors = await ctx.ql.find('contact', {
+      const advisors = await (ctx.ql as any).find('contact', {
         filters: [['role', '=', 'advisor']],
         limit: 1
       });
 
       if (advisors.length > 0) {
-        await ctx.ql.doc.update('student', student._id, { advisor_id: advisors[0]._id });
+        await (ctx.ql as any).doc.update('student', student._id, { advisor_id: advisors[0]._id });
         console.log(`📋 Auto-assigned advisor ${advisors[0]._id} to student ${student._id}`);
       }
     } catch (error) {

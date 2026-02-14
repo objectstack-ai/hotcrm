@@ -47,7 +47,7 @@ const ScholarshipFundTracking: Hook = {
     if (balance <= 0) {
       console.log(`💰 Scholarship ${result?._id} fund depleted — marking as depleted`);
       try {
-        await ctx.ql.doc.update('scholarship', result._id, { status: 'depleted' });
+        await (ctx.ql as any).doc.update('scholarship', result._id, { status: 'depleted' });
       } catch (error) {
         console.warn('⚠️ Failed to update scholarship status:', error);
       }
@@ -75,7 +75,7 @@ const ScholarshipAutoRenewal: Hook = {
     const minGpa = result.min_gpa || 0;
 
     try {
-      const students = await ctx.ql.find('student', {
+      const students = await (ctx.ql as any).find('student', {
         filters: [['enrollment_status', '=', 'enrolled']],
         limit: 50
       });
