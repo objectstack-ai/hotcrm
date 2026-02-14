@@ -1,7 +1,5 @@
 import { EmailTemplateSchema } from '@objectstack/spec/system';
-import type { z } from 'zod';
-
-type EmailTemplate = z.infer<typeof EmailTemplateSchema>;
+import type { EmailTemplate } from '@objectstack/spec/system';
 
 /**
  * Email sent when an invoice is issued to a customer.

@@ -10,7 +10,7 @@ export const CreditNote = ObjectSchema.create({
   fields: {
     credit_note_number: Field.autonumber({
       label: 'Credit Note Number',
-      prefix: 'CN-',
+      format: 'CN-{000000}',
       description: 'Auto-generated credit note number'
     }),
     invoice_id: Field.lookup('invoice', {

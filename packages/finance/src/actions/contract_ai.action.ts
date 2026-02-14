@@ -54,10 +54,10 @@ export async function analyzeContractRisk(request: ContractRiskRequest): Promise
   const { contractId } = request;
 
   // Fetch contract data
-  const contract = await broker.findOne('contract', contractId, {
-    fields: ['contract_number', 'contract_term', 'status', 'start_date', 'end_date', 
+  const contract = await broker.findOne('contract', contractId, 
+    ['contract_number', 'contract_term', 'status', 'start_date', 'end_date', 
              'billing_frequency', 'payment_terms', 'account_id']
-  });
+  );
 
   const risks = [];
   let riskScore = 0;
@@ -113,9 +113,9 @@ export async function analyzeContractRisk(request: ContractRiskRequest): Promise
 
   // Fetch account data for credit risk
   if (contract.account_id) {
-    const account = await broker.findOne('account', contract.account_id, {
-      fields: ['name', 'annual_revenue', 'number_of_employees']
-    });
+    const account = await broker.findOne('account', contract.account_id, 
+      ['name', 'annual_revenue', 'number_of_employees']
+    );
 
     // Check customer financial stability
     if (!account.annual_revenue || account.annual_revenue < 1000000) {
@@ -209,14 +209,14 @@ export async function predictRenewal(request: RenewalPredictionRequest): Promise
   const { contractId } = request;
 
   // Fetch contract data
-  const contract = await broker.findOne('contract', contractId, {
-    fields: ['account_id', 'status', 'start_date', 'end_date', 'contract_term']
-  });
+  const contract = await broker.findOne('contract', contractId, 
+    ['account_id', 'status', 'start_date', 'end_date', 'contract_term']
+  );
 
   // Fetch account data
-  const account = await broker.findOne('account', contract.account_id, {
-    fields: ['name']
-  });
+  const account = await broker.findOne('account', contract.account_id, 
+    ['name']
+  );
 
   // Fetch customer health metrics (would use account_ai.action.ts in production)
   // For now, simulate
@@ -560,9 +560,9 @@ export async function optimizeContract(request: ContractOptimizationRequest): Pr
   const { contractId } = request;
 
   // Fetch contract
-  const contract = await broker.findOne('contract', contractId, {
-    fields: ['payment_terms', 'billing_frequency', 'contract_term']
-  });
+  const contract = await broker.findOne('contract', contractId, 
+    ['payment_terms', 'billing_frequency', 'contract_term']
+  );
 
   const opportunities = [];
   let incrementalRevenue = 0;

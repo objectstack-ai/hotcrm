@@ -25,7 +25,9 @@ export const RevenueReport = {
     type: 'stacked-bar' as const,
     title: 'Recognized vs Deferred Revenue',
     xAxis: 'recognition_date',
-    yAxis: 'recognized_amount'
+    yAxis: 'recognized_amount',
+    showLegend: true,
+    showDataLabels: true
   }
 } satisfies Report;
 

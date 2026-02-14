@@ -64,15 +64,19 @@ export const Invoice = ObjectSchema.create({
     }),
     line_item_count: Field.summary({
       label: 'Line Item Count',
-      summary_object: 'invoice_line',
-      summary_field: 'id',
-      summary_type: 'count'
+      summaryOperations: {
+        object: 'invoice_line',
+        field: 'id',
+        function: 'count'
+      }
     }),
     calculated_subtotal: Field.summary({
       label: 'Calculated Subtotal',
-      summary_object: 'invoice_line',
-      summary_field: 'amount',
-      summary_type: 'sum'
+      summaryOperations: {
+        object: 'invoice_line',
+        field: 'amount',
+        function: 'sum'
+      }
     })
   },
 });
