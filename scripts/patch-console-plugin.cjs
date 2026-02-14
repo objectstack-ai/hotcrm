@@ -5,7 +5,7 @@
  * Node.js cannot execute .ts files natively, so we transpile it to
  * JavaScript and update the package exports before deployment.
  */
-const { execSync } = require('child_process');
+const { execFileSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
@@ -30,22 +30,34 @@ if (fs.existsSync(pluginJs)) {
 console.log('[patch-console-plugin] Transpiling plugin.ts → plugin.js ...');
 
 try {
-  // Try using tsc via npx first
-  execSync(
-    `npx tsc --outDir "${consolePkgDir}" --declaration false --module nodenext --moduleResolution nodenext --target es2022 --esModuleInterop true --skipLibCheck true "${pluginTs}"`,
-    { stdio: 'inherit' }
-  );
-} catch {
-  // Fallback: manual transpilation (the file has no complex TS features)
-  console.log('[patch-console-plugin] tsc failed, using manual transpilation ...');
-  let source = fs.readFileSync(pluginTs, 'utf-8');
-  // Remove type annotations: `: any`, `: string`, `: Record<...>`, `as const`
-  source = source
-    .replace(/:\s*Record<string,\s*string>\s*=/g, ' =')
-    .replace(/\bas const\b/g, '')
-    .replace(/:\s*any/g, '')
-    .replace(/:\s*string/g, '');
-  fs.writeFileSync(pluginJs, source, 'utf-8');
+  // Use tsc to transpile the single file (paths passed as array args, not shell string)
+  execFileSync('npx', [
+    'tsc', '--outDir', consolePkgDir,
+    '--declaration', 'false',
+    '--module', 'nodenext',
+    '--moduleResolution', 'nodenext',
+    '--target', 'es2022',
+    '--esModuleInterop', 'true',
+    '--skipLibCheck', 'true',
+    pluginTs,
+  ], { stdio: 'inherit' });
+} catch (err) {
+  console.warn('[patch-console-plugin] tsc failed:', err.message);
+  console.warn('[patch-console-plugin] Falling back to TypeScript API transpilation ...');
+  // Fallback: use TypeScript compiler API for reliable transpilation
+  const ts = require('typescript');
+  const source = fs.readFileSync(pluginTs, 'utf-8');
+  const result = ts.transpileModule(source, {
+    compilerOptions: {
+      module: ts.ModuleKind.NodeNext,
+      moduleResolution: ts.ModuleResolutionKind.NodeNext,
+      target: ts.ScriptTarget.ES2022,
+      esModuleInterop: true,
+      declaration: false,
+    },
+    fileName: 'plugin.ts',
+  });
+  fs.writeFileSync(pluginJs, result.outputText, 'utf-8');
 }
 
 // 2. Update package.json to point to plugin.js
