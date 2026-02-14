@@ -74,6 +74,7 @@ export const CrmDashboard = {
     {
       title: 'Deals Closing This Month',
       type: 'table' as const,
+      aggregate: 'count' as const,
       object: 'opportunity',
       filter: ['stage', '!=', 'closed_lost'],
       layout: { x: 6, y: 6, w: 6, h: 4 }
