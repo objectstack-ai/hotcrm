@@ -226,6 +226,11 @@ pnpm compile
 
 # Clean all build artifacts
 pnpm clean
+
+# Version management (for contributors)
+pnpm changeset       # Create a changeset for your changes
+pnpm version         # Consume changesets and bump versions (maintainers)
+pnpm release         # Build and publish packages (maintainers)
 ```
 
 ### Individual Package Development
