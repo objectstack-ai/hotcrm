@@ -11,6 +11,15 @@ importers:
       '@objectstack/cli':
         specifier: ^3.0.2
         version: 3.0.2(esbuild@0.27.3)
+      '@objectstack/driver-memory':
+        specifier: ^3.0.2
+        version: 3.0.2
+      '@objectstack/plugin-hono-server':
+        specifier: ^3.0.2
+        version: 3.0.2
+      '@objectstack/runtime':
+        specifier: ^3.0.2
+        version: 3.0.2
       '@objectstack/spec':
         specifier: ^3.0.2
         version: 3.0.2
