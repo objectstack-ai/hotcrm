@@ -1,6 +1,7 @@
 {
   "name": "@hotcrm/integration",
   "version": "1.0.0",
+  "type": "module",
   "description": "Integration module - Connectors, Sync, Webhooks, and API management",
   "license": "MIT",
   "main": "./dist/plugin.js",

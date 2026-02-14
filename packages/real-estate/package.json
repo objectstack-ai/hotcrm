@@ -1,6 +1,7 @@
 {
   "name": "@hotcrm/real-estate",
   "version": "1.0.0",
+  "type": "module",
   "description": "Real Estate module - Property Management, Listings, Showings, Offers, and Commission Tracking",
   "license": "MIT",
   "main": "./dist/plugin.js",

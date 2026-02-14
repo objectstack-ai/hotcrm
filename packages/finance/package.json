@@ -1,6 +1,7 @@
 {
   "name": "@hotcrm/finance",
   "version": "1.0.0",
+  "type": "module",
   "description": "Finance module - Contract and payment management",
   "license": "MIT",
   "main": "./dist/index.js",

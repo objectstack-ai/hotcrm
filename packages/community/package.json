@@ -1,6 +1,7 @@
 {
   "name": "@hotcrm/community",
   "version": "1.0.0",
+  "type": "module",
   "description": "Community module - Customer Portal, Forums, Ideas, Events, and Gamification",
   "license": "MIT",
   "main": "./dist/plugin.js",

@@ -1,6 +1,7 @@
 {
   "name": "@hotcrm/analytics",
   "version": "1.0.0",
+  "type": "module",
   "description": "Analytics module - Reports, Dashboards, KPIs, Metrics, and Business Intelligence",
   "license": "MIT",
   "main": "./dist/plugin.js",

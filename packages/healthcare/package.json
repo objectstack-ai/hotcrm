@@ -1,6 +1,7 @@
 {
   "name": "@hotcrm/healthcare",
   "version": "1.0.0",
+  "type": "module",
   "description": "Healthcare module - Patient Management, Appointments, Insurance, Referrals, and HIPAA Compliance",
   "license": "MIT",
   "main": "./dist/plugin.js",

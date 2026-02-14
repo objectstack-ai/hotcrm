@@ -1,6 +1,7 @@
 {
   "name": "@hotcrm/marketing",
   "version": "1.0.0",
+  "type": "module",
   "description": "Marketing Cloud module - Campaigns, email templates, landing pages, forms, and list management",
   "license": "MIT",
   "main": "./dist/index.js",

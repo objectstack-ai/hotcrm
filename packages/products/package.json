@@ -1,6 +1,7 @@
 {
   "name": "@hotcrm/products",
   "version": "1.0.0",
+  "type": "module",
   "description": "Products module - Product catalog, pricing, and quotes",
   "license": "MIT",
   "main": "./dist/index.js",

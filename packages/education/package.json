@@ -1,6 +1,7 @@
 {
   "name": "@hotcrm/education",
   "version": "1.0.0",
+  "type": "module",
   "description": "Education module - Student Management, Course Enrollment, Scholarships, Admissions, and Alumni Engagement",
   "license": "MIT",
   "main": "./dist/plugin.js",

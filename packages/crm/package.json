@@ -1,6 +1,7 @@
 {
   "name": "@hotcrm/crm",
   "version": "1.0.0",
+  "type": "module",
   "description": "CRM module - Account, Contact, Lead, Opportunity management with hooks and actions",
   "license": "MIT",
   "main": "./dist/index.js",

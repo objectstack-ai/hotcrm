@@ -1,6 +1,7 @@
 {
   "name": "@hotcrm/server",
   "version": "1.0.0",
+  "type": "module",
   "description": "HotCRM Application Server (DEPRECATED - Use root objectstack.config.ts instead)",
   "private": true,
   "main": "dist/src/index.js",

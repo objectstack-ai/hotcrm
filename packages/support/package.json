@@ -1,6 +1,7 @@
 {
   "name": "@hotcrm/support",
   "version": "1.0.0",
+  "type": "module",
   "description": "Support module - Case and Knowledge management",
   "license": "MIT",
   "main": "./dist/index.js",
