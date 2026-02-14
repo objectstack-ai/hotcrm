@@ -23,6 +23,9 @@ importers:
       '@objectstack/driver-memory':
         specifier: ^3.0.3
         version: 3.0.3
+      '@objectstack/objectql':
+        specifier: ^3.0.3
+        version: 3.0.3
       '@objectstack/plugin-hono-server':
         specifier: ^3.0.3
         version: 3.0.3
