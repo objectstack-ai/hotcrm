@@ -1,7 +1,7 @@
 # HotCRM vs Salesforce: Deep Feature Comparison
 
-> **Version**: 1.0  
-> **Date**: February 12, 2026  
+> **Version**: 2.0  
+> **Date**: July 2026  
 > **Purpose**: Comprehensive feature-by-feature comparison with Salesforce core clouds  
 > **Audience**: Product leadership, Engineering, and Business stakeholders
 
@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-This document provides a systematic comparison between **HotCRM** (94 business objects across 6 clouds) and **Salesforce** core functionality. It identifies feature parity, gaps, and strategic priorities for closing the gap on the most business-critical Salesforce capabilities.
+This document provides a systematic comparison between **HotCRM** (~120 business objects across 9 packages) and **Salesforce** core functionality. It identifies feature parity, gaps, and strategic priorities for closing the gap on the most business-critical Salesforce capabilities.
 
 **Key Findings:**
 
@@ -22,9 +22,14 @@ This document provides a systematic comparison between **HotCRM** (94 business o
 | Revenue Cloud (Billing) | ~8 core objects | 9 objects | 🟢 90% |
 | HR / Work.com | ~10 core objects | 18 objects | 🟢 95% |
 | AI (Einstein) | Platform AI | 32 AI actions | 🟢 90% |
+| Form Builder | Lightning Form | 6 layout types, field-level controls | 🟢 90% |
+| Page Layouts | Lightning Pages | 4 page types, 21+ components | 🟢 90% |
+| Integration (iPaaS) | MuleSoft / AppExchange | 10 pre-built connectors | 🟢 85% |
+| Analytics (BI) | CRM Analytics (Tableau) | Report builder, dashboards, KPI | 🟢 85% |
+| Community | Experience Cloud | Forums, ideation, gamification | 🟢 80% |
 | Platform | Low-code builder | Metadata-driven | ⚪ Out of Scope |
 
-**Overall Business Feature Parity: ~92%** — HotCRM now provides comprehensive coverage across all 6 clouds with forecasting, territory management, journey builder, A/B testing, revenue recognition, subscriptions, order management, and cross-cloud lifecycle automation.
+**Overall Business Feature Parity: ~95%** — HotCRM now provides comprehensive coverage across all 6 original clouds plus 3 new packages (Analytics, Integration, Community). Phase 10.6 added advanced form builder and page layout parity. Phase 11 delivered 10 external connectors, a full analytics package, and a community portal with gamification.
 
 > **Note**: Platform features (Flow Builder, Process Builder, Lightning App Builder, Apex runtime, etc.) are developed separately in the `@objectstack/runtime` project and are **out of scope** for HotCRM.
 
@@ -39,9 +44,14 @@ This document provides a systematic comparison between **HotCRM** (94 business o
 5. [Revenue Cloud — Billing Comparison](#5-revenue-cloud--billing-comparison)
 6. [HR Cloud Comparison](#6-hr-cloud-comparison)
 7. [AI Capabilities Comparison](#7-ai-capabilities-comparison)
-8. [Platform Features (Out of Scope)](#8-platform-features-out-of-scope)
-9. [Gap Analysis Summary](#9-gap-analysis-summary)
-10. [Next-Step Business Feature Roadmap](#10-next-step-business-feature-roadmap)
+8. [Form Builder Parity (Phase 10.6)](#8-form-builder-parity-phase-106)
+9. [Page Layout Parity (Phase 10.6)](#9-page-layout-parity-phase-106)
+10. [Integration Parity (Phase 11)](#10-integration-parity-phase-11)
+11. [Analytics Parity (Phase 11)](#11-analytics-parity-phase-11)
+12. [Community Parity (Phase 11)](#12-community-parity-phase-11)
+13. [Platform Features (Out of Scope)](#13-platform-features-out-of-scope)
+14. [Gap Analysis Summary](#14-gap-analysis-summary)
+15. [Next-Step Business Feature Roadmap](#15-next-step-business-feature-roadmap)
 
 ---
 
@@ -391,7 +401,171 @@ This document provides a systematic comparison between **HotCRM** (94 business o
 
 ---
 
-## 8. Platform Features (Out of Scope)
+## 8. Form Builder Parity (Phase 10.6)
+
+> Added in Phase 10.6 — Advanced form definitions with Salesforce-level layout and field controls.
+
+### Layout Types
+
+| Salesforce Form Layout | HotCRM Form Layout | Status | Notes |
+|------------------------|-------------------|--------|-------|
+| Standard Record Form | `simple` | ✅ Implemented | Single-column record form |
+| Tabbed Form | `tabbed` | ✅ Implemented | Multi-tab form layout |
+| Wizard / Multi-Step | `wizard` | ✅ Implemented | Step-by-step guided form |
+| Modal Form | `modal` | ✅ Implemented | Overlay dialog form |
+| Drawer / Side Panel | `drawer` | ✅ Implemented | Slide-in panel form |
+| Split View Form | `split` | ✅ Implemented | Side-by-side layout |
+
+### Field-Level Controls
+
+| Salesforce Control | HotCRM Control | Status | Notes |
+|-------------------|---------------|--------|-------|
+| Required fields | `required` | ✅ Implemented | Mandatory field validation |
+| Read-only fields | `readonly` | ✅ Implemented | Non-editable display |
+| Hidden fields | `hidden` | ✅ Implemented | Conditionally hidden |
+| Help text / tooltips | `helpText` | ✅ Implemented | Inline field guidance |
+| Placeholder text | `placeholder` | ✅ Implemented | Input placeholder |
+| Custom widget override | `widget` | ✅ Implemented | Custom field renderer |
+| Visibility rules | `visibleOn` | ✅ Implemented | Conditional field visibility |
+| Field dependencies | `dependsOn` | ✅ Implemented | Dependent field chains |
+| Column span | `colSpan` | ✅ Implemented | Multi-column field spanning |
+
+### Section Features
+
+| Salesforce Section Feature | HotCRM Section Feature | Status | Notes |
+|---------------------------|----------------------|--------|-------|
+| Collapsible sections | `collapsible` | ✅ Implemented | Expand/collapse sections |
+| Default collapsed state | `collapsed` | ✅ Implemented | Initial collapsed state |
+| Multi-column grids | Multi-column grids | ✅ Implemented | Configurable column count per section |
+
+**Summary**: HotCRM provides **full form builder parity** with 6 layout types, comprehensive field-level controls (required, readonly, hidden, helpText, placeholder, widget, visibleOn, dependsOn, colSpan), and collapsible multi-column sections — matching and exceeding Salesforce Lightning form capabilities.
+
+---
+
+## 9. Page Layout Parity (Phase 10.6)
+
+> Added in Phase 10.6 — Declarative page layouts with component-based composition and AI integration.
+
+### Page Types
+
+| Salesforce Page Type | HotCRM Page Type | Status | Notes |
+|---------------------|-----------------|--------|-------|
+| Record Page | `record` | ✅ Implemented | Detail/edit record pages |
+| Home Page | `home` | ✅ Implemented | Dashboard-style home pages |
+| App Page | `app` | ✅ Implemented | Custom application pages |
+| Utility Page | `utility` | ✅ Implemented | Utility bar / panel pages |
+
+### Component Types (21+)
+
+| Component Category | Examples | Status |
+|-------------------|----------|--------|
+| Data Display | Detail, Related List, Feed, Timeline | ✅ Implemented |
+| Data Input | Form, Quick Action, Inline Edit | ✅ Implemented |
+| Navigation | Tabs, Breadcrumb, Path | ✅ Implemented |
+| Visualization | Chart, KPI, Gauge, Map | ✅ Implemented |
+| AI Components | AI Insights, Copilot Panel, Recommendations | ✅ Implemented |
+| Layout | Accordion, Card, Section, Spacer | ✅ Implemented |
+| Content | Rich Text, Image, Video, Embed | ✅ Implemented |
+
+### Advanced Features
+
+| Salesforce Feature | HotCRM Feature | Status | Notes |
+|-------------------|---------------|--------|-------|
+| Profile-based page assignment | Profile-based assignment | ✅ Implemented | Pages assigned by user profile |
+| Component visibility rules | Visibility rules | ✅ Implemented | Conditional component rendering |
+| AI components in pages | AI-embedded components | ✅ Implemented | Inline AI insights and copilot |
+| Lightning App Builder | Metadata-driven pages | ✅ Comparable | Declarative JSON/TS page definitions |
+
+**Summary**: HotCRM delivers **full page layout parity** with 4 page types, 21+ component types (including AI-native components), profile-based page assignment, and component visibility rules. Total page layouts: 19 (14 existing + 5 new page types).
+
+---
+
+## 10. Integration Parity (Phase 11)
+
+> Added in Phase 11 — iPaaS-style integration layer with pre-built connectors and bi-directional sync.
+
+### Pre-Built Connectors (10)
+
+| Connector | Category | Status | Notes |
+|-----------|----------|--------|-------|
+| Stripe | Payment | ✅ Implemented | Payment processing, invoicing |
+| DocuSign | E-Signature | ✅ Implemented | Contract signing workflows |
+| Slack | Messaging | ✅ Implemented | Notifications, deal alerts |
+| Gmail | Email | ✅ Implemented | Email sync, activity capture |
+| Microsoft Teams | Messaging | ✅ Implemented | Team notifications, meetings |
+| PayPal | Payment | ✅ Implemented | Payment processing |
+| Adobe Sign | E-Signature | ✅ Implemented | Document signing |
+| Outlook | Email/Calendar | ✅ Implemented | Email and calendar sync |
+| QuickBooks | Accounting | ✅ Implemented | Invoice/payment sync |
+| LinkedIn | Social/Sales | ✅ Implemented | Contact enrichment, social selling |
+
+### Integration Features
+
+| Salesforce Feature | HotCRM Feature | Status | Notes |
+|-------------------|---------------|--------|-------|
+| MuleSoft iPaaS | `@hotcrm/integration` | ✅ Implemented | Native integration package |
+| Bi-directional sync | Bi-directional sync | ✅ Implemented | Real-time two-way data sync |
+| Webhook management | Webhook subscriptions & delivery | ✅ Implemented | Inbound/outbound webhooks |
+| Field mapping | AI-powered field mapping | ✅ Implemented | AI suggests field mappings |
+| OAuth / token management | Connection lifecycle | ✅ Implemented | Token refresh, credential management |
+| Connector marketplace | Connector registry | ✅ Implemented | Browsable connector catalog |
+
+**Summary**: HotCRM's integration package delivers **strong iPaaS parity** with 10 pre-built connectors covering payments (Stripe, PayPal), e-signature (DocuSign, Adobe Sign), messaging (Slack, Teams), email (Gmail, Outlook), accounting (QuickBooks), and social (LinkedIn). AI-powered field mapping and bi-directional sync match MuleSoft capabilities for common CRM integrations.
+
+---
+
+## 11. Analytics Parity (Phase 11)
+
+> Added in Phase 11 — Business Intelligence Cloud with reports, dashboards, KPIs, and AI-powered insights.
+
+### Feature Comparison
+
+| Salesforce Analytics Feature | HotCRM Analytics | Status | Notes |
+|-----------------------------|-----------------|--------|-------|
+| Report Builder | Report builder (`report`, `report_schedule`) | ✅ Implemented | Configurable report definitions |
+| Dashboard Canvas | Dashboard canvas (`analytics_dashboard`) | ✅ Implemented | Multi-widget dashboard layout |
+| KPI Tracking | KPI & Metric objects (`kpi`, `metric`) | ✅ Implemented | Real-time KPI scorecards |
+| Data Sources | Data source registry (`data_source`) | ✅ Implemented | Multi-source data connections |
+| Saved Filters | Saved filters (`saved_filter`) | ✅ Implemented | Reusable filter presets |
+| AI-Powered Insights | Insight AI (anomaly detection, forecasting) | ✅ Implemented | AI-driven analytics suggestions |
+| Cross-Cloud Reporting | Cross-cloud reporting | ✅ Implemented | Analytics spanning CRM, Finance, Marketing |
+| Natural Language Queries | Report AI (NL→report) | ✅ Implemented | Generate reports from natural language |
+| Scheduled Reports | Report schedules | ✅ Implemented | Automated report delivery |
+
+### Analytics Objects (~8)
+
+`report`, `report_schedule`, `analytics_dashboard`, `kpi`, `metric`, `data_source`, `saved_filter`, `analytics_snapshot`
+
+**Summary**: HotCRM's analytics package provides **robust BI parity** with a report builder, dashboard canvas, KPI tracking, AI-powered insights, and cross-cloud reporting. The AI-native advantage enables natural language report generation and automated anomaly detection — capabilities that require Tableau CRM (additional cost) in Salesforce.
+
+---
+
+## 12. Community Parity (Phase 11)
+
+> Added in Phase 11 — Customer community portal with forums, ideation, and gamification.
+
+### Feature Comparison
+
+| Salesforce Experience Cloud | HotCRM Community | Status | Notes |
+|----------------------------|-----------------|--------|-------|
+| Discussion Forums | Forums (`forum_category`, `topic`, `reply`) | ✅ Implemented | Categorized discussion threads |
+| Idea Management | Ideation portal (`idea`, voting) | ✅ Implemented | Customer idea submission & voting |
+| User Groups | User groups (`user_group`) | ✅ Implemented | Community segmentation |
+| Gamification / Badges | Badge system (`badge`) | ✅ Implemented | Achievement badges, reputation |
+| Community Events | Events (`community_event`) | ✅ Implemented | RSVP and event management |
+| Content Moderation | AI-powered moderation | ✅ Implemented | Automated content screening |
+| Community Analytics | Engagement analytics | ✅ Implemented | Sentiment analysis, engagement tracking |
+| Case Deflection | Community↔Support integration | ✅ Implemented | Topic→Case escalation |
+
+### Community Objects (~8)
+
+`community`, `forum_category`, `topic`, `reply`, `idea`, `user_group`, `community_event`, `badge`
+
+**Summary**: HotCRM's community package delivers **solid Experience Cloud parity** with discussion forums, ideation portals, gamification (badges), community events, and AI-powered moderation. The community↔support integration enables seamless case deflection from forum topics.
+
+---
+
+## 13. Platform Features (Out of Scope)
 
 > **Important**: The following features are **platform-level capabilities** provided by `@objectstack/runtime` and are **NOT developed within HotCRM**. They are listed here for completeness only.
 
@@ -420,7 +594,7 @@ This document provides a systematic comparison between **HotCRM** (94 business o
 
 ---
 
-## 9. Gap Analysis Summary
+## 14. Gap Analysis Summary
 
 ### Critical Gaps (P0 — Must Have for CRM Parity)
 
@@ -461,7 +635,7 @@ This document provides a systematic comparison between **HotCRM** (94 business o
 
 ---
 
-## 10. Next-Step Business Feature Roadmap
+## 15. Next-Step Business Feature Roadmap
 
 Based on the gap analysis, the following roadmap prioritizes business-critical Salesforce parity features while maintaining HotCRM's AI-native advantage. All items below are **business package features** — platform features are handled by `@objectstack/runtime`.
 
@@ -568,12 +742,17 @@ Week 13-16  ████████  Phase 10D: Package Maturity & Polish (P2 g
 
 | Cloud | Objects | Automation | AI | UI Metadata | Overall |
 |-------|---------|-----------|-----|-------------|---------|
-| **Sales** | 🟢 90% | 🟢 85% | 🟢 90% | 🟢 80% | 🟢 **90%** |
-| **Service** | 🟢 90% | 🟢 85% | 🟢 90% | 🟡 70% | 🟢 **90%** |
-| **Marketing** | 🟢 85% | 🟢 85% | 🟢 90% | 🟡 70% | 🟢 **85%** |
-| **CPQ** | 🟢 90% | 🟢 90% | 🟢 90% | 🟡 70% | 🟢 **90%** |
-| **Billing** | 🟢 90% | 🟢 85% | 🟢 90% | 🟡 70% | 🟢 **90%** |
-| **HR** | 🟢 95% | 🟢 95% | 🟢 90% | 🟡 70% | 🟢 **95%** |
+| **Sales** | 🟢 90% | 🟢 85% | 🟢 90% | 🟢 90% | 🟢 **90%** |
+| **Service** | 🟢 90% | 🟢 85% | 🟢 90% | 🟢 85% | 🟢 **90%** |
+| **Marketing** | 🟢 85% | 🟢 85% | 🟢 90% | 🟢 85% | 🟢 **85%** |
+| **CPQ** | 🟢 90% | 🟢 90% | 🟢 90% | 🟢 85% | 🟢 **90%** |
+| **Billing** | 🟢 90% | 🟢 85% | 🟢 90% | 🟢 85% | 🟢 **90%** |
+| **HR** | 🟢 95% | 🟢 95% | 🟢 90% | 🟢 85% | 🟢 **95%** |
+| **Form Builder** | 🟢 90% | — | — | 🟢 90% | 🟢 **90%** |
+| **Page Layouts** | 🟢 90% | — | 🟢 90% | 🟢 90% | 🟢 **90%** |
+| **Integration** | 🟢 85% | 🟢 80% | 🟢 85% | 🟢 80% | 🟢 **85%** |
+| **Analytics** | 🟢 85% | 🟢 80% | 🟢 90% | 🟢 85% | 🟢 **85%** |
+| **Community** | 🟢 80% | 🟢 75% | 🟢 80% | 🟡 75% | 🟢 **80%** |
 
 ## Appendix B: Terminology Mapping
 
@@ -587,7 +766,7 @@ Week 13-16  ████████  Phase 10D: Package Maturity & Polish (P2 g
 | Work.com / HCM | `@hotcrm/hr` | HR package |
 | Einstein AI | `@hotcrm/ai` + per-package actions | AI-native architecture |
 | Lightning Platform | `@objectstack/runtime` | Out of scope for HotCRM |
-| AppExchange | Planned marketplace | Phase 11 |
+| AppExchange | `@hotcrm/integration` + planned marketplace | Phase 11 (integration complete) |
 | Apex | TypeScript hooks + actions | Metadata-driven |
 | Flows | Workflow definitions | `*.workflow.ts` files |
 | Custom Objects | `*.object.ts` | ObjectSchema-validated |
@@ -595,7 +774,7 @@ Week 13-16  ████████  Phase 10D: Package Maturity & Polish (P2 g
 
 ---
 
-**Phase 10 Complete**: All Salesforce feature gaps have been addressed. See [ROADMAP.md](../ROADMAP.md) for details.
+**Phases 10, 10.5, 10.6, and 11 Complete**: All Salesforce feature gaps have been addressed through Phase 10 (core parity), Phase 10.5 (deep metadata), Phase 10.6 (form builder & page layouts), and Phase 11 (integration, analytics, community). See [ROADMAP.md](../ROADMAP.md) for details.
 
 **Related Documents**:
 - [ROADMAP.md](../ROADMAP.md) — Full development roadmap
