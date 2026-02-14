@@ -7,6 +7,7 @@ import { ViewSchema } from '@objectstack/spec/ui';
 
 export const AllCampaignsView = {
   list: {
+    type: 'grid' as const,
     name: 'all_campaigns',
     label: 'All Campaigns',
     columns: [
@@ -28,6 +29,7 @@ export const AllCampaignsView = {
 
 export const ActiveCampaignsView = {
   list: {
+    type: 'grid' as const,
     name: 'active_campaigns',
     label: 'Active Campaigns',
     filter: [['status', '=', 'in_progress']],
@@ -46,6 +48,7 @@ export const ActiveCampaignsView = {
 
 export const PlannedCampaignsView = {
   list: {
+    type: 'grid' as const,
     name: 'planned_campaigns',
     label: 'Planned Campaigns',
     filter: [['status', '=', 'planned']],
@@ -63,6 +66,7 @@ export const PlannedCampaignsView = {
 
 export const CompletedCampaignsView = {
   list: {
+    type: 'grid' as const,
     name: 'completed_campaigns',
     label: 'Completed Campaigns',
     filter: [['status', '=', 'completed']],

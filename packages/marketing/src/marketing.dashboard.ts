@@ -71,6 +71,7 @@ export const MarketingDashboard = {
       title: 'Recent Campaigns',
       type: 'table' as const,
       object: 'campaign',
+      aggregate: 'count' as const,
       filter: ['is_active', '=', true],
       layout: { x: 6, y: 6, w: 6, h: 4 }
     }

@@ -228,6 +228,8 @@ export const ValidatedWorkflows = {
     triggerType: 'schedule',
     active: true,
     actions: [{ type: 'field_update', name: 'activate_campaign', field: 'status', value: 'in_progress' }],
+    executionOrder: 1,
+    reevaluateOnChange: false,
   } satisfies WorkflowRule),
 
   campaignBudgetAlert: WorkflowRuleSchema.parse({
@@ -236,6 +238,8 @@ export const ValidatedWorkflows = {
     triggerType: 'on_create_or_update',
     active: true,
     actions: [{ type: 'email_alert', name: 'budget_warning', template: 'campaign_budget_warning', recipients: ['created_by'] }],
+    executionOrder: 1,
+    reevaluateOnChange: false,
   } satisfies WorkflowRule),
 
   campaignCompletionCheck: WorkflowRuleSchema.parse({
@@ -244,6 +248,8 @@ export const ValidatedWorkflows = {
     triggerType: 'schedule',
     active: true,
     actions: [{ type: 'field_update', name: 'complete_campaign', field: 'status', value: 'completed' }],
+    executionOrder: 1,
+    reevaluateOnChange: false,
   } satisfies WorkflowRule),
 
   campaignMemberWelcome: WorkflowRuleSchema.parse({
@@ -252,5 +258,7 @@ export const ValidatedWorkflows = {
     triggerType: 'on_create',
     active: true,
     actions: [{ type: 'email_alert', name: 'send_welcome', template: 'campaign_member_welcome', recipients: ['contact_email'] }],
+    executionOrder: 1,
+    reevaluateOnChange: false,
   } satisfies WorkflowRule),
 };
