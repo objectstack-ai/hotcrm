@@ -85,7 +85,7 @@ const NextRunCalculation: Hook = {
     }
 
     try {
-      await ctx.ql.doc.update('report_schedule', schedule._id, {
+      await (ctx.ql as any).doc.update('report_schedule', schedule._id, {
         next_run: nextRun.toISOString()
       });
       console.log(`📅 Next run for schedule "${schedule.name}" set to ${nextRun.toISOString()}`);
@@ -113,7 +113,7 @@ const ScheduleDeactivation: Hook = {
     if (!reportId) return;
 
     try {
-      const report = await ctx.ql.doc.get('report', reportId);
+      const report = await (ctx.ql as any).doc.get('report', reportId);
       if (!report || report._deleted) {
         console.warn(`⚠️ Report ${reportId} no longer exists — deactivating schedule`);
         doc.is_active = false;

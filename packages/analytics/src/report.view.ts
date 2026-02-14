@@ -9,6 +9,7 @@ import { ViewSchema } from '@objectstack/spec/ui';
 // All Reports View
 export const AllReportsView = {
   list: {
+    type: 'grid' as const,
     name: 'all_reports',
     label: 'All Reports',
     columns: [
@@ -29,6 +30,7 @@ export const AllReportsView = {
 // My Reports View
 export const MyReportsView = {
   list: {
+    type: 'grid' as const,
     name: 'my_reports',
     label: 'My Reports',
     filter: [['owner_id', '=', '${currentUser.id}']],
@@ -46,6 +48,7 @@ export const MyReportsView = {
 // Public Reports View
 export const PublicReportsView = {
   list: {
+    type: 'grid' as const,
     name: 'public_reports',
     label: 'Public Reports',
     filter: [['is_public', '=', true]],
@@ -63,6 +66,7 @@ export const PublicReportsView = {
 // Recently Run Reports View
 export const RecentReportsView = {
   list: {
+    type: 'grid' as const,
     name: 'recent_reports',
     label: 'Recently Run',
     filter: [['last_run_at', '>=', 'LAST_30_DAYS']],
@@ -80,6 +84,7 @@ export const RecentReportsView = {
 // Reports by Folder View
 export const ReportsByFolderView = {
   list: {
+    type: 'grid' as const,
     name: 'reports_by_folder',
     label: 'By Folder',
     columns: [

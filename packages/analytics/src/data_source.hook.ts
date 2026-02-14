@@ -50,7 +50,7 @@ const ConnectionHealthCheck: Hook = {
     }
 
     try {
-      await ctx.ql.doc.update('data_source', ds._id, {
+      await (ctx.ql as any).doc.update('data_source', ds._id, {
         sync_status: status,
         last_sync: status === 'connected' ? new Date().toISOString() : undefined
       });
@@ -87,7 +87,7 @@ const SyncLifecycle: Hook = {
     // When sync completes, record the timestamp
     if (newStatus === 'connected' && prevStatus === 'syncing') {
       try {
-        await ctx.ql.doc.update('data_source', ds._id, {
+        await (ctx.ql as any).doc.update('data_source', ds._id, {
           last_sync: new Date().toISOString()
         });
         console.log(`✅ Data source "${ds.name}" sync completed`);
@@ -100,7 +100,7 @@ const SyncLifecycle: Hook = {
     if (newStatus === 'error') {
       console.error(`❌ Data source "${ds.name}" entered error state`);
       try {
-        await ctx.ql.doc.create('activity', {
+        await (ctx.ql as any).doc.create('activity', {
           Subject: `Data Source Sync Error: ${ds.name}`,
           Type: 'Alert',
           Status: 'open',
@@ -165,7 +165,7 @@ const SchemaDriftDetection: Hook = {
     console.warn(`⚠️ Schema drift detected for data source "${ds.name}": ${changes.join('; ')}`);
 
     try {
-      await ctx.ql.doc.create('activity', {
+      await (ctx.ql as any).doc.create('activity', {
         Subject: `Schema Drift Detected: ${ds.name}`,
         Type: 'Alert',
         Status: 'open',
