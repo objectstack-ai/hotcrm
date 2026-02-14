@@ -1,10 +1,10 @@
 import { defineStack } from '@objectstack/spec';
-import { CRMPlugin } from './packages/crm/src/plugin';
-import { FinancePlugin } from './packages/finance/src/plugin';
-import { MarketingPlugin } from './packages/marketing/src/plugin';
-import { ProductsPlugin } from './packages/products/src/plugin';
-import { SupportPlugin } from './packages/support/src/plugin';
-import { HRPlugin } from './packages/hr/src/plugin';
+import { CRMPlugin } from './packages/crm/dist/plugin.js';
+import { FinancePlugin } from './packages/finance/dist/plugin.js';
+import { MarketingPlugin } from './packages/marketing/dist/plugin.js';
+import { ProductsPlugin } from './packages/products/dist/plugin.js';
+import { SupportPlugin } from './packages/support/dist/plugin.js';
+import { HRPlugin } from './packages/hr/dist/plugin.js';
 // import { ConsolePlugin } from '@object-ui/console';
 
 /**
