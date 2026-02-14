@@ -288,8 +288,9 @@ The serverless function at `api/[[...route]].ts` uses a **singleton bootstrap pa
 - **Cold start after idle**: data resets — a fresh kernel is bootstrapped
 
 The function does **not** use `HonoServerPlugin` (which binds to a TCP port). Instead, it manually creates
-a `HonoHttpServer`, registers it as the `http.server` service, and exports its `.fetch()` method as the
-Web Standard handler that Vercel recognises natively.
+a `HonoHttpServer`, registers it as the `http.server` service, and uses the `handle()` adapter from
+`@hono/node-server/vercel` to convert the Hono app into a standard Node.js serverless handler
+(`(IncomingMessage, ServerResponse) => void`) that Vercel's `@vercel/node` runtime recognises.
 
 ### Data Behavior
 
