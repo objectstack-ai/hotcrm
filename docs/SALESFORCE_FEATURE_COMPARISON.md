@@ -1,15 +1,15 @@
 # HotCRM vs Salesforce: Deep Feature Comparison
 
-> **Version**: 2.0  
-> **Date**: July 2026  
-> **Purpose**: Comprehensive feature-by-feature comparison with Salesforce core clouds  
+> **Version**: 3.0  
+> **Date**: February 2026  
+> **Purpose**: Comprehensive feature-by-feature comparison with Salesforce core clouds and vertical solutions  
 > **Audience**: Product leadership, Engineering, and Business stakeholders
 
 ---
 
 ## Executive Summary
 
-This document provides a systematic comparison between **HotCRM** (~120 business objects across 9 packages) and **Salesforce** core functionality. It identifies feature parity, gaps, and strategic priorities for closing the gap on the most business-critical Salesforce capabilities.
+This document provides a systematic comparison between **HotCRM** (~148 business objects across 13 packages) and **Salesforce** core functionality plus vertical solutions. It identifies feature parity, gaps, and strategic priorities.
 
 **Key Findings:**
 
@@ -21,15 +21,19 @@ This document provides a systematic comparison between **HotCRM** (~120 business
 | Revenue Cloud (CPQ) | ~12 core objects | 13 objects | 🟢 90% |
 | Revenue Cloud (Billing) | ~8 core objects | 9 objects | 🟢 90% |
 | HR / Work.com | ~10 core objects | 18 objects | 🟢 95% |
-| AI (Einstein) | Platform AI | 32 AI actions | 🟢 90% |
+| AI (Einstein) | Platform AI | 48 AI actions | 🟢 90% |
 | Form Builder | Lightning Form | 6 layout types, field-level controls | 🟢 90% |
 | Page Layouts | Lightning Pages | 4 page types, 21+ components | 🟢 90% |
 | Integration (iPaaS) | MuleSoft / AppExchange | 10 pre-built connectors | 🟢 85% |
 | Analytics (BI) | CRM Analytics (Tableau) | Report builder, dashboards, KPI | 🟢 85% |
 | Community | Experience Cloud | Forums, ideation, gamification | 🟢 80% |
+| Real Estate | Industry Cloud | 7 objects, property lifecycle | 🟢 85% |
+| Healthcare | Health Cloud | 7 objects, HIPAA compliance | 🟢 80% |
+| Financial Services | Financial Services Cloud | 7 objects, KYC/compliance | 🟢 80% |
+| Education | Education Cloud | 7 objects, student lifecycle | 🟢 80% |
 | Platform | Low-code builder | Metadata-driven | ⚪ Out of Scope |
 
-**Overall Business Feature Parity: ~95%** — HotCRM now provides comprehensive coverage across all 6 original clouds plus 3 new packages (Analytics, Integration, Community). Phase 10.6 added advanced form builder and page layout parity. Phase 11 delivered 10 external connectors, a full analytics package, and a community portal with gamification.
+**Overall Business Feature Parity: ~95%** — HotCRM now provides comprehensive coverage across all 6 original clouds, 3 ecosystem packages (Analytics, Integration, Community), and 4 vertical solutions (Real Estate, Healthcare, Financial Services, Education). Phase 10.6 added advanced form builder and page layout parity. Phase 11 delivered 10 external connectors, a full analytics package, and a community portal. Phase 12 added 4 industry-specific vertical CRM solutions with 28 new objects and 16 AI actions.
 
 > **Note**: Platform features (Flow Builder, Process Builder, Lightning App Builder, Apex runtime, etc.) are developed separately in the `@objectstack/runtime` project and are **out of scope** for HotCRM.
 
@@ -49,9 +53,13 @@ This document provides a systematic comparison between **HotCRM** (~120 business
 10. [Integration Parity (Phase 11)](#10-integration-parity-phase-11)
 11. [Analytics Parity (Phase 11)](#11-analytics-parity-phase-11)
 12. [Community Parity (Phase 11)](#12-community-parity-phase-11)
-13. [Platform Features (Out of Scope)](#13-platform-features-out-of-scope)
-14. [Gap Analysis Summary](#14-gap-analysis-summary)
-15. [Next-Step Business Feature Roadmap](#15-next-step-business-feature-roadmap)
+13. [Real Estate Vertical (Phase 12)](#13-real-estate-vertical-phase-12)
+14. [Healthcare Vertical (Phase 12)](#14-healthcare-vertical-phase-12)
+15. [Financial Services Vertical (Phase 12)](#15-financial-services-vertical-phase-12)
+16. [Education Vertical (Phase 12)](#16-education-vertical-phase-12)
+17. [Platform Features (Out of Scope)](#17-platform-features-out-of-scope)
+18. [Gap Analysis Summary](#18-gap-analysis-summary)
+19. [Next-Step Business Feature Roadmap](#19-next-step-business-feature-roadmap)
 
 ---
 
@@ -565,7 +573,131 @@ This document provides a systematic comparison between **HotCRM** (~120 business
 
 ---
 
-## 13. Platform Features (Out of Scope)
+## 13. Real Estate Vertical (Phase 12)
+
+> Added in Phase 12A — Purpose-built CRM for brokerages and agents covering the complete property transaction lifecycle.
+
+### Object Mapping
+
+| Salesforce Industry Object | HotCRM Object | Status | Notes |
+|---------------------------|---------------|--------|-------|
+| Property | `property` | ✅ Implemented | Address, type, bedrooms, bathrooms, sqft, MLS number, status |
+| Listing | `listing` | ✅ Implemented | Active/sold listings with pricing, days on market, listing type |
+| Showing | `showing` | ✅ Implemented | Property showings with scheduling, feedback, rating |
+| Offer | `real_estate_offer` | ✅ Implemented | Purchase offers with contingencies, counter-offers, earnest money |
+| Commission | `commission` | ✅ Implemented | Commission tracking with splits, rates, payment status |
+| Open House | `open_house` | ✅ Implemented | Open house events with attendee tracking, lead generation |
+| Neighborhood | `neighborhood` | ✅ Implemented | Neighborhood data with median price, school rating, walk score |
+
+### AI Capabilities
+
+| Feature | Description | Status |
+|---------|-------------|--------|
+| Property Valuation | Estimate property value from comparable sales | ✅ Implemented |
+| Market Trend Analysis | Analyze neighborhood market trends | ✅ Implemented |
+| Lead Matching | Match buyer preferences to available listings | ✅ Implemented |
+| Investment Analysis | ROI analysis for investment properties | ✅ Implemented |
+
+**Objects**: `property`, `listing`, `showing`, `real_estate_offer`, `commission`, `open_house`, `neighborhood`
+
+**Summary**: HotCRM's real estate package provides **comprehensive property lifecycle management** from listing through closing, with 13 hooks for automation (days-on-market calculation, showing conflict detection, offer validation, commission split calculation) and 4 AI actions.
+
+---
+
+## 14. Healthcare Vertical (Phase 12)
+
+> Added in Phase 12B — HIPAA-compliant CRM for clinics and healthcare providers.
+
+### Object Mapping
+
+| Salesforce Health Cloud Object | HotCRM Object | Status | Notes |
+|-------------------------------|---------------|--------|-------|
+| Patient | `patient` | ✅ Implemented | Demographics, insurance, allergies, medical record number |
+| Appointment | `appointment` | ✅ Implemented | Scheduling with telehealth support, multiple appointment types |
+| Insurance | `insurance` | ✅ Implemented | Insurance plans with copay, deductible, coverage dates |
+| Referral | `referral` | ✅ Implemented | Provider referrals with urgency levels, authorization tracking |
+| HIPAA Audit | `hipaa_audit` | ✅ Implemented | Compliance audit log for all PHI access with anomaly detection |
+| Prescription | `prescription` | ✅ Implemented | Prescriptions with dosage, frequency, refills tracking |
+| Care Plan | `care_plan` | ✅ Implemented | Care plans with goals, interventions, review scheduling |
+
+### AI Capabilities
+
+| Feature | Description | Status |
+|---------|-------------|--------|
+| Scheduling Optimization | Optimize appointment scheduling to minimize wait times | ✅ Implemented |
+| Patient Risk Scoring | Calculate risk scores based on medical history | ✅ Implemented |
+| Care Gap Identification | Identify gaps in patient care plans | ✅ Implemented |
+| Readmission Prediction | Predict likelihood of patient readmission | ✅ Implemented |
+
+**Objects**: `patient`, `appointment`, `insurance`, `referral`, `hipaa_audit`, `prescription`, `care_plan`
+
+**Summary**: HotCRM's healthcare package delivers **HIPAA-compliant patient management** with 12 hooks (appointment conflict detection, PHI encryption marking, referral auto-routing, HIPAA audit trails with anomaly detection) and 4 AI actions for clinical decision support.
+
+---
+
+## 15. Financial Services Vertical (Phase 12)
+
+> Added in Phase 12C — CRM for wealth management and banking with compliance built in.
+
+### Object Mapping
+
+| Salesforce FSC Object | HotCRM Object | Status | Notes |
+|----------------------|---------------|--------|-------|
+| Wealth Account | `wealth_account` | ✅ Implemented | Client accounts with risk profile, investment strategy, balance |
+| Portfolio | `portfolio` | ✅ Implemented | Investment portfolios with allocation, performance tracking |
+| Advisory | `advisory` | ✅ Implemented | Advisory interactions with compliance approval, meeting notes |
+| Compliance Check | `compliance_check` | ✅ Implemented | AML/KYC/sanctions screening with risk scoring |
+| KYC | `kyc` | ✅ Implemented | Know Your Customer verification with document tracking |
+| Financial Product | `financial_product` | ✅ Implemented | Product catalog with risk rating, expected return, fees |
+| Transaction Record | `transaction_record` | ✅ Implemented | Financial transactions with compliance flagging |
+
+### AI Capabilities
+
+| Feature | Description | Status |
+|---------|-------------|--------|
+| Portfolio Optimization | Optimize allocation based on risk profile and market conditions | ✅ Implemented |
+| Client Risk Profiling | Assess risk tolerance using behavioral analysis | ✅ Implemented |
+| Regulatory Impact Analysis | Analyze impact of regulatory changes on portfolios | ✅ Implemented |
+| Investment Recommendation | Generate personalized investment recommendations | ✅ Implemented |
+
+**Objects**: `wealth_account`, `portfolio`, `advisory`, `compliance_check`, `kyc`, `financial_product`, `transaction_record`
+
+**Summary**: HotCRM's financial services package provides **compliance-first wealth management** with 12 hooks (risk assessment, suitability checks, KYC auto-classification, compliance audit trails) and 4 AI actions for portfolio optimization and regulatory analysis.
+
+---
+
+## 16. Education Vertical (Phase 12)
+
+> Added in Phase 12D — CRM for universities and EdTech covering the full student lifecycle.
+
+### Object Mapping
+
+| Salesforce Education Cloud Object | HotCRM Object | Status | Notes |
+|----------------------------------|---------------|--------|-------|
+| Student | `student` | ✅ Implemented | Profiles with enrollment status, GPA, program, advisor |
+| Enrollment | `enrollment` | ✅ Implemented | Course enrollments with grade, credits, term tracking |
+| Course | `course` | ✅ Implemented | Course catalog with prerequisites, capacity, scheduling |
+| Alumni | `alumni` | ✅ Implemented | Alumni network with giving history, engagement scoring |
+| Scholarship | `scholarship` | ✅ Implemented | Scholarship management with eligibility, fund tracking |
+| Application | `application_form` | ✅ Implemented | Admissions applications with test scores, decision workflow |
+| Campus Event | `campus_event` | ✅ Implemented | Campus events with RSVP, capacity, feedback scoring |
+
+### AI Capabilities
+
+| Feature | Description | Status |
+|---------|-------------|--------|
+| Student Success Prediction | Predict student success from academic performance patterns | ✅ Implemented |
+| Course Recommendation | Recommend courses based on interests and requirements | ✅ Implemented |
+| Enrollment Forecasting | Forecast enrollment numbers for capacity planning | ✅ Implemented |
+| Alumni Engagement Scoring | Score alumni engagement for outreach prioritization | ✅ Implemented |
+
+**Objects**: `student`, `enrollment`, `course`, `alumni`, `scholarship`, `application_form`, `campus_event`
+
+**Summary**: HotCRM's education package delivers **full student lifecycle management** from application through alumni engagement, with 13 hooks (prerequisite checks, capacity enforcement, waitlist management, scholarship eligibility verification) and 4 AI actions for student success and enrollment optimization.
+
+---
+
+## 17. Platform Features (Out of Scope)
 
 > **Important**: The following features are **platform-level capabilities** provided by `@objectstack/runtime` and are **NOT developed within HotCRM**. They are listed here for completeness only.
 
@@ -594,7 +726,7 @@ This document provides a systematic comparison between **HotCRM** (~120 business
 
 ---
 
-## 14. Gap Analysis Summary
+## 18. Gap Analysis Summary
 
 ### Critical Gaps (P0 — Must Have for CRM Parity)
 
@@ -635,7 +767,7 @@ This document provides a systematic comparison between **HotCRM** (~120 business
 
 ---
 
-## 15. Next-Step Business Feature Roadmap
+## 19. Next-Step Business Feature Roadmap
 
 Based on the gap analysis, the following roadmap prioritizes business-critical Salesforce parity features while maintaining HotCRM's AI-native advantage. All items below are **business package features** — platform features are handled by `@objectstack/runtime`.
 
@@ -753,6 +885,10 @@ Week 13-16  ████████  Phase 10D: Package Maturity & Polish (P2 g
 | **Integration** | 🟢 85% | 🟢 80% | 🟢 85% | 🟢 80% | 🟢 **85%** |
 | **Analytics** | 🟢 85% | 🟢 80% | 🟢 90% | 🟢 85% | 🟢 **85%** |
 | **Community** | 🟢 80% | 🟢 75% | 🟢 80% | 🟡 75% | 🟢 **80%** |
+| **Real Estate** | 🟢 85% | 🟢 85% | 🟢 85% | — | 🟢 **85%** |
+| **Healthcare** | 🟢 80% | 🟢 80% | 🟢 80% | — | 🟢 **80%** |
+| **Financial Services** | 🟢 80% | 🟢 80% | 🟢 80% | — | 🟢 **80%** |
+| **Education** | 🟢 80% | 🟢 80% | 🟢 80% | — | 🟢 **80%** |
 
 ## Appendix B: Terminology Mapping
 
@@ -767,6 +903,10 @@ Week 13-16  ████████  Phase 10D: Package Maturity & Polish (P2 g
 | Einstein AI | `@hotcrm/ai` + per-package actions | AI-native architecture |
 | Lightning Platform | `@objectstack/runtime` | Out of scope for HotCRM |
 | AppExchange | `@hotcrm/integration` + planned marketplace | Phase 11 (integration complete) |
+| Industry Cloud (Real Estate) | `@hotcrm/real-estate` | Phase 12A |
+| Health Cloud | `@hotcrm/healthcare` | Phase 12B |
+| Financial Services Cloud | `@hotcrm/financial-services` | Phase 12C |
+| Education Cloud | `@hotcrm/education` | Phase 12D |
 | Apex | TypeScript hooks + actions | Metadata-driven |
 | Flows | Workflow definitions | `*.workflow.ts` files |
 | Custom Objects | `*.object.ts` | ObjectSchema-validated |
@@ -774,7 +914,7 @@ Week 13-16  ████████  Phase 10D: Package Maturity & Polish (P2 g
 
 ---
 
-**Phases 10, 10.5, 10.6, and 11 Complete**: All Salesforce feature gaps have been addressed through Phase 10 (core parity), Phase 10.5 (deep metadata), Phase 10.6 (form builder & page layouts), and Phase 11 (integration, analytics, community). See [ROADMAP.md](../ROADMAP.md) for details.
+**Phases 10, 10.5, 10.6, 11, and 12 Complete**: All Salesforce feature gaps have been addressed through Phase 10 (core parity), Phase 10.5 (deep metadata), Phase 10.6 (form builder & page layouts), Phase 11 (integration, analytics, community), and Phase 12 (vertical solutions: real estate, healthcare, financial services, education). See [ROADMAP.md](../ROADMAP.md) for details.
 
 **Related Documents**:
 - [ROADMAP.md](../ROADMAP.md) — Full development roadmap

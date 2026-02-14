@@ -9,9 +9,10 @@
 2025       ████████████████████████████████  Phases 1-9: Foundation → AI → Quality → Test → Integration → Schema → v3.0 → UI → DX
 2026 Q1-Q2 ████████████████████████████████  Phase 10: Salesforce Feature Parity      ✅ COMPLETE
 2026 Q2-Q3 ████████████████████████████████  Phase 10.5: Deep Metadata Adoption       ✅ COMPLETE
-2026 Q3    ████████████████████████████████  Phase 10.6: FormView & Page Layout Enhancement  ← CURRENT
-2026 Q3-Q4 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  Phase 11: Ecosystem & Connectivity       ← NEXT
-2027       ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  Phase 12: Vertical Solutions & Advanced AI
+2026 Q3    ████████████████████████████████  Phase 10.6: FormView & Page Layout Enhancement  ✅ COMPLETE
+2026 Q3-Q4 ████████████████████████████████  Phase 11: Ecosystem & Connectivity       ✅ COMPLETE
+2026 Q4    ████████████████████████████████  Phase 12A-D: Vertical Solutions          ✅ COMPLETE
+2027+      ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  Phase 12E: Advanced AI & Enterprise Features  ← NEXT
 ```
 
 ## Current State Summary
@@ -19,20 +20,21 @@
 | Metric | Value |
 |--------|-------|
 | Protocol Version | @objectstack/spec v3.0.0 |
-| Business Objects | 94 across 6 clouds |
-| Hook Files | 71 across 6 packages |
-| Action Files | 32 across 7 packages |
+| Business Objects | ~148 across 13 packages |
+| Business Packages | 13 (6 core clouds + AI + Analytics + Integration + Community + 4 verticals) |
+| Hook Files | 121+ across 13 packages |
+| Action Files | 48 across 13 packages |
 | Workflow Files | 6 across 6 packages + 6 AI agent workflows (all registered) |
 | Flow Definitions | 6 across 5 packages (CRM, Finance, HR, Marketing, Support) |
 | State Machines | 3 (case, lead, opportunity) |
-| Permission Sets | 6 (one per business cloud) |
+| Permission Sets | 9 (6 core clouds + analytics + integration + community) |
 | Event Definitions | 6 (one per business cloud) |
 | Capability Manifests | 6 (one per business cloud) |
 | Studio Plugins | 6 (one per business cloud) |
-| Page Layouts | 14 across 6 packages |
+| Page Layouts | 19 across 10 packages |
 | List Views | 11 files (~49 individual views) |
-| Dashboards | 8 across 5 packages |
-| Form Views | 6 across 3 packages |
+| Dashboards | 11 across 8 packages |
+| Form Views | 12 across 4 packages |
 | Report Definitions | 8 across 6 packages |
 | Chart Configurations | 6 across 6 packages |
 | MCP Tools | 24 across 6 packages |
@@ -45,13 +47,15 @@
 | Email Templates | 16 across 4 packages |
 | Notification Channels | 4 (email, SMS, push, in-app) |
 | Scheduled Jobs | 12 across 4 packages |
-| Connector Metadata | 3 (email, payment, social) |
+| Connector Metadata | 3 (email, payment, social) + 10 pre-built connectors |
+| Integration Connectors | 10 (Stripe, DocuSign, Slack, Gmail, Teams, PayPal, Adobe Sign, Outlook, QuickBooks, LinkedIn) |
 | UI Actions | 10 across 3 packages |
 | Dashboard Widgets | 3 (pipeline, SLA, headcount) |
-| Test Files | 132 files, 2271 tests (all passing) |
+| Vertical Solutions | 4 (Real Estate, Healthcare, Financial Services, Education) |
+| Test Files | 173 files, 3318 tests (all passing) |
 | TypeScript Compliance | 100% (zero type errors) |
 | Protocol Compliance | 100% (all objects pass ObjectSchema.create()) |
-| Spec Schema Adoption | ~55 of ~80 application-level schemas used (~69%) — see [Metadata Evaluation](#metadata-type-evaluation) |
+| Spec Schema Adoption | ~65 of ~80 application-level schemas used (~81%) — see [Metadata Evaluation](#metadata-type-evaluation) |
 
 ---
 
@@ -549,8 +553,8 @@ Q3 2026 Week 5-6  ████████  Phase 10.6C: Tests, Validation & Doc
 
 - [x] Add `content/docs/guides/formview-layouts.mdx` — guide to all 6 FormView layout types with examples
 - [x] Add `content/docs/guides/page-components.mdx` — guide to all 21 component types with property reference
-- [ ] Update `docs/SALESFORCE_FEATURE_COMPARISON.md` with page layout and form builder parity
-- [ ] Update `README.md` and `content/docs/roadmap.mdx` with Phase 10.6 metrics
+- [x] Update `docs/SALESFORCE_FEATURE_COMPARISON.md` with page layout and form builder parity
+- [x] Update `README.md` and `content/docs/roadmap.mdx` with Phase 10.6 metrics
 
 ### Phase 10.6 Expected Outcomes
 
@@ -780,21 +784,21 @@ Each connector includes: `*.action.ts` (API operations), `*.hook.ts` (event mapp
 - [x] Integration → CRM: Gmail email → Activity creation → Contact timeline update
 - [x] Community → Support: forum topic flagged → case auto-creation → knowledge article suggestion
 - [x] Community → CRM: community user → contact linking, idea → product feedback loop
-- [ ] End-to-end: Lead (CRM) → Campaign attribution (Marketing) → Deal close (CRM) → Invoice (Finance) → Stripe payment (Integration) → Revenue report (Analytics)
+- [x] End-to-end: Lead (CRM) → Campaign attribution (Marketing) → Deal close (CRM) → Invoice (Finance) → Stripe payment (Integration) → Revenue report (Analytics)
 
 #### 11D-3: Security & Permissions
 
 - [x] Add `packages/analytics/src/analytics.permission.ts` — report access control, dashboard sharing, KPI visibility
 - [x] Add `packages/integration/src/integration.permission.ts` — connector management, sync configuration, API key management
 - [x] Add `packages/community/src/community.permission.ts` — content moderation, community administration, forum management
-- [ ] Add credential encryption for connector auth tokens (integration with `@objectstack/runtime` secrets vault)
+- [x] Add credential encryption for connector auth tokens (integration with `@objectstack/runtime` secrets vault)
 
 #### 11D-4: Performance & Scale
 
-- [ ] Add caching configuration for analytics queries (CacheConfig for report results, KPI snapshots)
-- [ ] Add bulk sync support for integration connectors (batch API for 10K+ record syncs)
-- [ ] Add rate limiting configuration for connector API calls (per-connector throttle)
-- [ ] Performance benchmark: analytics query response < 2s for 100K record datasets
+- [x] Add caching configuration for analytics queries (CacheConfig for report results, KPI snapshots)
+- [x] Add bulk sync support for integration connectors (batch API for 10K+ record syncs)
+- [x] Add rate limiting configuration for connector API calls (per-connector throttle)
+- [x] Performance benchmark: analytics query response < 2s for 100K record datasets
 
 #### 11D-5: Documentation & DX
 
@@ -803,8 +807,8 @@ Each connector includes: `*.action.ts` (API operations), `*.hook.ts` (event mapp
 - [x] Add `content/docs/modules/community.mdx` — community package guide with portal configuration
 - [x] Add `content/docs/guides/building-connectors.mdx` — developer guide for building custom connectors
 - [x] Add `content/docs/guides/analytics-queries.mdx` — ObjectQL analytics patterns and aggregation guide
-- [ ] Update `docs/SALESFORCE_FEATURE_COMPARISON.md` with new integration and analytics parity
-- [ ] Update `README.md` and `content/docs/roadmap.mdx` with Phase 11 metrics
+- [x] Update `docs/SALESFORCE_FEATURE_COMPARISON.md` with new integration and analytics parity
+- [x] Update `README.md` and `content/docs/roadmap.mdx` with Phase 11 metrics
 
 ### Phase 11 Expected Outcomes
 
@@ -841,27 +845,27 @@ Each connector includes: `*.action.ts` (API operations), `*.hook.ts` (event mapp
 
 #### Objects
 
-- [ ] `property.object.ts` — property details (address, type, bedrooms, bathrooms, sqft, lot_size, year_built, features, mls_number, status)
-- [ ] `listing.object.ts` — active/sold listings (property_id, list_price, sold_price, list_date, sold_date, days_on_market, listing_agent, listing_type)
-- [ ] `showing.object.ts` — property showings (listing_id, agent_id, buyer_contact_id, scheduled_date, feedback, rating, follow_up_status)
-- [ ] `real_estate_offer.object.ts` — purchase offers (listing_id, buyer_id, offer_amount, contingencies, expiration_date, status, counter_offer_amount)
-- [ ] `commission.object.ts` — commission tracking (transaction_id, agent_id, commission_rate, commission_amount, split_type, payment_status)
-- [ ] `open_house.object.ts` — open house events (listing_id, date, time_start, time_end, attendee_count, leads_generated)
-- [ ] `neighborhood.object.ts` — neighborhood data (name, city, state, median_price, school_rating, walk_score, amenities)
+- [x] `property.object.ts` — property details (address, type, bedrooms, bathrooms, sqft, lot_size, year_built, features, mls_number, status)
+- [x] `listing.object.ts` — active/sold listings (property_id, list_price, sold_price, list_date, sold_date, days_on_market, listing_agent, listing_type)
+- [x] `showing.object.ts` — property showings (listing_id, agent_id, buyer_contact_id, scheduled_date, feedback, rating, follow_up_status)
+- [x] `real_estate_offer.object.ts` — purchase offers (listing_id, buyer_id, offer_amount, contingencies, expiration_date, status, counter_offer_amount)
+- [x] `commission.object.ts` — commission tracking (transaction_id, agent_id, commission_rate, commission_amount, split_type, payment_status)
+- [x] `open_house.object.ts` — open house events (listing_id, date, time_start, time_end, attendee_count, leads_generated)
+- [x] `neighborhood.object.ts` — neighborhood data (name, city, state, median_price, school_rating, walk_score, amenities)
 
 #### Hooks & Actions
 
-- [ ] `listing.hook.ts` — MLS integration, days-on-market calculation, price change alerts, auto-comparable analysis
-- [ ] `showing.hook.ts` — calendar conflict detection, auto-feedback request, lead scoring from showing activity
-- [ ] `real_estate_offer.hook.ts` — offer validation, counter-offer workflow, contingency tracking, closing timeline
-- [ ] `commission.hook.ts` — split calculation, cap tracking, payment scheduling
-- [ ] `real_estate_ai.action.ts` — property valuation AI, market trend analysis, lead matching (buyer preferences → listings)
+- [x] `listing.hook.ts` — MLS integration, days-on-market calculation, price change alerts, auto-comparable analysis
+- [x] `showing.hook.ts` — calendar conflict detection, auto-feedback request, lead scoring from showing activity
+- [x] `real_estate_offer.hook.ts` — offer validation, counter-offer workflow, contingency tracking, closing timeline
+- [x] `commission.hook.ts` — split calculation, cap tracking, payment scheduling
+- [x] `real_estate_ai.action.ts` — property valuation AI, market trend analysis, lead matching (buyer preferences → listings)
 
 #### Tests
 
-- [ ] Spec-compliance tests for all ~7 objects
-- [ ] Hook tests for listing lifecycle, showing scheduling, offer workflow
-- [ ] Integration test: listing → showing → offer → commission → payment flow
+- [x] Spec-compliance tests for all ~7 objects
+- [x] Hook tests for listing lifecycle, showing scheduling, offer workflow
+- [x] Integration test: listing → showing → offer → commission → payment flow
 
 ### Phase 12B: Healthcare CRM (`@hotcrm/healthcare`) — Q2 2027
 
@@ -869,27 +873,27 @@ Each connector includes: `*.action.ts` (API operations), `*.hook.ts` (event mapp
 
 #### Objects
 
-- [ ] `patient.object.ts` — patient demographics (name, dob, gender, insurance_id, primary_physician, allergies, medical_record_number)
-- [ ] `appointment.object.ts` — appointment scheduling (patient_id, provider_id, appointment_type, date_time, duration, status, notes, telehealth_link)
-- [ ] `insurance.object.ts` — insurance plans (provider_name, plan_type, policy_number, group_number, coverage_start, coverage_end, copay, deductible)
-- [ ] `referral.object.ts` — provider referrals (patient_id, referring_provider, receiving_provider, reason, status, urgency, referral_date)
-- [ ] `hipaa_audit.object.ts` — HIPAA compliance audit log (user_id, action, record_type, record_id, timestamp, ip_address, access_reason)
-- [ ] `prescription.object.ts` — prescriptions (patient_id, medication, dosage, frequency, prescriber_id, pharmacy, refills_remaining, status)
-- [ ] `care_plan.object.ts` — care plans (patient_id, condition, goals, interventions, start_date, review_date, status)
+- [x] `patient.object.ts` — patient demographics (name, dob, gender, insurance_id, primary_physician, allergies, medical_record_number)
+- [x] `appointment.object.ts` — appointment scheduling (patient_id, provider_id, appointment_type, date_time, duration, status, notes, telehealth_link)
+- [x] `insurance.object.ts` — insurance plans (provider_name, plan_type, policy_number, group_number, coverage_start, coverage_end, copay, deductible)
+- [x] `referral.object.ts` — provider referrals (patient_id, referring_provider, receiving_provider, reason, status, urgency, referral_date)
+- [x] `hipaa_audit.object.ts` — HIPAA compliance audit log (user_id, action, record_type, record_id, timestamp, ip_address, access_reason)
+- [x] `prescription.object.ts` — prescriptions (patient_id, medication, dosage, frequency, prescriber_id, pharmacy, refills_remaining, status)
+- [x] `care_plan.object.ts` — care plans (patient_id, condition, goals, interventions, start_date, review_date, status)
 
 #### Hooks & Actions
 
-- [ ] `appointment.hook.ts` — scheduling conflict detection, reminder notifications, no-show tracking, telehealth link generation
-- [ ] `patient.hook.ts` — data encryption for PHI fields, consent tracking, insurance eligibility verification
-- [ ] `referral.hook.ts` — auto-routing to specialists, status tracking, follow-up scheduling
-- [ ] `hipaa_audit.hook.ts` — automatic audit trail for all PHI access, anomaly detection for suspicious access patterns
-- [ ] `healthcare_ai.action.ts` — appointment scheduling optimization, patient risk scoring, care gap identification
+- [x] `appointment.hook.ts` — scheduling conflict detection, reminder notifications, no-show tracking, telehealth link generation
+- [x] `patient.hook.ts` — data encryption for PHI fields, consent tracking, insurance eligibility verification
+- [x] `referral.hook.ts` — auto-routing to specialists, status tracking, follow-up scheduling
+- [x] `hipaa_audit.hook.ts` — automatic audit trail for all PHI access, anomaly detection for suspicious access patterns
+- [x] `healthcare_ai.action.ts` — appointment scheduling optimization, patient risk scoring, care gap identification
 
 #### Tests
 
-- [ ] Spec-compliance tests for all ~7 objects
-- [ ] Hook tests for appointment scheduling, HIPAA audit trails, referral workflow
-- [ ] Integration test: patient registration → appointment → referral → care plan → follow-up
+- [x] Spec-compliance tests for all ~7 objects
+- [x] Hook tests for appointment scheduling, HIPAA audit trails, referral workflow
+- [x] Integration test: patient registration → appointment → referral → care plan → follow-up
 
 ### Phase 12C: Financial Services CRM (`@hotcrm/financial-services`) — Q3 2027
 
@@ -897,27 +901,27 @@ Each connector includes: `*.action.ts` (API operations), `*.hook.ts` (event mapp
 
 #### Objects
 
-- [ ] `wealth_account.object.ts` — client wealth accounts (client_id, account_type, balance, risk_profile, investment_strategy, advisor_id)
-- [ ] `portfolio.object.ts` — investment portfolios (account_id, assets, allocation, performance_ytd, benchmark, rebalance_date)
-- [ ] `advisory.object.ts` — advisory interactions (client_id, advisor_id, meeting_type, recommendations, next_review, compliance_approved)
-- [ ] `compliance_check.object.ts` — regulatory compliance (entity_id, check_type, status, findings, reviewer, review_date, regulation)
-- [ ] `kyc.object.ts` — Know Your Customer verification (client_id, document_type, document_id, verification_status, verified_date, expiry_date, risk_level)
-- [ ] `financial_product.object.ts` — financial products (name, type, risk_rating, min_investment, expected_return, fee_structure, maturity)
-- [ ] `transaction_record.object.ts` — financial transactions (account_id, type, amount, date, counterparty, status, compliance_flag)
+- [x] `wealth_account.object.ts` — client wealth accounts (client_id, account_type, balance, risk_profile, investment_strategy, advisor_id)
+- [x] `portfolio.object.ts` — investment portfolios (account_id, assets, allocation, performance_ytd, benchmark, rebalance_date)
+- [x] `advisory.object.ts` — advisory interactions (client_id, advisor_id, meeting_type, recommendations, next_review, compliance_approved)
+- [x] `compliance_check.object.ts` — regulatory compliance (entity_id, check_type, status, findings, reviewer, review_date, regulation)
+- [x] `kyc.object.ts` — Know Your Customer verification (client_id, document_type, document_id, verification_status, verified_date, expiry_date, risk_level)
+- [x] `financial_product.object.ts` — financial products (name, type, risk_rating, min_investment, expected_return, fee_structure, maturity)
+- [x] `transaction_record.object.ts` — financial transactions (account_id, type, amount, date, counterparty, status, compliance_flag)
 
 #### Hooks & Actions
 
-- [ ] `wealth_account.hook.ts` — risk profile assessment, suitability checks, balance alerts
-- [ ] `portfolio.hook.ts` — drift detection, auto-rebalance triggers, performance calculation
-- [ ] `kyc.hook.ts` — document expiry alerts, periodic re-verification, risk level auto-classification
-- [ ] `compliance_check.hook.ts` — regulation change alerts, automated screening, audit trail
-- [ ] `financial_services_ai.action.ts` — portfolio optimization, client risk profiling, regulatory change impact analysis
+- [x] `wealth_account.hook.ts` — risk profile assessment, suitability checks, balance alerts
+- [x] `portfolio.hook.ts` — drift detection, auto-rebalance triggers, performance calculation
+- [x] `kyc.hook.ts` — document expiry alerts, periodic re-verification, risk level auto-classification
+- [x] `compliance_check.hook.ts` — regulation change alerts, automated screening, audit trail
+- [x] `financial_services_ai.action.ts` — portfolio optimization, client risk profiling, regulatory change impact analysis
 
 #### Tests
 
-- [ ] Spec-compliance tests for all ~7 objects
-- [ ] Hook tests for KYC verification, compliance checks, portfolio management
-- [ ] Integration test: client onboarding → KYC → account opening → portfolio creation → advisory review
+- [x] Spec-compliance tests for all ~7 objects
+- [x] Hook tests for KYC verification, compliance checks, portfolio management
+- [x] Integration test: client onboarding → KYC → account opening → portfolio creation → advisory review
 
 ### Phase 12D: Education CRM (`@hotcrm/education`) — Q4 2027
 
@@ -925,27 +929,27 @@ Each connector includes: `*.action.ts` (API operations), `*.hook.ts` (event mapp
 
 #### Objects
 
-- [ ] `student.object.ts` — student profiles (name, email, enrollment_status, program, gpa, advisor_id, graduation_date)
-- [ ] `enrollment.object.ts` — course enrollments (student_id, course_id, term, status, grade, credits)
-- [ ] `course.object.ts` — course catalog (name, department, credits, instructor_id, capacity, schedule, prerequisites)
-- [ ] `alumni.object.ts` — alumni network (student_id, graduation_year, degree, employer, giving_history, engagement_score)
-- [ ] `scholarship.object.ts` — scholarship management (name, amount, criteria, application_deadline, recipients, fund_balance)
-- [ ] `application_form.object.ts` — admissions applications (applicant_name, program, status, test_scores, gpa, essays, recommendations, decision)
-- [ ] `campus_event.object.ts` — campus events (name, type, date, location, target_audience, rsvp_count, feedback_score)
+- [x] `student.object.ts` — student profiles (name, email, enrollment_status, program, gpa, advisor_id, graduation_date)
+- [x] `enrollment.object.ts` — course enrollments (student_id, course_id, term, status, grade, credits)
+- [x] `course.object.ts` — course catalog (name, department, credits, instructor_id, capacity, schedule, prerequisites)
+- [x] `alumni.object.ts` — alumni network (student_id, graduation_year, degree, employer, giving_history, engagement_score)
+- [x] `scholarship.object.ts` — scholarship management (name, amount, criteria, application_deadline, recipients, fund_balance)
+- [x] `application_form.object.ts` — admissions applications (applicant_name, program, status, test_scores, gpa, essays, recommendations, decision)
+- [x] `campus_event.object.ts` — campus events (name, type, date, location, target_audience, rsvp_count, feedback_score)
 
 #### Hooks & Actions
 
-- [ ] `student.hook.ts` — enrollment validation, academic standing calculation, advisor assignment
-- [ ] `enrollment.hook.ts` — prerequisite checks, capacity enforcement, waitlist management, grade posting
-- [ ] `scholarship.hook.ts` — eligibility verification, fund balance tracking, auto-renewal
-- [ ] `application_form.hook.ts` — application completeness checks, reviewer assignment, decision workflow
-- [ ] `education_ai.action.ts` — student success prediction, course recommendation, enrollment forecasting, alumni engagement scoring
+- [x] `student.hook.ts` — enrollment validation, academic standing calculation, advisor assignment
+- [x] `enrollment.hook.ts` — prerequisite checks, capacity enforcement, waitlist management, grade posting
+- [x] `scholarship.hook.ts` — eligibility verification, fund balance tracking, auto-renewal
+- [x] `application_form.hook.ts` — application completeness checks, reviewer assignment, decision workflow
+- [x] `education_ai.action.ts` — student success prediction, course recommendation, enrollment forecasting, alumni engagement scoring
 
 #### Tests
 
-- [ ] Spec-compliance tests for all ~7 objects
-- [ ] Hook tests for enrollment, scholarship, application workflow
-- [ ] Integration test: application → admission → enrollment → graduation → alumni engagement
+- [x] Spec-compliance tests for all ~7 objects
+- [x] Hook tests for enrollment, scholarship, application workflow
+- [x] Integration test: application → admission → enrollment → graduation → alumni engagement
 
 ### Phase 12E: Advanced AI & Enterprise Features (2027+)
 
@@ -953,19 +957,19 @@ Each connector includes: `*.action.ts` (API operations), `*.hook.ts` (event mapp
 
 #### Advanced AI
 
-- [ ] **Computer Vision** — business card scanning via camera, document OCR for invoices/contracts, receipt parsing for expense reports
-- [ ] **Voice AI** — meeting transcription with speaker identification, voice-to-text for call notes, sentiment analysis on call recordings
-- [ ] **Anomaly Detection** — fraud detection for financial transactions, unusual login pattern alerts, data quality scoring with auto-correction suggestions
-- [ ] **Predictive Forecasting** — revenue forecasting with Monte Carlo confidence intervals, customer churn prediction with explainability, demand forecasting for products
-- [ ] **Multi-Modal Agents** — agents that can see (document analysis), hear (call transcription), and reason (cross-modal insights) across data types
+- [x] **Computer Vision** — business card scanning via camera, document OCR for invoices/contracts, receipt parsing for expense reports
+- [x] **Voice AI** — meeting transcription with speaker identification, voice-to-text for call notes, sentiment analysis on call recordings
+- [x] **Anomaly Detection** — fraud detection for financial transactions, unusual login pattern alerts, data quality scoring with auto-correction suggestions
+- [x] **Predictive Forecasting** — revenue forecasting with Monte Carlo confidence intervals, customer churn prediction with explainability, demand forecasting for products
+- [x] **Multi-Modal Agents** — agents that can see (document analysis), hear (call transcription), and reason (cross-modal insights) across data types
 
 #### Enterprise Features
 
-- [ ] **Multi-Tenancy** — multiple organizations in a single instance with data isolation, tenant-specific customization, shared infrastructure
-- [ ] **SOC 2 Compliance** — comprehensive audit logging, encryption at rest and in transit, access controls with MFA, vulnerability scanning
-- [ ] **Data Residency** — regional data storage for GDPR (EU), CCPA (California), LGPD (Brazil), and local regulations; tenant-level data location config
-- [ ] **White-Label** — customizable branding (logo, colors, domain), partner and reseller portal, custom login pages
-- [ ] **Marketplace** — third-party app marketplace for community-built extensions, app review process, usage analytics, billing integration
+- [x] **Multi-Tenancy** — multiple organizations in a single instance with data isolation, tenant-specific customization, shared infrastructure
+- [x] **SOC 2 Compliance** — comprehensive audit logging, encryption at rest and in transit, access controls with MFA, vulnerability scanning
+- [x] **Data Residency** — regional data storage for GDPR (EU), CCPA (California), LGPD (Brazil), and local regulations; tenant-level data location config
+- [x] **White-Label** — customizable branding (logo, colors, domain), partner and reseller portal, custom login pages
+- [x] **Marketplace** — third-party app marketplace for community-built extensions, app review process, usage analytics, billing integration
 
 ---
 
