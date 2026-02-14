@@ -1,5 +1,6 @@
-import type { PasswordPolicy } from '@objectstack/spec/security';
 import { PasswordPolicySchema } from '@objectstack/spec/security';
+
+type PasswordPolicy = typeof PasswordPolicySchema extends { _output: infer T } ? T : never;
 
 export const EnterprisePasswordPolicy = {
   minLength: 12,

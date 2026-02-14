@@ -1,5 +1,6 @@
-import type { SessionPolicy } from '@objectstack/spec/security';
 import { SessionPolicySchema } from '@objectstack/spec/security';
+
+type SessionPolicy = typeof SessionPolicySchema extends { _output: infer T } ? T : never;
 
 export const EnterpriseSessionPolicy = {
   idleTimeout: 30,

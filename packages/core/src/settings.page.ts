@@ -10,6 +10,8 @@ export const SettingsPage = {
   type: 'app' as const,
   label: 'System Settings',
   assignedProfiles: ['admin', 'system_admin'],
+  template: 'default',
+  isDefault: false,
 
   regions: [
     {
