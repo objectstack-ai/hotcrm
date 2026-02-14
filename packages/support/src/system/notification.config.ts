@@ -1,7 +1,4 @@
-import { NotificationConfigSchema } from '@objectstack/spec/system';
-import type { z } from 'zod';
-
-type NotificationConfig = z.infer<typeof NotificationConfigSchema>;
+import { NotificationConfigSchema, type NotificationConfig } from '@objectstack/spec/system';
 
 /**
  * Notification sent when a new support case is created.

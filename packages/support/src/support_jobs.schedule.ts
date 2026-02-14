@@ -1,7 +1,4 @@
-import { JobSchema } from '@objectstack/spec/system';
-import type { z } from 'zod';
-
-type Job = z.infer<typeof JobSchema>;
+import { JobSchema, type Job } from '@objectstack/spec/system';
 
 /**
  * Checks SLA compliance for all open cases every hour.

@@ -7,6 +7,7 @@ import { ViewSchema } from '@objectstack/spec/ui';
 
 export const AllCasesView = {
   list: {
+    type: 'grid' as const,
     name: 'all_cases',
     label: 'All Cases',
     columns: [
@@ -27,6 +28,7 @@ export const AllCasesView = {
 
 export const MyCasesView = {
   list: {
+    type: 'grid' as const,
     name: 'my_cases',
     label: 'My Cases',
     filter: [['owner_id', '=', '${currentUser.id}']],
@@ -44,6 +46,7 @@ export const MyCasesView = {
 
 export const OpenCasesView = {
   list: {
+    type: 'grid' as const,
     name: 'open_cases',
     label: 'Open Cases',
     filter: [['status', 'NOT IN', ['resolved', 'closed']]],
@@ -62,6 +65,7 @@ export const OpenCasesView = {
 
 export const HighPriorityCasesView = {
   list: {
+    type: 'grid' as const,
     name: 'high_priority_cases',
     label: 'High Priority',
     filter: [['priority', 'IN', ['high', 'critical']]],
@@ -83,6 +87,7 @@ export const HighPriorityCasesView = {
 
 export const EscalatedCasesView = {
   list: {
+    type: 'grid' as const,
     name: 'escalated_cases',
     label: 'Escalated Cases',
     filter: [['is_escalated', '=', true]],
@@ -104,6 +109,7 @@ export const EscalatedCasesView = {
 
 export const SLAAtRiskView = {
   list: {
+    type: 'grid' as const,
     name: 'sla_at_risk',
     label: 'SLA At Risk',
     filter: [['is_sla_violated', '=', true]],

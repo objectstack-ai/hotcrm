@@ -15,9 +15,10 @@ export const EscalateCaseAction = {
   params: [
     { name: 'escalation_reason', label: 'Reason', type: 'select' as const, required: true, options: [{ label: 'SLA Breach', value: 'sla_breach' }, { label: 'Customer Request', value: 'customer_request' }, { label: 'Technical Complexity', value: 'technical_complexity' }, { label: 'Executive Escalation', value: 'executive_escalation' }] },
     { name: 'notes', label: 'Escalation Notes', type: 'textarea' as const, required: true },
-    { name: 'escalate_to', label: 'Escalate To', type: 'lookup' as const }
+    { name: 'escalate_to', label: 'Escalate To', type: 'lookup' as const, required: false }
   ],
   variant: 'danger' as const,
+  refreshAfter: true,
   confirmText: 'Are you sure you want to escalate this case?',
   successMessage: 'Case escalated successfully'
 } satisfies Action;
@@ -30,9 +31,10 @@ export const MergeCasesAction = {
   locations: ['list_toolbar' as const],
   params: [
     { name: 'primary_case', label: 'Primary Case', type: 'lookup' as const, required: true },
-    { name: 'merge_comments', label: 'Merge Comments', type: 'boolean' as const }
+    { name: 'merge_comments', label: 'Merge Comments', type: 'boolean' as const, required: false }
   ],
   variant: 'secondary' as const,
+  refreshAfter: true,
   confirmText: 'Merge selected cases? This action cannot be undone.',
   bulkEnabled: true,
   successMessage: 'Cases merged successfully'
@@ -46,10 +48,11 @@ export const CreateKnowledgeArticleAction = {
   locations: ['record_header' as const, 'record_more' as const],
   params: [
     { name: 'title', label: 'Article Title', type: 'text' as const, required: true },
-    { name: 'article_type', label: 'Article Type', type: 'select' as const, options: [{ label: 'How To', value: 'how_to' }, { label: 'FAQ', value: 'faq' }, { label: 'Troubleshooting', value: 'troubleshooting' }, { label: 'Best Practice', value: 'best_practice' }] },
-    { name: 'include_resolution', label: 'Include Case Resolution', type: 'boolean' as const }
+    { name: 'article_type', label: 'Article Type', type: 'select' as const, required: false, options: [{ label: 'How To', value: 'how_to' }, { label: 'FAQ', value: 'faq' }, { label: 'Troubleshooting', value: 'troubleshooting' }, { label: 'Best Practice', value: 'best_practice' }] },
+    { name: 'include_resolution', label: 'Include Case Resolution', type: 'boolean' as const, required: false }
   ],
   variant: 'secondary' as const,
+  refreshAfter: true,
   successMessage: 'Knowledge article created'
 } satisfies Action;
 

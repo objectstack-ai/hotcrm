@@ -57,9 +57,9 @@ export async function predictSLABreach(request: SLABreachPredictionRequest): Pro
   const { caseId } = request;
 
   // Fetch case data
-  const caseRecord = await broker.findOne('case', caseId, {
-    fields: ['subject', 'priority', 'status', 'created_date', 'type', 'owner_id']
-  });
+  const caseRecord = await broker.findOne('case', caseId, 
+    ['subject', 'priority', 'status', 'created_date', 'type', 'owner_id']
+  );
 
   // Fetch SLA milestone data if available
   const slaRecords = await broker.find('sla_milestone', {
@@ -229,9 +229,9 @@ export async function estimateResolutionTime(request: ResolutionTimeRequest): Pr
   const { caseId } = request;
 
   // Fetch case data
-  const caseRecord = await broker.findOne('case', caseId, {
-    fields: ['subject', 'description', 'priority', 'type', 'created_date']
-  });
+  const caseRecord = await broker.findOne('case', caseId, 
+    ['subject', 'description', 'priority', 'type', 'created_date']
+  );
 
   // Fetch historical similar cases
   const similarCases = await broker.find('case', {

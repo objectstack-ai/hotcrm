@@ -9,6 +9,8 @@ export const SupportHomePage = {
   name: 'support_home',
   type: 'home' as const,
   label: 'Support Home Page',
+  template: 'default',
+  isDefault: false,
   assignedProfiles: ['support_agent', 'support_manager', 'admin'],
 
   regions: [

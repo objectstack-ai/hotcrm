@@ -53,9 +53,9 @@ export async function recommendArticles(request: ArticleRecommendationRequest): 
 
   // If case ID provided, fetch case details
   if (caseId) {
-    const caseRecord = await broker.findOne('case', caseId, {
-      fields: ['subject', 'description', 'type', 'priority']
-    });
+    const caseRecord = await broker.findOne('case', caseId, 
+      ['subject', 'description', 'type', 'priority']
+    );
     searchQuery = `${caseRecord.subject} ${caseRecord.description}`;
   }
 
@@ -130,9 +130,9 @@ export async function autoTagArticle(request: AutoTaggingRequest): Promise<AutoT
   const { articleId } = request;
 
   // Fetch article content
-  const article = await broker.findOne('knowledge_article', articleId, {
-    fields: ['title', 'summary', 'body', 'article_type']
-  });
+  const article = await broker.findOne('knowledge_article', articleId, 
+    ['title', 'summary', 'body', 'article_type']
+  );
 
   // Analyze content and generate tags
   const content = `${article.title} ${article.summary} ${article.body}`.toLowerCase();
@@ -231,9 +231,9 @@ export async function scoreArticleQuality(request: QualityScoringRequest): Promi
   const { articleId } = request;
 
   // Fetch article and usage metrics
-  const article = await broker.findOne('knowledge_article', articleId, {
-    fields: ['title', 'summary', 'body', 'view_count', 'helpful_count', 'not_helpful_count']
-  });
+  const article = await broker.findOne('knowledge_article', articleId, 
+    ['title', 'summary', 'body', 'view_count', 'helpful_count', 'not_helpful_count']
+  );
 
   const issues = [];
   const recommendations = [];

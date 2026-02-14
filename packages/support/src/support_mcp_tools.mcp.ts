@@ -48,6 +48,7 @@ export const SearchCasesTool = {
   version: '1.0.0',
   category: 'support',
   tags: ['case', 'search', 'customer_service'],
+  deprecated: false,
   examples: [
     {
       description: 'Find open critical cases about billing',
@@ -89,6 +90,7 @@ export const EscalateCaseTool = {
   version: '1.0.0',
   category: 'support',
   tags: ['case', 'escalation', 'workflow'],
+  deprecated: false,
   examples: [
     {
       description: 'Escalate a case due to SLA breach',
@@ -124,6 +126,7 @@ export const GetKnowledgeArticleTool = {
   version: '1.0.0',
   category: 'support',
   tags: ['knowledge_base', 'article', 'self_service'],
+  deprecated: false,
   examples: [
     {
       description: 'Get article on password reset',
@@ -159,6 +162,7 @@ export const SuggestResolutionTool = {
   version: '1.0.0',
   category: 'support',
   tags: ['case', 'ai', 'resolution', 'suggestion'],
+  deprecated: false,
   examples: [
     {
       description: 'Get AI resolution suggestions for a case',

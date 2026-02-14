@@ -54,9 +54,9 @@ export async function autoCategorizeCase(request: AutoCategorizationRequest): Pr
 
   // If case ID provided, fetch case details
   if (request.caseId) {
-    const caseRecord = await broker.findOne('Case', request.caseId, {
-      fields: ['Subject', 'Description']
-    });
+    const caseRecord = await broker.findOne('Case', request.caseId, 
+      ['Subject', 'Description']
+    );
     subject = caseRecord.Subject;
     description = caseRecord.Description;
   }
@@ -198,9 +198,9 @@ export async function assignCaseIntelligently(request: IntelligentAssignmentRequ
   const { caseId } = request;
 
   // Fetch case data
-  const caseRecord = await broker.findOne('Case', caseId, {
-    fields: ['Subject', 'Description', 'Type', 'Product', 'Priority', 'Severity']
-  });
+  const caseRecord = await broker.findOne('Case', caseId, 
+    ['Subject', 'Description', 'Type', 'Product', 'Priority', 'Severity']
+  );
 
   // Fetch available support agents (mock data - in production, query User object)
   const agents = [
@@ -316,9 +316,9 @@ Select the best agent and provide top 3 alternatives with detailed scoring.
   const parsed = JSON.parse(llmResponse);
 
   // Auto-assign case to recommended agent only if not already assigned
-  const currentCase = await broker.findOne('Case', caseId, {
-    fields: ['OwnerId']
-  });
+  const currentCase = await broker.findOne('Case', caseId, 
+    ['OwnerId']
+  );
 
   if (!currentCase.OwnerId) {
     await broker.update('Case', caseId, {
@@ -372,9 +372,9 @@ export async function searchKnowledgeBase(request: KnowledgeBaseRequest): Promis
 
   // If case ID provided, build query from case
   if (request.caseId && !query) {
-    const caseRecord = await broker.findOne('Case', request.caseId, {
-      fields: ['Subject', 'Description']
-    });
+    const caseRecord = await broker.findOne('Case', request.caseId, 
+      ['Subject', 'Description']
+    );
     query = `${caseRecord.Subject} ${caseRecord.Description}`;
   }
 
@@ -531,12 +531,12 @@ export async function predictSLABreach(request: SLABreachPredictionRequest): Pro
   const { caseId } = request;
 
   // Fetch case data
-  const caseRecord = await broker.findOne('Case', caseId, {
-    fields: [
+  const caseRecord = await broker.findOne('Case', caseId, 
+    [
       'CreatedDate', 'Priority', 'Severity', 'Status', 'Type', 
       'Product', 'OwnerId', 'FirstResponseDate'
     ]
-  });
+  );
 
   // Calculate time metrics
   const createdDate = new Date(caseRecord.CreatedDate);
@@ -565,7 +565,7 @@ export async function predictSLABreach(request: SLABreachPredictionRequest): Pro
   // Fetch recent activities to assess progress
   const activities = await broker.find('Activity', {
     filters: [['WhatId', '=', caseId]],
-    sort: 'ActivityDate desc',
+    sort: { ActivityDate: -1 },
     limit: 10
   });
 
@@ -666,9 +666,9 @@ Assess breach probability (0-100) and risk level:
 
   // Auto-escalate if breach probability is high and not already escalated
   if (parsed.breachProbability > 70) {
-    const currentCase = await broker.findOne('Case', caseId, {
-      fields: ['IsEscalated']
-    });
+    const currentCase = await broker.findOne('Case', caseId, 
+      ['IsEscalated']
+    );
 
     if (!currentCase.IsEscalated) {
       await broker.update('Case', caseId, {
@@ -732,14 +732,14 @@ export async function analyzeSentiment(request: SentimentAnalysisRequest): Promi
 
   // If case ID provided, fetch case description and comments
   if (request.caseId && !textToAnalyze) {
-    const caseRecord = await broker.findOne('Case', request.caseId, {
-      fields: ['Subject', 'Description']
-    });
+    const caseRecord = await broker.findOne('Case', request.caseId, 
+      ['Subject', 'Description']
+    );
 
     // Fetch recent comments
     const comments = await broker.find('CaseComment', {
       filters: [['ParentId', '=', request.caseId]],
-      sort: 'CreatedDate desc',
+      sort: { CreatedDate: -1 },
       limit: 5
     });
 
@@ -854,9 +854,9 @@ Provide comprehensive sentiment analysis with:
   // Note: SentimentScore and ChurnRisk are custom fields that should be added to Case schema
   let priorityAdjusted = false;
   if (request.caseId) {
-    const caseRecord = await broker.findOne('Case', request.caseId, {
-      fields: ['Priority', 'IsEscalated']
-    });
+    const caseRecord = await broker.findOne('Case', request.caseId, 
+      ['Priority', 'IsEscalated']
+    );
 
     const shouldEscalate = 
       parsed.sentimentScore < -60 || 

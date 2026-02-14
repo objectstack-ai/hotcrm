@@ -1,7 +1,4 @@
-import { EmailTemplateSchema } from '@objectstack/spec/system';
-import type { z } from 'zod';
-
-type EmailTemplate = z.infer<typeof EmailTemplateSchema>;
+import { EmailTemplateSchema, type EmailTemplate } from '@objectstack/spec/system';
 
 /**
  * Confirmation email sent when a new support case is created.
