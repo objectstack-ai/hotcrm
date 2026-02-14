@@ -13,7 +13,7 @@ export const SalesDashboard = {
   widgets: [
     // KPI Metrics Row
     {
-      title: 'Total Revenue (YTD)',
+      title: 'Total Revenue (Closed Won)',
       type: 'metric' as const,
       object: 'opportunity',
       filter: ['stage', '=', 'closed_won'],
@@ -62,7 +62,7 @@ export const SalesDashboard = {
 
     // Revenue Trend Chart
     {
-      title: 'Revenue Trend (Last 12 Months)',
+      title: 'Revenue Trend',
       type: 'bar' as const,
       object: 'opportunity',
       filter: ['stage', '=', 'closed_won'],
