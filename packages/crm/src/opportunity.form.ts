@@ -15,7 +15,7 @@ export const OpportunityForm = {
   sections: [
     {
       label: 'Deal Information',
-      columns: 2,
+      columns: '2' as any,
       collapsible: false,
       collapsed: false,
       fields: [
@@ -32,7 +32,7 @@ export const OpportunityForm = {
     },
     {
       label: 'Forecast Details',
-      columns: 2,
+      columns: '2' as any,
       collapsible: false,
       collapsed: false,
       fields: [

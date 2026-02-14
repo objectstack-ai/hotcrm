@@ -123,12 +123,12 @@ describe('ReportAccessControl', () => {
   it('should have correct hook metadata', () => {
     expect(ReportAccessControl.name).toBe('ReportAccessControl');
     expect(ReportAccessControl.object).toBe('report');
-    expect(ReportAccessControl.events).toContain('beforeRead');
+    expect(ReportAccessControl.events).toContain('beforeFind');
   });
 
   it('should allow access when user is the owner', async () => {
     const report = { _id: 'rpt_001', owner_id: 'user_123', is_public: false };
-    const ctx = createMockContext('beforeRead', {});
+    const ctx = createMockContext('beforeFind', {});
     ctx.result = report;
 
     await expect(ReportAccessControl.handler(ctx)).resolves.toBeUndefined();
@@ -136,7 +136,7 @@ describe('ReportAccessControl', () => {
 
   it('should allow access when report is public', async () => {
     const report = { _id: 'rpt_002', owner_id: 'other_user', is_public: true };
-    const ctx = createMockContext('beforeRead', {});
+    const ctx = createMockContext('beforeFind', {});
     ctx.result = report;
 
     await expect(ReportAccessControl.handler(ctx)).resolves.toBeUndefined();
@@ -144,7 +144,7 @@ describe('ReportAccessControl', () => {
 
   it('should deny access for non-owner on private report', async () => {
     const report = { _id: 'rpt_003', owner_id: 'other_user', is_public: false };
-    const ctx = createMockContext('beforeRead', {});
+    const ctx = createMockContext('beforeFind', {});
     ctx.result = report;
 
     await expect(ReportAccessControl.handler(ctx)).rejects.toThrow(
@@ -153,7 +153,7 @@ describe('ReportAccessControl', () => {
   });
 
   it('should pass when result is undefined', async () => {
-    const ctx = createMockContext('beforeRead', {});
+    const ctx = createMockContext('beforeFind', {});
     ctx.result = undefined;
 
     await expect(ReportAccessControl.handler(ctx)).resolves.toBeUndefined();
@@ -220,13 +220,13 @@ describe('ReportExecutionTracking', () => {
   it('should have correct hook metadata', () => {
     expect(ReportExecutionTracking.name).toBe('ReportExecutionTracking');
     expect(ReportExecutionTracking.object).toBe('report');
-    expect(ReportExecutionTracking.events).toContain('afterRead');
+    expect(ReportExecutionTracking.events).toContain('afterFind');
   });
 
   it('should increment run_count and set last_run_at', async () => {
     const report = { _id: 'rpt_001', run_count: 5 };
     mockQlDocUpdate.mockResolvedValue({});
-    const ctx = createMockContext('afterRead', report);
+    const ctx = createMockContext('afterFind', report);
 
     await ReportExecutionTracking.handler(ctx);
 
@@ -244,7 +244,7 @@ describe('ReportExecutionTracking', () => {
   it('should default run_count to 1 when undefined', async () => {
     const report = { _id: 'rpt_002' };
     mockQlDocUpdate.mockResolvedValue({});
-    const ctx = createMockContext('afterRead', report);
+    const ctx = createMockContext('afterFind', report);
 
     await ReportExecutionTracking.handler(ctx);
 
@@ -256,7 +256,7 @@ describe('ReportExecutionTracking', () => {
   });
 
   it('should skip when report has no _id', async () => {
-    const ctx = createMockContext('afterRead', {});
+    const ctx = createMockContext('afterFind', {});
     ctx.result = {};
 
     await ReportExecutionTracking.handler(ctx);
@@ -267,7 +267,7 @@ describe('ReportExecutionTracking', () => {
   it('should not throw when tracking update fails', async () => {
     const report = { _id: 'rpt_003', run_count: 0 };
     mockQlDocUpdate.mockRejectedValue(new Error('DB down'));
-    const ctx = createMockContext('afterRead', report);
+    const ctx = createMockContext('afterFind', report);
 
     await expect(ReportExecutionTracking.handler(ctx)).resolves.toBeUndefined();
   });

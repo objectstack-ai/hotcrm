@@ -15,7 +15,7 @@ export const ContactForm = {
   sections: [
     {
       label: 'Contact Information',
-      columns: 2,
+      columns: '2' as any,
       collapsible: false,
       collapsed: false,
       fields: [
@@ -31,7 +31,7 @@ export const ContactForm = {
     },
     {
       label: 'Communication Preferences',
-      columns: 2,
+      columns: '2' as any,
       collapsible: true,
       collapsed: false,
       fields: [
@@ -43,7 +43,7 @@ export const ContactForm = {
     },
     {
       label: 'Role Details',
-      columns: 2,
+      columns: '2' as any,
       collapsible: true,
       collapsed: false,
       fields: [

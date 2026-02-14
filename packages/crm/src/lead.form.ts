@@ -15,7 +15,7 @@ export const LeadForm = {
   sections: [
     {
       label: 'Lead Information',
-      columns: 2,
+      columns: '2' as any,
       collapsible: false,
       collapsed: false,
       fields: [
@@ -34,7 +34,7 @@ export const LeadForm = {
     },
     {
       label: 'Address',
-      columns: 2,
+      columns: '2' as any,
       collapsible: true,
       collapsed: true,
       fields: [

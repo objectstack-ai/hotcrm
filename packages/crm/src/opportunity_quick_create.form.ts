@@ -14,7 +14,7 @@ export const OpportunityQuickCreateForm = {
   sections: [
     {
       label: 'Deal Information',
-      columns: 2,
+      columns: '2' as any,
       collapsible: false,
       collapsed: false,
       fields: [

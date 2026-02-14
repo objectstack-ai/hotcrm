@@ -107,7 +107,7 @@ describe('Lead AI Actions - enrichLead', () => {
 
     const result = await enrichLead(request);
 
-    expect(broker.findOne).toHaveBeenCalledWith('Lead', 'lead_001', { fields: ['email'] });
+    expect(broker.findOne).toHaveBeenCalledWith('Lead', 'lead_001', ['email']);
     expect(result.companyData).toBeDefined();
     expect(broker.update).toHaveBeenCalledWith('Lead', 'lead_001', expect.any(Object));
   });

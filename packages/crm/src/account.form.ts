@@ -15,7 +15,7 @@ export const AccountForm = {
   sections: [
     {
       label: 'Account Information',
-      columns: 2,
+      columns: '2' as any,
       collapsible: false,
       collapsed: false,
       fields: [
@@ -33,7 +33,7 @@ export const AccountForm = {
     },
     {
       label: 'Billing Address',
-      columns: 2,
+      columns: '2' as any,
       collapsible: true,
       collapsed: false,
       fields: [
@@ -46,7 +46,7 @@ export const AccountForm = {
     },
     {
       label: 'Shipping Address',
-      columns: 2,
+      columns: '2' as any,
       collapsible: true,
       collapsed: true,
       fields: [
@@ -59,7 +59,7 @@ export const AccountForm = {
     },
     {
       label: 'Additional Details',
-      columns: 2,
+      columns: '2' as any,
       collapsible: true,
       collapsed: false,
       fields: [
