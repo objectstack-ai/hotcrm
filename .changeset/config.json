@@ -9,5 +9,8 @@
   "access": "restricted",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": []
+  "ignore": [
+    "@hotcrm/core",
+    "@hotcrm/server"
+  ]
 }

@@ -132,7 +132,13 @@ After versions are updated, maintainers can publish all packages:
 pnpm release
 ```
 
-> **Note**: All HotCRM packages are currently marked as `private: true` and are not published to npm.
+This command runs `pnpm build && changeset publish`, which:
+1. Compiles all TypeScript source into `dist/` (JavaScript + type declarations)
+2. Publishes each non-private package to the configured npm registry
+
+Only the compiled `dist/` folder is included in published packages (controlled by the `files` field in each `package.json`). Source code (`.ts` files) is **never** published to the registry.
+
+> **Note**: Packages are published to a private GitHub Packages registry (`https://npm.pkg.github.com`) with `restricted` access. The `@hotcrm/core` and `@hotcrm/server` packages are excluded from publishing (marked `private: true`). See `docs/RELEASE_STRATEGY.md` for the full distribution strategy.
 
 ## 🔄 Pull Request Process
 
