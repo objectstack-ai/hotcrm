@@ -182,6 +182,8 @@ database or Redis required. All data is stored in the function instance's memory
 3. `HonoHttpServer` from `@objectstack/plugin-hono-server` handles HTTP routing (without TCP listener).
 4. `createRestApiPlugin()` auto-generates CRUD endpoints for all 65+ business objects.
 5. The kernel instance is reused across warm invocations (Vercel Fluid Compute).
+6. **Console UI** is served at `/console/` (default redirect from `/`) for data browsing and management.
+7. **Studio UI** is served at `/_studio/` for metadata inspection and development.
 
 ```
 Vercel Serverless Function
@@ -192,6 +194,8 @@ Vercel Serverless Function
 │  ├── REST API Plugin (auto CRUD)         │
 │  ├── Dispatcher Plugin (auth, graphql)   │
 │  ├── 6 Business Plugins                  │
+│  ├── Console UI (/console/)              │
+│  ├── Studio UI (/_studio/)               │
 │  └── InMemoryDriver (data store)         │
 │        ↓                                 │
 │  Response                                │
@@ -255,16 +259,16 @@ vercel deploy
 
 ### Build Process
 
-The build step compiles only the `@hotcrm/ai` utility library (the only workspace dependency that
-other plugins import from its `dist/` output). The 6 business plugin packages (CRM, Finance,
-Marketing, Products, Support, HR) are imported directly from TypeScript source — Vercel's
-`@vercel/node` runtime compiles them automatically using esbuild when building the serverless
-function.
+The build step first patches `@object-ui/console` and `@objectstack/studio` pnpm symlinks
+(replacing them with real copies for Vercel compatibility), then compiles all business plugin
+packages. The 6 business plugin packages (CRM, Finance, Marketing, Products, Support, HR) plus
+the AI utility library are built from TypeScript source to `dist/`.
 
 ```
 Build pipeline:
   pnpm install                            ← install all workspace deps
-  pnpm --filter @hotcrm/ai build          ← compile @hotcrm/ai → dist/
+  node scripts/patch-console-plugin.cjs   ← dereference pnpm symlinks for Console & Studio
+  pnpm --filter @hotcrm/{ai,crm,...} build ← compile all business plugins → dist/
   @vercel/node compiles api/[[...route]].ts  ← bundles function + TS imports
 ```
 
@@ -273,10 +277,10 @@ Build pipeline:
 | Field | Value | Purpose |
 |-------|-------|---------|
 | `installCommand` | `pnpm install` | Installs all workspace dependencies |
-| `buildCommand` | `pnpm --filter @hotcrm/ai build` | Compiles the AI utility library (only dependency that needs pre-built `dist/`) |
+| `buildCommand` | `node scripts/patch-console-plugin.cjs && pnpm --filter ... build` | Patches pnpm symlinks for UI packages, then compiles all business plugins |
 | `functions.memory` | `1024` MB | Memory allocated to the serverless function |
 | `functions.maxDuration` | `60` s | Maximum execution time per request (Pro plan) |
-| `functions.includeFiles` | `packages/*/src/**` | Ensures workspace TypeScript sources are bundled with the function |
+| `functions.includeFiles` | `{packages/*/dist,node_modules/@object-ui/console/dist,node_modules/@objectstack/studio/dist}/**` | Bundles business plugin dist/ and Console/Studio SPA assets with the function |
 | `rewrites` | `/(.*) → /api/[[...route]]` | Routes all requests to the catch-all handler |
 
 ### Architecture Details

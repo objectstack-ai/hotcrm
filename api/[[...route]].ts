@@ -10,14 +10,19 @@
  *
  * Data lives in the function instance's memory and persists across
  * warm invocations (Vercel Fluid Compute) but resets on cold start.
+ *
+ * Both Console (/) and Studio (/_studio/) UIs are served as static SPAs.
  */
 import { ObjectKernel, DriverPlugin, AppPlugin, createDispatcherPlugin, createRestApiPlugin } from '@objectstack/runtime';
 import { HonoHttpServer } from '@objectstack/plugin-hono-server';
 import { InMemoryDriver } from '@objectstack/driver-memory';
 import { ObjectQLPlugin } from '@objectstack/objectql';
-// import { ConsolePlugin } from '@object-ui/console';
 import { handle } from '@hono/node-server/vercel';
 import type { Hono } from 'hono';
+import { resolve, dirname, join, extname } from 'path';
+import { fileURLToPath } from 'url';
+import { existsSync, readFileSync, statSync } from 'fs';
+import { createRequire } from 'module';
 
 // Business plugins
 import { CRMPlugin } from '../packages/crm/dist/plugin.js';
@@ -26,6 +31,94 @@ import { MarketingPlugin } from '../packages/marketing/dist/plugin.js';
 import { ProductsPlugin } from '../packages/products/dist/plugin.js';
 import { SupportPlugin } from '../packages/support/dist/plugin.js';
 import { HRPlugin } from '../packages/hr/dist/plugin.js';
+
+// ---------------------------------------------------------------------------
+// Static SPA plugins — serve Console at / and Studio at /_studio/
+// ---------------------------------------------------------------------------
+
+const STUDIO_PATH = '/_studio';
+
+const MIME_TYPES: Record<string, string> = {
+  '.html': 'text/html; charset=utf-8',
+  '.js': 'application/javascript; charset=utf-8',
+  '.mjs': 'application/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
+  '.svg': 'image/svg+xml',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.gif': 'image/gif',
+  '.ico': 'image/x-icon',
+  '.woff': 'font/woff',
+  '.woff2': 'font/woff2',
+  '.ttf': 'font/ttf',
+  '.map': 'application/json',
+};
+
+function mimeType(filePath: string): string {
+  return MIME_TYPES[extname(filePath).toLowerCase()] || 'application/octet-stream';
+}
+
+function resolvePackageDistPath(packageName: string): string | null {
+  try {
+    const req = createRequire(import.meta.url);
+    const pkgPath = req.resolve(`${packageName}/package.json`);
+    const distPath = join(dirname(pkgPath), 'dist');
+    if (existsSync(join(distPath, 'index.html'))) return distPath;
+  } catch { /* ignore */ }
+
+  const __filename = fileURLToPath(import.meta.url);
+  const projectRoot = resolve(dirname(__filename), '..');
+  const directPath = join(projectRoot, 'node_modules', ...packageName.split('/'), 'dist');
+  if (existsSync(join(directPath, 'index.html'))) return directPath;
+
+  return null;
+}
+
+function createStaticSpaPlugin(name: string, basePath: string, distPath: string, rewriteAssetPaths = true) {
+  const absoluteDist = resolve(distPath);
+  const indexPath = join(absoluteDist, 'index.html');
+  const rawHtml = readFileSync(indexPath, 'utf-8');
+  // Rewrite relative asset paths (e.g. href="./assets/..." → href="/_studio/assets/...")
+  // Skip absolute URLs (http://, https://, //) and paths already using the correct base
+  const rewrittenHtml = rewriteAssetPaths
+    ? rawHtml.replace(
+        /(\s(?:href|src))="(?!https?:\/\/|\/\/)\.?\/?(?!\/)/g,
+        `$1="${basePath}/`,
+      )
+    : rawHtml;
+
+  return {
+    name,
+    version: '1.0.0',
+    init: async () => {},
+    start: async (ctx: any) => {
+      const httpServer = ctx.getService?.('http.server');
+      if (!httpServer?.getRawApp) return;
+      const app = httpServer.getRawApp();
+
+      app.get(basePath, (c: any) => c.redirect(`${basePath}/`));
+      app.get(`${basePath}/*`, async (c: any) => {
+        const reqPath = c.req.path.substring(basePath.length) || '/';
+        const filePath = resolve(absoluteDist, reqPath.replace(/^\//, ''));
+        // Prevent path traversal: resolved path must stay within distPath
+        if (!filePath.startsWith(absoluteDist)) {
+          return c.text('Forbidden', 403);
+        }
+        if (existsSync(filePath) && statSync(filePath).isFile()) {
+          const content = readFileSync(filePath);
+          return new Response(content, {
+            headers: { 'content-type': mimeType(filePath) },
+          });
+        }
+        return new Response(rewrittenHtml, {
+          headers: { 'content-type': 'text/html; charset=utf-8' },
+        });
+      });
+    },
+  };
+}
 
 // ---------------------------------------------------------------------------
 // Singleton bootstrap — reused across warm invocations
@@ -129,10 +222,23 @@ async function bootstrap(): Promise<Hono> {
   // 8. Dispatcher (auth, graphql, analytics routes)
   await kernel.use(createDispatcherPlugin());
 
-  // 9. Console UI (serves the ObjectStack Console SPA for data browsing and management)
-  // await kernel.use(new ConsolePlugin());
+  // 9. Console UI (serves the ObjectStack Console SPA at /console/)
+  const consoleDistPath = resolvePackageDistPath('@object-ui/console');
+  if (consoleDistPath) {
+    // Console SPA already has absolute /console/ asset paths — skip rewriting
+    await kernel.use(createStaticSpaPlugin('com.objectui.console-static', '/console', consoleDistPath, false));
+    // Default redirect: / -> /console/
+    const app = httpServer.getRawApp();
+    app.get('/', (c: any) => c.redirect('/console/'));
+  }
 
-  // 10. Bootstrap kernel (init + start all plugins, fire kernel:ready)
+  // 10. Studio UI (serves the ObjectStack Studio SPA at /_studio/)
+  const studioDistPath = resolvePackageDistPath('@objectstack/studio');
+  if (studioDistPath) {
+    await kernel.use(createStaticSpaPlugin('com.objectstack.studio-static', STUDIO_PATH, studioDistPath));
+  }
+
+  // 11. Bootstrap kernel (init + start all plugins, fire kernel:ready)
   await kernel.bootstrap();
 
   return httpServer.getRawApp();
