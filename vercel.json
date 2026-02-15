@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "installCommand": "pnpm install",
+  "installCommand": "pnpm install --ignore-scripts",
   "buildCommand": "node scripts/patch-console-plugin.cjs && pnpm --filter @hotcrm/ai --filter @hotcrm/crm --filter @hotcrm/finance --filter @hotcrm/marketing --filter @hotcrm/products --filter @hotcrm/support --filter @hotcrm/hr build",
   "framework": null,
   "functions": {
