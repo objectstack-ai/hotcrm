@@ -1,5 +1,4 @@
 import { EmailTemplateSchema } from '@objectstack/spec/system';
-// @ts-expect-error zod is available at runtime via @objectstack/spec
 import type { z } from 'zod';
 
 type EmailTemplate = z.infer<typeof EmailTemplateSchema>;

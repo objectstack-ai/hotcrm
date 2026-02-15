@@ -2,13 +2,12 @@
 /**
  * patch-console-plugin.cjs
  *
- * Prepares @object-ui/console and @objectstack/studio for Vercel deployment.
+ * Prepares node_modules for Vercel deployment.
  *
  * pnpm uses symlinks in node_modules which Vercel rejects as
  * "invalid deployment package … symlinked directories". This script
- * replaces the symlinks with real copies of the packages so that
- * Vercel's includeFiles glob can bundle their dist/ assets into the
- * serverless function.
+ * replaces ALL top-level symlinks with real copies of the target
+ * directories so that Vercel can bundle the serverless function.
  */
 'use strict';
 
@@ -23,32 +22,57 @@ const ROOT = path.resolve(__dirname, '..');
 function derefSymlink(pkgPath) {
   const abs = path.resolve(ROOT, pkgPath);
   if (!fs.existsSync(abs)) {
-    console.warn(`  ⚠ ${pkgPath} not found — skipping`);
     return false;
   }
 
   const stat = fs.lstatSync(abs);
   if (!stat.isSymbolicLink()) {
-    console.log(`  ✓ ${pkgPath} is already a real directory`);
     return true;
   }
 
   const realPath = fs.realpathSync(abs);
   console.log(`  → Dereferencing ${pkgPath}`);
-  console.log(`    symlink target: ${realPath}`);
 
   // Copy to a temp location first, then swap — avoids data loss if cpSync fails
   const tmpPath = abs + '.tmp';
   fs.cpSync(realPath, tmpPath, { recursive: true });
   fs.unlinkSync(abs);
   fs.renameSync(tmpPath, abs);
-  console.log(`  ✓ Replaced symlink with real copy`);
   return true;
 }
 
-console.log('\n🔧 Patching UI packages for Vercel deployment…\n');
+/**
+ * Walk a directory and dereference all symlinks found at the top level.
+ * Handles scoped packages (@scope/pkg) by walking one level deeper.
+ */
+function derefAllSymlinks(nmDir) {
+  const abs = path.resolve(ROOT, nmDir);
+  if (!fs.existsSync(abs)) return 0;
 
-derefSymlink('node_modules/@object-ui/console');
-derefSymlink('node_modules/@objectstack/studio');
+  let count = 0;
+  for (const entry of fs.readdirSync(abs)) {
+    // Skip the .pnpm virtual store and hidden files
+    if (entry === '.pnpm' || entry.startsWith('.')) continue;
 
-console.log('\n✅ Patch complete\n');
+    const entryPath = path.join(abs, entry);
+
+    // Scoped package — walk one level deeper
+    if (entry.startsWith('@')) {
+      if (!fs.existsSync(entryPath)) continue;
+      for (const sub of fs.readdirSync(entryPath)) {
+        const rel = path.join(nmDir, entry, sub);
+        if (derefSymlink(rel)) count++;
+      }
+      continue;
+    }
+
+    const rel = path.join(nmDir, entry);
+    if (derefSymlink(rel)) count++;
+  }
+  return count;
+}
+
+console.log('\n🔧 Patching pnpm symlinks for Vercel deployment…\n');
+
+const count = derefAllSymlinks('node_modules');
+console.log(`\n✅ Patch complete — processed ${count} packages\n`);
