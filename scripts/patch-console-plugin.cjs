@@ -73,7 +73,30 @@ function derefAllSymlinks(nmDir) {
   return count;
 }
 
+/**
+ * Find all workspace packages that have their own node_modules directory
+ * and dereference symlinks in those as well. This fixes broken .bin
+ * symlinks that pnpm 10.x creates in workspace packages even with
+ * node-linker=hoisted, which cause `pnpm exec tsc` to fail on Vercel.
+ */
+function derefWorkspaceNodeModules() {
+  let total = 0;
+  const dirs = ['packages', 'apps'];
+  for (const dir of dirs) {
+    const abs = path.resolve(ROOT, dir);
+    if (!fs.existsSync(abs)) continue;
+    for (const pkg of fs.readdirSync(abs)) {
+      const nmDir = path.join(dir, pkg, 'node_modules');
+      const nmAbs = path.resolve(ROOT, nmDir);
+      if (!fs.existsSync(nmAbs)) continue;
+      total += derefAllSymlinks(nmDir);
+    }
+  }
+  return total;
+}
+
 console.log('\n🔧 Patching pnpm symlinks for Vercel deployment…\n');
 
 const count = derefAllSymlinks('node_modules');
-console.log(`\n✅ Patch complete — processed ${count} packages\n`);
+const wsCount = derefWorkspaceNodeModules();
+console.log(`\n✅ Patch complete — processed ${count} root + ${wsCount} workspace packages\n`);
