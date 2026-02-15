@@ -37,8 +37,11 @@ function derefSymlink(pkgPath) {
   console.log(`  → Dereferencing ${pkgPath}`);
   console.log(`    symlink target: ${realPath}`);
 
+  // Copy to a temp location first, then swap — avoids data loss if cpSync fails
+  const tmpPath = abs + '.tmp';
+  fs.cpSync(realPath, tmpPath, { recursive: true });
   fs.unlinkSync(abs);
-  fs.cpSync(realPath, abs, { recursive: true });
+  fs.renameSync(tmpPath, abs);
   console.log(`  ✓ Replaced symlink with real copy`);
   return true;
 }

@@ -76,13 +76,15 @@ function resolvePackageDistPath(packageName: string): string | null {
   return null;
 }
 
-function createStaticSpaPlugin(name: string, basePath: string, distPath: string, rewriteAssets = true) {
+function createStaticSpaPlugin(name: string, basePath: string, distPath: string, rewriteAssetPaths = true) {
   const absoluteDist = resolve(distPath);
   const indexPath = join(absoluteDist, 'index.html');
   const rawHtml = readFileSync(indexPath, 'utf-8');
-  const rewrittenHtml = rewriteAssets
+  // Rewrite relative asset paths (e.g. href="./assets/..." → href="/_studio/assets/...")
+  // Skip absolute URLs (http://, https://, //) and paths already using the correct base
+  const rewrittenHtml = rewriteAssetPaths
     ? rawHtml.replace(
-        /(\s(?:href|src))="\.?\/?(?!\/)/g,
+        /(\s(?:href|src))="(?!https?:\/\/|\/\/)\.?\/?(?!\/)/g,
         `$1="${basePath}/`,
       )
     : rawHtml;
@@ -99,7 +101,8 @@ function createStaticSpaPlugin(name: string, basePath: string, distPath: string,
       app.get(basePath, (c: any) => c.redirect(`${basePath}/`));
       app.get(`${basePath}/*`, async (c: any) => {
         const reqPath = c.req.path.substring(basePath.length) || '/';
-        const filePath = join(absoluteDist, reqPath);
+        const filePath = resolve(absoluteDist, reqPath.replace(/^\//, ''));
+        // Prevent path traversal: resolved path must stay within distPath
         if (!filePath.startsWith(absoluteDist)) {
           return c.text('Forbidden', 403);
         }
@@ -222,6 +225,7 @@ async function bootstrap(): Promise<Hono> {
   // 9. Console UI (serves the ObjectStack Console SPA at /console/)
   const consoleDistPath = resolvePackageDistPath('@object-ui/console');
   if (consoleDistPath) {
+    // Console SPA already has absolute /console/ asset paths — skip rewriting
     await kernel.use(createStaticSpaPlugin('com.objectui.console-static', '/console', consoleDistPath, false));
     // Default redirect: / -> /console/
     const app = httpServer.getRawApp();
