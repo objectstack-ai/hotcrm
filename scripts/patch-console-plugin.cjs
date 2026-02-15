@@ -22,6 +22,7 @@ const ROOT = path.resolve(__dirname, '..');
 function derefSymlink(pkgPath) {
   const abs = path.resolve(ROOT, pkgPath);
   if (!fs.existsSync(abs)) {
+    console.warn(`  ⚠ ${pkgPath} not found — skipping`);
     return false;
   }
 
