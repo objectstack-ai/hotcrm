@@ -22,7 +22,7 @@
   "scripts": {
     "dev": "objectstack dev",
     "start": "objectstack serve",
-    "build": "pnpm exec tsc && objectstack compile",
+    "build": "tsc && objectstack compile",
     "typecheck": "tsc --noEmit",
     "test": "objectstack test"
   },

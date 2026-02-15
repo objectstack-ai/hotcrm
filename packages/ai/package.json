@@ -20,7 +20,7 @@
     "registry": "https://npm.pkg.github.com"
   },
   "scripts": {
-    "build": "pnpm exec tsc",
+    "build": "tsc",
     "dev": "tsc --watch",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
