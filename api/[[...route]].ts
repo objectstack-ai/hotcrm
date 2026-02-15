@@ -38,14 +38,14 @@ async function bootstrap(): Promise<Hono> {
   const kernel = new ObjectKernel();
 
   // 1. ObjectQL engine (provides metadata, data, and protocol services)
-  kernel.use(new ObjectQLPlugin());
+  await kernel.use(new ObjectQLPlugin());
 
   // 2. In-memory data driver (no external DB required)
-  kernel.use(new DriverPlugin(new InMemoryDriver(), 'memory'));
+  await kernel.use(new DriverPlugin(new InMemoryDriver(), 'memory'));
 
   // 3. HTTP server adapter — register the Hono app without TCP listener
   const httpServer = new HonoHttpServer();
-  kernel.use({
+  await kernel.use({
     name: 'vercel-http',
     version: '1.0.0',
     init: async (ctx: any) => {
@@ -56,7 +56,7 @@ async function bootstrap(): Promise<Hono> {
   });
 
   // 4. In-memory cache service (satisfies the 'cache' core service requirement)
-  kernel.use({
+  await kernel.use({
     name: 'com.hotcrm.cache.memory',
     version: '1.0.0',
     init: async (ctx: any) => {
@@ -100,7 +100,7 @@ async function bootstrap(): Promise<Hono> {
   });
 
   // 5. Application config (business objects & plugins)
-  kernel.use(new AppPlugin({
+  await kernel.use(new AppPlugin({
     manifest: {
       id: 'com.hotcrm.app',
       namespace: 'hotcrm',
@@ -119,18 +119,18 @@ async function bootstrap(): Promise<Hono> {
   ];
   for (const plugin of businessPlugins) {
     if (plugin) {
-      kernel.use(new AppPlugin(plugin));
+      await kernel.use(new AppPlugin(plugin));
     }
   }
 
   // 7. REST API endpoints (auto-generated CRUD for all objects)
-  kernel.use(createRestApiPlugin());
+  await kernel.use(createRestApiPlugin());
 
   // 8. Dispatcher (auth, graphql, analytics routes)
-  kernel.use(createDispatcherPlugin());
+  await kernel.use(createDispatcherPlugin());
 
   // 9. Console UI (serves the ObjectStack Console SPA for data browsing and management)
-  // kernel.use(new ConsolePlugin());
+  // await kernel.use(new ConsolePlugin());
 
   // 10. Bootstrap kernel (init + start all plugins, fire kernel:ready)
   await kernel.bootstrap();
