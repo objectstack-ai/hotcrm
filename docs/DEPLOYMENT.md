@@ -259,15 +259,17 @@ vercel deploy
 
 ### Build Process
 
-The build step first patches `@object-ui/console` and `@objectstack/studio` pnpm symlinks
-(replacing them with real copies for Vercel compatibility), then compiles all business plugin
-packages. The 6 business plugin packages (CRM, Finance, Marketing, Products, Support, HR) plus
-the AI utility library are built from TypeScript source to `dist/`.
+The `.npmrc` configures `node-linker=hoisted` to create a flat `node_modules` without
+pnpm symlinks — this is required because Vercel rejects symlinked directories when
+packaging serverless functions. The `patch-console-plugin.cjs` script runs as an
+additional safety net to dereference any remaining symlinks before the build. The 6
+business plugin packages (CRM, Finance, Marketing, Products, Support, HR) plus the AI
+utility library are built from TypeScript source to `dist/`.
 
 ```
 Build pipeline:
-  pnpm install                            ← install all workspace deps
-  node scripts/patch-console-plugin.cjs   ← dereference pnpm symlinks for Console & Studio
+  pnpm install                            ← install all workspace deps (flat / hoisted)
+  node scripts/patch-console-plugin.cjs   ← dereference any remaining pnpm symlinks
   pnpm --filter @hotcrm/{ai,crm,...} build ← compile all business plugins → dist/
   @vercel/node compiles api/[[...route]].ts  ← bundles function + TS imports
 ```
@@ -277,7 +279,7 @@ Build pipeline:
 | Field | Value | Purpose |
 |-------|-------|---------|
 | `installCommand` | `pnpm install` | Installs all workspace dependencies |
-| `buildCommand` | `node scripts/patch-console-plugin.cjs && pnpm --filter ... build` | Patches pnpm symlinks for UI packages, then compiles all business plugins |
+| `buildCommand` | `node scripts/patch-console-plugin.cjs && pnpm --filter ... build` | Dereferences any remaining pnpm symlinks, then compiles all business plugins |
 | `functions.memory` | `1024` MB | Memory allocated to the serverless function |
 | `functions.maxDuration` | `60` s | Maximum execution time per request (Pro plan) |
 | `functions.includeFiles` | `{packages/*/dist,node_modules/@object-ui/console/dist,node_modules/@objectstack/studio/dist}/**` | Bundles business plugin dist/ and Console/Studio SPA assets with the function |
