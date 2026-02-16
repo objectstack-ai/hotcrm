@@ -5,9 +5,9 @@ description: Strategic direction and upcoming features for HotCRM — 2026 and b
 
 # HotCRM Roadmap
 
-HotCRM has completed **13 development phases** (including 10.5, 10.6, and 12A-D), establishing a full-featured, production-ready **13-package CRM** with **~148 business objects**, AI agent workflows, enterprise security, full UI metadata, Salesforce feature parity (~95%), 4 vertical industry solutions, and comprehensive developer tooling. Our roadmap now focuses on **advanced AI**, **enterprise features**, and **marketplace growth** for 2027+.
+HotCRM has completed **13 development phases** (including 10.5, 10.6, and 12A-D), establishing a full-featured, production-ready **13-package CRM** with **~148 business objects**, AI agent workflows, enterprise security, full UI metadata, Salesforce feature parity (~95%), 4 vertical industry solutions, and comprehensive developer tooling. Our roadmap now focuses on **module optimization**, **seed data foundation**, and **advanced AI** for 2027+.
 
-> **Protocol Version**: @objectstack/spec v3.0.0 | **Tests**: 3,318+ passing (~173+ files) | **Spec Schema Adoption**: ~65 / ~80 (81%) | **Last Updated**: February 2026
+> **Protocol Version**: @objectstack/spec v3.0.0 | **Tests**: 3,318+ passing (~173+ files) | **Spec Schema Adoption**: ~65 / ~80 (81%) | **Last Updated**: February 16, 2026
 
 ---
 
@@ -15,8 +15,8 @@ HotCRM has completed **13 development phases** (including 10.5, 10.6, and 12A-D)
 
 ```
 2025  ███████████████████████████████████████████████████████████  Foundation → AI → Quality → Test → Integration → Schema → v3.0 → UI → DX → Salesforce Parity
-2026  ██████████████████████████████████████████████████████████░  Deep Metadata (✅ 10.5) → Forms & Pages (✅ 10.6) → Ecosystem (✅ 11) → Verticals (✅ 12A-D)    ← YOU ARE HERE
-2027  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  Advanced AI & Enterprise Features
+2026  ██████████████████████████████████████████████████████████  Deep Metadata (✅ 10.5) → Forms & Pages (✅ 10.6) → Ecosystem (✅ 11) → Verticals (✅ 12A-D) ✅ COMPLETE
+2027  ████████████████████████████████████░░░░░░░░░░░░░░░░░░░░░  Module Optimization & Seed Data (Phase 13) → Advanced AI (Phase 12E)    ← NEXT
 ```
 
 ---
@@ -246,6 +246,35 @@ Four industry-specific CRM verticals delivered with 28 new objects, 50 hooks, an
 | AI Actions | ~40 | ~48 | +16 functions |
 | Test Files | ~160+ | ~173+ | +12 files |
 | Tests Passing | ~2,880+ | ~3,318+ | +438 tests |
+
+---
+
+## 🚀 Phase 13: Module Optimization & Seed Data Foundation (2027 Q1-Q2)
+
+Addresses three critical gaps: metadata richness imbalance across modules, zero seed/initial data, and incomplete plugin registration.
+
+### Key Deliverables
+
+| Area | Details |
+|------|---------|
+| **Seed Data Foundation** | `*.seed.ts` convention, system reference data (currencies, countries, industries), per-package demo data for all 13 packages, `pnpm seed` command |
+| **Plugin Registration** | Register all 13 packages in root `objectstack.config.ts`, dependency validation, plugin health checks |
+| **Vertical Package Enhancement** | Complete UI metadata for healthcare, real-estate, education, financial-services (pages, views, forms, dashboards, workflows, state machines, permissions, RLS, reports, charts, seed data) |
+| **Core Cloud Metadata Equalization** | Bring finance, marketing, products, support, hr, analytics, integration, community to CRM-level richness (state machines, AI agents, events, capabilities, studio plugins, additional forms/pages/reports/charts) |
+| **Validation & Testing** | Spec-compliance tests for all new metadata, seed data validation tests, cross-package integration tests, documentation updates |
+
+### Expected Outcomes
+
+| Metric | Before | After | Change |
+|--------|--------|-------|--------|
+| Seed Data Files | 0 | ~40 | +40 |
+| Packages Registered | 6 of 13 | 13 of 13 | +7 |
+| Average Metadata Types per Package | ~8 | ~18 | +10 |
+| State Machines | 3 | 11 | +8 |
+| AI Agents | 2 | 10 | +8 |
+| Schema Adoption | ~65/80 (81%) | ~75/80 (94%) | +10 schemas |
+
+> For the complete Phase 13 plan with detailed sub-phases and deliverables, see the [detailed ROADMAP.md](https://github.com/objectstack-ai/hotcrm/blob/main/ROADMAP.md#phase-13-module-by-module-deep-optimization--seed-data-foundation-2027-q1-q2).
 
 ---
 
