@@ -5,6 +5,13 @@ import { MarketingPlugin } from './packages/marketing/dist/plugin.js';
 import { ProductsPlugin } from './packages/products/dist/plugin.js';
 import { SupportPlugin } from './packages/support/dist/plugin.js';
 import { HRPlugin } from './packages/hr/dist/plugin.js';
+import { AnalyticsPlugin } from './packages/analytics/dist/plugin.js';
+import { IntegrationPlugin } from './packages/integration/dist/plugin.js';
+import { CommunityPlugin } from './packages/community/dist/plugin.js';
+import { HealthcarePlugin } from './packages/healthcare/dist/plugin.js';
+import { RealEstatePlugin } from './packages/real-estate/dist/plugin.js';
+import { EducationPlugin } from './packages/education/dist/plugin.js';
+import { FinancialServicesPlugin } from './packages/financial-services/dist/plugin.js';
 import { ConsolePlugin } from '@object-ui/console';
 
 /**
@@ -42,6 +49,7 @@ export default defineStack({
   objects: [],
 
   // Register all Business Plugins
+  // Core clouds (6)
   plugins: [
     CRMPlugin,
     FinancePlugin,
@@ -49,6 +57,15 @@ export default defineStack({
     ProductsPlugin,
     SupportPlugin,
     HRPlugin,
+    // Cross-functional clouds (3)
+    AnalyticsPlugin,
+    IntegrationPlugin,
+    CommunityPlugin,
+    // Vertical industry solutions (4)
+    HealthcarePlugin,
+    RealEstatePlugin,
+    EducationPlugin,
+    FinancialServicesPlugin,
     new ConsolePlugin(),
   ],
   // Uses 'as any' because defineStack schema doesn't include runtime plugins
