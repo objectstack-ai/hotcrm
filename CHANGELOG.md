@@ -8,6 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- **Upgraded @objectstack to v3.0.6 and @object-ui/console to v3.0.3** (February 16, 2026)
+  - @objectstack/spec: ^3.0.3 → ^3.0.6
+  - @objectstack/cli: ^3.0.3 → ^3.0.6
+  - @objectstack/runtime: ^3.0.3 → ^3.0.6
+  - @objectstack/plugin-hono-server: ^3.0.3 → ^3.0.6
+  - @objectstack/objectql: ^3.0.3 → ^3.0.6
+  - @objectstack/driver-memory: ^3.0.3 → ^3.0.6
+  - @objectstack/studio: ^3.0.3 → ^3.0.6
+  - @objectstack/core: ^3.0.2 → ^3.0.6
+  - @objectstack/metadata: ^3.0.2 → ^3.0.6
+  - @object-ui/console: ^3.0.2 → ^3.0.3
+- All 3318 tests passing (173 test files) with zero breaking changes
+- Upgrade history: v0.8.1 → ... → v2.0.6 → v3.0.0 → v3.0.3 → v3.0.6
+
 - **Upgraded @objectstack to v3.0.0**: Major version upgrade (February 12, 2026)
   - @objectstack/spec: ^2.0.6 → ^3.0.0 (Zod 4 validation engine, new ObjectSchema.create() API)
   - @objectstack/cli: ^2.0.6 → ^3.0.0
