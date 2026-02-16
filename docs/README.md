@@ -42,6 +42,12 @@
 | **API Reference** | Per-object field reference for all packages | [developers/api_reference.md](developers/api_reference.md) |
 | **Code Examples** | Hooks, actions, workflows, MCP examples | [developers/code_examples.md](developers/code_examples.md) |
 
+### Ecosystem & Publishing
+
+| Document | Purpose | Location |
+|----------|---------|----------|
+| **Marketplace Publishing Guide** | How to publish plugins to ObjectStack Cloud marketplace | [MARKETPLACE_PUBLISHING.md](MARKETPLACE_PUBLISHING.md) |
+
 ### Package Technical Specs
 
 | Package | Documentation | Contents |

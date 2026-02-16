@@ -12,7 +12,8 @@
 2026 Q3    ████████████████████████████████  Phase 10.6: FormView & Page Layout Enhancement  ✅ COMPLETE
 2026 Q3-Q4 ████████████████████████████████  Phase 11: Ecosystem & Connectivity       ✅ COMPLETE
 2026 Q4    ████████████████████████████████  Phase 12A-D: Vertical Solutions          ✅ COMPLETE
-2027 Q1-Q2 ████████████████████████████████  Phase 13: Module Optimization & Seed Data  ← NEXT (moved from 12E)
+2027 Q1-Q2 ████████████████████████████████  Phase 13: Module Optimization & Seed Data  ← CURRENT
+2027 Q2-Q3 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  Phase 14: Marketplace Publishing & Distribution
 2027+      ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  Phase 12E: Advanced AI & Enterprise Features
 ```
 
@@ -1574,6 +1575,217 @@ Each connector includes: `*.action.ts` (API operations), `*.hook.ts` (event mapp
 | Application Schema Adoption | ~65/80 (81%) | ~75/80 (94%) | +10 schemas |
 | Test Files | 173 | ~200 | +27 |
 | Tests Passing | 3318 | ~3800 | +482 |
+
+---
+
+## Phase 14: Marketplace Publishing & Distribution (2027 Q2-Q3)
+
+> Goal: Enable third-party plugin distribution through ObjectStack Cloud marketplace with automated quality gates and security scanning.
+
+### 14A: Publishing Infrastructure
+
+#### Documentation & Developer Experience
+
+- [ ] Create comprehensive publishing guide: `docs/MARKETPLACE_PUBLISHING.md` ✅
+  - [x] Prerequisites (CLI, vendor account, spec compliance)
+  - [x] Plugin project structure requirements
+  - [x] `objectstack.json` manifest format specification
+  - [x] Quality requirements (5-dimension scoring system)
+  - [x] Security scanning rules (12 static analysis rules)
+  - [x] Publishing workflow (build, validate, publish)
+  - [x] Publishing protocol internals (3-phase flow)
+  - [x] Current limitations and roadmap
+  - [x] Complete @hotcrm/crm publishing example
+
+- [ ] Add marketplace publishing reference to `CONTRIBUTING.md` ✅
+
+- [ ] Add navigation link in `docs/README.md` ✅
+
+#### Manifest Tooling
+
+- [ ] Create `scripts/generate-manifest.ts` — automated `objectstack.json` generator
+  - [ ] Read `objectstack.config.ts` and `package.json`
+  - [ ] Extract name, version, description, category
+  - [ ] Infer permissions from plugin code (network, storage, compute)
+  - [ ] Generate spec-compliant `objectstack.json`
+  - [ ] Support dry-run mode for validation
+  
+- [ ] Add `pnpm manifest:generate` script to each package
+  - [ ] `packages/crm/package.json`: `"manifest:generate": "node ../../scripts/generate-manifest.ts"`
+  - [ ] Auto-sync version from `package.json` to `objectstack.json`
+
+- [ ] Create manifest validation tests
+  - [ ] `__tests__/marketplace/manifest-validation.test.ts`
+  - [ ] Validate all required fields present
+  - [ ] Validate category is in allowed list
+  - [ ] Validate semver format
+  - [ ] Validate permissions array
+
+#### Local Quality Checks
+
+- [ ] Create `scripts/marketplace-quality-check.ts`
+  - [ ] Integrate Cloud's security-scanner logic (12 rules)
+  - [ ] Integrate Cloud's quality-scoring logic (5 dimensions)
+  - [ ] Generate quality report (JSON + human-readable)
+  - [ ] Exit with error if score < 40/100
+  - [ ] Exit with error if critical/high vulnerabilities found
+
+- [ ] Add `pnpm quality:check` script to root `package.json`
+  - [ ] Run security scanner on all packages
+  - [ ] Run quality scorer on all packages
+  - [ ] Generate consolidated report
+
+- [ ] Create pre-publish hooks
+  - [ ] `.husky/pre-push` — run quality checks on changed packages
+  - [ ] Block push if quality < 40 or security violations
+
+### 14B: Package Preparation
+
+#### Add `objectstack.json` to All Packages
+
+- [ ] `packages/crm/objectstack.json` — Sales Cloud manifest
+- [ ] `packages/finance/objectstack.json` — Revenue Cloud manifest
+- [ ] `packages/hr/objectstack.json` — Human Capital manifest
+- [ ] `packages/marketing/objectstack.json` — Marketing Cloud manifest
+- [ ] `packages/products/objectstack.json` — CPQ Cloud manifest
+- [ ] `packages/support/objectstack.json` — Service Cloud manifest
+- [ ] `packages/ai/objectstack.json` — AI Intelligence manifest
+- [ ] `packages/analytics/objectstack.json` — Analytics Platform manifest
+- [ ] `packages/integration/objectstack.json` — Integration Hub manifest
+- [ ] `packages/community/objectstack.json` — Community Platform manifest
+- [ ] `packages/healthcare/objectstack.json` — Healthcare vertical manifest
+- [ ] `packages/real-estate/objectstack.json` — Real Estate vertical manifest
+- [ ] `packages/education/objectstack.json` — Education vertical manifest
+- [ ] `packages/financial-services/objectstack.json` — Financial Services vertical manifest
+
+#### Quality Improvements
+
+- [ ] Ensure all packages have README.md with:
+  - [ ] Installation instructions
+  - [ ] Usage examples
+  - [ ] API reference
+  - [ ] Configuration options
+
+- [ ] Ensure all packages have CHANGELOG.md with version history
+
+- [ ] Add code examples to all package READMEs:
+  - [ ] Hook usage examples
+  - [ ] Action usage examples
+  - [ ] Workflow configuration examples
+
+- [ ] Achieve 100% test coverage for all hooks and actions
+  - [ ] Current: ~80% coverage (varies by package)
+  - [ ] Target: 100% coverage for publishable packages
+
+### 14C: CI/CD Integration
+
+#### GitHub Actions Workflow
+
+- [ ] Create `.github/workflows/marketplace-publish.yml`
+  - [ ] Trigger: on `release` tag creation (e.g., `v1.0.0`)
+  - [ ] Run quality checks (security + scoring)
+  - [ ] Block if quality < 40 or security violations
+  - [ ] Build all packages (`pnpm build`)
+  - [ ] Publish to ObjectStack Cloud marketplace
+  - [ ] Post summary to GitHub Release notes
+
+- [ ] Create `.github/workflows/marketplace-quality-check.yml`
+  - [ ] Trigger: on PR to `main`
+  - [ ] Run quality checks on changed packages only
+  - [ ] Post quality report as PR comment
+  - [ ] Block merge if quality regression
+
+#### Versioning Automation
+
+- [ ] Update `pnpm release` script to:
+  - [ ] Generate `objectstack.json` for all packages
+  - [ ] Sync versions across `package.json` and `objectstack.json`
+  - [ ] Create git tag (e.g., `v1.0.0`)
+  - [ ] Trigger marketplace publish workflow
+
+### 14D: Cloud Integration & Testing
+
+#### Prerequisites (Cloud-side work)
+
+> These tasks require completion of ObjectStack Cloud Phase 4 (Storage Layer).
+
+- [ ] Wait for Cloud Phase 4 completion:
+  - [ ] Presigned S3 URLs functional
+  - [ ] Checksum verification implemented
+  - [ ] Security scanner integrated into publish route
+  - [ ] Quality scorer integrated into publish route
+
+- [ ] Wait for Cloud Phase 2 completion:
+  - [ ] `@objectstack/cli` published to npm
+  - [ ] CLI `os marketplace publish` command available
+
+#### End-to-End Testing
+
+- [ ] Test publishing @hotcrm/crm to Cloud staging environment
+  - [ ] Generate manifest: `pnpm manifest:generate`
+  - [ ] Run quality check: `pnpm quality:check`
+  - [ ] Build package: `pnpm build`
+  - [ ] Publish: `os marketplace publish --registry https://staging.cloud.objectstack.dev`
+  - [ ] Verify package appears in staging marketplace
+  - [ ] Install package: `os package install @hotcrm/crm --registry https://staging.cloud.objectstack.dev`
+  - [ ] Verify runtime loading
+
+- [ ] Test publishing all 13 HotCRM packages
+  - [ ] Automate with script: `scripts/publish-all-packages.sh`
+  - [ ] Verify all packages meet quality threshold
+  - [ ] Verify all packages pass security scan
+  - [ ] Verify all packages installable
+
+- [ ] Test version upgrade flow
+  - [ ] Publish @hotcrm/crm@1.0.0
+  - [ ] Make changes, increment version to 1.0.1
+  - [ ] Publish @hotcrm/crm@1.0.1
+  - [ ] Verify both versions available in marketplace
+  - [ ] Verify users can upgrade: `os package upgrade @hotcrm/crm`
+
+- [ ] Test unpublish flow
+  - [ ] Publish test package
+  - [ ] Unpublish: `os marketplace yank @hotcrm/test@1.0.0`
+  - [ ] Verify package hidden from marketplace
+  - [ ] Verify existing installations unaffected
+
+### 14E: Documentation Finalization
+
+- [ ] Update `docs/MARKETPLACE_PUBLISHING.md` with:
+  - [ ] Remove "Current Limitations" section when Cloud Phase 4 complete
+  - [ ] Add production publishing examples
+  - [ ] Add troubleshooting section with common errors
+  - [ ] Add performance tips (bundle optimization)
+
+- [ ] Create marketplace publishing video tutorial
+  - [ ] Recording: "Publishing Your First Plugin to ObjectStack Cloud"
+  - [ ] Duration: 15 minutes
+  - [ ] Topics: manifest creation, quality checks, publishing, verification
+
+- [ ] Update HotCRM README.md with marketplace badges
+  - [ ] Quality grade badges (A/B/C/D/F)
+  - [ ] Download count badges
+  - [ ] Latest version badges
+
+- [ ] Add marketplace section to `QUICK_REFERENCE.md`
+  - [ ] `objectstack.json` — marketplace manifest
+  - [ ] `pnpm manifest:generate` — generate manifest from config
+  - [ ] `pnpm quality:check` — run security + quality checks
+  - [ ] `os marketplace publish` — publish to cloud
+
+### Phase 14 Expected Outcomes
+
+| Metric | Before Phase 14 | After Phase 14 | Change |
+|--------|----------------|----------------|--------|
+| Packages with `objectstack.json` | 0 | 13 | +13 |
+| Packages Published to Marketplace | 0 | 13 | +13 |
+| Average Quality Score | N/A | ≥85/100 (Grade B+) | N/A |
+| Packages with README + CHANGELOG | ~8 | 13 | +5 |
+| Test Coverage (hooks + actions) | ~80% | 100% | +20% |
+| Marketplace Documentation Pages | 0 | 1 (MARKETPLACE_PUBLISHING.md) | +1 |
+| CI/CD Marketplace Workflows | 0 | 2 (publish, quality-check) | +2 |
+| Manifest Generation Scripts | 0 | 1 | +1 |
+| Quality Check Scripts | 0 | 1 | +1 |
 
 ---
 

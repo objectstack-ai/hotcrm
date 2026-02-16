@@ -192,6 +192,29 @@ Use the feature request template and include:
 - Update relevant documentation files
 - Include code examples where helpful
 
+## 🚀 Publishing to ObjectStack Marketplace
+
+If you've developed a plugin that you'd like to publish to the **ObjectStack Cloud Application Marketplace**, please refer to our comprehensive publishing guide:
+
+- **Guide**: [docs/MARKETPLACE_PUBLISHING.md](docs/MARKETPLACE_PUBLISHING.md)
+
+Before publishing, ensure your plugin:
+- ✅ Meets the **minimum quality score** of 40/100 (5-dimension scoring)
+- ✅ Passes **security scanning** (no critical/high vulnerabilities)
+- ✅ Includes `objectstack.json` manifest file
+- ✅ Conforms to `@objectstack/spec` v3.0.0
+- ✅ Has comprehensive documentation (README, CHANGELOG, examples)
+- ✅ Includes test coverage for hooks and actions
+
+The publishing guide covers:
+- Prerequisites and setup
+- Plugin structure requirements
+- Quality and security requirements
+- Step-by-step publishing workflow
+- Troubleshooting common issues
+
+**Note**: Publishing to the marketplace requires a verified vendor account on ObjectStack Cloud.
+
 ## 🧪 Testing
 
 - Write tests for new features
