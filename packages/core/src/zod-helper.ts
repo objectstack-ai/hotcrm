@@ -1,4 +1,3 @@
-// @ts-expect-error - zod is available at runtime via @objectstack/spec
 import { z } from 'zod';
 
 export interface FieldConfig {
