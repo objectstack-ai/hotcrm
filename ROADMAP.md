@@ -1,7 +1,7 @@
 # HotCRM Development Roadmap
 
 > Comprehensive development plan for HotCRM — the world's first AI-Native CRM.
-> Protocol: @objectstack/spec v3.0.0 | Last Updated: February 16, 2026
+> Protocol: @objectstack/spec v3.0.8 | Last Updated: February 21, 2026
 
 ## Strategic Direction
 
@@ -12,7 +12,8 @@
 2026 Q3    ████████████████████████████████  Phase 10.6: FormView & Page Layout Enhancement  ✅ COMPLETE
 2026 Q3-Q4 ████████████████████████████████  Phase 11: Ecosystem & Connectivity       ✅ COMPLETE
 2026 Q4    ████████████████████████████████  Phase 12A-D: Vertical Solutions          ✅ COMPLETE
-2027 Q1-Q2 ████████████████████████████████  Phase 13: Module Optimization & Seed Data  ← NEXT (moved from 12E)
+2027 Q1-Q2 ████████████████████████████████  Phase 13: Module Optimization & Seed Data  ← CURRENT
+2027 Q2-Q3 ████████████████████████████████  Phase 14: v3.0.8 Feed & Interface Builder Adoption  ← NEXT
 2027+      ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  Phase 12E: Advanced AI & Enterprise Features
 ```
 
@@ -20,7 +21,7 @@
 
 | Metric | Value |
 |--------|-------|
-| Protocol Version | @objectstack/spec v3.0.0 |
+| Protocol Version | @objectstack/spec v3.0.8 |
 | Business Objects | ~148 across 13 packages |
 | Business Packages | 13 (6 core clouds + AI + Analytics + Integration + Community + 4 verticals) |
 | Hook Files | 121+ across 13 packages |
@@ -58,7 +59,7 @@
 | Test Files | 173 files, 3318 tests (all passing) |
 | TypeScript Compliance | 100% (zero type errors) |
 | Protocol Compliance | 100% (all objects pass ObjectSchema.create()) |
-| Spec Schema Adoption | ~65 of ~80 application-level schemas used (~81%) — see [Metadata Evaluation](#metadata-type-evaluation) |
+| Spec Schema Adoption | ~65 of ~95 application-level schemas used (~68%) — see [Metadata Evaluation](#metadata-type-evaluation) |
 
 ---
 
@@ -97,15 +98,17 @@
 ## Metadata Type Evaluation
 
 > Comprehensive assessment of all @objectstack/spec application metadata types.
-> Goal: Identify high-value schemas not yet adopted and plan deep integration for Phase 10.5.
+> Goal: Identify high-value schemas not yet adopted and plan deep integration.
 
 ### Assessment Methodology
 
-@objectstack/spec v3.0.0 exports **12 subpaths** with ~1,269 total schema types. Most are internal/transport schemas (API request/response envelopes, low-level configs). We focus on **~80 application-level metadata schemas** — the ones that define business configurations, UI layouts, automations, security policies, and AI capabilities.
+@objectstack/spec v3.0.8 exports **12 subpaths** with ~1,300+ total schema types. Most are internal/transport schemas (API request/response envelopes, low-level configs). We focus on **~95 application-level metadata schemas** — the ones that define business configurations, UI layouts, automations, security policies, and AI capabilities.
 
-**Current adoption: 28 of ~80 application-level schemas (35%)**
+**Current adoption: ~65 of ~95 application-level schemas (~68%)**
 
-### Currently Adopted Schemas (28 types)
+**New in v3.0.8** (released 2026-02-20): Activity Feed & Chatter system, Interface Builder / Blank Page layouts, Dashboard enhancements, Feed API contracts, Studio Interface Builder config, Oclif CLI plugin config, Package conventions & system constants.
+
+### Currently Adopted Schemas (28 types — pre-Phase 10.5 baseline)
 
 | Subpath | Schema | Usage | Files |
 |---------|--------|-------|-------|
@@ -198,20 +201,66 @@
 | `spec/ui` | `OfflineConfigSchema` | Offline-first configuration | Field sales offline CRM |
 | `spec/ui` | `NotificationSchema` (UI) | In-app notification definitions | Real-time in-app alerts and toasts |
 
+#### Tier 4 — New in v3.0.8: Feed, Interface Builder & Enhanced UI (P0-P1)
+
+> These schemas were introduced in @objectstack/spec v3.0.8 (2026-02-20) and are not yet adopted.
+
+| Subpath | Schema | Business Value | CRM Justification |
+|---------|--------|---------------|-------------------|
+| `spec/data` | `FeedItemSchema` | Activity feed items (posts, comments, field changes) | Salesforce Chatter equivalent; record-level activity stream |
+| `spec/data` | `FeedActorSchema` | Feed actor identity (user/system/automation) | Attribute feed activity to users, bots, or automated processes |
+| `spec/data` | `ReactionSchema` | Emoji/like reactions on feed items | Social CRM engagement; quick feedback on updates |
+| `spec/data` | `MentionSchema` | @-mention support in feed content | Notify colleagues in record discussions; cross-team collaboration |
+| `spec/data` | `RecordSubscriptionSchema` | Record-level subscription/follow | Users follow records for change notifications |
+| `spec/data` | `FieldChangeEntrySchema` | Structured field change tracking | Audit trail for record changes; "what changed" in activity feed |
+| `spec/ui` | `BlankPageLayoutSchema` | Drag-and-drop blank page canvas | Custom landing pages, dashboards, portals without predefined layout |
+| `spec/ui` | `InterfacePageConfigSchema` | Interface builder page configuration | Low-code page builder for admin-created custom pages |
+| `spec/ui` | `ElementDataSourceSchema` | Data source binding for page elements | Connect page elements to object records, queries, or APIs |
+| `spec/ui` | `Element*PropsSchema` (6 types) | Element property schemas (Button, Filter, Form, Image, Number, Text, RecordPicker) | Fine-grained configuration for interface builder components |
+| `spec/ui` | `DashboardHeaderSchema` | Dashboard header with actions | Dashboard title bar with action buttons and context |
+| `spec/ui` | `GlobalFilterSchema` | Cross-widget dashboard filters | Filter all dashboard widgets from a single control |
+| `spec/ui` | `ViewTabSchema` | Tabbed list view configurations | Multiple related views in tabs (e.g., Active/Closed/All) |
+| `spec/ui` | `RecordChatterProps` | Record page chatter/feed component | Embed activity feed directly on record detail pages |
+| `spec/ui` | `RecordReviewConfigSchema` | Record review/approval UI config | Inline approval workflows on record pages |
+| `spec/ui` | `NavigationAreaSchema` | Named navigation regions | Header, sidebar, utility bar navigation areas |
+| `spec/ui` | `PageTypeSchema` | Page type classification (record, list, app, home, blank) | Type-safe page routing and layout selection |
+| `spec/ui` | `SharingConfigSchema` | View/dashboard sharing configuration | Share saved views and dashboards with teams/roles |
+| `spec/ui` | `AppearanceConfigSchema` | View appearance settings | Visual customization (density, colors, icons) per view |
+| `spec/ui` | `AddRecordConfigSchema` | Quick-add record configuration | Inline record creation from list views |
+| `spec/ui` | `UserActionsConfigSchema` | User-facing action bar configuration | Configure which actions appear in record/list toolbars |
+| `spec/ui` | `WidgetMeasureSchema` | Dashboard widget KPI measures | Define what metrics a widget displays |
+| `spec/ui` | `WidgetActionTypeSchema` | Widget interaction action types | Define clickable actions within dashboard widgets |
+| `spec/ui` | `WidgetColorVariantSchema` | Widget color/status variants | Color-code widgets by status (success, warning, danger) |
+| `spec/ui` | `ActionNavItemSchema` / `ReportNavItemSchema` | Navigation item types for actions & reports | Typed navigation entries in app nav bars |
+| `spec/ui` | `VisualizationTypeSchema` | Chart/visualization type enumeration | Type-safe chart type selection in dashboards |
+| `spec/api` | `FeedApiContracts` (12 types) | Complete Feed CRUD API | Create/read/update/delete feed items, reactions, subscriptions |
+| `spec/contracts` | `IFeedService` | Feed service interface contract | Standard feed service for all packages |
+| `spec/kernel` | `OclifPluginConfigSchema` | Oclif CLI plugin configuration | CLI extensibility for custom CRM commands |
+| `spec/studio` | `InterfaceBuilderConfigSchema` | Studio interface builder config | Visual page builder settings in Studio |
+| `spec/studio` | `PageBuilderConfigSchema` | Studio page builder config | Page builder canvas and toolbox settings |
+| `spec/studio` | `CanvasSnapSettingsSchema` | Canvas grid snap settings | Pixel-perfect layout alignment in page builder |
+| `spec/studio` | `ElementPaletteItemSchema` | Element palette for page builder | Draggable component palette in Studio |
+| `spec/system` | `PKG_CONVENTIONS` | Package naming conventions | Standardized package structure validation |
+| `spec/system` | `SystemFieldName` / `SystemObjectName` | System field/object name enumerations | Type-safe references to built-in fields and objects |
+| `spec/shared` | `SortItemSchema` | Standardized sort specification | Reusable sort order for queries, views, and APIs |
+
 ### Impact Assessment
 
-| Metric | Current | After Phase 10.5 | After Phase 10.6 | After Phase 11 |
-|--------|---------|-------------------|-------------------|----------------|
-| Application Schema Adoption | 28 / ~80 (35%) | ~55 / ~80 (69%) | ~58 / ~80 (73%) | ~65 / ~80 (81%) |
-| UI Metadata Types | 5 (Page, View, Form, Dashboard, App) | 10 (+Report, ListViewAdv, Chart, Action, Widget) | 10 (deepened: FormView 6 layouts, Page 4 types, 10+ component types) | 12 (+Theme, Responsive) |
-| Automation Types | 4 (Workflow, StateMachine, Approval, TimeTrigger) | 7 (+Flow, Connector, ETL) | 7 (unchanged) | 8 (+DataSync) |
-| Security Types | 4 (Permission, Sharing, Territory, TerritoryModel) | 8 (+RLS, Policy, Password, Session) | 8 (unchanged) | 10 (+Network, Audit) |
-| AI Types | 6 (Agent, MCP, RAG, ModelRegistry, NLQ×2) | 12 (+MCPTool, MCPResource, MCPPrompt, Orchestration, Predictive, Conversation) | 12 (deepened: ai:chat_window, ai:suggestion embedded in pages) | 14 (+MultiAgent, Cost) |
-| System Types | 3 (Audit, Cache, Notification) | 7 (+Email, NotifChannel, Schedule, Job) | 7 (unchanged) | 10 (+Encryption, Masking, Compliance) |
+| Metric | Current | After Phase 10.5 | After Phase 10.6 | After Phase 11 | After Phase 14 (v3.0.8) |
+|--------|---------|-------------------|-------------------|----------------|-------------------------|
+| Application Schema Adoption | 28 / ~80 (35%) | ~55 / ~80 (69%) | ~58 / ~80 (73%) | ~65 / ~80 (81%) | ~95 / ~95 (100%) |
+| UI Metadata Types | 5 (Page, View, Form, Dashboard, App) | 10 (+Report, ListViewAdv, Chart, Action, Widget) | 10 (deepened: FormView 6 layouts, Page 4 types, 10+ component types) | 12 (+Theme, Responsive) | 25+ (+BlankPageLayout, InterfacePage, ElementDataSource, DashboardHeader, GlobalFilter, ViewTab, RecordChatter, RecordReview, NavigationArea, PageType, SharingConfig, AppearanceConfig, AddRecordConfig, UserActionsConfig, WidgetMeasure/Action/Color, ActionNavItem, ReportNavItem, VisualizationType) |
+| Data Types | ObjectSchema, Field | ObjectSchema, Field | ObjectSchema, Field | ObjectSchema, Field | +FeedItem, FeedActor, Reaction, Mention, RecordSubscription, FieldChangeEntry |
+| Automation Types | 4 (Workflow, StateMachine, Approval, TimeTrigger) | 7 (+Flow, Connector, ETL) | 7 (unchanged) | 8 (+DataSync) | 8 (unchanged) |
+| Security Types | 4 (Permission, Sharing, Territory, TerritoryModel) | 8 (+RLS, Policy, Password, Session) | 8 (unchanged) | 10 (+Network, Audit) | 10 (unchanged) |
+| AI Types | 6 (Agent, MCP, RAG, ModelRegistry, NLQ×2) | 12 (+MCPTool, MCPResource, MCPPrompt, Orchestration, Predictive, Conversation) | 12 (deepened: ai:chat_window, ai:suggestion embedded in pages) | 14 (+MultiAgent, Cost) | 14 (unchanged) |
+| API Types | 1 (ApiEndpointRegistration) | 1 | 1 | 1 | 13 (+Feed API: Create/Get/Update/Delete FeedItem, Subscribe/Unsubscribe, Add/Remove Reaction) |
+| Studio Types | 1 (StudioPluginManifest) | 1 | 1 | 1 | 5 (+InterfaceBuilderConfig, PageBuilderConfig, CanvasSnapSettings, ElementPaletteItem) |
+| System Types | 3 (Audit, Cache, Notification) | 7 (+Email, NotifChannel, Schedule, Job) | 7 (unchanged) | 10 (+Encryption, Masking, Compliance) | 13 (+PKG_CONVENTIONS, SystemFieldName, SystemObjectName) |
 
 ---
 
-## Phase 10.5: Deep Metadata Adoption (2026 Q2-Q3) ← NEXT
+## Phase 10.5: Deep Metadata Adoption (2026 Q2-Q3) ✅ COMPLETE
 
 > Maximize adoption of @objectstack/spec application-level metadata types before building new packages.
 > This phase deepens the metadata foundation across existing 6 business clouds, making each cloud richer and more enterprise-ready without adding new objects.
@@ -1577,6 +1626,175 @@ Each connector includes: `*.action.ts` (API operations), `*.hook.ts` (event mapp
 
 ---
 
+## Phase 14: v3.0.8 Feed System, Interface Builder & Enhanced UI Adoption (2027 Q2-Q3)
+
+> Goal: Adopt all new metadata types introduced in @objectstack/spec v3.0.8, including the Chatter/Feed system, Interface Builder pages, enhanced dashboard features, and Feed API contracts across all business packages.
+
+### Phase 14 Timeline
+
+```
+2027 Q2 Week 1-3   ████████  Phase 14A: Activity Feed & Chatter (FeedItem, Reactions, Subscriptions)
+2027 Q2 Week 4-6   ████████  Phase 14B: Interface Builder & Blank Pages (BlankPageLayout, InterfacePage, ElementDataSource)
+2027 Q3 Week 7-9   ████████  Phase 14C: Enhanced Dashboard & List View Features (DashboardHeader, GlobalFilter, ViewTab)
+2027 Q3 Week 10-11 ████████  Phase 14D: Feed API Integration & Service Contracts (FeedApiContracts, IFeedService)
+2027 Q3 Week 12    ████████  Phase 14E: Validation, Tests & Documentation
+```
+
+### Phase 14 New Capabilities from v3.0.8
+
+**Capability 1: Activity Feed / Chatter System** — Salesforce Chatter equivalent. Every business object gets a record-level activity stream with posts, comments, @mentions, reactions, field change tracking, and subscription/follow functionality.
+
+**Capability 2: Interface Builder / Blank Pages** — Low-code page builder with drag-and-drop blank canvas layouts. Admin-created custom pages with data-bound elements (buttons, filters, forms, images, text, record pickers).
+
+**Capability 3: Enhanced Dashboard & List Views** — Dashboards gain headers with action buttons, cross-widget global filters, and widget KPI measures. List views support tabbed configurations, sharing settings, and appearance customization.
+
+**Capability 4: Feed API & Service Contracts** — Complete REST API contracts for feed CRUD operations, reaction management, and record subscription/unsubscription. Standardized `IFeedService` contract for all packages.
+
+**Capability 5: Studio Interface Builder** — Visual page builder in Studio with canvas snap/zoom settings and element palette for drag-and-drop page composition.
+
+### Phase 14A: Activity Feed & Chatter System (Weeks 1-3) — P0
+
+> Implement the Salesforce Chatter equivalent across all 6 core business clouds.
+
+#### 14A-1: Feed Data Model & Configuration
+
+- [ ] **CRM**: Add `*.feed.ts` — configure feed on Account, Opportunity, Contact, Lead, Case (FeedItemSchema, FeedActorSchema)
+- [ ] **Finance**: Add `*.feed.ts` — configure feed on Contract, Invoice, Quote (FeedItemSchema)
+- [ ] **HR**: Add `*.feed.ts` — configure feed on Employee, Job Application, Performance Review (FeedItemSchema)
+- [ ] **Marketing**: Add `*.feed.ts` — configure feed on Campaign, Lead, Journey (FeedItemSchema)
+- [ ] **Support**: Add `*.feed.ts` — configure feed on Case, Knowledge Article, SLA (FeedItemSchema)
+- [ ] **Products**: Add `*.feed.ts` — configure feed on Product, Price Book, Quote Line (FeedItemSchema)
+
+#### 14A-2: Reactions, Mentions & Subscriptions
+
+- [ ] Configure `ReactionSchema` — define allowed reaction types per object (like, celebrate, support, insightful)
+- [ ] Configure `MentionSchema` — @mention resolution and notification triggers
+- [ ] Configure `RecordSubscriptionSchema` — auto-subscribe rules (record owner, last modifier, team members)
+- [ ] Configure `FieldChangeEntrySchema` — define which field changes appear in feed (amount, stage, status, owner)
+
+#### 14A-3: Record Page Chatter Component
+
+- [ ] Add `RecordChatterProps` component to all record detail pages (embed feed on record pages)
+- [ ] Configure feed visibility rules per object (FeedVisibility, FeedFilterMode)
+- [ ] Add feed-related hooks for real-time notification on new feed items
+
+### Phase 14B: Interface Builder & Blank Pages (Weeks 4-6) — P0
+
+> Enable admin-created custom pages using the new Interface Builder metadata.
+
+#### 14B-1: Blank Page Layouts
+
+- [ ] **CRM**: Create `sales_dashboard.blank_page.ts` — custom sales command center (BlankPageLayoutSchema)
+- [ ] **Finance**: Create `revenue_overview.blank_page.ts` — revenue recognition dashboard
+- [ ] **HR**: Create `hr_portal.blank_page.ts` — employee self-service portal
+- [ ] **Support**: Create `service_console.blank_page.ts` — agent workspace with multi-panel layout
+- [ ] Define `BlankPageLayoutItemSchema` elements with `ElementDataSourceSchema` data bindings
+
+#### 14B-2: Interface Page Configurations
+
+- [ ] Configure `InterfacePageConfigSchema` for each blank page (permissions, data sources, filters)
+- [ ] Implement element property schemas: `ElementButtonPropsSchema`, `ElementFilterPropsSchema`, `ElementFormPropsSchema`, `ElementImagePropsSchema`, `ElementNumberPropsSchema`, `ElementTextPropsSchema`, `ElementRecordPickerPropsSchema`
+- [ ] Add `PageTypeSchema` classification to all existing and new pages (record, list, app, home, blank)
+
+#### 14B-3: Studio Integration
+
+- [ ] Configure `InterfaceBuilderConfigSchema` for Studio page builder experience
+- [ ] Define `PageBuilderConfigSchema` with canvas and toolbox settings
+- [ ] Configure `CanvasSnapSettingsSchema` for grid alignment
+- [ ] Define `ElementPaletteItemSchema` entries for all available page elements
+
+### Phase 14C: Enhanced Dashboard & List View Features (Weeks 7-9) — P1
+
+> Upgrade existing dashboards and list views with new v3.0.8 capabilities.
+
+#### 14C-1: Dashboard Enhancements
+
+- [ ] Add `DashboardHeaderSchema` to all 11 dashboards (title, subtitle, action buttons)
+- [ ] Add `DashboardHeaderActionSchema` — define header actions (refresh, export, share, filter)
+- [ ] Implement `GlobalFilterSchema` on cross-cloud dashboards (date range, owner, region filters)
+- [ ] Add `GlobalFilterOptionsFromSchema` — define filter option sources (object fields, picklists)
+- [ ] Upgrade widgets with `WidgetMeasureSchema` (KPI values), `WidgetActionTypeSchema` (drill-down), `WidgetColorVariantSchema` (status colors)
+- [ ] Add `VisualizationTypeSchema` to chart widgets for type-safe chart selection
+
+#### 14C-2: List View Enhancements
+
+- [ ] Add `ViewTabSchema` to key list views (e.g., Opportunities: Pipeline / Won / Lost / All)
+- [ ] Configure `SharingConfigSchema` on views and dashboards (share with teams, roles, public)
+- [ ] Add `AppearanceConfigSchema` to views (density mode, row height, color coding)
+- [ ] Implement `AddRecordConfigSchema` for inline record creation from list views
+- [ ] Configure `UserActionsConfigSchema` for toolbar action menus on record/list pages
+
+#### 14C-3: Navigation Enhancements
+
+- [ ] Add `NavigationAreaSchema` definitions (header, sidebar, utility bar)
+- [ ] Implement `ActionNavItemSchema` for quick-action navigation entries
+- [ ] Implement `ReportNavItemSchema` for report shortcuts in navigation
+
+### Phase 14D: Feed API Integration & Service Contracts (Weeks 10-11) — P1
+
+> Implement Feed API endpoints and service contracts.
+
+#### 14D-1: Feed API Actions
+
+- [ ] Create `feed.action.ts` in CRM package — CRUD operations using `CreateFeedItemRequestSchema`, `UpdateFeedItemRequestSchema`, `DeleteFeedItemRequestSchema`, `GetFeedRequestSchema`
+- [ ] Implement reaction API — `AddReactionRequestSchema`, `RemoveReactionRequestSchema`
+- [ ] Implement subscription API — `SubscribeRequestSchema`, `FeedUnsubscribeRequestSchema`
+- [ ] Define Feed API error codes using `FeedApiErrorCode`
+
+#### 14D-2: Feed Service Contract
+
+- [ ] Implement `IFeedService` contract in packages/core
+- [ ] Define `ListFeedOptions`, `CreateFeedItemInput`, `UpdateFeedItemInput`, `SubscribeInput` types
+- [ ] Register Feed endpoints using `FeedPathParamsSchema`, `FeedItemPathParamsSchema`
+
+#### 14D-3: System & Kernel Metadata
+
+- [ ] Adopt `PKG_CONVENTIONS` for standardized package structure validation
+- [ ] Use `SystemFieldName` and `SystemObjectName` enumerations in core package
+- [ ] Configure `OclifPluginConfigSchema` for CLI command extensions
+- [ ] Adopt `SortItemSchema` from `spec/shared` for standardized sort specifications
+
+### Phase 14E: Validation, Tests & Documentation (Week 12) — P1
+
+#### 14E-1: Spec-Compliance Tests
+
+- [ ] Feed metadata validation tests (FeedItemSchema, ReactionSchema, RecordSubscriptionSchema)
+- [ ] BlankPageLayout validation tests (BlankPageLayoutSchema, InterfacePageConfigSchema, ElementDataSourceSchema)
+- [ ] Dashboard enhancement tests (DashboardHeaderSchema, GlobalFilterSchema, WidgetMeasureSchema)
+- [ ] Feed API contract tests (all 12 Feed API request/response schemas)
+- [ ] Studio builder config tests (InterfaceBuilderConfigSchema, PageBuilderConfigSchema)
+
+#### 14E-2: Cross-Package Integration Tests
+
+- [ ] Feed system integration: create feed item → add reaction → subscribe → verify notification
+- [ ] Interface builder: create blank page → bind data source → verify rendering
+- [ ] Dashboard filters: set global filter → verify all widgets update
+
+#### 14E-3: Documentation
+
+- [ ] Update ARCHITECTURE.md with Feed system design
+- [ ] Add Interface Builder developer guide
+- [ ] Update per-package README with feed configuration examples
+- [ ] Document Feed API endpoints
+
+### Phase 14 Expected Outcomes
+
+| Metric | Before Phase 14 | After Phase 14 |
+|--------|-----------------|----------------|
+| Protocol Version | v3.0.6 | v3.0.8 |
+| Application Schema Adoption | ~65 / ~95 (68%) | ~95 / ~95 (100%) |
+| Feed-Enabled Objects | 0 | 20+ across 6 clouds |
+| Blank/Interface Pages | 0 | 4+ custom portal pages |
+| Dashboards with Headers | 0 | 11 (all existing dashboards) |
+| Dashboards with Global Filters | 0 | 6+ cross-cloud dashboards |
+| Views with Tabs | 0 | 10+ key list views |
+| Feed API Endpoints | 0 | 8 (CRUD + reactions + subscriptions) |
+| Studio Builder Configs | 0 | 4 (Interface, Page, Canvas, Palette) |
+| New Data Types Adopted | 0 | 6 (FeedItem, FeedActor, Reaction, Mention, RecordSubscription, FieldChangeEntry) |
+| New UI Types Adopted | 0 | 20+ (BlankPageLayout, InterfacePage, DashboardHeader, GlobalFilter, ViewTab, etc.) |
+
+---
+
 ### Phase 12E: Advanced AI & Enterprise Features (2027+)
 
 > Goal: Next-generation AI capabilities and enterprise-grade platform features.
@@ -1603,6 +1821,7 @@ Each connector includes: `*.action.ts` (API operations), `*.hook.ts` (event mapp
 
 | Date | From | To | Breaking Changes | Tests |
 |------|------|----|-----------------|-------|
+| 2026-02-21 | v3.0.6 | v3.0.8 | None (New: Activity Feed/Chatter system, Interface Builder/Blank Pages, Dashboard headers & global filters, Feed API contracts, Studio builder configs, Oclif CLI plugin, Package conventions; Phase 14 roadmap added) | 3318 ✅ |
 | 2026-02-16 | v3.0.0 | v3.0.0 | None (Phase 13 roadmap: Module-by-module deep optimization, seed data foundation, vertical package UI enhancement, core cloud metadata equalization) | 3318 ✅ |
 | 2026-02-13 | v3.0.0 | v3.0.0 | None (Phase 10.6 roadmap: FormView & Page Layout Deep Enhancement — 6 form layout types, collapsible sections, field-level controls, 4 page types, AI components, assignedProfiles, component visibility, ComponentPropsMap alignment) | 2271 ✅ |
 | 2026-02-13 | v3.0.0 | v3.0.0 | None (Metadata evaluation: assessed all @objectstack/spec schemas, identified 27 high-value unused types, added Phase 10.5 Deep Metadata Adoption roadmap) | 1759 ✅ |
