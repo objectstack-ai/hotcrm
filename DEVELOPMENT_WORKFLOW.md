@@ -303,6 +303,68 @@ pnpm typecheck
 pnpm test
 ```
 
+## 📝 Logging
+
+HotCRM uses **structured logging** via [pino](https://getpino.io). All log output is JSON, making it easy to search, filter, and aggregate in production.
+
+### Creating a Logger
+
+```typescript
+import { createLogger } from '@hotcrm/core';
+
+const logger = createLogger('crm:account');
+```
+
+The module name follows the convention `package:module` (e.g. `crm:account`, `finance:invoice`, `ai:cache-manager`).
+
+### Log Levels
+
+| Level | Method | When to use |
+|-------|--------|-------------|
+| `debug` | `logger.debug(...)` | Verbose development-time tracing |
+| `info` | `logger.info(...)` | Normal operational events |
+| `warn` | `logger.warn(...)` | Something unexpected but recoverable |
+| `error` | `logger.error(...)` | Failures that need attention |
+
+### Structured Data
+
+Always pass structured data as the **first argument** (object), and a short message string as the **second**:
+
+```typescript
+// Good — structured data is machine-parseable
+logger.info({ accountId, healthScore: 85 }, 'Account scored');
+logger.error({ err }, 'Failed to update account');
+
+// Bad — don't embed data in the message string
+logger.info(`Account ${accountId} scored 85`);
+```
+
+### Controlling Log Level
+
+Set the `LOG_LEVEL` environment variable:
+
+```bash
+LOG_LEVEL=debug pnpm dev    # See all log output
+LOG_LEVEL=warn pnpm start   # Only warnings and errors in production
+```
+
+### Testing with Logger
+
+In tests, mock `@hotcrm/core` so log calls delegate to `console.*` (allowing existing `vi.spyOn(console, ...)` patterns):
+
+```typescript
+vi.mock('@hotcrm/core', () => ({
+  createLogger: () => ({
+    info: (...args: any[]) => console.log(...args),
+    warn: (...args: any[]) => console.warn(...args),
+    error: (...args: any[]) => console.error(...args),
+    debug: (...args: any[]) => console.debug(...args),
+  }),
+}));
+```
+
+> **Note:** Do not use `console.log` directly in production source code. Always use `createLogger` from `@hotcrm/core`.
+
 ## ❓ Troubleshooting FAQ
 
 ### `pnpm install` fails

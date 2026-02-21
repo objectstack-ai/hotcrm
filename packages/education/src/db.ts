@@ -1,10 +1,17 @@
 /**
+ * @deprecated This module is scheduled for removal. Migrate to broker/ObjectQL.
+ *
  * ObjectQL Broker - Data Access Layer
  *
  * Provides a unified data access interface using the ObjectQL broker pattern.
  * In production, this connects to the @objectstack/runtime engine.
  * Actions and services use this broker for CRUD operations.
  * Hooks should prefer ctx.ql (injected by the runtime) for transactional access.
+ *
+ * Migration Guide:
+ * - Hooks: use `ctx.ql` (injected by the runtime) — `(ctx.ql as any).find(...)`
+ * - Actions: import `broker` from this module (not `db`)
+ * - The `db` export is a legacy shim and will be removed in a future release.
  */
 
 export interface BrokerQueryOptions {

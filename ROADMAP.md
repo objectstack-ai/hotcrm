@@ -65,7 +65,7 @@
 | Studio Builder Configs | 4 (Interface Builder, Page Builder, Canvas Snap, Element Palette) |
 | Navigation Areas | 3 (header, sidebar, utility bar) |
 | Packages Registered in Root Config | 13 of 13 (all packages registered) |
-| Test Files | 192 files, 3799 tests (all passing) |
+| Test Files | 194 files, 3813 tests (all passing) |
 | TypeScript Compliance | 100% (zero type errors) |
 | Protocol Compliance | 100% (all objects pass ObjectSchema.create()) |
 | Spec Schema Adoption | ~95 of ~95 application-level schemas used (~100%) |
@@ -193,8 +193,10 @@ These items were deferred during Phase 13 and have been completed:
 
 #### Deferred / Future
 
-- [ ] **Structured logging migration** — Replace `console.log` with pino logger across hook files
-- [ ] **Legacy API cleanup** — Remove `db.ts` references and migrate to broker/ObjectQL
+- [x] **Structured logging migration** — Replaced `console.log` with pino logger (`createLogger` from `@hotcrm/core`) across 154 hook/action/service files in all 13 packages; removed emoji from log output; added 9 logger unit tests
+- [x] **CacheManager test isolation** — Added `CacheManager.resetInstance()` for test isolation; 5 dedicated tests
+- [x] **Legacy API cleanup (Phase 1)** — Added `@deprecated` annotations and migration guide to all 13 `db.ts` files; `db` export marked for removal
+- [ ] **Legacy API cleanup (Phase 2)** — Remove `db.ts` exports entirely once all consumers migrated to broker/ObjectQL
 - [ ] **E2E test coverage** — Build API-layer end-to-end tests for Feed API / MCP API
 - [ ] **FormView `as any` cleanup** — Remove `as any` casts once `@objectstack/spec` aligns FormView column types
 
@@ -204,6 +206,7 @@ These items were deferred during Phase 13 and have been completed:
 
 | Date | From | To | Breaking Changes | Tests |
 |------|------|----|-----------------|-------|
+| 2026-02-21 | v3.0.8 | v3.0.8 | None (Phase 15 continued: Structured pino logging across 154 files, CacheManager test isolation, db.ts deprecation annotations, emoji removal from logs) | 3813 ✅ |
 | 2026-02-21 | v3.0.8 | v3.0.8 | None (Phase 15: Repository quality improvements — hook `any` type migration, CI typecheck, ESLint version alignment, documentation updates, code-quality workflow fixes) | 3799 ✅ |
 | 2027-02-21 | v3.0.8 | v3.0.8 | None (Phase 14 complete: Activity Feed/Chatter across 6 clouds, 4 Interface Builder blank pages, Dashboard headers & global filters on 6 clouds, ViewTabs on 18 views, Feed API 8 endpoints, Feed service contract, System metadata, Studio builder configs, Navigation areas, 327 new tests) | 3707 ✅ |
 | 2026-02-21 | v3.0.6 | v3.0.8 | None (New: Activity Feed/Chatter system, Interface Builder/Blank Pages, Dashboard headers & global filters, Feed API contracts, Studio builder configs, Oclif CLI plugin, Package conventions; Phase 14 roadmap added) | 3318 ✅ |
