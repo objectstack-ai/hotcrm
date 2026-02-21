@@ -9,7 +9,7 @@ const CampaignROIHook: Hook = {
   name: 'CampaignROIHook',
   object: 'opportunity', // Listening to Opportunity events from Marketing package
   events: ['afterUpdate'],
-  handler: async (ctx: any) => {
+  handler: async (ctx: HookContext) => {
     try {
       const newOpp = ctx.result as Record<string, any>;
       const oldOpp = ctx.previous as Record<string, any> | undefined;
@@ -42,18 +42,18 @@ const CampaignROIHook: Hook = {
         // Note: In a real concurrent system, use $inc operator. 
         // objectstack/runtime usually supports partial updates.
         // If we can't use $inc, we risk race conditions, but for this prototype:
-        const campaigns = await ctx.ql.find('campaign', { filters: [['_id', '=', newOpp.campaign_id]] });
+        const campaigns = await (ctx.ql as any).find('campaign', { filters: [['_id', '=', newOpp.campaign_id]] });
         if (campaigns && campaigns.length > 0) {
           const campaign: any = campaigns[0];
           const currentRevenue = campaign.actual_revenue || 0;
           
-          await ctx.ql.doc.update('campaign', newOpp.campaign_id, {
+          await (ctx.ql as any).doc.update('campaign', newOpp.campaign_id, {
             actual_revenue: currentRevenue + delta
           });
         }
       }
     } catch (error) {
-      console.error(`❌ Error in CampaignROIHook for campaign ${ctx.result?.campaign_id}:`, error);
+      console.error(`❌ Error in CampaignROIHook for campaign ${(ctx.result as Record<string, any>)?.campaign_id}:`, error);
       // Don't throw - allow opportunity update to complete even if ROI calculation fails
     }
   }

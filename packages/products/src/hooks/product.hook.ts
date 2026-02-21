@@ -44,13 +44,13 @@ const ProductHook: Hook = {
 /**
  * Validate product configuration
  */
-async function validateProductConfiguration(ctx: any): Promise<void> {
-  const product = ctx.input?.doc || ctx.result;
+async function validateProductConfiguration(ctx: HookContext): Promise<void> {
+  const product = (ctx.input?.doc || ctx.result) as Record<string, any>;
   
   try {
     // Ensure product code is unique
     if (product.ProductCode) {
-      const existing = await ctx.ql.find('product', {
+      const existing = await (ctx.ql as any).find('product', {
         filters: [
           ['ProductCode', '=', product.ProductCode],
           ['Id', '!=', product.Id || '']
@@ -79,8 +79,8 @@ async function validateProductConfiguration(ctx: any): Promise<void> {
 /**
  * Validate bundle configuration and dependencies
  */
-async function validateBundleConfiguration(ctx: any): Promise<void> {
-  const product = ctx.input?.doc || ctx.result;
+async function validateBundleConfiguration(ctx: HookContext): Promise<void> {
+  const product = (ctx.input?.doc || ctx.result) as Record<string, any>;
   
   try {
     // If this is a bundle product, validate bundle items
@@ -108,16 +108,18 @@ async function validateBundleConfiguration(ctx: any): Promise<void> {
 /**
  * Handle stock level changes
  */
-async function handleStockLevelChange(ctx: any): Promise<void> {
+async function handleStockLevelChange(ctx: HookContext): Promise<void> {
   if (!ctx.previous || !ctx.result) return;
   
-  const stockChanged = ctx.previous.StockLevel !== ctx.result.StockLevel;
+  const prev = ctx.previous as Record<string, any>;
+  const result = ctx.result as Record<string, any>;
+  const stockChanged = prev.StockLevel !== result.StockLevel;
   if (!stockChanged) return;
 
-  const product = ctx.result;
+  const product = result;
   
   try {
-    console.log(`📊 Stock level changed from ${ctx.previous.StockLevel} to ${product.StockLevel}`);
+    console.log(`📊 Stock level changed from ${prev.StockLevel} to ${product.StockLevel}`);
 
     // Check if stock is low
     if (product.LowStockThreshold && product.StockLevel <= product.LowStockThreshold) {
@@ -133,7 +135,7 @@ async function handleStockLevelChange(ctx: any): Promise<void> {
       
       // Update product status to Out of Stock
       if (product.Status === 'active') {
-        await ctx.ql.doc.update('product', product.Id, {
+        await (ctx.ql as any).doc.update('product', product.Id, {
           Status: 'Out of Stock'
         });
         console.log('🚫 Product status updated to Out of Stock');
@@ -141,8 +143,8 @@ async function handleStockLevelChange(ctx: any): Promise<void> {
     }
 
     // If stock was replenished, reactivate product
-    if (ctx.previous.StockLevel === 0 && product.StockLevel > 0 && product.Status === 'Out of Stock') {
-      await ctx.ql.doc.update('product', product.Id, {
+    if (prev.StockLevel === 0 && product.StockLevel > 0 && product.Status === 'Out of Stock') {
+      await (ctx.ql as any).doc.update('product', product.Id, {
         Status: 'active'
       });
       console.log('✅ Product reactivated after stock replenishment');
@@ -155,22 +157,24 @@ async function handleStockLevelChange(ctx: any): Promise<void> {
 /**
  * Handle price changes
  */
-async function handlePriceChange(ctx: any): Promise<void> {
+async function handlePriceChange(ctx: HookContext): Promise<void> {
   if (!ctx.previous || !ctx.result) return;
   
-  const listPriceChanged = ctx.previous.ListPrice !== ctx.result.ListPrice;
-  const costPriceChanged = ctx.previous.CostPrice !== ctx.result.CostPrice;
+  const prev = ctx.previous as Record<string, any>;
+  const result = ctx.result as Record<string, any>;
+  const listPriceChanged = prev.ListPrice !== result.ListPrice;
+  const costPriceChanged = prev.CostPrice !== result.CostPrice;
   
   if (!listPriceChanged && !costPriceChanged) return;
 
-  const product = ctx.result;
+  const product = result;
   
   try {
     if (listPriceChanged) {
-      console.log(`💰 List price changed from ${ctx.previous.ListPrice} to ${product.ListPrice}`);
+      console.log(`💰 List price changed from ${prev.ListPrice} to ${product.ListPrice}`);
       
       // Log price change activity
-      await ctx.ql.doc.create('activity', {
+      await (ctx.ql as any).doc.create('activity', {
         Subject: `Price Change: ${product.Name}`,
         Type: 'Price Update',
         Status: 'completed',
@@ -178,17 +182,17 @@ async function handlePriceChange(ctx: any): Promise<void> {
         WhatId: product.Id,
         OwnerId: ctx.user.id,
         ActivityDate: new Date().toISOString().split('T')[0],
-        Description: `List price changed from ${ctx.previous.ListPrice} to ${product.ListPrice}`
+        Description: `List price changed from ${prev.ListPrice} to ${product.ListPrice}`
       });
       console.log('✅ Price change activity logged');
 
       console.debug(`[product.hook] Pricebook update pending: update active pricebook entries for product ${product.Name} with new list price ${product.ListPrice}`);
       
-      console.debug(`[product.hook] Sales team notification pending: price change for product ${product.Name} from ${ctx.previous.ListPrice} to ${product.ListPrice}`);
+      console.debug(`[product.hook] Sales team notification pending: price change for product ${product.Name} from ${prev.ListPrice} to ${product.ListPrice}`);
     }
 
     if (costPriceChanged) {
-      console.log(`💵 Cost price changed from ${ctx.previous.CostPrice} to ${product.CostPrice}`);
+      console.log(`💵 Cost price changed from ${prev.CostPrice} to ${product.CostPrice}`);
       
       // Recalculate margin
       if (product.ListPrice && product.CostPrice) {
@@ -208,16 +212,18 @@ async function handlePriceChange(ctx: any): Promise<void> {
 /**
  * Handle product status changes
  */
-async function handleStatusChange(ctx: any): Promise<void> {
+async function handleStatusChange(ctx: HookContext): Promise<void> {
   if (!ctx.previous || !ctx.result) return;
   
-  const statusChanged = ctx.previous.Status !== ctx.result.Status;
+  const prev = ctx.previous as Record<string, any>;
+  const result = ctx.result as Record<string, any>;
+  const statusChanged = prev.Status !== result.Status;
   if (!statusChanged) return;
 
-  const product = ctx.result;
+  const product = result;
   
   try {
-    console.log(`🔄 Product status changed from "${ctx.previous.Status}" to "${product.Status}"`);
+    console.log(`🔄 Product status changed from "${prev.Status}" to "${product.Status}"`);
 
     // Handle deactivation
     if (product.Status === 'inactive' || product.Status === 'discontinued') {
@@ -227,7 +233,7 @@ async function handleStatusChange(ctx: any): Promise<void> {
     }
 
     // Handle reactivation
-    if ((ctx.previous.Status === 'inactive' || ctx.previous.Status === 'discontinued') && 
+    if ((prev.Status === 'inactive' || prev.Status === 'discontinued') && 
         product.Status === 'active') {
       console.log(`✅ Product reactivated: ${product.Name}`);
       
@@ -235,15 +241,15 @@ async function handleStatusChange(ctx: any): Promise<void> {
     }
 
     // Log activity for status change
-    await ctx.ql.doc.create('activity', {
-      Subject: `Product Status Changed: ${ctx.previous.Status} → ${product.Status}`,
+    await (ctx.ql as any).doc.create('activity', {
+      Subject: `Product Status Changed: ${prev.Status} → ${product.Status}`,
       Type: 'Status Change',
       Status: 'completed',
       Priority: 'normal',
       WhatId: product.Id,
       OwnerId: ctx.user.id,
       ActivityDate: new Date().toISOString().split('T')[0],
-      Description: `Product "${product.Name}" status changed from "${ctx.previous.Status}" to "${product.Status}"`
+      Description: `Product "${product.Name}" status changed from "${prev.Status}" to "${product.Status}"`
     });
   } catch (error) {
     console.error(`[product.hook] handleStatusChange failed:`, error);

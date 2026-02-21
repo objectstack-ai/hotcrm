@@ -41,7 +41,7 @@ const AccountHealthScoreTrigger: Hook = {
 /**
  * Calculate account health score (0-100)
  */
-async function calculateHealthScore(account: Record<string, any>, ctx: any): Promise<number> {
+async function calculateHealthScore(account: Record<string, any>, ctx: HookContext): Promise<number> {
   let score = 0;
   
   // Base score for active customer status (20 points)
@@ -125,7 +125,7 @@ const AccountHierarchyTrigger: Hook = {
 /**
  * Update parent account metrics by aggregating child account data
  */
-async function updateParentAccountMetrics(parentId: string, ctx: any): Promise<void> {
+async function updateParentAccountMetrics(parentId: string, ctx: HookContext): Promise<void> {
   console.log(`🔄 Updating parent account metrics: ${parentId}`);
   
   // In real implementation, would query all child accounts and aggregate
@@ -146,7 +146,7 @@ async function updateParentAccountMetrics(parentId: string, ctx: any): Promise<v
 /**
  * Cascade ownership changes to child accounts
  */
-async function cascadeOwnershipChange(accountId: string, newOwnerId: string, ctx: any): Promise<void> {
+async function cascadeOwnershipChange(accountId: string, newOwnerId: string, ctx: HookContext): Promise<void> {
   console.log(`🔄 Cascading ownership change to child accounts of ${accountId}`);
   
   // In real implementation, would query and update all child accounts

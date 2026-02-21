@@ -81,7 +81,7 @@ const ActivityRelatedObjectUpdatesTrigger: Hook = {
 /**
  * Update Contact's last activity date
  */
-async function updateContactLastActivityDate(whoId: string, activityDate: string, ctx: any): Promise<void> {
+async function updateContactLastActivityDate(whoId: string, activityDate: string, ctx: HookContext): Promise<void> {
   console.log(`🔄 Updating LastContactDate for contact: ${whoId}`);
   
   // In real implementation:
@@ -98,7 +98,7 @@ async function updateContactLastActivityDate(whoId: string, activityDate: string
 /**
  * Update related object's last activity date
  */
-async function updateWhatObjectLastActivityDate(whatId: string, activityDate: string, ctx: any): Promise<void> {
+async function updateWhatObjectLastActivityDate(whatId: string, activityDate: string, ctx: HookContext): Promise<void> {
   console.log(`🔄 Updating LastActivityDate for related object: ${whatId}`);
   
   // In real implementation, would need to determine object type from WhatId
@@ -154,7 +154,7 @@ const ActivityCompletionTrigger: Hook = {
 /**
  * Create next recurrence of a recurring activity
  */
-async function createNextRecurrence(activity: Record<string, any>, ctx: any): Promise<void> {
+async function createNextRecurrence(activity: Record<string, any>, ctx: HookContext): Promise<void> {
   console.log(`🔄 Creating next recurrence for: ${activity.Subject}`);
   
   // Calculate next occurrence date based on pattern

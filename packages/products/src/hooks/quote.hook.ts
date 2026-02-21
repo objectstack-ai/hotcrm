@@ -53,8 +53,8 @@ const QuotePricingHook: Hook = {
 /**
  * Calculate quote pricing based on line items and discounts
  */
-async function calculateQuotePricing(ctx: any): Promise<void> {
-  const quote = ctx.input?.doc || ctx.result;
+async function calculateQuotePricing(ctx: HookContext): Promise<void> {
+  const quote = (ctx.input?.doc || ctx.result) as Record<string, any>;
   
   try {
     // Calculate Discount Amount from Percent or vice versa
@@ -88,8 +88,8 @@ async function calculateQuotePricing(ctx: any): Promise<void> {
 /**
  * Determine approval requirements based on discount percentage
  */
-async function determineApprovalRequirements(ctx: any): Promise<void> {
-  const quote = ctx.input?.doc || ctx.result;
+async function determineApprovalRequirements(ctx: HookContext): Promise<void> {
+  const quote = (ctx.input?.doc || ctx.result) as Record<string, any>;
   const discountPercent = quote.DiscountPercent || 0;
 
   try {
@@ -118,7 +118,7 @@ async function determineApprovalRequirements(ctx: any): Promise<void> {
       
       // Set approval status to Pending if discount increased
       if (ctx.previous) {
-        const oldDiscount = ctx.previous.DiscountPercent || 0;
+        const oldDiscount = (ctx.previous as Record<string, any>).DiscountPercent || 0;
         if (discountPercent > oldDiscount && quote.ApprovalStatus !== 'approved' && quote.ApprovalStatus !== 'pending') {
           quote.ApprovalStatus = 'pending';
           console.log(`🔄 Quote requires Level ${approvalLevel} approval (${(discountPercent * 100).toFixed(1)}% discount)`);
@@ -136,8 +136,8 @@ async function determineApprovalRequirements(ctx: any): Promise<void> {
 /**
  * Validate margin protection rules
  */
-async function validateMarginProtection(ctx: any): Promise<void> {
-  const quote = ctx.input?.doc || ctx.result;
+async function validateMarginProtection(ctx: HookContext): Promise<void> {
+  const quote = (ctx.input?.doc || ctx.result) as Record<string, any>;
   
   try {
     // Calculate margin if we have cost information
@@ -156,13 +156,13 @@ async function validateMarginProtection(ctx: any): Promise<void> {
 /**
  * Initialize quote after creation
  */
-async function initializeQuote(ctx: any): Promise<void> {
-  const quote = ctx.result;
+async function initializeQuote(ctx: HookContext): Promise<void> {
+  const quote = ctx.result as Record<string, any>;
   
   try {
     // Log activity for new quote
     if (quote.AccountId) {
-      await ctx.ql.doc.create('activity', {
+      await (ctx.ql as any).doc.create('activity', {
         Subject: `New Quote Created: ${quote.Name}`,
         Type: 'Quote',
         Status: 'completed',
@@ -182,7 +182,7 @@ async function initializeQuote(ctx: any): Promise<void> {
       const quoteDate = new Date(quote.QuoteDate);
       const expirationDate = new Date(quoteDate.getTime() + validityDays * 24 * 60 * 60 * 1000);
       
-      await ctx.ql.doc.update('quote', quote.Id, {
+      await (ctx.ql as any).doc.update('quote', quote.Id, {
         ExpirationDate: expirationDate.toISOString().split('T')[0]
       });
       console.log(`📅 Expiration date set to: ${expirationDate.toISOString().split('T')[0]}`);
@@ -195,16 +195,18 @@ async function initializeQuote(ctx: any): Promise<void> {
 /**
  * Handle quote status changes
  */
-async function handleQuoteStatusChange(ctx: any): Promise<void> {
+async function handleQuoteStatusChange(ctx: HookContext): Promise<void> {
   if (!ctx.previous || !ctx.result) return;
   
-  const statusChanged = ctx.previous.Status !== ctx.result.Status;
+  const prev = ctx.previous as Record<string, any>;
+  const result = ctx.result as Record<string, any>;
+  const statusChanged = prev.Status !== result.Status;
   if (!statusChanged) return;
 
-  const quote = ctx.result;
+  const quote = result;
   
   try {
-    console.log(`🔄 Quote status changed from "${ctx.previous.Status}" to "${quote.Status}"`);
+    console.log(`🔄 Quote status changed from "${prev.Status}" to "${quote.Status}"`);
 
     // Handle Accepted status
     if (quote.Status === 'accepted') {
@@ -223,8 +225,8 @@ async function handleQuoteStatusChange(ctx: any): Promise<void> {
 
     // Log activity for status change
     if (quote.AccountId) {
-      await ctx.ql.doc.create('activity', {
-        Subject: `Quote Status Changed: ${ctx.previous.Status} → ${quote.Status}`,
+      await (ctx.ql as any).doc.create('activity', {
+        Subject: `Quote Status Changed: ${prev.Status} → ${quote.Status}`,
         Type: 'Quote Status Change',
         Status: 'completed',
         Priority: 'normal',
@@ -232,7 +234,7 @@ async function handleQuoteStatusChange(ctx: any): Promise<void> {
         WhatId: quote.Id,
         OwnerId: ctx.user.id,
         ActivityDate: new Date().toISOString().split('T')[0],
-        Description: `Quote ${quote.QuoteNumber} status changed from "${ctx.previous.Status}" to "${quote.Status}"`
+        Description: `Quote ${quote.QuoteNumber} status changed from "${prev.Status}" to "${quote.Status}"`
       });
     }
   } catch (error) {
@@ -243,21 +245,21 @@ async function handleQuoteStatusChange(ctx: any): Promise<void> {
 /**
  * Handle quote accepted
  */
-async function handleQuoteAccepted(ctx: any): Promise<void> {
-  const quote = ctx.result;
+async function handleQuoteAccepted(ctx: HookContext): Promise<void> {
+  const quote = ctx.result as Record<string, any>;
   
   try {
     console.log('✅ Processing quote acceptance...');
 
     // Update accepted date and timestamp
-    await ctx.ql.doc.update('quote', quote.Id, {
+    await (ctx.ql as any).doc.update('quote', quote.Id, {
       AcceptedDate: new Date().toISOString()
     });
 
     // Update opportunity stage if linked
     if (quote.OpportunityId) {
       try {
-        await ctx.ql.doc.update('opportunity', quote.OpportunityId, {
+        await (ctx.ql as any).doc.update('opportunity', quote.OpportunityId, {
           Stage: 'closed_won',
           CloseDate: new Date().toISOString().split('T')[0]
         });
@@ -286,11 +288,11 @@ async function handleQuoteAccepted(ctx: any): Promise<void> {
         };
 
         try {
-            const contract = await ctx.ql.doc.create('contract', contractData);
+            const contract = await (ctx.ql as any).doc.create('contract', contractData);
             console.log(`📝 Contract created successfully: ${contract._id}`);
             
             // Link Contract back to Quote
-            await ctx.ql.doc.update('quote', quote.Id, {
+            await (ctx.ql as any).doc.update('quote', quote.Id, {
                 Description: `${quote.Description || ''}\n Contract Created: ${contract.contract_number}`
             });
         } catch (err) {
@@ -305,8 +307,8 @@ async function handleQuoteAccepted(ctx: any): Promise<void> {
 /**
  * Handle quote sent to customer
  */
-async function handleQuoteSent(ctx: any): Promise<void> {
-  const quote = ctx.result;
+async function handleQuoteSent(ctx: HookContext): Promise<void> {
+  const quote = ctx.result as Record<string, any>;
   
   try {
     console.log('📧 Quote sent to customer');
@@ -320,8 +322,8 @@ async function handleQuoteSent(ctx: any): Promise<void> {
 /**
  * Handle quote expiration
  */
-async function handleQuoteExpired(ctx: any): Promise<void> {
-  const quote = ctx.result;
+async function handleQuoteExpired(ctx: HookContext): Promise<void> {
+  const quote = ctx.result as Record<string, any>;
   
   try {
     console.log('⏰ Quote expired');
@@ -335,20 +337,22 @@ async function handleQuoteExpired(ctx: any): Promise<void> {
 /**
  * Handle approval status changes
  */
-async function handleApprovalStatusChange(ctx: any): Promise<void> {
+async function handleApprovalStatusChange(ctx: HookContext): Promise<void> {
   if (!ctx.previous || !ctx.result) return;
   
-  const approvalStatusChanged = ctx.previous.ApprovalStatus !== ctx.result.ApprovalStatus;
+  const prev = ctx.previous as Record<string, any>;
+  const result = ctx.result as Record<string, any>;
+  const approvalStatusChanged = prev.ApprovalStatus !== result.ApprovalStatus;
   if (!approvalStatusChanged) return;
 
-  const quote = ctx.result;
+  const quote = result;
   
   try {
-    console.log(`🔄 Approval status changed from "${ctx.previous.ApprovalStatus}" to "${quote.ApprovalStatus}"`);
+    console.log(`🔄 Approval status changed from "${prev.ApprovalStatus}" to "${quote.ApprovalStatus}"`);
 
     // Handle approved
     if (quote.ApprovalStatus === 'approved') {
-      await ctx.ql.doc.update('quote', quote.Id, {
+      await (ctx.ql as any).doc.update('quote', quote.Id, {
         ApprovedDate: new Date().toISOString(),
         ApprovedById: ctx.user.id,
         Status: quote.Status === 'in_review' ? 'approved' : quote.Status
@@ -358,7 +362,7 @@ async function handleApprovalStatusChange(ctx: any): Promise<void> {
 
     // Handle rejected
     if (quote.ApprovalStatus === 'rejected') {
-      await ctx.ql.doc.update('quote', quote.Id, {
+      await (ctx.ql as any).doc.update('quote', quote.Id, {
         RejectedDate: new Date().toISOString(),
         RejectedById: ctx.user.id,
         Status: 'rejected'

@@ -64,7 +64,7 @@ const ApplicationStatusWorkflowTrigger: Hook = {
 /**
  * Create an interview record when application moves to interview stage
  */
-async function createInterviewRecord(application: any, ctx: any): Promise<void> {
+async function createInterviewRecord(application: Record<string, any>, ctx: HookContext): Promise<void> {
   try {
     const scheduledDate = new Date();
     scheduledDate.setDate(scheduledDate.getDate() + 3); // Default: 3 days from now
@@ -91,7 +91,7 @@ async function createInterviewRecord(application: any, ctx: any): Promise<void> 
 /**
  * Update candidate status to 'hired' when application is hired
  */
-async function updateCandidateToHired(application: any, ctx: any): Promise<void> {
+async function updateCandidateToHired(application: Record<string, any>, ctx: HookContext): Promise<void> {
   try {
     if (!application.candidate_id) {
       console.warn('⚠️ No candidate linked to application, skipping candidate update');
@@ -112,10 +112,10 @@ async function updateCandidateToHired(application: any, ctx: any): Promise<void>
  * Log application status change
  */
 async function logApplicationStatusChange(
-  application: any,
+  application: Record<string, any>,
   oldStatus: string,
   newStatus: string,
-  ctx: any
+  ctx: HookContext
 ): Promise<void> {
   try {
     console.log(`📝 Logging application status change: ${oldStatus} → ${newStatus} for ${application.application_number}`);
@@ -179,7 +179,7 @@ const ApplicationScreeningTrigger: Hook = {
 /**
  * Fetch candidate record
  */
-async function fetchCandidate(candidateId: string, ctx: any): Promise<any> {
+async function fetchCandidate(candidateId: string, ctx: HookContext): Promise<any> {
   try {
     const candidates = await (ctx.ql as any).find('candidate', {
       filters: [['id', '=', candidateId]],
@@ -195,7 +195,7 @@ async function fetchCandidate(candidateId: string, ctx: any): Promise<any> {
 /**
  * Fetch recruitment record
  */
-async function fetchRecruitment(recruitmentId: string, ctx: any): Promise<any> {
+async function fetchRecruitment(recruitmentId: string, ctx: HookContext): Promise<any> {
   try {
     if (!recruitmentId) return null;
     const recruitments = await (ctx.ql as any).find('recruitment', {
@@ -212,7 +212,7 @@ async function fetchRecruitment(recruitmentId: string, ctx: any): Promise<any> {
 /**
  * Calculate screening score based on candidate qualifications
  */
-function calculateScreeningScore(candidate: any, recruitment: any): number {
+function calculateScreeningScore(candidate: Record<string, any>, recruitment: Record<string, any>): number {
   let score = 0;
 
   // Experience score (30 points)

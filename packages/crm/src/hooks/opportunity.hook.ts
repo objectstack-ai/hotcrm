@@ -82,9 +82,9 @@ const OpportunityStageChange: Hook = {
 /**
  * Handle Closed Won automation
  */
-async function handleClosedWon(ctx: any): Promise<void> {
+async function handleClosedWon(ctx: HookContext): Promise<void> {
   console.log('✅ Processing Closed Won automation...');
-  const opportunity = ctx.result;
+  const opportunity = ctx.result as Record<string, any>;
 
   if (!opportunity.AccountId) {
     console.error('❌ Cannot process: Opportunity has no AccountId');
@@ -96,7 +96,7 @@ async function handleClosedWon(ctx: any): Promise<void> {
   // 1. Create Contract
   let contractId;
   try {
-    const contract = await ctx.ql.doc.create('contract', {
+    const contract = await (ctx.ql as any).doc.create('contract', {
       AccountId: opportunity.AccountId,
       OpportunityId: opportunity.Id,
       Status: 'draft',
@@ -118,7 +118,7 @@ async function handleClosedWon(ctx: any): Promise<void> {
 
   // 2. Update Account Status
   try {
-    await ctx.ql.doc.update('account', opportunity.AccountId, {
+    await (ctx.ql as any).doc.update('account', opportunity.AccountId, {
       CustomerStatus: 'active_customer'
     });
     console.log('✅ Account status updated to Active Customer');
@@ -129,7 +129,7 @@ async function handleClosedWon(ctx: any): Promise<void> {
 
   // 3. Log activity
   try {
-    await ctx.ql.doc.create('activity', {
+    await (ctx.ql as any).doc.create('activity', {
       Subject: `Deal Won: ${opportunity.Name}`,
       Type: 'Milestone',
       Status: 'completed',
@@ -160,9 +160,9 @@ async function handleClosedWon(ctx: any): Promise<void> {
   }
 }
 
-async function handleClosedLost(ctx: any): Promise<void> {
+async function handleClosedLost(ctx: HookContext): Promise<void> {
   console.log('❌ Processing Closed Lost automation...');
-  const opportunity = ctx.result;
+  const opportunity = ctx.result as Record<string, any>;
 
   if (!opportunity.AccountId) {
     return;
@@ -170,7 +170,7 @@ async function handleClosedLost(ctx: any): Promise<void> {
 
   // Log activity for lost opportunity
   try {
-    await ctx.ql.doc.create('activity', {
+    await (ctx.ql as any).doc.create('activity', {
       Subject: `Deal Lost: ${opportunity.Name}`,
       Type: 'Milestone',
       Status: 'completed',
@@ -192,12 +192,12 @@ async function handleClosedLost(ctx: any): Promise<void> {
 /**
  * Log activity when stage changes
  */
-async function logStageChange(ctx: any): Promise<void> {
+async function logStageChange(ctx: HookContext): Promise<void> {
   try {
-    const opportunity = ctx.result;
-    const oldStage = ctx.previous?.Stage || 'unknown';
-    await ctx.ql.doc.create('activity', {
-      Subject: `Opportunity Stage Change: ${oldStage} → ${ctx.result.Stage}`,
+    const opportunity = ctx.result as Record<string, any>;
+    const oldStage = (ctx.previous as Record<string, any>)?.Stage || 'unknown';
+    await (ctx.ql as any).doc.create('activity', {
+      Subject: `Opportunity Stage Change: ${oldStage} → ${(ctx.result as Record<string, any>).Stage}`,
       Type: 'Stage Change',
       Status: 'completed',
       Priority: 'normal',
@@ -205,7 +205,7 @@ async function logStageChange(ctx: any): Promise<void> {
       WhatId: opportunity.Id,
       OwnerId: ctx.user.id,
       ActivityDate: new Date().toISOString().split('T')[0],
-      Description: `Opportunity stage changed from "${oldStage}" to "${ctx.result.Stage}"`
+      Description: `Opportunity stage changed from "${oldStage}" to "${(ctx.result as Record<string, any>).Stage}"`
     });
   } catch (error) {
     console.error('❌ Failed to log stage change activity:', error);
@@ -215,8 +215,8 @@ async function logStageChange(ctx: any): Promise<void> {
 /**
  * Validate required fields for advanced stages
  */
-async function validateStageRequirements(ctx: any): Promise<void> {
-  const opportunity = ctx.result;
+async function validateStageRequirements(ctx: HookContext): Promise<void> {
+  const opportunity = ctx.result as Record<string, any>;
   const stage = opportunity.Stage;
   const warnings: string[] = [];
 
@@ -252,13 +252,13 @@ async function validateStageRequirements(ctx: any): Promise<void> {
 /**
  * Helper: Count related quotes
  */
-async function countRelatedQuotes(ctx: any, opportunityId: string): Promise<number> {
+async function countRelatedQuotes(ctx: HookContext, opportunityId: string): Promise<number> {
   // Check if quote object exists first (it's in products package)
   try {
      // In a real monorepo with strict boundaries, we might use a decoupled service.
      // Here we assume the broker can find 'quote' across packages.
      // Mocking for now since we don't have the full runtime
-     const quotes = await ctx.ql.find('quote', { 
+     const quotes = await (ctx.ql as any).find('quote', { 
        filters: [['opportunity', '=', opportunityId]] 
      });
      return quotes.length;

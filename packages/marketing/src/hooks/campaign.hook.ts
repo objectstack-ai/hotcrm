@@ -139,7 +139,7 @@ const CampaignStatusChangeTrigger: Hook = {
 /**
  * Handle campaign transition to In Progress
  */
-async function handleInProgressStatus(campaign: any, ctx: any): Promise<void> {
+async function handleInProgressStatus(campaign: Record<string, any>, ctx: HookContext): Promise<void> {
   console.log(`🚀 Campaign "${campaign.name}" started`);
   
   console.debug(`[campaign.hook] Campaign start pending for "${campaign.name}": member notifications, workflow activation, and start event logging`);
@@ -148,7 +148,7 @@ async function handleInProgressStatus(campaign: any, ctx: any): Promise<void> {
 /**
  * Handle campaign completion
  */
-async function handleCompletedStatus(campaign: any, ctx: any): Promise<void> {
+async function handleCompletedStatus(campaign: Record<string, any>, ctx: HookContext): Promise<void> {
   console.log(`✅ Campaign "${campaign.name}" completed`);
   
   console.debug(`[campaign.hook] Campaign completion pending for "${campaign.name}": final metrics calculation, report generation, data archival, and stakeholder notification`);
@@ -157,7 +157,7 @@ async function handleCompletedStatus(campaign: any, ctx: any): Promise<void> {
 /**
  * Handle campaign abortion
  */
-async function handleAbortedStatus(campaign: any, ctx: any): Promise<void> {
+async function handleAbortedStatus(campaign: Record<string, any>, ctx: HookContext): Promise<void> {
   console.log(`❌ Campaign "${campaign.name}" was aborted`);
   
   console.debug(`[campaign.hook] Campaign abort pending for "${campaign.name}": abort reason logging, scheduled activity cleanup, and team notification`);
@@ -203,12 +203,12 @@ const CampaignDateValidationTrigger: Hook = {
  * Update campaign metrics from member engagement
  * Called by campaign_member hooks
  */
-export async function updateCampaignMetrics(campaignId: string, ctx: any): Promise<void> {
+export async function updateCampaignMetrics(campaignId: string, ctx: HookContext): Promise<void> {
   try {
     console.log(`🔄 Updating campaign metrics for: ${campaignId}`);
 
     // Aggregate campaign member statistics
-    const members = await ctx.ql.find('campaign_member', {
+    const members = await (ctx.ql as any).find('campaign_member', {
       filters: [['campaign', '=', campaignId]]
     });
 
@@ -234,7 +234,7 @@ export async function updateCampaignMetrics(campaignId: string, ctx: any): Promi
     const unsubscribeRate = totalMembers > 0 ? (unsubscribed / totalMembers) * 100 : 0;
 
     // Update campaign with aggregated metrics
-    await ctx.ql.update('campaign', campaignId, {
+    await (ctx.ql as any).update('campaign', campaignId, {
       total_members: totalMembers,
       total_opened: opened,
       total_clicked: clicked,
@@ -256,9 +256,9 @@ export async function updateCampaignMetrics(campaignId: string, ctx: any): Promi
 /**
  * Calculate cost per lead/opportunity/customer
  */
-export async function calculateCostMetrics(campaignId: string, ctx: any): Promise<any> {
+export async function calculateCostMetrics(campaignId: string, ctx: HookContext): Promise<any> {
   try {
-    const campaign = await ctx.ql.findOne('campaign', {
+    const campaign = await (ctx.ql as any).findOne('campaign', {
       filters: [['id', '=', campaignId]]
     });
 

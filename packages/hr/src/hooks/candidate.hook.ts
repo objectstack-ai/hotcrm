@@ -59,7 +59,7 @@ const CandidateScoringTrigger: Hook = {
 /**
  * Calculate candidate score (0-100) based on qualifications
  */
-function calculateCandidateScore(candidate: any): number {
+function calculateCandidateScore(candidate: Record<string, any>): number {
   let score = 0;
 
   // Education score (25 points)
@@ -122,7 +122,7 @@ function calculateCandidateScore(candidate: any): number {
 /**
  * Auto-screen candidate against minimum requirements
  */
-async function autoScreen(candidate: any, ctx: any): Promise<boolean> {
+async function autoScreen(candidate: Record<string, any>, ctx: HookContext): Promise<boolean> {
   // Basic validation
   if (!candidate.email || !candidate.mobile_phone) {
     return false;
@@ -192,7 +192,7 @@ const CandidateStatusChangeTrigger: Hook = {
 /**
  * Handle transition to Interviewing status
  */
-async function handleInterviewingStatus(candidate: any, ctx: any): Promise<void> {
+async function handleInterviewingStatus(candidate: Record<string, any>, ctx: HookContext): Promise<void> {
   console.log(`📅 Candidate ${candidate.first_name} ${candidate.last_name} moved to interviewing stage`);
   
   console.debug(`[candidate.hook] Interview process pending for ${candidate.first_name} ${candidate.last_name}: schedule first interview, notify hiring manager, and create interview records`);
@@ -201,7 +201,7 @@ async function handleInterviewingStatus(candidate: any, ctx: any): Promise<void>
 /**
  * Handle transition to Hired status
  */
-async function handleHiredStatus(candidate: any, ctx: any): Promise<void> {
+async function handleHiredStatus(candidate: Record<string, any>, ctx: HookContext): Promise<void> {
   console.log(`🎉 Candidate ${candidate.first_name} ${candidate.last_name} has been hired`);
   
   console.debug(`[candidate.hook] Hiring process pending for ${candidate.first_name} ${candidate.last_name}: create offer record, initiate onboarding, send welcome email, and notify HR team`);
@@ -210,7 +210,7 @@ async function handleHiredStatus(candidate: any, ctx: any): Promise<void> {
 /**
  * Handle transition to Rejected status
  */
-async function handleRejectedStatus(candidate: any, ctx: any): Promise<void> {
+async function handleRejectedStatus(candidate: Record<string, any>, ctx: HookContext): Promise<void> {
   console.log(`❌ Candidate ${candidate.first_name} ${candidate.last_name} has been rejected`);
   
   console.debug(`[candidate.hook] Rejection process pending for ${candidate.first_name} ${candidate.last_name}: send rejection email and archive candidate data`);
@@ -219,7 +219,7 @@ async function handleRejectedStatus(candidate: any, ctx: any): Promise<void> {
 /**
  * Handle transition to Withdrawn status
  */
-async function handleWithdrawnStatus(candidate: any, ctx: any): Promise<void> {
+async function handleWithdrawnStatus(candidate: Record<string, any>, ctx: HookContext): Promise<void> {
   console.log(`🚪 Candidate ${candidate.first_name} ${candidate.last_name} has withdrawn`);
   
   console.debug(`[candidate.hook] Withdrawal process pending for ${candidate.first_name} ${candidate.last_name}: log withdrawal reason and update recruitment metrics`);
@@ -229,10 +229,10 @@ async function handleWithdrawnStatus(candidate: any, ctx: any): Promise<void> {
  * Log status change activity
  */
 async function logStatusChange(
-  candidate: any,
+  candidate: Record<string, any>,
   oldStatus: string,
   newStatus: string,
-  ctx: any
+  ctx: HookContext
 ): Promise<void> {
   try {
     // Note: Activity object might need to be adapted for HR module

@@ -40,7 +40,7 @@ const OnboardingChecklistTrigger: Hook = {
 /**
  * Create onboarding record from accepted offer
  */
-async function createOnboardingFromOffer(offer: any, ctx: any): Promise<void> {
+async function createOnboardingFromOffer(offer: Record<string, any>, ctx: HookContext): Promise<void> {
   try {
     const startDate = offer.start_date || new Date().toISOString().split('T')[0];
     const start = new Date(startDate);

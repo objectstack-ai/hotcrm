@@ -68,7 +68,7 @@ async function checkInterviewerAvailability(
   interviewerId: string,
   scheduledDate: string,
   duration: number,
-  ctx: any
+  ctx: HookContext
 ): Promise<boolean> {
   try {
     const dateOnly = scheduledDate.split('T')[0];
@@ -137,9 +137,9 @@ const InterviewFeedbackTrigger: Hook = {
  * Update application status based on interview result
  */
 async function updateApplicationFromResult(
-  interview: any,
+  interview: Record<string, any>,
   result: string,
-  ctx: any
+  ctx: HookContext
 ): Promise<void> {
   try {
     const statusMap: Record<string, string> = {
@@ -174,7 +174,7 @@ async function updateApplicationFromResult(
  */
 async function calculateAverageInterviewScore(
   applicationId: string,
-  ctx: any
+  ctx: HookContext
 ): Promise<void> {
   try {
     const interviews = await (ctx.ql as any).find('interview', {
