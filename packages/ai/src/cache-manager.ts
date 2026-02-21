@@ -58,6 +58,19 @@ export class CacheManager {
   }
   
   /**
+   * Reset singleton instance for test isolation.
+   * Call in beforeEach/afterEach to ensure a clean slate between tests.
+   */
+  static resetInstance(): void {
+    if (CacheManager.instance) {
+      CacheManager.instance.memoryCache.clear();
+      CacheManager.instance.redisClient = null;
+      CacheManager.instance.useRedis = false;
+    }
+    CacheManager.instance = undefined as unknown as CacheManager;
+  }
+  
+  /**
    * Initialize Redis client
    */
   private async initializeRedis(): Promise<void> {
