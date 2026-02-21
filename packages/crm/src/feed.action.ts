@@ -53,8 +53,8 @@ export const listFeedRequest = GetFeedRequestSchema.parse({
 });
 
 export const listFeedResponse = GetFeedResponseSchema.parse({
-  items: [],
-  total: 0,
+  success: true,
+  data: { items: [], total: 0, hasMore: false },
 });
 
 // ---------------------------------------------------------------------------
@@ -69,8 +69,17 @@ export const createFeedItemRequest = CreateFeedItemRequestSchema.parse({
 });
 
 export const createFeedItemResponse = CreateFeedItemResponseSchema.parse({
-  id: 'fi-001',
   success: true,
+  data: {
+    id: 'fi-001',
+    type: 'comment',
+    object: 'account',
+    recordId: 'rec_example',
+    body: 'Initial outreach completed. Decision-maker identified.',
+    actor: { type: 'user', id: 'u-001', name: 'Sales Rep' },
+    visibility: 'public',
+    createdAt: '2027-06-01T10:00:00Z',
+  },
 });
 
 // ---------------------------------------------------------------------------
@@ -85,8 +94,17 @@ export const updateFeedItemRequest = UpdateFeedItemRequestSchema.parse({
 });
 
 export const updateFeedItemResponse = UpdateFeedItemResponseSchema.parse({
-  id: 'fi-001',
   success: true,
+  data: {
+    id: 'fi-001',
+    type: 'comment',
+    object: 'account',
+    recordId: 'rec_example',
+    body: 'Updated: follow-up meeting scheduled for next week.',
+    actor: { type: 'user', id: 'u-001', name: 'Sales Rep' },
+    visibility: 'public',
+    createdAt: '2027-06-01T10:00:00Z',
+  },
 });
 
 // ---------------------------------------------------------------------------
@@ -101,6 +119,7 @@ export const deleteFeedItemRequest = DeleteFeedItemRequestSchema.parse({
 
 export const deleteFeedItemResponse = DeleteFeedItemResponseSchema.parse({
   success: true,
+  data: { feedId: 'fi-001' },
 });
 
 // ---------------------------------------------------------------------------
@@ -116,6 +135,7 @@ export const addReactionRequest = AddReactionRequestSchema.parse({
 
 export const addReactionResponse = AddReactionResponseSchema.parse({
   success: true,
+  data: { reactions: [{ emoji: '👍', userIds: ['u-001'], count: 1 }] },
 });
 
 // ---------------------------------------------------------------------------
@@ -131,6 +151,7 @@ export const removeReactionRequest = RemoveReactionRequestSchema.parse({
 
 export const removeReactionResponse = RemoveReactionResponseSchema.parse({
   success: true,
+  data: { reactions: [] },
 });
 
 // ---------------------------------------------------------------------------
@@ -144,6 +165,7 @@ export const subscribeRequest = SubscribeRequestSchema.parse({
 
 export const subscribeResponse = SubscribeResponseSchema.parse({
   success: true,
+  data: { object: 'account', recordId: 'rec_example', userId: 'u-001', createdAt: '2027-06-01T10:00:00Z' },
 });
 
 // ---------------------------------------------------------------------------
@@ -157,6 +179,7 @@ export const unsubscribeRequest = FeedUnsubscribeRequestSchema.parse({
 
 export const unsubscribeResponse = UnsubscribeResponseSchema.parse({
   success: true,
+  data: { object: 'account', recordId: 'rec_example', unsubscribed: true },
 });
 
 // ---------------------------------------------------------------------------
