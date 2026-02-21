@@ -1,5 +1,8 @@
 packages:
   - 'apps/*'
   - 'packages/*'
+  # core and server are internal-only packages (private: true) excluded from
+  # workspace linking to avoid circular dependency issues during builds.
+  # They are consumed via tsconfig path aliases instead.
   - '!packages/core'
   - '!packages/server'

@@ -40,7 +40,7 @@ jobs:
       
       - name: Check for console.log statements
         run: |
-          if grep -r "console\.log" src/ --include="*.ts" --exclude-dir=node_modules; then
+          if grep -r "console\.log" packages/ --include="*.ts" --exclude-dir=node_modules --exclude-dir=__tests__; then
             echo "Warning: console.log statements found in source code"
             echo "Please use proper logging instead"
             # This is just a warning, not failing the build
@@ -50,7 +50,7 @@ jobs:
         continue-on-error: true
       
       - name: Check TypeScript compilation
-        run: pnpm run build
+        run: pnpm run typecheck
       
       - name: Run ESLint
         run: pnpm run lint
@@ -58,11 +58,11 @@ jobs:
       - name: Check for TODO comments
         run: |
           echo "Checking for TODO/FIXME comments..."
-          grep -r "TODO\|FIXME" src/ --include="*.ts" || echo "No TODO/FIXME found"
+          grep -r "TODO\|FIXME" packages/ --include="*.ts" --exclude-dir=node_modules || echo "No TODO/FIXME found"
         continue-on-error: true
       
       - name: Check file sizes
         run: |
           echo "Checking for large files..."
-          find src/ -type f -size +100k -exec ls -lh {} \; || echo "No large files found"
+          find packages/ -type f -size +100k -exec ls -lh {} \; || echo "No large files found"
         continue-on-error: true

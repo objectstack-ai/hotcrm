@@ -39,6 +39,9 @@ jobs:
       - name: Run linter
         run: pnpm run lint
       
+      - name: TypeScript type checking
+        run: pnpm run typecheck
+      
       - name: Build project
         run: pnpm run build
       

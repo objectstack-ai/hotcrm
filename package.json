@@ -67,7 +67,7 @@
     "@objectstack/studio": "^3.0.8",
     "@types/node": "^25.2.3",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
-    "@typescript-eslint/parser": "^6.21.0",
+    "@typescript-eslint/parser": "^7.18.0",
     "@vitest/coverage-v8": "^1.6.1",
     "@vitest/ui": "^1.6.1",
     "eslint": "^8.57.1",
