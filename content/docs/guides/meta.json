@@ -8,6 +8,7 @@
     "formview-layouts",
     "page-components",
     "building-connectors",
-    "analytics-queries"
+    "analytics-queries",
+    "seed-data"
   ]
 }
