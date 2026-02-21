@@ -86,16 +86,18 @@ export default ObjectSchema.create({
 
 ```typescript
 // packages/{pkg}/src/my_entity.hook.ts
-export function beforeInsert(context: any) {
-  const { doc, broker } = context;
+import type { HookContext } from '@objectstack/spec/data';
+
+export function beforeInsert(context: HookContext) {
+  const doc = context.input.doc as Record<string, any>;
   // Validation and business logic
   if (!doc.name) {
     throw new Error('Name is required');
   }
 }
 
-export function afterInsert(context: any) {
-  const { doc, broker } = context;
+export function afterInsert(context: HookContext) {
+  const doc = context.result as Record<string, any>;
   // Post-creation side effects (notifications, related records, etc.)
 }
 ```
@@ -204,8 +206,10 @@ If the field needs validation or side effects, add logic to the hook file:
 
 ```typescript
 // packages/crm/src/account.hook.ts
-export function beforeInsert(context: any) {
-  const { doc } = context;
+import type { HookContext } from '@objectstack/spec/data';
+
+export function beforeInsert(context: HookContext) {
+  const doc = context.input.doc as Record<string, any>;
   // Validate URL format if provided
   if (doc.website_url && !doc.website_url.startsWith('http')) {
     doc.website_url = 'https://' + doc.website_url;

@@ -143,10 +143,12 @@ Only the compiled `dist/` folder is included in published packages (controlled b
 ## 🔄 Pull Request Process
 
 1. **Before Creating a PR**
-   - Ensure all tests pass
-   - Run linting and fix any issues
+   - Ensure all tests pass (`pnpm test`)
+   - Run type checking (`pnpm typecheck`)
+   - Run linting and fix any issues (`pnpm lint`)
    - Update documentation if needed
    - Add tests for new features
+   - Update ROADMAP.md if the change completes a roadmap item
    - **Add a changeset** if your changes affect package behavior
 
 2. **Creating a PR**

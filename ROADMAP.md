@@ -1,7 +1,7 @@
 # HotCRM Development Roadmap
 
 > Comprehensive development plan for HotCRM — the world's first AI-Native CRM.
-> Protocol: @objectstack/spec v3.0.8 | Last Updated: February 21, 2027
+> Protocol: @objectstack/spec v3.0.8 | Last Updated: February 2026
 
 ## Strategic Direction
 
@@ -15,6 +15,7 @@
 2027 Q1-Q2 ████████████████████████████████  Phase 13: Module Optimization & Seed Data  ✅ COMPLETE
 2027 Q2-Q3 ████████████████████████████████  Phase 14: v3.0.8 Feed & Interface Builder Adoption  ✅ COMPLETE
 2027+      ████████████████████████████████  Phase 12E: Advanced AI & Enterprise Features  ✅ COMPLETE
+2026 Q1    ████████████████████████████████  Phase 15: Repository Quality & DX Improvements  🔄 IN PROGRESS
 ```
 
 ## Current State Summary
@@ -171,10 +172,39 @@ These items were deferred during Phase 13 and have been completed:
 
 ---
 
+### Phase 15: Repository Quality & DX Improvements (2026 Q1)
+
+> Goal: Improve code quality, CI/CD, documentation accuracy, and developer experience.
+
+#### High Priority
+
+- [x] **DEVELOPMENT_WORKFLOW.md test count** — Remove hardcoded test count; use dynamic description
+- [x] **Hook `any` type migration** — Replace `ctx: any` with `ctx: HookContext` in 18 helper functions across hook files
+- [x] **pnpm-workspace.yaml documentation** — Add comment explaining core/server exclusion reason
+- [x] **CI workflow typecheck** — Add `pnpm typecheck` step to CI workflow
+- [x] **Code quality workflow paths** — Fix `src/` references to `packages/` in code-quality workflow
+
+#### Medium Priority
+
+- [x] **ESLint version alignment** — Align `@typescript-eslint/parser` (^6 → ^7) with `@typescript-eslint/eslint-plugin` (^7)
+- [x] **CONTRIBUTING.md checklist** — Add pre-submission development checklist (typecheck, test, ROADMAP)
+- [x] **Documentation hook examples** — Update DEVELOPMENT_WORKFLOW.md code examples to use `HookContext` instead of `any`
+- [x] **ROADMAP.md date sync** — Update last-updated date and version timeline to match current state
+
+#### Deferred / Future
+
+- [ ] **Structured logging migration** — Replace `console.log` with pino logger across hook files
+- [ ] **Legacy API cleanup** — Remove `db.ts` references and migrate to broker/ObjectQL
+- [ ] **E2E test coverage** — Build API-layer end-to-end tests for Feed API / MCP API
+- [ ] **FormView `as any` cleanup** — Remove `as any` casts once `@objectstack/spec` aligns FormView column types
+
+---
+
 ## Version Upgrade History
 
 | Date | From | To | Breaking Changes | Tests |
 |------|------|----|-----------------|-------|
+| 2026-02-21 | v3.0.8 | v3.0.8 | None (Phase 15: Repository quality improvements — hook `any` type migration, CI typecheck, ESLint version alignment, documentation updates, code-quality workflow fixes) | 3799 ✅ |
 | 2027-02-21 | v3.0.8 | v3.0.8 | None (Phase 14 complete: Activity Feed/Chatter across 6 clouds, 4 Interface Builder blank pages, Dashboard headers & global filters on 6 clouds, ViewTabs on 18 views, Feed API 8 endpoints, Feed service contract, System metadata, Studio builder configs, Navigation areas, 327 new tests) | 3707 ✅ |
 | 2026-02-21 | v3.0.6 | v3.0.8 | None (New: Activity Feed/Chatter system, Interface Builder/Blank Pages, Dashboard headers & global filters, Feed API contracts, Studio builder configs, Oclif CLI plugin, Package conventions; Phase 14 roadmap added) | 3318 ✅ |
 | 2026-02-16 | v3.0.0 | v3.0.0 | None (Phase 13 roadmap: Module-by-module deep optimization, seed data foundation, vertical package UI enhancement, core cloud metadata equalization) | 3318 ✅ |
