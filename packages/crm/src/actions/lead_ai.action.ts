@@ -20,41 +20,41 @@ const logger = createLogger('crm:lead_ai');
 // ============================================================================
 
 export interface EmailSignatureRequest {
- /** Email content to parse */
- emailBody: string;
- /** Optional lead ID to update */
- leadId?: string;
+  /** Email content to parse */
+  emailBody: string;
+  /** Optional lead ID to update */
+  leadId?: string;
 }
 
 export interface EmailSignatureResponse {
- /** Extracted contact information */
- extractedData: {
- Name?: string;
- FirstName?: string;
- LastName?: string;
- Title?: string;
- Company?: string;
- Phone?: string;
- Email?: string;
- Address?: string;
- Website?: string;
- };
- /** Confidence score for each field (0-100) */
- confidence: {
- [key: string]: number;
- };
- /** Whether lead was auto-updated */
- leadUpdated: boolean;
+  /** Extracted contact information */
+  extractedData: {
+    Name?: string;
+    FirstName?: string;
+    LastName?: string;
+    Title?: string;
+    Company?: string;
+    Phone?: string;
+    Email?: string;
+    Address?: string;
+    Website?: string;
+  };
+  /** Confidence score for each field (0-100) */
+  confidence: {
+    [key: string]: number;
+  };
+  /** Whether lead was auto-updated */
+  leadUpdated: boolean;
 }
 
 /**
  * Extract contact details from email signature
  */
 export async function extractEmailSignature(request: EmailSignatureRequest): Promise<EmailSignatureResponse> {
- const { emailBody, leadId } = request;
+  const { emailBody, leadId } = request;
 
- // System prompt for LLM to extract signature data
- const systemPrompt = `
+  // System prompt for LLM to extract signature data
+  const systemPrompt = `
 You are an expert at extracting contact information from email signatures.
 
 # Email Content
@@ -77,54 +77,54 @@ Extract the following information from the email signature:
 Return JSON with extracted data and confidence scores (0-100):
 
 {
- "extractedData": {
- "FirstName": "...",
- "LastName": "...",
- "Title": "...",
- "Company": "...",
- "phone": "...",
- "email": "...",
- "Address": "...",
- "Website": "..."
- },
- "confidence": {
- "FirstName": 95,
- "LastName": 95,
- "Title": 80,
- ...
- }
+  "extractedData": {
+    "FirstName": "...",
+    "LastName": "...",
+    "Title": "...",
+    "Company": "...",
+    "phone": "...",
+    "email": "...",
+    "Address": "...",
+    "Website": "..."
+  },
+  "confidence": {
+    "FirstName": 95,
+    "LastName": 95,
+    "Title": 80,
+    ...
+  }
 }
 
 Only include fields you find. Use confidence scores to indicate certainty.
 `.trim();
 
- const llmResponse = await callLLM(systemPrompt);
- const parsed = JSON.parse(llmResponse);
+  const llmResponse = await callLLM(systemPrompt);
+  const parsed = JSON.parse(llmResponse);
 
- let leadUpdated = false;
+  let leadUpdated = false;
 
- // Auto-update lead if ID provided and confidence is high
- if (leadId && parsed.extractedData) {
- const updates: Record<string, any> = {};
- 
- // Only update fields with confidence > 70
- for (const [key, value] of Object.entries(parsed.extractedData)) {
- if (parsed.confidence[key] > 70) {
- updates[key] = value;
- }
- }
+  // Auto-update lead if ID provided and confidence is high
+  if (leadId && parsed.extractedData) {
+    const updates: Record<string, any> = {};
+    
+    // Only update fields with confidence > 70
+    for (const [key, value] of Object.entries(parsed.extractedData)) {
+      if (parsed.confidence[key] > 70) {
+        updates[key] = value;
+      }
+    }
 
- if (Object.keys(updates).length > 0) {
- await broker.update('Lead', leadId, updates);
- leadUpdated = true;
- }
- }
+    if (Object.keys(updates).length > 0) {
+      await broker.update('Lead', leadId, updates);
+      leadUpdated = true;
+    }
+  }
 
- return {
- extractedData: parsed.extractedData,
- confidence: parsed.confidence,
- leadUpdated
- };
+  return {
+    extractedData: parsed.extractedData,
+    confidence: parsed.confidence,
+    leadUpdated
+  };
 }
 
 // ============================================================================
@@ -132,121 +132,121 @@ Only include fields you find. Use confidence scores to indicate certainty.
 // ============================================================================
 
 export interface LeadEnrichmentRequest {
- /** Lead ID or email domain to enrich */
- leadId?: string;
- emailDomain?: string;
+  /** Lead ID or email domain to enrich */
+  leadId?: string;
+  emailDomain?: string;
 }
 
 export interface LeadEnrichmentResponse {
- /** Company information */
- companyData: {
- name?: string;
- domain?: string;
- industry?: string;
- employeeCount?: string;
- revenue?: string;
- description?: string;
- foundedYear?: number;
- headquarters?: string;
- };
- /** Social media profiles */
- socialProfiles: {
- linkedin?: string;
- twitter?: string;
- facebook?: string;
- };
- /** Enrichment metadata */
- metadata: {
- source: string;
- enrichedAt: string;
- confidence: number;
- };
+  /** Company information */
+  companyData: {
+    name?: string;
+    domain?: string;
+    industry?: string;
+    employeeCount?: string;
+    revenue?: string;
+    description?: string;
+    foundedYear?: number;
+    headquarters?: string;
+  };
+  /** Social media profiles */
+  socialProfiles: {
+    linkedin?: string;
+    twitter?: string;
+    facebook?: string;
+  };
+  /** Enrichment metadata */
+  metadata: {
+    source: string;
+    enrichedAt: string;
+    confidence: number;
+  };
 }
 
 /**
  * Enrich lead with company and social data
  */
 export async function enrichLead(request: LeadEnrichmentRequest): Promise<LeadEnrichmentResponse> {
- let domain = request.emailDomain;
+  let domain = request.emailDomain;
 
- // If leadId provided, fetch lead to get email domain
- if (request.leadId && !domain) {
- const lead = await broker.findOne('Lead', request.leadId,
- ['email']
- );
- if (lead?.Email) {
- domain = lead.Email.split('@')[1];
- }
- }
+  // If leadId provided, fetch lead to get email domain
+  if (request.leadId && !domain) {
+    const lead = await broker.findOne('Lead', request.leadId,
+      ['email']
+    );
+    if (lead?.Email) {
+      domain = lead.Email.split('@')[1];
+    }
+  }
 
- if (!domain) {
- throw new Error('Email domain is required for enrichment');
- }
+  if (!domain) {
+    throw new Error('Email domain is required for enrichment');
+  }
 
- const systemPrompt = `
+  const systemPrompt = `
 You are a company intelligence expert. Analyze the domain "${domain}" and provide:
 
 1. Company Information:
- - Official company name
- - Industry classification
- - Employee count estimate
- - Annual revenue estimate (if public)
- - Company description
- - Founded year
- - Headquarters location
+   - Official company name
+   - Industry classification
+   - Employee count estimate
+   - Annual revenue estimate (if public)
+   - Company description
+   - Founded year
+   - Headquarters location
 
 2. Social Media Profiles:
- - LinkedIn company page
- - Twitter/X handle
- - Facebook page
+   - LinkedIn company page
+   - Twitter/X handle
+   - Facebook page
 
 # Output Format
 
 Return JSON:
 
 {
- "companyData": {
- "name": "...",
- "domain": "${domain}",
- "industry": "Technology|Finance|Healthcare|Retail|Manufacturing|Other",
- "employeeCount": "1-10|11-50|51-200|201-500|501-1000|1000+",
- "revenue": "$1M-$10M|$10M-$50M|$50M-$100M|$100M+|Unknown",
- "description": "...",
- "foundedYear": 2020,
- "headquarters": "City, State/Country"
- },
- "socialProfiles": {
- "linkedin": "https://...",
- "twitter": "https://...",
- "facebook": "https://..."
- },
- "confidence": 85
+  "companyData": {
+    "name": "...",
+    "domain": "${domain}",
+    "industry": "Technology|Finance|Healthcare|Retail|Manufacturing|Other",
+    "employeeCount": "1-10|11-50|51-200|201-500|501-1000|1000+",
+    "revenue": "$1M-$10M|$10M-$50M|$50M-$100M|$100M+|Unknown",
+    "description": "...",
+    "foundedYear": 2020,
+    "headquarters": "City, State/Country"
+  },
+  "socialProfiles": {
+    "linkedin": "https://...",
+    "twitter": "https://...",
+    "facebook": "https://..."
+  },
+  "confidence": 85
 }
 `.trim();
 
- const llmResponse = await callLLM(systemPrompt);
- const parsed = JSON.parse(llmResponse);
+  const llmResponse = await callLLM(systemPrompt);
+  const parsed = JSON.parse(llmResponse);
 
- // Update lead if ID provided
- if (request.leadId && parsed.companyData) {
- const updates: Record<string, any> = {};
- if (parsed.companyData.industry) updates.Industry = parsed.companyData.industry;
- if (parsed.companyData.employeeCount) updates.NumberOfEmployees = parsed.companyData.employeeCount;
- if (parsed.companyData.revenue) updates.AnnualRevenue = parsed.companyData.revenue;
- if (parsed.companyData.description) updates.Description = parsed.companyData.description;
+  // Update lead if ID provided
+  if (request.leadId && parsed.companyData) {
+    const updates: Record<string, any> = {};
+    if (parsed.companyData.industry) updates.Industry = parsed.companyData.industry;
+    if (parsed.companyData.employeeCount) updates.NumberOfEmployees = parsed.companyData.employeeCount;
+    if (parsed.companyData.revenue) updates.AnnualRevenue = parsed.companyData.revenue;
+    if (parsed.companyData.description) updates.Description = parsed.companyData.description;
 
- await broker.update('Lead', request.leadId, updates);
- }
+    await broker.update('Lead', request.leadId, updates);
+  }
 
- return {
- companyData: parsed.companyData,
- socialProfiles: parsed.socialProfiles,
- metadata: {
- source: 'AI Enrichment',
- enrichedAt: new Date().toISOString(),
- confidence: parsed.confidence
- }
- };
+  return {
+    companyData: parsed.companyData,
+    socialProfiles: parsed.socialProfiles,
+    metadata: {
+      source: 'AI Enrichment',
+      enrichedAt: new Date().toISOString(),
+      confidence: parsed.confidence
+    }
+  };
 }
 
 // ============================================================================
@@ -254,80 +254,80 @@ Return JSON:
 // ============================================================================
 
 export interface LeadRoutingRequest {
- /** Lead ID to route */
- leadId: string;
- /** Optional: specify sales team to consider */
- teamId?: string;
+  /** Lead ID to route */
+  leadId: string;
+  /** Optional: specify sales team to consider */
+  teamId?: string;
 }
 
 export interface LeadRoutingResponse {
- /** Recommended sales rep */
- recommendedOwner: {
- userId: string;
- userName: string;
- matchScore: number;
- };
- /** Alternative recommendations */
- alternatives: Array<{
- userId: string;
- userName: string;
- matchScore: number;
- }>;
- /** Reasoning for recommendation */
- reasoning: {
- industryMatch: number;
- geographyMatch: number;
- workloadBalance: number;
- winRateScore: number;
- };
- /** Whether lead was auto-assigned */
- assigned: boolean;
+  /** Recommended sales rep */
+  recommendedOwner: {
+    userId: string;
+    userName: string;
+    matchScore: number;
+  };
+  /** Alternative recommendations */
+  alternatives: Array<{
+    userId: string;
+    userName: string;
+    matchScore: number;
+  }>;
+  /** Reasoning for recommendation */
+  reasoning: {
+    industryMatch: number;
+    geographyMatch: number;
+    workloadBalance: number;
+    winRateScore: number;
+  };
+  /** Whether lead was auto-assigned */
+  assigned: boolean;
 }
 
 /**
  * Route lead to best-matched sales rep using ML
  */
 export async function routeLead(request: LeadRoutingRequest): Promise<LeadRoutingResponse> {
- const { leadId } = request;
+  const { leadId } = request;
 
- // 1. Fetch lead data
- const lead = await broker.findOne('Lead', leadId,
- ['Company', 'Industry', 'State', 'Country', 'LeadScore', 'AnnualRevenue']
- );
+  // 1. Fetch lead data
+  const lead = await broker.findOne('Lead', leadId,
+    ['Company', 'Industry', 'State', 'Country', 'LeadScore', 'AnnualRevenue']
+  );
 
- // 2. Fetch available sales reps (mock - in production, query User object)
- // For now, we'll simulate with mock data
- const salesReps = [
- {
- userId: 'user_001',
- userName: 'John Smith',
- industry: lead?.Industry || 'technology',
- geography: ['CA', 'WA', 'OR'],
- currentLeads: 15,
- winRate: 0.65,
- avgDealSize: 50000
- },
- {
- userId: 'user_002',
- userName: 'Sarah Johnson',
- industry: 'finance',
- geography: ['NY', 'NJ', 'CT'],
- currentLeads: 12,
- winRate: 0.72,
- avgDealSize: 75000
- },
- {
- userId: 'user_003',
- userName: 'Mike Chen',
- industry: lead?.Industry || 'technology',
- geography: ['CA', 'TX', 'FL'],
- currentLeads: 8,
- winRate: 0.58,
- avgDealSize: 40000
- }
- ];
+  // 2. Fetch available sales reps (mock - in production, query User object)
+  // For now, we'll simulate with mock data
+  const salesReps = [
+    {
+      userId: 'user_001',
+      userName: 'John Smith',
+      industry: lead?.Industry || 'technology',
+      geography: ['CA', 'WA', 'OR'],
+      currentLeads: 15,
+      winRate: 0.65,
+      avgDealSize: 50000
+    },
+    {
+      userId: 'user_002',
+      userName: 'Sarah Johnson',
+      industry: 'finance',
+      geography: ['NY', 'NJ', 'CT'],
+      currentLeads: 12,
+      winRate: 0.72,
+      avgDealSize: 75000
+    },
+    {
+      userId: 'user_003',
+      userName: 'Mike Chen',
+      industry: lead?.Industry || 'technology',
+      geography: ['CA', 'TX', 'FL'],
+      currentLeads: 8,
+      winRate: 0.58,
+      avgDealSize: 40000
+    }
+  ];
 
- const systemPrompt = `
+  const systemPrompt = `
 You are an expert at matching leads to sales representatives.
 
 # Lead Information
@@ -341,11 +341,11 @@ You are an expert at matching leads to sales representatives.
 
 ${salesReps.map((rep, i) => `
 ${i + 1}. ${rep.userName} (${rep.userId})
- - Industry Expertise: ${rep.industry}
- - Geography: ${rep.geography.join(', ')}
- - Current Workload: ${rep.currentLeads} leads
- - Win Rate: ${(rep.winRate * 100).toFixed(0)}%
- - Avg Deal Size: $${rep.avgDealSize.toLocaleString()}
+   - Industry Expertise: ${rep.industry}
+   - Geography: ${rep.geography.join(', ')}
+   - Current Workload: ${rep.currentLeads} leads
+   - Win Rate: ${(rep.winRate * 100).toFixed(0)}%
+   - Avg Deal Size: $${rep.avgDealSize.toLocaleString()}
 `).join('\n')}
 
 # Task
@@ -362,36 +362,36 @@ Recommend the best sales rep and provide top 3 alternatives.
 # Output Format
 
 {
- "recommendedOwner": {
- "userId": "user_XXX",
- "userName": "...",
- "matchScore": 92
- },
- "alternatives": [
- {"userId": "...", "userName": "...", "matchScore": 85},
- {"userId": "...", "userName": "...", "matchScore": 78}
- ],
- "reasoning": {
- "industryMatch": 95,
- "geographyMatch": 90,
- "workloadBalance": 88,
- "winRateScore": 92
- }
+  "recommendedOwner": {
+    "userId": "user_XXX",
+    "userName": "...",
+    "matchScore": 92
+  },
+  "alternatives": [
+    {"userId": "...", "userName": "...", "matchScore": 85},
+    {"userId": "...", "userName": "...", "matchScore": 78}
+  ],
+  "reasoning": {
+    "industryMatch": 95,
+    "geographyMatch": 90,
+    "workloadBalance": 88,
+    "winRateScore": 92
+  }
 }
 `.trim();
 
- const llmResponse = await callLLM(systemPrompt);
- const parsed = JSON.parse(llmResponse);
+  const llmResponse = await callLLM(systemPrompt);
+  const parsed = JSON.parse(llmResponse);
 
- // Auto-assign lead to recommended owner
- await broker.update('Lead', leadId, {
- OwnerId: parsed.recommendedOwner.userId
- });
+  // Auto-assign lead to recommended owner
+  await broker.update('Lead', leadId, {
+    OwnerId: parsed.recommendedOwner.userId
+  });
 
- return {
- ...parsed,
- assigned: true
- };
+  return {
+    ...parsed,
+    assigned: true
+  };
 }
 
 // ============================================================================
@@ -399,57 +399,57 @@ Recommend the best sales rep and provide top 3 alternatives.
 // ============================================================================
 
 export interface LeadNurturingRequest {
- /** Lead ID to analyze */
- leadId: string;
+  /** Lead ID to analyze */
+  leadId: string;
 }
 
 export interface LeadNurturingResponse {
- /** Recommended next action */
- nextBestAction: {
- action: 'call' | 'email' | 'meeting' | 'demo' | 'content';
- description: string;
- priority: 'high' | 'medium' | 'low';
- };
- /** Email template recommendation */
- emailTemplate: {
- subject: string;
- body: string;
- tone: string;
- };
- /** Optimal contact time */
- optimalContactTime: {
- dayOfWeek: string;
- timeOfDay: string;
- timezone: string;
- reasoning: string;
- };
- /** Content recommendations */
- contentRecommendations: Array<{
- type: 'case_study' | 'whitepaper' | 'video' | 'webinar' | 'product_brief';
- title: string;
- relevance: number;
- }>;
+  /** Recommended next action */
+  nextBestAction: {
+    action: 'call' | 'email' | 'meeting' | 'demo' | 'content';
+    description: string;
+    priority: 'high' | 'medium' | 'low';
+  };
+  /** Email template recommendation */
+  emailTemplate: {
+    subject: string;
+    body: string;
+    tone: string;
+  };
+  /** Optimal contact time */
+  optimalContactTime: {
+    dayOfWeek: string;
+    timeOfDay: string;
+    timezone: string;
+    reasoning: string;
+  };
+  /** Content recommendations */
+  contentRecommendations: Array<{
+    type: 'case_study' | 'whitepaper' | 'video' | 'webinar' | 'product_brief';
+    title: string;
+    relevance: number;
+  }>;
 }
 
 /**
  * Generate personalized nurturing recommendations
  */
 export async function generateNurturingRecommendations(request: LeadNurturingRequest): Promise<LeadNurturingResponse> {
- const { leadId } = request;
+  const { leadId } = request;
 
- // Fetch lead data
- const lead = await broker.findOne('Lead', leadId,
- ['FirstName', 'LastName', 'Company', 'Industry', 'Title', 'LeadScore', 'Status', 'LeadSource']
- );
+  // Fetch lead data
+  const lead = await broker.findOne('Lead', leadId,
+    ['FirstName', 'LastName', 'Company', 'Industry', 'Title', 'LeadScore', 'Status', 'LeadSource']
+  );
 
- // Fetch recent activities
- const activities = await broker.find('Activity', {
- filters: [['WhoId', '=', leadId]],
- sort: { ActivityDate: -1 },
- limit: 5
- });
+  // Fetch recent activities
+  const activities = await broker.find('Activity', {
+    filters: [['WhoId', '=', leadId]],
+    sort: { ActivityDate: -1 },
+    limit: 5
+  });
 
- const systemPrompt = `
+  const systemPrompt = `
 You are an expert sales development representative providing nurturing guidance.
 
 # Lead Profile
@@ -485,36 +485,36 @@ Provide personalized nurturing recommendations:
 # Output Format
 
 {
- "nextBestAction": {
- "action": "call|email|meeting|demo|content",
- "description": "Specific action to take",
- "priority": "high|medium|low"
- },
- "emailTemplate": {
- "subject": "...",
- "body": "...",
- "tone": "professional|consultative|casual"
- },
- "optimalContactTime": {
- "dayOfWeek": "Tuesday",
- "timeOfDay": "10:00 AM - 11:00 AM",
- "timezone": "PT",
- "reasoning": "..."
- },
- "contentRecommendations": [
- {
- "type": "case_study",
- "title": "...",
- "relevance": 95
- }
- ]
+  "nextBestAction": {
+    "action": "call|email|meeting|demo|content",
+    "description": "Specific action to take",
+    "priority": "high|medium|low"
+  },
+  "emailTemplate": {
+    "subject": "...",
+    "body": "...",
+    "tone": "professional|consultative|casual"
+  },
+  "optimalContactTime": {
+    "dayOfWeek": "Tuesday",
+    "timeOfDay": "10:00 AM - 11:00 AM",
+    "timezone": "PT",
+    "reasoning": "..."
+  },
+  "contentRecommendations": [
+    {
+      "type": "case_study",
+      "title": "...",
+      "relevance": 95
+    }
+  ]
 }
 `.trim();
 
- const llmResponse = await callLLM(systemPrompt);
- const parsed = JSON.parse(llmResponse);
+  const llmResponse = await callLLM(systemPrompt);
+  const parsed = JSON.parse(llmResponse);
 
- return parsed;
+  return parsed;
 }
 
 // ============================================================================
@@ -526,117 +526,117 @@ Provide personalized nurturing recommendations:
  * In production, replace with actual OpenAI/Anthropic API
  */
 async function callLLM(prompt: string): Promise<string> {
- logger.info('🤖 Calling LLM API for lead AI...');
- 
- // Simulate API delay
- await new Promise(resolve => setTimeout(resolve, 500));
+  logger.info('Calling LLM API for lead AI...');
+  
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 500));
 
- // Mock response based on prompt type
- if (prompt.includes('email signature')) {
- return JSON.stringify({
- extractedData: {
- FirstName: 'John',
- LastName: 'Doe',
- Title: 'VP of Sales',
- Company: 'Acme Corp',
- Phone: '+1 (555) 123-4567',
- Email: 'john.doe@acme.com',
- Address: '123 Market St, San Francisco, CA 94105'
- },
- confidence: {
- FirstName: 95,
- LastName: 95,
- Title: 90,
- Company: 95,
- Phone: 85,
- Email: 100,
- Address: 80
- }
- });
- }
+  // Mock response based on prompt type
+  if (prompt.includes('email signature')) {
+    return JSON.stringify({
+      extractedData: {
+        FirstName: 'John',
+        LastName: 'Doe',
+        Title: 'VP of Sales',
+        Company: 'Acme Corp',
+        Phone: '+1 (555) 123-4567',
+        Email: 'john.doe@acme.com',
+        Address: '123 Market St, San Francisco, CA 94105'
+      },
+      confidence: {
+        FirstName: 95,
+        LastName: 95,
+        Title: 90,
+        Company: 95,
+        Phone: 85,
+        Email: 100,
+        Address: 80
+      }
+    });
+  }
 
- if (prompt.includes('company intelligence')) {
- return JSON.stringify({
- companyData: {
- name: 'Acme Corporation',
- domain: 'acme.com',
- industry: 'technology',
- employeeCount: '201-500',
- revenue: '$50M-$100M',
- description: 'Enterprise software solutions provider',
- foundedYear: 2010,
- headquarters: 'San Francisco, CA'
- },
- socialProfiles: {
- linkedin: 'https://linkedin.com/company/acme',
- twitter: 'https://twitter.com/acmecorp'
- },
- confidence: 85
- });
- }
+  if (prompt.includes('company intelligence')) {
+    return JSON.stringify({
+      companyData: {
+        name: 'Acme Corporation',
+        domain: 'acme.com',
+        industry: 'technology',
+        employeeCount: '201-500',
+        revenue: '$50M-$100M',
+        description: 'Enterprise software solutions provider',
+        foundedYear: 2010,
+        headquarters: 'San Francisco, CA'
+      },
+      socialProfiles: {
+        linkedin: 'https://linkedin.com/company/acme',
+        twitter: 'https://twitter.com/acmecorp'
+      },
+      confidence: 85
+    });
+  }
 
- if (prompt.includes('matching leads')) {
- return JSON.stringify({
- recommendedOwner: {
- userId: 'user_001',
- userName: 'John Smith',
- matchScore: 92
- },
- alternatives: [
- { userId: 'user_003', userName: 'Mike Chen', matchScore: 85 },
- { userId: 'user_002', userName: 'Sarah Johnson', matchScore: 78 }
- ],
- reasoning: {
- industryMatch: 95,
- geographyMatch: 90,
- workloadBalance: 88,
- winRateScore: 92
- }
- });
- }
+  if (prompt.includes('matching leads')) {
+    return JSON.stringify({
+      recommendedOwner: {
+        userId: 'user_001',
+        userName: 'John Smith',
+        matchScore: 92
+      },
+      alternatives: [
+        { userId: 'user_003', userName: 'Mike Chen', matchScore: 85 },
+        { userId: 'user_002', userName: 'Sarah Johnson', matchScore: 78 }
+      ],
+      reasoning: {
+        industryMatch: 95,
+        geographyMatch: 90,
+        workloadBalance: 88,
+        winRateScore: 92
+      }
+    });
+  }
 
- // Nurturing recommendations
- return JSON.stringify({
- nextBestAction: {
- action: 'email',
- description: 'Send personalized email with industry case study',
- priority: 'high'
- },
- emailTemplate: {
- subject: 'How Acme Corp Can Improve Sales Efficiency by 40%',
- body: `Hi John,\n\nI noticed you're the VP of Sales at Acme Corp. I wanted to share how companies in the technology sector are using our CRM to dramatically improve their sales efficiency.\n\nWe recently helped a similar-sized company:\n- Reduce sales cycle by 30%\n- Increase win rate by 25%\n- Improve forecast accuracy to 95%\n\nWould you be open to a 15-minute call next week to discuss your current challenges?\n\nBest regards`,
- tone: 'professional'
- },
- optimalContactTime: {
- dayOfWeek: 'Tuesday',
- timeOfDay: '10:00 AM - 11:00 AM',
- timezone: 'PT',
- reasoning: 'Technology industry professionals typically have fewer meetings mid-morning on Tuesdays'
- },
- contentRecommendations: [
- {
- type: 'case_study',
- title: 'How TechCorp Increased Sales by 40% with HotCRM',
- relevance: 95
- },
- {
- type: 'whitepaper',
- title: 'Modern Sales Process Optimization Guide',
- relevance: 88
- },
- {
- type: 'webinar',
- title: 'AI-Powered Sales Automation Workshop',
- relevance: 82
- }
- ]
- });
+  // Nurturing recommendations
+  return JSON.stringify({
+    nextBestAction: {
+      action: 'email',
+      description: 'Send personalized email with industry case study',
+      priority: 'high'
+    },
+    emailTemplate: {
+      subject: 'How Acme Corp Can Improve Sales Efficiency by 40%',
+      body: `Hi John,\n\nI noticed you're the VP of Sales at Acme Corp. I wanted to share how companies in the technology sector are using our CRM to dramatically improve their sales efficiency.\n\nWe recently helped a similar-sized company:\n- Reduce sales cycle by 30%\n- Increase win rate by 25%\n- Improve forecast accuracy to 95%\n\nWould you be open to a 15-minute call next week to discuss your current challenges?\n\nBest regards`,
+      tone: 'professional'
+    },
+    optimalContactTime: {
+      dayOfWeek: 'Tuesday',
+      timeOfDay: '10:00 AM - 11:00 AM',
+      timezone: 'PT',
+      reasoning: 'Technology industry professionals typically have fewer meetings mid-morning on Tuesdays'
+    },
+    contentRecommendations: [
+      {
+        type: 'case_study',
+        title: 'How TechCorp Increased Sales by 40% with HotCRM',
+        relevance: 95
+      },
+      {
+        type: 'whitepaper',
+        title: 'Modern Sales Process Optimization Guide',
+        relevance: 88
+      },
+      {
+        type: 'webinar',
+        title: 'AI-Powered Sales Automation Workshop',
+        relevance: 82
+      }
+    ]
+  });
 }
 
 // Export all functions
 export default {
- extractEmailSignature,
- enrichLead,
- routeLead,
- generateNurturingRecommendations
+  extractEmailSignature,
+  enrichLead,
+  routeLead,
+  generateNurturingRecommendations
 };

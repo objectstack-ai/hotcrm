@@ -9,16 +9,16 @@ const logger = createLogger('financial-services:compliance_check');
  * Alerts when a new regulation check is required after insert.
  */
 const ComplianceRegulationAlert: Hook = {
- name: 'ComplianceRegulationAlert',
- object: 'compliance_check',
- events: ['afterInsert'],
- handler: async (ctx: HookContext) => {
- const result = ctx.result as Record<string, any>;
+  name: 'ComplianceRegulationAlert',
+  object: 'compliance_check',
+  events: ['afterInsert'],
+  handler: async (ctx: HookContext) => {
+    const result = ctx.result as Record<string, any>;
 
- if (result?.check_type && result?.entity_id) {
- logger.info(`New ${result.check_type.toUpperCase()} compliance check created for entity ${result.entity_id}`);
- }
- }
+    if (result?.check_type && result?.entity_id) {
+      logger.info(`New ${result.check_type.toUpperCase()} compliance check created for entity ${result.entity_id}`);
+    }
+  }
 };
 
 /**
@@ -27,17 +27,17 @@ const ComplianceRegulationAlert: Hook = {
  * Auto-screens entity against sanctions lists before insert.
  */
 const ComplianceAutoScreening: Hook = {
- name: 'ComplianceAutoScreening',
- object: 'compliance_check',
- events: ['beforeInsert'],
- handler: async (ctx: HookContext) => {
- const doc = ctx.input.doc as Record<string, any>;
+  name: 'ComplianceAutoScreening',
+  object: 'compliance_check',
+  events: ['beforeInsert'],
+  handler: async (ctx: HookContext) => {
+    const doc = ctx.input.doc as Record<string, any>;
 
- if (doc.check_type === 'sanctions') {
- logger.info(`Auto-screening entity ${doc.entity_id} against sanctions lists`);
- doc.risk_score = doc.risk_score || 0;
- }
- }
+    if (doc.check_type === 'sanctions') {
+      logger.info(`Auto-screening entity ${doc.entity_id} against sanctions lists`);
+      doc.risk_score = doc.risk_score || 0;
+    }
+  }
 };
 
 /**
@@ -46,14 +46,14 @@ const ComplianceAutoScreening: Hook = {
  * Logs all compliance activities after insert and update.
  */
 const ComplianceAuditTrail: Hook = {
- name: 'ComplianceAuditTrail',
- object: 'compliance_check',
- events: ['afterInsert', 'afterUpdate'],
- handler: async (ctx: HookContext) => {
- const result = ctx.result as Record<string, any>;
+  name: 'ComplianceAuditTrail',
+  object: 'compliance_check',
+  events: ['afterInsert', 'afterUpdate'],
+  handler: async (ctx: HookContext) => {
+    const result = ctx.result as Record<string, any>;
 
- logger.info(`Audit trail: compliance check ${result?._id} [${ctx.event}] — type: ${result?.check_type}, status: ${result?.status}`);
- }
+    logger.info(`Audit trail: compliance check ${result?._id} [${ctx.event}] — type: ${result?.check_type}, status: ${result?.status}`);
+  }
 };
 
 export { ComplianceRegulationAlert, ComplianceAutoScreening, ComplianceAuditTrail };

@@ -12,27 +12,27 @@ const logger = createLogger('crm:activity');
  * This would typically run as a daily batch job
  */
 export async function autoCompletePastDueActivities(ql: any): Promise<void> {
- logger.info('Running auto-complete for past-due activities...');
- 
- // In real implementation:
- // const pastDueActivities = await db.find('Activity', {
- // filters: [
- // ['DueDate', '<', new Date().toISOString().split('T')[0]],
- // ['Status', 'not in', ['completed', 'cancelled']]
- // ]
- // });
- 
- // for (const activity of pastDueActivities) {
- // await db.doc.update('Activity', activity.Id, {
- // Status: 'completed',
- // CompletedDate: new Date().toISOString()
- // });
- // 
- // // Send notification
- // logger.info(`Auto-completed past-due activity: ${activity.Subject}`);
- // }
- 
- logger.info('Auto-complete batch job completed');
+  logger.info('Running auto-complete for past-due activities...');
+  
+  // In real implementation:
+  // const pastDueActivities = await db.find('Activity', {
+  //   filters: [
+  //     ['DueDate', '<', new Date().toISOString().split('T')[0]],
+  //     ['Status', 'not in', ['completed', 'cancelled']]
+  //   ]
+  // });
+  
+  // for (const activity of pastDueActivities) {
+  //   await db.doc.update('Activity', activity.Id, {
+  //     Status: 'completed',
+  //     CompletedDate: new Date().toISOString()
+  //   });
+  //   
+  //   // Send notification
+  //   logger.info(`Auto-completed past-due activity: ${activity.Subject}`);
+  // }
+  
+  logger.info('Auto-complete batch job completed');
 }
 
 /**
@@ -45,77 +45,77 @@ export async function autoCompletePastDueActivities(ql: any): Promise<void> {
  * - Increment activity counters
  */
 const ActivityRelatedObjectUpdatesTrigger: Hook = {
- name: 'ActivityRelatedObjectUpdatesTrigger',
- object: 'activity',
- events: ['afterInsert', 'afterUpdate'],
- handler: async (ctx: HookContext) => {
- try {
- const activity = ctx.result as Record<string, any>;
- const oldActivity = ctx.previous as Record<string, any> | undefined;
- 
- // Only process if activity is completed or date changed
- const isCompleted = activity.Status === 'completed';
- const dateChanged = !oldActivity || oldActivity.ActivityDate !== activity.ActivityDate;
- 
- if (!isCompleted && !dateChanged) {
- return;
- }
- 
- const activityDate = activity.ActivityDate 
- ? activity.ActivityDate.split('T')[0] 
- : new Date().toISOString().split('T')[0];
- 
- // Update Contact.LastContactDate
- if (activity.WhoId) {
- await updateContactLastActivityDate(activity.WhoId, activityDate, ctx);
- }
- 
- // Update related Account/Opportunity/Contract/Case
- if (activity.WhatId) {
- await updateWhatObjectLastActivityDate(activity.WhatId, activityDate, ctx);
- }
- 
- } catch (error) {
- logger.error('Error in ActivityRelatedObjectUpdatesTrigger:', error);
- }
- }
+  name: 'ActivityRelatedObjectUpdatesTrigger',
+  object: 'activity',
+  events: ['afterInsert', 'afterUpdate'],
+  handler: async (ctx: HookContext) => {
+    try {
+      const activity = ctx.result as Record<string, any>;
+      const oldActivity = ctx.previous as Record<string, any> | undefined;
+      
+      // Only process if activity is completed or date changed
+      const isCompleted = activity.Status === 'completed';
+      const dateChanged = !oldActivity || oldActivity.ActivityDate !== activity.ActivityDate;
+      
+      if (!isCompleted && !dateChanged) {
+        return;
+      }
+      
+      const activityDate = activity.ActivityDate 
+        ? activity.ActivityDate.split('T')[0] 
+        : new Date().toISOString().split('T')[0];
+      
+      // Update Contact.LastContactDate
+      if (activity.WhoId) {
+        await updateContactLastActivityDate(activity.WhoId, activityDate, ctx);
+      }
+      
+      // Update related Account/Opportunity/Contract/Case
+      if (activity.WhatId) {
+        await updateWhatObjectLastActivityDate(activity.WhatId, activityDate, ctx);
+      }
+      
+    } catch (error) {
+      logger.error('Error in ActivityRelatedObjectUpdatesTrigger:', error);
+    }
+  }
 };
 
 /**
  * Update Contact's last activity date
  */
 async function updateContactLastActivityDate(whoId: string, activityDate: string, ctx: HookContext): Promise<void> {
- logger.info(`Updating LastContactDate for contact: ${whoId}`);
- 
- // In real implementation:
- // const contact = await ctx.db.doc.get('Contact', whoId, { fields: ['LastContactDate'] });
- // 
- // if (!contact.LastContactDate || new Date(activityDate) > new Date(contact.LastContactDate)) {
- // await ctx.db.doc.update('Contact', whoId, {
- // LastContactDate: activityDate
- // });
- // logger.info(`Updated contact LastContactDate to ${activityDate}`);
- // }
+  logger.info(`Updating LastContactDate for contact: ${whoId}`);
+  
+  // In real implementation:
+  // const contact = await ctx.db.doc.get('Contact', whoId, { fields: ['LastContactDate'] });
+  // 
+  // if (!contact.LastContactDate || new Date(activityDate) > new Date(contact.LastContactDate)) {
+  //   await ctx.db.doc.update('Contact', whoId, {
+  //     LastContactDate: activityDate
+  //   });
+  //   logger.info(`Updated contact LastContactDate to ${activityDate}`);
+  // }
 }
 
 /**
  * Update related object's last activity date
  */
 async function updateWhatObjectLastActivityDate(whatId: string, activityDate: string, ctx: HookContext): Promise<void> {
- logger.info(`Updating LastActivityDate for related object: ${whatId}`);
- 
- // In real implementation, would need to determine object type from WhatId
- // and update the appropriate object (Account, Opportunity, Contract, Case)
- // 
- // For Account:
- // await ctx.db.doc.update('Account', whatId, {
- // LastActivityDate: activityDate // Note: This field may need to be added to Account object
- // });
- 
- // For Opportunity:
- // await ctx.db.doc.update('Opportunity', whatId, {
- // LastActivityDate: activityDate // Note: This field may need to be added to Opportunity object
- // });
+  logger.info(`Updating LastActivityDate for related object: ${whatId}`);
+  
+  // In real implementation, would need to determine object type from WhatId
+  // and update the appropriate object (Account, Opportunity, Contract, Case)
+  // 
+  // For Account:
+  // await ctx.db.doc.update('Account', whatId, {
+  //   LastActivityDate: activityDate  // Note: This field may need to be added to Account object
+  // });
+  
+  // For Opportunity:
+  // await ctx.db.doc.update('Opportunity', whatId, {
+  //   LastActivityDate: activityDate  // Note: This field may need to be added to Opportunity object
+  // });
 }
 
 /**
@@ -128,114 +128,114 @@ async function updateWhatObjectLastActivityDate(whatId: string, activityDate: st
  * - Handle recurrence
  */
 const ActivityCompletionTrigger: Hook = {
- name: 'ActivityCompletionTrigger',
- object: 'activity',
- events: ['beforeUpdate'],
- handler: async (ctx: HookContext) => {
- try {
- const activity = ctx.input.doc as Record<string, any>;
- const oldActivity = ctx.previous as Record<string, any> | undefined;
- 
- // Check if status changed to Completed
- if (oldActivity && oldActivity.Status !== 'completed' && activity.Status === 'completed') {
- // Set CompletedDate
- activity.CompletedDate = new Date().toISOString();
- logger.info(`Activity completed: ${activity.Subject}`);
- 
- // Handle recurrence - create next occurrence
- if (activity.IsRecurring && activity.RecurrencePattern) {
- await createNextRecurrence(activity, ctx);
- }
- }
- 
- } catch (error) {
- logger.error('Error in ActivityCompletionTrigger:', error);
- }
- }
+  name: 'ActivityCompletionTrigger',
+  object: 'activity',
+  events: ['beforeUpdate'],
+  handler: async (ctx: HookContext) => {
+    try {
+      const activity = ctx.input.doc as Record<string, any>;
+      const oldActivity = ctx.previous as Record<string, any> | undefined;
+      
+      // Check if status changed to Completed
+      if (oldActivity && oldActivity.Status !== 'completed' && activity.Status === 'completed') {
+        // Set CompletedDate
+        activity.CompletedDate = new Date().toISOString();
+        logger.info(`Activity completed: ${activity.Subject}`);
+        
+        // Handle recurrence - create next occurrence
+        if (activity.IsRecurring && activity.RecurrencePattern) {
+          await createNextRecurrence(activity, ctx);
+        }
+      }
+      
+    } catch (error) {
+      logger.error('Error in ActivityCompletionTrigger:', error);
+    }
+  }
 };
 
 /**
  * Create next recurrence of a recurring activity
  */
 async function createNextRecurrence(activity: Record<string, any>, ctx: HookContext): Promise<void> {
- logger.info(`Creating next recurrence for: ${activity.Subject}`);
- 
- // Calculate next occurrence date based on pattern
- const currentDate = new Date(activity.ActivityDate);
- const nextDate = new Date(currentDate);
- 
- const interval = activity.RecurrenceInterval || 1;
- 
- // Validate recurrence pattern
- const validPatterns = ['daily', 'weekly', 'monthly', 'yearly'];
- if (!validPatterns.includes(activity.RecurrencePattern)) {
- logger.error(`Invalid recurrence pattern: ${activity.RecurrencePattern}`);
- return;
- }
- 
- switch (activity.RecurrencePattern) {
- case 'daily':
- nextDate.setDate(nextDate.getDate() + interval);
- break;
- case 'weekly':
- nextDate.setDate(nextDate.getDate() + (7 * interval));
- break;
- case 'monthly': {
- // Handle month overflow properly (e.g., Jan 31 + 1 month = Feb 28/29)
- const targetMonth = nextDate.getMonth() + interval;
- const targetYear = nextDate.getFullYear() + Math.floor(targetMonth / 12);
- const normalizedMonth = targetMonth % 12;
- const currentDay = nextDate.getDate();
- 
- nextDate.setFullYear(targetYear);
- nextDate.setMonth(normalizedMonth);
- 
- // If day was reset due to overflow (e.g., Jan 31 -> Mar 3), set to last day of target month
- if (nextDate.getDate() !== currentDay) {
- nextDate.setDate(0); // Sets to last day of previous month
- }
- break;
- }
- case 'yearly':
- nextDate.setFullYear(nextDate.getFullYear() + interval);
- break;
- }
- 
- // Check if we should create the next occurrence
- if (activity.RecurrenceEndDate) {
- try {
- const endDate = new Date(activity.RecurrenceEndDate);
- if (nextDate > endDate) {
- logger.info(`⏹ Recurrence ended - reached end date`);
- return;
- }
- } catch (error) {
- logger.error(`Invalid RecurrenceEndDate: ${activity.RecurrenceEndDate}`);
- return;
- }
- }
- 
- // Create next occurrence
- const nextActivity = {
- Subject: activity.Subject,
- Type: activity.Type,
- Status: 'planned',
- Priority: activity.Priority,
- ActivityDate: nextDate.toISOString(),
- DueDate: nextDate.toISOString().split('T')[0],
- WhoId: activity.WhoId,
- WhatId: activity.WhatId,
- OwnerId: activity.OwnerId,
- Description: activity.Description,
- IsRecurring: true,
- RecurrencePattern: activity.RecurrencePattern,
- RecurrenceInterval: activity.RecurrenceInterval,
- RecurrenceEndDate: activity.RecurrenceEndDate,
- RecurrenceInstanceId: activity.RecurrenceInstanceId || activity.Id
- };
- 
- // await ctx.db.doc.create('Activity', nextActivity);
- logger.info(`Created next recurrence for ${nextDate.toISOString().split('T')[0]}`);
+  logger.info(`Creating next recurrence for: ${activity.Subject}`);
+  
+  // Calculate next occurrence date based on pattern
+  const currentDate = new Date(activity.ActivityDate);
+  const nextDate = new Date(currentDate);
+  
+  const interval = activity.RecurrenceInterval || 1;
+  
+  // Validate recurrence pattern
+  const validPatterns = ['daily', 'weekly', 'monthly', 'yearly'];
+  if (!validPatterns.includes(activity.RecurrencePattern)) {
+    logger.error(`Invalid recurrence pattern: ${activity.RecurrencePattern}`);
+    return;
+  }
+  
+  switch (activity.RecurrencePattern) {
+    case 'daily':
+      nextDate.setDate(nextDate.getDate() + interval);
+      break;
+    case 'weekly':
+      nextDate.setDate(nextDate.getDate() + (7 * interval));
+      break;
+    case 'monthly': {
+      // Handle month overflow properly (e.g., Jan 31 + 1 month = Feb 28/29)
+      const targetMonth = nextDate.getMonth() + interval;
+      const targetYear = nextDate.getFullYear() + Math.floor(targetMonth / 12);
+      const normalizedMonth = targetMonth % 12;
+      const currentDay = nextDate.getDate();
+      
+      nextDate.setFullYear(targetYear);
+      nextDate.setMonth(normalizedMonth);
+      
+      // If day was reset due to overflow (e.g., Jan 31 -> Mar 3), set to last day of target month
+      if (nextDate.getDate() !== currentDay) {
+        nextDate.setDate(0); // Sets to last day of previous month
+      }
+      break;
+    }
+    case 'yearly':
+      nextDate.setFullYear(nextDate.getFullYear() + interval);
+      break;
+  }
+  
+  // Check if we should create the next occurrence
+  if (activity.RecurrenceEndDate) {
+    try {
+      const endDate = new Date(activity.RecurrenceEndDate);
+      if (nextDate > endDate) {
+        logger.info(`⏹ Recurrence ended - reached end date`);
+        return;
+      }
+    } catch (error) {
+      logger.error(`Invalid RecurrenceEndDate: ${activity.RecurrenceEndDate}`);
+      return;
+    }
+  }
+  
+  // Create next occurrence
+  const nextActivity = {
+    Subject: activity.Subject,
+    Type: activity.Type,
+    Status: 'planned',
+    Priority: activity.Priority,
+    ActivityDate: nextDate.toISOString(),
+    DueDate: nextDate.toISOString().split('T')[0],
+    WhoId: activity.WhoId,
+    WhatId: activity.WhatId,
+    OwnerId: activity.OwnerId,
+    Description: activity.Description,
+    IsRecurring: true,
+    RecurrencePattern: activity.RecurrencePattern,
+    RecurrenceInterval: activity.RecurrenceInterval,
+    RecurrenceEndDate: activity.RecurrenceEndDate,
+    RecurrenceInstanceId: activity.RecurrenceInstanceId || activity.Id
+  };
+  
+  // await ctx.db.doc.create('Activity', nextActivity);
+  logger.info(`Created next recurrence for ${nextDate.toISOString().split('T')[0]}`);
 }
 
 /**
@@ -244,41 +244,41 @@ async function createNextRecurrence(activity: Record<string, any>, ctx: HookCont
  * Daily job to find and notify about overdue activities
  */
 export async function sendOverdueNotifications(ql: any): Promise<void> {
- logger.info('Finding overdue activities...');
- 
- // In real implementation:
- // const overdueActivities = await db.find('Activity', {
- // filters: [
- // ['DueDate', '<', new Date().toISOString().split('T')[0]],
- // ['Status', 'not in', ['completed', 'cancelled']]
- // ]
- // });
- 
- // for (const activity of overdueActivities) {
- // // Send notification to owner
- // logger.info(`Notifying ${activity.OwnerId} about overdue activity: ${activity.Subject}`);
- // 
- // // Optionally notify manager
- // // const owner = await db.doc.get('User', activity.OwnerId);
- // // if (owner.ManagerId) {
- // // logger.info(`Notifying manager ${owner.ManagerId}`);
- // // }
- // 
- // // Optionally create follow-up task
- // // await db.doc.create('Activity', {
- // // Subject: `Follow-up: ${activity.Subject}`,
- // // Type: 'task',
- // // Status: 'planned',
- // // Priority: 'high',
- // // WhoId: activity.WhoId,
- // // WhatId: activity.WhatId,
- // // OwnerId: activity.OwnerId,
- // // ActivityDate: new Date().toISOString(),
- // // Description: `Follow-up for overdue activity: ${activity.Subject}`
- // // });
- // }
- 
- logger.info('Overdue notification job completed');
+  logger.info('Finding overdue activities...');
+  
+  // In real implementation:
+  // const overdueActivities = await db.find('Activity', {
+  //   filters: [
+  //     ['DueDate', '<', new Date().toISOString().split('T')[0]],
+  //     ['Status', 'not in', ['completed', 'cancelled']]
+  //   ]
+  // });
+  
+  // for (const activity of overdueActivities) {
+  //   // Send notification to owner
+  //   logger.info(`Notifying ${activity.OwnerId} about overdue activity: ${activity.Subject}`);
+  //   
+  //   // Optionally notify manager
+  //   // const owner = await db.doc.get('User', activity.OwnerId);
+  //   // if (owner.ManagerId) {
+  //   //   logger.info(`Notifying manager ${owner.ManagerId}`);
+  //   // }
+  //   
+  //   // Optionally create follow-up task
+  //   // await db.doc.create('Activity', {
+  //   //   Subject: `Follow-up: ${activity.Subject}`,
+  //   //   Type: 'task',
+  //   //   Status: 'planned',
+  //   //   Priority: 'high',
+  //   //   WhoId: activity.WhoId,
+  //   //   WhatId: activity.WhatId,
+  //   //   OwnerId: activity.OwnerId,
+  //   //   ActivityDate: new Date().toISOString(),
+  //   //   Description: `Follow-up for overdue activity: ${activity.Subject}`
+  //   // });
+  // }
+  
+  logger.info('Overdue notification job completed');
 }
 
 /**
@@ -287,46 +287,46 @@ export async function sendOverdueNotifications(ql: any): Promise<void> {
  * Validates type-specific requirements
  */
 const ActivityTypeValidationTrigger: Hook = {
- name: 'ActivityTypeValidationTrigger',
- object: 'activity',
- events: ['beforeInsert', 'beforeUpdate'],
- handler: async (ctx: HookContext) => {
- try {
- const activity = ctx.input.doc as Record<string, any>;
- 
- // Log activity type for tracking
- logger.info(`Activity: ${activity.Type} - ${activity.Subject}`);
- 
- // Type-specific processing could go here
- switch (activity.Type) {
- case 'call':
- if (activity.CallResult === 'connected' && !activity.CallDurationInSeconds) {
- logger.warn(`Connected call should have duration recorded`);
- }
- break;
- case 'email':
- if (!activity.EmailSubject && activity.EmailBody) {
- logger.warn(`Email has body but no subject`);
- }
- break;
- case 'meeting':
- if (!activity.IsOnline && !activity.Location) {
- logger.warn(`In-person meeting should have location`);
- }
- break;
- }
- 
- } catch (error) {
- logger.error('Error in ActivityTypeValidationTrigger:', error);
- }
- }
+  name: 'ActivityTypeValidationTrigger',
+  object: 'activity',
+  events: ['beforeInsert', 'beforeUpdate'],
+  handler: async (ctx: HookContext) => {
+    try {
+      const activity = ctx.input.doc as Record<string, any>;
+      
+      // Log activity type for tracking
+      logger.info(`Activity: ${activity.Type} - ${activity.Subject}`);
+      
+      // Type-specific processing could go here
+      switch (activity.Type) {
+        case 'call':
+          if (activity.CallResult === 'connected' && !activity.CallDurationInSeconds) {
+            logger.warn(`Connected call should have duration recorded`);
+          }
+          break;
+        case 'email':
+          if (!activity.EmailSubject && activity.EmailBody) {
+            logger.warn(`Email has body but no subject`);
+          }
+          break;
+        case 'meeting':
+          if (!activity.IsOnline && !activity.Location) {
+            logger.warn(`In-person meeting should have location`);
+          }
+          break;
+      }
+      
+    } catch (error) {
+      logger.error('Error in ActivityTypeValidationTrigger:', error);
+    }
+  }
 };
 
 // Export all hooks
 export {
- ActivityRelatedObjectUpdatesTrigger,
- ActivityCompletionTrigger,
- ActivityTypeValidationTrigger
+  ActivityRelatedObjectUpdatesTrigger,
+  ActivityCompletionTrigger,
+  ActivityTypeValidationTrigger
 };
 
 export default ActivityRelatedObjectUpdatesTrigger;

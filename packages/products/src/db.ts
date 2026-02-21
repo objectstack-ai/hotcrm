@@ -9,9 +9,9 @@
  * Hooks should prefer ctx.ql (injected by the runtime) for transactional access.
  *
  * Migration Guide:
- * - Hooks: use `ctx.ql` (injected by the runtime) — `(ctx.ql as any).find(...)`
- * - Actions: import `broker` from this module (not `db`)
- * - The `db` export is a legacy shim and will be removed in a future release.
+ * - Hooks: use ctx.ql (injected by the runtime) - (ctx.ql as any).find(...)
+ * - Actions: import broker from this module (not db)
+ * - The db export is a legacy shim and will be removed in a future release.
  */
 
 export interface BrokerQueryOptions {

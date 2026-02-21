@@ -687,7 +687,7 @@ describe('KnowledgeArticleSearchAnalytics', () => {
     const ctx = {};
     await KnowledgeArticleSearchAnalytics.handler(ctx as any);
 
-    expect(consoleSpy).toHaveBeenCalledWith('📈 Search analytics tracked');
+    expect(consoleSpy).toHaveBeenCalledWith('Search analytics tracked');
 
     consoleSpy.mockRestore();
   });
