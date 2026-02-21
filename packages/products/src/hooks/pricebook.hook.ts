@@ -44,8 +44,8 @@ const PricebookHook: Hook = {
 /**
  * Validate pricebook date ranges
  */
-async function validatePricebookDates(ctx: any): Promise<void> {
-  const pricebook = ctx.input?.doc || ctx.result;
+async function validatePricebookDates(ctx: HookContext): Promise<void> {
+  const pricebook = (ctx.input?.doc || ctx.result) as Record<string, any>;
   
   try {
     // Validate effective dates
@@ -60,7 +60,7 @@ async function validatePricebookDates(ctx: any): Promise<void> {
 
     // Check for overlapping pricebooks (if this is a standard pricebook)
     if (pricebook.IsStandard && pricebook.EffectiveDate) {
-      const overlapping = await ctx.ql.find('pricebook', {
+      const overlapping = await (ctx.ql as any).find('pricebook', {
         filters: [
           ['IsStandard', '=', true],
           ['Status', '=', 'active'],
@@ -84,8 +84,8 @@ async function validatePricebookDates(ctx: any): Promise<void> {
 /**
  * Validate currency configuration
  */
-async function validateCurrencyConfiguration(ctx: any): Promise<void> {
-  const pricebook = ctx.input?.doc || ctx.result;
+async function validateCurrencyConfiguration(ctx: HookContext): Promise<void> {
+  const pricebook = (ctx.input?.doc || ctx.result) as Record<string, any>;
   
   try {
     // Validate currency code
@@ -116,15 +116,17 @@ async function validateCurrencyConfiguration(ctx: any): Promise<void> {
 /**
  * Handle effective date changes
  */
-async function handleEffectiveDateChange(ctx: any): Promise<void> {
+async function handleEffectiveDateChange(ctx: HookContext): Promise<void> {
   if (!ctx.previous || !ctx.result) return;
   
-  const effectiveDateChanged = ctx.previous.EffectiveDate !== ctx.result.EffectiveDate;
-  const expirationDateChanged = ctx.previous.ExpirationDate !== ctx.result.ExpirationDate;
+  const prev = ctx.previous as Record<string, any>;
+  const result = ctx.result as Record<string, any>;
+  const effectiveDateChanged = prev.EffectiveDate !== result.EffectiveDate;
+  const expirationDateChanged = prev.ExpirationDate !== result.ExpirationDate;
   
   if (!effectiveDateChanged && !expirationDateChanged) return;
 
-  const pricebook = ctx.result;
+  const pricebook = result;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   
@@ -137,7 +139,7 @@ async function handleEffectiveDateChange(ctx: any): Promise<void> {
       if (effectiveDateOnly <= today && pricebook.Status === 'draft') {
         console.log(`✅ Pricebook effective date reached, activating: ${pricebook.Name}`);
         
-        await ctx.ql.doc.update('pricebook', pricebook.Id, {
+        await (ctx.ql as any).doc.update('pricebook', pricebook.Id, {
           Status: 'active'
         });
       }
@@ -151,7 +153,7 @@ async function handleEffectiveDateChange(ctx: any): Promise<void> {
       if (expirationDateOnly < today && pricebook.Status === 'active') {
         console.log(`⏰ Pricebook expired, deactivating: ${pricebook.Name}`);
         
-        await ctx.ql.doc.update('pricebook', pricebook.Id, {
+        await (ctx.ql as any).doc.update('pricebook', pricebook.Id, {
           Status: 'expired'
         });
       }
@@ -161,13 +163,13 @@ async function handleEffectiveDateChange(ctx: any): Promise<void> {
     if (effectiveDateChanged || expirationDateChanged) {
       const changes = [];
       if (effectiveDateChanged) {
-        changes.push(`Effective Date: ${ctx.old.EffectiveDate} → ${pricebook.EffectiveDate}`);
+        changes.push(`Effective Date: ${prev.EffectiveDate} → ${pricebook.EffectiveDate}`);
       }
       if (expirationDateChanged) {
-        changes.push(`Expiration Date: ${ctx.old.ExpirationDate} → ${pricebook.ExpirationDate}`);
+        changes.push(`Expiration Date: ${prev.ExpirationDate} → ${pricebook.ExpirationDate}`);
       }
       
-      await ctx.ql.doc.create('activity', {
+      await (ctx.ql as any).doc.create('activity', {
         Subject: `Pricebook Dates Updated: ${pricebook.Name}`,
         Type: 'Pricebook Update',
         Status: 'completed',
@@ -186,16 +188,18 @@ async function handleEffectiveDateChange(ctx: any): Promise<void> {
 /**
  * Handle pricebook status changes
  */
-async function handleStatusChange(ctx: any): Promise<void> {
+async function handleStatusChange(ctx: HookContext): Promise<void> {
   if (!ctx.previous || !ctx.result) return;
   
-  const statusChanged = ctx.previous.Status !== ctx.result.Status;
+  const prev = ctx.previous as Record<string, any>;
+  const result = ctx.result as Record<string, any>;
+  const statusChanged = prev.Status !== result.Status;
   if (!statusChanged) return;
 
-  const pricebook = ctx.result;
+  const pricebook = result;
   
   try {
-    console.log(`🔄 Pricebook status changed from "${ctx.previous.Status}" to "${pricebook.Status}"`);
+    console.log(`🔄 Pricebook status changed from "${prev.Status}" to "${pricebook.Status}"`);
 
     // Handle activation
     if (pricebook.Status === 'active') {
@@ -203,7 +207,7 @@ async function handleStatusChange(ctx: any): Promise<void> {
       
       // Set effective date if not already set
       if (!pricebook.EffectiveDate) {
-        await ctx.ql.doc.update('pricebook', pricebook.Id, {
+        await (ctx.ql as any).doc.update('pricebook', pricebook.Id, {
           EffectiveDate: new Date().toISOString().split('T')[0]
         });
         console.log('📅 Effective date set to today');
@@ -212,7 +216,7 @@ async function handleStatusChange(ctx: any): Promise<void> {
       // If this is a standard pricebook, deactivate other standard pricebooks
       if (pricebook.IsStandard) {
         try {
-          const otherStandard = await ctx.ql.find('pricebook', {
+          const otherStandard = await (ctx.ql as any).find('pricebook', {
             filters: [
               ['IsStandard', '=', true],
               ['Status', '=', 'active'],
@@ -224,7 +228,7 @@ async function handleStatusChange(ctx: any): Promise<void> {
           if (otherPricebooks.length > 0) {
             console.log(`⚠️ Deactivating ${otherPricebooks.length} other standard pricebook(s)`);
             for (const pb of otherPricebooks) {
-              await ctx.ql.doc.update('pricebook', pb.Id, {
+              await (ctx.ql as any).doc.update('pricebook', pb.Id, {
                 Status: 'inactive',
                 ExpirationDate: new Date().toISOString().split('T')[0]
               });
@@ -244,7 +248,7 @@ async function handleStatusChange(ctx: any): Promise<void> {
       
       // Set expiration date if not already set
       if (!pricebook.ExpirationDate) {
-        await ctx.ql.doc.update('pricebook', pricebook.Id, {
+        await (ctx.ql as any).doc.update('pricebook', pricebook.Id, {
           ExpirationDate: new Date().toISOString().split('T')[0]
         });
       }
@@ -253,15 +257,15 @@ async function handleStatusChange(ctx: any): Promise<void> {
     }
 
     // Log activity for status change
-    await ctx.ql.doc.create('activity', {
-      Subject: `Pricebook Status Changed: ${ctx.previous.Status} → ${pricebook.Status}`,
+    await (ctx.ql as any).doc.create('activity', {
+      Subject: `Pricebook Status Changed: ${prev.Status} → ${pricebook.Status}`,
       Type: 'Status Change',
       Status: 'completed',
       Priority: 'normal',
       WhatId: pricebook.Id,
       OwnerId: ctx.user.id,
       ActivityDate: new Date().toISOString().split('T')[0],
-      Description: `Pricebook "${pricebook.Name}" status changed from "${ctx.previous.Status}" to "${pricebook.Status}"`
+      Description: `Pricebook "${pricebook.Name}" status changed from "${prev.Status}" to "${pricebook.Status}"`
     });
   } catch (error) {
     console.error(`[pricebook.hook] handleStatusChange failed:`, error);
@@ -271,25 +275,27 @@ async function handleStatusChange(ctx: any): Promise<void> {
 /**
  * Handle currency or exchange rate changes
  */
-async function handleCurrencyChange(ctx: any): Promise<void> {
+async function handleCurrencyChange(ctx: HookContext): Promise<void> {
   if (!ctx.previous || !ctx.result) return;
   
-  const currencyChanged = ctx.previous.CurrencyCode !== ctx.result.CurrencyCode;
-  const rateChanged = ctx.previous.ExchangeRate !== ctx.result.ExchangeRate;
+  const prev = ctx.previous as Record<string, any>;
+  const result = ctx.result as Record<string, any>;
+  const currencyChanged = prev.CurrencyCode !== result.CurrencyCode;
+  const rateChanged = prev.ExchangeRate !== result.ExchangeRate;
   
   if (!currencyChanged && !rateChanged) return;
 
-  const pricebook = ctx.result;
+  const pricebook = result;
   
   try {
     if (currencyChanged) {
-      console.log(`💱 Currency changed from ${ctx.previous.CurrencyCode} to ${pricebook.CurrencyCode}`);
+      console.log(`💱 Currency changed from ${prev.CurrencyCode} to ${pricebook.CurrencyCode}`);
       
-      console.debug(`[pricebook.hook] Currency update pending: update pricebook entries and notify users about currency change from ${ctx.previous.CurrencyCode} to ${pricebook.CurrencyCode} for pricebook "${pricebook.Name}"`);
+      console.debug(`[pricebook.hook] Currency update pending: update pricebook entries and notify users about currency change from ${prev.CurrencyCode} to ${pricebook.CurrencyCode} for pricebook "${pricebook.Name}"`);
     }
 
     if (rateChanged) {
-      console.log(`💱 Exchange rate changed from ${ctx.previous.ExchangeRate} to ${pricebook.ExchangeRate}`);
+      console.log(`💱 Exchange rate changed from ${prev.ExchangeRate} to ${pricebook.ExchangeRate}`);
       
       // Recalculate all prices based on new exchange rate
       // This would update all PricebookEntry records
@@ -300,13 +306,13 @@ async function handleCurrencyChange(ctx: any): Promise<void> {
     if (currencyChanged || rateChanged) {
       const changes = [];
       if (currencyChanged) {
-        changes.push(`Currency: ${ctx.previous.CurrencyCode} → ${pricebook.CurrencyCode}`);
+        changes.push(`Currency: ${prev.CurrencyCode} → ${pricebook.CurrencyCode}`);
       }
       if (rateChanged) {
-        changes.push(`Exchange Rate: ${ctx.previous.ExchangeRate} → ${pricebook.ExchangeRate}`);
+        changes.push(`Exchange Rate: ${prev.ExchangeRate} → ${pricebook.ExchangeRate}`);
       }
       
-      await ctx.ql.doc.create('activity', {
+      await (ctx.ql as any).doc.create('activity', {
         Subject: `Pricebook Currency Updated: ${pricebook.Name}`,
         Type: 'Currency Update',
         Status: 'completed',

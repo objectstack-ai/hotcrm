@@ -40,14 +40,14 @@ const EmployeeOnboardingTrigger: Hook = {
 /**
  * Create onboarding record for new employee
  */
-async function createOnboardingRecord(employee: any, ctx: any): Promise<void> {
+async function createOnboardingRecord(employee: Record<string, any>, ctx: HookContext): Promise<void> {
   try {
     // Calculate onboarding completion date (typically 30-90 days)
     const startDate = new Date(employee.hire_date || new Date());
     const targetDate = new Date(startDate);
     targetDate.setDate(targetDate.getDate() + 90); // 90-day onboarding
 
-    await ctx.ql.doc.create('onboarding', {
+    await (ctx.ql as any).doc.create('onboarding', {
       employee_id: employee.id,
       start_date: startDate.toISOString().split('T')[0],
       target_completion_date: targetDate.toISOString().split('T')[0],
@@ -66,7 +66,7 @@ async function createOnboardingRecord(employee: any, ctx: any): Promise<void> {
 /**
  * Notify manager about new team member
  */
-async function notifyManager(employee: any, ctx: any): Promise<void> {
+async function notifyManager(employee: Record<string, any>, ctx: HookContext): Promise<void> {
   try {
     if (!employee.manager_id) {
       console.log('⚠️ No manager assigned, skipping notification');
@@ -86,13 +86,13 @@ async function notifyManager(employee: any, ctx: any): Promise<void> {
 /**
  * Create initial goals for probation period
  */
-async function createProbationGoals(employee: any, ctx: any): Promise<void> {
+async function createProbationGoals(employee: Record<string, any>, ctx: HookContext): Promise<void> {
   try {
     const hireDate = new Date(employee.hire_date || new Date());
     const probationEndDate = new Date(hireDate);
     probationEndDate.setDate(probationEndDate.getDate() + 90); // 90-day probation
 
-    await ctx.ql.doc.create('goal', {
+    await (ctx.ql as any).doc.create('goal', {
       employee_id: employee.id,
       goal_name: `Complete Onboarding - ${employee.full_name}`,
       description: 'Successfully complete all onboarding tasks and probation requirements',
@@ -157,7 +157,7 @@ const EmployeeStatusChangeTrigger: Hook = {
 /**
  * Handle employee activation
  */
-async function handleActivation(employee: any, ctx: any): Promise<void> {
+async function handleActivation(employee: Record<string, any>, ctx: HookContext): Promise<void> {
   console.log(`✅ Employee ${employee.full_name} activated`);
   
   console.debug(`[employee.hook] Activation pending for ${employee.full_name}: enable system accounts, grant access permissions, and add to team channels`);
@@ -166,7 +166,7 @@ async function handleActivation(employee: any, ctx: any): Promise<void> {
 /**
  * Handle employee termination
  */
-async function handleTermination(employee: any, ctx: any): Promise<void> {
+async function handleTermination(employee: Record<string, any>, ctx: HookContext): Promise<void> {
   console.log(`👋 Processing termination for ${employee.full_name}`);
   
   try {
@@ -191,7 +191,7 @@ async function handleTermination(employee: any, ctx: any): Promise<void> {
 /**
  * Handle leave start
  */
-async function handleLeaveStart(employee: any, ctx: any): Promise<void> {
+async function handleLeaveStart(employee: Record<string, any>, ctx: HookContext): Promise<void> {
   console.log(`🏖️ Employee ${employee.full_name} started leave`);
   
   console.debug(`[employee.hook] Leave process pending for ${employee.full_name}: update team calendars, set up out-of-office auto-responder, and reassign urgent tasks`);
@@ -201,10 +201,10 @@ async function handleLeaveStart(employee: any, ctx: any): Promise<void> {
  * Log employee status change
  */
 async function logEmployeeStatusChange(
-  employee: any,
+  employee: Record<string, any>,
   oldStatus: string,
   newStatus: string,
-  ctx: any
+  ctx: HookContext
 ): Promise<void> {
   try {
     console.log(`📝 Logging status change: ${oldStatus} → ${newStatus} for ${employee.full_name}`);

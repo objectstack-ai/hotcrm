@@ -200,7 +200,7 @@ const KnowledgeArticleSearchAnalytics: Hook = {
 
 // Helper Functions
 
-function calculateQualityScore(article: any): number {
+function calculateQualityScore(article: Record<string, any>): number {
   let score = 0;
   const maxScore = 100;
 
@@ -269,7 +269,7 @@ function calculateQualityScore(article: any): number {
   return Math.min(score, maxScore);
 }
 
-async function calculatePopularityScore(article: any): Promise<number> {
+async function calculatePopularityScore(article: Record<string, any>): Promise<number> {
   let score = 0;
   const maxScore = 100;
 
@@ -329,7 +329,7 @@ async function calculatePopularityScore(article: any): Promise<number> {
   return Math.min(score, maxScore);
 }
 
-async function performAIArticleClassification(article: any): Promise<string> {
+async function performAIArticleClassification(article: Record<string, any>): Promise<string> {
   const text = `${article.Title} ${article.Content}`.toLowerCase();
   
   if (text.includes('how to') || text.includes('step by step') || text.includes('tutorial')) {
@@ -351,7 +351,7 @@ async function performAIArticleClassification(article: any): Promise<string> {
   return 'Other';
 }
 
-async function extractArticleTags(article: any): Promise<string[]> {
+async function extractArticleTags(article: Record<string, any>): Promise<string[]> {
   const tags: string[] = [];
   const text = `${article.Title} ${article.Content}`.toLowerCase();
   
@@ -422,13 +422,13 @@ async function extractArticleKeywords(content: string): Promise<string> {
   return sortedWords.join(', ');
 }
 
-async function findRelatedArticles(article: any, ctx: any): Promise<any[]> {
+async function findRelatedArticles(article: Record<string, any>, ctx: HookContext): Promise<any[]> {
   const keywords = article.AIKeywords?.split(',').map((k: string) => k.trim()) || [];
   
   if (keywords.length === 0) return [];
 
   // Find articles with similar keywords or category
-  const relatedArticles = await ctx.ql.find('knowledge_article', {
+  const relatedArticles = await (ctx.ql as any).find('knowledge_article', {
     filters: [
       ['Status', '=', 'Published'],
       ['id', '!=', article.id]
@@ -439,7 +439,7 @@ async function findRelatedArticles(article: any, ctx: any): Promise<any[]> {
   return relatedArticles;
 }
 
-async function trackStatusChange(article: any, oldArticle: any, ctx: any): Promise<void> {
+async function trackStatusChange(article: Record<string, any>, oldArticle: Record<string, any>, ctx: HookContext): Promise<void> {
   const statusChange = {
     ArticleId: article.id,
     OldStatus: oldArticle.Status,
@@ -463,7 +463,7 @@ async function trackStatusChange(article: any, oldArticle: any, ctx: any): Promi
   }
 }
 
-async function checkForAutoArchive(article: any, ctx: any): Promise<boolean> {
+async function checkForAutoArchive(article: Record<string, any>, ctx: HookContext): Promise<boolean> {
   // Auto-archive if:
   // 1. Article is older than 2 years
   // 2. Low views in last 6 months
@@ -482,7 +482,7 @@ async function checkForAutoArchive(article: any, ctx: any): Promise<boolean> {
   return recentViewCount < 10 && helpfulRating < 50;
 }
 
-function calculateNextReviewDate(article: any): Date {
+function calculateNextReviewDate(article: Record<string, any>): Date {
   // Schedule next review based on category and criticality
   const now = new Date();
   let monthsUntilReview = 12; // Default: annual review
@@ -501,16 +501,16 @@ function calculateNextReviewDate(article: any): Date {
   return reviewDate;
 }
 
-async function incrementArticleUsage(articleId: string, ctx: any): Promise<void> {
+async function incrementArticleUsage(articleId: string, ctx: HookContext): Promise<void> {
   try {
-    const article = await ctx.ql.find('knowledge_article', {
+    const article = await (ctx.ql as any).find('knowledge_article', {
       filters: [['id', '=', articleId]],
       limit: 1
     });
 
     if (article && article.length > 0) {
       const currentCount = article[0].CaseResolutionCount || 0;
-      await ctx.ql.doc.update('knowledge_article', articleId, {
+      await (ctx.ql as any).doc.update('knowledge_article', articleId, {
         CaseResolutionCount: currentCount + 1,
         LastUsedInCaseDate: new Date()
       });
