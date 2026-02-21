@@ -223,7 +223,7 @@ const CampaignMemberBounceHandlerTrigger: Hook = {
 /**
  * Calculate member engagement score (0-100)
  */
-export function calculateEngagementScore(member: any): number {
+export function calculateEngagementScore(member: Record<string, any>): number {
   let score = 0;
 
   // Base score for being in campaign
@@ -270,7 +270,7 @@ export function calculateEngagementScore(member: any): number {
 export async function trackMemberEngagementTimeline(
   memberId: string,
   engagementType: 'opened' | 'clicked' | 'responded' | 'unsubscribed',
-  ctx: any
+  ctx: HookContext
 ): Promise<void> {
   try {
     console.log(`🔄 Tracking engagement timeline for member: ${memberId}`);

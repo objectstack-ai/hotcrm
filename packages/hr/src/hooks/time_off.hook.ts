@@ -92,7 +92,7 @@ async function checkLeaveBalance(
   employeeId: string,
   leaveType: string,
   requestedDays: number,
-  ctx: any
+  ctx: HookContext
 ): Promise<boolean> {
   try {
     // Find all approved time-off records for this employee and leave type in current year
@@ -188,7 +188,7 @@ const TimeOffApprovalTrigger: Hook = {
 /**
  * Handle time-off approval: set approval date
  */
-async function handleTimeOffApproved(timeOff: any, ctx: any): Promise<void> {
+async function handleTimeOffApproved(timeOff: Record<string, any>, ctx: HookContext): Promise<void> {
   try {
     await (ctx.ql as any).doc.update('time_off', timeOff.id, {
       approval_date: new Date().toISOString().split('T')[0]
@@ -205,7 +205,7 @@ async function handleTimeOffApproved(timeOff: any, ctx: any): Promise<void> {
 /**
  * Handle time-off cancellation after approval: restore balance
  */
-async function handleTimeOffCancelled(timeOff: any, ctx: any): Promise<void> {
+async function handleTimeOffCancelled(timeOff: Record<string, any>, ctx: HookContext): Promise<void> {
   try {
     console.log(`🔄 Time-off request ${timeOff.request_number} cancelled after approval: ${timeOff.total_days} day(s) of ${timeOff.leave_type} restored`);
 
@@ -219,10 +219,10 @@ async function handleTimeOffCancelled(timeOff: any, ctx: any): Promise<void> {
  * Log balance change for audit trail
  */
 async function logBalanceChange(
-  timeOff: any,
+  timeOff: Record<string, any>,
   oldStatus: string,
   newStatus: string,
-  ctx: any
+  ctx: HookContext
 ): Promise<void> {
   try {
     const action = newStatus === 'approved' ? 'DEDUCTED' : newStatus === 'cancelled' ? 'RESTORED' : 'STATUS_CHANGE';
