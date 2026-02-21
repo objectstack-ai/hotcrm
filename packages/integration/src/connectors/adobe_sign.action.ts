@@ -10,45 +10,48 @@
 
 import { broker } from '../db.js';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('integration:adobe_sign');
+
 // ============================================================================
 // 1. CREATE AGREEMENT
 // ============================================================================
 
 export interface CreateAgreementRequest {
-  name: string;
-  recipient_emails: string[];
-  template_id?: string;
-  document_url?: string;
-  message?: string;
-  metadata?: Record<string, string>;
+ name: string;
+ recipient_emails: string[];
+ template_id?: string;
+ document_url?: string;
+ message?: string;
+ metadata?: Record<string, string>;
 }
 
 export interface CreateAgreementResponse {
-  agreement_id: string;
-  status: string;
-  signing_url: string;
+ agreement_id: string;
+ status: string;
+ signing_url: string;
 }
 
 export async function createAgreement(request: CreateAgreementRequest): Promise<CreateAgreementResponse> {
-  const { name, recipient_emails, template_id, document_url } = request;
+ const { name, recipient_emails, template_id, document_url } = request;
 
-  if (!name) {
-    throw new Error('name is required');
-  }
-  if (!recipient_emails || recipient_emails.length === 0) {
-    throw new Error('at least one recipient email is required');
-  }
-  if (!template_id && !document_url) {
-    throw new Error('either template_id or document_url is required');
-  }
+ if (!name) {
+ throw new Error('name is required');
+ }
+ if (!recipient_emails || recipient_emails.length === 0) {
+ throw new Error('at least one recipient email is required');
+ }
+ if (!template_id && !document_url) {
+ throw new Error('either template_id or document_url is required');
+ }
 
-  console.log(`📝 Creating Adobe Sign agreement: ${name}`);
+ logger.info(`Creating Adobe Sign agreement: ${name}`);
 
-  return {
-    agreement_id: `CBJ-${Math.random().toString(36).substring(2, 15)}`,
-    status: 'OUT_FOR_SIGNATURE',
-    signing_url: `https://secure.adobesign.com/sign/${Math.random().toString(36).substring(2, 15)}`
-  };
+ return {
+ agreement_id: `CBJ-${Math.random().toString(36).substring(2, 15)}`,
+ status: 'OUT_FOR_SIGNATURE',
+ signing_url: `https://secure.adobesign.com/sign/${Math.random().toString(36).substring(2, 15)}`
+ };
 }
 
 // ============================================================================
@@ -56,33 +59,33 @@ export async function createAgreement(request: CreateAgreementRequest): Promise<
 // ============================================================================
 
 export interface GetSigningStatusRequest {
-  agreement_id: string;
+ agreement_id: string;
 }
 
 export interface GetSigningStatusResponse {
-  agreement_id: string;
-  status: string;
-  signers: Array<{
-    email: string;
-    status: string;
-    signed_at?: string;
-  }>;
+ agreement_id: string;
+ status: string;
+ signers: Array<{
+ email: string;
+ status: string;
+ signed_at?: string;
+ }>;
 }
 
 export async function getSigningStatus(request: GetSigningStatusRequest): Promise<GetSigningStatusResponse> {
-  const { agreement_id } = request;
+ const { agreement_id } = request;
 
-  if (!agreement_id) {
-    throw new Error('agreement_id is required');
-  }
+ if (!agreement_id) {
+ throw new Error('agreement_id is required');
+ }
 
-  console.log(`🔍 Getting signing status for agreement ${agreement_id}`);
+ logger.info(`Getting signing status for agreement ${agreement_id}`);
 
-  return {
-    agreement_id,
-    status: 'OUT_FOR_SIGNATURE',
-    signers: []
-  };
+ return {
+ agreement_id,
+ status: 'OUT_FOR_SIGNATURE',
+ signers: []
+ };
 }
 
 // ============================================================================
@@ -90,32 +93,32 @@ export async function getSigningStatus(request: GetSigningStatusRequest): Promis
 // ============================================================================
 
 export interface DownloadSignedDocumentRequest {
-  agreement_id: string;
-  format?: 'pdf' | 'original';
+ agreement_id: string;
+ format?: 'pdf' | 'original';
 }
 
 export interface DownloadSignedDocumentResponse {
-  agreement_id: string;
-  download_url: string;
-  format: string;
-  expires_at: string;
+ agreement_id: string;
+ download_url: string;
+ format: string;
+ expires_at: string;
 }
 
 export async function downloadSignedDocument(request: DownloadSignedDocumentRequest): Promise<DownloadSignedDocumentResponse> {
-  const { agreement_id, format } = request;
+ const { agreement_id, format } = request;
 
-  if (!agreement_id) {
-    throw new Error('agreement_id is required');
-  }
+ if (!agreement_id) {
+ throw new Error('agreement_id is required');
+ }
 
-  console.log(`📥 Downloading signed document for agreement ${agreement_id}`);
+ logger.info(`📥 Downloading signed document for agreement ${agreement_id}`);
 
-  return {
-    agreement_id,
-    download_url: `https://secure.adobesign.com/download/${agreement_id}`,
-    format: format || 'pdf',
-    expires_at: new Date(Date.now() + 3600000).toISOString()
-  };
+ return {
+ agreement_id,
+ download_url: `https://secure.adobesign.com/download/${agreement_id}`,
+ format: format || 'pdf',
+ expires_at: new Date(Date.now() + 3600000).toISOString()
+ };
 }
 
 // ============================================================================
@@ -123,46 +126,46 @@ export async function downloadSignedDocument(request: DownloadSignedDocumentRequ
 // ============================================================================
 
 export interface HandleAdobeSignWebhookRequest {
-  event_type: string;
-  payload: Record<string, any>;
-  webhook_id: string;
+ event_type: string;
+ payload: Record<string, any>;
+ webhook_id: string;
 }
 
 export interface HandleAdobeSignWebhookResponse {
-  processed: boolean;
-  event_type: string;
-  actions_taken: string[];
+ processed: boolean;
+ event_type: string;
+ actions_taken: string[];
 }
 
 export async function handleAdobeSignWebhook(request: HandleAdobeSignWebhookRequest): Promise<HandleAdobeSignWebhookResponse> {
-  const { event_type, payload, webhook_id } = request;
+ const { event_type, payload, webhook_id } = request;
 
-  if (!event_type || !payload) {
-    throw new Error('event_type and payload are required');
-  }
+ if (!event_type || !payload) {
+ throw new Error('event_type and payload are required');
+ }
 
-  console.log(`🔔 Processing Adobe Sign webhook: ${event_type}`);
+ logger.info(`Processing Adobe Sign webhook: ${event_type}`);
 
-  const actions: string[] = [];
+ const actions: string[] = [];
 
-  if (event_type === 'AGREEMENT_ALL_SIGNED') {
-    actions.push('agreement_completed');
-  } else if (event_type === 'AGREEMENT_ACTION_REQUESTED') {
-    actions.push('signing_reminder_sent');
-  } else if (event_type === 'AGREEMENT_EXPIRED') {
-    actions.push('agreement_expiry_logged');
-  }
+ if (event_type === 'AGREEMENT_ALL_SIGNED') {
+ actions.push('agreement_completed');
+ } else if (event_type === 'AGREEMENT_ACTION_REQUESTED') {
+ actions.push('signing_reminder_sent');
+ } else if (event_type === 'AGREEMENT_EXPIRED') {
+ actions.push('agreement_expiry_logged');
+ }
 
-  return {
-    processed: true,
-    event_type,
-    actions_taken: actions
-  };
+ return {
+ processed: true,
+ event_type,
+ actions_taken: actions
+ };
 }
 
 export default {
-  createAgreement,
-  getSigningStatus,
-  downloadSignedDocument,
-  handleAdobeSignWebhook
+ createAgreement,
+ getSigningStatus,
+ downloadSignedDocument,
+ handleAdobeSignWebhook
 };

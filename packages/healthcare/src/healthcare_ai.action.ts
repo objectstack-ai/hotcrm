@@ -10,52 +10,55 @@
 
 import { broker } from './db.js';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('healthcare:healthcare_ai');
+
 // ============================================================================
 // 1. SCHEDULING OPTIMIZATION
 // ============================================================================
 
 export interface SchedulingOptimizationRequest {
-  /** Provider ID to optimize schedule for */
-  providerId: string;
-  /** Date to optimize */
-  date: string;
+ /** Provider ID to optimize schedule for */
+ providerId: string;
+ /** Date to optimize */
+ date: string;
 }
 
 export interface SchedulingOptimizationResponse {
-  /** Optimized schedule slots */
-  slots: Array<{ time: string; patientId: string; duration: number }>;
-  /** Average wait time in minutes */
-  avgWaitTime: number;
-  /** Utilization percentage */
-  utilization: number;
-  /** Optimization summary */
-  summary: string;
+ /** Optimized schedule slots */
+ slots: Array<{ time: string; patientId: string; duration: number }>;
+ /** Average wait time in minutes */
+ avgWaitTime: number;
+ /** Utilization percentage */
+ utilization: number;
+ /** Optimization summary */
+ summary: string;
 }
 
 /**
  * AI-powered appointment scheduling optimization
  */
 export async function schedulingOptimization(request: SchedulingOptimizationRequest): Promise<SchedulingOptimizationResponse> {
-  const { providerId, date } = request;
+ const { providerId, date } = request;
 
-  if (!providerId || !date) {
-    throw new Error('providerId and date are required');
-  }
+ if (!providerId || !date) {
+ throw new Error('providerId and date are required');
+ }
 
-  let appointments: any[] = [];
-  try {
-    appointments = await broker.find('appointment', {
-      filters: [
-        ['provider_id', '=', providerId],
-        ['status', '!=', 'cancelled']
-      ],
-      limit: 50
-    });
-  } catch {
-    // Proceed with empty data
-  }
+ let appointments: any[] = [];
+ try {
+ appointments = await broker.find('appointment', {
+ filters: [
+ ['provider_id', '=', providerId],
+ ['status', '!=', 'cancelled']
+ ],
+ limit: 50
+ });
+ } catch {
+ // Proceed with empty data
+ }
 
-  const systemPrompt = `
+ const systemPrompt = `
 You are a healthcare scheduling optimization AI.
 
 # Provider: ${providerId}
@@ -67,15 +70,15 @@ Optimize the appointment schedule to minimize patient wait times.
 
 # Output Format
 {
-  "slots": [],
-  "avgWaitTime": 12,
-  "utilization": 85,
-  "summary": "Schedule optimized with minimal gaps..."
+ "slots": [],
+ "avgWaitTime": 12,
+ "utilization": 85,
+ "summary": "Schedule optimized with minimal gaps..."
 }
 `.trim();
 
-  const llmResponse = await callLLM(systemPrompt);
-  return JSON.parse(llmResponse);
+ const llmResponse = await callLLM(systemPrompt);
+ return JSON.parse(llmResponse);
 }
 
 // ============================================================================
@@ -83,44 +86,44 @@ Optimize the appointment schedule to minimize patient wait times.
 // ============================================================================
 
 export interface PatientRiskScoringRequest {
-  /** Patient ID to score */
-  patientId: string;
+ /** Patient ID to score */
+ patientId: string;
 }
 
 export interface PatientRiskScoringResponse {
-  /** Overall risk score 0-100 */
-  riskScore: number;
-  /** Risk level */
-  riskLevel: 'low' | 'moderate' | 'high' | 'critical';
-  /** Risk factors identified */
-  riskFactors: Array<{ factor: string; weight: number }>;
-  /** Recommended actions */
-  recommendations: string[];
+ /** Overall risk score 0-100 */
+ riskScore: number;
+ /** Risk level */
+ riskLevel: 'low' | 'moderate' | 'high' | 'critical';
+ /** Risk factors identified */
+ riskFactors: Array<{ factor: string; weight: number }>;
+ /** Recommended actions */
+ recommendations: string[];
 }
 
 /**
  * AI-powered patient risk scoring based on medical history
  */
 export async function patientRiskScoring(request: PatientRiskScoringRequest): Promise<PatientRiskScoringResponse> {
-  const { patientId } = request;
+ const { patientId } = request;
 
-  if (!patientId) {
-    throw new Error('patientId is required');
-  }
+ if (!patientId) {
+ throw new Error('patientId is required');
+ }
 
-  let patient: any = {};
-  let prescriptions: any[] = [];
-  try {
-    patient = await broker.findOne('patient', patientId);
-    prescriptions = await broker.find('prescription', {
-      filters: [['patient_id', '=', patientId]],
-      limit: 20
-    });
-  } catch {
-    // Proceed with empty data
-  }
+ let patient: any = {};
+ let prescriptions: any[] = [];
+ try {
+ patient = await broker.findOne('patient', patientId);
+ prescriptions = await broker.find('prescription', {
+ filters: [['patient_id', '=', patientId]],
+ limit: 20
+ });
+ } catch {
+ // Proceed with empty data
+ }
 
-  const systemPrompt = `
+ const systemPrompt = `
 You are a healthcare risk assessment AI.
 
 # Patient: ${patient.name || 'Unknown'}
@@ -132,15 +135,15 @@ Calculate a risk score based on the patient's medical history.
 
 # Output Format
 {
-  "riskScore": 35,
-  "riskLevel": "moderate",
-  "riskFactors": [{ "factor": "Multiple medications", "weight": 0.3 }],
-  "recommendations": ["Schedule follow-up in 2 weeks"]
+ "riskScore": 35,
+ "riskLevel": "moderate",
+ "riskFactors": [{ "factor": "Multiple medications", "weight": 0.3 }],
+ "recommendations": ["Schedule follow-up in 2 weeks"]
 }
 `.trim();
 
-  const llmResponse = await callLLM(systemPrompt);
-  return JSON.parse(llmResponse);
+ const llmResponse = await callLLM(systemPrompt);
+ return JSON.parse(llmResponse);
 }
 
 // ============================================================================
@@ -148,45 +151,45 @@ Calculate a risk score based on the patient's medical history.
 // ============================================================================
 
 export interface CareGapIdentificationRequest {
-  /** Patient ID to analyze */
-  patientId: string;
+ /** Patient ID to analyze */
+ patientId: string;
 }
 
 export interface CareGapIdentificationResponse {
-  /** Identified care gaps */
-  gaps: Array<{ type: string; description: string; priority: 'low' | 'medium' | 'high' }>;
-  /** Total gaps found */
-  totalGaps: number;
-  /** Overall care completeness percentage */
-  completeness: number;
+ /** Identified care gaps */
+ gaps: Array<{ type: string; description: string; priority: 'low' | 'medium' | 'high' }>;
+ /** Total gaps found */
+ totalGaps: number;
+ /** Overall care completeness percentage */
+ completeness: number;
 }
 
 /**
  * AI-powered identification of gaps in patient care plans
  */
 export async function careGapIdentification(request: CareGapIdentificationRequest): Promise<CareGapIdentificationResponse> {
-  const { patientId } = request;
+ const { patientId } = request;
 
-  if (!patientId) {
-    throw new Error('patientId is required');
-  }
+ if (!patientId) {
+ throw new Error('patientId is required');
+ }
 
-  let carePlans: any[] = [];
-  let appointments: any[] = [];
-  try {
-    carePlans = await broker.find('care_plan', {
-      filters: [['patient_id', '=', patientId]],
-      limit: 20
-    });
-    appointments = await broker.find('appointment', {
-      filters: [['patient_id', '=', patientId]],
-      limit: 50
-    });
-  } catch {
-    // Proceed with empty data
-  }
+ let carePlans: any[] = [];
+ let appointments: any[] = [];
+ try {
+ carePlans = await broker.find('care_plan', {
+ filters: [['patient_id', '=', patientId]],
+ limit: 20
+ });
+ appointments = await broker.find('appointment', {
+ filters: [['patient_id', '=', patientId]],
+ limit: 50
+ });
+ } catch {
+ // Proceed with empty data
+ }
 
-  const systemPrompt = `
+ const systemPrompt = `
 You are a healthcare care gap analysis AI.
 
 # Patient: ${patientId}
@@ -198,14 +201,14 @@ Identify gaps in the patient's care plans and recommend actions.
 
 # Output Format
 {
-  "gaps": [{ "type": "screening", "description": "Annual physical overdue", "priority": "medium" }],
-  "totalGaps": 1,
-  "completeness": 75
+ "gaps": [{ "type": "screening", "description": "Annual physical overdue", "priority": "medium" }],
+ "totalGaps": 1,
+ "completeness": 75
 }
 `.trim();
 
-  const llmResponse = await callLLM(systemPrompt);
-  return JSON.parse(llmResponse);
+ const llmResponse = await callLLM(systemPrompt);
+ return JSON.parse(llmResponse);
 }
 
 // ============================================================================
@@ -213,44 +216,44 @@ Identify gaps in the patient's care plans and recommend actions.
 // ============================================================================
 
 export interface ReadmissionPredictionRequest {
-  /** Patient ID to analyze */
-  patientId: string;
+ /** Patient ID to analyze */
+ patientId: string;
 }
 
 export interface ReadmissionPredictionResponse {
-  /** Readmission probability 0-100 */
-  probability: number;
-  /** Risk level */
-  riskLevel: 'low' | 'moderate' | 'high';
-  /** Contributing factors */
-  factors: Array<{ factor: string; impact: number }>;
-  /** Preventive recommendations */
-  preventiveActions: string[];
+ /** Readmission probability 0-100 */
+ probability: number;
+ /** Risk level */
+ riskLevel: 'low' | 'moderate' | 'high';
+ /** Contributing factors */
+ factors: Array<{ factor: string; impact: number }>;
+ /** Preventive recommendations */
+ preventiveActions: string[];
 }
 
 /**
  * AI-powered prediction of patient readmission likelihood
  */
 export async function readmissionPrediction(request: ReadmissionPredictionRequest): Promise<ReadmissionPredictionResponse> {
-  const { patientId } = request;
+ const { patientId } = request;
 
-  if (!patientId) {
-    throw new Error('patientId is required');
-  }
+ if (!patientId) {
+ throw new Error('patientId is required');
+ }
 
-  let patient: any = {};
-  let recentAppointments: any[] = [];
-  try {
-    patient = await broker.findOne('patient', patientId);
-    recentAppointments = await broker.find('appointment', {
-      filters: [['patient_id', '=', patientId]],
-      limit: 20
-    });
-  } catch {
-    // Proceed with empty data
-  }
+ let patient: any = {};
+ let recentAppointments: any[] = [];
+ try {
+ patient = await broker.findOne('patient', patientId);
+ recentAppointments = await broker.find('appointment', {
+ filters: [['patient_id', '=', patientId]],
+ limit: 20
+ });
+ } catch {
+ // Proceed with empty data
+ }
 
-  const systemPrompt = `
+ const systemPrompt = `
 You are a healthcare readmission prediction AI.
 
 # Patient: ${patient.name || 'Unknown'}
@@ -262,15 +265,15 @@ Predict the likelihood of patient readmission within 30 days.
 
 # Output Format
 {
-  "probability": 25,
-  "riskLevel": "moderate",
-  "factors": [{ "factor": "Recent hospitalization", "impact": 0.4 }],
-  "preventiveActions": ["Schedule follow-up within 7 days"]
+ "probability": 25,
+ "riskLevel": "moderate",
+ "factors": [{ "factor": "Recent hospitalization", "impact": 0.4 }],
+ "preventiveActions": ["Schedule follow-up within 7 days"]
 }
 `.trim();
 
-  const llmResponse = await callLLM(systemPrompt);
-  return JSON.parse(llmResponse);
+ const llmResponse = await callLLM(systemPrompt);
+ return JSON.parse(llmResponse);
 }
 
 // ============================================================================
@@ -278,47 +281,47 @@ Predict the likelihood of patient readmission within 30 days.
 // ============================================================================
 
 async function callLLM(prompt: string): Promise<string> {
-  console.log('🤖 Calling LLM API for healthcare AI...');
-  await new Promise(resolve => setTimeout(resolve, 500));
+ logger.info('🤖 Calling LLM API for healthcare AI...');
+ await new Promise(resolve => setTimeout(resolve, 500));
 
-  if (prompt.includes('scheduling optimization')) {
-    return JSON.stringify({
-      slots: [],
-      avgWaitTime: 12,
-      utilization: 85,
-      summary: 'Schedule optimized with minimal gaps and reduced wait times.'
-    });
-  }
+ if (prompt.includes('scheduling optimization')) {
+ return JSON.stringify({
+ slots: [],
+ avgWaitTime: 12,
+ utilization: 85,
+ summary: 'Schedule optimized with minimal gaps and reduced wait times.'
+ });
+ }
 
-  if (prompt.includes('risk assessment')) {
-    return JSON.stringify({
-      riskScore: 35,
-      riskLevel: 'moderate',
-      riskFactors: [{ factor: 'Multiple medications', weight: 0.3 }],
-      recommendations: ['Schedule follow-up in 2 weeks']
-    });
-  }
+ if (prompt.includes('risk assessment')) {
+ return JSON.stringify({
+ riskScore: 35,
+ riskLevel: 'moderate',
+ riskFactors: [{ factor: 'Multiple medications', weight: 0.3 }],
+ recommendations: ['Schedule follow-up in 2 weeks']
+ });
+ }
 
-  if (prompt.includes('care gap')) {
-    return JSON.stringify({
-      gaps: [{ type: 'screening', description: 'Annual physical overdue', priority: 'medium' }],
-      totalGaps: 1,
-      completeness: 75
-    });
-  }
+ if (prompt.includes('care gap')) {
+ return JSON.stringify({
+ gaps: [{ type: 'screening', description: 'Annual physical overdue', priority: 'medium' }],
+ totalGaps: 1,
+ completeness: 75
+ });
+ }
 
-  // Readmission prediction
-  return JSON.stringify({
-    probability: 25,
-    riskLevel: 'moderate',
-    factors: [{ factor: 'Recent hospitalization', impact: 0.4 }],
-    preventiveActions: ['Schedule follow-up within 7 days']
-  });
+ // Readmission prediction
+ return JSON.stringify({
+ probability: 25,
+ riskLevel: 'moderate',
+ factors: [{ factor: 'Recent hospitalization', impact: 0.4 }],
+ preventiveActions: ['Schedule follow-up within 7 days']
+ });
 }
 
 export default {
-  schedulingOptimization,
-  patientRiskScoring,
-  careGapIdentification,
-  readmissionPrediction
+ schedulingOptimization,
+ patientRiskScoring,
+ careGapIdentification,
+ readmissionPrediction
 };

@@ -10,38 +10,41 @@
 
 import { broker } from '../db.js';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('integration:gmail');
+
 // ============================================================================
 // 1. LOG EMAIL ACTIVITY
 // ============================================================================
 
 export interface LogEmailActivityRequest {
-  message_id: string;
-  from: string;
-  to: string[];
-  subject: string;
-  body_snippet?: string;
-  related_record_id?: string;
-  related_object?: string;
+ message_id: string;
+ from: string;
+ to: string[];
+ subject: string;
+ body_snippet?: string;
+ related_record_id?: string;
+ related_object?: string;
 }
 
 export interface LogEmailActivityResponse {
-  activity_id: string;
-  logged: boolean;
+ activity_id: string;
+ logged: boolean;
 }
 
 export async function logEmailActivity(request: LogEmailActivityRequest): Promise<LogEmailActivityResponse> {
-  const { message_id, from, to, subject } = request;
+ const { message_id, from, to, subject } = request;
 
-  if (!message_id || !from || !to || !subject) {
-    throw new Error('message_id, from, to, and subject are required');
-  }
+ if (!message_id || !from || !to || !subject) {
+ throw new Error('message_id, from, to, and subject are required');
+ }
 
-  console.log(`📧 Logging email activity: ${subject}`);
+ logger.info(`Logging email activity: ${subject}`);
 
-  return {
-    activity_id: `act_${Math.random().toString(36).substring(2, 15)}`,
-    logged: true
-  };
+ return {
+ activity_id: `act_${Math.random().toString(36).substring(2, 15)}`,
+ logged: true
+ };
 }
 
 // ============================================================================
@@ -49,31 +52,31 @@ export async function logEmailActivity(request: LogEmailActivityRequest): Promis
 // ============================================================================
 
 export interface TrackThreadRequest {
-  thread_id: string;
-  related_record_id: string;
-  related_object: string;
+ thread_id: string;
+ related_record_id: string;
+ related_object: string;
 }
 
 export interface TrackThreadResponse {
-  tracked: boolean;
-  thread_id: string;
-  message_count: number;
+ tracked: boolean;
+ thread_id: string;
+ message_count: number;
 }
 
 export async function trackThread(request: TrackThreadRequest): Promise<TrackThreadResponse> {
-  const { thread_id, related_record_id, related_object } = request;
+ const { thread_id, related_record_id, related_object } = request;
 
-  if (!thread_id || !related_record_id || !related_object) {
-    throw new Error('thread_id, related_record_id, and related_object are required');
-  }
+ if (!thread_id || !related_record_id || !related_object) {
+ throw new Error('thread_id, related_record_id, and related_object are required');
+ }
 
-  console.log(`📨 Tracking email thread ${thread_id} for ${related_object}:${related_record_id}`);
+ logger.info(`📨 Tracking email thread ${thread_id} for ${related_object}:${related_record_id}`);
 
-  return {
-    tracked: true,
-    thread_id,
-    message_count: 1
-  };
+ return {
+ tracked: true,
+ thread_id,
+ message_count: 1
+ };
 }
 
 // ============================================================================
@@ -81,33 +84,33 @@ export async function trackThread(request: TrackThreadRequest): Promise<TrackThr
 // ============================================================================
 
 export interface SendTemplateEmailRequest {
-  template_name: string;
-  to: string[];
-  variables: Record<string, string>;
-  cc?: string[];
-  bcc?: string[];
+ template_name: string;
+ to: string[];
+ variables: Record<string, string>;
+ cc?: string[];
+ bcc?: string[];
 }
 
 export interface SendTemplateEmailResponse {
-  sent: boolean;
-  message_id: string;
-  recipients: number;
+ sent: boolean;
+ message_id: string;
+ recipients: number;
 }
 
 export async function sendTemplateEmail(request: SendTemplateEmailRequest): Promise<SendTemplateEmailResponse> {
-  const { template_name, to, variables } = request;
+ const { template_name, to, variables } = request;
 
-  if (!template_name || !to || to.length === 0) {
-    throw new Error('template_name and at least one recipient are required');
-  }
+ if (!template_name || !to || to.length === 0) {
+ throw new Error('template_name and at least one recipient are required');
+ }
 
-  console.log(`✉️ Sending template email "${template_name}" to ${to.length} recipient(s)`);
+ logger.info(`✉ Sending template email "${template_name}" to ${to.length} recipient(s)`);
 
-  return {
-    sent: true,
-    message_id: `msg_${Math.random().toString(36).substring(2, 15)}`,
-    recipients: to.length
-  };
+ return {
+ sent: true,
+ message_id: `msg_${Math.random().toString(36).substring(2, 15)}`,
+ recipients: to.length
+ };
 }
 
 // ============================================================================
@@ -115,36 +118,36 @@ export async function sendTemplateEmail(request: SendTemplateEmailRequest): Prom
 // ============================================================================
 
 export interface HandleGmailWebhookRequest {
-  history_id: string;
-  email_address: string;
-  payload: Record<string, any>;
+ history_id: string;
+ email_address: string;
+ payload: Record<string, any>;
 }
 
 export interface HandleGmailWebhookResponse {
-  processed: boolean;
-  new_messages: number;
-  actions_taken: string[];
+ processed: boolean;
+ new_messages: number;
+ actions_taken: string[];
 }
 
 export async function handleGmailWebhook(request: HandleGmailWebhookRequest): Promise<HandleGmailWebhookResponse> {
-  const { history_id, email_address } = request;
+ const { history_id, email_address } = request;
 
-  if (!history_id || !email_address) {
-    throw new Error('history_id and email_address are required');
-  }
+ if (!history_id || !email_address) {
+ throw new Error('history_id and email_address are required');
+ }
 
-  console.log(`🔔 Processing Gmail webhook for ${email_address}, history: ${history_id}`);
+ logger.info(`Processing Gmail webhook for ${email_address}, history: ${history_id}`);
 
-  return {
-    processed: true,
-    new_messages: 0,
-    actions_taken: ['history_synced']
-  };
+ return {
+ processed: true,
+ new_messages: 0,
+ actions_taken: ['history_synced']
+ };
 }
 
 export default {
-  logEmailActivity,
-  trackThread,
-  sendTemplateEmail,
-  handleGmailWebhook
+ logEmailActivity,
+ trackThread,
+ sendTemplateEmail,
+ handleGmailWebhook
 };

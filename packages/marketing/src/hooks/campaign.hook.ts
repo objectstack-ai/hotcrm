@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('marketing:campaign');
+
 /**
  * Campaign Lifecycle and ROI Management Trigger
  * 
@@ -10,39 +13,39 @@ import type { Hook, HookContext } from '@objectstack/spec/data';
  * 4. Performance metrics aggregation
  */
 const CampaignROICalculationTrigger: Hook = {
-  name: 'CampaignROICalculationTrigger',
-  object: 'campaign',
-  events: ['beforeInsert', 'beforeUpdate'],
-  handler: async (ctx: HookContext) => {
-    try {
-      const campaign = ctx.input as Record<string, any>;
+ name: 'CampaignROICalculationTrigger',
+ object: 'campaign',
+ events: ['beforeInsert', 'beforeUpdate'],
+ handler: async (ctx: HookContext) => {
+ try {
+ const campaign = ctx.input as Record<string, any>;
 
-      // Calculate ROI: (ActualRevenue - ActualCost) / ActualCost * 100
-      const actualRevenue = campaign.actual_revenue || 0;
-      const actualCost = campaign.actual_cost || 0;
+ // Calculate ROI: (ActualRevenue - ActualCost) / ActualCost * 100
+ const actualRevenue = campaign.actual_revenue || 0;
+ const actualCost = campaign.actual_cost || 0;
 
-      if (actualCost > 0) {
-        campaign.roi = ((actualRevenue - actualCost) / actualCost) * 100;
-        console.log(`📊 Campaign ROI calculated: ${campaign.roi.toFixed(2)}%`);
-      } else if (actualRevenue > 0 && actualCost === 0) {
-        // Infinite ROI - revenue with no cost
-        campaign.roi = 999.99;
-        console.log(`📊 Campaign ROI: Infinite (revenue with zero cost)`);
-      } else {
-        campaign.roi = 0;
-      }
+ if (actualCost > 0) {
+ campaign.roi = ((actualRevenue - actualCost) / actualCost) * 100;
+ logger.info(`Campaign ROI calculated: ${campaign.roi.toFixed(2)}%`);
+ } else if (actualRevenue > 0 && actualCost === 0) {
+ // Infinite ROI - revenue with no cost
+ campaign.roi = 999.99;
+ logger.info(`Campaign ROI: Infinite (revenue with zero cost)`);
+ } else {
+ campaign.roi = 0;
+ }
 
-      // Calculate budget utilization percentage
-      const budgetedCost = campaign.budgeted_cost || 0;
-      if (budgetedCost > 0) {
-        campaign.budget_utilization = (actualCost / budgetedCost) * 100;
-        console.log(`💰 Budget utilization: ${campaign.budget_utilization.toFixed(1)}%`);
-      }
+ // Calculate budget utilization percentage
+ const budgetedCost = campaign.budgeted_cost || 0;
+ if (budgetedCost > 0) {
+ campaign.budget_utilization = (actualCost / budgetedCost) * 100;
+ logger.info(`Budget utilization: ${campaign.budget_utilization.toFixed(1)}%`);
+ }
 
-    } catch (error) {
-      console.error(`[campaign.hook] ROI calculation failed:`, error);
-    }
-  }
+ } catch (error) {
+ logger.error(`[campaign.hook] ROI calculation failed:`, error);
+ }
+ }
 };
 
 /**
@@ -54,44 +57,44 @@ const CampaignROICalculationTrigger: Hook = {
  * - Track variance from budget
  */
 const CampaignBudgetTrackingTrigger: Hook = {
-  name: 'CampaignBudgetTrackingTrigger',
-  object: 'campaign',
-  events: ['beforeUpdate'],
-  handler: async (ctx: HookContext) => {
-    try {
-      const campaign = ctx.input as Record<string, any>;
-      const oldCampaign = ctx.previous as Record<string, any> | undefined;
+ name: 'CampaignBudgetTrackingTrigger',
+ object: 'campaign',
+ events: ['beforeUpdate'],
+ handler: async (ctx: HookContext) => {
+ try {
+ const campaign = ctx.input as Record<string, any>;
+ const oldCampaign = ctx.previous as Record<string, any> | undefined;
 
-      // Only process if actual cost changed
-      if (!oldCampaign || oldCampaign.actual_cost === campaign.actual_cost) {
-        return;
-      }
+ // Only process if actual cost changed
+ if (!oldCampaign || oldCampaign.actual_cost === campaign.actual_cost) {
+ return;
+ }
 
-      const budgeted = campaign.budgeted_cost || 0;
-      const actual = campaign.actual_cost || 0;
+ const budgeted = campaign.budgeted_cost || 0;
+ const actual = campaign.actual_cost || 0;
 
-      if (budgeted > 0) {
-        const percentSpent = (actual / budgeted) * 100;
+ if (budgeted > 0) {
+ const percentSpent = (actual / budgeted) * 100;
 
-        // Warn at 80%
-        if (percentSpent >= 80 && percentSpent < 100) {
-          console.warn(`⚠️ Campaign "${campaign.name}" has spent ${percentSpent.toFixed(1)}% of budget!`);
-          console.debug(`[campaign.hook] Budget warning pending: notify campaign manager about ${percentSpent.toFixed(1)}% budget usage for campaign "${campaign.name}"`);
-        }
+ // Warn at 80%
+ if (percentSpent >= 80 && percentSpent < 100) {
+ logger.warn(`Campaign "${campaign.name}" has spent ${percentSpent.toFixed(1)}% of budget!`);
+ logger.debug(`[campaign.hook] Budget warning pending: notify campaign manager about ${percentSpent.toFixed(1)}% budget usage for campaign "${campaign.name}"`);
+ }
 
-        // Alert at 100%
-        if (percentSpent >= 100) {
-          console.error(`🚨 Campaign "${campaign.name}" has exceeded budget! (${percentSpent.toFixed(1)}%)`);
-          console.debug(`[campaign.hook] Budget overspend alert pending: urgent notification for campaign "${campaign.name}" at ${percentSpent.toFixed(1)}% of budget`);
-        }
+ // Alert at 100%
+ if (percentSpent >= 100) {
+ logger.error(`Campaign "${campaign.name}" has exceeded budget! (${percentSpent.toFixed(1)}%)`);
+ logger.debug(`[campaign.hook] Budget overspend alert pending: urgent notification for campaign "${campaign.name}" at ${percentSpent.toFixed(1)}% of budget`);
+ }
 
-        console.log(`💰 Budget status: $${actual.toLocaleString()} / $${budgeted.toLocaleString()} (${percentSpent.toFixed(1)}%)`);
-      }
+ logger.info(`Budget status: $${actual.toLocaleString()} / $${budgeted.toLocaleString()} (${percentSpent.toFixed(1)}%)`);
+ }
 
-    } catch (error) {
-      console.error(`[campaign.hook] budget tracking failed:`, error);
-    }
-  }
+ } catch (error) {
+ logger.error(`[campaign.hook] budget tracking failed:`, error);
+ }
+ }
 };
 
 /**
@@ -103,64 +106,64 @@ const CampaignBudgetTrackingTrigger: Hook = {
  * - Abort campaign: Cleanup and logging
  */
 const CampaignStatusChangeTrigger: Hook = {
-  name: 'CampaignStatusChangeTrigger',
-  object: 'campaign',
-  events: ['afterUpdate'],
-  handler: async (ctx: HookContext) => {
-    try {
-      const campaign = ctx.result as Record<string, any>;
-      const oldCampaign = ctx.previous as Record<string, any> | undefined;
+ name: 'CampaignStatusChangeTrigger',
+ object: 'campaign',
+ events: ['afterUpdate'],
+ handler: async (ctx: HookContext) => {
+ try {
+ const campaign = ctx.result as Record<string, any>;
+ const oldCampaign = ctx.previous as Record<string, any> | undefined;
 
-      // Check if status changed
-      if (!oldCampaign || oldCampaign.status === campaign.status) {
-        return;
-      }
+ // Check if status changed
+ if (!oldCampaign || oldCampaign.status === campaign.status) {
+ return;
+ }
 
-      console.log(`🔄 Campaign status changed: ${oldCampaign.status} → ${campaign.status}`);
+ logger.info(`Campaign status changed: ${oldCampaign.status} → ${campaign.status}`);
 
-      switch (campaign.status) {
-        case 'in_progress':
-          await handleInProgressStatus(campaign, ctx);
-          break;
-        case 'completed':
-          await handleCompletedStatus(campaign, ctx);
-          break;
-        case 'Aborted':
-          await handleAbortedStatus(campaign, ctx);
-          break;
-      }
+ switch (campaign.status) {
+ case 'in_progress':
+ await handleInProgressStatus(campaign, ctx);
+ break;
+ case 'completed':
+ await handleCompletedStatus(campaign, ctx);
+ break;
+ case 'Aborted':
+ await handleAbortedStatus(campaign, ctx);
+ break;
+ }
 
-    } catch (error) {
-      console.error(`[campaign.hook] status change handling failed:`, error);
-    }
-  }
+ } catch (error) {
+ logger.error(`[campaign.hook] status change handling failed:`, error);
+ }
+ }
 };
 
 /**
  * Handle campaign transition to In Progress
  */
 async function handleInProgressStatus(campaign: Record<string, any>, ctx: HookContext): Promise<void> {
-  console.log(`🚀 Campaign "${campaign.name}" started`);
-  
-  console.debug(`[campaign.hook] Campaign start pending for "${campaign.name}": member notifications, workflow activation, and start event logging`);
+ logger.info(`🚀 Campaign "${campaign.name}" started`);
+ 
+ logger.debug(`[campaign.hook] Campaign start pending for "${campaign.name}": member notifications, workflow activation, and start event logging`);
 }
 
 /**
  * Handle campaign completion
  */
 async function handleCompletedStatus(campaign: Record<string, any>, ctx: HookContext): Promise<void> {
-  console.log(`✅ Campaign "${campaign.name}" completed`);
-  
-  console.debug(`[campaign.hook] Campaign completion pending for "${campaign.name}": final metrics calculation, report generation, data archival, and stakeholder notification`);
+ logger.info(`Campaign "${campaign.name}" completed`);
+ 
+ logger.debug(`[campaign.hook] Campaign completion pending for "${campaign.name}": final metrics calculation, report generation, data archival, and stakeholder notification`);
 }
 
 /**
  * Handle campaign abortion
  */
 async function handleAbortedStatus(campaign: Record<string, any>, ctx: HookContext): Promise<void> {
-  console.log(`❌ Campaign "${campaign.name}" was aborted`);
-  
-  console.debug(`[campaign.hook] Campaign abort pending for "${campaign.name}": abort reason logging, scheduled activity cleanup, and team notification`);
+ logger.info(`Campaign "${campaign.name}" was aborted`);
+ 
+ logger.debug(`[campaign.hook] Campaign abort pending for "${campaign.name}": abort reason logging, scheduled activity cleanup, and team notification`);
 }
 
 /**
@@ -169,34 +172,34 @@ async function handleAbortedStatus(campaign: Record<string, any>, ctx: HookConte
  * Ensures end date is after start date
  */
 const CampaignDateValidationTrigger: Hook = {
-  name: 'CampaignDateValidationTrigger',
-  object: 'campaign',
-  events: ['beforeInsert', 'beforeUpdate'],
-  handler: async (ctx: HookContext) => {
-    try {
-      const campaign = ctx.input as Record<string, any>;
+ name: 'CampaignDateValidationTrigger',
+ object: 'campaign',
+ events: ['beforeInsert', 'beforeUpdate'],
+ handler: async (ctx: HookContext) => {
+ try {
+ const campaign = ctx.input as Record<string, any>;
 
-      if (campaign.start_date && campaign.end_date) {
-        const startDate = new Date(campaign.start_date);
-        const endDate = new Date(campaign.end_date);
+ if (campaign.start_date && campaign.end_date) {
+ const startDate = new Date(campaign.start_date);
+ const endDate = new Date(campaign.end_date);
 
-        if (endDate < startDate) {
-          throw new Error('Campaign end date must be after start date');
-        }
+ if (endDate < startDate) {
+ throw new Error('Campaign end date must be after start date');
+ }
 
-        // Calculate duration in days
-        const durationMs = endDate.getTime() - startDate.getTime();
-        const durationDays = Math.ceil(durationMs / (1000 * 60 * 60 * 24));
-        campaign.duration_days = durationDays;
-        
-        console.log(`📅 Campaign duration: ${durationDays} days`);
-      }
+ // Calculate duration in days
+ const durationMs = endDate.getTime() - startDate.getTime();
+ const durationDays = Math.ceil(durationMs / (1000 * 60 * 60 * 24));
+ campaign.duration_days = durationDays;
+ 
+ logger.info(`Campaign duration: ${durationDays} days`);
+ }
 
-    } catch (error) {
-      console.error(`[campaign.hook] date validation failed:`, error);
-      throw error;
-    }
-  }
+ } catch (error) {
+ logger.error(`[campaign.hook] date validation failed:`, error);
+ throw error;
+ }
+ }
 };
 
 /**
@@ -204,101 +207,101 @@ const CampaignDateValidationTrigger: Hook = {
  * Called by campaign_member hooks
  */
 export async function updateCampaignMetrics(campaignId: string, ctx: HookContext): Promise<void> {
-  try {
-    console.log(`🔄 Updating campaign metrics for: ${campaignId}`);
+ try {
+ logger.info(`Updating campaign metrics for: ${campaignId}`);
 
-    // Aggregate campaign member statistics
-    const members = await (ctx.ql as any).find('campaign_member', {
-      filters: [['campaign', '=', campaignId]]
-    });
+ // Aggregate campaign member statistics
+ const members = await (ctx.ql as any).find('campaign_member', {
+ filters: [['campaign', '=', campaignId]]
+ });
 
-    if (!members || members.length === 0) {
-      return;
-    }
+ if (!members || members.length === 0) {
+ return;
+ }
 
-    // Calculate engagement metrics
-    const totalMembers = members.length;
-    const opened = members.filter((m: any) => 
-      ['Opened', 'Clicked', 'Responded'].includes(m.status)
-    ).length;
-    const clicked = members.filter((m: any) => 
-      ['Clicked', 'Responded'].includes(m.status)
-    ).length;
-    const responded = members.filter((m: any) => m.status === 'Responded').length;
-    const unsubscribed = members.filter((m: any) => m.status === 'Unsubscribed').length;
+ // Calculate engagement metrics
+ const totalMembers = members.length;
+ const opened = members.filter((m: any) => 
+ ['Opened', 'Clicked', 'Responded'].includes(m.status)
+ ).length;
+ const clicked = members.filter((m: any) => 
+ ['Clicked', 'Responded'].includes(m.status)
+ ).length;
+ const responded = members.filter((m: any) => m.status === 'Responded').length;
+ const unsubscribed = members.filter((m: any) => m.status === 'Unsubscribed').length;
 
-    // Calculate rates
-    const openRate = totalMembers > 0 ? (opened / totalMembers) * 100 : 0;
-    const clickRate = opened > 0 ? (clicked / opened) * 100 : 0;
-    const responseRate = totalMembers > 0 ? (responded / totalMembers) * 100 : 0;
-    const unsubscribeRate = totalMembers > 0 ? (unsubscribed / totalMembers) * 100 : 0;
+ // Calculate rates
+ const openRate = totalMembers > 0 ? (opened / totalMembers) * 100 : 0;
+ const clickRate = opened > 0 ? (clicked / opened) * 100 : 0;
+ const responseRate = totalMembers > 0 ? (responded / totalMembers) * 100 : 0;
+ const unsubscribeRate = totalMembers > 0 ? (unsubscribed / totalMembers) * 100 : 0;
 
-    // Update campaign with aggregated metrics
-    await (ctx.ql as any).update('campaign', campaignId, {
-      total_members: totalMembers,
-      total_opened: opened,
-      total_clicked: clicked,
-      total_responded: responded,
-      total_unsubscribed: unsubscribed,
-      open_rate: openRate,
-      click_rate: clickRate,
-      response_rate: responseRate,
-      unsubscribe_rate: unsubscribeRate
-    });
+ // Update campaign with aggregated metrics
+ await (ctx.ql as any).update('campaign', campaignId, {
+ total_members: totalMembers,
+ total_opened: opened,
+ total_clicked: clicked,
+ total_responded: responded,
+ total_unsubscribed: unsubscribed,
+ open_rate: openRate,
+ click_rate: clickRate,
+ response_rate: responseRate,
+ unsubscribe_rate: unsubscribeRate
+ });
 
-    console.log(`✅ Campaign metrics updated - Open: ${openRate.toFixed(1)}%, Click: ${clickRate.toFixed(1)}%, Response: ${responseRate.toFixed(1)}%`);
+ logger.info(`Campaign metrics updated - Open: ${openRate.toFixed(1)}%, Click: ${clickRate.toFixed(1)}%, Response: ${responseRate.toFixed(1)}%`);
 
-  } catch (error) {
-    console.error(`[campaign.hook] updateCampaignMetrics failed:`, error);
-  }
+ } catch (error) {
+ logger.error(`[campaign.hook] updateCampaignMetrics failed:`, error);
+ }
 }
 
 /**
  * Calculate cost per lead/opportunity/customer
  */
 export async function calculateCostMetrics(campaignId: string, ctx: HookContext): Promise<any> {
-  try {
-    const campaign = await (ctx.ql as any).findOne('campaign', {
-      filters: [['id', '=', campaignId]]
-    });
+ try {
+ const campaign = await (ctx.ql as any).findOne('campaign', {
+ filters: [['id', '=', campaignId]]
+ });
 
-    if (!campaign) {
-      return null;
-    }
+ if (!campaign) {
+ return null;
+ }
 
-    const actualCost = campaign.actual_cost || 0;
-    const totalMembers = campaign.total_members || 0;
-    const totalResponded = campaign.total_responded || 0;
+ const actualCost = campaign.actual_cost || 0;
+ const totalMembers = campaign.total_members || 0;
+ const totalResponded = campaign.total_responded || 0;
 
-    // Calculate cost per metrics
-    const costPerContact = totalMembers > 0 ? actualCost / totalMembers : 0;
-    const costPerResponse = totalResponded > 0 ? actualCost / totalResponded : 0;
+ // Calculate cost per metrics
+ const costPerContact = totalMembers > 0 ? actualCost / totalMembers : 0;
+ const costPerResponse = totalResponded > 0 ? actualCost / totalResponded : 0;
 
-    return {
-      costPerContact,
-      costPerResponse,
-      totalCost: actualCost,
-      totalContacts: totalMembers,
-      totalResponses: totalResponded
-    };
+ return {
+ costPerContact,
+ costPerResponse,
+ totalCost: actualCost,
+ totalContacts: totalMembers,
+ totalResponses: totalResponded
+ };
 
-  } catch (error) {
-    console.error(`[campaign.hook] calculateCostMetrics failed:`, error);
-    return null;
-  }
+ } catch (error) {
+ logger.error(`[campaign.hook] calculateCostMetrics failed:`, error);
+ return null;
+ }
 }
 
 // Export all hooks
 export {
-  CampaignROICalculationTrigger,
-  CampaignBudgetTrackingTrigger,
-  CampaignStatusChangeTrigger,
-  CampaignDateValidationTrigger
+ CampaignROICalculationTrigger,
+ CampaignBudgetTrackingTrigger,
+ CampaignStatusChangeTrigger,
+ CampaignDateValidationTrigger
 };
 
 export default [
-  CampaignROICalculationTrigger,
-  CampaignBudgetTrackingTrigger,
-  CampaignStatusChangeTrigger,
-  CampaignDateValidationTrigger
+ CampaignROICalculationTrigger,
+ CampaignBudgetTrackingTrigger,
+ CampaignStatusChangeTrigger,
+ CampaignDateValidationTrigger
 ] as Hook[];

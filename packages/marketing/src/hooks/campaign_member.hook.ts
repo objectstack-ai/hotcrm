@@ -1,6 +1,9 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 import { updateCampaignMetrics } from './campaign.hook.js';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('marketing:campaign_member');
+
 /**
  * Campaign Member Engagement Tracking Trigger
  * 
@@ -11,64 +14,64 @@ import { updateCampaignMetrics } from './campaign.hook.js';
  * 4. Track engagement progression
  */
 const CampaignMemberEngagementTrigger: Hook = {
-  name: 'CampaignMemberEngagementTrigger',
-  object: 'campaign_member',
-  events: ['beforeInsert', 'beforeUpdate'],
-  handler: async (ctx: HookContext) => {
-    try {
-      const member = ctx.input as Record<string, any>;
-      const oldMember = ctx.previous as Record<string, any> | undefined;
+ name: 'CampaignMemberEngagementTrigger',
+ object: 'campaign_member',
+ events: ['beforeInsert', 'beforeUpdate'],
+ handler: async (ctx: HookContext) => {
+ try {
+ const member = ctx.input as Record<string, any>;
+ const oldMember = ctx.previous as Record<string, any> | undefined;
 
-      const now = new Date().toISOString();
+ const now = new Date().toISOString();
 
-      // Only process engagement updates on status change
-      if (oldMember && oldMember.status !== member.status) {
-        console.log(`📊 Member engagement updated: ${oldMember.status} → ${member.status}`);
+ // Only process engagement updates on status change
+ if (oldMember && oldMember.status !== member.status) {
+ logger.info(`Member engagement updated: ${oldMember.status} → ${member.status}`);
 
-        // Update engagement metrics based on new status
-        switch (member.status) {
-          case 'Opened':
-            if (!member.first_opened_date) {
-              member.first_opened_date = now;
-              console.log(`👁️ Member opened - setting first_opened_date`);
-            }
-            member.number_of_opens = (member.number_of_opens || 0) + 1;
-            break;
+ // Update engagement metrics based on new status
+ switch (member.status) {
+ case 'Opened':
+ if (!member.first_opened_date) {
+ member.first_opened_date = now;
+ logger.info(`👁 Member opened - setting first_opened_date`);
+ }
+ member.number_of_opens = (member.number_of_opens || 0) + 1;
+ break;
 
-          case 'Clicked':
-            if (!member.first_opened_date) {
-              member.first_opened_date = now;
-            }
-            if (!member.first_clicked_date) {
-              member.first_clicked_date = now;
-              console.log(`🖱️ Member clicked - setting first_clicked_date`);
-            }
-            member.number_of_opens = (member.number_of_opens || 0) + 1;
-            member.number_of_clicks = (member.number_of_clicks || 0) + 1;
-            break;
+ case 'Clicked':
+ if (!member.first_opened_date) {
+ member.first_opened_date = now;
+ }
+ if (!member.first_clicked_date) {
+ member.first_clicked_date = now;
+ logger.info(`🖱 Member clicked - setting first_clicked_date`);
+ }
+ member.number_of_opens = (member.number_of_opens || 0) + 1;
+ member.number_of_clicks = (member.number_of_clicks || 0) + 1;
+ break;
 
-          case 'Responded':
-            if (!member.first_opened_date) {
-              member.first_opened_date = now;
-            }
-            if (!member.first_clicked_date) {
-              member.first_clicked_date = now;
-            }
-            if (!member.first_responded_date) {
-              member.first_responded_date = now;
-              console.log(`✅ Member responded - setting first_responded_date`);
-            }
-            member.has_responded = true;
-            member.number_of_opens = (member.number_of_opens || 0) + 1;
-            member.number_of_clicks = (member.number_of_clicks || 0) + 1;
-            break;
-        }
-      }
+ case 'Responded':
+ if (!member.first_opened_date) {
+ member.first_opened_date = now;
+ }
+ if (!member.first_clicked_date) {
+ member.first_clicked_date = now;
+ }
+ if (!member.first_responded_date) {
+ member.first_responded_date = now;
+ logger.info(`Member responded - setting first_responded_date`);
+ }
+ member.has_responded = true;
+ member.number_of_opens = (member.number_of_opens || 0) + 1;
+ member.number_of_clicks = (member.number_of_clicks || 0) + 1;
+ break;
+ }
+ }
 
-    } catch (error) {
-      console.error(`[campaign_member.hook] engagement tracking failed:`, error);
-    }
-  }
+ } catch (error) {
+ logger.error(`[campaign_member.hook] engagement tracking failed:`, error);
+ }
+ }
 };
 
 /**
@@ -81,66 +84,66 @@ const CampaignMemberEngagementTrigger: Hook = {
  * - Unsubscribed: -10 points
  */
 const CampaignMemberLeadScoringTrigger: Hook = {
-  name: 'CampaignMemberLeadScoringTrigger',
-  object: 'campaign_member',
-  events: ['afterUpdate'],
-  handler: async (ctx: HookContext) => {
-    try {
-      const member = ctx.result as Record<string, any>;
-      const oldMember = ctx.previous as Record<string, any> | undefined;
+ name: 'CampaignMemberLeadScoringTrigger',
+ object: 'campaign_member',
+ events: ['afterUpdate'],
+ handler: async (ctx: HookContext) => {
+ try {
+ const member = ctx.result as Record<string, any>;
+ const oldMember = ctx.previous as Record<string, any> | undefined;
 
-      // Only process if status changed
-      if (!oldMember || oldMember.status === member.status) {
-        return;
-      }
+ // Only process if status changed
+ if (!oldMember || oldMember.status === member.status) {
+ return;
+ }
 
-      // Determine which record to update (Lead or Contact)
-      const objectType = member.lead ? 'lead' : 'contact';
-      const recordId = member.lead || member.contact;
+ // Determine which record to update (Lead or Contact)
+ const objectType = member.lead ? 'lead' : 'contact';
+ const recordId = member.lead || member.contact;
 
-      if (!recordId) {
-        console.warn('⚠️ Campaign member has no Lead or Contact');
-        return;
-      }
+ if (!recordId) {
+ logger.warn('Campaign member has no Lead or Contact');
+ return;
+ }
 
-      // Calculate score increment based on engagement
-      let scoreIncrement = 0;
+ // Calculate score increment based on engagement
+ let scoreIncrement = 0;
 
-      switch (member.status) {
-        case 'Opened':
-          scoreIncrement = 5;
-          console.log(`👁️ Email opened - adding ${scoreIncrement} points to ${objectType}`);
-          break;
-        case 'Clicked':
-          scoreIncrement = 10;
-          console.log(`🖱️ Link clicked - adding ${scoreIncrement} points to ${objectType}`);
-          break;
-        case 'Responded':
-          scoreIncrement = 20;
-          console.log(`✅ Response received - adding ${scoreIncrement} points to ${objectType}`);
-          break;
-        case 'Unsubscribed':
-          scoreIncrement = -10;
-          console.log(`🚫 Unsubscribed - subtracting ${Math.abs(scoreIncrement)} points from ${objectType}`);
-          break;
-      }
+ switch (member.status) {
+ case 'Opened':
+ scoreIncrement = 5;
+ logger.info(`👁 Email opened - adding ${scoreIncrement} points to ${objectType}`);
+ break;
+ case 'Clicked':
+ scoreIncrement = 10;
+ logger.info(`🖱 Link clicked - adding ${scoreIncrement} points to ${objectType}`);
+ break;
+ case 'Responded':
+ scoreIncrement = 20;
+ logger.info(`Response received - adding ${scoreIncrement} points to ${objectType}`);
+ break;
+ case 'Unsubscribed':
+ scoreIncrement = -10;
+ logger.info(`🚫 Unsubscribed - subtracting ${Math.abs(scoreIncrement)} points from ${objectType}`);
+ break;
+ }
 
-      if (scoreIncrement !== 0) {
-        // In production, update the Lead/Contact score
-        // const record = await ctx.ql.findOne(objectType, { filters: [['id', '=', recordId]] });
-        // const currentScore = record?.lead_score || 0;
-        // await ctx.ql.update(objectType, recordId, {
-        //   lead_score: currentScore + scoreIncrement,
-        //   last_engagement_date: new Date().toISOString()
-        // });
+ if (scoreIncrement !== 0) {
+ // In production, update the Lead/Contact score
+ // const record = await ctx.ql.findOne(objectType, { filters: [['id', '=', recordId]] });
+ // const currentScore = record?.lead_score || 0;
+ // await ctx.ql.update(objectType, recordId, {
+ // lead_score: currentScore + scoreIncrement,
+ // last_engagement_date: new Date().toISOString()
+ // });
 
-        console.log(`📊 ${objectType} ${recordId} score updated by ${scoreIncrement} points`);
-      }
+ logger.info(`${objectType} ${recordId} score updated by ${scoreIncrement} points`);
+ }
 
-    } catch (error) {
-      console.error(`[campaign_member.hook] lead scoring failed:`, error);
-    }
-  }
+ } catch (error) {
+ logger.error(`[campaign_member.hook] lead scoring failed:`, error);
+ }
+ }
 };
 
 /**
@@ -149,25 +152,25 @@ const CampaignMemberLeadScoringTrigger: Hook = {
  * Updates parent campaign statistics when member engagement changes
  */
 const CampaignMemberStatsTrigger: Hook = {
-  name: 'CampaignMemberStatsTrigger',
-  object: 'campaign_member',
-  events: ['afterInsert', 'afterUpdate', 'afterDelete'],
-  handler: async (ctx: HookContext) => {
-    try {
-      const member = ctx.result as Record<string, any>;
-      const campaignId = member?.campaign || ctx.previous?.campaign;
+ name: 'CampaignMemberStatsTrigger',
+ object: 'campaign_member',
+ events: ['afterInsert', 'afterUpdate', 'afterDelete'],
+ handler: async (ctx: HookContext) => {
+ try {
+ const member = ctx.result as Record<string, any>;
+ const campaignId = member?.campaign || ctx.previous?.campaign;
 
-      if (!campaignId) {
-        return;
-      }
+ if (!campaignId) {
+ return;
+ }
 
-      // Update parent campaign metrics
-      await updateCampaignMetrics(campaignId, ctx);
+ // Update parent campaign metrics
+ await updateCampaignMetrics(campaignId, ctx);
 
-    } catch (error) {
-      console.error(`[campaign_member.hook] stats aggregation failed:`, error);
-    }
-  }
+ } catch (error) {
+ logger.error(`[campaign_member.hook] stats aggregation failed:`, error);
+ }
+ }
 };
 
 /**
@@ -179,88 +182,88 @@ const CampaignMemberStatsTrigger: Hook = {
  * - Tracks bounce reason and date
  */
 const CampaignMemberBounceHandlerTrigger: Hook = {
-  name: 'CampaignMemberBounceHandlerTrigger',
-  object: 'campaign_member',
-  events: ['beforeUpdate'],
-  handler: async (ctx: HookContext) => {
-    try {
-      const member = ctx.input as Record<string, any>;
-      const oldMember = ctx.previous as Record<string, any> | undefined;
+ name: 'CampaignMemberBounceHandlerTrigger',
+ object: 'campaign_member',
+ events: ['beforeUpdate'],
+ handler: async (ctx: HookContext) => {
+ try {
+ const member = ctx.input as Record<string, any>;
+ const oldMember = ctx.previous as Record<string, any> | undefined;
 
-      // Check if bounce information was added
-      if (!oldMember?.email_bounced_date && member.email_bounced_date) {
-        console.log(`📧 Email bounced for campaign member: ${member.id}`);
+ // Check if bounce information was added
+ if (!oldMember?.email_bounced_date && member.email_bounced_date) {
+ logger.info(`Email bounced for campaign member: ${member.id}`);
 
-        // Determine if it's a hard bounce
-        const bounceReason = (member.email_bounced_reason || '').toLowerCase();
-        const isHardBounce = 
-          bounceReason.includes('permanent') ||
-          bounceReason.includes('not found') ||
-          bounceReason.includes('invalid') ||
-          bounceReason.includes('does not exist');
+ // Determine if it's a hard bounce
+ const bounceReason = (member.email_bounced_reason || '').toLowerCase();
+ const isHardBounce = 
+ bounceReason.includes('permanent') ||
+ bounceReason.includes('not found') ||
+ bounceReason.includes('invalid') ||
+ bounceReason.includes('does not exist');
 
-        if (isHardBounce) {
-          console.log(`🔴 Hard bounce detected - should create unsubscribe record`);
+ if (isHardBounce) {
+ logger.info(`🔴 Hard bounce detected - should create unsubscribe record`);
 
-          // Get email address from Lead or Contact
-          const objectType = member.lead ? 'lead' : 'contact';
-          const recordId = member.lead || member.contact;
+ // Get email address from Lead or Contact
+ const objectType = member.lead ? 'lead' : 'contact';
+ const recordId = member.lead || member.contact;
 
-          if (recordId) {
-            console.debug(`[campaign_member.hook] Unsubscribe record pending: create hard bounce unsubscribe for ${objectType} ${recordId} in campaign ${member.campaign}`);
-          }
-        } else {
-          console.log(`🟡 Soft bounce detected - no unsubscribe needed`);
-        }
-      }
+ if (recordId) {
+ logger.debug(`[campaign_member.hook] Unsubscribe record pending: create hard bounce unsubscribe for ${objectType} ${recordId} in campaign ${member.campaign}`);
+ }
+ } else {
+ logger.info(`🟡 Soft bounce detected - no unsubscribe needed`);
+ }
+ }
 
-    } catch (error) {
-      console.error(`[campaign_member.hook] bounce handling failed:`, error);
-    }
-  }
+ } catch (error) {
+ logger.error(`[campaign_member.hook] bounce handling failed:`, error);
+ }
+ }
 };
 
 /**
  * Calculate member engagement score (0-100)
  */
 export function calculateEngagementScore(member: Record<string, any>): number {
-  let score = 0;
+ let score = 0;
 
-  // Base score for being in campaign
-  score += 10;
+ // Base score for being in campaign
+ score += 10;
 
-  // Engagement progression
-  switch (member.status) {
-    case 'sent':
-      score += 10;
-      break;
-    case 'Opened':
-      score += 30;
-      break;
-    case 'Clicked':
-      score += 60;
-      break;
-    case 'Responded':
-      score += 100;
-      break;
-    case 'Unsubscribed':
-      score = 0;
-      break;
-  }
+ // Engagement progression
+ switch (member.status) {
+ case 'sent':
+ score += 10;
+ break;
+ case 'Opened':
+ score += 30;
+ break;
+ case 'Clicked':
+ score += 60;
+ break;
+ case 'Responded':
+ score += 100;
+ break;
+ case 'Unsubscribed':
+ score = 0;
+ break;
+ }
 
-  // Bonus for multiple opens/clicks
-  const opens = member.number_of_opens || 0;
-  const clicks = member.number_of_clicks || 0;
-  
-  if (opens > 1) {
-    score += Math.min((opens - 1) * 5, 20);
-  }
-  
-  if (clicks > 1) {
-    score += Math.min((clicks - 1) * 10, 30);
-  }
+ // Bonus for multiple opens/clicks
+ const opens = member.number_of_opens || 0;
+ const clicks = member.number_of_clicks || 0;
+ 
+ if (opens > 1) {
+ score += Math.min((opens - 1) * 5, 20);
+ }
+ 
+ if (clicks > 1) {
+ score += Math.min((clicks - 1) * 10, 30);
+ }
 
-  return Math.min(100, Math.max(0, score));
+ return Math.min(100, Math.max(0, score));
 }
 
 /**
@@ -268,31 +271,31 @@ export function calculateEngagementScore(member: Record<string, any>): number {
  * Creates activity records for significant engagements
  */
 export async function trackMemberEngagementTimeline(
-  memberId: string,
-  engagementType: 'opened' | 'clicked' | 'responded' | 'unsubscribed',
-  ctx: HookContext
+ memberId: string,
+ engagementType: 'opened' | 'clicked' | 'responded' | 'unsubscribed',
+ ctx: HookContext
 ): Promise<void> {
-  try {
-    console.log(`🔄 Tracking engagement timeline for member: ${memberId}`);
+ try {
+ logger.info(`Tracking engagement timeline for member: ${memberId}`);
 
-    console.debug(`[campaign_member.hook] Activity record pending: track ${engagementType} engagement for member ${memberId}`);
+ logger.debug(`[campaign_member.hook] Activity record pending: track ${engagementType} engagement for member ${memberId}`);
 
-  } catch (error) {
-    console.error(`[campaign_member.hook] trackMemberEngagementTimeline failed:`, error);
-  }
+ } catch (error) {
+ logger.error(`[campaign_member.hook] trackMemberEngagementTimeline failed:`, error);
+ }
 }
 
 // Export all hooks
 export {
-  CampaignMemberEngagementTrigger,
-  CampaignMemberLeadScoringTrigger,
-  CampaignMemberStatsTrigger,
-  CampaignMemberBounceHandlerTrigger
+ CampaignMemberEngagementTrigger,
+ CampaignMemberLeadScoringTrigger,
+ CampaignMemberStatsTrigger,
+ CampaignMemberBounceHandlerTrigger
 };
 
 export default [
-  CampaignMemberEngagementTrigger,
-  CampaignMemberLeadScoringTrigger,
-  CampaignMemberStatsTrigger,
-  CampaignMemberBounceHandlerTrigger
+ CampaignMemberEngagementTrigger,
+ CampaignMemberLeadScoringTrigger,
+ CampaignMemberStatsTrigger,
+ CampaignMemberBounceHandlerTrigger
 ] as Hook[];

@@ -1,6 +1,12 @@
 import { defineConfig } from 'vitest/config';
+import path from 'path';
 
 export default defineConfig({
+  resolve: {
+    alias: {
+      '@hotcrm/core': path.resolve(__dirname, 'packages/core/src'),
+    },
+  },
   test: {
     globals: true,
     environment: 'node',
