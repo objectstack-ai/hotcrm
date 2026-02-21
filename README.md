@@ -5,10 +5,10 @@
 [![Code Quality](https://github.com/objectstack-ai/hotcrm/workflows/Code%20Quality/badge.svg)](https://github.com/objectstack-ai/hotcrm/actions/workflows/code-quality.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![Objects](https://img.shields.io/badge/Objects-~148-brightgreen)
-![Tests](https://img.shields.io/badge/Tests-3318%2B%20passing-brightgreen)
-![Spec](https://img.shields.io/badge/%40objectstack%2Fspec-v3.0.0-blue)
+![Tests](https://img.shields.io/badge/Tests-3707%20passing-brightgreen)
+![Spec](https://img.shields.io/badge/%40objectstack%2Fspec-v3.0.8-blue)
 
-> A world-class Customer Relationship Management system built on @objectstack/spec v3.0.0 protocol with Salesforce-level functionality and Apple/Linear-level UX.
+> A world-class Customer Relationship Management system built on @objectstack/spec v3.0.8 protocol with Salesforce-level functionality and Apple/Linear-level UX.
 
 ## ⚡ Quick Start in 60 Seconds
 
@@ -24,14 +24,14 @@ pnpm dev           # Start development server
 ```bash
 # Verify everything works
 pnpm typecheck     # TypeScript — expect 0 errors
-pnpm test          # Vitest — expect 3,318+ tests passing
+pnpm test          # Vitest — expect 3,707+ tests passing
 ```
 
 > 📖 **New developers**: See [DEVELOPMENT_WORKFLOW.md](DEVELOPMENT_WORKFLOW.md) for the full quickstart, first contribution tutorial, and troubleshooting FAQ.
 
 ## 🌟 Overview
 
-HotCRM is a **comprehensive, AI-native enterprise CRM** covering the complete Lead-to-Cash lifecycle. Built on @objectstack/spec v3.0.0:
+HotCRM is a **comprehensive, AI-native enterprise CRM** covering the complete Lead-to-Cash lifecycle. Built on @objectstack/spec v3.0.8:
 
 - **~148 Business Objects** across 13 packages: Sales, Marketing, Revenue, Service, HR, AI, Analytics, Integration, Community, Real Estate, Healthcare, Financial Services, Education
 - **Metadata-Driven**: All objects defined in TypeScript (`.object.ts`) — the single source of truth
@@ -742,7 +742,7 @@ HotCRM implements a comprehensive enterprise system organized into **6 major dom
 - **6 Service Channels**: Email, Web, Phone, WeChat, Chat Bot, Mobile App
 - **500+ Fields**: Comprehensive data capture across all objects
 - **~173+ Test Files**: Comprehensive test coverage across all packages
-- **~3,318+ Tests Passing**: Full spec compliance, hook, action, and integration tests
+- **~3,707 Tests Passing**: Full spec compliance, hook, action, and integration tests
 - **~95% Salesforce Parity**: Comprehensive coverage across all clouds including analytics, integration, community, and 4 vertical solutions
 - **AI-First Design**: Every major object has AI enhancement capabilities
 
