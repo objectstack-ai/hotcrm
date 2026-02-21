@@ -72,6 +72,7 @@ hotcrm/
 | **RAG管道** | `.rag.ts` | `@objectstack/spec/ai` | `knowledge.rag.ts` |
 | **Webhook** | `.webhook.ts` | `@objectstack/spec/automation` | `deal_won.webhook.ts` |
 | **连接器** | `.connector.ts` | `@objectstack/spec/automation` | `stripe.connector.ts` |
+| **种子数据** | `.seed.ts` | 自定义 | `account.seed.ts` |
 
 ---
 
@@ -507,6 +508,6 @@ pnpm -r exec rm -rf dist
 
 ---
 
-**最后更新**: 2026-02-07  
-**版本**: 2.0.0  
+**最后更新**: 2027-02-21  
+**版本**: 3.0.0  
 **维护者**: HotCRM Team
