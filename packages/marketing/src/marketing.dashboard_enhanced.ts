@@ -7,13 +7,13 @@ import { DashboardHeaderSchema, DashboardHeaderActionSchema, GlobalFilterSchema,
  */
 
 export const MarketingDashboardHeader = {
-  title: 'Marketing Dashboard',
-  subtitle: 'Campaign performance, lead generation, and channel analytics',
+  showTitle: true,
+  showDescription: true,
   actions: [
-    { label: 'Refresh', type: 'refresh' as const, actionUrl: '/api/marketing/dashboard/refresh' },
-    { label: 'Export PDF', type: 'export' as const, actionUrl: '/api/marketing/dashboard/export' },
-    { label: 'Schedule Report', type: 'action' as const, actionUrl: '/api/marketing/dashboard/schedule' },
-    { label: 'Create Campaign', type: 'action' as const, actionUrl: '/api/marketing/dashboard/new-campaign' }
+    { label: 'Refresh', actionType: 'url' as const, actionUrl: '/api/marketing/dashboard/refresh' },
+    { label: 'Export PDF', actionType: 'url' as const, actionUrl: '/api/marketing/dashboard/export' },
+    { label: 'Schedule Report', actionType: 'url' as const, actionUrl: '/api/marketing/dashboard/schedule' },
+    { label: 'Create Campaign', actionType: 'url' as const, actionUrl: '/api/marketing/dashboard/new-campaign' }
   ]
 } satisfies DashboardHeader;
 
@@ -21,26 +21,30 @@ export const MarketingGlobalFilters = [
   {
     field: 'start_date',
     label: 'Campaign Period',
+    scope: 'dashboard' as const,
     type: 'date' as const,
-    optionsFrom: { type: 'field' as const, object: 'campaign', field: 'start_date', valueField: 'start_date', labelField: 'start_date' }
+    optionsFrom: { object: 'campaign', valueField: 'start_date', labelField: 'start_date' }
   },
   {
     field: 'channel',
     label: 'Channel',
+    scope: 'dashboard' as const,
     type: 'select' as const,
-    optionsFrom: { type: 'field' as const, object: 'campaign', field: 'type', valueField: 'type', labelField: 'type' }
+    optionsFrom: { object: 'campaign', valueField: 'type', labelField: 'type' }
   },
   {
     field: 'status',
     label: 'Campaign Status',
+    scope: 'dashboard' as const,
     type: 'select' as const,
-    optionsFrom: { type: 'field' as const, object: 'campaign', field: 'status', valueField: 'status', labelField: 'status' }
+    optionsFrom: { object: 'campaign', valueField: 'status', labelField: 'status' }
   },
   {
     field: 'budget_range',
     label: 'Budget Range',
+    scope: 'dashboard' as const,
     type: 'number' as const,
-    optionsFrom: { type: 'field' as const, object: 'campaign', field: 'budgeted_cost', valueField: 'budgeted_cost', labelField: 'budgeted_cost' }
+    optionsFrom: { object: 'campaign', valueField: 'budgeted_cost', labelField: 'budgeted_cost' }
   }
 ] satisfies GlobalFilter[];
 

@@ -14,7 +14,7 @@ export const PaymentForm = {
   sections: [
     {
       label: 'Payment Details',
-      columns: 2,
+      columns: '2' as any,
       collapsible: false,
       collapsed: false,
       fields: [
@@ -30,7 +30,7 @@ export const PaymentForm = {
     },
     {
       label: 'Allocation',
-      columns: 1,
+      columns: '1' as any,
       collapsible: false,
       collapsed: false,
       fields: [
@@ -42,7 +42,7 @@ export const PaymentForm = {
     },
     {
       label: 'Bank Information',
-      columns: 2,
+      columns: '2' as any,
       collapsible: true,
       collapsed: true,
       fields: [

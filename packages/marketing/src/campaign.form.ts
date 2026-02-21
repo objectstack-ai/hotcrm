@@ -14,7 +14,7 @@ export const CampaignForm = {
   sections: [
     {
       label: 'Campaign Details',
-      columns: 2,
+      columns: '2' as any,
       collapsible: false,
       collapsed: false,
       fields: [
@@ -29,7 +29,7 @@ export const CampaignForm = {
     },
     {
       label: 'Targeting',
-      columns: 2,
+      columns: '2' as any,
       collapsible: false,
       collapsed: false,
       fields: [
@@ -41,7 +41,7 @@ export const CampaignForm = {
     },
     {
       label: 'Budget',
-      columns: 2,
+      columns: '2' as any,
       collapsible: false,
       collapsed: false,
       fields: [

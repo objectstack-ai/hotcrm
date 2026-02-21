@@ -7,13 +7,13 @@ import { DashboardHeaderSchema, DashboardHeaderActionSchema, GlobalFilterSchema,
  */
 
 export const SupportDashboardHeader = {
-  title: 'Service Dashboard',
-  subtitle: 'Case management, SLA compliance, and agent performance metrics',
+  showTitle: true,
+  showDescription: true,
   actions: [
-    { label: 'Refresh', type: 'refresh' as const, actionUrl: '/api/support/dashboard/refresh' },
-    { label: 'Export PDF', type: 'export' as const, actionUrl: '/api/support/dashboard/export' },
-    { label: 'SLA Report', type: 'action' as const, actionUrl: '/api/support/dashboard/sla-report' },
-    { label: 'Queue Manager', type: 'action' as const, actionUrl: '/api/support/dashboard/queue-manager' }
+    { label: 'Refresh', actionType: 'url' as const, actionUrl: '/api/support/dashboard/refresh' },
+    { label: 'Export PDF', actionType: 'url' as const, actionUrl: '/api/support/dashboard/export' },
+    { label: 'SLA Report', actionType: 'url' as const, actionUrl: '/api/support/dashboard/sla-report' },
+    { label: 'Queue Manager', actionType: 'url' as const, actionUrl: '/api/support/dashboard/queue-manager' }
   ]
 } satisfies DashboardHeader;
 
@@ -21,26 +21,30 @@ export const SupportGlobalFilters = [
   {
     field: 'created_date',
     label: 'Date Range',
+    scope: 'dashboard' as const,
     type: 'date' as const,
-    optionsFrom: { type: 'field' as const, object: 'case', field: 'created_date', valueField: 'created_date', labelField: 'created_date' }
+    optionsFrom: { object: 'case', valueField: 'created_date', labelField: 'created_date' }
   },
   {
     field: 'priority',
     label: 'Priority',
+    scope: 'dashboard' as const,
     type: 'select' as const,
-    optionsFrom: { type: 'field' as const, object: 'case', field: 'priority', valueField: 'priority', labelField: 'priority' }
+    optionsFrom: { object: 'case', valueField: 'priority', labelField: 'priority' }
   },
   {
     field: 'channel',
     label: 'Channel',
+    scope: 'dashboard' as const,
     type: 'select' as const,
-    optionsFrom: { type: 'field' as const, object: 'case', field: 'origin', valueField: 'origin', labelField: 'origin' }
+    optionsFrom: { object: 'case', valueField: 'origin', labelField: 'origin' }
   },
   {
     field: 'assigned_agent',
     label: 'Agent',
+    scope: 'dashboard' as const,
     type: 'lookup' as const,
-    optionsFrom: { type: 'field' as const, object: 'case', field: 'owner', valueField: 'owner', labelField: 'owner' }
+    optionsFrom: { object: 'case', valueField: 'owner', labelField: 'owner' }
   }
 ] satisfies GlobalFilter[];
 

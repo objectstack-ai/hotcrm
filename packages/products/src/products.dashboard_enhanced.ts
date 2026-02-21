@@ -7,13 +7,13 @@ import { DashboardHeaderSchema, DashboardHeaderActionSchema, GlobalFilterSchema,
  */
 
 export const ProductsDashboardHeader = {
-  title: 'Products Dashboard',
-  subtitle: 'Product catalog, pricing trends, and order analytics',
+  showTitle: true,
+  showDescription: true,
   actions: [
-    { label: 'Refresh', type: 'refresh' as const, actionUrl: '/api/products/dashboard/refresh' },
-    { label: 'Export PDF', type: 'export' as const, actionUrl: '/api/products/dashboard/export' },
-    { label: 'Price Analysis', type: 'action' as const, actionUrl: '/api/products/dashboard/price-analysis' },
-    { label: 'Inventory Check', type: 'action' as const, actionUrl: '/api/products/dashboard/inventory' }
+    { label: 'Refresh', actionType: 'url' as const, actionUrl: '/api/products/dashboard/refresh' },
+    { label: 'Export PDF', actionType: 'url' as const, actionUrl: '/api/products/dashboard/export' },
+    { label: 'Price Analysis', actionType: 'url' as const, actionUrl: '/api/products/dashboard/price-analysis' },
+    { label: 'Inventory Check', actionType: 'url' as const, actionUrl: '/api/products/dashboard/inventory' }
   ]
 } satisfies DashboardHeader;
 
@@ -21,26 +21,30 @@ export const ProductsGlobalFilters = [
   {
     field: 'category',
     label: 'Category',
+    scope: 'dashboard' as const,
     type: 'select' as const,
-    optionsFrom: { type: 'field' as const, object: 'product', field: 'family', valueField: 'family', labelField: 'family' }
+    optionsFrom: { object: 'product', valueField: 'family', labelField: 'family' }
   },
   {
     field: 'status',
     label: 'Product Status',
+    scope: 'dashboard' as const,
     type: 'select' as const,
-    optionsFrom: { type: 'field' as const, object: 'product', field: 'status', valueField: 'status', labelField: 'status' }
+    optionsFrom: { object: 'product', valueField: 'status', labelField: 'status' }
   },
   {
     field: 'created_date',
     label: 'Date Range',
+    scope: 'dashboard' as const,
     type: 'date' as const,
-    optionsFrom: { type: 'field' as const, object: 'order', field: 'order_date', valueField: 'order_date', labelField: 'order_date' }
+    optionsFrom: { object: 'order', valueField: 'order_date', labelField: 'order_date' }
   },
   {
     field: 'price_range',
     label: 'Price Range',
+    scope: 'dashboard' as const,
     type: 'number' as const,
-    optionsFrom: { type: 'field' as const, object: 'product', field: 'unit_price', valueField: 'unit_price', labelField: 'unit_price' }
+    optionsFrom: { object: 'product', valueField: 'unit_price', labelField: 'unit_price' }
   }
 ] satisfies GlobalFilter[];
 

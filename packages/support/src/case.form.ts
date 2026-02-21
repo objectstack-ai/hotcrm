@@ -15,7 +15,7 @@ export const CaseForm = {
   sections: [
     {
       label: 'Case Information',
-      columns: 2,
+      columns: '2' as any,
       collapsible: false,
       collapsed: false,
       fields: [
@@ -31,7 +31,7 @@ export const CaseForm = {
     },
     {
       label: 'Description',
-      columns: 1,
+      columns: '1' as any,
       collapsible: false,
       collapsed: false,
       fields: [
@@ -40,7 +40,7 @@ export const CaseForm = {
     },
     {
       label: 'Assignment',
-      columns: 2,
+      columns: '2' as any,
       collapsible: true,
       collapsed: false,
       fields: [

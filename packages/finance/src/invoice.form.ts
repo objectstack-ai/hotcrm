@@ -14,7 +14,7 @@ export const InvoiceForm = {
   sections: [
     {
       label: 'Invoice Details',
-      columns: 2,
+      columns: '2' as any,
       collapsible: false,
       collapsed: false,
       fields: [
@@ -29,7 +29,7 @@ export const InvoiceForm = {
     },
     {
       label: 'Line Items',
-      columns: 1,
+      columns: '1' as any,
       collapsible: false,
       collapsed: false,
       fields: [
@@ -41,7 +41,7 @@ export const InvoiceForm = {
     },
     {
       label: 'Payment Terms',
-      columns: 2,
+      columns: '2' as any,
       collapsible: false,
       collapsed: false,
       fields: [

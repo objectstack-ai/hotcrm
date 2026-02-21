@@ -15,7 +15,7 @@ export const ReportBuilderForm = {
   sections: [
     {
       label: 'Data Source',
-      columns: '2' as const,
+      columns: '2' as any,
       collapsible: false,
       collapsed: false,
       fields: [
@@ -25,7 +25,7 @@ export const ReportBuilderForm = {
     },
     {
       label: 'Columns',
-      columns: '1' as const,
+      columns: '1' as any,
       collapsible: true,
       collapsed: false,
       fields: [
@@ -36,7 +36,7 @@ export const ReportBuilderForm = {
     },
     {
       label: 'Display',
-      columns: '2' as const,
+      columns: '2' as any,
       collapsible: true,
       collapsed: false,
       fields: [

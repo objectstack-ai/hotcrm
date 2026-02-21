@@ -7,13 +7,13 @@ import { DashboardHeaderSchema, DashboardHeaderActionSchema, GlobalFilterSchema,
  */
 
 export const CrmDashboardHeader = {
-  title: 'Sales Dashboard',
-  subtitle: 'Real-time pipeline visibility and sales performance metrics',
+  showTitle: true,
+  showDescription: true,
   actions: [
-    { label: 'Refresh', type: 'refresh' as const, actionUrl: '/api/crm/dashboard/refresh' },
-    { label: 'Export PDF', type: 'export' as const, actionUrl: '/api/crm/dashboard/export' },
-    { label: 'Schedule Report', type: 'action' as const, actionUrl: '/api/crm/dashboard/schedule' },
-    { label: 'Customize', type: 'action' as const, actionUrl: '/api/crm/dashboard/customize' }
+    { label: 'Refresh', actionType: 'url' as const, actionUrl: '/api/crm/dashboard/refresh' },
+    { label: 'Export PDF', actionType: 'url' as const, actionUrl: '/api/crm/dashboard/export' },
+    { label: 'Schedule Report', actionType: 'url' as const, actionUrl: '/api/crm/dashboard/schedule' },
+    { label: 'Customize', actionType: 'url' as const, actionUrl: '/api/crm/dashboard/customize' }
   ]
 } satisfies DashboardHeader;
 
@@ -21,26 +21,30 @@ export const CrmGlobalFilters = [
   {
     field: 'close_date',
     label: 'Date Range',
+    scope: 'dashboard' as const,
     type: 'date' as const,
-    optionsFrom: { type: 'field' as const, object: 'opportunity', field: 'close_date', valueField: 'close_date', labelField: 'close_date' }
+    optionsFrom: { object: 'opportunity', valueField: 'close_date', labelField: 'close_date' }
   },
   {
     field: 'owner',
     label: 'Owner',
+    scope: 'dashboard' as const,
     type: 'lookup' as const,
-    optionsFrom: { type: 'field' as const, object: 'opportunity', field: 'owner', valueField: 'owner', labelField: 'owner' }
+    optionsFrom: { object: 'opportunity', valueField: 'owner', labelField: 'owner' }
   },
   {
     field: 'region',
     label: 'Region',
+    scope: 'dashboard' as const,
     type: 'select' as const,
-    optionsFrom: { type: 'field' as const, object: 'account', field: 'region', valueField: 'region', labelField: 'region' }
+    optionsFrom: { object: 'account', valueField: 'region', labelField: 'region' }
   },
   {
     field: 'stage',
     label: 'Stage',
+    scope: 'dashboard' as const,
     type: 'select' as const,
-    optionsFrom: { type: 'field' as const, object: 'opportunity', field: 'stage', valueField: 'stage', labelField: 'stage' }
+    optionsFrom: { object: 'opportunity', valueField: 'stage', labelField: 'stage' }
   }
 ] satisfies GlobalFilter[];
 

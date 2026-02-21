@@ -7,13 +7,13 @@ import { DashboardHeaderSchema, DashboardHeaderActionSchema, GlobalFilterSchema,
  */
 
 export const FinanceDashboardHeader = {
-  title: 'Revenue Dashboard',
-  subtitle: 'Contract value, invoice tracking, and cash flow analytics',
+  showTitle: true,
+  showDescription: true,
   actions: [
-    { label: 'Refresh', type: 'refresh' as const, actionUrl: '/api/finance/dashboard/refresh' },
-    { label: 'Export PDF', type: 'export' as const, actionUrl: '/api/finance/dashboard/export' },
-    { label: 'Schedule Report', type: 'action' as const, actionUrl: '/api/finance/dashboard/schedule' },
-    { label: 'Configure Alerts', type: 'action' as const, actionUrl: '/api/finance/dashboard/alerts' }
+    { label: 'Refresh', actionType: 'url' as const, actionUrl: '/api/finance/dashboard/refresh' },
+    { label: 'Export PDF', actionType: 'url' as const, actionUrl: '/api/finance/dashboard/export' },
+    { label: 'Schedule Report', actionType: 'url' as const, actionUrl: '/api/finance/dashboard/schedule' },
+    { label: 'Configure Alerts', actionType: 'url' as const, actionUrl: '/api/finance/dashboard/alerts' }
   ]
 } satisfies DashboardHeader;
 
@@ -21,26 +21,30 @@ export const FinanceGlobalFilters = [
   {
     field: 'invoice_date',
     label: 'Date Range',
+    scope: 'dashboard' as const,
     type: 'date' as const,
-    optionsFrom: { type: 'field' as const, object: 'invoice', field: 'invoice_date', valueField: 'invoice_date', labelField: 'invoice_date' }
+    optionsFrom: { object: 'invoice', valueField: 'invoice_date', labelField: 'invoice_date' }
   },
   {
     field: 'fiscal_period',
     label: 'Fiscal Period',
+    scope: 'dashboard' as const,
     type: 'select' as const,
-    optionsFrom: { type: 'field' as const, object: 'revenue_schedule', field: 'period', valueField: 'period', labelField: 'period' }
+    optionsFrom: { object: 'revenue_schedule', valueField: 'period', labelField: 'period' }
   },
   {
     field: 'status',
     label: 'Invoice Status',
+    scope: 'dashboard' as const,
     type: 'select' as const,
-    optionsFrom: { type: 'field' as const, object: 'invoice', field: 'status', valueField: 'status', labelField: 'status' }
+    optionsFrom: { object: 'invoice', valueField: 'status', labelField: 'status' }
   },
   {
     field: 'payment_method',
     label: 'Payment Method',
+    scope: 'dashboard' as const,
     type: 'select' as const,
-    optionsFrom: { type: 'field' as const, object: 'payment', field: 'payment_method', valueField: 'payment_method', labelField: 'payment_method' }
+    optionsFrom: { object: 'payment', valueField: 'payment_method', labelField: 'payment_method' }
   }
 ] satisfies GlobalFilter[];
 

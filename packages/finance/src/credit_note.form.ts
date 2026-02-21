@@ -14,7 +14,7 @@ export const CreditNoteForm = {
   sections: [
     {
       label: 'Credit Note Details',
-      columns: 2,
+      columns: '2' as any,
       collapsible: false,
       collapsed: false,
       fields: [
@@ -30,7 +30,7 @@ export const CreditNoteForm = {
     },
     {
       label: 'Line Items',
-      columns: 1,
+      columns: '1' as any,
       collapsible: false,
       collapsed: false,
       fields: [
@@ -42,7 +42,7 @@ export const CreditNoteForm = {
     },
     {
       label: 'Approval',
-      columns: 2,
+      columns: '2' as any,
       collapsible: false,
       collapsed: false,
       fields: [

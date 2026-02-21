@@ -138,7 +138,7 @@ describe('Finance Phase 14 Schema Compliance', () => {
     it('FinanceDashboardHeader should validate against DashboardHeaderSchema', () => {
       expect(FinanceDashboardHeader).toBeDefined();
       expect(() => DashboardHeaderSchema.parse(FinanceDashboardHeader)).not.toThrow();
-      expect(FinanceDashboardHeader).toHaveProperty('title');
+      expect(FinanceDashboardHeader).toHaveProperty('showTitle');
       expect(FinanceDashboardHeader).toHaveProperty('actions');
     });
 

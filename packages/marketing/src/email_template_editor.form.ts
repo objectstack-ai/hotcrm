@@ -14,7 +14,7 @@ export const EmailTemplateEditorForm = {
   sections: [
     {
       label: 'Template Details',
-      columns: 2,
+      columns: '2' as any,
       collapsible: false,
       collapsed: false,
       fields: [
@@ -28,7 +28,7 @@ export const EmailTemplateEditorForm = {
     },
     {
       label: 'Content',
-      columns: 1,
+      columns: '1' as any,
       collapsible: false,
       collapsed: false,
       fields: [
@@ -39,7 +39,7 @@ export const EmailTemplateEditorForm = {
     },
     {
       label: 'Settings',
-      columns: 2,
+      columns: '2' as any,
       collapsible: true,
       collapsed: true,
       fields: [

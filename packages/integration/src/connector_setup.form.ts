@@ -15,7 +15,7 @@ export const ConnectorSetupForm = {
   sections: [
     {
       label: 'Connector Info',
-      columns: '2' as const,
+      columns: '2' as any,
       collapsible: false,
       collapsed: false,
       fields: [
@@ -26,7 +26,7 @@ export const ConnectorSetupForm = {
     },
     {
       label: 'Authentication',
-      columns: '2' as const,
+      columns: '2' as any,
       collapsible: false,
       collapsed: false,
       fields: [
@@ -38,7 +38,7 @@ export const ConnectorSetupForm = {
     },
     {
       label: 'Configuration',
-      columns: '2' as const,
+      columns: '2' as any,
       collapsible: true,
       collapsed: false,
       fields: [

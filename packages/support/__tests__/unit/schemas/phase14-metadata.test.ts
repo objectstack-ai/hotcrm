@@ -138,7 +138,7 @@ describe('Support Phase 14 Schema Compliance', () => {
     it('SupportDashboardHeader should validate against DashboardHeaderSchema', () => {
       expect(SupportDashboardHeader).toBeDefined();
       expect(() => DashboardHeaderSchema.parse(SupportDashboardHeader)).not.toThrow();
-      expect(SupportDashboardHeader).toHaveProperty('title');
+      expect(SupportDashboardHeader).toHaveProperty('showTitle');
       expect(SupportDashboardHeader).toHaveProperty('actions');
     });
 
