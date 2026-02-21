@@ -1,0 +1,151 @@
+---
+title: Seed Data Guide
+description: How to create, manage, and validate seed data in HotCRM packages.
+---
+
+# Seed Data Guide
+
+HotCRM uses **seed data** to populate the database with initial reference data and sample records for development, testing, and demo environments. Each package can define its own seed files that are loaded in dependency order.
+
+## Overview
+
+| Metric | Value |
+|--------|-------|
+| Total Seed Files | 39 across 14 packages |
+| File Convention | `*.seed.ts` |
+| Loader Script | `scripts/seed.ts` |
+| Load Strategy | Dependency-ordered (topological sort) |
+
+## File Naming Convention
+
+Seed files follow the standard HotCRM naming convention:
+
+```
+packages/{package}/src/{entity}.seed.ts
+```
+
+**Examples:**
+- `packages/crm/src/account.seed.ts` — Account sample data
+- `packages/finance/src/currency.seed.ts` — Currency reference data
+- `packages/core/src/system.seed.ts` — System-level reference data
+
+## Writing a Seed File
+
+Each seed file exports a named array of plain objects representing database records:
+
+```typescript
+/**
+ * Account Seed Data
+ * Sample accounts representing a mix of industries and sizes
+ */
+export const AccountSeedData = [
+  {
+    name: 'Acme Corporation',
+    industry: 'Technology',
+    type: 'Customer',
+    annual_revenue: 5000000,
+    employees: 250,
+    status: 'active',
+  },
+  {
+    name: 'GlobalTech Solutions',
+    industry: 'Technology',
+    type: 'Customer',
+    annual_revenue: 12000000,
+    employees: 800,
+    status: 'active',
+  },
+];
+
+export default AccountSeedData;
+```
+
+### Best Practices
+
+- **Export both named and default**: Always export both `export const EntitySeedData` and `export default`.
+- **Include realistic data**: Use realistic names, amounts, and dates for demo environments.
+- **Cover edge cases**: Include records in different statuses (active, inactive, draft, etc.).
+- **Use consistent types**: Match field types to the corresponding `*.object.ts` definition.
+- **Minimum 3-5 records**: Each seed file should have enough data for meaningful testing.
+
+## Package Load Order
+
+Seed data is loaded in dependency order to ensure referential integrity. The load order is defined in `scripts/seed.ts`:
+
+| Order | Package | Dependencies |
+|-------|---------|-------------|
+| 1 | core | — |
+| 2 | crm | core |
+| 3 | finance | core, crm |
+| 4 | products | core |
+| 5 | hr | core |
+| 6 | support | core, crm |
+| 7 | marketing | core, crm |
+| 8 | analytics | core |
+| 9 | integration | core |
+| 10 | community | core |
+| 11 | healthcare | core, crm |
+| 12 | financial-services | core, crm, finance |
+| 13 | real-estate | core, crm |
+| 14 | education | core |
+
+## Seed Files by Package
+
+| Package | Seed Files |
+|---------|-----------|
+| **Core** | system.seed.ts |
+| **CRM** | account, contact, lead, opportunity, industry |
+| **Finance** | currency, invoice, payment |
+| **Products** | product, price_book |
+| **HR** | employee, department, job_posting |
+| **Support** | case, kb_article |
+| **Marketing** | campaign, campaign_type, email_template |
+| **Analytics** | report |
+| **Integration** | connection |
+| **Community** | idea, topic |
+| **Healthcare** | patient, appointment, insurance, prescription |
+| **Financial Services** | wealth_account, portfolio, advisory, kyc |
+| **Real Estate** | property, listing, showing, real_estate_offer |
+| **Education** | course, student, enrollment, scholarship |
+
+## Validation
+
+HotCRM provides a seed data validation utility in `packages/core/src/seed_validation.ts`:
+
+```typescript
+import { validateSeedData } from '@hotcrm/core/seed_validation';
+
+const result = validateSeedData(AccountSeedData, {
+  minRecords: 5,
+  requiredFields: ['name', 'industry', 'status'],
+  strictRequired: true,
+});
+
+console.log(result.valid);       // true
+console.log(result.recordCount); // 10
+console.log(result.errors);      // []
+```
+
+## Running the Seed Loader
+
+```bash
+# Load all seed data (dependency order)
+npx ts-node scripts/seed.ts
+
+# Reset and reload all seed data
+npx ts-node scripts/seed.ts --reset
+```
+
+## Adding Seed Data to a New Package
+
+1. Create the seed file in `packages/{pkg}/src/{entity}.seed.ts`
+2. Export the seed data array with the naming convention `{Entity}SeedData`
+3. Register the seed file in `scripts/seed.ts` manifest
+4. Add the package to `packages/core/src/dependency_graph.ts`
+5. Write validation tests in `packages/core/__tests__/unit/seeds/`
+
+## Related Resources
+
+- [Metadata Types Guide](/docs/guides/metadata-types) — All supported metadata types
+- [Product Roadmap](/docs/roadmap) — Development milestones
+- [Contributing Guide](https://github.com/objectstack-ai/hotcrm/blob/main/CONTRIBUTING.md)

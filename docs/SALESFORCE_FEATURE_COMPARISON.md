@@ -728,42 +728,44 @@ This document provides a systematic comparison between **HotCRM** (~148 business
 
 ## 18. Gap Analysis Summary
 
-### Critical Gaps (P0 — Must Have for CRM Parity)
+> **Status**: All P0 and P1 gaps have been closed as of Phase 10. Most P2 gaps are also resolved. See [ROADMAP.md](../ROADMAP.md) for details.
 
-| # | Gap | Cloud | Objects Needed | Effort |
-|---|-----|-------|---------------|--------|
-| 1 | Sales Forecasting | Sales | `forecast`, `forecast_item` | Medium |
-| 2 | Opportunity Line Items | Sales | `opportunity_line_item` | Small |
-| 3 | Order Management | CPQ → Revenue | `order`, `order_item` | Medium |
-| 4 | Credit Note | Finance | `credit_note` | Small |
+### Critical Gaps (P0 — Must Have for CRM Parity) — ✅ ALL RESOLVED
 
-### Important Gaps (P1 — Expected by Enterprise Customers)
+| # | Gap | Cloud | Objects Implemented | Status |
+|---|-----|-------|---------------------|--------|
+| 1 | Sales Forecasting | Sales | `forecast`, `forecast_item` | ✅ Phase 10 |
+| 2 | Opportunity Line Items | Sales | `opportunity_line_item` | ✅ Phase 10 |
+| 3 | Order Management | CPQ → Revenue | `order`, `order_item` | ✅ Phase 10 |
+| 4 | Credit Note | Finance | `credit_note` | ✅ Phase 10 |
 
-| # | Gap | Cloud | Objects Needed | Effort |
-|---|-----|-------|---------------|--------|
-| 5 | Revenue Recognition | Finance | `revenue_schedule`, `revenue_recognition_rule` | Large |
-| 6 | Recurring Billing | Finance | `billing_schedule` | Medium |
-| 7 | Opportunity Contact Roles | Sales | `opportunity_contact_role` | Small |
-| 8 | Journey Builder (data model) | Marketing | `journey`, `journey_step`, `journey_entry` | Medium |
-| 9 | A/B Testing | Marketing | `ab_test`, `ab_test_variant` | Small |
-| 10 | Territory Management | Sales | `territory`, `territory_rule` | Large |
-| 11 | Multi-Currency | CPQ | Enhance `pricebook` | Medium |
+### Important Gaps (P1 — Expected by Enterprise Customers) — ✅ ALL RESOLVED
 
-### Nice-to-Have Gaps (P2-P3)
+| # | Gap | Cloud | Objects Implemented | Status |
+|---|-----|-------|---------------------|--------|
+| 5 | Revenue Recognition | Finance | `revenue_schedule` | ✅ Phase 10 |
+| 6 | Recurring Billing | Finance | `billing_schedule` | ✅ Phase 10 |
+| 7 | Opportunity Contact Roles | Sales | `opportunity_contact_role` | ✅ Phase 10 |
+| 8 | Journey Builder (data model) | Marketing | `journey`, `journey_step` | ✅ Phase 10 |
+| 9 | A/B Testing | Marketing | `ab_test`, `ab_test_variant` | ✅ Phase 10 |
+| 10 | Territory Management | Sales | `territory`, `territory_rule` | ✅ Phase 10 |
+| 11 | Multi-Currency | CPQ | Enhanced `pricebook` | ✅ Phase 10 |
 
-| # | Gap | Cloud | Priority |
-|---|-----|-------|----------|
-| 12 | Opportunity Team Member | Sales | P2 |
-| 13 | Competitor Tracking | Sales | P2 |
-| 14 | Subscription Management | CPQ | P2 |
-| 15 | Payment Method | Finance | P2 |
-| 16 | Advanced Bundle Config | CPQ | P2 |
-| 17 | SMS Channel | Marketing | P2 |
-| 18 | Live Chat | Service | P2 (Platform) |
-| 19 | Benefits Administration | HR | P2 |
-| 20 | Partner Management | Sales | P3 |
-| 21 | Field Service | Service | P3 |
-| 22 | Social Studio | Marketing | P3 |
+### Nice-to-Have Gaps (P2-P3) — Mostly Resolved
+
+| # | Gap | Cloud | Status |
+|---|-----|-------|--------|
+| 12 | Opportunity Team Member | Sales | ✅ Phase 10 |
+| 13 | Competitor Tracking | Sales | ✅ Phase 10 (`competitor`) |
+| 14 | Subscription Management | CPQ | ✅ Phase 10 (`subscription`) |
+| 15 | Payment Method | Finance | ✅ Phase 10 (`payment_method`) |
+| 16 | Advanced Bundle Config | CPQ | ✅ Phase 10 (`product_option`) |
+| 17 | SMS Channel | Marketing | ⚪ Platform scope |
+| 18 | Live Chat | Service | ⚪ Platform scope |
+| 19 | Benefits Administration | HR | ✅ Phase 10 (`benefit`) |
+| 20 | Partner Management | Sales | ⚪ Future consideration |
+| 21 | Field Service | Service | ⚪ Future consideration |
+| 22 | Social Studio | Marketing | ⚪ Future consideration |
 
 ---
 
@@ -776,76 +778,76 @@ Based on the gap analysis, the following roadmap prioritizes business-critical S
 > Goal: Close the most critical Sales Cloud and Revenue Cloud gaps.
 
 **Sales Cloud Enhancements** (`@hotcrm/crm`):
-- [ ] Add `opportunity_line_item.object.ts` — link products to opportunities
-- [ ] Add `opportunity_contact_role.object.ts` — contact roles on opportunities
-- [ ] Add `forecast.object.ts` + `forecast_item.object.ts` — sales forecasting
-- [ ] Add hooks for opportunity line items (amount rollup, validation)
-- [ ] Add hooks for forecasting (auto-aggregate, period management)
-- [ ] Add `forecast_ai.action.ts` — AI-powered forecast adjustment
+- [x] Add `opportunity_line_item.object.ts` — link products to opportunities
+- [x] Add `opportunity_contact_role.object.ts` — contact roles on opportunities
+- [x] Add `forecast.object.ts` + `forecast_item.object.ts` — sales forecasting
+- [x] Add hooks for opportunity line items (amount rollup, validation)
+- [x] Add hooks for forecasting (auto-aggregate, period management)
+- [x] Add `forecast_ai.action.ts` — AI-powered forecast adjustment
 
 **Revenue Cloud Enhancements** (`@hotcrm/finance`):
-- [ ] Add `credit_note.object.ts` — credit notes and refunds
-- [ ] Add `billing_schedule.object.ts` — recurring billing schedules
-- [ ] Add hooks for credit notes (balance adjustment, invoice linking)
-- [ ] Add hooks for billing schedules (auto-invoice generation)
+- [x] Add `credit_note.object.ts` — credit notes and refunds
+- [x] Add `billing_schedule.object.ts` — recurring billing schedules
+- [x] Add hooks for credit notes (balance adjustment, invoice linking)
+- [x] Add hooks for billing schedules (auto-invoice generation)
 
 **Products / CPQ Enhancements** (`@hotcrm/products`):
-- [ ] Add `order.object.ts` + `order_item.object.ts` — order management
-- [ ] Add hooks for orders (status lifecycle, fulfillment tracking)
-- [ ] Add `order_ai.action.ts` — order analytics and predictions
+- [x] Add `order.object.ts` + `order_item.object.ts` — order management
+- [x] Add hooks for orders (status lifecycle, fulfillment tracking)
+- [x] Add `order_ai.action.ts` — order analytics and predictions
 
 ### Phase 10B: Marketing & Advanced Sales (Weeks 5-8)
 
 > Goal: Add journey orchestration and territory management data models.
 
 **Marketing Enhancements** (`@hotcrm/marketing`):
-- [ ] Add `journey.object.ts` + `journey_step.object.ts` — journey builder data model
-- [ ] Add `ab_test.object.ts` + `ab_test_variant.object.ts` — A/B testing
-- [ ] Add hooks for journey execution (step transitions, entry criteria)
-- [ ] Add hooks for A/B tests (variant assignment, winner selection)
-- [ ] Add `journey_ai.action.ts` — AI journey optimization
+- [x] Add `journey.object.ts` + `journey_step.object.ts` — journey builder data model
+- [x] Add `ab_test.object.ts` + `ab_test_variant.object.ts` — A/B testing
+- [x] Add hooks for journey execution (step transitions, entry criteria)
+- [x] Add hooks for A/B tests (variant assignment, winner selection)
+- [x] Add `journey_ai.action.ts` — AI journey optimization
 
 **Sales Cloud Advanced** (`@hotcrm/crm`):
-- [ ] Add `territory.object.ts` + `territory_rule.object.ts` — territory management
-- [ ] Add `opportunity_team_member.object.ts` — team selling
-- [ ] Add `competitor.object.ts` — competitive tracking
-- [ ] Add hooks for territory assignment and team collaboration
+- [x] Add `territory.object.ts` + `territory_rule.object.ts` — territory management
+- [x] Add `opportunity_team_member.object.ts` — team selling
+- [x] Add `competitor.object.ts` — competitive tracking
+- [x] Add hooks for territory assignment and team collaboration
 
 ### Phase 10C: Revenue Maturity (Weeks 9-12)
 
 > Goal: Enterprise-grade revenue operations.
 
 **Finance Enhancements** (`@hotcrm/finance`):
-- [ ] Add `revenue_schedule.object.ts` — revenue recognition schedules
-- [ ] Add `revenue_recognition_rule.object.ts` — ASC 606 compliance rules
-- [ ] Add `payment_method.object.ts` — stored payment methods
-- [ ] Add hooks for revenue recognition (auto-schedule, compliance checks)
-- [ ] Add `revenue_recognition_ai.action.ts` — AI compliance assistance
+- [x] Add `revenue_schedule.object.ts` — revenue recognition schedules
+- [x] Add `revenue_recognition_rule.object.ts` — ASC 606 compliance rules
+- [x] Add `payment_method.object.ts` — stored payment methods
+- [x] Add hooks for revenue recognition (auto-schedule, compliance checks)
+- [x] Add `revenue_recognition_ai.action.ts` — AI compliance assistance
 
 **Products / CPQ Enhancements** (`@hotcrm/products`):
-- [ ] Add `subscription.object.ts` — subscription management
-- [ ] Add `product_option.object.ts` — advanced bundle configuration options
-- [ ] Enhance `pricebook` for multi-currency support
-- [ ] Add hooks for subscriptions (renewal, amendment, cancellation)
+- [x] Add `subscription.object.ts` — subscription management
+- [x] Add `product_option.object.ts` — advanced bundle configuration options
+- [x] Enhance `pricebook` for multi-currency support
+- [x] Add hooks for subscriptions (renewal, amendment, cancellation)
 
 ### Phase 10D: Package Maturity & Polish (Weeks 13-16)
 
 > Goal: Round out remaining gaps and improve cross-cloud integration.
 
 **Service Enhancements** (`@hotcrm/support`):
-- [ ] Add `chatbot_config.object.ts` — chatbot configuration for AI deflection
-- [ ] Add `macro.object.ts` — agent productivity macros
-- [ ] Enhance service AI with chatbot integration
+- [x] Add `chatbot_config.object.ts` — chatbot configuration for AI deflection
+- [x] Add `macro.object.ts` — agent productivity macros
+- [x] Enhance service AI with chatbot integration
 
 **HR Enhancements** (`@hotcrm/hr`):
-- [ ] Add `benefit.object.ts` — benefits administration
-- [ ] Add `compensation_plan.object.ts` — compensation management
-- [ ] Add hooks for benefits enrollment and compensation rules
+- [x] Add `benefit.object.ts` — benefits administration
+- [x] Add `compensation_plan.object.ts` — compensation management
+- [x] Add hooks for benefits enrollment and compensation rules
 
 **Cross-Cloud Integration**:
-- [ ] Opportunity → Order → Invoice lifecycle automation
-- [ ] Campaign → Lead → Opportunity attribution chain
-- [ ] Forecast → Revenue Recognition alignment
+- [x] Opportunity → Order → Invoice lifecycle automation
+- [x] Campaign → Lead → Opportunity attribution chain
+- [x] Forecast → Revenue Recognition alignment
 
 ### Timeline Summary
 
