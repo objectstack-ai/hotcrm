@@ -15,7 +15,7 @@ export const TopicForm = {
   sections: [
     {
       label: 'Topic Info',
-      columns: 2,
+      columns: '2' as const,
       collapsible: false,
       collapsed: false,
       fields: [
@@ -26,7 +26,7 @@ export const TopicForm = {
     },
     {
       label: 'Content',
-      columns: 1,
+      columns: '1' as const,
       collapsible: false,
       collapsed: false,
       fields: [
@@ -35,7 +35,7 @@ export const TopicForm = {
     },
     {
       label: 'Settings',
-      columns: 2,
+      columns: '2' as const,
       collapsible: true,
       collapsed: false,
       fields: [

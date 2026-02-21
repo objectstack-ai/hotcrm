@@ -26,7 +26,7 @@ export const NursePatientAccess = {
   label: 'Nurse Patient Access',
   description: 'Nurses can view patients in their assigned department',
   object: 'patient',
-  operation: 'read',
+  operation: 'select',
   using: 'department_id IN (SELECT department_id FROM nurse_assignments WHERE nurse_id = current_user_id())',
   roles: ['nurse'],
   enabled: true,

@@ -15,7 +15,7 @@ export const FieldMappingForm = {
   sections: [
     {
       label: 'Source',
-      columns: 2,
+      columns: '2' as const,
       collapsible: false,
       collapsed: false,
       fields: [
@@ -25,7 +25,7 @@ export const FieldMappingForm = {
     },
     {
       label: 'Target',
-      columns: 2,
+      columns: '2' as const,
       collapsible: false,
       collapsed: false,
       fields: [
@@ -35,7 +35,7 @@ export const FieldMappingForm = {
     },
     {
       label: 'Mapping Options',
-      columns: 2,
+      columns: '2' as const,
       collapsible: true,
       collapsed: false,
       fields: [
