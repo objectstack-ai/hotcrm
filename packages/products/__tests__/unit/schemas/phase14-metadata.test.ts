@@ -117,7 +117,7 @@ describe('Products Phase 14 Schema Compliance', () => {
     it('ProductsDashboardHeader should validate against DashboardHeaderSchema', () => {
       expect(ProductsDashboardHeader).toBeDefined();
       expect(() => DashboardHeaderSchema.parse(ProductsDashboardHeader)).not.toThrow();
-      expect(ProductsDashboardHeader).toHaveProperty('title');
+      expect(ProductsDashboardHeader).toHaveProperty('showTitle');
       expect(ProductsDashboardHeader).toHaveProperty('actions');
     });
 

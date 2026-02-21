@@ -15,7 +15,7 @@ export const BundleConfigForm = {
   sections: [
     {
       label: 'Bundle Details',
-      columns: 2,
+      columns: '2' as any,
       collapsible: false,
       collapsed: false,
       fields: [
@@ -26,7 +26,7 @@ export const BundleConfigForm = {
     },
     {
       label: 'Components',
-      columns: 2,
+      columns: '2' as any,
       collapsible: false,
       collapsed: false,
       fields: [
@@ -38,7 +38,7 @@ export const BundleConfigForm = {
     },
     {
       label: 'Pricing',
-      columns: 2,
+      columns: '2' as any,
       collapsible: true,
       collapsed: false,
       fields: [

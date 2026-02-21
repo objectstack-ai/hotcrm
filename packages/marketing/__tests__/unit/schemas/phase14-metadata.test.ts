@@ -117,7 +117,7 @@ describe('Marketing Phase 14 Schema Compliance', () => {
     it('MarketingDashboardHeader should validate against DashboardHeaderSchema', () => {
       expect(MarketingDashboardHeader).toBeDefined();
       expect(() => DashboardHeaderSchema.parse(MarketingDashboardHeader)).not.toThrow();
-      expect(MarketingDashboardHeader).toHaveProperty('title');
+      expect(MarketingDashboardHeader).toHaveProperty('showTitle');
       expect(MarketingDashboardHeader).toHaveProperty('actions');
     });
 

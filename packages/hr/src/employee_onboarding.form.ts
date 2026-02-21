@@ -14,7 +14,7 @@ export const EmployeeOnboardingForm = {
   sections: [
     {
       label: 'Personal Information',
-      columns: 2,
+      columns: '2' as any,
       collapsible: false,
       collapsed: false,
       fields: [
@@ -29,7 +29,7 @@ export const EmployeeOnboardingForm = {
     },
     {
       label: 'Role & Department',
-      columns: 2,
+      columns: '2' as any,
       collapsible: false,
       collapsed: false,
       fields: [
@@ -43,7 +43,7 @@ export const EmployeeOnboardingForm = {
     },
     {
       label: 'IT Setup',
-      columns: 2,
+      columns: '2' as any,
       collapsible: false,
       collapsed: false,
       fields: [
@@ -53,7 +53,7 @@ export const EmployeeOnboardingForm = {
     },
     {
       label: 'Review & Confirm',
-      columns: 1,
+      columns: '1' as any,
       collapsible: false,
       collapsed: false,
       fields: [

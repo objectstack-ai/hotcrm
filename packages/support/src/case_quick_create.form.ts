@@ -14,7 +14,7 @@ export const CaseQuickCreateForm = {
   sections: [
     {
       label: 'Case Information',
-      columns: 1,
+      columns: '1' as any,
       collapsible: false,
       collapsed: false,
       fields: [

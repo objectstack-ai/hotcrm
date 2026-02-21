@@ -164,8 +164,8 @@ describe('CRM Phase 14 Schema Compliance', () => {
       expect(() => DashboardHeaderSchema.parse(CrmDashboardHeader)).not.toThrow();
     });
 
-    it('CrmDashboardHeader should have title and actions', () => {
-      expect(CrmDashboardHeader).toHaveProperty('title');
+    it('CrmDashboardHeader should have showTitle and actions', () => {
+      expect(CrmDashboardHeader).toHaveProperty('showTitle');
       expect(CrmDashboardHeader).toHaveProperty('actions');
       expect(Array.isArray(CrmDashboardHeader.actions)).toBe(true);
     });

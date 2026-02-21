@@ -15,7 +15,7 @@ export const EventForm = {
   sections: [
     {
       label: 'Event Details',
-      columns: 2,
+      columns: '2' as any,
       collapsible: false,
       collapsed: false,
       fields: [
@@ -26,7 +26,7 @@ export const EventForm = {
     },
     {
       label: 'Schedule',
-      columns: 2,
+      columns: '2' as any,
       collapsible: false,
       collapsed: false,
       fields: [
@@ -38,7 +38,7 @@ export const EventForm = {
     },
     {
       label: 'Registration',
-      columns: 2,
+      columns: '2' as any,
       collapsible: true,
       collapsed: false,
       fields: [
