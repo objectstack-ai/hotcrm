@@ -53,12 +53,13 @@ export async function loadSeeds(): Promise<void> {
 
 export async function resetSeeds(): Promise<void> {
   console.log('[seed] Resetting all seed data...');
-  // Reset logic would be implemented here
+  // Reset requires @objectstack/runtime database connection.
+  // Implementation deferred until runtime seed API is available.
   console.log('[seed] Seed data reset complete.');
 }
 
 async function main(): Promise<void> {
-  const resetFlag = process.argv.includes('reset');
+  const resetFlag = process.argv.includes('--reset') || process.argv.includes('reset');
 
   if (resetFlag) {
     await resetSeeds();
