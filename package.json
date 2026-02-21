@@ -36,7 +36,9 @@
     "clean": "pnpm -r exec rm -rf dist node_modules",
     "changeset": "changeset",
     "version": "changeset version",
-    "release": "pnpm build && changeset publish"
+    "release": "pnpm build && changeset publish",
+    "seed": "npx tsx scripts/seed.ts",
+    "seed:reset": "npx tsx scripts/seed.ts --reset"
   },
   "keywords": [
     "crm",
