@@ -8,42 +8,42 @@ import { ViewTabSchema, SharingConfigSchema, AppearanceConfigSchema, AddRecordCo
 
 // --- Product View Tabs ---
 export const ProductViewTabs = [
-  { name: 'active', label: 'Active', filter: [['status', '=', 'active']] },
-  { name: 'retired', label: 'Retired', filter: [['status', '=', 'retired']] },
-  { name: 'draft', label: 'Draft', filter: [['status', '=', 'draft']] },
-  { name: 'all', label: 'All Products', filter: [] }
+  { name: 'active', label: 'Active', pinned: false, isDefault: true, visible: true, filter: [['status', '=', 'active']] },
+  { name: 'retired', label: 'Retired', pinned: false, isDefault: false, visible: true, filter: [['status', '=', 'retired']] },
+  { name: 'draft', label: 'Draft', pinned: false, isDefault: false, visible: true, filter: [['status', '=', 'draft']] },
+  { name: 'all', label: 'All Products', pinned: false, isDefault: false, visible: true, filter: [] }
 ] satisfies ViewTab[];
 
 // --- Order View Tabs ---
 export const OrderViewTabs = [
-  { name: 'pending', label: 'Pending', filter: [['status', '=', 'pending']] },
-  { name: 'shipped', label: 'Shipped', filter: [['status', '=', 'shipped']] },
-  { name: 'delivered', label: 'Delivered', filter: [['status', '=', 'delivered']] },
-  { name: 'all', label: 'All Orders', filter: [] }
+  { name: 'pending', label: 'Pending', pinned: false, isDefault: true, visible: true, filter: [['status', '=', 'pending']] },
+  { name: 'shipped', label: 'Shipped', pinned: false, isDefault: false, visible: true, filter: [['status', '=', 'shipped']] },
+  { name: 'delivered', label: 'Delivered', pinned: false, isDefault: false, visible: true, filter: [['status', '=', 'delivered']] },
+  { name: 'all', label: 'All Orders', pinned: false, isDefault: false, visible: true, filter: [] }
 ] satisfies ViewTab[];
 
 // --- Quote View Tabs ---
 export const QuoteViewTabs = [
-  { name: 'draft', label: 'Draft', filter: [['status', '=', 'draft']] },
-  { name: 'approved', label: 'Approved', filter: [['status', '=', 'approved']] },
-  { name: 'all', label: 'All Quotes', filter: [] }
+  { name: 'draft', label: 'Draft', pinned: false, isDefault: true, visible: true, filter: [['status', '=', 'draft']] },
+  { name: 'approved', label: 'Approved', pinned: false, isDefault: false, visible: true, filter: [['status', '=', 'approved']] },
+  { name: 'all', label: 'All Quotes', pinned: false, isDefault: false, visible: true, filter: [] }
 ] satisfies ViewTab[];
 
 // --- Shared Configs ---
 export const ProductsSharingConfig = {
-  visibility: 'public' as const
+  enabled: true, allowAnonymous: false
 } satisfies SharingConfig;
 
 export const ProductsAppearanceConfig = {
-  density: 'comfortable' as const
+  showDescription: true
 } satisfies AppearanceConfig;
 
 export const ProductsAddRecordConfig = {
-  enabled: true
+  enabled: true, position: 'top' as const, mode: 'modal' as const
 } satisfies AddRecordConfig;
 
 export const ProductsUserActionsConfig = {
-  actions: ['edit', 'delete', 'clone', 'export']
+  sort: true, search: true, filter: true, rowHeight: false, addRecordForm: true, buttons: ['edit', 'delete', 'clone', 'export']
 } satisfies UserActionsConfig;
 
 // Schema validation

@@ -15,7 +15,7 @@ export const EscalationForm = {
   sections: [
     {
       label: 'Escalation Details',
-      columns: '2' as const,
+      columns: 2,
       collapsible: false,
       collapsed: false,
       fields: [
@@ -27,7 +27,7 @@ export const EscalationForm = {
     },
     {
       label: 'Assignment',
-      columns: '2' as const,
+      columns: 2,
       collapsible: true,
       collapsed: false,
       fields: [

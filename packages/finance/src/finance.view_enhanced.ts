@@ -8,41 +8,41 @@ import { ViewTabSchema, SharingConfigSchema, AppearanceConfigSchema, AddRecordCo
 
 // --- Invoice View Tabs ---
 export const InvoiceViewTabs = [
-  { name: 'pending', label: 'Pending', filter: [['status', '=', 'pending']] },
-  { name: 'paid', label: 'Paid', filter: [['status', '=', 'paid']] },
-  { name: 'overdue', label: 'Overdue', filter: [['status', '=', 'overdue']] },
-  { name: 'all', label: 'All Invoices', filter: [] }
+  { name: 'pending', label: 'Pending', pinned: false, isDefault: true, visible: true, filter: [['status', '=', 'pending']] },
+  { name: 'paid', label: 'Paid', pinned: false, isDefault: false, visible: true, filter: [['status', '=', 'paid']] },
+  { name: 'overdue', label: 'Overdue', pinned: false, isDefault: false, visible: true, filter: [['status', '=', 'overdue']] },
+  { name: 'all', label: 'All Invoices', pinned: false, isDefault: false, visible: true, filter: [] }
 ] satisfies ViewTab[];
 
 // --- Contract View Tabs ---
 export const ContractViewTabs = [
-  { name: 'active', label: 'Active', filter: [['status', '=', 'activated']] },
-  { name: 'expired', label: 'Expired', filter: [['status', '=', 'expired']] },
-  { name: 'draft', label: 'Draft', filter: [['status', '=', 'draft']] }
+  { name: 'active', label: 'Active', pinned: false, isDefault: true, visible: true, filter: [['status', '=', 'activated']] },
+  { name: 'expired', label: 'Expired', pinned: false, isDefault: false, visible: true, filter: [['status', '=', 'expired']] },
+  { name: 'draft', label: 'Draft', pinned: false, isDefault: false, visible: true, filter: [['status', '=', 'draft']] }
 ] satisfies ViewTab[];
 
 // --- Payment View Tabs ---
 export const PaymentViewTabs = [
-  { name: 'completed', label: 'Completed', filter: [['status', '=', 'completed']] },
-  { name: 'pending', label: 'Pending', filter: [['status', '=', 'pending']] },
-  { name: 'all', label: 'All Payments', filter: [] }
+  { name: 'completed', label: 'Completed', pinned: false, isDefault: true, visible: true, filter: [['status', '=', 'completed']] },
+  { name: 'pending', label: 'Pending', pinned: false, isDefault: false, visible: true, filter: [['status', '=', 'pending']] },
+  { name: 'all', label: 'All Payments', pinned: false, isDefault: false, visible: true, filter: [] }
 ] satisfies ViewTab[];
 
 // --- Shared Configs ---
 export const FinanceSharingConfig = {
-  visibility: 'team' as const
+  enabled: true, allowAnonymous: false
 } satisfies SharingConfig;
 
 export const FinanceAppearanceConfig = {
-  density: 'compact' as const
+  showDescription: true
 } satisfies AppearanceConfig;
 
 export const FinanceAddRecordConfig = {
-  enabled: true
+  enabled: true, position: 'top' as const, mode: 'modal' as const
 } satisfies AddRecordConfig;
 
 export const FinanceUserActionsConfig = {
-  actions: ['edit', 'delete', 'send_invoice', 'export']
+  sort: true, search: true, filter: true, rowHeight: false, addRecordForm: true, buttons: ['edit', 'delete', 'send_invoice', 'export']
 } satisfies UserActionsConfig;
 
 // Schema validation

@@ -7,13 +7,13 @@ import { DashboardHeaderSchema, DashboardHeaderActionSchema, GlobalFilterSchema,
  */
 
 export const HrDashboardHeader = {
-  title: 'HR Dashboard',
-  subtitle: 'Workforce analytics, headcount, and talent management overview',
+  showTitle: true,
+  showDescription: true,
   actions: [
-    { label: 'Refresh', type: 'refresh' as const, actionUrl: '/api/hr/dashboard/refresh' },
-    { label: 'Export PDF', type: 'export' as const, actionUrl: '/api/hr/dashboard/export' },
-    { label: 'Schedule Report', type: 'action' as const, actionUrl: '/api/hr/dashboard/schedule' },
-    { label: 'Org Chart', type: 'action' as const, actionUrl: '/api/hr/dashboard/org-chart' }
+    { label: 'Refresh', actionType: 'url' as const, actionUrl: '/api/hr/dashboard/refresh' },
+    { label: 'Export PDF', actionType: 'url' as const, actionUrl: '/api/hr/dashboard/export' },
+    { label: 'Schedule Report', actionType: 'url' as const, actionUrl: '/api/hr/dashboard/schedule' },
+    { label: 'Org Chart', actionType: 'url' as const, actionUrl: '/api/hr/dashboard/org-chart' }
   ]
 } satisfies DashboardHeader;
 
@@ -21,26 +21,30 @@ export const HrGlobalFilters = [
   {
     field: 'department',
     label: 'Department',
+    scope: 'dashboard' as const,
     type: 'select' as const,
-    optionsFrom: { type: 'field' as const, object: 'department', field: 'name', valueField: 'name', labelField: 'name' }
+    optionsFrom: { object: 'department', valueField: 'name', labelField: 'name' }
   },
   {
     field: 'hire_date',
     label: 'Date Range',
+    scope: 'dashboard' as const,
     type: 'date' as const,
-    optionsFrom: { type: 'field' as const, object: 'employee', field: 'hire_date', valueField: 'hire_date', labelField: 'hire_date' }
+    optionsFrom: { object: 'employee', valueField: 'hire_date', labelField: 'hire_date' }
   },
   {
     field: 'status',
     label: 'Employment Status',
+    scope: 'dashboard' as const,
     type: 'select' as const,
-    optionsFrom: { type: 'field' as const, object: 'employee', field: 'status', valueField: 'status', labelField: 'status' }
+    optionsFrom: { object: 'employee', valueField: 'status', labelField: 'status' }
   },
   {
     field: 'location',
     label: 'Location',
+    scope: 'dashboard' as const,
     type: 'text' as const,
-    optionsFrom: { type: 'field' as const, object: 'employee', field: 'location', valueField: 'location', labelField: 'location' }
+    optionsFrom: { object: 'employee', valueField: 'location', labelField: 'location' }
   }
 ] satisfies GlobalFilter[];
 

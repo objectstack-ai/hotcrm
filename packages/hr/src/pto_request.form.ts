@@ -15,7 +15,7 @@ export const PTORequestForm = {
   sections: [
     {
       label: 'Request Details',
-      columns: '2' as const,
+      columns: 2,
       collapsible: false,
       collapsed: false,
       fields: [
@@ -28,7 +28,7 @@ export const PTORequestForm = {
     },
     {
       label: 'Reason',
-      columns: '1' as const,
+      columns: 1,
       collapsible: false,
       collapsed: false,
       fields: [
@@ -37,7 +37,7 @@ export const PTORequestForm = {
     },
     {
       label: 'Approval',
-      columns: '2' as const,
+      columns: 2,
       collapsible: true,
       collapsed: false,
       fields: [

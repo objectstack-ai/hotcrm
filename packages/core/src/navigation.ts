@@ -11,28 +11,28 @@ export const QuickCreateAction = {
   type: 'action' as const,
   id: 'quick_create',
   label: 'Quick Create',
-  actionDef: { actionName: 'create', label: 'New Record', type: 'modal' as const }
+  actionDef: { actionName: 'create' }
 } satisfies ActionNavItem;
 
 export const GlobalSearchAction = {
   type: 'action' as const,
   id: 'global_search',
   label: 'Global Search',
-  actionDef: { actionName: 'search', label: 'Search', type: 'modal' as const }
+  actionDef: { actionName: 'search' }
 } satisfies ActionNavItem;
 
 export const ImportDataAction = {
   type: 'action' as const,
   id: 'import_data',
   label: 'Import Data',
-  actionDef: { actionName: 'import', label: 'Import', type: 'modal' as const }
+  actionDef: { actionName: 'import' }
 } satisfies ActionNavItem;
 
 export const NotificationsAction = {
   type: 'action' as const,
   id: 'notifications',
   label: 'Notifications',
-  actionDef: { actionName: 'show_notifications', label: 'Notifications', type: 'panel' as const }
+  actionDef: { actionName: 'show_notifications' }
 } satisfies ActionNavItem;
 
 // --- Report Nav Items ---

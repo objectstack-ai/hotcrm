@@ -8,41 +8,41 @@ import { ViewTabSchema, SharingConfigSchema, AppearanceConfigSchema, AddRecordCo
 
 // --- Employee View Tabs ---
 export const EmployeeViewTabs = [
-  { name: 'active', label: 'Active', filter: [['status', '=', 'active']] },
-  { name: 'on_leave', label: 'On Leave', filter: [['status', '=', 'on_leave']] },
-  { name: 'all', label: 'All Employees', filter: [] }
+  { name: 'active', label: 'Active', pinned: false, isDefault: true, visible: true, filter: [['status', '=', 'active']] },
+  { name: 'on_leave', label: 'On Leave', pinned: false, isDefault: false, visible: true, filter: [['status', '=', 'on_leave']] },
+  { name: 'all', label: 'All Employees', pinned: false, isDefault: false, visible: true, filter: [] }
 ] satisfies ViewTab[];
 
 // --- Application View Tabs ---
 export const ApplicationViewTabs = [
-  { name: 'new', label: 'New', filter: [['status', '=', 'new']] },
-  { name: 'in_review', label: 'In Review', filter: [['status', '=', 'in_review']] },
-  { name: 'hired', label: 'Hired', filter: [['status', '=', 'hired']] },
-  { name: 'all', label: 'All Applications', filter: [] }
+  { name: 'new', label: 'New', pinned: false, isDefault: true, visible: true, filter: [['status', '=', 'new']] },
+  { name: 'in_review', label: 'In Review', pinned: false, isDefault: false, visible: true, filter: [['status', '=', 'in_review']] },
+  { name: 'hired', label: 'Hired', pinned: false, isDefault: false, visible: true, filter: [['status', '=', 'hired']] },
+  { name: 'all', label: 'All Applications', pinned: false, isDefault: false, visible: true, filter: [] }
 ] satisfies ViewTab[];
 
 // --- Time Off View Tabs ---
 export const TimeOffViewTabs = [
-  { name: 'pending', label: 'Pending Approval', filter: [['status', '=', 'pending']] },
-  { name: 'approved', label: 'Approved', filter: [['status', '=', 'approved']] },
-  { name: 'all', label: 'All Requests', filter: [] }
+  { name: 'pending', label: 'Pending Approval', pinned: false, isDefault: true, visible: true, filter: [['status', '=', 'pending']] },
+  { name: 'approved', label: 'Approved', pinned: false, isDefault: false, visible: true, filter: [['status', '=', 'approved']] },
+  { name: 'all', label: 'All Requests', pinned: false, isDefault: false, visible: true, filter: [] }
 ] satisfies ViewTab[];
 
 // --- Shared Configs ---
 export const HrSharingConfig = {
-  visibility: 'private' as const
+  enabled: true, allowAnonymous: false
 } satisfies SharingConfig;
 
 export const HrAppearanceConfig = {
-  density: 'comfortable' as const
+  showDescription: true
 } satisfies AppearanceConfig;
 
 export const HrAddRecordConfig = {
-  enabled: true
+  enabled: true, position: 'top' as const, mode: 'modal' as const
 } satisfies AddRecordConfig;
 
 export const HrUserActionsConfig = {
-  actions: ['edit', 'delete', 'assign_manager', 'export']
+  sort: true, search: true, filter: true, rowHeight: false, addRecordForm: true, buttons: ['edit', 'delete', 'assign_manager', 'export']
 } satisfies UserActionsConfig;
 
 // Schema validation

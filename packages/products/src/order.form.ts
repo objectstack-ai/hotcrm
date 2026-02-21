@@ -15,7 +15,7 @@ export const OrderForm = {
   sections: [
     {
       label: 'Order Information',
-      columns: '2' as const,
+      columns: 2,
       collapsible: false,
       collapsed: false,
       fields: [
@@ -27,7 +27,7 @@ export const OrderForm = {
     },
     {
       label: 'Line Items',
-      columns: '2' as const,
+      columns: 2,
       collapsible: false,
       collapsed: false,
       fields: [
@@ -39,7 +39,7 @@ export const OrderForm = {
     },
     {
       label: 'Shipping',
-      columns: '2' as const,
+      columns: 2,
       collapsible: true,
       collapsed: false,
       fields: [

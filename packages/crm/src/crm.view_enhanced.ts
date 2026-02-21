@@ -8,41 +8,41 @@ import { ViewTabSchema, SharingConfigSchema, AppearanceConfigSchema, AddRecordCo
 
 // --- Opportunity View Tabs ---
 export const OpportunityViewTabs = [
-  { name: 'pipeline', label: 'Pipeline', filter: [['stage', '!=', 'closed_won'], ['stage', '!=', 'closed_lost']] },
-  { name: 'won', label: 'Won', filter: [['stage', '=', 'closed_won']] },
-  { name: 'lost', label: 'Lost', filter: [['stage', '=', 'closed_lost']] },
-  { name: 'all', label: 'All', filter: [] }
+  { name: 'pipeline', label: 'Pipeline', pinned: false, isDefault: true, visible: true, filter: [['stage', '!=', 'closed_won'], ['stage', '!=', 'closed_lost']] },
+  { name: 'won', label: 'Won', pinned: false, isDefault: false, visible: true, filter: [['stage', '=', 'closed_won']] },
+  { name: 'lost', label: 'Lost', pinned: false, isDefault: false, visible: true, filter: [['stage', '=', 'closed_lost']] },
+  { name: 'all', label: 'All', pinned: false, isDefault: false, visible: true, filter: [] }
 ] satisfies ViewTab[];
 
 // --- Account View Tabs ---
 export const AccountViewTabs = [
-  { name: 'active', label: 'Active Accounts', filter: [['status', '=', 'active']] },
-  { name: 'inactive', label: 'Inactive', filter: [['status', '=', 'inactive']] },
-  { name: 'my_accounts', label: 'My Accounts', filter: [['owner', '=', '${currentUser.id}']] }
+  { name: 'active', label: 'Active Accounts', pinned: false, isDefault: true, visible: true, filter: [['status', '=', 'active']] },
+  { name: 'inactive', label: 'Inactive', pinned: false, isDefault: false, visible: true, filter: [['status', '=', 'inactive']] },
+  { name: 'my_accounts', label: 'My Accounts', pinned: false, isDefault: false, visible: true, filter: [['owner', '=', '${currentUser.id}']] }
 ] satisfies ViewTab[];
 
 // --- Contact View Tabs ---
 export const ContactViewTabs = [
-  { name: 'all', label: 'All Contacts', filter: [] },
-  { name: 'decision_makers', label: 'Decision Makers', filter: [['is_decision_maker', '=', 'true']] },
-  { name: 'recent', label: 'Recently Contacted', filter: [['last_contact_date', '>=', 'LAST_30_DAYS']] }
+  { name: 'all', label: 'All Contacts', pinned: false, isDefault: true, visible: true, filter: [] },
+  { name: 'decision_makers', label: 'Decision Makers', pinned: false, isDefault: false, visible: true, filter: [['is_decision_maker', '=', 'true']] },
+  { name: 'recent', label: 'Recently Contacted', pinned: false, isDefault: false, visible: true, filter: [['last_contact_date', '>=', 'LAST_30_DAYS']] }
 ] satisfies ViewTab[];
 
 // --- Shared Configs ---
 export const CrmSharingConfig = {
-  visibility: 'public' as const
+  enabled: true, allowAnonymous: false
 } satisfies SharingConfig;
 
 export const CrmAppearanceConfig = {
-  density: 'comfortable' as const
+  showDescription: true
 } satisfies AppearanceConfig;
 
 export const CrmAddRecordConfig = {
-  enabled: true
+  enabled: true, position: 'top' as const, mode: 'modal' as const
 } satisfies AddRecordConfig;
 
 export const CrmUserActionsConfig = {
-  actions: ['edit', 'delete', 'change_owner', 'export']
+  sort: true, search: true, filter: true, rowHeight: false, addRecordForm: true, buttons: ['edit', 'delete', 'change_owner', 'export']
 } satisfies UserActionsConfig;
 
 // Schema validation

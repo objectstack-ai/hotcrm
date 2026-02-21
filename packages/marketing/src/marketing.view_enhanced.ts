@@ -8,42 +8,42 @@ import { ViewTabSchema, SharingConfigSchema, AppearanceConfigSchema, AddRecordCo
 
 // --- Campaign View Tabs ---
 export const CampaignViewTabs = [
-  { name: 'active', label: 'Active', filter: [['status', '=', 'active']] },
-  { name: 'planned', label: 'Planned', filter: [['status', '=', 'planned']] },
-  { name: 'completed', label: 'Completed', filter: [['status', '=', 'completed']] },
-  { name: 'all', label: 'All Campaigns', filter: [] }
+  { name: 'active', label: 'Active', pinned: false, isDefault: true, visible: true, filter: [['status', '=', 'active']] },
+  { name: 'planned', label: 'Planned', pinned: false, isDefault: false, visible: true, filter: [['status', '=', 'planned']] },
+  { name: 'completed', label: 'Completed', pinned: false, isDefault: false, visible: true, filter: [['status', '=', 'completed']] },
+  { name: 'all', label: 'All Campaigns', pinned: false, isDefault: false, visible: true, filter: [] }
 ] satisfies ViewTab[];
 
 // --- Lead View Tabs ---
 export const LeadViewTabs = [
-  { name: 'new', label: 'New Leads', filter: [['status', '=', 'new']] },
-  { name: 'qualified', label: 'Qualified', filter: [['status', '=', 'qualified']] },
-  { name: 'converted', label: 'Converted', filter: [['status', '=', 'converted']] },
-  { name: 'all', label: 'All Leads', filter: [] }
+  { name: 'new', label: 'New Leads', pinned: false, isDefault: true, visible: true, filter: [['status', '=', 'new']] },
+  { name: 'qualified', label: 'Qualified', pinned: false, isDefault: false, visible: true, filter: [['status', '=', 'qualified']] },
+  { name: 'converted', label: 'Converted', pinned: false, isDefault: false, visible: true, filter: [['status', '=', 'converted']] },
+  { name: 'all', label: 'All Leads', pinned: false, isDefault: false, visible: true, filter: [] }
 ] satisfies ViewTab[];
 
 // --- Email Template View Tabs ---
 export const EmailTemplateViewTabs = [
-  { name: 'active', label: 'Active', filter: [['status', '=', 'active']] },
-  { name: 'draft', label: 'Draft', filter: [['status', '=', 'draft']] },
-  { name: 'all', label: 'All Templates', filter: [] }
+  { name: 'active', label: 'Active', pinned: false, isDefault: true, visible: true, filter: [['status', '=', 'active']] },
+  { name: 'draft', label: 'Draft', pinned: false, isDefault: false, visible: true, filter: [['status', '=', 'draft']] },
+  { name: 'all', label: 'All Templates', pinned: false, isDefault: false, visible: true, filter: [] }
 ] satisfies ViewTab[];
 
 // --- Shared Configs ---
 export const MarketingSharingConfig = {
-  visibility: 'public' as const
+  enabled: true, allowAnonymous: false
 } satisfies SharingConfig;
 
 export const MarketingAppearanceConfig = {
-  density: 'comfortable' as const
+  showDescription: true
 } satisfies AppearanceConfig;
 
 export const MarketingAddRecordConfig = {
-  enabled: true
+  enabled: true, position: 'top' as const, mode: 'modal' as const
 } satisfies AddRecordConfig;
 
 export const MarketingUserActionsConfig = {
-  actions: ['edit', 'delete', 'clone_campaign', 'export']
+  sort: true, search: true, filter: true, rowHeight: false, addRecordForm: true, buttons: ['edit', 'delete', 'clone_campaign', 'export']
 } satisfies UserActionsConfig;
 
 // Schema validation
