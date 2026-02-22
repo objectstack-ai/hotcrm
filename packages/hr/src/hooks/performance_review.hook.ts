@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('hr:performance_review');
+
 // Rating calculation weights
 const RATING_WEIGHTS = {
   TECHNICAL_SKILLS: 0.25,
@@ -31,7 +34,7 @@ const PerformanceReviewRatingTrigger: Hook = {
         review.overall_rating = calculateOverallRating(review);
         review.performance_level = determinePerformanceLevel(review.overall_rating);
         
-        console.log(`✨ Performance review rating calculated: ${review.overall_rating}/5 (${review.performance_level})`);
+        logger.info(`Performance review rating calculated: ${review.overall_rating}/5 (${review.performance_level})`);
       }
 
       // Calculate completion percentage
@@ -40,11 +43,11 @@ const PerformanceReviewRatingTrigger: Hook = {
       // Auto-update status based on completion
       if (review.completion_percentage === 100 && review.status === 'in_progress') {
         review.status = 'pending_approval';
-        console.log(`📋 Review auto-advanced to Pending Approval`);
+        logger.info(`Review auto-advanced to Pending Approval`);
       }
 
     } catch (error) {
-      console.error('❌ Error in PerformanceReviewRatingTrigger:', error);
+      logger.error('Error in PerformanceReviewRatingTrigger:', error);
       // Don't throw - allow review to be saved
     }
   }
@@ -143,7 +146,7 @@ const PerformanceReviewWorkflowTrigger: Hook = {
       const oldStatus = (ctx.previous as Record<string, any>).status;
       const newStatus = review.status;
 
-      console.log(`🔄 Performance review ${review.review_name} status changed from "${oldStatus}" to "${newStatus}"`);
+      logger.info(`Performance review ${review.review_name} status changed from "${oldStatus}" to "${newStatus}"`);
 
       // Handle different status transitions
       switch (newStatus) {
@@ -168,7 +171,7 @@ const PerformanceReviewWorkflowTrigger: Hook = {
       await logReviewStatusChange(review, oldStatus, newStatus, ctx);
 
     } catch (error) {
-      console.error('❌ Error in PerformanceReviewWorkflowTrigger:', error);
+      logger.error('Error in PerformanceReviewWorkflowTrigger:', error);
     }
   }
 };
@@ -177,13 +180,13 @@ const PerformanceReviewWorkflowTrigger: Hook = {
  * Handle review started
  */
 async function handleReviewStarted(review: Record<string, any>, ctx: HookContext): Promise<void> {
-  console.log(`📝 Performance review started: ${review.review_name}`);
+  logger.info(`Performance review started: ${review.review_name}`);
   
   try {
-    console.debug(`[performance_review.hook] Review start notifications pending for ${review.review_name}: notify employee and reviewer via email`);
+    logger.debug(`[performance_review.hook] Review start notifications pending for ${review.review_name}: notify employee and reviewer via email`);
     
   } catch (error) {
-    console.error('❌ Failed to process review start:', error);
+    logger.error('Failed to process review start:', error);
   }
 }
 
@@ -191,7 +194,7 @@ async function handleReviewStarted(review: Record<string, any>, ctx: HookContext
  * Handle review submitted for approval
  */
 async function handleReviewSubmitted(review: Record<string, any>, ctx: HookContext): Promise<void> {
-  console.log(`📤 Performance review submitted for approval: ${review.review_name}`);
+  logger.info(`Performance review submitted for approval: ${review.review_name}`);
   
   try {
     // Set submission date
@@ -200,12 +203,12 @@ async function handleReviewSubmitted(review: Record<string, any>, ctx: HookConte
       submitted_by: ctx.session?.userId
     });
 
-    console.debug(`[performance_review.hook] Approval request pending for review ${review.review_name}: notify approver (HR or senior manager)`);
+    logger.debug(`[performance_review.hook] Approval request pending for review ${review.review_name}: notify approver (HR or senior manager)`);
     
-    console.log(`✅ Review ${review.review_name} submitted for approval`);
+    logger.info(`Review ${review.review_name} submitted for approval`);
     
   } catch (error) {
-    console.error('❌ Failed to process review submission:', error);
+    logger.error('Failed to process review submission:', error);
   }
 }
 
@@ -213,7 +216,7 @@ async function handleReviewSubmitted(review: Record<string, any>, ctx: HookConte
  * Handle review approved
  */
 async function handleReviewApproved(review: Record<string, any>, ctx: HookContext): Promise<void> {
-  console.log(`✅ Performance review approved: ${review.review_name}`);
+  logger.info(`Performance review approved: ${review.review_name}`);
   
   try {
     // Set approval date
@@ -230,10 +233,10 @@ async function handleReviewApproved(review: Record<string, any>, ctx: HookContex
     // Create development goals based on review
     await createDevelopmentGoals(review, ctx);
 
-    console.log(`✅ Review ${review.review_name} processing completed`);
+    logger.info(`Review ${review.review_name} processing completed`);
     
   } catch (error) {
-    console.error('❌ Failed to process review approval:', error);
+    logger.error('Failed to process review approval:', error);
   }
 }
 
@@ -242,12 +245,12 @@ async function handleReviewApproved(review: Record<string, any>, ctx: HookContex
  */
 async function triggerCompensationReview(review: Record<string, any>, ctx: HookContext): Promise<void> {
   try {
-    console.log(`💰 Triggering compensation review for high performer: ${review.employee_id}`);
+    logger.info(`Triggering compensation review for high performer: ${review.employee_id}`);
     
-    console.debug(`[performance_review.hook] Compensation review pending for high performer ${review.employee_id}: create compensation review task and notify HR and manager`);
+    logger.debug(`[performance_review.hook] Compensation review pending for high performer ${review.employee_id}: create compensation review task and notify HR and manager`);
     
   } catch (error) {
-    console.error('❌ Failed to trigger compensation review:', error);
+    logger.error('Failed to trigger compensation review:', error);
   }
 }
 
@@ -257,7 +260,7 @@ async function triggerCompensationReview(review: Record<string, any>, ctx: HookC
 async function createDevelopmentGoals(review: Record<string, any>, ctx: HookContext): Promise<void> {
   try {
     if (!review.development_plan || review.development_plan.trim() === '') {
-      console.log('ℹ️ No development plan specified, skipping goal creation');
+      logger.info('ℹ No development plan specified, skipping goal creation');
       return;
     }
 
@@ -293,10 +296,10 @@ async function createDevelopmentGoals(review: Record<string, any>, ctx: HookCont
       related_review_id: review.id
     });
 
-    console.log(`🎯 Created development goal from review ${review.review_name}`);
+    logger.info(`Created development goal from review ${review.review_name}`);
     
   } catch (error) {
-    console.error('❌ Failed to create development goals:', error);
+    logger.error('Failed to create development goals:', error);
   }
 }
 
@@ -304,7 +307,7 @@ async function createDevelopmentGoals(review: Record<string, any>, ctx: HookCont
  * Handle review completed
  */
 async function handleReviewCompleted(review: Record<string, any>, ctx: HookContext): Promise<void> {
-  console.log(`🎉 Performance review completed: ${review.review_name}`);
+  logger.info(`Performance review completed: ${review.review_name}`);
   
   try {
     // Set completion date
@@ -312,15 +315,15 @@ async function handleReviewCompleted(review: Record<string, any>, ctx: HookConte
       completion_date: new Date().toISOString().split('T')[0]
     });
 
-    console.debug(`[performance_review.hook] Completion notification pending for review ${review.review_name}: send results to employee`);
+    logger.debug(`[performance_review.hook] Completion notification pending for review ${review.review_name}: send results to employee`);
     
     // Update employee record with latest review data
     await updateEmployeeReviewStats(review, ctx);
     
-    console.log(`✅ Review ${review.review_name} finalized`);
+    logger.info(`Review ${review.review_name} finalized`);
     
   } catch (error) {
-    console.error('❌ Failed to process review completion:', error);
+    logger.error('Failed to process review completion:', error);
   }
 }
 
@@ -335,10 +338,10 @@ async function updateEmployeeReviewStats(review: Record<string, any>, ctx: HookC
       last_review_level: review.performance_level
     });
 
-    console.log(`📊 Updated employee review stats for ${review.employee_id}`);
+    logger.info(`Updated employee review stats for ${review.employee_id}`);
     
   } catch (error) {
-    console.error('❌ Failed to update employee review stats:', error);
+    logger.error('Failed to update employee review stats:', error);
   }
 }
 
@@ -346,7 +349,7 @@ async function updateEmployeeReviewStats(review: Record<string, any>, ctx: HookC
  * Handle review rejected
  */
 async function handleReviewRejected(review: Record<string, any>, ctx: HookContext): Promise<void> {
-  console.log(`❌ Performance review rejected: ${review.review_name}`);
+  logger.info(`Performance review rejected: ${review.review_name}`);
   
   try {
     // Send back to reviewer for revision
@@ -354,10 +357,10 @@ async function handleReviewRejected(review: Record<string, any>, ctx: HookContex
       status: 'in_progress'
     });
 
-    console.debug(`[performance_review.hook] Rejection notification pending for review ${review.review_name}: notify reviewer about required changes`);
+    logger.debug(`[performance_review.hook] Rejection notification pending for review ${review.review_name}: notify reviewer about required changes`);
     
   } catch (error) {
-    console.error('❌ Failed to process review rejection:', error);
+    logger.error('Failed to process review rejection:', error);
   }
 }
 
@@ -371,11 +374,11 @@ async function logReviewStatusChange(
   ctx: HookContext
 ): Promise<void> {
   try {
-    console.log(`📝 Logging review status change: ${oldStatus} → ${newStatus} for ${review.review_name}`);
+    logger.info(`Logging review status change: ${oldStatus} → ${newStatus} for ${review.review_name}`);
     
-    console.debug(`[performance_review.hook] Audit log pending: record status change ${oldStatus} → ${newStatus} for review ${review.review_name}`);
+    logger.debug(`[performance_review.hook] Audit log pending: record status change ${oldStatus} → ${newStatus} for review ${review.review_name}`);
   } catch (error) {
-    console.error('❌ Failed to log review status change:', error);
+    logger.error('Failed to log review status change:', error);
   }
 }
 
@@ -401,12 +404,12 @@ export async function checkPerformanceReviewDueDates(ctx: HookContext): Promise<
     });
 
     for (const review of upcomingReviews) {
-      console.log(`⏰ Reminder: Review ${review.review_name} due on ${review.due_date}`);
-      console.debug(`[performance_review.hook] Due date reminder pending for review ${review.review_name}: send reminder notification (due ${review.due_date})`);
+      logger.info(`⏰ Reminder: Review ${review.review_name} due on ${review.due_date}`);
+      logger.debug(`[performance_review.hook] Due date reminder pending for review ${review.review_name}: send reminder notification (due ${review.due_date})`);
     }
     
   } catch (error) {
-    console.error('❌ Failed to check review due dates:', error);
+    logger.error('Failed to check review due dates:', error);
   }
 }
 

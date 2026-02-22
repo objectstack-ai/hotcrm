@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('analytics:data_source');
+
 /**
  * Connection Health Check
  *
@@ -14,7 +17,7 @@ const ConnectionHealthCheck: Hook = {
     const ds = ctx.result as Record<string, any>;
     if (!ds?._id) return;
 
-    console.log(`🔌 Validating connection for data source "${ds.name}"`);
+    logger.info(`Validating connection for data source "${ds.name}"`);
 
     let status = 'disconnected';
     try {
@@ -23,7 +26,7 @@ const ConnectionHealthCheck: Hook = {
         if (ds.source_type === 'internal') {
           status = 'connected';
         } else {
-          console.warn(`⚠️ Data source "${ds.name}" has no connection config`);
+          logger.warn(`Data source "${ds.name}" has no connection config`);
           status = 'error';
         }
       } else {
@@ -45,7 +48,7 @@ const ConnectionHealthCheck: Hook = {
         status = 'connected';
       }
     } catch (error) {
-      console.error(`❌ Connection validation failed for "${ds.name}":`, error);
+      logger.error(`Connection validation failed for "${ds.name}":`, error);
       status = 'error';
     }
 
@@ -54,9 +57,9 @@ const ConnectionHealthCheck: Hook = {
         sync_status: status,
         last_sync: status === 'connected' ? new Date().toISOString() : undefined
       });
-      console.log(`✅ Data source "${ds.name}" status: ${status}`);
+      logger.info(`Data source "${ds.name}" status: ${status}`);
     } catch (error) {
-      console.warn('⚠️ Failed to update data source status:', error);
+      logger.warn('Failed to update data source status:', error);
     }
   }
 };
@@ -82,7 +85,7 @@ const SyncLifecycle: Hook = {
 
     if (!prevStatus || prevStatus === newStatus) return;
 
-    console.log(`🔄 Data source "${ds.name}" sync status: ${prevStatus} → ${newStatus}`);
+    logger.info(`Data source "${ds.name}" sync status: ${prevStatus} → ${newStatus}`);
 
     // When sync completes, record the timestamp
     if (newStatus === 'connected' && prevStatus === 'syncing') {
@@ -90,15 +93,15 @@ const SyncLifecycle: Hook = {
         await (ctx.ql as any).doc.update('data_source', ds._id, {
           last_sync: new Date().toISOString()
         });
-        console.log(`✅ Data source "${ds.name}" sync completed`);
+        logger.info(`Data source "${ds.name}" sync completed`);
       } catch (error) {
-        console.warn('⚠️ Failed to update last_sync:', error);
+        logger.warn('Failed to update last_sync:', error);
       }
     }
 
     // When sync errors, create an alert
     if (newStatus === 'error') {
-      console.error(`❌ Data source "${ds.name}" entered error state`);
+      logger.error(`Data source "${ds.name}" entered error state`);
       try {
         await (ctx.ql as any).doc.create('activity', {
           Subject: `Data Source Sync Error: ${ds.name}`,
@@ -110,7 +113,7 @@ const SyncLifecycle: Hook = {
           Description: `Data source "${ds.name}" sync failed. Previous status: ${prevStatus}.`
         });
       } catch (error) {
-        console.warn('⚠️ Failed to create sync error alert:', error);
+        logger.warn('Failed to create sync error alert:', error);
       }
     }
   }
@@ -162,7 +165,7 @@ const SchemaDriftDetection: Hook = {
     if (removed.length > 0) changes.push(`Removed: ${removed.join(', ')}`);
     if (modified.length > 0) changes.push(`Modified: ${modified.join(', ')}`);
 
-    console.warn(`⚠️ Schema drift detected for data source "${ds.name}": ${changes.join('; ')}`);
+    logger.warn(`Schema drift detected for data source "${ds.name}": ${changes.join('; ')}`);
 
     try {
       await (ctx.ql as any).doc.create('activity', {
@@ -175,7 +178,7 @@ const SchemaDriftDetection: Hook = {
         Description: `Schema drift detected for data source "${ds.name}". Changes: ${changes.join('; ')}`
       });
     } catch (error) {
-      console.warn('⚠️ Failed to create schema drift alert:', error);
+      logger.warn('Failed to create schema drift alert:', error);
     }
   }
 };

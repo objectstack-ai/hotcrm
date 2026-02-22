@@ -6,6 +6,23 @@ import {
   ForumPostModerationTrigger
 } from '../../../src/hooks/forum.hook';
 
+vi.mock('@hotcrm/core', () => ({
+  createLogger: () => ({
+    info: (...args: any[]) => console.log(...args),
+    warn: (...args: any[]) => console.warn(...args),
+    error: (...args: any[]) => console.error(...args),
+    debug: (...args: any[]) => console.debug(...args),
+    fatal: (...args: any[]) => console.error(...args),
+  }),
+  logger: {
+    info: (...args: any[]) => console.log(...args),
+    warn: (...args: any[]) => console.warn(...args),
+    error: (...args: any[]) => console.error(...args),
+    debug: (...args: any[]) => console.debug(...args),
+    fatal: (...args: any[]) => console.error(...args),
+  },
+}));
+
 describe('ForumTopicValidationTrigger', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
@@ -206,7 +223,7 @@ describe('ForumPostCreationTrigger', () => {
     await ForumPostCreationTrigger.handler(ctx as any);
 
     expect(consoleSpy).toHaveBeenCalledWith(
-      '❌ Error in ForumPostCreationTrigger:',
+      'Error in ForumPostCreationTrigger:',
       expect.any(Error)
     );
   });

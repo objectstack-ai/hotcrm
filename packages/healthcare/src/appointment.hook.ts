@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('healthcare:appointment');
+
 /**
  * Appointment Conflict Detection
  *
@@ -30,7 +33,7 @@ const AppointmentConflictDetection: Hook = {
       if ((error as Error).message?.includes('Scheduling conflict')) {
         throw error;
       }
-      console.warn('⚠️ Failed to check appointment conflicts:', error);
+      logger.warn('Failed to check appointment conflicts:', error);
     }
   }
 };
@@ -48,7 +51,7 @@ const AppointmentReminderNotification: Hook = {
     const appointment = ctx.result as Record<string, any>;
     if (!appointment?._id || !appointment?.patient_id) return;
 
-    console.log(`📅 Reminder scheduled for appointment ${appointment._id} - Patient ${appointment.patient_id}`);
+    logger.info(`Reminder scheduled for appointment ${appointment._id} - Patient ${appointment.patient_id}`);
   }
 };
 
@@ -70,10 +73,10 @@ const AppointmentNoShowTracking: Hook = {
     try {
       const patient = await (ctx.ql as any).findOne('patient', result?.patient_id);
       if (patient) {
-        console.log(`⚠️ No-show recorded for patient ${result?.patient_id} - Appointment ${result?._id}`);
+        logger.info(`No-show recorded for patient ${result?.patient_id} - Appointment ${result?._id}`);
       }
     } catch (error) {
-      console.warn('⚠️ Failed to track no-show:', error);
+      logger.warn('Failed to track no-show:', error);
     }
   }
 };
@@ -93,7 +96,7 @@ const AppointmentTelehealthLink: Hook = {
     if (doc.appointment_type === 'telehealth' && !doc.telehealth_link) {
       const linkId = Math.random().toString(36).substring(2, 10);
       doc.telehealth_link = `https://telehealth.hotcrm.com/session/${linkId}`;
-      console.log(`🔗 Telehealth link generated for appointment: ${doc.telehealth_link}`);
+      logger.info(`Telehealth link generated for appointment: ${doc.telehealth_link}`);
     }
   }
 };

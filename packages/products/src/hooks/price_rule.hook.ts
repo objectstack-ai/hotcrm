@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('products:price_rule');
+
 const VALID_RULE_TYPES = ['tiered', 'volumediscount', 'contractbased', 'customerspecific', 'promotional', 'competitive', 'bundlediscount'];
 
 const PriceRuleValidationTrigger: Hook = {
@@ -30,9 +33,9 @@ const PriceRuleValidationTrigger: Hook = {
         }
       }
 
-      console.log(`✅ Price rule validated: ${doc.name}`);
+      logger.info(`Price rule validated: ${doc.name}`);
     } catch (err) {
-      console.error('❌ PriceRuleValidationTrigger Error:', err);
+      logger.error('PriceRuleValidationTrigger Error:', err);
       throw err;
     }
   }
@@ -65,11 +68,11 @@ const PriceRuleConflictDetectionTrigger: Hook = {
         const ruleEnd = rule.end_date ? new Date(rule.end_date).getTime() : Infinity;
 
         if (newStart <= ruleEnd && newEnd >= ruleStart) {
-          console.warn(`⚠️ Warning: New price rule "${doc.name}" overlaps with existing rule "${rule.name}" (${rule.start_date} - ${rule.end_date || 'no end date'})`);
+          logger.warn(`Warning: New price rule "${doc.name}" overlaps with existing rule "${rule.name}" (${rule.start_date} - ${rule.end_date || 'no end date'})`);
         }
       }
     } catch (err) {
-      console.error('❌ PriceRuleConflictDetectionTrigger Error:', err);
+      logger.error('PriceRuleConflictDetectionTrigger Error:', err);
     }
   }
 };

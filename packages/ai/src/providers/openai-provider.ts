@@ -6,6 +6,9 @@
 
 import BaseMLProvider, { MLProviderConfig, PredictionInput, PredictionOutput } from './base-provider.js';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('ai:openai-provider');
+
 // Type stubs for when axios is not available
 interface AxiosInstance {
   post(url: string, data: any): Promise<any>;
@@ -86,7 +89,7 @@ export class OpenAIProvider extends BaseMLProvider {
       
       return true;
     } catch (error) {
-      console.error('[OpenAI] Validation failed:', error);
+      logger.error('[OpenAI] Validation failed:', error);
       return false;
     }
   }
@@ -128,7 +131,7 @@ export class OpenAIProvider extends BaseMLProvider {
         }
       };
     } catch (error) {
-      console.error('[OpenAI] Prediction error:', error);
+      logger.error('[OpenAI] Prediction error:', error);
       
       const err = error as any;
       if (err.isAxiosError) {

@@ -10,6 +10,9 @@
 
 import { broker } from '../db.js';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('integration:outlook');
+
 // ============================================================================
 // 1. LOG OUTLOOK EMAIL
 // ============================================================================
@@ -37,7 +40,7 @@ export async function logOutlookEmail(request: LogOutlookEmailRequest): Promise<
     throw new Error('connection_id is required');
   }
 
-  console.log(`📧 Logging Outlook email ${message_id}`);
+  logger.info(`Logging Outlook email ${message_id}`);
 
   return {
     activity_id: `act_${Math.random().toString(36).substring(2, 15)}`,
@@ -74,7 +77,7 @@ export async function syncCalendarEvents(request: SyncCalendarEventsRequest): Pr
     throw new Error('start_date and end_date are required');
   }
 
-  console.log(`📅 Syncing Outlook calendar events from ${start_date} to ${end_date}`);
+  logger.info(`Syncing Outlook calendar events from ${start_date} to ${end_date}`);
 
   return {
     synced: true,
@@ -111,7 +114,7 @@ export async function syncOutlookContacts(request: SyncOutlookContactsRequest): 
     throw new Error('sync_direction is required');
   }
 
-  console.log(`👥 Syncing Outlook contacts (${sync_direction})`);
+  logger.info(`Syncing Outlook contacts (${sync_direction})`);
 
   return {
     synced: true,
@@ -144,7 +147,7 @@ export async function handleOutlookWebhook(request: HandleOutlookWebhookRequest)
     throw new Error('event_type and payload are required');
   }
 
-  console.log(`🔔 Processing Outlook webhook: ${event_type}`);
+  logger.info(`Processing Outlook webhook: ${event_type}`);
 
   const actions: string[] = [];
 

@@ -1,5 +1,8 @@
 import { broker } from '../db.js';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('support:email_handler');
+
 /**
  * Service: EmailHandler
  * 
@@ -20,7 +23,7 @@ export class EmailHandler {
     body: string;
     message_id: string;
   }) {
-    console.log(`📧 Processing inbound email from ${payload.from_address}: "${payload.subject}"`);
+    logger.info(`Processing inbound email from ${payload.from_address}: "${payload.subject}"`);
 
     // 1. Resolve Contact & Account
     const contact = await this.findOrCreateContact(payload.from_address, payload.from_name);
@@ -34,7 +37,7 @@ export class EmailHandler {
       const existingCase = await this.findCaseByNumber(caseNumber);
       if (existingCase) {
         caseId = existingCase._id;
-        console.log(`🔗 Threading email to existing case: ${caseNumber}`);
+        logger.info(`Threading email to existing case: ${caseNumber}`);
       }
     }
 
@@ -57,7 +60,7 @@ export class EmailHandler {
         supplied_email: payload.from_address
       });
       caseId = newCase._id;
-      console.log(`🆕 Created new case from email: ${newCase._id}`);
+      logger.info(`🆕 Created new case from email: ${newCase._id}`);
       
       // Log the initial email
       await this.logEmailMessage(caseId, payload, 'Inbound');

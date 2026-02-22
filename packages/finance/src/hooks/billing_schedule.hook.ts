@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('finance:billing_schedule');
+
 const BillingScheduleValidationTrigger: Hook = {
   name: 'BillingScheduleValidationTrigger',
   object: 'billing_schedule',
@@ -48,9 +51,9 @@ const BillingScheduleValidationTrigger: Hook = {
         doc.next_billing_date = nextBilling.toISOString().split('T')[0];
       }
 
-      console.log(`✅ Billing schedule validated: billing_day=${doc.billing_day}, next_billing_date=${doc.next_billing_date}`);
+      logger.info(`Billing schedule validated: billing_day=${doc.billing_day}, next_billing_date=${doc.next_billing_date}`);
     } catch (err) {
-      console.error('❌ Billing Schedule Validation Error:', err);
+      logger.error('Billing Schedule Validation Error:', err);
     }
   }
 };
@@ -68,13 +71,13 @@ const BillingScheduleInvoiceGenerationTrigger: Hook = {
 
     try {
       if (schedule.auto_generate_invoice) {
-        console.log(`📅 Billing schedule ${schedule.name} activated — auto-invoice generation scheduled for day ${schedule.billing_day} of each ${schedule.frequency} cycle`);
-        console.log(`📋 Next billing date: ${schedule.next_billing_date}, amount: ${schedule.amount}`);
+        logger.info(`Billing schedule ${schedule.name} activated — auto-invoice generation scheduled for day ${schedule.billing_day} of each ${schedule.frequency} cycle`);
+        logger.info(`Next billing date: ${schedule.next_billing_date}, amount: ${schedule.amount}`);
       } else {
-        console.log(`📅 Billing schedule ${schedule.name} activated — manual invoicing mode`);
+        logger.info(`Billing schedule ${schedule.name} activated — manual invoicing mode`);
       }
     } catch (err) {
-      console.error('❌ Billing Schedule Invoice Generation Error:', err);
+      logger.error('Billing Schedule Invoice Generation Error:', err);
     }
   }
 };

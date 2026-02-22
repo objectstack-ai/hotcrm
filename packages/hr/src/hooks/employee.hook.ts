@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('hr:employee');
+
 /**
  * Employee Lifecycle Management Trigger
  * 
@@ -17,7 +20,7 @@ const EmployeeOnboardingTrigger: Hook = {
     try {
       const employee = ctx.result as Record<string, any>;
 
-      console.log(`👋 Initiating onboarding for employee: ${employee.first_name} ${employee.last_name}`);
+      logger.info(`Initiating onboarding for employee: ${employee.first_name} ${employee.last_name}`);
 
       // Create onboarding record
       await createOnboardingRecord(employee, ctx);
@@ -28,10 +31,10 @@ const EmployeeOnboardingTrigger: Hook = {
       // Create goal records for probation period
       await createProbationGoals(employee, ctx);
 
-      console.log(`✅ Onboarding initiated for ${employee.employee_number}`);
+      logger.info(`Onboarding initiated for ${employee.employee_number}`);
 
     } catch (error) {
-      console.error('❌ Error in EmployeeOnboardingTrigger:', error);
+      logger.error('Error in EmployeeOnboardingTrigger:', error);
       // Don't throw - employee record already created
     }
   }
@@ -57,9 +60,9 @@ async function createOnboardingRecord(employee: Record<string, any>, ctx: HookCo
       hr_coordinator_id: ctx.session?.userId
     });
 
-    console.log(`📋 Created onboarding record for ${employee.first_name} ${employee.last_name}`);
+    logger.info(`Created onboarding record for ${employee.first_name} ${employee.last_name}`);
   } catch (error) {
-    console.error('❌ Failed to create onboarding record:', error);
+    logger.error('Failed to create onboarding record:', error);
   }
 }
 
@@ -69,17 +72,17 @@ async function createOnboardingRecord(employee: Record<string, any>, ctx: HookCo
 async function notifyManager(employee: Record<string, any>, ctx: HookContext): Promise<void> {
   try {
     if (!employee.manager_id) {
-      console.log('⚠️ No manager assigned, skipping notification');
+      logger.info('No manager assigned, skipping notification');
       return;
     }
 
     // In production, this would send an email or create a notification
-    console.log(`📧 Notification sent to manager ${employee.manager_id} about new employee ${employee.full_name}`);
+    logger.info(`Notification sent to manager ${employee.manager_id} about new employee ${employee.full_name}`);
     
-    console.debug(`[employee.hook] Notification system integration pending: notify manager ${employee.manager_id} about new employee ${employee.full_name}`);
+    logger.debug(`[employee.hook] Notification system integration pending: notify manager ${employee.manager_id} about new employee ${employee.full_name}`);
 
   } catch (error) {
-    console.error('❌ Failed to notify manager:', error);
+    logger.error('Failed to notify manager:', error);
   }
 }
 
@@ -103,9 +106,9 @@ async function createProbationGoals(employee: Record<string, any>, ctx: HookCont
       progress: 0
     });
 
-    console.log(`🎯 Created probation goals for ${employee.first_name} ${employee.last_name}`);
+    logger.info(`Created probation goals for ${employee.first_name} ${employee.last_name}`);
   } catch (error) {
-    console.error('❌ Failed to create probation goals:', error);
+    logger.error('Failed to create probation goals:', error);
   }
 }
 
@@ -129,7 +132,7 @@ const EmployeeStatusChangeTrigger: Hook = {
       const oldStatus = (ctx.previous as Record<string, any>).employment_status;
       const newStatus = employee.employment_status;
 
-      console.log(`🔄 Employee status changed from "${oldStatus}" to "${newStatus}"`);
+      logger.info(`Employee status changed from "${oldStatus}" to "${newStatus}"`);
 
       // Handle different status transitions
       switch (newStatus) {
@@ -149,7 +152,7 @@ const EmployeeStatusChangeTrigger: Hook = {
       await logEmployeeStatusChange(employee, oldStatus, newStatus, ctx);
 
     } catch (error) {
-      console.error('❌ Error in EmployeeStatusChangeTrigger:', error);
+      logger.error('Error in EmployeeStatusChangeTrigger:', error);
     }
   }
 };
@@ -158,16 +161,16 @@ const EmployeeStatusChangeTrigger: Hook = {
  * Handle employee activation
  */
 async function handleActivation(employee: Record<string, any>, ctx: HookContext): Promise<void> {
-  console.log(`✅ Employee ${employee.full_name} activated`);
+  logger.info(`Employee ${employee.full_name} activated`);
   
-  console.debug(`[employee.hook] Activation pending for ${employee.full_name}: enable system accounts, grant access permissions, and add to team channels`);
+  logger.debug(`[employee.hook] Activation pending for ${employee.full_name}: enable system accounts, grant access permissions, and add to team channels`);
 }
 
 /**
  * Handle employee termination
  */
 async function handleTermination(employee: Record<string, any>, ctx: HookContext): Promise<void> {
-  console.log(`👋 Processing termination for ${employee.full_name}`);
+  logger.info(`Processing termination for ${employee.full_name}`);
   
   try {
     // Create offboarding record
@@ -179,12 +182,12 @@ async function handleTermination(employee: Record<string, any>, ctx: HookContext
       hr_coordinator_id: ctx.session?.userId
     });
 
-    console.log(`📋 Created offboarding record for ${employee.full_name}`);
+    logger.info(`Created offboarding record for ${employee.full_name}`);
     
-    console.debug(`[employee.hook] Exit process initiated for ${employee.full_name}: access revocation, exit interview, final payroll, and equipment return pending`);
+    logger.debug(`[employee.hook] Exit process initiated for ${employee.full_name}: access revocation, exit interview, final payroll, and equipment return pending`);
 
   } catch (error) {
-    console.error('❌ Failed to process termination:', error);
+    logger.error('Failed to process termination:', error);
   }
 }
 
@@ -192,9 +195,9 @@ async function handleTermination(employee: Record<string, any>, ctx: HookContext
  * Handle leave start
  */
 async function handleLeaveStart(employee: Record<string, any>, ctx: HookContext): Promise<void> {
-  console.log(`🏖️ Employee ${employee.full_name} started leave`);
+  logger.info(`Employee ${employee.full_name} started leave`);
   
-  console.debug(`[employee.hook] Leave process pending for ${employee.full_name}: update team calendars, set up out-of-office auto-responder, and reassign urgent tasks`);
+  logger.debug(`[employee.hook] Leave process pending for ${employee.full_name}: update team calendars, set up out-of-office auto-responder, and reassign urgent tasks`);
 }
 
 /**
@@ -207,11 +210,11 @@ async function logEmployeeStatusChange(
   ctx: HookContext
 ): Promise<void> {
   try {
-    console.log(`📝 Logging status change: ${oldStatus} → ${newStatus} for ${employee.full_name}`);
+    logger.info(`Logging status change: ${oldStatus} → ${newStatus} for ${employee.full_name}`);
     
-    console.debug(`[employee.hook] Audit log pending: record status change ${oldStatus} → ${newStatus} for employee ${employee.full_name}`);
+    logger.debug(`[employee.hook] Audit log pending: record status change ${oldStatus} → ${newStatus} for employee ${employee.full_name}`);
   } catch (error) {
-    console.error('❌ Failed to log status change:', error);
+    logger.error('Failed to log status change:', error);
   }
 }
 
@@ -235,7 +238,7 @@ const EmployeeDataValidationTrigger: Hook = {
         today.setHours(0, 0, 0, 0);
         
         if (hireDate > today && ctx.event === 'beforeInsert') {
-          console.warn(`⚠️ Hire date ${employee.hire_date} is in the future for ${employee.first_name} ${employee.last_name}`);
+          logger.warn(`Hire date ${employee.hire_date} is in the future for ${employee.first_name} ${employee.last_name}`);
           // Allow future hire dates for pre-boarding
         }
       }
@@ -257,13 +260,13 @@ const EmployeeDataValidationTrigger: Hook = {
 
       // Validate email domain for company email
       if (employee.email && ctx.event === 'beforeInsert') {
-        console.debug(`[employee.hook] Email domain validation pending: validate ${employee.email} against allowed company email domains`);
+        logger.debug(`[employee.hook] Email domain validation pending: validate ${employee.email} against allowed company email domains`);
       }
 
-      console.log(`✅ Employee data validation passed for ${employee.first_name} ${employee.last_name}`);
+      logger.info(`Employee data validation passed for ${employee.first_name} ${employee.last_name}`);
 
     } catch (error) {
-      console.error('❌ Error in EmployeeDataValidationTrigger:', error);
+      logger.error('Error in EmployeeDataValidationTrigger:', error);
       throw error; // Re-throw to prevent save
     }
   }

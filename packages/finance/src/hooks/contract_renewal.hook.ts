@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('finance:contract_renewal');
+
 const RENEWAL_WINDOW_DAYS = 90;
 const ALERT_WINDOW_DAYS = 30;
 
@@ -24,7 +27,7 @@ const ContractRenewalCheck: Hook = {
 
       if (daysUntilExpiry > RENEWAL_WINDOW_DAYS) return;
 
-      console.log(`🔄 Contract ${newDoc.contract_number} expires in ${daysUntilExpiry} days — creating renewal opportunity`);
+      logger.info(`Contract ${newDoc.contract_number} expires in ${daysUntilExpiry} days — creating renewal opportunity`);
 
       // Check if a renewal opportunity already exists for this contract
       const existing = await (ctx.ql as any).find('opportunity', {
@@ -35,7 +38,7 @@ const ContractRenewalCheck: Hook = {
       });
 
       if (existing && existing.length > 0) {
-        console.log(`ℹ️ Renewal opportunity already exists for Contract ${newDoc.contract_number}`);
+        logger.info(`ℹ Renewal opportunity already exists for Contract ${newDoc.contract_number}`);
         return;
       }
 
@@ -53,7 +56,7 @@ const ContractRenewalCheck: Hook = {
         close_date: closeDate.toISOString()
       });
 
-      console.log(`✅ Created renewal opportunity ${opportunity.name} for Contract ${newDoc.contract_number}`);
+      logger.info(`Created renewal opportunity ${opportunity.name} for Contract ${newDoc.contract_number}`);
 
       // Create a task for the account owner to initiate renewal conversation
       await (ctx.ql as any).doc.create('task', {
@@ -66,10 +69,10 @@ const ContractRenewalCheck: Hook = {
         due_date: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString()
       });
 
-      console.log(`✅ Created renewal task for account owner — Contract ${newDoc.contract_number}`);
+      logger.info(`Created renewal task for account owner — Contract ${newDoc.contract_number}`);
 
     } catch (err) {
-      console.error('❌ Contract Renewal Check Error:', err);
+      logger.error('Contract Renewal Check Error:', err);
     }
   }
 };
@@ -97,7 +100,7 @@ const ContractExpirationAlert: Hook = {
 
       if (daysUntilExpiry > ALERT_WINDOW_DAYS) return;
 
-      console.log(`⚠️ Contract ${newDoc.contract_number} expires in ${daysUntilExpiry} days — sending expiration alert`);
+      logger.info(`Contract ${newDoc.contract_number} expires in ${daysUntilExpiry} days — sending expiration alert`);
 
       // Log urgent renewal activity
       await (ctx.ql as any).doc.create('activity', {
@@ -115,10 +118,10 @@ const ContractExpirationAlert: Hook = {
         renewal_reminder_sent: true
       });
 
-      console.log(`✅ Expiration alert sent and flag set for Contract ${newDoc.contract_number}`);
+      logger.info(`Expiration alert sent and flag set for Contract ${newDoc.contract_number}`);
 
     } catch (err) {
-      console.error('❌ Contract Expiration Alert Error:', err);
+      logger.error('Contract Expiration Alert Error:', err);
     }
   }
 };

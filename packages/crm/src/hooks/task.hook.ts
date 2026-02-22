@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('crm:task');
+
 
 
 /**
@@ -36,16 +39,16 @@ const TaskValidationTrigger: Hook = {
       // Auto-set status to 'not_started' on insert if not provided
       if (isNew && !doc.status) {
         doc.status = 'not_started';
-        console.log(`✅ Auto-set task status to 'not_started'`);
+        logger.info(`Auto-set task status to 'not_started'`);
       }
 
-      console.log(`📝 Task validated: ${doc.subject}`);
+      logger.info(`Task validated: ${doc.subject}`);
 
     } catch (error) {
       if (error instanceof Error && error.message.startsWith('Validation Error:')) {
         throw error;
       }
-      console.error('❌ Error in TaskValidationTrigger:', error);
+      logger.error('Error in TaskValidationTrigger:', error);
     }
   }
 };
@@ -74,17 +77,17 @@ const TaskCompletionTrigger: Hook = {
       if (oldDoc.status !== 'completed' && doc.status === 'completed') {
         doc.completed_date = new Date().toISOString();
         doc.percent_complete = 100;
-        console.log(`✅ Task completed: ${doc.subject}`);
+        logger.info(`Task completed: ${doc.subject}`);
       }
 
       // When status changes FROM 'completed'
       if (oldDoc.status === 'completed' && doc.status !== 'completed') {
         doc.completed_date = null;
-        console.log(`🔄 Task reopened: ${doc.subject}, cleared completed_date`);
+        logger.info(`Task reopened: ${doc.subject}, cleared completed_date`);
       }
 
     } catch (error) {
-      console.error('❌ Error in TaskCompletionTrigger:', error);
+      logger.error('Error in TaskCompletionTrigger:', error);
     }
   }
 };
@@ -111,11 +114,11 @@ const TaskOverdueTrigger: Hook = {
       const dueDate = new Date(task.due_date);
 
       if (dueDate < now && task.status !== 'completed' && task.status !== 'cancelled') {
-        console.warn(`⚠️ Task overdue: "${task.subject}" was due on ${task.due_date}`);
+        logger.warn(`Task overdue: "${task.subject}" was due on ${task.due_date}`);
       }
 
     } catch (error) {
-      console.error('❌ Error in TaskOverdueTrigger:', error);
+      logger.error('Error in TaskOverdueTrigger:', error);
     }
   }
 };

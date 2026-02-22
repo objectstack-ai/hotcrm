@@ -9,6 +9,9 @@
 
 import { broker } from '../db.js';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('analytics:forecast_analytics');
+
 // ============================================================================
 // 1. REVENUE FORECAST
 // ============================================================================
@@ -292,7 +295,7 @@ Model the what-if scenario and provide period-by-period outcomes.
 // ============================================================================
 
 async function callLLM(prompt: string): Promise<string> {
-  console.log('🤖 Calling LLM API for forecast analytics...');
+  logger.info('Calling LLM API for forecast analytics...');
   await new Promise(resolve => setTimeout(resolve, 500));
 
   if (prompt.includes('revenue forecast')) {

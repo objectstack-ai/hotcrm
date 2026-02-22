@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('hr:offer');
+
 /**
  * Offer Creation and Approval Workflow Trigger
  * 
@@ -35,10 +38,10 @@ const OfferCreationTrigger: Hook = {
         offer.status = 'draft';
       }
 
-      console.log(`✨ Offer ${offer.offer_number} prepared for candidate ${offer.candidate_id}`);
+      logger.info(`Offer ${offer.offer_number} prepared for candidate ${offer.candidate_id}`);
 
     } catch (error) {
-      console.error('❌ Error in OfferCreationTrigger:', error);
+      logger.error('Error in OfferCreationTrigger:', error);
       throw error; // Prevent offer creation if there's an error
     }
   }
@@ -90,7 +93,7 @@ const OfferStatusChangeTrigger: Hook = {
       const oldStatus = (ctx.previous as Record<string, any>).status;
       const newStatus = offer.status;
 
-      console.log(`🔄 Offer ${offer.offer_number} status changed from "${oldStatus}" to "${newStatus}"`);
+      logger.info(`Offer ${offer.offer_number} status changed from "${oldStatus}" to "${newStatus}"`);
 
       // Handle different status transitions
       switch (newStatus) {
@@ -115,7 +118,7 @@ const OfferStatusChangeTrigger: Hook = {
       await logOfferStatusChange(offer, oldStatus, newStatus, ctx);
 
     } catch (error) {
-      console.error('❌ Error in OfferStatusChangeTrigger:', error);
+      logger.error('Error in OfferStatusChangeTrigger:', error);
     }
   }
 };
@@ -124,7 +127,7 @@ const OfferStatusChangeTrigger: Hook = {
  * Handle offer sent
  */
 async function handleOfferSent(offer: Record<string, any>, ctx: HookContext): Promise<void> {
-  console.log(`📧 Offer ${offer.offer_number} sent to candidate`);
+  logger.info(`Offer ${offer.offer_number} sent to candidate`);
   
   try {
     // Update candidate status
@@ -144,12 +147,12 @@ async function handleOfferSent(offer: Record<string, any>, ctx: HookContext): Pr
       });
     }
 
-    console.log(`✅ Candidate and application status updated for offer ${offer.offer_number}`);
+    logger.info(`Candidate and application status updated for offer ${offer.offer_number}`);
     
-    console.debug(`[offer.hook] Offer sent pending for ${offer.offer_number}: send offer email to candidate, notify hiring manager, and schedule follow-up reminder`);
+    logger.debug(`[offer.hook] Offer sent pending for ${offer.offer_number}: send offer email to candidate, notify hiring manager, and schedule follow-up reminder`);
 
   } catch (error) {
-    console.error('❌ Failed to process offer sent:', error);
+    logger.error('Failed to process offer sent:', error);
   }
 }
 
@@ -157,7 +160,7 @@ async function handleOfferSent(offer: Record<string, any>, ctx: HookContext): Pr
  * Handle offer accepted
  */
 async function handleOfferAccepted(offer: Record<string, any>, ctx: HookContext): Promise<void> {
-  console.log(`🎉 Offer ${offer.offer_number} accepted by candidate`);
+  logger.info(`Offer ${offer.offer_number} accepted by candidate`);
   
   try {
     // Update candidate status
@@ -180,12 +183,12 @@ async function handleOfferAccepted(offer: Record<string, any>, ctx: HookContext)
     // Create employee record
     await createEmployeeFromOffer(offer, ctx);
 
-    console.log(`✅ Employee record created from accepted offer ${offer.offer_number}`);
+    logger.info(`Employee record created from accepted offer ${offer.offer_number}`);
     
-    console.debug(`[offer.hook] Offer acceptance pending for ${offer.offer_number}: send welcome email, initiate background check, and create onboarding checklist`);
+    logger.debug(`[offer.hook] Offer acceptance pending for ${offer.offer_number}: send welcome email, initiate background check, and create onboarding checklist`);
 
   } catch (error) {
-    console.error('❌ Failed to process offer acceptance:', error);
+    logger.error('Failed to process offer acceptance:', error);
   }
 }
 
@@ -230,10 +233,10 @@ async function createEmployeeFromOffer(offer: Record<string, any>, ctx: HookCont
       employee_id: employee.id
     });
 
-    console.log(`👤 Created employee ${employeeNumber} from offer ${offer.offer_number}`);
+    logger.info(`Created employee ${employeeNumber} from offer ${offer.offer_number}`);
 
   } catch (error) {
-    console.error('❌ Failed to create employee from offer:', error);
+    logger.error('Failed to create employee from offer:', error);
     throw error;
   }
 }
@@ -267,7 +270,7 @@ async function generateEmployeeNumber(ctx: HookContext): Promise<string> {
  * Handle offer rejected
  */
 async function handleOfferRejected(offer: Record<string, any>, ctx: HookContext): Promise<void> {
-  console.log(`❌ Offer ${offer.offer_number} rejected by candidate`);
+  logger.info(`Offer ${offer.offer_number} rejected by candidate`);
   
   try {
     // Update candidate status
@@ -287,10 +290,10 @@ async function handleOfferRejected(offer: Record<string, any>, ctx: HookContext)
       });
     }
 
-    console.debug(`[offer.hook] Offer rejection pending for ${offer.offer_number}: notify hiring manager, continue with other candidates, and analyze rejection reasons`);
+    logger.debug(`[offer.hook] Offer rejection pending for ${offer.offer_number}: notify hiring manager, continue with other candidates, and analyze rejection reasons`);
 
   } catch (error) {
-    console.error('❌ Failed to process offer rejection:', error);
+    logger.error('Failed to process offer rejection:', error);
   }
 }
 
@@ -298,7 +301,7 @@ async function handleOfferRejected(offer: Record<string, any>, ctx: HookContext)
  * Handle offer expired
  */
 async function handleOfferExpired(offer: Record<string, any>, ctx: HookContext): Promise<void> {
-  console.log(`⏰ Offer ${offer.offer_number} has expired`);
+  logger.info(`⏰ Offer ${offer.offer_number} has expired`);
   
   try {
     // Update candidate status
@@ -306,10 +309,10 @@ async function handleOfferExpired(offer: Record<string, any>, ctx: HookContext):
       status: 'Offer Expired'
     });
 
-    console.debug(`[offer.hook] Offer expiry pending for ${offer.offer_number}: notify hiring manager and decide whether to extend or withdraw`);
+    logger.debug(`[offer.hook] Offer expiry pending for ${offer.offer_number}: notify hiring manager and decide whether to extend or withdraw`);
     
   } catch (error) {
-    console.error('❌ Failed to process offer expiry:', error);
+    logger.error('Failed to process offer expiry:', error);
   }
 }
 
@@ -317,7 +320,7 @@ async function handleOfferExpired(offer: Record<string, any>, ctx: HookContext):
  * Handle offer withdrawn
  */
 async function handleOfferWithdrawn(offer: Record<string, any>, ctx: HookContext): Promise<void> {
-  console.log(`🚫 Offer ${offer.offer_number} has been withdrawn`);
+  logger.info(`Offer ${offer.offer_number} has been withdrawn`);
   
   try {
     // Update candidate status
@@ -325,10 +328,10 @@ async function handleOfferWithdrawn(offer: Record<string, any>, ctx: HookContext
       status: 'Offer Withdrawn'
     });
 
-    console.debug(`[offer.hook] Offer withdrawal pending for ${offer.offer_number}: send notification to candidate and log withdrawal reason`);
+    logger.debug(`[offer.hook] Offer withdrawal pending for ${offer.offer_number}: send notification to candidate and log withdrawal reason`);
     
   } catch (error) {
-    console.error('❌ Failed to process offer withdrawal:', error);
+    logger.error('Failed to process offer withdrawal:', error);
   }
 }
 
@@ -342,11 +345,11 @@ async function logOfferStatusChange(
   ctx: HookContext
 ): Promise<void> {
   try {
-    console.log(`📝 Logging offer status change: ${oldStatus} → ${newStatus} for offer ${offer.offer_number}`);
+    logger.info(`Logging offer status change: ${oldStatus} → ${newStatus} for offer ${offer.offer_number}`);
     
-    console.debug(`[offer.hook] Audit log pending: record status change ${oldStatus} → ${newStatus} for offer ${offer.offer_number}`);
+    logger.debug(`[offer.hook] Audit log pending: record status change ${oldStatus} → ${newStatus} for offer ${offer.offer_number}`);
   } catch (error) {
-    console.error('❌ Failed to log offer status change:', error);
+    logger.error('Failed to log offer status change:', error);
   }
 }
 
@@ -369,7 +372,7 @@ const OfferApprovalTrigger: Hook = {
         return;
       }
 
-      console.log(`📋 Offer ${offer.offer_number} approval status changed to ${offer.approval_status}`);
+      logger.info(`Offer ${offer.offer_number} approval status changed to ${offer.approval_status}`);
 
       // Handle approval
       if (offer.approval_status === 'approved' && previousOffer.approval_status !== 'approved') {
@@ -381,17 +384,17 @@ const OfferApprovalTrigger: Hook = {
         offer.approved_date = new Date().toISOString().split('T')[0];
         offer.approved_by = ctx.session?.userId;
         
-        console.log(`✅ Offer ${offer.offer_number} approved by ${ctx.session?.userId}`);
+        logger.info(`Offer ${offer.offer_number} approved by ${ctx.session?.userId}`);
       }
 
       // Handle rejection
       if (offer.approval_status === 'rejected') {
         offer.status = 'draft'; // Send back to draft
-        console.log(`❌ Offer ${offer.offer_number} rejected in approval`);
+        logger.info(`Offer ${offer.offer_number} rejected in approval`);
       }
 
     } catch (error) {
-      console.error('❌ Error in OfferApprovalTrigger:', error);
+      logger.error('Error in OfferApprovalTrigger:', error);
     }
   }
 };

@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('community:user_group');
+
 /**
  * Group Membership Validation
  *
@@ -59,7 +62,7 @@ const GroupAutoAssignment: Hook = {
     const group = ctx.result as Record<string, any>;
     if (!group?._id || !group?.criteria) return;
 
-    console.log(`🔄 Evaluating auto-assignment criteria for group "${group.name}"`);
+    logger.info(`Evaluating auto-assignment criteria for group "${group.name}"`);
   }
 };
 

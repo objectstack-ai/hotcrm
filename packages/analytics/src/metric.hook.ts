@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('analytics:metric');
+
 /**
  * Metric Formula Validation
  *
@@ -131,7 +134,7 @@ const MetricAggregationComputation: Hook = {
     const metric = ctx.result as Record<string, any>;
     if (!metric?._id || !metric.source_object || !metric.aggregation_type) return;
 
-    console.log(`📊 Computing initial aggregation for metric "${metric.name}"`);
+    logger.info(`Computing initial aggregation for metric "${metric.name}"`);
 
     try {
       let filters: Array<[string, string, any]> = [];
@@ -183,10 +186,10 @@ const MetricAggregationComputation: Hook = {
         await (ctx.ql as any).doc.update('metric', metric._id, {
           description: `${metric.description || ''}\n[Initial value: ${result}]`.trim()
         });
-        console.log(`✅ Metric "${metric.name}" initial aggregation: ${result}`);
+        logger.info(`Metric "${metric.name}" initial aggregation: ${result}`);
       }
     } catch (error) {
-      console.warn('⚠️ Failed to compute initial metric aggregation:', error);
+      logger.warn('Failed to compute initial metric aggregation:', error);
     }
   }
 };

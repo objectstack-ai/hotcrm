@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('marketing:journey');
+
 
 const VALID_STATUSES = ['draft', 'scheduled', 'active', 'paused', 'completed', 'archived'];
 
@@ -53,13 +56,13 @@ const JourneyValidationTrigger: Hook = {
         }
       }
 
-      console.log(`🚀 Journey validated: status=${doc.status || 'draft'}`);
+      logger.info(`Journey validated: status=${doc.status || 'draft'}`);
 
     } catch (error) {
       if (error instanceof Error && error.message.startsWith('Validation Error:')) {
         throw error;
       }
-      console.error('❌ Error in JourneyValidationTrigger:', error);
+      logger.error('Error in JourneyValidationTrigger:', error);
     }
   }
 };
@@ -87,10 +90,10 @@ const JourneyMetricsTrigger: Hook = {
         doc.conversion_rate = 0;
       }
 
-      console.log(`📊 Journey metrics updated: conversion_rate=${doc.conversion_rate}%, total_entered=${totalEntered}, completed=${completedContacts}`);
+      logger.info(`Journey metrics updated: conversion_rate=${doc.conversion_rate}%, total_entered=${totalEntered}, completed=${completedContacts}`);
 
     } catch (error) {
-      console.error('❌ Error in JourneyMetricsTrigger:', error);
+      logger.error('Error in JourneyMetricsTrigger:', error);
     }
   }
 };

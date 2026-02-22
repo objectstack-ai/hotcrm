@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('crm:contact');
+
 
 
 /**
@@ -9,7 +12,7 @@ import type { Hook, HookContext } from '@objectstack/spec/data';
  * This hook is actually called from Activity hooks
  */
 export async function updateContactLastContactDate(contactId: string, activityDate: string, ql: any): Promise<void> {
-  console.log(`🔄 Updating last contact date for contact: ${contactId}`);
+  logger.info(`Updating last contact date for contact: ${contactId}`);
   
   // Get current contact to check if update is needed
   // const contact = await db.doc.get('Contact', contactId, { fields: ['LastContactDate'] });
@@ -19,7 +22,7 @@ export async function updateContactLastContactDate(contactId: string, activityDa
   //   await db.doc.update('Contact', contactId, {
   //     LastContactDate: activityDate
   //   });
-  //   console.log(`✅ Updated last contact date to ${activityDate}`);
+  //   logger.info(`Updated last contact date to ${activityDate}`);
   // }
 }
 
@@ -44,23 +47,23 @@ const ContactDecisionChainTrigger: Hook = {
         switch (contact.Level) {
           case 'c_level':
             contact.InfluenceLevel = 'high';
-            console.log(`✅ Auto-set InfluenceLevel to High for C-Level contact`);
+            logger.info(`Auto-set InfluenceLevel to High for C-Level contact`);
             break;
           case 'VP':
             contact.InfluenceLevel = 'high';
-            console.log(`✅ Auto-set InfluenceLevel to High for VP contact`);
+            logger.info(`Auto-set InfluenceLevel to High for VP contact`);
             break;
           case 'Director':
             contact.InfluenceLevel = 'medium';
-            console.log(`✅ Auto-set InfluenceLevel to Medium for Director contact`);
+            logger.info(`Auto-set InfluenceLevel to Medium for Director contact`);
             break;
           case 'Manager':
             contact.InfluenceLevel = 'medium';
-            console.log(`✅ Auto-set InfluenceLevel to Medium for Manager contact`);
+            logger.info(`Auto-set InfluenceLevel to Medium for Manager contact`);
             break;
           case 'Individual Contributor':
             contact.InfluenceLevel = 'low';
-            console.log(`✅ Auto-set InfluenceLevel to Low for Individual Contributor`);
+            logger.info(`Auto-set InfluenceLevel to Low for Individual Contributor`);
             break;
         }
       }
@@ -68,11 +71,11 @@ const ContactDecisionChainTrigger: Hook = {
       // Auto-set IsDecisionMaker for C-Level
       if (contact.Level === 'c_level' && !contact.IsDecisionMaker) {
         contact.IsDecisionMaker = true;
-        console.log(`✅ Auto-set IsDecisionMaker for C-Level contact`);
+        logger.info(`Auto-set IsDecisionMaker for C-Level contact`);
       }
       
     } catch (error) {
-      console.error('❌ Error in ContactDecisionChainTrigger:', error);
+      logger.error('Error in ContactDecisionChainTrigger:', error);
     }
   }
 };
@@ -103,14 +106,14 @@ const ContactDecisionMakerValidationTrigger: Hook = {
       // });
       
       // if (decisionMakers.length === 0) {
-      //   console.warn(`⚠️ Account has no decision maker! AccountId: ${contact.AccountId}`);
+      //   logger.warn(`Account has no decision maker! AccountId: ${contact.AccountId}`);
       //   // Could create a task or send notification to account owner
       // } else {
-      //   console.log(`✅ Account has ${decisionMakers.length} decision maker(s)`);
+      //   logger.info(`Account has ${decisionMakers.length} decision maker(s)`);
       // }
       
     } catch (error) {
-      console.error('❌ Error in ContactDecisionMakerValidationTrigger:', error);
+      logger.error('Error in ContactDecisionMakerValidationTrigger:', error);
     }
   }
 };
@@ -144,7 +147,7 @@ const ContactDuplicateDetectionTrigger: Hook = {
         // });
         
         // if (potentialDuplicates.length > 0) {
-        //   console.warn(`⚠️ Potential duplicate contact found: ${contact.FirstName} ${contact.LastName} at same account`);
+        //   logger.warn(`Potential duplicate contact found: ${contact.FirstName} ${contact.LastName} at same account`);
         //   // Could create a task for manual review
         // }
       }
@@ -152,11 +155,11 @@ const ContactDuplicateDetectionTrigger: Hook = {
       // Email uniqueness is already enforced by unique constraint on Email field
       // But we can provide better error messaging
       if (contact.Email && isNew) {
-        console.log(`✅ New contact with email: ${contact.Email}`);
+        logger.info(`New contact with email: ${contact.Email}`);
       }
       
     } catch (error) {
-      console.error('❌ Error in ContactDuplicateDetectionTrigger:', error);
+      logger.error('Error in ContactDuplicateDetectionTrigger:', error);
     }
   }
 };
@@ -191,10 +194,10 @@ const ContactRelationshipStrengthTrigger: Hook = {
       if (daysSinceContact > 90) {
         if (currentStrength === 'strong') {
           contact.RelationshipStrength = 'medium';
-          console.log(`⬇️ Demoted relationship strength: Strong → Medium (${daysSinceContact} days since contact)`);
+          logger.info(`⬇ Demoted relationship strength: Strong → Medium (${daysSinceContact} days since contact)`);
         } else if (currentStrength === 'medium') {
           contact.RelationshipStrength = 'weak';
-          console.log(`⬇️ Demoted relationship strength: Medium → Weak (${daysSinceContact} days since contact)`);
+          logger.info(`⬇ Demoted relationship strength: Medium → Weak (${daysSinceContact} days since contact)`);
         }
       }
       
@@ -204,17 +207,17 @@ const ContactRelationshipStrengthTrigger: Hook = {
         // Recent contact suggests active relationship
         if (currentStrength === 'weak' || currentStrength === 'unknown') {
           contact.RelationshipStrength = 'medium';
-          console.log(`⬆️ Promoted relationship strength: ${currentStrength} → Medium (active engagement)`);
+          logger.info(`⬆ Promoted relationship strength: ${currentStrength} → Medium (active engagement)`);
         } else if (currentStrength === 'medium') {
           // In real implementation, would check activity count here
           // If many recent activities (e.g., > 10 in last 30 days), promote to Strong
           // For now, we log that this could be promoted
-          console.log(`ℹ️ Medium relationship with recent contact - could promote to Strong based on activity count`);
+          logger.info(`ℹ Medium relationship with recent contact - could promote to Strong based on activity count`);
         }
       }
       
     } catch (error) {
-      console.error('❌ Error in ContactRelationshipStrengthTrigger:', error);
+      logger.error('Error in ContactRelationshipStrengthTrigger:', error);
     }
   }
 };
@@ -236,7 +239,7 @@ function getDaysSince(dateString: string): number {
  * This is called periodically or after significant activity changes
  */
 export async function analyzeAndUpdateRelationshipStrength(contactId: string, ql: any): Promise<void> {
-  console.log(`🔄 Analyzing relationship strength for contact: ${contactId}`);
+  logger.info(`Analyzing relationship strength for contact: ${contactId}`);
   
   // In real implementation:
   // 1. Query all activities for this contact in last 90 days
@@ -269,7 +272,7 @@ export async function analyzeAndUpdateRelationshipStrength(contactId: string, ql
   //   RelationshipStrength: newStrength
   // });
   
-  console.log(`✅ Relationship strength analysis completed for contact ${contactId}`);
+  logger.info(`Relationship strength analysis completed for contact ${contactId}`);
 }
 
 // Export all hooks

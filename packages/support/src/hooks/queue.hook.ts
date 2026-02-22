@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('support:queue');
+
 /**
  * Queue Load Balancing Trigger
  * 
@@ -43,7 +46,7 @@ const QueueLoadBalancingTrigger: Hook = {
       });
 
       if (overloaded.length > 0 && underloaded.length > 0) {
-        console.log(`🔄 Queue "${member.queue_id}" workload imbalance detected. Avg: ${avgCases} cases. Overloaded: ${overloaded.length}, Underloaded: ${underloaded.length}`);
+        logger.info(`Queue "${member.queue_id}" workload imbalance detected. Avg: ${avgCases} cases. Overloaded: ${overloaded.length}, Underloaded: ${underloaded.length}`);
       }
 
       // Update queue-level statistics
@@ -63,10 +66,10 @@ const QueueLoadBalancingTrigger: Hook = {
         });
       }
 
-      console.log(`✅ Queue "${member.queue_id}" stats updated: ${allMembers.length} active members, ${totalCases} total cases`);
+      logger.info(`Queue "${member.queue_id}" stats updated: ${allMembers.length} active members, ${totalCases} total cases`);
 
     } catch (error) {
-      console.error('❌ Error in queue load balancing:', error);
+      logger.error('Error in queue load balancing:', error);
     }
   }
 };
@@ -113,10 +116,10 @@ const QueueCapacityValidationTrigger: Hook = {
         }
       }
 
-      console.log(`✅ Queue validation passed: ${queue.name || 'unknown'}`);
+      logger.info(`Queue validation passed: ${queue.name || 'unknown'}`);
 
     } catch (error) {
-      console.error('❌ Queue validation failed:', error);
+      logger.error('Queue validation failed:', error);
       throw error;
     }
   }

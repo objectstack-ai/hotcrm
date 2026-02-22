@@ -6,6 +6,9 @@
 
 import BaseMLProvider, { MLProviderConfig, PredictionInput, PredictionOutput } from './base-provider.js';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('ai:aws-sagemaker-provider');
+
 export interface SageMakerConfig extends MLProviderConfig {
   provider: 'aws-sagemaker';
   credentials: {
@@ -46,7 +49,7 @@ export class AWSSageMakerProvider extends BaseMLProvider {
     this.client = {
       send: async (command: any) => {
         // Mock implementation
-        console.log('[SageMaker] Would invoke endpoint:', command.input?.EndpointName);
+        logger.info('[SageMaker] Would invoke endpoint:', command.input?.EndpointName);
         const mockBody = JSON.stringify({ predictions: [0.85] });
         return { Body: { toString: () => mockBody } };
       }
@@ -66,7 +69,7 @@ export class AWSSageMakerProvider extends BaseMLProvider {
       
       return true;
     } catch (error) {
-      console.error('[SageMaker] Validation failed:', error);
+      logger.error('[SageMaker] Validation failed:', error);
       return false;
     }
   }
@@ -112,7 +115,7 @@ export class AWSSageMakerProvider extends BaseMLProvider {
         }
       };
     } catch (error) {
-      console.error('[SageMaker] Prediction error:', error);
+      logger.error('[SageMaker] Prediction error:', error);
       throw new Error(`SageMaker prediction failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }

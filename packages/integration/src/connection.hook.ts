@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('integration:connection');
+
 /**
  * Connection Validation
  *
@@ -50,11 +53,11 @@ const TokenRefresh: Hook = {
     const bufferMs = 5 * 60 * 1000; // 5 minutes
 
     if (expiresAt.getTime() - now.getTime() < bufferMs && doc.status === 'connected') {
-      console.log(`🔄 Token nearing expiry for connection ${doc._id}, triggering refresh`);
+      logger.info(`Token nearing expiry for connection ${doc._id}, triggering refresh`);
       try {
         await (ctx.ql as any).doc.update('connection', doc._id, { status: 'expired' });
       } catch (error) {
-        console.warn('⚠️ Failed to mark connection as expired:', error);
+        logger.warn('Failed to mark connection as expired:', error);
       }
     }
   }
@@ -74,10 +77,10 @@ const ExpiryAlert: Hook = {
     if (!doc?._id) return;
 
     if (doc.status === 'expired') {
-      console.log(`⚠️ Connection ${doc.name} has expired. Please re-authenticate.`);
+      logger.info(`Connection ${doc.name} has expired. Please re-authenticate.`);
     }
     if (doc.status === 'error') {
-      console.log(`🚨 Connection ${doc.name} is in error state.`);
+      logger.info(`Connection ${doc.name} is in error state.`);
     }
   }
 };

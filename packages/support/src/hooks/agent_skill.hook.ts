@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('support:agent_skill');
+
 /**
  * Agent Skill Level Validation Trigger
  * 
@@ -30,7 +33,7 @@ const AgentSkillLevelValidationTrigger: Hook = {
         doc.is_certified = expiryDate > now;
 
         if (!doc.is_certified) {
-          console.warn(`⚠️ Agent certification has expired (${doc.certification_expiry})`);
+          logger.warn(`Agent certification has expired (${doc.certification_expiry})`);
           doc.training_required = true;
         }
       } else if (doc.certification_date && !doc.certification_expiry) {
@@ -42,9 +45,9 @@ const AgentSkillLevelValidationTrigger: Hook = {
         throw new Error('Max concurrent cases must be 0 or greater.');
       }
 
-      console.log(`✅ Agent skill validation passed for agent ${doc.user_id}, skill ${doc.skill_id}`);
+      logger.info(`Agent skill validation passed for agent ${doc.user_id}, skill ${doc.skill_id}`);
     } catch (error) {
-      console.error('❌ Agent skill validation failed:', error);
+      logger.error('Agent skill validation failed:', error);
       throw error;
     }
   }
@@ -86,14 +89,14 @@ const AgentCapacityTrackingTrigger: Hook = {
       const verifiedSkills = agentSkills.filter((s: any) => s.is_verified).length;
       const totalSkills = agentSkills.length;
 
-      console.log(`👤 Agent ${skill.user_id} skill profile: ${totalSkills} skills (${activeSkills} active, ${verifiedSkills} verified)`);
+      logger.info(`Agent ${skill.user_id} skill profile: ${totalSkills} skills (${activeSkills} active, ${verifiedSkills} verified)`);
 
       // Log if verification status changed
       if (oldSkill && !oldSkill.is_verified && skill.is_verified) {
-        console.log(`✅ Skill verified for agent ${skill.user_id}: ${skill.skill_id}`);
+        logger.info(`Skill verified for agent ${skill.user_id}: ${skill.skill_id}`);
       }
     } catch (error) {
-      console.error('[agent_skill.hook] capacity tracking failed:', error);
+      logger.error('[agent_skill.hook] capacity tracking failed:', error);
     }
   }
 };

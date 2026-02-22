@@ -10,6 +10,9 @@
 
 import { broker } from '../db.js';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('integration:stripe');
+
 // ============================================================================
 // 1. CREATE PAYMENT INTENT
 // ============================================================================
@@ -37,7 +40,7 @@ export async function createPaymentIntent(request: CreatePaymentIntentRequest): 
     throw new Error('currency is required');
   }
 
-  console.log(`💳 Creating Stripe payment intent: ${amount} ${currency}`);
+  logger.info(`Creating Stripe payment intent: ${amount} ${currency}`);
 
   // Delegated to Stripe API via connector framework
   return {
@@ -70,7 +73,7 @@ export async function processRefund(request: ProcessRefundRequest): Promise<Proc
     throw new Error('payment_intent_id is required');
   }
 
-  console.log(`💸 Processing refund for ${payment_intent_id}`);
+  logger.info(`Processing refund for ${payment_intent_id}`);
 
   return {
     refund_id: `re_${Math.random().toString(36).substring(2, 15)}`,
@@ -101,7 +104,7 @@ export async function syncSubscription(request: SyncSubscriptionRequest): Promis
     throw new Error('subscription_id and connection_id are required');
   }
 
-  console.log(`🔄 Syncing Stripe subscription ${subscription_id}`);
+  logger.info(`Syncing Stripe subscription ${subscription_id}`);
 
   return {
     synced: true,
@@ -133,7 +136,7 @@ export async function handleStripeWebhook(request: HandleStripeWebhookRequest): 
     throw new Error('event_type and payload are required');
   }
 
-  console.log(`🔔 Processing Stripe webhook: ${event_type}`);
+  logger.info(`Processing Stripe webhook: ${event_type}`);
 
   const actions: string[] = [];
 

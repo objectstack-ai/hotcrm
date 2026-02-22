@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('marketing:automation_workflow');
+
 /**
  * Automation Workflow Validation Trigger
  * 
@@ -24,14 +27,14 @@ const AutomationWorkflowValidationTrigger: Hook = {
       if (isActivating) {
         // Ensure trigger_type is set
         if (!workflow.trigger_type) {
-          console.error(`❌ Cannot activate workflow without trigger_type`);
+          logger.error(`Cannot activate workflow without trigger_type`);
           workflow.status = oldWorkflow?.status || 'draft';
           return;
         }
 
         // Ensure entry_criteria is set
         if (!workflow.entry_criteria) {
-          console.error(`❌ Cannot activate workflow without entry_criteria`);
+          logger.error(`Cannot activate workflow without entry_criteria`);
           workflow.status = oldWorkflow?.status || 'draft';
           return;
         }
@@ -41,13 +44,13 @@ const AutomationWorkflowValidationTrigger: Hook = {
           const startDate = new Date(workflow.start_date);
           const now = new Date();
           if (startDate < now) {
-            console.error(`❌ Cannot activate workflow with start_date in the past`);
+            logger.error(`Cannot activate workflow with start_date in the past`);
             workflow.status = oldWorkflow?.status || 'draft';
             return;
           }
         }
 
-        console.log(`🚀 Workflow "${workflow.name}" is being activated`);
+        logger.info(`Workflow "${workflow.name}" is being activated`);
       }
 
       // Calculate is_active based on status and dates
@@ -59,10 +62,10 @@ const AutomationWorkflowValidationTrigger: Hook = {
         (!startDate || startDate <= now) &&
         (!endDate || endDate >= now);
 
-      console.log(`📊 Workflow is_active: ${workflow.is_active}`);
+      logger.info(`Workflow is_active: ${workflow.is_active}`);
 
     } catch (error) {
-      console.error(`[automation_workflow.hook] validation failed:`, error);
+      logger.error(`[automation_workflow.hook] validation failed:`, error);
     }
   }
 };
@@ -95,13 +98,13 @@ const AutomationWorkflowMetricsTrigger: Hook = {
 
       if (enrolledCount > 0) {
         workflow.conversion_rate = (completedCount / enrolledCount) * 100;
-        console.log(`📊 Workflow conversion rate: ${workflow.conversion_rate.toFixed(2)}%`);
+        logger.info(`Workflow conversion rate: ${workflow.conversion_rate.toFixed(2)}%`);
       } else {
         workflow.conversion_rate = 0;
       }
 
     } catch (error) {
-      console.error(`[automation_workflow.hook] metrics calculation failed:`, error);
+      logger.error(`[automation_workflow.hook] metrics calculation failed:`, error);
     }
   }
 };

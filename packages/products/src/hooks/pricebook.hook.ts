@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('products:pricebook');
+
 
 
 /**
@@ -35,7 +38,7 @@ const PricebookHook: Hook = {
       }
 
     } catch (error) {
-      console.error(`[pricebook.hook] handler execution failed:`, error);
+      logger.error(`[pricebook.hook] handler execution failed:`, error);
       throw error;
     }
   }
@@ -69,14 +72,14 @@ async function validatePricebookDates(ctx: HookContext): Promise<void> {
       });
       
       if (overlapping && overlapping.length > 0) {
-        console.warn(`⚠️ Warning: Multiple active standard pricebooks detected`);
+        logger.warn(`Warning: Multiple active standard pricebooks detected`);
         // Depending on business rules, might want to throw error or auto-deactivate others
       }
     }
 
-    console.log(`✅ Pricebook dates validated: ${pricebook.Name}`);
+    logger.info(`Pricebook dates validated: ${pricebook.Name}`);
   } catch (error) {
-    console.error(`[pricebook.hook] validatePricebookDates failed:`, error);
+    logger.error(`[pricebook.hook] validatePricebookDates failed:`, error);
     throw error;
   }
 }
@@ -92,7 +95,7 @@ async function validateCurrencyConfiguration(ctx: HookContext): Promise<void> {
     const validCurrencies = ['USD', 'EUR', 'GBP', 'JPY', 'CNY', 'AUD', 'CAD', 'CHF', 'INR'];
     
     if (pricebook.CurrencyCode && !validCurrencies.includes(pricebook.CurrencyCode)) {
-      console.warn(`⚠️ Warning: Unusual currency code: ${pricebook.CurrencyCode}`);
+      logger.warn(`Warning: Unusual currency code: ${pricebook.CurrencyCode}`);
     }
 
     // Validate exchange rate
@@ -102,13 +105,13 @@ async function validateCurrencyConfiguration(ctx: HookContext): Promise<void> {
       }
       
       if (pricebook.CurrencyCode === 'USD' && pricebook.ExchangeRate !== 1.0) {
-        console.warn(`⚠️ Warning: USD exchange rate should typically be 1.0`);
+        logger.warn(`Warning: USD exchange rate should typically be 1.0`);
       }
     }
 
-    console.log(`✅ Currency configuration validated`);
+    logger.info(`Currency configuration validated`);
   } catch (error) {
-    console.error(`[pricebook.hook] validateCurrencyConfiguration failed:`, error);
+    logger.error(`[pricebook.hook] validateCurrencyConfiguration failed:`, error);
     throw error;
   }
 }
@@ -137,7 +140,7 @@ async function handleEffectiveDateChange(ctx: HookContext): Promise<void> {
       const effectiveDateOnly = new Date(effectiveDate.getFullYear(), effectiveDate.getMonth(), effectiveDate.getDate());
       
       if (effectiveDateOnly <= today && pricebook.Status === 'draft') {
-        console.log(`✅ Pricebook effective date reached, activating: ${pricebook.Name}`);
+        logger.info(`Pricebook effective date reached, activating: ${pricebook.Name}`);
         
         await (ctx.ql as any).doc.update('pricebook', pricebook.Id, {
           Status: 'active'
@@ -151,7 +154,7 @@ async function handleEffectiveDateChange(ctx: HookContext): Promise<void> {
       const expirationDateOnly = new Date(expirationDate.getFullYear(), expirationDate.getMonth(), expirationDate.getDate());
       
       if (expirationDateOnly < today && pricebook.Status === 'active') {
-        console.log(`⏰ Pricebook expired, deactivating: ${pricebook.Name}`);
+        logger.info(`⏰ Pricebook expired, deactivating: ${pricebook.Name}`);
         
         await (ctx.ql as any).doc.update('pricebook', pricebook.Id, {
           Status: 'expired'
@@ -181,7 +184,7 @@ async function handleEffectiveDateChange(ctx: HookContext): Promise<void> {
       });
     }
   } catch (error) {
-    console.error(`[pricebook.hook] handleEffectiveDateChange failed:`, error);
+    logger.error(`[pricebook.hook] handleEffectiveDateChange failed:`, error);
   }
 }
 
@@ -199,18 +202,18 @@ async function handleStatusChange(ctx: HookContext): Promise<void> {
   const pricebook = result;
   
   try {
-    console.log(`🔄 Pricebook status changed from "${prev.Status}" to "${pricebook.Status}"`);
+    logger.info(`Pricebook status changed from "${prev.Status}" to "${pricebook.Status}"`);
 
     // Handle activation
     if (pricebook.Status === 'active') {
-      console.log(`✅ Pricebook activated: ${pricebook.Name}`);
+      logger.info(`Pricebook activated: ${pricebook.Name}`);
       
       // Set effective date if not already set
       if (!pricebook.EffectiveDate) {
         await (ctx.ql as any).doc.update('pricebook', pricebook.Id, {
           EffectiveDate: new Date().toISOString().split('T')[0]
         });
-        console.log('📅 Effective date set to today');
+        logger.info('Effective date set to today');
       }
 
       // If this is a standard pricebook, deactivate other standard pricebooks
@@ -226,7 +229,7 @@ async function handleStatusChange(ctx: HookContext): Promise<void> {
           
           const otherPricebooks = otherStandard || [];
           if (otherPricebooks.length > 0) {
-            console.log(`⚠️ Deactivating ${otherPricebooks.length} other standard pricebook(s)`);
+            logger.info(`Deactivating ${otherPricebooks.length} other standard pricebook(s)`);
             for (const pb of otherPricebooks) {
               await (ctx.ql as any).doc.update('pricebook', pb.Id, {
                 Status: 'inactive',
@@ -235,16 +238,16 @@ async function handleStatusChange(ctx: HookContext): Promise<void> {
             }
           }
         } catch (error) {
-          console.error(`[pricebook.hook] deactivateOtherStandardPricebooks failed:`, error);
+          logger.error(`[pricebook.hook] deactivateOtherStandardPricebooks failed:`, error);
         }
       }
 
-      console.debug(`[pricebook.hook] Activation notification pending: notify sales team about new active pricebook "${pricebook.Name}"`);
+      logger.debug(`[pricebook.hook] Activation notification pending: notify sales team about new active pricebook "${pricebook.Name}"`);
     }
 
     // Handle expiration
     if (pricebook.Status === 'expired') {
-      console.log(`⏰ Pricebook expired: ${pricebook.Name}`);
+      logger.info(`⏰ Pricebook expired: ${pricebook.Name}`);
       
       // Set expiration date if not already set
       if (!pricebook.ExpirationDate) {
@@ -253,7 +256,7 @@ async function handleStatusChange(ctx: HookContext): Promise<void> {
         });
       }
 
-      console.debug(`[pricebook.hook] Expiration notification pending: notify users about expired pricebook "${pricebook.Name}"`);
+      logger.debug(`[pricebook.hook] Expiration notification pending: notify users about expired pricebook "${pricebook.Name}"`);
     }
 
     // Log activity for status change
@@ -268,7 +271,7 @@ async function handleStatusChange(ctx: HookContext): Promise<void> {
       Description: `Pricebook "${pricebook.Name}" status changed from "${prev.Status}" to "${pricebook.Status}"`
     });
   } catch (error) {
-    console.error(`[pricebook.hook] handleStatusChange failed:`, error);
+    logger.error(`[pricebook.hook] handleStatusChange failed:`, error);
   }
 }
 
@@ -289,17 +292,17 @@ async function handleCurrencyChange(ctx: HookContext): Promise<void> {
   
   try {
     if (currencyChanged) {
-      console.log(`💱 Currency changed from ${prev.CurrencyCode} to ${pricebook.CurrencyCode}`);
+      logger.info(`Currency changed from ${prev.CurrencyCode} to ${pricebook.CurrencyCode}`);
       
-      console.debug(`[pricebook.hook] Currency update pending: update pricebook entries and notify users about currency change from ${prev.CurrencyCode} to ${pricebook.CurrencyCode} for pricebook "${pricebook.Name}"`);
+      logger.debug(`[pricebook.hook] Currency update pending: update pricebook entries and notify users about currency change from ${prev.CurrencyCode} to ${pricebook.CurrencyCode} for pricebook "${pricebook.Name}"`);
     }
 
     if (rateChanged) {
-      console.log(`💱 Exchange rate changed from ${prev.ExchangeRate} to ${pricebook.ExchangeRate}`);
+      logger.info(`Exchange rate changed from ${prev.ExchangeRate} to ${pricebook.ExchangeRate}`);
       
       // Recalculate all prices based on new exchange rate
       // This would update all PricebookEntry records
-      console.log('💰 Price recalculation would be triggered here');
+      logger.info('Price recalculation would be triggered here');
     }
 
     // Log activity for currency change
@@ -324,7 +327,7 @@ async function handleCurrencyChange(ctx: HookContext): Promise<void> {
       });
     }
   } catch (error) {
-    console.error(`[pricebook.hook] handleCurrencyChange failed:`, error);
+    logger.error(`[pricebook.hook] handleCurrencyChange failed:`, error);
   }
 }
 
@@ -336,11 +339,11 @@ async function activatePricebookEntries(
   ql: any
 ): Promise<void> {
   try {
-    console.log(`✅ Activating pricebook entries for pricebook: ${pricebookId}`);
+    logger.info(`Activating pricebook entries for pricebook: ${pricebookId}`);
     
-    console.debug(`[pricebook.hook] Entry activation pending: activate all PricebookEntry records for pricebook ${pricebookId}`);
+    logger.debug(`[pricebook.hook] Entry activation pending: activate all PricebookEntry records for pricebook ${pricebookId}`);
   } catch (error) {
-    console.error(`[pricebook.hook] activatePricebookEntries failed:`, error);
+    logger.error(`[pricebook.hook] activatePricebookEntries failed:`, error);
   }
 }
 
@@ -352,11 +355,11 @@ async function expirePricebookEntries(
   ql: any
 ): Promise<void> {
   try {
-    console.log(`⏰ Expiring pricebook entries for pricebook: ${pricebookId}`);
+    logger.info(`⏰ Expiring pricebook entries for pricebook: ${pricebookId}`);
     
-    console.debug(`[pricebook.hook] Entry expiration pending: expire all PricebookEntry records for pricebook ${pricebookId}`);
+    logger.debug(`[pricebook.hook] Entry expiration pending: expire all PricebookEntry records for pricebook ${pricebookId}`);
   } catch (error) {
-    console.error(`[pricebook.hook] expirePricebookEntries failed:`, error);
+    logger.error(`[pricebook.hook] expirePricebookEntries failed:`, error);
   }
 }
 

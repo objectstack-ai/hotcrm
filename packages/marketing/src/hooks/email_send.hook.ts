@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('marketing:email_send');
+
 /**
  * Email Send Tracking Trigger
  * 
@@ -22,7 +25,7 @@ const EmailSendTrackingTrigger: Hook = {
         return;
       }
 
-      console.log(`📧 Email send status changed: ${oldEmailSend.status} → ${emailSend.status}`);
+      logger.info(`Email send status changed: ${oldEmailSend.status} → ${emailSend.status}`);
 
       const campaignId = emailSend.campaign;
       if (!campaignId) {
@@ -59,11 +62,11 @@ const EmailSendTrackingTrigger: Hook = {
         bounce_rate: bounceRate
       });
 
-      console.log(`📊 Campaign metrics updated - Open: ${openRate.toFixed(1)}%, Click: ${clickRate.toFixed(1)}%, Bounce: ${bounceRate.toFixed(1)}%`);
-      console.log(`✅ Engagement event logged: ${emailSend.status} for email send ${emailSend._id || emailSend.id}`);
+      logger.info(`Campaign metrics updated - Open: ${openRate.toFixed(1)}%, Click: ${clickRate.toFixed(1)}%, Bounce: ${bounceRate.toFixed(1)}%`);
+      logger.info(`Engagement event logged: ${emailSend.status} for email send ${emailSend._id || emailSend.id}`);
 
     } catch (error) {
-      console.error(`[email_send.hook] tracking failed:`, error);
+      logger.error(`[email_send.hook] tracking failed:`, error);
     }
   }
 };
@@ -88,7 +91,7 @@ const EmailSendValidationTrigger: Hook = {
       // Validate recipient_email format
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailSend.recipient_email || !emailRegex.test(emailSend.recipient_email)) {
-        console.error(`❌ Invalid recipient email: ${emailSend.recipient_email}`);
+        logger.error(`Invalid recipient email: ${emailSend.recipient_email}`);
         emailSend.status = 'failed';
         emailSend.failure_reason = 'Invalid recipient email format';
         return;
@@ -100,7 +103,7 @@ const EmailSendValidationTrigger: Hook = {
       });
 
       if (unsubscribes && unsubscribes.length > 0) {
-        console.log(`🚫 Recipient ${emailSend.recipient_email} is unsubscribed - rejecting send`);
+        logger.info(`Recipient ${emailSend.recipient_email} is unsubscribed - rejecting send`);
         emailSend.status = 'failed';
         emailSend.failure_reason = 'Recipient has unsubscribed';
         return;
@@ -109,11 +112,11 @@ const EmailSendValidationTrigger: Hook = {
       // Set tracking_id if not provided
       if (!emailSend.tracking_id) {
         emailSend.tracking_id = `trk_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-        console.log(`🔗 Generated tracking ID: ${emailSend.tracking_id}`);
+        logger.info(`Generated tracking ID: ${emailSend.tracking_id}`);
       }
 
     } catch (error) {
-      console.error(`[email_send.hook] validation failed:`, error);
+      logger.error(`[email_send.hook] validation failed:`, error);
     }
   }
 };

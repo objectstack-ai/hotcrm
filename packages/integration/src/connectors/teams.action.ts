@@ -10,6 +10,9 @@
 
 import { broker } from '../db.js';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('integration:teams');
+
 // ============================================================================
 // 1. SCHEDULE MEETING
 // ============================================================================
@@ -36,7 +39,7 @@ export async function scheduleMeeting(request: ScheduleMeetingRequest): Promise<
     throw new Error('subject, start_time, end_time, and at least one attendee are required');
   }
 
-  console.log(`📅 Scheduling Teams meeting: ${subject}`);
+  logger.info(`Scheduling Teams meeting: ${subject}`);
 
   return {
     meeting_id: `mtg_${Math.random().toString(36).substring(2, 15)}`,
@@ -67,7 +70,7 @@ export async function sendAdaptiveCard(request: SendAdaptiveCardRequest): Promis
     throw new Error('channel_id and card are required');
   }
 
-  console.log(`🃏 Sending adaptive card to Teams channel ${channel_id}`);
+  logger.info(`🃏 Sending adaptive card to Teams channel ${channel_id}`);
 
   return {
     sent: true,
@@ -98,7 +101,7 @@ export async function syncTeamsContacts(request: SyncTeamsContactsRequest): Prom
     throw new Error('connection_id is required');
   }
 
-  console.log(`🔄 Syncing Teams contacts (${direction}) for connection ${connection_id}`);
+  logger.info(`Syncing Teams contacts (${direction}) for connection ${connection_id}`);
 
   return {
     synced: true,
@@ -132,7 +135,7 @@ export async function handleTeamsEvent(request: HandleTeamsEventRequest): Promis
     throw new Error('type and payload are required');
   }
 
-  console.log(`🔔 Processing Teams event: ${type} on ${resource}`);
+  logger.info(`Processing Teams event: ${type} on ${resource}`);
 
   const actions: string[] = [];
 

@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('integration:sync_config');
+
 /**
  * Mapping Validation
  *
@@ -49,7 +52,7 @@ const ScheduleManagement: Hook = {
     if (!doc?._id) return;
 
     if (doc.is_active && doc.frequency && doc.frequency !== 'manual') {
-      console.log(`⏱️ Sync schedule updated: ${doc.name} will run ${doc.frequency}`);
+      logger.info(`⏱ Sync schedule updated: ${doc.name} will run ${doc.frequency}`);
     }
   }
 };

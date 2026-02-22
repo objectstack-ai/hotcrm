@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('community:idea');
+
 /**
  * Idea Vote Aggregation
  *
@@ -25,7 +28,7 @@ const IdeaVoteAggregation: Hook = {
     try {
       await (ctx.ql as any).doc.update('idea', idea._id, { priority_score: priorityScore });
     } catch (error) {
-      console.warn('⚠️ Failed to update idea priority score:', error);
+      logger.warn('Failed to update idea priority score:', error);
     }
   }
 };
@@ -64,7 +67,7 @@ const IdeaStatusTransition: Hook = {
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
       if (msg.includes('Invalid status transition')) throw error;
-      console.warn('⚠️ Could not validate idea status transition:', error);
+      logger.warn('Could not validate idea status transition:', error);
     }
   }
 };
@@ -82,7 +85,7 @@ const IdeaNotification: Hook = {
     const idea = ctx.result as Record<string, any>;
     if (!idea?._id || !idea?.status) return;
 
-    console.log(`📢 Idea "${idea.title}" status changed to ${idea.status} — notifying author ${idea.author_id}`);
+    logger.info(`Idea "${idea.title}" status changed to ${idea.status} — notifying author ${idea.author_id}`);
   }
 };
 

@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('support:forum');
+
 /**
  * Forum Topic Validation Hook
  * 
@@ -36,9 +39,9 @@ const ForumTopicValidationTrigger: Hook = {
         doc.like_count = 0;
       }
 
-      console.log(`✅ Forum topic validated: "${doc.title}" (slug: ${doc.url_slug})`);
+      logger.info(`Forum topic validated: "${doc.title}" (slug: ${doc.url_slug})`);
     } catch (err) {
-      console.error('❌ Error in ForumTopicValidationTrigger:', err);
+      logger.error('Error in ForumTopicValidationTrigger:', err);
       throw err;
     }
   }
@@ -59,10 +62,10 @@ const ForumTopicModerationTrigger: Hook = {
     try {
       if (doc.author_type !== 'agent' && doc.author_type !== 'admin') {
         doc.requires_moderation = true;
-        console.log(`🔍 Forum topic "${doc.title}" by ${doc.author_type || 'unknown'} added to moderation queue.`);
+        logger.info(`Forum topic "${doc.title}" by ${doc.author_type || 'unknown'} added to moderation queue.`);
       }
     } catch (err) {
-      console.error('❌ Error in ForumTopicModerationTrigger:', err);
+      logger.error('Error in ForumTopicModerationTrigger:', err);
     }
   }
 };
@@ -82,7 +85,7 @@ const ForumPostCreationTrigger: Hook = {
 
     try {
       if (!doc.topic_id) {
-        console.warn('⚠️ Forum post created without topic_id. Skipping topic update.');
+        logger.warn('Forum post created without topic_id. Skipping topic update.');
         return;
       }
 
@@ -91,7 +94,7 @@ const ForumPostCreationTrigger: Hook = {
       });
 
       if (!topics || topics.length === 0) {
-        console.warn(`⚠️ Parent topic ${doc.topic_id} not found.`);
+        logger.warn(`Parent topic ${doc.topic_id} not found.`);
         return;
       }
 
@@ -102,9 +105,9 @@ const ForumPostCreationTrigger: Hook = {
         last_post_by_id: doc.author_id
       });
 
-      console.log(`✅ Updated topic ${doc.topic_id}: post_count=${(topic.post_count || 0) + 1}`);
+      logger.info(`Updated topic ${doc.topic_id}: post_count=${(topic.post_count || 0) + 1}`);
     } catch (err) {
-      console.error('❌ Error in ForumPostCreationTrigger:', err);
+      logger.error('Error in ForumPostCreationTrigger:', err);
     }
   }
 };
@@ -125,14 +128,14 @@ const ForumPostModerationTrigger: Hook = {
     try {
       if (doc.author_type !== 'agent' && doc.author_type !== 'admin') {
         doc.requires_moderation = true;
-        console.log(`🔍 Forum post by ${doc.author_type || 'unknown'} added to moderation queue.`);
+        logger.info(`Forum post by ${doc.author_type || 'unknown'} added to moderation queue.`);
       }
 
       if (doc.content && doc.content.length < 10) {
-        console.warn(`⚠️ Low-quality content detected: post content is only ${doc.content.length} characters.`);
+        logger.warn(`Low-quality content detected: post content is only ${doc.content.length} characters.`);
       }
     } catch (err) {
-      console.error('❌ Error in ForumPostModerationTrigger:', err);
+      logger.error('Error in ForumPostModerationTrigger:', err);
     }
   }
 };

@@ -6,6 +6,9 @@
 
 import BaseMLProvider, { MLProviderConfig, PredictionInput, PredictionOutput } from './base-provider.js';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('ai:azure-ml-provider');
+
 // Type stubs for when axios is not available
 interface AxiosInstance {
   post(url: string, data: any): Promise<any>;
@@ -83,7 +86,7 @@ export class AzureMLProvider extends BaseMLProvider {
       
       return true;
     } catch (error) {
-      console.error('[Azure ML] Validation failed:', error);
+      logger.error('[Azure ML] Validation failed:', error);
       return false;
     }
   }
@@ -128,7 +131,7 @@ export class AzureMLProvider extends BaseMLProvider {
         }
       };
     } catch (error) {
-      console.error('[Azure ML] Prediction error:', error);
+      logger.error('[Azure ML] Prediction error:', error);
       
       const err = error as any;
       if (err.isAxiosError) {
@@ -175,7 +178,7 @@ export class AzureMLProvider extends BaseMLProvider {
         }
       }));
     } catch (error) {
-      console.error('[Azure ML] Batch prediction error:', error);
+      logger.error('[Azure ML] Batch prediction error:', error);
       throw new Error(`Azure ML batch prediction failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }

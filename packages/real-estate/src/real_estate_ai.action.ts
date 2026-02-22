@@ -10,6 +10,9 @@
 
 import { broker } from './db.js';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('real-estate:real_estate_ai');
+
 // ============================================================================
 // 1. PROPERTY VALUATION
 // ============================================================================
@@ -293,7 +296,7 @@ Provide ROI analysis for this investment property.
 // ============================================================================
 
 async function callLLM(prompt: string): Promise<string> {
-  console.log('🤖 Calling LLM API for real estate AI...');
+  logger.info('Calling LLM API for real estate AI...');
   await new Promise(resolve => setTimeout(resolve, 500));
 
   if (prompt.includes('valuation')) {

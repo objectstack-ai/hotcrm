@@ -1,6 +1,23 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { DiscountScheduleActivationTrigger, DiscountScheduleOverlapDetectionTrigger } from '../../../src/hooks/discount_schedule.hook';
 
+vi.mock('@hotcrm/core', () => ({
+  createLogger: () => ({
+    info: (...args: any[]) => console.log(...args),
+    warn: (...args: any[]) => console.warn(...args),
+    error: (...args: any[]) => console.error(...args),
+    debug: (...args: any[]) => console.debug(...args),
+    fatal: (...args: any[]) => console.error(...args),
+  }),
+  logger: {
+    info: (...args: any[]) => console.log(...args),
+    warn: (...args: any[]) => console.warn(...args),
+    error: (...args: any[]) => console.error(...args),
+    debug: (...args: any[]) => console.debug(...args),
+    fatal: (...args: any[]) => console.error(...args),
+  },
+}));
+
 describe('DiscountScheduleActivationTrigger', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
@@ -207,7 +224,7 @@ describe('DiscountScheduleOverlapDetectionTrigger', () => {
     await DiscountScheduleOverlapDetectionTrigger.handler(ctx as any);
 
     expect(consoleSpy).toHaveBeenCalledWith(
-      '❌ DiscountScheduleOverlapDetectionTrigger Error:',
+      'DiscountScheduleOverlapDetectionTrigger Error:',
       expect.any(Error)
     );
   });

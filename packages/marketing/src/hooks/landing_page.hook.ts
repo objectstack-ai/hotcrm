@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('marketing:landing_page');
+
 /**
  * Landing Page Lifecycle Validation Trigger
  * 
@@ -30,13 +33,13 @@ const LandingPageLifecycleValidationTrigger: Hook = {
         // Auto-set published_date on first publish
         if (!previous || previous.status !== 'published') {
           doc.published_date = new Date().toISOString();
-          console.log(`📅 Landing page published: ${doc.name}`);
+          logger.info(`Landing page published: ${doc.name}`);
         }
       }
 
       // Cannot archive directly from published without going through draft
       if (doc.status === 'archived' && previous && previous.status === 'published') {
-        console.warn('⚠️ Landing page archived from published state - analytics may be affected');
+        logger.warn('Landing page archived from published state - analytics may be affected');
       }
 
       // Auto-generate URL slug from name if not provided
@@ -47,7 +50,7 @@ const LandingPageLifecycleValidationTrigger: Hook = {
           .replace(/\s+/g, '-')
           .replace(/-+/g, '-')
           .substring(0, 100);
-        console.log(`🔗 Auto-generated URL slug: ${doc.slug}`);
+        logger.info(`Auto-generated URL slug: ${doc.slug}`);
       }
 
       // Validate slug format
@@ -55,9 +58,9 @@ const LandingPageLifecycleValidationTrigger: Hook = {
         throw new Error('URL slug must contain only lowercase letters, numbers, and hyphens.');
       }
 
-      console.log(`✅ Landing page lifecycle validation passed: ${doc.name || 'unknown'}`);
+      logger.info(`Landing page lifecycle validation passed: ${doc.name || 'unknown'}`);
     } catch (error) {
-      console.error('❌ Landing page lifecycle validation failed:', error);
+      logger.error('Landing page lifecycle validation failed:', error);
       throw error;
     }
   }
@@ -93,9 +96,9 @@ const LandingPageMetricsTrigger: Hook = {
         conversion_rate: Math.round(conversionRate * 100) / 100
       });
 
-      console.log(`📊 Landing page metrics updated - Visitors: ${uniqueVisitors}, Submissions: ${totalSubmissions}, Conversion: ${conversionRate.toFixed(1)}%`);
+      logger.info(`Landing page metrics updated - Visitors: ${uniqueVisitors}, Submissions: ${totalSubmissions}, Conversion: ${conversionRate.toFixed(1)}%`);
     } catch (error) {
-      console.error('[landing_page.hook] metrics update failed:', error);
+      logger.error('[landing_page.hook] metrics update failed:', error);
     }
   }
 };

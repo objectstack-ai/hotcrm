@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('hr:candidate');
+
 /**
  * Candidate Scoring and Status Management Trigger
  * 
@@ -28,7 +31,7 @@ const CandidateScoringTrigger: Hook = {
         });
 
         if (duplicates && duplicates.length > 0) {
-          console.warn(`⚠️ Duplicate candidate detected: ${candidate.email}`);
+          logger.warn(`Duplicate candidate detected: ${candidate.email}`);
           // Note: Could throw error or merge logic here
         }
       }
@@ -41,16 +44,16 @@ const CandidateScoringTrigger: Hook = {
         const passedScreening = await autoScreen(candidate, ctx);
         if (passedScreening) {
           candidate.status = 'under_review';
-          console.log(`✅ Candidate ${candidate.first_name} ${candidate.last_name} passed auto-screening`);
+          logger.info(`Candidate ${candidate.first_name} ${candidate.last_name} passed auto-screening`);
         } else {
-          console.log(`❌ Candidate ${candidate.first_name} ${candidate.last_name} did not pass auto-screening`);
+          logger.info(`Candidate ${candidate.first_name} ${candidate.last_name} did not pass auto-screening`);
         }
       }
 
-      console.log(`✨ Candidate scoring completed: Score=${candidate.score}`);
+      logger.info(`Candidate scoring completed: Score=${candidate.score}`);
 
     } catch (error) {
-      console.error('❌ Error in CandidateScoringTrigger:', error);
+      logger.error('Error in CandidateScoringTrigger:', error);
       // Don't throw - allow candidate to be saved
     }
   }
@@ -162,7 +165,7 @@ const CandidateStatusChangeTrigger: Hook = {
       const oldStatus = (ctx.previous as Record<string, any>).status;
       const newStatus = candidate.status;
 
-      console.log(`🔄 Candidate status changed from "${oldStatus}" to "${newStatus}"`);
+      logger.info(`Candidate status changed from "${oldStatus}" to "${newStatus}"`);
 
       // Handle different status transitions
       switch (newStatus) {
@@ -184,7 +187,7 @@ const CandidateStatusChangeTrigger: Hook = {
       await logStatusChange(candidate, oldStatus, newStatus, ctx);
 
     } catch (error) {
-      console.error('❌ Error in CandidateStatusChangeTrigger:', error);
+      logger.error('Error in CandidateStatusChangeTrigger:', error);
     }
   }
 };
@@ -193,36 +196,36 @@ const CandidateStatusChangeTrigger: Hook = {
  * Handle transition to Interviewing status
  */
 async function handleInterviewingStatus(candidate: Record<string, any>, ctx: HookContext): Promise<void> {
-  console.log(`📅 Candidate ${candidate.first_name} ${candidate.last_name} moved to interviewing stage`);
+  logger.info(`Candidate ${candidate.first_name} ${candidate.last_name} moved to interviewing stage`);
   
-  console.debug(`[candidate.hook] Interview process pending for ${candidate.first_name} ${candidate.last_name}: schedule first interview, notify hiring manager, and create interview records`);
+  logger.debug(`[candidate.hook] Interview process pending for ${candidate.first_name} ${candidate.last_name}: schedule first interview, notify hiring manager, and create interview records`);
 }
 
 /**
  * Handle transition to Hired status
  */
 async function handleHiredStatus(candidate: Record<string, any>, ctx: HookContext): Promise<void> {
-  console.log(`🎉 Candidate ${candidate.first_name} ${candidate.last_name} has been hired`);
+  logger.info(`Candidate ${candidate.first_name} ${candidate.last_name} has been hired`);
   
-  console.debug(`[candidate.hook] Hiring process pending for ${candidate.first_name} ${candidate.last_name}: create offer record, initiate onboarding, send welcome email, and notify HR team`);
+  logger.debug(`[candidate.hook] Hiring process pending for ${candidate.first_name} ${candidate.last_name}: create offer record, initiate onboarding, send welcome email, and notify HR team`);
 }
 
 /**
  * Handle transition to Rejected status
  */
 async function handleRejectedStatus(candidate: Record<string, any>, ctx: HookContext): Promise<void> {
-  console.log(`❌ Candidate ${candidate.first_name} ${candidate.last_name} has been rejected`);
+  logger.info(`Candidate ${candidate.first_name} ${candidate.last_name} has been rejected`);
   
-  console.debug(`[candidate.hook] Rejection process pending for ${candidate.first_name} ${candidate.last_name}: send rejection email and archive candidate data`);
+  logger.debug(`[candidate.hook] Rejection process pending for ${candidate.first_name} ${candidate.last_name}: send rejection email and archive candidate data`);
 }
 
 /**
  * Handle transition to Withdrawn status
  */
 async function handleWithdrawnStatus(candidate: Record<string, any>, ctx: HookContext): Promise<void> {
-  console.log(`🚪 Candidate ${candidate.first_name} ${candidate.last_name} has withdrawn`);
+  logger.info(`Candidate ${candidate.first_name} ${candidate.last_name} has withdrawn`);
   
-  console.debug(`[candidate.hook] Withdrawal process pending for ${candidate.first_name} ${candidate.last_name}: log withdrawal reason and update recruitment metrics`);
+  logger.debug(`[candidate.hook] Withdrawal process pending for ${candidate.first_name} ${candidate.last_name}: log withdrawal reason and update recruitment metrics`);
 }
 
 /**
@@ -237,11 +240,11 @@ async function logStatusChange(
   try {
     // Note: Activity object might need to be adapted for HR module
     // This is a placeholder implementation
-    console.log(`📝 Logging status change: ${oldStatus} → ${newStatus}`);
+    logger.info(`Logging status change: ${oldStatus} → ${newStatus}`);
     
-    console.debug(`[candidate.hook] Activity record pending: log status change ${oldStatus} → ${newStatus} for candidate ${candidate.first_name} ${candidate.last_name}`);
+    logger.debug(`[candidate.hook] Activity record pending: log status change ${oldStatus} → ${newStatus} for candidate ${candidate.first_name} ${candidate.last_name}`);
   } catch (error) {
-    console.error('❌ Failed to log status change:', error);
+    logger.error('Failed to log status change:', error);
   }
 }
 

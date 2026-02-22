@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('hr:payroll');
+
 const VALID_PAY_PERIODS = ['weekly', 'bi_weekly', 'semi_monthly', 'monthly'];
 
 /**
@@ -19,23 +22,23 @@ const PayrollCalculationValidationTrigger: Hook = {
     try {
       // Validate base_salary >= 0
       if (doc.base_salary !== undefined && doc.base_salary < 0) {
-        throw new Error('❌ base_salary must be greater than or equal to 0');
+        throw new Error(' base_salary must be greater than or equal to 0');
       }
 
       // Validate pay_period
       if (doc.pay_period && !VALID_PAY_PERIODS.includes(doc.pay_period)) {
-        throw new Error(`❌ Invalid pay_period "${doc.pay_period}". Must be one of: ${VALID_PAY_PERIODS.join(', ')}`);
+        throw new Error(` Invalid pay_period "${doc.pay_period}". Must be one of: ${VALID_PAY_PERIODS.join(', ')}`);
       }
 
       // Calculate gross_pay if not provided
       if (doc.base_salary !== undefined && doc.gross_pay === undefined) {
         doc.gross_pay = doc.base_salary;
-        console.log(`💰 Auto-calculated gross_pay: ${doc.gross_pay}`);
+        logger.info(`Auto-calculated gross_pay: ${doc.gross_pay}`);
       }
 
-      console.log(`✅ Payroll calculation validation passed`);
+      logger.info(`Payroll calculation validation passed`);
     } catch (err) {
-      console.error('❌ Error in PayrollCalculationValidationTrigger:', err);
+      logger.error('Error in PayrollCalculationValidationTrigger:', err);
       throw err;
     }
   }
@@ -65,21 +68,21 @@ const PayrollApprovalTrigger: Hook = {
         const missingFields = requiredFields.filter(field => !doc[field] && doc[field] !== 0);
 
         if (missingFields.length > 0) {
-          throw new Error(`❌ Cannot approve payroll. Missing required fields: ${missingFields.join(', ')}`);
+          throw new Error(` Cannot approve payroll. Missing required fields: ${missingFields.join(', ')}`);
         }
 
-        console.log(`✅ Payroll approved — all required fields present`);
+        logger.info(`Payroll approved — all required fields present`);
       }
 
       // When status changes to 'processed', set processed_date
       if (doc.status === 'processed') {
         doc.processed_date = new Date().toISOString().split('T')[0];
-        console.log(`📅 Payroll processed_date set to ${doc.processed_date}`);
+        logger.info(`Payroll processed_date set to ${doc.processed_date}`);
       }
 
-      console.log(`🔄 Payroll status changed to "${doc.status}"`);
+      logger.info(`Payroll status changed to "${doc.status}"`);
     } catch (err) {
-      console.error('❌ Error in PayrollApprovalTrigger:', err);
+      logger.error('Error in PayrollApprovalTrigger:', err);
       throw err;
     }
   }

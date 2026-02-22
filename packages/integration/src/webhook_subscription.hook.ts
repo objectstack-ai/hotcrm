@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('integration:webhook_subscription');
+
 /**
  * Subscription Validation
  *
@@ -56,7 +59,7 @@ const SecretRotation: Hook = {
     // Secret rotation is detected by comparing the input with existing
     const input = ctx.input.doc as Record<string, any>;
     if (input.secret) {
-      console.log(`🔑 Webhook secret rotated for subscription ${doc.name}`);
+      logger.info(`Webhook secret rotated for subscription ${doc.name}`);
     }
   }
 };
@@ -74,7 +77,7 @@ const EndpointVerification: Hook = {
     const doc = ctx.result as Record<string, any>;
     if (!doc?._id || !doc.target_url) return;
 
-    console.log(`🔍 Verifying webhook endpoint: ${doc.target_url}`);
+    logger.info(`Verifying webhook endpoint: ${doc.target_url}`);
     // Endpoint verification is delegated to the runtime webhook framework
   }
 };

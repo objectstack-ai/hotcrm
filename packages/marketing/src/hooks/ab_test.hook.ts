@@ -2,6 +2,9 @@ import type { Hook, HookContext } from '@objectstack/spec/data';
 
 import { broker } from '../db.js';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('marketing:ab_test');
+
 
 /**
  * A/B Test Validation Trigger
@@ -43,13 +46,13 @@ const AbTestValidationTrigger: Hook = {
         }
       }
 
-      console.log(`🧪 A/B test validated: confidence_level=${doc.confidence_level || 'default'}`);
+      logger.info(`A/B test validated: confidence_level=${doc.confidence_level || 'default'}`);
 
     } catch (error) {
       if (error instanceof Error && error.message.startsWith('Validation Error:')) {
         throw error;
       }
-      console.error('❌ Error in AbTestValidationTrigger:', error);
+      logger.error('Error in AbTestValidationTrigger:', error);
     }
   }
 };
@@ -84,7 +87,7 @@ const AbTestWinnerSelectionTrigger: Hook = {
       });
 
       if (variants.length === 0) {
-        console.log(`⚠️ No variants found for A/B test ${testId}`);
+        logger.info(`No variants found for A/B test ${testId}`);
         return;
       }
 
@@ -104,10 +107,10 @@ const AbTestWinnerSelectionTrigger: Hook = {
         completed_date: new Date().toISOString(),
       });
 
-      console.log(`🏆 A/B test ${testId} completed: winner="${winner.name}" based on ${winningCriteria}`);
+      logger.info(`A/B test ${testId} completed: winner="${winner.name}" based on ${winningCriteria}`);
 
     } catch (error) {
-      console.error('❌ Error in AbTestWinnerSelectionTrigger:', error);
+      logger.error('Error in AbTestWinnerSelectionTrigger:', error);
     }
   }
 };

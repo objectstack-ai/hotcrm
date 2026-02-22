@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('products:subscription');
+
 const SubscriptionValidationTrigger: Hook = {
   name: 'SubscriptionValidationTrigger',
   object: 'subscription',
@@ -58,9 +61,9 @@ const SubscriptionValidationTrigger: Hook = {
         doc.days_until_renewal = Math.max(Math.ceil(diffMs / (1000 * 60 * 60 * 24)), 0);
       }
 
-      console.log(`✅ Subscription validated: MRR=${doc.mrr}, ARR=${doc.arr}, TCV=${doc.total_contract_value}, days_until_renewal=${doc.days_until_renewal}`);
+      logger.info(`Subscription validated: MRR=${doc.mrr}, ARR=${doc.arr}, TCV=${doc.total_contract_value}, days_until_renewal=${doc.days_until_renewal}`);
     } catch (err) {
-      console.error('❌ Subscription Validation Error:', err);
+      logger.error('Subscription Validation Error:', err);
       throw err;
     }
   }
@@ -78,9 +81,9 @@ const SubscriptionRenewalReminderTrigger: Hook = {
     if (doc.status !== 'pending_renewal') return;
 
     try {
-      console.log(`🔔 Subscription renewal reminder: "${doc.name}" is now pending renewal. End date: ${doc.end_date}, auto_renew: ${doc.auto_renew}`);
+      logger.info(`Subscription renewal reminder: "${doc.name}" is now pending renewal. End date: ${doc.end_date}, auto_renew: ${doc.auto_renew}`);
     } catch (err) {
-      console.error('❌ Subscription Renewal Reminder Error:', err);
+      logger.error('Subscription Renewal Reminder Error:', err);
     }
   }
 };

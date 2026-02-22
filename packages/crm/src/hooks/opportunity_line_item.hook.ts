@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('crm:opportunity_line_item');
+
 const OpportunityLineItemCalculationTrigger: Hook = {
   name: 'OpportunityLineItemCalculationTrigger',
   object: 'opportunity_line_item',
@@ -31,9 +34,9 @@ const OpportunityLineItemCalculationTrigger: Hook = {
       doc.discount_amount = discountAmount;
       doc.total_price = totalPrice;
 
-      console.log(`💰 Opportunity line item calculated: ${quantity} × ${unitPrice} = ${lineTotal}, discount=${discountAmount}, total=${totalPrice}`);
+      logger.info(`Opportunity line item calculated: ${quantity} × ${unitPrice} = ${lineTotal}, discount=${discountAmount}, total=${totalPrice}`);
     } catch (err) {
-      console.error('❌ Opportunity Line Item Calculation Error:', err);
+      logger.error('Opportunity Line Item Calculation Error:', err);
     }
   }
 };
@@ -64,9 +67,9 @@ const OpportunityLineItemRollupTrigger: Hook = {
         amount: totalAmount
       });
 
-      console.log(`📊 Opportunity ${lineItem.opportunity_id} amount updated: ${totalAmount}`);
+      logger.info(`Opportunity ${lineItem.opportunity_id} amount updated: ${totalAmount}`);
     } catch (err) {
-      console.error('❌ Opportunity Line Item Rollup Error:', err);
+      logger.error('Opportunity Line Item Rollup Error:', err);
     }
   }
 };

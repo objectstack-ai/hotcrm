@@ -10,6 +10,9 @@
 
 import { broker } from './db.js';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('education:education_ai');
+
 // ============================================================================
 // 1. STUDENT SUCCESS PREDICTION
 // ============================================================================
@@ -290,7 +293,7 @@ Score this alumni's engagement level for outreach prioritization.
 // ============================================================================
 
 async function callLLM(prompt: string): Promise<string> {
-  console.log('🤖 Calling LLM API for education AI...');
+  logger.info('Calling LLM API for education AI...');
   await new Promise(resolve => setTimeout(resolve, 500));
 
   if (prompt.includes('success prediction')) {

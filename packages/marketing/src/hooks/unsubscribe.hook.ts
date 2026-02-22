@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('marketing:unsubscribe');
+
 /**
  * Unsubscribe Compliance Trigger
  * 
@@ -25,7 +28,7 @@ const UnsubscribeComplianceTrigger: Hook = {
       });
 
       if (!activeLists || activeLists.length === 0) {
-        console.log(`📋 No active marketing lists found for suppression`);
+        logger.info(`No active marketing lists found for suppression`);
         return;
       }
 
@@ -75,11 +78,11 @@ const UnsubscribeComplianceTrigger: Hook = {
         }
       }
 
-      console.log(`🛡️ CAN-SPAM/GDPR compliance: suppressed ${suppressedCount} memberships for ${email || contactId}`);
-      console.log(`✅ Unsubscribe suppression completed for record ${doc._id || doc.id}`);
+      logger.info(`CAN-SPAM/GDPR compliance: suppressed ${suppressedCount} memberships for ${email || contactId}`);
+      logger.info(`Unsubscribe suppression completed for record ${doc._id || doc.id}`);
 
     } catch (err) {
-      console.error('❌ Error in UnsubscribeComplianceTrigger:', err);
+      logger.error('Error in UnsubscribeComplianceTrigger:', err);
     }
   }
 };
@@ -107,7 +110,7 @@ const UnsubscribeValidationTrigger: Hook = {
       // Auto-set unsubscribe_date if not provided
       if (!doc.unsubscribe_date) {
         doc.unsubscribe_date = new Date().toISOString();
-        console.log(`📅 Auto-set unsubscribe_date to ${doc.unsubscribe_date}`);
+        logger.info(`Auto-set unsubscribe_date to ${doc.unsubscribe_date}`);
       }
 
       // Validate reason is provided
@@ -116,7 +119,7 @@ const UnsubscribeValidationTrigger: Hook = {
       }
 
     } catch (err) {
-      console.error('❌ Error in UnsubscribeValidationTrigger:', err);
+      logger.error('Error in UnsubscribeValidationTrigger:', err);
       throw err;
     }
   }
@@ -140,11 +143,11 @@ const GlobalSuppressionTrigger: Hook = {
       }
 
       const identifier = doc.email || doc.contact_id;
-      console.log(`🌐 GLOBAL SUPPRESSION: Contact ${identifier} is now globally suppressed from all marketing communications`);
-      console.log(`🔒 Suppression details - Source: ${doc.unsubscribe_source || 'unknown'}, GDPR: ${doc.is_gdpr_request ? 'Yes' : 'No'}, Date: ${doc.unsubscribe_date}`);
+      logger.info(`GLOBAL SUPPRESSION: Contact ${identifier} is now globally suppressed from all marketing communications`);
+      logger.info(`Suppression details - Source: ${doc.unsubscribe_source || 'unknown'}, GDPR: ${doc.is_gdpr_request ? 'Yes' : 'No'}, Date: ${doc.unsubscribe_date}`);
 
     } catch (err) {
-      console.error('❌ Error in GlobalSuppressionTrigger:', err);
+      logger.error('Error in GlobalSuppressionTrigger:', err);
     }
   }
 };

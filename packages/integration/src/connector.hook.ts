@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('integration:connector');
+
 /**
  * Connector Activation
  *
@@ -21,7 +24,7 @@ const ConnectorActivation: Hook = {
       if (!existing?.auth_type && !doc.auth_type) {
         throw new Error('Validation Error: auth_type must be configured before activation');
       }
-      console.log(`🔌 Activating connector: ${existing?.name || doc.name}`);
+      logger.info(`Activating connector: ${existing?.name || doc.name}`);
     }
   }
 };
@@ -46,9 +49,9 @@ const ConnectorDeactivation: Hook = {
       for (const conn of connections) {
         await (ctx.ql as any).doc.update('connection', conn._id, { status: 'disconnected' });
       }
-      console.log(`🔌 Deactivated ${connections.length} connections for connector ${doc._id}`);
+      logger.info(`Deactivated ${connections.length} connections for connector ${doc._id}`);
     } catch (error) {
-      console.warn('⚠️ Failed to deactivate connections:', error);
+      logger.warn('Failed to deactivate connections:', error);
     }
   }
 };
@@ -66,7 +69,7 @@ const ConnectorHealthCheck: Hook = {
     const doc = ctx.result as Record<string, any>;
     if (!doc?._id || !doc.base_url) return;
 
-    console.log(`🏥 Running initial health check for connector ${doc.name}`);
+    logger.info(`Running initial health check for connector ${doc.name}`);
     // Health check is delegated to the runtime connector framework
   }
 };

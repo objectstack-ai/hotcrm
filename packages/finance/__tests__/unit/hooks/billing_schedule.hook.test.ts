@@ -5,6 +5,23 @@ import {
   BillingScheduleInvoiceGenerationTrigger
 } from '../../../src/hooks/billing_schedule.hook';
 
+vi.mock('@hotcrm/core', () => ({
+  createLogger: () => ({
+    info: (...args: any[]) => console.log(...args),
+    warn: (...args: any[]) => console.warn(...args),
+    error: (...args: any[]) => console.error(...args),
+    debug: (...args: any[]) => console.debug(...args),
+    fatal: (...args: any[]) => console.error(...args),
+  }),
+  logger: {
+    info: (...args: any[]) => console.log(...args),
+    warn: (...args: any[]) => console.warn(...args),
+    error: (...args: any[]) => console.error(...args),
+    debug: (...args: any[]) => console.debug(...args),
+    fatal: (...args: any[]) => console.error(...args),
+  },
+}));
+
 const mockQlFind = vi.fn();
 const mockQlDocGet = vi.fn();
 const mockQlDocCreate = vi.fn();
@@ -53,7 +70,7 @@ describe('BillingSchedule Hook - BillingScheduleValidationTrigger', () => {
     await BillingScheduleValidationTrigger.handler(ctx);
 
     expect(consoleSpy).toHaveBeenCalledWith(
-      '❌ Billing Schedule Validation Error:',
+      'Billing Schedule Validation Error:',
       expect.any(Error)
     );
     consoleSpy.mockRestore();
@@ -89,7 +106,7 @@ describe('BillingSchedule Hook - BillingScheduleValidationTrigger', () => {
     await BillingScheduleValidationTrigger.handler(ctx);
 
     expect(consoleSpy).toHaveBeenCalledWith(
-      '❌ Billing Schedule Validation Error:',
+      'Billing Schedule Validation Error:',
       expect.any(Error)
     );
     consoleSpy.mockRestore();

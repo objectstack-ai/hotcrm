@@ -9,6 +9,9 @@
 
 import { broker } from '../db.js';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('integration:connector_ai');
+
 // ============================================================================
 // 1. CONFIGURE FROM NATURAL LANGUAGE
 // ============================================================================
@@ -177,7 +180,7 @@ Suggest the best connectors for the given use case.
 // ============================================================================
 
 async function callLLM(prompt: string): Promise<string> {
-  console.log('🤖 Calling LLM API for connector AI...');
+  logger.info('Calling LLM API for connector AI...');
   await new Promise(resolve => setTimeout(resolve, 500));
 
   if (prompt.includes('connector configuration')) {

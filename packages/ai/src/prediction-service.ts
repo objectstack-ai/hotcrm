@@ -11,6 +11,9 @@ import { BaseMLProvider } from './providers/base-provider.js';
 import CacheManager from './cache-manager.js';
 import PerformanceMonitor from './performance-monitor.js';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('ai:prediction-service');
+
 export interface PredictionRequest {
   /** Model ID to use */
   modelId: string;
@@ -191,7 +194,7 @@ export class PredictionService {
           metadata: result.metadata
         }));
       } catch (error) {
-        console.warn('[PredictionService] Batch prediction failed, falling back to sequential:', error);
+        logger.warn('[PredictionService] Batch prediction failed, falling back to sequential:', error);
       }
     }
     
@@ -238,7 +241,7 @@ export class PredictionService {
         const result = await provider.predict<T>(model.id, { features, context });
         return result;
       } catch (error) {
-        console.warn(`[PredictionService] Provider prediction failed for ${model.id}, falling back to mock:`, error);
+        logger.warn(`[PredictionService] Provider prediction failed for ${model.id}, falling back to mock:`, error);
       }
     }
     

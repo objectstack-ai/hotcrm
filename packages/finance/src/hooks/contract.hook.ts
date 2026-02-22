@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('finance:contract');
+
 const ContractBillingHook: Hook = {
   name: 'ContractBillingAutomation',
   object: 'contract',
@@ -10,7 +13,7 @@ const ContractBillingHook: Hook = {
 
     // Trigger only when status changes to 'activated'
     if (newDoc.status === 'activated' && oldDoc?.status !== 'activated') {
-      console.log(`Starting Billing Process for Contract ${newDoc.contract_number}`);
+      logger.info(`Starting Billing Process for Contract ${newDoc.contract_number}`);
 
       try {
         // Calculate Due Date (e.g., Net 30 from Start Date)
@@ -39,10 +42,10 @@ const ContractBillingHook: Hook = {
             amount: newDoc.contract_value
         });
 
-        console.log(`✅ Generated Invoice ${invoice.invoice_number} for Contract ${newDoc.contract_number}`);
+        logger.info(`Generated Invoice ${invoice.invoice_number} for Contract ${newDoc.contract_number}`);
 
       } catch (err) {
-        console.error('❌ Billing Error:', err);
+        logger.error('Billing Error:', err);
         // We might want to throw here to prevent contract activation if billing fails, 
         // but for now we just log it.
       }

@@ -12,6 +12,9 @@
  * 6. Sentiment Analysis - Analyze candidate communication tone
  */
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('hr:candidate_ai');
+
 // Mock database interface (replace with actual ObjectStack db import)
 const db = {
   doc: {
@@ -715,7 +718,7 @@ Analyze the sentiment, emotions, and engagement level:
  * In production, replace with actual OpenAI/Anthropic API
  */
 async function callLLM(prompt: string): Promise<string> {
-  console.log('🤖 Calling LLM API for candidate AI...');
+  logger.info('Calling LLM API for candidate AI...');
   
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 500));

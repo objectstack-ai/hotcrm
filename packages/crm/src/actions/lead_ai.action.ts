@@ -12,6 +12,9 @@
 
 import { broker } from '../db.js';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('crm:lead_ai');
+
 // ============================================================================
 // 1. EMAIL SIGNATURE DATA EXTRACTION
 // ============================================================================
@@ -523,7 +526,7 @@ Provide personalized nurturing recommendations:
  * In production, replace with actual OpenAI/Anthropic API
  */
 async function callLLM(prompt: string): Promise<string> {
-  console.log('🤖 Calling LLM API for lead AI...');
+  logger.info('Calling LLM API for lead AI...');
   
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 500));

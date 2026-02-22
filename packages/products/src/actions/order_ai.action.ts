@@ -12,6 +12,9 @@
 
 import { broker } from '../db.js';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('products:order_ai');
+
 // ============================================================================
 // 1. PREDICT DELIVERY
 // ============================================================================
@@ -50,7 +53,7 @@ export interface PredictDeliveryResponse {
  */
 export async function predictDelivery(params: PredictDeliveryRequest): Promise<PredictDeliveryResponse> {
   const { order_id } = params;
-  console.log('🤖 AI Delivery Prediction:', params);
+  logger.info('AI Delivery Prediction:', params);
 
   // Fetch order details
   const order = await broker.findOne('order', order_id, ['account_id', 'status', 'order_date', 'total_amount', 'shipping_method', 'shipping_address']);
@@ -210,7 +213,7 @@ export interface RecommendUpsellResponse {
  */
 export async function recommendUpsell(params: RecommendUpsellRequest): Promise<RecommendUpsellResponse> {
   const { order_id, max_recommendations = 5 } = params;
-  console.log('🤖 AI Upsell Recommendation:', params);
+  logger.info('AI Upsell Recommendation:', params);
 
   // Fetch order and items
   const order = await broker.findOne('order', order_id, ['account_id', 'total_amount']);
@@ -366,7 +369,7 @@ export interface AnalyzeOrderPatternsResponse {
  */
 export async function analyzeOrderPatterns(params: AnalyzeOrderPatternsRequest): Promise<AnalyzeOrderPatternsResponse> {
   const { account_id, lookback_months = 12 } = params;
-  console.log('🤖 AI Order Pattern Analysis:', params);
+  logger.info('AI Order Pattern Analysis:', params);
 
   const lookbackDate = new Date();
   lookbackDate.setMonth(lookbackDate.getMonth() - lookback_months);
@@ -561,7 +564,7 @@ export interface OptimizeFulfillmentResponse {
  */
 export async function optimizeFulfillment(params: OptimizeFulfillmentRequest): Promise<OptimizeFulfillmentResponse> {
   const { order_id } = params;
-  console.log('🤖 AI Fulfillment Optimization:', params);
+  logger.info('AI Fulfillment Optimization:', params);
 
   // Fetch order details
   const order = await broker.findOne('order', order_id, ['account_id', 'status', 'total_amount', 'shipping_method', 'shipping_address', 'order_date']);

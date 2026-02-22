@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('financial-services:kyc');
+
 /**
  * KYC Document Expiry Alert
  *
@@ -18,7 +21,7 @@ const KycDocumentExpiryAlert: Hook = {
       const daysUntilExpiry = Math.ceil((expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
       if (daysUntilExpiry <= 30) {
-        console.log(`⚠️ KYC document ${result._id} expires in ${daysUntilExpiry} days`);
+        logger.info(`KYC document ${result._id} expires in ${daysUntilExpiry} days`);
       }
     }
   }
@@ -38,7 +41,7 @@ const KycPeriodicReverification: Hook = {
     const doc = ctx.input.doc as Record<string, any>;
 
     if (doc.verification_status === 'verified') {
-      console.log(`🔄 KYC ${result?._id} verified — next re-verification scheduled in 12 months`);
+      logger.info(`KYC ${result?._id} verified — next re-verification scheduled in 12 months`);
     }
   }
 };
@@ -59,7 +62,7 @@ const KycRiskAutoClassification: Hook = {
       const highRiskDocTypes = ['utility_bill', 'bank_statement'];
       if (highRiskDocTypes.includes(doc.document_type)) {
         doc.risk_level = 'medium';
-        console.log(`📋 Auto-classified KYC risk to 'medium' for document type '${doc.document_type}'`);
+        logger.info(`Auto-classified KYC risk to 'medium' for document type '${doc.document_type}'`);
       }
     }
   }

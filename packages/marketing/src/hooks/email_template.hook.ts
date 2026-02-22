@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('marketing:email_template');
+
 /**
  * Email Template Content Validation Trigger
  * 
@@ -40,7 +43,7 @@ const EmailTemplateContentValidationTrigger: Hook = {
 
       if (tokens.size > 0) {
         doc.personalization_tokens = Array.from(tokens).join(', ');
-        console.log(`🔑 Extracted ${tokens.size} personalization tokens: ${doc.personalization_tokens}`);
+        logger.info(`Extracted ${tokens.size} personalization tokens: ${doc.personalization_tokens}`);
       }
 
       // Auto-detect unsubscribe link
@@ -48,12 +51,12 @@ const EmailTemplateContentValidationTrigger: Hook = {
       doc.has_unsubscribe_link = unsubscribePattern.test(doc.html_body);
 
       if (!doc.has_unsubscribe_link && doc.template_type === 'marketing') {
-        console.warn('⚠️ Marketing email template is missing an unsubscribe link');
+        logger.warn('Marketing email template is missing an unsubscribe link');
       }
 
-      console.log(`✅ Email template content validation passed: ${doc.name || 'unknown'}`);
+      logger.info(`Email template content validation passed: ${doc.name || 'unknown'}`);
     } catch (error) {
-      console.error('❌ Email template content validation failed:', error);
+      logger.error('Email template content validation failed:', error);
       throw error;
     }
   }
@@ -88,12 +91,12 @@ const EmailTemplateTokenValidationTrigger: Hook = {
         await (ctx.ql as any).doc.update('email_template', template._id || template.id, {
           dynamic_content_blocks: blockCount
         });
-        console.log(`📊 Updated dynamic content block count: ${blockCount}`);
+        logger.info(`Updated dynamic content block count: ${blockCount}`);
       }
 
-      console.log(`✅ Email template token validation complete for: ${template.name || template._id}`);
+      logger.info(`Email template token validation complete for: ${template.name || template._id}`);
     } catch (error) {
-      console.error('[email_template.hook] token validation failed:', error);
+      logger.error('[email_template.hook] token validation failed:', error);
     }
   }
 };

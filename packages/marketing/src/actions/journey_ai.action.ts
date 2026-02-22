@@ -12,6 +12,9 @@
 
 import { broker } from '../db.js';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('marketing:journey_ai');
+
 // ============================================================================
 // 1. OPTIMIZE JOURNEY
 // ============================================================================
@@ -47,7 +50,7 @@ export interface OptimizeJourneyResponse {
  */
 export async function optimizeJourney(params: OptimizeJourneyRequest): Promise<OptimizeJourneyResponse> {
   const { journey_id } = params;
-  console.log('🤖 AI Journey Optimization:', params);
+  logger.info('AI Journey Optimization:', params);
 
   // Fetch journey details
   const journeys = await broker.find('journey', {
@@ -189,7 +192,7 @@ export interface PredictEngagementResponse {
  */
 export async function predictEngagement(params: PredictEngagementRequest): Promise<PredictEngagementResponse> {
   const { journey_id, contact_id } = params;
-  console.log('🤖 AI Journey Engagement Prediction:', params);
+  logger.info('AI Journey Engagement Prediction:', params);
 
   // Fetch contact's past touchpoints
   const touchpoints = await broker.find('touchpoint', {
@@ -286,7 +289,7 @@ export interface SuggestNextBestActionResponse {
  */
 export async function suggestNextBestAction(params: SuggestNextBestActionRequest): Promise<SuggestNextBestActionResponse> {
   const { journey_id, contact_id, current_step_id } = params;
-  console.log('🤖 AI Journey Next Best Action:', params);
+  logger.info('AI Journey Next Best Action:', params);
 
   // Fetch contact's recent interactions
   const recentTouchpoints = await broker.find('touchpoint', {
@@ -427,7 +430,7 @@ export interface AnalyzeDropoffResponse {
  */
 export async function analyzeDropoff(params: AnalyzeDropoffRequest): Promise<AnalyzeDropoffResponse> {
   const { journey_id } = params;
-  console.log('🤖 AI Journey Dropoff Analysis:', params);
+  logger.info('AI Journey Dropoff Analysis:', params);
 
   // Fetch journey
   const journeys = await broker.find('journey', {

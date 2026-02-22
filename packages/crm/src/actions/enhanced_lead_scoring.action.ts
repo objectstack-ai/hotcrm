@@ -6,6 +6,9 @@
 
 import { PredictionService, ExplainabilityService } from '@hotcrm/ai';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('crm:enhanced_lead_scoring');
+
 export interface EnhancedLeadScoringRequest {
   leadId: string;
   explainPrediction?: boolean;
@@ -281,7 +284,7 @@ function generateRecommendations(
   
   // Score-based recommendations
   if (score >= 75) {
-    recommendations.push('🔥 High-priority lead - schedule a call within 24 hours');
+    recommendations.push(' High-priority lead - schedule a call within 24 hours');
     recommendations.push('Assign to senior sales rep for personalized approach');
   } else if (score >= 60) {
     recommendations.push('Schedule discovery call to understand needs');
@@ -337,7 +340,7 @@ async function fetchLeads(leadIds: string[]): Promise<any[]> {
 
 async function updateLead(leadId: string, updates: any): Promise<void> {
   // Mock implementation
-  console.log(`Updated lead ${leadId}:`, updates);
+  logger.info(`Updated lead ${leadId}:`, updates);
 }
 
 export default {

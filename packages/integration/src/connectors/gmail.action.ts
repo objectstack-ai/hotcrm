@@ -10,6 +10,9 @@
 
 import { broker } from '../db.js';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('integration:gmail');
+
 // ============================================================================
 // 1. LOG EMAIL ACTIVITY
 // ============================================================================
@@ -36,7 +39,7 @@ export async function logEmailActivity(request: LogEmailActivityRequest): Promis
     throw new Error('message_id, from, to, and subject are required');
   }
 
-  console.log(`📧 Logging email activity: ${subject}`);
+  logger.info(`Logging email activity: ${subject}`);
 
   return {
     activity_id: `act_${Math.random().toString(36).substring(2, 15)}`,
@@ -67,7 +70,7 @@ export async function trackThread(request: TrackThreadRequest): Promise<TrackThr
     throw new Error('thread_id, related_record_id, and related_object are required');
   }
 
-  console.log(`📨 Tracking email thread ${thread_id} for ${related_object}:${related_record_id}`);
+  logger.info(`Tracking email thread ${thread_id} for ${related_object}:${related_record_id}`);
 
   return {
     tracked: true,
@@ -101,7 +104,7 @@ export async function sendTemplateEmail(request: SendTemplateEmailRequest): Prom
     throw new Error('template_name and at least one recipient are required');
   }
 
-  console.log(`✉️ Sending template email "${template_name}" to ${to.length} recipient(s)`);
+  logger.info(`Sending template email "${template_name}" to ${to.length} recipient(s)`);
 
   return {
     sent: true,
@@ -133,7 +136,7 @@ export async function handleGmailWebhook(request: HandleGmailWebhookRequest): Pr
     throw new Error('history_id and email_address are required');
   }
 
-  console.log(`🔔 Processing Gmail webhook for ${email_address}, history: ${history_id}`);
+  logger.info(`Processing Gmail webhook for ${email_address}, history: ${history_id}`);
 
   return {
     processed: true,

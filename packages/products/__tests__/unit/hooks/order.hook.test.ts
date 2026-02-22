@@ -5,6 +5,23 @@ import {
   OrderStatusLifecycleTrigger
 } from '../../../src/hooks/order.hook';
 
+vi.mock('@hotcrm/core', () => ({
+  createLogger: () => ({
+    info: (...args: any[]) => console.log(...args),
+    warn: (...args: any[]) => console.warn(...args),
+    error: (...args: any[]) => console.error(...args),
+    debug: (...args: any[]) => console.debug(...args),
+    fatal: (...args: any[]) => console.error(...args),
+  }),
+  logger: {
+    info: (...args: any[]) => console.log(...args),
+    warn: (...args: any[]) => console.warn(...args),
+    error: (...args: any[]) => console.error(...args),
+    debug: (...args: any[]) => console.debug(...args),
+    fatal: (...args: any[]) => console.error(...args),
+  },
+}));
+
 const mockQlFind = vi.fn();
 const mockQlDocGet = vi.fn();
 const mockQlDocCreate = vi.fn();
@@ -86,7 +103,7 @@ describe('Order Hook - OrderValidationTrigger', () => {
     await OrderValidationTrigger.handler(ctx);
 
     expect(consoleSpy).toHaveBeenCalledWith(
-      '❌ Order Validation Error:',
+      'Order Validation Error:',
       expect.any(Error)
     );
     consoleSpy.mockRestore();
@@ -107,7 +124,7 @@ describe('Order Hook - OrderStatusLifecycleTrigger', () => {
     await OrderStatusLifecycleTrigger.handler(ctx);
 
     expect(consoleSpy).toHaveBeenCalledWith(
-      '❌ Order Status Lifecycle Error:',
+      'Order Status Lifecycle Error:',
       expect.any(Error)
     );
     consoleSpy.mockRestore();

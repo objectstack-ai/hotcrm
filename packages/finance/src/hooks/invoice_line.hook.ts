@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('finance:invoice_line');
+
 const InvoiceLineCalculationTrigger: Hook = {
   name: 'InvoiceLineCalculationTrigger',
   object: 'invoice_line',
@@ -22,9 +25,9 @@ const InvoiceLineCalculationTrigger: Hook = {
       const amount = quantity * unitPrice;
       doc.amount = amount;
 
-      console.log(`💰 Invoice line calculated: qty=${quantity} × price=${unitPrice} = ${amount}`);
+      logger.info(`Invoice line calculated: qty=${quantity} × price=${unitPrice} = ${amount}`);
     } catch (err) {
-      console.error('❌ Invoice Line Calculation Error:', err);
+      logger.error('Invoice Line Calculation Error:', err);
     }
   }
 };
@@ -49,7 +52,7 @@ const InvoiceLineTotalUpdateTrigger: Hook = {
         await (ctx.ql as any).doc.update('invoice', lineItem.invoice, {
           total_amount: totalAmount
         });
-        console.log(`📊 Invoice ${lineItem.invoice} total_amount updated: ${totalAmount}`);
+        logger.info(`Invoice ${lineItem.invoice} total_amount updated: ${totalAmount}`);
         return;
       }
 
@@ -61,9 +64,9 @@ const InvoiceLineTotalUpdateTrigger: Hook = {
         total_amount: totalAmount
       });
 
-      console.log(`📊 Invoice ${lineItem.invoice} total_amount updated: ${totalAmount}`);
+      logger.info(`Invoice ${lineItem.invoice} total_amount updated: ${totalAmount}`);
     } catch (err) {
-      console.error('❌ Invoice Line Total Update Error:', err);
+      logger.error('Invoice Line Total Update Error:', err);
     }
   }
 };

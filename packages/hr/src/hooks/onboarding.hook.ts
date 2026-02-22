@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('hr:onboarding');
+
 /**
  * Onboarding Checklist Trigger
  * 
@@ -26,13 +29,13 @@ const OnboardingChecklistTrigger: Hook = {
         return;
       }
 
-      console.log(`🎉 Offer ${offer.offer_number} accepted, creating onboarding record`);
+      logger.info(`Offer ${offer.offer_number} accepted, creating onboarding record`);
 
       // Create onboarding record with default checklist items
       await createOnboardingFromOffer(offer, ctx);
 
     } catch (error) {
-      console.error('❌ Error in OnboardingChecklistTrigger:', error);
+      logger.error('Error in OnboardingChecklistTrigger:', error);
     }
   }
 };
@@ -70,9 +73,9 @@ async function createOnboardingFromOffer(offer: Record<string, any>, ctx: HookCo
       notes: 'Auto-created from accepted offer'
     });
 
-    console.log(`📋 Created onboarding record for offer ${offer.offer_number} with start date ${startDate}`);
+    logger.info(`Created onboarding record for offer ${offer.offer_number} with start date ${startDate}`);
   } catch (error) {
-    console.error('❌ Failed to create onboarding record:', error);
+    logger.error('Failed to create onboarding record:', error);
   }
 }
 
@@ -115,12 +118,12 @@ const OnboardingProgressTrigger: Hook = {
       const completionPercentage = Math.round((completedCount / checklistItems.length) * 100);
       onboarding.completion_percentage = completionPercentage;
 
-      console.log(`📊 Onboarding completion: ${completionPercentage}% (${completedCount}/${checklistItems.length} items)`);
+      logger.info(`Onboarding completion: ${completionPercentage}% (${completedCount}/${checklistItems.length} items)`);
 
       // Set status to 'completed' if all items are done
       if (completionPercentage === 100 && onboarding.status !== 'completed') {
         onboarding.status = 'completed';
-        console.log('🎉 All onboarding checklist items completed, status set to completed');
+        logger.info('All onboarding checklist items completed, status set to completed');
       }
 
       // Track days since start for progress reporting
@@ -129,11 +132,11 @@ const OnboardingProgressTrigger: Hook = {
         const start = new Date(startDate);
         const today = new Date();
         const daysSinceStart = Math.floor((today.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-        console.log(`📅 Days since onboarding start: ${daysSinceStart}`);
+        logger.info(`Days since onboarding start: ${daysSinceStart}`);
       }
 
     } catch (error) {
-      console.error('❌ Error in OnboardingProgressTrigger:', error);
+      logger.error('Error in OnboardingProgressTrigger:', error);
     }
   }
 };

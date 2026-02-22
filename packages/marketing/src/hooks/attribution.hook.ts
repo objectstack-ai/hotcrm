@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('marketing:attribution');
+
 /**
  * Touchpoint Recording Trigger
  * 
@@ -18,19 +21,19 @@ const TouchpointRecordingTrigger: Hook = {
 
       // Validate required fields
       if (!touchpoint.touchpoint_type) {
-        console.error(`❌ Touchpoint requires touchpoint_type`);
+        logger.error(`Touchpoint requires touchpoint_type`);
         return;
       }
 
       if (!touchpoint.channel) {
-        console.error(`❌ Touchpoint requires channel`);
+        logger.error(`Touchpoint requires channel`);
         return;
       }
 
       // Set touchpoint_date to now if not provided
       if (!touchpoint.touchpoint_date) {
         touchpoint.touchpoint_date = new Date().toISOString();
-        console.log(`📅 Set touchpoint_date to ${touchpoint.touchpoint_date}`);
+        logger.info(`Set touchpoint_date to ${touchpoint.touchpoint_date}`);
       }
 
       // Set default attribution_weight based on attribution_model
@@ -55,11 +58,11 @@ const TouchpointRecordingTrigger: Hook = {
             touchpoint.attribution_weight = 100; // Default to full weight
             break;
         }
-        console.log(`⚖️ Set attribution_weight to ${touchpoint.attribution_weight} for model "${touchpoint.attribution_model || 'default'}"`);
+        logger.info(`Set attribution_weight to ${touchpoint.attribution_weight} for model "${touchpoint.attribution_model || 'default'}"`);
       }
 
     } catch (error) {
-      console.error(`[attribution.hook] touchpoint recording failed:`, error);
+      logger.error(`[attribution.hook] touchpoint recording failed:`, error);
     }
   }
 };
@@ -103,7 +106,7 @@ const RevenueAttributionTrigger: Hook = {
             actual_revenue: currentRevenue + touchpoint.revenue_attributed
           });
 
-          console.log(`💰 Updated campaign ${campaignId} revenue by $${touchpoint.revenue_attributed}`);
+          logger.info(`Updated campaign ${campaignId} revenue by $${touchpoint.revenue_attributed}`);
         }
       }
 
@@ -124,11 +127,11 @@ const RevenueAttributionTrigger: Hook = {
           }
         }
 
-        console.log(`⚖️ Recalculated attribution weights for ${totalTouchpoints} touchpoints in campaign ${campaignId}`);
+        logger.info(`Recalculated attribution weights for ${totalTouchpoints} touchpoints in campaign ${campaignId}`);
       }
 
     } catch (error) {
-      console.error(`[attribution.hook] revenue attribution failed:`, error);
+      logger.error(`[attribution.hook] revenue attribution failed:`, error);
     }
   }
 };

@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('hr:goal');
+
 /**
  * Goal Progress Tracking Trigger
  * 
@@ -26,19 +29,19 @@ const GoalProgressTrackingTrigger: Hook = {
       // Auto-update status based on progress_percent
       if (doc.progress_percent === 0) {
         doc.status = 'not_started';
-        console.log(`📊 Goal status set to "not_started" (progress: 0%)`);
+        logger.info(`Goal status set to "not_started" (progress: 0%)`);
       } else if (doc.progress_percent > 0 && doc.progress_percent < 100) {
         doc.status = 'in_progress';
-        console.log(`📊 Goal status set to "in_progress" (progress: ${doc.progress_percent}%)`);
+        logger.info(`Goal status set to "in_progress" (progress: ${doc.progress_percent}%)`);
       } else if (doc.progress_percent === 100) {
         doc.status = 'completed';
         doc.completed_date = new Date().toISOString().split('T')[0];
-        console.log(`🎉 Goal completed! completed_date set to ${doc.completed_date}`);
+        logger.info(`Goal completed! completed_date set to ${doc.completed_date}`);
       }
 
-      console.log(`✅ Goal progress tracking updated`);
+      logger.info(`Goal progress tracking updated`);
     } catch (err) {
-      console.error('❌ Error in GoalProgressTrackingTrigger:', err);
+      logger.error('Error in GoalProgressTrackingTrigger:', err);
       throw err;
     }
   }
@@ -66,15 +69,15 @@ const GoalAlignmentValidationTrigger: Hook = {
       const parentGoal = await (ctx.ql as any).doc.get('goal', doc.parent_goal);
 
       if (!parentGoal) {
-        throw new Error(`❌ Parent goal "${doc.parent_goal}" does not exist`);
+        throw new Error(` Parent goal "${doc.parent_goal}" does not exist`);
       }
 
-      console.log(`🔗 Goal aligned to parent: ${parentGoal.goal_name || parentGoal.name || doc.parent_goal}`);
-      console.debug(`[goal.hook] Alignment hierarchy: ${doc.parent_goal} → ${doc.id || '(new goal)'}`);
+      logger.info(`Goal aligned to parent: ${parentGoal.goal_name || parentGoal.name || doc.parent_goal}`);
+      logger.debug(`[goal.hook] Alignment hierarchy: ${doc.parent_goal} → ${doc.id || '(new goal)'}`);
 
-      console.log(`✅ Goal alignment validation passed`);
+      logger.info(`Goal alignment validation passed`);
     } catch (err) {
-      console.error('❌ Error in GoalAlignmentValidationTrigger:', err);
+      logger.error('Error in GoalAlignmentValidationTrigger:', err);
       throw err;
     }
   }

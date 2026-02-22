@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('marketing:campaign');
+
 /**
  * Campaign Lifecycle and ROI Management Trigger
  * 
@@ -23,11 +26,11 @@ const CampaignROICalculationTrigger: Hook = {
 
       if (actualCost > 0) {
         campaign.roi = ((actualRevenue - actualCost) / actualCost) * 100;
-        console.log(`📊 Campaign ROI calculated: ${campaign.roi.toFixed(2)}%`);
+        logger.info(`Campaign ROI calculated: ${campaign.roi.toFixed(2)}%`);
       } else if (actualRevenue > 0 && actualCost === 0) {
         // Infinite ROI - revenue with no cost
         campaign.roi = 999.99;
-        console.log(`📊 Campaign ROI: Infinite (revenue with zero cost)`);
+        logger.info(`Campaign ROI: Infinite (revenue with zero cost)`);
       } else {
         campaign.roi = 0;
       }
@@ -36,11 +39,11 @@ const CampaignROICalculationTrigger: Hook = {
       const budgetedCost = campaign.budgeted_cost || 0;
       if (budgetedCost > 0) {
         campaign.budget_utilization = (actualCost / budgetedCost) * 100;
-        console.log(`💰 Budget utilization: ${campaign.budget_utilization.toFixed(1)}%`);
+        logger.info(`Budget utilization: ${campaign.budget_utilization.toFixed(1)}%`);
       }
 
     } catch (error) {
-      console.error(`[campaign.hook] ROI calculation failed:`, error);
+      logger.error(`[campaign.hook] ROI calculation failed:`, error);
     }
   }
 };
@@ -75,21 +78,21 @@ const CampaignBudgetTrackingTrigger: Hook = {
 
         // Warn at 80%
         if (percentSpent >= 80 && percentSpent < 100) {
-          console.warn(`⚠️ Campaign "${campaign.name}" has spent ${percentSpent.toFixed(1)}% of budget!`);
-          console.debug(`[campaign.hook] Budget warning pending: notify campaign manager about ${percentSpent.toFixed(1)}% budget usage for campaign "${campaign.name}"`);
+          logger.warn(`Campaign "${campaign.name}" has spent ${percentSpent.toFixed(1)}% of budget!`);
+          logger.debug(`[campaign.hook] Budget warning pending: notify campaign manager about ${percentSpent.toFixed(1)}% budget usage for campaign "${campaign.name}"`);
         }
 
         // Alert at 100%
         if (percentSpent >= 100) {
-          console.error(`🚨 Campaign "${campaign.name}" has exceeded budget! (${percentSpent.toFixed(1)}%)`);
-          console.debug(`[campaign.hook] Budget overspend alert pending: urgent notification for campaign "${campaign.name}" at ${percentSpent.toFixed(1)}% of budget`);
+          logger.error(`Campaign "${campaign.name}" has exceeded budget! (${percentSpent.toFixed(1)}%)`);
+          logger.debug(`[campaign.hook] Budget overspend alert pending: urgent notification for campaign "${campaign.name}" at ${percentSpent.toFixed(1)}% of budget`);
         }
 
-        console.log(`💰 Budget status: $${actual.toLocaleString()} / $${budgeted.toLocaleString()} (${percentSpent.toFixed(1)}%)`);
+        logger.info(`Budget status: $${actual.toLocaleString()} / $${budgeted.toLocaleString()} (${percentSpent.toFixed(1)}%)`);
       }
 
     } catch (error) {
-      console.error(`[campaign.hook] budget tracking failed:`, error);
+      logger.error(`[campaign.hook] budget tracking failed:`, error);
     }
   }
 };
@@ -116,7 +119,7 @@ const CampaignStatusChangeTrigger: Hook = {
         return;
       }
 
-      console.log(`🔄 Campaign status changed: ${oldCampaign.status} → ${campaign.status}`);
+      logger.info(`Campaign status changed: ${oldCampaign.status} → ${campaign.status}`);
 
       switch (campaign.status) {
         case 'in_progress':
@@ -131,7 +134,7 @@ const CampaignStatusChangeTrigger: Hook = {
       }
 
     } catch (error) {
-      console.error(`[campaign.hook] status change handling failed:`, error);
+      logger.error(`[campaign.hook] status change handling failed:`, error);
     }
   }
 };
@@ -140,27 +143,27 @@ const CampaignStatusChangeTrigger: Hook = {
  * Handle campaign transition to In Progress
  */
 async function handleInProgressStatus(campaign: Record<string, any>, ctx: HookContext): Promise<void> {
-  console.log(`🚀 Campaign "${campaign.name}" started`);
+  logger.info(`Campaign "${campaign.name}" started`);
   
-  console.debug(`[campaign.hook] Campaign start pending for "${campaign.name}": member notifications, workflow activation, and start event logging`);
+  logger.debug(`[campaign.hook] Campaign start pending for "${campaign.name}": member notifications, workflow activation, and start event logging`);
 }
 
 /**
  * Handle campaign completion
  */
 async function handleCompletedStatus(campaign: Record<string, any>, ctx: HookContext): Promise<void> {
-  console.log(`✅ Campaign "${campaign.name}" completed`);
+  logger.info(`Campaign "${campaign.name}" completed`);
   
-  console.debug(`[campaign.hook] Campaign completion pending for "${campaign.name}": final metrics calculation, report generation, data archival, and stakeholder notification`);
+  logger.debug(`[campaign.hook] Campaign completion pending for "${campaign.name}": final metrics calculation, report generation, data archival, and stakeholder notification`);
 }
 
 /**
  * Handle campaign abortion
  */
 async function handleAbortedStatus(campaign: Record<string, any>, ctx: HookContext): Promise<void> {
-  console.log(`❌ Campaign "${campaign.name}" was aborted`);
+  logger.info(`Campaign "${campaign.name}" was aborted`);
   
-  console.debug(`[campaign.hook] Campaign abort pending for "${campaign.name}": abort reason logging, scheduled activity cleanup, and team notification`);
+  logger.debug(`[campaign.hook] Campaign abort pending for "${campaign.name}": abort reason logging, scheduled activity cleanup, and team notification`);
 }
 
 /**
@@ -189,11 +192,11 @@ const CampaignDateValidationTrigger: Hook = {
         const durationDays = Math.ceil(durationMs / (1000 * 60 * 60 * 24));
         campaign.duration_days = durationDays;
         
-        console.log(`📅 Campaign duration: ${durationDays} days`);
+        logger.info(`Campaign duration: ${durationDays} days`);
       }
 
     } catch (error) {
-      console.error(`[campaign.hook] date validation failed:`, error);
+      logger.error(`[campaign.hook] date validation failed:`, error);
       throw error;
     }
   }
@@ -205,7 +208,7 @@ const CampaignDateValidationTrigger: Hook = {
  */
 export async function updateCampaignMetrics(campaignId: string, ctx: HookContext): Promise<void> {
   try {
-    console.log(`🔄 Updating campaign metrics for: ${campaignId}`);
+    logger.info(`Updating campaign metrics for: ${campaignId}`);
 
     // Aggregate campaign member statistics
     const members = await (ctx.ql as any).find('campaign_member', {
@@ -246,10 +249,10 @@ export async function updateCampaignMetrics(campaignId: string, ctx: HookContext
       unsubscribe_rate: unsubscribeRate
     });
 
-    console.log(`✅ Campaign metrics updated - Open: ${openRate.toFixed(1)}%, Click: ${clickRate.toFixed(1)}%, Response: ${responseRate.toFixed(1)}%`);
+    logger.info(`Campaign metrics updated - Open: ${openRate.toFixed(1)}%, Click: ${clickRate.toFixed(1)}%, Response: ${responseRate.toFixed(1)}%`);
 
   } catch (error) {
-    console.error(`[campaign.hook] updateCampaignMetrics failed:`, error);
+    logger.error(`[campaign.hook] updateCampaignMetrics failed:`, error);
   }
 }
 
@@ -283,7 +286,7 @@ export async function calculateCostMetrics(campaignId: string, ctx: HookContext)
     };
 
   } catch (error) {
-    console.error(`[campaign.hook] calculateCostMetrics failed:`, error);
+    logger.error(`[campaign.hook] calculateCostMetrics failed:`, error);
     return null;
   }
 }

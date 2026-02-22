@@ -5,6 +5,9 @@
  * Falls back to in-memory cache if Redis is not available
  */
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('ai:cache-manager');
+
 export interface CacheConfig {
   /** Redis connection URL */
   redisUrl?: string;
@@ -58,11 +61,24 @@ export class CacheManager {
   }
   
   /**
+   * Reset singleton instance for test isolation.
+   * Call in beforeEach/afterEach to ensure a clean slate between tests.
+   */
+  static resetInstance(): void {
+    if (CacheManager.instance) {
+      CacheManager.instance.memoryCache.clear();
+      CacheManager.instance.redisClient = null;
+      CacheManager.instance.useRedis = false;
+    }
+    CacheManager.instance = undefined as unknown as CacheManager;
+  }
+  
+  /**
    * Initialize Redis client
    */
   private async initializeRedis(): Promise<void> {
     if (!this.config.redisUrl) {
-      console.log('[Cache] No Redis URL provided, using in-memory cache');
+      logger.info('[Cache] No Redis URL provided, using in-memory cache');
       return;
     }
     
@@ -72,14 +88,14 @@ export class CacheManager {
       // this.redisClient = createClient({ url: this.config.redisUrl });
       // await this.redisClient.connect();
       // this.useRedis = true;
-      // console.log('[Cache] Redis connected successfully');
+      // logger.info('[Cache] Redis connected successfully');
       
-      console.log('[Cache] Redis initialization placeholder - using in-memory cache');
+      logger.info('[Cache] Redis initialization placeholder - using in-memory cache');
     } catch (error) {
-      console.error('[Cache] Redis initialization failed:', error);
+      logger.error('[Cache] Redis initialization failed:', error);
       
       if (this.config.useMemoryFallback) {
-        console.log('[Cache] Falling back to in-memory cache');
+        logger.info('[Cache] Falling back to in-memory cache');
       }
     }
   }
@@ -120,7 +136,7 @@ export class CacheManager {
       
       return entry.data as T;
     } catch (error) {
-      console.error('[Cache] Get error:', error);
+      logger.error('[Cache] Get error:', error);
       return null;
     }
   }
@@ -153,7 +169,7 @@ export class CacheManager {
       // Clean up expired entries periodically
       this.cleanupExpired();
     } catch (error) {
-      console.error('[Cache] Set error:', error);
+      logger.error('[Cache] Set error:', error);
     }
   }
   
@@ -169,7 +185,7 @@ export class CacheManager {
       
       this.memoryCache.delete(key);
     } catch (error) {
-      console.error('[Cache] Delete error:', error);
+      logger.error('[Cache] Delete error:', error);
     }
   }
   
@@ -185,7 +201,7 @@ export class CacheManager {
       
       this.memoryCache.clear();
     } catch (error) {
-      console.error('[Cache] Clear error:', error);
+      logger.error('[Cache] Clear error:', error);
     }
   }
   

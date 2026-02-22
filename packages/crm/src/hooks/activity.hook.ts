@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('crm:activity');
+
 
 
 /**
@@ -9,7 +12,7 @@ import type { Hook, HookContext } from '@objectstack/spec/data';
  * This would typically run as a daily batch job
  */
 export async function autoCompletePastDueActivities(ql: any): Promise<void> {
-  console.log('🔄 Running auto-complete for past-due activities...');
+  logger.info('Running auto-complete for past-due activities...');
   
   // In real implementation:
   // const pastDueActivities = await db.find('Activity', {
@@ -26,10 +29,10 @@ export async function autoCompletePastDueActivities(ql: any): Promise<void> {
   //   });
   //   
   //   // Send notification
-  //   console.log(`✅ Auto-completed past-due activity: ${activity.Subject}`);
+  //   logger.info(`Auto-completed past-due activity: ${activity.Subject}`);
   // }
   
-  console.log('✅ Auto-complete batch job completed');
+  logger.info('Auto-complete batch job completed');
 }
 
 /**
@@ -73,7 +76,7 @@ const ActivityRelatedObjectUpdatesTrigger: Hook = {
       }
       
     } catch (error) {
-      console.error('❌ Error in ActivityRelatedObjectUpdatesTrigger:', error);
+      logger.error('Error in ActivityRelatedObjectUpdatesTrigger:', error);
     }
   }
 };
@@ -82,7 +85,7 @@ const ActivityRelatedObjectUpdatesTrigger: Hook = {
  * Update Contact's last activity date
  */
 async function updateContactLastActivityDate(whoId: string, activityDate: string, ctx: HookContext): Promise<void> {
-  console.log(`🔄 Updating LastContactDate for contact: ${whoId}`);
+  logger.info(`Updating LastContactDate for contact: ${whoId}`);
   
   // In real implementation:
   // const contact = await ctx.db.doc.get('Contact', whoId, { fields: ['LastContactDate'] });
@@ -91,7 +94,7 @@ async function updateContactLastActivityDate(whoId: string, activityDate: string
   //   await ctx.db.doc.update('Contact', whoId, {
   //     LastContactDate: activityDate
   //   });
-  //   console.log(`✅ Updated contact LastContactDate to ${activityDate}`);
+  //   logger.info(`Updated contact LastContactDate to ${activityDate}`);
   // }
 }
 
@@ -99,7 +102,7 @@ async function updateContactLastActivityDate(whoId: string, activityDate: string
  * Update related object's last activity date
  */
 async function updateWhatObjectLastActivityDate(whatId: string, activityDate: string, ctx: HookContext): Promise<void> {
-  console.log(`🔄 Updating LastActivityDate for related object: ${whatId}`);
+  logger.info(`Updating LastActivityDate for related object: ${whatId}`);
   
   // In real implementation, would need to determine object type from WhatId
   // and update the appropriate object (Account, Opportunity, Contract, Case)
@@ -137,7 +140,7 @@ const ActivityCompletionTrigger: Hook = {
       if (oldActivity && oldActivity.Status !== 'completed' && activity.Status === 'completed') {
         // Set CompletedDate
         activity.CompletedDate = new Date().toISOString();
-        console.log(`✅ Activity completed: ${activity.Subject}`);
+        logger.info(`Activity completed: ${activity.Subject}`);
         
         // Handle recurrence - create next occurrence
         if (activity.IsRecurring && activity.RecurrencePattern) {
@@ -146,7 +149,7 @@ const ActivityCompletionTrigger: Hook = {
       }
       
     } catch (error) {
-      console.error('❌ Error in ActivityCompletionTrigger:', error);
+      logger.error('Error in ActivityCompletionTrigger:', error);
     }
   }
 };
@@ -155,7 +158,7 @@ const ActivityCompletionTrigger: Hook = {
  * Create next recurrence of a recurring activity
  */
 async function createNextRecurrence(activity: Record<string, any>, ctx: HookContext): Promise<void> {
-  console.log(`🔄 Creating next recurrence for: ${activity.Subject}`);
+  logger.info(`Creating next recurrence for: ${activity.Subject}`);
   
   // Calculate next occurrence date based on pattern
   const currentDate = new Date(activity.ActivityDate);
@@ -166,7 +169,7 @@ async function createNextRecurrence(activity: Record<string, any>, ctx: HookCont
   // Validate recurrence pattern
   const validPatterns = ['daily', 'weekly', 'monthly', 'yearly'];
   if (!validPatterns.includes(activity.RecurrencePattern)) {
-    console.error(`❌ Invalid recurrence pattern: ${activity.RecurrencePattern}`);
+    logger.error(`Invalid recurrence pattern: ${activity.RecurrencePattern}`);
     return;
   }
   
@@ -203,11 +206,11 @@ async function createNextRecurrence(activity: Record<string, any>, ctx: HookCont
     try {
       const endDate = new Date(activity.RecurrenceEndDate);
       if (nextDate > endDate) {
-        console.log(`⏹️ Recurrence ended - reached end date`);
+        logger.info(`⏹ Recurrence ended - reached end date`);
         return;
       }
     } catch (error) {
-      console.error(`❌ Invalid RecurrenceEndDate: ${activity.RecurrenceEndDate}`);
+      logger.error(`Invalid RecurrenceEndDate: ${activity.RecurrenceEndDate}`);
       return;
     }
   }
@@ -232,7 +235,7 @@ async function createNextRecurrence(activity: Record<string, any>, ctx: HookCont
   };
   
   // await ctx.db.doc.create('Activity', nextActivity);
-  console.log(`✅ Created next recurrence for ${nextDate.toISOString().split('T')[0]}`);
+  logger.info(`Created next recurrence for ${nextDate.toISOString().split('T')[0]}`);
 }
 
 /**
@@ -241,7 +244,7 @@ async function createNextRecurrence(activity: Record<string, any>, ctx: HookCont
  * Daily job to find and notify about overdue activities
  */
 export async function sendOverdueNotifications(ql: any): Promise<void> {
-  console.log('🔄 Finding overdue activities...');
+  logger.info('Finding overdue activities...');
   
   // In real implementation:
   // const overdueActivities = await db.find('Activity', {
@@ -253,12 +256,12 @@ export async function sendOverdueNotifications(ql: any): Promise<void> {
   
   // for (const activity of overdueActivities) {
   //   // Send notification to owner
-  //   console.log(`📧 Notifying ${activity.OwnerId} about overdue activity: ${activity.Subject}`);
+  //   logger.info(`Notifying ${activity.OwnerId} about overdue activity: ${activity.Subject}`);
   //   
   //   // Optionally notify manager
   //   // const owner = await db.doc.get('User', activity.OwnerId);
   //   // if (owner.ManagerId) {
-  //   //   console.log(`📧 Notifying manager ${owner.ManagerId}`);
+  //   //   logger.info(`Notifying manager ${owner.ManagerId}`);
   //   // }
   //   
   //   // Optionally create follow-up task
@@ -275,7 +278,7 @@ export async function sendOverdueNotifications(ql: any): Promise<void> {
   //   // });
   // }
   
-  console.log('✅ Overdue notification job completed');
+  logger.info('Overdue notification job completed');
 }
 
 /**
@@ -292,29 +295,29 @@ const ActivityTypeValidationTrigger: Hook = {
       const activity = ctx.input.doc as Record<string, any>;
       
       // Log activity type for tracking
-      console.log(`📝 Activity: ${activity.Type} - ${activity.Subject}`);
+      logger.info(`Activity: ${activity.Type} - ${activity.Subject}`);
       
       // Type-specific processing could go here
       switch (activity.Type) {
         case 'call':
           if (activity.CallResult === 'connected' && !activity.CallDurationInSeconds) {
-            console.warn(`⚠️ Connected call should have duration recorded`);
+            logger.warn(`Connected call should have duration recorded`);
           }
           break;
         case 'email':
           if (!activity.EmailSubject && activity.EmailBody) {
-            console.warn(`⚠️ Email has body but no subject`);
+            logger.warn(`Email has body but no subject`);
           }
           break;
         case 'meeting':
           if (!activity.IsOnline && !activity.Location) {
-            console.warn(`⚠️ In-person meeting should have location`);
+            logger.warn(`In-person meeting should have location`);
           }
           break;
       }
       
     } catch (error) {
-      console.error('❌ Error in ActivityTypeValidationTrigger:', error);
+      logger.error('Error in ActivityTypeValidationTrigger:', error);
     }
   }
 };

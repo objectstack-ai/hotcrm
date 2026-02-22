@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('education:enrollment');
+
 /**
  * Enrollment Prerequisite Check
  *
@@ -36,7 +39,7 @@ const EnrollmentPrerequisiteCheck: Hook = {
       }
     } catch (error) {
       if ((error as Error).message?.includes('Missing prerequisites')) throw error;
-      console.warn('⚠️ Failed to check prerequisites:', error);
+      logger.warn('Failed to check prerequisites:', error);
     }
   }
 };
@@ -71,7 +74,7 @@ const EnrollmentCapacityEnforcement: Hook = {
       }
     } catch (error) {
       if ((error as Error).message?.includes('full capacity')) throw error;
-      console.warn('⚠️ Failed to check course capacity:', error);
+      logger.warn('Failed to check course capacity:', error);
     }
   }
 };
@@ -101,10 +104,10 @@ const EnrollmentWaitlistManagement: Hook = {
       });
 
       if (enrolledCount > course.capacity) {
-        console.log(`📋 Course ${enrollment.course_id} over capacity — adding ${enrollment._id} to waitlist`);
+        logger.info(`Course ${enrollment.course_id} over capacity — adding ${enrollment._id} to waitlist`);
       }
     } catch (error) {
-      console.warn('⚠️ Failed to manage waitlist:', error);
+      logger.warn('Failed to manage waitlist:', error);
     }
   }
 };
@@ -150,10 +153,10 @@ const EnrollmentGradePosting: Hook = {
       if (totalCredits > 0) {
         const gpa = Math.round((totalPoints / totalCredits) * 100) / 100;
         await (ctx.ql as any).doc.update('student', result.student_id, { gpa });
-        console.log(`📊 Updated GPA for student ${result.student_id}: ${gpa}`);
+        logger.info(`Updated GPA for student ${result.student_id}: ${gpa}`);
       }
     } catch (error) {
-      console.warn('⚠️ Failed to update student GPA:', error);
+      logger.warn('Failed to update student GPA:', error);
     }
   }
 };

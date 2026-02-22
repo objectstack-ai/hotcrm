@@ -9,6 +9,9 @@
 
 import { broker } from '../db.js';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('analytics:dashboard_ai');
+
 // ============================================================================
 // 1. AUTO-GENERATE DASHBOARD
 // ============================================================================
@@ -286,7 +289,7 @@ Recommend up to ${maxRecommendations || 5} widgets that would add the most value
 // ============================================================================
 
 async function callLLM(prompt: string): Promise<string> {
-  console.log('🤖 Calling LLM API for dashboard AI...');
+  logger.info('Calling LLM API for dashboard AI...');
   await new Promise(resolve => setTimeout(resolve, 500));
 
   if (prompt.includes('dashboard layout')) {

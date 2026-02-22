@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('hr:attendance');
+
 /**
  * Attendance Validation Trigger
  * 
@@ -17,7 +20,7 @@ const AttendanceValidationTrigger: Hook = {
     try {
       // Validate check_in is provided
       if (!doc.check_in) {
-        throw new Error('❌ check_in is required for attendance records');
+        throw new Error(' check_in is required for attendance records');
       }
 
       // If check_out is provided, validate check_out > check_in
@@ -26,19 +29,19 @@ const AttendanceValidationTrigger: Hook = {
         const checkOut = new Date(doc.check_out);
 
         if (checkOut <= checkIn) {
-          throw new Error('❌ check_out must be after check_in');
+          throw new Error(' check_out must be after check_in');
         }
 
         // Auto-calculate hours_worked
         const diffMs = checkOut.getTime() - checkIn.getTime();
         const hours = Math.round((diffMs / (1000 * 60 * 60)) * 100) / 100;
         doc.hours_worked = hours;
-        console.log(`⏱️ Auto-calculated hours_worked: ${hours}h`);
+        logger.info(`⏱ Auto-calculated hours_worked: ${hours}h`);
       }
 
-      console.log(`✅ Attendance validation passed`);
+      logger.info(`Attendance validation passed`);
     } catch (err) {
-      console.error('❌ Error in AttendanceValidationTrigger:', err);
+      logger.error('Error in AttendanceValidationTrigger:', err);
       throw err;
     }
   }
@@ -72,13 +75,13 @@ const AttendanceDuplicateCheckTrigger: Hook = {
       });
 
       if (existing && existing.length > 0) {
-        console.warn(`⚠️ Duplicate attendance record detected for employee ${doc.employee} on ${attendanceDate}`);
-        throw new Error(`❌ Attendance record already exists for employee ${doc.employee} on ${attendanceDate}`);
+        logger.warn(`Duplicate attendance record detected for employee ${doc.employee} on ${attendanceDate}`);
+        throw new Error(` Attendance record already exists for employee ${doc.employee} on ${attendanceDate}`);
       }
 
-      console.log(`✅ No duplicate attendance record found`);
+      logger.info(`No duplicate attendance record found`);
     } catch (err) {
-      console.error('❌ Error in AttendanceDuplicateCheckTrigger:', err);
+      logger.error('Error in AttendanceDuplicateCheckTrigger:', err);
       throw err;
     }
   }

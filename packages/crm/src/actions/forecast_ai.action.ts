@@ -12,6 +12,9 @@
 
 import { broker } from '../db.js';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('crm:forecast_ai');
+
 // ============================================================================
 // 1. PREDICT FORECAST
 // ============================================================================
@@ -58,7 +61,7 @@ export interface PredictForecastResponse {
  */
 export async function predictForecast(params: PredictForecastRequest): Promise<PredictForecastResponse> {
   const { period_start, period_end, owner_id } = params;
-  console.log('🤖 AI Forecast Prediction:', params);
+  logger.info('AI Forecast Prediction:', params);
 
   // Fetch pipeline opportunities within the forecast period
   const opportunities = await broker.find('opportunity', {
@@ -210,7 +213,7 @@ export interface AdjustForecastResponse {
  */
 export async function adjustForecast(params: AdjustForecastRequest): Promise<AdjustForecastResponse> {
   const { period_start, period_end, owner_id, current_amount } = params;
-  console.log('🤖 AI Forecast Adjustment:', params);
+  logger.info('AI Forecast Adjustment:', params);
 
   // Fetch current pipeline
   const pipeline = await broker.find('opportunity', {
@@ -351,7 +354,7 @@ export interface IdentifyRisksResponse {
  */
 export async function identifyRisks(params: IdentifyRisksRequest): Promise<IdentifyRisksResponse> {
   const { period_start, period_end, owner_id } = params;
-  console.log('🤖 AI Forecast Risk Identification:', params);
+  logger.info('AI Forecast Risk Identification:', params);
 
   const now = new Date();
 
@@ -506,7 +509,7 @@ export interface GenerateInsightsResponse {
  */
 export async function generateInsights(params: GenerateInsightsRequest): Promise<GenerateInsightsResponse> {
   const { period_start, period_end, owner_id } = params;
-  console.log('🤖 AI Forecast Insights Generation:', params);
+  logger.info('AI Forecast Insights Generation:', params);
 
   // Fetch current period pipeline
   const currentPipeline = await broker.find('opportunity', {

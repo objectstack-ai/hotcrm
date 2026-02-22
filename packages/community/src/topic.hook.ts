@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('community:topic');
+
 /**
  * Topic Content Moderation
  *
@@ -45,7 +48,7 @@ const TopicNotification: Hook = {
     const topic = ctx.result as Record<string, any>;
     if (!topic?._id || !topic?.category_id) return;
 
-    console.log(`📢 Notifying subscribers of category ${topic.category_id} about new topic: ${topic.title}`);
+    logger.info(`Notifying subscribers of category ${topic.category_id} about new topic: ${topic.title}`);
 
     // Increment topic_count on the category
     try {
@@ -56,7 +59,7 @@ const TopicNotification: Hook = {
         });
       }
     } catch (error) {
-      console.warn('⚠️ Failed to update category topic count:', error);
+      logger.warn('Failed to update category topic count:', error);
     }
   }
 };
@@ -117,7 +120,7 @@ const TopicViewCounting: Hook = {
         last_activity_at: new Date().toISOString()
       });
     } catch (error) {
-      console.warn('⚠️ Failed to update topic view count:', error);
+      logger.warn('Failed to update topic view count:', error);
     }
   }
 };

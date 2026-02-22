@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('financial-services:wealth_account');
+
 /**
  * Wealth Account Risk Assessment
  *
@@ -22,7 +25,7 @@ const WealthAccountRiskAssessment: Hook = {
     if (doc.investment_strategy && doc.risk_profile) {
       const allowed = strategyRiskMap[doc.investment_strategy];
       if (allowed && !allowed.includes(doc.risk_profile)) {
-        console.warn(`⚠️ Risk profile '${doc.risk_profile}' may not align with '${doc.investment_strategy}' strategy`);
+        logger.warn(`Risk profile '${doc.risk_profile}' may not align with '${doc.investment_strategy}' strategy`);
       }
     }
   }
@@ -44,10 +47,10 @@ const WealthAccountSuitabilityCheck: Hook = {
       try {
         const existing = await (ctx.ql as any).findOne('wealth_account', doc._id);
         if (existing?.risk_profile === 'conservative' && doc.investment_strategy === 'growth') {
-          console.warn(`⚠️ Suitability concern: changing conservative account to growth strategy`);
+          logger.warn(`Suitability concern: changing conservative account to growth strategy`);
         }
       } catch (error) {
-        console.warn('⚠️ Failed to perform suitability check:', error);
+        logger.warn('Failed to perform suitability check:', error);
       }
     }
   }
@@ -69,7 +72,7 @@ const WealthAccountBalanceAlert: Hook = {
     const BALANCE_THRESHOLD = 10000;
 
     if (doc.balance !== undefined && doc.balance < BALANCE_THRESHOLD) {
-      console.log(`🚨 Balance alert for account ${result?._id}: balance $${doc.balance} below threshold $${BALANCE_THRESHOLD}`);
+      logger.info(`Balance alert for account ${result?._id}: balance $${doc.balance} below threshold $${BALANCE_THRESHOLD}`);
     }
   }
 };

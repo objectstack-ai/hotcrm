@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('hr:department');
+
 /**
  * Department Manager Assignment Validation Trigger
  * 
@@ -17,7 +20,7 @@ const DepartmentManagerValidationTrigger: Hook = {
     try {
       // A department cannot be its own parent
       if (doc.parent_id && doc._id && doc.parent_id === doc._id) {
-        throw new Error('❌ A department cannot be its own parent');
+        throw new Error(' A department cannot be its own parent');
       }
 
       // Validate manager is an active employee
@@ -30,7 +33,7 @@ const DepartmentManagerValidationTrigger: Hook = {
         if (managers && managers.length > 0) {
           const manager = managers[0];
           if (manager.status !== 'active') {
-            throw new Error(`❌ Department manager must be an active employee. Current status: ${manager.status}`);
+            throw new Error(` Department manager must be an active employee. Current status: ${manager.status}`);
           }
         }
       }
@@ -39,13 +42,13 @@ const DepartmentManagerValidationTrigger: Hook = {
       if (doc.status === 'closed') {
         const previous = ctx.previous as Record<string, any> | undefined;
         if (previous && previous.status !== 'closed') {
-          console.log(`⚠️ Department "${doc.name}" is being closed - verify all employees have been reassigned`);
+          logger.info(`Department "${doc.name}" is being closed - verify all employees have been reassigned`);
         }
       }
 
-      console.log(`✅ Department validation passed: ${doc.name || 'unknown'}`);
+      logger.info(`Department validation passed: ${doc.name || 'unknown'}`);
     } catch (err) {
-      console.error('❌ Error in DepartmentManagerValidationTrigger:', err);
+      logger.error('Error in DepartmentManagerValidationTrigger:', err);
       throw err;
     }
   }
@@ -80,12 +83,12 @@ const DepartmentHeadcountTrackingTrigger: Hook = {
         await (ctx.ql as any).doc.update('department', deptId, {
           employee_count: headcount
         });
-        console.log(`👥 Department "${dept.name}" headcount updated: ${headcount} active employees`);
+        logger.info(`Department "${dept.name}" headcount updated: ${headcount} active employees`);
       }
 
-      console.log(`✅ Department headcount tracking complete`);
+      logger.info(`Department headcount tracking complete`);
     } catch (err) {
-      console.error('❌ Error in DepartmentHeadcountTrackingTrigger:', err);
+      logger.error('Error in DepartmentHeadcountTrackingTrigger:', err);
     }
   }
 };

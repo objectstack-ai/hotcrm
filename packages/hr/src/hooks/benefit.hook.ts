@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('hr:benefit');
+
 /**
  * Benefit Enrollment Validation Trigger
  * 
@@ -30,10 +33,10 @@ const BenefitEnrollmentValidationTrigger: Hook = {
       const employerContribution = Number(benefit.employer_contribution) || 0;
       benefit.total_cost = employeeContribution + employerContribution;
 
-      console.log(`✅ Benefit enrollment validation passed, total_cost: ${benefit.total_cost}`);
+      logger.info(`Benefit enrollment validation passed, total_cost: ${benefit.total_cost}`);
 
     } catch (error) {
-      console.error('❌ Error in BenefitEnrollmentValidationTrigger:', error);
+      logger.error('Error in BenefitEnrollmentValidationTrigger:', error);
       throw error; // Re-throw to prevent save
     }
   }
@@ -55,12 +58,12 @@ const BenefitExpirationCheckTrigger: Hook = {
 
       // Check if termination_date was just set
       if (benefit.termination_date && (!previous || !previous.termination_date)) {
-        console.log(`⚠️ Benefit termination date set: ${benefit.termination_date} for benefit ${benefit._id || benefit.id}`);
-        console.log(`📋 Benefit plan "${benefit.plan_name || benefit.benefit_type}" will expire on ${benefit.termination_date}`);
+        logger.info(`Benefit termination date set: ${benefit.termination_date} for benefit ${benefit._id || benefit.id}`);
+        logger.info(`Benefit plan "${benefit.plan_name || benefit.benefit_type}" will expire on ${benefit.termination_date}`);
       }
 
     } catch (error) {
-      console.error('❌ Error in BenefitExpirationCheckTrigger:', error);
+      logger.error('Error in BenefitExpirationCheckTrigger:', error);
       // Don't throw - benefit record already updated
     }
   }

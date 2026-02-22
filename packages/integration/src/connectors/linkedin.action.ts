@@ -10,6 +10,9 @@
 
 import { broker } from '../db.js';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('integration:linkedin');
+
 // ============================================================================
 // 1. ENRICH LEAD DATA
 // ============================================================================
@@ -37,7 +40,7 @@ export async function enrichLeadData(request: EnrichLeadDataRequest): Promise<En
     throw new Error('either linkedin_url or email is required');
   }
 
-  console.log(`🔍 Enriching lead data for ${lead_id}`);
+  logger.info(`Enriching lead data for ${lead_id}`);
 
   return {
     enriched: true,
@@ -74,7 +77,7 @@ export async function syncRecruitingPipeline(request: SyncRecruitingPipelineRequ
     throw new Error('sync_direction is required');
   }
 
-  console.log(`👥 Syncing LinkedIn recruiting pipeline (${sync_direction})`);
+  logger.info(`Syncing LinkedIn recruiting pipeline (${sync_direction})`);
 
   return {
     synced: true,
@@ -111,7 +114,7 @@ export async function importCompanyData(request: ImportCompanyDataRequest): Prom
     throw new Error('either linkedin_company_url or company_name is required');
   }
 
-  console.log(`🏢 Importing company data from LinkedIn`);
+  logger.info(`Importing company data from LinkedIn`);
 
   return {
     imported: true,
@@ -144,7 +147,7 @@ export async function handleLinkedInWebhook(request: HandleLinkedInWebhookReques
     throw new Error('event_type and payload are required');
   }
 
-  console.log(`🔔 Processing LinkedIn webhook: ${event_type}`);
+  logger.info(`Processing LinkedIn webhook: ${event_type}`);
 
   const actions: string[] = [];
 

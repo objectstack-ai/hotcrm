@@ -9,6 +9,9 @@
 
 import { broker } from '../db.js';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('analytics:report_ai');
+
 // ============================================================================
 // 1. NATURAL LANGUAGE TO REPORT
 // ============================================================================
@@ -286,7 +289,7 @@ Auto-generate a complete report definition optimized for the given purpose.
 // ============================================================================
 
 async function callLLM(prompt: string): Promise<string> {
-  console.log('🤖 Calling LLM API for report AI...');
+  logger.info('Calling LLM API for report AI...');
   await new Promise(resolve => setTimeout(resolve, 500));
 
   if (prompt.includes('natural language request')) {

@@ -13,6 +13,9 @@
  * 7. Tone and Style Adaptation - Match brand voice
  */
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('marketing:content_generator');
+
 // Mock database interface
 const db = {
   doc: {
@@ -241,10 +244,10 @@ Create 3-5 post variants:
 {
   "posts": [
     {
-      "text": "🚀 Exciting news for marketers...",
+      "text": " Exciting news for marketers...",
       "characterCount": 180,
       "hashtags": ["#MarketingAI", "#CampaignOptimization"],
-      "emojis": ["🚀", "💡"],
+      "emojis": ["", ""],
       "imageIdeas": [
         "Product screenshot with results",
         "Infographic showing ROI improvement"
@@ -871,7 +874,7 @@ Rewrite content to match ${targetTone} tone while preserving core message:
  * Mock LLM API call
  */
 async function callLLM(prompt: string): Promise<string> {
-  console.log('🤖 Calling LLM API for content generation...');
+  logger.info('Calling LLM API for content generation...');
 
   await new Promise(resolve => setTimeout(resolve, 500));
 
@@ -882,7 +885,7 @@ async function callLLM(prompt: string): Promise<string> {
         { text: '{{FirstName}}, exclusive early access inside', style: 'Personalized + FOMO', expectedOpenRate: 28 },
         { text: 'Transform your marketing ROI in 30 days', style: 'Benefit-focused', expectedOpenRate: 25 },
         { text: 'Is your campaign optimization costing you money?', style: 'Question-based', expectedOpenRate: 23 },
-        { text: '⚡ Limited time: 3x your conversions', style: 'Urgency + emoji', expectedOpenRate: 26 },
+        { text: ' Limited time: 3x your conversions', style: 'Urgency + emoji', expectedOpenRate: 26 },
         { text: 'See how top marketers automate success', style: 'Curiosity', expectedOpenRate: 24 }
       ],
       previewText: 'Be among the first to experience AI-powered campaign optimization',
@@ -906,17 +909,17 @@ async function callLLM(prompt: string): Promise<string> {
     return JSON.stringify({
       posts: [
         {
-          text: '🚀 Marketing teams: Stop wasting budget on underperforming campaigns.\n\nAI-powered optimization can 3x your ROI in 30 days.\n\nHere\'s how 👇',
+          text: ' Marketing teams: Stop wasting budget on underperforming campaigns.\n\nAI-powered optimization can 3x your ROI in 30 days.\n\nHere\'s how ',
           characterCount: 142,
           hashtags: ['#MarketingAI', '#CampaignOptimization', '#MarTech'],
-          emojis: ['🚀', '👇'],
+          emojis: ['', ''],
           imageIdeas: ['Before/after ROI comparison chart', 'Product dashboard screenshot']
         },
         {
-          text: '💡 Pro tip for marketers:\n\nThe best campaign isn\'t the one with the biggest budget.\n\nIt\'s the one that\'s continuously optimized.\n\nLearn more 👉',
+          text: ' Pro tip for marketers:\n\nThe best campaign isn\'t the one with the biggest budget.\n\nIt\'s the one that\'s continuously optimized.\n\nLearn more ',
           characterCount: 138,
           hashtags: ['#MarketingTips', '#GrowthHacking', '#B2BMarketing'],
-          emojis: ['💡', '👉'],
+          emojis: ['', ''],
           imageIdeas: ['Infographic on optimization ROI', 'Animated GIF of optimization in action']
         }
       ],

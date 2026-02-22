@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('hr:compensation_plan');
+
 /**
  * Compensation Plan Validation Trigger
  * 
@@ -32,10 +35,10 @@ const CompensationPlanValidationTrigger: Hook = {
         plan.compa_ratio = baseSalary / salaryRangeMidpoint * 100;
       }
 
-      console.log(`✅ Compensation plan validation passed, total_compensation: ${plan.total_compensation}, compa_ratio: ${plan.compa_ratio || 'N/A'}`);
+      logger.info(`Compensation plan validation passed, total_compensation: ${plan.total_compensation}, compa_ratio: ${plan.compa_ratio || 'N/A'}`);
 
     } catch (error) {
-      console.error('❌ Error in CompensationPlanValidationTrigger:', error);
+      logger.error('Error in CompensationPlanValidationTrigger:', error);
       throw error; // Re-throw to prevent save
     }
   }
@@ -57,12 +60,12 @@ const CompensationPlanApprovalTrigger: Hook = {
 
       // Check if status changed to 'active'
       if (plan.status === 'active' && (!previous || previous.status !== 'active')) {
-        console.log(`✅ Compensation plan approved and activated: ${plan._id || plan.id}`);
-        console.log(`📋 Plan for employee ${plan.employee_id || 'unknown'}: base_salary=${plan.base_salary}, total_compensation=${plan.total_compensation}`);
+        logger.info(`Compensation plan approved and activated: ${plan._id || plan.id}`);
+        logger.info(`Plan for employee ${plan.employee_id || 'unknown'}: base_salary=${plan.base_salary}, total_compensation=${plan.total_compensation}`);
       }
 
     } catch (error) {
-      console.error('❌ Error in CompensationPlanApprovalTrigger:', error);
+      logger.error('Error in CompensationPlanApprovalTrigger:', error);
       // Don't throw - plan record already updated
     }
   }

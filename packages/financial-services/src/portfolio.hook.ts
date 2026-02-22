@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('financial-services:portfolio');
+
 /**
  * Portfolio Drift Detection
  *
@@ -17,7 +20,7 @@ const PortfolioDriftDetection: Hook = {
         const allocation = JSON.parse(result.allocation);
         const totalPercent = Object.values(allocation).reduce((sum: number, val: any) => sum + Number(val), 0) as number;
         if (Math.abs(totalPercent - 100) > 5) {
-          console.log(`📊 Drift detected for portfolio ${result._id}: allocation totals ${totalPercent}%`);
+          logger.info(`Drift detected for portfolio ${result._id}: allocation totals ${totalPercent}%`);
         }
       } catch {
         // Allocation is not valid JSON, skip drift detection
@@ -43,7 +46,7 @@ const PortfolioRebalanceTrigger: Hook = {
         const allocation = JSON.parse(doc.allocation);
         const totalPercent = Object.values(allocation).reduce((sum: number, val: any) => sum + Number(val), 0) as number;
         if (Math.abs(totalPercent - 100) > 10) {
-          console.log(`🔄 Rebalance triggered for portfolio: drift exceeds 10% threshold`);
+          logger.info(`Rebalance triggered for portfolio: drift exceeds 10% threshold`);
           doc.rebalance_date = new Date().toISOString().split('T')[0];
         }
       } catch {
@@ -66,7 +69,7 @@ const PortfolioPerformanceCalc: Hook = {
     const result = ctx.result as Record<string, any>;
 
     if (result?.total_value && result?.benchmark) {
-      console.log(`📈 Performance update for portfolio ${result._id}: YTD ${result.performance_ytd || 0}% vs benchmark ${result.benchmark}`);
+      logger.info(`Performance update for portfolio ${result._id}: YTD ${result.performance_ytd || 0}% vs benchmark ${result.benchmark}`);
     }
   }
 };

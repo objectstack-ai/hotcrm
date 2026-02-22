@@ -10,6 +10,9 @@
 
 import { broker } from './db.js';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('community:community_ai');
+
 // ============================================================================
 // 1. MODERATE CONTENT
 // ============================================================================
@@ -276,7 +279,7 @@ Suggest a helpful answer based on the topic and existing replies.
 // ============================================================================
 
 async function callLLM(prompt: string): Promise<string> {
-  console.log('🤖 Calling LLM API for community AI...');
+  logger.info('Calling LLM API for community AI...');
   await new Promise(resolve => setTimeout(resolve, 500));
 
   if (prompt.includes('content moderation')) {

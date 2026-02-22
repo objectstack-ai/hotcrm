@@ -21,6 +21,9 @@ const RETRY_DELAY_MS = 1000;
 
 import { broker } from '../db.js';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('crm:ai_smart_briefing');
+
 export interface SmartBriefingRequest {
   /** Account ID to analyze */
   accountId: string;
@@ -267,7 +270,7 @@ export async function executeSmartBriefing(request: SmartBriefingRequest): Promi
         limit: activityLimit
       });
     } catch (error) {
-      console.warn('⚠️ Failed to fetch activities, continuing without them:', error);
+      logger.warn('Failed to fetch activities, continuing without them:', error);
       activities = [];
     }
 
@@ -281,7 +284,7 @@ export async function executeSmartBriefing(request: SmartBriefingRequest): Promi
         limit: 5
       });
     } catch (error) {
-      console.warn('⚠️ Failed to fetch emails, continuing without them:', error);
+      logger.warn('Failed to fetch emails, continuing without them:', error);
       emails = [];
     }
 
@@ -298,7 +301,7 @@ export async function executeSmartBriefing(request: SmartBriefingRequest): Promi
         limit: 5
       });
     } catch (error) {
-      console.warn('⚠️ Failed to fetch opportunities, continuing without them:', error);
+      logger.warn('Failed to fetch opportunities, continuing without them:', error);
       opportunities = [];
     }
 
@@ -317,7 +320,7 @@ export async function executeSmartBriefing(request: SmartBriefingRequest): Promi
         if (retries === 0) {
           throw new Error(`LLM API failed after ${MAX_RETRIES} retries: ${error}`);
         }
-        console.warn(`⚠️ LLM call failed, retrying... (${retries} attempts left)`);
+        logger.warn(`LLM call failed, retrying... (${retries} attempts left)`);
         await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS));
       }
     }
@@ -364,11 +367,11 @@ export async function executeSmartBriefing(request: SmartBriefingRequest): Promi
       }
     };
 
-    console.log('✨ Smart Briefing generated successfully');
+    logger.info('Smart Briefing generated successfully');
     return response;
 
   } catch (error) {
-    console.error('❌ Error generating Smart Briefing:', error);
+    logger.error('Error generating Smart Briefing:', error);
     throw error;
   }
 }
@@ -378,7 +381,7 @@ export async function executeSmartBriefing(request: SmartBriefingRequest): Promi
  * In production, replace with actual OpenAI/Anthropic API
  */
 async function callLLM(prompt: string): Promise<string> {
-  console.log('🤖 Calling LLM with prompt...');
+  logger.info('Calling LLM with prompt...');
   
   // Mock response for demonstration
   const mockResponse = {

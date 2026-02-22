@@ -9,6 +9,9 @@
 
 import { broker } from '../db.js';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('analytics:insight_ai');
+
 // ============================================================================
 // 1. ANOMALY DETECTION
 // ============================================================================
@@ -303,7 +306,7 @@ Generate a concise executive summary with highlights, risks, and recommendations
 // ============================================================================
 
 async function callLLM(prompt: string): Promise<string> {
-  console.log('🤖 Calling LLM API for insight AI...');
+  logger.info('Calling LLM API for insight AI...');
   await new Promise(resolve => setTimeout(resolve, 500));
 
   if (prompt.includes('trend analysis')) {

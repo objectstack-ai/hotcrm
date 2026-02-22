@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('education:scholarship');
+
 /**
  * Scholarship Eligibility Verification
  *
@@ -45,14 +48,14 @@ const ScholarshipFundTracking: Hook = {
     const balance = (result?.fund_balance || 0) - totalAwarded;
 
     if (balance <= 0) {
-      console.log(`💰 Scholarship ${result?._id} fund depleted — marking as depleted`);
+      logger.info(`Scholarship ${result?._id} fund depleted — marking as depleted`);
       try {
         await (ctx.ql as any).doc.update('scholarship', result._id, { status: 'depleted' });
       } catch (error) {
-        console.warn('⚠️ Failed to update scholarship status:', error);
+        logger.warn('Failed to update scholarship status:', error);
       }
     } else {
-      console.log(`💰 Scholarship ${result?._id} fund balance remaining: $${balance}`);
+      logger.info(`Scholarship ${result?._id} fund balance remaining: $${balance}`);
     }
   }
 };
@@ -81,9 +84,9 @@ const ScholarshipAutoRenewal: Hook = {
       });
 
       const eligible = students.filter((s: any) => s.gpa >= minGpa);
-      console.log(`🔄 Scholarship ${result._id} renewal: ${eligible.length} students eligible`);
+      logger.info(`Scholarship ${result._id} renewal: ${eligible.length} students eligible`);
     } catch (error) {
-      console.warn('⚠️ Failed to check renewal eligibility:', error);
+      logger.warn('Failed to check renewal eligibility:', error);
     }
   }
 };

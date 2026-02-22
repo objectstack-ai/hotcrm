@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('products:quote');
+
 
 
 /**
@@ -44,7 +47,7 @@ const QuotePricingHook: Hook = {
       }
 
     } catch (error) {
-      console.error('❌ Error in QuotePricingHook:', error);
+      logger.error('Error in QuotePricingHook:', error);
       throw error;
     }
   }
@@ -79,9 +82,9 @@ async function calculateQuotePricing(ctx: HookContext): Promise<void> {
     // Calculate Total Price
     quote.TotalPrice = afterDiscount + (quote.TaxAmount || 0) + (quote.ShippingHandling || 0);
 
-    console.log(`💰 Quote pricing calculated: Subtotal=${quote.Subtotal}, Discount=${quote.DiscountAmount}, Tax=${quote.TaxAmount}, Total=${quote.TotalPrice}`);
+    logger.info(`Quote pricing calculated: Subtotal=${quote.Subtotal}, Discount=${quote.DiscountAmount}, Tax=${quote.TaxAmount}, Total=${quote.TotalPrice}`);
   } catch (error) {
-    console.error('❌ Error calculating quote pricing:', error);
+    logger.error('Error calculating quote pricing:', error);
   }
 }
 
@@ -121,15 +124,15 @@ async function determineApprovalRequirements(ctx: HookContext): Promise<void> {
         const oldDiscount = (ctx.previous as Record<string, any>).DiscountPercent || 0;
         if (discountPercent > oldDiscount && quote.ApprovalStatus !== 'approved' && quote.ApprovalStatus !== 'pending') {
           quote.ApprovalStatus = 'pending';
-          console.log(`🔄 Quote requires Level ${approvalLevel} approval (${(discountPercent * 100).toFixed(1)}% discount)`);
+          logger.info(`Quote requires Level ${approvalLevel} approval (${(discountPercent * 100).toFixed(1)}% discount)`);
         }
       } else if (quote.ApprovalStatus !== 'pending') {
         quote.ApprovalStatus = 'pending';
-        console.log(`🔄 New quote requires Level ${approvalLevel} approval (${(discountPercent * 100).toFixed(1)}% discount)`);
+        logger.info(`New quote requires Level ${approvalLevel} approval (${(discountPercent * 100).toFixed(1)}% discount)`);
       }
     }
   } catch (error) {
-    console.error('❌ Error determining approval requirements:', error);
+    logger.error('Error determining approval requirements:', error);
   }
 }
 
@@ -146,10 +149,10 @@ async function validateMarginProtection(ctx: HookContext): Promise<void> {
     const discountPercent = quote.DiscountPercent || 0;
     
     if (discountPercent > 0.50) {
-      console.warn(`⚠️ Warning: Quote ${quote.Name} has discount >50%, may impact margins`);
+      logger.warn(`Warning: Quote ${quote.Name} has discount >50%, may impact margins`);
     }
   } catch (error) {
-    console.error('❌ Error validating margin protection:', error);
+    logger.error('Error validating margin protection:', error);
   }
 }
 
@@ -173,7 +176,7 @@ async function initializeQuote(ctx: HookContext): Promise<void> {
         ActivityDate: new Date().toISOString().split('T')[0],
         Description: `Quote ${quote.QuoteNumber} created with total value of ${quote.TotalPrice?.toLocaleString() || 0}`
       });
-      console.log(`✅ Activity logged for new quote: ${quote.Name}`);
+      logger.info(`Activity logged for new quote: ${quote.Name}`);
     }
 
     // Set expiration date if not provided
@@ -185,10 +188,10 @@ async function initializeQuote(ctx: HookContext): Promise<void> {
       await (ctx.ql as any).doc.update('quote', quote.Id, {
         ExpirationDate: expirationDate.toISOString().split('T')[0]
       });
-      console.log(`📅 Expiration date set to: ${expirationDate.toISOString().split('T')[0]}`);
+      logger.info(`Expiration date set to: ${expirationDate.toISOString().split('T')[0]}`);
     }
   } catch (error) {
-    console.error('❌ Error initializing quote:', error);
+    logger.error('Error initializing quote:', error);
   }
 }
 
@@ -206,7 +209,7 @@ async function handleQuoteStatusChange(ctx: HookContext): Promise<void> {
   const quote = result;
   
   try {
-    console.log(`🔄 Quote status changed from "${prev.Status}" to "${quote.Status}"`);
+    logger.info(`Quote status changed from "${prev.Status}" to "${quote.Status}"`);
 
     // Handle Accepted status
     if (quote.Status === 'accepted') {
@@ -238,7 +241,7 @@ async function handleQuoteStatusChange(ctx: HookContext): Promise<void> {
       });
     }
   } catch (error) {
-    console.error('❌ Error handling quote status change:', error);
+    logger.error('Error handling quote status change:', error);
   }
 }
 
@@ -249,7 +252,7 @@ async function handleQuoteAccepted(ctx: HookContext): Promise<void> {
   const quote = ctx.result as Record<string, any>;
   
   try {
-    console.log('✅ Processing quote acceptance...');
+    logger.info('Processing quote acceptance...');
 
     // Update accepted date and timestamp
     await (ctx.ql as any).doc.update('quote', quote.Id, {
@@ -263,9 +266,9 @@ async function handleQuoteAccepted(ctx: HookContext): Promise<void> {
           Stage: 'closed_won',
           CloseDate: new Date().toISOString().split('T')[0]
         });
-        console.log(`✅ Opportunity stage updated to Closed Won`);
+        logger.info(`Opportunity stage updated to Closed Won`);
       } catch (error) {
-        console.error('❌ Failed to update opportunity:', error);
+        logger.error('Failed to update opportunity:', error);
       }
     }
 
@@ -289,18 +292,18 @@ async function handleQuoteAccepted(ctx: HookContext): Promise<void> {
 
         try {
             const contract = await (ctx.ql as any).doc.create('contract', contractData);
-            console.log(`📝 Contract created successfully: ${contract._id}`);
+            logger.info(`Contract created successfully: ${contract._id}`);
             
             // Link Contract back to Quote
             await (ctx.ql as any).doc.update('quote', quote.Id, {
                 Description: `${quote.Description || ''}\n Contract Created: ${contract.contract_number}`
             });
         } catch (err) {
-            console.error('❌ Failed to create contract:', err);
+            logger.error('Failed to create contract:', err);
         }
     }
   } catch (error) {
-    console.error('❌ Error handling quote acceptance:', error);
+    logger.error('Error handling quote acceptance:', error);
   }
 }
 
@@ -311,11 +314,11 @@ async function handleQuoteSent(ctx: HookContext): Promise<void> {
   const quote = ctx.result as Record<string, any>;
   
   try {
-    console.log('📧 Quote sent to customer');
+    logger.info('Quote sent to customer');
     
-    console.debug(`[quote.hook] Quote sent pending for ${quote.QuoteNumber}: send email notification and schedule follow-up activity`);
+    logger.debug(`[quote.hook] Quote sent pending for ${quote.QuoteNumber}: send email notification and schedule follow-up activity`);
   } catch (error) {
-    console.error('❌ Error handling quote sent:', error);
+    logger.error('Error handling quote sent:', error);
   }
 }
 
@@ -326,11 +329,11 @@ async function handleQuoteExpired(ctx: HookContext): Promise<void> {
   const quote = ctx.result as Record<string, any>;
   
   try {
-    console.log('⏰ Quote expired');
+    logger.info('⏰ Quote expired');
     
-    console.debug(`[quote.hook] Quote expiration pending for ${quote.QuoteNumber}: notify owner and suggest creating new version`);
+    logger.debug(`[quote.hook] Quote expiration pending for ${quote.QuoteNumber}: notify owner and suggest creating new version`);
   } catch (error) {
-    console.error('❌ Error handling quote expiration:', error);
+    logger.error('Error handling quote expiration:', error);
   }
 }
 
@@ -348,7 +351,7 @@ async function handleApprovalStatusChange(ctx: HookContext): Promise<void> {
   const quote = result;
   
   try {
-    console.log(`🔄 Approval status changed from "${prev.ApprovalStatus}" to "${quote.ApprovalStatus}"`);
+    logger.info(`Approval status changed from "${prev.ApprovalStatus}" to "${quote.ApprovalStatus}"`);
 
     // Handle approved
     if (quote.ApprovalStatus === 'approved') {
@@ -357,7 +360,7 @@ async function handleApprovalStatusChange(ctx: HookContext): Promise<void> {
         ApprovedById: ctx.user.id,
         Status: quote.Status === 'in_review' ? 'approved' : quote.Status
       });
-      console.log('✅ Quote approved');
+      logger.info('Quote approved');
     }
 
     // Handle rejected
@@ -367,10 +370,10 @@ async function handleApprovalStatusChange(ctx: HookContext): Promise<void> {
         RejectedById: ctx.user.id,
         Status: 'rejected'
       });
-      console.log('❌ Quote rejected');
+      logger.info('Quote rejected');
     }
   } catch (error) {
-    console.error('❌ Error handling approval status change:', error);
+    logger.error('Error handling approval status change:', error);
   }
 }
 

@@ -13,6 +13,9 @@
 
 import { broker } from '../db.js';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('support:case_ai');
+
 // ============================================================================
 // 1. AUTO-CATEGORIZATION
 // ============================================================================
@@ -897,7 +900,7 @@ Provide comprehensive sentiment analysis with:
  * The patterns are case-sensitive and should match the prompts in the functions above.
  */
 async function callLLM(prompt: string): Promise<string> {
-  console.log('🤖 Calling LLM API for case AI...');
+  logger.info('Calling LLM API for case AI...');
   await new Promise(resolve => setTimeout(resolve, 500));
 
   // Pattern matching for different AI functions (case-sensitive)

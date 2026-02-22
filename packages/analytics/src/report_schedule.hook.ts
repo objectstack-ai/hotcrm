@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('analytics:report_schedule');
+
 /** Valid IANA timezone pattern (simplified) */
 const TIMEZONE_PATTERN = /^[A-Za-z_]+\/[A-Za-z_]+$/;
 const VALID_FREQUENCIES = ['daily', 'weekly', 'monthly', 'quarterly'];
@@ -88,9 +91,9 @@ const NextRunCalculation: Hook = {
       await (ctx.ql as any).doc.update('report_schedule', schedule._id, {
         next_run: nextRun.toISOString()
       });
-      console.log(`📅 Next run for schedule "${schedule.name}" set to ${nextRun.toISOString()}`);
+      logger.info(`Next run for schedule "${schedule.name}" set to ${nextRun.toISOString()}`);
     } catch (error) {
-      console.warn('⚠️ Failed to set next run date:', error);
+      logger.warn('Failed to set next run date:', error);
     }
   }
 };
@@ -115,12 +118,12 @@ const ScheduleDeactivation: Hook = {
     try {
       const report = await (ctx.ql as any).doc.get('report', reportId);
       if (!report || report._deleted) {
-        console.warn(`⚠️ Report ${reportId} no longer exists — deactivating schedule`);
+        logger.warn(`Report ${reportId} no longer exists — deactivating schedule`);
         doc.is_active = false;
       }
     } catch {
       // Report not found — deactivate schedule
-      console.warn(`⚠️ Report ${reportId} not found — deactivating schedule`);
+      logger.warn(`Report ${reportId} not found — deactivating schedule`);
       doc.is_active = false;
     }
   }

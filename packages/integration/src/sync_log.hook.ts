@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('integration:sync_log');
+
 /**
  * Sync Monitoring
  *
@@ -22,7 +25,7 @@ const SyncMonitoring: Hook = {
           last_sync: doc.completed_at
         });
       } catch (error) {
-        console.warn('⚠️ Failed to update sync monitoring data:', error);
+        logger.warn('Failed to update sync monitoring data:', error);
       }
     }
   }
@@ -41,8 +44,8 @@ const FailureAlert: Hook = {
     const doc = ctx.result as Record<string, any>;
     if (!doc?._id || doc.status !== 'failed') return;
 
-    console.log(`🚨 Sync failed for config ${doc.sync_config_id}: ${doc.error_details || 'Unknown error'}`);
-    console.log(`📊 Processed: ${doc.records_processed || 0}, Failed: ${doc.records_failed || 0}`);
+    logger.info(`Sync failed for config ${doc.sync_config_id}: ${doc.error_details || 'Unknown error'}`);
+    logger.info(`Processed: ${doc.records_processed || 0}, Failed: ${doc.records_failed || 0}`);
   }
 };
 
@@ -63,10 +66,10 @@ const RetryLogic: Hook = {
     try {
       const config = await (ctx.ql as any).findOne('sync_config', doc.sync_config_id);
       if (config?.is_active && config.frequency !== 'manual') {
-        console.log(`🔄 Scheduling retry for sync config ${doc.sync_config_id}`);
+        logger.info(`Scheduling retry for sync config ${doc.sync_config_id}`);
       }
     } catch (error) {
-      console.warn('⚠️ Failed to check retry eligibility:', error);
+      logger.warn('Failed to check retry eligibility:', error);
     }
   }
 };

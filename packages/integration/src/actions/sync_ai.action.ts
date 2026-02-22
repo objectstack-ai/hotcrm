@@ -9,6 +9,9 @@
 
 import { broker } from '../db.js';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('integration:sync_ai');
+
 // ============================================================================
 // 1. SUGGEST FIELD MAPPINGS
 // ============================================================================
@@ -172,7 +175,7 @@ Assess the data quality of this object and provide scores and recommendations.
 // ============================================================================
 
 async function callLLM(prompt: string): Promise<string> {
-  console.log('🤖 Calling LLM API for sync AI...');
+  logger.info('Calling LLM API for sync AI...');
   await new Promise(resolve => setTimeout(resolve, 500));
 
   if (prompt.includes('field mappings')) {

@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('support:sla');
+
 /**
  * SLA Policy Validation Trigger
  * 
@@ -61,10 +64,10 @@ const SLAPolicyValidationTrigger: Hook = {
         }
       }
 
-      console.log(`✅ SLA Policy validation passed: ${policy.policy_name || 'unknown'}`);
+      logger.info(`SLA Policy validation passed: ${policy.policy_name || 'unknown'}`);
 
     } catch (error) {
-      console.error('❌ SLA Policy validation failed:', error);
+      logger.error('SLA Policy validation failed:', error);
       throw error;
     }
   }
@@ -92,7 +95,7 @@ const SLAMilestoneCreationTrigger: Hook = {
       const policies = await (ctx.ql as any).find('sla_policy', { filters });
 
       if (!policies || policies.length === 0) {
-        console.log('ℹ️ No active SLA policies found. Skipping milestone creation.');
+        logger.info('ℹ No active SLA policies found. Skipping milestone creation.');
         return;
       }
 
@@ -153,10 +156,10 @@ const SLAMilestoneCreationTrigger: Hook = {
         });
       }
 
-      console.log(`✅ SLA milestones created for case ${caseRec.case_number || caseRec._id} using policy "${matchingPolicy.policy_name}"`);
+      logger.info(`SLA milestones created for case ${caseRec.case_number || caseRec._id} using policy "${matchingPolicy.policy_name}"`);
 
     } catch (error) {
-      console.error('❌ Error creating SLA milestones:', error);
+      logger.error('Error creating SLA milestones:', error);
     }
   }
 };
@@ -196,7 +199,7 @@ const SLABreachDetectionTrigger: Hook = {
         milestone.is_violated = true;
         milestone.violation_minutes = Math.round((now.getTime() - targetDate.getTime()) / (60 * 1000));
 
-        console.log(`🚨 SLA milestone breached: ${milestone.name || milestone.milestone_type}. Violation: ${milestone.violation_minutes} minutes.`);
+        logger.info(`SLA milestone breached: ${milestone.name || milestone.milestone_type}. Violation: ${milestone.violation_minutes} minutes.`);
 
         // Trigger escalation by updating the associated case priority
         if (milestone.case_id) {
@@ -228,7 +231,7 @@ const SLABreachDetectionTrigger: Hook = {
                 escalation_reason: `SLA ${milestone.milestone_type} breached by ${milestone.violation_minutes} minutes`,
               });
 
-              console.log(`⬆️ Case ${caseRec.case_number} escalated from "${currentPriority}" to "${newPriority}" due to SLA breach.`);
+              logger.info(`⬆ Case ${caseRec.case_number} escalated from "${currentPriority}" to "${newPriority}" due to SLA breach.`);
             }
           }
         }
@@ -240,12 +243,12 @@ const SLABreachDetectionTrigger: Hook = {
 
         if (warningDate && now > warningDate && !milestone.is_warning) {
           milestone.is_warning = true;
-          console.log(`⚠️ SLA milestone approaching breach: ${milestone.name || milestone.milestone_type}`);
+          logger.info(`SLA milestone approaching breach: ${milestone.name || milestone.milestone_type}`);
         }
       }
 
     } catch (error) {
-      console.error('❌ Error in SLA breach detection:', error);
+      logger.error('Error in SLA breach detection:', error);
     }
   }
 };

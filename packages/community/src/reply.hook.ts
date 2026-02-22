@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('community:reply');
+
 /**
  * Reply Answer Acceptance
  *
@@ -25,7 +28,7 @@ const ReplyAnswerAcceptance: Hook = {
           }
         }
       } catch (error) {
-        console.warn('⚠️ Failed to unset previous accepted answer:', error);
+        logger.warn('Failed to unset previous accepted answer:', error);
       }
     }
   }
@@ -53,7 +56,7 @@ const ReplyUpvoteTracking: Hook = {
         last_activity_at: new Date().toISOString()
       });
     } catch (error) {
-      console.warn('⚠️ Failed to update topic reply count:', error);
+      logger.warn('Failed to update topic reply count:', error);
     }
   }
 };
@@ -73,7 +76,7 @@ const ReplyAuthorReputation: Hook = {
     if (!reply?._id || !reply?.author_id) return;
 
     if (reply.is_accepted_answer) {
-      console.log(`🏆 Reply ${reply._id} accepted as answer — awarding reputation to ${reply.author_id}`);
+      logger.info(`Reply ${reply._id} accepted as answer — awarding reputation to ${reply.author_id}`);
     }
   }
 };
@@ -111,7 +114,7 @@ const ReplySpamDetection: Hook = {
           limit: 5
         });
         if (recentReplies.length >= 5) {
-          console.warn(`⚠️ Rate limit warning for user ${doc.author_id}: high posting frequency`);
+          logger.warn(`Rate limit warning for user ${doc.author_id}: high posting frequency`);
         }
       } catch (error) {
         // Non-blocking

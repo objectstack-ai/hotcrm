@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('crm:note');
+
 
 
 /**
@@ -38,13 +41,13 @@ const NoteValidationTrigger: Hook = {
       const bodyText = doc.body || '';
       doc.searchable_text = `${titleText} ${bodyText}`.trim().toLowerCase();
 
-      console.log(`📝 Note validated: word_count=${doc.word_count}`);
+      logger.info(`Note validated: word_count=${doc.word_count}`);
 
     } catch (error) {
       if (error instanceof Error && error.message.startsWith('Validation Error:')) {
         throw error;
       }
-      console.error('❌ Error in NoteValidationTrigger:', error);
+      logger.error('Error in NoteValidationTrigger:', error);
     }
   }
 };
@@ -67,10 +70,10 @@ const NoteEditTrackingTrigger: Hook = {
       doc.last_edited_date = new Date().toISOString();
       doc.last_edited_by_id = ctx.session?.userId || null;
 
-      console.log(`✏️ Note edit tracked: edited by ${doc.last_edited_by_id} at ${doc.last_edited_date}`);
+      logger.info(`Note edit tracked: edited by ${doc.last_edited_by_id} at ${doc.last_edited_date}`);
 
     } catch (error) {
-      console.error('❌ Error in NoteEditTrackingTrigger:', error);
+      logger.error('Error in NoteEditTrackingTrigger:', error);
     }
   }
 };

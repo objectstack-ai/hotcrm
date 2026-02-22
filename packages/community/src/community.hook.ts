@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('community:community');
+
 /**
  * Community Config Validation
  *
@@ -67,9 +70,9 @@ const CommunityFeatureToggle: Hook = {
       const features = typeof community.features_enabled === 'string'
         ? JSON.parse(community.features_enabled)
         : community.features_enabled;
-      console.log(`🔧 Community "${community.name}" features updated:`, Object.keys(features));
+      logger.info(`Community "${community.name}" features updated:`, Object.keys(features));
     } catch (error) {
-      console.warn('⚠️ Failed to parse community features:', error);
+      logger.warn('Failed to parse community features:', error);
     }
   }
 };

@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('support:routing');
+
 /**
  * Case Routing Trigger
  * 
@@ -17,7 +20,7 @@ const CaseRoutingTrigger: Hook = {
 
       // Skip if case already has an owner assigned
       if (caseRec.owner_id) {
-        console.log('ℹ️ Case already has an owner. Skipping auto-routing.');
+        logger.info('ℹ Case already has an owner. Skipping auto-routing.');
         return;
       }
 
@@ -27,7 +30,7 @@ const CaseRoutingTrigger: Hook = {
       });
 
       if (!routingRules || routingRules.length === 0) {
-        console.log('ℹ️ No active routing rules found. Skipping auto-routing.');
+        logger.info('ℹ No active routing rules found. Skipping auto-routing.');
         return;
       }
 
@@ -48,7 +51,7 @@ const CaseRoutingTrigger: Hook = {
       }
 
       if (!matchedRule) {
-        console.log('ℹ️ No matching routing rule found for case criteria.');
+        logger.info('ℹ No matching routing rule found for case criteria.');
         return;
       }
 
@@ -87,9 +90,9 @@ const CaseRoutingTrigger: Hook = {
               total_assignments: (selectedMember.total_assignments || 0) + 1,
             });
 
-            console.log(`✅ Case routed to agent ${selectedMember.user_id} via rule "${matchedRule.name}" (workload: ${selectedMember.current_cases || 0} cases)`);
+            logger.info(`Case routed to agent ${selectedMember.user_id} via rule "${matchedRule.name}" (workload: ${selectedMember.current_cases || 0} cases)`);
           } else {
-            console.log(`⚠️ All agents in queue "${matchedRule.queue_id}" are at capacity. Case queued without owner.`);
+            logger.info(`All agents in queue "${matchedRule.queue_id}" are at capacity. Case queued without owner.`);
           }
         }
       }
@@ -101,7 +104,7 @@ const CaseRoutingTrigger: Hook = {
       });
 
     } catch (error) {
-      console.error('❌ Error in case routing:', error);
+      logger.error('Error in case routing:', error);
     }
   }
 };
@@ -163,7 +166,7 @@ const CaseEscalationTrigger: Hook = {
       });
 
       if (!escalationRules || escalationRules.length === 0) {
-        console.log('ℹ️ No active escalation rules found.');
+        logger.info('ℹ No active escalation rules found.');
         return;
       }
 
@@ -202,10 +205,10 @@ const CaseEscalationTrigger: Hook = {
         last_triggered_date: now.toISOString(),
       });
 
-      console.log(`⬆️ Case ${caseRec.case_number || caseRec._id} escalated (Level ${caseRec.escalation_level}): ${escalationReason}`);
+      logger.info(`⬆ Case ${caseRec.case_number || caseRec._id} escalated (Level ${caseRec.escalation_level}): ${escalationReason}`);
 
     } catch (error) {
-      console.error('❌ Error in case escalation:', error);
+      logger.error('Error in case escalation:', error);
     }
   }
 };

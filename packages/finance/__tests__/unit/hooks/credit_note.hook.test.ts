@@ -5,6 +5,23 @@ import {
   CreditNoteBalanceAdjustmentTrigger
 } from '../../../src/hooks/credit_note.hook';
 
+vi.mock('@hotcrm/core', () => ({
+  createLogger: () => ({
+    info: (...args: any[]) => console.log(...args),
+    warn: (...args: any[]) => console.warn(...args),
+    error: (...args: any[]) => console.error(...args),
+    debug: (...args: any[]) => console.debug(...args),
+    fatal: (...args: any[]) => console.error(...args),
+  }),
+  logger: {
+    info: (...args: any[]) => console.log(...args),
+    warn: (...args: any[]) => console.warn(...args),
+    error: (...args: any[]) => console.error(...args),
+    debug: (...args: any[]) => console.debug(...args),
+    fatal: (...args: any[]) => console.error(...args),
+  },
+}));
+
 const mockQlFind = vi.fn();
 const mockQlDocGet = vi.fn();
 const mockQlDocCreate = vi.fn();
@@ -64,7 +81,7 @@ describe('CreditNote Hook - CreditNoteValidationTrigger', () => {
     await CreditNoteValidationTrigger.handler(ctx);
 
     expect(consoleSpy).toHaveBeenCalledWith(
-      '❌ Credit Note Validation Error:',
+      'Credit Note Validation Error:',
       expect.any(Error)
     );
     consoleSpy.mockRestore();

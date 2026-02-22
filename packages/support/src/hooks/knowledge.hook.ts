@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('support:knowledge');
+
 
 
 /**
@@ -35,10 +38,10 @@ const KnowledgeArticleScoringTrigger: Hook = {
         }
       }
 
-      console.log(`📊 Article scoring completed: Quality=${article.QualityScore}, Popularity=${article.PopularityScore}`);
+      logger.info(`Article scoring completed: Quality=${article.QualityScore}, Popularity=${article.PopularityScore}`);
 
     } catch (error) {
-      console.error(`[knowledge.hook] article scoring failed:`, error);
+      logger.error(`[knowledge.hook] article scoring failed:`, error);
     }
   }
 };
@@ -91,11 +94,11 @@ const KnowledgeArticleAIEnhancementTrigger: Hook = {
           article.RelatedArticleIds = relatedArticles.map((a: any) => a.id).join(',');
         }
 
-        console.log(`🤖 AI enhancement completed: Category=${article.AICategory}, Tags=${article.AITags}`);
+        logger.info(`AI enhancement completed: Category=${article.AICategory}, Tags=${article.AITags}`);
       }
 
     } catch (error) {
-      console.error(`[knowledge.hook] AI enhancement failed:`, error);
+      logger.error(`[knowledge.hook] AI enhancement failed:`, error);
     }
   }
 };
@@ -129,7 +132,7 @@ const KnowledgeArticleWorkflowTrigger: Hook = {
           article.Status = 'Archived';
           article.ArchivedDate = new Date();
           article.ArchivedReason = 'Auto-archived due to age and low usage';
-          console.log(`📦 Article auto-archived: ${article.ArticleNumber}`);
+          logger.info(`Article auto-archived: ${article.ArticleNumber}`);
         }
       }
 
@@ -139,7 +142,7 @@ const KnowledgeArticleWorkflowTrigger: Hook = {
       }
 
     } catch (error) {
-      console.error(`[knowledge.hook] workflow processing failed:`, error);
+      logger.error(`[knowledge.hook] workflow processing failed:`, error);
     }
   }
 };
@@ -167,12 +170,12 @@ const KnowledgeArticleUsageTracker: Hook = {
             await incrementArticleUsage(articleId.trim(), ctx);
           }
 
-          console.log(`📚 Article usage tracked for case ${caseRecord.CaseNumber}`);
+          logger.info(`Article usage tracked for case ${caseRecord.CaseNumber}`);
         }
       }
 
     } catch (error) {
-      console.error(`[knowledge.hook] usage tracking failed:`, error);
+      logger.error(`[knowledge.hook] usage tracking failed:`, error);
     }
   }
 };
@@ -190,10 +193,10 @@ const KnowledgeArticleSearchAnalytics: Hook = {
     try {
       // Track search queries and results
       // This would be implemented at the search API level
-      console.log('📈 Search analytics tracked');
+      logger.info('Search analytics tracked');
 
     } catch (error) {
-      console.error(`[knowledge.hook] search analytics failed:`, error);
+      logger.error(`[knowledge.hook] search analytics failed:`, error);
     }
   }
 };
@@ -452,14 +455,14 @@ async function trackStatusChange(article: Record<string, any>, oldArticle: Recor
   if (article.Status === 'Published' && oldArticle.Status !== 'Published') {
     article.PublishedDate = new Date();
     article.PublishedByUserId = ctx.user.id;
-    console.log(`📢 Article published: ${article.ArticleNumber}`);
+    logger.info(`Article published: ${article.ArticleNumber}`);
   }
 
   // Track archiving
   if (article.Status === 'Archived' && oldArticle.Status !== 'Archived') {
     article.ArchivedDate = new Date();
     article.ArchivedByUserId = ctx.user.id;
-    console.log(`📦 Article archived: ${article.ArticleNumber}`);
+    logger.info(`Article archived: ${article.ArticleNumber}`);
   }
 }
 
@@ -516,7 +519,7 @@ async function incrementArticleUsage(articleId: string, ctx: HookContext): Promi
       });
     }
   } catch (error) {
-    console.error(`[knowledge.hook] incrementArticleUsage failed:`, error);
+    logger.error(`[knowledge.hook] incrementArticleUsage failed:`, error);
   }
 }
 

@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('analytics:kpi');
+
 /**
  * KPI Threshold Alert
  *
@@ -28,7 +31,7 @@ const KPIThresholdAlert: Hook = {
         currentValue < kpi.threshold_critical;
 
       if (crossedCritical) {
-        console.error(`🚨 CRITICAL: KPI "${kpi.name}" dropped below critical threshold (${currentValue} < ${kpi.threshold_critical})`);
+        logger.error(`CRITICAL: KPI "${kpi.name}" dropped below critical threshold (${currentValue} < ${kpi.threshold_critical})`);
         try {
           await (ctx.ql as any).doc.create('activity', {
             Subject: `KPI Critical Alert: ${kpi.name}`,
@@ -40,7 +43,7 @@ const KPIThresholdAlert: Hook = {
             Description: `KPI "${kpi.name}" current value (${currentValue}) has dropped below the critical threshold (${kpi.threshold_critical}).`
           });
         } catch (error) {
-          console.warn('⚠️ Failed to create critical KPI alert:', error);
+          logger.warn('Failed to create critical KPI alert:', error);
         }
         return;
       }
@@ -53,7 +56,7 @@ const KPIThresholdAlert: Hook = {
         currentValue < kpi.threshold_warning;
 
       if (crossedWarning) {
-        console.warn(`⚠️ WARNING: KPI "${kpi.name}" dropped below warning threshold (${currentValue} < ${kpi.threshold_warning})`);
+        logger.warn(`WARNING: KPI "${kpi.name}" dropped below warning threshold (${currentValue} < ${kpi.threshold_warning})`);
         try {
           await (ctx.ql as any).doc.create('activity', {
             Subject: `KPI Warning Alert: ${kpi.name}`,
@@ -65,7 +68,7 @@ const KPIThresholdAlert: Hook = {
             Description: `KPI "${kpi.name}" current value (${currentValue}) has dropped below the warning threshold (${kpi.threshold_warning}).`
           });
         } catch (error) {
-          console.warn('⚠️ Failed to create warning KPI alert:', error);
+          logger.warn('Failed to create warning KPI alert:', error);
         }
       }
     }
@@ -125,7 +128,7 @@ const KPIAutoRefresh: Hook = {
 
     const frequency = frequencyMap[kpi.period] || 'daily';
 
-    console.log(`⏰ Scheduling ${frequency} refresh for KPI "${kpi.name}"`);
+    logger.info(`⏰ Scheduling ${frequency} refresh for KPI "${kpi.name}"`);
 
     // Log a scheduling activity — report_schedule requires a report reference,
     // so KPI refresh scheduling is tracked via activity records instead.
@@ -140,7 +143,7 @@ const KPIAutoRefresh: Hook = {
         Description: `Auto-refresh scheduled for KPI "${kpi.name}" with ${frequency} frequency.`
       });
     } catch (error) {
-      console.warn('⚠️ Failed to schedule KPI auto-refresh:', error);
+      logger.warn('Failed to schedule KPI auto-refresh:', error);
     }
   }
 };

@@ -10,6 +10,9 @@
 
 import { broker } from './db.js';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('community:community_analytics');
+
 // ============================================================================
 // 1. GET ENGAGEMENT METRICS
 // ============================================================================
@@ -253,7 +256,7 @@ ${contentSamples.map((c: string, i: number) => `${i + 1}. ${c.substring(0, 200)}
 Return sentiment analysis.
 `.trim();
 
-  console.log('🤖 Calling LLM API for sentiment analysis...');
+  logger.info('Calling LLM API for sentiment analysis...');
 
   return {
     overallScore: 0.3,

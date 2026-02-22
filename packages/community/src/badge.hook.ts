@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('community:badge');
+
 /**
  * Badge Auto-Award
  *
@@ -13,16 +16,16 @@ const BadgeAutoAward: Hook = {
     const badge = ctx.result as Record<string, any>;
     if (!badge?._id || !badge?.is_automatic || !badge?.criteria) return;
 
-    console.log(`🏅 Evaluating auto-award criteria for badge "${badge.name}"`);
+    logger.info(`Evaluating auto-award criteria for badge "${badge.name}"`);
 
     // Parse criteria and find qualifying users
     try {
       const criteria = typeof badge.criteria === 'string' ? JSON.parse(badge.criteria) : badge.criteria;
       if (criteria && criteria.min_posts) {
-        console.log(`📊 Badge requires minimum ${criteria.min_posts} posts`);
+        logger.info(`Badge requires minimum ${criteria.min_posts} posts`);
       }
     } catch (error) {
-      console.warn('⚠️ Failed to parse badge criteria:', error);
+      logger.warn('Failed to parse badge criteria:', error);
     }
   }
 };

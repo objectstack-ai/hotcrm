@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('real-estate:showing');
+
 /**
  * Showing Conflict Detection
  *
@@ -29,7 +32,7 @@ const ShowingConflictDetection: Hook = {
       if ((error as Error).message.startsWith('Scheduling Conflict')) {
         throw error;
       }
-      console.warn('⚠️ Failed to check showing conflicts:', error);
+      logger.warn('Failed to check showing conflicts:', error);
     }
   }
 };
@@ -47,7 +50,7 @@ const ShowingFeedbackRequest: Hook = {
     const showing = ctx.result as Record<string, any>;
     if (!showing?._id || !showing?.agent_id) return;
 
-    console.log(`📋 Feedback request sent to agent ${showing.agent_id} for showing ${showing._id} — due within 24h`);
+    logger.info(`Feedback request sent to agent ${showing.agent_id} for showing ${showing._id} — due within 24h`);
   }
 };
 
@@ -67,7 +70,7 @@ const ShowingLeadScoring: Hook = {
     const rating = showing.rating || 0;
     const scoreBoost = rating >= 4 ? 20 : rating >= 3 ? 10 : 5;
 
-    console.log(`📊 Lead score for buyer ${showing.buyer_contact_id} boosted by ${scoreBoost} based on showing rating ${rating}`);
+    logger.info(`Lead score for buyer ${showing.buyer_contact_id} boosted by ${scoreBoost} based on showing rating ${rating}`);
   }
 };
 

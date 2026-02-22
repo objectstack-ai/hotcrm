@@ -13,6 +13,9 @@
 
 import { broker } from '../db.js';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('crm:opportunity_ai');
+
 // ============================================================================
 // 1. WIN PROBABILITY PREDICTION
 // ============================================================================
@@ -635,7 +638,7 @@ Predict realistic close date and assess if current forecast is achievable.
  * Mock LLM API call
  */
 async function callLLM(prompt: string): Promise<string> {
-  console.log('🤖 Calling LLM API for opportunity AI...');
+  logger.info('Calling LLM API for opportunity AI...');
   await new Promise(resolve => setTimeout(resolve, 500));
 
   if (prompt.includes('win probability')) {

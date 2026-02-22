@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('marketing:lead_nurture');
+
 /**
  * Nurture Enrollment Trigger
  * 
@@ -22,13 +25,13 @@ const NurtureEnrollmentTrigger: Hook = {
         (!oldProgram || oldProgram.status !== 'active');
 
       if (isActivating && !program.enrollment_criteria) {
-        console.error(`❌ Cannot activate nurture program without enrollment_criteria`);
+        logger.error(`Cannot activate nurture program without enrollment_criteria`);
         program.status = oldProgram?.status || 'draft';
         return;
       }
 
       if (isActivating) {
-        console.log(`🚀 Nurture program "${program.name}" activated`);
+        logger.info(`Nurture program "${program.name}" activated`);
       }
 
       // Recalculate graduation_rate
@@ -37,7 +40,7 @@ const NurtureEnrollmentTrigger: Hook = {
 
       if (totalEnrolled > 0) {
         program.graduation_rate = (totalGraduated / totalEnrolled) * 100;
-        console.log(`🎓 Graduation rate: ${program.graduation_rate.toFixed(2)}%`);
+        logger.info(`Graduation rate: ${program.graduation_rate.toFixed(2)}%`);
       } else {
         program.graduation_rate = 0;
       }
@@ -47,12 +50,12 @@ const NurtureEnrollmentTrigger: Hook = {
       if (totalEnrolled > 0 && (totalGraduated + totalDropped) >= totalEnrolled) {
         if (program.status === 'active') {
           program.status = 'completed';
-          console.log(`✅ Nurture program "${program.name}" auto-completed - all enrolled have graduated or dropped`);
+          logger.info(`Nurture program "${program.name}" auto-completed - all enrolled have graduated or dropped`);
         }
       }
 
     } catch (error) {
-      console.error(`[lead_nurture.hook] enrollment trigger failed:`, error);
+      logger.error(`[lead_nurture.hook] enrollment trigger failed:`, error);
     }
   }
 };
@@ -81,7 +84,7 @@ const NurtureGraduationTrigger: Hook = {
         return;
       }
 
-      console.log(`🎓 Graduation milestone: ${newGraduated} total graduates for program "${program.name}"`);
+      logger.info(`Graduation milestone: ${newGraduated} total graduates for program "${program.name}"`);
 
       // Check graduation_rate for success metric
       const totalEnrolled = program.total_enrolled || 0;
@@ -89,12 +92,12 @@ const NurtureGraduationTrigger: Hook = {
         const graduationRate = (newGraduated / totalEnrolled) * 100;
 
         if (graduationRate > 50) {
-          console.log(`🏆 Success metric: Graduation rate ${graduationRate.toFixed(2)}% exceeds 50% for program "${program.name}"`);
+          logger.info(`Success metric: Graduation rate ${graduationRate.toFixed(2)}% exceeds 50% for program "${program.name}"`);
         }
       }
 
     } catch (error) {
-      console.error(`[lead_nurture.hook] graduation trigger failed:`, error);
+      logger.error(`[lead_nurture.hook] graduation trigger failed:`, error);
     }
   }
 };

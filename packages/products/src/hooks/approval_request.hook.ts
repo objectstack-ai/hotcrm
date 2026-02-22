@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('products:approval_request');
+
 const DISCOUNT_THRESHOLDS: { max: number; approver: string }[] = [
   { max: 10, approver: 'auto' },
   { max: 20, approver: 'sales_manager' },
@@ -29,7 +32,7 @@ const ApprovalRequestCreationTrigger: Hook = {
       if (!threshold) return;
 
       if (threshold.approver === 'auto') {
-        console.log(`✅ Quote discount ${discountPercent}% auto-approved (within 0-10% threshold)`);
+        logger.info(`Quote discount ${discountPercent}% auto-approved (within 0-10% threshold)`);
         return;
       }
 
@@ -45,9 +48,9 @@ const ApprovalRequestCreationTrigger: Hook = {
         created_date: new Date().toISOString()
       });
 
-      console.log(`🔄 Approval request created for quote ${oldDoc._id}: ${discountPercent}% discount requires ${threshold.approver}`);
+      logger.info(`Approval request created for quote ${oldDoc._id}: ${discountPercent}% discount requires ${threshold.approver}`);
     } catch (err) {
-      console.error('❌ Approval Request Creation Error:', err);
+      logger.error('Approval Request Creation Error:', err);
     }
   }
 };
@@ -68,17 +71,17 @@ const ApprovalDecisionTrigger: Hook = {
         await (ctx.ql as any).doc.update('quote', approval.quote, {
           status: 'draft'
         });
-        console.log(`✅ Quote ${approval.quote} approved — status set to draft (editable)`);
+        logger.info(`Quote ${approval.quote} approved — status set to draft (editable)`);
       }
 
       if (approval.status === 'rejected') {
         await (ctx.ql as any).doc.update('quote', approval.quote, {
           status: 'rejected'
         });
-        console.log(`❌ Quote ${approval.quote} rejected — reason: ${approval.rejection_reason || 'not specified'}`);
+        logger.info(`Quote ${approval.quote} rejected — reason: ${approval.rejection_reason || 'not specified'}`);
       }
     } catch (err) {
-      console.error('❌ Approval Decision Error:', err);
+      logger.error('Approval Decision Error:', err);
     }
   }
 };

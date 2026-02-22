@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('finance:invoice');
+
 const VALID_TRANSITIONS: Record<string, string[]> = {
   draft: ['sent', 'cancelled'],
   sent: ['paid', 'overdue', 'cancelled'],
@@ -24,21 +27,21 @@ const InvoiceStatusLifecycleTrigger: Hook = {
       const allowed = VALID_TRANSITIONS[oldStatus];
 
       if (!allowed || !allowed.includes(newStatus)) {
-        throw new Error(`❌ Invalid invoice status transition: ${oldStatus} → ${newStatus}`);
+        throw new Error(` Invalid invoice status transition: ${oldStatus} → ${newStatus}`);
       }
 
       if (newStatus === 'sent') {
         doc.sent_date = new Date().toISOString();
-        console.log(`📧 Invoice ${oldDoc.invoice_number} sent — sent_date set`);
+        logger.info(`Invoice ${oldDoc.invoice_number} sent — sent_date set`);
       }
 
       if (newStatus === 'overdue') {
-        console.warn(`⚠️ Invoice ${oldDoc.invoice_number} is now overdue`);
+        logger.warn(`Invoice ${oldDoc.invoice_number} is now overdue`);
       }
 
-      console.log(`🔄 Invoice status transition: ${oldStatus} → ${newStatus}`);
+      logger.info(`Invoice status transition: ${oldStatus} → ${newStatus}`);
     } catch (err) {
-      console.error('❌ Invoice Status Lifecycle Error:', err);
+      logger.error('Invoice Status Lifecycle Error:', err);
     }
   }
 };
@@ -63,9 +66,9 @@ const InvoiceLineCalculationTrigger: Hook = {
       doc.tax_amount = taxAmount;
       doc.total = total;
 
-      console.log(`💰 Invoice line calculated: qty=${quantity} × price=${unitPrice} = ${amount}, tax=${taxAmount}, total=${total}`);
+      logger.info(`Invoice line calculated: qty=${quantity} × price=${unitPrice} = ${amount}, tax=${taxAmount}, total=${total}`);
     } catch (err) {
-      console.error('❌ Invoice Line Calculation Error:', err);
+      logger.error('Invoice Line Calculation Error:', err);
     }
   }
 };

@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('support:case');
+
 /**
  * Entitlement Verification Hook
  * 
@@ -15,7 +18,7 @@ const CaseEntitlementCheck: Hook = {
 
     // Skip if no account is linked
     if (!caseRec.account) {
-      console.log('ℹ️ Case created without Account. Skipping Entitlement check.');
+      logger.info('ℹ Case created without Account. Skipping Entitlement check.');
       return;
     }
 
@@ -25,7 +28,7 @@ const CaseEntitlementCheck: Hook = {
       const accounts = await (ctx.ql as any).find('account', { filters: [['_id', '=', caseRec.account]] });
       
       if (!accounts || accounts.length === 0) {
-        console.warn(`Warning: Linked Account ${caseRec.account} not found.`);
+        logger.warn(`Warning: Linked Account ${caseRec.account} not found.`);
         return;
       }
 
@@ -65,10 +68,10 @@ const CaseEntitlementCheck: Hook = {
       // Set the field
       caseRec.target_resolution_date = targetDate.toISOString();
       
-      console.log(`✅ Applied ${slaLevel} SLA to Case ${caseRec.subject || 'unknown'}. Target: ${caseRec.target_resolution_date}`);
+      logger.info(`Applied ${slaLevel} SLA to Case ${caseRec.subject || 'unknown'}. Target: ${caseRec.target_resolution_date}`);
 
     } catch (error) {
-      console.error('❌ Error executing CaseEntitlementCheck:', error);
+      logger.error('Error executing CaseEntitlementCheck:', error);
     }
   }
 };

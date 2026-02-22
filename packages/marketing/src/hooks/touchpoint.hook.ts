@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('marketing:touchpoint');
+
 /**
  * Touchpoint Timestamp Validation Trigger
  * 
@@ -47,13 +50,13 @@ const TouchpointTimestampValidationTrigger: Hook = {
         };
         doc.channel = channelMap[doc.touchpoint_type] || doc.channel;
         if (doc.channel) {
-          console.log(`🔄 Auto-set channel to "${doc.channel}" based on touchpoint type`);
+          logger.info(`Auto-set channel to "${doc.channel}" based on touchpoint type`);
         }
       }
 
-      console.log(`✅ Touchpoint validation passed`);
+      logger.info(`Touchpoint validation passed`);
     } catch (error) {
-      console.error('❌ Touchpoint validation failed:', error);
+      logger.error('Touchpoint validation failed:', error);
       throw error;
     }
   }
@@ -99,10 +102,10 @@ const TouchpointAttributionScoringTrigger: Hook = {
       const conversions = touchpoints.filter((t: any) => t.is_conversion).length;
       const totalRevenue = touchpoints.reduce((sum: number, t: any) => sum + (t.revenue_attributed || 0), 0);
 
-      console.log(`📊 Campaign attribution updated - Touchpoints: ${totalTouchpoints}, Conversions: ${conversions}, Revenue: $${totalRevenue.toFixed(2)}`);
-      console.log(`✅ Attribution scoring complete for touchpoint ${touchpoint._id || touchpoint.id}`);
+      logger.info(`Campaign attribution updated - Touchpoints: ${totalTouchpoints}, Conversions: ${conversions}, Revenue: $${totalRevenue.toFixed(2)}`);
+      logger.info(`Attribution scoring complete for touchpoint ${touchpoint._id || touchpoint.id}`);
     } catch (error) {
-      console.error('[touchpoint.hook] attribution scoring failed:', error);
+      logger.error('[touchpoint.hook] attribution scoring failed:', error);
     }
   }
 };

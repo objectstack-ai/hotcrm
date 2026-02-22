@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('crm:assignment_rule');
+
 const VALID_OPERATORS = ['=', '!=', '>', '<', '>=', '<=', 'contains', 'not_contains'];
 
 /**
@@ -33,13 +36,13 @@ const AssignmentRuleValidationTrigger: Hook = {
         throw new Error('Validation Error: Either assign_to or assign_to_queue must be provided.');
       }
 
-      console.log(`📝 Assignment rule validated: ${doc.name}`);
+      logger.info(`Assignment rule validated: ${doc.name}`);
 
     } catch (error) {
       if (error instanceof Error && error.message.startsWith('Validation Error:')) {
         throw error;
       }
-      console.error('❌ Error in AssignmentRuleValidationTrigger:', error);
+      logger.error('Error in AssignmentRuleValidationTrigger:', error);
     }
   }
 };
@@ -77,10 +80,10 @@ const AssignmentRuleSortOrderTrigger: Hook = {
         doc.sort_order = 10;
       }
 
-      console.log(`✅ Auto-assigned sort_order=${doc.sort_order} for rule "${doc.name}"`);
+      logger.info(`Auto-assigned sort_order=${doc.sort_order} for rule "${doc.name}"`);
 
     } catch (error) {
-      console.error('❌ Error in AssignmentRuleSortOrderTrigger:', error);
+      logger.error('Error in AssignmentRuleSortOrderTrigger:', error);
     }
   }
 };

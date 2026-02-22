@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('hr:recruitment');
+
 const VALID_STAGES = ['sourcing', 'screening', 'interviewing', 'offer', 'hired', 'closed'];
 
 /**
@@ -18,18 +21,18 @@ const RecruitmentPipelineValidationTrigger: Hook = {
     try {
       // Validate stage
       if (doc.stage && !VALID_STAGES.includes(doc.stage)) {
-        throw new Error(`❌ Invalid recruitment stage "${doc.stage}". Must be one of: ${VALID_STAGES.join(', ')}`);
+        throw new Error(` Invalid recruitment stage "${doc.stage}". Must be one of: ${VALID_STAGES.join(', ')}`);
       }
 
       // Auto-set status to 'open' on insert if not provided
       if (ctx.event === 'beforeInsert' && !doc.status) {
         doc.status = 'open';
-        console.log('📋 Auto-set recruitment status to "open"');
+        logger.info('Auto-set recruitment status to "open"');
       }
 
-      console.log(`✅ Recruitment pipeline validation passed`);
+      logger.info(`Recruitment pipeline validation passed`);
     } catch (err) {
-      console.error('❌ Error in RecruitmentPipelineValidationTrigger:', err);
+      logger.error('Error in RecruitmentPipelineValidationTrigger:', err);
       throw err;
     }
   }
@@ -54,12 +57,12 @@ const RecruitmentMetricsTrigger: Hook = {
       const oldStage = (ctx.previous as Record<string, any>).stage;
       const newStage = recruitment.stage;
 
-      console.log(`🔄 Recruitment pipeline stage transition: "${oldStage}" → "${newStage}"`);
-      console.log(`📊 Pipeline metric logged for recruitment ${recruitment.id || recruitment.name || ''}`);
+      logger.info(`Recruitment pipeline stage transition: "${oldStage}" → "${newStage}"`);
+      logger.info(`Pipeline metric logged for recruitment ${recruitment.id || recruitment.name || ''}`);
 
-      console.debug(`[recruitment.hook] Pipeline analytics pending: record stage transition ${oldStage} → ${newStage}`);
+      logger.debug(`[recruitment.hook] Pipeline analytics pending: record stage transition ${oldStage} → ${newStage}`);
     } catch (err) {
-      console.error('❌ Error in RecruitmentMetricsTrigger:', err);
+      logger.error('Error in RecruitmentMetricsTrigger:', err);
     }
   }
 };

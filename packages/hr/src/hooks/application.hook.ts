@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('hr:application');
+
 // Valid application status transitions
 const VALID_STATUS_TRANSITIONS: Record<string, string[]> = {
   'new': ['screening'],
@@ -33,12 +36,12 @@ const ApplicationStatusWorkflowTrigger: Hook = {
       const oldStatus = (ctx.previous as Record<string, any>).status;
       const newStatus = application.status;
 
-      console.log(`🔄 Application ${application.application_number} status changed from "${oldStatus}" to "${newStatus}"`);
+      logger.info(`Application ${application.application_number} status changed from "${oldStatus}" to "${newStatus}"`);
 
       // Validate transition
       const allowedTransitions = VALID_STATUS_TRANSITIONS[oldStatus] || [];
       if (!allowedTransitions.includes(newStatus)) {
-        console.warn(`⚠️ Invalid status transition from "${oldStatus}" to "${newStatus}" for application ${application.application_number}`);
+        logger.warn(`Invalid status transition from "${oldStatus}" to "${newStatus}" for application ${application.application_number}`);
         return;
       }
 
@@ -56,7 +59,7 @@ const ApplicationStatusWorkflowTrigger: Hook = {
       await logApplicationStatusChange(application, oldStatus, newStatus, ctx);
 
     } catch (error) {
-      console.error('❌ Error in ApplicationStatusWorkflowTrigger:', error);
+      logger.error('Error in ApplicationStatusWorkflowTrigger:', error);
     }
   }
 };
@@ -82,9 +85,9 @@ async function createInterviewRecord(application: Record<string, any>, ctx: Hook
       feedback: null
     });
 
-    console.log(`📅 Auto-created interview record for application ${application.application_number}`);
+    logger.info(`Auto-created interview record for application ${application.application_number}`);
   } catch (error) {
-    console.error('❌ Failed to create interview record:', error);
+    logger.error('Failed to create interview record:', error);
   }
 }
 
@@ -94,7 +97,7 @@ async function createInterviewRecord(application: Record<string, any>, ctx: Hook
 async function updateCandidateToHired(application: Record<string, any>, ctx: HookContext): Promise<void> {
   try {
     if (!application.candidate_id) {
-      console.warn('⚠️ No candidate linked to application, skipping candidate update');
+      logger.warn('No candidate linked to application, skipping candidate update');
       return;
     }
 
@@ -102,9 +105,9 @@ async function updateCandidateToHired(application: Record<string, any>, ctx: Hoo
       status: 'hired'
     });
 
-    console.log(`🎉 Candidate ${application.candidate_id} status updated to hired`);
+    logger.info(`Candidate ${application.candidate_id} status updated to hired`);
   } catch (error) {
-    console.error('❌ Failed to update candidate status:', error);
+    logger.error('Failed to update candidate status:', error);
   }
 }
 
@@ -118,11 +121,11 @@ async function logApplicationStatusChange(
   ctx: HookContext
 ): Promise<void> {
   try {
-    console.log(`📝 Logging application status change: ${oldStatus} → ${newStatus} for ${application.application_number}`);
+    logger.info(`Logging application status change: ${oldStatus} → ${newStatus} for ${application.application_number}`);
 
-    console.debug(`[application.hook] Audit log pending: record status change ${oldStatus} → ${newStatus} for application ${application.application_number}`);
+    logger.debug(`[application.hook] Audit log pending: record status change ${oldStatus} → ${newStatus} for application ${application.application_number}`);
   } catch (error) {
-    console.error('❌ Failed to log application status change:', error);
+    logger.error('Failed to log application status change:', error);
   }
 }
 
@@ -144,7 +147,7 @@ const ApplicationScreeningTrigger: Hook = {
       // Fetch candidate details for scoring
       const candidate = await fetchCandidate(application.candidate_id, ctx);
       if (!candidate) {
-        console.warn(`⚠️ Candidate ${application.candidate_id} not found, skipping screening`);
+        logger.warn(`Candidate ${application.candidate_id} not found, skipping screening`);
         return;
       }
 
@@ -153,7 +156,7 @@ const ApplicationScreeningTrigger: Hook = {
 
       // Calculate screening score
       const screeningScore = calculateScreeningScore(candidate, recruitment);
-      console.log(`📊 Screening score for application ${application.application_number}: ${screeningScore}`);
+      logger.info(`Screening score for application ${application.application_number}: ${screeningScore}`);
 
       // Update application with screening score via notes
       const updates: Record<string, any> = {
@@ -163,15 +166,15 @@ const ApplicationScreeningTrigger: Hook = {
       // Auto-progress to 'screening' if score >= 70
       if (screeningScore >= 70) {
         updates.status = 'screening';
-        console.log(`✅ Application ${application.application_number} auto-progressed to screening (score: ${screeningScore})`);
+        logger.info(`Application ${application.application_number} auto-progressed to screening (score: ${screeningScore})`);
       } else {
-        console.log(`ℹ️ Application ${application.application_number} remains in current status (score: ${screeningScore})`);
+        logger.info(`ℹ Application ${application.application_number} remains in current status (score: ${screeningScore})`);
       }
 
       await (ctx.ql as any).doc.update('application', application.id, updates);
 
     } catch (error) {
-      console.error('❌ Error in ApplicationScreeningTrigger:', error);
+      logger.error('Error in ApplicationScreeningTrigger:', error);
     }
   }
 };
@@ -187,7 +190,7 @@ async function fetchCandidate(candidateId: string, ctx: HookContext): Promise<an
     });
     return candidates && candidates.length > 0 ? candidates[0] : null;
   } catch (error) {
-    console.error('❌ Failed to fetch candidate:', error);
+    logger.error('Failed to fetch candidate:', error);
     return null;
   }
 }
@@ -204,7 +207,7 @@ async function fetchRecruitment(recruitmentId: string, ctx: HookContext): Promis
     });
     return recruitments && recruitments.length > 0 ? recruitments[0] : null;
   } catch (error) {
-    console.error('❌ Failed to fetch recruitment:', error);
+    logger.error('Failed to fetch recruitment:', error);
     return null;
   }
 }

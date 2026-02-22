@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('analytics:analytics_dashboard');
+
 /**
  * Dashboard Widget Validation
  *
@@ -110,7 +113,7 @@ const DashboardRefreshScheduling: Hook = {
     const interval = dashboard.refresh_interval;
     if (!interval || interval <= 0) return;
 
-    console.log(`⏰ Scheduling auto-refresh for dashboard ${dashboard._id} every ${interval}s`);
+    logger.info(`⏰ Scheduling auto-refresh for dashboard ${dashboard._id} every ${interval}s`);
 
     // Log a scheduling activity — report_schedule requires a report reference,
     // so dashboard refresh scheduling is tracked via activity records instead.
@@ -125,7 +128,7 @@ const DashboardRefreshScheduling: Hook = {
         Description: `Auto-refresh scheduled for dashboard "${dashboard.name}" every ${interval} seconds.`
       });
     } catch (error) {
-      console.warn('⚠️ Failed to schedule dashboard refresh:', error);
+      logger.warn('Failed to schedule dashboard refresh:', error);
     }
   }
 };

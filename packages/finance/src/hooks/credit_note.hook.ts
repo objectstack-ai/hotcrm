@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('finance:credit_note');
+
 const CreditNoteValidationTrigger: Hook = {
   name: 'CreditNoteValidationTrigger',
   object: 'credit_note',
@@ -28,9 +31,9 @@ const CreditNoteValidationTrigger: Hook = {
         throw new Error('Remaining balance cannot exceed total amount');
       }
 
-      console.log(`✅ Credit note validated: amount=${amount}, tax=${taxAmount}, total=${doc.total_amount}, remaining=${doc.remaining_balance}`);
+      logger.info(`Credit note validated: amount=${amount}, tax=${taxAmount}, total=${doc.total_amount}, remaining=${doc.remaining_balance}`);
     } catch (err) {
-      console.error('❌ Credit Note Validation Error:', err);
+      logger.error('Credit Note Validation Error:', err);
     }
   }
 };
@@ -69,13 +72,13 @@ const CreditNoteBalanceAdjustmentTrigger: Hook = {
             paid_amount: newPaidAmount
           });
 
-          console.log(`💳 Credit note ${creditNote.credit_note_number} applied to invoice ${invoice.invoice_number}: credited ${creditNote.total_amount}`);
+          logger.info(`Credit note ${creditNote.credit_note_number} applied to invoice ${invoice.invoice_number}: credited ${creditNote.total_amount}`);
         }
       }
 
-      console.log(`🔄 Credit note ${creditNote.credit_note_number} status changed to applied`);
+      logger.info(`Credit note ${creditNote.credit_note_number} status changed to applied`);
     } catch (err) {
-      console.error('❌ Credit Note Balance Adjustment Error:', err);
+      logger.error('Credit Note Balance Adjustment Error:', err);
     }
   }
 };

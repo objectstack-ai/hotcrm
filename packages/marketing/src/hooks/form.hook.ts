@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('marketing:form');
+
 /**
  * Form Field Validation Trigger
  * 
@@ -36,7 +39,7 @@ const FormFieldValidationTrigger: Hook = {
         const previous = ctx.previous as Record<string, any> | undefined;
         if (!previous || previous.status !== 'published') {
           doc.published_date = new Date().toISOString();
-          console.log(`📅 Form published date set: ${doc.published_date}`);
+          logger.info(`Form published date set: ${doc.published_date}`);
         }
       }
 
@@ -49,9 +52,9 @@ const FormFieldValidationTrigger: Hook = {
         }
       }
 
-      console.log(`✅ Form field validation passed: ${doc.name || 'unknown'}`);
+      logger.info(`Form field validation passed: ${doc.name || 'unknown'}`);
     } catch (error) {
-      console.error('❌ Form field validation failed:', error);
+      logger.error('Form field validation failed:', error);
       throw error;
     }
   }
@@ -91,9 +94,9 @@ const FormSubmissionTrackingTrigger: Hook = {
           : form.last_submission_date
       });
 
-      console.log(`📊 Form metrics updated - Views: ${totalViews}, Submissions: ${totalSubmissions}, Conversion: ${conversionRate.toFixed(1)}%`);
+      logger.info(`Form metrics updated - Views: ${totalViews}, Submissions: ${totalSubmissions}, Conversion: ${conversionRate.toFixed(1)}%`);
     } catch (error) {
-      console.error('[form.hook] submission tracking failed:', error);
+      logger.error('[form.hook] submission tracking failed:', error);
     }
   }
 };

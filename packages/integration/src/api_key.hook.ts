@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('integration:api_key');
+
 /**
  * Key Generation
  *
@@ -52,9 +55,9 @@ const ExpiryAlert: Hook = {
     const daysUntilExpiry = (expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
 
     if (daysUntilExpiry <= 7 && daysUntilExpiry > 0) {
-      console.log(`⚠️ API key "${doc.name}" expires in ${Math.ceil(daysUntilExpiry)} day(s)`);
+      logger.info(`API key "${doc.name}" expires in ${Math.ceil(daysUntilExpiry)} day(s)`);
     } else if (daysUntilExpiry <= 0) {
-      console.log(`🚨 API key "${doc.name}" has expired`);
+      logger.info(`API key "${doc.name}" has expired`);
     }
   }
 };
@@ -78,7 +81,7 @@ const UsageTracking: Hook = {
         last_used: new Date().toISOString()
       });
     } catch (error) {
-      console.warn('⚠️ Failed to update API key usage tracking:', error);
+      logger.warn('Failed to update API key usage tracking:', error);
     }
   }
 };

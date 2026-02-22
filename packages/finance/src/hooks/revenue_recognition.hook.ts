@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('finance:revenue_recognition');
+
 const RevenueScheduleValidationTrigger: Hook = {
   name: 'RevenueScheduleValidationTrigger',
   object: 'revenue_schedule',
@@ -30,9 +33,9 @@ const RevenueScheduleValidationTrigger: Hook = {
         doc.amount_per_period = Math.round((doc.total_amount / doc.periods_total) * 100) / 100;
       }
 
-      console.log(`✅ Revenue schedule validated: deferred_amount=${doc.deferred_amount}, amount_per_period=${doc.amount_per_period}`);
+      logger.info(`Revenue schedule validated: deferred_amount=${doc.deferred_amount}, amount_per_period=${doc.amount_per_period}`);
     } catch (err) {
-      console.error('❌ Revenue Schedule Validation Error:', err);
+      logger.error('Revenue Schedule Validation Error:', err);
       throw err;
     }
   }
@@ -46,9 +49,9 @@ const RevenueRecognitionComplianceTrigger: Hook = {
     const doc = ctx.result as Record<string, any>;
 
     try {
-      console.log(`📋 Revenue recognition compliance check: Schedule "${doc.name}" created with method=${doc.recognition_method}, total_amount=${doc.total_amount}, periods=${doc.periods_total}`);
+      logger.info(`Revenue recognition compliance check: Schedule "${doc.name}" created with method=${doc.recognition_method}, total_amount=${doc.total_amount}, periods=${doc.periods_total}`);
     } catch (err) {
-      console.error('❌ Revenue Recognition Compliance Error:', err);
+      logger.error('Revenue Recognition Compliance Error:', err);
     }
   }
 };

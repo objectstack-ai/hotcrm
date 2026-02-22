@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('products:discount_schedule');
+
 const DiscountScheduleActivationTrigger: Hook = {
   name: 'DiscountScheduleActivationTrigger',
   object: 'discount_schedule',
@@ -19,16 +22,16 @@ const DiscountScheduleActivationTrigger: Hook = {
         const maxPct = doc.maximum_discount_percent ?? oldDoc.maximum_discount_percent;
 
         if (minPct == null && maxPct == null) {
-          console.warn('⚠️ Warning: Tiered discount schedule activated without discount tier configuration. Configure minimum/maximum discount percentages.');
+          logger.warn('Warning: Tiered discount schedule activated without discount tier configuration. Configure minimum/maximum discount percentages.');
         }
       }
 
       // Set activated timestamp
       doc.start_date = doc.start_date || new Date().toISOString();
 
-      console.log(`✅ Discount schedule "${oldDoc.name}" activated`);
+      logger.info(`Discount schedule "${oldDoc.name}" activated`);
     } catch (err) {
-      console.error('❌ DiscountScheduleActivationTrigger Error:', err);
+      logger.error('DiscountScheduleActivationTrigger Error:', err);
     }
   }
 };
@@ -71,11 +74,11 @@ const DiscountScheduleOverlapDetectionTrigger: Hook = {
         const schedEnd = new Date(schedule.end_date).getTime();
 
         if (newStart <= schedEnd && newEnd >= schedStart) {
-          console.warn(`⚠️ Warning: Discount schedule "${doc.name}" overlaps with existing schedule "${schedule.name}" (${schedule.start_date} - ${schedule.end_date})`);
+          logger.warn(`Warning: Discount schedule "${doc.name}" overlaps with existing schedule "${schedule.name}" (${schedule.start_date} - ${schedule.end_date})`);
         }
       }
     } catch (err) {
-      console.error('❌ DiscountScheduleOverlapDetectionTrigger Error:', err);
+      logger.error('DiscountScheduleOverlapDetectionTrigger Error:', err);
     }
   }
 };

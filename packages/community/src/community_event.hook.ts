@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('community:community_event');
+
 /**
  * Event RSVP Management
  *
@@ -52,7 +55,7 @@ const EventCapacityEnforcement: Hook = {
       } catch (error) {
         const msg = error instanceof Error ? error.message : String(error);
         if (msg.includes('Capacity Exceeded')) throw error;
-        console.warn('⚠️ Could not validate event capacity:', error);
+        logger.warn('Could not validate event capacity:', error);
       }
     }
   }
@@ -74,7 +77,7 @@ const EventReminderScheduling: Hook = {
     const startDate = new Date(event.start_date);
     const reminderDate = new Date(startDate.getTime() - 24 * 60 * 60 * 1000); // 24h before
 
-    console.log(`⏰ Scheduling reminder for event "${event.title}" at ${reminderDate.toISOString()}`);
+    logger.info(`⏰ Scheduling reminder for event "${event.title}" at ${reminderDate.toISOString()}`);
   }
 };
 

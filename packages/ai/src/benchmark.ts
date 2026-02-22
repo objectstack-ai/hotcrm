@@ -7,8 +7,11 @@
  * Usage:
  *   const bench = new Benchmark('lead_scoring');
  *   const result = await bench.run(() => scoreLead(lead), { iterations: 100 });
- *   console.log(result.summary());
+ *   logger.info(result.summary());
  */
+
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('ai:benchmark');
 
 // ---------------------------------------------------------------------------
 // Types

@@ -2,6 +2,9 @@ import type { Hook, HookContext } from '@objectstack/spec/data';
 
 import { broker } from '../db.js';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('crm:territory');
+
 
 /**
  * Territory Validation Trigger
@@ -57,13 +60,13 @@ const TerritoryValidationTrigger: Hook = {
         }
       }
 
-      console.log(`🗺️ Territory validated: name="${doc.name}"`);
+      logger.info(`Territory validated: name="${doc.name}"`);
 
     } catch (error) {
       if (error instanceof Error && error.message.startsWith('Validation Error:')) {
         throw error;
       }
-      console.error('❌ Error in TerritoryValidationTrigger:', error);
+      logger.error('Error in TerritoryValidationTrigger:', error);
     }
   }
 };
@@ -84,10 +87,10 @@ const TerritoryMetricsTrigger: Hook = {
       const territoryId = doc._id || doc.id;
       const event = ctx.input.event || 'update';
 
-      console.log(`📊 Territory metrics ${event}: id=${territoryId}, name="${doc.name}", type=${doc.territory_type || 'unknown'}, status=${doc.status || 'active'}`);
+      logger.info(`Territory metrics ${event}: id=${territoryId}, name="${doc.name}", type=${doc.territory_type || 'unknown'}, status=${doc.status || 'active'}`);
 
     } catch (error) {
-      console.error('❌ Error in TerritoryMetricsTrigger:', error);
+      logger.error('Error in TerritoryMetricsTrigger:', error);
     }
   }
 };

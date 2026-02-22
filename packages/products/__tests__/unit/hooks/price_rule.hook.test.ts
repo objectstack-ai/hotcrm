@@ -1,6 +1,23 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { PriceRuleValidationTrigger, PriceRuleConflictDetectionTrigger } from '../../../src/hooks/price_rule.hook';
 
+vi.mock('@hotcrm/core', () => ({
+  createLogger: () => ({
+    info: (...args: any[]) => console.log(...args),
+    warn: (...args: any[]) => console.warn(...args),
+    error: (...args: any[]) => console.error(...args),
+    debug: (...args: any[]) => console.debug(...args),
+    fatal: (...args: any[]) => console.error(...args),
+  }),
+  logger: {
+    info: (...args: any[]) => console.log(...args),
+    warn: (...args: any[]) => console.warn(...args),
+    error: (...args: any[]) => console.error(...args),
+    debug: (...args: any[]) => console.debug(...args),
+    fatal: (...args: any[]) => console.error(...args),
+  },
+}));
+
 describe('PriceRuleValidationTrigger', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
@@ -177,7 +194,7 @@ describe('PriceRuleConflictDetectionTrigger', () => {
     await PriceRuleConflictDetectionTrigger.handler(ctx as any);
 
     expect(consoleSpy).toHaveBeenCalledWith(
-      '❌ PriceRuleConflictDetectionTrigger Error:',
+      'PriceRuleConflictDetectionTrigger Error:',
       expect.any(Error)
     );
   });

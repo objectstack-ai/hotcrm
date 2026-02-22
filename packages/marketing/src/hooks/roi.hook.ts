@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('marketing:roi');
+
 /**
  * Campaign ROI Calculator
  * 
@@ -36,7 +39,7 @@ const CampaignROIHook: Hook = {
       }
 
       if (delta !== 0) {
-        console.log(`💰 Updating Campaign ${newOpp.campaign_id} Revenue by ${delta}`);
+        logger.info(`Updating Campaign ${newOpp.campaign_id} Revenue by ${delta}`);
         
         // Fetch current campaign to get current revenue
         // Note: In a real concurrent system, use $inc operator. 
@@ -53,7 +56,7 @@ const CampaignROIHook: Hook = {
         }
       }
     } catch (error) {
-      console.error(`❌ Error in CampaignROIHook for campaign ${(ctx.result as Record<string, any>)?.campaign_id}:`, error);
+      logger.error(`Error in CampaignROIHook for campaign ${(ctx.result as Record<string, any>)?.campaign_id}:`, error);
       // Don't throw - allow opportunity update to complete even if ROI calculation fails
     }
   }

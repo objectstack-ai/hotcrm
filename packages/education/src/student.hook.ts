@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('education:student');
+
 /**
  * Student Enrollment Validation
  *
@@ -54,7 +57,7 @@ const StudentAcademicStanding: Hook = {
     else if (gpa < 2.0) standing = 'probation';
     else if (gpa >= 3.5) standing = 'honors';
 
-    console.log(`🎓 Student ${result?._id} academic standing: ${standing} (GPA: ${gpa})`);
+    logger.info(`Student ${result?._id} academic standing: ${standing} (GPA: ${gpa})`);
   }
 };
 
@@ -73,7 +76,7 @@ const StudentAdvisorAssignment: Hook = {
 
     const program = student.program || student.major;
     if (!program) {
-      console.log(`📋 Student ${student._id} has no program/major — skipping advisor assignment`);
+      logger.info(`Student ${student._id} has no program/major — skipping advisor assignment`);
       return;
     }
 
@@ -85,10 +88,10 @@ const StudentAdvisorAssignment: Hook = {
 
       if (advisors.length > 0) {
         await (ctx.ql as any).doc.update('student', student._id, { advisor_id: advisors[0]._id });
-        console.log(`📋 Auto-assigned advisor ${advisors[0]._id} to student ${student._id}`);
+        logger.info(`Auto-assigned advisor ${advisors[0]._id} to student ${student._id}`);
       }
     } catch (error) {
-      console.warn('⚠️ Failed to auto-assign advisor:', error);
+      logger.warn('Failed to auto-assign advisor:', error);
     }
   }
 };

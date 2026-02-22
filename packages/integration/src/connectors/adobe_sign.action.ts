@@ -10,6 +10,9 @@
 
 import { broker } from '../db.js';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('integration:adobe_sign');
+
 // ============================================================================
 // 1. CREATE AGREEMENT
 // ============================================================================
@@ -42,7 +45,7 @@ export async function createAgreement(request: CreateAgreementRequest): Promise<
     throw new Error('either template_id or document_url is required');
   }
 
-  console.log(`📝 Creating Adobe Sign agreement: ${name}`);
+  logger.info(`Creating Adobe Sign agreement: ${name}`);
 
   return {
     agreement_id: `CBJ-${Math.random().toString(36).substring(2, 15)}`,
@@ -76,7 +79,7 @@ export async function getSigningStatus(request: GetSigningStatusRequest): Promis
     throw new Error('agreement_id is required');
   }
 
-  console.log(`🔍 Getting signing status for agreement ${agreement_id}`);
+  logger.info(`Getting signing status for agreement ${agreement_id}`);
 
   return {
     agreement_id,
@@ -108,7 +111,7 @@ export async function downloadSignedDocument(request: DownloadSignedDocumentRequ
     throw new Error('agreement_id is required');
   }
 
-  console.log(`📥 Downloading signed document for agreement ${agreement_id}`);
+  logger.info(`Downloading signed document for agreement ${agreement_id}`);
 
   return {
     agreement_id,
@@ -141,7 +144,7 @@ export async function handleAdobeSignWebhook(request: HandleAdobeSignWebhookRequ
     throw new Error('event_type and payload are required');
   }
 
-  console.log(`🔔 Processing Adobe Sign webhook: ${event_type}`);
+  logger.info(`Processing Adobe Sign webhook: ${event_type}`);
 
   const actions: string[] = [];
 

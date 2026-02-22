@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('real-estate:listing');
+
 /**
  * Listing Days On Market
  *
@@ -36,7 +39,7 @@ const ListingPriceChangeAlert: Hook = {
     const doc = ctx.input.doc as Record<string, any>;
 
     if (doc.list_price !== undefined && result?.list_price !== doc.list_price) {
-      console.log(`💰 Price change alert for listing ${result?._id}: new price ${doc.list_price}`);
+      logger.info(`Price change alert for listing ${result?._id}: new price ${doc.list_price}`);
     }
   }
 };
@@ -57,10 +60,10 @@ const ListingMlsSync: Hook = {
     try {
       const property = await (ctx.ql as any).findOne('property', listing.property_id);
       if (!property?.mls_number) {
-        console.warn(`⚠️ Property ${listing.property_id} has no MLS number for listing ${listing._id}`);
+        logger.warn(`Property ${listing.property_id} has no MLS number for listing ${listing._id}`);
       }
     } catch (error) {
-      console.warn('⚠️ Failed to validate MLS number:', error);
+      logger.warn('Failed to validate MLS number:', error);
     }
   }
 };
@@ -87,9 +90,9 @@ const ListingAutoComparable: Hook = {
         limit: 5
       });
 
-      console.log(`🏘️ Found ${comparables.length} comparable listings for property ${listing.property_id}`);
+      logger.info(`Found ${comparables.length} comparable listings for property ${listing.property_id}`);
     } catch (error) {
-      console.warn('⚠️ Failed to find comparable listings:', error);
+      logger.warn('Failed to find comparable listings:', error);
     }
   }
 };

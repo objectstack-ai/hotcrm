@@ -1,5 +1,8 @@
 import { broker } from '../db.js';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('crm:lead_convert');
+
 /**
  * Lead Conversion Service
  * 
@@ -96,7 +99,7 @@ export const LeadConvertAction = {
     });
 
 
-    console.log(`✅ Lead ${lead_id} converted successfully.`);
+    logger.info(`Lead ${lead_id} converted successfully.`);
     return result;
   }
 };

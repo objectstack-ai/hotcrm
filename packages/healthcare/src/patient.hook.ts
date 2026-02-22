@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('healthcare:patient');
+
 /**
  * Patient Data Encryption
  *
@@ -23,7 +26,7 @@ const PatientDataEncryption: Hook = {
 
     if (markedFields.length > 0) {
       doc._phi_encrypted = markedFields;
-      console.log(`🔒 PHI fields marked for encryption: ${markedFields.join(', ')}`);
+      logger.info(`PHI fields marked for encryption: ${markedFields.join(', ')}`);
     }
   }
 };
@@ -41,7 +44,7 @@ const PatientConsentTracking: Hook = {
     const patient = ctx.result as Record<string, any>;
     if (!patient?._id) return;
 
-    console.log(`📋 Consent record created for new patient ${patient._id}`);
+    logger.info(`Consent record created for new patient ${patient._id}`);
   }
 };
 
@@ -62,10 +65,10 @@ const PatientInsuranceVerification: Hook = {
     try {
       const insurance = await (ctx.ql as any).findOne('insurance', doc.insurance_id);
       if (insurance && insurance.status !== 'active') {
-        console.warn(`⚠️ Insurance ${doc.insurance_id} is not active (status: ${insurance.status})`);
+        logger.warn(`Insurance ${doc.insurance_id} is not active (status: ${insurance.status})`);
       }
     } catch (error) {
-      console.warn('⚠️ Failed to verify insurance status:', error);
+      logger.warn('Failed to verify insurance status:', error);
     }
   }
 };

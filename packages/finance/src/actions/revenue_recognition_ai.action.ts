@@ -12,6 +12,9 @@
 
 import { broker } from '../db.js';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('finance:revenue_recognition_ai');
+
 // ============================================================================
 // 1. PREDICT REVENUE
 // ============================================================================
@@ -46,7 +49,7 @@ export interface PredictRevenueResponse {
  */
 export async function predictRevenue(params: PredictRevenueRequest): Promise<PredictRevenueResponse> {
   const { period_start, period_end, contract_id } = params;
-  console.log('🤖 AI Revenue Prediction:', params);
+  logger.info('AI Revenue Prediction:', params);
 
   const filters: Array<[string, string, any]> = [
     ['status', '=', 'active'],
@@ -136,7 +139,7 @@ export interface CheckComplianceResponse {
  */
 export async function checkCompliance(params: CheckComplianceRequest): Promise<CheckComplianceResponse> {
   const { schedule_id, review_all } = params;
-  console.log('🤖 AI Compliance Check:', params);
+  logger.info('AI Compliance Check:', params);
 
   const filters: Array<[string, string, any]> = schedule_id
     ? [['_id', '=', schedule_id]]
@@ -264,7 +267,7 @@ export interface OptimizeScheduleResponse {
  */
 export async function optimizeSchedule(params: OptimizeScheduleRequest): Promise<OptimizeScheduleResponse> {
   const { contract_id } = params;
-  console.log('🤖 AI Schedule Optimization:', params);
+  logger.info('AI Schedule Optimization:', params);
 
   const schedules = await broker.find('revenue_schedule', {
     filters: [['contract_id', '=', contract_id]],
@@ -361,7 +364,7 @@ export interface ForecastDeferredResponse {
  */
 export async function forecastDeferred(params: ForecastDeferredRequest): Promise<ForecastDeferredResponse> {
   const { forecast_months, contract_id } = params;
-  console.log('🤖 AI Deferred Revenue Forecast:', params);
+  logger.info('AI Deferred Revenue Forecast:', params);
 
   const filters: Array<[string, string, any]> = [
     ['status', '=', 'active']

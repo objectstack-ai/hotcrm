@@ -10,6 +10,9 @@
 
 import { broker } from '../db.js';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('integration:slack');
+
 // ============================================================================
 // 1. SEND NOTIFICATION
 // ============================================================================
@@ -34,7 +37,7 @@ export async function sendNotification(request: SendNotificationRequest): Promis
     throw new Error('channel and message are required');
   }
 
-  console.log(`💬 Sending Slack notification to ${channel}`);
+  logger.info(`Sending Slack notification to ${channel}`);
 
   return {
     ok: true,
@@ -68,7 +71,7 @@ export async function handleSlashCommand(request: HandleSlashCommandRequest): Pr
     throw new Error('command is required');
   }
 
-  console.log(`⚡ Processing Slack slash command: ${command} ${text}`);
+  logger.info(`Processing Slack slash command: ${command} ${text}`);
 
   return {
     response_type: 'ephemeral',
@@ -100,7 +103,7 @@ export async function postChannelMessage(request: PostChannelMessageRequest): Pr
     throw new Error('channel and text are required');
   }
 
-  console.log(`📨 Posting message to Slack channel ${channel}`);
+  logger.info(`Posting message to Slack channel ${channel}`);
 
   return {
     ok: true,
@@ -133,7 +136,7 @@ export async function handleSlackEvent(request: HandleSlackEventRequest): Promis
     throw new Error('type and event are required');
   }
 
-  console.log(`🔔 Processing Slack event: ${type}`);
+  logger.info(`Processing Slack event: ${type}`);
 
   const actions: string[] = [];
 

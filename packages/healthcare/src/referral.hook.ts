@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('healthcare:referral');
+
 /**
  * Referral Auto Routing
  *
@@ -26,7 +29,7 @@ const ReferralAutoRouting: Hook = {
       specialistType = 'dermatology';
     }
 
-    console.log(`🔀 Referral ${referral._id} routed to ${specialistType} specialist`);
+    logger.info(`Referral ${referral._id} routed to ${specialistType} specialist`);
   }
 };
 
@@ -47,10 +50,10 @@ const ReferralStatusTracking: Hook = {
 
     try {
       if (result?.referring_provider) {
-        console.log(`📬 Notification sent to referring provider ${result.referring_provider}: Referral ${result._id} status changed to ${doc.status}`);
+        logger.info(`Notification sent to referring provider ${result.referring_provider}: Referral ${result._id} status changed to ${doc.status}`);
       }
     } catch (error) {
-      console.warn('⚠️ Failed to notify referring provider:', error);
+      logger.warn('Failed to notify referring provider:', error);
     }
   }
 };
@@ -72,10 +75,10 @@ const ReferralFollowUpScheduling: Hook = {
 
     try {
       if (result?.patient_id && result?.referring_provider) {
-        console.log(`📅 Follow-up appointment scheduled for patient ${result.patient_id} with provider ${result.referring_provider}`);
+        logger.info(`Follow-up appointment scheduled for patient ${result.patient_id} with provider ${result.referring_provider}`);
       }
     } catch (error) {
-      console.warn('⚠️ Failed to schedule follow-up:', error);
+      logger.warn('Failed to schedule follow-up:', error);
     }
   }
 };

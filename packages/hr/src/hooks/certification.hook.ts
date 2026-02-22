@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('hr:certification');
+
 /**
  * Certification Expiration Validation Trigger
  * 
@@ -21,7 +24,7 @@ const CertificationExpirationValidationTrigger: Hook = {
         const expiryDate = new Date(doc.expiry_date);
 
         if (expiryDate <= issueDate) {
-          throw new Error('❌ Expiry date must be after issue date');
+          throw new Error(' Expiry date must be after issue date');
         }
 
         // Auto-update status based on expiry date
@@ -31,10 +34,10 @@ const CertificationExpirationValidationTrigger: Hook = {
         if (expiryDate < now) {
           doc.status = 'expired';
           doc.is_active = false;
-          console.log(`⏰ Certification "${doc.title}" has expired`);
+          logger.info(`⏰ Certification "${doc.title}" has expired`);
         } else if (expiryDate < thirtyDaysFromNow) {
           doc.status = 'expiring_soon';
-          console.log(`⚠️ Certification "${doc.title}" is expiring within 30 days`);
+          logger.info(`Certification "${doc.title}" is expiring within 30 days`);
         }
       }
 
@@ -44,12 +47,12 @@ const CertificationExpirationValidationTrigger: Hook = {
         // Set renewal date 30 days before expiry
         const renewalDate = new Date(expiryDate.getTime() - 30 * 24 * 60 * 60 * 1000);
         doc.next_renewal_date = renewalDate.toISOString().split('T')[0];
-        console.log(`📅 Auto-set renewal date: ${doc.next_renewal_date}`);
+        logger.info(`Auto-set renewal date: ${doc.next_renewal_date}`);
       }
 
-      console.log(`✅ Certification validation passed: ${doc.title || 'unknown'}`);
+      logger.info(`Certification validation passed: ${doc.title || 'unknown'}`);
     } catch (err) {
-      console.error('❌ Error in CertificationExpirationValidationTrigger:', err);
+      logger.error('Error in CertificationExpirationValidationTrigger:', err);
       throw err;
     }
   }
@@ -75,21 +78,21 @@ const CertificationRenewalReminderTrigger: Hook = {
         return;
       }
 
-      console.log(`📜 Certification status changed: ${oldCert.status} → ${cert.status} for "${cert.title}"`);
+      logger.info(`Certification status changed: ${oldCert.status} → ${cert.status} for "${cert.title}"`);
 
       // If certification expired, log a renewal reminder
       if (cert.status === 'expired' && cert.renewal_required) {
-        console.log(`🔔 Renewal reminder: Certification "${cert.title}" for employee ${cert.employee_id} has expired and requires renewal`);
+        logger.info(`Renewal reminder: Certification "${cert.title}" for employee ${cert.employee_id} has expired and requires renewal`);
       }
 
       // If certification is expiring soon, log a warning
       if (cert.status === 'expiring_soon') {
-        console.log(`⚠️ Expiring soon: Certification "${cert.title}" for employee ${cert.employee_id} - renewal due by ${cert.next_renewal_date || cert.expiry_date}`);
+        logger.info(`Expiring soon: Certification "${cert.title}" for employee ${cert.employee_id} - renewal due by ${cert.next_renewal_date || cert.expiry_date}`);
       }
 
-      console.log(`✅ Certification renewal check complete`);
+      logger.info(`Certification renewal check complete`);
     } catch (err) {
-      console.error('❌ Error in CertificationRenewalReminderTrigger:', err);
+      logger.error('Error in CertificationRenewalReminderTrigger:', err);
     }
   }
 };

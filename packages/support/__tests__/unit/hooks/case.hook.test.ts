@@ -2,6 +2,23 @@ import { describe, it, expect, vi, beforeEach, Mock } from 'vitest';
 
 import { CaseEntitlementCheck } from '../../../src/hooks/case.hook';
 
+vi.mock('@hotcrm/core', () => ({
+  createLogger: () => ({
+    info: (...args: any[]) => console.log(...args),
+    warn: (...args: any[]) => console.warn(...args),
+    error: (...args: any[]) => console.error(...args),
+    debug: (...args: any[]) => console.debug(...args),
+    fatal: (...args: any[]) => console.error(...args),
+  }),
+  logger: {
+    info: (...args: any[]) => console.log(...args),
+    warn: (...args: any[]) => console.warn(...args),
+    error: (...args: any[]) => console.error(...args),
+    debug: (...args: any[]) => console.debug(...args),
+    fatal: (...args: any[]) => console.error(...args),
+  },
+}));
+
 describe('CaseEntitlementCheck', () => {
   let mockQl: any;
 
@@ -205,7 +222,7 @@ describe('CaseEntitlementCheck', () => {
     await CaseEntitlementCheck.handler(ctx as any);
 
     expect(consoleSpy).toHaveBeenCalledWith(
-      '❌ Error executing CaseEntitlementCheck:',
+      'Error executing CaseEntitlementCheck:',
       expect.any(Error)
     );
 

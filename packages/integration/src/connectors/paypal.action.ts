@@ -10,6 +10,9 @@
 
 import { broker } from '../db.js';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('integration:paypal');
+
 // ============================================================================
 // 1. CREATE PAYPAL PAYMENT
 // ============================================================================
@@ -42,7 +45,7 @@ export async function createPayPalPayment(request: CreatePayPalPaymentRequest): 
     throw new Error('return_url and cancel_url are required');
   }
 
-  console.log(`💳 Creating PayPal payment: ${amount} ${currency}`);
+  logger.info(`Creating PayPal payment: ${amount} ${currency}`);
 
   return {
     payment_id: `PAY-${Math.random().toString(36).substring(2, 15)}`,
@@ -74,7 +77,7 @@ export async function processPayPalRefund(request: ProcessPayPalRefundRequest): 
     throw new Error('payment_id is required');
   }
 
-  console.log(`💸 Processing PayPal refund for ${payment_id}`);
+  logger.info(`Processing PayPal refund for ${payment_id}`);
 
   return {
     refund_id: `REF-${Math.random().toString(36).substring(2, 15)}`,
@@ -105,7 +108,7 @@ export async function syncPayPalSubscription(request: SyncPayPalSubscriptionRequ
     throw new Error('subscription_id and connection_id are required');
   }
 
-  console.log(`🔄 Syncing PayPal subscription ${subscription_id}`);
+  logger.info(`Syncing PayPal subscription ${subscription_id}`);
 
   return {
     synced: true,
@@ -137,7 +140,7 @@ export async function handlePayPalWebhook(request: HandlePayPalWebhookRequest): 
     throw new Error('event_type and payload are required');
   }
 
-  console.log(`🔔 Processing PayPal webhook: ${event_type}`);
+  logger.info(`Processing PayPal webhook: ${event_type}`);
 
   const actions: string[] = [];
 

@@ -10,6 +10,9 @@
 
 import { broker } from './db.js';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('healthcare:healthcare_ai');
+
 // ============================================================================
 // 1. SCHEDULING OPTIMIZATION
 // ============================================================================
@@ -278,7 +281,7 @@ Predict the likelihood of patient readmission within 30 days.
 // ============================================================================
 
 async function callLLM(prompt: string): Promise<string> {
-  console.log('🤖 Calling LLM API for healthcare AI...');
+  logger.info('Calling LLM API for healthcare AI...');
   await new Promise(resolve => setTimeout(resolve, 500));
 
   if (prompt.includes('scheduling optimization')) {

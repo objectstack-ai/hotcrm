@@ -13,6 +13,9 @@
  * 7. Budget Allocation Recommendations - Data-driven budget planning
  */
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('marketing:marketing_analytics');
+
 // Mock database interface
 const db = {
   doc: {
@@ -1081,7 +1084,7 @@ Create optimal budget allocation:
  * Mock LLM API call
  */
 async function callLLM(prompt: string): Promise<string> {
-  console.log('🤖 Calling LLM API for marketing analytics...');
+  logger.info('Calling LLM API for marketing analytics...');
 
   await new Promise(resolve => setTimeout(resolve, 500));
 

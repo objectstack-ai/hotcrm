@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('hr:interview');
+
 /**
  * Interview Scheduling Trigger
  * 
@@ -19,7 +22,7 @@ const InterviewSchedulingTrigger: Hook = {
       // Set default duration if not provided (60 minutes)
       if (!interview.duration) {
         interview.duration = 60;
-        console.log('ℹ️ Default interview duration set to 60 minutes');
+        logger.info('ℹ Default interview duration set to 60 minutes');
       }
 
       // Validate interview date is in the future
@@ -29,7 +32,7 @@ const InterviewSchedulingTrigger: Hook = {
         today.setHours(0, 0, 0, 0);
 
         if (scheduledDate < today) {
-          console.warn(`⚠️ Interview scheduled_date ${interview.scheduled_date} is in the past`);
+          logger.warn(`Interview scheduled_date ${interview.scheduled_date} is in the past`);
           // Allow past dates for historical data entry but log warning
         }
       }
@@ -44,7 +47,7 @@ const InterviewSchedulingTrigger: Hook = {
         );
 
         if (isDoubleBooked) {
-          console.warn(`⚠️ Interviewer ${interview.interviewer_id} may have a scheduling conflict on ${interview.scheduled_date}`);
+          logger.warn(`Interviewer ${interview.interviewer_id} may have a scheduling conflict on ${interview.scheduled_date}`);
         }
       }
 
@@ -53,10 +56,10 @@ const InterviewSchedulingTrigger: Hook = {
         interview.status = 'scheduled';
       }
 
-      console.log(`✅ Interview scheduling validation passed for ${interview.title || 'new interview'}`);
+      logger.info(`Interview scheduling validation passed for ${interview.title || 'new interview'}`);
 
     } catch (error) {
-      console.error('❌ Error in InterviewSchedulingTrigger:', error);
+      logger.error('Error in InterviewSchedulingTrigger:', error);
     }
   }
 };
@@ -82,13 +85,13 @@ async function checkInterviewerAvailability(
     });
 
     if (existingInterviews && existingInterviews.length > 0) {
-      console.warn(`⚠️ Interviewer ${interviewerId} already has ${existingInterviews.length} interview(s) on ${dateOnly}`);
+      logger.warn(`Interviewer ${interviewerId} already has ${existingInterviews.length} interview(s) on ${dateOnly}`);
       return true;
     }
 
     return false;
   } catch (error) {
-    console.error('❌ Failed to check interviewer availability:', error);
+    logger.error('Failed to check interviewer availability:', error);
     return false;
   }
 }
@@ -115,7 +118,7 @@ const InterviewFeedbackTrigger: Hook = {
       }
 
       const interview = ctx.result as Record<string, any>;
-      console.log(`📝 Interview feedback submitted for ${interview.title}: result=${currentResult}`);
+      logger.info(`Interview feedback submitted for ${interview.title}: result=${currentResult}`);
 
       // Update application status based on result
       if (interview.application_id) {
@@ -128,7 +131,7 @@ const InterviewFeedbackTrigger: Hook = {
       }
 
     } catch (error) {
-      console.error('❌ Error in InterviewFeedbackTrigger:', error);
+      logger.error('Error in InterviewFeedbackTrigger:', error);
     }
   }
 };
@@ -150,7 +153,7 @@ async function updateApplicationFromResult(
 
     const newStatus = statusMap[result];
     if (!newStatus) {
-      console.warn(`⚠️ Unknown interview result: ${result}`);
+      logger.warn(`Unknown interview result: ${result}`);
       return;
     }
 
@@ -160,12 +163,12 @@ async function updateApplicationFromResult(
         status: newStatus
       });
 
-      console.log(`✅ Application ${interview.application_id} status updated to "${newStatus}" based on interview result`);
+      logger.info(`Application ${interview.application_id} status updated to "${newStatus}" based on interview result`);
     } else {
-      console.log(`ℹ️ Application ${interview.application_id} remains in interview stage (result: ${result})`);
+      logger.info(`ℹ Application ${interview.application_id} remains in interview stage (result: ${result})`);
     }
   } catch (error) {
-    console.error('❌ Failed to update application status:', error);
+    logger.error('Failed to update application status:', error);
   }
 }
 
@@ -211,9 +214,9 @@ async function calculateAverageInterviewScore(
       notes: `Average interview score: ${averageScore}/100 (${scoredCount} interview(s) completed)`
     });
 
-    console.log(`📊 Average interview score for application ${applicationId}: ${averageScore}/100`);
+    logger.info(`Average interview score for application ${applicationId}: ${averageScore}/100`);
   } catch (error) {
-    console.error('❌ Failed to calculate average interview score:', error);
+    logger.error('Failed to calculate average interview score:', error);
   }
 }
 

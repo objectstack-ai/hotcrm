@@ -1,6 +1,23 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ProductBundleValidationTrigger, ProductBundleComponentCompletenessTrigger } from '../../../src/hooks/product_bundle.hook';
 
+vi.mock('@hotcrm/core', () => ({
+  createLogger: () => ({
+    info: (...args: any[]) => console.log(...args),
+    warn: (...args: any[]) => console.warn(...args),
+    error: (...args: any[]) => console.error(...args),
+    debug: (...args: any[]) => console.debug(...args),
+    fatal: (...args: any[]) => console.error(...args),
+  }),
+  logger: {
+    info: (...args: any[]) => console.log(...args),
+    warn: (...args: any[]) => console.warn(...args),
+    error: (...args: any[]) => console.error(...args),
+    debug: (...args: any[]) => console.debug(...args),
+    fatal: (...args: any[]) => console.error(...args),
+  },
+}));
+
 describe('ProductBundleValidationTrigger', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
@@ -193,7 +210,7 @@ describe('ProductBundleComponentCompletenessTrigger', () => {
     await ProductBundleComponentCompletenessTrigger.handler(ctx as any);
 
     expect(consoleSpy).toHaveBeenCalledWith(
-      '❌ ProductBundleComponentCompletenessTrigger Error:',
+      'ProductBundleComponentCompletenessTrigger Error:',
       expect.any(Error)
     );
   });

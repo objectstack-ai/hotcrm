@@ -1,6 +1,9 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 import type { Lead } from '../schemas/lead.schema.js';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('crm:lead');
+
 // Constants for lead scoring
 const HIGH_SCORE_THRESHOLD = 70;
 const DEFAULT_OPPORTUNITY_CLOSE_DAYS = 30;
@@ -69,10 +72,10 @@ const LeadScoringTrigger: Hook = {
       }
 
 
-      console.log(`✨ Lead scoring completed: Score=${lead.LeadScore}, Completeness=${lead.DataCompleteness}%`);
+      logger.info(`Lead scoring completed: Score=${lead.LeadScore}, Completeness=${lead.DataCompleteness}%`);
 
     } catch (error) {
-      console.error('❌ Error in LeadScoringTrigger:', error);
+      logger.error('Error in LeadScoringTrigger:', error);
       // Don't throw - allow lead to be saved even if scoring fails
     }
   }
@@ -202,12 +205,12 @@ async function runAssignmentRules(lead: Lead, ctx: HookContext): Promise<void> {
           lead.OwnerId = rule.assign_to_queue;
           // In real implementation we might set type to 'queue'
         }
-        console.log(`✅ Lead assigned to ${lead.owner} by rule "${rule.name}"`);
+        logger.info(`Lead assigned to ${lead.owner} by rule "${rule.name}"`);
         break; // Stop after first match
       }
     }
   } catch (error) {
-    console.error('⚠️ Failed to run assignment rules:', error);
+    logger.error('Failed to run assignment rules:', error);
   }
 }
 
@@ -244,19 +247,19 @@ async function managePublicPool(lead: Lead, ctx: HookContext): Promise<void> {
   // If lead is being claimed from pool
   if (ctx.previous && ctx.previous.IsInPublicPool && !lead.IsInPublicPool) {
     lead.ClaimedDate = new Date().toISOString();
-    console.log(`📋 Lead claimed from public pool by ${ctx.session?.userId}`);
+    logger.info(`Lead claimed from public pool by ${ctx.session?.userId}`);
   }
 
   // If lead is being returned to pool
   if (ctx.previous && !ctx.previous.IsInPublicPool && lead.IsInPublicPool) {
     lead.PoolEntryDate = new Date().toISOString();
     lead.ClaimedDate = null;
-    console.log(`🔄 Lead returned to public pool`);
+    logger.info(`Lead returned to public pool`);
   }
 
   // Auto-remove high-score leads from public pool
   if (lead.LeadScore > HIGH_SCORE_THRESHOLD && lead.IsInPublicPool) {
-    console.warn(`⚠️ High-score lead (${lead.LeadScore}) should not be in public pool`);
+    logger.warn(`High-score lead (${lead.LeadScore}) should not be in public pool`);
     // Note: Validation rule will prevent this, but log warning
   }
 }
@@ -288,7 +291,7 @@ const LeadStatusChangeTrigger: Hook = {
         return;
       }
 
-      console.log(`🔄 Lead status changed from "${ctx.previous.Status}" to "${ctx.input.Status}"`);
+      logger.info(`Lead status changed from "${ctx.previous.Status}" to "${ctx.input.Status}"`);
 
       // Handle conversion
       if (ctx.input.Status === 'converted') {
@@ -304,7 +307,7 @@ const LeadStatusChangeTrigger: Hook = {
       await logStatusChange(ctx);
 
     } catch (error) {
-      console.error('❌ Error in LeadStatusChangeTrigger:', error);
+      logger.error('Error in LeadStatusChangeTrigger:', error);
       // Don't throw - allow update to complete
     }
   }
@@ -317,7 +320,7 @@ const LeadStatusChangeTrigger: Hook = {
  * Called from afterUpdate trigger when status changes to 'converted'.
  */
 async function handleLeadConversion(ctx: HookContext): Promise<void> {
-  console.log('✅ Processing lead conversion...');
+  logger.info('Processing lead conversion...');
   const lead = ctx.input;
 
   try {
@@ -370,9 +373,9 @@ async function handleLeadConversion(ctx: HookContext): Promise<void> {
       Description: `Lead "${lead.FirstName} ${lead.LastName}" from "${lead.Company}" converted. Account: ${account?._id}, Contact: ${contact?._id}, Opportunity: ${opportunity?._id}`
     });
 
-    console.log(`✅ Lead conversion complete: Account=${account?._id}, Contact=${contact?._id}, Opportunity=${opportunity?._id}`);
+    logger.info(`Lead conversion complete: Account=${account?._id}, Contact=${contact?._id}, Opportunity=${opportunity?._id}`);
   } catch (error) {
-    console.error('❌ Failed to convert lead:', error);
+    logger.error('Failed to convert lead:', error);
   }
 }
 
@@ -383,7 +386,7 @@ async function handleLeadConversion(ctx: HookContext): Promise<void> {
  * IsInPublicPool should be updated by the application or a workflow rule.
  */
 async function handleLeadUnqualification(ctx: HookContext): Promise<void> {
-  console.log('❌ Processing lead unqualification...');
+  logger.info('Processing lead unqualification...');
   const lead = ctx.input;
 
   // Log activity
@@ -399,7 +402,7 @@ async function handleLeadUnqualification(ctx: HookContext): Promise<void> {
       Description: `Lead "${lead.FirstName} ${lead.LastName}" marked as unqualified`
     });
   } catch (error) {
-    console.error('❌ Failed to log unqualification activity:', error);
+    logger.error('Failed to log unqualification activity:', error);
   }
 }
 
@@ -422,7 +425,7 @@ async function logStatusChange(ctx: HookContext): Promise<void> {
       Description: `Lead status changed from "${oldStatus}" to "${ctx.input.Status}"`
     });
   } catch (error) {
-    console.error('❌ Failed to log status change activity:', error);
+    logger.error('Failed to log status change activity:', error);
   }
 }
 

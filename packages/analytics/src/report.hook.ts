@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('analytics:report');
+
 /**
  * Report Filter Validation
  *
@@ -87,7 +90,7 @@ const ReportCacheInvalidation: Hook = {
     const report = ctx.result as Record<string, any>;
     if (!report?._id) return;
 
-    console.log(`🗑️ Invalidating cache for report ${report._id}`);
+    logger.info(`Invalidating cache for report ${report._id}`);
 
     // Remove any cached snapshots tied to this report
     try {
@@ -98,7 +101,7 @@ const ReportCacheInvalidation: Hook = {
         await (ctx.ql as any).doc.update('snapshot', snap._id, { is_stale: true });
       }
     } catch (error) {
-      console.warn('⚠️ Failed to invalidate report cache:', error);
+      logger.warn('Failed to invalidate report cache:', error);
     }
   }
 };
@@ -123,7 +126,7 @@ const ReportExecutionTracking: Hook = {
         last_run_at: new Date().toISOString()
       });
     } catch (error) {
-      console.warn('⚠️ Failed to update report execution tracking:', error);
+      logger.warn('Failed to update report execution tracking:', error);
     }
   }
 };

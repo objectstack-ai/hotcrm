@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('integration:webhook_delivery');
+
 /**
  * Delivery Tracking
  *
@@ -19,7 +22,7 @@ const DeliveryTracking: Hook = {
         last_triggered: new Date().toISOString()
       });
     } catch (error) {
-      console.warn('⚠️ Failed to update subscription last_triggered:', error);
+      logger.warn('Failed to update subscription last_triggered:', error);
     }
   }
 };
@@ -44,11 +47,11 @@ const RetryScheduling: Hook = {
 
       const maxRetries = subscription.max_retries || 3;
       if ((doc.attempt_number || 1) < maxRetries) {
-        console.log(`🔄 Scheduling retry ${(doc.attempt_number || 1) + 1}/${maxRetries} for delivery ${doc._id}`);
+        logger.info(`Scheduling retry ${(doc.attempt_number || 1) + 1}/${maxRetries} for delivery ${doc._id}`);
         await (ctx.ql as any).doc.update('webhook_delivery', doc._id, { status: 'retrying' });
       }
     } catch (error) {
-      console.warn('⚠️ Failed to schedule retry:', error);
+      logger.warn('Failed to schedule retry:', error);
     }
   }
 };
@@ -73,11 +76,11 @@ const DeadLetterHandling: Hook = {
 
       const maxRetries = subscription.max_retries || 3;
       if ((doc.attempt_number || 1) >= maxRetries) {
-        console.log(`💀 Dead letter: delivery ${doc._id} exhausted all ${maxRetries} retries`);
+        logger.info(`Dead letter: delivery ${doc._id} exhausted all ${maxRetries} retries`);
         await (ctx.ql as any).doc.update('webhook_subscription', doc.subscription_id, { status: 'failed' });
       }
     } catch (error) {
-      console.warn('⚠️ Failed to handle dead letter:', error);
+      logger.warn('Failed to handle dead letter:', error);
     }
   }
 };

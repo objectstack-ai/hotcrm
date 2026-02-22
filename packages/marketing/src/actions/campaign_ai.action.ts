@@ -13,6 +13,9 @@
  * 7. Campaign Health Score - Overall campaign effectiveness rating
  */
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('marketing:campaign_ai');
+
 // Mock database interface
 const db = {
   doc: {
@@ -952,7 +955,7 @@ Provide:
  * In production, replace with actual OpenAI/Anthropic API
  */
 async function callLLM(prompt: string): Promise<string> {
-  console.log('🤖 Calling LLM API for campaign AI...');
+  logger.info('Calling LLM API for campaign AI...');
 
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 500));

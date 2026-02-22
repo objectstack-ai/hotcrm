@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('products:product_bundle');
+
 const VALID_STATUSES = ['draft', 'active', 'inactive', 'archived'];
 
 const ProductBundleValidationTrigger: Hook = {
@@ -25,9 +28,9 @@ const ProductBundleValidationTrigger: Hook = {
         }
       }
 
-      console.log(`✅ Product bundle validated: ${doc.name}`);
+      logger.info(`Product bundle validated: ${doc.name}`);
     } catch (err) {
-      console.error('❌ ProductBundleValidationTrigger Error:', err);
+      logger.error('ProductBundleValidationTrigger Error:', err);
       throw err;
     }
   }
@@ -50,12 +53,12 @@ const ProductBundleComponentCompletenessTrigger: Hook = {
       });
 
       if (!components || components.length === 0) {
-        console.warn(`⚠️ Warning: Bundle "${bundle.name}" activated with no components. Add at least one component.`);
+        logger.warn(`Warning: Bundle "${bundle.name}" activated with no components. Add at least one component.`);
       } else {
-        console.log(`✅ Bundle "${bundle.name}" activated with ${components.length} component(s)`);
+        logger.info(`Bundle "${bundle.name}" activated with ${components.length} component(s)`);
       }
     } catch (err) {
-      console.error('❌ ProductBundleComponentCompletenessTrigger Error:', err);
+      logger.error('ProductBundleComponentCompletenessTrigger Error:', err);
     }
   }
 };

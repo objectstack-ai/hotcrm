@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('support:social_media_case');
+
 /**
  * Social Media Case Platform Validation Trigger
  * 
@@ -43,12 +46,12 @@ const SocialMediaCasePlatformValidationTrigger: Hook = {
 
       // Warn if no monitoring options are enabled
       if (!doc.monitor_mentions && !doc.monitor_direct_messages && !doc.monitor_comments) {
-        console.warn(`⚠️ No monitoring options enabled for ${doc.platform} configuration "${doc.name}"`);
+        logger.warn(`No monitoring options enabled for ${doc.platform} configuration "${doc.name}"`);
       }
 
-      console.log(`✅ Social media case validation passed: ${doc.name || 'unknown'} (${doc.platform})`);
+      logger.info(`Social media case validation passed: ${doc.name || 'unknown'} (${doc.platform})`);
     } catch (error) {
-      console.error('❌ Social media case validation failed:', error);
+      logger.error('Social media case validation failed:', error);
       throw error;
     }
   }
@@ -83,19 +86,19 @@ const SocialMediaCaseSentimentAnalysisTrigger: Hook = {
         ? (casesCreated / postsProcessed) * 100
         : 0;
 
-      console.log(`📊 Social media metrics for "${config.name}" (${config.platform}): ${postsProcessed} posts processed, ${casesCreated} cases created (${caseCreationRate.toFixed(1)}%)`);
+      logger.info(`Social media metrics for "${config.name}" (${config.platform}): ${postsProcessed} posts processed, ${casesCreated} cases created (${caseCreationRate.toFixed(1)}%)`);
 
       // Alert on high error count
       if (config.error_count > 0 && oldConfig && config.error_count > oldConfig.error_count) {
-        console.warn(`🚨 Error count increased for ${config.platform} config "${config.name}": ${config.error_count} errors. Last error: ${config.last_error_message || 'unknown'}`);
+        logger.warn(`Error count increased for ${config.platform} config "${config.name}": ${config.error_count} errors. Last error: ${config.last_error_message || 'unknown'}`);
       }
 
       // Alert on negative sentiment trend
       if (config.average_sentiment !== undefined && config.average_sentiment < -0.3) {
-        console.warn(`⚠️ Negative sentiment trend detected for ${config.platform} config "${config.name}": avg sentiment ${config.average_sentiment}`);
+        logger.warn(`Negative sentiment trend detected for ${config.platform} config "${config.name}": avg sentiment ${config.average_sentiment}`);
       }
     } catch (error) {
-      console.error('[social_media_case.hook] sentiment analysis failed:', error);
+      logger.error('[social_media_case.hook] sentiment analysis failed:', error);
     }
   }
 };
@@ -136,9 +139,9 @@ const SocialMediaCaseCreationTrigger: Hook = {
       doc.responses_sent = 0;
       doc.error_count = 0;
 
-      console.log(`✅ Social media case configuration created: ${doc.name} (${doc.platform}/@${doc.account_handle})`);
+      logger.info(`Social media case configuration created: ${doc.name} (${doc.platform}/@${doc.account_handle})`);
     } catch (error) {
-      console.error('❌ Social media case creation validation failed:', error);
+      logger.error('Social media case creation validation failed:', error);
       throw error;
     }
   }

@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('healthcare:hipaa_audit');
+
 /**
  * HIPAA Audit Trail
  *
@@ -13,7 +16,7 @@ const HipaaAuditTrail: Hook = {
     const audit = ctx.result as Record<string, any>;
     if (!audit?._id) return;
 
-    console.log(`📝 HIPAA Audit: User ${audit.user_id} performed ${audit.action} on ${audit.record_type}:${audit.record_id} at ${audit.timestamp}`);
+    logger.info(`HIPAA Audit: User ${audit.user_id} performed ${audit.action} on ${audit.record_type}:${audit.record_id} at ${audit.timestamp}`);
   }
 };
 
@@ -38,18 +41,18 @@ const HipaaAnomalyDetection: Hook = {
       });
 
       if (recentAccess.length >= 50) {
-        console.warn(`🚨 HIPAA Alert: High-volume access detected for user ${audit.user_id} (${recentAccess.length} records accessed)`);
+        logger.warn(`HIPAA Alert: High-volume access detected for user ${audit.user_id} (${recentAccess.length} records accessed)`);
       }
 
       // Check for after-hours access
       if (audit.timestamp) {
         const hour = new Date(audit.timestamp).getHours();
         if (hour < 6 || hour > 22) {
-          console.warn(`🚨 HIPAA Alert: After-hours access by user ${audit.user_id} at ${audit.timestamp}`);
+          logger.warn(`HIPAA Alert: After-hours access by user ${audit.user_id} at ${audit.timestamp}`);
         }
       }
     } catch (error) {
-      console.warn('⚠️ Failed to detect anomalies:', error);
+      logger.warn('Failed to detect anomalies:', error);
     }
   }
 };

@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('real-estate:real_estate_offer');
+
 /**
  * Offer Validation
  *
@@ -26,7 +29,7 @@ const OfferValidation: Hook = {
         if ((error as Error).message.startsWith('Validation Error')) {
           throw error;
         }
-        console.warn('⚠️ Failed to validate listing status:', error);
+        logger.warn('Failed to validate listing status:', error);
       }
     }
   }
@@ -46,7 +49,7 @@ const OfferCounterWorkflow: Hook = {
     const result = ctx.result as Record<string, any>;
 
     if (doc.status === 'counter' && result?.buyer_id) {
-      console.log(`🔄 Counter offer notification sent to buyer ${result.buyer_id} for offer ${result._id}`);
+      logger.info(`Counter offer notification sent to buyer ${result.buyer_id} for offer ${result._id}`);
     }
   }
 };
@@ -69,7 +72,7 @@ const OfferExpirationCheck: Hook = {
 
       if (expirationDate < now && doc.status !== 'expired' && doc.status !== 'withdrawn') {
         doc.status = 'expired';
-        console.log(`⏰ Offer automatically expired — expiration date ${doc.expiration_date} has passed`);
+        logger.info(`⏰ Offer automatically expired — expiration date ${doc.expiration_date} has passed`);
       }
     }
   }

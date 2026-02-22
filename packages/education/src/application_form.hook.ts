@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('education:application_form');
+
 /**
  * Application Completeness Check
  *
@@ -41,10 +44,10 @@ const ApplicationReviewerAssignment: Hook = {
       });
 
       if (reviewers.length > 0) {
-        console.log(`📋 Auto-assigned reviewer ${reviewers[0]._id} to application ${application._id}`);
+        logger.info(`Auto-assigned reviewer ${reviewers[0]._id} to application ${application._id}`);
       }
     } catch (error) {
-      console.warn('⚠️ Failed to assign reviewer:', error);
+      logger.warn('Failed to assign reviewer:', error);
     }
   }
 };
@@ -65,14 +68,14 @@ const ApplicationDecisionWorkflow: Hook = {
     if (!doc.decision || doc.decision === 'pending') return;
 
     const decision = doc.decision;
-    console.log(`📬 Application ${result?._id} decision: ${decision}`);
+    logger.info(`Application ${result?._id} decision: ${decision}`);
 
     if (decision === 'admit') {
-      console.log(`🎉 Sending acceptance notification to ${result?.email}`);
+      logger.info(`Sending acceptance notification to ${result?.email}`);
     } else if (decision === 'deny') {
-      console.log(`📭 Sending rejection notification to ${result?.email}`);
+      logger.info(`Sending rejection notification to ${result?.email}`);
     } else if (decision === 'waitlist') {
-      console.log(`⏳ Sending waitlist notification to ${result?.email}`);
+      logger.info(`⏳ Sending waitlist notification to ${result?.email}`);
     }
   }
 };

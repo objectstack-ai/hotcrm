@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('real-estate:commission');
+
 /**
  * Commission Split Calculation
  *
@@ -19,7 +22,7 @@ const CommissionSplitCalculation: Hook = {
           doc.commission_amount = listing.sold_price * (doc.commission_rate / 100);
         }
       } catch (error) {
-        console.warn('⚠️ Failed to calculate commission from listing:', error);
+        logger.warn('Failed to calculate commission from listing:', error);
       }
     }
   }
@@ -48,9 +51,9 @@ const CommissionCapTracking: Hook = {
         (sum: number, c: any) => sum + (c.commission_amount || 0), 0
       );
 
-      console.log(`📈 Agent ${commission.agent_id} annual commission total: $${totalCommission.toFixed(2)}`);
+      logger.info(`Agent ${commission.agent_id} annual commission total: $${totalCommission.toFixed(2)}`);
     } catch (error) {
-      console.warn('⚠️ Failed to track commission cap:', error);
+      logger.warn('Failed to track commission cap:', error);
     }
   }
 };
@@ -70,7 +73,7 @@ const CommissionPaymentScheduling: Hook = {
 
     if (doc.payment_status === 'paid' && result?._id) {
       const paymentDate = doc.payment_date || new Date().toISOString().split('T')[0];
-      console.log(`✅ Commission ${result._id} paid on ${paymentDate} to agent ${result.agent_id}`);
+      logger.info(`Commission ${result._id} paid on ${paymentDate} to agent ${result.agent_id}`);
 
       if (!doc.payment_date) {
         try {
@@ -78,7 +81,7 @@ const CommissionPaymentScheduling: Hook = {
             payment_date: paymentDate
           });
         } catch (error) {
-          console.warn('⚠️ Failed to set payment date:', error);
+          logger.warn('Failed to set payment date:', error);
         }
       }
     }

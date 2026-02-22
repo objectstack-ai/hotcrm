@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('crm:account');
+
 
 
 /**
@@ -24,15 +27,15 @@ const AccountHealthScoreTrigger: Hook = {
       
       // Set color coding based on health score
       if (account.HealthScore >= 80) {
-        console.log(`✅ Account ${account.Name} - Healthy (${account.HealthScore})`);
+        logger.info(`Account ${account.Name} - Healthy (${account.HealthScore})`);
       } else if (account.HealthScore >= 50) {
-        console.log(`⚠️ Account ${account.Name} - At Risk (${account.HealthScore})`);
+        logger.info(`Account ${account.Name} - At Risk (${account.HealthScore})`);
       } else {
-        console.log(`🚨 Account ${account.Name} - Critical (${account.HealthScore})`);
+        logger.info(`Account ${account.Name} - Critical (${account.HealthScore})`);
       }
       
     } catch (error) {
-      console.error('❌ Error in AccountHealthScoreTrigger:', error);
+      logger.error('Error in AccountHealthScoreTrigger:', error);
       // Don't throw - allow account to be saved even if scoring fails
     }
   }
@@ -117,7 +120,7 @@ const AccountHierarchyTrigger: Hook = {
       }
       
     } catch (error) {
-      console.error('❌ Error in AccountHierarchyTrigger:', error);
+      logger.error('Error in AccountHierarchyTrigger:', error);
     }
   }
 };
@@ -126,7 +129,7 @@ const AccountHierarchyTrigger: Hook = {
  * Update parent account metrics by aggregating child account data
  */
 async function updateParentAccountMetrics(parentId: string, ctx: HookContext): Promise<void> {
-  console.log(`🔄 Updating parent account metrics: ${parentId}`);
+  logger.info(`Updating parent account metrics: ${parentId}`);
   
   // In real implementation, would query all child accounts and aggregate
   // For now, just log the action
@@ -147,7 +150,7 @@ async function updateParentAccountMetrics(parentId: string, ctx: HookContext): P
  * Cascade ownership changes to child accounts
  */
 async function cascadeOwnershipChange(accountId: string, newOwnerId: string, ctx: HookContext): Promise<void> {
-  console.log(`🔄 Cascading ownership change to child accounts of ${accountId}`);
+  logger.info(`Cascading ownership change to child accounts of ${accountId}`);
   
   // In real implementation, would query and update all child accounts
   // const childAccounts = await ctx.db.find('Account', {
@@ -180,17 +183,17 @@ const AccountStatusAutomationTrigger: Hook = {
       // Auto-upgrade to Active Customer if has contract value
       if (account.CustomerStatus === 'prospect' && account.ContractValue > 0) {
         account.CustomerStatus = 'active_customer';
-        console.log(`✅ Auto-upgraded ${account.Name} from Prospect to Active Customer`);
+        logger.info(`Auto-upgraded ${account.Name} from Prospect to Active Customer`);
       }
       
       // Flag at-risk based on health score
       if (account.CustomerStatus === 'active_customer' && account.HealthScore < 50) {
-        console.warn(`🚨 Account ${account.Name} is at risk! Health Score: ${account.HealthScore}`);
+        logger.warn(`Account ${account.Name} is at risk! Health Score: ${account.HealthScore}`);
         // In real implementation, could create a task or send notification
       }
       
     } catch (error) {
-      console.error('❌ Error in AccountStatusAutomationTrigger:', error);
+      logger.error('Error in AccountStatusAutomationTrigger:', error);
     }
   }
 };
@@ -202,7 +205,7 @@ const AccountStatusAutomationTrigger: Hook = {
  * Here we provide the logic for updating account contract values
  */
 export async function updateAccountContractValue(accountId: string, db: any): Promise<void> {
-  console.log(`🔄 Updating contract value rollup for account: ${accountId}`);
+  logger.info(`Updating contract value rollup for account: ${accountId}`);
   
   // In real implementation, would query all active contracts
   // const activeContracts = await db.find('Contract', {
@@ -218,7 +221,7 @@ export async function updateAccountContractValue(accountId: string, db: any): Pr
   //   ContractValue: totalValue
   // });
   
-  console.log(`✅ Contract value rollup updated for account ${accountId}`);
+  logger.info(`Contract value rollup updated for account ${accountId}`);
 }
 
 /**
@@ -228,7 +231,7 @@ export async function updateAccountContractValue(accountId: string, db: any): Pr
  * Here we provide the logic for updating renewal dates
  */
 export async function updateAccountRenewalDate(accountId: string, db: any): Promise<void> {
-  console.log(`🔄 Updating renewal date for account: ${accountId}`);
+  logger.info(`Updating renewal date for account: ${accountId}`);
   
   // In real implementation, would query all active contracts and find nearest renewal
   // const activeContracts = await db.find('Contract', {
@@ -250,7 +253,7 @@ export async function updateAccountRenewalDate(accountId: string, db: any): Prom
   //   await createRenewalReminderTasks(accountId, nextRenewalDate, db);
   // }
   
-  console.log(`✅ Renewal date updated for account ${accountId}`);
+  logger.info(`Renewal date updated for account ${accountId}`);
 }
 
 /**
@@ -265,7 +268,7 @@ async function createRenewalReminderTasks(accountId: string, renewalDate: string
     
     if (reminderDate > new Date()) {
       // In real implementation, would create the task
-      console.log(`📅 Would create reminder task ${days} days before renewal`);
+      logger.info(`Would create reminder task ${days} days before renewal`);
       // await db.doc.create('Activity', {
       //   Subject: `Renewal reminder: ${days} days until contract renewal`,
       //   Type: 'task',

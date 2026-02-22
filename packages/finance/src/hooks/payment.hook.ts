@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('finance:payment');
+
 const PaymentMatchingTrigger: Hook = {
   name: 'PaymentMatchingTrigger',
   object: 'payment',
@@ -15,7 +18,7 @@ const PaymentMatchingTrigger: Hook = {
       });
 
       if (!invoices || invoices.length === 0) {
-        console.warn(`⚠️ Payment ${payment._id}: linked invoice ${payment.invoice} not found`);
+        logger.warn(`Payment ${payment._id}: linked invoice ${payment.invoice} not found`);
         return;
       }
 
@@ -26,16 +29,16 @@ const PaymentMatchingTrigger: Hook = {
           status: 'paid',
           paid_amount: invoice.total_amount
         });
-        console.log(`✅ Invoice ${invoice.invoice_number} fully paid by payment ${payment._id}`);
+        logger.info(`Invoice ${invoice.invoice_number} fully paid by payment ${payment._id}`);
       } else {
         const newPaidAmount = (invoice.paid_amount || 0) + payment.amount;
         await (ctx.ql as any).doc.update('invoice', invoice._id, {
           paid_amount: newPaidAmount
         });
-        console.log(`💰 Invoice ${invoice.invoice_number} partially paid: ${newPaidAmount} of ${invoice.total_amount}`);
+        logger.info(`Invoice ${invoice.invoice_number} partially paid: ${newPaidAmount} of ${invoice.total_amount}`);
       }
     } catch (err) {
-      console.error('❌ Payment Matching Error:', err);
+      logger.error('Payment Matching Error:', err);
     }
   }
 };
@@ -79,9 +82,9 @@ const PaymentValidationTrigger: Hook = {
         }
       }
 
-      console.log(`✅ Payment validation passed`);
+      logger.info(`Payment validation passed`);
     } catch (err) {
-      console.error('❌ Payment Validation Error:', err);
+      logger.error('Payment Validation Error:', err);
     }
   }
 };

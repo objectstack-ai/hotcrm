@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('hr:training');
+
 /**
  * Training Enrollment Validation Trigger
  * 
@@ -21,32 +24,32 @@ const TrainingEnrollmentValidationTrigger: Hook = {
         const endDate = new Date(doc.end_date);
 
         if (endDate <= startDate) {
-          throw new Error('❌ End date must be after start date');
+          throw new Error(' End date must be after start date');
         }
 
         // Auto-calculate duration_hours
         const diffMs = endDate.getTime() - startDate.getTime();
         const hours = Math.round((diffMs / (1000 * 60 * 60)) * 10) / 10;
         doc.duration_hours = hours;
-        console.log(`⏱️ Auto-calculated training duration: ${hours}h`);
+        logger.info(`⏱ Auto-calculated training duration: ${hours}h`);
       }
 
       // Validate exam_score range
       if (doc.exam_score !== undefined && doc.exam_score !== null) {
         if (doc.exam_score < 0 || doc.exam_score > 100) {
-          throw new Error('❌ Exam score must be between 0 and 100');
+          throw new Error(' Exam score must be between 0 and 100');
         }
       }
 
       // Cannot mark as completed without attendance
       if (doc.status === 'completed' && !doc.attendance_status) {
         doc.attendance_status = 'attended';
-        console.log(`📋 Auto-set attendance status to "attended" for completed training`);
+        logger.info(`Auto-set attendance status to "attended" for completed training`);
       }
 
-      console.log(`✅ Training enrollment validation passed: ${doc.title || 'unknown'}`);
+      logger.info(`Training enrollment validation passed: ${doc.title || 'unknown'}`);
     } catch (err) {
-      console.error('❌ Error in TrainingEnrollmentValidationTrigger:', err);
+      logger.error('Error in TrainingEnrollmentValidationTrigger:', err);
       throw err;
     }
   }
@@ -73,12 +76,12 @@ const TrainingCompletionTrackingTrigger: Hook = {
       }
 
       if (training.status === 'completed') {
-        console.log(`🎓 Training "${training.title}" completed by employee ${training.employee_id}`);
+        logger.info(`Training "${training.title}" completed by employee ${training.employee_id}`);
 
         // If passed and category is certification, log for cert creation
         if (training.passed && training.category === 'certification') {
-          console.log(`🏆 Employee ${training.employee_id} passed certification training "${training.title}" with score: ${training.exam_score}`);
-          console.log(`📜 Certification record should be created for this training`);
+          logger.info(`Employee ${training.employee_id} passed certification training "${training.title}" with score: ${training.exam_score}`);
+          logger.info(`Certification record should be created for this training`);
         }
 
         // Auto-set completion_percentage to 100
@@ -86,17 +89,17 @@ const TrainingCompletionTrackingTrigger: Hook = {
           await (ctx.ql as any).doc.update('training', training._id || training.id, {
             completion_percentage: 100
           });
-          console.log(`📊 Completion percentage set to 100%`);
+          logger.info(`Completion percentage set to 100%`);
         }
       }
 
       if (training.status === 'cancelled') {
-        console.log(`❌ Training "${training.title}" was cancelled for employee ${training.employee_id}`);
+        logger.info(`Training "${training.title}" was cancelled for employee ${training.employee_id}`);
       }
 
-      console.log(`✅ Training completion tracking complete`);
+      logger.info(`Training completion tracking complete`);
     } catch (err) {
-      console.error('❌ Error in TrainingCompletionTrackingTrigger:', err);
+      logger.error('Error in TrainingCompletionTrackingTrigger:', err);
     }
   }
 };

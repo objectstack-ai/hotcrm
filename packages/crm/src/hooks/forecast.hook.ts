@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('crm:forecast');
+
 const ForecastCalculationTrigger: Hook = {
   name: 'ForecastCalculationTrigger',
   object: 'forecast',
@@ -28,9 +31,9 @@ const ForecastCalculationTrigger: Hook = {
       // Set last calculated timestamp
       doc.last_calculated_at = new Date().toISOString();
 
-      console.log(`📊 Forecast calculated: amount=${amount}, quota=${quota}, attainment=${doc.quota_attainment}%, gap=${doc.gap_to_quota}, adjusted=${doc.adjusted_amount}`);
+      logger.info(`Forecast calculated: amount=${amount}, quota=${quota}, attainment=${doc.quota_attainment}%, gap=${doc.gap_to_quota}, adjusted=${doc.adjusted_amount}`);
     } catch (err) {
-      console.error('❌ Forecast Calculation Error:', err);
+      logger.error('Forecast Calculation Error:', err);
     }
   }
 };
@@ -76,9 +79,9 @@ const ForecastAggregationTrigger: Hook = {
         });
       }
 
-      console.log(`📊 Forecast aggregation updated for owner ${forecast.owner_id}: pipeline=${pipelineAmount}, closed=${closedAmount}`);
+      logger.info(`Forecast aggregation updated for owner ${forecast.owner_id}: pipeline=${pipelineAmount}, closed=${closedAmount}`);
     } catch (err) {
-      console.error('❌ Forecast Aggregation Error:', err);
+      logger.error('Forecast Aggregation Error:', err);
     }
   }
 };

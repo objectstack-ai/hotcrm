@@ -1,6 +1,23 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { QuotePricingHook } from '../../../src/hooks/quote.hook';
 
+vi.mock('@hotcrm/core', () => ({
+  createLogger: () => ({
+    info: (...args: any[]) => console.log(...args),
+    warn: (...args: any[]) => console.warn(...args),
+    error: (...args: any[]) => console.error(...args),
+    debug: (...args: any[]) => console.debug(...args),
+    fatal: (...args: any[]) => console.error(...args),
+  }),
+  logger: {
+    info: (...args: any[]) => console.log(...args),
+    warn: (...args: any[]) => console.warn(...args),
+    error: (...args: any[]) => console.error(...args),
+    debug: (...args: any[]) => console.debug(...args),
+    fatal: (...args: any[]) => console.error(...args),
+  },
+}));
+
 describe('QuotePricingHook', () => {
   let mockQl: any;
   let mockUser: any;
@@ -446,7 +463,7 @@ describe('QuotePricingHook', () => {
     await expect(QuotePricingHook.handler(ctx as any)).rejects.toThrow('Unexpected error');
 
     expect(consoleSpy).toHaveBeenCalledWith(
-      '❌ Error in QuotePricingHook:',
+      'Error in QuotePricingHook:',
       expect.any(Error)
     );
     consoleSpy.mockRestore();

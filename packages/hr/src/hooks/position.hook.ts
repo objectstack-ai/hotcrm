@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('hr:position');
+
 /**
  * Position Status Change Validation Trigger
  * 
@@ -18,24 +21,24 @@ const PositionStatusChangeValidationTrigger: Hook = {
       // Validate salary range
       if (doc.min_salary !== undefined && doc.max_salary !== undefined) {
         if (doc.min_salary > doc.max_salary) {
-          throw new Error('❌ Minimum salary cannot exceed maximum salary');
+          throw new Error(' Minimum salary cannot exceed maximum salary');
         }
       }
 
       // Validate headcount is positive
       if (doc.headcount !== undefined && doc.headcount < 1) {
-        throw new Error('❌ Planned headcount must be at least 1');
+        throw new Error(' Planned headcount must be at least 1');
       }
 
       // Validate status transitions
       const previous = ctx.previous as Record<string, any> | undefined;
       if (previous && doc.status === 'closed' && previous.status === 'hiring') {
-        console.warn(`⚠️ Position "${doc.title}" is being closed while in hiring status - ensure all open applications are handled`);
+        logger.warn(`Position "${doc.title}" is being closed while in hiring status - ensure all open applications are handled`);
       }
 
-      console.log(`✅ Position validation passed: ${doc.title || 'unknown'}`);
+      logger.info(`Position validation passed: ${doc.title || 'unknown'}`);
     } catch (err) {
-      console.error('❌ Error in PositionStatusChangeValidationTrigger:', err);
+      logger.error('Error in PositionStatusChangeValidationTrigger:', err);
       throw err;
     }
   }
@@ -75,12 +78,12 @@ const PositionVacancyTrackingTrigger: Hook = {
       }
 
       if (vacancies > 0) {
-        console.log(`📋 Position "${position.title}" has ${vacancies} vacancy(ies) - Current: ${currentHeadcount}/${plannedHeadcount}`);
+        logger.info(`Position "${position.title}" has ${vacancies} vacancy(ies) - Current: ${currentHeadcount}/${plannedHeadcount}`);
       } else {
-        console.log(`✅ Position "${position.title}" is fully staffed: ${currentHeadcount}/${plannedHeadcount}`);
+        logger.info(`Position "${position.title}" is fully staffed: ${currentHeadcount}/${plannedHeadcount}`);
       }
     } catch (err) {
-      console.error('❌ Error in PositionVacancyTrackingTrigger:', err);
+      logger.error('Error in PositionVacancyTrackingTrigger:', err);
     }
   }
 };

@@ -11,6 +11,23 @@ vi.mock('../../../src/db', () => ({
 import { db } from '../../../src/db';
 import knowledgeHooks from '../../../src/hooks/knowledge.hook';
 
+vi.mock('@hotcrm/core', () => ({
+  createLogger: () => ({
+    info: (...args: any[]) => console.log(...args),
+    warn: (...args: any[]) => console.warn(...args),
+    error: (...args: any[]) => console.error(...args),
+    debug: (...args: any[]) => console.debug(...args),
+    fatal: (...args: any[]) => console.error(...args),
+  }),
+  logger: {
+    info: (...args: any[]) => console.log(...args),
+    warn: (...args: any[]) => console.warn(...args),
+    error: (...args: any[]) => console.error(...args),
+    debug: (...args: any[]) => console.debug(...args),
+    fatal: (...args: any[]) => console.error(...args),
+  },
+}));
+
 const [
   KnowledgeArticleScoringTrigger,
   KnowledgeArticleAIEnhancementTrigger,
@@ -670,7 +687,7 @@ describe('KnowledgeArticleSearchAnalytics', () => {
     const ctx = {};
     await KnowledgeArticleSearchAnalytics.handler(ctx as any);
 
-    expect(consoleSpy).toHaveBeenCalledWith('📈 Search analytics tracked');
+    expect(consoleSpy).toHaveBeenCalledWith('Search analytics tracked');
 
     consoleSpy.mockRestore();
   });

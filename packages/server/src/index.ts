@@ -8,9 +8,12 @@
  * - See README.md for full migration instructions
  */
 
-console.error(`
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('server:index');
+
+logger.error(`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  ⚠️  DEPRECATION WARNING
+    DEPRECATION WARNING
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   The @hotcrm/server package is DEPRECATED and no longer maintained.

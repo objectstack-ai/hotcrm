@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('marketing:marketing_list');
+
 /**
  * Marketing List Duplicate Detection Trigger
  * 
@@ -40,9 +43,9 @@ const MarketingListDuplicateDetectionTrigger: Hook = {
         throw new Error('Dynamic lists require filter_criteria_json to be defined.');
       }
 
-      console.log(`✅ Marketing list duplicate detection passed: ${doc.name || 'unknown'}`);
+      logger.info(`Marketing list duplicate detection passed: ${doc.name || 'unknown'}`);
     } catch (error) {
-      console.error('❌ Marketing list duplicate detection failed:', error);
+      logger.error('Marketing list duplicate detection failed:', error);
       throw error;
     }
   }
@@ -84,9 +87,9 @@ const MarketingListMembershipCountTrigger: Hook = {
         deliverability_rate: Math.round(deliverabilityRate * 100) / 100
       });
 
-      console.log(`📊 Marketing list membership updated - Total: ${totalMembers}, Active: ${activeMembers}, Deliverability: ${deliverabilityRate.toFixed(1)}%`);
+      logger.info(`Marketing list membership updated - Total: ${totalMembers}, Active: ${activeMembers}, Deliverability: ${deliverabilityRate.toFixed(1)}%`);
     } catch (error) {
-      console.error('[marketing_list.hook] membership count update failed:', error);
+      logger.error('[marketing_list.hook] membership count update failed:', error);
     }
   }
 };

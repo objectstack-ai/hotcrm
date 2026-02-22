@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('support:portal_user');
+
 /**
  * Portal User Account Validation Trigger
  * 
@@ -34,7 +37,7 @@ const PortalUserAccountValidationTrigger: Hook = {
       if (doc.user_role === 'readonly') {
         doc.can_submit_cases = false;
         doc.can_comment_on_cases = false;
-        console.log(`🔒 Read-only permissions applied for portal user ${doc.username}`);
+        logger.info(`Read-only permissions applied for portal user ${doc.username}`);
       }
 
       // Enforce max_cases_per_month based on customer_tier
@@ -49,13 +52,13 @@ const PortalUserAccountValidationTrigger: Hook = {
         const limit = tierLimits[doc.customer_tier];
         if (limit !== undefined) {
           doc.max_cases_per_month = limit;
-          console.log(`📊 Auto-set case limit to ${limit || 'unlimited'} based on ${doc.customer_tier} tier`);
+          logger.info(`Auto-set case limit to ${limit || 'unlimited'} based on ${doc.customer_tier} tier`);
         }
       }
 
-      console.log(`✅ Portal user validation passed: ${doc.username || 'unknown'}`);
+      logger.info(`Portal user validation passed: ${doc.username || 'unknown'}`);
     } catch (error) {
-      console.error('❌ Portal user validation failed:', error);
+      logger.error('Portal user validation failed:', error);
       throw error;
     }
   }
@@ -83,7 +86,7 @@ const PortalUserAccessLevelTrigger: Hook = {
         return;
       }
 
-      console.log(`🔄 Portal user status changed: ${oldUser.status} → ${user.status} for ${user.username}`);
+      logger.info(`Portal user status changed: ${oldUser.status} → ${user.status} for ${user.username}`);
 
       // Handle activation
       if (user.status === 'active' && oldUser.status !== 'active') {
@@ -94,7 +97,7 @@ const PortalUserAccessLevelTrigger: Hook = {
         };
 
         await (ctx.ql as any).doc.update('portal_user', user._id || user.id, updates);
-        console.log(`✅ Portal user "${user.username}" activated`);
+        logger.info(`Portal user "${user.username}" activated`);
       }
 
       // Handle deactivation or suspension
@@ -102,15 +105,15 @@ const PortalUserAccessLevelTrigger: Hook = {
         await (ctx.ql as any).doc.update('portal_user', user._id || user.id, {
           is_active: false
         });
-        console.log(`🔒 Portal user "${user.username}" ${user.status} - access revoked`);
+        logger.info(`Portal user "${user.username}" ${user.status} - access revoked`);
       }
 
       // Handle locked status due to failed login attempts
       if (user.status === 'locked') {
-        console.log(`🚨 Security alert: Portal user "${user.username}" account locked`);
+        logger.info(`Security alert: Portal user "${user.username}" account locked`);
       }
     } catch (error) {
-      console.error('[portal_user.hook] access level management failed:', error);
+      logger.error('[portal_user.hook] access level management failed:', error);
     }
   }
 };

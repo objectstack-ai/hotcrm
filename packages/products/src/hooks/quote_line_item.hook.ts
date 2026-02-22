@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('products:quote_line_item');
+
 const QuoteLineCalculationTrigger: Hook = {
   name: 'QuoteLineCalculationTrigger',
   object: 'quote_line_item',
@@ -25,9 +28,9 @@ const QuoteLineCalculationTrigger: Hook = {
       doc.tax_amount = taxAmount;
       doc.final_amount = finalAmount;
 
-      console.log(`💰 Quote line calculated: ${quantity} × ${unitPrice} = ${lineTotal}, discount=${discountAmount}, tax=${taxAmount}, final=${finalAmount}`);
+      logger.info(`Quote line calculated: ${quantity} × ${unitPrice} = ${lineTotal}, discount=${discountAmount}, tax=${taxAmount}, final=${finalAmount}`);
     } catch (err) {
-      console.error('❌ Quote Line Calculation Error:', err);
+      logger.error('Quote Line Calculation Error:', err);
     }
   }
 };
@@ -67,9 +70,9 @@ const QuoteLineTotalUpdateTrigger: Hook = {
         grand_total: grandTotal
       });
 
-      console.log(`📊 Quote ${lineItem.quote} totals updated: subtotal=${subtotal}, discount=${discountTotal}, tax=${taxTotal}, grand_total=${grandTotal}`);
+      logger.info(`Quote ${lineItem.quote} totals updated: subtotal=${subtotal}, discount=${discountTotal}, tax=${taxTotal}, grand_total=${grandTotal}`);
     } catch (err) {
-      console.error('❌ Quote Line Total Update Error:', err);
+      logger.error('Quote Line Total Update Error:', err);
     }
   }
 };

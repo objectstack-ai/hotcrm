@@ -10,6 +10,9 @@
 
 import { broker } from '../db.js';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('integration:docusign');
+
 // ============================================================================
 // 1. CREATE ENVELOPE
 // ============================================================================
@@ -38,7 +41,7 @@ export async function createEnvelope(request: CreateEnvelopeRequest): Promise<Cr
     throw new Error('subject is required');
   }
 
-  console.log(`📝 Creating DocuSign envelope: ${subject}`);
+  logger.info(`Creating DocuSign envelope: ${subject}`);
 
   return {
     envelope_id: `env_${Math.random().toString(36).substring(2, 15)}`,
@@ -68,7 +71,7 @@ export async function getSigningStatus(request: GetSigningStatusRequest): Promis
     throw new Error('envelope_id is required');
   }
 
-  console.log(`📋 Checking signing status for envelope ${envelope_id}`);
+  logger.info(`Checking signing status for envelope ${envelope_id}`);
 
   return {
     envelope_id,
@@ -101,7 +104,7 @@ export async function downloadSignedDocument(request: DownloadSignedDocumentRequ
     throw new Error('envelope_id is required');
   }
 
-  console.log(`📥 Downloading signed document for envelope ${envelope_id}`);
+  logger.info(`Downloading signed document for envelope ${envelope_id}`);
 
   return {
     envelope_id,
@@ -133,7 +136,7 @@ export async function handleDocuSignWebhook(request: HandleDocuSignWebhookReques
     throw new Error('event and envelope_id are required');
   }
 
-  console.log(`🔔 Processing DocuSign webhook: ${event} for envelope ${envelope_id}`);
+  logger.info(`Processing DocuSign webhook: ${event} for envelope ${envelope_id}`);
 
   const actions: string[] = [];
 

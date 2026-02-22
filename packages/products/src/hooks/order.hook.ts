@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('products:order');
+
 const VALID_ORDER_TRANSITIONS: Record<string, string[]> = {
   draft: ['activated', 'cancelled'],
   activated: ['fulfilled', 'partially_fulfilled', 'shipped', 'cancelled'],
@@ -34,9 +37,9 @@ const OrderValidationTrigger: Hook = {
 
       doc.total_amount = subtotal + taxAmount + shippingAmount - discountAmount;
 
-      console.log(`✅ Order validated: subtotal=${subtotal}, tax=${taxAmount}, shipping=${shippingAmount}, discount=${discountAmount}, total=${doc.total_amount}`);
+      logger.info(`Order validated: subtotal=${subtotal}, tax=${taxAmount}, shipping=${shippingAmount}, discount=${discountAmount}, total=${doc.total_amount}`);
     } catch (err) {
-      console.error('❌ Order Validation Error:', err);
+      logger.error('Order Validation Error:', err);
     }
   }
 };
@@ -62,16 +65,16 @@ const OrderStatusLifecycleTrigger: Hook = {
 
       if (newStatus === 'activated') {
         doc.effective_date = doc.effective_date || new Date().toISOString().split('T')[0];
-        console.log(`🚀 Order ${oldDoc.order_number} activated — effective date: ${doc.effective_date}`);
+        logger.info(`Order ${oldDoc.order_number} activated — effective date: ${doc.effective_date}`);
       }
 
       if (newStatus === 'cancelled') {
-        console.warn(`⚠️ Order ${oldDoc.order_number} has been cancelled`);
+        logger.warn(`Order ${oldDoc.order_number} has been cancelled`);
       }
 
-      console.log(`🔄 Order status transition: ${oldStatus} → ${newStatus}`);
+      logger.info(`Order status transition: ${oldStatus} → ${newStatus}`);
     } catch (err) {
-      console.error('❌ Order Status Lifecycle Error:', err);
+      logger.error('Order Status Lifecycle Error:', err);
     }
   }
 };

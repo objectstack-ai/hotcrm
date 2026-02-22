@@ -10,6 +10,9 @@
 
 import { broker } from '../db.js';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('integration:quickbooks');
+
 // ============================================================================
 // 1. SYNC QUICKBOOKS INVOICE
 // ============================================================================
@@ -38,7 +41,7 @@ export async function syncQuickBooksInvoice(request: SyncQuickBooksInvoiceReques
     throw new Error('sync_direction is required');
   }
 
-  console.log(`📄 Syncing QuickBooks invoice (${sync_direction})`);
+  logger.info(`Syncing QuickBooks invoice (${sync_direction})`);
 
   return {
     synced: true,
@@ -79,7 +82,7 @@ export async function reconcilePayments(request: ReconcilePaymentsRequest): Prom
     throw new Error('start_date and end_date are required');
   }
 
-  console.log(`💰 Reconciling payments from ${start_date} to ${end_date}`);
+  logger.info(`Reconciling payments from ${start_date} to ${end_date}`);
 
   return {
     reconciled: true,
@@ -120,7 +123,7 @@ export async function mapCustomerVendor(request: MapCustomerVendorRequest): Prom
     throw new Error('entity_type is required');
   }
 
-  console.log(`🔗 Mapping CRM account ${crm_account_id} to QuickBooks ${entity_type}`);
+  logger.info(`Mapping CRM account ${crm_account_id} to QuickBooks ${entity_type}`);
 
   return {
     mapped: true,
@@ -153,7 +156,7 @@ export async function handleQuickBooksWebhook(request: HandleQuickBooksWebhookRe
     throw new Error('event_type and payload are required');
   }
 
-  console.log(`🔔 Processing QuickBooks webhook: ${event_type}`);
+  logger.info(`Processing QuickBooks webhook: ${event_type}`);
 
   const actions: string[] = [];
 

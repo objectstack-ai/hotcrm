@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('hr:time_off');
+
 /**
  * Time Off Balance Validation Trigger
  * 
@@ -23,7 +26,7 @@ const TimeOffBalanceValidationTrigger: Hook = {
         const endDate = new Date(timeOff.end_date);
 
         if (startDate > endDate) {
-          console.warn(`⚠️ Time-off start date ${timeOff.start_date} is after end date ${timeOff.end_date}`);
+          logger.warn(`Time-off start date ${timeOff.start_date} is after end date ${timeOff.end_date}`);
         }
       }
 
@@ -34,7 +37,7 @@ const TimeOffBalanceValidationTrigger: Hook = {
         today.setHours(0, 0, 0, 0);
 
         if (startDate < today && ctx.event === 'beforeInsert') {
-          console.warn(`⚠️ Time-off request start date ${timeOff.start_date} is in the past`);
+          logger.warn(`Time-off request start date ${timeOff.start_date} is in the past`);
         }
       }
 
@@ -42,7 +45,7 @@ const TimeOffBalanceValidationTrigger: Hook = {
       if (timeOff.start_date && timeOff.end_date) {
         const businessDays = calculateBusinessDays(new Date(timeOff.start_date), new Date(timeOff.end_date));
         timeOff.total_days = businessDays;
-        console.log(`📊 Calculated business days: ${businessDays}`);
+        logger.info(`Calculated business days: ${businessDays}`);
       }
 
       // Check employee has sufficient balance
@@ -55,14 +58,14 @@ const TimeOffBalanceValidationTrigger: Hook = {
         );
 
         if (!hasSufficientBalance) {
-          console.warn(`⚠️ Employee ${timeOff.employee_id} may have insufficient ${timeOff.leave_type} balance for ${timeOff.total_days} day(s)`);
+          logger.warn(`Employee ${timeOff.employee_id} may have insufficient ${timeOff.leave_type} balance for ${timeOff.total_days} day(s)`);
         }
       }
 
-      console.log(`✅ Time-off validation passed for employee ${timeOff.employee_id}`);
+      logger.info(`Time-off validation passed for employee ${timeOff.employee_id}`);
 
     } catch (error) {
-      console.error('❌ Error in TimeOffBalanceValidationTrigger:', error);
+      logger.error('Error in TimeOffBalanceValidationTrigger:', error);
     }
   }
 };
@@ -132,11 +135,11 @@ async function checkLeaveBalance(
     const totalBalance = defaultBalances[leaveType] || 10;
     const remainingBalance = totalBalance - usedDays;
 
-    console.log(`📊 Leave balance for ${leaveType}: ${remainingBalance} remaining (${usedDays} used of ${totalBalance})`);
+    logger.info(`Leave balance for ${leaveType}: ${remainingBalance} remaining (${usedDays} used of ${totalBalance})`);
 
     return remainingBalance >= requestedDays;
   } catch (error) {
-    console.error('❌ Failed to check leave balance:', error);
+    logger.error('Failed to check leave balance:', error);
     return true; // Default to allowing if check fails
   }
 }
@@ -164,7 +167,7 @@ const TimeOffApprovalTrigger: Hook = {
       const oldStatus = (ctx.previous as Record<string, any>).status;
       const newStatus = timeOff.status;
 
-      console.log(`🔄 Time-off request ${timeOff.request_number} status changed from "${oldStatus}" to "${newStatus}"`);
+      logger.info(`Time-off request ${timeOff.request_number} status changed from "${oldStatus}" to "${newStatus}"`);
 
       // Handle approval: deduct balance
       if (newStatus === 'approved' && oldStatus !== 'approved') {
@@ -180,7 +183,7 @@ const TimeOffApprovalTrigger: Hook = {
       await logBalanceChange(timeOff, oldStatus, newStatus, ctx);
 
     } catch (error) {
-      console.error('❌ Error in TimeOffApprovalTrigger:', error);
+      logger.error('Error in TimeOffApprovalTrigger:', error);
     }
   }
 };
@@ -194,11 +197,11 @@ async function handleTimeOffApproved(timeOff: Record<string, any>, ctx: HookCont
       approval_date: new Date().toISOString().split('T')[0]
     });
 
-    console.log(`✅ Time-off request ${timeOff.request_number} approved: ${timeOff.total_days} day(s) of ${timeOff.leave_type} deducted`);
+    logger.info(`Time-off request ${timeOff.request_number} approved: ${timeOff.total_days} day(s) of ${timeOff.leave_type} deducted`);
 
-    console.debug(`[time_off.hook] Balance deduction pending for ${timeOff.request_number}: ${timeOff.total_days} day(s) of ${timeOff.leave_type} for employee ${timeOff.employee_id}`);
+    logger.debug(`[time_off.hook] Balance deduction pending for ${timeOff.request_number}: ${timeOff.total_days} day(s) of ${timeOff.leave_type} for employee ${timeOff.employee_id}`);
   } catch (error) {
-    console.error('❌ Failed to process time-off approval:', error);
+    logger.error('Failed to process time-off approval:', error);
   }
 }
 
@@ -207,11 +210,11 @@ async function handleTimeOffApproved(timeOff: Record<string, any>, ctx: HookCont
  */
 async function handleTimeOffCancelled(timeOff: Record<string, any>, ctx: HookContext): Promise<void> {
   try {
-    console.log(`🔄 Time-off request ${timeOff.request_number} cancelled after approval: ${timeOff.total_days} day(s) of ${timeOff.leave_type} restored`);
+    logger.info(`Time-off request ${timeOff.request_number} cancelled after approval: ${timeOff.total_days} day(s) of ${timeOff.leave_type} restored`);
 
-    console.debug(`[time_off.hook] Balance restoration pending for ${timeOff.request_number}: ${timeOff.total_days} day(s) of ${timeOff.leave_type} restored for employee ${timeOff.employee_id}`);
+    logger.debug(`[time_off.hook] Balance restoration pending for ${timeOff.request_number}: ${timeOff.total_days} day(s) of ${timeOff.leave_type} restored for employee ${timeOff.employee_id}`);
   } catch (error) {
-    console.error('❌ Failed to process time-off cancellation:', error);
+    logger.error('Failed to process time-off cancellation:', error);
   }
 }
 
@@ -227,11 +230,11 @@ async function logBalanceChange(
   try {
     const action = newStatus === 'approved' ? 'DEDUCTED' : newStatus === 'cancelled' ? 'RESTORED' : 'STATUS_CHANGE';
 
-    console.log(`📝 Audit: Time-off ${timeOff.request_number} [${action}] ${oldStatus} → ${newStatus} | ${timeOff.total_days || 0} day(s) of ${timeOff.leave_type} | Employee: ${timeOff.employee_id}`);
+    logger.info(`Audit: Time-off ${timeOff.request_number} [${action}] ${oldStatus} → ${newStatus} | ${timeOff.total_days || 0} day(s) of ${timeOff.leave_type} | Employee: ${timeOff.employee_id}`);
 
-    console.debug(`[time_off.hook] Audit log pending: record balance change ${action} for time-off ${timeOff.request_number}`);
+    logger.debug(`[time_off.hook] Audit log pending: record balance change ${action} for time-off ${timeOff.request_number}`);
   } catch (error) {
-    console.error('❌ Failed to log balance change:', error);
+    logger.error('Failed to log balance change:', error);
   }
 }
 

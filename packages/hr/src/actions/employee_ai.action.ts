@@ -12,6 +12,9 @@
  * 6. Compensation Benchmarking - Compare salaries with market data
  */
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('hr:employee_ai');
+
 // Mock database interface
 const db = {
   doc: {
@@ -872,7 +875,7 @@ Benchmark compensation against market data:
  * In production, replace with actual OpenAI/Anthropic API
  */
 async function callLLM(prompt: string): Promise<string> {
-  console.log('🤖 Calling LLM API for employee AI...');
+  logger.info('Calling LLM API for employee AI...');
   
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 500));

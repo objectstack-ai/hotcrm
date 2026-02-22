@@ -12,6 +12,9 @@
  * 6. 360 Review Synthesis - Synthesize multi-rater feedback
  */
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('hr:performance_ai');
+
 // Mock database interface
 const db = {
   doc: {
@@ -904,7 +907,7 @@ Synthesize multi-rater feedback:
  * In production, replace with actual OpenAI/Anthropic API
  */
 async function callLLM(prompt: string): Promise<string> {
-  console.log('🤖 Calling LLM API for performance AI...');
+  logger.info('Calling LLM API for performance AI...');
   
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 500));

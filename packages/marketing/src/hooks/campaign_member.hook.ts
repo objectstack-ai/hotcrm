@@ -1,6 +1,9 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 import { updateCampaignMetrics } from './campaign.hook.js';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('marketing:campaign_member');
+
 /**
  * Campaign Member Engagement Tracking Trigger
  * 
@@ -23,14 +26,14 @@ const CampaignMemberEngagementTrigger: Hook = {
 
       // Only process engagement updates on status change
       if (oldMember && oldMember.status !== member.status) {
-        console.log(`📊 Member engagement updated: ${oldMember.status} → ${member.status}`);
+        logger.info(`Member engagement updated: ${oldMember.status} → ${member.status}`);
 
         // Update engagement metrics based on new status
         switch (member.status) {
           case 'Opened':
             if (!member.first_opened_date) {
               member.first_opened_date = now;
-              console.log(`👁️ Member opened - setting first_opened_date`);
+              logger.info(`Member opened - setting first_opened_date`);
             }
             member.number_of_opens = (member.number_of_opens || 0) + 1;
             break;
@@ -41,7 +44,7 @@ const CampaignMemberEngagementTrigger: Hook = {
             }
             if (!member.first_clicked_date) {
               member.first_clicked_date = now;
-              console.log(`🖱️ Member clicked - setting first_clicked_date`);
+              logger.info(`Member clicked - setting first_clicked_date`);
             }
             member.number_of_opens = (member.number_of_opens || 0) + 1;
             member.number_of_clicks = (member.number_of_clicks || 0) + 1;
@@ -56,7 +59,7 @@ const CampaignMemberEngagementTrigger: Hook = {
             }
             if (!member.first_responded_date) {
               member.first_responded_date = now;
-              console.log(`✅ Member responded - setting first_responded_date`);
+              logger.info(`Member responded - setting first_responded_date`);
             }
             member.has_responded = true;
             member.number_of_opens = (member.number_of_opens || 0) + 1;
@@ -66,7 +69,7 @@ const CampaignMemberEngagementTrigger: Hook = {
       }
 
     } catch (error) {
-      console.error(`[campaign_member.hook] engagement tracking failed:`, error);
+      logger.error(`[campaign_member.hook] engagement tracking failed:`, error);
     }
   }
 };
@@ -99,7 +102,7 @@ const CampaignMemberLeadScoringTrigger: Hook = {
       const recordId = member.lead || member.contact;
 
       if (!recordId) {
-        console.warn('⚠️ Campaign member has no Lead or Contact');
+        logger.warn('Campaign member has no Lead or Contact');
         return;
       }
 
@@ -109,19 +112,19 @@ const CampaignMemberLeadScoringTrigger: Hook = {
       switch (member.status) {
         case 'Opened':
           scoreIncrement = 5;
-          console.log(`👁️ Email opened - adding ${scoreIncrement} points to ${objectType}`);
+          logger.info(`Email opened - adding ${scoreIncrement} points to ${objectType}`);
           break;
         case 'Clicked':
           scoreIncrement = 10;
-          console.log(`🖱️ Link clicked - adding ${scoreIncrement} points to ${objectType}`);
+          logger.info(`Link clicked - adding ${scoreIncrement} points to ${objectType}`);
           break;
         case 'Responded':
           scoreIncrement = 20;
-          console.log(`✅ Response received - adding ${scoreIncrement} points to ${objectType}`);
+          logger.info(`Response received - adding ${scoreIncrement} points to ${objectType}`);
           break;
         case 'Unsubscribed':
           scoreIncrement = -10;
-          console.log(`🚫 Unsubscribed - subtracting ${Math.abs(scoreIncrement)} points from ${objectType}`);
+          logger.info(`Unsubscribed - subtracting ${Math.abs(scoreIncrement)} points from ${objectType}`);
           break;
       }
 
@@ -134,11 +137,11 @@ const CampaignMemberLeadScoringTrigger: Hook = {
         //   last_engagement_date: new Date().toISOString()
         // });
 
-        console.log(`📊 ${objectType} ${recordId} score updated by ${scoreIncrement} points`);
+        logger.info(`${objectType} ${recordId} score updated by ${scoreIncrement} points`);
       }
 
     } catch (error) {
-      console.error(`[campaign_member.hook] lead scoring failed:`, error);
+      logger.error(`[campaign_member.hook] lead scoring failed:`, error);
     }
   }
 };
@@ -165,7 +168,7 @@ const CampaignMemberStatsTrigger: Hook = {
       await updateCampaignMetrics(campaignId, ctx);
 
     } catch (error) {
-      console.error(`[campaign_member.hook] stats aggregation failed:`, error);
+      logger.error(`[campaign_member.hook] stats aggregation failed:`, error);
     }
   }
 };
@@ -189,7 +192,7 @@ const CampaignMemberBounceHandlerTrigger: Hook = {
 
       // Check if bounce information was added
       if (!oldMember?.email_bounced_date && member.email_bounced_date) {
-        console.log(`📧 Email bounced for campaign member: ${member.id}`);
+        logger.info(`Email bounced for campaign member: ${member.id}`);
 
         // Determine if it's a hard bounce
         const bounceReason = (member.email_bounced_reason || '').toLowerCase();
@@ -200,22 +203,22 @@ const CampaignMemberBounceHandlerTrigger: Hook = {
           bounceReason.includes('does not exist');
 
         if (isHardBounce) {
-          console.log(`🔴 Hard bounce detected - should create unsubscribe record`);
+          logger.info(`Hard bounce detected - should create unsubscribe record`);
 
           // Get email address from Lead or Contact
           const objectType = member.lead ? 'lead' : 'contact';
           const recordId = member.lead || member.contact;
 
           if (recordId) {
-            console.debug(`[campaign_member.hook] Unsubscribe record pending: create hard bounce unsubscribe for ${objectType} ${recordId} in campaign ${member.campaign}`);
+            logger.debug(`[campaign_member.hook] Unsubscribe record pending: create hard bounce unsubscribe for ${objectType} ${recordId} in campaign ${member.campaign}`);
           }
         } else {
-          console.log(`🟡 Soft bounce detected - no unsubscribe needed`);
+          logger.info(`Soft bounce detected - no unsubscribe needed`);
         }
       }
 
     } catch (error) {
-      console.error(`[campaign_member.hook] bounce handling failed:`, error);
+      logger.error(`[campaign_member.hook] bounce handling failed:`, error);
     }
   }
 };
@@ -273,12 +276,12 @@ export async function trackMemberEngagementTimeline(
   ctx: HookContext
 ): Promise<void> {
   try {
-    console.log(`🔄 Tracking engagement timeline for member: ${memberId}`);
+    logger.info(`Tracking engagement timeline for member: ${memberId}`);
 
-    console.debug(`[campaign_member.hook] Activity record pending: track ${engagementType} engagement for member ${memberId}`);
+    logger.debug(`[campaign_member.hook] Activity record pending: track ${engagementType} engagement for member ${memberId}`);
 
   } catch (error) {
-    console.error(`[campaign_member.hook] trackMemberEngagementTimeline failed:`, error);
+    logger.error(`[campaign_member.hook] trackMemberEngagementTimeline failed:`, error);
   }
 }
 

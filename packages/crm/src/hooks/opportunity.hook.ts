@@ -1,5 +1,8 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 
+import { createLogger } from '@hotcrm/core';
+const logger = createLogger('crm:opportunity');
+
 
 
 const OpportunityValidation: Hook = {
@@ -44,7 +47,7 @@ const OpportunityStageChange: Hook = {
     try {
       // Defensive check
       if (!ctx.previous || !ctx.result) {
-        console.warn('⚠️ Trigger called without previous/result context');
+        logger.warn('Trigger called without previous/result context');
         return;
       }
 
@@ -54,7 +57,7 @@ const OpportunityStageChange: Hook = {
         return;
       }
 
-      console.log(`🔄 Stage changed from "${(ctx.previous as Record<string, any> | undefined)?.Stage}" to "${(ctx.result as Record<string, any>)?.Stage}"`);
+      logger.info(`Stage changed from "${(ctx.previous as Record<string, any> | undefined)?.Stage}" to "${(ctx.result as Record<string, any>)?.Stage}"`);
 
       // Log activity for stage change
       await logStageChange(ctx);
@@ -73,7 +76,7 @@ const OpportunityStageChange: Hook = {
       }
 
     } catch (error) {
-      console.error('❌ Error in OpportunityTrigger:', error);
+      logger.error('Error in OpportunityTrigger:', error);
       throw error;
     }
   }
@@ -83,11 +86,11 @@ const OpportunityStageChange: Hook = {
  * Handle Closed Won automation
  */
 async function handleClosedWon(ctx: HookContext): Promise<void> {
-  console.log('✅ Processing Closed Won automation...');
+  logger.info('Processing Closed Won automation...');
   const opportunity = ctx.result as Record<string, any>;
 
   if (!opportunity.AccountId) {
-    console.error('❌ Cannot process: Opportunity has no AccountId');
+    logger.error('Cannot process: Opportunity has no AccountId');
     return;
   }
 
@@ -107,12 +110,12 @@ async function handleClosedWon(ctx: HookContext): Promise<void> {
     });
     contractId = contract?.Id;
     if (contractId) {
-      console.log(`✅ Contract created: ${contractId}`);
+      logger.info(`Contract created: ${contractId}`);
     } else {
-      console.warn('⚠️ Contract created but no ID returned');
+      logger.warn('Contract created but no ID returned');
     }
   } catch (error) {
-    console.error('❌ Failed to create Contract:', error);
+    logger.error('Failed to create Contract:', error);
     errors.push('Contract creation failed');
   }
 
@@ -121,9 +124,9 @@ async function handleClosedWon(ctx: HookContext): Promise<void> {
     await (ctx.ql as any).doc.update('account', opportunity.AccountId, {
       CustomerStatus: 'active_customer'
     });
-    console.log('✅ Account status updated to Active Customer');
+    logger.info('Account status updated to Active Customer');
   } catch (error) {
-    console.error('❌ Failed to update Account status:', error);
+    logger.error('Failed to update Account status:', error);
     errors.push('Account update failed');
   }
 
@@ -140,28 +143,28 @@ async function handleClosedWon(ctx: HookContext): Promise<void> {
       ActivityDate: new Date().toISOString().split('T')[0],
       Description: `Opportunity "${opportunity.Name}" was successfully closed, amount: ${opportunity.Amount?.toLocaleString() || 0}`
     });
-    console.log('✅ Activity logged for Closed Won');
+    logger.info('Activity logged for Closed Won');
   } catch (error) {
-    console.error('❌ Failed to log activity:', error);
+    logger.error('Failed to log activity:', error);
     errors.push('Activity logging failed');
   }
 
   // 4. Send notification (placeholder)
   try {
-    console.debug(`[opportunity.hook] Notification pending: notify ${ctx.user.email} about won opportunity ${opportunity.Id}`);
+    logger.debug(`[opportunity.hook] Notification pending: notify ${ctx.user.email} about won opportunity ${opportunity.Id}`);
   } catch (error) {
-    console.error('❌ Failed to send notification:', error);
+    logger.error('Failed to send notification:', error);
   }
 
   if (errors.length > 0) {
-    console.warn(`⚠️ Closed Won automation completed with errors: ${errors.join(', ')}`);
+    logger.warn(`Closed Won automation completed with errors: ${errors.join(', ')}`);
   } else {
-    console.log('✅ Closed Won automation completed successfully');
+    logger.info('Closed Won automation completed successfully');
   }
 }
 
 async function handleClosedLost(ctx: HookContext): Promise<void> {
-  console.log('❌ Processing Closed Lost automation...');
+  logger.info('Processing Closed Lost automation...');
   const opportunity = ctx.result as Record<string, any>;
 
   if (!opportunity.AccountId) {
@@ -181,12 +184,12 @@ async function handleClosedLost(ctx: HookContext): Promise<void> {
       ActivityDate: new Date().toISOString().split('T')[0],
       Description: `Opportunity "${opportunity.Name}" was lost, amount: ${opportunity.Amount?.toLocaleString() || 0}. Reason pending analysis.`
     });
-    console.log('✅ Activity logged for Closed Lost');
+    logger.info('Activity logged for Closed Lost');
   } catch (error) {
-    console.error('❌ Failed to log activity:', error);
+    logger.error('Failed to log activity:', error);
   }
 
-  console.debug(`[opportunity.hook] Loss analysis workflow pending: analyze loss reasons for opportunity ${opportunity.Id}, amount: ${opportunity.Amount?.toLocaleString() || 0}`);
+  logger.debug(`[opportunity.hook] Loss analysis workflow pending: analyze loss reasons for opportunity ${opportunity.Id}, amount: ${opportunity.Amount?.toLocaleString() || 0}`);
 }
 
 /**
@@ -208,7 +211,7 @@ async function logStageChange(ctx: HookContext): Promise<void> {
       Description: `Opportunity stage changed from "${oldStage}" to "${(ctx.result as Record<string, any>).Stage}"`
     });
   } catch (error) {
-    console.error('❌ Failed to log stage change activity:', error);
+    logger.error('Failed to log stage change activity:', error);
   }
 }
 
@@ -244,7 +247,7 @@ async function validateStageRequirements(ctx: HookContext): Promise<void> {
   }
 
   if (warnings.length > 0) {
-    console.warn(`⚠️ Stage validation warnings for ${opportunity.Name}:`, warnings);
+    logger.warn(`Stage validation warnings for ${opportunity.Name}:`, warnings);
   }
 }
 
@@ -263,7 +266,7 @@ async function countRelatedQuotes(ctx: HookContext, opportunityId: string): Prom
      });
      return quotes.length;
   } catch (e) {
-    console.warn('⚠️ Could not check quotes (Quote object might not be loaded):', e);
+    logger.warn('Could not check quotes (Quote object might not be loaded):', e);
     return 1; // Bypass check if quote system is offline
   }
 }
