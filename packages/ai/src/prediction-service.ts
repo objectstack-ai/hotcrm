@@ -194,7 +194,7 @@ export class PredictionService {
           metadata: result.metadata
         }));
       } catch (error) {
-        logger.warn('[PredictionService] Batch prediction failed, falling back to sequential:', error);
+        logger.warn({ err: error }, '[PredictionService] Batch prediction failed, falling back to sequential');
       }
     }
     
@@ -241,7 +241,7 @@ export class PredictionService {
         const result = await provider.predict<T>(model.id, { features, context });
         return result;
       } catch (error) {
-        logger.warn(`[PredictionService] Provider prediction failed for ${model.id}, falling back to mock:`, error);
+        logger.warn({ err: error }, `[PredictionService] Provider prediction failed for ${model.id}, falling back to mock`);
       }
     }
     

@@ -92,7 +92,7 @@ export class CacheManager {
       
       logger.info('[Cache] Redis initialization placeholder - using in-memory cache');
     } catch (error) {
-      logger.error('[Cache] Redis initialization failed:', error);
+      logger.error({ err: error }, '[Cache] Redis initialization failed');
       
       if (this.config.useMemoryFallback) {
         logger.info('[Cache] Falling back to in-memory cache');
@@ -136,7 +136,7 @@ export class CacheManager {
       
       return entry.data as T;
     } catch (error) {
-      logger.error('[Cache] Get error:', error);
+      logger.error({ err: error }, '[Cache] Get error');
       return null;
     }
   }
@@ -169,7 +169,7 @@ export class CacheManager {
       // Clean up expired entries periodically
       this.cleanupExpired();
     } catch (error) {
-      logger.error('[Cache] Set error:', error);
+      logger.error({ err: error }, '[Cache] Set error');
     }
   }
   
@@ -185,7 +185,7 @@ export class CacheManager {
       
       this.memoryCache.delete(key);
     } catch (error) {
-      logger.error('[Cache] Delete error:', error);
+      logger.error({ err: error }, '[Cache] Delete error');
     }
   }
   
@@ -201,7 +201,7 @@ export class CacheManager {
       
       this.memoryCache.clear();
     } catch (error) {
-      logger.error('[Cache] Clear error:', error);
+      logger.error({ err: error }, '[Cache] Clear error');
     }
   }
   

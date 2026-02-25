@@ -86,7 +86,7 @@ export class AzureMLProvider extends BaseMLProvider {
       
       return true;
     } catch (error) {
-      logger.error('[Azure ML] Validation failed:', error);
+      logger.error({ err: error }, '[Azure ML] Validation failed');
       return false;
     }
   }
@@ -131,7 +131,7 @@ export class AzureMLProvider extends BaseMLProvider {
         }
       };
     } catch (error) {
-      logger.error('[Azure ML] Prediction error:', error);
+      logger.error({ err: error }, '[Azure ML] Prediction error');
       
       const err = error as any;
       if (err.isAxiosError) {
@@ -178,7 +178,7 @@ export class AzureMLProvider extends BaseMLProvider {
         }
       }));
     } catch (error) {
-      logger.error('[Azure ML] Batch prediction error:', error);
+      logger.error({ err: error }, '[Azure ML] Batch prediction error');
       throw new Error(`Azure ML batch prediction failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }

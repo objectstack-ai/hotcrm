@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@hotcrm/core':
+        specifier: workspace:*
+        version: link:packages/core
       pino:
         specifier: ^10.3.1
         version: 10.3.1
@@ -178,6 +181,15 @@ importers:
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
+
+  packages/core:
+    dependencies:
+      '@objectstack/spec':
+        specifier: ^3.0.8
+        version: 3.0.8
+      zod:
+        specifier: ^4.3.6
+        version: 4.3.6
 
   packages/crm:
     dependencies:
