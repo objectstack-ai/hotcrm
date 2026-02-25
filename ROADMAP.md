@@ -191,6 +191,10 @@ These items were deferred during Phase 13 and have been completed:
 - [x] **Documentation hook examples** — Update DEVELOPMENT_WORKFLOW.md code examples to use `HookContext` instead of `any`
 - [x] **ROADMAP.md date sync** — Update last-updated date and version timeline to match current state
 
+#### Docs & UI
+
+- [x] **Docs homepage redesign** — Redesigned `apps/docs/app/(home)/page.tsx` to match Linear/Stripe/Vercel standards; multi-layer glow Hero, Trust Block, 3-column glow cards, code highlight, compact Solution Grid, updated Stats, differentiated CTA with `npx` command; custom CSS animations in `global.css`; dark/light mode compatible
+
 #### Deferred / Future
 
 - [x] **Structured logging migration** — Replaced `console.log` with pino logger (`createLogger` from `@hotcrm/core`) across 154 hook/action/service files in all 13 packages; removed emoji from log output; added 9 logger unit tests
