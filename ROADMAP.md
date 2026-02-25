@@ -210,6 +210,7 @@ These items were deferred during Phase 13 and have been completed:
 
 | Date | From | To | Breaking Changes | Tests |
 |------|------|----|-----------------|-------|
+| 2026-02-25 | v3.0.8 | v3.0.8 | None (Phase 15: Fixed tsconfig.json path aliases for node16 ESM module resolution — changed directory paths to explicit index.ts files) | 3813 ✅ |
 | 2026-02-21 | v3.0.8 | v3.0.8 | None (Phase 15 continued: Structured pino logging across 154 files, CacheManager test isolation, db.ts deprecation annotations, emoji removal from logs) | 3813 ✅ |
 | 2026-02-21 | v3.0.8 | v3.0.8 | None (Phase 15: Repository quality improvements — hook `any` type migration, CI typecheck, ESLint version alignment, documentation updates, code-quality workflow fixes) | 3799 ✅ |
 | 2027-02-21 | v3.0.8 | v3.0.8 | None (Phase 14 complete: Activity Feed/Chatter across 6 clouds, 4 Interface Builder blank pages, Dashboard headers & global filters on 6 clouds, ViewTabs on 18 views, Feed API 8 endpoints, Feed service contract, System metadata, Studio builder configs, Navigation areas, 327 new tests) | 3707 ✅ |

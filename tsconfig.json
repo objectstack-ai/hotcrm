@@ -14,15 +14,15 @@
     "sourceMap": true,
     "baseUrl": ".",
     "paths": {
-      "@hotcrm/ai": ["packages/ai/src"],
-      "@hotcrm/core": ["packages/core/src"],
-      "@hotcrm/crm": ["packages/crm/src"],
-      "@hotcrm/finance": ["packages/finance/src"],
-      "@hotcrm/hr": ["packages/hr/src"],
-      "@hotcrm/marketing": ["packages/marketing/src"],
-      "@hotcrm/products": ["packages/products/src"],
-      "@hotcrm/server": ["packages/server/src"],
-      "@hotcrm/support": ["packages/support/src"]
+      "@hotcrm/ai": ["packages/ai/src/index.ts"],
+      "@hotcrm/core": ["packages/core/src/index.ts"],
+      "@hotcrm/crm": ["packages/crm/src/index.ts"],
+      "@hotcrm/finance": ["packages/finance/src/index.ts"],
+      "@hotcrm/hr": ["packages/hr/src/index.ts"],
+      "@hotcrm/marketing": ["packages/marketing/src/index.ts"],
+      "@hotcrm/products": ["packages/products/src/index.ts"],
+      "@hotcrm/server": ["packages/server/src/index.ts"],
+      "@hotcrm/support": ["packages/support/src/index.ts"]
     }
   },
   "include": ["packages/*/src/**/*.ts"],
