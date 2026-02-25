@@ -1,3 +1,109 @@
 @import 'tailwindcss';
 @import 'fumadocs-ui/css/neutral.css';
 @import 'fumadocs-ui/css/preset.css';
+
+/* ── Hero Section ──────────────────────────────────────────────── */
+
+.hero-section {
+  background: radial-gradient(ellipse 80% 50% at 50% -20%, hsl(var(--primary) / 0.08), transparent);
+}
+
+.hero-glow-1 {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle 600px at 50% 0%, hsl(var(--primary) / 0.12), transparent 70%);
+  pointer-events: none;
+}
+
+.hero-glow-2 {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle 400px at 30% 20%, hsl(var(--primary) / 0.06), transparent 60%);
+  pointer-events: none;
+}
+
+.hero-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(hsl(var(--border) / 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(var(--border) / 0.04) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 30%, transparent 70%);
+  pointer-events: none;
+}
+
+.hero-gradient-text {
+  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.7));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Glow Cards ────────────────────────────────────────────────── */
+
+.glow-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.glow-card-shine {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background: radial-gradient(circle 200px at var(--mouse-x, 50%) var(--mouse-y, 50%), hsl(var(--primary) / 0.06), transparent 60%);
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+.glow-card:hover .glow-card-shine {
+  opacity: 1;
+}
+
+/* ── Code Block Glow ───────────────────────────────────────────── */
+
+.code-block-wrapper {
+  position: relative;
+}
+
+.code-block-glow {
+  position: absolute;
+  inset: -1px;
+  background: linear-gradient(135deg, hsl(var(--primary) / 0.15), transparent 50%, hsl(var(--primary) / 0.1));
+  border-radius: 0.75rem;
+  filter: blur(20px);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* ── CTA Glow ──────────────────────────────────────────────────── */
+
+.cta-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 60% 50% at 50% 100%, hsl(var(--primary) / 0.06), transparent);
+  pointer-events: none;
+}
+
+/* ── Terminal Window ───────────────────────────────────────────── */
+
+.terminal-window {
+  transition: box-shadow 0.3s, border-color 0.3s;
+}
+
+.terminal-window:hover {
+  border-color: hsl(var(--primary) / 0.3);
+  box-shadow:
+    0 0 0 1px hsl(var(--primary) / 0.1),
+    0 20px 40px -12px hsl(var(--primary) / 0.15);
+}
+
+/* ── CTA Primary Button ───────────────────────────────────────── */
+
+.hero-cta-primary {
+  transition: all 0.2s;
+}
+
+.hero-cta-primary:hover {
+  transform: translateY(-1px);
+}
