@@ -1,7 +1,7 @@
 # HotCRM Development Roadmap
 
 > Comprehensive development plan for HotCRM — the world's first AI-Native CRM.
-> Protocol: @objectstack/spec v3.0.8 | Last Updated: February 2026
+> Protocol: @objectstack/spec v3.0.8 | Last Updated: February 25, 2026
 
 ## Strategic Direction
 
@@ -16,6 +16,7 @@
 2027 Q2-Q3 ████████████████████████████████  Phase 14: v3.0.8 Feed & Interface Builder Adoption  ✅ COMPLETE
 2027+      ████████████████████████████████  Phase 12E: Advanced AI & Enterprise Features  ✅ COMPLETE
 2026 Q1    ████████████████████████████████  Phase 15: Repository Quality & DX Improvements  🔄 IN PROGRESS
+2026 Q1    ████████████████████████████████  Phase 16: Commercial Expansion & Platform Positioning  🔄 IN PROGRESS
 ```
 
 ## Current State Summary
@@ -231,6 +232,33 @@ These items were deferred during Phase 13 and have been completed:
 | 2026-02-07 | v1.0.4 | v1.1.0 | None | 496 ✅ |
 | 2026-02-05 | v1.0.0 | v1.0.4 | None | 378 ✅ |
 | 2026-02-04 | v0.9.2 | v1.0.0 | None | 378 ✅ |
+
+---
+
+### Phase 16: Commercial Expansion & Platform Positioning (2026 Q1)
+
+> Goal: Reposition HotCRM as an AI-Native Enterprise Application Platform with PSA and compliance-grade capabilities ahead of the March 10 Launch.
+
+#### Epic 1: Professional Services Automation (PSA) Module
+
+- [ ] Metadata-driven timesheet management with role-based state machine isolation
+- [ ] Project delivery access control — Freelancer vs Project_Manager permission boundaries
+- [ ] Automated approval workflows with configurable escalation paths
+- [ ] PSA-specific seed data and demo scenarios
+
+#### Epic 2: Enterprise Compliance & SOX Audit
+
+- [ ] Tamper-proof state machine audit logging with AES-256 encryption
+- [ ] One-click compliance report export (SOX, SOC 2, GDPR)
+- [ ] Field-Level Security (FLS) enforcement for sensitive data (KYC, PII)
+- [ ] Immutable audit trail with cryptographic verification
+
+#### Epic 3: Agentic AI Governance
+
+- [ ] AI agent blast radius configuration (Rate Limiting & Caps)
+- [ ] Field-level permission boundaries for AI agent operations
+- [ ] AI action audit logging with explainability metadata
+- [ ] Governance dashboard for monitoring AI agent behavior
 
 ---
 

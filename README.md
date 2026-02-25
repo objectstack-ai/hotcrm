@@ -841,6 +841,37 @@ HotCRM includes comprehensive GitHub Actions workflows for automation:
 
 For workflow configuration details, see the individual workflow files in [.github/workflows/](.github/workflows/).
 
+## 🤖 App-as-Code: Meet @ObjectBot (Your AI Architect)
+
+HotCRM is fully **App-as-Code** — every business object, workflow, and compliance rule is generated from metadata. Instead of clicking through a UI builder, simply tag `@ObjectBot` in a GitHub Issue or Pull Request comment, describe what you need, and the AI generates production-ready `.object.ts` and `state-machine.yaml` files that you can commit directly to the repo. The runtime engine instantly renders the UI and backend logic.
+
+### ✨ Magic Prompts — Copy & Paste into a GitHub Issue
+
+#### 🕐 PSA: Timesheet & Approval Workflow
+
+```
+@ObjectBot Generate a 'Timesheet' object for freelancers. Add a YAML state machine where the status transitions from 'Draft' -> 'Pending_Approval' -> 'Approved' -> 'Invoiced'. Ensure that the 'Freelancer' role can only edit in 'Draft' state, and only the 'Project_Manager' role can transition it to 'Approved'.
+```
+
+#### 🔒 Compliance: KYC & Field-Level Security
+
+```
+@ObjectBot Scaffold a 'Client_Onboarding' flow. Include a 'Passport_Image' and 'Tax_ID' field. Apply strict Field-Level Security (FLS) so that regular 'Sales_Reps' cannot read these fields, and only the 'Compliance_Officer' role has read/write access. Enable AES-256 audit logging for any state changes.
+```
+
+#### 📊 Custom CRM Pipeline
+
+```
+@ObjectBot Create a custom 'Opportunity' object. I need a non-standard pipeline for a cross-border trade business. Stages should be: 'Lead' -> 'Customs_Clearance_Check' -> 'Quotation' -> 'Closed_Won'. Add a business rule that requires 'Legal_Approval' before moving to the Quotation stage.
+```
+
+### How It Works
+
+1. Tag `@ObjectBot` in any GitHub Issue or PR comment with your requirements.
+2. @ObjectBot generates the exact metadata schema (`.object.ts` and `state-machine.yaml` files).
+3. Commit the generated files directly to the repo.
+4. The runtime engine instantly renders the UI and backend logic — no additional code required.
+
 ## 📄 License
 
 MIT License - see LICENSE file for details
