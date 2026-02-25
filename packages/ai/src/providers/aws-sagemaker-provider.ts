@@ -69,7 +69,7 @@ export class AWSSageMakerProvider extends BaseMLProvider {
       
       return true;
     } catch (error) {
-      logger.error('[SageMaker] Validation failed:', error);
+      logger.error({ err: error }, '[SageMaker] Validation failed');
       return false;
     }
   }
@@ -115,7 +115,7 @@ export class AWSSageMakerProvider extends BaseMLProvider {
         }
       };
     } catch (error) {
-      logger.error('[SageMaker] Prediction error:', error);
+      logger.error({ err: error }, '[SageMaker] Prediction error');
       throw new Error(`SageMaker prediction failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }

@@ -89,7 +89,7 @@ export class OpenAIProvider extends BaseMLProvider {
       
       return true;
     } catch (error) {
-      logger.error('[OpenAI] Validation failed:', error);
+      logger.error({ err: error }, '[OpenAI] Validation failed');
       return false;
     }
   }
@@ -131,7 +131,7 @@ export class OpenAIProvider extends BaseMLProvider {
         }
       };
     } catch (error) {
-      logger.error('[OpenAI] Prediction error:', error);
+      logger.error({ err: error }, '[OpenAI] Prediction error');
       
       const err = error as any;
       if (err.isAxiosError) {

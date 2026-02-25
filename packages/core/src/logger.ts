@@ -20,16 +20,33 @@ export interface LoggerOptions {
   level?: LogLevel;
 }
 
+/** Flexible logger interface compatible with pino but lenient on call signatures */
+export interface Logger {
+  fatal(msg: string, ...args: any[]): void;
+  fatal(obj: unknown, msg?: string, ...args: any[]): void;
+  error(msg: string, ...args: any[]): void;
+  error(obj: unknown, msg?: string, ...args: any[]): void;
+  warn(msg: string, ...args: any[]): void;
+  warn(obj: unknown, msg?: string, ...args: any[]): void;
+  info(msg: string, ...args: any[]): void;
+  info(obj: unknown, msg?: string, ...args: any[]): void;
+  debug(msg: string, ...args: any[]): void;
+  debug(obj: unknown, msg?: string, ...args: any[]): void;
+  trace(msg: string, ...args: any[]): void;
+  trace(obj: unknown, msg?: string, ...args: any[]): void;
+  child(bindings: Record<string, any>): Logger;
+}
+
 /**
  * Create a child logger scoped to a specific module.
  *
  * @param module  Hierarchical module name, e.g. 'crm:account' or 'ai:cache'
  * @param options Optional overrides
  */
-export function createLogger(module: string, options?: LoggerOptions): pino.Logger {
+export function createLogger(module: string, options?: LoggerOptions): Logger {
   const level = options?.level ?? (process.env.LOG_LEVEL as LogLevel) ?? 'info';
-  return pino({ name: module, level });
+  return pino({ name: module, level }) as unknown as Logger;
 }
 
 /** Shared root logger instance */
-export const logger: pino.Logger = createLogger('hotcrm');
+export const logger: Logger = createLogger('hotcrm');
