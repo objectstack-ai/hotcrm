@@ -31,7 +31,7 @@ export const ActiveListingsView = {
     type: 'grid' as const,
     name: 'active_listings',
     label: 'Active Listings',
-    filter: [['status', '=', 'active']],
+    filter: [{ field: 'status', operator: '=', value: 'active' }],
     columns: [
       { field: 'property_id', width: 200, link: true },
       { field: 'list_price', width: 130, sortable: true, align: 'right' as const },
@@ -52,7 +52,7 @@ export const PendingListingsView = {
     type: 'grid' as const,
     name: 'pending_listings',
     label: 'Pending Listings',
-    filter: [['status', '=', 'pending']],
+    filter: [{ field: 'status', operator: '=', value: 'pending' }],
     columns: [
       { field: 'property_id', width: 200, link: true },
       { field: 'list_price', width: 130, align: 'right' as const },
@@ -69,7 +69,7 @@ export const SoldListingsView = {
     type: 'grid' as const,
     name: 'sold_listings',
     label: 'Sold Listings',
-    filter: [['status', '=', 'sold']],
+    filter: [{ field: 'status', operator: '=', value: 'sold' }],
     columns: [
       { field: 'property_id', width: 200, link: true },
       { field: 'list_price', width: 130, align: 'right' as const },

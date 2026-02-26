@@ -8,24 +8,24 @@ import { ViewTabSchema, SharingConfigSchema, AppearanceConfigSchema, AddRecordCo
 
 // --- Product View Tabs ---
 export const ProductViewTabs = [
-  { name: 'active', label: 'Active', pinned: false, isDefault: true, visible: true, filter: [['status', '=', 'active']] },
-  { name: 'retired', label: 'Retired', pinned: false, isDefault: false, visible: true, filter: [['status', '=', 'retired']] },
-  { name: 'draft', label: 'Draft', pinned: false, isDefault: false, visible: true, filter: [['status', '=', 'draft']] },
+  { name: 'active', label: 'Active', pinned: false, isDefault: true, visible: true, filter: [{ field: 'status', operator: '=', value: 'active' }] },
+  { name: 'retired', label: 'Retired', pinned: false, isDefault: false, visible: true, filter: [{ field: 'status', operator: '=', value: 'retired' }] },
+  { name: 'draft', label: 'Draft', pinned: false, isDefault: false, visible: true, filter: [{ field: 'status', operator: '=', value: 'draft' }] },
   { name: 'all', label: 'All Products', pinned: false, isDefault: false, visible: true, filter: [] }
 ] satisfies ViewTab[];
 
 // --- Order View Tabs ---
 export const OrderViewTabs = [
-  { name: 'pending', label: 'Pending', pinned: false, isDefault: true, visible: true, filter: [['status', '=', 'pending']] },
-  { name: 'shipped', label: 'Shipped', pinned: false, isDefault: false, visible: true, filter: [['status', '=', 'shipped']] },
-  { name: 'delivered', label: 'Delivered', pinned: false, isDefault: false, visible: true, filter: [['status', '=', 'delivered']] },
+  { name: 'pending', label: 'Pending', pinned: false, isDefault: true, visible: true, filter: [{ field: 'status', operator: '=', value: 'pending' }] },
+  { name: 'shipped', label: 'Shipped', pinned: false, isDefault: false, visible: true, filter: [{ field: 'status', operator: '=', value: 'shipped' }] },
+  { name: 'delivered', label: 'Delivered', pinned: false, isDefault: false, visible: true, filter: [{ field: 'status', operator: '=', value: 'delivered' }] },
   { name: 'all', label: 'All Orders', pinned: false, isDefault: false, visible: true, filter: [] }
 ] satisfies ViewTab[];
 
 // --- Quote View Tabs ---
 export const QuoteViewTabs = [
-  { name: 'draft', label: 'Draft', pinned: false, isDefault: true, visible: true, filter: [['status', '=', 'draft']] },
-  { name: 'approved', label: 'Approved', pinned: false, isDefault: false, visible: true, filter: [['status', '=', 'approved']] },
+  { name: 'draft', label: 'Draft', pinned: false, isDefault: true, visible: true, filter: [{ field: 'status', operator: '=', value: 'draft' }] },
+  { name: 'approved', label: 'Approved', pinned: false, isDefault: false, visible: true, filter: [{ field: 'status', operator: '=', value: 'approved' }] },
   { name: 'all', label: 'All Quotes', pinned: false, isDefault: false, visible: true, filter: [] }
 ] satisfies ViewTab[];
 

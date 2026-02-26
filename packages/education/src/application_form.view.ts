@@ -32,7 +32,7 @@ export const PendingReviewView = {
     type: 'grid' as const,
     name: 'pending_review',
     label: 'Pending Review',
-    filter: [['status', '=', 'submitted']],
+    filter: [{ field: 'status', operator: '=', value: 'submitted' }],
     columns: [
       { field: 'applicant_name', width: 180, link: true },
       { field: 'program', width: 150 },
@@ -49,7 +49,7 @@ export const AcceptedApplicationsView = {
     type: 'grid' as const,
     name: 'accepted_applications',
     label: 'Accepted',
-    filter: [['status', '=', 'accepted']],
+    filter: [{ field: 'status', operator: '=', value: 'accepted' }],
     columns: [
       { field: 'applicant_name', width: 180, link: true },
       { field: 'program', width: 150 },
@@ -66,7 +66,7 @@ export const RejectedApplicationsView = {
     type: 'grid' as const,
     name: 'rejected_applications',
     label: 'Rejected',
-    filter: [['status', '=', 'rejected']],
+    filter: [{ field: 'status', operator: '=', value: 'rejected' }],
     columns: [
       { field: 'applicant_name', width: 180, link: true },
       { field: 'program', width: 150 },

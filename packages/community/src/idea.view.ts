@@ -50,7 +50,7 @@ export const PlannedIdeasView = {
     type: 'grid' as const,
     name: 'planned_ideas',
     label: 'Planned',
-    filter: [['status', '=', 'planned']],
+    filter: [{ field: 'status', operator: '=', value: 'planned' }],
     columns: [
       { field: 'title', width: 300, link: true },
       { field: 'category', width: 120 },
@@ -68,7 +68,7 @@ export const NewSubmissionsView = {
     type: 'grid' as const,
     name: 'new_submissions',
     label: 'New Submissions',
-    filter: [['status', '=', 'submitted']],
+    filter: [{ field: 'status', operator: '=', value: 'submitted' }],
     columns: [
       { field: 'title', width: 300, link: true },
       { field: 'category', width: 120 },
@@ -86,7 +86,7 @@ export const ReleasedIdeasView = {
     type: 'grid' as const,
     name: 'released_ideas',
     label: 'Released',
-    filter: [['status', '=', 'released']],
+    filter: [{ field: 'status', operator: '=', value: 'released' }],
     columns: [
       { field: 'title', width: 300, link: true },
       { field: 'category', width: 120 },

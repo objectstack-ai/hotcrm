@@ -38,7 +38,7 @@ export const KPIsAtRiskView = {
     type: 'grid' as const,
     name: 'kpis_at_risk',
     label: 'At Risk',
-    filter: [['trend', '=', 'declining']],
+    filter: [{ field: 'trend', operator: '=', value: 'declining' }],
     columns: [
       { field: 'name', width: 200, link: true },
       { field: 'current_value', width: 120, align: 'right' as const },
@@ -60,7 +60,7 @@ export const KPIsOnTrackView = {
     type: 'grid' as const,
     name: 'kpis_on_track',
     label: 'On Track',
-    filter: [['trend', '=', 'improving']],
+    filter: [{ field: 'trend', operator: '=', value: 'improving' }],
     columns: [
       { field: 'name', width: 200, link: true },
       { field: 'metric_type', width: 120 },
@@ -79,7 +79,7 @@ export const MyKPIsView = {
     type: 'grid' as const,
     name: 'my_kpis',
     label: 'My KPIs',
-    filter: [['owner_id', '=', '${currentUser.id}']],
+    filter: [{ field: 'owner_id', operator: '=', value: '${currentUser.id}' }],
     columns: [
       { field: 'name', width: 200, link: true },
       { field: 'metric_type', width: 120 },

@@ -32,7 +32,7 @@ export const ActiveCoursesView = {
     type: 'grid' as const,
     name: 'active_courses',
     label: 'Active Courses',
-    filter: [['status', '=', 'active']],
+    filter: [{ field: 'status', operator: '=', value: 'active' }],
     columns: [
       { field: 'course_code', width: 120, link: true },
       { field: 'name', width: 200, link: true },

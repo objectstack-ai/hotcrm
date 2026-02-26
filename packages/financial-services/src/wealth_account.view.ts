@@ -35,7 +35,7 @@ export const ActiveAccountsView = {
     type: 'grid' as const,
     name: 'active_wealth_accounts',
     label: 'Active Accounts',
-    filter: [['status', '=', 'active']],
+    filter: [{ field: 'status', operator: '=', value: 'active' }],
     columns: [
       { field: 'client_name', width: 200, link: true },
       { field: 'account_number', width: 140 },

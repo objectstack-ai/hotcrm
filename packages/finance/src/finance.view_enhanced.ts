@@ -8,23 +8,23 @@ import { ViewTabSchema, SharingConfigSchema, AppearanceConfigSchema, AddRecordCo
 
 // --- Invoice View Tabs ---
 export const InvoiceViewTabs = [
-  { name: 'pending', label: 'Pending', pinned: false, isDefault: true, visible: true, filter: [['status', '=', 'pending']] },
-  { name: 'paid', label: 'Paid', pinned: false, isDefault: false, visible: true, filter: [['status', '=', 'paid']] },
-  { name: 'overdue', label: 'Overdue', pinned: false, isDefault: false, visible: true, filter: [['status', '=', 'overdue']] },
+  { name: 'pending', label: 'Pending', pinned: false, isDefault: true, visible: true, filter: [{ field: 'status', operator: '=', value: 'pending' }] },
+  { name: 'paid', label: 'Paid', pinned: false, isDefault: false, visible: true, filter: [{ field: 'status', operator: '=', value: 'paid' }] },
+  { name: 'overdue', label: 'Overdue', pinned: false, isDefault: false, visible: true, filter: [{ field: 'status', operator: '=', value: 'overdue' }] },
   { name: 'all', label: 'All Invoices', pinned: false, isDefault: false, visible: true, filter: [] }
 ] satisfies ViewTab[];
 
 // --- Contract View Tabs ---
 export const ContractViewTabs = [
-  { name: 'active', label: 'Active', pinned: false, isDefault: true, visible: true, filter: [['status', '=', 'activated']] },
-  { name: 'expired', label: 'Expired', pinned: false, isDefault: false, visible: true, filter: [['status', '=', 'expired']] },
-  { name: 'draft', label: 'Draft', pinned: false, isDefault: false, visible: true, filter: [['status', '=', 'draft']] }
+  { name: 'active', label: 'Active', pinned: false, isDefault: true, visible: true, filter: [{ field: 'status', operator: '=', value: 'activated' }] },
+  { name: 'expired', label: 'Expired', pinned: false, isDefault: false, visible: true, filter: [{ field: 'status', operator: '=', value: 'expired' }] },
+  { name: 'draft', label: 'Draft', pinned: false, isDefault: false, visible: true, filter: [{ field: 'status', operator: '=', value: 'draft' }] }
 ] satisfies ViewTab[];
 
 // --- Payment View Tabs ---
 export const PaymentViewTabs = [
-  { name: 'completed', label: 'Completed', pinned: false, isDefault: true, visible: true, filter: [['status', '=', 'completed']] },
-  { name: 'pending', label: 'Pending', pinned: false, isDefault: false, visible: true, filter: [['status', '=', 'pending']] },
+  { name: 'completed', label: 'Completed', pinned: false, isDefault: true, visible: true, filter: [{ field: 'status', operator: '=', value: 'completed' }] },
+  { name: 'pending', label: 'Pending', pinned: false, isDefault: false, visible: true, filter: [{ field: 'status', operator: '=', value: 'pending' }] },
   { name: 'all', label: 'All Payments', pinned: false, isDefault: false, visible: true, filter: [] }
 ] satisfies ViewTab[];
 

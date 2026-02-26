@@ -30,7 +30,7 @@ export const ActiveProductsView = {
     type: 'grid' as const,
     name: 'active_products',
     label: 'Active Products',
-    filter: [['is_active', '=', true]],
+    filter: [{ field: 'is_active', operator: '=', value: true }],
     columns: [
       { field: 'name', width: 250, link: true },
       { field: 'product_code', width: 130 },
@@ -47,7 +47,7 @@ export const InactiveProductsView = {
     type: 'grid' as const,
     name: 'inactive_products',
     label: 'Inactive Products',
-    filter: [['is_active', '=', false]],
+    filter: [{ field: 'is_active', operator: '=', value: false }],
     columns: [
       { field: 'name', width: 250, link: true },
       { field: 'product_code', width: 130 },

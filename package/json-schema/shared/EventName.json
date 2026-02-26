@@ -1,9 +1,0 @@
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "type": "string",
-  "minLength": 3,
-  "pattern": "^[a-z][a-z0-9_.]*$",
-  "description": "Event name (lowercase with dot notation for namespacing)",
-  "$id": "https://schema.objectstack.io/v3.0.11/shared/EventName.json",
-  "x-spec-version": "3.0.11"
-}

@@ -33,7 +33,7 @@ export const OpenTopicsView = {
     type: 'grid' as const,
     name: 'open_topics',
     label: 'Open Topics',
-    filter: [['status', '=', 'open']],
+    filter: [{ field: 'status', operator: '=', value: 'open' }],
     columns: [
       { field: 'title', width: 300, link: true },
       { field: 'category_id', width: 150 },
@@ -51,7 +51,7 @@ export const PinnedTopicsView = {
     type: 'grid' as const,
     name: 'pinned_topics',
     label: 'Pinned Topics',
-    filter: [['is_pinned', '=', true]],
+    filter: [{ field: 'is_pinned', operator: '=', value: true }],
     columns: [
       { field: 'title', width: 300, link: true },
       { field: 'category_id', width: 150 },
@@ -68,7 +68,7 @@ export const UnansweredTopicsView = {
     type: 'grid' as const,
     name: 'unanswered_topics',
     label: 'Unanswered',
-    filter: [['reply_count', '=', 0]],
+    filter: [{ field: 'reply_count', operator: '=', value: 0 }],
     columns: [
       { field: 'title', width: 300, link: true },
       { field: 'category_id', width: 150 },

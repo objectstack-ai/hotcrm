@@ -32,7 +32,7 @@ export const ActiveStudentsView = {
     type: 'grid' as const,
     name: 'active_students',
     label: 'Active Students',
-    filter: [['enrollment_status', '=', 'enrolled']],
+    filter: [{ field: 'enrollment_status', operator: '=', value: 'enrolled' }],
     columns: [
       { field: 'name', width: 180, link: true },
       { field: 'student_id_number', width: 120 },
@@ -51,7 +51,7 @@ export const GraduatedStudentsView = {
     type: 'grid' as const,
     name: 'graduated_students',
     label: 'Graduated Students',
-    filter: [['enrollment_status', '=', 'graduated']],
+    filter: [{ field: 'enrollment_status', operator: '=', value: 'graduated' }],
     columns: [
       { field: 'name', width: 180, link: true },
       { field: 'student_id_number', width: 120 },
@@ -69,7 +69,7 @@ export const OnProbationView = {
     type: 'grid' as const,
     name: 'on_probation',
     label: 'On Probation',
-    filter: [['gpa', '<', '2.0']],
+    filter: [{ field: 'gpa', operator: '<', value: '2.0' }],
     columns: [
       { field: 'name', width: 180, link: true },
       { field: 'student_id_number', width: 120 },

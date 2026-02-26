@@ -32,7 +32,7 @@ export const MyLeadsView = {
     type: 'grid' as const,
     name: 'my_leads',
     label: 'My Leads',
-    filter: [['owner_id', '=', '${currentUser.id}']],
+    filter: [{ field: 'owner_id', operator: '=', value: '${currentUser.id}' }],
     columns: [
       { field: 'first_name', width: 150, link: true },
       { field: 'last_name', width: 150, link: true },
@@ -51,7 +51,7 @@ export const HotLeadsView = {
     type: 'grid' as const,
     name: 'hot_leads',
     label: 'Hot Leads',
-    filter: [['rating', '=', 'hot']],
+    filter: [{ field: 'rating', operator: '=', value: 'hot' }],
     columns: [
       { field: 'first_name', width: 150, link: true },
       { field: 'last_name', width: 150, link: true },
@@ -73,7 +73,7 @@ export const OpenLeadsView = {
     type: 'grid' as const,
     name: 'open_leads',
     label: 'Open Leads',
-    filter: [['status', 'IN', ['new', 'contacted']]],
+    filter: [{ field: 'status', operator: 'IN', value: ['new', 'contacted'] }],
     columns: [
       { field: 'first_name', width: 150, link: true },
       { field: 'last_name', width: 150, link: true },
@@ -92,7 +92,7 @@ export const QualifiedLeadsView = {
     type: 'grid' as const,
     name: 'qualified_leads',
     label: 'Qualified Leads',
-    filter: [['status', '=', 'qualified']],
+    filter: [{ field: 'status', operator: '=', value: 'qualified' }],
     columns: [
       { field: 'first_name', width: 150, link: true },
       { field: 'last_name', width: 150, link: true },
@@ -111,7 +111,7 @@ export const PublicPoolView = {
     type: 'grid' as const,
     name: 'public_pool',
     label: 'Public Pool',
-    filter: [['is_in_public_pool', '=', true]],
+    filter: [{ field: 'is_in_public_pool', operator: '=', value: true }],
     columns: [
       { field: 'first_name', width: 150, link: true },
       { field: 'last_name', width: 150, link: true },
