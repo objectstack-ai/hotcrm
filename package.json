@@ -13,7 +13,7 @@
     "dev:studio": "objectstack studio",
     "serve": "objectstack serve",
     "start": "objectstack start",
-    "build": "pnpm -r build",
+    "build": "pnpm --filter @hotcrm/core build && pnpm -r build",
     "build:ai": "pnpm --filter @hotcrm/ai build",
     "build:crm": "pnpm --filter @hotcrm/crm build",
     "build:support": "pnpm --filter @hotcrm/support build",
