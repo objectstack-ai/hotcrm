@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "description": "Transformation name",
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "map",
+        "filter",
+        "aggregate",
+        "join",
+        "script",
+        "lookup",
+        "split",
+        "merge",
+        "normalize",
+        "deduplicate"
+      ],
+      "description": "Transformation type"
+    },
+    "config": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {},
+      "description": "Transformation config"
+    },
+    "continueOnError": {
+      "default": false,
+      "description": "Continue on error",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "type",
+    "config",
+    "continueOnError"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/automation/ETLTransformation.json",
+  "x-spec-version": "3.0.11"
+}

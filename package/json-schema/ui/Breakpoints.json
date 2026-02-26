@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "xs": {
+      "description": "Extra small breakpoint (e.g., 480px)",
+      "type": "string"
+    },
+    "sm": {
+      "description": "Small breakpoint (e.g., 640px)",
+      "type": "string"
+    },
+    "md": {
+      "description": "Medium breakpoint (e.g., 768px)",
+      "type": "string"
+    },
+    "lg": {
+      "description": "Large breakpoint (e.g., 1024px)",
+      "type": "string"
+    },
+    "xl": {
+      "description": "Extra large breakpoint (e.g., 1280px)",
+      "type": "string"
+    },
+    "2xl": {
+      "description": "2X large breakpoint (e.g., 1536px)",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/ui/Breakpoints.json",
+  "x-spec-version": "3.0.11"
+}

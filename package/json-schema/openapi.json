@@ -1,0 +1,1008 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "ObjectStack REST API",
+    "version": "3.0.11",
+    "description": "Auto-generated OpenAPI specification from @objectstack/spec protocol schemas.",
+    "contact": {
+      "name": "ObjectStack",
+      "url": "https://objectstack.io"
+    },
+    "license": {
+      "name": "Apache-2.0",
+      "url": "https://www.apache.org/licenses/LICENSE-2.0"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Local development"
+    }
+  ],
+  "tags": [
+    {
+      "name": "CRUD",
+      "description": "Data record operations"
+    },
+    {
+      "name": "Metadata",
+      "description": "Platform metadata and introspection"
+    },
+    {
+      "name": "Discovery",
+      "description": "Service discovery and capabilities"
+    }
+  ],
+  "paths": {
+    "/api/{object}": {
+      "get": {
+        "summary": "List records",
+        "description": "Query records with filtering, sorting, and pagination",
+        "tags": [
+          "CRUD"
+        ],
+        "operationId": "listRecords",
+        "parameters": [
+          {
+            "name": "object",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Object name (snake_case)"
+          },
+          {
+            "name": "top",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 25
+            },
+            "description": "Page size"
+          },
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0
+            },
+            "description": "Offset"
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Sort field (prefix with - for desc)"
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Comma-separated field list"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of records",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListRecordResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a record",
+        "description": "Create a new record in the specified object",
+        "tags": [
+          "CRUD"
+        ],
+        "operationId": "createRecord",
+        "parameters": [
+          {
+            "name": "object",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Object name (snake_case)"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Record created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SingleRecordResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/{object}/{id}": {
+      "get": {
+        "summary": "Get a record",
+        "description": "Retrieve a single record by ID",
+        "tags": [
+          "CRUD"
+        ],
+        "operationId": "getRecord",
+        "parameters": [
+          {
+            "name": "object",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Object name"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Record ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Record found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SingleRecordResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Record not found"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update a record",
+        "description": "Update an existing record by ID",
+        "tags": [
+          "CRUD"
+        ],
+        "operationId": "updateRecord",
+        "parameters": [
+          {
+            "name": "object",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Object name"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Record ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Record updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SingleRecordResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Record not found"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a record",
+        "description": "Delete a record by ID",
+        "tags": [
+          "CRUD"
+        ],
+        "operationId": "deleteRecord",
+        "parameters": [
+          {
+            "name": "object",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Object name"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Record ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Record deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Record not found"
+          }
+        }
+      }
+    },
+    "/api/meta": {
+      "get": {
+        "summary": "Get platform metadata",
+        "description": "Returns platform-level metadata including registered types and capabilities",
+        "tags": [
+          "Metadata"
+        ],
+        "operationId": "getMetadata",
+        "responses": {
+          "200": {
+            "description": "Platform metadata"
+          }
+        }
+      }
+    },
+    "/api/meta/types": {
+      "get": {
+        "summary": "List metadata types",
+        "description": "Returns all registered metadata type names",
+        "tags": [
+          "Metadata"
+        ],
+        "operationId": "listMetadataTypes",
+        "responses": {
+          "200": {
+            "description": "List of metadata type names"
+          }
+        }
+      }
+    },
+    "/api/meta/{type}": {
+      "get": {
+        "summary": "List metadata by type",
+        "description": "Returns all metadata entries for the specified type",
+        "tags": [
+          "Metadata"
+        ],
+        "operationId": "listMetadataByType",
+        "parameters": [
+          {
+            "name": "type",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Metadata type (e.g., object, view, flow)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of metadata entries"
+          },
+          "404": {
+            "description": "Unknown metadata type"
+          }
+        }
+      }
+    },
+    "/api/meta/{type}/{name}": {
+      "get": {
+        "summary": "Get metadata by type and name",
+        "description": "Returns a single metadata entry by type and name",
+        "tags": [
+          "Metadata"
+        ],
+        "operationId": "getMetadataByName",
+        "parameters": [
+          {
+            "name": "type",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Metadata type"
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Metadata name"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Metadata entry"
+          },
+          "404": {
+            "description": "Metadata not found"
+          }
+        }
+      }
+    },
+    "/api/.well-known/objectstack": {
+      "get": {
+        "summary": "Platform discovery",
+        "description": "Returns ObjectStack platform discovery information including available services and capabilities",
+        "tags": [
+          "Discovery"
+        ],
+        "operationId": "discover",
+        "responses": {
+          "200": {
+            "description": "Discovery response with platform info, services, and capabilities"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CreateRequest": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {},
+            "description": "Record data to insert"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "additionalProperties": false
+      },
+      "UpdateRequest": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {},
+            "description": "Partial record data to update"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "additionalProperties": false
+      },
+      "SingleRecordResponse": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Operation success status"
+          },
+          "error": {
+            "description": "Error details if success is false",
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "description": "Error code (e.g. validation_error)"
+              },
+              "message": {
+                "type": "string",
+                "description": "Readable error message"
+              },
+              "category": {
+                "description": "Error category (e.g. validation, authorization)",
+                "type": "string"
+              },
+              "details": {
+                "description": "Additional error context (e.g. field validation errors)"
+              },
+              "requestId": {
+                "description": "Request ID for tracking",
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "message"
+            ],
+            "additionalProperties": false
+          },
+          "meta": {
+            "description": "Response metadata",
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "string"
+              },
+              "duration": {
+                "type": "number"
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "traceId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "timestamp"
+            ],
+            "additionalProperties": false
+          },
+          "data": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {},
+            "description": "The requested or modified record"
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ],
+        "additionalProperties": false
+      },
+      "ListRecordResponse": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Operation success status"
+          },
+          "error": {
+            "description": "Error details if success is false",
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "description": "Error code (e.g. validation_error)"
+              },
+              "message": {
+                "type": "string",
+                "description": "Readable error message"
+              },
+              "category": {
+                "description": "Error category (e.g. validation, authorization)",
+                "type": "string"
+              },
+              "details": {
+                "description": "Additional error context (e.g. field validation errors)"
+              },
+              "requestId": {
+                "description": "Request ID for tracking",
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "message"
+            ],
+            "additionalProperties": false
+          },
+          "meta": {
+            "description": "Response metadata",
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "string"
+              },
+              "duration": {
+                "type": "number"
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "traceId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "timestamp"
+            ],
+            "additionalProperties": false
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {},
+              "description": "Key-value map of record data"
+            },
+            "description": "Array of matching records"
+          },
+          "pagination": {
+            "type": "object",
+            "properties": {
+              "total": {
+                "description": "Total matching records count",
+                "type": "number"
+              },
+              "limit": {
+                "description": "Page size",
+                "type": "number"
+              },
+              "offset": {
+                "description": "Page offset",
+                "type": "number"
+              },
+              "cursor": {
+                "description": "Cursor for next page",
+                "type": "string"
+              },
+              "nextCursor": {
+                "description": "Next cursor for pagination",
+                "type": "string"
+              },
+              "hasMore": {
+                "type": "boolean",
+                "description": "Are there more pages?"
+              }
+            },
+            "required": [
+              "hasMore"
+            ],
+            "additionalProperties": false,
+            "description": "Pagination info"
+          }
+        },
+        "required": [
+          "success",
+          "data",
+          "pagination"
+        ],
+        "additionalProperties": false
+      },
+      "DeleteResponse": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Operation success status"
+          },
+          "error": {
+            "description": "Error details if success is false",
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "description": "Error code (e.g. validation_error)"
+              },
+              "message": {
+                "type": "string",
+                "description": "Readable error message"
+              },
+              "category": {
+                "description": "Error category (e.g. validation, authorization)",
+                "type": "string"
+              },
+              "details": {
+                "description": "Additional error context (e.g. field validation errors)"
+              },
+              "requestId": {
+                "description": "Request ID for tracking",
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "message"
+            ],
+            "additionalProperties": false
+          },
+          "meta": {
+            "description": "Response metadata",
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "string"
+              },
+              "duration": {
+                "type": "number"
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "traceId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "timestamp"
+            ],
+            "additionalProperties": false
+          },
+          "id": {
+            "type": "string",
+            "description": "ID of the deleted record"
+          }
+        },
+        "required": [
+          "success",
+          "id"
+        ],
+        "additionalProperties": false
+      },
+      "ApiError": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Error code (e.g. validation_error)"
+          },
+          "message": {
+            "type": "string",
+            "description": "Readable error message"
+          },
+          "category": {
+            "description": "Error category (e.g. validation, authorization)",
+            "type": "string"
+          },
+          "details": {
+            "description": "Additional error context (e.g. field validation errors)"
+          },
+          "requestId": {
+            "description": "Request ID for tracking",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "additionalProperties": false
+      },
+      "BulkRequest": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "records": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {},
+              "description": "Key-value map of record data"
+            },
+            "description": "Array of records to process"
+          },
+          "allOrNone": {
+            "default": true,
+            "description": "If true, rollback entire transaction on any failure",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "records",
+          "allOrNone"
+        ],
+        "additionalProperties": false
+      },
+      "BulkResponse": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Operation success status"
+          },
+          "error": {
+            "description": "Error details if success is false",
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "description": "Error code (e.g. validation_error)"
+              },
+              "message": {
+                "type": "string",
+                "description": "Readable error message"
+              },
+              "category": {
+                "description": "Error category (e.g. validation, authorization)",
+                "type": "string"
+              },
+              "details": {
+                "description": "Additional error context (e.g. field validation errors)"
+              },
+              "requestId": {
+                "description": "Request ID for tracking",
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "message"
+            ],
+            "additionalProperties": false
+          },
+          "meta": {
+            "description": "Response metadata",
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "string"
+              },
+              "duration": {
+                "type": "number"
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "traceId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "timestamp"
+            ],
+            "additionalProperties": false
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "description": "Record ID if processed",
+                  "type": "string"
+                },
+                "success": {
+                  "type": "boolean"
+                },
+                "errors": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "code": {
+                        "type": "string",
+                        "description": "Error code (e.g. validation_error)"
+                      },
+                      "message": {
+                        "type": "string",
+                        "description": "Readable error message"
+                      },
+                      "category": {
+                        "description": "Error category (e.g. validation, authorization)",
+                        "type": "string"
+                      },
+                      "details": {
+                        "description": "Additional error context (e.g. field validation errors)"
+                      },
+                      "requestId": {
+                        "description": "Request ID for tracking",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "code",
+                      "message"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "index": {
+                  "description": "Index in original request",
+                  "type": "number"
+                },
+                "data": {
+                  "description": "Result data (e.g. created record)"
+                }
+              },
+              "required": [
+                "success"
+              ],
+              "additionalProperties": false
+            },
+            "description": "Results for each item in the batch"
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ],
+        "additionalProperties": false
+      },
+      "BaseResponse": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Operation success status"
+          },
+          "error": {
+            "description": "Error details if success is false",
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "description": "Error code (e.g. validation_error)"
+              },
+              "message": {
+                "type": "string",
+                "description": "Readable error message"
+              },
+              "category": {
+                "description": "Error category (e.g. validation, authorization)",
+                "type": "string"
+              },
+              "details": {
+                "description": "Additional error context (e.g. field validation errors)"
+              },
+              "requestId": {
+                "description": "Request ID for tracking",
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "message"
+            ],
+            "additionalProperties": false
+          },
+          "meta": {
+            "description": "Response metadata",
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "string"
+              },
+              "duration": {
+                "type": "number"
+              },
+              "requestId": {
+                "type": "string"
+              },
+              "traceId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "timestamp"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "success"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      },
+      "apiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key"
+      }
+    }
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ]
+}

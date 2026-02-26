@@ -1,0 +1,311 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "success": {
+      "type": "boolean",
+      "description": "Operation success status"
+    },
+    "error": {
+      "description": "Error details if success is false",
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "description": "Error code (e.g. validation_error)"
+        },
+        "message": {
+          "type": "string",
+          "description": "Readable error message"
+        },
+        "category": {
+          "description": "Error category (e.g. validation, authorization)",
+          "type": "string"
+        },
+        "details": {
+          "description": "Additional error context (e.g. field validation errors)"
+        },
+        "requestId": {
+          "description": "Request ID for tracking",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ],
+      "additionalProperties": false
+    },
+    "meta": {
+      "description": "Response metadata",
+      "type": "object",
+      "properties": {
+        "timestamp": {
+          "type": "string"
+        },
+        "duration": {
+          "type": "number"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "traceId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "timestamp"
+      ],
+      "additionalProperties": false
+    },
+    "data": {
+      "type": "object",
+      "properties": {
+        "runs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Execution instance ID"
+              },
+              "flowName": {
+                "type": "string",
+                "description": "Machine name of the executed flow"
+              },
+              "flowVersion": {
+                "description": "Version of the flow that was executed",
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "running",
+                  "paused",
+                  "completed",
+                  "failed",
+                  "cancelled",
+                  "timed_out",
+                  "retrying"
+                ],
+                "description": "Current execution status"
+              },
+              "trigger": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "description": "Trigger type (e.g., \"record_change\", \"schedule\", \"api\", \"manual\")"
+                  },
+                  "recordId": {
+                    "description": "Triggering record ID",
+                    "type": "string"
+                  },
+                  "object": {
+                    "description": "Triggering object name",
+                    "type": "string"
+                  },
+                  "userId": {
+                    "description": "User who triggered the execution",
+                    "type": "string"
+                  },
+                  "metadata": {
+                    "description": "Additional trigger context",
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {}
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "additionalProperties": false,
+                "description": "What triggered this execution"
+              },
+              "steps": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "nodeId": {
+                      "type": "string",
+                      "description": "Node ID that was executed"
+                    },
+                    "nodeType": {
+                      "type": "string",
+                      "description": "Node action type (e.g., \"decision\", \"http_request\")"
+                    },
+                    "nodeLabel": {
+                      "description": "Human-readable node label",
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "success",
+                        "failure",
+                        "skipped"
+                      ],
+                      "description": "Step execution result"
+                    },
+                    "startedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+                      "description": "When the step started"
+                    },
+                    "completedAt": {
+                      "description": "When the step completed",
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                    },
+                    "durationMs": {
+                      "description": "Step execution duration in milliseconds",
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "input": {
+                      "description": "Input data passed to the node",
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string"
+                      },
+                      "additionalProperties": {}
+                    },
+                    "output": {
+                      "description": "Output data produced by the node",
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string"
+                      },
+                      "additionalProperties": {}
+                    },
+                    "error": {
+                      "description": "Error details if step failed",
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "description": "Error code"
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Error message"
+                        },
+                        "stack": {
+                          "description": "Stack trace",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "retryAttempt": {
+                      "description": "Retry attempt number (0 = first try)",
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "nodeId",
+                    "nodeType",
+                    "status",
+                    "startedAt"
+                  ],
+                  "additionalProperties": false
+                },
+                "description": "Ordered list of executed steps"
+              },
+              "variables": {
+                "description": "Final state of flow variables",
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {}
+              },
+              "startedAt": {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+                "description": "Execution start timestamp"
+              },
+              "completedAt": {
+                "description": "Execution completion timestamp",
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+              },
+              "durationMs": {
+                "description": "Total execution duration in milliseconds",
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "runAs": {
+                "description": "Execution context identity",
+                "type": "string",
+                "enum": [
+                  "system",
+                  "user"
+                ]
+              },
+              "tenantId": {
+                "description": "Tenant ID for multi-tenant isolation",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "flowName",
+              "status",
+              "trigger",
+              "steps",
+              "startedAt"
+            ],
+            "additionalProperties": false
+          },
+          "description": "Execution run logs"
+        },
+        "total": {
+          "description": "Total matching runs",
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "nextCursor": {
+          "description": "Cursor for the next page",
+          "type": "string"
+        },
+        "hasMore": {
+          "type": "boolean",
+          "description": "Whether more runs are available"
+        }
+      },
+      "required": [
+        "runs",
+        "hasMore"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "success",
+    "data"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/ListRunsResponse.json",
+  "x-spec-version": "3.0.11"
+}

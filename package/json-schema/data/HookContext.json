@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "description": "Unique execution ID for tracing",
+      "type": "string"
+    },
+    "object": {
+      "type": "string"
+    },
+    "event": {
+      "type": "string",
+      "enum": [
+        "beforeFind",
+        "afterFind",
+        "beforeFindOne",
+        "afterFindOne",
+        "beforeCount",
+        "afterCount",
+        "beforeAggregate",
+        "afterAggregate",
+        "beforeInsert",
+        "afterInsert",
+        "beforeUpdate",
+        "afterUpdate",
+        "beforeDelete",
+        "afterDelete",
+        "beforeUpdateMany",
+        "afterUpdateMany",
+        "beforeDeleteMany",
+        "afterDeleteMany"
+      ]
+    },
+    "input": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {},
+      "description": "Mutable input parameters"
+    },
+    "result": {
+      "description": "Operation result (After hooks only)"
+    },
+    "previous": {
+      "description": "Record state before operation",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
+    },
+    "session": {
+      "description": "Current session context",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string"
+        },
+        "tenantId": {
+          "type": "string"
+        },
+        "roles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "accessToken": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "transaction": {
+      "description": "Database transaction handle"
+    },
+    "ql": {
+      "description": "ObjectQL Engine Reference"
+    },
+    "api": {
+      "description": "Cross-object data access (ScopedContext)"
+    },
+    "user": {
+      "description": "Current user info shortcut",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "object",
+    "event",
+    "input",
+    "ql"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/data/HookContext.json",
+  "x-spec-version": "3.0.11"
+}

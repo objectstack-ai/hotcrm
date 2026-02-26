@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "strategy": {
+      "type": "string",
+      "const": "shared_schema",
+      "description": "Row-level isolation strategy"
+    },
+    "database": {
+      "description": "Database configuration",
+      "type": "object",
+      "properties": {
+        "enableRLS": {
+          "default": true,
+          "description": "Enable PostgreSQL Row-Level Security",
+          "type": "boolean"
+        },
+        "contextMethod": {
+          "default": "session_variable",
+          "description": "How to set tenant context",
+          "type": "string",
+          "enum": [
+            "session_variable",
+            "search_path",
+            "application_name"
+          ]
+        },
+        "contextVariable": {
+          "default": "app.current_tenant",
+          "description": "Session variable name",
+          "type": "string"
+        },
+        "applicationValidation": {
+          "default": true,
+          "description": "Application-level tenant validation",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enableRLS",
+        "contextMethod",
+        "contextVariable",
+        "applicationValidation"
+      ],
+      "additionalProperties": false
+    },
+    "performance": {
+      "description": "Performance settings",
+      "type": "object",
+      "properties": {
+        "usePartialIndexes": {
+          "default": true,
+          "description": "Use partial indexes per tenant",
+          "type": "boolean"
+        },
+        "usePartitioning": {
+          "default": false,
+          "description": "Use table partitioning by tenant_id",
+          "type": "boolean"
+        },
+        "poolSizePerTenant": {
+          "description": "Connection pool size per tenant",
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "usePartialIndexes",
+        "usePartitioning"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "strategy"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/system/RowLevelIsolationStrategy.json",
+  "x-spec-version": "3.0.11"
+}

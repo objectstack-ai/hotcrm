@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Workflow name"
+    },
+    "path": {
+      "type": "string",
+      "description": "Workflow file path (e.g., .github/workflows/ci.yml)"
+    },
+    "enabled": {
+      "default": true,
+      "description": "Enable workflow",
+      "type": "boolean"
+    },
+    "triggers": {
+      "description": "Workflow triggers",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "push",
+          "pull_request",
+          "release",
+          "schedule",
+          "workflow_dispatch",
+          "repository_dispatch"
+        ]
+      }
+    },
+    "env": {
+      "description": "Environment variables",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "secrets": {
+      "description": "Required secrets",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "name",
+    "path",
+    "enabled"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/integration/GitHubActionsWorkflow.json",
+  "x-spec-version": "3.0.11"
+}

@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "organization": {
+      "default": false,
+      "description": "Enable Organization/Teams support",
+      "type": "boolean"
+    },
+    "twoFactor": {
+      "default": false,
+      "description": "Enable 2FA",
+      "type": "boolean"
+    },
+    "passkeys": {
+      "default": false,
+      "description": "Enable Passkey support",
+      "type": "boolean"
+    },
+    "magicLink": {
+      "default": false,
+      "description": "Enable Magic Link login",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "organization",
+    "twoFactor",
+    "passkeys",
+    "magicLink"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/system/AuthPluginConfig.json",
+  "x-spec-version": "3.0.11"
+}

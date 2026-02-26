@@ -1,0 +1,1613 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "description": "Internal view name (lowercase snake_case)",
+      "type": "string",
+      "minLength": 2,
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "label": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "key": {
+              "type": "string",
+              "description": "Translation key (e.g., \"views.task_list.label\")"
+            },
+            "defaultValue": {
+              "description": "Fallback value when translation key is not found",
+              "type": "string"
+            },
+            "params": {
+              "description": "Interpolation parameters (e.g., { count: 5 })",
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "boolean"
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "key"
+          ],
+          "additionalProperties": false
+        }
+      ],
+      "description": "Display label: plain string or i18n translation object"
+    },
+    "type": {
+      "default": "grid",
+      "type": "string",
+      "enum": [
+        "grid",
+        "kanban",
+        "gallery",
+        "calendar",
+        "timeline",
+        "gantt",
+        "map"
+      ]
+    },
+    "data": {
+      "description": "Data source configuration (defaults to \"object\" provider)",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "provider": {
+              "type": "string",
+              "const": "object"
+            },
+            "object": {
+              "type": "string",
+              "description": "Target object name"
+            }
+          },
+          "required": [
+            "provider",
+            "object"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "provider": {
+              "type": "string",
+              "const": "api"
+            },
+            "read": {
+              "description": "Configuration for fetching data",
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string",
+                  "description": "API endpoint URL"
+                },
+                "method": {
+                  "default": "GET",
+                  "description": "HTTP method",
+                  "type": "string",
+                  "enum": [
+                    "GET",
+                    "POST",
+                    "PUT",
+                    "PATCH",
+                    "DELETE"
+                  ]
+                },
+                "headers": {
+                  "description": "Custom HTTP headers",
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                },
+                "params": {
+                  "description": "Query parameters",
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {}
+                },
+                "body": {
+                  "description": "Request body for POST/PUT/PATCH"
+                }
+              },
+              "required": [
+                "url",
+                "method"
+              ],
+              "additionalProperties": false
+            },
+            "write": {
+              "description": "Configuration for submitting data (for forms/editable tables)",
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string",
+                  "description": "API endpoint URL"
+                },
+                "method": {
+                  "default": "GET",
+                  "description": "HTTP method",
+                  "type": "string",
+                  "enum": [
+                    "GET",
+                    "POST",
+                    "PUT",
+                    "PATCH",
+                    "DELETE"
+                  ]
+                },
+                "headers": {
+                  "description": "Custom HTTP headers",
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                },
+                "params": {
+                  "description": "Query parameters",
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {}
+                },
+                "body": {
+                  "description": "Request body for POST/PUT/PATCH"
+                }
+              },
+              "required": [
+                "url",
+                "method"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "provider"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "provider": {
+              "type": "string",
+              "const": "value"
+            },
+            "items": {
+              "type": "array",
+              "items": {},
+              "description": "Static data array"
+            }
+          },
+          "required": [
+            "provider",
+            "items"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "columns": {
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "field": {
+                "type": "string",
+                "description": "Field name (snake_case)"
+              },
+              "label": {
+                "description": "Display label override",
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "key": {
+                        "type": "string",
+                        "description": "Translation key (e.g., \"views.task_list.label\")"
+                      },
+                      "defaultValue": {
+                        "description": "Fallback value when translation key is not found",
+                        "type": "string"
+                      },
+                      "params": {
+                        "description": "Interpolation parameters (e.g., { count: 5 })",
+                        "type": "object",
+                        "propertyNames": {
+                          "type": "string"
+                        },
+                        "additionalProperties": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "boolean"
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    "required": [
+                      "key"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              },
+              "width": {
+                "description": "Column width in pixels",
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "align": {
+                "description": "Text alignment",
+                "type": "string",
+                "enum": [
+                  "left",
+                  "center",
+                  "right"
+                ]
+              },
+              "hidden": {
+                "description": "Hide column by default",
+                "type": "boolean"
+              },
+              "sortable": {
+                "description": "Allow sorting by this column",
+                "type": "boolean"
+              },
+              "resizable": {
+                "description": "Allow resizing this column",
+                "type": "boolean"
+              },
+              "wrap": {
+                "description": "Allow text wrapping",
+                "type": "boolean"
+              },
+              "type": {
+                "description": "Renderer type override (e.g., \"currency\", \"date\")",
+                "type": "string"
+              },
+              "pinned": {
+                "description": "Pin/freeze column to left or right side",
+                "type": "string",
+                "enum": [
+                  "left",
+                  "right"
+                ]
+              },
+              "summary": {
+                "description": "Footer aggregation function for this column",
+                "type": "string",
+                "enum": [
+                  "none",
+                  "count",
+                  "count_empty",
+                  "count_filled",
+                  "count_unique",
+                  "percent_empty",
+                  "percent_filled",
+                  "sum",
+                  "avg",
+                  "min",
+                  "max"
+                ]
+              },
+              "link": {
+                "description": "Functions as the primary navigation link (triggers View navigation)",
+                "type": "boolean"
+              },
+              "action": {
+                "description": "Registered Action ID to execute when clicked",
+                "type": "string"
+              }
+            },
+            "required": [
+              "field"
+            ],
+            "additionalProperties": false
+          }
+        }
+      ],
+      "description": "Fields to display as columns"
+    },
+    "filter": {
+      "description": "Filter criteria (JSON Rules)",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string",
+            "description": "Field name to filter on"
+          },
+          "operator": {
+            "type": "string",
+            "description": "Filter operator (e.g. equals, not_equals, contains, this_quarter)"
+          },
+          "value": {
+            "description": "Filter value",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "required": [
+          "field",
+          "operator"
+        ],
+        "additionalProperties": false,
+        "description": "View filter rule"
+      }
+    },
+    "sort": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "field": {
+                "type": "string"
+              },
+              "order": {
+                "type": "string",
+                "enum": [
+                  "asc",
+                  "desc"
+                ]
+              }
+            },
+            "required": [
+              "field",
+              "order"
+            ],
+            "additionalProperties": false
+          }
+        }
+      ]
+    },
+    "searchableFields": {
+      "description": "Fields enabled for search",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "filterableFields": {
+      "description": "Fields enabled for end-user filtering in the top bar",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "quickFilters": {
+      "description": "One-click filter chips for quick record filtering",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string",
+            "description": "Field name to filter by"
+          },
+          "label": {
+            "description": "Display label for the chip",
+            "type": "string"
+          },
+          "operator": {
+            "default": "equals",
+            "description": "Filter operator",
+            "type": "string",
+            "enum": [
+              "equals",
+              "not_equals",
+              "contains",
+              "in",
+              "is_null",
+              "is_not_null"
+            ]
+          },
+          "value": {
+            "description": "Preset filter value",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "required": [
+          "field",
+          "operator"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "resizable": {
+      "description": "Enable column resizing",
+      "type": "boolean"
+    },
+    "striped": {
+      "description": "Striped row styling",
+      "type": "boolean"
+    },
+    "bordered": {
+      "description": "Show borders",
+      "type": "boolean"
+    },
+    "selection": {
+      "description": "Row selection configuration",
+      "type": "object",
+      "properties": {
+        "type": {
+          "default": "none",
+          "description": "Selection mode",
+          "type": "string",
+          "enum": [
+            "none",
+            "single",
+            "multiple"
+          ]
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "navigation": {
+      "description": "Configuration for item click navigation (page, drawer, modal, etc.)",
+      "type": "object",
+      "properties": {
+        "mode": {
+          "default": "page",
+          "type": "string",
+          "enum": [
+            "page",
+            "drawer",
+            "modal",
+            "split",
+            "popover",
+            "new_window",
+            "none"
+          ]
+        },
+        "view": {
+          "description": "Name of the form view to use for details (e.g. \"summary_view\", \"edit_form\")",
+          "type": "string"
+        },
+        "preventNavigation": {
+          "default": false,
+          "description": "Disable standard navigation entirely",
+          "type": "boolean"
+        },
+        "openNewTab": {
+          "default": false,
+          "description": "Force open in new tab (applies to page mode)",
+          "type": "boolean"
+        },
+        "width": {
+          "description": "Width of the drawer/modal (e.g. \"600px\", \"50%\")",
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "number"
+            }
+          ]
+        }
+      },
+      "required": [
+        "mode",
+        "preventNavigation",
+        "openNewTab"
+      ],
+      "additionalProperties": false
+    },
+    "pagination": {
+      "description": "Pagination configuration",
+      "type": "object",
+      "properties": {
+        "pageSize": {
+          "default": 25,
+          "description": "Number of records per page",
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "pageSizeOptions": {
+          "description": "Available page size options",
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          }
+        }
+      },
+      "required": [
+        "pageSize"
+      ],
+      "additionalProperties": false
+    },
+    "kanban": {
+      "type": "object",
+      "properties": {
+        "groupByField": {
+          "type": "string",
+          "description": "Field to group columns by (usually status/select)"
+        },
+        "summarizeField": {
+          "description": "Field to sum at top of column (e.g. amount)",
+          "type": "string"
+        },
+        "columns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Fields to show on cards"
+        }
+      },
+      "required": [
+        "groupByField",
+        "columns"
+      ],
+      "additionalProperties": false
+    },
+    "calendar": {
+      "type": "object",
+      "properties": {
+        "startDateField": {
+          "type": "string"
+        },
+        "endDateField": {
+          "type": "string"
+        },
+        "titleField": {
+          "type": "string"
+        },
+        "colorField": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "startDateField",
+        "titleField"
+      ],
+      "additionalProperties": false
+    },
+    "gantt": {
+      "type": "object",
+      "properties": {
+        "startDateField": {
+          "type": "string"
+        },
+        "endDateField": {
+          "type": "string"
+        },
+        "titleField": {
+          "type": "string"
+        },
+        "progressField": {
+          "type": "string"
+        },
+        "dependenciesField": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "startDateField",
+        "endDateField",
+        "titleField"
+      ],
+      "additionalProperties": false
+    },
+    "gallery": {
+      "type": "object",
+      "properties": {
+        "coverField": {
+          "description": "Attachment/image field to display as card cover",
+          "type": "string"
+        },
+        "coverFit": {
+          "default": "cover",
+          "description": "Image fit mode for card cover",
+          "type": "string",
+          "enum": [
+            "cover",
+            "contain"
+          ]
+        },
+        "cardSize": {
+          "default": "medium",
+          "description": "Card size in gallery view",
+          "type": "string",
+          "enum": [
+            "small",
+            "medium",
+            "large"
+          ]
+        },
+        "titleField": {
+          "description": "Field to display as card title",
+          "type": "string"
+        },
+        "visibleFields": {
+          "description": "Fields to display on card body",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "coverFit",
+        "cardSize"
+      ],
+      "additionalProperties": false,
+      "description": "Gallery/card view configuration"
+    },
+    "timeline": {
+      "type": "object",
+      "properties": {
+        "startDateField": {
+          "type": "string",
+          "description": "Field for timeline item start date"
+        },
+        "endDateField": {
+          "description": "Field for timeline item end date",
+          "type": "string"
+        },
+        "titleField": {
+          "type": "string",
+          "description": "Field to display as timeline item title"
+        },
+        "groupByField": {
+          "description": "Field to group timeline rows",
+          "type": "string"
+        },
+        "colorField": {
+          "description": "Field to determine item color",
+          "type": "string"
+        },
+        "scale": {
+          "default": "week",
+          "description": "Default timeline scale",
+          "type": "string",
+          "enum": [
+            "hour",
+            "day",
+            "week",
+            "month",
+            "quarter",
+            "year"
+          ]
+        }
+      },
+      "required": [
+        "startDateField",
+        "titleField",
+        "scale"
+      ],
+      "additionalProperties": false,
+      "description": "Timeline view configuration"
+    },
+    "description": {
+      "description": "View description for documentation/tooltips",
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "key": {
+              "type": "string",
+              "description": "Translation key (e.g., \"views.task_list.label\")"
+            },
+            "defaultValue": {
+              "description": "Fallback value when translation key is not found",
+              "type": "string"
+            },
+            "params": {
+              "description": "Interpolation parameters (e.g., { count: 5 })",
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "boolean"
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "key"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "sharing": {
+      "description": "View sharing and access configuration",
+      "type": "object",
+      "properties": {
+        "type": {
+          "default": "collaborative",
+          "description": "View ownership type",
+          "type": "string",
+          "enum": [
+            "personal",
+            "collaborative"
+          ]
+        },
+        "lockedBy": {
+          "description": "User who locked the view configuration",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "rowHeight": {
+      "description": "Row height / density setting",
+      "type": "string",
+      "enum": [
+        "compact",
+        "short",
+        "medium",
+        "tall",
+        "extra_tall"
+      ]
+    },
+    "grouping": {
+      "description": "Group records by one or more fields",
+      "type": "object",
+      "properties": {
+        "fields": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "field": {
+                "type": "string",
+                "description": "Field name to group by"
+              },
+              "order": {
+                "default": "asc",
+                "description": "Group sort order",
+                "type": "string",
+                "enum": [
+                  "asc",
+                  "desc"
+                ]
+              },
+              "collapsed": {
+                "default": false,
+                "description": "Collapse groups by default",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "field",
+              "order",
+              "collapsed"
+            ],
+            "additionalProperties": false
+          },
+          "description": "Fields to group by (supports up to 3 levels)"
+        }
+      },
+      "required": [
+        "fields"
+      ],
+      "additionalProperties": false
+    },
+    "rowColor": {
+      "description": "Color rows based on field value",
+      "type": "object",
+      "properties": {
+        "field": {
+          "type": "string",
+          "description": "Field to derive color from (typically a select/status field)"
+        },
+        "colors": {
+          "description": "Map of field value to color (hex/token)",
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "field"
+      ],
+      "additionalProperties": false
+    },
+    "hiddenFields": {
+      "description": "Fields to hide in this specific view",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "fieldOrder": {
+      "description": "Explicit field display order for this view",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "rowActions": {
+      "description": "Actions available for individual row items",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "bulkActions": {
+      "description": "Actions available when multiple rows are selected",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "virtualScroll": {
+      "description": "Enable virtual scrolling for large datasets",
+      "type": "boolean"
+    },
+    "conditionalFormatting": {
+      "description": "Conditional formatting rules for list rows",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "condition": {
+            "type": "string",
+            "description": "Condition expression to evaluate"
+          },
+          "style": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "CSS styles to apply when condition is true"
+          }
+        },
+        "required": [
+          "condition",
+          "style"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "inlineEdit": {
+      "description": "Allow inline editing of records directly in the list view",
+      "type": "boolean"
+    },
+    "exportOptions": {
+      "description": "Available export format options",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "csv",
+          "xlsx",
+          "pdf",
+          "json"
+        ]
+      }
+    },
+    "userActions": {
+      "description": "User action toggles for the view toolbar",
+      "type": "object",
+      "properties": {
+        "sort": {
+          "default": true,
+          "description": "Allow users to sort records",
+          "type": "boolean"
+        },
+        "search": {
+          "default": true,
+          "description": "Allow users to search records",
+          "type": "boolean"
+        },
+        "filter": {
+          "default": true,
+          "description": "Allow users to filter records",
+          "type": "boolean"
+        },
+        "rowHeight": {
+          "default": true,
+          "description": "Allow users to toggle row height/density",
+          "type": "boolean"
+        },
+        "addRecordForm": {
+          "default": false,
+          "description": "Add records through a form instead of inline",
+          "type": "boolean"
+        },
+        "buttons": {
+          "description": "Custom action button IDs to show in the toolbar",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "sort",
+        "search",
+        "filter",
+        "rowHeight",
+        "addRecordForm"
+      ],
+      "additionalProperties": false
+    },
+    "appearance": {
+      "description": "Appearance and visualization configuration",
+      "type": "object",
+      "properties": {
+        "showDescription": {
+          "default": true,
+          "description": "Show the view description text",
+          "type": "boolean"
+        },
+        "allowedVisualizations": {
+          "description": "Whitelist of visualization types users can switch between (e.g. [\"grid\", \"gallery\", \"kanban\"])",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "grid",
+              "kanban",
+              "gallery",
+              "calendar",
+              "timeline",
+              "gantt",
+              "map"
+            ],
+            "description": "Visualization type that users can switch to"
+          }
+        }
+      },
+      "required": [
+        "showDescription"
+      ],
+      "additionalProperties": false
+    },
+    "tabs": {
+      "description": "Tab definitions for multi-tab view interface",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "description": "Tab identifier (snake_case)"
+          },
+          "label": {
+            "description": "Display label",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "key": {
+                    "type": "string",
+                    "description": "Translation key (e.g., \"views.task_list.label\")"
+                  },
+                  "defaultValue": {
+                    "description": "Fallback value when translation key is not found",
+                    "type": "string"
+                  },
+                  "params": {
+                    "description": "Interpolation parameters (e.g., { count: 5 })",
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "boolean"
+                        }
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "key"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          },
+          "icon": {
+            "description": "Tab icon name",
+            "type": "string"
+          },
+          "view": {
+            "description": "Referenced list view name from listViews",
+            "type": "string"
+          },
+          "filter": {
+            "description": "Tab-specific filter criteria",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "field": {
+                  "type": "string",
+                  "description": "Field name to filter on"
+                },
+                "operator": {
+                  "type": "string",
+                  "description": "Filter operator (e.g. equals, not_equals, contains, this_quarter)"
+                },
+                "value": {
+                  "description": "Filter value",
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "field",
+                "operator"
+              ],
+              "additionalProperties": false,
+              "description": "View filter rule"
+            }
+          },
+          "order": {
+            "description": "Tab display order",
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "pinned": {
+            "default": false,
+            "description": "Pin tab (cannot be removed by users)",
+            "type": "boolean"
+          },
+          "isDefault": {
+            "default": false,
+            "description": "Set as the default active tab",
+            "type": "boolean"
+          },
+          "visible": {
+            "default": true,
+            "description": "Tab visibility",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "name",
+          "pinned",
+          "isDefault",
+          "visible"
+        ],
+        "additionalProperties": false,
+        "description": "Tab configuration for multi-tab view interface"
+      }
+    },
+    "addRecord": {
+      "description": "Add record entry point configuration",
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": true,
+          "description": "Show the add record entry point",
+          "type": "boolean"
+        },
+        "position": {
+          "default": "bottom",
+          "description": "Position of the add record button",
+          "type": "string",
+          "enum": [
+            "top",
+            "bottom",
+            "both"
+          ]
+        },
+        "mode": {
+          "default": "inline",
+          "description": "How to add a new record",
+          "type": "string",
+          "enum": [
+            "inline",
+            "form",
+            "modal"
+          ]
+        },
+        "formView": {
+          "description": "Named form view to use when mode is \"form\" or \"modal\"",
+          "type": "string"
+        }
+      },
+      "required": [
+        "enabled",
+        "position",
+        "mode"
+      ],
+      "additionalProperties": false
+    },
+    "showRecordCount": {
+      "description": "Show record count at the bottom of the list",
+      "type": "boolean"
+    },
+    "allowPrinting": {
+      "description": "Allow users to print the view",
+      "type": "boolean"
+    },
+    "emptyState": {
+      "description": "Empty state configuration when no records found",
+      "type": "object",
+      "properties": {
+        "title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string",
+                  "description": "Translation key (e.g., \"views.task_list.label\")"
+                },
+                "defaultValue": {
+                  "description": "Fallback value when translation key is not found",
+                  "type": "string"
+                },
+                "params": {
+                  "description": "Interpolation parameters (e.g., { count: 5 })",
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "boolean"
+                      }
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "key"
+              ],
+              "additionalProperties": false
+            }
+          ],
+          "description": "Display label: plain string or i18n translation object"
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string",
+                  "description": "Translation key (e.g., \"views.task_list.label\")"
+                },
+                "defaultValue": {
+                  "description": "Fallback value when translation key is not found",
+                  "type": "string"
+                },
+                "params": {
+                  "description": "Interpolation parameters (e.g., { count: 5 })",
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "boolean"
+                      }
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "key"
+              ],
+              "additionalProperties": false
+            }
+          ],
+          "description": "Display label: plain string or i18n translation object"
+        },
+        "icon": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "aria": {
+      "description": "ARIA accessibility attributes for the list view",
+      "type": "object",
+      "properties": {
+        "ariaLabel": {
+          "description": "Accessible label for screen readers (WAI-ARIA aria-label)",
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string",
+                  "description": "Translation key (e.g., \"views.task_list.label\")"
+                },
+                "defaultValue": {
+                  "description": "Fallback value when translation key is not found",
+                  "type": "string"
+                },
+                "params": {
+                  "description": "Interpolation parameters (e.g., { count: 5 })",
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "boolean"
+                      }
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "key"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "ariaDescribedBy": {
+          "description": "ID of element providing additional description (WAI-ARIA aria-describedby)",
+          "type": "string"
+        },
+        "role": {
+          "description": "WAI-ARIA role attribute (e.g., \"dialog\", \"navigation\", \"alert\")",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "responsive": {
+      "description": "Responsive layout configuration",
+      "type": "object",
+      "properties": {
+        "breakpoint": {
+          "description": "Minimum breakpoint for visibility",
+          "type": "string",
+          "enum": [
+            "xs",
+            "sm",
+            "md",
+            "lg",
+            "xl",
+            "2xl"
+          ]
+        },
+        "hiddenOn": {
+          "description": "Hide on these breakpoints",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "xs",
+              "sm",
+              "md",
+              "lg",
+              "xl",
+              "2xl"
+            ]
+          }
+        },
+        "columns": {
+          "description": "Grid columns per breakpoint",
+          "type": "object",
+          "properties": {
+            "xs": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 12
+            },
+            "sm": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 12
+            },
+            "md": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 12
+            },
+            "lg": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 12
+            },
+            "xl": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 12
+            },
+            "2xl": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 12
+            }
+          },
+          "additionalProperties": false
+        },
+        "order": {
+          "description": "Display order per breakpoint",
+          "type": "object",
+          "properties": {
+            "xs": {
+              "type": "number"
+            },
+            "sm": {
+              "type": "number"
+            },
+            "md": {
+              "type": "number"
+            },
+            "lg": {
+              "type": "number"
+            },
+            "xl": {
+              "type": "number"
+            },
+            "2xl": {
+              "type": "number"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "performance": {
+      "description": "Performance optimization settings",
+      "type": "object",
+      "properties": {
+        "lazyLoad": {
+          "description": "Enable lazy loading (defer rendering until visible)",
+          "type": "boolean"
+        },
+        "virtualScroll": {
+          "description": "Virtual scrolling configuration",
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "default": false,
+              "description": "Enable virtual scrolling",
+              "type": "boolean"
+            },
+            "itemHeight": {
+              "description": "Fixed item height in pixels (for estimation)",
+              "type": "number"
+            },
+            "overscan": {
+              "description": "Number of extra items to render outside viewport",
+              "type": "number"
+            }
+          },
+          "required": [
+            "enabled"
+          ],
+          "additionalProperties": false
+        },
+        "cacheStrategy": {
+          "description": "Client-side data caching strategy",
+          "type": "string",
+          "enum": [
+            "none",
+            "cache-first",
+            "network-first",
+            "stale-while-revalidate"
+          ]
+        },
+        "prefetch": {
+          "description": "Prefetch data before component is visible",
+          "type": "boolean"
+        },
+        "pageSize": {
+          "description": "Number of items per page for pagination",
+          "type": "number"
+        },
+        "debounceMs": {
+          "description": "Debounce interval for user interactions in milliseconds",
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "type",
+    "columns"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/ui/ListView.json",
+  "x-spec-version": "3.0.11"
+}

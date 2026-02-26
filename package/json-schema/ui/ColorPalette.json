@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "primary": {
+      "type": "string",
+      "description": "Primary brand color (hex, rgb, or hsl)"
+    },
+    "secondary": {
+      "description": "Secondary brand color",
+      "type": "string"
+    },
+    "accent": {
+      "description": "Accent color for highlights",
+      "type": "string"
+    },
+    "success": {
+      "description": "Success state color (default: green)",
+      "type": "string"
+    },
+    "warning": {
+      "description": "Warning state color (default: yellow)",
+      "type": "string"
+    },
+    "error": {
+      "description": "Error state color (default: red)",
+      "type": "string"
+    },
+    "info": {
+      "description": "Info state color (default: blue)",
+      "type": "string"
+    },
+    "background": {
+      "description": "Background color",
+      "type": "string"
+    },
+    "surface": {
+      "description": "Surface/card background color",
+      "type": "string"
+    },
+    "text": {
+      "description": "Primary text color",
+      "type": "string"
+    },
+    "textSecondary": {
+      "description": "Secondary text color",
+      "type": "string"
+    },
+    "border": {
+      "description": "Border color",
+      "type": "string"
+    },
+    "disabled": {
+      "description": "Disabled state color",
+      "type": "string"
+    },
+    "primaryLight": {
+      "description": "Lighter shade of primary",
+      "type": "string"
+    },
+    "primaryDark": {
+      "description": "Darker shade of primary",
+      "type": "string"
+    },
+    "secondaryLight": {
+      "description": "Lighter shade of secondary",
+      "type": "string"
+    },
+    "secondaryDark": {
+      "description": "Darker shade of secondary",
+      "type": "string"
+    }
+  },
+  "required": [
+    "primary"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/ui/ColorPalette.json",
+  "x-spec-version": "3.0.11"
+}

@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "language": {
+      "type": "string",
+      "description": "Target language/framework (e.g., typescript, python, curl)"
+    },
+    "name": {
+      "type": "string",
+      "description": "Template name"
+    },
+    "template": {
+      "type": "string",
+      "description": "Code template with placeholders"
+    },
+    "variables": {
+      "description": "Required template variables",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "language",
+    "name",
+    "template"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/CodeGenerationTemplate.json",
+  "x-spec-version": "3.0.11"
+}

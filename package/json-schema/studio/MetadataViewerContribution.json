@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique viewer identifier"
+    },
+    "metadataTypes": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Metadata types this viewer can handle"
+    },
+    "label": {
+      "type": "string",
+      "description": "Viewer display label"
+    },
+    "priority": {
+      "default": 0,
+      "description": "Viewer priority (higher wins)",
+      "type": "number"
+    },
+    "modes": {
+      "default": [
+        "preview"
+      ],
+      "description": "Supported view modes",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "preview",
+          "design",
+          "code",
+          "data"
+        ]
+      }
+    }
+  },
+  "required": [
+    "id",
+    "metadataTypes",
+    "label",
+    "priority",
+    "modes"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/studio/MetadataViewerContribution.json",
+  "x-spec-version": "3.0.11"
+}

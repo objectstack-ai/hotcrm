@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "status": {
+      "description": "Filter by flow status",
+      "type": "string",
+      "enum": [
+        "draft",
+        "active",
+        "obsolete",
+        "invalid"
+      ]
+    },
+    "type": {
+      "description": "Filter by flow type",
+      "type": "string",
+      "enum": [
+        "autolaunched",
+        "record_change",
+        "schedule",
+        "screen",
+        "api"
+      ]
+    },
+    "limit": {
+      "default": 50,
+      "description": "Maximum number of flows to return",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+    },
+    "cursor": {
+      "description": "Cursor for pagination",
+      "type": "string"
+    }
+  },
+  "required": [
+    "limit"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/ListFlowsRequest.json",
+  "x-spec-version": "3.0.11"
+}

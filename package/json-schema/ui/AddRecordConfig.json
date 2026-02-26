@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "enabled": {
+      "default": true,
+      "description": "Show the add record entry point",
+      "type": "boolean"
+    },
+    "position": {
+      "default": "bottom",
+      "description": "Position of the add record button",
+      "type": "string",
+      "enum": [
+        "top",
+        "bottom",
+        "both"
+      ]
+    },
+    "mode": {
+      "default": "inline",
+      "description": "How to add a new record",
+      "type": "string",
+      "enum": [
+        "inline",
+        "form",
+        "modal"
+      ]
+    },
+    "formView": {
+      "description": "Named form view to use when mode is \"form\" or \"modal\"",
+      "type": "string"
+    }
+  },
+  "required": [
+    "enabled",
+    "position",
+    "mode"
+  ],
+  "additionalProperties": false,
+  "description": "Add record entry point configuration",
+  "$id": "https://schema.objectstack.io/v3.0.11/ui/AddRecordConfig.json",
+  "x-spec-version": "3.0.11"
+}

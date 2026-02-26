@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "enabled": {
+      "type": "boolean",
+      "description": "Enable circuit breaker"
+    },
+    "failureThreshold": {
+      "default": 5,
+      "description": "Failures before opening circuit",
+      "type": "number"
+    },
+    "resetTimeoutMs": {
+      "default": 30000,
+      "description": "Time in open state before half-open",
+      "type": "number"
+    },
+    "halfOpenMaxRequests": {
+      "default": 1,
+      "description": "Requests allowed in half-open state",
+      "type": "number"
+    },
+    "monitoringWindow": {
+      "default": 60000,
+      "description": "Rolling window for failure count in ms",
+      "type": "number"
+    },
+    "fallbackStrategy": {
+      "description": "Fallback strategy when circuit is open",
+      "type": "string",
+      "enum": [
+        "cache",
+        "default_value",
+        "error",
+        "queue"
+      ]
+    }
+  },
+  "required": [
+    "enabled",
+    "failureThreshold",
+    "resetTimeoutMs",
+    "halfOpenMaxRequests",
+    "monitoringWindow"
+  ],
+  "additionalProperties": false,
+  "description": "Circuit breaker configuration",
+  "$id": "https://schema.objectstack.io/v3.0.11/integration/CircuitBreakerConfig.json",
+  "x-spec-version": "3.0.11"
+}

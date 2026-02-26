@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "enabled": {
+      "default": false,
+      "description": "Enable dead letter queue for failed messages",
+      "type": "boolean"
+    },
+    "maxRetries": {
+      "default": 3,
+      "description": "Maximum delivery attempts before sending to DLQ",
+      "type": "number"
+    },
+    "queueName": {
+      "type": "string",
+      "description": "Name of the dead letter queue"
+    }
+  },
+  "required": [
+    "enabled",
+    "maxRetries",
+    "queueName"
+  ],
+  "additionalProperties": false,
+  "description": "Dead letter queue configuration for unprocessable messages",
+  "$id": "https://schema.objectstack.io/v3.0.11/system/DeadLetterQueue.json",
+  "x-spec-version": "3.0.11"
+}

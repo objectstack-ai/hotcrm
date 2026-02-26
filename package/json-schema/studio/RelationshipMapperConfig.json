@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "visualCreation": {
+      "default": true,
+      "description": "Enable drag-to-create relationships",
+      "type": "boolean"
+    },
+    "showReverseRelationships": {
+      "default": true,
+      "description": "Show reverse/child-to-parent relationships",
+      "type": "boolean"
+    },
+    "showCascadeWarnings": {
+      "default": true,
+      "description": "Show cascade delete behavior warnings",
+      "type": "boolean"
+    },
+    "displayConfig": {
+      "default": [
+        {
+          "type": "lookup",
+          "lineStyle": "dashed",
+          "color": "#0891b2",
+          "highlightColor": "#06b6d4",
+          "cardinalityLabel": "1:N"
+        },
+        {
+          "type": "master_detail",
+          "lineStyle": "solid",
+          "color": "#ea580c",
+          "highlightColor": "#f97316",
+          "cardinalityLabel": "1:N"
+        },
+        {
+          "type": "tree",
+          "lineStyle": "dotted",
+          "color": "#8b5cf6",
+          "highlightColor": "#a78bfa",
+          "cardinalityLabel": "1:N"
+        }
+      ],
+      "description": "Visual config per relationship type",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "lookup",
+              "master_detail",
+              "tree"
+            ],
+            "description": "Relationship type"
+          },
+          "lineStyle": {
+            "default": "solid",
+            "description": "Line style in diagrams",
+            "type": "string",
+            "enum": [
+              "solid",
+              "dashed",
+              "dotted"
+            ]
+          },
+          "color": {
+            "default": "#94a3b8",
+            "description": "Line color (CSS value)",
+            "type": "string"
+          },
+          "highlightColor": {
+            "default": "#0891b2",
+            "description": "Highlighted color on hover/select",
+            "type": "string"
+          },
+          "cardinalityLabel": {
+            "default": "1:N",
+            "description": "Cardinality label (e.g., \"1:N\", \"1:1\", \"N:M\")",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "lineStyle",
+          "color",
+          "highlightColor",
+          "cardinalityLabel"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "visualCreation",
+    "showReverseRelationships",
+    "showCascadeWarnings",
+    "displayConfig"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/studio/RelationshipMapperConfig.json",
+  "x-spec-version": "3.0.11"
+}

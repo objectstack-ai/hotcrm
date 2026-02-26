@@ -1,0 +1,2943 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "success": {
+      "type": "boolean",
+      "description": "Operation success status"
+    },
+    "error": {
+      "description": "Error details if success is false",
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "description": "Error code (e.g. validation_error)"
+        },
+        "message": {
+          "type": "string",
+          "description": "Readable error message"
+        },
+        "category": {
+          "description": "Error category (e.g. validation, authorization)",
+          "type": "string"
+        },
+        "details": {
+          "description": "Additional error context (e.g. field validation errors)"
+        },
+        "requestId": {
+          "description": "Request ID for tracking",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ],
+      "additionalProperties": false
+    },
+    "meta": {
+      "description": "Response metadata",
+      "type": "object",
+      "properties": {
+        "timestamp": {
+          "type": "string"
+        },
+        "duration": {
+          "type": "number"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "traceId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "timestamp"
+      ],
+      "additionalProperties": false
+    },
+    "data": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z_][a-z0-9_]*$",
+          "description": "Machine unique key (snake_case). Immutable."
+        },
+        "label": {
+          "description": "Human readable singular label (e.g. \"Account\")",
+          "type": "string"
+        },
+        "pluralLabel": {
+          "description": "Human readable plural label (e.g. \"Accounts\")",
+          "type": "string"
+        },
+        "description": {
+          "description": "Developer documentation / description",
+          "type": "string"
+        },
+        "icon": {
+          "description": "Icon name (Lucide/Material) for UI representation",
+          "type": "string"
+        },
+        "tags": {
+          "description": "Categorization tags (e.g. \"sales\", \"system\", \"reference\")",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "active": {
+          "default": true,
+          "description": "Is the object active and usable",
+          "type": "boolean"
+        },
+        "isSystem": {
+          "default": false,
+          "description": "Is system object (protected from deletion)",
+          "type": "boolean"
+        },
+        "abstract": {
+          "default": false,
+          "description": "Is abstract base object (cannot be instantiated)",
+          "type": "boolean"
+        },
+        "datasource": {
+          "default": "default",
+          "description": "Target Datasource ID. \"default\" is the primary DB.",
+          "type": "string"
+        },
+        "tableName": {
+          "description": "Physical table/collection name in the target datasource",
+          "type": "string"
+        },
+        "fields": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "pattern": "^[a-z_][a-z0-9_]*$"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "pattern": "^[a-z_][a-z0-9_]*$",
+                "description": "Machine name (snake_case)"
+              },
+              "label": {
+                "description": "Human readable label",
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "text",
+                  "textarea",
+                  "email",
+                  "url",
+                  "phone",
+                  "password",
+                  "markdown",
+                  "html",
+                  "richtext",
+                  "number",
+                  "currency",
+                  "percent",
+                  "date",
+                  "datetime",
+                  "time",
+                  "boolean",
+                  "toggle",
+                  "select",
+                  "multiselect",
+                  "radio",
+                  "checkboxes",
+                  "lookup",
+                  "master_detail",
+                  "tree",
+                  "image",
+                  "file",
+                  "avatar",
+                  "video",
+                  "audio",
+                  "formula",
+                  "summary",
+                  "autonumber",
+                  "location",
+                  "address",
+                  "code",
+                  "json",
+                  "color",
+                  "rating",
+                  "slider",
+                  "signature",
+                  "qrcode",
+                  "progress",
+                  "tags",
+                  "vector"
+                ],
+                "description": "Field Data Type"
+              },
+              "description": {
+                "description": "Tooltip/Help text",
+                "type": "string"
+              },
+              "format": {
+                "description": "Format string (e.g. email, phone)",
+                "type": "string"
+              },
+              "columnName": {
+                "description": "Physical column name in the target datasource. Defaults to the field key when not set.",
+                "type": "string"
+              },
+              "required": {
+                "default": false,
+                "description": "Is required",
+                "type": "boolean"
+              },
+              "searchable": {
+                "default": false,
+                "description": "Is searchable",
+                "type": "boolean"
+              },
+              "multiple": {
+                "default": false,
+                "description": "Allow multiple values (Stores as Array/JSON). Applicable for select, lookup, file, image.",
+                "type": "boolean"
+              },
+              "unique": {
+                "default": false,
+                "description": "Is unique constraint",
+                "type": "boolean"
+              },
+              "defaultValue": {
+                "description": "Default value"
+              },
+              "maxLength": {
+                "description": "Max character length",
+                "type": "number"
+              },
+              "minLength": {
+                "description": "Min character length",
+                "type": "number"
+              },
+              "precision": {
+                "description": "Total digits",
+                "type": "number"
+              },
+              "scale": {
+                "description": "Decimal places",
+                "type": "number"
+              },
+              "min": {
+                "description": "Minimum value",
+                "type": "number"
+              },
+              "max": {
+                "description": "Maximum value",
+                "type": "number"
+              },
+              "options": {
+                "description": "Static options for select/multiselect",
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "label": {
+                      "type": "string",
+                      "description": "Display label (human-readable, any case allowed)"
+                    },
+                    "value": {
+                      "type": "string",
+                      "minLength": 2,
+                      "pattern": "^[a-z][a-z0-9_.]*$",
+                      "description": "Stored value (lowercase machine identifier)"
+                    },
+                    "color": {
+                      "description": "Color code for badges/charts",
+                      "type": "string"
+                    },
+                    "default": {
+                      "description": "Is default option",
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "label",
+                    "value"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "reference": {
+                "description": "Target Object Name",
+                "type": "string"
+              },
+              "referenceFilters": {
+                "description": "Filters applied to lookup dialogs (e.g. \"active = true\")",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "writeRequiresMasterRead": {
+                "description": "If true, user needs read access to master record to edit this field",
+                "type": "boolean"
+              },
+              "deleteBehavior": {
+                "default": "set_null",
+                "description": "What happens if referenced record is deleted",
+                "type": "string",
+                "enum": [
+                  "set_null",
+                  "cascade",
+                  "restrict"
+                ]
+              },
+              "expression": {
+                "description": "Formula expression",
+                "type": "string"
+              },
+              "summaryOperations": {
+                "description": "Roll-up summary definition",
+                "type": "object",
+                "properties": {
+                  "object": {
+                    "type": "string",
+                    "description": "Source child object name for roll-up"
+                  },
+                  "field": {
+                    "type": "string",
+                    "description": "Field on child object to aggregate"
+                  },
+                  "function": {
+                    "type": "string",
+                    "enum": [
+                      "count",
+                      "sum",
+                      "min",
+                      "max",
+                      "avg"
+                    ],
+                    "description": "Aggregation function to apply"
+                  }
+                },
+                "required": [
+                  "object",
+                  "field",
+                  "function"
+                ],
+                "additionalProperties": false
+              },
+              "language": {
+                "description": "Programming language for syntax highlighting (e.g., javascript, python, sql)",
+                "type": "string"
+              },
+              "theme": {
+                "description": "Code editor theme (e.g., dark, light, monokai)",
+                "type": "string"
+              },
+              "lineNumbers": {
+                "description": "Show line numbers in code editor",
+                "type": "boolean"
+              },
+              "maxRating": {
+                "description": "Maximum rating value (default: 5)",
+                "type": "number"
+              },
+              "allowHalf": {
+                "description": "Allow half-star ratings",
+                "type": "boolean"
+              },
+              "displayMap": {
+                "description": "Display map widget for location field",
+                "type": "boolean"
+              },
+              "allowGeocoding": {
+                "description": "Allow address-to-coordinate conversion",
+                "type": "boolean"
+              },
+              "addressFormat": {
+                "description": "Address format template",
+                "type": "string",
+                "enum": [
+                  "us",
+                  "uk",
+                  "international"
+                ]
+              },
+              "colorFormat": {
+                "description": "Color value format",
+                "type": "string",
+                "enum": [
+                  "hex",
+                  "rgb",
+                  "rgba",
+                  "hsl"
+                ]
+              },
+              "allowAlpha": {
+                "description": "Allow transparency/alpha channel",
+                "type": "boolean"
+              },
+              "presetColors": {
+                "description": "Preset color options",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "step": {
+                "description": "Step increment for slider (default: 1)",
+                "type": "number"
+              },
+              "showValue": {
+                "description": "Display current value on slider",
+                "type": "boolean"
+              },
+              "marks": {
+                "description": "Custom marks/labels at specific values (e.g., {0: \"Low\", 50: \"Medium\", 100: \"High\"})",
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "type": "string"
+                }
+              },
+              "barcodeFormat": {
+                "description": "Barcode format type",
+                "type": "string",
+                "enum": [
+                  "qr",
+                  "ean13",
+                  "ean8",
+                  "code128",
+                  "code39",
+                  "upca",
+                  "upce"
+                ]
+              },
+              "qrErrorCorrection": {
+                "description": "QR code error correction level (L=7%, M=15%, Q=25%, H=30%). Only applicable when barcodeFormat is \"qr\"",
+                "type": "string",
+                "enum": [
+                  "L",
+                  "M",
+                  "Q",
+                  "H"
+                ]
+              },
+              "displayValue": {
+                "description": "Display human-readable value below barcode/QR code",
+                "type": "boolean"
+              },
+              "allowScanning": {
+                "description": "Enable camera scanning for barcode/QR code input",
+                "type": "boolean"
+              },
+              "currencyConfig": {
+                "description": "Configuration for currency field type",
+                "type": "object",
+                "properties": {
+                  "precision": {
+                    "default": 2,
+                    "description": "Decimal precision (default: 2)",
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 10
+                  },
+                  "currencyMode": {
+                    "default": "dynamic",
+                    "description": "Currency mode: dynamic (user selectable) or fixed (single currency)",
+                    "type": "string",
+                    "enum": [
+                      "dynamic",
+                      "fixed"
+                    ]
+                  },
+                  "defaultCurrency": {
+                    "default": "CNY",
+                    "description": "Default or fixed currency code (ISO 4217, e.g., USD, CNY, EUR)",
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 3
+                  }
+                },
+                "required": [
+                  "precision",
+                  "currencyMode",
+                  "defaultCurrency"
+                ],
+                "additionalProperties": false
+              },
+              "vectorConfig": {
+                "description": "Configuration for vector field type (AI/ML embeddings)",
+                "type": "object",
+                "properties": {
+                  "dimensions": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 10000,
+                    "description": "Vector dimensionality (e.g., 1536 for OpenAI embeddings)"
+                  },
+                  "distanceMetric": {
+                    "default": "cosine",
+                    "description": "Distance/similarity metric for vector search",
+                    "type": "string",
+                    "enum": [
+                      "cosine",
+                      "euclidean",
+                      "dotProduct",
+                      "manhattan"
+                    ]
+                  },
+                  "normalized": {
+                    "default": false,
+                    "description": "Whether vectors are normalized (unit length)",
+                    "type": "boolean"
+                  },
+                  "indexed": {
+                    "default": true,
+                    "description": "Whether to create a vector index for fast similarity search",
+                    "type": "boolean"
+                  },
+                  "indexType": {
+                    "description": "Vector index algorithm (HNSW for high accuracy, IVFFlat for large datasets)",
+                    "type": "string",
+                    "enum": [
+                      "hnsw",
+                      "ivfflat",
+                      "flat"
+                    ]
+                  }
+                },
+                "required": [
+                  "dimensions",
+                  "distanceMetric",
+                  "normalized",
+                  "indexed"
+                ],
+                "additionalProperties": false
+              },
+              "fileAttachmentConfig": {
+                "description": "Configuration for file and attachment field types",
+                "type": "object",
+                "properties": {
+                  "minSize": {
+                    "description": "Minimum file size in bytes",
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "maxSize": {
+                    "description": "Maximum file size in bytes (e.g., 10485760 = 10MB)",
+                    "type": "number",
+                    "minimum": 1
+                  },
+                  "allowedTypes": {
+                    "description": "Allowed file extensions (e.g., [\".pdf\", \".docx\", \".jpg\"])",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "blockedTypes": {
+                    "description": "Blocked file extensions (e.g., [\".exe\", \".bat\", \".sh\"])",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "allowedMimeTypes": {
+                    "description": "Allowed MIME types (e.g., [\"image/jpeg\", \"application/pdf\"])",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "blockedMimeTypes": {
+                    "description": "Blocked MIME types",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "virusScan": {
+                    "default": false,
+                    "description": "Enable virus scanning for uploaded files",
+                    "type": "boolean"
+                  },
+                  "virusScanProvider": {
+                    "description": "Virus scanning service provider",
+                    "type": "string",
+                    "enum": [
+                      "clamav",
+                      "virustotal",
+                      "metadefender",
+                      "custom"
+                    ]
+                  },
+                  "virusScanOnUpload": {
+                    "default": true,
+                    "description": "Scan files immediately on upload",
+                    "type": "boolean"
+                  },
+                  "quarantineOnThreat": {
+                    "default": true,
+                    "description": "Quarantine files if threat detected",
+                    "type": "boolean"
+                  },
+                  "storageProvider": {
+                    "description": "Object storage provider name (references ObjectStorageConfig)",
+                    "type": "string"
+                  },
+                  "storageBucket": {
+                    "description": "Target bucket name",
+                    "type": "string"
+                  },
+                  "storagePrefix": {
+                    "description": "Storage path prefix (e.g., \"uploads/documents/\")",
+                    "type": "string"
+                  },
+                  "imageValidation": {
+                    "description": "Image-specific validation rules",
+                    "type": "object",
+                    "properties": {
+                      "minWidth": {
+                        "description": "Minimum image width in pixels",
+                        "type": "number",
+                        "minimum": 1
+                      },
+                      "maxWidth": {
+                        "description": "Maximum image width in pixels",
+                        "type": "number",
+                        "minimum": 1
+                      },
+                      "minHeight": {
+                        "description": "Minimum image height in pixels",
+                        "type": "number",
+                        "minimum": 1
+                      },
+                      "maxHeight": {
+                        "description": "Maximum image height in pixels",
+                        "type": "number",
+                        "minimum": 1
+                      },
+                      "aspectRatio": {
+                        "description": "Required aspect ratio (e.g., \"16:9\", \"1:1\")",
+                        "type": "string"
+                      },
+                      "generateThumbnails": {
+                        "default": false,
+                        "description": "Auto-generate thumbnails",
+                        "type": "boolean"
+                      },
+                      "thumbnailSizes": {
+                        "description": "Thumbnail size configurations",
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "name": {
+                              "type": "string",
+                              "description": "Thumbnail variant name (e.g., \"small\", \"medium\", \"large\")"
+                            },
+                            "width": {
+                              "type": "number",
+                              "minimum": 1,
+                              "description": "Thumbnail width in pixels"
+                            },
+                            "height": {
+                              "type": "number",
+                              "minimum": 1,
+                              "description": "Thumbnail height in pixels"
+                            },
+                            "crop": {
+                              "default": false,
+                              "description": "Crop to exact dimensions",
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "name",
+                            "width",
+                            "height",
+                            "crop"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "preserveMetadata": {
+                        "default": false,
+                        "description": "Preserve EXIF metadata",
+                        "type": "boolean"
+                      },
+                      "autoRotate": {
+                        "default": true,
+                        "description": "Auto-rotate based on EXIF orientation",
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "generateThumbnails",
+                      "preserveMetadata",
+                      "autoRotate"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "allowMultiple": {
+                    "default": false,
+                    "description": "Allow multiple file uploads (overrides field.multiple)",
+                    "type": "boolean"
+                  },
+                  "allowReplace": {
+                    "default": true,
+                    "description": "Allow replacing existing files",
+                    "type": "boolean"
+                  },
+                  "allowDelete": {
+                    "default": true,
+                    "description": "Allow deleting uploaded files",
+                    "type": "boolean"
+                  },
+                  "requireUpload": {
+                    "default": false,
+                    "description": "Require at least one file when field is required",
+                    "type": "boolean"
+                  },
+                  "extractMetadata": {
+                    "default": true,
+                    "description": "Extract file metadata (name, size, type, etc.)",
+                    "type": "boolean"
+                  },
+                  "extractText": {
+                    "default": false,
+                    "description": "Extract text content from documents (OCR/parsing)",
+                    "type": "boolean"
+                  },
+                  "versioningEnabled": {
+                    "default": false,
+                    "description": "Keep previous versions of replaced files",
+                    "type": "boolean"
+                  },
+                  "maxVersions": {
+                    "description": "Maximum number of versions to retain",
+                    "type": "number",
+                    "minimum": 1
+                  },
+                  "publicRead": {
+                    "default": false,
+                    "description": "Allow public read access to uploaded files",
+                    "type": "boolean"
+                  },
+                  "presignedUrlExpiry": {
+                    "default": 3600,
+                    "description": "Presigned URL expiration in seconds (default: 1 hour)",
+                    "type": "number",
+                    "minimum": 60,
+                    "maximum": 604800
+                  }
+                },
+                "required": [
+                  "virusScan",
+                  "virusScanOnUpload",
+                  "quarantineOnThreat",
+                  "allowMultiple",
+                  "allowReplace",
+                  "allowDelete",
+                  "requireUpload",
+                  "extractMetadata",
+                  "extractText",
+                  "versioningEnabled",
+                  "publicRead",
+                  "presignedUrlExpiry"
+                ],
+                "additionalProperties": false
+              },
+              "encryptionConfig": {
+                "description": "Field-level encryption configuration for sensitive data (GDPR/HIPAA/PCI-DSS)",
+                "type": "object",
+                "properties": {
+                  "enabled": {
+                    "default": false,
+                    "description": "Enable field-level encryption",
+                    "type": "boolean"
+                  },
+                  "algorithm": {
+                    "default": "aes-256-gcm",
+                    "description": "Encryption algorithm",
+                    "type": "string",
+                    "enum": [
+                      "aes-256-gcm",
+                      "aes-256-cbc",
+                      "chacha20-poly1305"
+                    ]
+                  },
+                  "keyManagement": {
+                    "type": "object",
+                    "properties": {
+                      "provider": {
+                        "type": "string",
+                        "enum": [
+                          "local",
+                          "aws-kms",
+                          "azure-key-vault",
+                          "gcp-kms",
+                          "hashicorp-vault"
+                        ],
+                        "description": "Key management service provider"
+                      },
+                      "keyId": {
+                        "description": "Key identifier in the provider",
+                        "type": "string"
+                      },
+                      "rotationPolicy": {
+                        "description": "Key rotation policy",
+                        "type": "object",
+                        "properties": {
+                          "enabled": {
+                            "default": false,
+                            "description": "Enable automatic key rotation",
+                            "type": "boolean"
+                          },
+                          "frequencyDays": {
+                            "default": 90,
+                            "description": "Rotation frequency in days",
+                            "type": "number",
+                            "minimum": 1
+                          },
+                          "retainOldVersions": {
+                            "default": 3,
+                            "description": "Number of old key versions to retain",
+                            "type": "number"
+                          },
+                          "autoRotate": {
+                            "default": true,
+                            "description": "Automatically rotate without manual approval",
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "enabled",
+                          "frequencyDays",
+                          "retainOldVersions",
+                          "autoRotate"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "provider"
+                    ],
+                    "additionalProperties": false,
+                    "description": "Key management configuration"
+                  },
+                  "scope": {
+                    "type": "string",
+                    "enum": [
+                      "field",
+                      "record",
+                      "table",
+                      "database"
+                    ],
+                    "description": "Encryption scope level"
+                  },
+                  "deterministicEncryption": {
+                    "default": false,
+                    "description": "Allows equality queries on encrypted data",
+                    "type": "boolean"
+                  },
+                  "searchableEncryption": {
+                    "default": false,
+                    "description": "Allows search on encrypted data",
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "enabled",
+                  "algorithm",
+                  "keyManagement",
+                  "scope",
+                  "deterministicEncryption",
+                  "searchableEncryption"
+                ],
+                "additionalProperties": false
+              },
+              "maskingRule": {
+                "description": "Data masking rules for PII protection",
+                "type": "object",
+                "properties": {
+                  "field": {
+                    "type": "string",
+                    "description": "Field name to apply masking to"
+                  },
+                  "strategy": {
+                    "type": "string",
+                    "enum": [
+                      "redact",
+                      "partial",
+                      "hash",
+                      "tokenize",
+                      "randomize",
+                      "nullify",
+                      "substitute"
+                    ],
+                    "description": "Masking strategy to use"
+                  },
+                  "pattern": {
+                    "description": "Regex pattern for partial masking",
+                    "type": "string"
+                  },
+                  "preserveFormat": {
+                    "default": true,
+                    "description": "Keep the original data format after masking",
+                    "type": "boolean"
+                  },
+                  "preserveLength": {
+                    "default": true,
+                    "description": "Keep the original data length after masking",
+                    "type": "boolean"
+                  },
+                  "roles": {
+                    "description": "Roles that see masked data",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "exemptRoles": {
+                    "description": "Roles that see unmasked data",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "field",
+                  "strategy",
+                  "preserveFormat",
+                  "preserveLength"
+                ],
+                "additionalProperties": false
+              },
+              "auditTrail": {
+                "default": false,
+                "description": "Enable detailed audit trail for this field (tracks all changes with user and timestamp)",
+                "type": "boolean"
+              },
+              "dependencies": {
+                "description": "Array of field names that this field depends on (for formulas, visibility rules, etc.)",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "cached": {
+                "description": "Caching configuration for computed/formula fields",
+                "type": "object",
+                "properties": {
+                  "enabled": {
+                    "type": "boolean",
+                    "description": "Enable caching for computed field results"
+                  },
+                  "ttl": {
+                    "type": "number",
+                    "minimum": 0,
+                    "description": "Cache TTL in seconds (0 = no expiration)"
+                  },
+                  "invalidateOn": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Field paths that invalidate cache (e.g., [\"inventory.quantity\", \"pricing.base_price\"])"
+                  }
+                },
+                "required": [
+                  "enabled",
+                  "ttl",
+                  "invalidateOn"
+                ],
+                "additionalProperties": false
+              },
+              "dataQuality": {
+                "description": "Data quality validation and monitoring rules",
+                "type": "object",
+                "properties": {
+                  "uniqueness": {
+                    "default": false,
+                    "description": "Enforce unique values across all records",
+                    "type": "boolean"
+                  },
+                  "completeness": {
+                    "default": 0,
+                    "description": "Minimum ratio of non-null values (0-1, default: 0 = no requirement)",
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "accuracy": {
+                    "description": "Accuracy validation configuration",
+                    "type": "object",
+                    "properties": {
+                      "source": {
+                        "type": "string",
+                        "description": "Reference data source for validation (e.g., \"api.verify.com\", \"master_data\")"
+                      },
+                      "threshold": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1,
+                        "description": "Minimum accuracy threshold (0-1, e.g., 0.95 = 95% match required)"
+                      }
+                    },
+                    "required": [
+                      "source",
+                      "threshold"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "uniqueness",
+                  "completeness"
+                ],
+                "additionalProperties": false
+              },
+              "group": {
+                "description": "Field group name for organizing fields in forms and layouts (e.g., \"contact_info\", \"billing\", \"system\")",
+                "type": "string"
+              },
+              "conditionalRequired": {
+                "description": "Formula expression that makes this field required when TRUE (e.g., \"status = 'closed_won'\")",
+                "type": "string"
+              },
+              "hidden": {
+                "default": false,
+                "description": "Hidden from default UI",
+                "type": "boolean"
+              },
+              "readonly": {
+                "default": false,
+                "description": "Read-only in UI",
+                "type": "boolean"
+              },
+              "sortable": {
+                "default": true,
+                "description": "Whether field is sortable in list views",
+                "type": "boolean"
+              },
+              "inlineHelpText": {
+                "description": "Help text displayed below the field in forms",
+                "type": "string"
+              },
+              "trackFeedHistory": {
+                "description": "Track field changes in Chatter/activity feed (Salesforce pattern)",
+                "type": "boolean"
+              },
+              "caseSensitive": {
+                "description": "Whether text comparisons are case-sensitive",
+                "type": "boolean"
+              },
+              "autonumberFormat": {
+                "description": "Auto-number display format pattern (e.g., \"CASE-{0000}\")",
+                "type": "string"
+              },
+              "index": {
+                "default": false,
+                "description": "Create standard database index",
+                "type": "boolean"
+              },
+              "externalId": {
+                "default": false,
+                "description": "Is external ID for upsert operations",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "type",
+              "required",
+              "searchable",
+              "multiple",
+              "unique",
+              "deleteBehavior",
+              "auditTrail",
+              "hidden",
+              "readonly",
+              "sortable",
+              "index",
+              "externalId"
+            ],
+            "additionalProperties": false
+          },
+          "description": "Field definitions map. Keys must be snake_case identifiers."
+        },
+        "indexes": {
+          "description": "Database performance indexes",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "Index name (auto-generated if not provided)",
+                "type": "string"
+              },
+              "fields": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Fields included in the index"
+              },
+              "type": {
+                "default": "btree",
+                "description": "Index algorithm type",
+                "type": "string",
+                "enum": [
+                  "btree",
+                  "hash",
+                  "gin",
+                  "gist",
+                  "fulltext"
+                ]
+              },
+              "unique": {
+                "default": false,
+                "description": "Whether the index enforces uniqueness",
+                "type": "boolean"
+              },
+              "partial": {
+                "description": "Partial index condition (SQL WHERE clause for conditional indexes)",
+                "type": "string"
+              }
+            },
+            "required": [
+              "fields",
+              "type",
+              "unique"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "tenancy": {
+          "description": "Multi-tenancy configuration for SaaS applications",
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Enable multi-tenancy for this object"
+            },
+            "strategy": {
+              "type": "string",
+              "enum": [
+                "shared",
+                "isolated",
+                "hybrid"
+              ],
+              "description": "Tenant isolation strategy: shared (single DB, row-level), isolated (separate DB per tenant), hybrid (mix)"
+            },
+            "tenantField": {
+              "default": "tenant_id",
+              "description": "Field name for tenant identifier",
+              "type": "string"
+            },
+            "crossTenantAccess": {
+              "default": false,
+              "description": "Allow cross-tenant data access (with explicit permission)",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "enabled",
+            "strategy",
+            "tenantField",
+            "crossTenantAccess"
+          ],
+          "additionalProperties": false
+        },
+        "softDelete": {
+          "description": "Soft delete (trash/recycle bin) configuration",
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Enable soft delete (trash/recycle bin)"
+            },
+            "field": {
+              "default": "deleted_at",
+              "description": "Field name for soft delete timestamp",
+              "type": "string"
+            },
+            "cascadeDelete": {
+              "default": false,
+              "description": "Cascade soft delete to related records",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "enabled",
+            "field",
+            "cascadeDelete"
+          ],
+          "additionalProperties": false
+        },
+        "versioning": {
+          "description": "Record versioning and history tracking configuration",
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Enable record versioning"
+            },
+            "strategy": {
+              "type": "string",
+              "enum": [
+                "snapshot",
+                "delta",
+                "event-sourcing"
+              ],
+              "description": "Versioning strategy: snapshot (full copy), delta (changes only), event-sourcing (event log)"
+            },
+            "retentionDays": {
+              "description": "Number of days to retain old versions (undefined = infinite)",
+              "type": "number",
+              "minimum": 1
+            },
+            "versionField": {
+              "default": "version",
+              "description": "Field name for version number/timestamp",
+              "type": "string"
+            }
+          },
+          "required": [
+            "enabled",
+            "strategy",
+            "versionField"
+          ],
+          "additionalProperties": false
+        },
+        "partitioning": {
+          "description": "Table partitioning configuration for performance",
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Enable table partitioning"
+            },
+            "strategy": {
+              "type": "string",
+              "enum": [
+                "range",
+                "hash",
+                "list"
+              ],
+              "description": "Partitioning strategy: range (date ranges), hash (consistent hashing), list (predefined values)"
+            },
+            "key": {
+              "type": "string",
+              "description": "Field name to partition by"
+            },
+            "interval": {
+              "description": "Partition interval for range strategy (e.g., \"1 month\", \"1 year\")",
+              "type": "string"
+            }
+          },
+          "required": [
+            "enabled",
+            "strategy",
+            "key"
+          ],
+          "additionalProperties": false
+        },
+        "cdc": {
+          "description": "Change Data Capture (CDC) configuration for real-time data streaming",
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Enable Change Data Capture"
+            },
+            "events": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "insert",
+                  "update",
+                  "delete"
+                ]
+              },
+              "description": "Event types to capture"
+            },
+            "destination": {
+              "type": "string",
+              "description": "Destination endpoint (e.g., \"kafka://topic\", \"webhook://url\")"
+            }
+          },
+          "required": [
+            "enabled",
+            "events",
+            "destination"
+          ],
+          "additionalProperties": false
+        },
+        "validations": {
+          "description": "Object-level validation rules",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/__schema0"
+          }
+        },
+        "stateMachines": {
+          "description": "Named state machines for parallel lifecycles (e.g., status, payment, approval)",
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 2,
+                "pattern": "^[a-z][a-z0-9_]*$",
+                "description": "Unique Machine ID"
+              },
+              "description": {
+                "type": "string"
+              },
+              "contextSchema": {
+                "description": "Zod Schema for the machine context/memory",
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {}
+              },
+              "initial": {
+                "type": "string",
+                "description": "Initial State ID"
+              },
+              "states": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "$ref": "#/$defs/__schema2"
+                },
+                "description": "State Nodes"
+              },
+              "on": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "target": {
+                          "description": "Target State ID",
+                          "type": "string"
+                        },
+                        "cond": {
+                          "description": "Condition (Guard) required to take this path",
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "description": "Guard Name (e.g., \"isManager\", \"amountGT1000\")"
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string"
+                                },
+                                "params": {
+                                  "type": "object",
+                                  "propertyNames": {
+                                    "type": "string"
+                                  },
+                                  "additionalProperties": {}
+                                }
+                              },
+                              "required": [
+                                "type"
+                              ],
+                              "additionalProperties": false
+                            }
+                          ]
+                        },
+                        "actions": {
+                          "description": "Actions to execute during transition",
+                          "type": "array",
+                          "items": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "description": "Action Name"
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string"
+                                  },
+                                  "params": {
+                                    "type": "object",
+                                    "propertyNames": {
+                                      "type": "string"
+                                    },
+                                    "additionalProperties": {}
+                                  }
+                                },
+                                "required": [
+                                  "type"
+                                ],
+                                "additionalProperties": false
+                              }
+                            ]
+                          }
+                        },
+                        "description": {
+                          "description": "Human readable description of this rule",
+                          "type": "string"
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "target": {
+                            "description": "Target State ID",
+                            "type": "string"
+                          },
+                          "cond": {
+                            "description": "Condition (Guard) required to take this path",
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "description": "Guard Name (e.g., \"isManager\", \"amountGT1000\")"
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string"
+                                  },
+                                  "params": {
+                                    "type": "object",
+                                    "propertyNames": {
+                                      "type": "string"
+                                    },
+                                    "additionalProperties": {}
+                                  }
+                                },
+                                "required": [
+                                  "type"
+                                ],
+                                "additionalProperties": false
+                              }
+                            ]
+                          },
+                          "actions": {
+                            "description": "Actions to execute during transition",
+                            "type": "array",
+                            "items": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "description": "Action Name"
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "type": {
+                                      "type": "string"
+                                    },
+                                    "params": {
+                                      "type": "object",
+                                      "propertyNames": {
+                                        "type": "string"
+                                      },
+                                      "additionalProperties": {}
+                                    }
+                                  },
+                                  "required": [
+                                    "type"
+                                  ],
+                                  "additionalProperties": false
+                                }
+                              ]
+                            }
+                          },
+                          "description": {
+                            "description": "Human readable description of this rule",
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "required": [
+              "id",
+              "initial",
+              "states"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "displayNameField": {
+          "description": "Field to use as the record display name (e.g., \"name\", \"title\"). Defaults to \"name\" if present.",
+          "type": "string"
+        },
+        "recordName": {
+          "description": "Record name generation configuration (Salesforce pattern)",
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "text",
+                "autonumber"
+              ],
+              "description": "Record name type: text (user-entered) or autonumber (system-generated)"
+            },
+            "displayFormat": {
+              "description": "Auto-number format pattern (e.g., \"CASE-{0000}\", \"INV-{YYYY}-{0000}\")",
+              "type": "string"
+            },
+            "startNumber": {
+              "description": "Starting number for autonumber (default: 1)",
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "additionalProperties": false
+        },
+        "titleFormat": {
+          "description": "Title expression (e.g. \"{name} - {code}\"). Overrides displayNameField.",
+          "type": "string"
+        },
+        "compactLayout": {
+          "description": "Primary fields for hover/cards/lookups",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "search": {
+          "description": "Search engine configuration",
+          "type": "object",
+          "properties": {
+            "fields": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Fields to index for full-text search weighting"
+            },
+            "displayFields": {
+              "description": "Fields to display in search result cards",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "filters": {
+              "description": "Default filters for search results",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "fields"
+          ],
+          "additionalProperties": false
+        },
+        "enable": {
+          "description": "Enabled system features modules",
+          "type": "object",
+          "properties": {
+            "trackHistory": {
+              "default": false,
+              "description": "Enable field history tracking for audit compliance",
+              "type": "boolean"
+            },
+            "searchable": {
+              "default": true,
+              "description": "Index records for global search",
+              "type": "boolean"
+            },
+            "apiEnabled": {
+              "default": true,
+              "description": "Expose object via automatic APIs",
+              "type": "boolean"
+            },
+            "apiMethods": {
+              "description": "Whitelist of allowed API operations",
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "get",
+                  "list",
+                  "create",
+                  "update",
+                  "delete",
+                  "upsert",
+                  "bulk",
+                  "aggregate",
+                  "history",
+                  "search",
+                  "restore",
+                  "purge",
+                  "import",
+                  "export"
+                ]
+              }
+            },
+            "files": {
+              "default": false,
+              "description": "Enable file attachments and document management",
+              "type": "boolean"
+            },
+            "feeds": {
+              "default": false,
+              "description": "Enable social feed, comments, and mentions (Chatter-like)",
+              "type": "boolean"
+            },
+            "activities": {
+              "default": false,
+              "description": "Enable standard tasks and events tracking",
+              "type": "boolean"
+            },
+            "trash": {
+              "default": true,
+              "description": "Enable soft-delete with restore capability",
+              "type": "boolean"
+            },
+            "mru": {
+              "default": true,
+              "description": "Track Most Recently Used (MRU) list for users",
+              "type": "boolean"
+            },
+            "clone": {
+              "default": true,
+              "description": "Allow record deep cloning",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "trackHistory",
+            "searchable",
+            "apiEnabled",
+            "files",
+            "feeds",
+            "activities",
+            "trash",
+            "mru",
+            "clone"
+          ],
+          "additionalProperties": false
+        },
+        "recordTypes": {
+          "description": "Record type names for this object",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sharingModel": {
+          "description": "Default sharing model",
+          "type": "string",
+          "enum": [
+            "private",
+            "read",
+            "read_write",
+            "full"
+          ]
+        },
+        "keyPrefix": {
+          "description": "Short prefix for record IDs (e.g., \"001\" for Account)",
+          "type": "string",
+          "maxLength": 5
+        }
+      },
+      "required": [
+        "name",
+        "active",
+        "isSystem",
+        "abstract",
+        "datasource",
+        "fields"
+      ],
+      "additionalProperties": false,
+      "description": "Full Object Schema"
+    }
+  },
+  "required": [
+    "success",
+    "data"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "__schema0": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "pattern": "^[a-z_][a-z0-9_]*$",
+              "description": "Unique rule name (snake_case)"
+            },
+            "label": {
+              "description": "Human-readable label for the rule listing",
+              "type": "string"
+            },
+            "description": {
+              "description": "Administrative notes explaining the business reason",
+              "type": "string"
+            },
+            "active": {
+              "default": true,
+              "type": "boolean"
+            },
+            "events": {
+              "default": [
+                "insert",
+                "update"
+              ],
+              "description": "Validation contexts",
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "insert",
+                  "update",
+                  "delete"
+                ]
+              }
+            },
+            "priority": {
+              "default": 100,
+              "description": "Execution priority (lower runs first, default: 100)",
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9999
+            },
+            "tags": {
+              "description": "Categorization tags (e.g., \"compliance\", \"billing\")",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "severity": {
+              "default": "error",
+              "type": "string",
+              "enum": [
+                "error",
+                "warning",
+                "info"
+              ]
+            },
+            "message": {
+              "type": "string",
+              "description": "Error message to display to the user"
+            },
+            "type": {
+              "type": "string",
+              "const": "script"
+            },
+            "condition": {
+              "type": "string",
+              "description": "Formula expression. If TRUE, validation fails. (e.g. amount < 0)"
+            }
+          },
+          "required": [
+            "name",
+            "active",
+            "events",
+            "priority",
+            "severity",
+            "message",
+            "type",
+            "condition"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "pattern": "^[a-z_][a-z0-9_]*$",
+              "description": "Unique rule name (snake_case)"
+            },
+            "label": {
+              "description": "Human-readable label for the rule listing",
+              "type": "string"
+            },
+            "description": {
+              "description": "Administrative notes explaining the business reason",
+              "type": "string"
+            },
+            "active": {
+              "default": true,
+              "type": "boolean"
+            },
+            "events": {
+              "default": [
+                "insert",
+                "update"
+              ],
+              "description": "Validation contexts",
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "insert",
+                  "update",
+                  "delete"
+                ]
+              }
+            },
+            "priority": {
+              "default": 100,
+              "description": "Execution priority (lower runs first, default: 100)",
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9999
+            },
+            "tags": {
+              "description": "Categorization tags (e.g., \"compliance\", \"billing\")",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "severity": {
+              "default": "error",
+              "type": "string",
+              "enum": [
+                "error",
+                "warning",
+                "info"
+              ]
+            },
+            "message": {
+              "type": "string",
+              "description": "Error message to display to the user"
+            },
+            "type": {
+              "type": "string",
+              "const": "unique"
+            },
+            "fields": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Fields that must be combined unique"
+            },
+            "scope": {
+              "description": "Formula condition for scope (e.g. active = true)",
+              "type": "string"
+            },
+            "caseSensitive": {
+              "default": true,
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "name",
+            "active",
+            "events",
+            "priority",
+            "severity",
+            "message",
+            "type",
+            "fields",
+            "caseSensitive"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "pattern": "^[a-z_][a-z0-9_]*$",
+              "description": "Unique rule name (snake_case)"
+            },
+            "label": {
+              "description": "Human-readable label for the rule listing",
+              "type": "string"
+            },
+            "description": {
+              "description": "Administrative notes explaining the business reason",
+              "type": "string"
+            },
+            "active": {
+              "default": true,
+              "type": "boolean"
+            },
+            "events": {
+              "default": [
+                "insert",
+                "update"
+              ],
+              "description": "Validation contexts",
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "insert",
+                  "update",
+                  "delete"
+                ]
+              }
+            },
+            "priority": {
+              "default": 100,
+              "description": "Execution priority (lower runs first, default: 100)",
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9999
+            },
+            "tags": {
+              "description": "Categorization tags (e.g., \"compliance\", \"billing\")",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "severity": {
+              "default": "error",
+              "type": "string",
+              "enum": [
+                "error",
+                "warning",
+                "info"
+              ]
+            },
+            "message": {
+              "type": "string",
+              "description": "Error message to display to the user"
+            },
+            "type": {
+              "type": "string",
+              "const": "state_machine"
+            },
+            "field": {
+              "type": "string",
+              "description": "State field (e.g. status)"
+            },
+            "transitions": {
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "description": "Map of { OldState: [AllowedNewStates] }"
+            }
+          },
+          "required": [
+            "name",
+            "active",
+            "events",
+            "priority",
+            "severity",
+            "message",
+            "type",
+            "field",
+            "transitions"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "pattern": "^[a-z_][a-z0-9_]*$",
+              "description": "Unique rule name (snake_case)"
+            },
+            "label": {
+              "description": "Human-readable label for the rule listing",
+              "type": "string"
+            },
+            "description": {
+              "description": "Administrative notes explaining the business reason",
+              "type": "string"
+            },
+            "active": {
+              "default": true,
+              "type": "boolean"
+            },
+            "events": {
+              "default": [
+                "insert",
+                "update"
+              ],
+              "description": "Validation contexts",
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "insert",
+                  "update",
+                  "delete"
+                ]
+              }
+            },
+            "priority": {
+              "default": 100,
+              "description": "Execution priority (lower runs first, default: 100)",
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9999
+            },
+            "tags": {
+              "description": "Categorization tags (e.g., \"compliance\", \"billing\")",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "severity": {
+              "default": "error",
+              "type": "string",
+              "enum": [
+                "error",
+                "warning",
+                "info"
+              ]
+            },
+            "message": {
+              "type": "string",
+              "description": "Error message to display to the user"
+            },
+            "type": {
+              "type": "string",
+              "const": "format"
+            },
+            "field": {
+              "type": "string"
+            },
+            "regex": {
+              "type": "string"
+            },
+            "format": {
+              "type": "string",
+              "enum": [
+                "email",
+                "url",
+                "phone",
+                "json"
+              ]
+            }
+          },
+          "required": [
+            "name",
+            "active",
+            "events",
+            "priority",
+            "severity",
+            "message",
+            "type",
+            "field"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "pattern": "^[a-z_][a-z0-9_]*$",
+              "description": "Unique rule name (snake_case)"
+            },
+            "label": {
+              "description": "Human-readable label for the rule listing",
+              "type": "string"
+            },
+            "description": {
+              "description": "Administrative notes explaining the business reason",
+              "type": "string"
+            },
+            "active": {
+              "default": true,
+              "type": "boolean"
+            },
+            "events": {
+              "default": [
+                "insert",
+                "update"
+              ],
+              "description": "Validation contexts",
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "insert",
+                  "update",
+                  "delete"
+                ]
+              }
+            },
+            "priority": {
+              "default": 100,
+              "description": "Execution priority (lower runs first, default: 100)",
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9999
+            },
+            "tags": {
+              "description": "Categorization tags (e.g., \"compliance\", \"billing\")",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "severity": {
+              "default": "error",
+              "type": "string",
+              "enum": [
+                "error",
+                "warning",
+                "info"
+              ]
+            },
+            "message": {
+              "type": "string",
+              "description": "Error message to display to the user"
+            },
+            "type": {
+              "type": "string",
+              "const": "cross_field"
+            },
+            "condition": {
+              "type": "string",
+              "description": "Formula expression comparing fields (e.g. \"end_date > start_date\")"
+            },
+            "fields": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Fields involved in the validation"
+            }
+          },
+          "required": [
+            "name",
+            "active",
+            "events",
+            "priority",
+            "severity",
+            "message",
+            "type",
+            "condition",
+            "fields"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "pattern": "^[a-z_][a-z0-9_]*$",
+              "description": "Unique rule name (snake_case)"
+            },
+            "label": {
+              "description": "Human-readable label for the rule listing",
+              "type": "string"
+            },
+            "description": {
+              "description": "Administrative notes explaining the business reason",
+              "type": "string"
+            },
+            "active": {
+              "default": true,
+              "type": "boolean"
+            },
+            "events": {
+              "default": [
+                "insert",
+                "update"
+              ],
+              "description": "Validation contexts",
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "insert",
+                  "update",
+                  "delete"
+                ]
+              }
+            },
+            "priority": {
+              "default": 100,
+              "description": "Execution priority (lower runs first, default: 100)",
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9999
+            },
+            "tags": {
+              "description": "Categorization tags (e.g., \"compliance\", \"billing\")",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "severity": {
+              "default": "error",
+              "type": "string",
+              "enum": [
+                "error",
+                "warning",
+                "info"
+              ]
+            },
+            "message": {
+              "type": "string",
+              "description": "Error message to display to the user"
+            },
+            "type": {
+              "type": "string",
+              "const": "json_schema"
+            },
+            "field": {
+              "type": "string",
+              "description": "JSON field to validate"
+            },
+            "schema": {
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {},
+              "description": "JSON Schema object definition"
+            }
+          },
+          "required": [
+            "name",
+            "active",
+            "events",
+            "priority",
+            "severity",
+            "message",
+            "type",
+            "field",
+            "schema"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "pattern": "^[a-z_][a-z0-9_]*$",
+              "description": "Unique rule name (snake_case)"
+            },
+            "label": {
+              "description": "Human-readable label for the rule listing",
+              "type": "string"
+            },
+            "description": {
+              "description": "Administrative notes explaining the business reason",
+              "type": "string"
+            },
+            "active": {
+              "default": true,
+              "type": "boolean"
+            },
+            "events": {
+              "default": [
+                "insert",
+                "update"
+              ],
+              "description": "Validation contexts",
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "insert",
+                  "update",
+                  "delete"
+                ]
+              }
+            },
+            "priority": {
+              "default": 100,
+              "description": "Execution priority (lower runs first, default: 100)",
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9999
+            },
+            "tags": {
+              "description": "Categorization tags (e.g., \"compliance\", \"billing\")",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "severity": {
+              "default": "error",
+              "type": "string",
+              "enum": [
+                "error",
+                "warning",
+                "info"
+              ]
+            },
+            "message": {
+              "type": "string",
+              "description": "Error message to display to the user"
+            },
+            "type": {
+              "type": "string",
+              "const": "async"
+            },
+            "field": {
+              "type": "string",
+              "description": "Field to validate"
+            },
+            "validatorUrl": {
+              "description": "External API endpoint for validation",
+              "type": "string"
+            },
+            "method": {
+              "default": "GET",
+              "description": "HTTP method for external call",
+              "type": "string",
+              "enum": [
+                "GET",
+                "POST"
+              ]
+            },
+            "headers": {
+              "description": "Custom headers for the request",
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "validatorFunction": {
+              "description": "Reference to custom validator function",
+              "type": "string"
+            },
+            "timeout": {
+              "default": 5000,
+              "description": "Timeout in milliseconds",
+              "type": "number"
+            },
+            "debounce": {
+              "description": "Debounce delay in milliseconds",
+              "type": "number"
+            },
+            "params": {
+              "description": "Additional parameters to pass to validator",
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {}
+            }
+          },
+          "required": [
+            "name",
+            "active",
+            "events",
+            "priority",
+            "severity",
+            "message",
+            "type",
+            "field",
+            "method",
+            "timeout"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "pattern": "^[a-z_][a-z0-9_]*$",
+              "description": "Unique rule name (snake_case)"
+            },
+            "label": {
+              "description": "Human-readable label for the rule listing",
+              "type": "string"
+            },
+            "description": {
+              "description": "Administrative notes explaining the business reason",
+              "type": "string"
+            },
+            "active": {
+              "default": true,
+              "type": "boolean"
+            },
+            "events": {
+              "default": [
+                "insert",
+                "update"
+              ],
+              "description": "Validation contexts",
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "insert",
+                  "update",
+                  "delete"
+                ]
+              }
+            },
+            "priority": {
+              "default": 100,
+              "description": "Execution priority (lower runs first, default: 100)",
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9999
+            },
+            "tags": {
+              "description": "Categorization tags (e.g., \"compliance\", \"billing\")",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "severity": {
+              "default": "error",
+              "type": "string",
+              "enum": [
+                "error",
+                "warning",
+                "info"
+              ]
+            },
+            "message": {
+              "type": "string",
+              "description": "Error message to display to the user"
+            },
+            "type": {
+              "type": "string",
+              "const": "custom"
+            },
+            "handler": {
+              "type": "string",
+              "description": "Name of the custom validation function registered in the system"
+            },
+            "params": {
+              "description": "Parameters passed to the custom handler",
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {}
+            }
+          },
+          "required": [
+            "name",
+            "active",
+            "events",
+            "priority",
+            "severity",
+            "message",
+            "type",
+            "handler"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/__schema1"
+        }
+      ]
+    },
+    "__schema1": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z_][a-z0-9_]*$",
+          "description": "Unique rule name (snake_case)"
+        },
+        "label": {
+          "description": "Human-readable label for the rule listing",
+          "type": "string"
+        },
+        "description": {
+          "description": "Administrative notes explaining the business reason",
+          "type": "string"
+        },
+        "active": {
+          "default": true,
+          "type": "boolean"
+        },
+        "events": {
+          "default": [
+            "insert",
+            "update"
+          ],
+          "description": "Validation contexts",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "insert",
+              "update",
+              "delete"
+            ]
+          }
+        },
+        "priority": {
+          "default": 100,
+          "description": "Execution priority (lower runs first, default: 100)",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9999
+        },
+        "tags": {
+          "description": "Categorization tags (e.g., \"compliance\", \"billing\")",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "severity": {
+          "default": "error",
+          "type": "string",
+          "enum": [
+            "error",
+            "warning",
+            "info"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "description": "Error message to display to the user"
+        },
+        "type": {
+          "type": "string",
+          "const": "conditional"
+        },
+        "when": {
+          "type": "string",
+          "description": "Condition formula (e.g. \"type = 'enterprise'\")"
+        },
+        "then": {
+          "description": "Validation rule to apply when condition is true",
+          "$ref": "#/$defs/__schema0"
+        },
+        "otherwise": {
+          "description": "Validation rule to apply when condition is false",
+          "$ref": "#/$defs/__schema0"
+        }
+      },
+      "required": [
+        "name",
+        "active",
+        "events",
+        "priority",
+        "severity",
+        "message",
+        "type",
+        "when",
+        "then"
+      ],
+      "additionalProperties": false
+    },
+    "__schema2": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "default": "atomic",
+          "type": "string",
+          "enum": [
+            "atomic",
+            "compound",
+            "parallel",
+            "final",
+            "history"
+          ]
+        },
+        "entry": {
+          "description": "Actions to run when entering this state",
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Action Name"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string"
+                  },
+                  "params": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {}
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          }
+        },
+        "exit": {
+          "description": "Actions to run when leaving this state",
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Action Name"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string"
+                  },
+                  "params": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {}
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          }
+        },
+        "on": {
+          "description": "Map of Event Type -> Transition Definition",
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "target": {
+                    "description": "Target State ID",
+                    "type": "string"
+                  },
+                  "cond": {
+                    "description": "Condition (Guard) required to take this path",
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "description": "Guard Name (e.g., \"isManager\", \"amountGT1000\")"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string"
+                          },
+                          "params": {
+                            "type": "object",
+                            "propertyNames": {
+                              "type": "string"
+                            },
+                            "additionalProperties": {}
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ]
+                  },
+                  "actions": {
+                    "description": "Actions to execute during transition",
+                    "type": "array",
+                    "items": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "description": "Action Name"
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string"
+                            },
+                            "params": {
+                              "type": "object",
+                              "propertyNames": {
+                                "type": "string"
+                              },
+                              "additionalProperties": {}
+                            }
+                          },
+                          "required": [
+                            "type"
+                          ],
+                          "additionalProperties": false
+                        }
+                      ]
+                    }
+                  },
+                  "description": {
+                    "description": "Human readable description of this rule",
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "target": {
+                      "description": "Target State ID",
+                      "type": "string"
+                    },
+                    "cond": {
+                      "description": "Condition (Guard) required to take this path",
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "description": "Guard Name (e.g., \"isManager\", \"amountGT1000\")"
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string"
+                            },
+                            "params": {
+                              "type": "object",
+                              "propertyNames": {
+                                "type": "string"
+                              },
+                              "additionalProperties": {}
+                            }
+                          },
+                          "required": [
+                            "type"
+                          ],
+                          "additionalProperties": false
+                        }
+                      ]
+                    },
+                    "actions": {
+                      "description": "Actions to execute during transition",
+                      "type": "array",
+                      "items": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "description": "Action Name"
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string"
+                              },
+                              "params": {
+                                "type": "object",
+                                "propertyNames": {
+                                  "type": "string"
+                                },
+                                "additionalProperties": {}
+                              }
+                            },
+                            "required": [
+                              "type"
+                            ],
+                            "additionalProperties": false
+                          }
+                        ]
+                      }
+                    },
+                    "description": {
+                      "description": "Human readable description of this rule",
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            ]
+          }
+        },
+        "always": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "target": {
+                "description": "Target State ID",
+                "type": "string"
+              },
+              "cond": {
+                "description": "Condition (Guard) required to take this path",
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "description": "Guard Name (e.g., \"isManager\", \"amountGT1000\")"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string"
+                      },
+                      "params": {
+                        "type": "object",
+                        "propertyNames": {
+                          "type": "string"
+                        },
+                        "additionalProperties": {}
+                      }
+                    },
+                    "required": [
+                      "type"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              },
+              "actions": {
+                "description": "Actions to execute during transition",
+                "type": "array",
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "description": "Action Name"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "params": {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string"
+                          },
+                          "additionalProperties": {}
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false
+                    }
+                  ]
+                }
+              },
+              "description": {
+                "description": "Human readable description of this rule",
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "initial": {
+          "description": "Initial child state (if compound)",
+          "type": "string"
+        },
+        "states": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/__schema2"
+          }
+        },
+        "meta": {
+          "type": "object",
+          "properties": {
+            "label": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            },
+            "color": {
+              "type": "string"
+            },
+            "aiInstructions": {
+              "description": "Specific instructions for AI when in this state",
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$id": "https://schema.objectstack.io/v3.0.11/api/ObjectDefinitionResponse.json",
+  "x-spec-version": "3.0.11"
+}

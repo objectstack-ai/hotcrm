@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "userId": {
+      "type": "string",
+      "description": "User identifier"
+    },
+    "userName": {
+      "type": "string",
+      "description": "User display name"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "online",
+        "away",
+        "offline"
+      ],
+      "description": "User presence status"
+    },
+    "lastSeen": {
+      "type": "number",
+      "description": "Unix timestamp of last activity in milliseconds"
+    },
+    "metadata": {
+      "description": "Additional presence metadata (e.g., current page, custom status)",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
+    }
+  },
+  "required": [
+    "userId",
+    "userName",
+    "status",
+    "lastSeen"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/SimplePresenceState.json",
+  "x-spec-version": "3.0.11"
+}

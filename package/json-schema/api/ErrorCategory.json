@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "validation",
+    "authentication",
+    "authorization",
+    "not_found",
+    "conflict",
+    "rate_limit",
+    "server",
+    "external",
+    "maintenance"
+  ],
+  "$id": "https://schema.objectstack.io/v3.0.11/api/ErrorCategory.json",
+  "x-spec-version": "3.0.11"
+}

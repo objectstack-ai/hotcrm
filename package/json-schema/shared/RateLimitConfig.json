@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "enabled": {
+      "default": false,
+      "description": "Enable rate limiting",
+      "type": "boolean"
+    },
+    "windowMs": {
+      "default": 60000,
+      "description": "Time window in milliseconds",
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991
+    },
+    "maxRequests": {
+      "default": 100,
+      "description": "Max requests per window",
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991
+    }
+  },
+  "required": [
+    "enabled",
+    "windowMs",
+    "maxRequests"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/shared/RateLimitConfig.json",
+  "x-spec-version": "3.0.11"
+}

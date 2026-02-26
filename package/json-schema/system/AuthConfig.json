@@ -1,0 +1,189 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "secret": {
+      "description": "Encryption secret",
+      "type": "string"
+    },
+    "baseUrl": {
+      "description": "Base URL for auth routes",
+      "type": "string"
+    },
+    "databaseUrl": {
+      "description": "Database connection string",
+      "type": "string"
+    },
+    "providers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Provider ID (github, google)"
+          },
+          "clientId": {
+            "type": "string",
+            "description": "OAuth Client ID"
+          },
+          "clientSecret": {
+            "type": "string",
+            "description": "OAuth Client Secret"
+          },
+          "scope": {
+            "description": "Requested permissions",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "clientId",
+          "clientSecret"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "plugins": {
+      "type": "object",
+      "properties": {
+        "organization": {
+          "default": false,
+          "description": "Enable Organization/Teams support",
+          "type": "boolean"
+        },
+        "twoFactor": {
+          "default": false,
+          "description": "Enable 2FA",
+          "type": "boolean"
+        },
+        "passkeys": {
+          "default": false,
+          "description": "Enable Passkey support",
+          "type": "boolean"
+        },
+        "magicLink": {
+          "default": false,
+          "description": "Enable Magic Link login",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "organization",
+        "twoFactor",
+        "passkeys",
+        "magicLink"
+      ],
+      "additionalProperties": false
+    },
+    "session": {
+      "type": "object",
+      "properties": {
+        "expiresIn": {
+          "default": 604800,
+          "description": "Session duration in seconds",
+          "type": "number"
+        },
+        "updateAge": {
+          "default": 86400,
+          "description": "Session update frequency",
+          "type": "number"
+        }
+      },
+      "required": [
+        "expiresIn",
+        "updateAge"
+      ],
+      "additionalProperties": false
+    },
+    "mutualTls": {
+      "description": "Mutual TLS (mTLS) configuration",
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "description": "Enable mutual TLS authentication",
+          "type": "boolean"
+        },
+        "clientCertRequired": {
+          "default": false,
+          "description": "Require client certificates for all connections",
+          "type": "boolean"
+        },
+        "trustedCAs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "PEM-encoded CA certificates or file paths"
+        },
+        "crlUrl": {
+          "description": "Certificate Revocation List (CRL) URL",
+          "type": "string"
+        },
+        "ocspUrl": {
+          "description": "Online Certificate Status Protocol (OCSP) URL",
+          "type": "string"
+        },
+        "certificateValidation": {
+          "type": "string",
+          "enum": [
+            "strict",
+            "relaxed",
+            "none"
+          ],
+          "description": "Certificate validation strictness level"
+        },
+        "allowedCNs": {
+          "description": "Allowed Common Names (CN) on client certificates",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "allowedOUs": {
+          "description": "Allowed Organizational Units (OU) on client certificates",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "pinning": {
+          "description": "Certificate pinning configuration",
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Enable certificate pinning"
+            },
+            "pins": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Pinned certificate hashes"
+            }
+          },
+          "required": [
+            "enabled",
+            "pins"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "enabled",
+        "clientCertRequired",
+        "trustedCAs",
+        "certificateValidation"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": {},
+  "$id": "https://schema.objectstack.io/v3.0.11/system/AuthConfig.json",
+  "x-spec-version": "3.0.11"
+}

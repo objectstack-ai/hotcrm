@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "items": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Metadata type"
+          },
+          "name": {
+            "type": "string",
+            "description": "Item name"
+          }
+        },
+        "required": [
+          "type",
+          "name"
+        ],
+        "additionalProperties": false
+      },
+      "description": "Items to unregister"
+    }
+  },
+  "required": [
+    "items"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/MetadataBulkUnregisterRequest.json",
+  "x-spec-version": "3.0.11"
+}

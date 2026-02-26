@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique panel identifier"
+    },
+    "label": {
+      "type": "string",
+      "description": "Panel display label"
+    },
+    "icon": {
+      "description": "Lucide icon name",
+      "type": "string"
+    },
+    "location": {
+      "default": "bottom",
+      "description": "Panel location",
+      "type": "string",
+      "enum": [
+        "bottom",
+        "right",
+        "modal"
+      ]
+    }
+  },
+  "required": [
+    "id",
+    "label",
+    "location"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/studio/PanelContribution.json",
+  "x-spec-version": "3.0.11"
+}

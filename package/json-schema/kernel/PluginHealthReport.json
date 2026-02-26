@@ -1,0 +1,129 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": [
+        "healthy",
+        "degraded",
+        "unhealthy",
+        "failed",
+        "recovering",
+        "unknown"
+      ],
+      "description": "Current health status of the plugin"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+    },
+    "message": {
+      "type": "string"
+    },
+    "metrics": {
+      "type": "object",
+      "properties": {
+        "uptime": {
+          "type": "number",
+          "description": "Plugin uptime in milliseconds"
+        },
+        "memoryUsage": {
+          "description": "Memory usage in bytes",
+          "type": "number"
+        },
+        "cpuUsage": {
+          "description": "CPU usage percentage",
+          "type": "number"
+        },
+        "activeConnections": {
+          "description": "Number of active connections",
+          "type": "number"
+        },
+        "errorRate": {
+          "description": "Error rate (errors per minute)",
+          "type": "number"
+        },
+        "responseTime": {
+          "description": "Average response time in ms",
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Check name"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "passed",
+              "failed",
+              "warning"
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {}
+          }
+        },
+        "required": [
+          "name",
+          "status"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "pluginId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "healthy",
+              "degraded",
+              "unhealthy",
+              "failed",
+              "recovering",
+              "unknown"
+            ],
+            "description": "Current health status of the plugin"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "pluginId",
+          "status"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "status",
+    "timestamp"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/PluginHealthReport.json",
+  "x-spec-version": "3.0.11"
+}

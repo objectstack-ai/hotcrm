@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "data.object",
+    "data.record",
+    "data.field",
+    "ui.view",
+    "ui.dashboard",
+    "ui.report",
+    "system.config",
+    "system.plugin",
+    "system.api",
+    "system.service",
+    "storage.file",
+    "storage.database",
+    "network.http",
+    "network.websocket",
+    "process.spawn",
+    "process.env"
+  ],
+  "description": "Type of resource being accessed",
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/ResourceType.json",
+  "x-spec-version": "3.0.11"
+}

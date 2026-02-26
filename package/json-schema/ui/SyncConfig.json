@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "strategy": {
+      "default": "network_first",
+      "description": "Sync fetch strategy",
+      "type": "string",
+      "enum": [
+        "cache_first",
+        "network_first",
+        "stale_while_revalidate",
+        "network_only",
+        "cache_only"
+      ]
+    },
+    "conflictResolution": {
+      "default": "last_write_wins",
+      "description": "Conflict resolution policy",
+      "type": "string",
+      "enum": [
+        "client_wins",
+        "server_wins",
+        "manual",
+        "last_write_wins"
+      ]
+    },
+    "retryInterval": {
+      "description": "Retry interval in milliseconds between sync attempts",
+      "type": "number"
+    },
+    "maxRetries": {
+      "description": "Maximum number of sync retry attempts",
+      "type": "number"
+    },
+    "batchSize": {
+      "description": "Number of mutations to sync per batch",
+      "type": "number"
+    }
+  },
+  "required": [
+    "strategy",
+    "conflictResolution"
+  ],
+  "additionalProperties": false,
+  "description": "Offline-to-online synchronization configuration",
+  "$id": "https://schema.objectstack.io/v3.0.11/ui/SyncConfig.json",
+  "x-spec-version": "3.0.11"
+}

@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "staticFields": {
+      "description": "Static fields added to every log",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
+    },
+    "dynamicEnrichers": {
+      "description": "Dynamic enricher function IDs",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "addHostname": {
+      "default": true,
+      "type": "boolean"
+    },
+    "addProcessId": {
+      "default": true,
+      "type": "boolean"
+    },
+    "addEnvironment": {
+      "default": true,
+      "type": "boolean"
+    },
+    "addTimestampFormats": {
+      "type": "object",
+      "properties": {
+        "unix": {
+          "default": false,
+          "type": "boolean"
+        },
+        "iso": {
+          "default": true,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "unix",
+        "iso"
+      ],
+      "additionalProperties": false
+    },
+    "addCaller": {
+      "default": false,
+      "type": "boolean"
+    },
+    "addCorrelationIds": {
+      "default": true,
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "addHostname",
+    "addProcessId",
+    "addEnvironment",
+    "addCaller",
+    "addCorrelationIds"
+  ],
+  "additionalProperties": false,
+  "description": "Log enrichment configuration",
+  "$id": "https://schema.objectstack.io/v3.0.11/system/LogEnrichmentConfig.json",
+  "x-spec-version": "3.0.11"
+}

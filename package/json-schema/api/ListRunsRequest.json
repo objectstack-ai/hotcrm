@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Flow machine name (snake_case)"
+    },
+    "status": {
+      "description": "Filter by execution status",
+      "type": "string",
+      "enum": [
+        "pending",
+        "running",
+        "paused",
+        "completed",
+        "failed",
+        "cancelled",
+        "timed_out",
+        "retrying"
+      ]
+    },
+    "limit": {
+      "default": 20,
+      "description": "Maximum number of runs to return",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+    },
+    "cursor": {
+      "description": "Cursor for pagination",
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "limit"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/ListRunsRequest.json",
+  "x-spec-version": "3.0.11"
+}

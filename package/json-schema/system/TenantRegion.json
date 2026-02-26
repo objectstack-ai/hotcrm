@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "us-east",
+    "us-west",
+    "eu-west",
+    "eu-central",
+    "ap-southeast",
+    "ap-northeast"
+  ],
+  "description": "Available deployment region",
+  "$id": "https://schema.objectstack.io/v3.0.11/system/TenantRegion.json",
+  "x-spec-version": "3.0.11"
+}

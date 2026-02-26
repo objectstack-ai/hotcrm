@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "scheme": {
+      "default": "semver",
+      "description": "Versioning scheme",
+      "type": "string",
+      "enum": [
+        "semver",
+        "calver",
+        "custom"
+      ]
+    },
+    "autoIncrement": {
+      "default": "patch",
+      "description": "Auto-increment strategy",
+      "type": "string",
+      "enum": [
+        "major",
+        "minor",
+        "patch",
+        "none"
+      ]
+    },
+    "prefix": {
+      "default": "v",
+      "description": "Version tag prefix",
+      "type": "string"
+    },
+    "generateChangelog": {
+      "default": true,
+      "description": "Generate changelog automatically",
+      "type": "boolean"
+    },
+    "changelogFormat": {
+      "default": "conventional",
+      "description": "Changelog format",
+      "type": "string",
+      "enum": [
+        "conventional",
+        "keepachangelog",
+        "custom"
+      ]
+    },
+    "tagReleases": {
+      "default": true,
+      "description": "Create Git tags for releases",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "scheme",
+    "autoIncrement",
+    "prefix",
+    "generateChangelog",
+    "changelogFormat",
+    "tagReleases"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/ai/VersionManagement.json",
+  "x-spec-version": "3.0.11"
+}

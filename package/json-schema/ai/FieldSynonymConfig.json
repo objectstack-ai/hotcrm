@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "object": {
+      "type": "string",
+      "description": "Object name"
+    },
+    "field": {
+      "type": "string",
+      "description": "Field name"
+    },
+    "synonyms": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Natural language synonyms"
+    },
+    "examples": {
+      "description": "Example queries using synonyms",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "object",
+    "field",
+    "synonyms"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/ai/FieldSynonymConfig.json",
+  "x-spec-version": "3.0.11"
+}

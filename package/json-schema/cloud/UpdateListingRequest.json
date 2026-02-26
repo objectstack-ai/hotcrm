@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "listingId": {
+      "type": "string",
+      "description": "Listing ID to update"
+    },
+    "name": {
+      "type": "string"
+    },
+    "tagline": {
+      "type": "string",
+      "maxLength": 120
+    },
+    "description": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "iconUrl": {
+      "type": "string",
+      "format": "uri"
+    },
+    "screenshots": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "caption": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "documentationUrl": {
+      "type": "string",
+      "format": "uri"
+    },
+    "supportUrl": {
+      "type": "string",
+      "format": "uri"
+    },
+    "repositoryUrl": {
+      "type": "string",
+      "format": "uri"
+    },
+    "pricing": {
+      "type": "string",
+      "enum": [
+        "free",
+        "freemium",
+        "paid",
+        "subscription",
+        "usage-based",
+        "contact-sales"
+      ]
+    },
+    "priceInCents": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    }
+  },
+  "required": [
+    "listingId"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/cloud/UpdateListingRequest.json",
+  "x-spec-version": "3.0.11"
+}

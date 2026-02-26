@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Pipeline stage name"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "build",
+        "test",
+        "lint",
+        "security_scan",
+        "deploy",
+        "smoke_test",
+        "rollback"
+      ],
+      "description": "Stage type"
+    },
+    "order": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991,
+      "description": "Execution order"
+    },
+    "parallel": {
+      "default": false,
+      "description": "Can run in parallel with other stages",
+      "type": "boolean"
+    },
+    "commands": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Commands to execute"
+    },
+    "env": {
+      "description": "Stage-specific environment variables",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "timeout": {
+      "default": 600,
+      "description": "Stage timeout in seconds",
+      "type": "integer",
+      "minimum": 60,
+      "maximum": 9007199254740991
+    },
+    "retryOnFailure": {
+      "default": false,
+      "description": "Retry stage on failure",
+      "type": "boolean"
+    },
+    "maxRetries": {
+      "default": 0,
+      "description": "Maximum retry attempts",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 5
+    }
+  },
+  "required": [
+    "name",
+    "type",
+    "order",
+    "parallel",
+    "commands",
+    "timeout",
+    "retryOnFailure",
+    "maxRetries"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/ai/PipelineStage.json",
+  "x-spec-version": "3.0.11"
+}

@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Action name"
+    },
+    "type": {
+      "type": "string",
+      "const": "push_notification"
+    },
+    "title": {
+      "type": "string",
+      "description": "Notification title"
+    },
+    "body": {
+      "type": "string",
+      "description": "Notification body text"
+    },
+    "recipients": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "User IDs or device tokens"
+    },
+    "data": {
+      "description": "Additional data payload",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
+    },
+    "badge": {
+      "description": "Badge count (iOS)",
+      "type": "number"
+    },
+    "sound": {
+      "description": "Notification sound",
+      "type": "string"
+    },
+    "clickAction": {
+      "description": "Action/URL when notification is clicked",
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "type",
+    "title",
+    "body",
+    "recipients"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/automation/PushNotificationAction.json",
+  "x-spec-version": "3.0.11"
+}

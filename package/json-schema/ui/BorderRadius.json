@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "none": {
+      "description": "No border radius (0)",
+      "type": "string"
+    },
+    "sm": {
+      "description": "Small border radius (e.g., 0.125rem)",
+      "type": "string"
+    },
+    "base": {
+      "description": "Base border radius (e.g., 0.25rem)",
+      "type": "string"
+    },
+    "md": {
+      "description": "Medium border radius (e.g., 0.375rem)",
+      "type": "string"
+    },
+    "lg": {
+      "description": "Large border radius (e.g., 0.5rem)",
+      "type": "string"
+    },
+    "xl": {
+      "description": "Extra large border radius (e.g., 0.75rem)",
+      "type": "string"
+    },
+    "2xl": {
+      "description": "2X large border radius (e.g., 1rem)",
+      "type": "string"
+    },
+    "full": {
+      "description": "Full border radius (50%)",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/ui/BorderRadius.json",
+  "x-spec-version": "3.0.11"
+}

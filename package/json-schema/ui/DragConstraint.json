@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "axis": {
+      "default": "both",
+      "description": "Constrain drag axis",
+      "type": "string",
+      "enum": [
+        "x",
+        "y",
+        "both"
+      ]
+    },
+    "bounds": {
+      "default": "none",
+      "description": "Constrain within bounds",
+      "type": "string",
+      "enum": [
+        "parent",
+        "viewport",
+        "none"
+      ]
+    },
+    "grid": {
+      "description": "Snap to grid [x, y] in pixels",
+      "type": "array",
+      "prefixItems": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        }
+      ]
+    }
+  },
+  "required": [
+    "axis",
+    "bounds"
+  ],
+  "additionalProperties": false,
+  "description": "Drag movement constraints",
+  "$id": "https://schema.objectstack.io/v3.0.11/ui/DragConstraint.json",
+  "x-spec-version": "3.0.11"
+}

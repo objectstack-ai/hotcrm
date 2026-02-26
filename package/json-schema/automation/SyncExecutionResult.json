@@ -1,0 +1,160 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Execution ID"
+    },
+    "syncName": {
+      "type": "string",
+      "description": "Sync name"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "running",
+        "completed",
+        "partial",
+        "failed",
+        "cancelled"
+      ],
+      "description": "Execution status"
+    },
+    "startedAt": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+      "description": "Start time"
+    },
+    "completedAt": {
+      "description": "Completion time",
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+    },
+    "durationMs": {
+      "description": "Duration in ms",
+      "type": "number"
+    },
+    "stats": {
+      "description": "Execution statistics",
+      "type": "object",
+      "properties": {
+        "recordsProcessed": {
+          "default": 0,
+          "description": "Total records processed",
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "recordsInserted": {
+          "default": 0,
+          "description": "Records inserted",
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "recordsUpdated": {
+          "default": 0,
+          "description": "Records updated",
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "recordsDeleted": {
+          "default": 0,
+          "description": "Records deleted",
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "recordsSkipped": {
+          "default": 0,
+          "description": "Records skipped",
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "recordsErrored": {
+          "default": 0,
+          "description": "Records with errors",
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "conflictsDetected": {
+          "default": 0,
+          "description": "Conflicts detected",
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "conflictsResolved": {
+          "default": 0,
+          "description": "Conflicts resolved",
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "recordsProcessed",
+        "recordsInserted",
+        "recordsUpdated",
+        "recordsDeleted",
+        "recordsSkipped",
+        "recordsErrored",
+        "conflictsDetected",
+        "conflictsResolved"
+      ],
+      "additionalProperties": false
+    },
+    "errors": {
+      "description": "Errors",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "recordId": {
+            "description": "Record ID",
+            "type": "string"
+          },
+          "field": {
+            "description": "Field name",
+            "type": "string"
+          },
+          "message": {
+            "type": "string",
+            "description": "Error message"
+          },
+          "code": {
+            "description": "Error code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "logs": {
+      "description": "Execution logs",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "id",
+    "syncName",
+    "status",
+    "startedAt"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/automation/SyncExecutionResult.json",
+  "x-spec-version": "3.0.11"
+}

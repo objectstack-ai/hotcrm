@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "record.created",
+    "record.updated",
+    "record.deleted",
+    "sync.started",
+    "sync.completed",
+    "sync.failed",
+    "auth.expired",
+    "rate_limit.exceeded"
+  ],
+  "description": "Webhook event type",
+  "$id": "https://schema.objectstack.io/v3.0.11/integration/WebhookEvent.json",
+  "x-spec-version": "3.0.11"
+}

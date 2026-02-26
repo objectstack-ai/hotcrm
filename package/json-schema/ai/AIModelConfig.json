@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "provider": {
+      "default": "openai",
+      "type": "string",
+      "enum": [
+        "openai",
+        "azure_openai",
+        "anthropic",
+        "local"
+      ]
+    },
+    "model": {
+      "type": "string",
+      "description": "Model name (e.g. gpt-4, claude-3-opus)"
+    },
+    "temperature": {
+      "default": 0.7,
+      "type": "number",
+      "minimum": 0,
+      "maximum": 2
+    },
+    "maxTokens": {
+      "type": "number"
+    },
+    "topP": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "provider",
+    "model",
+    "temperature"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/ai/AIModelConfig.json",
+  "x-spec-version": "3.0.11"
+}

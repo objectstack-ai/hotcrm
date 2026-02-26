@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "crm",
+    "erp",
+    "hr",
+    "finance",
+    "project",
+    "collaboration",
+    "analytics",
+    "integration",
+    "automation",
+    "ai",
+    "security",
+    "developer-tools",
+    "ui-theme",
+    "storage",
+    "other"
+  ],
+  "description": "Marketplace package category",
+  "$id": "https://schema.objectstack.io/v3.0.11/cloud/MarketplaceCategory.json",
+  "x-spec-version": "3.0.11"
+}

@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "enabled": {
+      "type": "boolean",
+      "description": "Enable record versioning"
+    },
+    "strategy": {
+      "type": "string",
+      "enum": [
+        "snapshot",
+        "delta",
+        "event-sourcing"
+      ],
+      "description": "Versioning strategy: snapshot (full copy), delta (changes only), event-sourcing (event log)"
+    },
+    "retentionDays": {
+      "description": "Number of days to retain old versions (undefined = infinite)",
+      "type": "number",
+      "minimum": 1
+    },
+    "versionField": {
+      "default": "version",
+      "description": "Field name for version number/timestamp",
+      "type": "string"
+    }
+  },
+  "required": [
+    "enabled",
+    "strategy",
+    "versionField"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/data/VersioningConfig.json",
+  "x-spec-version": "3.0.11"
+}

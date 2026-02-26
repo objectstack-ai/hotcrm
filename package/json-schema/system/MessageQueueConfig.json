@@ -1,0 +1,173 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "provider": {
+      "type": "string",
+      "enum": [
+        "kafka",
+        "rabbitmq",
+        "aws-sqs",
+        "redis-pubsub",
+        "google-pubsub",
+        "azure-service-bus"
+      ],
+      "description": "Message queue backend provider"
+    },
+    "topics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Topic name identifier"
+          },
+          "partitions": {
+            "default": 1,
+            "description": "Number of partitions for parallel consumption",
+            "type": "number"
+          },
+          "replicationFactor": {
+            "default": 1,
+            "description": "Number of replicas for fault tolerance",
+            "type": "number"
+          },
+          "retentionMs": {
+            "description": "Message retention period in milliseconds",
+            "type": "number"
+          },
+          "compressionType": {
+            "default": "none",
+            "description": "Message compression algorithm",
+            "type": "string",
+            "enum": [
+              "none",
+              "gzip",
+              "snappy",
+              "lz4"
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "partitions",
+          "replicationFactor",
+          "compressionType"
+        ],
+        "additionalProperties": false,
+        "description": "Configuration for a message queue topic"
+      },
+      "description": "List of topic configurations"
+    },
+    "consumers": {
+      "description": "Consumer group configurations",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "groupId": {
+            "type": "string",
+            "description": "Consumer group identifier"
+          },
+          "autoOffsetReset": {
+            "default": "latest",
+            "description": "Where to start reading when no offset exists",
+            "type": "string",
+            "enum": [
+              "earliest",
+              "latest"
+            ]
+          },
+          "enableAutoCommit": {
+            "default": true,
+            "description": "Automatically commit consumed offsets",
+            "type": "boolean"
+          },
+          "maxPollRecords": {
+            "default": 500,
+            "description": "Maximum records returned per poll",
+            "type": "number"
+          }
+        },
+        "required": [
+          "groupId",
+          "autoOffsetReset",
+          "enableAutoCommit",
+          "maxPollRecords"
+        ],
+        "additionalProperties": false,
+        "description": "Consumer group configuration for topic consumption"
+      }
+    },
+    "deadLetterQueue": {
+      "description": "Dead letter queue for failed messages",
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "description": "Enable dead letter queue for failed messages",
+          "type": "boolean"
+        },
+        "maxRetries": {
+          "default": 3,
+          "description": "Maximum delivery attempts before sending to DLQ",
+          "type": "number"
+        },
+        "queueName": {
+          "type": "string",
+          "description": "Name of the dead letter queue"
+        }
+      },
+      "required": [
+        "enabled",
+        "maxRetries",
+        "queueName"
+      ],
+      "additionalProperties": false
+    },
+    "ssl": {
+      "default": false,
+      "description": "Enable SSL/TLS for broker connections",
+      "type": "boolean"
+    },
+    "sasl": {
+      "description": "SASL authentication configuration",
+      "type": "object",
+      "properties": {
+        "mechanism": {
+          "type": "string",
+          "enum": [
+            "plain",
+            "scram-sha-256",
+            "scram-sha-512"
+          ],
+          "description": "SASL authentication mechanism"
+        },
+        "username": {
+          "type": "string",
+          "description": "SASL username"
+        },
+        "password": {
+          "type": "string",
+          "description": "SASL password"
+        }
+      },
+      "required": [
+        "mechanism",
+        "username",
+        "password"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "provider",
+    "topics",
+    "ssl"
+  ],
+  "additionalProperties": false,
+  "description": "Top-level message queue configuration",
+  "$id": "https://schema.objectstack.io/v3.0.11/system/MessageQueueConfig.json",
+  "x-spec-version": "3.0.11"
+}

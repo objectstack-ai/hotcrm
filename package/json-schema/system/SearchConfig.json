@@ -1,0 +1,236 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "provider": {
+      "type": "string",
+      "enum": [
+        "elasticsearch",
+        "algolia",
+        "meilisearch",
+        "typesense",
+        "opensearch"
+      ],
+      "description": "Search engine backend provider"
+    },
+    "indexes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "indexName": {
+            "type": "string",
+            "description": "Name of the search index"
+          },
+          "objectName": {
+            "type": "string",
+            "description": "Source ObjectQL object"
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Field name to index"
+                },
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "text",
+                    "keyword",
+                    "number",
+                    "date",
+                    "boolean",
+                    "geo"
+                  ],
+                  "description": "Index field data type"
+                },
+                "analyzer": {
+                  "description": "Named analyzer to use for this field",
+                  "type": "string"
+                },
+                "searchable": {
+                  "default": true,
+                  "description": "Include field in full-text search",
+                  "type": "boolean"
+                },
+                "filterable": {
+                  "default": false,
+                  "description": "Allow filtering on this field",
+                  "type": "boolean"
+                },
+                "sortable": {
+                  "default": false,
+                  "description": "Allow sorting by this field",
+                  "type": "boolean"
+                },
+                "boost": {
+                  "default": 1,
+                  "description": "Relevance boost factor for this field",
+                  "type": "number"
+                }
+              },
+              "required": [
+                "name",
+                "type",
+                "searchable",
+                "filterable",
+                "sortable",
+                "boost"
+              ],
+              "additionalProperties": false
+            },
+            "description": "Fields to include in the search index"
+          },
+          "replicas": {
+            "default": 1,
+            "description": "Number of index replicas for availability",
+            "type": "number"
+          },
+          "shards": {
+            "default": 1,
+            "description": "Number of index shards for distribution",
+            "type": "number"
+          }
+        },
+        "required": [
+          "indexName",
+          "objectName",
+          "fields",
+          "replicas",
+          "shards"
+        ],
+        "additionalProperties": false,
+        "description": "Search index definition mapping an ObjectQL object to a search engine index"
+      },
+      "description": "Search index definitions"
+    },
+    "analyzers": {
+      "description": "Named text analyzer configurations",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "standard",
+              "simple",
+              "whitespace",
+              "keyword",
+              "pattern",
+              "language"
+            ],
+            "description": "Text analyzer type"
+          },
+          "language": {
+            "description": "Language for language-specific analysis",
+            "type": "string"
+          },
+          "stopwords": {
+            "description": "Custom stopwords to filter during analysis",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "customFilters": {
+            "description": "Additional token filter names to apply",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "type"
+        ],
+        "additionalProperties": false,
+        "description": "Text analyzer configuration for index tokenization and normalization"
+      }
+    },
+    "facets": {
+      "description": "Faceted search configurations",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string",
+            "description": "Field name to generate facets from"
+          },
+          "maxValues": {
+            "default": 10,
+            "description": "Maximum number of facet values to return",
+            "type": "number"
+          },
+          "sort": {
+            "default": "count",
+            "description": "Facet value sort order",
+            "type": "string",
+            "enum": [
+              "count",
+              "alpha"
+            ]
+          }
+        },
+        "required": [
+          "field",
+          "maxValues",
+          "sort"
+        ],
+        "additionalProperties": false,
+        "description": "Faceted search configuration for a single field"
+      }
+    },
+    "typoTolerance": {
+      "default": true,
+      "description": "Enable typo-tolerant search",
+      "type": "boolean"
+    },
+    "synonyms": {
+      "description": "Synonym mappings for search expansion",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "ranking": {
+      "description": "Custom ranking rule order",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "typo",
+          "geo",
+          "words",
+          "filters",
+          "proximity",
+          "attribute",
+          "exact",
+          "custom"
+        ]
+      }
+    }
+  },
+  "required": [
+    "provider",
+    "indexes",
+    "typoTolerance"
+  ],
+  "additionalProperties": false,
+  "description": "Top-level full-text search engine configuration",
+  "$id": "https://schema.objectstack.io/v3.0.11/system/SearchConfig.json",
+  "x-spec-version": "3.0.11"
+}

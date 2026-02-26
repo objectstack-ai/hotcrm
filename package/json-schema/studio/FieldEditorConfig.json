@@ -1,0 +1,170 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "inlineEditing": {
+      "default": true,
+      "description": "Enable inline editing of field properties",
+      "type": "boolean"
+    },
+    "dragReorder": {
+      "default": true,
+      "description": "Enable drag-and-drop field reordering",
+      "type": "boolean"
+    },
+    "showFieldGroups": {
+      "default": true,
+      "description": "Show field group headers",
+      "type": "boolean"
+    },
+    "showPropertyPanel": {
+      "default": true,
+      "description": "Show the right-side property panel",
+      "type": "boolean"
+    },
+    "propertySections": {
+      "default": [
+        {
+          "key": "basics",
+          "label": "Basic Properties",
+          "defaultExpanded": true,
+          "order": 0
+        },
+        {
+          "key": "constraints",
+          "label": "Constraints & Validation",
+          "defaultExpanded": true,
+          "order": 10
+        },
+        {
+          "key": "relationship",
+          "label": "Relationship Config",
+          "defaultExpanded": true,
+          "order": 20
+        },
+        {
+          "key": "display",
+          "label": "Display & UI",
+          "defaultExpanded": false,
+          "order": 30
+        },
+        {
+          "key": "security",
+          "label": "Security & Compliance",
+          "defaultExpanded": false,
+          "order": 40
+        },
+        {
+          "key": "advanced",
+          "label": "Advanced",
+          "defaultExpanded": false,
+          "order": 50
+        }
+      ],
+      "description": "Property panel section definitions",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Section key (e.g., \"basics\", \"constraints\", \"security\")"
+          },
+          "label": {
+            "type": "string",
+            "description": "Section display label"
+          },
+          "icon": {
+            "description": "Lucide icon name",
+            "type": "string"
+          },
+          "defaultExpanded": {
+            "default": true,
+            "description": "Whether section is expanded by default",
+            "type": "boolean"
+          },
+          "order": {
+            "default": 0,
+            "description": "Sort order (lower = higher)",
+            "type": "number"
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "defaultExpanded",
+          "order"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "fieldGroups": {
+      "default": [],
+      "description": "Field group definitions",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Group key matching field.group values"
+          },
+          "label": {
+            "type": "string",
+            "description": "Group display label"
+          },
+          "icon": {
+            "description": "Lucide icon name",
+            "type": "string"
+          },
+          "defaultExpanded": {
+            "default": true,
+            "description": "Whether group is expanded by default",
+            "type": "boolean"
+          },
+          "order": {
+            "default": 0,
+            "description": "Sort order (lower = higher)",
+            "type": "number"
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "defaultExpanded",
+          "order"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "paginationThreshold": {
+      "default": 50,
+      "description": "Number of fields before pagination is enabled",
+      "type": "number"
+    },
+    "batchOperations": {
+      "default": true,
+      "description": "Enable batch add/remove field operations",
+      "type": "boolean"
+    },
+    "showUsageStats": {
+      "default": false,
+      "description": "Show field usage statistics",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "inlineEditing",
+    "dragReorder",
+    "showFieldGroups",
+    "showPropertyPanel",
+    "propertySections",
+    "fieldGroups",
+    "paginationThreshold",
+    "batchOperations",
+    "showUsageStats"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/studio/FieldEditorConfig.json",
+  "x-spec-version": "3.0.11"
+}

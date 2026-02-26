@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "all",
+    "comments_only",
+    "changes_only",
+    "tasks_only"
+  ],
+  "$id": "https://schema.objectstack.io/v3.0.11/api/FeedListFilterType.json",
+  "x-spec-version": "3.0.11"
+}

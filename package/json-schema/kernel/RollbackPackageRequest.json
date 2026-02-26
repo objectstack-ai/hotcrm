@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "packageId": {
+      "type": "string",
+      "description": "Package ID to rollback"
+    },
+    "snapshotId": {
+      "type": "string",
+      "description": "Snapshot ID to restore from"
+    },
+    "rollbackCustomizations": {
+      "default": true,
+      "description": "Whether to restore pre-upgrade customizations",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "packageId",
+    "snapshotId",
+    "rollbackCustomizations"
+  ],
+  "additionalProperties": false,
+  "description": "Rollback package request",
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/RollbackPackageRequest.json",
+  "x-spec-version": "3.0.11"
+}

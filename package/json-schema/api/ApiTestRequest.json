@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Test request name"
+    },
+    "description": {
+      "description": "Request description",
+      "type": "string"
+    },
+    "method": {
+      "type": "string",
+      "enum": [
+        "GET",
+        "POST",
+        "PUT",
+        "PATCH",
+        "DELETE",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "description": "HTTP method"
+    },
+    "url": {
+      "type": "string",
+      "description": "Request URL (can include variables)"
+    },
+    "headers": {
+      "default": {},
+      "description": "Request headers",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "queryParams": {
+      "default": {},
+      "description": "Query parameters",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "boolean"
+          }
+        ]
+      }
+    },
+    "body": {
+      "description": "Request body"
+    },
+    "variables": {
+      "default": {},
+      "description": "Template variables",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
+    },
+    "expectedResponse": {
+      "description": "Expected response for validation",
+      "type": "object",
+      "properties": {
+        "statusCode": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "body": {}
+      },
+      "required": [
+        "statusCode"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "name",
+    "method",
+    "url",
+    "headers",
+    "queryParams",
+    "variables"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/ApiTestRequest.json",
+  "x-spec-version": "3.0.11"
+}

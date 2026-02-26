@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "file",
+        "directory",
+        "url",
+        "api",
+        "database",
+        "custom"
+      ]
+    },
+    "source": {
+      "type": "string",
+      "description": "Source path, URL, or identifier"
+    },
+    "fileTypes": {
+      "description": "Accepted file extensions (e.g., [\".pdf\", \".md\"])",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "recursive": {
+      "default": false,
+      "description": "Process directories recursively",
+      "type": "boolean"
+    },
+    "maxFileSize": {
+      "description": "Maximum file size in bytes",
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991
+    },
+    "excludePatterns": {
+      "description": "Patterns to exclude",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "extractImages": {
+      "default": false,
+      "description": "Extract text from images (OCR)",
+      "type": "boolean"
+    },
+    "extractTables": {
+      "default": false,
+      "description": "Extract and format tables",
+      "type": "boolean"
+    },
+    "loaderConfig": {
+      "description": "Custom loader-specific config",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
+    }
+  },
+  "required": [
+    "type",
+    "source",
+    "recursive",
+    "extractImages",
+    "extractTables"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/ai/DocumentLoaderConfig.json",
+  "x-spec-version": "3.0.11"
+}

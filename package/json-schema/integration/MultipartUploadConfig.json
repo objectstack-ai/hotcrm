@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "enabled": {
+      "default": true,
+      "description": "Enable multipart uploads",
+      "type": "boolean"
+    },
+    "partSize": {
+      "default": 5242880,
+      "description": "Part size in bytes (min 5MB)",
+      "type": "number",
+      "minimum": 5242880
+    },
+    "maxConcurrentParts": {
+      "default": 5,
+      "description": "Maximum concurrent part uploads",
+      "type": "number",
+      "minimum": 1,
+      "maximum": 10
+    },
+    "threshold": {
+      "default": 104857600,
+      "description": "File size threshold for multipart upload in bytes",
+      "type": "number",
+      "minimum": 5242880
+    }
+  },
+  "required": [
+    "enabled",
+    "partSize",
+    "maxConcurrentParts",
+    "threshold"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/integration/MultipartUploadConfig.json",
+  "x-spec-version": "3.0.11"
+}

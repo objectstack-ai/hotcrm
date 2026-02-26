@@ -1,0 +1,553 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "success": {
+      "type": "boolean",
+      "description": "Operation success status"
+    },
+    "error": {
+      "description": "Error details if success is false",
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "description": "Error code (e.g. validation_error)"
+        },
+        "message": {
+          "type": "string",
+          "description": "Readable error message"
+        },
+        "category": {
+          "description": "Error category (e.g. validation, authorization)",
+          "type": "string"
+        },
+        "details": {
+          "description": "Additional error context (e.g. field validation errors)"
+        },
+        "requestId": {
+          "description": "Request ID for tracking",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ],
+      "additionalProperties": false
+    },
+    "meta": {
+      "description": "Response metadata",
+      "type": "object",
+      "properties": {
+        "timestamp": {
+          "type": "string"
+        },
+        "duration": {
+          "type": "number"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "traceId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "timestamp"
+      ],
+      "additionalProperties": false
+    },
+    "data": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z_][a-z0-9_]*$",
+          "description": "Machine name"
+        },
+        "label": {
+          "type": "string",
+          "description": "Flow label"
+        },
+        "description": {
+          "type": "string"
+        },
+        "version": {
+          "default": 1,
+          "description": "Version number",
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "status": {
+          "default": "draft",
+          "description": "Deployment status",
+          "type": "string",
+          "enum": [
+            "draft",
+            "active",
+            "obsolete",
+            "invalid"
+          ]
+        },
+        "template": {
+          "default": false,
+          "description": "Is logic template (Subflow)",
+          "type": "boolean"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "autolaunched",
+            "record_change",
+            "schedule",
+            "screen",
+            "api"
+          ],
+          "description": "Flow type"
+        },
+        "variables": {
+          "description": "Flow variables",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Variable name"
+              },
+              "type": {
+                "type": "string",
+                "description": "Data type (text, number, boolean, object, list)"
+              },
+              "isInput": {
+                "default": false,
+                "description": "Is input parameter",
+                "type": "boolean"
+              },
+              "isOutput": {
+                "default": false,
+                "description": "Is output parameter",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "name",
+              "type",
+              "isInput",
+              "isOutput"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Node unique ID"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "start",
+                  "end",
+                  "decision",
+                  "assignment",
+                  "loop",
+                  "create_record",
+                  "update_record",
+                  "delete_record",
+                  "get_record",
+                  "http_request",
+                  "script",
+                  "screen",
+                  "wait",
+                  "subflow",
+                  "connector_action",
+                  "parallel_gateway",
+                  "join_gateway",
+                  "boundary_event"
+                ],
+                "description": "Action type"
+              },
+              "label": {
+                "type": "string",
+                "description": "Node label"
+              },
+              "config": {
+                "description": "Node configuration",
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {}
+              },
+              "connectorConfig": {
+                "type": "object",
+                "properties": {
+                  "connectorId": {
+                    "type": "string"
+                  },
+                  "actionId": {
+                    "type": "string"
+                  },
+                  "input": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {},
+                    "description": "Mapped inputs for the action"
+                  }
+                },
+                "required": [
+                  "connectorId",
+                  "actionId",
+                  "input"
+                ],
+                "additionalProperties": false
+              },
+              "position": {
+                "type": "object",
+                "properties": {
+                  "x": {
+                    "type": "number"
+                  },
+                  "y": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "x",
+                  "y"
+                ],
+                "additionalProperties": false
+              },
+              "timeoutMs": {
+                "description": "Maximum execution time for this node in milliseconds",
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "inputSchema": {
+                "description": "Input parameter schema for this node",
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "string",
+                        "number",
+                        "boolean",
+                        "object",
+                        "array"
+                      ],
+                      "description": "Parameter type"
+                    },
+                    "required": {
+                      "default": false,
+                      "description": "Whether the parameter is required",
+                      "type": "boolean"
+                    },
+                    "description": {
+                      "description": "Parameter description",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "required"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "outputSchema": {
+                "description": "Output schema declaration for this node",
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "string",
+                        "number",
+                        "boolean",
+                        "object",
+                        "array"
+                      ],
+                      "description": "Output type"
+                    },
+                    "description": {
+                      "description": "Output description",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "waitEventConfig": {
+                "description": "Configuration for wait node event resumption",
+                "type": "object",
+                "properties": {
+                  "eventType": {
+                    "type": "string",
+                    "enum": [
+                      "timer",
+                      "signal",
+                      "webhook",
+                      "manual",
+                      "condition"
+                    ],
+                    "description": "What kind of event resumes the execution"
+                  },
+                  "timerDuration": {
+                    "description": "ISO 8601 duration (e.g., \"PT1H\") or wait time for timer events",
+                    "type": "string"
+                  },
+                  "signalName": {
+                    "description": "Named signal or webhook event to wait for",
+                    "type": "string"
+                  },
+                  "timeoutMs": {
+                    "description": "Maximum wait time before timeout (ms)",
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "onTimeout": {
+                    "default": "fail",
+                    "description": "Behavior when the wait times out",
+                    "type": "string",
+                    "enum": [
+                      "fail",
+                      "continue"
+                    ]
+                  }
+                },
+                "required": [
+                  "eventType",
+                  "onTimeout"
+                ],
+                "additionalProperties": false
+              },
+              "boundaryConfig": {
+                "description": "Configuration for boundary events attached to host nodes",
+                "type": "object",
+                "properties": {
+                  "attachedToNodeId": {
+                    "type": "string",
+                    "description": "Host node ID this boundary event monitors"
+                  },
+                  "eventType": {
+                    "type": "string",
+                    "enum": [
+                      "error",
+                      "timer",
+                      "signal",
+                      "cancel"
+                    ],
+                    "description": "Boundary event trigger type"
+                  },
+                  "interrupting": {
+                    "default": true,
+                    "description": "If true, the host activity is cancelled when this event fires",
+                    "type": "boolean"
+                  },
+                  "errorCode": {
+                    "description": "Specific error code to catch (empty = catch all errors)",
+                    "type": "string"
+                  },
+                  "timerDuration": {
+                    "description": "ISO 8601 duration for timer boundary events",
+                    "type": "string"
+                  },
+                  "signalName": {
+                    "description": "Named signal to catch",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "attachedToNodeId",
+                  "eventType",
+                  "interrupting"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "id",
+              "type",
+              "label"
+            ],
+            "additionalProperties": false
+          },
+          "description": "Flow nodes"
+        },
+        "edges": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Edge unique ID"
+              },
+              "source": {
+                "type": "string",
+                "description": "Source Node ID"
+              },
+              "target": {
+                "type": "string",
+                "description": "Target Node ID"
+              },
+              "condition": {
+                "description": "Expression returning boolean used for branching",
+                "type": "string"
+              },
+              "type": {
+                "default": "default",
+                "description": "Connection type: default (normal flow), fault (error path), or conditional (expression-guarded)",
+                "type": "string",
+                "enum": [
+                  "default",
+                  "fault",
+                  "conditional"
+                ]
+              },
+              "label": {
+                "description": "Label on the connector",
+                "type": "string"
+              },
+              "isDefault": {
+                "default": false,
+                "description": "Marks this edge as the default path when no other conditions match",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "id",
+              "source",
+              "target",
+              "type",
+              "isDefault"
+            ],
+            "additionalProperties": false
+          },
+          "description": "Flow connections"
+        },
+        "active": {
+          "default": false,
+          "description": "Is active (Deprecated: use status)",
+          "type": "boolean"
+        },
+        "runAs": {
+          "default": "user",
+          "description": "Execution context",
+          "type": "string",
+          "enum": [
+            "system",
+            "user"
+          ]
+        },
+        "errorHandling": {
+          "description": "Flow-level error handling configuration",
+          "type": "object",
+          "properties": {
+            "strategy": {
+              "default": "fail",
+              "description": "How to handle node execution errors",
+              "type": "string",
+              "enum": [
+                "fail",
+                "retry",
+                "continue"
+              ]
+            },
+            "maxRetries": {
+              "default": 0,
+              "description": "Number of retry attempts (only for retry strategy)",
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "retryDelayMs": {
+              "default": 1000,
+              "description": "Delay between retries in milliseconds",
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "backoffMultiplier": {
+              "default": 1,
+              "description": "Multiplier for exponential backoff between retries",
+              "type": "number",
+              "minimum": 1
+            },
+            "maxRetryDelayMs": {
+              "default": 30000,
+              "description": "Maximum delay between retries in milliseconds",
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "jitter": {
+              "default": false,
+              "description": "Add random jitter to retry delay to avoid thundering herd",
+              "type": "boolean"
+            },
+            "fallbackNodeId": {
+              "description": "Node ID to jump to on unrecoverable error",
+              "type": "string"
+            }
+          },
+          "required": [
+            "strategy",
+            "maxRetries",
+            "retryDelayMs",
+            "backoffMultiplier",
+            "maxRetryDelayMs",
+            "jitter"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "name",
+        "label",
+        "version",
+        "status",
+        "template",
+        "type",
+        "nodes",
+        "edges",
+        "active",
+        "runAs"
+      ],
+      "additionalProperties": false,
+      "description": "The created flow definition"
+    }
+  },
+  "required": [
+    "success",
+    "data"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/CreateFlowResponse.json",
+  "x-spec-version": "3.0.11"
+}

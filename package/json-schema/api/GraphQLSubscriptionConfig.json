@@ -1,0 +1,130 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Subscription field name (camelCase recommended)"
+    },
+    "object": {
+      "type": "string",
+      "description": "Source ObjectQL object name"
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "created",
+          "updated",
+          "deleted",
+          "custom"
+        ]
+      },
+      "description": "Events to subscribe to"
+    },
+    "description": {
+      "description": "Subscription description",
+      "type": "string"
+    },
+    "filter": {
+      "description": "Subscription filtering",
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": true,
+          "description": "Allow filtering subscriptions",
+          "type": "boolean"
+        },
+        "fields": {
+          "description": "Filterable fields",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "enabled"
+      ],
+      "additionalProperties": false
+    },
+    "payload": {
+      "description": "Payload configuration",
+      "type": "object",
+      "properties": {
+        "includeEntity": {
+          "default": true,
+          "description": "Include entity in payload",
+          "type": "boolean"
+        },
+        "includePreviousValues": {
+          "default": false,
+          "description": "Include previous field values",
+          "type": "boolean"
+        },
+        "includeMeta": {
+          "default": true,
+          "description": "Include metadata (timestamp, user, etc.)",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "includeEntity",
+        "includePreviousValues",
+        "includeMeta"
+      ],
+      "additionalProperties": false
+    },
+    "authRequired": {
+      "default": true,
+      "description": "Require authentication",
+      "type": "boolean"
+    },
+    "permissions": {
+      "description": "Required permissions",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "rateLimit": {
+      "description": "Subscription rate limiting",
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": true,
+          "description": "Enable rate limiting",
+          "type": "boolean"
+        },
+        "maxSubscriptionsPerUser": {
+          "default": 10,
+          "description": "Max concurrent subscriptions per user",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "throttleMs": {
+          "description": "Throttle interval in milliseconds",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "enabled",
+        "maxSubscriptionsPerUser"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "name",
+    "object",
+    "events",
+    "authRequired"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/GraphQLSubscriptionConfig.json",
+  "x-spec-version": "3.0.11"
+}

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "eager",
+    "lazy",
+    "parallel",
+    "deferred",
+    "on-demand"
+  ],
+  "description": "Plugin loading strategy",
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/PluginLoadingStrategy.json",
+  "x-spec-version": "3.0.11"
+}

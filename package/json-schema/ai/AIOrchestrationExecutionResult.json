@@ -1,0 +1,147 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "workflowName": {
+      "type": "string"
+    },
+    "recordId": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "success",
+        "partial_success",
+        "failed",
+        "skipped"
+      ]
+    },
+    "executionTime": {
+      "type": "number",
+      "description": "Execution time in milliseconds"
+    },
+    "tasksExecuted": {
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991,
+      "description": "Number of tasks executed"
+    },
+    "tasksSucceeded": {
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991,
+      "description": "Number of tasks succeeded"
+    },
+    "tasksFailed": {
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991,
+      "description": "Number of tasks failed"
+    },
+    "taskResults": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "taskId": {
+            "type": "string"
+          },
+          "taskName": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "success",
+              "failed",
+              "skipped"
+            ]
+          },
+          "output": {},
+          "error": {
+            "type": "string"
+          },
+          "executionTime": {
+            "description": "Task execution time in milliseconds",
+            "type": "number"
+          },
+          "modelUsed": {
+            "type": "string"
+          },
+          "tokensUsed": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "taskName",
+          "status"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "tokens": {
+      "description": "Total token usage for this execution",
+      "type": "object",
+      "properties": {
+        "prompt": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991,
+          "description": "Input tokens"
+        },
+        "completion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991,
+          "description": "Output tokens"
+        },
+        "total": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991,
+          "description": "Total tokens"
+        }
+      },
+      "required": [
+        "prompt",
+        "completion",
+        "total"
+      ],
+      "additionalProperties": false
+    },
+    "cost": {
+      "description": "Total cost for this execution in USD",
+      "type": "number",
+      "minimum": 0
+    },
+    "error": {
+      "type": "string"
+    },
+    "startedAt": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+      "description": "ISO timestamp"
+    },
+    "completedAt": {
+      "description": "ISO timestamp",
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+    }
+  },
+  "required": [
+    "workflowName",
+    "recordId",
+    "status",
+    "executionTime",
+    "tasksExecuted",
+    "tasksSucceeded",
+    "tasksFailed",
+    "startedAt"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/ai/AIOrchestrationExecutionResult.json",
+  "x-spec-version": "3.0.11"
+}

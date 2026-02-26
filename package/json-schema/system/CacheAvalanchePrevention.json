@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "jitterTtl": {
+      "description": "TTL jitter to prevent simultaneous expiration",
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "description": "Add random jitter to TTL values",
+          "type": "boolean"
+        },
+        "maxJitterSeconds": {
+          "default": 60,
+          "description": "Maximum jitter added to TTL in seconds",
+          "type": "number"
+        }
+      },
+      "required": [
+        "enabled",
+        "maxJitterSeconds"
+      ],
+      "additionalProperties": false
+    },
+    "circuitBreaker": {
+      "description": "Circuit breaker for backend protection",
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "description": "Enable circuit breaker for backend protection",
+          "type": "boolean"
+        },
+        "failureThreshold": {
+          "default": 5,
+          "description": "Failures before circuit opens",
+          "type": "number"
+        },
+        "resetTimeout": {
+          "default": 30,
+          "description": "Seconds before half-open state",
+          "type": "number"
+        }
+      },
+      "required": [
+        "enabled",
+        "failureThreshold",
+        "resetTimeout"
+      ],
+      "additionalProperties": false
+    },
+    "lockout": {
+      "description": "Lock-based stampede prevention",
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "description": "Enable cache locking for key regeneration",
+          "type": "boolean"
+        },
+        "lockTimeoutMs": {
+          "default": 5000,
+          "description": "Maximum lock wait time in milliseconds",
+          "type": "number"
+        }
+      },
+      "required": [
+        "enabled",
+        "lockTimeoutMs"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "description": "Cache avalanche/stampede prevention configuration",
+  "$id": "https://schema.objectstack.io/v3.0.11/system/CacheAvalanchePrevention.json",
+  "x-spec-version": "3.0.11"
+}

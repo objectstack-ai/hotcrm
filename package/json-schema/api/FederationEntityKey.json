@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "fields": {
+      "type": "string",
+      "description": "Selection set of fields composing the entity key"
+    },
+    "resolvable": {
+      "default": true,
+      "description": "Whether entities can be resolved from this subgraph",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "fields",
+    "resolvable"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/FederationEntityKey.json",
+  "x-spec-version": "3.0.11"
+}

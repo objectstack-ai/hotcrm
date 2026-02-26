@@ -1,0 +1,171 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "enabled": {
+      "default": false,
+      "description": "Enable offline support",
+      "type": "boolean"
+    },
+    "strategy": {
+      "default": "network_first",
+      "description": "Default offline fetch strategy",
+      "type": "string",
+      "enum": [
+        "cache_first",
+        "network_first",
+        "stale_while_revalidate",
+        "network_only",
+        "cache_only"
+      ]
+    },
+    "cache": {
+      "description": "Cache settings for offline data",
+      "type": "object",
+      "properties": {
+        "maxSize": {
+          "description": "Maximum cache size in bytes",
+          "type": "number"
+        },
+        "ttl": {
+          "description": "Time-to-live for cached entries in milliseconds",
+          "type": "number"
+        },
+        "persistStorage": {
+          "default": "indexeddb",
+          "description": "Storage backend",
+          "type": "string",
+          "enum": [
+            "indexeddb",
+            "localstorage",
+            "sqlite"
+          ]
+        },
+        "evictionPolicy": {
+          "default": "lru",
+          "description": "Cache eviction policy when full",
+          "type": "string",
+          "enum": [
+            "lru",
+            "lfu",
+            "fifo"
+          ]
+        }
+      },
+      "required": [
+        "persistStorage",
+        "evictionPolicy"
+      ],
+      "additionalProperties": false
+    },
+    "sync": {
+      "description": "Sync settings for offline mutations",
+      "type": "object",
+      "properties": {
+        "strategy": {
+          "default": "network_first",
+          "description": "Sync fetch strategy",
+          "type": "string",
+          "enum": [
+            "cache_first",
+            "network_first",
+            "stale_while_revalidate",
+            "network_only",
+            "cache_only"
+          ]
+        },
+        "conflictResolution": {
+          "default": "last_write_wins",
+          "description": "Conflict resolution policy",
+          "type": "string",
+          "enum": [
+            "client_wins",
+            "server_wins",
+            "manual",
+            "last_write_wins"
+          ]
+        },
+        "retryInterval": {
+          "description": "Retry interval in milliseconds between sync attempts",
+          "type": "number"
+        },
+        "maxRetries": {
+          "description": "Maximum number of sync retry attempts",
+          "type": "number"
+        },
+        "batchSize": {
+          "description": "Number of mutations to sync per batch",
+          "type": "number"
+        }
+      },
+      "required": [
+        "strategy",
+        "conflictResolution"
+      ],
+      "additionalProperties": false
+    },
+    "offlineIndicator": {
+      "default": true,
+      "description": "Show a visual indicator when offline",
+      "type": "boolean"
+    },
+    "offlineMessage": {
+      "description": "Customizable offline status message shown to users",
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "key": {
+              "type": "string",
+              "description": "Translation key (e.g., \"views.task_list.label\")"
+            },
+            "defaultValue": {
+              "description": "Fallback value when translation key is not found",
+              "type": "string"
+            },
+            "params": {
+              "description": "Interpolation parameters (e.g., { count: 5 })",
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "boolean"
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "key"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "queueMaxSize": {
+      "description": "Maximum number of queued offline mutations",
+      "type": "number"
+    }
+  },
+  "required": [
+    "enabled",
+    "strategy",
+    "offlineIndicator"
+  ],
+  "additionalProperties": false,
+  "description": "Offline support configuration",
+  "$id": "https://schema.objectstack.io/v3.0.11/ui/OfflineConfig.json",
+  "x-spec-version": "3.0.11"
+}

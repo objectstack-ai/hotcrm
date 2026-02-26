@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "enabled": {
+      "default": true,
+      "description": "Enable RLS enforcement globally",
+      "type": "boolean"
+    },
+    "defaultPolicy": {
+      "default": "deny",
+      "description": "Default action when no policies match",
+      "type": "string",
+      "enum": [
+        "deny",
+        "allow"
+      ]
+    },
+    "allowSuperuserBypass": {
+      "default": true,
+      "description": "Allow superusers to bypass RLS",
+      "type": "boolean"
+    },
+    "bypassRoles": {
+      "description": "Roles that bypass RLS (see all data)",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "logEvaluations": {
+      "default": false,
+      "description": "Log RLS policy evaluations for debugging",
+      "type": "boolean"
+    },
+    "cacheResults": {
+      "default": true,
+      "description": "Cache RLS evaluation results",
+      "type": "boolean"
+    },
+    "cacheTtlSeconds": {
+      "default": 300,
+      "description": "Cache TTL in seconds",
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    },
+    "prefetchUserContext": {
+      "default": true,
+      "description": "Pre-fetch user context for performance",
+      "type": "boolean"
+    },
+    "audit": {
+      "description": "RLS audit logging configuration",
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable RLS audit logging"
+        },
+        "logLevel": {
+          "type": "string",
+          "enum": [
+            "all",
+            "denied_only",
+            "granted_only",
+            "none"
+          ],
+          "description": "Which evaluations to log"
+        },
+        "destination": {
+          "type": "string",
+          "enum": [
+            "system_log",
+            "audit_trail",
+            "external"
+          ],
+          "description": "Audit log destination"
+        },
+        "sampleRate": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Sampling rate (0-1) for high-traffic environments"
+        },
+        "retentionDays": {
+          "default": 90,
+          "description": "Audit log retention period in days",
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "includeRowData": {
+          "default": false,
+          "description": "Include row data in audit logs (security-sensitive)",
+          "type": "boolean"
+        },
+        "alertOnDenied": {
+          "default": true,
+          "description": "Send alerts when access is denied",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enabled",
+        "logLevel",
+        "destination",
+        "sampleRate",
+        "retentionDays",
+        "includeRowData",
+        "alertOnDenied"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "enabled",
+    "defaultPolicy",
+    "allowSuperuserBypass",
+    "logEvaluations",
+    "cacheResults",
+    "cacheTtlSeconds",
+    "prefetchUserContext"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/security/RLSConfig.json",
+  "x-spec-version": "3.0.11"
+}

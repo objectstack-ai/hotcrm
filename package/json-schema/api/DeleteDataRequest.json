@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "object": {
+      "type": "string",
+      "description": "Object name"
+    },
+    "id": {
+      "type": "string",
+      "description": "Record ID to delete"
+    }
+  },
+  "required": [
+    "object",
+    "id"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/DeleteDataRequest.json",
+  "x-spec-version": "3.0.11"
+}

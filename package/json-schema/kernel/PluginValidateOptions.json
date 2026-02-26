@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "artifactPath": {
+      "type": "string",
+      "description": "Path to the artifact file to validate"
+    },
+    "verifySignature": {
+      "default": true,
+      "description": "Whether to verify the digital signature",
+      "type": "boolean"
+    },
+    "publicKeyPath": {
+      "description": "Path to the public key for signature verification",
+      "type": "string"
+    },
+    "verifyChecksums": {
+      "default": true,
+      "description": "Whether to verify checksums of all files",
+      "type": "boolean"
+    },
+    "validateMetadata": {
+      "default": true,
+      "description": "Whether to validate metadata against schemas",
+      "type": "boolean"
+    },
+    "platformVersion": {
+      "description": "Platform version for compatibility verification",
+      "type": "string"
+    }
+  },
+  "required": [
+    "artifactPath",
+    "verifySignature",
+    "verifyChecksums",
+    "validateMetadata"
+  ],
+  "additionalProperties": false,
+  "description": "Options for the os plugin validate command",
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/PluginValidateOptions.json",
+  "x-spec-version": "3.0.11"
+}

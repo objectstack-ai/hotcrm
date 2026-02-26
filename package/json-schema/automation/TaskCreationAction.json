@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Action name"
+    },
+    "type": {
+      "type": "string",
+      "const": "task_creation"
+    },
+    "taskObject": {
+      "type": "string",
+      "description": "Task object name (e.g., \"task\", \"project_task\")"
+    },
+    "subject": {
+      "type": "string",
+      "description": "Task subject/title"
+    },
+    "description": {
+      "description": "Task description",
+      "type": "string"
+    },
+    "assignedTo": {
+      "description": "User ID or field reference for assignee",
+      "type": "string"
+    },
+    "dueDate": {
+      "description": "Due date (ISO string or formula)",
+      "type": "string"
+    },
+    "priority": {
+      "description": "Task priority",
+      "type": "string"
+    },
+    "relatedTo": {
+      "description": "Related record ID or field reference",
+      "type": "string"
+    },
+    "additionalFields": {
+      "description": "Additional custom fields",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
+    }
+  },
+  "required": [
+    "name",
+    "type",
+    "taskObject",
+    "subject"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/automation/TaskCreationAction.json",
+  "x-spec-version": "3.0.11"
+}

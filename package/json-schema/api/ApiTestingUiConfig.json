@@ -1,0 +1,162 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "swagger-ui",
+        "redoc",
+        "rapidoc",
+        "stoplight",
+        "scalar",
+        "graphql-playground",
+        "graphiql",
+        "postman",
+        "custom"
+      ],
+      "description": "Testing UI implementation"
+    },
+    "path": {
+      "default": "/api-docs",
+      "description": "URL path for documentation UI",
+      "type": "string"
+    },
+    "theme": {
+      "default": "light",
+      "description": "UI color theme",
+      "type": "string",
+      "enum": [
+        "light",
+        "dark",
+        "auto"
+      ]
+    },
+    "enableTryItOut": {
+      "default": true,
+      "description": "Enable interactive API testing",
+      "type": "boolean"
+    },
+    "enableFilter": {
+      "default": true,
+      "description": "Enable endpoint filtering",
+      "type": "boolean"
+    },
+    "enableCors": {
+      "default": true,
+      "description": "Enable CORS for browser testing",
+      "type": "boolean"
+    },
+    "defaultModelsExpandDepth": {
+      "default": 1,
+      "description": "Default expand depth for schemas (-1 = fully expand)",
+      "type": "integer",
+      "minimum": -1,
+      "maximum": 9007199254740991
+    },
+    "displayRequestDuration": {
+      "default": true,
+      "description": "Show request duration",
+      "type": "boolean"
+    },
+    "syntaxHighlighting": {
+      "default": true,
+      "description": "Enable syntax highlighting",
+      "type": "boolean"
+    },
+    "customCssUrl": {
+      "description": "Custom CSS stylesheet URL",
+      "type": "string",
+      "format": "uri"
+    },
+    "customJsUrl": {
+      "description": "Custom JavaScript URL",
+      "type": "string",
+      "format": "uri"
+    },
+    "layout": {
+      "description": "Layout configuration",
+      "type": "object",
+      "properties": {
+        "showExtensions": {
+          "default": false,
+          "description": "Show vendor extensions",
+          "type": "boolean"
+        },
+        "showCommonExtensions": {
+          "default": false,
+          "description": "Show common extensions",
+          "type": "boolean"
+        },
+        "deepLinking": {
+          "default": true,
+          "description": "Enable deep linking",
+          "type": "boolean"
+        },
+        "displayOperationId": {
+          "default": false,
+          "description": "Display operation IDs",
+          "type": "boolean"
+        },
+        "defaultModelRendering": {
+          "default": "example",
+          "description": "Default model rendering mode",
+          "type": "string",
+          "enum": [
+            "example",
+            "model"
+          ]
+        },
+        "defaultModelsExpandDepth": {
+          "default": 1,
+          "description": "Models expand depth",
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "defaultModelExpandDepth": {
+          "default": 1,
+          "description": "Single model expand depth",
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "docExpansion": {
+          "default": "list",
+          "description": "Documentation expansion mode",
+          "type": "string",
+          "enum": [
+            "list",
+            "full",
+            "none"
+          ]
+        }
+      },
+      "required": [
+        "showExtensions",
+        "showCommonExtensions",
+        "deepLinking",
+        "displayOperationId",
+        "defaultModelRendering",
+        "defaultModelsExpandDepth",
+        "defaultModelExpandDepth",
+        "docExpansion"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "type",
+    "path",
+    "theme",
+    "enableTryItOut",
+    "enableFilter",
+    "enableCors",
+    "defaultModelsExpandDepth",
+    "displayRequestDuration",
+    "syntaxHighlighting"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/ApiTestingUiConfig.json",
+  "x-spec-version": "3.0.11"
+}

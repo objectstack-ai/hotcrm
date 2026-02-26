@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "crm",
+    "payment",
+    "communication",
+    "storage",
+    "analytics",
+    "database",
+    "marketing",
+    "accounting",
+    "hr",
+    "productivity",
+    "ecommerce",
+    "support",
+    "devtools",
+    "social",
+    "other"
+  ],
+  "$id": "https://schema.objectstack.io/v3.0.11/automation/ConnectorCategory.json",
+  "x-spec-version": "3.0.11"
+}

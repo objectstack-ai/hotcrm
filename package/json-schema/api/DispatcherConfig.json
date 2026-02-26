@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "routes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "prefix": {
+            "type": "string",
+            "pattern": "^\\/",
+            "description": "URL path prefix for routing (e.g. /api/v1/data)"
+          },
+          "service": {
+            "type": "string",
+            "enum": [
+              "metadata",
+              "data",
+              "auth",
+              "file-storage",
+              "search",
+              "cache",
+              "queue",
+              "automation",
+              "graphql",
+              "analytics",
+              "realtime",
+              "job",
+              "notification",
+              "ai",
+              "i18n",
+              "ui",
+              "workflow"
+            ],
+            "description": "Target core service name"
+          },
+          "authRequired": {
+            "default": true,
+            "description": "Whether authentication is required",
+            "type": "boolean"
+          },
+          "criticality": {
+            "default": "optional",
+            "description": "Service criticality level for unavailability handling",
+            "type": "string",
+            "enum": [
+              "required",
+              "core",
+              "optional"
+            ]
+          },
+          "permissions": {
+            "description": "Required permissions for this route namespace",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "prefix",
+          "service",
+          "authRequired",
+          "criticality"
+        ],
+        "additionalProperties": false
+      },
+      "description": "Route-to-service mappings"
+    },
+    "fallback": {
+      "default": "404",
+      "description": "Behavior when no route matches",
+      "type": "string",
+      "enum": [
+        "404",
+        "proxy",
+        "custom"
+      ]
+    },
+    "proxyTarget": {
+      "description": "Proxy target URL when fallback is \"proxy\"",
+      "type": "string",
+      "format": "uri"
+    }
+  },
+  "required": [
+    "routes",
+    "fallback"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/DispatcherConfig.json",
+  "x-spec-version": "3.0.11"
+}

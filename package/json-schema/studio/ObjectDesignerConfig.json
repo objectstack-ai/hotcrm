@@ -1,0 +1,902 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "defaultView": {
+      "default": "field-editor",
+      "description": "Default view",
+      "type": "string",
+      "enum": [
+        "field-editor",
+        "relationship-mapper",
+        "er-diagram",
+        "object-manager"
+      ]
+    },
+    "fieldEditor": {
+      "default": {
+        "inlineEditing": true,
+        "dragReorder": true,
+        "showFieldGroups": true,
+        "showPropertyPanel": true,
+        "propertySections": [
+          {
+            "key": "basics",
+            "label": "Basic Properties",
+            "defaultExpanded": true,
+            "order": 0
+          },
+          {
+            "key": "constraints",
+            "label": "Constraints & Validation",
+            "defaultExpanded": true,
+            "order": 10
+          },
+          {
+            "key": "relationship",
+            "label": "Relationship Config",
+            "defaultExpanded": true,
+            "order": 20
+          },
+          {
+            "key": "display",
+            "label": "Display & UI",
+            "defaultExpanded": false,
+            "order": 30
+          },
+          {
+            "key": "security",
+            "label": "Security & Compliance",
+            "defaultExpanded": false,
+            "order": 40
+          },
+          {
+            "key": "advanced",
+            "label": "Advanced",
+            "defaultExpanded": false,
+            "order": 50
+          }
+        ],
+        "fieldGroups": [],
+        "paginationThreshold": 50,
+        "batchOperations": true,
+        "showUsageStats": false
+      },
+      "description": "Field editor configuration",
+      "type": "object",
+      "properties": {
+        "inlineEditing": {
+          "default": true,
+          "description": "Enable inline editing of field properties",
+          "type": "boolean"
+        },
+        "dragReorder": {
+          "default": true,
+          "description": "Enable drag-and-drop field reordering",
+          "type": "boolean"
+        },
+        "showFieldGroups": {
+          "default": true,
+          "description": "Show field group headers",
+          "type": "boolean"
+        },
+        "showPropertyPanel": {
+          "default": true,
+          "description": "Show the right-side property panel",
+          "type": "boolean"
+        },
+        "propertySections": {
+          "default": [
+            {
+              "key": "basics",
+              "label": "Basic Properties",
+              "defaultExpanded": true,
+              "order": 0
+            },
+            {
+              "key": "constraints",
+              "label": "Constraints & Validation",
+              "defaultExpanded": true,
+              "order": 10
+            },
+            {
+              "key": "relationship",
+              "label": "Relationship Config",
+              "defaultExpanded": true,
+              "order": 20
+            },
+            {
+              "key": "display",
+              "label": "Display & UI",
+              "defaultExpanded": false,
+              "order": 30
+            },
+            {
+              "key": "security",
+              "label": "Security & Compliance",
+              "defaultExpanded": false,
+              "order": 40
+            },
+            {
+              "key": "advanced",
+              "label": "Advanced",
+              "defaultExpanded": false,
+              "order": 50
+            }
+          ],
+          "description": "Property panel section definitions",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "key": {
+                "type": "string",
+                "description": "Section key (e.g., \"basics\", \"constraints\", \"security\")"
+              },
+              "label": {
+                "type": "string",
+                "description": "Section display label"
+              },
+              "icon": {
+                "description": "Lucide icon name",
+                "type": "string"
+              },
+              "defaultExpanded": {
+                "default": true,
+                "description": "Whether section is expanded by default",
+                "type": "boolean"
+              },
+              "order": {
+                "default": 0,
+                "description": "Sort order (lower = higher)",
+                "type": "number"
+              }
+            },
+            "required": [
+              "key",
+              "label",
+              "defaultExpanded",
+              "order"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "fieldGroups": {
+          "default": [],
+          "description": "Field group definitions",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "key": {
+                "type": "string",
+                "description": "Group key matching field.group values"
+              },
+              "label": {
+                "type": "string",
+                "description": "Group display label"
+              },
+              "icon": {
+                "description": "Lucide icon name",
+                "type": "string"
+              },
+              "defaultExpanded": {
+                "default": true,
+                "description": "Whether group is expanded by default",
+                "type": "boolean"
+              },
+              "order": {
+                "default": 0,
+                "description": "Sort order (lower = higher)",
+                "type": "number"
+              }
+            },
+            "required": [
+              "key",
+              "label",
+              "defaultExpanded",
+              "order"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "paginationThreshold": {
+          "default": 50,
+          "description": "Number of fields before pagination is enabled",
+          "type": "number"
+        },
+        "batchOperations": {
+          "default": true,
+          "description": "Enable batch add/remove field operations",
+          "type": "boolean"
+        },
+        "showUsageStats": {
+          "default": false,
+          "description": "Show field usage statistics",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "inlineEditing",
+        "dragReorder",
+        "showFieldGroups",
+        "showPropertyPanel",
+        "propertySections",
+        "fieldGroups",
+        "paginationThreshold",
+        "batchOperations",
+        "showUsageStats"
+      ],
+      "additionalProperties": false
+    },
+    "relationshipMapper": {
+      "default": {
+        "visualCreation": true,
+        "showReverseRelationships": true,
+        "showCascadeWarnings": true,
+        "displayConfig": [
+          {
+            "type": "lookup",
+            "lineStyle": "dashed",
+            "color": "#0891b2",
+            "highlightColor": "#06b6d4",
+            "cardinalityLabel": "1:N"
+          },
+          {
+            "type": "master_detail",
+            "lineStyle": "solid",
+            "color": "#ea580c",
+            "highlightColor": "#f97316",
+            "cardinalityLabel": "1:N"
+          },
+          {
+            "type": "tree",
+            "lineStyle": "dotted",
+            "color": "#8b5cf6",
+            "highlightColor": "#a78bfa",
+            "cardinalityLabel": "1:N"
+          }
+        ]
+      },
+      "description": "Relationship mapper configuration",
+      "type": "object",
+      "properties": {
+        "visualCreation": {
+          "default": true,
+          "description": "Enable drag-to-create relationships",
+          "type": "boolean"
+        },
+        "showReverseRelationships": {
+          "default": true,
+          "description": "Show reverse/child-to-parent relationships",
+          "type": "boolean"
+        },
+        "showCascadeWarnings": {
+          "default": true,
+          "description": "Show cascade delete behavior warnings",
+          "type": "boolean"
+        },
+        "displayConfig": {
+          "default": [
+            {
+              "type": "lookup",
+              "lineStyle": "dashed",
+              "color": "#0891b2",
+              "highlightColor": "#06b6d4",
+              "cardinalityLabel": "1:N"
+            },
+            {
+              "type": "master_detail",
+              "lineStyle": "solid",
+              "color": "#ea580c",
+              "highlightColor": "#f97316",
+              "cardinalityLabel": "1:N"
+            },
+            {
+              "type": "tree",
+              "lineStyle": "dotted",
+              "color": "#8b5cf6",
+              "highlightColor": "#a78bfa",
+              "cardinalityLabel": "1:N"
+            }
+          ],
+          "description": "Visual config per relationship type",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "lookup",
+                  "master_detail",
+                  "tree"
+                ],
+                "description": "Relationship type"
+              },
+              "lineStyle": {
+                "default": "solid",
+                "description": "Line style in diagrams",
+                "type": "string",
+                "enum": [
+                  "solid",
+                  "dashed",
+                  "dotted"
+                ]
+              },
+              "color": {
+                "default": "#94a3b8",
+                "description": "Line color (CSS value)",
+                "type": "string"
+              },
+              "highlightColor": {
+                "default": "#0891b2",
+                "description": "Highlighted color on hover/select",
+                "type": "string"
+              },
+              "cardinalityLabel": {
+                "default": "1:N",
+                "description": "Cardinality label (e.g., \"1:N\", \"1:1\", \"N:M\")",
+                "type": "string"
+              }
+            },
+            "required": [
+              "type",
+              "lineStyle",
+              "color",
+              "highlightColor",
+              "cardinalityLabel"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "visualCreation",
+        "showReverseRelationships",
+        "showCascadeWarnings",
+        "displayConfig"
+      ],
+      "additionalProperties": false
+    },
+    "erDiagram": {
+      "default": {
+        "enabled": true,
+        "layout": "force",
+        "nodeDisplay": {
+          "showFields": true,
+          "maxFieldsVisible": 8,
+          "showFieldTypes": true,
+          "showRequiredIndicator": true,
+          "showRecordCount": false,
+          "showIcon": true,
+          "showDescription": true
+        },
+        "showMinimap": true,
+        "zoomControls": true,
+        "minZoom": 0.1,
+        "maxZoom": 3,
+        "showEdgeLabels": true,
+        "highlightOnHover": true,
+        "clickToNavigate": true,
+        "dragToConnect": true,
+        "hideOrphans": false,
+        "autoFit": true,
+        "exportFormats": [
+          "png",
+          "svg"
+        ]
+      },
+      "description": "ER diagram configuration",
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": true,
+          "description": "Enable ER diagram panel",
+          "type": "boolean"
+        },
+        "layout": {
+          "default": "force",
+          "description": "Default layout algorithm",
+          "type": "string",
+          "enum": [
+            "force",
+            "hierarchy",
+            "grid",
+            "circular"
+          ]
+        },
+        "nodeDisplay": {
+          "default": {
+            "showFields": true,
+            "maxFieldsVisible": 8,
+            "showFieldTypes": true,
+            "showRequiredIndicator": true,
+            "showRecordCount": false,
+            "showIcon": true,
+            "showDescription": true
+          },
+          "description": "Node display configuration",
+          "type": "object",
+          "properties": {
+            "showFields": {
+              "default": true,
+              "description": "Show field list inside entity nodes",
+              "type": "boolean"
+            },
+            "maxFieldsVisible": {
+              "default": 8,
+              "description": "Max fields visible before \"N more...\" collapse",
+              "type": "number"
+            },
+            "showFieldTypes": {
+              "default": true,
+              "description": "Show field type badges",
+              "type": "boolean"
+            },
+            "showRequiredIndicator": {
+              "default": true,
+              "description": "Show required field indicators",
+              "type": "boolean"
+            },
+            "showRecordCount": {
+              "default": false,
+              "description": "Show live record count on nodes",
+              "type": "boolean"
+            },
+            "showIcon": {
+              "default": true,
+              "description": "Show object icon on node header",
+              "type": "boolean"
+            },
+            "showDescription": {
+              "default": true,
+              "description": "Show description tooltip on hover",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "showFields",
+            "maxFieldsVisible",
+            "showFieldTypes",
+            "showRequiredIndicator",
+            "showRecordCount",
+            "showIcon",
+            "showDescription"
+          ],
+          "additionalProperties": false
+        },
+        "showMinimap": {
+          "default": true,
+          "description": "Show minimap for large diagrams",
+          "type": "boolean"
+        },
+        "zoomControls": {
+          "default": true,
+          "description": "Show zoom in/out/fit controls",
+          "type": "boolean"
+        },
+        "minZoom": {
+          "default": 0.1,
+          "description": "Minimum zoom level",
+          "type": "number"
+        },
+        "maxZoom": {
+          "default": 3,
+          "description": "Maximum zoom level",
+          "type": "number"
+        },
+        "showEdgeLabels": {
+          "default": true,
+          "description": "Show cardinality labels on relationship edges",
+          "type": "boolean"
+        },
+        "highlightOnHover": {
+          "default": true,
+          "description": "Highlight connected entities on node hover",
+          "type": "boolean"
+        },
+        "clickToNavigate": {
+          "default": true,
+          "description": "Click node to navigate to object detail",
+          "type": "boolean"
+        },
+        "dragToConnect": {
+          "default": true,
+          "description": "Drag between nodes to create relationships",
+          "type": "boolean"
+        },
+        "hideOrphans": {
+          "default": false,
+          "description": "Hide objects with no relationships",
+          "type": "boolean"
+        },
+        "autoFit": {
+          "default": true,
+          "description": "Auto-fit diagram to viewport on load",
+          "type": "boolean"
+        },
+        "exportFormats": {
+          "default": [
+            "png",
+            "svg"
+          ],
+          "description": "Available export formats for diagram",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "png",
+              "svg",
+              "json"
+            ]
+          }
+        }
+      },
+      "required": [
+        "enabled",
+        "layout",
+        "nodeDisplay",
+        "showMinimap",
+        "zoomControls",
+        "minZoom",
+        "maxZoom",
+        "showEdgeLabels",
+        "highlightOnHover",
+        "clickToNavigate",
+        "dragToConnect",
+        "hideOrphans",
+        "autoFit",
+        "exportFormats"
+      ],
+      "additionalProperties": false
+    },
+    "objectManager": {
+      "default": {
+        "defaultDisplayMode": "table",
+        "defaultSortField": "label",
+        "defaultSortDirection": "asc",
+        "defaultFilter": {
+          "includeSystem": false,
+          "includeAbstract": false
+        },
+        "showFieldCount": true,
+        "showRelationshipCount": true,
+        "showQuickPreview": true,
+        "enableComparison": false,
+        "showERDiagramToggle": true,
+        "showCreateAction": true,
+        "showStatsSummary": true
+      },
+      "description": "Object manager configuration",
+      "type": "object",
+      "properties": {
+        "defaultDisplayMode": {
+          "default": "table",
+          "description": "Default list display mode",
+          "type": "string",
+          "enum": [
+            "table",
+            "cards",
+            "tree"
+          ]
+        },
+        "defaultSortField": {
+          "default": "label",
+          "description": "Default sort field",
+          "type": "string",
+          "enum": [
+            "name",
+            "label",
+            "fieldCount",
+            "updatedAt"
+          ]
+        },
+        "defaultSortDirection": {
+          "default": "asc",
+          "description": "Default sort direction",
+          "type": "string",
+          "enum": [
+            "asc",
+            "desc"
+          ]
+        },
+        "defaultFilter": {
+          "default": {
+            "includeSystem": false,
+            "includeAbstract": false
+          },
+          "description": "Default filter configuration",
+          "type": "object",
+          "properties": {
+            "package": {
+              "description": "Filter by owning package",
+              "type": "string"
+            },
+            "tags": {
+              "description": "Filter by object tags",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "includeSystem": {
+              "default": false,
+              "description": "Include system-level objects",
+              "type": "boolean"
+            },
+            "includeAbstract": {
+              "default": false,
+              "description": "Include abstract base objects",
+              "type": "boolean"
+            },
+            "hasFieldType": {
+              "description": "Filter to objects containing a specific field type",
+              "type": "string"
+            },
+            "hasRelationships": {
+              "description": "Filter to objects with lookup/master_detail fields",
+              "type": "boolean"
+            },
+            "searchQuery": {
+              "description": "Free-text search across name, label, and description",
+              "type": "string"
+            }
+          },
+          "required": [
+            "includeSystem",
+            "includeAbstract"
+          ],
+          "additionalProperties": false
+        },
+        "showFieldCount": {
+          "default": true,
+          "description": "Show field count badge",
+          "type": "boolean"
+        },
+        "showRelationshipCount": {
+          "default": true,
+          "description": "Show relationship count badge",
+          "type": "boolean"
+        },
+        "showQuickPreview": {
+          "default": true,
+          "description": "Show quick field preview tooltip on hover",
+          "type": "boolean"
+        },
+        "enableComparison": {
+          "default": false,
+          "description": "Enable side-by-side object comparison",
+          "type": "boolean"
+        },
+        "showERDiagramToggle": {
+          "default": true,
+          "description": "Show ER diagram toggle in toolbar",
+          "type": "boolean"
+        },
+        "showCreateAction": {
+          "default": true,
+          "description": "Show create object action",
+          "type": "boolean"
+        },
+        "showStatsSummary": {
+          "default": true,
+          "description": "Show statistics summary bar",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "defaultDisplayMode",
+        "defaultSortField",
+        "defaultSortDirection",
+        "defaultFilter",
+        "showFieldCount",
+        "showRelationshipCount",
+        "showQuickPreview",
+        "enableComparison",
+        "showERDiagramToggle",
+        "showCreateAction",
+        "showStatsSummary"
+      ],
+      "additionalProperties": false
+    },
+    "objectPreview": {
+      "default": {
+        "tabs": [
+          {
+            "key": "fields",
+            "label": "Fields",
+            "icon": "list",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "key": "relationships",
+            "label": "Relationships",
+            "icon": "link",
+            "enabled": true,
+            "order": 10
+          },
+          {
+            "key": "indexes",
+            "label": "Indexes",
+            "icon": "zap",
+            "enabled": true,
+            "order": 20
+          },
+          {
+            "key": "validations",
+            "label": "Validations",
+            "icon": "shield-check",
+            "enabled": true,
+            "order": 30
+          },
+          {
+            "key": "capabilities",
+            "label": "Capabilities",
+            "icon": "settings",
+            "enabled": true,
+            "order": 40
+          },
+          {
+            "key": "data",
+            "label": "Data",
+            "icon": "table-2",
+            "enabled": true,
+            "order": 50
+          },
+          {
+            "key": "api",
+            "label": "API",
+            "icon": "globe",
+            "enabled": true,
+            "order": 60
+          },
+          {
+            "key": "code",
+            "label": "Code",
+            "icon": "code-2",
+            "enabled": true,
+            "order": 70
+          }
+        ],
+        "defaultTab": "fields",
+        "showHeader": true,
+        "showBreadcrumbs": true
+      },
+      "description": "Object preview configuration",
+      "type": "object",
+      "properties": {
+        "tabs": {
+          "default": [
+            {
+              "key": "fields",
+              "label": "Fields",
+              "icon": "list",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "key": "relationships",
+              "label": "Relationships",
+              "icon": "link",
+              "enabled": true,
+              "order": 10
+            },
+            {
+              "key": "indexes",
+              "label": "Indexes",
+              "icon": "zap",
+              "enabled": true,
+              "order": 20
+            },
+            {
+              "key": "validations",
+              "label": "Validations",
+              "icon": "shield-check",
+              "enabled": true,
+              "order": 30
+            },
+            {
+              "key": "capabilities",
+              "label": "Capabilities",
+              "icon": "settings",
+              "enabled": true,
+              "order": 40
+            },
+            {
+              "key": "data",
+              "label": "Data",
+              "icon": "table-2",
+              "enabled": true,
+              "order": 50
+            },
+            {
+              "key": "api",
+              "label": "API",
+              "icon": "globe",
+              "enabled": true,
+              "order": 60
+            },
+            {
+              "key": "code",
+              "label": "Code",
+              "icon": "code-2",
+              "enabled": true,
+              "order": 70
+            }
+          ],
+          "description": "Object detail preview tabs",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "key": {
+                "type": "string",
+                "description": "Tab key"
+              },
+              "label": {
+                "type": "string",
+                "description": "Tab display label"
+              },
+              "icon": {
+                "description": "Lucide icon name",
+                "type": "string"
+              },
+              "enabled": {
+                "default": true,
+                "description": "Whether this tab is available",
+                "type": "boolean"
+              },
+              "order": {
+                "default": 0,
+                "description": "Sort order (lower = higher)",
+                "type": "number"
+              }
+            },
+            "required": [
+              "key",
+              "label",
+              "enabled",
+              "order"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "defaultTab": {
+          "default": "fields",
+          "description": "Default active tab key",
+          "type": "string"
+        },
+        "showHeader": {
+          "default": true,
+          "description": "Show object summary header",
+          "type": "boolean"
+        },
+        "showBreadcrumbs": {
+          "default": true,
+          "description": "Show navigation breadcrumbs",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "tabs",
+        "defaultTab",
+        "showHeader",
+        "showBreadcrumbs"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "defaultView",
+    "fieldEditor",
+    "relationshipMapper",
+    "erDiagram",
+    "objectManager",
+    "objectPreview"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/studio/ObjectDesignerConfig.json",
+  "x-spec-version": "3.0.11"
+}

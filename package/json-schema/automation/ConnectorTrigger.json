@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z_][a-z0-9_]*$",
+      "description": "Trigger ID (snake_case)"
+    },
+    "name": {
+      "type": "string",
+      "description": "Trigger name"
+    },
+    "description": {
+      "description": "Trigger description",
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "webhook",
+        "polling",
+        "stream"
+      ],
+      "description": "Trigger mechanism"
+    },
+    "config": {
+      "description": "Trigger configuration",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
+    },
+    "outputSchema": {
+      "description": "Event payload schema",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
+    },
+    "pollingIntervalMs": {
+      "description": "Polling interval in ms",
+      "type": "integer",
+      "minimum": 1000,
+      "maximum": 9007199254740991
+    }
+  },
+  "required": [
+    "id",
+    "name",
+    "type"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/automation/ConnectorTrigger.json",
+  "x-spec-version": "3.0.11"
+}

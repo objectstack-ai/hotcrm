@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "full",
+    "incremental",
+    "upsert",
+    "append_only"
+  ],
+  "description": "Synchronization strategy",
+  "$id": "https://schema.objectstack.io/v3.0.11/integration/SyncStrategy.json",
+  "x-spec-version": "3.0.11"
+}

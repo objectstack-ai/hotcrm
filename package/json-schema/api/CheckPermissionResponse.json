@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "allowed": {
+      "type": "boolean",
+      "description": "Whether the action is permitted"
+    },
+    "reason": {
+      "description": "Reason if denied",
+      "type": "string"
+    }
+  },
+  "required": [
+    "allowed"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/CheckPermissionResponse.json",
+  "x-spec-version": "3.0.11"
+}

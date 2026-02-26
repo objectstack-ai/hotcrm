@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "enabled": {
+      "default": false,
+      "description": "Enable CDC",
+      "type": "boolean"
+    },
+    "method": {
+      "type": "string",
+      "enum": [
+        "log_based",
+        "trigger_based",
+        "query_based",
+        "custom"
+      ],
+      "description": "CDC method"
+    },
+    "slotName": {
+      "description": "Replication slot name (for log-based CDC)",
+      "type": "string"
+    },
+    "publicationName": {
+      "description": "Publication name (for PostgreSQL)",
+      "type": "string"
+    },
+    "startPosition": {
+      "description": "Starting position/LSN for CDC stream",
+      "type": "string"
+    },
+    "batchSize": {
+      "default": 1000,
+      "description": "CDC batch size",
+      "type": "number",
+      "minimum": 1,
+      "maximum": 10000
+    },
+    "pollIntervalMs": {
+      "default": 1000,
+      "description": "CDC polling interval in ms",
+      "type": "number",
+      "minimum": 100
+    }
+  },
+  "required": [
+    "enabled",
+    "method",
+    "batchSize",
+    "pollIntervalMs"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/integration/CdcConfig.json",
+  "x-spec-version": "3.0.11"
+}

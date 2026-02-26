@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "query": {
+      "type": "string",
+      "description": "Natural language query string"
+    },
+    "object": {
+      "description": "Target object context",
+      "type": "string"
+    },
+    "conversationId": {
+      "description": "Conversation ID for multi-turn queries",
+      "type": "string"
+    }
+  },
+  "required": [
+    "query"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/AiNlqRequest.json",
+  "x-spec-version": "3.0.11"
+}

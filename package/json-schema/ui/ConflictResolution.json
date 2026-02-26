@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "client_wins",
+    "server_wins",
+    "manual",
+    "last_write_wins"
+  ],
+  "description": "How to resolve conflicts when syncing offline changes",
+  "$id": "https://schema.objectstack.io/v3.0.11/ui/ConflictResolution.json",
+  "x-spec-version": "3.0.11"
+}

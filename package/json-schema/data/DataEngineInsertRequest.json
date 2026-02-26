@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "method": {
+      "type": "string",
+      "const": "insert"
+    },
+    "object": {
+      "type": "string"
+    },
+    "data": {
+      "anyOf": [
+        {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {}
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {}
+          }
+        }
+      ]
+    },
+    "options": {
+      "type": "object",
+      "properties": {
+        "context": {
+          "type": "object",
+          "properties": {
+            "userId": {
+              "type": "string"
+            },
+            "tenantId": {
+              "type": "string"
+            },
+            "roles": {
+              "default": [],
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "permissions": {
+              "default": [],
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "isSystem": {
+              "default": false,
+              "type": "boolean"
+            },
+            "accessToken": {
+              "type": "string"
+            },
+            "transaction": {},
+            "traceId": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "roles",
+            "permissions",
+            "isSystem"
+          ],
+          "additionalProperties": false
+        },
+        "returning": {
+          "default": true,
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "description": "Options for DataEngine.insert operations"
+    }
+  },
+  "required": [
+    "method",
+    "object",
+    "data"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/data/DataEngineInsertRequest.json",
+  "x-spec-version": "3.0.11"
+}

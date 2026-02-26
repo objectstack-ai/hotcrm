@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "object": {
+      "type": "string",
+      "description": "Object name"
+    },
+    "permissions": {
+      "type": "object",
+      "properties": {
+        "allowCreate": {
+          "default": false,
+          "description": "Create permission",
+          "type": "boolean"
+        },
+        "allowRead": {
+          "default": false,
+          "description": "Read permission",
+          "type": "boolean"
+        },
+        "allowEdit": {
+          "default": false,
+          "description": "Edit permission",
+          "type": "boolean"
+        },
+        "allowDelete": {
+          "default": false,
+          "description": "Delete permission",
+          "type": "boolean"
+        },
+        "allowTransfer": {
+          "default": false,
+          "description": "Change record ownership",
+          "type": "boolean"
+        },
+        "allowRestore": {
+          "default": false,
+          "description": "Restore from trash (Undelete)",
+          "type": "boolean"
+        },
+        "allowPurge": {
+          "default": false,
+          "description": "Permanently delete (Hard Delete/GDPR)",
+          "type": "boolean"
+        },
+        "viewAllRecords": {
+          "default": false,
+          "description": "View All Data (Bypass Sharing)",
+          "type": "boolean"
+        },
+        "modifyAllRecords": {
+          "default": false,
+          "description": "Modify All Data (Bypass Sharing)",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "allowCreate",
+        "allowRead",
+        "allowEdit",
+        "allowDelete",
+        "allowTransfer",
+        "allowRestore",
+        "allowPurge",
+        "viewAllRecords",
+        "modifyAllRecords"
+      ],
+      "additionalProperties": false,
+      "description": "Object-level permissions"
+    },
+    "fieldPermissions": {
+      "description": "Field-level permissions keyed by field name",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "readable": {
+            "default": true,
+            "description": "Field read access",
+            "type": "boolean"
+          },
+          "editable": {
+            "default": false,
+            "description": "Field edit access",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "readable",
+          "editable"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "object",
+    "permissions"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/GetObjectPermissionsResponse.json",
+  "x-spec-version": "3.0.11"
+}

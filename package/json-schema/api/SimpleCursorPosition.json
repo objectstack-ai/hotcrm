@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "userId": {
+      "type": "string",
+      "description": "User identifier"
+    },
+    "recordId": {
+      "type": "string",
+      "description": "Record identifier being edited"
+    },
+    "fieldName": {
+      "type": "string",
+      "description": "Field name being edited"
+    },
+    "position": {
+      "type": "number",
+      "description": "Cursor position (character offset from start)"
+    },
+    "selection": {
+      "description": "Text selection range (if text is selected)",
+      "type": "object",
+      "properties": {
+        "start": {
+          "type": "number",
+          "description": "Selection start position"
+        },
+        "end": {
+          "type": "number",
+          "description": "Selection end position"
+        }
+      },
+      "required": [
+        "start",
+        "end"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "userId",
+    "recordId",
+    "fieldName",
+    "position"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/SimpleCursorPosition.json",
+  "x-spec-version": "3.0.11"
+}

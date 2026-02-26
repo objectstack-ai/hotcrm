@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "subscriptionId": {
+      "type": "string",
+      "description": "Unique subscription identifier"
+    },
+    "channel": {
+      "type": "string",
+      "description": "Subscribed channel name"
+    }
+  },
+  "required": [
+    "subscriptionId",
+    "channel"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/RealtimeSubscribeResponse.json",
+  "x-spec-version": "3.0.11"
+}

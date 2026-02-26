@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "npm"
+        },
+        "packageName": {
+          "type": "string",
+          "description": "NPM package name"
+        },
+        "version": {
+          "default": "latest",
+          "type": "string"
+        },
+        "exportName": {
+          "description": "Named export (default: default)",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "packageName",
+        "version"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "remote"
+        },
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "description": "Remote entry URL (.js)"
+        },
+        "moduleName": {
+          "type": "string",
+          "description": "Exposed module name"
+        },
+        "scope": {
+          "type": "string",
+          "description": "Remote scope name"
+        }
+      },
+      "required": [
+        "type",
+        "url",
+        "moduleName",
+        "scope"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "inline"
+        },
+        "code": {
+          "type": "string",
+          "description": "JavaScript code body"
+        }
+      },
+      "required": [
+        "type",
+        "code"
+      ],
+      "additionalProperties": false
+    }
+  ],
+  "$id": "https://schema.objectstack.io/v3.0.11/ui/WidgetSource.json",
+  "x-spec-version": "3.0.11"
+}

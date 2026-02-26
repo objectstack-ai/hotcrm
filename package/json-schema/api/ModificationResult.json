@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "description": "Record ID if processed",
+      "type": "string"
+    },
+    "success": {
+      "type": "boolean"
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Error code (e.g. validation_error)"
+          },
+          "message": {
+            "type": "string",
+            "description": "Readable error message"
+          },
+          "category": {
+            "description": "Error category (e.g. validation, authorization)",
+            "type": "string"
+          },
+          "details": {
+            "description": "Additional error context (e.g. field validation errors)"
+          },
+          "requestId": {
+            "description": "Request ID for tracking",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "index": {
+      "description": "Index in original request",
+      "type": "number"
+    },
+    "data": {
+      "description": "Result data (e.g. created record)"
+    }
+  },
+  "required": [
+    "success"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/ModificationResult.json",
+  "x-spec-version": "3.0.11"
+}

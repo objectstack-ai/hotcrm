@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "label": {
+      "type": "string",
+      "description": "Display label (human-readable, any case allowed)"
+    },
+    "value": {
+      "type": "string",
+      "minLength": 2,
+      "pattern": "^[a-z][a-z0-9_.]*$",
+      "description": "Stored value (lowercase machine identifier)"
+    },
+    "color": {
+      "description": "Color code for badges/charts",
+      "type": "string"
+    },
+    "default": {
+      "description": "Is default option",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "label",
+    "value"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/data/SelectOption.json",
+  "x-spec-version": "3.0.11"
+}

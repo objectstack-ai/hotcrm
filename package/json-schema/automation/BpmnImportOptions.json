@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "unmappedStrategy": {
+      "default": "warn",
+      "description": "How to handle unmapped BPMN elements",
+      "type": "string",
+      "enum": [
+        "skip",
+        "warn",
+        "error",
+        "comment"
+      ]
+    },
+    "customMappings": {
+      "description": "Custom element mappings to override or extend defaults",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "bpmnType": {
+            "type": "string",
+            "description": "BPMN XML element type (e.g., \"bpmn:parallelGateway\")"
+          },
+          "flowNodeAction": {
+            "type": "string",
+            "description": "ObjectStack FlowNodeAction value"
+          },
+          "bidirectional": {
+            "default": true,
+            "description": "Whether the mapping supports both import and export",
+            "type": "boolean"
+          },
+          "notes": {
+            "description": "Notes about mapping limitations",
+            "type": "string"
+          }
+        },
+        "required": [
+          "bpmnType",
+          "flowNodeAction",
+          "bidirectional"
+        ],
+        "additionalProperties": false,
+        "description": "Mapping between BPMN XML element and ObjectStack FlowNodeAction"
+      }
+    },
+    "importLayout": {
+      "default": true,
+      "description": "Import BPMN DI layout positions into canvas node coordinates",
+      "type": "boolean"
+    },
+    "importDocumentation": {
+      "default": true,
+      "description": "Import BPMN documentation elements as node descriptions",
+      "type": "boolean"
+    },
+    "flowName": {
+      "description": "Override flow name (defaults to BPMN process name)",
+      "type": "string"
+    },
+    "validateAfterImport": {
+      "default": true,
+      "description": "Validate imported flow against FlowSchema after import",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "unmappedStrategy",
+    "importLayout",
+    "importDocumentation",
+    "validateAfterImport"
+  ],
+  "additionalProperties": false,
+  "description": "Options for importing BPMN 2.0 XML into an ObjectStack flow",
+  "$id": "https://schema.objectstack.io/v3.0.11/automation/BpmnImportOptions.json",
+  "x-spec-version": "3.0.11"
+}

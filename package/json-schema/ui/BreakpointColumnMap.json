@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "xs": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 12
+    },
+    "sm": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 12
+    },
+    "md": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 12
+    },
+    "lg": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 12
+    },
+    "xl": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 12
+    },
+    "2xl": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 12
+    }
+  },
+  "additionalProperties": false,
+  "description": "Grid columns per breakpoint (1-12)",
+  "$id": "https://schema.objectstack.io/v3.0.11/ui/BreakpointColumnMap.json",
+  "x-spec-version": "3.0.11"
+}

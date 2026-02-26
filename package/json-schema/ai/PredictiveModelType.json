@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "classification",
+    "regression",
+    "clustering",
+    "forecasting",
+    "anomaly_detection",
+    "recommendation",
+    "ranking"
+  ],
+  "$id": "https://schema.objectstack.io/v3.0.11/ai/PredictiveModelType.json",
+  "x-spec-version": "3.0.11"
+}

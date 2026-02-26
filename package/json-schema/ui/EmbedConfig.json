@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "enabled": {
+      "default": false,
+      "description": "Enable iframe embedding",
+      "type": "boolean"
+    },
+    "allowedOrigins": {
+      "description": "Allowed iframe parent origins (e.g. [\"https://example.com\"])",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "width": {
+      "default": "100%",
+      "description": "Embed width (CSS value)",
+      "type": "string"
+    },
+    "height": {
+      "default": "600px",
+      "description": "Embed height (CSS value)",
+      "type": "string"
+    },
+    "showHeader": {
+      "default": true,
+      "description": "Show interface header in embed",
+      "type": "boolean"
+    },
+    "showNavigation": {
+      "default": false,
+      "description": "Show navigation in embed",
+      "type": "boolean"
+    },
+    "responsive": {
+      "default": true,
+      "description": "Enable responsive resizing",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "enabled",
+    "width",
+    "height",
+    "showHeader",
+    "showNavigation",
+    "responsive"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/ui/EmbedConfig.json",
+  "x-spec-version": "3.0.11"
+}

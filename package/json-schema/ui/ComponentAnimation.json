@@ -1,0 +1,284 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "label": {
+      "description": "Descriptive label for this animation configuration",
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "key": {
+              "type": "string",
+              "description": "Translation key (e.g., \"views.task_list.label\")"
+            },
+            "defaultValue": {
+              "description": "Fallback value when translation key is not found",
+              "type": "string"
+            },
+            "params": {
+              "description": "Interpolation parameters (e.g., { count: 5 })",
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "boolean"
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "key"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "enter": {
+      "description": "Enter/mount animation",
+      "type": "object",
+      "properties": {
+        "preset": {
+          "description": "Transition preset to apply",
+          "type": "string",
+          "enum": [
+            "fade",
+            "slide_up",
+            "slide_down",
+            "slide_left",
+            "slide_right",
+            "scale",
+            "rotate",
+            "flip",
+            "none"
+          ]
+        },
+        "duration": {
+          "description": "Transition duration in milliseconds",
+          "type": "number"
+        },
+        "easing": {
+          "description": "Easing function for the transition",
+          "type": "string",
+          "enum": [
+            "linear",
+            "ease",
+            "ease_in",
+            "ease_out",
+            "ease_in_out",
+            "spring"
+          ]
+        },
+        "delay": {
+          "description": "Delay before transition starts in milliseconds",
+          "type": "number"
+        },
+        "customKeyframes": {
+          "description": "CSS @keyframes name for custom animations",
+          "type": "string"
+        },
+        "themeToken": {
+          "description": "Reference to a theme animation token (e.g. \"animation.duration.fast\")",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "exit": {
+      "description": "Exit/unmount animation",
+      "type": "object",
+      "properties": {
+        "preset": {
+          "description": "Transition preset to apply",
+          "type": "string",
+          "enum": [
+            "fade",
+            "slide_up",
+            "slide_down",
+            "slide_left",
+            "slide_right",
+            "scale",
+            "rotate",
+            "flip",
+            "none"
+          ]
+        },
+        "duration": {
+          "description": "Transition duration in milliseconds",
+          "type": "number"
+        },
+        "easing": {
+          "description": "Easing function for the transition",
+          "type": "string",
+          "enum": [
+            "linear",
+            "ease",
+            "ease_in",
+            "ease_out",
+            "ease_in_out",
+            "spring"
+          ]
+        },
+        "delay": {
+          "description": "Delay before transition starts in milliseconds",
+          "type": "number"
+        },
+        "customKeyframes": {
+          "description": "CSS @keyframes name for custom animations",
+          "type": "string"
+        },
+        "themeToken": {
+          "description": "Reference to a theme animation token (e.g. \"animation.duration.fast\")",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "hover": {
+      "description": "Hover state animation",
+      "type": "object",
+      "properties": {
+        "preset": {
+          "description": "Transition preset to apply",
+          "type": "string",
+          "enum": [
+            "fade",
+            "slide_up",
+            "slide_down",
+            "slide_left",
+            "slide_right",
+            "scale",
+            "rotate",
+            "flip",
+            "none"
+          ]
+        },
+        "duration": {
+          "description": "Transition duration in milliseconds",
+          "type": "number"
+        },
+        "easing": {
+          "description": "Easing function for the transition",
+          "type": "string",
+          "enum": [
+            "linear",
+            "ease",
+            "ease_in",
+            "ease_out",
+            "ease_in_out",
+            "spring"
+          ]
+        },
+        "delay": {
+          "description": "Delay before transition starts in milliseconds",
+          "type": "number"
+        },
+        "customKeyframes": {
+          "description": "CSS @keyframes name for custom animations",
+          "type": "string"
+        },
+        "themeToken": {
+          "description": "Reference to a theme animation token (e.g. \"animation.duration.fast\")",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "trigger": {
+      "description": "When to trigger the animation",
+      "type": "string",
+      "enum": [
+        "on_mount",
+        "on_unmount",
+        "on_hover",
+        "on_focus",
+        "on_click",
+        "on_scroll",
+        "on_visible"
+      ]
+    },
+    "reducedMotion": {
+      "default": "respect",
+      "description": "Accessibility: how to handle prefers-reduced-motion",
+      "type": "string",
+      "enum": [
+        "respect",
+        "disable",
+        "alternative"
+      ]
+    },
+    "ariaLabel": {
+      "description": "Accessible label for screen readers (WAI-ARIA aria-label)",
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "key": {
+              "type": "string",
+              "description": "Translation key (e.g., \"views.task_list.label\")"
+            },
+            "defaultValue": {
+              "description": "Fallback value when translation key is not found",
+              "type": "string"
+            },
+            "params": {
+              "description": "Interpolation parameters (e.g., { count: 5 })",
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "boolean"
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "key"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "ariaDescribedBy": {
+      "description": "ID of element providing additional description (WAI-ARIA aria-describedby)",
+      "type": "string"
+    },
+    "role": {
+      "description": "WAI-ARIA role attribute (e.g., \"dialog\", \"navigation\", \"alert\")",
+      "type": "string"
+    }
+  },
+  "required": [
+    "reducedMotion"
+  ],
+  "additionalProperties": false,
+  "description": "Component-level animation configuration",
+  "$id": "https://schema.objectstack.io/v3.0.11/ui/ComponentAnimation.json",
+  "x-spec-version": "3.0.11"
+}

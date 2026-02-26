@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "teamId": {
+      "description": "Team ID or slug",
+      "type": "string"
+    },
+    "teamName": {
+      "description": "Team name",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/integration/VercelTeam.json",
+  "x-spec-version": "3.0.11"
+}

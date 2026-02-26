@@ -1,0 +1,618 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "api": {
+      "description": "REST API configuration",
+      "type": "object",
+      "properties": {
+        "version": {
+          "default": "v1",
+          "description": "API version (e.g., v1, v2, 2024-01)",
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-\\.]+$"
+        },
+        "basePath": {
+          "default": "/api",
+          "description": "Base URL path for API",
+          "type": "string"
+        },
+        "apiPath": {
+          "description": "Full API path (defaults to {basePath}/{version})",
+          "type": "string"
+        },
+        "enableCrud": {
+          "default": true,
+          "description": "Enable automatic CRUD endpoint generation",
+          "type": "boolean"
+        },
+        "enableMetadata": {
+          "default": true,
+          "description": "Enable metadata API endpoints",
+          "type": "boolean"
+        },
+        "enableUi": {
+          "default": true,
+          "description": "Enable UI API endpoints (Views, Menus, Layouts)",
+          "type": "boolean"
+        },
+        "enableBatch": {
+          "default": true,
+          "description": "Enable batch operation endpoints",
+          "type": "boolean"
+        },
+        "enableDiscovery": {
+          "default": true,
+          "description": "Enable API discovery endpoint",
+          "type": "boolean"
+        },
+        "documentation": {
+          "description": "OpenAPI/Swagger documentation config",
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "default": true,
+              "description": "Enable API documentation",
+              "type": "boolean"
+            },
+            "title": {
+              "default": "ObjectStack API",
+              "description": "API documentation title",
+              "type": "string"
+            },
+            "description": {
+              "description": "API description",
+              "type": "string"
+            },
+            "version": {
+              "description": "Documentation version",
+              "type": "string"
+            },
+            "termsOfService": {
+              "description": "Terms of service URL",
+              "type": "string"
+            },
+            "contact": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "url": {
+                  "type": "string"
+                },
+                "email": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "license": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "url": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "enabled",
+            "title"
+          ],
+          "additionalProperties": false
+        },
+        "responseFormat": {
+          "description": "Response format options",
+          "type": "object",
+          "properties": {
+            "envelope": {
+              "default": true,
+              "description": "Wrap responses in standard envelope",
+              "type": "boolean"
+            },
+            "includeMetadata": {
+              "default": true,
+              "description": "Include response metadata (timestamp, requestId)",
+              "type": "boolean"
+            },
+            "includePagination": {
+              "default": true,
+              "description": "Include pagination info in list responses",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "envelope",
+            "includeMetadata",
+            "includePagination"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "version",
+        "basePath",
+        "enableCrud",
+        "enableMetadata",
+        "enableUi",
+        "enableBatch",
+        "enableDiscovery"
+      ],
+      "additionalProperties": false
+    },
+    "crud": {
+      "description": "CRUD endpoints configuration",
+      "type": "object",
+      "properties": {
+        "operations": {
+          "description": "Enable/disable operations",
+          "type": "object",
+          "properties": {
+            "create": {
+              "default": true,
+              "description": "Enable create operation",
+              "type": "boolean"
+            },
+            "read": {
+              "default": true,
+              "description": "Enable read operation",
+              "type": "boolean"
+            },
+            "update": {
+              "default": true,
+              "description": "Enable update operation",
+              "type": "boolean"
+            },
+            "delete": {
+              "default": true,
+              "description": "Enable delete operation",
+              "type": "boolean"
+            },
+            "list": {
+              "default": true,
+              "description": "Enable list operation",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "create",
+            "read",
+            "update",
+            "delete",
+            "list"
+          ],
+          "additionalProperties": false
+        },
+        "patterns": {
+          "description": "Custom URL patterns for operations",
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "enum": [
+              "create",
+              "read",
+              "update",
+              "delete",
+              "list"
+            ]
+          },
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "method": {
+                "type": "string",
+                "enum": [
+                  "GET",
+                  "POST",
+                  "PUT",
+                  "DELETE",
+                  "PATCH",
+                  "HEAD",
+                  "OPTIONS"
+                ],
+                "description": "HTTP method"
+              },
+              "path": {
+                "type": "string",
+                "description": "URL path pattern"
+              },
+              "summary": {
+                "description": "Operation summary",
+                "type": "string"
+              },
+              "description": {
+                "description": "Operation description",
+                "type": "string"
+              }
+            },
+            "required": [
+              "method",
+              "path"
+            ],
+            "additionalProperties": false
+          },
+          "required": [
+            "create",
+            "read",
+            "update",
+            "delete",
+            "list"
+          ]
+        },
+        "dataPrefix": {
+          "default": "/data",
+          "description": "URL prefix for data endpoints",
+          "type": "string"
+        },
+        "objectParamStyle": {
+          "default": "path",
+          "description": "How object name is passed (path param or query param)",
+          "type": "string",
+          "enum": [
+            "path",
+            "query"
+          ]
+        }
+      },
+      "required": [
+        "dataPrefix",
+        "objectParamStyle"
+      ],
+      "additionalProperties": false
+    },
+    "metadata": {
+      "description": "Metadata endpoints configuration",
+      "type": "object",
+      "properties": {
+        "prefix": {
+          "default": "/meta",
+          "description": "URL prefix for metadata endpoints",
+          "type": "string"
+        },
+        "enableCache": {
+          "default": true,
+          "description": "Enable HTTP cache headers (ETag, Last-Modified)",
+          "type": "boolean"
+        },
+        "cacheTtl": {
+          "default": 3600,
+          "description": "Cache TTL in seconds",
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "endpoints": {
+          "description": "Enable/disable specific endpoints",
+          "type": "object",
+          "properties": {
+            "types": {
+              "default": true,
+              "description": "GET /meta - List all metadata types",
+              "type": "boolean"
+            },
+            "items": {
+              "default": true,
+              "description": "GET /meta/:type - List items of type",
+              "type": "boolean"
+            },
+            "item": {
+              "default": true,
+              "description": "GET /meta/:type/:name - Get specific item",
+              "type": "boolean"
+            },
+            "schema": {
+              "default": true,
+              "description": "GET /meta/:type/:name/schema - Get JSON schema",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "types",
+            "items",
+            "item",
+            "schema"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "prefix",
+        "enableCache",
+        "cacheTtl"
+      ],
+      "additionalProperties": false
+    },
+    "batch": {
+      "description": "Batch endpoints configuration",
+      "type": "object",
+      "properties": {
+        "maxBatchSize": {
+          "default": 200,
+          "description": "Maximum records per batch operation",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "enableBatchEndpoint": {
+          "default": true,
+          "description": "Enable POST /data/:object/batch endpoint",
+          "type": "boolean"
+        },
+        "operations": {
+          "description": "Enable/disable specific batch operations",
+          "type": "object",
+          "properties": {
+            "createMany": {
+              "default": true,
+              "description": "Enable POST /data/:object/createMany",
+              "type": "boolean"
+            },
+            "updateMany": {
+              "default": true,
+              "description": "Enable POST /data/:object/updateMany",
+              "type": "boolean"
+            },
+            "deleteMany": {
+              "default": true,
+              "description": "Enable POST /data/:object/deleteMany",
+              "type": "boolean"
+            },
+            "upsertMany": {
+              "default": true,
+              "description": "Enable POST /data/:object/upsertMany",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "createMany",
+            "updateMany",
+            "deleteMany",
+            "upsertMany"
+          ],
+          "additionalProperties": false
+        },
+        "defaultAtomic": {
+          "default": true,
+          "description": "Default atomic/transaction mode for batch operations",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "maxBatchSize",
+        "enableBatchEndpoint",
+        "defaultAtomic"
+      ],
+      "additionalProperties": false
+    },
+    "routes": {
+      "description": "Route generation configuration",
+      "type": "object",
+      "properties": {
+        "includeObjects": {
+          "description": "Specific objects to generate routes for (empty = all)",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "excludeObjects": {
+          "description": "Objects to exclude from route generation",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "nameTransform": {
+          "default": "none",
+          "description": "Transform object names in URLs",
+          "type": "string",
+          "enum": [
+            "none",
+            "plural",
+            "kebab-case",
+            "camelCase"
+          ]
+        },
+        "overrides": {
+          "description": "Per-object route customization",
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "enabled": {
+                "description": "Enable/disable routes for this object",
+                "type": "boolean"
+              },
+              "basePath": {
+                "description": "Custom base path",
+                "type": "string"
+              },
+              "operations": {
+                "description": "Enable/disable specific operations",
+                "type": "object",
+                "propertyNames": {
+                  "type": "string",
+                  "enum": [
+                    "create",
+                    "read",
+                    "update",
+                    "delete",
+                    "list"
+                  ]
+                },
+                "additionalProperties": {
+                  "type": "boolean"
+                },
+                "required": [
+                  "create",
+                  "read",
+                  "update",
+                  "delete",
+                  "list"
+                ]
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "nameTransform"
+      ],
+      "additionalProperties": false
+    },
+    "openApi31": {
+      "description": "OpenAPI 3.1 extensions configuration",
+      "type": "object",
+      "properties": {
+        "webhooks": {
+          "description": "OpenAPI 3.1 webhooks (top-level webhook definitions)",
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "pattern": "^[a-z_][a-z0-9_]*$",
+                "description": "Webhook event identifier (snake_case)"
+              },
+              "description": {
+                "type": "string",
+                "description": "Human-readable event description"
+              },
+              "method": {
+                "default": "POST",
+                "description": "HTTP method for webhook delivery",
+                "type": "string",
+                "enum": [
+                  "GET",
+                  "POST",
+                  "PUT",
+                  "DELETE",
+                  "PATCH",
+                  "HEAD",
+                  "OPTIONS"
+                ]
+              },
+              "payloadSchema": {
+                "type": "string",
+                "description": "JSON Schema $ref for the webhook payload"
+              },
+              "headers": {
+                "description": "Custom headers to include in webhook delivery",
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "type": "string"
+                }
+              },
+              "security": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "hmac_sha256",
+                    "basic",
+                    "bearer",
+                    "api_key"
+                  ]
+                },
+                "description": "Supported authentication methods for webhook verification"
+              }
+            },
+            "required": [
+              "name",
+              "description",
+              "method",
+              "payloadSchema",
+              "security"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "callbacks": {
+          "description": "OpenAPI 3.1 callbacks (async response definitions)",
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "pattern": "^[a-z_][a-z0-9_]*$",
+                  "description": "Callback identifier (snake_case)"
+                },
+                "expression": {
+                  "type": "string",
+                  "description": "Runtime expression (e.g., {$request.body#/callbackUrl})"
+                },
+                "method": {
+                  "type": "string",
+                  "enum": [
+                    "GET",
+                    "POST",
+                    "PUT",
+                    "DELETE",
+                    "PATCH",
+                    "HEAD",
+                    "OPTIONS"
+                  ],
+                  "description": "HTTP method for callback request"
+                },
+                "url": {
+                  "type": "string",
+                  "description": "Callback URL template with runtime expressions"
+                }
+              },
+              "required": [
+                "name",
+                "expression",
+                "method",
+                "url"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "jsonSchemaDialect": {
+          "default": "https://json-schema.org/draft/2020-12/schema",
+          "description": "JSON Schema dialect for schema definitions",
+          "type": "string"
+        },
+        "pathItemReferences": {
+          "default": false,
+          "description": "Allow $ref in path items (OpenAPI 3.1 feature)",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "jsonSchemaDialect",
+        "pathItemReferences"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/RestServerConfig.json",
+  "x-spec-version": "3.0.11"
+}

@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "path": {
+      "type": "string",
+      "description": "Resolver path (Type.field)"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "datasource",
+        "computed",
+        "script",
+        "proxy"
+      ],
+      "description": "Resolver implementation type"
+    },
+    "implementation": {
+      "description": "Implementation configuration",
+      "type": "object",
+      "properties": {
+        "datasource": {
+          "description": "Datasource ID",
+          "type": "string"
+        },
+        "query": {
+          "description": "Query/SQL to execute",
+          "type": "string"
+        },
+        "expression": {
+          "description": "Computation expression",
+          "type": "string"
+        },
+        "dependencies": {
+          "description": "Dependent fields",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "script": {
+          "description": "Script ID or inline code",
+          "type": "string"
+        },
+        "url": {
+          "description": "Proxy URL",
+          "type": "string"
+        },
+        "method": {
+          "description": "HTTP method",
+          "type": "string",
+          "enum": [
+            "GET",
+            "POST",
+            "PUT",
+            "DELETE"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "cache": {
+      "description": "Resolver caching",
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "description": "Enable resolver caching",
+          "type": "boolean"
+        },
+        "ttl": {
+          "description": "Cache TTL in seconds",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "keyArgs": {
+          "description": "Arguments to include in cache key",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "enabled"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "path",
+    "type"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/GraphQLResolverConfig.json",
+  "x-spec-version": "3.0.11"
+}

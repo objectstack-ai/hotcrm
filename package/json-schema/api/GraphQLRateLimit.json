@@ -1,0 +1,166 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "enabled": {
+      "default": true,
+      "description": "Enable rate limiting",
+      "type": "boolean"
+    },
+    "strategy": {
+      "default": "token_bucket",
+      "description": "Rate limiting strategy",
+      "type": "string",
+      "enum": [
+        "token_bucket",
+        "fixed_window",
+        "sliding_window",
+        "cost_based"
+      ]
+    },
+    "global": {
+      "description": "Global rate limits",
+      "type": "object",
+      "properties": {
+        "maxRequests": {
+          "default": 1000,
+          "description": "Maximum requests per window",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "windowMs": {
+          "default": 60000,
+          "description": "Time window in milliseconds",
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "maxRequests",
+        "windowMs"
+      ],
+      "additionalProperties": false
+    },
+    "perUser": {
+      "description": "Per-user rate limits",
+      "type": "object",
+      "properties": {
+        "maxRequests": {
+          "default": 100,
+          "description": "Maximum requests per user per window",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "windowMs": {
+          "default": 60000,
+          "description": "Time window in milliseconds",
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "maxRequests",
+        "windowMs"
+      ],
+      "additionalProperties": false
+    },
+    "costBased": {
+      "description": "Cost-based rate limiting",
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "description": "Enable cost-based rate limiting",
+          "type": "boolean"
+        },
+        "maxCost": {
+          "default": 10000,
+          "description": "Maximum cost per window",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "windowMs": {
+          "default": 60000,
+          "description": "Time window in milliseconds",
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 9007199254740991
+        },
+        "useComplexityAsCost": {
+          "default": true,
+          "description": "Use query complexity as cost",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enabled",
+        "maxCost",
+        "windowMs",
+        "useComplexityAsCost"
+      ],
+      "additionalProperties": false
+    },
+    "operations": {
+      "description": "Per-operation rate limits",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "maxRequests": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991,
+            "description": "Max requests for this operation"
+          },
+          "windowMs": {
+            "type": "integer",
+            "minimum": 1000,
+            "maximum": 9007199254740991,
+            "description": "Time window"
+          }
+        },
+        "required": [
+          "maxRequests",
+          "windowMs"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "onLimitExceeded": {
+      "default": "reject",
+      "description": "Action when rate limit exceeded",
+      "type": "string",
+      "enum": [
+        "reject",
+        "queue",
+        "log"
+      ]
+    },
+    "errorMessage": {
+      "description": "Custom error message for rate limit violations",
+      "type": "string"
+    },
+    "includeHeaders": {
+      "default": true,
+      "description": "Include rate limit headers in response",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "enabled",
+    "strategy",
+    "onLimitExceeded",
+    "includeHeaders"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/GraphQLRateLimit.json",
+  "x-spec-version": "3.0.11"
+}

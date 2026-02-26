@@ -1,0 +1,167 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "github": {
+      "type": "object",
+      "properties": {
+        "connector": {
+          "type": "string",
+          "description": "GitHub connector name"
+        },
+        "repository": {
+          "type": "object",
+          "properties": {
+            "owner": {
+              "type": "string",
+              "description": "Repository owner"
+            },
+            "name": {
+              "type": "string",
+              "description": "Repository name"
+            }
+          },
+          "required": [
+            "owner",
+            "name"
+          ],
+          "additionalProperties": false,
+          "description": "Repository configuration"
+        },
+        "featureBranch": {
+          "default": "develop",
+          "description": "Default feature branch",
+          "type": "string"
+        },
+        "pullRequest": {
+          "description": "Pull request settings",
+          "type": "object",
+          "properties": {
+            "autoCreate": {
+              "default": true,
+              "description": "Automatically create PRs",
+              "type": "boolean"
+            },
+            "autoMerge": {
+              "default": false,
+              "description": "Automatically merge PRs when checks pass",
+              "type": "boolean"
+            },
+            "requireReviews": {
+              "default": true,
+              "description": "Require reviews before merge",
+              "type": "boolean"
+            },
+            "deleteBranchOnMerge": {
+              "default": true,
+              "description": "Delete feature branch after merge",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "autoCreate",
+            "autoMerge",
+            "requireReviews",
+            "deleteBranchOnMerge"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "connector",
+        "repository",
+        "featureBranch"
+      ],
+      "additionalProperties": false,
+      "description": "GitHub integration configuration"
+    },
+    "vercel": {
+      "type": "object",
+      "properties": {
+        "connector": {
+          "type": "string",
+          "description": "Vercel connector name"
+        },
+        "project": {
+          "type": "string",
+          "description": "Vercel project name"
+        },
+        "environments": {
+          "description": "Environment mapping",
+          "type": "object",
+          "properties": {
+            "production": {
+              "default": "main",
+              "description": "Production branch",
+              "type": "string"
+            },
+            "preview": {
+              "default": [
+                "develop",
+                "feature/*"
+              ],
+              "description": "Preview branches",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "production",
+            "preview"
+          ],
+          "additionalProperties": false
+        },
+        "deployment": {
+          "description": "Deployment settings",
+          "type": "object",
+          "properties": {
+            "autoDeployProduction": {
+              "default": false,
+              "description": "Auto-deploy to production",
+              "type": "boolean"
+            },
+            "autoDeployPreview": {
+              "default": true,
+              "description": "Auto-deploy preview environments",
+              "type": "boolean"
+            },
+            "requireApproval": {
+              "default": true,
+              "description": "Require approval for production deployments",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "autoDeployProduction",
+            "autoDeployPreview",
+            "requireApproval"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "connector",
+        "project"
+      ],
+      "additionalProperties": false,
+      "description": "Vercel integration configuration"
+    },
+    "additional": {
+      "description": "Additional integration configurations",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
+    }
+  },
+  "required": [
+    "github",
+    "vercel"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/ai/IntegrationConfig.json",
+  "x-spec-version": "3.0.11"
+}

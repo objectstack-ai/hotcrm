@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "info",
+    "success",
+    "warning",
+    "error"
+  ],
+  "description": "Notification severity level",
+  "$id": "https://schema.objectstack.io/v3.0.11/ui/NotificationSeverity.json",
+  "x-spec-version": "3.0.11"
+}

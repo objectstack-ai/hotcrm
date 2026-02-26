@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Variable name"
+    },
+    "type": {
+      "type": "string",
+      "description": "Data type (text, number, boolean, object, list)"
+    },
+    "isInput": {
+      "default": false,
+      "description": "Is input parameter",
+      "type": "boolean"
+    },
+    "isOutput": {
+      "default": false,
+      "description": "Is output parameter",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "name",
+    "type",
+    "isInput",
+    "isOutput"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/automation/FlowVariable.json",
+  "x-spec-version": "3.0.11"
+}

@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "fieldName": {
+      "type": "string",
+      "description": "Name of the field to encrypt"
+    },
+    "encryptionConfig": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "description": "Enable field-level encryption",
+          "type": "boolean"
+        },
+        "algorithm": {
+          "default": "aes-256-gcm",
+          "description": "Encryption algorithm",
+          "type": "string",
+          "enum": [
+            "aes-256-gcm",
+            "aes-256-cbc",
+            "chacha20-poly1305"
+          ]
+        },
+        "keyManagement": {
+          "type": "object",
+          "properties": {
+            "provider": {
+              "type": "string",
+              "enum": [
+                "local",
+                "aws-kms",
+                "azure-key-vault",
+                "gcp-kms",
+                "hashicorp-vault"
+              ],
+              "description": "Key management service provider"
+            },
+            "keyId": {
+              "description": "Key identifier in the provider",
+              "type": "string"
+            },
+            "rotationPolicy": {
+              "description": "Key rotation policy",
+              "type": "object",
+              "properties": {
+                "enabled": {
+                  "default": false,
+                  "description": "Enable automatic key rotation",
+                  "type": "boolean"
+                },
+                "frequencyDays": {
+                  "default": 90,
+                  "description": "Rotation frequency in days",
+                  "type": "number",
+                  "minimum": 1
+                },
+                "retainOldVersions": {
+                  "default": 3,
+                  "description": "Number of old key versions to retain",
+                  "type": "number"
+                },
+                "autoRotate": {
+                  "default": true,
+                  "description": "Automatically rotate without manual approval",
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "enabled",
+                "frequencyDays",
+                "retainOldVersions",
+                "autoRotate"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "provider"
+          ],
+          "additionalProperties": false,
+          "description": "Key management configuration"
+        },
+        "scope": {
+          "type": "string",
+          "enum": [
+            "field",
+            "record",
+            "table",
+            "database"
+          ],
+          "description": "Encryption scope level"
+        },
+        "deterministicEncryption": {
+          "default": false,
+          "description": "Allows equality queries on encrypted data",
+          "type": "boolean"
+        },
+        "searchableEncryption": {
+          "default": false,
+          "description": "Allows search on encrypted data",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enabled",
+        "algorithm",
+        "keyManagement",
+        "scope",
+        "deterministicEncryption",
+        "searchableEncryption"
+      ],
+      "additionalProperties": false,
+      "description": "Encryption settings for this field"
+    },
+    "indexable": {
+      "default": false,
+      "description": "Allow indexing on encrypted field",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "fieldName",
+    "encryptionConfig",
+    "indexable"
+  ],
+  "additionalProperties": false,
+  "description": "Per-field encryption assignment",
+  "$id": "https://schema.objectstack.io/v3.0.11/system/FieldEncryption.json",
+  "x-spec-version": "3.0.11"
+}

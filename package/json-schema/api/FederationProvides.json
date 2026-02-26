@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "field": {
+      "type": "string",
+      "description": "Field that provides additional entity fields"
+    },
+    "fields": {
+      "type": "string",
+      "description": "Selection set of provided fields (e.g., \"name price\")"
+    }
+  },
+  "required": [
+    "field",
+    "fields"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/FederationProvides.json",
+  "x-spec-version": "3.0.11"
+}

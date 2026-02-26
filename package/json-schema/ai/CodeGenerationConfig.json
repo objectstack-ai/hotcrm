@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "enabled": {
+      "default": true,
+      "description": "Enable code generation",
+      "type": "boolean"
+    },
+    "targets": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "frontend",
+          "backend",
+          "api",
+          "database",
+          "tests",
+          "documentation",
+          "infrastructure"
+        ],
+        "description": "Code generation target"
+      },
+      "description": "Code generation targets"
+    },
+    "templateRepo": {
+      "description": "Template repository for scaffolding",
+      "type": "string"
+    },
+    "styleGuide": {
+      "description": "Code style guide to follow",
+      "type": "string"
+    },
+    "includeTests": {
+      "default": true,
+      "description": "Generate tests with code",
+      "type": "boolean"
+    },
+    "includeDocumentation": {
+      "default": true,
+      "description": "Generate documentation",
+      "type": "boolean"
+    },
+    "validationMode": {
+      "default": "strict",
+      "description": "Code validation strictness",
+      "type": "string",
+      "enum": [
+        "strict",
+        "moderate",
+        "permissive"
+      ]
+    }
+  },
+  "required": [
+    "enabled",
+    "targets",
+    "includeTests",
+    "includeDocumentation",
+    "validationMode"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/ai/CodeGenerationConfig.json",
+  "x-spec-version": "3.0.11"
+}

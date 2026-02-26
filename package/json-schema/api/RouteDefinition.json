@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "method": {
+      "type": "string",
+      "enum": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE",
+        "PATCH",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    "path": {
+      "type": "string",
+      "description": "URL Path pattern"
+    },
+    "category": {
+      "default": "api",
+      "type": "string",
+      "enum": [
+        "system",
+        "api",
+        "auth",
+        "static",
+        "webhook",
+        "plugin"
+      ]
+    },
+    "handler": {
+      "type": "string",
+      "description": "Unique handler identifier"
+    },
+    "summary": {
+      "description": "OpenAPI summary",
+      "type": "string"
+    },
+    "description": {
+      "description": "OpenAPI description",
+      "type": "string"
+    },
+    "public": {
+      "default": false,
+      "description": "Is publicly accessible",
+      "type": "boolean"
+    },
+    "permissions": {
+      "description": "Required permissions",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "timeout": {
+      "description": "Execution timeout in ms",
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991
+    },
+    "rateLimit": {
+      "description": "Rate limit policy name",
+      "type": "string"
+    }
+  },
+  "required": [
+    "method",
+    "path",
+    "category",
+    "handler",
+    "public"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/RouteDefinition.json",
+  "x-spec-version": "3.0.11"
+}

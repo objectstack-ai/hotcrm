@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "always_on",
+    "always_off",
+    "trace_id_ratio",
+    "rate_limiting",
+    "parent_based",
+    "probability",
+    "composite",
+    "custom"
+  ],
+  "description": "Sampling strategy type",
+  "$id": "https://schema.objectstack.io/v3.0.11/system/SamplingStrategyType.json",
+  "x-spec-version": "3.0.11"
+}

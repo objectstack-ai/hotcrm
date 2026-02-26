@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "status": {
+      "description": "Updated presence status",
+      "type": "string",
+      "enum": [
+        "online",
+        "away",
+        "busy",
+        "offline"
+      ]
+    },
+    "currentLocation": {
+      "description": "Updated current location",
+      "type": "string"
+    },
+    "customStatus": {
+      "description": "Updated custom status message",
+      "type": "string"
+    },
+    "metadata": {
+      "description": "Updated metadata",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
+    }
+  },
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/PresenceUpdate.json",
+  "x-spec-version": "3.0.11"
+}

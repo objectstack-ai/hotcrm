@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "enabled": {
+      "default": false,
+      "description": "Enable data masking",
+      "type": "boolean"
+    },
+    "rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string",
+            "description": "Field name to apply masking to"
+          },
+          "strategy": {
+            "type": "string",
+            "enum": [
+              "redact",
+              "partial",
+              "hash",
+              "tokenize",
+              "randomize",
+              "nullify",
+              "substitute"
+            ],
+            "description": "Masking strategy to use"
+          },
+          "pattern": {
+            "description": "Regex pattern for partial masking",
+            "type": "string"
+          },
+          "preserveFormat": {
+            "default": true,
+            "description": "Keep the original data format after masking",
+            "type": "boolean"
+          },
+          "preserveLength": {
+            "default": true,
+            "description": "Keep the original data length after masking",
+            "type": "boolean"
+          },
+          "roles": {
+            "description": "Roles that see masked data",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "exemptRoles": {
+            "description": "Roles that see unmasked data",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "field",
+          "strategy",
+          "preserveFormat",
+          "preserveLength"
+        ],
+        "additionalProperties": false,
+        "description": "Masking rule for a single field"
+      },
+      "description": "List of field-level masking rules"
+    },
+    "auditUnmasking": {
+      "default": true,
+      "description": "Log when masked data is accessed unmasked",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "enabled",
+    "rules",
+    "auditUnmasking"
+  ],
+  "additionalProperties": false,
+  "description": "Top-level data masking configuration for PII protection",
+  "$id": "https://schema.objectstack.io/v3.0.11/system/MaskingConfig.json",
+  "x-spec-version": "3.0.11"
+}

@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "object": {
+      "type": "string",
+      "description": "Object name"
+    },
+    "locale": {
+      "type": "string",
+      "description": "BCP-47 locale code"
+    }
+  },
+  "required": [
+    "object",
+    "locale"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/GetFieldLabelsRequest.json",
+  "x-spec-version": "3.0.11"
+}

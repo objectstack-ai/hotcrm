@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z_][a-z0-9_]*$",
+      "description": "Unique rule name (snake_case)"
+    },
+    "label": {
+      "description": "Human-readable label for the rule listing",
+      "type": "string"
+    },
+    "description": {
+      "description": "Administrative notes explaining the business reason",
+      "type": "string"
+    },
+    "active": {
+      "default": true,
+      "type": "boolean"
+    },
+    "events": {
+      "default": [
+        "insert",
+        "update"
+      ],
+      "description": "Validation contexts",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "insert",
+          "update",
+          "delete"
+        ]
+      }
+    },
+    "priority": {
+      "default": 100,
+      "description": "Execution priority (lower runs first, default: 100)",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9999
+    },
+    "tags": {
+      "description": "Categorization tags (e.g., \"compliance\", \"billing\")",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "severity": {
+      "default": "error",
+      "type": "string",
+      "enum": [
+        "error",
+        "warning",
+        "info"
+      ]
+    },
+    "message": {
+      "type": "string",
+      "description": "Error message to display to the user"
+    },
+    "type": {
+      "type": "string",
+      "const": "cross_field"
+    },
+    "condition": {
+      "type": "string",
+      "description": "Formula expression comparing fields (e.g. \"end_date > start_date\")"
+    },
+    "fields": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Fields involved in the validation"
+    }
+  },
+  "required": [
+    "name",
+    "active",
+    "events",
+    "priority",
+    "severity",
+    "message",
+    "type",
+    "condition",
+    "fields"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/data/CrossFieldValidation.json",
+  "x-spec-version": "3.0.11"
+}

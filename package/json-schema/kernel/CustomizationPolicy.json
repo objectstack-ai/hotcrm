@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "metadataType": {
+      "type": "string",
+      "description": "Metadata type (e.g. \"object\", \"view\")"
+    },
+    "allowCustomization": {
+      "default": true,
+      "type": "boolean"
+    },
+    "lockedFields": {
+      "description": "Field paths that cannot be customized",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "customizableFields": {
+      "description": "Field paths that can be customized (whitelist)",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "allowAddFields": {
+      "default": true,
+      "description": "Whether admins can add new fields to package objects",
+      "type": "boolean"
+    },
+    "allowDeleteFields": {
+      "default": false,
+      "description": "Whether admins can delete package-delivered fields",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "metadataType",
+    "allowCustomization",
+    "allowAddFields",
+    "allowDeleteFields"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/CustomizationPolicy.json",
+  "x-spec-version": "3.0.11"
+}

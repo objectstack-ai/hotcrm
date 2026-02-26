@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "requireApproval": {
+      "default": false,
+      "description": "Require approval before tool execution",
+      "type": "boolean"
+    },
+    "approvalStrategy": {
+      "type": "string",
+      "enum": [
+        "human_in_loop",
+        "auto_approve",
+        "policy_based"
+      ],
+      "description": "Approval strategy for tool execution"
+    },
+    "dangerousToolPatterns": {
+      "description": "Regex patterns for tools needing approval",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "autoApproveTimeout": {
+      "description": "Auto-approve timeout in seconds",
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    }
+  },
+  "required": [
+    "requireApproval",
+    "approvalStrategy"
+  ],
+  "additionalProperties": false,
+  "description": "Tool approval configuration for MCP",
+  "$id": "https://schema.objectstack.io/v3.0.11/ai/MCPToolApproval.json",
+  "x-spec-version": "3.0.11"
+}

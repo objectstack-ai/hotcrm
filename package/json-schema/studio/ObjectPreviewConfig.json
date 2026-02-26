@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "tabs": {
+      "default": [
+        {
+          "key": "fields",
+          "label": "Fields",
+          "icon": "list",
+          "enabled": true,
+          "order": 0
+        },
+        {
+          "key": "relationships",
+          "label": "Relationships",
+          "icon": "link",
+          "enabled": true,
+          "order": 10
+        },
+        {
+          "key": "indexes",
+          "label": "Indexes",
+          "icon": "zap",
+          "enabled": true,
+          "order": 20
+        },
+        {
+          "key": "validations",
+          "label": "Validations",
+          "icon": "shield-check",
+          "enabled": true,
+          "order": 30
+        },
+        {
+          "key": "capabilities",
+          "label": "Capabilities",
+          "icon": "settings",
+          "enabled": true,
+          "order": 40
+        },
+        {
+          "key": "data",
+          "label": "Data",
+          "icon": "table-2",
+          "enabled": true,
+          "order": 50
+        },
+        {
+          "key": "api",
+          "label": "API",
+          "icon": "globe",
+          "enabled": true,
+          "order": 60
+        },
+        {
+          "key": "code",
+          "label": "Code",
+          "icon": "code-2",
+          "enabled": true,
+          "order": 70
+        }
+      ],
+      "description": "Object detail preview tabs",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Tab key"
+          },
+          "label": {
+            "type": "string",
+            "description": "Tab display label"
+          },
+          "icon": {
+            "description": "Lucide icon name",
+            "type": "string"
+          },
+          "enabled": {
+            "default": true,
+            "description": "Whether this tab is available",
+            "type": "boolean"
+          },
+          "order": {
+            "default": 0,
+            "description": "Sort order (lower = higher)",
+            "type": "number"
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "enabled",
+          "order"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "defaultTab": {
+      "default": "fields",
+      "description": "Default active tab key",
+      "type": "string"
+    },
+    "showHeader": {
+      "default": true,
+      "description": "Show object summary header",
+      "type": "boolean"
+    },
+    "showBreadcrumbs": {
+      "default": true,
+      "description": "Show navigation breadcrumbs",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "tabs",
+    "defaultTab",
+    "showHeader",
+    "showBreadcrumbs"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/studio/ObjectPreviewConfig.json",
+  "x-spec-version": "3.0.11"
+}

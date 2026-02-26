@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "0": {
+      "description": "0 spacing (0)",
+      "type": "string"
+    },
+    "1": {
+      "description": "Spacing unit 1 (e.g., 0.25rem)",
+      "type": "string"
+    },
+    "2": {
+      "description": "Spacing unit 2 (e.g., 0.5rem)",
+      "type": "string"
+    },
+    "3": {
+      "description": "Spacing unit 3 (e.g., 0.75rem)",
+      "type": "string"
+    },
+    "4": {
+      "description": "Spacing unit 4 (e.g., 1rem)",
+      "type": "string"
+    },
+    "5": {
+      "description": "Spacing unit 5 (e.g., 1.25rem)",
+      "type": "string"
+    },
+    "6": {
+      "description": "Spacing unit 6 (e.g., 1.5rem)",
+      "type": "string"
+    },
+    "8": {
+      "description": "Spacing unit 8 (e.g., 2rem)",
+      "type": "string"
+    },
+    "10": {
+      "description": "Spacing unit 10 (e.g., 2.5rem)",
+      "type": "string"
+    },
+    "12": {
+      "description": "Spacing unit 12 (e.g., 3rem)",
+      "type": "string"
+    },
+    "16": {
+      "description": "Spacing unit 16 (e.g., 4rem)",
+      "type": "string"
+    },
+    "20": {
+      "description": "Spacing unit 20 (e.g., 5rem)",
+      "type": "string"
+    },
+    "24": {
+      "description": "Spacing unit 24 (e.g., 6rem)",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/ui/Spacing.json",
+  "x-spec-version": "3.0.11"
+}

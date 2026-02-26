@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "package_not_found",
+    "package_already_installed",
+    "version_not_found",
+    "dependency_conflict",
+    "namespace_conflict",
+    "platform_incompatible",
+    "artifact_invalid",
+    "checksum_mismatch",
+    "signature_invalid",
+    "upgrade_failed",
+    "rollback_failed",
+    "snapshot_not_found",
+    "upload_failed"
+  ],
+  "$id": "https://schema.objectstack.io/v3.0.11/api/PackageApiErrorCode.json",
+  "x-spec-version": "3.0.11"
+}

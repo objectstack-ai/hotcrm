@@ -1,0 +1,451 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "inner",
+        "left",
+        "right",
+        "full"
+      ],
+      "description": "Join type"
+    },
+    "strategy": {
+      "description": "Execution strategy hint",
+      "type": "string",
+      "enum": [
+        "auto",
+        "database",
+        "hash",
+        "loop"
+      ]
+    },
+    "object": {
+      "type": "string",
+      "description": "Object/table to join"
+    },
+    "alias": {
+      "description": "Table alias",
+      "type": "string"
+    },
+    "on": {
+      "description": "Join condition",
+      "allOf": [
+        {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {}
+        },
+        {
+          "type": "object",
+          "properties": {
+            "$and": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/__schema0"
+              }
+            },
+            "$or": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/__schema0"
+              }
+            },
+            "$not": {
+              "$ref": "#/$defs/__schema0"
+            }
+          },
+          "additionalProperties": false
+        }
+      ],
+      "$ref": "#/$defs/__schema0"
+    },
+    "subquery": {
+      "description": "Subquery instead of object",
+      "$ref": "#/$defs/__schema1"
+    }
+  },
+  "required": [
+    "type",
+    "object",
+    "on"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "__schema0": {
+      "allOf": [
+        {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {}
+        },
+        {
+          "type": "object",
+          "properties": {
+            "$and": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/__schema0"
+              }
+            },
+            "$or": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/__schema0"
+              }
+            },
+            "$not": {
+              "$ref": "#/$defs/__schema0"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "__schema1": {
+      "type": "object",
+      "properties": {
+        "object": {
+          "type": "string",
+          "description": "Object name (e.g. account)"
+        },
+        "fields": {
+          "description": "Fields to retrieve",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/__schema2"
+          }
+        },
+        "where": {
+          "description": "Filtering criteria (WHERE)",
+          "$ref": "#/$defs/__schema0"
+        },
+        "search": {
+          "description": "Full-text search configuration ($search parameter)",
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "Search query text"
+            },
+            "fields": {
+              "description": "Fields to search in (if not specified, searches all text fields)",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "fuzzy": {
+              "default": false,
+              "description": "Enable fuzzy matching (tolerates typos)",
+              "type": "boolean"
+            },
+            "operator": {
+              "default": "or",
+              "description": "Logical operator between terms",
+              "type": "string",
+              "enum": [
+                "and",
+                "or"
+              ]
+            },
+            "boost": {
+              "description": "Field-specific relevance boosting (field name -> boost factor)",
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {
+                "type": "number"
+              }
+            },
+            "minScore": {
+              "description": "Minimum relevance score threshold",
+              "type": "number"
+            },
+            "language": {
+              "description": "Language for text analysis (e.g., \"en\", \"zh\", \"es\")",
+              "type": "string"
+            },
+            "highlight": {
+              "default": false,
+              "description": "Enable search result highlighting",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "query",
+            "fuzzy",
+            "operator",
+            "highlight"
+          ],
+          "additionalProperties": false
+        },
+        "orderBy": {
+          "description": "Sorting instructions (ORDER BY)",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "field": {
+                "type": "string"
+              },
+              "order": {
+                "default": "asc",
+                "type": "string",
+                "enum": [
+                  "asc",
+                  "desc"
+                ]
+              }
+            },
+            "required": [
+              "field",
+              "order"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "limit": {
+          "description": "Max records to return (LIMIT)",
+          "type": "number"
+        },
+        "offset": {
+          "description": "Records to skip (OFFSET)",
+          "type": "number"
+        },
+        "top": {
+          "description": "Alias for limit (OData compatibility)",
+          "type": "number"
+        },
+        "cursor": {
+          "description": "Cursor for keyset pagination",
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {}
+        },
+        "joins": {
+          "description": "Explicit Table Joins",
+          "type": "array",
+          "items": {
+            "$ref": "#"
+          }
+        },
+        "aggregations": {
+          "description": "Aggregation functions",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "function": {
+                "type": "string",
+                "enum": [
+                  "count",
+                  "sum",
+                  "avg",
+                  "min",
+                  "max",
+                  "count_distinct",
+                  "array_agg",
+                  "string_agg"
+                ],
+                "description": "Aggregation function"
+              },
+              "field": {
+                "description": "Field to aggregate (optional for COUNT(*))",
+                "type": "string"
+              },
+              "alias": {
+                "type": "string",
+                "description": "Result column alias"
+              },
+              "distinct": {
+                "description": "Apply DISTINCT before aggregation",
+                "type": "boolean"
+              },
+              "filter": {
+                "description": "Filter/Condition to apply to the aggregation (FILTER WHERE clause)",
+                "$ref": "#/$defs/__schema0"
+              }
+            },
+            "required": [
+              "function",
+              "alias"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "groupBy": {
+          "description": "GROUP BY fields",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "having": {
+          "description": "HAVING clause for aggregation filtering",
+          "$ref": "#/$defs/__schema0"
+        },
+        "windowFunctions": {
+          "description": "Window functions with OVER clause",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "function": {
+                "type": "string",
+                "enum": [
+                  "row_number",
+                  "rank",
+                  "dense_rank",
+                  "percent_rank",
+                  "lag",
+                  "lead",
+                  "first_value",
+                  "last_value",
+                  "sum",
+                  "avg",
+                  "count",
+                  "min",
+                  "max"
+                ],
+                "description": "Window function name"
+              },
+              "field": {
+                "description": "Field to operate on (for aggregate window functions)",
+                "type": "string"
+              },
+              "alias": {
+                "type": "string",
+                "description": "Result column alias"
+              },
+              "over": {
+                "type": "object",
+                "properties": {
+                  "partitionBy": {
+                    "description": "PARTITION BY fields",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "orderBy": {
+                    "description": "ORDER BY specification",
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "field": {
+                          "type": "string"
+                        },
+                        "order": {
+                          "default": "asc",
+                          "type": "string",
+                          "enum": [
+                            "asc",
+                            "desc"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "field",
+                        "order"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "frame": {
+                    "description": "Window frame specification",
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "rows",
+                          "range"
+                        ]
+                      },
+                      "start": {
+                        "description": "Frame start (e.g., \"UNBOUNDED PRECEDING\", \"1 PRECEDING\")",
+                        "type": "string"
+                      },
+                      "end": {
+                        "description": "Frame end (e.g., \"CURRENT ROW\", \"1 FOLLOWING\")",
+                        "type": "string"
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "additionalProperties": false,
+                "description": "Window specification (OVER clause)"
+              }
+            },
+            "required": [
+              "function",
+              "alias",
+              "over"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "distinct": {
+          "description": "SELECT DISTINCT flag",
+          "type": "boolean"
+        },
+        "expand": {
+          "description": "Recursive relation loading (nested queries)",
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/__schema1"
+          }
+        }
+      },
+      "required": [
+        "object"
+      ],
+      "additionalProperties": false
+    },
+    "__schema2": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "field": {
+              "type": "string"
+            },
+            "fields": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/__schema2"
+              }
+            },
+            "alias": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "field"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    }
+  },
+  "$id": "https://schema.objectstack.io/v3.0.11/data/JoinNode.json",
+  "x-spec-version": "3.0.11"
+}

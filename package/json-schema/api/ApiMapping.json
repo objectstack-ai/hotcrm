@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "source": {
+      "type": "string",
+      "description": "Source field/path"
+    },
+    "target": {
+      "type": "string",
+      "description": "Target field/path"
+    },
+    "transform": {
+      "description": "Transformation function name",
+      "type": "string"
+    }
+  },
+  "required": [
+    "source",
+    "target"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/ApiMapping.json",
+  "x-spec-version": "3.0.11"
+}

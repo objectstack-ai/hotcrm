@@ -1,0 +1,1664 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z_][a-z0-9_]*$",
+      "description": "Unique rule name (snake_case)"
+    },
+    "label": {
+      "description": "Human-readable label for the rule listing",
+      "type": "string"
+    },
+    "description": {
+      "description": "Administrative notes explaining the business reason",
+      "type": "string"
+    },
+    "active": {
+      "default": true,
+      "type": "boolean"
+    },
+    "events": {
+      "default": [
+        "insert",
+        "update"
+      ],
+      "description": "Validation contexts",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "insert",
+          "update",
+          "delete"
+        ]
+      }
+    },
+    "priority": {
+      "default": 100,
+      "description": "Execution priority (lower runs first, default: 100)",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9999
+    },
+    "tags": {
+      "description": "Categorization tags (e.g., \"compliance\", \"billing\")",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "severity": {
+      "default": "error",
+      "type": "string",
+      "enum": [
+        "error",
+        "warning",
+        "info"
+      ]
+    },
+    "message": {
+      "type": "string",
+      "description": "Error message to display to the user"
+    },
+    "type": {
+      "type": "string",
+      "const": "conditional"
+    },
+    "when": {
+      "type": "string",
+      "description": "Condition formula (e.g. \"type = 'enterprise'\")"
+    },
+    "then": {
+      "description": "Validation rule to apply when condition is true",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "pattern": "^[a-z_][a-z0-9_]*$",
+              "description": "Unique rule name (snake_case)"
+            },
+            "label": {
+              "description": "Human-readable label for the rule listing",
+              "type": "string"
+            },
+            "description": {
+              "description": "Administrative notes explaining the business reason",
+              "type": "string"
+            },
+            "active": {
+              "default": true,
+              "type": "boolean"
+            },
+            "events": {
+              "default": [
+                "insert",
+                "update"
+              ],
+              "description": "Validation contexts",
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "insert",
+                  "update",
+                  "delete"
+                ]
+              }
+            },
+            "priority": {
+              "default": 100,
+              "description": "Execution priority (lower runs first, default: 100)",
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9999
+            },
+            "tags": {
+              "description": "Categorization tags (e.g., \"compliance\", \"billing\")",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "severity": {
+              "default": "error",
+              "type": "string",
+              "enum": [
+                "error",
+                "warning",
+                "info"
+              ]
+            },
+            "message": {
+              "type": "string",
+              "description": "Error message to display to the user"
+            },
+            "type": {
+              "type": "string",
+              "const": "script"
+            },
+            "condition": {
+              "type": "string",
+              "description": "Formula expression. If TRUE, validation fails. (e.g. amount < 0)"
+            }
+          },
+          "required": [
+            "name",
+            "active",
+            "events",
+            "priority",
+            "severity",
+            "message",
+            "type",
+            "condition"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "pattern": "^[a-z_][a-z0-9_]*$",
+              "description": "Unique rule name (snake_case)"
+            },
+            "label": {
+              "description": "Human-readable label for the rule listing",
+              "type": "string"
+            },
+            "description": {
+              "description": "Administrative notes explaining the business reason",
+              "type": "string"
+            },
+            "active": {
+              "default": true,
+              "type": "boolean"
+            },
+            "events": {
+              "default": [
+                "insert",
+                "update"
+              ],
+              "description": "Validation contexts",
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "insert",
+                  "update",
+                  "delete"
+                ]
+              }
+            },
+            "priority": {
+              "default": 100,
+              "description": "Execution priority (lower runs first, default: 100)",
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9999
+            },
+            "tags": {
+              "description": "Categorization tags (e.g., \"compliance\", \"billing\")",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "severity": {
+              "default": "error",
+              "type": "string",
+              "enum": [
+                "error",
+                "warning",
+                "info"
+              ]
+            },
+            "message": {
+              "type": "string",
+              "description": "Error message to display to the user"
+            },
+            "type": {
+              "type": "string",
+              "const": "unique"
+            },
+            "fields": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Fields that must be combined unique"
+            },
+            "scope": {
+              "description": "Formula condition for scope (e.g. active = true)",
+              "type": "string"
+            },
+            "caseSensitive": {
+              "default": true,
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "name",
+            "active",
+            "events",
+            "priority",
+            "severity",
+            "message",
+            "type",
+            "fields",
+            "caseSensitive"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "pattern": "^[a-z_][a-z0-9_]*$",
+              "description": "Unique rule name (snake_case)"
+            },
+            "label": {
+              "description": "Human-readable label for the rule listing",
+              "type": "string"
+            },
+            "description": {
+              "description": "Administrative notes explaining the business reason",
+              "type": "string"
+            },
+            "active": {
+              "default": true,
+              "type": "boolean"
+            },
+            "events": {
+              "default": [
+                "insert",
+                "update"
+              ],
+              "description": "Validation contexts",
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "insert",
+                  "update",
+                  "delete"
+                ]
+              }
+            },
+            "priority": {
+              "default": 100,
+              "description": "Execution priority (lower runs first, default: 100)",
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9999
+            },
+            "tags": {
+              "description": "Categorization tags (e.g., \"compliance\", \"billing\")",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "severity": {
+              "default": "error",
+              "type": "string",
+              "enum": [
+                "error",
+                "warning",
+                "info"
+              ]
+            },
+            "message": {
+              "type": "string",
+              "description": "Error message to display to the user"
+            },
+            "type": {
+              "type": "string",
+              "const": "state_machine"
+            },
+            "field": {
+              "type": "string",
+              "description": "State field (e.g. status)"
+            },
+            "transitions": {
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "description": "Map of { OldState: [AllowedNewStates] }"
+            }
+          },
+          "required": [
+            "name",
+            "active",
+            "events",
+            "priority",
+            "severity",
+            "message",
+            "type",
+            "field",
+            "transitions"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "pattern": "^[a-z_][a-z0-9_]*$",
+              "description": "Unique rule name (snake_case)"
+            },
+            "label": {
+              "description": "Human-readable label for the rule listing",
+              "type": "string"
+            },
+            "description": {
+              "description": "Administrative notes explaining the business reason",
+              "type": "string"
+            },
+            "active": {
+              "default": true,
+              "type": "boolean"
+            },
+            "events": {
+              "default": [
+                "insert",
+                "update"
+              ],
+              "description": "Validation contexts",
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "insert",
+                  "update",
+                  "delete"
+                ]
+              }
+            },
+            "priority": {
+              "default": 100,
+              "description": "Execution priority (lower runs first, default: 100)",
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9999
+            },
+            "tags": {
+              "description": "Categorization tags (e.g., \"compliance\", \"billing\")",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "severity": {
+              "default": "error",
+              "type": "string",
+              "enum": [
+                "error",
+                "warning",
+                "info"
+              ]
+            },
+            "message": {
+              "type": "string",
+              "description": "Error message to display to the user"
+            },
+            "type": {
+              "type": "string",
+              "const": "format"
+            },
+            "field": {
+              "type": "string"
+            },
+            "regex": {
+              "type": "string"
+            },
+            "format": {
+              "type": "string",
+              "enum": [
+                "email",
+                "url",
+                "phone",
+                "json"
+              ]
+            }
+          },
+          "required": [
+            "name",
+            "active",
+            "events",
+            "priority",
+            "severity",
+            "message",
+            "type",
+            "field"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "pattern": "^[a-z_][a-z0-9_]*$",
+              "description": "Unique rule name (snake_case)"
+            },
+            "label": {
+              "description": "Human-readable label for the rule listing",
+              "type": "string"
+            },
+            "description": {
+              "description": "Administrative notes explaining the business reason",
+              "type": "string"
+            },
+            "active": {
+              "default": true,
+              "type": "boolean"
+            },
+            "events": {
+              "default": [
+                "insert",
+                "update"
+              ],
+              "description": "Validation contexts",
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "insert",
+                  "update",
+                  "delete"
+                ]
+              }
+            },
+            "priority": {
+              "default": 100,
+              "description": "Execution priority (lower runs first, default: 100)",
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9999
+            },
+            "tags": {
+              "description": "Categorization tags (e.g., \"compliance\", \"billing\")",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "severity": {
+              "default": "error",
+              "type": "string",
+              "enum": [
+                "error",
+                "warning",
+                "info"
+              ]
+            },
+            "message": {
+              "type": "string",
+              "description": "Error message to display to the user"
+            },
+            "type": {
+              "type": "string",
+              "const": "cross_field"
+            },
+            "condition": {
+              "type": "string",
+              "description": "Formula expression comparing fields (e.g. \"end_date > start_date\")"
+            },
+            "fields": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Fields involved in the validation"
+            }
+          },
+          "required": [
+            "name",
+            "active",
+            "events",
+            "priority",
+            "severity",
+            "message",
+            "type",
+            "condition",
+            "fields"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "pattern": "^[a-z_][a-z0-9_]*$",
+              "description": "Unique rule name (snake_case)"
+            },
+            "label": {
+              "description": "Human-readable label for the rule listing",
+              "type": "string"
+            },
+            "description": {
+              "description": "Administrative notes explaining the business reason",
+              "type": "string"
+            },
+            "active": {
+              "default": true,
+              "type": "boolean"
+            },
+            "events": {
+              "default": [
+                "insert",
+                "update"
+              ],
+              "description": "Validation contexts",
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "insert",
+                  "update",
+                  "delete"
+                ]
+              }
+            },
+            "priority": {
+              "default": 100,
+              "description": "Execution priority (lower runs first, default: 100)",
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9999
+            },
+            "tags": {
+              "description": "Categorization tags (e.g., \"compliance\", \"billing\")",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "severity": {
+              "default": "error",
+              "type": "string",
+              "enum": [
+                "error",
+                "warning",
+                "info"
+              ]
+            },
+            "message": {
+              "type": "string",
+              "description": "Error message to display to the user"
+            },
+            "type": {
+              "type": "string",
+              "const": "json_schema"
+            },
+            "field": {
+              "type": "string",
+              "description": "JSON field to validate"
+            },
+            "schema": {
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {},
+              "description": "JSON Schema object definition"
+            }
+          },
+          "required": [
+            "name",
+            "active",
+            "events",
+            "priority",
+            "severity",
+            "message",
+            "type",
+            "field",
+            "schema"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "pattern": "^[a-z_][a-z0-9_]*$",
+              "description": "Unique rule name (snake_case)"
+            },
+            "label": {
+              "description": "Human-readable label for the rule listing",
+              "type": "string"
+            },
+            "description": {
+              "description": "Administrative notes explaining the business reason",
+              "type": "string"
+            },
+            "active": {
+              "default": true,
+              "type": "boolean"
+            },
+            "events": {
+              "default": [
+                "insert",
+                "update"
+              ],
+              "description": "Validation contexts",
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "insert",
+                  "update",
+                  "delete"
+                ]
+              }
+            },
+            "priority": {
+              "default": 100,
+              "description": "Execution priority (lower runs first, default: 100)",
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9999
+            },
+            "tags": {
+              "description": "Categorization tags (e.g., \"compliance\", \"billing\")",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "severity": {
+              "default": "error",
+              "type": "string",
+              "enum": [
+                "error",
+                "warning",
+                "info"
+              ]
+            },
+            "message": {
+              "type": "string",
+              "description": "Error message to display to the user"
+            },
+            "type": {
+              "type": "string",
+              "const": "async"
+            },
+            "field": {
+              "type": "string",
+              "description": "Field to validate"
+            },
+            "validatorUrl": {
+              "description": "External API endpoint for validation",
+              "type": "string"
+            },
+            "method": {
+              "default": "GET",
+              "description": "HTTP method for external call",
+              "type": "string",
+              "enum": [
+                "GET",
+                "POST"
+              ]
+            },
+            "headers": {
+              "description": "Custom headers for the request",
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "validatorFunction": {
+              "description": "Reference to custom validator function",
+              "type": "string"
+            },
+            "timeout": {
+              "default": 5000,
+              "description": "Timeout in milliseconds",
+              "type": "number"
+            },
+            "debounce": {
+              "description": "Debounce delay in milliseconds",
+              "type": "number"
+            },
+            "params": {
+              "description": "Additional parameters to pass to validator",
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {}
+            }
+          },
+          "required": [
+            "name",
+            "active",
+            "events",
+            "priority",
+            "severity",
+            "message",
+            "type",
+            "field",
+            "method",
+            "timeout"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "pattern": "^[a-z_][a-z0-9_]*$",
+              "description": "Unique rule name (snake_case)"
+            },
+            "label": {
+              "description": "Human-readable label for the rule listing",
+              "type": "string"
+            },
+            "description": {
+              "description": "Administrative notes explaining the business reason",
+              "type": "string"
+            },
+            "active": {
+              "default": true,
+              "type": "boolean"
+            },
+            "events": {
+              "default": [
+                "insert",
+                "update"
+              ],
+              "description": "Validation contexts",
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "insert",
+                  "update",
+                  "delete"
+                ]
+              }
+            },
+            "priority": {
+              "default": 100,
+              "description": "Execution priority (lower runs first, default: 100)",
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9999
+            },
+            "tags": {
+              "description": "Categorization tags (e.g., \"compliance\", \"billing\")",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "severity": {
+              "default": "error",
+              "type": "string",
+              "enum": [
+                "error",
+                "warning",
+                "info"
+              ]
+            },
+            "message": {
+              "type": "string",
+              "description": "Error message to display to the user"
+            },
+            "type": {
+              "type": "string",
+              "const": "custom"
+            },
+            "handler": {
+              "type": "string",
+              "description": "Name of the custom validation function registered in the system"
+            },
+            "params": {
+              "description": "Parameters passed to the custom handler",
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {}
+            }
+          },
+          "required": [
+            "name",
+            "active",
+            "events",
+            "priority",
+            "severity",
+            "message",
+            "type",
+            "handler"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#"
+        }
+      ]
+    },
+    "otherwise": {
+      "description": "Validation rule to apply when condition is false",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "pattern": "^[a-z_][a-z0-9_]*$",
+              "description": "Unique rule name (snake_case)"
+            },
+            "label": {
+              "description": "Human-readable label for the rule listing",
+              "type": "string"
+            },
+            "description": {
+              "description": "Administrative notes explaining the business reason",
+              "type": "string"
+            },
+            "active": {
+              "default": true,
+              "type": "boolean"
+            },
+            "events": {
+              "default": [
+                "insert",
+                "update"
+              ],
+              "description": "Validation contexts",
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "insert",
+                  "update",
+                  "delete"
+                ]
+              }
+            },
+            "priority": {
+              "default": 100,
+              "description": "Execution priority (lower runs first, default: 100)",
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9999
+            },
+            "tags": {
+              "description": "Categorization tags (e.g., \"compliance\", \"billing\")",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "severity": {
+              "default": "error",
+              "type": "string",
+              "enum": [
+                "error",
+                "warning",
+                "info"
+              ]
+            },
+            "message": {
+              "type": "string",
+              "description": "Error message to display to the user"
+            },
+            "type": {
+              "type": "string",
+              "const": "script"
+            },
+            "condition": {
+              "type": "string",
+              "description": "Formula expression. If TRUE, validation fails. (e.g. amount < 0)"
+            }
+          },
+          "required": [
+            "name",
+            "active",
+            "events",
+            "priority",
+            "severity",
+            "message",
+            "type",
+            "condition"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "pattern": "^[a-z_][a-z0-9_]*$",
+              "description": "Unique rule name (snake_case)"
+            },
+            "label": {
+              "description": "Human-readable label for the rule listing",
+              "type": "string"
+            },
+            "description": {
+              "description": "Administrative notes explaining the business reason",
+              "type": "string"
+            },
+            "active": {
+              "default": true,
+              "type": "boolean"
+            },
+            "events": {
+              "default": [
+                "insert",
+                "update"
+              ],
+              "description": "Validation contexts",
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "insert",
+                  "update",
+                  "delete"
+                ]
+              }
+            },
+            "priority": {
+              "default": 100,
+              "description": "Execution priority (lower runs first, default: 100)",
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9999
+            },
+            "tags": {
+              "description": "Categorization tags (e.g., \"compliance\", \"billing\")",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "severity": {
+              "default": "error",
+              "type": "string",
+              "enum": [
+                "error",
+                "warning",
+                "info"
+              ]
+            },
+            "message": {
+              "type": "string",
+              "description": "Error message to display to the user"
+            },
+            "type": {
+              "type": "string",
+              "const": "unique"
+            },
+            "fields": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Fields that must be combined unique"
+            },
+            "scope": {
+              "description": "Formula condition for scope (e.g. active = true)",
+              "type": "string"
+            },
+            "caseSensitive": {
+              "default": true,
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "name",
+            "active",
+            "events",
+            "priority",
+            "severity",
+            "message",
+            "type",
+            "fields",
+            "caseSensitive"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "pattern": "^[a-z_][a-z0-9_]*$",
+              "description": "Unique rule name (snake_case)"
+            },
+            "label": {
+              "description": "Human-readable label for the rule listing",
+              "type": "string"
+            },
+            "description": {
+              "description": "Administrative notes explaining the business reason",
+              "type": "string"
+            },
+            "active": {
+              "default": true,
+              "type": "boolean"
+            },
+            "events": {
+              "default": [
+                "insert",
+                "update"
+              ],
+              "description": "Validation contexts",
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "insert",
+                  "update",
+                  "delete"
+                ]
+              }
+            },
+            "priority": {
+              "default": 100,
+              "description": "Execution priority (lower runs first, default: 100)",
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9999
+            },
+            "tags": {
+              "description": "Categorization tags (e.g., \"compliance\", \"billing\")",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "severity": {
+              "default": "error",
+              "type": "string",
+              "enum": [
+                "error",
+                "warning",
+                "info"
+              ]
+            },
+            "message": {
+              "type": "string",
+              "description": "Error message to display to the user"
+            },
+            "type": {
+              "type": "string",
+              "const": "state_machine"
+            },
+            "field": {
+              "type": "string",
+              "description": "State field (e.g. status)"
+            },
+            "transitions": {
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "description": "Map of { OldState: [AllowedNewStates] }"
+            }
+          },
+          "required": [
+            "name",
+            "active",
+            "events",
+            "priority",
+            "severity",
+            "message",
+            "type",
+            "field",
+            "transitions"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "pattern": "^[a-z_][a-z0-9_]*$",
+              "description": "Unique rule name (snake_case)"
+            },
+            "label": {
+              "description": "Human-readable label for the rule listing",
+              "type": "string"
+            },
+            "description": {
+              "description": "Administrative notes explaining the business reason",
+              "type": "string"
+            },
+            "active": {
+              "default": true,
+              "type": "boolean"
+            },
+            "events": {
+              "default": [
+                "insert",
+                "update"
+              ],
+              "description": "Validation contexts",
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "insert",
+                  "update",
+                  "delete"
+                ]
+              }
+            },
+            "priority": {
+              "default": 100,
+              "description": "Execution priority (lower runs first, default: 100)",
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9999
+            },
+            "tags": {
+              "description": "Categorization tags (e.g., \"compliance\", \"billing\")",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "severity": {
+              "default": "error",
+              "type": "string",
+              "enum": [
+                "error",
+                "warning",
+                "info"
+              ]
+            },
+            "message": {
+              "type": "string",
+              "description": "Error message to display to the user"
+            },
+            "type": {
+              "type": "string",
+              "const": "format"
+            },
+            "field": {
+              "type": "string"
+            },
+            "regex": {
+              "type": "string"
+            },
+            "format": {
+              "type": "string",
+              "enum": [
+                "email",
+                "url",
+                "phone",
+                "json"
+              ]
+            }
+          },
+          "required": [
+            "name",
+            "active",
+            "events",
+            "priority",
+            "severity",
+            "message",
+            "type",
+            "field"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "pattern": "^[a-z_][a-z0-9_]*$",
+              "description": "Unique rule name (snake_case)"
+            },
+            "label": {
+              "description": "Human-readable label for the rule listing",
+              "type": "string"
+            },
+            "description": {
+              "description": "Administrative notes explaining the business reason",
+              "type": "string"
+            },
+            "active": {
+              "default": true,
+              "type": "boolean"
+            },
+            "events": {
+              "default": [
+                "insert",
+                "update"
+              ],
+              "description": "Validation contexts",
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "insert",
+                  "update",
+                  "delete"
+                ]
+              }
+            },
+            "priority": {
+              "default": 100,
+              "description": "Execution priority (lower runs first, default: 100)",
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9999
+            },
+            "tags": {
+              "description": "Categorization tags (e.g., \"compliance\", \"billing\")",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "severity": {
+              "default": "error",
+              "type": "string",
+              "enum": [
+                "error",
+                "warning",
+                "info"
+              ]
+            },
+            "message": {
+              "type": "string",
+              "description": "Error message to display to the user"
+            },
+            "type": {
+              "type": "string",
+              "const": "cross_field"
+            },
+            "condition": {
+              "type": "string",
+              "description": "Formula expression comparing fields (e.g. \"end_date > start_date\")"
+            },
+            "fields": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Fields involved in the validation"
+            }
+          },
+          "required": [
+            "name",
+            "active",
+            "events",
+            "priority",
+            "severity",
+            "message",
+            "type",
+            "condition",
+            "fields"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "pattern": "^[a-z_][a-z0-9_]*$",
+              "description": "Unique rule name (snake_case)"
+            },
+            "label": {
+              "description": "Human-readable label for the rule listing",
+              "type": "string"
+            },
+            "description": {
+              "description": "Administrative notes explaining the business reason",
+              "type": "string"
+            },
+            "active": {
+              "default": true,
+              "type": "boolean"
+            },
+            "events": {
+              "default": [
+                "insert",
+                "update"
+              ],
+              "description": "Validation contexts",
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "insert",
+                  "update",
+                  "delete"
+                ]
+              }
+            },
+            "priority": {
+              "default": 100,
+              "description": "Execution priority (lower runs first, default: 100)",
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9999
+            },
+            "tags": {
+              "description": "Categorization tags (e.g., \"compliance\", \"billing\")",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "severity": {
+              "default": "error",
+              "type": "string",
+              "enum": [
+                "error",
+                "warning",
+                "info"
+              ]
+            },
+            "message": {
+              "type": "string",
+              "description": "Error message to display to the user"
+            },
+            "type": {
+              "type": "string",
+              "const": "json_schema"
+            },
+            "field": {
+              "type": "string",
+              "description": "JSON field to validate"
+            },
+            "schema": {
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {},
+              "description": "JSON Schema object definition"
+            }
+          },
+          "required": [
+            "name",
+            "active",
+            "events",
+            "priority",
+            "severity",
+            "message",
+            "type",
+            "field",
+            "schema"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "pattern": "^[a-z_][a-z0-9_]*$",
+              "description": "Unique rule name (snake_case)"
+            },
+            "label": {
+              "description": "Human-readable label for the rule listing",
+              "type": "string"
+            },
+            "description": {
+              "description": "Administrative notes explaining the business reason",
+              "type": "string"
+            },
+            "active": {
+              "default": true,
+              "type": "boolean"
+            },
+            "events": {
+              "default": [
+                "insert",
+                "update"
+              ],
+              "description": "Validation contexts",
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "insert",
+                  "update",
+                  "delete"
+                ]
+              }
+            },
+            "priority": {
+              "default": 100,
+              "description": "Execution priority (lower runs first, default: 100)",
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9999
+            },
+            "tags": {
+              "description": "Categorization tags (e.g., \"compliance\", \"billing\")",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "severity": {
+              "default": "error",
+              "type": "string",
+              "enum": [
+                "error",
+                "warning",
+                "info"
+              ]
+            },
+            "message": {
+              "type": "string",
+              "description": "Error message to display to the user"
+            },
+            "type": {
+              "type": "string",
+              "const": "async"
+            },
+            "field": {
+              "type": "string",
+              "description": "Field to validate"
+            },
+            "validatorUrl": {
+              "description": "External API endpoint for validation",
+              "type": "string"
+            },
+            "method": {
+              "default": "GET",
+              "description": "HTTP method for external call",
+              "type": "string",
+              "enum": [
+                "GET",
+                "POST"
+              ]
+            },
+            "headers": {
+              "description": "Custom headers for the request",
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "validatorFunction": {
+              "description": "Reference to custom validator function",
+              "type": "string"
+            },
+            "timeout": {
+              "default": 5000,
+              "description": "Timeout in milliseconds",
+              "type": "number"
+            },
+            "debounce": {
+              "description": "Debounce delay in milliseconds",
+              "type": "number"
+            },
+            "params": {
+              "description": "Additional parameters to pass to validator",
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {}
+            }
+          },
+          "required": [
+            "name",
+            "active",
+            "events",
+            "priority",
+            "severity",
+            "message",
+            "type",
+            "field",
+            "method",
+            "timeout"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "pattern": "^[a-z_][a-z0-9_]*$",
+              "description": "Unique rule name (snake_case)"
+            },
+            "label": {
+              "description": "Human-readable label for the rule listing",
+              "type": "string"
+            },
+            "description": {
+              "description": "Administrative notes explaining the business reason",
+              "type": "string"
+            },
+            "active": {
+              "default": true,
+              "type": "boolean"
+            },
+            "events": {
+              "default": [
+                "insert",
+                "update"
+              ],
+              "description": "Validation contexts",
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "insert",
+                  "update",
+                  "delete"
+                ]
+              }
+            },
+            "priority": {
+              "default": 100,
+              "description": "Execution priority (lower runs first, default: 100)",
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9999
+            },
+            "tags": {
+              "description": "Categorization tags (e.g., \"compliance\", \"billing\")",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "severity": {
+              "default": "error",
+              "type": "string",
+              "enum": [
+                "error",
+                "warning",
+                "info"
+              ]
+            },
+            "message": {
+              "type": "string",
+              "description": "Error message to display to the user"
+            },
+            "type": {
+              "type": "string",
+              "const": "custom"
+            },
+            "handler": {
+              "type": "string",
+              "description": "Name of the custom validation function registered in the system"
+            },
+            "params": {
+              "description": "Parameters passed to the custom handler",
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {}
+            }
+          },
+          "required": [
+            "name",
+            "active",
+            "events",
+            "priority",
+            "severity",
+            "message",
+            "type",
+            "handler"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#"
+        }
+      ]
+    }
+  },
+  "required": [
+    "name",
+    "active",
+    "events",
+    "priority",
+    "severity",
+    "message",
+    "type",
+    "when",
+    "then"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/data/ConditionalValidation.json",
+  "x-spec-version": "3.0.11"
+}

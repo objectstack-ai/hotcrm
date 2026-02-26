@@ -1,0 +1,162 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique task identifier"
+    },
+    "type": {
+      "type": "string",
+      "pattern": "^[a-z_][a-z0-9_]*$",
+      "description": "Task type (snake_case)"
+    },
+    "payload": {
+      "description": "Task payload data"
+    },
+    "queue": {
+      "default": "default",
+      "description": "Queue name",
+      "type": "string"
+    },
+    "priority": {
+      "default": "normal",
+      "description": "Task priority level",
+      "type": "string",
+      "enum": [
+        "critical",
+        "high",
+        "normal",
+        "low",
+        "background"
+      ]
+    },
+    "retryPolicy": {
+      "description": "Retry policy configuration",
+      "type": "object",
+      "properties": {
+        "maxRetries": {
+          "default": 3,
+          "description": "Maximum retry attempts",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "backoffStrategy": {
+          "default": "exponential",
+          "description": "Backoff strategy between retries",
+          "type": "string",
+          "enum": [
+            "fixed",
+            "linear",
+            "exponential"
+          ]
+        },
+        "initialDelayMs": {
+          "default": 1000,
+          "description": "Initial retry delay in milliseconds",
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maxDelayMs": {
+          "default": 60000,
+          "description": "Maximum retry delay in milliseconds",
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "backoffMultiplier": {
+          "default": 2,
+          "description": "Multiplier for exponential backoff",
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "required": [
+        "maxRetries",
+        "backoffStrategy",
+        "initialDelayMs",
+        "maxDelayMs",
+        "backoffMultiplier"
+      ],
+      "additionalProperties": false
+    },
+    "timeoutMs": {
+      "description": "Task timeout in milliseconds",
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    },
+    "scheduledAt": {
+      "description": "ISO 8601 datetime to execute task",
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+    },
+    "attempts": {
+      "default": 0,
+      "description": "Number of execution attempts",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "status": {
+      "default": "pending",
+      "description": "Current task status",
+      "type": "string",
+      "enum": [
+        "pending",
+        "queued",
+        "processing",
+        "completed",
+        "failed",
+        "cancelled",
+        "timeout",
+        "dead"
+      ]
+    },
+    "metadata": {
+      "description": "Task metadata",
+      "type": "object",
+      "properties": {
+        "createdAt": {
+          "description": "When task was created",
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+        },
+        "updatedAt": {
+          "description": "Last update time",
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+        },
+        "createdBy": {
+          "description": "User who created task",
+          "type": "string"
+        },
+        "tags": {
+          "description": "Task tags for filtering",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "id",
+    "type",
+    "payload",
+    "queue",
+    "priority",
+    "attempts",
+    "status"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/system/Task.json",
+  "x-spec-version": "3.0.11"
+}

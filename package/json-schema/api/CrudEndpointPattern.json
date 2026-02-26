@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "method": {
+      "type": "string",
+      "enum": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE",
+        "PATCH",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "description": "HTTP method"
+    },
+    "path": {
+      "type": "string",
+      "description": "URL path pattern"
+    },
+    "summary": {
+      "description": "Operation summary",
+      "type": "string"
+    },
+    "description": {
+      "description": "Operation description",
+      "type": "string"
+    }
+  },
+  "required": [
+    "method",
+    "path"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/CrudEndpointPattern.json",
+  "x-spec-version": "3.0.11"
+}

@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "nodeId": {
+      "type": "string",
+      "description": "Corresponding FlowNode.id"
+    },
+    "x": {
+      "type": "number",
+      "description": "X position on canvas"
+    },
+    "y": {
+      "type": "number",
+      "description": "Y position on canvas"
+    },
+    "width": {
+      "description": "Width override in pixels",
+      "type": "integer",
+      "minimum": 20,
+      "maximum": 9007199254740991
+    },
+    "height": {
+      "description": "Height override in pixels",
+      "type": "integer",
+      "minimum": 20,
+      "maximum": 9007199254740991
+    },
+    "collapsed": {
+      "default": false,
+      "description": "Whether the node is collapsed",
+      "type": "boolean"
+    },
+    "fillColor": {
+      "description": "Fill color override",
+      "type": "string"
+    },
+    "borderColor": {
+      "description": "Border color override",
+      "type": "string"
+    },
+    "annotation": {
+      "description": "User annotation displayed near the node",
+      "type": "string"
+    }
+  },
+  "required": [
+    "nodeId",
+    "x",
+    "y",
+    "collapsed"
+  ],
+  "additionalProperties": false,
+  "description": "Canvas layout data for a flow node",
+  "$id": "https://schema.objectstack.io/v3.0.11/studio/FlowCanvasNode.json",
+  "x-spec-version": "3.0.11"
+}

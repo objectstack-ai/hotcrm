@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "type": {
+      "default": "rolling",
+      "description": "Deployment strategy",
+      "type": "string",
+      "enum": [
+        "rolling",
+        "blue_green",
+        "canary",
+        "recreate"
+      ]
+    },
+    "canaryPercentage": {
+      "default": 10,
+      "description": "Canary deployment percentage",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "healthCheckUrl": {
+      "description": "Health check endpoint",
+      "type": "string"
+    },
+    "healthCheckTimeout": {
+      "default": 60,
+      "description": "Health check timeout in seconds",
+      "type": "integer",
+      "minimum": 10,
+      "maximum": 9007199254740991
+    },
+    "autoRollback": {
+      "default": true,
+      "description": "Automatically rollback on failure",
+      "type": "boolean"
+    },
+    "smokeTests": {
+      "description": "Smoke test commands to run post-deployment",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "type",
+    "canaryPercentage",
+    "healthCheckTimeout",
+    "autoRollback"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/ai/DeploymentStrategy.json",
+  "x-spec-version": "3.0.11"
+}

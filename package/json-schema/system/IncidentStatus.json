@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "reported",
+    "triaged",
+    "investigating",
+    "containing",
+    "eradicating",
+    "recovering",
+    "resolved",
+    "closed"
+  ],
+  "$id": "https://schema.objectstack.io/v3.0.11/system/IncidentStatus.json",
+  "x-spec-version": "3.0.11"
+}

@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Notification title"
+    },
+    "message": {
+      "type": "string",
+      "description": "Notification message"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "info",
+        "success",
+        "warning",
+        "error"
+      ],
+      "description": "Notification type"
+    },
+    "actionUrl": {
+      "description": "Action URL",
+      "type": "string"
+    },
+    "dismissible": {
+      "default": true,
+      "description": "User dismissible",
+      "type": "boolean"
+    },
+    "expiresAt": {
+      "description": "Expiration timestamp",
+      "type": "number"
+    }
+  },
+  "required": [
+    "title",
+    "message",
+    "type",
+    "dismissible"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/system/InAppNotification.json",
+  "x-spec-version": "3.0.11"
+}

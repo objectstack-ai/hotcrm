@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "ot",
+    "crdt",
+    "lock",
+    "hybrid"
+  ],
+  "$id": "https://schema.objectstack.io/v3.0.11/system/CollaborationMode.json",
+  "x-spec-version": "3.0.11"
+}

@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "API version (e.g., \"v2\", \"2023-10-01\")"
+    },
+    "isDefault": {
+      "default": false,
+      "description": "Is this the default version",
+      "type": "boolean"
+    },
+    "deprecationDate": {
+      "description": "API version deprecation date (ISO 8601)",
+      "type": "string"
+    },
+    "sunsetDate": {
+      "description": "API version sunset date (ISO 8601)",
+      "type": "string"
+    }
+  },
+  "required": [
+    "version",
+    "isDefault"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/integration/ApiVersionConfig.json",
+  "x-spec-version": "3.0.11"
+}

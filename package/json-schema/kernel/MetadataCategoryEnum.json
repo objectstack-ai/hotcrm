@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "objects",
+    "views",
+    "pages",
+    "flows",
+    "dashboards",
+    "permissions",
+    "agents",
+    "reports",
+    "actions",
+    "translations",
+    "themes",
+    "datasets",
+    "apis",
+    "triggers",
+    "workflows"
+  ],
+  "description": "Metadata category within the artifact",
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/MetadataCategoryEnum.json",
+  "x-spec-version": "3.0.11"
+}

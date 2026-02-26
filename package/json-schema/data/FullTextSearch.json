@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "query": {
+      "type": "string",
+      "description": "Search query text"
+    },
+    "fields": {
+      "description": "Fields to search in (if not specified, searches all text fields)",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "fuzzy": {
+      "default": false,
+      "description": "Enable fuzzy matching (tolerates typos)",
+      "type": "boolean"
+    },
+    "operator": {
+      "default": "or",
+      "description": "Logical operator between terms",
+      "type": "string",
+      "enum": [
+        "and",
+        "or"
+      ]
+    },
+    "boost": {
+      "description": "Field-specific relevance boosting (field name -> boost factor)",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "number"
+      }
+    },
+    "minScore": {
+      "description": "Minimum relevance score threshold",
+      "type": "number"
+    },
+    "language": {
+      "description": "Language for text analysis (e.g., \"en\", \"zh\", \"es\")",
+      "type": "string"
+    },
+    "highlight": {
+      "default": false,
+      "description": "Enable search result highlighting",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "query",
+    "fuzzy",
+    "operator",
+    "highlight"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/data/FullTextSearch.json",
+  "x-spec-version": "3.0.11"
+}

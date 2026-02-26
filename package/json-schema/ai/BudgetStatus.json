@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "budgetId": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "global",
+        "user",
+        "agent",
+        "object",
+        "project",
+        "department"
+      ]
+    },
+    "scope": {
+      "type": "string"
+    },
+    "periodStart": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+      "description": "ISO 8601 timestamp"
+    },
+    "periodEnd": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+      "description": "ISO 8601 timestamp"
+    },
+    "currentCost": {
+      "default": 0,
+      "type": "number",
+      "minimum": 0
+    },
+    "maxCost": {
+      "type": "number",
+      "minimum": 0
+    },
+    "currency": {
+      "default": "USD",
+      "type": "string"
+    },
+    "percentageUsed": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Usage as percentage (can exceed 1.0 if over budget)"
+    },
+    "remainingCost": {
+      "type": "number",
+      "description": "Remaining budget (can be negative if exceeded)"
+    },
+    "isExceeded": {
+      "default": false,
+      "type": "boolean"
+    },
+    "isWarning": {
+      "default": false,
+      "type": "boolean"
+    },
+    "projectedCost": {
+      "description": "Projected cost for period",
+      "type": "number",
+      "minimum": 0
+    },
+    "projectedOverage": {
+      "description": "Projected overage",
+      "type": "number",
+      "minimum": 0
+    },
+    "lastUpdated": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+      "description": "ISO 8601 timestamp"
+    }
+  },
+  "required": [
+    "budgetId",
+    "type",
+    "periodStart",
+    "periodEnd",
+    "currentCost",
+    "maxCost",
+    "currency",
+    "percentageUsed",
+    "remainingCost",
+    "isExceeded",
+    "isWarning",
+    "lastUpdated"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/ai/BudgetStatus.json",
+  "x-spec-version": "3.0.11"
+}

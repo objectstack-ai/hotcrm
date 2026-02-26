@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "learningRate": {
+      "description": "Learning rate for training",
+      "type": "number"
+    },
+    "epochs": {
+      "description": "Number of training epochs",
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991
+    },
+    "batchSize": {
+      "description": "Training batch size",
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991
+    },
+    "maxDepth": {
+      "description": "Maximum tree depth",
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991
+    },
+    "numTrees": {
+      "description": "Number of trees in ensemble",
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991
+    },
+    "minSamplesSplit": {
+      "description": "Minimum samples to split node",
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991
+    },
+    "minSamplesLeaf": {
+      "description": "Minimum samples in leaf node",
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991
+    },
+    "hiddenLayers": {
+      "description": "Hidden layer sizes",
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": -9007199254740991,
+        "maximum": 9007199254740991
+      }
+    },
+    "activation": {
+      "description": "Activation function",
+      "type": "string"
+    },
+    "dropout": {
+      "description": "Dropout rate",
+      "type": "number"
+    },
+    "l1Regularization": {
+      "description": "L1 regularization strength",
+      "type": "number"
+    },
+    "l2Regularization": {
+      "description": "L2 regularization strength",
+      "type": "number"
+    },
+    "numClusters": {
+      "description": "Number of clusters (k-means, etc.)",
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991
+    },
+    "seasonalPeriod": {
+      "description": "Seasonal period for time series",
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991
+    },
+    "forecastHorizon": {
+      "description": "Number of periods to forecast",
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991
+    },
+    "custom": {
+      "description": "Algorithm-specific parameters",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
+    }
+  },
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/ai/Hyperparameters.json",
+  "x-spec-version": "3.0.11"
+}

@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "anyOf": [
+    {
+      "type": "string"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string",
+          "description": "Translation key (e.g., \"views.task_list.label\")"
+        },
+        "defaultValue": {
+          "description": "Fallback value when translation key is not found",
+          "type": "string"
+        },
+        "params": {
+          "description": "Interpolation parameters (e.g., { count: 5 })",
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              }
+            ]
+          }
+        }
+      },
+      "required": [
+        "key"
+      ],
+      "additionalProperties": false
+    }
+  ],
+  "description": "Display label: plain string or i18n translation object",
+  "$id": "https://schema.objectstack.io/v3.0.11/ui/I18nLabel.json",
+  "x-spec-version": "3.0.11"
+}

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "uri": {
+      "type": "string",
+      "description": "Root URI (e.g., file:///path/to/project)"
+    },
+    "name": {
+      "description": "Human-readable root name",
+      "type": "string"
+    },
+    "readOnly": {
+      "description": "Whether the root is read-only",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "uri"
+  ],
+  "additionalProperties": false,
+  "description": "A single root directory or resource",
+  "$id": "https://schema.objectstack.io/v3.0.11/ai/MCPRootEntry.json",
+  "x-spec-version": "3.0.11"
+}

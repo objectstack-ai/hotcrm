@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "autoDeployment": {
+      "default": true,
+      "description": "Enable automatic deployments",
+      "type": "boolean"
+    },
+    "regions": {
+      "description": "Deployment regions",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "iad1",
+          "sfo1",
+          "gru1",
+          "lhr1",
+          "fra1",
+          "sin1",
+          "syd1",
+          "hnd1",
+          "icn1"
+        ]
+      }
+    },
+    "enablePreview": {
+      "default": true,
+      "description": "Enable preview deployments",
+      "type": "boolean"
+    },
+    "previewComments": {
+      "default": true,
+      "description": "Post preview URLs in PR comments",
+      "type": "boolean"
+    },
+    "productionProtection": {
+      "default": true,
+      "description": "Require approval for production deployments",
+      "type": "boolean"
+    },
+    "deployHooks": {
+      "description": "Deploy hooks",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Hook name"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Deploy hook URL"
+          },
+          "branch": {
+            "description": "Target branch",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "url"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "autoDeployment",
+    "enablePreview",
+    "previewComments",
+    "productionProtection"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/integration/DeploymentConfig.json",
+  "x-spec-version": "3.0.11"
+}

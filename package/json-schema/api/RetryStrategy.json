@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "no_retry",
+    "retry_immediate",
+    "retry_backoff",
+    "retry_after"
+  ],
+  "$id": "https://schema.objectstack.io/v3.0.11/api/RetryStrategy.json",
+  "x-spec-version": "3.0.11"
+}

@@ -1,0 +1,178 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "pluginId": {
+      "type": "string"
+    },
+    "currentVersion": {
+      "type": "string"
+    },
+    "compatibilityMatrix": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "description": "Version being upgraded from"
+          },
+          "to": {
+            "type": "string",
+            "description": "Version being upgraded to"
+          },
+          "compatibility": {
+            "type": "string",
+            "enum": [
+              "fully-compatible",
+              "backward-compatible",
+              "deprecated-compatible",
+              "breaking-changes",
+              "incompatible"
+            ],
+            "description": "Compatibility level between versions"
+          },
+          "breakingChanges": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "introducedIn": {
+                  "type": "string",
+                  "description": "Version that introduced this breaking change"
+                },
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "api-removed",
+                    "api-renamed",
+                    "api-signature-changed",
+                    "behavior-changed",
+                    "dependency-changed",
+                    "configuration-changed",
+                    "protocol-changed"
+                  ]
+                },
+                "description": {
+                  "type": "string"
+                },
+                "migrationGuide": {
+                  "description": "How to migrate from old to new",
+                  "type": "string"
+                },
+                "deprecatedIn": {
+                  "description": "Version where old API was deprecated",
+                  "type": "string"
+                },
+                "removedIn": {
+                  "description": "Version where old API will be removed",
+                  "type": "string"
+                },
+                "automatedMigration": {
+                  "default": false,
+                  "description": "Whether automated migration tool is available",
+                  "type": "boolean"
+                },
+                "severity": {
+                  "type": "string",
+                  "enum": [
+                    "critical",
+                    "major",
+                    "minor"
+                  ],
+                  "description": "Impact severity"
+                }
+              },
+              "required": [
+                "introducedIn",
+                "type",
+                "description",
+                "automatedMigration",
+                "severity"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "migrationRequired": {
+            "default": false,
+            "type": "boolean"
+          },
+          "migrationComplexity": {
+            "type": "string",
+            "enum": [
+              "trivial",
+              "simple",
+              "moderate",
+              "complex",
+              "major"
+            ]
+          },
+          "estimatedMigrationTime": {
+            "type": "number"
+          },
+          "migrationScript": {
+            "description": "Path to migration script",
+            "type": "string"
+          },
+          "testCoverage": {
+            "description": "Percentage of migration covered by tests",
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100
+          }
+        },
+        "required": [
+          "from",
+          "to",
+          "compatibility",
+          "migrationRequired"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "supportedVersions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "supported": {
+            "type": "boolean"
+          },
+          "endOfLife": {
+            "description": "End of support date",
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+          },
+          "securitySupport": {
+            "default": false,
+            "description": "Still receives security updates",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "version",
+          "supported",
+          "securitySupport"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "minimumCompatibleVersion": {
+      "description": "Oldest version that can be directly upgraded",
+      "type": "string"
+    }
+  },
+  "required": [
+    "pluginId",
+    "currentVersion",
+    "compatibilityMatrix",
+    "supportedVersions"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/PluginCompatibilityMatrix.json",
+  "x-spec-version": "3.0.11"
+}

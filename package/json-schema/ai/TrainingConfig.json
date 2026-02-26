@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "trainingDataRatio": {
+      "default": 0.8,
+      "description": "Proportion of data for training",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "validationDataRatio": {
+      "default": 0.1,
+      "description": "Proportion for validation",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "testDataRatio": {
+      "default": 0.1,
+      "description": "Proportion for testing",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "dataFilter": {
+      "description": "Formula to filter training data",
+      "type": "string"
+    },
+    "minRecords": {
+      "default": 100,
+      "description": "Minimum records required",
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991
+    },
+    "maxRecords": {
+      "description": "Maximum records to use",
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991
+    },
+    "strategy": {
+      "default": "full",
+      "type": "string",
+      "enum": [
+        "full",
+        "incremental",
+        "online",
+        "transfer_learning"
+      ]
+    },
+    "crossValidation": {
+      "default": true,
+      "type": "boolean"
+    },
+    "folds": {
+      "default": 5,
+      "description": "Cross-validation folds",
+      "type": "integer",
+      "minimum": 2,
+      "maximum": 10
+    },
+    "earlyStoppingEnabled": {
+      "default": true,
+      "type": "boolean"
+    },
+    "earlyStoppingPatience": {
+      "default": 10,
+      "description": "Epochs without improvement before stopping",
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991
+    },
+    "maxTrainingTime": {
+      "description": "Maximum training time in seconds",
+      "type": "number"
+    },
+    "gpuEnabled": {
+      "default": false,
+      "type": "boolean"
+    },
+    "randomSeed": {
+      "description": "Random seed for reproducibility",
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991
+    }
+  },
+  "required": [
+    "trainingDataRatio",
+    "validationDataRatio",
+    "testDataRatio",
+    "minRecords",
+    "strategy",
+    "crossValidation",
+    "folds",
+    "earlyStoppingEnabled",
+    "earlyStoppingPatience",
+    "gpuEnabled"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/ai/TrainingConfig.json",
+  "x-spec-version": "3.0.11"
+}

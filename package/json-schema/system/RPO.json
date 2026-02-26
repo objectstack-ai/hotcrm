@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "value": {
+      "type": "number",
+      "minimum": 0,
+      "description": "RPO value"
+    },
+    "unit": {
+      "default": "minutes",
+      "description": "RPO time unit",
+      "type": "string",
+      "enum": [
+        "seconds",
+        "minutes",
+        "hours"
+      ]
+    }
+  },
+  "required": [
+    "value",
+    "unit"
+  ],
+  "additionalProperties": false,
+  "description": "Recovery Point Objective (maximum acceptable data loss)",
+  "$id": "https://schema.objectstack.io/v3.0.11/system/RPO.json",
+  "x-spec-version": "3.0.11"
+}

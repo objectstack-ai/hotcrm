@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "compatible": {
+      "type": "boolean",
+      "description": "Whether the app is compatible"
+    },
+    "issues": {
+      "default": [],
+      "description": "Compatibility issues",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "severity": {
+            "type": "string",
+            "enum": [
+              "error",
+              "warning"
+            ],
+            "description": "Issue severity"
+          },
+          "message": {
+            "type": "string",
+            "description": "Issue description"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "kernel_version",
+              "object_conflict",
+              "dependency_missing",
+              "quota_exceeded"
+            ],
+            "description": "Issue category"
+          }
+        },
+        "required": [
+          "severity",
+          "message",
+          "category"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "compatible",
+    "issues"
+  ],
+  "additionalProperties": false,
+  "description": "App compatibility check result",
+  "$id": "https://schema.objectstack.io/v3.0.11/system/AppCompatibilityCheck.json",
+  "x-spec-version": "3.0.11"
+}

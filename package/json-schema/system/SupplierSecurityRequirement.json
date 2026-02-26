@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Requirement identifier"
+    },
+    "description": {
+      "type": "string",
+      "description": "Requirement description"
+    },
+    "controlReference": {
+      "description": "ISO 27001 control reference",
+      "type": "string"
+    },
+    "mandatory": {
+      "default": true,
+      "description": "Whether this requirement is mandatory",
+      "type": "boolean"
+    },
+    "compliant": {
+      "description": "Whether the supplier meets this requirement",
+      "type": "boolean"
+    },
+    "evidence": {
+      "description": "Compliance evidence or assessment notes",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "description",
+    "mandatory"
+  ],
+  "additionalProperties": false,
+  "description": "Individual supplier security requirement",
+  "$id": "https://schema.objectstack.io/v3.0.11/system/SupplierSecurityRequirement.json",
+  "x-spec-version": "3.0.11"
+}

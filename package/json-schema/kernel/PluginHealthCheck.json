@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "interval": {
+      "default": 30000,
+      "description": "How often to perform health checks (default: 30s)",
+      "type": "integer",
+      "minimum": 1000,
+      "maximum": 9007199254740991
+    },
+    "timeout": {
+      "default": 5000,
+      "description": "Maximum time to wait for health check response",
+      "type": "integer",
+      "minimum": 100,
+      "maximum": 9007199254740991
+    },
+    "failureThreshold": {
+      "default": 3,
+      "description": "Consecutive failures needed to mark unhealthy",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "successThreshold": {
+      "default": 1,
+      "description": "Consecutive successes needed to mark healthy",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "checkMethod": {
+      "description": "Method name to call for health check",
+      "type": "string"
+    },
+    "autoRestart": {
+      "default": false,
+      "description": "Automatically restart plugin on health check failure",
+      "type": "boolean"
+    },
+    "maxRestartAttempts": {
+      "default": 3,
+      "description": "Maximum restart attempts before giving up",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "restartBackoff": {
+      "default": "exponential",
+      "description": "Backoff strategy for restart delays",
+      "type": "string",
+      "enum": [
+        "fixed",
+        "linear",
+        "exponential"
+      ]
+    }
+  },
+  "required": [
+    "interval",
+    "timeout",
+    "failureThreshold",
+    "successThreshold",
+    "autoRestart",
+    "maxRestartAttempts",
+    "restartBackoff"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/PluginHealthCheck.json",
+  "x-spec-version": "3.0.11"
+}

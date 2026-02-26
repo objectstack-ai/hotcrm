@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "success": {
+      "type": "boolean",
+      "description": "Operation success status"
+    },
+    "error": {
+      "description": "Error details if success is false",
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "description": "Error code (e.g. validation_error)"
+        },
+        "message": {
+          "type": "string",
+          "description": "Readable error message"
+        },
+        "category": {
+          "description": "Error category (e.g. validation, authorization)",
+          "type": "string"
+        },
+        "details": {
+          "description": "Additional error context (e.g. field validation errors)"
+        },
+        "requestId": {
+          "description": "Request ID for tracking",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ],
+      "additionalProperties": false
+    },
+    "meta": {
+      "description": "Response metadata",
+      "type": "object",
+      "properties": {
+        "timestamp": {
+          "type": "string"
+        },
+        "duration": {
+          "type": "number"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "traceId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "timestamp"
+      ],
+      "additionalProperties": false
+    },
+    "data": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "description": "Whether the rollback succeeded"
+        },
+        "restoredVersion": {
+          "description": "Restored version",
+          "type": "string"
+        },
+        "message": {
+          "description": "Rollback status message",
+          "type": "string"
+        }
+      },
+      "required": [
+        "success"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "success",
+    "data"
+  ],
+  "additionalProperties": false,
+  "description": "Rollback package response",
+  "$id": "https://schema.objectstack.io/v3.0.11/api/PackageRollbackResponse.json",
+  "x-spec-version": "3.0.11"
+}

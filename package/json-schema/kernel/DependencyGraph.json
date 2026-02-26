@@ -1,0 +1,195 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "root": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Identifier of the root package"
+        },
+        "version": {
+          "type": "string",
+          "description": "Version of the root package"
+        }
+      },
+      "required": [
+        "id",
+        "version"
+      ],
+      "additionalProperties": false,
+      "description": "Root package of the dependency graph"
+    },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier of the package"
+          },
+          "version": {
+            "type": "string",
+            "description": "Resolved version of the package"
+          },
+          "dependencies": {
+            "default": [],
+            "description": "Dependencies required by this package",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Package name or identifier"
+                },
+                "versionConstraint": {
+                  "type": "string",
+                  "description": "Semver range (e.g., `^1.0.0`, `>=2.0.0 <3.0.0`)"
+                },
+                "type": {
+                  "default": "required",
+                  "description": "Category of the dependency relationship",
+                  "type": "string",
+                  "enum": [
+                    "required",
+                    "optional",
+                    "peer",
+                    "dev"
+                  ]
+                },
+                "resolvedVersion": {
+                  "description": "Concrete version resolved during dependency resolution",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name",
+                "versionConstraint",
+                "type"
+              ],
+              "additionalProperties": false,
+              "description": "A package dependency with its version constraint"
+            }
+          },
+          "depth": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "description": "Depth level in the dependency tree (0 = root)"
+          },
+          "isDirect": {
+            "type": "boolean",
+            "description": "Whether this is a direct (top-level) dependency"
+          },
+          "metadata": {
+            "description": "Additional metadata about the package",
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Display name of the package"
+              },
+              "description": {
+                "description": "Short description of the package",
+                "type": "string"
+              },
+              "license": {
+                "description": "SPDX license identifier of the package",
+                "type": "string"
+              },
+              "homepage": {
+                "description": "Homepage URL of the package",
+                "type": "string",
+                "format": "uri"
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "id",
+          "version",
+          "dependencies",
+          "depth",
+          "isDirect"
+        ],
+        "additionalProperties": false,
+        "description": "A node in the dependency graph representing a resolved package"
+      },
+      "description": "All resolved package nodes in the dependency graph"
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "description": "Package ID"
+          },
+          "to": {
+            "type": "string",
+            "description": "Package ID"
+          },
+          "constraint": {
+            "type": "string",
+            "description": "Version constraint"
+          }
+        },
+        "required": [
+          "from",
+          "to",
+          "constraint"
+        ],
+        "additionalProperties": false
+      },
+      "description": "Directed edges representing dependency relationships"
+    },
+    "stats": {
+      "type": "object",
+      "properties": {
+        "totalDependencies": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991,
+          "description": "Total number of resolved dependencies"
+        },
+        "directDependencies": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991,
+          "description": "Number of direct (top-level) dependencies"
+        },
+        "maxDepth": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991,
+          "description": "Maximum depth of the dependency tree"
+        }
+      },
+      "required": [
+        "totalDependencies",
+        "directDependencies",
+        "maxDepth"
+      ],
+      "additionalProperties": false,
+      "description": "Summary statistics for the dependency graph"
+    }
+  },
+  "required": [
+    "root",
+    "nodes",
+    "edges",
+    "stats"
+  ],
+  "additionalProperties": false,
+  "description": "Complete dependency graph for a package and its transitive dependencies",
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/DependencyGraph.json",
+  "x-spec-version": "3.0.11"
+}

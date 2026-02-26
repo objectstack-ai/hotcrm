@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Unique plugin identifier"
+    },
+    "version": {
+      "description": "Semantic version (e.g., 1.0.0)",
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "dependencies": {
+      "description": "Array of plugin names this plugin depends on",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "signature": {
+      "description": "Cryptographic signature for plugin verification",
+      "type": "string"
+    }
+  },
+  "required": [
+    "name"
+  ],
+  "additionalProperties": {},
+  "description": "Plugin metadata for validation",
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/PluginMetadata.json",
+  "x-spec-version": "3.0.11"
+}

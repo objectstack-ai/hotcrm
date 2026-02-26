@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "value": {
+      "type": "string",
+      "description": "Member ID"
+    },
+    "$ref": {
+      "description": "URI reference to the member",
+      "type": "string",
+      "format": "uri"
+    },
+    "type": {
+      "description": "Member type",
+      "type": "string",
+      "enum": [
+        "User",
+        "Group"
+      ]
+    },
+    "display": {
+      "description": "Member display name",
+      "type": "string"
+    }
+  },
+  "required": [
+    "value"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/identity/SCIMMemberReference.json",
+  "x-spec-version": "3.0.11"
+}

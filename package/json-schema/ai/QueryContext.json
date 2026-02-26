@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "userId": {
+      "type": "string"
+    },
+    "userRole": {
+      "type": "string"
+    },
+    "currentObject": {
+      "description": "Current object being viewed",
+      "type": "string"
+    },
+    "currentRecordId": {
+      "description": "Current record ID",
+      "type": "string"
+    },
+    "conversationHistory": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string"
+          },
+          "intent": {
+            "type": "string",
+            "enum": [
+              "select",
+              "aggregate",
+              "filter",
+              "sort",
+              "compare",
+              "trend",
+              "insight",
+              "create",
+              "update",
+              "delete"
+            ]
+          }
+        },
+        "required": [
+          "query",
+          "timestamp"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "defaultLimit": {
+      "default": 100,
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991
+    },
+    "timezone": {
+      "default": "UTC",
+      "type": "string"
+    },
+    "locale": {
+      "default": "en-US",
+      "type": "string"
+    }
+  },
+  "required": [
+    "defaultLimit",
+    "timezone",
+    "locale"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/ai/QueryContext.json",
+  "x-spec-version": "3.0.11"
+}

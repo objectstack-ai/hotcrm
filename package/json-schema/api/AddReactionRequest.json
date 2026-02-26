@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "object": {
+      "type": "string",
+      "description": "Object name (e.g., \"account\")"
+    },
+    "recordId": {
+      "type": "string",
+      "description": "Record ID"
+    },
+    "feedId": {
+      "type": "string",
+      "description": "Feed item ID"
+    },
+    "emoji": {
+      "type": "string",
+      "description": "Emoji character or shortcode (e.g., \"👍\", \":thumbsup:\")"
+    }
+  },
+  "required": [
+    "object",
+    "recordId",
+    "feedId",
+    "emoji"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/AddReactionRequest.json",
+  "x-spec-version": "3.0.11"
+}

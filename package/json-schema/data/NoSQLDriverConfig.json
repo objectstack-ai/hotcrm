@@ -1,0 +1,499 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Driver instance name"
+    },
+    "type": {
+      "type": "string",
+      "const": "nosql",
+      "description": "Driver type must be \"nosql\""
+    },
+    "capabilities": {
+      "type": "object",
+      "properties": {
+        "create": {
+          "default": true,
+          "description": "Supports CREATE operations",
+          "type": "boolean"
+        },
+        "read": {
+          "default": true,
+          "description": "Supports READ operations",
+          "type": "boolean"
+        },
+        "update": {
+          "default": true,
+          "description": "Supports UPDATE operations",
+          "type": "boolean"
+        },
+        "delete": {
+          "default": true,
+          "description": "Supports DELETE operations",
+          "type": "boolean"
+        },
+        "bulkCreate": {
+          "default": false,
+          "description": "Supports bulk CREATE operations",
+          "type": "boolean"
+        },
+        "bulkUpdate": {
+          "default": false,
+          "description": "Supports bulk UPDATE operations",
+          "type": "boolean"
+        },
+        "bulkDelete": {
+          "default": false,
+          "description": "Supports bulk DELETE operations",
+          "type": "boolean"
+        },
+        "transactions": {
+          "default": false,
+          "description": "Supports ACID transactions",
+          "type": "boolean"
+        },
+        "savepoints": {
+          "default": false,
+          "description": "Supports transaction savepoints",
+          "type": "boolean"
+        },
+        "isolationLevels": {
+          "description": "Supported isolation levels",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "read_uncommitted",
+              "read_committed",
+              "repeatable_read",
+              "serializable",
+              "snapshot"
+            ],
+            "description": "Transaction isolation levels (snake_case standard)"
+          }
+        },
+        "queryFilters": {
+          "default": true,
+          "description": "Supports WHERE clause filtering",
+          "type": "boolean"
+        },
+        "queryAggregations": {
+          "default": false,
+          "description": "Supports GROUP BY and aggregation functions",
+          "type": "boolean"
+        },
+        "querySorting": {
+          "default": true,
+          "description": "Supports ORDER BY sorting",
+          "type": "boolean"
+        },
+        "queryPagination": {
+          "default": true,
+          "description": "Supports LIMIT/OFFSET pagination",
+          "type": "boolean"
+        },
+        "queryWindowFunctions": {
+          "default": false,
+          "description": "Supports window functions with OVER clause",
+          "type": "boolean"
+        },
+        "querySubqueries": {
+          "default": false,
+          "description": "Supports subqueries",
+          "type": "boolean"
+        },
+        "queryCTE": {
+          "default": false,
+          "description": "Supports Common Table Expressions (WITH clause)",
+          "type": "boolean"
+        },
+        "joins": {
+          "default": false,
+          "description": "Supports SQL joins",
+          "type": "boolean"
+        },
+        "fullTextSearch": {
+          "default": false,
+          "description": "Supports full-text search",
+          "type": "boolean"
+        },
+        "jsonQuery": {
+          "default": false,
+          "description": "Supports JSON field querying",
+          "type": "boolean"
+        },
+        "geospatialQuery": {
+          "default": false,
+          "description": "Supports geospatial queries",
+          "type": "boolean"
+        },
+        "streaming": {
+          "default": false,
+          "description": "Supports result streaming (cursors/iterators)",
+          "type": "boolean"
+        },
+        "jsonFields": {
+          "default": false,
+          "description": "Supports JSON field types",
+          "type": "boolean"
+        },
+        "arrayFields": {
+          "default": false,
+          "description": "Supports array field types",
+          "type": "boolean"
+        },
+        "vectorSearch": {
+          "default": false,
+          "description": "Supports vector embeddings and similarity search",
+          "type": "boolean"
+        },
+        "schemaSync": {
+          "default": false,
+          "description": "Supports automatic schema synchronization",
+          "type": "boolean"
+        },
+        "migrations": {
+          "default": false,
+          "description": "Supports database migrations",
+          "type": "boolean"
+        },
+        "indexes": {
+          "default": false,
+          "description": "Supports index creation and management",
+          "type": "boolean"
+        },
+        "connectionPooling": {
+          "default": false,
+          "description": "Supports connection pooling",
+          "type": "boolean"
+        },
+        "preparedStatements": {
+          "default": false,
+          "description": "Supports prepared statements (SQL injection prevention)",
+          "type": "boolean"
+        },
+        "queryCache": {
+          "default": false,
+          "description": "Supports query result caching",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "create",
+        "read",
+        "update",
+        "delete",
+        "bulkCreate",
+        "bulkUpdate",
+        "bulkDelete",
+        "transactions",
+        "savepoints",
+        "queryFilters",
+        "queryAggregations",
+        "querySorting",
+        "queryPagination",
+        "queryWindowFunctions",
+        "querySubqueries",
+        "queryCTE",
+        "joins",
+        "fullTextSearch",
+        "jsonQuery",
+        "geospatialQuery",
+        "streaming",
+        "jsonFields",
+        "arrayFields",
+        "vectorSearch",
+        "schemaSync",
+        "migrations",
+        "indexes",
+        "connectionPooling",
+        "preparedStatements",
+        "queryCache"
+      ],
+      "additionalProperties": false,
+      "description": "Driver capability flags"
+    },
+    "connectionString": {
+      "description": "Database connection string (driver-specific format)",
+      "type": "string"
+    },
+    "poolConfig": {
+      "description": "Connection pool configuration",
+      "type": "object",
+      "properties": {
+        "min": {
+          "default": 2,
+          "description": "Minimum number of connections in pool",
+          "type": "number",
+          "minimum": 0
+        },
+        "max": {
+          "default": 10,
+          "description": "Maximum number of connections in pool",
+          "type": "number",
+          "minimum": 1
+        },
+        "idleTimeoutMillis": {
+          "default": 30000,
+          "description": "Time in ms before idle connection is closed",
+          "type": "number",
+          "minimum": 0
+        },
+        "connectionTimeoutMillis": {
+          "default": 5000,
+          "description": "Time in ms to wait for available connection",
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "min",
+        "max",
+        "idleTimeoutMillis",
+        "connectionTimeoutMillis"
+      ],
+      "additionalProperties": false
+    },
+    "databaseType": {
+      "type": "string",
+      "enum": [
+        "mongodb",
+        "couchdb",
+        "dynamodb",
+        "cassandra",
+        "redis",
+        "elasticsearch",
+        "neo4j",
+        "orientdb"
+      ],
+      "description": "Specific NoSQL database type"
+    },
+    "dataTypeMapping": {
+      "type": "object",
+      "properties": {
+        "text": {
+          "type": "string",
+          "description": "NoSQL type for text fields"
+        },
+        "number": {
+          "type": "string",
+          "description": "NoSQL type for number fields"
+        },
+        "boolean": {
+          "type": "string",
+          "description": "NoSQL type for boolean fields"
+        },
+        "date": {
+          "type": "string",
+          "description": "NoSQL type for date fields"
+        },
+        "datetime": {
+          "type": "string",
+          "description": "NoSQL type for datetime fields"
+        },
+        "json": {
+          "description": "NoSQL type for JSON/object fields",
+          "type": "string"
+        },
+        "uuid": {
+          "description": "NoSQL type for UUID fields",
+          "type": "string"
+        },
+        "binary": {
+          "description": "NoSQL type for binary fields",
+          "type": "string"
+        },
+        "array": {
+          "description": "NoSQL type for array fields",
+          "type": "string"
+        },
+        "objectId": {
+          "description": "NoSQL type for ObjectID fields (MongoDB)",
+          "type": "string"
+        },
+        "geopoint": {
+          "description": "NoSQL type for geospatial point fields",
+          "type": "string"
+        }
+      },
+      "required": [
+        "text",
+        "number",
+        "boolean",
+        "date",
+        "datetime"
+      ],
+      "additionalProperties": false,
+      "description": "NoSQL data type mapping configuration"
+    },
+    "consistency": {
+      "description": "Consistency level for operations",
+      "type": "string",
+      "enum": [
+        "all",
+        "quorum",
+        "one",
+        "local_quorum",
+        "each_quorum",
+        "eventual"
+      ]
+    },
+    "replication": {
+      "description": "Replication configuration",
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "description": "Enable replication",
+          "type": "boolean"
+        },
+        "replicaSetName": {
+          "description": "Replica set name",
+          "type": "string"
+        },
+        "replicas": {
+          "description": "Number of replicas",
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "readPreference": {
+          "description": "Read preference for replica set",
+          "type": "string",
+          "enum": [
+            "primary",
+            "primaryPreferred",
+            "secondary",
+            "secondaryPreferred",
+            "nearest"
+          ]
+        },
+        "writeConcern": {
+          "description": "Write concern level",
+          "type": "string",
+          "enum": [
+            "majority",
+            "acknowledged",
+            "unacknowledged"
+          ]
+        }
+      },
+      "required": [
+        "enabled"
+      ],
+      "additionalProperties": false
+    },
+    "sharding": {
+      "description": "Sharding configuration",
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "description": "Enable sharding",
+          "type": "boolean"
+        },
+        "shardKey": {
+          "description": "Field to use as shard key",
+          "type": "string"
+        },
+        "shardingStrategy": {
+          "description": "Sharding strategy",
+          "type": "string",
+          "enum": [
+            "hash",
+            "range",
+            "zone"
+          ]
+        },
+        "numShards": {
+          "description": "Number of shards",
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "enabled"
+      ],
+      "additionalProperties": false
+    },
+    "schemaValidation": {
+      "description": "Document schema validation",
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "description": "Enable schema validation",
+          "type": "boolean"
+        },
+        "validationLevel": {
+          "description": "Validation strictness",
+          "type": "string",
+          "enum": [
+            "strict",
+            "moderate",
+            "off"
+          ]
+        },
+        "validationAction": {
+          "description": "Action on validation failure",
+          "type": "string",
+          "enum": [
+            "error",
+            "warn"
+          ]
+        },
+        "jsonSchema": {
+          "description": "JSON Schema for validation",
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {}
+        }
+      },
+      "required": [
+        "enabled"
+      ],
+      "additionalProperties": false
+    },
+    "region": {
+      "description": "AWS region (for managed NoSQL services)",
+      "type": "string"
+    },
+    "accessKeyId": {
+      "description": "AWS access key ID",
+      "type": "string"
+    },
+    "secretAccessKey": {
+      "description": "AWS secret access key",
+      "type": "string"
+    },
+    "ttlField": {
+      "description": "Field name for TTL (auto-deletion)",
+      "type": "string"
+    },
+    "maxDocumentSize": {
+      "description": "Maximum document size in bytes",
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    },
+    "collectionPrefix": {
+      "description": "Prefix for collection/table names",
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "type",
+    "capabilities",
+    "databaseType",
+    "dataTypeMapping"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/data/NoSQLDriverConfig.json",
+  "x-spec-version": "3.0.11"
+}

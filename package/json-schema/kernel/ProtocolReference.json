@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^([a-z][a-z0-9]*\\.)+protocol\\.[a-z][a-z0-9._]*\\.v\\d+$",
+      "description": "Unique protocol identifier (e.g., com.objectstack.protocol.storage.v1)"
+    },
+    "label": {
+      "type": "string"
+    },
+    "version": {
+      "type": "object",
+      "properties": {
+        "major": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "minor": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "patch": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "major",
+        "minor",
+        "patch"
+      ],
+      "additionalProperties": false,
+      "description": "Semantic version of the protocol"
+    },
+    "specification": {
+      "description": "URL or path to protocol specification",
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "label",
+    "version"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/ProtocolReference.json",
+  "x-spec-version": "3.0.11"
+}

@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "url": {
+      "type": "string",
+      "description": "API endpoint URL"
+    },
+    "method": {
+      "default": "GET",
+      "description": "HTTP method",
+      "type": "string",
+      "enum": [
+        "GET",
+        "POST",
+        "PUT",
+        "PATCH",
+        "DELETE"
+      ]
+    },
+    "headers": {
+      "description": "Custom HTTP headers",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "params": {
+      "description": "Query parameters",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
+    },
+    "body": {
+      "description": "Request body for POST/PUT/PATCH"
+    }
+  },
+  "required": [
+    "url",
+    "method"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/ui/HttpRequest.json",
+  "x-spec-version": "3.0.11"
+}

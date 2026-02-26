@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "GraphQL type name (PascalCase recommended)"
+    },
+    "object": {
+      "type": "string",
+      "description": "Source ObjectQL object name"
+    },
+    "description": {
+      "description": "Type description",
+      "type": "string"
+    },
+    "fields": {
+      "description": "Field configuration",
+      "type": "object",
+      "properties": {
+        "include": {
+          "description": "Fields to include",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "exclude": {
+          "description": "Fields to exclude (e.g., sensitive fields)",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "mappings": {
+          "description": "Field-level customizations",
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "graphqlName": {
+                "description": "Custom GraphQL field name",
+                "type": "string"
+              },
+              "graphqlType": {
+                "description": "Override GraphQL type",
+                "type": "string"
+              },
+              "description": {
+                "description": "Field description",
+                "type": "string"
+              },
+              "deprecationReason": {
+                "description": "Why field is deprecated",
+                "type": "string"
+              },
+              "nullable": {
+                "description": "Override nullable",
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "interfaces": {
+      "description": "GraphQL interface names",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "isInterface": {
+      "default": false,
+      "description": "Define as GraphQL interface",
+      "type": "boolean"
+    },
+    "directives": {
+      "description": "GraphQL directives",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Directive name"
+          },
+          "args": {
+            "description": "Directive arguments",
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {}
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "name",
+    "object",
+    "isInterface"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/GraphQLTypeConfig.json",
+  "x-spec-version": "3.0.11"
+}

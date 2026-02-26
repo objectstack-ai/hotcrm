@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "enabled": {
+      "default": true,
+      "description": "Enable audit logging",
+      "type": "boolean"
+    },
+    "retentionDays": {
+      "default": 365,
+      "description": "Number of days to retain audit logs",
+      "type": "number"
+    },
+    "immutable": {
+      "default": true,
+      "description": "Prevent modification or deletion of audit logs",
+      "type": "boolean"
+    },
+    "signLogs": {
+      "default": false,
+      "description": "Cryptographically sign log entries for tamper detection",
+      "type": "boolean"
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "create",
+          "read",
+          "update",
+          "delete",
+          "export",
+          "permission-change",
+          "login",
+          "logout",
+          "failed-login"
+        ]
+      },
+      "description": "Event types to capture in the audit log"
+    }
+  },
+  "required": [
+    "enabled",
+    "retentionDays",
+    "immutable",
+    "signLogs",
+    "events"
+  ],
+  "additionalProperties": false,
+  "description": "Audit log configuration for compliance and security monitoring",
+  "$id": "https://schema.objectstack.io/v3.0.11/system/AuditLogConfig.json",
+  "x-spec-version": "3.0.11"
+}

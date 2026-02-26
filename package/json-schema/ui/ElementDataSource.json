@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "object": {
+      "type": "string",
+      "description": "Object to query"
+    },
+    "view": {
+      "description": "Named view to apply",
+      "type": "string"
+    },
+    "filter": {
+      "description": "Additional filter criteria",
+      "$ref": "#/$defs/__schema0"
+    },
+    "sort": {
+      "description": "Sort order",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string",
+            "description": "Field name to sort by"
+          },
+          "order": {
+            "type": "string",
+            "enum": [
+              "asc",
+              "desc"
+            ],
+            "description": "Sort direction"
+          }
+        },
+        "required": [
+          "field",
+          "order"
+        ],
+        "additionalProperties": false,
+        "description": "Sort field and direction pair"
+      }
+    },
+    "limit": {
+      "description": "Max records to display",
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    }
+  },
+  "required": [
+    "object"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "__schema0": {
+      "allOf": [
+        {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {}
+        },
+        {
+          "type": "object",
+          "properties": {
+            "$and": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/__schema0"
+              }
+            },
+            "$or": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/__schema0"
+              }
+            },
+            "$not": {
+              "$ref": "#/$defs/__schema0"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    }
+  },
+  "$id": "https://schema.objectstack.io/v3.0.11/ui/ElementDataSource.json",
+  "x-spec-version": "3.0.11"
+}

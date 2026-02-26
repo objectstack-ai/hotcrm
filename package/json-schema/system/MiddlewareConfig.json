@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z_][a-z0-9_]*$",
+      "description": "Middleware name (snake_case)"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "authentication",
+        "authorization",
+        "logging",
+        "validation",
+        "transformation",
+        "error",
+        "custom"
+      ],
+      "description": "Middleware type"
+    },
+    "enabled": {
+      "default": true,
+      "description": "Whether middleware is enabled",
+      "type": "boolean"
+    },
+    "order": {
+      "default": 100,
+      "description": "Execution order priority",
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991
+    },
+    "config": {
+      "description": "Middleware configuration object",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
+    },
+    "paths": {
+      "description": "Path filtering",
+      "type": "object",
+      "properties": {
+        "include": {
+          "description": "Include path patterns (glob)",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "exclude": {
+          "description": "Exclude path patterns (glob)",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "name",
+    "type",
+    "enabled",
+    "order"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/system/MiddlewareConfig.json",
+  "x-spec-version": "3.0.11"
+}

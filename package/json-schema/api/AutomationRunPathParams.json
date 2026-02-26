@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Flow machine name (snake_case)"
+    },
+    "runId": {
+      "type": "string",
+      "description": "Execution run ID"
+    }
+  },
+  "required": [
+    "name",
+    "runId"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/AutomationRunPathParams.json",
+  "x-spec-version": "3.0.11"
+}

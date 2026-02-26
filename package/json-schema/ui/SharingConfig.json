@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "enabled": {
+      "default": false,
+      "description": "Enable public sharing",
+      "type": "boolean"
+    },
+    "publicLink": {
+      "description": "Generated public share URL",
+      "type": "string"
+    },
+    "password": {
+      "description": "Password required to access shared link",
+      "type": "string"
+    },
+    "allowedDomains": {
+      "description": "Restrict access to specific email domains (e.g. [\"example.com\"])",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "expiresAt": {
+      "description": "Expiration date/time in ISO 8601 format",
+      "type": "string"
+    },
+    "allowAnonymous": {
+      "default": false,
+      "description": "Allow access without authentication",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "enabled",
+    "allowAnonymous"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/ui/SharingConfig.json",
+  "x-spec-version": "3.0.11"
+}

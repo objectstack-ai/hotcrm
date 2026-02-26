@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "lookup",
+        "master_detail",
+        "tree"
+      ],
+      "description": "Relationship type"
+    },
+    "lineStyle": {
+      "default": "solid",
+      "description": "Line style in diagrams",
+      "type": "string",
+      "enum": [
+        "solid",
+        "dashed",
+        "dotted"
+      ]
+    },
+    "color": {
+      "default": "#94a3b8",
+      "description": "Line color (CSS value)",
+      "type": "string"
+    },
+    "highlightColor": {
+      "default": "#0891b2",
+      "description": "Highlighted color on hover/select",
+      "type": "string"
+    },
+    "cardinalityLabel": {
+      "default": "1:N",
+      "description": "Cardinality label (e.g., \"1:N\", \"1:1\", \"N:M\")",
+      "type": "string"
+    }
+  },
+  "required": [
+    "type",
+    "lineStyle",
+    "color",
+    "highlightColor",
+    "cardinalityLabel"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/studio/RelationshipDisplay.json",
+  "x-spec-version": "3.0.11"
+}

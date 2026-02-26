@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "migrationId": {
+      "type": "string",
+      "description": "ID of the migration this depends on"
+    },
+    "package": {
+      "description": "Package that owns the dependency migration",
+      "type": "string"
+    }
+  },
+  "required": [
+    "migrationId"
+  ],
+  "additionalProperties": false,
+  "description": "Dependency reference to another migration that must run first",
+  "$id": "https://schema.objectstack.io/v3.0.11/system/MigrationDependency.json",
+  "x-spec-version": "3.0.11"
+}

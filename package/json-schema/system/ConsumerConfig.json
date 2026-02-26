@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "groupId": {
+      "type": "string",
+      "description": "Consumer group identifier"
+    },
+    "autoOffsetReset": {
+      "default": "latest",
+      "description": "Where to start reading when no offset exists",
+      "type": "string",
+      "enum": [
+        "earliest",
+        "latest"
+      ]
+    },
+    "enableAutoCommit": {
+      "default": true,
+      "description": "Automatically commit consumed offsets",
+      "type": "boolean"
+    },
+    "maxPollRecords": {
+      "default": 500,
+      "description": "Maximum records returned per poll",
+      "type": "number"
+    }
+  },
+  "required": [
+    "groupId",
+    "autoOffsetReset",
+    "enableAutoCommit",
+    "maxPollRecords"
+  ],
+  "additionalProperties": false,
+  "description": "Consumer group configuration for topic consumption",
+  "$id": "https://schema.objectstack.io/v3.0.11/system/ConsumerConfig.json",
+  "x-spec-version": "3.0.11"
+}

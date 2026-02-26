@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "json",
+    "yaml",
+    "yml",
+    "ts",
+    "js",
+    "typescript",
+    "javascript"
+  ],
+  "$id": "https://schema.objectstack.io/v3.0.11/system/MetadataFormat.json",
+  "x-spec-version": "3.0.11"
+}

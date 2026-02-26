@@ -1,0 +1,155 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "success": {
+      "type": "boolean",
+      "description": "Operation success status"
+    },
+    "error": {
+      "description": "Error details if success is false",
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "description": "Error code (e.g. validation_error)"
+        },
+        "message": {
+          "type": "string",
+          "description": "Readable error message"
+        },
+        "category": {
+          "description": "Error category (e.g. validation, authorization)",
+          "type": "string"
+        },
+        "details": {
+          "description": "Additional error context (e.g. field validation errors)"
+        },
+        "requestId": {
+          "description": "Request ID for tracking",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ],
+      "additionalProperties": false
+    },
+    "meta": {
+      "description": "Response metadata",
+      "type": "object",
+      "properties": {
+        "timestamp": {
+          "type": "string"
+        },
+        "duration": {
+          "type": "number"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "traceId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "timestamp"
+      ],
+      "additionalProperties": false
+    },
+    "data": {
+      "type": "object",
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "description": "Metadata type"
+              },
+              "name": {
+                "type": "string",
+                "description": "Item name"
+              },
+              "namespace": {
+                "description": "Namespace",
+                "type": "string"
+              },
+              "label": {
+                "description": "Display label",
+                "type": "string"
+              },
+              "scope": {
+                "type": "string",
+                "enum": [
+                  "system",
+                  "platform",
+                  "user"
+                ]
+              },
+              "state": {
+                "type": "string",
+                "enum": [
+                  "draft",
+                  "active",
+                  "archived",
+                  "deprecated"
+                ]
+              },
+              "packageId": {
+                "type": "string"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+              }
+            },
+            "required": [
+              "type",
+              "name"
+            ],
+            "additionalProperties": false
+          },
+          "description": "Matched metadata items"
+        },
+        "total": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991,
+          "description": "Total matching items"
+        },
+        "page": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991,
+          "description": "Current page"
+        },
+        "pageSize": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991,
+          "description": "Page size"
+        }
+      },
+      "required": [
+        "items",
+        "total",
+        "page",
+        "pageSize"
+      ],
+      "additionalProperties": false,
+      "description": "Paginated query result"
+    }
+  },
+  "required": [
+    "success",
+    "data"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/MetadataQueryResponse.json",
+  "x-spec-version": "3.0.11"
+}

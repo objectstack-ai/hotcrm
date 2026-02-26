@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "field": {
+      "type": "string",
+      "description": "Field name to generate facets from"
+    },
+    "maxValues": {
+      "default": 10,
+      "description": "Maximum number of facet values to return",
+      "type": "number"
+    },
+    "sort": {
+      "default": "count",
+      "description": "Facet value sort order",
+      "type": "string",
+      "enum": [
+        "count",
+        "alpha"
+      ]
+    }
+  },
+  "required": [
+    "field",
+    "maxValues",
+    "sort"
+  ],
+  "additionalProperties": false,
+  "description": "Faceted search configuration for a single field",
+  "$id": "https://schema.objectstack.io/v3.0.11/system/FacetConfig.json",
+  "x-spec-version": "3.0.11"
+}

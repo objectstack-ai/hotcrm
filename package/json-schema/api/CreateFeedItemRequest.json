@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "object": {
+      "type": "string",
+      "description": "Object name (e.g., \"account\")"
+    },
+    "recordId": {
+      "type": "string",
+      "description": "Record ID"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "comment",
+        "field_change",
+        "task",
+        "event",
+        "email",
+        "call",
+        "note",
+        "file",
+        "record_create",
+        "record_delete",
+        "approval",
+        "sharing",
+        "system"
+      ],
+      "description": "Type of feed item to create"
+    },
+    "body": {
+      "description": "Rich text body (Markdown supported)",
+      "type": "string"
+    },
+    "mentions": {
+      "description": "Mentioned users, teams, or records",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "user",
+              "team",
+              "record"
+            ],
+            "description": "Mention target type"
+          },
+          "id": {
+            "type": "string",
+            "description": "Target ID"
+          },
+          "name": {
+            "type": "string",
+            "description": "Display name for rendering"
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "description": "Character offset in body text"
+          },
+          "length": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991,
+            "description": "Length of mention token in body text"
+          }
+        },
+        "required": [
+          "type",
+          "id",
+          "name",
+          "offset",
+          "length"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "parentId": {
+      "description": "Parent feed item ID for threaded replies",
+      "type": "string"
+    },
+    "visibility": {
+      "default": "public",
+      "description": "Visibility: public, internal, or private",
+      "type": "string",
+      "enum": [
+        "public",
+        "internal",
+        "private"
+      ]
+    }
+  },
+  "required": [
+    "object",
+    "recordId",
+    "type",
+    "visibility"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/CreateFeedItemRequest.json",
+  "x-spec-version": "3.0.11"
+}

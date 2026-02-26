@@ -1,0 +1,250 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "metadataViewers": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique viewer identifier"
+          },
+          "metadataTypes": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Metadata types this viewer can handle"
+          },
+          "label": {
+            "type": "string",
+            "description": "Viewer display label"
+          },
+          "priority": {
+            "default": 0,
+            "description": "Viewer priority (higher wins)",
+            "type": "number"
+          },
+          "modes": {
+            "default": [
+              "preview"
+            ],
+            "description": "Supported view modes",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "preview",
+                "design",
+                "code",
+                "data"
+              ]
+            }
+          }
+        },
+        "required": [
+          "id",
+          "metadataTypes",
+          "label",
+          "priority",
+          "modes"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "sidebarGroups": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Unique group key"
+          },
+          "label": {
+            "type": "string",
+            "description": "Group display label"
+          },
+          "icon": {
+            "description": "Lucide icon name",
+            "type": "string"
+          },
+          "metadataTypes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Metadata types in this group"
+          },
+          "order": {
+            "default": 100,
+            "description": "Sort order (lower = higher)",
+            "type": "number"
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "metadataTypes",
+          "order"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "actions": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique action identifier"
+          },
+          "label": {
+            "type": "string",
+            "description": "Action display label"
+          },
+          "icon": {
+            "description": "Lucide icon name",
+            "type": "string"
+          },
+          "location": {
+            "type": "string",
+            "enum": [
+              "toolbar",
+              "contextMenu",
+              "commandPalette"
+            ],
+            "description": "UI location"
+          },
+          "metadataTypes": {
+            "default": [],
+            "description": "Applicable metadata types",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "location",
+          "metadataTypes"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "metadataIcons": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "metadataType": {
+            "type": "string",
+            "description": "Metadata type"
+          },
+          "label": {
+            "type": "string",
+            "description": "Display label"
+          },
+          "icon": {
+            "type": "string",
+            "description": "Lucide icon name"
+          }
+        },
+        "required": [
+          "metadataType",
+          "label",
+          "icon"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "panels": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique panel identifier"
+          },
+          "label": {
+            "type": "string",
+            "description": "Panel display label"
+          },
+          "icon": {
+            "description": "Lucide icon name",
+            "type": "string"
+          },
+          "location": {
+            "default": "bottom",
+            "description": "Panel location",
+            "type": "string",
+            "enum": [
+              "bottom",
+              "right",
+              "modal"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "location"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "commands": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique command identifier"
+          },
+          "label": {
+            "type": "string",
+            "description": "Command display label"
+          },
+          "shortcut": {
+            "description": "Keyboard shortcut",
+            "type": "string"
+          },
+          "icon": {
+            "description": "Lucide icon name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "label"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "metadataViewers",
+    "sidebarGroups",
+    "actions",
+    "metadataIcons",
+    "panels",
+    "commands"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/studio/StudioPluginContributions.json",
+  "x-spec-version": "3.0.11"
+}

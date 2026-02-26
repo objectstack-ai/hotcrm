@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "object": {
+      "description": "ObjectStack object name",
+      "type": "string"
+    },
+    "filters": {
+      "description": "Filter conditions"
+    },
+    "fields": {
+      "description": "Fields to sync",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "connectorInstanceId": {
+      "description": "Connector instance ID",
+      "type": "string"
+    },
+    "externalResource": {
+      "description": "External resource ID",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/automation/DataSourceConfig.json",
+  "x-spec-version": "3.0.11"
+}

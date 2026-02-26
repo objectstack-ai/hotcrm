@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "includeObjects": {
+      "description": "Specific objects to generate routes for (empty = all)",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "excludeObjects": {
+      "description": "Objects to exclude from route generation",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "nameTransform": {
+      "default": "none",
+      "description": "Transform object names in URLs",
+      "type": "string",
+      "enum": [
+        "none",
+        "plural",
+        "kebab-case",
+        "camelCase"
+      ]
+    },
+    "overrides": {
+      "description": "Per-object route customization",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "description": "Enable/disable routes for this object",
+            "type": "boolean"
+          },
+          "basePath": {
+            "description": "Custom base path",
+            "type": "string"
+          },
+          "operations": {
+            "description": "Enable/disable specific operations",
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "enum": [
+                "create",
+                "read",
+                "update",
+                "delete",
+                "list"
+              ]
+            },
+            "additionalProperties": {
+              "type": "boolean"
+            },
+            "required": [
+              "create",
+              "read",
+              "update",
+              "delete",
+              "list"
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "nameTransform"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/RouteGenerationConfig.json",
+  "x-spec-version": "3.0.11"
+}

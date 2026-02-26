@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "datasource": {
+      "description": "Datasource name reference for database persistence",
+      "type": "string"
+    },
+    "tableName": {
+      "default": "sys_metadata",
+      "description": "Database table name for metadata storage",
+      "type": "string"
+    },
+    "fallback": {
+      "default": "none",
+      "description": "Fallback strategy when datasource is unavailable",
+      "type": "string",
+      "enum": [
+        "filesystem",
+        "memory",
+        "none"
+      ]
+    },
+    "rootDir": {
+      "description": "Root directory for filesystem-based metadata",
+      "type": "string"
+    },
+    "formats": {
+      "description": "Enabled metadata formats",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "json",
+          "yaml",
+          "yml",
+          "ts",
+          "js",
+          "typescript",
+          "javascript"
+        ]
+      }
+    },
+    "watch": {
+      "description": "Enable file watching for filesystem loaders",
+      "type": "boolean"
+    },
+    "cache": {
+      "description": "Enable metadata caching",
+      "type": "boolean"
+    },
+    "watchOptions": {
+      "description": "File watcher options",
+      "type": "object",
+      "properties": {
+        "ignored": {
+          "description": "Patterns to ignore",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "persistent": {
+          "default": true,
+          "description": "Keep process running",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "persistent"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "tableName",
+    "fallback"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/system/MetadataManagerConfig.json",
+  "x-spec-version": "3.0.11"
+}

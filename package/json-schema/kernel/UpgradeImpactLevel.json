@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "none",
+    "low",
+    "medium",
+    "high",
+    "critical"
+  ],
+  "description": "Severity of upgrade impact",
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/UpgradeImpactLevel.json",
+  "x-spec-version": "3.0.11"
+}

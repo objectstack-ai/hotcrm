@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "valid": {
+      "type": "boolean",
+      "description": "Whether the plugin passed validation"
+    },
+    "errors": {
+      "description": "Validation errors",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string",
+            "description": "Field name that failed validation"
+          },
+          "message": {
+            "type": "string",
+            "description": "Human-readable error message"
+          },
+          "code": {
+            "description": "Machine-readable error code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "field",
+          "message"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "warnings": {
+      "description": "Validation warnings",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string",
+            "description": "Field name with warning"
+          },
+          "message": {
+            "type": "string",
+            "description": "Human-readable warning message"
+          },
+          "code": {
+            "description": "Machine-readable warning code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "field",
+          "message"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "valid"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/ValidationResult.json",
+  "x-spec-version": "3.0.11"
+}

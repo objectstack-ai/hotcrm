@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "roots": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "uri": {
+            "type": "string",
+            "description": "Root URI (e.g., file:///path/to/project)"
+          },
+          "name": {
+            "description": "Human-readable root name",
+            "type": "string"
+          },
+          "readOnly": {
+            "description": "Whether the root is read-only",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "uri"
+        ],
+        "additionalProperties": false,
+        "description": "A single root directory or resource"
+      },
+      "description": "Root directories or resources available to the client"
+    },
+    "watchForChanges": {
+      "default": false,
+      "description": "Watch root directories for filesystem changes",
+      "type": "boolean"
+    },
+    "notifyOnChange": {
+      "default": true,
+      "description": "Notify server when root contents change",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "roots",
+    "watchForChanges",
+    "notifyOnChange"
+  ],
+  "additionalProperties": false,
+  "description": "Roots configuration for MCP client",
+  "$id": "https://schema.objectstack.io/v3.0.11/ai/MCPRootsConfig.json",
+  "x-spec-version": "3.0.11"
+}

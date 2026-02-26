@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Event name"
+    },
+    "label": {
+      "description": "Human-readable event label",
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "key": {
+              "type": "string",
+              "description": "Translation key (e.g., \"views.task_list.label\")"
+            },
+            "defaultValue": {
+              "description": "Fallback value when translation key is not found",
+              "type": "string"
+            },
+            "params": {
+              "description": "Interpolation parameters (e.g., { count: 5 })",
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "boolean"
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "key"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "description": {
+      "description": "Event description and usage",
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "key": {
+              "type": "string",
+              "description": "Translation key (e.g., \"views.task_list.label\")"
+            },
+            "defaultValue": {
+              "description": "Fallback value when translation key is not found",
+              "type": "string"
+            },
+            "params": {
+              "description": "Interpolation parameters (e.g., { count: 5 })",
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "boolean"
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "key"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "bubbles": {
+      "default": false,
+      "description": "Whether event bubbles",
+      "type": "boolean"
+    },
+    "cancelable": {
+      "default": false,
+      "description": "Whether event is cancelable",
+      "type": "boolean"
+    },
+    "payload": {
+      "description": "Event payload schema",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
+    }
+  },
+  "required": [
+    "name",
+    "bubbles",
+    "cancelable"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/ui/WidgetEvent.json",
+  "x-spec-version": "3.0.11"
+}

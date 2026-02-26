@@ -1,0 +1,240 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "snap": {
+      "default": {
+        "enabled": true,
+        "gridSize": 16,
+        "showGrid": true
+      },
+      "description": "Canvas snap-to-grid settings",
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": true,
+          "description": "Enable snap-to-grid",
+          "type": "boolean"
+        },
+        "gridSize": {
+          "default": 16,
+          "description": "Snap grid size in pixels",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "showGrid": {
+          "default": true,
+          "description": "Show grid overlay",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enabled",
+        "gridSize",
+        "showGrid"
+      ],
+      "additionalProperties": false
+    },
+    "zoom": {
+      "default": {
+        "min": 0.25,
+        "max": 3,
+        "default": 1,
+        "step": 0.1
+      },
+      "description": "Canvas zoom settings",
+      "type": "object",
+      "properties": {
+        "min": {
+          "default": 0.25,
+          "description": "Minimum zoom level",
+          "type": "number",
+          "minimum": 0.1
+        },
+        "max": {
+          "default": 3,
+          "description": "Maximum zoom level",
+          "type": "number",
+          "maximum": 10
+        },
+        "default": {
+          "default": 1,
+          "description": "Default zoom level",
+          "type": "number"
+        },
+        "step": {
+          "default": 0.1,
+          "description": "Zoom step",
+          "type": "number"
+        }
+      },
+      "required": [
+        "min",
+        "max",
+        "default",
+        "step"
+      ],
+      "additionalProperties": false
+    },
+    "layoutAlgorithm": {
+      "default": "dagre",
+      "description": "Default auto-layout algorithm",
+      "type": "string",
+      "enum": [
+        "dagre",
+        "elk",
+        "force",
+        "manual"
+      ]
+    },
+    "layoutDirection": {
+      "default": "TB",
+      "description": "Default auto-layout direction",
+      "type": "string",
+      "enum": [
+        "TB",
+        "BT",
+        "LR",
+        "RL"
+      ]
+    },
+    "nodeDescriptors": {
+      "description": "Custom node render descriptors (merged with built-in defaults)",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "description": "FlowNodeAction value (e.g., \"parallel_gateway\")"
+          },
+          "shape": {
+            "type": "string",
+            "enum": [
+              "rounded_rect",
+              "circle",
+              "diamond",
+              "parallelogram",
+              "hexagon",
+              "diamond_thick",
+              "attached_circle",
+              "screen_rect"
+            ],
+            "description": "Shape to render"
+          },
+          "icon": {
+            "type": "string",
+            "description": "Lucide icon name"
+          },
+          "defaultLabel": {
+            "type": "string",
+            "description": "Default display label"
+          },
+          "defaultWidth": {
+            "default": 120,
+            "description": "Default width in pixels",
+            "type": "integer",
+            "minimum": 20,
+            "maximum": 9007199254740991
+          },
+          "defaultHeight": {
+            "default": 60,
+            "description": "Default height in pixels",
+            "type": "integer",
+            "minimum": 20,
+            "maximum": 9007199254740991
+          },
+          "fillColor": {
+            "default": "#ffffff",
+            "description": "Node fill color (CSS value)",
+            "type": "string"
+          },
+          "borderColor": {
+            "default": "#94a3b8",
+            "description": "Node border color (CSS value)",
+            "type": "string"
+          },
+          "allowBoundaryEvents": {
+            "default": false,
+            "description": "Whether boundary events can be attached to this node type",
+            "type": "boolean"
+          },
+          "paletteCategory": {
+            "type": "string",
+            "enum": [
+              "event",
+              "gateway",
+              "activity",
+              "data",
+              "subflow"
+            ],
+            "description": "Palette category for grouping"
+          }
+        },
+        "required": [
+          "action",
+          "shape",
+          "icon",
+          "defaultLabel",
+          "defaultWidth",
+          "defaultHeight",
+          "fillColor",
+          "borderColor",
+          "allowBoundaryEvents",
+          "paletteCategory"
+        ],
+        "additionalProperties": false,
+        "description": "Visual render descriptor for a flow node type"
+      }
+    },
+    "showMinimap": {
+      "default": true,
+      "description": "Show minimap panel",
+      "type": "boolean"
+    },
+    "showPropertyPanel": {
+      "default": true,
+      "description": "Show property panel",
+      "type": "boolean"
+    },
+    "showPalette": {
+      "default": true,
+      "description": "Show node palette sidebar",
+      "type": "boolean"
+    },
+    "undoLimit": {
+      "default": 50,
+      "description": "Maximum undo history steps",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "animateExecution": {
+      "default": true,
+      "description": "Animate edges during execution preview",
+      "type": "boolean"
+    },
+    "connectionValidation": {
+      "default": true,
+      "description": "Validate connections before creating edges",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "snap",
+    "zoom",
+    "layoutAlgorithm",
+    "layoutDirection",
+    "showMinimap",
+    "showPropertyPanel",
+    "showPalette",
+    "undoLimit",
+    "animateExecution",
+    "connectionValidation"
+  ],
+  "additionalProperties": false,
+  "description": "Studio Flow Builder configuration",
+  "$id": "https://schema.objectstack.io/v3.0.11/studio/FlowBuilderConfig.json",
+  "x-spec-version": "3.0.11"
+}

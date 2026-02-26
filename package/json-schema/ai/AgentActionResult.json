@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "actionId": {
+      "type": "string",
+      "description": "ID of the executed action"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "success",
+        "error",
+        "cancelled",
+        "pending"
+      ],
+      "description": "Execution status"
+    },
+    "data": {
+      "description": "Action result data"
+    },
+    "error": {
+      "description": "Error details if status is \"error\"",
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {}
+      },
+      "required": [
+        "code",
+        "message"
+      ],
+      "additionalProperties": false
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "startTime": {
+          "description": "Execution start time (ISO 8601)",
+          "type": "string"
+        },
+        "endTime": {
+          "description": "Execution end time (ISO 8601)",
+          "type": "string"
+        },
+        "duration": {
+          "description": "Execution duration in ms",
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "actionId",
+    "status"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/ai/AgentActionResult.json",
+  "x-spec-version": "3.0.11"
+}

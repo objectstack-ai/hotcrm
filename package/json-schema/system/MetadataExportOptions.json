@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "types": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "namespaces": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "output": {
+      "type": "string",
+      "description": "Output directory or file"
+    },
+    "format": {
+      "default": "json",
+      "type": "string",
+      "enum": [
+        "json",
+        "yaml",
+        "yml",
+        "ts",
+        "js",
+        "typescript",
+        "javascript"
+      ]
+    }
+  },
+  "required": [
+    "output",
+    "format"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/system/MetadataExportOptions.json",
+  "x-spec-version": "3.0.11"
+}

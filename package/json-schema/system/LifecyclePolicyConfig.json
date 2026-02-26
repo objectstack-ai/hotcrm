@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "enabled": {
+      "default": false,
+      "description": "Enable lifecycle policies",
+      "type": "boolean"
+    },
+    "rules": {
+      "default": [],
+      "description": "Lifecycle rules",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 2,
+            "pattern": "^[a-z][a-z0-9_.]*$",
+            "description": "Rule identifier"
+          },
+          "enabled": {
+            "default": true,
+            "description": "Enable this rule",
+            "type": "boolean"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "transition",
+              "delete",
+              "abort"
+            ],
+            "description": "Action to perform"
+          },
+          "prefix": {
+            "description": "Object key prefix filter (e.g., \"uploads/\")",
+            "type": "string"
+          },
+          "tags": {
+            "description": "Object tag filters",
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "daysAfterCreation": {
+            "description": "Days after object creation",
+            "type": "number",
+            "minimum": 0
+          },
+          "daysAfterModification": {
+            "description": "Days after last modification",
+            "type": "number",
+            "minimum": 0
+          },
+          "targetStorageClass": {
+            "description": "Target storage class for transition action",
+            "type": "string",
+            "enum": [
+              "standard",
+              "intelligent",
+              "infrequent_access",
+              "glacier",
+              "deep_archive"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "enabled",
+          "action"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "enabled",
+    "rules"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/system/LifecyclePolicyConfig.json",
+  "x-spec-version": "3.0.11"
+}

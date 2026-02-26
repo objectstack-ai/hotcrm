@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "sourceType": {
+      "type": "string",
+      "description": "Dependent metadata type"
+    },
+    "sourceName": {
+      "type": "string",
+      "description": "Dependent metadata name"
+    },
+    "targetType": {
+      "type": "string",
+      "description": "Referenced metadata type"
+    },
+    "targetName": {
+      "type": "string",
+      "description": "Referenced metadata name"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "reference",
+        "extends",
+        "includes",
+        "triggers"
+      ],
+      "description": "How the dependency is formed"
+    }
+  },
+  "required": [
+    "sourceType",
+    "sourceName",
+    "targetType",
+    "targetName",
+    "kind"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/MetadataDependency.json",
+  "x-spec-version": "3.0.11"
+}

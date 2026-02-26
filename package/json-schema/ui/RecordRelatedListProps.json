@@ -1,0 +1,239 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "objectName": {
+      "type": "string",
+      "description": "Related object name (e.g., \"task\", \"opportunity\")"
+    },
+    "relationshipField": {
+      "type": "string",
+      "description": "Field on related object that points to this record (e.g., \"account_id\")"
+    },
+    "columns": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Fields to display in the related list"
+    },
+    "sort": {
+      "description": "Sort order for related records",
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "field": {
+                "type": "string"
+              },
+              "order": {
+                "type": "string",
+                "enum": [
+                  "asc",
+                  "desc"
+                ]
+              }
+            },
+            "required": [
+              "field",
+              "order"
+            ],
+            "additionalProperties": false
+          }
+        }
+      ]
+    },
+    "limit": {
+      "default": 5,
+      "description": "Number of records to display initially",
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    },
+    "filter": {
+      "description": "Additional filter criteria for related records",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string",
+            "description": "Field name to filter on"
+          },
+          "operator": {
+            "type": "string",
+            "description": "Filter operator (e.g. equals, not_equals, contains, this_quarter)"
+          },
+          "value": {
+            "description": "Filter value",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "required": [
+          "field",
+          "operator"
+        ],
+        "additionalProperties": false,
+        "description": "View filter rule"
+      }
+    },
+    "title": {
+      "description": "Custom title for the related list",
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "key": {
+              "type": "string",
+              "description": "Translation key (e.g., \"views.task_list.label\")"
+            },
+            "defaultValue": {
+              "description": "Fallback value when translation key is not found",
+              "type": "string"
+            },
+            "params": {
+              "description": "Interpolation parameters (e.g., { count: 5 })",
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "boolean"
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "key"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "showViewAll": {
+      "default": true,
+      "description": "Show \"View All\" link to see all related records",
+      "type": "boolean"
+    },
+    "actions": {
+      "description": "Action IDs available for related records",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "aria": {
+      "description": "ARIA accessibility attributes",
+      "type": "object",
+      "properties": {
+        "ariaLabel": {
+          "description": "Accessible label for screen readers (WAI-ARIA aria-label)",
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string",
+                  "description": "Translation key (e.g., \"views.task_list.label\")"
+                },
+                "defaultValue": {
+                  "description": "Fallback value when translation key is not found",
+                  "type": "string"
+                },
+                "params": {
+                  "description": "Interpolation parameters (e.g., { count: 5 })",
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "boolean"
+                      }
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "key"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "ariaDescribedBy": {
+          "description": "ID of element providing additional description (WAI-ARIA aria-describedby)",
+          "type": "string"
+        },
+        "role": {
+          "description": "WAI-ARIA role attribute (e.g., \"dialog\", \"navigation\", \"alert\")",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "objectName",
+    "relationshipField",
+    "columns",
+    "limit",
+    "showViewAll"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/ui/RecordRelatedListProps.json",
+  "x-spec-version": "3.0.11"
+}

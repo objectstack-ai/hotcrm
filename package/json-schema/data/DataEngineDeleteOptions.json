@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "context": {
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string"
+        },
+        "tenantId": {
+          "type": "string"
+        },
+        "roles": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "permissions": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "isSystem": {
+          "default": false,
+          "type": "boolean"
+        },
+        "accessToken": {
+          "type": "string"
+        },
+        "transaction": {},
+        "traceId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "roles",
+        "permissions",
+        "isSystem"
+      ],
+      "additionalProperties": false
+    },
+    "filter": {
+      "anyOf": [
+        {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {}
+        },
+        {
+          "$ref": "#/$defs/__schema0"
+        }
+      ],
+      "description": "Data Engine query filter conditions"
+    },
+    "multi": {
+      "default": false,
+      "type": "boolean"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Options for DataEngine.delete operations",
+  "$defs": {
+    "__schema0": {
+      "allOf": [
+        {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {}
+        },
+        {
+          "type": "object",
+          "properties": {
+            "$and": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/__schema0"
+              }
+            },
+            "$or": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/__schema0"
+              }
+            },
+            "$not": {
+              "$ref": "#/$defs/__schema0"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    }
+  },
+  "$id": "https://schema.objectstack.io/v3.0.11/data/DataEngineDeleteOptions.json",
+  "x-spec-version": "3.0.11"
+}

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "map",
+    "filter",
+    "aggregate",
+    "join",
+    "script",
+    "lookup",
+    "split",
+    "merge",
+    "normalize",
+    "deduplicate"
+  ],
+  "$id": "https://schema.objectstack.io/v3.0.11/automation/ETLTransformationType.json",
+  "x-spec-version": "3.0.11"
+}

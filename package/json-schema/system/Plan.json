@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "code": {
+      "type": "string",
+      "description": "Plan code (e.g. pro_v1)"
+    },
+    "label": {
+      "type": "string"
+    },
+    "active": {
+      "default": true,
+      "type": "boolean"
+    },
+    "features": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of enabled boolean features"
+    },
+    "limits": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "number"
+      },
+      "description": "Map of metric codes to limit values (e.g. { storage_gb: 10 })"
+    },
+    "currency": {
+      "default": "USD",
+      "type": "string"
+    },
+    "priceMonthly": {
+      "type": "number"
+    },
+    "priceYearly": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "code",
+    "label",
+    "active",
+    "features",
+    "limits"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/system/Plan.json",
+  "x-spec-version": "3.0.11"
+}

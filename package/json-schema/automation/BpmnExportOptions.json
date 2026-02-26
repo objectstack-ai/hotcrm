@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "version": {
+      "default": "2.0",
+      "description": "Target BPMN specification version",
+      "type": "string",
+      "enum": [
+        "2.0",
+        "2.0.2"
+      ]
+    },
+    "includeLayout": {
+      "default": true,
+      "description": "Include BPMN DI layout data from canvas positions",
+      "type": "boolean"
+    },
+    "includeExtensions": {
+      "default": false,
+      "description": "Include ObjectStack extensions in BPMN extensionElements",
+      "type": "boolean"
+    },
+    "customMappings": {
+      "description": "Custom element mappings for export",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "bpmnType": {
+            "type": "string",
+            "description": "BPMN XML element type (e.g., \"bpmn:parallelGateway\")"
+          },
+          "flowNodeAction": {
+            "type": "string",
+            "description": "ObjectStack FlowNodeAction value"
+          },
+          "bidirectional": {
+            "default": true,
+            "description": "Whether the mapping supports both import and export",
+            "type": "boolean"
+          },
+          "notes": {
+            "description": "Notes about mapping limitations",
+            "type": "string"
+          }
+        },
+        "required": [
+          "bpmnType",
+          "flowNodeAction",
+          "bidirectional"
+        ],
+        "additionalProperties": false,
+        "description": "Mapping between BPMN XML element and ObjectStack FlowNodeAction"
+      }
+    },
+    "prettyPrint": {
+      "default": true,
+      "description": "Pretty-print XML output with indentation",
+      "type": "boolean"
+    },
+    "namespacePrefix": {
+      "default": "bpmn",
+      "description": "XML namespace prefix for BPMN elements",
+      "type": "string"
+    }
+  },
+  "required": [
+    "version",
+    "includeLayout",
+    "includeExtensions",
+    "prettyPrint",
+    "namespacePrefix"
+  ],
+  "additionalProperties": false,
+  "description": "Options for exporting an ObjectStack flow as BPMN 2.0 XML",
+  "$id": "https://schema.objectstack.io/v3.0.11/automation/BpmnExportOptions.json",
+  "x-spec-version": "3.0.11"
+}

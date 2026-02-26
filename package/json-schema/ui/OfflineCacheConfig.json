@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "maxSize": {
+      "description": "Maximum cache size in bytes",
+      "type": "number"
+    },
+    "ttl": {
+      "description": "Time-to-live for cached entries in milliseconds",
+      "type": "number"
+    },
+    "persistStorage": {
+      "default": "indexeddb",
+      "description": "Storage backend",
+      "type": "string",
+      "enum": [
+        "indexeddb",
+        "localstorage",
+        "sqlite"
+      ]
+    },
+    "evictionPolicy": {
+      "default": "lru",
+      "description": "Cache eviction policy when full",
+      "type": "string",
+      "enum": [
+        "lru",
+        "lfu",
+        "fifo"
+      ]
+    }
+  },
+  "required": [
+    "persistStorage",
+    "evictionPolicy"
+  ],
+  "additionalProperties": false,
+  "description": "Client-side offline cache configuration",
+  "$id": "https://schema.objectstack.io/v3.0.11/ui/OfflineCacheConfig.json",
+  "x-spec-version": "3.0.11"
+}

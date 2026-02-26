@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "enabled": {
+      "default": true,
+      "description": "Enable query complexity limiting",
+      "type": "boolean"
+    },
+    "maxComplexity": {
+      "default": 1000,
+      "description": "Maximum query complexity",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "defaultFieldComplexity": {
+      "default": 1,
+      "description": "Default complexity per field",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "fieldComplexity": {
+      "description": "Per-field complexity configuration",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          {
+            "type": "object",
+            "properties": {
+              "base": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991,
+                "description": "Base complexity"
+              },
+              "multiplier": {
+                "description": "Argument multiplier (e.g., \"limit\")",
+                "type": "string"
+              },
+              "calculator": {
+                "description": "Custom calculator function",
+                "type": "string"
+              }
+            },
+            "required": [
+              "base"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      }
+    },
+    "listMultiplier": {
+      "default": 10,
+      "description": "Multiplier for list fields",
+      "type": "number",
+      "minimum": 0
+    },
+    "onComplexityExceeded": {
+      "default": "reject",
+      "description": "Action when complexity exceeded",
+      "type": "string",
+      "enum": [
+        "reject",
+        "log",
+        "warn"
+      ]
+    },
+    "errorMessage": {
+      "description": "Custom error message for complexity violations",
+      "type": "string"
+    }
+  },
+  "required": [
+    "enabled",
+    "maxComplexity",
+    "defaultFieldComplexity",
+    "listMultiplier",
+    "onComplexityExceeded"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/GraphQLQueryComplexity.json",
+  "x-spec-version": "3.0.11"
+}

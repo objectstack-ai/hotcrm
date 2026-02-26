@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "const": "lww-register"
+    },
+    "value": {
+      "description": "Current register value"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+      "description": "ISO 8601 datetime of last write"
+    },
+    "replicaId": {
+      "type": "string",
+      "description": "ID of replica that performed last write"
+    },
+    "vectorClock": {
+      "description": "Optional vector clock for causality tracking",
+      "type": "object",
+      "properties": {
+        "clock": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "description": "Map of replica ID to logical timestamp"
+        }
+      },
+      "required": [
+        "clock"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "type",
+    "value",
+    "timestamp",
+    "replicaId"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/system/LWWRegister.json",
+  "x-spec-version": "3.0.11"
+}

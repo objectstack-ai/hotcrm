@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "messageId": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+      "description": "Unique message identifier"
+    },
+    "type": {
+      "type": "string",
+      "const": "subscribe"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+      "description": "ISO 8601 datetime when message was sent"
+    },
+    "subscription": {
+      "type": "object",
+      "properties": {
+        "subscriptionId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+          "description": "Unique subscription identifier"
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^[a-z*][a-z0-9_.*]*$",
+            "description": "Event pattern (supports wildcards like \"record.*\" or \"*.created\")"
+          },
+          "description": "Event patterns to subscribe to (supports wildcards, e.g., \"record.*\", \"user.created\")"
+        },
+        "objects": {
+          "description": "Object names to filter events by (e.g., [\"account\", \"contact\"])",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "filters": {
+          "description": "Advanced filter conditions for event payloads",
+          "$ref": "#/$defs/__schema0"
+        },
+        "channels": {
+          "description": "Channel names for scoped subscriptions",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "subscriptionId",
+        "events"
+      ],
+      "additionalProperties": false,
+      "description": "Subscription configuration"
+    }
+  },
+  "required": [
+    "messageId",
+    "type",
+    "timestamp",
+    "subscription"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "__schema0": {
+      "type": "object",
+      "properties": {
+        "conditions": {
+          "description": "Array of filter conditions",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "field": {
+                "type": "string",
+                "description": "Field path to filter on (supports dot notation, e.g., \"user.email\")"
+              },
+              "operator": {
+                "type": "string",
+                "enum": [
+                  "eq",
+                  "ne",
+                  "gt",
+                  "gte",
+                  "lt",
+                  "lte",
+                  "in",
+                  "nin",
+                  "contains",
+                  "startsWith",
+                  "endsWith",
+                  "exists",
+                  "regex"
+                ],
+                "description": "Comparison operator"
+              },
+              "value": {
+                "description": "Value to compare against (not needed for \"exists\" operator)"
+              }
+            },
+            "required": [
+              "field",
+              "operator"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "and": {
+          "description": "AND logical combination of filters",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/__schema0"
+          }
+        },
+        "or": {
+          "description": "OR logical combination of filters",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/__schema0"
+          }
+        },
+        "not": {
+          "description": "NOT logical negation of filter",
+          "$ref": "#/$defs/__schema0"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "$id": "https://schema.objectstack.io/v3.0.11/api/SubscribeMessage.json",
+  "x-spec-version": "3.0.11"
+}

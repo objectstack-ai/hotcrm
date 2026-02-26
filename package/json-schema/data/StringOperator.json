@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "$contains": {
+      "type": "string"
+    },
+    "$startsWith": {
+      "type": "string"
+    },
+    "$endsWith": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/data/StringOperator.json",
+  "x-spec-version": "3.0.11"
+}

@@ -1,0 +1,235 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 2,
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "description": "Permission set unique name (lowercase snake_case)"
+    },
+    "label": {
+      "description": "Display label",
+      "type": "string"
+    },
+    "isProfile": {
+      "default": false,
+      "description": "Whether this is a user profile",
+      "type": "boolean"
+    },
+    "objects": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "allowCreate": {
+            "default": false,
+            "description": "Create permission",
+            "type": "boolean"
+          },
+          "allowRead": {
+            "default": false,
+            "description": "Read permission",
+            "type": "boolean"
+          },
+          "allowEdit": {
+            "default": false,
+            "description": "Edit permission",
+            "type": "boolean"
+          },
+          "allowDelete": {
+            "default": false,
+            "description": "Delete permission",
+            "type": "boolean"
+          },
+          "allowTransfer": {
+            "default": false,
+            "description": "Change record ownership",
+            "type": "boolean"
+          },
+          "allowRestore": {
+            "default": false,
+            "description": "Restore from trash (Undelete)",
+            "type": "boolean"
+          },
+          "allowPurge": {
+            "default": false,
+            "description": "Permanently delete (Hard Delete/GDPR)",
+            "type": "boolean"
+          },
+          "viewAllRecords": {
+            "default": false,
+            "description": "View All Data (Bypass Sharing)",
+            "type": "boolean"
+          },
+          "modifyAllRecords": {
+            "default": false,
+            "description": "Modify All Data (Bypass Sharing)",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "allowCreate",
+          "allowRead",
+          "allowEdit",
+          "allowDelete",
+          "allowTransfer",
+          "allowRestore",
+          "allowPurge",
+          "viewAllRecords",
+          "modifyAllRecords"
+        ],
+        "additionalProperties": false
+      },
+      "description": "Entity permissions"
+    },
+    "fields": {
+      "description": "Field level security",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "readable": {
+            "default": true,
+            "description": "Field read access",
+            "type": "boolean"
+          },
+          "editable": {
+            "default": false,
+            "description": "Field edit access",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "readable",
+          "editable"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "systemPermissions": {
+      "description": "System level capabilities",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "tabPermissions": {
+      "description": "App/tab visibility: visible, hidden, default_on (shown by default), default_off (available but hidden initially)",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "string",
+        "enum": [
+          "visible",
+          "hidden",
+          "default_on",
+          "default_off"
+        ]
+      }
+    },
+    "rowLevelSecurity": {
+      "description": "Row-level security policies (see rls.zod.ts for full spec)",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z_][a-z0-9_]*$",
+            "description": "Policy unique identifier (snake_case)"
+          },
+          "label": {
+            "description": "Human-readable policy label",
+            "type": "string"
+          },
+          "description": {
+            "description": "Policy description and business justification",
+            "type": "string"
+          },
+          "object": {
+            "type": "string",
+            "description": "Target object name"
+          },
+          "operation": {
+            "type": "string",
+            "enum": [
+              "select",
+              "insert",
+              "update",
+              "delete",
+              "all"
+            ],
+            "description": "Database operation this policy applies to"
+          },
+          "using": {
+            "description": "Filter condition for SELECT/UPDATE/DELETE (PostgreSQL SQL WHERE clause syntax with parameterized context variables). Optional for INSERT-only policies.",
+            "type": "string"
+          },
+          "check": {
+            "description": "Validation condition for INSERT/UPDATE (defaults to USING clause if not specified - enforced at application level)",
+            "type": "string"
+          },
+          "roles": {
+            "description": "Roles this policy applies to (omit for all roles)",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "enabled": {
+            "default": true,
+            "description": "Whether this policy is active",
+            "type": "boolean"
+          },
+          "priority": {
+            "default": 0,
+            "description": "Policy evaluation priority (higher = evaluated first)",
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "tags": {
+            "description": "Policy categorization tags",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "name",
+          "object",
+          "operation",
+          "enabled",
+          "priority"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "contextVariables": {
+      "description": "Context variables for RLS evaluation",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
+    }
+  },
+  "required": [
+    "name",
+    "isProfile",
+    "objects"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/security/PermissionSet.json",
+  "x-spec-version": "3.0.11"
+}

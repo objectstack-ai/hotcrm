@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "name",
+    "label",
+    "fieldCount",
+    "updatedAt"
+  ],
+  "description": "Object list sort field",
+  "$id": "https://schema.objectstack.io/v3.0.11/studio/ObjectSortField.json",
+  "x-spec-version": "3.0.11"
+}

@@ -1,0 +1,424 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z_][a-z0-9_]*$",
+      "description": "Orchestration unique identifier (snake_case)"
+    },
+    "label": {
+      "type": "string",
+      "description": "Display name"
+    },
+    "description": {
+      "type": "string"
+    },
+    "objectName": {
+      "type": "string",
+      "description": "Target object for this orchestration"
+    },
+    "trigger": {
+      "type": "string",
+      "enum": [
+        "record_created",
+        "record_updated",
+        "field_changed",
+        "scheduled",
+        "manual",
+        "webhook",
+        "batch"
+      ]
+    },
+    "fieldConditions": {
+      "description": "Fields to monitor (for field_changed trigger)",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string",
+            "description": "Field name to monitor"
+          },
+          "operator": {
+            "default": "changed",
+            "type": "string",
+            "enum": [
+              "changed",
+              "changed_to",
+              "changed_from",
+              "is",
+              "is_not"
+            ]
+          },
+          "value": {
+            "description": "Value to compare against (for changed_to/changed_from/is/is_not)"
+          }
+        },
+        "required": [
+          "field",
+          "operator"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "schedule": {
+      "description": "Schedule configuration (for scheduled trigger)",
+      "type": "object",
+      "properties": {
+        "type": {
+          "default": "cron",
+          "type": "string",
+          "enum": [
+            "cron",
+            "interval",
+            "daily",
+            "weekly",
+            "monthly"
+          ]
+        },
+        "cron": {
+          "description": "Cron expression (required if type is \"cron\")",
+          "type": "string"
+        },
+        "interval": {
+          "description": "Interval in minutes (required if type is \"interval\")",
+          "type": "number"
+        },
+        "time": {
+          "description": "Time of day for daily schedules (HH:MM format)",
+          "type": "string"
+        },
+        "dayOfWeek": {
+          "description": "Day of week for weekly (0=Sunday)",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 6
+        },
+        "dayOfMonth": {
+          "description": "Day of month for monthly",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 31
+        },
+        "timezone": {
+          "default": "UTC",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "timezone"
+      ],
+      "additionalProperties": false
+    },
+    "webhookConfig": {
+      "description": "Webhook configuration (for webhook trigger)",
+      "type": "object",
+      "properties": {
+        "secret": {
+          "description": "Webhook verification secret",
+          "type": "string"
+        },
+        "headers": {
+          "description": "Expected headers",
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "entryCriteria": {
+      "description": "Formula condition - workflow only runs if TRUE",
+      "type": "string"
+    },
+    "aiTasks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "description": "Optional task ID for referencing",
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable task name"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "classify",
+              "extract",
+              "summarize",
+              "generate",
+              "predict",
+              "translate",
+              "sentiment",
+              "entity_recognition",
+              "anomaly_detection",
+              "recommendation"
+            ]
+          },
+          "model": {
+            "description": "Model ID from registry (uses default if not specified)",
+            "type": "string"
+          },
+          "promptTemplate": {
+            "description": "Prompt template ID for this task",
+            "type": "string"
+          },
+          "inputFields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Source fields to process (e.g., [\"description\", \"comments\"])"
+          },
+          "inputSchema": {
+            "description": "Validation schema for inputs",
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {}
+          },
+          "inputContext": {
+            "description": "Additional context for the AI model",
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {}
+          },
+          "outputField": {
+            "type": "string",
+            "description": "Target field to store the result"
+          },
+          "outputSchema": {
+            "description": "Validation schema for output",
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {}
+          },
+          "outputFormat": {
+            "default": "text",
+            "type": "string",
+            "enum": [
+              "text",
+              "json",
+              "number",
+              "boolean",
+              "array"
+            ]
+          },
+          "classes": {
+            "description": "Valid classes for classification tasks",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "multiClass": {
+            "default": false,
+            "description": "Allow multiple classes to be selected",
+            "type": "boolean"
+          },
+          "extractionSchema": {
+            "description": "JSON schema for structured extraction",
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {}
+          },
+          "maxLength": {
+            "description": "Maximum length for generated content",
+            "type": "number"
+          },
+          "temperature": {
+            "description": "Model temperature override",
+            "type": "number",
+            "minimum": 0,
+            "maximum": 2
+          },
+          "fallbackValue": {
+            "description": "Fallback value if AI task fails"
+          },
+          "retryAttempts": {
+            "default": 1,
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 5
+          },
+          "condition": {
+            "description": "Formula condition - task only runs if TRUE",
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "active": {
+            "default": true,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "name",
+          "type",
+          "inputFields",
+          "outputField",
+          "outputFormat",
+          "multiClass",
+          "retryAttempts",
+          "active"
+        ],
+        "additionalProperties": false
+      },
+      "description": "AI tasks to execute in sequence"
+    },
+    "postActions": {
+      "description": "Actions after AI tasks complete",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "field_update",
+              "send_email",
+              "create_record",
+              "update_related",
+              "trigger_flow",
+              "webhook"
+            ]
+          },
+          "name": {
+            "type": "string",
+            "description": "Action name"
+          },
+          "config": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {},
+            "description": "Action-specific configuration"
+          },
+          "condition": {
+            "description": "Execute only if condition is TRUE",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "name",
+          "config"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "executionMode": {
+      "default": "sequential",
+      "description": "How to execute multiple AI tasks",
+      "type": "string",
+      "enum": [
+        "sequential",
+        "parallel"
+      ]
+    },
+    "stopOnError": {
+      "default": false,
+      "description": "Stop workflow if any task fails",
+      "type": "boolean"
+    },
+    "timeout": {
+      "description": "Maximum execution time in seconds",
+      "type": "number"
+    },
+    "priority": {
+      "default": "normal",
+      "type": "string",
+      "enum": [
+        "low",
+        "normal",
+        "high",
+        "critical"
+      ]
+    },
+    "enableLogging": {
+      "default": true,
+      "type": "boolean"
+    },
+    "enableMetrics": {
+      "default": true,
+      "type": "boolean"
+    },
+    "notifyOnFailure": {
+      "description": "User IDs to notify on failure",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "active": {
+      "default": true,
+      "type": "boolean"
+    },
+    "version": {
+      "default": "1.0.0",
+      "type": "string"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "category": {
+      "description": "Workflow category (e.g., \"support\", \"sales\", \"hr\")",
+      "type": "string"
+    },
+    "owner": {
+      "description": "User ID of workflow owner",
+      "type": "string"
+    },
+    "createdAt": {
+      "description": "ISO timestamp",
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+    },
+    "updatedAt": {
+      "description": "ISO timestamp",
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+    }
+  },
+  "required": [
+    "name",
+    "label",
+    "objectName",
+    "trigger",
+    "aiTasks",
+    "executionMode",
+    "stopOnError",
+    "priority",
+    "enableLogging",
+    "enableMetrics",
+    "active",
+    "version"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/ai/AIOrchestration.json",
+  "x-spec-version": "3.0.11"
+}

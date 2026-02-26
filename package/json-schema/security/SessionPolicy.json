@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "idleTimeout": {
+      "default": 30,
+      "description": "Minutes before idle session logout",
+      "type": "number"
+    },
+    "absoluteTimeout": {
+      "default": 480,
+      "description": "Max session duration (minutes)",
+      "type": "number"
+    },
+    "forceMfa": {
+      "default": false,
+      "description": "Require 2FA for all users",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "idleTimeout",
+    "absoluteTimeout",
+    "forceMfa"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/security/SessionPolicy.json",
+  "x-spec-version": "3.0.11"
+}

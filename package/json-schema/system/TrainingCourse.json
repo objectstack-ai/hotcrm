@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique course identifier"
+    },
+    "title": {
+      "type": "string",
+      "description": "Course title"
+    },
+    "description": {
+      "type": "string",
+      "description": "Course description and learning objectives"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "security_awareness",
+        "data_protection",
+        "incident_response",
+        "access_control",
+        "phishing_awareness",
+        "compliance",
+        "secure_development",
+        "physical_security",
+        "business_continuity",
+        "other"
+      ],
+      "description": "Training category"
+    },
+    "durationMinutes": {
+      "type": "number",
+      "minimum": 1,
+      "description": "Estimated course duration in minutes"
+    },
+    "mandatory": {
+      "default": false,
+      "description": "Whether training is mandatory",
+      "type": "boolean"
+    },
+    "targetRoles": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Target roles or groups"
+    },
+    "validityDays": {
+      "description": "Certification validity period in days",
+      "type": "number"
+    },
+    "passingScore": {
+      "description": "Minimum passing score percentage",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "version": {
+      "description": "Course content version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "title",
+    "description",
+    "category",
+    "durationMinutes",
+    "mandatory",
+    "targetRoles"
+  ],
+  "additionalProperties": false,
+  "description": "Security training course definition",
+  "$id": "https://schema.objectstack.io/v3.0.11/system/TrainingCourse.json",
+  "x-spec-version": "3.0.11"
+}

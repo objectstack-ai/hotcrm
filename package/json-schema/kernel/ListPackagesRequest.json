@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "status": {
+      "description": "Filter by package status",
+      "type": "string",
+      "enum": [
+        "installed",
+        "disabled",
+        "installing",
+        "upgrading",
+        "uninstalling",
+        "error"
+      ]
+    },
+    "type": {
+      "description": "Filter by package type",
+      "type": "string",
+      "enum": [
+        "plugin",
+        "ui",
+        "driver",
+        "server",
+        "app",
+        "theme",
+        "agent",
+        "objectql",
+        "module",
+        "gateway",
+        "adapter"
+      ]
+    },
+    "enabled": {
+      "description": "Filter by enabled state",
+      "type": "boolean"
+    }
+  },
+  "additionalProperties": false,
+  "description": "List packages request",
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/ListPackagesRequest.json",
+  "x-spec-version": "3.0.11"
+}

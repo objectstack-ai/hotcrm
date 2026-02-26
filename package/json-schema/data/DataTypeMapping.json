@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "text": {
+      "type": "string",
+      "description": "SQL type for text fields (e.g., VARCHAR, TEXT)"
+    },
+    "number": {
+      "type": "string",
+      "description": "SQL type for number fields (e.g., NUMERIC, DECIMAL, INT)"
+    },
+    "boolean": {
+      "type": "string",
+      "description": "SQL type for boolean fields (e.g., BOOLEAN, BIT)"
+    },
+    "date": {
+      "type": "string",
+      "description": "SQL type for date fields (e.g., DATE)"
+    },
+    "datetime": {
+      "type": "string",
+      "description": "SQL type for datetime fields (e.g., TIMESTAMP, DATETIME)"
+    },
+    "json": {
+      "description": "SQL type for JSON fields (e.g., JSON, JSONB)",
+      "type": "string"
+    },
+    "uuid": {
+      "description": "SQL type for UUID fields (e.g., UUID, CHAR(36))",
+      "type": "string"
+    },
+    "binary": {
+      "description": "SQL type for binary fields (e.g., BLOB, BYTEA)",
+      "type": "string"
+    }
+  },
+  "required": [
+    "text",
+    "number",
+    "boolean",
+    "date",
+    "datetime"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/data/DataTypeMapping.json",
+  "x-spec-version": "3.0.11"
+}

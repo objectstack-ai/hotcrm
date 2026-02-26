@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "tenantId": {
+      "type": "string"
+    },
+    "enabled": {
+      "type": "boolean"
+    },
+    "updateAvailable": {
+      "type": "boolean"
+    },
+    "sortBy": {
+      "default": "name",
+      "type": "string",
+      "enum": [
+        "name",
+        "installed-date",
+        "updated-date"
+      ]
+    },
+    "page": {
+      "default": 1,
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "pageSize": {
+      "default": 20,
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+    }
+  },
+  "required": [
+    "sortBy",
+    "page",
+    "pageSize"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/cloud/ListInstalledAppsRequest.json",
+  "x-spec-version": "3.0.11"
+}

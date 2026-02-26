@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "console",
+    "file",
+    "syslog",
+    "elasticsearch",
+    "cloudwatch",
+    "stackdriver",
+    "azure_monitor",
+    "datadog",
+    "splunk",
+    "loki",
+    "http",
+    "kafka",
+    "redis",
+    "custom"
+  ],
+  "description": "Log destination type",
+  "$id": "https://schema.objectstack.io/v3.0.11/system/LogDestinationType.json",
+  "x-spec-version": "3.0.11"
+}

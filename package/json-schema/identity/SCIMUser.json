@@ -1,0 +1,469 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schemas": {
+      "default": [
+        "urn:ietf:params:scim:schemas:core:2.0:User"
+      ],
+      "description": "SCIM schema URIs (must include User schema)",
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "id": {
+      "description": "Unique resource identifier",
+      "type": "string"
+    },
+    "externalId": {
+      "description": "External identifier from client system",
+      "type": "string"
+    },
+    "userName": {
+      "type": "string",
+      "description": "Unique username (REQUIRED)"
+    },
+    "name": {
+      "description": "Structured name components",
+      "type": "object",
+      "properties": {
+        "formatted": {
+          "description": "Formatted full name",
+          "type": "string"
+        },
+        "familyName": {
+          "description": "Family name (last name)",
+          "type": "string"
+        },
+        "givenName": {
+          "description": "Given name (first name)",
+          "type": "string"
+        },
+        "middleName": {
+          "description": "Middle name",
+          "type": "string"
+        },
+        "honorificPrefix": {
+          "description": "Honorific prefix (Mr., Ms., Dr.)",
+          "type": "string"
+        },
+        "honorificSuffix": {
+          "description": "Honorific suffix (Jr., Sr.)",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "displayName": {
+      "description": "Display name for UI",
+      "type": "string"
+    },
+    "nickName": {
+      "description": "Nickname",
+      "type": "string"
+    },
+    "profileUrl": {
+      "description": "Profile page URL",
+      "type": "string",
+      "format": "uri"
+    },
+    "title": {
+      "description": "Job title",
+      "type": "string"
+    },
+    "userType": {
+      "description": "User type (employee, contractor)",
+      "type": "string"
+    },
+    "preferredLanguage": {
+      "description": "Preferred language (ISO 639-1)",
+      "type": "string"
+    },
+    "locale": {
+      "description": "Locale (e.g., en-US)",
+      "type": "string"
+    },
+    "timezone": {
+      "description": "Timezone",
+      "type": "string"
+    },
+    "active": {
+      "default": true,
+      "description": "Account active status",
+      "type": "boolean"
+    },
+    "password": {
+      "description": "Password (write-only)",
+      "type": "string"
+    },
+    "emails": {
+      "description": "Email addresses",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string",
+            "format": "email",
+            "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
+            "description": "Email address"
+          },
+          "type": {
+            "description": "Email type",
+            "type": "string",
+            "enum": [
+              "work",
+              "home",
+              "other"
+            ]
+          },
+          "display": {
+            "description": "Display label",
+            "type": "string"
+          },
+          "primary": {
+            "default": false,
+            "description": "Primary email indicator",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "value",
+          "primary"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "phoneNumbers": {
+      "description": "Phone numbers",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string",
+            "description": "Phone number"
+          },
+          "type": {
+            "description": "Phone number type",
+            "type": "string",
+            "enum": [
+              "work",
+              "home",
+              "mobile",
+              "fax",
+              "pager",
+              "other"
+            ]
+          },
+          "display": {
+            "description": "Display label",
+            "type": "string"
+          },
+          "primary": {
+            "default": false,
+            "description": "Primary phone indicator",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "value",
+          "primary"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "ims": {
+      "description": "IM addresses",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "primary": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "value"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "photos": {
+      "description": "Photo URLs",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string",
+            "format": "uri"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "photo",
+              "thumbnail"
+            ]
+          },
+          "primary": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "value"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "addresses": {
+      "description": "Physical addresses",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "formatted": {
+            "description": "Formatted address",
+            "type": "string"
+          },
+          "streetAddress": {
+            "description": "Street address",
+            "type": "string"
+          },
+          "locality": {
+            "description": "City/Locality",
+            "type": "string"
+          },
+          "region": {
+            "description": "State/Region",
+            "type": "string"
+          },
+          "postalCode": {
+            "description": "Postal code",
+            "type": "string"
+          },
+          "country": {
+            "description": "Country",
+            "type": "string"
+          },
+          "type": {
+            "description": "Address type",
+            "type": "string",
+            "enum": [
+              "work",
+              "home",
+              "other"
+            ]
+          },
+          "primary": {
+            "default": false,
+            "description": "Primary address indicator",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "primary"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "groups": {
+      "description": "Group memberships",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string",
+            "description": "Group ID"
+          },
+          "$ref": {
+            "description": "URI reference to the group",
+            "type": "string",
+            "format": "uri"
+          },
+          "display": {
+            "description": "Group display name",
+            "type": "string"
+          },
+          "type": {
+            "description": "Membership type",
+            "type": "string",
+            "enum": [
+              "direct",
+              "indirect"
+            ]
+          }
+        },
+        "required": [
+          "value"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "entitlements": {
+      "description": "Entitlements",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "primary": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "value"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "roles": {
+      "description": "Roles",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "primary": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "value"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "x509Certificates": {
+      "description": "X509 certificates",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "primary": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "value"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "meta": {
+      "description": "Resource metadata",
+      "type": "object",
+      "properties": {
+        "resourceType": {
+          "description": "Resource type",
+          "type": "string"
+        },
+        "created": {
+          "description": "Creation timestamp",
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+        },
+        "lastModified": {
+          "description": "Last modification timestamp",
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+        },
+        "location": {
+          "description": "Resource location URI",
+          "type": "string",
+          "format": "uri"
+        },
+        "version": {
+          "description": "Entity tag (ETag) for concurrency control",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User": {
+      "description": "Enterprise user attributes",
+      "type": "object",
+      "properties": {
+        "employeeNumber": {
+          "description": "Employee number",
+          "type": "string"
+        },
+        "costCenter": {
+          "description": "Cost center",
+          "type": "string"
+        },
+        "organization": {
+          "description": "Organization",
+          "type": "string"
+        },
+        "division": {
+          "description": "Division",
+          "type": "string"
+        },
+        "department": {
+          "description": "Department",
+          "type": "string"
+        },
+        "manager": {
+          "description": "Manager reference",
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string",
+              "description": "Manager ID"
+            },
+            "$ref": {
+              "description": "Manager URI",
+              "type": "string",
+              "format": "uri"
+            },
+            "displayName": {
+              "description": "Manager name",
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "schemas",
+    "userName",
+    "active"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/identity/SCIMUser.json",
+  "x-spec-version": "3.0.11"
+}

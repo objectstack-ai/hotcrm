@@ -1,0 +1,154 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "strategy": {
+      "default": "urlPath",
+      "description": "How the API version is specified by clients",
+      "type": "string",
+      "enum": [
+        "urlPath",
+        "header",
+        "queryParam",
+        "dateBased"
+      ]
+    },
+    "current": {
+      "type": "string",
+      "description": "The current/recommended API version identifier"
+    },
+    "default": {
+      "type": "string",
+      "description": "Fallback version when client does not specify one"
+    },
+    "versions": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string",
+            "description": "Version identifier (e.g., \"v1\", \"v2beta1\", \"2025-01-01\")"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "preview",
+              "current",
+              "supported",
+              "deprecated",
+              "retired"
+            ],
+            "description": "Lifecycle status of this version"
+          },
+          "releasedAt": {
+            "type": "string",
+            "description": "Release date (ISO 8601, e.g., \"2025-01-15\")"
+          },
+          "deprecatedAt": {
+            "description": "Deprecation date (ISO 8601). Only set for deprecated/retired versions",
+            "type": "string"
+          },
+          "sunsetAt": {
+            "description": "Sunset date (ISO 8601). After this date, the version returns 410 Gone",
+            "type": "string"
+          },
+          "migrationGuide": {
+            "description": "URL to migration guide for upgrading from this version",
+            "type": "string",
+            "format": "uri"
+          },
+          "description": {
+            "description": "Human-readable description or release notes summary",
+            "type": "string"
+          },
+          "breakingChanges": {
+            "description": "List of breaking changes (for preview/new versions)",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "version",
+          "status",
+          "releasedAt"
+        ],
+        "additionalProperties": false
+      },
+      "description": "All available API versions with lifecycle metadata"
+    },
+    "headerName": {
+      "default": "ObjectStack-Version",
+      "description": "HTTP header name for version negotiation (header/dateBased strategies)",
+      "type": "string"
+    },
+    "queryParamName": {
+      "default": "version",
+      "description": "Query parameter name for version specification (queryParam strategy)",
+      "type": "string"
+    },
+    "urlPrefix": {
+      "default": "/api",
+      "description": "URL prefix before version segment (urlPath strategy)",
+      "type": "string"
+    },
+    "deprecation": {
+      "description": "Deprecation lifecycle behavior",
+      "type": "object",
+      "properties": {
+        "warnHeader": {
+          "default": true,
+          "description": "Include Deprecation header (RFC 8594) in responses",
+          "type": "boolean"
+        },
+        "sunsetHeader": {
+          "default": true,
+          "description": "Include Sunset header (RFC 8594) with retirement date",
+          "type": "boolean"
+        },
+        "linkHeader": {
+          "default": true,
+          "description": "Include Link header pointing to migration guide URL",
+          "type": "boolean"
+        },
+        "rejectRetired": {
+          "default": true,
+          "description": "Return 410 Gone for retired API versions",
+          "type": "boolean"
+        },
+        "warningMessage": {
+          "description": "Custom warning message for deprecated version responses",
+          "type": "string"
+        }
+      },
+      "required": [
+        "warnHeader",
+        "sunsetHeader",
+        "linkHeader",
+        "rejectRetired"
+      ],
+      "additionalProperties": false
+    },
+    "includeInDiscovery": {
+      "default": true,
+      "description": "Include version information in the API discovery endpoint",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "strategy",
+    "current",
+    "default",
+    "versions",
+    "headerName",
+    "queryParamName",
+    "urlPrefix",
+    "includeInDiscovery"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/VersioningConfig.json",
+  "x-spec-version": "3.0.11"
+}

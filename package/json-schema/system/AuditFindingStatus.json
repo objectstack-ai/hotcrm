@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "open",
+    "in_remediation",
+    "remediated",
+    "verified",
+    "accepted_risk",
+    "closed"
+  ],
+  "$id": "https://schema.objectstack.io/v3.0.11/system/AuditFindingStatus.json",
+  "x-spec-version": "3.0.11"
+}

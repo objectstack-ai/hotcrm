@@ -1,0 +1,416 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "enabled": {
+      "default": false,
+      "description": "Enable disaster recovery plan",
+      "type": "boolean"
+    },
+    "rpo": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "number",
+          "minimum": 0,
+          "description": "RPO value"
+        },
+        "unit": {
+          "default": "minutes",
+          "description": "RPO time unit",
+          "type": "string",
+          "enum": [
+            "seconds",
+            "minutes",
+            "hours"
+          ]
+        }
+      },
+      "required": [
+        "value",
+        "unit"
+      ],
+      "additionalProperties": false,
+      "description": "Recovery Point Objective"
+    },
+    "rto": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "number",
+          "minimum": 0,
+          "description": "RTO value"
+        },
+        "unit": {
+          "default": "minutes",
+          "description": "RTO time unit",
+          "type": "string",
+          "enum": [
+            "seconds",
+            "minutes",
+            "hours"
+          ]
+        }
+      },
+      "required": [
+        "value",
+        "unit"
+      ],
+      "additionalProperties": false,
+      "description": "Recovery Time Objective"
+    },
+    "backup": {
+      "type": "object",
+      "properties": {
+        "strategy": {
+          "default": "incremental",
+          "description": "Backup strategy",
+          "type": "string",
+          "enum": [
+            "full",
+            "incremental",
+            "differential"
+          ]
+        },
+        "schedule": {
+          "description": "Cron expression for backup schedule (e.g., \"0 2 * * *\")",
+          "type": "string"
+        },
+        "retention": {
+          "type": "object",
+          "properties": {
+            "days": {
+              "type": "number",
+              "minimum": 1,
+              "description": "Retention period in days"
+            },
+            "minCopies": {
+              "default": 3,
+              "description": "Minimum backup copies to retain",
+              "type": "number",
+              "minimum": 1
+            },
+            "maxCopies": {
+              "description": "Maximum backup copies to store",
+              "type": "number"
+            }
+          },
+          "required": [
+            "days",
+            "minCopies"
+          ],
+          "additionalProperties": false,
+          "description": "Backup retention policy"
+        },
+        "destination": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "s3",
+                "gcs",
+                "azure_blob",
+                "local"
+              ],
+              "description": "Storage backend type"
+            },
+            "bucket": {
+              "description": "Cloud storage bucket/container name",
+              "type": "string"
+            },
+            "path": {
+              "description": "Storage path prefix",
+              "type": "string"
+            },
+            "region": {
+              "description": "Cloud storage region",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "additionalProperties": false,
+          "description": "Backup storage destination"
+        },
+        "encryption": {
+          "description": "Backup encryption settings",
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "default": true,
+              "description": "Enable backup encryption",
+              "type": "boolean"
+            },
+            "algorithm": {
+              "default": "AES-256-GCM",
+              "description": "Encryption algorithm",
+              "type": "string",
+              "enum": [
+                "AES-256-GCM",
+                "AES-256-CBC",
+                "ChaCha20-Poly1305"
+              ]
+            },
+            "keyId": {
+              "description": "KMS key ID for encryption",
+              "type": "string"
+            }
+          },
+          "required": [
+            "enabled",
+            "algorithm"
+          ],
+          "additionalProperties": false
+        },
+        "compression": {
+          "description": "Backup compression settings",
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "default": true,
+              "description": "Enable backup compression",
+              "type": "boolean"
+            },
+            "algorithm": {
+              "default": "zstd",
+              "description": "Compression algorithm",
+              "type": "string",
+              "enum": [
+                "gzip",
+                "zstd",
+                "lz4",
+                "snappy"
+              ]
+            }
+          },
+          "required": [
+            "enabled",
+            "algorithm"
+          ],
+          "additionalProperties": false
+        },
+        "verifyAfterBackup": {
+          "default": true,
+          "description": "Verify backup integrity after creation",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "strategy",
+        "retention",
+        "destination",
+        "verifyAfterBackup"
+      ],
+      "additionalProperties": false,
+      "description": "Backup configuration"
+    },
+    "failover": {
+      "description": "Multi-region failover configuration",
+      "type": "object",
+      "properties": {
+        "mode": {
+          "default": "active_passive",
+          "description": "Failover mode",
+          "type": "string",
+          "enum": [
+            "active_passive",
+            "active_active",
+            "pilot_light",
+            "warm_standby"
+          ]
+        },
+        "autoFailover": {
+          "default": true,
+          "description": "Enable automatic failover",
+          "type": "boolean"
+        },
+        "healthCheckInterval": {
+          "default": 30,
+          "description": "Health check interval in seconds",
+          "type": "number"
+        },
+        "failureThreshold": {
+          "default": 3,
+          "description": "Consecutive failures before failover",
+          "type": "number"
+        },
+        "regions": {
+          "minItems": 2,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Region identifier (e.g., \"us-east-1\", \"eu-west-1\")"
+              },
+              "role": {
+                "type": "string",
+                "enum": [
+                  "primary",
+                  "secondary",
+                  "witness"
+                ],
+                "description": "Region role"
+              },
+              "endpoint": {
+                "description": "Region endpoint URL",
+                "type": "string"
+              },
+              "priority": {
+                "description": "Failover priority (lower = higher priority)",
+                "type": "number"
+              }
+            },
+            "required": [
+              "name",
+              "role"
+            ],
+            "additionalProperties": false
+          },
+          "description": "Multi-region configuration (minimum 2 regions)"
+        },
+        "dns": {
+          "description": "DNS failover settings",
+          "type": "object",
+          "properties": {
+            "ttl": {
+              "default": 60,
+              "description": "DNS TTL in seconds for failover",
+              "type": "number"
+            },
+            "provider": {
+              "description": "DNS provider for automatic failover",
+              "type": "string",
+              "enum": [
+                "route53",
+                "cloudflare",
+                "azure_dns",
+                "custom"
+              ]
+            }
+          },
+          "required": [
+            "ttl"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "mode",
+        "autoFailover",
+        "healthCheckInterval",
+        "failureThreshold",
+        "regions"
+      ],
+      "additionalProperties": false
+    },
+    "replication": {
+      "description": "Data replication settings",
+      "type": "object",
+      "properties": {
+        "mode": {
+          "default": "asynchronous",
+          "description": "Data replication mode",
+          "type": "string",
+          "enum": [
+            "synchronous",
+            "asynchronous",
+            "semi_synchronous"
+          ]
+        },
+        "maxLagSeconds": {
+          "description": "Maximum acceptable replication lag in seconds",
+          "type": "number"
+        },
+        "includeObjects": {
+          "description": "Objects to replicate (empty = all)",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "excludeObjects": {
+          "description": "Objects to exclude from replication",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "mode"
+      ],
+      "additionalProperties": false
+    },
+    "testing": {
+      "description": "Automated disaster recovery testing",
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "description": "Enable automated DR testing",
+          "type": "boolean"
+        },
+        "schedule": {
+          "description": "Cron expression for DR test schedule",
+          "type": "string"
+        },
+        "notificationChannel": {
+          "description": "Notification channel for DR test results",
+          "type": "string"
+        }
+      },
+      "required": [
+        "enabled"
+      ],
+      "additionalProperties": false
+    },
+    "runbookUrl": {
+      "description": "URL to disaster recovery runbook/playbook",
+      "type": "string"
+    },
+    "contacts": {
+      "description": "Emergency contact list for DR incidents",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Contact name"
+          },
+          "role": {
+            "type": "string",
+            "description": "Contact role (e.g., \"DBA\", \"SRE Lead\")"
+          },
+          "email": {
+            "description": "Contact email",
+            "type": "string"
+          },
+          "phone": {
+            "description": "Contact phone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "role"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "enabled",
+    "rpo",
+    "rto",
+    "backup"
+  ],
+  "additionalProperties": false,
+  "description": "Complete disaster recovery plan configuration",
+  "$id": "https://schema.objectstack.io/v3.0.11/system/DisasterRecoveryPlan.json",
+  "x-spec-version": "3.0.11"
+}

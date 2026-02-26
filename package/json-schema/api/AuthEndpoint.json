@@ -1,0 +1,203 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "signInEmail": {
+      "type": "object",
+      "properties": {
+        "method": {
+          "type": "string",
+          "const": "POST"
+        },
+        "path": {
+          "type": "string",
+          "const": "/sign-in/email"
+        },
+        "description": {
+          "type": "string",
+          "const": "Sign in with email and password"
+        }
+      },
+      "required": [
+        "method",
+        "path",
+        "description"
+      ],
+      "additionalProperties": false
+    },
+    "signUpEmail": {
+      "type": "object",
+      "properties": {
+        "method": {
+          "type": "string",
+          "const": "POST"
+        },
+        "path": {
+          "type": "string",
+          "const": "/sign-up/email"
+        },
+        "description": {
+          "type": "string",
+          "const": "Register new user with email and password"
+        }
+      },
+      "required": [
+        "method",
+        "path",
+        "description"
+      ],
+      "additionalProperties": false
+    },
+    "signOut": {
+      "type": "object",
+      "properties": {
+        "method": {
+          "type": "string",
+          "const": "POST"
+        },
+        "path": {
+          "type": "string",
+          "const": "/sign-out"
+        },
+        "description": {
+          "type": "string",
+          "const": "Sign out current user"
+        }
+      },
+      "required": [
+        "method",
+        "path",
+        "description"
+      ],
+      "additionalProperties": false
+    },
+    "getSession": {
+      "type": "object",
+      "properties": {
+        "method": {
+          "type": "string",
+          "const": "GET"
+        },
+        "path": {
+          "type": "string",
+          "const": "/get-session"
+        },
+        "description": {
+          "type": "string",
+          "const": "Get current user session"
+        }
+      },
+      "required": [
+        "method",
+        "path",
+        "description"
+      ],
+      "additionalProperties": false
+    },
+    "forgetPassword": {
+      "type": "object",
+      "properties": {
+        "method": {
+          "type": "string",
+          "const": "POST"
+        },
+        "path": {
+          "type": "string",
+          "const": "/forget-password"
+        },
+        "description": {
+          "type": "string",
+          "const": "Request password reset email"
+        }
+      },
+      "required": [
+        "method",
+        "path",
+        "description"
+      ],
+      "additionalProperties": false
+    },
+    "resetPassword": {
+      "type": "object",
+      "properties": {
+        "method": {
+          "type": "string",
+          "const": "POST"
+        },
+        "path": {
+          "type": "string",
+          "const": "/reset-password"
+        },
+        "description": {
+          "type": "string",
+          "const": "Reset password with token"
+        }
+      },
+      "required": [
+        "method",
+        "path",
+        "description"
+      ],
+      "additionalProperties": false
+    },
+    "sendVerificationEmail": {
+      "type": "object",
+      "properties": {
+        "method": {
+          "type": "string",
+          "const": "POST"
+        },
+        "path": {
+          "type": "string",
+          "const": "/send-verification-email"
+        },
+        "description": {
+          "type": "string",
+          "const": "Send email verification link"
+        }
+      },
+      "required": [
+        "method",
+        "path",
+        "description"
+      ],
+      "additionalProperties": false
+    },
+    "verifyEmail": {
+      "type": "object",
+      "properties": {
+        "method": {
+          "type": "string",
+          "const": "GET"
+        },
+        "path": {
+          "type": "string",
+          "const": "/verify-email"
+        },
+        "description": {
+          "type": "string",
+          "const": "Verify email with token"
+        }
+      },
+      "required": [
+        "method",
+        "path",
+        "description"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "signInEmail",
+    "signUpEmail",
+    "signOut",
+    "getSession",
+    "forgetPassword",
+    "resetPassword",
+    "sendVerificationEmail",
+    "verifyEmail"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/AuthEndpoint.json",
+  "x-spec-version": "3.0.11"
+}

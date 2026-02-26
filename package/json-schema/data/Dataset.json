@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "object": {
+      "type": "string",
+      "pattern": "^[a-z_][a-z0-9_]*$",
+      "description": "Target Object Name"
+    },
+    "externalId": {
+      "default": "name",
+      "description": "Field match for uniqueness check",
+      "type": "string"
+    },
+    "mode": {
+      "default": "upsert",
+      "description": "Conflict resolution strategy",
+      "type": "string",
+      "enum": [
+        "insert",
+        "update",
+        "upsert",
+        "replace",
+        "ignore"
+      ]
+    },
+    "env": {
+      "default": [
+        "prod",
+        "dev",
+        "test"
+      ],
+      "description": "Applicable environments",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "prod",
+          "dev",
+          "test"
+        ]
+      }
+    },
+    "records": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "propertyNames": {
+          "type": "string"
+        },
+        "additionalProperties": {}
+      },
+      "description": "Data records"
+    }
+  },
+  "required": [
+    "object",
+    "externalId",
+    "mode",
+    "env",
+    "records"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/data/Dataset.json",
+  "x-spec-version": "3.0.11"
+}

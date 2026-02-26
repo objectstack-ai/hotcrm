@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Criterion ID"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "security",
+        "performance",
+        "quality",
+        "ux",
+        "documentation",
+        "policy",
+        "compatibility"
+      ]
+    },
+    "description": {
+      "type": "string"
+    },
+    "required": {
+      "default": true,
+      "type": "boolean"
+    },
+    "passed": {
+      "type": "boolean"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "category",
+    "description",
+    "required"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/cloud/ReviewCriterion.json",
+  "x-spec-version": "3.0.11"
+}

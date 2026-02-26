@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "modelName": {
+      "type": "string"
+    },
+    "modelVersion": {
+      "type": "string"
+    },
+    "recordId": {
+      "type": "string"
+    },
+    "prediction": {
+      "description": "The predicted value"
+    },
+    "confidence": {
+      "description": "Confidence score (0-1)",
+      "type": "number"
+    },
+    "probabilities": {
+      "description": "Class probabilities (for classification)",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "number"
+      }
+    },
+    "explanation": {
+      "type": "object",
+      "properties": {
+        "topFeatures": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "feature": {
+                "type": "string"
+              },
+              "importance": {
+                "type": "number"
+              },
+              "value": {}
+            },
+            "required": [
+              "feature",
+              "importance",
+              "value"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "reasoning": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "tokens": {
+      "description": "Token usage for this prediction (if AI-powered)",
+      "type": "object",
+      "properties": {
+        "prompt": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991,
+          "description": "Input tokens"
+        },
+        "completion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991,
+          "description": "Output tokens"
+        },
+        "total": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991,
+          "description": "Total tokens"
+        }
+      },
+      "required": [
+        "prompt",
+        "completion",
+        "total"
+      ],
+      "additionalProperties": false
+    },
+    "cost": {
+      "description": "Cost for this prediction in USD",
+      "type": "number",
+      "minimum": 0
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "executionTime": {
+          "description": "Execution time in milliseconds",
+          "type": "number"
+        },
+        "timestamp": {
+          "description": "ISO timestamp",
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "modelName",
+    "modelVersion",
+    "prediction"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/ai/PredictionResult.json",
+  "x-spec-version": "3.0.11"
+}

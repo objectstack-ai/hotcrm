@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "strategy": {
+      "default": "compatible",
+      "type": "string",
+      "enum": [
+        "strict",
+        "compatible",
+        "latest",
+        "pinned"
+      ]
+    },
+    "peerDependencies": {
+      "type": "object",
+      "properties": {
+        "resolve": {
+          "default": true,
+          "type": "boolean"
+        },
+        "onMissing": {
+          "default": "warn",
+          "type": "string",
+          "enum": [
+            "error",
+            "warn",
+            "ignore"
+          ]
+        },
+        "onMismatch": {
+          "default": "warn",
+          "type": "string",
+          "enum": [
+            "error",
+            "warn",
+            "ignore"
+          ]
+        }
+      },
+      "required": [
+        "resolve",
+        "onMissing",
+        "onMismatch"
+      ],
+      "additionalProperties": false
+    },
+    "optionalDependencies": {
+      "type": "object",
+      "properties": {
+        "load": {
+          "default": true,
+          "type": "boolean"
+        },
+        "onFailure": {
+          "default": "warn",
+          "type": "string",
+          "enum": [
+            "warn",
+            "ignore"
+          ]
+        }
+      },
+      "required": [
+        "load",
+        "onFailure"
+      ],
+      "additionalProperties": false
+    },
+    "conflictResolution": {
+      "default": "latest",
+      "type": "string",
+      "enum": [
+        "fail",
+        "latest",
+        "oldest",
+        "manual"
+      ]
+    },
+    "circularDependencies": {
+      "default": "warn",
+      "type": "string",
+      "enum": [
+        "error",
+        "warn",
+        "allow"
+      ]
+    }
+  },
+  "required": [
+    "strategy",
+    "conflictResolution",
+    "circularDependencies"
+  ],
+  "additionalProperties": false,
+  "description": "Plugin dependency resolution configuration",
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/PluginDependencyResolution.json",
+  "x-spec-version": "3.0.11"
+}

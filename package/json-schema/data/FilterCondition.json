@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "allOf": [
+    {
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
+    },
+    {
+      "type": "object",
+      "properties": {
+        "$and": {
+          "type": "array",
+          "items": {
+            "$ref": "#"
+          }
+        },
+        "$or": {
+          "type": "array",
+          "items": {
+            "$ref": "#"
+          }
+        },
+        "$not": {
+          "$ref": "#"
+        }
+      },
+      "additionalProperties": false
+    }
+  ],
+  "$id": "https://schema.objectstack.io/v3.0.11/data/FilterCondition.json",
+  "x-spec-version": "3.0.11"
+}

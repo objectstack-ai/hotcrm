@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "mode": {
+      "default": "async",
+      "type": "string",
+      "enum": [
+        "sync",
+        "async",
+        "parallel",
+        "sequential"
+      ]
+    },
+    "timeout": {
+      "default": 30000,
+      "type": "integer",
+      "minimum": 100,
+      "maximum": 9007199254740991
+    },
+    "priority": {
+      "default": 100,
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "critical": {
+      "default": false,
+      "description": "If true, kernel bootstrap fails if plugin fails",
+      "type": "boolean"
+    },
+    "retry": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "type": "boolean"
+        },
+        "maxAttempts": {
+          "default": 3,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5
+        },
+        "backoffMs": {
+          "default": 1000,
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "enabled",
+        "maxAttempts",
+        "backoffMs"
+      ],
+      "additionalProperties": false
+    },
+    "healthCheckInterval": {
+      "description": "Health check interval in ms (0 = disabled)",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    }
+  },
+  "required": [
+    "mode",
+    "timeout",
+    "priority",
+    "critical"
+  ],
+  "additionalProperties": false,
+  "description": "Plugin initialization configuration",
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/PluginInitialization.json",
+  "x-spec-version": "3.0.11"
+}

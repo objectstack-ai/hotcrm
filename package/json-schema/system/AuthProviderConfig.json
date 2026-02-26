@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Provider ID (github, google)"
+    },
+    "clientId": {
+      "type": "string",
+      "description": "OAuth Client ID"
+    },
+    "clientSecret": {
+      "type": "string",
+      "description": "OAuth Client Secret"
+    },
+    "scope": {
+      "description": "Requested permissions",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "id",
+    "clientId",
+    "clientSecret"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/system/AuthProviderConfig.json",
+  "x-spec-version": "3.0.11"
+}

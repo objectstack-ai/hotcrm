@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 2,
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "description": "Unique role name (lowercase snake_case)"
+    },
+    "label": {
+      "type": "string",
+      "description": "Display label (e.g. VP of Sales)"
+    },
+    "parent": {
+      "description": "Parent Role ID (Reports To)",
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "label"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/identity/Role.json",
+  "x-spec-version": "3.0.11"
+}

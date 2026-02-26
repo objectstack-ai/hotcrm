@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "aes-256-gcm",
+    "aes-256-cbc",
+    "chacha20-poly1305"
+  ],
+  "description": "Supported encryption algorithm",
+  "$id": "https://schema.objectstack.io/v3.0.11/system/EncryptionAlgorithm.json",
+  "x-spec-version": "3.0.11"
+}

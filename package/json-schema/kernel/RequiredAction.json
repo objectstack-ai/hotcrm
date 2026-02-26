@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "install",
+        "upgrade",
+        "confirm_conflict"
+      ],
+      "description": "Type of action required"
+    },
+    "packageId": {
+      "type": "string",
+      "description": "Target package identifier"
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable action description"
+    }
+  },
+  "required": [
+    "type",
+    "packageId",
+    "description"
+  ],
+  "additionalProperties": false,
+  "description": "Action required before installation can proceed",
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/RequiredAction.json",
+  "x-spec-version": "3.0.11"
+}

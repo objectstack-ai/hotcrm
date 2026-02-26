@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "maxBatchSize": {
+      "default": 200,
+      "description": "Maximum records per batch operation",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000
+    },
+    "enableBatchEndpoint": {
+      "default": true,
+      "description": "Enable POST /data/:object/batch endpoint",
+      "type": "boolean"
+    },
+    "operations": {
+      "description": "Enable/disable specific batch operations",
+      "type": "object",
+      "properties": {
+        "createMany": {
+          "default": true,
+          "description": "Enable POST /data/:object/createMany",
+          "type": "boolean"
+        },
+        "updateMany": {
+          "default": true,
+          "description": "Enable POST /data/:object/updateMany",
+          "type": "boolean"
+        },
+        "deleteMany": {
+          "default": true,
+          "description": "Enable POST /data/:object/deleteMany",
+          "type": "boolean"
+        },
+        "upsertMany": {
+          "default": true,
+          "description": "Enable POST /data/:object/upsertMany",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "createMany",
+        "updateMany",
+        "deleteMany",
+        "upsertMany"
+      ],
+      "additionalProperties": false
+    },
+    "defaultAtomic": {
+      "default": true,
+      "description": "Default atomic/transaction mode for batch operations",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "maxBatchSize",
+    "enableBatchEndpoint",
+    "defaultAtomic"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/BatchEndpointsConfig.json",
+  "x-spec-version": "3.0.11"
+}

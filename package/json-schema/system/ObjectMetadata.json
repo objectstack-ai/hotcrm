@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "contentType": {
+      "type": "string",
+      "description": "MIME type (e.g., image/jpeg, application/pdf)"
+    },
+    "contentLength": {
+      "type": "number",
+      "minimum": 0,
+      "description": "File size in bytes"
+    },
+    "contentEncoding": {
+      "description": "Content encoding (e.g., gzip)",
+      "type": "string"
+    },
+    "contentDisposition": {
+      "description": "Content disposition header",
+      "type": "string"
+    },
+    "contentLanguage": {
+      "description": "Content language",
+      "type": "string"
+    },
+    "cacheControl": {
+      "description": "Cache control directives",
+      "type": "string"
+    },
+    "etag": {
+      "description": "Entity tag for versioning/caching",
+      "type": "string"
+    },
+    "lastModified": {
+      "description": "Last modification timestamp",
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+    },
+    "versionId": {
+      "description": "Object version identifier",
+      "type": "string"
+    },
+    "storageClass": {
+      "description": "Storage class/tier",
+      "type": "string",
+      "enum": [
+        "standard",
+        "intelligent",
+        "infrequent_access",
+        "glacier",
+        "deep_archive"
+      ]
+    },
+    "encryption": {
+      "description": "Server-side encryption configuration",
+      "type": "object",
+      "properties": {
+        "algorithm": {
+          "type": "string",
+          "description": "Encryption algorithm (e.g., AES256, aws:kms)"
+        },
+        "keyId": {
+          "description": "KMS key ID if using managed encryption",
+          "type": "string"
+        }
+      },
+      "required": [
+        "algorithm"
+      ],
+      "additionalProperties": false
+    },
+    "custom": {
+      "description": "Custom user-defined metadata",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "contentType",
+    "contentLength"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/system/ObjectMetadata.json",
+  "x-spec-version": "3.0.11"
+}

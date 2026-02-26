@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "changes": {
+      "default": [],
+      "description": "List of schema changes",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "entityType": {
+            "type": "string",
+            "enum": [
+              "object",
+              "field",
+              "index",
+              "view",
+              "flow",
+              "permission"
+            ],
+            "description": "Entity type"
+          },
+          "entityName": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Entity name"
+          },
+          "parentEntity": {
+            "description": "Parent entity name",
+            "type": "string"
+          },
+          "changeType": {
+            "type": "string",
+            "enum": [
+              "added",
+              "modified",
+              "removed"
+            ],
+            "description": "Change type"
+          },
+          "oldValue": {
+            "description": "Previous value"
+          },
+          "newValue": {
+            "description": "New value"
+          }
+        },
+        "required": [
+          "entityType",
+          "entityName",
+          "changeType"
+        ],
+        "additionalProperties": false,
+        "description": "Individual schema change"
+      }
+    },
+    "summary": {
+      "type": "object",
+      "properties": {
+        "added": {
+          "default": 0,
+          "description": "Number of added entities",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "modified": {
+          "default": 0,
+          "description": "Number of modified entities",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "removed": {
+          "default": 0,
+          "description": "Number of removed entities",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "added",
+        "modified",
+        "removed"
+      ],
+      "additionalProperties": false,
+      "description": "Change summary counts"
+    },
+    "hasBreakingChanges": {
+      "default": false,
+      "description": "Whether diff contains breaking changes",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "changes",
+    "summary",
+    "hasBreakingChanges"
+  ],
+  "additionalProperties": false,
+  "description": "Schema diff between current and desired state",
+  "$id": "https://schema.objectstack.io/v3.0.11/system/DeployDiff.json",
+  "x-spec-version": "3.0.11"
+}

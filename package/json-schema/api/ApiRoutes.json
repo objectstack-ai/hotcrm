@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "data": {
+      "type": "string",
+      "description": "e.g. /api/v1/data"
+    },
+    "metadata": {
+      "type": "string",
+      "description": "e.g. /api/v1/meta"
+    },
+    "ui": {
+      "description": "e.g. /api/v1/ui",
+      "type": "string"
+    },
+    "auth": {
+      "description": "e.g. /api/v1/auth",
+      "type": "string"
+    },
+    "automation": {
+      "description": "e.g. /api/v1/automation",
+      "type": "string"
+    },
+    "storage": {
+      "description": "e.g. /api/v1/storage",
+      "type": "string"
+    },
+    "analytics": {
+      "description": "e.g. /api/v1/analytics",
+      "type": "string"
+    },
+    "graphql": {
+      "description": "e.g. /graphql",
+      "type": "string"
+    },
+    "packages": {
+      "description": "e.g. /api/v1/packages",
+      "type": "string"
+    },
+    "workflow": {
+      "description": "e.g. /api/v1/workflow",
+      "type": "string"
+    },
+    "realtime": {
+      "description": "e.g. /api/v1/realtime",
+      "type": "string"
+    },
+    "notifications": {
+      "description": "e.g. /api/v1/notifications",
+      "type": "string"
+    },
+    "ai": {
+      "description": "e.g. /api/v1/ai",
+      "type": "string"
+    },
+    "i18n": {
+      "description": "e.g. /api/v1/i18n",
+      "type": "string"
+    }
+  },
+  "required": [
+    "data",
+    "metadata"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/ApiRoutes.json",
+  "x-spec-version": "3.0.11"
+}

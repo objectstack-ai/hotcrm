@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "topics": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Topics/Tags to recruit knowledge from"
+    },
+    "indexes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Vector Store Indexes"
+    }
+  },
+  "required": [
+    "topics",
+    "indexes"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/ai/AIKnowledge.json",
+  "x-spec-version": "3.0.11"
+}

@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "from": {
+      "type": "string",
+      "description": "Source event pattern (supports wildcards, e.g., user.* or *.created)"
+    },
+    "to": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Target event names to route to"
+    },
+    "transform": {
+      "description": "Optional function to transform payload"
+    }
+  },
+  "required": [
+    "from",
+    "to"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/EventRoute.json",
+  "x-spec-version": "3.0.11"
+}

@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "viewMode": {
+      "type": "string",
+      "enum": [
+        "list",
+        "kanban",
+        "calendar",
+        "gantt",
+        "pivot"
+      ]
+    },
+    "filters": {
+      "description": "Filter conditions",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
+    },
+    "sort": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string"
+          },
+          "order": {
+            "type": "string",
+            "enum": [
+              "asc",
+              "desc"
+            ]
+          }
+        },
+        "required": [
+          "field",
+          "order"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "groupBy": {
+      "description": "Field to group by",
+      "type": "string"
+    },
+    "columns": {
+      "description": "Columns to show/hide",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "recordId": {
+      "description": "Record to expand/collapse",
+      "type": "string"
+    },
+    "exportFormat": {
+      "type": "string",
+      "enum": [
+        "csv",
+        "xlsx",
+        "pdf",
+        "json"
+      ]
+    }
+  },
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/ai/ViewActionParams.json",
+  "x-spec-version": "3.0.11"
+}

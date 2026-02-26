@@ -1,0 +1,220 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z_][a-z0-9_]*$",
+      "description": "Table name in ObjectStack (snake_case)"
+    },
+    "label": {
+      "type": "string",
+      "description": "Display label"
+    },
+    "schema": {
+      "description": "Database schema name",
+      "type": "string"
+    },
+    "tableName": {
+      "type": "string",
+      "description": "Actual table name in database"
+    },
+    "primaryKey": {
+      "type": "string",
+      "description": "Primary key column"
+    },
+    "enabled": {
+      "default": true,
+      "description": "Enable sync for this table",
+      "type": "boolean"
+    },
+    "fieldMappings": {
+      "description": "Table-specific field mappings",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string",
+            "description": "Source field name"
+          },
+          "target": {
+            "type": "string",
+            "description": "Target field name"
+          },
+          "transform": {
+            "description": "Transformation to apply",
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "constant"
+                  },
+                  "value": {
+                    "description": "Constant value to use"
+                  }
+                },
+                "required": [
+                  "type",
+                  "value"
+                ],
+                "additionalProperties": false,
+                "description": "Set a constant value"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "cast"
+                  },
+                  "targetType": {
+                    "type": "string",
+                    "enum": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "date"
+                    ],
+                    "description": "Target data type"
+                  }
+                },
+                "required": [
+                  "type",
+                  "targetType"
+                ],
+                "additionalProperties": false,
+                "description": "Cast to a specific data type"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "lookup"
+                  },
+                  "table": {
+                    "type": "string",
+                    "description": "Lookup table name"
+                  },
+                  "keyField": {
+                    "type": "string",
+                    "description": "Field to match on"
+                  },
+                  "valueField": {
+                    "type": "string",
+                    "description": "Field to retrieve"
+                  }
+                },
+                "required": [
+                  "type",
+                  "table",
+                  "keyField",
+                  "valueField"
+                ],
+                "additionalProperties": false,
+                "description": "Lookup value from another table"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "javascript"
+                  },
+                  "expression": {
+                    "type": "string",
+                    "description": "JavaScript expression (e.g., \"value.toUpperCase()\")"
+                  }
+                },
+                "required": [
+                  "type",
+                  "expression"
+                ],
+                "additionalProperties": false,
+                "description": "Custom JavaScript transformation"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "map"
+                  },
+                  "mappings": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {},
+                    "description": "Value mappings (e.g., {\"Active\": \"active\"})"
+                  }
+                },
+                "required": [
+                  "type",
+                  "mappings"
+                ],
+                "additionalProperties": false,
+                "description": "Map values using a dictionary"
+              }
+            ]
+          },
+          "defaultValue": {
+            "description": "Default if source is null/undefined"
+          },
+          "dataType": {
+            "description": "Target data type",
+            "type": "string",
+            "enum": [
+              "string",
+              "number",
+              "boolean",
+              "date",
+              "datetime",
+              "json",
+              "array"
+            ]
+          },
+          "required": {
+            "default": false,
+            "description": "Field is required",
+            "type": "boolean"
+          },
+          "syncMode": {
+            "default": "bidirectional",
+            "description": "Sync mode",
+            "type": "string",
+            "enum": [
+              "read_only",
+              "write_only",
+              "bidirectional"
+            ]
+          }
+        },
+        "required": [
+          "source",
+          "target",
+          "required",
+          "syncMode"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "whereClause": {
+      "description": "SQL WHERE clause for filtering",
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "label",
+    "tableName",
+    "primaryKey",
+    "enabled"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/integration/DatabaseTable.json",
+  "x-spec-version": "3.0.11"
+}

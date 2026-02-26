@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "label": {
+      "type": "string",
+      "description": "Translated singular label"
+    },
+    "pluralLabel": {
+      "description": "Translated plural label",
+      "type": "string"
+    },
+    "fields": {
+      "description": "Field-level translations",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "description": "Translated field label",
+            "type": "string"
+          },
+          "help": {
+            "description": "Translated help text",
+            "type": "string"
+          },
+          "options": {
+            "description": "Option value to translated label map",
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false,
+        "description": "Translation data for a single field"
+      }
+    }
+  },
+  "required": [
+    "label"
+  ],
+  "additionalProperties": false,
+  "description": "Translation data for a single object",
+  "$id": "https://schema.objectstack.io/v3.0.11/system/ObjectTranslationData.json",
+  "x-spec-version": "3.0.11"
+}

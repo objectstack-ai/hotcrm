@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "style": {
+      "default": "decimal",
+      "description": "Number formatting style",
+      "type": "string",
+      "enum": [
+        "decimal",
+        "currency",
+        "percent",
+        "unit"
+      ]
+    },
+    "currency": {
+      "description": "ISO 4217 currency code (e.g., \"USD\", \"EUR\")",
+      "type": "string"
+    },
+    "unit": {
+      "description": "Unit for unit formatting (e.g., \"kilometer\", \"liter\")",
+      "type": "string"
+    },
+    "minimumFractionDigits": {
+      "description": "Minimum number of fraction digits",
+      "type": "number"
+    },
+    "maximumFractionDigits": {
+      "description": "Maximum number of fraction digits",
+      "type": "number"
+    },
+    "useGrouping": {
+      "description": "Whether to use grouping separators (e.g., 1,000)",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "style"
+  ],
+  "additionalProperties": false,
+  "description": "Number formatting rules",
+  "$id": "https://schema.objectstack.io/v3.0.11/ui/NumberFormat.json",
+  "x-spec-version": "3.0.11"
+}

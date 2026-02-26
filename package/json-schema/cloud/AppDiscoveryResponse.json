@@ -1,0 +1,451 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "featured": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "listingId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "tagline": {
+            "type": "string"
+          },
+          "iconUrl": {
+            "type": "string",
+            "format": "uri"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "crm",
+              "erp",
+              "hr",
+              "finance",
+              "project",
+              "collaboration",
+              "analytics",
+              "integration",
+              "automation",
+              "ai",
+              "security",
+              "developer-tools",
+              "ui-theme",
+              "storage",
+              "other"
+            ],
+            "description": "Marketplace package category"
+          },
+          "pricing": {
+            "type": "string",
+            "enum": [
+              "free",
+              "freemium",
+              "paid",
+              "subscription",
+              "usage-based",
+              "contact-sales"
+            ],
+            "description": "Package pricing model"
+          },
+          "averageRating": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 5
+          },
+          "activeInstalls": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "popular-in-category",
+              "similar-users",
+              "complements-installed",
+              "trending",
+              "new-release",
+              "editor-pick"
+            ]
+          }
+        },
+        "required": [
+          "listingId",
+          "name",
+          "category",
+          "pricing",
+          "reason"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "recommended": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "listingId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "tagline": {
+            "type": "string"
+          },
+          "iconUrl": {
+            "type": "string",
+            "format": "uri"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "crm",
+              "erp",
+              "hr",
+              "finance",
+              "project",
+              "collaboration",
+              "analytics",
+              "integration",
+              "automation",
+              "ai",
+              "security",
+              "developer-tools",
+              "ui-theme",
+              "storage",
+              "other"
+            ],
+            "description": "Marketplace package category"
+          },
+          "pricing": {
+            "type": "string",
+            "enum": [
+              "free",
+              "freemium",
+              "paid",
+              "subscription",
+              "usage-based",
+              "contact-sales"
+            ],
+            "description": "Package pricing model"
+          },
+          "averageRating": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 5
+          },
+          "activeInstalls": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "popular-in-category",
+              "similar-users",
+              "complements-installed",
+              "trending",
+              "new-release",
+              "editor-pick"
+            ]
+          }
+        },
+        "required": [
+          "listingId",
+          "name",
+          "category",
+          "pricing",
+          "reason"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "trending": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "listingId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "tagline": {
+            "type": "string"
+          },
+          "iconUrl": {
+            "type": "string",
+            "format": "uri"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "crm",
+              "erp",
+              "hr",
+              "finance",
+              "project",
+              "collaboration",
+              "analytics",
+              "integration",
+              "automation",
+              "ai",
+              "security",
+              "developer-tools",
+              "ui-theme",
+              "storage",
+              "other"
+            ],
+            "description": "Marketplace package category"
+          },
+          "pricing": {
+            "type": "string",
+            "enum": [
+              "free",
+              "freemium",
+              "paid",
+              "subscription",
+              "usage-based",
+              "contact-sales"
+            ],
+            "description": "Package pricing model"
+          },
+          "averageRating": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 5
+          },
+          "activeInstalls": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "popular-in-category",
+              "similar-users",
+              "complements-installed",
+              "trending",
+              "new-release",
+              "editor-pick"
+            ]
+          }
+        },
+        "required": [
+          "listingId",
+          "name",
+          "category",
+          "pricing",
+          "reason"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "newArrivals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "listingId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "tagline": {
+            "type": "string"
+          },
+          "iconUrl": {
+            "type": "string",
+            "format": "uri"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "crm",
+              "erp",
+              "hr",
+              "finance",
+              "project",
+              "collaboration",
+              "analytics",
+              "integration",
+              "automation",
+              "ai",
+              "security",
+              "developer-tools",
+              "ui-theme",
+              "storage",
+              "other"
+            ],
+            "description": "Marketplace package category"
+          },
+          "pricing": {
+            "type": "string",
+            "enum": [
+              "free",
+              "freemium",
+              "paid",
+              "subscription",
+              "usage-based",
+              "contact-sales"
+            ],
+            "description": "Package pricing model"
+          },
+          "averageRating": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 5
+          },
+          "activeInstalls": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "popular-in-category",
+              "similar-users",
+              "complements-installed",
+              "trending",
+              "new-release",
+              "editor-pick"
+            ]
+          }
+        },
+        "required": [
+          "listingId",
+          "name",
+          "category",
+          "pricing",
+          "reason"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "collections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "coverImageUrl": {
+            "type": "string",
+            "format": "uri"
+          },
+          "apps": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "listingId": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "tagline": {
+                  "type": "string"
+                },
+                "iconUrl": {
+                  "type": "string",
+                  "format": "uri"
+                },
+                "category": {
+                  "type": "string",
+                  "enum": [
+                    "crm",
+                    "erp",
+                    "hr",
+                    "finance",
+                    "project",
+                    "collaboration",
+                    "analytics",
+                    "integration",
+                    "automation",
+                    "ai",
+                    "security",
+                    "developer-tools",
+                    "ui-theme",
+                    "storage",
+                    "other"
+                  ],
+                  "description": "Marketplace package category"
+                },
+                "pricing": {
+                  "type": "string",
+                  "enum": [
+                    "free",
+                    "freemium",
+                    "paid",
+                    "subscription",
+                    "usage-based",
+                    "contact-sales"
+                  ],
+                  "description": "Package pricing model"
+                },
+                "averageRating": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 5
+                },
+                "activeInstalls": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "reason": {
+                  "type": "string",
+                  "enum": [
+                    "popular-in-category",
+                    "similar-users",
+                    "complements-installed",
+                    "trending",
+                    "new-release",
+                    "editor-pick"
+                  ]
+                }
+              },
+              "required": [
+                "listingId",
+                "name",
+                "category",
+                "pricing",
+                "reason"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "apps"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/cloud/AppDiscoveryResponse.json",
+  "x-spec-version": "3.0.11"
+}

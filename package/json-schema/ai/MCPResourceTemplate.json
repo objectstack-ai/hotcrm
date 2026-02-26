@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "uriPattern": {
+      "type": "string",
+      "description": "URI pattern with variables (e.g., \"objectstack://objects/{objectName}/{recordId}\")"
+    },
+    "name": {
+      "type": "string",
+      "description": "Template name"
+    },
+    "description": {
+      "type": "string"
+    },
+    "parameters": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Parameter name"
+          },
+          "type": {
+            "default": "string",
+            "type": "string",
+            "enum": [
+              "string",
+              "number",
+              "boolean"
+            ]
+          },
+          "required": {
+            "default": true,
+            "type": "boolean"
+          },
+          "description": {
+            "type": "string"
+          },
+          "pattern": {
+            "description": "Regex validation pattern",
+            "type": "string"
+          },
+          "default": {}
+        },
+        "required": [
+          "name",
+          "type",
+          "required"
+        ],
+        "additionalProperties": false
+      },
+      "description": "URI parameters"
+    },
+    "handler": {
+      "description": "Handler function name for dynamic generation",
+      "type": "string"
+    },
+    "mimeType": {
+      "type": "string"
+    },
+    "resourceType": {
+      "default": "json",
+      "type": "string",
+      "enum": [
+        "text",
+        "json",
+        "binary",
+        "stream"
+      ]
+    }
+  },
+  "required": [
+    "uriPattern",
+    "name",
+    "parameters",
+    "resourceType"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/ai/MCPResourceTemplate.json",
+  "x-spec-version": "3.0.11"
+}

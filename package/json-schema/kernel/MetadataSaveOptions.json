@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "format": {
+      "default": "typescript",
+      "description": "Output format",
+      "type": "string",
+      "enum": [
+        "json",
+        "yaml",
+        "typescript",
+        "javascript"
+      ]
+    },
+    "prettify": {
+      "default": true,
+      "description": "Format with indentation",
+      "type": "boolean"
+    },
+    "indent": {
+      "default": 2,
+      "description": "Indentation spaces",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 8
+    },
+    "sortKeys": {
+      "default": false,
+      "description": "Sort object keys",
+      "type": "boolean"
+    },
+    "includeDefaults": {
+      "default": false,
+      "description": "Include default values",
+      "type": "boolean"
+    },
+    "backup": {
+      "default": false,
+      "description": "Create backup file",
+      "type": "boolean"
+    },
+    "overwrite": {
+      "default": true,
+      "description": "Overwrite existing file",
+      "type": "boolean"
+    },
+    "atomic": {
+      "default": true,
+      "description": "Use atomic write operation",
+      "type": "boolean"
+    },
+    "path": {
+      "description": "Custom output path",
+      "type": "string"
+    }
+  },
+  "required": [
+    "format",
+    "prettify",
+    "indent",
+    "sortKeys",
+    "includeDefaults",
+    "backup",
+    "overwrite",
+    "atomic"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/MetadataSaveOptions.json",
+  "x-spec-version": "3.0.11"
+}

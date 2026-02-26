@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "count",
+    "sum",
+    "avg",
+    "min",
+    "max",
+    "count_distinct",
+    "percentile",
+    "median",
+    "stddev",
+    "variance"
+  ],
+  "description": "Standard aggregation functions",
+  "$id": "https://schema.objectstack.io/v3.0.11/shared/AggregationFunctionEnum.json",
+  "x-spec-version": "3.0.11"
+}

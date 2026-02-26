@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "csv",
+    "json",
+    "jsonl",
+    "xlsx",
+    "parquet"
+  ],
+  "$id": "https://schema.objectstack.io/v3.0.11/api/ExportFormat.json",
+  "x-spec-version": "3.0.11"
+}

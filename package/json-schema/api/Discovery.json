@@ -1,0 +1,258 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    },
+    "environment": {
+      "type": "string",
+      "enum": [
+        "production",
+        "sandbox",
+        "development"
+      ]
+    },
+    "routes": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "string",
+          "description": "e.g. /api/v1/data"
+        },
+        "metadata": {
+          "type": "string",
+          "description": "e.g. /api/v1/meta"
+        },
+        "ui": {
+          "description": "e.g. /api/v1/ui",
+          "type": "string"
+        },
+        "auth": {
+          "description": "e.g. /api/v1/auth",
+          "type": "string"
+        },
+        "automation": {
+          "description": "e.g. /api/v1/automation",
+          "type": "string"
+        },
+        "storage": {
+          "description": "e.g. /api/v1/storage",
+          "type": "string"
+        },
+        "analytics": {
+          "description": "e.g. /api/v1/analytics",
+          "type": "string"
+        },
+        "graphql": {
+          "description": "e.g. /graphql",
+          "type": "string"
+        },
+        "packages": {
+          "description": "e.g. /api/v1/packages",
+          "type": "string"
+        },
+        "workflow": {
+          "description": "e.g. /api/v1/workflow",
+          "type": "string"
+        },
+        "realtime": {
+          "description": "e.g. /api/v1/realtime",
+          "type": "string"
+        },
+        "notifications": {
+          "description": "e.g. /api/v1/notifications",
+          "type": "string"
+        },
+        "ai": {
+          "description": "e.g. /api/v1/ai",
+          "type": "string"
+        },
+        "i18n": {
+          "description": "e.g. /api/v1/i18n",
+          "type": "string"
+        }
+      },
+      "required": [
+        "data",
+        "metadata"
+      ],
+      "additionalProperties": false
+    },
+    "locale": {
+      "type": "object",
+      "properties": {
+        "default": {
+          "type": "string"
+        },
+        "supported": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "timezone": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "default",
+        "supported",
+        "timezone"
+      ],
+      "additionalProperties": false
+    },
+    "services": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "available",
+              "unavailable",
+              "degraded",
+              "stub"
+            ],
+            "description": "available = fully operational, unavailable = not installed, degraded = partial, stub = placeholder that throws"
+          },
+          "route": {
+            "description": "e.g. /api/v1/analytics",
+            "type": "string"
+          },
+          "provider": {
+            "description": "e.g. \"objectql\", \"plugin-redis\", \"driver-memory\"",
+            "type": "string"
+          },
+          "version": {
+            "description": "Semantic version of the service implementation (e.g. \"3.0.6\")",
+            "type": "string"
+          },
+          "message": {
+            "description": "e.g. \"Install plugin-workflow to enable\"",
+            "type": "string"
+          },
+          "rateLimit": {
+            "description": "Rate limit and quota info for this service",
+            "type": "object",
+            "properties": {
+              "requestsPerMinute": {
+                "description": "Maximum requests per minute",
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "requestsPerHour": {
+                "description": "Maximum requests per hour",
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "burstLimit": {
+                "description": "Maximum burst request count",
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "retryAfterMs": {
+                "description": "Suggested retry-after delay in milliseconds when rate-limited",
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "enabled",
+          "status"
+        ],
+        "additionalProperties": false
+      },
+      "description": "Per-service availability map keyed by CoreServiceName"
+    },
+    "capabilities": {
+      "description": "Hierarchical capability descriptors for frontend intelligent adaptation",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "description": "Whether this capability is available"
+          },
+          "features": {
+            "description": "Sub-feature flags within this capability",
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {
+              "type": "boolean"
+            }
+          },
+          "description": {
+            "description": "Human-readable capability description",
+            "type": "string"
+          }
+        },
+        "required": [
+          "enabled"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "schemaDiscovery": {
+      "description": "Schema discovery endpoints for API toolchain integration",
+      "type": "object",
+      "properties": {
+        "openapi": {
+          "description": "URL to OpenAPI (Swagger) specification (e.g., \"/api/v1/openapi.json\")",
+          "type": "string"
+        },
+        "graphql": {
+          "description": "URL to GraphQL schema endpoint (e.g., \"/graphql\")",
+          "type": "string"
+        },
+        "jsonSchema": {
+          "description": "URL to JSON Schema definitions",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "metadata": {
+      "description": "Custom metadata key-value pairs for extensibility",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
+    }
+  },
+  "required": [
+    "name",
+    "version",
+    "environment",
+    "routes",
+    "locale",
+    "services"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/Discovery.json",
+  "x-spec-version": "3.0.11"
+}

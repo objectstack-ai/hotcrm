@@ -1,0 +1,312 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Action name"
+        },
+        "type": {
+          "type": "string",
+          "const": "field_update"
+        },
+        "field": {
+          "type": "string",
+          "description": "Field to update"
+        },
+        "value": {
+          "description": "Value or Formula to set"
+        }
+      },
+      "required": [
+        "name",
+        "type",
+        "field",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Action name"
+        },
+        "type": {
+          "type": "string",
+          "const": "email_alert"
+        },
+        "template": {
+          "type": "string",
+          "description": "Email template ID/DevName"
+        },
+        "recipients": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of recipient emails or user IDs"
+        }
+      },
+      "required": [
+        "name",
+        "type",
+        "template",
+        "recipients"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Action name"
+        },
+        "type": {
+          "type": "string",
+          "const": "http_call"
+        },
+        "url": {
+          "type": "string",
+          "description": "Target URL"
+        },
+        "method": {
+          "default": "POST",
+          "description": "HTTP Method",
+          "type": "string",
+          "enum": [
+            "GET",
+            "POST",
+            "PUT",
+            "DELETE",
+            "PATCH"
+          ]
+        },
+        "headers": {
+          "description": "HTTP Headers",
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "body": {
+          "description": "Request body (JSON or text)",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "type",
+        "url",
+        "method"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Action name"
+        },
+        "type": {
+          "type": "string",
+          "const": "connector_action"
+        },
+        "connectorId": {
+          "type": "string",
+          "description": "Target Connector ID (e.g. slack, twilio)"
+        },
+        "actionId": {
+          "type": "string",
+          "description": "Target Action ID (e.g. send_message)"
+        },
+        "input": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {},
+          "description": "Input parameters matching the action schema"
+        }
+      },
+      "required": [
+        "name",
+        "type",
+        "connectorId",
+        "actionId",
+        "input"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Action name"
+        },
+        "type": {
+          "type": "string",
+          "const": "task_creation"
+        },
+        "taskObject": {
+          "type": "string",
+          "description": "Task object name (e.g., \"task\", \"project_task\")"
+        },
+        "subject": {
+          "type": "string",
+          "description": "Task subject/title"
+        },
+        "description": {
+          "description": "Task description",
+          "type": "string"
+        },
+        "assignedTo": {
+          "description": "User ID or field reference for assignee",
+          "type": "string"
+        },
+        "dueDate": {
+          "description": "Due date (ISO string or formula)",
+          "type": "string"
+        },
+        "priority": {
+          "description": "Task priority",
+          "type": "string"
+        },
+        "relatedTo": {
+          "description": "Related record ID or field reference",
+          "type": "string"
+        },
+        "additionalFields": {
+          "description": "Additional custom fields",
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {}
+        }
+      },
+      "required": [
+        "name",
+        "type",
+        "taskObject",
+        "subject"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Action name"
+        },
+        "type": {
+          "type": "string",
+          "const": "push_notification"
+        },
+        "title": {
+          "type": "string",
+          "description": "Notification title"
+        },
+        "body": {
+          "type": "string",
+          "description": "Notification body text"
+        },
+        "recipients": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "User IDs or device tokens"
+        },
+        "data": {
+          "description": "Additional data payload",
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {}
+        },
+        "badge": {
+          "description": "Badge count (iOS)",
+          "type": "number"
+        },
+        "sound": {
+          "description": "Notification sound",
+          "type": "string"
+        },
+        "clickAction": {
+          "description": "Action/URL when notification is clicked",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "type",
+        "title",
+        "body",
+        "recipients"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Action name"
+        },
+        "type": {
+          "type": "string",
+          "const": "custom_script"
+        },
+        "language": {
+          "default": "javascript",
+          "description": "Script language",
+          "type": "string",
+          "enum": [
+            "javascript",
+            "typescript",
+            "python"
+          ]
+        },
+        "code": {
+          "type": "string",
+          "description": "Script code to execute"
+        },
+        "timeout": {
+          "default": 30000,
+          "description": "Execution timeout in milliseconds",
+          "type": "number"
+        },
+        "context": {
+          "description": "Additional context variables",
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {}
+        }
+      },
+      "required": [
+        "name",
+        "type",
+        "language",
+        "code",
+        "timeout"
+      ],
+      "additionalProperties": false
+    }
+  ],
+  "$id": "https://schema.objectstack.io/v3.0.11/automation/WorkflowAction.json",
+  "x-spec-version": "3.0.11"
+}

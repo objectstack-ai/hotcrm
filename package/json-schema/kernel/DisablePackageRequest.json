@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Package ID to disable"
+    }
+  },
+  "required": [
+    "id"
+  ],
+  "additionalProperties": false,
+  "description": "Disable package request",
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/DisablePackageRequest.json",
+  "x-spec-version": "3.0.11"
+}

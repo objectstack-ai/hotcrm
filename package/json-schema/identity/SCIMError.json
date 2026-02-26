@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schemas": {
+      "default": [
+        "urn:ietf:params:scim:api:messages:2.0:Error"
+      ],
+      "description": "SCIM schema URIs",
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "status": {
+      "type": "integer",
+      "minimum": 400,
+      "maximum": 599,
+      "description": "HTTP status code"
+    },
+    "scimType": {
+      "description": "SCIM error type",
+      "type": "string",
+      "enum": [
+        "invalidFilter",
+        "tooMany",
+        "uniqueness",
+        "mutability",
+        "invalidSyntax",
+        "invalidPath",
+        "noTarget",
+        "invalidValue",
+        "invalidVers",
+        "sensitive"
+      ]
+    },
+    "detail": {
+      "description": "Error detail message",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schemas",
+    "status"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/identity/SCIMError.json",
+  "x-spec-version": "3.0.11"
+}

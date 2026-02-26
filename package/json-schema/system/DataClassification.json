@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "pii",
+    "phi",
+    "pci",
+    "financial",
+    "confidential",
+    "internal",
+    "public"
+  ],
+  "description": "Data classification level",
+  "$id": "https://schema.objectstack.io/v3.0.11/system/DataClassification.json",
+  "x-spec-version": "3.0.11"
+}

@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "github",
+        "gitlab",
+        "bitbucket"
+      ],
+      "description": "Git provider"
+    },
+    "repo": {
+      "type": "string",
+      "description": "Repository identifier (e.g., owner/repo)"
+    },
+    "productionBranch": {
+      "default": "main",
+      "description": "Production branch name",
+      "type": "string"
+    },
+    "autoDeployProduction": {
+      "default": true,
+      "description": "Auto-deploy production branch",
+      "type": "boolean"
+    },
+    "autoDeployPreview": {
+      "default": true,
+      "description": "Auto-deploy preview branches",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "type",
+    "repo",
+    "productionBranch",
+    "autoDeployProduction",
+    "autoDeployPreview"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/integration/GitRepositoryConfig.json",
+  "x-spec-version": "3.0.11"
+}

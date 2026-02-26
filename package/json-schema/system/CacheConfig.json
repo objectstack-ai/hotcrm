@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "enabled": {
+      "default": false,
+      "description": "Enable application-level caching",
+      "type": "boolean"
+    },
+    "tiers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Unique cache tier name"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "memory",
+              "redis",
+              "memcached",
+              "cdn"
+            ],
+            "description": "Cache backend type"
+          },
+          "maxSize": {
+            "description": "Max size in MB",
+            "type": "number"
+          },
+          "ttl": {
+            "default": 300,
+            "description": "Default TTL in seconds",
+            "type": "number"
+          },
+          "strategy": {
+            "default": "lru",
+            "description": "Eviction strategy",
+            "type": "string",
+            "enum": [
+              "lru",
+              "lfu",
+              "fifo",
+              "ttl",
+              "adaptive"
+            ]
+          },
+          "warmup": {
+            "default": false,
+            "description": "Pre-populate cache on startup",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "name",
+          "type",
+          "ttl",
+          "strategy",
+          "warmup"
+        ],
+        "additionalProperties": false,
+        "description": "Configuration for a single cache tier in the hierarchy"
+      },
+      "description": "Ordered cache tier hierarchy"
+    },
+    "invalidation": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "trigger": {
+            "type": "string",
+            "enum": [
+              "create",
+              "update",
+              "delete",
+              "manual"
+            ],
+            "description": "Event that triggers invalidation"
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "key",
+              "pattern",
+              "tag",
+              "all"
+            ],
+            "description": "Invalidation scope"
+          },
+          "pattern": {
+            "description": "Key pattern for pattern-based invalidation",
+            "type": "string"
+          },
+          "tags": {
+            "description": "Cache tags to invalidate",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "trigger",
+          "scope"
+        ],
+        "additionalProperties": false,
+        "description": "Rule defining when and how cached entries are invalidated"
+      },
+      "description": "Cache invalidation rules"
+    },
+    "prefetch": {
+      "default": false,
+      "description": "Enable cache prefetching",
+      "type": "boolean"
+    },
+    "compression": {
+      "default": false,
+      "description": "Enable data compression in cache",
+      "type": "boolean"
+    },
+    "encryption": {
+      "default": false,
+      "description": "Enable encryption for cached data",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "enabled",
+    "tiers",
+    "invalidation",
+    "prefetch",
+    "compression",
+    "encryption"
+  ],
+  "additionalProperties": false,
+  "description": "Top-level application cache configuration",
+  "$id": "https://schema.objectstack.io/v3.0.11/system/CacheConfig.json",
+  "x-spec-version": "3.0.11"
+}

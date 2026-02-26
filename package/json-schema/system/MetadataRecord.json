@@ -1,0 +1,135 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string"
+    },
+    "namespace": {
+      "default": "default",
+      "type": "string"
+    },
+    "packageId": {
+      "description": "Package ID that owns/delivered this metadata",
+      "type": "string"
+    },
+    "managedBy": {
+      "description": "Who manages this metadata record lifecycle",
+      "type": "string",
+      "enum": [
+        "package",
+        "platform",
+        "user"
+      ]
+    },
+    "scope": {
+      "default": "platform",
+      "type": "string",
+      "enum": [
+        "system",
+        "platform",
+        "user"
+      ]
+    },
+    "metadata": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
+    },
+    "extends": {
+      "description": "Name of the parent metadata to extend/override",
+      "type": "string"
+    },
+    "strategy": {
+      "default": "merge",
+      "type": "string",
+      "enum": [
+        "merge",
+        "replace"
+      ]
+    },
+    "owner": {
+      "type": "string"
+    },
+    "state": {
+      "default": "active",
+      "type": "string",
+      "enum": [
+        "draft",
+        "active",
+        "archived",
+        "deprecated"
+      ]
+    },
+    "tenantId": {
+      "description": "Tenant identifier for multi-tenant isolation",
+      "type": "string"
+    },
+    "version": {
+      "default": 1,
+      "description": "Record version for optimistic concurrency control",
+      "type": "number"
+    },
+    "checksum": {
+      "description": "Content checksum for change detection",
+      "type": "string"
+    },
+    "source": {
+      "description": "Origin of this metadata record",
+      "type": "string",
+      "enum": [
+        "filesystem",
+        "database",
+        "api",
+        "migration"
+      ]
+    },
+    "tags": {
+      "description": "Classification tags for filtering and grouping",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "createdBy": {
+      "type": "string"
+    },
+    "createdAt": {
+      "description": "Creation timestamp",
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+    },
+    "updatedBy": {
+      "type": "string"
+    },
+    "updatedAt": {
+      "description": "Last update timestamp",
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+    }
+  },
+  "required": [
+    "id",
+    "name",
+    "type",
+    "namespace",
+    "scope",
+    "metadata",
+    "strategy",
+    "state",
+    "version"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/system/MetadataRecord.json",
+  "x-spec-version": "3.0.11"
+}

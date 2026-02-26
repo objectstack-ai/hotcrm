@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "defaultLocale": {
+      "type": "string",
+      "description": "Default locale (e.g., \"en\")"
+    },
+    "supportedLocales": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "description": "BCP-47 Language Tag (e.g. en-US, zh-CN)"
+      },
+      "description": "Supported BCP-47 locale codes"
+    },
+    "fallbackLocale": {
+      "description": "Fallback locale code",
+      "type": "string"
+    },
+    "fileOrganization": {
+      "default": "per_locale",
+      "description": "File organization strategy",
+      "type": "string",
+      "enum": [
+        "bundled",
+        "per_locale",
+        "per_namespace"
+      ]
+    },
+    "lazyLoad": {
+      "default": false,
+      "description": "Load translations on demand",
+      "type": "boolean"
+    },
+    "cache": {
+      "default": true,
+      "description": "Cache loaded translations",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "defaultLocale",
+    "supportedLocales",
+    "fileOrganization",
+    "lazyLoad",
+    "cache"
+  ],
+  "additionalProperties": false,
+  "description": "Internationalization configuration",
+  "$id": "https://schema.objectstack.io/v3.0.11/system/TranslationConfig.json",
+  "x-spec-version": "3.0.11"
+}

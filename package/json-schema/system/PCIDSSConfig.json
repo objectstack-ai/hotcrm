@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "enabled": {
+      "type": "boolean",
+      "description": "Enable PCI-DSS compliance controls"
+    },
+    "level": {
+      "type": "string",
+      "enum": [
+        "1",
+        "2",
+        "3",
+        "4"
+      ],
+      "description": "PCI-DSS compliance level (1 = highest)"
+    },
+    "cardDataFields": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Field names containing cardholder data"
+    },
+    "tokenization": {
+      "default": true,
+      "description": "Replace card data with secure tokens",
+      "type": "boolean"
+    },
+    "encryptionInTransit": {
+      "default": true,
+      "description": "Encrypt cardholder data during transmission",
+      "type": "boolean"
+    },
+    "encryptionAtRest": {
+      "default": true,
+      "description": "Encrypt stored cardholder data",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "enabled",
+    "level",
+    "cardDataFields",
+    "tokenization",
+    "encryptionInTransit",
+    "encryptionAtRest"
+  ],
+  "additionalProperties": false,
+  "description": "PCI-DSS (Payment Card Industry Data Security Standard) compliance configuration",
+  "$id": "https://schema.objectstack.io/v3.0.11/system/PCIDSSConfig.json",
+  "x-spec-version": "3.0.11"
+}

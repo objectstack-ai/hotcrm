@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z_][a-z0-9_]*$",
+      "description": "Unique dimension ID"
+    },
+    "label": {
+      "type": "string",
+      "description": "Human readable label"
+    },
+    "description": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "string",
+        "number",
+        "boolean",
+        "time",
+        "geo"
+      ]
+    },
+    "sql": {
+      "type": "string",
+      "description": "SQL expression or column reference"
+    },
+    "granularities": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "second",
+          "minute",
+          "hour",
+          "day",
+          "week",
+          "month",
+          "quarter",
+          "year"
+        ]
+      }
+    }
+  },
+  "required": [
+    "name",
+    "label",
+    "type",
+    "sql"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/data/Dimension.json",
+  "x-spec-version": "3.0.11"
+}

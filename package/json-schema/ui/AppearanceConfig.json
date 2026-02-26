@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "showDescription": {
+      "default": true,
+      "description": "Show the view description text",
+      "type": "boolean"
+    },
+    "allowedVisualizations": {
+      "description": "Whitelist of visualization types users can switch between (e.g. [\"grid\", \"gallery\", \"kanban\"])",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "grid",
+          "kanban",
+          "gallery",
+          "calendar",
+          "timeline",
+          "gantt",
+          "map"
+        ],
+        "description": "Visualization type that users can switch to"
+      }
+    }
+  },
+  "required": [
+    "showDescription"
+  ],
+  "additionalProperties": false,
+  "description": "Appearance and visualization configuration",
+  "$id": "https://schema.objectstack.io/v3.0.11/ui/AppearanceConfig.json",
+  "x-spec-version": "3.0.11"
+}

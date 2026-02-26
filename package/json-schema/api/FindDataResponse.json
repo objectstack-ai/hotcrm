@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "object": {
+      "type": "string",
+      "description": "The object name for the returned records."
+    },
+    "records": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "propertyNames": {
+          "type": "string"
+        },
+        "additionalProperties": {}
+      },
+      "description": "The list of matching records."
+    },
+    "total": {
+      "description": "Total number of records matching the filter (if requested).",
+      "type": "number"
+    },
+    "nextCursor": {
+      "description": "Cursor for the next page of results (cursor-based pagination).",
+      "type": "string"
+    },
+    "hasMore": {
+      "description": "True if there are more records available (pagination).",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "object",
+    "records"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/FindDataResponse.json",
+  "x-spec-version": "3.0.11"
+}

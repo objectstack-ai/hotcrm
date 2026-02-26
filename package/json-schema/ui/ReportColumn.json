@@ -1,0 +1,169 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "field": {
+      "type": "string",
+      "description": "Field name"
+    },
+    "label": {
+      "description": "Override label",
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "key": {
+              "type": "string",
+              "description": "Translation key (e.g., \"views.task_list.label\")"
+            },
+            "defaultValue": {
+              "description": "Fallback value when translation key is not found",
+              "type": "string"
+            },
+            "params": {
+              "description": "Interpolation parameters (e.g., { count: 5 })",
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "boolean"
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "key"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "aggregate": {
+      "description": "Aggregation function",
+      "type": "string",
+      "enum": [
+        "sum",
+        "avg",
+        "max",
+        "min",
+        "count",
+        "unique"
+      ]
+    },
+    "responsive": {
+      "description": "Responsive visibility for this column",
+      "type": "object",
+      "properties": {
+        "breakpoint": {
+          "description": "Minimum breakpoint for visibility",
+          "type": "string",
+          "enum": [
+            "xs",
+            "sm",
+            "md",
+            "lg",
+            "xl",
+            "2xl"
+          ]
+        },
+        "hiddenOn": {
+          "description": "Hide on these breakpoints",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "xs",
+              "sm",
+              "md",
+              "lg",
+              "xl",
+              "2xl"
+            ]
+          }
+        },
+        "columns": {
+          "description": "Grid columns per breakpoint",
+          "type": "object",
+          "properties": {
+            "xs": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 12
+            },
+            "sm": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 12
+            },
+            "md": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 12
+            },
+            "lg": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 12
+            },
+            "xl": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 12
+            },
+            "2xl": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 12
+            }
+          },
+          "additionalProperties": false
+        },
+        "order": {
+          "description": "Display order per breakpoint",
+          "type": "object",
+          "properties": {
+            "xs": {
+              "type": "number"
+            },
+            "sm": {
+              "type": "number"
+            },
+            "md": {
+              "type": "number"
+            },
+            "lg": {
+              "type": "number"
+            },
+            "xl": {
+              "type": "number"
+            },
+            "2xl": {
+              "type": "number"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "field"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/ui/ReportColumn.json",
+  "x-spec-version": "3.0.11"
+}

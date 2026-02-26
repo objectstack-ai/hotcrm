@@ -1,0 +1,245 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "success": {
+      "type": "boolean",
+      "description": "Whether the build succeeded"
+    },
+    "artifactPath": {
+      "description": "Absolute path to the generated artifact file",
+      "type": "string"
+    },
+    "artifact": {
+      "description": "Artifact metadata",
+      "type": "object",
+      "properties": {
+        "formatVersion": {
+          "default": "1.0",
+          "description": "Artifact format version (e.g. \"1.0\")",
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+$"
+        },
+        "packageId": {
+          "type": "string",
+          "description": "Package identifier from manifest"
+        },
+        "version": {
+          "type": "string",
+          "description": "Package version from manifest"
+        },
+        "format": {
+          "default": "tgz",
+          "description": "Archive format of the artifact",
+          "type": "string",
+          "enum": [
+            "tgz",
+            "zip"
+          ]
+        },
+        "size": {
+          "description": "Total artifact file size in bytes",
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "builtAt": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+          "description": "ISO 8601 timestamp of when the artifact was built"
+        },
+        "builtWith": {
+          "description": "Build tool identifier (e.g. \"os-cli@3.2.0\")",
+          "type": "string"
+        },
+        "files": {
+          "description": "List of files contained in the artifact",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string",
+                "description": "Relative file path within the artifact"
+              },
+              "size": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991,
+                "description": "File size in bytes"
+              },
+              "category": {
+                "description": "Metadata category this file belongs to",
+                "type": "string",
+                "enum": [
+                  "objects",
+                  "views",
+                  "pages",
+                  "flows",
+                  "dashboards",
+                  "permissions",
+                  "agents",
+                  "reports",
+                  "actions",
+                  "translations",
+                  "themes",
+                  "datasets",
+                  "apis",
+                  "triggers",
+                  "workflows"
+                ]
+              }
+            },
+            "required": [
+              "path",
+              "size"
+            ],
+            "additionalProperties": false,
+            "description": "A single file entry within the artifact"
+          }
+        },
+        "metadataCategories": {
+          "description": "Metadata categories included in this artifact",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "objects",
+              "views",
+              "pages",
+              "flows",
+              "dashboards",
+              "permissions",
+              "agents",
+              "reports",
+              "actions",
+              "translations",
+              "themes",
+              "datasets",
+              "apis",
+              "triggers",
+              "workflows"
+            ],
+            "description": "Metadata category within the artifact"
+          }
+        },
+        "checksums": {
+          "description": "SHA256 checksums for artifact integrity verification",
+          "type": "object",
+          "properties": {
+            "algorithm": {
+              "default": "sha256",
+              "description": "Hash algorithm used for checksums",
+              "type": "string",
+              "enum": [
+                "sha256",
+                "sha384",
+                "sha512"
+              ]
+            },
+            "files": {
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {
+                "type": "string",
+                "pattern": "^[a-f0-9]+$"
+              },
+              "description": "File path to hash value mapping"
+            }
+          },
+          "required": [
+            "algorithm",
+            "files"
+          ],
+          "additionalProperties": false
+        },
+        "signature": {
+          "description": "Digital signature for artifact authenticity verification",
+          "type": "object",
+          "properties": {
+            "algorithm": {
+              "default": "RSA-SHA256",
+              "description": "Signing algorithm used",
+              "type": "string",
+              "enum": [
+                "RSA-SHA256",
+                "RSA-SHA384",
+                "RSA-SHA512",
+                "ECDSA-SHA256"
+              ]
+            },
+            "publicKeyRef": {
+              "type": "string",
+              "description": "Public key reference (URL or fingerprint) for signature verification"
+            },
+            "signature": {
+              "type": "string",
+              "description": "Base64-encoded digital signature"
+            },
+            "signedAt": {
+              "description": "ISO 8601 timestamp of when the artifact was signed",
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+            },
+            "signedBy": {
+              "description": "Identity of the signer (publisher ID or email)",
+              "type": "string"
+            }
+          },
+          "required": [
+            "algorithm",
+            "publicKeyRef",
+            "signature"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "formatVersion",
+        "packageId",
+        "version",
+        "format",
+        "builtAt"
+      ],
+      "additionalProperties": false
+    },
+    "fileCount": {
+      "description": "Total number of files in the artifact",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "size": {
+      "description": "Total artifact size in bytes",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "durationMs": {
+      "description": "Build duration in milliseconds",
+      "type": "number"
+    },
+    "errorMessage": {
+      "description": "Error message if build failed",
+      "type": "string"
+    },
+    "warnings": {
+      "description": "Warnings emitted during build",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "success"
+  ],
+  "additionalProperties": false,
+  "description": "Result of the os plugin build command",
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/PluginBuildResult.json",
+  "x-spec-version": "3.0.11"
+}

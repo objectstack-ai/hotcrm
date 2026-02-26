@@ -1,0 +1,1849 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Registry version"
+    },
+    "conflictResolution": {
+      "default": "error",
+      "description": "Strategy for handling route conflicts",
+      "type": "string",
+      "enum": [
+        "error",
+        "priority",
+        "first-wins",
+        "last-wins"
+      ]
+    },
+    "apis": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z_][a-z0-9_]*$",
+            "description": "Unique API identifier (snake_case)"
+          },
+          "name": {
+            "type": "string",
+            "description": "API display name"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "rest",
+              "graphql",
+              "odata",
+              "websocket",
+              "file",
+              "auth",
+              "metadata",
+              "plugin",
+              "webhook",
+              "rpc"
+            ],
+            "description": "API protocol type"
+          },
+          "version": {
+            "type": "string",
+            "description": "API version (e.g., v1, 2024-01)"
+          },
+          "basePath": {
+            "type": "string",
+            "description": "Base URL path for this API"
+          },
+          "description": {
+            "description": "API description",
+            "type": "string"
+          },
+          "endpoints": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "Unique endpoint identifier"
+                },
+                "method": {
+                  "description": "HTTP method",
+                  "type": "string",
+                  "enum": [
+                    "GET",
+                    "POST",
+                    "PUT",
+                    "DELETE",
+                    "PATCH",
+                    "HEAD",
+                    "OPTIONS"
+                  ]
+                },
+                "path": {
+                  "type": "string",
+                  "description": "URL path pattern"
+                },
+                "summary": {
+                  "description": "Short endpoint summary",
+                  "type": "string"
+                },
+                "description": {
+                  "description": "Detailed endpoint description",
+                  "type": "string"
+                },
+                "operationId": {
+                  "description": "Unique operation identifier",
+                  "type": "string"
+                },
+                "tags": {
+                  "default": [],
+                  "description": "Tags for categorization",
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "parameters": {
+                  "default": [],
+                  "description": "Endpoint parameters",
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "description": "Parameter name"
+                      },
+                      "in": {
+                        "type": "string",
+                        "enum": [
+                          "path",
+                          "query",
+                          "header",
+                          "body",
+                          "cookie"
+                        ],
+                        "description": "Parameter location"
+                      },
+                      "description": {
+                        "description": "Parameter description",
+                        "type": "string"
+                      },
+                      "required": {
+                        "default": false,
+                        "description": "Whether parameter is required",
+                        "type": "boolean"
+                      },
+                      "schema": {
+                        "anyOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": [
+                                  "string",
+                                  "number",
+                                  "integer",
+                                  "boolean",
+                                  "array",
+                                  "object"
+                                ],
+                                "description": "Parameter type"
+                              },
+                              "format": {
+                                "description": "Format (e.g., date-time, email, uuid)",
+                                "type": "string"
+                              },
+                              "enum": {
+                                "description": "Allowed values",
+                                "type": "array",
+                                "items": {}
+                              },
+                              "default": {
+                                "description": "Default value"
+                              },
+                              "items": {
+                                "description": "Array item schema"
+                              },
+                              "properties": {
+                                "description": "Object properties",
+                                "type": "object",
+                                "propertyNames": {
+                                  "type": "string"
+                                },
+                                "additionalProperties": {}
+                              }
+                            },
+                            "required": [
+                              "type"
+                            ],
+                            "additionalProperties": false,
+                            "description": "Static JSON Schema"
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "$ref": {
+                                "type": "object",
+                                "properties": {
+                                  "objectId": {
+                                    "type": "string",
+                                    "minLength": 2,
+                                    "pattern": "^[a-z][a-z0-9_]*$",
+                                    "description": "Object name to reference"
+                                  },
+                                  "includeFields": {
+                                    "description": "Include only these fields in the schema",
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "excludeFields": {
+                                    "description": "Exclude these fields from the schema",
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "includeRelated": {
+                                    "description": "Include related objects via lookup fields",
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  }
+                                },
+                                "required": [
+                                  "objectId"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "required": [
+                              "$ref"
+                            ],
+                            "additionalProperties": false,
+                            "description": "Dynamic ObjectQL reference"
+                          }
+                        ],
+                        "description": "Parameter schema definition"
+                      },
+                      "example": {
+                        "description": "Example value"
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "in",
+                      "required",
+                      "schema"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "requestBody": {
+                  "description": "Request body specification",
+                  "type": "object",
+                  "properties": {
+                    "description": {
+                      "type": "string"
+                    },
+                    "required": {
+                      "default": false,
+                      "type": "boolean"
+                    },
+                    "contentType": {
+                      "default": "application/json",
+                      "type": "string"
+                    },
+                    "schema": {},
+                    "example": {}
+                  },
+                  "required": [
+                    "required",
+                    "contentType"
+                  ],
+                  "additionalProperties": false
+                },
+                "responses": {
+                  "default": [],
+                  "description": "Possible responses",
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "statusCode": {
+                        "anyOf": [
+                          {
+                            "type": "integer",
+                            "minimum": 100,
+                            "maximum": 599
+                          },
+                          {
+                            "type": "string",
+                            "enum": [
+                              "2xx",
+                              "3xx",
+                              "4xx",
+                              "5xx"
+                            ]
+                          }
+                        ],
+                        "description": "HTTP status code"
+                      },
+                      "description": {
+                        "type": "string",
+                        "description": "Response description"
+                      },
+                      "contentType": {
+                        "default": "application/json",
+                        "description": "Response content type",
+                        "type": "string"
+                      },
+                      "schema": {
+                        "description": "Response body schema",
+                        "anyOf": [
+                          {
+                            "description": "Static JSON Schema"
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "$ref": {
+                                "type": "object",
+                                "properties": {
+                                  "objectId": {
+                                    "type": "string",
+                                    "minLength": 2,
+                                    "pattern": "^[a-z][a-z0-9_]*$",
+                                    "description": "Object name to reference"
+                                  },
+                                  "includeFields": {
+                                    "description": "Include only these fields in the schema",
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "excludeFields": {
+                                    "description": "Exclude these fields from the schema",
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "includeRelated": {
+                                    "description": "Include related objects via lookup fields",
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  }
+                                },
+                                "required": [
+                                  "objectId"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "required": [
+                              "$ref"
+                            ],
+                            "additionalProperties": false,
+                            "description": "Dynamic ObjectQL reference"
+                          }
+                        ]
+                      },
+                      "headers": {
+                        "description": "Response headers",
+                        "type": "object",
+                        "propertyNames": {
+                          "type": "string"
+                        },
+                        "additionalProperties": {
+                          "type": "object",
+                          "properties": {
+                            "description": {
+                              "type": "string"
+                            },
+                            "schema": {}
+                          },
+                          "required": [
+                            "schema"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "example": {
+                        "description": "Example response"
+                      }
+                    },
+                    "required": [
+                      "statusCode",
+                      "description",
+                      "contentType"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "rateLimit": {
+                  "description": "Endpoint specific rate limiting",
+                  "type": "object",
+                  "properties": {
+                    "enabled": {
+                      "default": false,
+                      "description": "Enable rate limiting",
+                      "type": "boolean"
+                    },
+                    "windowMs": {
+                      "default": 60000,
+                      "description": "Time window in milliseconds",
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "maxRequests": {
+                      "default": 100,
+                      "description": "Max requests per window",
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "enabled",
+                    "windowMs",
+                    "maxRequests"
+                  ],
+                  "additionalProperties": false
+                },
+                "security": {
+                  "description": "Security requirements (e.g. [{\"bearerAuth\": []}])",
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "requiredPermissions": {
+                  "default": [],
+                  "description": "Required RBAC permissions (e.g., \"customer.read\", \"manage_users\")",
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "priority": {
+                  "default": 100,
+                  "description": "Route priority for conflict resolution (0-1000, higher = more important)",
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 1000
+                },
+                "protocolConfig": {
+                  "description": "Protocol-specific configuration for custom protocols (gRPC, tRPC, etc.)",
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {}
+                },
+                "deprecated": {
+                  "default": false,
+                  "description": "Whether endpoint is deprecated",
+                  "type": "boolean"
+                },
+                "externalDocs": {
+                  "description": "External documentation link",
+                  "type": "object",
+                  "properties": {
+                    "description": {
+                      "type": "string"
+                    },
+                    "url": {
+                      "type": "string",
+                      "format": "uri"
+                    }
+                  },
+                  "required": [
+                    "url"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "id",
+                "path",
+                "tags",
+                "parameters",
+                "responses",
+                "requiredPermissions",
+                "priority",
+                "deprecated"
+              ],
+              "additionalProperties": false
+            },
+            "description": "Registered endpoints"
+          },
+          "config": {
+            "description": "Protocol-specific configuration",
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {}
+          },
+          "metadata": {
+            "description": "Additional metadata",
+            "type": "object",
+            "properties": {
+              "owner": {
+                "description": "Owner team or person",
+                "type": "string"
+              },
+              "status": {
+                "default": "active",
+                "description": "API lifecycle status",
+                "type": "string",
+                "enum": [
+                  "active",
+                  "deprecated",
+                  "experimental",
+                  "beta"
+                ]
+              },
+              "tags": {
+                "default": [],
+                "description": "Classification tags",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "pluginSource": {
+                "description": "Source plugin name",
+                "type": "string"
+              },
+              "custom": {
+                "description": "Custom metadata fields",
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {}
+              }
+            },
+            "required": [
+              "status",
+              "tags"
+            ],
+            "additionalProperties": false
+          },
+          "termsOfService": {
+            "description": "Terms of service URL",
+            "type": "string",
+            "format": "uri"
+          },
+          "contact": {
+            "description": "Contact information",
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "url": {
+                "type": "string",
+                "format": "uri"
+              },
+              "email": {
+                "type": "string",
+                "format": "email",
+                "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+              }
+            },
+            "additionalProperties": false
+          },
+          "license": {
+            "description": "License information",
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "url": {
+                "type": "string",
+                "format": "uri"
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "type",
+          "version",
+          "basePath",
+          "endpoints"
+        ],
+        "additionalProperties": false
+      },
+      "description": "All registered APIs"
+    },
+    "totalApis": {
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991,
+      "description": "Total number of registered APIs"
+    },
+    "totalEndpoints": {
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991,
+      "description": "Total number of endpoints"
+    },
+    "byType": {
+      "description": "APIs grouped by protocol type",
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "enum": [
+          "rest",
+          "graphql",
+          "odata",
+          "websocket",
+          "file",
+          "auth",
+          "metadata",
+          "plugin",
+          "webhook",
+          "rpc"
+        ]
+      },
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "pattern": "^[a-z_][a-z0-9_]*$",
+              "description": "Unique API identifier (snake_case)"
+            },
+            "name": {
+              "type": "string",
+              "description": "API display name"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "rest",
+                "graphql",
+                "odata",
+                "websocket",
+                "file",
+                "auth",
+                "metadata",
+                "plugin",
+                "webhook",
+                "rpc"
+              ],
+              "description": "API protocol type"
+            },
+            "version": {
+              "type": "string",
+              "description": "API version (e.g., v1, 2024-01)"
+            },
+            "basePath": {
+              "type": "string",
+              "description": "Base URL path for this API"
+            },
+            "description": {
+              "description": "API description",
+              "type": "string"
+            },
+            "endpoints": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "description": "Unique endpoint identifier"
+                  },
+                  "method": {
+                    "description": "HTTP method",
+                    "type": "string",
+                    "enum": [
+                      "GET",
+                      "POST",
+                      "PUT",
+                      "DELETE",
+                      "PATCH",
+                      "HEAD",
+                      "OPTIONS"
+                    ]
+                  },
+                  "path": {
+                    "type": "string",
+                    "description": "URL path pattern"
+                  },
+                  "summary": {
+                    "description": "Short endpoint summary",
+                    "type": "string"
+                  },
+                  "description": {
+                    "description": "Detailed endpoint description",
+                    "type": "string"
+                  },
+                  "operationId": {
+                    "description": "Unique operation identifier",
+                    "type": "string"
+                  },
+                  "tags": {
+                    "default": [],
+                    "description": "Tags for categorization",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "parameters": {
+                    "default": [],
+                    "description": "Endpoint parameters",
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "description": "Parameter name"
+                        },
+                        "in": {
+                          "type": "string",
+                          "enum": [
+                            "path",
+                            "query",
+                            "header",
+                            "body",
+                            "cookie"
+                          ],
+                          "description": "Parameter location"
+                        },
+                        "description": {
+                          "description": "Parameter description",
+                          "type": "string"
+                        },
+                        "required": {
+                          "default": false,
+                          "description": "Whether parameter is required",
+                          "type": "boolean"
+                        },
+                        "schema": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
+                                    "string",
+                                    "number",
+                                    "integer",
+                                    "boolean",
+                                    "array",
+                                    "object"
+                                  ],
+                                  "description": "Parameter type"
+                                },
+                                "format": {
+                                  "description": "Format (e.g., date-time, email, uuid)",
+                                  "type": "string"
+                                },
+                                "enum": {
+                                  "description": "Allowed values",
+                                  "type": "array",
+                                  "items": {}
+                                },
+                                "default": {
+                                  "description": "Default value"
+                                },
+                                "items": {
+                                  "description": "Array item schema"
+                                },
+                                "properties": {
+                                  "description": "Object properties",
+                                  "type": "object",
+                                  "propertyNames": {
+                                    "type": "string"
+                                  },
+                                  "additionalProperties": {}
+                                }
+                              },
+                              "required": [
+                                "type"
+                              ],
+                              "additionalProperties": false,
+                              "description": "Static JSON Schema"
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "$ref": {
+                                  "type": "object",
+                                  "properties": {
+                                    "objectId": {
+                                      "type": "string",
+                                      "minLength": 2,
+                                      "pattern": "^[a-z][a-z0-9_]*$",
+                                      "description": "Object name to reference"
+                                    },
+                                    "includeFields": {
+                                      "description": "Include only these fields in the schema",
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "excludeFields": {
+                                      "description": "Exclude these fields from the schema",
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "includeRelated": {
+                                      "description": "Include related objects via lookup fields",
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    }
+                                  },
+                                  "required": [
+                                    "objectId"
+                                  ],
+                                  "additionalProperties": false
+                                }
+                              },
+                              "required": [
+                                "$ref"
+                              ],
+                              "additionalProperties": false,
+                              "description": "Dynamic ObjectQL reference"
+                            }
+                          ],
+                          "description": "Parameter schema definition"
+                        },
+                        "example": {
+                          "description": "Example value"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "in",
+                        "required",
+                        "schema"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "requestBody": {
+                    "description": "Request body specification",
+                    "type": "object",
+                    "properties": {
+                      "description": {
+                        "type": "string"
+                      },
+                      "required": {
+                        "default": false,
+                        "type": "boolean"
+                      },
+                      "contentType": {
+                        "default": "application/json",
+                        "type": "string"
+                      },
+                      "schema": {},
+                      "example": {}
+                    },
+                    "required": [
+                      "required",
+                      "contentType"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "responses": {
+                    "default": [],
+                    "description": "Possible responses",
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "statusCode": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": 100,
+                              "maximum": 599
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "2xx",
+                                "3xx",
+                                "4xx",
+                                "5xx"
+                              ]
+                            }
+                          ],
+                          "description": "HTTP status code"
+                        },
+                        "description": {
+                          "type": "string",
+                          "description": "Response description"
+                        },
+                        "contentType": {
+                          "default": "application/json",
+                          "description": "Response content type",
+                          "type": "string"
+                        },
+                        "schema": {
+                          "description": "Response body schema",
+                          "anyOf": [
+                            {
+                              "description": "Static JSON Schema"
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "$ref": {
+                                  "type": "object",
+                                  "properties": {
+                                    "objectId": {
+                                      "type": "string",
+                                      "minLength": 2,
+                                      "pattern": "^[a-z][a-z0-9_]*$",
+                                      "description": "Object name to reference"
+                                    },
+                                    "includeFields": {
+                                      "description": "Include only these fields in the schema",
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "excludeFields": {
+                                      "description": "Exclude these fields from the schema",
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "includeRelated": {
+                                      "description": "Include related objects via lookup fields",
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    }
+                                  },
+                                  "required": [
+                                    "objectId"
+                                  ],
+                                  "additionalProperties": false
+                                }
+                              },
+                              "required": [
+                                "$ref"
+                              ],
+                              "additionalProperties": false,
+                              "description": "Dynamic ObjectQL reference"
+                            }
+                          ]
+                        },
+                        "headers": {
+                          "description": "Response headers",
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string"
+                          },
+                          "additionalProperties": {
+                            "type": "object",
+                            "properties": {
+                              "description": {
+                                "type": "string"
+                              },
+                              "schema": {}
+                            },
+                            "required": [
+                              "schema"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "example": {
+                          "description": "Example response"
+                        }
+                      },
+                      "required": [
+                        "statusCode",
+                        "description",
+                        "contentType"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "rateLimit": {
+                    "description": "Endpoint specific rate limiting",
+                    "type": "object",
+                    "properties": {
+                      "enabled": {
+                        "default": false,
+                        "description": "Enable rate limiting",
+                        "type": "boolean"
+                      },
+                      "windowMs": {
+                        "default": 60000,
+                        "description": "Time window in milliseconds",
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      "maxRequests": {
+                        "default": 100,
+                        "description": "Max requests per window",
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "required": [
+                      "enabled",
+                      "windowMs",
+                      "maxRequests"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "security": {
+                    "description": "Security requirements (e.g. [{\"bearerAuth\": []}])",
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string"
+                      },
+                      "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  },
+                  "requiredPermissions": {
+                    "default": [],
+                    "description": "Required RBAC permissions (e.g., \"customer.read\", \"manage_users\")",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "priority": {
+                    "default": 100,
+                    "description": "Route priority for conflict resolution (0-1000, higher = more important)",
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 1000
+                  },
+                  "protocolConfig": {
+                    "description": "Protocol-specific configuration for custom protocols (gRPC, tRPC, etc.)",
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {}
+                  },
+                  "deprecated": {
+                    "default": false,
+                    "description": "Whether endpoint is deprecated",
+                    "type": "boolean"
+                  },
+                  "externalDocs": {
+                    "description": "External documentation link",
+                    "type": "object",
+                    "properties": {
+                      "description": {
+                        "type": "string"
+                      },
+                      "url": {
+                        "type": "string",
+                        "format": "uri"
+                      }
+                    },
+                    "required": [
+                      "url"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "id",
+                  "path",
+                  "tags",
+                  "parameters",
+                  "responses",
+                  "requiredPermissions",
+                  "priority",
+                  "deprecated"
+                ],
+                "additionalProperties": false
+              },
+              "description": "Registered endpoints"
+            },
+            "config": {
+              "description": "Protocol-specific configuration",
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {}
+            },
+            "metadata": {
+              "description": "Additional metadata",
+              "type": "object",
+              "properties": {
+                "owner": {
+                  "description": "Owner team or person",
+                  "type": "string"
+                },
+                "status": {
+                  "default": "active",
+                  "description": "API lifecycle status",
+                  "type": "string",
+                  "enum": [
+                    "active",
+                    "deprecated",
+                    "experimental",
+                    "beta"
+                  ]
+                },
+                "tags": {
+                  "default": [],
+                  "description": "Classification tags",
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "pluginSource": {
+                  "description": "Source plugin name",
+                  "type": "string"
+                },
+                "custom": {
+                  "description": "Custom metadata fields",
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {}
+                }
+              },
+              "required": [
+                "status",
+                "tags"
+              ],
+              "additionalProperties": false
+            },
+            "termsOfService": {
+              "description": "Terms of service URL",
+              "type": "string",
+              "format": "uri"
+            },
+            "contact": {
+              "description": "Contact information",
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "url": {
+                  "type": "string",
+                  "format": "uri"
+                },
+                "email": {
+                  "type": "string",
+                  "format": "email",
+                  "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                }
+              },
+              "additionalProperties": false
+            },
+            "license": {
+              "description": "License information",
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "url": {
+                  "type": "string",
+                  "format": "uri"
+                }
+              },
+              "required": [
+                "name"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "id",
+            "name",
+            "type",
+            "version",
+            "basePath",
+            "endpoints"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "rest",
+        "graphql",
+        "odata",
+        "websocket",
+        "file",
+        "auth",
+        "metadata",
+        "plugin",
+        "webhook",
+        "rpc"
+      ]
+    },
+    "byStatus": {
+      "description": "APIs grouped by status",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "pattern": "^[a-z_][a-z0-9_]*$",
+              "description": "Unique API identifier (snake_case)"
+            },
+            "name": {
+              "type": "string",
+              "description": "API display name"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "rest",
+                "graphql",
+                "odata",
+                "websocket",
+                "file",
+                "auth",
+                "metadata",
+                "plugin",
+                "webhook",
+                "rpc"
+              ],
+              "description": "API protocol type"
+            },
+            "version": {
+              "type": "string",
+              "description": "API version (e.g., v1, 2024-01)"
+            },
+            "basePath": {
+              "type": "string",
+              "description": "Base URL path for this API"
+            },
+            "description": {
+              "description": "API description",
+              "type": "string"
+            },
+            "endpoints": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "description": "Unique endpoint identifier"
+                  },
+                  "method": {
+                    "description": "HTTP method",
+                    "type": "string",
+                    "enum": [
+                      "GET",
+                      "POST",
+                      "PUT",
+                      "DELETE",
+                      "PATCH",
+                      "HEAD",
+                      "OPTIONS"
+                    ]
+                  },
+                  "path": {
+                    "type": "string",
+                    "description": "URL path pattern"
+                  },
+                  "summary": {
+                    "description": "Short endpoint summary",
+                    "type": "string"
+                  },
+                  "description": {
+                    "description": "Detailed endpoint description",
+                    "type": "string"
+                  },
+                  "operationId": {
+                    "description": "Unique operation identifier",
+                    "type": "string"
+                  },
+                  "tags": {
+                    "default": [],
+                    "description": "Tags for categorization",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "parameters": {
+                    "default": [],
+                    "description": "Endpoint parameters",
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "description": "Parameter name"
+                        },
+                        "in": {
+                          "type": "string",
+                          "enum": [
+                            "path",
+                            "query",
+                            "header",
+                            "body",
+                            "cookie"
+                          ],
+                          "description": "Parameter location"
+                        },
+                        "description": {
+                          "description": "Parameter description",
+                          "type": "string"
+                        },
+                        "required": {
+                          "default": false,
+                          "description": "Whether parameter is required",
+                          "type": "boolean"
+                        },
+                        "schema": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
+                                    "string",
+                                    "number",
+                                    "integer",
+                                    "boolean",
+                                    "array",
+                                    "object"
+                                  ],
+                                  "description": "Parameter type"
+                                },
+                                "format": {
+                                  "description": "Format (e.g., date-time, email, uuid)",
+                                  "type": "string"
+                                },
+                                "enum": {
+                                  "description": "Allowed values",
+                                  "type": "array",
+                                  "items": {}
+                                },
+                                "default": {
+                                  "description": "Default value"
+                                },
+                                "items": {
+                                  "description": "Array item schema"
+                                },
+                                "properties": {
+                                  "description": "Object properties",
+                                  "type": "object",
+                                  "propertyNames": {
+                                    "type": "string"
+                                  },
+                                  "additionalProperties": {}
+                                }
+                              },
+                              "required": [
+                                "type"
+                              ],
+                              "additionalProperties": false,
+                              "description": "Static JSON Schema"
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "$ref": {
+                                  "type": "object",
+                                  "properties": {
+                                    "objectId": {
+                                      "type": "string",
+                                      "minLength": 2,
+                                      "pattern": "^[a-z][a-z0-9_]*$",
+                                      "description": "Object name to reference"
+                                    },
+                                    "includeFields": {
+                                      "description": "Include only these fields in the schema",
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "excludeFields": {
+                                      "description": "Exclude these fields from the schema",
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "includeRelated": {
+                                      "description": "Include related objects via lookup fields",
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    }
+                                  },
+                                  "required": [
+                                    "objectId"
+                                  ],
+                                  "additionalProperties": false
+                                }
+                              },
+                              "required": [
+                                "$ref"
+                              ],
+                              "additionalProperties": false,
+                              "description": "Dynamic ObjectQL reference"
+                            }
+                          ],
+                          "description": "Parameter schema definition"
+                        },
+                        "example": {
+                          "description": "Example value"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "in",
+                        "required",
+                        "schema"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "requestBody": {
+                    "description": "Request body specification",
+                    "type": "object",
+                    "properties": {
+                      "description": {
+                        "type": "string"
+                      },
+                      "required": {
+                        "default": false,
+                        "type": "boolean"
+                      },
+                      "contentType": {
+                        "default": "application/json",
+                        "type": "string"
+                      },
+                      "schema": {},
+                      "example": {}
+                    },
+                    "required": [
+                      "required",
+                      "contentType"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "responses": {
+                    "default": [],
+                    "description": "Possible responses",
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "statusCode": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": 100,
+                              "maximum": 599
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "2xx",
+                                "3xx",
+                                "4xx",
+                                "5xx"
+                              ]
+                            }
+                          ],
+                          "description": "HTTP status code"
+                        },
+                        "description": {
+                          "type": "string",
+                          "description": "Response description"
+                        },
+                        "contentType": {
+                          "default": "application/json",
+                          "description": "Response content type",
+                          "type": "string"
+                        },
+                        "schema": {
+                          "description": "Response body schema",
+                          "anyOf": [
+                            {
+                              "description": "Static JSON Schema"
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "$ref": {
+                                  "type": "object",
+                                  "properties": {
+                                    "objectId": {
+                                      "type": "string",
+                                      "minLength": 2,
+                                      "pattern": "^[a-z][a-z0-9_]*$",
+                                      "description": "Object name to reference"
+                                    },
+                                    "includeFields": {
+                                      "description": "Include only these fields in the schema",
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "excludeFields": {
+                                      "description": "Exclude these fields from the schema",
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "includeRelated": {
+                                      "description": "Include related objects via lookup fields",
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    }
+                                  },
+                                  "required": [
+                                    "objectId"
+                                  ],
+                                  "additionalProperties": false
+                                }
+                              },
+                              "required": [
+                                "$ref"
+                              ],
+                              "additionalProperties": false,
+                              "description": "Dynamic ObjectQL reference"
+                            }
+                          ]
+                        },
+                        "headers": {
+                          "description": "Response headers",
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string"
+                          },
+                          "additionalProperties": {
+                            "type": "object",
+                            "properties": {
+                              "description": {
+                                "type": "string"
+                              },
+                              "schema": {}
+                            },
+                            "required": [
+                              "schema"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "example": {
+                          "description": "Example response"
+                        }
+                      },
+                      "required": [
+                        "statusCode",
+                        "description",
+                        "contentType"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "rateLimit": {
+                    "description": "Endpoint specific rate limiting",
+                    "type": "object",
+                    "properties": {
+                      "enabled": {
+                        "default": false,
+                        "description": "Enable rate limiting",
+                        "type": "boolean"
+                      },
+                      "windowMs": {
+                        "default": 60000,
+                        "description": "Time window in milliseconds",
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      "maxRequests": {
+                        "default": 100,
+                        "description": "Max requests per window",
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "required": [
+                      "enabled",
+                      "windowMs",
+                      "maxRequests"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "security": {
+                    "description": "Security requirements (e.g. [{\"bearerAuth\": []}])",
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string"
+                      },
+                      "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  },
+                  "requiredPermissions": {
+                    "default": [],
+                    "description": "Required RBAC permissions (e.g., \"customer.read\", \"manage_users\")",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "priority": {
+                    "default": 100,
+                    "description": "Route priority for conflict resolution (0-1000, higher = more important)",
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 1000
+                  },
+                  "protocolConfig": {
+                    "description": "Protocol-specific configuration for custom protocols (gRPC, tRPC, etc.)",
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {}
+                  },
+                  "deprecated": {
+                    "default": false,
+                    "description": "Whether endpoint is deprecated",
+                    "type": "boolean"
+                  },
+                  "externalDocs": {
+                    "description": "External documentation link",
+                    "type": "object",
+                    "properties": {
+                      "description": {
+                        "type": "string"
+                      },
+                      "url": {
+                        "type": "string",
+                        "format": "uri"
+                      }
+                    },
+                    "required": [
+                      "url"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "id",
+                  "path",
+                  "tags",
+                  "parameters",
+                  "responses",
+                  "requiredPermissions",
+                  "priority",
+                  "deprecated"
+                ],
+                "additionalProperties": false
+              },
+              "description": "Registered endpoints"
+            },
+            "config": {
+              "description": "Protocol-specific configuration",
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {}
+            },
+            "metadata": {
+              "description": "Additional metadata",
+              "type": "object",
+              "properties": {
+                "owner": {
+                  "description": "Owner team or person",
+                  "type": "string"
+                },
+                "status": {
+                  "default": "active",
+                  "description": "API lifecycle status",
+                  "type": "string",
+                  "enum": [
+                    "active",
+                    "deprecated",
+                    "experimental",
+                    "beta"
+                  ]
+                },
+                "tags": {
+                  "default": [],
+                  "description": "Classification tags",
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "pluginSource": {
+                  "description": "Source plugin name",
+                  "type": "string"
+                },
+                "custom": {
+                  "description": "Custom metadata fields",
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {}
+                }
+              },
+              "required": [
+                "status",
+                "tags"
+              ],
+              "additionalProperties": false
+            },
+            "termsOfService": {
+              "description": "Terms of service URL",
+              "type": "string",
+              "format": "uri"
+            },
+            "contact": {
+              "description": "Contact information",
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "url": {
+                  "type": "string",
+                  "format": "uri"
+                },
+                "email": {
+                  "type": "string",
+                  "format": "email",
+                  "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                }
+              },
+              "additionalProperties": false
+            },
+            "license": {
+              "description": "License information",
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "url": {
+                  "type": "string",
+                  "format": "uri"
+                }
+              },
+              "required": [
+                "name"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "id",
+            "name",
+            "type",
+            "version",
+            "basePath",
+            "endpoints"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    "updatedAt": {
+      "description": "Last registry update time",
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+    }
+  },
+  "required": [
+    "version",
+    "conflictResolution",
+    "apis",
+    "totalApis",
+    "totalEndpoints"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/ApiRegistry.json",
+  "x-spec-version": "3.0.11"
+}

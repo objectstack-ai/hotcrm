@@ -1,0 +1,196 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "always_on",
+        "always_off",
+        "trace_id_ratio",
+        "rate_limiting",
+        "parent_based",
+        "probability",
+        "composite",
+        "custom"
+      ],
+      "description": "Sampling strategy"
+    },
+    "ratio": {
+      "description": "Sample ratio (0-1)",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "rateLimit": {
+      "description": "Traces per second",
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "parentBased": {
+      "type": "object",
+      "properties": {
+        "whenParentSampled": {
+          "default": "always_on",
+          "type": "string",
+          "enum": [
+            "always_on",
+            "always_off",
+            "trace_id_ratio",
+            "rate_limiting",
+            "parent_based",
+            "probability",
+            "composite",
+            "custom"
+          ],
+          "description": "Sampling strategy type"
+        },
+        "whenParentNotSampled": {
+          "default": "always_off",
+          "type": "string",
+          "enum": [
+            "always_on",
+            "always_off",
+            "trace_id_ratio",
+            "rate_limiting",
+            "parent_based",
+            "probability",
+            "composite",
+            "custom"
+          ],
+          "description": "Sampling strategy type"
+        },
+        "root": {
+          "default": "trace_id_ratio",
+          "type": "string",
+          "enum": [
+            "always_on",
+            "always_off",
+            "trace_id_ratio",
+            "rate_limiting",
+            "parent_based",
+            "probability",
+            "composite",
+            "custom"
+          ],
+          "description": "Sampling strategy type"
+        },
+        "rootRatio": {
+          "default": 0.1,
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "required": [
+        "whenParentSampled",
+        "whenParentNotSampled",
+        "root",
+        "rootRatio"
+      ],
+      "additionalProperties": false
+    },
+    "composite": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "strategy": {
+            "type": "string",
+            "enum": [
+              "always_on",
+              "always_off",
+              "trace_id_ratio",
+              "rate_limiting",
+              "parent_based",
+              "probability",
+              "composite",
+              "custom"
+            ],
+            "description": "Strategy type"
+          },
+          "ratio": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "condition": {
+            "description": "Condition for this strategy",
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {}
+          }
+        },
+        "required": [
+          "strategy"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "rules": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Rule name"
+          },
+          "match": {
+            "type": "object",
+            "properties": {
+              "service": {
+                "type": "string"
+              },
+              "spanName": {
+                "type": "string"
+              },
+              "attributes": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {}
+              }
+            },
+            "additionalProperties": false
+          },
+          "decision": {
+            "type": "string",
+            "enum": [
+              "drop",
+              "record_only",
+              "record_and_sample"
+            ],
+            "description": "Sampling decision"
+          },
+          "rate": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        },
+        "required": [
+          "name",
+          "decision"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "customSamplerId": {
+      "description": "Custom sampler identifier",
+      "type": "string"
+    }
+  },
+  "required": [
+    "type",
+    "rules"
+  ],
+  "additionalProperties": false,
+  "description": "Trace sampling configuration",
+  "$id": "https://schema.objectstack.io/v3.0.11/system/TraceSamplingConfig.json",
+  "x-spec-version": "3.0.11"
+}

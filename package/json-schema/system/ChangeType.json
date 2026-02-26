@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "standard",
+    "normal",
+    "emergency",
+    "major"
+  ],
+  "$id": "https://schema.objectstack.io/v3.0.11/system/ChangeType.json",
+  "x-spec-version": "3.0.11"
+}

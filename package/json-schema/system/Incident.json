@@ -1,0 +1,193 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique incident identifier"
+    },
+    "title": {
+      "type": "string",
+      "description": "Incident title"
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed incident description"
+    },
+    "severity": {
+      "type": "string",
+      "enum": [
+        "critical",
+        "high",
+        "medium",
+        "low"
+      ],
+      "description": "Incident severity level"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "data_breach",
+        "malware",
+        "unauthorized_access",
+        "denial_of_service",
+        "social_engineering",
+        "insider_threat",
+        "physical_security",
+        "configuration_error",
+        "vulnerability_exploit",
+        "policy_violation",
+        "other"
+      ],
+      "description": "Incident category"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "reported",
+        "triaged",
+        "investigating",
+        "containing",
+        "eradicating",
+        "recovering",
+        "resolved",
+        "closed"
+      ],
+      "description": "Current incident status"
+    },
+    "reportedBy": {
+      "type": "string",
+      "description": "Reporter user ID or system name"
+    },
+    "reportedAt": {
+      "type": "number",
+      "description": "Report timestamp"
+    },
+    "detectedAt": {
+      "description": "Detection timestamp",
+      "type": "number"
+    },
+    "resolvedAt": {
+      "description": "Resolution timestamp",
+      "type": "number"
+    },
+    "affectedSystems": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Affected systems"
+    },
+    "affectedDataClassifications": {
+      "description": "Affected data classifications",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "pii",
+          "phi",
+          "pci",
+          "financial",
+          "confidential",
+          "internal",
+          "public"
+        ],
+        "description": "Data classification level"
+      }
+    },
+    "responsePhases": {
+      "description": "Incident response phases",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "phase": {
+            "type": "string",
+            "enum": [
+              "identification",
+              "containment",
+              "eradication",
+              "recovery",
+              "lessons_learned"
+            ],
+            "description": "Response phase name"
+          },
+          "description": {
+            "type": "string",
+            "description": "Phase description and objectives"
+          },
+          "assignedTo": {
+            "type": "string",
+            "description": "Responsible team or role"
+          },
+          "targetHours": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Target completion time in hours"
+          },
+          "completedAt": {
+            "description": "Actual completion timestamp",
+            "type": "number"
+          },
+          "notes": {
+            "description": "Phase notes and findings",
+            "type": "string"
+          }
+        },
+        "required": [
+          "phase",
+          "description",
+          "assignedTo",
+          "targetHours"
+        ],
+        "additionalProperties": false,
+        "description": "Incident response phase with timing and assignment"
+      }
+    },
+    "rootCause": {
+      "description": "Root cause analysis",
+      "type": "string"
+    },
+    "correctiveActions": {
+      "description": "Corrective actions taken or planned",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "lessonsLearned": {
+      "description": "Lessons learned from the incident",
+      "type": "string"
+    },
+    "relatedChangeRequestIds": {
+      "description": "Related change request IDs",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "metadata": {
+      "description": "Custom metadata key-value pairs",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
+    }
+  },
+  "required": [
+    "id",
+    "title",
+    "description",
+    "severity",
+    "category",
+    "status",
+    "reportedBy",
+    "reportedAt",
+    "affectedSystems"
+  ],
+  "additionalProperties": false,
+  "description": "Security incident record per ISO 27001:2022 A.5.24–A.5.28",
+  "$id": "https://schema.objectstack.io/v3.0.11/system/Incident.json",
+  "x-spec-version": "3.0.11"
+}

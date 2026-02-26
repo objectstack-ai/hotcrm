@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "value": {
+      "type": "string",
+      "description": "Group ID"
+    },
+    "$ref": {
+      "description": "URI reference to the group",
+      "type": "string",
+      "format": "uri"
+    },
+    "display": {
+      "description": "Group display name",
+      "type": "string"
+    },
+    "type": {
+      "description": "Membership type",
+      "type": "string",
+      "enum": [
+        "direct",
+        "indirect"
+      ]
+    }
+  },
+  "required": [
+    "value"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/identity/SCIMGroupReference.json",
+  "x-spec-version": "3.0.11"
+}

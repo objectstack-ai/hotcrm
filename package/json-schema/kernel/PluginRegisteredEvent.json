@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "pluginName": {
+      "type": "string",
+      "description": "Name of the plugin"
+    },
+    "timestamp": {
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991,
+      "description": "Unix timestamp in milliseconds when event occurred"
+    },
+    "version": {
+      "description": "Plugin version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "pluginName",
+    "timestamp"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/PluginRegisteredEvent.json",
+  "x-spec-version": "3.0.11"
+}

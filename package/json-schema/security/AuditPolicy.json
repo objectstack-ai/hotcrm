@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "logRetentionDays": {
+      "default": 180,
+      "type": "number"
+    },
+    "sensitiveFields": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Fields to redact in logs (e.g. password, ssn)"
+    },
+    "captureRead": {
+      "default": false,
+      "description": "Log read access (High volume!)",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "logRetentionDays",
+    "sensitiveFields",
+    "captureRead"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/security/AuditPolicy.json",
+  "x-spec-version": "3.0.11"
+}

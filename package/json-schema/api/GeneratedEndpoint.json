@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique endpoint identifier"
+    },
+    "method": {
+      "type": "string",
+      "enum": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE",
+        "PATCH",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "description": "HTTP method"
+    },
+    "path": {
+      "type": "string",
+      "description": "Full URL path"
+    },
+    "object": {
+      "type": "string",
+      "description": "Object name (snake_case)"
+    },
+    "operation": {
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "create",
+            "read",
+            "update",
+            "delete",
+            "list"
+          ]
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "description": "Operation type"
+    },
+    "handler": {
+      "type": "string",
+      "description": "Handler function identifier"
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "summary": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "deprecated": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "id",
+    "method",
+    "path",
+    "object",
+    "operation",
+    "handler"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/GeneratedEndpoint.json",
+  "x-spec-version": "3.0.11"
+}

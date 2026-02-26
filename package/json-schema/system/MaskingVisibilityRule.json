@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "dataClassification": {
+      "type": "string",
+      "enum": [
+        "pii",
+        "phi",
+        "pci",
+        "financial",
+        "confidential",
+        "internal",
+        "public"
+      ],
+      "description": "Data classification this rule applies to"
+    },
+    "defaultMasked": {
+      "default": true,
+      "description": "Whether data is masked by default",
+      "type": "boolean"
+    },
+    "unmaskRoles": {
+      "description": "Roles allowed to view unmasked data",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "auditUnmask": {
+      "default": true,
+      "description": "Log an audit event when data is unmasked",
+      "type": "boolean"
+    },
+    "requireApproval": {
+      "default": false,
+      "description": "Require explicit approval before unmasking",
+      "type": "boolean"
+    },
+    "approvalRoles": {
+      "description": "Roles that can approve unmasking requests",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "dataClassification",
+    "defaultMasked",
+    "auditUnmask",
+    "requireApproval"
+  ],
+  "additionalProperties": false,
+  "description": "Masking visibility and audit rule per data classification",
+  "$id": "https://schema.objectstack.io/v3.0.11/system/MaskingVisibilityRule.json",
+  "x-spec-version": "3.0.11"
+}

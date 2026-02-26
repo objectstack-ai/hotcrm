@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "mode": {
+      "default": "manual",
+      "type": "string",
+      "enum": [
+        "manual",
+        "automatic",
+        "scheduled",
+        "rolling"
+      ]
+    },
+    "autoUpdateConstraints": {
+      "type": "object",
+      "properties": {
+        "major": {
+          "default": false,
+          "description": "Allow major version updates",
+          "type": "boolean"
+        },
+        "minor": {
+          "default": true,
+          "description": "Allow minor version updates",
+          "type": "boolean"
+        },
+        "patch": {
+          "default": true,
+          "description": "Allow patch version updates",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "major",
+        "minor",
+        "patch"
+      ],
+      "additionalProperties": false
+    },
+    "schedule": {
+      "type": "object",
+      "properties": {
+        "cron": {
+          "type": "string"
+        },
+        "timezone": {
+          "default": "UTC",
+          "type": "string"
+        },
+        "maintenanceWindow": {
+          "default": 60,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "timezone",
+        "maintenanceWindow"
+      ],
+      "additionalProperties": false
+    },
+    "rollback": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": true,
+          "type": "boolean"
+        },
+        "automatic": {
+          "default": true,
+          "type": "boolean"
+        },
+        "keepVersions": {
+          "default": 3,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "timeout": {
+          "default": 30000,
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "enabled",
+        "automatic",
+        "keepVersions",
+        "timeout"
+      ],
+      "additionalProperties": false
+    },
+    "validation": {
+      "type": "object",
+      "properties": {
+        "checkCompatibility": {
+          "default": true,
+          "type": "boolean"
+        },
+        "runTests": {
+          "default": false,
+          "type": "boolean"
+        },
+        "testSuite": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "checkCompatibility",
+        "runTests"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "mode"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/PluginUpdateStrategy.json",
+  "x-spec-version": "3.0.11"
+}

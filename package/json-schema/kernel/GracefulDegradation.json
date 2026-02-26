@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "enabled": {
+      "default": true,
+      "type": "boolean"
+    },
+    "fallbackMode": {
+      "default": "minimal",
+      "type": "string",
+      "enum": [
+        "minimal",
+        "cached",
+        "readonly",
+        "offline",
+        "disabled"
+      ]
+    },
+    "criticalDependencies": {
+      "description": "Plugin IDs that are required for operation",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "optionalDependencies": {
+      "description": "Plugin IDs that are nice to have but not required",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "degradedFeatures": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "feature": {
+            "type": "string",
+            "description": "Feature name"
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "Whether feature is available in degraded mode"
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "feature",
+          "enabled"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "autoRecovery": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": true,
+          "type": "boolean"
+        },
+        "retryInterval": {
+          "default": 60000,
+          "description": "Interval between recovery attempts (ms)",
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 9007199254740991
+        },
+        "maxAttempts": {
+          "default": 5,
+          "description": "Maximum recovery attempts before giving up",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "enabled",
+        "retryInterval",
+        "maxAttempts"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "enabled",
+    "fallbackMode"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/GracefulDegradation.json",
+  "x-spec-version": "3.0.11"
+}

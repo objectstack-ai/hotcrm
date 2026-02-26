@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "timer",
+    "signal",
+    "webhook",
+    "manual",
+    "condition"
+  ],
+  "description": "Wait event type determining how a paused flow is resumed",
+  "$id": "https://schema.objectstack.io/v3.0.11/automation/WaitEventType.json",
+  "x-spec-version": "3.0.11"
+}

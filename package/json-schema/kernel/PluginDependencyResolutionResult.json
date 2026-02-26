@@ -1,0 +1,164 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "success": {
+      "type": "boolean"
+    },
+    "resolved": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "pluginId": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          },
+          "resolvedVersion": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "pluginId",
+          "version",
+          "resolvedVersion"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "conflicts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "version-mismatch",
+              "missing-dependency",
+              "circular-dependency",
+              "incompatible-versions",
+              "conflicting-interfaces"
+            ]
+          },
+          "plugins": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "pluginId": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "string"
+                },
+                "requirement": {
+                  "description": "What this plugin requires",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "pluginId",
+                "version"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "description": {
+            "type": "string"
+          },
+          "resolutions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "strategy": {
+                  "type": "string",
+                  "enum": [
+                    "upgrade",
+                    "downgrade",
+                    "replace",
+                    "disable",
+                    "manual"
+                  ]
+                },
+                "description": {
+                  "type": "string"
+                },
+                "automaticResolution": {
+                  "default": false,
+                  "type": "boolean"
+                },
+                "riskLevel": {
+                  "type": "string",
+                  "enum": [
+                    "low",
+                    "medium",
+                    "high"
+                  ]
+                }
+              },
+              "required": [
+                "strategy",
+                "description",
+                "automaticResolution",
+                "riskLevel"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "critical",
+              "error",
+              "warning",
+              "info"
+            ]
+          }
+        },
+        "required": [
+          "type",
+          "plugins",
+          "description",
+          "severity"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "installationOrder": {
+      "description": "Plugin IDs in order they should be installed",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "dependencyGraph": {
+      "description": "Map of plugin ID to its dependencies",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "required": [
+    "success"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/PluginDependencyResolutionResult.json",
+  "x-spec-version": "3.0.11"
+}

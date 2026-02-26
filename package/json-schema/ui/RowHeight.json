@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "compact",
+    "short",
+    "medium",
+    "tall",
+    "extra_tall"
+  ],
+  "description": "Row height / density setting for list view",
+  "$id": "https://schema.objectstack.io/v3.0.11/ui/RowHeight.json",
+  "x-spec-version": "3.0.11"
+}

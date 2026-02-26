@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "content": {
+      "type": "string",
+      "description": "Text or Markdown content"
+    },
+    "variant": {
+      "default": "body",
+      "description": "Text style variant",
+      "type": "string",
+      "enum": [
+        "heading",
+        "subheading",
+        "body",
+        "caption"
+      ]
+    },
+    "align": {
+      "default": "left",
+      "description": "Text alignment",
+      "type": "string",
+      "enum": [
+        "left",
+        "center",
+        "right"
+      ]
+    },
+    "aria": {
+      "description": "ARIA accessibility attributes",
+      "type": "object",
+      "properties": {
+        "ariaLabel": {
+          "description": "Accessible label for screen readers (WAI-ARIA aria-label)",
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string",
+                  "description": "Translation key (e.g., \"views.task_list.label\")"
+                },
+                "defaultValue": {
+                  "description": "Fallback value when translation key is not found",
+                  "type": "string"
+                },
+                "params": {
+                  "description": "Interpolation parameters (e.g., { count: 5 })",
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "boolean"
+                      }
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "key"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "ariaDescribedBy": {
+          "description": "ID of element providing additional description (WAI-ARIA aria-describedby)",
+          "type": "string"
+        },
+        "role": {
+          "description": "WAI-ARIA role attribute (e.g., \"dialog\", \"navigation\", \"alert\")",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "content",
+    "variant",
+    "align"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/ui/ElementTextProps.json",
+  "x-spec-version": "3.0.11"
+}

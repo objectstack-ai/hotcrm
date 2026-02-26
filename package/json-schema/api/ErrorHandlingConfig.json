@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "enabled": {
+      "default": true,
+      "description": "Enable standardized error handling",
+      "type": "boolean"
+    },
+    "includeStackTrace": {
+      "default": false,
+      "description": "Include stack traces in error responses",
+      "type": "boolean"
+    },
+    "logErrors": {
+      "default": true,
+      "description": "Log errors to system logger",
+      "type": "boolean"
+    },
+    "exposeInternalErrors": {
+      "default": false,
+      "description": "Expose internal error details in responses",
+      "type": "boolean"
+    },
+    "includeRequestId": {
+      "default": true,
+      "description": "Include requestId in error responses",
+      "type": "boolean"
+    },
+    "includeTimestamp": {
+      "default": true,
+      "description": "Include timestamp in error responses",
+      "type": "boolean"
+    },
+    "includeDocumentation": {
+      "default": true,
+      "description": "Include documentation URLs for errors",
+      "type": "boolean"
+    },
+    "documentationBaseUrl": {
+      "description": "Base URL for error documentation",
+      "type": "string",
+      "format": "uri"
+    },
+    "customErrorMessages": {
+      "description": "Custom error messages by error code",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "redactFields": {
+      "description": "Field names to redact from error details",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "enabled",
+    "includeStackTrace",
+    "logErrors",
+    "exposeInternalErrors",
+    "includeRequestId",
+    "includeTimestamp",
+    "includeDocumentation"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/ErrorHandlingConfig.json",
+  "x-spec-version": "3.0.11"
+}

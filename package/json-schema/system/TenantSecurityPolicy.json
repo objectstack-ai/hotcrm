@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "encryption": {
+      "description": "Encryption requirements",
+      "type": "object",
+      "properties": {
+        "atRest": {
+          "default": true,
+          "description": "Require encryption at rest",
+          "type": "boolean"
+        },
+        "inTransit": {
+          "default": true,
+          "description": "Require encryption in transit",
+          "type": "boolean"
+        },
+        "fieldLevel": {
+          "default": false,
+          "description": "Require field-level encryption",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "atRest",
+        "inTransit",
+        "fieldLevel"
+      ],
+      "additionalProperties": false
+    },
+    "accessControl": {
+      "description": "Access control requirements",
+      "type": "object",
+      "properties": {
+        "requireMFA": {
+          "default": false,
+          "description": "Require MFA",
+          "type": "boolean"
+        },
+        "requireSSO": {
+          "default": false,
+          "description": "Require SSO",
+          "type": "boolean"
+        },
+        "ipWhitelist": {
+          "description": "Allowed IP addresses",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sessionTimeout": {
+          "default": 3600,
+          "description": "Session timeout",
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "requireMFA",
+        "requireSSO",
+        "sessionTimeout"
+      ],
+      "additionalProperties": false
+    },
+    "compliance": {
+      "description": "Compliance requirements",
+      "type": "object",
+      "properties": {
+        "standards": {
+          "description": "Compliance standards",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "sox",
+              "hipaa",
+              "gdpr",
+              "pci_dss",
+              "iso_27001",
+              "fedramp"
+            ]
+          }
+        },
+        "requireAuditLog": {
+          "default": true,
+          "description": "Require audit logging",
+          "type": "boolean"
+        },
+        "auditRetentionDays": {
+          "default": 365,
+          "description": "Audit retention days",
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "dataResidency": {
+          "description": "Data residency requirements",
+          "type": "object",
+          "properties": {
+            "region": {
+              "description": "Required region (e.g., US, EU, APAC)",
+              "type": "string"
+            },
+            "excludeRegions": {
+              "description": "Prohibited regions",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "requireAuditLog",
+        "auditRetentionDays"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/system/TenantSecurityPolicy.json",
+  "x-spec-version": "3.0.11"
+}

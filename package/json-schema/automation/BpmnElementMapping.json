@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "bpmnType": {
+      "type": "string",
+      "description": "BPMN XML element type (e.g., \"bpmn:parallelGateway\")"
+    },
+    "flowNodeAction": {
+      "type": "string",
+      "description": "ObjectStack FlowNodeAction value"
+    },
+    "bidirectional": {
+      "default": true,
+      "description": "Whether the mapping supports both import and export",
+      "type": "boolean"
+    },
+    "notes": {
+      "description": "Notes about mapping limitations",
+      "type": "string"
+    }
+  },
+  "required": [
+    "bpmnType",
+    "flowNodeAction",
+    "bidirectional"
+  ],
+  "additionalProperties": false,
+  "description": "Mapping between BPMN XML element and ObjectStack FlowNodeAction",
+  "$id": "https://schema.objectstack.io/v3.0.11/automation/BpmnElementMapping.json",
+  "x-spec-version": "3.0.11"
+}

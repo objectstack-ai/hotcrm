@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "create_record",
+    "update_record",
+    "delete_record",
+    "read_record",
+    "query_records",
+    "api_call",
+    "run_script",
+    "wait"
+  ],
+  "description": "Type of test action to perform",
+  "$id": "https://schema.objectstack.io/v3.0.11/qa/TestActionType.json",
+  "x-spec-version": "3.0.11"
+}

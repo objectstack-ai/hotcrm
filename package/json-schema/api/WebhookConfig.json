@@ -1,0 +1,131 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "enabled": {
+      "default": false,
+      "description": "Enable webhook support",
+      "type": "boolean"
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z_][a-z0-9_]*$",
+            "description": "Webhook event identifier (snake_case)"
+          },
+          "description": {
+            "type": "string",
+            "description": "Human-readable event description"
+          },
+          "method": {
+            "default": "POST",
+            "description": "HTTP method for webhook delivery",
+            "type": "string",
+            "enum": [
+              "GET",
+              "POST",
+              "PUT",
+              "DELETE",
+              "PATCH",
+              "HEAD",
+              "OPTIONS"
+            ]
+          },
+          "payloadSchema": {
+            "type": "string",
+            "description": "JSON Schema $ref for the webhook payload"
+          },
+          "headers": {
+            "description": "Custom headers to include in webhook delivery",
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "security": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "hmac_sha256",
+                "basic",
+                "bearer",
+                "api_key"
+              ]
+            },
+            "description": "Supported authentication methods for webhook verification"
+          }
+        },
+        "required": [
+          "name",
+          "description",
+          "method",
+          "payloadSchema",
+          "security"
+        ],
+        "additionalProperties": false
+      },
+      "description": "Registered webhook events"
+    },
+    "deliveryConfig": {
+      "type": "object",
+      "properties": {
+        "maxRetries": {
+          "default": 3,
+          "description": "Maximum delivery retry attempts",
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "retryIntervalMs": {
+          "default": 5000,
+          "description": "Milliseconds between retry attempts",
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "timeoutMs": {
+          "default": 30000,
+          "description": "Delivery request timeout in milliseconds",
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "signatureHeader": {
+          "default": "X-Signature-256",
+          "description": "Header name for webhook signature",
+          "type": "string"
+        }
+      },
+      "required": [
+        "maxRetries",
+        "retryIntervalMs",
+        "timeoutMs",
+        "signatureHeader"
+      ],
+      "additionalProperties": false,
+      "description": "Webhook delivery configuration"
+    },
+    "registrationEndpoint": {
+      "default": "/webhooks",
+      "description": "URL path for webhook registration",
+      "type": "string"
+    }
+  },
+  "required": [
+    "enabled",
+    "events",
+    "deliveryConfig",
+    "registrationEndpoint"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/WebhookConfig.json",
+  "x-spec-version": "3.0.11"
+}

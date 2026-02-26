@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "enabled": {
+      "default": false,
+      "description": "Enable focus trapping within this container",
+      "type": "boolean"
+    },
+    "initialFocus": {
+      "description": "CSS selector for the element to focus on activation",
+      "type": "string"
+    },
+    "returnFocus": {
+      "default": true,
+      "description": "Return focus to trigger element on deactivation",
+      "type": "boolean"
+    },
+    "escapeDeactivates": {
+      "default": true,
+      "description": "Allow Escape key to deactivate the focus trap",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "enabled",
+    "returnFocus",
+    "escapeDeactivates"
+  ],
+  "additionalProperties": false,
+  "description": "Focus trap configuration for modal-like containers",
+  "$id": "https://schema.objectstack.io/v3.0.11/ui/FocusTrapConfig.json",
+  "x-spec-version": "3.0.11"
+}

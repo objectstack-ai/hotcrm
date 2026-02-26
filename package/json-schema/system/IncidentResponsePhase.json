@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "phase": {
+      "type": "string",
+      "enum": [
+        "identification",
+        "containment",
+        "eradication",
+        "recovery",
+        "lessons_learned"
+      ],
+      "description": "Response phase name"
+    },
+    "description": {
+      "type": "string",
+      "description": "Phase description and objectives"
+    },
+    "assignedTo": {
+      "type": "string",
+      "description": "Responsible team or role"
+    },
+    "targetHours": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Target completion time in hours"
+    },
+    "completedAt": {
+      "description": "Actual completion timestamp",
+      "type": "number"
+    },
+    "notes": {
+      "description": "Phase notes and findings",
+      "type": "string"
+    }
+  },
+  "required": [
+    "phase",
+    "description",
+    "assignedTo",
+    "targetHours"
+  ],
+  "additionalProperties": false,
+  "description": "Incident response phase with timing and assignment",
+  "$id": "https://schema.objectstack.io/v3.0.11/system/IncidentResponsePhase.json",
+  "x-spec-version": "3.0.11"
+}

@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Publisher ID"
+    },
+    "name": {
+      "type": "string",
+      "description": "Publisher display name"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "individual",
+        "organization"
+      ],
+      "description": "Publisher type"
+    },
+    "verification": {
+      "default": "unverified",
+      "description": "Publisher verification status",
+      "type": "string",
+      "enum": [
+        "unverified",
+        "pending",
+        "verified",
+        "trusted",
+        "partner"
+      ]
+    },
+    "email": {
+      "description": "Contact email",
+      "type": "string",
+      "format": "email",
+      "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+    },
+    "website": {
+      "description": "Publisher website",
+      "type": "string",
+      "format": "uri"
+    },
+    "logoUrl": {
+      "description": "Publisher logo URL",
+      "type": "string",
+      "format": "uri"
+    },
+    "description": {
+      "description": "Publisher description",
+      "type": "string"
+    },
+    "registeredAt": {
+      "description": "Publisher registration timestamp",
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+    }
+  },
+  "required": [
+    "id",
+    "name",
+    "type",
+    "verification"
+  ],
+  "additionalProperties": false,
+  "description": "Developer or organization that publishes packages",
+  "$id": "https://schema.objectstack.io/v3.0.11/cloud/Publisher.json",
+  "x-spec-version": "3.0.11"
+}

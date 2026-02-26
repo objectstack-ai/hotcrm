@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "metadata",
+    "data",
+    "auth",
+    "file-storage",
+    "search",
+    "cache",
+    "queue",
+    "automation",
+    "graphql",
+    "analytics",
+    "realtime",
+    "job",
+    "notification",
+    "ai",
+    "i18n",
+    "ui",
+    "workflow"
+  ],
+  "$id": "https://schema.objectstack.io/v3.0.11/system/CoreServiceName.json",
+  "x-spec-version": "3.0.11"
+}

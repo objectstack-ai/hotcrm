@@ -1,0 +1,471 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Registry name"
+    },
+    "models": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Unique model identifier"
+              },
+              "name": {
+                "type": "string",
+                "description": "Model display name"
+              },
+              "version": {
+                "type": "string",
+                "description": "Model version (e.g., \"gpt-4-turbo-2024-04-09\")"
+              },
+              "provider": {
+                "type": "string",
+                "enum": [
+                  "openai",
+                  "azure_openai",
+                  "anthropic",
+                  "google",
+                  "cohere",
+                  "huggingface",
+                  "local",
+                  "custom"
+                ]
+              },
+              "capabilities": {
+                "type": "object",
+                "properties": {
+                  "textGeneration": {
+                    "default": true,
+                    "description": "Supports text generation",
+                    "type": "boolean"
+                  },
+                  "textEmbedding": {
+                    "default": false,
+                    "description": "Supports text embedding",
+                    "type": "boolean"
+                  },
+                  "imageGeneration": {
+                    "default": false,
+                    "description": "Supports image generation",
+                    "type": "boolean"
+                  },
+                  "imageUnderstanding": {
+                    "default": false,
+                    "description": "Supports image understanding",
+                    "type": "boolean"
+                  },
+                  "functionCalling": {
+                    "default": false,
+                    "description": "Supports function calling",
+                    "type": "boolean"
+                  },
+                  "codeGeneration": {
+                    "default": false,
+                    "description": "Supports code generation",
+                    "type": "boolean"
+                  },
+                  "reasoning": {
+                    "default": false,
+                    "description": "Supports advanced reasoning",
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "textGeneration",
+                  "textEmbedding",
+                  "imageGeneration",
+                  "imageUnderstanding",
+                  "functionCalling",
+                  "codeGeneration",
+                  "reasoning"
+                ],
+                "additionalProperties": false
+              },
+              "limits": {
+                "type": "object",
+                "properties": {
+                  "maxTokens": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991,
+                    "description": "Maximum tokens per request"
+                  },
+                  "contextWindow": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991,
+                    "description": "Context window size"
+                  },
+                  "maxOutputTokens": {
+                    "description": "Maximum output tokens",
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "rateLimit": {
+                    "type": "object",
+                    "properties": {
+                      "requestsPerMinute": {
+                        "type": "integer",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      "tokensPerMinute": {
+                        "type": "integer",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "maxTokens",
+                  "contextWindow"
+                ],
+                "additionalProperties": false
+              },
+              "pricing": {
+                "type": "object",
+                "properties": {
+                  "currency": {
+                    "default": "USD",
+                    "type": "string"
+                  },
+                  "inputCostPer1kTokens": {
+                    "description": "Cost per 1K input tokens",
+                    "type": "number"
+                  },
+                  "outputCostPer1kTokens": {
+                    "description": "Cost per 1K output tokens",
+                    "type": "number"
+                  },
+                  "embeddingCostPer1kTokens": {
+                    "description": "Cost per 1K embedding tokens",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "currency"
+                ],
+                "additionalProperties": false
+              },
+              "endpoint": {
+                "description": "Custom API endpoint",
+                "type": "string",
+                "format": "uri"
+              },
+              "apiKey": {
+                "description": "API key (Warning: Prefer secretRef)",
+                "type": "string"
+              },
+              "secretRef": {
+                "description": "Reference to stored secret (e.g. system:openai_api_key)",
+                "type": "string"
+              },
+              "region": {
+                "description": "Deployment region (e.g., \"us-east-1\")",
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "tags": {
+                "description": "Tags for categorization",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "deprecated": {
+                "default": false,
+                "type": "boolean"
+              },
+              "recommendedFor": {
+                "description": "Use case recommendations",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "version",
+              "provider",
+              "capabilities",
+              "limits",
+              "deprecated"
+            ],
+            "additionalProperties": false
+          },
+          "status": {
+            "default": "active",
+            "type": "string",
+            "enum": [
+              "active",
+              "deprecated",
+              "experimental",
+              "disabled"
+            ]
+          },
+          "priority": {
+            "default": 0,
+            "description": "Priority for model selection",
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "fallbackModels": {
+            "description": "Fallback model IDs",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "healthCheck": {
+            "type": "object",
+            "properties": {
+              "enabled": {
+                "default": true,
+                "type": "boolean"
+              },
+              "intervalSeconds": {
+                "default": 300,
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "lastChecked": {
+                "description": "ISO timestamp",
+                "type": "string"
+              },
+              "status": {
+                "default": "unknown",
+                "type": "string",
+                "enum": [
+                  "healthy",
+                  "unhealthy",
+                  "unknown"
+                ]
+              }
+            },
+            "required": [
+              "enabled",
+              "intervalSeconds",
+              "status"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "model",
+          "status",
+          "priority"
+        ],
+        "additionalProperties": false
+      },
+      "description": "Model entries by ID"
+    },
+    "promptTemplates": {
+      "description": "Prompt templates by name",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique template identifier"
+          },
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z_][a-z0-9_]*$",
+            "description": "Template name (snake_case)"
+          },
+          "label": {
+            "type": "string",
+            "description": "Display name"
+          },
+          "system": {
+            "description": "System prompt",
+            "type": "string"
+          },
+          "user": {
+            "type": "string",
+            "description": "User prompt template with variables"
+          },
+          "assistant": {
+            "description": "Assistant message prefix",
+            "type": "string"
+          },
+          "variables": {
+            "description": "Template variables",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Variable name (e.g., \"user_name\", \"context\")"
+                },
+                "type": {
+                  "default": "string",
+                  "type": "string",
+                  "enum": [
+                    "string",
+                    "number",
+                    "boolean",
+                    "object",
+                    "array"
+                  ]
+                },
+                "required": {
+                  "default": false,
+                  "type": "boolean"
+                },
+                "defaultValue": {},
+                "description": {
+                  "type": "string"
+                },
+                "validation": {
+                  "type": "object",
+                  "properties": {
+                    "minLength": {
+                      "type": "number"
+                    },
+                    "maxLength": {
+                      "type": "number"
+                    },
+                    "pattern": {
+                      "type": "string"
+                    },
+                    "enum": {
+                      "type": "array",
+                      "items": {}
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "name",
+                "type",
+                "required"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "modelId": {
+            "description": "Recommended model ID",
+            "type": "string"
+          },
+          "temperature": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 2
+          },
+          "maxTokens": {
+            "type": "number"
+          },
+          "topP": {
+            "type": "number"
+          },
+          "frequencyPenalty": {
+            "type": "number"
+          },
+          "presencePenalty": {
+            "type": "number"
+          },
+          "stopSequences": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "version": {
+            "default": "1.0.0",
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "category": {
+            "description": "Template category (e.g., \"code_generation\", \"support\")",
+            "type": "string"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "examples": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "input": {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {},
+                  "description": "Example variable values"
+                },
+                "output": {
+                  "type": "string",
+                  "description": "Expected output"
+                }
+              },
+              "required": [
+                "input",
+                "output"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "label",
+          "user",
+          "version"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "defaultModel": {
+      "description": "Default model ID",
+      "type": "string"
+    },
+    "enableAutoFallback": {
+      "default": true,
+      "description": "Auto-fallback on errors",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "name",
+    "models",
+    "enableAutoFallback"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/ai/ModelRegistry.json",
+  "x-spec-version": "3.0.11"
+}

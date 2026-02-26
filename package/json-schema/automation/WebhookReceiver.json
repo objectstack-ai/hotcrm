@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 2,
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "description": "Webhook receiver unique name (lowercase snake_case)"
+    },
+    "path": {
+      "type": "string",
+      "description": "URL Path (e.g. /webhooks/stripe)"
+    },
+    "verificationType": {
+      "default": "none",
+      "type": "string",
+      "enum": [
+        "none",
+        "header_token",
+        "hmac",
+        "ip_whitelist"
+      ]
+    },
+    "verificationParams": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "type": "string"
+        },
+        "secret": {
+          "type": "string"
+        },
+        "ips": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "action": {
+      "default": "trigger_flow",
+      "type": "string",
+      "enum": [
+        "trigger_flow",
+        "script",
+        "upsert_record"
+      ]
+    },
+    "target": {
+      "type": "string",
+      "description": "Flow ID or Script name"
+    }
+  },
+  "required": [
+    "name",
+    "path",
+    "verificationType",
+    "action",
+    "target"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/automation/WebhookReceiver.json",
+  "x-spec-version": "3.0.11"
+}

@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "object": {
+      "type": "string",
+      "description": "Object name"
+    },
+    "records": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "propertyNames": {
+          "type": "string"
+        },
+        "additionalProperties": {}
+      },
+      "description": "Created records"
+    },
+    "count": {
+      "type": "number",
+      "description": "Number of records created"
+    }
+  },
+  "required": [
+    "object",
+    "records",
+    "count"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/CreateManyDataResponse.json",
+  "x-spec-version": "3.0.11"
+}

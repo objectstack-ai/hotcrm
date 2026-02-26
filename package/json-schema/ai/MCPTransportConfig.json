@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "stdio",
+        "http",
+        "websocket",
+        "grpc"
+      ]
+    },
+    "url": {
+      "description": "Server URL (for HTTP/WebSocket/gRPC)",
+      "type": "string",
+      "format": "uri"
+    },
+    "headers": {
+      "description": "Custom headers for requests",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "auth": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "default": "none",
+          "type": "string",
+          "enum": [
+            "none",
+            "bearer",
+            "api_key",
+            "oauth2",
+            "custom"
+          ]
+        },
+        "token": {
+          "description": "Bearer token or API key",
+          "type": "string"
+        },
+        "secretRef": {
+          "description": "Reference to stored secret",
+          "type": "string"
+        },
+        "headerName": {
+          "description": "Custom auth header name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "timeout": {
+      "default": 30000,
+      "description": "Request timeout in milliseconds",
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    },
+    "retryAttempts": {
+      "default": 3,
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 5
+    },
+    "retryDelay": {
+      "default": 1000,
+      "description": "Delay between retries in milliseconds",
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    },
+    "command": {
+      "description": "Command to execute (for stdio transport)",
+      "type": "string"
+    },
+    "args": {
+      "description": "Command arguments",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "env": {
+      "description": "Environment variables",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "workingDirectory": {
+      "description": "Working directory for the process",
+      "type": "string"
+    }
+  },
+  "required": [
+    "type",
+    "timeout",
+    "retryAttempts",
+    "retryDelay"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/ai/MCPTransportConfig.json",
+  "x-spec-version": "3.0.11"
+}

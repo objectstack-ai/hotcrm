@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "provider": {
+      "type": "string",
+      "enum": [
+        "redis",
+        "etcd",
+        "custom"
+      ],
+      "description": "Distributed state backend provider"
+    },
+    "endpoints": {
+      "description": "Backend connection endpoints",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "keyPrefix": {
+      "description": "Prefix for all keys (e.g., \"plugin:my-plugin:\")",
+      "type": "string"
+    },
+    "ttl": {
+      "description": "State expiration time in seconds",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "auth": {
+      "type": "object",
+      "properties": {
+        "username": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "token": {
+          "type": "string"
+        },
+        "certificate": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "replication": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": true,
+          "type": "boolean"
+        },
+        "minReplicas": {
+          "default": 1,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "enabled",
+        "minReplicas"
+      ],
+      "additionalProperties": false
+    },
+    "customConfig": {
+      "description": "Provider-specific configuration",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
+    }
+  },
+  "required": [
+    "provider"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/DistributedStateConfig.json",
+  "x-spec-version": "3.0.11"
+}

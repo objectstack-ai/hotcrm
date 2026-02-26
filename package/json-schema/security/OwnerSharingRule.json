@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z_][a-z0-9_]*$",
+      "description": "Unique rule name (snake_case)"
+    },
+    "label": {
+      "description": "Human-readable label",
+      "type": "string"
+    },
+    "description": {
+      "description": "Administrative notes",
+      "type": "string"
+    },
+    "object": {
+      "type": "string",
+      "description": "Target Object Name"
+    },
+    "active": {
+      "default": true,
+      "type": "boolean"
+    },
+    "accessLevel": {
+      "default": "read",
+      "type": "string",
+      "enum": [
+        "read",
+        "edit",
+        "full"
+      ]
+    },
+    "sharedWith": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "user",
+            "group",
+            "role",
+            "role_and_subordinates",
+            "guest"
+          ]
+        },
+        "value": {
+          "type": "string",
+          "description": "ID or Code of the User/Group/Role"
+        }
+      },
+      "required": [
+        "type",
+        "value"
+      ],
+      "additionalProperties": false,
+      "description": "The recipient of the shared access"
+    },
+    "type": {
+      "type": "string",
+      "const": "owner"
+    },
+    "ownedBy": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "user",
+            "group",
+            "role",
+            "role_and_subordinates",
+            "guest"
+          ]
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "value"
+      ],
+      "additionalProperties": false,
+      "description": "Source group/role whose records are being shared"
+    }
+  },
+  "required": [
+    "name",
+    "object",
+    "active",
+    "accessLevel",
+    "sharedWith",
+    "type",
+    "ownedBy"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/security/OwnerSharingRule.json",
+  "x-spec-version": "3.0.11"
+}

@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "path": {
+      "type": "string",
+      "description": "JSON path to the conflicting field"
+    },
+    "baseValue": {
+      "description": "Value in the old package version"
+    },
+    "incomingValue": {
+      "description": "Value in the new package version"
+    },
+    "customValue": {
+      "description": "Customer customized value"
+    },
+    "suggestedResolution": {
+      "type": "string",
+      "enum": [
+        "keep-custom",
+        "accept-incoming",
+        "manual"
+      ],
+      "description": "Suggested resolution strategy"
+    },
+    "reason": {
+      "description": "Explanation for the suggested resolution",
+      "type": "string"
+    }
+  },
+  "required": [
+    "path",
+    "baseValue",
+    "incomingValue",
+    "customValue",
+    "suggestedResolution"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/MergeConflict.json",
+  "x-spec-version": "3.0.11"
+}

@@ -1,0 +1,138 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique tenant identifier"
+    },
+    "name": {
+      "type": "string",
+      "description": "Tenant display name"
+    },
+    "isolationLevel": {
+      "type": "string",
+      "enum": [
+        "shared_schema",
+        "isolated_schema",
+        "isolated_db"
+      ]
+    },
+    "databaseProvider": {
+      "description": "Database provider",
+      "type": "string",
+      "enum": [
+        "turso",
+        "postgres",
+        "memory"
+      ]
+    },
+    "connectionConfig": {
+      "description": "Database connection config",
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Database connection URL"
+        },
+        "authToken": {
+          "description": "Database auth token (encrypted at rest)",
+          "type": "string"
+        },
+        "group": {
+          "description": "Turso database group name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "url"
+      ],
+      "additionalProperties": false
+    },
+    "provisioningStatus": {
+      "description": "Current provisioning lifecycle status",
+      "type": "string",
+      "enum": [
+        "provisioning",
+        "active",
+        "suspended",
+        "failed",
+        "destroying"
+      ]
+    },
+    "plan": {
+      "description": "Subscription plan",
+      "type": "string",
+      "enum": [
+        "free",
+        "pro",
+        "enterprise"
+      ]
+    },
+    "customizations": {
+      "description": "Custom configuration values",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
+    },
+    "quotas": {
+      "type": "object",
+      "properties": {
+        "maxUsers": {
+          "description": "Maximum number of users",
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maxStorage": {
+          "description": "Maximum storage in bytes",
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "apiRateLimit": {
+          "description": "API requests per minute",
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maxObjects": {
+          "description": "Maximum number of custom objects",
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maxRecordsPerObject": {
+          "description": "Maximum records per object",
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maxDeploymentsPerDay": {
+          "description": "Maximum deployments per day",
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maxStorageBytes": {
+          "description": "Maximum storage in bytes",
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "id",
+    "name",
+    "isolationLevel"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/system/Tenant.json",
+  "x-spec-version": "3.0.11"
+}

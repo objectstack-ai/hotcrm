@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "feed": {
+      "type": "boolean",
+      "description": "Whether the backend supports Feed / Chatter API"
+    },
+    "comments": {
+      "type": "boolean",
+      "description": "Whether the backend supports comments (a subset of Feed)"
+    },
+    "automation": {
+      "type": "boolean",
+      "description": "Whether the backend supports Automation CRUD (flows, triggers)"
+    },
+    "cron": {
+      "type": "boolean",
+      "description": "Whether the backend supports cron scheduling"
+    },
+    "search": {
+      "type": "boolean",
+      "description": "Whether the backend supports full-text search"
+    },
+    "export": {
+      "type": "boolean",
+      "description": "Whether the backend supports async export"
+    },
+    "chunkedUpload": {
+      "type": "boolean",
+      "description": "Whether the backend supports chunked (multipart) uploads"
+    }
+  },
+  "required": [
+    "feed",
+    "comments",
+    "automation",
+    "cron",
+    "search",
+    "export",
+    "chunkedUpload"
+  ],
+  "additionalProperties": false,
+  "description": "Well-known capability flags for frontend intelligent adaptation",
+  "$id": "https://schema.objectstack.io/v3.0.11/api/WellKnownCapabilities.json",
+  "x-spec-version": "3.0.11"
+}

@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "action": {
+      "type": "string",
+      "description": "FlowNodeAction value (e.g., \"parallel_gateway\")"
+    },
+    "shape": {
+      "type": "string",
+      "enum": [
+        "rounded_rect",
+        "circle",
+        "diamond",
+        "parallelogram",
+        "hexagon",
+        "diamond_thick",
+        "attached_circle",
+        "screen_rect"
+      ],
+      "description": "Shape to render"
+    },
+    "icon": {
+      "type": "string",
+      "description": "Lucide icon name"
+    },
+    "defaultLabel": {
+      "type": "string",
+      "description": "Default display label"
+    },
+    "defaultWidth": {
+      "default": 120,
+      "description": "Default width in pixels",
+      "type": "integer",
+      "minimum": 20,
+      "maximum": 9007199254740991
+    },
+    "defaultHeight": {
+      "default": 60,
+      "description": "Default height in pixels",
+      "type": "integer",
+      "minimum": 20,
+      "maximum": 9007199254740991
+    },
+    "fillColor": {
+      "default": "#ffffff",
+      "description": "Node fill color (CSS value)",
+      "type": "string"
+    },
+    "borderColor": {
+      "default": "#94a3b8",
+      "description": "Node border color (CSS value)",
+      "type": "string"
+    },
+    "allowBoundaryEvents": {
+      "default": false,
+      "description": "Whether boundary events can be attached to this node type",
+      "type": "boolean"
+    },
+    "paletteCategory": {
+      "type": "string",
+      "enum": [
+        "event",
+        "gateway",
+        "activity",
+        "data",
+        "subflow"
+      ],
+      "description": "Palette category for grouping"
+    }
+  },
+  "required": [
+    "action",
+    "shape",
+    "icon",
+    "defaultLabel",
+    "defaultWidth",
+    "defaultHeight",
+    "fillColor",
+    "borderColor",
+    "allowBoundaryEvents",
+    "paletteCategory"
+  ],
+  "additionalProperties": false,
+  "description": "Visual render descriptor for a flow node type",
+  "$id": "https://schema.objectstack.io/v3.0.11/studio/FlowNodeRenderDescriptor.json",
+  "x-spec-version": "3.0.11"
+}

@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "$select": {
+      "description": "Fields to select",
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    "$filter": {
+      "description": "Filter expression (OData filter syntax)",
+      "type": "string"
+    },
+    "$orderby": {
+      "description": "Sort order",
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    "$top": {
+      "description": "Max results to return",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "$skip": {
+      "description": "Results to skip",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "$expand": {
+      "description": "Navigation properties to expand",
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    "$count": {
+      "description": "Include total count",
+      "type": "boolean"
+    },
+    "$search": {
+      "description": "Search expression",
+      "type": "string"
+    },
+    "$format": {
+      "description": "Response format",
+      "type": "string",
+      "enum": [
+        "json",
+        "xml",
+        "atom"
+      ]
+    },
+    "$apply": {
+      "description": "Aggregation expression",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/ODataQuery.json",
+  "x-spec-version": "3.0.11"
+}

@@ -1,0 +1,805 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "enabled": {
+      "default": true,
+      "description": "Enable API documentation",
+      "type": "boolean"
+    },
+    "title": {
+      "default": "API Documentation",
+      "description": "Documentation title",
+      "type": "string"
+    },
+    "version": {
+      "type": "string",
+      "description": "API version"
+    },
+    "description": {
+      "description": "API description",
+      "type": "string"
+    },
+    "servers": {
+      "default": [],
+      "description": "API server URLs",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Server base URL"
+          },
+          "description": {
+            "description": "Server description",
+            "type": "string"
+          },
+          "variables": {
+            "description": "URL template variables",
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "default": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "enum": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "default"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "ui": {
+      "description": "Testing UI configuration",
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "swagger-ui",
+            "redoc",
+            "rapidoc",
+            "stoplight",
+            "scalar",
+            "graphql-playground",
+            "graphiql",
+            "postman",
+            "custom"
+          ],
+          "description": "Testing UI implementation"
+        },
+        "path": {
+          "default": "/api-docs",
+          "description": "URL path for documentation UI",
+          "type": "string"
+        },
+        "theme": {
+          "default": "light",
+          "description": "UI color theme",
+          "type": "string",
+          "enum": [
+            "light",
+            "dark",
+            "auto"
+          ]
+        },
+        "enableTryItOut": {
+          "default": true,
+          "description": "Enable interactive API testing",
+          "type": "boolean"
+        },
+        "enableFilter": {
+          "default": true,
+          "description": "Enable endpoint filtering",
+          "type": "boolean"
+        },
+        "enableCors": {
+          "default": true,
+          "description": "Enable CORS for browser testing",
+          "type": "boolean"
+        },
+        "defaultModelsExpandDepth": {
+          "default": 1,
+          "description": "Default expand depth for schemas (-1 = fully expand)",
+          "type": "integer",
+          "minimum": -1,
+          "maximum": 9007199254740991
+        },
+        "displayRequestDuration": {
+          "default": true,
+          "description": "Show request duration",
+          "type": "boolean"
+        },
+        "syntaxHighlighting": {
+          "default": true,
+          "description": "Enable syntax highlighting",
+          "type": "boolean"
+        },
+        "customCssUrl": {
+          "description": "Custom CSS stylesheet URL",
+          "type": "string",
+          "format": "uri"
+        },
+        "customJsUrl": {
+          "description": "Custom JavaScript URL",
+          "type": "string",
+          "format": "uri"
+        },
+        "layout": {
+          "description": "Layout configuration",
+          "type": "object",
+          "properties": {
+            "showExtensions": {
+              "default": false,
+              "description": "Show vendor extensions",
+              "type": "boolean"
+            },
+            "showCommonExtensions": {
+              "default": false,
+              "description": "Show common extensions",
+              "type": "boolean"
+            },
+            "deepLinking": {
+              "default": true,
+              "description": "Enable deep linking",
+              "type": "boolean"
+            },
+            "displayOperationId": {
+              "default": false,
+              "description": "Display operation IDs",
+              "type": "boolean"
+            },
+            "defaultModelRendering": {
+              "default": "example",
+              "description": "Default model rendering mode",
+              "type": "string",
+              "enum": [
+                "example",
+                "model"
+              ]
+            },
+            "defaultModelsExpandDepth": {
+              "default": 1,
+              "description": "Models expand depth",
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "defaultModelExpandDepth": {
+              "default": 1,
+              "description": "Single model expand depth",
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "docExpansion": {
+              "default": "list",
+              "description": "Documentation expansion mode",
+              "type": "string",
+              "enum": [
+                "list",
+                "full",
+                "none"
+              ]
+            }
+          },
+          "required": [
+            "showExtensions",
+            "showCommonExtensions",
+            "deepLinking",
+            "displayOperationId",
+            "defaultModelRendering",
+            "defaultModelsExpandDepth",
+            "defaultModelExpandDepth",
+            "docExpansion"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "type",
+        "path",
+        "theme",
+        "enableTryItOut",
+        "enableFilter",
+        "enableCors",
+        "defaultModelsExpandDepth",
+        "displayRequestDuration",
+        "syntaxHighlighting"
+      ],
+      "additionalProperties": false
+    },
+    "generateOpenApi": {
+      "default": true,
+      "description": "Generate OpenAPI 3.0 specification",
+      "type": "boolean"
+    },
+    "generateTestCollections": {
+      "default": true,
+      "description": "Generate API test collections",
+      "type": "boolean"
+    },
+    "testCollections": {
+      "default": [],
+      "description": "Predefined test collections",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Collection name"
+          },
+          "description": {
+            "description": "Collection description",
+            "type": "string"
+          },
+          "variables": {
+            "default": {},
+            "description": "Shared variables",
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {}
+          },
+          "requests": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Test request name"
+                },
+                "description": {
+                  "description": "Request description",
+                  "type": "string"
+                },
+                "method": {
+                  "type": "string",
+                  "enum": [
+                    "GET",
+                    "POST",
+                    "PUT",
+                    "PATCH",
+                    "DELETE",
+                    "HEAD",
+                    "OPTIONS"
+                  ],
+                  "description": "HTTP method"
+                },
+                "url": {
+                  "type": "string",
+                  "description": "Request URL (can include variables)"
+                },
+                "headers": {
+                  "default": {},
+                  "description": "Request headers",
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                },
+                "queryParams": {
+                  "default": {},
+                  "description": "Query parameters",
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "boolean"
+                      }
+                    ]
+                  }
+                },
+                "body": {
+                  "description": "Request body"
+                },
+                "variables": {
+                  "default": {},
+                  "description": "Template variables",
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {}
+                },
+                "expectedResponse": {
+                  "description": "Expected response for validation",
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "body": {}
+                  },
+                  "required": [
+                    "statusCode"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "name",
+                "method",
+                "url",
+                "headers",
+                "queryParams",
+                "variables"
+              ],
+              "additionalProperties": false
+            },
+            "description": "Test requests in this collection"
+          },
+          "folders": {
+            "description": "Request folders for organization",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "requests": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "description": "Test request name"
+                      },
+                      "description": {
+                        "description": "Request description",
+                        "type": "string"
+                      },
+                      "method": {
+                        "type": "string",
+                        "enum": [
+                          "GET",
+                          "POST",
+                          "PUT",
+                          "PATCH",
+                          "DELETE",
+                          "HEAD",
+                          "OPTIONS"
+                        ],
+                        "description": "HTTP method"
+                      },
+                      "url": {
+                        "type": "string",
+                        "description": "Request URL (can include variables)"
+                      },
+                      "headers": {
+                        "default": {},
+                        "description": "Request headers",
+                        "type": "object",
+                        "propertyNames": {
+                          "type": "string"
+                        },
+                        "additionalProperties": {
+                          "type": "string"
+                        }
+                      },
+                      "queryParams": {
+                        "default": {},
+                        "description": "Query parameters",
+                        "type": "object",
+                        "propertyNames": {
+                          "type": "string"
+                        },
+                        "additionalProperties": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "boolean"
+                            }
+                          ]
+                        }
+                      },
+                      "body": {
+                        "description": "Request body"
+                      },
+                      "variables": {
+                        "default": {},
+                        "description": "Template variables",
+                        "type": "object",
+                        "propertyNames": {
+                          "type": "string"
+                        },
+                        "additionalProperties": {}
+                      },
+                      "expectedResponse": {
+                        "description": "Expected response for validation",
+                        "type": "object",
+                        "properties": {
+                          "statusCode": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "body": {}
+                        },
+                        "required": [
+                          "statusCode"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "method",
+                      "url",
+                      "headers",
+                      "queryParams",
+                      "variables"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": [
+                "name",
+                "requests"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "name",
+          "variables",
+          "requests"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "changelog": {
+      "default": [],
+      "description": "API version changelog",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string",
+            "description": "API version"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+            "description": "Release date"
+          },
+          "changes": {
+            "type": "object",
+            "properties": {
+              "added": {
+                "default": [],
+                "description": "New features",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "changed": {
+                "default": [],
+                "description": "Changes",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "deprecated": {
+                "default": [],
+                "description": "Deprecations",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "removed": {
+                "default": [],
+                "description": "Removed features",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "fixed": {
+                "default": [],
+                "description": "Bug fixes",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "security": {
+                "default": [],
+                "description": "Security fixes",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "added",
+              "changed",
+              "deprecated",
+              "removed",
+              "fixed",
+              "security"
+            ],
+            "additionalProperties": false,
+            "description": "Version changes"
+          },
+          "migrationGuide": {
+            "description": "Migration guide URL or text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version",
+          "date",
+          "changes"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "codeTemplates": {
+      "default": [],
+      "description": "Code generation templates",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "language": {
+            "type": "string",
+            "description": "Target language/framework (e.g., typescript, python, curl)"
+          },
+          "name": {
+            "type": "string",
+            "description": "Template name"
+          },
+          "template": {
+            "type": "string",
+            "description": "Code template with placeholders"
+          },
+          "variables": {
+            "description": "Required template variables",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "language",
+          "name",
+          "template"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "termsOfService": {
+      "description": "Terms of service URL",
+      "type": "string",
+      "format": "uri"
+    },
+    "contact": {
+      "description": "Contact information",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "license": {
+      "description": "API license",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string",
+          "format": "uri"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "additionalProperties": false
+    },
+    "externalDocs": {
+      "description": "External documentation link",
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string",
+          "format": "uri"
+        }
+      },
+      "required": [
+        "url"
+      ],
+      "additionalProperties": false
+    },
+    "securitySchemes": {
+      "description": "Security scheme definitions",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "apiKey",
+              "http",
+              "oauth2",
+              "openIdConnect"
+            ],
+            "description": "Security type"
+          },
+          "scheme": {
+            "description": "HTTP auth scheme (bearer, basic, etc.)",
+            "type": "string"
+          },
+          "bearerFormat": {
+            "description": "Bearer token format (e.g., JWT)",
+            "type": "string"
+          },
+          "name": {
+            "description": "API key parameter name",
+            "type": "string"
+          },
+          "in": {
+            "description": "API key location",
+            "type": "string",
+            "enum": [
+              "header",
+              "query",
+              "cookie"
+            ]
+          },
+          "flows": {
+            "description": "OAuth2 flows",
+            "type": "object",
+            "properties": {
+              "implicit": {},
+              "password": {},
+              "clientCredentials": {},
+              "authorizationCode": {}
+            },
+            "additionalProperties": false
+          },
+          "openIdConnectUrl": {
+            "description": "OpenID Connect discovery URL",
+            "type": "string",
+            "format": "uri"
+          },
+          "description": {
+            "description": "Security scheme description",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "tags": {
+      "description": "Global tag definitions",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "externalDocs": {
+            "type": "object",
+            "properties": {
+              "description": {
+                "type": "string"
+              },
+              "url": {
+                "type": "string",
+                "format": "uri"
+              }
+            },
+            "required": [
+              "url"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "enabled",
+    "title",
+    "version",
+    "servers",
+    "generateOpenApi",
+    "generateTestCollections",
+    "testCollections",
+    "changelog",
+    "codeTemplates"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/ApiDocumentationConfig.json",
+  "x-spec-version": "3.0.11"
+}

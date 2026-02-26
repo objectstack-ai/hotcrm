@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "breakpoint": {
+      "description": "Minimum breakpoint for visibility",
+      "type": "string",
+      "enum": [
+        "xs",
+        "sm",
+        "md",
+        "lg",
+        "xl",
+        "2xl"
+      ]
+    },
+    "hiddenOn": {
+      "description": "Hide on these breakpoints",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "xs",
+          "sm",
+          "md",
+          "lg",
+          "xl",
+          "2xl"
+        ]
+      }
+    },
+    "columns": {
+      "description": "Grid columns per breakpoint",
+      "type": "object",
+      "properties": {
+        "xs": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 12
+        },
+        "sm": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 12
+        },
+        "md": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 12
+        },
+        "lg": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 12
+        },
+        "xl": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 12
+        },
+        "2xl": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 12
+        }
+      },
+      "additionalProperties": false
+    },
+    "order": {
+      "description": "Display order per breakpoint",
+      "type": "object",
+      "properties": {
+        "xs": {
+          "type": "number"
+        },
+        "sm": {
+          "type": "number"
+        },
+        "md": {
+          "type": "number"
+        },
+        "lg": {
+          "type": "number"
+        },
+        "xl": {
+          "type": "number"
+        },
+        "2xl": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "description": "Responsive layout configuration",
+  "$id": "https://schema.objectstack.io/v3.0.11/ui/ResponsiveConfig.json",
+  "x-spec-version": "3.0.11"
+}

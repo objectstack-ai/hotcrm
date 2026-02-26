@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "goal": {
+      "type": "string",
+      "description": "What should the composed plugins achieve"
+    },
+    "availablePlugins": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "pluginId": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          },
+          "capabilities": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "pluginId",
+          "version"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "properties": {
+        "maxPlugins": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "requiredPlugins": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "excludedPlugins": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "performance": {
+          "type": "object",
+          "properties": {
+            "maxLatency": {
+              "description": "Maximum latency in ms",
+              "type": "number"
+            },
+            "maxMemory": {
+              "description": "Maximum memory in bytes",
+              "type": "number"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "optimize": {
+      "type": "string",
+      "enum": [
+        "performance",
+        "reliability",
+        "simplicity",
+        "cost",
+        "security"
+      ]
+    }
+  },
+  "required": [
+    "goal",
+    "availablePlugins"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/ai/PluginCompositionRequest.json",
+  "x-spec-version": "3.0.11"
+}

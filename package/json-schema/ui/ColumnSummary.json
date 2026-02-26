@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "none",
+    "count",
+    "count_empty",
+    "count_filled",
+    "count_unique",
+    "percent_empty",
+    "percent_filled",
+    "sum",
+    "avg",
+    "min",
+    "max"
+  ],
+  "description": "Aggregation function for column footer summary",
+  "$id": "https://schema.objectstack.io/v3.0.11/ui/ColumnSummary.json",
+  "x-spec-version": "3.0.11"
+}

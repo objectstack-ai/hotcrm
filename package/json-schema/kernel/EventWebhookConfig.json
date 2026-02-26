@@ -1,0 +1,138 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "description": "Unique webhook identifier",
+      "type": "string"
+    },
+    "eventPattern": {
+      "type": "string",
+      "description": "Event name pattern (supports wildcards)"
+    },
+    "url": {
+      "type": "string",
+      "format": "uri",
+      "description": "Webhook endpoint URL"
+    },
+    "method": {
+      "default": "POST",
+      "description": "HTTP method",
+      "type": "string",
+      "enum": [
+        "GET",
+        "POST",
+        "PUT",
+        "PATCH"
+      ]
+    },
+    "headers": {
+      "description": "HTTP headers",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "authentication": {
+      "description": "Authentication configuration",
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "none",
+            "bearer",
+            "basic",
+            "api-key"
+          ],
+          "description": "Auth type"
+        },
+        "credentials": {
+          "description": "Auth credentials",
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "retryPolicy": {
+      "description": "Retry policy",
+      "type": "object",
+      "properties": {
+        "maxRetries": {
+          "default": 3,
+          "description": "Max retry attempts",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "backoffStrategy": {
+          "default": "exponential",
+          "type": "string",
+          "enum": [
+            "fixed",
+            "linear",
+            "exponential"
+          ]
+        },
+        "initialDelayMs": {
+          "default": 1000,
+          "description": "Initial retry delay",
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maxDelayMs": {
+          "default": 60000,
+          "description": "Max retry delay",
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "maxRetries",
+        "backoffStrategy",
+        "initialDelayMs",
+        "maxDelayMs"
+      ],
+      "additionalProperties": false
+    },
+    "timeoutMs": {
+      "default": 30000,
+      "description": "Request timeout in milliseconds",
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    },
+    "transform": {
+      "description": "Transform event before sending"
+    },
+    "enabled": {
+      "default": true,
+      "description": "Whether webhook is enabled",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "eventPattern",
+    "url",
+    "method",
+    "timeoutMs",
+    "enabled"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/EventWebhookConfig.json",
+  "x-spec-version": "3.0.11"
+}

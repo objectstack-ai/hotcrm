@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "items": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Metadata type"
+          },
+          "name": {
+            "type": "string",
+            "description": "Item name"
+          },
+          "data": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {},
+            "description": "Metadata payload"
+          },
+          "namespace": {
+            "description": "Namespace",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "name",
+          "data"
+        ],
+        "additionalProperties": false
+      },
+      "description": "Items to register"
+    },
+    "continueOnError": {
+      "default": false,
+      "description": "Continue if individual item fails",
+      "type": "boolean"
+    },
+    "validate": {
+      "default": true,
+      "description": "Validate before register",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "items",
+    "continueOnError",
+    "validate"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/MetadataBulkRegisterRequest.json",
+  "x-spec-version": "3.0.11"
+}

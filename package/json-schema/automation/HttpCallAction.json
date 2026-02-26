@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Action name"
+    },
+    "type": {
+      "type": "string",
+      "const": "http_call"
+    },
+    "url": {
+      "type": "string",
+      "description": "Target URL"
+    },
+    "method": {
+      "default": "POST",
+      "description": "HTTP Method",
+      "type": "string",
+      "enum": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE",
+        "PATCH"
+      ]
+    },
+    "headers": {
+      "description": "HTTP Headers",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "body": {
+      "description": "Request body (JSON or text)",
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "type",
+    "url",
+    "method"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/automation/HttpCallAction.json",
+  "x-spec-version": "3.0.11"
+}

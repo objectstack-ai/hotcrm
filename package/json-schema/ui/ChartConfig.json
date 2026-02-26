@@ -1,0 +1,727 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "bar",
+        "horizontal-bar",
+        "column",
+        "grouped-bar",
+        "stacked-bar",
+        "bi-polar-bar",
+        "line",
+        "area",
+        "stacked-area",
+        "step-line",
+        "spline",
+        "pie",
+        "donut",
+        "funnel",
+        "pyramid",
+        "scatter",
+        "bubble",
+        "treemap",
+        "sunburst",
+        "sankey",
+        "word-cloud",
+        "gauge",
+        "solid-gauge",
+        "metric",
+        "kpi",
+        "bullet",
+        "choropleth",
+        "bubble-map",
+        "gl-map",
+        "heatmap",
+        "radar",
+        "waterfall",
+        "box-plot",
+        "violin",
+        "candlestick",
+        "stock",
+        "table",
+        "pivot"
+      ]
+    },
+    "title": {
+      "description": "Chart title",
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "key": {
+              "type": "string",
+              "description": "Translation key (e.g., \"views.task_list.label\")"
+            },
+            "defaultValue": {
+              "description": "Fallback value when translation key is not found",
+              "type": "string"
+            },
+            "params": {
+              "description": "Interpolation parameters (e.g., { count: 5 })",
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "boolean"
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "key"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "subtitle": {
+      "description": "Chart subtitle",
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "key": {
+              "type": "string",
+              "description": "Translation key (e.g., \"views.task_list.label\")"
+            },
+            "defaultValue": {
+              "description": "Fallback value when translation key is not found",
+              "type": "string"
+            },
+            "params": {
+              "description": "Interpolation parameters (e.g., { count: 5 })",
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "boolean"
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "key"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "description": {
+      "description": "Accessibility description",
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "key": {
+              "type": "string",
+              "description": "Translation key (e.g., \"views.task_list.label\")"
+            },
+            "defaultValue": {
+              "description": "Fallback value when translation key is not found",
+              "type": "string"
+            },
+            "params": {
+              "description": "Interpolation parameters (e.g., { count: 5 })",
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "boolean"
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "key"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "xAxis": {
+      "description": "X-Axis configuration",
+      "type": "object",
+      "properties": {
+        "field": {
+          "type": "string",
+          "description": "Data field key"
+        },
+        "title": {
+          "description": "Axis display title",
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string",
+                  "description": "Translation key (e.g., \"views.task_list.label\")"
+                },
+                "defaultValue": {
+                  "description": "Fallback value when translation key is not found",
+                  "type": "string"
+                },
+                "params": {
+                  "description": "Interpolation parameters (e.g., { count: 5 })",
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "boolean"
+                      }
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "key"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "format": {
+          "description": "Value format string (e.g., \"$0,0.00\")",
+          "type": "string"
+        },
+        "min": {
+          "description": "Minimum value",
+          "type": "number"
+        },
+        "max": {
+          "description": "Maximum value",
+          "type": "number"
+        },
+        "stepSize": {
+          "description": "Step size for ticks",
+          "type": "number"
+        },
+        "showGridLines": {
+          "default": true,
+          "type": "boolean"
+        },
+        "position": {
+          "description": "Axis position",
+          "type": "string",
+          "enum": [
+            "left",
+            "right",
+            "top",
+            "bottom"
+          ]
+        },
+        "logarithmic": {
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "field",
+        "showGridLines",
+        "logarithmic"
+      ],
+      "additionalProperties": false
+    },
+    "yAxis": {
+      "description": "Y-Axis configuration (support dual axis)",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string",
+            "description": "Data field key"
+          },
+          "title": {
+            "description": "Axis display title",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "key": {
+                    "type": "string",
+                    "description": "Translation key (e.g., \"views.task_list.label\")"
+                  },
+                  "defaultValue": {
+                    "description": "Fallback value when translation key is not found",
+                    "type": "string"
+                  },
+                  "params": {
+                    "description": "Interpolation parameters (e.g., { count: 5 })",
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "boolean"
+                        }
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "key"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          },
+          "format": {
+            "description": "Value format string (e.g., \"$0,0.00\")",
+            "type": "string"
+          },
+          "min": {
+            "description": "Minimum value",
+            "type": "number"
+          },
+          "max": {
+            "description": "Maximum value",
+            "type": "number"
+          },
+          "stepSize": {
+            "description": "Step size for ticks",
+            "type": "number"
+          },
+          "showGridLines": {
+            "default": true,
+            "type": "boolean"
+          },
+          "position": {
+            "description": "Axis position",
+            "type": "string",
+            "enum": [
+              "left",
+              "right",
+              "top",
+              "bottom"
+            ]
+          },
+          "logarithmic": {
+            "default": false,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "field",
+          "showGridLines",
+          "logarithmic"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "series": {
+      "description": "Defined series configuration",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Field name or series identifier"
+          },
+          "label": {
+            "description": "Series display label",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "key": {
+                    "type": "string",
+                    "description": "Translation key (e.g., \"views.task_list.label\")"
+                  },
+                  "defaultValue": {
+                    "description": "Fallback value when translation key is not found",
+                    "type": "string"
+                  },
+                  "params": {
+                    "description": "Interpolation parameters (e.g., { count: 5 })",
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "boolean"
+                        }
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "key"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          },
+          "type": {
+            "description": "Override chart type for this series",
+            "type": "string",
+            "enum": [
+              "bar",
+              "horizontal-bar",
+              "column",
+              "grouped-bar",
+              "stacked-bar",
+              "bi-polar-bar",
+              "line",
+              "area",
+              "stacked-area",
+              "step-line",
+              "spline",
+              "pie",
+              "donut",
+              "funnel",
+              "pyramid",
+              "scatter",
+              "bubble",
+              "treemap",
+              "sunburst",
+              "sankey",
+              "word-cloud",
+              "gauge",
+              "solid-gauge",
+              "metric",
+              "kpi",
+              "bullet",
+              "choropleth",
+              "bubble-map",
+              "gl-map",
+              "heatmap",
+              "radar",
+              "waterfall",
+              "box-plot",
+              "violin",
+              "candlestick",
+              "stock",
+              "table",
+              "pivot"
+            ]
+          },
+          "color": {
+            "description": "Series color (hex/rgb/token)",
+            "type": "string"
+          },
+          "stack": {
+            "description": "Stack identifier to group series",
+            "type": "string"
+          },
+          "yAxis": {
+            "default": "left",
+            "description": "Bind to specific Y-Axis",
+            "type": "string",
+            "enum": [
+              "left",
+              "right"
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "yAxis"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "colors": {
+      "description": "Color palette",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "height": {
+      "description": "Fixed height in pixels",
+      "type": "number"
+    },
+    "showLegend": {
+      "default": true,
+      "description": "Display legend",
+      "type": "boolean"
+    },
+    "showDataLabels": {
+      "default": false,
+      "description": "Display data labels",
+      "type": "boolean"
+    },
+    "annotations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "default": "line",
+            "type": "string",
+            "enum": [
+              "line",
+              "region"
+            ]
+          },
+          "axis": {
+            "default": "y",
+            "type": "string",
+            "enum": [
+              "x",
+              "y"
+            ]
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "description": "Start value"
+          },
+          "endValue": {
+            "description": "End value for regions",
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "color": {
+            "type": "string"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "key": {
+                    "type": "string",
+                    "description": "Translation key (e.g., \"views.task_list.label\")"
+                  },
+                  "defaultValue": {
+                    "description": "Fallback value when translation key is not found",
+                    "type": "string"
+                  },
+                  "params": {
+                    "description": "Interpolation parameters (e.g., { count: 5 })",
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "boolean"
+                        }
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "key"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "description": "Display label: plain string or i18n translation object"
+          },
+          "style": {
+            "default": "dashed",
+            "type": "string",
+            "enum": [
+              "solid",
+              "dashed",
+              "dotted"
+            ]
+          }
+        },
+        "required": [
+          "type",
+          "axis",
+          "value",
+          "style"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "interaction": {
+      "type": "object",
+      "properties": {
+        "tooltips": {
+          "default": true,
+          "type": "boolean"
+        },
+        "zoom": {
+          "default": false,
+          "type": "boolean"
+        },
+        "brush": {
+          "default": false,
+          "type": "boolean"
+        },
+        "clickAction": {
+          "description": "Action ID to trigger on click",
+          "type": "string"
+        }
+      },
+      "required": [
+        "tooltips",
+        "zoom",
+        "brush"
+      ],
+      "additionalProperties": false
+    },
+    "aria": {
+      "description": "ARIA accessibility attributes",
+      "type": "object",
+      "properties": {
+        "ariaLabel": {
+          "description": "Accessible label for screen readers (WAI-ARIA aria-label)",
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string",
+                  "description": "Translation key (e.g., \"views.task_list.label\")"
+                },
+                "defaultValue": {
+                  "description": "Fallback value when translation key is not found",
+                  "type": "string"
+                },
+                "params": {
+                  "description": "Interpolation parameters (e.g., { count: 5 })",
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "boolean"
+                      }
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "key"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "ariaDescribedBy": {
+          "description": "ID of element providing additional description (WAI-ARIA aria-describedby)",
+          "type": "string"
+        },
+        "role": {
+          "description": "WAI-ARIA role attribute (e.g., \"dialog\", \"navigation\", \"alert\")",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "type",
+    "showLegend",
+    "showDataLabels"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/ui/ChartConfig.json",
+  "x-spec-version": "3.0.11"
+}

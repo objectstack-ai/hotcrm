@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "defaultPosition": {
+      "default": "top_right",
+      "description": "Default screen position for notifications",
+      "type": "string",
+      "enum": [
+        "top_left",
+        "top_center",
+        "top_right",
+        "bottom_left",
+        "bottom_center",
+        "bottom_right"
+      ]
+    },
+    "defaultDuration": {
+      "default": 5000,
+      "description": "Default auto-dismiss duration in ms",
+      "type": "number"
+    },
+    "maxVisible": {
+      "default": 5,
+      "description": "Maximum number of notifications visible at once",
+      "type": "number"
+    },
+    "stackDirection": {
+      "default": "down",
+      "description": "Stack direction for multiple notifications",
+      "type": "string",
+      "enum": [
+        "up",
+        "down"
+      ]
+    },
+    "pauseOnHover": {
+      "default": true,
+      "description": "Pause auto-dismiss timer on hover",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "defaultPosition",
+    "defaultDuration",
+    "maxVisible",
+    "stackDirection",
+    "pauseOnHover"
+  ],
+  "additionalProperties": false,
+  "description": "Global notification system configuration",
+  "$id": "https://schema.objectstack.io/v3.0.11/ui/NotificationConfig.json",
+  "x-spec-version": "3.0.11"
+}

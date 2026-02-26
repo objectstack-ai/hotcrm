@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "algorithm": {
+      "default": "sha256",
+      "description": "Hash algorithm used for checksums",
+      "type": "string",
+      "enum": [
+        "sha256",
+        "sha384",
+        "sha512"
+      ]
+    },
+    "files": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^[a-f0-9]+$"
+      },
+      "description": "File path to hash value mapping"
+    }
+  },
+  "required": [
+    "algorithm",
+    "files"
+  ],
+  "additionalProperties": false,
+  "description": "Checksum manifest for artifact integrity verification",
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/ArtifactChecksum.json",
+  "x-spec-version": "3.0.11"
+}

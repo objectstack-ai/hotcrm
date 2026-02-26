@@ -1,0 +1,600 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[a-z_][a-z0-9_]*$",
+      "description": "Configuration name (snake_case, max 64 chars)"
+    },
+    "label": {
+      "type": "string",
+      "description": "Display label"
+    },
+    "enabled": {
+      "default": true,
+      "type": "boolean"
+    },
+    "sampling": {
+      "default": {
+        "type": "always_on",
+        "rules": []
+      },
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "always_on",
+            "always_off",
+            "trace_id_ratio",
+            "rate_limiting",
+            "parent_based",
+            "probability",
+            "composite",
+            "custom"
+          ],
+          "description": "Sampling strategy"
+        },
+        "ratio": {
+          "description": "Sample ratio (0-1)",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "rateLimit": {
+          "description": "Traces per second",
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "parentBased": {
+          "type": "object",
+          "properties": {
+            "whenParentSampled": {
+              "default": "always_on",
+              "type": "string",
+              "enum": [
+                "always_on",
+                "always_off",
+                "trace_id_ratio",
+                "rate_limiting",
+                "parent_based",
+                "probability",
+                "composite",
+                "custom"
+              ],
+              "description": "Sampling strategy type"
+            },
+            "whenParentNotSampled": {
+              "default": "always_off",
+              "type": "string",
+              "enum": [
+                "always_on",
+                "always_off",
+                "trace_id_ratio",
+                "rate_limiting",
+                "parent_based",
+                "probability",
+                "composite",
+                "custom"
+              ],
+              "description": "Sampling strategy type"
+            },
+            "root": {
+              "default": "trace_id_ratio",
+              "type": "string",
+              "enum": [
+                "always_on",
+                "always_off",
+                "trace_id_ratio",
+                "rate_limiting",
+                "parent_based",
+                "probability",
+                "composite",
+                "custom"
+              ],
+              "description": "Sampling strategy type"
+            },
+            "rootRatio": {
+              "default": 0.1,
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          },
+          "required": [
+            "whenParentSampled",
+            "whenParentNotSampled",
+            "root",
+            "rootRatio"
+          ],
+          "additionalProperties": false
+        },
+        "composite": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "strategy": {
+                "type": "string",
+                "enum": [
+                  "always_on",
+                  "always_off",
+                  "trace_id_ratio",
+                  "rate_limiting",
+                  "parent_based",
+                  "probability",
+                  "composite",
+                  "custom"
+                ],
+                "description": "Strategy type"
+              },
+              "ratio": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "condition": {
+                "description": "Condition for this strategy",
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {}
+              }
+            },
+            "required": [
+              "strategy"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "rules": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Rule name"
+              },
+              "match": {
+                "type": "object",
+                "properties": {
+                  "service": {
+                    "type": "string"
+                  },
+                  "spanName": {
+                    "type": "string"
+                  },
+                  "attributes": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {}
+                  }
+                },
+                "additionalProperties": false
+              },
+              "decision": {
+                "type": "string",
+                "enum": [
+                  "drop",
+                  "record_only",
+                  "record_and_sample"
+                ],
+                "description": "Sampling decision"
+              },
+              "rate": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
+            },
+            "required": [
+              "name",
+              "decision"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "customSamplerId": {
+          "description": "Custom sampler identifier",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "rules"
+      ],
+      "additionalProperties": false,
+      "description": "Trace sampling configuration"
+    },
+    "propagation": {
+      "default": {
+        "formats": [
+          "w3c"
+        ],
+        "extract": true,
+        "inject": true
+      },
+      "type": "object",
+      "properties": {
+        "formats": {
+          "default": [
+            "w3c"
+          ],
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "w3c",
+              "b3",
+              "b3_multi",
+              "jaeger",
+              "xray",
+              "ottrace",
+              "custom"
+            ],
+            "description": "Trace propagation format"
+          }
+        },
+        "extract": {
+          "default": true,
+          "type": "boolean"
+        },
+        "inject": {
+          "default": true,
+          "type": "boolean"
+        },
+        "headers": {
+          "type": "object",
+          "properties": {
+            "traceId": {
+              "type": "string"
+            },
+            "spanId": {
+              "type": "string"
+            },
+            "traceFlags": {
+              "type": "string"
+            },
+            "traceState": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "baggage": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "default": true,
+              "type": "boolean"
+            },
+            "maxSize": {
+              "default": 8192,
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "allowedKeys": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "enabled",
+            "maxSize"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "formats",
+        "extract",
+        "inject"
+      ],
+      "additionalProperties": false,
+      "description": "Trace context propagation"
+    },
+    "openTelemetry": {
+      "type": "object",
+      "properties": {
+        "sdkVersion": {
+          "description": "OTel SDK version",
+          "type": "string"
+        },
+        "exporter": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "otlp_http",
+                "otlp_grpc",
+                "jaeger",
+                "zipkin",
+                "console",
+                "datadog",
+                "honeycomb",
+                "lightstep",
+                "newrelic",
+                "custom"
+              ],
+              "description": "Exporter type"
+            },
+            "endpoint": {
+              "description": "Exporter endpoint",
+              "type": "string",
+              "format": "uri"
+            },
+            "protocol": {
+              "description": "Protocol version",
+              "type": "string"
+            },
+            "headers": {
+              "description": "HTTP headers",
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "timeout": {
+              "default": 10000,
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "compression": {
+              "default": "none",
+              "type": "string",
+              "enum": [
+                "none",
+                "gzip"
+              ]
+            },
+            "batch": {
+              "type": "object",
+              "properties": {
+                "maxBatchSize": {
+                  "default": 512,
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "maxQueueSize": {
+                  "default": 2048,
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "exportTimeout": {
+                  "default": 30000,
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "scheduledDelay": {
+                  "default": 5000,
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "maxBatchSize",
+                "maxQueueSize",
+                "exportTimeout",
+                "scheduledDelay"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "type",
+            "timeout",
+            "compression"
+          ],
+          "additionalProperties": false,
+          "description": "Exporter configuration"
+        },
+        "resource": {
+          "type": "object",
+          "properties": {
+            "serviceName": {
+              "type": "string",
+              "description": "Service name"
+            },
+            "serviceVersion": {
+              "description": "Service version",
+              "type": "string"
+            },
+            "serviceInstanceId": {
+              "description": "Service instance ID",
+              "type": "string"
+            },
+            "serviceNamespace": {
+              "description": "Service namespace",
+              "type": "string"
+            },
+            "deploymentEnvironment": {
+              "description": "Deployment environment",
+              "type": "string"
+            },
+            "attributes": {
+              "description": "Additional resource attributes",
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    }
+                  },
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "boolean"
+                    }
+                  }
+                ],
+                "description": "Span attribute value"
+              }
+            }
+          },
+          "required": [
+            "serviceName"
+          ],
+          "additionalProperties": false,
+          "description": "Resource attributes"
+        },
+        "instrumentation": {
+          "type": "object",
+          "properties": {
+            "autoInstrumentation": {
+              "default": true,
+              "type": "boolean"
+            },
+            "libraries": {
+              "description": "Enabled libraries",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "disabledLibraries": {
+              "description": "Disabled libraries",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "autoInstrumentation"
+          ],
+          "additionalProperties": false
+        },
+        "semanticConventionsVersion": {
+          "description": "Semantic conventions version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "exporter",
+        "resource"
+      ],
+      "additionalProperties": false,
+      "description": "OpenTelemetry compatibility configuration"
+    },
+    "spanLimits": {
+      "type": "object",
+      "properties": {
+        "maxAttributes": {
+          "default": 128,
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maxEvents": {
+          "default": 128,
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maxLinks": {
+          "default": 128,
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maxAttributeValueLength": {
+          "default": 4096,
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "maxAttributes",
+        "maxEvents",
+        "maxLinks",
+        "maxAttributeValueLength"
+      ],
+      "additionalProperties": false
+    },
+    "traceIdGenerator": {
+      "default": "random",
+      "type": "string",
+      "enum": [
+        "random",
+        "uuid",
+        "custom"
+      ]
+    },
+    "customTraceIdGeneratorId": {
+      "description": "Custom generator identifier",
+      "type": "string"
+    },
+    "performance": {
+      "type": "object",
+      "properties": {
+        "asyncExport": {
+          "default": true,
+          "type": "boolean"
+        },
+        "exportInterval": {
+          "default": 5000,
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "asyncExport",
+        "exportInterval"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "name",
+    "label",
+    "enabled",
+    "sampling",
+    "propagation",
+    "traceIdGenerator"
+  ],
+  "additionalProperties": false,
+  "description": "Tracing configuration",
+  "$id": "https://schema.objectstack.io/v3.0.11/system/TracingConfig.json",
+  "x-spec-version": "3.0.11"
+}

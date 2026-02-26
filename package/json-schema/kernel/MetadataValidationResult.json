@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "valid": {
+      "type": "boolean",
+      "description": "Whether the metadata is valid"
+    },
+    "errors": {
+      "description": "Validation errors",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "JSON path to the invalid field"
+          },
+          "message": {
+            "type": "string",
+            "description": "Error description"
+          },
+          "code": {
+            "description": "Error code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "message"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "warnings": {
+      "description": "Validation warnings",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "JSON path to the field"
+          },
+          "message": {
+            "type": "string",
+            "description": "Warning description"
+          }
+        },
+        "required": [
+          "path",
+          "message"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "valid"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/MetadataValidationResult.json",
+  "x-spec-version": "3.0.11"
+}

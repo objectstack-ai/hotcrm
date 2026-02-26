@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Template ID"
+    },
+    "name": {
+      "type": "string",
+      "description": "Template name"
+    },
+    "description": {
+      "description": "Template description",
+      "type": "string"
+    },
+    "fileUrl": {
+      "type": "string",
+      "format": "uri",
+      "description": "Template file URL"
+    },
+    "fileType": {
+      "type": "string",
+      "description": "File MIME type"
+    },
+    "placeholders": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Placeholder key"
+          },
+          "label": {
+            "type": "string",
+            "description": "Placeholder label"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "text",
+              "number",
+              "date",
+              "image"
+            ],
+            "description": "Placeholder type"
+          },
+          "required": {
+            "default": false,
+            "description": "Is required",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "type",
+          "required"
+        ],
+        "additionalProperties": false
+      },
+      "description": "Template placeholders"
+    }
+  },
+  "required": [
+    "id",
+    "name",
+    "fileUrl",
+    "fileType",
+    "placeholders"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/data/DocumentTemplate.json",
+  "x-spec-version": "3.0.11"
+}

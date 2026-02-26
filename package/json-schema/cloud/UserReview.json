@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Review ID"
+    },
+    "listingId": {
+      "type": "string",
+      "description": "Listing being reviewed"
+    },
+    "userId": {
+      "type": "string",
+      "description": "Review author user ID"
+    },
+    "displayName": {
+      "description": "Reviewer display name",
+      "type": "string"
+    },
+    "rating": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5,
+      "description": "Star rating (1-5)"
+    },
+    "title": {
+      "description": "Review title",
+      "type": "string",
+      "maxLength": 200
+    },
+    "body": {
+      "description": "Review text",
+      "type": "string",
+      "maxLength": 5000
+    },
+    "appVersion": {
+      "description": "App version being reviewed",
+      "type": "string"
+    },
+    "moderationStatus": {
+      "default": "pending",
+      "type": "string",
+      "enum": [
+        "pending",
+        "approved",
+        "flagged",
+        "rejected"
+      ]
+    },
+    "helpfulCount": {
+      "default": 0,
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "publisherResponse": {
+      "description": "Publisher response to review",
+      "type": "object",
+      "properties": {
+        "body": {
+          "type": "string"
+        },
+        "respondedAt": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+        }
+      },
+      "required": [
+        "body",
+        "respondedAt"
+      ],
+      "additionalProperties": false
+    },
+    "submittedAt": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+    }
+  },
+  "required": [
+    "id",
+    "listingId",
+    "userId",
+    "rating",
+    "moderationStatus",
+    "helpfulCount",
+    "submittedAt"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/cloud/UserReview.json",
+  "x-spec-version": "3.0.11"
+}

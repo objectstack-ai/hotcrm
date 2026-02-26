@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "strategy": {
+      "default": "incremental",
+      "type": "string",
+      "enum": [
+        "full",
+        "incremental",
+        "upsert",
+        "append_only"
+      ],
+      "description": "Synchronization strategy"
+    },
+    "direction": {
+      "default": "import",
+      "description": "Sync direction",
+      "type": "string",
+      "enum": [
+        "import",
+        "export",
+        "bidirectional"
+      ]
+    },
+    "schedule": {
+      "description": "Cron expression for scheduled sync",
+      "type": "string"
+    },
+    "realtimeSync": {
+      "default": false,
+      "description": "Enable real-time sync",
+      "type": "boolean"
+    },
+    "timestampField": {
+      "description": "Field to track last modification time",
+      "type": "string"
+    },
+    "conflictResolution": {
+      "default": "latest_wins",
+      "type": "string",
+      "enum": [
+        "source_wins",
+        "target_wins",
+        "latest_wins",
+        "manual"
+      ],
+      "description": "Conflict resolution strategy"
+    },
+    "batchSize": {
+      "default": 1000,
+      "description": "Records per batch",
+      "type": "number",
+      "minimum": 1,
+      "maximum": 10000
+    },
+    "deleteMode": {
+      "default": "soft_delete",
+      "description": "Delete handling mode",
+      "type": "string",
+      "enum": [
+        "hard_delete",
+        "soft_delete",
+        "ignore"
+      ]
+    },
+    "filters": {
+      "description": "Filter criteria for selective sync",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
+    }
+  },
+  "required": [
+    "strategy",
+    "direction",
+    "realtimeSync",
+    "conflictResolution",
+    "batchSize",
+    "deleteMode"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/integration/DataSyncConfig.json",
+  "x-spec-version": "3.0.11"
+}

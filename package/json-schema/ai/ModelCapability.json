@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "textGeneration": {
+      "default": true,
+      "description": "Supports text generation",
+      "type": "boolean"
+    },
+    "textEmbedding": {
+      "default": false,
+      "description": "Supports text embedding",
+      "type": "boolean"
+    },
+    "imageGeneration": {
+      "default": false,
+      "description": "Supports image generation",
+      "type": "boolean"
+    },
+    "imageUnderstanding": {
+      "default": false,
+      "description": "Supports image understanding",
+      "type": "boolean"
+    },
+    "functionCalling": {
+      "default": false,
+      "description": "Supports function calling",
+      "type": "boolean"
+    },
+    "codeGeneration": {
+      "default": false,
+      "description": "Supports code generation",
+      "type": "boolean"
+    },
+    "reasoning": {
+      "default": false,
+      "description": "Supports advanced reasoning",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "textGeneration",
+    "textEmbedding",
+    "imageGeneration",
+    "imageUnderstanding",
+    "functionCalling",
+    "codeGeneration",
+    "reasoning"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/ai/ModelCapability.json",
+  "x-spec-version": "3.0.11"
+}

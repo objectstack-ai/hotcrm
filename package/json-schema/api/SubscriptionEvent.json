@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "record.created",
+        "record.updated",
+        "record.deleted",
+        "field.changed"
+      ],
+      "description": "Type of event to subscribe to"
+    },
+    "object": {
+      "description": "Object name to subscribe to",
+      "type": "string"
+    },
+    "filters": {
+      "description": "Filter conditions"
+    }
+  },
+  "required": [
+    "type"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/SubscriptionEvent.json",
+  "x-spec-version": "3.0.11"
+}

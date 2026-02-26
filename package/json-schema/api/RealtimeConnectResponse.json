@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "connectionId": {
+      "type": "string",
+      "description": "Unique connection identifier"
+    },
+    "transport": {
+      "type": "string",
+      "enum": [
+        "websocket",
+        "sse",
+        "polling"
+      ],
+      "description": "Negotiated transport protocol"
+    },
+    "url": {
+      "description": "WebSocket/SSE endpoint URL",
+      "type": "string"
+    }
+  },
+  "required": [
+    "connectionId",
+    "transport"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/RealtimeConnectResponse.json",
+  "x-spec-version": "3.0.11"
+}

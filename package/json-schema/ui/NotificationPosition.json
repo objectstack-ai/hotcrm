@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "top_left",
+    "top_center",
+    "top_right",
+    "bottom_left",
+    "bottom_center",
+    "bottom_right"
+  ],
+  "description": "Screen position for notification placement",
+  "$id": "https://schema.objectstack.io/v3.0.11/ui/NotificationPosition.json",
+  "x-spec-version": "3.0.11"
+}

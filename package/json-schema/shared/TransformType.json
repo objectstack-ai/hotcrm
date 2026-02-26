@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "constant"
+        },
+        "value": {
+          "description": "Constant value to use"
+        }
+      },
+      "required": [
+        "type",
+        "value"
+      ],
+      "additionalProperties": false,
+      "description": "Set a constant value"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "cast"
+        },
+        "targetType": {
+          "type": "string",
+          "enum": [
+            "string",
+            "number",
+            "boolean",
+            "date"
+          ],
+          "description": "Target data type"
+        }
+      },
+      "required": [
+        "type",
+        "targetType"
+      ],
+      "additionalProperties": false,
+      "description": "Cast to a specific data type"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "lookup"
+        },
+        "table": {
+          "type": "string",
+          "description": "Lookup table name"
+        },
+        "keyField": {
+          "type": "string",
+          "description": "Field to match on"
+        },
+        "valueField": {
+          "type": "string",
+          "description": "Field to retrieve"
+        }
+      },
+      "required": [
+        "type",
+        "table",
+        "keyField",
+        "valueField"
+      ],
+      "additionalProperties": false,
+      "description": "Lookup value from another table"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "javascript"
+        },
+        "expression": {
+          "type": "string",
+          "description": "JavaScript expression (e.g., \"value.toUpperCase()\")"
+        }
+      },
+      "required": [
+        "type",
+        "expression"
+      ],
+      "additionalProperties": false,
+      "description": "Custom JavaScript transformation"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "map"
+        },
+        "mappings": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {},
+          "description": "Value mappings (e.g., {\"Active\": \"active\"})"
+        }
+      },
+      "required": [
+        "type",
+        "mappings"
+      ],
+      "additionalProperties": false,
+      "description": "Map values using a dictionary"
+    }
+  ],
+  "$id": "https://schema.objectstack.io/v3.0.11/shared/TransformType.json",
+  "x-spec-version": "3.0.11"
+}

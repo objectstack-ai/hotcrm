@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "mode": {
+      "type": "string",
+      "enum": [
+        "whitelist",
+        "blacklist"
+      ],
+      "description": "whitelist = only allow listed types, blacklist = block listed types"
+    },
+    "mimeTypes": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of MIME types to allow or block (e.g., \"image/jpeg\", \"application/pdf\")"
+    },
+    "extensions": {
+      "description": "List of file extensions to allow or block (e.g., \".jpg\", \".pdf\")",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "maxFileSize": {
+      "description": "Maximum file size in bytes",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "minFileSize": {
+      "description": "Minimum file size in bytes (e.g., reject empty files)",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    }
+  },
+  "required": [
+    "mode",
+    "mimeTypes"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/FileTypeValidation.json",
+  "x-spec-version": "3.0.11"
+}

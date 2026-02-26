@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "feed_item_not_found",
+    "feed_permission_denied",
+    "feed_item_not_editable",
+    "feed_invalid_parent",
+    "reaction_already_exists",
+    "reaction_not_found",
+    "subscription_already_exists",
+    "subscription_not_found",
+    "invalid_feed_type",
+    "feed_already_pinned",
+    "feed_not_pinned",
+    "feed_already_starred",
+    "feed_not_starred",
+    "feed_search_query_too_short"
+  ],
+  "$id": "https://schema.objectstack.io/v3.0.11/api/FeedApiErrorCode.json",
+  "x-spec-version": "3.0.11"
+}

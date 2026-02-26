@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schemas": {
+      "default": [
+        "urn:ietf:params:scim:schemas:core:2.0:Group"
+      ],
+      "description": "SCIM schema URIs (must include Group schema)",
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "id": {
+      "description": "Unique resource identifier",
+      "type": "string"
+    },
+    "externalId": {
+      "description": "External identifier from client system",
+      "type": "string"
+    },
+    "displayName": {
+      "type": "string",
+      "description": "Group display name (REQUIRED)"
+    },
+    "members": {
+      "description": "Group members",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string",
+            "description": "Member ID"
+          },
+          "$ref": {
+            "description": "URI reference to the member",
+            "type": "string",
+            "format": "uri"
+          },
+          "type": {
+            "description": "Member type",
+            "type": "string",
+            "enum": [
+              "User",
+              "Group"
+            ]
+          },
+          "display": {
+            "description": "Member display name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "value"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "meta": {
+      "description": "Resource metadata",
+      "type": "object",
+      "properties": {
+        "resourceType": {
+          "description": "Resource type",
+          "type": "string"
+        },
+        "created": {
+          "description": "Creation timestamp",
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+        },
+        "lastModified": {
+          "description": "Last modification timestamp",
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+        },
+        "location": {
+          "description": "Resource location URI",
+          "type": "string",
+          "format": "uri"
+        },
+        "version": {
+          "description": "Entity tag (ETag) for concurrency control",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "schemas",
+    "displayName"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/identity/SCIMGroup.json",
+  "x-spec-version": "3.0.11"
+}

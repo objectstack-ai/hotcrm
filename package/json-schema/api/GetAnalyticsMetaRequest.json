@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "cube": {
+      "description": "Optional cube name to filter",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/GetAnalyticsMetaRequest.json",
+  "x-spec-version": "3.0.11"
+}

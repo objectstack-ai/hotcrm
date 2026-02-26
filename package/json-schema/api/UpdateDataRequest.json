@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "object": {
+      "type": "string",
+      "description": "The object name."
+    },
+    "id": {
+      "type": "string",
+      "description": "The ID of the record to update."
+    },
+    "data": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {},
+      "description": "The fields to update (partial update)."
+    }
+  },
+  "required": [
+    "object",
+    "id",
+    "data"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/UpdateDataRequest.json",
+  "x-spec-version": "3.0.11"
+}

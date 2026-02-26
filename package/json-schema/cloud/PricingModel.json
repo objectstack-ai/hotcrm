@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "free",
+    "freemium",
+    "paid",
+    "subscription",
+    "usage-based",
+    "contact-sales"
+  ],
+  "description": "Package pricing model",
+  "$id": "https://schema.objectstack.io/v3.0.11/cloud/PricingModel.json",
+  "x-spec-version": "3.0.11"
+}

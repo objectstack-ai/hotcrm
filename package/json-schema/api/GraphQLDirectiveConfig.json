@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z][a-zA-Z0-9]*$",
+      "description": "Directive name (camelCase)"
+    },
+    "description": {
+      "description": "Directive description",
+      "type": "string"
+    },
+    "locations": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "QUERY",
+          "MUTATION",
+          "SUBSCRIPTION",
+          "FIELD",
+          "FRAGMENT_DEFINITION",
+          "FRAGMENT_SPREAD",
+          "INLINE_FRAGMENT",
+          "VARIABLE_DEFINITION",
+          "SCHEMA",
+          "SCALAR",
+          "OBJECT",
+          "FIELD_DEFINITION",
+          "ARGUMENT_DEFINITION",
+          "INTERFACE",
+          "UNION",
+          "ENUM",
+          "ENUM_VALUE",
+          "INPUT_OBJECT",
+          "INPUT_FIELD_DEFINITION"
+        ]
+      },
+      "description": "Directive locations"
+    },
+    "args": {
+      "description": "Directive arguments",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Argument type"
+          },
+          "description": {
+            "description": "Argument description",
+            "type": "string"
+          },
+          "defaultValue": {
+            "description": "Default value"
+          }
+        },
+        "required": [
+          "type"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "repeatable": {
+      "default": false,
+      "description": "Can be applied multiple times",
+      "type": "boolean"
+    },
+    "implementation": {
+      "description": "Directive implementation",
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "auth",
+            "validation",
+            "transform",
+            "cache",
+            "deprecation",
+            "custom"
+          ],
+          "description": "Directive type"
+        },
+        "handler": {
+          "description": "Handler function name or script",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "name",
+    "locations",
+    "repeatable"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/GraphQLDirectiveConfig.json",
+  "x-spec-version": "3.0.11"
+}

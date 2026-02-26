@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "second",
+    "minute",
+    "hour",
+    "day",
+    "week",
+    "month",
+    "quarter",
+    "year"
+  ],
+  "$id": "https://schema.objectstack.io/v3.0.11/data/TimeUpdateInterval.json",
+  "x-spec-version": "3.0.11"
+}

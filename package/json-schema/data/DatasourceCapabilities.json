@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "transactions": {
+      "default": false,
+      "type": "boolean"
+    },
+    "queryFilters": {
+      "default": false,
+      "type": "boolean"
+    },
+    "queryAggregations": {
+      "default": false,
+      "type": "boolean"
+    },
+    "querySorting": {
+      "default": false,
+      "type": "boolean"
+    },
+    "queryPagination": {
+      "default": false,
+      "type": "boolean"
+    },
+    "queryWindowFunctions": {
+      "default": false,
+      "type": "boolean"
+    },
+    "querySubqueries": {
+      "default": false,
+      "type": "boolean"
+    },
+    "joins": {
+      "default": false,
+      "type": "boolean"
+    },
+    "fullTextSearch": {
+      "default": false,
+      "type": "boolean"
+    },
+    "readOnly": {
+      "default": false,
+      "type": "boolean"
+    },
+    "dynamicSchema": {
+      "default": false,
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "transactions",
+    "queryFilters",
+    "queryAggregations",
+    "querySorting",
+    "queryPagination",
+    "queryWindowFunctions",
+    "querySubqueries",
+    "joins",
+    "fullTextSearch",
+    "readOnly",
+    "dynamicSchema"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/data/DatasourceCapabilities.json",
+  "x-spec-version": "3.0.11"
+}

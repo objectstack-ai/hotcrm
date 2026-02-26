@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Semver version (e.g., 2.1.0-beta.1)"
+    },
+    "channel": {
+      "default": "stable",
+      "type": "string",
+      "enum": [
+        "alpha",
+        "beta",
+        "rc",
+        "stable"
+      ]
+    },
+    "releaseNotes": {
+      "description": "Release notes (Markdown)",
+      "type": "string"
+    },
+    "changelog": {
+      "description": "Structured changelog entries",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "added",
+              "changed",
+              "fixed",
+              "removed",
+              "deprecated",
+              "security"
+            ]
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "description"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "minPlatformVersion": {
+      "type": "string"
+    },
+    "artifactUrl": {
+      "description": "Built package artifact URL",
+      "type": "string"
+    },
+    "artifactChecksum": {
+      "description": "SHA-256 checksum",
+      "type": "string"
+    },
+    "deprecated": {
+      "default": false,
+      "type": "boolean"
+    },
+    "deprecationMessage": {
+      "type": "string"
+    },
+    "releasedAt": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+    }
+  },
+  "required": [
+    "version",
+    "channel",
+    "deprecated"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/cloud/VersionRelease.json",
+  "x-spec-version": "3.0.11"
+}

@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "enabled": {
+      "default": true,
+      "type": "boolean"
+    },
+    "storage": {
+      "default": "memory",
+      "type": "string",
+      "enum": [
+        "memory",
+        "disk",
+        "indexeddb",
+        "hybrid"
+      ]
+    },
+    "keyStrategy": {
+      "default": "version",
+      "type": "string",
+      "enum": [
+        "version",
+        "hash",
+        "timestamp"
+      ]
+    },
+    "ttl": {
+      "description": "Time to live in seconds (0 = infinite)",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "maxSize": {
+      "description": "Max cache size in MB",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "invalidateOn": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "version-change",
+          "dependency-change",
+          "manual",
+          "error"
+        ]
+      }
+    },
+    "compression": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "type": "boolean"
+        },
+        "algorithm": {
+          "default": "gzip",
+          "type": "string",
+          "enum": [
+            "gzip",
+            "brotli",
+            "deflate"
+          ]
+        }
+      },
+      "required": [
+        "enabled",
+        "algorithm"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "enabled",
+    "storage",
+    "keyStrategy"
+  ],
+  "additionalProperties": false,
+  "description": "Plugin caching configuration",
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/PluginCaching.json",
+  "x-spec-version": "3.0.11"
+}

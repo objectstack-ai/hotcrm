@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "orgId": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Organization ID"
+    },
+    "plan": {
+      "default": "free",
+      "type": "string",
+      "enum": [
+        "free",
+        "pro",
+        "enterprise"
+      ],
+      "description": "Tenant subscription plan"
+    },
+    "region": {
+      "default": "us-east",
+      "type": "string",
+      "enum": [
+        "us-east",
+        "us-west",
+        "eu-west",
+        "eu-central",
+        "ap-southeast",
+        "ap-northeast"
+      ],
+      "description": "Available deployment region"
+    },
+    "displayName": {
+      "description": "Tenant display name",
+      "type": "string"
+    },
+    "adminEmail": {
+      "description": "Initial admin user email",
+      "type": "string",
+      "format": "email",
+      "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+    },
+    "metadata": {
+      "description": "Additional metadata",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
+    }
+  },
+  "required": [
+    "orgId",
+    "plan",
+    "region"
+  ],
+  "additionalProperties": false,
+  "description": "Tenant provisioning request",
+  "$id": "https://schema.objectstack.io/v3.0.11/system/TenantProvisioningRequest.json",
+  "x-spec-version": "3.0.11"
+}

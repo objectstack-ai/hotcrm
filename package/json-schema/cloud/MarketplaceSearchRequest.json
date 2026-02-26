@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "query": {
+      "description": "Full-text search query",
+      "type": "string"
+    },
+    "category": {
+      "description": "Filter by category",
+      "type": "string",
+      "enum": [
+        "crm",
+        "erp",
+        "hr",
+        "finance",
+        "project",
+        "collaboration",
+        "analytics",
+        "integration",
+        "automation",
+        "ai",
+        "security",
+        "developer-tools",
+        "ui-theme",
+        "storage",
+        "other"
+      ]
+    },
+    "tags": {
+      "description": "Filter by tags",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "pricing": {
+      "description": "Filter by pricing model",
+      "type": "string",
+      "enum": [
+        "free",
+        "freemium",
+        "paid",
+        "subscription",
+        "usage-based",
+        "contact-sales"
+      ]
+    },
+    "publisherVerification": {
+      "description": "Filter by publisher verification level",
+      "type": "string",
+      "enum": [
+        "unverified",
+        "pending",
+        "verified",
+        "trusted",
+        "partner"
+      ]
+    },
+    "sortBy": {
+      "default": "relevance",
+      "description": "Sort field",
+      "type": "string",
+      "enum": [
+        "relevance",
+        "popularity",
+        "rating",
+        "newest",
+        "updated",
+        "name"
+      ]
+    },
+    "sortDirection": {
+      "default": "desc",
+      "description": "Sort direction",
+      "type": "string",
+      "enum": [
+        "asc",
+        "desc"
+      ]
+    },
+    "page": {
+      "default": 1,
+      "description": "Page number",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "pageSize": {
+      "default": 20,
+      "description": "Items per page",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+    },
+    "platformVersion": {
+      "description": "Filter by platform version compatibility",
+      "type": "string"
+    }
+  },
+  "required": [
+    "sortBy",
+    "sortDirection",
+    "page",
+    "pageSize"
+  ],
+  "additionalProperties": false,
+  "description": "Marketplace search request",
+  "$id": "https://schema.objectstack.io/v3.0.11/cloud/MarketplaceSearchRequest.json",
+  "x-spec-version": "3.0.11"
+}

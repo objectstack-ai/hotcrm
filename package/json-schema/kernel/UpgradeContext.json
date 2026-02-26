@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "previousVersion": {
+      "type": "string",
+      "description": "Version before upgrade"
+    },
+    "newVersion": {
+      "type": "string",
+      "description": "Version after upgrade"
+    },
+    "isMajorUpgrade": {
+      "type": "boolean",
+      "description": "Whether this is a major version bump"
+    },
+    "previousMetadata": {
+      "description": "Metadata snapshot before upgrade",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
+    }
+  },
+  "required": [
+    "previousVersion",
+    "newVersion",
+    "isMajorUpgrade"
+  ],
+  "additionalProperties": false,
+  "description": "Version migration context for onUpgrade hook",
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/UpgradeContext.json",
+  "x-spec-version": "3.0.11"
+}

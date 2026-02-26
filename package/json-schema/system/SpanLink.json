@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "context": {
+      "type": "object",
+      "properties": {
+        "traceId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{32}$",
+          "description": "Trace ID (32 hex chars)"
+        },
+        "spanId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{16}$",
+          "description": "Span ID (16 hex chars)"
+        },
+        "traceFlags": {
+          "default": 1,
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "description": "Trace flags bitmap"
+        },
+        "traceState": {
+          "type": "object",
+          "properties": {
+            "entries": {
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {
+                "type": "string"
+              },
+              "description": "Trace state entries"
+            }
+          },
+          "required": [
+            "entries"
+          ],
+          "additionalProperties": false,
+          "description": "Trace state"
+        },
+        "parentSpanId": {
+          "description": "Parent span ID (16 hex chars)",
+          "type": "string",
+          "pattern": "^[0-9a-f]{16}$"
+        },
+        "sampled": {
+          "default": true,
+          "type": "boolean"
+        },
+        "remote": {
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "traceId",
+        "spanId",
+        "traceFlags",
+        "sampled",
+        "remote"
+      ],
+      "additionalProperties": false,
+      "description": "Linked trace context"
+    },
+    "attributes": {
+      "description": "Link attributes",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          {
+            "type": "array",
+            "items": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "description": "Span attribute value"
+      }
+    }
+  },
+  "required": [
+    "context"
+  ],
+  "additionalProperties": false,
+  "description": "Span link",
+  "$id": "https://schema.objectstack.io/v3.0.11/system/SpanLink.json",
+  "x-spec-version": "3.0.11"
+}

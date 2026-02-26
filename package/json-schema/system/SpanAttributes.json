@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "propertyNames": {
+    "type": "string"
+  },
+  "additionalProperties": {
+    "anyOf": [
+      {
+        "type": "string"
+      },
+      {
+        "type": "number"
+      },
+      {
+        "type": "boolean"
+      },
+      {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      {
+        "type": "array",
+        "items": {
+          "type": "number"
+        }
+      },
+      {
+        "type": "array",
+        "items": {
+          "type": "boolean"
+        }
+      }
+    ],
+    "description": "Span attribute value"
+  },
+  "description": "Span attributes",
+  "$id": "https://schema.objectstack.io/v3.0.11/system/SpanAttributes.json",
+  "x-spec-version": "3.0.11"
+}

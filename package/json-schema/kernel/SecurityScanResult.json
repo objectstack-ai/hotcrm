@@ -1,0 +1,378 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "scanId": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+      "description": "Unique identifier for this security scan"
+    },
+    "plugin": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Plugin identifier"
+        },
+        "version": {
+          "type": "string",
+          "description": "Plugin version that was scanned"
+        }
+      },
+      "required": [
+        "id",
+        "version"
+      ],
+      "additionalProperties": false,
+      "description": "Plugin that was scanned"
+    },
+    "scannedAt": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+      "description": "ISO 8601 timestamp when the scan was performed"
+    },
+    "scanner": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Scanner name (e.g., snyk, osv, trivy)"
+        },
+        "version": {
+          "type": "string",
+          "description": "Version of the scanner tool"
+        }
+      },
+      "required": [
+        "name",
+        "version"
+      ],
+      "additionalProperties": false,
+      "description": "Information about the scanner tool used"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "passed",
+        "failed",
+        "warning"
+      ],
+      "description": "Overall result status of the security scan"
+    },
+    "vulnerabilities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "cve": {
+            "description": "CVE identifier",
+            "type": "string",
+            "pattern": "^CVE-\\d{4}-\\d+$"
+          },
+          "id": {
+            "type": "string",
+            "description": "Vulnerability ID"
+          },
+          "title": {
+            "type": "string",
+            "description": "Short title summarizing the vulnerability"
+          },
+          "description": {
+            "type": "string",
+            "description": "Detailed description of the vulnerability"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "critical",
+              "high",
+              "medium",
+              "low",
+              "info"
+            ],
+            "description": "Severity level of this vulnerability"
+          },
+          "cvss": {
+            "description": "CVSS score ranging from 0 to 10",
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "package": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Name of the affected package"
+              },
+              "version": {
+                "type": "string",
+                "description": "Version of the affected package"
+              },
+              "ecosystem": {
+                "description": "Package ecosystem (e.g., npm, pip, maven)",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "version"
+            ],
+            "additionalProperties": false,
+            "description": "Affected package information"
+          },
+          "vulnerableVersions": {
+            "type": "string",
+            "description": "Semver range of vulnerable versions"
+          },
+          "patchedVersions": {
+            "description": "Semver range of patched versions",
+            "type": "string"
+          },
+          "references": {
+            "default": [],
+            "description": "External references related to the vulnerability",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "advisory",
+                    "article",
+                    "report",
+                    "web"
+                  ],
+                  "description": "Type of reference source"
+                },
+                "url": {
+                  "type": "string",
+                  "format": "uri",
+                  "description": "URL of the reference"
+                }
+              },
+              "required": [
+                "type",
+                "url"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "cwe": {
+            "default": [],
+            "description": "CWE identifiers associated with this vulnerability",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "publishedAt": {
+            "description": "ISO 8601 date when the vulnerability was published",
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+          },
+          "mitigation": {
+            "description": "Recommended steps to mitigate the vulnerability",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "description",
+          "severity",
+          "package",
+          "vulnerableVersions",
+          "references",
+          "cwe"
+        ],
+        "additionalProperties": false,
+        "description": "A known security vulnerability in a package dependency"
+      },
+      "description": "List of vulnerabilities discovered during the scan"
+    },
+    "summary": {
+      "type": "object",
+      "properties": {
+        "critical": {
+          "default": 0,
+          "description": "Count of critical severity vulnerabilities",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "high": {
+          "default": 0,
+          "description": "Count of high severity vulnerabilities",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "medium": {
+          "default": 0,
+          "description": "Count of medium severity vulnerabilities",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "low": {
+          "default": 0,
+          "description": "Count of low severity vulnerabilities",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "info": {
+          "default": 0,
+          "description": "Count of informational severity vulnerabilities",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "total": {
+          "default": 0,
+          "description": "Total count of all vulnerabilities",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "critical",
+        "high",
+        "medium",
+        "low",
+        "info",
+        "total"
+      ],
+      "additionalProperties": false,
+      "description": "Summary counts of vulnerabilities by severity"
+    },
+    "licenseIssues": {
+      "default": [],
+      "description": "License compliance issues found during the scan",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "package": {
+            "type": "string",
+            "description": "Name of the package with a license issue"
+          },
+          "license": {
+            "type": "string",
+            "description": "License identifier of the package"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Reason the license is flagged"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "error",
+              "warning",
+              "info"
+            ],
+            "description": "Severity of the license compliance issue"
+          }
+        },
+        "required": [
+          "package",
+          "license",
+          "reason",
+          "severity"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "codeQuality": {
+      "description": "Code quality analysis results",
+      "type": "object",
+      "properties": {
+        "score": {
+          "description": "Overall code quality score from 0 to 100",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "issues": {
+          "default": [],
+          "description": "List of individual code quality issues",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "security",
+                  "quality",
+                  "style"
+                ],
+                "description": "Category of the code quality issue"
+              },
+              "severity": {
+                "type": "string",
+                "enum": [
+                  "error",
+                  "warning",
+                  "info"
+                ],
+                "description": "Severity of the code quality issue"
+              },
+              "message": {
+                "type": "string",
+                "description": "Description of the code quality issue"
+              },
+              "file": {
+                "description": "File path where the issue was found",
+                "type": "string"
+              },
+              "line": {
+                "description": "Line number where the issue was found",
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "type",
+              "severity",
+              "message"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "issues"
+      ],
+      "additionalProperties": false
+    },
+    "nextScanAt": {
+      "description": "ISO 8601 timestamp for the next scheduled scan",
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+    }
+  },
+  "required": [
+    "scanId",
+    "plugin",
+    "scannedAt",
+    "scanner",
+    "status",
+    "vulnerabilities",
+    "summary",
+    "licenseIssues"
+  ],
+  "additionalProperties": false,
+  "description": "Result of a security scan performed on a plugin",
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/SecurityScanResult.json",
+  "x-spec-version": "3.0.11"
+}

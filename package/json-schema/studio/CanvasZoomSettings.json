@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "min": {
+      "default": 0.25,
+      "description": "Minimum zoom level",
+      "type": "number",
+      "minimum": 0.1
+    },
+    "max": {
+      "default": 3,
+      "description": "Maximum zoom level",
+      "type": "number",
+      "maximum": 10
+    },
+    "default": {
+      "default": 1,
+      "description": "Default zoom level",
+      "type": "number"
+    },
+    "step": {
+      "default": 0.1,
+      "description": "Zoom step increment",
+      "type": "number"
+    }
+  },
+  "required": [
+    "min",
+    "max",
+    "default",
+    "step"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/studio/CanvasZoomSettings.json",
+  "x-spec-version": "3.0.11"
+}

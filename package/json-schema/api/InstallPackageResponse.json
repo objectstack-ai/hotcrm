@@ -1,0 +1,2052 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "package": {
+      "type": "object",
+      "properties": {
+        "manifest": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Unique package identifier (reverse domain style)"
+            },
+            "namespace": {
+              "description": "Short namespace identifier for metadata scoping (e.g. \"crm\", \"todo\")",
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]{1,19}$"
+            },
+            "version": {
+              "type": "string",
+              "pattern": "^\\d+\\.\\d+\\.\\d+$",
+              "description": "Package version (semantic versioning)"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "plugin",
+                "ui",
+                "driver",
+                "server",
+                "app",
+                "theme",
+                "agent",
+                "objectql",
+                "module",
+                "gateway",
+                "adapter"
+              ],
+              "description": "Type of package"
+            },
+            "name": {
+              "type": "string",
+              "description": "Human-readable package name"
+            },
+            "description": {
+              "description": "Package description",
+              "type": "string"
+            },
+            "permissions": {
+              "description": "Array of required permission strings",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "objects": {
+              "description": "Glob patterns for ObjectQL schemas files",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "datasources": {
+              "description": "Glob patterns for Datasource definitions",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "dependencies": {
+              "description": "Package dependencies",
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "configuration": {
+              "description": "Plugin configuration settings",
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string"
+                },
+                "properties": {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "string",
+                          "number",
+                          "boolean",
+                          "array",
+                          "object"
+                        ],
+                        "description": "Data type of the setting"
+                      },
+                      "default": {
+                        "description": "Default value"
+                      },
+                      "description": {
+                        "description": "Tooltip description",
+                        "type": "string"
+                      },
+                      "required": {
+                        "description": "Is this setting required?",
+                        "type": "boolean"
+                      },
+                      "secret": {
+                        "description": "If true, value is encrypted/masked (e.g. API Keys)",
+                        "type": "boolean"
+                      },
+                      "enum": {
+                        "description": "Allowed values for select inputs",
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "required": [
+                      "type"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "description": "Map of configuration keys to their definitions"
+                }
+              },
+              "required": [
+                "properties"
+              ],
+              "additionalProperties": false
+            },
+            "contributes": {
+              "description": "Platform contributions",
+              "type": "object",
+              "properties": {
+                "kinds": {
+                  "description": "New Metadata Types to recognize",
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "description": "The generic identifier of the kind (e.g., \"sys.bi.report\")"
+                      },
+                      "globs": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        },
+                        "description": "File patterns to watch (e.g., [\"**/*.report.ts\"])"
+                      },
+                      "description": {
+                        "description": "Description of what this kind represents",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "globs"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "events": {
+                  "description": "Events this plugin listens to",
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "menus": {
+                  "description": "UI Menu contributions",
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "label": {
+                          "type": "string"
+                        },
+                        "command": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "label"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "themes": {
+                  "description": "Theme contributions",
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "label": {
+                        "type": "string"
+                      },
+                      "path": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "label",
+                      "path"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "translations": {
+                  "description": "Translation resources",
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "locale": {
+                        "type": "string"
+                      },
+                      "path": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "locale",
+                      "path"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "actions": {
+                  "description": "Exposed server actions",
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "description": "Unique action name"
+                      },
+                      "label": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "input": {
+                        "description": "Input validation schema"
+                      },
+                      "output": {
+                        "description": "Output schema"
+                      }
+                    },
+                    "required": [
+                      "name"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "drivers": {
+                  "description": "Driver contributions",
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "description": "Driver unique identifier (e.g. \"postgres\", \"mongo\")"
+                      },
+                      "label": {
+                        "type": "string",
+                        "description": "Human readable name"
+                      },
+                      "description": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "label"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "fieldTypes": {
+                  "description": "Field Type contributions",
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "description": "Unique field type name (e.g. \"vector\")"
+                      },
+                      "label": {
+                        "type": "string",
+                        "description": "Display label"
+                      },
+                      "description": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "label"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "functions": {
+                  "description": "Query Function contributions",
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "description": "Function name (e.g. \"distance\")"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "args": {
+                        "description": "Argument types",
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "returnType": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "name"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "routes": {
+                  "description": "API route contributions to HttpDispatcher",
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "prefix": {
+                        "type": "string",
+                        "pattern": "^\\/",
+                        "description": "API path prefix"
+                      },
+                      "service": {
+                        "type": "string",
+                        "description": "Service name this plugin provides"
+                      },
+                      "methods": {
+                        "description": "Protocol method names implemented (e.g. [\"aiNlq\", \"aiChat\"])",
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "required": [
+                      "prefix",
+                      "service"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "commands": {
+                  "description": "CLI command contributions",
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "pattern": "^[a-z][a-z0-9-]*$",
+                        "description": "CLI command name"
+                      },
+                      "description": {
+                        "description": "Command description for help text",
+                        "type": "string"
+                      },
+                      "module": {
+                        "description": "Module path exporting Commander.js commands",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "name"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "additionalProperties": false
+            },
+            "data": {
+              "description": "Initial seed data (prefer top-level data field)",
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "object": {
+                    "type": "string",
+                    "pattern": "^[a-z_][a-z0-9_]*$",
+                    "description": "Target Object Name"
+                  },
+                  "externalId": {
+                    "default": "name",
+                    "description": "Field match for uniqueness check",
+                    "type": "string"
+                  },
+                  "mode": {
+                    "default": "upsert",
+                    "description": "Conflict resolution strategy",
+                    "type": "string",
+                    "enum": [
+                      "insert",
+                      "update",
+                      "upsert",
+                      "replace",
+                      "ignore"
+                    ]
+                  },
+                  "env": {
+                    "default": [
+                      "prod",
+                      "dev",
+                      "test"
+                    ],
+                    "description": "Applicable environments",
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "prod",
+                        "dev",
+                        "test"
+                      ]
+                    }
+                  },
+                  "records": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string"
+                      },
+                      "additionalProperties": {}
+                    },
+                    "description": "Data records"
+                  }
+                },
+                "required": [
+                  "object",
+                  "externalId",
+                  "mode",
+                  "env",
+                  "records"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "capabilities": {
+              "description": "Plugin capability declarations for interoperability",
+              "type": "object",
+              "properties": {
+                "implements": {
+                  "description": "List of protocols this plugin conforms to",
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "protocol": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "pattern": "^([a-z][a-z0-9]*\\.)+protocol\\.[a-z][a-z0-9._]*\\.v\\d+$",
+                            "description": "Unique protocol identifier (e.g., com.objectstack.protocol.storage.v1)"
+                          },
+                          "label": {
+                            "type": "string"
+                          },
+                          "version": {
+                            "type": "object",
+                            "properties": {
+                              "major": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 9007199254740991
+                              },
+                              "minor": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 9007199254740991
+                              },
+                              "patch": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 9007199254740991
+                              }
+                            },
+                            "required": [
+                              "major",
+                              "minor",
+                              "patch"
+                            ],
+                            "additionalProperties": false,
+                            "description": "Semantic version of the protocol"
+                          },
+                          "specification": {
+                            "description": "URL or path to protocol specification",
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "label",
+                          "version"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "conformance": {
+                        "default": "full",
+                        "type": "string",
+                        "enum": [
+                          "full",
+                          "partial",
+                          "experimental",
+                          "deprecated"
+                        ],
+                        "description": "Level of protocol conformance"
+                      },
+                      "implementedFeatures": {
+                        "description": "List of implemented feature names",
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "features": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "name": {
+                              "type": "string",
+                              "description": "Feature identifier within the protocol"
+                            },
+                            "enabled": {
+                              "default": true,
+                              "type": "boolean"
+                            },
+                            "description": {
+                              "type": "string"
+                            },
+                            "sinceVersion": {
+                              "description": "Version when this feature was added",
+                              "type": "string"
+                            },
+                            "deprecatedSince": {
+                              "description": "Version when deprecated",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "name",
+                            "enabled"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "metadata": {
+                        "type": "object",
+                        "propertyNames": {
+                          "type": "string"
+                        },
+                        "additionalProperties": {}
+                      },
+                      "certified": {
+                        "default": false,
+                        "description": "Has passed official conformance tests",
+                        "type": "boolean"
+                      },
+                      "certificationDate": {
+                        "type": "string",
+                        "format": "date-time",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                      }
+                    },
+                    "required": [
+                      "protocol",
+                      "conformance",
+                      "certified"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "provides": {
+                  "description": "Services/APIs this plugin offers to others",
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "pattern": "^([a-z][a-z0-9]*\\.)+interface\\.[a-z][a-z0-9._]+$",
+                        "description": "Unique interface identifier"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "version": {
+                        "type": "object",
+                        "properties": {
+                          "major": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          "minor": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          "patch": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "major",
+                          "minor",
+                          "patch"
+                        ],
+                        "additionalProperties": false,
+                        "description": "Semantic version of the protocol"
+                      },
+                      "methods": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "name": {
+                              "type": "string",
+                              "description": "Method name"
+                            },
+                            "description": {
+                              "type": "string"
+                            },
+                            "parameters": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "type": {
+                                    "type": "string",
+                                    "description": "Type notation (e.g., string, number, User)"
+                                  },
+                                  "required": {
+                                    "default": true,
+                                    "type": "boolean"
+                                  },
+                                  "description": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "name",
+                                  "type",
+                                  "required"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "returnType": {
+                              "description": "Return value type",
+                              "type": "string"
+                            },
+                            "async": {
+                              "default": false,
+                              "description": "Whether method returns a Promise",
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "name",
+                            "async"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "events": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "name": {
+                              "type": "string",
+                              "description": "Event name"
+                            },
+                            "description": {
+                              "type": "string"
+                            },
+                            "payload": {
+                              "description": "Event payload type",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "name"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "stability": {
+                        "default": "stable",
+                        "type": "string",
+                        "enum": [
+                          "stable",
+                          "beta",
+                          "alpha",
+                          "experimental"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "name",
+                      "version",
+                      "methods",
+                      "stability"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "requires": {
+                  "description": "Required plugins and their capabilities",
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "pluginId": {
+                        "type": "string",
+                        "pattern": "^([a-z][a-z0-9]*\\.)+[a-z][a-z0-9-]+$",
+                        "description": "Required plugin identifier"
+                      },
+                      "version": {
+                        "type": "string",
+                        "description": "Semantic version constraint"
+                      },
+                      "optional": {
+                        "default": false,
+                        "type": "boolean"
+                      },
+                      "reason": {
+                        "type": "string"
+                      },
+                      "requiredCapabilities": {
+                        "description": "Protocol IDs the dependency must support",
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "required": [
+                      "pluginId",
+                      "version",
+                      "optional"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "extensionPoints": {
+                  "description": "Points where other plugins can extend this plugin",
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "pattern": "^([a-z][a-z0-9]*\\.)+extension\\.[a-z][a-z0-9._]+$",
+                        "description": "Unique extension point identifier"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "action",
+                          "hook",
+                          "widget",
+                          "provider",
+                          "transformer",
+                          "validator",
+                          "decorator"
+                        ]
+                      },
+                      "contract": {
+                        "type": "object",
+                        "properties": {
+                          "input": {
+                            "description": "Input type/schema",
+                            "type": "string"
+                          },
+                          "output": {
+                            "description": "Output type/schema",
+                            "type": "string"
+                          },
+                          "signature": {
+                            "description": "Function signature if applicable",
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      "cardinality": {
+                        "default": "multiple",
+                        "description": "Whether multiple extensions can register to this point",
+                        "type": "string",
+                        "enum": [
+                          "single",
+                          "multiple"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "name",
+                      "type",
+                      "cardinality"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "extensions": {
+                  "description": "Extensions contributed to other plugins",
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "targetPluginId": {
+                        "type": "string",
+                        "description": "Plugin ID being extended"
+                      },
+                      "extensionPointId": {
+                        "type": "string",
+                        "description": "Extension point identifier"
+                      },
+                      "implementation": {
+                        "type": "string",
+                        "description": "Path to implementation module"
+                      },
+                      "priority": {
+                        "default": 100,
+                        "description": "Registration priority (lower = higher priority)",
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "required": [
+                      "targetPluginId",
+                      "extensionPointId",
+                      "implementation",
+                      "priority"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "additionalProperties": false
+            },
+            "extensions": {
+              "description": "Extension points and contributions",
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {}
+            },
+            "loading": {
+              "description": "Plugin loading and runtime behavior configuration",
+              "type": "object",
+              "properties": {
+                "strategy": {
+                  "default": "lazy",
+                  "type": "string",
+                  "enum": [
+                    "eager",
+                    "lazy",
+                    "parallel",
+                    "deferred",
+                    "on-demand"
+                  ],
+                  "description": "Plugin loading strategy"
+                },
+                "preload": {
+                  "type": "object",
+                  "properties": {
+                    "enabled": {
+                      "default": false,
+                      "type": "boolean"
+                    },
+                    "priority": {
+                      "default": 100,
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "resources": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": [
+                          "metadata",
+                          "dependencies",
+                          "assets",
+                          "code",
+                          "services"
+                        ]
+                      }
+                    },
+                    "conditions": {
+                      "type": "object",
+                      "properties": {
+                        "routes": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "roles": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "deviceType": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "enum": [
+                              "desktop",
+                              "mobile",
+                              "tablet"
+                            ]
+                          }
+                        },
+                        "minNetworkSpeed": {
+                          "type": "string",
+                          "enum": [
+                            "slow-2g",
+                            "2g",
+                            "3g",
+                            "4g"
+                          ]
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "enabled",
+                    "priority"
+                  ],
+                  "additionalProperties": false,
+                  "description": "Plugin preloading configuration"
+                },
+                "codeSplitting": {
+                  "type": "object",
+                  "properties": {
+                    "enabled": {
+                      "default": true,
+                      "type": "boolean"
+                    },
+                    "strategy": {
+                      "default": "feature",
+                      "type": "string",
+                      "enum": [
+                        "route",
+                        "feature",
+                        "size",
+                        "custom"
+                      ]
+                    },
+                    "chunkNaming": {
+                      "default": "hashed",
+                      "type": "string",
+                      "enum": [
+                        "hashed",
+                        "named",
+                        "sequential"
+                      ]
+                    },
+                    "maxChunkSize": {
+                      "description": "Max chunk size in KB",
+                      "type": "integer",
+                      "minimum": 10,
+                      "maximum": 9007199254740991
+                    },
+                    "sharedDependencies": {
+                      "type": "object",
+                      "properties": {
+                        "enabled": {
+                          "default": true,
+                          "type": "boolean"
+                        },
+                        "minChunks": {
+                          "default": 2,
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "enabled",
+                        "minChunks"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "enabled",
+                    "strategy",
+                    "chunkNaming"
+                  ],
+                  "additionalProperties": false,
+                  "description": "Plugin code splitting configuration"
+                },
+                "dynamicImport": {
+                  "type": "object",
+                  "properties": {
+                    "enabled": {
+                      "default": true,
+                      "type": "boolean"
+                    },
+                    "mode": {
+                      "default": "async",
+                      "type": "string",
+                      "enum": [
+                        "async",
+                        "sync",
+                        "eager",
+                        "lazy"
+                      ]
+                    },
+                    "prefetch": {
+                      "default": false,
+                      "description": "Prefetch module in idle time",
+                      "type": "boolean"
+                    },
+                    "preload": {
+                      "default": false,
+                      "description": "Preload module in parallel with parent",
+                      "type": "boolean"
+                    },
+                    "webpackChunkName": {
+                      "description": "Custom chunk name for webpack",
+                      "type": "string"
+                    },
+                    "timeout": {
+                      "default": 30000,
+                      "description": "Dynamic import timeout (ms)",
+                      "type": "integer",
+                      "minimum": 100,
+                      "maximum": 9007199254740991
+                    },
+                    "retry": {
+                      "type": "object",
+                      "properties": {
+                        "enabled": {
+                          "default": true,
+                          "type": "boolean"
+                        },
+                        "maxAttempts": {
+                          "default": 3,
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 10
+                        },
+                        "backoffMs": {
+                          "default": 1000,
+                          "description": "Exponential backoff base delay",
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "enabled",
+                        "maxAttempts",
+                        "backoffMs"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "enabled",
+                    "mode",
+                    "prefetch",
+                    "preload",
+                    "timeout"
+                  ],
+                  "additionalProperties": false,
+                  "description": "Plugin dynamic import configuration"
+                },
+                "initialization": {
+                  "type": "object",
+                  "properties": {
+                    "mode": {
+                      "default": "async",
+                      "type": "string",
+                      "enum": [
+                        "sync",
+                        "async",
+                        "parallel",
+                        "sequential"
+                      ]
+                    },
+                    "timeout": {
+                      "default": 30000,
+                      "type": "integer",
+                      "minimum": 100,
+                      "maximum": 9007199254740991
+                    },
+                    "priority": {
+                      "default": 100,
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "critical": {
+                      "default": false,
+                      "description": "If true, kernel bootstrap fails if plugin fails",
+                      "type": "boolean"
+                    },
+                    "retry": {
+                      "type": "object",
+                      "properties": {
+                        "enabled": {
+                          "default": false,
+                          "type": "boolean"
+                        },
+                        "maxAttempts": {
+                          "default": 3,
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 5
+                        },
+                        "backoffMs": {
+                          "default": 1000,
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "enabled",
+                        "maxAttempts",
+                        "backoffMs"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "healthCheckInterval": {
+                      "description": "Health check interval in ms (0 = disabled)",
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "mode",
+                    "timeout",
+                    "priority",
+                    "critical"
+                  ],
+                  "additionalProperties": false,
+                  "description": "Plugin initialization configuration"
+                },
+                "dependencyResolution": {
+                  "type": "object",
+                  "properties": {
+                    "strategy": {
+                      "default": "compatible",
+                      "type": "string",
+                      "enum": [
+                        "strict",
+                        "compatible",
+                        "latest",
+                        "pinned"
+                      ]
+                    },
+                    "peerDependencies": {
+                      "type": "object",
+                      "properties": {
+                        "resolve": {
+                          "default": true,
+                          "type": "boolean"
+                        },
+                        "onMissing": {
+                          "default": "warn",
+                          "type": "string",
+                          "enum": [
+                            "error",
+                            "warn",
+                            "ignore"
+                          ]
+                        },
+                        "onMismatch": {
+                          "default": "warn",
+                          "type": "string",
+                          "enum": [
+                            "error",
+                            "warn",
+                            "ignore"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "resolve",
+                        "onMissing",
+                        "onMismatch"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "optionalDependencies": {
+                      "type": "object",
+                      "properties": {
+                        "load": {
+                          "default": true,
+                          "type": "boolean"
+                        },
+                        "onFailure": {
+                          "default": "warn",
+                          "type": "string",
+                          "enum": [
+                            "warn",
+                            "ignore"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "load",
+                        "onFailure"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "conflictResolution": {
+                      "default": "latest",
+                      "type": "string",
+                      "enum": [
+                        "fail",
+                        "latest",
+                        "oldest",
+                        "manual"
+                      ]
+                    },
+                    "circularDependencies": {
+                      "default": "warn",
+                      "type": "string",
+                      "enum": [
+                        "error",
+                        "warn",
+                        "allow"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "strategy",
+                    "conflictResolution",
+                    "circularDependencies"
+                  ],
+                  "additionalProperties": false,
+                  "description": "Plugin dependency resolution configuration"
+                },
+                "hotReload": {
+                  "type": "object",
+                  "properties": {
+                    "enabled": {
+                      "default": false,
+                      "type": "boolean"
+                    },
+                    "environment": {
+                      "default": "development",
+                      "description": "Target environment controlling safety level",
+                      "type": "string",
+                      "enum": [
+                        "development",
+                        "staging",
+                        "production"
+                      ]
+                    },
+                    "strategy": {
+                      "default": "full",
+                      "type": "string",
+                      "enum": [
+                        "full",
+                        "partial",
+                        "state-preserve"
+                      ]
+                    },
+                    "watchPatterns": {
+                      "description": "Glob patterns for files to watch",
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "ignorePatterns": {
+                      "description": "Glob patterns for files to ignore",
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "debounceMs": {
+                      "default": 300,
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "preserveState": {
+                      "default": false,
+                      "type": "boolean"
+                    },
+                    "stateSerialization": {
+                      "type": "object",
+                      "properties": {
+                        "enabled": {
+                          "default": false,
+                          "type": "boolean"
+                        },
+                        "handler": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "enabled"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "hooks": {
+                      "type": "object",
+                      "properties": {
+                        "beforeReload": {
+                          "description": "Function to call before reload",
+                          "type": "string"
+                        },
+                        "afterReload": {
+                          "description": "Function to call after reload",
+                          "type": "string"
+                        },
+                        "onError": {
+                          "description": "Function to call on reload error",
+                          "type": "string"
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    "productionSafety": {
+                      "type": "object",
+                      "properties": {
+                        "healthValidation": {
+                          "default": true,
+                          "description": "Run health checks after reload before accepting traffic",
+                          "type": "boolean"
+                        },
+                        "rollbackOnFailure": {
+                          "default": true,
+                          "description": "Auto-rollback if reloaded plugin fails health check",
+                          "type": "boolean"
+                        },
+                        "healthTimeout": {
+                          "default": 30000,
+                          "description": "Health check timeout after reload in ms",
+                          "type": "integer",
+                          "minimum": 1000,
+                          "maximum": 9007199254740991
+                        },
+                        "drainConnections": {
+                          "default": true,
+                          "description": "Gracefully drain active requests before reloading",
+                          "type": "boolean"
+                        },
+                        "drainTimeout": {
+                          "default": 15000,
+                          "description": "Max wait time for connection draining in ms",
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "maxConcurrentReloads": {
+                          "default": 1,
+                          "description": "Limit concurrent reloads to prevent system instability",
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 9007199254740991
+                        },
+                        "minReloadInterval": {
+                          "default": 5000,
+                          "description": "Cooldown period between reloads of the same plugin",
+                          "type": "integer",
+                          "minimum": 1000,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "healthValidation",
+                        "rollbackOnFailure",
+                        "healthTimeout",
+                        "drainConnections",
+                        "drainTimeout",
+                        "maxConcurrentReloads",
+                        "minReloadInterval"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "enabled",
+                    "environment",
+                    "strategy",
+                    "debounceMs",
+                    "preserveState"
+                  ],
+                  "additionalProperties": false,
+                  "description": "Plugin hot reload configuration"
+                },
+                "caching": {
+                  "type": "object",
+                  "properties": {
+                    "enabled": {
+                      "default": true,
+                      "type": "boolean"
+                    },
+                    "storage": {
+                      "default": "memory",
+                      "type": "string",
+                      "enum": [
+                        "memory",
+                        "disk",
+                        "indexeddb",
+                        "hybrid"
+                      ]
+                    },
+                    "keyStrategy": {
+                      "default": "version",
+                      "type": "string",
+                      "enum": [
+                        "version",
+                        "hash",
+                        "timestamp"
+                      ]
+                    },
+                    "ttl": {
+                      "description": "Time to live in seconds (0 = infinite)",
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "maxSize": {
+                      "description": "Max cache size in MB",
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 9007199254740991
+                    },
+                    "invalidateOn": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": [
+                          "version-change",
+                          "dependency-change",
+                          "manual",
+                          "error"
+                        ]
+                      }
+                    },
+                    "compression": {
+                      "type": "object",
+                      "properties": {
+                        "enabled": {
+                          "default": false,
+                          "type": "boolean"
+                        },
+                        "algorithm": {
+                          "default": "gzip",
+                          "type": "string",
+                          "enum": [
+                            "gzip",
+                            "brotli",
+                            "deflate"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "enabled",
+                        "algorithm"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "enabled",
+                    "storage",
+                    "keyStrategy"
+                  ],
+                  "additionalProperties": false,
+                  "description": "Plugin caching configuration"
+                },
+                "sandboxing": {
+                  "type": "object",
+                  "properties": {
+                    "enabled": {
+                      "default": false,
+                      "type": "boolean"
+                    },
+                    "scope": {
+                      "default": "automation-only",
+                      "description": "Which plugins are subject to isolation",
+                      "type": "string",
+                      "enum": [
+                        "automation-only",
+                        "untrusted-only",
+                        "all-plugins"
+                      ]
+                    },
+                    "isolationLevel": {
+                      "default": "none",
+                      "type": "string",
+                      "enum": [
+                        "none",
+                        "process",
+                        "vm",
+                        "iframe",
+                        "web-worker"
+                      ]
+                    },
+                    "allowedCapabilities": {
+                      "description": "List of allowed capability IDs",
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "resourceQuotas": {
+                      "type": "object",
+                      "properties": {
+                        "maxMemoryMB": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 9007199254740991
+                        },
+                        "maxCpuTimeMs": {
+                          "type": "integer",
+                          "minimum": 100,
+                          "maximum": 9007199254740991
+                        },
+                        "maxFileDescriptors": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 9007199254740991
+                        },
+                        "maxNetworkKBps": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    "permissions": {
+                      "type": "object",
+                      "properties": {
+                        "allowedAPIs": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "allowedPaths": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "allowedEndpoints": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "allowedEnvVars": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    "ipc": {
+                      "type": "object",
+                      "properties": {
+                        "enabled": {
+                          "default": true,
+                          "description": "Allow sandboxed plugins to communicate via IPC",
+                          "type": "boolean"
+                        },
+                        "transport": {
+                          "default": "message-port",
+                          "description": "IPC transport for cross-boundary communication",
+                          "type": "string",
+                          "enum": [
+                            "message-port",
+                            "unix-socket",
+                            "tcp",
+                            "memory"
+                          ]
+                        },
+                        "maxMessageSize": {
+                          "default": 1048576,
+                          "description": "Maximum IPC message size in bytes (default 1MB)",
+                          "type": "integer",
+                          "minimum": 1024,
+                          "maximum": 9007199254740991
+                        },
+                        "timeout": {
+                          "default": 30000,
+                          "description": "IPC message response timeout in ms",
+                          "type": "integer",
+                          "minimum": 100,
+                          "maximum": 9007199254740991
+                        },
+                        "allowedServices": {
+                          "description": "Service names the sandboxed plugin may invoke via IPC",
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "required": [
+                        "enabled",
+                        "transport",
+                        "maxMessageSize",
+                        "timeout"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "enabled",
+                    "scope",
+                    "isolationLevel"
+                  ],
+                  "additionalProperties": false,
+                  "description": "Plugin sandboxing configuration"
+                },
+                "monitoring": {
+                  "type": "object",
+                  "properties": {
+                    "enabled": {
+                      "default": false,
+                      "type": "boolean"
+                    },
+                    "metrics": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": [
+                          "load-time",
+                          "init-time",
+                          "memory-usage",
+                          "cpu-usage",
+                          "api-calls",
+                          "error-rate",
+                          "cache-hit-rate"
+                        ]
+                      }
+                    },
+                    "samplingRate": {
+                      "default": 1,
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    },
+                    "reportingInterval": {
+                      "default": 60,
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 9007199254740991
+                    },
+                    "budgets": {
+                      "type": "object",
+                      "properties": {
+                        "maxLoadTimeMs": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "maxInitTimeMs": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "maxMemoryMB": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    "onBudgetViolation": {
+                      "default": "warn",
+                      "type": "string",
+                      "enum": [
+                        "warn",
+                        "error",
+                        "ignore"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "enabled",
+                    "samplingRate",
+                    "reportingInterval",
+                    "onBudgetViolation"
+                  ],
+                  "additionalProperties": false,
+                  "description": "Plugin performance monitoring configuration"
+                }
+              },
+              "required": [
+                "strategy"
+              ],
+              "additionalProperties": false
+            },
+            "engine": {
+              "description": "Platform compatibility requirements",
+              "type": "object",
+              "properties": {
+                "objectstack": {
+                  "type": "string",
+                  "pattern": "^[><=~^]*\\d+\\.\\d+\\.\\d+",
+                  "description": "ObjectStack platform version requirement (SemVer range, e.g. \">=3.0.0\")"
+                }
+              },
+              "required": [
+                "objectstack"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "id",
+            "version",
+            "type",
+            "name"
+          ],
+          "additionalProperties": false,
+          "description": "Full package manifest"
+        },
+        "status": {
+          "default": "installed",
+          "description": "Package state: installed, disabled, installing, upgrading, uninstalling, or error",
+          "type": "string",
+          "enum": [
+            "installed",
+            "disabled",
+            "installing",
+            "upgrading",
+            "uninstalling",
+            "error"
+          ]
+        },
+        "enabled": {
+          "default": true,
+          "description": "Whether the package is currently enabled",
+          "type": "boolean"
+        },
+        "installedAt": {
+          "description": "Installation timestamp",
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+        },
+        "updatedAt": {
+          "description": "Last update timestamp",
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+        },
+        "installedVersion": {
+          "description": "Currently installed version for quick access",
+          "type": "string"
+        },
+        "previousVersion": {
+          "description": "Version before the last upgrade",
+          "type": "string"
+        },
+        "statusChangedAt": {
+          "description": "Status change timestamp",
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+        },
+        "errorMessage": {
+          "description": "Error message when status is error",
+          "type": "string"
+        },
+        "settings": {
+          "description": "User-provided configuration settings",
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {}
+        },
+        "upgradeHistory": {
+          "description": "Version upgrade history",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "fromVersion": {
+                "type": "string",
+                "description": "Version before upgrade"
+              },
+              "toVersion": {
+                "type": "string",
+                "description": "Version after upgrade"
+              },
+              "upgradedAt": {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+                "description": "Upgrade timestamp"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "success",
+                  "failed",
+                  "rolled_back"
+                ],
+                "description": "Upgrade outcome"
+              },
+              "migrationLog": {
+                "description": "Migration step logs",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "fromVersion",
+              "toVersion",
+              "upgradedAt",
+              "status"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "registeredNamespaces": {
+          "description": "Namespace prefixes registered by this package",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "manifest",
+        "status",
+        "enabled"
+      ],
+      "additionalProperties": false,
+      "description": "Installed package details"
+    },
+    "message": {
+      "description": "Installation status message",
+      "type": "string"
+    },
+    "dependencyResolution": {
+      "description": "Dependency resolution result from install analysis",
+      "type": "object",
+      "properties": {
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "packageId": {
+                "type": "string",
+                "description": "Dependency package identifier"
+              },
+              "requiredRange": {
+                "type": "string",
+                "description": "SemVer range required (e.g. \"^2.0.0\")"
+              },
+              "resolvedVersion": {
+                "description": "Actual version resolved from registry",
+                "type": "string"
+              },
+              "installedVersion": {
+                "description": "Currently installed version",
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "satisfied",
+                  "needs_install",
+                  "needs_upgrade",
+                  "conflict"
+                ],
+                "description": "Resolution status"
+              },
+              "conflictReason": {
+                "description": "Explanation of the conflict",
+                "type": "string"
+              }
+            },
+            "required": [
+              "packageId",
+              "requiredRange",
+              "status"
+            ],
+            "additionalProperties": false,
+            "description": "Resolution result for a single dependency"
+          },
+          "description": "Resolution result for each dependency"
+        },
+        "canProceed": {
+          "type": "boolean",
+          "description": "Whether installation can proceed"
+        },
+        "requiredActions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "install",
+                  "upgrade",
+                  "confirm_conflict"
+                ],
+                "description": "Type of action required"
+              },
+              "packageId": {
+                "type": "string",
+                "description": "Target package identifier"
+              },
+              "description": {
+                "type": "string",
+                "description": "Human-readable action description"
+              }
+            },
+            "required": [
+              "type",
+              "packageId",
+              "description"
+            ],
+            "additionalProperties": false,
+            "description": "Action required before installation can proceed"
+          },
+          "description": "Actions required before proceeding"
+        },
+        "installOrder": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Topologically sorted package IDs for installation"
+        },
+        "circularDependencies": {
+          "description": "Circular dependency chains detected (e.g. [[\"A\", \"B\", \"A\"]])",
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "required": [
+        "dependencies",
+        "canProceed",
+        "requiredActions",
+        "installOrder"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "package"
+  ],
+  "additionalProperties": false,
+  "description": "Install package response",
+  "$id": "https://schema.objectstack.io/v3.0.11/api/InstallPackageResponse.json",
+  "x-spec-version": "3.0.11"
+}

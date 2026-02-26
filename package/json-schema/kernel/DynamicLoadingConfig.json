@@ -1,0 +1,151 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "enabled": {
+      "default": false,
+      "description": "Enable runtime load/unload of plugins",
+      "type": "boolean"
+    },
+    "maxDynamicPlugins": {
+      "default": 50,
+      "description": "Upper limit on runtime-loaded plugins",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "discovery": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "type": "boolean"
+        },
+        "sources": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "registry",
+                  "npm",
+                  "directory",
+                  "url"
+                ],
+                "description": "Discovery source type"
+              },
+              "endpoint": {
+                "type": "string",
+                "description": "Registry URL, directory path, or manifest URL"
+              },
+              "pollInterval": {
+                "default": 0,
+                "description": "How often to re-scan for new plugins (0 = manual)",
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "filter": {
+                "type": "object",
+                "properties": {
+                  "tags": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "vendors": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "minTrustLevel": {
+                    "type": "string",
+                    "enum": [
+                      "verified",
+                      "trusted",
+                      "community",
+                      "untrusted"
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "type",
+              "endpoint",
+              "pollInterval"
+            ],
+            "additionalProperties": false,
+            "description": "Source for runtime plugin discovery"
+          }
+        },
+        "autoLoad": {
+          "default": false,
+          "description": "Automatically load newly discovered plugins",
+          "type": "boolean"
+        },
+        "requireApproval": {
+          "default": true,
+          "description": "Require admin approval before loading discovered plugins",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enabled",
+        "sources",
+        "autoLoad",
+        "requireApproval"
+      ],
+      "additionalProperties": false,
+      "description": "Runtime plugin discovery configuration"
+    },
+    "defaultSandbox": {
+      "default": true,
+      "description": "Sandbox dynamically loaded plugins by default",
+      "type": "boolean"
+    },
+    "allowedSources": {
+      "description": "Restrict which source types are permitted",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "npm",
+          "local",
+          "url",
+          "registry",
+          "git"
+        ]
+      }
+    },
+    "requireIntegrity": {
+      "default": true,
+      "description": "Require integrity hash verification for remote sources",
+      "type": "boolean"
+    },
+    "operationTimeout": {
+      "default": 60000,
+      "description": "Default timeout for load/unload operations in ms",
+      "type": "integer",
+      "minimum": 1000,
+      "maximum": 9007199254740991
+    }
+  },
+  "required": [
+    "enabled",
+    "maxDynamicPlugins",
+    "defaultSandbox",
+    "requireIntegrity",
+    "operationTimeout"
+  ],
+  "additionalProperties": false,
+  "description": "Dynamic plugin loading subsystem configuration",
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/DynamicLoadingConfig.json",
+  "x-spec-version": "3.0.11"
+}

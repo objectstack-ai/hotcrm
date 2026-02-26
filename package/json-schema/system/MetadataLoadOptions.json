@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "scope": {
+      "type": "string",
+      "enum": [
+        "system",
+        "platform",
+        "user"
+      ]
+    },
+    "namespace": {
+      "type": "string"
+    },
+    "raw": {
+      "description": "Return raw file content instead of parsed JSON",
+      "type": "boolean"
+    },
+    "cache": {
+      "type": "boolean"
+    },
+    "useCache": {
+      "type": "boolean"
+    },
+    "validate": {
+      "type": "boolean"
+    },
+    "ifNoneMatch": {
+      "type": "string"
+    },
+    "recursive": {
+      "type": "boolean"
+    },
+    "limit": {
+      "type": "number"
+    },
+    "patterns": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "loader": {
+      "description": "Specific loader to use (e.g. filesystem, database)",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/system/MetadataLoadOptions.json",
+  "x-spec-version": "3.0.11"
+}

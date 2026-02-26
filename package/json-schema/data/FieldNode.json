@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "anyOf": [
+    {
+      "type": "string"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "field": {
+          "type": "string"
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "$ref": "#"
+          }
+        },
+        "alias": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "field"
+      ],
+      "additionalProperties": false
+    }
+  ],
+  "$id": "https://schema.objectstack.io/v3.0.11/data/FieldNode.json",
+  "x-spec-version": "3.0.11"
+}

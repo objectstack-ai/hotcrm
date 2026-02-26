@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "uploadId": {
+      "type": "string",
+      "description": "Multipart upload session ID"
+    },
+    "parts": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "chunkIndex": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
+            "description": "Chunk index"
+          },
+          "eTag": {
+            "type": "string",
+            "description": "ETag returned from chunk upload"
+          }
+        },
+        "required": [
+          "chunkIndex",
+          "eTag"
+        ],
+        "additionalProperties": false
+      },
+      "description": "Ordered list of uploaded parts for assembly"
+    }
+  },
+  "required": [
+    "uploadId",
+    "parts"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/CompleteChunkedUploadRequest.json",
+  "x-spec-version": "3.0.11"
+}

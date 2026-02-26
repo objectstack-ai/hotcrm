@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "query": {
+      "description": "Generated structured query (AST)"
+    },
+    "explanation": {
+      "description": "Human-readable explanation of the query",
+      "type": "string"
+    },
+    "confidence": {
+      "description": "Confidence score (0-1)",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "suggestions": {
+      "description": "Suggested follow-up queries",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "query"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/AiNlqResponse.json",
+  "x-spec-version": "3.0.11"
+}

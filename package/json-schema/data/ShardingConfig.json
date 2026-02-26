@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "enabled": {
+      "default": false,
+      "description": "Enable sharding",
+      "type": "boolean"
+    },
+    "shardKey": {
+      "description": "Field to use as shard key",
+      "type": "string"
+    },
+    "shardingStrategy": {
+      "description": "Sharding strategy",
+      "type": "string",
+      "enum": [
+        "hash",
+        "range",
+        "zone"
+      ]
+    },
+    "numShards": {
+      "description": "Number of shards",
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    }
+  },
+  "required": [
+    "enabled"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/data/ShardingConfig.json",
+  "x-spec-version": "3.0.11"
+}

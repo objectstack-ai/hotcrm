@@ -1,0 +1,259 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "description": {
+      "type": "string",
+      "description": "What the plugin should do"
+    },
+    "pluginType": {
+      "type": "string",
+      "enum": [
+        "driver",
+        "app",
+        "widget",
+        "integration",
+        "automation",
+        "analytics",
+        "ai-agent",
+        "custom"
+      ]
+    },
+    "outputFormat": {
+      "default": "source-code",
+      "description": "Format of the generated output",
+      "type": "string",
+      "enum": [
+        "source-code",
+        "low-code-schema",
+        "dsl"
+      ]
+    },
+    "language": {
+      "default": "typescript",
+      "type": "string",
+      "enum": [
+        "typescript",
+        "javascript",
+        "python"
+      ]
+    },
+    "framework": {
+      "type": "object",
+      "properties": {
+        "runtime": {
+          "type": "string",
+          "enum": [
+            "node",
+            "browser",
+            "edge",
+            "universal"
+          ]
+        },
+        "uiFramework": {
+          "type": "string",
+          "enum": [
+            "react",
+            "vue",
+            "svelte",
+            "none"
+          ]
+        },
+        "testing": {
+          "type": "string",
+          "enum": [
+            "vitest",
+            "jest",
+            "mocha",
+            "none"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "capabilities": {
+      "description": "Protocol IDs to implement",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "dependencies": {
+      "description": "Required plugin IDs",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "examples": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "input": {
+            "type": "string"
+          },
+          "expectedOutput": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "input",
+          "expectedOutput"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "style": {
+      "type": "object",
+      "properties": {
+        "indentation": {
+          "default": "2spaces",
+          "type": "string",
+          "enum": [
+            "tab",
+            "2spaces",
+            "4spaces"
+          ]
+        },
+        "quotes": {
+          "default": "single",
+          "type": "string",
+          "enum": [
+            "single",
+            "double"
+          ]
+        },
+        "semicolons": {
+          "default": true,
+          "type": "boolean"
+        },
+        "trailingComma": {
+          "default": true,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "indentation",
+        "quotes",
+        "semicolons",
+        "trailingComma"
+      ],
+      "additionalProperties": false
+    },
+    "schemaOptions": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "default": "typescript",
+          "description": "Output schema format",
+          "type": "string",
+          "enum": [
+            "json",
+            "yaml",
+            "typescript"
+          ]
+        },
+        "includeExamples": {
+          "default": true,
+          "type": "boolean"
+        },
+        "strictValidation": {
+          "default": true,
+          "type": "boolean"
+        },
+        "generateUI": {
+          "default": true,
+          "description": "Generate view, dashboard, and page definitions",
+          "type": "boolean"
+        },
+        "generateDataModels": {
+          "default": true,
+          "description": "Generate object and field definitions",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "format",
+        "includeExamples",
+        "strictValidation",
+        "generateUI",
+        "generateDataModels"
+      ],
+      "additionalProperties": false
+    },
+    "context": {
+      "type": "object",
+      "properties": {
+        "existingCode": {
+          "type": "string"
+        },
+        "documentationUrls": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "referencePlugins": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "options": {
+      "type": "object",
+      "properties": {
+        "generateTests": {
+          "default": true,
+          "type": "boolean"
+        },
+        "generateDocs": {
+          "default": true,
+          "type": "boolean"
+        },
+        "generateExamples": {
+          "default": true,
+          "type": "boolean"
+        },
+        "targetCoverage": {
+          "default": 80,
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "optimizationLevel": {
+          "default": "basic",
+          "type": "string",
+          "enum": [
+            "none",
+            "basic",
+            "aggressive"
+          ]
+        }
+      },
+      "required": [
+        "generateTests",
+        "generateDocs",
+        "generateExamples",
+        "targetCoverage",
+        "optimizationLevel"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "description",
+    "pluginType",
+    "outputFormat",
+    "language"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/ai/CodeGenerationRequest.json",
+  "x-spec-version": "3.0.11"
+}

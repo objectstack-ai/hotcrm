@@ -1,0 +1,908 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^([a-z][a-z0-9]*\\.)+[a-z][a-z0-9-]+$",
+      "description": "Plugin identifier (reverse domain notation)"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "readme": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "data",
+        "integration",
+        "ui",
+        "analytics",
+        "security",
+        "automation",
+        "ai",
+        "utility",
+        "driver",
+        "gateway",
+        "adapter"
+      ]
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "vendor": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9]*(\\.[a-z][a-z0-9]*)+$",
+          "description": "Vendor identifier (reverse domain)"
+        },
+        "name": {
+          "type": "string"
+        },
+        "website": {
+          "type": "string",
+          "format": "uri"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+        },
+        "verified": {
+          "default": false,
+          "description": "Whether vendor is verified by ObjectStack",
+          "type": "boolean"
+        },
+        "trustLevel": {
+          "default": "unverified",
+          "type": "string",
+          "enum": [
+            "official",
+            "verified",
+            "community",
+            "unverified"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "verified",
+        "trustLevel"
+      ],
+      "additionalProperties": false
+    },
+    "capabilities": {
+      "type": "object",
+      "properties": {
+        "implements": {
+          "description": "List of protocols this plugin conforms to",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "protocol": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^([a-z][a-z0-9]*\\.)+protocol\\.[a-z][a-z0-9._]*\\.v\\d+$",
+                    "description": "Unique protocol identifier (e.g., com.objectstack.protocol.storage.v1)"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "version": {
+                    "type": "object",
+                    "properties": {
+                      "major": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      "minor": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      "patch": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "required": [
+                      "major",
+                      "minor",
+                      "patch"
+                    ],
+                    "additionalProperties": false,
+                    "description": "Semantic version of the protocol"
+                  },
+                  "specification": {
+                    "description": "URL or path to protocol specification",
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "label",
+                  "version"
+                ],
+                "additionalProperties": false
+              },
+              "conformance": {
+                "default": "full",
+                "type": "string",
+                "enum": [
+                  "full",
+                  "partial",
+                  "experimental",
+                  "deprecated"
+                ],
+                "description": "Level of protocol conformance"
+              },
+              "implementedFeatures": {
+                "description": "List of implemented feature names",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "features": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "description": "Feature identifier within the protocol"
+                    },
+                    "enabled": {
+                      "default": true,
+                      "type": "boolean"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "sinceVersion": {
+                      "description": "Version when this feature was added",
+                      "type": "string"
+                    },
+                    "deprecatedSince": {
+                      "description": "Version when deprecated",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "enabled"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "metadata": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {}
+              },
+              "certified": {
+                "default": false,
+                "description": "Has passed official conformance tests",
+                "type": "boolean"
+              },
+              "certificationDate": {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+              }
+            },
+            "required": [
+              "protocol",
+              "conformance",
+              "certified"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "provides": {
+          "description": "Services/APIs this plugin offers to others",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^([a-z][a-z0-9]*\\.)+interface\\.[a-z][a-z0-9._]+$",
+                "description": "Unique interface identifier"
+              },
+              "name": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "version": {
+                "type": "object",
+                "properties": {
+                  "major": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "minor": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "patch": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "major",
+                  "minor",
+                  "patch"
+                ],
+                "additionalProperties": false,
+                "description": "Semantic version of the protocol"
+              },
+              "methods": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "description": "Method name"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "parameters": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "type": {
+                            "type": "string",
+                            "description": "Type notation (e.g., string, number, User)"
+                          },
+                          "required": {
+                            "default": true,
+                            "type": "boolean"
+                          },
+                          "description": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "name",
+                          "type",
+                          "required"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "returnType": {
+                      "description": "Return value type",
+                      "type": "string"
+                    },
+                    "async": {
+                      "default": false,
+                      "description": "Whether method returns a Promise",
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "async"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "events": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "description": "Event name"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "payload": {
+                      "description": "Event payload type",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "name"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "stability": {
+                "default": "stable",
+                "type": "string",
+                "enum": [
+                  "stable",
+                  "beta",
+                  "alpha",
+                  "experimental"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "version",
+              "methods",
+              "stability"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "requires": {
+          "description": "Required plugins and their capabilities",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "pluginId": {
+                "type": "string",
+                "pattern": "^([a-z][a-z0-9]*\\.)+[a-z][a-z0-9-]+$",
+                "description": "Required plugin identifier"
+              },
+              "version": {
+                "type": "string",
+                "description": "Semantic version constraint"
+              },
+              "optional": {
+                "default": false,
+                "type": "boolean"
+              },
+              "reason": {
+                "type": "string"
+              },
+              "requiredCapabilities": {
+                "description": "Protocol IDs the dependency must support",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "pluginId",
+              "version",
+              "optional"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "extensionPoints": {
+          "description": "Points where other plugins can extend this plugin",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^([a-z][a-z0-9]*\\.)+extension\\.[a-z][a-z0-9._]+$",
+                "description": "Unique extension point identifier"
+              },
+              "name": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "action",
+                  "hook",
+                  "widget",
+                  "provider",
+                  "transformer",
+                  "validator",
+                  "decorator"
+                ]
+              },
+              "contract": {
+                "type": "object",
+                "properties": {
+                  "input": {
+                    "description": "Input type/schema",
+                    "type": "string"
+                  },
+                  "output": {
+                    "description": "Output type/schema",
+                    "type": "string"
+                  },
+                  "signature": {
+                    "description": "Function signature if applicable",
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "cardinality": {
+                "default": "multiple",
+                "description": "Whether multiple extensions can register to this point",
+                "type": "string",
+                "enum": [
+                  "single",
+                  "multiple"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "type",
+              "cardinality"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "extensions": {
+          "description": "Extensions contributed to other plugins",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "targetPluginId": {
+                "type": "string",
+                "description": "Plugin ID being extended"
+              },
+              "extensionPointId": {
+                "type": "string",
+                "description": "Extension point identifier"
+              },
+              "implementation": {
+                "type": "string",
+                "description": "Path to implementation module"
+              },
+              "priority": {
+                "default": 100,
+                "description": "Registration priority (lower = higher priority)",
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "targetPluginId",
+              "extensionPointId",
+              "implementation",
+              "priority"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "compatibility": {
+      "type": "object",
+      "properties": {
+        "minObjectStackVersion": {
+          "type": "string"
+        },
+        "maxObjectStackVersion": {
+          "type": "string"
+        },
+        "nodeVersion": {
+          "type": "string"
+        },
+        "platforms": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "linux",
+              "darwin",
+              "win32",
+              "browser"
+            ]
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "links": {
+      "type": "object",
+      "properties": {
+        "homepage": {
+          "type": "string",
+          "format": "uri"
+        },
+        "repository": {
+          "type": "string",
+          "format": "uri"
+        },
+        "documentation": {
+          "type": "string",
+          "format": "uri"
+        },
+        "bugs": {
+          "type": "string",
+          "format": "uri"
+        },
+        "changelog": {
+          "type": "string",
+          "format": "uri"
+        }
+      },
+      "additionalProperties": false
+    },
+    "media": {
+      "type": "object",
+      "properties": {
+        "icon": {
+          "type": "string",
+          "format": "uri"
+        },
+        "logo": {
+          "type": "string",
+          "format": "uri"
+        },
+        "screenshots": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "video": {
+          "type": "string",
+          "format": "uri"
+        }
+      },
+      "additionalProperties": false
+    },
+    "quality": {
+      "type": "object",
+      "properties": {
+        "testCoverage": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "documentationScore": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "codeQuality": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "securityScan": {
+          "type": "object",
+          "properties": {
+            "lastScanDate": {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+            },
+            "vulnerabilities": {
+              "type": "object",
+              "properties": {
+                "critical": {
+                  "default": 0,
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "high": {
+                  "default": 0,
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "medium": {
+                  "default": 0,
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "low": {
+                  "default": 0,
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "critical",
+                "high",
+                "medium",
+                "low"
+              ],
+              "additionalProperties": false
+            },
+            "passed": {
+              "default": false,
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "passed"
+          ],
+          "additionalProperties": false
+        },
+        "conformanceTests": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "protocolId": {
+                "type": "string",
+                "description": "Protocol being tested"
+              },
+              "passed": {
+                "type": "boolean"
+              },
+              "totalTests": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "passedTests": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "lastRunDate": {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+              }
+            },
+            "required": [
+              "protocolId",
+              "passed",
+              "totalTests",
+              "passedTests"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "statistics": {
+      "type": "object",
+      "properties": {
+        "downloads": {
+          "default": 0,
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "downloadsLastMonth": {
+          "default": 0,
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "activeInstallations": {
+          "default": 0,
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "ratings": {
+          "type": "object",
+          "properties": {
+            "average": {
+              "default": 0,
+              "type": "number",
+              "minimum": 0,
+              "maximum": 5
+            },
+            "count": {
+              "default": 0,
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "distribution": {
+              "type": "object",
+              "properties": {
+                "1": {
+                  "default": 0,
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "2": {
+                  "default": 0,
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "3": {
+                  "default": 0,
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "4": {
+                  "default": 0,
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "5": {
+                  "default": 0,
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "1",
+                "2",
+                "3",
+                "4",
+                "5"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "average",
+            "count"
+          ],
+          "additionalProperties": false
+        },
+        "stars": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "dependents": {
+          "default": 0,
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "downloads",
+        "downloadsLastMonth",
+        "activeInstallations",
+        "dependents"
+      ],
+      "additionalProperties": false
+    },
+    "license": {
+      "description": "SPDX license identifier",
+      "type": "string"
+    },
+    "pricing": {
+      "type": "object",
+      "properties": {
+        "model": {
+          "type": "string",
+          "enum": [
+            "free",
+            "freemium",
+            "paid",
+            "enterprise"
+          ]
+        },
+        "price": {
+          "type": "number",
+          "minimum": 0
+        },
+        "currency": {
+          "default": "USD",
+          "type": "string"
+        },
+        "billingPeriod": {
+          "type": "string",
+          "enum": [
+            "one-time",
+            "monthly",
+            "yearly"
+          ]
+        }
+      },
+      "required": [
+        "model"
+      ],
+      "additionalProperties": false
+    },
+    "publishedAt": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+    },
+    "deprecated": {
+      "default": false,
+      "type": "boolean"
+    },
+    "deprecationMessage": {
+      "type": "string"
+    },
+    "replacedBy": {
+      "description": "Plugin ID that replaces this one",
+      "type": "string"
+    },
+    "flags": {
+      "type": "object",
+      "properties": {
+        "experimental": {
+          "default": false,
+          "type": "boolean"
+        },
+        "beta": {
+          "default": false,
+          "type": "boolean"
+        },
+        "featured": {
+          "default": false,
+          "type": "boolean"
+        },
+        "verified": {
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "experimental",
+        "beta",
+        "featured",
+        "verified"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "id",
+    "version",
+    "name",
+    "vendor",
+    "deprecated"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/PluginRegistryEntry.json",
+  "x-spec-version": "3.0.11"
+}

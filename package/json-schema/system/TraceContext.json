@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "traceId": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{32}$",
+      "description": "Trace ID (32 hex chars)"
+    },
+    "spanId": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{16}$",
+      "description": "Span ID (16 hex chars)"
+    },
+    "traceFlags": {
+      "default": 1,
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255,
+      "description": "Trace flags bitmap"
+    },
+    "traceState": {
+      "type": "object",
+      "properties": {
+        "entries": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Trace state entries"
+        }
+      },
+      "required": [
+        "entries"
+      ],
+      "additionalProperties": false,
+      "description": "Trace state"
+    },
+    "parentSpanId": {
+      "description": "Parent span ID (16 hex chars)",
+      "type": "string",
+      "pattern": "^[0-9a-f]{16}$"
+    },
+    "sampled": {
+      "default": true,
+      "type": "boolean"
+    },
+    "remote": {
+      "default": false,
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "traceId",
+    "spanId",
+    "traceFlags",
+    "sampled",
+    "remote"
+  ],
+  "additionalProperties": false,
+  "description": "Trace context (W3C Trace Context)",
+  "$id": "https://schema.objectstack.io/v3.0.11/system/TraceContext.json",
+  "x-spec-version": "3.0.11"
+}

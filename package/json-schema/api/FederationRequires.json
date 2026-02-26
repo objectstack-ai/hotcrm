@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "field": {
+      "type": "string",
+      "description": "Field with the requirement"
+    },
+    "fields": {
+      "type": "string",
+      "description": "Selection set of required fields (e.g., \"price weight\")"
+    }
+  },
+  "required": [
+    "field",
+    "fields"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/FederationRequires.json",
+  "x-spec-version": "3.0.11"
+}

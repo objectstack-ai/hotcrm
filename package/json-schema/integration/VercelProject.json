@@ -1,0 +1,335 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Vercel project name"
+    },
+    "framework": {
+      "description": "Frontend framework",
+      "type": "string",
+      "enum": [
+        "nextjs",
+        "react",
+        "vue",
+        "nuxtjs",
+        "gatsby",
+        "remix",
+        "astro",
+        "sveltekit",
+        "solid",
+        "angular",
+        "static",
+        "other"
+      ]
+    },
+    "gitRepository": {
+      "description": "Git repository configuration",
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "github",
+            "gitlab",
+            "bitbucket"
+          ],
+          "description": "Git provider"
+        },
+        "repo": {
+          "type": "string",
+          "description": "Repository identifier (e.g., owner/repo)"
+        },
+        "productionBranch": {
+          "default": "main",
+          "description": "Production branch name",
+          "type": "string"
+        },
+        "autoDeployProduction": {
+          "default": true,
+          "description": "Auto-deploy production branch",
+          "type": "boolean"
+        },
+        "autoDeployPreview": {
+          "default": true,
+          "description": "Auto-deploy preview branches",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "repo",
+        "productionBranch",
+        "autoDeployProduction",
+        "autoDeployPreview"
+      ],
+      "additionalProperties": false
+    },
+    "buildConfig": {
+      "description": "Build configuration",
+      "type": "object",
+      "properties": {
+        "buildCommand": {
+          "description": "Build command (e.g., npm run build)",
+          "type": "string"
+        },
+        "outputDirectory": {
+          "description": "Output directory (e.g., .next, dist)",
+          "type": "string"
+        },
+        "installCommand": {
+          "description": "Install command (e.g., npm install, pnpm install)",
+          "type": "string"
+        },
+        "devCommand": {
+          "description": "Development command (e.g., npm run dev)",
+          "type": "string"
+        },
+        "nodeVersion": {
+          "description": "Node.js version (e.g., 18.x, 20.x)",
+          "type": "string"
+        },
+        "env": {
+          "description": "Build environment variables",
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "deploymentConfig": {
+      "description": "Deployment configuration",
+      "type": "object",
+      "properties": {
+        "autoDeployment": {
+          "default": true,
+          "description": "Enable automatic deployments",
+          "type": "boolean"
+        },
+        "regions": {
+          "description": "Deployment regions",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "iad1",
+              "sfo1",
+              "gru1",
+              "lhr1",
+              "fra1",
+              "sin1",
+              "syd1",
+              "hnd1",
+              "icn1"
+            ]
+          }
+        },
+        "enablePreview": {
+          "default": true,
+          "description": "Enable preview deployments",
+          "type": "boolean"
+        },
+        "previewComments": {
+          "default": true,
+          "description": "Post preview URLs in PR comments",
+          "type": "boolean"
+        },
+        "productionProtection": {
+          "default": true,
+          "description": "Require approval for production deployments",
+          "type": "boolean"
+        },
+        "deployHooks": {
+          "description": "Deploy hooks",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Hook name"
+              },
+              "url": {
+                "type": "string",
+                "format": "uri",
+                "description": "Deploy hook URL"
+              },
+              "branch": {
+                "description": "Target branch",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "url"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "autoDeployment",
+        "enablePreview",
+        "previewComments",
+        "productionProtection"
+      ],
+      "additionalProperties": false
+    },
+    "domains": {
+      "description": "Custom domains",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string",
+            "description": "Domain name (e.g., app.example.com)"
+          },
+          "httpsRedirect": {
+            "default": true,
+            "description": "Redirect HTTP to HTTPS",
+            "type": "boolean"
+          },
+          "customCertificate": {
+            "description": "Custom SSL certificate",
+            "type": "object",
+            "properties": {
+              "cert": {
+                "type": "string",
+                "description": "SSL certificate"
+              },
+              "key": {
+                "type": "string",
+                "description": "Private key"
+              },
+              "ca": {
+                "description": "Certificate authority",
+                "type": "string"
+              }
+            },
+            "required": [
+              "cert",
+              "key"
+            ],
+            "additionalProperties": false
+          },
+          "gitBranch": {
+            "description": "Git branch to deploy to this domain",
+            "type": "string"
+          }
+        },
+        "required": [
+          "domain",
+          "httpsRedirect"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "environmentVariables": {
+      "description": "Environment variables",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Environment variable name"
+          },
+          "value": {
+            "type": "string",
+            "description": "Environment variable value"
+          },
+          "target": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "production",
+                "preview",
+                "development"
+              ]
+            },
+            "description": "Target environments"
+          },
+          "isSecret": {
+            "default": false,
+            "description": "Encrypt this variable",
+            "type": "boolean"
+          },
+          "gitBranch": {
+            "description": "Specific git branch",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "value",
+          "target",
+          "isSecret"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "edgeFunctions": {
+      "description": "Edge functions",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Edge function name"
+          },
+          "path": {
+            "type": "string",
+            "description": "Function path (e.g., /api/*)"
+          },
+          "regions": {
+            "description": "Specific regions for this function",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "memoryLimit": {
+            "default": 1024,
+            "description": "Memory limit in MB",
+            "type": "integer",
+            "minimum": 128,
+            "maximum": 3008
+          },
+          "timeout": {
+            "default": 10,
+            "description": "Timeout in seconds",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 300
+          }
+        },
+        "required": [
+          "name",
+          "path",
+          "memoryLimit",
+          "timeout"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "rootDirectory": {
+      "description": "Root directory (for monorepos)",
+      "type": "string"
+    }
+  },
+  "required": [
+    "name"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/integration/VercelProject.json",
+  "x-spec-version": "3.0.11"
+}

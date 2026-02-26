@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Package ID to enable"
+    }
+  },
+  "required": [
+    "id"
+  ],
+  "additionalProperties": false,
+  "description": "Enable package request",
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/EnablePackageRequest.json",
+  "x-spec-version": "3.0.11"
+}

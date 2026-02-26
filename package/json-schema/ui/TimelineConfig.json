@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "startDateField": {
+      "type": "string",
+      "description": "Field for timeline item start date"
+    },
+    "endDateField": {
+      "description": "Field for timeline item end date",
+      "type": "string"
+    },
+    "titleField": {
+      "type": "string",
+      "description": "Field to display as timeline item title"
+    },
+    "groupByField": {
+      "description": "Field to group timeline rows",
+      "type": "string"
+    },
+    "colorField": {
+      "description": "Field to determine item color",
+      "type": "string"
+    },
+    "scale": {
+      "default": "week",
+      "description": "Default timeline scale",
+      "type": "string",
+      "enum": [
+        "hour",
+        "day",
+        "week",
+        "month",
+        "quarter",
+        "year"
+      ]
+    }
+  },
+  "required": [
+    "startDateField",
+    "titleField",
+    "scale"
+  ],
+  "additionalProperties": false,
+  "description": "Timeline view configuration",
+  "$id": "https://schema.objectstack.io/v3.0.11/ui/TimelineConfig.json",
+  "x-spec-version": "3.0.11"
+}

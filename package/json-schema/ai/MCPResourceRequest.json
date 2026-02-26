@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "uri": {
+      "type": "string",
+      "description": "Resource URI to fetch"
+    },
+    "parameters": {
+      "description": "URI template parameters",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
+    }
+  },
+  "required": [
+    "uri"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/ai/MCPResourceRequest.json",
+  "x-spec-version": "3.0.11"
+}

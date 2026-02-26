@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "value": {
+      "type": "number",
+      "minimum": 0,
+      "description": "RTO value"
+    },
+    "unit": {
+      "default": "minutes",
+      "description": "RTO time unit",
+      "type": "string",
+      "enum": [
+        "seconds",
+        "minutes",
+        "hours"
+      ]
+    }
+  },
+  "required": [
+    "value",
+    "unit"
+  ],
+  "additionalProperties": false,
+  "description": "Recovery Time Objective (maximum acceptable downtime)",
+  "$id": "https://schema.objectstack.io/v3.0.11/system/RTO.json",
+  "x-spec-version": "3.0.11"
+}

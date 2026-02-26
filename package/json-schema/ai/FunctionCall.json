@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Function name"
+    },
+    "arguments": {
+      "type": "string",
+      "description": "JSON string of function arguments"
+    },
+    "result": {
+      "description": "Function execution result",
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "arguments"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/ai/FunctionCall.json",
+  "x-spec-version": "3.0.11"
+}

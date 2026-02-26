@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "header",
+    "subdomain",
+    "path",
+    "token",
+    "lookup"
+  ],
+  "description": "Strategy for resolving tenant identity from request context",
+  "$id": "https://schema.objectstack.io/v3.0.11/data/TenantResolverStrategy.json",
+  "x-spec-version": "3.0.11"
+}

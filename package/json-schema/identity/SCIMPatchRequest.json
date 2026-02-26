@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schemas": {
+      "default": [
+        "urn:ietf:params:scim:api:messages:2.0:PatchOp"
+      ],
+      "description": "SCIM schema URIs",
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "Operations": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "op": {
+            "type": "string",
+            "enum": [
+              "add",
+              "remove",
+              "replace"
+            ],
+            "description": "Operation type"
+          },
+          "path": {
+            "description": "Attribute path (optional for add)",
+            "type": "string"
+          },
+          "value": {
+            "description": "Value to set"
+          }
+        },
+        "required": [
+          "op"
+        ],
+        "additionalProperties": false
+      },
+      "description": "Patch operations"
+    }
+  },
+  "required": [
+    "schemas",
+    "Operations"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/identity/SCIMPatchRequest.json",
+  "x-spec-version": "3.0.11"
+}

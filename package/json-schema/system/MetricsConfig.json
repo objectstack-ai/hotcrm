@@ -1,0 +1,776 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[a-z_][a-z0-9_]*$",
+      "description": "Configuration name (snake_case, max 64 chars)"
+    },
+    "label": {
+      "type": "string",
+      "description": "Display label"
+    },
+    "enabled": {
+      "default": true,
+      "type": "boolean"
+    },
+    "metrics": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z_][a-z0-9_]*$",
+            "description": "Metric name (snake_case)"
+          },
+          "label": {
+            "description": "Display label",
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "counter",
+              "gauge",
+              "histogram",
+              "summary"
+            ],
+            "description": "Metric type"
+          },
+          "unit": {
+            "description": "Metric unit",
+            "type": "string",
+            "enum": [
+              "nanoseconds",
+              "microseconds",
+              "milliseconds",
+              "seconds",
+              "minutes",
+              "hours",
+              "days",
+              "bytes",
+              "kilobytes",
+              "megabytes",
+              "gigabytes",
+              "terabytes",
+              "requests_per_second",
+              "events_per_second",
+              "bytes_per_second",
+              "percent",
+              "ratio",
+              "count",
+              "operations",
+              "custom"
+            ]
+          },
+          "description": {
+            "description": "Metric description",
+            "type": "string"
+          },
+          "labelNames": {
+            "default": [],
+            "description": "Label names",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "histogram": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "linear",
+                  "exponential",
+                  "explicit"
+                ],
+                "description": "Bucket type"
+              },
+              "linear": {
+                "type": "object",
+                "properties": {
+                  "start": {
+                    "type": "number",
+                    "description": "Start value"
+                  },
+                  "width": {
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "description": "Bucket width"
+                  },
+                  "count": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991,
+                    "description": "Number of buckets"
+                  }
+                },
+                "required": [
+                  "start",
+                  "width",
+                  "count"
+                ],
+                "additionalProperties": false
+              },
+              "exponential": {
+                "type": "object",
+                "properties": {
+                  "start": {
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "description": "Start value"
+                  },
+                  "factor": {
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "description": "Growth factor"
+                  },
+                  "count": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991,
+                    "description": "Number of buckets"
+                  }
+                },
+                "required": [
+                  "start",
+                  "factor",
+                  "count"
+                ],
+                "additionalProperties": false
+              },
+              "explicit": {
+                "type": "object",
+                "properties": {
+                  "boundaries": {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    },
+                    "description": "Bucket boundaries"
+                  }
+                },
+                "required": [
+                  "boundaries"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "type"
+            ],
+            "additionalProperties": false,
+            "description": "Histogram bucket configuration"
+          },
+          "summary": {
+            "type": "object",
+            "properties": {
+              "quantiles": {
+                "default": [
+                  0.5,
+                  0.9,
+                  0.99
+                ],
+                "type": "array",
+                "items": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              },
+              "maxAge": {
+                "default": 600,
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991
+              },
+              "ageBuckets": {
+                "default": 5,
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "quantiles",
+              "maxAge",
+              "ageBuckets"
+            ],
+            "additionalProperties": false
+          },
+          "enabled": {
+            "default": true,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "name",
+          "type",
+          "labelNames",
+          "enabled"
+        ],
+        "additionalProperties": false,
+        "description": "Metric definition"
+      }
+    },
+    "defaultLabels": {
+      "default": {},
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "string"
+      },
+      "description": "Metric labels"
+    },
+    "aggregations": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "sum",
+              "avg",
+              "min",
+              "max",
+              "count",
+              "p50",
+              "p75",
+              "p90",
+              "p95",
+              "p99",
+              "p999",
+              "rate",
+              "stddev"
+            ],
+            "description": "Aggregation type"
+          },
+          "window": {
+            "type": "object",
+            "properties": {
+              "size": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991,
+                "description": "Window size in seconds"
+              },
+              "sliding": {
+                "default": false,
+                "type": "boolean"
+              },
+              "slideInterval": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "size",
+              "sliding"
+            ],
+            "additionalProperties": false
+          },
+          "groupBy": {
+            "description": "Group by label names",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "filters": {
+            "description": "Filter criteria",
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {}
+          }
+        },
+        "required": [
+          "type"
+        ],
+        "additionalProperties": false,
+        "description": "Metric aggregation configuration"
+      }
+    },
+    "slis": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z_][a-z0-9_]*$",
+            "description": "SLI name (snake_case)"
+          },
+          "label": {
+            "type": "string",
+            "description": "Display label"
+          },
+          "description": {
+            "description": "SLI description",
+            "type": "string"
+          },
+          "metric": {
+            "type": "string",
+            "description": "Base metric name"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "availability",
+              "latency",
+              "throughput",
+              "error_rate",
+              "saturation",
+              "custom"
+            ],
+            "description": "SLI type"
+          },
+          "successCriteria": {
+            "type": "object",
+            "properties": {
+              "threshold": {
+                "type": "number",
+                "description": "Threshold value"
+              },
+              "operator": {
+                "type": "string",
+                "enum": [
+                  "lt",
+                  "lte",
+                  "gt",
+                  "gte",
+                  "eq"
+                ],
+                "description": "Comparison operator"
+              },
+              "percentile": {
+                "description": "Percentile (0-1)",
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
+            },
+            "required": [
+              "threshold",
+              "operator"
+            ],
+            "additionalProperties": false,
+            "description": "Success criteria"
+          },
+          "window": {
+            "type": "object",
+            "properties": {
+              "size": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991,
+                "description": "Window size in seconds"
+              },
+              "rolling": {
+                "default": true,
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "size",
+              "rolling"
+            ],
+            "additionalProperties": false,
+            "description": "Measurement window"
+          },
+          "enabled": {
+            "default": true,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "name",
+          "label",
+          "metric",
+          "type",
+          "successCriteria",
+          "window",
+          "enabled"
+        ],
+        "additionalProperties": false,
+        "description": "Service Level Indicator"
+      }
+    },
+    "slos": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z_][a-z0-9_]*$",
+            "description": "SLO name (snake_case)"
+          },
+          "label": {
+            "type": "string",
+            "description": "Display label"
+          },
+          "description": {
+            "description": "SLO description",
+            "type": "string"
+          },
+          "sli": {
+            "type": "string",
+            "description": "SLI name"
+          },
+          "target": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "Target percentage"
+          },
+          "period": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "rolling",
+                  "calendar"
+                ],
+                "description": "Period type"
+              },
+              "duration": {
+                "description": "Duration in seconds",
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991
+              },
+              "calendar": {
+                "type": "string",
+                "enum": [
+                  "daily",
+                  "weekly",
+                  "monthly",
+                  "quarterly",
+                  "yearly"
+                ]
+              }
+            },
+            "required": [
+              "type"
+            ],
+            "additionalProperties": false,
+            "description": "Time period"
+          },
+          "errorBudget": {
+            "type": "object",
+            "properties": {
+              "enabled": {
+                "default": true,
+                "type": "boolean"
+              },
+              "alertThreshold": {
+                "default": 80,
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "burnRateWindows": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "window": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0,
+                      "maximum": 9007199254740991,
+                      "description": "Window size"
+                    },
+                    "threshold": {
+                      "type": "number",
+                      "exclusiveMinimum": 0,
+                      "description": "Burn rate threshold"
+                    }
+                  },
+                  "required": [
+                    "window",
+                    "threshold"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "enabled",
+              "alertThreshold"
+            ],
+            "additionalProperties": false
+          },
+          "alerts": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Alert name"
+                },
+                "severity": {
+                  "type": "string",
+                  "enum": [
+                    "info",
+                    "warning",
+                    "critical"
+                  ],
+                  "description": "Alert severity"
+                },
+                "condition": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "slo_breach",
+                        "error_budget",
+                        "burn_rate"
+                      ],
+                      "description": "Condition type"
+                    },
+                    "threshold": {
+                      "description": "Threshold value",
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "type"
+                  ],
+                  "additionalProperties": false,
+                  "description": "Alert condition"
+                }
+              },
+              "required": [
+                "name",
+                "severity",
+                "condition"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "enabled": {
+            "default": true,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "name",
+          "label",
+          "sli",
+          "target",
+          "period",
+          "alerts",
+          "enabled"
+        ],
+        "additionalProperties": false,
+        "description": "Service Level Objective"
+      }
+    },
+    "exports": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "prometheus",
+              "openmetrics",
+              "graphite",
+              "statsd",
+              "influxdb",
+              "datadog",
+              "cloudwatch",
+              "stackdriver",
+              "azure_monitor",
+              "http",
+              "custom"
+            ],
+            "description": "Export type"
+          },
+          "endpoint": {
+            "description": "Export endpoint",
+            "type": "string"
+          },
+          "interval": {
+            "default": 60,
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          },
+          "batch": {
+            "type": "object",
+            "properties": {
+              "enabled": {
+                "default": true,
+                "type": "boolean"
+              },
+              "size": {
+                "default": 1000,
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "enabled",
+              "size"
+            ],
+            "additionalProperties": false
+          },
+          "auth": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "none",
+                  "basic",
+                  "bearer",
+                  "api_key"
+                ],
+                "description": "Auth type"
+              },
+              "username": {
+                "type": "string"
+              },
+              "password": {
+                "type": "string"
+              },
+              "token": {
+                "type": "string"
+              },
+              "apiKey": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "type"
+            ],
+            "additionalProperties": false
+          },
+          "config": {
+            "description": "Additional configuration",
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {}
+          }
+        },
+        "required": [
+          "type",
+          "interval"
+        ],
+        "additionalProperties": false,
+        "description": "Metric export configuration"
+      }
+    },
+    "collectionInterval": {
+      "default": 15,
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    },
+    "retention": {
+      "type": "object",
+      "properties": {
+        "period": {
+          "default": 604800,
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "downsampling": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "afterSeconds": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991,
+                "description": "Downsample after seconds"
+              },
+              "resolution": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991,
+                "description": "Downsampled resolution"
+              }
+            },
+            "required": [
+              "afterSeconds",
+              "resolution"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "period"
+      ],
+      "additionalProperties": false
+    },
+    "cardinalityLimits": {
+      "type": "object",
+      "properties": {
+        "maxLabelCombinations": {
+          "default": 10000,
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "onLimitExceeded": {
+          "default": "alert",
+          "type": "string",
+          "enum": [
+            "drop",
+            "sample",
+            "alert"
+          ]
+        }
+      },
+      "required": [
+        "maxLabelCombinations",
+        "onLimitExceeded"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "name",
+    "label",
+    "enabled",
+    "metrics",
+    "defaultLabels",
+    "aggregations",
+    "slis",
+    "slos",
+    "exports",
+    "collectionInterval"
+  ],
+  "additionalProperties": false,
+  "description": "Metrics configuration",
+  "$id": "https://schema.objectstack.io/v3.0.11/system/MetricsConfig.json",
+  "x-spec-version": "3.0.11"
+}

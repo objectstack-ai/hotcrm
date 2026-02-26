@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "enabled": {
+      "type": "boolean",
+      "description": "Enable table partitioning"
+    },
+    "strategy": {
+      "type": "string",
+      "enum": [
+        "range",
+        "hash",
+        "list"
+      ],
+      "description": "Partitioning strategy: range (date ranges), hash (consistent hashing), list (predefined values)"
+    },
+    "key": {
+      "type": "string",
+      "description": "Field name to partition by"
+    },
+    "interval": {
+      "description": "Partition interval for range strategy (e.g., \"1 month\", \"1 year\")",
+      "type": "string"
+    }
+  },
+  "required": [
+    "enabled",
+    "strategy",
+    "key"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/data/PartitioningConfig.json",
+  "x-spec-version": "3.0.11"
+}

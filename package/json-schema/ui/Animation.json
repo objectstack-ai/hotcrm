@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "duration": {
+      "type": "object",
+      "properties": {
+        "fast": {
+          "description": "Fast animation (e.g., 150ms)",
+          "type": "string"
+        },
+        "base": {
+          "description": "Base animation (e.g., 300ms)",
+          "type": "string"
+        },
+        "slow": {
+          "description": "Slow animation (e.g., 500ms)",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "timing": {
+      "type": "object",
+      "properties": {
+        "linear": {
+          "description": "Linear timing function",
+          "type": "string"
+        },
+        "ease": {
+          "description": "Ease timing function",
+          "type": "string"
+        },
+        "ease_in": {
+          "description": "Ease-in timing function",
+          "type": "string"
+        },
+        "ease_out": {
+          "description": "Ease-out timing function",
+          "type": "string"
+        },
+        "ease_in_out": {
+          "description": "Ease-in-out timing function",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/ui/Animation.json",
+  "x-spec-version": "3.0.11"
+}

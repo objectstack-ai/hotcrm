@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "field": {
+      "type": "string"
+    },
+    "order": {
+      "default": "asc",
+      "type": "string",
+      "enum": [
+        "asc",
+        "desc"
+      ]
+    }
+  },
+  "required": [
+    "field",
+    "order"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/data/SortNode.json",
+  "x-spec-version": "3.0.11"
+}

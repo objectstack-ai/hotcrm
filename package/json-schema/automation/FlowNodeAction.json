@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "start",
+    "end",
+    "decision",
+    "assignment",
+    "loop",
+    "create_record",
+    "update_record",
+    "delete_record",
+    "get_record",
+    "http_request",
+    "script",
+    "screen",
+    "wait",
+    "subflow",
+    "connector_action",
+    "parallel_gateway",
+    "join_gateway",
+    "boundary_event"
+  ],
+  "$id": "https://schema.objectstack.io/v3.0.11/automation/FlowNodeAction.json",
+  "x-spec-version": "3.0.11"
+}

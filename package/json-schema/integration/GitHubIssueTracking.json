@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "enabled": {
+      "default": true,
+      "description": "Enable issue tracking",
+      "type": "boolean"
+    },
+    "defaultLabels": {
+      "description": "Default issue labels",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "templatePaths": {
+      "description": "Issue template paths",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "autoAssign": {
+      "default": false,
+      "description": "Auto-assign issues",
+      "type": "boolean"
+    },
+    "autoCloseStale": {
+      "description": "Auto-close stale issues configuration",
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "type": "boolean"
+        },
+        "daysBeforeStale": {
+          "default": 60,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "daysBeforeClose": {
+          "default": 7,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "staleLabel": {
+          "default": "stale",
+          "type": "string"
+        }
+      },
+      "required": [
+        "enabled",
+        "daysBeforeStale",
+        "daysBeforeClose",
+        "staleLabel"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "enabled",
+    "autoAssign"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/integration/GitHubIssueTracking.json",
+  "x-spec-version": "3.0.11"
+}

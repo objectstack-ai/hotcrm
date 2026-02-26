@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "global",
+        "user",
+        "agent",
+        "object",
+        "project",
+        "department"
+      ]
+    },
+    "scope": {
+      "description": "Scope identifier (userId, agentId, etc.)",
+      "type": "string"
+    },
+    "maxCost": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Maximum cost limit"
+    },
+    "currency": {
+      "default": "USD",
+      "type": "string"
+    },
+    "period": {
+      "type": "string",
+      "enum": [
+        "hourly",
+        "daily",
+        "weekly",
+        "monthly",
+        "quarterly",
+        "yearly",
+        "custom"
+      ]
+    },
+    "customPeriodDays": {
+      "description": "Custom period in days",
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    },
+    "softLimit": {
+      "description": "Soft limit for warnings",
+      "type": "number",
+      "minimum": 0
+    },
+    "warnThresholds": {
+      "description": "Warning thresholds (e.g., [0.5, 0.8, 0.95])",
+      "type": "array",
+      "items": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      }
+    },
+    "enforced": {
+      "default": true,
+      "description": "Block requests when exceeded",
+      "type": "boolean"
+    },
+    "gracePeriodSeconds": {
+      "default": 0,
+      "description": "Grace period after limit exceeded",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "allowRollover": {
+      "default": false,
+      "description": "Allow unused budget to rollover",
+      "type": "boolean"
+    },
+    "maxRolloverPercentage": {
+      "description": "Max rollover as % of limit",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "name": {
+      "description": "Budget name",
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "active": {
+      "default": true,
+      "type": "boolean"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "type",
+    "maxCost",
+    "currency",
+    "period",
+    "enforced",
+    "gracePeriodSeconds",
+    "allowRollover",
+    "active"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/ai/BudgetLimit.json",
+  "x-spec-version": "3.0.11"
+}

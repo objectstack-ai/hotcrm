@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "description": "Record ID (required for update/delete)",
+      "type": "string"
+    },
+    "data": {
+      "description": "Record data (required for create/update/upsert)",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
+    },
+    "externalId": {
+      "description": "External ID for upsert matching",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/BatchRecord.json",
+  "x-spec-version": "3.0.11"
+}

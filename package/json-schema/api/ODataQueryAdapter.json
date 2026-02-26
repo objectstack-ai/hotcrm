@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "version": {
+      "default": "v4",
+      "description": "OData version",
+      "type": "string",
+      "enum": [
+        "v2",
+        "v4"
+      ]
+    },
+    "usePrefix": {
+      "default": true,
+      "description": "Use $ prefix for system query options ($filter vs filter)",
+      "type": "boolean"
+    },
+    "stringFunctions": {
+      "description": "Supported OData string functions",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "contains",
+          "startswith",
+          "endswith",
+          "tolower",
+          "toupper",
+          "trim",
+          "concat",
+          "substring",
+          "length"
+        ]
+      }
+    },
+    "expand": {
+      "description": "$expand configuration",
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": true,
+          "description": "Enable $expand support",
+          "type": "boolean"
+        },
+        "maxDepth": {
+          "default": 3,
+          "description": "Maximum expand depth",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "enabled",
+        "maxDepth"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "version",
+    "usePrefix"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/ODataQueryAdapter.json",
+  "x-spec-version": "3.0.11"
+}

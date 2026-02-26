@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "minScale": {
+      "description": "Minimum scale factor (e.g., 0.5 for 50%)",
+      "type": "number"
+    },
+    "maxScale": {
+      "description": "Maximum scale factor (e.g., 3.0 for 300%)",
+      "type": "number"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Pinch/zoom gesture recognition settings",
+  "$id": "https://schema.objectstack.io/v3.0.11/ui/PinchGestureConfig.json",
+  "x-spec-version": "3.0.11"
+}

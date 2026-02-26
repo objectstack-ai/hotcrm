@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "redact",
+    "partial",
+    "hash",
+    "tokenize",
+    "randomize",
+    "nullify",
+    "substitute"
+  ],
+  "description": "Data masking strategy for PII protection",
+  "$id": "https://schema.objectstack.io/v3.0.11/system/MaskingStrategy.json",
+  "x-spec-version": "3.0.11"
+}

@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "success": {
+      "type": "boolean",
+      "description": "Whether invalidation succeeded"
+    },
+    "invalidated": {
+      "type": "number",
+      "description": "Number of cache entries invalidated"
+    },
+    "targets": {
+      "description": "List of invalidated resources",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "success",
+    "invalidated"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/CacheInvalidationResponse.json",
+  "x-spec-version": "3.0.11"
+}

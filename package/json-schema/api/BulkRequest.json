@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "records": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "propertyNames": {
+          "type": "string"
+        },
+        "additionalProperties": {},
+        "description": "Key-value map of record data"
+      },
+      "description": "Array of records to process"
+    },
+    "allOrNone": {
+      "default": true,
+      "description": "If true, rollback entire transaction on any failure",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "records",
+    "allOrNone"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/BulkRequest.json",
+  "x-spec-version": "3.0.11"
+}

@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "message": {
+      "type": "string",
+      "description": "User message"
+    },
+    "conversationId": {
+      "description": "Conversation ID for context",
+      "type": "string"
+    },
+    "context": {
+      "description": "Additional context data",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
+    }
+  },
+  "required": [
+    "message"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/AiChatRequest.json",
+  "x-spec-version": "3.0.11"
+}

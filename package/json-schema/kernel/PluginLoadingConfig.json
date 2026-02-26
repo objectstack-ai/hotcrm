@@ -1,0 +1,862 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "strategy": {
+      "default": "lazy",
+      "type": "string",
+      "enum": [
+        "eager",
+        "lazy",
+        "parallel",
+        "deferred",
+        "on-demand"
+      ],
+      "description": "Plugin loading strategy"
+    },
+    "preload": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "type": "boolean"
+        },
+        "priority": {
+          "default": 100,
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "resources": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "metadata",
+              "dependencies",
+              "assets",
+              "code",
+              "services"
+            ]
+          }
+        },
+        "conditions": {
+          "type": "object",
+          "properties": {
+            "routes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "roles": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "deviceType": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "desktop",
+                  "mobile",
+                  "tablet"
+                ]
+              }
+            },
+            "minNetworkSpeed": {
+              "type": "string",
+              "enum": [
+                "slow-2g",
+                "2g",
+                "3g",
+                "4g"
+              ]
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "enabled",
+        "priority"
+      ],
+      "additionalProperties": false,
+      "description": "Plugin preloading configuration"
+    },
+    "codeSplitting": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": true,
+          "type": "boolean"
+        },
+        "strategy": {
+          "default": "feature",
+          "type": "string",
+          "enum": [
+            "route",
+            "feature",
+            "size",
+            "custom"
+          ]
+        },
+        "chunkNaming": {
+          "default": "hashed",
+          "type": "string",
+          "enum": [
+            "hashed",
+            "named",
+            "sequential"
+          ]
+        },
+        "maxChunkSize": {
+          "description": "Max chunk size in KB",
+          "type": "integer",
+          "minimum": 10,
+          "maximum": 9007199254740991
+        },
+        "sharedDependencies": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "default": true,
+              "type": "boolean"
+            },
+            "minChunks": {
+              "default": 2,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "enabled",
+            "minChunks"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "enabled",
+        "strategy",
+        "chunkNaming"
+      ],
+      "additionalProperties": false,
+      "description": "Plugin code splitting configuration"
+    },
+    "dynamicImport": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": true,
+          "type": "boolean"
+        },
+        "mode": {
+          "default": "async",
+          "type": "string",
+          "enum": [
+            "async",
+            "sync",
+            "eager",
+            "lazy"
+          ]
+        },
+        "prefetch": {
+          "default": false,
+          "description": "Prefetch module in idle time",
+          "type": "boolean"
+        },
+        "preload": {
+          "default": false,
+          "description": "Preload module in parallel with parent",
+          "type": "boolean"
+        },
+        "webpackChunkName": {
+          "description": "Custom chunk name for webpack",
+          "type": "string"
+        },
+        "timeout": {
+          "default": 30000,
+          "description": "Dynamic import timeout (ms)",
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 9007199254740991
+        },
+        "retry": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "default": true,
+              "type": "boolean"
+            },
+            "maxAttempts": {
+              "default": 3,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10
+            },
+            "backoffMs": {
+              "default": 1000,
+              "description": "Exponential backoff base delay",
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "enabled",
+            "maxAttempts",
+            "backoffMs"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "enabled",
+        "mode",
+        "prefetch",
+        "preload",
+        "timeout"
+      ],
+      "additionalProperties": false,
+      "description": "Plugin dynamic import configuration"
+    },
+    "initialization": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "default": "async",
+          "type": "string",
+          "enum": [
+            "sync",
+            "async",
+            "parallel",
+            "sequential"
+          ]
+        },
+        "timeout": {
+          "default": 30000,
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 9007199254740991
+        },
+        "priority": {
+          "default": 100,
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "critical": {
+          "default": false,
+          "description": "If true, kernel bootstrap fails if plugin fails",
+          "type": "boolean"
+        },
+        "retry": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "default": false,
+              "type": "boolean"
+            },
+            "maxAttempts": {
+              "default": 3,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 5
+            },
+            "backoffMs": {
+              "default": 1000,
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "enabled",
+            "maxAttempts",
+            "backoffMs"
+          ],
+          "additionalProperties": false
+        },
+        "healthCheckInterval": {
+          "description": "Health check interval in ms (0 = disabled)",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "mode",
+        "timeout",
+        "priority",
+        "critical"
+      ],
+      "additionalProperties": false,
+      "description": "Plugin initialization configuration"
+    },
+    "dependencyResolution": {
+      "type": "object",
+      "properties": {
+        "strategy": {
+          "default": "compatible",
+          "type": "string",
+          "enum": [
+            "strict",
+            "compatible",
+            "latest",
+            "pinned"
+          ]
+        },
+        "peerDependencies": {
+          "type": "object",
+          "properties": {
+            "resolve": {
+              "default": true,
+              "type": "boolean"
+            },
+            "onMissing": {
+              "default": "warn",
+              "type": "string",
+              "enum": [
+                "error",
+                "warn",
+                "ignore"
+              ]
+            },
+            "onMismatch": {
+              "default": "warn",
+              "type": "string",
+              "enum": [
+                "error",
+                "warn",
+                "ignore"
+              ]
+            }
+          },
+          "required": [
+            "resolve",
+            "onMissing",
+            "onMismatch"
+          ],
+          "additionalProperties": false
+        },
+        "optionalDependencies": {
+          "type": "object",
+          "properties": {
+            "load": {
+              "default": true,
+              "type": "boolean"
+            },
+            "onFailure": {
+              "default": "warn",
+              "type": "string",
+              "enum": [
+                "warn",
+                "ignore"
+              ]
+            }
+          },
+          "required": [
+            "load",
+            "onFailure"
+          ],
+          "additionalProperties": false
+        },
+        "conflictResolution": {
+          "default": "latest",
+          "type": "string",
+          "enum": [
+            "fail",
+            "latest",
+            "oldest",
+            "manual"
+          ]
+        },
+        "circularDependencies": {
+          "default": "warn",
+          "type": "string",
+          "enum": [
+            "error",
+            "warn",
+            "allow"
+          ]
+        }
+      },
+      "required": [
+        "strategy",
+        "conflictResolution",
+        "circularDependencies"
+      ],
+      "additionalProperties": false,
+      "description": "Plugin dependency resolution configuration"
+    },
+    "hotReload": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "type": "boolean"
+        },
+        "environment": {
+          "default": "development",
+          "description": "Target environment controlling safety level",
+          "type": "string",
+          "enum": [
+            "development",
+            "staging",
+            "production"
+          ]
+        },
+        "strategy": {
+          "default": "full",
+          "type": "string",
+          "enum": [
+            "full",
+            "partial",
+            "state-preserve"
+          ]
+        },
+        "watchPatterns": {
+          "description": "Glob patterns for files to watch",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "ignorePatterns": {
+          "description": "Glob patterns for files to ignore",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "debounceMs": {
+          "default": 300,
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "preserveState": {
+          "default": false,
+          "type": "boolean"
+        },
+        "stateSerialization": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "default": false,
+              "type": "boolean"
+            },
+            "handler": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "enabled"
+          ],
+          "additionalProperties": false
+        },
+        "hooks": {
+          "type": "object",
+          "properties": {
+            "beforeReload": {
+              "description": "Function to call before reload",
+              "type": "string"
+            },
+            "afterReload": {
+              "description": "Function to call after reload",
+              "type": "string"
+            },
+            "onError": {
+              "description": "Function to call on reload error",
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "productionSafety": {
+          "type": "object",
+          "properties": {
+            "healthValidation": {
+              "default": true,
+              "description": "Run health checks after reload before accepting traffic",
+              "type": "boolean"
+            },
+            "rollbackOnFailure": {
+              "default": true,
+              "description": "Auto-rollback if reloaded plugin fails health check",
+              "type": "boolean"
+            },
+            "healthTimeout": {
+              "default": 30000,
+              "description": "Health check timeout after reload in ms",
+              "type": "integer",
+              "minimum": 1000,
+              "maximum": 9007199254740991
+            },
+            "drainConnections": {
+              "default": true,
+              "description": "Gracefully drain active requests before reloading",
+              "type": "boolean"
+            },
+            "drainTimeout": {
+              "default": 15000,
+              "description": "Max wait time for connection draining in ms",
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "maxConcurrentReloads": {
+              "default": 1,
+              "description": "Limit concurrent reloads to prevent system instability",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "minReloadInterval": {
+              "default": 5000,
+              "description": "Cooldown period between reloads of the same plugin",
+              "type": "integer",
+              "minimum": 1000,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "healthValidation",
+            "rollbackOnFailure",
+            "healthTimeout",
+            "drainConnections",
+            "drainTimeout",
+            "maxConcurrentReloads",
+            "minReloadInterval"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "enabled",
+        "environment",
+        "strategy",
+        "debounceMs",
+        "preserveState"
+      ],
+      "additionalProperties": false,
+      "description": "Plugin hot reload configuration"
+    },
+    "caching": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": true,
+          "type": "boolean"
+        },
+        "storage": {
+          "default": "memory",
+          "type": "string",
+          "enum": [
+            "memory",
+            "disk",
+            "indexeddb",
+            "hybrid"
+          ]
+        },
+        "keyStrategy": {
+          "default": "version",
+          "type": "string",
+          "enum": [
+            "version",
+            "hash",
+            "timestamp"
+          ]
+        },
+        "ttl": {
+          "description": "Time to live in seconds (0 = infinite)",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maxSize": {
+          "description": "Max cache size in MB",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "invalidateOn": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "version-change",
+              "dependency-change",
+              "manual",
+              "error"
+            ]
+          }
+        },
+        "compression": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "default": false,
+              "type": "boolean"
+            },
+            "algorithm": {
+              "default": "gzip",
+              "type": "string",
+              "enum": [
+                "gzip",
+                "brotli",
+                "deflate"
+              ]
+            }
+          },
+          "required": [
+            "enabled",
+            "algorithm"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "enabled",
+        "storage",
+        "keyStrategy"
+      ],
+      "additionalProperties": false,
+      "description": "Plugin caching configuration"
+    },
+    "sandboxing": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "type": "boolean"
+        },
+        "scope": {
+          "default": "automation-only",
+          "description": "Which plugins are subject to isolation",
+          "type": "string",
+          "enum": [
+            "automation-only",
+            "untrusted-only",
+            "all-plugins"
+          ]
+        },
+        "isolationLevel": {
+          "default": "none",
+          "type": "string",
+          "enum": [
+            "none",
+            "process",
+            "vm",
+            "iframe",
+            "web-worker"
+          ]
+        },
+        "allowedCapabilities": {
+          "description": "List of allowed capability IDs",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "resourceQuotas": {
+          "type": "object",
+          "properties": {
+            "maxMemoryMB": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "maxCpuTimeMs": {
+              "type": "integer",
+              "minimum": 100,
+              "maximum": 9007199254740991
+            },
+            "maxFileDescriptors": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "maxNetworkKBps": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          },
+          "additionalProperties": false
+        },
+        "permissions": {
+          "type": "object",
+          "properties": {
+            "allowedAPIs": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "allowedPaths": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "allowedEndpoints": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "allowedEnvVars": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "ipc": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "default": true,
+              "description": "Allow sandboxed plugins to communicate via IPC",
+              "type": "boolean"
+            },
+            "transport": {
+              "default": "message-port",
+              "description": "IPC transport for cross-boundary communication",
+              "type": "string",
+              "enum": [
+                "message-port",
+                "unix-socket",
+                "tcp",
+                "memory"
+              ]
+            },
+            "maxMessageSize": {
+              "default": 1048576,
+              "description": "Maximum IPC message size in bytes (default 1MB)",
+              "type": "integer",
+              "minimum": 1024,
+              "maximum": 9007199254740991
+            },
+            "timeout": {
+              "default": 30000,
+              "description": "IPC message response timeout in ms",
+              "type": "integer",
+              "minimum": 100,
+              "maximum": 9007199254740991
+            },
+            "allowedServices": {
+              "description": "Service names the sandboxed plugin may invoke via IPC",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "enabled",
+            "transport",
+            "maxMessageSize",
+            "timeout"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "enabled",
+        "scope",
+        "isolationLevel"
+      ],
+      "additionalProperties": false,
+      "description": "Plugin sandboxing configuration"
+    },
+    "monitoring": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "type": "boolean"
+        },
+        "metrics": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "load-time",
+              "init-time",
+              "memory-usage",
+              "cpu-usage",
+              "api-calls",
+              "error-rate",
+              "cache-hit-rate"
+            ]
+          }
+        },
+        "samplingRate": {
+          "default": 1,
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "reportingInterval": {
+          "default": 60,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "budgets": {
+          "type": "object",
+          "properties": {
+            "maxLoadTimeMs": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "maxInitTimeMs": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "maxMemoryMB": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "additionalProperties": false
+        },
+        "onBudgetViolation": {
+          "default": "warn",
+          "type": "string",
+          "enum": [
+            "warn",
+            "error",
+            "ignore"
+          ]
+        }
+      },
+      "required": [
+        "enabled",
+        "samplingRate",
+        "reportingInterval",
+        "onBudgetViolation"
+      ],
+      "additionalProperties": false,
+      "description": "Plugin performance monitoring configuration"
+    }
+  },
+  "required": [
+    "strategy"
+  ],
+  "additionalProperties": false,
+  "description": "Complete plugin loading configuration",
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/PluginLoadingConfig.json",
+  "x-spec-version": "3.0.11"
+}

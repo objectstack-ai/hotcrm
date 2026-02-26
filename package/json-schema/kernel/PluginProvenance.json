@@ -1,0 +1,234 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "pluginId": {
+      "type": "string",
+      "description": "Unique identifier of the plugin"
+    },
+    "version": {
+      "type": "string",
+      "description": "Version of the plugin artifact"
+    },
+    "build": {
+      "type": "object",
+      "properties": {
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+          "description": "ISO 8601 timestamp when the build was produced"
+        },
+        "environment": {
+          "description": "Environment details where the build was executed",
+          "type": "object",
+          "properties": {
+            "os": {
+              "type": "string",
+              "description": "Operating system used for the build"
+            },
+            "arch": {
+              "type": "string",
+              "description": "CPU architecture used for the build"
+            },
+            "nodeVersion": {
+              "type": "string",
+              "description": "Node.js version used for the build"
+            }
+          },
+          "required": [
+            "os",
+            "arch",
+            "nodeVersion"
+          ],
+          "additionalProperties": false
+        },
+        "source": {
+          "description": "Source repository information for the build",
+          "type": "object",
+          "properties": {
+            "repository": {
+              "type": "string",
+              "format": "uri",
+              "description": "URL of the source repository"
+            },
+            "commit": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{40}$",
+              "description": "Full SHA-1 commit hash of the source"
+            },
+            "branch": {
+              "description": "Branch name the build was produced from",
+              "type": "string"
+            },
+            "tag": {
+              "description": "Git tag associated with the build",
+              "type": "string"
+            }
+          },
+          "required": [
+            "repository",
+            "commit"
+          ],
+          "additionalProperties": false
+        },
+        "builder": {
+          "description": "Identity of the builder who produced the artifact",
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Name of the person or system that produced the build"
+            },
+            "email": {
+              "description": "Email address of the builder",
+              "type": "string",
+              "format": "email",
+              "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "timestamp"
+      ],
+      "additionalProperties": false,
+      "description": "Build provenance information"
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "filename": {
+            "type": "string",
+            "description": "Name of the artifact file"
+          },
+          "sha256": {
+            "type": "string",
+            "description": "SHA-256 hash of the artifact"
+          },
+          "size": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991,
+            "description": "Size of the artifact in bytes"
+          }
+        },
+        "required": [
+          "filename",
+          "sha256",
+          "size"
+        ],
+        "additionalProperties": false
+      },
+      "description": "List of build artifacts with integrity hashes"
+    },
+    "signatures": {
+      "default": [],
+      "description": "Cryptographic signatures for the plugin artifact",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "algorithm": {
+            "type": "string",
+            "enum": [
+              "rsa",
+              "ecdsa",
+              "ed25519"
+            ],
+            "description": "Cryptographic algorithm used for signing"
+          },
+          "publicKey": {
+            "type": "string",
+            "description": "Public key used to verify the signature"
+          },
+          "signature": {
+            "type": "string",
+            "description": "Digital signature value"
+          },
+          "signedBy": {
+            "type": "string",
+            "description": "Identity of the signer"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+            "description": "ISO 8601 timestamp when the signature was created"
+          }
+        },
+        "required": [
+          "algorithm",
+          "publicKey",
+          "signature",
+          "signedBy",
+          "timestamp"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "attestations": {
+      "default": [],
+      "description": "Verification attestations for the plugin",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "code-review",
+              "security-scan",
+              "test-results",
+              "ci-build"
+            ],
+            "description": "Type of attestation"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "passed",
+              "failed"
+            ],
+            "description": "Result status of the attestation"
+          },
+          "url": {
+            "description": "URL with details about the attestation",
+            "type": "string",
+            "format": "uri"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+            "description": "ISO 8601 timestamp when the attestation was issued"
+          }
+        },
+        "required": [
+          "type",
+          "status",
+          "timestamp"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "pluginId",
+    "version",
+    "build",
+    "artifacts",
+    "signatures",
+    "attestations"
+  ],
+  "additionalProperties": false,
+  "description": "Verifiable provenance and chain of custody for a plugin artifact",
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/PluginProvenance.json",
+  "x-spec-version": "3.0.11"
+}

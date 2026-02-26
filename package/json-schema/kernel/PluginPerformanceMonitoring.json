@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "enabled": {
+      "default": false,
+      "type": "boolean"
+    },
+    "metrics": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "load-time",
+          "init-time",
+          "memory-usage",
+          "cpu-usage",
+          "api-calls",
+          "error-rate",
+          "cache-hit-rate"
+        ]
+      }
+    },
+    "samplingRate": {
+      "default": 1,
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "reportingInterval": {
+      "default": 60,
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "budgets": {
+      "type": "object",
+      "properties": {
+        "maxLoadTimeMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maxInitTimeMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maxMemoryMB": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "additionalProperties": false
+    },
+    "onBudgetViolation": {
+      "default": "warn",
+      "type": "string",
+      "enum": [
+        "warn",
+        "error",
+        "ignore"
+      ]
+    }
+  },
+  "required": [
+    "enabled",
+    "samplingRate",
+    "reportingInterval",
+    "onBudgetViolation"
+  ],
+  "additionalProperties": false,
+  "description": "Plugin performance monitoring configuration",
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/PluginPerformanceMonitoring.json",
+  "x-spec-version": "3.0.11"
+}

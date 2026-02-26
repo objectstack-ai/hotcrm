@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "prefix": {
+      "default": "/meta",
+      "description": "URL prefix for metadata endpoints",
+      "type": "string"
+    },
+    "enableCache": {
+      "default": true,
+      "description": "Enable HTTP cache headers (ETag, Last-Modified)",
+      "type": "boolean"
+    },
+    "cacheTtl": {
+      "default": 3600,
+      "description": "Cache TTL in seconds",
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991
+    },
+    "endpoints": {
+      "description": "Enable/disable specific endpoints",
+      "type": "object",
+      "properties": {
+        "types": {
+          "default": true,
+          "description": "GET /meta - List all metadata types",
+          "type": "boolean"
+        },
+        "items": {
+          "default": true,
+          "description": "GET /meta/:type - List items of type",
+          "type": "boolean"
+        },
+        "item": {
+          "default": true,
+          "description": "GET /meta/:type/:name - Get specific item",
+          "type": "boolean"
+        },
+        "schema": {
+          "default": true,
+          "description": "GET /meta/:type/:name/schema - Get JSON schema",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "types",
+        "items",
+        "item",
+        "schema"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "prefix",
+    "enableCache",
+    "cacheTtl"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/MetadataEndpointsConfig.json",
+  "x-spec-version": "3.0.11"
+}

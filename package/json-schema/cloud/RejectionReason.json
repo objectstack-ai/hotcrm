@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "security-vulnerability",
+    "policy-violation",
+    "quality-below-standard",
+    "misleading-metadata",
+    "incompatible",
+    "duplicate",
+    "insufficient-documentation",
+    "other"
+  ],
+  "$id": "https://schema.objectstack.io/v3.0.11/cloud/RejectionReason.json",
+  "x-spec-version": "3.0.11"
+}

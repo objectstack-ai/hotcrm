@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "recordIds": {
+      "description": "Record IDs to select/operate on",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "filters": {
+      "description": "Filter for bulk operations",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
+    },
+    "updateData": {
+      "description": "Data for bulk update",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
+    },
+    "exportFormat": {
+      "type": "string",
+      "enum": [
+        "csv",
+        "xlsx",
+        "pdf",
+        "json"
+      ]
+    }
+  },
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/ai/DataActionParams.json",
+  "x-spec-version": "3.0.11"
+}

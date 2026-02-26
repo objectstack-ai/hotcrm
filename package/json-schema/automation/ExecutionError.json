@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Error record ID"
+    },
+    "executionId": {
+      "type": "string",
+      "description": "Parent execution ID"
+    },
+    "nodeId": {
+      "description": "Node where the error occurred",
+      "type": "string"
+    },
+    "severity": {
+      "type": "string",
+      "enum": [
+        "warning",
+        "error",
+        "critical"
+      ],
+      "description": "Error severity level"
+    },
+    "code": {
+      "type": "string",
+      "description": "Machine-readable error code"
+    },
+    "message": {
+      "type": "string",
+      "description": "Human-readable error message"
+    },
+    "stack": {
+      "description": "Stack trace for debugging",
+      "type": "string"
+    },
+    "context": {
+      "description": "Additional diagnostic context (input data, config snapshot)",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+      "description": "When the error occurred"
+    },
+    "retryable": {
+      "default": false,
+      "description": "Whether this error can be retried",
+      "type": "boolean"
+    },
+    "resolvedAt": {
+      "description": "When the error was resolved (e.g., after successful retry)",
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+    }
+  },
+  "required": [
+    "id",
+    "executionId",
+    "severity",
+    "code",
+    "message",
+    "timestamp",
+    "retryable"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/automation/ExecutionError.json",
+  "x-spec-version": "3.0.11"
+}

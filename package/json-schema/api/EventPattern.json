@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "minLength": 1,
+  "pattern": "^[a-z*][a-z0-9_.*]*$",
+  "description": "Event pattern (supports wildcards like \"record.*\" or \"*.created\")",
+  "$id": "https://schema.objectstack.io/v3.0.11/api/EventPattern.json",
+  "x-spec-version": "3.0.11"
+}

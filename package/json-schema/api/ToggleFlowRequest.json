@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Flow machine name (snake_case)"
+    },
+    "enabled": {
+      "type": "boolean",
+      "description": "Whether to enable (true) or disable (false) the flow"
+    }
+  },
+  "required": [
+    "name",
+    "enabled"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/ToggleFlowRequest.json",
+  "x-spec-version": "3.0.11"
+}

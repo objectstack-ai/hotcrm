@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "strategy": {
+      "default": "exponential_backoff",
+      "type": "string",
+      "enum": [
+        "exponential_backoff",
+        "linear_backoff",
+        "fixed_delay",
+        "no_retry"
+      ],
+      "description": "Retry strategy"
+    },
+    "maxAttempts": {
+      "default": 3,
+      "description": "Maximum retry attempts",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 10
+    },
+    "initialDelayMs": {
+      "default": 1000,
+      "description": "Initial retry delay in ms",
+      "type": "number",
+      "minimum": 100
+    },
+    "maxDelayMs": {
+      "default": 60000,
+      "description": "Maximum retry delay in ms",
+      "type": "number",
+      "minimum": 1000
+    },
+    "backoffMultiplier": {
+      "default": 2,
+      "description": "Exponential backoff multiplier",
+      "type": "number",
+      "minimum": 1
+    },
+    "retryableStatusCodes": {
+      "default": [
+        408,
+        429,
+        500,
+        502,
+        503,
+        504
+      ],
+      "description": "HTTP status codes to retry",
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    },
+    "retryOnNetworkError": {
+      "default": true,
+      "description": "Retry on network errors",
+      "type": "boolean"
+    },
+    "jitter": {
+      "default": true,
+      "description": "Add jitter to retry delays",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "strategy",
+    "maxAttempts",
+    "initialDelayMs",
+    "maxDelayMs",
+    "backoffMultiplier",
+    "retryableStatusCodes",
+    "retryOnNetworkError",
+    "jitter"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/integration/RetryConfig.json",
+  "x-spec-version": "3.0.11"
+}

@@ -1,0 +1,264 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Query field name (camelCase recommended)"
+    },
+    "object": {
+      "type": "string",
+      "description": "Source ObjectQL object name"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "get",
+        "list",
+        "search"
+      ],
+      "description": "Query type"
+    },
+    "description": {
+      "description": "Query description",
+      "type": "string"
+    },
+    "args": {
+      "description": "Query arguments",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "GraphQL type (e.g., \"ID!\", \"String\", \"Int\")"
+          },
+          "description": {
+            "description": "Argument description",
+            "type": "string"
+          },
+          "defaultValue": {
+            "description": "Default value"
+          }
+        },
+        "required": [
+          "type"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "filtering": {
+      "description": "Filtering capabilities",
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": true,
+          "description": "Allow filtering",
+          "type": "boolean"
+        },
+        "fields": {
+          "description": "Filterable fields",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "operators": {
+          "description": "Allowed filter operators",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "eq",
+              "ne",
+              "gt",
+              "gte",
+              "lt",
+              "lte",
+              "in",
+              "notIn",
+              "contains",
+              "startsWith",
+              "endsWith",
+              "isNull",
+              "isNotNull"
+            ]
+          }
+        }
+      },
+      "required": [
+        "enabled"
+      ],
+      "additionalProperties": false
+    },
+    "sorting": {
+      "description": "Sorting capabilities",
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": true,
+          "description": "Allow sorting",
+          "type": "boolean"
+        },
+        "fields": {
+          "description": "Sortable fields",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "defaultSort": {
+          "description": "Default sort order",
+          "type": "object",
+          "properties": {
+            "field": {
+              "type": "string"
+            },
+            "direction": {
+              "type": "string",
+              "enum": [
+                "ASC",
+                "DESC"
+              ]
+            }
+          },
+          "required": [
+            "field",
+            "direction"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "enabled"
+      ],
+      "additionalProperties": false
+    },
+    "pagination": {
+      "description": "Pagination configuration",
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": true,
+          "description": "Enable pagination",
+          "type": "boolean"
+        },
+        "type": {
+          "default": "offset",
+          "description": "Pagination style",
+          "type": "string",
+          "enum": [
+            "offset",
+            "cursor",
+            "relay"
+          ]
+        },
+        "defaultLimit": {
+          "default": 20,
+          "description": "Default page size",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "maxLimit": {
+          "default": 100,
+          "description": "Maximum page size",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "cursors": {
+          "type": "object",
+          "properties": {
+            "field": {
+              "default": "id",
+              "description": "Field to use for cursor pagination",
+              "type": "string"
+            }
+          },
+          "required": [
+            "field"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "enabled",
+        "type",
+        "defaultLimit",
+        "maxLimit"
+      ],
+      "additionalProperties": false
+    },
+    "fields": {
+      "description": "Field selection configuration",
+      "type": "object",
+      "properties": {
+        "required": {
+          "description": "Required fields (always returned)",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "selectable": {
+          "description": "Selectable fields",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "authRequired": {
+      "default": true,
+      "description": "Require authentication",
+      "type": "boolean"
+    },
+    "permissions": {
+      "description": "Required permissions",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "cache": {
+      "description": "Query caching",
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "description": "Enable caching",
+          "type": "boolean"
+        },
+        "ttl": {
+          "description": "Cache TTL in seconds",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "key": {
+          "description": "Cache key template",
+          "type": "string"
+        }
+      },
+      "required": [
+        "enabled"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "name",
+    "object",
+    "type",
+    "authRequired"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/GraphQLQueryConfig.json",
+  "x-spec-version": "3.0.11"
+}

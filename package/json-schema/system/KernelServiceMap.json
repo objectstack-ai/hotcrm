@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "propertyNames": {
+    "type": "string",
+    "enum": [
+      "metadata",
+      "data",
+      "auth",
+      "file-storage",
+      "search",
+      "cache",
+      "queue",
+      "automation",
+      "graphql",
+      "analytics",
+      "realtime",
+      "job",
+      "notification",
+      "ai",
+      "i18n",
+      "ui",
+      "workflow"
+    ]
+  },
+  "additionalProperties": {
+    "description": "Service Instance implementing the protocol interface"
+  },
+  "required": [
+    "metadata",
+    "data",
+    "auth",
+    "file-storage",
+    "search",
+    "cache",
+    "queue",
+    "automation",
+    "graphql",
+    "analytics",
+    "realtime",
+    "job",
+    "notification",
+    "ai",
+    "i18n",
+    "ui",
+    "workflow"
+  ],
+  "$id": "https://schema.objectstack.io/v3.0.11/system/KernelServiceMap.json",
+  "x-spec-version": "3.0.11"
+}

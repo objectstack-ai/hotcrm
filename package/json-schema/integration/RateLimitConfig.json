@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "strategy": {
+      "default": "token_bucket",
+      "type": "string",
+      "enum": [
+        "fixed_window",
+        "sliding_window",
+        "token_bucket",
+        "leaky_bucket"
+      ],
+      "description": "Rate limiting strategy"
+    },
+    "maxRequests": {
+      "type": "number",
+      "minimum": 1,
+      "description": "Maximum requests per window"
+    },
+    "windowSeconds": {
+      "type": "number",
+      "minimum": 1,
+      "description": "Time window in seconds"
+    },
+    "burstCapacity": {
+      "description": "Burst capacity",
+      "type": "number",
+      "minimum": 1
+    },
+    "respectUpstreamLimits": {
+      "default": true,
+      "description": "Respect external rate limit headers",
+      "type": "boolean"
+    },
+    "rateLimitHeaders": {
+      "description": "Custom rate limit headers",
+      "type": "object",
+      "properties": {
+        "remaining": {
+          "default": "X-RateLimit-Remaining",
+          "description": "Header for remaining requests",
+          "type": "string"
+        },
+        "limit": {
+          "default": "X-RateLimit-Limit",
+          "description": "Header for rate limit",
+          "type": "string"
+        },
+        "reset": {
+          "default": "X-RateLimit-Reset",
+          "description": "Header for reset time",
+          "type": "string"
+        }
+      },
+      "required": [
+        "remaining",
+        "limit",
+        "reset"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "strategy",
+    "maxRequests",
+    "windowSeconds",
+    "respectUpstreamLimits"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/integration/RateLimitConfig.json",
+  "x-spec-version": "3.0.11"
+}

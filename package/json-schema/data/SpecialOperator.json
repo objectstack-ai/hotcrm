@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "$null": {
+      "type": "boolean"
+    },
+    "$exists": {
+      "type": "boolean"
+    }
+  },
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/data/SpecialOperator.json",
+  "x-spec-version": "3.0.11"
+}

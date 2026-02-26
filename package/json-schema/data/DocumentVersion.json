@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "versionNumber": {
+      "type": "number",
+      "description": "Version number"
+    },
+    "createdAt": {
+      "type": "number",
+      "description": "Creation timestamp"
+    },
+    "createdBy": {
+      "type": "string",
+      "description": "Creator user ID"
+    },
+    "size": {
+      "type": "number",
+      "description": "File size in bytes"
+    },
+    "checksum": {
+      "type": "string",
+      "description": "File checksum"
+    },
+    "downloadUrl": {
+      "type": "string",
+      "format": "uri",
+      "description": "Download URL"
+    },
+    "isLatest": {
+      "default": false,
+      "description": "Is latest version",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "versionNumber",
+    "createdAt",
+    "createdBy",
+    "size",
+    "checksum",
+    "downloadUrl",
+    "isLatest"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/data/DocumentVersion.json",
+  "x-spec-version": "3.0.11"
+}

@@ -1,0 +1,227 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "assessment": {
+      "type": "string",
+      "enum": [
+        "excellent",
+        "good",
+        "acceptable",
+        "needs-improvement",
+        "poor"
+      ]
+    },
+    "score": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "severity": {
+            "type": "string",
+            "enum": [
+              "critical",
+              "error",
+              "warning",
+              "info",
+              "style"
+            ]
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "bug",
+              "security",
+              "performance",
+              "maintainability",
+              "style",
+              "documentation",
+              "testing",
+              "type-safety",
+              "best-practice"
+            ]
+          },
+          "file": {
+            "type": "string"
+          },
+          "line": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "column": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "message": {
+            "type": "string"
+          },
+          "suggestion": {
+            "type": "string"
+          },
+          "autoFixable": {
+            "default": false,
+            "type": "boolean"
+          },
+          "autoFix": {
+            "description": "Automated fix code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "severity",
+          "category",
+          "file",
+          "message",
+          "autoFixable"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "highlights": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "file": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "category",
+          "description"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "properties": {
+        "complexity": {
+          "type": "number"
+        },
+        "maintainability": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "testCoverage": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "duplicateCode": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "technicalDebt": {
+          "description": "Estimated technical debt",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "recommendations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "priority": {
+            "type": "string",
+            "enum": [
+              "high",
+              "medium",
+              "low"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "effort": {
+            "type": "string",
+            "enum": [
+              "trivial",
+              "small",
+              "medium",
+              "large"
+            ]
+          }
+        },
+        "required": [
+          "priority",
+          "title",
+          "description"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "security": {
+      "type": "object",
+      "properties": {
+        "vulnerabilities": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "severity": {
+                "type": "string",
+                "enum": [
+                  "critical",
+                  "high",
+                  "medium",
+                  "low"
+                ]
+              },
+              "type": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "remediation": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "severity",
+              "type",
+              "description"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "assessment",
+    "score",
+    "issues",
+    "recommendations"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/ai/AICodeReviewResult.json",
+  "x-spec-version": "3.0.11"
+}

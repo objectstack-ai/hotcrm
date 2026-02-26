@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "enabled": {
+      "default": true,
+      "description": "Enable cross-subsystem security event correlation",
+      "type": "boolean"
+    },
+    "correlationId": {
+      "default": true,
+      "description": "Inject a shared correlation ID into audit, encryption, and masking events",
+      "type": "boolean"
+    },
+    "linkAuthToAudit": {
+      "default": true,
+      "description": "Link authentication events to subsequent data operation audit trails",
+      "type": "boolean"
+    },
+    "linkEncryptionToAudit": {
+      "default": true,
+      "description": "Log encryption/decryption operations in the audit trail",
+      "type": "boolean"
+    },
+    "linkMaskingToAudit": {
+      "default": true,
+      "description": "Log masking/unmasking operations in the audit trail",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "enabled",
+    "correlationId",
+    "linkAuthToAudit",
+    "linkEncryptionToAudit",
+    "linkMaskingToAudit"
+  ],
+  "additionalProperties": false,
+  "description": "Cross-subsystem security event correlation configuration",
+  "$id": "https://schema.objectstack.io/v3.0.11/system/SecurityEventCorrelation.json",
+  "x-spec-version": "3.0.11"
+}

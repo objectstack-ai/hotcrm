@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "description": "Index name (auto-generated if not provided)",
+      "type": "string"
+    },
+    "fields": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Fields included in the index"
+    },
+    "type": {
+      "default": "btree",
+      "description": "Index algorithm type",
+      "type": "string",
+      "enum": [
+        "btree",
+        "hash",
+        "gin",
+        "gist",
+        "fulltext"
+      ]
+    },
+    "unique": {
+      "default": false,
+      "description": "Whether the index enforces uniqueness",
+      "type": "boolean"
+    },
+    "partial": {
+      "description": "Partial index condition (SQL WHERE clause for conditional indexes)",
+      "type": "string"
+    }
+  },
+  "required": [
+    "fields",
+    "type",
+    "unique"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/data/Index.json",
+  "x-spec-version": "3.0.11"
+}

@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+      "description": "Unique subscription identifier"
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "record.created",
+              "record.updated",
+              "record.deleted",
+              "field.changed"
+            ],
+            "description": "Type of event to subscribe to"
+          },
+          "object": {
+            "description": "Object name to subscribe to",
+            "type": "string"
+          },
+          "filters": {
+            "description": "Filter conditions"
+          }
+        },
+        "required": [
+          "type"
+        ],
+        "additionalProperties": false
+      },
+      "description": "Array of events to subscribe to"
+    },
+    "transport": {
+      "type": "string",
+      "enum": [
+        "websocket",
+        "sse",
+        "polling"
+      ],
+      "description": "Transport protocol to use"
+    },
+    "channel": {
+      "description": "Optional channel name for grouping subscriptions",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "events",
+    "transport"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/Subscription.json",
+  "x-spec-version": "3.0.11"
+}

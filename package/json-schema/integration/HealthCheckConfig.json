@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "enabled": {
+      "type": "boolean",
+      "description": "Enable health checks"
+    },
+    "intervalMs": {
+      "default": 60000,
+      "description": "Health check interval in milliseconds",
+      "type": "number"
+    },
+    "timeoutMs": {
+      "default": 5000,
+      "description": "Health check timeout in milliseconds",
+      "type": "number"
+    },
+    "endpoint": {
+      "description": "Health check endpoint path",
+      "type": "string"
+    },
+    "method": {
+      "description": "HTTP method for health check",
+      "type": "string",
+      "enum": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    "expectedStatus": {
+      "default": 200,
+      "description": "Expected HTTP status code",
+      "type": "number"
+    },
+    "unhealthyThreshold": {
+      "default": 3,
+      "description": "Consecutive failures before marking unhealthy",
+      "type": "number"
+    },
+    "healthyThreshold": {
+      "default": 1,
+      "description": "Consecutive successes before marking healthy",
+      "type": "number"
+    }
+  },
+  "required": [
+    "enabled",
+    "intervalMs",
+    "timeoutMs",
+    "expectedStatus",
+    "unhealthyThreshold",
+    "healthyThreshold"
+  ],
+  "additionalProperties": false,
+  "description": "Health check configuration",
+  "$id": "https://schema.objectstack.io/v3.0.11/integration/HealthCheckConfig.json",
+  "x-spec-version": "3.0.11"
+}

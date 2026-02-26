@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "formats": {
+      "default": [
+        "w3c"
+      ],
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "w3c",
+          "b3",
+          "b3_multi",
+          "jaeger",
+          "xray",
+          "ottrace",
+          "custom"
+        ],
+        "description": "Trace propagation format"
+      }
+    },
+    "extract": {
+      "default": true,
+      "type": "boolean"
+    },
+    "inject": {
+      "default": true,
+      "type": "boolean"
+    },
+    "headers": {
+      "type": "object",
+      "properties": {
+        "traceId": {
+          "type": "string"
+        },
+        "spanId": {
+          "type": "string"
+        },
+        "traceFlags": {
+          "type": "string"
+        },
+        "traceState": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "baggage": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": true,
+          "type": "boolean"
+        },
+        "maxSize": {
+          "default": 8192,
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "allowedKeys": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "enabled",
+        "maxSize"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "formats",
+    "extract",
+    "inject"
+  ],
+  "additionalProperties": false,
+  "description": "Trace context propagation",
+  "$id": "https://schema.objectstack.io/v3.0.11/system/TraceContextPropagation.json",
+  "x-spec-version": "3.0.11"
+}

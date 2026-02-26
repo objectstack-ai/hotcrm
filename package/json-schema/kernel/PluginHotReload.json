@@ -1,0 +1,156 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "enabled": {
+      "default": false,
+      "type": "boolean"
+    },
+    "environment": {
+      "default": "development",
+      "description": "Target environment controlling safety level",
+      "type": "string",
+      "enum": [
+        "development",
+        "staging",
+        "production"
+      ]
+    },
+    "strategy": {
+      "default": "full",
+      "type": "string",
+      "enum": [
+        "full",
+        "partial",
+        "state-preserve"
+      ]
+    },
+    "watchPatterns": {
+      "description": "Glob patterns for files to watch",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "ignorePatterns": {
+      "description": "Glob patterns for files to ignore",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "debounceMs": {
+      "default": 300,
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "preserveState": {
+      "default": false,
+      "type": "boolean"
+    },
+    "stateSerialization": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "type": "boolean"
+        },
+        "handler": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "enabled"
+      ],
+      "additionalProperties": false
+    },
+    "hooks": {
+      "type": "object",
+      "properties": {
+        "beforeReload": {
+          "description": "Function to call before reload",
+          "type": "string"
+        },
+        "afterReload": {
+          "description": "Function to call after reload",
+          "type": "string"
+        },
+        "onError": {
+          "description": "Function to call on reload error",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "productionSafety": {
+      "type": "object",
+      "properties": {
+        "healthValidation": {
+          "default": true,
+          "description": "Run health checks after reload before accepting traffic",
+          "type": "boolean"
+        },
+        "rollbackOnFailure": {
+          "default": true,
+          "description": "Auto-rollback if reloaded plugin fails health check",
+          "type": "boolean"
+        },
+        "healthTimeout": {
+          "default": 30000,
+          "description": "Health check timeout after reload in ms",
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 9007199254740991
+        },
+        "drainConnections": {
+          "default": true,
+          "description": "Gracefully drain active requests before reloading",
+          "type": "boolean"
+        },
+        "drainTimeout": {
+          "default": 15000,
+          "description": "Max wait time for connection draining in ms",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maxConcurrentReloads": {
+          "default": 1,
+          "description": "Limit concurrent reloads to prevent system instability",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "minReloadInterval": {
+          "default": 5000,
+          "description": "Cooldown period between reloads of the same plugin",
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "healthValidation",
+        "rollbackOnFailure",
+        "healthTimeout",
+        "drainConnections",
+        "drainTimeout",
+        "maxConcurrentReloads",
+        "minReloadInterval"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "enabled",
+    "environment",
+    "strategy",
+    "debounceMs",
+    "preserveState"
+  ],
+  "additionalProperties": false,
+  "description": "Plugin hot reload configuration",
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/PluginHotReload.json",
+  "x-spec-version": "3.0.11"
+}

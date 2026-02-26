@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "scopeId": {
+      "type": "string",
+      "description": "Unique scope identifier"
+    },
+    "scopeType": {
+      "type": "string",
+      "description": "Type of scope"
+    },
+    "createdAt": {
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991,
+      "description": "Unix timestamp in milliseconds when scope was created"
+    },
+    "serviceCount": {
+      "description": "Number of services registered in this scope",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "metadata": {
+      "description": "Scope-specific context metadata",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
+    }
+  },
+  "required": [
+    "scopeId",
+    "scopeType",
+    "createdAt"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/ScopeInfo.json",
+  "x-spec-version": "3.0.11"
+}

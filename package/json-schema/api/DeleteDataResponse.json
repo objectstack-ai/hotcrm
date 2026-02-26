@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "object": {
+      "type": "string",
+      "description": "Object name"
+    },
+    "id": {
+      "type": "string",
+      "description": "Deleted record ID"
+    },
+    "success": {
+      "type": "boolean",
+      "description": "Whether deletion succeeded"
+    }
+  },
+  "required": [
+    "object",
+    "id",
+    "success"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/DeleteDataResponse.json",
+  "x-spec-version": "3.0.11"
+}

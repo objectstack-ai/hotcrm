@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "fixed_window",
+    "sliding_window",
+    "token_bucket",
+    "leaky_bucket"
+  ],
+  "description": "Rate limiting strategy",
+  "$id": "https://schema.objectstack.io/v3.0.11/integration/RateLimitStrategy.json",
+  "x-spec-version": "3.0.11"
+}

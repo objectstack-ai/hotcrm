@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "QUERY",
+    "MUTATION",
+    "SUBSCRIPTION",
+    "FIELD",
+    "FRAGMENT_DEFINITION",
+    "FRAGMENT_SPREAD",
+    "INLINE_FRAGMENT",
+    "VARIABLE_DEFINITION",
+    "SCHEMA",
+    "SCALAR",
+    "OBJECT",
+    "FIELD_DEFINITION",
+    "ARGUMENT_DEFINITION",
+    "INTERFACE",
+    "UNION",
+    "ENUM",
+    "ENUM_VALUE",
+    "INPUT_OBJECT",
+    "INPUT_FIELD_DEFINITION"
+  ],
+  "$id": "https://schema.objectstack.io/v3.0.11/api/GraphQLDirectiveLocation.json",
+  "x-spec-version": "3.0.11"
+}

@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z_][a-z0-9_]*$",
+      "description": "Unique rule name (snake_case)"
+    },
+    "label": {
+      "description": "Human-readable label for the rule listing",
+      "type": "string"
+    },
+    "description": {
+      "description": "Administrative notes explaining the business reason",
+      "type": "string"
+    },
+    "active": {
+      "default": true,
+      "type": "boolean"
+    },
+    "events": {
+      "default": [
+        "insert",
+        "update"
+      ],
+      "description": "Validation contexts",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "insert",
+          "update",
+          "delete"
+        ]
+      }
+    },
+    "priority": {
+      "default": 100,
+      "description": "Execution priority (lower runs first, default: 100)",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9999
+    },
+    "tags": {
+      "description": "Categorization tags (e.g., \"compliance\", \"billing\")",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "severity": {
+      "default": "error",
+      "type": "string",
+      "enum": [
+        "error",
+        "warning",
+        "info"
+      ]
+    },
+    "message": {
+      "type": "string",
+      "description": "Error message to display to the user"
+    },
+    "type": {
+      "type": "string",
+      "const": "async"
+    },
+    "field": {
+      "type": "string",
+      "description": "Field to validate"
+    },
+    "validatorUrl": {
+      "description": "External API endpoint for validation",
+      "type": "string"
+    },
+    "method": {
+      "default": "GET",
+      "description": "HTTP method for external call",
+      "type": "string",
+      "enum": [
+        "GET",
+        "POST"
+      ]
+    },
+    "headers": {
+      "description": "Custom headers for the request",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "validatorFunction": {
+      "description": "Reference to custom validator function",
+      "type": "string"
+    },
+    "timeout": {
+      "default": 5000,
+      "description": "Timeout in milliseconds",
+      "type": "number"
+    },
+    "debounce": {
+      "description": "Debounce delay in milliseconds",
+      "type": "number"
+    },
+    "params": {
+      "description": "Additional parameters to pass to validator",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
+    }
+  },
+  "required": [
+    "name",
+    "active",
+    "events",
+    "priority",
+    "severity",
+    "message",
+    "type",
+    "field",
+    "method",
+    "timeout"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/data/AsyncValidation.json",
+  "x-spec-version": "3.0.11"
+}

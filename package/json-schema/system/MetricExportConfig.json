@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "prometheus",
+        "openmetrics",
+        "graphite",
+        "statsd",
+        "influxdb",
+        "datadog",
+        "cloudwatch",
+        "stackdriver",
+        "azure_monitor",
+        "http",
+        "custom"
+      ],
+      "description": "Export type"
+    },
+    "endpoint": {
+      "description": "Export endpoint",
+      "type": "string"
+    },
+    "interval": {
+      "default": 60,
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    },
+    "batch": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": true,
+          "type": "boolean"
+        },
+        "size": {
+          "default": 1000,
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "enabled",
+        "size"
+      ],
+      "additionalProperties": false
+    },
+    "auth": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "none",
+            "basic",
+            "bearer",
+            "api_key"
+          ],
+          "description": "Auth type"
+        },
+        "username": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "token": {
+          "type": "string"
+        },
+        "apiKey": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "config": {
+      "description": "Additional configuration",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
+    }
+  },
+  "required": [
+    "type",
+    "interval"
+  ],
+  "additionalProperties": false,
+  "description": "Metric export configuration",
+  "$id": "https://schema.objectstack.io/v3.0.11/system/MetricExportConfig.json",
+  "x-spec-version": "3.0.11"
+}

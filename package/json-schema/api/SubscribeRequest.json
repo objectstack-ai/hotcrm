@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "object": {
+      "type": "string",
+      "description": "Object name (e.g., \"account\")"
+    },
+    "recordId": {
+      "type": "string",
+      "description": "Record ID"
+    },
+    "events": {
+      "default": [
+        "all"
+      ],
+      "description": "Event types to subscribe to",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "comment",
+          "mention",
+          "field_change",
+          "task",
+          "approval",
+          "all"
+        ]
+      }
+    },
+    "channels": {
+      "default": [
+        "in_app"
+      ],
+      "description": "Notification delivery channels",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "in_app",
+          "email",
+          "push",
+          "slack"
+        ]
+      }
+    }
+  },
+  "required": [
+    "object",
+    "recordId",
+    "events",
+    "channels"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/SubscribeRequest.json",
+  "x-spec-version": "3.0.11"
+}

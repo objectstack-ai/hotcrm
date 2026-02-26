@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Package name or identifier"
+    },
+    "versionConstraint": {
+      "type": "string",
+      "description": "Semver range (e.g., `^1.0.0`, `>=2.0.0 <3.0.0`)"
+    },
+    "type": {
+      "default": "required",
+      "description": "Category of the dependency relationship",
+      "type": "string",
+      "enum": [
+        "required",
+        "optional",
+        "peer",
+        "dev"
+      ]
+    },
+    "resolvedVersion": {
+      "description": "Concrete version resolved during dependency resolution",
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "versionConstraint",
+    "type"
+  ],
+  "additionalProperties": false,
+  "description": "A package dependency with its version constraint",
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/PackageDependency.json",
+  "x-spec-version": "3.0.11"
+}

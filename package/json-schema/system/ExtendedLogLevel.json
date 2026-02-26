@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "trace",
+    "debug",
+    "info",
+    "warn",
+    "error",
+    "fatal"
+  ],
+  "description": "Extended log severity level",
+  "$id": "https://schema.objectstack.io/v3.0.11/system/ExtendedLogLevel.json",
+  "x-spec-version": "3.0.11"
+}

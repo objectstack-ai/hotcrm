@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "insights": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Insight type"
+          },
+          "title": {
+            "type": "string",
+            "description": "Insight title"
+          },
+          "description": {
+            "type": "string",
+            "description": "Detailed description"
+          },
+          "confidence": {
+            "description": "Confidence score (0-1)",
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "data": {
+            "description": "Supporting data",
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {}
+          }
+        },
+        "required": [
+          "type",
+          "title",
+          "description"
+        ],
+        "additionalProperties": false
+      },
+      "description": "Generated insights"
+    }
+  },
+  "required": [
+    "insights"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/AiInsightsResponse.json",
+  "x-spec-version": "3.0.11"
+}

@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "field": {
+      "type": "string",
+      "description": "Field to derive color from (typically a select/status field)"
+    },
+    "colors": {
+      "description": "Map of field value to color (hex/token)",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "field"
+  ],
+  "additionalProperties": false,
+  "description": "Row color configuration based on field values",
+  "$id": "https://schema.objectstack.io/v3.0.11/ui/RowColorConfig.json",
+  "x-spec-version": "3.0.11"
+}

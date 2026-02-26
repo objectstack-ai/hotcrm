@@ -1,0 +1,147 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "datasource": {
+      "description": "Datasource name reference for database persistence",
+      "type": "string"
+    },
+    "tableName": {
+      "default": "sys_metadata",
+      "description": "Database table name for metadata storage",
+      "type": "string"
+    },
+    "fallback": {
+      "default": "none",
+      "description": "Fallback strategy when datasource is unavailable",
+      "type": "string",
+      "enum": [
+        "filesystem",
+        "memory",
+        "none"
+      ]
+    },
+    "rootDir": {
+      "description": "Root directory path",
+      "type": "string"
+    },
+    "formats": {
+      "default": [
+        "typescript",
+        "json",
+        "yaml"
+      ],
+      "description": "Enabled formats",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "json",
+          "yaml",
+          "typescript",
+          "javascript"
+        ]
+      }
+    },
+    "cache": {
+      "description": "Cache settings",
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": true,
+          "description": "Enable caching",
+          "type": "boolean"
+        },
+        "ttl": {
+          "default": 3600,
+          "description": "Cache TTL in seconds",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maxSize": {
+          "description": "Max cache size in bytes",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "enabled",
+        "ttl"
+      ],
+      "additionalProperties": false
+    },
+    "watch": {
+      "default": false,
+      "description": "Enable file watching",
+      "type": "boolean"
+    },
+    "watchOptions": {
+      "description": "File watcher options",
+      "type": "object",
+      "properties": {
+        "ignored": {
+          "description": "Patterns to ignore",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "persistent": {
+          "default": true,
+          "description": "Keep process running",
+          "type": "boolean"
+        },
+        "ignoreInitial": {
+          "default": true,
+          "description": "Ignore initial add events",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "persistent",
+        "ignoreInitial"
+      ],
+      "additionalProperties": false
+    },
+    "validation": {
+      "description": "Validation settings",
+      "type": "object",
+      "properties": {
+        "strict": {
+          "default": true,
+          "description": "Strict validation",
+          "type": "boolean"
+        },
+        "throwOnError": {
+          "default": true,
+          "description": "Throw on validation error",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "strict",
+        "throwOnError"
+      ],
+      "additionalProperties": false
+    },
+    "loaderOptions": {
+      "description": "Loader-specific configuration",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
+    }
+  },
+  "required": [
+    "tableName",
+    "fallback",
+    "formats",
+    "watch"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/MetadataManagerConfig.json",
+  "x-spec-version": "3.0.11"
+}

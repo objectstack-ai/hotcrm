@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "operator": {
+      "type": "string",
+      "description": "Aggregation operator (e.g., $match, $group, $sort)"
+    },
+    "options": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {},
+      "description": "Stage-specific options"
+    }
+  },
+  "required": [
+    "operator",
+    "options"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/data/AggregationStage.json",
+  "x-spec-version": "3.0.11"
+}

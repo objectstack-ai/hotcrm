@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "verified",
+    "trusted",
+    "community",
+    "untrusted",
+    "blocked"
+  ],
+  "description": "Trust level of the plugin",
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/PluginTrustLevel.json",
+  "x-spec-version": "3.0.11"
+}

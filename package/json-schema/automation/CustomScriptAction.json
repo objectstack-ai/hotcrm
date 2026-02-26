@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Action name"
+    },
+    "type": {
+      "type": "string",
+      "const": "custom_script"
+    },
+    "language": {
+      "default": "javascript",
+      "description": "Script language",
+      "type": "string",
+      "enum": [
+        "javascript",
+        "typescript",
+        "python"
+      ]
+    },
+    "code": {
+      "type": "string",
+      "description": "Script code to execute"
+    },
+    "timeout": {
+      "default": 30000,
+      "description": "Execution timeout in milliseconds",
+      "type": "number"
+    },
+    "context": {
+      "description": "Additional context variables",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
+    }
+  },
+  "required": [
+    "name",
+    "type",
+    "language",
+    "code",
+    "timeout"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/automation/CustomScriptAction.json",
+  "x-spec-version": "3.0.11"
+}

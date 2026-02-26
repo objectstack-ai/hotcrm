@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "preset": {
+      "description": "Transition preset to apply",
+      "type": "string",
+      "enum": [
+        "fade",
+        "slide_up",
+        "slide_down",
+        "slide_left",
+        "slide_right",
+        "scale",
+        "rotate",
+        "flip",
+        "none"
+      ]
+    },
+    "duration": {
+      "description": "Transition duration in milliseconds",
+      "type": "number"
+    },
+    "easing": {
+      "description": "Easing function for the transition",
+      "type": "string",
+      "enum": [
+        "linear",
+        "ease",
+        "ease_in",
+        "ease_out",
+        "ease_in_out",
+        "spring"
+      ]
+    },
+    "delay": {
+      "description": "Delay before transition starts in milliseconds",
+      "type": "number"
+    },
+    "customKeyframes": {
+      "description": "CSS @keyframes name for custom animations",
+      "type": "string"
+    },
+    "themeToken": {
+      "description": "Reference to a theme animation token (e.g. \"animation.duration.fast\")",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Animation transition configuration",
+  "$id": "https://schema.objectstack.io/v3.0.11/ui/TransitionConfig.json",
+  "x-spec-version": "3.0.11"
+}

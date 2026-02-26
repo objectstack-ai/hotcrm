@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "root": {
+      "type": "string",
+      "description": "Root directory path of the plugin project"
+    },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of all file paths relative to root"
+    },
+    "metadata": {
+      "description": "Custom metadata key-value pairs for extensibility",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
+    }
+  },
+  "required": [
+    "root",
+    "files"
+  ],
+  "additionalProperties": false,
+  "description": "Full plugin project layout validated against OPS conventions",
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/OpsPluginStructure.json",
+  "x-spec-version": "3.0.11"
+}

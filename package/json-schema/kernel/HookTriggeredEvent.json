@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "hookName": {
+      "type": "string",
+      "description": "Name of the hook"
+    },
+    "timestamp": {
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991,
+      "description": "Unix timestamp in milliseconds"
+    },
+    "args": {
+      "type": "array",
+      "items": {},
+      "description": "Arguments passed to the hook handlers"
+    },
+    "handlerCount": {
+      "description": "Number of handlers that will handle this event",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    }
+  },
+  "required": [
+    "hookName",
+    "timestamp",
+    "args"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/HookTriggeredEvent.json",
+  "x-spec-version": "3.0.11"
+}

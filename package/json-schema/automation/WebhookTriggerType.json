@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "create",
+    "update",
+    "delete",
+    "undelete",
+    "api"
+  ],
+  "$id": "https://schema.objectstack.io/v3.0.11/automation/WebhookTriggerType.json",
+  "x-spec-version": "3.0.11"
+}

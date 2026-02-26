@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "sourceCode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "description": "External system error code"
+          },
+          "sourceMessage": {
+            "description": "Pattern to match against error message",
+            "type": "string"
+          },
+          "targetCode": {
+            "type": "string",
+            "description": "ObjectStack standard error code"
+          },
+          "targetCategory": {
+            "type": "string",
+            "enum": [
+              "validation",
+              "authorization",
+              "not_found",
+              "conflict",
+              "rate_limit",
+              "timeout",
+              "server_error",
+              "integration_error"
+            ],
+            "description": "Error category"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high",
+              "critical"
+            ],
+            "description": "Error severity level"
+          },
+          "retryable": {
+            "type": "boolean",
+            "description": "Whether the error is retryable"
+          },
+          "userMessage": {
+            "description": "Human-readable message to show users",
+            "type": "string"
+          }
+        },
+        "required": [
+          "sourceCode",
+          "targetCode",
+          "targetCategory",
+          "severity",
+          "retryable"
+        ],
+        "additionalProperties": false,
+        "description": "Error mapping rule"
+      },
+      "description": "Error mapping rules"
+    },
+    "defaultCategory": {
+      "default": "integration_error",
+      "description": "Default category for unmapped errors",
+      "type": "string",
+      "enum": [
+        "validation",
+        "authorization",
+        "not_found",
+        "conflict",
+        "rate_limit",
+        "timeout",
+        "server_error",
+        "integration_error"
+      ]
+    },
+    "unmappedBehavior": {
+      "type": "string",
+      "enum": [
+        "passthrough",
+        "generic_error",
+        "throw"
+      ],
+      "description": "What to do with unmapped errors"
+    },
+    "logUnmapped": {
+      "default": true,
+      "description": "Log unmapped errors",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "rules",
+    "defaultCategory",
+    "unmappedBehavior",
+    "logUnmapped"
+  ],
+  "additionalProperties": false,
+  "description": "Error mapping configuration",
+  "$id": "https://schema.objectstack.io/v3.0.11/integration/ErrorMappingConfig.json",
+  "x-spec-version": "3.0.11"
+}

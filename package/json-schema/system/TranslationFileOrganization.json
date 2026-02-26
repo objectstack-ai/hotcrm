@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "bundled",
+    "per_locale",
+    "per_namespace"
+  ],
+  "description": "Translation file organization strategy",
+  "$id": "https://schema.objectstack.io/v3.0.11/system/TranslationFileOrganization.json",
+  "x-spec-version": "3.0.11"
+}

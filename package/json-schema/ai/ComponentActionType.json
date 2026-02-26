@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "open_modal",
+    "close_modal",
+    "open_sidebar",
+    "close_sidebar",
+    "show_notification",
+    "hide_notification",
+    "open_dropdown",
+    "close_dropdown",
+    "toggle_section"
+  ],
+  "$id": "https://schema.objectstack.io/v3.0.11/ai/ComponentActionType.json",
+  "x-spec-version": "3.0.11"
+}

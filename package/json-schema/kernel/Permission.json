@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique permission identifier"
+    },
+    "resource": {
+      "type": "string",
+      "enum": [
+        "data.object",
+        "data.record",
+        "data.field",
+        "ui.view",
+        "ui.dashboard",
+        "ui.report",
+        "system.config",
+        "system.plugin",
+        "system.api",
+        "system.service",
+        "storage.file",
+        "storage.database",
+        "network.http",
+        "network.websocket",
+        "process.spawn",
+        "process.env"
+      ],
+      "description": "Type of resource being accessed"
+    },
+    "actions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "create",
+          "read",
+          "update",
+          "delete",
+          "execute",
+          "manage",
+          "configure",
+          "share",
+          "export",
+          "import",
+          "admin"
+        ],
+        "description": "Type of action being permitted"
+      }
+    },
+    "scope": {
+      "default": "plugin",
+      "type": "string",
+      "enum": [
+        "global",
+        "tenant",
+        "user",
+        "resource",
+        "plugin"
+      ],
+      "description": "Scope of permission application"
+    },
+    "filter": {
+      "type": "object",
+      "properties": {
+        "resourceIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "condition": {
+          "description": "Filter expression (e.g., owner = currentUser)",
+          "type": "string"
+        },
+        "fields": {
+          "description": "Allowed fields for data resources",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "description": {
+      "type": "string"
+    },
+    "required": {
+      "default": true,
+      "type": "boolean"
+    },
+    "justification": {
+      "description": "Why this permission is needed",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "resource",
+    "actions",
+    "scope",
+    "description",
+    "required"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/Permission.json",
+  "x-spec-version": "3.0.11"
+}

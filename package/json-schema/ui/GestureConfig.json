@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "swipe",
+        "pinch",
+        "long_press",
+        "double_tap",
+        "drag",
+        "rotate",
+        "pan"
+      ],
+      "description": "Gesture type to configure"
+    },
+    "label": {
+      "description": "Descriptive label for the gesture action",
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "key": {
+              "type": "string",
+              "description": "Translation key (e.g., \"views.task_list.label\")"
+            },
+            "defaultValue": {
+              "description": "Fallback value when translation key is not found",
+              "type": "string"
+            },
+            "params": {
+              "description": "Interpolation parameters (e.g., { count: 5 })",
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "boolean"
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "key"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "enabled": {
+      "default": true,
+      "description": "Whether this gesture is active",
+      "type": "boolean"
+    },
+    "swipe": {
+      "description": "Swipe gesture settings (when type is swipe)",
+      "type": "object",
+      "properties": {
+        "direction": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "up",
+              "down",
+              "left",
+              "right"
+            ]
+          },
+          "description": "Allowed swipe directions"
+        },
+        "threshold": {
+          "description": "Minimum distance in pixels to recognize swipe",
+          "type": "number"
+        },
+        "velocity": {
+          "description": "Minimum velocity (px/ms) to trigger swipe",
+          "type": "number"
+        }
+      },
+      "required": [
+        "direction"
+      ],
+      "additionalProperties": false
+    },
+    "pinch": {
+      "description": "Pinch gesture settings (when type is pinch)",
+      "type": "object",
+      "properties": {
+        "minScale": {
+          "description": "Minimum scale factor (e.g., 0.5 for 50%)",
+          "type": "number"
+        },
+        "maxScale": {
+          "description": "Maximum scale factor (e.g., 3.0 for 300%)",
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "longPress": {
+      "description": "Long press settings (when type is long_press)",
+      "type": "object",
+      "properties": {
+        "duration": {
+          "default": 500,
+          "description": "Hold duration in milliseconds to trigger long press",
+          "type": "number"
+        },
+        "moveTolerance": {
+          "description": "Max movement in pixels allowed during press",
+          "type": "number"
+        }
+      },
+      "required": [
+        "duration"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "type",
+    "enabled"
+  ],
+  "additionalProperties": false,
+  "description": "Per-gesture configuration",
+  "$id": "https://schema.objectstack.io/v3.0.11/ui/GestureConfig.json",
+  "x-spec-version": "3.0.11"
+}

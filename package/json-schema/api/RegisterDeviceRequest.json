@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "token": {
+      "type": "string",
+      "description": "Device push notification token"
+    },
+    "platform": {
+      "type": "string",
+      "enum": [
+        "ios",
+        "android",
+        "web"
+      ],
+      "description": "Device platform"
+    },
+    "deviceId": {
+      "description": "Unique device identifier",
+      "type": "string"
+    },
+    "name": {
+      "description": "Device friendly name",
+      "type": "string"
+    }
+  },
+  "required": [
+    "token",
+    "platform"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/RegisterDeviceRequest.json",
+  "x-spec-version": "3.0.11"
+}

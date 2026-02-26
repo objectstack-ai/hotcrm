@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "extractMetadata": {
+      "default": true,
+      "description": "Extract file metadata",
+      "type": "boolean"
+    },
+    "metadataFields": {
+      "description": "Metadata fields to extract",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "content_type",
+          "file_size",
+          "last_modified",
+          "etag",
+          "checksum",
+          "creator",
+          "created_at",
+          "custom"
+        ]
+      }
+    },
+    "customMetadata": {
+      "description": "Custom metadata key-value pairs",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "extractMetadata"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/integration/FileMetadataConfig.json",
+  "x-spec-version": "3.0.11"
+}

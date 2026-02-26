@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "provider": {
+      "type": "string",
+      "enum": [
+        "docusign",
+        "adobe-sign",
+        "hellosign",
+        "custom"
+      ],
+      "description": "E-signature provider"
+    },
+    "enabled": {
+      "default": false,
+      "description": "E-signature enabled",
+      "type": "boolean"
+    },
+    "signers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
+            "description": "Signer email"
+          },
+          "name": {
+            "type": "string",
+            "description": "Signer name"
+          },
+          "role": {
+            "type": "string",
+            "description": "Signer role"
+          },
+          "order": {
+            "type": "number",
+            "description": "Signing order"
+          }
+        },
+        "required": [
+          "email",
+          "name",
+          "role",
+          "order"
+        ],
+        "additionalProperties": false
+      },
+      "description": "Document signers"
+    },
+    "expirationDays": {
+      "default": 30,
+      "description": "Expiration days",
+      "type": "number"
+    },
+    "reminderDays": {
+      "default": 7,
+      "description": "Reminder interval days",
+      "type": "number"
+    }
+  },
+  "required": [
+    "provider",
+    "enabled",
+    "signers",
+    "expirationDays",
+    "reminderDays"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/data/ESignatureConfig.json",
+  "x-spec-version": "3.0.11"
+}

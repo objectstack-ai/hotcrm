@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schemas": {
+      "default": [
+        "urn:ietf:params:scim:api:messages:2.0:BulkRequest"
+      ],
+      "description": "SCIM schema URIs (BulkRequest)",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "const": "urn:ietf:params:scim:api:messages:2.0:BulkRequest"
+      }
+    },
+    "operations": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "method": {
+            "type": "string",
+            "enum": [
+              "POST",
+              "PUT",
+              "PATCH",
+              "DELETE"
+            ],
+            "description": "HTTP method for the bulk operation"
+          },
+          "path": {
+            "type": "string",
+            "description": "Resource endpoint path (e.g. /Users, /Groups/{id})"
+          },
+          "bulkId": {
+            "description": "Client-assigned ID for cross-referencing between operations",
+            "type": "string"
+          },
+          "data": {
+            "description": "Request body for POST/PUT/PATCH operations",
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {}
+          },
+          "version": {
+            "description": "ETag for optimistic concurrency control",
+            "type": "string"
+          }
+        },
+        "required": [
+          "method",
+          "path"
+        ],
+        "additionalProperties": false
+      },
+      "description": "Bulk operations to execute (minimum 1)"
+    },
+    "failOnErrors": {
+      "description": "Stop processing after this many errors",
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991
+    }
+  },
+  "required": [
+    "schemas",
+    "operations"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/identity/SCIMBulkRequest.json",
+  "x-spec-version": "3.0.11"
+}

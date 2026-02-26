@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "model",
+    "provider",
+    "user",
+    "agent",
+    "object",
+    "operation",
+    "date",
+    "hour",
+    "tag"
+  ],
+  "$id": "https://schema.objectstack.io/v3.0.11/ai/CostBreakdownDimension.json",
+  "x-spec-version": "3.0.11"
+}

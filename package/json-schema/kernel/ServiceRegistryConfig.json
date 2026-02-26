@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "strictMode": {
+      "default": true,
+      "description": "Throw errors on invalid operations (duplicate registration, service not found, etc.)",
+      "type": "boolean"
+    },
+    "allowOverwrite": {
+      "default": false,
+      "description": "Allow overwriting existing service registrations",
+      "type": "boolean"
+    },
+    "enableLogging": {
+      "default": false,
+      "description": "Enable logging for service registration and retrieval",
+      "type": "boolean"
+    },
+    "scopeTypes": {
+      "description": "Supported scope types",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "maxServices": {
+      "description": "Maximum number of services that can be registered",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    }
+  },
+  "required": [
+    "strictMode",
+    "allowOverwrite",
+    "enableLogging"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/ServiceRegistryConfig.json",
+  "x-spec-version": "3.0.11"
+}

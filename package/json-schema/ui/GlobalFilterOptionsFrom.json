@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "object": {
+      "type": "string",
+      "description": "Source object name"
+    },
+    "valueField": {
+      "type": "string",
+      "description": "Field to use as option value"
+    },
+    "labelField": {
+      "type": "string",
+      "description": "Field to use as option label"
+    },
+    "filter": {
+      "description": "Filter to apply to source object",
+      "$ref": "#/$defs/__schema0"
+    }
+  },
+  "required": [
+    "object",
+    "valueField",
+    "labelField"
+  ],
+  "additionalProperties": false,
+  "description": "Dynamic filter options from object",
+  "$defs": {
+    "__schema0": {
+      "allOf": [
+        {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {}
+        },
+        {
+          "type": "object",
+          "properties": {
+            "$and": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/__schema0"
+              }
+            },
+            "$or": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/__schema0"
+              }
+            },
+            "$not": {
+              "$ref": "#/$defs/__schema0"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    }
+  },
+  "$id": "https://schema.objectstack.io/v3.0.11/ui/GlobalFilterOptionsFrom.json",
+  "x-spec-version": "3.0.11"
+}

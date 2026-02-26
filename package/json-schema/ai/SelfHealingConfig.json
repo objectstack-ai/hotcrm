@@ -1,0 +1,235 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "enabled": {
+      "default": true,
+      "type": "boolean"
+    },
+    "strategy": {
+      "default": "moderate",
+      "type": "string",
+      "enum": [
+        "conservative",
+        "moderate",
+        "aggressive"
+      ]
+    },
+    "actions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "restart",
+              "scale",
+              "rollback",
+              "clear-cache",
+              "adjust-config",
+              "execute-script",
+              "notify"
+            ]
+          },
+          "trigger": {
+            "type": "object",
+            "properties": {
+              "healthStatus": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "healthy",
+                    "degraded",
+                    "unhealthy",
+                    "failed",
+                    "recovering",
+                    "unknown"
+                  ],
+                  "description": "Current health status of the plugin"
+                }
+              },
+              "anomalyTypes": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "errorPatterns": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "customCondition": {
+                "description": "Custom trigger condition (e.g., \"errorRate > 0.1\")",
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          },
+          "parameters": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {}
+          },
+          "maxAttempts": {
+            "default": 3,
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "cooldown": {
+            "default": 60,
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "timeout": {
+            "default": 300,
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "requireApproval": {
+            "default": false,
+            "type": "boolean"
+          },
+          "priority": {
+            "default": 5,
+            "description": "Action priority (lower number = higher priority)",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "trigger",
+          "maxAttempts",
+          "cooldown",
+          "timeout",
+          "requireApproval",
+          "priority"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "anomalyDetection": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": true,
+          "type": "boolean"
+        },
+        "metrics": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "cpu-usage",
+              "memory-usage",
+              "response-time",
+              "error-rate",
+              "throughput",
+              "latency",
+              "connection-count",
+              "queue-depth"
+            ]
+          }
+        },
+        "algorithm": {
+          "default": "hybrid",
+          "type": "string",
+          "enum": [
+            "statistical",
+            "machine-learning",
+            "heuristic",
+            "hybrid"
+          ]
+        },
+        "sensitivity": {
+          "default": "medium",
+          "description": "How aggressively to detect anomalies",
+          "type": "string",
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ]
+        },
+        "timeWindow": {
+          "default": 300,
+          "description": "Historical data window for anomaly detection",
+          "type": "integer",
+          "minimum": 60,
+          "maximum": 9007199254740991
+        },
+        "confidenceThreshold": {
+          "default": 80,
+          "description": "Minimum confidence to flag as anomaly",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "alertOnDetection": {
+          "default": true,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enabled",
+        "metrics",
+        "algorithm",
+        "sensitivity",
+        "timeWindow",
+        "confidenceThreshold",
+        "alertOnDetection"
+      ],
+      "additionalProperties": false
+    },
+    "maxConcurrentHealing": {
+      "default": 1,
+      "description": "Maximum number of simultaneous healing attempts",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "learning": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": true,
+          "description": "Learn from successful/failed healing attempts",
+          "type": "boolean"
+        },
+        "feedbackLoop": {
+          "default": true,
+          "description": "Adjust strategy based on outcomes",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enabled",
+        "feedbackLoop"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "enabled",
+    "strategy",
+    "actions",
+    "maxConcurrentHealing"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/ai/SelfHealingConfig.json",
+  "x-spec-version": "3.0.11"
+}

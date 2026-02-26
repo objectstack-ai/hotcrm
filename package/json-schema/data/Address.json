@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "street": {
+      "description": "Street address",
+      "type": "string"
+    },
+    "city": {
+      "description": "City name",
+      "type": "string"
+    },
+    "state": {
+      "description": "State/Province",
+      "type": "string"
+    },
+    "postalCode": {
+      "description": "Postal/ZIP code",
+      "type": "string"
+    },
+    "country": {
+      "description": "Country name or code",
+      "type": "string"
+    },
+    "countryCode": {
+      "description": "ISO country code (e.g., US, GB)",
+      "type": "string"
+    },
+    "formatted": {
+      "description": "Formatted address string",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/data/Address.json",
+  "x-spec-version": "3.0.11"
+}

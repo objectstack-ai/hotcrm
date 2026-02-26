@@ -1,0 +1,710 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[a-z_][a-z0-9_]*$",
+      "description": "Configuration name (snake_case, max 64 chars)"
+    },
+    "label": {
+      "type": "string",
+      "description": "Display label"
+    },
+    "enabled": {
+      "default": true,
+      "type": "boolean"
+    },
+    "level": {
+      "default": "info",
+      "type": "string",
+      "enum": [
+        "trace",
+        "debug",
+        "info",
+        "warn",
+        "error",
+        "fatal"
+      ],
+      "description": "Extended log severity level"
+    },
+    "default": {
+      "description": "Default logger configuration",
+      "type": "object",
+      "properties": {
+        "name": {
+          "description": "Logger name identifier",
+          "type": "string"
+        },
+        "level": {
+          "default": "info",
+          "type": "string",
+          "enum": [
+            "debug",
+            "info",
+            "warn",
+            "error",
+            "fatal",
+            "silent"
+          ],
+          "description": "Log severity level"
+        },
+        "format": {
+          "default": "json",
+          "type": "string",
+          "enum": [
+            "json",
+            "text",
+            "pretty"
+          ],
+          "description": "Log output format"
+        },
+        "redact": {
+          "default": [
+            "password",
+            "token",
+            "secret",
+            "key"
+          ],
+          "description": "Keys to redact from log context",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sourceLocation": {
+          "default": false,
+          "description": "Include file and line number",
+          "type": "boolean"
+        },
+        "file": {
+          "description": "Path to log file",
+          "type": "string"
+        },
+        "rotation": {
+          "type": "object",
+          "properties": {
+            "maxSize": {
+              "default": "10m",
+              "type": "string"
+            },
+            "maxFiles": {
+              "default": 5,
+              "type": "number"
+            }
+          },
+          "required": [
+            "maxSize",
+            "maxFiles"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "level",
+        "format",
+        "redact",
+        "sourceLocation"
+      ],
+      "additionalProperties": false
+    },
+    "loggers": {
+      "description": "Named logger configurations",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "description": "Logger name identifier",
+            "type": "string"
+          },
+          "level": {
+            "default": "info",
+            "type": "string",
+            "enum": [
+              "debug",
+              "info",
+              "warn",
+              "error",
+              "fatal",
+              "silent"
+            ],
+            "description": "Log severity level"
+          },
+          "format": {
+            "default": "json",
+            "type": "string",
+            "enum": [
+              "json",
+              "text",
+              "pretty"
+            ],
+            "description": "Log output format"
+          },
+          "redact": {
+            "default": [
+              "password",
+              "token",
+              "secret",
+              "key"
+            ],
+            "description": "Keys to redact from log context",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "sourceLocation": {
+            "default": false,
+            "description": "Include file and line number",
+            "type": "boolean"
+          },
+          "file": {
+            "description": "Path to log file",
+            "type": "string"
+          },
+          "rotation": {
+            "type": "object",
+            "properties": {
+              "maxSize": {
+                "default": "10m",
+                "type": "string"
+              },
+              "maxFiles": {
+                "default": 5,
+                "type": "number"
+              }
+            },
+            "required": [
+              "maxSize",
+              "maxFiles"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "level",
+          "format",
+          "redact",
+          "sourceLocation"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "destinations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z_][a-z0-9_]*$",
+            "description": "Destination name (snake_case)"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "console",
+              "file",
+              "syslog",
+              "elasticsearch",
+              "cloudwatch",
+              "stackdriver",
+              "azure_monitor",
+              "datadog",
+              "splunk",
+              "loki",
+              "http",
+              "kafka",
+              "redis",
+              "custom"
+            ],
+            "description": "Destination type"
+          },
+          "level": {
+            "default": "info",
+            "type": "string",
+            "enum": [
+              "trace",
+              "debug",
+              "info",
+              "warn",
+              "error",
+              "fatal"
+            ],
+            "description": "Extended log severity level"
+          },
+          "enabled": {
+            "default": true,
+            "type": "boolean"
+          },
+          "console": {
+            "type": "object",
+            "properties": {
+              "stream": {
+                "default": "stdout",
+                "type": "string",
+                "enum": [
+                  "stdout",
+                  "stderr"
+                ]
+              },
+              "colors": {
+                "default": true,
+                "type": "boolean"
+              },
+              "prettyPrint": {
+                "default": false,
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "stream",
+              "colors",
+              "prettyPrint"
+            ],
+            "additionalProperties": false,
+            "description": "Console destination configuration"
+          },
+          "file": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string",
+                "description": "Log file path"
+              },
+              "rotation": {
+                "type": "object",
+                "properties": {
+                  "maxSize": {
+                    "default": "10m",
+                    "type": "string"
+                  },
+                  "maxFiles": {
+                    "default": 5,
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "compress": {
+                    "default": true,
+                    "type": "boolean"
+                  },
+                  "interval": {
+                    "type": "string",
+                    "enum": [
+                      "hourly",
+                      "daily",
+                      "weekly",
+                      "monthly"
+                    ]
+                  }
+                },
+                "required": [
+                  "maxSize",
+                  "maxFiles",
+                  "compress"
+                ],
+                "additionalProperties": false
+              },
+              "encoding": {
+                "default": "utf8",
+                "type": "string"
+              },
+              "append": {
+                "default": true,
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "path",
+              "encoding",
+              "append"
+            ],
+            "additionalProperties": false,
+            "description": "File destination configuration"
+          },
+          "http": {
+            "type": "object",
+            "properties": {
+              "url": {
+                "type": "string",
+                "format": "uri",
+                "description": "HTTP endpoint URL"
+              },
+              "method": {
+                "default": "POST",
+                "type": "string",
+                "enum": [
+                  "POST",
+                  "PUT"
+                ]
+              },
+              "headers": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "type": "string"
+                }
+              },
+              "auth": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "basic",
+                      "bearer",
+                      "api_key"
+                    ],
+                    "description": "Auth type"
+                  },
+                  "username": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  },
+                  "token": {
+                    "type": "string"
+                  },
+                  "apiKey": {
+                    "type": "string"
+                  },
+                  "apiKeyHeader": {
+                    "default": "X-API-Key",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "apiKeyHeader"
+                ],
+                "additionalProperties": false
+              },
+              "batch": {
+                "type": "object",
+                "properties": {
+                  "maxSize": {
+                    "default": 100,
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "flushInterval": {
+                    "default": 5000,
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "maxSize",
+                  "flushInterval"
+                ],
+                "additionalProperties": false
+              },
+              "retry": {
+                "type": "object",
+                "properties": {
+                  "maxAttempts": {
+                    "default": 3,
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "initialDelay": {
+                    "default": 1000,
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "backoffMultiplier": {
+                    "default": 2,
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  }
+                },
+                "required": [
+                  "maxAttempts",
+                  "initialDelay",
+                  "backoffMultiplier"
+                ],
+                "additionalProperties": false
+              },
+              "timeout": {
+                "default": 30000,
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "url",
+              "method",
+              "timeout"
+            ],
+            "additionalProperties": false,
+            "description": "HTTP destination configuration"
+          },
+          "externalService": {
+            "type": "object",
+            "properties": {
+              "endpoint": {
+                "type": "string",
+                "format": "uri"
+              },
+              "region": {
+                "type": "string"
+              },
+              "credentials": {
+                "type": "object",
+                "properties": {
+                  "accessKeyId": {
+                    "type": "string"
+                  },
+                  "secretAccessKey": {
+                    "type": "string"
+                  },
+                  "apiKey": {
+                    "type": "string"
+                  },
+                  "projectId": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "logGroup": {
+                "type": "string"
+              },
+              "logStream": {
+                "type": "string"
+              },
+              "index": {
+                "type": "string"
+              },
+              "config": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {}
+              }
+            },
+            "additionalProperties": false,
+            "description": "External service destination configuration"
+          },
+          "format": {
+            "default": "json",
+            "type": "string",
+            "enum": [
+              "json",
+              "text",
+              "pretty"
+            ]
+          },
+          "filterId": {
+            "description": "Filter function identifier",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "type",
+          "level",
+          "enabled",
+          "format"
+        ],
+        "additionalProperties": false,
+        "description": "Log destination configuration"
+      },
+      "description": "Log destinations"
+    },
+    "enrichment": {
+      "type": "object",
+      "properties": {
+        "staticFields": {
+          "description": "Static fields added to every log",
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {}
+        },
+        "dynamicEnrichers": {
+          "description": "Dynamic enricher function IDs",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "addHostname": {
+          "default": true,
+          "type": "boolean"
+        },
+        "addProcessId": {
+          "default": true,
+          "type": "boolean"
+        },
+        "addEnvironment": {
+          "default": true,
+          "type": "boolean"
+        },
+        "addTimestampFormats": {
+          "type": "object",
+          "properties": {
+            "unix": {
+              "default": false,
+              "type": "boolean"
+            },
+            "iso": {
+              "default": true,
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "unix",
+            "iso"
+          ],
+          "additionalProperties": false
+        },
+        "addCaller": {
+          "default": false,
+          "type": "boolean"
+        },
+        "addCorrelationIds": {
+          "default": true,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "addHostname",
+        "addProcessId",
+        "addEnvironment",
+        "addCaller",
+        "addCorrelationIds"
+      ],
+      "additionalProperties": false,
+      "description": "Log enrichment configuration"
+    },
+    "redact": {
+      "default": [
+        "password",
+        "passwordHash",
+        "token",
+        "apiKey",
+        "secret",
+        "creditCard",
+        "ssn",
+        "authorization"
+      ],
+      "description": "Fields to redact",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "sampling": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "type": "boolean"
+        },
+        "rate": {
+          "default": 1,
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "rateByLevel": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        }
+      },
+      "required": [
+        "enabled",
+        "rate"
+      ],
+      "additionalProperties": false
+    },
+    "buffer": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": true,
+          "type": "boolean"
+        },
+        "size": {
+          "default": 1000,
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "flushInterval": {
+          "default": 1000,
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "flushOnShutdown": {
+          "default": true,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enabled",
+        "size",
+        "flushInterval",
+        "flushOnShutdown"
+      ],
+      "additionalProperties": false
+    },
+    "performance": {
+      "type": "object",
+      "properties": {
+        "async": {
+          "default": true,
+          "type": "boolean"
+        },
+        "workers": {
+          "default": 1,
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "async",
+        "workers"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "name",
+    "label",
+    "enabled",
+    "level",
+    "destinations",
+    "redact"
+  ],
+  "additionalProperties": false,
+  "description": "Logging configuration",
+  "$id": "https://schema.objectstack.io/v3.0.11/system/LoggingConfig.json",
+  "x-spec-version": "3.0.11"
+}

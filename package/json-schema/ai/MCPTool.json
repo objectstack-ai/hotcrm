@@ -1,0 +1,220 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z_][a-z0-9_]*$",
+      "description": "Tool function name (snake_case)"
+    },
+    "description": {
+      "type": "string",
+      "description": "Tool description for AI consumption (be detailed and specific)"
+    },
+    "parameters": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/__schema0"
+      },
+      "description": "Tool parameters"
+    },
+    "returns": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "string",
+            "number",
+            "boolean",
+            "object",
+            "array",
+            "void"
+          ]
+        },
+        "description": {
+          "type": "string"
+        },
+        "schema": {
+          "description": "Return value schema",
+          "$ref": "#/$defs/__schema0"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "handler": {
+      "type": "string",
+      "description": "Handler function or endpoint reference"
+    },
+    "async": {
+      "default": true,
+      "description": "Whether the tool executes asynchronously",
+      "type": "boolean"
+    },
+    "timeout": {
+      "description": "Execution timeout in milliseconds",
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    },
+    "sideEffects": {
+      "default": "read",
+      "description": "Tool side effects",
+      "type": "string",
+      "enum": [
+        "none",
+        "read",
+        "write",
+        "delete"
+      ]
+    },
+    "requiresConfirmation": {
+      "default": false,
+      "description": "Require user confirmation before execution",
+      "type": "boolean"
+    },
+    "confirmationMessage": {
+      "type": "string"
+    },
+    "examples": {
+      "description": "Usage examples for AI learning",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "parameters": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {}
+          },
+          "result": {}
+        },
+        "required": [
+          "description",
+          "parameters"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "category": {
+      "description": "Tool category (e.g., \"data\", \"workflow\", \"analytics\")",
+      "type": "string"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "deprecated": {
+      "default": false,
+      "type": "boolean"
+    },
+    "version": {
+      "default": "1.0.0",
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "description",
+    "parameters",
+    "handler",
+    "async",
+    "sideEffects",
+    "requiresConfirmation",
+    "deprecated",
+    "version"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "__schema0": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Parameter name"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "string",
+            "number",
+            "boolean",
+            "object",
+            "array"
+          ]
+        },
+        "description": {
+          "type": "string",
+          "description": "Parameter description for AI consumption"
+        },
+        "required": {
+          "default": false,
+          "type": "boolean"
+        },
+        "default": {},
+        "enum": {
+          "description": "Allowed values",
+          "type": "array",
+          "items": {}
+        },
+        "pattern": {
+          "description": "Regex validation pattern (for strings)",
+          "type": "string"
+        },
+        "minimum": {
+          "description": "Minimum value (for numbers)",
+          "type": "number"
+        },
+        "maximum": {
+          "description": "Maximum value (for numbers)",
+          "type": "number"
+        },
+        "minLength": {
+          "description": "Minimum length (for strings/arrays)",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maxLength": {
+          "description": "Maximum length (for strings/arrays)",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "properties": {
+          "description": "Properties for object types",
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/__schema0"
+          }
+        },
+        "items": {
+          "description": "Item schema for array types",
+          "$ref": "#/$defs/__schema0"
+        }
+      },
+      "required": [
+        "name",
+        "type",
+        "description",
+        "required"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$id": "https://schema.objectstack.io/v3.0.11/ai/MCPTool.json",
+  "x-spec-version": "3.0.11"
+}

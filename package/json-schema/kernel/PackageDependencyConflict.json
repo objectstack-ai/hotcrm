@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "package": {
+      "type": "string",
+      "description": "Name of the package with conflicting version requirements"
+    },
+    "conflicts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string",
+            "description": "Conflicting version of the package"
+          },
+          "requestedBy": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Packages that require this version"
+          },
+          "constraint": {
+            "type": "string",
+            "description": "Semver constraint that produced this version requirement"
+          }
+        },
+        "required": [
+          "version",
+          "requestedBy",
+          "constraint"
+        ],
+        "additionalProperties": false
+      },
+      "description": "List of conflicting version requirements"
+    },
+    "resolution": {
+      "description": "Suggested resolution for the conflict",
+      "type": "object",
+      "properties": {
+        "strategy": {
+          "type": "string",
+          "enum": [
+            "pick-highest",
+            "pick-lowest",
+            "manual"
+          ],
+          "description": "Strategy used to resolve the conflict"
+        },
+        "version": {
+          "description": "Resolved version selected by the strategy",
+          "type": "string"
+        },
+        "reason": {
+          "description": "Explanation of why this resolution was chosen",
+          "type": "string"
+        }
+      },
+      "required": [
+        "strategy"
+      ],
+      "additionalProperties": false
+    },
+    "severity": {
+      "type": "string",
+      "enum": [
+        "error",
+        "warning",
+        "info"
+      ],
+      "description": "Severity level of the dependency conflict"
+    }
+  },
+  "required": [
+    "package",
+    "conflicts",
+    "severity"
+  ],
+  "additionalProperties": false,
+  "description": "A detected conflict between dependency version requirements",
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/PackageDependencyConflict.json",
+  "x-spec-version": "3.0.11"
+}

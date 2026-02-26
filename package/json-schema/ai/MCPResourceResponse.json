@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "resource": {
+      "type": "object",
+      "properties": {
+        "uri": {
+          "type": "string",
+          "description": "Unique resource identifier (e.g., \"objectstack://objects/account/ABC123\")"
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-readable resource name"
+        },
+        "description": {
+          "description": "Resource description for AI consumption",
+          "type": "string"
+        },
+        "mimeType": {
+          "description": "MIME type (e.g., \"application/json\", \"text/plain\")",
+          "type": "string"
+        },
+        "resourceType": {
+          "default": "json",
+          "type": "string",
+          "enum": [
+            "text",
+            "json",
+            "binary",
+            "stream"
+          ]
+        },
+        "content": {
+          "description": "Resource content (for static resources)"
+        },
+        "contentUrl": {
+          "description": "URL to fetch content dynamically",
+          "type": "string",
+          "format": "uri"
+        },
+        "size": {
+          "description": "Resource size in bytes",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "lastModified": {
+          "description": "Last modification timestamp (ISO 8601)",
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+        },
+        "tags": {
+          "description": "Tags for resource categorization",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "permissions": {
+          "type": "object",
+          "properties": {
+            "read": {
+              "default": true,
+              "type": "boolean"
+            },
+            "write": {
+              "default": false,
+              "type": "boolean"
+            },
+            "delete": {
+              "default": false,
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "read",
+            "write",
+            "delete"
+          ],
+          "additionalProperties": false
+        },
+        "cacheable": {
+          "default": true,
+          "description": "Whether this resource can be cached",
+          "type": "boolean"
+        },
+        "cacheMaxAge": {
+          "description": "Cache max age in seconds",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "uri",
+        "name",
+        "resourceType",
+        "cacheable"
+      ],
+      "additionalProperties": false
+    },
+    "content": {
+      "description": "Resource content"
+    }
+  },
+  "required": [
+    "resource",
+    "content"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/ai/MCPResourceResponse.json",
+  "x-spec-version": "3.0.11"
+}

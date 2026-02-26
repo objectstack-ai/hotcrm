@@ -1,0 +1,167 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "enabled": {
+      "default": true,
+      "description": "Enable ER diagram panel",
+      "type": "boolean"
+    },
+    "layout": {
+      "default": "force",
+      "description": "Default layout algorithm",
+      "type": "string",
+      "enum": [
+        "force",
+        "hierarchy",
+        "grid",
+        "circular"
+      ]
+    },
+    "nodeDisplay": {
+      "default": {
+        "showFields": true,
+        "maxFieldsVisible": 8,
+        "showFieldTypes": true,
+        "showRequiredIndicator": true,
+        "showRecordCount": false,
+        "showIcon": true,
+        "showDescription": true
+      },
+      "description": "Node display configuration",
+      "type": "object",
+      "properties": {
+        "showFields": {
+          "default": true,
+          "description": "Show field list inside entity nodes",
+          "type": "boolean"
+        },
+        "maxFieldsVisible": {
+          "default": 8,
+          "description": "Max fields visible before \"N more...\" collapse",
+          "type": "number"
+        },
+        "showFieldTypes": {
+          "default": true,
+          "description": "Show field type badges",
+          "type": "boolean"
+        },
+        "showRequiredIndicator": {
+          "default": true,
+          "description": "Show required field indicators",
+          "type": "boolean"
+        },
+        "showRecordCount": {
+          "default": false,
+          "description": "Show live record count on nodes",
+          "type": "boolean"
+        },
+        "showIcon": {
+          "default": true,
+          "description": "Show object icon on node header",
+          "type": "boolean"
+        },
+        "showDescription": {
+          "default": true,
+          "description": "Show description tooltip on hover",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "showFields",
+        "maxFieldsVisible",
+        "showFieldTypes",
+        "showRequiredIndicator",
+        "showRecordCount",
+        "showIcon",
+        "showDescription"
+      ],
+      "additionalProperties": false
+    },
+    "showMinimap": {
+      "default": true,
+      "description": "Show minimap for large diagrams",
+      "type": "boolean"
+    },
+    "zoomControls": {
+      "default": true,
+      "description": "Show zoom in/out/fit controls",
+      "type": "boolean"
+    },
+    "minZoom": {
+      "default": 0.1,
+      "description": "Minimum zoom level",
+      "type": "number"
+    },
+    "maxZoom": {
+      "default": 3,
+      "description": "Maximum zoom level",
+      "type": "number"
+    },
+    "showEdgeLabels": {
+      "default": true,
+      "description": "Show cardinality labels on relationship edges",
+      "type": "boolean"
+    },
+    "highlightOnHover": {
+      "default": true,
+      "description": "Highlight connected entities on node hover",
+      "type": "boolean"
+    },
+    "clickToNavigate": {
+      "default": true,
+      "description": "Click node to navigate to object detail",
+      "type": "boolean"
+    },
+    "dragToConnect": {
+      "default": true,
+      "description": "Drag between nodes to create relationships",
+      "type": "boolean"
+    },
+    "hideOrphans": {
+      "default": false,
+      "description": "Hide objects with no relationships",
+      "type": "boolean"
+    },
+    "autoFit": {
+      "default": true,
+      "description": "Auto-fit diagram to viewport on load",
+      "type": "boolean"
+    },
+    "exportFormats": {
+      "default": [
+        "png",
+        "svg"
+      ],
+      "description": "Available export formats for diagram",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "png",
+          "svg",
+          "json"
+        ]
+      }
+    }
+  },
+  "required": [
+    "enabled",
+    "layout",
+    "nodeDisplay",
+    "showMinimap",
+    "zoomControls",
+    "minZoom",
+    "maxZoom",
+    "showEdgeLabels",
+    "highlightOnHover",
+    "clickToNavigate",
+    "dragToConnect",
+    "hideOrphans",
+    "autoFit",
+    "exportFormats"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/studio/ERDiagramConfig.json",
+  "x-spec-version": "3.0.11"
+}

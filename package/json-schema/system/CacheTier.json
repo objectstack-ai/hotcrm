@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Unique cache tier name"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "memory",
+        "redis",
+        "memcached",
+        "cdn"
+      ],
+      "description": "Cache backend type"
+    },
+    "maxSize": {
+      "description": "Max size in MB",
+      "type": "number"
+    },
+    "ttl": {
+      "default": 300,
+      "description": "Default TTL in seconds",
+      "type": "number"
+    },
+    "strategy": {
+      "default": "lru",
+      "description": "Eviction strategy",
+      "type": "string",
+      "enum": [
+        "lru",
+        "lfu",
+        "fifo",
+        "ttl",
+        "adaptive"
+      ]
+    },
+    "warmup": {
+      "default": false,
+      "description": "Pre-populate cache on startup",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "name",
+    "type",
+    "ttl",
+    "strategy",
+    "warmup"
+  ],
+  "additionalProperties": false,
+  "description": "Configuration for a single cache tier in the hierarchy",
+  "$id": "https://schema.objectstack.io/v3.0.11/system/CacheTier.json",
+  "x-spec-version": "3.0.11"
+}

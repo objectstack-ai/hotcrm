@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "registry",
+        "npm",
+        "directory",
+        "url"
+      ],
+      "description": "Discovery source type"
+    },
+    "endpoint": {
+      "type": "string",
+      "description": "Registry URL, directory path, or manifest URL"
+    },
+    "pollInterval": {
+      "default": 0,
+      "description": "How often to re-scan for new plugins (0 = manual)",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "filter": {
+      "type": "object",
+      "properties": {
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "vendors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "minTrustLevel": {
+          "type": "string",
+          "enum": [
+            "verified",
+            "trusted",
+            "community",
+            "untrusted"
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "type",
+    "endpoint",
+    "pollInterval"
+  ],
+  "additionalProperties": false,
+  "description": "Source for runtime plugin discovery",
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/PluginDiscoverySource.json",
+  "x-spec-version": "3.0.11"
+}

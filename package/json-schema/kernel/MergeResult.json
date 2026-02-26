@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "success": {
+      "type": "boolean",
+      "description": "Whether merge completed without unresolved conflicts"
+    },
+    "mergedMetadata": {
+      "description": "Merged metadata result",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
+    },
+    "updatedOverlay": {
+      "description": "Updated overlay after merge",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
+    },
+    "conflicts": {
+      "description": "Unresolved merge conflicts",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "JSON path to the conflicting field"
+          },
+          "baseValue": {
+            "description": "Value in the old package version"
+          },
+          "incomingValue": {
+            "description": "Value in the new package version"
+          },
+          "customValue": {
+            "description": "Customer customized value"
+          },
+          "suggestedResolution": {
+            "type": "string",
+            "enum": [
+              "keep-custom",
+              "accept-incoming",
+              "manual"
+            ],
+            "description": "Suggested resolution strategy"
+          },
+          "reason": {
+            "description": "Explanation for the suggested resolution",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "baseValue",
+          "incomingValue",
+          "customValue",
+          "suggestedResolution"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "autoResolved": {
+      "description": "Summary of auto-resolved changes",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "resolution": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "resolution"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "stats": {
+      "type": "object",
+      "properties": {
+        "totalFields": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991,
+          "description": "Total fields evaluated"
+        },
+        "unchanged": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991,
+          "description": "Fields with no changes"
+        },
+        "autoResolved": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991,
+          "description": "Fields auto-resolved"
+        },
+        "conflicts": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991,
+          "description": "Fields with conflicts"
+        }
+      },
+      "required": [
+        "totalFields",
+        "unchanged",
+        "autoResolved",
+        "conflicts"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "success"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/MergeResult.json",
+  "x-spec-version": "3.0.11"
+}

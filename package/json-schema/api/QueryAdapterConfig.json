@@ -1,0 +1,274 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "operatorMappings": {
+      "description": "Custom operator mappings",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "operator": {
+            "type": "string",
+            "description": "Unified DSL operator"
+          },
+          "rest": {
+            "description": "REST query parameter template",
+            "type": "string"
+          },
+          "graphql": {
+            "description": "GraphQL where clause template",
+            "type": "string"
+          },
+          "odata": {
+            "description": "OData $filter expression template",
+            "type": "string"
+          }
+        },
+        "required": [
+          "operator"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "rest": {
+      "description": "REST query adapter configuration",
+      "type": "object",
+      "properties": {
+        "filterStyle": {
+          "default": "bracket",
+          "description": "REST filter parameter encoding style",
+          "type": "string",
+          "enum": [
+            "bracket",
+            "dot",
+            "flat",
+            "rsql"
+          ]
+        },
+        "pagination": {
+          "description": "Pagination parameter name mappings",
+          "type": "object",
+          "properties": {
+            "limitParam": {
+              "default": "limit",
+              "description": "Page size parameter name",
+              "type": "string"
+            },
+            "offsetParam": {
+              "default": "offset",
+              "description": "Offset parameter name",
+              "type": "string"
+            },
+            "cursorParam": {
+              "default": "cursor",
+              "description": "Cursor parameter name",
+              "type": "string"
+            },
+            "pageParam": {
+              "default": "page",
+              "description": "Page number parameter name",
+              "type": "string"
+            }
+          },
+          "required": [
+            "limitParam",
+            "offsetParam",
+            "cursorParam",
+            "pageParam"
+          ],
+          "additionalProperties": false
+        },
+        "sorting": {
+          "description": "Sort parameter mapping",
+          "type": "object",
+          "properties": {
+            "param": {
+              "default": "sort",
+              "description": "Sort parameter name",
+              "type": "string"
+            },
+            "format": {
+              "default": "comma",
+              "description": "Sort parameter encoding format",
+              "type": "string",
+              "enum": [
+                "comma",
+                "array",
+                "pipe"
+              ]
+            }
+          },
+          "required": [
+            "param",
+            "format"
+          ],
+          "additionalProperties": false
+        },
+        "fieldsParam": {
+          "default": "fields",
+          "description": "Field selection parameter name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "filterStyle",
+        "fieldsParam"
+      ],
+      "additionalProperties": false
+    },
+    "graphql": {
+      "description": "GraphQL query adapter configuration",
+      "type": "object",
+      "properties": {
+        "filterArgName": {
+          "default": "where",
+          "description": "GraphQL filter argument name",
+          "type": "string"
+        },
+        "filterStyle": {
+          "default": "nested",
+          "description": "GraphQL filter nesting style",
+          "type": "string",
+          "enum": [
+            "nested",
+            "flat",
+            "array"
+          ]
+        },
+        "pagination": {
+          "description": "Pagination argument name mappings",
+          "type": "object",
+          "properties": {
+            "limitArg": {
+              "default": "limit",
+              "description": "Page size argument name",
+              "type": "string"
+            },
+            "offsetArg": {
+              "default": "offset",
+              "description": "Offset argument name",
+              "type": "string"
+            },
+            "firstArg": {
+              "default": "first",
+              "description": "Relay \"first\" argument name",
+              "type": "string"
+            },
+            "afterArg": {
+              "default": "after",
+              "description": "Relay \"after\" cursor argument name",
+              "type": "string"
+            }
+          },
+          "required": [
+            "limitArg",
+            "offsetArg",
+            "firstArg",
+            "afterArg"
+          ],
+          "additionalProperties": false
+        },
+        "sorting": {
+          "description": "Sort argument mapping",
+          "type": "object",
+          "properties": {
+            "argName": {
+              "default": "orderBy",
+              "description": "Sort argument name",
+              "type": "string"
+            },
+            "format": {
+              "default": "enum",
+              "description": "Sort argument format",
+              "type": "string",
+              "enum": [
+                "enum",
+                "array"
+              ]
+            }
+          },
+          "required": [
+            "argName",
+            "format"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "filterArgName",
+        "filterStyle"
+      ],
+      "additionalProperties": false
+    },
+    "odata": {
+      "description": "OData query adapter configuration",
+      "type": "object",
+      "properties": {
+        "version": {
+          "default": "v4",
+          "description": "OData version",
+          "type": "string",
+          "enum": [
+            "v2",
+            "v4"
+          ]
+        },
+        "usePrefix": {
+          "default": true,
+          "description": "Use $ prefix for system query options ($filter vs filter)",
+          "type": "boolean"
+        },
+        "stringFunctions": {
+          "description": "Supported OData string functions",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "contains",
+              "startswith",
+              "endswith",
+              "tolower",
+              "toupper",
+              "trim",
+              "concat",
+              "substring",
+              "length"
+            ]
+          }
+        },
+        "expand": {
+          "description": "$expand configuration",
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "default": true,
+              "description": "Enable $expand support",
+              "type": "boolean"
+            },
+            "maxDepth": {
+              "default": 3,
+              "description": "Maximum expand depth",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "enabled",
+            "maxDepth"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "version",
+        "usePrefix"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/QueryAdapterConfig.json",
+  "x-spec-version": "3.0.11"
+}

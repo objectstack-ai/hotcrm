@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "data": {
+      "description": "Metadata bundle to import"
+    },
+    "conflictResolution": {
+      "default": "skip",
+      "description": "Conflict resolution strategy",
+      "type": "string",
+      "enum": [
+        "skip",
+        "overwrite",
+        "merge"
+      ]
+    },
+    "validate": {
+      "default": true,
+      "description": "Validate before import",
+      "type": "boolean"
+    },
+    "dryRun": {
+      "default": false,
+      "description": "Dry run (no save)",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "data",
+    "conflictResolution",
+    "validate",
+    "dryRun"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/MetadataImportRequest.json",
+  "x-spec-version": "3.0.11"
+}

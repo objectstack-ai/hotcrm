@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "pluginName": {
+      "type": "string",
+      "description": "Name of the plugin"
+    },
+    "timestamp": {
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991,
+      "description": "Unix timestamp in milliseconds when event occurred"
+    },
+    "error": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Error class name"
+        },
+        "message": {
+          "type": "string",
+          "description": "Error message"
+        },
+        "stack": {
+          "description": "Stack trace",
+          "type": "string"
+        },
+        "code": {
+          "description": "Error code",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "message"
+      ],
+      "additionalProperties": false,
+      "description": "Serializable error representation"
+    },
+    "phase": {
+      "type": "string",
+      "enum": [
+        "init",
+        "start",
+        "destroy"
+      ],
+      "description": "Lifecycle phase where error occurred"
+    },
+    "errorMessage": {
+      "description": "Error message",
+      "type": "string"
+    },
+    "errorStack": {
+      "description": "Error stack trace",
+      "type": "string"
+    }
+  },
+  "required": [
+    "pluginName",
+    "timestamp",
+    "error",
+    "phase"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/PluginErrorEvent.json",
+  "x-spec-version": "3.0.11"
+}

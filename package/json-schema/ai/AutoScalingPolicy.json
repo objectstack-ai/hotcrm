@@ -1,0 +1,191 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "enabled": {
+      "default": false,
+      "type": "boolean"
+    },
+    "metric": {
+      "type": "string",
+      "enum": [
+        "cpu-usage",
+        "memory-usage",
+        "request-rate",
+        "response-time",
+        "queue-depth",
+        "custom"
+      ]
+    },
+    "customMetric": {
+      "type": "string"
+    },
+    "targetValue": {
+      "type": "number",
+      "description": "Desired metric value (e.g., 70 for 70% CPU)"
+    },
+    "bounds": {
+      "type": "object",
+      "properties": {
+        "minInstances": {
+          "default": 1,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "maxInstances": {
+          "default": 10,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "minResources": {
+          "type": "object",
+          "properties": {
+            "cpu": {
+              "description": "CPU limit (e.g., \"0.5\", \"1\")",
+              "type": "string"
+            },
+            "memory": {
+              "description": "Memory limit (e.g., \"512Mi\", \"1Gi\")",
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "maxResources": {
+          "type": "object",
+          "properties": {
+            "cpu": {
+              "type": "string"
+            },
+            "memory": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "minInstances",
+        "maxInstances"
+      ],
+      "additionalProperties": false
+    },
+    "scaleUp": {
+      "type": "object",
+      "properties": {
+        "threshold": {
+          "type": "number",
+          "description": "Metric value that triggers scale up"
+        },
+        "stabilizationWindow": {
+          "default": 60,
+          "description": "How long metric must exceed threshold",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "cooldown": {
+          "default": 300,
+          "description": "Minimum time between scale-up operations",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "stepSize": {
+          "default": 1,
+          "description": "Number of instances to add",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "threshold",
+        "stabilizationWindow",
+        "cooldown",
+        "stepSize"
+      ],
+      "additionalProperties": false
+    },
+    "scaleDown": {
+      "type": "object",
+      "properties": {
+        "threshold": {
+          "type": "number",
+          "description": "Metric value that triggers scale down"
+        },
+        "stabilizationWindow": {
+          "default": 300,
+          "description": "How long metric must be below threshold",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "cooldown": {
+          "default": 600,
+          "description": "Minimum time between scale-down operations",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "stepSize": {
+          "default": 1,
+          "description": "Number of instances to remove",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "threshold",
+        "stabilizationWindow",
+        "cooldown",
+        "stepSize"
+      ],
+      "additionalProperties": false
+    },
+    "predictive": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "description": "Use ML to predict future load",
+          "type": "boolean"
+        },
+        "lookAhead": {
+          "default": 300,
+          "description": "How far ahead to predict (seconds)",
+          "type": "integer",
+          "minimum": 60,
+          "maximum": 9007199254740991
+        },
+        "confidence": {
+          "default": 80,
+          "description": "Minimum confidence for prediction-based scaling",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        }
+      },
+      "required": [
+        "enabled",
+        "lookAhead",
+        "confidence"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "enabled",
+    "metric",
+    "targetValue",
+    "bounds",
+    "scaleUp",
+    "scaleDown"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/ai/AutoScalingPolicy.json",
+  "x-spec-version": "3.0.11"
+}

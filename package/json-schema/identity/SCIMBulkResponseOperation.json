@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "method": {
+      "type": "string",
+      "enum": [
+        "POST",
+        "PUT",
+        "PATCH",
+        "DELETE"
+      ],
+      "description": "HTTP method that was executed"
+    },
+    "bulkId": {
+      "description": "Client-assigned bulk operation ID",
+      "type": "string"
+    },
+    "location": {
+      "description": "URL of the created or modified resource",
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "description": "HTTP status code as string (e.g. \"201\", \"400\")"
+    },
+    "response": {
+      "description": "Response body (typically present for errors)"
+    }
+  },
+  "required": [
+    "method",
+    "status"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/identity/SCIMBulkResponseOperation.json",
+  "x-spec-version": "3.0.11"
+}

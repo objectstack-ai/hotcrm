@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "enabled": {
+      "default": true,
+      "description": "Enable producer",
+      "type": "boolean"
+    },
+    "acks": {
+      "default": "all",
+      "description": "Acknowledgment level",
+      "type": "string",
+      "enum": [
+        "0",
+        "1",
+        "all"
+      ]
+    },
+    "compressionType": {
+      "default": "none",
+      "description": "Compression type",
+      "type": "string",
+      "enum": [
+        "none",
+        "gzip",
+        "snappy",
+        "lz4",
+        "zstd"
+      ]
+    },
+    "batchSize": {
+      "default": 16384,
+      "description": "Batch size in bytes",
+      "type": "number",
+      "minimum": 1
+    },
+    "lingerMs": {
+      "default": 0,
+      "description": "Linger time in ms",
+      "type": "number",
+      "minimum": 0
+    },
+    "maxInFlightRequests": {
+      "default": 5,
+      "description": "Max in-flight requests",
+      "type": "number",
+      "minimum": 1
+    },
+    "idempotence": {
+      "default": true,
+      "description": "Enable idempotent producer",
+      "type": "boolean"
+    },
+    "transactional": {
+      "default": false,
+      "description": "Enable transactional producer",
+      "type": "boolean"
+    },
+    "transactionTimeoutMs": {
+      "description": "Transaction timeout in ms",
+      "type": "number",
+      "minimum": 1000
+    }
+  },
+  "required": [
+    "enabled",
+    "acks",
+    "compressionType",
+    "batchSize",
+    "lingerMs",
+    "maxInFlightRequests",
+    "idempotence",
+    "transactional"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/integration/ProducerConfig.json",
+  "x-spec-version": "3.0.11"
+}

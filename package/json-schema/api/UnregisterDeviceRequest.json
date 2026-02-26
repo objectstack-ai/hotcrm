@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "deviceId": {
+      "type": "string",
+      "description": "Device ID to unregister"
+    }
+  },
+  "required": [
+    "deviceId"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/UnregisterDeviceRequest.json",
+  "x-spec-version": "3.0.11"
+}

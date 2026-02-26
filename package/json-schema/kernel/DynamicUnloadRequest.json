@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "pluginId": {
+      "type": "string",
+      "description": "Plugin to unload"
+    },
+    "strategy": {
+      "default": "graceful",
+      "description": "How to handle in-flight work during unload",
+      "type": "string",
+      "enum": [
+        "graceful",
+        "forceful",
+        "drain"
+      ]
+    },
+    "timeout": {
+      "default": 30000,
+      "description": "Maximum time to complete unloading in ms",
+      "type": "integer",
+      "minimum": 1000,
+      "maximum": 9007199254740991
+    },
+    "cleanupCache": {
+      "default": false,
+      "description": "Remove cached code and assets after unload",
+      "type": "boolean"
+    },
+    "dependentAction": {
+      "default": "block",
+      "description": "How to handle plugins that depend on this one",
+      "type": "string",
+      "enum": [
+        "cascade",
+        "warn",
+        "block"
+      ]
+    }
+  },
+  "required": [
+    "pluginId",
+    "strategy",
+    "timeout",
+    "cleanupCache",
+    "dependentAction"
+  ],
+  "additionalProperties": false,
+  "description": "Request to dynamically unload a plugin at runtime",
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/DynamicUnloadRequest.json",
+  "x-spec-version": "3.0.11"
+}

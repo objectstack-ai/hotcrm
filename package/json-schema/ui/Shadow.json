@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "none": {
+      "description": "No shadow",
+      "type": "string"
+    },
+    "sm": {
+      "description": "Small shadow",
+      "type": "string"
+    },
+    "base": {
+      "description": "Base shadow",
+      "type": "string"
+    },
+    "md": {
+      "description": "Medium shadow",
+      "type": "string"
+    },
+    "lg": {
+      "description": "Large shadow",
+      "type": "string"
+    },
+    "xl": {
+      "description": "Extra large shadow",
+      "type": "string"
+    },
+    "2xl": {
+      "description": "2X large shadow",
+      "type": "string"
+    },
+    "inner": {
+      "description": "Inner shadow (inset)",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/ui/Shadow.json",
+  "x-spec-version": "3.0.11"
+}

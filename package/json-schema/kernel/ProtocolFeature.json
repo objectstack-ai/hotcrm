@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Feature identifier within the protocol"
+    },
+    "enabled": {
+      "default": true,
+      "type": "boolean"
+    },
+    "description": {
+      "type": "string"
+    },
+    "sinceVersion": {
+      "description": "Version when this feature was added",
+      "type": "string"
+    },
+    "deprecatedSince": {
+      "description": "Version when deprecated",
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "enabled"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/ProtocolFeature.json",
+  "x-spec-version": "3.0.11"
+}

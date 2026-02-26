@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "enabled": {
+      "default": true,
+      "description": "Enable incident response management",
+      "type": "boolean"
+    },
+    "notificationMatrix": {
+      "type": "object",
+      "properties": {
+        "rules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "severity": {
+                "type": "string",
+                "enum": [
+                  "critical",
+                  "high",
+                  "medium",
+                  "low"
+                ],
+                "description": "Minimum severity to trigger notification"
+              },
+              "channels": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "email",
+                    "sms",
+                    "slack",
+                    "pagerduty",
+                    "webhook"
+                  ]
+                },
+                "description": "Notification channels"
+              },
+              "recipients": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Roles or teams to notify"
+              },
+              "withinMinutes": {
+                "type": "number",
+                "minimum": 1,
+                "description": "Notification deadline in minutes from detection"
+              },
+              "notifyRegulators": {
+                "default": false,
+                "description": "Whether to notify regulatory authorities",
+                "type": "boolean"
+              },
+              "regulatorDeadlineHours": {
+                "description": "Regulatory notification deadline in hours",
+                "type": "number"
+              }
+            },
+            "required": [
+              "severity",
+              "channels",
+              "recipients",
+              "withinMinutes",
+              "notifyRegulators"
+            ],
+            "additionalProperties": false,
+            "description": "Incident notification rule per severity level"
+          },
+          "description": "Notification rules by severity level"
+        },
+        "escalationTimeoutMinutes": {
+          "default": 30,
+          "description": "Auto-escalation timeout in minutes",
+          "type": "number"
+        },
+        "escalationChain": {
+          "default": [],
+          "description": "Ordered escalation chain of roles",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "rules",
+        "escalationTimeoutMinutes",
+        "escalationChain"
+      ],
+      "additionalProperties": false,
+      "description": "Notification and escalation matrix"
+    },
+    "defaultResponseTeam": {
+      "type": "string",
+      "description": "Default incident response team or role"
+    },
+    "triageDeadlineHours": {
+      "default": 1,
+      "description": "Maximum hours to begin triage after detection",
+      "type": "number"
+    },
+    "requirePostIncidentReview": {
+      "default": true,
+      "description": "Require post-incident review for all incidents",
+      "type": "boolean"
+    },
+    "regulatoryNotificationThreshold": {
+      "default": "high",
+      "description": "Minimum severity requiring regulatory notification",
+      "type": "string",
+      "enum": [
+        "critical",
+        "high",
+        "medium",
+        "low"
+      ]
+    },
+    "retentionDays": {
+      "default": 2555,
+      "description": "Incident record retention period in days (default ~7 years)",
+      "type": "number"
+    }
+  },
+  "required": [
+    "enabled",
+    "notificationMatrix",
+    "defaultResponseTeam",
+    "triageDeadlineHours",
+    "requirePostIncidentReview",
+    "regulatoryNotificationThreshold",
+    "retentionDays"
+  ],
+  "additionalProperties": false,
+  "description": "Organization-level incident response policy per ISO 27001:2022",
+  "$id": "https://schema.objectstack.io/v3.0.11/system/IncidentResponsePolicy.json",
+  "x-spec-version": "3.0.11"
+}

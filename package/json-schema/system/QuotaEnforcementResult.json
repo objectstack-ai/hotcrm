@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "allowed": {
+      "type": "boolean",
+      "description": "Whether the operation is within quota"
+    },
+    "exceededQuota": {
+      "description": "Name of the exceeded quota",
+      "type": "string"
+    },
+    "currentUsage": {
+      "description": "Current usage value",
+      "type": "number"
+    },
+    "limit": {
+      "description": "Quota limit",
+      "type": "number"
+    },
+    "message": {
+      "description": "Human-readable quota message",
+      "type": "string"
+    }
+  },
+  "required": [
+    "allowed"
+  ],
+  "additionalProperties": false,
+  "description": "Quota enforcement check result",
+  "$id": "https://schema.objectstack.io/v3.0.11/system/QuotaEnforcementResult.json",
+  "x-spec-version": "3.0.11"
+}

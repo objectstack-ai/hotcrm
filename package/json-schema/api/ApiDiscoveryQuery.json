@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "type": {
+      "description": "Filter by API protocol type",
+      "type": "string",
+      "enum": [
+        "rest",
+        "graphql",
+        "odata",
+        "websocket",
+        "file",
+        "auth",
+        "metadata",
+        "plugin",
+        "webhook",
+        "rpc"
+      ]
+    },
+    "tags": {
+      "description": "Filter by tags (ANY match)",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "status": {
+      "description": "Filter by lifecycle status",
+      "type": "string",
+      "enum": [
+        "active",
+        "deprecated",
+        "experimental",
+        "beta"
+      ]
+    },
+    "pluginSource": {
+      "description": "Filter by plugin name",
+      "type": "string"
+    },
+    "search": {
+      "description": "Full-text search in name/description",
+      "type": "string"
+    },
+    "version": {
+      "description": "Filter by specific version",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/ApiDiscoveryQuery.json",
+  "x-spec-version": "3.0.11"
+}

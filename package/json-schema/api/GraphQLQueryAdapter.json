@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "filterArgName": {
+      "default": "where",
+      "description": "GraphQL filter argument name",
+      "type": "string"
+    },
+    "filterStyle": {
+      "default": "nested",
+      "description": "GraphQL filter nesting style",
+      "type": "string",
+      "enum": [
+        "nested",
+        "flat",
+        "array"
+      ]
+    },
+    "pagination": {
+      "description": "Pagination argument name mappings",
+      "type": "object",
+      "properties": {
+        "limitArg": {
+          "default": "limit",
+          "description": "Page size argument name",
+          "type": "string"
+        },
+        "offsetArg": {
+          "default": "offset",
+          "description": "Offset argument name",
+          "type": "string"
+        },
+        "firstArg": {
+          "default": "first",
+          "description": "Relay \"first\" argument name",
+          "type": "string"
+        },
+        "afterArg": {
+          "default": "after",
+          "description": "Relay \"after\" cursor argument name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "limitArg",
+        "offsetArg",
+        "firstArg",
+        "afterArg"
+      ],
+      "additionalProperties": false
+    },
+    "sorting": {
+      "description": "Sort argument mapping",
+      "type": "object",
+      "properties": {
+        "argName": {
+          "default": "orderBy",
+          "description": "Sort argument name",
+          "type": "string"
+        },
+        "format": {
+          "default": "enum",
+          "description": "Sort argument format",
+          "type": "string",
+          "enum": [
+            "enum",
+            "array"
+          ]
+        }
+      },
+      "required": [
+        "argName",
+        "format"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "filterArgName",
+    "filterStyle"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/GraphQLQueryAdapter.json",
+  "x-spec-version": "3.0.11"
+}

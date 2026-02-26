@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "load-started",
+        "load-completed",
+        "load-failed",
+        "init-started",
+        "init-completed",
+        "init-failed",
+        "preload-started",
+        "preload-completed",
+        "cache-hit",
+        "cache-miss",
+        "hot-reload",
+        "dynamic-load",
+        "dynamic-unload",
+        "dynamic-discover"
+      ]
+    },
+    "pluginId": {
+      "type": "string"
+    },
+    "timestamp": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "durationMs": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "metadata": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
+    },
+    "error": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        },
+        "code": {
+          "type": "string"
+        },
+        "stack": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "message"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "type",
+    "pluginId",
+    "timestamp"
+  ],
+  "additionalProperties": false,
+  "description": "Plugin loading lifecycle event",
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/PluginLoadingEvent.json",
+  "x-spec-version": "3.0.11"
+}

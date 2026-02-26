@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "popular-in-category",
+    "similar-users",
+    "complements-installed",
+    "trending",
+    "new-release",
+    "editor-pick"
+  ],
+  "$id": "https://schema.objectstack.io/v3.0.11/cloud/RecommendationReason.json",
+  "x-spec-version": "3.0.11"
+}

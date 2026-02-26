@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "preventNPlusOne": {
+      "type": "boolean",
+      "description": "Enable N+1 query detection and prevention"
+    },
+    "dataLoader": {
+      "description": "DataLoader batch loading configuration",
+      "type": "object",
+      "properties": {
+        "maxBatchSize": {
+          "default": 100,
+          "description": "Maximum number of keys per batch load",
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "batchScheduleFn": {
+          "default": "microtask",
+          "description": "Scheduling strategy for collecting batch keys",
+          "type": "string",
+          "enum": [
+            "microtask",
+            "timeout",
+            "manual"
+          ]
+        },
+        "cacheEnabled": {
+          "default": true,
+          "description": "Enable per-request result caching",
+          "type": "boolean"
+        },
+        "cacheKeyFn": {
+          "description": "Name or identifier of the cache key function",
+          "type": "string"
+        },
+        "cacheTtl": {
+          "description": "Cache time-to-live in seconds (0 = no expiration)",
+          "type": "number",
+          "minimum": 0
+        },
+        "coalesceRequests": {
+          "default": true,
+          "description": "Deduplicate identical requests within a batch window",
+          "type": "boolean"
+        },
+        "maxConcurrency": {
+          "description": "Maximum parallel batch requests",
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "maxBatchSize",
+        "batchScheduleFn",
+        "cacheEnabled",
+        "coalesceRequests"
+      ],
+      "additionalProperties": false
+    },
+    "batchStrategy": {
+      "description": "Batch loading strategy configuration",
+      "type": "object",
+      "properties": {
+        "strategy": {
+          "type": "string",
+          "enum": [
+            "dataloader",
+            "windowed",
+            "prefetch"
+          ],
+          "description": "Batch loading strategy type"
+        },
+        "windowMs": {
+          "description": "Collection window duration in milliseconds (for windowed strategy)",
+          "type": "number"
+        },
+        "prefetchDepth": {
+          "description": "Depth of relation prefetching (for prefetch strategy)",
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "associationLoading": {
+          "default": "batch",
+          "description": "How to load related associations",
+          "type": "string",
+          "enum": [
+            "lazy",
+            "eager",
+            "batch"
+          ]
+        }
+      },
+      "required": [
+        "strategy",
+        "associationLoading"
+      ],
+      "additionalProperties": false
+    },
+    "maxQueryDepth": {
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991,
+      "description": "Maximum depth for nested relation queries"
+    },
+    "queryComplexityLimit": {
+      "description": "Maximum allowed query complexity score",
+      "type": "number"
+    },
+    "enableQueryPlan": {
+      "default": false,
+      "description": "Log query execution plans for debugging",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "preventNPlusOne",
+    "maxQueryDepth",
+    "enableQueryPlan"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/QueryOptimizationConfig.json",
+  "x-spec-version": "3.0.11"
+}

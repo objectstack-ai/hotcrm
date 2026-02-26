@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "success": {
+      "type": "boolean",
+      "description": "Operation success status"
+    },
+    "error": {
+      "description": "Error details if success is false",
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "description": "Error code (e.g. validation_error)"
+        },
+        "message": {
+          "type": "string",
+          "description": "Readable error message"
+        },
+        "category": {
+          "description": "Error category (e.g. validation, authorization)",
+          "type": "string"
+        },
+        "details": {
+          "description": "Additional error context (e.g. field validation errors)"
+        },
+        "requestId": {
+          "description": "Request ID for tracking",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ],
+      "additionalProperties": false
+    },
+    "meta": {
+      "description": "Response metadata",
+      "type": "object",
+      "properties": {
+        "timestamp": {
+          "type": "string"
+        },
+        "duration": {
+          "type": "number"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "traceId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "timestamp"
+      ],
+      "additionalProperties": false
+    },
+    "data": {
+      "type": "object",
+      "properties": {
+        "uploadUrl": {
+          "type": "string",
+          "description": "PUT/POST URL for direct upload"
+        },
+        "downloadUrl": {
+          "description": "Public/Private preview URL",
+          "type": "string"
+        },
+        "fileId": {
+          "type": "string",
+          "description": "Temporary File ID"
+        },
+        "method": {
+          "type": "string",
+          "enum": [
+            "PUT",
+            "POST"
+          ],
+          "description": "HTTP Method to use"
+        },
+        "headers": {
+          "description": "Required headers for upload",
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "expiresIn": {
+          "type": "number",
+          "description": "URL expiry in seconds"
+        }
+      },
+      "required": [
+        "uploadUrl",
+        "fileId",
+        "method",
+        "expiresIn"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "success",
+    "data"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/PresignedUrlResponse.json",
+  "x-spec-version": "3.0.11"
+}

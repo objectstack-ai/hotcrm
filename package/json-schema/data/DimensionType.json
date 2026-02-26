@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "string",
+    "number",
+    "boolean",
+    "time",
+    "geo"
+  ],
+  "$id": "https://schema.objectstack.io/v3.0.11/data/DimensionType.json",
+  "x-spec-version": "3.0.11"
+}

@@ -1,0 +1,163 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "none",
+        "apiKey",
+        "basic",
+        "bearer",
+        "oauth1",
+        "oauth2",
+        "custom"
+      ],
+      "description": "Authentication type"
+    },
+    "fields": {
+      "description": "Authentication fields",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z_][a-z0-9_]*$",
+            "description": "Field name (snake_case)"
+          },
+          "label": {
+            "type": "string",
+            "description": "Field label"
+          },
+          "type": {
+            "default": "text",
+            "description": "Field type",
+            "type": "string",
+            "enum": [
+              "text",
+              "password",
+              "url",
+              "select"
+            ]
+          },
+          "description": {
+            "description": "Field description",
+            "type": "string"
+          },
+          "required": {
+            "default": true,
+            "description": "Required field",
+            "type": "boolean"
+          },
+          "default": {
+            "description": "Default value",
+            "type": "string"
+          },
+          "options": {
+            "description": "Select field options",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "type": "string"
+                },
+                "value": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "label",
+                "value"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "placeholder": {
+            "description": "Placeholder text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "label",
+          "type",
+          "required"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "oauth2": {
+      "description": "OAuth 2.0 configuration",
+      "type": "object",
+      "properties": {
+        "authorizationUrl": {
+          "type": "string",
+          "format": "uri",
+          "description": "Authorization endpoint URL"
+        },
+        "tokenUrl": {
+          "type": "string",
+          "format": "uri",
+          "description": "Token endpoint URL"
+        },
+        "scopes": {
+          "description": "OAuth scopes",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "clientIdField": {
+          "default": "client_id",
+          "description": "Client ID field name",
+          "type": "string"
+        },
+        "clientSecretField": {
+          "default": "client_secret",
+          "description": "Client secret field name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "authorizationUrl",
+        "tokenUrl",
+        "clientIdField",
+        "clientSecretField"
+      ],
+      "additionalProperties": false
+    },
+    "test": {
+      "description": "Authentication test configuration",
+      "type": "object",
+      "properties": {
+        "url": {
+          "description": "Test endpoint URL",
+          "type": "string"
+        },
+        "method": {
+          "default": "GET",
+          "description": "HTTP method",
+          "type": "string",
+          "enum": [
+            "GET",
+            "POST",
+            "PUT",
+            "DELETE"
+          ]
+        }
+      },
+      "required": [
+        "method"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "type"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/automation/Authentication.json",
+  "x-spec-version": "3.0.11"
+}

@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "sourceField": {
+      "type": "string",
+      "description": "Field name in the source data (import) or object (export)"
+    },
+    "targetField": {
+      "type": "string",
+      "description": "Field name in the target object (import) or file column (export)"
+    },
+    "targetLabel": {
+      "description": "Display label for the target column (export)",
+      "type": "string"
+    },
+    "transform": {
+      "default": "none",
+      "description": "Transformation to apply during mapping",
+      "type": "string",
+      "enum": [
+        "none",
+        "uppercase",
+        "lowercase",
+        "trim",
+        "date_format",
+        "lookup"
+      ]
+    },
+    "defaultValue": {
+      "description": "Default value if source field is null/empty"
+    },
+    "required": {
+      "default": false,
+      "description": "Whether this field is required (import validation)",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "sourceField",
+    "targetField",
+    "transform",
+    "required"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/FieldMappingEntry.json",
+  "x-spec-version": "3.0.11"
+}

@@ -1,0 +1,441 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "const": "com.objectstack.metadata",
+      "description": "Metadata plugin ID"
+    },
+    "name": {
+      "type": "string",
+      "const": "ObjectStack Metadata Service",
+      "description": "Plugin name"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Plugin version"
+    },
+    "type": {
+      "type": "string",
+      "const": "standard",
+      "description": "Plugin type"
+    },
+    "description": {
+      "default": "Core metadata management service for ObjectStack platform",
+      "description": "Plugin description",
+      "type": "string"
+    },
+    "capabilities": {
+      "type": "object",
+      "properties": {
+        "crud": {
+          "default": true,
+          "description": "Supports metadata CRUD",
+          "type": "boolean"
+        },
+        "query": {
+          "default": true,
+          "description": "Supports metadata query",
+          "type": "boolean"
+        },
+        "overlay": {
+          "default": true,
+          "description": "Supports customization overlays",
+          "type": "boolean"
+        },
+        "watch": {
+          "default": false,
+          "description": "Supports file watching",
+          "type": "boolean"
+        },
+        "importExport": {
+          "default": true,
+          "description": "Supports import/export",
+          "type": "boolean"
+        },
+        "validation": {
+          "default": true,
+          "description": "Supports schema validation",
+          "type": "boolean"
+        },
+        "versioning": {
+          "default": false,
+          "description": "Supports version history",
+          "type": "boolean"
+        },
+        "events": {
+          "default": true,
+          "description": "Emits metadata events",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "crud",
+        "query",
+        "overlay",
+        "watch",
+        "importExport",
+        "validation",
+        "versioning",
+        "events"
+      ],
+      "additionalProperties": false,
+      "description": "Plugin capabilities"
+    },
+    "config": {
+      "description": "Plugin configuration",
+      "type": "object",
+      "properties": {
+        "storage": {
+          "type": "object",
+          "properties": {
+            "datasource": {
+              "description": "Datasource name reference for database persistence",
+              "type": "string"
+            },
+            "tableName": {
+              "default": "sys_metadata",
+              "description": "Database table name for metadata storage",
+              "type": "string"
+            },
+            "fallback": {
+              "default": "none",
+              "description": "Fallback strategy when datasource is unavailable",
+              "type": "string",
+              "enum": [
+                "filesystem",
+                "memory",
+                "none"
+              ]
+            },
+            "rootDir": {
+              "description": "Root directory path",
+              "type": "string"
+            },
+            "formats": {
+              "default": [
+                "typescript",
+                "json",
+                "yaml"
+              ],
+              "description": "Enabled formats",
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "json",
+                  "yaml",
+                  "typescript",
+                  "javascript"
+                ]
+              }
+            },
+            "cache": {
+              "description": "Cache settings",
+              "type": "object",
+              "properties": {
+                "enabled": {
+                  "default": true,
+                  "description": "Enable caching",
+                  "type": "boolean"
+                },
+                "ttl": {
+                  "default": 3600,
+                  "description": "Cache TTL in seconds",
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "maxSize": {
+                  "description": "Max cache size in bytes",
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "enabled",
+                "ttl"
+              ],
+              "additionalProperties": false
+            },
+            "watch": {
+              "default": false,
+              "description": "Enable file watching",
+              "type": "boolean"
+            },
+            "watchOptions": {
+              "description": "File watcher options",
+              "type": "object",
+              "properties": {
+                "ignored": {
+                  "description": "Patterns to ignore",
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "persistent": {
+                  "default": true,
+                  "description": "Keep process running",
+                  "type": "boolean"
+                },
+                "ignoreInitial": {
+                  "default": true,
+                  "description": "Ignore initial add events",
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "persistent",
+                "ignoreInitial"
+              ],
+              "additionalProperties": false
+            },
+            "validation": {
+              "description": "Validation settings",
+              "type": "object",
+              "properties": {
+                "strict": {
+                  "default": true,
+                  "description": "Strict validation",
+                  "type": "boolean"
+                },
+                "throwOnError": {
+                  "default": true,
+                  "description": "Throw on validation error",
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "strict",
+                "throwOnError"
+              ],
+              "additionalProperties": false
+            },
+            "loaderOptions": {
+              "description": "Loader-specific configuration",
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {}
+            }
+          },
+          "required": [
+            "tableName",
+            "fallback",
+            "formats",
+            "watch"
+          ],
+          "additionalProperties": false,
+          "description": "Storage backend configuration"
+        },
+        "customizationPolicies": {
+          "description": "Default customization policies per type",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "metadataType": {
+                "type": "string",
+                "description": "Metadata type (e.g. \"object\", \"view\")"
+              },
+              "allowCustomization": {
+                "default": true,
+                "type": "boolean"
+              },
+              "lockedFields": {
+                "description": "Field paths that cannot be customized",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "customizableFields": {
+                "description": "Field paths that can be customized (whitelist)",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "allowAddFields": {
+                "default": true,
+                "description": "Whether admins can add new fields to package objects",
+                "type": "boolean"
+              },
+              "allowDeleteFields": {
+                "default": false,
+                "description": "Whether admins can delete package-delivered fields",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "metadataType",
+              "allowCustomization",
+              "allowAddFields",
+              "allowDeleteFields"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "mergeStrategy": {
+          "description": "Merge strategy for package upgrades",
+          "type": "object",
+          "properties": {
+            "defaultStrategy": {
+              "default": "three-way-merge",
+              "description": "Default merge strategy",
+              "type": "string",
+              "enum": [
+                "keep-custom",
+                "accept-incoming",
+                "three-way-merge"
+              ]
+            },
+            "alwaysAcceptIncoming": {
+              "description": "Field paths that always accept package updates",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "alwaysKeepCustom": {
+              "description": "Field paths where customer customizations always win",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "autoResolveNonConflicting": {
+              "default": true,
+              "description": "Auto-resolve changes that do not conflict",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "defaultStrategy",
+            "autoResolveNonConflicting"
+          ],
+          "additionalProperties": false
+        },
+        "additionalTypes": {
+          "description": "Additional custom metadata types",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string",
+                "description": "Display label for the metadata type"
+              },
+              "description": {
+                "description": "Description of the metadata type",
+                "type": "string"
+              },
+              "filePatterns": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Glob patterns to discover files of this type"
+              },
+              "supportsOverlay": {
+                "default": true,
+                "description": "Whether overlay customization is supported",
+                "type": "boolean"
+              },
+              "allowRuntimeCreate": {
+                "default": true,
+                "description": "Allow runtime creation via API",
+                "type": "boolean"
+              },
+              "supportsVersioning": {
+                "default": false,
+                "description": "Whether version history is tracked",
+                "type": "boolean"
+              },
+              "loadOrder": {
+                "default": 100,
+                "description": "Loading priority (lower = earlier)",
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "domain": {
+                "type": "string",
+                "enum": [
+                  "data",
+                  "ui",
+                  "automation",
+                  "system",
+                  "security",
+                  "ai"
+                ],
+                "description": "Protocol domain"
+              },
+              "type": {
+                "type": "string",
+                "description": "Custom metadata type identifier"
+              }
+            },
+            "required": [
+              "label",
+              "filePatterns",
+              "supportsOverlay",
+              "allowRuntimeCreate",
+              "supportsVersioning",
+              "loadOrder",
+              "domain",
+              "type"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "enableEvents": {
+          "default": true,
+          "description": "Emit metadata change events",
+          "type": "boolean"
+        },
+        "validateOnWrite": {
+          "default": true,
+          "description": "Validate metadata on write",
+          "type": "boolean"
+        },
+        "enableVersioning": {
+          "default": false,
+          "description": "Track metadata version history",
+          "type": "boolean"
+        },
+        "cacheMaxItems": {
+          "default": 10000,
+          "description": "Max items in memory cache",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "storage",
+        "enableEvents",
+        "validateOnWrite",
+        "enableVersioning",
+        "cacheMaxItems"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "id",
+    "name",
+    "version",
+    "type",
+    "description",
+    "capabilities"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/MetadataPluginManifest.json",
+  "x-spec-version": "3.0.11"
+}

@@ -1,0 +1,158 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "object": {
+      "type": "string",
+      "description": "Target object for review"
+    },
+    "filter": {
+      "description": "Filter criteria for review queue",
+      "$ref": "#/$defs/__schema0"
+    },
+    "sort": {
+      "description": "Sort order for review queue",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string",
+            "description": "Field name to sort by"
+          },
+          "order": {
+            "type": "string",
+            "enum": [
+              "asc",
+              "desc"
+            ],
+            "description": "Sort direction"
+          }
+        },
+        "required": [
+          "field",
+          "order"
+        ],
+        "additionalProperties": false,
+        "description": "Sort field and direction pair"
+      }
+    },
+    "displayFields": {
+      "description": "Fields to display on the review page",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "actions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "description": "Action button label"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "approve",
+              "reject",
+              "skip",
+              "custom"
+            ],
+            "description": "Action type"
+          },
+          "field": {
+            "description": "Field to update on action",
+            "type": "string"
+          },
+          "value": {
+            "description": "Value to set on action",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              }
+            ]
+          },
+          "nextRecord": {
+            "default": true,
+            "description": "Auto-advance to next record after action",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "label",
+          "type",
+          "nextRecord"
+        ],
+        "additionalProperties": false
+      },
+      "description": "Review actions"
+    },
+    "navigation": {
+      "default": "sequential",
+      "description": "Record navigation mode",
+      "type": "string",
+      "enum": [
+        "sequential",
+        "random",
+        "filtered"
+      ]
+    },
+    "showProgress": {
+      "default": true,
+      "description": "Show review progress indicator",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "object",
+    "actions",
+    "navigation",
+    "showProgress"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "__schema0": {
+      "allOf": [
+        {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {}
+        },
+        {
+          "type": "object",
+          "properties": {
+            "$and": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/__schema0"
+              }
+            },
+            "$or": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/__schema0"
+              }
+            },
+            "$not": {
+              "$ref": "#/$defs/__schema0"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    }
+  },
+  "$id": "https://schema.objectstack.io/v3.0.11/ui/RecordReviewConfig.json",
+  "x-spec-version": "3.0.11"
+}

@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "filename": {
+      "type": "string",
+      "description": "Original filename"
+    },
+    "mimeType": {
+      "type": "string",
+      "description": "File MIME type"
+    },
+    "size": {
+      "type": "number",
+      "description": "File size in bytes"
+    },
+    "scope": {
+      "default": "user",
+      "description": "Target storage scope (e.g. user, private, public)",
+      "type": "string"
+    },
+    "bucket": {
+      "description": "Specific bucket override (admin only)",
+      "type": "string"
+    }
+  },
+  "required": [
+    "filename",
+    "mimeType",
+    "size",
+    "scope"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/GetPresignedUrlRequest.json",
+  "x-spec-version": "3.0.11"
+}

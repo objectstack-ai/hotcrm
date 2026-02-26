@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Notification title"
+    },
+    "body": {
+      "type": "string",
+      "description": "Notification body"
+    },
+    "icon": {
+      "description": "Notification icon URL",
+      "type": "string",
+      "format": "uri"
+    },
+    "badge": {
+      "description": "Badge count",
+      "type": "number"
+    },
+    "data": {
+      "description": "Custom data",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
+    },
+    "actions": {
+      "description": "Notification actions",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "description": "Action identifier"
+          },
+          "title": {
+            "type": "string",
+            "description": "Action button title"
+          }
+        },
+        "required": [
+          "action",
+          "title"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "title",
+    "body"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/system/PushNotification.json",
+  "x-spec-version": "3.0.11"
+}

@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "trigger_flow",
+    "trigger_approval",
+    "trigger_webhook",
+    "run_report",
+    "send_email",
+    "send_notification",
+    "schedule_task"
+  ],
+  "$id": "https://schema.objectstack.io/v3.0.11/ai/WorkflowActionType.json",
+  "x-spec-version": "3.0.11"
+}

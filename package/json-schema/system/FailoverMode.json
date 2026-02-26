@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "active_passive",
+    "active_active",
+    "pilot_light",
+    "warm_standby"
+  ],
+  "description": "Failover mode",
+  "$id": "https://schema.objectstack.io/v3.0.11/system/FailoverMode.json",
+  "x-spec-version": "3.0.11"
+}

@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "directives": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "public",
+          "private",
+          "no-cache",
+          "no-store",
+          "must-revalidate",
+          "max-age"
+        ]
+      },
+      "description": "Cache control directives"
+    },
+    "maxAge": {
+      "description": "Maximum cache age in seconds",
+      "type": "number"
+    },
+    "staleWhileRevalidate": {
+      "description": "Allow serving stale content while revalidating (seconds)",
+      "type": "number"
+    },
+    "staleIfError": {
+      "description": "Allow serving stale content on error (seconds)",
+      "type": "number"
+    }
+  },
+  "required": [
+    "directives"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/CacheControl.json",
+  "x-spec-version": "3.0.11"
+}

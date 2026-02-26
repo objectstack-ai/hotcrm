@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "key": {
+      "type": "string",
+      "description": "Translation key"
+    },
+    "zero": {
+      "description": "Zero form (e.g., \"No items\")",
+      "type": "string"
+    },
+    "one": {
+      "description": "Singular form (e.g., \"{count} item\")",
+      "type": "string"
+    },
+    "two": {
+      "description": "Dual form (e.g., \"{count} items\" for exactly 2)",
+      "type": "string"
+    },
+    "few": {
+      "description": "Few form (e.g., for 2-4 in some languages)",
+      "type": "string"
+    },
+    "many": {
+      "description": "Many form (e.g., for 5+ in some languages)",
+      "type": "string"
+    },
+    "other": {
+      "type": "string",
+      "description": "Default plural form (e.g., \"{count} items\")"
+    }
+  },
+  "required": [
+    "key",
+    "other"
+  ],
+  "additionalProperties": false,
+  "description": "ICU plural rules for a translation key",
+  "$id": "https://schema.objectstack.io/v3.0.11/ui/PluralRule.json",
+  "x-spec-version": "3.0.11"
+}

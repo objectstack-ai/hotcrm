@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "find",
+    "findOne",
+    "insert",
+    "update",
+    "delete",
+    "aggregate",
+    "mapReduce",
+    "count",
+    "distinct",
+    "createIndex",
+    "dropIndex"
+  ],
+  "$id": "https://schema.objectstack.io/v3.0.11/data/NoSQLOperationType.json",
+  "x-spec-version": "3.0.11"
+}

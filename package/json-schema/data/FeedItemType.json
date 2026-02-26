@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "comment",
+    "field_change",
+    "task",
+    "event",
+    "email",
+    "call",
+    "note",
+    "file",
+    "record_create",
+    "record_delete",
+    "approval",
+    "sharing",
+    "system"
+  ],
+  "$id": "https://schema.objectstack.io/v3.0.11/data/FeedItemType.json",
+  "x-spec-version": "3.0.11"
+}

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "s3",
+    "azure_blob",
+    "gcs",
+    "minio",
+    "r2",
+    "spaces",
+    "wasabi",
+    "backblaze",
+    "local"
+  ],
+  "description": "Storage provider type",
+  "$id": "https://schema.objectstack.io/v3.0.11/system/StorageProvider.json",
+  "x-spec-version": "3.0.11"
+}

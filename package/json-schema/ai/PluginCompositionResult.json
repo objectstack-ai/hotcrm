@@ -1,0 +1,147 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "plugins": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "pluginId": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "description": "Role in the composition"
+          },
+          "configuration": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {}
+          }
+        },
+        "required": [
+          "pluginId",
+          "version",
+          "role"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "integration": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "config": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {}
+        },
+        "initOrder": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "code",
+        "initOrder"
+      ],
+      "additionalProperties": false
+    },
+    "dataFlow": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string"
+          },
+          "to": {
+            "type": "string"
+          },
+          "data": {
+            "type": "string",
+            "description": "Data type or description"
+          }
+        },
+        "required": [
+          "from",
+          "to",
+          "data"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "performance": {
+      "type": "object",
+      "properties": {
+        "estimatedLatency": {
+          "description": "Estimated latency in ms",
+          "type": "number"
+        },
+        "estimatedMemory": {
+          "description": "Estimated memory in bytes",
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "alternatives": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "plugins": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "tradeoffs": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "description",
+          "plugins",
+          "tradeoffs"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "plugins",
+    "integration",
+    "dataFlow",
+    "confidence"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/ai/PluginCompositionResult.json",
+  "x-spec-version": "3.0.11"
+}

@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "pluginId": {
+      "type": "string",
+      "description": "Unique identifier of the plugin"
+    },
+    "score": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Overall trust score from 0 to 100"
+    },
+    "components": {
+      "type": "object",
+      "properties": {
+        "vendorReputation": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Vendor reputation score from 0 to 100"
+        },
+        "securityScore": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Security scan results score from 0 to 100"
+        },
+        "codeQuality": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Code quality score from 0 to 100"
+        },
+        "communityScore": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Community engagement score from 0 to 100"
+        },
+        "maintenanceScore": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Maintenance and update frequency score from 0 to 100"
+        }
+      },
+      "required": [
+        "vendorReputation",
+        "securityScore",
+        "codeQuality",
+        "communityScore",
+        "maintenanceScore"
+      ],
+      "additionalProperties": false,
+      "description": "Individual score components contributing to the overall trust score"
+    },
+    "level": {
+      "type": "string",
+      "enum": [
+        "verified",
+        "trusted",
+        "neutral",
+        "untrusted",
+        "blocked"
+      ],
+      "description": "Computed trust level based on the overall score"
+    },
+    "badges": {
+      "default": [],
+      "description": "Verification badges earned by the plugin",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "official",
+          "verified-vendor",
+          "security-scanned",
+          "code-signed",
+          "open-source",
+          "popular"
+        ]
+      }
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+      "description": "ISO 8601 timestamp when the trust score was last updated"
+    }
+  },
+  "required": [
+    "pluginId",
+    "score",
+    "components",
+    "level",
+    "badges",
+    "updatedAt"
+  ],
+  "additionalProperties": false,
+  "description": "Trust score and verification status for a plugin",
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/PluginTrustScore.json",
+  "x-spec-version": "3.0.11"
+}

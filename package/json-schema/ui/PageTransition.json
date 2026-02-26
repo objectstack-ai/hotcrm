@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "type": {
+      "default": "fade",
+      "description": "Page transition type",
+      "type": "string",
+      "enum": [
+        "fade",
+        "slide_up",
+        "slide_down",
+        "slide_left",
+        "slide_right",
+        "scale",
+        "rotate",
+        "flip",
+        "none"
+      ]
+    },
+    "duration": {
+      "default": 300,
+      "description": "Transition duration in milliseconds",
+      "type": "number"
+    },
+    "easing": {
+      "default": "ease_in_out",
+      "description": "Easing function for the transition",
+      "type": "string",
+      "enum": [
+        "linear",
+        "ease",
+        "ease_in",
+        "ease_out",
+        "ease_in_out",
+        "spring"
+      ]
+    },
+    "crossFade": {
+      "default": false,
+      "description": "Whether to cross-fade between pages",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "type",
+    "duration",
+    "easing",
+    "crossFade"
+  ],
+  "additionalProperties": false,
+  "description": "Page-level transition configuration",
+  "$id": "https://schema.objectstack.io/v3.0.11/ui/PageTransition.json",
+  "x-spec-version": "3.0.11"
+}

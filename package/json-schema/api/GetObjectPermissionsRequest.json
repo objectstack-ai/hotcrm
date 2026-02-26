@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "object": {
+      "type": "string",
+      "description": "Object name to get permissions for"
+    }
+  },
+  "required": [
+    "object"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/GetObjectPermissionsRequest.json",
+  "x-spec-version": "3.0.11"
+}

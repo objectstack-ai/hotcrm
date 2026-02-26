@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "listingId": {
+      "type": "string"
+    },
+    "rank": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "trendScore": {
+      "type": "number",
+      "minimum": 0
+    },
+    "installVelocity": {
+      "type": "number",
+      "minimum": 0
+    },
+    "period": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "listingId",
+    "rank",
+    "trendScore",
+    "installVelocity",
+    "period"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/cloud/TrendingListing.json",
+  "x-spec-version": "3.0.11"
+}

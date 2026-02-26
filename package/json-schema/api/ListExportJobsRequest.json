@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "object": {
+      "description": "Filter by object name",
+      "type": "string"
+    },
+    "status": {
+      "description": "Filter by job status",
+      "type": "string",
+      "enum": [
+        "pending",
+        "processing",
+        "completed",
+        "failed",
+        "cancelled",
+        "expired"
+      ]
+    },
+    "limit": {
+      "default": 20,
+      "description": "Maximum number of jobs to return",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+    },
+    "cursor": {
+      "description": "Pagination cursor from a previous response",
+      "type": "string"
+    }
+  },
+  "required": [
+    "limit"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/ListExportJobsRequest.json",
+  "x-spec-version": "3.0.11"
+}

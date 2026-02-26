@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "formatted": {
+      "description": "Formatted full name",
+      "type": "string"
+    },
+    "familyName": {
+      "description": "Family name (last name)",
+      "type": "string"
+    },
+    "givenName": {
+      "description": "Given name (first name)",
+      "type": "string"
+    },
+    "middleName": {
+      "description": "Middle name",
+      "type": "string"
+    },
+    "honorificPrefix": {
+      "description": "Honorific prefix (Mr., Ms., Dr.)",
+      "type": "string"
+    },
+    "honorificSuffix": {
+      "description": "Honorific suffix (Jr., Sr.)",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/identity/SCIMName.json",
+  "x-spec-version": "3.0.11"
+}

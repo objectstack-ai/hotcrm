@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "locale": {
+      "type": "string",
+      "description": "BCP-47 locale code"
+    },
+    "namespace": {
+      "description": "Translation namespace (e.g., objects, apps, messages)",
+      "type": "string"
+    },
+    "keys": {
+      "description": "Specific translation keys to fetch",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "locale"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/GetTranslationsRequest.json",
+  "x-spec-version": "3.0.11"
+}

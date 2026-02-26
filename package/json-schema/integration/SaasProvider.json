@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "salesforce",
+    "hubspot",
+    "stripe",
+    "shopify",
+    "zendesk",
+    "intercom",
+    "mailchimp",
+    "slack",
+    "microsoft_dynamics",
+    "servicenow",
+    "netsuite",
+    "custom"
+  ],
+  "description": "SaaS provider type",
+  "$id": "https://schema.objectstack.io/v3.0.11/integration/SaasProvider.json",
+  "x-spec-version": "3.0.11"
+}

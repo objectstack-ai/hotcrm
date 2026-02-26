@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "defaultStrategy": {
+      "default": "three-way-merge",
+      "description": "Default merge strategy",
+      "type": "string",
+      "enum": [
+        "keep-custom",
+        "accept-incoming",
+        "three-way-merge"
+      ]
+    },
+    "alwaysAcceptIncoming": {
+      "description": "Field paths that always accept package updates",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "alwaysKeepCustom": {
+      "description": "Field paths where customer customizations always win",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "autoResolveNonConflicting": {
+      "default": true,
+      "description": "Auto-resolve changes that do not conflict",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "defaultStrategy",
+    "autoResolveNonConflicting"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/kernel/MergeStrategyConfig.json",
+  "x-spec-version": "3.0.11"
+}

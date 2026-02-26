@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "formatted": {
+      "description": "Formatted address",
+      "type": "string"
+    },
+    "streetAddress": {
+      "description": "Street address",
+      "type": "string"
+    },
+    "locality": {
+      "description": "City/Locality",
+      "type": "string"
+    },
+    "region": {
+      "description": "State/Region",
+      "type": "string"
+    },
+    "postalCode": {
+      "description": "Postal code",
+      "type": "string"
+    },
+    "country": {
+      "description": "Country",
+      "type": "string"
+    },
+    "type": {
+      "description": "Address type",
+      "type": "string",
+      "enum": [
+        "work",
+        "home",
+        "other"
+      ]
+    },
+    "primary": {
+      "default": false,
+      "description": "Primary address indicator",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "primary"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/identity/SCIMAddress.json",
+  "x-spec-version": "3.0.11"
+}

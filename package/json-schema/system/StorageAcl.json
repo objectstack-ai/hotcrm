@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "private",
+    "public_read",
+    "public_read_write",
+    "authenticated_read",
+    "bucket_owner_read",
+    "bucket_owner_full_control"
+  ],
+  "description": "Storage access control level",
+  "$id": "https://schema.objectstack.io/v3.0.11/system/StorageAcl.json",
+  "x-spec-version": "3.0.11"
+}

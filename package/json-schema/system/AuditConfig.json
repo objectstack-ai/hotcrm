@@ -1,0 +1,625 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[a-z_][a-z0-9_]*$",
+      "description": "Configuration name (snake_case, max 64 chars)"
+    },
+    "label": {
+      "type": "string",
+      "description": "Display label"
+    },
+    "enabled": {
+      "default": true,
+      "description": "Enable audit logging",
+      "type": "boolean"
+    },
+    "eventTypes": {
+      "description": "Event types to audit",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "data.create",
+          "data.read",
+          "data.update",
+          "data.delete",
+          "data.export",
+          "data.import",
+          "data.bulk_update",
+          "data.bulk_delete",
+          "auth.login",
+          "auth.login_failed",
+          "auth.logout",
+          "auth.session_created",
+          "auth.session_expired",
+          "auth.password_reset",
+          "auth.password_changed",
+          "auth.email_verified",
+          "auth.mfa_enabled",
+          "auth.mfa_disabled",
+          "auth.account_locked",
+          "auth.account_unlocked",
+          "authz.permission_granted",
+          "authz.permission_revoked",
+          "authz.role_assigned",
+          "authz.role_removed",
+          "authz.role_created",
+          "authz.role_updated",
+          "authz.role_deleted",
+          "authz.policy_created",
+          "authz.policy_updated",
+          "authz.policy_deleted",
+          "system.config_changed",
+          "system.plugin_installed",
+          "system.plugin_uninstalled",
+          "system.backup_created",
+          "system.backup_restored",
+          "system.integration_added",
+          "system.integration_removed",
+          "security.access_denied",
+          "security.suspicious_activity",
+          "security.data_breach",
+          "security.api_key_created",
+          "security.api_key_revoked"
+        ]
+      }
+    },
+    "excludeEventTypes": {
+      "description": "Event types to exclude",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "data.create",
+          "data.read",
+          "data.update",
+          "data.delete",
+          "data.export",
+          "data.import",
+          "data.bulk_update",
+          "data.bulk_delete",
+          "auth.login",
+          "auth.login_failed",
+          "auth.logout",
+          "auth.session_created",
+          "auth.session_expired",
+          "auth.password_reset",
+          "auth.password_changed",
+          "auth.email_verified",
+          "auth.mfa_enabled",
+          "auth.mfa_disabled",
+          "auth.account_locked",
+          "auth.account_unlocked",
+          "authz.permission_granted",
+          "authz.permission_revoked",
+          "authz.role_assigned",
+          "authz.role_removed",
+          "authz.role_created",
+          "authz.role_updated",
+          "authz.role_deleted",
+          "authz.policy_created",
+          "authz.policy_updated",
+          "authz.policy_deleted",
+          "system.config_changed",
+          "system.plugin_installed",
+          "system.plugin_uninstalled",
+          "system.backup_created",
+          "system.backup_restored",
+          "system.integration_added",
+          "system.integration_removed",
+          "security.access_denied",
+          "security.suspicious_activity",
+          "security.data_breach",
+          "security.api_key_created",
+          "security.api_key_revoked"
+        ]
+      }
+    },
+    "minimumSeverity": {
+      "default": "info",
+      "description": "Minimum severity level",
+      "type": "string",
+      "enum": [
+        "debug",
+        "info",
+        "notice",
+        "warning",
+        "error",
+        "critical",
+        "alert",
+        "emergency"
+      ]
+    },
+    "storage": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "database",
+            "elasticsearch",
+            "mongodb",
+            "clickhouse",
+            "s3",
+            "gcs",
+            "azure_blob",
+            "custom"
+          ],
+          "description": "Storage backend type"
+        },
+        "connectionString": {
+          "description": "Connection string",
+          "type": "string"
+        },
+        "config": {
+          "description": "Storage-specific configuration",
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {}
+        },
+        "bufferEnabled": {
+          "default": true,
+          "description": "Enable buffering",
+          "type": "boolean"
+        },
+        "bufferSize": {
+          "default": 100,
+          "description": "Buffer size",
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "flushIntervalSeconds": {
+          "default": 5,
+          "description": "Flush interval in seconds",
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "compression": {
+          "default": true,
+          "description": "Enable compression",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "bufferEnabled",
+        "bufferSize",
+        "flushIntervalSeconds",
+        "compression"
+      ],
+      "additionalProperties": false,
+      "description": "Storage configuration"
+    },
+    "retentionPolicy": {
+      "description": "Retention policy",
+      "type": "object",
+      "properties": {
+        "retentionDays": {
+          "default": 180,
+          "description": "Retention period in days",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "archiveAfterRetention": {
+          "default": true,
+          "description": "Archive logs after retention period",
+          "type": "boolean"
+        },
+        "archiveStorage": {
+          "description": "Archive storage configuration",
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "s3",
+                "gcs",
+                "azure_blob",
+                "filesystem"
+              ],
+              "description": "Archive storage type"
+            },
+            "endpoint": {
+              "description": "Storage endpoint URL",
+              "type": "string"
+            },
+            "bucket": {
+              "description": "Storage bucket/container name",
+              "type": "string"
+            },
+            "path": {
+              "description": "Storage path prefix",
+              "type": "string"
+            },
+            "credentials": {
+              "description": "Storage credentials",
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {}
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "additionalProperties": false
+        },
+        "customRetention": {
+          "description": "Custom retention by event type",
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "minimumRetentionDays": {
+          "description": "Minimum retention for compliance",
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "retentionDays",
+        "archiveAfterRetention"
+      ],
+      "additionalProperties": false
+    },
+    "suspiciousActivityRules": {
+      "default": [],
+      "description": "Suspicious activity rules",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Rule identifier"
+          },
+          "name": {
+            "type": "string",
+            "description": "Rule name"
+          },
+          "description": {
+            "description": "Rule description",
+            "type": "string"
+          },
+          "enabled": {
+            "default": true,
+            "description": "Rule enabled status",
+            "type": "boolean"
+          },
+          "eventTypes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "data.create",
+                "data.read",
+                "data.update",
+                "data.delete",
+                "data.export",
+                "data.import",
+                "data.bulk_update",
+                "data.bulk_delete",
+                "auth.login",
+                "auth.login_failed",
+                "auth.logout",
+                "auth.session_created",
+                "auth.session_expired",
+                "auth.password_reset",
+                "auth.password_changed",
+                "auth.email_verified",
+                "auth.mfa_enabled",
+                "auth.mfa_disabled",
+                "auth.account_locked",
+                "auth.account_unlocked",
+                "authz.permission_granted",
+                "authz.permission_revoked",
+                "authz.role_assigned",
+                "authz.role_removed",
+                "authz.role_created",
+                "authz.role_updated",
+                "authz.role_deleted",
+                "authz.policy_created",
+                "authz.policy_updated",
+                "authz.policy_deleted",
+                "system.config_changed",
+                "system.plugin_installed",
+                "system.plugin_uninstalled",
+                "system.backup_created",
+                "system.backup_restored",
+                "system.integration_added",
+                "system.integration_removed",
+                "security.access_denied",
+                "security.suspicious_activity",
+                "security.data_breach",
+                "security.api_key_created",
+                "security.api_key_revoked"
+              ]
+            },
+            "description": "Event types to monitor"
+          },
+          "condition": {
+            "type": "object",
+            "properties": {
+              "threshold": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991,
+                "description": "Event threshold"
+              },
+              "windowSeconds": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991,
+                "description": "Time window in seconds"
+              },
+              "groupBy": {
+                "description": "Grouping criteria",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "filters": {
+                "description": "Additional filters",
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {}
+              }
+            },
+            "required": [
+              "threshold",
+              "windowSeconds"
+            ],
+            "additionalProperties": false,
+            "description": "Detection condition"
+          },
+          "actions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "alert",
+                "lock_account",
+                "block_ip",
+                "require_mfa",
+                "log_critical",
+                "webhook"
+              ]
+            },
+            "description": "Actions to take"
+          },
+          "alertSeverity": {
+            "default": "warning",
+            "description": "Alert severity",
+            "type": "string",
+            "enum": [
+              "debug",
+              "info",
+              "notice",
+              "warning",
+              "error",
+              "critical",
+              "alert",
+              "emergency"
+            ]
+          },
+          "notifications": {
+            "description": "Notification configuration",
+            "type": "object",
+            "properties": {
+              "email": {
+                "description": "Email recipients",
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "email",
+                  "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                }
+              },
+              "slack": {
+                "description": "Slack webhook URL",
+                "type": "string",
+                "format": "uri"
+              },
+              "webhook": {
+                "description": "Custom webhook URL",
+                "type": "string",
+                "format": "uri"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "enabled",
+          "eventTypes",
+          "condition",
+          "actions",
+          "alertSeverity"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "includeSensitiveData": {
+      "default": false,
+      "description": "Include sensitive data",
+      "type": "boolean"
+    },
+    "redactFields": {
+      "default": [
+        "password",
+        "passwordHash",
+        "token",
+        "apiKey",
+        "secret",
+        "creditCard",
+        "ssn"
+      ],
+      "description": "Fields to redact",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "logReads": {
+      "default": false,
+      "description": "Log read operations",
+      "type": "boolean"
+    },
+    "readSamplingRate": {
+      "default": 0.1,
+      "description": "Read sampling rate",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "logSystemEvents": {
+      "default": true,
+      "description": "Log system events",
+      "type": "boolean"
+    },
+    "customHandlers": {
+      "description": "Custom event handler references",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "eventType": {
+            "type": "string",
+            "enum": [
+              "data.create",
+              "data.read",
+              "data.update",
+              "data.delete",
+              "data.export",
+              "data.import",
+              "data.bulk_update",
+              "data.bulk_delete",
+              "auth.login",
+              "auth.login_failed",
+              "auth.logout",
+              "auth.session_created",
+              "auth.session_expired",
+              "auth.password_reset",
+              "auth.password_changed",
+              "auth.email_verified",
+              "auth.mfa_enabled",
+              "auth.mfa_disabled",
+              "auth.account_locked",
+              "auth.account_unlocked",
+              "authz.permission_granted",
+              "authz.permission_revoked",
+              "authz.role_assigned",
+              "authz.role_removed",
+              "authz.role_created",
+              "authz.role_updated",
+              "authz.role_deleted",
+              "authz.policy_created",
+              "authz.policy_updated",
+              "authz.policy_deleted",
+              "system.config_changed",
+              "system.plugin_installed",
+              "system.plugin_uninstalled",
+              "system.backup_created",
+              "system.backup_restored",
+              "system.integration_added",
+              "system.integration_removed",
+              "security.access_denied",
+              "security.suspicious_activity",
+              "security.data_breach",
+              "security.api_key_created",
+              "security.api_key_revoked"
+            ],
+            "description": "Event type to handle"
+          },
+          "handlerId": {
+            "type": "string",
+            "description": "Unique identifier for the handler"
+          }
+        },
+        "required": [
+          "eventType",
+          "handlerId"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "compliance": {
+      "description": "Compliance configuration",
+      "type": "object",
+      "properties": {
+        "standards": {
+          "description": "Compliance standards",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "sox",
+              "hipaa",
+              "gdpr",
+              "pci_dss",
+              "iso_27001",
+              "fedramp"
+            ]
+          }
+        },
+        "immutableLogs": {
+          "default": true,
+          "description": "Enforce immutable logs",
+          "type": "boolean"
+        },
+        "requireSigning": {
+          "default": false,
+          "description": "Require log signing",
+          "type": "boolean"
+        },
+        "signingKey": {
+          "description": "Signing key",
+          "type": "string"
+        }
+      },
+      "required": [
+        "immutableLogs",
+        "requireSigning"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "name",
+    "label",
+    "enabled",
+    "minimumSeverity",
+    "storage",
+    "suspiciousActivityRules",
+    "includeSensitiveData",
+    "redactFields",
+    "logReads",
+    "readSamplingRate",
+    "logSystemEvents"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/system/AuditConfig.json",
+  "x-spec-version": "3.0.11"
+}

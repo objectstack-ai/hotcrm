@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "integer",
+  "minimum": 0,
+  "maximum": 255,
+  "description": "Trace flags bitmap",
+  "$id": "https://schema.objectstack.io/v3.0.11/system/TraceFlags.json",
+  "x-spec-version": "3.0.11"
+}

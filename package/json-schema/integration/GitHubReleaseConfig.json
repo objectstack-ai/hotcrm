@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "tagPattern": {
+      "default": "v*",
+      "description": "Tag name pattern (e.g., v*, release/*)",
+      "type": "string"
+    },
+    "semanticVersioning": {
+      "default": true,
+      "description": "Use semantic versioning",
+      "type": "boolean"
+    },
+    "autoReleaseNotes": {
+      "default": true,
+      "description": "Generate release notes automatically",
+      "type": "boolean"
+    },
+    "releaseNameTemplate": {
+      "description": "Release name template",
+      "type": "string"
+    },
+    "preReleasePattern": {
+      "description": "Pre-release pattern (e.g., *-alpha, *-beta)",
+      "type": "string"
+    },
+    "draftByDefault": {
+      "default": false,
+      "description": "Create draft releases by default",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "tagPattern",
+    "semanticVersioning",
+    "autoReleaseNotes",
+    "draftByDefault"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/integration/GitHubReleaseConfig.json",
+  "x-spec-version": "3.0.11"
+}

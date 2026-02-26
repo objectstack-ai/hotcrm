@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "tenantId": {
+      "type": "string"
+    },
+    "categories": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "crm",
+          "erp",
+          "hr",
+          "finance",
+          "project",
+          "collaboration",
+          "analytics",
+          "integration",
+          "automation",
+          "ai",
+          "security",
+          "developer-tools",
+          "ui-theme",
+          "storage",
+          "other"
+        ],
+        "description": "Marketplace package category"
+      }
+    },
+    "platformVersion": {
+      "type": "string"
+    },
+    "limit": {
+      "default": 10,
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 50
+    }
+  },
+  "required": [
+    "limit"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/cloud/AppDiscoveryRequest.json",
+  "x-spec-version": "3.0.11"
+}

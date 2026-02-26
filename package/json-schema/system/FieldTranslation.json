@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "label": {
+      "description": "Translated field label",
+      "type": "string"
+    },
+    "help": {
+      "description": "Translated help text",
+      "type": "string"
+    },
+    "options": {
+      "description": "Option value to translated label map",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "description": "Translation data for a single field",
+  "$id": "https://schema.objectstack.io/v3.0.11/system/FieldTranslation.json",
+  "x-spec-version": "3.0.11"
+}

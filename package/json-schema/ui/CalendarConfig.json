@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "startDateField": {
+      "type": "string"
+    },
+    "endDateField": {
+      "type": "string"
+    },
+    "titleField": {
+      "type": "string"
+    },
+    "colorField": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "startDateField",
+    "titleField"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/ui/CalendarConfig.json",
+  "x-spec-version": "3.0.11"
+}

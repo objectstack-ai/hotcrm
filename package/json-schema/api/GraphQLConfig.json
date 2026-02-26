@@ -1,0 +1,1886 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "enabled": {
+      "default": true,
+      "description": "Enable GraphQL API",
+      "type": "boolean"
+    },
+    "path": {
+      "default": "/graphql",
+      "description": "GraphQL endpoint path",
+      "type": "string"
+    },
+    "playground": {
+      "description": "GraphQL Playground configuration",
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": true,
+          "description": "Enable GraphQL Playground",
+          "type": "boolean"
+        },
+        "path": {
+          "default": "/playground",
+          "description": "Playground path",
+          "type": "string"
+        }
+      },
+      "required": [
+        "enabled",
+        "path"
+      ],
+      "additionalProperties": false
+    },
+    "schema": {
+      "description": "Schema generation configuration",
+      "type": "object",
+      "properties": {
+        "autoGenerateTypes": {
+          "default": true,
+          "description": "Auto-generate types from Objects",
+          "type": "boolean"
+        },
+        "types": {
+          "description": "Type configurations",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "GraphQL type name (PascalCase recommended)"
+              },
+              "object": {
+                "type": "string",
+                "description": "Source ObjectQL object name"
+              },
+              "description": {
+                "description": "Type description",
+                "type": "string"
+              },
+              "fields": {
+                "description": "Field configuration",
+                "type": "object",
+                "properties": {
+                  "include": {
+                    "description": "Fields to include",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "exclude": {
+                    "description": "Fields to exclude (e.g., sensitive fields)",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "mappings": {
+                    "description": "Field-level customizations",
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {
+                      "type": "object",
+                      "properties": {
+                        "graphqlName": {
+                          "description": "Custom GraphQL field name",
+                          "type": "string"
+                        },
+                        "graphqlType": {
+                          "description": "Override GraphQL type",
+                          "type": "string"
+                        },
+                        "description": {
+                          "description": "Field description",
+                          "type": "string"
+                        },
+                        "deprecationReason": {
+                          "description": "Why field is deprecated",
+                          "type": "string"
+                        },
+                        "nullable": {
+                          "description": "Override nullable",
+                          "type": "boolean"
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "additionalProperties": false
+              },
+              "interfaces": {
+                "description": "GraphQL interface names",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "isInterface": {
+                "default": false,
+                "description": "Define as GraphQL interface",
+                "type": "boolean"
+              },
+              "directives": {
+                "description": "GraphQL directives",
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "description": "Directive name"
+                    },
+                    "args": {
+                      "description": "Directive arguments",
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string"
+                      },
+                      "additionalProperties": {}
+                    }
+                  },
+                  "required": [
+                    "name"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "name",
+              "object",
+              "isInterface"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "queries": {
+          "description": "Query configurations",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Query field name (camelCase recommended)"
+              },
+              "object": {
+                "type": "string",
+                "description": "Source ObjectQL object name"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "get",
+                  "list",
+                  "search"
+                ],
+                "description": "Query type"
+              },
+              "description": {
+                "description": "Query description",
+                "type": "string"
+              },
+              "args": {
+                "description": "Query arguments",
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "GraphQL type (e.g., \"ID!\", \"String\", \"Int\")"
+                    },
+                    "description": {
+                      "description": "Argument description",
+                      "type": "string"
+                    },
+                    "defaultValue": {
+                      "description": "Default value"
+                    }
+                  },
+                  "required": [
+                    "type"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "filtering": {
+                "description": "Filtering capabilities",
+                "type": "object",
+                "properties": {
+                  "enabled": {
+                    "default": true,
+                    "description": "Allow filtering",
+                    "type": "boolean"
+                  },
+                  "fields": {
+                    "description": "Filterable fields",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "operators": {
+                    "description": "Allowed filter operators",
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "eq",
+                        "ne",
+                        "gt",
+                        "gte",
+                        "lt",
+                        "lte",
+                        "in",
+                        "notIn",
+                        "contains",
+                        "startsWith",
+                        "endsWith",
+                        "isNull",
+                        "isNotNull"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "enabled"
+                ],
+                "additionalProperties": false
+              },
+              "sorting": {
+                "description": "Sorting capabilities",
+                "type": "object",
+                "properties": {
+                  "enabled": {
+                    "default": true,
+                    "description": "Allow sorting",
+                    "type": "boolean"
+                  },
+                  "fields": {
+                    "description": "Sortable fields",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "defaultSort": {
+                    "description": "Default sort order",
+                    "type": "object",
+                    "properties": {
+                      "field": {
+                        "type": "string"
+                      },
+                      "direction": {
+                        "type": "string",
+                        "enum": [
+                          "ASC",
+                          "DESC"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "field",
+                      "direction"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "enabled"
+                ],
+                "additionalProperties": false
+              },
+              "pagination": {
+                "description": "Pagination configuration",
+                "type": "object",
+                "properties": {
+                  "enabled": {
+                    "default": true,
+                    "description": "Enable pagination",
+                    "type": "boolean"
+                  },
+                  "type": {
+                    "default": "offset",
+                    "description": "Pagination style",
+                    "type": "string",
+                    "enum": [
+                      "offset",
+                      "cursor",
+                      "relay"
+                    ]
+                  },
+                  "defaultLimit": {
+                    "default": 20,
+                    "description": "Default page size",
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 9007199254740991
+                  },
+                  "maxLimit": {
+                    "default": 100,
+                    "description": "Maximum page size",
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 9007199254740991
+                  },
+                  "cursors": {
+                    "type": "object",
+                    "properties": {
+                      "field": {
+                        "default": "id",
+                        "description": "Field to use for cursor pagination",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "field"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "enabled",
+                  "type",
+                  "defaultLimit",
+                  "maxLimit"
+                ],
+                "additionalProperties": false
+              },
+              "fields": {
+                "description": "Field selection configuration",
+                "type": "object",
+                "properties": {
+                  "required": {
+                    "description": "Required fields (always returned)",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "selectable": {
+                    "description": "Selectable fields",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "additionalProperties": false
+              },
+              "authRequired": {
+                "default": true,
+                "description": "Require authentication",
+                "type": "boolean"
+              },
+              "permissions": {
+                "description": "Required permissions",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "cache": {
+                "description": "Query caching",
+                "type": "object",
+                "properties": {
+                  "enabled": {
+                    "default": false,
+                    "description": "Enable caching",
+                    "type": "boolean"
+                  },
+                  "ttl": {
+                    "description": "Cache TTL in seconds",
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "key": {
+                    "description": "Cache key template",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "enabled"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "name",
+              "object",
+              "type",
+              "authRequired"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "mutations": {
+          "description": "Mutation configurations",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Mutation field name (camelCase recommended)"
+              },
+              "object": {
+                "type": "string",
+                "description": "Source ObjectQL object name"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "create",
+                  "update",
+                  "delete",
+                  "upsert",
+                  "custom"
+                ],
+                "description": "Mutation type"
+              },
+              "description": {
+                "description": "Mutation description",
+                "type": "string"
+              },
+              "input": {
+                "description": "Input configuration",
+                "type": "object",
+                "properties": {
+                  "typeName": {
+                    "description": "Custom input type name",
+                    "type": "string"
+                  },
+                  "fields": {
+                    "description": "Input field configuration",
+                    "type": "object",
+                    "properties": {
+                      "include": {
+                        "description": "Fields to include",
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "exclude": {
+                        "description": "Fields to exclude",
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "required": {
+                        "description": "Required input fields",
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "validation": {
+                    "description": "Input validation",
+                    "type": "object",
+                    "properties": {
+                      "enabled": {
+                        "default": true,
+                        "description": "Enable input validation",
+                        "type": "boolean"
+                      },
+                      "rules": {
+                        "description": "Custom validation rules",
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "required": [
+                      "enabled"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "additionalProperties": false
+              },
+              "output": {
+                "description": "Output configuration",
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "default": "object",
+                    "description": "Output type",
+                    "type": "string",
+                    "enum": [
+                      "object",
+                      "payload",
+                      "boolean",
+                      "custom"
+                    ]
+                  },
+                  "includeEnvelope": {
+                    "default": false,
+                    "description": "Wrap in success/error payload",
+                    "type": "boolean"
+                  },
+                  "customType": {
+                    "description": "Custom output type name",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "includeEnvelope"
+                ],
+                "additionalProperties": false
+              },
+              "transaction": {
+                "description": "Transaction configuration",
+                "type": "object",
+                "properties": {
+                  "enabled": {
+                    "default": true,
+                    "description": "Use database transaction",
+                    "type": "boolean"
+                  },
+                  "isolationLevel": {
+                    "description": "Transaction isolation level",
+                    "type": "string",
+                    "enum": [
+                      "read_uncommitted",
+                      "read_committed",
+                      "repeatable_read",
+                      "serializable"
+                    ]
+                  }
+                },
+                "required": [
+                  "enabled"
+                ],
+                "additionalProperties": false
+              },
+              "authRequired": {
+                "default": true,
+                "description": "Require authentication",
+                "type": "boolean"
+              },
+              "permissions": {
+                "description": "Required permissions",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "hooks": {
+                "description": "Lifecycle hooks",
+                "type": "object",
+                "properties": {
+                  "before": {
+                    "description": "Pre-mutation hooks",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "after": {
+                    "description": "Post-mutation hooks",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "name",
+              "object",
+              "type",
+              "authRequired"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "subscriptions": {
+          "description": "Subscription configurations",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Subscription field name (camelCase recommended)"
+              },
+              "object": {
+                "type": "string",
+                "description": "Source ObjectQL object name"
+              },
+              "events": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "created",
+                    "updated",
+                    "deleted",
+                    "custom"
+                  ]
+                },
+                "description": "Events to subscribe to"
+              },
+              "description": {
+                "description": "Subscription description",
+                "type": "string"
+              },
+              "filter": {
+                "description": "Subscription filtering",
+                "type": "object",
+                "properties": {
+                  "enabled": {
+                    "default": true,
+                    "description": "Allow filtering subscriptions",
+                    "type": "boolean"
+                  },
+                  "fields": {
+                    "description": "Filterable fields",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "enabled"
+                ],
+                "additionalProperties": false
+              },
+              "payload": {
+                "description": "Payload configuration",
+                "type": "object",
+                "properties": {
+                  "includeEntity": {
+                    "default": true,
+                    "description": "Include entity in payload",
+                    "type": "boolean"
+                  },
+                  "includePreviousValues": {
+                    "default": false,
+                    "description": "Include previous field values",
+                    "type": "boolean"
+                  },
+                  "includeMeta": {
+                    "default": true,
+                    "description": "Include metadata (timestamp, user, etc.)",
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "includeEntity",
+                  "includePreviousValues",
+                  "includeMeta"
+                ],
+                "additionalProperties": false
+              },
+              "authRequired": {
+                "default": true,
+                "description": "Require authentication",
+                "type": "boolean"
+              },
+              "permissions": {
+                "description": "Required permissions",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "rateLimit": {
+                "description": "Subscription rate limiting",
+                "type": "object",
+                "properties": {
+                  "enabled": {
+                    "default": true,
+                    "description": "Enable rate limiting",
+                    "type": "boolean"
+                  },
+                  "maxSubscriptionsPerUser": {
+                    "default": 10,
+                    "description": "Max concurrent subscriptions per user",
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 9007199254740991
+                  },
+                  "throttleMs": {
+                    "description": "Throttle interval in milliseconds",
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "enabled",
+                  "maxSubscriptionsPerUser"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "name",
+              "object",
+              "events",
+              "authRequired"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "resolvers": {
+          "description": "Custom resolver configurations",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string",
+                "description": "Resolver path (Type.field)"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "datasource",
+                  "computed",
+                  "script",
+                  "proxy"
+                ],
+                "description": "Resolver implementation type"
+              },
+              "implementation": {
+                "description": "Implementation configuration",
+                "type": "object",
+                "properties": {
+                  "datasource": {
+                    "description": "Datasource ID",
+                    "type": "string"
+                  },
+                  "query": {
+                    "description": "Query/SQL to execute",
+                    "type": "string"
+                  },
+                  "expression": {
+                    "description": "Computation expression",
+                    "type": "string"
+                  },
+                  "dependencies": {
+                    "description": "Dependent fields",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "script": {
+                    "description": "Script ID or inline code",
+                    "type": "string"
+                  },
+                  "url": {
+                    "description": "Proxy URL",
+                    "type": "string"
+                  },
+                  "method": {
+                    "description": "HTTP method",
+                    "type": "string",
+                    "enum": [
+                      "GET",
+                      "POST",
+                      "PUT",
+                      "DELETE"
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              },
+              "cache": {
+                "description": "Resolver caching",
+                "type": "object",
+                "properties": {
+                  "enabled": {
+                    "default": false,
+                    "description": "Enable resolver caching",
+                    "type": "boolean"
+                  },
+                  "ttl": {
+                    "description": "Cache TTL in seconds",
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "keyArgs": {
+                    "description": "Arguments to include in cache key",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "enabled"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "path",
+              "type"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "directives": {
+          "description": "Custom directive configurations",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "pattern": "^[a-z][a-zA-Z0-9]*$",
+                "description": "Directive name (camelCase)"
+              },
+              "description": {
+                "description": "Directive description",
+                "type": "string"
+              },
+              "locations": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "QUERY",
+                    "MUTATION",
+                    "SUBSCRIPTION",
+                    "FIELD",
+                    "FRAGMENT_DEFINITION",
+                    "FRAGMENT_SPREAD",
+                    "INLINE_FRAGMENT",
+                    "VARIABLE_DEFINITION",
+                    "SCHEMA",
+                    "SCALAR",
+                    "OBJECT",
+                    "FIELD_DEFINITION",
+                    "ARGUMENT_DEFINITION",
+                    "INTERFACE",
+                    "UNION",
+                    "ENUM",
+                    "ENUM_VALUE",
+                    "INPUT_OBJECT",
+                    "INPUT_FIELD_DEFINITION"
+                  ]
+                },
+                "description": "Directive locations"
+              },
+              "args": {
+                "description": "Directive arguments",
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "Argument type"
+                    },
+                    "description": {
+                      "description": "Argument description",
+                      "type": "string"
+                    },
+                    "defaultValue": {
+                      "description": "Default value"
+                    }
+                  },
+                  "required": [
+                    "type"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "repeatable": {
+                "default": false,
+                "description": "Can be applied multiple times",
+                "type": "boolean"
+              },
+              "implementation": {
+                "description": "Directive implementation",
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "auth",
+                      "validation",
+                      "transform",
+                      "cache",
+                      "deprecation",
+                      "custom"
+                    ],
+                    "description": "Directive type"
+                  },
+                  "handler": {
+                    "description": "Handler function name or script",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "name",
+              "locations",
+              "repeatable"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "autoGenerateTypes"
+      ],
+      "additionalProperties": false
+    },
+    "dataLoaders": {
+      "description": "DataLoader configurations",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "DataLoader name"
+          },
+          "source": {
+            "type": "string",
+            "description": "Source object or datasource"
+          },
+          "batchFunction": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "findByIds",
+                  "query",
+                  "script",
+                  "custom"
+                ],
+                "description": "Batch function type"
+              },
+              "keyField": {
+                "description": "Field to batch on (e.g., \"id\")",
+                "type": "string"
+              },
+              "query": {
+                "description": "Query template",
+                "type": "string"
+              },
+              "script": {
+                "description": "Script ID",
+                "type": "string"
+              },
+              "maxBatchSize": {
+                "default": 100,
+                "description": "Maximum batch size",
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "type",
+              "maxBatchSize"
+            ],
+            "additionalProperties": false,
+            "description": "Batch function configuration"
+          },
+          "cache": {
+            "description": "DataLoader caching",
+            "type": "object",
+            "properties": {
+              "enabled": {
+                "default": true,
+                "description": "Enable per-request caching",
+                "type": "boolean"
+              },
+              "keyFn": {
+                "description": "Custom cache key function",
+                "type": "string"
+              }
+            },
+            "required": [
+              "enabled"
+            ],
+            "additionalProperties": false
+          },
+          "options": {
+            "description": "DataLoader options",
+            "type": "object",
+            "properties": {
+              "batch": {
+                "default": true,
+                "description": "Enable batching",
+                "type": "boolean"
+              },
+              "cache": {
+                "default": true,
+                "description": "Enable caching",
+                "type": "boolean"
+              },
+              "maxCacheSize": {
+                "description": "Max cache entries",
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "batch",
+              "cache"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "name",
+          "source",
+          "batchFunction"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "security": {
+      "description": "Security configuration",
+      "type": "object",
+      "properties": {
+        "depthLimit": {
+          "description": "Query depth limiting",
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "default": true,
+              "description": "Enable query depth limiting",
+              "type": "boolean"
+            },
+            "maxDepth": {
+              "default": 10,
+              "description": "Maximum query depth",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "ignoreFields": {
+              "description": "Fields excluded from depth calculation",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "onDepthExceeded": {
+              "default": "reject",
+              "description": "Action when depth exceeded",
+              "type": "string",
+              "enum": [
+                "reject",
+                "log",
+                "warn"
+              ]
+            },
+            "errorMessage": {
+              "description": "Custom error message for depth violations",
+              "type": "string"
+            }
+          },
+          "required": [
+            "enabled",
+            "maxDepth",
+            "onDepthExceeded"
+          ],
+          "additionalProperties": false
+        },
+        "complexity": {
+          "description": "Query complexity calculation",
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "default": true,
+              "description": "Enable query complexity limiting",
+              "type": "boolean"
+            },
+            "maxComplexity": {
+              "default": 1000,
+              "description": "Maximum query complexity",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "defaultFieldComplexity": {
+              "default": 1,
+              "description": "Default complexity per field",
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "fieldComplexity": {
+              "description": "Per-field complexity configuration",
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "base": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991,
+                        "description": "Base complexity"
+                      },
+                      "multiplier": {
+                        "description": "Argument multiplier (e.g., \"limit\")",
+                        "type": "string"
+                      },
+                      "calculator": {
+                        "description": "Custom calculator function",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "base"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              }
+            },
+            "listMultiplier": {
+              "default": 10,
+              "description": "Multiplier for list fields",
+              "type": "number",
+              "minimum": 0
+            },
+            "onComplexityExceeded": {
+              "default": "reject",
+              "description": "Action when complexity exceeded",
+              "type": "string",
+              "enum": [
+                "reject",
+                "log",
+                "warn"
+              ]
+            },
+            "errorMessage": {
+              "description": "Custom error message for complexity violations",
+              "type": "string"
+            }
+          },
+          "required": [
+            "enabled",
+            "maxComplexity",
+            "defaultFieldComplexity",
+            "listMultiplier",
+            "onComplexityExceeded"
+          ],
+          "additionalProperties": false
+        },
+        "rateLimit": {
+          "description": "Rate limiting",
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "default": true,
+              "description": "Enable rate limiting",
+              "type": "boolean"
+            },
+            "strategy": {
+              "default": "token_bucket",
+              "description": "Rate limiting strategy",
+              "type": "string",
+              "enum": [
+                "token_bucket",
+                "fixed_window",
+                "sliding_window",
+                "cost_based"
+              ]
+            },
+            "global": {
+              "description": "Global rate limits",
+              "type": "object",
+              "properties": {
+                "maxRequests": {
+                  "default": 1000,
+                  "description": "Maximum requests per window",
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991
+                },
+                "windowMs": {
+                  "default": 60000,
+                  "description": "Time window in milliseconds",
+                  "type": "integer",
+                  "minimum": 1000,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "maxRequests",
+                "windowMs"
+              ],
+              "additionalProperties": false
+            },
+            "perUser": {
+              "description": "Per-user rate limits",
+              "type": "object",
+              "properties": {
+                "maxRequests": {
+                  "default": 100,
+                  "description": "Maximum requests per user per window",
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991
+                },
+                "windowMs": {
+                  "default": 60000,
+                  "description": "Time window in milliseconds",
+                  "type": "integer",
+                  "minimum": 1000,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "maxRequests",
+                "windowMs"
+              ],
+              "additionalProperties": false
+            },
+            "costBased": {
+              "description": "Cost-based rate limiting",
+              "type": "object",
+              "properties": {
+                "enabled": {
+                  "default": false,
+                  "description": "Enable cost-based rate limiting",
+                  "type": "boolean"
+                },
+                "maxCost": {
+                  "default": 10000,
+                  "description": "Maximum cost per window",
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991
+                },
+                "windowMs": {
+                  "default": 60000,
+                  "description": "Time window in milliseconds",
+                  "type": "integer",
+                  "minimum": 1000,
+                  "maximum": 9007199254740991
+                },
+                "useComplexityAsCost": {
+                  "default": true,
+                  "description": "Use query complexity as cost",
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "enabled",
+                "maxCost",
+                "windowMs",
+                "useComplexityAsCost"
+              ],
+              "additionalProperties": false
+            },
+            "operations": {
+              "description": "Per-operation rate limits",
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {
+                "type": "object",
+                "properties": {
+                  "maxRequests": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 9007199254740991,
+                    "description": "Max requests for this operation"
+                  },
+                  "windowMs": {
+                    "type": "integer",
+                    "minimum": 1000,
+                    "maximum": 9007199254740991,
+                    "description": "Time window"
+                  }
+                },
+                "required": [
+                  "maxRequests",
+                  "windowMs"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "onLimitExceeded": {
+              "default": "reject",
+              "description": "Action when rate limit exceeded",
+              "type": "string",
+              "enum": [
+                "reject",
+                "queue",
+                "log"
+              ]
+            },
+            "errorMessage": {
+              "description": "Custom error message for rate limit violations",
+              "type": "string"
+            },
+            "includeHeaders": {
+              "default": true,
+              "description": "Include rate limit headers in response",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "enabled",
+            "strategy",
+            "onLimitExceeded",
+            "includeHeaders"
+          ],
+          "additionalProperties": false
+        },
+        "persistedQueries": {
+          "description": "Persisted queries",
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "default": false,
+              "description": "Enable persisted queries",
+              "type": "boolean"
+            },
+            "mode": {
+              "default": "optional",
+              "description": "Persisted query mode (optional: allow both, required: only persisted)",
+              "type": "string",
+              "enum": [
+                "optional",
+                "required"
+              ]
+            },
+            "store": {
+              "description": "Query store configuration",
+              "type": "object",
+              "properties": {
+                "type": {
+                  "default": "memory",
+                  "description": "Query store type",
+                  "type": "string",
+                  "enum": [
+                    "memory",
+                    "redis",
+                    "database",
+                    "file"
+                  ]
+                },
+                "connection": {
+                  "description": "Store connection string or path",
+                  "type": "string"
+                },
+                "ttl": {
+                  "description": "TTL in seconds for stored queries",
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "type"
+              ],
+              "additionalProperties": false
+            },
+            "apq": {
+              "description": "Automatic Persisted Queries configuration",
+              "type": "object",
+              "properties": {
+                "enabled": {
+                  "default": true,
+                  "description": "Enable Automatic Persisted Queries",
+                  "type": "boolean"
+                },
+                "hashAlgorithm": {
+                  "default": "sha256",
+                  "description": "Hash algorithm for query IDs",
+                  "type": "string",
+                  "enum": [
+                    "sha256",
+                    "sha1",
+                    "md5"
+                  ]
+                },
+                "cache": {
+                  "description": "APQ cache configuration",
+                  "type": "object",
+                  "properties": {
+                    "ttl": {
+                      "default": 3600,
+                      "description": "Cache TTL in seconds",
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "maxSize": {
+                      "description": "Maximum number of cached queries",
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "ttl"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "enabled",
+                "hashAlgorithm"
+              ],
+              "additionalProperties": false
+            },
+            "allowlist": {
+              "description": "Query allow list configuration",
+              "type": "object",
+              "properties": {
+                "enabled": {
+                  "default": false,
+                  "description": "Enable query allow list (reject queries not in list)",
+                  "type": "boolean"
+                },
+                "queries": {
+                  "description": "Allowed queries",
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "description": "Query ID or hash"
+                      },
+                      "operation": {
+                        "description": "Operation name",
+                        "type": "string"
+                      },
+                      "query": {
+                        "description": "Query string",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "source": {
+                  "description": "External allow list source (file path or URL)",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "enabled"
+              ],
+              "additionalProperties": false
+            },
+            "security": {
+              "description": "Security configuration",
+              "type": "object",
+              "properties": {
+                "maxQuerySize": {
+                  "description": "Maximum query string size in bytes",
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991
+                },
+                "rejectIntrospection": {
+                  "default": false,
+                  "description": "Reject introspection queries",
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "rejectIntrospection"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "enabled",
+            "mode"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "federation": {
+      "description": "GraphQL Federation gateway configuration",
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "description": "Enable GraphQL Federation gateway mode",
+          "type": "boolean"
+        },
+        "version": {
+          "default": "v2",
+          "description": "Federation specification version",
+          "type": "string",
+          "enum": [
+            "v1",
+            "v2"
+          ]
+        },
+        "subgraphs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Unique subgraph identifier"
+              },
+              "url": {
+                "type": "string",
+                "description": "Subgraph endpoint URL"
+              },
+              "schemaSource": {
+                "default": "introspection",
+                "description": "How to obtain the subgraph schema",
+                "type": "string",
+                "enum": [
+                  "introspection",
+                  "file",
+                  "registry"
+                ]
+              },
+              "schemaPath": {
+                "description": "Path to schema file (SDL format)",
+                "type": "string"
+              },
+              "entities": {
+                "description": "Entity definitions for this subgraph",
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "typeName": {
+                      "type": "string",
+                      "description": "GraphQL type name for this entity"
+                    },
+                    "keys": {
+                      "minItems": 1,
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "fields": {
+                            "type": "string",
+                            "description": "Selection set of fields composing the entity key"
+                          },
+                          "resolvable": {
+                            "default": true,
+                            "description": "Whether entities can be resolved from this subgraph",
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "fields",
+                          "resolvable"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "Entity key definitions"
+                    },
+                    "externalFields": {
+                      "description": "Fields owned by other subgraphs",
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "field": {
+                            "type": "string",
+                            "description": "Field name marked as external"
+                          },
+                          "ownerSubgraph": {
+                            "description": "Subgraph that owns this field",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "field"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "requires": {
+                      "description": "Required external fields for computed fields",
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "field": {
+                            "type": "string",
+                            "description": "Field with the requirement"
+                          },
+                          "fields": {
+                            "type": "string",
+                            "description": "Selection set of required fields (e.g., \"price weight\")"
+                          }
+                        },
+                        "required": [
+                          "field",
+                          "fields"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "provides": {
+                      "description": "Fields provided during resolution",
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "field": {
+                            "type": "string",
+                            "description": "Field that provides additional entity fields"
+                          },
+                          "fields": {
+                            "type": "string",
+                            "description": "Selection set of provided fields (e.g., \"name price\")"
+                          }
+                        },
+                        "required": [
+                          "field",
+                          "fields"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "owner": {
+                      "default": false,
+                      "description": "Whether this subgraph is the owner of this entity",
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "typeName",
+                    "keys",
+                    "owner"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "healthCheck": {
+                "description": "Subgraph health check configuration",
+                "type": "object",
+                "properties": {
+                  "enabled": {
+                    "default": true,
+                    "description": "Enable health checking",
+                    "type": "boolean"
+                  },
+                  "path": {
+                    "default": "/health",
+                    "description": "Health check endpoint path",
+                    "type": "string"
+                  },
+                  "intervalMs": {
+                    "default": 30000,
+                    "description": "Health check interval in milliseconds",
+                    "type": "integer",
+                    "minimum": 1000,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "enabled",
+                  "path",
+                  "intervalMs"
+                ],
+                "additionalProperties": false
+              },
+              "forwardHeaders": {
+                "description": "HTTP headers to forward to this subgraph",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "name",
+              "url",
+              "schemaSource"
+            ],
+            "additionalProperties": false
+          },
+          "description": "Subgraph configurations"
+        },
+        "serviceDiscovery": {
+          "description": "Service discovery configuration",
+          "type": "object",
+          "properties": {
+            "type": {
+              "default": "static",
+              "description": "Service discovery method",
+              "type": "string",
+              "enum": [
+                "static",
+                "dns",
+                "consul",
+                "kubernetes"
+              ]
+            },
+            "pollIntervalMs": {
+              "description": "Discovery poll interval in milliseconds",
+              "type": "integer",
+              "minimum": 1000,
+              "maximum": 9007199254740991
+            },
+            "namespace": {
+              "description": "Kubernetes namespace for subgraph discovery",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "additionalProperties": false
+        },
+        "queryPlanning": {
+          "description": "Query planning configuration",
+          "type": "object",
+          "properties": {
+            "strategy": {
+              "default": "parallel",
+              "description": "Query execution strategy across subgraphs",
+              "type": "string",
+              "enum": [
+                "parallel",
+                "sequential",
+                "adaptive"
+              ]
+            },
+            "maxDepth": {
+              "description": "Max query depth in federated execution",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "dryRun": {
+              "default": false,
+              "description": "Log query plans without executing",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "strategy",
+            "dryRun"
+          ],
+          "additionalProperties": false
+        },
+        "composition": {
+          "description": "Schema composition configuration",
+          "type": "object",
+          "properties": {
+            "conflictResolution": {
+              "default": "error",
+              "description": "Strategy for resolving schema conflicts",
+              "type": "string",
+              "enum": [
+                "error",
+                "first_wins",
+                "last_wins"
+              ]
+            },
+            "validate": {
+              "default": true,
+              "description": "Validate composed supergraph schema",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "conflictResolution",
+            "validate"
+          ],
+          "additionalProperties": false
+        },
+        "errorHandling": {
+          "description": "Error handling configuration",
+          "type": "object",
+          "properties": {
+            "includeSubgraphName": {
+              "default": false,
+              "description": "Include subgraph name in error responses",
+              "type": "boolean"
+            },
+            "partialErrors": {
+              "default": "propagate",
+              "description": "Behavior when a subgraph returns partial errors",
+              "type": "string",
+              "enum": [
+                "propagate",
+                "nullify",
+                "reject"
+              ]
+            }
+          },
+          "required": [
+            "includeSubgraphName",
+            "partialErrors"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "enabled",
+        "version",
+        "subgraphs"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "enabled",
+    "path"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/GraphQLConfig.json",
+  "x-spec-version": "3.0.11"
+}

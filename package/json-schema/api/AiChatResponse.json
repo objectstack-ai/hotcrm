@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "message": {
+      "type": "string",
+      "description": "Assistant response message"
+    },
+    "conversationId": {
+      "type": "string",
+      "description": "Conversation ID"
+    },
+    "actions": {
+      "description": "Suggested actions",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Action type"
+          },
+          "label": {
+            "type": "string",
+            "description": "Action display label"
+          },
+          "data": {
+            "description": "Action data",
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {}
+          }
+        },
+        "required": [
+          "type",
+          "label"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "message",
+    "conversationId"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/AiChatResponse.json",
+  "x-spec-version": "3.0.11"
+}

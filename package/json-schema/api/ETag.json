@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "value": {
+      "type": "string",
+      "description": "ETag value (hash or version identifier)"
+    },
+    "weak": {
+      "default": false,
+      "description": "Whether this is a weak ETag",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "value",
+    "weak"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/api/ETag.json",
+  "x-spec-version": "3.0.11"
+}

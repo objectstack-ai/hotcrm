@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "groupByField": {
+      "type": "string",
+      "description": "Field to group columns by (usually status/select)"
+    },
+    "summarizeField": {
+      "description": "Field to sum at top of column (e.g. amount)",
+      "type": "string"
+    },
+    "columns": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Fields to show on cards"
+    }
+  },
+  "required": [
+    "groupByField",
+    "columns"
+  ],
+  "additionalProperties": false,
+  "$id": "https://schema.objectstack.io/v3.0.11/ui/KanbanConfig.json",
+  "x-spec-version": "3.0.11"
+}
