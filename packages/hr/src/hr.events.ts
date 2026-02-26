@@ -4,41 +4,35 @@
  * Defines the event contracts for cross-package communication.
  * Other plugins can subscribe to these events to react to HR domain changes.
  */
+import { EventTypeDefinitionSchema } from '@objectstack/spec/kernel';
 
 export const HREvents = {
-  employeeOnboarded: {
+  employeeOnboarded: EventTypeDefinitionSchema.parse({
     name: 'hr.employee.onboarded',
-    type: 'domain' as const,
     description: 'Fired when a new employee completes onboarding',
-  },
-  employeeTerminated: {
+  }),
+  employeeTerminated: EventTypeDefinitionSchema.parse({
     name: 'hr.employee.terminated',
-    type: 'domain' as const,
     description: 'Fired when an employee is terminated',
-  },
-  candidateHired: {
+  }),
+  candidateHired: EventTypeDefinitionSchema.parse({
     name: 'hr.candidate.hired',
-    type: 'domain' as const,
     description: 'Fired when a candidate is hired and converted to employee',
-  },
-  offerAccepted: {
+  }),
+  offerAccepted: EventTypeDefinitionSchema.parse({
     name: 'hr.offer.accepted',
-    type: 'domain' as const,
     description: 'Fired when an offer letter is accepted by a candidate',
-  },
-  performanceReviewCompleted: {
+  }),
+  performanceReviewCompleted: EventTypeDefinitionSchema.parse({
     name: 'hr.performance_review.completed',
-    type: 'domain' as const,
     description: 'Fired when a performance review cycle is completed',
-  },
-  timeOffApproved: {
+  }),
+  timeOffApproved: EventTypeDefinitionSchema.parse({
     name: 'hr.time_off.approved',
-    type: 'domain' as const,
     description: 'Fired when a time-off request is approved',
-  },
-  payrollProcessed: {
+  }),
+  payrollProcessed: EventTypeDefinitionSchema.parse({
     name: 'hr.payroll.processed',
-    type: 'domain' as const,
     description: 'Fired when payroll is processed for a pay period',
-  },
+  }),
 };

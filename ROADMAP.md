@@ -65,7 +65,7 @@
 | Studio Builder Configs | 4 (Interface Builder, Page Builder, Canvas Snap, Element Palette) |
 | Navigation Areas | 3 (header, sidebar, utility bar) |
 | Packages Registered in Root Config | 13 of 13 (all packages registered) |
-| Test Files | 194 files, 3813 tests (all passing) |
+| Test Files | 195 files, 3817 tests (all passing) |
 | TypeScript Compliance | 100% (zero type errors) |
 | Protocol Compliance | 100% (all objects pass ObjectSchema.create()) |
 | Spec Schema Adoption | ~95 of ~95 application-level schemas used (~100%) |
@@ -203,6 +203,7 @@ These items were deferred during Phase 13 and have been completed:
 - [ ] **Legacy API cleanup (Phase 2)** — Remove `db.ts` exports entirely once all consumers migrated to broker/ObjectQL
 - [ ] **E2E test coverage** — Build API-layer end-to-end tests for Feed API / MCP API
 - [ ] **FormView `as any` cleanup** — Remove `as any` casts once `@objectstack/spec` aligns FormView column types
+- [x] **Events metadata schema validation** — Added `EventTypeDefinitionSchema.parse()` to all 9 `*.events.ts` files; all metadata now validated against spec schemas
 
 ---
 
@@ -210,6 +211,7 @@ These items were deferred during Phase 13 and have been completed:
 
 | Date | From | To | Breaking Changes | Tests |
 |------|------|----|-----------------|-------|
+| 2026-02-26 | v3.0.8 | v3.0.8 | None (Phase 15: Added EventTypeDefinitionSchema validation to all 9 events.ts files; 100% metadata schema compliance) | 3817 ✅ |
 | 2026-02-25 | v3.0.8 | v3.0.8 | None (Phase 15: Fixed tsconfig.json path aliases for node16 ESM module resolution — changed directory paths to explicit index.ts files) | 3813 ✅ |
 | 2026-02-21 | v3.0.8 | v3.0.8 | None (Phase 15 continued: Structured pino logging across 154 files, CacheManager test isolation, db.ts deprecation annotations, emoji removal from logs) | 3813 ✅ |
 | 2026-02-21 | v3.0.8 | v3.0.8 | None (Phase 15: Repository quality improvements — hook `any` type migration, CI typecheck, ESLint version alignment, documentation updates, code-quality workflow fixes) | 3799 ✅ |

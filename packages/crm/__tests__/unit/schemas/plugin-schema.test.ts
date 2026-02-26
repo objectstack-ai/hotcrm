@@ -46,10 +46,10 @@ describe('CRM Plugin Schema Compliance', () => {
       expect(CRMEvents.leadConverted).toBeDefined();
     });
 
-    it('each event should have a name and type', () => {
+    it('each event should have a name and description', () => {
       for (const [, event] of Object.entries(CRMEvents)) {
         expect(event).toHaveProperty('name');
-        expect(event).toHaveProperty('type');
+        expect(event).toHaveProperty('description');
       }
     });
   });

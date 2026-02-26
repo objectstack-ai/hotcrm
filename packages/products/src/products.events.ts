@@ -4,36 +4,31 @@
  * Defines the event contracts for cross-package communication.
  * Other plugins can subscribe to these events to react to Products domain changes.
  */
+import { EventTypeDefinitionSchema } from '@objectstack/spec/kernel';
 
 export const ProductsEvents = {
-  quoteGenerated: {
+  quoteGenerated: EventTypeDefinitionSchema.parse({
     name: 'products.quote.generated',
-    type: 'domain' as const,
     description: 'Fired when a new quote is generated',
-  },
-  quoteApproved: {
+  }),
+  quoteApproved: EventTypeDefinitionSchema.parse({
     name: 'products.quote.approved',
-    type: 'domain' as const,
     description: 'Fired when a quote is approved and ready for customer',
-  },
-  quoteAccepted: {
+  }),
+  quoteAccepted: EventTypeDefinitionSchema.parse({
     name: 'products.quote.accepted',
-    type: 'domain' as const,
     description: 'Fired when a quote is accepted by the customer',
-  },
-  priceRuleApplied: {
+  }),
+  priceRuleApplied: EventTypeDefinitionSchema.parse({
     name: 'products.price_rule.applied',
-    type: 'domain' as const,
     description: 'Fired when a pricing rule is applied to a quote line',
-  },
-  approvalRequested: {
+  }),
+  approvalRequested: EventTypeDefinitionSchema.parse({
     name: 'products.approval.requested',
-    type: 'domain' as const,
     description: 'Fired when a discount or special pricing approval is requested',
-  },
-  productDeactivated: {
+  }),
+  productDeactivated: EventTypeDefinitionSchema.parse({
     name: 'products.product.deactivated',
-    type: 'domain' as const,
     description: 'Fired when a product is deactivated from the catalog',
-  },
+  }),
 };

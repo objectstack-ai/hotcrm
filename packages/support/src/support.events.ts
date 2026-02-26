@@ -4,41 +4,35 @@
  * Defines the event contracts for cross-package communication.
  * Other plugins can subscribe to these events to react to Support domain changes.
  */
+import { EventTypeDefinitionSchema } from '@objectstack/spec/kernel';
 
 export const SupportEvents = {
-  caseCreated: {
+  caseCreated: EventTypeDefinitionSchema.parse({
     name: 'support.case.created',
-    type: 'domain' as const,
     description: 'Fired when a new support case is created',
-  },
-  caseEscalated: {
+  }),
+  caseEscalated: EventTypeDefinitionSchema.parse({
     name: 'support.case.escalated',
-    type: 'domain' as const,
     description: 'Fired when a case is escalated to a higher tier',
-  },
-  caseClosed: {
+  }),
+  caseClosed: EventTypeDefinitionSchema.parse({
     name: 'support.case.closed',
-    type: 'domain' as const,
     description: 'Fired when a support case is resolved and closed',
-  },
-  slaBreached: {
+  }),
+  slaBreached: EventTypeDefinitionSchema.parse({
     name: 'support.sla.breached',
-    type: 'domain' as const,
     description: 'Fired when an SLA milestone is breached',
-  },
-  slaWarning: {
+  }),
+  slaWarning: EventTypeDefinitionSchema.parse({
     name: 'support.sla.warning',
-    type: 'domain' as const,
     description: 'Fired when an SLA milestone is approaching its deadline',
-  },
-  articlePublished: {
+  }),
+  articlePublished: EventTypeDefinitionSchema.parse({
     name: 'support.article.published',
-    type: 'domain' as const,
     description: 'Fired when a knowledge article is published',
-  },
-  caseAssigned: {
+  }),
+  caseAssigned: EventTypeDefinitionSchema.parse({
     name: 'support.case.assigned',
-    type: 'domain' as const,
     description: 'Fired when a case is assigned to an agent or queue',
-  },
+  }),
 };
