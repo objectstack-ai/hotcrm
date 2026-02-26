@@ -4,41 +4,35 @@
  * Defines the event contracts for cross-package communication.
  * Other plugins can subscribe to these events to react to Finance domain changes.
  */
+import { EventTypeDefinitionSchema } from '@objectstack/spec/kernel';
 
 export const FinanceEvents = {
-  invoiceCreated: {
+  invoiceCreated: EventTypeDefinitionSchema.parse({
     name: 'finance.invoice.created',
-    type: 'domain' as const,
     description: 'Fired when a new invoice is created',
-  },
-  invoicePaid: {
+  }),
+  invoicePaid: EventTypeDefinitionSchema.parse({
     name: 'finance.invoice.paid',
-    type: 'domain' as const,
     description: 'Fired when an invoice is fully paid',
-  },
-  invoiceOverdue: {
+  }),
+  invoiceOverdue: EventTypeDefinitionSchema.parse({
     name: 'finance.invoice.overdue',
-    type: 'domain' as const,
     description: 'Fired when an invoice becomes overdue',
-  },
-  paymentReceived: {
+  }),
+  paymentReceived: EventTypeDefinitionSchema.parse({
     name: 'finance.payment.received',
-    type: 'domain' as const,
     description: 'Fired when a payment is received and recorded',
-  },
-  contractActivated: {
+  }),
+  contractActivated: EventTypeDefinitionSchema.parse({
     name: 'finance.contract.activated',
-    type: 'domain' as const,
     description: 'Fired when a contract is activated',
-  },
-  contractRenewed: {
+  }),
+  contractRenewed: EventTypeDefinitionSchema.parse({
     name: 'finance.contract.renewed',
-    type: 'domain' as const,
     description: 'Fired when a contract is renewed',
-  },
-  contractExpiring: {
+  }),
+  contractExpiring: EventTypeDefinitionSchema.parse({
     name: 'finance.contract.expiring',
-    type: 'domain' as const,
     description: 'Fired when a contract is approaching its expiration date',
-  },
+  }),
 };

@@ -4,26 +4,23 @@
  * Defines the event contracts for cross-package communication.
  * Other plugins can subscribe to these events to react to Community domain changes.
  */
+import { EventTypeDefinitionSchema } from '@objectstack/spec/kernel';
 
 export const CommunityEvents = {
-  topicCreated: {
+  topicCreated: EventTypeDefinitionSchema.parse({
     name: 'community.topic.created',
-    type: 'domain' as const,
     description: 'Fired when a new topic is created in the forum',
-  },
-  replyPosted: {
+  }),
+  replyPosted: EventTypeDefinitionSchema.parse({
     name: 'community.reply.posted',
-    type: 'domain' as const,
     description: 'Fired when a reply is posted to a topic',
-  },
-  ideaSubmitted: {
+  }),
+  ideaSubmitted: EventTypeDefinitionSchema.parse({
     name: 'community.idea.submitted',
-    type: 'domain' as const,
     description: 'Fired when a new idea is submitted for consideration',
-  },
-  badgeAwarded: {
+  }),
+  badgeAwarded: EventTypeDefinitionSchema.parse({
     name: 'community.badge.awarded',
-    type: 'domain' as const,
     description: 'Fired when a badge is awarded to a community member',
-  },
+  }),
 };

@@ -4,51 +4,43 @@
  * Defines the event contracts for cross-package communication.
  * Other plugins can subscribe to these events to react to CRM domain changes.
  */
+import { EventTypeDefinitionSchema } from '@objectstack/spec/kernel';
 
 export const CRMEvents = {
-  accountCreated: {
+  accountCreated: EventTypeDefinitionSchema.parse({
     name: 'crm.account.created',
-    type: 'domain' as const,
     description: 'Fired when a new account is created',
-  },
-  accountUpdated: {
+  }),
+  accountUpdated: EventTypeDefinitionSchema.parse({
     name: 'crm.account.updated',
-    type: 'domain' as const,
     description: 'Fired when an account record is updated',
-  },
-  contactCreated: {
+  }),
+  contactCreated: EventTypeDefinitionSchema.parse({
     name: 'crm.contact.created',
-    type: 'domain' as const,
     description: 'Fired when a new contact is created',
-  },
-  leadConverted: {
+  }),
+  leadConverted: EventTypeDefinitionSchema.parse({
     name: 'crm.lead.converted',
-    type: 'domain' as const,
     description: 'Fired when a lead is converted to account/contact/opportunity',
-  },
-  leadScored: {
+  }),
+  leadScored: EventTypeDefinitionSchema.parse({
     name: 'crm.lead.scored',
-    type: 'domain' as const,
     description: 'Fired when a lead score is recalculated',
-  },
-  opportunityStageChanged: {
+  }),
+  opportunityStageChanged: EventTypeDefinitionSchema.parse({
     name: 'crm.opportunity.stage_changed',
-    type: 'domain' as const,
     description: 'Fired when an opportunity moves to a new stage',
-  },
-  opportunityWon: {
+  }),
+  opportunityWon: EventTypeDefinitionSchema.parse({
     name: 'crm.opportunity.won',
-    type: 'domain' as const,
     description: 'Fired when an opportunity is closed-won',
-  },
-  opportunityLost: {
+  }),
+  opportunityLost: EventTypeDefinitionSchema.parse({
     name: 'crm.opportunity.lost',
-    type: 'domain' as const,
     description: 'Fired when an opportunity is closed-lost',
-  },
-  activityCompleted: {
+  }),
+  activityCompleted: EventTypeDefinitionSchema.parse({
     name: 'crm.activity.completed',
-    type: 'domain' as const,
     description: 'Fired when an activity or task is marked as completed',
-  },
+  }),
 };

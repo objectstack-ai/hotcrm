@@ -4,36 +4,31 @@
  * Defines the event contracts for cross-package communication.
  * Other plugins can subscribe to these events to react to Marketing domain changes.
  */
+import { EventTypeDefinitionSchema } from '@objectstack/spec/kernel';
 
 export const MarketingEvents = {
-  campaignLaunched: {
+  campaignLaunched: EventTypeDefinitionSchema.parse({
     name: 'marketing.campaign.launched',
-    type: 'domain' as const,
     description: 'Fired when a campaign is launched and active',
-  },
-  campaignCompleted: {
+  }),
+  campaignCompleted: EventTypeDefinitionSchema.parse({
     name: 'marketing.campaign.completed',
-    type: 'domain' as const,
     description: 'Fired when a campaign reaches its end date or is manually completed',
-  },
-  leadCaptured: {
+  }),
+  leadCaptured: EventTypeDefinitionSchema.parse({
     name: 'marketing.lead.captured',
-    type: 'domain' as const,
     description: 'Fired when a new lead is captured from a form or landing page',
-  },
-  emailSent: {
+  }),
+  emailSent: EventTypeDefinitionSchema.parse({
     name: 'marketing.email.sent',
-    type: 'domain' as const,
     description: 'Fired when a marketing email is sent to a recipient',
-  },
-  formSubmitted: {
+  }),
+  formSubmitted: EventTypeDefinitionSchema.parse({
     name: 'marketing.form.submitted',
-    type: 'domain' as const,
     description: 'Fired when a marketing form is submitted by a prospect',
-  },
-  unsubscribeRequested: {
+  }),
+  unsubscribeRequested: EventTypeDefinitionSchema.parse({
     name: 'marketing.unsubscribe.requested',
-    type: 'domain' as const,
     description: 'Fired when a contact requests to unsubscribe from communications',
-  },
+  }),
 };
