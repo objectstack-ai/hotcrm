@@ -1,4 +1,4 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "installCommand": "pnpm install --ignore-scripts"
+  "installCommand": "pnpm install --ignore-scripts && rm -rf node_modules"
 }
