@@ -8,23 +8,23 @@ import { ViewTabSchema, SharingConfigSchema, AppearanceConfigSchema, AddRecordCo
 
 // --- Case View Tabs ---
 export const CaseViewTabs = [
-  { name: 'open', label: 'Open', pinned: false, isDefault: true, visible: true, filter: [['status', '=', 'open']] },
-  { name: 'escalated', label: 'Escalated', pinned: false, isDefault: false, visible: true, filter: [['is_escalated', '=', 'true']] },
-  { name: 'resolved', label: 'Resolved', pinned: false, isDefault: false, visible: true, filter: [['status', '=', 'resolved']] },
+  { name: 'open', label: 'Open', pinned: false, isDefault: true, visible: true, filter: [{ field: 'status', operator: '=', value: 'open' }] },
+  { name: 'escalated', label: 'Escalated', pinned: false, isDefault: false, visible: true, filter: [{ field: 'is_escalated', operator: '=', value: 'true' }] },
+  { name: 'resolved', label: 'Resolved', pinned: false, isDefault: false, visible: true, filter: [{ field: 'status', operator: '=', value: 'resolved' }] },
   { name: 'all', label: 'All Cases', pinned: false, isDefault: false, visible: true, filter: [] }
 ] satisfies ViewTab[];
 
 // --- Knowledge Base View Tabs ---
 export const KnowledgeArticleViewTabs = [
-  { name: 'published', label: 'Published', pinned: false, isDefault: true, visible: true, filter: [['status', '=', 'published']] },
-  { name: 'draft', label: 'Draft', pinned: false, isDefault: false, visible: true, filter: [['status', '=', 'draft']] },
+  { name: 'published', label: 'Published', pinned: false, isDefault: true, visible: true, filter: [{ field: 'status', operator: '=', value: 'published' }] },
+  { name: 'draft', label: 'Draft', pinned: false, isDefault: false, visible: true, filter: [{ field: 'status', operator: '=', value: 'draft' }] },
   { name: 'all', label: 'All Articles', pinned: false, isDefault: false, visible: true, filter: [] }
 ] satisfies ViewTab[];
 
 // --- Queue View Tabs ---
 export const QueueViewTabs = [
-  { name: 'unassigned', label: 'Unassigned', pinned: false, isDefault: true, visible: true, filter: [['owner', '=', '']] },
-  { name: 'my_queue', label: 'My Queue', pinned: false, isDefault: false, visible: true, filter: [['owner', '=', '${currentUser.id}']] },
+  { name: 'unassigned', label: 'Unassigned', pinned: false, isDefault: true, visible: true, filter: [{ field: 'owner', operator: '=', value: '' }] },
+  { name: 'my_queue', label: 'My Queue', pinned: false, isDefault: false, visible: true, filter: [{ field: 'owner', operator: '=', value: '${currentUser.id}' }] },
   { name: 'all', label: 'All Queues', pinned: false, isDefault: false, visible: true, filter: [] }
 ] satisfies ViewTab[];
 

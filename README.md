@@ -6,9 +6,9 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![Objects](https://img.shields.io/badge/Objects-~148-brightgreen)
 ![Tests](https://img.shields.io/badge/Tests-3799%20passing-brightgreen)
-![Spec](https://img.shields.io/badge/%40objectstack%2Fspec-v3.0.8-blue)
+![Spec](https://img.shields.io/badge/%40objectstack%2Fspec-v3.0.11-blue)
 
-> A world-class Customer Relationship Management system built on @objectstack/spec v3.0.8 protocol with Salesforce-level functionality and Apple/Linear-level UX.
+> A world-class Customer Relationship Management system built on @objectstack/spec v3.0.11 protocol with Salesforce-level functionality and Apple/Linear-level UX.
 
 ## ⚡ Quick Start in 60 Seconds
 
@@ -31,7 +31,7 @@ pnpm test          # Vitest — expect 3,799+ tests passing
 
 ## 🌟 Overview
 
-HotCRM is a **comprehensive, AI-native enterprise CRM** covering the complete Lead-to-Cash lifecycle. Built on @objectstack/spec v3.0.8:
+HotCRM is a **comprehensive, AI-native enterprise CRM** covering the complete Lead-to-Cash lifecycle. Built on @objectstack/spec v3.0.11:
 
 - **~148 Business Objects** across 13 packages: Sales, Marketing, Revenue, Service, HR, AI, Analytics, Integration, Community, Real Estate, Healthcare, Financial Services, Education
 - **Metadata-Driven**: All objects defined in TypeScript (`.object.ts`) — the single source of truth

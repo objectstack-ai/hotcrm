@@ -31,7 +31,7 @@ export const ActiveEmployeesView = {
     type: 'grid' as const,
     name: 'active_employees',
     label: 'Active Employees',
-    filter: [['employment_status', '=', 'active']],
+    filter: [{ field: 'employment_status', operator: '=', value: 'active' }],
     columns: [
       { field: 'employee_number', width: 130, link: true },
       { field: 'full_name', width: 200, link: true },
@@ -69,7 +69,7 @@ export const RecentHiresView = {
     type: 'grid' as const,
     name: 'recent_hires',
     label: 'Recent Hires',
-    filter: [['hire_date', '>=', 'LAST_90_DAYS']],
+    filter: [{ field: 'hire_date', operator: '>=', value: 'LAST_90_DAYS' }],
     columns: [
       { field: 'employee_number', width: 130, link: true },
       { field: 'full_name', width: 200, link: true },
@@ -87,7 +87,7 @@ export const OnLeaveView = {
     type: 'grid' as const,
     name: 'on_leave',
     label: 'On Leave',
-    filter: [['employment_status', '=', 'on_leave']],
+    filter: [{ field: 'employment_status', operator: '=', value: 'on_leave' }],
     columns: [
       { field: 'employee_number', width: 130, link: true },
       { field: 'full_name', width: 200, link: true },

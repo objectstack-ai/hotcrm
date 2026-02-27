@@ -34,7 +34,7 @@ export const MyAccountsView = {
     type: 'grid' as const,
     name: 'my_accounts',
     label: 'My Accounts',
-    filter: [['owner', '=', '${currentUser.id}']],
+    filter: [{ field: 'owner', operator: '=', value: '${currentUser.id}' }],
     columns: [
       { field: 'name', width: 250, link: true },
       { field: 'type', width: 120 },
@@ -53,8 +53,8 @@ export const EnterpriseAccountsView = {
     name: 'enterprise_accounts',
     label: 'Enterprise Accounts',
     filter: [
-      ['annual_revenue', '>', 10000000],
-      ['type', '=', 'customer']
+      { field: 'annual_revenue', operator: '>', value: 10000000 },
+      { field: 'type', operator: '=', value: 'customer' }
     ],
     columns: [
       { field: 'name', width: 250, link: true },
@@ -74,7 +74,7 @@ export const RecentlyCreatedView = {
     type: 'grid' as const,
     name: 'recently_created_accounts',
     label: 'Recently Created',
-    filter: [['created_date', '>=', 'LAST_30_DAYS']],
+    filter: [{ field: 'created_date', operator: '>=', value: 'LAST_30_DAYS' }],
     columns: [
       { field: 'name', width: 250, link: true },
       { field: 'type', width: 120 },
@@ -93,8 +93,8 @@ export const HotAccountsView = {
     name: 'hot_accounts',
     label: 'Hot Accounts',
     filter: [
-      ['rating', '=', 'Hot'],
-      ['type', 'IN', ['customer', 'prospect']]
+      { field: 'rating', operator: '=', value: 'Hot' },
+      { field: 'type', operator: 'IN', value: ['customer', 'prospect'] }
     ],
     columns: [
       { field: 'name', width: 250, link: true },
@@ -117,8 +117,8 @@ export const NeedAttentionView = {
     name: 'accounts_need_attention',
     label: 'Needs Attention',
     filter: [
-      ['last_activity_date', '<', 'LAST_60_DAYS'],
-      ['type', '=', 'customer']
+      { field: 'last_activity_date', operator: '<', value: 'LAST_60_DAYS' },
+      { field: 'type', operator: '=', value: 'customer' }
     ],
     columns: [
       { field: 'name', width: 250, link: true },

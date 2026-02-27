@@ -1,7 +1,7 @@
 # HotCRM Development Roadmap
 
 > Comprehensive development plan for HotCRM — the world's first AI-Native CRM.
-> Protocol: @objectstack/spec v3.0.8 | Last Updated: February 2026
+> Protocol: @objectstack/spec v3.0.11 | Last Updated: February 2026
 
 ## Strategic Direction
 
@@ -22,7 +22,7 @@
 
 | Metric | Value |
 |--------|-------|
-| Protocol Version | @objectstack/spec v3.0.8 |
+| Protocol Version | @objectstack/spec v3.0.11 |
 | Business Objects | ~148 across 13 packages |
 | Business Packages | 13 (6 core clouds + AI + Analytics + Integration + Community + 4 verticals) |
 | Hook Files | 121+ across 13 packages |
@@ -211,6 +211,7 @@ These items were deferred during Phase 13 and have been completed:
 
 | Date | From | To | Breaking Changes | Tests |
 |------|------|----|-----------------|-------|
+| 2026-02-26 | v3.0.8 | v3.0.11 | ViewFilterRule format changed from array tuples to objects `{ field, operator, value }` (34 view files updated) | 3817 ✅ |
 | 2026-02-26 | v3.0.8 | v3.0.8 | None (Phase 15: Added EventTypeDefinitionSchema validation to all 9 events.ts files; 100% metadata schema compliance) | 3817 ✅ |
 | 2026-02-25 | v3.0.8 | v3.0.8 | None (Phase 15: Fixed tsconfig.json path aliases for node16 ESM module resolution — changed directory paths to explicit index.ts files) | 3813 ✅ |
 | 2026-02-21 | v3.0.8 | v3.0.8 | None (Phase 15 continued: Structured pino logging across 154 files, CacheManager test isolation, db.ts deprecation annotations, emoji removal from logs) | 3813 ✅ |

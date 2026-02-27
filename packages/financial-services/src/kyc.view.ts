@@ -34,7 +34,7 @@ export const PendingVerificationView = {
     type: 'grid' as const,
     name: 'pending_kyc',
     label: 'Pending Verification',
-    filter: [['status', '=', 'pending']],
+    filter: [{ field: 'status', operator: '=', value: 'pending' }],
     columns: [
       { field: 'wealth_account', width: 200, link: true },
       { field: 'risk_rating', width: 120 },
@@ -55,7 +55,7 @@ export const ExpiredKycView = {
     type: 'grid' as const,
     name: 'expired_kyc',
     label: 'Expired',
-    filter: [['status', '=', 'expired']],
+    filter: [{ field: 'status', operator: '=', value: 'expired' }],
     columns: [
       { field: 'wealth_account', width: 200, link: true },
       { field: 'expiry_date', width: 140 },
@@ -76,7 +76,7 @@ export const HighRiskKycView = {
     type: 'grid' as const,
     name: 'high_risk_kyc',
     label: 'High Risk',
-    filter: [['risk_rating', '=', 'high']],
+    filter: [{ field: 'risk_rating', operator: '=', value: 'high' }],
     columns: [
       { field: 'wealth_account', width: 200, link: true },
       { field: 'status', width: 120 },

@@ -32,7 +32,7 @@ export const ActivePatientsView = {
     type: 'grid' as const,
     name: 'active_patients',
     label: 'Active Patients',
-    filter: [['status', '=', 'active']],
+    filter: [{ field: 'status', operator: '=', value: 'active' }],
     columns: [
       { field: 'first_name', width: 150, link: true },
       { field: 'last_name', width: 150, link: true },
@@ -50,7 +50,7 @@ export const MyPatientsView = {
     type: 'grid' as const,
     name: 'my_patients',
     label: 'My Patients',
-    filter: [['primary_physician', '=', '${currentUser.id}']],
+    filter: [{ field: 'primary_physician', operator: '=', value: '${currentUser.id}' }],
     columns: [
       { field: 'first_name', width: 150, link: true },
       { field: 'last_name', width: 150, link: true },
@@ -68,7 +68,7 @@ export const DischargedPatientsView = {
     type: 'grid' as const,
     name: 'discharged_patients',
     label: 'Discharged Patients',
-    filter: [['status', '=', 'discharged']],
+    filter: [{ field: 'status', operator: '=', value: 'discharged' }],
     columns: [
       { field: 'first_name', width: 150, link: true },
       { field: 'last_name', width: 150, link: true },

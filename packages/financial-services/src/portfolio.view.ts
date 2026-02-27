@@ -52,7 +52,7 @@ export const TopPerformersView = {
     type: 'grid' as const,
     name: 'top_performing_portfolios',
     label: 'Top Performers',
-    filter: [['performance_ytd', '>', 0]],
+    filter: [{ field: 'performance_ytd', operator: '>', value: 0 }],
     columns: [
       { field: 'name', width: 200, link: true },
       { field: 'wealth_account', width: 180 },

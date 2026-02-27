@@ -31,7 +31,7 @@ export const DraftQuotesView = {
     type: 'grid' as const,
     name: 'draft_quotes',
     label: 'Draft Quotes',
-    filter: [['status', '=', 'draft']],
+    filter: [{ field: 'status', operator: '=', value: 'draft' }],
     columns: [
       { field: 'quote_number', width: 130, link: true },
       { field: 'name', width: 250, link: true },
@@ -48,7 +48,7 @@ export const PendingApprovalView = {
     type: 'grid' as const,
     name: 'pending_approval',
     label: 'Pending Approval',
-    filter: [['approval_status', '=', 'pending']],
+    filter: [{ field: 'approval_status', operator: '=', value: 'pending' }],
     columns: [
       { field: 'quote_number', width: 130, link: true },
       { field: 'name', width: 250, link: true },
@@ -70,7 +70,7 @@ export const AcceptedQuotesView = {
     type: 'grid' as const,
     name: 'accepted_quotes',
     label: 'Accepted Quotes',
-    filter: [['status', '=', 'accepted']],
+    filter: [{ field: 'status', operator: '=', value: 'accepted' }],
     columns: [
       { field: 'quote_number', width: 130, link: true },
       { field: 'name', width: 250, link: true },
@@ -88,7 +88,7 @@ export const ExpiredQuotesView = {
     type: 'grid' as const,
     name: 'expired_quotes',
     label: 'Expired Quotes',
-    filter: [['status', '=', 'expired']],
+    filter: [{ field: 'status', operator: '=', value: 'expired' }],
     columns: [
       { field: 'quote_number', width: 130, link: true },
       { field: 'name', width: 250, link: true },

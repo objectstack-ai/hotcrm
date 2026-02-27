@@ -8,24 +8,24 @@ import { ViewTabSchema, SharingConfigSchema, AppearanceConfigSchema, AddRecordCo
 
 // --- Opportunity View Tabs ---
 export const OpportunityViewTabs = [
-  { name: 'pipeline', label: 'Pipeline', pinned: false, isDefault: true, visible: true, filter: [['stage', '!=', 'closed_won'], ['stage', '!=', 'closed_lost']] },
-  { name: 'won', label: 'Won', pinned: false, isDefault: false, visible: true, filter: [['stage', '=', 'closed_won']] },
-  { name: 'lost', label: 'Lost', pinned: false, isDefault: false, visible: true, filter: [['stage', '=', 'closed_lost']] },
+  { name: 'pipeline', label: 'Pipeline', pinned: false, isDefault: true, visible: true, filter: [{ field: 'stage', operator: '!=', value: 'closed_won' }, { field: 'stage', operator: '!=', value: 'closed_lost' }] },
+  { name: 'won', label: 'Won', pinned: false, isDefault: false, visible: true, filter: [{ field: 'stage', operator: '=', value: 'closed_won' }] },
+  { name: 'lost', label: 'Lost', pinned: false, isDefault: false, visible: true, filter: [{ field: 'stage', operator: '=', value: 'closed_lost' }] },
   { name: 'all', label: 'All', pinned: false, isDefault: false, visible: true, filter: [] }
 ] satisfies ViewTab[];
 
 // --- Account View Tabs ---
 export const AccountViewTabs = [
-  { name: 'active', label: 'Active Accounts', pinned: false, isDefault: true, visible: true, filter: [['status', '=', 'active']] },
-  { name: 'inactive', label: 'Inactive', pinned: false, isDefault: false, visible: true, filter: [['status', '=', 'inactive']] },
-  { name: 'my_accounts', label: 'My Accounts', pinned: false, isDefault: false, visible: true, filter: [['owner', '=', '${currentUser.id}']] }
+  { name: 'active', label: 'Active Accounts', pinned: false, isDefault: true, visible: true, filter: [{ field: 'status', operator: '=', value: 'active' }] },
+  { name: 'inactive', label: 'Inactive', pinned: false, isDefault: false, visible: true, filter: [{ field: 'status', operator: '=', value: 'inactive' }] },
+  { name: 'my_accounts', label: 'My Accounts', pinned: false, isDefault: false, visible: true, filter: [{ field: 'owner', operator: '=', value: '${currentUser.id}' }] }
 ] satisfies ViewTab[];
 
 // --- Contact View Tabs ---
 export const ContactViewTabs = [
   { name: 'all', label: 'All Contacts', pinned: false, isDefault: true, visible: true, filter: [] },
-  { name: 'decision_makers', label: 'Decision Makers', pinned: false, isDefault: false, visible: true, filter: [['is_decision_maker', '=', 'true']] },
-  { name: 'recent', label: 'Recently Contacted', pinned: false, isDefault: false, visible: true, filter: [['last_contact_date', '>=', 'LAST_30_DAYS']] }
+  { name: 'decision_makers', label: 'Decision Makers', pinned: false, isDefault: false, visible: true, filter: [{ field: 'is_decision_maker', operator: '=', value: 'true' }] },
+  { name: 'recent', label: 'Recently Contacted', pinned: false, isDefault: false, visible: true, filter: [{ field: 'last_contact_date', operator: '>=', value: 'LAST_30_DAYS' }] }
 ] satisfies ViewTab[];
 
 // --- Shared Configs ---

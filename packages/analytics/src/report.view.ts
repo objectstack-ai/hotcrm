@@ -33,7 +33,7 @@ export const MyReportsView = {
     type: 'grid' as const,
     name: 'my_reports',
     label: 'My Reports',
-    filter: [['owner_id', '=', '${currentUser.id}']],
+    filter: [{ field: 'owner_id', operator: '=', value: '${currentUser.id}' }],
     columns: [
       { field: 'name', width: 250, link: true },
       { field: 'report_type', width: 120 },
@@ -51,7 +51,7 @@ export const PublicReportsView = {
     type: 'grid' as const,
     name: 'public_reports',
     label: 'Public Reports',
-    filter: [['is_public', '=', true]],
+    filter: [{ field: 'is_public', operator: '=', value: true }],
     columns: [
       { field: 'name', width: 250, link: true },
       { field: 'report_type', width: 120 },
@@ -69,7 +69,7 @@ export const RecentReportsView = {
     type: 'grid' as const,
     name: 'recent_reports',
     label: 'Recently Run',
-    filter: [['last_run_at', '>=', 'LAST_30_DAYS']],
+    filter: [{ field: 'last_run_at', operator: '>=', value: 'LAST_30_DAYS' }],
     columns: [
       { field: 'name', width: 250, link: true },
       { field: 'report_type', width: 120 },

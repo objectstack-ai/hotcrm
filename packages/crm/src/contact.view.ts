@@ -31,7 +31,7 @@ export const MyContactsView = {
     type: 'grid' as const,
     name: 'my_contacts',
     label: 'My Contacts',
-    filter: [['owner', '=', '${currentUser.id}']],
+    filter: [{ field: 'owner', operator: '=', value: '${currentUser.id}' }],
     columns: [
       { field: 'first_name', width: 150, link: true },
       { field: 'last_name', width: 150, link: true },
@@ -49,7 +49,7 @@ export const DecisionMakersView = {
     type: 'grid' as const,
     name: 'decision_makers',
     label: 'Decision Makers',
-    filter: [['is_decision_maker', '=', true]],
+    filter: [{ field: 'is_decision_maker', operator: '=', value: true }],
     columns: [
       { field: 'first_name', width: 150, link: true },
       { field: 'last_name', width: 150, link: true },
@@ -71,7 +71,7 @@ export const RecentContactsView = {
     type: 'grid' as const,
     name: 'recent_contacts',
     label: 'Recent Contacts',
-    filter: [['last_contact_date', '>=', 'LAST_30_DAYS']],
+    filter: [{ field: 'last_contact_date', operator: '>=', value: 'LAST_30_DAYS' }],
     columns: [
       { field: 'first_name', width: 150, link: true },
       { field: 'last_name', width: 150, link: true },

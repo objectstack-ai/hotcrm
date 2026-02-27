@@ -32,7 +32,7 @@ export const ActiveCampaignsView = {
     type: 'grid' as const,
     name: 'active_campaigns',
     label: 'Active Campaigns',
-    filter: [['status', '=', 'in_progress']],
+    filter: [{ field: 'status', operator: '=', value: 'in_progress' }],
     columns: [
       { field: 'name', width: 250, link: true },
       { field: 'type', width: 130 },
@@ -51,7 +51,7 @@ export const PlannedCampaignsView = {
     type: 'grid' as const,
     name: 'planned_campaigns',
     label: 'Planned Campaigns',
-    filter: [['status', '=', 'planned']],
+    filter: [{ field: 'status', operator: '=', value: 'planned' }],
     columns: [
       { field: 'name', width: 250, link: true },
       { field: 'type', width: 130 },
@@ -69,7 +69,7 @@ export const CompletedCampaignsView = {
     type: 'grid' as const,
     name: 'completed_campaigns',
     label: 'Completed Campaigns',
-    filter: [['status', '=', 'completed']],
+    filter: [{ field: 'status', operator: '=', value: 'completed' }],
     columns: [
       { field: 'name', width: 250, link: true },
       { field: 'type', width: 130 },

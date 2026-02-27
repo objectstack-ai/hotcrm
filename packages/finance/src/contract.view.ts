@@ -31,7 +31,7 @@ export const ActiveContractsView = {
     type: 'grid' as const,
     name: 'active_contracts',
     label: 'Active Contracts',
-    filter: [['status', '=', 'activated']],
+    filter: [{ field: 'status', operator: '=', value: 'activated' }],
     columns: [
       { field: 'contract_number', width: 150, link: true },
       { field: 'account', width: 200 },
@@ -50,8 +50,8 @@ export const ExpiringContractsView = {
     name: 'expiring_contracts',
     label: 'Expiring Contracts',
     filter: [
-      ['end_date', '<=', 'NEXT_90_DAYS'],
-      ['status', '=', 'activated']
+      { field: 'end_date', operator: '<=', value: 'NEXT_90_DAYS' },
+      { field: 'status', operator: '=', value: 'activated' }
     ],
     columns: [
       { field: 'contract_number', width: 150, link: true },
@@ -72,7 +72,7 @@ export const DraftContractsView = {
     type: 'grid' as const,
     name: 'draft_contracts',
     label: 'Draft Contracts',
-    filter: [['status', '=', 'draft']],
+    filter: [{ field: 'status', operator: '=', value: 'draft' }],
     columns: [
       { field: 'contract_number', width: 150, link: true },
       { field: 'account', width: 200 },

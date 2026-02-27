@@ -8,23 +8,23 @@ import { ViewTabSchema, SharingConfigSchema, AppearanceConfigSchema, AddRecordCo
 
 // --- Employee View Tabs ---
 export const EmployeeViewTabs = [
-  { name: 'active', label: 'Active', pinned: false, isDefault: true, visible: true, filter: [['status', '=', 'active']] },
-  { name: 'on_leave', label: 'On Leave', pinned: false, isDefault: false, visible: true, filter: [['status', '=', 'on_leave']] },
+  { name: 'active', label: 'Active', pinned: false, isDefault: true, visible: true, filter: [{ field: 'status', operator: '=', value: 'active' }] },
+  { name: 'on_leave', label: 'On Leave', pinned: false, isDefault: false, visible: true, filter: [{ field: 'status', operator: '=', value: 'on_leave' }] },
   { name: 'all', label: 'All Employees', pinned: false, isDefault: false, visible: true, filter: [] }
 ] satisfies ViewTab[];
 
 // --- Application View Tabs ---
 export const ApplicationViewTabs = [
-  { name: 'new', label: 'New', pinned: false, isDefault: true, visible: true, filter: [['status', '=', 'new']] },
-  { name: 'in_review', label: 'In Review', pinned: false, isDefault: false, visible: true, filter: [['status', '=', 'in_review']] },
-  { name: 'hired', label: 'Hired', pinned: false, isDefault: false, visible: true, filter: [['status', '=', 'hired']] },
+  { name: 'new', label: 'New', pinned: false, isDefault: true, visible: true, filter: [{ field: 'status', operator: '=', value: 'new' }] },
+  { name: 'in_review', label: 'In Review', pinned: false, isDefault: false, visible: true, filter: [{ field: 'status', operator: '=', value: 'in_review' }] },
+  { name: 'hired', label: 'Hired', pinned: false, isDefault: false, visible: true, filter: [{ field: 'status', operator: '=', value: 'hired' }] },
   { name: 'all', label: 'All Applications', pinned: false, isDefault: false, visible: true, filter: [] }
 ] satisfies ViewTab[];
 
 // --- Time Off View Tabs ---
 export const TimeOffViewTabs = [
-  { name: 'pending', label: 'Pending Approval', pinned: false, isDefault: true, visible: true, filter: [['status', '=', 'pending']] },
-  { name: 'approved', label: 'Approved', pinned: false, isDefault: false, visible: true, filter: [['status', '=', 'approved']] },
+  { name: 'pending', label: 'Pending Approval', pinned: false, isDefault: true, visible: true, filter: [{ field: 'status', operator: '=', value: 'pending' }] },
+  { name: 'approved', label: 'Approved', pinned: false, isDefault: false, visible: true, filter: [{ field: 'status', operator: '=', value: 'approved' }] },
   { name: 'all', label: 'All Requests', pinned: false, isDefault: false, visible: true, filter: [] }
 ] satisfies ViewTab[];
 

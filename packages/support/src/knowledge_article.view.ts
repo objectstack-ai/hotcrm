@@ -31,7 +31,7 @@ export const PublishedArticlesView = {
     type: 'grid' as const,
     name: 'published_articles',
     label: 'Published Articles',
-    filter: [['status', '=', 'published']],
+    filter: [{ field: 'status', operator: '=', value: 'published' }],
     columns: [
       { field: 'title', width: 300, link: true },
       { field: 'article_number', width: 130 },
@@ -49,7 +49,7 @@ export const DraftArticlesView = {
     type: 'grid' as const,
     name: 'draft_articles',
     label: 'Draft Articles',
-    filter: [['status', '=', 'draft']],
+    filter: [{ field: 'status', operator: '=', value: 'draft' }],
     columns: [
       { field: 'title', width: 300, link: true },
       { field: 'article_number', width: 130 },
@@ -66,7 +66,7 @@ export const InternalArticlesView = {
     type: 'grid' as const,
     name: 'internal_articles',
     label: 'Internal Articles',
-    filter: [['is_internal', '=', true]],
+    filter: [{ field: 'is_internal', operator: '=', value: true }],
     columns: [
       { field: 'title', width: 300, link: true },
       { field: 'article_number', width: 130 },
@@ -84,7 +84,7 @@ export const PopularArticlesView = {
     type: 'grid' as const,
     name: 'popular_articles',
     label: 'Popular Articles',
-    filter: [['view_count', '>', 100]],
+    filter: [{ field: 'view_count', operator: '>', value: 100 }],
     columns: [
       { field: 'title', width: 300, link: true },
       { field: 'article_number', width: 130 },

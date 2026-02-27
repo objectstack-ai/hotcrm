@@ -30,7 +30,7 @@ export const TodayShowingsView = {
     type: 'grid' as const,
     name: 'today_showings',
     label: 'Today',
-    filter: [['scheduled_date', '=', 'TODAY()']],
+    filter: [{ field: 'scheduled_date', operator: '=', value: 'TODAY()' }],
     columns: [
       { field: 'listing_id', width: 200, link: true },
       { field: 'scheduled_date', width: 160, sortable: true },
@@ -47,7 +47,7 @@ export const UpcomingShowingsView = {
     type: 'grid' as const,
     name: 'upcoming_showings',
     label: 'Upcoming',
-    filter: [['scheduled_date', '>', 'TODAY()']],
+    filter: [{ field: 'scheduled_date', operator: '>', value: 'TODAY()' }],
     columns: [
       { field: 'listing_id', width: 200, link: true },
       { field: 'scheduled_date', width: 160, sortable: true },
@@ -64,7 +64,7 @@ export const CompletedShowingsView = {
     type: 'grid' as const,
     name: 'completed_showings',
     label: 'Completed',
-    filter: [['follow_up_status', '=', 'completed']],
+    filter: [{ field: 'follow_up_status', operator: '=', value: 'completed' }],
     columns: [
       { field: 'listing_id', width: 200, link: true },
       { field: 'scheduled_date', width: 160, sortable: true },

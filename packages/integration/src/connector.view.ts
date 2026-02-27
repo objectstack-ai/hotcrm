@@ -34,7 +34,7 @@ export const ActiveConnectorsView = {
     type: 'grid' as const,
     name: 'active_connectors',
     label: 'Active Connectors',
-    filter: [['status', '=', 'active']],
+    filter: [{ field: 'status', operator: '=', value: 'active' }],
     columns: [
       { field: 'name', width: 200, link: true },
       { field: 'provider', width: 150 },
@@ -55,7 +55,7 @@ export const ErrorConnectorsView = {
     type: 'grid' as const,
     name: 'error_connectors',
     label: 'Connectors with Errors',
-    filter: [['status', '=', 'error']],
+    filter: [{ field: 'status', operator: '=', value: 'error' }],
     columns: [
       { field: 'name', width: 200, link: true },
       { field: 'provider', width: 150 },

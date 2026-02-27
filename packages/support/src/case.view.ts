@@ -31,7 +31,7 @@ export const MyCasesView = {
     type: 'grid' as const,
     name: 'my_cases',
     label: 'My Cases',
-    filter: [['owner_id', '=', '${currentUser.id}']],
+    filter: [{ field: 'owner_id', operator: '=', value: '${currentUser.id}' }],
     columns: [
       { field: 'case_number', width: 130, link: true },
       { field: 'subject', width: 280, link: true },
@@ -49,7 +49,7 @@ export const OpenCasesView = {
     type: 'grid' as const,
     name: 'open_cases',
     label: 'Open Cases',
-    filter: [['status', 'NOT IN', ['resolved', 'closed']]],
+    filter: [{ field: 'status', operator: 'NOT IN', value: ['resolved', 'closed'] }],
     columns: [
       { field: 'case_number', width: 130, link: true },
       { field: 'subject', width: 280, link: true },
@@ -68,7 +68,7 @@ export const HighPriorityCasesView = {
     type: 'grid' as const,
     name: 'high_priority_cases',
     label: 'High Priority',
-    filter: [['priority', 'IN', ['high', 'critical']]],
+    filter: [{ field: 'priority', operator: 'IN', value: ['high', 'critical'] }],
     columns: [
       { field: 'case_number', width: 130, link: true },
       { field: 'subject', width: 280, link: true },
@@ -90,7 +90,7 @@ export const EscalatedCasesView = {
     type: 'grid' as const,
     name: 'escalated_cases',
     label: 'Escalated Cases',
-    filter: [['is_escalated', '=', true]],
+    filter: [{ field: 'is_escalated', operator: '=', value: true }],
     columns: [
       { field: 'case_number', width: 130, link: true },
       { field: 'subject', width: 280, link: true },
@@ -112,7 +112,7 @@ export const SLAAtRiskView = {
     type: 'grid' as const,
     name: 'sla_at_risk',
     label: 'SLA At Risk',
-    filter: [['is_sla_violated', '=', true]],
+    filter: [{ field: 'is_sla_violated', operator: '=', value: true }],
     columns: [
       { field: 'case_number', width: 130, link: true },
       { field: 'subject', width: 280, link: true },

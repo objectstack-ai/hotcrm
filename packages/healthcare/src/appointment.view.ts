@@ -31,7 +31,7 @@ export const TodaysAppointmentsView = {
     type: 'grid' as const,
     name: 'todays_appointments',
     label: "Today's Appointments",
-    filter: [['appointment_date', '=', 'TODAY']],
+    filter: [{ field: 'appointment_date', operator: '=', value: 'TODAY' }],
     columns: [
       { field: 'patient', width: 180, link: true },
       { field: 'appointment_time', width: 100 },
@@ -53,7 +53,7 @@ export const UpcomingAppointmentsView = {
     type: 'grid' as const,
     name: 'upcoming_appointments',
     label: 'Upcoming Appointments',
-    filter: [['appointment_date', '>', 'TODAY']],
+    filter: [{ field: 'appointment_date', operator: '>', value: 'TODAY' }],
     columns: [
       { field: 'patient', width: 180, link: true },
       { field: 'appointment_date', width: 130 },
@@ -71,7 +71,7 @@ export const CancelledAppointmentsView = {
     type: 'grid' as const,
     name: 'cancelled_appointments',
     label: 'Cancelled Appointments',
-    filter: [['status', '=', 'cancelled']],
+    filter: [{ field: 'status', operator: '=', value: 'cancelled' }],
     columns: [
       { field: 'patient', width: 180, link: true },
       { field: 'appointment_date', width: 130 },

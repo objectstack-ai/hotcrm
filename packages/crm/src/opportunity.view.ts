@@ -31,7 +31,7 @@ export const MyOpportunitiesView = {
     type: 'grid' as const,
     name: 'my_opportunities',
     label: 'My Opportunities',
-    filter: [['owner_id', '=', '${currentUser.id}']],
+    filter: [{ field: 'owner_id', operator: '=', value: '${currentUser.id}' }],
     columns: [
       { field: 'name', width: 250, link: true },
       { field: 'account_id', width: 200 },
@@ -49,7 +49,7 @@ export const OpenPipelineView = {
     type: 'grid' as const,
     name: 'open_pipeline',
     label: 'Open Pipeline',
-    filter: [['stage', 'NOT IN', ['closed_won', 'closed_lost']]],
+    filter: [{ field: 'stage', operator: 'NOT IN', value: ['closed_won', 'closed_lost'] }],
     columns: [
       { field: 'name', width: 250, link: true },
       { field: 'account_id', width: 200 },
@@ -69,8 +69,8 @@ export const ClosingThisMonthView = {
     name: 'closing_this_month',
     label: 'Closing This Month',
     filter: [
-      ['close_date', '>=', 'THIS_MONTH'],
-      ['stage', 'NOT IN', ['closed_won', 'closed_lost']]
+      { field: 'close_date', operator: '>=', value: 'THIS_MONTH' },
+      { field: 'stage', operator: 'NOT IN', value: ['closed_won', 'closed_lost'] }
     ],
     columns: [
       { field: 'name', width: 250, link: true },
@@ -92,7 +92,7 @@ export const HighValueDealsView = {
     type: 'grid' as const,
     name: 'high_value_deals',
     label: 'High Value Deals',
-    filter: [['amount', '>', 100000]],
+    filter: [{ field: 'amount', operator: '>', value: 100000 }],
     columns: [
       { field: 'name', width: 250, link: true },
       { field: 'account_id', width: 200 },
@@ -114,7 +114,7 @@ export const LostDealsView = {
     type: 'grid' as const,
     name: 'lost_deals',
     label: 'Lost Deals',
-    filter: [['stage', '=', 'closed_lost']],
+    filter: [{ field: 'stage', operator: '=', value: 'closed_lost' }],
     columns: [
       { field: 'name', width: 250, link: true },
       { field: 'account_id', width: 200 },

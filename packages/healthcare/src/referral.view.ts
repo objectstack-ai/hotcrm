@@ -31,7 +31,7 @@ export const PendingReferralsView = {
     type: 'grid' as const,
     name: 'pending_referrals',
     label: 'Pending Referrals',
-    filter: [['status', '=', 'pending']],
+    filter: [{ field: 'status', operator: '=', value: 'pending' }],
     columns: [
       { field: 'patient', width: 180, link: true },
       { field: 'referring_provider', width: 150 },
@@ -53,7 +53,7 @@ export const CompletedReferralsView = {
     type: 'grid' as const,
     name: 'completed_referrals',
     label: 'Completed Referrals',
-    filter: [['status', '=', 'completed']],
+    filter: [{ field: 'status', operator: '=', value: 'completed' }],
     columns: [
       { field: 'patient', width: 180, link: true },
       { field: 'referred_to_provider', width: 150 },
@@ -70,7 +70,7 @@ export const UrgentReferralsView = {
     type: 'grid' as const,
     name: 'urgent_referrals',
     label: 'Urgent Referrals',
-    filter: [['urgency', '=', 'urgent']],
+    filter: [{ field: 'urgency', operator: '=', value: 'urgent' }],
     columns: [
       { field: 'patient', width: 180, link: true },
       { field: 'referring_provider', width: 150 },

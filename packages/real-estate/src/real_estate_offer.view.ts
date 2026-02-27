@@ -31,7 +31,7 @@ export const PendingOffersView = {
     type: 'grid' as const,
     name: 'pending_offers',
     label: 'Pending Offers',
-    filter: [['status', '=', 'submitted']],
+    filter: [{ field: 'status', operator: '=', value: 'submitted' }],
     columns: [
       { field: 'listing_id', width: 200, link: true },
       { field: 'buyer_id', width: 160 },
@@ -52,7 +52,7 @@ export const AcceptedOffersView = {
     type: 'grid' as const,
     name: 'accepted_offers',
     label: 'Accepted Offers',
-    filter: [['status', '=', 'accepted']],
+    filter: [{ field: 'status', operator: '=', value: 'accepted' }],
     columns: [
       { field: 'listing_id', width: 200, link: true },
       { field: 'buyer_id', width: 160 },
@@ -69,7 +69,7 @@ export const RejectedOffersView = {
     type: 'grid' as const,
     name: 'rejected_offers',
     label: 'Rejected Offers',
-    filter: [['status', '=', 'rejected']],
+    filter: [{ field: 'status', operator: '=', value: 'rejected' }],
     columns: [
       { field: 'listing_id', width: 200, link: true },
       { field: 'buyer_id', width: 160 },
