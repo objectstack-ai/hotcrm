@@ -40,16 +40,31 @@ export function SiteHeader({ locale, dict }: { locale: Locale; dict: Dictionary 
             onMouseEnter={() => setProductsOpen(true)}
             onMouseLeave={() => setProductsOpen(false)}
           >
-            <button className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            <button
+              className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              aria-expanded={productsOpen}
+              aria-haspopup="true"
+              onClick={() => setProductsOpen(o => !o)}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') setProductsOpen(false);
+              }}
+            >
               {dict.nav.products}
               <ChevronDown className="w-4 h-4" />
             </button>
             {productsOpen && (
-              <div className="absolute top-full left-0 mt-1 w-56 rounded-lg border border-border bg-card shadow-lg p-2">
+              <div
+                className="absolute top-full left-0 mt-1 w-56 rounded-lg border border-border bg-card shadow-lg p-2"
+                role="menu"
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') setProductsOpen(false);
+                }}
+              >
                 {productLinks.map(link => (
                   <Link
                     key={link.href}
                     href={link.href}
+                    role="menuitem"
                     className="block rounded-md px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
                   >
                     {link.label}
