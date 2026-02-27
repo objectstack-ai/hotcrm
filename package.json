@@ -4,6 +4,7 @@
   "description": "Enterprise-level CRM system based on @objectstack/spec with world-class UI/UX - Plugin-based Monorepo Architecture",
   "private": true,
   "type": "module",
+  "packageManager": "pnpm@9.15.9",
   "workspaces": [
     "packages/*"
   ],
