@@ -23,7 +23,7 @@ importers:
         version: 2.29.8(@types/node@25.2.3)
       '@hono/node-server':
         specifier: ^1.19.9
-        version: 1.19.9(hono@4.11.9)
+        version: 1.19.9(hono@4.12.3)
       '@object-ui/console':
         specifier: ^3.0.3
         version: 3.0.3
@@ -67,8 +67,8 @@ importers:
         specifier: ^8.57.1
         version: 8.57.1
       hono:
-        specifier: ^4.11.9
-        version: 4.11.9
+        specifier: ^4.12.3
+        version: 4.12.3
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -2844,10 +2844,6 @@ packages:
   help-me@5.0.0:
     resolution: {integrity: sha512-7xgomUX6ADmcYzFik0HzAxh/73YlKR9bmFzf51CZwR+b6YtzU2m0u49hQCqV6SvlqIqsaxovfwdvbnsw3b/zpg==}
 
-  hono@4.11.9:
-    resolution: {integrity: sha512-Eaw2YTGM6WOxA6CXbckaEvslr2Ne4NFsKrvc0v97JD5awbmeBLO5w9Ho9L9kmKonrwF9RJlW6BxT1PVv/agBHQ==}
-    engines: {node: '>=16.9.0'}
-
   hono@4.12.3:
     resolution: {integrity: sha512-SFsVSjp8sj5UumXOOFlkZOG6XS9SJDKw0TbwFeV+AJ8xlST8kxK5Z/5EYa111UY8732lK2S/xB653ceuaoGwpg==}
     engines: {node: '>=16.9.0'}
@@ -4620,10 +4616,6 @@ snapshots:
       postcss-selector-parser: 7.1.1
     optionalDependencies:
       tailwindcss: 4.1.18
-
-  '@hono/node-server@1.19.9(hono@4.11.9)':
-    dependencies:
-      hono: 4.11.9
 
   '@hono/node-server@1.19.9(hono@4.12.3)':
     dependencies:
@@ -6845,8 +6837,6 @@ snapshots:
   headers-polyfill@4.0.3: {}
 
   help-me@5.0.0: {}
-
-  hono@4.11.9: {}
 
   hono@4.12.3: {}
 
