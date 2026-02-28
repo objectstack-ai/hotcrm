@@ -11,6 +11,7 @@ export const HrDashboard = {
   description: 'Workforce metrics, headcount, and recruitment overview',
   widgets: [
     {
+      id: 'total_headcount',
       title: 'Total Headcount',
       type: 'metric' as const,
       object: 'employee',
@@ -19,6 +20,7 @@ export const HrDashboard = {
       layout: { x: 0, y: 0, w: 3, h: 2 }
     },
     {
+      id: 'open_positions',
       title: 'Open Positions',
       type: 'metric' as const,
       object: 'candidate',
@@ -27,6 +29,7 @@ export const HrDashboard = {
       layout: { x: 3, y: 0, w: 3, h: 2 }
     },
     {
+      id: 'avg_performance_score',
       title: 'Avg Performance Score',
       type: 'kpi' as const,
       object: 'performance_review',
@@ -35,6 +38,7 @@ export const HrDashboard = {
       layout: { x: 6, y: 0, w: 3, h: 2 }
     },
     {
+      id: 'new_hires_this_quarter',
       title: 'New Hires (This Quarter)',
       type: 'metric' as const,
       object: 'employee',
@@ -43,6 +47,7 @@ export const HrDashboard = {
       layout: { x: 9, y: 0, w: 3, h: 2 }
     },
     {
+      id: 'headcount_by_department',
       title: 'Headcount by Department',
       type: 'bar' as const,
       object: 'employee',
@@ -52,6 +57,7 @@ export const HrDashboard = {
       layout: { x: 0, y: 2, w: 6, h: 4 }
     },
     {
+      id: 'turnover_trend',
       title: 'Turnover Trend',
       type: 'line' as const,
       object: 'employee',
@@ -60,6 +66,7 @@ export const HrDashboard = {
       layout: { x: 6, y: 2, w: 6, h: 4 }
     },
     {
+      id: 'recruitment_pipeline',
       title: 'Recruitment Pipeline',
       type: 'funnel' as const,
       object: 'candidate',
@@ -68,6 +75,7 @@ export const HrDashboard = {
       layout: { x: 0, y: 6, w: 6, h: 4 }
     },
     {
+      id: 'employee_distribution',
       title: 'Employee Distribution',
       type: 'donut' as const,
       object: 'employee',

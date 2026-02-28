@@ -11,6 +11,7 @@ export const ExecutiveDashboard = {
   description: 'Cross-cloud executive overview of sales, support, and workforce',
   widgets: [
     {
+      id: 'pipeline_value',
       title: 'Pipeline Value',
       type: 'metric' as const,
       object: 'opportunity',
@@ -20,6 +21,7 @@ export const ExecutiveDashboard = {
       layout: { x: 0, y: 0, w: 3, h: 2 }
     },
     {
+      id: 'won_revenue',
       title: 'Won Revenue',
       type: 'metric' as const,
       object: 'opportunity',
@@ -29,6 +31,7 @@ export const ExecutiveDashboard = {
       layout: { x: 3, y: 0, w: 3, h: 2 }
     },
     {
+      id: 'open_cases',
       title: 'Open Cases',
       type: 'metric' as const,
       object: 'case',
@@ -37,6 +40,7 @@ export const ExecutiveDashboard = {
       layout: { x: 6, y: 0, w: 3, h: 2 }
     },
     {
+      id: 'employee_count',
       title: 'Employee Count',
       type: 'metric' as const,
       object: 'employee',
@@ -45,6 +49,7 @@ export const ExecutiveDashboard = {
       layout: { x: 9, y: 0, w: 3, h: 2 }
     },
     {
+      id: 'pipeline_by_stage',
       title: 'Pipeline by Stage',
       type: 'funnel' as const,
       object: 'opportunity',
@@ -54,6 +59,7 @@ export const ExecutiveDashboard = {
       layout: { x: 0, y: 2, w: 6, h: 4 }
     },
     {
+      id: 'revenue_trend',
       title: 'Revenue Trend',
       type: 'line' as const,
       object: 'opportunity',
@@ -64,6 +70,7 @@ export const ExecutiveDashboard = {
       layout: { x: 6, y: 2, w: 6, h: 4 }
     },
     {
+      id: 'case_volume_by_priority',
       title: 'Case Volume by Priority',
       type: 'bar' as const,
       object: 'case',
@@ -72,6 +79,7 @@ export const ExecutiveDashboard = {
       layout: { x: 0, y: 6, w: 6, h: 4 }
     },
     {
+      id: 'top_deals',
       title: 'Top Deals',
       type: 'table' as const,
       aggregate: 'count' as const,

@@ -11,6 +11,7 @@ export const AnalyticsDashboard = {
   description: 'System health, data freshness, and usage analytics',
   widgets: [
     {
+      id: 'total_reports',
       title: 'Total Reports',
       type: 'metric' as const,
       object: 'report',
@@ -18,6 +19,7 @@ export const AnalyticsDashboard = {
       layout: { x: 0, y: 0, w: 3, h: 2 }
     },
     {
+      id: 'active_dashboards',
       title: 'Active Dashboards',
       type: 'metric' as const,
       object: 'analytics_dashboard',
@@ -26,6 +28,7 @@ export const AnalyticsDashboard = {
       layout: { x: 3, y: 0, w: 3, h: 2 }
     },
     {
+      id: 'kpis_at_risk',
       title: 'KPIs At Risk',
       type: 'kpi' as const,
       object: 'kpi',
@@ -34,6 +37,7 @@ export const AnalyticsDashboard = {
       layout: { x: 6, y: 0, w: 3, h: 2 }
     },
     {
+      id: 'data_sources_connected',
       title: 'Data Sources Connected',
       type: 'metric' as const,
       object: 'data_source',
@@ -42,6 +46,7 @@ export const AnalyticsDashboard = {
       layout: { x: 9, y: 0, w: 3, h: 2 }
     },
     {
+      id: 'reports_by_type',
       title: 'Reports by Type',
       type: 'pie' as const,
       object: 'report',
@@ -50,6 +55,7 @@ export const AnalyticsDashboard = {
       layout: { x: 0, y: 2, w: 6, h: 4 }
     },
     {
+      id: 'report_executions_over_time',
       title: 'Report Executions Over Time',
       type: 'line' as const,
       object: 'snapshot',
@@ -58,6 +64,7 @@ export const AnalyticsDashboard = {
       layout: { x: 6, y: 2, w: 6, h: 4 }
     },
     {
+      id: 'data_source_health',
       title: 'Data Source Health',
       type: 'bar' as const,
       object: 'data_source',
@@ -67,6 +74,7 @@ export const AnalyticsDashboard = {
       layout: { x: 0, y: 6, w: 6, h: 4 }
     },
     {
+      id: 'recent_report_activity',
       title: 'Recent Report Activity',
       type: 'table' as const,
       aggregate: 'count' as const,
