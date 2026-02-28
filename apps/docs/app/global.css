@@ -40,9 +40,32 @@
   background-clip: text;
 }
 
-/* ── Glow Cards ────────────────────────────────────────────────── */
+/* ── Product Showcase ──────────────────────────────────────────── */
 
-.glow-card {
+.product-showcase {
+  transition: box-shadow 0.3s, border-color 0.3s;
+}
+
+.product-showcase:hover {
+  border-color: hsl(var(--primary) / 0.3);
+  box-shadow:
+    0 0 0 1px hsl(var(--primary) / 0.1),
+    0 20px 40px -12px hsl(var(--primary) / 0.15);
+}
+
+/* ── Customer Logo Wall ────────────────────────────────────────── */
+
+.customer-logo-item {
+  transition: all 0.3s ease;
+}
+
+.customer-logo-item:hover {
+  transform: translateY(-2px);
+}
+
+/* ── Value & Feature Cards ─────────────────────────────────────── */
+
+.value-card {
   position: relative;
   overflow: hidden;
 }
@@ -56,24 +79,29 @@
   pointer-events: none;
 }
 
-.glow-card:hover .glow-card-shine {
+.value-card:hover .glow-card-shine {
   opacity: 1;
 }
 
-/* ── Code Block Glow ───────────────────────────────────────────── */
+/* ── Testimonials ──────────────────────────────────────────────── */
 
-.code-block-wrapper {
+.testimonial-card {
   position: relative;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.code-block-glow {
-  position: absolute;
-  inset: -1px;
-  background: linear-gradient(135deg, hsl(var(--primary) / 0.15), transparent 50%, hsl(var(--primary) / 0.1));
-  border-radius: 0.75rem;
-  filter: blur(20px);
-  opacity: 0.5;
-  pointer-events: none;
+.testimonial-card:hover {
+  transform: translateY(-4px);
+}
+
+/* ── Integration Items ─────────────────────────────────────────── */
+
+.integration-item {
+  transition: all 0.3s ease;
+}
+
+.integration-item:hover {
+  transform: scale(1.1);
 }
 
 /* ── CTA Glow ──────────────────────────────────────────────────── */
@@ -85,19 +113,6 @@
   pointer-events: none;
 }
 
-/* ── Terminal Window ───────────────────────────────────────────── */
-
-.terminal-window {
-  transition: box-shadow 0.3s, border-color 0.3s;
-}
-
-.terminal-window:hover {
-  border-color: hsl(var(--primary) / 0.3);
-  box-shadow:
-    0 0 0 1px hsl(var(--primary) / 0.1),
-    0 20px 40px -12px hsl(var(--primary) / 0.15);
-}
-
 /* ── CTA Primary Button ───────────────────────────────────────── */
 
 .hero-cta-primary {
@@ -106,4 +121,21 @@
 
 .hero-cta-primary:hover {
   transform: translateY(-1px);
+}
+
+/* ── Animation Utilities ───────────────────────────────────────── */
+
+@keyframes slide-in-from-bottom {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-in {
+  animation: slide-in-from-bottom 0.6s ease-out forwards;
 }
