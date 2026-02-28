@@ -11,6 +11,7 @@ export const CpqDashboard = {
   description: 'Quote pipeline, approval tracking, and pricing analytics',
   widgets: [
     {
+      id: 'total_quotes',
       title: 'Total Quotes',
       type: 'metric' as const,
       object: 'quote',
@@ -18,6 +19,7 @@ export const CpqDashboard = {
       layout: { x: 0, y: 0, w: 3, h: 2 }
     },
     {
+      id: 'pending_approval',
       title: 'Pending Approval',
       type: 'metric' as const,
       object: 'quote',
@@ -26,6 +28,7 @@ export const CpqDashboard = {
       layout: { x: 3, y: 0, w: 3, h: 2 }
     },
     {
+      id: 'avg_quote_value',
       title: 'Avg Quote Value',
       type: 'metric' as const,
       object: 'quote',
@@ -34,6 +37,7 @@ export const CpqDashboard = {
       layout: { x: 6, y: 0, w: 3, h: 2 }
     },
     {
+      id: 'quote_win_rate',
       title: 'Quote Win Rate',
       type: 'kpi' as const,
       object: 'quote',
@@ -42,6 +46,7 @@ export const CpqDashboard = {
       layout: { x: 9, y: 0, w: 3, h: 2 }
     },
     {
+      id: 'quotes_by_status',
       title: 'Quotes by Status',
       type: 'pie' as const,
       object: 'quote',
@@ -50,6 +55,7 @@ export const CpqDashboard = {
       layout: { x: 0, y: 2, w: 6, h: 4 }
     },
     {
+      id: 'quote_value_trend',
       title: 'Quote Value Trend',
       type: 'line' as const,
       object: 'quote',
@@ -59,6 +65,7 @@ export const CpqDashboard = {
       layout: { x: 6, y: 2, w: 6, h: 4 }
     },
     {
+      id: 'discount_usage',
       title: 'Discount Usage',
       type: 'bar' as const,
       object: 'quote_line_item',
@@ -68,6 +75,7 @@ export const CpqDashboard = {
       layout: { x: 0, y: 6, w: 6, h: 4 }
     },
     {
+      id: 'recent_quotes',
       title: 'Recent Quotes',
       type: 'table' as const,
       object: 'quote',

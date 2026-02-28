@@ -11,6 +11,7 @@ export const MarketingDashboard = {
   description: 'Campaign performance, ROI, and lead generation metrics',
   widgets: [
     {
+      id: 'campaign_count',
       title: 'Campaign Count',
       type: 'metric' as const,
       object: 'campaign',
@@ -18,6 +19,7 @@ export const MarketingDashboard = {
       layout: { x: 0, y: 0, w: 3, h: 2 }
     },
     {
+      id: 'active_campaigns',
       title: 'Active Campaigns',
       type: 'metric' as const,
       object: 'campaign',
@@ -26,6 +28,7 @@ export const MarketingDashboard = {
       layout: { x: 3, y: 0, w: 3, h: 2 }
     },
     {
+      id: 'total_budget',
       title: 'Total Budget',
       type: 'metric' as const,
       object: 'campaign',
@@ -34,6 +37,7 @@ export const MarketingDashboard = {
       layout: { x: 6, y: 0, w: 3, h: 2 }
     },
     {
+      id: 'campaign_roi',
       title: 'Campaign ROI',
       type: 'kpi' as const,
       object: 'campaign',
@@ -43,6 +47,7 @@ export const MarketingDashboard = {
       layout: { x: 9, y: 0, w: 3, h: 2 }
     },
     {
+      id: 'campaigns_by_type',
       title: 'Campaigns by Type',
       type: 'pie' as const,
       object: 'campaign',
@@ -51,6 +56,7 @@ export const MarketingDashboard = {
       layout: { x: 0, y: 2, w: 6, h: 4 }
     },
     {
+      id: 'campaign_performance_over_time',
       title: 'Campaign Performance Over Time',
       type: 'line' as const,
       object: 'campaign',
@@ -60,6 +66,7 @@ export const MarketingDashboard = {
       layout: { x: 6, y: 2, w: 6, h: 4 }
     },
     {
+      id: 'lead_sources_breakdown',
       title: 'Lead Sources Breakdown',
       type: 'bar' as const,
       object: 'lead',
@@ -68,6 +75,7 @@ export const MarketingDashboard = {
       layout: { x: 0, y: 6, w: 6, h: 4 }
     },
     {
+      id: 'recent_campaigns',
       title: 'Recent Campaigns',
       type: 'table' as const,
       object: 'campaign',

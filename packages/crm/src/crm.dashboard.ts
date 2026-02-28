@@ -11,6 +11,7 @@ export const CrmDashboard = {
   description: 'Key sales metrics and pipeline overview',
   widgets: [
     {
+      id: 'total_pipeline_value',
       title: 'Total Pipeline Value',
       type: 'metric' as const,
       object: 'opportunity',
@@ -20,6 +21,7 @@ export const CrmDashboard = {
       layout: { x: 0, y: 0, w: 3, h: 2 }
     },
     {
+      id: 'open_deals',
       title: 'Open Deals',
       type: 'metric' as const,
       object: 'opportunity',
@@ -28,6 +30,7 @@ export const CrmDashboard = {
       layout: { x: 3, y: 0, w: 3, h: 2 }
     },
     {
+      id: 'won_this_quarter',
       title: 'Won This Quarter',
       type: 'kpi' as const,
       object: 'opportunity',
@@ -37,6 +40,7 @@ export const CrmDashboard = {
       layout: { x: 6, y: 0, w: 3, h: 2 }
     },
     {
+      id: 'avg_deal_size',
       title: 'Avg Deal Size',
       type: 'metric' as const,
       object: 'opportunity',
@@ -45,6 +49,7 @@ export const CrmDashboard = {
       layout: { x: 9, y: 0, w: 3, h: 2 }
     },
     {
+      id: 'pipeline_by_stage',
       title: 'Pipeline by Stage',
       type: 'funnel' as const,
       object: 'opportunity',
@@ -54,6 +59,7 @@ export const CrmDashboard = {
       layout: { x: 0, y: 2, w: 6, h: 4 }
     },
     {
+      id: 'win_rate_by_month',
       title: 'Win Rate by Month',
       type: 'line' as const,
       object: 'opportunity',
@@ -63,6 +69,7 @@ export const CrmDashboard = {
       layout: { x: 6, y: 2, w: 6, h: 4 }
     },
     {
+      id: 'top_accounts_by_revenue',
       title: 'Top Accounts by Revenue',
       type: 'bar' as const,
       object: 'account',
@@ -72,6 +79,7 @@ export const CrmDashboard = {
       layout: { x: 0, y: 6, w: 6, h: 4 }
     },
     {
+      id: 'deals_closing_this_month',
       title: 'Deals Closing This Month',
       type: 'table' as const,
       aggregate: 'count' as const,

@@ -13,6 +13,7 @@ export const SalesDashboard = {
   widgets: [
     // KPI Metrics Row
     {
+      id: 'total_revenue_closed_won',
       title: 'Total Revenue (Closed Won)',
       type: 'metric' as const,
       object: 'opportunity',
@@ -22,6 +23,7 @@ export const SalesDashboard = {
       layout: { x: 0, y: 0, w: 3, h: 2 }
     },
     {
+      id: 'pipeline_value',
       title: 'Pipeline Value',
       type: 'metric' as const,
       object: 'opportunity',
@@ -31,6 +33,7 @@ export const SalesDashboard = {
       layout: { x: 3, y: 0, w: 3, h: 2 }
     },
     {
+      id: 'win_rate',
       title: 'Win Rate',
       type: 'metric' as const,
       object: 'opportunity',
@@ -39,6 +42,7 @@ export const SalesDashboard = {
       layout: { x: 6, y: 0, w: 3, h: 2 }
     },
     {
+      id: 'avg_deal_size',
       title: 'Avg Deal Size',
       type: 'metric' as const,
       object: 'opportunity',
@@ -50,6 +54,7 @@ export const SalesDashboard = {
 
     // Pipeline Funnel Chart
     {
+      id: 'sales_pipeline_by_stage',
       title: 'Sales Pipeline by Stage',
       type: 'funnel' as const,
       object: 'opportunity',
@@ -62,6 +67,7 @@ export const SalesDashboard = {
 
     // Revenue Trend Chart
     {
+      id: 'revenue_trend',
       title: 'Revenue Trend',
       type: 'bar' as const,
       object: 'opportunity',
@@ -74,6 +80,7 @@ export const SalesDashboard = {
 
     // Revenue by Industry
     {
+      id: 'revenue_distribution_by_industry',
       title: 'Revenue Distribution by Industry',
       type: 'pie' as const,
       object: 'opportunity',
@@ -86,6 +93,7 @@ export const SalesDashboard = {
 
     // Win/Loss Analysis
     {
+      id: 'win_loss_analysis',
       title: 'Win/Loss Analysis',
       type: 'donut' as const,
       object: 'opportunity',
@@ -97,6 +105,7 @@ export const SalesDashboard = {
 
     // Top 10 Deals Table
     {
+      id: 'top_10_opportunities',
       title: 'Top 10 Opportunities',
       type: 'table' as const,
       object: 'opportunity',
@@ -107,6 +116,7 @@ export const SalesDashboard = {
 
     // Team Performance Leaderboard
     {
+      id: 'team_performance_this_quarter',
       title: 'Team Performance (This Quarter)',
       type: 'table' as const,
       object: 'opportunity',
@@ -119,6 +129,7 @@ export const SalesDashboard = {
 
     // Forecast vs Actual
     {
+      id: 'forecast_vs_actual_revenue',
       title: 'Forecast vs Actual Revenue',
       type: 'line' as const,
       object: 'opportunity',

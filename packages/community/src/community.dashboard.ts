@@ -11,6 +11,7 @@ export const CommunityDashboard = {
   description: 'Community engagement, activity, and health metrics',
   widgets: [
     {
+      id: 'active_topics',
       title: 'Active Topics',
       type: 'metric' as const,
       object: 'topic',
@@ -19,6 +20,7 @@ export const CommunityDashboard = {
       layout: { x: 0, y: 0, w: 3, h: 2 }
     },
     {
+      id: 'total_ideas',
       title: 'Total Ideas',
       type: 'metric' as const,
       object: 'idea',
@@ -26,6 +28,7 @@ export const CommunityDashboard = {
       layout: { x: 3, y: 0, w: 3, h: 2 }
     },
     {
+      id: 'upcoming_events',
       title: 'Upcoming Events',
       type: 'metric' as const,
       object: 'community_event',
@@ -33,6 +36,7 @@ export const CommunityDashboard = {
       layout: { x: 6, y: 0, w: 3, h: 2 }
     },
     {
+      id: 'badges_awarded',
       title: 'Badges Awarded',
       type: 'metric' as const,
       object: 'badge',
@@ -40,6 +44,7 @@ export const CommunityDashboard = {
       layout: { x: 9, y: 0, w: 3, h: 2 }
     },
     {
+      id: 'topics_by_category',
       title: 'Topics by Category',
       type: 'pie' as const,
       object: 'topic',
@@ -48,6 +53,7 @@ export const CommunityDashboard = {
       layout: { x: 0, y: 2, w: 6, h: 4 }
     },
     {
+      id: 'ideas_by_status',
       title: 'Ideas by Status',
       type: 'bar' as const,
       object: 'idea',
@@ -56,6 +62,7 @@ export const CommunityDashboard = {
       layout: { x: 6, y: 2, w: 6, h: 4 }
     },
     {
+      id: 'topic_activity_over_time',
       title: 'Topic Activity Over Time',
       type: 'line' as const,
       object: 'topic',
@@ -64,6 +71,7 @@ export const CommunityDashboard = {
       layout: { x: 0, y: 6, w: 6, h: 4 }
     },
     {
+      id: 'recent_topics',
       title: 'Recent Topics',
       type: 'table' as const,
       object: 'topic',
