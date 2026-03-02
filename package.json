@@ -61,7 +61,7 @@
     "@hono/node-server": "^1.19.9",
     "@object-ui/console": "^3.0.3",
     "@objectstack/cli": "^3.0.11",
-    "@objectstack/driver-memory": "^3.0.11",
+    "@objectstack/driver-memory": "^3.1.1",
     "@objectstack/objectql": "^3.0.11",
     "@objectstack/plugin-hono-server": "^3.0.11",
     "@objectstack/runtime": "^3.0.11",
