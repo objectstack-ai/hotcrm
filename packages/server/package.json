@@ -14,7 +14,7 @@
     "compile": "objectstack compile"
   },
   "dependencies": {
-    "@objectstack/cli": "^3.0.11",
+    "@objectstack/cli": "^3.1.1",
     "@objectstack/core": "^3.0.11",
     "@objectstack/metadata": "^3.0.11",
     "@objectstack/objectql": "^3.0.11",
