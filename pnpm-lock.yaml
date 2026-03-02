@@ -43,8 +43,8 @@ importers:
         specifier: ^3.0.11
         version: 3.0.11
       '@objectstack/spec':
-        specifier: ^3.0.11
-        version: 3.0.11
+        specifier: ^3.1.1
+        version: 3.1.1
       '@objectstack/studio':
         specifier: ^3.0.11
         version: 3.0.11(@types/node@25.3.2)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(typescript@5.9.3)
@@ -131,8 +131,8 @@ importers:
   packages/ai:
     dependencies:
       '@objectstack/spec':
-        specifier: ^3.0.11
-        version: 3.0.11
+        specifier: ^3.1.1
+        version: 3.1.1
       axios:
         specifier: ^1.13.5
         version: 1.13.5
@@ -153,8 +153,8 @@ importers:
         specifier: workspace:*
         version: link:../ai
       '@objectstack/spec':
-        specifier: ^3.0.11
-        version: 3.0.11
+        specifier: ^3.1.1
+        version: 3.1.1
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -169,8 +169,8 @@ importers:
   packages/community:
     dependencies:
       '@objectstack/spec':
-        specifier: ^3.0.11
-        version: 3.0.11
+        specifier: ^3.1.1
+        version: 3.1.1
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -185,8 +185,8 @@ importers:
   packages/core:
     dependencies:
       '@objectstack/spec':
-        specifier: ^3.0.11
-        version: 3.0.11
+        specifier: ^3.1.1
+        version: 3.1.1
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -197,8 +197,8 @@ importers:
         specifier: workspace:*
         version: link:../ai
       '@objectstack/spec':
-        specifier: ^3.0.11
-        version: 3.0.11
+        specifier: ^3.1.1
+        version: 3.1.1
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -213,8 +213,8 @@ importers:
   packages/education:
     dependencies:
       '@objectstack/spec':
-        specifier: ^3.0.11
-        version: 3.0.11
+        specifier: ^3.1.1
+        version: 3.1.1
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -229,8 +229,8 @@ importers:
   packages/finance:
     dependencies:
       '@objectstack/spec':
-        specifier: ^3.0.11
-        version: 3.0.11
+        specifier: ^3.1.1
+        version: 3.1.1
     devDependencies:
       '@objectstack/cli':
         specifier: ^3.0.11
@@ -242,8 +242,8 @@ importers:
   packages/financial-services:
     dependencies:
       '@objectstack/spec':
-        specifier: ^3.0.11
-        version: 3.0.11
+        specifier: ^3.1.1
+        version: 3.1.1
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -258,8 +258,8 @@ importers:
   packages/healthcare:
     dependencies:
       '@objectstack/spec':
-        specifier: ^3.0.11
-        version: 3.0.11
+        specifier: ^3.1.1
+        version: 3.1.1
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -274,8 +274,8 @@ importers:
   packages/hr:
     dependencies:
       '@objectstack/spec':
-        specifier: ^3.0.11
-        version: 3.0.11
+        specifier: ^3.1.1
+        version: 3.1.1
     devDependencies:
       '@objectstack/cli':
         specifier: ^3.0.11
@@ -290,8 +290,8 @@ importers:
         specifier: workspace:*
         version: link:../ai
       '@objectstack/spec':
-        specifier: ^3.0.11
-        version: 3.0.11
+        specifier: ^3.1.1
+        version: 3.1.1
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -306,8 +306,8 @@ importers:
   packages/marketing:
     dependencies:
       '@objectstack/spec':
-        specifier: ^3.0.11
-        version: 3.0.11
+        specifier: ^3.1.1
+        version: 3.1.1
     devDependencies:
       '@objectstack/cli':
         specifier: ^3.0.11
@@ -319,8 +319,8 @@ importers:
   packages/products:
     dependencies:
       '@objectstack/spec':
-        specifier: ^3.0.11
-        version: 3.0.11
+        specifier: ^3.1.1
+        version: 3.1.1
     devDependencies:
       '@objectstack/cli':
         specifier: ^3.0.11
@@ -332,8 +332,8 @@ importers:
   packages/real-estate:
     dependencies:
       '@objectstack/spec':
-        specifier: ^3.0.11
-        version: 3.0.11
+        specifier: ^3.1.1
+        version: 3.1.1
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -348,8 +348,8 @@ importers:
   packages/support:
     dependencies:
       '@objectstack/spec':
-        specifier: ^3.0.11
-        version: 3.0.11
+        specifier: ^3.1.1
+        version: 3.1.1
     devDependencies:
       '@objectstack/cli':
         specifier: ^3.0.11
@@ -1154,6 +1154,10 @@ packages:
 
   '@objectstack/spec@3.0.11':
     resolution: {integrity: sha512-UsVs3tgZ9aELdE1tkfYmxod5BIqKpswgkbTtC78+7ANaUn22jh7uuprIf31Oljsps69DFlw2CU8sJx96CTL4YQ==}
+    engines: {node: '>=18.0.0'}
+
+  '@objectstack/spec@3.1.1':
+    resolution: {integrity: sha512-GciwJrNvnNMZK5P3Hm60WECeJThNC64hhnfNdnv88dYEnl0dNBaeXSAPxRSC8yTWhGnx9WWt4qMlMiXZMhuMog==}
     engines: {node: '>=18.0.0'}
 
   '@objectstack/studio@3.0.11':
@@ -5019,6 +5023,10 @@ snapshots:
       zod: 4.3.6
 
   '@objectstack/spec@3.0.11':
+    dependencies:
+      zod: 4.3.6
+
+  '@objectstack/spec@3.1.1':
     dependencies:
       zod: 4.3.6
 
