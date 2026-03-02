@@ -66,7 +66,7 @@
     "@objectstack/plugin-hono-server": "^3.0.11",
     "@objectstack/runtime": "^3.0.11",
     "@objectstack/spec": "^3.0.11",
-    "@objectstack/studio": "^3.0.11",
+    "@objectstack/studio": "^3.1.1",
     "@types/node": "^25.2.3",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
