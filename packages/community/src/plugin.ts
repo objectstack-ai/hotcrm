@@ -39,6 +39,10 @@ import { CommunityConfigValidation, CommunityFeatureToggle, CommunityDomainVerif
 import CommunityAIAction from './community_ai.action.js';
 import CommunityAnalyticsAction from './community_analytics.action.js';
 
+// Import datasets
+import { TopicDataset } from './topic.dataset.js';
+import { IdeaDataset } from './idea.dataset.js';
+
 /**
  * Community Plugin Definition
  *
@@ -102,6 +106,12 @@ export const CommunityPlugin = {
     community_feature_toggle: CommunityFeatureToggle,
     community_domain_verification: CommunityDomainVerification,
   },
+
+  // Seed data (DatasetSchema)
+  data: [
+    TopicDataset,
+    IdeaDataset,
+  ],
 
   // Apps provided by this plugin
   apps: [
