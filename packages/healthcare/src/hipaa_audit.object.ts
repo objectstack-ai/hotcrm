@@ -3,6 +3,7 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 export const HipaaAudit = ObjectSchema.create({
   name: 'hipaa_audit',
   label: 'HIPAA Audit',
+  icon: 'shield-check',
   fields: {
     user_id: Field.lookup('users', { label: 'User', required: true }),
     action: Field.select({

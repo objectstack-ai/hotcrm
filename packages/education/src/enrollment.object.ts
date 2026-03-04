@@ -3,6 +3,7 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 export const Enrollment = ObjectSchema.create({
   name: 'enrollment',
   label: 'Enrollment',
+  icon: 'user-check',
   fields: {
     student_id: Field.masterDetail('student', { label: 'Student' }),
     course_id: Field.lookup('course', { label: 'Course', required: true }),

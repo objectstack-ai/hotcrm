@@ -3,6 +3,7 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 export const Patient = ObjectSchema.create({
   name: 'patient',
   label: 'Patient',
+  icon: 'heart-pulse',
   fields: {
     name: Field.text({ label: 'Patient Name', required: true, maxLength: 255 }),
     date_of_birth: Field.text({ label: 'Date of Birth' }),

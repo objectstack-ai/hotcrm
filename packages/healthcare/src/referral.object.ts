@@ -3,6 +3,7 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 export const Referral = ObjectSchema.create({
   name: 'referral',
   label: 'Referral',
+  icon: 'forward',
   fields: {
     patient_id: Field.masterDetail('patient', { label: 'Patient' }),
     referring_provider: Field.lookup('contact', { label: 'Referring Provider' }),

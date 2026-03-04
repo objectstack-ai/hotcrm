@@ -3,6 +3,7 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 export const Metric = ObjectSchema.create({
   name: 'metric',
   label: 'Metric',
+  icon: 'bar-chart-3',
   fields: {
     name: Field.text({ label: 'Metric Name', required: true, maxLength: 255 }),
     description: Field.textarea({ label: 'Description', maxLength: 2000 }),

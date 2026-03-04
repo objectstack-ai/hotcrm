@@ -3,6 +3,7 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 export const TransactionRecord = ObjectSchema.create({
   name: 'transaction_record',
   label: 'Transaction Record',
+  icon: 'arrow-left-right',
   fields: {
     account_id: Field.masterDetail('wealth_account'),
     transaction_type: Field.select({

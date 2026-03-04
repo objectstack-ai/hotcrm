@@ -3,6 +3,7 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 export const Neighborhood = ObjectSchema.create({
   name: 'neighborhood',
   label: 'Neighborhood',
+  icon: 'map-pin',
   fields: {
     name: Field.text({ label: 'Neighborhood Name', required: true, maxLength: 255 }),
     city: Field.text({ label: 'City', required: true }),

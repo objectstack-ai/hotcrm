@@ -3,6 +3,7 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 export const DataSource = ObjectSchema.create({
   name: 'data_source',
   label: 'Data Source',
+  icon: 'database',
   fields: {
     name: Field.text({ label: 'Source Name', required: true, maxLength: 255 }),
     description: Field.textarea({ label: 'Description', maxLength: 2000 }),
