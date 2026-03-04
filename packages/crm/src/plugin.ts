@@ -60,6 +60,13 @@ import { enrichContact, detectBuyingIntent, analyzeSentiment, predictBestContact
 import ForecastAIAction from './actions/forecast_ai.action.js';
 import CrossCloudLifecycleAction from './actions/cross_cloud_lifecycle.action.js';
 
+// Import datasets
+import { AccountDataset } from './account.dataset.js';
+import { ContactDataset } from './contact.dataset.js';
+import { LeadDataset } from './lead.dataset.js';
+import { OpportunityDataset } from './opportunity.dataset.js';
+import { IndustryDataset } from './industry.dataset.js';
+
 /**
  * CRM Plugin Definition
  * 
@@ -155,6 +162,15 @@ export const CRMPlugin = {
   
   // Translations (i18n)
   translations: CrmTranslations,
+
+  // Seed data (DatasetSchema)
+  data: [
+    IndustryDataset,
+    AccountDataset,
+    ContactDataset,
+    LeadDataset,
+    OpportunityDataset,
+  ],
 
   // Apps provided by this plugin
   apps: [
