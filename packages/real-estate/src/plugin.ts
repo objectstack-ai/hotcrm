@@ -35,6 +35,12 @@ import { CommissionSplitCalculation, CommissionCapTracking, CommissionPaymentSch
 // Import actions
 import RealEstateAIAction from './real_estate_ai.action.js';
 
+// Import datasets
+import { PropertyDataset } from './property.dataset.js';
+import { ListingDataset } from './listing.dataset.js';
+import { ShowingDataset } from './showing.dataset.js';
+import { RealEstateOfferDataset } from './real_estate_offer.dataset.js';
+
 /**
  * Real Estate Plugin Definition
  *
@@ -87,6 +93,14 @@ export const RealEstatePlugin = {
     commission_cap_tracking: CommissionCapTracking,
     commission_payment_scheduling: CommissionPaymentScheduling,
   },
+
+  // Seed data (DatasetSchema)
+  data: [
+    PropertyDataset,
+    ListingDataset,
+    ShowingDataset,
+    RealEstateOfferDataset,
+  ],
 
   // Apps provided by this plugin
   apps: [

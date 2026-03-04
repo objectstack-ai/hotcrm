@@ -61,7 +61,7 @@
 | Dashboard Widgets | 3 (pipeline, SLA, headcount) |
 | Widget Measures | 24 across 6 core clouds |
 | Vertical Solutions | 4 (Real Estate, Healthcare, Financial Services, Education) |
-| Seed Data Files | 39 across 13 packages (system + per-package demo data) |
+| Seed Data Files | 39 across 13 packages (system + per-package demo data) + 43 DatasetSchema-compliant dataset files |
 | Studio Builder Configs | 4 (Interface Builder, Page Builder, Canvas Snap, Element Palette) |
 | Navigation Areas | 3 (header, sidebar, utility bar) |
 | Packages Registered in Root Config | 13 of 13 (all packages registered) |
@@ -205,6 +205,7 @@ These items were deferred during Phase 13 and have been completed:
 - [ ] **E2E test coverage** — Build API-layer end-to-end tests for Feed API / MCP API
 - [ ] **FormView `as any` cleanup** — Remove `as any` casts once `@objectstack/spec` aligns FormView column types
 - [x] **Events metadata schema validation** — Added `EventTypeDefinitionSchema.parse()` to all 9 `*.events.ts` files; all metadata now validated against spec schemas
+- [x] **DatasetSchema seed data migration** — Created 43 `*.dataset.ts` files across 14 packages following `DatasetSchema` from `@objectstack/spec/data`; added `data` field to all 13 plugins and root config; updated `scripts/seed.ts` with environment filtering; added 132 DatasetSchema validation tests
 
 ---
 
@@ -212,6 +213,7 @@ These items were deferred during Phase 13 and have been completed:
 
 | Date | From | To | Breaking Changes | Tests |
 |------|------|----|-----------------|-------|
+| 2026-03-04 | v3.2.1 | v3.2.1 | None (Phase 15: DatasetSchema seed data migration — 43 dataset files, 13 plugins with data field, env-filtered seed loader, 132 new tests) | 3949 ✅ |
 | 2026-03-04 | v3.0.11 | v3.2.1 | Action `target` field is now required for actions with type `url`, `flow`, `modal`, or `api` (10 action files updated across crm, finance, support packages). `@object-ui/console` upgraded from v3.0.3 to v3.1.1. | 3817 ✅ |
 | 2026-02-26 | v3.0.8 | v3.0.11 | ViewFilterRule format changed from array tuples to objects `{ field, operator, value }` (34 view files updated) | 3817 ✅ |
 | 2026-02-26 | v3.0.8 | v3.0.8 | None (Phase 15: Added EventTypeDefinitionSchema validation to all 9 events.ts files; 100% metadata schema compliance) | 3817 ✅ |

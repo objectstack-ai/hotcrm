@@ -65,6 +65,11 @@ import { TrainingEnrollmentValidationTrigger, TrainingCompletionTrackingTrigger 
 import { BenefitEnrollmentValidationTrigger, BenefitExpirationCheckTrigger } from './hooks/benefit.hook.js';
 import { CompensationPlanValidationTrigger, CompensationPlanApprovalTrigger } from './hooks/compensation_plan.hook.js';
 
+// Import datasets
+import { DepartmentDataset } from './department.dataset.js';
+import { EmployeeDataset } from './employee.dataset.js';
+import { JobPostingDataset } from './job_posting.dataset.js';
+
 // Import actions
 import CandidateAIAction from './actions/candidate_ai.action.js';
 import EmployeeAIAction from './actions/employee_ai.action.js';
@@ -149,6 +154,13 @@ export const HRPlugin = {
     performance_review_cycle: HRWorkflows.performanceReviewCycle,
     performance_review_reminder: HRWorkflows.performanceReviewReminder,
   },
+
+  // Seed data (DatasetSchema)
+  data: [
+    DepartmentDataset,
+    EmployeeDataset,
+    JobPostingDataset,
+  ],
 
   // Business objects provided by this plugin
   objects: {

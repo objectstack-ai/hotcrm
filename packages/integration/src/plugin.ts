@@ -46,6 +46,9 @@ import SlackAction from './connectors/slack.action.js';
 import GmailAction from './connectors/gmail.action.js';
 import TeamsAction from './connectors/teams.action.js';
 
+// Import datasets
+import { ConnectionDataset } from './connection.dataset.js';
+
 /**
  * Integration Plugin Definition
  *
@@ -113,6 +116,11 @@ export const IntegrationPlugin = {
     api_key_expiry_alert: ApiKeyExpiryAlert,
     api_key_usage_tracking: UsageTracking,
   },
+
+  // Seed data (DatasetSchema)
+  data: [
+    ConnectionDataset,
+  ],
 
   // Apps provided by this plugin
   apps: [

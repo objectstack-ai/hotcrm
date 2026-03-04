@@ -14,6 +14,13 @@ import { EducationPlugin } from './packages/education/dist/plugin.js';
 import { FinancialServicesPlugin } from './packages/financial-services/dist/plugin.js';
 import { ConsolePlugin } from '@object-ui/console';
 
+// Core system reference datasets (not part of any plugin)
+import { CurrencyDataset } from './packages/core/dist/currency.dataset.js';
+import { CountryDataset } from './packages/core/dist/country.dataset.js';
+import { IndustryDataset } from './packages/core/dist/industry.dataset.js';
+import { TimezoneDataset } from './packages/core/dist/timezone.dataset.js';
+import { LanguageDataset } from './packages/core/dist/language.dataset.js';
+
 /**
  * HotCRM Application Configuration
  * 
@@ -47,6 +54,16 @@ export default defineStack({
   // which is required by the AppPlugin at startup.
   // Business objects are defined inside each plugin's objects[] property.
   objects: [],
+
+  // Core system reference data (currencies, countries, industries, timezones, languages)
+  // Plugin-specific seed data is registered in each plugin's data[] field.
+  data: [
+    CurrencyDataset,
+    CountryDataset,
+    IndustryDataset,
+    TimezoneDataset,
+    LanguageDataset,
+  ],
 
   // Register all Business Plugins
   // Core clouds (6)

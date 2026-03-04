@@ -33,6 +33,9 @@ import { KPIThresholdAlert, KPITrendCalculation, KPIAutoRefresh } from './kpi.ho
 import { MetricFormulaValidation, MetricCircularDependency, MetricAggregationComputation } from './metric.hook.js';
 import { ConnectionHealthCheck, SyncLifecycle, SchemaDriftDetection } from './data_source.hook.js';
 
+// Import datasets
+import { ReportDataset } from './report.dataset.js';
+
 // Import actions
 import DashboardAIAction from './actions/dashboard_ai.action.js';
 import ForecastAnalyticsAction from './actions/forecast_analytics.action.js';
@@ -101,6 +104,11 @@ export const AnalyticsPlugin = {
     sync_lifecycle: SyncLifecycle,
     schema_drift_detection: SchemaDriftDetection,
   },
+
+  // Seed data (DatasetSchema)
+  data: [
+    ReportDataset,
+  ],
 
   // Apps provided by this plugin
   apps: [

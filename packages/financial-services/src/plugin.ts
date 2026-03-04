@@ -34,6 +34,12 @@ import { ComplianceRegulationAlert, ComplianceAutoScreening, ComplianceAuditTrai
 // Import actions
 import FinancialServicesAIAction from './financial_services_ai.action.js';
 
+// Import datasets
+import { WealthAccountDataset } from './wealth_account.dataset.js';
+import { PortfolioDataset } from './portfolio.dataset.js';
+import { AdvisoryDataset } from './advisory.dataset.js';
+import { KycDataset } from './kyc.dataset.js';
+
 /**
  * Financial Services Plugin Definition
  *
@@ -85,6 +91,14 @@ export const FinancialServicesPlugin = {
     compliance_auto_screening: ComplianceAutoScreening,
     compliance_audit_trail: ComplianceAuditTrail,
   },
+
+  // Seed data (DatasetSchema)
+  data: [
+    WealthAccountDataset,
+    PortfolioDataset,
+    AdvisoryDataset,
+    KycDataset,
+  ],
 
   // Apps provided by this plugin
   apps: [

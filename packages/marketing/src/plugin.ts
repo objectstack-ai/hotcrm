@@ -40,6 +40,11 @@ import MarketingAnalyticsAction from './actions/marketing_analytics.action.js';
 import JourneyAIAction from './actions/journey_ai.action.js';
 import { CampaignWorkflows } from './campaign.workflow.js';
 
+// Import datasets
+import { CampaignTypeDataset } from './campaign_type.dataset.js';
+import { CampaignDataset } from './campaign.dataset.js';
+import { EmailTemplateDataset } from './email_template.dataset.js';
+
 export const MarketingPlugin = {
   name: 'marketing',
   label: 'Marketing Cloud',
@@ -119,6 +124,12 @@ export const MarketingPlugin = {
     campaign_completion_check: CampaignWorkflows.completionCheck,
     campaign_member_welcome: CampaignWorkflows.memberWelcome,
   },
+  // Seed data (DatasetSchema)
+  data: [
+    CampaignTypeDataset,
+    CampaignDataset,
+    EmailTemplateDataset,
+  ],
   // Apps provided by this plugin
   apps: [
     {

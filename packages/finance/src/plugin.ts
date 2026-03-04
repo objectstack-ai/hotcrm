@@ -34,6 +34,10 @@ import { BillingScheduleValidationTrigger, BillingScheduleInvoiceGenerationTrigg
 import { RevenueScheduleValidationTrigger, RevenueRecognitionComplianceTrigger } from './hooks/revenue_recognition.hook.js';
 import { PaymentReminderWorkflows } from './payment_reminder.workflow.js';
 
+// Import datasets
+import { InvoiceDataset } from './invoice.dataset.js';
+import { PaymentDataset } from './payment.dataset.js';
+
 // Import actions
 import RevenueDashboardAction from './actions/revenue_dashboard.action.js';
 import RevenueForecastAction from './actions/revenue_forecast.action.js';
@@ -108,6 +112,13 @@ export const FinancePlugin = {
     payment_confirmation: PaymentReminderWorkflows.paymentConfirmation,
     contract_renewal_reminder: PaymentReminderWorkflows.contractRenewalReminder,
   },
+
+  // Seed data (DatasetSchema)
+  // Note: CurrencyDataset is registered in core (root config), not duplicated here.
+  data: [
+    InvoiceDataset,
+    PaymentDataset,
+  ],
 
   // Apps provided by this plugin
   apps: [

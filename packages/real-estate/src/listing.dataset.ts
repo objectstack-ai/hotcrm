@@ -1,0 +1,14 @@
+import { type DatasetInput, DatasetSchema } from '@objectstack/spec/data';
+import { ListingSeedData } from './listing.seed.js';
+
+export const ListingDataset: DatasetInput = {
+  object: 'listing',
+  externalId: 'property_address',
+  mode: 'ignore',
+  env: ['dev', 'test'],
+  records: ListingSeedData,
+};
+
+DatasetSchema.parse(ListingDataset);
+
+export default ListingDataset;
