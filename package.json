@@ -59,7 +59,7 @@
   "devDependencies": {
     "@changesets/cli": "^2.29.8",
     "@hono/node-server": "^1.19.9",
-    "@object-ui/console": "^3.1.1",
+    "@object-ui/console": "^3.1.2",
     "@objectstack/cli": "^3.2.1",
     "@objectstack/driver-memory": "^3.2.1",
     "@objectstack/objectql": "^3.2.1",

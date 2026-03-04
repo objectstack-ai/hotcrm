@@ -213,6 +213,7 @@ These items were deferred during Phase 13 and have been completed:
 
 | Date | From | To | Breaking Changes | Tests |
 |------|------|----|-----------------|-------|
+| 2026-03-04 | v3.2.1 | v3.2.1 | None (`@object-ui/console` upgraded from v3.1.1 to v3.1.2) | 4036 ✅ |
 | 2026-03-04 | v3.2.1 | v3.2.1 | None (Phase 15: DatasetSchema seed data migration — 43 dataset files, 13 plugins with data field, env-filtered seed loader, 132 new tests) | 3949 ✅ |
 | 2026-03-04 | v3.0.11 | v3.2.1 | Action `target` field is now required for actions with type `url`, `flow`, `modal`, or `api` (10 action files updated across crm, finance, support packages). `@object-ui/console` upgraded from v3.0.3 to v3.1.1. | 3817 ✅ |
 | 2026-02-26 | v3.0.8 | v3.0.11 | ViewFilterRule format changed from array tuples to objects `{ field, operator, value }` (34 view files updated) | 3817 ✅ |
