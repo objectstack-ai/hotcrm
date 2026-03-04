@@ -3,6 +3,7 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 export const Snapshot = ObjectSchema.create({
   name: 'snapshot',
   label: 'Data Snapshot',
+  icon: 'camera',
   fields: {
     name: Field.text({ label: 'Snapshot Name', required: true, maxLength: 255 }),
     source_object: Field.text({ label: 'Source Object', required: true, maxLength: 100 }),

@@ -3,6 +3,7 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 export const Scholarship = ObjectSchema.create({
   name: 'scholarship',
   label: 'Scholarship',
+  icon: 'award',
   fields: {
     name: Field.text({ label: 'Scholarship Name', required: true, maxLength: 255 }),
     amount: Field.number({ label: 'Award Amount', required: true, min: 0 }),

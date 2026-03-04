@@ -3,6 +3,7 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 export const Showing = ObjectSchema.create({
   name: 'showing',
   label: 'Showing',
+  icon: 'eye',
   fields: {
     listing_id: Field.masterDetail('listing', { label: 'Listing', required: true }),
     agent_id: Field.lookup('contact', { label: 'Agent' }),

@@ -3,6 +3,7 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 export const Course = ObjectSchema.create({
   name: 'course',
   label: 'Course',
+  icon: 'book-open',
   fields: {
     name: Field.text({ label: 'Course Name', required: true, maxLength: 255 }),
     course_code: Field.text({ label: 'Course Code', required: true, unique: true }),

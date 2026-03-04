@@ -3,6 +3,7 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 export const WealthAccount = ObjectSchema.create({
   name: 'wealth_account',
   label: 'Wealth Account',
+  icon: 'wallet',
   fields: {
     client_id: Field.lookup('contact', { label: 'Client', required: true }),
     account_type: Field.select({

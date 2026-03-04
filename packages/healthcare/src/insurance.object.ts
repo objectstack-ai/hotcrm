@@ -3,6 +3,7 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 export const Insurance = ObjectSchema.create({
   name: 'insurance',
   label: 'Insurance',
+  icon: 'shield',
   fields: {
     provider_name: Field.text({ label: 'Insurance Provider', required: true }),
     plan_type: Field.select({

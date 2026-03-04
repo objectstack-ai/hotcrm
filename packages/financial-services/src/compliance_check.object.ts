@@ -3,6 +3,7 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 export const ComplianceCheck = ObjectSchema.create({
   name: 'compliance_check',
   label: 'Compliance Check',
+  icon: 'clipboard-check',
   fields: {
     entity_id: Field.text({ label: 'Entity ID', required: true }),
     entity_type: Field.select({

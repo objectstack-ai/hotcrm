@@ -3,6 +3,7 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 export const Portfolio = ObjectSchema.create({
   name: 'portfolio',
   label: 'Portfolio',
+  icon: 'pie-chart',
   fields: {
     account_id: Field.masterDetail('wealth_account', { required: true }),
     portfolio_name: Field.text({ label: 'Portfolio Name', required: true, maxLength: 255 }),

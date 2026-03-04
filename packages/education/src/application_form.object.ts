@@ -3,6 +3,7 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 export const ApplicationForm = ObjectSchema.create({
   name: 'application_form',
   label: 'Application Form',
+  icon: 'file-pen',
   fields: {
     applicant_name: Field.text({ label: 'Applicant Name', required: true, maxLength: 255 }),
     email: Field.text({ label: 'Email', required: true }),

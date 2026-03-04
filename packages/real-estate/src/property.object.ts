@@ -3,6 +3,7 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 export const Property = ObjectSchema.create({
   name: 'property',
   label: 'Property',
+  icon: 'home',
   fields: {
     name: Field.text({ label: 'Property Name', required: true, maxLength: 255 }),
     address: Field.textarea({ label: 'Address' }),

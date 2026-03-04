@@ -3,6 +3,7 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 export const KPI = ObjectSchema.create({
   name: 'kpi',
   label: 'KPI',
+  icon: 'gauge',
   fields: {
     name: Field.text({ label: 'KPI Name', required: true, maxLength: 255 }),
     description: Field.textarea({ label: 'Description', maxLength: 2000 }),

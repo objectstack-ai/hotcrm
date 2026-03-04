@@ -3,6 +3,7 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 export const Listing = ObjectSchema.create({
   name: 'listing',
   label: 'Listing',
+  icon: 'scroll-text',
   fields: {
     property_id: Field.masterDetail('property', { label: 'Property', required: true }),
     list_price: Field.currency({ label: 'List Price', required: true }),

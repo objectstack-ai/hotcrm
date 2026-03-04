@@ -3,6 +3,7 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 export const Topic = ObjectSchema.create({
   name: 'topic',
   label: 'Topic',
+  icon: 'message-square',
   fields: {
     title: Field.text({ label: 'Title', required: true, maxLength: 500 }),
     body: Field.textarea({ label: 'Body', required: true }),

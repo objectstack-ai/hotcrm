@@ -3,6 +3,7 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 export const Alumni = ObjectSchema.create({
   name: 'alumni',
   label: 'Alumni',
+  icon: 'graduation-cap',
   fields: {
     student_id: Field.lookup('student', { label: 'Student' }),
     name: Field.text({ label: 'Alumni Name', required: true, maxLength: 255 }),

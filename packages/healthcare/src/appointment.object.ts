@@ -3,6 +3,7 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 export const Appointment = ObjectSchema.create({
   name: 'appointment',
   label: 'Appointment',
+  icon: 'calendar-clock',
   fields: {
     patient_id: Field.masterDetail('patient', { label: 'Patient' }),
     provider_id: Field.lookup('contact', { label: 'Provider' }),

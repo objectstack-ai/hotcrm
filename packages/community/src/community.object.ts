@@ -3,6 +3,7 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 export const Community = ObjectSchema.create({
   name: 'community',
   label: 'Community',
+  icon: 'users',
   fields: {
     name: Field.text({ label: 'Community Name', required: true, maxLength: 255 }),
     description: Field.textarea({ label: 'Description' }),

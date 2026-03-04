@@ -3,6 +3,7 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 export const Commission = ObjectSchema.create({
   name: 'commission',
   label: 'Commission',
+  icon: 'percent',
   fields: {
     transaction_id: Field.lookup('listing', { label: 'Transaction' }),
     agent_id: Field.lookup('contact', { label: 'Agent', required: true }),

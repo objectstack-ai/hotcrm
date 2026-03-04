@@ -3,6 +3,7 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 export const AnalyticsDashboard = ObjectSchema.create({
   name: 'analytics_dashboard',
   label: 'Analytics Dashboard',
+  icon: 'layout-dashboard',
   fields: {
     name: Field.text({ label: 'Dashboard Name', required: true, maxLength: 255 }),
     description: Field.textarea({ label: 'Description', maxLength: 2000 }),
