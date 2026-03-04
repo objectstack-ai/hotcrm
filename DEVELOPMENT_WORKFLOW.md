@@ -53,6 +53,8 @@ Every business package follows strict file naming conventions in `packages/{pkg}
 | `*.permission.ts` | Permission Sets | `PermissionSetSchema.parse()` |
 | `*.capabilities.ts` | Plugin Capability Manifests | `PluginCapabilityManifestSchema.parse()` |
 | `*.events.ts` | Domain Event Definitions | `EventSchema.parse()` |
+| `*.seed.ts` | Raw Seed Data Arrays | — |
+| `*.dataset.ts` | DatasetSchema-compliant Seed Data | `DatasetSchema.parse()` |
 
 ### Creating a New Object
 
