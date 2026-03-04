@@ -78,7 +78,7 @@ describe('CRM UI Schema Compliance', () => {
         if (group.type === 'group' && group.children) {
           for (const child of group.children) {
             expect(child, `Navigation child "${child.label}" should have an icon`).toHaveProperty('icon');
-            expect((child as any).icon).toBeTruthy();
+            expect('icon' in child && child.icon, `Navigation child "${child.label}" icon should be non-empty`).toBeTruthy();
           }
         }
       }
