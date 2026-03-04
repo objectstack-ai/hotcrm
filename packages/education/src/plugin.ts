@@ -35,6 +35,12 @@ import { ApplicationCompletenessCheck, ApplicationReviewerAssignment, Applicatio
 // Import actions
 import EducationAIAction from './education_ai.action.js';
 
+// Import datasets
+import { CourseDataset } from './course.dataset.js';
+import { StudentDataset } from './student.dataset.js';
+import { EnrollmentDataset } from './enrollment.dataset.js';
+import { ScholarshipDataset } from './scholarship.dataset.js';
+
 /**
  * Education Plugin Definition
  *
@@ -87,6 +93,14 @@ export const EducationPlugin = {
     application_reviewer_assignment: ApplicationReviewerAssignment,
     application_decision_workflow: ApplicationDecisionWorkflow,
   },
+
+  // Seed data (DatasetSchema)
+  data: [
+    CourseDataset,
+    StudentDataset,
+    EnrollmentDataset,
+    ScholarshipDataset,
+  ],
 
   // Apps provided by this plugin
   apps: [
