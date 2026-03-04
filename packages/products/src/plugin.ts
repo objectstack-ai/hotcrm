@@ -42,6 +42,10 @@ import { OrderValidationTrigger, OrderStatusLifecycleTrigger } from './hooks/ord
 import { SubscriptionValidationTrigger, SubscriptionRenewalReminderTrigger } from './hooks/subscription.hook.js';
 import { ApprovalWorkflows } from './approval.workflow.js';
 
+// Import datasets
+import { ProductDataset } from './product.dataset.js';
+import { PriceBookDataset } from './price_book.dataset.js';
+
 // Import actions
 import BundleSuggestionAction from './actions/bundle_suggestion.action.js';
 import PricingOptimizerAction from './actions/pricing_optimizer.action.js';
@@ -85,6 +89,12 @@ export const ProductsPlugin = {
     product_option: ProductOption,
   },
   
+  // Seed data (DatasetSchema)
+  data: [
+    ProductDataset,
+    PriceBookDataset,
+  ],
+
   // Actions provided by this plugin
   actions: {
     bundle_suggestion: BundleSuggestionAction,
