@@ -11,6 +11,7 @@ export const LogACallAction = {
   label: 'Log a Call',
   icon: 'phone',
   type: 'modal' as const,
+  target: 'log_a_call',
   locations: ['record_header' as const, 'list_item' as const],
   params: [
     { name: 'subject', label: 'Subject', type: 'text' as const, required: true },
@@ -28,6 +29,7 @@ export const ConvertLeadAction = {
   label: 'Convert Lead',
   icon: 'user-check',
   type: 'modal' as const,
+  target: 'convert_lead',
   locations: ['record_header' as const],
   params: [
     { name: 'create_account', label: 'Create Account', type: 'boolean' as const, required: true },
@@ -45,6 +47,7 @@ export const CreateFollowUpTaskAction = {
   label: 'Create Follow-up Task',
   icon: 'calendar-plus',
   type: 'modal' as const,
+  target: 'create_follow_up_task',
   locations: ['record_header' as const, 'record_more' as const],
   params: [
     { name: 'subject', label: 'Task Subject', type: 'text' as const, required: true },
@@ -62,6 +65,7 @@ export const SendQuoteAction = {
   label: 'Send Quote',
   icon: 'file-text',
   type: 'modal' as const,
+  target: 'send_quote',
   locations: ['record_header' as const],
   params: [
     { name: 'recipient_email', label: 'Recipient Email', type: 'email' as const, required: true },

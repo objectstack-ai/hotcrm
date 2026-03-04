@@ -25,29 +25,29 @@ importers:
         specifier: ^1.19.9
         version: 1.19.9(hono@4.12.3)
       '@object-ui/console':
-        specifier: ^3.0.3
-        version: 3.0.3
+        specifier: ^3.1.1
+        version: 3.1.1
       '@objectstack/cli':
-        specifier: ^3.0.11
-        version: 3.0.11(esbuild@0.27.3)
+        specifier: ^3.2.1
+        version: 3.2.1(esbuild@0.27.3)
       '@objectstack/driver-memory':
-        specifier: ^3.0.11
-        version: 3.0.11
+        specifier: ^3.2.1
+        version: 3.2.1
       '@objectstack/objectql':
-        specifier: ^3.0.11
-        version: 3.0.11
+        specifier: ^3.2.1
+        version: 3.2.1
       '@objectstack/plugin-hono-server':
-        specifier: ^3.0.11
-        version: 3.0.11
+        specifier: ^3.2.1
+        version: 3.2.1
       '@objectstack/runtime':
-        specifier: ^3.0.11
-        version: 3.0.11
+        specifier: ^3.2.1
+        version: 3.2.1
       '@objectstack/spec':
-        specifier: ^3.0.11
-        version: 3.0.11
+        specifier: ^3.2.1
+        version: 3.2.1
       '@objectstack/studio':
-        specifier: ^3.0.11
-        version: 3.0.11(@types/node@25.3.2)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(typescript@5.9.3)
+        specifier: ^3.2.1
+        version: 3.2.1(@types/node@25.3.2)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(typescript@5.9.3)
       '@types/node':
         specifier: ^25.2.3
         version: 25.3.2
@@ -131,8 +131,8 @@ importers:
   packages/ai:
     dependencies:
       '@objectstack/spec':
-        specifier: ^3.0.11
-        version: 3.0.11
+        specifier: ^3.2.1
+        version: 3.2.1
       axios:
         specifier: ^1.13.5
         version: 1.13.5
@@ -141,8 +141,8 @@ importers:
         version: 4.3.6
     devDependencies:
       '@objectstack/cli':
-        specifier: ^3.0.11
-        version: 3.0.11(esbuild@0.27.3)
+        specifier: ^3.2.1
+        version: 3.2.1(esbuild@0.27.3)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -153,15 +153,15 @@ importers:
         specifier: workspace:*
         version: link:../ai
       '@objectstack/spec':
-        specifier: ^3.0.11
-        version: 3.0.11
+        specifier: ^3.2.1
+        version: 3.2.1
       zod:
         specifier: ^4.3.6
         version: 4.3.6
     devDependencies:
       '@objectstack/cli':
-        specifier: ^3.0.11
-        version: 3.0.11(esbuild@0.27.3)
+        specifier: ^3.2.1
+        version: 3.2.1(esbuild@0.27.3)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -169,15 +169,15 @@ importers:
   packages/community:
     dependencies:
       '@objectstack/spec':
-        specifier: ^3.0.11
-        version: 3.0.11
+        specifier: ^3.2.1
+        version: 3.2.1
       zod:
         specifier: ^4.3.6
         version: 4.3.6
     devDependencies:
       '@objectstack/cli':
-        specifier: ^3.0.11
-        version: 3.0.11(esbuild@0.27.3)
+        specifier: ^3.2.1
+        version: 3.2.1(esbuild@0.27.3)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -185,8 +185,8 @@ importers:
   packages/core:
     dependencies:
       '@objectstack/spec':
-        specifier: ^3.0.11
-        version: 3.0.11
+        specifier: ^3.2.1
+        version: 3.2.1
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -197,15 +197,15 @@ importers:
         specifier: workspace:*
         version: link:../ai
       '@objectstack/spec':
-        specifier: ^3.0.11
-        version: 3.0.11
+        specifier: ^3.2.1
+        version: 3.2.1
       zod:
         specifier: ^4.3.6
         version: 4.3.6
     devDependencies:
       '@objectstack/cli':
-        specifier: ^3.0.11
-        version: 3.0.11(esbuild@0.27.3)
+        specifier: ^3.2.1
+        version: 3.2.1(esbuild@0.27.3)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -213,15 +213,15 @@ importers:
   packages/education:
     dependencies:
       '@objectstack/spec':
-        specifier: ^3.0.11
-        version: 3.0.11
+        specifier: ^3.2.1
+        version: 3.2.1
       zod:
         specifier: ^4.3.6
         version: 4.3.6
     devDependencies:
       '@objectstack/cli':
-        specifier: ^3.0.11
-        version: 3.0.11(esbuild@0.27.3)
+        specifier: ^3.2.1
+        version: 3.2.1(esbuild@0.27.3)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -229,12 +229,12 @@ importers:
   packages/finance:
     dependencies:
       '@objectstack/spec':
-        specifier: ^3.0.11
-        version: 3.0.11
+        specifier: ^3.2.1
+        version: 3.2.1
     devDependencies:
       '@objectstack/cli':
-        specifier: ^3.0.11
-        version: 3.0.11(esbuild@0.27.3)
+        specifier: ^3.2.1
+        version: 3.2.1(esbuild@0.27.3)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -242,15 +242,15 @@ importers:
   packages/financial-services:
     dependencies:
       '@objectstack/spec':
-        specifier: ^3.0.11
-        version: 3.0.11
+        specifier: ^3.2.1
+        version: 3.2.1
       zod:
         specifier: ^4.3.6
         version: 4.3.6
     devDependencies:
       '@objectstack/cli':
-        specifier: ^3.0.11
-        version: 3.0.11(esbuild@0.27.3)
+        specifier: ^3.2.1
+        version: 3.2.1(esbuild@0.27.3)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -258,15 +258,15 @@ importers:
   packages/healthcare:
     dependencies:
       '@objectstack/spec':
-        specifier: ^3.0.11
-        version: 3.0.11
+        specifier: ^3.2.1
+        version: 3.2.1
       zod:
         specifier: ^4.3.6
         version: 4.3.6
     devDependencies:
       '@objectstack/cli':
-        specifier: ^3.0.11
-        version: 3.0.11(esbuild@0.27.3)
+        specifier: ^3.2.1
+        version: 3.2.1(esbuild@0.27.3)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -274,12 +274,12 @@ importers:
   packages/hr:
     dependencies:
       '@objectstack/spec':
-        specifier: ^3.0.11
-        version: 3.0.11
+        specifier: ^3.2.1
+        version: 3.2.1
     devDependencies:
       '@objectstack/cli':
-        specifier: ^3.0.11
-        version: 3.0.11(esbuild@0.27.3)
+        specifier: ^3.2.1
+        version: 3.2.1(esbuild@0.27.3)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -290,15 +290,15 @@ importers:
         specifier: workspace:*
         version: link:../ai
       '@objectstack/spec':
-        specifier: ^3.0.11
-        version: 3.0.11
+        specifier: ^3.2.1
+        version: 3.2.1
       zod:
         specifier: ^4.3.6
         version: 4.3.6
     devDependencies:
       '@objectstack/cli':
-        specifier: ^3.0.11
-        version: 3.0.11(esbuild@0.27.3)
+        specifier: ^3.2.1
+        version: 3.2.1(esbuild@0.27.3)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -306,12 +306,12 @@ importers:
   packages/marketing:
     dependencies:
       '@objectstack/spec':
-        specifier: ^3.0.11
-        version: 3.0.11
+        specifier: ^3.2.1
+        version: 3.2.1
     devDependencies:
       '@objectstack/cli':
-        specifier: ^3.0.11
-        version: 3.0.11(esbuild@0.27.3)
+        specifier: ^3.2.1
+        version: 3.2.1(esbuild@0.27.3)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -319,12 +319,12 @@ importers:
   packages/products:
     dependencies:
       '@objectstack/spec':
-        specifier: ^3.0.11
-        version: 3.0.11
+        specifier: ^3.2.1
+        version: 3.2.1
     devDependencies:
       '@objectstack/cli':
-        specifier: ^3.0.11
-        version: 3.0.11(esbuild@0.27.3)
+        specifier: ^3.2.1
+        version: 3.2.1(esbuild@0.27.3)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -332,15 +332,15 @@ importers:
   packages/real-estate:
     dependencies:
       '@objectstack/spec':
-        specifier: ^3.0.11
-        version: 3.0.11
+        specifier: ^3.2.1
+        version: 3.2.1
       zod:
         specifier: ^4.3.6
         version: 4.3.6
     devDependencies:
       '@objectstack/cli':
-        specifier: ^3.0.11
-        version: 3.0.11(esbuild@0.27.3)
+        specifier: ^3.2.1
+        version: 3.2.1(esbuild@0.27.3)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -348,12 +348,12 @@ importers:
   packages/support:
     dependencies:
       '@objectstack/spec':
-        specifier: ^3.0.11
-        version: 3.0.11
+        specifier: ^3.2.1
+        version: 3.2.1
     devDependencies:
       '@objectstack/cli':
-        specifier: ^3.0.11
-        version: 3.0.11(esbuild@0.27.3)
+        specifier: ^3.2.1
+        version: 3.2.1(esbuild@0.27.3)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -1111,59 +1111,59 @@ packages:
     resolution: {integrity: sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg==}
     engines: {node: '>= 8'}
 
-  '@object-ui/console@3.0.3':
-    resolution: {integrity: sha512-gExQoxjbl0ur2LMs8XIcyjkDvTol6V/pKXa0l/1KECNLNgUaHC9yYFkqnNgTSAAGwxvyucVVALe0jvyzH/CkRQ==}
+  '@object-ui/console@3.1.1':
+    resolution: {integrity: sha512-D3inRQny8GrmM9jhgw+QuYW2WMGFlYmRPjLa+B5PZM49atiARIhwY9Asg+0qAaFS/WoKcc8YHv7iA7iJGFTG/w==}
 
-  '@objectstack/cli@3.0.11':
-    resolution: {integrity: sha512-JXLPc/mU0ARMQCkeA7E0F0og680kDoChlYGk0eUt2D67CLZ5n7D0zqqTtMUigrYecBD0Z/4kn5bktxNhzq11Pg==}
+  '@objectstack/cli@3.2.1':
+    resolution: {integrity: sha512-c6IOAdzLc8ISMmIpO4IQIo8c1T+bsp+kbn4HYbUzOQ5OUqMO+1vqUl2r4fazws7dgbrLH0IM+AMkMUDCYbZYgQ==}
     hasBin: true
 
-  '@objectstack/client-react@3.0.11':
-    resolution: {integrity: sha512-S0j5DQfWqn/rkdltTU+DsUmjx80VbNAhMMgCIx+7aEGCMsinuYdm072RacwYGaWXWok8DGP8GaKtsFP//OCPxg==}
+  '@objectstack/client-react@3.2.1':
+    resolution: {integrity: sha512-aA9jXJQOMoO5+oz1fAY5eHCzRkWZJxYXW/33whTs+GYrckI/NrIanW/NLI2qcl1Zz4Pi5OplyDqpCkBKiK/eaA==}
     peerDependencies:
       react: '>=18.0.0'
 
-  '@objectstack/client@3.0.11':
-    resolution: {integrity: sha512-B1q7yZtU7Dp4womCrALur/u6LiNoGe8Js2jT87aerbyzWy9waNJV/gq0e//CpBbTv2C931jAzIAqBv86PnRfew==}
+  '@objectstack/client@3.2.1':
+    resolution: {integrity: sha512-QaeJkAACfj8j390EyZ6Pg/riOxxLcgWb7I7S1AQBQoJeBA+rfQLiYF2J+9aSOAo9qSnMYdE9tpBV8IAP6Bx1tA==}
 
-  '@objectstack/core@3.0.11':
-    resolution: {integrity: sha512-nWwMz8kI3ZFvHVlfKJkKwUil68SW+ONEUkOwnQra/ccGX9sEIxf+gH96JOLEctXh3hAv7YHaLZURmVlnsGFbYA==}
+  '@objectstack/core@3.2.1':
+    resolution: {integrity: sha512-wi1bX0+s0hypf+rINbRGC93N+WG5K1JqBqrmgrHO+BdSq4BoLA8vw4inhxn0wJr7iqcHkofIdLKcANsB8vPkSg==}
 
-  '@objectstack/driver-memory@3.0.11':
-    resolution: {integrity: sha512-fMSHsQjj/bMZ1suXzatGcSzkT1yCANSuDEifpzMLaR2c4yUfbKiMeCWC1o5qYUhA+5jHFo4j8A4WvExuryLYlw==}
+  '@objectstack/driver-memory@3.2.1':
+    resolution: {integrity: sha512-bLQpJ8zfvvGn43uojsrPDgpfKJpwvuKfEtjV4Sue/2KIe3Awefmfy+Do3nsOkOIrjqdLX7RxjH/ikJQxbehlPg==}
 
-  '@objectstack/metadata@3.0.11':
-    resolution: {integrity: sha512-rZea8op1au3qWXAzs9MJrnmEOeqUnubmrKQqH1S6ZkvtQkkB/MWjTzRNQCDlFZv5loLbZ7gH+RGjvS3UEWe9Ew==}
+  '@objectstack/metadata@3.2.1':
+    resolution: {integrity: sha512-ktpsR22nsTEITJk2EJ8IqDyqmIlSu87Kk2bmHqWmscuCpSg8Q9zuKNfWyAn27RUHs6axNASJR+gg0AhWW6xHrg==}
 
-  '@objectstack/objectql@3.0.11':
-    resolution: {integrity: sha512-S47oUmgzTSBZUWkpFgaf2W/RkZT15eE4SmlXSf5eUhK6EMPaEVDWL0PTNl8iss7FLUnYn8VT/eLWMC8xQrU1qw==}
+  '@objectstack/objectql@3.2.1':
+    resolution: {integrity: sha512-0ZKkv3r87iXBBUdn1YPN1+Kd99MpxwfuDgYZhBxctBIQ1UYc3+ndYkfPzA7U48ZANNixAiFrD0Sb9LE30zvnGg==}
 
-  '@objectstack/plugin-hono-server@3.0.11':
-    resolution: {integrity: sha512-yGafN+3uyge7qibZf9dVjp8c9kiXcAI/DKTB+jPueGotDqlhSOVSv1lQ7VrcP1t8RqKPAnZBkC80u/Lxssaueg==}
+  '@objectstack/plugin-hono-server@3.2.1':
+    resolution: {integrity: sha512-JsdxkMibc+XKW1iazwP5gerwW1sUiIx4VeCbT3qsEcaQbbzU5VdDiTSIlZqcPHQMTM2MuDbVlVGXYnEmLf01Zg==}
 
-  '@objectstack/plugin-msw@3.0.11':
-    resolution: {integrity: sha512-+ueRY/7nL6RjrQW6VUttlXNEeBoliAA+mGbVSBe4rGLGujgb7k8hGM7qmpzuCgW0H/rECQ1parsZZXgwLcT41A==}
+  '@objectstack/plugin-msw@3.2.1':
+    resolution: {integrity: sha512-57EMEonqfqHLC4N6D1flR+QIwlquikerLw42aBFsWlkWuYR/0eU6cVI2PmUq8EWbXCsrjoqb65WnJtAUoLtt/A==}
     peerDependencies:
-      '@objectstack/runtime': 3.0.11
+      '@objectstack/runtime': ^3.2.1
 
-  '@objectstack/rest@3.0.11':
-    resolution: {integrity: sha512-pZlvEk39YwWTOdrhA8Qt9O3MUSom/qwaxIB4mX4ZIFhekBtN6HZRjw3Pbs/LPIo4kOGF2bt3JXX5PjDbNT/UUA==}
+  '@objectstack/rest@3.2.1':
+    resolution: {integrity: sha512-KyBT4V7HlAm1+w6Hd8jbseQOfE/2TFDIUW9QT/q+nnQh1qRWQm0SpCv2CpdhbfuyJj3TDX9ka5QyAj8qEFd7fA==}
 
-  '@objectstack/runtime@3.0.11':
-    resolution: {integrity: sha512-yZwpswHvw1OKvnSOU1FA4qT4cHjaOUn4ekNcOkhaWrvTkheaXIZ3wsPdgN4hxqg34SWtpd4mk1Zv7ZArZemacg==}
+  '@objectstack/runtime@3.2.1':
+    resolution: {integrity: sha512-R8/35hgHOnA8nLdze8ZwmC5mO8bS6B0ky4eDK9WpE4L9CSWb4lAceeF1fxPNuWo8WYOUgnMulf3x3oRYI9NHWw==}
 
-  '@objectstack/spec@3.0.11':
-    resolution: {integrity: sha512-UsVs3tgZ9aELdE1tkfYmxod5BIqKpswgkbTtC78+7ANaUn22jh7uuprIf31Oljsps69DFlw2CU8sJx96CTL4YQ==}
+  '@objectstack/spec@3.2.1':
+    resolution: {integrity: sha512-Nov8qdpORhQuZgtxnQ6lrQVQtfrcHvmuEILtunTeoFrumLzCO+yxOQMT/Ol/8XA6BzAopksCV1o1xNzdUfXEsA==}
     engines: {node: '>=18.0.0'}
 
-  '@objectstack/studio@3.0.11':
-    resolution: {integrity: sha512-pWJ+jpkNI62NrCRH/X0RhXUR0DXtm0MXzt0uCa1SdfFNvV+EO9zU63miytMZlKJF9fA6/osny7sBhn0gy99SJw==}
+  '@objectstack/studio@3.2.1':
+    resolution: {integrity: sha512-c13VlN3q4gr44kvDEML5NbJuKGSK03/qc+bDOUa6LuiJqyfZY1msvn3NJXrA0Ok9MbqB/TMehByoT/8+CCMydw==}
 
-  '@objectstack/types@3.0.11':
-    resolution: {integrity: sha512-UhNBSnMvOU0qjjyQPPR9ZYiKF6sym5qq78Bli5O1xsTL0kSR55cGVYGxtPcMLTBIeDC8rT384+Oxcvee903KTQ==}
+  '@objectstack/types@3.2.1':
+    resolution: {integrity: sha512-wbODJhFaGI67TF+r/HS/2UsxLO/k2emJtIvetLhwAJuJEUw0qCX+MXSMAf/sH7DDgRJnuHhLghMsQ+wDohDIXQ==}
 
-  '@oclif/core@4.8.1':
-    resolution: {integrity: sha512-07mq0vKCWNsB85ZHeBMlTAiO0KLFqHyAeRK3bD2K8CI1tX3tiwkWw1lZQZkiw8MUBrhxdROhMkYMY4Q0l7JHqA==}
+  '@oclif/core@4.8.3':
+    resolution: {integrity: sha512-f7Rc1JBZO0wNMyDmNzP5IFOv5eM97S9pO4JUFdu2OLyk73YeBI9wog1Yyf666NOQvyptkbG1xh8inzMDQLNTyQ==}
     engines: {node: '>=18.0.0'}
 
   '@open-draft/deferred-promise@2.2.0':
@@ -3717,8 +3717,8 @@ packages:
       '@types/react':
         optional: true
 
-  react-resizable-panels@4.6.5:
-    resolution: {integrity: sha512-pmQP6qv9KmsesNMvWVNvVfVJAwYSOWWbAOAtrPR8Cre20+j1NWIlyft0btjtDQE+OepXmI6g3VPrCXQY0oD7+Q==}
+  react-resizable-panels@4.7.1:
+    resolution: {integrity: sha512-RYBRgvdZhnUds5jJWYr1up0hYFofgN1dqSwhxfBl9Savoxms0gyGF0AfaXskhxTYkXrlwc+TlQPe5UkoV+1neg==}
     peerDependencies:
       react: ^18.0.0 || ^19.0.0
       react-dom: ^18.0.0 || ^19.0.0
@@ -4925,18 +4925,18 @@ snapshots:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.20.1
 
-  '@object-ui/console@3.0.3': {}
+  '@object-ui/console@3.1.1': {}
 
-  '@objectstack/cli@3.0.11(esbuild@0.27.3)':
+  '@objectstack/cli@3.2.1(esbuild@0.27.3)':
     dependencies:
-      '@objectstack/core': 3.0.11
-      '@objectstack/driver-memory': 3.0.11
-      '@objectstack/objectql': 3.0.11
-      '@objectstack/plugin-hono-server': 3.0.11
-      '@objectstack/rest': 3.0.11
-      '@objectstack/runtime': 3.0.11
-      '@objectstack/spec': 3.0.11
-      '@oclif/core': 4.8.1
+      '@objectstack/core': 3.2.1
+      '@objectstack/driver-memory': 3.2.1
+      '@objectstack/objectql': 3.2.1
+      '@objectstack/plugin-hono-server': 3.2.1
+      '@objectstack/rest': 3.2.1
+      '@objectstack/runtime': 3.2.1
+      '@objectstack/spec': 3.2.1
+      '@oclif/core': 4.8.3
       bundle-require: 5.1.0(esbuild@0.27.3)
       chalk: 5.6.2
       tsx: 4.21.0
@@ -4944,94 +4944,94 @@ snapshots:
     transitivePeerDependencies:
       - esbuild
 
-  '@objectstack/client-react@3.0.11(react@19.2.4)':
+  '@objectstack/client-react@3.2.1(react@19.2.4)':
     dependencies:
-      '@objectstack/client': 3.0.11
-      '@objectstack/core': 3.0.11
-      '@objectstack/spec': 3.0.11
+      '@objectstack/client': 3.2.1
+      '@objectstack/core': 3.2.1
+      '@objectstack/spec': 3.2.1
       react: 19.2.4
 
-  '@objectstack/client@3.0.11':
+  '@objectstack/client@3.2.1':
     dependencies:
-      '@objectstack/core': 3.0.11
-      '@objectstack/spec': 3.0.11
+      '@objectstack/core': 3.2.1
+      '@objectstack/spec': 3.2.1
 
-  '@objectstack/core@3.0.11':
+  '@objectstack/core@3.2.1':
     dependencies:
-      '@objectstack/spec': 3.0.11
+      '@objectstack/spec': 3.2.1
       pino: 10.3.1
       pino-pretty: 13.1.3
       zod: 4.3.6
 
-  '@objectstack/driver-memory@3.0.11':
+  '@objectstack/driver-memory@3.2.1':
     dependencies:
-      '@objectstack/core': 3.0.11
-      '@objectstack/spec': 3.0.11
+      '@objectstack/core': 3.2.1
+      '@objectstack/spec': 3.2.1
       mingo: 7.2.0
 
-  '@objectstack/metadata@3.0.11':
+  '@objectstack/metadata@3.2.1':
     dependencies:
-      '@objectstack/core': 3.0.11
-      '@objectstack/spec': 3.0.11
-      '@objectstack/types': 3.0.11
+      '@objectstack/core': 3.2.1
+      '@objectstack/spec': 3.2.1
+      '@objectstack/types': 3.2.1
       chokidar: 5.0.0
       glob: 13.0.6
       js-yaml: 4.1.1
       zod: 4.3.6
 
-  '@objectstack/objectql@3.0.11':
+  '@objectstack/objectql@3.2.1':
     dependencies:
-      '@objectstack/core': 3.0.11
-      '@objectstack/spec': 3.0.11
-      '@objectstack/types': 3.0.11
+      '@objectstack/core': 3.2.1
+      '@objectstack/spec': 3.2.1
+      '@objectstack/types': 3.2.1
 
-  '@objectstack/plugin-hono-server@3.0.11':
+  '@objectstack/plugin-hono-server@3.2.1':
     dependencies:
       '@hono/node-server': 1.19.9(hono@4.12.3)
-      '@objectstack/core': 3.0.11
-      '@objectstack/spec': 3.0.11
+      '@objectstack/core': 3.2.1
+      '@objectstack/spec': 3.2.1
       hono: 4.12.3
 
-  '@objectstack/plugin-msw@3.0.11(@objectstack/runtime@3.0.11)(@types/node@25.3.2)(typescript@5.9.3)':
+  '@objectstack/plugin-msw@3.2.1(@objectstack/runtime@3.2.1)(@types/node@25.3.2)(typescript@5.9.3)':
     dependencies:
-      '@objectstack/core': 3.0.11
-      '@objectstack/objectql': 3.0.11
-      '@objectstack/runtime': 3.0.11
-      '@objectstack/spec': 3.0.11
-      '@objectstack/types': 3.0.11
+      '@objectstack/core': 3.2.1
+      '@objectstack/objectql': 3.2.1
+      '@objectstack/runtime': 3.2.1
+      '@objectstack/spec': 3.2.1
+      '@objectstack/types': 3.2.1
       msw: 2.12.10(@types/node@25.3.2)(typescript@5.9.3)
     transitivePeerDependencies:
       - '@types/node'
       - typescript
 
-  '@objectstack/rest@3.0.11':
+  '@objectstack/rest@3.2.1':
     dependencies:
-      '@objectstack/core': 3.0.11
-      '@objectstack/spec': 3.0.11
+      '@objectstack/core': 3.2.1
+      '@objectstack/spec': 3.2.1
       zod: 4.3.6
 
-  '@objectstack/runtime@3.0.11':
+  '@objectstack/runtime@3.2.1':
     dependencies:
-      '@objectstack/core': 3.0.11
-      '@objectstack/rest': 3.0.11
-      '@objectstack/spec': 3.0.11
-      '@objectstack/types': 3.0.11
+      '@objectstack/core': 3.2.1
+      '@objectstack/rest': 3.2.1
+      '@objectstack/spec': 3.2.1
+      '@objectstack/types': 3.2.1
       zod: 4.3.6
 
-  '@objectstack/spec@3.0.11':
+  '@objectstack/spec@3.2.1':
     dependencies:
       zod: 4.3.6
 
-  '@objectstack/studio@3.0.11(@types/node@25.3.2)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(typescript@5.9.3)':
+  '@objectstack/studio@3.2.1(@types/node@25.3.2)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(typescript@5.9.3)':
     dependencies:
-      '@objectstack/client': 3.0.11
-      '@objectstack/client-react': 3.0.11(react@19.2.4)
-      '@objectstack/driver-memory': 3.0.11
-      '@objectstack/metadata': 3.0.11
-      '@objectstack/objectql': 3.0.11
-      '@objectstack/plugin-msw': 3.0.11(@objectstack/runtime@3.0.11)(@types/node@25.3.2)(typescript@5.9.3)
-      '@objectstack/runtime': 3.0.11
-      '@objectstack/spec': 3.0.11
+      '@objectstack/client': 3.2.1
+      '@objectstack/client-react': 3.2.1(react@19.2.4)
+      '@objectstack/driver-memory': 3.2.1
+      '@objectstack/metadata': 3.2.1
+      '@objectstack/objectql': 3.2.1
+      '@objectstack/plugin-msw': 3.2.1(@objectstack/runtime@3.2.1)(@types/node@25.3.2)(typescript@5.9.3)
+      '@objectstack/runtime': 3.2.1
+      '@objectstack/spec': 3.2.1
       '@radix-ui/react-avatar': 1.1.11(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@radix-ui/react-checkbox': 1.3.3(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@radix-ui/react-collapsible': 1.1.12(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -5052,7 +5052,7 @@ snapshots:
       lucide-react: 0.575.0(react@19.2.4)
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
-      react-resizable-panels: 4.6.5(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      react-resizable-panels: 4.7.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       tailwind-merge: 3.5.0
     transitivePeerDependencies:
       - '@types/node'
@@ -5060,11 +5060,11 @@ snapshots:
       - '@types/react-dom'
       - typescript
 
-  '@objectstack/types@3.0.11':
+  '@objectstack/types@3.2.1':
     dependencies:
-      '@objectstack/spec': 3.0.11
+      '@objectstack/spec': 3.2.1
 
-  '@oclif/core@4.8.1':
+  '@oclif/core@4.8.3':
     dependencies:
       ansi-escapes: 4.3.2
       ansis: 3.17.0
@@ -7916,7 +7916,7 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.2.14
 
-  react-resizable-panels@4.6.5(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+  react-resizable-panels@4.7.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
