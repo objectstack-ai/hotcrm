@@ -3,6 +3,7 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 export const CampusEvent = ObjectSchema.create({
   name: 'campus_event',
   label: 'Campus Event',
+  icon: 'calendar-days',
   fields: {
     name: Field.text({ label: 'Event Name', required: true, maxLength: 255 }),
     event_type: Field.select({

@@ -3,6 +3,7 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 export const SavedFilter = ObjectSchema.create({
   name: 'saved_filter',
   label: 'Saved Filter',
+  icon: 'filter',
   fields: {
     name: Field.text({ label: 'Filter Name', required: true, maxLength: 255 }),
     description: Field.textarea({ label: 'Description', maxLength: 1000 }),

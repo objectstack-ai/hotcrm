@@ -3,6 +3,7 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 export const UserGroup = ObjectSchema.create({
   name: 'user_group',
   label: 'User Group',
+  icon: 'users-round',
   fields: {
     name: Field.text({ label: 'Group Name', required: true, maxLength: 255 }),
     description: Field.textarea({ label: 'Description' }),

@@ -3,6 +3,7 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 export const Prescription = ObjectSchema.create({
   name: 'prescription',
   label: 'Prescription',
+  icon: 'pill',
   fields: {
     patient_id: Field.masterDetail('patient', { label: 'Patient' }),
     medication: Field.text({ label: 'Medication Name', required: true }),

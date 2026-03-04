@@ -3,6 +3,7 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 export const Kyc = ObjectSchema.create({
   name: 'kyc',
   label: 'KYC',
+  icon: 'scan-face',
   fields: {
     client_id: Field.masterDetail('wealth_account'),
     document_type: Field.select({

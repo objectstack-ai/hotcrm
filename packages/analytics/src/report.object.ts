@@ -3,6 +3,7 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 export const Report = ObjectSchema.create({
   name: 'report',
   label: 'Report',
+  icon: 'file-bar-chart',
   fields: {
     name: Field.text({ label: 'Report Name', required: true, maxLength: 255 }),
     description: Field.textarea({ label: 'Description', maxLength: 2000 }),

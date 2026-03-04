@@ -3,6 +3,7 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 export const Idea = ObjectSchema.create({
   name: 'idea',
   label: 'Idea',
+  icon: 'lightbulb',
   fields: {
     title: Field.text({ label: 'Title', required: true, maxLength: 500 }),
     description: Field.textarea({ label: 'Description', required: true }),

@@ -3,6 +3,7 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 export const FinancialProduct = ObjectSchema.create({
   name: 'financial_product',
   label: 'Financial Product',
+  icon: 'landmark',
   fields: {
     name: Field.text({ label: 'Product Name', required: true, maxLength: 255 }),
     product_type: Field.select({

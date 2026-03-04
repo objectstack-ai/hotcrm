@@ -3,6 +3,7 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 export const Reply = ObjectSchema.create({
   name: 'reply',
   label: 'Reply',
+  icon: 'message-circle',
   fields: {
     topic_id: Field.lookup('topic', { label: 'Topic', required: true }),
     body: Field.textarea({ label: 'Body', required: true }),

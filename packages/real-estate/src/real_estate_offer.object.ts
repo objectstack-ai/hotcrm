@@ -3,6 +3,7 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 export const RealEstateOffer = ObjectSchema.create({
   name: 'real_estate_offer',
   label: 'Real Estate Offer',
+  icon: 'hand-coins',
   fields: {
     listing_id: Field.masterDetail('listing', { label: 'Listing', required: true }),
     buyer_id: Field.lookup('contact', { label: 'Buyer' }),

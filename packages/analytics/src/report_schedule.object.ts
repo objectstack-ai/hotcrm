@@ -3,6 +3,7 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 export const ReportSchedule = ObjectSchema.create({
   name: 'report_schedule',
   label: 'Report Schedule',
+  icon: 'clock',
   fields: {
     name: Field.text({ label: 'Schedule Name', required: true, maxLength: 255 }),
     report_id: Field.lookup('report', { label: 'Report', required: true }),
