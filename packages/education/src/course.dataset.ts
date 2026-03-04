@@ -3,7 +3,7 @@ import { CourseSeedData } from './course.seed.js';
 
 export const CourseDataset: DatasetInput = {
   object: 'course',
-  externalId: 'code',
+  externalId: 'course_code',
   mode: 'ignore',
   env: ['dev', 'test'],
   records: CourseSeedData,

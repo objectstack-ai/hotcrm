@@ -35,7 +35,6 @@ import { RevenueScheduleValidationTrigger, RevenueRecognitionComplianceTrigger }
 import { PaymentReminderWorkflows } from './payment_reminder.workflow.js';
 
 // Import datasets
-import { CurrencyDataset } from './currency.dataset.js';
 import { InvoiceDataset } from './invoice.dataset.js';
 import { PaymentDataset } from './payment.dataset.js';
 
@@ -115,8 +114,8 @@ export const FinancePlugin = {
   },
 
   // Seed data (DatasetSchema)
+  // Note: CurrencyDataset is registered in core (root config), not duplicated here.
   data: [
-    CurrencyDataset,
     InvoiceDataset,
     PaymentDataset,
   ],

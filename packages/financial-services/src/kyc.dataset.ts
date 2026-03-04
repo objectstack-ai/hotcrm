@@ -3,7 +3,7 @@ import { KycSeedData } from './kyc.seed.js';
 
 export const KycDataset: DatasetInput = {
   object: 'kyc',
-  externalId: 'client_name',
+  externalId: 'verification_type',
   mode: 'ignore',
   env: ['dev', 'test'],
   records: KycSeedData,

@@ -3,7 +3,7 @@ import { ShowingSeedData } from './showing.seed.js';
 
 export const ShowingDataset: DatasetInput = {
   object: 'showing',
-  externalId: 'buyer_name',
+  externalId: 'property_address',
   mode: 'ignore',
   env: ['dev', 'test'],
   records: ShowingSeedData,

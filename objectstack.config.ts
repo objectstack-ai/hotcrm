@@ -15,11 +15,11 @@ import { FinancialServicesPlugin } from './packages/financial-services/dist/plug
 import { ConsolePlugin } from '@object-ui/console';
 
 // Core system reference datasets (not part of any plugin)
-import { CurrencyDataset } from './packages/core/src/currency.dataset.js';
-import { CountryDataset } from './packages/core/src/country.dataset.js';
-import { IndustryDataset } from './packages/core/src/industry.dataset.js';
-import { TimezoneDataset } from './packages/core/src/timezone.dataset.js';
-import { LanguageDataset } from './packages/core/src/language.dataset.js';
+import { CurrencyDataset } from './packages/core/dist/currency.dataset.js';
+import { CountryDataset } from './packages/core/dist/country.dataset.js';
+import { IndustryDataset } from './packages/core/dist/industry.dataset.js';
+import { TimezoneDataset } from './packages/core/dist/timezone.dataset.js';
+import { LanguageDataset } from './packages/core/dist/language.dataset.js';
 
 /**
  * HotCRM Application Configuration

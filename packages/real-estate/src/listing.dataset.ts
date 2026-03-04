@@ -3,7 +3,7 @@ import { ListingSeedData } from './listing.seed.js';
 
 export const ListingDataset: DatasetInput = {
   object: 'listing',
-  externalId: 'mls_number',
+  externalId: 'property_address',
   mode: 'ignore',
   env: ['dev', 'test'],
   records: ListingSeedData,

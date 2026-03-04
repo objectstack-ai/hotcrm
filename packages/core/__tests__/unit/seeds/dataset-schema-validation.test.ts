@@ -182,4 +182,28 @@ describe('DatasetSchema Validation — All Packages', () => {
       expect(allDatasets.length).toBe(43);
     });
   });
+
+  describe('ExternalId field validation', () => {
+    it.each(allDatasets)('$name should have externalId field present in every record', ({ name, dataset }) => {
+      const externalIdField = dataset.externalId ?? 'name';
+      for (const record of dataset.records) {
+        const value = (record as Record<string, unknown>)[externalIdField];
+        expect(
+          value,
+          `${name}: record missing value for externalId field "${externalIdField}"`
+        ).toBeTruthy();
+      }
+    });
+
+    it.each(allDatasets)('$name should have non-empty externalId values', ({ name, dataset }) => {
+      const externalIdField = dataset.externalId ?? 'name';
+      for (const record of dataset.records) {
+        const value = (record as Record<string, unknown>)[externalIdField];
+        expect(
+          value !== null && value !== undefined && value !== '',
+          `${name}: record has empty externalId value for field "${externalIdField}"`
+        ).toBe(true);
+      }
+    });
+  });
 });

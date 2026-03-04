@@ -3,7 +3,7 @@ import { PrescriptionSeedData } from './prescription.seed.js';
 
 export const PrescriptionDataset: DatasetInput = {
   object: 'prescription',
-  externalId: 'medication_name',
+  externalId: 'patient_name',
   mode: 'ignore',
   env: ['dev', 'test'],
   records: PrescriptionSeedData,

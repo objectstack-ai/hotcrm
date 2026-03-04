@@ -87,21 +87,21 @@ export async function loadSeeds(env: string = 'dev'): Promise<void> {
 
     for (const dataset of datasets) {
       console.log(`[seed]   → ${dataset.object} (${dataset.records.length} records, mode: ${dataset.mode ?? 'upsert'})`);
-      // Actual data insertion requires @objectstack/runtime database connection.
-      // The dataset records are DatasetSchema-compliant and ready for the runtime seed API.
     }
 
     loaded.add(manifest.package);
   }
 
-  console.log('[seed] All packages loaded successfully.');
+  console.log('[seed] All datasets validated and enumerated successfully.');
+  console.log('[seed] NOTE: Actual data insertion requires @objectstack/runtime database connection.');
+  console.log('[seed] The dataset records are DatasetSchema-compliant and ready for the runtime seed API.');
 }
 
 export async function resetSeeds(): Promise<void> {
-  console.log('[seed] Resetting all seed data...');
-  // Reset requires @objectstack/runtime database connection.
-  // Implementation deferred until runtime seed API is available.
-  console.log('[seed] Seed data reset complete.');
+  console.error('[seed] ERROR: Reset is not yet implemented.');
+  console.error('[seed] Reset requires @objectstack/runtime database connection.');
+  console.error('[seed] Implementation deferred until runtime seed API is available.');
+  process.exit(1);
 }
 
 async function main(): Promise<void> {
