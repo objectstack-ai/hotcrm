@@ -72,6 +72,17 @@ describe('CRM UI Schema Compliance', () => {
     it('should validate against AppSchema', () => {
       expect(() => AppSchema.parse(HotCrmApp)).not.toThrow();
     });
+
+    it('should have an icon on every navigation child', () => {
+      for (const group of HotCrmApp.navigation) {
+        if (group.type === 'group' && group.children) {
+          for (const child of group.children) {
+            expect(child, `Navigation child "${child.label}" should have an icon`).toHaveProperty('icon');
+            expect((child as any).icon).toBeTruthy();
+          }
+        }
+      }
+    });
   });
 
   describe('Reports', () => {
