@@ -11,6 +11,7 @@ export const CreateInvoiceAction = {
   label: 'Create Invoice',
   icon: 'file-plus',
   type: 'modal' as const,
+  target: 'create_invoice',
   locations: ['record_header' as const, 'list_toolbar' as const],
   params: [
     { name: 'account_id', label: 'Account', type: 'lookup' as const, required: true },
@@ -27,6 +28,7 @@ export const RecordPaymentAction = {
   label: 'Record Payment',
   icon: 'credit-card',
   type: 'modal' as const,
+  target: 'record_payment',
   locations: ['record_header' as const],
   params: [
     { name: 'amount', label: 'Payment Amount', type: 'currency' as const, required: true },
@@ -44,6 +46,7 @@ export const SendReminderAction = {
   label: 'Send Reminder',
   icon: 'bell',
   type: 'modal' as const,
+  target: 'send_reminder',
   locations: ['record_header' as const, 'list_item' as const],
   params: [
     { name: 'reminder_type', label: 'Reminder Type', type: 'select' as const, required: false, options: [{ label: 'Payment Due', value: 'payment_due' }, { label: 'Overdue', value: 'overdue' }, { label: 'Final Notice', value: 'final_notice' }] },

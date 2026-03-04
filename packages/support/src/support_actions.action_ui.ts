@@ -11,6 +11,7 @@ export const EscalateCaseAction = {
   label: 'Escalate Case',
   icon: 'arrow-up-circle',
   type: 'modal' as const,
+  target: 'escalate_case',
   locations: ['record_header' as const, 'list_item' as const],
   params: [
     { name: 'escalation_reason', label: 'Reason', type: 'select' as const, required: true, options: [{ label: 'SLA Breach', value: 'sla_breach' }, { label: 'Customer Request', value: 'customer_request' }, { label: 'Technical Complexity', value: 'technical_complexity' }, { label: 'Executive Escalation', value: 'executive_escalation' }] },
@@ -28,6 +29,7 @@ export const MergeCasesAction = {
   label: 'Merge Cases',
   icon: 'git-merge',
   type: 'modal' as const,
+  target: 'merge_cases',
   locations: ['list_toolbar' as const],
   params: [
     { name: 'primary_case', label: 'Primary Case', type: 'lookup' as const, required: true },
@@ -45,6 +47,7 @@ export const CreateKnowledgeArticleAction = {
   label: 'Create Knowledge Article',
   icon: 'book-open',
   type: 'modal' as const,
+  target: 'create_knowledge_article',
   locations: ['record_header' as const, 'record_more' as const],
   params: [
     { name: 'title', label: 'Article Title', type: 'text' as const, required: true },
