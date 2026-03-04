@@ -35,6 +35,12 @@ import { HipaaAuditTrail, HipaaAnomalyDetection } from './hipaa_audit.hook.js';
 // Import actions
 import HealthcareAIAction from './healthcare_ai.action.js';
 
+// Import datasets
+import { PatientDataset } from './patient.dataset.js';
+import { AppointmentDataset } from './appointment.dataset.js';
+import { InsuranceDataset } from './insurance.dataset.js';
+import { PrescriptionDataset } from './prescription.dataset.js';
+
 /**
  * Healthcare Plugin Definition
  *
@@ -86,6 +92,14 @@ export const HealthcarePlugin = {
     hipaa_audit_trail: HipaaAuditTrail,
     hipaa_anomaly_detection: HipaaAnomalyDetection,
   },
+
+  // Seed data (DatasetSchema)
+  data: [
+    PatientDataset,
+    InsuranceDataset,
+    AppointmentDataset,
+    PrescriptionDataset,
+  ],
 
   // Apps provided by this plugin
   apps: [
