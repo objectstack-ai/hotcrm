@@ -52,6 +52,10 @@ import { PortalUserAccountValidationTrigger, PortalUserAccessLevelTrigger } from
 import { SocialMediaCasePlatformValidationTrigger, SocialMediaCaseSentimentAnalysisTrigger, SocialMediaCaseCreationTrigger } from './hooks/social_media_case.hook.js';
 import { CaseEscalationWorkflows } from './case_escalation.workflow.js';
 
+// Import datasets
+import { CaseDataset } from './case.dataset.js';
+import { KbArticleDataset } from './kb_article.dataset.js';
+
 // Import actions
 import CaseAIAction from './actions/case_ai.action.js';
 import ServiceMetricsAction from './actions/service_metrics.action.js';
@@ -139,6 +143,12 @@ export const SupportPlugin = {
     case_stale_check: CaseEscalationWorkflows.staleCheck,
     case_first_response_sla: CaseEscalationWorkflows.firstResponseSLA,
   },
+
+  // Seed data (DatasetSchema)
+  data: [
+    KbArticleDataset,
+    CaseDataset,
+  ],
 
   // Apps provided by this plugin
   apps: [
