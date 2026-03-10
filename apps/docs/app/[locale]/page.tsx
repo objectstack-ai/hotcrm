@@ -63,7 +63,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300">
             <Link
               href="/docs/getting-started/introduction"
-              className="hero-cta-primary inline-flex h-12 items-center justify-center rounded-lg bg-primary px-8 text-base font-medium text-primary-foreground shadow-lg transition-all hover:shadow-primary/25 hover:shadow-xl"
+              className="hero-cta-primary inline-flex h-12 items-center justify-center rounded-full bg-primary px-8 text-base font-medium text-primary-foreground shadow-lg transition-colors hover:bg-primary/90"
             >
               {dict.home.getStarted}
               <ArrowRight className="ml-2 w-5 h-5" />
@@ -71,7 +71,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             <Link
               href="https://github.com/objectstack-ai/hotcrm"
               target="_blank"
-              className="inline-flex h-12 items-center justify-center rounded-lg border border-border bg-background/50 backdrop-blur-sm px-8 text-base font-medium shadow-sm transition-all hover:bg-accent hover:text-accent-foreground"
+              className="inline-flex h-12 items-center justify-center rounded-full border border-foreground/30 bg-background/50 backdrop-blur-sm px-8 text-base font-medium shadow-sm transition-all hover:bg-accent hover:text-accent-foreground"
             >
               {dict.home.viewOnGithub}
             </Link>
@@ -350,7 +350,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           <p className="text-muted-foreground mb-8">{dict.home.pricingSubtitle}</p>
           <Link
             href={`/${locale}/docs/getting-started/introduction`}
-            className="inline-flex h-11 items-center justify-center rounded-lg border border-border bg-background px-6 text-sm font-medium transition-all hover:bg-accent hover:text-accent-foreground"
+            className="inline-flex h-11 items-center justify-center rounded-full border border-foreground/30 bg-background px-6 text-sm font-medium transition-all hover:bg-accent hover:text-accent-foreground"
           >
             {dict.home.pricingCta}
             <ArrowRight className="ml-2 w-4 h-4" />
@@ -367,7 +367,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <Link
               href="/docs/getting-started/introduction"
-              className="inline-flex h-12 items-center justify-center rounded-lg bg-foreground text-background px-8 text-base font-medium transition-all hover:bg-foreground/90 hover:shadow-lg"
+              className="inline-flex h-12 items-center justify-center rounded-full bg-primary px-8 text-base font-medium text-primary-foreground transition-colors hover:bg-primary/90"
             >
               {dict.home.readDocs}
               <ArrowRight className="ml-2 w-5 h-5" />
@@ -375,7 +375,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             <Link
               href="https://github.com/objectstack-ai/hotcrm"
               target="_blank"
-              className="inline-flex h-12 items-center justify-center rounded-lg border border-border bg-background/50 backdrop-blur-sm px-8 text-base font-medium shadow-sm transition-all hover:bg-accent hover:text-accent-foreground"
+              className="inline-flex h-12 items-center justify-center rounded-full border border-foreground/30 bg-background/50 backdrop-blur-sm px-8 text-base font-medium shadow-sm transition-all hover:bg-accent hover:text-accent-foreground"
             >
               {dict.home.starOnGithub}
             </Link>
