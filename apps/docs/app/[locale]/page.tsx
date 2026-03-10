@@ -3,11 +3,12 @@ import {
   ArrowRight, Bot, TrendingUp, Users, Shield, Zap, Globe, Target,
   LifeBuoy, Megaphone, Banknote, LayoutTemplate, CheckCircle2,
   Building2, Briefcase, ShoppingCart, Factory, HeartPulse, Lightbulb,
-  Mail, MessageSquare, Calendar, FileText, Lock, Award, Play,
+  Mail, Lock, Award, Play,
 } from 'lucide-react';
 import { getDictionary, locales } from '@/lib/i18n';
 import type { Locale } from '@/lib/i18n';
 import type { Metadata } from 'next';
+import { IntegrationMarquee } from '@/components/marketing/integration-marquee';
 
 export function generateStaticParams() {
   return locales.map(locale => ({ locale }));
@@ -310,21 +311,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           <p className="text-muted-foreground text-lg">{dict.home.integrationsSubtitle}</p>
         </div>
 
-        <div className="grid grid-cols-3 md:grid-cols-6 gap-8 items-center justify-items-center">
-          {[
-            { name: 'Email', icon: <Mail className="w-8 h-8" /> },
-            { name: 'Chat', icon: <MessageSquare className="w-8 h-8" /> },
-            { name: 'Calendar', icon: <Calendar className="w-8 h-8" /> },
-            { name: 'Docs', icon: <FileText className="w-8 h-8" /> },
-            { name: 'CRM', icon: <Users className="w-8 h-8" /> },
-            { name: 'API', icon: <Zap className="w-8 h-8" /> },
-          ].map(integration => (
-            <div key={integration.name} className="integration-item flex flex-col items-center gap-2 text-muted-foreground/60 hover:text-primary transition-colors cursor-pointer">
-              {integration.icon}
-              <span className="text-xs font-medium">{integration.name}</span>
-            </div>
-          ))}
-        </div>
+        <IntegrationMarquee />
       </section>
 
       {/* Security & Compliance */}

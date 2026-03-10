@@ -104,6 +104,50 @@
   transform: scale(1.1);
 }
 
+/* ── Integration Marquee ───────────────────────────────────────── */
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+@keyframes marquee-reverse {
+  from { transform: translateX(-50%); }
+  to   { transform: translateX(0); }
+}
+
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee 30s linear infinite;
+}
+
+.marquee-track-reverse {
+  display: flex;
+  width: max-content;
+  animation: marquee-reverse 35s linear infinite;
+}
+
+.marquee-wrap {
+  overflow: hidden;
+  mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent);
+}
+
+.marquee-wrap:hover .marquee-track,
+.marquee-wrap:hover .marquee-track-reverse {
+  animation-play-state: paused;
+}
+
+.integration-logo-card {
+  transition: all 0.25s ease;
+}
+
+.integration-logo-card:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 8px 24px -6px hsl(var(--primary) / 0.15);
+}
+
 /* ── CTA Glow ──────────────────────────────────────────────────── */
 
 .cta-glow {
