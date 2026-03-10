@@ -269,18 +269,21 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             author={dict.home.testimonial1Author}
             role={dict.home.testimonial1Role}
             company={dict.home.testimonial1Company}
+            avatarImg={1}
           />
           <TestimonialCard
             quote={dict.home.testimonial2Quote}
             author={dict.home.testimonial2Author}
             role={dict.home.testimonial2Role}
             company={dict.home.testimonial2Company}
+            avatarImg={11}
           />
           <TestimonialCard
             quote={dict.home.testimonial3Quote}
             author={dict.home.testimonial3Author}
             role={dict.home.testimonial3Role}
             company={dict.home.testimonial3Company}
+            avatarImg={20}
           />
         </div>
       </section>
@@ -450,16 +453,15 @@ function AIFeatureCard({ icon, title, description }: { icon: React.ReactNode; ti
   );
 }
 
-function TestimonialCard({ quote, author, role, company }: { quote: string; author: string; role: string; company: string }) {
+function TestimonialCard({ quote, author, role, company, avatarImg }: { quote: string; author: string; role: string; company: string; avatarImg: number }) {
   return (
     <div className="testimonial-card rounded-xl border border-border/60 bg-card p-8 transition-all hover:border-primary/40 hover:shadow-lg">
       <div className="mb-6">
         <p className="text-muted-foreground leading-relaxed italic">&quot;{quote}&quot;</p>
       </div>
       <div className="flex items-center gap-3">
-        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold">
-          {author.charAt(0)}
-        </div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={`https://i.pravatar.cc/150?img=${avatarImg}`} alt={author} className="w-10 h-10 rounded-full object-cover shrink-0" />
         <div>
           <p className="font-semibold">{author}</p>
           <p className="text-sm text-muted-foreground">{role}</p>
