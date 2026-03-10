@@ -75,7 +75,7 @@ export function ProductPageTemplate({
       </section>
 
       {/* Features Grid */}
-      <section className="bg-muted/20 border-y border-border/40 py-24">
+      <section className="bg-slate-50 py-24">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">{dict.products.keyCapabilities}</h2>
           <p className="text-muted-foreground text-lg mb-12">{dict.products.features}</p>
@@ -83,7 +83,7 @@ export function ProductPageTemplate({
             {features.map((feature, i) => (
               <div
                 key={i}
-                className="rounded-xl border border-border/60 bg-card p-6 transition-all hover:border-primary/40 hover:shadow-md"
+                className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm hover:shadow-md transition-shadow hover:border-primary/40"
               >
                 <div className="flex items-start gap-3 mb-3">
                   <CheckCircle className="w-5 h-5 text-primary shrink-0 mt-0.5" />

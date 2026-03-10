@@ -29,7 +29,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   return (
     <div className="flex flex-col">
       {/* Hero Section */}
-      <section className="hero-section relative overflow-hidden pt-24 pb-36 md:pt-36 md:pb-52">
+      <section className="hero-section relative overflow-hidden pt-24 pb-36 md:pt-36 md:pb-52 bg-white">
         <div className="hero-glow-1" />
         <div className="hero-glow-2" />
         <div className="hero-grid" />
@@ -88,7 +88,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       </section>
 
       {/* Customer Logo Wall */}
-      <section className="border-y border-border/40 bg-muted/20 py-10">
+      <section className="bg-slate-50 border-y border-border/40 py-10">
         <div className="container mx-auto px-4">
           <p className="text-center text-sm text-muted-foreground mb-6 uppercase tracking-wider font-medium">
             {dict.home.trustTitle}
@@ -137,7 +137,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       </section>
 
       {/* Product Showcase */}
-      <section className="bg-muted/20 border-y border-border/40 py-24">
+      <section className="bg-slate-50 py-24">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <div className="inline-flex items-center gap-2 px-3 py-1 mb-6 text-xs font-semibold bg-primary/10 text-primary rounded-full uppercase tracking-wider border border-primary/20">
@@ -168,59 +168,61 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       </section>
 
       {/* Solutions Grid */}
-      <section className="container mx-auto px-4 py-24">
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">{dict.home.solutionsTitle}</h2>
-          <p className="text-muted-foreground text-lg">{dict.home.solutionsSubtitle}</p>
-        </div>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          <SolutionCard
-            icon={<TrendingUp className="w-6 h-6" />}
-            title={dict.home.salesTitle}
-            description={dict.home.salesDesc}
-            href={`/${locale}/products/sales`}
-            cta={dict.home.learnMore}
-          />
-          <SolutionCard
-            icon={<LifeBuoy className="w-6 h-6" />}
-            title={dict.home.serviceTitle}
-            description={dict.home.serviceDesc}
-            href={`/${locale}/products/service`}
-            cta={dict.home.learnMore}
-          />
-          <SolutionCard
-            icon={<Megaphone className="w-6 h-6" />}
-            title={dict.home.marketingTitle}
-            description={dict.home.marketingDesc}
-            href={`/${locale}/products/marketing`}
-            cta={dict.home.learnMore}
-          />
-          <SolutionCard
-            icon={<Banknote className="w-6 h-6" />}
-            title={dict.home.revenueTitle}
-            description={dict.home.revenueDesc}
-            href={`/${locale}/products/revenue`}
-            cta={dict.home.learnMore}
-          />
-          <SolutionCard
-            icon={<Users className="w-6 h-6" />}
-            title={dict.home.hrTitle}
-            description={dict.home.hrDesc}
-            href={`/${locale}/products/hr`}
-            cta={dict.home.learnMore}
-          />
-          <SolutionCard
-            icon={<LayoutTemplate className="w-6 h-6" />}
-            title={dict.home.platformTitle}
-            description={dict.home.platformDesc}
-            href={`/${locale}/products/platform`}
-            cta={dict.home.learnMore}
-          />
+      <section className="bg-slate-50 py-24">
+        <div className="container mx-auto px-4">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">{dict.home.solutionsTitle}</h2>
+            <p className="text-muted-foreground text-lg">{dict.home.solutionsSubtitle}</p>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <SolutionCard
+              icon={<TrendingUp className="w-6 h-6" />}
+              title={dict.home.salesTitle}
+              description={dict.home.salesDesc}
+              href={`/${locale}/products/sales`}
+              cta={dict.home.learnMore}
+            />
+            <SolutionCard
+              icon={<LifeBuoy className="w-6 h-6" />}
+              title={dict.home.serviceTitle}
+              description={dict.home.serviceDesc}
+              href={`/${locale}/products/service`}
+              cta={dict.home.learnMore}
+            />
+            <SolutionCard
+              icon={<Megaphone className="w-6 h-6" />}
+              title={dict.home.marketingTitle}
+              description={dict.home.marketingDesc}
+              href={`/${locale}/products/marketing`}
+              cta={dict.home.learnMore}
+            />
+            <SolutionCard
+              icon={<Banknote className="w-6 h-6" />}
+              title={dict.home.revenueTitle}
+              description={dict.home.revenueDesc}
+              href={`/${locale}/products/revenue`}
+              cta={dict.home.learnMore}
+            />
+            <SolutionCard
+              icon={<Users className="w-6 h-6" />}
+              title={dict.home.hrTitle}
+              description={dict.home.hrDesc}
+              href={`/${locale}/products/hr`}
+              cta={dict.home.learnMore}
+            />
+            <SolutionCard
+              icon={<LayoutTemplate className="w-6 h-6" />}
+              title={dict.home.platformTitle}
+              description={dict.home.platformDesc}
+              href={`/${locale}/products/platform`}
+              cta={dict.home.learnMore}
+            />
+          </div>
         </div>
       </section>
 
       {/* AI Differentiator Section */}
-      <section className="bg-muted/20 border-y border-border/40 py-24">
+      <section className="bg-white py-24">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">{dict.home.aiSectionTitle}</h2>
@@ -278,7 +280,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       </section>
 
       {/* Industry Solutions */}
-      <section className="bg-muted/20 border-y border-border/40 py-24">
+      <section className="bg-slate-50 py-24">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">{dict.home.industryTitle}</h2>
@@ -321,7 +323,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       </section>
 
       {/* Security & Compliance */}
-      <section className="bg-muted/20 border-y border-border/40 py-24">
+      <section className="bg-white py-24">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">{dict.home.securityTitle}</h2>
@@ -350,7 +352,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       </section>
 
       {/* Pricing Entry Point */}
-      <section className="bg-muted/20 border-y border-border/40 py-16">
+      <section className="bg-slate-50 py-16">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-2xl md:text-3xl font-bold mb-4">{dict.home.pricingTitle}</h2>
           <p className="text-muted-foreground mb-8">{dict.home.pricingSubtitle}</p>
@@ -396,7 +398,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 
 function ValueCard({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
   return (
-    <div className="value-card group relative rounded-xl border border-border/60 bg-card p-8 transition-all hover:border-primary/40 hover:shadow-lg">
+    <div className="value-card group relative rounded-xl border border-gray-100 bg-white p-8 shadow-sm hover:shadow-md transition-shadow hover:border-primary/40">
       <div className="glow-card-shine" />
       <div className="relative z-10">
         <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-5 group-hover:bg-primary/15 transition-colors">
@@ -411,7 +413,7 @@ function ValueCard({ icon, title, description }: { icon: React.ReactNode; title:
 
 function FeatureCard({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
   return (
-    <div className="flex flex-col items-start gap-4 rounded-xl border border-border/60 bg-card p-6 transition-all hover:border-primary/40 hover:shadow-md">
+    <div className="flex flex-col items-start gap-4 rounded-xl border border-gray-100 bg-white p-6 shadow-sm hover:shadow-md transition-shadow hover:border-primary/40">
       <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
         {icon}
       </div>
@@ -426,7 +428,7 @@ function FeatureCard({ icon, title, description }: { icon: React.ReactNode; titl
 function SolutionCard({ icon, title, description, href, cta }: { icon: React.ReactNode; title: string; description: string; href: string; cta: string }) {
   return (
     <Link href={href} className="group block">
-      <div className="flex flex-col gap-4 rounded-xl border border-border/60 bg-card p-6 transition-all hover:border-primary/40 hover:shadow-md hover:bg-accent/30 h-full">
+      <div className="flex flex-col gap-4 rounded-xl border border-gray-100 bg-white p-6 shadow-sm hover:shadow-md transition-shadow hover:border-primary/40 h-full">
         <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary/15 transition-colors">
           {icon}
         </div>
@@ -444,7 +446,7 @@ function SolutionCard({ icon, title, description, href, cta }: { icon: React.Rea
 
 function AIFeatureCard({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
   return (
-    <div className="flex items-start gap-4 rounded-xl border border-border/60 bg-card p-6">
+    <div className="flex items-start gap-4 rounded-xl border border-gray-100 bg-white p-6 shadow-sm hover:shadow-md transition-shadow hover:border-primary/40">
       <div className="w-10 h-10 rounded-lg bg-primary/10 flex shrink-0 items-center justify-center text-primary">
         {icon}
       </div>
@@ -458,7 +460,7 @@ function AIFeatureCard({ icon, title, description }: { icon: React.ReactNode; ti
 
 function TestimonialCard({ quote, author, role, company }: { quote: string; author: string; role: string; company: string }) {
   return (
-    <div className="testimonial-card rounded-xl border border-border/60 bg-card p-8 transition-all hover:border-primary/40 hover:shadow-lg">
+    <div className="testimonial-card rounded-xl border border-gray-100 bg-white p-8 shadow-sm hover:shadow-md transition-shadow hover:border-primary/40">
       <div className="mb-6">
         <p className="text-muted-foreground leading-relaxed italic">&quot;{quote}&quot;</p>
       </div>
@@ -478,7 +480,7 @@ function TestimonialCard({ quote, author, role, company }: { quote: string; auth
 
 function IndustryCard({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
   return (
-    <div className="flex items-start gap-4 rounded-xl border border-border/60 bg-card p-6 transition-all hover:border-primary/40 hover:shadow-md">
+    <div className="flex items-start gap-4 rounded-xl border border-gray-100 bg-white p-6 shadow-sm hover:shadow-md transition-shadow hover:border-primary/40">
       <div className="w-10 h-10 rounded-lg bg-primary/10 flex shrink-0 items-center justify-center text-primary">
         {icon}
       </div>
@@ -492,7 +494,7 @@ function IndustryCard({ icon, title, description }: { icon: React.ReactNode; tit
 
 function SecurityBadge({ icon, text }: { icon: React.ReactNode; text: string }) {
   return (
-    <div className="flex items-center gap-3 rounded-lg border border-border/60 bg-card px-4 py-3">
+    <div className="flex items-center gap-3 rounded-lg border border-gray-100 bg-white px-4 py-3 shadow-sm hover:shadow-md transition-shadow">
       <div className="text-primary shrink-0">{icon}</div>
       <span className="text-sm font-medium">{text}</span>
     </div>
