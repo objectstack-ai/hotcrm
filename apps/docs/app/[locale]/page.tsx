@@ -19,6 +19,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   return {
     title: `HotCRM - ${dict.home.badge}`,
     description: dict.home.subtitle,
+    alternates: {
+      languages: {
+        'en': '/en',
+        'zh': '/zh',
+        'x-default': '/en',
+      },
+    },
   };
 }
 
