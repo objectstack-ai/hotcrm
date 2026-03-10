@@ -8,6 +8,7 @@ import {
 import { getDictionary, locales } from '@/lib/i18n';
 import type { Locale } from '@/lib/i18n';
 import type { Metadata } from 'next';
+import { AnimatedGrid } from '@/components/marketing/animated-grid';
 
 export function generateStaticParams() {
   return locales.map(locale => ({ locale }));
@@ -173,7 +174,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           <h2 className="text-3xl md:text-4xl font-bold mb-4">{dict.home.solutionsTitle}</h2>
           <p className="text-muted-foreground text-lg">{dict.home.solutionsSubtitle}</p>
         </div>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <AnimatedGrid className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           <SolutionCard
             icon={<TrendingUp className="w-6 h-6" />}
             title={dict.home.salesTitle}
@@ -216,7 +217,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             href={`/${locale}/products/platform`}
             cta={dict.home.learnMore}
           />
-        </div>
+        </AnimatedGrid>
       </section>
 
       {/* AI Differentiator Section */}
@@ -285,14 +286,14 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             <p className="text-muted-foreground text-lg">{dict.home.industrySubtitle}</p>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <AnimatedGrid className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             <IndustryCard icon={<Globe className="w-6 h-6" />} title={dict.home.industryTech} description={dict.home.industryTechDesc} />
             <IndustryCard icon={<Building2 className="w-6 h-6" />} title={dict.home.industryFinance} description={dict.home.industryFinanceDesc} />
             <IndustryCard icon={<ShoppingCart className="w-6 h-6" />} title={dict.home.industryRetail} description={dict.home.industryRetailDesc} />
             <IndustryCard icon={<Factory className="w-6 h-6" />} title={dict.home.industryManufacturing} description={dict.home.industryManufacturingDesc} />
             <IndustryCard icon={<HeartPulse className="w-6 h-6" />} title={dict.home.industryHealthcare} description={dict.home.industryHealthcareDesc} />
             <IndustryCard icon={<Briefcase className="w-6 h-6" />} title={dict.home.industryProfessional} description={dict.home.industryProfessionalDesc} />
-          </div>
+          </AnimatedGrid>
         </div>
       </section>
 
@@ -426,7 +427,7 @@ function FeatureCard({ icon, title, description }: { icon: React.ReactNode; titl
 function SolutionCard({ icon, title, description, href, cta }: { icon: React.ReactNode; title: string; description: string; href: string; cta: string }) {
   return (
     <Link href={href} className="group block">
-      <div className="flex flex-col gap-4 rounded-xl border border-border/60 bg-card p-6 transition-all hover:border-primary/40 hover:shadow-md hover:bg-accent/30 h-full">
+      <div className="flex flex-col gap-4 rounded-xl border border-border/60 bg-card p-6 transition-all duration-300 hover:border-primary/40 hover:shadow-xl hover:-translate-y-1 hover:bg-accent/30 h-full">
         <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary/15 transition-colors">
           {icon}
         </div>
@@ -478,7 +479,7 @@ function TestimonialCard({ quote, author, role, company }: { quote: string; auth
 
 function IndustryCard({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
   return (
-    <div className="flex items-start gap-4 rounded-xl border border-border/60 bg-card p-6 transition-all hover:border-primary/40 hover:shadow-md">
+    <div className="flex items-start gap-4 rounded-xl border border-border/60 bg-card p-6 transition-all duration-300 hover:border-primary/40 hover:shadow-xl hover:-translate-y-1">
       <div className="w-10 h-10 rounded-lg bg-primary/10 flex shrink-0 items-center justify-center text-primary">
         {icon}
       </div>

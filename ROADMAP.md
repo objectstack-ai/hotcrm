@@ -195,6 +195,7 @@ These items were deferred during Phase 13 and have been completed:
 
 - [x] **Docs homepage redesign** — Redesigned `apps/docs/app/(home)/page.tsx` to match Linear/Stripe/Vercel standards; multi-layer glow Hero, Trust Block, 3-column glow cards, code highlight, compact Solution Grid, updated Stats, differentiated CTA with `npx` command; custom CSS animations in `global.css`; dark/light mode compatible
 - [x] **Docs homepage transformation (Issue #245)** — Completely rebuilt homepage as customer-facing enterprise CRM website; replaced developer-oriented content with business value propositions; added 11 new sections (customer logos, testimonials, AI differentiator, industry solutions, integrations, security, pricing); transformed all copy in en.ts and zh.ts to business language; replaced terminal/code blocks with product showcase placeholders; changed CTAs from "Get Started"/"Star on GitHub" to "Start Free Trial"/"Book a Demo"; stats now show customer metrics (12,500+ customers, 85 countries, 47% productivity gain, 20+ industries) instead of engineering metrics
+- [x] **Card hover & scroll animations** — Added hover lift effect (`hover:-translate-y-1 hover:shadow-xl`) and scroll-triggered fade-in-up animations to SolutionCard and IndustryCard grids; implemented via Intersection Observer (`useInView` hook) and CSS `@keyframes fadeInUp` with staggered delays; extracted animated grid into `AnimatedGrid` client component
 
 #### Deferred / Future
 
