@@ -54,15 +54,14 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300">
             <Link
-              href="/docs/getting-started/introduction"
+              href="/signup"
               className="hero-cta-primary inline-flex h-12 items-center justify-center rounded-lg bg-primary px-8 text-base font-medium text-primary-foreground shadow-lg transition-all hover:shadow-primary/25 hover:shadow-xl"
             >
               {dict.home.getStarted}
               <ArrowRight className="ml-2 w-5 h-5" />
             </Link>
             <Link
-              href="https://github.com/objectstack-ai/hotcrm"
-              target="_blank"
+              href="/book-demo"
               className="inline-flex h-12 items-center justify-center rounded-lg border border-border bg-background/50 backdrop-blur-sm px-8 text-base font-medium shadow-sm transition-all hover:bg-accent hover:text-accent-foreground"
             >
               {dict.home.viewOnGithub}
@@ -372,15 +371,14 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           <p className="text-lg text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed">{dict.home.ctaSubtitle}</p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <Link
-              href="/docs/getting-started/introduction"
+              href="/signup"
               className="inline-flex h-12 items-center justify-center rounded-lg bg-foreground text-background px-8 text-base font-medium transition-all hover:bg-foreground/90 hover:shadow-lg"
             >
               {dict.home.readDocs}
               <ArrowRight className="ml-2 w-5 h-5" />
             </Link>
             <Link
-              href="https://github.com/objectstack-ai/hotcrm"
-              target="_blank"
+              href="/book-demo"
               className="inline-flex h-12 items-center justify-center rounded-lg border border-border bg-background/50 backdrop-blur-sm px-8 text-base font-medium shadow-sm transition-all hover:bg-accent hover:text-accent-foreground"
             >
               {dict.home.starOnGithub}
