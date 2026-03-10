@@ -2,6 +2,17 @@
 @import 'fumadocs-ui/css/neutral.css';
 @import 'fumadocs-ui/css/preset.css';
 
+/* ── Brand Primary Color (extracted from HotCRM flame logo: #EF4444) ── */
+:root {
+  --primary: 0 84% 60%;
+  --primary-foreground: 0 0% 100%;
+}
+
+.dark {
+  --primary: 0 84% 60%;
+  --primary-foreground: 0 0% 100%;
+}
+
 /* ── Hero Section ──────────────────────────────────────────────── */
 
 .hero-section {
