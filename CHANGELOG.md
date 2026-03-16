@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- **Upgraded @objectstack/* to v3.2.6 and @object-ui/console to v3.1.3** (March 2026)
+  - @objectstack/spec: ^3.2.1 → ^3.2.6
+  - @objectstack/cli: ^3.2.1 → ^3.2.6
+  - @objectstack/runtime: ^3.2.1 → ^3.2.6
+  - @objectstack/plugin-hono-server: ^3.2.1 → ^3.2.6
+  - @objectstack/objectql: ^3.2.1 → ^3.2.6
+  - @objectstack/driver-memory: ^3.2.1 → ^3.2.6
+  - @objectstack/studio: ^3.2.1 → ^3.2.6
+  - @objectstack/core: ^3.2.1 → ^3.2.6
+  - @objectstack/metadata: ^3.2.1 → ^3.2.6
+  - @object-ui/console: ^3.1.2 → ^3.1.3
+  - All 4036 tests passing (196 test files) with zero breaking changes
+
 - **Upgraded @objectstack to v3.0.6 and @object-ui/console to v3.0.3** (February 16, 2026)
   - @objectstack/spec: ^3.0.3 → ^3.0.6
   - @objectstack/cli: ^3.0.3 → ^3.0.6
