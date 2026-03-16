@@ -12,12 +12,15 @@ interface IntegrationLogo {
 
 /* ── Brand SVG icons ──────────────────────────────────────────────────────── */
 
-const GoogleWorkspaceSvg = () => (
+const GmailSvg = () => (
   <svg viewBox="0 0 24 24" className="w-7 h-7" fill="none" aria-hidden="true">
-    <path d="M12 11.25v1.75H17.19C16.69 14.84 14.62 16 12 16a5 5 0 1 1 0-10c1.36 0 2.59.54 3.5 1.41L16.91 6A7 7 0 1 0 12 19c3.87 0 7-2.56 7-7 0-.47-.05-.93-.13-1.38L12 11.25Z" fill="#4285F4"/>
-    <path d="M4 10.31 6.64 12.5A5 5 0 0 1 12 7c1.36 0 2.59.54 3.5 1.41L16.91 7A7 7 0 0 0 4 10.31Z" fill="#EA4335"/>
-    <path d="M12 19c2.15 0 4.07-.72 5.57-1.93L15 15a5 5 0 0 1-7.64-2.5L4 14.69A7 7 0 0 0 12 19Z" fill="#34A853"/>
-    <path d="M19 12c0-.47-.05-.93-.13-1.38L12 11.25V13h5.19A5 5 0 0 1 15 15l2.57 2.07A7 7 0 0 0 19 12Z" fill="#FBBC05"/>
+    <path d="M2 6.5A2.5 2.5 0 0 1 4.5 4h15A2.5 2.5 0 0 1 22 6.5V17.5A2.5 2.5 0 0 1 19.5 20h-15A2.5 2.5 0 0 1 2 17.5V6.5Z" fill="white"/>
+    <path d="M2 6.5 12 13l10-6.5" stroke="#EA4335" strokeWidth="0.5" fill="none"/>
+    <path d="M4 4h16L12 11 4 4Z" fill="#EA4335"/>
+    <path d="M2 7.5V18a1 1 0 0 0 1 1h4V10.5L2 7.5Z" fill="#4285F4"/>
+    <path d="M22 7.5V18a1 1 0 0 1-1 1h-4V10.5l5-3Z" fill="#34A853"/>
+    <path d="M7 10.5V19h10v-8.5L12 14l-5-3.5Z" fill="#FBBC05"/>
+    <path d="M4 4l8 7 8-7H4Z" fill="#EA4335"/>
   </svg>
 );
 
@@ -31,6 +34,22 @@ const SlackSvg = () => (
     <path d="M17.91 8.18a2.1 2.1 0 0 1-2.09 2.1 2.1 2.1 0 0 1-2.1-2.1V2.95a2.1 2.1 0 0 1 2.1-2.09 2.1 2.1 0 0 1 2.09 2.09v5.23Z" fill="#2EB67D"/>
     <path d="M15.82 18.96a2.1 2.1 0 0 1 2.09 2.09 2.1 2.1 0 0 1-2.09 2.09 2.1 2.1 0 0 1-2.1-2.09v-2.09h2.1Z" fill="#ECB22E"/>
     <path d="M15.82 17.91a2.1 2.1 0 0 1-2.1-2.09 2.1 2.1 0 0 1 2.1-2.1h5.22a2.1 2.1 0 0 1 2.1 2.1 2.1 2.1 0 0 1-2.1 2.09h-5.22Z" fill="#ECB22E"/>
+  </svg>
+);
+
+const GoogleCalendarSvg = () => (
+  <svg viewBox="0 0 24 24" className="w-7 h-7" fill="none" aria-hidden="true">
+    <rect x="3" y="5" width="18" height="16" rx="2" fill="white" stroke="#E0E0E0" strokeWidth="0.5"/>
+    <rect x="3" y="5" width="18" height="5.5" rx="2" fill="#1A73E8"/>
+    <rect x="3" y="8.5" width="18" height="2" fill="#1A73E8"/>
+    <circle cx="8" cy="5" r="1.5" fill="white"/>
+    <circle cx="16" cy="5" r="1.5" fill="white"/>
+    <rect x="7" y="13" width="3" height="1.5" rx="0.5" fill="#1A73E8"/>
+    <rect x="11" y="13" width="3" height="1.5" rx="0.5" fill="#1A73E8"/>
+    <rect x="15" y="13" width="2" height="1.5" rx="0.5" fill="#EA4335"/>
+    <rect x="7" y="16" width="2" height="1.5" rx="0.5" fill="#1A73E8"/>
+    <rect x="11" y="16" width="3" height="1.5" rx="0.5" fill="#1A73E8"/>
+    <rect x="15" y="16" width="2" height="1.5" rx="0.5" fill="#34A853"/>
   </svg>
 );
 
@@ -151,9 +170,9 @@ const JiraSvg = () => (
 /* ── Data ─────────────────────────────────────────────────────────────────── */
 
 const ROW_1: IntegrationLogo[] = [
-  { name: 'Google Workspace', svg: <GoogleWorkspaceSvg /> },
+  { name: 'Gmail',            svg: <GmailSvg /> },
   { name: 'Slack',            svg: <SlackSvg /> },
-  { name: 'Microsoft Teams',  svg: <MicrosoftTeamsSvg /> },
+  { name: 'Google Calendar',  svg: <GoogleCalendarSvg /> },
   { name: 'Zendesk',          svg: <ZendeskSvg /> },
   { name: 'GitHub',           svg: <GithubSvg /> },
   { name: 'Salesforce',       svg: <SalesforceSvg /> },
@@ -161,15 +180,16 @@ const ROW_1: IntegrationLogo[] = [
 ];
 
 const ROW_2: IntegrationLogo[] = [
-  { name: 'HubSpot',  svg: <HubspotSvg /> },
-  { name: 'Zoom',     svg: <ZoomSvg /> },
-  { name: 'Stripe',   svg: <StripeSvg /> },
-  { name: 'Twilio',   svg: <TwilioSvg /> },
-  { name: 'LinkedIn', svg: <LinkedInSvg /> },
-  { name: 'Shopify',  svg: <ShopifySvg /> },
-  { name: 'Outlook',  svg: <OutlookSvg /> },
-  { name: 'Asana',    svg: <AsanaSvg /> },
-  { name: 'Jira',     svg: <JiraSvg /> },
+  { name: 'HubSpot',          svg: <HubspotSvg /> },
+  { name: 'Zoom',             svg: <ZoomSvg /> },
+  { name: 'Stripe',           svg: <StripeSvg /> },
+  { name: 'Twilio',           svg: <TwilioSvg /> },
+  { name: 'LinkedIn',         svg: <LinkedInSvg /> },
+  { name: 'Shopify',          svg: <ShopifySvg /> },
+  { name: 'Outlook',          svg: <OutlookSvg /> },
+  { name: 'Microsoft Teams',  svg: <MicrosoftTeamsSvg /> },
+  { name: 'Asana',            svg: <AsanaSvg /> },
+  { name: 'Jira',             svg: <JiraSvg /> },
 ];
 
 /* ── Sub-components ───────────────────────────────────────────────────────── */
