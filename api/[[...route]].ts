@@ -15,6 +15,7 @@
  */
 import { ObjectKernel, DriverPlugin, AppPlugin, createDispatcherPlugin, createRestApiPlugin } from '@objectstack/runtime';
 import { HonoHttpServer } from '@objectstack/plugin-hono-server';
+import { AuthPlugin } from '@objectstack/plugin-auth';
 import { InMemoryDriver } from '@objectstack/driver-memory';
 import { ObjectQLPlugin } from '@objectstack/objectql';
 import { handle } from '@hono/node-server/vercel';
@@ -192,7 +193,12 @@ async function bootstrap(): Promise<Hono> {
     start: async () => {},
   });
 
-  // 5. Application config (business objects & plugins)
+  // 5. Authentication & Identity (better-auth based)
+  await kernel.use(new AuthPlugin({
+    secret: process.env.AUTH_SECRET || 'hotcrm-dev-secret-change-me-in-production',
+  }));
+
+  // 6. Application config (business objects & plugins)
   await kernel.use(new AppPlugin({
     manifest: {
       id: 'com.hotcrm.app',
@@ -205,7 +211,7 @@ async function bootstrap(): Promise<Hono> {
     plugins: [],
   }));
 
-  // 6. Register business plugins
+  // 7. Register business plugins
   const businessPlugins = [
     CRMPlugin, FinancePlugin, MarketingPlugin,
     ProductsPlugin, SupportPlugin, HRPlugin,
@@ -216,13 +222,13 @@ async function bootstrap(): Promise<Hono> {
     }
   }
 
-  // 7. REST API endpoints (auto-generated CRUD for all objects)
+  // 8. REST API endpoints (auto-generated CRUD for all objects)
   await kernel.use(createRestApiPlugin());
 
-  // 8. Dispatcher (auth, graphql, analytics routes)
+  // 9. Dispatcher (auth, graphql, analytics routes)
   await kernel.use(createDispatcherPlugin());
 
-  // 9. Console UI (serves the ObjectStack Console SPA at /console/)
+  // 10. Console UI (serves the ObjectStack Console SPA at /console/)
   const consoleDistPath = resolvePackageDistPath('@object-ui/console');
   if (consoleDistPath) {
     // Console SPA already has absolute /console/ asset paths — skip rewriting
@@ -232,13 +238,13 @@ async function bootstrap(): Promise<Hono> {
     app.get('/', (c: any) => c.redirect('/console/'));
   }
 
-  // 10. Studio UI (serves the ObjectStack Studio SPA at /_studio/)
+  // 11. Studio UI (serves the ObjectStack Studio SPA at /_studio/)
   const studioDistPath = resolvePackageDistPath('@objectstack/studio');
   if (studioDistPath) {
     await kernel.use(createStaticSpaPlugin('com.objectstack.studio-static', STUDIO_PATH, studioDistPath));
   }
 
-  // 11. Bootstrap kernel (init + start all plugins, fire kernel:ready)
+  // 12. Bootstrap kernel (init + start all plugins, fire kernel:ready)
   await kernel.bootstrap();
 
   return httpServer.getRawApp();

@@ -29,25 +29,28 @@ importers:
         version: 3.1.3
       '@objectstack/cli':
         specifier: ^3.2.6
-        version: 3.2.6(esbuild@0.27.3)
+        version: 3.2.6(esbuild@0.27.3)(pino@10.3.1)
       '@objectstack/driver-memory':
         specifier: ^3.2.6
-        version: 3.2.6
+        version: 3.2.6(pino@10.3.1)
       '@objectstack/objectql':
         specifier: ^3.2.6
-        version: 3.2.6
+        version: 3.2.6(pino@10.3.1)
+      '@objectstack/plugin-auth':
+        specifier: ^3.2.6
+        version: 3.2.6(next@16.1.6(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(pino@10.3.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@1.6.1)
       '@objectstack/plugin-hono-server':
         specifier: ^3.2.6
-        version: 3.2.6
+        version: 3.2.6(pino@10.3.1)
       '@objectstack/runtime':
         specifier: ^3.2.6
-        version: 3.2.6
+        version: 3.2.6(pino@10.3.1)
       '@objectstack/spec':
         specifier: ^3.2.6
         version: 3.2.6
       '@objectstack/studio':
         specifier: ^3.2.6
-        version: 3.2.6(@types/node@25.3.2)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(typescript@5.9.3)
+        version: 3.2.6(@types/node@25.3.2)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(pino@10.3.1)(typescript@5.9.3)
       '@types/node':
         specifier: ^25.2.3
         version: 25.3.2
@@ -142,7 +145,7 @@ importers:
     devDependencies:
       '@objectstack/cli':
         specifier: ^3.2.6
-        version: 3.2.6(esbuild@0.27.3)
+        version: 3.2.6(esbuild@0.27.3)(pino@10.3.1)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -161,7 +164,7 @@ importers:
     devDependencies:
       '@objectstack/cli':
         specifier: ^3.2.6
-        version: 3.2.6(esbuild@0.27.3)
+        version: 3.2.6(esbuild@0.27.3)(pino@10.3.1)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -177,7 +180,7 @@ importers:
     devDependencies:
       '@objectstack/cli':
         specifier: ^3.2.6
-        version: 3.2.6(esbuild@0.27.3)
+        version: 3.2.6(esbuild@0.27.3)(pino@10.3.1)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -205,7 +208,7 @@ importers:
     devDependencies:
       '@objectstack/cli':
         specifier: ^3.2.6
-        version: 3.2.6(esbuild@0.27.3)
+        version: 3.2.6(esbuild@0.27.3)(pino@10.3.1)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -221,7 +224,7 @@ importers:
     devDependencies:
       '@objectstack/cli':
         specifier: ^3.2.6
-        version: 3.2.6(esbuild@0.27.3)
+        version: 3.2.6(esbuild@0.27.3)(pino@10.3.1)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -234,7 +237,7 @@ importers:
     devDependencies:
       '@objectstack/cli':
         specifier: ^3.2.6
-        version: 3.2.6(esbuild@0.27.3)
+        version: 3.2.6(esbuild@0.27.3)(pino@10.3.1)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -250,7 +253,7 @@ importers:
     devDependencies:
       '@objectstack/cli':
         specifier: ^3.2.6
-        version: 3.2.6(esbuild@0.27.3)
+        version: 3.2.6(esbuild@0.27.3)(pino@10.3.1)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -266,7 +269,7 @@ importers:
     devDependencies:
       '@objectstack/cli':
         specifier: ^3.2.6
-        version: 3.2.6(esbuild@0.27.3)
+        version: 3.2.6(esbuild@0.27.3)(pino@10.3.1)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -279,7 +282,7 @@ importers:
     devDependencies:
       '@objectstack/cli':
         specifier: ^3.2.6
-        version: 3.2.6(esbuild@0.27.3)
+        version: 3.2.6(esbuild@0.27.3)(pino@10.3.1)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -298,7 +301,7 @@ importers:
     devDependencies:
       '@objectstack/cli':
         specifier: ^3.2.6
-        version: 3.2.6(esbuild@0.27.3)
+        version: 3.2.6(esbuild@0.27.3)(pino@10.3.1)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -311,7 +314,7 @@ importers:
     devDependencies:
       '@objectstack/cli':
         specifier: ^3.2.6
-        version: 3.2.6(esbuild@0.27.3)
+        version: 3.2.6(esbuild@0.27.3)(pino@10.3.1)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -324,7 +327,7 @@ importers:
     devDependencies:
       '@objectstack/cli':
         specifier: ^3.2.6
-        version: 3.2.6(esbuild@0.27.3)
+        version: 3.2.6(esbuild@0.27.3)(pino@10.3.1)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -340,7 +343,7 @@ importers:
     devDependencies:
       '@objectstack/cli':
         specifier: ^3.2.6
-        version: 3.2.6(esbuild@0.27.3)
+        version: 3.2.6(esbuild@0.27.3)(pino@10.3.1)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -353,7 +356,7 @@ importers:
     devDependencies:
       '@objectstack/cli':
         specifier: ^3.2.6
-        version: 3.2.6(esbuild@0.27.3)
+        version: 3.2.6(esbuild@0.27.3)(pino@10.3.1)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -391,6 +394,74 @@ packages:
 
   '@bcoe/v8-coverage@0.2.3':
     resolution: {integrity: sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==}
+
+  '@better-auth/core@1.5.5':
+    resolution: {integrity: sha512-1oR/2jAp821Dcf67kQYHUoyNcdc1TcShfw4QMK0YTVntuRES5mUOyvEJql5T6eIuLfaqaN4LOF78l0FtF66HXA==}
+    peerDependencies:
+      '@better-auth/utils': 0.3.1
+      '@better-fetch/fetch': 1.1.21
+      '@cloudflare/workers-types': '>=4'
+      better-call: 1.3.2
+      jose: ^6.1.0
+      kysely: ^0.28.5
+      nanostores: ^1.0.1
+    peerDependenciesMeta:
+      '@cloudflare/workers-types':
+        optional: true
+
+  '@better-auth/drizzle-adapter@1.5.5':
+    resolution: {integrity: sha512-HAi9xAP40oDt48QZeYBFTcmg3vt1Jik90GwoRIfangd7VGbxesIIDBJSnvwMbZ52GBIc6+V4FRw9lasNiNrPfw==}
+    peerDependencies:
+      '@better-auth/core': 1.5.5
+      '@better-auth/utils': ^0.3.0
+      drizzle-orm: '>=0.41.0'
+    peerDependenciesMeta:
+      drizzle-orm:
+        optional: true
+
+  '@better-auth/kysely-adapter@1.5.5':
+    resolution: {integrity: sha512-LmHffIVnqbfsxcxckMOoE8MwibWrbVFch+kwPKJ5OFDFv6lin75ufN7ZZ7twH0IMPLT/FcgzaRjP8jRrXRef9g==}
+    peerDependencies:
+      '@better-auth/core': 1.5.5
+      '@better-auth/utils': ^0.3.0
+      kysely: ^0.27.0 || ^0.28.0
+
+  '@better-auth/memory-adapter@1.5.5':
+    resolution: {integrity: sha512-4X0j1/2L+nsgmObjmy9xEGUFWUv38Qjthp558fwS3DAp6ueWWyCaxaD6VJZ7m5qPNMrsBStO5WGP8CmJTEWm7g==}
+    peerDependencies:
+      '@better-auth/core': 1.5.5
+      '@better-auth/utils': ^0.3.0
+
+  '@better-auth/mongo-adapter@1.5.5':
+    resolution: {integrity: sha512-P1J9ljL5X5k740I8Rx1esPWNgWYPdJR5hf2CY7BwDSrQFPUHuzeCg0YhtEEP55niNateTXhBqGAcy0fVOeamZg==}
+    peerDependencies:
+      '@better-auth/core': 1.5.5
+      '@better-auth/utils': ^0.3.0
+      mongodb: ^6.0.0 || ^7.0.0
+
+  '@better-auth/prisma-adapter@1.5.5':
+    resolution: {integrity: sha512-CliDd78CXHzzwQIXhCdwGr5Ml53i6JdCHWV7PYwTIJz9EAm6qb2RVBdpP3nqEfNjINGM22A6gfleCgCdZkTIZg==}
+    peerDependencies:
+      '@better-auth/core': 1.5.5
+      '@better-auth/utils': ^0.3.0
+      '@prisma/client': ^5.0.0 || ^6.0.0 || ^7.0.0
+      prisma: ^5.0.0 || ^6.0.0 || ^7.0.0
+    peerDependenciesMeta:
+      '@prisma/client':
+        optional: true
+      prisma:
+        optional: true
+
+  '@better-auth/telemetry@1.5.5':
+    resolution: {integrity: sha512-1+lklxArn4IMHuU503RcPdXrSG2tlXt4jnGG3omolmspQ7tktg/Y9XO/yAkYDurtvMn1xJ8X1Ov01Ji/r5s9BQ==}
+    peerDependencies:
+      '@better-auth/core': 1.5.5
+
+  '@better-auth/utils@0.3.1':
+    resolution: {integrity: sha512-+CGp4UmZSUrHHnpHhLPYu6cV+wSUSvVbZbNykxhUDocpVNTo9uFFxw/NqJlh1iC4wQ9HKKWGCKuZ5wUgS0v6Kg==}
+
+  '@better-fetch/fetch@1.1.21':
+    resolution: {integrity: sha512-/ImESw0sskqlVR94jB+5+Pxjf+xBwDZF/N5+y2/q4EqD7IARUTSpPfIo8uf39SYpCxyOCtbyYpUrZ3F/k0zT4A==}
 
   '@changesets/apply-release-plan@7.0.14':
     resolution: {integrity: sha512-ddBvf9PHdy2YY0OUiEl3TV78mH9sckndJR14QAt87KLEbIov81XO0q0QAmvooBxXlqRRP8I9B7XOzZwQG7JkWA==}
@@ -1105,6 +1176,14 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@noble/ciphers@2.1.1':
+    resolution: {integrity: sha512-bysYuiVfhxNJuldNXlFEitTVdNnYUc+XNJZd7Qm2a5j1vZHgY+fazadNFWFaMK/2vye0JVlxV3gHmC0WDfAOQw==}
+    engines: {node: '>= 20.19.0'}
+
+  '@noble/hashes@2.0.1':
+    resolution: {integrity: sha512-XlOlEbQcE9fmuXxrVTXCTlG2nlRXa9Rj3rr5Ue/+tX+nmkgbX720YHh0VR3hBF9xDvwnb8D2shVGOwNx+ulArw==}
+    engines: {node: '>= 20.19.0'}
+
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
     engines: {node: '>= 8'}
@@ -1134,6 +1213,11 @@ packages:
 
   '@objectstack/core@3.2.6':
     resolution: {integrity: sha512-8fmyMKxKL3PRlto7skQink4/VjerLSyredUJ4KbcJ1AxDrbYGltV4c8LkpqPzbQ99EVVUV3iiH/uiDNHxKU6xA==}
+    peerDependencies:
+      pino: ^8.0.0
+    peerDependenciesMeta:
+      pino:
+        optional: true
 
   '@objectstack/driver-memory@3.2.6':
     resolution: {integrity: sha512-fX2HzB9f3EAluKSdcg1Rni6L/Kv8JN7nagG7zwdI7BX9DFw1paIC3PNGlzCoWl3e5y2WIHnjRPIvLrvu25R0/w==}
@@ -1143,6 +1227,9 @@ packages:
 
   '@objectstack/objectql@3.2.6':
     resolution: {integrity: sha512-JTmUBUQIsF0LRf56cg1IabeHssuEluiKqhUMIy7kDlMafWqWKblhbge+wqutf0WBFi/BbBmInt9JNX3LZW8bBw==}
+
+  '@objectstack/plugin-auth@3.2.6':
+    resolution: {integrity: sha512-MIDCxTj58InspW7c46Hvu6N9VpTNA09uR65E/wX8lUNA4Q5/KbiAmHRIRXKvDGpjaA1WQHRabB5tUjIZlJzn5g==}
 
   '@objectstack/plugin-hono-server@3.2.6':
     resolution: {integrity: sha512-UQfvDh7DLUFeNHpDYdWizAXy+CHOK/PX4nLdwi61owmEuk8nQkl88cc5oxwBANZqTU6ju3Gb1aceDtoeBHAYzQ==}
@@ -2216,6 +2303,76 @@ packages:
     engines: {node: '>=6.0.0'}
     hasBin: true
 
+  better-auth@1.5.5:
+    resolution: {integrity: sha512-GpVPaV1eqr3mOovKfghJXXk6QvlcVeFbS3z+n+FPDid5rK/2PchnDtiaVCzWyXA9jH2KkirOfl+JhAUvnja0Eg==}
+    peerDependencies:
+      '@lynx-js/react': '*'
+      '@prisma/client': ^5.0.0 || ^6.0.0 || ^7.0.0
+      '@sveltejs/kit': ^2.0.0
+      '@tanstack/react-start': ^1.0.0
+      '@tanstack/solid-start': ^1.0.0
+      better-sqlite3: ^12.0.0
+      drizzle-kit: '>=0.31.4'
+      drizzle-orm: '>=0.41.0'
+      mongodb: ^6.0.0 || ^7.0.0
+      mysql2: ^3.0.0
+      next: ^14.0.0 || ^15.0.0 || ^16.0.0
+      pg: ^8.0.0
+      prisma: ^5.0.0 || ^6.0.0 || ^7.0.0
+      react: ^18.0.0 || ^19.0.0
+      react-dom: ^18.0.0 || ^19.0.0
+      solid-js: ^1.0.0
+      svelte: ^4.0.0 || ^5.0.0
+      vitest: ^2.0.0 || ^3.0.0 || ^4.0.0
+      vue: ^3.0.0
+    peerDependenciesMeta:
+      '@lynx-js/react':
+        optional: true
+      '@prisma/client':
+        optional: true
+      '@sveltejs/kit':
+        optional: true
+      '@tanstack/react-start':
+        optional: true
+      '@tanstack/solid-start':
+        optional: true
+      better-sqlite3:
+        optional: true
+      drizzle-kit:
+        optional: true
+      drizzle-orm:
+        optional: true
+      mongodb:
+        optional: true
+      mysql2:
+        optional: true
+      next:
+        optional: true
+      pg:
+        optional: true
+      prisma:
+        optional: true
+      react:
+        optional: true
+      react-dom:
+        optional: true
+      solid-js:
+        optional: true
+      svelte:
+        optional: true
+      vitest:
+        optional: true
+      vue:
+        optional: true
+
+  better-call@1.3.2:
+    resolution: {integrity: sha512-4cZIfrerDsNTn3cm+MhLbUePN0gdwkhSXEuG7r/zuQ8c/H7iU0/jSK5TD3FW7U0MgKHce/8jGpPYNO4Ve+4NBw==}
+    peerDependencies:
+      zod: ^4.0.0
+    peerDependenciesMeta:
+      zod:
+        optional: true
+
   better-path-resolve@1.0.0:
     resolution: {integrity: sha512-pbnl5XzGBdrFU/wT4jqmJVPn2B6UHPBOhzMQkY/SPUPB6QtUXtmBHBIwCbXJol93mOpGMnQyP/+BB19q04xj7g==}
     engines: {node: '>=4'}
@@ -2388,6 +2545,9 @@ packages:
 
   deep-is@0.1.4:
     resolution: {integrity: sha512-oIPzksmTg4/MriiaYGO+okXDT7ztn/w3Eptv/+gSIdMdKsJo0u4CfYNFJPy+4SKMuCqGw2wxnA+URMg3t8a/bQ==}
+
+  defu@6.1.4:
+    resolution: {integrity: sha512-mEQCMmwJu317oSz8CwdIOdwf3xMif1ttiM8LTufzc3g6kR+9Pe236twL8j3IYT1F7GfRgGcW6MWxzZjLIkuHIg==}
 
   delayed-stream@1.0.0:
     resolution: {integrity: sha512-ZySD7Nf91aLB0RxL4KGrKHBXl7Eds1DAmEdcoVawXnLD7SDhpNgtuII2aAkg7a7QS41jxPSZ17p4VdGnMHk3MQ==}
@@ -3032,6 +3192,9 @@ packages:
     resolution: {integrity: sha512-ekilCSN1jwRvIbgeg/57YFh8qQDNbwDb9xT/qu2DAHbFFZUicIl4ygVaAvzveMhMVr3LnpSKTNnwt8PoOfmKhQ==}
     hasBin: true
 
+  jose@6.2.1:
+    resolution: {integrity: sha512-jUaKr1yrbfaImV7R2TN/b3IcZzsw38/chqMpo2XJ7i2F8AfM/lA4G1goC3JVEwg0H7UldTmSt3P68nt31W7/mw==}
+
   joycon@3.1.1:
     resolution: {integrity: sha512-34wB/Y7MW7bzjKRjUKTa46I2Z7eV62Rkhva+KkopW7Qvv/OSWBqvkSY7vusOPrNuZcUG3tApvdVgNB8POj3SPw==}
     engines: {node: '>=10'}
@@ -3061,6 +3224,10 @@ packages:
 
   keyv@4.5.4:
     resolution: {integrity: sha512-oxVHkHR/EJf2CNXnWxRLW6mg7JyCCUcG0DtEGmL2ctUo1PNTin1PUil+r/+4r5MpVgC/fn1kjsx7mjSujKqIpw==}
+
+  kysely@0.28.12:
+    resolution: {integrity: sha512-kWiueDWXhbCchgiotwXkwdxZE/6h56IHAeFWg4euUfW0YsmO9sxbAxzx1KLLv2lox15EfuuxHQvgJ1qIfZuHGw==}
+    engines: {node: '>=20.0.0'}
 
   levn@0.4.1:
     resolution: {integrity: sha512-+bT2uH4E5LGE7h/n3evcS/sQlJXCpIp6ym8OWJ5eV6+67Dsql/LaaT7qJBAt2rzfoa/5QBGBhxDix1dMt2kQKQ==}
@@ -3461,6 +3628,10 @@ packages:
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
 
+  nanostores@1.2.0:
+    resolution: {integrity: sha512-F0wCzbsH80G7XXo0Jd9/AVQC7ouWY6idUCTnMwW5t/Rv9W8qmO6endavDwg7TNp5GbugwSukFMVZqzPSrSMndg==}
+    engines: {node: ^20.0.0 || >=22.0.0}
+
   natural-compare@1.4.0:
     resolution: {integrity: sha512-OWND8ei3VtNC9h7V60qff3SVobHr996CTwgxubgyQYEpg290h9J0buyECNNJexkFm5sOajh5G116RYA1c8ZMSw==}
 
@@ -3835,6 +4006,9 @@ packages:
     engines: {node: '>=18.0.0', npm: '>=8.0.0'}
     hasBin: true
 
+  rou3@0.7.12:
+    resolution: {integrity: sha512-iFE4hLDuloSWcD7mjdCDhx2bKcIsYbtOTpfH5MHHLSKMOUyjqQXTeZVa289uuwEGEKFoE/BAPbhaU4B774nceg==}
+
   run-parallel@1.2.0:
     resolution: {integrity: sha512-5l4VyZR86LZ/lDxZTR6jqL8AFE2S0IFLMP26AbjsLVADxHdhB/c0GUsH+y39UfCi3dzz8OlQuPmnaJOMoDHQBA==}
 
@@ -3858,6 +4032,9 @@ packages:
     resolution: {integrity: sha512-vFKC2IEtQnVhpT78h1Yp8wzwrf8CM+MzKMHGJZfBtzhZNycRFnXsHk6E5TxIkkMsgNS7mdX3AGB7x2QM2di4lA==}
     engines: {node: '>=10'}
     hasBin: true
+
+  set-cookie-parser@3.0.1:
+    resolution: {integrity: sha512-n7Z7dXZhJbwuAHhNzkTti6Aw9QDDjZtm3JTpTGATIdNzdQz5GuFs22w90BcvF4INfnrL5xrX3oGsuqO5Dx3A1Q==}
 
   sharp@0.34.5:
     resolution: {integrity: sha512-Ou9I5Ft9WNcCbXrU9cMgPBcCK8LiwLqcbywW3t4oDV37n1pzpuNLsYiAV8eODnjbtQlSDwZ2cUEeQz4E54Hltg==}
@@ -4317,6 +4494,53 @@ snapshots:
       '@babel/helper-validator-identifier': 7.28.5
 
   '@bcoe/v8-coverage@0.2.3': {}
+
+  '@better-auth/core@1.5.5(@better-auth/utils@0.3.1)(@better-fetch/fetch@1.1.21)(better-call@1.3.2(zod@4.3.6))(jose@6.2.1)(kysely@0.28.12)(nanostores@1.2.0)':
+    dependencies:
+      '@better-auth/utils': 0.3.1
+      '@better-fetch/fetch': 1.1.21
+      '@standard-schema/spec': 1.1.0
+      better-call: 1.3.2(zod@4.3.6)
+      jose: 6.2.1
+      kysely: 0.28.12
+      nanostores: 1.2.0
+      zod: 4.3.6
+
+  '@better-auth/drizzle-adapter@1.5.5(@better-auth/core@1.5.5(@better-auth/utils@0.3.1)(@better-fetch/fetch@1.1.21)(better-call@1.3.2(zod@4.3.6))(jose@6.2.1)(kysely@0.28.12)(nanostores@1.2.0))(@better-auth/utils@0.3.1)':
+    dependencies:
+      '@better-auth/core': 1.5.5(@better-auth/utils@0.3.1)(@better-fetch/fetch@1.1.21)(better-call@1.3.2(zod@4.3.6))(jose@6.2.1)(kysely@0.28.12)(nanostores@1.2.0)
+      '@better-auth/utils': 0.3.1
+
+  '@better-auth/kysely-adapter@1.5.5(@better-auth/core@1.5.5(@better-auth/utils@0.3.1)(@better-fetch/fetch@1.1.21)(better-call@1.3.2(zod@4.3.6))(jose@6.2.1)(kysely@0.28.12)(nanostores@1.2.0))(@better-auth/utils@0.3.1)(kysely@0.28.12)':
+    dependencies:
+      '@better-auth/core': 1.5.5(@better-auth/utils@0.3.1)(@better-fetch/fetch@1.1.21)(better-call@1.3.2(zod@4.3.6))(jose@6.2.1)(kysely@0.28.12)(nanostores@1.2.0)
+      '@better-auth/utils': 0.3.1
+      kysely: 0.28.12
+
+  '@better-auth/memory-adapter@1.5.5(@better-auth/core@1.5.5(@better-auth/utils@0.3.1)(@better-fetch/fetch@1.1.21)(better-call@1.3.2(zod@4.3.6))(jose@6.2.1)(kysely@0.28.12)(nanostores@1.2.0))(@better-auth/utils@0.3.1)':
+    dependencies:
+      '@better-auth/core': 1.5.5(@better-auth/utils@0.3.1)(@better-fetch/fetch@1.1.21)(better-call@1.3.2(zod@4.3.6))(jose@6.2.1)(kysely@0.28.12)(nanostores@1.2.0)
+      '@better-auth/utils': 0.3.1
+
+  '@better-auth/mongo-adapter@1.5.5(@better-auth/core@1.5.5(@better-auth/utils@0.3.1)(@better-fetch/fetch@1.1.21)(better-call@1.3.2(zod@4.3.6))(jose@6.2.1)(kysely@0.28.12)(nanostores@1.2.0))(@better-auth/utils@0.3.1)':
+    dependencies:
+      '@better-auth/core': 1.5.5(@better-auth/utils@0.3.1)(@better-fetch/fetch@1.1.21)(better-call@1.3.2(zod@4.3.6))(jose@6.2.1)(kysely@0.28.12)(nanostores@1.2.0)
+      '@better-auth/utils': 0.3.1
+
+  '@better-auth/prisma-adapter@1.5.5(@better-auth/core@1.5.5(@better-auth/utils@0.3.1)(@better-fetch/fetch@1.1.21)(better-call@1.3.2(zod@4.3.6))(jose@6.2.1)(kysely@0.28.12)(nanostores@1.2.0))(@better-auth/utils@0.3.1)':
+    dependencies:
+      '@better-auth/core': 1.5.5(@better-auth/utils@0.3.1)(@better-fetch/fetch@1.1.21)(better-call@1.3.2(zod@4.3.6))(jose@6.2.1)(kysely@0.28.12)(nanostores@1.2.0)
+      '@better-auth/utils': 0.3.1
+
+  '@better-auth/telemetry@1.5.5(@better-auth/core@1.5.5(@better-auth/utils@0.3.1)(@better-fetch/fetch@1.1.21)(better-call@1.3.2(zod@4.3.6))(jose@6.2.1)(kysely@0.28.12)(nanostores@1.2.0))':
+    dependencies:
+      '@better-auth/core': 1.5.5(@better-auth/utils@0.3.1)(@better-fetch/fetch@1.1.21)(better-call@1.3.2(zod@4.3.6))(jose@6.2.1)(kysely@0.28.12)(nanostores@1.2.0)
+      '@better-auth/utils': 0.3.1
+      '@better-fetch/fetch': 1.1.21
+
+  '@better-auth/utils@0.3.1': {}
+
+  '@better-fetch/fetch@1.1.21': {}
 
   '@changesets/apply-release-plan@7.0.14':
     dependencies:
@@ -4927,6 +5151,10 @@ snapshots:
   '@next/swc-win32-x64-msvc@16.1.6':
     optional: true
 
+  '@noble/ciphers@2.1.1': {}
+
+  '@noble/hashes@2.0.1': {}
+
   '@nodelib/fs.scandir@2.1.5':
     dependencies:
       '@nodelib/fs.stat': 2.0.5
@@ -4941,14 +5169,14 @@ snapshots:
 
   '@object-ui/console@3.1.3': {}
 
-  '@objectstack/cli@3.2.6(esbuild@0.27.3)':
+  '@objectstack/cli@3.2.6(esbuild@0.27.3)(pino@10.3.1)':
     dependencies:
-      '@objectstack/core': 3.2.6
-      '@objectstack/driver-memory': 3.2.6
-      '@objectstack/objectql': 3.2.6
-      '@objectstack/plugin-hono-server': 3.2.6
-      '@objectstack/rest': 3.2.6
-      '@objectstack/runtime': 3.2.6
+      '@objectstack/core': 3.2.6(pino@10.3.1)
+      '@objectstack/driver-memory': 3.2.6(pino@10.3.1)
+      '@objectstack/objectql': 3.2.6(pino@10.3.1)
+      '@objectstack/plugin-hono-server': 3.2.6(pino@10.3.1)
+      '@objectstack/rest': 3.2.6(pino@10.3.1)
+      '@objectstack/runtime': 3.2.6(pino@10.3.1)
       '@objectstack/spec': 3.2.6
       '@oclif/core': 4.8.3
       bundle-require: 5.1.0(esbuild@0.27.3)
@@ -4957,94 +5185,141 @@ snapshots:
       zod: 4.3.6
     transitivePeerDependencies:
       - esbuild
+      - pino
 
-  '@objectstack/client-react@3.2.6(react@19.2.4)':
+  '@objectstack/client-react@3.2.6(pino@10.3.1)(react@19.2.4)':
     dependencies:
-      '@objectstack/client': 3.2.6
-      '@objectstack/core': 3.2.6
+      '@objectstack/client': 3.2.6(pino@10.3.1)
+      '@objectstack/core': 3.2.6(pino@10.3.1)
       '@objectstack/spec': 3.2.6
       react: 19.2.4
+    transitivePeerDependencies:
+      - pino
 
-  '@objectstack/client@3.2.6':
+  '@objectstack/client@3.2.6(pino@10.3.1)':
     dependencies:
-      '@objectstack/core': 3.2.6
+      '@objectstack/core': 3.2.6(pino@10.3.1)
       '@objectstack/spec': 3.2.6
+    transitivePeerDependencies:
+      - pino
 
-  '@objectstack/core@3.2.6':
+  '@objectstack/core@3.2.6(pino@10.3.1)':
     dependencies:
       '@objectstack/spec': 3.2.6
-      pino: 10.3.1
       pino-pretty: 13.1.3
       zod: 4.3.6
+    optionalDependencies:
+      pino: 10.3.1
 
-  '@objectstack/driver-memory@3.2.6':
+  '@objectstack/driver-memory@3.2.6(pino@10.3.1)':
     dependencies:
-      '@objectstack/core': 3.2.6
+      '@objectstack/core': 3.2.6(pino@10.3.1)
       '@objectstack/spec': 3.2.6
       mingo: 7.2.0
+    transitivePeerDependencies:
+      - pino
 
-  '@objectstack/metadata@3.2.6':
+  '@objectstack/metadata@3.2.6(pino@10.3.1)':
     dependencies:
-      '@objectstack/core': 3.2.6
+      '@objectstack/core': 3.2.6(pino@10.3.1)
       '@objectstack/spec': 3.2.6
       '@objectstack/types': 3.2.6
       chokidar: 5.0.0
       glob: 13.0.6
       js-yaml: 4.1.1
       zod: 4.3.6
+    transitivePeerDependencies:
+      - pino
 
-  '@objectstack/objectql@3.2.6':
+  '@objectstack/objectql@3.2.6(pino@10.3.1)':
     dependencies:
-      '@objectstack/core': 3.2.6
+      '@objectstack/core': 3.2.6(pino@10.3.1)
       '@objectstack/spec': 3.2.6
       '@objectstack/types': 3.2.6
+    transitivePeerDependencies:
+      - pino
 
-  '@objectstack/plugin-hono-server@3.2.6':
+  '@objectstack/plugin-auth@3.2.6(next@16.1.6(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(pino@10.3.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@1.6.1)':
+    dependencies:
+      '@objectstack/core': 3.2.6(pino@10.3.1)
+      '@objectstack/spec': 3.2.6
+      better-auth: 1.5.5(next@16.1.6(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@1.6.1)
+    transitivePeerDependencies:
+      - '@cloudflare/workers-types'
+      - '@lynx-js/react'
+      - '@prisma/client'
+      - '@sveltejs/kit'
+      - '@tanstack/react-start'
+      - '@tanstack/solid-start'
+      - better-sqlite3
+      - drizzle-kit
+      - drizzle-orm
+      - mongodb
+      - mysql2
+      - next
+      - pg
+      - pino
+      - prisma
+      - react
+      - react-dom
+      - solid-js
+      - svelte
+      - vitest
+      - vue
+
+  '@objectstack/plugin-hono-server@3.2.6(pino@10.3.1)':
     dependencies:
       '@hono/node-server': 1.19.11(hono@4.12.8)
-      '@objectstack/core': 3.2.6
+      '@objectstack/core': 3.2.6(pino@10.3.1)
       '@objectstack/spec': 3.2.6
       hono: 4.12.8
+    transitivePeerDependencies:
+      - pino
 
-  '@objectstack/plugin-msw@3.2.6(@objectstack/runtime@3.2.6)(@types/node@25.3.2)(typescript@5.9.3)':
+  '@objectstack/plugin-msw@3.2.6(@objectstack/runtime@3.2.6(pino@10.3.1))(@types/node@25.3.2)(pino@10.3.1)(typescript@5.9.3)':
     dependencies:
-      '@objectstack/core': 3.2.6
-      '@objectstack/objectql': 3.2.6
-      '@objectstack/runtime': 3.2.6
+      '@objectstack/core': 3.2.6(pino@10.3.1)
+      '@objectstack/objectql': 3.2.6(pino@10.3.1)
+      '@objectstack/runtime': 3.2.6(pino@10.3.1)
       '@objectstack/spec': 3.2.6
       '@objectstack/types': 3.2.6
       msw: 2.12.10(@types/node@25.3.2)(typescript@5.9.3)
     transitivePeerDependencies:
       - '@types/node'
+      - pino
       - typescript
 
-  '@objectstack/rest@3.2.6':
+  '@objectstack/rest@3.2.6(pino@10.3.1)':
     dependencies:
-      '@objectstack/core': 3.2.6
+      '@objectstack/core': 3.2.6(pino@10.3.1)
       '@objectstack/spec': 3.2.6
       zod: 4.3.6
+    transitivePeerDependencies:
+      - pino
 
-  '@objectstack/runtime@3.2.6':
+  '@objectstack/runtime@3.2.6(pino@10.3.1)':
     dependencies:
-      '@objectstack/core': 3.2.6
-      '@objectstack/rest': 3.2.6
+      '@objectstack/core': 3.2.6(pino@10.3.1)
+      '@objectstack/rest': 3.2.6(pino@10.3.1)
       '@objectstack/spec': 3.2.6
       '@objectstack/types': 3.2.6
       zod: 4.3.6
+    transitivePeerDependencies:
+      - pino
 
   '@objectstack/spec@3.2.6':
     dependencies:
       zod: 4.3.6
 
-  '@objectstack/studio@3.2.6(@types/node@25.3.2)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(typescript@5.9.3)':
+  '@objectstack/studio@3.2.6(@types/node@25.3.2)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(pino@10.3.1)(typescript@5.9.3)':
     dependencies:
-      '@objectstack/client': 3.2.6
-      '@objectstack/client-react': 3.2.6(react@19.2.4)
-      '@objectstack/driver-memory': 3.2.6
-      '@objectstack/metadata': 3.2.6
-      '@objectstack/objectql': 3.2.6
-      '@objectstack/plugin-msw': 3.2.6(@objectstack/runtime@3.2.6)(@types/node@25.3.2)(typescript@5.9.3)
-      '@objectstack/runtime': 3.2.6
+      '@objectstack/client': 3.2.6(pino@10.3.1)
+      '@objectstack/client-react': 3.2.6(pino@10.3.1)(react@19.2.4)
+      '@objectstack/driver-memory': 3.2.6(pino@10.3.1)
+      '@objectstack/metadata': 3.2.6(pino@10.3.1)
+      '@objectstack/objectql': 3.2.6(pino@10.3.1)
+      '@objectstack/plugin-msw': 3.2.6(@objectstack/runtime@3.2.6(pino@10.3.1))(@types/node@25.3.2)(pino@10.3.1)(typescript@5.9.3)
+      '@objectstack/runtime': 3.2.6(pino@10.3.1)
       '@objectstack/spec': 3.2.6
       '@radix-ui/react-avatar': 1.1.11(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@radix-ui/react-checkbox': 1.3.3(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -5072,6 +5347,7 @@ snapshots:
       - '@types/node'
       - '@types/react'
       - '@types/react-dom'
+      - pino
       - typescript
 
   '@objectstack/types@3.2.6':
@@ -6128,6 +6404,42 @@ snapshots:
 
   baseline-browser-mapping@2.10.0: {}
 
+  better-auth@1.5.5(next@16.1.6(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@1.6.1):
+    dependencies:
+      '@better-auth/core': 1.5.5(@better-auth/utils@0.3.1)(@better-fetch/fetch@1.1.21)(better-call@1.3.2(zod@4.3.6))(jose@6.2.1)(kysely@0.28.12)(nanostores@1.2.0)
+      '@better-auth/drizzle-adapter': 1.5.5(@better-auth/core@1.5.5(@better-auth/utils@0.3.1)(@better-fetch/fetch@1.1.21)(better-call@1.3.2(zod@4.3.6))(jose@6.2.1)(kysely@0.28.12)(nanostores@1.2.0))(@better-auth/utils@0.3.1)
+      '@better-auth/kysely-adapter': 1.5.5(@better-auth/core@1.5.5(@better-auth/utils@0.3.1)(@better-fetch/fetch@1.1.21)(better-call@1.3.2(zod@4.3.6))(jose@6.2.1)(kysely@0.28.12)(nanostores@1.2.0))(@better-auth/utils@0.3.1)(kysely@0.28.12)
+      '@better-auth/memory-adapter': 1.5.5(@better-auth/core@1.5.5(@better-auth/utils@0.3.1)(@better-fetch/fetch@1.1.21)(better-call@1.3.2(zod@4.3.6))(jose@6.2.1)(kysely@0.28.12)(nanostores@1.2.0))(@better-auth/utils@0.3.1)
+      '@better-auth/mongo-adapter': 1.5.5(@better-auth/core@1.5.5(@better-auth/utils@0.3.1)(@better-fetch/fetch@1.1.21)(better-call@1.3.2(zod@4.3.6))(jose@6.2.1)(kysely@0.28.12)(nanostores@1.2.0))(@better-auth/utils@0.3.1)
+      '@better-auth/prisma-adapter': 1.5.5(@better-auth/core@1.5.5(@better-auth/utils@0.3.1)(@better-fetch/fetch@1.1.21)(better-call@1.3.2(zod@4.3.6))(jose@6.2.1)(kysely@0.28.12)(nanostores@1.2.0))(@better-auth/utils@0.3.1)
+      '@better-auth/telemetry': 1.5.5(@better-auth/core@1.5.5(@better-auth/utils@0.3.1)(@better-fetch/fetch@1.1.21)(better-call@1.3.2(zod@4.3.6))(jose@6.2.1)(kysely@0.28.12)(nanostores@1.2.0))
+      '@better-auth/utils': 0.3.1
+      '@better-fetch/fetch': 1.1.21
+      '@noble/ciphers': 2.1.1
+      '@noble/hashes': 2.0.1
+      better-call: 1.3.2(zod@4.3.6)
+      defu: 6.1.4
+      jose: 6.2.1
+      kysely: 0.28.12
+      nanostores: 1.2.0
+      zod: 4.3.6
+    optionalDependencies:
+      next: 16.1.6(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      react: 19.2.4
+      react-dom: 19.2.4(react@19.2.4)
+      vitest: 1.6.1(@types/node@25.3.2)(@vitest/ui@1.6.1)(lightningcss@1.31.1)
+    transitivePeerDependencies:
+      - '@cloudflare/workers-types'
+
+  better-call@1.3.2(zod@4.3.6):
+    dependencies:
+      '@better-auth/utils': 0.3.1
+      '@better-fetch/fetch': 1.1.21
+      rou3: 0.7.12
+      set-cookie-parser: 3.0.1
+    optionalDependencies:
+      zod: 4.3.6
+
   better-path-resolve@1.0.0:
     dependencies:
       is-windows: 1.0.2
@@ -6277,6 +6589,8 @@ snapshots:
       type-detect: 4.1.0
 
   deep-is@0.1.4: {}
+
+  defu@6.1.4: {}
 
   delayed-stream@1.0.0: {}
 
@@ -7004,6 +7318,8 @@ snapshots:
 
   jiti@2.6.1: {}
 
+  jose@6.2.1: {}
+
   joycon@3.1.1: {}
 
   js-tokens@9.0.1: {}
@@ -7030,6 +7346,8 @@ snapshots:
   keyv@4.5.4:
     dependencies:
       json-buffer: 3.0.1
+
+  kysely@0.28.12: {}
 
   levn@0.4.1:
     dependencies:
@@ -7664,6 +7982,8 @@ snapshots:
 
   nanoid@3.3.11: {}
 
+  nanostores@1.2.0: {}
+
   natural-compare@1.4.0: {}
 
   negotiator@1.0.0: {}
@@ -8102,6 +8422,8 @@ snapshots:
       '@rollup/rollup-win32-x64-msvc': 4.59.0
       fsevents: 2.3.3
 
+  rou3@0.7.12: {}
+
   run-parallel@1.2.0:
     dependencies:
       queue-microtask: 1.2.3
@@ -8119,6 +8441,8 @@ snapshots:
   secure-json-parse@4.1.0: {}
 
   semver@7.7.4: {}
+
+  set-cookie-parser@3.0.1: {}
 
   sharp@0.34.5:
     dependencies:
