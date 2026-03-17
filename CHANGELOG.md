@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Load `@objectstack/plugin-auth` in Vercel deployment** — The Auth Plugin (better-auth based)
+  is now registered in the Vercel serverless handler (`api/[[...route]].ts`), providing
+  authentication & identity services (session management, user registration/login, OAuth,
+  organization support, 2FA, magic links, passkeys) in production deployments.
+  - Added `@objectstack/plugin-auth@^3.2.6` to devDependencies
+  - Updated `vercel.json` `includeFiles` to bundle the Auth Plugin dist with the serverless function
+
 ### Changed
 - **Upgraded @objectstack/* to v3.2.6 and @object-ui/console to v3.1.3** (March 2026)
   - @objectstack/spec: ^3.2.1 → ^3.2.6
