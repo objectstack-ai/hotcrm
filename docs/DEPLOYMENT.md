@@ -208,6 +208,12 @@ Vercel Serverless Function
 - A [Vercel](https://vercel.com) account
 - Node.js ≥ 20.9.0, pnpm ≥ 9
 
+### Environment Variables
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `AUTH_SECRET` | **Yes** (production) | Dev fallback | Secret key used by the Auth Plugin (`@objectstack/plugin-auth`) for signing sessions and tokens. In production, set a strong random value (e.g. `openssl rand -base64 32`). A development fallback is used when not set. |
+
 ### Quick Start
 
 ```bash

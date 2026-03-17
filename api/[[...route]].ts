@@ -194,7 +194,9 @@ async function bootstrap(): Promise<Hono> {
   });
 
   // 5. Authentication & Identity (better-auth based)
-  await kernel.use(new AuthPlugin());
+  await kernel.use(new AuthPlugin({
+    secret: process.env.AUTH_SECRET || 'hotcrm-dev-secret-change-me-in-production',
+  }));
 
   // 6. Application config (business objects & plugins)
   await kernel.use(new AppPlugin({
