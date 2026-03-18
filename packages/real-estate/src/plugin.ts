@@ -54,7 +54,7 @@ export const RealEstatePlugin = {
   description: 'Real Estate management - Properties, Listings, Showings, Offers, and Commission Tracking',
 
   // Plugin dependencies
-  dependencies: ['core', 'crm'],
+  dependencies: ['crm'],
 
   // Plugin initialization
   init: async () => {

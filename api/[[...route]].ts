@@ -32,6 +32,13 @@ import { MarketingPlugin } from '../packages/marketing/dist/plugin.js';
 import { ProductsPlugin } from '../packages/products/dist/plugin.js';
 import { SupportPlugin } from '../packages/support/dist/plugin.js';
 import { HRPlugin } from '../packages/hr/dist/plugin.js';
+import { AnalyticsPlugin } from '../packages/analytics/dist/plugin.js';
+import { IntegrationPlugin } from '../packages/integration/dist/plugin.js';
+import { CommunityPlugin } from '../packages/community/dist/plugin.js';
+import { HealthcarePlugin } from '../packages/healthcare/dist/plugin.js';
+import { RealEstatePlugin } from '../packages/real-estate/dist/plugin.js';
+import { EducationPlugin } from '../packages/education/dist/plugin.js';
+import { FinancialServicesPlugin } from '../packages/financial-services/dist/plugin.js';
 
 // ---------------------------------------------------------------------------
 // Static SPA plugins — serve Console at / and Studio at /_studio/
@@ -196,6 +203,11 @@ async function bootstrap(): Promise<Hono> {
   // 5. Authentication & Identity (better-auth based)
   await kernel.use(new AuthPlugin({
     secret: process.env.AUTH_SECRET || 'hotcrm-dev-secret-change-me-in-production',
+    trustedOrigins: [
+      'http://localhost:3000',
+      ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : []),
+      ...(process.env.VERCEL_PROJECT_PRODUCTION_URL ? [`https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`] : []),
+    ],
   }));
 
   // 6. Application config (business objects & plugins)
@@ -215,6 +227,10 @@ async function bootstrap(): Promise<Hono> {
   const businessPlugins = [
     CRMPlugin, FinancePlugin, MarketingPlugin,
     ProductsPlugin, SupportPlugin, HRPlugin,
+    // Cross-functional clouds
+    AnalyticsPlugin, IntegrationPlugin, CommunityPlugin,
+    // Vertical industry solutions
+    HealthcarePlugin, RealEstatePlugin, EducationPlugin, FinancialServicesPlugin,
   ];
   for (const plugin of businessPlugins) {
     if (plugin) {

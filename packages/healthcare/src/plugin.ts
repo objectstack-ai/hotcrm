@@ -54,7 +54,7 @@ export const HealthcarePlugin = {
   description: 'Healthcare management - Patients, Appointments, Insurance, Referrals, and HIPAA Compliance',
 
   // Plugin dependencies
-  dependencies: ['core'],
+  dependencies: [],
 
   // Plugin initialization
   init: async () => {

@@ -53,7 +53,7 @@ export const FinancialServicesPlugin = {
   description: 'Financial Services management - Wealth Management, Portfolio, KYC, Compliance, and Advisory',
 
   // Plugin dependencies
-  dependencies: ['core'],
+  dependencies: [],
 
   // Plugin initialization
   init: async () => {
