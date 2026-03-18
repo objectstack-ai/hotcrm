@@ -286,7 +286,7 @@ Build pipeline:
 | Field | Value | Purpose |
 |-------|-------|---------|
 | `installCommand` | `pnpm install` | Installs all workspace dependencies |
-| `buildCommand` | `node scripts/patch-console-plugin.cjs && pnpm --filter ... build` | Dereferences any remaining pnpm symlinks, then compiles all business plugins |
+| `buildCommand` | `bash scripts/build-vercel.sh` | Runs the Vercel build script that builds core, patches console plugin, then compiles all business plugins |
 | `functions.memory` | `1024` MB | Memory allocated to the serverless function |
 | `functions.maxDuration` | `60` s | Maximum execution time per request (Pro plan) |
 | `functions.includeFiles` | `{packages/*/dist,node_modules/@object-ui/console/dist,node_modules/@objectstack/plugin-auth/dist,node_modules/@objectstack/studio/dist}/**` | Bundles business plugin dist/, Auth plugin, and Console/Studio SPA assets with the function |
