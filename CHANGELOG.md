@@ -16,6 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated `vercel.json` `includeFiles` to bundle the Auth Plugin dist with the serverless function
 
 ### Fixed
+- **Fix `vercel.json` buildCommand exceeding 256-character limit** — Vercel schema validation
+  rejects `buildCommand` values longer than 256 characters. The previous inline command was
+  454 characters. Extracted the build steps into `scripts/build-vercel.sh` and referenced it
+  from `vercel.json` (`bash scripts/build-vercel.sh`, 28 characters).
 - **Fix AuthPlugin 500 error on Vercel** — The AuthPlugin requires a `secret` option for signing
   sessions/tokens. Previously it was initialized without options (`new AuthPlugin()`), which caused
   the server to crash with `Error("AuthPlugin: secret is required")` during bootstrap. Now reads
