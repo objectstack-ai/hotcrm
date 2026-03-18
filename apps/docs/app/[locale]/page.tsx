@@ -3,7 +3,7 @@ import {
   ArrowRight, Bot, TrendingUp, Users, Shield, Zap, Globe, Target,
   LifeBuoy, Megaphone, Banknote, LayoutTemplate, CheckCircle2,
   Building2, Briefcase, ShoppingCart, Factory, HeartPulse, Lightbulb,
-  Mail, Lock, Award, Play,
+  Mail, MessageSquare, Calendar, FileText, Lock, Award, Play,
 } from 'lucide-react';
 import { getDictionary, locales } from '@/lib/i18n';
 import type { Locale } from '@/lib/i18n';
@@ -49,9 +49,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           </div>
 
           <h1 className="max-w-5xl mx-auto text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight mb-8 text-foreground animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-100">
-            {dict.home.title1}
-            <br />
-            {dict.home.title2}
+            {dict.home.title1} {dict.home.title2}
             <br />
             <span className="hero-gradient-text">{dict.home.title3}</span>
           </h1>
@@ -77,20 +75,15 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             </Link>
           </div>
 
-          {/* Product Visual Placeholder */}
+          {/* Product Visual */}
           <div className="mt-16 max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-500">
-            <div className="product-showcase rounded-xl border border-border/60 bg-card/80 backdrop-blur-md shadow-2xl overflow-hidden p-8">
-              <div className="flex items-center justify-center gap-3 text-muted-foreground mb-4">
-                <Play className="w-6 h-6 text-primary" />
-                <span className="text-base font-medium">{dict.home.terminal}</span>
-              </div>
-              <div className="aspect-video bg-muted/30 rounded-lg border border-border/40 flex items-center justify-center">
-                <div className="text-center">
-                  <TrendingUp className="w-16 h-16 mx-auto mb-4 text-primary/40" />
-                  <p className="text-sm text-muted-foreground">Product Dashboard Preview</p>
-                </div>
-              </div>
-            </div>
+            <img
+              src="/dashboard-mockup.webp"
+              alt="HotCRM Product Dashboard"
+              width={1280}
+              height={800}
+              className="w-full rounded-2xl shadow-2xl ring-1 ring-gray-900/10"
+            />
           </div>
         </div>
       </section>
