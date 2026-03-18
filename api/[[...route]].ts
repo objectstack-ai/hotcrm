@@ -204,9 +204,10 @@ async function bootstrap(): Promise<Hono> {
   await kernel.use(new AuthPlugin({
     secret: process.env.AUTH_SECRET || 'hotcrm-dev-secret-change-me-in-production',
     trustedOrigins: [
-      'http://localhost:3000',
+      'http://localhost:*',
       ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : []),
       ...(process.env.VERCEL_PROJECT_PRODUCTION_URL ? [`https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`] : []),
+      ...(process.env.AUTH_TRUSTED_ORIGINS ? process.env.AUTH_TRUSTED_ORIGINS.split(',').map(s => s.trim()) : []),
     ],
   }));
 
