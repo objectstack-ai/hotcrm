@@ -195,6 +195,7 @@ These items were deferred during Phase 13 and have been completed:
 
 - [x] **Docs homepage redesign** — Redesigned `apps/docs/app/(home)/page.tsx` to match Linear/Stripe/Vercel standards; multi-layer glow Hero, Trust Block, 3-column glow cards, code highlight, compact Solution Grid, updated Stats, differentiated CTA with `npx` command; custom CSS animations in `global.css`; dark/light mode compatible
 - [x] **Docs homepage transformation (Issue #245)** — Completely rebuilt homepage as customer-facing enterprise CRM website; replaced developer-oriented content with business value propositions; added 11 new sections (customer logos, testimonials, AI differentiator, industry solutions, integrations, security, pricing); transformed all copy in en.ts and zh.ts to business language; replaced terminal/code blocks with product showcase placeholders; changed CTAs from "Get Started"/"Star on GitHub" to "Start Free Trial"/"Book a Demo"; stats now show customer metrics (12,500+ customers, 85 countries, 47% productivity gain, 20+ industries) instead of engineering metrics
+- [x] **Landing page button link correction** — Updated Hero Section and Final CTA button `href` attributes: "Start Free Trial" (`getStarted`/`readDocs`) changed from `/docs/getting-started/introduction` to `/signup`; "Book a Demo" (`viewOnGithub`) and "Talk to Sales" (`starOnGithub`) changed from GitHub repo URL to `/book-demo` with `target="_blank"` removed (in-site routes); pricing "View Plans" link left unchanged
 
 #### Deferred / Future
 
