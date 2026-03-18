@@ -15,6 +15,7 @@
  */
 import { ObjectKernel, DriverPlugin, AppPlugin, createDispatcherPlugin, createRestApiPlugin } from '@objectstack/runtime';
 import { HonoHttpServer } from '@objectstack/plugin-hono-server';
+import { AuthPlugin } from '@objectstack/plugin-auth';
 import { InMemoryDriver } from '@objectstack/driver-memory';
 import { ObjectQLPlugin } from '@objectstack/objectql';
 import { handle } from '@hono/node-server/vercel';
@@ -31,6 +32,13 @@ import { MarketingPlugin } from '../packages/marketing/dist/plugin.js';
 import { ProductsPlugin } from '../packages/products/dist/plugin.js';
 import { SupportPlugin } from '../packages/support/dist/plugin.js';
 import { HRPlugin } from '../packages/hr/dist/plugin.js';
+import { AnalyticsPlugin } from '../packages/analytics/dist/plugin.js';
+import { IntegrationPlugin } from '../packages/integration/dist/plugin.js';
+import { CommunityPlugin } from '../packages/community/dist/plugin.js';
+import { HealthcarePlugin } from '../packages/healthcare/dist/plugin.js';
+import { RealEstatePlugin } from '../packages/real-estate/dist/plugin.js';
+import { EducationPlugin } from '../packages/education/dist/plugin.js';
+import { FinancialServicesPlugin } from '../packages/financial-services/dist/plugin.js';
 
 // ---------------------------------------------------------------------------
 // Static SPA plugins — serve Console at / and Studio at /_studio/
@@ -121,11 +129,34 @@ function createStaticSpaPlugin(name: string, basePath: string, distPath: string,
 }
 
 // ---------------------------------------------------------------------------
-// Singleton bootstrap — reused across warm invocations
+// Singleton bootstrap — runs eagerly at module load, reused across warm
+// invocations (Vercel Fluid Compute).
+//
+// Previous approach used a Proxy to lazily bootstrap on the first request.
+// This caused timeouts on Vercel because better-auth's internal async init
+// (AsyncLocalStorage import, adapter creation, context resolution) ran
+// *inside* the first request, competing with Vercel's 60 s function timeout.
+//
+// Starting bootstrap eagerly at module-load time ensures the kernel is
+// fully ready before any request arrives.
 // ---------------------------------------------------------------------------
 
-let honoApp: Hono | null = null;
-let bootstrapPromise: Promise<Hono> | null = null;
+const bootstrapPromise: Promise<ReturnType<typeof handle>> = bootstrap().then(
+  (app) => handle(app),
+);
+
+// ---------------------------------------------------------------------------
+// Vercel Node.js serverless handler via @hono/node-server/vercel adapter
+// ---------------------------------------------------------------------------
+
+export default async function handler(req: any, res: any) {
+  const honoHandler = await bootstrapPromise;
+  return honoHandler(req, res);
+}
+
+// ---------------------------------------------------------------------------
+// Bootstrap — creates the full ObjectStack kernel with all plugins
+// ---------------------------------------------------------------------------
 
 async function bootstrap(): Promise<Hono> {
   const kernel = new ObjectKernel();
@@ -192,7 +223,29 @@ async function bootstrap(): Promise<Hono> {
     start: async () => {},
   });
 
-  // 5. Application config (business objects & plugins)
+  // 5. Authentication & Identity (better-auth based)
+  //
+  // baseUrl MUST match the actual deployment URL so that better-auth
+  // sets correct cookie domains, generates valid callback URLs,
+  // and doesn't trigger internal routing mismatches on Vercel.
+  const baseUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : 'http://localhost:3000';
+
+  await kernel.use(new AuthPlugin({
+    secret: process.env.AUTH_SECRET || 'hotcrm-dev-secret-change-me-in-production',
+    baseUrl,
+    trustedOrigins: [
+      'http://localhost:*',
+      ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : []),
+      ...(process.env.VERCEL_PROJECT_PRODUCTION_URL ? [`https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`] : []),
+      ...(process.env.AUTH_TRUSTED_ORIGINS ? process.env.AUTH_TRUSTED_ORIGINS.split(',').map(s => s.trim()) : []),
+    ],
+  }));
+
+  // 6. Application config (business objects & plugins)
   await kernel.use(new AppPlugin({
     manifest: {
       id: 'com.hotcrm.app',
@@ -205,10 +258,14 @@ async function bootstrap(): Promise<Hono> {
     plugins: [],
   }));
 
-  // 6. Register business plugins
+  // 7. Register business plugins
   const businessPlugins = [
     CRMPlugin, FinancePlugin, MarketingPlugin,
     ProductsPlugin, SupportPlugin, HRPlugin,
+    // Cross-functional clouds
+    AnalyticsPlugin, IntegrationPlugin, CommunityPlugin,
+    // Vertical industry solutions
+    HealthcarePlugin, RealEstatePlugin, EducationPlugin, FinancialServicesPlugin,
   ];
   for (const plugin of businessPlugins) {
     if (plugin) {
@@ -216,13 +273,13 @@ async function bootstrap(): Promise<Hono> {
     }
   }
 
-  // 7. REST API endpoints (auto-generated CRUD for all objects)
+  // 8. REST API endpoints (auto-generated CRUD for all objects)
   await kernel.use(createRestApiPlugin());
 
-  // 8. Dispatcher (auth, graphql, analytics routes)
+  // 9. Dispatcher (auth, graphql, analytics routes)
   await kernel.use(createDispatcherPlugin());
 
-  // 9. Console UI (serves the ObjectStack Console SPA at /console/)
+  // 10. Console UI (serves the ObjectStack Console SPA at /console/)
   const consoleDistPath = resolvePackageDistPath('@object-ui/console');
   if (consoleDistPath) {
     // Console SPA already has absolute /console/ asset paths — skip rewriting
@@ -232,48 +289,14 @@ async function bootstrap(): Promise<Hono> {
     app.get('/', (c: any) => c.redirect('/console/'));
   }
 
-  // 10. Studio UI (serves the ObjectStack Studio SPA at /_studio/)
+  // 11. Studio UI (serves the ObjectStack Studio SPA at /_studio/)
   const studioDistPath = resolvePackageDistPath('@objectstack/studio');
   if (studioDistPath) {
     await kernel.use(createStaticSpaPlugin('com.objectstack.studio-static', STUDIO_PATH, studioDistPath));
   }
 
-  // 11. Bootstrap kernel (init + start all plugins, fire kernel:ready)
+  // 12. Bootstrap kernel (init + start all plugins, fire kernel:ready)
   await kernel.bootstrap();
 
   return httpServer.getRawApp();
 }
-
-async function getApp(): Promise<Hono> {
-  if (honoApp) return honoApp;
-  if (!bootstrapPromise) {
-    bootstrapPromise = bootstrap().then((app) => {
-      honoApp = app;
-      return app;
-    });
-  }
-  return bootstrapPromise as Promise<Hono>;
-}
-
-// ---------------------------------------------------------------------------
-// Vercel Node.js serverless handler via @hono/node-server/vercel adapter
-// ---------------------------------------------------------------------------
-
-const handler = handle(
-  // Lazy-init proxy: the real Hono app is created on first request.
-  // handle() only invokes app.fetch() at request time, so the proxy
-  // forwards that call to the bootstrapped singleton.
-  new Proxy({} as Hono, {
-    get(_target, prop, receiver) {
-      if (prop === 'fetch') {
-        return async (request: Request) => {
-          const app = await getApp();
-          return app.fetch(request);
-        };
-      }
-      return Reflect.get(_target, prop, receiver);
-    },
-  })
-);
-
-export default handler;

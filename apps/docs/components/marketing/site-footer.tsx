@@ -1,8 +1,9 @@
 import Link from 'next/link';
 import type { Dictionary, Locale } from '@/lib/i18n';
 
+const currentYear = new Date().getFullYear();
+
 export function SiteFooter({ locale, dict }: { locale: Locale; dict: Dictionary }) {
-  const currentYear = new Date().getFullYear();
   return (
     <footer className="border-t border-border/40 bg-muted/20">
       <div className="container mx-auto px-4 py-12">
@@ -38,7 +39,7 @@ export function SiteFooter({ locale, dict }: { locale: Locale; dict: Dictionary 
           </div>
         </div>
         <div className="mt-12 pt-6 border-t border-border/40 text-center text-sm text-muted-foreground">
-          {dict.footer.copyright.replace('2025', String(currentYear))}
+          {dict.footer.copyright.replace('{year}', String(currentYear))}
         </div>
       </div>
     </footer>

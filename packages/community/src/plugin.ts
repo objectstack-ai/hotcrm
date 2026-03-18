@@ -56,7 +56,7 @@ export const CommunityPlugin = {
   description: 'Community engagement - Forums, Ideas, Events, Gamification, and AI-Powered Moderation',
 
   // Plugin dependencies
-  dependencies: ['core', 'support'],
+  dependencies: ['support'],
 
   // Plugin initialization
   init: async () => {
