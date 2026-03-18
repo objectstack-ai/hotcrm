@@ -1,4 +1,5 @@
 import { defineStack } from '@objectstack/spec';
+import { AuthPlugin } from '@objectstack/plugin-auth';
 import { CRMPlugin } from './packages/crm/dist/plugin.js';
 import { FinancePlugin } from './packages/finance/dist/plugin.js';
 import { MarketingPlugin } from './packages/marketing/dist/plugin.js';
@@ -83,6 +84,10 @@ export default defineStack({
     RealEstatePlugin,
     EducationPlugin,
     FinancialServicesPlugin,
+    new AuthPlugin({
+      secret: process.env.AUTH_SECRET || 'hotcrm-dev-secret-change-me-in-production',
+      trustedOrigins: ['http://localhost:*'],
+    }),
     new ConsolePlugin(),
   ],
   // Uses 'as any' because defineStack schema doesn't include runtime plugins

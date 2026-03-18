@@ -35,11 +35,11 @@
   ],
   "author": "HotCRM Team",
   "dependencies": {
-    "@objectstack/spec": "^3.2.1",
+    "@objectstack/spec": "^3.2.7",
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@objectstack/cli": "^3.2.1",
+    "@objectstack/cli": "^3.2.7",
     "typescript": "^5.9.3"
   }
 }

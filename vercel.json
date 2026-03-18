@@ -1,13 +1,13 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "installCommand": "pnpm install --ignore-scripts",
-  "buildCommand": "pnpm --filter @hotcrm/core build && node scripts/patch-console-plugin.cjs && pnpm --filter @hotcrm/ai --filter @hotcrm/crm --filter @hotcrm/finance --filter @hotcrm/marketing --filter @hotcrm/products --filter @hotcrm/support --filter @hotcrm/hr build",
+  "buildCommand": "pnpm --filter @hotcrm/core build && node scripts/patch-console-plugin.cjs && pnpm --filter @hotcrm/ai --filter @hotcrm/crm --filter @hotcrm/finance --filter @hotcrm/marketing --filter @hotcrm/products --filter @hotcrm/support --filter @hotcrm/hr --filter @hotcrm/analytics --filter @hotcrm/integration --filter @hotcrm/community --filter @hotcrm/healthcare --filter @hotcrm/real-estate --filter @hotcrm/education --filter @hotcrm/financial-services build",
   "framework": null,
   "functions": {
     "api/**/*.ts": {
       "memory": 1024,
       "maxDuration": 60,
-      "includeFiles": "{packages/*/dist,node_modules/@object-ui/console/dist,node_modules/@objectstack/studio/dist}/**"
+      "includeFiles": "{packages/*/dist,node_modules/@object-ui/console/dist,node_modules/@objectstack/plugin-auth/dist,node_modules/@objectstack/studio/dist}/**"
     }
   },
   "rewrites": [
