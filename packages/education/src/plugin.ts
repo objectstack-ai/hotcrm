@@ -54,7 +54,7 @@ export const EducationPlugin = {
   description: 'Education management - Students, Courses, Enrollments, Scholarships, and Alumni Engagement',
 
   // Plugin dependencies
-  dependencies: ['core'],
+  dependencies: [],
 
   // Plugin initialization
   init: async () => {

@@ -391,7 +391,7 @@ export const dictionary = {
     about: 'About',
     blog: 'Blog',
     careers: 'Careers',
-    copyright: '© 2025 HotCRM. All rights reserved.',
+    copyright: '© {year} HotCRM. All rights reserved.',
     openSource: 'Open Source',
     builtWith: 'Built with ObjectStack Protocol',
   },

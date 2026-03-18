@@ -29,7 +29,7 @@ export function SiteHeader({ locale, dict }: { locale: Locale; dict: Dictionary 
   return (
     <header className="sticky top-0 z-50 border-b border-border/40 bg-background/80 backdrop-blur-lg">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <Link href={`/${locale}`} className="flex items-center gap-2">
+        <Link href={`/${locale}`} className="flex items-center gap-2" aria-label="HotCRM - Home">
           <Image src="/logo.svg" alt="HotCRM Logo" width={120} height={32} priority />
         </Link>
 
@@ -89,8 +89,9 @@ export function SiteHeader({ locale, dict }: { locale: Locale; dict: Dictionary 
           <Link
             href={`/${otherLocale}`}
             className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            aria-label={`Switch to ${localeLabels[otherLocale]}`}
           >
-            <Globe className="w-4 h-4" />
+            <Globe className="w-4 h-4" aria-hidden="true" />
             {localeLabels[otherLocale]}
           </Link>
 
@@ -103,7 +104,12 @@ export function SiteHeader({ locale, dict }: { locale: Locale; dict: Dictionary 
         </nav>
 
         {/* Mobile Toggle */}
-        <button className="md:hidden" onClick={() => setMobileOpen(!mobileOpen)}>
+        <button
+          className="md:hidden"
+          onClick={() => setMobileOpen(!mobileOpen)}
+          aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+          aria-expanded={mobileOpen}
+        >
           {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </button>
       </div>
@@ -129,8 +135,9 @@ export function SiteHeader({ locale, dict }: { locale: Locale; dict: Dictionary 
             href={`/${otherLocale}`}
             className="flex items-center gap-1 py-2 text-sm font-medium text-muted-foreground hover:text-foreground"
             onClick={() => setMobileOpen(false)}
+            aria-label={`Switch to ${localeLabels[otherLocale]}`}
           >
-            <Globe className="w-4 h-4" />
+            <Globe className="w-4 h-4" aria-hidden="true" />
             {localeLabels[otherLocale]}
           </Link>
         </div>

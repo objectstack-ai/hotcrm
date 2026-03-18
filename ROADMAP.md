@@ -1,7 +1,7 @@
 # HotCRM Development Roadmap
 
 > Comprehensive development plan for HotCRM — the world's first AI-Native CRM.
-> Protocol: @objectstack/spec v3.2.1 | Last Updated: March 2026
+> Protocol: @objectstack/spec v3.2.6 | Last Updated: March 2026
 
 ## Strategic Direction
 
@@ -22,7 +22,7 @@
 
 | Metric | Value |
 |--------|-------|
-| Protocol Version | @objectstack/spec v3.2.1 |
+| Protocol Version | @objectstack/spec v3.2.6 |
 | Business Objects | ~148 across 13 packages |
 | Business Packages | 13 (6 core clouds + AI + Analytics + Integration + Community + 4 verticals) |
 | Hook Files | 121+ across 13 packages |

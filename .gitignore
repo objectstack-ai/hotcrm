@@ -29,3 +29,5 @@ packages/server/objectstack.config.js
 .vercel/
 *.tgz
 package/
+
+.objectstack

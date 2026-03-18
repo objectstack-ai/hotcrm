@@ -11,7 +11,17 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   const dict = getDictionary(locale as Locale);
-  return { title: `${dict.products.sales.title} - HotCRM`, description: dict.products.sales.subtitle };
+  return {
+    title: `${dict.products.sales.title} - HotCRM`,
+    description: dict.products.sales.subtitle,
+    alternates: {
+      languages: {
+        'en': '/en/products/sales',
+        'zh': '/zh/products/sales',
+        'x-default': '/en/products/sales',
+      },
+    },
+  };
 }
 
 export default async function SalesPage({ params }: { params: Promise<{ locale: string }> }) {

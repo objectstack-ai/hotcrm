@@ -387,7 +387,7 @@ export const dictionary = {
     about: '关于',
     blog: '博客',
     careers: '加入我们',
-    copyright: '© 2025 HotCRM. 保留所有权利。',
+    copyright: '© {year} HotCRM. 保留所有权利。',
     openSource: '开源',
     builtWith: '基于 ObjectStack 协议构建',
   },
