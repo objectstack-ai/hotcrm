@@ -61,9 +61,6 @@ export const IntegrationPlugin = {
   version: '1.0.0',
   description: 'Integration and connectivity - Connectors, Sync, Webhooks, API Management, and AI-Powered Tools',
 
-  // Plugin dependencies
-  dependencies: ['ai'],
-
   // Plugin initialization
   init: async () => {
     // No initialization required for this plugin

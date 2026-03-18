@@ -3,12 +3,13 @@ import {
   ArrowRight, Bot, TrendingUp, Users, Shield, Zap, Globe, Target,
   LifeBuoy, Megaphone, Banknote, LayoutTemplate, CheckCircle2,
   Building2, Briefcase, ShoppingCart, Factory, HeartPulse, Lightbulb,
-  Mail, MessageSquare, Calendar, FileText, Lock, Award, Play,
+  Mail, Lock, Award, Play,
 } from 'lucide-react';
 import { getDictionary, locales } from '@/lib/i18n';
 import type { Locale } from '@/lib/i18n';
 import type { Metadata } from 'next';
 import { AnimatedGrid } from '@/components/marketing/animated-grid';
+import { IntegrationMarquee } from '@/components/marketing/integration-marquee';
 
 export function generateStaticParams() {
   return locales.map(locale => ({ locale }));
@@ -20,6 +21,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   return {
     title: `HotCRM - ${dict.home.badge}`,
     description: dict.home.subtitle,
+    alternates: {
+      languages: {
+        'en': '/en',
+        'zh': '/zh',
+        'x-default': '/en',
+      },
+    },
   };
 }
 
@@ -56,7 +64,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300">
             <Link
               href="/docs/getting-started/introduction"
-              className="hero-cta-primary inline-flex h-12 items-center justify-center rounded-lg bg-primary px-8 text-base font-medium text-primary-foreground shadow-lg transition-all hover:shadow-primary/25 hover:shadow-xl"
+              className="hero-cta-primary inline-flex h-12 items-center justify-center rounded-full bg-primary px-8 text-base font-medium text-primary-foreground shadow-lg transition-colors hover:bg-primary/90"
             >
               {dict.home.getStarted}
               <ArrowRight className="ml-2 w-5 h-5" />
@@ -64,7 +72,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             <Link
               href="https://github.com/objectstack-ai/hotcrm"
               target="_blank"
-              className="inline-flex h-12 items-center justify-center rounded-lg border border-border bg-background/50 backdrop-blur-sm px-8 text-base font-medium shadow-sm transition-all hover:bg-accent hover:text-accent-foreground"
+              className="inline-flex h-12 items-center justify-center rounded-full border border-foreground/30 bg-background/50 backdrop-blur-sm px-8 text-base font-medium shadow-sm transition-all hover:bg-accent hover:text-accent-foreground"
             >
               {dict.home.viewOnGithub}
             </Link>
@@ -262,18 +270,21 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             author={dict.home.testimonial1Author}
             role={dict.home.testimonial1Role}
             company={dict.home.testimonial1Company}
+            avatarImg={1}
           />
           <TestimonialCard
             quote={dict.home.testimonial2Quote}
             author={dict.home.testimonial2Author}
             role={dict.home.testimonial2Role}
             company={dict.home.testimonial2Company}
+            avatarImg={11}
           />
           <TestimonialCard
             quote={dict.home.testimonial3Quote}
             author={dict.home.testimonial3Author}
             role={dict.home.testimonial3Role}
             company={dict.home.testimonial3Company}
+            avatarImg={20}
           />
         </div>
       </section>
@@ -304,21 +315,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           <p className="text-muted-foreground text-lg">{dict.home.integrationsSubtitle}</p>
         </div>
 
-        <div className="grid grid-cols-3 md:grid-cols-6 gap-8 items-center justify-items-center">
-          {[
-            { name: 'Email', icon: <Mail className="w-8 h-8" /> },
-            { name: 'Chat', icon: <MessageSquare className="w-8 h-8" /> },
-            { name: 'Calendar', icon: <Calendar className="w-8 h-8" /> },
-            { name: 'Docs', icon: <FileText className="w-8 h-8" /> },
-            { name: 'CRM', icon: <Users className="w-8 h-8" /> },
-            { name: 'API', icon: <Zap className="w-8 h-8" /> },
-          ].map(integration => (
-            <div key={integration.name} className="integration-item flex flex-col items-center gap-2 text-muted-foreground/60 hover:text-primary transition-colors cursor-pointer">
-              {integration.icon}
-              <span className="text-xs font-medium">{integration.name}</span>
-            </div>
-          ))}
-        </div>
+        <IntegrationMarquee />
       </section>
 
       {/* Security & Compliance */}
@@ -357,7 +354,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           <p className="text-muted-foreground mb-8">{dict.home.pricingSubtitle}</p>
           <Link
             href={`/${locale}/docs/getting-started/introduction`}
-            className="inline-flex h-11 items-center justify-center rounded-lg border border-border bg-background px-6 text-sm font-medium transition-all hover:bg-accent hover:text-accent-foreground"
+            className="inline-flex h-11 items-center justify-center rounded-full border border-foreground/30 bg-background px-6 text-sm font-medium transition-all hover:bg-accent hover:text-accent-foreground"
           >
             {dict.home.pricingCta}
             <ArrowRight className="ml-2 w-4 h-4" />
@@ -374,7 +371,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <Link
               href="/docs/getting-started/introduction"
-              className="inline-flex h-12 items-center justify-center rounded-lg bg-foreground text-background px-8 text-base font-medium transition-all hover:bg-foreground/90 hover:shadow-lg"
+              className="inline-flex h-12 items-center justify-center rounded-full bg-primary px-8 text-base font-medium text-primary-foreground transition-colors hover:bg-primary/90"
             >
               {dict.home.readDocs}
               <ArrowRight className="ml-2 w-5 h-5" />
@@ -382,7 +379,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             <Link
               href="https://github.com/objectstack-ai/hotcrm"
               target="_blank"
-              className="inline-flex h-12 items-center justify-center rounded-lg border border-border bg-background/50 backdrop-blur-sm px-8 text-base font-medium shadow-sm transition-all hover:bg-accent hover:text-accent-foreground"
+              className="inline-flex h-12 items-center justify-center rounded-full border border-foreground/30 bg-background/50 backdrop-blur-sm px-8 text-base font-medium shadow-sm transition-all hover:bg-accent hover:text-accent-foreground"
             >
               {dict.home.starOnGithub}
             </Link>
@@ -457,16 +454,15 @@ function AIFeatureCard({ icon, title, description }: { icon: React.ReactNode; ti
   );
 }
 
-function TestimonialCard({ quote, author, role, company }: { quote: string; author: string; role: string; company: string }) {
+function TestimonialCard({ quote, author, role, company, avatarImg }: { quote: string; author: string; role: string; company: string; avatarImg: number }) {
   return (
     <div className="testimonial-card rounded-xl border border-border/60 bg-card p-8 transition-all hover:border-primary/40 hover:shadow-lg">
       <div className="mb-6">
         <p className="text-muted-foreground leading-relaxed italic">&quot;{quote}&quot;</p>
       </div>
       <div className="flex items-center gap-3">
-        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold">
-          {author.charAt(0)}
-        </div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={`https://i.pravatar.cc/150?img=${avatarImg}`} alt={author} className="w-10 h-10 rounded-full object-cover shrink-0" />
         <div>
           <p className="font-semibold">{author}</p>
           <p className="text-sm text-muted-foreground">{role}</p>
