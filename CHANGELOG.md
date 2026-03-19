@@ -16,6 +16,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated `vercel.json` `includeFiles` to bundle the Auth Plugin dist with the serverless function
 
 ### Fixed
+- **Fix Vercel login timeout (60 s serverless handler hang)** — The serverless handler bootstrap
+  could hang indefinitely when a plugin's `init`/`start` returned a never-resolving promise (e.g.
+  missing dependency, unresolved network call, or coding error). Added three layers of timeout
+  protection:
+  - Each `kernel.use()` call is wrapped with a **10 s** per-plugin timeout.
+  - `kernel.bootstrap()` (runs init + start on all plugins) has a **30 s** timeout.
+  - The entire `bootstrap()` function has a **50 s** budget (leaving 10 s margin for Vercel's 60 s
+    function limit).
+  - On timeout or any bootstrap error the handler now returns **503 Service Unavailable** with a
+    JSON body instead of silently consuming the full 60 s limit.
+  - Added timestamped diagnostic logging (`[HotCRM] [<elapsed>ms] …`) at every bootstrap step so
+    that the blocking plugin can be identified from Vercel function logs.
 - **Fix `vercel.json` buildCommand exceeding 256-character limit** — Vercel schema validation
   rejects `buildCommand` values longer than 256 characters. The previous inline command was
   454 characters. Extracted the build steps into `scripts/build-vercel.sh` and referenced it
