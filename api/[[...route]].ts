@@ -334,7 +334,7 @@ async function bootstrap(): Promise<Hono> {
   log('AppPlugin (manifest) registered.');
 
   // 7. Register business plugins
-  const businessPlugins: Array<{ name?: string; label?: string } | null | undefined> = [
+  const businessPlugins = [
     CRMPlugin, FinancePlugin, MarketingPlugin,
     ProductsPlugin, SupportPlugin, HRPlugin,
     // Cross-functional clouds
@@ -344,10 +344,10 @@ async function bootstrap(): Promise<Hono> {
   ];
   for (const plugin of businessPlugins) {
     if (plugin) {
-      const pluginName = plugin.name || plugin.label || 'unknown';
+      const pluginName = (plugin as { name?: string }).name || 'unknown';
       log(`Registering business plugin: ${pluginName}…`);
       await withTimeout(
-        kernel.use(new AppPlugin(plugin as any)),
+        kernel.use(new AppPlugin(plugin)),
         PLUGIN_TIMEOUT_MS,
         `AppPlugin(${pluginName})`,
       );
