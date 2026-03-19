@@ -300,6 +300,8 @@ The serverless function at `api/[[...route]].ts` uses a **singleton bootstrap pa
 - **Subsequent requests (warm)**: reuses the existing kernel and in-memory data (Vercel Fluid Compute)
 - **Cold start after idle**: data resets — a fresh kernel is bootstrapped
 
+**Timeout Protection** — Every `kernel.use()` call has a **10 s** per-plugin timeout, `kernel.bootstrap()` has a **30 s** timeout, and the entire bootstrap function has a **50 s** budget (10 s margin for Vercel's 60 s function limit). If any step exceeds its timeout, the handler immediately returns **503 Service Unavailable** with a JSON error body instead of silently hanging until the Vercel 60 s limit. Timestamped diagnostic logs (`[HotCRM] [<elapsed>ms] …`) are emitted at every bootstrap step so the blocking plugin can be identified from the Vercel Function Logs tab.
+
 The function does **not** use `HonoServerPlugin` (which binds to a TCP port). Instead, it manually creates
 a `HonoHttpServer`, registers it as the `http.server` service, and uses the `handle()` adapter from
 `@hono/node-server/vercel` to convert the Hono app into a standard Node.js serverless handler
