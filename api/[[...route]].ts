@@ -296,6 +296,17 @@ async function bootstrap(): Promise<Hono> {
 
   // 5. Authentication & Identity (better-auth based)
   //
+  // Fail-fast: on Vercel, AUTH_SECRET MUST be set. A missing secret would cause
+  // silent authentication failures or insecure token signing. In local dev we
+  // fall back to a placeholder so `pnpm dev` works out-of-the-box.
+  const authSecret = process.env.AUTH_SECRET;
+  if (!authSecret && process.env.VERCEL) {
+    throw new Error(
+      '[HotCRM] AUTH_SECRET environment variable is required on Vercel. ' +
+      'Set it in the Vercel Dashboard → Project Settings → Environment Variables.',
+    );
+  }
+
   // baseUrl MUST match the actual deployment URL so that better-auth
   // sets correct cookie domains, generates valid callback URLs,
   // and doesn't trigger internal routing mismatches on Vercel.
@@ -307,7 +318,7 @@ async function bootstrap(): Promise<Hono> {
 
   log('Registering AuthPlugin…');
   await withTimeout(kernel.use(new AuthPlugin({
-    secret: process.env.AUTH_SECRET || 'hotcrm-dev-secret-change-me-in-production',
+    secret: authSecret || 'hotcrm-dev-secret-change-me-in-production',
     baseUrl,
     trustedOrigins: [
       'http://localhost:*',

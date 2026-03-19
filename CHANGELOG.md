@@ -28,6 +28,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     JSON body instead of silently consuming the full 60 s limit.
   - Added timestamped diagnostic logging (`[HotCRM] [<elapsed>ms] …`) at every bootstrap step so
     that the blocking plugin can be identified from Vercel function logs.
+- **Fail-fast on missing `AUTH_SECRET` in Vercel** — When running on Vercel (`VERCEL` env var set),
+  the handler now throws immediately if `AUTH_SECRET` is not configured, instead of silently falling
+  back to an insecure dev placeholder. The error message directs to Vercel Dashboard settings.
 - **Fix `vercel.json` buildCommand exceeding 256-character limit** — Vercel schema validation
   rejects `buildCommand` values longer than 256 characters. The previous inline command was
   454 characters. Extracted the build steps into `scripts/build-vercel.sh` and referenced it
