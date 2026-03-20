@@ -12,6 +12,13 @@
  * warm invocations (Vercel Fluid Compute) but resets on cold start.
  *
  * Both Console (/) and Studio (/_studio/) UIs are served as static SPAs.
+ *
+ * Timeout Protection:
+ *   - Each plugin registration (kernel.use) has a 10 s timeout.
+ *   - kernel.bootstrap() (init + start all plugins) has a 30 s timeout.
+ *   - The entire bootstrap() function has a 50 s budget (10 s margin
+ *     for Vercel's 60 s function limit).
+ *   - On failure the handler returns 503 instead of hanging.
  */
 import { ObjectKernel, DriverPlugin, AppPlugin, createDispatcherPlugin, createRestApiPlugin } from '@objectstack/runtime';
 import { HonoHttpServer } from '@objectstack/plugin-hono-server';
@@ -39,6 +46,36 @@ import { HealthcarePlugin } from '../packages/healthcare/dist/plugin.js';
 import { RealEstatePlugin } from '../packages/real-estate/dist/plugin.js';
 import { EducationPlugin } from '../packages/education/dist/plugin.js';
 import { FinancialServicesPlugin } from '../packages/financial-services/dist/plugin.js';
+
+// ---------------------------------------------------------------------------
+// Timeout constants — protect against permanently-pending promises that would
+// cause Vercel's 60 s function timeout.
+// ---------------------------------------------------------------------------
+
+/** Per-plugin kernel.use() timeout (ms). */
+const PLUGIN_TIMEOUT_MS = 10_000;
+
+/** kernel.bootstrap() (init + start all plugins) timeout (ms). */
+const KERNEL_BOOTSTRAP_TIMEOUT_MS = 30_000;
+
+/** Overall bootstrap() budget (ms). Leaves ~10 s margin for Vercel's 60 s limit. */
+const BOOTSTRAP_TIMEOUT_MS = 50_000;
+
+/**
+ * Race a promise against a timer. Rejects with a descriptive error if the
+ * promise does not settle within `ms` milliseconds.
+ */
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error(`[HotCRM] Timeout after ${ms}ms: ${label}`));
+    }, ms);
+    promise.then(
+      (v) => { clearTimeout(timer); resolve(v); },
+      (e) => { clearTimeout(timer); reject(e); },
+    );
+  });
+}
 
 // ---------------------------------------------------------------------------
 // Static SPA plugins — serve Console at / and Studio at /_studio/
@@ -139,19 +176,39 @@ function createStaticSpaPlugin(name: string, basePath: string, distPath: string,
 //
 // Starting bootstrap eagerly at module-load time ensures the kernel is
 // fully ready before any request arrives.
+//
+// The entire bootstrap is wrapped in a BOOTSTRAP_TIMEOUT_MS budget so that
+// a permanently-pending plugin or missing dependency triggers a fast,
+// diagnosable failure instead of silently consuming the full 60 s Vercel limit.
 // ---------------------------------------------------------------------------
 
-const bootstrapPromise: Promise<ReturnType<typeof handle>> = bootstrap().then(
-  (app) => handle(app),
-);
+const bootstrapPromise: Promise<ReturnType<typeof handle>> = withTimeout(
+  bootstrap(),
+  BOOTSTRAP_TIMEOUT_MS,
+  'Overall bootstrap',
+)
+  .then((app) => handle(app))
+  .catch((err) => {
+    console.error('[HotCRM] Bootstrap failed:', err);
+    // Re-throw so every subsequent `await bootstrapPromise` also rejects.
+    throw err;
+  });
 
 // ---------------------------------------------------------------------------
 // Vercel Node.js serverless handler via @hono/node-server/vercel adapter
 // ---------------------------------------------------------------------------
 
 export default async function handler(req: any, res: any) {
-  const honoHandler = await bootstrapPromise;
-  return honoHandler(req, res);
+  try {
+    const honoHandler = await bootstrapPromise;
+    return honoHandler(req, res);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error('[HotCRM] Handler error — bootstrap did not complete:', message);
+    res.statusCode = 503;
+    res.setHeader('Content-Type', 'application/json');
+    res.end(JSON.stringify({ error: 'Service Unavailable', message: 'Kernel bootstrap failed. Check function logs for details.' }));
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -159,17 +216,28 @@ export default async function handler(req: any, res: any) {
 // ---------------------------------------------------------------------------
 
 async function bootstrap(): Promise<Hono> {
+  const t0 = Date.now();
+  const elapsed = () => `${Date.now() - t0}ms`;
+  const log = (msg: string) => console.log(`[HotCRM] [${elapsed()}] ${msg}`);
+
+  log('Bootstrap starting…');
+
   const kernel = new ObjectKernel();
 
   // 1. ObjectQL engine (provides metadata, data, and protocol services)
-  await kernel.use(new ObjectQLPlugin());
+  log('Registering ObjectQLPlugin…');
+  await withTimeout(kernel.use(new ObjectQLPlugin()), PLUGIN_TIMEOUT_MS, 'ObjectQLPlugin');
+  log('ObjectQLPlugin registered.');
 
   // 2. In-memory data driver (no external DB required)
-  await kernel.use(new DriverPlugin(new InMemoryDriver(), 'memory'));
+  log('Registering DriverPlugin (InMemoryDriver)…');
+  await withTimeout(kernel.use(new DriverPlugin(new InMemoryDriver(), 'memory')), PLUGIN_TIMEOUT_MS, 'DriverPlugin');
+  log('DriverPlugin registered.');
 
   // 3. HTTP server adapter — register the Hono app without TCP listener
   const httpServer = new HonoHttpServer();
-  await kernel.use({
+  log('Registering vercel-http…');
+  await withTimeout(kernel.use({
     name: 'vercel-http',
     version: '1.0.0',
     init: async (ctx: any) => {
@@ -177,10 +245,12 @@ async function bootstrap(): Promise<Hono> {
       ctx.registerService('http-server', httpServer);
     },
     start: async () => {},
-  });
+  }), PLUGIN_TIMEOUT_MS, 'vercel-http');
+  log('vercel-http registered.');
 
   // 4. In-memory cache service (satisfies the 'cache' core service requirement)
-  await kernel.use({
+  log('Registering cache service…');
+  await withTimeout(kernel.use({
     name: 'com.hotcrm.cache.memory',
     version: '1.0.0',
     init: async (ctx: any) => {
@@ -221,10 +291,22 @@ async function bootstrap(): Promise<Hono> {
       });
     },
     start: async () => {},
-  });
+  }), PLUGIN_TIMEOUT_MS, 'cache-memory');
+  log('Cache service registered.');
 
   // 5. Authentication & Identity (better-auth based)
   //
+  // Fail-fast: on Vercel, AUTH_SECRET MUST be set. A missing secret would cause
+  // silent authentication failures or insecure token signing. In local dev we
+  // fall back to a placeholder so `pnpm dev` works out-of-the-box.
+  const authSecret = process.env.AUTH_SECRET;
+  if (!authSecret && process.env.VERCEL) {
+    throw new Error(
+      '[HotCRM] AUTH_SECRET environment variable is required on Vercel. ' +
+      'Set it in the Vercel Dashboard → Project Settings → Environment Variables.',
+    );
+  }
+
   // baseUrl MUST match the actual deployment URL so that better-auth
   // sets correct cookie domains, generates valid callback URLs,
   // and doesn't trigger internal routing mismatches on Vercel.
@@ -234,8 +316,9 @@ async function bootstrap(): Promise<Hono> {
       ? `https://${process.env.VERCEL_URL}`
       : 'http://localhost:3000';
 
-  await kernel.use(new AuthPlugin({
-    secret: process.env.AUTH_SECRET || 'hotcrm-dev-secret-change-me-in-production',
+  log('Registering AuthPlugin…');
+  await withTimeout(kernel.use(new AuthPlugin({
+    secret: authSecret || 'hotcrm-dev-secret-change-me-in-production',
     baseUrl,
     trustedOrigins: [
       'http://localhost:*',
@@ -243,10 +326,12 @@ async function bootstrap(): Promise<Hono> {
       ...(process.env.VERCEL_PROJECT_PRODUCTION_URL ? [`https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`] : []),
       ...(process.env.AUTH_TRUSTED_ORIGINS ? process.env.AUTH_TRUSTED_ORIGINS.split(',').map(s => s.trim()) : []),
     ],
-  }));
+  })), PLUGIN_TIMEOUT_MS, 'AuthPlugin');
+  log('AuthPlugin registered.');
 
   // 6. Application config (business objects & plugins)
-  await kernel.use(new AppPlugin({
+  log('Registering AppPlugin (manifest)…');
+  await withTimeout(kernel.use(new AppPlugin({
     manifest: {
       id: 'com.hotcrm.app',
       namespace: 'hotcrm',
@@ -256,7 +341,8 @@ async function bootstrap(): Promise<Hono> {
     },
     objects: [],
     plugins: [],
-  }));
+  })), PLUGIN_TIMEOUT_MS, 'AppPlugin-manifest');
+  log('AppPlugin (manifest) registered.');
 
   // 7. Register business plugins
   const businessPlugins = [
@@ -269,34 +355,59 @@ async function bootstrap(): Promise<Hono> {
   ];
   for (const plugin of businessPlugins) {
     if (plugin) {
-      await kernel.use(new AppPlugin(plugin));
+      const pluginName = (plugin as { name?: string }).name || 'unknown';
+      log(`Registering business plugin: ${pluginName}…`);
+      await withTimeout(
+        kernel.use(new AppPlugin(plugin)),
+        PLUGIN_TIMEOUT_MS,
+        `AppPlugin(${pluginName})`,
+      );
+      log(`Business plugin ${pluginName} registered.`);
     }
   }
 
   // 8. REST API endpoints (auto-generated CRUD for all objects)
-  await kernel.use(createRestApiPlugin());
+  log('Registering RestApiPlugin…');
+  await withTimeout(kernel.use(createRestApiPlugin()), PLUGIN_TIMEOUT_MS, 'RestApiPlugin');
+  log('RestApiPlugin registered.');
 
   // 9. Dispatcher (auth, graphql, analytics routes)
-  await kernel.use(createDispatcherPlugin());
+  log('Registering DispatcherPlugin…');
+  await withTimeout(kernel.use(createDispatcherPlugin()), PLUGIN_TIMEOUT_MS, 'DispatcherPlugin');
+  log('DispatcherPlugin registered.');
 
   // 10. Console UI (serves the ObjectStack Console SPA at /console/)
   const consoleDistPath = resolvePackageDistPath('@object-ui/console');
   if (consoleDistPath) {
+    log('Registering Console SPA static plugin…');
     // Console SPA already has absolute /console/ asset paths — skip rewriting
-    await kernel.use(createStaticSpaPlugin('com.objectui.console-static', '/console', consoleDistPath, false));
+    await withTimeout(
+      kernel.use(createStaticSpaPlugin('com.objectui.console-static', '/console', consoleDistPath, false)),
+      PLUGIN_TIMEOUT_MS,
+      'Console-SPA',
+    );
     // Default redirect: / -> /console/
     const app = httpServer.getRawApp();
     app.get('/', (c: any) => c.redirect('/console/'));
+    log('Console SPA registered.');
   }
 
   // 11. Studio UI (serves the ObjectStack Studio SPA at /_studio/)
   const studioDistPath = resolvePackageDistPath('@objectstack/studio');
   if (studioDistPath) {
-    await kernel.use(createStaticSpaPlugin('com.objectstack.studio-static', STUDIO_PATH, studioDistPath));
+    log('Registering Studio SPA static plugin…');
+    await withTimeout(
+      kernel.use(createStaticSpaPlugin('com.objectstack.studio-static', STUDIO_PATH, studioDistPath)),
+      PLUGIN_TIMEOUT_MS,
+      'Studio-SPA',
+    );
+    log('Studio SPA registered.');
   }
 
   // 12. Bootstrap kernel (init + start all plugins, fire kernel:ready)
-  await kernel.bootstrap();
+  log('Running kernel.bootstrap()…');
+  await withTimeout(kernel.bootstrap(), KERNEL_BOOTSTRAP_TIMEOUT_MS, 'kernel.bootstrap()');
+  log(`Bootstrap complete in ${elapsed()}.`);
 
   return httpServer.getRawApp();
 }
