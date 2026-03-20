@@ -212,6 +212,32 @@ function extractBody(incoming: VercelIncomingMessage, method: string, contentTyp
   return null;
 }
 
+/**
+ * Derive the correct public URL for the request, fixing the protocol when
+ * running behind a reverse proxy such as Vercel's edge network.
+ *
+ * `@hono/node-server`'s `getRequestListener` constructs the URL from
+ * `incoming.socket.encrypted`, which is `false` on Vercel's internal network
+ * even though the external request is HTTPS. Using `x-forwarded-proto: https`
+ * (set by Vercel's edge) ensures that better-auth sees an `https://` URL,
+ * so cookie `Secure` attributes, callback URL validation, and any protocol
+ * comparisons inside better-auth work correctly.
+ *
+ * Only `http` and `https` are accepted as valid protocol values; any other
+ * value in the header is ignored to prevent header-injection attacks.
+ */
+function resolvePublicUrl(requestUrl: string, incoming: VercelIncomingMessage | undefined): string {
+  if (!incoming) return requestUrl;
+  const fwdProto = incoming.headers?.['x-forwarded-proto'];
+  const rawProto = Array.isArray(fwdProto) ? fwdProto[0] : fwdProto;
+  // Accept only well-known protocol values to prevent header-injection attacks.
+  const proto = rawProto === 'https' || rawProto === 'http' ? rawProto : undefined;
+  if (proto === 'https' && requestUrl.startsWith('http:')) {
+    return requestUrl.replace(/^http:/, 'https:');
+  }
+  return requestUrl;
+}
+
 // ---------------------------------------------------------------------------
 // Singleton bootstrap — runs eagerly at module load, reused across warm
 // invocations (Vercel Fluid Compute).
@@ -245,6 +271,12 @@ const bootstrapPromise: Promise<Hono> = withTimeout(
 // Using getRequestListener() instead of handle() from @hono/node-server/vercel
 // gives us access to the raw IncomingMessage via `env.incoming`, which lets us
 // read Vercel's pre-buffered rawBody/body for POST/PUT/PATCH requests.
+//
+// URL protocol fix: getRequestListener derives the URL scheme from
+// `socket.encrypted` which is `false` on Vercel's internal network (even for
+// HTTPS requests). We correct this using the `x-forwarded-proto` header so
+// that better-auth receives an `https://` URL with correct cookie/origin
+// semantics.
 // ---------------------------------------------------------------------------
 
 export default getRequestListener(async (request, env) => {
@@ -263,17 +295,24 @@ export default getRequestListener(async (request, env) => {
   const method = request.method.toUpperCase();
   const incoming = (env as VercelEnv)?.incoming;
 
+  // Fix URL protocol using x-forwarded-proto (Vercel sets this to 'https').
+  const url = resolvePublicUrl(request.url, incoming);
+
   if (method !== 'GET' && method !== 'HEAD' && method !== 'OPTIONS' && incoming) {
     const contentType = incoming.headers?.['content-type'];
     const contentTypeStr = Array.isArray(contentType) ? contentType[0] : contentType;
     const body = extractBody(incoming, method, contentTypeStr);
     if (body != null) {
-      const newReq = new Request(request.url, { method, headers: request.headers, body });
-      return await app.fetch(newReq);
+      return await app.fetch(new Request(url, { method, headers: request.headers, body }));
     }
   }
 
-  return await app.fetch(request);
+  // For GET/HEAD/OPTIONS (or body-less requests): pass through with corrected URL.
+  return await app.fetch(
+    url !== request.url
+      ? new Request(url, { method, headers: request.headers })
+      : request,
+  );
 });
 
 // ---------------------------------------------------------------------------
@@ -387,7 +426,14 @@ async function bootstrap(): Promise<Hono> {
     baseUrl,
     trustedOrigins: [
       'http://localhost:*',
+      // Vercel automatically provides these environment variables:
+      //   VERCEL_URL              — unique deployment URL (hash-based, changes per deploy)
+      //   VERCEL_BRANCH_URL       — stable branch URL (e.g. hotcrm-git-main.vercel.app)
+      //   VERCEL_PROJECT_PRODUCTION_URL — production alias (e.g. hotcrm.vercel.app)
+      // All three must be trusted so that users can sign in from any Vercel URL.
+      // For custom domains, set AUTH_TRUSTED_ORIGINS=https://myapp.example.com
       ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : []),
+      ...(process.env.VERCEL_BRANCH_URL ? [`https://${process.env.VERCEL_BRANCH_URL}`] : []),
       ...(process.env.VERCEL_PROJECT_PRODUCTION_URL ? [`https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`] : []),
       ...(process.env.AUTH_TRUSTED_ORIGINS ? process.env.AUTH_TRUSTED_ORIGINS.split(',').map(s => s.trim()) : []),
     ],
