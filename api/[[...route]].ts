@@ -4,9 +4,13 @@
  * Bootstraps the full ObjectStack kernel with all HotCRM plugins,
  * using @objectstack/driver-memory for zero-config in-memory data.
  *
- * Uses @hono/node-server/vercel `handle()` adapter to convert the Hono app
- * into a Node.js serverless handler that Vercel's @vercel/node runtime
- * recognises (IncomingMessage / ServerResponse).
+ * Uses `getRequestListener()` from `@hono/node-server` together with an
+ * `extractBody()` helper to handle Vercel's pre-buffered request body.
+ * Vercel's Node.js runtime attaches the full body to `req.rawBody` /
+ * `req.body` before the handler is called, so the original stream is
+ * already drained when the handler receives the request. Reading from
+ * `rawBody` / `body` directly and constructing a fresh `Request` object
+ * prevents POST/PUT/PATCH requests (e.g. login) from hanging indefinitely.
  *
  * Data lives in the function instance's memory and persists across
  * warm invocations (Vercel Fluid Compute) but resets on cold start.
@@ -25,7 +29,7 @@ import { HonoHttpServer } from '@objectstack/plugin-hono-server';
 import { AuthPlugin } from '@objectstack/plugin-auth';
 import { InMemoryDriver } from '@objectstack/driver-memory';
 import { ObjectQLPlugin } from '@objectstack/objectql';
-import { handle } from '@hono/node-server/vercel';
+import { getRequestListener } from '@hono/node-server';
 import type { Hono } from 'hono';
 import { resolve, dirname, join, extname } from 'path';
 import { fileURLToPath } from 'url';
@@ -166,6 +170,49 @@ function createStaticSpaPlugin(name: string, basePath: string, distPath: string,
 }
 
 // ---------------------------------------------------------------------------
+// Body extraction helper — reads Vercel's pre-buffered request body.
+//
+// Vercel's Node.js runtime buffers the entire request body before invoking
+// the serverless handler and attaches it to `IncomingMessage` as:
+//   - `rawBody`  (Buffer | string) — the raw bytes
+//   - `body`     (object | string) — parsed body (for JSON/form content types)
+//
+// The underlying readable stream is therefore already drained by the time
+// our handler runs. Building a new `Request` from these pre-buffered
+// properties avoids the indefinite hang that occurs when `req.json()` tries
+// to read a consumed stream.
+//
+// Node.js normalises all IncomingMessage header names to lowercase, so
+// `headers['content-type']` is always the correct lookup key.
+// ---------------------------------------------------------------------------
+
+/** Shape of the Vercel-augmented IncomingMessage passed via `env.incoming`. */
+interface VercelIncomingMessage {
+  rawBody?: Buffer | string;
+  body?: unknown;
+  headers?: Record<string, string | string[] | undefined>;
+}
+
+/** Shape of the env object provided by `getRequestListener` on Vercel. */
+interface VercelEnv {
+  incoming?: VercelIncomingMessage;
+}
+
+function extractBody(incoming: VercelIncomingMessage, method: string, contentType: string | undefined): BodyInit | null {
+  if (method === 'GET' || method === 'HEAD' || method === 'OPTIONS') return null;
+  if (incoming.rawBody != null) {
+    if (typeof incoming.rawBody === 'string') return incoming.rawBody;
+    return incoming.rawBody;
+  }
+  if (incoming.body != null) {
+    if (typeof incoming.body === 'string') return incoming.body;
+    if (contentType?.includes('application/json')) return JSON.stringify(incoming.body);
+    return String(incoming.body);
+  }
+  return null;
+}
+
+// ---------------------------------------------------------------------------
 // Singleton bootstrap — runs eagerly at module load, reused across warm
 // invocations (Vercel Fluid Compute).
 //
@@ -182,34 +229,52 @@ function createStaticSpaPlugin(name: string, basePath: string, distPath: string,
 // diagnosable failure instead of silently consuming the full 60 s Vercel limit.
 // ---------------------------------------------------------------------------
 
-const bootstrapPromise: Promise<ReturnType<typeof handle>> = withTimeout(
+const bootstrapPromise: Promise<Hono> = withTimeout(
   bootstrap(),
   BOOTSTRAP_TIMEOUT_MS,
   'Overall bootstrap',
-)
-  .then((app) => handle(app))
-  .catch((err) => {
-    console.error('[HotCRM] Bootstrap failed:', err);
-    // Re-throw so every subsequent `await bootstrapPromise` also rejects.
-    throw err;
-  });
+).catch((err) => {
+  console.error('[HotCRM] Bootstrap failed:', err);
+  // Re-throw so every subsequent `await bootstrapPromise` also rejects.
+  throw err;
+});
 
 // ---------------------------------------------------------------------------
-// Vercel Node.js serverless handler via @hono/node-server/vercel adapter
+// Vercel Node.js serverless handler via @hono/node-server getRequestListener.
+//
+// Using getRequestListener() instead of handle() from @hono/node-server/vercel
+// gives us access to the raw IncomingMessage via `env.incoming`, which lets us
+// read Vercel's pre-buffered rawBody/body for POST/PUT/PATCH requests.
 // ---------------------------------------------------------------------------
 
-export default async function handler(req: any, res: any) {
+export default getRequestListener(async (request, env) => {
+  let app: Hono;
   try {
-    const honoHandler = await bootstrapPromise;
-    return honoHandler(req, res);
+    app = await bootstrapPromise;
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     console.error('[HotCRM] Handler error — bootstrap did not complete:', message);
-    res.statusCode = 503;
-    res.setHeader('Content-Type', 'application/json');
-    res.end(JSON.stringify({ error: 'Service Unavailable', message: 'Kernel bootstrap failed. Check function logs for details.' }));
+    return new Response(
+      JSON.stringify({ error: 'Service Unavailable', message: 'Kernel bootstrap failed. Check function logs for details.' }),
+      { status: 503, headers: { 'content-type': 'application/json' } },
+    );
   }
-}
+
+  const method = request.method.toUpperCase();
+  const incoming = (env as VercelEnv)?.incoming;
+
+  if (method !== 'GET' && method !== 'HEAD' && method !== 'OPTIONS' && incoming) {
+    const contentType = incoming.headers?.['content-type'];
+    const contentTypeStr = Array.isArray(contentType) ? contentType[0] : contentType;
+    const body = extractBody(incoming, method, contentTypeStr);
+    if (body != null) {
+      const newReq = new Request(request.url, { method, headers: request.headers, body });
+      return await app.fetch(newReq);
+    }
+  }
+
+  return await app.fetch(request);
+});
 
 // ---------------------------------------------------------------------------
 // Bootstrap — creates the full ObjectStack kernel with all plugins
