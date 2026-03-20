@@ -22,6 +22,14 @@ import { IndustryDataset } from './packages/core/dist/industry.dataset.js';
 import { TimezoneDataset } from './packages/core/dist/timezone.dataset.js';
 import { LanguageDataset } from './packages/core/dist/language.dataset.js';
 
+// Translation bundles — aggregated from all business plugins
+import { CrmTranslations } from './packages/crm/dist/translations/index.js';
+import { FinanceTranslations } from './packages/finance/dist/translations/index.js';
+import { MarketingTranslations } from './packages/marketing/dist/translations/index.js';
+import { ProductsTranslations } from './packages/products/dist/translations/index.js';
+import { SupportTranslations } from './packages/support/dist/translations/index.js';
+import { HRTranslations } from './packages/hr/dist/translations/index.js';
+
 /**
  * HotCRM Application Configuration
  * 
@@ -64,6 +72,18 @@ export default defineStack({
     IndustryDataset,
     TimezoneDataset,
     LanguageDataset,
+  ],
+
+  // Aggregated translations from all business plugins (TranslationBundle[])
+  // Each plugin also registers its own translations for plugin-level loading.
+  // The root config merges them for the AppPlugin to load at startup.
+  translations: [
+    CrmTranslations,
+    FinanceTranslations,
+    MarketingTranslations,
+    ProductsTranslations,
+    SupportTranslations,
+    HRTranslations,
   ],
 
   // Register all Business Plugins

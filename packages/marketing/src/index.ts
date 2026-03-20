@@ -32,3 +32,5 @@ export { default as CampaignROIHook } from './hooks/roi.hook.js';
 // Export plugin definition
 export { default as MarketingPlugin } from './plugin.js';
 
+// Export translations
+export { MarketingTranslations } from './translations/index.js';

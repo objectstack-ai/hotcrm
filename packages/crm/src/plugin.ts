@@ -160,8 +160,8 @@ export const CRMPlugin = {
     competitor: Competitor,
   },
   
-  // Translations (i18n)
-  translations: CrmTranslations,
+  // Translations (i18n) — must be array format per @objectstack/spec
+  translations: [CrmTranslations],
 
   // Seed data (DatasetSchema)
   data: [

@@ -16,6 +16,9 @@
 import { PluginSchema } from '@objectstack/spec/kernel';
 import type { PluginDefinition } from '@objectstack/spec/kernel';
 
+// Import translations
+import { SupportTranslations } from './translations/index.js';
+
 // Import all Support objects
 import { Case } from './case.object.js';
 import { CaseComment } from './case_comment.object.js';
@@ -149,6 +152,9 @@ export const SupportPlugin = {
     KbArticleDataset,
     CaseDataset,
   ],
+
+  // Translations (i18n)
+  translations: [SupportTranslations],
 
   // Apps provided by this plugin
   apps: [

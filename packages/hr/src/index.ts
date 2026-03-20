@@ -69,3 +69,6 @@ export { HRWorkflows } from './hr.workflow.js';
 
 // Export plugin definition
 export { HRPlugin } from './plugin.js';
+
+// Export translations
+export { HRTranslations } from './translations/index.js';

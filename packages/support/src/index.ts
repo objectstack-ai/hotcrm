@@ -59,5 +59,8 @@ export { InboxAgent } from './inbox.agent.js';
 // Export plugin definition
 export { default as SupportPlugin } from './plugin.js';
 
+// Export translations
+export { SupportTranslations } from './translations/index.js';
+
 // Note: YAML files (Knowledge) are kept for reference
 // TypeScript definitions should be created following the metadata protocol

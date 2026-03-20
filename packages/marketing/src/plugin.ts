@@ -1,6 +1,9 @@
 import { PluginSchema } from '@objectstack/spec/kernel';
 import type { PluginDefinition } from '@objectstack/spec/kernel';
 
+// Import translations
+import { MarketingTranslations } from './translations/index.js';
+
 import { Campaign } from './campaign.object.js';
 import { CampaignMember } from './campaign_member.object.js';
 import { EmailTemplate } from './email_template.object.js';
@@ -130,6 +133,10 @@ export const MarketingPlugin = {
     CampaignDataset,
     EmailTemplateDataset,
   ],
+
+  // Translations (i18n)
+  translations: [MarketingTranslations],
+
   // Apps provided by this plugin
   apps: [
     {

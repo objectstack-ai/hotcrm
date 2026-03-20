@@ -13,6 +13,9 @@
 import { PluginSchema } from '@objectstack/spec/kernel';
 import type { PluginDefinition } from '@objectstack/spec/kernel';
 
+// Import translations
+import { HRTranslations } from './translations/index.js';
+
 // Import organizational objects
 import { Department } from './department.object.js';
 import { Position } from './position.object.js';
@@ -161,6 +164,9 @@ export const HRPlugin = {
     EmployeeDataset,
     JobPostingDataset,
   ],
+
+  // Translations (i18n)
+  translations: [HRTranslations],
 
   // Business objects provided by this plugin
   objects: {
