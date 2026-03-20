@@ -14,6 +14,9 @@
 import { PluginSchema } from '@objectstack/spec/kernel';
 import type { PluginDefinition } from '@objectstack/spec/kernel';
 
+// Import translations
+import { ProductsTranslations } from './translations/index.js';
+
 // Import all Products objects
 import { Product } from './product.object.js';
 import { Pricebook } from './pricebook.object.js';
@@ -94,6 +97,9 @@ export const ProductsPlugin = {
     ProductDataset,
     PriceBookDataset,
   ],
+
+  // Translations (i18n)
+  translations: [ProductsTranslations],
 
   // Actions provided by this plugin
   actions: {

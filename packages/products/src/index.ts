@@ -37,5 +37,8 @@ export { ApprovalWorkflows } from './approval.workflow.js';
 // Export plugin definition
 export { default as ProductsPlugin } from './plugin.js';
 
+// Export translations
+export { ProductsTranslations } from './translations/index.js';
+
 // Note: YAML files (Product, Pricebook) are kept for reference
 // TypeScript definitions should be created following the metadata protocol

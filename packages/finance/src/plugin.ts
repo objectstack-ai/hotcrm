@@ -12,6 +12,9 @@
 import { PluginSchema } from '@objectstack/spec/kernel';
 import type { PluginDefinition } from '@objectstack/spec/kernel';
 
+// Import translations
+import { FinanceTranslations } from './translations/index.js';
+
 // Import all Finance objects
 import { Contract } from './contract.object.js';
 import { Payment } from './payment.object.js';
@@ -119,6 +122,9 @@ export const FinancePlugin = {
     InvoiceDataset,
     PaymentDataset,
   ],
+
+  // Translations (i18n)
+  translations: [FinanceTranslations],
 
   // Apps provided by this plugin
   apps: [

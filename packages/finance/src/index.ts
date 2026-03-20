@@ -20,3 +20,6 @@ export { default as ContractRenewalHooks } from './hooks/contract_renewal.hook.j
 
 // Export plugin definition
 export { default as FinancePlugin } from './plugin.js';
+
+// Export translations
+export { FinanceTranslations } from './translations/index.js';
