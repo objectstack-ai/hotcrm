@@ -16,6 +16,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated `vercel.json` `includeFiles` to bundle the Auth Plugin dist with the serverless function
 
 ### Fixed
+- **Fix Vercel POST request timeout (login hangs for 60 s)** — Replaced `handle()` from
+  `@hono/node-server/vercel` with `getRequestListener()` from `@hono/node-server` and added an
+  `extractBody()` helper. Vercel's Node.js runtime pre-buffers the entire request body onto
+  `IncomingMessage.rawBody` / `.body` before invoking the handler, so the original readable stream
+  is already drained when our code runs. The previous `handle()` adapter tried to re-read that
+  consumed stream, causing `req.json()` inside Hono to hang indefinitely and triggering Vercel's
+  60 s timeout on all POST/PUT/PATCH requests (e.g. `/api/v1/auth/sign-in/email`). The new
+  `extractBody()` helper reads `rawBody`/`body` synchronously from the pre-buffered properties and
+  builds a fresh `Request` object, resolving the hang. GET/HEAD/OPTIONS requests are unaffected and
+  continue to call `app.fetch(request)` directly. (Fixes #295)
 - **Fix Vercel login timeout (60 s serverless handler hang)** — The serverless handler bootstrap
   could hang indefinitely when a plugin's `init`/`start` returned a never-resolving promise (e.g.
   missing dependency, unresolved network call, or coding error). Added three layers of timeout
