@@ -36,11 +36,11 @@
   "author": "HotCRM Team",
   "dependencies": {
     "@hotcrm/ai": "workspace:*",
-    "@objectstack/spec": "^3.2.7",
+    "@objectstack/spec": "^3.2.8",
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@objectstack/cli": "^3.2.7",
+    "@objectstack/cli": "^3.2.8",
     "typescript": "^5.9.3"
   }
 }
