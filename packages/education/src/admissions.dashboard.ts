@@ -24,7 +24,7 @@ export const AdmissionsDashboard = {
       type: 'metric' as const,
       object: 'application_form',
       aggregate: 'count' as const,
-      filter: ['status', '=', 'submitted'],
+      filter: { status: 'submitted' },
       layout: { x: 3, y: 0, w: 3, h: 2 }
     },
     {
@@ -33,7 +33,7 @@ export const AdmissionsDashboard = {
       type: 'kpi' as const,
       object: 'application_form',
       aggregate: 'count' as const,
-      filter: ['status', '=', 'accepted'],
+      filter: { status: 'accepted' },
       layout: { x: 6, y: 0, w: 3, h: 2 }
     },
     {
@@ -43,7 +43,7 @@ export const AdmissionsDashboard = {
       object: 'scholarship',
       aggregate: 'sum' as const,
       valueField: 'amount',
-      filter: ['status', '=', 'awarded'],
+      filter: { status: 'awarded' },
       layout: { x: 9, y: 0, w: 3, h: 2 }
     },
     {
@@ -80,8 +80,11 @@ export const AdmissionsDashboard = {
       type: 'table' as const,
       object: 'application_form',
       aggregate: 'count' as const,
-      filter: ['status', '!=', 'rejected'],
-      layout: { x: 6, y: 6, w: 6, h: 4 }
+      filter: { status: { $ne: 'rejected' } },
+      layout: { x: 6, y: 6, w: 6, h: 4 },
+      options: {
+        columns: ['applicant_name', 'program', 'status', 'application_date', 'gpa']
+      }
     }
   ]
 } satisfies Dashboard;

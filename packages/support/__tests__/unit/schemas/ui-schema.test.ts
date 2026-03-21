@@ -5,14 +5,20 @@ import { CaseKanbanView } from '../../../src/case_kanban.view';
 import { CaseResolutionChart } from '../../../src/case_resolution.chart';
 import { EscalateCaseAction, MergeCasesAction, CreateKnowledgeArticleAction } from '../../../src/support_actions.action_ui';
 import { SlaWidget } from '../../../src/sla_widget.widget';
+import { assertTableWidgetsHaveColumns } from '../../../../core/__tests__/helpers/dashboard-test-utils';
 
 describe('Support UI Schema Compliance', () => {
   describe('SupportDashboard', () => {
     // SupportDashboard module calls DashboardSchema.parse() at load time.
-    // The dashboard widget filter format currently uses arrays (ObjectQL style)
-    // which does not match the DashboardSchema expectation of record/object.
-    it('should fail module-level DashboardSchema validation (known schema mismatch)', async () => {
-      await expect(() => import('../../../src/support.dashboard')).rejects.toThrow();
+    // Filters now use MongoDB-style FilterCondition format.
+    it('should pass module-level DashboardSchema validation', async () => {
+      const mod = await import('../../../src/support.dashboard');
+      expect(mod.SupportDashboard).toBeDefined();
+    });
+
+    it('should have options.columns on table widgets', async () => {
+      const mod = await import('../../../src/support.dashboard');
+      assertTableWidgetsHaveColumns(mod.SupportDashboard);
     });
   });
 

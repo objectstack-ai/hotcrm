@@ -4,8 +4,21 @@ import CampaignPage from '../../../src/campaign.page';
 import { CampaignRoiReport } from '../../../src/campaign_roi_report.report';
 import { CampaignTimelineView } from '../../../src/campaign_timeline.view';
 import { ChannelPerformanceChart } from '../../../src/channel_performance.chart';
+import { assertTableWidgetsHaveColumns } from '../../../../core/__tests__/helpers/dashboard-test-utils';
 
 describe('Marketing UI Schema Compliance', () => {
+  describe('MarketingDashboard', () => {
+    it('should pass module-level DashboardSchema validation', async () => {
+      const mod = await import('../../../src/marketing.dashboard');
+      expect(mod.MarketingDashboard).toBeDefined();
+    });
+
+    it('should have options.columns on table widgets', async () => {
+      const mod = await import('../../../src/marketing.dashboard');
+      assertTableWidgetsHaveColumns(mod.MarketingDashboard);
+    });
+  });
+
   describe('CampaignPage', () => {
     it('should be defined', () => {
       expect(CampaignPage).toBeDefined();

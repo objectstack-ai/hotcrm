@@ -24,7 +24,7 @@ export const CpqDashboard = {
       type: 'metric' as const,
       object: 'quote',
       aggregate: 'count' as const,
-      filter: ['approval_status', '=', 'pending'],
+      filter: { approval_status: 'pending' },
       layout: { x: 3, y: 0, w: 3, h: 2 }
     },
     {
@@ -42,7 +42,7 @@ export const CpqDashboard = {
       type: 'kpi' as const,
       object: 'quote',
       aggregate: 'count' as const,
-      filter: ['status', '=', 'accepted'],
+      filter: { status: 'accepted' },
       layout: { x: 9, y: 0, w: 3, h: 2 }
     },
     {
@@ -80,8 +80,11 @@ export const CpqDashboard = {
       type: 'table' as const,
       object: 'quote',
       aggregate: 'count' as const,
-      filter: ['status', '!=', 'cancelled'],
-      layout: { x: 6, y: 6, w: 6, h: 4 }
+      filter: { status: { $ne: 'cancelled' } },
+      layout: { x: 6, y: 6, w: 6, h: 4 },
+      options: {
+        columns: ['quote_number', 'name', 'status', 'total_price', 'quote_date']
+      }
     }
   ]
 } satisfies Dashboard;

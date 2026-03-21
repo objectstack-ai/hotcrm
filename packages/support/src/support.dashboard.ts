@@ -16,7 +16,7 @@ export const SupportDashboard = {
       type: 'metric' as const,
       object: 'case',
       aggregate: 'count' as const,
-      filter: ['status', '!=', 'closed'],
+      filter: { status: { $ne: 'closed' } },
       layout: { x: 0, y: 0, w: 3, h: 2 }
     },
     {
@@ -88,8 +88,11 @@ export const SupportDashboard = {
       type: 'table' as const,
       object: 'case',
       aggregate: 'count' as const,
-      filter: ['priority', '=', 'critical'],
-      layout: { x: 8, y: 6, w: 4, h: 4 }
+      filter: { priority: 'critical' },
+      layout: { x: 8, y: 6, w: 4, h: 4 },
+      options: {
+        columns: ['case_number', 'subject', 'priority', 'status', 'owner_id']
+      }
     }
   ]
 } satisfies Dashboard;

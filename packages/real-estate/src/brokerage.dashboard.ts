@@ -16,7 +16,7 @@ export const BrokerageDashboard = {
       type: 'metric' as const,
       object: 'listing',
       aggregate: 'count' as const,
-      filter: ['status', '=', 'active'],
+      filter: { status: 'active' },
       layout: { x: 0, y: 0, w: 3, h: 2 }
     },
     {
@@ -25,7 +25,7 @@ export const BrokerageDashboard = {
       type: 'metric' as const,
       object: 'showing',
       aggregate: 'count' as const,
-      filter: ['scheduled_date', '>=', 'THIS_WEEK()'],
+      filter: { scheduled_date: { $gte: 'THIS_WEEK()' } },
       layout: { x: 3, y: 0, w: 3, h: 2 }
     },
     {
@@ -34,7 +34,7 @@ export const BrokerageDashboard = {
       type: 'metric' as const,
       object: 'real_estate_offer',
       aggregate: 'count' as const,
-      filter: ['status', '=', 'submitted'],
+      filter: { status: 'submitted' },
       layout: { x: 6, y: 0, w: 3, h: 2 }
     },
     {
@@ -44,7 +44,7 @@ export const BrokerageDashboard = {
       object: 'commission',
       valueField: 'commission_amount',
       aggregate: 'sum' as const,
-      filter: ['payment_status', '!=', 'pending'],
+      filter: { payment_status: { $ne: 'pending' } },
       layout: { x: 9, y: 0, w: 3, h: 2 }
     },
     {
@@ -83,8 +83,11 @@ export const BrokerageDashboard = {
       type: 'table' as const,
       object: 'showing',
       aggregate: 'count' as const,
-      filter: ['scheduled_date', '>=', 'TODAY()'],
-      layout: { x: 6, y: 6, w: 6, h: 4 }
+      filter: { scheduled_date: { $gte: 'TODAY()' } },
+      layout: { x: 6, y: 6, w: 6, h: 4 },
+      options: {
+        columns: ['listing_id', 'agent_id', 'scheduled_date', 'buyer_contact_id', 'follow_up_status']
+      }
     }
   ]
 } satisfies Dashboard;

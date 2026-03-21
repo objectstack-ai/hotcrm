@@ -12,6 +12,7 @@ import { PipelineFunnelChart } from '../../../src/pipeline_funnel.chart';
 import { RevenueTrendChart } from '../../../src/revenue_trend.chart';
 import { LogACallAction, ConvertLeadAction, CreateFollowUpTaskAction, SendQuoteAction } from '../../../src/crm_actions.action_ui';
 import { PipelineWidget } from '../../../src/pipeline_widget.widget';
+import { assertTableWidgetsHaveColumns } from '../../../../core/__tests__/helpers/dashboard-test-utils';
 
 describe('CRM UI Schema Compliance', () => {
   describe('AccountPage', () => {
@@ -47,10 +48,39 @@ describe('CRM UI Schema Compliance', () => {
 
   describe('CrmDashboard', () => {
     // CrmDashboard module calls DashboardSchema.parse() at load time.
-    // The dashboard widget filter format currently uses arrays (ObjectQL style)
-    // which does not match the DashboardSchema expectation of record/object.
-    it('should fail module-level DashboardSchema validation (known schema mismatch)', async () => {
-      await expect(() => import('../../../src/crm.dashboard')).rejects.toThrow();
+    // Filters now use MongoDB-style FilterCondition format.
+    it('should pass module-level DashboardSchema validation', async () => {
+      const mod = await import('../../../src/crm.dashboard');
+      expect(mod.CrmDashboard).toBeDefined();
+    });
+
+    it('should have options.columns on table widgets', async () => {
+      const mod = await import('../../../src/crm.dashboard');
+      assertTableWidgetsHaveColumns(mod.CrmDashboard);
+    });
+  });
+
+  describe('SalesDashboard', () => {
+    it('should pass module-level DashboardSchema validation', async () => {
+      const mod = await import('../../../src/sales.dashboard');
+      expect(mod.SalesDashboard).toBeDefined();
+    });
+
+    it('should have options.columns on table widgets', async () => {
+      const mod = await import('../../../src/sales.dashboard');
+      assertTableWidgetsHaveColumns(mod.SalesDashboard);
+    });
+  });
+
+  describe('ExecutiveDashboard', () => {
+    it('should pass module-level DashboardSchema validation', async () => {
+      const mod = await import('../../../src/executive.dashboard');
+      expect(mod.ExecutiveDashboard).toBeDefined();
+    });
+
+    it('should have options.columns on table widgets', async () => {
+      const mod = await import('../../../src/executive.dashboard');
+      assertTableWidgetsHaveColumns(mod.ExecutiveDashboard);
     });
   });
 

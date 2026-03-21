@@ -16,7 +16,7 @@ export const HrDashboard = {
       type: 'metric' as const,
       object: 'employee',
       aggregate: 'count' as const,
-      filter: ['status', '=', 'active'],
+      filter: { status: 'active' },
       layout: { x: 0, y: 0, w: 3, h: 2 }
     },
     {
@@ -25,7 +25,7 @@ export const HrDashboard = {
       type: 'metric' as const,
       object: 'candidate',
       aggregate: 'count' as const,
-      filter: ['status', '=', 'open'],
+      filter: { status: 'open' },
       layout: { x: 3, y: 0, w: 3, h: 2 }
     },
     {
@@ -43,7 +43,7 @@ export const HrDashboard = {
       type: 'metric' as const,
       object: 'employee',
       aggregate: 'count' as const,
-      filter: ['hire_date', '>=', 'THIS_QUARTER'],
+      filter: { hire_date: { $gte: 'THIS_QUARTER()' } },
       layout: { x: 9, y: 0, w: 3, h: 2 }
     },
     {
@@ -53,7 +53,7 @@ export const HrDashboard = {
       object: 'employee',
       categoryField: 'department',
       aggregate: 'count' as const,
-      filter: ['status', '=', 'active'],
+      filter: { status: 'active' },
       layout: { x: 0, y: 2, w: 6, h: 4 }
     },
     {
@@ -81,7 +81,7 @@ export const HrDashboard = {
       object: 'employee',
       categoryField: 'employment_type',
       aggregate: 'count' as const,
-      filter: ['status', '=', 'active'],
+      filter: { status: 'active' },
       layout: { x: 6, y: 6, w: 6, h: 4 }
     }
   ]

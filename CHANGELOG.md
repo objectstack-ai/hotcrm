@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Fix dashboard metadata columns/options compliance across all packages** — All `table`-type
+  dashboard widgets now include `options.columns` specifying the fields to display, preventing
+  rendering errors (`Cannot read properties of undefined (reading 'columns')`). Additionally,
+  converted all widget `filter` fields from the non-compliant ObjectQL array format
+  (`['field', 'op', 'value']`) to the MongoDB-style `FilterCondition` record format
+  (`{ field: { $op: value } }`) expected by `DashboardSchema`. All 15 dashboards across CRM,
+  Finance, Support, Marketing, Products, HR, Analytics, Integration, Community, Healthcare,
+  Real-Estate, Financial-Services, and Education now pass `DashboardSchema.parse()` validation
+  at module load time.
+  - Affected files: `sales.dashboard.ts`, `crm.dashboard.ts`, `executive.dashboard.ts`,
+    `support.dashboard.ts`, `finance.dashboard.ts`, `marketing.dashboard.ts`, `cpq.dashboard.ts`,
+    `hr.dashboard.ts`, `analytics.dashboard.ts`, `integration.dashboard.ts`,
+    `community.dashboard.ts`, `healthcare.dashboard.ts`, `brokerage.dashboard.ts`,
+    `wealth_management.dashboard.ts`, `admissions.dashboard.ts`
+  - Updated test expectations in CRM, Support, HR to reflect successful validation
+  - Added dashboard validation tests with `options.columns` checks for all 12 packages that have
+    `table`-type widgets: CRM (3 dashboards), Support, Finance, Marketing, Products, Analytics,
+    Integration, Community, Healthcare, Real-Estate, Financial-Services, Education (HR dashboards
+    contain no `table` widgets; HR tests assert only successful module load / schema validation)
+  - Extracted shared `assertTableWidgetsHaveColumns()` test helper to
+    `packages/core/__tests__/helpers/dashboard-test-utils.ts`
+  - Also audited `*_enhanced.ts` (6 files) and `*.blank_page.ts` (3 files) — confirmed compliant
+
 ### Added
 - **Load `@objectstack/plugin-auth` in Vercel deployment** — The Auth Plugin (better-auth based)
   is now registered in the Vercel serverless handler (`api/[[...route]].ts`), providing

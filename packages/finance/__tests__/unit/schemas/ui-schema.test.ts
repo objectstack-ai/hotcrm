@@ -5,8 +5,21 @@ import { RevenueReport } from '../../../src/revenue_report.report';
 import { ArAgingReport } from '../../../src/ar_aging_report.report';
 import { CashFlowChart } from '../../../src/cash_flow.chart';
 import { CreateInvoiceAction, RecordPaymentAction, SendReminderAction } from '../../../src/finance_actions.action_ui';
+import { assertTableWidgetsHaveColumns } from '../../../../core/__tests__/helpers/dashboard-test-utils';
 
 describe('Finance UI Schema Compliance', () => {
+  describe('FinanceDashboard', () => {
+    it('should pass module-level DashboardSchema validation', async () => {
+      const mod = await import('../../../src/finance.dashboard');
+      expect(mod.FinanceDashboard).toBeDefined();
+    });
+
+    it('should have options.columns on table widgets', async () => {
+      const mod = await import('../../../src/finance.dashboard');
+      assertTableWidgetsHaveColumns(mod.FinanceDashboard);
+    });
+  });
+
   describe('InvoicePage', () => {
     it('should be defined', () => {
       expect(InvoicePage).toBeDefined();

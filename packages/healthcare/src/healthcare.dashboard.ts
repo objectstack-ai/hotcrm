@@ -16,7 +16,7 @@ export const HealthcareDashboard = {
       type: 'metric' as const,
       object: 'appointment',
       aggregate: 'count' as const,
-      filter: ['appointment_date', '=', 'TODAY'],
+      filter: { appointment_date: 'TODAY()' },
       layout: { x: 0, y: 0, w: 3, h: 2 }
     },
     {
@@ -25,7 +25,7 @@ export const HealthcareDashboard = {
       type: 'metric' as const,
       object: 'referral',
       aggregate: 'count' as const,
-      filter: ['status', '=', 'pending'],
+      filter: { status: 'pending' },
       layout: { x: 3, y: 0, w: 3, h: 2 }
     },
     {
@@ -34,7 +34,7 @@ export const HealthcareDashboard = {
       type: 'metric' as const,
       object: 'patient',
       aggregate: 'count' as const,
-      filter: ['status', '=', 'active'],
+      filter: { status: 'active' },
       layout: { x: 6, y: 0, w: 3, h: 2 }
     },
     {
@@ -43,7 +43,7 @@ export const HealthcareDashboard = {
       type: 'kpi' as const,
       object: 'hipaa_audit',
       aggregate: 'count' as const,
-      filter: ['status', '=', 'compliant'],
+      filter: { status: 'compliant' },
       layout: { x: 9, y: 0, w: 3, h: 2 }
     },
     {
@@ -79,8 +79,11 @@ export const HealthcareDashboard = {
       type: 'table' as const,
       object: 'appointment',
       aggregate: 'count' as const,
-      filter: ['status', '!=', 'cancelled'],
-      layout: { x: 6, y: 6, w: 6, h: 4 }
+      filter: { status: { $ne: 'cancelled' } },
+      layout: { x: 6, y: 6, w: 6, h: 4 },
+      options: {
+        columns: ['patient_id', 'appointment_type', 'scheduled_date', 'status', 'provider_id']
+      }
     }
   ]
 } satisfies Dashboard;

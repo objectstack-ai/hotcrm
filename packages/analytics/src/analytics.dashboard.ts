@@ -24,7 +24,7 @@ export const AnalyticsDashboard = {
       type: 'metric' as const,
       object: 'analytics_dashboard',
       aggregate: 'count' as const,
-      filter: ['is_default', '=', true],
+      filter: { is_default: true },
       layout: { x: 3, y: 0, w: 3, h: 2 }
     },
     {
@@ -33,7 +33,7 @@ export const AnalyticsDashboard = {
       type: 'kpi' as const,
       object: 'kpi',
       aggregate: 'count' as const,
-      filter: ['trend', '=', 'declining'],
+      filter: { trend: 'declining' },
       layout: { x: 6, y: 0, w: 3, h: 2 }
     },
     {
@@ -42,7 +42,7 @@ export const AnalyticsDashboard = {
       type: 'metric' as const,
       object: 'data_source',
       aggregate: 'count' as const,
-      filter: ['sync_status', '=', 'connected'],
+      filter: { sync_status: 'connected' },
       layout: { x: 9, y: 0, w: 3, h: 2 }
     },
     {
@@ -79,8 +79,11 @@ export const AnalyticsDashboard = {
       type: 'table' as const,
       aggregate: 'count' as const,
       object: 'report',
-      filter: ['last_run_at', '>=', 'LAST_7_DAYS'],
-      layout: { x: 6, y: 6, w: 6, h: 4 }
+      filter: { last_run_at: { $gte: 'LAST_7_DAYS' } },
+      layout: { x: 6, y: 6, w: 6, h: 4 },
+      options: {
+        columns: ['name', 'report_type', 'last_run_at', 'run_count']
+      }
     }
   ]
 } satisfies Dashboard;
