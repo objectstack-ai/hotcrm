@@ -27,6 +27,7 @@
 import { ObjectKernel, DriverPlugin, AppPlugin, createDispatcherPlugin, createRestApiPlugin } from '@objectstack/runtime';
 import { HonoHttpServer } from '@objectstack/plugin-hono-server';
 import { AuthPlugin } from '@objectstack/plugin-auth';
+import { I18nServicePlugin } from '@objectstack/service-i18n';
 import { InMemoryDriver } from '@objectstack/driver-memory';
 import { ObjectQLPlugin } from '@objectstack/objectql';
 import { getRequestListener } from '@hono/node-server';
@@ -50,6 +51,14 @@ import { HealthcarePlugin } from '../packages/healthcare/dist/plugin.js';
 import { RealEstatePlugin } from '../packages/real-estate/dist/plugin.js';
 import { EducationPlugin } from '../packages/education/dist/plugin.js';
 import { FinancialServicesPlugin } from '../packages/financial-services/dist/plugin.js';
+
+// Translation bundles — aggregated from all business plugins
+import { CrmTranslations } from '../packages/crm/dist/translations/index.js';
+import { FinanceTranslations } from '../packages/finance/dist/translations/index.js';
+import { MarketingTranslations } from '../packages/marketing/dist/translations/index.js';
+import { ProductsTranslations } from '../packages/products/dist/translations/index.js';
+import { SupportTranslations } from '../packages/support/dist/translations/index.js';
+import { HRTranslations } from '../packages/hr/dist/translations/index.js';
 
 // ---------------------------------------------------------------------------
 // Timeout constants — protect against permanently-pending promises that would
@@ -440,7 +449,19 @@ async function bootstrap(): Promise<Hono> {
   })), PLUGIN_TIMEOUT_MS, 'AuthPlugin');
   log('AuthPlugin registered.');
 
-  // 6. Application config (business objects & plugins)
+  // 6. Internationalization service (must be registered before AppPlugin so that
+  //    AppPlugin.loadTranslations() finds a live i18n kernel service and the
+  //    REST endpoint GET /api/v1/i18n/translations/:locale is available for the
+  //    Console SPA's loadLanguage callback.)
+  log('Registering I18nServicePlugin…');
+  await withTimeout(kernel.use(new I18nServicePlugin({
+    defaultLocale: 'en',
+    fallbackLocale: 'en',
+    registerRoutes: true,
+  })), PLUGIN_TIMEOUT_MS, 'I18nServicePlugin');
+  log('I18nServicePlugin registered.');
+
+  // 7. Application config (business objects & plugins)
   log('Registering AppPlugin (manifest)…');
   await withTimeout(kernel.use(new AppPlugin({
     manifest: {
@@ -450,12 +471,25 @@ async function bootstrap(): Promise<Hono> {
       type: 'app',
       name: 'HotCRM Enterprise',
     },
+    i18n: {
+      defaultLocale: 'en',
+      supportedLocales: ['en', 'zh-CN', 'ja-JP'],
+      fallbackLocale: 'en',
+    },
+    translations: [
+      CrmTranslations,
+      FinanceTranslations,
+      MarketingTranslations,
+      ProductsTranslations,
+      SupportTranslations,
+      HRTranslations,
+    ],
     objects: [],
     plugins: [],
   })), PLUGIN_TIMEOUT_MS, 'AppPlugin-manifest');
   log('AppPlugin (manifest) registered.');
 
-  // 7. Register business plugins
+  // 8. Register business plugins
   const businessPlugins = [
     CRMPlugin, FinancePlugin, MarketingPlugin,
     ProductsPlugin, SupportPlugin, HRPlugin,
@@ -477,17 +511,17 @@ async function bootstrap(): Promise<Hono> {
     }
   }
 
-  // 8. REST API endpoints (auto-generated CRUD for all objects)
+  // 9. REST API endpoints (auto-generated CRUD for all objects)
   log('Registering RestApiPlugin…');
   await withTimeout(kernel.use(createRestApiPlugin()), PLUGIN_TIMEOUT_MS, 'RestApiPlugin');
   log('RestApiPlugin registered.');
 
-  // 9. Dispatcher (auth, graphql, analytics routes)
+  // 10. Dispatcher (auth, graphql, analytics routes)
   log('Registering DispatcherPlugin…');
   await withTimeout(kernel.use(createDispatcherPlugin()), PLUGIN_TIMEOUT_MS, 'DispatcherPlugin');
   log('DispatcherPlugin registered.');
 
-  // 10. Console UI (serves the ObjectStack Console SPA at /console/)
+  // 11. Console UI (serves the ObjectStack Console SPA at /console/)
   const consoleDistPath = resolvePackageDistPath('@object-ui/console');
   if (consoleDistPath) {
     log('Registering Console SPA static plugin…');
@@ -503,7 +537,7 @@ async function bootstrap(): Promise<Hono> {
     log('Console SPA registered.');
   }
 
-  // 11. Studio UI (serves the ObjectStack Studio SPA at /_studio/)
+  // 12. Studio UI (serves the ObjectStack Studio SPA at /_studio/)
   const studioDistPath = resolvePackageDistPath('@objectstack/studio');
   if (studioDistPath) {
     log('Registering Studio SPA static plugin…');
@@ -515,7 +549,7 @@ async function bootstrap(): Promise<Hono> {
     log('Studio SPA registered.');
   }
 
-  // 12. Bootstrap kernel (init + start all plugins, fire kernel:ready)
+  // 13. Bootstrap kernel (init + start all plugins, fire kernel:ready)
   log('Running kernel.bootstrap()…');
   await withTimeout(kernel.bootstrap(), KERNEL_BOOTSTRAP_TIMEOUT_MS, 'kernel.bootstrap()');
   log(`Bootstrap complete in ${elapsed()}.`);

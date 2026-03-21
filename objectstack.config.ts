@@ -1,5 +1,6 @@
 import { defineStack } from '@objectstack/spec';
 import { AuthPlugin } from '@objectstack/plugin-auth';
+import { I18nServicePlugin } from '@objectstack/service-i18n';
 import { CRMPlugin } from './packages/crm/dist/plugin.js';
 import { FinancePlugin } from './packages/finance/dist/plugin.js';
 import { MarketingPlugin } from './packages/marketing/dist/plugin.js';
@@ -107,6 +108,11 @@ export default defineStack({
     new AuthPlugin({
       secret: process.env.AUTH_SECRET || 'hotcrm-dev-secret-change-me-in-production',
       trustedOrigins: ['http://localhost:*'],
+    }),
+    new I18nServicePlugin({
+      defaultLocale: 'en',
+      fallbackLocale: 'en',
+      registerRoutes: true,
     }),
     new ConsolePlugin(),
   ],
