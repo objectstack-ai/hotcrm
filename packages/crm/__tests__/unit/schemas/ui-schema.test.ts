@@ -12,6 +12,7 @@ import { PipelineFunnelChart } from '../../../src/pipeline_funnel.chart';
 import { RevenueTrendChart } from '../../../src/revenue_trend.chart';
 import { LogACallAction, ConvertLeadAction, CreateFollowUpTaskAction, SendQuoteAction } from '../../../src/crm_actions.action_ui';
 import { PipelineWidget } from '../../../src/pipeline_widget.widget';
+import { assertTableWidgetsHaveColumns } from '../../../../core/__tests__/helpers/dashboard-test-utils';
 
 describe('CRM UI Schema Compliance', () => {
   describe('AccountPage', () => {
@@ -55,13 +56,7 @@ describe('CRM UI Schema Compliance', () => {
 
     it('should have options.columns on table widgets', async () => {
       const mod = await import('../../../src/crm.dashboard');
-      const tableWidgets = mod.CrmDashboard.widgets.filter((w: any) => w.type === 'table');
-      for (const w of tableWidgets) {
-        expect(w.options, `table widget "${w.id}" should have options`).toBeDefined();
-        expect(w.options.columns, `table widget "${w.id}" should have options.columns`).toBeDefined();
-        expect(Array.isArray(w.options.columns)).toBe(true);
-        expect(w.options.columns.length).toBeGreaterThan(0);
-      }
+      assertTableWidgetsHaveColumns(mod.CrmDashboard);
     });
   });
 
@@ -73,14 +68,7 @@ describe('CRM UI Schema Compliance', () => {
 
     it('should have options.columns on table widgets', async () => {
       const mod = await import('../../../src/sales.dashboard');
-      const tableWidgets = mod.SalesDashboard.widgets.filter((w: any) => w.type === 'table');
-      expect(tableWidgets.length).toBeGreaterThan(0);
-      for (const w of tableWidgets) {
-        expect(w.options, `table widget "${w.id}" should have options`).toBeDefined();
-        expect(w.options.columns, `table widget "${w.id}" should have options.columns`).toBeDefined();
-        expect(Array.isArray(w.options.columns)).toBe(true);
-        expect(w.options.columns.length).toBeGreaterThan(0);
-      }
+      assertTableWidgetsHaveColumns(mod.SalesDashboard);
     });
   });
 
@@ -92,14 +80,7 @@ describe('CRM UI Schema Compliance', () => {
 
     it('should have options.columns on table widgets', async () => {
       const mod = await import('../../../src/executive.dashboard');
-      const tableWidgets = mod.ExecutiveDashboard.widgets.filter((w: any) => w.type === 'table');
-      expect(tableWidgets.length).toBeGreaterThan(0);
-      for (const w of tableWidgets) {
-        expect(w.options, `table widget "${w.id}" should have options`).toBeDefined();
-        expect(w.options.columns, `table widget "${w.id}" should have options.columns`).toBeDefined();
-        expect(Array.isArray(w.options.columns)).toBe(true);
-        expect(w.options.columns.length).toBeGreaterThan(0);
-      }
+      assertTableWidgetsHaveColumns(mod.ExecutiveDashboard);
     });
   });
 

@@ -43,7 +43,7 @@ export const HrDashboard = {
       type: 'metric' as const,
       object: 'employee',
       aggregate: 'count' as const,
-      filter: { hire_date: { $gte: 'THIS_QUARTER' } },
+      filter: { hire_date: { $gte: 'THIS_QUARTER()' } },
       layout: { x: 9, y: 0, w: 3, h: 2 }
     },
     {

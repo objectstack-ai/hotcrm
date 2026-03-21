@@ -3,6 +3,7 @@ import { PageSchema, ViewSchema, ReportSchema } from '@objectstack/spec/ui';
 import ProductBundlePage from '../../../src/product_bundle.page';
 import { ProductMixReport } from '../../../src/product_mix_report.report';
 import { QuoteGanttView } from '../../../src/quote_gantt.view';
+import { assertTableWidgetsHaveColumns } from '../../../../core/__tests__/helpers/dashboard-test-utils';
 
 describe('Products UI Schema Compliance', () => {
   describe('CpqDashboard', () => {
@@ -13,14 +14,7 @@ describe('Products UI Schema Compliance', () => {
 
     it('should have options.columns on table widgets', async () => {
       const mod = await import('../../../src/cpq.dashboard');
-      const tableWidgets = mod.CpqDashboard.widgets.filter((w: any) => w.type === 'table');
-      expect(tableWidgets.length).toBeGreaterThan(0);
-      for (const w of tableWidgets) {
-        expect(w.options, `table widget "${w.id}" should have options`).toBeDefined();
-        expect(w.options.columns, `table widget "${w.id}" should have options.columns`).toBeDefined();
-        expect(Array.isArray(w.options.columns)).toBe(true);
-        expect(w.options.columns.length).toBeGreaterThan(0);
-      }
+      assertTableWidgetsHaveColumns(mod.CpqDashboard);
     });
   });
 

@@ -4,6 +4,7 @@ import CampaignPage from '../../../src/campaign.page';
 import { CampaignRoiReport } from '../../../src/campaign_roi_report.report';
 import { CampaignTimelineView } from '../../../src/campaign_timeline.view';
 import { ChannelPerformanceChart } from '../../../src/channel_performance.chart';
+import { assertTableWidgetsHaveColumns } from '../../../../core/__tests__/helpers/dashboard-test-utils';
 
 describe('Marketing UI Schema Compliance', () => {
   describe('MarketingDashboard', () => {
@@ -14,14 +15,7 @@ describe('Marketing UI Schema Compliance', () => {
 
     it('should have options.columns on table widgets', async () => {
       const mod = await import('../../../src/marketing.dashboard');
-      const tableWidgets = mod.MarketingDashboard.widgets.filter((w: any) => w.type === 'table');
-      expect(tableWidgets.length).toBeGreaterThan(0);
-      for (const w of tableWidgets) {
-        expect(w.options, `table widget "${w.id}" should have options`).toBeDefined();
-        expect(w.options.columns, `table widget "${w.id}" should have options.columns`).toBeDefined();
-        expect(Array.isArray(w.options.columns)).toBe(true);
-        expect(w.options.columns.length).toBeGreaterThan(0);
-      }
+      assertTableWidgetsHaveColumns(mod.MarketingDashboard);
     });
   });
 

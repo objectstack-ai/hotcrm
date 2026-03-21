@@ -16,7 +16,7 @@ export const HealthcareDashboard = {
       type: 'metric' as const,
       object: 'appointment',
       aggregate: 'count' as const,
-      filter: { appointment_date: 'TODAY' },
+      filter: { appointment_date: 'TODAY()' },
       layout: { x: 0, y: 0, w: 3, h: 2 }
     },
     {

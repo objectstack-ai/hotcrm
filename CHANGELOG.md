@@ -23,9 +23,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `community.dashboard.ts`, `healthcare.dashboard.ts`, `brokerage.dashboard.ts`,
     `wealth_management.dashboard.ts`, `admissions.dashboard.ts`
   - Updated test expectations in CRM, Support, HR to reflect successful validation
-  - Added dashboard validation tests with `options.columns` checks for all 13 packages:
-    CRM (3 dashboards), Support, Finance, Marketing, Products, HR, Analytics, Integration,
-    Community, Healthcare, Real-Estate, Financial-Services, Education
+  - Added dashboard validation tests with `options.columns` checks for all 12 packages that have
+    `table`-type widgets: CRM (3 dashboards), Support, Finance, Marketing, Products, Analytics,
+    Integration, Community, Healthcare, Real-Estate, Financial-Services, Education (HR dashboards
+    contain no `table` widgets; HR tests assert only successful module load / schema validation)
+  - Extracted shared `assertTableWidgetsHaveColumns()` test helper to
+    `packages/core/__tests__/helpers/dashboard-test-utils.ts`
   - Also audited `*_enhanced.ts` (6 files) and `*.blank_page.ts` (3 files) — confirmed compliant
 
 ### Added
