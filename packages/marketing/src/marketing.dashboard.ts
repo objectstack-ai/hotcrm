@@ -83,7 +83,13 @@ export const MarketingDashboard = {
       filter: { is_active: true },
       layout: { x: 6, y: 6, w: 6, h: 4 },
       options: {
-        columns: ['name', 'type', 'status', 'start_date', 'budgeted_cost']
+        columns: [
+          { header: 'Name', accessorKey: 'name' },
+          { header: 'Type', accessorKey: 'type' },
+          { header: 'Status', accessorKey: 'status' },
+          { header: 'Start Date', accessorKey: 'start_date' },
+          { header: 'Budgeted Cost', accessorKey: 'budgeted_cost' }
+        ]
       }
     }
   ]

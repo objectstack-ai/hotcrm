@@ -87,7 +87,12 @@ export const ExecutiveDashboard = {
       filter: { stage: { $ne: 'closed_lost' } },
       layout: { x: 6, y: 6, w: 6, h: 4 },
       options: {
-        columns: ['name', 'amount', 'stage', 'close_date']
+        columns: [
+          { header: 'Name', accessorKey: 'name' },
+          { header: 'Amount', accessorKey: 'amount' },
+          { header: 'Stage', accessorKey: 'stage' },
+          { header: 'Close Date', accessorKey: 'close_date' }
+        ]
       }
     }
   ]

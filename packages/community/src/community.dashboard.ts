@@ -79,7 +79,13 @@ export const CommunityDashboard = {
       filter: { last_activity_at: { $gte: 'LAST_7_DAYS' } },
       layout: { x: 6, y: 6, w: 6, h: 4 },
       options: {
-        columns: ['title', 'status', 'category_id', 'reply_count', 'last_activity_at']
+        columns: [
+          { header: 'Title', accessorKey: 'title' },
+          { header: 'Status', accessorKey: 'status' },
+          { header: 'Category', accessorKey: 'category_id' },
+          { header: 'Reply Count', accessorKey: 'reply_count' },
+          { header: 'Last Activity At', accessorKey: 'last_activity_at' }
+        ]
       }
     }
   ]

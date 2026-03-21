@@ -83,7 +83,13 @@ export const CpqDashboard = {
       filter: { status: { $ne: 'cancelled' } },
       layout: { x: 6, y: 6, w: 6, h: 4 },
       options: {
-        columns: ['quote_number', 'name', 'status', 'total_price', 'quote_date']
+        columns: [
+          { header: 'Quote Number', accessorKey: 'quote_number' },
+          { header: 'Name', accessorKey: 'name' },
+          { header: 'Status', accessorKey: 'status' },
+          { header: 'Total Price', accessorKey: 'total_price' },
+          { header: 'Quote Date', accessorKey: 'quote_date' }
+        ]
       }
     }
   ]

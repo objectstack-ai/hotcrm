@@ -82,7 +82,13 @@ export const IntegrationDashboard = {
       filter: { status: { $ne: 'cancelled' } },
       layout: { x: 6, y: 6, w: 6, h: 4 },
       options: {
-        columns: ['name', 'status', 'records_processed', 'records_failed', 'started_at']
+        columns: [
+          { header: 'Name', accessorKey: 'name' },
+          { header: 'Status', accessorKey: 'status' },
+          { header: 'Records Processed', accessorKey: 'records_processed' },
+          { header: 'Records Failed', accessorKey: 'records_failed' },
+          { header: 'Started At', accessorKey: 'started_at' }
+        ]
       }
     }
   ]

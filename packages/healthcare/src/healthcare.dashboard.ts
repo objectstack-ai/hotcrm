@@ -82,7 +82,13 @@ export const HealthcareDashboard = {
       filter: { status: { $ne: 'cancelled' } },
       layout: { x: 6, y: 6, w: 6, h: 4 },
       options: {
-        columns: ['patient_id', 'appointment_type', 'scheduled_date', 'status', 'provider_id']
+        columns: [
+          { header: 'Patient', accessorKey: 'patient_id' },
+          { header: 'Appointment Type', accessorKey: 'appointment_type' },
+          { header: 'Scheduled Date', accessorKey: 'scheduled_date' },
+          { header: 'Status', accessorKey: 'status' },
+          { header: 'Provider', accessorKey: 'provider_id' }
+        ]
       }
     }
   ]

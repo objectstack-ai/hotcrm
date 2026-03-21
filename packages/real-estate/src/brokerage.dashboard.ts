@@ -86,7 +86,13 @@ export const BrokerageDashboard = {
       filter: { scheduled_date: { $gte: 'TODAY()' } },
       layout: { x: 6, y: 6, w: 6, h: 4 },
       options: {
-        columns: ['listing_id', 'agent_id', 'scheduled_date', 'buyer_contact_id', 'follow_up_status']
+        columns: [
+          { header: 'Listing', accessorKey: 'listing_id' },
+          { header: 'Agent', accessorKey: 'agent_id' },
+          { header: 'Scheduled Date', accessorKey: 'scheduled_date' },
+          { header: 'Buyer Contact', accessorKey: 'buyer_contact_id' },
+          { header: 'Follow Up Status', accessorKey: 'follow_up_status' }
+        ]
       }
     }
   ]

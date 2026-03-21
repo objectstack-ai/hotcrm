@@ -85,7 +85,13 @@ export const WealthManagementDashboard = {
       filter: { status: { $ne: 'completed' } },
       layout: { x: 6, y: 6, w: 6, h: 4 },
       options: {
-        columns: ['client_id', 'advisor_id', 'meeting_type', 'meeting_date', 'compliance_approved']
+        columns: [
+          { header: 'Client', accessorKey: 'client_id' },
+          { header: 'Advisor', accessorKey: 'advisor_id' },
+          { header: 'Meeting Type', accessorKey: 'meeting_type' },
+          { header: 'Meeting Date', accessorKey: 'meeting_date' },
+          { header: 'Compliance Approved', accessorKey: 'compliance_approved' }
+        ]
       }
     }
   ]

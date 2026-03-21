@@ -113,7 +113,13 @@ export const SalesDashboard = {
       aggregate: 'count' as const,
       layout: { x: 0, y: 11, w: 12, h: 5 },
       options: {
-        columns: ['name', 'account_id', 'amount', 'stage', 'close_date']
+        columns: [
+          { header: 'Name', accessorKey: 'name' },
+          { header: 'Account', accessorKey: 'account_id' },
+          { header: 'Amount', accessorKey: 'amount' },
+          { header: 'Stage', accessorKey: 'stage' },
+          { header: 'Close Date', accessorKey: 'close_date' }
+        ]
       }
     },
 
@@ -129,7 +135,11 @@ export const SalesDashboard = {
       aggregate: 'sum' as const,
       layout: { x: 0, y: 16, w: 6, h: 4 },
       options: {
-        columns: ['owner_id', 'amount', 'close_date']
+        columns: [
+          { header: 'Owner', accessorKey: 'owner_id' },
+          { header: 'Amount', accessorKey: 'amount' },
+          { header: 'Close Date', accessorKey: 'close_date' }
+        ]
       }
     },
 

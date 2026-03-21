@@ -82,7 +82,12 @@ export const AnalyticsDashboard = {
       filter: { last_run_at: { $gte: 'LAST_7_DAYS' } },
       layout: { x: 6, y: 6, w: 6, h: 4 },
       options: {
-        columns: ['name', 'report_type', 'last_run_at', 'run_count']
+        columns: [
+          { header: 'Name', accessorKey: 'name' },
+          { header: 'Report Type', accessorKey: 'report_type' },
+          { header: 'Last Run At', accessorKey: 'last_run_at' },
+          { header: 'Run Count', accessorKey: 'run_count' }
+        ]
       }
     }
   ]

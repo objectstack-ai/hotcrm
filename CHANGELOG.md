@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **Fix table widget columns format for ObjectUI renderer compatibility** — All `table`-type
+  dashboard widgets now use `{ header, accessorKey }` object arrays for `options.columns` instead
+  of plain string arrays, aligning with the ObjectUI rendering contract and preventing runtime
+  `TypeError: Cannot read properties of undefined (reading 'columns')`. Updated 15 table widgets
+  across 14 dashboard files in CRM, Finance, Support, Marketing, Products, Analytics, Integration,
+  Community, Healthcare, Real-Estate, Financial-Services, and Education packages. Updated shared
+  test helper `assertTableWidgetsHaveColumns()` to validate the object array format.
+
+### Fixed
 - **Fix dashboard metadata columns/options compliance across all packages** — All `table`-type
   dashboard widgets now include `options.columns` specifying the fields to display, preventing
   rendering errors (`Cannot read properties of undefined (reading 'columns')`). Additionally,

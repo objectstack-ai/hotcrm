@@ -85,7 +85,13 @@ export const FinanceDashboard = {
       filter: { status: 'activated' },
       layout: { x: 6, y: 6, w: 6, h: 4 },
       options: {
-        columns: ['contract_number', 'account', 'contract_value', 'status', 'end_date']
+        columns: [
+          { header: 'Contract Number', accessorKey: 'contract_number' },
+          { header: 'Account', accessorKey: 'account' },
+          { header: 'Contract Value', accessorKey: 'contract_value' },
+          { header: 'Status', accessorKey: 'status' },
+          { header: 'End Date', accessorKey: 'end_date' }
+        ]
       }
     }
   ]

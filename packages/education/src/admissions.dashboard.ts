@@ -83,7 +83,13 @@ export const AdmissionsDashboard = {
       filter: { status: { $ne: 'rejected' } },
       layout: { x: 6, y: 6, w: 6, h: 4 },
       options: {
-        columns: ['applicant_name', 'program', 'status', 'application_date', 'gpa']
+        columns: [
+          { header: 'Applicant Name', accessorKey: 'applicant_name' },
+          { header: 'Program', accessorKey: 'program' },
+          { header: 'Status', accessorKey: 'status' },
+          { header: 'Application Date', accessorKey: 'application_date' },
+          { header: 'GPA', accessorKey: 'gpa' }
+        ]
       }
     }
   ]

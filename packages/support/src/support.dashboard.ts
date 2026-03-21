@@ -91,7 +91,13 @@ export const SupportDashboard = {
       filter: { priority: 'critical' },
       layout: { x: 8, y: 6, w: 4, h: 4 },
       options: {
-        columns: ['case_number', 'subject', 'priority', 'status', 'owner_id']
+        columns: [
+          { header: 'Case Number', accessorKey: 'case_number' },
+          { header: 'Subject', accessorKey: 'subject' },
+          { header: 'Priority', accessorKey: 'priority' },
+          { header: 'Status', accessorKey: 'status' },
+          { header: 'Owner', accessorKey: 'owner_id' }
+        ]
       }
     }
   ]
