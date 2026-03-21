@@ -16,6 +16,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated `vercel.json` `includeFiles` to bundle the Auth Plugin dist with the serverless function
 
 ### Fixed
+- **Fix i18n translations not loading in Console** — Register `I18nServicePlugin` from
+  `@objectstack/service-i18n` in `api/[[...route]].ts` (Vercel serverless handler) before
+  `AppPlugin` so the kernel has a live i18n service when `AppPlugin.loadTranslations()` runs.
+  Without this, object/field labels in the Console SPA showed raw English-only keys instead of
+  translated strings. Also pass aggregated `translations` and `i18n` config to the root
+  `AppPlugin` so all business plugin translation bundles are loaded on startup.
+  Added `I18nServicePlugin` to `objectstack.config.ts` for consistency in local `pnpm dev`.
+  - Added `@objectstack/service-i18n@^3.2.8` to devDependencies
+  - `GET /api/v1/i18n/translations/:locale` now returns merged translation bundles
 - **Fix Vercel POST request timeout (login hangs for 60 s)** — Replaced `handle()` from
   `@hono/node-server/vercel` with `getRequestListener()` from `@hono/node-server` and added an
   `extractBody()` helper. Vercel's Node.js runtime pre-buffers the entire request body onto
