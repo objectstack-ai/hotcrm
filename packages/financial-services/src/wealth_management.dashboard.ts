@@ -82,7 +82,7 @@ export const WealthManagementDashboard = {
       type: 'table' as const,
       object: 'advisory',
       aggregate: 'count' as const,
-      filter: { compliance_approved: { $ne: true } },
+      filter: { status: { $ne: 'completed' } },
       layout: { x: 6, y: 6, w: 6, h: 4 },
       options: {
         columns: ['client_id', 'advisor_id', 'meeting_type', 'meeting_date', 'compliance_approved']
