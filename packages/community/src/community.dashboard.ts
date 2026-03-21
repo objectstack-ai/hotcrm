@@ -16,7 +16,7 @@ export const CommunityDashboard = {
       type: 'metric' as const,
       object: 'topic',
       aggregate: 'count' as const,
-      filter: ['status', '=', 'open'],
+      filter: { status: 'open' },
       layout: { x: 0, y: 0, w: 3, h: 2 }
     },
     {
@@ -76,8 +76,11 @@ export const CommunityDashboard = {
       type: 'table' as const,
       object: 'topic',
       aggregate: 'count' as const,
-      filter: ['last_activity_at', '>=', 'LAST_7_DAYS'],
-      layout: { x: 6, y: 6, w: 6, h: 4 }
+      filter: { last_activity_at: { $gte: 'LAST_7_DAYS' } },
+      layout: { x: 6, y: 6, w: 6, h: 4 },
+      options: {
+        columns: ['title', 'status', 'category_id', 'reply_count', 'last_activity_at']
+      }
     }
   ]
 } satisfies Dashboard;

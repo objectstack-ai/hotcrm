@@ -17,7 +17,7 @@ export const CrmDashboard = {
       object: 'opportunity',
       valueField: 'amount',
       aggregate: 'sum' as const,
-      filter: ['stage', '!=', 'closed_lost'],
+      filter: { stage: { $ne: 'closed_lost' } },
       layout: { x: 0, y: 0, w: 3, h: 2 }
     },
     {
@@ -26,7 +26,7 @@ export const CrmDashboard = {
       type: 'metric' as const,
       object: 'opportunity',
       aggregate: 'count' as const,
-      filter: ['stage', '!=', 'closed_lost'],
+      filter: { stage: { $ne: 'closed_lost' } },
       layout: { x: 3, y: 0, w: 3, h: 2 }
     },
     {
@@ -36,7 +36,7 @@ export const CrmDashboard = {
       object: 'opportunity',
       valueField: 'amount',
       aggregate: 'sum' as const,
-      filter: ['stage', '=', 'closed_won'],
+      filter: { stage: 'closed_won' },
       layout: { x: 6, y: 0, w: 3, h: 2 }
     },
     {
@@ -84,8 +84,11 @@ export const CrmDashboard = {
       type: 'table' as const,
       aggregate: 'count' as const,
       object: 'opportunity',
-      filter: ['stage', '!=', 'closed_lost'],
-      layout: { x: 6, y: 6, w: 6, h: 4 }
+      filter: { stage: { $ne: 'closed_lost' } },
+      layout: { x: 6, y: 6, w: 6, h: 4 },
+      options: {
+        columns: ['name', 'amount', 'stage', 'close_date']
+      }
     }
   ]
 } satisfies Dashboard;

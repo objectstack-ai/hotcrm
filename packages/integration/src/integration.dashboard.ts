@@ -16,7 +16,7 @@ export const IntegrationDashboard = {
       type: 'metric' as const,
       object: 'connector',
       aggregate: 'count' as const,
-      filter: ['status', '=', 'active'],
+      filter: { status: 'active' },
       layout: { x: 0, y: 0, w: 3, h: 2 }
     },
     {
@@ -25,7 +25,7 @@ export const IntegrationDashboard = {
       type: 'metric' as const,
       object: 'connection',
       aggregate: 'count' as const,
-      filter: ['status', '=', 'connected'],
+      filter: { status: 'connected' },
       layout: { x: 3, y: 0, w: 3, h: 2 }
     },
     {
@@ -34,7 +34,7 @@ export const IntegrationDashboard = {
       type: 'metric' as const,
       object: 'sync_config',
       aggregate: 'count' as const,
-      filter: ['is_active', '=', true],
+      filter: { is_active: true },
       layout: { x: 6, y: 0, w: 3, h: 2 }
     },
     {
@@ -43,7 +43,7 @@ export const IntegrationDashboard = {
       type: 'metric' as const,
       object: 'api_key',
       aggregate: 'count' as const,
-      filter: ['is_active', '=', true],
+      filter: { is_active: true },
       layout: { x: 9, y: 0, w: 3, h: 2 }
     },
     {
@@ -79,8 +79,11 @@ export const IntegrationDashboard = {
       type: 'table' as const,
       object: 'sync_log',
       aggregate: 'count' as const,
-      filter: ['status', '!=', 'cancelled'],
-      layout: { x: 6, y: 6, w: 6, h: 4 }
+      filter: { status: { $ne: 'cancelled' } },
+      layout: { x: 6, y: 6, w: 6, h: 4 },
+      options: {
+        columns: ['name', 'status', 'records_processed', 'records_failed', 'started_at']
+      }
     }
   ]
 } satisfies Dashboard;

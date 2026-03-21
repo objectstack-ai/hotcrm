@@ -7,6 +7,13 @@ import { CashFlowChart } from '../../../src/cash_flow.chart';
 import { CreateInvoiceAction, RecordPaymentAction, SendReminderAction } from '../../../src/finance_actions.action_ui';
 
 describe('Finance UI Schema Compliance', () => {
+  describe('FinanceDashboard', () => {
+    it('should pass module-level DashboardSchema validation', async () => {
+      const mod = await import('../../../src/finance.dashboard');
+      expect(mod.FinanceDashboard).toBeDefined();
+    });
+  });
+
   describe('InvoicePage', () => {
     it('should be defined', () => {
       expect(InvoicePage).toBeDefined();

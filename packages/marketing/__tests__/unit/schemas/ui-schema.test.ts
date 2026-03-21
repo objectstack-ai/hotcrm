@@ -6,6 +6,13 @@ import { CampaignTimelineView } from '../../../src/campaign_timeline.view';
 import { ChannelPerformanceChart } from '../../../src/channel_performance.chart';
 
 describe('Marketing UI Schema Compliance', () => {
+  describe('MarketingDashboard', () => {
+    it('should pass module-level DashboardSchema validation', async () => {
+      const mod = await import('../../../src/marketing.dashboard');
+      expect(mod.MarketingDashboard).toBeDefined();
+    });
+  });
+
   describe('CampaignPage', () => {
     it('should be defined', () => {
       expect(CampaignPage).toBeDefined();

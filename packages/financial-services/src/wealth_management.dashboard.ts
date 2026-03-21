@@ -17,7 +17,7 @@ export const WealthManagementDashboard = {
       object: 'wealth_account',
       valueField: 'total_aum',
       aggregate: 'sum' as const,
-      filter: ['status', '=', 'active'],
+      filter: { status: 'active' },
       layout: { x: 0, y: 0, w: 3, h: 2 }
     },
     {
@@ -26,7 +26,7 @@ export const WealthManagementDashboard = {
       type: 'metric' as const,
       object: 'wealth_account',
       aggregate: 'count' as const,
-      filter: ['status', '=', 'active'],
+      filter: { status: 'active' },
       layout: { x: 3, y: 0, w: 3, h: 2 }
     },
     {
@@ -44,7 +44,7 @@ export const WealthManagementDashboard = {
       type: 'metric' as const,
       object: 'kyc',
       aggregate: 'count' as const,
-      filter: ['status', '=', 'pending'],
+      filter: { status: 'pending' },
       layout: { x: 9, y: 0, w: 3, h: 2 }
     },
     {
@@ -82,8 +82,11 @@ export const WealthManagementDashboard = {
       type: 'table' as const,
       object: 'advisory',
       aggregate: 'count' as const,
-      filter: ['status', '!=', 'completed'],
-      layout: { x: 6, y: 6, w: 6, h: 4 }
+      filter: { compliance_approved: { $ne: true } },
+      layout: { x: 6, y: 6, w: 6, h: 4 },
+      options: {
+        columns: ['client_id', 'advisor_id', 'meeting_type', 'meeting_date', 'compliance_approved']
+      }
     }
   ]
 } satisfies Dashboard;

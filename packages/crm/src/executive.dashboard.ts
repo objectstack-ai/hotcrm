@@ -17,7 +17,7 @@ export const ExecutiveDashboard = {
       object: 'opportunity',
       valueField: 'amount',
       aggregate: 'sum' as const,
-      filter: ['stage', '!=', 'closed_lost'],
+      filter: { stage: { $ne: 'closed_lost' } },
       layout: { x: 0, y: 0, w: 3, h: 2 }
     },
     {
@@ -27,7 +27,7 @@ export const ExecutiveDashboard = {
       object: 'opportunity',
       valueField: 'amount',
       aggregate: 'sum' as const,
-      filter: ['stage', '=', 'closed_won'],
+      filter: { stage: 'closed_won' },
       layout: { x: 3, y: 0, w: 3, h: 2 }
     },
     {
@@ -36,7 +36,7 @@ export const ExecutiveDashboard = {
       type: 'metric' as const,
       object: 'case',
       aggregate: 'count' as const,
-      filter: ['status', '!=', 'closed'],
+      filter: { status: { $ne: 'closed' } },
       layout: { x: 6, y: 0, w: 3, h: 2 }
     },
     {
@@ -45,7 +45,7 @@ export const ExecutiveDashboard = {
       type: 'metric' as const,
       object: 'employee',
       aggregate: 'count' as const,
-      filter: ['employment_status', '=', 'active'],
+      filter: { employment_status: 'active' },
       layout: { x: 9, y: 0, w: 3, h: 2 }
     },
     {
@@ -66,7 +66,7 @@ export const ExecutiveDashboard = {
       categoryField: 'close_date',
       valueField: 'amount',
       aggregate: 'sum' as const,
-      filter: ['stage', '=', 'closed_won'],
+      filter: { stage: 'closed_won' },
       layout: { x: 6, y: 2, w: 6, h: 4 }
     },
     {
@@ -84,8 +84,11 @@ export const ExecutiveDashboard = {
       type: 'table' as const,
       aggregate: 'count' as const,
       object: 'opportunity',
-      filter: ['stage', '!=', 'closed_lost'],
-      layout: { x: 6, y: 6, w: 6, h: 4 }
+      filter: { stage: { $ne: 'closed_lost' } },
+      layout: { x: 6, y: 6, w: 6, h: 4 },
+      options: {
+        columns: ['name', 'amount', 'stage', 'close_date']
+      }
     }
   ]
 } satisfies Dashboard;

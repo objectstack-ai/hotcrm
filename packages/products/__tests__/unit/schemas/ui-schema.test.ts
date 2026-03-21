@@ -5,6 +5,13 @@ import { ProductMixReport } from '../../../src/product_mix_report.report';
 import { QuoteGanttView } from '../../../src/quote_gantt.view';
 
 describe('Products UI Schema Compliance', () => {
+  describe('CpqDashboard', () => {
+    it('should pass module-level DashboardSchema validation', async () => {
+      const mod = await import('../../../src/cpq.dashboard');
+      expect(mod.CpqDashboard).toBeDefined();
+    });
+  });
+
   describe('ProductBundlePage', () => {
     it('should be defined', () => {
       expect(ProductBundlePage).toBeDefined();

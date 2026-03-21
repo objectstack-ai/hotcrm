@@ -24,7 +24,7 @@ export const MarketingDashboard = {
       type: 'metric' as const,
       object: 'campaign',
       aggregate: 'count' as const,
-      filter: ['is_active', '=', true],
+      filter: { is_active: true },
       layout: { x: 3, y: 0, w: 3, h: 2 }
     },
     {
@@ -43,7 +43,7 @@ export const MarketingDashboard = {
       object: 'campaign',
       valueField: 'actual_revenue',
       aggregate: 'sum' as const,
-      filter: ['status', '=', 'completed'],
+      filter: { status: 'completed' },
       layout: { x: 9, y: 0, w: 3, h: 2 }
     },
     {
@@ -80,8 +80,11 @@ export const MarketingDashboard = {
       type: 'table' as const,
       object: 'campaign',
       aggregate: 'count' as const,
-      filter: ['is_active', '=', true],
-      layout: { x: 6, y: 6, w: 6, h: 4 }
+      filter: { is_active: true },
+      layout: { x: 6, y: 6, w: 6, h: 4 },
+      options: {
+        columns: ['name', 'type', 'status', 'start_date', 'budgeted_cost']
+      }
     }
   ]
 } satisfies Dashboard;

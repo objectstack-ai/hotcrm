@@ -25,7 +25,7 @@ export const FinanceDashboard = {
       type: 'metric' as const,
       object: 'contract',
       aggregate: 'count' as const,
-      filter: ['status', '=', 'activated'],
+      filter: { status: 'activated' },
       layout: { x: 3, y: 0, w: 3, h: 2 }
     },
     {
@@ -34,7 +34,7 @@ export const FinanceDashboard = {
       type: 'metric' as const,
       object: 'invoice',
       aggregate: 'count' as const,
-      filter: ['status', '=', 'overdue'],
+      filter: { status: 'overdue' },
       layout: { x: 6, y: 0, w: 3, h: 2 }
     },
     {
@@ -44,7 +44,7 @@ export const FinanceDashboard = {
       object: 'payment',
       valueField: 'received_amount',
       aggregate: 'sum' as const,
-      filter: ['status', '=', 'completed'],
+      filter: { status: 'completed' },
       layout: { x: 9, y: 0, w: 3, h: 2 }
     },
     {
@@ -82,8 +82,11 @@ export const FinanceDashboard = {
       type: 'table' as const,
       object: 'contract',
       aggregate: 'count' as const,
-      filter: ['status', '=', 'activated'],
-      layout: { x: 6, y: 6, w: 6, h: 4 }
+      filter: { status: 'activated' },
+      layout: { x: 6, y: 6, w: 6, h: 4 },
+      options: {
+        columns: ['contract_number', 'account', 'contract_value', 'status', 'end_date']
+      }
     }
   ]
 } satisfies Dashboard;

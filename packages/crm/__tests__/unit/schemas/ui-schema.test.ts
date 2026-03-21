@@ -47,10 +47,10 @@ describe('CRM UI Schema Compliance', () => {
 
   describe('CrmDashboard', () => {
     // CrmDashboard module calls DashboardSchema.parse() at load time.
-    // The dashboard widget filter format currently uses arrays (ObjectQL style)
-    // which does not match the DashboardSchema expectation of record/object.
-    it('should fail module-level DashboardSchema validation (known schema mismatch)', async () => {
-      await expect(() => import('../../../src/crm.dashboard')).rejects.toThrow();
+    // Filters now use MongoDB-style FilterCondition format.
+    it('should pass module-level DashboardSchema validation', async () => {
+      const mod = await import('../../../src/crm.dashboard');
+      expect(mod.CrmDashboard).toBeDefined();
     });
   });
 
