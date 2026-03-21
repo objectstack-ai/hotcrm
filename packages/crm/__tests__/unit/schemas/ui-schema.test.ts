@@ -52,6 +52,55 @@ describe('CRM UI Schema Compliance', () => {
       const mod = await import('../../../src/crm.dashboard');
       expect(mod.CrmDashboard).toBeDefined();
     });
+
+    it('should have options.columns on table widgets', async () => {
+      const mod = await import('../../../src/crm.dashboard');
+      const tableWidgets = mod.CrmDashboard.widgets.filter((w: any) => w.type === 'table');
+      for (const w of tableWidgets) {
+        expect(w.options, `table widget "${w.id}" should have options`).toBeDefined();
+        expect(w.options.columns, `table widget "${w.id}" should have options.columns`).toBeDefined();
+        expect(Array.isArray(w.options.columns)).toBe(true);
+        expect(w.options.columns.length).toBeGreaterThan(0);
+      }
+    });
+  });
+
+  describe('SalesDashboard', () => {
+    it('should pass module-level DashboardSchema validation', async () => {
+      const mod = await import('../../../src/sales.dashboard');
+      expect(mod.SalesDashboard).toBeDefined();
+    });
+
+    it('should have options.columns on table widgets', async () => {
+      const mod = await import('../../../src/sales.dashboard');
+      const tableWidgets = mod.SalesDashboard.widgets.filter((w: any) => w.type === 'table');
+      expect(tableWidgets.length).toBeGreaterThan(0);
+      for (const w of tableWidgets) {
+        expect(w.options, `table widget "${w.id}" should have options`).toBeDefined();
+        expect(w.options.columns, `table widget "${w.id}" should have options.columns`).toBeDefined();
+        expect(Array.isArray(w.options.columns)).toBe(true);
+        expect(w.options.columns.length).toBeGreaterThan(0);
+      }
+    });
+  });
+
+  describe('ExecutiveDashboard', () => {
+    it('should pass module-level DashboardSchema validation', async () => {
+      const mod = await import('../../../src/executive.dashboard');
+      expect(mod.ExecutiveDashboard).toBeDefined();
+    });
+
+    it('should have options.columns on table widgets', async () => {
+      const mod = await import('../../../src/executive.dashboard');
+      const tableWidgets = mod.ExecutiveDashboard.widgets.filter((w: any) => w.type === 'table');
+      expect(tableWidgets.length).toBeGreaterThan(0);
+      for (const w of tableWidgets) {
+        expect(w.options, `table widget "${w.id}" should have options`).toBeDefined();
+        expect(w.options.columns, `table widget "${w.id}" should have options.columns`).toBeDefined();
+        expect(Array.isArray(w.options.columns)).toBe(true);
+        expect(w.options.columns.length).toBeGreaterThan(0);
+      }
+    });
   });
 
   describe('AccountForm', () => {

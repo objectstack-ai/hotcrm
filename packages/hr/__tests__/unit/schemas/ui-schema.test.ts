@@ -13,6 +13,9 @@ describe('HR UI Schema Compliance', () => {
       const mod = await import('../../../src/hr.dashboard');
       expect(mod.HrDashboard).toBeDefined();
     });
+
+    // HR dashboard has no table widgets, only chart/metric/kpi types.
+    // Verify filters use MongoDB-style format (validation happens at import).
   });
 
   describe('Reports', () => {
