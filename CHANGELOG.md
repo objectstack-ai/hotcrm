@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Upgrade all dependencies recursively** — Ran `pnpm upgrade -r` across the monorepo.
+  - `@objectstack/*` packages upgraded from `^3.2.8` to `^3.3.0` (spec, cli, runtime, objectql, driver-memory, plugin-auth, plugin-hono-server, service-i18n, studio)
+  - `@object-ui/console` upgraded from `^3.1.3` to `^3.1.4`
+  - `hono` upgraded from `^4.12.8` to `^4.12.9`
+  - All 210 test files (4104 tests) continue to pass
+
 ### Fixed
 - **Fix dashboard metadata columns/options compliance across all packages** — All `table`-type
   dashboard widgets now include `options.columns` specifying the fields to display, preventing
