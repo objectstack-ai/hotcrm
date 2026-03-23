@@ -65,7 +65,7 @@
     "@objectstack/objectql": "^3.2.8",
     "@objectstack/plugin-auth": "^3.2.8",
     "@objectstack/plugin-hono-server": "^3.2.8",
-    "@objectstack/runtime": "^3.2.8",
+    "@objectstack/runtime": "^3.2.9",
     "@objectstack/service-i18n": "^3.2.8",
     "@objectstack/spec": "^3.2.8",
     "@objectstack/studio": "^3.2.8",
