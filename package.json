@@ -62,6 +62,7 @@
     "@object-ui/console": "^3.1.4",
     "@objectstack/cli": "^3.3.0",
     "@objectstack/driver-memory": "^3.3.0",
+    "@objectstack/driver-turso": "^3.3.0",
     "@objectstack/objectql": "^3.3.0",
     "@objectstack/plugin-auth": "^3.3.0",
     "@objectstack/plugin-hono-server": "^3.3.0",

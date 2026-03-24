@@ -7,7 +7,7 @@
     "api/**/*.ts": {
       "memory": 1024,
       "maxDuration": 60,
-      "includeFiles": "{packages/*/dist,node_modules/@object-ui/console/dist,node_modules/@objectstack/plugin-auth/dist,node_modules/@objectstack/service-i18n/dist,node_modules/@objectstack/studio/dist,node_modules/@opentelemetry/api}/**"
+      "includeFiles": "{packages/*/dist,node_modules/@object-ui/console/dist,node_modules/@objectstack/*/dist,node_modules/@libsql,node_modules/better-sqlite3,node_modules/@opentelemetry/api}/**"
     }
   },
   "rewrites": [

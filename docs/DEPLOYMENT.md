@@ -171,14 +171,15 @@ kubectl logs -n hotcrm <pod-name> --previous
 
 ## Vercel Deployment (Serverless Mode)
 
-HotCRM can be deployed to **Vercel** as a serverless application using **Hono + Memory Driver** mode.
-In this mode the full ObjectStack kernel runs server-side inside a Vercel Serverless Function — no external
-database or Redis required. All data is stored in the function instance's memory.
+HotCRM can be deployed to **Vercel** as a serverless application using **Hono + Turso Driver** mode.
+In this mode the full ObjectStack kernel runs server-side inside a Vercel Serverless Function. When
+`TURSO_DATABASE_URL` is set, data persists in a Turso cloud database across cold starts. Without it,
+the driver falls back to `:memory:` (ephemeral SQLite, same behaviour as the old InMemoryDriver).
 
 ### How It Works
 
 1. A catch-all Vercel Serverless Function (`api/[[...route]].ts`) bootstraps the ObjectStack kernel on first request.
-2. `@objectstack/driver-memory` provides an in-memory data store — zero external infrastructure needed.
+2. `@objectstack/driver-turso` provides a persistent Turso/libSQL data store. When `TURSO_DATABASE_URL` is set, data persists across cold starts; otherwise falls back to `:memory:`.
 3. `HonoHttpServer` from `@objectstack/plugin-hono-server` handles HTTP routing (without TCP listener).
 4. `createRestApiPlugin()` auto-generates CRUD endpoints for all 65+ business objects.
 5. The kernel instance is reused across warm invocations (Vercel Fluid Compute).
@@ -197,7 +198,7 @@ Vercel Serverless Function
 │  ├── 6 Business Plugins                  │
 │  ├── Console UI (/console/)              │
 │  ├── Studio UI (/_studio/)               │
-│  └── InMemoryDriver (data store)         │
+│  └── TursoDriver (Turso cloud / :memory:) │
 │        ↓                                 │
 │  Response                                │
 └──────────────────────────────────────────┘
@@ -213,6 +214,8 @@ Vercel Serverless Function
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
 | `AUTH_SECRET` | **Yes** (production) | Dev fallback | Secret key used by the Auth Plugin (`@objectstack/plugin-auth`) for signing sessions and tokens. In production, set a strong random value (e.g. `openssl rand -base64 32`). A development fallback is used when not set. |
+| `TURSO_DATABASE_URL` | No (recommended for prod) | `:memory:` | Turso database URL (e.g. `libsql://my-db-orgname.turso.io`). When set, data persists across cold starts. |
+| `TURSO_AUTH_TOKEN` | When using remote URL | — | JWT auth token for the Turso database. Required when `TURSO_DATABASE_URL` points to a remote Turso cloud database. |
 
 ### Quick Start
 
@@ -289,7 +292,7 @@ Build pipeline:
 | `buildCommand` | `bash scripts/build-vercel.sh` | Runs the Vercel build script that builds core, patches console plugin, then compiles all business plugins |
 | `functions.memory` | `1024` MB | Memory allocated to the serverless function |
 | `functions.maxDuration` | `60` s | Maximum execution time per request (Pro plan) |
-| `functions.includeFiles` | `{packages/*/dist,node_modules/@object-ui/console/dist,node_modules/@objectstack/plugin-auth/dist,node_modules/@objectstack/studio/dist}/**` | Bundles business plugin dist/, Auth plugin, and Console/Studio SPA assets with the function |
+| `functions.includeFiles` | `{packages/*/dist,node_modules/@object-ui/console/dist,node_modules/@objectstack/*/dist,node_modules/@libsql,node_modules/better-sqlite3,node_modules/@opentelemetry/api}/**` | Bundles business plugin dist/, all @objectstack packages (including Auth, Studio, TursoDriver), libSQL/better-sqlite3 native deps, and OpenTelemetry with the function |
 | `rewrites` | `/(.*) → /api/[[...route]]` | Routes all requests to the catch-all handler |
 
 ### Architecture Details
@@ -309,14 +312,13 @@ a `HonoHttpServer`, registers it as the `http.server` service, and uses the `han
 
 ### Data Behavior
 
-- Data lives in the function instance's process memory
-- Warm invocations **share data** — records created in one request are visible in the next
-- After ~5–15 minutes of inactivity, Vercel recycles the instance (cold start) and data resets
-- For persistent data, see [Docker Deployment](#docker-deployment) or configure an external database
+- **With `TURSO_DATABASE_URL`** (production recommended): data persists in a Turso cloud database across cold starts and instance recycling.
+- **Without `TURSO_DATABASE_URL`** (local dev / demo): falls back to `:memory:` (ephemeral SQLite) — records persist only while the function instance is warm; data resets on cold start.
+- Warm invocations **share data** — records created in one request are visible in the next.
 
 ### Limitations
 
-- **Data is ephemeral** — records persist only while the function instance is warm; data resets on cold start.
+- **Data is ephemeral without Turso** — without `TURSO_DATABASE_URL`, records persist only while the function instance is warm; data resets on cold start. Set `TURSO_DATABASE_URL` + `TURSO_AUTH_TOKEN` for persistent production data.
 - **No authentication** — this mode does not enforce permissions or user sessions out of the box.
 - **No WebSocket** — Vercel Serverless Functions do not support persistent connections.
 - **Cold start latency** — the first request after idle may take 2–5 seconds for kernel bootstrap.
