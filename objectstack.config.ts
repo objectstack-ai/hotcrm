@@ -57,7 +57,15 @@ export default defineStack({
     defaultLocale: 'en',
     supportedLocales: ['en', 'zh-CN', 'ja-JP'],
     fallbackLocale: 'en',
-    fileOrganization: 'per_locale',
+    namespace: 'hotcrm',
+    translations: [
+      CrmTranslations,
+      FinanceTranslations,
+      MarketingTranslations,
+      ProductsTranslations,
+      SupportTranslations,
+      HRTranslations,
+    ],
   },
 
   // Empty objects array triggers auto-loading of ObjectQL and the memory driver,
@@ -73,18 +81,6 @@ export default defineStack({
     IndustryDataset,
     TimezoneDataset,
     LanguageDataset,
-  ],
-
-  // Aggregated translations from all business plugins (TranslationBundle[])
-  // Each plugin also registers its own translations for plugin-level loading.
-  // The root config merges them for the AppPlugin to load at startup.
-  translations: [
-    CrmTranslations,
-    FinanceTranslations,
-    MarketingTranslations,
-    ProductsTranslations,
-    SupportTranslations,
-    HRTranslations,
   ],
 
   // Register all Business Plugins
