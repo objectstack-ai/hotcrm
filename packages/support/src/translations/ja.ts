@@ -1,14 +1,14 @@
 import type { TranslationData } from '@objectstack/spec/system';
 
 /**
- * 日本語 (ja-JP) — カスタマーサポート翻訳
+ * 日本語 (ja) — カスタマーサポート翻訳
  *
  * Per-locale file: one file per language, following the `per_locale` convention.
  * Each file exports a single `TranslationData` object for its locale.
  *
  * Covers all 23 Support objects with field labels, select options, and help texts.
  */
-export const jaJP: TranslationData = {
+export const ja: TranslationData = {
   objects: {
     case: {
       label: 'ケース',

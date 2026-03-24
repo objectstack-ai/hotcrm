@@ -1,11 +1,11 @@
 import type { TranslationData } from '@objectstack/spec/system';
 
 /**
- * 简体中文 (zh-CN) — Human Capital Management Translations
+ * 简体中文 (zh) — Human Capital Management Translations
  *
  * Per-locale file: one file per language, following the `per_locale` convention.
  */
-export const zhCN: TranslationData = {
+export const zh: TranslationData = {
   objects: {
     department: {
       label: '部门',

@@ -55,7 +55,7 @@ export default defineStack({
   // Internationalization (i18n) configuration
   i18n: {
     defaultLocale: 'en',
-    supportedLocales: ['en', 'zh-CN', 'ja-JP'],
+    supportedLocales: ['en', 'zh', 'ja'],
     fallbackLocale: 'en',
     namespace: 'hotcrm',
     translations: [

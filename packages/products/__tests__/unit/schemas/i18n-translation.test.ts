@@ -13,12 +13,12 @@ describe('Products i18n Translations', () => {
 
   it('should contain all supported locales', () => {
     expect(ProductsTranslations).toHaveProperty('en');
-    expect(ProductsTranslations).toHaveProperty('zh-CN');
-    expect(ProductsTranslations).toHaveProperty('ja-JP');
+    expect(ProductsTranslations).toHaveProperty('zh');
+    expect(ProductsTranslations).toHaveProperty('ja');
   });
 
   it('should have non-empty objects section for each locale', () => {
-    for (const locale of ['en', 'zh-CN', 'ja-JP']) {
+    for (const locale of ['en', 'zh', 'ja']) {
       const data = ProductsTranslations[locale];
       expect(data).toBeDefined();
       expect(data.objects).toBeDefined();
@@ -35,8 +35,8 @@ describe('Products i18n Translations', () => {
 
   it('should have consistent object keys across all locales', () => {
     const enKeys = Object.keys(ProductsTranslations.en.objects ?? {}).sort();
-    const zhKeys = Object.keys(ProductsTranslations['zh-CN'].objects ?? {}).sort();
-    const jaKeys = Object.keys(ProductsTranslations['ja-JP'].objects ?? {}).sort();
+    const zhKeys = Object.keys(ProductsTranslations['zh'].objects ?? {}).sort();
+    const jaKeys = Object.keys(ProductsTranslations['ja'].objects ?? {}).sort();
     expect(enKeys).toEqual(zhKeys);
     expect(enKeys).toEqual(jaKeys);
   });

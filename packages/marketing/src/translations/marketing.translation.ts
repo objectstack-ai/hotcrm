@@ -1,7 +1,7 @@
 import type { TranslationBundle } from '@objectstack/spec/system';
 import { en } from './en.js';
-import { zhCN } from './zh-CN.js';
-import { jaJP } from './ja-JP.js';
+import { zh } from './zh.js';
+import { ja } from './ja.js';
 
 /**
  * Marketing Cloud — Internationalization (i18n)
@@ -16,10 +16,10 @@ import { jaJP } from './ja-JP.js';
  * - App & navigation group labels
  * - Common UI messages, validation messages
  *
- * Supported locales: en, zh-CN, ja-JP
+ * Supported locales: en, zh, ja
  */
 export const MarketingTranslations: TranslationBundle = {
   en,
-  'zh-CN': zhCN,
-  'ja-JP': jaJP,
+  zh,
+  ja,
 };

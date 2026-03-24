@@ -481,7 +481,7 @@ async function bootstrap(): Promise<Hono> {
     },
     i18n: {
       defaultLocale: 'en',
-      supportedLocales: ['en', 'zh-CN', 'ja-JP'],
+      supportedLocales: ['en', 'zh', 'ja'],
       fallbackLocale: 'en',
       namespace: 'hotcrm',
       translations: [

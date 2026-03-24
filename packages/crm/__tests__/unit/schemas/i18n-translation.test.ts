@@ -13,12 +13,12 @@ describe('CRM i18n Translations', () => {
 
   it('should contain all supported locales', () => {
     expect(CrmTranslations).toHaveProperty('en');
-    expect(CrmTranslations).toHaveProperty('zh-CN');
-    expect(CrmTranslations).toHaveProperty('ja-JP');
+    expect(CrmTranslations).toHaveProperty('zh');
+    expect(CrmTranslations).toHaveProperty('ja');
   });
 
   it('should have non-empty objects section for each locale', () => {
-    for (const locale of ['en', 'zh-CN', 'ja-JP']) {
+    for (const locale of ['en', 'zh', 'ja']) {
       const data = CrmTranslations[locale];
       expect(data).toBeDefined();
       expect(data.objects).toBeDefined();
@@ -36,8 +36,8 @@ describe('CRM i18n Translations', () => {
 
   it('should have consistent object keys across all locales', () => {
     const enKeys = Object.keys(CrmTranslations.en.objects ?? {}).sort();
-    const zhKeys = Object.keys(CrmTranslations['zh-CN'].objects ?? {}).sort();
-    const jaKeys = Object.keys(CrmTranslations['ja-JP'].objects ?? {}).sort();
+    const zhKeys = Object.keys(CrmTranslations['zh'].objects ?? {}).sort();
+    const jaKeys = Object.keys(CrmTranslations['ja'].objects ?? {}).sort();
     expect(enKeys).toEqual(zhKeys);
     expect(enKeys).toEqual(jaKeys);
   });

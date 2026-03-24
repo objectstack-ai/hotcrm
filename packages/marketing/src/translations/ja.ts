@@ -1,11 +1,11 @@
 import type { TranslationData } from '@objectstack/spec/system';
 
 /**
- * 日本語 (ja-JP) — Marketing Cloud Translations
+ * 日本語 (ja) — Marketing Cloud Translations
  *
  * Per-locale file: one file per language, following the `per_locale` convention.
  */
-export const jaJP: TranslationData = {
+export const ja: TranslationData = {
   objects: {
     campaign: {
       label: 'キャンペーン',

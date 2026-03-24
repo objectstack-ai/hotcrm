@@ -1,11 +1,11 @@
 import type { TranslationData } from '@objectstack/spec/system';
 
 /**
- * 简体中文 (zh-CN) — Finance Cloud Translations
+ * 简体中文 (zh) — Finance Cloud Translations
  *
  * Per-locale file: one file per language, following the `per_locale` convention.
  */
-export const zhCN: TranslationData = {
+export const zh: TranslationData = {
   objects: {
     contract: {
       label: '合同',

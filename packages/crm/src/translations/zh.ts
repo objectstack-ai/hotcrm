@@ -1,11 +1,11 @@
 import type { TranslationData } from '@objectstack/spec/system';
 
 /**
- * 简体中文 (zh-CN) — CRM Sales Cloud Translations
+ * 简体中文 (zh) — CRM Sales Cloud Translations
  *
  * Per-locale file: one file per language, following the `per_locale` convention.
  */
-export const zhCN: TranslationData = {
+export const zh: TranslationData = {
   objects: {
     account: {
       label: '客户',

@@ -1,14 +1,14 @@
 import type { TranslationData } from '@objectstack/spec/system';
 
 /**
- * 简体中文 (zh-CN) — 客户支持翻译
+ * 简体中文 (zh) — 客户支持翻译
  *
  * Per-locale file: one file per language, following the `per_locale` convention.
  * Each file exports a single `TranslationData` object for its locale.
  *
  * Covers all 23 Support objects with field labels, select options, and help texts.
  */
-export const zhCN: TranslationData = {
+export const zh: TranslationData = {
   objects: {
     case: {
       label: '工单',
