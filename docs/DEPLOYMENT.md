@@ -292,7 +292,7 @@ Build pipeline:
 | `buildCommand` | `bash scripts/build-vercel.sh` | Runs the Vercel build script that builds core, patches console plugin, then compiles all business plugins |
 | `functions.memory` | `1024` MB | Memory allocated to the serverless function |
 | `functions.maxDuration` | `60` s | Maximum execution time per request (Pro plan) |
-| `functions.includeFiles` | `{packages/*/dist,node_modules/@object-ui/console/dist,node_modules/@objectstack/plugin-auth/dist,node_modules/@objectstack/studio/dist}/**` | Bundles business plugin dist/, Auth plugin, and Console/Studio SPA assets with the function |
+| `functions.includeFiles` | `{packages/*/dist,node_modules/@object-ui/console/dist,node_modules/@objectstack/*/dist,node_modules/@libsql,node_modules/better-sqlite3,node_modules/@opentelemetry/api}/**` | Bundles business plugin dist/, all @objectstack packages (including Auth, Studio, TursoDriver), libSQL/better-sqlite3 native deps, and OpenTelemetry with the function |
 | `rewrites` | `/(.*) → /api/[[...route]]` | Routes all requests to the catch-all handler |
 
 ### Architecture Details
