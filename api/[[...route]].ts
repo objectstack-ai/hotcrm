@@ -60,6 +60,46 @@ import { ProductsTranslations } from '../packages/products/dist/translations/ind
 import { SupportTranslations } from '../packages/support/dist/translations/index.js';
 import { HRTranslations } from '../packages/hr/dist/translations/index.js';
 
+/**
+ * Merge multiple TranslationBundles into a single bundle by deep-merging each locale.
+ * This allows multiple plugins to contribute translations that are combined into one namespace.
+ */
+function mergeTranslationBundles(...bundles: any[]): any {
+  const merged: any = {};
+
+  for (const bundle of bundles) {
+    for (const locale in bundle) {
+      if (!merged[locale]) {
+        merged[locale] = {};
+      }
+
+      // Deep merge the translation data for this locale
+      const source = bundle[locale];
+      const target = merged[locale];
+
+      for (const key in source) {
+        if (typeof source[key] === 'object' && !Array.isArray(source[key])) {
+          target[key] = { ...target[key], ...source[key] };
+        } else {
+          target[key] = source[key];
+        }
+      }
+    }
+  }
+
+  return merged;
+}
+
+// Merge all plugin translations into a single bundle
+const HotCRMTranslations = mergeTranslationBundles(
+  CrmTranslations,
+  FinanceTranslations,
+  MarketingTranslations,
+  ProductsTranslations,
+  SupportTranslations,
+  HRTranslations
+);
+
 // ---------------------------------------------------------------------------
 // Timeout constants — protect against permanently-pending promises that would
 // cause Vercel's 60 s function timeout.
@@ -484,14 +524,7 @@ async function bootstrap(): Promise<Hono> {
       supportedLocales: ['en', 'zh', 'ja'],
       fallbackLocale: 'en',
       namespace: 'hotcrm',
-      translations: [
-        CrmTranslations,
-        FinanceTranslations,
-        MarketingTranslations,
-        ProductsTranslations,
-        SupportTranslations,
-        HRTranslations,
-      ],
+      translations: HotCRMTranslations,
     },
     objects: [],
     plugins: [],
