@@ -94,11 +94,6 @@ export const HRPlugin = {
   // Plugin dependencies
   dependencies: [],
   
-  // Plugin initialization
-  init: async () => {
-    // No initialization required for this plugin
-  },
-  
   // Actions provided by this plugin
   actions: {
     candidate_ai: CandidateAIAction,

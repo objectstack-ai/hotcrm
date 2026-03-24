@@ -55,11 +55,6 @@ export const MarketingPlugin = {
   description: 'Marketing automation, campaign management, email templates, landing pages, and list management.',
   dependencies: ['crm'],
   
-  // Plugin initialization
-  init: async () => {
-    // No initialization required for this plugin
-  },
-  
   objects: {
     campaign: Campaign,
     campaign_member: CampaignMember,

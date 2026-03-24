@@ -82,11 +82,6 @@ export const CRMPlugin = {
   // Plugin dependencies
   dependencies: [],
   
-  // Plugin initialization
-  init: async () => {
-    // No initialization required for this plugin
-  },
-  
   // Actions provided by this plugin
   actions: {
     lead_convert: LeadConvertAction,

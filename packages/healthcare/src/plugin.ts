@@ -56,11 +56,6 @@ export const HealthcarePlugin = {
   // Plugin dependencies
   dependencies: [],
 
-  // Plugin initialization
-  init: async () => {
-    // No initialization required for this plugin
-  },
-
   // Business objects provided by this plugin
   objects: {
     patient: Patient,
