@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- **Vercel deployment — switched from InMemoryDriver to TursoDriver** — The Vercel serverless
+  handler (`api/[[...route]].ts`) now uses `@objectstack/driver-turso` (TursoDriver) instead of
+  `@objectstack/driver-memory` (InMemoryDriver). In production, set `TURSO_DATABASE_URL` and
+  `TURSO_AUTH_TOKEN` environment variables to connect to a Turso cloud database for persistent
+  data across cold starts. Without those variables, falls back to `:memory:` (ephemeral SQLite,
+  same behavior as before). Added `@objectstack/driver-turso@^3.3.0` to devDependencies and
+  updated `vercel.json` `includeFiles` to bundle the Turso driver and its dependencies.
 - **Upgrade all dependencies recursively** — Ran `pnpm upgrade -r` across the monorepo.
   - `@objectstack/*` packages upgraded from `^3.2.8` to `^3.3.0` (spec, cli, runtime, objectql, driver-memory, plugin-auth, plugin-hono-server, service-i18n, studio)
   - `@object-ui/console` upgraded from `^3.1.3` to `^3.1.4`

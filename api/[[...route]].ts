@@ -2,7 +2,7 @@
  * Vercel Serverless Function — ObjectStack Hono Handler
  *
  * Bootstraps the full ObjectStack kernel with all HotCRM plugins,
- * using @objectstack/driver-memory for zero-config in-memory data.
+ * using @objectstack/driver-turso for persistent data (Turso cloud) or :memory: fallback.
  *
  * Uses `getRequestListener()` from `@hono/node-server` together with an
  * `extractBody()` helper to handle Vercel's pre-buffered request body.
@@ -12,8 +12,8 @@
  * `rawBody` / `body` directly and constructing a fresh `Request` object
  * prevents POST/PUT/PATCH requests (e.g. login) from hanging indefinitely.
  *
- * Data lives in the function instance's memory and persists across
- * warm invocations (Vercel Fluid Compute) but resets on cold start.
+ * When TURSO_DATABASE_URL is set, data persists in a Turso cloud database
+ * across cold starts. Without it, falls back to :memory: (ephemeral, same as old InMemoryDriver).
  *
  * Both Console (/) and Studio (/_studio/) UIs are served as static SPAs.
  *
@@ -28,7 +28,7 @@ import { ObjectKernel, DriverPlugin, AppPlugin, createDispatcherPlugin, createRe
 import { HonoHttpServer } from '@objectstack/plugin-hono-server';
 import { AuthPlugin } from '@objectstack/plugin-auth';
 import { I18nServicePlugin } from '@objectstack/service-i18n';
-import { InMemoryDriver } from '@objectstack/driver-memory';
+import { TursoDriver } from '@objectstack/driver-turso';
 import { ObjectQLPlugin } from '@objectstack/objectql';
 import { getRequestListener } from '@hono/node-server';
 import type { Hono } from 'hono';
@@ -342,9 +342,17 @@ async function bootstrap(): Promise<Hono> {
   await withTimeout(kernel.use(new ObjectQLPlugin()), PLUGIN_TIMEOUT_MS, 'ObjectQLPlugin');
   log('ObjectQLPlugin registered.');
 
-  // 2. In-memory data driver (no external DB required)
-  log('Registering DriverPlugin (InMemoryDriver)…');
-  await withTimeout(kernel.use(new DriverPlugin(new InMemoryDriver(), 'memory')), PLUGIN_TIMEOUT_MS, 'DriverPlugin');
+  // 2. Turso/libSQL data driver (persistent across cold starts)
+  //
+  // In production (Vercel), reads TURSO_DATABASE_URL and TURSO_AUTH_TOKEN
+  // environment variables for remote mode (libsql:// cloud database).
+  // For local development without those variables, falls back to :memory:
+  // (ephemeral SQLite — same behaviour as the old InMemoryDriver).
+  log('Registering DriverPlugin (TursoDriver)…');
+  await withTimeout(kernel.use(new DriverPlugin(new TursoDriver({
+    url: process.env.TURSO_DATABASE_URL ?? ':memory:',
+    ...(process.env.TURSO_AUTH_TOKEN && { authToken: process.env.TURSO_AUTH_TOKEN }),
+  }), 'turso')), PLUGIN_TIMEOUT_MS, 'DriverPlugin');
   log('DriverPlugin registered.');
 
   // 3. HTTP server adapter — register the Hono app without TCP listener
