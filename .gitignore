@@ -30,4 +30,8 @@ packages/server/objectstack.config.js
 *.tgz
 package/
 
+# SPA static assets copied during Vercel build (build artifacts, not source)
+public/console/
+public/_studio/
+
 .objectstack
