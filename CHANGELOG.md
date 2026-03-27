@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- **Optimize static file access paths — serve SPA assets directly from Vercel CDN** — Console
+  and Studio SPA static assets (JS, CSS, fonts, images) are now copied to `public/console/` and
+  `public/_studio/` during the Vercel build step. Vercel's filesystem-first routing serves these
+  files directly from its CDN edge network, bypassing the `api/[[...route]]` serverless function
+  entirely. This eliminates unnecessary cold-start latency for asset requests, enables browser
+  and CDN caching with `Cache-Control: public, max-age=31536000, immutable` headers for
+  content-hashed assets, and reduces serverless function invocations. The API handler retains
+  its static SPA plugin for non-Vercel deployments (Docker, local dev) and SPA HTML fallback.
+  - Updated `scripts/build-vercel.sh` to copy SPA dist assets to `public/` after package builds
+  - Added `headers` configuration in `vercel.json` for long-lived cache on asset paths
+  - Updated `.gitignore` to exclude `public/console/` and `public/_studio/` (build artifacts)
 - **Vercel deployment — switched from InMemoryDriver to TursoDriver** — The Vercel serverless
   handler (`api/[[...route]].ts`) now uses `@objectstack/driver-turso` (TursoDriver) instead of
   `@objectstack/driver-memory` (InMemoryDriver). In production, set `TURSO_DATABASE_URL` and

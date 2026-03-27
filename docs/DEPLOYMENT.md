@@ -289,11 +289,28 @@ Build pipeline:
 | Field | Value | Purpose |
 |-------|-------|---------|
 | `installCommand` | `pnpm install` | Installs all workspace dependencies |
-| `buildCommand` | `bash scripts/build-vercel.sh` | Runs the Vercel build script that builds core, patches console plugin, then compiles all business plugins |
+| `buildCommand` | `bash scripts/build-vercel.sh` | Runs the Vercel build script that builds core, patches console plugin, compiles all business plugins, and copies SPA static assets to `public/` |
 | `functions.memory` | `1024` MB | Memory allocated to the serverless function |
 | `functions.maxDuration` | `60` s | Maximum execution time per request (Pro plan) |
 | `functions.includeFiles` | `{packages/*/dist,node_modules/@object-ui/console/dist,node_modules/@objectstack/*/dist,node_modules/@libsql,node_modules/better-sqlite3,node_modules/@opentelemetry/api}/**` | Bundles business plugin dist/, all @objectstack packages (including Auth, Studio, TursoDriver), libSQL/better-sqlite3 native deps, and OpenTelemetry with the function |
-| `rewrites` | `/(.*) → /api/[[...route]]` | Routes all requests to the catch-all handler |
+| `headers` | `/console/assets/*`, `/_studio/assets/*` | Sets `Cache-Control: public, max-age=31536000, immutable` on content-hashed static assets |
+| `rewrites` | `/(.*) → /api/[[...route]]` | Routes non-static requests to the catch-all handler (static files in `public/` are served by Vercel's CDN before rewrites are evaluated) |
+
+### Static Asset Optimization
+
+SPA static assets (JS, CSS, fonts, images) are served directly from Vercel's CDN edge network
+instead of routing through the serverless function:
+
+- **Build step**: `scripts/build-vercel.sh` copies Console assets to `public/console/assets/`
+  and Studio assets to `public/_studio/assets/` after building all packages.
+- **Vercel routing order**: redirects → headers → **filesystem** → rewrites. Files in `public/`
+  (the output directory) are matched at the filesystem step, **before** rewrites, so they bypass
+  the `api/[[...route]]` serverless function entirely.
+- **Cache headers**: Content-hashed assets (e.g., `index-DDpLaQOV.js`) get
+  `Cache-Control: public, max-age=31536000, immutable` for optimal CDN and browser caching.
+- **SPA fallback**: Only `index.html` and client-side routes still go through the API handler.
+  The static SPA plugin in the serverless function handles these requests, plus serves as the
+  fallback for non-Vercel deployments (Docker, local dev).
 
 ### Architecture Details
 
