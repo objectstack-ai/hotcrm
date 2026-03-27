@@ -19,8 +19,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated `scripts/build-vercel.sh` to copy SPA dist assets to `public/` after package builds
   - Added `headers` configuration in `vercel.json` for long-lived cache on asset paths
   - Updated `.gitignore` to exclude `public/console/` and `public/_studio/` (build artifacts)
-
-### Changed
 - **Vercel deployment — switched from InMemoryDriver to TursoDriver** — The Vercel serverless
   handler (`api/[[...route]].ts`) now uses `@objectstack/driver-turso` (TursoDriver) instead of
   `@objectstack/driver-memory` (InMemoryDriver). In production, set `TURSO_DATABASE_URL` and
