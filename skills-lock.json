@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "skills": {
+    "objectstack-ai": {
+      "source": "objectstack-ai/framework",
+      "sourceType": "github",
+      "computedHash": "4dd7a72b4b891b5add18500cee92777b3f5e09393048328109de1508c08a5700"
+    },
+    "objectstack-automation": {
+      "source": "objectstack-ai/framework",
+      "sourceType": "github",
+      "computedHash": "c9647e94b2e72e948a30779d8ac75228ea57edf61c31c6477a168dd1a9999739"
+    },
+    "objectstack-data": {
+      "source": "objectstack-ai/framework",
+      "sourceType": "github",
+      "computedHash": "7d359fc429b6c6b34f0e216d1fd06e95a7cd977d4071f6a091fa5702634f0d8b"
+    },
+    "objectstack-ui": {
+      "source": "objectstack-ai/framework",
+      "sourceType": "github",
+      "computedHash": "9562ca9dc9ddd34f0d248a04bef940af50ad42be76609e02c9e81c8f6a2e6835"
+    }
+  }
+}
