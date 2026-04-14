@@ -35,7 +35,7 @@ export const Campaign = ObjectSchema.create({
         { label: 'Completed', value: 'completed' },
         { label: 'Aborted', value: 'aborted' }
       ],
-      defaultValue: 'Planned'
+      defaultValue: 'planned'
     }),
     start_date: Field.date({ label: 'Start Date' }),
     end_date: Field.date({ label: 'End Date' }),

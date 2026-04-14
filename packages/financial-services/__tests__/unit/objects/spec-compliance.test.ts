@@ -265,8 +265,8 @@ describe('Kyc Object Spec Compliance', () => {
     expect(Kyc.fields.document_type.type).toBe('select');
     expect(Kyc.fields.document_id.type).toBe('text');
     expect(Kyc.fields.verification_status.type).toBe('select');
-    expect(Kyc.fields.verified_date.type).toBe('text');
-    expect(Kyc.fields.expiry_date.type).toBe('text');
+    expect(Kyc.fields.verified_date.type).toBe('date');
+    expect(Kyc.fields.expiry_date.type).toBe('date');
     expect(Kyc.fields.risk_level.type).toBe('select');
     expect(Kyc.fields.verified_by.type).toBe('lookup');
     expect(Kyc.fields.notes.type).toBe('textarea');
@@ -380,8 +380,8 @@ describe('TransactionRecord Object Spec Compliance', () => {
   it('should have correct field types', () => {
     expect(TransactionRecord.fields.account_id.type).toBe('master_detail');
     expect(TransactionRecord.fields.transaction_type.type).toBe('select');
-    expect(TransactionRecord.fields.amount.type).toBe('number');
-    expect(TransactionRecord.fields.transaction_date.type).toBe('text');
+    expect(TransactionRecord.fields.amount.type).toBe('currency');
+    expect(TransactionRecord.fields.transaction_date.type).toBe('date');
     expect(TransactionRecord.fields.counterparty.type).toBe('text');
     expect(TransactionRecord.fields.status.type).toBe('select');
     expect(TransactionRecord.fields.compliance_flag.type).toBe('select');

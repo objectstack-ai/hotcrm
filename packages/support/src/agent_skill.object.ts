@@ -125,7 +125,7 @@ export const AgentSkill = ObjectSchema.create({
       precision: 2
     }),
     notes: Field.textarea({
-      label: 'notes',
+      label: 'Notes',
       maxLength: 2000
     })
   },

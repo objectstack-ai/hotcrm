@@ -9,12 +9,12 @@ export const Skill = ObjectSchema.create({
 
   fields: {
     name: Field.text({
-      label: 'Skill name',
+      label: 'Skill Name',
       required: true,
       maxLength: 255
     }),
     description: Field.textarea({
-      label: 'description',
+      label: 'Description',
       maxLength: 2000
     }),
     is_active: Field.boolean({
@@ -92,7 +92,7 @@ export const Skill = ObjectSchema.create({
       defaultValue: false
     }),
     certification_name: Field.text({
-      label: 'Certification name',
+      label: 'Certification Name',
       maxLength: 255
     }),
     total_agents: Field.number({

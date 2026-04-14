@@ -9,12 +9,12 @@ export const RoutingRule = ObjectSchema.create({
 
   fields: {
     name: Field.text({
-      label: 'Rule name',
+      label: 'Rule Name',
       required: true,
       maxLength: 255
     }),
     description: Field.textarea({
-      label: 'description',
+      label: 'Description',
       maxLength: 2000
     }),
     is_active: Field.boolean({
@@ -22,7 +22,7 @@ export const RoutingRule = ObjectSchema.create({
       defaultValue: true
     }),
     priority: Field.number({
-      label: 'Rule priority',
+      label: 'Rule Priority',
       description: 'Lower number = higher priority (rules evaluated in priority order)',
       required: true,
       defaultValue: 100,

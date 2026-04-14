@@ -188,15 +188,15 @@ export const EmailTemplate = ObjectSchema.create({
       options: [
         {
           "label": "Open Rate",
-          "value": "openrate"
+          "value": "open_rate"
         },
         {
           "label": "Click Rate",
-          "value": "clickrate"
+          "value": "click_rate"
         },
         {
           "label": "Conversion Rate",
-          "value": "conversionrate"
+          "value": "conversion_rate"
         }
       ]
     }),

@@ -21,14 +21,14 @@ export const Pricebook = ObjectSchema.create({
         { label: 'JPY', value: 'jpy' },
         { label: 'HKD', value: 'hkd' }
       ],
-      defaultValue: 'CNY',
+      defaultValue: 'cny',
       required: true
     }),
     start_date: Field.date({ label: 'Start Date' }),
     end_date: Field.date({ label: 'End Date' }),
     description: Field.textarea({ label: 'Description' }),
     supported_currencies: Field.text({ label: 'Supported Currencies', maxLength: 500, description: 'Comma-separated currency codes (e.g., USD,EUR,GBP)' }),
-    default_currency: Field.text({ label: 'Default Currency', maxLength: 3, defaultValue: 'USD' }),
+    default_currency: Field.text({ label: 'Default Currency', maxLength: 3, defaultValue: 'usd' }),
     exchange_rate_type: Field.select({
       label: 'Exchange Rate Type',
       options: [

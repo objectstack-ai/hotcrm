@@ -14,12 +14,12 @@ export const Quote = ObjectSchema.create({
       format: 'Q-{YYYY}-{MM}-{0000}'
     }),
     name: Field.text({
-      label: 'Quote name',
+      label: 'Quote Name',
       required: true,
       maxLength: 255
     }),
     status: Field.select({
-      label: 'status',
+      label: 'Status',
       required: true,
       defaultValue: 'draft',
       options: [
@@ -86,7 +86,7 @@ export const Quote = ObjectSchema.create({
       precision: 0
     }),
     subtotal: Field.currency({
-      label: 'subtotal',
+      label: 'Subtotal',
       description: 'Sum of all line item amounts',
       readonly: true,
       precision: 2
@@ -267,7 +267,7 @@ export const Quote = ObjectSchema.create({
       maxLength: 80
     }),
     approval_status: Field.select({
-      label: 'Approval status',
+      label: 'Approval Status',
       defaultValue: 'not_submitted',
       readonly: true,
       options: [
@@ -344,7 +344,7 @@ export const Quote = ObjectSchema.create({
       description: 'Quote template used for PDF generation'
     }),
     description: Field.textarea({
-      label: 'description',
+      label: 'Description',
       maxLength: 32000
     }),
     internal_notes: Field.textarea({

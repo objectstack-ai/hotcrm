@@ -13,7 +13,7 @@ export const Alumni = ObjectSchema.create({
     job_title: Field.text({ label: 'Job Title' }),
     giving_history: Field.number({ label: 'Lifetime Giving ($)', min: 0, defaultValue: 0 }),
     engagement_score: Field.number({ label: 'Engagement Score', min: 0, max: 100 }),
-    email: Field.text({ label: 'Email' }),
+    email: Field.email({ label: 'Email' }),
     location: Field.text({ label: 'Location' })
   }
 });

@@ -26,7 +26,7 @@ export const QueueMember = ObjectSchema.create({
       defaultValue: false
     }),
     status: Field.select({
-      label: 'status',
+      label: 'Status',
       defaultValue: 'available',
       options: [
         {
@@ -92,7 +92,7 @@ export const QueueMember = ObjectSchema.create({
       defaultValue: false
     }),
     custom_schedule_notes: Field.textarea({
-      label: 'Schedule notes',
+      label: 'Schedule Notes',
       maxLength: 1000
     }),
     current_cases: Field.number({
@@ -138,7 +138,7 @@ export const QueueMember = ObjectSchema.create({
       precision: 0
     }),
     notes: Field.textarea({
-      label: 'notes',
+      label: 'Notes',
       maxLength: 2000
     })
   },

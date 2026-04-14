@@ -9,7 +9,7 @@ export const ProductBundle = ObjectSchema.create({
 
   fields: {
     name: Field.text({
-      label: 'Bundle name',
+      label: 'Bundle Name',
       required: true,
       maxLength: 255
     }),
@@ -20,11 +20,11 @@ export const ProductBundle = ObjectSchema.create({
       maxLength: 50
     }),
     description: Field.textarea({
-      label: 'description',
+      label: 'Description',
       maxLength: 32000
     }),
     status: Field.select({
-      label: 'status',
+      label: 'Status',
       required: true,
       defaultValue: 'active',
       options: [

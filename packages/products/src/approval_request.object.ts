@@ -14,12 +14,12 @@ export const ApprovalRequest = ObjectSchema.create({
       format: 'AR-{YYYY}-{MM}-{00000}'
     }),
     name: Field.text({
-      label: 'Request name',
+      label: 'Request Name',
       required: true,
       maxLength: 255
     }),
     description: Field.textarea({
-      label: 'description',
+      label: 'Description',
       description: 'Detailed description of approval request',
       maxLength: 2000
     }),
@@ -82,7 +82,7 @@ export const ApprovalRequest = ObjectSchema.create({
       readonly: true
     }),
     status: Field.select({
-      label: 'status',
+      label: 'Status',
       required: true,
       defaultValue: 'pending',
       options: [
@@ -209,7 +209,7 @@ export const ApprovalRequest = ObjectSchema.create({
       ]
     }),
     competitor_name: Field.text({
-      label: 'Competitor name',
+      label: 'Competitor Name',
       description: 'Competitor being matched (if applicable)',
       maxLength: 255
     }),

@@ -34,14 +34,14 @@ describe('Patient Object Spec Compliance', () => {
 
   it('should have correct field types', () => {
     expect(Patient.fields.name.type).toBe('text');
-    expect(Patient.fields.date_of_birth.type).toBe('text');
+    expect(Patient.fields.date_of_birth.type).toBe('date');
     expect(Patient.fields.gender.type).toBe('select');
     expect(Patient.fields.insurance_id.type).toBe('lookup');
     expect(Patient.fields.primary_physician.type).toBe('lookup');
     expect(Patient.fields.allergies.type).toBe('textarea');
     expect(Patient.fields.medical_record_number.type).toBe('text');
-    expect(Patient.fields.email.type).toBe('text');
-    expect(Patient.fields.phone.type).toBe('text');
+    expect(Patient.fields.email.type).toBe('email');
+    expect(Patient.fields.phone.type).toBe('phone');
     expect(Patient.fields.emergency_contact.type).toBe('text');
     expect(Patient.fields.status.type).toBe('select');
   });
@@ -105,11 +105,11 @@ describe('Appointment Object Spec Compliance', () => {
     expect(Appointment.fields.patient_id.type).toBe('master_detail');
     expect(Appointment.fields.provider_id.type).toBe('lookup');
     expect(Appointment.fields.appointment_type.type).toBe('select');
-    expect(Appointment.fields.scheduled_date.type).toBe('text');
+    expect(Appointment.fields.scheduled_date.type).toBe('datetime');
     expect(Appointment.fields.duration.type).toBe('number');
     expect(Appointment.fields.status.type).toBe('select');
     expect(Appointment.fields.notes.type).toBe('textarea');
-    expect(Appointment.fields.telehealth_link.type).toBe('text');
+    expect(Appointment.fields.telehealth_link.type).toBe('url');
     expect(Appointment.fields.reason.type).toBe('text');
   });
 
@@ -185,10 +185,10 @@ describe('Insurance Object Spec Compliance', () => {
     expect(Insurance.fields.plan_type.type).toBe('select');
     expect(Insurance.fields.policy_number.type).toBe('text');
     expect(Insurance.fields.group_number.type).toBe('text');
-    expect(Insurance.fields.coverage_start.type).toBe('text');
-    expect(Insurance.fields.coverage_end.type).toBe('text');
-    expect(Insurance.fields.copay.type).toBe('number');
-    expect(Insurance.fields.deductible.type).toBe('number');
+    expect(Insurance.fields.coverage_start.type).toBe('date');
+    expect(Insurance.fields.coverage_end.type).toBe('date');
+    expect(Insurance.fields.copay.type).toBe('currency');
+    expect(Insurance.fields.deductible.type).toBe('currency');
     expect(Insurance.fields.status.type).toBe('select');
   });
 
@@ -241,7 +241,7 @@ describe('Referral Object Spec Compliance', () => {
     expect(Referral.fields.reason.type).toBe('textarea');
     expect(Referral.fields.status.type).toBe('select');
     expect(Referral.fields.urgency.type).toBe('select');
-    expect(Referral.fields.referral_date.type).toBe('text');
+    expect(Referral.fields.referral_date.type).toBe('date');
     expect(Referral.fields.authorization_number.type).toBe('text');
     expect(Referral.fields.notes.type).toBe('textarea');
   });
@@ -321,7 +321,7 @@ describe('HipaaAudit Object Spec Compliance', () => {
     expect(HipaaAudit.fields.action.type).toBe('select');
     expect(HipaaAudit.fields.record_type.type).toBe('text');
     expect(HipaaAudit.fields.record_id.type).toBe('text');
-    expect(HipaaAudit.fields.timestamp.type).toBe('text');
+    expect(HipaaAudit.fields.timestamp.type).toBe('datetime');
     expect(HipaaAudit.fields.ip_address.type).toBe('text');
     expect(HipaaAudit.fields.access_reason.type).toBe('textarea');
     expect(HipaaAudit.fields.risk_level.type).toBe('select');
@@ -390,8 +390,8 @@ describe('Prescription Object Spec Compliance', () => {
     expect(Prescription.fields.pharmacy.type).toBe('text');
     expect(Prescription.fields.refills_remaining.type).toBe('number');
     expect(Prescription.fields.status.type).toBe('select');
-    expect(Prescription.fields.start_date.type).toBe('text');
-    expect(Prescription.fields.end_date.type).toBe('text');
+    expect(Prescription.fields.start_date.type).toBe('date');
+    expect(Prescription.fields.end_date.type).toBe('date');
     expect(Prescription.fields.instructions.type).toBe('textarea');
   });
 
@@ -451,8 +451,8 @@ describe('CarePlan Object Spec Compliance', () => {
     expect(CarePlan.fields.condition.type).toBe('text');
     expect(CarePlan.fields.goals.type).toBe('textarea');
     expect(CarePlan.fields.interventions.type).toBe('textarea');
-    expect(CarePlan.fields.start_date.type).toBe('text');
-    expect(CarePlan.fields.review_date.type).toBe('text');
+    expect(CarePlan.fields.start_date.type).toBe('date');
+    expect(CarePlan.fields.review_date.type).toBe('date');
     expect(CarePlan.fields.status.type).toBe('select');
     expect(CarePlan.fields.assigned_provider.type).toBe('lookup');
     expect(CarePlan.fields.notes.type).toBe('textarea');

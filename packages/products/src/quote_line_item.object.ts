@@ -43,12 +43,12 @@ export const QuoteLineItem = ObjectSchema.create({
       maxLength: 50
     }),
     description: Field.textarea({
-      label: 'description',
+      label: 'Description',
       description: 'Custom description for this line item',
       maxLength: 2000
     }),
     quantity: Field.number({
-      label: 'quantity',
+      label: 'Quantity',
       description: 'Number of units',
       required: true,
       defaultValue: 1,
@@ -107,7 +107,7 @@ export const QuoteLineItem = ObjectSchema.create({
       description: 'Pricing rule applied to this line item'
     }),
     subtotal: Field.currency({
-      label: 'subtotal',
+      label: 'Subtotal',
       description: 'List Price × quantity',
       readonly: true,
       precision: 2
@@ -119,13 +119,13 @@ export const QuoteLineItem = ObjectSchema.create({
       precision: 2
     }),
     margin: Field.currency({
-      label: 'margin',
+      label: 'Margin',
       description: 'Profit margin for this line item',
       readonly: true,
       precision: 2
     }),
     margin_percent: Field.percent({
-      label: 'margin %',
+      label: 'Margin %',
       description: 'Profit margin percentage',
       readonly: true
     }),
@@ -259,7 +259,7 @@ export const QuoteLineItem = ObjectSchema.create({
       maxLength: 2000
     }),
     ai_optimal_quantity: Field.number({
-      label: 'AI Optimal quantity',
+      label: 'AI Optimal Quantity',
       description: 'AI-recommended optimal quantity based on usage patterns',
       readonly: true,
       precision: 0

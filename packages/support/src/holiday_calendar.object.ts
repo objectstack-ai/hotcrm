@@ -9,12 +9,12 @@ export const HolidayCalendar = ObjectSchema.create({
 
   fields: {
     name: Field.text({
-      label: 'Calendar name',
+      label: 'Calendar Name',
       required: true,
       maxLength: 255
     }),
     description: Field.textarea({
-      label: 'description',
+      label: 'Description',
       maxLength: 2000
     }),
     is_active: Field.boolean({
@@ -22,7 +22,7 @@ export const HolidayCalendar = ObjectSchema.create({
       defaultValue: true
     }),
     country: Field.select({
-      label: 'country',
+      label: 'Country',
       required: true,
       options: [
         {
@@ -68,12 +68,12 @@ export const HolidayCalendar = ObjectSchema.create({
       ]
     }),
     region: Field.text({
-      label: 'region/State',
+      label: 'Region/State',
       description: 'Specific region or state for regional holidays',
       maxLength: 100
     }),
     year: Field.number({
-      label: 'year',
+      label: 'Year',
       required: true,
       min: 2020,
       max: 2100,

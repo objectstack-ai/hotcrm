@@ -9,8 +9,8 @@ export const CarePlan = ObjectSchema.create({
     condition: Field.text({ label: 'Medical Condition', required: true }),
     goals: Field.textarea({ label: 'Treatment Goals', required: true }),
     interventions: Field.textarea({ label: 'Planned Interventions' }),
-    start_date: Field.text({ label: 'Start Date' }),
-    review_date: Field.text({ label: 'Next Review Date' }),
+    start_date: Field.date({ label: 'Start Date' }),
+    review_date: Field.date({ label: 'Next Review Date' }),
     status: Field.select({
       label: 'Status',
       options: [

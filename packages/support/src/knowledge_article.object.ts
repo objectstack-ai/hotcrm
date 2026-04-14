@@ -14,24 +14,24 @@ export const KnowledgeArticle = ObjectSchema.create({
       format: 'KB-{YYYY}-{0000}'
     }),
     title: Field.text({
-      label: 'title',
+      label: 'Title',
       required: true,
       maxLength: 255
     }),
     summary: Field.textarea({
-      label: 'summary',
+      label: 'Summary',
       description: 'Brief summary shown in search results',
       required: true,
       maxLength: 500
     }),
     content: Field.textarea({
-      label: 'content',
+      label: 'Content',
       description: 'Full article content with formatting',
       required: true,
       maxLength: 32000
     }),
     category: Field.select({
-      label: 'category',
+      label: 'Category',
       required: true,
       options: [
         {
@@ -73,11 +73,11 @@ export const KnowledgeArticle = ObjectSchema.create({
       ]
     }),
     subcategory: Field.text({
-      label: 'subcategory',
+      label: 'Subcategory',
       maxLength: 100
     }),
     keywords: Field.text({
-      label: 'keywords',
+      label: 'Keywords',
       description: 'Comma-separated keywords for search',
       maxLength: 500
     }),
@@ -102,7 +102,7 @@ export const KnowledgeArticle = ObjectSchema.create({
     }),
     related_case_types: Field.select({ label: 'Related Case Types', multiple: true, options: [] }),
     status: Field.select({
-      label: 'status',
+      label: 'Status',
       required: true,
       defaultValue: 'draft',
       options: [
@@ -166,7 +166,7 @@ export const KnowledgeArticle = ObjectSchema.create({
     }),
     visible_to_customer_tiers: Field.select({ label: 'Visible To Customer Tiers', multiple: true, options: [] }),
     language: Field.select({
-      label: 'language',
+      label: 'Language',
       required: true,
       defaultValue: 'en',
       options: [
@@ -275,7 +275,7 @@ export const KnowledgeArticle = ObjectSchema.create({
       maxLength: 255
     }),
     ai_category: Field.select({
-      label: 'AI Suggested category',
+      label: 'AI Suggested Category',
       description: 'AI-suggested category based on content analysis',
       readonly: true,
       options: [
@@ -318,19 +318,19 @@ export const KnowledgeArticle = ObjectSchema.create({
       ]
     }),
     ai_tags: Field.text({
-      label: 'AI Suggested tags',
+      label: 'AI Suggested Tags',
       description: 'Comma-separated AI-generated tags',
       readonly: true,
       maxLength: 500
     }),
     ai_summary: Field.textarea({
-      label: 'AI Generated summary',
+      label: 'AI Generated Summary',
       description: 'AI-generated article summary',
       readonly: true,
       maxLength: 500
     }),
     ai_keywords: Field.text({
-      label: 'AI Extracted keywords',
+      label: 'AI Extracted Keywords',
       description: 'keywords extracted by AI',
       readonly: true,
       maxLength: 500

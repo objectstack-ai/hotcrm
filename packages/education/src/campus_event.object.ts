@@ -19,7 +19,7 @@ export const CampusEvent = ObjectSchema.create({
         { label: 'Open House', value: 'open_house' }
       ]
     }),
-    event_date: Field.text({ label: 'Event Date', required: true }),
+    event_date: Field.date({ label: 'Event Date', required: true }),
     location: Field.text({ label: 'Location' }),
     target_audience: Field.select({
       label: 'Target Audience',

@@ -40,7 +40,7 @@ describe('Student Object Spec Compliance', () => {
     expect(Student.fields.program.type).toBe('text');
     expect(Student.fields.gpa.type).toBe('number');
     expect(Student.fields.advisor_id.type).toBe('lookup');
-    expect(Student.fields.graduation_date.type).toBe('text');
+    expect(Student.fields.graduation_date.type).toBe('date');
     expect(Student.fields.student_id_number.type).toBe('text');
     expect(Student.fields.phone.type).toBe('text');
     expect(Student.fields.major.type).toBe('text');
@@ -110,7 +110,7 @@ describe('Enrollment Object Spec Compliance', () => {
     expect(Enrollment.fields.status.type).toBe('select');
     expect(Enrollment.fields.grade.type).toBe('text');
     expect(Enrollment.fields.credits.type).toBe('number');
-    expect(Enrollment.fields.enrollment_date.type).toBe('text');
+    expect(Enrollment.fields.enrollment_date.type).toBe('date');
   });
 
   it('should have student_id master_detail referencing student', () => {
@@ -239,7 +239,7 @@ describe('Alumni Object Spec Compliance', () => {
     expect(Alumni.fields.job_title.type).toBe('text');
     expect(Alumni.fields.giving_history.type).toBe('number');
     expect(Alumni.fields.engagement_score.type).toBe('number');
-    expect(Alumni.fields.email.type).toBe('text');
+    expect(Alumni.fields.email.type).toBe('email');
     expect(Alumni.fields.location.type).toBe('text');
   });
 
@@ -284,7 +284,7 @@ describe('Scholarship Object Spec Compliance', () => {
     expect(Scholarship.fields.name.type).toBe('text');
     expect(Scholarship.fields.amount.type).toBe('number');
     expect(Scholarship.fields.criteria.type).toBe('textarea');
-    expect(Scholarship.fields.application_deadline.type).toBe('text');
+    expect(Scholarship.fields.application_deadline.type).toBe('date');
     expect(Scholarship.fields.recipients.type).toBe('number');
     expect(Scholarship.fields.fund_balance.type).toBe('number');
     expect(Scholarship.fields.status.type).toBe('select');
@@ -339,7 +339,7 @@ describe('ApplicationForm Object Spec Compliance', () => {
 
   it('should have correct field types', () => {
     expect(ApplicationForm.fields.applicant_name.type).toBe('text');
-    expect(ApplicationForm.fields.email.type).toBe('text');
+    expect(ApplicationForm.fields.email.type).toBe('email');
     expect(ApplicationForm.fields.program.type).toBe('text');
     expect(ApplicationForm.fields.status.type).toBe('select');
     expect(ApplicationForm.fields.test_scores.type).toBe('textarea');
@@ -347,8 +347,8 @@ describe('ApplicationForm Object Spec Compliance', () => {
     expect(ApplicationForm.fields.essays.type).toBe('textarea');
     expect(ApplicationForm.fields.recommendations.type).toBe('number');
     expect(ApplicationForm.fields.decision.type).toBe('select');
-    expect(ApplicationForm.fields.application_date.type).toBe('text');
-    expect(ApplicationForm.fields.decision_date.type).toBe('text');
+    expect(ApplicationForm.fields.application_date.type).toBe('date');
+    expect(ApplicationForm.fields.decision_date.type).toBe('date');
     expect(ApplicationForm.fields.notes.type).toBe('textarea');
   });
 
@@ -410,7 +410,7 @@ describe('CampusEvent Object Spec Compliance', () => {
   it('should have correct field types', () => {
     expect(CampusEvent.fields.name.type).toBe('text');
     expect(CampusEvent.fields.event_type.type).toBe('select');
-    expect(CampusEvent.fields.event_date.type).toBe('text');
+    expect(CampusEvent.fields.event_date.type).toBe('date');
     expect(CampusEvent.fields.location.type).toBe('text');
     expect(CampusEvent.fields.target_audience.type).toBe('select');
     expect(CampusEvent.fields.rsvp_count.type).toBe('number');

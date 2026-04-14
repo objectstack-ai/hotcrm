@@ -17,7 +17,7 @@ export const Appointment = ObjectSchema.create({
         { label: 'Emergency', value: 'emergency' }
       ]
     }),
-    scheduled_date: Field.text({ label: 'Scheduled Date/Time', required: true }),
+    scheduled_date: Field.datetime({ label: 'Scheduled Date/Time', required: true }),
     duration: Field.number({ label: 'Duration (minutes)', defaultValue: 30 }),
     status: Field.select({
       label: 'Status',
@@ -33,7 +33,7 @@ export const Appointment = ObjectSchema.create({
       defaultValue: 'scheduled'
     }),
     notes: Field.textarea({ label: 'Notes' }),
-    telehealth_link: Field.text({ label: 'Telehealth Link' }),
+    telehealth_link: Field.url({ label: 'Telehealth Link' }),
     reason: Field.text({ label: 'Reason for Visit' })
   }
 });

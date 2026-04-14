@@ -29,7 +29,7 @@ export const Referral = ObjectSchema.create({
       ],
       defaultValue: 'routine'
     }),
-    referral_date: Field.text({ label: 'Referral Date' }),
+    referral_date: Field.date({ label: 'Referral Date' }),
     authorization_number: Field.text({ label: 'Authorization Number' }),
     notes: Field.textarea({ label: 'Notes' })
   }

@@ -23,7 +23,7 @@ export const Student = ObjectSchema.create({
     program: Field.text({ label: 'Program' }),
     gpa: Field.number({ label: 'GPA', min: 0, max: 4 }),
     advisor_id: Field.lookup('contact', { label: 'Academic Advisor' }),
-    graduation_date: Field.text({ label: 'Expected Graduation Date' }),
+    graduation_date: Field.date({ label: 'Expected Graduation Date' }),
     student_id_number: Field.text({ label: 'Student ID', unique: true }),
     phone: Field.text({ label: 'Phone' }),
     major: Field.text({ label: 'Major' }),

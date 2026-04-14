@@ -8,7 +8,7 @@ export const Scholarship = ObjectSchema.create({
     name: Field.text({ label: 'Scholarship Name', required: true, maxLength: 255 }),
     amount: Field.number({ label: 'Award Amount', required: true, min: 0 }),
     criteria: Field.textarea({ label: 'Eligibility Criteria', required: true }),
-    application_deadline: Field.text({ label: 'Application Deadline' }),
+    application_deadline: Field.date({ label: 'Application Deadline' }),
     recipients: Field.number({ label: 'Number of Recipients', min: 0, defaultValue: 0 }),
     fund_balance: Field.number({ label: 'Fund Balance', min: 0 }),
     status: Field.select({

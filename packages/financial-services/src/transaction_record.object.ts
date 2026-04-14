@@ -20,8 +20,8 @@ export const TransactionRecord = ObjectSchema.create({
         { label: 'Transfer', value: 'transfer' }
       ]
     }),
-    amount: Field.number({ label: 'Transaction Amount', required: true }),
-    transaction_date: Field.text({ label: 'Transaction Date', required: true }),
+    amount: Field.currency({ label: 'Transaction Amount', required: true }),
+    transaction_date: Field.date({ label: 'Transaction Date', required: true }),
     counterparty: Field.text({ label: 'Counterparty' }),
     status: Field.select({
       label: 'Status',

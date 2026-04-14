@@ -43,7 +43,7 @@ export const Lead = ObjectSchema.create({
     }),
     status: Field.select({
       label: 'Status',
-      defaultValue: 'New',
+      defaultValue: 'new',
       options: [
         { label: 'New', value: 'new' },
         { label: 'Contacted', value: 'contacted' },
