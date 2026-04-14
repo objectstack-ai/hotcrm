@@ -25,8 +25,8 @@ importers:
         specifier: ^1.19.14
         version: 1.19.14(hono@4.12.12)
       '@object-ui/console':
-        specifier: ^3.1.5
-        version: 3.1.5
+        specifier: ^3.3.0
+        version: 3.3.0
       '@objectstack/cli':
         specifier: ^4.0.3
         version: 4.0.3(@ai-sdk/anthropic@3.0.69(zod@4.3.6))(@ai-sdk/google@3.0.63(zod@4.3.6))(@ai-sdk/openai@3.0.52(zod@4.3.6))(esbuild@0.27.7)
@@ -1308,8 +1308,8 @@ packages:
     resolution: {integrity: sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg==}
     engines: {node: '>= 8'}
 
-  '@object-ui/console@3.1.5':
-    resolution: {integrity: sha512-yVXUxjTBJEIK8ZTv3MgnR1u+THjxfsdS5qOs5w2F0P7A9Wlya3SycMPyV0XP59+Zigk+1eGDFHyweGnCewbGjA==}
+  '@object-ui/console@3.3.0':
+    resolution: {integrity: sha512-BbfZcaH4p6URYyKGrJ3taawjMNmddiRzSozSHYbkc1xjWM2hJ5oTSUdUzychGJgn4SHoWsJmYEwNkC4ch/DtWg==}
 
   '@objectstack/cli@4.0.3':
     resolution: {integrity: sha512-4MMDWoJQWUhyO7gfrDLCraNOhnv71w3Ocja/ShMzFtTKVzeqHibekLpIFaZ9yrOb56+KaxYhXnmTolpQlsNtIw==}
@@ -5795,7 +5795,7 @@ snapshots:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.20.1
 
-  '@object-ui/console@3.1.5': {}
+  '@object-ui/console@3.3.0': {}
 
   '@objectstack/cli@4.0.3(@ai-sdk/anthropic@3.0.69(zod@4.3.6))(@ai-sdk/google@3.0.63(zod@4.3.6))(@ai-sdk/openai@3.0.52(zod@4.3.6))(esbuild@0.27.7)':
     dependencies:
