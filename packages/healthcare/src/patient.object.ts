@@ -6,7 +6,7 @@ export const Patient = ObjectSchema.create({
   icon: 'heart-pulse',
   fields: {
     name: Field.text({ label: 'Patient Name', required: true, maxLength: 255 }),
-    date_of_birth: Field.text({ label: 'Date of Birth' }),
+    date_of_birth: Field.date({ label: 'Date of Birth' }),
     gender: Field.select({
       label: 'Gender',
       options: [
@@ -20,8 +20,8 @@ export const Patient = ObjectSchema.create({
     primary_physician: Field.lookup('contact', { label: 'Primary Physician' }),
     allergies: Field.textarea({ label: 'Allergies' }),
     medical_record_number: Field.text({ label: 'Medical Record Number', unique: true }),
-    email: Field.text({ label: 'Email' }),
-    phone: Field.text({ label: 'Phone' }),
+    email: Field.email({ label: 'Email' }),
+    phone: Field.phone({ label: 'Phone' }),
     emergency_contact: Field.text({ label: 'Emergency Contact' }),
     status: Field.select({
       label: 'Status',

@@ -20,7 +20,7 @@ export const HipaaAudit = ObjectSchema.create({
     }),
     record_type: Field.text({ label: 'Record Type', required: true }),
     record_id: Field.text({ label: 'Record ID', required: true }),
-    timestamp: Field.text({ label: 'Timestamp', required: true }),
+    timestamp: Field.datetime({ label: 'Timestamp', required: true }),
     ip_address: Field.text({ label: 'IP Address' }),
     access_reason: Field.textarea({ label: 'Access Reason' }),
     risk_level: Field.select({

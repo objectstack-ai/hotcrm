@@ -22,8 +22,8 @@ export const Prescription = ObjectSchema.create({
       ],
       defaultValue: 'active'
     }),
-    start_date: Field.text({ label: 'Start Date' }),
-    end_date: Field.text({ label: 'End Date' }),
+    start_date: Field.date({ label: 'Start Date' }),
+    end_date: Field.date({ label: 'End Date' }),
     instructions: Field.textarea({ label: 'Special Instructions' })
   }
 });

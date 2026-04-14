@@ -18,10 +18,10 @@ export const Insurance = ObjectSchema.create({
     }),
     policy_number: Field.text({ label: 'Policy Number', required: true }),
     group_number: Field.text({ label: 'Group Number' }),
-    coverage_start: Field.text({ label: 'Coverage Start Date' }),
-    coverage_end: Field.text({ label: 'Coverage End Date' }),
-    copay: Field.number({ label: 'Copay Amount', min: 0 }),
-    deductible: Field.number({ label: 'Deductible Amount', min: 0 }),
+    coverage_start: Field.date({ label: 'Coverage Start Date' }),
+    coverage_end: Field.date({ label: 'Coverage End Date' }),
+    copay: Field.currency({ label: 'Copay Amount' }),
+    deductible: Field.currency({ label: 'Deductible Amount' }),
     status: Field.select({
       label: 'Status',
       options: [
