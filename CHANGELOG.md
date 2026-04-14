@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Schema compliance audit — fix field type, naming, and label violations across all packages** —
+  Evaluated all 142 `*.object.ts` files across 14 packages against the ObjectStack schema specification.
+  Fixed 120+ violations in 40+ files:
+  - **Field type corrections (27 fixes):** Changed `Field.text()` to semantic types (`Field.date()`,
+    `Field.datetime()`, `Field.email()`, `Field.phone()`, `Field.url()`) and `Field.number()` to
+    `Field.currency()` for monetary values in healthcare (7 files), education (6 files), and
+    financial-services (2 files) packages.
+  - **Default value casing (5 fixes):** Lowercased `defaultValue` to match option values per spec
+    (`'New'`→`'new'`, `'Planned'`→`'planned'`, `'CNY'`→`'cny'`, `'USD'`→`'usd'`) in CRM lead,
+    marketing campaign, finance payment, and products pricebook.
+  - **Field naming (3 fixes):** Corrected non-snake_case field names in marketing email_template
+    (`openrate`→`open_rate`, `clickrate`→`click_rate`, `conversionrate`→`conversion_rate`).
+  - **Label capitalization (80+ fixes):** Standardized field labels to Title Case across support
+    (20 files) and products (7 files) packages.
+  - Updated spec-compliance tests in healthcare, education, and financial-services to match
+    corrected field types. All 210 test files (4104 tests) continue to pass.
+  - **Compliant packages (no changes needed):** analytics, community, real-estate, integration, HR, core.
+
 ### Changed
 - **Optimize static file access paths — serve SPA assets directly from Vercel CDN** — Console
   and Studio SPA static assets (JS, CSS, fonts, images) are now copied to `public/console/` and
