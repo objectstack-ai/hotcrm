@@ -28,34 +28,34 @@ importers:
         specifier: ^3.1.5
         version: 3.1.5
       '@objectstack/cli':
-        specifier: ^4.0.0
+        specifier: ^4.0.3
         version: 4.0.3(@ai-sdk/anthropic@3.0.69(zod@4.3.6))(@ai-sdk/google@3.0.63(zod@4.3.6))(@ai-sdk/openai@3.0.52(zod@4.3.6))(esbuild@0.27.7)
       '@objectstack/driver-memory':
-        specifier: ^4.0.0
+        specifier: ^4.0.3
         version: 4.0.3
       '@objectstack/driver-turso':
-        specifier: ^4.0.0
+        specifier: ^4.0.3
         version: 4.0.3
       '@objectstack/objectql':
-        specifier: ^4.0.0
+        specifier: ^4.0.3
         version: 4.0.3
       '@objectstack/plugin-auth':
-        specifier: ^4.0.0
+        specifier: ^4.0.3
         version: 4.0.3(@opentelemetry/api@1.9.1)(better-sqlite3@12.9.0)(next@16.2.1(@opentelemetry/api@1.9.1)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(vitest@1.6.1)
       '@objectstack/plugin-hono-server':
-        specifier: ^4.0.0
+        specifier: ^4.0.3
         version: 4.0.3
       '@objectstack/runtime':
-        specifier: ^4.0.0
+        specifier: ^4.0.3
         version: 4.0.3
       '@objectstack/service-i18n':
-        specifier: ^4.0.0
+        specifier: ^4.0.3
         version: 4.0.3
       '@objectstack/spec':
-        specifier: ^4.0.0
-        version: 4.0.0
+        specifier: ^4.0.3
+        version: 4.0.3
       '@objectstack/studio':
-        specifier: ^4.0.0
+        specifier: ^4.0.3
         version: 4.0.3(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(better-sqlite3@12.9.0)(next@16.2.1(@opentelemetry/api@1.9.1)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(typescript@5.9.3)(vitest@1.6.1)(zod@4.3.6)
       '@opentelemetry/api':
         specifier: ^1.9.1
@@ -143,8 +143,8 @@ importers:
   packages/ai:
     dependencies:
       '@objectstack/spec':
-        specifier: ^4.0.0
-        version: 4.0.0
+        specifier: ^4.0.3
+        version: 4.0.3
       axios:
         specifier: ^1.15.0
         version: 1.15.0
@@ -153,7 +153,7 @@ importers:
         version: 4.3.6
     devDependencies:
       '@objectstack/cli':
-        specifier: ^4.0.0
+        specifier: ^4.0.3
         version: 4.0.3(@ai-sdk/anthropic@3.0.69(zod@4.3.6))(@ai-sdk/google@3.0.63(zod@4.3.6))(@ai-sdk/openai@3.0.52(zod@4.3.6))(esbuild@0.27.7)
       typescript:
         specifier: ^5.9.3
@@ -165,14 +165,14 @@ importers:
         specifier: workspace:*
         version: link:../ai
       '@objectstack/spec':
-        specifier: ^4.0.0
-        version: 4.0.0
+        specifier: ^4.0.3
+        version: 4.0.3
       zod:
         specifier: ^4.3.6
         version: 4.3.6
     devDependencies:
       '@objectstack/cli':
-        specifier: ^4.0.0
+        specifier: ^4.0.3
         version: 4.0.3(@ai-sdk/anthropic@3.0.69(zod@4.3.6))(@ai-sdk/google@3.0.63(zod@4.3.6))(@ai-sdk/openai@3.0.52(zod@4.3.6))(esbuild@0.27.7)
       typescript:
         specifier: ^5.9.3
@@ -181,14 +181,14 @@ importers:
   packages/community:
     dependencies:
       '@objectstack/spec':
-        specifier: ^4.0.0
-        version: 4.0.0
+        specifier: ^4.0.3
+        version: 4.0.3
       zod:
         specifier: ^4.3.6
         version: 4.3.6
     devDependencies:
       '@objectstack/cli':
-        specifier: ^4.0.0
+        specifier: ^4.0.3
         version: 4.0.3(@ai-sdk/anthropic@3.0.69(zod@4.3.6))(@ai-sdk/google@3.0.63(zod@4.3.6))(@ai-sdk/openai@3.0.52(zod@4.3.6))(esbuild@0.27.7)
       typescript:
         specifier: ^5.9.3
@@ -197,8 +197,8 @@ importers:
   packages/core:
     dependencies:
       '@objectstack/spec':
-        specifier: ^4.0.0
-        version: 4.0.0
+        specifier: ^4.0.3
+        version: 4.0.3
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -209,14 +209,14 @@ importers:
         specifier: workspace:*
         version: link:../ai
       '@objectstack/spec':
-        specifier: ^4.0.0
-        version: 4.0.0
+        specifier: ^4.0.3
+        version: 4.0.3
       zod:
         specifier: ^4.3.6
         version: 4.3.6
     devDependencies:
       '@objectstack/cli':
-        specifier: ^4.0.0
+        specifier: ^4.0.3
         version: 4.0.3(@ai-sdk/anthropic@3.0.69(zod@4.3.6))(@ai-sdk/google@3.0.63(zod@4.3.6))(@ai-sdk/openai@3.0.52(zod@4.3.6))(esbuild@0.27.7)
       typescript:
         specifier: ^5.9.3
@@ -225,14 +225,14 @@ importers:
   packages/education:
     dependencies:
       '@objectstack/spec':
-        specifier: ^4.0.0
-        version: 4.0.0
+        specifier: ^4.0.3
+        version: 4.0.3
       zod:
         specifier: ^4.3.6
         version: 4.3.6
     devDependencies:
       '@objectstack/cli':
-        specifier: ^4.0.0
+        specifier: ^4.0.3
         version: 4.0.3(@ai-sdk/anthropic@3.0.69(zod@4.3.6))(@ai-sdk/google@3.0.63(zod@4.3.6))(@ai-sdk/openai@3.0.52(zod@4.3.6))(esbuild@0.27.7)
       typescript:
         specifier: ^5.9.3
@@ -241,11 +241,11 @@ importers:
   packages/finance:
     dependencies:
       '@objectstack/spec':
-        specifier: ^4.0.0
-        version: 4.0.0
+        specifier: ^4.0.3
+        version: 4.0.3
     devDependencies:
       '@objectstack/cli':
-        specifier: ^4.0.0
+        specifier: ^4.0.3
         version: 4.0.3(@ai-sdk/anthropic@3.0.69(zod@4.3.6))(@ai-sdk/google@3.0.63(zod@4.3.6))(@ai-sdk/openai@3.0.52(zod@4.3.6))(esbuild@0.27.7)
       typescript:
         specifier: ^5.9.3
@@ -254,14 +254,14 @@ importers:
   packages/financial-services:
     dependencies:
       '@objectstack/spec':
-        specifier: ^4.0.0
-        version: 4.0.0
+        specifier: ^4.0.3
+        version: 4.0.3
       zod:
         specifier: ^4.3.6
         version: 4.3.6
     devDependencies:
       '@objectstack/cli':
-        specifier: ^4.0.0
+        specifier: ^4.0.3
         version: 4.0.3(@ai-sdk/anthropic@3.0.69(zod@4.3.6))(@ai-sdk/google@3.0.63(zod@4.3.6))(@ai-sdk/openai@3.0.52(zod@4.3.6))(esbuild@0.27.7)
       typescript:
         specifier: ^5.9.3
@@ -270,14 +270,14 @@ importers:
   packages/healthcare:
     dependencies:
       '@objectstack/spec':
-        specifier: ^4.0.0
-        version: 4.0.0
+        specifier: ^4.0.3
+        version: 4.0.3
       zod:
         specifier: ^4.3.6
         version: 4.3.6
     devDependencies:
       '@objectstack/cli':
-        specifier: ^4.0.0
+        specifier: ^4.0.3
         version: 4.0.3(@ai-sdk/anthropic@3.0.69(zod@4.3.6))(@ai-sdk/google@3.0.63(zod@4.3.6))(@ai-sdk/openai@3.0.52(zod@4.3.6))(esbuild@0.27.7)
       typescript:
         specifier: ^5.9.3
@@ -286,11 +286,11 @@ importers:
   packages/hr:
     dependencies:
       '@objectstack/spec':
-        specifier: ^4.0.0
-        version: 4.0.0
+        specifier: ^4.0.3
+        version: 4.0.3
     devDependencies:
       '@objectstack/cli':
-        specifier: ^4.0.0
+        specifier: ^4.0.3
         version: 4.0.3(@ai-sdk/anthropic@3.0.69(zod@4.3.6))(@ai-sdk/google@3.0.63(zod@4.3.6))(@ai-sdk/openai@3.0.52(zod@4.3.6))(esbuild@0.27.7)
       typescript:
         specifier: ^5.9.3
@@ -302,14 +302,14 @@ importers:
         specifier: workspace:*
         version: link:../ai
       '@objectstack/spec':
-        specifier: ^4.0.0
-        version: 4.0.0
+        specifier: ^4.0.3
+        version: 4.0.3
       zod:
         specifier: ^4.3.6
         version: 4.3.6
     devDependencies:
       '@objectstack/cli':
-        specifier: ^4.0.0
+        specifier: ^4.0.3
         version: 4.0.3(@ai-sdk/anthropic@3.0.69(zod@4.3.6))(@ai-sdk/google@3.0.63(zod@4.3.6))(@ai-sdk/openai@3.0.52(zod@4.3.6))(esbuild@0.27.7)
       typescript:
         specifier: ^5.9.3
@@ -318,11 +318,11 @@ importers:
   packages/marketing:
     dependencies:
       '@objectstack/spec':
-        specifier: ^4.0.0
-        version: 4.0.0
+        specifier: ^4.0.3
+        version: 4.0.3
     devDependencies:
       '@objectstack/cli':
-        specifier: ^4.0.0
+        specifier: ^4.0.3
         version: 4.0.3(@ai-sdk/anthropic@3.0.69(zod@4.3.6))(@ai-sdk/google@3.0.63(zod@4.3.6))(@ai-sdk/openai@3.0.52(zod@4.3.6))(esbuild@0.27.7)
       typescript:
         specifier: ^5.9.3
@@ -331,11 +331,11 @@ importers:
   packages/products:
     dependencies:
       '@objectstack/spec':
-        specifier: ^4.0.0
-        version: 4.0.0
+        specifier: ^4.0.3
+        version: 4.0.3
     devDependencies:
       '@objectstack/cli':
-        specifier: ^4.0.0
+        specifier: ^4.0.3
         version: 4.0.3(@ai-sdk/anthropic@3.0.69(zod@4.3.6))(@ai-sdk/google@3.0.63(zod@4.3.6))(@ai-sdk/openai@3.0.52(zod@4.3.6))(esbuild@0.27.7)
       typescript:
         specifier: ^5.9.3
@@ -344,14 +344,14 @@ importers:
   packages/real-estate:
     dependencies:
       '@objectstack/spec':
-        specifier: ^4.0.0
-        version: 4.0.0
+        specifier: ^4.0.3
+        version: 4.0.3
       zod:
         specifier: ^4.3.6
         version: 4.3.6
     devDependencies:
       '@objectstack/cli':
-        specifier: ^4.0.0
+        specifier: ^4.0.3
         version: 4.0.3(@ai-sdk/anthropic@3.0.69(zod@4.3.6))(@ai-sdk/google@3.0.63(zod@4.3.6))(@ai-sdk/openai@3.0.52(zod@4.3.6))(esbuild@0.27.7)
       typescript:
         specifier: ^5.9.3
@@ -360,11 +360,11 @@ importers:
   packages/support:
     dependencies:
       '@objectstack/spec':
-        specifier: ^4.0.0
-        version: 4.0.0
+        specifier: ^4.0.3
+        version: 4.0.3
     devDependencies:
       '@objectstack/cli':
-        specifier: ^4.0.0
+        specifier: ^4.0.3
         version: 4.0.3(@ai-sdk/anthropic@3.0.69(zod@4.3.6))(@ai-sdk/google@3.0.63(zod@4.3.6))(@ai-sdk/openai@3.0.52(zod@4.3.6))(esbuild@0.27.7)
       typescript:
         specifier: ^5.9.3
@@ -1401,10 +1401,6 @@ packages:
 
   '@objectstack/service-i18n@4.0.3':
     resolution: {integrity: sha512-mmX6OWLgd7KK+hc0WNO2b3ffcQbRSp/PolMv/4Q/J+igF39MR4foEFPNNrKp7NO1svNqA5dykUkXSw9Iyrpy3g==}
-
-  '@objectstack/spec@4.0.0':
-    resolution: {integrity: sha512-6JaFfO1LD1pNS/PLFUN300pcyuNWiAEboDpj+QnLXxhYwkx+Nz8gEsMW50isFpecnVL1SnDRGjTXmfpU8rOAcA==}
-    engines: {node: '>=18.0.0'}
 
   '@objectstack/spec@4.0.3':
     resolution: {integrity: sha512-WCnDm7DdVSUP7UnNtwGHpVBUmEr4nnY20Nbu1G9GfNZWTcZST1Yr7b4KtGf0fkohZXjegQVF1+vsEQf8rMospw==}
@@ -6020,10 +6016,6 @@ snapshots:
     dependencies:
       '@objectstack/core': 4.0.3
       '@objectstack/spec': 4.0.3
-
-  '@objectstack/spec@4.0.0':
-    dependencies:
-      zod: 4.3.6
 
   '@objectstack/spec@4.0.3':
     dependencies:
