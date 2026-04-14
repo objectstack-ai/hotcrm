@@ -40,8 +40,8 @@ importers:
         specifier: ^3.3.1
         version: 3.3.1
       '@objectstack/plugin-auth':
-        specifier: ^3.3.1
-        version: 3.3.1(@opentelemetry/api@1.9.1)(better-sqlite3@12.9.0)(next@16.2.1(@opentelemetry/api@1.9.1)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(vitest@1.6.1)
+        specifier: ^4.0.3
+        version: 4.0.3(@opentelemetry/api@1.9.1)(better-sqlite3@12.9.0)(next@16.2.1(@opentelemetry/api@1.9.1)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(pino@10.3.1)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(vitest@1.6.1)
       '@objectstack/plugin-hono-server':
         specifier: ^3.3.1
         version: 3.3.1
@@ -371,6 +371,22 @@ importers:
         version: 5.9.3
 
 packages:
+
+  '@ai-sdk/gateway@3.0.96':
+    resolution: {integrity: sha512-BDiVEMUVHGpngReeigzLyJobG0TvzYbNGzdHI8JYBZHrjOX4aL6qwIls7z3p7V4TuXVWUCbG8TSWEe7ksX4Vhw==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
+
+  '@ai-sdk/provider-utils@4.0.23':
+    resolution: {integrity: sha512-z8GlDaCmRSDlqkMF2f4/RFgWxdarvIbyuk+m6WXT1LYgsnGiXRJGTD2Z1+SDl3LqtFuRtGX1aghYvQLoHL/9pg==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
+
+  '@ai-sdk/provider@3.0.8':
+    resolution: {integrity: sha512-oGMAgGoQdBXbZqNG0Ze56CHjDZ1IDYOwGYxYjO5KLSlz5HiNQ9udIXsPZ61VWaHGZ5XW/jyjmr6t2xz2jGVwbQ==}
+    engines: {node: '>=18'}
 
   '@alloc/quick-lru@5.2.0':
     resolution: {integrity: sha512-UrcABB+4bUrFABwbluTIBErXwvbsU/V7TZWfmbgJfbkwiBuziS9gxdODUyuiecfdGQ85jglMW6juS3+z5TsKLw==}
@@ -1294,6 +1310,14 @@ packages:
       pino:
         optional: true
 
+  '@objectstack/core@4.0.3':
+    resolution: {integrity: sha512-qoKFjRXDrbbl7Ud0liFwLCJvonn0i9LVhrZZb8YpBTsFZkUnrXG8LCnz7xitq8PULKuLbU6CMVci7JSxfxum3w==}
+    peerDependencies:
+      pino: ^8.0.0
+    peerDependenciesMeta:
+      pino:
+        optional: true
+
   '@objectstack/driver-memory@3.3.1':
     resolution: {integrity: sha512-Et81TG2iB73e+wzLmQg6QMFjTTAOTTuT4a1KpyY1Ymxvt3+0YHY9Gyuwga8kqghVstf2sEGehlJO40udOLciBQ==}
 
@@ -1327,6 +1351,9 @@ packages:
   '@objectstack/plugin-auth@3.3.1':
     resolution: {integrity: sha512-nAnX0yYdQFU1YOPji2hoMISJDihf3GAtofNIteE6+8O74wTpNAt6j+QUI6orxieMXDcqOidMPFT7cI6Yltj3Pw==}
 
+  '@objectstack/plugin-auth@4.0.3':
+    resolution: {integrity: sha512-QV/HtzVVvACZEhHqnYRXRH1FJZwAbmHdFxG8XKeLbzbpCarnrMIse2pgk1iig1v8l7hNfvWH6Qg4oxal+xkxMg==}
+
   '@objectstack/plugin-hono-server@3.3.1':
     resolution: {integrity: sha512-XDJUR4v3s8j7hfJY0KMO35tE+8suGEmdmwBVX+ZsemxcY1B7Q+z1lHVb3gqBIYDM6yTFj2W6mHwV4E5N1QFd2A==}
 
@@ -1358,6 +1385,10 @@ packages:
     resolution: {integrity: sha512-6JaFfO1LD1pNS/PLFUN300pcyuNWiAEboDpj+QnLXxhYwkx+Nz8gEsMW50isFpecnVL1SnDRGjTXmfpU8rOAcA==}
     engines: {node: '>=18.0.0'}
 
+  '@objectstack/spec@4.0.3':
+    resolution: {integrity: sha512-WCnDm7DdVSUP7UnNtwGHpVBUmEr4nnY20Nbu1G9GfNZWTcZST1Yr7b4KtGf0fkohZXjegQVF1+vsEQf8rMospw==}
+    engines: {node: '>=18.0.0'}
+
   '@objectstack/studio@3.3.1':
     resolution: {integrity: sha512-Pe8j23VrNKtDD9cWBLAf8qd+oZeQsAKeNBrjwGfWTCzIVWfpooC62RRi01rhp6HfcJc1UdB49BmYCtC+2tb1xg==}
 
@@ -1376,6 +1407,10 @@ packages:
 
   '@open-draft/until@2.1.0':
     resolution: {integrity: sha512-U69T3ItWHvLwGg5eJ0n3I62nWuE6ilHlmz7zM0npLBRvPRd7e6NYmg54vvRtP5mZG7kZqZCFVdsTWo7BPtBujg==}
+
+  '@opentelemetry/api@1.9.0':
+    resolution: {integrity: sha512-3giAOQvZiH5F9bMlMiv8+GSPMeqg0dbaeo58/0SlA9sxSqZhnUtxzX9/2FzyhS9sWQf5S0GJE0AKBrFqjpeYcg==}
+    engines: {node: '>=8.0.0'}
 
   '@opentelemetry/api@1.9.1':
     resolution: {integrity: sha512-gLyJlPHPZYdAk1JENA9LeHejZe1Ti77/pTeFm/nMXmQH/HFZlcS/O2XJB+L8fkbrNSqhdtlvjBVjxwUYanNH5Q==}
@@ -2320,6 +2355,10 @@ packages:
   '@ungap/structured-clone@1.3.0':
     resolution: {integrity: sha512-WmoN8qaIAo7WTYWbAZuG8PYEhn5fkz7dZrqTBZ7dtt//lL2Gwms1IcnQ5yHqjDfX8Ft5j4YzDM23f87zBfDe9g==}
 
+  '@vercel/oidc@3.1.0':
+    resolution: {integrity: sha512-Fw28YZpRnA3cAHHDlkt7xQHiJ0fcL+NRcIqsocZQUSmbzeIKRpwttJjik5ZGanXP+vlA4SbTg+AbA3bP363l+w==}
+    engines: {node: '>= 20'}
+
   '@vitest/coverage-v8@1.6.1':
     resolution: {integrity: sha512-6YeRZwuO4oTGKxD3bijok756oktHSIm3eczVVzNe3scqzuhLwltIF3S9ZL/vwOVIpURmU6SnZhziXXAfw8/Qlw==}
     peerDependencies:
@@ -2358,6 +2397,12 @@ packages:
     resolution: {integrity: sha512-UVJyE9MttOsBQIDKw1skb9nAwQuR5wuGD3+82K6JgJlm/Y+KI92oNsMNGZCYdDsVtRHSak0pcV5Dno5+4jh9sw==}
     engines: {node: '>=0.4.0'}
     hasBin: true
+
+  ai@6.0.159:
+    resolution: {integrity: sha512-S18ozG7Dkm3Ud1tzOtAK5acczD4vygfml80RkpM9VWMFpvAFwAKSHaGYkATvPQHIE+VpD1tJY9zcTXLZ/zR5cw==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
 
   ajv@6.14.0:
     resolution: {integrity: sha512-IWrosm/yrn43eiKqkfkHis7QioDleaXQHdDVPKg0FSwwd/DuvyX79TZnFOnYpB7dcsFAMmtFztZuXPDvSePkFw==}
@@ -2910,6 +2955,10 @@ packages:
   esutils@2.0.3:
     resolution: {integrity: sha512-kVscqXk4OCp68SZ0dkgEKVi6/8ij300KBWTJq32P/dYeWTSwK41WyTxalN1eRmA5Z9UU/LX9D7FWSmV9SAYx6g==}
     engines: {node: '>=0.10.0'}
+
+  eventsource-parser@3.0.6:
+    resolution: {integrity: sha512-Vo1ab+QXPzZ4tCa8SwIHJFaSzy4R6SHf7BY79rFBDf0idraZWAkYrDjDj8uWaSm3S2TK+hJ7/t1CEmZ7jXw+pg==}
+    engines: {node: '>=18.0.0'}
 
   execa@8.0.1:
     resolution: {integrity: sha512-VyhnebXciFV2DESc+p6B+y0LjSm0krU4OgJN44qFAhBY0TJ+1V61tYD2+wHusZ6F9n5K+vl8k0sTy7PEfV4qpg==}
@@ -3465,6 +3514,9 @@ packages:
 
   json-schema-traverse@0.4.1:
     resolution: {integrity: sha512-xbbCH5dCYU5T8LcEhhuh7HJ88HXuW3qsI3Y0zOZFKfZEHcpWiHU/Jxzk629Brsab/mMiHQti9wMP+845RPe3Vg==}
+
+  json-schema@0.4.0:
+    resolution: {integrity: sha512-es94M3nTIfsEPisRafak+HDLfHXnKBhV3vU5eqPcS3flIWqcxJWgXHXiey3YrpaNsanY5ei1VoYEbOzijuq9BA==}
 
   json-stable-stringify-without-jsonify@1.0.1:
     resolution: {integrity: sha512-Bdboy+l7tA3OGW6FjyFHWkP5LuByj1Tk33Ljyq0axyzdk9//JSi2u3fP1QSmd1KNwq6VOKYGlAu87CisVir6Pw==}
@@ -4904,6 +4956,24 @@ packages:
 
 snapshots:
 
+  '@ai-sdk/gateway@3.0.96(zod@4.3.6)':
+    dependencies:
+      '@ai-sdk/provider': 3.0.8
+      '@ai-sdk/provider-utils': 4.0.23(zod@4.3.6)
+      '@vercel/oidc': 3.1.0
+      zod: 4.3.6
+
+  '@ai-sdk/provider-utils@4.0.23(zod@4.3.6)':
+    dependencies:
+      '@ai-sdk/provider': 3.0.8
+      '@standard-schema/spec': 1.1.0
+      eventsource-parser: 3.0.6
+      zod: 4.3.6
+
+  '@ai-sdk/provider@3.0.8':
+    dependencies:
+      json-schema: 0.4.0
+
   '@alloc/quick-lru@5.2.0': {}
 
   '@ampproject/remapping@2.3.0':
@@ -5708,6 +5778,14 @@ snapshots:
     optionalDependencies:
       pino: 10.3.1
 
+  '@objectstack/core@4.0.3(pino@10.3.1)':
+    dependencies:
+      '@objectstack/spec': 4.0.3
+      pino-pretty: 13.1.3
+      zod: 4.3.6
+    optionalDependencies:
+      pino: 10.3.1
+
   '@objectstack/driver-memory@3.3.1':
     dependencies:
       '@objectstack/core': 3.3.1
@@ -5846,6 +5924,35 @@ snapshots:
       - vitest
       - vue
 
+  '@objectstack/plugin-auth@4.0.3(@opentelemetry/api@1.9.1)(better-sqlite3@12.9.0)(next@16.2.1(@opentelemetry/api@1.9.1)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(pino@10.3.1)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(vitest@1.6.1)':
+    dependencies:
+      '@objectstack/core': 4.0.3(pino@10.3.1)
+      '@objectstack/spec': 4.0.3
+      better-auth: 1.6.2(@opentelemetry/api@1.9.1)(better-sqlite3@12.9.0)(next@16.2.1(@opentelemetry/api@1.9.1)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(vitest@1.6.1)
+    transitivePeerDependencies:
+      - '@cloudflare/workers-types'
+      - '@lynx-js/react'
+      - '@opentelemetry/api'
+      - '@prisma/client'
+      - '@sveltejs/kit'
+      - '@tanstack/react-start'
+      - '@tanstack/solid-start'
+      - better-sqlite3
+      - drizzle-kit
+      - drizzle-orm
+      - mongodb
+      - mysql2
+      - next
+      - pg
+      - pino
+      - prisma
+      - react
+      - react-dom
+      - solid-js
+      - svelte
+      - vitest
+      - vue
+
   '@objectstack/plugin-hono-server@3.3.1':
     dependencies:
       '@hono/node-server': 1.19.14(hono@4.12.12)
@@ -5900,6 +6007,11 @@ snapshots:
 
   '@objectstack/spec@4.0.0':
     dependencies:
+      zod: 4.3.6
+
+  '@objectstack/spec@4.0.3':
+    dependencies:
+      ai: 6.0.159(zod@4.3.6)
       zod: 4.3.6
 
   '@objectstack/studio@3.3.1(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(better-sqlite3@12.9.0)(next@16.2.1(@opentelemetry/api@1.9.1)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(typescript@5.9.3)(vitest@1.6.1)':
@@ -6009,6 +6121,8 @@ snapshots:
       outvariant: 1.4.3
 
   '@open-draft/until@2.1.0': {}
+
+  '@opentelemetry/api@1.9.0': {}
 
   '@opentelemetry/api@1.9.1': {}
 
@@ -6915,6 +7029,8 @@ snapshots:
 
   '@ungap/structured-clone@1.3.0': {}
 
+  '@vercel/oidc@3.1.0': {}
+
   '@vitest/coverage-v8@1.6.1(vitest@1.6.1)':
     dependencies:
       '@ampproject/remapping': 2.3.0
@@ -6983,6 +7099,14 @@ snapshots:
       acorn: 8.16.0
 
   acorn@8.16.0: {}
+
+  ai@6.0.159(zod@4.3.6):
+    dependencies:
+      '@ai-sdk/gateway': 3.0.96(zod@4.3.6)
+      '@ai-sdk/provider': 3.0.8
+      '@ai-sdk/provider-utils': 4.0.23(zod@4.3.6)
+      '@opentelemetry/api': 1.9.0
+      zod: 4.3.6
 
   ajv@6.14.0:
     dependencies:
@@ -7537,6 +7661,8 @@ snapshots:
       '@types/estree': 1.0.8
 
   esutils@2.0.3: {}
+
+  eventsource-parser@3.0.6: {}
 
   execa@8.0.1:
     dependencies:
@@ -8116,6 +8242,8 @@ snapshots:
   json-buffer@3.0.1: {}
 
   json-schema-traverse@0.4.1: {}
+
+  json-schema@0.4.0: {}
 
   json-stable-stringify-without-jsonify@1.0.1: {}
 
