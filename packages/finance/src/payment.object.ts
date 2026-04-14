@@ -34,7 +34,7 @@ export const Payment = ObjectSchema.create({
         { label: 'Written Off', value: 'written_off' },
         { label: 'Cancelled', value: 'cancelled' }
       ],
-      defaultValue: 'Planned'
+      defaultValue: 'planned'
     }),
     account: Field.lookup('account', { label: 'Account', required: true }),
     opportunity: Field.lookup('opportunity', { label: 'Related Opportunity' }),
