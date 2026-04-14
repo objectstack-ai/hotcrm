@@ -6,7 +6,7 @@ export const ApplicationForm = ObjectSchema.create({
   icon: 'file-pen',
   fields: {
     applicant_name: Field.text({ label: 'Applicant Name', required: true, maxLength: 255 }),
-    email: Field.text({ label: 'Email', required: true }),
+    email: Field.email({ label: 'Email', required: true }),
     program: Field.text({ label: 'Applied Program', required: true }),
     status: Field.select({
       label: 'Status',
@@ -36,8 +36,8 @@ export const ApplicationForm = ObjectSchema.create({
       ],
       defaultValue: 'pending'
     }),
-    application_date: Field.text({ label: 'Application Date' }),
-    decision_date: Field.text({ label: 'Decision Date' }),
+    application_date: Field.date({ label: 'Application Date' }),
+    decision_date: Field.date({ label: 'Decision Date' }),
     notes: Field.textarea({ label: 'Notes' })
   }
 });

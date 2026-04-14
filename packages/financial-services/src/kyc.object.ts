@@ -28,8 +28,8 @@ export const Kyc = ObjectSchema.create({
       ],
       defaultValue: 'pending'
     }),
-    verified_date: Field.text({ label: 'Verification Date' }),
-    expiry_date: Field.text({ label: 'Document Expiry Date' }),
+    verified_date: Field.date({ label: 'Verification Date' }),
+    expiry_date: Field.date({ label: 'Document Expiry Date' }),
     risk_level: Field.select({
       label: 'Risk Level',
       options: [

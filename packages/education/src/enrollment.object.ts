@@ -21,6 +21,6 @@ export const Enrollment = ObjectSchema.create({
     }),
     grade: Field.text({ label: 'Grade' }),
     credits: Field.number({ label: 'Credits', min: 0 }),
-    enrollment_date: Field.text({ label: 'Enrollment Date' })
+    enrollment_date: Field.date({ label: 'Enrollment Date' })
   }
 });
