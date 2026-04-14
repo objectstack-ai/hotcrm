@@ -9,7 +9,7 @@ export const DiscountSchedule = ObjectSchema.create({
 
   fields: {
     name: Field.text({
-      label: 'Schedule name',
+      label: 'Schedule Name',
       required: true,
       maxLength: 255
     }),
@@ -20,11 +20,11 @@ export const DiscountSchedule = ObjectSchema.create({
       maxLength: 50
     }),
     description: Field.textarea({
-      label: 'description',
+      label: 'Description',
       maxLength: 2000
     }),
     status: Field.select({
-      label: 'status',
+      label: 'Status',
       required: true,
       defaultValue: 'active',
       options: [
@@ -217,7 +217,7 @@ export const DiscountSchedule = ObjectSchema.create({
           "value": "customer_segment"
         },
         {
-          "label": "industry",
+          "label": "Industry",
           "value": "industry"
         }
       ]
@@ -227,7 +227,7 @@ export const DiscountSchedule = ObjectSchema.create({
       maxLength: 100
     }),
     industry: Field.text({
-      label: 'industry',
+      label: 'Industry',
       maxLength: 100
     }),
     included_accounts: Field.textarea({
@@ -342,7 +342,7 @@ export const DiscountSchedule = ObjectSchema.create({
       defaultValue: false
     }),
     priority: Field.number({
-      label: 'priority',
+      label: 'Priority',
       description: 'priority when multiple schedules apply (lower = higher priority)',
       defaultValue: 100,
       precision: 0

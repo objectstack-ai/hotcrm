@@ -76,7 +76,7 @@ export const CampaignMember = ObjectSchema.create({
       ]
     }),
     notes: Field.textarea({
-      label: 'notes',
+      label: 'Notes',
       description: 'Additional notes about this campaign member',
       maxLength: 2000
     }),

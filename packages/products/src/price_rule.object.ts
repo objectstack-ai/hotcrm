@@ -153,7 +153,7 @@ export const PriceRule = ObjectSchema.create({
           "value": "account_type"
         },
         {
-          "label": "industry",
+          "label": "Industry",
           "value": "industry"
         },
         {
@@ -283,7 +283,7 @@ export const PriceRule = ObjectSchema.create({
       precision: 2
     }),
     competitor_name: Field.text({
-      label: 'Competitor name',
+      label: 'Competitor Name',
       description: 'Competitor being matched or beaten',
       maxLength: 255
     }),
@@ -319,7 +319,7 @@ export const PriceRule = ObjectSchema.create({
       defaultValue: false
     }),
     approval_status: Field.select({
-      label: 'Approval status',
+      label: 'Approval Status',
       defaultValue: 'not_required',
       readonly: true,
       options: [
