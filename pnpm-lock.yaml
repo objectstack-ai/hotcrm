@@ -28,35 +28,35 @@ importers:
         specifier: ^3.1.5
         version: 3.1.5
       '@objectstack/cli':
-        specifier: ^3.3.1
-        version: 3.3.1(esbuild@0.27.7)
+        specifier: ^4.0.0
+        version: 4.0.3(@ai-sdk/anthropic@3.0.69(zod@4.3.6))(@ai-sdk/google@3.0.63(zod@4.3.6))(@ai-sdk/openai@3.0.52(zod@4.3.6))(esbuild@0.27.7)
       '@objectstack/driver-memory':
-        specifier: ^3.3.1
-        version: 3.3.1
+        specifier: ^4.0.0
+        version: 4.0.3
       '@objectstack/driver-turso':
-        specifier: ^3.3.2
-        version: 3.3.2(pino@10.3.1)
+        specifier: ^4.0.0
+        version: 4.0.3
       '@objectstack/objectql':
-        specifier: ^3.3.1
-        version: 3.3.1
+        specifier: ^4.0.0
+        version: 4.0.3
       '@objectstack/plugin-auth':
-        specifier: ^3.3.1
-        version: 3.3.1(@opentelemetry/api@1.9.1)(better-sqlite3@12.9.0)(next@16.2.1(@opentelemetry/api@1.9.1)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(vitest@1.6.1)
+        specifier: ^4.0.0
+        version: 4.0.3(@opentelemetry/api@1.9.1)(better-sqlite3@12.9.0)(next@16.2.1(@opentelemetry/api@1.9.1)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(vitest@1.6.1)
       '@objectstack/plugin-hono-server':
-        specifier: ^3.3.1
-        version: 3.3.1
+        specifier: ^4.0.0
+        version: 4.0.3
       '@objectstack/runtime':
-        specifier: ^3.3.1
-        version: 3.3.1
+        specifier: ^4.0.0
+        version: 4.0.3
       '@objectstack/service-i18n':
-        specifier: ^3.3.1
-        version: 3.3.1
+        specifier: ^4.0.0
+        version: 4.0.3
       '@objectstack/spec':
-        specifier: ^3.3.1
-        version: 3.3.1
+        specifier: ^4.0.0
+        version: 4.0.0
       '@objectstack/studio':
-        specifier: ^3.3.1
-        version: 3.3.1(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(better-sqlite3@12.9.0)(next@16.2.1(@opentelemetry/api@1.9.1)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(typescript@5.9.3)(vitest@1.6.1)
+        specifier: ^4.0.0
+        version: 4.0.3(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(better-sqlite3@12.9.0)(next@16.2.1(@opentelemetry/api@1.9.1)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(typescript@5.9.3)(vitest@1.6.1)(zod@4.3.6)
       '@opentelemetry/api':
         specifier: ^1.9.1
         version: 1.9.1
@@ -143,8 +143,8 @@ importers:
   packages/ai:
     dependencies:
       '@objectstack/spec':
-        specifier: ^3.3.1
-        version: 3.3.1
+        specifier: ^4.0.0
+        version: 4.0.0
       axios:
         specifier: ^1.15.0
         version: 1.15.0
@@ -153,8 +153,8 @@ importers:
         version: 4.3.6
     devDependencies:
       '@objectstack/cli':
-        specifier: ^3.3.1
-        version: 3.3.1(esbuild@0.27.7)
+        specifier: ^4.0.0
+        version: 4.0.3(@ai-sdk/anthropic@3.0.69(zod@4.3.6))(@ai-sdk/google@3.0.63(zod@4.3.6))(@ai-sdk/openai@3.0.52(zod@4.3.6))(esbuild@0.27.7)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -165,15 +165,15 @@ importers:
         specifier: workspace:*
         version: link:../ai
       '@objectstack/spec':
-        specifier: ^3.3.1
-        version: 3.3.1
+        specifier: ^4.0.0
+        version: 4.0.0
       zod:
         specifier: ^4.3.6
         version: 4.3.6
     devDependencies:
       '@objectstack/cli':
-        specifier: ^3.3.1
-        version: 3.3.1(esbuild@0.27.7)
+        specifier: ^4.0.0
+        version: 4.0.3(@ai-sdk/anthropic@3.0.69(zod@4.3.6))(@ai-sdk/google@3.0.63(zod@4.3.6))(@ai-sdk/openai@3.0.52(zod@4.3.6))(esbuild@0.27.7)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -181,15 +181,15 @@ importers:
   packages/community:
     dependencies:
       '@objectstack/spec':
-        specifier: ^3.3.1
-        version: 3.3.1
+        specifier: ^4.0.0
+        version: 4.0.0
       zod:
         specifier: ^4.3.6
         version: 4.3.6
     devDependencies:
       '@objectstack/cli':
-        specifier: ^3.3.1
-        version: 3.3.1(esbuild@0.27.7)
+        specifier: ^4.0.0
+        version: 4.0.3(@ai-sdk/anthropic@3.0.69(zod@4.3.6))(@ai-sdk/google@3.0.63(zod@4.3.6))(@ai-sdk/openai@3.0.52(zod@4.3.6))(esbuild@0.27.7)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -197,8 +197,8 @@ importers:
   packages/core:
     dependencies:
       '@objectstack/spec':
-        specifier: ^3.3.1
-        version: 3.3.1
+        specifier: ^4.0.0
+        version: 4.0.0
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -209,15 +209,15 @@ importers:
         specifier: workspace:*
         version: link:../ai
       '@objectstack/spec':
-        specifier: ^3.3.1
-        version: 3.3.1
+        specifier: ^4.0.0
+        version: 4.0.0
       zod:
         specifier: ^4.3.6
         version: 4.3.6
     devDependencies:
       '@objectstack/cli':
-        specifier: ^3.3.1
-        version: 3.3.1(esbuild@0.27.7)
+        specifier: ^4.0.0
+        version: 4.0.3(@ai-sdk/anthropic@3.0.69(zod@4.3.6))(@ai-sdk/google@3.0.63(zod@4.3.6))(@ai-sdk/openai@3.0.52(zod@4.3.6))(esbuild@0.27.7)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -225,15 +225,15 @@ importers:
   packages/education:
     dependencies:
       '@objectstack/spec':
-        specifier: ^3.3.1
-        version: 3.3.1
+        specifier: ^4.0.0
+        version: 4.0.0
       zod:
         specifier: ^4.3.6
         version: 4.3.6
     devDependencies:
       '@objectstack/cli':
-        specifier: ^3.3.1
-        version: 3.3.1(esbuild@0.27.7)
+        specifier: ^4.0.0
+        version: 4.0.3(@ai-sdk/anthropic@3.0.69(zod@4.3.6))(@ai-sdk/google@3.0.63(zod@4.3.6))(@ai-sdk/openai@3.0.52(zod@4.3.6))(esbuild@0.27.7)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -241,12 +241,12 @@ importers:
   packages/finance:
     dependencies:
       '@objectstack/spec':
-        specifier: ^3.3.1
-        version: 3.3.1
+        specifier: ^4.0.0
+        version: 4.0.0
     devDependencies:
       '@objectstack/cli':
-        specifier: ^3.3.1
-        version: 3.3.1(esbuild@0.27.7)
+        specifier: ^4.0.0
+        version: 4.0.3(@ai-sdk/anthropic@3.0.69(zod@4.3.6))(@ai-sdk/google@3.0.63(zod@4.3.6))(@ai-sdk/openai@3.0.52(zod@4.3.6))(esbuild@0.27.7)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -254,15 +254,15 @@ importers:
   packages/financial-services:
     dependencies:
       '@objectstack/spec':
-        specifier: ^3.3.1
-        version: 3.3.1
+        specifier: ^4.0.0
+        version: 4.0.0
       zod:
         specifier: ^4.3.6
         version: 4.3.6
     devDependencies:
       '@objectstack/cli':
-        specifier: ^3.3.1
-        version: 3.3.1(esbuild@0.27.7)
+        specifier: ^4.0.0
+        version: 4.0.3(@ai-sdk/anthropic@3.0.69(zod@4.3.6))(@ai-sdk/google@3.0.63(zod@4.3.6))(@ai-sdk/openai@3.0.52(zod@4.3.6))(esbuild@0.27.7)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -270,15 +270,15 @@ importers:
   packages/healthcare:
     dependencies:
       '@objectstack/spec':
-        specifier: ^3.3.1
-        version: 3.3.1
+        specifier: ^4.0.0
+        version: 4.0.0
       zod:
         specifier: ^4.3.6
         version: 4.3.6
     devDependencies:
       '@objectstack/cli':
-        specifier: ^3.3.1
-        version: 3.3.1(esbuild@0.27.7)
+        specifier: ^4.0.0
+        version: 4.0.3(@ai-sdk/anthropic@3.0.69(zod@4.3.6))(@ai-sdk/google@3.0.63(zod@4.3.6))(@ai-sdk/openai@3.0.52(zod@4.3.6))(esbuild@0.27.7)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -286,12 +286,12 @@ importers:
   packages/hr:
     dependencies:
       '@objectstack/spec':
-        specifier: ^3.3.1
-        version: 3.3.1
+        specifier: ^4.0.0
+        version: 4.0.0
     devDependencies:
       '@objectstack/cli':
-        specifier: ^3.3.1
-        version: 3.3.1(esbuild@0.27.7)
+        specifier: ^4.0.0
+        version: 4.0.3(@ai-sdk/anthropic@3.0.69(zod@4.3.6))(@ai-sdk/google@3.0.63(zod@4.3.6))(@ai-sdk/openai@3.0.52(zod@4.3.6))(esbuild@0.27.7)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -302,15 +302,15 @@ importers:
         specifier: workspace:*
         version: link:../ai
       '@objectstack/spec':
-        specifier: ^3.3.1
-        version: 3.3.1
+        specifier: ^4.0.0
+        version: 4.0.0
       zod:
         specifier: ^4.3.6
         version: 4.3.6
     devDependencies:
       '@objectstack/cli':
-        specifier: ^3.3.1
-        version: 3.3.1(esbuild@0.27.7)
+        specifier: ^4.0.0
+        version: 4.0.3(@ai-sdk/anthropic@3.0.69(zod@4.3.6))(@ai-sdk/google@3.0.63(zod@4.3.6))(@ai-sdk/openai@3.0.52(zod@4.3.6))(esbuild@0.27.7)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -318,12 +318,12 @@ importers:
   packages/marketing:
     dependencies:
       '@objectstack/spec':
-        specifier: ^3.3.1
-        version: 3.3.1
+        specifier: ^4.0.0
+        version: 4.0.0
     devDependencies:
       '@objectstack/cli':
-        specifier: ^3.3.1
-        version: 3.3.1(esbuild@0.27.7)
+        specifier: ^4.0.0
+        version: 4.0.3(@ai-sdk/anthropic@3.0.69(zod@4.3.6))(@ai-sdk/google@3.0.63(zod@4.3.6))(@ai-sdk/openai@3.0.52(zod@4.3.6))(esbuild@0.27.7)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -331,12 +331,12 @@ importers:
   packages/products:
     dependencies:
       '@objectstack/spec':
-        specifier: ^3.3.1
-        version: 3.3.1
+        specifier: ^4.0.0
+        version: 4.0.0
     devDependencies:
       '@objectstack/cli':
-        specifier: ^3.3.1
-        version: 3.3.1(esbuild@0.27.7)
+        specifier: ^4.0.0
+        version: 4.0.3(@ai-sdk/anthropic@3.0.69(zod@4.3.6))(@ai-sdk/google@3.0.63(zod@4.3.6))(@ai-sdk/openai@3.0.52(zod@4.3.6))(esbuild@0.27.7)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -344,15 +344,15 @@ importers:
   packages/real-estate:
     dependencies:
       '@objectstack/spec':
-        specifier: ^3.3.1
-        version: 3.3.1
+        specifier: ^4.0.0
+        version: 4.0.0
       zod:
         specifier: ^4.3.6
         version: 4.3.6
     devDependencies:
       '@objectstack/cli':
-        specifier: ^3.3.1
-        version: 3.3.1(esbuild@0.27.7)
+        specifier: ^4.0.0
+        version: 4.0.3(@ai-sdk/anthropic@3.0.69(zod@4.3.6))(@ai-sdk/google@3.0.63(zod@4.3.6))(@ai-sdk/openai@3.0.52(zod@4.3.6))(esbuild@0.27.7)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -360,17 +360,57 @@ importers:
   packages/support:
     dependencies:
       '@objectstack/spec':
-        specifier: ^3.3.1
-        version: 3.3.1
+        specifier: ^4.0.0
+        version: 4.0.0
     devDependencies:
       '@objectstack/cli':
-        specifier: ^3.3.1
-        version: 3.3.1(esbuild@0.27.7)
+        specifier: ^4.0.0
+        version: 4.0.3(@ai-sdk/anthropic@3.0.69(zod@4.3.6))(@ai-sdk/google@3.0.63(zod@4.3.6))(@ai-sdk/openai@3.0.52(zod@4.3.6))(esbuild@0.27.7)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
 
 packages:
+
+  '@ai-sdk/anthropic@3.0.69':
+    resolution: {integrity: sha512-LshR7X3pFugY0o41G2VKTmg1XoGpSl7uoYWfzk6zjVZLhCfeFiwgpOga+eTV4XY1VVpZwKVqRnkDbIL7K2eH5g==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
+
+  '@ai-sdk/gateway@3.0.96':
+    resolution: {integrity: sha512-BDiVEMUVHGpngReeigzLyJobG0TvzYbNGzdHI8JYBZHrjOX4aL6qwIls7z3p7V4TuXVWUCbG8TSWEe7ksX4Vhw==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
+
+  '@ai-sdk/google@3.0.63':
+    resolution: {integrity: sha512-RfOZWVMYSPu2sPRfGajrauWAZ9BSaRopSn+AszkKWQ1MFj8nhaXvCqRHB5pBQUaHTfZKagvOmMpNfa/s3gPLgQ==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
+
+  '@ai-sdk/openai@3.0.52':
+    resolution: {integrity: sha512-4Rr8NCGmfWTz6DCUvixn9UmyZcMatiHn0zWoMzI3JCUe9R1P/vsPOpCBALKoSzVYOjyJnhtnVIbfUKujcS39uw==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
+
+  '@ai-sdk/provider-utils@4.0.23':
+    resolution: {integrity: sha512-z8GlDaCmRSDlqkMF2f4/RFgWxdarvIbyuk+m6WXT1LYgsnGiXRJGTD2Z1+SDl3LqtFuRtGX1aghYvQLoHL/9pg==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
+
+  '@ai-sdk/provider@3.0.8':
+    resolution: {integrity: sha512-oGMAgGoQdBXbZqNG0Ze56CHjDZ1IDYOwGYxYjO5KLSlz5HiNQ9udIXsPZ61VWaHGZ5XW/jyjmr6t2xz2jGVwbQ==}
+    engines: {node: '>=18'}
+
+  '@ai-sdk/react@3.0.161':
+    resolution: {integrity: sha512-lFIZm7OggwNZD08Yz8ip0EPgmEn/lKZOB2MrKjzDpq6BT8gUX17TfaaUi9IICN8nOeLOZQqJKrWNnTXjcvElBw==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      react: ^18 || ~19.0.1 || ~19.1.2 || ^19.2.1
 
   '@alloc/quick-lru@5.2.0':
     resolution: {integrity: sha512-UrcABB+4bUrFABwbluTIBErXwvbsU/V7TZWfmbgJfbkwiBuziS9gxdODUyuiecfdGQ85jglMW6juS3+z5TsKLw==}
@@ -1271,98 +1311,110 @@ packages:
   '@object-ui/console@3.1.5':
     resolution: {integrity: sha512-yVXUxjTBJEIK8ZTv3MgnR1u+THjxfsdS5qOs5w2F0P7A9Wlya3SycMPyV0XP59+Zigk+1eGDFHyweGnCewbGjA==}
 
-  '@objectstack/cli@3.3.1':
-    resolution: {integrity: sha512-ac/RvlFBZjRuOxTPQWTOv0NX2lsoav8dYw+zZ4jtFs0MpCg0vZlC3mBJxs2eVpIDrCNragPi3Gc1P1O47XTdGg==}
+  '@objectstack/cli@4.0.3':
+    resolution: {integrity: sha512-4MMDWoJQWUhyO7gfrDLCraNOhnv71w3Ocja/ShMzFtTKVzeqHibekLpIFaZ9yrOb56+KaxYhXnmTolpQlsNtIw==}
     hasBin: true
 
-  '@objectstack/client-react@3.3.1':
-    resolution: {integrity: sha512-PFwKYy/KIOOd1XnQr3rfJRZZ+05NBDX2ZlZIabf+RYzwpRDmp83jclwstYVxKi5FfHq4DY6AkOwrYkrEdCkYMQ==}
+  '@objectstack/client-react@4.0.3':
+    resolution: {integrity: sha512-2PkMUiN58JYQpF2qT4q0Nr5082xy/wS8YrBJUFdGkWdXlnjkW5/tfBgN2iXb8afggnQwBCMzZcBUsKenZS3iwQ==}
     peerDependencies:
       react: '>=18.0.0'
 
-  '@objectstack/client@3.3.1':
-    resolution: {integrity: sha512-oNixb+q+lJEIe2g+9nDRsainJZ07D1H64O32cO3FoqiH3EwF0g+MDBpih/MZS/KAL8QhYroaWfMME7k6I/6gFg==}
+  '@objectstack/client@4.0.3':
+    resolution: {integrity: sha512-F0crxnq1lT79Gz34xnsS7DGpWcaK1/KTDJGK0Co1F59SK1QnhzwphUlWmzHvZ7mhmVmQuE6n+d0AbQRkqO/Mcg==}
 
-  '@objectstack/core@3.3.1':
-    resolution: {integrity: sha512-tFylxLMJEMRr+8Jc23LglwghDwOT8NdBzKZUtLSoyYxgfcx5E3Fwj/d9BYd30YLnztshFvq8gQchIP9v4C1FqA==}
+  '@objectstack/core@4.0.3':
+    resolution: {integrity: sha512-qoKFjRXDrbbl7Ud0liFwLCJvonn0i9LVhrZZb8YpBTsFZkUnrXG8LCnz7xitq8PULKuLbU6CMVci7JSxfxum3w==}
 
-  '@objectstack/core@4.0.0':
-    resolution: {integrity: sha512-5lo7/g5tkjnS0pForF+xIRhHr3AO16Qr+784myu8C2VCZyDvKvhzVKzmoOms4HXuhcj7dTgb99q7HnATgot8zA==}
+  '@objectstack/driver-memory@4.0.3':
+    resolution: {integrity: sha512-mTbWThY62H88tGiF+PbTUAE2tAZiz82aOrGPQLRBHeDwlfg6IynbheLuF/gCxxA/09WErmrYZFS5yW08kW2TVQ==}
+
+  '@objectstack/driver-sql@4.0.3':
+    resolution: {integrity: sha512-TcJ9QsM/FJqGoipk2B/umLmvJvl1dGigU+wcRTrf1d1meCwyDMFqGELW/vEefT46mue1vG7QJnGqXKhqXXX4kw==}
+
+  '@objectstack/driver-turso@4.0.3':
+    resolution: {integrity: sha512-Rx/B23zkFrGa/BBFbDtZaHJc1Zj6na764hx9hLqgdreH9VWIudYDpA7AP605Tm1oX6/f4Z6db+xk4WSk631ngg==}
+
+  '@objectstack/hono@4.0.3':
+    resolution: {integrity: sha512-oR08tEmh69Zw3gL45IkySbbvVBkVvC/nNCydOMLwBrE0U23He69R2/pTspT7wQFAip1WnqQQ3Hq0028qJ4PmfA==}
     peerDependencies:
-      pino: ^8.0.0
-    peerDependenciesMeta:
-      pino:
-        optional: true
-
-  '@objectstack/driver-memory@3.3.1':
-    resolution: {integrity: sha512-Et81TG2iB73e+wzLmQg6QMFjTTAOTTuT4a1KpyY1Ymxvt3+0YHY9Gyuwga8kqghVstf2sEGehlJO40udOLciBQ==}
-
-  '@objectstack/driver-sql@3.3.1':
-    resolution: {integrity: sha512-AV1zzJXHKc0fWJWw8tKij9X51/FnQJZq00zzkr87A2SpK9AAQ6XKsjiP23HO6lmcezS3ky9kbPhYrkXEIn2X3Q==}
-
-  '@objectstack/driver-sql@3.3.2':
-    resolution: {integrity: sha512-nEbmQrS4zf0yQ5ofwMkuA76QAJWp+UejwbQvWxb2cSMmFVIsgzpkwhdpqyciM/lamCrC6T2D5jo6px7ahu5jJw==}
-
-  '@objectstack/driver-turso@3.3.1':
-    resolution: {integrity: sha512-e/eUdRZtALXWlo8VJOisZuU9KYiDycUJ7fNS7pQofqo2FEvPKh2nvcvJxDeHjs+krOvsWthab14+eNc3V7rfNw==}
-
-  '@objectstack/driver-turso@3.3.2':
-    resolution: {integrity: sha512-R95gOtAMpDfmwsnt4WplmHMV1pc8xkkyviGSTZ5UehJQBKHerojHQ5OyWxhsEfodrm3MpMFqENG9t0GjpyQqDg==}
-
-  '@objectstack/hono@3.3.1':
-    resolution: {integrity: sha512-LnidTW1GrT0zAbzrBOs860e3D9tBVZQSgFtDOvs1b23DBjIiDTsypqHD/UhSUFRTuNZO1czxZQLsS2OvRdta7g==}
-    peerDependencies:
-      '@objectstack/runtime': ^3.3.1
+      '@objectstack/runtime': ^4.0.3
       hono: ^4.12.8
 
-  '@objectstack/metadata@3.3.1':
-    resolution: {integrity: sha512-4R6CixHc8mfPc3pSAj5zNKLomoumJcxS3MlPHGuzcdA76eFB9EeJbddFLMbQvtmpV6o+JovIUACxs4i7JN6h4w==}
+  '@objectstack/metadata@4.0.3':
+    resolution: {integrity: sha512-bzr/AdZxI2xf9PWl7R5twm2kTSmPIVEgzIqyno3EM6LShXMNq2mmcfbBqMnZlX+V8WWW52/gE3/E9fHtgQZmcg==}
 
-  '@objectstack/objectql@3.3.1':
-    resolution: {integrity: sha512-eUfTP6qB7sLJC/ojqcoUWKmMkzG8XNmnSv6m0kP8/6rBe07vfniLbN3jfafXjvHE7j4XWokJ9Oqfb7Q7arT0zA==}
+  '@objectstack/objectql@4.0.3':
+    resolution: {integrity: sha512-fTWXW/PwaQykuQeS+L8TmeZTMvb5psO55am/erykDqQ0LPrFFIpqY1yqyknktW9G8Cv2uYLzKxrF6bGOSuys7A==}
 
-  '@objectstack/plugin-audit@3.3.1':
-    resolution: {integrity: sha512-RXB1JMRZxikSmiUglfVbfZlu2KIy9d0s72HJOFOqHpXVbZs8KNcY8D+XxBGilhBu3IhTWNpWjS9auWj0WAyhnA==}
+  '@objectstack/plugin-audit@4.0.3':
+    resolution: {integrity: sha512-MhJ+7FMN9yS7669NjTi9ZvHCO9YA2KVQtDzyBCNYUtV7OR31vh5cVceJRUmnXNHteSLWYyaqtH3JH6ZCSg5Ugg==}
 
-  '@objectstack/plugin-auth@3.3.1':
-    resolution: {integrity: sha512-nAnX0yYdQFU1YOPji2hoMISJDihf3GAtofNIteE6+8O74wTpNAt6j+QUI6orxieMXDcqOidMPFT7cI6Yltj3Pw==}
+  '@objectstack/plugin-auth@4.0.3':
+    resolution: {integrity: sha512-QV/HtzVVvACZEhHqnYRXRH1FJZwAbmHdFxG8XKeLbzbpCarnrMIse2pgk1iig1v8l7hNfvWH6Qg4oxal+xkxMg==}
 
-  '@objectstack/plugin-hono-server@3.3.1':
-    resolution: {integrity: sha512-XDJUR4v3s8j7hfJY0KMO35tE+8suGEmdmwBVX+ZsemxcY1B7Q+z1lHVb3gqBIYDM6yTFj2W6mHwV4E5N1QFd2A==}
+  '@objectstack/plugin-hono-server@4.0.3':
+    resolution: {integrity: sha512-5uWwDxhlN9tTkOiG0f7h1QubRWqj6PydNZUv35gwpAV0dJN5zoj8ThwX/XYYoyjgtYxTEA61DH36nhS9sznmuQ==}
 
-  '@objectstack/plugin-msw@3.3.1':
-    resolution: {integrity: sha512-F1B51UXn1Y30ZaGUT9vqNiWem996+TZmyRRo+J14ZZg8sx72JTfSNR6DJz4nV25zUMFBliXJ7bqTA2Hw6qgx3w==}
+  '@objectstack/plugin-msw@4.0.3':
+    resolution: {integrity: sha512-Grc/jleqPAEn9JTtjZg0VnCd9J5KXq/rY/XjYtHEBDugpySL0vL23+PSwlS+djcZilamEdqzefgOGjrv5tBMcA==}
     peerDependencies:
-      '@objectstack/runtime': ^3.3.1
+      '@objectstack/runtime': ^4.0.3
 
-  '@objectstack/plugin-security@3.3.1':
-    resolution: {integrity: sha512-DrubXjQ3DVUtYknZzGQ1fMVIaM4/21bi8MlWt4a2PikTw18dYGciwKm5C51sFNO20uoyu49hzIXENca76bYS9Q==}
+  '@objectstack/plugin-security@4.0.3':
+    resolution: {integrity: sha512-sn2bWecv0B1cKCmWHgs1aYS1ejb8rjx0inulducobCL4qf+gpum7ks17LpnkXK+/wEnDONf2O1Uf5SYGbw+a5Q==}
 
-  '@objectstack/rest@3.3.1':
-    resolution: {integrity: sha512-+R1CuRaNtnI/QWY8puM0aekJqnRHS8T4pi64/w7SG8QG+Vw44vZNkMR8v7DkL40nag9Vs6B/P8L7LStzw40qEg==}
+  '@objectstack/plugin-setup@4.0.3':
+    resolution: {integrity: sha512-w3SacbwknO3Il4HIqE1LOgR14B6LICeuqrsadshs4mkjHGpzFaFIr1QS5XYT+DgfBbX0323sFwIIMRc5WiUlZQ==}
 
-  '@objectstack/runtime@3.3.1':
-    resolution: {integrity: sha512-MGfXQtqko9d2V496195Z2XHGBrIewQo84y3kCnEze95vIb2RU/+i7Lo9UZSz7HrOkjhx5ABsr8qfv3Dr2NK/3A==}
+  '@objectstack/rest@4.0.3':
+    resolution: {integrity: sha512-5hN/3Rz6ZHRFRi7+2dMzIlAmqLYL1E2W4+NcbedO77mqaq9/5Krbk4nT23OSqGW+GwyAm44pXWQBDDQKXXyyNA==}
 
-  '@objectstack/service-feed@3.3.1':
-    resolution: {integrity: sha512-njEGaWA21OqvHSPruGatC3PrmKfBCOV2xJObl4KBZe7976ZMqo3C7nBby/iYwFv6ydRpFQbXLJv5dbnrZ9FNHQ==}
+  '@objectstack/runtime@4.0.3':
+    resolution: {integrity: sha512-3M/1HFas5OIWnjNoUFkEhkNqvKGl/NgOHerKCSaMHjzcfLUC9WR6RHhdR9jYOI5QD1LruZfHNeJRic4aoQmU+g==}
 
-  '@objectstack/service-i18n@3.3.1':
-    resolution: {integrity: sha512-5JkY2SD4NZSu1ba/mzVPfPH6uqn+0L5vCBy8nl6fYrrPZwu/bNEvLw3e5u8I52V+ohrFSACDEAm2FUCDI5LTmQ==}
+  '@objectstack/service-ai@4.0.3':
+    resolution: {integrity: sha512-1hXT4WNc8f2du1NBalKBh3IPEDF8ODdLJScBXiezo82jxBE3RQFv2nlYASsBkXOBJfqU7RgWyRbhXpdw54m5Ag==}
+    peerDependencies:
+      '@ai-sdk/anthropic': ^3.0.0
+      '@ai-sdk/gateway': ^3.0.0
+      '@ai-sdk/google': ^3.0.0
+      '@ai-sdk/openai': ^3.0.0
+    peerDependenciesMeta:
+      '@ai-sdk/anthropic':
+        optional: true
+      '@ai-sdk/gateway':
+        optional: true
+      '@ai-sdk/google':
+        optional: true
+      '@ai-sdk/openai':
+        optional: true
 
-  '@objectstack/spec@3.3.1':
-    resolution: {integrity: sha512-7HVaNkwrCAvsN56ZN1cj2P+BE78QGh6DJxJO2gJnWg/LFUajis2NUXofIlCblSlF/y/32/7zi9iey/Z+aQWQJA==}
-    engines: {node: '>=18.0.0'}
+  '@objectstack/service-analytics@4.0.3':
+    resolution: {integrity: sha512-PwpDgGn9o/sBcGXAboapwxN46ZRR+8m6UVFygAbEiARYG4ZqyzCnmJwGFkG7za28ZwyJNlckmXXv0pOL1gicUQ==}
+
+  '@objectstack/service-automation@4.0.3':
+    resolution: {integrity: sha512-Um/cORv0voK4xm6eNkO/9+KEdmy8Hp9DkHmgFO/SxNE11VaFVRP5iUgy8En3WOUnoRGNTOBh5fhAN3uxOqZCTw==}
+
+  '@objectstack/service-feed@4.0.3':
+    resolution: {integrity: sha512-81ObGX/dV9R1Ku41zwWcpwg/ELgzl9u5A4CjiKIzUkUSvhKjxI0ngGpIeqFRQ6Zx8CnAEWc0ko34YFTHn/E3yw==}
+
+  '@objectstack/service-i18n@4.0.3':
+    resolution: {integrity: sha512-mmX6OWLgd7KK+hc0WNO2b3ffcQbRSp/PolMv/4Q/J+igF39MR4foEFPNNrKp7NO1svNqA5dykUkXSw9Iyrpy3g==}
 
   '@objectstack/spec@4.0.0':
     resolution: {integrity: sha512-6JaFfO1LD1pNS/PLFUN300pcyuNWiAEboDpj+QnLXxhYwkx+Nz8gEsMW50isFpecnVL1SnDRGjTXmfpU8rOAcA==}
     engines: {node: '>=18.0.0'}
 
-  '@objectstack/studio@3.3.1':
-    resolution: {integrity: sha512-Pe8j23VrNKtDD9cWBLAf8qd+oZeQsAKeNBrjwGfWTCzIVWfpooC62RRi01rhp6HfcJc1UdB49BmYCtC+2tb1xg==}
+  '@objectstack/spec@4.0.3':
+    resolution: {integrity: sha512-WCnDm7DdVSUP7UnNtwGHpVBUmEr4nnY20Nbu1G9GfNZWTcZST1Yr7b4KtGf0fkohZXjegQVF1+vsEQf8rMospw==}
+    engines: {node: '>=18.0.0'}
 
-  '@objectstack/types@3.3.1':
-    resolution: {integrity: sha512-2KVMl5x2Sz8G9bDW7iBrOTePZqbxaWj5ijWzELbTE6oU0b7eOGal/c3f43HoPyAHhlx5y+xt81102D2XW09MRA==}
+  '@objectstack/studio@4.0.3':
+    resolution: {integrity: sha512-0V52OcOrNbLK9/cDZxhDD7DVq4VhSUDGqGZl+bh1wTwMpc+rbfBRYPKWpGKfemO9n7ChIpaS7P9aln/5y5+u/A==}
+
+  '@objectstack/types@4.0.3':
+    resolution: {integrity: sha512-XWGPH0w+jEPTgyFb/N+HAGWCvf5ydau+lsdICa2JCoQOlZWZ3pXQul5My5n0zTvujVXQfOVSB+OUB+532zr3VQ==}
 
   '@oclif/core@4.10.5':
     resolution: {integrity: sha512-qcdCF7NrdWPfme6Kr34wwljRCXbCVpL1WVxiNy0Ep6vbWKjxAjFQwuhqkoyL0yjI+KdwtLcOCGn5z2yzdijc8w==}
@@ -1376,6 +1428,10 @@ packages:
 
   '@open-draft/until@2.1.0':
     resolution: {integrity: sha512-U69T3ItWHvLwGg5eJ0n3I62nWuE6ilHlmz7zM0npLBRvPRd7e6NYmg54vvRtP5mZG7kZqZCFVdsTWo7BPtBujg==}
+
+  '@opentelemetry/api@1.9.0':
+    resolution: {integrity: sha512-3giAOQvZiH5F9bMlMiv8+GSPMeqg0dbaeo58/0SlA9sxSqZhnUtxzX9/2FzyhS9sWQf5S0GJE0AKBrFqjpeYcg==}
+    engines: {node: '>=8.0.0'}
 
   '@opentelemetry/api@1.9.1':
     resolution: {integrity: sha512-gLyJlPHPZYdAk1JENA9LeHejZe1Ti77/pTeFm/nMXmQH/HFZlcS/O2XJB+L8fkbrNSqhdtlvjBVjxwUYanNH5Q==}
@@ -2320,6 +2376,10 @@ packages:
   '@ungap/structured-clone@1.3.0':
     resolution: {integrity: sha512-WmoN8qaIAo7WTYWbAZuG8PYEhn5fkz7dZrqTBZ7dtt//lL2Gwms1IcnQ5yHqjDfX8Ft5j4YzDM23f87zBfDe9g==}
 
+  '@vercel/oidc@3.1.0':
+    resolution: {integrity: sha512-Fw28YZpRnA3cAHHDlkt7xQHiJ0fcL+NRcIqsocZQUSmbzeIKRpwttJjik5ZGanXP+vlA4SbTg+AbA3bP363l+w==}
+    engines: {node: '>= 20'}
+
   '@vitest/coverage-v8@1.6.1':
     resolution: {integrity: sha512-6YeRZwuO4oTGKxD3bijok756oktHSIm3eczVVzNe3scqzuhLwltIF3S9ZL/vwOVIpURmU6SnZhziXXAfw8/Qlw==}
     peerDependencies:
@@ -2358,6 +2418,12 @@ packages:
     resolution: {integrity: sha512-UVJyE9MttOsBQIDKw1skb9nAwQuR5wuGD3+82K6JgJlm/Y+KI92oNsMNGZCYdDsVtRHSak0pcV5Dno5+4jh9sw==}
     engines: {node: '>=0.4.0'}
     hasBin: true
+
+  ai@6.0.159:
+    resolution: {integrity: sha512-S18ozG7Dkm3Ud1tzOtAK5acczD4vygfml80RkpM9VWMFpvAFwAKSHaGYkATvPQHIE+VpD1tJY9zcTXLZ/zR5cw==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
 
   ajv@6.14.0:
     resolution: {integrity: sha512-IWrosm/yrn43eiKqkfkHis7QioDleaXQHdDVPKg0FSwwd/DuvyX79TZnFOnYpB7dcsFAMmtFztZuXPDvSePkFw==}
@@ -2910,6 +2976,10 @@ packages:
   esutils@2.0.3:
     resolution: {integrity: sha512-kVscqXk4OCp68SZ0dkgEKVi6/8ij300KBWTJq32P/dYeWTSwK41WyTxalN1eRmA5Z9UU/LX9D7FWSmV9SAYx6g==}
     engines: {node: '>=0.10.0'}
+
+  eventsource-parser@3.0.6:
+    resolution: {integrity: sha512-Vo1ab+QXPzZ4tCa8SwIHJFaSzy4R6SHf7BY79rFBDf0idraZWAkYrDjDj8uWaSm3S2TK+hJ7/t1CEmZ7jXw+pg==}
+    engines: {node: '>=18.0.0'}
 
   execa@8.0.1:
     resolution: {integrity: sha512-VyhnebXciFV2DESc+p6B+y0LjSm0krU4OgJN44qFAhBY0TJ+1V61tYD2+wHusZ6F9n5K+vl8k0sTy7PEfV4qpg==}
@@ -3466,6 +3536,9 @@ packages:
   json-schema-traverse@0.4.1:
     resolution: {integrity: sha512-xbbCH5dCYU5T8LcEhhuh7HJ88HXuW3qsI3Y0zOZFKfZEHcpWiHU/Jxzk629Brsab/mMiHQti9wMP+845RPe3Vg==}
 
+  json-schema@0.4.0:
+    resolution: {integrity: sha512-es94M3nTIfsEPisRafak+HDLfHXnKBhV3vU5eqPcS3flIWqcxJWgXHXiey3YrpaNsanY5ei1VoYEbOzijuq9BA==}
+
   json-stable-stringify-without-jsonify@1.0.1:
     resolution: {integrity: sha512-Bdboy+l7tA3OGW6FjyFHWkP5LuByj1Tk33Ljyq0axyzdk9//JSi2u3fP1QSmd1KNwq6VOKYGlAu87CisVir6Pw==}
 
@@ -3634,6 +3707,11 @@ packages:
 
   lucide-react@0.577.0:
     resolution: {integrity: sha512-4LjoFv2eEPwYDPg/CUdBJQSDfPyzXCRrVW1X7jrx/trgxnxkHFjnVZINbzvzxjN70dxychOfg+FTYwBiS3pQ5A==}
+    peerDependencies:
+      react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
+  lucide-react@1.8.0:
+    resolution: {integrity: sha512-WuvlsjngSk7TnTBJ1hsCy3ql9V9VOdcPkd3PKcSmM34vJD8KG6molxz7m7zbYFgICwsanQWmJ13JlYs4Zp7Arw==}
     peerDependencies:
       react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
@@ -4544,6 +4622,11 @@ packages:
     resolution: {integrity: sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==}
     engines: {node: '>= 0.4'}
 
+  swr@2.4.1:
+    resolution: {integrity: sha512-2CC6CiKQtEwaEeNiqWTAw9PGykW8SR5zZX8MZk6TeAvEAnVS7Visz8WzphqgtQ8v2xz/4Q5K+j+SeMaKXeeQIA==}
+    peerDependencies:
+      react: ^16.11.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
   tagged-tag@1.0.0:
     resolution: {integrity: sha512-yEFYrVhod+hdNyx7g5Bnkkb0G6si8HJurOoOEgC8B/O0uXLHlaey/65KRv6cuWBNhBgHKAROVpc7QyYqE5gFng==}
     engines: {node: '>=20'}
@@ -4583,6 +4666,10 @@ packages:
   thread-stream@4.0.0:
     resolution: {integrity: sha512-4iMVL6HAINXWf1ZKZjIPcz5wYaOdPhtO8ATvZ+Xqp3BTdaqtAwQkNmKORqcIo5YkQqGXq5cwfswDwMqqQNrpJA==}
     engines: {node: '>=20'}
+
+  throttleit@2.1.0:
+    resolution: {integrity: sha512-nt6AMGKW1p/70DF/hGBdJB57B8Tspmbp5gfJ8ilhLnt7kkr2ye7hzD6NVG8GGErk2HWF34igrL2CXmNIkzKqKw==}
+    engines: {node: '>=18'}
 
   tildify@2.0.0:
     resolution: {integrity: sha512-Cc+OraorugtXNfs50hU9KS369rFXCfgGLpfCfvlc+Ud5u6VWmUQsOAa9HbTvheQdYnrdJqqv1e5oIqXppMYnSw==}
@@ -4876,6 +4963,11 @@ packages:
     resolution: {integrity: sha512-0pfFzegeDWJHJIAmTLRP2DwHjdF5s7jo9tuztdQxAhINCdvS+3nGINqPd00AphqJR/0LhANUS6/+7SCb98YOfA==}
     engines: {node: '>=10'}
 
+  yaml@2.8.3:
+    resolution: {integrity: sha512-AvbaCLOO2Otw/lW5bmh9d/WEdcDFdQp2Z2ZUH3pX9U2ihyUY0nvLv7J6TrWowklRGPYbB/IuIMfYgxaCPg5Bpg==}
+    engines: {node: '>= 14.6'}
+    hasBin: true
+
   yargs-parser@21.1.1:
     resolution: {integrity: sha512-tVpsJW7DdjecAiFpbIB1e3qxIQsE6NoPc5/eTdrbbIC4h0LVsWhnoa3g+m2HclBIujHzsxZ4VJVA+GUuc2/LBw==}
     engines: {node: '>=12'}
@@ -4903,6 +4995,52 @@ packages:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
 
 snapshots:
+
+  '@ai-sdk/anthropic@3.0.69(zod@4.3.6)':
+    dependencies:
+      '@ai-sdk/provider': 3.0.8
+      '@ai-sdk/provider-utils': 4.0.23(zod@4.3.6)
+      zod: 4.3.6
+
+  '@ai-sdk/gateway@3.0.96(zod@4.3.6)':
+    dependencies:
+      '@ai-sdk/provider': 3.0.8
+      '@ai-sdk/provider-utils': 4.0.23(zod@4.3.6)
+      '@vercel/oidc': 3.1.0
+      zod: 4.3.6
+
+  '@ai-sdk/google@3.0.63(zod@4.3.6)':
+    dependencies:
+      '@ai-sdk/provider': 3.0.8
+      '@ai-sdk/provider-utils': 4.0.23(zod@4.3.6)
+      zod: 4.3.6
+
+  '@ai-sdk/openai@3.0.52(zod@4.3.6)':
+    dependencies:
+      '@ai-sdk/provider': 3.0.8
+      '@ai-sdk/provider-utils': 4.0.23(zod@4.3.6)
+      zod: 4.3.6
+
+  '@ai-sdk/provider-utils@4.0.23(zod@4.3.6)':
+    dependencies:
+      '@ai-sdk/provider': 3.0.8
+      '@standard-schema/spec': 1.1.0
+      eventsource-parser: 3.0.6
+      zod: 4.3.6
+
+  '@ai-sdk/provider@3.0.8':
+    dependencies:
+      json-schema: 0.4.0
+
+  '@ai-sdk/react@3.0.161(react@19.2.5)(zod@4.3.6)':
+    dependencies:
+      '@ai-sdk/provider-utils': 4.0.23(zod@4.3.6)
+      ai: 6.0.159(zod@4.3.6)
+      react: 19.2.5
+      swr: 2.4.1(react@19.2.5)
+      throttleit: 2.1.0
+    transitivePeerDependencies:
+      - zod
 
   '@alloc/quick-lru@5.2.0': {}
 
@@ -5663,61 +5801,61 @@ snapshots:
 
   '@object-ui/console@3.1.5': {}
 
-  '@objectstack/cli@3.3.1(esbuild@0.27.7)':
+  '@objectstack/cli@4.0.3(@ai-sdk/anthropic@3.0.69(zod@4.3.6))(@ai-sdk/google@3.0.63(zod@4.3.6))(@ai-sdk/openai@3.0.52(zod@4.3.6))(esbuild@0.27.7)':
     dependencies:
-      '@objectstack/core': 3.3.1
-      '@objectstack/driver-memory': 3.3.1
-      '@objectstack/objectql': 3.3.1
-      '@objectstack/plugin-hono-server': 3.3.1
-      '@objectstack/rest': 3.3.1
-      '@objectstack/runtime': 3.3.1
-      '@objectstack/spec': 3.3.1
+      '@ai-sdk/gateway': 3.0.96(zod@4.3.6)
+      '@objectstack/client': 4.0.3
+      '@objectstack/core': 4.0.3
+      '@objectstack/driver-memory': 4.0.3
+      '@objectstack/objectql': 4.0.3
+      '@objectstack/plugin-hono-server': 4.0.3
+      '@objectstack/plugin-setup': 4.0.3
+      '@objectstack/rest': 4.0.3
+      '@objectstack/runtime': 4.0.3
+      '@objectstack/service-ai': 4.0.3(@ai-sdk/anthropic@3.0.69(zod@4.3.6))(@ai-sdk/gateway@3.0.96(zod@4.3.6))(@ai-sdk/google@3.0.63(zod@4.3.6))(@ai-sdk/openai@3.0.52(zod@4.3.6))(zod@4.3.6)
+      '@objectstack/spec': 4.0.3
       '@oclif/core': 4.10.5
       bundle-require: 5.1.0(esbuild@0.27.7)
       chalk: 5.6.2
       dotenv-flow: 4.1.0
       tsx: 4.21.0
+      yaml: 2.8.3
       zod: 4.3.6
     transitivePeerDependencies:
+      - '@ai-sdk/anthropic'
+      - '@ai-sdk/google'
+      - '@ai-sdk/openai'
       - esbuild
 
-  '@objectstack/client-react@3.3.1(react@19.2.5)':
+  '@objectstack/client-react@4.0.3(react@19.2.5)':
     dependencies:
-      '@objectstack/client': 3.3.1
-      '@objectstack/core': 3.3.1
-      '@objectstack/spec': 3.3.1
+      '@objectstack/client': 4.0.3
+      '@objectstack/core': 4.0.3
+      '@objectstack/spec': 4.0.3
       react: 19.2.5
 
-  '@objectstack/client@3.3.1':
+  '@objectstack/client@4.0.3':
     dependencies:
-      '@objectstack/core': 3.3.1
-      '@objectstack/spec': 3.3.1
+      '@objectstack/core': 4.0.3
+      '@objectstack/spec': 4.0.3
 
-  '@objectstack/core@3.3.1':
+  '@objectstack/core@4.0.3':
     dependencies:
-      '@objectstack/spec': 3.3.1
+      '@objectstack/spec': 4.0.3
       pino: 10.3.1
       pino-pretty: 13.1.3
       zod: 4.3.6
 
-  '@objectstack/core@4.0.0(pino@10.3.1)':
+  '@objectstack/driver-memory@4.0.3':
     dependencies:
-      '@objectstack/spec': 4.0.0
-      pino-pretty: 13.1.3
-      zod: 4.3.6
-    optionalDependencies:
-      pino: 10.3.1
-
-  '@objectstack/driver-memory@3.3.1':
-    dependencies:
-      '@objectstack/core': 3.3.1
-      '@objectstack/spec': 3.3.1
+      '@objectstack/core': 4.0.3
+      '@objectstack/spec': 4.0.3
       mingo: 7.2.1
 
-  '@objectstack/driver-sql@3.3.1(better-sqlite3@12.9.0)':
+  '@objectstack/driver-sql@4.0.3(better-sqlite3@12.9.0)':
     dependencies:
-      '@objectstack/core': 3.3.1
-      '@objectstack/spec': 3.3.1
+      '@objectstack/core': 4.0.3
+      '@objectstack/spec': 4.0.3
       knex: 3.2.9(better-sqlite3@12.9.0)
       nanoid: 5.1.7
     transitivePeerDependencies:
@@ -5731,30 +5869,12 @@ snapshots:
       - supports-color
       - tedious
 
-  '@objectstack/driver-sql@3.3.2(better-sqlite3@12.9.0)(pino@10.3.1)':
-    dependencies:
-      '@objectstack/core': 4.0.0(pino@10.3.1)
-      '@objectstack/spec': 4.0.0
-      knex: 3.2.9(better-sqlite3@12.9.0)
-      nanoid: 5.1.7
-    transitivePeerDependencies:
-      - better-sqlite3
-      - mysql
-      - mysql2
-      - pg
-      - pg-native
-      - pg-query-stream
-      - pino
-      - sqlite3
-      - supports-color
-      - tedious
-
-  '@objectstack/driver-turso@3.3.1':
+  '@objectstack/driver-turso@4.0.3':
     dependencies:
       '@libsql/client': 0.17.2
-      '@objectstack/core': 3.3.1
-      '@objectstack/driver-sql': 3.3.1(better-sqlite3@12.9.0)
-      '@objectstack/spec': 3.3.1
+      '@objectstack/core': 4.0.3
+      '@objectstack/driver-sql': 4.0.3(better-sqlite3@12.9.0)
+      '@objectstack/spec': 4.0.3
       better-sqlite3: 12.9.0
       nanoid: 5.1.7
     transitivePeerDependencies:
@@ -5770,58 +5890,36 @@ snapshots:
       - tedious
       - utf-8-validate
 
-  '@objectstack/driver-turso@3.3.2(pino@10.3.1)':
+  '@objectstack/hono@4.0.3(@objectstack/runtime@4.0.3)(hono@4.12.12)':
     dependencies:
-      '@libsql/client': 0.17.2
-      '@objectstack/core': 4.0.0(pino@10.3.1)
-      '@objectstack/driver-sql': 3.3.2(better-sqlite3@12.9.0)(pino@10.3.1)
-      '@objectstack/spec': 4.0.0
-      better-sqlite3: 12.9.0
-      nanoid: 5.1.7
-    transitivePeerDependencies:
-      - bufferutil
-      - encoding
-      - mysql
-      - mysql2
-      - pg
-      - pg-native
-      - pg-query-stream
-      - pino
-      - sqlite3
-      - supports-color
-      - tedious
-      - utf-8-validate
-
-  '@objectstack/hono@3.3.1(@objectstack/runtime@3.3.1)(hono@4.12.12)':
-    dependencies:
-      '@objectstack/runtime': 3.3.1
+      '@objectstack/runtime': 4.0.3
       hono: 4.12.12
 
-  '@objectstack/metadata@3.3.1':
+  '@objectstack/metadata@4.0.3':
     dependencies:
-      '@objectstack/core': 3.3.1
-      '@objectstack/spec': 3.3.1
-      '@objectstack/types': 3.3.1
+      '@objectstack/core': 4.0.3
+      '@objectstack/spec': 4.0.3
+      '@objectstack/types': 4.0.3
       chokidar: 5.0.0
       glob: 13.0.6
       js-yaml: 4.1.1
       zod: 4.3.6
 
-  '@objectstack/objectql@3.3.1':
+  '@objectstack/objectql@4.0.3':
     dependencies:
-      '@objectstack/core': 3.3.1
-      '@objectstack/spec': 3.3.1
-      '@objectstack/types': 3.3.1
+      '@objectstack/core': 4.0.3
+      '@objectstack/spec': 4.0.3
+      '@objectstack/types': 4.0.3
 
-  '@objectstack/plugin-audit@3.3.1':
+  '@objectstack/plugin-audit@4.0.3':
     dependencies:
-      '@objectstack/core': 3.3.1
-      '@objectstack/spec': 3.3.1
+      '@objectstack/core': 4.0.3
+      '@objectstack/spec': 4.0.3
 
-  '@objectstack/plugin-auth@3.3.1(@opentelemetry/api@1.9.1)(better-sqlite3@12.9.0)(next@16.2.1(@opentelemetry/api@1.9.1)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(vitest@1.6.1)':
+  '@objectstack/plugin-auth@4.0.3(@opentelemetry/api@1.9.1)(better-sqlite3@12.9.0)(next@16.2.1(@opentelemetry/api@1.9.1)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(vitest@1.6.1)':
     dependencies:
-      '@objectstack/core': 3.3.1
-      '@objectstack/spec': 3.3.1
+      '@objectstack/core': 4.0.3
+      '@objectstack/spec': 4.0.3
       better-auth: 1.6.2(@opentelemetry/api@1.9.1)(better-sqlite3@12.9.0)(next@16.2.1(@opentelemetry/api@1.9.1)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(vitest@1.6.1)
     transitivePeerDependencies:
       - '@cloudflare/workers-types'
@@ -5846,79 +5944,118 @@ snapshots:
       - vitest
       - vue
 
-  '@objectstack/plugin-hono-server@3.3.1':
+  '@objectstack/plugin-hono-server@4.0.3':
     dependencies:
       '@hono/node-server': 1.19.14(hono@4.12.12)
-      '@objectstack/core': 3.3.1
-      '@objectstack/spec': 3.3.1
+      '@objectstack/core': 4.0.3
+      '@objectstack/spec': 4.0.3
       hono: 4.12.12
 
-  '@objectstack/plugin-msw@3.3.1(@objectstack/runtime@3.3.1)(@types/node@25.6.0)(typescript@5.9.3)':
+  '@objectstack/plugin-msw@4.0.3(@objectstack/runtime@4.0.3)(@types/node@25.6.0)(typescript@5.9.3)':
     dependencies:
-      '@objectstack/core': 3.3.1
-      '@objectstack/objectql': 3.3.1
-      '@objectstack/runtime': 3.3.1
-      '@objectstack/spec': 3.3.1
-      '@objectstack/types': 3.3.1
+      '@objectstack/core': 4.0.3
+      '@objectstack/objectql': 4.0.3
+      '@objectstack/runtime': 4.0.3
+      '@objectstack/spec': 4.0.3
+      '@objectstack/types': 4.0.3
       msw: 2.13.3(@types/node@25.6.0)(typescript@5.9.3)
     transitivePeerDependencies:
       - '@types/node'
       - typescript
 
-  '@objectstack/plugin-security@3.3.1':
+  '@objectstack/plugin-security@4.0.3':
     dependencies:
-      '@objectstack/core': 3.3.1
-      '@objectstack/spec': 3.3.1
+      '@objectstack/core': 4.0.3
+      '@objectstack/spec': 4.0.3
 
-  '@objectstack/rest@3.3.1':
+  '@objectstack/plugin-setup@4.0.3':
     dependencies:
-      '@objectstack/core': 3.3.1
-      '@objectstack/spec': 3.3.1
+      '@objectstack/core': 4.0.3
+      '@objectstack/spec': 4.0.3
+
+  '@objectstack/rest@4.0.3':
+    dependencies:
+      '@objectstack/core': 4.0.3
+      '@objectstack/spec': 4.0.3
       zod: 4.3.6
 
-  '@objectstack/runtime@3.3.1':
+  '@objectstack/runtime@4.0.3':
     dependencies:
-      '@objectstack/core': 3.3.1
-      '@objectstack/rest': 3.3.1
-      '@objectstack/spec': 3.3.1
-      '@objectstack/types': 3.3.1
+      '@objectstack/core': 4.0.3
+      '@objectstack/rest': 4.0.3
+      '@objectstack/spec': 4.0.3
+      '@objectstack/types': 4.0.3
       zod: 4.3.6
 
-  '@objectstack/service-feed@3.3.1':
+  '@objectstack/service-ai@4.0.3(@ai-sdk/anthropic@3.0.69(zod@4.3.6))(@ai-sdk/gateway@3.0.96(zod@4.3.6))(@ai-sdk/google@3.0.63(zod@4.3.6))(@ai-sdk/openai@3.0.52(zod@4.3.6))(zod@4.3.6)':
     dependencies:
-      '@objectstack/core': 3.3.1
-      '@objectstack/spec': 3.3.1
+      '@ai-sdk/provider': 3.0.8
+      '@objectstack/core': 4.0.3
+      '@objectstack/spec': 4.0.3
+      ai: 6.0.159(zod@4.3.6)
+    optionalDependencies:
+      '@ai-sdk/anthropic': 3.0.69(zod@4.3.6)
+      '@ai-sdk/gateway': 3.0.96(zod@4.3.6)
+      '@ai-sdk/google': 3.0.63(zod@4.3.6)
+      '@ai-sdk/openai': 3.0.52(zod@4.3.6)
+    transitivePeerDependencies:
+      - zod
 
-  '@objectstack/service-i18n@3.3.1':
+  '@objectstack/service-analytics@4.0.3':
     dependencies:
-      '@objectstack/core': 3.3.1
-      '@objectstack/spec': 3.3.1
+      '@objectstack/core': 4.0.3
+      '@objectstack/spec': 4.0.3
 
-  '@objectstack/spec@3.3.1':
+  '@objectstack/service-automation@4.0.3':
     dependencies:
-      zod: 4.3.6
+      '@objectstack/core': 4.0.3
+      '@objectstack/spec': 4.0.3
+
+  '@objectstack/service-feed@4.0.3':
+    dependencies:
+      '@objectstack/core': 4.0.3
+      '@objectstack/spec': 4.0.3
+
+  '@objectstack/service-i18n@4.0.3':
+    dependencies:
+      '@objectstack/core': 4.0.3
+      '@objectstack/spec': 4.0.3
 
   '@objectstack/spec@4.0.0':
     dependencies:
       zod: 4.3.6
 
-  '@objectstack/studio@3.3.1(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(better-sqlite3@12.9.0)(next@16.2.1(@opentelemetry/api@1.9.1)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(typescript@5.9.3)(vitest@1.6.1)':
+  '@objectstack/spec@4.0.3':
     dependencies:
+      ai: 6.0.159(zod@4.3.6)
+      zod: 4.3.6
+
+  '@objectstack/studio@4.0.3(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(better-sqlite3@12.9.0)(next@16.2.1(@opentelemetry/api@1.9.1)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(typescript@5.9.3)(vitest@1.6.1)(zod@4.3.6)':
+    dependencies:
+      '@ai-sdk/anthropic': 3.0.69(zod@4.3.6)
+      '@ai-sdk/gateway': 3.0.96(zod@4.3.6)
+      '@ai-sdk/google': 3.0.63(zod@4.3.6)
+      '@ai-sdk/openai': 3.0.52(zod@4.3.6)
+      '@ai-sdk/react': 3.0.161(react@19.2.5)(zod@4.3.6)
       '@hono/node-server': 1.19.14(hono@4.12.12)
-      '@objectstack/client': 3.3.1
-      '@objectstack/client-react': 3.3.1(react@19.2.5)
-      '@objectstack/driver-memory': 3.3.1
-      '@objectstack/driver-turso': 3.3.1
-      '@objectstack/hono': 3.3.1(@objectstack/runtime@3.3.1)(hono@4.12.12)
-      '@objectstack/metadata': 3.3.1
-      '@objectstack/objectql': 3.3.1
-      '@objectstack/plugin-audit': 3.3.1
-      '@objectstack/plugin-auth': 3.3.1(@opentelemetry/api@1.9.1)(better-sqlite3@12.9.0)(next@16.2.1(@opentelemetry/api@1.9.1)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(vitest@1.6.1)
-      '@objectstack/plugin-msw': 3.3.1(@objectstack/runtime@3.3.1)(@types/node@25.6.0)(typescript@5.9.3)
-      '@objectstack/plugin-security': 3.3.1
-      '@objectstack/runtime': 3.3.1
-      '@objectstack/service-feed': 3.3.1
-      '@objectstack/spec': 3.3.1
+      '@objectstack/client': 4.0.3
+      '@objectstack/client-react': 4.0.3(react@19.2.5)
+      '@objectstack/driver-memory': 4.0.3
+      '@objectstack/driver-turso': 4.0.3
+      '@objectstack/hono': 4.0.3(@objectstack/runtime@4.0.3)(hono@4.12.12)
+      '@objectstack/metadata': 4.0.3
+      '@objectstack/objectql': 4.0.3
+      '@objectstack/plugin-audit': 4.0.3
+      '@objectstack/plugin-auth': 4.0.3(@opentelemetry/api@1.9.1)(better-sqlite3@12.9.0)(next@16.2.1(@opentelemetry/api@1.9.1)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(vitest@1.6.1)
+      '@objectstack/plugin-msw': 4.0.3(@objectstack/runtime@4.0.3)(@types/node@25.6.0)(typescript@5.9.3)
+      '@objectstack/plugin-security': 4.0.3
+      '@objectstack/plugin-setup': 4.0.3
+      '@objectstack/runtime': 4.0.3
+      '@objectstack/service-ai': 4.0.3(@ai-sdk/anthropic@3.0.69(zod@4.3.6))(@ai-sdk/gateway@3.0.96(zod@4.3.6))(@ai-sdk/google@3.0.63(zod@4.3.6))(@ai-sdk/openai@3.0.52(zod@4.3.6))(zod@4.3.6)
+      '@objectstack/service-analytics': 4.0.3
+      '@objectstack/service-automation': 4.0.3
+      '@objectstack/service-feed': 4.0.3
+      '@objectstack/spec': 4.0.3
       '@radix-ui/react-avatar': 1.1.11(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       '@radix-ui/react-checkbox': 1.3.3(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       '@radix-ui/react-collapsible': 1.1.12(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
@@ -5934,10 +6071,11 @@ snapshots:
       '@radix-ui/react-tabs': 1.1.13(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       '@radix-ui/react-toast': 1.2.15(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       '@radix-ui/react-tooltip': 1.2.8(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+      ai: 6.0.159(zod@4.3.6)
       class-variance-authority: 0.7.1
       clsx: 2.1.1
       hono: 4.12.12
-      lucide-react: 0.577.0(react@19.2.5)
+      lucide-react: 1.8.0(react@19.2.5)
       react: 19.2.5
       react-dom: 19.2.5(react@19.2.5)
       react-resizable-panels: 4.10.0(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
@@ -5975,10 +6113,11 @@ snapshots:
       - utf-8-validate
       - vitest
       - vue
+      - zod
 
-  '@objectstack/types@3.3.1':
+  '@objectstack/types@4.0.3':
     dependencies:
-      '@objectstack/spec': 3.3.1
+      '@objectstack/spec': 4.0.3
 
   '@oclif/core@4.10.5':
     dependencies:
@@ -6009,6 +6148,8 @@ snapshots:
       outvariant: 1.4.3
 
   '@open-draft/until@2.1.0': {}
+
+  '@opentelemetry/api@1.9.0': {}
 
   '@opentelemetry/api@1.9.1': {}
 
@@ -6915,6 +7056,8 @@ snapshots:
 
   '@ungap/structured-clone@1.3.0': {}
 
+  '@vercel/oidc@3.1.0': {}
+
   '@vitest/coverage-v8@1.6.1(vitest@1.6.1)':
     dependencies:
       '@ampproject/remapping': 2.3.0
@@ -6983,6 +7126,14 @@ snapshots:
       acorn: 8.16.0
 
   acorn@8.16.0: {}
+
+  ai@6.0.159(zod@4.3.6):
+    dependencies:
+      '@ai-sdk/gateway': 3.0.96(zod@4.3.6)
+      '@ai-sdk/provider': 3.0.8
+      '@ai-sdk/provider-utils': 4.0.23(zod@4.3.6)
+      '@opentelemetry/api': 1.9.0
+      zod: 4.3.6
 
   ajv@6.14.0:
     dependencies:
@@ -7537,6 +7688,8 @@ snapshots:
       '@types/estree': 1.0.8
 
   esutils@2.0.3: {}
+
+  eventsource-parser@3.0.6: {}
 
   execa@8.0.1:
     dependencies:
@@ -8117,6 +8270,8 @@ snapshots:
 
   json-schema-traverse@0.4.1: {}
 
+  json-schema@0.4.0: {}
+
   json-stable-stringify-without-jsonify@1.0.1: {}
 
   jsonfile@4.0.0:
@@ -8251,6 +8406,10 @@ snapshots:
   lru-cache@11.3.5: {}
 
   lucide-react@0.577.0(react@19.2.5):
+    dependencies:
+      react: 19.2.5
+
+  lucide-react@1.8.0(react@19.2.5):
     dependencies:
       react: 19.2.5
 
@@ -9494,6 +9653,12 @@ snapshots:
 
   supports-preserve-symlinks-flag@1.0.0: {}
 
+  swr@2.4.1(react@19.2.5):
+    dependencies:
+      dequal: 2.0.3
+      react: 19.2.5
+      use-sync-external-store: 1.6.0(react@19.2.5)
+
   tagged-tag@1.0.0: {}
 
   tailwind-merge@3.5.0: {}
@@ -9532,6 +9697,8 @@ snapshots:
   thread-stream@4.0.0:
     dependencies:
       real-require: 0.2.0
+
+  throttleit@2.1.0: {}
 
   tildify@2.0.0: {}
 
@@ -9801,6 +9968,8 @@ snapshots:
   ws@8.20.0: {}
 
   y18n@5.0.8: {}
+
+  yaml@2.8.3: {}
 
   yargs-parser@21.1.1: {}
 

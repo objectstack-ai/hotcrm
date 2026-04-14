@@ -4,22 +4,57 @@
     "objectstack-ai": {
       "source": "objectstack-ai/framework",
       "sourceType": "github",
-      "computedHash": "4dd7a72b4b891b5add18500cee92777b3f5e09393048328109de1508c08a5700"
+      "computedHash": "a91cd43c1212e16801944c9dac830c3be184eac5af501a953dab6d1e66b6e3c6"
+    },
+    "objectstack-api": {
+      "source": "objectstack-ai/framework",
+      "sourceType": "github",
+      "computedHash": "4e8121e298aa4448447781be0db766f9430b7d7b1334905e26a075fc90a979d5"
     },
     "objectstack-automation": {
       "source": "objectstack-ai/framework",
       "sourceType": "github",
-      "computedHash": "c9647e94b2e72e948a30779d8ac75228ea57edf61c31c6477a168dd1a9999739"
+      "computedHash": "ad2e9e975a11369a11dd49ad87dd05ccb6eb65803b2b86d2315679404d5ad3c9"
     },
     "objectstack-data": {
       "source": "objectstack-ai/framework",
       "sourceType": "github",
       "computedHash": "7d359fc429b6c6b34f0e216d1fd06e95a7cd977d4071f6a091fa5702634f0d8b"
     },
+    "objectstack-hooks": {
+      "source": "objectstack-ai/framework",
+      "sourceType": "github",
+      "computedHash": "7694f3ade8fef58753f13ace49a6d0206ef3a1cc53e012d32ecb1016447946d8"
+    },
+    "objectstack-i18n": {
+      "source": "objectstack-ai/framework",
+      "sourceType": "github",
+      "computedHash": "cc5f7130ee9f6135ad21347002d099cc7c2cc8147d1b5a28cfe538decef73711"
+    },
+    "objectstack-plugin": {
+      "source": "objectstack-ai/framework",
+      "sourceType": "github",
+      "computedHash": "2cdd4b0d3347ae22e782fe0229626a9c952d78feb0d7dcc3937f296e54d12156"
+    },
+    "objectstack-query": {
+      "source": "objectstack-ai/framework",
+      "sourceType": "github",
+      "computedHash": "dc1f8b87c4a8fec7b7804cca9f8a3e0a41e9dcb69fce26d0bec8d15d51d6c59a"
+    },
+    "objectstack-quickstart": {
+      "source": "objectstack-ai/framework",
+      "sourceType": "github",
+      "computedHash": "716c816f0af5cafd276beb784213926c8cf461172603206566e4491bab4f334f"
+    },
+    "objectstack-schema": {
+      "source": "objectstack-ai/framework",
+      "sourceType": "github",
+      "computedHash": "82864f595e357ad59c9f73d031247e41ff8e6e8ea68d9a0d3b638936bdde03e8"
+    },
     "objectstack-ui": {
       "source": "objectstack-ai/framework",
       "sourceType": "github",
-      "computedHash": "9562ca9dc9ddd34f0d248a04bef940af50ad42be76609e02c9e81c8f6a2e6835"
+      "computedHash": "40ccafa77d8c5c6f75dc8eb79dc1e5856eed0d84ccf727df83fcbee7b7ff3f59"
     }
   }
 }

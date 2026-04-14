@@ -15,7 +15,7 @@
     "build": "tsc"
   },
   "dependencies": {
-    "@objectstack/spec": "^3.3.1",
+    "@objectstack/spec": "^4.0.0",
     "zod": "^4.3.6"
   }
 }
