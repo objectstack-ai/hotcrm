@@ -17,7 +17,7 @@ export const ForumPost = ObjectSchema.create({
       description: 'Reply to another post'
     }),
     content: Field.textarea({
-      label: 'content',
+      label: 'Content',
       required: true,
       maxLength: 10000
     }),

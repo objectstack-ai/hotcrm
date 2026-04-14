@@ -13,12 +13,12 @@ export const Holiday = ObjectSchema.create({
       required: true
     }),
     name: Field.text({
-      label: 'Holiday name',
+      label: 'Holiday Name',
       required: true,
       maxLength: 255
     }),
     description: Field.textarea({
-      label: 'description',
+      label: 'Description',
       maxLength: 1000
     }),
     holiday_date: Field.date({

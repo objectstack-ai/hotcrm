@@ -9,12 +9,12 @@ export const EmailToCase = ObjectSchema.create({
 
   fields: {
     name: Field.text({
-      label: 'Configuration name',
+      label: 'Configuration Name',
       required: true,
       maxLength: 255
     }),
     description: Field.textarea({
-      label: 'description',
+      label: 'Description',
       maxLength: 2000
     }),
     is_active: Field.boolean({
@@ -68,7 +68,7 @@ export const EmailToCase = ObjectSchema.create({
       defaultValue: true
     }),
     username: Field.text({
-      label: 'username',
+      label: 'Username',
       maxLength: 255
     }),
     default_queue_id: Field.lookup('queue', {

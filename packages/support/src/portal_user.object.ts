@@ -9,12 +9,12 @@ export const PortalUser = ObjectSchema.create({
 
   fields: {
     username: Field.text({
-      label: 'username',
+      label: 'Username',
       required: true,
       maxLength: 100
     }),
     email: Field.email({
-      label: 'email',
+      label: 'Email',
       required: true
     }),
     first_name: Field.text({
@@ -47,7 +47,7 @@ export const PortalUser = ObjectSchema.create({
       defaultValue: true
     }),
     status: Field.select({
-      label: 'status',
+      label: 'Status',
       required: true,
       defaultValue: 'active',
       options: [
@@ -186,7 +186,7 @@ export const PortalUser = ObjectSchema.create({
       precision: 0
     }),
     language: Field.select({
-      label: 'language',
+      label: 'Language',
       defaultValue: 'en',
       options: [
         {
@@ -258,7 +258,7 @@ export const PortalUser = ObjectSchema.create({
       ]
     }),
     email_notifications: Field.boolean({
-      label: 'email Notifications',
+      label: 'Email Notifications',
       defaultValue: true
     }),
     sms_notifications: Field.boolean({
@@ -274,7 +274,7 @@ export const PortalUser = ObjectSchema.create({
       defaultValue: true
     }),
     digest_frequency: Field.select({
-      label: 'email Digest Frequency',
+      label: 'Email Digest Frequency',
       defaultValue: 'weekly',
       options: [
         {
@@ -353,7 +353,7 @@ export const PortalUser = ObjectSchema.create({
       readonly: true
     }),
     notes: Field.textarea({
-      label: 'notes',
+      label: 'Notes',
       maxLength: 2000
     })
   },

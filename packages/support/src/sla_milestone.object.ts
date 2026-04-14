@@ -39,12 +39,12 @@ export const SLAMilestone = ObjectSchema.create({
       ]
     }),
     name: Field.text({
-      label: 'Milestone name',
+      label: 'Milestone Name',
       required: true,
       maxLength: 255
     }),
     description: Field.text({
-      label: 'description',
+      label: 'Description',
       maxLength: 500
     }),
     target_date_time: Field.datetime({
@@ -78,7 +78,7 @@ export const SLAMilestone = ObjectSchema.create({
       precision: 0
     }),
     status: Field.select({
-      label: 'status',
+      label: 'Status',
       required: true,
       defaultValue: 'inprogress',
       options: [

@@ -9,17 +9,17 @@ export const ForumTopic = ObjectSchema.create({
 
   fields: {
     title: Field.text({
-      label: 'Topic title',
+      label: 'Topic Title',
       required: true,
       maxLength: 255
     }),
     description: Field.textarea({
-      label: 'description',
+      label: 'Description',
       required: true,
       maxLength: 5000
     }),
     category: Field.select({
-      label: 'category',
+      label: 'Category',
       required: true,
       options: [
         {
@@ -57,7 +57,7 @@ export const ForumTopic = ObjectSchema.create({
       ]
     }),
     tags: Field.text({
-      label: 'tags',
+      label: 'Tags',
       description: 'Comma-separated tags',
       maxLength: 500
     }),
@@ -89,7 +89,7 @@ export const ForumTopic = ObjectSchema.create({
       ]
     }),
     status: Field.select({
-      label: 'status',
+      label: 'Status',
       required: true,
       defaultValue: 'open',
       options: [

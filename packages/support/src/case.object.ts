@@ -14,17 +14,17 @@ export const Case = ObjectSchema.create({
       format: 'CASE-{YYYY}-{0000}'
     }),
     subject: Field.text({
-      label: 'subject',
+      label: 'Subject',
       required: true,
       maxLength: 255
     }),
     description: Field.textarea({
-      label: 'description',
+      label: 'Description',
       required: true,
       maxLength: 32000
     }),
     status: Field.select({
-      label: 'status',
+      label: 'Status',
       required: true,
       defaultValue: 'new',
       options: [
@@ -59,7 +59,7 @@ export const Case = ObjectSchema.create({
       ]
     }),
     priority: Field.select({
-      label: 'priority',
+      label: 'Priority',
       required: true,
       defaultValue: 'medium',
       options: [
@@ -82,7 +82,7 @@ export const Case = ObjectSchema.create({
       ]
     }),
     severity: Field.select({
-      label: 'severity',
+      label: 'Severity',
       options: [
         {
           "label": "S1 - Critical Impact",
@@ -103,7 +103,7 @@ export const Case = ObjectSchema.create({
       ]
     }),
     type: Field.select({
-      label: 'Case type',
+      label: 'Case Type',
       options: [
         {
           "label": "🐛 Problem",
@@ -136,7 +136,7 @@ export const Case = ObjectSchema.create({
       ]
     }),
     origin: Field.select({
-      label: 'origin Channel',
+      label: 'Origin Channel',
       required: true,
       options: [
         {
@@ -230,7 +230,7 @@ export const Case = ObjectSchema.create({
       readonly: true
     }),
     resolution_due_date: Field.datetime({
-      label: 'resolution Due',
+      label: 'Resolution Due',
       description: 'Auto-calculated based on SLA',
       readonly: true
     }),
@@ -239,7 +239,7 @@ export const Case = ObjectSchema.create({
       readonly: true
     }),
     actual_resolution_time: Field.datetime({
-      label: 'Actual resolution Time',
+      label: 'Actual Resolution Time',
       readonly: true
     }),
     response_time_minutes: Field.number({
@@ -248,7 +248,7 @@ export const Case = ObjectSchema.create({
       precision: 0
     }),
     resolution_time_minutes: Field.number({
-      label: 'resolution Time (Minutes)',
+      label: 'Resolution Time (Minutes)',
       readonly: true,
       precision: 0
     }),
@@ -258,7 +258,7 @@ export const Case = ObjectSchema.create({
       readonly: true
     }),
     sla_violation_type: Field.select({
-      label: 'SLA Violation type',
+      label: 'SLA Violation Type',
       readonly: true,
       options: [
         {
@@ -296,7 +296,7 @@ export const Case = ObjectSchema.create({
       precision: 0
     }),
     resolution: Field.textarea({
-      label: 'resolution',
+      label: 'Resolution',
       maxLength: 32000
     }),
     root_cause: Field.textarea({
@@ -304,7 +304,7 @@ export const Case = ObjectSchema.create({
       maxLength: 5000
     }),
     resolution_category: Field.select({
-      label: 'resolution Category',
+      label: 'Resolution Category',
       options: [
         {
           "label": "💻 Technical Support",

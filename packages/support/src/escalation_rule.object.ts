@@ -9,12 +9,12 @@ export const EscalationRule = ObjectSchema.create({
 
   fields: {
     name: Field.text({
-      label: 'Rule name',
+      label: 'Rule Name',
       required: true,
       maxLength: 255
     }),
     description: Field.textarea({
-      label: 'description',
+      label: 'Description',
       maxLength: 2000
     }),
     is_active: Field.boolean({

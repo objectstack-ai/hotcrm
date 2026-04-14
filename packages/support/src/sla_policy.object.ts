@@ -14,7 +14,7 @@ export const SLAPolicy = ObjectSchema.create({
       maxLength: 255
     }),
     description: Field.textarea({
-      label: 'description',
+      label: 'Description',
       maxLength: 2000
     }),
     is_active: Field.boolean({
@@ -31,7 +31,7 @@ export const SLAPolicy = ObjectSchema.create({
       description: 'When this policy expires (optional)'
     }),
     tier: Field.select({
-      label: 'Service tier',
+      label: 'Service Tier',
       required: true,
       options: [
         {
@@ -57,7 +57,7 @@ export const SLAPolicy = ObjectSchema.create({
       ]
     }),
     priority: Field.number({
-      label: 'Policy priority',
+      label: 'Policy Priority',
       description: 'Lower number = higher priority when multiple policies match',
       required: true,
       defaultValue: 100,
@@ -306,18 +306,18 @@ export const SLAPolicy = ObjectSchema.create({
       readonly: true
     }),
     version: Field.text({
-      label: 'version',
+      label: 'Version',
       description: 'Policy version number',
       readonly: true,
       maxLength: 50
     }),
     previous_version_id: Field.lookup('sla_policy', {
-      label: 'Previous version',
+      label: 'Previous Version',
       description: 'Previous version of this policy',
       readonly: true
     }),
     is_latest_version: Field.boolean({
-      label: 'Latest version',
+      label: 'Latest Version',
       defaultValue: true,
       readonly: true
     })
