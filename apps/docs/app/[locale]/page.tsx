@@ -73,17 +73,6 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
               {dict.home.viewOnGithub}
             </Link>
           </div>
-
-          {/* Product Visual */}
-          <div className="mt-16 max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-500">
-            <img
-              src="/dashboard-mockup.webp"
-              alt="HotCRM Product Dashboard"
-              width={1280}
-              height={800}
-              className="w-full rounded-2xl shadow-2xl ring-1 ring-gray-900/10"
-            />
-          </div>
         </div>
       </section>
 
