@@ -12,6 +12,7 @@
     "resolveJsonModule": true,
     "moduleResolution": "node16",
     "sourceMap": true,
+    "ignoreDeprecations": "6.0",
     "baseUrl": ".",
     "paths": {
       "@hotcrm/ai": ["packages/ai/src/index.ts"],
