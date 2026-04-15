@@ -5,6 +5,8 @@ import Image from 'next/image';
 import { useState } from 'react';
 import { ChevronDown, Globe, Menu, X } from 'lucide-react';
 import type { Dictionary, Locale } from '@/lib/i18n';
+import { TrialDialog } from './trial-dialog';
+import { locales } from '@/lib/i18n';
 
 const localeLabels: Record<Locale, string> = {
   en: 'English',
@@ -14,6 +16,8 @@ const localeLabels: Record<Locale, string> = {
 export function SiteHeader({ locale, dict }: { locale: Locale; dict: Dictionary }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [productsOpen, setProductsOpen] = useState(false);
+  const [languageOpen, setLanguageOpen] = useState(false);
+  const [trialDialogOpen, setTrialDialogOpen] = useState(false);
 
   const productLinks = [
     { href: `/${locale}/products/sales`, label: dict.nav.salesCloud },
@@ -54,7 +58,7 @@ export function SiteHeader({ locale, dict }: { locale: Locale; dict: Dictionary 
             </button>
             {productsOpen && (
               <div
-                className="absolute top-full left-0 mt-1 w-56 rounded-lg border border-border bg-card shadow-lg p-2"
+                className="absolute top-full left-0 mt-1 w-56 rounded-lg border border-border bg-background shadow-lg p-2"
                 role="menu"
                 onKeyDown={(e) => {
                   if (e.key === 'Escape') setProductsOpen(false);
@@ -86,21 +90,52 @@ export function SiteHeader({ locale, dict }: { locale: Locale; dict: Dictionary 
             {dict.nav.github}
           </Link>
 
-          <Link
-            href={`/${otherLocale}`}
-            className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            aria-label={`Switch to ${localeLabels[otherLocale]}`}
+          <div
+            className="relative"
+            onMouseEnter={() => setLanguageOpen(true)}
+            onMouseLeave={() => setLanguageOpen(false)}
           >
-            <Globe className="w-4 h-4" aria-hidden="true" />
-            {localeLabels[otherLocale]}
-          </Link>
+            <button
+              className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              aria-expanded={languageOpen}
+              aria-haspopup="true"
+              onClick={() => setLanguageOpen(o => !o)}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') setLanguageOpen(false);
+              }}
+            >
+              <Globe className="w-4 h-4" aria-hidden="true" />
+              {localeLabels[locale]}
+              <ChevronDown className="w-4 h-4" />
+            </button>
+            {languageOpen && (
+              <div
+                className="absolute top-full right-0 mt-1 w-36 rounded-lg border border-border bg-background shadow-lg p-2"
+                role="menu"
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') setLanguageOpen(false);
+                }}
+              >
+                {locales.map(loc => (
+                  <Link
+                    key={loc}
+                    href={`/${loc}`}
+                    role="menuitem"
+                    className="block rounded-md px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                  >
+                    {localeLabels[loc]}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
 
-          <Link
-            href="/docs/getting-started/introduction"
+          <button
+            onClick={() => setTrialDialogOpen(true)}
             className="inline-flex h-9 items-center justify-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
             {dict.nav.getStarted}
-          </Link>
+          </button>
         </nav>
 
         {/* Mobile Toggle */}
@@ -131,17 +166,38 @@ export function SiteHeader({ locale, dict }: { locale: Locale; dict: Dictionary 
           <Link href="/docs" className="block py-2 text-sm font-medium text-muted-foreground hover:text-foreground" onClick={() => setMobileOpen(false)}>
             {dict.nav.docs}
           </Link>
-          <Link
-            href={`/${otherLocale}`}
-            className="flex items-center gap-1 py-2 text-sm font-medium text-muted-foreground hover:text-foreground"
-            onClick={() => setMobileOpen(false)}
-            aria-label={`Switch to ${localeLabels[otherLocale]}`}
+          <div className="py-2 font-medium text-sm text-muted-foreground">{dict.nav.language}</div>
+          {locales.map(loc => (
+            <Link
+              key={loc}
+              href={`/${loc}`}
+              className="block py-2 pl-4 text-sm text-muted-foreground hover:text-foreground"
+              onClick={() => setMobileOpen(false)}
+            >
+              {localeLabels[loc]}
+            </Link>
+          ))}
+          <button
+            onClick={() => {
+              setMobileOpen(false);
+              setTrialDialogOpen(true);
+            }}
+            className="w-full mt-4 inline-flex h-9 items-center justify-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            <Globe className="w-4 h-4" aria-hidden="true" />
-            {localeLabels[otherLocale]}
-          </Link>
+            {dict.nav.getStarted}
+          </button>
         </div>
       )}
+
+      <TrialDialog
+        isOpen={trialDialogOpen}
+        onClose={() => setTrialDialogOpen(false)}
+        title={locale === 'zh' ? '开始免费试用' : 'Start Free Trial'}
+        description={locale === 'zh'
+          ? '体验 HotCRM 的完整功能，无需信用卡。立即访问在线演示环境。'
+          : 'Experience the full power of HotCRM with no credit card required. Access our online demo environment now.'}
+        buttonText={locale === 'zh' ? '访问在线演示' : 'Access Online Demo'}
+      />
     </header>
   );
 }
