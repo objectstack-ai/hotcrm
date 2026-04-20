@@ -43,7 +43,7 @@
     "@objectstack/spec": "^4.0.3"
   },
   "devDependencies": {
-    "@objectstack/cli": "^4.0.3",
+    "@objectstack/cli": "^4.0.4",
     "typescript": "^5.9.3"
   }
 }

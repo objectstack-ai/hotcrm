@@ -60,7 +60,7 @@
     "@changesets/cli": "^2.30.0",
     "@hono/node-server": "^1.19.14",
     "@object-ui/console": "^3.3.0",
-    "@objectstack/cli": "^4.0.3",
+    "@objectstack/cli": "^4.0.4",
     "@objectstack/driver-memory": "^4.0.3",
     "@objectstack/driver-turso": "^4.0.3",
     "@objectstack/objectql": "^4.0.3",
