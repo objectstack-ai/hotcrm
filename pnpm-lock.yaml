@@ -37,8 +37,8 @@ importers:
         specifier: ^4.0.3
         version: 4.0.3
       '@objectstack/objectql':
-        specifier: ^4.0.3
-        version: 4.0.3
+        specifier: ^4.0.4
+        version: 4.0.4(pino@10.3.1)
       '@objectstack/plugin-auth':
         specifier: ^4.0.3
         version: 4.0.3(@opentelemetry/api@1.9.1)(better-sqlite3@12.9.0)(next@16.2.1(@opentelemetry/api@1.9.1)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(vitest@1.6.1)
@@ -374,6 +374,12 @@ packages:
 
   '@ai-sdk/anthropic@3.0.69':
     resolution: {integrity: sha512-LshR7X3pFugY0o41G2VKTmg1XoGpSl7uoYWfzk6zjVZLhCfeFiwgpOga+eTV4XY1VVpZwKVqRnkDbIL7K2eH5g==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
+
+  '@ai-sdk/gateway@3.0.104':
+    resolution: {integrity: sha512-ZKX5n74io8VIRlhIMSLWVlvT3sXC8Z7cZ9GHuWBWZDVi96+62AIsWuLGvMfcBA1STYuSoDrp6rIziZmvrTq0TA==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -1326,6 +1332,14 @@ packages:
   '@objectstack/core@4.0.3':
     resolution: {integrity: sha512-qoKFjRXDrbbl7Ud0liFwLCJvonn0i9LVhrZZb8YpBTsFZkUnrXG8LCnz7xitq8PULKuLbU6CMVci7JSxfxum3w==}
 
+  '@objectstack/core@4.0.4':
+    resolution: {integrity: sha512-2Wfh9Aynj/hpROWjguTS1e7tCX/AB24UF6f7J1tt2q408PXDb/upNjQRucYcd168J2RZs4voXMj33/JTN+oNDg==}
+    peerDependencies:
+      pino: ^8.0.0
+    peerDependenciesMeta:
+      pino:
+        optional: true
+
   '@objectstack/driver-memory@4.0.3':
     resolution: {integrity: sha512-mTbWThY62H88tGiF+PbTUAE2tAZiz82aOrGPQLRBHeDwlfg6IynbheLuF/gCxxA/09WErmrYZFS5yW08kW2TVQ==}
 
@@ -1346,6 +1360,9 @@ packages:
 
   '@objectstack/objectql@4.0.3':
     resolution: {integrity: sha512-fTWXW/PwaQykuQeS+L8TmeZTMvb5psO55am/erykDqQ0LPrFFIpqY1yqyknktW9G8Cv2uYLzKxrF6bGOSuys7A==}
+
+  '@objectstack/objectql@4.0.4':
+    resolution: {integrity: sha512-O8/RsSKBx1l2JlTPVxQ3VehCtRLchcBZQNSNp5iV6MAukC8bFxXR3FPrGo0jhOIG20BimAN0QaTBg7Y0F6eR8Q==}
 
   '@objectstack/plugin-audit@4.0.3':
     resolution: {integrity: sha512-MhJ+7FMN9yS7669NjTi9ZvHCO9YA2KVQtDzyBCNYUtV7OR31vh5cVceJRUmnXNHteSLWYyaqtH3JH6ZCSg5Ugg==}
@@ -1406,11 +1423,18 @@ packages:
     resolution: {integrity: sha512-WCnDm7DdVSUP7UnNtwGHpVBUmEr4nnY20Nbu1G9GfNZWTcZST1Yr7b4KtGf0fkohZXjegQVF1+vsEQf8rMospw==}
     engines: {node: '>=18.0.0'}
 
+  '@objectstack/spec@4.0.4':
+    resolution: {integrity: sha512-35M0tk/u5Qm7a2uGSQOCDPyfwfSTgzUVlpZLJzWbrucmovPt+5KLGY/cPcZqeOlJpkN+bM9b7k4d7hdDhQwIBQ==}
+    engines: {node: '>=18.0.0'}
+
   '@objectstack/studio@4.0.3':
     resolution: {integrity: sha512-0V52OcOrNbLK9/cDZxhDD7DVq4VhSUDGqGZl+bh1wTwMpc+rbfBRYPKWpGKfemO9n7ChIpaS7P9aln/5y5+u/A==}
 
   '@objectstack/types@4.0.3':
     resolution: {integrity: sha512-XWGPH0w+jEPTgyFb/N+HAGWCvf5ydau+lsdICa2JCoQOlZWZ3pXQul5My5n0zTvujVXQfOVSB+OUB+532zr3VQ==}
+
+  '@objectstack/types@4.0.4':
+    resolution: {integrity: sha512-y+I2PKKiYqSRhrepjs/drUdhd1r447W/V1/Qf6M9MDxnvEeJg+69gkGc48scgB72KpXvvR0llQ1P5D3QYBChbw==}
 
   '@oclif/core@4.10.5':
     resolution: {integrity: sha512-qcdCF7NrdWPfme6Kr34wwljRCXbCVpL1WVxiNy0Ep6vbWKjxAjFQwuhqkoyL0yjI+KdwtLcOCGn5z2yzdijc8w==}
@@ -2376,6 +2400,10 @@ packages:
     resolution: {integrity: sha512-Fw28YZpRnA3cAHHDlkt7xQHiJ0fcL+NRcIqsocZQUSmbzeIKRpwttJjik5ZGanXP+vlA4SbTg+AbA3bP363l+w==}
     engines: {node: '>= 20'}
 
+  '@vercel/oidc@3.2.0':
+    resolution: {integrity: sha512-UycprH3T6n3jH0k44NHMa7pnFHGu/N05MjojYr+Mc6I7obkoLIJujSWwin1pCvdy/eOxrI/l3uDLQsmcrOb4ug==}
+    engines: {node: '>= 20'}
+
   '@vitest/coverage-v8@1.6.1':
     resolution: {integrity: sha512-6YeRZwuO4oTGKxD3bijok756oktHSIm3eczVVzNe3scqzuhLwltIF3S9ZL/vwOVIpURmU6SnZhziXXAfw8/Qlw==}
     peerDependencies:
@@ -2417,6 +2445,12 @@ packages:
 
   ai@6.0.159:
     resolution: {integrity: sha512-S18ozG7Dkm3Ud1tzOtAK5acczD4vygfml80RkpM9VWMFpvAFwAKSHaGYkATvPQHIE+VpD1tJY9zcTXLZ/zR5cw==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
+
+  ai@6.0.168:
+    resolution: {integrity: sha512-2HqCJuO+1V2aV7vfYs5LFEUfxbkGX+5oa54q/gCCTL7KLTdbxcCu5D7TdLA5kwsrs3Szgjah9q6D9tpjHM3hUQ==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -2973,8 +3007,8 @@ packages:
     resolution: {integrity: sha512-kVscqXk4OCp68SZ0dkgEKVi6/8ij300KBWTJq32P/dYeWTSwK41WyTxalN1eRmA5Z9UU/LX9D7FWSmV9SAYx6g==}
     engines: {node: '>=0.10.0'}
 
-  eventsource-parser@3.0.6:
-    resolution: {integrity: sha512-Vo1ab+QXPzZ4tCa8SwIHJFaSzy4R6SHf7BY79rFBDf0idraZWAkYrDjDj8uWaSm3S2TK+hJ7/t1CEmZ7jXw+pg==}
+  eventsource-parser@3.0.8:
+    resolution: {integrity: sha512-70QWGkr4snxr0OXLRWsFLeRBIRPuQOvt4s8QYjmUlmlkyTZkRqS7EDVRZtzU3TiyDbXSzaOeF0XUKy8PchzukQ==}
     engines: {node: '>=18.0.0'}
 
   execa@8.0.1:
@@ -4998,6 +5032,13 @@ snapshots:
       '@ai-sdk/provider-utils': 4.0.23(zod@4.3.6)
       zod: 4.3.6
 
+  '@ai-sdk/gateway@3.0.104(zod@4.3.6)':
+    dependencies:
+      '@ai-sdk/provider': 3.0.8
+      '@ai-sdk/provider-utils': 4.0.23(zod@4.3.6)
+      '@vercel/oidc': 3.2.0
+      zod: 4.3.6
+
   '@ai-sdk/gateway@3.0.96(zod@4.3.6)':
     dependencies:
       '@ai-sdk/provider': 3.0.8
@@ -5021,7 +5062,7 @@ snapshots:
     dependencies:
       '@ai-sdk/provider': 3.0.8
       '@standard-schema/spec': 1.1.0
-      eventsource-parser: 3.0.6
+      eventsource-parser: 3.0.8
       zod: 4.3.6
 
   '@ai-sdk/provider@3.0.8':
@@ -5842,6 +5883,14 @@ snapshots:
       pino-pretty: 13.1.3
       zod: 4.3.6
 
+  '@objectstack/core@4.0.4(pino@10.3.1)':
+    dependencies:
+      '@objectstack/spec': 4.0.4
+      pino-pretty: 13.1.3
+      zod: 4.3.6
+    optionalDependencies:
+      pino: 10.3.1
+
   '@objectstack/driver-memory@4.0.3':
     dependencies:
       '@objectstack/core': 4.0.3
@@ -5906,6 +5955,14 @@ snapshots:
       '@objectstack/core': 4.0.3
       '@objectstack/spec': 4.0.3
       '@objectstack/types': 4.0.3
+
+  '@objectstack/objectql@4.0.4(pino@10.3.1)':
+    dependencies:
+      '@objectstack/core': 4.0.4(pino@10.3.1)
+      '@objectstack/spec': 4.0.4
+      '@objectstack/types': 4.0.4
+    transitivePeerDependencies:
+      - pino
 
   '@objectstack/plugin-audit@4.0.3':
     dependencies:
@@ -5988,7 +6045,7 @@ snapshots:
       '@ai-sdk/provider': 3.0.8
       '@objectstack/core': 4.0.3
       '@objectstack/spec': 4.0.3
-      ai: 6.0.159(zod@4.3.6)
+      ai: 6.0.168(zod@4.3.6)
     optionalDependencies:
       '@ai-sdk/anthropic': 3.0.69(zod@4.3.6)
       '@ai-sdk/gateway': 3.0.96(zod@4.3.6)
@@ -6020,6 +6077,11 @@ snapshots:
   '@objectstack/spec@4.0.3':
     dependencies:
       ai: 6.0.159(zod@4.3.6)
+      zod: 4.3.6
+
+  '@objectstack/spec@4.0.4':
+    dependencies:
+      ai: 6.0.168(zod@4.3.6)
       zod: 4.3.6
 
   '@objectstack/studio@4.0.3(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(better-sqlite3@12.9.0)(next@16.2.1(@opentelemetry/api@1.9.1)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(typescript@5.9.3)(vitest@1.6.1)(zod@4.3.6)':
@@ -6110,6 +6172,10 @@ snapshots:
   '@objectstack/types@4.0.3':
     dependencies:
       '@objectstack/spec': 4.0.3
+
+  '@objectstack/types@4.0.4':
+    dependencies:
+      '@objectstack/spec': 4.0.4
 
   '@oclif/core@4.10.5':
     dependencies:
@@ -7050,6 +7116,8 @@ snapshots:
 
   '@vercel/oidc@3.1.0': {}
 
+  '@vercel/oidc@3.2.0': {}
+
   '@vitest/coverage-v8@1.6.1(vitest@1.6.1)':
     dependencies:
       '@ampproject/remapping': 2.3.0
@@ -7122,6 +7190,14 @@ snapshots:
   ai@6.0.159(zod@4.3.6):
     dependencies:
       '@ai-sdk/gateway': 3.0.96(zod@4.3.6)
+      '@ai-sdk/provider': 3.0.8
+      '@ai-sdk/provider-utils': 4.0.23(zod@4.3.6)
+      '@opentelemetry/api': 1.9.0
+      zod: 4.3.6
+
+  ai@6.0.168(zod@4.3.6):
+    dependencies:
+      '@ai-sdk/gateway': 3.0.104(zod@4.3.6)
       '@ai-sdk/provider': 3.0.8
       '@ai-sdk/provider-utils': 4.0.23(zod@4.3.6)
       '@opentelemetry/api': 1.9.0
@@ -7681,7 +7757,7 @@ snapshots:
 
   esutils@2.0.3: {}
 
-  eventsource-parser@3.0.6: {}
+  eventsource-parser@3.0.8: {}
 
   execa@8.0.1:
     dependencies:

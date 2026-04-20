@@ -63,7 +63,7 @@
     "@objectstack/cli": "^4.0.3",
     "@objectstack/driver-memory": "^4.0.3",
     "@objectstack/driver-turso": "^4.0.3",
-    "@objectstack/objectql": "^4.0.3",
+    "@objectstack/objectql": "^4.0.4",
     "@objectstack/plugin-auth": "^4.0.3",
     "@objectstack/plugin-hono-server": "^4.0.3",
     "@objectstack/runtime": "^4.0.3",
