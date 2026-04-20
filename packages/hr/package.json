@@ -40,7 +40,7 @@
   ],
   "author": "HotCRM Team",
   "dependencies": {
-    "@objectstack/spec": "^4.0.3"
+    "@objectstack/spec": "^4.0.4"
   },
   "devDependencies": {
     "@objectstack/cli": "^4.0.3",

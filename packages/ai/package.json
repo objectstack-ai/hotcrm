@@ -34,7 +34,7 @@
   ],
   "author": "HotCRM Team",
   "dependencies": {
-    "@objectstack/spec": "^4.0.3",
+    "@objectstack/spec": "^4.0.4",
     "axios": "^1.15.0",
     "zod": "^4.3.6"
   },

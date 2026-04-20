@@ -52,8 +52,8 @@ importers:
         specifier: ^4.0.3
         version: 4.0.3
       '@objectstack/spec':
-        specifier: ^4.0.3
-        version: 4.0.3
+        specifier: ^4.0.4
+        version: 4.0.4
       '@objectstack/studio':
         specifier: ^4.0.3
         version: 4.0.3(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(better-sqlite3@12.9.0)(next@16.2.1(@opentelemetry/api@1.9.1)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(typescript@5.9.3)(vitest@1.6.1)(zod@4.3.6)
@@ -143,8 +143,8 @@ importers:
   packages/ai:
     dependencies:
       '@objectstack/spec':
-        specifier: ^4.0.3
-        version: 4.0.3
+        specifier: ^4.0.4
+        version: 4.0.4
       axios:
         specifier: ^1.15.0
         version: 1.15.0
@@ -165,8 +165,8 @@ importers:
         specifier: workspace:*
         version: link:../ai
       '@objectstack/spec':
-        specifier: ^4.0.3
-        version: 4.0.3
+        specifier: ^4.0.4
+        version: 4.0.4
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -181,8 +181,8 @@ importers:
   packages/community:
     dependencies:
       '@objectstack/spec':
-        specifier: ^4.0.3
-        version: 4.0.3
+        specifier: ^4.0.4
+        version: 4.0.4
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -197,8 +197,8 @@ importers:
   packages/core:
     dependencies:
       '@objectstack/spec':
-        specifier: ^4.0.3
-        version: 4.0.3
+        specifier: ^4.0.4
+        version: 4.0.4
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -209,8 +209,8 @@ importers:
         specifier: workspace:*
         version: link:../ai
       '@objectstack/spec':
-        specifier: ^4.0.3
-        version: 4.0.3
+        specifier: ^4.0.4
+        version: 4.0.4
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -225,8 +225,8 @@ importers:
   packages/education:
     dependencies:
       '@objectstack/spec':
-        specifier: ^4.0.3
-        version: 4.0.3
+        specifier: ^4.0.4
+        version: 4.0.4
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -241,8 +241,8 @@ importers:
   packages/finance:
     dependencies:
       '@objectstack/spec':
-        specifier: ^4.0.3
-        version: 4.0.3
+        specifier: ^4.0.4
+        version: 4.0.4
     devDependencies:
       '@objectstack/cli':
         specifier: ^4.0.3
@@ -254,8 +254,8 @@ importers:
   packages/financial-services:
     dependencies:
       '@objectstack/spec':
-        specifier: ^4.0.3
-        version: 4.0.3
+        specifier: ^4.0.4
+        version: 4.0.4
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -270,8 +270,8 @@ importers:
   packages/healthcare:
     dependencies:
       '@objectstack/spec':
-        specifier: ^4.0.3
-        version: 4.0.3
+        specifier: ^4.0.4
+        version: 4.0.4
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -286,8 +286,8 @@ importers:
   packages/hr:
     dependencies:
       '@objectstack/spec':
-        specifier: ^4.0.3
-        version: 4.0.3
+        specifier: ^4.0.4
+        version: 4.0.4
     devDependencies:
       '@objectstack/cli':
         specifier: ^4.0.3
@@ -302,8 +302,8 @@ importers:
         specifier: workspace:*
         version: link:../ai
       '@objectstack/spec':
-        specifier: ^4.0.3
-        version: 4.0.3
+        specifier: ^4.0.4
+        version: 4.0.4
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -318,8 +318,8 @@ importers:
   packages/marketing:
     dependencies:
       '@objectstack/spec':
-        specifier: ^4.0.3
-        version: 4.0.3
+        specifier: ^4.0.4
+        version: 4.0.4
     devDependencies:
       '@objectstack/cli':
         specifier: ^4.0.3
@@ -331,8 +331,8 @@ importers:
   packages/products:
     dependencies:
       '@objectstack/spec':
-        specifier: ^4.0.3
-        version: 4.0.3
+        specifier: ^4.0.4
+        version: 4.0.4
     devDependencies:
       '@objectstack/cli':
         specifier: ^4.0.3
@@ -344,8 +344,8 @@ importers:
   packages/real-estate:
     dependencies:
       '@objectstack/spec':
-        specifier: ^4.0.3
-        version: 4.0.3
+        specifier: ^4.0.4
+        version: 4.0.4
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -360,8 +360,8 @@ importers:
   packages/support:
     dependencies:
       '@objectstack/spec':
-        specifier: ^4.0.3
-        version: 4.0.3
+        specifier: ^4.0.4
+        version: 4.0.4
     devDependencies:
       '@objectstack/cli':
         specifier: ^4.0.3
@@ -374,6 +374,12 @@ packages:
 
   '@ai-sdk/anthropic@3.0.69':
     resolution: {integrity: sha512-LshR7X3pFugY0o41G2VKTmg1XoGpSl7uoYWfzk6zjVZLhCfeFiwgpOga+eTV4XY1VVpZwKVqRnkDbIL7K2eH5g==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
+
+  '@ai-sdk/gateway@3.0.104':
+    resolution: {integrity: sha512-ZKX5n74io8VIRlhIMSLWVlvT3sXC8Z7cZ9GHuWBWZDVi96+62AIsWuLGvMfcBA1STYuSoDrp6rIziZmvrTq0TA==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -1406,6 +1412,10 @@ packages:
     resolution: {integrity: sha512-WCnDm7DdVSUP7UnNtwGHpVBUmEr4nnY20Nbu1G9GfNZWTcZST1Yr7b4KtGf0fkohZXjegQVF1+vsEQf8rMospw==}
     engines: {node: '>=18.0.0'}
 
+  '@objectstack/spec@4.0.4':
+    resolution: {integrity: sha512-35M0tk/u5Qm7a2uGSQOCDPyfwfSTgzUVlpZLJzWbrucmovPt+5KLGY/cPcZqeOlJpkN+bM9b7k4d7hdDhQwIBQ==}
+    engines: {node: '>=18.0.0'}
+
   '@objectstack/studio@4.0.3':
     resolution: {integrity: sha512-0V52OcOrNbLK9/cDZxhDD7DVq4VhSUDGqGZl+bh1wTwMpc+rbfBRYPKWpGKfemO9n7ChIpaS7P9aln/5y5+u/A==}
 
@@ -2376,6 +2386,10 @@ packages:
     resolution: {integrity: sha512-Fw28YZpRnA3cAHHDlkt7xQHiJ0fcL+NRcIqsocZQUSmbzeIKRpwttJjik5ZGanXP+vlA4SbTg+AbA3bP363l+w==}
     engines: {node: '>= 20'}
 
+  '@vercel/oidc@3.2.0':
+    resolution: {integrity: sha512-UycprH3T6n3jH0k44NHMa7pnFHGu/N05MjojYr+Mc6I7obkoLIJujSWwin1pCvdy/eOxrI/l3uDLQsmcrOb4ug==}
+    engines: {node: '>= 20'}
+
   '@vitest/coverage-v8@1.6.1':
     resolution: {integrity: sha512-6YeRZwuO4oTGKxD3bijok756oktHSIm3eczVVzNe3scqzuhLwltIF3S9ZL/vwOVIpURmU6SnZhziXXAfw8/Qlw==}
     peerDependencies:
@@ -2417,6 +2431,12 @@ packages:
 
   ai@6.0.159:
     resolution: {integrity: sha512-S18ozG7Dkm3Ud1tzOtAK5acczD4vygfml80RkpM9VWMFpvAFwAKSHaGYkATvPQHIE+VpD1tJY9zcTXLZ/zR5cw==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
+
+  ai@6.0.168:
+    resolution: {integrity: sha512-2HqCJuO+1V2aV7vfYs5LFEUfxbkGX+5oa54q/gCCTL7KLTdbxcCu5D7TdLA5kwsrs3Szgjah9q6D9tpjHM3hUQ==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -2973,8 +2993,8 @@ packages:
     resolution: {integrity: sha512-kVscqXk4OCp68SZ0dkgEKVi6/8ij300KBWTJq32P/dYeWTSwK41WyTxalN1eRmA5Z9UU/LX9D7FWSmV9SAYx6g==}
     engines: {node: '>=0.10.0'}
 
-  eventsource-parser@3.0.6:
-    resolution: {integrity: sha512-Vo1ab+QXPzZ4tCa8SwIHJFaSzy4R6SHf7BY79rFBDf0idraZWAkYrDjDj8uWaSm3S2TK+hJ7/t1CEmZ7jXw+pg==}
+  eventsource-parser@3.0.8:
+    resolution: {integrity: sha512-70QWGkr4snxr0OXLRWsFLeRBIRPuQOvt4s8QYjmUlmlkyTZkRqS7EDVRZtzU3TiyDbXSzaOeF0XUKy8PchzukQ==}
     engines: {node: '>=18.0.0'}
 
   execa@8.0.1:
@@ -4998,6 +5018,13 @@ snapshots:
       '@ai-sdk/provider-utils': 4.0.23(zod@4.3.6)
       zod: 4.3.6
 
+  '@ai-sdk/gateway@3.0.104(zod@4.3.6)':
+    dependencies:
+      '@ai-sdk/provider': 3.0.8
+      '@ai-sdk/provider-utils': 4.0.23(zod@4.3.6)
+      '@vercel/oidc': 3.2.0
+      zod: 4.3.6
+
   '@ai-sdk/gateway@3.0.96(zod@4.3.6)':
     dependencies:
       '@ai-sdk/provider': 3.0.8
@@ -5021,7 +5048,7 @@ snapshots:
     dependencies:
       '@ai-sdk/provider': 3.0.8
       '@standard-schema/spec': 1.1.0
-      eventsource-parser: 3.0.6
+      eventsource-parser: 3.0.8
       zod: 4.3.6
 
   '@ai-sdk/provider@3.0.8':
@@ -5988,7 +6015,7 @@ snapshots:
       '@ai-sdk/provider': 3.0.8
       '@objectstack/core': 4.0.3
       '@objectstack/spec': 4.0.3
-      ai: 6.0.159(zod@4.3.6)
+      ai: 6.0.168(zod@4.3.6)
     optionalDependencies:
       '@ai-sdk/anthropic': 3.0.69(zod@4.3.6)
       '@ai-sdk/gateway': 3.0.96(zod@4.3.6)
@@ -6019,7 +6046,12 @@ snapshots:
 
   '@objectstack/spec@4.0.3':
     dependencies:
-      ai: 6.0.159(zod@4.3.6)
+      ai: 6.0.168(zod@4.3.6)
+      zod: 4.3.6
+
+  '@objectstack/spec@4.0.4':
+    dependencies:
+      ai: 6.0.168(zod@4.3.6)
       zod: 4.3.6
 
   '@objectstack/studio@4.0.3(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(better-sqlite3@12.9.0)(next@16.2.1(@opentelemetry/api@1.9.1)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(typescript@5.9.3)(vitest@1.6.1)(zod@4.3.6)':
@@ -7050,6 +7082,8 @@ snapshots:
 
   '@vercel/oidc@3.1.0': {}
 
+  '@vercel/oidc@3.2.0': {}
+
   '@vitest/coverage-v8@1.6.1(vitest@1.6.1)':
     dependencies:
       '@ampproject/remapping': 2.3.0
@@ -7122,6 +7156,14 @@ snapshots:
   ai@6.0.159(zod@4.3.6):
     dependencies:
       '@ai-sdk/gateway': 3.0.96(zod@4.3.6)
+      '@ai-sdk/provider': 3.0.8
+      '@ai-sdk/provider-utils': 4.0.23(zod@4.3.6)
+      '@opentelemetry/api': 1.9.0
+      zod: 4.3.6
+
+  ai@6.0.168(zod@4.3.6):
+    dependencies:
+      '@ai-sdk/gateway': 3.0.104(zod@4.3.6)
       '@ai-sdk/provider': 3.0.8
       '@ai-sdk/provider-utils': 4.0.23(zod@4.3.6)
       '@opentelemetry/api': 1.9.0
@@ -7681,7 +7723,7 @@ snapshots:
 
   esutils@2.0.3: {}
 
-  eventsource-parser@3.0.6: {}
+  eventsource-parser@3.0.8: {}
 
   execa@8.0.1:
     dependencies:
