@@ -1,0 +1,191 @@
+// Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
+
+import { ObjectSchema, Field } from '@objectstack/spec/data';
+import { F, P } from '@objectstack/spec';
+
+/**
+ * Forecast Object
+ *
+ * Monthly / quarterly snapshot of pipeline by owner. Each record holds
+ * the aggregated amounts at the moment of snapshot, so trend reports
+ * ("how did our Q3 forecast change week over week?") can be built
+ * without re-aggregating opportunity history.
+ *
+ * Written by:
+ *   • `forecast.hook.ts` scheduled job (default: nightly)
+ *   • `revenue_forecasting` AI skill on demand
+ *
+ * Forecast categories follow the standard Salesforce model:
+ *   pipeline  → all open opps
+ *   best_case → high-confidence opps (>= 60%)
+ *   commit    → owner-committed opps (>= 80%)
+ *   closed    → already-won amount
+ */
+export const Forecast = ObjectSchema.create({
+  name: 'forecast',
+  label: 'Forecast',
+  pluralLabel: 'Forecasts',
+  icon: 'trending-up',
+  description: 'Periodic pipeline snapshot by owner used for revenue forecasting.',
+  titleFormat: '{owner} — {period_label} ({period_start})',
+  compactLayout: ['owner', 'period', 'period_start', 'commit_amount', 'closed_amount'],
+
+  fieldGroups: [
+    { key: 'basic',   label: 'Snapshot',    icon: 'info' },
+    { key: 'amounts', label: 'Amounts',     icon: 'dollar-sign' },
+    { key: 'meta',    label: 'Source',      icon: 'database', defaultExpanded: false },
+  ],
+
+  fields: {
+    owner: Field.lookup('user', {
+      label: 'Owner',
+      required: true,
+      group: 'basic',
+    }),
+
+    period: Field.select({
+      label: 'Period',
+      required: true,
+      group: 'basic',
+      options: [
+        { label: 'Month',   value: 'month', default: true },
+        { label: 'Quarter', value: 'quarter' },
+      ],
+    }),
+
+    period_start: Field.date({
+      label: 'Period Start',
+      required: true,
+      group: 'basic',
+    }),
+
+    period_end: Field.date({
+      label: 'Period End',
+      required: true,
+      group: 'basic',
+    }),
+
+    period_label: Field.text({
+      label: 'Period Label',
+      description: 'Human-friendly label, e.g. "Q3 2026" or "Aug 2026".',
+      group: 'basic',
+    }),
+
+    snapshot_date: Field.date({
+      label: 'Snapshot Date',
+      description: 'The day this snapshot was captured.',
+      required: true,
+      group: 'meta',
+    }),
+
+    quota: Field.currency({
+      label: 'Quota',
+      scale: 2,
+      min: 0,
+      group: 'amounts',
+    }),
+
+    pipeline_amount: Field.currency({
+      label: 'Pipeline',
+      description: 'Sum of all open opportunities (any stage).',
+      scale: 2,
+      min: 0,
+      group: 'amounts',
+    }),
+
+    best_case_amount: Field.currency({
+      label: 'Best Case',
+      description: 'Open opportunities with probability >= 60%.',
+      scale: 2,
+      min: 0,
+      group: 'amounts',
+    }),
+
+    commit_amount: Field.currency({
+      label: 'Commit',
+      description: 'Open opportunities with probability >= 80% (owner-committed).',
+      scale: 2,
+      min: 0,
+      group: 'amounts',
+    }),
+
+    closed_amount: Field.currency({
+      label: 'Closed Won',
+      description: 'Already-closed-won amount in this period.',
+      scale: 2,
+      min: 0,
+      group: 'amounts',
+    }),
+
+    expected_amount: Field.formula({
+      label: 'Expected',
+      description: 'Closed + Commit — what the owner reasonably expects to ship.',
+      expression: F`coalesce(record.closed_amount, 0) + coalesce(record.commit_amount, 0)`,
+      scale: 2,
+    }),
+
+    attainment_pct: Field.formula({
+      label: 'Attainment %',
+      description: '(Closed / Quota) * 100. Negative quota guarded.',
+      expression: F`coalesce(record.quota, 0) > 0 ? (coalesce(record.closed_amount, 0) * 100.0) / record.quota : 0.0`,
+      scale: 2,
+    }),
+
+    coverage_ratio: Field.formula({
+      label: 'Coverage Ratio',
+      description: 'Pipeline ÷ (Quota − Closed). Health-check for whether enough pipeline exists.',
+      expression: F`(coalesce(record.quota, 0) - coalesce(record.closed_amount, 0)) > 0 ? coalesce(record.pipeline_amount, 0) / (record.quota - coalesce(record.closed_amount, 0)) : 0.0`,
+      scale: 2,
+    }),
+
+    source: Field.select({
+      label: 'Source',
+      group: 'meta',
+      options: [
+        { label: 'Scheduled snapshot', value: 'scheduled', default: true },
+        { label: 'AI skill',           value: 'ai' },
+        { label: 'Manual entry',       value: 'manual' },
+      ],
+    }),
+
+    notes: Field.text({
+      label: 'Notes',
+      maxLength: 1000,
+      group: 'meta',
+    }),
+  },
+
+  indexes: [
+    { fields: ['owner', 'period_start', 'period'] },
+    { fields: ['snapshot_date'] },
+    { fields: ['period_start'] },
+  ],
+
+  enable: {
+    trackHistory: true,
+    searchable: true,
+    apiEnabled: true,
+    apiMethods: ['get', 'list', 'create', 'update', 'delete', 'search', 'export'],
+    feeds: false,
+    activities: false,
+    trash: true,
+    mru: false,
+  },
+
+  validations: [
+    {
+      name: 'period_end_after_start',
+      type: 'script',
+      severity: 'error',
+      message: 'Period End must be on or after Period Start.',
+      condition: P`record.period_end < record.period_start`,
+    },
+    {
+      name: 'snapshot_amounts_non_negative',
+      type: 'script',
+      severity: 'error',
+      message: 'Snapshot amounts cannot be negative.',
+      condition: P`record.pipeline_amount < 0 || record.best_case_amount < 0 || record.commit_amount < 0 || record.closed_amount < 0`,
+    },
+  ],
+});

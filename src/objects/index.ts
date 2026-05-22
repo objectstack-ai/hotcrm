@@ -13,6 +13,8 @@ export { CampaignMember } from './campaign_member.object';
 export { Case } from './case.object';
 export { Contact } from './contact.object';
 export { Contract } from './contract.object';
+export { Forecast } from './forecast.object';
+export { KnowledgeArticle } from './knowledge_article.object';
 export { Lead } from './lead.object';
 export { Opportunity } from './opportunity.object';
 export { OpportunityLineItem } from './opportunity_line_item.object';

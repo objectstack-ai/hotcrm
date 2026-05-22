@@ -68,3 +68,66 @@ export const leadCube: Cube = {
     is_converted: { name: 'is_converted', label: 'Converted', type: 'boolean', sql: 'is_converted' },
   },
 };
+
+export const caseCube: Cube = {
+  name: 'case',
+  title: 'Cases',
+  sql: 'case',
+  public: true,
+  measures: {
+    count:                 { name: 'count',                 label: 'Count',                 type: 'count', sql: '*' },
+    sla_violations:        { name: 'sla_violations',        label: 'SLA Violations',        type: 'count', sql: 'is_sla_violated', filters: [{ sql: 'is_sla_violated = true' }] },
+    escalated:             { name: 'escalated',             label: 'Escalated',             type: 'count', sql: 'is_escalated',    filters: [{ sql: 'is_escalated = true' }] },
+    avg_resolution_hours:  { name: 'avg_resolution_hours',  label: 'Avg Resolution (hrs)',  type: 'avg',   sql: 'resolution_time_hours' },
+  },
+  dimensions: {
+    status:     { name: 'status',     label: 'Status',   type: 'string',  sql: 'status' },
+    priority:   { name: 'priority',   label: 'Priority', type: 'string',  sql: 'priority' },
+    origin:     { name: 'origin',     label: 'Origin',   type: 'string',  sql: 'origin' },
+    type:       { name: 'type',       label: 'Type',     type: 'string',  sql: 'type' },
+    owner:      { name: 'owner',      label: 'Owner',    type: 'string',  sql: 'owner' },
+    is_closed:  { name: 'is_closed',  label: 'Closed',   type: 'boolean', sql: 'is_closed' },
+    account:    { name: 'account',    label: 'Account',  type: 'string',  sql: 'account' },
+    created_at: { name: 'created_at', label: 'Created',  type: 'time',    sql: 'created_at', granularities: ['day', 'week', 'month', 'quarter', 'year'] },
+  },
+};
+
+export const campaignCube: Cube = {
+  name: 'campaign',
+  title: 'Campaigns',
+  sql: 'campaign',
+  public: true,
+  measures: {
+    count:            { name: 'count',            label: 'Count',            type: 'count', sql: '*' },
+    budgeted_cost:    { name: 'budgeted_cost',    label: 'Budgeted Cost',    type: 'sum',   sql: 'budgeted_cost',    format: 'currency' },
+    actual_cost:      { name: 'actual_cost',      label: 'Actual Cost',      type: 'sum',   sql: 'actual_cost',      format: 'currency' },
+    actual_revenue:   { name: 'actual_revenue',   label: 'Actual Revenue',   type: 'sum',   sql: 'actual_revenue',   format: 'currency' },
+    expected_revenue: { name: 'expected_revenue', label: 'Expected Revenue', type: 'sum',   sql: 'expected_revenue', format: 'currency' },
+    num_leads:        { name: 'num_leads',        label: 'Leads',            type: 'sum',   sql: 'num_leads' },
+    num_opportunities:{ name: 'num_opportunities',label: 'Opportunities',    type: 'sum',   sql: 'num_opportunities' },
+    num_won:          { name: 'num_won',          label: 'Won Opps',         type: 'sum',   sql: 'num_won_opportunities' },
+  },
+  dimensions: {
+    type:       { name: 'type',       label: 'Type',     type: 'string',  sql: 'type' },
+    channel:    { name: 'channel',    label: 'Channel',  type: 'string',  sql: 'channel' },
+    status:     { name: 'status',     label: 'Status',   type: 'string',  sql: 'status' },
+    owner:      { name: 'owner',      label: 'Owner',    type: 'string',  sql: 'owner' },
+    is_active:  { name: 'is_active',  label: 'Active',   type: 'boolean', sql: 'is_active' },
+    start_date: { name: 'start_date', label: 'Start',    type: 'time',    sql: 'start_date', granularities: ['day', 'week', 'month', 'quarter', 'year'] },
+  },
+};
+
+export const campaignMemberCube: Cube = {
+  name: 'campaign_member',
+  title: 'Campaign Members',
+  sql: 'campaign_member',
+  public: true,
+  measures: {
+    count: { name: 'count', label: 'Count', type: 'count', sql: '*' },
+  },
+  dimensions: {
+    campaign:      { name: 'campaign',      label: 'Campaign', type: 'string', sql: 'campaign' },
+    status:        { name: 'status',        label: 'Status',   type: 'string', sql: 'status' },
+    response_date: { name: 'response_date', label: 'Responded',type: 'time',   sql: 'response_date', granularities: ['day', 'week', 'month'] },
+  },
+};

@@ -13,6 +13,7 @@ import type { Hook, HookContext } from '@objectstack/spec/data';
 type ApiShape = {
   object: (n: string) => {
     count: (q: { filter: Record<string, unknown> }) => Promise<number>;
+    find: (q: { filter: Record<string, unknown>; fields?: string[]; top?: number }) => Promise<Array<Record<string, unknown>>>;
     update: (id: string, doc: Record<string, unknown>) => Promise<unknown>;
   };
 };
@@ -54,7 +55,7 @@ const campaignCompleted: Hook = {
   priority: 800,
   async: true,
   onError: 'log',
-  description: 'On completion, snapshot attributed lead/opportunity counts.',
+  description: 'On completion, snapshot attributed lead/opportunity counts and ROI metrics.',
   handler: async (ctx: HookContext) => {
     const { input } = ctx;
     const previous = ctx.previous;
@@ -66,18 +67,43 @@ const campaignCompleted: Hook = {
       (typeof previous?.id === 'string' ? (previous.id as string) : undefined);
     if (!id) return;
 
-    const [leads, convertedLeads, opportunities, wonOpps] = await Promise.all([
+    const [
+      leads,
+      convertedLeads,
+      opportunities,
+      wonOpps,
+      members,
+      responded,
+      sent,
+      wonOppRecords,
+    ] = await Promise.all([
       api.object('lead').count({ filter: { campaign: id } }),
       api.object('lead').count({ filter: { campaign: id, is_converted: true } }),
       api.object('opportunity').count({ filter: { campaign: id } }),
       api.object('opportunity').count({ filter: { campaign: id, stage: 'closed_won' } }),
+      api.object('campaign_member').count({ filter: { campaign: id } }),
+      api.object('campaign_member').count({ filter: { campaign: id, status: 'responded' } }),
+      api.object('campaign_member').count({ filter: { campaign: id, status: 'sent' } }),
+      api.object('opportunity').find({
+        filter: { campaign: id, stage: 'closed_won' },
+        fields: ['amount'],
+        top: 5000,
+      }),
     ]);
+
+    const actualRevenue = wonOppRecords.reduce((sum, row) => {
+      const amt = typeof row.amount === 'number' ? row.amount : Number(row.amount) || 0;
+      return sum + amt;
+    }, 0);
 
     await api.object('campaign').update(id, {
       num_leads: leads,
       num_converted_leads: convertedLeads,
       num_opportunities: opportunities,
       num_won_opportunities: wonOpps,
+      num_sent: sent || members,
+      num_responses: responded,
+      actual_revenue: actualRevenue,
     });
   },
 };

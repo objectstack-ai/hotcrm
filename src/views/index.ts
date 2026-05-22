@@ -8,5 +8,7 @@ export { TaskViews } from './task.view';
 export { CaseViews } from './case.view';
 export { CampaignViews } from './campaign.view';
 export { ContractViews } from './contract.view';
+export { ForecastViews } from './forecast.view';
+export { KnowledgeArticleViews } from './knowledge_article.view';
 export { ProductViews } from './product.view';
 export { QuoteViews } from './quote.view';
