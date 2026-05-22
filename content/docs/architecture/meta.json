@@ -8,9 +8,6 @@
     "ui-protocol",
     "automation-protocol",
     "security-protocol",
-    "monorepo-structure",
-    "plugin-architecture",
-    "business-evaluation",
-    "spec-capability-evaluation"
+    "plugin-architecture"
   ]
 }

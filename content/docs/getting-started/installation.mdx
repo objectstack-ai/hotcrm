@@ -1,191 +1,90 @@
 ---
 title: Installation
-description: How to install and set up HotCRM
+description: Get HotCRM running locally in 5 minutes.
 ---
 
 # Installation
 
-This guide will help you install and set up HotCRM on your local machine or server.
-
 ## Prerequisites
 
-Before installing HotCRM, make sure you have the following installed:
+- **Node.js ≥ 20**
+- **pnpm ≥ 10**
+- A C/C++ toolchain (for the `better-sqlite3` native build): Xcode CLT on macOS, `build-essential` on Linux, or Visual Studio Build Tools on Windows.
 
-- **Node.js** 20.9.0 or higher
-- **pnpm** 9.0.0 or higher (recommended for monorepo management)
-- **Git** for cloning the repository
+You do not need a database server — the dev runtime uses `better-sqlite3` and creates a file at `.objectstack/data/standalone.db`.
 
-### Installing Node.js
-
-Download and install Node.js from [nodejs.org](https://nodejs.org/). We recommend using the LTS (Long Term Support) version.
-
-To verify your installation:
-
-```bash
-node --version  # Should show v20.9.0 or higher
-```
-
-### Installing pnpm
-
-pnpm is a fast, disk space efficient package manager. Install it globally:
-
-```bash
-npm install -g pnpm
-```
-
-Verify the installation:
-
-```bash
-pnpm --version  # Should show 9.0.0 or higher
-```
-
-## Installation Steps
-
-### 1. Clone the Repository
+## Clone & Install
 
 ```bash
 git clone https://github.com/objectstack-ai/hotcrm.git
 cd hotcrm
-```
-
-### 2. Install Dependencies
-
-Install all package dependencies using pnpm:
-
-```bash
 pnpm install
+npm rebuild better-sqlite3    # ensures the native binding is built
 ```
 
-This will install dependencies for all packages in the monorepo.
+> **Why `npm rebuild`?** pnpm's lifecycle-script approval prompt blocks the native build on first install. Running `npm rebuild` once produces `node_modules/better-sqlite3/build/Release/better_sqlite3.node`. Alternatively, run `pnpm approve-builds` and follow the prompts.
 
-### 3. Build All Packages
+## Link the UI Apps (dev only)
 
-Build all packages in the correct order:
+The `@objectstack/console` and `@objectstack/account` admin UIs aren't published to npm yet; they live in the `framework` monorepo next door. Symlink them:
 
 ```bash
-pnpm build
+git clone https://github.com/objectstack-ai/framework.git ../framework
+ln -sf $(pwd)/../framework/apps/console node_modules/@objectstack/console
+ln -sf $(pwd)/../framework/apps/account node_modules/@objectstack/account
 ```
 
-This command will:
-1. Build `@objectstack/spec` first (foundation)
-2. Build domain packages (`@hotcrm/crm`, `@hotcrm/support`, etc.)
-3. Build `@hotcrm/ui` (UI components)
-4. Build `@hotcrm/server` (application server)
+`@objectstack/studio` is on npm and installs automatically.
 
-### 4. Start the Development Server
-
-Start the development server with hot reload:
+## Build & Run
 
 ```bash
-pnpm dev
+pnpm build      # compiles src/ → dist/objectstack.json
+pnpm dev        # starts the dev server on http://localhost:3000
 ```
 
-The server will start at `http://localhost:3000` (or another port if 3000 is in use).
+Expected dev-server banner:
 
-## Building Individual Packages
+```
+✓ Server is ready
 
-You can also build individual packages:
+  ➜  API:       http://localhost:3000/
+  ➜  Studio:    http://localhost:3000/_studio/
+  ➜  Account:   http://localhost:3000/_account/
+  ➜  Console:   http://localhost:3000/_console/
+
+Plugins: 29 loaded
+```
+
+## Create Your First User
 
 ```bash
-# Build CRM domain package
-pnpm --filter @hotcrm/crm build
-
-# Build server package
-pnpm --filter @hotcrm/server build
+curl -X POST http://localhost:3000/api/v1/auth/sign-up/email \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"you@example.com","password":"admin123","name":"You"}'
 ```
 
-## Production Deployment
-
-For production deployment:
-
-### 1. Build for Production
+The first sign-up triggers seed loading — about 90 records across 9 tables. Verify:
 
 ```bash
-pnpm build
+sqlite3 .objectstack/data/standalone.db \
+  "SELECT 'account',COUNT(*) FROM account UNION ALL
+   SELECT 'lead',COUNT(*) FROM lead UNION ALL
+   SELECT 'opportunity',COUNT(*) FROM opportunity"
 ```
 
-### 2. Start the Production Server
+Open [http://localhost:3000/_console/](http://localhost:3000/_console/) and log in.
 
-```bash
-pnpm start
-```
+## Production
 
-## Environment Configuration
-
-Create a `.env` file in the root directory to configure environment variables:
-
-```bash
-# Server Configuration
-PORT=3000
-NODE_ENV=production
-
-# Database Configuration (Future)
-# DB_HOST=localhost
-# DB_PORT=5432
-# DB_NAME=hotcrm
-# DB_USER=hotcrm
-# DB_PASSWORD=your_password
-
-# AI Configuration (Future)
-# OPENAI_API_KEY=your_openai_api_key
-```
+For production, swap the SQLite driver for Postgres or MongoDB by adding the driver package and setting `OS_DATABASE_URL`. See [Architecture → Data Protocol](/docs/architecture/data-protocol) for driver options.
 
 ## Troubleshooting
 
-### Port Already in Use
-
-If port 3000 is already in use, you can change it in the `.env` file or by setting the PORT environment variable:
-
-```bash
-PORT=3001 pnpm dev
-```
-
-### Build Errors
-
-If you encounter build errors:
-
-1. Clean all build artifacts:
-   ```bash
-   pnpm clean
-   ```
-
-2. Reinstall dependencies:
-   ```bash
-   rm -rf node_modules pnpm-lock.yaml
-   pnpm install
-   ```
-
-3. Rebuild:
-   ```bash
-   pnpm build
-   ```
-
-### pnpm Not Found
-
-If `pnpm` command is not recognized, ensure it's installed globally:
-
-```bash
-npm install -g pnpm
-```
-
-Or use npm instead (though pnpm is recommended):
-
-```bash
-npm install
-npm run build
-npm run dev
-```
-
-## Verify Installation
-
-To verify that HotCRM is installed correctly:
-
-1. Check that the development server starts without errors
-2. Open `http://localhost:3000` in your browser
-3. You should see the HotCRM dashboard
-
-## Next Steps
-
-- [Quick Start Guide](/docs/getting-started/quick-start) - Learn the basics
-- [Architecture Overview](/docs/architecture/overview) - Understand how HotCRM works
-- [Creating Objects](/docs/development/creating-objects) - Start customizing
+| Symptom | Fix |
+|---|---|
+| `Cannot find package '@objectstack/metadata'` | Run `pnpm install` again — explicit deps are declared in `package.json`. |
+| `Could not locate the bindings file` (better-sqlite3) | `npm rebuild better-sqlite3` |
+| `@objectstack/console not found — skipping UI` | Re-create the symlinks above. |
+| Empty `_console` page | Sign up first — the UI requires an authenticated session. |
+| `pnpm dev` fails on port 3000 | Another process is using the port; `kill` it or set `PORT=3001`. |

@@ -1,55 +1,96 @@
 ---
 title: Setup & Configuration
-description: Initial setup and environment configuration for HotCRM administrators.
+description: Production setup for HotCRM administrators.
 ---
 
 # Setup & Configuration
 
-This guide walks system administrators through the initial setup and ongoing configuration of a HotCRM environment.
+This guide covers running HotCRM beyond the dev server. For local install, see [Installation](/docs/getting-started/installation).
 
-## Prerequisites
+## Environment Variables
 
-Before you begin, ensure you have:
+| Variable | Default | Purpose |
+|---|---|---|
+| `PORT` | `3000` | HTTP listen port |
+| `OS_DATABASE_URL` | `file:./.objectstack/data/standalone.db` | Database driver URL (see below) |
+| `OS_MULTI_TENANT` | `false` (standalone) / `true` (serve) | Enable multi-tenant mode |
+| `OS_LOG_LEVEL` | `info` | One of `trace`, `debug`, `info`, `warn`, `error` |
+| `AUTH_SECRET` | (random per boot) | Required in production for stable sessions |
+| `OPENAI_API_KEY` | — | If you use the AI service |
 
-- **Node.js** 20+ installed
-- **pnpm** package manager
-- Access to a supported database (PostgreSQL recommended)
-- Administrator credentials for your HotCRM instance
+## Choosing a Database
 
-## Environment Configuration
+| URL | Driver | Best for |
+|---|---|---|
+| `file:./data.db` | better-sqlite3 | Dev, demo, single-node |
+| `postgres://user:pw@host/db` | pg | Production multi-node |
+| `mongodb://host/db` | MongoDB | Document-heavy workloads |
+| `libsql://...` | Turso | Edge / global replication |
 
-HotCRM is configured through the `objectstack.config.ts` file at the repository root. This file defines:
+Switching only requires changing the URL and installing the matching driver package. The metadata never changes.
 
-| Setting | Description |
-|---------|-------------|
-| **Database** | Connection string and pool settings |
-| **Packages** | Business packages to load (CRM, Finance, HR, etc.) |
-| **Plugins** | Active plugin registrations |
-| **AI Models** | ML model configurations and API keys |
+## Building for Production
 
-## Package Management
+```bash
+pnpm build               # produces dist/objectstack.json
+pnpm start               # runs the artifact (no source compilation)
+```
 
-HotCRM uses a modular package architecture. Each business cloud is an independent package:
+The artifact is **self-contained and deterministic** — bundle it into a container image and ship.
 
-- **@hotcrm/crm** — Sales Cloud (Leads, Opportunities, Accounts)
-- **@hotcrm/support** — Service Cloud (Cases, Knowledge, SLA)
-- **@hotcrm/marketing** — Marketing Cloud (Campaigns, Journeys)
-- **@hotcrm/finance** — Revenue Cloud (Quotes, Contracts, Invoices)
-- **@hotcrm/hr** — HR Cloud (Recruitment, Performance, Payroll)
-- **@hotcrm/products** — Product Catalog (CPQ)
+## Containerised Deployment
 
-Enable or disable packages based on your organization's needs by updating the plugin configuration.
+Minimal Dockerfile:
 
-## System Health
+```dockerfile
+FROM node:20-bookworm-slim
+WORKDIR /app
+COPY package.json pnpm-lock.yaml ./
+RUN corepack enable && pnpm install --prod --frozen-lockfile
+COPY dist/objectstack.json ./dist/
+COPY node_modules ./node_modules/
+ENV PORT=3000
+EXPOSE 3000
+CMD ["pnpm", "start"]
+```
 
-Monitor system health through:
+For a true single-binary deploy, you can use `pnpm pack` + a Node SEA build — see the ObjectStack framework's deployment recipes.
 
-- **Object Registry** — Verify all business objects are loaded correctly
-- **Hook Registration** — Confirm automation triggers are active
-- **AI Model Status** — Check ML model availability and performance
+## Multi-tenant Mode
 
-## Next Steps
+Set `OS_MULTI_TENANT=true` to enable per-tenant data isolation. Each authenticated request is scoped to its `tenant_id`, derived from the user's session. Hooks, queries, and shares are all tenant-aware by default.
 
-- [Security Configuration](/docs/admin/security) — Set up authentication and authorization
-- [User Management](/docs/admin/users-permissions) — Configure user access
-- [Installation Guide](/docs/getting-started/installation) — Detailed installation steps
+## Backups
+
+For SQLite, snapshot `.objectstack/data/standalone.db` while the server is paused or use SQLite's `VACUUM INTO`. For Postgres/MongoDB, use the native dump tools.
+
+The runtime stores everything in the configured datasource — there is no separate metadata store.
+
+## Logging & Observability
+
+The runtime emits structured JSON logs to stdout. Pipe them to your aggregator (Loki, Cloudwatch, Datadog) and filter by:
+
+- `module` — plugin name
+- `level`
+- `tenant_id`
+- `request_id`
+
+For OpenTelemetry tracing, set `OTEL_EXPORTER_OTLP_ENDPOINT`. The runtime ships traces for HTTP requests, ObjectQL operations, and hook execution.
+
+## Upgrading
+
+Each minor release of HotCRM tracks the framework runtime version it was built against. To upgrade:
+
+1. `pnpm update @objectstack/runtime @objectstack/spec @objectstack/cli`
+2. `pnpm build` — fails loudly on schema-breaking changes
+3. Run automated tests
+4. Deploy the new artifact behind a canary
+
+There is no separate "metadata migration" step — schema changes are detected by comparing the new artifact to the database's stored schema and applied automatically by the driver.
+
+## Security Hardening
+
+- Set `AUTH_SECRET` to a stable, high-entropy value.
+- Put HotCRM behind a TLS-terminating reverse proxy.
+- Restrict outbound network access from the hook sandbox (it doesn't have network in the default config).
+- Review the [Security Protocol](/docs/architecture/security-protocol) for sharing rules, field-level security, and audit log configuration.

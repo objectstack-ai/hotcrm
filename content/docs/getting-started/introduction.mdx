@@ -1,146 +1,97 @@
 ---
 title: Introduction
-description: Learn about HotCRM and its capabilities
+description: What HotCRM is, what's inside, and how it compares to a SaaS CRM.
 ---
 
-# Introduction to HotCRM
+# Introduction
 
-HotCRM is a world-class **Customer Relationship Management** system that combines Salesforce-level functionality with Apple/Linear-level user experience. Built on the innovative @objectstack/spec protocol, it provides a comprehensive solution for managing the entire business lifecycle from Lead to Cash, with additional HR and AI capabilities.
+**HotCRM is a self-hosted, metadata-driven CRM application.** It is built on top of the [ObjectStack runtime](https://github.com/objectstack-ai/framework) and ships everything an early-stage sales team needs: accounts, contacts, leads, opportunities, quotes, contracts, campaigns, cases, and tasks.
 
-## What is HotCRM?
+Unlike a SaaS CRM, every piece of HotCRM's behaviour — fields, validation rules, page layouts, automation flows, AI agents — is **TypeScript source code in this repository**. There is no clicking through admin UIs hoping to remember what you changed; the code is the source of truth.
 
-HotCRM is designed to help businesses of all sizes manage their operations more effectively. It covers six major domains with **69 core objects**:
+## What's in v0.1
 
-### 🟢 Sales Cloud
+| Layer | Count | Examples |
+|---|---|---|
+| Business objects | 13 | account, contact, lead, opportunity, quote, contract, campaign, case, task |
+| Server-side hooks | 10 | account_protection, lead_validation, opportunity_close_guard |
+| State machines | 2 | lead (open → qualified → converted), opportunity (prospecting → won/lost) |
+| List views | 10 | one per core object |
+| Pages | 12 | Home, App Launcher, detail pages, action modals |
+| Automation flows | 5 | inline declarative pipelines |
+| AI agents / skills | 2 / 2 | callable via `/api/v1/ai/*` |
+| Sharing rules | 4 | + 10-level role hierarchy |
+| Approval processes | 1 | quote discount approval |
 
-Complete sales pipeline management with 360-degree customer view, opportunity tracking, and activity logging.
+About **90 seed records** ship in the box; they insert the first time a user signs up.
 
-**Objects (8)**: Account, Contact, Lead, Opportunity, Activity, Task, Note, Assignment Rule
+## Three Core Principles
 
-### 🎯 Marketing Cloud
+### 1. Metadata-First
 
-Multi-channel campaign management with ROI tracking and lead nurturing capabilities.
+Everything is `*.object.ts`, `*.hook.ts`, `*.page.ts`, etc. There is no YAML or JSON. The compiler validates every field, every reference, every page binding **at build time** using `@objectstack/spec` schemas.
 
-**Objects (11)**: Campaign, Campaign Member, Email Template, Email Send, Form, Landing Page, Marketing List, Unsubscribe, Lead Nurture Program, Touchpoint, Automation Workflow
-
-### 💰 Revenue Cloud
-
-Configure, Price, Quote (CPQ), product catalog, contract management, invoicing, and payment tracking.
-
-**Objects (13)**: Product, Product Bundle, Product Bundle Component, Quote, Quote Line Item, Pricebook, Price Rule, Discount Schedule, Approval Request, Contract, Invoice, Invoice Line, Payment
-
-### 🛟 Service Cloud
-
-Omni-channel case management, SLA tracking, knowledge base, and customer self-service portal.
-
-**Objects (21)**: Case, Case Comment, Knowledge Article, Forum Topic, Forum Post, Queue, Queue Member, Routing Rule, Escalation Rule, SLA Policy, SLA Milestone, SLA Template, Agent Skill, Skill, Business Hours, Holiday, Holiday Calendar, Portal User, Email to Case, Web to Case, Social Media Case
-
-### 👥 HR Cloud
-
-Human Capital Management covering recruitment, onboarding, performance, payroll, and training.
-
-**Objects (16)**: Employee, Department, Position, Candidate, Application, Interview, Offer, Recruitment, Onboarding, Time Off, Attendance, Goal, Performance Review, Payroll, Training, Certification
-
-### 🤖 AI Cloud
-
-AI capabilities embedded throughout the system with unified model registry and prediction services.
-
-**Features**: Lead scoring, churn prediction, sentiment analysis, revenue forecasting, product recommendations, resume parsing, and more
-
-## Core Principles
-
-HotCRM is built on five core architectural principles:
-
-### 1. Metadata-Driven Architecture
-
-All business objects are defined natively in **TypeScript** (`.object.ts` files), not YAML or JSON. This provides:
-
-- Full type safety with IDE autocomplete
-- Compile-time validation
-- Easy refactoring and version control
-- Native JavaScript/TypeScript development experience
-
-```typescript
-import { ObjectSchema, Field } from '@objectstack/spec/data';
-
-export const Account = ObjectSchema.create({
+```ts
+// src/objects/account.object.ts
+export const Account = ObjectSchema.parse({
   name: 'account',
   label: 'Account',
   fields: {
-    name: Field.text({
-      label: 'Account Name',
-      required: true,
-    }),
-    // ... more fields
+    name: Field.text({ required: true, unique: true }),
+    annual_revenue: Field.currency({ scale: 2 }),
+    industry: Field.select({ options: industryOptions }),
+    owner: Field.lookup({ object: 'sys_user' }),
   },
 });
 ```
 
-### 2. ObjectQL Query Language
+### 2. ObjectQL, not SQL
 
-Replace SQL with a type-safe, flexible query language:
+Data access goes through `broker.find(...)` / `broker.create(...)`. The runtime translates to SQL, MongoDB, or whichever driver is plugged in. Your business code stays driver-agnostic.
 
-```typescript
-// Simple query
-const accounts = await db.find('Account', { 
-  filters: [['Status', '=', 'Active']] 
-});
-
-// Complex query with relationships
-const result = await db.query({
-  object: 'Account',
-  fields: ['Name', 'Industry'],
-  filters: {
-    Industry: { $in: ['Technology', 'Finance'] }
-  },
-  related: {
-    Opportunities: {
-      fields: ['Name', 'Amount', 'Stage']
-    }
-  }
+```ts
+await ctx.api.find('opportunity', {
+  filters: [['amount', '>', 50_000], ['stage', '!=', 'lost']],
+  orderBy: [{ field: 'close_date', dir: 'asc' }],
 });
 ```
 
-### 3. UI Engine with Tailwind CSS
+### 3. AI-Native
 
-Frontend rendering based on ObjectUI framework with Tailwind CSS for beautiful, responsive interfaces.
+AI agents are first-class metadata, not bolt-ons. The same `ctx.api` exposed to hooks is exposed to agents via tool definitions in `*.action.ts`. A human in `/_console/` and an LLM in `/api/v1/ai/agents/run` see exactly the same data plane.
 
-### 4. AI-First Design
+## How It Compares
 
-Every major feature has built-in AI capabilities:
-- Lead scoring and enrichment
-- Opportunity win prediction
-- Smart case routing
-- Knowledge base Q&A
+| | SaaS CRM (e.g. Salesforce) | HotCRM |
+|---|---|---|
+| Customisation | Clicks-then-code, locked schema | TypeScript everywhere |
+| Hosting | Vendor cloud | Your machine, your VPC, your K8s |
+| Data | Vendor's DB | SQLite / Postgres / Mongo / Turso |
+| Plugin model | AppExchange | npm + plugin protocol |
+| AI | Einstein (closed) | Bring-your-own LLM, declared in metadata |
+| Source of truth | Production org | Git repo |
+| Price | Per-seat SaaS | Open-source runtime + your infra |
 
-### 5. Modular Monorepo Architecture
+## Who Is This For?
 
-Clean separation of concerns with pnpm workspaces:
+- **Engineering teams** that need a CRM but refuse a closed SaaS lock-in.
+- **AI startups** building agent-driven business systems and need a real data plane.
+- **Platform teams** that want to extend a working CRM rather than build from scratch.
 
-```
-hotcrm/
-├── packages/
-│   ├── crm/        # Sales Cloud (8 objects)
-│   ├── marketing/  # Marketing Cloud (11 objects)
-│   ├── products/   # Product Catalog (9 objects)
-│   ├── finance/    # Invoicing & Payments (4 objects)
-│   ├── support/    # Service Cloud (21 objects)
-│   └── hr/         # HR Cloud (16 objects)
-├── apps/
-│   └── docs/       # Documentation site
-```
+## What HotCRM Is **Not** (yet)
 
-## Who Should Use HotCRM?
+The legacy 146-object scope (HR, Healthcare, Education, Real Estate, Financial Services) has been removed from the active codebase. The previous version of those docs is archived on the `legacy-archive` branch. If you need one of those verticals, port the relevant `*.object.ts` files into `src/objects/` and verify hooks against the runtime — see [Creating Objects](/docs/developers/creating-objects).
 
-HotCRM is designed for:
+## Next Steps
 
-- **Small to Medium Businesses** looking for an affordable, feature-rich CRM
-- **Enterprises** requiring customization and extensibility
-- **Developers** who want full control over their CRM system
-- **Teams** seeking modern UX with AI-powered insights
-
-## What's Next?
-
-- [Installation Guide](/docs/getting-started/installation) - Get HotCRM up and running
-- [Quick Start](/docs/getting-started/quick-start) - Your first steps with HotCRM
-- [Architecture Overview](/docs/architecture/overview) - Deep dive into the system design
+<Cards>
+  <Card title="Install HotCRM" href="/docs/getting-started/installation" icon="download">
+    Get the dev server running in 5 minutes.
+  </Card>
+  <Card title="Quick Start" href="/docs/getting-started/quick-start" icon="zap">
+    Sign up, see seeded data, create a record.
+  </Card>
+  <Card title="Architecture Overview" href="/docs/architecture/overview" icon="layers">
+    How the runtime and metadata fit together.
+  </Card>
+</Cards>

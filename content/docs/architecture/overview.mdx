@@ -1,345 +1,170 @@
 ---
 title: Architecture Overview
-description: Understanding HotCRM's architecture and design principles
+description: How HotCRM, the ObjectStack runtime, and metadata fit together.
 ---
 
 # Architecture Overview
 
-HotCRM is built on a modern, scalable architecture that emphasizes type safety, modularity, and developer experience. This document provides a high-level overview of the system architecture.
+HotCRM is a thin metadata layer on top of the **ObjectStack runtime**. The repository contains no platform code — it imports `@objectstack/runtime` and ships **declarative TypeScript** that the runtime executes.
 
-## High-Level Architecture
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                         Frontend Layer                          │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
-│  │  Co-Pilot    │  │   ObjectUI   │  │  Components  │          │
-│  └──────────────┘  └──────────────┘  └──────────────┘          │
-└─────────────────────────────────────────────────────────────────┘
-                            ▲
-                            │ REST / GraphQL
-                            ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                      Intelligence Layer                         │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
-│  │  Generative  │  │   Predictive │  │    Audit     │          │
-│  │    Agents    │  │    Models    │  │  Trust Wall  │          │
-│  └──────────────┘  └──────────────┘  └──────────────┘          │
-└─────────────────────────────────────────────────────────────────┘
-                            ▲
-                            │ Context & Actions
-                            ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                      Application Layer                          │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
-│  │   Express    │  │   Actions    │  │   Triggers   │          │
-│  │    Server    │  │   (API)      │  │   (Logic)    │          │
-│  └──────────────┘  └──────────────┘  └──────────────┘          │
-└─────────────────────────────────────────────────────────────────┘
-                            ▲
-                            │ ObjectQL (Type-Safe)
-                            ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                        Data Layer                               │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
-│  │   ObjectQL   │  │   Metadata   │  │   Vector     │          │
-│  │   Engine     │  │   Registry   │  │    Store     │          │
-│  └──────────────┘  └──────────────┘  └──────────────┘          │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-## Core Components
-
-### 1. Frontend Layer
-The frontend is more than just forms. It includes the **Co-Pilot** interface that overlays every application, allowing users to converse with their data.
-
-**Technologies:**
-- **ObjectUI Engine**: Dynamic UI rendering based on metadata. (Part of Runtime)
-- **React Server Components**: For high-performance rendering.
-
-### 2. Intelligence Layer
-The distinct layer that processes intent, prediction, and generation.
-
-**Components:**
-- **Generative Agents**: Autonomous workers that perform tasks.
-- **Prophet Engine**: Predictive models for scoring and forecasting.
-
-### 3. Application Layer
-The middle tier handles business logic validation and orchestration.
-
-**Components:**
-- **ObjectStack Runtime**: The standard engine powering the system.
-- **Triggers**: Transactional logic defined in `packages/*`.
-- **Actions**: Callable functions exposed to the API.
-
-### 4. Data Layer
-The foundation. It manages structured (relational) and unstructured (vector) data side-by-side.
-
-**Components:**
-- **ObjectQL Engine**: Translates high-level queries into optimized database calls. (Part of Runtime)
-- **Metadata Registry**: Loads objects from `packages/*`.
-- **Vector Store**: Stores embeddings for semantic search (RAG).
-
-## Design Principles
-
-### 1. Metadata-Driven
-
-Everything in HotCRM is defined through metadata:
-
-```typescript
-// Object definition in TypeScript
-export default const Account: ObjectSchema = {
-  name: 'Account',
-  label: 'Account',
-  fields: [...],
-  relationships: [...],
-  triggers: [...],
-  listViews: [...]
-};
-```
-
-**Benefits:**
-- Single source of truth
-- Type safety
-- Easy customization
-- Version control
-
-### 2. Type-Safe
-
-Full TypeScript implementation with strict type checking:
-
-```typescript
-// Type-safe queries
-const accounts: Account[] = await db.find('Account', {
-  filters: [['Industry', '=', 'Technology']]
-});
-
-// Compile-time validation
-accounts.forEach(account => {
-  console.log(account.Name); // ✅ Type-safe
-  console.log(account.InvalidField); // ❌ Compile error
-});
-```
-
-### 3. Modular & Extensible
-
-Clean package separation allows easy customization and extension.
-
-### 4. AI-First
-
-AI capabilities are core to the platform, not add-ons.
-
-### 5. Developer-Friendly
-
-Focus on developer experience with excellent tooling and documentation.
-
-## Data Flow
-
-### Read Operation
+## Three-Layer Model
 
 ```
-User Request
-    ↓
-Express Server (REST API)
-    ↓
-ObjectQL Query Engine
-    ↓
-Metadata Registry (validate schema)
-    ↓
-Database Access
-    ↓
-Return Data (JSON)
+┌──────────────────────────────────────────────────────────────┐
+│   HotCRM repository  (this codebase)                         │
+│   ───────────────────────────────────────────                │
+│   src/                                                       │
+│   ├── objects/   ← 13 ObjectSchema definitions               │
+│   ├── hooks/     ← 10 server-side behaviours                 │
+│   ├── pages/     ← UI layouts                                │
+│   ├── views/     ← List view configurations                  │
+│   ├── flows/     ← Automation pipelines                      │
+│   ├── agents/    ← AI agents + skills                        │
+│   ├── data/      ← Seed records (defineDataset)              │
+│   └── ...                                                    │
+│   objectstack.config.ts  ← Stack definition (defineStack)    │
+└──────────────────────────────────────────────────────────────┘
+                          │
+                          ▼  imports
+┌──────────────────────────────────────────────────────────────┐
+│   @objectstack/runtime  (the platform)                       │
+│   ───────────────────────────────────────────                │
+│   - Kernel & plugin loader                                   │
+│   - ObjectQL engine + driver abstraction                     │
+│   - Auth, Security, Sharing                                  │
+│   - Automation, Approvals, Flows                             │
+│   - REST API, Hono server                                    │
+│   - QuickJS sandbox for hooks                                │
+│   - Console / Studio / Account UI (when present)             │
+└──────────────────────────────────────────────────────────────┘
+                          │
+                          ▼  reads/writes
+┌──────────────────────────────────────────────────────────────┐
+│   Storage driver                                             │
+│   - @objectstack/driver-sql      (SQLite, Postgres, MySQL)   │
+│   - @objectstack/driver-mongodb                              │
+│   - @objectstack/driver-turso                                │
+│   - @objectstack/driver-memory   (tests)                     │
+└──────────────────────────────────────────────────────────────┘
 ```
 
-### Write Operation
-
-```
-User Request (Create/Update)
-    ↓
-Express Server (validation)
-    ↓
-Before Triggers (business logic)
-    ↓
-ObjectQL Mutation Engine
-    ↓
-Database Write
-    ↓
-After Triggers (automation)
-    ↓
-Return Result
-```
-
-## Monorepo Structure
-
-HotCRM uses a **multi-package monorepo** architecture with 9 business packages:
+## Repository Layout
 
 ```
 hotcrm/
-├── packages/
-│   ├── core/                 # Foundation & ObjectQL Engine
-│   ├── crm/                  # Sales Cloud (13 objects)
-│   ├── marketing/            # Marketing Cloud (2 objects)
-│   ├── products/             # Product Catalog (9 objects)
-│   ├── finance/              # Finance & Billing (4 objects)
-│   ├── support/              # Service Cloud (21 objects)
-│   ├── hr/                   # HR Cloud (16 objects)
-│   ├── ai/                   # AI Services & ML Models
-│   ├── ui/                   # UI Components
-│   └── server/               # Application Server
-├── pnpm-workspace.yaml       # Workspace config
-└── package.json              # Root scripts
-```
-
-**Total**: 65 objects across 6 business clouds
-
-**Package Dependencies:**
-
-```
-@hotcrm/server (Application Assembly)
-  ├── @hotcrm/core
-  ├── @hotcrm/crm (13 objects)
-  ├── @hotcrm/marketing (2 objects)
-  ├── @hotcrm/products (9 objects)
-  ├── @hotcrm/finance (4 objects)
-  ├── @hotcrm/support (21 objects)
-  ├── @hotcrm/hr (16 objects)
-  ├── @hotcrm/ai (ML models)
-  └── @hotcrm/ui
-
-Domain Packages (crm, marketing, products, finance, support, hr)
-  └── @hotcrm/core
-
-@hotcrm/ai
-  └── @hotcrm/core
-
-@hotcrm/ui
-  └── @hotcrm/core
-
-@hotcrm/core (no dependencies)
-```
-
-## Vertical Slice Architecture
-
-Each domain package is a self-contained vertical slice:
-
-```
-@hotcrm/crm/
+├── package.json              ← single package, not a workspace
+├── pnpm-workspace.yaml       ← only apps/* (the docs site)
+├── tsconfig.json
+├── objectstack.config.ts     ← stack definition, the "entry point"
 ├── src/
-│   ├── account.object.ts      # Schema
-│   ├── contact.object.ts      # Schema
-│   ├── opportunity.object.ts  # Schema
-│   ├── opportunity.hook.ts    # Business Logic
-│   ├── ai_briefing.action.ts  # Custom Action
-│   └── index.ts               # Exports
-└── package.json
+│   ├── objects/              ← Account, Contact, Lead, Opportunity, ...
+│   ├── hooks/                ← index.ts re-exports per-object hooks
+│   ├── pages/
+│   ├── views/
+│   ├── actions/
+│   ├── dashboards/
+│   ├── reports/
+│   ├── flows/
+│   ├── agents/
+│   ├── skills/
+│   ├── approvals/
+│   ├── sharing/
+│   ├── profiles/
+│   ├── apps/
+│   ├── interfaces/
+│   ├── cubes/
+│   ├── rag/
+│   ├── translations/
+│   └── data/index.ts         ← seed dataset (~90 records)
+├── apps/
+│   └── docs/                 ← documentation site (Next.js / Fumadocs)
+└── content/docs/             ← documentation source
 ```
 
-**Benefits:**
-- Complete feature isolation
-- Easy to understand and maintain
-- Can be deployed independently
-- Clear ownership
+HotCRM intentionally uses a **flat single-package layout**, not a monorepo of `packages/*`. The previous monorepo attempt is preserved on the `legacy-archive` branch — it traded simplicity for the unrealised promise of independently published business packages, while introducing build-order, type-resolution, and seed-loading bugs at every layer.
 
-## Security Architecture
+## How `defineStack` Wires Everything
 
-### Authentication & Authorization
+`objectstack.config.ts` aggregates every metadata module and hands it to the runtime:
 
-```typescript
-// Future: JWT-based authentication
-const user = await authenticate(req.headers.authorization);
+```ts
+import { defineStack } from '@objectstack/spec';
+import * as objects from './src/objects/index.js';
+import * as pages from './src/pages/index.js';
+import { allHooks } from './src/hooks/index.js';
+import { CrmSeedData } from './src/data/index.js';
+// ... and so on
 
-// Row-level security
-const accounts = await db.find('Account', {
-  filters: [['OwnerId', '=', user.Id]]
+export default defineStack({
+  manifest: { id: 'com.example.crm', namespace: 'crm', version: '0.1.0', type: 'app' },
+
+  // What platform capabilities this stack needs. The CLI auto-loads
+  // matching service plugins (auth, ui, ai, automation, ...).
+  requires: ['ai', 'automation', 'analytics', 'auth', 'ui', 'approvals', 'sharing'],
+
+  objects: Object.values(objects),
+  pages:   Object.values(pages),
+  hooks:   allHooks,
+  data:    CrmSeedData,
+  // ...
 });
 ```
 
-### Field-Level Security
+At dev time, `objectstack dev`:
 
-```typescript
-// Field permissions based on user role
-if (user.role !== 'Admin') {
-  delete account.AnnualRevenue; // Hide sensitive data
-}
-```
+1. Reads `objectstack.config.ts`.
+2. Compiles & validates every metadata entry against `@objectstack/spec` schemas.
+3. Emits `dist/objectstack.json` — a single canonical artifact.
+4. Boots the runtime, registers all capabilities, exposes:
+   - REST API at `/api/v1/*`
+   - `/_console/`, `/_studio/`, `/_account/` UIs
+   - WebSocket / SSE channels for live updates
 
-### Audit Trail
-
-All data operations are logged for compliance:
-
-```typescript
-{
-  timestamp: '2026-01-27T10:00:00Z',
-  user: 'john.doe@acme.com',
-  action: 'UPDATE',
-  object: 'Account',
-  recordId: 'acc_123',
-  changes: {
-    Status: { old: 'Prospect', new: 'Customer' }
-  }
-}
-```
-
-## Scalability
-
-### Horizontal Scaling
-
-The stateless application layer can be scaled horizontally:
+## Build → Artifact → Runtime
 
 ```
-Load Balancer
-    ├── Server Instance 1
-    ├── Server Instance 2
-    └── Server Instance 3
-          ↓
-    Database Cluster
+src/ + objectstack.config.ts
+       │
+       │  pnpm build   (objectstack build)
+       ▼
+dist/objectstack.json   ← canonical, signed, hashable
+       │
+       │  pnpm dev / pnpm start
+       ▼
+@objectstack/runtime in-process
+       │
+       ├── HTTP @ :3000
+       ├── SQLite driver @ .objectstack/data/standalone.db
+       └── QuickJS sandbox for hook handlers
 ```
 
-### Caching Strategy
+The artifact is **the unit of deployment**. CI builds it, you ship it, the runtime executes it. No source code runs in production — only validated metadata.
 
-- **Metadata Caching**: Object schemas are cached in memory
-- **Query Results**: Frequently accessed data is cached
-- **API Responses**: Cache at CDN level
+## What HotCRM Adds
 
-### Performance Optimization
+The runtime knows nothing about CRM concepts. HotCRM provides:
 
-- Lazy loading of related records
-- Batch operations for bulk data
-- Database query optimization
-- Efficient indexing
+- **Domain objects** (Account, Lead, Opportunity, …) with their fields and relationships.
+- **Business rules** (cannot delete a customer with open opportunities; website must be a URL; quote discount > 20 % requires approval).
+- **Sales process** state machines for Lead and Opportunity.
+- **Seed records** for demos and tests.
+- **AI agents** purpose-built for sales workflows.
 
-## Technology Stack
+Add another vertical (e.g. ticketing, HR) by adding `*.object.ts` + `*.hook.ts` + `*.page.ts` under `src/` and re-exporting from the relevant `index.ts`. No platform changes.
 
-### Backend
+## Next
 
-- **Runtime**: Node.js 20+
-- **Language**: TypeScript 5+
-- **Framework**: Express.js
-- **Package Manager**: pnpm 8+
-
-### Frontend (Future)
-
-- **Framework**: React / Next.js
-- **Styling**: Tailwind CSS
-- **State Management**: React Query / Zustand
-
-### Database (Future)
-
-- **Primary**: PostgreSQL (relational data)
-- **Cache**: Redis (session, cache)
-- **Search**: Elasticsearch (full-text search)
-- **Vector DB**: Pinecone (AI embeddings)
-
-### AI/ML
-
-- **LLM**: OpenAI GPT-4 / GPT-3.5
-- **Embeddings**: OpenAI text-embedding-ada-002
-- **NLP**: Custom models for entity extraction
-
-## Next Steps
-
-Explore specific architectural components:
-
-- [Metadata-Driven Architecture](/docs/architecture/metadata-driven)
-- [ObjectQL Query Language](/docs/architecture/objectql)
-- [Monorepo Structure](/docs/architecture/monorepo-structure)
+<Cards>
+  <Card title="Data Protocol" href="/docs/architecture/data-protocol" icon="database">
+    Field types, relationships, ObjectQL.
+  </Card>
+  <Card title="UI Protocol" href="/docs/architecture/ui-protocol" icon="monitor">
+    Pages, views, dashboards.
+  </Card>
+  <Card title="Automation Protocol" href="/docs/architecture/automation-protocol" icon="git-branch">
+    Hooks, flows, approvals.
+  </Card>
+  <Card title="Plugin Architecture" href="/docs/architecture/plugin-architecture" icon="puzzle">
+    How the runtime loads platform plugins.
+  </Card>
+</Cards>

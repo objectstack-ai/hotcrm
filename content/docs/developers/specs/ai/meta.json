@@ -1,8 +1,0 @@
-{
-  "title": "AI Specs",
-  "pages": [
-    "index",
-    "model-registry",
-    "prediction-service"
-  ]
-}

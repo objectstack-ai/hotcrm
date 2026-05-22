@@ -1,9 +1,0 @@
-{
-  "title": "Service Cloud",
-  "pages": [
-    "index",
-    "ticket-management",
-    "knowledge-base",
-    "sla-management"
-  ]
-}

@@ -1,267 +1,125 @@
 ---
 title: Quick Start
-description: Get started with HotCRM in 5 minutes
+description: From zero to your first record in 10 minutes.
 ---
 
-# Quick Start Guide
+# Quick Start
 
-This guide will help you get started with HotCRM quickly. You'll learn how to create your first lead, convert it to an opportunity, and track it through the sales pipeline.
+This guide assumes `pnpm dev` is running per the [installation guide](/docs/getting-started/installation).
 
-## Prerequisites
+## 1. Sign Up
 
-Make sure you have [installed HotCRM](/docs/getting-started/installation) and the development server is running.
+Open [http://localhost:3000/_account/sign-up](http://localhost:3000/_account/sign-up) and create an account. Or via curl:
 
-## Step 1: Access the Dashboard
-
-Open your browser and navigate to:
-
-```
-http://localhost:3000
+```bash
+curl -X POST http://localhost:3000/api/v1/auth/sign-up/email \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"sales@acme.com","password":"admin123","name":"Sales Rep"}'
 ```
 
-You should see the HotCRM Sales Dashboard with KPI cards showing:
-- Monthly Revenue
-- Active Opportunities
-- Win Rate
-- Pipeline Value
+The response includes an auth token. Save it; you'll use it for API calls.
 
-## Step 2: Create Your First Lead
+## 2. Browse the Seeded Data
 
-### Using the UI
+Open [http://localhost:3000/_console/](http://localhost:3000/_console/). You'll land on the Home page. The left sidebar lists every object the user can see — Accounts, Contacts, Leads, Opportunities, Quotes, Contracts, Campaigns, Cases, Tasks, Products.
 
-1. Navigate to **Leads** from the main menu
-2. Click **New Lead**
-3. Fill in the lead information:
-   - **Name**: John Doe
-   - **Company**: Acme Corporation
-   - **Email**: john.doe@acme.com
-   - **Phone**: +1-555-0123
-   - **Source**: Website
-   - **Status**: New
+Click **Accounts** — you'll see 5 demo records (Acme Corporation, Global Tech Inc, etc.) with industry, revenue, employee count, tier, segment, and health score.
 
-4. Click **Save**
+Click any account to open the **Account Detail** page (`src/pages/account_detail.page.ts`). It shows fields, related contacts, related opportunities, and quick actions.
 
-### Using ObjectQL (Developer Mode)
+## 3. Create a Record (UI)
 
-```typescript
-import { db } from '../db';
+From the Accounts list view, click **New**. Fill in:
 
-const newLead = await db.doc.create('Lead', {
-  FirstName: 'John',
-  LastName: 'Doe',
-  Company: 'Acme Corporation',
-  Email: 'john.doe@acme.com',
-  Phone: '+1-555-0123',
-  LeadSource: 'Website',
-  Status: 'New'
-});
+- **Name**: `Stark Industries`
+- **Type**: `customer`
+- **Industry**: `manufacturing`
+- **Annual Revenue**: `9000000000`
+- **Website**: `https://stark.example.com`
 
-console.log('Lead created:', newLead.Id);
+Click **Save**. The `account_protection` hook (`src/objects/account.hook.ts`) runs server-side:
+
+- Validates the website starts with `http://` or `https://`
+- Rejects negative annual revenue
+- Normalises `account_number` to uppercase
+
+Try saving with `website: stark.example.com` (no protocol) — you'll get a server error: *"Website must start with http:// or https://"*. This is the hook in action.
+
+## 4. Create a Record (API)
+
+```bash
+TOKEN="<your token from step 1>"
+
+curl -X POST http://localhost:3000/api/v1/objectql \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "operation": "create",
+    "object": "lead",
+    "data": {
+      "first_name": "Tony",
+      "last_name": "Stark",
+      "company": "Stark Industries",
+      "email": "tony@stark.example.com",
+      "status": "open",
+      "rating": "hot"
+    }
+  }'
 ```
 
-## Step 3: View Lead Scoring
+Query it back:
 
-HotCRM automatically calculates a lead score based on:
-- Data completeness
-- Engagement level
-- Company information
-
-View the AI-generated lead score (0-100) in the lead detail page.
-
-## Step 4: Convert Lead to Opportunity
-
-When a lead is qualified and ready for sales:
-
-1. Open the lead record
-2. Click **Convert Lead**
-3. This will create:
-   - An **Account** (Acme Corporation)
-   - A **Contact** (John Doe)
-   - An **Opportunity** (linked to the account)
-
-## Step 5: Manage the Opportunity
-
-### Update Opportunity Stage
-
-Track your opportunity through the 7-stage sales pipeline:
-
-1. 🔍 **Prospecting** (10% probability)
-2. 📞 **Qualification** (20%)
-3. 💡 **Needs Analysis** (40%)
-4. 📊 **Proposal** (60%)
-5. 💰 **Negotiation** (80%)
-6. ✅ **Closed Won** (100%)
-7. ❌ **Closed Lost** (0%)
-
-### Add Activities
-
-Log your sales activities:
-
-```typescript
-await db.doc.create('Activity', {
-  Type: 'Call',
-  Subject: 'Discovery Call with John Doe',
-  Description: 'Discussed their requirements for CRM system',
-  Status: 'Completed',
-  RelatedTo: opportunityId,
-  DurationMinutes: 30
-});
+```bash
+curl -X POST http://localhost:3000/api/v1/objectql \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "operation": "find",
+    "object": "lead",
+    "filters": [["company", "=", "Stark Industries"]]
+  }'
 ```
 
-## Step 6: Create a Quote
+## 5. Try the State Machine
 
-Configure a quote for your opportunity:
+Leads have a state machine declared in `src/objects/lead.state.ts`:
 
-1. Navigate to the opportunity
-2. Click **New Quote**
-3. Add products from the catalog
-4. Apply discounts if needed
-5. Send the quote to the customer
-
-### Using ObjectQL:
-
-```typescript
-// Create a quote
-const quote = await db.doc.create('Quote', {
-  Name: 'Acme Corp - CRM Implementation',
-  OpportunityId: opportunityId,
-  AccountId: accountId,
-  Status: 'Draft',
-  ValidUntil: '2026-02-28',
-  PaymentTerms: 'Net 30'
-});
-
-// Add line items
-await db.doc.create('QuoteLineItem', {
-  QuoteId: quote.Id,
-  ProductId: productId,
-  Quantity: 5,
-  UnitPrice: 1000.00,
-  Discount: 10
-});
+```
+open → working → qualified → converted
+                          → unqualified
 ```
 
-## Step 7: Use AI Features
+Each transition is guarded. Try transitioning a `converted` lead back to `open` via the UI — you'll be blocked. Try converting an `open` lead directly to `converted` — also blocked. Transitions must follow the declared graph.
 
-### Smart Briefing
+## 6. Trigger an Approval
 
-Get AI-generated insights about your customer:
+Open an opportunity → create a quote → apply a discount > 20 %. The quote enters the **Quote Discount Approval** process (`src/approvals/`). It will appear under the Approvals tab for the assigned approver.
 
-```typescript
-import { executeSmartBriefing } from '@hotcrm/crm';
+## What Just Happened
 
-const briefing = await executeSmartBriefing({
-  accountId: accountId
-});
+Every interaction you just performed was driven by metadata in `src/`:
 
-console.log('AI Summary:', briefing.summary);
-console.log('Next Steps:', briefing.nextSteps);
-console.log('Sales Tips:', briefing.salesTalkingPoints);
-```
+| You did | File that drove it |
+|---|---|
+| Saw the account list | `src/views/account.view.ts` |
+| Opened the account detail | `src/pages/account_detail.page.ts` |
+| Got blocked by website validation | `src/objects/account.hook.ts` |
+| Transitioned a lead | `src/objects/lead.state.ts` |
+| Sent a quote for approval | `src/approvals/index.ts` |
+| Got 90 seed records on sign-up | `src/data/index.ts` |
 
-### Win Probability
-
-HotCRM automatically calculates win probability based on:
-- Current stage
-- Deal size
-- Customer engagement
-- Historical data
-
-View the AI prediction in the opportunity detail page.
-
-## Common Tasks
-
-### View All Leads
-
-```typescript
-// Get all leads
-const allLeads = await db.find('Lead', {});
-
-// Get high-score leads (>70 points)
-const hotLeads = await db.find('Lead', {
-  filters: [['LeadScore', '>', 70]]
-});
-
-// Get leads from public pool
-const publicPool = await db.find('Lead', {
-  filters: [['OwnerId', '=', null]]
-});
-```
-
-### Search Opportunities
-
-```typescript
-// Get all open opportunities
-const openOpps = await db.find('Opportunity', {
-  filters: [['IsClosed', '=', false]]
-});
-
-// Get opportunities in negotiation stage
-const negotiating = await db.find('Opportunity', {
-  filters: [['Stage', '=', 'Negotiation']]
-});
-
-// Get opportunities worth > $10,000
-const bigDeals = await db.find('Opportunity', {
-  filters: [['Amount', '>', 10000]]
-});
-```
-
-### Create a Campaign
-
-```typescript
-const campaign = await db.doc.create('Campaign', {
-  Name: 'Q1 2026 Product Launch',
-  Type: 'Email',
-  Status: 'Planning',
-  StartDate: '2026-02-01',
-  EndDate: '2026-03-31',
-  BudgetedCost: 5000,
-  Description: 'Email campaign for new product launch'
-});
-```
-
-## Best Practices
-
-### 1. Keep Data Clean
-
-- Always fill in required fields
-- Use consistent naming conventions
-- Regularly update opportunity stages
-- Log all customer interactions
-
-### 2. Leverage AI
-
-- Review AI-generated lead scores
-- Use smart briefing before customer calls
-- Follow AI next-step recommendations
-- Monitor win probability predictions
-
-### 3. Track Activities
-
-- Log every call, meeting, and email
-- Use check-in for field visits
-- Add detailed notes
-- Set follow-up tasks
-
-### 4. Use List Views
-
-- **My Leads**: Leads assigned to you
-- **Public Pool**: Unclaimed leads
-- **High Score Leads**: Hot leads (>70 score)
-- **Recent Leads**: Leads from last 7 days
+There is no admin UI to change behaviour — edit the file, restart `pnpm dev`, and the change is live.
 
 ## Next Steps
 
-Now that you've completed the quick start, explore more features:
-
-- [Marketing & Leads](/docs/features/marketing-leads) - Deep dive into lead management
-- [Sales Automation](/docs/features/sales-automation) - Complete sales features
-- [AI Capabilities](/docs/ai/overview) - Learn about AI enhancements
-- [Creating Objects](/docs/development/creating-objects) - Customize your CRM
-
-## Need Help?
-
-- Check the [API Reference](/docs/api-reference/objectql-api) for detailed API documentation
-- Review [Architecture](/docs/architecture/overview) to understand the system design
-- Open an issue on [GitHub](https://github.com/objectstack-ai/hotcrm/issues) for support
+<Cards>
+  <Card title="Creating Objects" href="/docs/developers/creating-objects" icon="database">
+    Add a new business object.
+  </Card>
+  <Card title="Business Logic" href="/docs/developers/business-logic" icon="zap">
+    Write your first hook.
+  </Card>
+  <Card title="Page Layouts" href="/docs/developers/page-layouts" icon="layout">
+    Customise a detail page.
+  </Card>
+</Cards>

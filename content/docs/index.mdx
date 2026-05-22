@@ -1,110 +1,78 @@
 ---
 title: HotCRM Documentation
-description: The World's First AI-Native, Metadata-Driven CRM — Find the docs you need by role.
+description: A production-ready CRM built on the ObjectStack runtime — metadata-driven, AI-extensible.
 ---
 
 # HotCRM Documentation
 
-Welcome to the **HotCRM** documentation. Whether you're closing deals, configuring the platform, or building integrations, start here to find the guides that match your role.
+**HotCRM** is a production CRM application built on top of [`@objectstack/runtime`](https://github.com/objectstack-ai/framework). Everything — objects, hooks, pages, flows, agents — is declared as **TypeScript metadata** and executed by the platform.
+
+This is the documentation for the **current baseline** (v0.1). The baseline ships **10 core sales-cloud objects**, 10 server-side hooks, 12 pages, 5 automation flows and 2 AI agents. Iterations add capabilities incrementally — see [What's New](/docs/whats-new).
 
 ## 🚀 Get Started
 
 <Cards>
   <Card title="Introduction" href="/docs/getting-started/introduction" icon="book-open">
-    What HotCRM is, core principles, and who it's for.
+    What HotCRM is, what's included, and how it differs from a SaaS CRM.
   </Card>
   <Card title="Installation" href="/docs/getting-started/installation" icon="download">
-    Set up HotCRM locally or in the cloud.
+    Clone, install, and start the dev server in 5 minutes.
   </Card>
   <Card title="Quick Start" href="/docs/getting-started/quick-start" icon="zap">
-    Create your first lead and close a deal in minutes.
+    Sign up, browse the seeded data, and create your first record.
   </Card>
 </Cards>
 
-## ☁️ Products & Clouds
-
-Explore the six business clouds that power every stage of the customer lifecycle.
+## 🧱 Build & Extend
 
 <Cards>
-  <Card title="Sales Cloud" href="/docs/modules/sales" icon="trending-up">
-    Lead management, Opportunity pipelines, AI-powered deal intelligence, and Activity tracking.
+  <Card title="Creating Objects" href="/docs/developers/creating-objects" icon="database">
+    Add a new business object using <code>ObjectSchema</code>.
   </Card>
-  <Card title="Service Cloud" href="/docs/modules/service" icon="life-buoy">
-    Case management, SLA tracking, Knowledge base, and Omni-channel routing.
+  <Card title="Business Logic (Hooks)" href="/docs/developers/business-logic" icon="zap">
+    Validate, normalize, and protect data via <code>beforeInsert/Update/Delete</code> hooks.
   </Card>
-  <Card title="Marketing Cloud" href="/docs/modules/marketing" icon="megaphone">
-    Campaign management, Email automation, Lead nurturing, and ROI attribution.
+  <Card title="Page Layouts" href="/docs/developers/page-layouts" icon="layout">
+    Compose detail and list pages declaratively.
   </Card>
-  <Card title="Revenue Cloud" href="/docs/modules/revenue" icon="banknote">
-    CPQ (Configure, Price, Quote), Contracts, Invoicing, and Payment tracking.
-  </Card>
-  <Card title="HR Cloud" href="/docs/modules/hr" icon="users">
-    Recruitment, Onboarding, Performance management, Payroll, and Training.
-  </Card>
-  <Card title="AI Intelligence" href="/docs/modules/ai" icon="cpu">
-    AI Agents, Co-Pilot, Model registry, Prediction service, and RAG pipelines.
+  <Card title="Seed Data" href="/docs/guides/seed-data" icon="seedling">
+    Author <code>defineDataset()</code> records with compile-time field checking.
   </Card>
 </Cards>
 
-## 🔧 Administration
+## 🏛 Architecture
 
 <Cards>
-  <Card title="Setup & Configuration" href="/docs/admin/setup" icon="settings">
-    Environment setup, package management, and system preferences.
+  <Card title="Overview" href="/docs/architecture/overview" icon="layers">
+    How the runtime, plugins, and metadata fit together.
   </Card>
-  <Card title="Security" href="/docs/admin/security" icon="shield">
-    Authentication, authorization, and data protection policies.
+  <Card title="Data Protocol" href="/docs/architecture/data-protocol" icon="database">
+    Object schema, fields, relationships, ObjectQL.
   </Card>
-  <Card title="Users & Permissions" href="/docs/admin/users-permissions" icon="user-check">
-    User provisioning, roles, profiles, and permission sets.
+  <Card title="UI Protocol" href="/docs/architecture/ui-protocol" icon="monitor">
+    Apps, pages, views, dashboards.
   </Card>
-  <Card title="Data Management" href="/docs/admin/data-management" icon="database">
-    Data import/export, backups, and data quality.
-  </Card>
-</Cards>
-
-## 💻 Developer Guide
-
-<Cards>
-  <Card title="Creating Objects" href="/docs/developers/creating-objects" icon="file-code">
-    Define business objects using the metadata-first `.object.ts` protocol.
-  </Card>
-  <Card title="Business Logic" href="/docs/developers/business-logic" icon="workflow">
-    Write server-side hooks, triggers, and automation rules.
-  </Card>
-  <Card title="Platform Architecture" href="/docs/architecture/overview" icon="layers">
-    Understand the ObjectStack Protocol, plugin system, and data model.
-  </Card>
-  <Card title="Field Type Guide" href="/docs/developers/field-type-guide" icon="list">
-    Reference for all 33+ field types including lookup, master-detail, and summary.
+  <Card title="Automation Protocol" href="/docs/architecture/automation-protocol" icon="git-branch">
+    Flows, approvals, hooks.
   </Card>
 </Cards>
 
-## 📊 Platform at a Glance
+## What's in the Box (v0.1 Baseline)
 
-| Metric | Value |
-|--------|-------|
-| **Protocol Version** | @objectstack/spec v3.0.11 |
-| **Business Packages** | 13 (6 core clouds + AI + Analytics + Integration + Community + 4 verticals) |
-| **Business Objects** | ~148 across 13 packages |
-| **Server-Side Hooks** | 121+ hooks enforcing business logic |
-| **Integration Connectors** | 10 (Stripe, DocuSign, Slack, Gmail, Teams, PayPal, Adobe Sign, Outlook, QuickBooks, LinkedIn) |
-| **AI Agent Workflows** | 13 AI agents + 6 autonomous workflows |
-| **Tests** | 3,817 passing across 195 test files |
+| Layer | Items |
+|---|---|
+| **Objects** | account, contact, lead, opportunity, opportunity_line_item, product, quote, quote_line_item, contract, campaign, campaign_member, case, task |
+| **Hooks** | 10 — field validation, status normalization, deletion protection |
+| **Pages** | Home, App Launcher, Utility Bar, Account / Lead / Opportunity detail, Action Modals |
+| **Views** | 10 — one list view per core object |
+| **Flows** | 5 — automation pipelines |
+| **Agents** | 2 — AI assistants |
+| **Sharing** | 4 sharing rules + role hierarchy |
+| **Seed Data** | ~90 records across 9 tables (verified on first sign-up) |
 
-## 📚 Resources
+## Why HotCRM
 
-<Cards>
-  <Card title="What's New" href="/docs/whats-new" icon="sparkles">
-    Latest features, improvements, and release highlights.
-  </Card>
-  <Card title="Editions & Licensing" href="/docs/editions" icon="package">
-    Compare HotCRM editions — Essentials, Professional, Enterprise, Ultimate.
-  </Card>
-  <Card title="Roadmap" href="/docs/roadmap" icon="map">
-    See what's coming next — 2026 and beyond.
-  </Card>
-  <Card title="Analytics & BI" href="/docs/modules/analytics" icon="bar-chart">
-    Dashboards, reports, and AI-powered insights.
-  </Card>
-</Cards>
+- **Code-as-source-of-truth** — every field, hook, page, and flow is checked into git as TypeScript. No clicks-not-code drift between dev and prod.
+- **AI-extensible** — agents and skills are first-class metadata; the same record can be operated by a human at `/_console/` or an LLM via the agent runtime.
+- **Self-hosted** — runs on SQLite for dev and Postgres / MongoDB / Turso for production. No vendor lock-in.
+- **Incremental** — iterations add 1 verified feature at a time. See [What's New](/docs/whats-new) for the changelog.

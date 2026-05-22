@@ -1,253 +1,57 @@
 ---
 title: What's New
-description: Latest features, improvements, and releases in HotCRM.
+description: Release notes for HotCRM.
 ---
 
-# What's New in HotCRM
+# What's New
 
-Stay up to date with the latest features, improvements, and platform updates.
+## v0.1.0 — Baseline (May 2026)
 
-## February 2027 — Phase 14 Complete
+**Hard reset.** Previous iterations attempted a 17-package monorepo covering 146 objects across CRM/HR/Healthcare/Education/Real Estate/Financial Services/Community. That codebase shipped with disabled hooks, 30 % seed-insert rate, and an unbuildable browser experience. It is preserved on the `legacy-archive` git branch for reference only.
 
-### 🔔 v3.0.8 Feed System, Interface Builder & Enhanced UI
+This release re-bases HotCRM on `framework/examples/app-crm` — a verified, runnable reference implementation maintained inside the ObjectStack framework monorepo. From here, every new feature is added one PR at a time with explicit acceptance criteria.
 
-This release adopts all new metadata types from @objectstack/spec v3.0.8, bringing the spec schema adoption to ~100%.
+### Included
 
-**Highlights:**
-- **Activity Feed / Chatter**: Salesforce Chatter equivalent across 6 core clouds — record-level activity streams with posts, @mentions, reactions, field change tracking, and subscriptions on 20+ business objects
-- **Interface Builder**: 4 custom blank page layouts (Sales Dashboard, Revenue Overview, HR Portal, Service Console) with drag-and-drop canvas and data-bound elements
-- **Dashboard Enhancements**: Dashboard headers with action buttons on all 6 core cloud dashboards, 24 cross-widget global filters, widget KPI measures with drill-down actions
-- **List View Enhancements**: 18 tabbed list views, sharing configurations, appearance settings, inline record creation, and user action toolbars
-- **Feed API**: 8 REST endpoints for feed CRUD, reactions, and subscriptions with standardized `IFeedService` contract
-- **Studio Builder**: Interface Builder, Page Builder, Canvas Snap, and Element Palette configurations for visual page composition
-- **Navigation**: Header, sidebar, and utility bar navigation areas with action and report shortcuts
-- **System Metadata**: Package conventions, system field/object name enumerations, Oclif CLI plugin config, standardized sort specifications
-- **Tests**: +327 new tests (3,707 total across 188 files)
+- **10 core sales-cloud objects**: account, contact, lead, opportunity (+ line items), product, quote (+ line items), contract, campaign (+ members), case, task.
+- **10 hooks** covering field validation (e.g. website format), value normalization (uppercased account numbers), and deletion protection (customer accounts with open opportunities).
+- **2 state machines** (lead, opportunity) with transition guards.
+- **12 pages** including Home, App Launcher, Account / Lead / Opportunity details, Action Modals, Utility Bar.
+- **10 list views** (one per core object).
+- **5 automation flows**, **2 AI agents**, **2 skills**, **1 approval process**.
+- **4 sharing rules** + 10-level role hierarchy.
+- **Seed dataset**: ~90 records authored with `defineDataset()` (compile-time field-name checking). Verified to insert successfully on first sign-up.
+- **`/_console/`, `/_studio/`, `/_account/`** UIs wired and serving 200.
 
----
+### Architecture changes from legacy
 
-## February 2027 — Phase 13 Complete
+| Aspect | Legacy | v0.1 |
+|---|---|---|
+| Layout | 17 packages × workspace | Flat `src/`, single package |
+| Workspace scope | `packages/*` + `apps/*` | `apps/*` only (docs site) |
+| Build | Per-package `tsc` + aggregator | Single `objectstack build` |
+| Object count | 146 (mostly unverified) | 13 (all wired end-to-end) |
+| Hooks | 107 (all disabled — sandbox-incompatible) | 10 (running) |
+| Seed insert rate | ~30 % | 100 % |
 
-### 📦 Module Optimization & Seed Data Foundation
+### Removed
 
-This release addresses metadata richness imbalance, establishes the seed data foundation, and completes plugin registration for all 13 packages.
+- `packages/{crm,finance,hr,marketing,products,support,analytics,integration,community,healthcare,real-estate,education,financial-services,ai,core,server}`
+- `objectstack.aggregator.ts` (no longer needed)
+- The "146 objects / 6 clouds" marketing surface — docs now describe only what runs.
 
-**Highlights:**
-- **Seed Data**: 39 seed files across 13 packages — system reference data (currencies, countries, industries) and per-package demo data with `pnpm seed` command
-- **Plugin Registration**: All 13 packages registered in root `objectstack.config.ts` (previously only 6)
-- **Vertical Enhancement**: Complete UI metadata for Healthcare, Real Estate, Education, and Financial Services — pages, views, forms, dashboards, workflows, state machines, permissions, RLS, reports, charts
-- **Core Cloud Equalization**: All 8 non-CRM packages (Finance, Marketing, Products, Support, HR, Analytics, Integration, Community) enhanced with state machines, AI agents, domain events, capability manifests, studio plugins, additional forms/pages/reports/charts
-- **State Machines**: 13 total (up from 3) covering case, lead, opportunity, invoice, campaign, application, listing, patient, kyc, order, employee, sync, idea
-- **AI Agents**: 13 total (up from 2) — one per package for intelligent assistance
-- **Reports & Charts**: 36 reports and 30 charts across all 13 packages
-- **Tests**: 3,380 passing across 180 test files
+### Migration
 
----
+- If you forked the legacy hotcrm, check out `legacy-archive` for the prior tree.
+- If you want a specific schema (e.g. `patient.object.ts` from healthcare), port it manually into `src/objects/` and re-verify hooks against the QuickJS sandbox.
 
-## 2027 — Phase 12E Complete
+## Roadmap
 
-### 🤖 Advanced AI & Enterprise Features
+See [GitHub Issues](https://github.com/objectstack-ai/hotcrm/issues) for the active iteration backlog.
 
-Next-generation AI capabilities and enterprise-grade platform features.
+Iteration policy:
 
-**Highlights:**
-- **Computer Vision**: Business card scanning, document OCR for invoices/contracts, receipt parsing
-- **Voice AI**: Meeting transcription with speaker identification, sentiment analysis on call recordings
-- **Anomaly Detection**: Fraud detection for financial transactions, unusual login pattern alerts, data quality scoring
-- **Predictive Forecasting**: Revenue forecasting with Monte Carlo confidence intervals, churn prediction with explainability
-- **Multi-Modal Agents**: Agents that see, hear, and reason across data types
-- **Multi-Tenancy**: Data isolation, tenant-specific customization, shared infrastructure
-- **SOC 2 Compliance**: Comprehensive audit logging, encryption, MFA, vulnerability scanning
-- **Data Residency**: Regional data storage for GDPR, CCPA, LGPD compliance
-- **White-Label**: Customizable branding, partner portal, custom login pages
-- **Marketplace**: Third-party app marketplace, app review process, billing integration
-
----
-
-## 2026 Q4 — Phase 12A-D Complete
-
-### 🏥 Vertical Industry Solutions
-
-Four industry-specific CRM verticals with 28 new objects, 50 hooks, and 16 AI actions.
-
-**Highlights:**
-- **Real Estate CRM** (`@hotcrm/real-estate`): Property listings, showings, offers, commissions, open houses, neighborhood data; AI property valuation and buyer-listing matching
-- **Healthcare CRM** (`@hotcrm/healthcare`): HIPAA-compliant patient management, appointments, insurance, referrals, prescriptions, care plans; AI scheduling optimization and patient risk scoring
-- **Financial Services CRM** (`@hotcrm/financial-services`): Wealth accounts, portfolios, advisory, KYC/AML compliance, financial products; AI portfolio optimization and regulatory analysis
-- **Education CRM** (`@hotcrm/education`): Student lifecycle, enrollments, courses, alumni, scholarships, admissions; AI student success prediction and course recommendation
-
----
-
-## 2026 Q3-Q4 — Phase 11 Complete
-
-### 🔌 Ecosystem & Connectivity
-
-Three new packages, 10 external connectors, and a full integration layer.
-
-**Highlights:**
-- **Analytics Cloud** (`@hotcrm/analytics`): Reports, dashboards, KPIs, metrics, data sources — with AI-powered insights and natural language report generation
-- **Integration Cloud** (`@hotcrm/integration`): Connectors, sync configs, webhooks, API keys, field mappings — 10 pre-built connectors (Stripe, DocuSign, Slack, Gmail, Teams, PayPal, Adobe Sign, Outlook, QuickBooks, LinkedIn)
-- **Community Portal** (`@hotcrm/community`): Discussion forums, idea management, gamification badges, community events — with AI content moderation
-- **Cross-Ecosystem Testing**: End-to-end integration tests spanning CRM→Finance→Integration→Analytics
-- **Salesforce Parity**: Increased from ~92% to ~95%
-
----
-
-## 2026 Q3 — Phase 10.6 Complete
-
-### 🖼️ Form Builder & Page Layout Parity
-
-Advanced form builder and page layout capabilities matching Salesforce Lightning standards.
-
-**Highlights:**
-- **6 Form Layout Types**: simple, tabbed, wizard, modal, drawer, split
-- **12 Form Definitions**: Including quick-create, onboarding, and split variants
-- **Field Controls**: readonly, hidden, visibleOn, dependsOn, widget, placeholder, helpText
-- **Collapsible Sections**: ~15 collapsible sections across forms
-- **4 Page Types**: record, home, app, utility
-- **21+ Component Types**: Data display, input, navigation, visualization, AI, layout, content
-- **AI-Embedded Pages**: Inline AI insights, copilot panels, recommendations on record pages
-- **Profile Assignment**: Pages assigned by user profile with component visibility rules
-
----
-
-## 2026 Q2-Q3 — Phase 10.5 Complete
-
-### 📊 Deep Metadata Adoption
-
-Maximized @objectstack/spec schema adoption from 35% to 69%.
-
-**Highlights:**
-- **Reports**: 8 report definitions across all clouds (pipeline, forecast, revenue, AR aging, headcount, campaign ROI, product mix, case volume)
-- **Advanced Views**: 6 Kanban/Calendar/Gantt/Timeline views for visual pipeline management
-- **Charts**: 6 chart configurations (funnel, trend, waterfall, distribution, bar, trend)
-- **Flows**: 6 visual process flows (lead qualification, deal close, invoice collection, onboarding, case escalation, lead nurture)
-- **MCP Integration**: 24 AI-callable tools, 8 data resources, 10 prompt templates across 6 clouds
-- **AI**: 2 orchestrations (sales, support), 3 predictive models (lead scoring, churn, deal forecast)
-- **Security**: 4 RLS policies, 3 security policies (password, session, composite), email templates, notification channels
-- **Scheduled Jobs**: 12 automated jobs (forecast recalc, SLA checks, lead scoring refresh, email queue processing)
-
----
-
-## February 2026 — Phase 10 Complete
-
-### 🏢 Salesforce Feature Parity
-
-This release closes the most critical Salesforce feature gaps, adding 25 new business objects and cross-cloud lifecycle automation.
-
-**Highlights:**
-- **Sales Cloud**: Opportunity Line Items, Contact Roles, Forecasting, Territory Management, Team Selling, Competitive Tracking
-- **Revenue Cloud**: Credit Notes, Billing Schedules, Revenue Recognition (ASC 606), Payment Methods
-- **Marketing Cloud**: Journey Builder, A/B Testing with statistical winner selection
-- **CPQ Cloud**: Order Management, Subscriptions, Product Options
-- **Service Cloud**: Chatbot Configuration, Agent Productivity Macros
-- **HR Cloud**: Benefits Administration, Compensation Management
-- **Cross-Cloud Lifecycle**: Opportunity→Order→Invoice, Campaign→Lead→Opportunity, Forecast→Revenue Recognition alignment
-- **Salesforce Parity**: Increased from ~75% to ~92%
-
----
-
-## February 2026 — Phase 9 Complete
-
-### 🛠️ Developer Experience & Documentation Governance
-
-This release focuses on developer onboarding, documentation integrity, and tooling improvements.
-
-**Highlights:**
-- **Documentation Integrity**: Removed 20+ broken links, corrected statistics across README, ROADMAP, and docs site
-- **Developer Workflow**: New `DEVELOPMENT_WORKFLOW.md` with step-by-step quickstart guide
-- **Automated Metrics**: `pnpm stats` extracts real-time project metrics from the codebase
-- **CI Improvements**: Link-checking workflow prevents future broken documentation links
-- **Tooling Scripts**: `pnpm typecheck`, `pnpm test:changed`, `pnpm stats` added as root scripts
-
----
-
-## January 2026 — Phase 8 Complete
-
-### 🖥️ UI Completeness & Cross-Cloud Integration
-
-Full UI metadata coverage for all primary business objects and cross-cloud data flow patterns.
-
-**Highlights:**
-- **14 Page Layouts** across all clouds — every key object has a detail page
-- **11 List Views** with 49 individual view configurations
-- **8 Dashboards**: Sales, CRM, HR, Support, Marketing, Finance, CPQ, and Executive dashboards
-- **6 Form Views** for Opportunity, Contact, Lead, Case, Employee, and Account
-- **Cross-Cloud Tests**: Lead→Opportunity, Quote→Contract→Invoice, Campaign→Lead, Case→Knowledge, Employee→Onboarding→Training
-- **Hook Coverage**: Expanded to 71 hooks covering 94 objects
-
----
-
-## December 2025 — Phase 7 Complete
-
-### ⬆️ @objectstack/spec v3.0.0 Upgrade
-
-Major platform version upgrade — Zod 4 validation engine, new `ObjectSchema.create()` API, Studio plugin extensibility.
-
-**Highlights:**
-- **Zero Breaking Changes**: All 1,604 tests passing, 0 TypeScript errors after upgrade
-- **10 Packages Upgraded**: All business packages migrated to @objectstack/spec v3.0.0
-- **Studio Plugin Support**: 6 studio plugins (one per cloud) for visual tooling extensibility
-- **Module Cleanup**: Removed legacy modules (`hub`, `auth`, `driver`, `permission`) not used by HotCRM
-
----
-
-## November 2025 — Phase 6 Complete
-
-### 📐 Deep Schema Adoption
-
-Increased @objectstack/spec schema adoption across all metadata types.
-
-**Highlights:**
-- **UI Schemas**: Pages, Views, Dashboards, Forms validated via spec schemas
-- **Automation Schemas**: 6 workflows, 3 state machines, 1 approval process, 1 time trigger
-- **Security Metadata**: 6 permission sets, sharing rules, territory model
-- **AI Formalization**: 6 agents via `AgentSchema`, RAG pipeline, model registry
-
----
-
-## October 2025 — Phase 5 Complete
-
-### 🔌 Integration & Business Features
-
-Comprehensive business logic hooks and plugin registration.
-
-**Highlights:**
-- **47 Server-Side Hooks** across all packages
-- **Plugin Registration**: All hooks, actions, and workflows registered in plugin.ts
-- **Broker API Migration**: All 6 `db.ts` shim files migrated to runtime broker
-- **Performance Benchmarking**: Benchmark/BenchmarkSuite utilities with percentile tracking
-
----
-
-## September 2025 — Phase 4 Complete
-
-### 🧪 Test Coverage & Documentation
-
-Achieved comprehensive test coverage and technical documentation.
-
-**Highlights:**
-- **1,759 Tests Passing** across 118 test files (up from 933 tests / 48 files)
-- **Full Hook Coverage**: All 47 hook files have corresponding tests
-- **Full Action Coverage**: All 27 action files have corresponding tests
-- **Technical Specs**: Developer documentation for all 6 clouds + AI package
-- **Deployment Guides**: Docker, Kubernetes, and docker-compose configurations
-
----
-
-## Earlier Releases
-
-### Phase 3 — Quality & Protocol Compliance
-- 100% ObjectSchema.parse() compliance across all 94 objects
-- Zero TypeScript errors across all packages
-- All business labels translated to English
-
-### Phase 2 — Deep Intelligence
-- 6 AI Agent Workflows: Lead-to-Close, Customer 360, Churn Prevention, Case Resolution, Talent Acquisition, Revenue Optimization
-- MCP Integration with 8 tools, 4 resources, 3 prompts
-- Enhanced analytics dashboards with AI-powered insights
-
-### Phase 1 — Core Foundation
-- 6 Business Clouds: Sales, Marketing, Revenue, Service, HR, AI
-- 94 production-ready business objects
-- Metadata engine, ObjectQL, and plugin architecture
+1. **One PR = one feature**, ≤ 500 lines of diff.
+2. **No unverified code** — every hook must run in the sandbox; every seed must insert; every page must render.
+3. **No batch generation** — features are added one object at a time so each ships with tests and docs.
+4. **Acceptance criteria are public** — listed in the issue before code is written.

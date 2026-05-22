@@ -200,7 +200,7 @@ Seed data is loaded in dependency order to ensure referential integrity. The loa
 HotCRM provides a seed data validation utility in `packages/core/src/seed_validation.ts`:
 
 ```typescript
-import { validateSeedData } from '@hotcrm/core/seed_validation';
+import { validateSeedData } from '@objectstack/spec/data';
 
 const result = validateSeedData(AccountSeedData, {
   minRecords: 5,

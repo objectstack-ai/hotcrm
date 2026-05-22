@@ -1,9 +1,8 @@
 {
   "title": "Developer Guide",
-  "description": "Technical documentation for building and extending HotCRM",
+  "description": "Build and extend HotCRM with TypeScript metadata.",
   "root": true,
   "pages": [
-    "specs",
     "creating-objects",
     "field-type-guide",
     "business-logic",
@@ -13,7 +12,6 @@
     "list-views",
     "ui-metadata-guide",
     "ui-development",
-    "cross-cloud-integration",
     "metadata-reference"
   ]
 }

@@ -3,16 +3,13 @@
   "pages": [
     "index",
     "getting-started",
-    "---Products & Clouds---",
-    "modules",
-    "---Setup & Extend---",
-    "admin",
+    "---Build & Extend---",
     "developers",
     "guides",
     "architecture",
+    "---Operate---",
+    "admin",
     "---Resources---",
-    "whats-new",
-    "editions",
-    "roadmap"
+    "whats-new"
   ]
 }
