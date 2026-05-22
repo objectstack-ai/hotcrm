@@ -121,22 +121,27 @@ export const LeadDetailPage: Page = {
                       // header chip. Field names map to lead.object.ts.
                       sections: [
                         {
+                          name: 'info',
                           label: 'Lead Information',
                           fields: ['salutation', 'first_name', 'last_name', 'title', 'company', 'industry'],
                         },
                         {
+                          name: 'contact',
                           label: 'Contact',
                           fields: ['email', 'phone', 'mobile', 'website'],
                         },
                         {
+                          name: 'detail',
                           label: 'Lead Detail',
                           fields: ['status', 'rating', 'lead_source', 'owner', 'annual_revenue', 'number_of_employees'],
                         },
                         {
+                          name: 'address',
                           label: 'Address',
                           fields: ['address'],
                         },
                         {
+                          name: 'description',
                           label: 'Description',
                           fields: ['description'],
                           columns: 1,

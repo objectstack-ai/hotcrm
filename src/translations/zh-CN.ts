@@ -187,6 +187,13 @@ export const zhCN: TranslationData = {
         my_leads: { label: '我的线索' },
         high_priority: { label: '高优先级' },
       },
+      _sections: {
+        info: { label: '线索信息' },
+        contact: { label: '联系方式' },
+        detail: { label: '线索详情' },
+        address: { label: '地址' },
+        description: { label: '描述' },
+      },
       _actions: {
         convert_lead: {
           label: '转化线索',
@@ -565,6 +572,11 @@ export const zhCN: TranslationData = {
         deal_timeline: { label: '商机时间线' },
         deal_gallery: { label: '商机卡片' },
         my_open_deals: { label: '我的进行中商机' },
+      },
+      _sections: {
+        info: { label: '商机信息' },
+        forecast: { label: '阶段与预测' },
+        description: { label: '描述' },
       },
       _actions: {
         clone_opportunity: {

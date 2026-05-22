@@ -3,7 +3,6 @@
   "version": "0.1.0",
   "description": "HotCRM - Production CRM built on ObjectStack",
   "private": true,
-  "type": "module",
   "main": "./objectstack.config.ts",
   "types": "./objectstack.config.ts",
   "exports": {
@@ -19,22 +18,24 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
-    "@objectstack/cli": "^4.2.0",
-    "@objectstack/driver-memory": "^4.2.0",
-    "@objectstack/driver-sql": "^4.2.0",
-    "@objectstack/metadata": "^4.2.0",
-    "@objectstack/objectql": "^4.2.0",
-    "@objectstack/runtime": "^4.2.0",
-    "@objectstack/service-analytics": "^4.2.0",
-    "@objectstack/service-automation": "^4.2.0",
-    "@objectstack/spec": "^4.2.0",
-    "@objectstack/studio": "^4.2.0",
+    "@objectstack/account": "^5.0.0",
+    "@objectstack/cli": "^5.0.0",
+    "@objectstack/console": "^5.0.0",
+    "@objectstack/driver-memory": "^5.0.0",
+    "@objectstack/driver-sql": "^5.0.0",
+    "@objectstack/metadata": "^5.0.0",
+    "@objectstack/objectql": "^5.0.0",
+    "@objectstack/runtime": "^5.0.0",
+    "@objectstack/service-analytics": "^5.0.0",
+    "@objectstack/service-automation": "^5.0.0",
+    "@objectstack/spec": "^5.0.0",
+    "@objectstack/studio": "^5.0.0",
     "better-sqlite3": "^12.10.0"
   },
   "devDependencies": {
-    "@objectstack/cli": "^4.2.0",
+    "@objectstack/cli": "^5.0.0",
     "@playwright/test": "^1.60.0",
-    "typescript": "^5.9.3"
+    "typescript": "^6.0.3"
   },
   "engines": {
     "node": ">=20",

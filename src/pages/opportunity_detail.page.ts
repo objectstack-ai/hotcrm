@@ -93,14 +93,17 @@ export const OpportunityDetailPage: Page = {
                       layout: 'auto',
                       sections: [
                         {
+                          name: 'info',
                           label: 'Opportunity Information',
                           fields: ['name', 'account', 'owner', 'type', 'lead_source', 'campaign'],
                         },
                         {
+                          name: 'forecast',
                           label: 'Stage & Forecast',
                           fields: ['stage', 'probability', 'amount', 'expected_revenue', 'close_date', 'forecast_category'],
                         },
                         {
+                          name: 'description',
                           label: 'Description',
                           columns: 1,
                           collapsible: true,
@@ -187,6 +190,38 @@ export const OpportunityDetailPage: Page = {
                     },
                   },
                 ],
+              },
+            ],
+          },
+        },
+      ],
+    },
+    {
+      name: 'aside',
+      width: 'small',
+      components: [
+        {
+          type: 'record:reference_rail',
+          id: 'opp_reference_rail',
+          properties: {
+            entries: [
+              {
+                objectName: 'quote',
+                relationshipField: 'opportunity',
+                title: 'Quotes',
+                limit: 3,
+              },
+              {
+                objectName: 'opportunity_line_item',
+                relationshipField: 'opportunity',
+                title: 'Products',
+                limit: 3,
+              },
+              {
+                objectName: 'task',
+                relationshipField: 'related_to_opportunity',
+                title: 'Open Tasks',
+                limit: 3,
               },
             ],
           },
