@@ -15,7 +15,9 @@ export const Advisory = ObjectSchema.create({
         { label: 'Quarterly Review', value: 'quarterly_review' },
         { label: 'Annual Review', value: 'annual_review' },
         { label: 'Ad Hoc', value: 'ad_hoc' },
-        { label: 'Phone', value: 'phone' }
+        { label: 'Phone', value: 'phone' },
+        { label: "Portfolio Review", value: "portfolio_review" },
+        { label: "Planning", value: "planning" }
       ]
     }),
     recommendations: Field.textarea({ label: 'Recommendations' }),

@@ -36,7 +36,10 @@ export const Invoice = ObjectSchema.create({
         {
           "label": "Void",
           "value": "void"
-        }
+        },
+        { label: "Sent", value: "sent" },
+        { label: "Overdue", value: "overdue" },
+        { label: "Cancelled", value: "cancelled" }
       ]
     }),
     total_amount: Field.currency({ label: 'Total Amount' }),
@@ -59,7 +62,8 @@ export const Invoice = ObjectSchema.create({
         {
           "label": "Net 60",
           "value": "net_60"
-        }
+        },
+        { label: "Net 45", value: "net_45" }
       ]
     }),
     line_item_count: Field.summary({

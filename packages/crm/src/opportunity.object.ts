@@ -66,7 +66,8 @@ export const Opportunity = ObjectSchema.create({
           "value": "closed_lost",
           "probability": 0,
           "isLost": true
-        }
+        },
+        { label: "Value Proposition", value: "value_proposition" }
       ]
     }),
     probability: Field.percent({
@@ -159,7 +160,9 @@ export const Opportunity = ObjectSchema.create({
         {
           "label": "Existing Business - Replacement",
           "value": "existing_business_replacement"
-        }
+        },
+        { label: "Renewal", value: "renewal" },
+        { label: "Existing Business", value: "existing_business" }
       ]
     }),
     expected_revenue: Field.currency({

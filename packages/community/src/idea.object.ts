@@ -13,7 +13,8 @@ export const Idea = ObjectSchema.create({
         { label: 'Feature', value: 'feature' },
         { label: 'Improvement', value: 'improvement' },
         { label: 'Bug Fix', value: 'bug_fix' },
-        { label: 'Integration', value: 'integration' }
+        { label: 'Integration', value: 'integration' },
+        { label: "Feature Request", value: "feature_request" }
       ]
     }),
     status: Field.select({

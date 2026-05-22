@@ -19,7 +19,8 @@ export const Course = ObjectSchema.create({
       options: [
         { label: 'Active', value: 'active' },
         { label: 'Cancelled', value: 'cancelled' },
-        { label: 'Archived', value: 'archived' }
+        { label: 'Archived', value: 'archived' },
+        { label: "Completed", value: "completed" }
       ],
       defaultValue: 'active'
     })

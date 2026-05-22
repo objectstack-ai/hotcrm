@@ -11,11 +11,14 @@
  */
 
 import { readdirSync, statSync, existsSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { join, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const PACKAGES_DIR = resolve(__dirname, 'packages');
+// Resolve packages dir from process.cwd() (the repo root when invoked by
+// the `objectstack` CLI). Avoid `import.meta.url` so that when this module
+// is bundled into `dist/objectstack-runtime.<hash>.mjs` it does not look for
+// `dist/packages` at runtime.
+const PACKAGES_DIR = resolve(process.cwd(), 'packages');
 
 /** Map file suffix (`.page.js`) → top-level `defineStack` field name. */
 const SUFFIX_TO_FIELD: Record<string, string> = {

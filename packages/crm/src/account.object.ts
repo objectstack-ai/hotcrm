@@ -86,7 +86,9 @@ export const Account = ObjectSchema.create({
         {
           "label": "Other",
           "value": "other"
-        }
+        },
+        { label: "Financial Services", value: "financial_services" },
+        { label: "Media & Entertainment", value: "media_entertainment" }
       ]
     }),
     annual_revenue: Field.currency({
@@ -172,7 +174,8 @@ export const Account = ObjectSchema.create({
         {
           "label": "On Hold",
           "value": "on_hold"
-        }
+        },
+        { label: "Active", value: "active" }
       ]
     }),
     description: Field.textarea({

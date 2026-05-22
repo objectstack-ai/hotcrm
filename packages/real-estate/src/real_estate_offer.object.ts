@@ -18,7 +18,8 @@ export const RealEstateOffer = ObjectSchema.create({
         { label: 'Rejected', value: 'rejected' },
         { label: 'Counter', value: 'counter' },
         { label: 'Expired', value: 'expired' },
-        { label: 'Withdrawn', value: 'withdrawn' }
+        { label: 'Withdrawn', value: 'withdrawn' },
+        { label: "Countered", value: "countered" }
       ],
       defaultValue: 'submitted'
     }),

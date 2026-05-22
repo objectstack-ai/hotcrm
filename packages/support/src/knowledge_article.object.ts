@@ -69,7 +69,10 @@ export const KnowledgeArticle = ObjectSchema.create({
         {
           "label": "📚 Other",
           "value": "other"
-        }
+        },
+        { label: "Getting Started", value: "getting_started" },
+        { label: "Best Practices", value: "best_practices" },
+        { label: "How To", value: "how_to" }
       ]
     }),
     subcategory: Field.text({

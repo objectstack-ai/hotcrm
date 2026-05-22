@@ -40,6 +40,7 @@ import CommunityAIAction from './community_ai.action.js';
 import CommunityAnalyticsAction from './community_analytics.action.js';
 
 // Import datasets
+import { ForumCategoryDataset } from './forum_category.dataset.js';
 import { TopicDataset } from './topic.dataset.js';
 import { IdeaDataset } from './idea.dataset.js';
 
@@ -104,6 +105,7 @@ export const CommunityPlugin = {
 
   // Seed data (DatasetSchema)
   data: [
+    ForumCategoryDataset,
     TopicDataset,
     IdeaDataset,
   ],

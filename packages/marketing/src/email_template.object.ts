@@ -163,7 +163,8 @@ export const EmailTemplate = ObjectSchema.create({
         {
           "label": "📦 Archived",
           "value": "archived"
-        }
+        },
+        { label: "Active", value: "active" }
       ]
     }),
     is_active: Field.boolean({

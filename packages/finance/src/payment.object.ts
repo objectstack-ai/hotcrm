@@ -32,7 +32,10 @@ export const Payment = ObjectSchema.create({
         { label: 'Received', value: 'received' },
         { label: 'Overdue', value: 'overdue' },
         { label: 'Written Off', value: 'written_off' },
-        { label: 'Cancelled', value: 'cancelled' }
+        { label: 'Cancelled', value: 'cancelled' },
+        { label: "Completed", value: "completed" },
+        { label: "Pending", value: "pending" },
+        { label: "Failed", value: "failed" }
       ],
       defaultValue: 'planned'
     }),
@@ -54,7 +57,9 @@ export const Payment = ObjectSchema.create({
         { label: 'Credit Card', value: 'credit_card' },
         { label: 'Alipay', value: 'alipay' },
         { label: 'WeChat Pay', value: 'wechat_pay' },
-        { label: 'Other', value: 'other' }
+        { label: 'Other', value: 'other' },
+        { label: "Wire Transfer", value: "wire_transfer" },
+        { label: "Ach", value: "ach" }
       ],
       label: 'Payment Method'
     }),

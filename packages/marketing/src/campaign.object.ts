@@ -24,7 +24,10 @@ export const Campaign = ObjectSchema.create({
         { label: 'Advertisement', value: 'advertisement' },
         { label: 'Direct Mail', value: 'direct_mail' },
         { label: 'Partners', value: 'partners' },
-        { label: 'Other', value: 'other' }
+        { label: 'Other', value: 'other' },
+        { label: "Event", value: "event" },
+        { label: "Social", value: "social" },
+        { label: "Content", value: "content" }
       ]
     }),
     status: Field.select({
@@ -33,7 +36,8 @@ export const Campaign = ObjectSchema.create({
         { label: 'Planned', value: 'planned' },
         { label: 'In Progress', value: 'in_progress' },
         { label: 'Completed', value: 'completed' },
-        { label: 'Aborted', value: 'aborted' }
+        { label: 'Aborted', value: 'aborted' },
+        { label: "Active", value: "active" }
       ],
       defaultValue: 'planned'
     }),

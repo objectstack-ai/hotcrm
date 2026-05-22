@@ -14,7 +14,8 @@ export const WealthAccount = ObjectSchema.create({
         { label: 'Joint', value: 'joint' },
         { label: 'Trust', value: 'trust' },
         { label: 'Corporate', value: 'corporate' },
-        { label: 'Retirement', value: 'retirement' }
+        { label: 'Retirement', value: 'retirement' },
+        { label: "Ira", value: "ira" }
       ]
     }),
     balance: Field.number({ label: 'Account Balance', min: 0 }),
@@ -33,7 +34,12 @@ export const WealthAccount = ObjectSchema.create({
         { label: 'Growth', value: 'growth' },
         { label: 'Income', value: 'income' },
         { label: 'Balanced', value: 'balanced' },
-        { label: 'Preservation', value: 'preservation' }
+        { label: 'Preservation', value: 'preservation' },
+        { label: "Balanced Growth - 60/40 equity-to-bond allocation", value: "balanced_growth_60_40_equity_to_bond_allocation" },
+        { label: "Growth-focused with tech and emerging market exposure", value: "growth_focused_with_tech_and_emerging_market_exposure" },
+        { label: "Diversified portfolio with ESG emphasis", value: "diversified_portfolio_with_esg_emphasis" },
+        { label: "Capital preservation with income generation focus", value: "capital_preservation_with_income_generation_focus" },
+        { label: "Private equity and alternative investments", value: "private_equity_and_alternative_investments" }
       ]
     }),
     advisor_id: Field.lookup('contact', { label: 'Financial Advisor' }),

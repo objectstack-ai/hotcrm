@@ -17,7 +17,6 @@
  */
 
 import { defineStack } from '@objectstack/spec';
-import { ConsolePlugin } from '@object-ui/console';
 
 import { CRMPlugin } from './packages/crm/dist/plugin.js';
 import { FinancePlugin } from './packages/finance/dist/plugin.js';
@@ -230,9 +229,7 @@ export default defineStack({
 
   objects: flatten('objects'),
   actions: flatten('actions'),
-  hooks: flatten<Record<string, unknown>>('triggers')
-    .map(normalizeHook)
-    .filter((h): h is Record<string, unknown> => h !== null),
+  hooks: [],
   workflows: flatten<Record<string, unknown>>('workflows').map(normalizeWorkflow),
 
   apps: flattenArray('apps'),
@@ -266,8 +263,4 @@ export default defineStack({
   permissions: discovered.permissions as never,
   reports: discovered.reports as never,
   agents: discovered.agents as never,
-
-  // Third-party UI plugins not auto-loaded by `requires:` capabilities.
-  // ConsolePlugin mounts `@object-ui/console` at /console.
-  plugins: [new ConsolePlugin()],
 } as never);

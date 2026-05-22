@@ -15,7 +15,9 @@ export const Enrollment = ObjectSchema.create({
         { label: 'Completed', value: 'completed' },
         { label: 'Dropped', value: 'dropped' },
         { label: 'Withdrawn', value: 'withdrawn' },
-        { label: 'Incomplete', value: 'incomplete' }
+        { label: 'Incomplete', value: 'incomplete' },
+        { label: "Failed", value: "failed" },
+        { label: "Registered", value: "registered" }
       ],
       defaultValue: 'enrolled'
     }),

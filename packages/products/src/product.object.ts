@@ -21,7 +21,12 @@ export const Product = ObjectSchema.create({
         { label: 'Training', value: 'training' },
         { label: 'Support', value: 'support' },
         { label: 'Subscription', value: 'subscription' },
-        { label: 'Other', value: 'other' }
+        { label: 'Other', value: 'other' },
+        { label: "CRM Suite", value: "crm_suite" },
+        { label: "Analytics", value: "analytics" },
+        { label: "Integration", value: "integration" },
+        { label: "Services", value: "services" },
+        { label: "Infrastructure", value: "infrastructure" }
       ]
     }),
     is_active: Field.boolean({ label: 'Active', defaultValue: true }),

@@ -143,7 +143,8 @@ export const Employee = ObjectSchema.create({
         {
           "label": "Intern",
           "value": "intern"
-        }
+        },
+        { label: "Contractor", value: "contractor" }
       ]
     }),
     work_location: Field.text({

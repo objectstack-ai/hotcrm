@@ -13,7 +13,11 @@ export const Property = ObjectSchema.create({
         { label: 'Residential', value: 'residential' },
         { label: 'Commercial', value: 'commercial' },
         { label: 'Land', value: 'land' },
-        { label: 'Industrial', value: 'industrial' }
+        { label: 'Industrial', value: 'industrial' },
+        { label: "Single Family", value: "single_family" },
+        { label: "Condo", value: "condo" },
+        { label: "Townhouse", value: "townhouse" },
+        { label: "Multi Family", value: "multi_family" }
       ]
     }),
     bedrooms: Field.number({ label: 'Bedrooms', min: 0 }),
@@ -29,7 +33,8 @@ export const Property = ObjectSchema.create({
         { label: 'Available', value: 'available' },
         { label: 'Pending', value: 'pending' },
         { label: 'Sold', value: 'sold' },
-        { label: 'Off Market', value: 'off_market' }
+        { label: 'Off Market', value: 'off_market' },
+        { label: "Active", value: "active" }
       ],
       defaultValue: 'available'
     }),

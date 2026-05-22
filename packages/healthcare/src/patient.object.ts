@@ -28,7 +28,8 @@ export const Patient = ObjectSchema.create({
       options: [
         { label: 'Active', value: 'active' },
         { label: 'Inactive', value: 'inactive' },
-        { label: 'Deceased', value: 'deceased' }
+        { label: 'Deceased', value: 'deceased' },
+        { label: "Discharged", value: "discharged" }
       ],
       defaultValue: 'active'
     })

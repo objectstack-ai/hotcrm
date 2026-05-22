@@ -49,7 +49,8 @@ export const Lead = ObjectSchema.create({
         { label: 'Contacted', value: 'contacted' },
         { label: 'Qualified', value: 'qualified' },
         { label: 'Unqualified', value: 'unqualified' },
-        { label: 'Converted', value: 'converted' }
+        { label: 'Converted', value: 'converted' },
+        { label: "Working", value: "working" }
       ]
     }),
     rating: Field.select({
@@ -85,7 +86,14 @@ export const Lead = ObjectSchema.create({
         { label: 'Real Estate', value: 'realestate' },
         { label: 'Energy', value: 'energy' },
         { label: 'Consulting', value: 'consulting' },
-        { label: 'Other', value: 'other' }
+        { label: 'Other', value: 'other' },
+        { label: "Financial Services", value: "financial_services" },
+        { label: "Construction", value: "construction" },
+        { label: "Transportation", value: "transportation" },
+        { label: "Agriculture", value: "agriculture" },
+        { label: "Media & Entertainment", value: "media_entertainment" },
+        { label: "Aerospace", value: "aerospace" },
+        { label: "Food & Beverage", value: "food_beverage" }
       ]
     }),
     number_of_employees: Field.number({
@@ -103,7 +111,11 @@ export const Lead = ObjectSchema.create({
         { label: 'Phone Inquiry', value: 'phone_inquiry' },
         { label: 'Partner Referral', value: 'partner_referral' },
         { label: 'Purchased List', value: 'purchased_list' },
-        { label: 'Other', value: 'other' }
+        { label: 'Other', value: 'other' },
+        { label: "Referral", value: "referral" },
+        { label: "Trade Show", value: "trade_show" },
+        { label: "Partner", value: "partner" },
+        { label: "Cold Call", value: "cold_call" }
       ]
     }),
     is_in_public_pool: Field.boolean({

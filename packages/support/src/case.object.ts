@@ -170,7 +170,8 @@ export const Case = ObjectSchema.create({
         {
           "label": "🎯 Other",
           "value": "other"
-        }
+        },
+        { label: "Chat", value: "chat" }
       ]
     }),
     account_id: Field.lookup('account', {
