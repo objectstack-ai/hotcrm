@@ -167,6 +167,14 @@ description: CRM and platform terms — alphabetised so you can stop bluffing in
 
 **State machine** — Defines valid status transitions and what triggers each.
 
+**`sys_activity`** — Platform-provided object used to record any time-stamped activity on a record (call, meeting, task completion). The "Log a Call" action writes here, and entries surface in a record's Activity tab.
+
+**`sys_audit_log`** — Platform field-history store. Any field on an object declared with `trackHistory: true` (the default for every CRM object) generates a `sys_audit_log` row on change. Visible in the Activity tab and in admin-facing audit reports.
+
+**`sys_comment`** — Platform-provided threaded discussion / chatter store. Comments posted on any record (case, opportunity, account…) live here. The Activity tab pulls them in along with `sys_activity`, `sys_email` and audit history.
+
+**`sys_email`** — Platform-provided outbound email queue. The "Send Email" action enqueues here; the email-service worker handles delivery, retries and status (queued / sent / bounced / failed).
+
 ## T
 
 **Tenant** — A logically isolated HotCRM instance (one customer org).

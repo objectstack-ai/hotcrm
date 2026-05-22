@@ -58,7 +58,22 @@ On any record, click **✍️ Draft Email** to have the [Sales Copilot](/docs/ai
 3. Click **Send** — the email goes through your connected inbox, *not* a HotCRM relay, so it preserves your sender reputation.
 4. The conversation is logged automatically.
 
-## Templates
+## "Send Email" from a contact or case
+
+Anywhere you see the **Send Email** action (on a Contact, a Case, an Opportunity) the flow is:
+
+1. The action opens a modal with **To / Subject / Body** pre-filled from the record (and from any email template you select).
+2. On submit, the email is queued through the platform `sys_email` service. It does **not** go directly to your inbox — the queue worker handles retries, bounces and rate limiting.
+3. The new email row is linked back to the source record under **Related Object**, and a corresponding entry shows up on the **Activity** tab of that record with the current delivery status (queued / sent / bounced / failed).
+4. Once delivered, replies are matched back via the regular two-way sync above and threaded onto the same record.
+
+> Admins can see all queued / failed emails in **Settings → System Email Queue** and re-drive a failed batch from there.
+
+## "Log a Call" from any record
+
+The **Log a Call** action records an outbound or inbound call without leaving the record. On submit, an entry of type **completed** is written to `sys_activity` (kind = *call*), with subject, duration and outcome. It appears on the record's **Activity** tab and is counted in the rep's activity metrics on the Sales / Service dashboards.
+
+
 
 Save reusable email templates in **Settings → Email Templates**:
 

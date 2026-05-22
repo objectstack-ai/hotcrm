@@ -32,39 +32,23 @@ const modalPage = (name: string, copy: ModalCopy): Page => ({
   name,
   label: copy.label,
   description: copy.heading,
-  type: 'blank',
+  type: 'utility',
   template: 'default',
   isDefault: false,
   kind: 'full',
-  blankLayout: {
-    columns: 12,
-    rowHeight: 40,
-    gap: 8,
-    items: [],
-  },
   regions: [
     {
       name: 'main',
       width: 'full',
       components: [
         {
-          type: 'page:card',
+          type: 'page:header',
           id: `${name}_intro`,
           label: copy.label,
           properties: {
             title: copy.heading,
-            bordered: true,
-            body: [
-              {
-                type: 'element:text',
-                id: `${name}_body`,
-                properties: {
-                  content: copy.body,
-                  variant: 'body',
-                  align: 'left',
-                },
-              },
-            ],
+            subtitle: copy.body,
+            icon: copy.icon,
           },
         },
       ],

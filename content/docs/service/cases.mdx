@@ -125,11 +125,28 @@ See [SLA & Escalation](/docs/service/sla-and-escalation) for the full mechanics.
 When you open a case, you'll see:
 
 - **Header** — case number, subject, status badge, priority badge, SLA countdown.
+- **Status path** — a Salesforce-style horizontal flow showing New → In Progress → Waiting on Customer → Escalated → Resolved → Closed, so an agent can see at a glance where the case stands and what the next stop is.
 - **Customer panel** — account, primary contact, contract tier, open cases this month.
-- **Case description and resolution** as the main content area.
-- **Comments thread** — internal and customer-facing.
-- **Related list** — tasks, attached files.
+- **Three tabs:**
+  - **Details** — full case description and resolution, all metadata fields.
+  - **Related** — child tasks, attached files, linked opportunities, milestones.
+  - **Activity** — a unified timeline (more on this below).
 - **AI Reference Rail** — the Service Copilot's suggestions.
+
+### The Activity timeline
+
+The Activity tab is the single source of truth for what has happened on a case. It combines four streams into one chronological feed:
+
+| Stream | Where it comes from | What you'll see |
+|--------|---------------------|------------------|
+| **Comments** | A teammate or customer posts on the case | Threaded discussion, @mentions, internal/external visibility |
+| **Logged calls** | "Log a Call" action — stored as `sys_activity` of type *completed* | Call subject, duration, outcome, who logged it |
+| **Outbound emails** | "Send Email" action — queued through `sys_email` | Subject, recipient, delivery status (queued / sent / bounced) |
+| **Field changes** | Every change to a tracked field on the case | What changed, who changed it, when, before → after |
+
+You don't have to configure any of this — every CRM object ships with `trackHistory: true` and the platform feeds engine wires comments, activities and audit log into the same timeline automatically.
+
+> Tip — if you only want to see the discussion, use the filter dropdown at the top of the Activity tab; you can also subscribe to the case from there so any future post pings you in the bell.
 
 ## How the AI Copilot helps
 
