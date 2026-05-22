@@ -8,10 +8,10 @@ import { WorkflowRuleSchema, type WorkflowRule } from '@objectstack/spec/automat
 export const PortfolioDriftDetection = {
   name: 'portfolio_drift_detection',
   label: 'Portfolio Drift Detection',
-  object: 'portfolio',
+  objectName: 'portfolio',
   description: 'Detect when portfolio allocation drifts beyond acceptable thresholds and notify advisor',
 
-  triggerType: 'scheduled',
+  triggerType: 'schedule',
   schedule: {
     frequency: 'daily',
     time: '07:00',
@@ -22,18 +22,18 @@ export const PortfolioDriftDetection = {
 
   actions: [
     {
-      type: 'fieldUpdate',
+      type: 'field_update',
       field: 'rebalance_flag',
       value: 'true'
     },
     {
-      type: 'emailAlert',
+      type: 'email_alert',
       template: 'portfolio_drift_alert',
       recipients: ['${wealth_account.advisor_id.email}'],
       cc: ['${wealth_account.advisor_id.manager.email}']
     },
     {
-      type: 'taskCreation',
+      type: 'task_creation',
       subject: 'Review portfolio drift: ${name}',
       description: 'Portfolio allocation has drifted beyond threshold. Review and consider rebalancing.',
       assignee: '${wealth_account.advisor_id}',
@@ -53,10 +53,10 @@ export const PortfolioDriftDetection = {
 export const AutoRebalanceExecution = {
   name: 'auto_rebalance_execution',
   label: 'Auto Rebalance Execution',
-  object: 'portfolio',
+  objectName: 'portfolio',
   description: 'Automatically execute rebalancing trades for portfolios with auto-rebalance enabled',
 
-  triggerType: 'onCreateOrUpdate',
+  triggerType: 'on_create_or_update',
 
   condition: 'rebalance_flag = true AND auto_rebalance = true AND ISCHANGED(rebalance_flag)',
 
@@ -73,17 +73,17 @@ export const AutoRebalanceExecution = {
       }
     },
     {
-      type: 'fieldUpdate',
+      type: 'field_update',
       field: 'last_rebalance_date',
       value: 'NOW()'
     },
     {
-      type: 'fieldUpdate',
+      type: 'field_update',
       field: 'rebalance_flag',
       value: 'false'
     },
     {
-      type: 'emailAlert',
+      type: 'email_alert',
       template: 'rebalance_confirmation',
       recipients: ['${wealth_account.email}', '${wealth_account.advisor_id.email}']
     }
@@ -100,10 +100,10 @@ export const AutoRebalanceExecution = {
 export const QuarterlyReviewReminder = {
   name: 'quarterly_review_reminder',
   label: 'Quarterly Review Reminder',
-  object: 'portfolio',
+  objectName: 'portfolio',
   description: 'Send quarterly review reminders to advisors for portfolio assessment',
 
-  triggerType: 'scheduled',
+  triggerType: 'schedule',
   schedule: {
     frequency: 'monthly',
     time: '09:00',
@@ -114,12 +114,12 @@ export const QuarterlyReviewReminder = {
 
   actions: [
     {
-      type: 'emailAlert',
+      type: 'email_alert',
       template: 'quarterly_review_reminder',
       recipients: ['${wealth_account.advisor_id.email}']
     },
     {
-      type: 'taskCreation',
+      type: 'task_creation',
       subject: 'Quarterly review due: ${name}',
       description: 'Portfolio quarterly review is due. Schedule meeting with client.',
       assignee: '${wealth_account.advisor_id}',

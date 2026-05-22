@@ -713,13 +713,13 @@ const OrderAIAction = {
   name: 'order_ai',
   label: 'AI Order Intelligence',
   description: 'AI-powered order delivery prediction, upsell recommendations, pattern analysis, and fulfillment optimization',
-  params: {
-    action: { type: 'text', required: true },
-    order_id: { type: 'text' },
-    account_id: { type: 'text' },
-    max_recommendations: { type: 'number' },
-    lookback_months: { type: 'number' }
-  },
+  params: [
+      { name: "action", type: 'text', required: true },
+      { name: "order_id", type: 'text' },
+      { name: "account_id", type: 'text' },
+      { name: "max_recommendations", type: 'number' },
+      { name: "lookback_months", type: 'number' },
+    ],
   handler: async (ctx: any) => {
     const { action } = ctx.params;
     switch (action) {

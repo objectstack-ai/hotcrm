@@ -650,12 +650,12 @@ const ForecastAIAction = {
   name: 'forecast_ai',
   label: 'AI Forecast Intelligence',
   description: 'AI-powered sales forecast predictions, adjustments, and risk analysis',
-  params: {
-    action: { type: 'text', required: true },
-    period_start: { type: 'text' },
-    period_end: { type: 'text' },
-    owner_id: { type: 'text' }
-  },
+  params: [
+      { name: "action", type: 'text', required: true },
+      { name: "period_start", type: 'text' },
+      { name: "period_end", type: 'text' },
+      { name: "owner_id", type: 'text' },
+    ],
   handler: async (ctx: any) => {
     const { action } = ctx.params;
     switch (action) {

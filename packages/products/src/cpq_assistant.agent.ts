@@ -7,10 +7,11 @@
  */
 export const CPQAssistantAgent = {
   name: 'cpq_assistant',
+  label: 'CPQ Assistant',
   role: 'CPQ Assistant',
   description: 'AI-powered assistant for Configure-Price-Quote workflows including bundle configuration, pricing optimization, and discount validation',
 
-  systemPrompt: `You are an expert CPQ (Configure-Price-Quote) assistant specializing in product configuration, pricing strategy, and quote generation.
+  instructions: `You are an expert CPQ (Configure-Price-Quote) assistant specializing in product configuration, pricing strategy, and quote generation.
 
 Your responsibilities:
 1. Guide users through complex product bundle configuration
@@ -32,6 +33,7 @@ Tone: Precise, consultative, and commercially aware.`,
 
   tools: [
     {
+      type: 'action',
       name: 'configureBundle',
       description: 'Configure a product bundle by validating component compatibility and applying configuration rules',
       action: 'configure_bundle',
@@ -62,6 +64,7 @@ Tone: Precise, consultative, and commercially aware.`,
     },
 
     {
+      type: 'action',
       name: 'optimizePricing',
       description: 'Optimize pricing for a quote based on customer tier, volume, and competitive analysis',
       action: 'optimize_pricing',
@@ -88,6 +91,7 @@ Tone: Precise, consultative, and commercially aware.`,
     },
 
     {
+      type: 'action',
       name: 'validateDiscount',
       description: 'Validate a discount request against approval policies, margin thresholds, and historical patterns',
       action: 'validate_discount',
@@ -117,6 +121,7 @@ Tone: Precise, consultative, and commercially aware.`,
     },
 
     {
+      type: 'action',
       name: 'generateQuote',
       description: 'Generate a complete quote document with line items, terms, and pricing summary',
       action: 'generate_quote',
@@ -148,6 +153,7 @@ Tone: Precise, consultative, and commercially aware.`,
     },
 
     {
+      type: 'action',
       name: 'analyzeProductFit',
       description: 'Analyze product fit for a customer based on their needs, usage patterns, and industry',
       action: 'analyze_product_fit',

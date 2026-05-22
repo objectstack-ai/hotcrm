@@ -31,6 +31,17 @@ const SUFFIX_TO_FIELD: Record<string, string> = {
 
 const SUFFIXES = Object.keys(SUFFIX_TO_FIELD);
 
+function isViewLike(value: unknown): boolean {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const v = value as Record<string, unknown>;
+  // ViewSchema variants
+  if (v.list || v.form || v.kanban || v.calendar || v.gallery ||
+      v.timeline || v.gantt || v.chart || v.map) return true;
+  // FormViewSchema (top-level { type, data, sections })
+  if (Array.isArray(v.sections) && v.data) return true;
+  return false;
+}
+
 function isPlainObjectWithName(value: unknown): value is { name: string } {
   return (
     !!value &&
@@ -72,9 +83,16 @@ export async function aggregatePackageMetadata(): Promise<AggregatedMetadata> {
       for (const file of files) {
         try {
           const mod = await import(pathToFileURL(file).href);
+          const seen = new WeakSet<object>();
           for (const key of Object.keys(mod)) {
             const val = (mod as Record<string, unknown>)[key];
-            if (isPlainObjectWithName(val)) {
+            if (!val || typeof val !== 'object') continue;
+            if (seen.has(val as object)) continue;
+            const accept = (suffix === 'view' || suffix === 'form')
+              ? isViewLike(val)
+              : isPlainObjectWithName(val);
+            if (accept) {
+              seen.add(val as object);
               result[field].push(val);
             }
           }

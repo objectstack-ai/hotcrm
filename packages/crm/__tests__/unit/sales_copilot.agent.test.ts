@@ -20,9 +20,9 @@ describe('SalesCoPilotAgent', () => {
   });
 
   it('should have a system prompt focused on deal velocity and stage analysis', () => {
-    expect(SalesCoPilotAgent.systemPrompt).toBeDefined();
-    expect(SalesCoPilotAgent.systemPrompt).toContain('deal velocity');
-    expect(SalesCoPilotAgent.systemPrompt).toContain('next-best-actions');
+    expect(SalesCoPilotAgent.instructions).toBeDefined();
+    expect(SalesCoPilotAgent.instructions).toContain('deal velocity');
+    expect(SalesCoPilotAgent.instructions).toContain('next-best-actions');
   });
 
   it('should define all required tools', () => {

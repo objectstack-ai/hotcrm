@@ -471,15 +471,15 @@ const RevenueRecognitionAIAction = {
   name: 'revenue_recognition_ai',
   label: 'AI Revenue Recognition Intelligence',
   description: 'AI-powered revenue recognition predictions, compliance checks, and deferred revenue forecasting',
-  params: {
-    action: { type: 'text', required: true },
-    period_start: { type: 'text' },
-    period_end: { type: 'text' },
-    contract_id: { type: 'text' },
-    schedule_id: { type: 'text' },
-    forecast_months: { type: 'number' },
-    review_all: { type: 'boolean' }
-  },
+  params: [
+      { name: "action", type: 'text', required: true },
+      { name: "period_start", type: 'text' },
+      { name: "period_end", type: 'text' },
+      { name: "contract_id", type: 'text' },
+      { name: "schedule_id", type: 'text' },
+      { name: "forecast_months", type: 'number' },
+      { name: "review_all", type: 'boolean' },
+    ],
   handler: async (ctx: any) => {
     const { action } = ctx.params;
     switch (action) {

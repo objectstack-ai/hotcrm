@@ -7,10 +7,11 @@
  */
 export const FinanceCoPilotAgent = {
   name: 'finance_copilot',
+  label: 'Finance Co-Pilot',
   role: 'Finance Co-Pilot',
   description: 'Proactive finance intelligence agent that assists with accounts receivable, accounts payable, invoice management, and revenue forecasting',
 
-  systemPrompt: `You are an expert finance co-pilot with deep knowledge of accounts receivable, accounts payable, revenue recognition, and cash flow management.
+  instructions: `You are an expert finance co-pilot with deep knowledge of accounts receivable, accounts payable, revenue recognition, and cash flow management.
 
 Your responsibilities:
 1. Look up invoice details and payment history for any account
@@ -32,6 +33,7 @@ Tone: Precise, analytical, and action-oriented.`,
 
   tools: [
     {
+      type: 'action',
       name: 'lookupInvoice',
       description: 'Look up invoice details including line items, payment status, and aging information',
       action: 'invoice_lookup',
@@ -57,6 +59,7 @@ Tone: Precise, analytical, and action-oriented.`,
     },
 
     {
+      type: 'action',
       name: 'trackPayments',
       description: 'Track payment status and history for an account or invoice',
       action: 'payment_tracking',
@@ -83,6 +86,7 @@ Tone: Precise, analytical, and action-oriented.`,
     },
 
     {
+      type: 'action',
       name: 'analyzeArAging',
       description: 'Analyze accounts receivable aging by bucket and identify collection risks',
       action: 'ar_aging_analysis',
@@ -108,6 +112,7 @@ Tone: Precise, analytical, and action-oriented.`,
     },
 
     {
+      type: 'action',
       name: 'forecastRevenue',
       description: 'Forecast revenue based on pipeline, contracts, and historical patterns',
       action: 'revenue_forecast',

@@ -7,10 +7,11 @@
  */
 export const SupportCoPilotAgent = {
   name: 'support_copilot',
+  label: 'Support Co-Pilot',
   role: 'Support Co-Pilot',
   description: 'Intelligent support agent that assists with case resolution, knowledge base recommendations, SLA monitoring, and customer sentiment analysis',
 
-  systemPrompt: `You are an expert support co-pilot specializing in case resolution, customer service excellence, and SLA management.
+  instructions: `You are an expert support co-pilot specializing in case resolution, customer service excellence, and SLA management.
 
 Your responsibilities:
 1. Analyze incoming cases and suggest resolution paths based on historical patterns
@@ -32,6 +33,7 @@ Tone: Empathetic, solution-oriented, and efficiency-focused.`,
 
   tools: [
     {
+      type: 'action',
       name: 'analyzeCase',
       description: 'Analyze case details and suggest resolution paths based on historical patterns',
       action: 'case_analysis',
@@ -57,6 +59,7 @@ Tone: Empathetic, solution-oriented, and efficiency-focused.`,
     },
 
     {
+      type: 'action',
       name: 'suggestResolution',
       description: 'Suggest resolution steps based on case context and historical win patterns',
       action: 'resolution_suggestion',
@@ -79,6 +82,7 @@ Tone: Empathetic, solution-oriented, and efficiency-focused.`,
     },
 
     {
+      type: 'action',
       name: 'searchKnowledge',
       description: 'Search knowledge base for articles relevant to the case issue',
       action: 'knowledge_search',
@@ -106,6 +110,7 @@ Tone: Empathetic, solution-oriented, and efficiency-focused.`,
     },
 
     {
+      type: 'action',
       name: 'assessSentiment',
       description: 'Analyze customer sentiment from case communications',
       action: 'sentiment_assessment',
@@ -125,6 +130,7 @@ Tone: Empathetic, solution-oriented, and efficiency-focused.`,
     },
 
     {
+      type: 'action',
       name: 'predictEscalation',
       description: 'Predict likelihood of case escalation and recommend preventive actions',
       action: 'escalation_prediction',
@@ -143,6 +149,7 @@ Tone: Empathetic, solution-oriented, and efficiency-focused.`,
     },
 
     {
+      type: 'action',
       name: 'recommendArticle',
       description: 'Recommend the best knowledge base article to share with the customer',
       action: 'article_recommendation',

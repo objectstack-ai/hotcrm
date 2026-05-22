@@ -8,11 +8,11 @@ import { WorkflowRuleSchema, type WorkflowRule } from '@objectstack/spec/automat
 export const CampaignAutoActivation = {
   name: 'campaign_auto_activation',
   label: 'Auto Activate Campaigns',
-  object: 'campaign',
+  objectName: 'campaign',
   description: 'Automatically activate campaigns when their start date arrives',
 
   // Trigger: Scheduled daily to check for campaigns ready to launch
-  triggerType: 'scheduled',
+  triggerType: 'schedule',
   schedule: {
     frequency: 'daily',
     time: '00:15',
@@ -26,21 +26,21 @@ export const CampaignAutoActivation = {
   actions: [
     // 1. Update status to In Progress
     {
-      type: 'fieldUpdate',
+      type: 'field_update',
       field: 'status',
       value: 'in_progress'
     },
 
     // 2. Mark campaign as active
     {
-      type: 'fieldUpdate',
+      type: 'field_update',
       field: 'is_active',
       value: true
     },
 
     // 3. Notify campaign owner
     {
-      type: 'emailAlert',
+      type: 'email_alert',
       template: 'campaign_activated',
       recipients: ['${created_by}'],
       description: 'Notify owner that campaign is now live'
@@ -58,11 +58,11 @@ export const CampaignAutoActivation = {
 export const CampaignBudgetAlert = {
   name: 'campaign_budget_alert',
   label: 'Campaign Budget Alert',
-  object: 'campaign',
+  objectName: 'campaign',
   description: 'Alert campaign owner when actual cost exceeds 80% of budgeted cost',
 
   // Trigger: When campaign is updated (cost fields change)
-  triggerType: 'onCreateOrUpdate',
+  triggerType: 'on_create_or_update',
 
   // Condition: Actual cost exceeds 80% of budget
   condition: 'actual_cost > (budgeted_cost * 0.8) AND budgeted_cost > 0 AND status = "in_progress"',
@@ -70,7 +70,7 @@ export const CampaignBudgetAlert = {
   actions: [
     // 1. Send budget alert email
     {
-      type: 'emailAlert',
+      type: 'email_alert',
       template: 'campaign_budget_warning',
       recipients: ['${created_by}'],
       cc: ['${created_by.manager_email}'],
@@ -79,7 +79,7 @@ export const CampaignBudgetAlert = {
 
     // 2. Post to Slack
     {
-      type: 'httpCall',
+      type: 'http_call',
       method: 'POST',
       url: '${env.SLACK_WEBHOOK_URL}',
       headers: {
@@ -111,11 +111,11 @@ export const CampaignBudgetAlert = {
 export const CampaignCompletionCheck = {
   name: 'campaign_completion_check',
   label: 'Auto Complete Expired Campaigns',
-  object: 'campaign',
+  objectName: 'campaign',
   description: 'Automatically complete campaigns whose end date has passed',
 
   // Trigger: Scheduled daily
-  triggerType: 'scheduled',
+  triggerType: 'schedule',
   schedule: {
     frequency: 'daily',
     time: '01:00',
@@ -128,14 +128,14 @@ export const CampaignCompletionCheck = {
   actions: [
     // 1. Update status to Completed
     {
-      type: 'fieldUpdate',
+      type: 'field_update',
       field: 'status',
       value: 'completed'
     },
 
     // 2. Deactivate the campaign
     {
-      type: 'fieldUpdate',
+      type: 'field_update',
       field: 'is_active',
       value: false
     },
@@ -152,7 +152,7 @@ export const CampaignCompletionCheck = {
 
     // 4. Notify owner of completion
     {
-      type: 'emailAlert',
+      type: 'email_alert',
       template: 'campaign_completed_summary',
       recipients: ['${created_by}'],
       description: 'Send campaign completion summary with ROI metrics'
@@ -170,11 +170,11 @@ export const CampaignCompletionCheck = {
 export const CampaignMemberWelcome = {
   name: 'campaign_member_welcome',
   label: 'Welcome New Campaign Members',
-  object: 'campaign_member',
+  objectName: 'campaign_member',
   description: 'Send a welcome email when a new member is added to a campaign',
 
   // Trigger: When a new campaign member is created
-  triggerType: 'onCreate',
+  triggerType: 'on_create',
 
   // Condition: Member has a valid contact or lead reference
   condition: 'contact != NULL OR lead != NULL',
@@ -182,7 +182,7 @@ export const CampaignMemberWelcome = {
   actions: [
     // 1. Send welcome email
     {
-      type: 'emailAlert',
+      type: 'email_alert',
       template: 'campaign_member_welcome',
       recipients: ['${contact.email}', '${lead.email}'],
       description: 'Send welcome email to new campaign member'
@@ -190,14 +190,14 @@ export const CampaignMemberWelcome = {
 
     // 2. Update member status
     {
-      type: 'fieldUpdate',
+      type: 'field_update',
       field: 'status',
       value: 'sent'
     },
 
     // 3. Create follow-up task for campaign owner
     {
-      type: 'taskCreation',
+      type: 'task_creation',
       subject: 'Follow up with new campaign member: ${contact.name || lead.name}',
       description: 'New member added to campaign ${campaign.name}. Review engagement.',
       assignee: '${campaign.created_by}',

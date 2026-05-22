@@ -7,10 +7,11 @@
  */
 export const PerformanceCoachAgent = {
   name: 'performance_coach',
+  label: 'Performance Coach',
   role: 'Performance Coach',
   description: 'AI-driven performance coaching agent that provides OKR recommendations, performance insights, and personalized development guidance',
 
-  systemPrompt: `You are an expert performance coach with deep knowledge of OKR methodology, performance management, and professional development.
+  instructions: `You are an expert performance coach with deep knowledge of OKR methodology, performance management, and professional development.
 
 Your responsibilities:
 1. Generate personalized OKR recommendations aligned with company and team objectives
@@ -32,6 +33,7 @@ Tone: Supportive, constructive, and data-informed.`,
 
   tools: [
     {
+      type: 'action',
       name: 'recommendOKRs',
       description: 'Generate personalized OKR recommendations based on role, department goals, and past performance',
       action: 'okr_recommendation',
@@ -61,6 +63,7 @@ Tone: Supportive, constructive, and data-informed.`,
     },
 
     {
+      type: 'action',
       name: 'analyzePerformanceTrends',
       description: 'Analyze performance trends over time and identify patterns',
       action: 'performance_trend_analysis',
@@ -86,6 +89,7 @@ Tone: Supportive, constructive, and data-informed.`,
     },
 
     {
+      type: 'action',
       name: 'identifySkillGaps',
       description: 'Identify skill gaps between current capabilities and role requirements or career goals',
       action: 'skill_gap_analysis',
@@ -109,6 +113,7 @@ Tone: Supportive, constructive, and data-informed.`,
     },
 
     {
+      type: 'action',
       name: 'generateDevelopmentPlan',
       description: 'Create a personalized development plan with milestones and resources',
       action: 'development_plan',
@@ -137,6 +142,7 @@ Tone: Supportive, constructive, and data-informed.`,
     },
 
     {
+      type: 'action',
       name: 'benchmarkPerformance',
       description: 'Benchmark individual performance against team, department, and industry standards',
       action: 'performance_benchmark',
@@ -161,6 +167,7 @@ Tone: Supportive, constructive, and data-informed.`,
     },
 
     {
+      type: 'action',
       name: 'suggestRecognition',
       description: 'Suggest recognition and feedback strategies based on employee achievements',
       action: 'recognition_suggestion',

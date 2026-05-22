@@ -8,11 +8,11 @@ import { WorkflowRuleSchema, type WorkflowRule } from '@objectstack/spec/automat
 export const LeadAutoAssignment = {
   name: 'lead_auto_assignment',
   label: 'Auto Assign New Leads',
-  object: 'lead',
+  objectName: 'lead',
   description: 'Automatically assign new leads to the next available sales rep in the territory',
 
   // Trigger: When a new lead is created
-  triggerType: 'onCreate',
+  triggerType: 'on_create',
 
   // Condition: Only auto-assign if owner is not set and status is New
   condition: 'status = "new" AND owner = NULL',
@@ -21,7 +21,7 @@ export const LeadAutoAssignment = {
   actions: [
     // 1. Assign to next available rep
     {
-      type: 'fieldUpdate',
+      type: 'field_update',
       field: 'owner_id',
       formula: 'getNextAvailableRep(territory, industry)',
       description: 'Assign to next rep in round-robin'
@@ -29,14 +29,14 @@ export const LeadAutoAssignment = {
 
     // 2. Set assignment date
     {
-      type: 'fieldUpdate',
+      type: 'field_update',
       field: 'assigned_date',
       value: 'NOW()'
     },
 
     // 3. Send email notification to assigned rep
     {
-      type: 'emailAlert',
+      type: 'email_alert',
       template: 'new_lead_assigned',
       recipients: ['owner_id'],
       cc: ['${owner.manager_email}']
@@ -44,7 +44,7 @@ export const LeadAutoAssignment = {
 
     // 4. Create follow-up task
     {
-      type: 'taskCreation',
+      type: 'task_creation',
       subject: 'Follow up with new lead: ${name}',
       description: 'Initial contact and qualification',
       assignee: '${owner_id}',
@@ -55,7 +55,7 @@ export const LeadAutoAssignment = {
 
     // 5. Log to Slack (via webhook)
     {
-      type: 'httpCall',
+      type: 'http_call',
       method: 'POST',
       url: '${env.SLACK_WEBHOOK_URL}',
       headers: {
@@ -90,11 +90,11 @@ export const LeadAutoAssignment = {
 export const LeadAutoScoring = {
   name: 'lead_auto_scoring',
   label: 'Auto Score Leads',
-  object: 'lead',
+  objectName: 'lead',
   description: 'Automatically calculate lead score when key fields change',
 
   // Trigger: When lead is created or updated
-  triggerType: 'onCreateOrUpdate',
+  triggerType: 'on_create_or_update',
 
   // Condition: Re-score if key fields changed
   condition: 'ISCHANGED(industry) OR ISCHANGED(company) OR ISCHANGED(title) OR ISCHANGED(employees) OR ISCHANGED(annual_revenue)',
@@ -112,7 +112,7 @@ export const LeadAutoScoring = {
 
     // Update rating based on score
     {
-      type: 'fieldUpdate',
+      type: 'field_update',
       field: 'rating',
       formula: `
         CASE
@@ -126,7 +126,7 @@ export const LeadAutoScoring = {
 
     // Notify rep if lead becomes hot
     {
-      type: 'emailAlert',
+      type: 'email_alert',
       template: 'hot_lead_alert',
       recipients: ['owner_id'],
       condition: 'rating = "Hot" AND ISCHANGED(rating)'
@@ -144,10 +144,10 @@ export const LeadAutoScoring = {
 export const LeadNurturing = {
   name: 'lead_nurturing',
   label: 'Lead Nurturing Automation',
-  object: 'lead',
+  objectName: 'lead',
   description: 'Send automated nurture emails to keep leads engaged',
 
-  triggerType: 'scheduled',
+  triggerType: 'schedule',
   schedule: {
     frequency: 'daily',
     time: '09:00',
@@ -159,25 +159,25 @@ export const LeadNurturing = {
 
   actions: [
     {
-      type: 'emailAlert',
+      type: 'email_alert',
       template: 'lead_nurture_week_1',
       recipients: ['email'],
       condition: 'DAYS_BETWEEN(created_date, TODAY()) BETWEEN 7 AND 14'
     },
     {
-      type: 'emailAlert',
+      type: 'email_alert',
       template: 'lead_nurture_week_2',
       recipients: ['email'],
       condition: 'DAYS_BETWEEN(created_date, TODAY()) BETWEEN 14 AND 21'
     },
     {
-      type: 'emailAlert',
+      type: 'email_alert',
       template: 'lead_nurture_month_1',
       recipients: ['email'],
       condition: 'DAYS_BETWEEN(created_date, TODAY()) >= 30'
     },
     {
-      type: 'fieldUpdate',
+      type: 'field_update',
       field: 'last_nurture_date',
       value: 'NOW()'
     }
@@ -193,10 +193,10 @@ export const LeadNurturing = {
 export const LeadEnrichment = {
   name: 'lead_data_enrichment',
   label: 'Lead Data Enrichment',
-  object: 'lead',
+  objectName: 'lead',
   description: 'Automatically enrich lead data using external data sources',
 
-  triggerType: 'onCreate',
+  triggerType: 'on_create',
 
   condition: 'email != NULL',
 
@@ -214,7 +214,7 @@ export const LeadEnrichment = {
 
     // Update enrichment timestamp
     {
-      type: 'fieldUpdate',
+      type: 'field_update',
       field: 'data_enriched_date',
       value: 'NOW()'
     }

@@ -20,9 +20,9 @@ describe('PerformanceCoachAgent', () => {
   });
 
   it('should have a system prompt focused on OKRs and performance', () => {
-    expect(PerformanceCoachAgent.systemPrompt).toBeDefined();
-    expect(PerformanceCoachAgent.systemPrompt).toContain('OKR');
-    expect(PerformanceCoachAgent.systemPrompt).toContain('performance');
+    expect(PerformanceCoachAgent.instructions).toBeDefined();
+    expect(PerformanceCoachAgent.instructions).toContain('OKR');
+    expect(PerformanceCoachAgent.instructions).toContain('performance');
   });
 
   it('should define all required tools', () => {

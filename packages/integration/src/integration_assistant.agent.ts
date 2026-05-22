@@ -7,10 +7,11 @@
  */
 export const IntegrationAssistantAgent = {
   name: 'integration_assistant',
+  label: 'Integration Assistant',
   role: 'Integration Assistant',
   description: 'Integration intelligence agent that assists with connector setup, field mapping configuration, sync troubleshooting, and webhook validation',
 
-  systemPrompt: `You are an expert integration assistant specializing in connector setup, data synchronization, and API management.
+  instructions: `You are an expert integration assistant specializing in connector setup, data synchronization, and API management.
 
 Your responsibilities:
 1. Diagnose connection issues and suggest fixes for authentication or network errors
@@ -32,6 +33,7 @@ Tone: Technical, precise, and solution-oriented.`,
 
   tools: [
     {
+      type: 'action',
       name: 'diagnoseConnection',
       description: 'Diagnose connection issues by testing endpoint availability, authentication, and network configuration',
       action: 'connection_diagnosis',
@@ -57,6 +59,7 @@ Tone: Technical, precise, and solution-oriented.`,
     },
 
     {
+      type: 'action',
       name: 'suggestFieldMapping',
       description: 'Suggest optimal field mappings between source and target objects based on data types and naming conventions',
       action: 'field_mapping_suggestion',
@@ -86,6 +89,7 @@ Tone: Technical, precise, and solution-oriented.`,
     },
 
     {
+      type: 'action',
       name: 'analyzeSyncErrors',
       description: 'Analyze sync error patterns and recommend corrective actions for failed synchronizations',
       action: 'sync_error_analysis',
@@ -112,6 +116,7 @@ Tone: Technical, precise, and solution-oriented.`,
     },
 
     {
+      type: 'action',
       name: 'validateWebhook',
       description: 'Validate webhook configuration including endpoint availability, payload structure, and security settings',
       action: 'webhook_validation',
@@ -132,6 +137,7 @@ Tone: Technical, precise, and solution-oriented.`,
     },
 
     {
+      type: 'action',
       name: 'optimizeSyncSchedule',
       description: 'Optimize sync schedule based on data volume, API rate limits, and system load patterns',
       action: 'sync_schedule_optimization',

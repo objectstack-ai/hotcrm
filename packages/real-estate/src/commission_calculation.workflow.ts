@@ -8,10 +8,10 @@ import { WorkflowRuleSchema, type WorkflowRule } from '@objectstack/spec/automat
 export const CommissionCalculation = {
   name: 'commission_calculation',
   label: 'Calculate Commission on Sale',
-  object: 'listing',
+  objectName: 'listing',
   description: 'Automatically calculate and create commission records when a listing status changes to sold',
 
-  triggerType: 'onCreateOrUpdate',
+  triggerType: 'on_create_or_update',
 
   condition: 'status = "sold" AND sold_price > 0 AND ISCHANGED(status)',
 
@@ -27,18 +27,18 @@ export const CommissionCalculation = {
       }
     },
     {
-      type: 'fieldUpdate',
+      type: 'field_update',
       field: 'sold_date',
       value: 'NOW()'
     },
     {
-      type: 'emailAlert',
+      type: 'email_alert',
       template: 'commission_calculated',
       recipients: ['${listing_agent.email}'],
       cc: ['${broker.email}']
     },
     {
-      type: 'taskCreation',
+      type: 'task_creation',
       subject: 'Process commission payment for: ${property_id.name}',
       description: 'Commission calculated for sold listing. Review and approve payment.',
       assignee: '${broker.id}',
@@ -59,10 +59,10 @@ export const CommissionCalculation = {
 export const CommissionSplit = {
   name: 'commission_split',
   label: 'Commission Split Processing',
-  object: 'commission',
+  objectName: 'commission',
   description: 'Automatically process commission splits for co-listings and referrals',
 
-  triggerType: 'onCreate',
+  triggerType: 'on_create',
 
   condition: 'split_type != "full"',
 
@@ -78,7 +78,7 @@ export const CommissionSplit = {
       }
     },
     {
-      type: 'emailAlert',
+      type: 'email_alert',
       template: 'commission_split_notification',
       recipients: ['${agent_id.email}']
     }

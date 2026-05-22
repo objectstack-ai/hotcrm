@@ -11,8 +11,8 @@ import { SupportPlugin } from '../../../src/plugin';
 describe('CaseAutoEscalation', () => {
   it('should have correct name, object, and triggerType', () => {
     expect(CaseAutoEscalation.name).toBe('case_auto_escalation');
-    expect(CaseAutoEscalation.object).toBe('case');
-    expect(CaseAutoEscalation.triggerType).toBe('onUpdate');
+    expect(CaseAutoEscalation.objectName).toBe('case');
+    expect(CaseAutoEscalation.triggerType).toBe('on_update');
   });
 
   it('should have correct condition for SLA violation on open, non-escalated cases', () => {
@@ -23,7 +23,7 @@ describe('CaseAutoEscalation', () => {
 
   it('should contain field update action for priority', () => {
     const priorityAction = CaseAutoEscalation.actions.find(
-      (a: any) => a.type === 'fieldUpdate' && a.field === 'priority'
+      (a: any) => a.type === 'field_update' && a.field === 'priority'
     );
     expect(priorityAction).toBeDefined();
     expect(priorityAction.formula).toBeDefined();
@@ -31,7 +31,7 @@ describe('CaseAutoEscalation', () => {
 
   it('should contain field update action for is_escalated', () => {
     const action = CaseAutoEscalation.actions.find(
-      (a: any) => a.type === 'fieldUpdate' && a.field === 'is_escalated'
+      (a: any) => a.type === 'field_update' && a.field === 'is_escalated'
     );
     expect(action).toBeDefined();
     expect(action.value).toBe(true);
@@ -39,7 +39,7 @@ describe('CaseAutoEscalation', () => {
 
   it('should contain field update action for escalated_date', () => {
     const action = CaseAutoEscalation.actions.find(
-      (a: any) => a.type === 'fieldUpdate' && a.field === 'escalated_date'
+      (a: any) => a.type === 'field_update' && a.field === 'escalated_date'
     );
     expect(action).toBeDefined();
     expect(action.value).toBe('NOW()');
@@ -47,7 +47,7 @@ describe('CaseAutoEscalation', () => {
 
   it('should contain field update action for escalation_reason', () => {
     const action = CaseAutoEscalation.actions.find(
-      (a: any) => a.type === 'fieldUpdate' && a.field === 'escalation_reason'
+      (a: any) => a.type === 'field_update' && a.field === 'escalation_reason'
     );
     expect(action).toBeDefined();
     expect(action.value).toBe('SLA resolution target exceeded');
@@ -55,7 +55,7 @@ describe('CaseAutoEscalation', () => {
 
   it('should contain an email alert action', () => {
     const emailAction = CaseAutoEscalation.actions.find(
-      (a: any) => a.type === 'emailAlert'
+      (a: any) => a.type === 'email_alert'
     );
     expect(emailAction).toBeDefined();
     expect(emailAction.template).toBe('case_sla_escalation');
@@ -69,7 +69,7 @@ describe('CaseAutoEscalation', () => {
 describe('CaseHighPriorityAlert', () => {
   it('should have correct name and trigger on create or update', () => {
     expect(CaseHighPriorityAlert.name).toBe('case_high_priority_alert');
-    expect(CaseHighPriorityAlert.triggerType).toBe('onCreateOrUpdate');
+    expect(CaseHighPriorityAlert.triggerType).toBe('on_create_or_update');
   });
 
   it('should trigger on critical priority change', () => {
@@ -80,7 +80,7 @@ describe('CaseHighPriorityAlert', () => {
 
   it('should contain an email alert action', () => {
     const emailAction = CaseHighPriorityAlert.actions.find(
-      (a: any) => a.type === 'emailAlert'
+      (a: any) => a.type === 'email_alert'
     );
     expect(emailAction).toBeDefined();
     expect(emailAction.template).toBe('critical_case_alert');
@@ -88,7 +88,7 @@ describe('CaseHighPriorityAlert', () => {
 
   it('should contain a task creation action', () => {
     const taskAction = CaseHighPriorityAlert.actions.find(
-      (a: any) => a.type === 'taskCreation'
+      (a: any) => a.type === 'task_creation'
     );
     expect(taskAction).toBeDefined();
     expect(taskAction.priority).toBe('critical');
@@ -101,7 +101,7 @@ describe('CaseHighPriorityAlert', () => {
 
 describe('CaseStaleCheck', () => {
   it('should be a scheduled workflow running daily at 08:00', () => {
-    expect(CaseStaleCheck.triggerType).toBe('scheduled');
+    expect(CaseStaleCheck.triggerType).toBe('schedule');
     expect(CaseStaleCheck.schedule).toEqual({
       frequency: 'daily',
       time: '08:00',
@@ -117,7 +117,7 @@ describe('CaseStaleCheck', () => {
 
   it('should contain a task creation action', () => {
     const taskAction = CaseStaleCheck.actions.find(
-      (a: any) => a.type === 'taskCreation'
+      (a: any) => a.type === 'task_creation'
     );
     expect(taskAction).toBeDefined();
     expect(taskAction.priority).toBe('high');
@@ -125,7 +125,7 @@ describe('CaseStaleCheck', () => {
 
   it('should contain an email alert action', () => {
     const emailAction = CaseStaleCheck.actions.find(
-      (a: any) => a.type === 'emailAlert'
+      (a: any) => a.type === 'email_alert'
     );
     expect(emailAction).toBeDefined();
     expect(emailAction.template).toBe('stale_case_reminder');
@@ -138,7 +138,7 @@ describe('CaseStaleCheck', () => {
 
 describe('CaseFirstResponseSLA', () => {
   it('should trigger on create with response_due_date condition', () => {
-    expect(CaseFirstResponseSLA.triggerType).toBe('onCreate');
+    expect(CaseFirstResponseSLA.triggerType).toBe('on_create');
     expect(CaseFirstResponseSLA.condition).toBe(
       'response_due_date != NULL AND status = "new"'
     );
@@ -146,7 +146,7 @@ describe('CaseFirstResponseSLA', () => {
 
   it('should contain a task creation action', () => {
     const taskAction = CaseFirstResponseSLA.actions.find(
-      (a: any) => a.type === 'taskCreation'
+      (a: any) => a.type === 'task_creation'
     );
     expect(taskAction).toBeDefined();
     expect(taskAction.dueDate).toBe('${response_due_date}');
@@ -154,7 +154,7 @@ describe('CaseFirstResponseSLA', () => {
 
   it('should contain an email alert action', () => {
     const emailAction = CaseFirstResponseSLA.actions.find(
-      (a: any) => a.type === 'emailAlert'
+      (a: any) => a.type === 'email_alert'
     );
     expect(emailAction).toBeDefined();
     expect(emailAction.template).toBe('case_first_response_assignment');

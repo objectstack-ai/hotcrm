@@ -7,10 +7,11 @@
  */
 export const InboxAgent = {
   name: 'inbox_agent',
+  label: 'Support Inbox AI Agent',
   role: 'Support Inbox AI Agent',
   description: 'Automatically categorizes incoming emails, routes them to the correct queue, and drafts context-aware replies for Support Cases',
 
-  systemPrompt: `You are an expert customer support inbox agent with deep knowledge of case management and customer communication.
+  instructions: `You are an expert customer support inbox agent with deep knowledge of case management and customer communication.
 
 Your responsibilities:
 1. Automatically categorize incoming emails by type, priority, and product area
@@ -32,6 +33,7 @@ Tone: Professional, empathetic, solution-oriented.`,
 
   tools: [
     {
+      type: 'action',
       name: 'categorizeEmail',
       description: 'Analyze and categorize an incoming email based on content, intent, and urgency',
       action: 'email_categorization',
@@ -68,6 +70,7 @@ Tone: Professional, empathetic, solution-oriented.`,
     },
 
     {
+      type: 'action',
       name: 'draftReply',
       description: 'Generate a context-aware reply draft for a support case email',
       action: 'draft_reply',
@@ -97,6 +100,7 @@ Tone: Professional, empathetic, solution-oriented.`,
     },
 
     {
+      type: 'action',
       name: 'routeToQueue',
       description: 'Route a case to the most appropriate support queue based on content analysis',
       action: 'intelligent_routing',
@@ -123,6 +127,7 @@ Tone: Professional, empathetic, solution-oriented.`,
     },
 
     {
+      type: 'action',
       name: 'detectEscalation',
       description: 'Detect if an email requires immediate escalation based on content and sentiment',
       action: 'escalation_detection',
@@ -145,6 +150,7 @@ Tone: Professional, empathetic, solution-oriented.`,
     },
 
     {
+      type: 'action',
       name: 'extractEntities',
       description: 'Extract structured entities from email content (order numbers, account IDs, error codes)',
       action: 'entity_extraction',
@@ -164,6 +170,7 @@ Tone: Professional, empathetic, solution-oriented.`,
     },
 
     {
+      type: 'action',
       name: 'searchKnowledgeBase',
       description: 'Search the knowledge base for relevant articles to include in the reply',
       action: 'knowledge_search',

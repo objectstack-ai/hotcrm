@@ -12,12 +12,12 @@ export const LeadConvertAction = {
   name: 'lead_convert',
   label: 'Convert Lead',
   description: 'Converts a qualified lead into a customer account, contact, and optional opportunity.',
-  params: {
-    lead_id: { type: 'text', required: true },
-    owner_id: { type: 'text' },
-    create_opportunity: { type: 'boolean', defaultValue: true },
-    opportunity_name: { type: 'text' }
-  },
+  params: [
+      { name: "lead_id", type: 'text', required: true },
+      { name: "owner_id", type: 'text' },
+      { name: "create_opportunity", type: 'boolean', defaultValue: true },
+      { name: "opportunity_name", type: 'text' },
+    ],
   handler: async (ctx: any) => {
     const { lead_id, owner_id, create_opportunity, opportunity_name } = ctx.params;
     const { user } = ctx;

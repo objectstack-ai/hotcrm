@@ -8,11 +8,11 @@ import { WorkflowRuleSchema, type WorkflowRule } from '@objectstack/spec/automat
 export const InvoicePaymentReminder = {
   name: 'invoice_payment_reminder',
   label: 'Overdue Invoice Reminder',
-  object: 'invoice',
+  objectName: 'invoice',
   description: 'Send payment reminder emails for overdue invoices',
 
   // Trigger: Scheduled daily
-  triggerType: 'scheduled',
+  triggerType: 'schedule',
   schedule: {
     frequency: 'daily',
     time: '09:00',
@@ -26,7 +26,7 @@ export const InvoicePaymentReminder = {
   actions: [
     // 1. Send payment reminder email to account
     {
-      type: 'emailAlert',
+      type: 'email_alert',
       template: 'invoice_payment_reminder',
       recipients: ['${account.billing_email}'],
       cc: ['${created_by}'],
@@ -47,7 +47,7 @@ export const InvoicePaymentReminder = {
 
     // 3. Post to Slack finance channel
     {
-      type: 'httpCall',
+      type: 'http_call',
       method: 'POST',
       url: '${env.SLACK_WEBHOOK_URL}',
       headers: {
@@ -79,11 +79,11 @@ export const InvoicePaymentReminder = {
 export const InvoiceOverdueEscalation = {
   name: 'invoice_overdue_escalation',
   label: 'Overdue Invoice Escalation',
-  object: 'invoice',
+  objectName: 'invoice',
   description: 'Escalate invoices that are 30+ days overdue to the finance manager',
 
   // Trigger: Scheduled daily
-  triggerType: 'scheduled',
+  triggerType: 'schedule',
   schedule: {
     frequency: 'daily',
     time: '10:00',
@@ -96,14 +96,14 @@ export const InvoiceOverdueEscalation = {
   actions: [
     // 1. Update status to Overdue
     {
-      type: 'fieldUpdate',
+      type: 'field_update',
       field: 'status',
       value: 'overdue'
     },
 
     // 2. Send escalation email to finance manager
     {
-      type: 'emailAlert',
+      type: 'email_alert',
       template: 'invoice_overdue_escalation',
       recipients: ['${created_by}', '${created_by.manager_email}'],
       description: 'Escalate severely overdue invoice to finance manager'
@@ -111,7 +111,7 @@ export const InvoiceOverdueEscalation = {
 
     // 3. Create collection task
     {
-      type: 'taskCreation',
+      type: 'task_creation',
       subject: 'Collections: Invoice ${invoice_number} is 30+ days overdue',
       description: 'Invoice ${invoice_number} for account ${account.name} is over 30 days past due.\nAmount: ${total_amount}\nDue Date: ${due_date}\nPlease initiate collection procedures.',
       assignee: '${created_by.manager_id}',
@@ -122,7 +122,7 @@ export const InvoiceOverdueEscalation = {
 
     // 4. Post to Slack
     {
-      type: 'httpCall',
+      type: 'http_call',
       method: 'POST',
       url: '${env.SLACK_WEBHOOK_URL}',
       headers: {
@@ -154,11 +154,11 @@ export const InvoiceOverdueEscalation = {
 export const PaymentConfirmation = {
   name: 'payment_confirmation',
   label: 'Payment Received Confirmation',
-  object: 'payment',
+  objectName: 'payment',
   description: 'Send confirmation email when a payment is received',
 
   // Trigger: When payment is updated
-  triggerType: 'onUpdate',
+  triggerType: 'on_update',
 
   // Condition: Status changed to Paid
   condition: 'status = "paid" AND ISCHANGED(status)',
@@ -166,7 +166,7 @@ export const PaymentConfirmation = {
   actions: [
     // 1. Send payment confirmation to customer
     {
-      type: 'emailAlert',
+      type: 'email_alert',
       template: 'payment_confirmation',
       recipients: ['${account.billing_email}'],
       cc: ['${created_by}'],
@@ -187,7 +187,7 @@ export const PaymentConfirmation = {
 
     // 3. Post to Slack finance channel
     {
-      type: 'httpCall',
+      type: 'http_call',
       method: 'POST',
       url: '${env.SLACK_WEBHOOK_URL}',
       headers: {
@@ -219,11 +219,11 @@ export const PaymentConfirmation = {
 export const ContractRenewalReminder = {
   name: 'contract_renewal_reminder',
   label: 'Contract Renewal Reminder',
-  object: 'contract',
+  objectName: 'contract',
   description: 'Create renewal tasks for contracts expiring within 90 days',
 
   // Trigger: Scheduled weekly
-  triggerType: 'scheduled',
+  triggerType: 'schedule',
   schedule: {
     frequency: 'weekly',
     day: 'Monday',
@@ -237,7 +237,7 @@ export const ContractRenewalReminder = {
   actions: [
     // 1. Create renewal task
     {
-      type: 'taskCreation',
+      type: 'task_creation',
       subject: 'Contract renewal due: ${contract_number} - ${account.name}',
       description: 'Contract ${contract_number} for ${account.name} expires on ${end_date}.\nContract Value: ${contract_value}\nPlease initiate renewal discussions with the customer.',
       assignee: '${created_by}',
@@ -248,7 +248,7 @@ export const ContractRenewalReminder = {
 
     // 2. Notify account owner
     {
-      type: 'emailAlert',
+      type: 'email_alert',
       template: 'contract_renewal_reminder',
       recipients: ['${created_by}'],
       cc: ['${account.owner_id}'],
@@ -257,7 +257,7 @@ export const ContractRenewalReminder = {
 
     // 3. Post to Slack
     {
-      type: 'httpCall',
+      type: 'http_call',
       method: 'POST',
       url: '${env.SLACK_WEBHOOK_URL}',
       headers: {

@@ -8,14 +8,14 @@ import { WorkflowRuleSchema, type WorkflowRule } from '@objectstack/spec/automat
 export const OnboardingAutomation = {
   name: 'onboarding_automation',
   label: 'New Hire Onboarding Automation',
-  object: 'onboarding',
+  objectName: 'onboarding',
   description: 'Create onboarding tasks for IT setup, HR orientation, manager welcome, benefits, and training',
-  triggerType: 'onCreate',
+  triggerType: 'on_create',
   condition: 'status = "new" AND employee_id != NULL',
   actions: [
-    { type: 'fieldUpdate', field: 'status', value: 'in_progress' },
+    { type: 'field_update', field: 'status', value: 'in_progress' },
     {
-      type: 'taskCreation',
+      type: 'task_creation',
       subject: 'IT Setup for ${employee.name}',
       description: 'Provision laptop, email, software licenses, VPN access, and security credentials',
       assignee: '${department.it_contact_id}',
@@ -24,7 +24,7 @@ export const OnboardingAutomation = {
       status: 'not_started'
     },
     {
-      type: 'taskCreation',
+      type: 'task_creation',
       subject: 'HR Orientation: ${employee.name}',
       description: 'Company policies, code of conduct, emergency procedures, and handbook review',
       assignee: '${hr_specialist_id}',
@@ -33,7 +33,7 @@ export const OnboardingAutomation = {
       status: 'not_started'
     },
     {
-      type: 'taskCreation',
+      type: 'task_creation',
       subject: 'Welcome Meeting with ${employee.name}',
       description: 'Role expectations, team structure, first-week goals, and key stakeholder introductions',
       assignee: '${employee.manager_id}',
@@ -42,7 +42,7 @@ export const OnboardingAutomation = {
       status: 'not_started'
     },
     {
-      type: 'taskCreation',
+      type: 'task_creation',
       subject: 'Benefits Enrollment: ${employee.name}',
       description: 'Health insurance, retirement plan, life insurance, and additional perks enrollment',
       assignee: '${hr_specialist_id}',
@@ -51,7 +51,7 @@ export const OnboardingAutomation = {
       status: 'not_started'
     },
     {
-      type: 'taskCreation',
+      type: 'task_creation',
       subject: 'Training Schedule for ${employee.name}',
       description: 'Compliance training, role-specific modules, tool walkthroughs, and mentorship pairing',
       assignee: '${employee.manager_id}',
@@ -60,13 +60,13 @@ export const OnboardingAutomation = {
       status: 'not_started'
     },
     {
-      type: 'emailAlert',
+      type: 'email_alert',
       template: 'new_hire_welcome',
       recipients: ['${employee.email}'],
       cc: ['${employee.manager_email}', '${hr_specialist_email}']
     },
     {
-      type: 'httpCall',
+      type: 'http_call',
       method: 'POST',
       url: '${env.SLACK_WEBHOOK_URL}',
       headers: { 'Content-Type': 'application/json' },
@@ -93,9 +93,9 @@ export const OnboardingAutomation = {
 export const TimeOffApproval = {
   name: 'time_off_approval',
   label: 'Time-Off Request Approval Routing',
-  object: 'time_off',
+  objectName: 'time_off',
   description: 'Route time-off requests to manager for approval based on leave type and balance',
-  triggerType: 'onCreate',
+  triggerType: 'on_create',
   condition: 'status = "pending" AND employee_id != NULL AND days_requested > 0',
   actions: [
     {
@@ -108,7 +108,7 @@ export const TimeOffApproval = {
       }
     },
     {
-      type: 'fieldUpdate',
+      type: 'field_update',
       field: 'approver_id',
       formula: `
         CASE
@@ -119,13 +119,13 @@ export const TimeOffApproval = {
       `
     },
     {
-      type: 'emailAlert',
+      type: 'email_alert',
       template: 'time_off_approval_request',
       recipients: ['${approver_id}'],
       cc: ['${employee.email}']
     },
     {
-      type: 'taskCreation',
+      type: 'task_creation',
       subject: 'Time-Off Approval: ${employee.name} - ${leave_type}',
       description: '${employee.name} requested ${days_requested} day(s) of ${leave_type} from ${start_date} to ${end_date}',
       assignee: '${approver_id}',
@@ -145,14 +145,14 @@ export const TimeOffApproval = {
 export const TimeOffAutoApproval = {
   name: 'time_off_auto_approval',
   label: 'Auto-Approve Short Time-Off Requests',
-  object: 'time_off',
+  objectName: 'time_off',
   description: 'Auto-approve requests for 1 day or less with sufficient balance and no scheduling conflicts',
-  triggerType: 'onCreate',
+  triggerType: 'on_create',
   condition: 'status = "pending" AND days_requested <= 1 AND leave_balance >= days_requested AND has_scheduling_conflict = false',
   actions: [
-    { type: 'fieldUpdate', field: 'status', value: 'approved' },
-    { type: 'fieldUpdate', field: 'approved_date', value: 'NOW()' },
-    { type: 'fieldUpdate', field: 'approval_notes', value: 'Auto-approved: 1 day or less with sufficient balance and no conflicts' },
+    { type: 'field_update', field: 'status', value: 'approved' },
+    { type: 'field_update', field: 'approved_date', value: 'NOW()' },
+    { type: 'field_update', field: 'approval_notes', value: 'Auto-approved: 1 day or less with sufficient balance and no conflicts' },
     {
       type: 'customAction',
       handler: 'deductLeaveBalance',
@@ -163,13 +163,13 @@ export const TimeOffAutoApproval = {
       }
     },
     {
-      type: 'emailAlert',
+      type: 'email_alert',
       template: 'time_off_auto_approved',
       recipients: ['${employee.email}'],
       cc: ['${employee.manager_email}']
     },
     {
-      type: 'httpCall',
+      type: 'http_call',
       method: 'POST',
       url: '${env.CALENDAR_API_URL}/events',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ${env.CALENDAR_API_TOKEN}' },
@@ -193,9 +193,9 @@ export const TimeOffAutoApproval = {
 export const PerformanceReviewCycle = {
   name: 'performance_review_cycle',
   label: 'Quarterly Performance Review Cycle',
-  object: 'performance_review',
+  objectName: 'performance_review',
   description: 'Create performance review records for all active employees on a quarterly schedule',
-  triggerType: 'scheduled',
+  triggerType: 'schedule',
   schedule: { frequency: 'quarterly', dayOfMonth: 1, time: '08:00', timezone: 'UTC' },
   condition: 'QUARTER(TODAY()) IN (1, 2, 3, 4)',
   actions: [
@@ -220,18 +220,18 @@ export const PerformanceReviewCycle = {
       }
     },
     {
-      type: 'emailAlert',
+      type: 'email_alert',
       template: 'performance_review_cycle_start',
       recipients: ['ALL_MANAGERS'],
       cc: ['${env.HR_TEAM_EMAIL}']
     },
     {
-      type: 'emailAlert',
+      type: 'email_alert',
       template: 'self_review_notification',
       recipients: ['ALL_ACTIVE_EMPLOYEES']
     },
     {
-      type: 'httpCall',
+      type: 'http_call',
       method: 'POST',
       url: '${env.SLACK_WEBHOOK_URL}',
       headers: { 'Content-Type': 'application/json' },
@@ -258,33 +258,33 @@ export const PerformanceReviewCycle = {
 export const PerformanceReviewReminder = {
   name: 'performance_review_reminder',
   label: 'Overdue Performance Review Reminders',
-  object: 'performance_review',
+  objectName: 'performance_review',
   description: 'Send weekly reminders for overdue or approaching-deadline performance reviews',
-  triggerType: 'scheduled',
+  triggerType: 'schedule',
   schedule: { frequency: 'weekly', dayOfWeek: 'Monday', time: '09:00', timezone: 'UTC' },
   condition: 'status IN ("not_started", "in_progress", "Self-Review Pending", "Manager Review Pending") AND deadline <= TODAY() + 7',
   actions: [
     {
-      type: 'emailAlert',
+      type: 'email_alert',
       template: 'self_review_reminder',
       recipients: ['${employee.email}'],
       condition: 'status = "Self-Review Pending" AND self_review_deadline <= TODAY() + 5'
     },
     {
-      type: 'emailAlert',
+      type: 'email_alert',
       template: 'manager_review_reminder',
       recipients: ['${reviewer_id}'],
       condition: 'status = "Manager Review Pending" AND manager_review_deadline <= TODAY() + 5'
     },
     {
-      type: 'emailAlert',
+      type: 'email_alert',
       template: 'overdue_review_escalation',
       recipients: ['${env.HR_TEAM_EMAIL}'],
       cc: ['${reviewer.manager_email}'],
       condition: 'deadline < TODAY() AND status != "completed"'
     },
     {
-      type: 'taskCreation',
+      type: 'task_creation',
       subject: 'OVERDUE: Complete review for ${employee.name}',
       description: 'Review for ${employee.name} (${review_period}) was due ${deadline}. Please complete immediately.',
       assignee: '${reviewer_id}',
@@ -294,7 +294,7 @@ export const PerformanceReviewReminder = {
       condition: 'deadline < TODAY() AND status = "Manager Review Pending"'
     },
     {
-      type: 'fieldUpdate',
+      type: 'field_update',
       field: 'escalation_level',
       formula: `
         CASE

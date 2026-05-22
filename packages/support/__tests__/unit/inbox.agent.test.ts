@@ -20,9 +20,9 @@ describe('InboxAgent', () => {
   });
 
   it('should have a system prompt', () => {
-    expect(InboxAgent.systemPrompt).toBeDefined();
-    expect(InboxAgent.systemPrompt.length).toBeGreaterThan(0);
-    expect(InboxAgent.systemPrompt).toContain('categorize');
+    expect(InboxAgent.instructions).toBeDefined();
+    expect(InboxAgent.instructions.length).toBeGreaterThan(0);
+    expect(InboxAgent.instructions).toContain('categorize');
   });
 
   it('should define all required tools', () => {

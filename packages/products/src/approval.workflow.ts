@@ -8,9 +8,9 @@ import { WorkflowRuleSchema, type WorkflowRule } from '@objectstack/spec/automat
 export const ParallelApprovalChain = {
   name: 'parallel_approval_chain',
   label: 'Parallel Approval Chain',
-  object: 'approval_request',
+  objectName: 'approval_request',
   description: 'Route approval requests to multiple approvers in parallel based on level and type',
-  triggerType: 'onCreateOrUpdate',
+  triggerType: 'on_create_or_update',
   condition: 'status = "pending" AND ISCHANGED(status)',
   actions: [
     {
@@ -25,7 +25,7 @@ export const ParallelApprovalChain = {
       }
     },
     {
-      type: 'fieldUpdate',
+      type: 'field_update',
       field: 'total_approval_levels',
       formula: `CASE
         WHEN discount_percent >= 30 OR revenue_impact >= 100000 THEN 3
@@ -33,7 +33,7 @@ export const ParallelApprovalChain = {
         ELSE 1 END`
     },
     {
-      type: 'fieldUpdate',
+      type: 'field_update',
       field: 'approval_matrix_rule',
       formula: `CASE
         WHEN request_type = "DiscountApproval" AND discount_percent >= 30 THEN 'VP_FINANCE_REQUIRED'
@@ -43,7 +43,7 @@ export const ParallelApprovalChain = {
         ELSE 'STANDARD_APPROVAL' END`
     },
     {
-      type: 'fieldUpdate',
+      type: 'field_update',
       field: 'due_date',
       formula: `CASE
         WHEN revenue_impact >= 100000 THEN NOW() + 1
@@ -51,14 +51,14 @@ export const ParallelApprovalChain = {
         ELSE NOW() + 3 END`
     },
     {
-      type: 'emailAlert',
+      type: 'email_alert',
       template: 'approval_request_pending',
       recipients: ['current_approver_id'],
       cc: ['${submitted_by_id.email}', '${escalation_email}'],
       condition: 'current_approver_id != NULL'
     },
     {
-      type: 'taskCreation',
+      type: 'task_creation',
       subject: 'Approval Required: ${name} (Level ${current_approval_level}/${total_approval_levels})',
       description: 'Type: ${request_type}\nDiscount: ${discount_percent}%\nRevenue Impact: ${revenue_impact}\nJustification: ${business_justification}',
       assignee: '${current_approver_id}',
@@ -67,7 +67,7 @@ export const ParallelApprovalChain = {
       status: 'not_started'
     },
     {
-      type: 'httpCall',
+      type: 'http_call',
       method: 'POST',
       url: '${env.SLACK_WEBHOOK_URL}',
       headers: { 'Content-Type': 'application/json' },
@@ -88,9 +88,9 @@ export const ParallelApprovalChain = {
 export const SmartDelegation = {
   name: 'smart_delegation',
   label: 'Smart Delegation for Unavailable Approvers',
-  object: 'approval_request',
+  objectName: 'approval_request',
   description: 'Auto-delegate to backup approver when primary approver is out of office',
-  triggerType: 'onCreateOrUpdate',
+  triggerType: 'on_create_or_update',
   condition: 'status = "pending" AND current_approver_id != NULL AND current_approver_id.is_out_of_office = true',
   actions: [
     {
@@ -104,28 +104,28 @@ export const SmartDelegation = {
       }
     },
     {
-      type: 'fieldUpdate',
+      type: 'field_update',
       field: 'internal_notes',
       formula: 'CONCAT(internal_notes, "\n[", NOW(), "] Auto-delegated from ", current_approver_id.name, " (OOO) to delegate approver.")'
     },
     {
-      type: 'fieldUpdate',
+      type: 'field_update',
       field: 'current_approver_id',
       formula: 'getDelegateApprover(current_approver_id)'
     },
     {
-      type: 'emailAlert',
+      type: 'email_alert',
       template: 'approval_delegated_to_you',
       recipients: ['current_approver_id'],
       cc: ['${submitted_by_id.email}']
     },
     {
-      type: 'emailAlert',
+      type: 'email_alert',
       template: 'approval_delegated_from_you',
       recipients: ['${current_approver_id.delegated_from_id.email}']
     },
     {
-      type: 'taskCreation',
+      type: 'task_creation',
       subject: 'Delegated Approval: ${name}',
       description: 'Delegated from ${current_approver_id.delegated_from_id.name} (OOO).\nType: ${request_type} | Discount: ${discount_percent}%',
       assignee: '${current_approver_id}',
@@ -134,7 +134,7 @@ export const SmartDelegation = {
       status: 'not_started'
     },
     {
-      type: 'httpCall',
+      type: 'http_call',
       method: 'POST',
       url: '${env.AUDIT_WEBHOOK_URL}',
       headers: { 'Content-Type': 'application/json', 'X-Event-Type': 'approval_delegation' },
@@ -161,9 +161,9 @@ export const SmartDelegation = {
 export const ApprovalEscalation = {
   name: 'approval_escalation',
   label: 'Approval SLA Escalation',
-  object: 'approval_request',
+  objectName: 'approval_request',
   description: 'Auto-escalate overdue approvals after SLA breach',
-  triggerType: 'scheduled',
+  triggerType: 'schedule',
   schedule: {
     frequency: 'daily',
     time: '08:00',
@@ -172,11 +172,11 @@ export const ApprovalEscalation = {
 
   condition: 'status = "pending" AND due_date < NOW() AND is_escalated = false',
   actions: [
-    { type: 'fieldUpdate', field: 'is_overdue', value: true },
-    { type: 'fieldUpdate', field: 'is_escalated', value: true },
-    { type: 'fieldUpdate', field: 'escalated_date', value: 'NOW()' },
+    { type: 'field_update', field: 'is_overdue', value: true },
+    { type: 'field_update', field: 'is_escalated', value: true },
+    { type: 'field_update', field: 'escalated_date', value: 'NOW()' },
     {
-      type: 'fieldUpdate',
+      type: 'field_update',
       field: 'escalation_reason',
       formula: 'CONCAT("Auto-escalated: SLA breached. Due: ", due_date, ". Overdue by ", HOURS_BETWEEN(due_date, NOW()), "h. Approver: ", current_approver_id.name)'
     },
@@ -191,19 +191,19 @@ export const ApprovalEscalation = {
       }
     },
     {
-      type: 'emailAlert',
+      type: 'email_alert',
       template: 'approval_escalation_urgent',
       recipients: ['${current_approver_id.manager_id}'],
       cc: ['${submitted_by_id.email}', '${escalation_email}']
     },
     {
-      type: 'emailAlert',
+      type: 'email_alert',
       template: 'approval_escalated_notice',
       recipients: ['current_approver_id'],
       condition: 'current_approver_id != NULL'
     },
     {
-      type: 'taskCreation',
+      type: 'task_creation',
       subject: '⚠️ Escalated Approval: ${name} (Overdue)',
       description: 'SLA breached. Approver: ${current_approver_id.name}\nDue: ${due_date} | Discount: ${discount_percent}% | Impact: ${revenue_impact}',
       assignee: '${current_approver_id.manager_id}',
@@ -212,7 +212,7 @@ export const ApprovalEscalation = {
       status: 'not_started'
     },
     {
-      type: 'httpCall',
+      type: 'http_call',
       method: 'POST',
       url: '${env.SLACK_WEBHOOK_URL}',
       headers: { 'Content-Type': 'application/json' },
@@ -233,21 +233,21 @@ export const ApprovalEscalation = {
 export const ApprovalAutoResolve = {
   name: 'approval_auto_resolve',
   label: 'Auto-Approve Low-Risk Requests',
-  object: 'approval_request',
+  objectName: 'approval_request',
   description: 'Auto-approve requests with low AI risk score and minimal discount',
-  triggerType: 'onCreateOrUpdate',
+  triggerType: 'on_create_or_update',
   condition: 'status = "pending" AND ai_risk_score != NULL AND ai_risk_score < 20 AND discount_percent < 5 AND ai_recommendation = "Approve"',
   actions: [
-    { type: 'fieldUpdate', field: 'final_decision', value: 'approved' },
-    { type: 'fieldUpdate', field: 'status', value: 'approved' },
-    { type: 'fieldUpdate', field: 'approved_date', value: 'NOW()' },
+    { type: 'field_update', field: 'final_decision', value: 'approved' },
+    { type: 'field_update', field: 'status', value: 'approved' },
+    { type: 'field_update', field: 'approved_date', value: 'NOW()' },
     {
-      type: 'fieldUpdate',
+      type: 'field_update',
       field: 'response_time',
       formula: 'HOURS_BETWEEN(submitted_date, NOW())'
     },
     {
-      type: 'fieldUpdate',
+      type: 'field_update',
       field: 'approver_comments',
       formula: 'CONCAT("Auto-approved. AI Risk Score: ", ai_risk_score, "/100. Discount: ", discount_percent, "%. Recommendation: ", ai_recommendation)'
     },
@@ -264,7 +264,7 @@ export const ApprovalAutoResolve = {
       }
     },
     {
-      type: 'emailAlert',
+      type: 'email_alert',
       template: 'approval_auto_approved',
       recipients: ['${submitted_by_id.email}'],
       cc: ['${account_id.owner_id.email}']
@@ -281,7 +281,7 @@ export const ApprovalAutoResolve = {
       }
     },
     {
-      type: 'httpCall',
+      type: 'http_call',
       method: 'POST',
       url: '${env.SLACK_WEBHOOK_URL}',
       headers: { 'Content-Type': 'application/json' },

@@ -8,11 +8,11 @@ import { WorkflowRuleSchema, type WorkflowRule } from '@objectstack/spec/automat
 export const CaseAutoEscalation = {
   name: 'case_auto_escalation',
   label: 'Auto Escalate SLA Breached Cases',
-  object: 'case',
+  objectName: 'case',
   description: 'Automatically escalate case priority when SLA resolution target is exceeded',
 
   // Trigger: When case is updated
-  triggerType: 'onUpdate',
+  triggerType: 'on_update',
 
   // Condition: SLA violated and case is still open
   condition: 'is_sla_violated = true AND status != "closed" AND status != "resolved" AND is_escalated = false',
@@ -21,7 +21,7 @@ export const CaseAutoEscalation = {
   actions: [
     // 1. Escalate priority
     {
-      type: 'fieldUpdate',
+      type: 'field_update',
       field: 'priority',
       formula: `
         CASE
@@ -35,28 +35,28 @@ export const CaseAutoEscalation = {
 
     // 2. Mark as escalated
     {
-      type: 'fieldUpdate',
+      type: 'field_update',
       field: 'is_escalated',
       value: true
     },
 
     // 3. Set escalation date
     {
-      type: 'fieldUpdate',
+      type: 'field_update',
       field: 'escalated_date',
       value: 'NOW()'
     },
 
     // 4. Set escalation reason
     {
-      type: 'fieldUpdate',
+      type: 'field_update',
       field: 'escalation_reason',
       value: 'SLA resolution target exceeded'
     },
 
     // 5. Notify support manager
     {
-      type: 'emailAlert',
+      type: 'email_alert',
       template: 'case_sla_escalation',
       recipients: ['${owner_id}'],
       cc: ['${owner_id.manager_email}'],
@@ -65,7 +65,7 @@ export const CaseAutoEscalation = {
 
     // 6. Post to Slack
     {
-      type: 'httpCall',
+      type: 'http_call',
       method: 'POST',
       url: '${env.SLACK_WEBHOOK_URL}',
       headers: {
@@ -97,11 +97,11 @@ export const CaseAutoEscalation = {
 export const CaseHighPriorityAlert = {
   name: 'case_high_priority_alert',
   label: 'Critical Case Alert',
-  object: 'case',
+  objectName: 'case',
   description: 'Notify support manager immediately when a case is set to Critical priority',
 
   // Trigger: When case is created or updated
-  triggerType: 'onCreateOrUpdate',
+  triggerType: 'on_create_or_update',
 
   // Condition: Priority is Critical
   condition: 'priority = "critical" AND ISCHANGED(priority)',
@@ -109,7 +109,7 @@ export const CaseHighPriorityAlert = {
   actions: [
     // 1. Send alert to support manager
     {
-      type: 'emailAlert',
+      type: 'email_alert',
       template: 'critical_case_alert',
       recipients: ['${owner_id}', '${owner_id.manager_email}'],
       description: 'Immediate notification for critical priority cases'
@@ -117,7 +117,7 @@ export const CaseHighPriorityAlert = {
 
     // 2. Create urgent follow-up task
     {
-      type: 'taskCreation',
+      type: 'task_creation',
       subject: 'URGENT: Critical case requires immediate attention - ${case_number}',
       description: 'Case ${case_number} has been escalated to Critical priority.\nSubject: ${subject}\nAccount: ${account_id.name}',
       assignee: '${owner_id}',
@@ -128,7 +128,7 @@ export const CaseHighPriorityAlert = {
 
     // 3. Post to Slack urgent channel
     {
-      type: 'httpCall',
+      type: 'http_call',
       method: 'POST',
       url: '${env.SLACK_WEBHOOK_URL}',
       headers: {
@@ -160,11 +160,11 @@ export const CaseHighPriorityAlert = {
 export const CaseStaleCheck = {
   name: 'case_stale_check',
   label: 'Stale Case Follow-Up',
-  object: 'case',
+  objectName: 'case',
   description: 'Create follow-up task for cases with no activity in 3 days',
 
   // Trigger: Scheduled daily
-  triggerType: 'scheduled',
+  triggerType: 'schedule',
   schedule: {
     frequency: 'daily',
     time: '08:00',
@@ -177,7 +177,7 @@ export const CaseStaleCheck = {
   actions: [
     // 1. Create follow-up task for case owner
     {
-      type: 'taskCreation',
+      type: 'task_creation',
       subject: 'Follow up on stale case: ${case_number}',
       description: 'Case ${case_number} (${subject}) has had no updates in 3+ days. Please review and provide an update or resolution.',
       assignee: '${owner_id}',
@@ -188,7 +188,7 @@ export const CaseStaleCheck = {
 
     // 2. Send reminder email to case owner
     {
-      type: 'emailAlert',
+      type: 'email_alert',
       template: 'stale_case_reminder',
       recipients: ['${owner_id}'],
       description: 'Remind case owner of stale case needing attention'
@@ -206,11 +206,11 @@ export const CaseStaleCheck = {
 export const CaseFirstResponseSLA = {
   name: 'case_first_response_sla',
   label: 'First Response SLA Task',
-  object: 'case',
+  objectName: 'case',
   description: 'Create a task to ensure first response is made within the SLA window',
 
   // Trigger: When a new case is created
-  triggerType: 'onCreate',
+  triggerType: 'on_create',
 
   // Condition: Case has a response due date set
   condition: 'response_due_date != NULL AND status = "new"',
@@ -218,7 +218,7 @@ export const CaseFirstResponseSLA = {
   actions: [
     // 1. Create first response task
     {
-      type: 'taskCreation',
+      type: 'task_creation',
       subject: 'First response required: ${case_number} - ${subject}',
       description: 'Provide first response to case before SLA deadline.\nAccount: ${account_id.name}\nPriority: ${priority}\nSLA Deadline: ${response_due_date}',
       assignee: '${owner_id}',
@@ -229,7 +229,7 @@ export const CaseFirstResponseSLA = {
 
     // 2. Send assignment notification
     {
-      type: 'emailAlert',
+      type: 'email_alert',
       template: 'case_first_response_assignment',
       recipients: ['${owner_id}'],
       description: 'Notify assignee of new case requiring first response'
@@ -237,7 +237,7 @@ export const CaseFirstResponseSLA = {
 
     // 3. Update case status to indicate it is being worked
     {
-      type: 'fieldUpdate',
+      type: 'field_update',
       field: 'status',
       value: 'in_progress'
     }

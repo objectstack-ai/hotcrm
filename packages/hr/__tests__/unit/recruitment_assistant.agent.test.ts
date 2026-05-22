@@ -20,9 +20,9 @@ describe('RecruitmentAssistantAgent', () => {
   });
 
   it('should have a system prompt focused on resume screening and interviews', () => {
-    expect(RecruitmentAssistantAgent.systemPrompt).toBeDefined();
-    expect(RecruitmentAssistantAgent.systemPrompt).toContain('screen');
-    expect(RecruitmentAssistantAgent.systemPrompt).toContain('interview');
+    expect(RecruitmentAssistantAgent.instructions).toBeDefined();
+    expect(RecruitmentAssistantAgent.instructions).toContain('screen');
+    expect(RecruitmentAssistantAgent.instructions).toContain('interview');
   });
 
   it('should define all required tools', () => {

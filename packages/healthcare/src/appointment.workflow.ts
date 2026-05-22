@@ -8,10 +8,10 @@ import { WorkflowRuleSchema, type WorkflowRule } from '@objectstack/spec/automat
 export const AppointmentReminder = {
   name: 'appointment_reminder',
   label: 'Appointment Reminder',
-  object: 'appointment',
+  objectName: 'appointment',
   description: 'Send automated reminders to patients 24 hours before their appointment',
 
-  triggerType: 'scheduled',
+  triggerType: 'schedule',
   schedule: {
     frequency: 'daily',
     time: '08:00',
@@ -22,12 +22,12 @@ export const AppointmentReminder = {
 
   actions: [
     {
-      type: 'emailAlert',
+      type: 'email_alert',
       template: 'appointment_reminder_24h',
       recipients: ['${patient.email}']
     },
     {
-      type: 'fieldUpdate',
+      type: 'field_update',
       field: 'reminder_sent',
       value: 'true'
     }
@@ -43,27 +43,27 @@ export const AppointmentReminder = {
 export const AppointmentConfirmation = {
   name: 'appointment_confirmation',
   label: 'Appointment Confirmation',
-  object: 'appointment',
+  objectName: 'appointment',
   description: 'Send confirmation email when appointment is scheduled or updated',
 
-  triggerType: 'onCreateOrUpdate',
+  triggerType: 'on_create_or_update',
 
   condition: 'ISCHANGED(appointment_date) OR ISCHANGED(appointment_time) OR ISNEW()',
 
   actions: [
     {
-      type: 'fieldUpdate',
+      type: 'field_update',
       field: 'status',
       value: 'confirmed'
     },
     {
-      type: 'emailAlert',
+      type: 'email_alert',
       template: 'appointment_confirmation',
       recipients: ['${patient.email}'],
       cc: ['${provider.email}']
     },
     {
-      type: 'taskCreation',
+      type: 'task_creation',
       subject: 'Prepare for appointment: ${patient.name}',
       description: 'Review patient history before appointment',
       assignee: '${provider_name}',
@@ -84,16 +84,16 @@ export const AppointmentConfirmation = {
 export const NoShowFollowUp = {
   name: 'no_show_follow_up',
   label: 'No-Show Follow-Up',
-  object: 'appointment',
+  objectName: 'appointment',
   description: 'Create follow-up tasks when a patient misses an appointment',
 
-  triggerType: 'onCreateOrUpdate',
+  triggerType: 'on_create_or_update',
 
   condition: 'status = "no_show" AND ISCHANGED(status)',
 
   actions: [
     {
-      type: 'taskCreation',
+      type: 'task_creation',
       subject: 'No-show follow-up: ${patient.name}',
       description: 'Contact patient to reschedule missed appointment',
       assignee: '${provider_name}',
@@ -102,12 +102,12 @@ export const NoShowFollowUp = {
       status: 'not_started'
     },
     {
-      type: 'emailAlert',
+      type: 'email_alert',
       template: 'missed_appointment_notification',
       recipients: ['${patient.email}']
     },
     {
-      type: 'fieldUpdate',
+      type: 'field_update',
       field: 'no_show_count',
       formula: 'no_show_count + 1'
     }
@@ -124,10 +124,10 @@ export const NoShowFollowUp = {
 export const TelehealthSetup = {
   name: 'telehealth_setup',
   label: 'Telehealth Link Setup',
-  object: 'appointment',
+  objectName: 'appointment',
   description: 'Generate telehealth meeting link for virtual appointments',
 
-  triggerType: 'onCreate',
+  triggerType: 'on_create',
 
   condition: 'type = "telehealth"',
 
@@ -142,7 +142,7 @@ export const TelehealthSetup = {
       }
     },
     {
-      type: 'emailAlert',
+      type: 'email_alert',
       template: 'telehealth_link_notification',
       recipients: ['${patient.email}', '${provider.email}']
     }

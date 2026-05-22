@@ -118,14 +118,14 @@ const CrossCloudLifecycleAction = {
   name: 'cross_cloud_lifecycle',
   label: 'Cross-Cloud Lifecycle Automation',
   description: 'Automate lifecycle flows across CRM, Products, Finance, Marketing, and Support',
-  params: {
-    action: { type: 'text' as const, required: true },
-    opportunity_id: { type: 'text' as const },
-    campaign_id: { type: 'text' as const },
-    lead_id: { type: 'text' as const },
-    forecast_id: { type: 'text' as const },
-    case_id: { type: 'text' as const }
-  },
+  params: [
+      { name: "action", type: 'text' as const, required: true },
+      { name: "opportunity_id", type: 'text' as const },
+      { name: "campaign_id", type: 'text' as const },
+      { name: "lead_id", type: 'text' as const },
+      { name: "forecast_id", type: 'text' as const },
+      { name: "case_id", type: 'text' as const },
+    ],
   handler: async (ctx: any) => {
     const { action } = ctx.params;
     switch (action) {

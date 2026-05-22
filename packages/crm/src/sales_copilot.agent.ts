@@ -7,10 +7,11 @@
  */
 export const SalesCoPilotAgent = {
   name: 'sales_copilot',
+  label: 'Sales Co-Pilot',
   role: 'Sales Co-Pilot',
   description: 'Proactive sales intelligence agent that suggests next-best-actions based on opportunity stage, deal velocity, and historical win patterns',
 
-  systemPrompt: `You are an elite sales co-pilot with expertise in B2B enterprise sales, pipeline management, and deal strategy.
+  instructions: `You are an elite sales co-pilot with expertise in B2B enterprise sales, pipeline management, and deal strategy.
 
 Your responsibilities:
 1. Analyze opportunity stage progression and identify stalled deals
@@ -32,6 +33,7 @@ Tone: Strategic, data-driven, and action-oriented.`,
 
   tools: [
     {
+      type: 'action',
       name: 'analyzeVelocity',
       description: 'Analyze deal velocity by comparing stage progression against historical benchmarks',
       action: 'deal_velocity_analysis',
@@ -59,6 +61,7 @@ Tone: Strategic, data-driven, and action-oriented.`,
     },
 
     {
+      type: 'action',
       name: 'suggestNextActions',
       description: 'Suggest next-best-actions based on opportunity stage, context, and win patterns',
       action: 'next_best_actions',
@@ -85,6 +88,7 @@ Tone: Strategic, data-driven, and action-oriented.`,
     },
 
     {
+      type: 'action',
       name: 'assessDealRisk',
       description: 'Identify risk signals in a deal and recommend mitigation strategies',
       action: 'deal_risk_assessment',
@@ -103,6 +107,7 @@ Tone: Strategic, data-driven, and action-oriented.`,
     },
 
     {
+      type: 'action',
       name: 'forecastCloseDate',
       description: 'Predict realistic close date based on deal velocity and historical patterns',
       action: 'close_date_forecast',
@@ -121,6 +126,7 @@ Tone: Strategic, data-driven, and action-oriented.`,
     },
 
     {
+      type: 'action',
       name: 'getStakeholderMap',
       description: 'Analyze stakeholder engagement and identify missing personas',
       action: 'stakeholder_analysis',
@@ -139,6 +145,7 @@ Tone: Strategic, data-driven, and action-oriented.`,
     },
 
     {
+      type: 'action',
       name: 'compareWinPatterns',
       description: 'Compare current deal against historically won deals for strategic insights',
       action: 'win_pattern_analysis',
@@ -162,6 +169,7 @@ Tone: Strategic, data-driven, and action-oriented.`,
     },
 
     {
+      type: 'action',
       name: 'analyzePipeline',
       description: 'Provide pipeline-level insights including at-risk deals and forecast accuracy',
       action: 'pipeline_intelligence',

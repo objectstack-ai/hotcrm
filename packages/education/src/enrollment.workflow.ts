@@ -8,26 +8,26 @@ import { WorkflowRuleSchema, type WorkflowRule } from '@objectstack/spec/automat
 export const EnrollmentRegistration = {
   name: 'enrollment_registration',
   label: 'Enrollment Registration',
-  object: 'enrollment',
+  objectName: 'enrollment',
   description: 'Send confirmation and update records when a student enrolls in a course',
 
-  triggerType: 'onCreate',
+  triggerType: 'on_create',
 
   condition: 'status = "enrolled"',
 
   actions: [
     {
-      type: 'fieldUpdate',
+      type: 'field_update',
       field: 'enrollment_date',
       value: 'NOW()'
     },
     {
-      type: 'emailAlert',
+      type: 'email_alert',
       template: 'enrollment_confirmation',
       recipients: ['${student_id.email}']
     },
     {
-      type: 'taskCreation',
+      type: 'task_creation',
       subject: 'New enrollment: ${student_id.name} in ${course_id.name}',
       description: 'Verify prerequisites and finalize registration',
       assignee: 'registrar',
@@ -48,21 +48,21 @@ export const EnrollmentRegistration = {
 export const GradePosted = {
   name: 'grade_posted',
   label: 'Grade Posted',
-  object: 'enrollment',
+  objectName: 'enrollment',
   description: 'Update enrollment status and notify student when a final grade is posted',
 
-  triggerType: 'onCreateOrUpdate',
+  triggerType: 'on_create_or_update',
 
   condition: 'ISCHANGED(grade) AND grade != NULL',
 
   actions: [
     {
-      type: 'fieldUpdate',
+      type: 'field_update',
       field: 'status',
       value: 'completed'
     },
     {
-      type: 'emailAlert',
+      type: 'email_alert',
       template: 'grade_posted_notification',
       recipients: ['${student_id.email}']
     }
@@ -79,21 +79,21 @@ export const GradePosted = {
 export const CourseDrop = {
   name: 'course_drop',
   label: 'Course Drop',
-  object: 'enrollment',
+  objectName: 'enrollment',
   description: 'Process course drop and notify relevant parties',
 
-  triggerType: 'onCreateOrUpdate',
+  triggerType: 'on_create_or_update',
 
   condition: 'status = "dropped" AND ISCHANGED(status)',
 
   actions: [
     {
-      type: 'emailAlert',
+      type: 'email_alert',
       template: 'course_drop_confirmation',
       recipients: ['${student_id.email}']
     },
     {
-      type: 'taskCreation',
+      type: 'task_creation',
       subject: 'Course drop processed: ${student_id.name} from ${course_id.name}',
       description: 'Update financial aid and billing records',
       assignee: 'registrar',
@@ -114,10 +114,10 @@ export const CourseDrop = {
 export const AcademicProbationCheck = {
   name: 'academic_probation_check',
   label: 'Academic Probation Check',
-  object: 'enrollment',
+  objectName: 'enrollment',
   description: 'Flag students with GPA below 2.0 for academic probation review',
 
-  triggerType: 'scheduled',
+  triggerType: 'schedule',
   schedule: {
     frequency: 'monthly',
     time: '06:00',
@@ -128,7 +128,7 @@ export const AcademicProbationCheck = {
 
   actions: [
     {
-      type: 'taskCreation',
+      type: 'task_creation',
       subject: 'Academic standing review: ${student_id.name}',
       description: 'Review academic standing and advising requirements',
       assignee: '${student_id.advisor_id}',

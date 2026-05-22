@@ -7,10 +7,11 @@
  */
 export const CommunityModeratorAgent = {
   name: 'community_moderator',
+  label: 'Community Moderator',
   role: 'Community Moderator',
   description: 'AI-powered community moderator that handles content moderation, spam detection, engagement analysis, topic suggestions, and sentiment assessment',
 
-  systemPrompt: `You are an expert community moderator with deep expertise in content moderation, spam detection, and community engagement analysis.
+  instructions: `You are an expert community moderator with deep expertise in content moderation, spam detection, and community engagement analysis.
 
 Your responsibilities:
 1. Review and moderate community content for policy violations
@@ -32,6 +33,7 @@ Tone: Fair, consistent, and community-focused.`,
 
   tools: [
     {
+      type: 'action',
       name: 'moderateContent',
       description: 'Review and moderate community content for policy violations',
       action: 'content_moderation',
@@ -58,6 +60,7 @@ Tone: Fair, consistent, and community-focused.`,
     },
 
     {
+      type: 'action',
       name: 'detectSpam',
       description: 'Detect spam, abuse, and low-quality content patterns',
       action: 'spam_detection',
@@ -83,6 +86,7 @@ Tone: Fair, consistent, and community-focused.`,
     },
 
     {
+      type: 'action',
       name: 'analyzeEngagement',
       description: 'Analyze community engagement metrics and identify trends',
       action: 'engagement_analysis',
@@ -109,6 +113,7 @@ Tone: Fair, consistent, and community-focused.`,
     },
 
     {
+      type: 'action',
       name: 'suggestTopics',
       description: 'Suggest trending topics and content strategies for the community',
       action: 'topic_suggestions',
@@ -133,6 +138,7 @@ Tone: Fair, consistent, and community-focused.`,
     },
 
     {
+      type: 'action',
       name: 'assessSentiment',
       description: 'Assess sentiment across community discussions and content',
       action: 'sentiment_assessment',

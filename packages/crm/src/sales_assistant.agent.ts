@@ -7,11 +7,12 @@
  */
 export const SalesAssistantAgent = {
   name: 'sales_assistant',
+  label: 'Sales AI Assistant',
   role: 'Sales AI Assistant',
   description: 'Intelligent sales assistant to help reps qualify leads, manage opportunities, and close deals faster',
 
   // System prompt defines the agent's behavior and personality
-  systemPrompt: `You are an expert sales assistant with deep knowledge of CRM and sales processes.
+  instructions: `You are an expert sales assistant with deep knowledge of CRM and sales processes.
 
 Your responsibilities:
 1. Help sales representatives qualify leads efficiently
@@ -32,6 +33,7 @@ Tone: Professional, helpful, and results-oriented.`,
   // Tools the agent can use
   tools: [
     {
+      type: 'action',
       name: 'scoreLeads',
       description: 'Score leads based on fit, intent, and engagement signals',
       action: 'lead_scoring',
@@ -55,6 +57,7 @@ Tone: Professional, helpful, and results-oriented.`,
     },
 
     {
+      type: 'action',
       name: 'analyzeOpportunity',
       description: 'Analyze an opportunity and suggest next best actions',
       action: 'opportunity_next_steps',
@@ -73,6 +76,7 @@ Tone: Professional, helpful, and results-oriented.`,
     },
 
     {
+      type: 'action',
       name: 'findSimilarDeals',
       description: 'Find similar won deals for strategic insights',
       action: 'deal_intelligence',
@@ -99,6 +103,7 @@ Tone: Professional, helpful, and results-oriented.`,
     },
 
     {
+      type: 'action',
       name: 'generateEmail',
       description: 'Generate personalized email templates',
       action: 'email_generation',
@@ -131,6 +136,7 @@ Tone: Professional, helpful, and results-oriented.`,
     },
 
     {
+      type: 'action',
       name: 'getAccountInsights',
       description: 'Get comprehensive insights about an account',
       action: 'account_ai',
@@ -161,6 +167,7 @@ Tone: Professional, helpful, and results-oriented.`,
     },
 
     {
+      type: 'action',
       name: 'searchKnowledge',
       description: 'Search the knowledge base for relevant information',
       action: 'knowledge_search',
@@ -185,6 +192,7 @@ Tone: Professional, helpful, and results-oriented.`,
     },
 
     {
+      type: 'action',
       name: 'analyzeCompetitor',
       description: 'Get competitive intelligence and positioning',
       action: 'competitor_analysis',

@@ -553,12 +553,12 @@ const JourneyAIAction = {
   name: 'journey_ai',
   label: 'AI Journey Intelligence',
   description: 'AI-powered journey optimization, engagement prediction, and dropoff analysis',
-  params: {
-    action: { type: 'text', required: true },
-    journey_id: { type: 'text' },
-    contact_id: { type: 'text' },
-    current_step_id: { type: 'text' }
-  },
+  params: [
+      { name: "action", type: 'text', required: true },
+      { name: "journey_id", type: 'text' },
+      { name: "contact_id", type: 'text' },
+      { name: "current_step_id", type: 'text' },
+    ],
   handler: async (ctx: any) => {
     const { action } = ctx.params;
     switch (action) {

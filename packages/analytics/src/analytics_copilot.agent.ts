@@ -7,10 +7,11 @@
  */
 export const AnalyticsCoPilotAgent = {
   name: 'analytics_copilot',
+  label: 'Analytics Co-Pilot',
   role: 'Analytics Co-Pilot',
   description: 'Intelligent analytics agent that enables natural language data queries, automated insight generation, anomaly detection, and visualization recommendations',
 
-  systemPrompt: `You are an expert analytics co-pilot specializing in data analysis, business intelligence, and data visualization.
+  instructions: `You are an expert analytics co-pilot specializing in data analysis, business intelligence, and data visualization.
 
 Your responsibilities:
 1. Translate natural language questions into data queries across CRM objects
@@ -32,6 +33,7 @@ Tone: Analytical, precise, and insightful.`,
 
   tools: [
     {
+      type: 'action',
       name: 'queryData',
       description: 'Execute a natural language query against CRM data objects',
       action: 'analytics_query',
@@ -62,6 +64,7 @@ Tone: Analytical, precise, and insightful.`,
     },
 
     {
+      type: 'action',
       name: 'generateInsight',
       description: 'Generate actionable insights from data patterns and trends',
       action: 'analytics_insight',
@@ -87,6 +90,7 @@ Tone: Analytical, precise, and insightful.`,
     },
 
     {
+      type: 'action',
       name: 'detectAnomaly',
       description: 'Detect anomalies and outliers in metrics and KPI data',
       action: 'analytics_anomaly_detection',
@@ -112,6 +116,7 @@ Tone: Analytical, precise, and insightful.`,
     },
 
     {
+      type: 'action',
       name: 'buildVisualization',
       description: 'Recommend and build optimal visualization for a given dataset',
       action: 'analytics_build_visualization',
@@ -137,6 +142,7 @@ Tone: Analytical, precise, and insightful.`,
     },
 
     {
+      type: 'action',
       name: 'explainMetric',
       description: 'Explain a metric or KPI definition, calculation, and context in plain language',
       action: 'analytics_explain_metric',

@@ -7,10 +7,11 @@
  */
 export const RecruitmentAssistantAgent = {
   name: 'recruitment_assistant',
+  label: 'Recruitment AI Assistant',
   role: 'Recruitment AI Assistant',
   description: 'Intelligent recruitment agent that auto-screens resumes, scores candidates against job requirements, and schedules interviews based on fit scores',
 
-  systemPrompt: `You are an expert recruitment assistant with deep knowledge of talent acquisition, candidate evaluation, and hiring best practices.
+  instructions: `You are an expert recruitment assistant with deep knowledge of talent acquisition, candidate evaluation, and hiring best practices.
 
 Your responsibilities:
 1. Auto-screen resumes against job requirements and generate fit scores
@@ -32,6 +33,7 @@ Tone: Professional, objective, and efficient.`,
 
   tools: [
     {
+      type: 'action',
       name: 'screenResume',
       description: 'Auto-screen a resume against job requirements and generate a detailed fit score',
       action: 'resume_screening',
@@ -64,6 +66,7 @@ Tone: Professional, objective, and efficient.`,
     },
 
     {
+      type: 'action',
       name: 'rankCandidates',
       description: 'Rank and score multiple candidates for a position based on fit analysis',
       action: 'candidate_ranking',
@@ -97,6 +100,7 @@ Tone: Professional, objective, and efficient.`,
     },
 
     {
+      type: 'action',
       name: 'scheduleInterview',
       description: 'Schedule an interview based on candidate fit score and interviewer availability',
       action: 'interview_scheduling',
@@ -129,6 +133,7 @@ Tone: Professional, objective, and efficient.`,
     },
 
     {
+      type: 'action',
       name: 'generateInterviewKit',
       description: 'Generate tailored interview questions and evaluation criteria for a candidate',
       action: 'interview_preparation',
@@ -157,6 +162,7 @@ Tone: Professional, objective, and efficient.`,
     },
 
     {
+      type: 'action',
       name: 'assessCulturalFit',
       description: 'Evaluate candidate cultural fit based on communication, values alignment, and team dynamics',
       action: 'cultural_fit_assessment',
@@ -179,6 +185,7 @@ Tone: Professional, objective, and efficient.`,
     },
 
     {
+      type: 'action',
       name: 'getHiringPipelineInsights',
       description: 'Provide analytics and insights on the current hiring pipeline for a position',
       action: 'pipeline_analytics',

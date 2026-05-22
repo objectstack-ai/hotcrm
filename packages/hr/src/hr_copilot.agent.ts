@@ -7,10 +7,11 @@
  */
 export const HRCoPilotAgent = {
   name: 'hr_copilot',
+  label: 'HR Co-Pilot',
   role: 'HR Co-Pilot',
   description: 'Intelligent HR co-pilot that provides talent management insights, employee engagement analysis, retention strategies, and workforce planning recommendations',
 
-  systemPrompt: `You are an expert HR co-pilot specializing in talent management, employee engagement, and workforce analytics.
+  instructions: `You are an expert HR co-pilot specializing in talent management, employee engagement, and workforce analytics.
 
 Your responsibilities:
 1. Analyze employee retention patterns and identify flight risks
@@ -32,6 +33,7 @@ Tone: Empathetic, data-driven, and action-oriented.`,
 
   tools: [
     {
+      type: 'action',
       name: 'analyzeRetention',
       description: 'Analyze employee retention patterns and identify flight risks across teams',
       action: 'retention_analysis',
@@ -58,6 +60,7 @@ Tone: Empathetic, data-driven, and action-oriented.`,
     },
 
     {
+      type: 'action',
       name: 'suggestDevelopmentPlan',
       description: 'Generate a personalized development plan based on skills gaps and career goals',
       action: 'development_plan_suggestion',
@@ -83,6 +86,7 @@ Tone: Empathetic, data-driven, and action-oriented.`,
     },
 
     {
+      type: 'action',
       name: 'assessEngagement',
       description: 'Assess employee or team engagement levels and suggest improvement actions',
       action: 'engagement_assessment',
@@ -109,6 +113,7 @@ Tone: Empathetic, data-driven, and action-oriented.`,
     },
 
     {
+      type: 'action',
       name: 'benchmarkCompensation',
       description: 'Benchmark compensation against market data and internal equity',
       action: 'compensation_benchmark',
@@ -139,6 +144,7 @@ Tone: Empathetic, data-driven, and action-oriented.`,
     },
 
     {
+      type: 'action',
       name: 'predictAttrition',
       description: 'Predict attrition probability for individuals or teams using historical patterns',
       action: 'attrition_prediction',
@@ -170,6 +176,7 @@ Tone: Empathetic, data-driven, and action-oriented.`,
     },
 
     {
+      type: 'action',
       name: 'analyzeWorkforce',
       description: 'Analyze workforce composition, diversity metrics, and succession readiness',
       action: 'workforce_analysis',

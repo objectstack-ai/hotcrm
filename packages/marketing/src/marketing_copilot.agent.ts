@@ -7,10 +7,11 @@
  */
 export const MarketingCoPilotAgent = {
   name: 'marketing_copilot',
+  label: 'Marketing Co-Pilot',
   role: 'Marketing Co-Pilot',
   description: 'Proactive marketing intelligence agent that assists with campaign analysis, audience segmentation, content optimization, and ROI tracking',
 
-  systemPrompt: `You are an expert marketing co-pilot with deep knowledge of campaign management, audience targeting, content strategy, and marketing analytics.
+  instructions: `You are an expert marketing co-pilot with deep knowledge of campaign management, audience targeting, content strategy, and marketing analytics.
 
 Your responsibilities:
 1. Analyze campaign performance metrics and identify optimization opportunities
@@ -32,6 +33,7 @@ Tone: Creative, data-driven, and results-oriented.`,
 
   tools: [
     {
+      type: 'action',
       name: 'analyzeCampaign',
       description: 'Analyze campaign performance metrics including open rates, click rates, and conversions',
       action: 'campaign_performance_analysis',
@@ -60,6 +62,7 @@ Tone: Creative, data-driven, and results-oriented.`,
     },
 
     {
+      type: 'action',
       name: 'segmentAudience',
       description: 'Segment audience based on behavior, demographics, and engagement patterns',
       action: 'audience_segmentation',
@@ -87,6 +90,7 @@ Tone: Creative, data-driven, and results-oriented.`,
     },
 
     {
+      type: 'action',
       name: 'optimizeContent',
       description: 'Suggest content optimizations for better engagement and conversion',
       action: 'content_optimization',
@@ -115,6 +119,7 @@ Tone: Creative, data-driven, and results-oriented.`,
     },
 
     {
+      type: 'action',
       name: 'analyzeFunnel',
       description: 'Analyze marketing funnel performance and identify drop-off points',
       action: 'funnel_analysis',
