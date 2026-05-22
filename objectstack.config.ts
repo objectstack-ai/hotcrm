@@ -1,6 +1,23 @@
+/**
+ * HotCRM root stack — flat `defineStack` configuration.
+ *
+ * Mirrors `framework/examples/app-crm/objectstack.config.ts`:
+ *  - Top-level `objects` / `actions` / `hooks` / `pages` / `views` / ... arrays
+ *  - `requires: [...]` declares platform capabilities (auth, ui, ai, ...).
+ *    The CLI auto-loads matching service plugins (no manual `new XPlugin()`).
+ *  - No `plugins: []` array → avoids the nested-plugin ownership collision
+ *    introduced by `@objectstack/objectql` 4.2's recursive `registerApp`.
+ *
+ * Metadata sources:
+ *  - Business objects / actions / triggers / workflows / apps / data / i18n
+ *    come from each `packages/<pkg>/dist/plugin.js` (the existing bundle).
+ *  - Pages, views, dashboards, forms, flows, permissions, reports, agents
+ *    are discovered from `packages/<pkg>/dist/**\/*.<suffix>.js` by
+ *    `objectstack.aggregator.ts`.
+ */
+
 import { defineStack } from '@objectstack/spec';
-import { AuthPlugin } from '@objectstack/plugin-auth';
-import { I18nServicePlugin } from '@objectstack/service-i18n';
+
 import { CRMPlugin } from './packages/crm/dist/plugin.js';
 import { FinancePlugin } from './packages/finance/dist/plugin.js';
 import { MarketingPlugin } from './packages/marketing/dist/plugin.js';
@@ -14,34 +31,69 @@ import { HealthcarePlugin } from './packages/healthcare/dist/plugin.js';
 import { RealEstatePlugin } from './packages/real-estate/dist/plugin.js';
 import { EducationPlugin } from './packages/education/dist/plugin.js';
 import { FinancialServicesPlugin } from './packages/financial-services/dist/plugin.js';
-import { ConsolePlugin } from '@object-ui/console';
 
-// Core system reference datasets (not part of any plugin)
+// Core system reference datasets (not owned by any plugin)
 import { CurrencyDataset } from './packages/core/dist/currency.dataset.js';
 import { CountryDataset } from './packages/core/dist/country.dataset.js';
 import { IndustryDataset } from './packages/core/dist/industry.dataset.js';
 import { TimezoneDataset } from './packages/core/dist/timezone.dataset.js';
 import { LanguageDataset } from './packages/core/dist/language.dataset.js';
 
-// Translation bundles — aggregated from all business plugins
-import { CrmTranslations } from './packages/crm/dist/translations/index.js';
-import { FinanceTranslations } from './packages/finance/dist/translations/index.js';
-import { MarketingTranslations } from './packages/marketing/dist/translations/index.js';
-import { ProductsTranslations } from './packages/products/dist/translations/index.js';
-import { SupportTranslations } from './packages/support/dist/translations/index.js';
-import { HRTranslations } from './packages/hr/dist/translations/index.js';
+import { aggregatePackageMetadata } from './objectstack.aggregator.js';
 
-/**
- * HotCRM Application Configuration
- * 
- * Aggregates all business plugins into a single runtime application.
- * This replaces the deprecated @hotcrm/server package.
- * 
- * Note: @hotcrm/ai is a utility library and doesn't need to be registered as a plugin.
- * 
- * ConsolePlugin is embedded in the plugins array so that the CLI `serve`
- * command loads the Console UI automatically — no custom server.ts needed.
- */
+// ─── Aggregate every business plugin's bundle into flat arrays ───────────
+const BUSINESS_PLUGINS = [
+  CRMPlugin, FinancePlugin, MarketingPlugin, ProductsPlugin,
+  SupportPlugin, HRPlugin, AnalyticsPlugin, IntegrationPlugin,
+  CommunityPlugin, HealthcarePlugin, RealEstatePlugin,
+  EducationPlugin, FinancialServicesPlugin,
+];
+
+const flatten = <T>(
+  field: 'objects' | 'actions' | 'triggers' | 'workflows',
+): T[] => {
+  const out: T[] = [];
+  for (const p of BUSINESS_PLUGINS as Array<Record<string, unknown>>) {
+    const value = p[field];
+    if (!value || typeof value !== 'object') continue;
+    for (const [key, v] of Object.entries(value as Record<string, unknown>)) {
+      // Some action maps nest a second level (e.g. `account_ai: { ... }`).
+      // Hoist nested action groups so each named action becomes a top-level
+      // entry the runtime can validate independently.
+      if (
+        field === 'actions' &&
+        v && typeof v === 'object' && !Array.isArray(v) &&
+        !('name' in (v as object))
+      ) {
+        for (const [nestedKey, nested] of Object.entries(
+          v as Record<string, unknown>,
+        )) {
+          if (!nested || typeof nested !== 'object') continue;
+          out.push({ ...(nested as object), name: (nested as { name?: string }).name ?? nestedKey } as T);
+        }
+      } else if (v && typeof v === 'object') {
+        // Use the map key as the canonical snake_case name — the legacy
+        // map-based plugin registration treated the key as the source of
+        // truth for the registered entity name (preserving snake_case).
+        out.push({ ...(v as object), name: key } as T);
+      }
+    }
+  }
+  return out;
+};
+
+const flattenArray = <T>(field: 'apps' | 'data' | 'translations'): T[] => {
+  const out: T[] = [];
+  for (const p of BUSINESS_PLUGINS as Array<Record<string, unknown>>) {
+    const value = p[field];
+    if (Array.isArray(value)) out.push(...(value as T[]));
+  }
+  return out;
+};
+
+// ─── Filesystem-discovered metadata (pages/views/dashboards/...) ─────────
+const discovered = await aggregatePackageMetadata();
+
 export default defineStack({
   manifest: {
     id: 'com.hotcrm.app',
@@ -49,10 +101,24 @@ export default defineStack({
     version: '1.0.0',
     type: 'app',
     name: 'HotCRM Enterprise',
-    description: 'AI-Native Enterprise CRM with Sales, Marketing, Products, Finance, Service, and HR clouds',
+    description:
+      'AI-Native Enterprise CRM with Sales, Marketing, Products, Finance, Service, and HR clouds',
   },
 
-  // Internationalization (i18n) configuration
+  // Platform capabilities — the CLI resolves each to a built-in service
+  // plugin and auto-loads it. Foundational tier (queue/job/cache/settings/
+  // email/storage) is auto-injected for non-`minimal` presets.
+  requires: [
+    'ai',
+    'automation',
+    'analytics',
+    'auth',
+    'ui',
+    'i18n',
+    'approvals',
+    'sharing',
+  ],
+
   i18n: {
     defaultLocale: 'en',
     supportedLocales: ['en', 'zh-CN', 'ja-JP'],
@@ -60,62 +126,29 @@ export default defineStack({
     fileOrganization: 'per_locale',
   },
 
-  // Empty objects array triggers auto-loading of ObjectQL and the memory driver,
-  // which is required by the AppPlugin at startup.
-  // Business objects are defined inside each plugin's objects[] property.
-  objects: [],
+  objects: flatten('objects'),
+  actions: flatten('actions'),
+  hooks: flatten('triggers'),
+  workflows: flatten('workflows'),
 
-  // Core system reference data (currencies, countries, industries, timezones, languages)
-  // Plugin-specific seed data is registered in each plugin's data[] field.
+  apps: flattenArray('apps'),
+  translations: flattenArray('translations'),
+
   data: [
     CurrencyDataset,
     CountryDataset,
     IndustryDataset,
     TimezoneDataset,
     LanguageDataset,
+    ...flattenArray('data'),
   ],
 
-  // Aggregated translations from all business plugins (TranslationBundle[])
-  // Each plugin also registers its own translations for plugin-level loading.
-  // The root config merges them for the AppPlugin to load at startup.
-  translations: [
-    CrmTranslations,
-    FinanceTranslations,
-    MarketingTranslations,
-    ProductsTranslations,
-    SupportTranslations,
-    HRTranslations,
-  ],
-
-  // Register all Business Plugins
-  // Core clouds (6)
-  plugins: [
-    CRMPlugin,
-    FinancePlugin,
-    MarketingPlugin,
-    ProductsPlugin,
-    SupportPlugin,
-    HRPlugin,
-    // Cross-functional clouds (3)
-    AnalyticsPlugin,
-    IntegrationPlugin,
-    CommunityPlugin,
-    // Vertical industry solutions (4)
-    HealthcarePlugin,
-    RealEstatePlugin,
-    EducationPlugin,
-    FinancialServicesPlugin,
-    new AuthPlugin({
-      secret: process.env.AUTH_SECRET || 'hotcrm-dev-secret-change-me-in-production',
-      trustedOrigins: ['http://localhost:*'],
-    }),
-    new I18nServicePlugin({
-      defaultLocale: 'en',
-      fallbackLocale: 'en',
-      registerRoutes: true,
-    }),
-    new ConsolePlugin(),
-  ],
-  // Uses 'as any' because defineStack schema doesn't include runtime plugins
-  // like ConsolePlugin — consistent with objectstack.shared.ts pattern.
-} as any);
+  // Filesystem-discovered metadata
+  pages: discovered.pages as never,
+  views: discovered.views as never,
+  dashboards: discovered.dashboards as never,
+  flows: discovered.flows as never,
+  permissions: discovered.permissions as never,
+  reports: discovered.reports as never,
+  agents: discovered.agents as never,
+});
