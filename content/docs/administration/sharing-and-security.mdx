@@ -40,27 +40,22 @@ OWD is the *most restrictive* setting for each object. Everything else either wi
 
 The role hierarchy is the **org chart** for visibility. A manager automatically sees everything their reports own.
 
-HotCRM ships with a 9-role default:
+HotCRM ships with a 10-role default that maps cleanly onto a typical Sales / Service / Marketing org under an Executive parent:
 
 ```
 Executive
  ├── Sales Director
- │    ├── Sales Manager - East
- │    │    ├── AE - East
- │    │    └── SDR - East
- │    └── Sales Manager - West
- │         ├── AE - West
- │         └── SDR - West
+ │    └── Sales Manager
+ │         └── Sales Representative
  ├── Service Director
- │    ├── Service Manager
- │    │    ├── Agent
- │    │    └── Senior Agent
- ├── Marketing Director
- │    └── Marketing Manager
- │         └── Campaign Specialist
+ │    └── Service Manager
+ │         └── Service Agent
+ └── Marketing Director
+      └── Marketing Manager
+           └── Marketing User
 ```
 
-A *Sales Director* automatically sees every opportunity owned by anyone below them. They do not see Service or Marketing records (those are siblings, not children).
+A *Sales Director* automatically sees every opportunity owned by anyone below them. They do not see Service or Marketing records (those are siblings, not children). To split a region into multiple teams (e.g. *Sales Manager — East* and *Sales Manager — West*), clone the **Sales Manager** node.
 
 Configure roles in **Setup → Roles**.
 

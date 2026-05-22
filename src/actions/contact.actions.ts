@@ -53,18 +53,21 @@ export const SendEmailAction: Action = {
     source: `
       const record = ctx.record ?? {};
       const recipientId = ctx.recordId ?? record.id ?? null;
-      const activity = await ctx.api.object('activity').insert({
-        type: 'email',
-        subject: input.subject ? String(input.subject) : ('Email to ' + (record.email ?? '')),
-        body: input.body ? String(input.body) : '',
-        contact_id: recipientId,
-        account_id: record.account_id ?? null,
-        direction: 'outbound',
-        status: 'sent',
-        created_by: ctx.user?.id ?? null,
-        sent_at: new Date().toISOString(),
+      const to = record.email ? String(record.email) : '';
+      const from = ctx.user?.email ?? 'noreply@hotcrm.local';
+      const subject = input.subject ? String(input.subject) : ('Email to ' + to);
+      const body = input.body ? String(input.body) : '';
+      const email = await ctx.api.object('sys_email').insert({
+        from_address: from,
+        to_addresses: to,
+        subject,
+        body_text: body,
+        status: 'queued',
+        related_object: 'contact',
+        related_id: recipientId,
+        sent_by: ctx.user?.id ?? null,
       });
-      return { activityId: activity?.id };
+      return { emailId: email?.id };
     `,
     capabilities: ['api.write'],
     timeoutMs: 5000,

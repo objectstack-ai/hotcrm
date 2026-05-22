@@ -19,16 +19,22 @@ export const LogCallAction: Action = {
     language: 'js',
     source: `
       const recordId = ctx.recordId ?? ctx.record?.id ?? null;
-      const activity = await ctx.api.object('activity').insert({
-        type: 'call',
-        subject: input.subject ? String(input.subject) : 'Untitled Call',
-        duration_minutes: input.duration ? Number(input.duration) : 0,
-        notes: input.notes ? String(input.notes) : '',
-        related_to_id: recordId,
-        direction: 'outbound',
-        status: 'completed',
-        created_by: ctx.user?.id ?? null,
-        call_date: new Date().toISOString(),
+      const objectName = ctx.objectName ?? input.objectName ?? null;
+      const subject = input.subject ? String(input.subject) : 'Untitled Call';
+      const duration = input.duration ? Number(input.duration) : 0;
+      const notes = input.notes ? String(input.notes) : '';
+      const summary = duration
+        ? subject + ' (' + duration + ' min)'
+        : subject;
+      const activity = await ctx.api.object('sys_activity').insert({
+        type: 'completed',
+        summary,
+        actor_id: ctx.user?.id ?? null,
+        actor_name: ctx.user?.name ?? null,
+        object_name: objectName,
+        record_id: recordId,
+        record_label: ctx.record?.name ?? null,
+        metadata: JSON.stringify({ kind: 'call', duration_minutes: duration, notes, direction: 'outbound' }),
       });
       return { activityId: activity?.id };
     `,
