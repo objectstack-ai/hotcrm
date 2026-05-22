@@ -3,6 +3,7 @@
   "pages": [
     "index",
     "getting-started",
+    "guides",
     "---Product---",
     "sales",
     "service",
@@ -15,6 +16,7 @@
     "administration",
     "customization",
     "---Resources---",
+    "reference",
     "whats-new"
   ]
 }

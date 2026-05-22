@@ -1,0 +1,312 @@
+---
+title: Theming & i18n
+description: Brand HotCRM with your colors, fonts, logo — and translate it into the languages your users speak.
+---
+
+# Theming & i18n
+
+This page covers two related customisations: **theming** (look-and-feel) and **internationalisation** (multi-language support).
+
+---
+
+## Theming
+
+A complete theme controls colours, typography, density, logo, favicon, login screen, and email templates.
+
+### Defining a theme
+
+```ts
+// packages/your-extension/src/theme.ts
+import { defineTheme } from '@objectstack/spec/ui';
+
+export default defineTheme({
+  name: 'acme',
+  brand: {
+    primary:    '#0E4DA4',
+    primary_dark: '#093470',
+    accent:     '#FFB000',
+    success:    '#16A34A',
+    warning:    '#F59E0B',
+    danger:     '#DC2626',
+    neutral:    { 50: '#F8FAFC', 900: '#0F172A' },  // light + dark anchor
+    logo:       { light: '/branding/logo-light.svg', dark: '/branding/logo-dark.svg' },
+    favicon:    '/branding/favicon.ico',
+    app_icon:   '/branding/app-icon-512.png',       // PWA icon
+  },
+  typography: {
+    sans:    'Inter, system-ui, sans-serif',
+    display: 'Söhne, Inter, sans-serif',
+    mono:    'JetBrains Mono, monospace',
+    base_size: 14,
+  },
+  density: 'comfortable',                            // 'comfortable' | 'compact' | 'spacious'
+  radius:  'md',                                     // 'none' | 'sm' | 'md' | 'lg' | 'pill'
+  shadow:  'subtle',                                 // 'none' | 'subtle' | 'pronounced'
+});
+```
+
+Register the theme:
+
+```ts
+// packages/your-extension/src/index.ts
+import theme from './theme';
+export { theme };
+```
+
+Apply it tenant-wide at **Setup → Branding → Theme → Activate**.
+
+### Login screen
+
+A separate `login_theme.ts` controls the login page (which renders before the user's theme loads):
+
+```ts
+import { defineLoginTheme } from '@objectstack/spec/ui';
+
+export default defineLoginTheme({
+  name: 'acme-login',
+  background: { type: 'gradient', from: '#0E4DA4', to: '#093470' },
+  hero:       { logo: '/branding/logo-light.svg', tagline: 'Built for builders.' },
+  card:       { radius: 'lg', shadow: 'pronounced', max_width: 420 },
+  footer:     '© Acme 2026 · privacy.acme.com',
+});
+```
+
+### Email templates
+
+Brand email templates with your colours and logo:
+
+```ts
+// packages/your-extension/src/email/_layout.email.ts
+import { defineEmailLayout } from '@objectstack/spec/ui';
+
+export default defineEmailLayout({
+  name: 'acme_layout',
+  header: { logo: '/branding/email-logo.png', background: '#0E4DA4' },
+  footer: { text: 'Acme · 1 Market St · San Francisco', unsubscribe_required: true },
+  fonts:  ['Inter', 'Helvetica Neue', 'Arial', 'sans-serif'],
+});
+```
+
+Every transactional email (lead alerts, approval requests, case notifications, password resets) inherits this layout.
+
+### Per-tenant theming (multi-brand)
+
+If you serve multiple brands (e.g., HotCRM resold under different labels):
+
+```ts
+defineTheme({
+  name: 'acme',
+  scope: { tenant_tag: 'brand=acme' },
+});
+
+defineTheme({
+  name: 'beta',
+  scope: { tenant_tag: 'brand=beta' },
+});
+```
+
+The runtime picks the theme matching each tenant's tag.
+
+### Per-user theming
+
+Users can opt for **Dark mode** / **Light mode** / **System default** in Settings → Preferences. Themes must define both light and dark variants:
+
+```ts
+defineTheme({
+  name: 'acme',
+  variants: {
+    light: { brand: { surface: '#FFFFFF', text: '#0F172A' } },
+    dark:  { brand: { surface: '#0F172A', text: '#F8FAFC' } },
+  },
+});
+```
+
+### Accessibility
+
+The runtime enforces:
+
+- **AA contrast** on text + background.
+- **Focus indicators** on every interactive element.
+- **Reduced motion** support (respects `prefers-reduced-motion`).
+
+A theme that fails contrast checks at validation time will be rejected.
+
+### Custom CSS escape hatch
+
+For one-off pixel pushing:
+
+```ts
+defineTheme({
+  name: 'acme',
+  extra_css: `
+    .dashboard-tile h3 { letter-spacing: -0.02em; }
+    .login-card        { backdrop-filter: blur(8px); }
+  `,
+});
+```
+
+Use sparingly — custom CSS can break with platform UI updates.
+
+---
+
+## Internationalisation (i18n)
+
+HotCRM ships English by default. Each tenant can enable additional languages.
+
+### Languages supported out of the box
+
+| Language | Locale code |
+| --- | --- |
+| English | `en` (default) |
+| 简体中文 | `zh-CN` |
+| 繁體中文 | `zh-TW` |
+| 日本語 | `ja` |
+| 한국어 | `ko` |
+| Español | `es` |
+| Português (BR) | `pt-BR` |
+| Français | `fr` |
+| Deutsch | `de` |
+| Italiano | `it` |
+| Nederlands | `nl` |
+| Polski | `pl` |
+| Türkçe | `tr` |
+| Русский | `ru` |
+| العربية | `ar` (RTL) |
+| עברית | `he` (RTL) |
+
+### Enabling languages
+
+**Setup → Internationalisation → Languages → Enable**. Each user picks their language in **Settings → Preferences**.
+
+### What gets translated
+
+| Layer | Source | Notes |
+| --- | --- | --- |
+| **System UI strings** | Platform bundles | Shipped by ObjectStack |
+| **Standard object labels** | HotCRM bundles | Shipped by HotCRM |
+| **Custom field labels** | Your translation files | You author |
+| **Picklist values** | Your translation files | You author |
+| **Validation messages** | Your translation files | You author |
+| **Email templates** | Locale-specific templates | You author |
+| **AI Copilot responses** | LLM (auto) | Quality varies by language |
+| **User-entered data** | Not translated | Record content stays as entered |
+
+### Translating custom labels
+
+Wrap labels in the `t()` function:
+
+```ts
+import { t } from '@objectstack/runtime/i18n';
+import { Field } from '@objectstack/spec/data';
+
+custom_priority: Field.select({
+  label: t('opportunity.field.custom_priority', 'Priority'),
+  options: [
+    { value: 'a', label: t('opportunity.priority.a', 'Top') },
+    { value: 'b', label: t('opportunity.priority.b', 'High') },
+  ],
+}),
+```
+
+The second argument is the **fallback** (used if no translation exists for the user's locale).
+
+### Translation files
+
+```
+packages/your-extension/
+  i18n/
+    en.json          // source language
+    zh-CN.json
+    ja.json
+    es.json
+    ...
+```
+
+```json
+// i18n/zh-CN.json
+{
+  "opportunity.field.custom_priority": "优先级",
+  "opportunity.priority.a": "最高",
+  "opportunity.priority.b": "高"
+}
+```
+
+### Pluralisation
+
+```ts
+t('inbox.cases', {
+  count: 5,
+  one:   '1 case',
+  other: '{count} cases',
+});
+```
+
+Each language file can override per-locale pluralisation rules (zero / one / few / many / other) — important for Polish, Russian, Arabic.
+
+### Formatting
+
+Numbers, dates, currencies are formatted per the user's locale:
+
+```ts
+import { fmt } from '@objectstack/runtime/i18n';
+
+fmt.currency(1234.5, 'USD', user.locale);   // "$1,234.50" or "1.234,50 $" depending on locale
+fmt.date(new Date(), 'long', user.locale);  // "March 12, 2026" or "12 mars 2026"
+fmt.relative(then, user.locale);            // "3 days ago" / "il y a 3 jours"
+```
+
+Use `fmt.*` rather than rolling your own — handles locale rules, RTL, and timezones.
+
+### RTL (Arabic, Hebrew)
+
+When the user's locale is RTL:
+
+- **Page direction** flips automatically.
+- **Icons** with directional meaning (arrows, chevrons) flip.
+- **Logical CSS properties** (`margin-inline-start`) work correctly.
+- **Numbers and code** stay LTR within RTL text.
+
+Test your custom UI in RTL with the **Locale switcher** in dev tools.
+
+### AI Copilot in non-English locales
+
+The Copilot detects the user's locale and:
+
+- Outputs responses in that language.
+- Drafts customer-facing emails in the **customer's** language (detected from the contact record).
+- Cites knowledge base articles in the user's language if available, else the original.
+
+For best results, **maintain knowledge bases in the same languages** you serve customers in.
+
+### Translation workflow
+
+A typical workflow for a new language:
+
+1. Mark the language as **In Progress** in setup.
+2. Export English bundle → translation vendor (or in-house translator).
+3. Import translated bundle.
+4. **Auto-translate** missing keys with the platform LLM (low-stakes UI strings only).
+5. **Reviewer** signs off in the in-app translation editor.
+6. Mark language **Active**.
+
+### Date / number / currency settings
+
+In addition to locale, each user can set:
+
+- **Time zone** — used for all date display.
+- **Date format** — auto from locale or custom.
+- **First day of week** — auto from locale.
+- **Currency** — for display when records have a different currency.
+
+These live in **Settings → Preferences → Region & Time**.
+
+---
+
+## Tips
+
+- ✅ Always provide a **dark variant** — modern users expect it.
+- ✅ Run the **accessibility validator** before activating a theme.
+- ✅ Use `t()` for **every user-facing string** — even if you only support English today.
+- ✅ **Don't translate data** — translate the *chrome* around the data.
+- ✅ For non-English knowledge bases, **author native content** rather than auto-translating English.
+- ✅ Test critical flows in **at least one RTL language** — catches a lot of layout bugs.
