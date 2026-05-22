@@ -9,6 +9,7 @@ export const EnrollmentPage = {
   name: 'enrollment_detail',
   object: 'enrollment',
   type: 'record' as const,
+  kind: 'full' as const,
   label: 'Enrollment Record',
   template: 'record_detail',
   isDefault: true,

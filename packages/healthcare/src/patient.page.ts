@@ -9,6 +9,7 @@ export const PatientPage = {
   name: 'patient_detail',
   object: 'patient',
   type: 'record' as const,
+  kind: 'full' as const,
   label: 'Patient Record',
   template: 'record_detail',
   isDefault: true,

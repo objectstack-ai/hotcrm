@@ -61,7 +61,7 @@ export const DecisionMakersView = {
     ],
     sort: [{ field: 'last_name', order: 'asc' as const }],
     conditionalFormatting: [
-      { condition: 'influence_level == "high"', style: { backgroundColor: '#FEF2F2', borderLeft: '3px solid #EF4444' } }
+      { condition: { dialect: 'cel', source: 'influence_level == "high"' }, style: { backgroundColor: '#FEF2F2', borderLeft: '3px solid #EF4444' } }
     ]
   }
 } satisfies View;

@@ -62,7 +62,7 @@ export const ExpiringContractsView = {
     ],
     sort: [{ field: 'end_date', order: 'asc' as const }],
     conditionalFormatting: [
-      { condition: 'end_date <= NEXT_30_DAYS', style: { backgroundColor: '#FEF2F2', borderLeft: '3px solid #EF4444' } }
+      { condition: { dialect: 'cel', source: 'end_date <= NEXT_30_DAYS' }, style: { backgroundColor: '#FEF2F2', borderLeft: '3px solid #EF4444' } }
     ]
   }
 } satisfies View;

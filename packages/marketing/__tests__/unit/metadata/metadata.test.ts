@@ -135,7 +135,8 @@ describe('Marketing Scheduled Jobs Metadata Compliance', () => {
       expect(job.schedule).toBeDefined();
       expect(['cron', 'interval']).toContain(job.schedule.type);
       if (job.schedule.type === 'cron') {
-        expect(typeof job.schedule.expression).toBe('string');
+        const exprVal = typeof job.schedule.expression === 'string' ? job.schedule.expression : (job.schedule.expression as any).source;
+        expect(typeof exprVal).toBe('string');
       }
     });
   });

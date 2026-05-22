@@ -5,6 +5,7 @@ const CampaignPage = {
   name: 'campaign_page',
   object: 'campaign',
   type: 'record' as const,
+  kind: 'full' as const,
   label: 'Campaign Layout',
   template: 'record_detail',
   isDefault: true,

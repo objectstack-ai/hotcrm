@@ -8,6 +8,7 @@ import { PageSchema } from '@objectstack/spec/ui';
 export const HealthcareHomePage = {
   name: 'healthcare_home',
   type: 'home' as const,
+  kind: 'full' as const,
   label: 'Healthcare Home Page',
   template: 'default',
   isDefault: false,

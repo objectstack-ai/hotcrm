@@ -8,6 +8,7 @@ import { PageSchema } from '@objectstack/spec/ui';
 export const RevenueHomePage = {
   name: 'revenue_home',
   type: 'home' as const,
+  kind: 'full' as const,
   label: 'Revenue Cloud Home Page',
   template: 'default',
   isDefault: false,

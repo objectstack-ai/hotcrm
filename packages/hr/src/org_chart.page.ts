@@ -8,6 +8,7 @@ import { PageSchema } from '@objectstack/spec/ui';
 export const OrgChartPage = {
   name: 'org_chart',
   type: 'app' as const,
+  kind: 'full' as const,
   label: 'Organization Chart',
   template: 'default',
   isDefault: false,

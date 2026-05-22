@@ -9,6 +9,7 @@ export const ConnectorPage = {
   name: 'connector_detail',
   object: 'connector',
   type: 'record' as const,
+  kind: 'full' as const,
   label: 'Connector Detail Page',
   template: 'record_detail',
   isDefault: true,

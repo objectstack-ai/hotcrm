@@ -42,8 +42,8 @@ export const TodaysAppointmentsView = {
     ],
     sort: [{ field: 'appointment_time', order: 'asc' as const }],
     conditionalFormatting: [
-      { condition: 'status == "confirmed"', style: { backgroundColor: '#F0FDF4', borderLeft: '3px solid #22C55E' } },
-      { condition: 'status == "cancelled"', style: { backgroundColor: '#FEF2F2', borderLeft: '3px solid #EF4444' } }
+      { condition: { dialect: 'cel', source: 'status == "confirmed"' }, style: { backgroundColor: '#F0FDF4', borderLeft: '3px solid #22C55E' } },
+      { condition: { dialect: 'cel', source: 'status == "cancelled"' }, style: { backgroundColor: '#FEF2F2', borderLeft: '3px solid #EF4444' } }
     ]
   }
 } satisfies View;

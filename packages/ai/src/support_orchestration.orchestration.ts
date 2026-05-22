@@ -16,7 +16,7 @@ export const SupportOrchestration = {
     'Multi-step AI pipeline triggered on new case creation to auto-classify, gauge sentiment, suggest resolution, and draft a response.',
   objectName: 'case',
   trigger: 'record_created',
-  entryCriteria: 'status == "New"',
+  entryCriteria: { dialect: 'cel', source: 'status == "New"' },
 
   aiTasks: [
     {
@@ -63,7 +63,7 @@ export const SupportOrchestration = {
       temperature: 0.4,
       retryAttempts: 2,
       multiClass: false,
-      condition: 'category != null',
+      condition: { dialect: 'cel', source: 'category != null' },
       description: 'Recommend a resolution strategy based on classification and sentiment.',
       active: true,
     },

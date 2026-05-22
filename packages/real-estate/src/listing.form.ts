@@ -34,8 +34,8 @@ export const ListingForm = {
       collapsed: false,
       fields: [
         { field: 'list_price', required: true, helpText: 'Current asking price' },
-        { field: 'sold_price', visibleOn: "status = 'sold'" },
-        { field: 'sold_date', visibleOn: "status = 'sold'" }
+        { field: 'sold_price', visibleOn: { dialect: 'cel', source: `status = 'sold'` } },
+        { field: 'sold_date', visibleOn: { dialect: 'cel', source: `status = 'sold'` } }
       ]
     },
     {

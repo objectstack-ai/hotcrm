@@ -9,6 +9,7 @@ export const PropertyPage = {
   name: 'property_detail',
   object: 'property',
   type: 'record' as const,
+  kind: 'full' as const,
   label: 'Property Record',
   template: 'record_detail',
   isDefault: true,

@@ -8,6 +8,7 @@ export const ContactPage = {
   name: 'contact_detail',
   object: 'contact',
   type: 'record' as const,
+  kind: 'full' as const,
   label: 'Contact Detail Page',
   template: 'record_detail',
   isDefault: true,

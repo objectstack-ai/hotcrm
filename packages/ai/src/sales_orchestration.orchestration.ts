@@ -19,7 +19,7 @@ export const SalesOrchestration = {
   fieldConditions: [
     { field: 'stage', operator: 'changed' },
   ],
-  entryCriteria: 'stage != "Closed Won" && stage != "Closed Lost"',
+  entryCriteria: { dialect: 'cel', source: 'stage != "Closed Won" && stage != "Closed Lost"' },
 
   aiTasks: [
     {
@@ -50,7 +50,7 @@ export const SalesOrchestration = {
       temperature: 0.4,
       retryAttempts: 2,
       multiClass: false,
-      condition: 'risk_level != null',
+      condition: { dialect: 'cel', source: 'risk_level != null' },
       description: 'Generate a concise executive summary of the deal.',
       active: true,
     },
@@ -100,7 +100,7 @@ export const SalesOrchestration = {
         subject: 'High-Risk Deal Alert: {{name}}',
         body: '{{deal_summary}}\n\nRecommended Action: {{next_best_action}}',
       },
-      condition: 'risk_level == "high" || risk_level == "critical"',
+      condition: { dialect: 'cel', source: 'risk_level == "high" || risk_level == "critical"' },
     },
   ],
 

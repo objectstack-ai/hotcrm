@@ -8,6 +8,7 @@ import { PageSchema } from '@objectstack/spec/ui';
 export const KbArticlePage = {
   name: 'kb_article',
   type: 'record' as const,
+  kind: 'full' as const,
   label: 'Knowledge Base Article Page',
   template: 'default',
   isDefault: false,

@@ -8,6 +8,7 @@ import { PageSchema } from '@objectstack/spec/ui';
 export const ConnectorDetailPage = {
   name: 'connector_detail',
   type: 'record' as const,
+  kind: 'full' as const,
   label: 'Connector Detail Page',
   template: 'default',
   isDefault: false,

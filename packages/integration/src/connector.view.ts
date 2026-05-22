@@ -44,7 +44,7 @@ export const ActiveConnectorsView = {
     ],
     sort: [{ field: 'name', order: 'asc' as const }],
     conditionalFormatting: [
-      { condition: 'status == "active"', style: { backgroundColor: '#F0FDF4', borderLeft: '3px solid #22C55E' } }
+      { condition: { dialect: 'cel', source: 'status == "active"' }, style: { backgroundColor: '#F0FDF4', borderLeft: '3px solid #22C55E' } }
     ]
   }
 } satisfies View;
@@ -64,7 +64,7 @@ export const ErrorConnectorsView = {
     ],
     sort: [{ field: 'name', order: 'asc' as const }],
     conditionalFormatting: [
-      { condition: 'status == "error"', style: { backgroundColor: '#FEF2F2', borderLeft: '3px solid #EF4444' } }
+      { condition: { dialect: 'cel', source: 'status == "error"' }, style: { backgroundColor: '#FEF2F2', borderLeft: '3px solid #EF4444' } }
     ]
   }
 } satisfies View;

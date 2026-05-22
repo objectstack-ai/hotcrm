@@ -8,6 +8,7 @@ import { PageSchema } from '@objectstack/spec/ui';
 export const SettingsPage = {
   name: 'settings',
   type: 'app' as const,
+  kind: 'full' as const,
   label: 'System Settings',
   assignedProfiles: ['admin', 'system_admin'],
   template: 'default',

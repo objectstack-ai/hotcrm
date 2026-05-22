@@ -82,7 +82,7 @@ export const ClosingThisMonthView = {
     ],
     sort: [{ field: 'close_date', order: 'asc' as const }],
     conditionalFormatting: [
-      { condition: 'probability >= 75', style: { backgroundColor: '#F0FDF4', borderLeft: '3px solid #22C55E' } }
+      { condition: { dialect: 'cel', source: 'probability >= 75' }, style: { backgroundColor: '#F0FDF4', borderLeft: '3px solid #22C55E' } }
     ]
   }
 } satisfies View;
@@ -104,7 +104,7 @@ export const HighValueDealsView = {
     ],
     sort: [{ field: 'amount', order: 'desc' as const }],
     conditionalFormatting: [
-      { condition: 'amount > 500000', style: { backgroundColor: '#FEF2F2', borderLeft: '3px solid #EF4444' } }
+      { condition: { dialect: 'cel', source: 'amount > 500000' }, style: { backgroundColor: '#FEF2F2', borderLeft: '3px solid #EF4444' } }
     ]
   }
 } satisfies View;

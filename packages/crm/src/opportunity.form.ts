@@ -36,7 +36,7 @@ export const OpportunityForm = {
       collapsible: false,
       collapsed: false,
       fields: [
-        { field: 'forecast_category', visibleOn: "stage != 'Prospecting'" },
+        { field: 'forecast_category', visibleOn: { dialect: 'cel', source: `stage != 'Prospecting'` } },
         { field: 'expected_revenue', readonly: true, helpText: 'Amount × Probability' },
         { field: 'next_step', colSpan: 2, placeholder: 'Describe the next action to advance this deal' }
       ]

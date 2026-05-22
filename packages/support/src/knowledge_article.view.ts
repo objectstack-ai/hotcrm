@@ -96,7 +96,7 @@ export const PopularArticlesView = {
     ],
     sort: [{ field: 'view_count', order: 'desc' as const }],
     conditionalFormatting: [
-      { condition: 'view_count > 1000', style: { backgroundColor: '#F0FDF4', borderLeft: '3px solid #22C55E' } }
+      { condition: { dialect: 'cel', source: 'view_count > 1000' }, style: { backgroundColor: '#F0FDF4', borderLeft: '3px solid #22C55E' } }
     ]
   }
 } satisfies View;

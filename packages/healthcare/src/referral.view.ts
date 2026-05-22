@@ -42,8 +42,8 @@ export const PendingReferralsView = {
     ],
     sort: [{ field: 'urgency', order: 'desc' as const }],
     conditionalFormatting: [
-      { condition: 'urgency == "urgent"', style: { backgroundColor: '#FEF2F2', borderLeft: '3px solid #EF4444' } },
-      { condition: 'urgency == "routine"', style: { backgroundColor: '#F0FDF4', borderLeft: '3px solid #22C55E' } }
+      { condition: { dialect: 'cel', source: 'urgency == "urgent"' }, style: { backgroundColor: '#FEF2F2', borderLeft: '3px solid #EF4444' } },
+      { condition: { dialect: 'cel', source: 'urgency == "routine"' }, style: { backgroundColor: '#F0FDF4', borderLeft: '3px solid #22C55E' } }
     ]
   }
 } satisfies View;
@@ -81,7 +81,7 @@ export const UrgentReferralsView = {
     ],
     sort: [{ field: 'referral_date', order: 'asc' as const }],
     conditionalFormatting: [
-      { condition: 'status == "pending"', style: { backgroundColor: '#FEF2F2', borderLeft: '3px solid #EF4444' } }
+      { condition: { dialect: 'cel', source: 'status == "pending"' }, style: { backgroundColor: '#FEF2F2', borderLeft: '3px solid #EF4444' } }
     ]
   }
 } satisfies View;

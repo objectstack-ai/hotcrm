@@ -9,6 +9,7 @@ export const SyncConfigPage = {
   name: 'sync_config_detail',
   object: 'sync_config',
   type: 'record' as const,
+  kind: 'full' as const,
   label: 'Sync Configuration Detail Page',
   template: 'record_detail',
   isDefault: true,

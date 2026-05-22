@@ -9,6 +9,7 @@ export const WealthAccountPage = {
   name: 'wealth_account_detail',
   object: 'wealth_account',
   type: 'record' as const,
+  kind: 'full' as const,
   label: 'Wealth Account Detail',
   template: 'record_detail',
   isDefault: true,

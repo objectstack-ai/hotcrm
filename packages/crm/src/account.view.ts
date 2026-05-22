@@ -105,7 +105,7 @@ export const HotAccountsView = {
     ],
     sort: [{ field: 'annual_revenue', order: 'desc' as const }],
     conditionalFormatting: [
-      { condition: 'rating == "Hot"', style: { backgroundColor: '#FEF2F2', borderLeft: '3px solid #EF4444' } }
+      { condition: { dialect: 'cel', source: 'rating == "Hot"' }, style: { backgroundColor: '#FEF2F2', borderLeft: '3px solid #EF4444' } }
     ]
   }
 } satisfies View;
@@ -128,7 +128,7 @@ export const NeedAttentionView = {
     ],
     sort: [{ field: 'last_activity_date', order: 'asc' as const }],
     conditionalFormatting: [
-      { condition: 'last_activity_date < LAST_60_DAYS', style: { backgroundColor: '#FFFBEB', borderLeft: '3px solid #F59E0B' } }
+      { condition: { dialect: 'cel', source: 'last_activity_date < LAST_60_DAYS' }, style: { backgroundColor: '#FFFBEB', borderLeft: '3px solid #F59E0B' } }
     ]
   }
 } satisfies View;

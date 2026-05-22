@@ -9,6 +9,7 @@ export const AdvisoryPage = {
   name: 'advisory_detail',
   object: 'advisory',
   type: 'record' as const,
+  kind: 'full' as const,
   label: 'Advisory Meeting Detail',
   template: 'record_detail',
   isDefault: true,

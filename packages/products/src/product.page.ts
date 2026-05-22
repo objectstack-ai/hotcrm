@@ -8,6 +8,7 @@ export const ProductPage = {
   name: 'product_detail',
   object: 'product',
   type: 'record' as const,
+  kind: 'full' as const,
   label: 'Product Detail Page',
   template: 'record_detail',
   isDefault: true,

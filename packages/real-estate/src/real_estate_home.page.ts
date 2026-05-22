@@ -8,6 +8,7 @@ import { PageSchema } from '@objectstack/spec/ui';
 export const RealEstateHomePage = {
   name: 'real_estate_home',
   type: 'home' as const,
+  kind: 'full' as const,
   label: 'Real Estate Home',
   template: 'default',
   isDefault: false,

@@ -44,9 +44,9 @@ export const LeadQualificationFlow = {
       label: 'Lead Temperature',
       config: {
         rules: [
-          { label: 'Hot', condition: 'lead_score >= 80' },
-          { label: 'Warm', condition: 'lead_score >= 50 && lead_score < 80' },
-          { label: 'Cold', condition: 'lead_score < 50' },
+          { label: 'Hot', condition: { dialect: 'cel', source: 'lead_score >= 80' } },
+          { label: 'Warm', condition: { dialect: 'cel', source: 'lead_score >= 50 && lead_score < 80' } },
+          { label: 'Cold', condition: { dialect: 'cel', source: 'lead_score < 50' } },
         ],
       },
       position: { x: 0, y: 200 },
@@ -87,9 +87,9 @@ export const LeadQualificationFlow = {
   edges: [
     { id: 'e1', source: 'start', target: 'score_lead', type: 'default' as const },
     { id: 'e2', source: 'score_lead', target: 'route_decision', type: 'default' as const },
-    { id: 'e3', source: 'route_decision', target: 'assign_rep', type: 'default' as const, condition: 'lead_score >= 80', label: 'Hot' },
-    { id: 'e4', source: 'route_decision', target: 'assign_rep', type: 'default' as const, condition: 'lead_score >= 50 && lead_score < 80', label: 'Warm' },
-    { id: 'e5', source: 'route_decision', target: 'end', type: 'default' as const, condition: 'lead_score < 50', label: 'Cold — No Action' },
+    { id: 'e3', source: 'route_decision', target: 'assign_rep', type: 'default' as const, condition: { dialect: 'cel', source: 'lead_score >= 80' }, label: 'Hot' },
+    { id: 'e4', source: 'route_decision', target: 'assign_rep', type: 'default' as const, condition: { dialect: 'cel', source: 'lead_score >= 50 && lead_score < 80' }, label: 'Warm' },
+    { id: 'e5', source: 'route_decision', target: 'end', type: 'default' as const, condition: { dialect: 'cel', source: 'lead_score < 50' }, label: 'Cold — No Action' },
     { id: 'e6', source: 'assign_rep', target: 'notify_rep', type: 'default' as const },
     { id: 'e7', source: 'notify_rep', target: 'end', type: 'default' as const },
   ],

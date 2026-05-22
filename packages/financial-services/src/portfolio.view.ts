@@ -63,7 +63,7 @@ export const TopPerformersView = {
     ],
     sort: [{ field: 'performance_ytd', order: 'desc' as const }],
     conditionalFormatting: [
-      { condition: 'performance_ytd > 10', style: { backgroundColor: '#F0FDF4', borderLeft: '3px solid #22C55E' } }
+      { condition: { dialect: 'cel', source: 'performance_ytd > 10' }, style: { backgroundColor: '#F0FDF4', borderLeft: '3px solid #22C55E' } }
     ]
   }
 } satisfies View;

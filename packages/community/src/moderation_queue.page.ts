@@ -8,6 +8,7 @@ import { PageSchema } from '@objectstack/spec/ui';
 export const ModerationQueuePage = {
   name: 'moderation_queue',
   type: 'app' as const,
+  kind: 'full' as const,
   label: 'Moderation Queue',
   template: 'default',
   isDefault: false,

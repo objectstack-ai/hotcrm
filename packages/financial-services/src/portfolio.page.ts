@@ -9,6 +9,7 @@ export const PortfolioPage = {
   name: 'portfolio_detail',
   object: 'portfolio',
   type: 'record' as const,
+  kind: 'full' as const,
   label: 'Portfolio Detail',
   template: 'record_detail',
   isDefault: true,

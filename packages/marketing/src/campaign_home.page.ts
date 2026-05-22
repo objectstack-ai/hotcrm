@@ -8,6 +8,7 @@ import { PageSchema } from '@objectstack/spec/ui';
 export const CampaignHomePage = {
   name: 'campaign_home',
   type: 'home' as const,
+  kind: 'full' as const,
   label: 'Campaign Home Page',
   template: 'default',
   isDefault: false,

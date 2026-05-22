@@ -9,6 +9,7 @@ export const TopicPage = {
   name: 'topic_detail',
   object: 'topic',
   type: 'record' as const,
+  kind: 'full' as const,
   label: 'Topic Detail',
   template: 'record_detail',
   isDefault: true,

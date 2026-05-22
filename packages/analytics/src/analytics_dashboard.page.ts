@@ -9,6 +9,7 @@ export const AnalyticsDashboardPage = {
   name: 'analytics_dashboard_detail',
   object: 'analytics_dashboard',
   type: 'record' as const,
+  kind: 'full' as const,
   label: 'Dashboard Canvas',
   template: 'record_detail',
   isDefault: true,

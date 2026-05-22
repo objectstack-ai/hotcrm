@@ -63,7 +63,7 @@ export const HotLeadsView = {
     ],
     sort: [{ field: 'lead_score', order: 'desc' as const }],
     conditionalFormatting: [
-      { condition: 'rating == "hot"', style: { backgroundColor: '#FEF2F2', borderLeft: '3px solid #EF4444' } }
+      { condition: { dialect: 'cel', source: 'rating == "hot"' }, style: { backgroundColor: '#FEF2F2', borderLeft: '3px solid #EF4444' } }
     ]
   }
 } satisfies View;

@@ -5,6 +5,7 @@ const InvoicePage = {
   name: 'invoice_page',
   object: 'invoice',
   type: 'record' as const,
+  kind: 'full' as const,
   label: 'Invoice Layout',
   template: 'record_detail',
   isDefault: true,

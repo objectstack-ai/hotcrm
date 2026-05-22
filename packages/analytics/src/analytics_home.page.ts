@@ -8,6 +8,7 @@ import { PageSchema } from '@objectstack/spec/ui';
 export const AnalyticsHomePage = {
   name: 'analytics_home',
   type: 'home' as const,
+  kind: 'full' as const,
   label: 'Analytics Home Page',
   template: 'default',
   isDefault: false,

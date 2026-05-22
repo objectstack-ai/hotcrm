@@ -9,6 +9,7 @@ export const ReportPage = {
   name: 'report_detail',
   object: 'report',
   type: 'record' as const,
+  kind: 'full' as const,
   label: 'Report Builder',
   template: 'record_detail',
   isDefault: true,

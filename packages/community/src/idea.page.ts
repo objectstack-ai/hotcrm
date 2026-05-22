@@ -9,6 +9,7 @@ export const IdeaPage = {
   name: 'idea_detail',
   object: 'idea',
   type: 'record' as const,
+  kind: 'full' as const,
   label: 'Idea Detail',
   template: 'record_detail',
   isDefault: true,

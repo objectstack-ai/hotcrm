@@ -8,6 +8,7 @@ import { PageSchema } from '@objectstack/spec/ui';
 export const ArAgingPage = {
   name: 'ar_aging_page',
   type: 'record' as const,
+  kind: 'full' as const,
   label: 'AR Aging Dashboard',
   template: 'record_detail',
   isDefault: false,

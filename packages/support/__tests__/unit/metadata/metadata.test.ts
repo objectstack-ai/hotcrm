@@ -178,13 +178,15 @@ describe('Support Email Templates Metadata Compliance', () => {
     });
 
     it('should have a subject', () => {
-      expect(typeof template.subject).toBe('string');
-      expect(template.subject.length).toBeGreaterThan(0);
+      const subj = typeof template.subject === 'string' ? template.subject : (template.subject as any).source;
+      expect(typeof subj).toBe('string');
+      expect(subj.length).toBeGreaterThan(0);
     });
 
     it('should have a body', () => {
-      expect(typeof template.body).toBe('string');
-      expect(template.body.length).toBeGreaterThan(0);
+      const bd = typeof template.body === 'string' ? template.body : (template.body as any).source;
+      expect(typeof bd).toBe('string');
+      expect(bd.length).toBeGreaterThan(0);
     });
   });
 });
@@ -221,7 +223,8 @@ describe('Support Scheduled Jobs Metadata Compliance', () => {
       expect(job.schedule).toBeDefined();
       expect(['cron', 'interval']).toContain(job.schedule.type);
       if (job.schedule.type === 'cron') {
-        expect(typeof job.schedule.expression).toBe('string');
+        const exprVal = typeof job.schedule.expression === 'string' ? job.schedule.expression : (job.schedule.expression as any).source;
+        expect(typeof exprVal).toBe('string');
       }
     });
   });

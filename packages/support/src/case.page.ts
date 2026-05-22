@@ -9,6 +9,7 @@ export const CasePage = {
   name: 'case_detail',
   object: 'case',
   type: 'record' as const,
+  kind: 'full' as const,
   label: 'Case Detail Page',
   template: 'record_detail',
   isDefault: true,
@@ -76,7 +77,7 @@ export const CasePage = {
         {
           type: 'record:details' as const,
           label: 'Resolution Information',
-          visibility: "record.status == 'Resolved' || record.status == 'Closed'",
+          visibility: { dialect: 'cel', source: "record.status == 'Resolved' || record.status == 'Closed'" },
           properties: {
             fields: [
               'resolution', 'root_cause', 'customer_satisfaction', 'tags'

@@ -8,6 +8,7 @@ import { PageSchema } from '@objectstack/spec/ui';
 export const SupportHomePage = {
   name: 'support_home',
   type: 'home' as const,
+  kind: 'full' as const,
   label: 'Support Home Page',
   template: 'default',
   isDefault: false,

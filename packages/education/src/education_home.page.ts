@@ -8,6 +8,7 @@ import { PageSchema } from '@objectstack/spec/ui';
 export const EducationHomePage = {
   name: 'education_home',
   type: 'home' as const,
+  kind: 'full' as const,
   label: 'Education Home Page',
   template: 'default',
   isDefault: false,

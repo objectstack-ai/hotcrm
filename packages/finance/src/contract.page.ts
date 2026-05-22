@@ -8,6 +8,7 @@ export const ContractPage = {
   name: 'contract_detail',
   object: 'contract',
   type: 'record' as const,
+  kind: 'full' as const,
   label: 'Contract Detail Page',
   template: 'record_detail',
   isDefault: true,

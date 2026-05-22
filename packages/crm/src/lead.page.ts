@@ -8,6 +8,7 @@ export const LeadPage = {
   name: 'lead_detail',
   object: 'lead',
   type: 'record' as const,
+  kind: 'full' as const,
   label: 'Lead Detail Page',
   template: 'record_detail',
   isDefault: true,

@@ -10,6 +10,7 @@ export const AccountPage = {
   name: 'account_detail',
   object: 'account',
   type: 'record' as const,
+  kind: 'full' as const,
   label: 'Account Detail Page',
   template: 'record_detail',
   isDefault: true,
@@ -126,7 +127,7 @@ export const AccountPage = {
         {
           type: 'record:related_list' as const,
           label: 'Cases',
-          visibility: "record.sla_tier != null",
+          visibility: { dialect: 'cel', source: "record.sla_tier != null" },
           properties: {
             object: 'case',
             columns: ['case_number', 'subject', 'status', 'priority', 'created_date'],

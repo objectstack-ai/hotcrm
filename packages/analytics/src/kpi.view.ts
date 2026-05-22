@@ -25,9 +25,9 @@ export const AllKPIsView = {
     bulkActions: ['delete', 'export'],
     pagination: { pageSize: 25, pageSizeOptions: [10, 25, 50, 100] },
     conditionalFormatting: [
-      { condition: 'trend == "declining"', style: { backgroundColor: '#FEF2F2', borderLeft: '3px solid #EF4444' } },
-      { condition: 'trend == "stable"', style: { backgroundColor: '#FFFBEB', borderLeft: '3px solid #F59E0B' } },
-      { condition: 'trend == "improving"', style: { backgroundColor: '#F0FDF4', borderLeft: '3px solid #22C55E' } }
+      { condition: { dialect: 'cel', source: 'trend == "declining"' }, style: { backgroundColor: '#FEF2F2', borderLeft: '3px solid #EF4444' } },
+      { condition: { dialect: 'cel', source: 'trend == "stable"' }, style: { backgroundColor: '#FFFBEB', borderLeft: '3px solid #F59E0B' } },
+      { condition: { dialect: 'cel', source: 'trend == "improving"' }, style: { backgroundColor: '#F0FDF4', borderLeft: '3px solid #22C55E' } }
     ]
   }
 } satisfies View;
@@ -49,7 +49,7 @@ export const KPIsAtRiskView = {
     ],
     sort: [{ field: 'trend', order: 'asc' as const }],
     conditionalFormatting: [
-      { condition: 'trend == "declining"', style: { backgroundColor: '#FEF2F2', borderLeft: '3px solid #EF4444' } }
+      { condition: { dialect: 'cel', source: 'trend == "declining"' }, style: { backgroundColor: '#FEF2F2', borderLeft: '3px solid #EF4444' } }
     ]
   }
 } satisfies View;

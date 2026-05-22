@@ -27,7 +27,7 @@ export const Employee = ObjectSchema.create({
     full_name: Field.formula({
       label: 'Full Name',
       readonly: true,
-      expression: 'CONCATENATE(last_name, first_name)'
+      expression: { dialect: 'cel', source: 'CONCATENATE(last_name, first_name)' }
     }),
     email: Field.email({
       label: 'Work Email',

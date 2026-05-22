@@ -60,7 +60,7 @@ export const PendingApprovalView = {
     ],
     sort: [{ field: 'quote_number', order: 'desc' as const }],
     conditionalFormatting: [
-      { condition: 'approval_status == "pending"', style: { backgroundColor: '#FFFBEB', borderLeft: '3px solid #F59E0B' } }
+      { condition: { dialect: 'cel', source: 'approval_status == "pending"' }, style: { backgroundColor: '#FFFBEB', borderLeft: '3px solid #F59E0B' } }
     ]
   }
 } satisfies View;

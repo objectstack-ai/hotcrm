@@ -8,6 +8,7 @@ import { PageSchema } from '@objectstack/spec/ui';
 export const EmailAnalyticsPage = {
   name: 'email_analytics_page',
   type: 'record' as const,
+  kind: 'full' as const,
   label: 'Email Analytics',
   template: 'record_detail',
   isDefault: false,

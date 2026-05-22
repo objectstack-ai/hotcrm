@@ -9,6 +9,7 @@ export const ListingPage = {
   name: 'listing_detail',
   object: 'listing',
   type: 'record' as const,
+  kind: 'full' as const,
   label: 'Listing Detail',
   template: 'record_detail',
   isDefault: true,

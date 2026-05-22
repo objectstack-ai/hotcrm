@@ -9,6 +9,7 @@ export const AppointmentPage = {
   name: 'appointment_detail',
   object: 'appointment',
   type: 'record' as const,
+  kind: 'full' as const,
   label: 'Appointment Detail Page',
   template: 'record_detail',
   isDefault: true,

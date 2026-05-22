@@ -8,6 +8,7 @@ export const CandidatePage = {
   name: 'candidate_detail',
   object: 'candidate',
   type: 'record' as const,
+  kind: 'full' as const,
   label: 'Candidate Detail Page',
   template: 'record_detail',
   isDefault: true,

@@ -42,7 +42,7 @@ export const PendingOffersView = {
     ],
     sort: [{ field: 'expiration_date', order: 'asc' as const }],
     conditionalFormatting: [
-      { condition: 'expiration_date <= TODAY()', style: { backgroundColor: '#FEF2F2', borderLeft: '3px solid #EF4444' } }
+      { condition: { dialect: 'cel', source: 'expiration_date <= TODAY()' }, style: { backgroundColor: '#FEF2F2', borderLeft: '3px solid #EF4444' } }
     ]
   }
 } satisfies View;

@@ -24,7 +24,7 @@ export const DealCloseFlow = {
       id: 'start',
       type: 'start' as const,
       label: 'Deal Marked Closed-Won',
-      config: { object: 'opportunity', trigger: 'after_update', condition: "stage == 'Closed Won'" },
+      config: { object: 'opportunity', trigger: 'after_update', condition: { dialect: 'cel', source: `stage == 'Closed Won'` } },
       position: { x: 0, y: 0 },
     },
     {
@@ -33,8 +33,8 @@ export const DealCloseFlow = {
       label: 'Check Approval Status',
       config: {
         rules: [
-          { label: 'Approved', condition: 'is_approved == true' },
-          { label: 'Needs Approval', condition: 'is_approved == false' },
+          { label: 'Approved', condition: { dialect: 'cel', source: 'is_approved == true' } },
+          { label: 'Needs Approval', condition: { dialect: 'cel', source: 'is_approved == false' } },
         ],
       },
       position: { x: 0, y: 100 },
@@ -107,8 +107,8 @@ export const DealCloseFlow = {
   ],
   edges: [
     { id: 'e1', source: 'start', target: 'check_approval', type: 'default' as const },
-    { id: 'e2', source: 'check_approval', target: 'generate_contract', type: 'default' as const, condition: 'is_approved == true', label: 'Approved' },
-    { id: 'e3', source: 'check_approval', target: 'request_approval', type: 'default' as const, condition: 'is_approved == false', label: 'Needs Approval' },
+    { id: 'e2', source: 'check_approval', target: 'generate_contract', type: 'default' as const, condition: { dialect: 'cel', source: 'is_approved == true' }, label: 'Approved' },
+    { id: 'e3', source: 'check_approval', target: 'request_approval', type: 'default' as const, condition: { dialect: 'cel', source: 'is_approved == false' }, label: 'Needs Approval' },
     { id: 'e4', source: 'request_approval', target: 'generate_contract', type: 'default' as const },
     { id: 'e5', source: 'generate_contract', target: 'create_invoice', type: 'default' as const },
     { id: 'e6', source: 'create_invoice', target: 'handoff_to_support', type: 'default' as const },

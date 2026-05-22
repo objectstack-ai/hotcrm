@@ -8,6 +8,7 @@ import { PageSchema } from '@objectstack/spec/ui';
 export const CPQHomePage = {
   name: 'cpq_home',
   type: 'home' as const,
+  kind: 'full' as const,
   label: 'CPQ Home Page',
   template: 'default',
   isDefault: false,

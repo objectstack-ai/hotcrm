@@ -44,7 +44,7 @@ export const PendingVerificationView = {
     ],
     sort: [{ field: 'submitted_date', order: 'asc' as const }],
     conditionalFormatting: [
-      { condition: 'submitted_date < LAST_30_DAYS', style: { backgroundColor: '#FEF2F2', borderLeft: '3px solid #EF4444' } }
+      { condition: { dialect: 'cel', source: 'submitted_date < LAST_30_DAYS' }, style: { backgroundColor: '#FEF2F2', borderLeft: '3px solid #EF4444' } }
     ]
   }
 } satisfies View;
@@ -65,7 +65,7 @@ export const ExpiredKycView = {
     ],
     sort: [{ field: 'expiry_date', order: 'asc' as const }],
     conditionalFormatting: [
-      { condition: 'status == "expired"', style: { backgroundColor: '#FFFBEB', borderLeft: '3px solid #F59E0B' } }
+      { condition: { dialect: 'cel', source: 'status == "expired"' }, style: { backgroundColor: '#FFFBEB', borderLeft: '3px solid #F59E0B' } }
     ]
   }
 } satisfies View;
@@ -87,7 +87,7 @@ export const HighRiskKycView = {
     ],
     sort: [{ field: 'verification_date', order: 'desc' as const }],
     conditionalFormatting: [
-      { condition: 'risk_rating == "high"', style: { backgroundColor: '#FEF2F2', borderLeft: '3px solid #EF4444' } }
+      { condition: { dialect: 'cel', source: 'risk_rating == "high"' }, style: { backgroundColor: '#FEF2F2', borderLeft: '3px solid #EF4444' } }
     ]
   }
 } satisfies View;

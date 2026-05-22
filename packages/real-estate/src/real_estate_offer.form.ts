@@ -33,7 +33,7 @@ export const RealEstateOfferForm = {
       collapsible: true,
       collapsed: true,
       fields: [
-        { field: 'counter_offer_amount', visibleOn: "status = 'counter'" },
+        { field: 'counter_offer_amount', visibleOn: { dialect: 'cel', source: `status = 'counter'` } },
         { field: 'contingencies', colSpan: 2, widget: 'richtext', placeholder: 'Inspection, financing, appraisal contingencies...' }
       ]
     }

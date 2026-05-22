@@ -81,7 +81,7 @@ export const OnProbationView = {
     ],
     sort: [{ field: 'gpa', order: 'asc' as const }],
     conditionalFormatting: [
-      { condition: 'gpa < 2.0', style: { color: '#EF4444', fontWeight: 'bold' } }
+      { condition: { dialect: 'cel', source: 'gpa < 2.0' }, style: { color: '#EF4444', fontWeight: 'bold' } }
     ]
   }
 } satisfies View;

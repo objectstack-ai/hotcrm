@@ -8,6 +8,7 @@ import { PageSchema } from '@objectstack/spec/ui';
 export const HrHomePage = {
   name: 'hr_home',
   type: 'home' as const,
+  kind: 'full' as const,
   label: 'HR Home Page',
   template: 'default',
   isDefault: false,

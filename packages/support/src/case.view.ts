@@ -80,7 +80,7 @@ export const HighPriorityCasesView = {
     ],
     sort: [{ field: 'severity', order: 'asc' as const }],
     conditionalFormatting: [
-      { condition: 'priority == "critical"', style: { backgroundColor: '#FEF2F2', borderLeft: '3px solid #EF4444' } }
+      { condition: { dialect: 'cel', source: 'priority == "critical"' }, style: { backgroundColor: '#FEF2F2', borderLeft: '3px solid #EF4444' } }
     ]
   }
 } satisfies View;
@@ -102,7 +102,7 @@ export const EscalatedCasesView = {
     ],
     sort: [{ field: 'escalated_date', order: 'desc' as const }],
     conditionalFormatting: [
-      { condition: 'escalation_level > 1', style: { backgroundColor: '#FFFBEB', borderLeft: '3px solid #F59E0B' } }
+      { condition: { dialect: 'cel', source: 'escalation_level > 1' }, style: { backgroundColor: '#FFFBEB', borderLeft: '3px solid #F59E0B' } }
     ]
   }
 } satisfies View;
@@ -124,7 +124,7 @@ export const SLAAtRiskView = {
     ],
     sort: [{ field: 'priority', order: 'asc' as const }],
     conditionalFormatting: [
-      { condition: 'is_sla_violated == true', style: { backgroundColor: '#FEF2F2', borderLeft: '3px solid #EF4444' } }
+      { condition: { dialect: 'cel', source: 'is_sla_violated == true' }, style: { backgroundColor: '#FEF2F2', borderLeft: '3px solid #EF4444' } }
     ]
   }
 } satisfies View;

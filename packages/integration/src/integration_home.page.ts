@@ -8,6 +8,7 @@ import { PageSchema } from '@objectstack/spec/ui';
 export const IntegrationHomePage = {
   name: 'integration_home',
   type: 'home' as const,
+  kind: 'full' as const,
   label: 'Integration Home Page',
   template: 'default',
   isDefault: false,

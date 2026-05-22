@@ -8,6 +8,7 @@ export const QuotePage = {
   name: 'quote_detail',
   object: 'quote',
   type: 'record' as const,
+  kind: 'full' as const,
   label: 'Quote Detail Page',
   template: 'record_detail',
   isDefault: true,

@@ -8,6 +8,7 @@ import { PageSchema } from '@objectstack/spec/ui';
 export const CrmUtilityPage = {
   name: 'crm_utility',
   type: 'utility' as const,
+  kind: 'full' as const,
   label: 'CRM Utility Bar',
   template: 'default',
   isDefault: false,

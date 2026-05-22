@@ -9,6 +9,7 @@ export const ReferralPage = {
   name: 'referral_detail',
   object: 'referral',
   type: 'record' as const,
+  kind: 'full' as const,
   label: 'Referral Detail Page',
   template: 'record_detail',
   isDefault: true,

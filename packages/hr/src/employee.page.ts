@@ -8,6 +8,7 @@ export const EmployeePage = {
   name: 'employee_detail',
   object: 'employee',
   type: 'record' as const,
+  kind: 'full' as const,
   label: 'Employee Detail Page',
   template: 'record_detail',
   isDefault: true,

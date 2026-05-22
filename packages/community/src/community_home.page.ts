@@ -8,6 +8,7 @@ import { PageSchema } from '@objectstack/spec/ui';
 export const CommunityHomePage = {
   name: 'community_home',
   type: 'home' as const,
+  kind: 'full' as const,
   label: 'Community Home Page',
   template: 'default',
   isDefault: false,

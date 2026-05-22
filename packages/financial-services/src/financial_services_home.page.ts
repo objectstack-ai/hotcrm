@@ -8,6 +8,7 @@ import { PageSchema } from '@objectstack/spec/ui';
 export const FinancialServicesHomePage = {
   name: 'financial_services_home',
   type: 'home' as const,
+  kind: 'full' as const,
   label: 'Financial Services Home',
   template: 'default',
   isDefault: false,

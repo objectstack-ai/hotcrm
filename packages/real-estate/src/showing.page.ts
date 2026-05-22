@@ -9,6 +9,7 @@ export const ShowingPage = {
   name: 'showing_detail',
   object: 'showing',
   type: 'record' as const,
+  kind: 'full' as const,
   label: 'Showing Detail',
   template: 'record_detail',
   isDefault: true,

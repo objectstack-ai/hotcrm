@@ -8,6 +8,7 @@ import { PageSchema } from '@objectstack/spec/ui';
 export const OrderDetailPage = {
   name: 'order_detail',
   type: 'record' as const,
+  kind: 'full' as const,
   label: 'Order Detail Page',
   template: 'default',
   isDefault: false,

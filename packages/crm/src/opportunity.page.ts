@@ -9,6 +9,7 @@ export const OpportunityPage = {
   name: 'opportunity_detail',
   object: 'opportunity',
   type: 'record' as const,
+  kind: 'full' as const,
   label: 'Opportunity Detail Page',
   template: 'record_detail',
   isDefault: true,

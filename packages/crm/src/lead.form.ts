@@ -26,7 +26,7 @@ export const LeadForm = {
         { field: 'email', required: true, placeholder: 'email@example.com' },
         { field: 'phone', placeholder: '+1 (555) 000-0000' },
         { field: 'mobile_phone' },
-        { field: 'website', placeholder: 'https://', visibleOn: "company != ''" },
+        { field: 'website', placeholder: 'https://', visibleOn: { dialect: 'cel', source: `company != ''` } },
         { field: 'industry', dependsOn: 'company' },
         { field: 'lead_source' },
         { field: 'description', colSpan: 2, widget: 'richtext' }

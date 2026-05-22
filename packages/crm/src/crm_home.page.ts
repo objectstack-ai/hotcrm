@@ -8,6 +8,7 @@ import { PageSchema } from '@objectstack/spec/ui';
 export const CrmHomePage = {
   name: 'crm_home',
   type: 'home' as const,
+  kind: 'full' as const,
   label: 'CRM Home Page',
   template: 'default',
   isDefault: false,

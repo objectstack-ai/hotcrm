@@ -76,8 +76,8 @@ export const LeadNurtureFlow = {
       label: 'Marketing Qualified?',
       config: {
         rules: [
-          { label: 'MQL — Handoff', condition: 'engagement_score >= 75' },
-          { label: 'Continue Nurturing', condition: 'engagement_score < 75' },
+          { label: 'MQL — Handoff', condition: { dialect: 'cel', source: 'engagement_score >= 75' } },
+          { label: 'Continue Nurturing', condition: { dialect: 'cel', source: 'engagement_score < 75' } },
         ],
       },
       position: { x: 0, y: 400 },
@@ -110,8 +110,8 @@ export const LeadNurtureFlow = {
     { id: 'e2', source: 'check_engagement', target: 'send_drip_email', type: 'default' as const },
     { id: 'e3', source: 'send_drip_email', target: 'update_score', type: 'default' as const },
     { id: 'e4', source: 'update_score', target: 'mql_decision', type: 'default' as const },
-    { id: 'e5', source: 'mql_decision', target: 'handoff_to_sales', type: 'default' as const, condition: 'engagement_score >= 75', label: 'MQL' },
-    { id: 'e6', source: 'mql_decision', target: 'end', type: 'default' as const, condition: 'engagement_score < 75', label: 'Continue Nurturing' },
+    { id: 'e5', source: 'mql_decision', target: 'handoff_to_sales', type: 'default' as const, condition: { dialect: 'cel', source: 'engagement_score >= 75' }, label: 'MQL' },
+    { id: 'e6', source: 'mql_decision', target: 'end', type: 'default' as const, condition: { dialect: 'cel', source: 'engagement_score < 75' }, label: 'Continue Nurturing' },
     { id: 'e7', source: 'handoff_to_sales', target: 'end', type: 'default' as const },
   ],
   active: true,

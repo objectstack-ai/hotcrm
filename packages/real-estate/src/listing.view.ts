@@ -42,7 +42,7 @@ export const ActiveListingsView = {
     ],
     sort: [{ field: 'days_on_market', order: 'asc' as const }],
     conditionalFormatting: [
-      { condition: 'days_on_market > 90', style: { backgroundColor: '#FEF2F2', borderLeft: '3px solid #EF4444' } }
+      { condition: { dialect: 'cel', source: 'days_on_market > 90' }, style: { backgroundColor: '#FEF2F2', borderLeft: '3px solid #EF4444' } }
     ]
   }
 } satisfies View;

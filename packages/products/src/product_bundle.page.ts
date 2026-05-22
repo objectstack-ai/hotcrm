@@ -5,6 +5,7 @@ const ProductBundlePage = {
   name: 'product_bundle_page',
   object: 'product_bundle',
   type: 'record' as const,
+  kind: 'full' as const,
   label: 'Bundle Configuration',
   template: 'record_detail',
   isDefault: true,

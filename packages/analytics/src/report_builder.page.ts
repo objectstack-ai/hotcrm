@@ -8,6 +8,7 @@ import { PageSchema } from '@objectstack/spec/ui';
 export const ReportBuilderPage = {
   name: 'report_builder',
   type: 'app' as const,
+  kind: 'full' as const,
   label: 'Report Builder',
   template: 'default',
   isDefault: false,

@@ -53,7 +53,7 @@ export const ApplicationForm = {
       fields: [
         { field: 'status', required: true },
         { field: 'decision' },
-        { field: 'decision_date', visibleOn: 'decision != "pending"' }
+        { field: 'decision_date', visibleOn: { dialect: 'cel', source: 'decision != "pending"' } }
       ]
     }
   ]

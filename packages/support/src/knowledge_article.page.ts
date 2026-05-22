@@ -8,6 +8,7 @@ export const KnowledgeArticlePage = {
   name: 'knowledge_article_detail',
   object: 'knowledge_article',
   type: 'record' as const,
+  kind: 'full' as const,
   label: 'Knowledge Article Detail Page',
   template: 'record_detail',
   isDefault: true,

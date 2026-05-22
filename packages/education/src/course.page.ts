@@ -9,6 +9,7 @@ export const CoursePage = {
   name: 'course_detail',
   object: 'course',
   type: 'record' as const,
+  kind: 'full' as const,
   label: 'Course Record',
   template: 'record_detail',
   isDefault: true,

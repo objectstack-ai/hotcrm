@@ -137,13 +137,15 @@ describe('HR Email Templates Metadata Compliance', () => {
     });
 
     it('should have a subject', () => {
-      expect(typeof template.subject).toBe('string');
-      expect(template.subject.length).toBeGreaterThan(0);
+      const subj = typeof template.subject === 'string' ? template.subject : (template.subject as any).source;
+      expect(typeof subj).toBe('string');
+      expect(subj.length).toBeGreaterThan(0);
     });
 
     it('should have a body', () => {
-      expect(typeof template.body).toBe('string');
-      expect(template.body.length).toBeGreaterThan(0);
+      const bd = typeof template.body === 'string' ? template.body : (template.body as any).source;
+      expect(typeof bd).toBe('string');
+      expect(bd.length).toBeGreaterThan(0);
     });
   });
 });
