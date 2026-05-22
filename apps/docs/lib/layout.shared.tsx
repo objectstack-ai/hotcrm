@@ -15,12 +15,6 @@ export function baseOptions(): BaseLayoutProps {
         </div>
       ),
     },
-    links: [
-      {
-        text: 'GitHub',
-        url: siteConfig.github,
-        external: true,
-      },
-    ],
+    githubUrl: siteConfig.github,
   };
 }

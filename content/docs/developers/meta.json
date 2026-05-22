@@ -1,7 +1,7 @@
 {
   "title": "Developer Guide",
   "description": "Build and extend HotCRM with TypeScript metadata.",
-  "root": true,
+  "defaultOpen": true,
   "pages": [
     "creating-objects",
     "field-type-guide",
