@@ -14,13 +14,13 @@
     "compile": "objectstack compile"
   },
   "dependencies": {
-    "@objectstack/cli": "^4.0.0",
-    "@objectstack/core": "^4.0.0",
-    "@objectstack/metadata": "^4.0.0",
-    "@objectstack/objectql": "^4.0.0",
-    "@objectstack/plugin-hono-server": "^4.0.0",
-    "@objectstack/runtime": "^4.0.0",
-    "@objectstack/spec": "^4.0.0",
+    "@objectstack/cli": "^4.2.0",
+    "@objectstack/core": "^4.2.0",
+    "@objectstack/metadata": "^4.2.0",
+    "@objectstack/objectql": "^4.2.0",
+    "@objectstack/plugin-hono-server": "^4.2.0",
+    "@objectstack/runtime": "^4.2.0",
+    "@objectstack/spec": "^4.2.0",
     "pino": "^10.3.1"
   },
   "devDependencies": {
