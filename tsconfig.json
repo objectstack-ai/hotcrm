@@ -1,30 +1,14 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
-    "module": "Node16",
-    "lib": ["ES2020"],
-    "strict": false,
-    "noImplicitAny": false,
-    "strictNullChecks": false,
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
     "esModuleInterop": true,
-    "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
-    "moduleResolution": "node16",
-    "sourceMap": true,
-    "baseUrl": ".",
-    "paths": {
-      "@hotcrm/ai": ["packages/ai/src/index.ts"],
-      "@hotcrm/core": ["packages/core/src/index.ts"],
-      "@hotcrm/crm": ["packages/crm/src/index.ts"],
-      "@hotcrm/finance": ["packages/finance/src/index.ts"],
-      "@hotcrm/hr": ["packages/hr/src/index.ts"],
-      "@hotcrm/marketing": ["packages/marketing/src/index.ts"],
-      "@hotcrm/products": ["packages/products/src/index.ts"],
-      "@hotcrm/server": ["packages/server/src/index.ts"],
-      "@hotcrm/support": ["packages/support/src/index.ts"]
-    }
+    "skipLibCheck": true,
+    "outDir": "./dist",
+    "rootDir": "."
   },
-  "include": ["packages/*/src/**/*.ts"],
-  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts", "**/__tests__/**"]
+  "include": ["src/**/*", "objectstack.config.ts"]
 }

@@ -1,0 +1,936 @@
+// Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
+
+/**
+ * CRM Seed Data
+ *
+ * Demo records for all core CRM objects.
+ * Uses defineDataset() for type-safe field name checking at compile time.
+ */
+import { defineDataset } from '@objectstack/spec/data';
+import { cel } from '@objectstack/spec';
+import { Account } from '../objects/account.object';
+import { Contact } from '../objects/contact.object';
+import { Lead } from '../objects/lead.object';
+import { Opportunity } from '../objects/opportunity.object';
+import { Product } from '../objects/product.object';
+import { Task } from '../objects/task.object';
+import { Case } from '../objects/case.object';
+import { Campaign } from '../objects/campaign.object';
+import { Contract } from '../objects/contract.object';
+import { Quote } from '../objects/quote.object';
+
+/**
+ * Build a CEL `daysAgo(N)` expression from a runtime number. Mirrors the
+ * existing tagged-template usage (`cel\`daysAgo(N)\``) so we can produce
+ * timestamps inside `.map()` generators without manufacturing fake template
+ * string arrays.
+ */
+const celDaysAgo = (n: number) => cel`daysAgo(${n})`;
+const celDaysFromNow = (n: number) => cel`daysFromNow(${n})`;
+
+// ─── Accounts ─────────────────────────────────────────────────────────
+const accounts = defineDataset(Account, {
+  mode: 'upsert',
+  externalId: 'name',
+  records: [
+    {
+      name: 'Acme Corporation',
+      type: 'customer',
+      industry: 'technology',
+      annual_revenue: 5000000,
+      number_of_employees: 250,
+      phone: '+1-415-555-0100',
+      website: 'https://acme.example.com',
+      tier: 'enterprise',
+      segment: 'growth',
+      health_score: 'healthy',
+      next_renewal_date: cel`daysFromNow(45)`,
+      last_activity_date: cel`daysAgo(3)`,
+    },
+    {
+      name: 'Globex Industries',
+      type: 'prospect',
+      industry: 'manufacturing',
+      annual_revenue: 12000000,
+      number_of_employees: 800,
+      phone: '+1-312-555-0200',
+      website: 'https://globex.example.com',
+      tier: 'enterprise',
+      segment: 'net_new',
+      last_activity_date: cel`daysAgo(8)`,
+    },
+    {
+      name: 'Initech Solutions',
+      type: 'customer',
+      industry: 'finance',
+      annual_revenue: 3500000,
+      number_of_employees: 150,
+      phone: '+1-212-555-0300',
+      website: 'https://initech.example.com',
+      tier: 'mid_market',
+      segment: 'at_risk',
+      health_score: 'at_risk',
+      next_renewal_date: cel`daysFromNow(75)`,
+      last_activity_date: cel`daysAgo(21)`,
+    },
+    {
+      name: 'Stark Medical',
+      type: 'partner',
+      industry: 'healthcare',
+      annual_revenue: 8000000,
+      number_of_employees: 400,
+      phone: '+1-617-555-0400',
+      website: 'https://starkmed.example.com',
+      tier: 'mid_market',
+      segment: 'stable',
+      last_activity_date: cel`daysAgo(5)`,
+    },
+    {
+      name: 'Wayne Enterprises',
+      type: 'customer',
+      industry: 'technology',
+      annual_revenue: 25000000,
+      number_of_employees: 2000,
+      phone: '+1-650-555-0500',
+      website: 'https://wayne.example.com',
+      tier: 'strategic',
+      segment: 'growth',
+      health_score: 'healthy',
+      next_renewal_date: cel`daysFromNow(28)`,
+      last_activity_date: cel`daysAgo(1)`,
+    },
+  ]
+});
+
+// ─── Contacts ─────────────────────────────────────────────────────────
+const contacts = defineDataset(Contact, {
+  mode: 'upsert',
+  externalId: 'email',
+  records: [
+    {
+      salutation: 'mr',
+      first_name: 'John',
+      last_name: 'Smith',
+      email: 'john.smith@acme.example.com',
+      phone: '+1-415-555-0101',
+      title: 'VP of Engineering',
+      department: 'engineering',
+      account: 'Acme Corporation',
+    },
+    {
+      salutation: 'ms',
+      first_name: 'Sarah',
+      last_name: 'Johnson',
+      email: 'sarah.j@globex.example.com',
+      phone: '+1-312-555-0201',
+      title: 'Chief Procurement Officer',
+      department: 'executive',
+      account: 'Globex Industries',
+    },
+    {
+      salutation: 'dr',
+      first_name: 'Michael',
+      last_name: 'Chen',
+      email: 'mchen@initech.example.com',
+      phone: '+1-212-555-0301',
+      title: 'Director of Operations',
+      department: 'operations',
+      account: 'Initech Solutions',
+    },
+    {
+      salutation: 'ms',
+      first_name: 'Emily',
+      last_name: 'Davis',
+      email: 'emily.d@starkmed.example.com',
+      phone: '+1-617-555-0401',
+      title: 'Head of Partnerships',
+      department: 'sales',
+      account: 'Stark Medical',
+    },
+    {
+      salutation: 'mr',
+      first_name: 'Robert',
+      last_name: 'Wilson',
+      email: 'rwilson@wayne.example.com',
+      phone: '+1-650-555-0501',
+      title: 'CTO',
+      department: 'engineering',
+      account: 'Wayne Enterprises',
+    },
+  ]
+});
+
+// ─── Leads ────────────────────────────────────────────────────────────
+const leads = defineDataset(Lead, {
+  mode: 'upsert',
+  externalId: 'email',
+  records: [
+    {
+      first_name: 'Alice',
+      last_name: 'Martinez',
+      company: 'NextGen Retail',
+      email: 'alice@nextgenretail.example.com',
+      phone: '+1-503-555-0600',
+      status: 'new',
+      lead_source: 'web',
+      industry: 'retail',
+      rating: 3,
+      next_followup_date: cel`daysFromNow(2)`,
+    },
+    {
+      first_name: 'David',
+      last_name: 'Kim',
+      company: 'EduTech Labs',
+      email: 'dkim@edutechlabs.example.com',
+      phone: '+1-408-555-0700',
+      status: 'contacted',
+      lead_source: 'referral',
+      industry: 'education',
+      rating: 4,
+      next_followup_date: cel`daysFromNow(1)`,
+      last_contacted_date: cel`daysAgo(3)`,
+    },
+    {
+      first_name: 'Lisa',
+      last_name: 'Thompson',
+      company: 'CloudFirst Inc',
+      email: 'lisa.t@cloudfirst.example.com',
+      phone: '+1-206-555-0800',
+      status: 'qualified',
+      lead_source: 'event',
+      industry: 'technology',
+      rating: 4.5,
+      next_followup_date: cel`daysFromNow(0)`,
+      last_contacted_date: cel`daysAgo(1)`,
+    },
+    // ─── Generated demo leads — spread across 6 months for monthly-bucket reports
+    // (`LeadInflowByMonthSourceReport`). Each `last_contacted_date` lives in a
+    // distinct month / source pair so the matrix has multiple cells populated.
+    ...[
+      { fn: 'Noah',    ln: 'Patel',    co: 'Vertex Analytics',     src: 'web',         ind: 'technology',   age: 7   },
+      { fn: 'Maya',    ln: 'Singh',    co: 'BluePeak Logistics',   src: 'referral',    ind: 'logistics',    age: 14  },
+      { fn: 'Owen',    ln: 'Becker',   co: 'Northwind Energy',     src: 'event',       ind: 'energy',       age: 21  },
+      { fn: 'Sara',    ln: 'Lopez',    co: 'Helios Solar',         src: 'partner',     ind: 'energy',       age: 28  },
+      { fn: 'Leo',     ln: 'Vance',    co: 'CleanCart',            src: 'web',         ind: 'retail',       age: 38  },
+      { fn: 'Iris',    ln: 'Okafor',   co: 'PulseHealth',          src: 'cold_call',   ind: 'healthcare',   age: 45  },
+      { fn: 'Ravi',    ln: 'Mehta',    co: 'Foundry Robotics',     src: 'event',       ind: 'manufacturing',age: 52  },
+      { fn: 'Tess',    ln: 'Brown',    co: 'Lattice Education',    src: 'referral',    ind: 'education',    age: 67  },
+      { fn: 'Marco',   ln: 'Ricci',    co: 'Aurora Travel',        src: 'advertising', ind: 'travel',       age: 74  },
+      { fn: 'Pia',     ln: 'Anand',    co: 'Citrine Finance',      src: 'partner',     ind: 'financial_services', age: 81 },
+      { fn: 'Jonas',   ln: 'Holt',     co: 'Polar Cargo',          src: 'web',         ind: 'logistics',    age: 95  },
+      { fn: 'Anya',    ln: 'Volkov',   co: 'RedOak Realty',        src: 'cold_call',   ind: 'real_estate',  age: 102 },
+      { fn: 'Theo',    ln: 'Park',     co: 'Skyline Media',        src: 'advertising', ind: 'media',        age: 116 },
+      { fn: 'Wren',    ln: 'Garcia',   co: 'Maple Bakery Group',   src: 'event',       ind: 'consumer_goods', age: 123 },
+      { fn: 'Hugo',    ln: 'Dubois',   co: 'Nimbus Aerospace',     src: 'referral',    ind: 'manufacturing',age: 138 },
+      { fn: 'Lena',    ln: 'Fischer',  co: 'Granite Insurance',    src: 'partner',     ind: 'financial_services', age: 145 },
+      { fn: 'Kai',     ln: 'Watanabe', co: 'Coral Reef Hotels',    src: 'web',         ind: 'travel',       age: 162 },
+      { fn: 'Mira',    ln: 'Costa',    co: 'Atlas Construction',   src: 'cold_call',   ind: 'construction', age: 175 },
+    ].map((l, i) => ({
+      first_name: l.fn,
+      last_name: l.ln,
+      company: l.co,
+      email: `${l.fn.toLowerCase()}.${l.ln.toLowerCase()}@${l.co.toLowerCase().replace(/\s+/g, '')}.example.com`,
+      phone: `+1-555-01${String(i).padStart(2, '0')}-${String(1000 + i * 7)}`,
+      status: (['new', 'contacted', 'qualified', 'unqualified'] as const)[i % 4],
+      lead_source: l.src,
+      industry: l.ind,
+      rating: 1 + ((i * 7) % 5),
+      last_contacted_date: celDaysAgo(l.age),
+    })),
+  ]
+});
+
+// ─── Opportunities ────────────────────────────────────────────────────
+const opportunities = defineDataset(Opportunity, {
+  mode: 'upsert',
+  externalId: 'name',
+  records: [
+    {
+      name: 'Acme Platform Upgrade',
+      account: 'Acme Corporation',
+      amount: 150000,
+      stage: 'proposal',
+      probability: 60,
+      close_date: cel`daysFromNow(30)`,
+      type: 'existing_upgrade',
+      forecast_category: 'pipeline',
+      lead_source: 'web',
+      days_in_stage: 12,
+    },
+    {
+      name: 'Globex Manufacturing Suite',
+      account: 'Globex Industries',
+      amount: 500000,
+      stage: 'qualification',
+      probability: 30,
+      close_date: cel`daysFromNow(60)`,
+      type: 'new_business',
+      forecast_category: 'pipeline',
+      lead_source: 'referral',
+      days_in_stage: 45,
+    },
+    {
+      name: 'Wayne Enterprise License',
+      account: 'Wayne Enterprises',
+      amount: 1200000,
+      stage: 'negotiation',
+      probability: 75,
+      close_date: cel`daysFromNow(14)`,
+      type: 'new_business',
+      forecast_category: 'commit',
+      lead_source: 'partner',
+      days_in_stage: 7,
+    },
+    {
+      name: 'Initech Cloud Migration',
+      account: 'Initech Solutions',
+      amount: 80000,
+      stage: 'needs_analysis',
+      probability: 25,
+      close_date: cel`daysFromNow(45)`,
+      type: 'existing_upgrade',
+      forecast_category: 'best_case',
+      lead_source: 'event',
+      days_in_stage: 38,
+    },
+    // ─── Closed Won deals (powers KPIs & revenue trends) ────────────────
+    {
+      name: 'Acme Annual Renewal 2025',
+      account: 'Acme Corporation',
+      amount: 220000,
+      stage: 'closed_won',
+      probability: 100,
+      close_date: cel`daysAgo(15)`,
+      type: 'renewal',
+      forecast_category: 'closed',
+      lead_source: 'partner',
+    },
+    {
+      name: 'Stark Medical Pilot',
+      account: 'Stark Medical',
+      amount: 145000,
+      stage: 'closed_won',
+      probability: 100,
+      close_date: cel`daysAgo(50)`,
+      type: 'new_business',
+      forecast_category: 'closed',
+      lead_source: 'event',
+    },
+    {
+      name: 'Wayne Q1 Expansion',
+      account: 'Wayne Enterprises',
+      amount: 380000,
+      stage: 'closed_won',
+      probability: 100,
+      close_date: cel`daysAgo(95)`,
+      type: 'existing_upgrade',
+      forecast_category: 'closed',
+      lead_source: 'web',
+    },
+    {
+      name: 'Globex Training Package',
+      account: 'Globex Industries',
+      amount: 65000,
+      stage: 'closed_won',
+      probability: 100,
+      close_date: cel`daysAgo(140)`,
+      type: 'new_business',
+      forecast_category: 'closed',
+      lead_source: 'referral',
+    },
+    {
+      name: 'Initech Phase 1',
+      account: 'Initech Solutions',
+      amount: 90000,
+      stage: 'closed_won',
+      probability: 100,
+      close_date: cel`daysAgo(200)`,
+      type: 'new_business',
+      forecast_category: 'closed',
+      lead_source: 'web',
+    },
+    // Closed Lost deals (powers win-rate analytics)
+    {
+      name: 'Acme Add-on (Lost)',
+      account: 'Acme Corporation',
+      amount: 75000,
+      stage: 'closed_lost',
+      probability: 0,
+      close_date: cel`daysAgo(25)`,
+      type: 'existing_upgrade',
+      forecast_category: 'omitted',
+      lead_source: 'cold_call',
+    },
+    {
+      name: 'Stark Expansion (Lost)',
+      account: 'Stark Medical',
+      amount: 120000,
+      stage: 'closed_lost',
+      probability: 0,
+      close_date: cel`daysAgo(60)`,
+      type: 'new_business',
+      forecast_category: 'omitted',
+      lead_source: 'advertising',
+    },
+    // ─── Generated demo opportunities — ~50 deals across ~6 months close_date
+    // spread over every stage / forecast / source combination so the
+    // `PipelineCoverageByQuarterReport`, `OpportunityFunnelByOwnerStageReport`,
+    // and the dashboard funnel/area widgets all have rich data to chew on.
+    ...((): readonly Record<string, unknown>[] => {
+      const stages = ['qualification', 'needs_analysis', 'proposal', 'negotiation', 'closed_won', 'closed_lost'] as const;
+      const forecastByStage: Record<typeof stages[number], string> = {
+        qualification: 'pipeline',
+        needs_analysis: 'best_case',
+        proposal: 'best_case',
+        negotiation: 'commit',
+        closed_won: 'closed',
+        closed_lost: 'omitted',
+      };
+      const sources = ['web', 'referral', 'partner', 'event', 'cold_call', 'advertising'] as const;
+      const types = ['new_business', 'existing_upgrade', 'renewal'] as const;
+      const accountsList = ['Acme Corporation', 'Globex Industries', 'Wayne Enterprises', 'Initech Solutions', 'Stark Medical'] as const;
+      const out: Record<string, unknown>[] = [];
+      for (let i = 0; i < 50; i++) {
+        const stage = stages[i % stages.length];
+        // Spread close_date across +/- 180 days for ~6 months of buckets.
+        const dayOffset = -180 + Math.floor((i * 367) % 360);
+        out.push({
+          name: `Demo Deal ${String(i + 1).padStart(2, '0')}`,
+          account: accountsList[i % accountsList.length],
+          amount: 20000 + ((i * 17_393) % 480_000),
+          stage,
+          probability: stage === 'closed_won' ? 100 : stage === 'closed_lost' ? 0 : 10 + (i * 13) % 80,
+          close_date: dayOffset >= 0 ? celDaysFromNow(dayOffset) : celDaysAgo(-dayOffset),
+          type: types[i % types.length],
+          forecast_category: forecastByStage[stage],
+          lead_source: sources[i % sources.length],
+          ...(stage !== 'closed_won' && stage !== 'closed_lost'
+            ? { days_in_stage: 3 + (i * 11) % 60 }
+            : {}),
+        });
+      }
+      return out;
+    })(),
+  ]
+});
+
+// ─── Products ─────────────────────────────────────────────────────────
+const products = defineDataset(Product, {
+  mode: 'upsert',
+  externalId: 'name',
+  records: [
+    {
+      name: 'ObjectStack Platform',
+      category: 'software',
+      family: 'enterprise',
+      list_price: 50000,
+      is_active: true,
+    },
+    {
+      name: 'Cloud Hosting (Annual)',
+      category: 'subscription',
+      family: 'cloud',
+      list_price: 12000,
+      is_active: true,
+    },
+    {
+      name: 'Premium Support',
+      category: 'support',
+      family: 'services',
+      list_price: 25000,
+      is_active: true,
+    },
+    {
+      name: 'Implementation Services',
+      category: 'service',
+      family: 'services',
+      list_price: 75000,
+      is_active: true,
+    },
+  ]
+});
+
+// ─── Tasks ────────────────────────────────────────────────────────────
+const tasks = defineDataset(Task, {
+  mode: 'upsert',
+  externalId: 'subject',
+  records: [
+    {
+      subject: 'Follow up with Acme on proposal',
+      status: 'not_started',
+      priority: 'high',
+      due_date: cel`daysFromNow(2)`,
+    },
+    {
+      subject: 'Schedule demo for Globex team',
+      status: 'in_progress',
+      priority: 'normal',
+      due_date: cel`daysFromNow(5)`,
+    },
+    {
+      subject: 'Prepare contract for Wayne Enterprises',
+      status: 'not_started',
+      priority: 'urgent',
+      due_date: cel`daysFromNow(1)`,
+    },
+    {
+      subject: 'Send welcome package to Stark Medical',
+      status: 'completed',
+      priority: 'low',
+    },
+    {
+      subject: 'Update CRM pipeline report',
+      status: 'not_started',
+      priority: 'normal',
+      due_date: cel`daysFromNow(7)`,
+    },
+  ]
+});
+
+// ─── Cases ────────────────────────────────────────────────────────────
+const cases = defineDataset(Case, {
+  mode: 'upsert',
+  externalId: 'subject',
+  records: [
+    {
+      subject: 'Login issues after platform upgrade',
+      description: 'Users unable to log in after the v4.2 upgrade.',
+      account: 'Acme Corporation',
+      contact: 'john.smith@acme.example.com',
+      status: 'in_progress',
+      priority: 'high',
+      type: 'problem',
+      origin: 'email',
+      is_closed: false,
+      is_sla_violated: false,
+      is_escalated: false,
+      case_number: 'CASE-00001',
+      created_date: cel`daysAgo(2)`,
+      sla_due_date: cel`daysFromNow(1)`,
+    },
+    {
+      subject: 'Data export timing out for large datasets',
+      description: 'CSV export fails for datasets over 10k rows.',
+      account: 'Globex Industries',
+      contact: 'sarah.j@globex.example.com',
+      status: 'escalated',
+      priority: 'critical',
+      type: 'bug',
+      origin: 'phone',
+      is_closed: false,
+      is_sla_violated: true,
+      is_escalated: true,
+      escalation_reason: 'Customer threatening churn',
+      case_number: 'CASE-00002',
+      created_date: cel`daysAgo(5)`,
+      sla_due_date: cel`daysAgo(2)`,
+    },
+    {
+      subject: 'How to configure SSO with Okta?',
+      description: 'Customer needs guidance on SSO setup with Okta.',
+      account: 'Initech Solutions',
+      contact: 'mchen@initech.example.com',
+      status: 'resolved',
+      priority: 'medium',
+      type: 'question',
+      origin: 'web',
+      is_closed: false,
+      is_sla_violated: false,
+      is_escalated: false,
+      resolution_time_hours: 4.5,
+      case_number: 'CASE-00003',
+      created_date: cel`daysAgo(3)`,
+      sla_due_date: cel`daysFromNow(2)`,
+    },
+    {
+      subject: 'API rate limit exceeded on production',
+      description: 'Production environment hitting rate limits during peak hours.',
+      account: 'Wayne Enterprises',
+      contact: 'rwilson@wayne.example.com',
+      status: 'closed',
+      priority: 'high',
+      type: 'problem',
+      origin: 'chat',
+      is_closed: true,
+      is_sla_violated: false,
+      is_escalated: false,
+      resolution_time_hours: 2.0,
+      case_number: 'CASE-00004',
+      created_date: cel`daysAgo(7)`,
+      closed_date: cel`daysAgo(6)`,
+      sla_due_date: cel`daysAgo(6)`,
+    },
+    {
+      subject: 'PDF reports not rendering charts correctly',
+      description: 'Charts appear blank when exporting dashboard to PDF.',
+      account: 'Stark Medical',
+      contact: 'emily.d@starkmed.example.com',
+      status: 'new',
+      priority: 'medium',
+      type: 'bug',
+      origin: 'email',
+      is_closed: false,
+      is_sla_violated: false,
+      is_escalated: false,
+      case_number: 'CASE-00005',
+      created_date: cel`daysAgo(1)`,
+      sla_due_date: cel`daysFromNow(2)`,
+    },
+    {
+      subject: 'Billing discrepancy on last invoice',
+      description: 'Customer billed for 15 seats but only uses 12.',
+      account: 'Acme Corporation',
+      contact: 'john.smith@acme.example.com',
+      status: 'waiting_customer',
+      priority: 'low',
+      type: 'problem',
+      origin: 'email',
+      is_closed: false,
+      is_sla_violated: false,
+      is_escalated: false,
+      case_number: 'CASE-00006',
+      created_date: cel`daysAgo(4)`,
+      sla_due_date: cel`daysFromNow(3)`,
+    },
+    {
+      subject: 'Mobile app crashes on iOS 17',
+      description: 'App crashes on launch for users running iOS 17.2+.',
+      account: 'Globex Industries',
+      contact: 'sarah.j@globex.example.com',
+      status: 'in_progress',
+      priority: 'critical',
+      type: 'bug',
+      origin: 'web',
+      is_closed: false,
+      is_sla_violated: true,
+      is_escalated: true,
+      escalation_reason: 'Affects 30% of mobile users',
+      case_number: 'CASE-00007',
+      created_date: cel`daysAgo(3)`,
+      sla_due_date: cel`daysAgo(1)`,
+    },
+    {
+      subject: 'Request: bulk import via CSV',
+      description: 'Customer requesting ability to import records via CSV upload.',
+      account: 'Wayne Enterprises',
+      contact: 'rwilson@wayne.example.com',
+      status: 'closed',
+      priority: 'low',
+      type: 'feature_request',
+      origin: 'web',
+      is_closed: true,
+      is_sla_violated: false,
+      is_escalated: false,
+      resolution_time_hours: 8.0,
+      case_number: 'CASE-00008',
+      created_date: cel`daysAgo(10)`,
+      closed_date: cel`daysAgo(8)`,
+      sla_due_date: cel`daysAgo(8)`,
+    },
+    // ─── Generated demo cases — 30 cases over the last 30 days, mixed across
+    // priorities. Powers `CasesOpenedByDayPriorityReport` (daily bucketing
+    // matrix) and the service dashboard's daily-volume area chart.
+    ...((): readonly Record<string, unknown>[] => {
+      const priorities = ['low', 'medium', 'high', 'critical'] as const;
+      const types = ['question', 'bug', 'problem', 'feature_request'] as const;
+      const origins = ['email', 'phone', 'web', 'chat'] as const;
+      const statuses = ['new', 'in_progress', 'resolved', 'closed', 'escalated'] as const;
+      const accountsList = ['Acme Corporation', 'Globex Industries', 'Wayne Enterprises', 'Initech Solutions', 'Stark Medical'] as const;
+      const out: Record<string, unknown>[] = [];
+      for (let i = 0; i < 30; i++) {
+        const priority = priorities[i % priorities.length];
+        const status = statuses[i % statuses.length];
+        const closed = status === 'resolved' || status === 'closed';
+        const ageDays = 1 + (i % 30);
+        out.push({
+          subject: `Demo case ${String(i + 9).padStart(5, '0')} — ${priority} ${types[i % types.length]}`,
+          description: `Auto-generated demo case for ${priority} priority on day -${ageDays}.`,
+          account: accountsList[i % accountsList.length],
+          status,
+          priority,
+          type: types[i % types.length],
+          origin: origins[i % origins.length],
+          is_closed: closed,
+          is_sla_violated: priority === 'critical' && i % 3 === 0,
+          is_escalated: status === 'escalated',
+          ...(closed ? { resolution_time_hours: 1 + (i * 7) % 48 } : {}),
+          case_number: `CASE-${String(i + 9).padStart(5, '0')}`,
+          created_date: celDaysAgo(ageDays),
+          ...(closed ? { closed_date: celDaysAgo(Math.max(0, ageDays - 1)) } : {}),
+          sla_due_date: celDaysFromNow(priority === 'critical' ? 1 : priority === 'high' ? 2 : 4),
+        });
+      }
+      return out;
+    })(),
+  ],
+});
+
+// ─── Campaigns ────────────────────────────────────────────────────────
+const campaigns = defineDataset(Campaign, {
+  mode: 'upsert',
+  externalId: 'name',
+  records: [
+    {
+      name: 'Q2 Enterprise Email Nurture',
+      description: 'Multi-touch email nurture targeting enterprise IT decision makers.',
+      type: 'email',
+      channel: 'email',
+      status: 'in_progress',
+      start_date: cel`daysAgo(30)`,
+      end_date: cel`daysFromNow(30)`,
+      budgeted_cost: 25000,
+      actual_cost: 12500,
+      expected_revenue: 500000,
+      target_size: 5000,
+      landing_page_url: 'https://acme.example.com/lp/enterprise-q2',
+      is_active: true,
+    },
+    {
+      name: 'Cloud Migration Webinar Series',
+      description: 'Three-part webinar series on cloud migration best practices.',
+      type: 'webinar',
+      channel: 'digital',
+      status: 'completed',
+      start_date: cel`daysAgo(90)`,
+      end_date: cel`daysAgo(30)`,
+      budgeted_cost: 15000,
+      actual_cost: 14200,
+      expected_revenue: 300000,
+      actual_revenue: 285000,
+      target_size: 1500,
+      landing_page_url: 'https://acme.example.com/webinars/cloud-migration',
+      is_active: false,
+    },
+    {
+      name: 'SaaSCon 2026 Trade Show',
+      description: 'Booth and sponsorship at the SaaSCon 2026 industry conference.',
+      type: 'trade_show',
+      channel: 'events',
+      status: 'planning',
+      start_date: cel`daysFromNow(60)`,
+      end_date: cel`daysFromNow(63)`,
+      budgeted_cost: 75000,
+      expected_revenue: 1200000,
+      target_size: 3000,
+      is_active: true,
+    },
+    {
+      name: 'Developer Content Marketing Push',
+      description: 'Technical blog posts, video tutorials, and developer community engagement.',
+      type: 'content',
+      channel: 'digital',
+      status: 'in_progress',
+      start_date: cel`daysAgo(60)`,
+      end_date: cel`daysFromNow(90)`,
+      budgeted_cost: 40000,
+      actual_cost: 18000,
+      expected_revenue: 250000,
+      target_size: 10000,
+      landing_page_url: 'https://acme.example.com/developers',
+      is_active: true,
+    },
+    {
+      name: 'Partner Co-Marketing Initiative',
+      description: 'Joint marketing campaigns with strategic technology partners.',
+      type: 'partner',
+      channel: 'partner',
+      status: 'planning',
+      start_date: cel`daysFromNow(14)`,
+      end_date: cel`daysFromNow(120)`,
+      budgeted_cost: 50000,
+      expected_revenue: 800000,
+      target_size: 2000,
+      is_active: true,
+    },
+  ]
+});
+
+// ─── Contracts ────────────────────────────────────────────────────────
+const contracts = defineDataset(Contract, {
+  mode: 'upsert',
+  externalId: 'contract_number',
+  records: [
+    {
+      contract_number: 'CTR-0001',
+      account: 'Acme Corporation',
+      contact: 'john.smith@acme.example.com',
+      opportunity: 'Acme Platform Upgrade',
+      status: 'activated',
+      contract_term_months: 12,
+      start_date: cel`daysAgo(30)`,
+      end_date: cel`daysFromNow(335)`,
+      contract_value: 150000,
+      billing_frequency: 'annually',
+      payment_terms: 'net_30',
+      auto_renewal: true,
+      renewal_notice_days: 60,
+      contract_type: 'subscription',
+      signed_date: cel`daysAgo(32)`,
+      signed_by: 'John Smith',
+      description: 'Annual platform subscription with premium support tier.',
+    },
+    {
+      contract_number: 'CTR-0002',
+      account: 'Wayne Enterprises',
+      contact: 'rwilson@wayne.example.com',
+      opportunity: 'Wayne Enterprise License',
+      status: 'in_approval',
+      contract_term_months: 36,
+      start_date: cel`daysFromNow(14)`,
+      end_date: cel`daysFromNow(1109)`,
+      contract_value: 1200000,
+      billing_frequency: 'annually',
+      payment_terms: 'net_60',
+      auto_renewal: false,
+      renewal_notice_days: 90,
+      contract_type: 'license',
+      description: 'Multi-year enterprise license with custom SLA.',
+    },
+    {
+      contract_number: 'CTR-0003',
+      account: 'Initech Solutions',
+      contact: 'mchen@initech.example.com',
+      status: 'expired',
+      contract_term_months: 12,
+      start_date: cel`daysAgo(400)`,
+      end_date: cel`daysAgo(35)`,
+      contract_value: 60000,
+      billing_frequency: 'quarterly',
+      payment_terms: 'net_30',
+      auto_renewal: false,
+      renewal_notice_days: 30,
+      contract_type: 'service',
+      signed_date: cel`daysAgo(405)`,
+      signed_by: 'Michael Chen',
+      description: 'Initial service agreement, pending renewal discussion.',
+    },
+    {
+      contract_number: 'CTR-0004',
+      account: 'Stark Medical',
+      contact: 'emily.d@starkmed.example.com',
+      status: 'draft',
+      contract_term_months: 24,
+      start_date: cel`daysFromNow(30)`,
+      end_date: cel`daysFromNow(760)`,
+      contract_value: 350000,
+      billing_frequency: 'monthly',
+      payment_terms: 'net_30',
+      auto_renewal: true,
+      renewal_notice_days: 60,
+      contract_type: 'partnership',
+      description: 'Healthcare partnership agreement, currently under legal review.',
+    },
+  ]
+});
+
+// ─── Quotes ───────────────────────────────────────────────────────────
+const quotes = defineDataset(Quote, {
+  mode: 'upsert',
+  externalId: 'quote_number',
+  records: [
+    {
+      quote_number: 'QTE-0001',
+      name: 'Acme Platform Upgrade Quote',
+      account: 'Acme Corporation',
+      contact: 'john.smith@acme.example.com',
+      opportunity: 'Acme Platform Upgrade',
+      status: 'accepted',
+      quote_date: cel`daysAgo(45)`,
+      expiration_date: cel`daysAgo(15)`,
+      subtotal: 150000,
+      discount: 10,
+      discount_amount: 15000,
+      tax: 11475,
+      shipping_handling: 0,
+      total_price: 146475,
+      payment_terms: 'net_30',
+      description: 'Platform upgrade with 10% loyalty discount applied.',
+    },
+    {
+      quote_number: 'QTE-0002',
+      name: 'Globex Manufacturing Suite Proposal',
+      account: 'Globex Industries',
+      contact: 'sarah.j@globex.example.com',
+      opportunity: 'Globex Manufacturing Suite',
+      status: 'presented',
+      quote_date: cel`daysAgo(7)`,
+      expiration_date: cel`daysFromNow(23)`,
+      subtotal: 500000,
+      discount: 5,
+      discount_amount: 25000,
+      tax: 38000,
+      shipping_handling: 2500,
+      total_price: 515500,
+      payment_terms: 'net_60',
+      description: 'Manufacturing suite licensing with implementation services.',
+    },
+    {
+      quote_number: 'QTE-0003',
+      name: 'Wayne Enterprise License Quote',
+      account: 'Wayne Enterprises',
+      contact: 'rwilson@wayne.example.com',
+      opportunity: 'Wayne Enterprise License',
+      status: 'in_review',
+      quote_date: cel`daysAgo(3)`,
+      expiration_date: cel`daysFromNow(27)`,
+      subtotal: 1200000,
+      discount: 15,
+      discount_amount: 180000,
+      tax: 81600,
+      shipping_handling: 0,
+      total_price: 1101600,
+      payment_terms: 'net_60',
+      description: 'Multi-year enterprise license with volume discount.',
+    },
+    {
+      quote_number: 'QTE-0004',
+      name: 'Initech Cloud Migration Estimate',
+      account: 'Initech Solutions',
+      contact: 'mchen@initech.example.com',
+      opportunity: 'Initech Cloud Migration',
+      status: 'draft',
+      quote_date: cel`daysAgo(1)`,
+      expiration_date: cel`daysFromNow(29)`,
+      subtotal: 80000,
+      discount: 0,
+      discount_amount: 0,
+      tax: 6400,
+      shipping_handling: 0,
+      total_price: 86400,
+      payment_terms: 'net_30',
+      description: 'Cloud migration services, awaiting internal review.',
+    },
+    {
+      quote_number: 'QTE-0005',
+      name: 'Stark Medical Pilot Quote',
+      account: 'Stark Medical',
+      contact: 'emily.d@starkmed.example.com',
+      status: 'rejected',
+      quote_date: cel`daysAgo(60)`,
+      expiration_date: cel`daysAgo(30)`,
+      subtotal: 45000,
+      discount: 0,
+      discount_amount: 0,
+      tax: 3600,
+      shipping_handling: 0,
+      total_price: 48600,
+      payment_terms: 'net_30',
+      description: 'Pilot project quote, rejected due to budget constraints.',
+      internal_notes: 'Customer requested re-quote with smaller scope.',
+    },
+  ]
+});
+
+/** All CRM seed datasets */
+export const CrmSeedData = [
+  accounts,
+  contacts,
+  leads,
+  opportunities,
+  products,
+  tasks,
+  cases,
+  campaigns,
+  contracts,
+  quotes,
+];
