@@ -1,0 +1,196 @@
+---
+title: Glossary
+description: CRM and platform terms — alphabetised so you can stop bluffing in meetings.
+---
+
+# Glossary
+
+## A
+
+**Account** — A company or organisation you do business with. The parent record for contacts, opportunities, contracts, cases.
+
+**Account team** — A list of users (and their access level) attached to an account. Used when a pod works the account together.
+
+**ACV** *(Annual Contract Value)* — The yearly value of a single contract, normalised. A 3-year $300K contract has ACV = $100K.
+
+**Activity** — A task, event, call, or email logged against a record.
+
+**Agent (AI)** — A composite AI assistant that bundles skills + knowledge bases. The Sales Copilot and Service Copilot are agents.
+
+**ARPU** *(Average Revenue Per User)* — Total revenue ÷ active users.
+
+**ARR** *(Annual Recurring Revenue)* — Sum of ACV across all active subscription contracts.
+
+**Approval process** — A multi-step sign-off flow. Locks the record while pending.
+
+## B
+
+**BANT** — Budget / Authority / Need / Timeline. Lead qualification framework.
+
+**Best case** — Forecast category for opportunities likely (but not committed) to close.
+
+**Bookings** — Closed-won contract value in a period. Includes new + expansion + renewal.
+
+**Business hours** — Working days and hours used in SLA calculations.
+
+## C
+
+**Campaign** — A marketing initiative with audience, budget, and outcomes (members enrolled / converted).
+
+**Case** — A customer service issue. Has SLA, priority, and status.
+
+**Churn** — Customer loss. Logo churn (# customers) vs revenue churn ($).
+
+**Closed won / lost** — Terminal stages on an opportunity.
+
+**Commit** — Forecast category for opportunities the rep is *committing* to close.
+
+**Contact** — A person at an account.
+
+**Contract** — A signed agreement. Triggers customer status; eligible for renewal.
+
+**Coverage ratio** — Pipeline ÷ remaining quota. >3× is healthy; <2× is a problem.
+
+**Cube** — A pre-modeled multi-dimensional dataset for analytics.
+
+## D
+
+**Dashboard** — A page of analytics widgets (KPIs, charts, lists).
+
+**Detail page** — The single-record view (vs the list view).
+
+## E
+
+**External ID** — A foreign-system identifier you store on a CRM record for matching during import / sync.
+
+## F
+
+**FLS** *(Field-Level Security)* — Per-field read/edit permissions per profile.
+
+**Flow** — A multi-step automation. More powerful than a workflow rule.
+
+**Forecast** — Predicted bookings for a period, bucketed Closed / Commit / Best Case / Pipeline.
+
+## G
+
+**GDPR** — EU regulation on personal data. HotCRM supports right-to-access and right-to-erasure.
+
+## H
+
+**Hierarchy** *(role hierarchy)* — The org chart that drives visibility — managers see their team's records.
+
+## I
+
+**ICP** *(Ideal Customer Profile)* — The kind of customer most likely to succeed with your product.
+
+## K
+
+**Knowledge base** *(KB)* — A library of articles. Two flavours: customer-facing support KB and AI-grounding KBs.
+
+## L
+
+**Lead** — A person who has expressed interest but hasn't been qualified.
+
+**Lead source** — Where the lead came from (Web, Referral, Trade Show, etc.).
+
+**List view** — A filtered, sorted, columned table of records.
+
+## M
+
+**MEDDIC** — Metrics / Economic Buyer / Decision Criteria / Decision Process / Identify Pain / Champion. Enterprise sales qualification.
+
+**MRR** *(Monthly Recurring Revenue)* — ARR ÷ 12 (or the sum of monthly contract values).
+
+**MQL** *(Marketing Qualified Lead)* — A lead marketing has qualified for sales handoff.
+
+## N
+
+**NPS** *(Net Promoter Score)* — Customer loyalty metric (-100 to +100).
+
+**NRR** *(Net Revenue Retention)* — Beginning ARR + expansion - churn - contraction ÷ Beginning ARR. >100% is healthy SaaS.
+
+## O
+
+**ObjectQL** — HotCRM's query language. `broker.find('opportunity', { filters: [...] })`.
+
+**ObjectStack** — The runtime that HotCRM is built on.
+
+**Opportunity** *(deal)* — A qualified sales opportunity in progress.
+
+**OWD** *(Org-Wide Default)* — The baseline sharing setting per object. Private / Public Read / Public Read-Write.
+
+## P
+
+**Pipeline** — All open opportunities, regardless of stage.
+
+**Permission set** — A bundle of extra permissions granted on top of a user's profile.
+
+**Profile** — The base permissions assigned to every user.
+
+**PWA** *(Progressive Web App)* — Install HotCRM as an "app" on your phone home screen.
+
+## Q
+
+**Qualification** — Determining if a lead/opportunity is worth pursuing.
+
+**Quote** — A formal price proposal sent to a customer.
+
+**Quota** — A rep's or team's revenue target for a period.
+
+## R
+
+**RAG** *(Retrieval-Augmented Generation)* — The technique behind the AI Copilot. Retrieves relevant knowledge before generating an answer.
+
+**Renewal** — Extending a contract before / at its end date.
+
+**Role** — A position in the role hierarchy (drives sharing).
+
+## S
+
+**SCIM** — Standard for syncing users from your identity provider (Okta, Azure AD).
+
+**SDR / BDR** *(Sales Development Rep / Business Development Rep)* — A rep specialised in prospecting leads.
+
+**Sharing rule** — An exception that grants visibility beyond OWD + hierarchy.
+
+**Skill (AI)** — A bite-sized AI capability (qualify lead, draft email, triage case).
+
+**SLA** *(Service Level Agreement)* — A commitment to first-respond / resolve a case within X time.
+
+**SOC2** — A security/audit standard for service providers.
+
+**SQL** — We use ObjectQL instead. Don't write SQL.
+
+**SSO** *(Single Sign-On)* — Log in to HotCRM with your corporate IdP (Okta, Azure AD, Google).
+
+**Stage** — A step in the opportunity lifecycle.
+
+**State machine** — Defines valid status transitions and what triggers each.
+
+## T
+
+**Tenant** — A logically isolated HotCRM instance (one customer org).
+
+**TCV** *(Total Contract Value)* — The full multi-year value of a contract (vs ACV which normalises to one year).
+
+## U
+
+**User** — A person who can log in. Each has a profile + role.
+
+## V
+
+**View** — Saved list-view filters/columns/sort.
+
+**View All** — A profile permission that bypasses sharing rules for an object.
+
+## W
+
+**Webhook** — An HTTP callback fired when CRM events happen.
+
+**Workflow rule** — A simple after-save automation: condition → field update / email / task.
+
+**Win rate** — Closed-won ÷ (closed-won + closed-lost). Excludes "closed without decision".
+
+## Y
+
+**YoY** *(Year-over-Year)* — This year vs last year, same period.

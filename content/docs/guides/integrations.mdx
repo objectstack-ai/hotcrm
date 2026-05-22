@@ -1,0 +1,137 @@
+---
+title: Integrations
+description: Connect HotCRM to Slack, Teams, DocuSign, Stripe, telephony, and other tools — and how to build your own integration.
+---
+
+# Integrations
+
+HotCRM is designed to **fit into your stack**, not replace it. This page lists the supported integrations and how to plug HotCRM into the rest of your business systems.
+
+## Built-in connectors
+
+| Tool | What it does | Setup at |
+| --- | --- | --- |
+| 💬 **Slack** | Notifications, slash-commands, deal-room channels | Setup → Integrations → Slack |
+| 💬 **Microsoft Teams** | Same as Slack | Setup → Integrations → Teams |
+| ✍️ **DocuSign** | Send quotes/contracts for e-signature; status flows back | Setup → Integrations → DocuSign |
+| 💳 **Stripe** | Customers, subscriptions, invoices sync to accounts/contracts | Setup → Integrations → Stripe |
+| 📞 **Twilio Voice** | Click-to-call, call recording, AI transcript | Setup → Integrations → Twilio |
+| 📞 **Aircall / RingCentral / Five9** | Same as Twilio | Setup → Integrations → Telephony |
+| 💬 **Intercom / Zendesk Chat** | Live-chat conversations land as cases | Setup → Integrations → Chat |
+| 📧 **Gmail / Outlook** | Email & calendar sync (see [Email & Calendar](/docs/guides/email-and-calendar)) | Settings → Email & Calendar |
+| 📊 **Snowflake / BigQuery / Redshift** | Data warehouse export | Setup → Data → Scheduled Exports |
+| 🔗 **Zapier / Make / n8n** | No-code automation to 5,000+ apps | Setup → Integrations → Webhooks |
+
+## What each connector does
+
+### 💬 Slack
+
+- **Notifications**: deal wins, case escalations, approvals, @mentions → DM or channel.
+- **Slash commands**: `/hotcrm lookup acme` to fetch an account; `/hotcrm log call` to log activity from Slack.
+- **Deal rooms**: auto-create a Slack channel per opportunity over a threshold, with the account team and product specialists invited.
+- **Approval actions**: approve/reject discount requests directly from Slack.
+
+### ✍️ DocuSign
+
+1. From a quote or contract → click **Send for Signature**.
+2. Choose recipients, signing order, fields.
+3. DocuSign emails the customer; status (sent → viewed → signed) flows back into HotCRM.
+4. Once signed, the executed PDF is attached and the record's status auto-updates.
+
+### 💳 Stripe
+
+- **Customers** in Stripe sync to HotCRM **accounts** by email or external ID.
+- **Subscriptions** sync to **contracts** — status, MRR, billing frequency.
+- **Invoices** appear on the account's activity timeline.
+- **Failed payments** create a high-priority case for the account owner / CSM.
+- **Cancellations** alert the CSM and create a churn opportunity.
+
+### 📞 Telephony (Twilio / Aircall / RingCentral / Five9)
+
+- Click any phone number to dial — call is logged automatically.
+- Inbound calls pop a screen-pop showing the contact, account, recent cases, recent emails.
+- Optional **call recording** — saved as audio file on the activity.
+- AI **transcription** + **call summary** delivered after each call.
+
+### 💬 Live chat (Intercom, Zendesk Chat, etc.)
+
+- Chat conversations land as cases automatically.
+- Visitor identified by email → linked to existing contact + account.
+- Anonymous chats become leads.
+
+### 📊 Data warehouse
+
+- Nightly incremental export of every CRM object.
+- Pre-built dbt models for Snowflake / BigQuery / Redshift.
+- Powers BI tools (Tableau, Looker, Power BI, Metabase, Hex).
+
+## Webhooks (outbound)
+
+Trigger external systems when CRM records change.
+
+1. **Setup → Integrations → Webhooks → New**.
+2. Pick the **object** and **event** (`created`, `updated`, `deleted`, custom).
+3. Add **conditions** (e.g., *only when opportunity stage = Closed Won*).
+4. Set the **target URL** and authentication (Bearer / Basic / HMAC signature).
+5. Choose the **payload schema** — full record, diff only, or custom.
+6. Test → activate.
+
+Webhooks retry up to 5 times with exponential back-off. Failures are visible in the **delivery log**.
+
+## Inbound webhooks / HTTP API
+
+External systems can create / update HotCRM records via REST / GraphQL. See the [API reference](/docs/customization/api-reference) for endpoints and authentication.
+
+Common patterns:
+
+- A **website form** → POST to `/api/v1/leads` → new lead with source = *Web*.
+- A **product** sending usage data → PATCH a custom usage field on the account.
+- A **finance system** → POST contract activation, which triggers the standard contract workflow.
+
+## Event bus (Kafka / EventBridge / Pub/Sub)
+
+For high-volume integrations, HotCRM publishes events to a configurable event bus.
+
+- **All record lifecycle events** (`created`, `updated`, `deleted`).
+- **Domain events** (opportunity_won, contract_activated, case_escalated, approval_granted).
+- **Schema-validated** with versioned schemas in the [@objectstack/spec](/docs/customization/index) repo.
+
+Configure at **Setup → Integrations → Event Bus**.
+
+## Building a custom integration
+
+If the connector you need isn't built-in, you have three options ordered from easy to powerful:
+
+### 1. Zapier / Make / n8n (no-code)
+
+Set up webhooks at **Setup → Integrations → Webhooks** and an inbound endpoint, then use Zapier to bridge to any app.
+
+Best for: simple field-sync between systems, small teams.
+
+### 2. Server-to-server scripting
+
+Use the REST API to call HotCRM from a script (cron job, AWS Lambda, GitHub Action). See [API reference](/docs/customization/api-reference).
+
+Best for: scheduled syncs, internal tools, anything more reliable than a no-code tool.
+
+### 3. Native plugin
+
+Build a `*.connector.ts` plugin that lives inside HotCRM with first-class lifecycle (auth, sync, monitoring). See [Customization › Extending Objects](/docs/customization/extending-objects).
+
+Best for: integrations you'll ship to other HotCRM customers; integrations where bi-directional sync and observability matter.
+
+## Auth & secrets
+
+All integration credentials are stored in the platform's secrets store (HashiCorp Vault / AWS Secrets Manager / GCP Secret Manager — configurable).
+
+- **Never** paste a token into a workflow / hook code — always reference from secrets.
+- **Rotate** OAuth refresh tokens automatically every 90 days.
+- **Audit log** records every secret access.
+
+## Tips for admins
+
+- ✅ **Connect Slack** first — biggest day-1 adoption boost.
+- ✅ **Connect telephony** for call-heavy teams — eliminates the "did Alex log the call?" gap.
+- ✅ **DocuSign** for closing — the gap between "signed in DocuSign" and "marked Won in CRM" is where deals die.
+- ✅ For each integration, **monitor the delivery log** weekly — webhook failures pile up silently.
+- ✅ Use **event bus** rather than webhooks once you have >3 downstream consumers — scales better.

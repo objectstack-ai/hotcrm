@@ -1,0 +1,11 @@
+{
+  "title": "Reference",
+  "defaultOpen": false,
+  "pages": [
+    "index",
+    "glossary",
+    "faq",
+    "security-and-compliance",
+    "performance-and-limits"
+  ]
+}

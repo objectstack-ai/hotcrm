@@ -1,0 +1,264 @@
+---
+title: Testing & CI
+description: Unit, integration, and end-to-end tests for HotCRM customizations — plus CI patterns and a sample GitHub Actions workflow.
+---
+
+# Testing & CI
+
+How to test your HotCRM customisations confidently before shipping.
+
+## What to test
+
+| Layer | Test type | Tool |
+| --- | --- | --- |
+| Object metadata | Schema validation | `@objectstack/spec` schemas + `vitest` |
+| Hook logic | Unit test | `vitest` |
+| Flows | Integration test | `@objectstack/runtime/testing` |
+| AI skills | Snapshot + integration | `@objectstack/runtime/ai/testing` |
+| Validation rules | Unit test | `vitest` |
+| Sharing rules | Integration test (multi-user) | `@objectstack/runtime/testing` |
+| UI pages / dashboards | Schema validation + visual | `@objectstack/spec` + Playwright |
+| End-to-end user flows | E2E | Playwright |
+
+## 1. Schema validation tests
+
+Every metadata file should validate against its spec schema. Add a single test that walks all files:
+
+```ts
+// packages/your-extension/test/metadata.test.ts
+import { describe, it, expect } from 'vitest';
+import { ObjectSchema } from '@objectstack/spec/data';
+import { PageSchema, ViewSchema, DashboardSchema } from '@objectstack/spec/ui';
+import { WorkflowRuleSchema, StateMachineSchema } from '@objectstack/spec/automation';
+import opportunityObj from '../src/opportunity.object';
+import opportunityPage from '../src/opportunity.page';
+
+describe('metadata schemas', () => {
+  it('opportunity object', () => {
+    expect(() => ObjectSchema.parse(opportunityObj)).not.toThrow();
+  });
+
+  it('opportunity page', () => {
+    expect(() => PageSchema.parse(opportunityPage)).not.toThrow();
+  });
+});
+```
+
+These run in milliseconds and catch most metadata bugs at CI time.
+
+## 2. Hook unit tests
+
+```ts
+// packages/your-extension/test/opportunity_territory.hook.test.ts
+import { it, expect, vi } from 'vitest';
+import territoryHook from '../src/opportunity_territory.hook';
+
+it('assigns territory from account region', async () => {
+  const broker = {
+    findOne: vi.fn().mockResolvedValue({ id: 'ter_amer', region: 'amer' }),
+  };
+  const record = { account: 'acc_123' };
+  // mock the account lookup
+  broker.findOne
+    .mockResolvedValueOnce({ id: 'acc_123', region: 'amer' })
+    .mockResolvedValueOnce({ id: 'ter_amer', region: 'amer' });
+
+  const result = await territoryHook.handler({ record, broker, context: {} });
+
+  expect(result.territory).toBe('ter_amer');
+});
+```
+
+Tip: hook handlers should be **pure functions of (record, context, broker)** — easy to unit test.
+
+## 3. Flow / automation tests
+
+Use the runtime's test harness to exercise multi-step flows:
+
+```ts
+// packages/your-extension/test/contract_renewal.flow.test.ts
+import { createTestRuntime } from '@objectstack/runtime/testing';
+import { it, expect } from 'vitest';
+
+it('creates a renewal task when contract enters renewal window', async () => {
+  const rt = await createTestRuntime();
+  await rt.seed.contract({
+    id: 'ctr_abc',
+    end_date: '2026-05-01',
+    renewal_notice_days: 60,
+    owner: 'usr_alex',
+    status: 'activated',
+  });
+
+  await rt.advanceTime('2026-03-02T08:00:00Z');  // crosses renewal window
+  await rt.runScheduledJobs();
+
+  const tasks = await rt.query.task({ filters: [['related_to', '=', 'ctr_abc']] });
+  expect(tasks).toHaveLength(1);
+  expect(tasks[0].subject).toContain('Renewal');
+});
+```
+
+The `createTestRuntime` spins up an in-memory tenant with your packages loaded — fast, isolated, deterministic.
+
+## 4. AI skill tests
+
+Skills are deterministic when you mock the LLM:
+
+```ts
+// packages/your-extension/test/renewal_pitch.skill.test.ts
+import { runSkill } from '@objectstack/runtime/ai/testing';
+import renewalPitch from '../src/renewal_pitch.skill';
+
+it('produces a pitch with citations', async () => {
+  const result = await runSkill(renewalPitch, {
+    input: { contract_id: 'ctr_123' },
+    as_user: 'usr_alex',
+    mock_llm: 'echo',           // deterministic mode
+  });
+  expect(result.subject).toMatch(/renewal/i);
+  expect(result.citations.length).toBeGreaterThan(0);
+});
+
+it('snapshot of prompt for renewal pitch', async () => {
+  const { rendered_prompt } = await runSkill(renewalPitch, {
+    input: { contract_id: 'ctr_123' },
+    as_user: 'usr_alex',
+    return_prompt_only: true,
+  });
+  expect(rendered_prompt).toMatchSnapshot();
+});
+```
+
+Snapshot the rendered prompt — if you tune the template, you see exactly what changed.
+
+For end-to-end integration tests with a real LLM, use a **dedicated test tenant** with a small free-tier model to keep cost down.
+
+## 5. Sharing rule tests
+
+```ts
+import { createTestRuntime } from '@objectstack/runtime/testing';
+
+it('AMER reps can see AMER accounts via sharing rule', async () => {
+  const rt = await createTestRuntime();
+  await rt.seed.user({ id: 'usr_amer_rep', role: 'ae_amer', profile: 'sales_user' });
+  await rt.seed.account({ id: 'acc_us', region: 'amer', owner: 'usr_someone_else' });
+
+  const accounts = await rt.as('usr_amer_rep').query.account({});
+  expect(accounts.find(a => a.id === 'acc_us')).toBeDefined();
+});
+
+it('AMER reps cannot see EMEA accounts', async () => {
+  const rt = await createTestRuntime();
+  await rt.seed.user({ id: 'usr_amer_rep', role: 'ae_amer', profile: 'sales_user' });
+  await rt.seed.account({ id: 'acc_de', region: 'emea', owner: 'usr_someone_else' });
+
+  const accounts = await rt.as('usr_amer_rep').query.account({});
+  expect(accounts.find(a => a.id === 'acc_de')).toBeUndefined();
+});
+```
+
+## 6. End-to-end with Playwright
+
+```ts
+// e2e/lead-conversion.spec.ts
+import { test, expect } from '@playwright/test';
+
+test('rep can convert a qualified lead to an opportunity', async ({ page }) => {
+  await page.goto('/');
+  await page.fill('[name=email]', 'rep@test.com');
+  await page.fill('[name=password]', process.env.TEST_PASSWORD!);
+  await page.click('button[type=submit]');
+
+  await page.click('text=Leads');
+  await page.click('text=New Lead');
+  await page.fill('[name=name]', 'Jane Doe');
+  await page.fill('[name=company]', 'Acme Corp');
+  await page.fill('[name=email]', 'jane@acme.test');
+  await page.click('text=Save');
+
+  await page.click('text=Mark Qualified');
+  await page.click('text=Convert');
+  await expect(page).toHaveURL(/\/opportunities\//);
+  await expect(page.locator('h1')).toContainText('Acme Corp');
+});
+```
+
+Run with `pnpm e2e`.
+
+## CI: GitHub Actions example
+
+```yaml
+# .github/workflows/ci.yaml
+name: ci
+
+on: [push, pull_request]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck       # @objectstack/spec validation
+      - run: pnpm lint
+      - run: pnpm test            # unit + integration
+      - run: pnpm test:metadata   # schema validation
+
+  e2e:
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm playwright install --with-deps
+      - run: pnpm dev &           # boot the runtime
+      - run: pnpm wait-on http://localhost:3000
+      - run: pnpm e2e
+
+  deploy-sandbox:
+    runs-on: ubuntu-latest
+    needs: e2e
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - run: pnpm deploy --tenant=sandbox-uat --token=${{ secrets.HOTCRM_DEPLOY_TOKEN }}
+```
+
+## Test data
+
+Don't hand-write seed data — use the runtime's seed builders:
+
+```ts
+await rt.seed.account({ region: 'amer' });           // sensible defaults
+await rt.seed.opportunity({ stage: 'negotiation' }); // links to a fresh account
+```
+
+For larger tests, use **factories**:
+
+```ts
+const accounts = await rt.seed.accountFactory(50, { tier: 'platinum' });
+```
+
+## Coverage targets
+
+- **Hooks** — 90%+ branch coverage.
+- **Flows** — every path through every decision.
+- **Validation rules** — both pass and fail cases.
+- **Sharing rules** — at least one positive and one negative case per rule.
+- **AI skills** — snapshot tests for prompts; integration tests sampling outputs weekly.
+
+## Tips
+
+- ✅ **Schema validation in CI** catches 80% of metadata bugs.
+- ✅ **Snapshot AI prompts** — tiny prompt changes shift outputs noticeably.
+- ✅ **Test sharing both ways** — what users CAN see + what they CANNOT.
+- ✅ Use **deterministic LLM mocks** in CI; live LLM tests run nightly on a separate workflow.
+- ✅ Keep E2E tests few but **critical** — cover login, lead conversion, deal close, case resolution.
+- ✅ Run the full suite **before every promotion to UAT** — never deploy a red build.

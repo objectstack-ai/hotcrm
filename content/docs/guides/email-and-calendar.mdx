@@ -1,0 +1,112 @@
+---
+title: Email & Calendar
+description: Connect Gmail or Outlook, log emails automatically, sync your calendar, and track opens & clicks.
+---
+
+# Email & Calendar
+
+HotCRM integrates with **Gmail** (Google Workspace) and **Outlook** (Microsoft 365) so that every customer email and meeting flows into the right record automatically — no copy-pasting.
+
+## What you get
+
+- ✉️ **Two-way email sync** — emails to/from customers appear on the contact, account, and opportunity records.
+- 📅 **Two-way calendar sync** — your meetings appear in HotCRM and vice versa.
+- 👀 **Email tracking** — see when the recipient opened your email or clicked a link.
+- 🤖 **AI-drafted replies** sent straight from your inbox.
+- 📥 **Inbound case email** — `support@yourcompany.com` becomes a case automatically.
+
+## Connecting your inbox
+
+1. Click your avatar → **Settings → Email & Calendar**.
+2. Click **Connect Gmail** or **Connect Outlook**.
+3. Authorise the integration in the OAuth pop-up.
+4. Choose what to sync:
+   - **All email** (default) — every conversation with anyone in your CRM.
+   - **Tracked email only** — only emails you explicitly add a tracking pixel to.
+   - **Whitelist domains** — only emails to/from specific customer domains.
+5. Choose what to sync to calendar:
+   - **Customer meetings only** — events with at least one external attendee.
+   - **All events** — including internal meetings (more noise).
+
+## How email logging works
+
+When the connector sees an email between you and a known contact (matched by email address):
+
+- The email body is stored on the **activity timeline** of the contact, account, and any open opportunity / case.
+- Attachments are saved as files.
+- The email shows up to **anyone** with sharing access to those records (so reps can see what their predecessor sent).
+
+You can also **manually log** an email by forwarding it to a personalised address (e.g., `you@hotcrm-log.io`) — it'll match contacts and link automatically.
+
+## Email tracking
+
+When composing from within HotCRM:
+
+- ✅ **Track opens** — get notified when the recipient opens.
+- ✅ **Track clicks** — get notified when they click a tracked link.
+- ✅ **Schedule send** — pick a time.
+- ✅ **Reminder** — bump back into your inbox if they don't reply in N days.
+
+Tracking events are stored on the email activity, the contact, and the originating campaign (if any).
+
+## AI-drafted emails
+
+On any record, click **✍️ Draft Email** to have the [Sales Copilot](/docs/ai-copilot/sales-copilot) or [Service Copilot](/docs/ai-copilot/service-copilot) draft a contextual email:
+
+1. Pick a goal (*"discovery follow-up"*, *"renewal pitch"*, *"resolution"*).
+2. Review the draft — edit, replace, regenerate.
+3. Click **Send** — the email goes through your connected inbox, *not* a HotCRM relay, so it preserves your sender reputation.
+4. The conversation is logged automatically.
+
+## Templates
+
+Save reusable email templates in **Settings → Email Templates**:
+
+- Merge fields (`{{Contact.FirstName}}`, `{{Opportunity.Amount}}`).
+- HTML + plain-text versions.
+- Per-team folders.
+- Approval-gated templates for legal-sensitive content.
+
+Templates can be **personalised by the AI Copilot** — pick a template, add a goal, and the Copilot fills it in with the right context.
+
+## Calendar sync
+
+After connecting your calendar:
+
+- HotCRM creates a **HotCRM Events** calendar in your Google/Outlook account.
+- Events created in HotCRM appear there.
+- Events created in your native calendar with **CRM contacts as attendees** sync into HotCRM as events on those contacts/accounts.
+- Conflicts (two events at the same time) are flagged.
+
+## Inbound case email
+
+Setup at **Setup → Email → Inbound Case Email**:
+
+1. Pick an address (e.g., `support@yourcompany.com`).
+2. Forward that address to the inbound address shown.
+3. Set the default queue, priority, and assignment rules.
+
+Now every email to support@ becomes a case:
+
+- The sender is matched (or auto-created) as a contact.
+- Subject → case subject; body → case description; attachments → case files.
+- Replies on the case thread go back via email to the customer, preserving the thread.
+
+## Privacy & policies
+
+- Email body content is stored in the same DB as your CRM records and follows your sharing rules.
+- You can **exclude** specific addresses or domains (HR, personal).
+- BCC / hidden recipients are *not* logged.
+- For GDPR — you can purge a contact's email history via the contact's *Delete Personal Data* action.
+
+## Tips for reps
+
+- ✅ Connect your inbox on day one — it eliminates 80% of CRM data entry.
+- ✅ Use **Schedule Send** for emails after hours — better response rates.
+- ✅ Watch the **open + click notifications** for hot signals (a prospect clicked 3 times in 5 minutes → pick up the phone).
+
+## Tips for admins
+
+- ✅ Push everyone in sales / service to connect their inbox — the platform's value grows with email coverage.
+- ✅ Set a clear policy on what's logged (all vs domain-whitelisted) — clarify with HR/legal first.
+- ✅ Use templates aggressively — consistent voice + 10× faster than hand-writing.

@@ -5,6 +5,9 @@
     "index",
     "extending-objects",
     "ai-skills",
-    "ui-extensions"
+    "ui-extensions",
+    "api-reference",
+    "testing-and-ci",
+    "theming-and-i18n"
   ]
 }

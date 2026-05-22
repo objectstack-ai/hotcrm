@@ -1,0 +1,118 @@
+---
+title: Search & Navigation
+description: Find anything in seconds — global search, keyboard shortcuts, saved views, and list-view filter syntax.
+---
+
+# Search & Navigation
+
+You'll spend more time finding records than creating them. These tools make it fast.
+
+## 🔍 Global search
+
+The search bar at the top of every page searches **everything** at once: accounts, contacts, leads, opportunities, cases, products, contracts, knowledge articles, even files.
+
+- Press <kbd>/</kbd> or <kbd>Ctrl</kbd>+<kbd>K</kbd> (Mac: <kbd>⌘</kbd>+<kbd>K</kbd>) to focus the search bar from anywhere.
+- Start typing — results appear after 2 characters.
+- Use <kbd>↑</kbd> <kbd>↓</kbd> to navigate, <kbd>Enter</kbd> to open.
+
+### Search operators
+
+| Operator | Example | Effect |
+| --- | --- | --- |
+| `"exact phrase"` | `"acme corp"` | Match the exact phrase |
+| `object:type` | `object:opportunity acme` | Restrict to one object type |
+| `owner:me` | `owner:me stale` | Only records you own |
+| `owner:@alice` | `owner:@alice` | Records owned by Alice |
+| `tag:vip` | `tag:vip status:open` | Tagged records |
+| `created:>30d` | `created:>30d closed` | Created more than 30 days ago |
+| `-keyword` | `acme -inactive` | Exclude a keyword |
+
+### What gets searched
+
+Search reads visible records only — sharing rules and field-level security apply. You can't accidentally find records you're not allowed to see.
+
+## ⌨️ Keyboard shortcuts
+
+| Shortcut | Action |
+| --- | --- |
+| <kbd>/</kbd> or <kbd>⌘K</kbd> | Open global search |
+| <kbd>G</kbd> then <kbd>H</kbd> | Go to Home dashboard |
+| <kbd>G</kbd> then <kbd>L</kbd> | Go to Leads |
+| <kbd>G</kbd> then <kbd>O</kbd> | Go to Opportunities |
+| <kbd>G</kbd> then <kbd>C</kbd> | Go to Cases |
+| <kbd>N</kbd> | New record (on a list view) |
+| <kbd>E</kbd> | Edit (on a detail page) |
+| <kbd>S</kbd> | Save |
+| <kbd>?</kbd> | Show all shortcuts |
+| <kbd>⌘</kbd>+<kbd>Enter</kbd> | Submit form |
+| <kbd>⌘</kbd>+<kbd>/</kbd> | Toggle AI Copilot panel |
+
+## 📋 List views
+
+Every object has list views (Leads, Opportunities, etc.). They share the same controls.
+
+### Built-in vs personal vs shared
+
+- **Built-in** views ship with the system (*All Open Opportunities*, *Pending My Approval*).
+- **Personal** views are saved for just you.
+- **Shared** views are saved for a group or the whole org (admin permission required).
+
+### Filtering
+
+Click **Filters** to add criteria. Each row is a `field operator value` predicate, combined with AND by default.
+
+Operators include: `equals`, `not equals`, `contains`, `starts with`, `in list`, `is empty`, `>`, `<`, `between`, `in last N days`, `in role hierarchy`.
+
+You can switch the join from AND to OR with the toggle, or use *Advanced* for complex logic with parentheses.
+
+### Saving a view
+
+After tweaking filters / columns / sort:
+
+1. Click **Save as**.
+2. Name it (e.g., *"My deals closing this quarter"*).
+3. Pick visibility — private / share with group / share with org.
+
+Your saved views appear in the dropdown next to the list-view name.
+
+### Bulk actions on list views
+
+Tick the checkboxes (or "select all matching filter") and use:
+
+- **Mass edit** — update the same field on N records.
+- **Mass delete** — admin only on most objects.
+- **Mass assign** — change owner.
+- **Add to campaign** — for leads / contacts.
+- **Export** — CSV / Excel.
+- **AI skills** — bulk-run a skill (e.g., qualify 100 leads at once).
+
+## 📌 Pinning, favourites, and recent
+
+- **Pin** any record, view, or report (star icon) — shows in your left-nav favourites.
+- **Recent** — your last 20 visited records, always one click away.
+- **Following** — records you've followed for activity-feed notifications.
+
+## 🗂️ App launcher
+
+Click the **app launcher** (top-left grid icon) to switch apps:
+
+- **Enterprise CRM** — daily user app.
+- **Admin** — for sysadmins.
+- **Custom apps** — any apps your admin built.
+
+You can drag apps to reorder; pin your most-used app as the default.
+
+## 🧭 Personalising your home
+
+Right-click any dashboard tile → **Pin to home**. Build a Home that fits your role:
+
+- Reps: *Today's tasks*, *My pipeline*, *Latest activity*.
+- Managers: *Team pipeline*, *Slipping deals*, *SLA risks*.
+- Execs: *Bookings vs plan*, *Top accounts*, *Renewal pipeline*.
+
+## Tips
+
+- ✅ Use <kbd>⌘K</kbd> as your *one* universal entry point — faster than clicking.
+- ✅ Save **three personal views** per object you use daily — *My open*, *Today*, *Stale*.
+- ✅ Pin your top dashboard so it loads on every login.
+- ✅ Don't fight the filters — if you keep refiltering, save the view.

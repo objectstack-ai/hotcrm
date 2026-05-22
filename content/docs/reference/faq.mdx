@@ -1,0 +1,196 @@
+---
+title: FAQ
+description: The most common "why can't I see / do / find this?" questions, with quick diagnostic answers.
+---
+
+# FAQ
+
+## 🔒 Access & visibility
+
+### Why can't I see a record I know exists?
+
+Most likely a [sharing rule](/docs/administration/sharing-and-security) doesn't grant you access. Check in this order:
+
+1. Are you the **owner**? If no…
+2. Are you **above the owner** in the role hierarchy? If no…
+3. Are you on the **account team**? If no…
+4. Does a **sharing rule** apply (e.g., region, tier)? If no…
+5. Does your profile have **View All**? If no…
+
+→ You won't see it. Ask the owner or your admin to add you to the account team or expand the sharing rule.
+
+### Why is a field grey / read-only?
+
+Three possibilities:
+
+- **Field-level security** restricts edit on your profile → ask admin.
+- The record is **locked in an approval process** → wait or recall.
+- A **validation rule** is preventing the change → look for an inline error message.
+
+### I have admin access in another tenant — why not here?
+
+Profiles and permissions are **per tenant**. You need an admin to grant you the *System Administrator* profile in this tenant.
+
+### Why does the AI Copilot say "I can't find that record"?
+
+The Copilot respects your sharing — if you can't see it, neither can it. Verify the record exists and check sharing.
+
+## 📈 Records & data
+
+### I created a lead but it's assigned to someone else — why?
+
+A **lead assignment rule** matched. Check the rule at **Setup → Lead Settings → Assignment Rules**. The default behaviour is to assign to the rep matching the lead's region/territory.
+
+### My opportunity won't move to Closed Won.
+
+Three blockers, in order:
+
+1. **Required fields** missing (Close Date, Amount, Won Reason).
+2. **Approval required** — amount > $500K triggers [discount approval](/docs/revenue/approvals); it must be granted first.
+3. **Validation rule** — e.g., *"Must have a primary contact role"*.
+
+### Why did my opportunity skip back to a previous stage?
+
+Likely a rejected approval. Check the **Approval History** section on the opportunity.
+
+### Where do deleted records go?
+
+To the **Recycle Bin** for 30 days. Restore from **Setup → Recycle Bin**. After 30 days they're purged permanently (logged in audit).
+
+### My import says "0 rows imported" — why?
+
+Common causes:
+
+- **External ID** column not set as the matching key but conflict mode is *Update only*.
+- **Picklist values** in the CSV don't match the defined values.
+- **Required field** missing.
+- **Owner email** doesn't match any user.
+
+The dry-run report tells you which row failed and why. Always dry-run first.
+
+## ⚙️ Automation
+
+### My workflow / flow didn't fire — why?
+
+Check in order:
+
+1. Is the rule **Active**?
+2. Does the record actually **match the condition** at the time of save?
+3. Did a **validation rule** block the save before the workflow could fire?
+4. Did a **prior workflow** change the record so the condition no longer matched?
+5. Workflows re-evaluate up to **5 times** — beyond that, the cascade stops.
+
+The **Process Monitor** (Setup → Process Monitor) shows the last 24 hours of automation runs with success/failure.
+
+### My SLA clock isn't running.
+
+Check:
+
+- The case is in an **open status** (not Resolved / Closed).
+- **Business hours** are configured.
+- The case's **priority** has an SLA defined.
+
+Cases without a priority get the *default* SLA; if none is set, no clock runs.
+
+### Auto-numbering jumped (e.g., from #1234 to #1267).
+
+Normal. Sequences reserve numbers in batches for performance; gaps occur when records are deleted, validation fails after a save attempt, or batches are abandoned. The sequence is **monotonic**, not contiguous.
+
+## 🤖 AI Copilot
+
+### The Copilot's answer is wrong / outdated.
+
+Three causes:
+
+- **Stale knowledge base** — re-index at *Setup → AI → Knowledge Bases → Refresh*.
+- **Outdated source document** — the cited article needs updating.
+- **Prompt could be tighter** — for custom skills, refine the prompt; for built-in skills, file a feedback report via the thumbs-down button.
+
+### The Copilot won't answer about a specific customer.
+
+Two possibilities:
+
+- **Sharing** — you can't see records for that customer.
+- **AI redaction rule** — admins can block the Copilot from referencing flagged accounts (e.g., VIP, in litigation). The Copilot says so explicitly.
+
+### Why are AI responses slow today?
+
+Check the AI dashboard (*Setup → AI → Health*). Common causes: upstream LLM provider latency, knowledge-base re-indexing in progress, or rate-limit throttling.
+
+## 📊 Reports & dashboards
+
+### My report shows fewer records than I expect.
+
+Sharing. Reports respect record visibility — you see only what you can see. A rep running the company pipeline report sees only their own opportunities.
+
+### A dashboard tile is empty.
+
+Check:
+
+- The tile's **filter** — too restrictive?
+- The underlying **cube refresh** — overdue?
+- Your **profile permissions** for the source object.
+
+### I changed a field on a record — when will the dashboard update?
+
+Most tiles use cubes with incremental refresh every few minutes. Force a refresh from the dashboard's **⟳ Refresh** button.
+
+### Why can't I add a custom field to a report?
+
+The field must be enabled for **reporting** in the field definition. Ask your admin to flip the *Available in Reports* toggle.
+
+## 🔌 Integrations
+
+### My email isn't logging.
+
+Check:
+
+- The **Gmail / Outlook connector** is connected (Settings → Email).
+- The email is to/from a **known contact** (matched by email).
+- The sender/recipient email isn't on your **excluded** list.
+
+### My DocuSign envelope isn't updating the contract.
+
+Check the **DocuSign integration log** (Setup → Integrations → DocuSign → Activity). Webhook delivery from DocuSign may be retrying.
+
+### Stripe says customer X exists; HotCRM says no.
+
+Stripe matches HotCRM accounts by email or external ID. If neither matches, no link is made. Add the external ID manually or use the **Stripe Sync → Re-link** action.
+
+## 🚀 Performance
+
+### Pages are loading slowly.
+
+Check:
+
+- **Network** — is your VPN routing through a slow region?
+- **List view size** — try filtering to <500 rows.
+- **Custom widgets** — disable temporarily to isolate.
+- **Browser** — clear cache; we recommend Chrome / Edge / Safari / Firefox latest.
+
+If persistent, check the **status page** for incidents.
+
+### I'm hitting an API rate limit.
+
+See [Performance & Limits](/docs/reference/performance-and-limits) for the matrix. Common causes: a tight integration loop without back-off. Add exponential back-off and respect the `Retry-After` header.
+
+## 👥 Users & licences
+
+### How do I disable a user?
+
+**Setup → Users → [user] → Deactivate**. Their records are reassigned per the deactivation wizard. **Don't delete** users — it breaks history.
+
+### Can a user have two profiles?
+
+No. Use **permission sets** to grant extras on top of the base profile.
+
+### Can a user belong to multiple roles?
+
+No — one role per user. Use **public groups** for cross-cutting sharing.
+
+## 🛟 Still stuck?
+
+- Search this site (<kbd>/</kbd> from any docs page).
+- Check the [Glossary](/docs/reference/glossary).
+- Ask your CRM admin.
+- File an issue at [GitHub](https://github.com/objectstack-ai/hotcrm/issues).

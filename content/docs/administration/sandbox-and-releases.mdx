@@ -1,0 +1,174 @@
+---
+title: Sandbox & Release Management
+description: Make configuration changes safely — sandbox tenants, change packages, promotion to production, and rollback.
+---
+
+# Sandbox & Release Management
+
+Never make config changes directly in production. This page covers the safe workflow: build in a sandbox, test, package, promote to production, rollback if needed.
+
+## What's a sandbox?
+
+A **sandbox** is a full-fidelity copy of your production HotCRM tenant — same schema, optionally same data — running in isolation. You can break it without consequence.
+
+| Sandbox type | What's in it | Refresh frequency |
+| --- | --- | --- |
+| **Config only** | Schema + metadata only, no records | On demand |
+| **Partial data** | Schema + a small sample of records | Weekly |
+| **Full copy** | Schema + all production data (anonymised) | Monthly |
+
+Enterprise plans typically include **3 sandboxes**; add more as needed.
+
+## Creating & refreshing a sandbox
+
+1. **Setup → Sandbox Management → New Sandbox**.
+2. Pick the **type** (config / partial / full).
+3. Name it (e.g., `dev`, `uat`, `training`).
+4. Click **Create** — typically ready in 10–60 min depending on size.
+
+To refresh an existing sandbox with the latest production data, click **Refresh** on the sandbox row. ⚠️ **Refresh wipes all changes in the sandbox** — package and export first if you need them.
+
+### Anonymisation on refresh
+
+For full-copy sandboxes, PII can be anonymised on refresh:
+
+- Email addresses → `user-{id}@example-anon.test`
+- Phone numbers → randomised but format-preserved
+- Names → realistic-looking fake names
+- Free-text fields → kept as-is (caveat — review for sensitive content)
+
+Recommended for sandboxes accessed by partners / contractors.
+
+## The change workflow
+
+```
+┌───────────┐   build    ┌─────────┐   test    ┌─────────┐   promote   ┌────────────┐
+│ Developer ├──────────▶│   dev   ├──────────▶│   uat   ├────────────▶│ production │
+└───────────┘            └─────────┘           └─────────┘             └────────────┘
+                                                                              │
+                                                                       rollback│
+                                                                              ▼
+                                                                       last working
+                                                                          package
+```
+
+1. **Build** the change in the `dev` sandbox.
+2. **Promote** to `uat` — business users test there.
+3. **UAT sign-off** required to proceed.
+4. **Promote** to `production` during the change window.
+5. **Smoke test** in production immediately.
+6. **Rollback** if needed.
+
+## Change packages
+
+A **change package** captures a set of metadata changes (objects, fields, validations, workflows, sharing rules, etc.) as a single deployable artefact.
+
+### Creating a package
+
+1. **Setup → Change Packages → New**.
+2. Name + description.
+3. Add components:
+   - **Manual** — pick objects, fields, rules from a list.
+   - **By tag** — anything tagged `release-2026-Q1`.
+   - **Auto** — every change since the last package timestamp.
+4. **Validate** — the system checks the package for consistency (e.g., field references that don't resolve).
+5. **Save**.
+
+### Deploying a package
+
+1. From source sandbox → **Deploy → pick target tenant**.
+2. **Dry-run** — what will change, what will be created, what conflicts exist.
+3. Review the change set.
+4. **Deploy** — typically <2 min for config-only changes.
+5. **Audit log** captures who deployed what, when.
+
+### What can be packaged
+
+| Type | Packageable |
+| --- | --- |
+| Objects, fields, validations | ✅ |
+| Workflows, flows | ✅ |
+| Sharing rules, profiles, permission sets | ✅ |
+| Pages, list views, dashboards | ✅ |
+| Reports, cubes | ✅ |
+| AI skills, knowledge base configs | ✅ |
+| Approval processes | ✅ |
+| Email templates | ✅ |
+| **Data records** | ❌ (use data import) |
+| **Files** | ❌ (use file sync API) |
+| **User accounts** | ❌ (use SCIM) |
+
+## Version control (git-backed)
+
+For technical teams, sandbox metadata can be **synced to a git repo**:
+
+1. **Setup → Sandbox → Git Sync → Connect**.
+2. Authorise a GitHub / GitLab / Bitbucket account.
+3. Pick the repo and branch.
+4. **Pull** — fetch metadata from git into sandbox.
+5. **Push** — commit sandbox changes back to git.
+
+This unlocks:
+
+- **Code review** via PRs.
+- **Diffs** between branches.
+- **History** of every change.
+- **CI** running `pnpm typecheck` etc. before merge.
+
+For HotCRM customers extending with their own packages, this is the recommended workflow.
+
+## Rollback
+
+Two flavours:
+
+### Quick rollback (within 24 h)
+
+Every deployment creates a **restore point**. Within 24 h of deploy:
+
+1. **Setup → Change Packages → Deployment History → [deployment] → Rollback**.
+2. Confirm — system reverts the metadata changes.
+3. Records created since the deploy stay; metadata reverts.
+
+### Re-deploy previous package
+
+If >24 h has passed, re-deploy the **previous successful package**. Same UI, just pick the older package version.
+
+⚠️ Data created against the new schema may need migration if you roll back schema changes. Always test rollback in UAT first.
+
+## Production change windows
+
+Best practice:
+
+- **Off-peak window** (typically weekends or 7 PM Friday) for non-trivial deploys.
+- **Freeze period** before major business events (quarter end, big launches).
+- **Announce** in the company #cm-announcements channel.
+- **2 admins** present for any production deploy (4-eyes principle).
+- **Smoke test checklist** runs immediately after.
+
+## Smoke test checklist
+
+After every production deploy:
+
+- [ ] Log in as test user.
+- [ ] Create a lead → convert → opportunity → quote → contract.
+- [ ] Create a case → triage → resolve.
+- [ ] Run the home dashboard — all tiles load.
+- [ ] Send a test email through a connected inbox.
+- [ ] Invoke a Copilot skill on a real record.
+- [ ] Spot-check the changed components.
+
+## Monitoring & alerts
+
+- **Deployment alerts** to Slack/Teams on every promotion.
+- **Error spike** detection — if errors spike post-deploy, automatic rollback recommendation.
+- **Performance regression** detection — if p95 latency degrades >20%, alert.
+
+## Tips
+
+- ✅ **Always** build in `dev`, test in `uat`, deploy to `prod`. Never skip uat.
+- ✅ **Small, frequent** packages beat big quarterly releases.
+- ✅ **Name packages clearly** — `2026-Q1-pipeline-revamp` not `Package 47`.
+- ✅ **Tag** components by initiative — makes packaging trivial.
+- ✅ **Connect to git** as soon as you have >2 admins making changes.
+- ✅ **Refresh sandboxes** monthly — stale sandboxes give false confidence.
+- ✅ **Practice rollback** quarterly — never use it for the first time in a real incident.

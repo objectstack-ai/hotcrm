@@ -1,0 +1,205 @@
+---
+title: Performance & Limits
+description: Records, API rate limits, AI quotas, file sizes — what HotCRM allows and how to stay within bounds.
+---
+
+# Performance & Limits
+
+The limits below are the **default Enterprise plan**. Other plans differ; self-hosted has no platform-imposed caps but bottlenecks shift to your infrastructure.
+
+## Data volumes
+
+| Item | Limit | Notes |
+| --- | --- | --- |
+| Records per object | **100 million** | Practical; can go higher with archiving |
+| Custom objects | **1,000** per tenant | |
+| Custom fields per object | **800** | Standard + custom combined |
+| Picklist values per field | **2,000** | |
+| Relationships per object | **40** lookup / **2** master-detail | |
+| Validation rules per object | **500** | |
+| Workflow rules per object | **500** | |
+| Flows per object | Unlimited | Each flow has its own complexity limits |
+| Page layouts per object | **200** | |
+| Record types per object | **200** | |
+
+## File storage
+
+| Item | Limit |
+| --- | --- |
+| Single file upload | **2 GB** |
+| Attachments per record | Unlimited |
+| Total file storage | Per plan (typically TB per tenant) |
+| Image preview formats | jpg, png, gif, webp, svg |
+| Document preview formats | pdf, docx, xlsx, pptx |
+
+Files over 100 MB upload via multi-part; the platform handles chunking.
+
+## API limits
+
+| Limit | Default |
+| --- | --- |
+| Requests per minute (per user) | **6,000** |
+| Requests per minute (per tenant) | **60,000** |
+| Concurrent connections (per user) | **25** |
+| Request body size | **20 MB** |
+| Response size (single record) | **10 MB** |
+| Max records per query | **2,000** (use cursor pagination for more) |
+| Max records per bulk write | **10,000** per batch |
+| Long-running query timeout | **120 s** |
+
+Rate-limit responses use HTTP **429** with `Retry-After` header. Always implement exponential back-off.
+
+## Search limits
+
+| Item | Limit |
+| --- | --- |
+| Global search results | Top **200** per object |
+| Search query length | **2,000 chars** |
+| Indexed fields per object | Top **30** by default (configurable) |
+| Search latency (p95) | **<500 ms** |
+
+## AI Copilot limits
+
+| Item | Default |
+| --- | --- |
+| Skill invocations per user per day | **500** |
+| Skill invocations per tenant per day | **50,000** |
+| Knowledge base size | **100,000 chunks** per base |
+| Knowledge base re-index | **Nightly** or on-demand |
+| Max tokens per skill prompt | **8,000** (input) / **2,000** (output) |
+| Max simultaneous skill executions | **10** per user |
+| Embedding storage | Per plan (typically GB per tenant) |
+
+Bulk-skill invocations (e.g., qualify 500 leads) count as 500 skill calls — be mindful of quotas.
+
+## Reporting & cubes
+
+| Item | Limit |
+| --- | --- |
+| Report rows displayed | **10,000** |
+| Report rows exported | **1,000,000** |
+| Dashboards per user | Unlimited |
+| Widgets per dashboard | **50** |
+| Cube refresh frequency | Every **5 min** (incremental) / nightly (full) |
+| Concurrent report runs (per user) | **5** |
+
+For deeper analysis, [export to a data warehouse](/docs/guides/import-and-export#scheduled-export).
+
+## List view limits
+
+| Item | Limit |
+| --- | --- |
+| Visible rows per page | **200** (configurable up to 500) |
+| Filter clauses | **20** per view |
+| Columns | **40** per view |
+| Saved views per user | **500** |
+
+## Automation limits
+
+| Item | Limit |
+| --- | --- |
+| Workflow re-evaluations per save | **5** (then halts) |
+| Flow steps | **500** per flow |
+| Flow loop iterations | **2,000** |
+| Scheduled job concurrency | **20** simultaneous tenant-wide |
+| Email alerts per hour | **1,000** per user / **50,000** per tenant |
+| Approval steps per process | **30** |
+
+## Email & calendar sync
+
+| Item | Limit |
+| --- | --- |
+| Email body size logged | **5 MB** |
+| Calendar events synced per user | **5,000** active |
+| Email retention | **2 years** default (configurable) |
+| Tracking pixel events stored | Per email indefinitely |
+
+## Webhook & event bus
+
+| Item | Limit |
+| --- | --- |
+| Webhook payload | **1 MB** |
+| Webhook retries | **5** with exponential back-off |
+| Webhook timeout | **10 s** |
+| Event bus throughput | **1,000 events/sec** per tenant |
+| Event retention in bus | **7 days** |
+
+## User & session limits
+
+| Item | Limit |
+| --- | --- |
+| Users per tenant | Unlimited (subject to plan) |
+| Concurrent sessions per user | **5** (configurable) |
+| Session idle timeout | **30 min** (configurable) |
+| Session absolute timeout | **12 hr** (configurable) |
+
+## How to stay within limits
+
+### Pagination
+
+When fetching >2,000 records:
+
+```http
+GET /api/v1/opportunities?limit=200&cursor=eyJpZCI6...
+```
+
+Always paginate; never load all records at once.
+
+### Back-off
+
+When you hit 429:
+
+```js
+async function callApi(fn, retries = 5) {
+  try { return await fn(); }
+  catch (e) {
+    if (e.status === 429 && retries > 0) {
+      await sleep(Math.min(60000, 1000 * Math.pow(2, 5 - retries)));
+      return callApi(fn, retries - 1);
+    }
+    throw e;
+  }
+}
+```
+
+Or use the platform SDK which handles back-off automatically.
+
+### Bulk operations
+
+For >100 records, use the **bulk API** rather than 100 single calls.
+
+### AI invocation batching
+
+When triaging many records, use a **bulk skill** invocation — it batches under the hood and counts as N invocations (so still respects per-user quota), but uses connection pooling for ~10× speedup.
+
+### Field indexing
+
+For custom fields you query frequently, mark them **indexed** — speeds list filtering and report execution.
+
+### Archive old data
+
+Records older than your operational window (e.g., closed cases >2 years) can be **archived**:
+
+- Removed from hot storage; still queryable via the **archive API**.
+- Frees indexes and improves performance.
+- Auto-archive policies configurable per object.
+
+## Monitoring your usage
+
+Each tenant has a **Usage dashboard** at **Setup → Usage**:
+
+- API calls per minute / day / month, by user.
+- AI skill invocations, by skill.
+- Storage growth.
+- Top users by record creation / API consumption.
+- Anomaly alerts.
+
+Enterprise tenants get a quarterly **usage review** with the account team.
+
+## When you outgrow these limits
+
+- **Vertical** — Enterprise+ plan extends most quotas.
+- **Sharded** — multi-region deployments for >1 billion records.
+- **Self-hosted** — eliminate platform caps; bottlenecks become infrastructure.
+
+Reach out to your account team or file an issue at [GitHub](https://github.com/objectstack-ai/hotcrm/issues).

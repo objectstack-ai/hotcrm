@@ -1,0 +1,157 @@
+---
+title: Import & Export
+description: Bulk import from CSV/Excel, migrate from Salesforce or HubSpot, export data, and handle GDPR data requests.
+---
+
+# Import & Export
+
+How to get data **into** HotCRM (bulk imports, migrations) and **out** (exports, GDPR, backups).
+
+## Importing from CSV / Excel
+
+The simplest route. Works for: leads, accounts, contacts, products, opportunities, cases, contracts.
+
+### Step-by-step
+
+1. Go to **Setup → Data → Import Wizard**.
+2. Pick the **object** to import into.
+3. Upload the **CSV** or **Excel** file (max 50 MB per upload; split larger files).
+4. **Map columns** to fields — the wizard auto-suggests matches by header name.
+5. Choose **conflict behaviour**:
+   - **Insert only** — skip rows that match an existing record.
+   - **Insert and update** — update existing records (matched by Email / External ID).
+   - **Update only** — fail if not found.
+6. Run a **dry-run** — the wizard reports how many would succeed / fail without writing.
+7. **Commit** — execute the import. You'll see a progress bar; large imports run in the background and you get an email when complete.
+
+### Field mapping tips
+
+- **Owners** — provide the user's email; the importer resolves to the user ID.
+- **Lookups** — provide the referenced record's *Name* or *External ID*; the importer resolves.
+- **Picklists** — values must match the picklist's defined values exactly (case-insensitive).
+- **Dates** — ISO format (`2025-03-15`) works everywhere; otherwise specify the format.
+- **Multi-select** — separate values with semicolons.
+
+### External IDs (recommended)
+
+Add an `external_id` column (e.g., `legacy_account_id = ACME-001`) and mark it as the matching key. This lets you:
+
+- Re-run the import idempotently without creating duplicates.
+- Cross-reference between objects (e.g., import leads with their original account's external ID, and the importer links them).
+
+## Migrating from Salesforce
+
+A purpose-built migration wizard ships in the box.
+
+1. **Setup → Data → Migrate from Salesforce**.
+2. Authorise via OAuth — the wizard reads from your Salesforce sandbox or production.
+3. The wizard auto-maps Salesforce objects to HotCRM equivalents:
+
+   | Salesforce | HotCRM |
+   | --- | --- |
+   | Account | account |
+   | Contact | contact |
+   | Lead | lead |
+   | Opportunity | opportunity |
+   | OpportunityLineItem | opportunity_line_item |
+   | Quote / QuoteLineItem | quote / quote_line_item |
+   | Contract | contract |
+   | Case | case |
+   | Campaign / CampaignMember | campaign / campaign_member |
+   | Product2 | product |
+   | Task / Event | task / event |
+   | User | user *(matched by email or invited)* |
+
+4. **Field mapping** — defaults are sensible; review and adjust custom fields.
+5. **Picklist mapping** — map Salesforce values to HotCRM values (especially stages, statuses, priorities).
+6. **Owner mapping** — map Salesforce users to HotCRM users by email.
+7. **Pick the slice** — all-time, or a date range (for staged cutover).
+8. **Dry-run**, review report, **commit**.
+
+The wizard preserves Salesforce IDs as `external_id` for traceability.
+
+## Migrating from HubSpot
+
+Similar wizard at **Setup → Data → Migrate from HubSpot**. Map Hub object types to HotCRM:
+
+| HubSpot | HotCRM |
+| --- | --- |
+| Company | account |
+| Contact | contact |
+| Deal | opportunity |
+| Ticket | case |
+| Line item | opportunity_line_item |
+| Product | product |
+| Quote | quote |
+
+Deal pipelines map to opportunity stages — review the picklist mapping carefully.
+
+## Migration playbook
+
+1. **Map roles & users first** — without owners, everything is orphaned.
+2. **Dry-run in sandbox** — never run a first migration against production.
+3. **Migrate in this order** to keep references intact:
+   1. Users
+   2. Products
+   3. Accounts (+ External ID)
+   4. Contacts (+ link to accounts)
+   5. Leads
+   6. Opportunities (+ link to accounts + contacts)
+   7. Opportunity line items
+   8. Quotes / Quote line items
+   9. Contracts
+   10. Cases
+   11. Campaigns
+   12. Campaign members
+   13. Tasks / Events / Notes / Files
+4. **Reconcile counts** — totals from the source system vs. HotCRM. Investigate any gap >0.1%.
+5. **Spot-check 10 records** end-to-end manually.
+6. **Sign-off** with sales / service leadership before go-live.
+
+## Exporting data
+
+### Ad-hoc export
+
+From any list view or report → **Export** → CSV or Excel. Subject to user permissions and FLS.
+
+### Scheduled export
+
+For data warehouse loads (Snowflake, BigQuery, Redshift):
+
+- **Setup → Data → Scheduled Exports** → pick object, fields, filters, schedule, destination.
+- Destinations: S3 / Azure Blob / GCS / SFTP.
+- Format: CSV, Parquet, or JSON Lines.
+- Incremental — only changed since the last run.
+
+### Bulk API export
+
+For programmatic export — use the [API reference](/docs/customization/api-reference). Query any object with ObjectQL; results paginate.
+
+## GDPR / data deletion requests
+
+When a customer requests *"delete all my personal data"*:
+
+1. **Setup → Privacy → Data Subject Requests → New**.
+2. Identify the person — by email or contact ID.
+3. The wizard shows everything linked to them: contact record, leads, cases, emails logged, campaign memberships, files.
+4. Choose **Delete** or **Anonymise** (replace name/email with `[redacted]` while keeping records for analytics).
+5. Confirm — the system processes and produces an **audit certificate** you can hand the customer.
+
+Anonymisation is usually preferred — it preserves the integrity of historical reports without keeping PII.
+
+## Backups & disaster recovery
+
+Backup behaviour depends on how HotCRM is hosted:
+
+- **SaaS** — backups are managed by the platform (typically daily snapshots, 30-day retention).
+- **Self-hosted** — your responsibility; back up the database and the file-storage bucket. See [Administration › Setup](/docs/administration/setup) for recommended cadence.
+
+For a tested **disaster recovery** runbook, see [Reference › Security & Compliance](/docs/reference/security-and-compliance).
+
+## Tips
+
+- ✅ **Always dry-run** large imports.
+- ✅ **Always add an External ID** column — saves you from duplicates forever.
+- ✅ **Migrate in sandbox first**, then run a final delta migration on cutover weekend.
+- ✅ For exports, use **scheduled exports** rather than ad-hoc — repeatable, monitored, retried on failure.
+- ✅ Use **anonymisation** rather than deletion for GDPR — keeps reports honest.
