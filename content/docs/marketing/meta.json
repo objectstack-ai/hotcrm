@@ -1,0 +1,9 @@
+{
+  "title": "Marketing Cloud",
+  "defaultOpen": true,
+  "pages": [
+    "index",
+    "campaigns",
+    "campaign-members"
+  ]
+}

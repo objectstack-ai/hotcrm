@@ -1,0 +1,140 @@
+---
+title: Automation
+description: Workflow rules, flows, validation rules and scheduled jobs — the business logic that runs without you.
+---
+
+# Automation
+
+Automation is what makes HotCRM *do work for you* — sending notifications, updating fields, creating tasks, escalating cases, all without anyone clicking a button. Five kinds of automation are available, each suited to a different job.
+
+## The five kinds
+
+| Kind | When it fires | Best for |
+| --- | --- | --- |
+| **Validation rules** | Before save | Blocking bad data |
+| **Workflow rules** | After save | Field updates, simple email alerts |
+| **Flows** | After save (or on a schedule) | Multi-step logic, branching, loops |
+| **Scheduled jobs** | On a schedule | Daily sweeps, weekly reports |
+| **Approval processes** | On submit | Multi-step sign-off |
+
+## Validation rules
+
+The simplest kind. They block a save if a condition is true.
+
+**Built-in examples**:
+
+- *"End date must be after start date"* (on contracts).
+- *"List price must be greater than zero"* (on products).
+- *"A campaign member must have either a Lead or a Contact, not both"* (on campaign members).
+- *"Discount % must be between 0 and 100"* (on quote line items).
+
+To add one:
+
+1. **Setup → Object → Validation Rules → New**.
+2. Write the condition (the *fail* condition).
+3. Write the error message shown to the user.
+4. Activate.
+
+## Workflow rules
+
+Fire when a record matches a condition after save. Each rule can perform one or more **actions**.
+
+**Action types**:
+
+- **Field update** — change a field on the same record or a parent record.
+- **Email alert** — send a templated email to specific recipients.
+- **Create task** — for the record owner or another user.
+- **Outbound message** — fire a webhook.
+
+**Built-in examples**:
+
+- *Lead created with rating = Hot* → email to sales manager + create a *"qualify within 24 hours"* task.
+- *Opportunity won, amount ≥ $100K* → email celebration to the team, post in #wins channel.
+- *Case priority changed to Critical* → notify on-call engineer.
+
+## Flows (multi-step)
+
+When workflow rules aren't enough — branching, loops, multi-object — use **flows**.
+
+A flow is a visual sequence of steps: get data → check conditions → update records → call a sub-flow → wait → repeat.
+
+**Built-in flows in HotCRM**:
+
+| Flow | What it does |
+| --- | --- |
+| **Lead conversion** | When *Status = Qualified*, create account + contact + opportunity, link them, transfer activities |
+| **Opportunity won** | When *Closed Won*, create a contract (if linked products), notify the team, optionally create renewal task |
+| **Quote expiration** | Daily — find quotes past their expiration date, set status to *Expired*, notify owner |
+| **Campaign enrollment** | When campaign moves to *In Progress*, enroll matching leads/contacts as members |
+| **Case escalation** | Run from the SLA monitor — re-assign, notify managers, optionally create a parent case |
+
+See [Customization › Extending Objects](/docs/customization/extending-objects) if you need to build new flows.
+
+## Scheduled jobs
+
+Run on a clock (cron). They power the daily/weekly sweeps that keep your data fresh.
+
+**Built-in scheduled jobs**:
+
+| Job | Schedule | What it does |
+| --- | --- | --- |
+| **Quote expiration sweep** | Daily 1 AM | Expire quotes past their expiration date |
+| **Campaign auto-complete** | Daily 2 AM | Move campaigns past their end date to *Completed* |
+| **Campaign auto-enroll** | Mondays 9 AM | Re-evaluate active campaigns and add newly-matching members |
+| **Contract expiration** | Daily midnight | Move expired *Activated* contracts to *Expired* |
+| **Contract renewal reminder** | Daily 8 AM | Notify contract owners when within renewal-notice window |
+| **SLA breach monitor** | Every 5 minutes | Check open cases for SLA risk/breach, fire alerts |
+
+You can add custom scheduled jobs in **Setup → Scheduled Jobs**.
+
+## Approval processes
+
+Approval processes are a specialised kind of automation — multi-step sign-off with locking. See [Revenue › Approvals](/docs/revenue/approvals) for the built-in discount approval, and how to configure new ones.
+
+## Order of operations
+
+When a record is saved, the order is fixed:
+
+1. **System** runs auto-calculations (formula fields, auto-numbering).
+2. **Validation rules** run — if any fail, the save is blocked.
+3. **The record is saved** to the database.
+4. **Workflow rules** fire.
+5. **Flow triggers** fire.
+6. **Field updates** from workflows / flows may cascade — re-evaluating workflows up to 5 times before stopping.
+7. **Email alerts** are queued.
+
+Understanding this order helps debug *"why didn't my workflow fire?"* questions.
+
+## Email templates
+
+Most automation actions send email. Templates live in **Setup → Email Templates** and support:
+
+- **Merge fields** — `{{Opportunity.Name}}`, `{{Account.Owner.Email}}`.
+- **Conditional blocks** — show only if a condition is true.
+- **HTML + plain text** versions.
+- **Attachments** — quote PDFs, contract PDFs.
+
+Built-in templates cover lead-routing, opportunity wins, case acknowledgments, contract activations, renewal reminders.
+
+## Where to monitor automation
+
+- **Setup → Process Monitor** — last 24 hours of automation runs with success/failure.
+- **Setup → Workflow Queue** — pending email alerts and field updates.
+- **Setup → Scheduled Jobs → History** — past runs of each scheduled job.
+- **Object → audit log** — what changed on the record, who/what made the change.
+
+## Tips for admins
+
+- ✅ **Validation rules** are the cheapest way to enforce data quality — use them liberally.
+- ✅ **One workflow per condition** is easier to maintain than mega-workflows with 10 branches.
+- ✅ For anything more complex than 2 actions, **use a flow** — much easier to debug.
+- ✅ **Test in sandbox** before activating in production — bad automation can cascade fast.
+- ✅ **Document what each rule does** in its description field — your future self will thank you.
+
+## Tips for users
+
+If a record isn't behaving as expected:
+
+1. Check the **audit log** — was the field updated by a workflow?
+2. Check the **task list** — did a workflow auto-create a task you missed?
+3. Ask an admin to inspect the **process monitor** for that record.

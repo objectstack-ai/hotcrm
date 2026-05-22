@@ -1,57 +1,68 @@
 ---
 title: What's New
-description: Release notes for HotCRM.
+description: Recent releases, new capabilities, and what's coming next.
 ---
 
 # What's New
 
-## v0.1.0 — Baseline (May 2026)
+## v5.0 — Latest release
 
-**Hard reset.** Previous iterations attempted a 17-package monorepo covering 146 objects across CRM/HR/Healthcare/Education/Real Estate/Financial Services/Community. That codebase shipped with disabled hooks, 30 % seed-insert rate, and an unbuildable browser experience. It is preserved on the `legacy-archive` git branch for reference only.
+The biggest release yet — a foundational upgrade plus a major documentation overhaul.
 
-This release re-bases HotCRM on `framework/examples/app-crm` — a verified, runnable reference implementation maintained inside the ObjectStack framework monorepo. From here, every new feature is added one PR at a time with explicit acceptance criteria.
+### Platform
 
-### Included
+- **🚀 Upgraded to ObjectStack 5.0** across all packages.
+- **New** `@objectstack/console@5.0` and `@objectstack/account@5.0` available on npm.
+- **Faster cold-start** and **lower memory footprint** in the runtime.
 
-- **10 core sales-cloud objects**: account, contact, lead, opportunity (+ line items), product, quote (+ line items), contract, campaign (+ members), case, task.
-- **10 hooks** covering field validation (e.g. website format), value normalization (uppercased account numbers), and deletion protection (customer accounts with open opportunities).
-- **2 state machines** (lead, opportunity) with transition guards.
-- **12 pages** including Home, App Launcher, Account / Lead / Opportunity details, Action Modals, Utility Bar.
-- **10 list views** (one per core object).
-- **5 automation flows**, **2 AI agents**, **2 skills**, **1 approval process**.
-- **4 sharing rules** + 10-level role hierarchy.
-- **Seed dataset**: ~90 records authored with `defineDataset()` (compile-time field-name checking). Verified to insert successfully on first sign-up.
-- **`/_console/`, `/_studio/`, `/_account/`** UIs wired and serving 200.
+### Sales
 
-### Architecture changes from legacy
+- **Refined opportunity stages** — clearer probability defaults, better forecast accuracy.
+- **Pipeline by Stage** dashboard now includes weighted and unweighted views side by side.
+- **Slipping deals report** added — surfaces opportunities whose close date moved out this week.
 
-| Aspect | Legacy | v0.1 |
-|---|---|---|
-| Layout | 17 packages × workspace | Flat `src/`, single package |
-| Workspace scope | `packages/*` + `apps/*` | `apps/*` only (docs site) |
-| Build | Per-package `tsc` + aggregator | Single `objectstack build` |
-| Object count | 146 (mostly unverified) | 13 (all wired end-to-end) |
-| Hooks | 107 (all disabled — sandbox-incompatible) | 10 (running) |
-| Seed insert rate | ~30 % | 100 % |
+### Service
 
-### Removed
+- **Case triage skill** — the AI Copilot now suggests priority, category, queue, and the top 3 matching KB articles in one click.
+- **SLA breach monitor** runs every 5 minutes (down from 15) — faster alerts on at-risk cases.
 
-- `packages/{crm,finance,hr,marketing,products,support,analytics,integration,community,healthcare,real-estate,education,financial-services,ai,core,server}`
-- `objectstack.aggregator.ts` (no longer needed)
-- The "146 objects / 6 clouds" marketing surface — docs now describe only what runs.
+### Revenue
 
-### Migration
+- **Contract renewal reminder** workflow now triggers based on `renewal_notice_days` on each contract.
+- **Discount approval** lock-fields behaviour added — amount/stage/close-date locked during approval.
 
-- If you forked the legacy hotcrm, check out `legacy-archive` for the prior tree.
-- If you want a specific schema (e.g. `patient.object.ts` from healthcare), port it manually into `src/objects/` and re-verify hooks against the QuickJS sandbox.
+### Marketing
+
+- **Campaign auto-complete** runs nightly at 2 AM.
+- **Campaign auto-enroll** added — every Monday at 9 AM, active campaigns re-evaluate their audience.
+
+### AI Copilot
+
+- **Five built-in skills**: lead qualification, email drafting, revenue forecasting, customer 360°, case triage.
+- **Four built-in knowledge bases**: Sales Knowledge, Product Information, Support Knowledge, Competitive Intel.
+- The Copilot now **respects sharing and field-level security** end-to-end.
+
+### Analytics
+
+- **Four built-in cubes**: Sales, Pipeline, Service, Marketing — for self-service analysis.
+- **Subscription emails** for dashboards and reports — get the weekly digest in your inbox.
+
+### Documentation
+
+- 📚 **Documentation rewritten** for a business-and-admin audience — less code, more *"what you see, what you do, what happens automatically"*.
+- New sections: **Sales, Service, Marketing, Revenue, AI Copilot, Analytics, Administration**.
+- **Customization** section retained for developers building extensions.
+
+---
 
 ## Roadmap
 
-See [GitHub Issues](https://github.com/objectstack-ai/hotcrm/issues) for the active iteration backlog.
+What we're working on next:
 
-Iteration policy:
+- **Forecasting AI improvements** — better confidence intervals, what-if scenarios.
+- **Service workforce management** — agent scheduling and capacity planning.
+- **Marketing journey designer** — multi-step nurture campaigns.
+- **Mobile app** — native iOS and Android for field reps.
+- **More connectors** — Slack, Microsoft Teams, Google Workspace, HubSpot import.
 
-1. **One PR = one feature**, ≤ 500 lines of diff.
-2. **No unverified code** — every hook must run in the sandbox; every seed must insert; every page must render.
-3. **No batch generation** — features are added one object at a time so each ships with tests and docs.
-4. **Acceptance criteria are public** — listed in the issue before code is written.
+Suggestions? File an issue on [GitHub](https://github.com/objectstack-ai/hotcrm/issues).

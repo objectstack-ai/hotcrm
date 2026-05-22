@@ -1,0 +1,125 @@
+---
+title: Products
+description: The catalog of what you sell — codes, list prices, billing types and SKUs.
+---
+
+# Products
+
+A **product** is anything you sell — software, hardware, services, subscriptions, support packages. The product catalog feeds into quotes and opportunities: when sales builds a quote, they pick products from this catalog rather than typing names manually.
+
+## What a product record stores
+
+The detail screen has 3 sections:
+
+| Section | Fields |
+| --- | --- |
+| **Product Information** | Product code *(auto)*, name, description, category, family |
+| **Pricing & Billing** | List price, cost, SKU, billing type, unit of measure, tax rate, taxable flag |
+| **Resources** | Product image, datasheet, product manager |
+
+## Categories and families
+
+Categorise products two ways:
+
+**Category** — how the product is delivered:
+
+- **Software** *(default)* — installed or downloaded software
+- **Hardware** — physical equipment
+- **Service** — consulting, training, professional services
+- **Subscription** — recurring access
+- **Support** — paid support tiers
+
+**Family** — how the product fits in your portfolio:
+
+- **Enterprise Solutions**
+- **SMB Solutions**
+- **Professional Services**
+- **Cloud Services**
+
+Categories and families let you slice reports by product mix — *"how much SMB-tier subscription revenue did we book this quarter?"*
+
+## Billing types
+
+| Billing type | Use for |
+| --- | --- |
+| **One-Time** *(default)* | Perpetual licenses, one-off purchases |
+| **Monthly** | Monthly subscriptions |
+| **Quarterly** | Quarterly subscriptions |
+| **Annual** | Annual subscriptions |
+| **Usage** | Consumption-based (per API call, per GB, etc.) |
+
+The billing type drives how the quote calculates totals (one-time fee vs. recurring) and feeds into revenue recognition reporting.
+
+## Units of measure
+
+Specify how the product is sold:
+
+- **Each** *(default)* — one unit per quantity
+- **License** — per software license
+- **Seat** — per named user
+- **Hour** — for services
+- **Day** — for services
+- **Month** — for time-bounded subscriptions
+
+## Pricing fields
+
+| Field | Purpose |
+| --- | --- |
+| **List Price** | Standard published price — what shows up on a quote by default |
+| **Cost** | Your cost — used for margin calculation |
+| **Default Tax Rate %** | Auto-applied to quote line items |
+| **Taxable** | If unchecked, no tax is added (zero-rated products) |
+
+The system warns you if Cost is greater than List Price (which would be a losing sale).
+
+## Inventory tracking
+
+For physical products:
+
+- **Quantity on Hand** — current inventory.
+- **Reorder Point** — when to reorder.
+
+These fields are optional — leave them empty for non-inventory items (software, services).
+
+## The product image and datasheet
+
+Two attachment fields let you upload:
+
+- **Product Image** — shown on quote line items and product list views.
+- **Datasheet** — typically a PDF; surfaced to the Sales Copilot for AI-drafted emails and proposals.
+
+The Product Information knowledge base reads these datasheets, so accurate, up-to-date docs make the Copilot smarter.
+
+## Built-in rules
+
+- **List price must be greater than zero** — you can't sell a free product (use a $0.01 list price with a 100% discount if you really need to).
+- **Cost cannot exceed list price** — warning only, doesn't block save.
+- **Unit price on opportunity / quote line items must be zero or positive** — basic validation.
+
+## Sharing — products are public by default
+
+The product catalog is **public read-only** for the whole organisation. Sales reps can see and use any product; only marketing/product managers can edit.
+
+## Standard list views
+
+- **Active Products** — `is_active = true`.
+- **By Category** — grouped.
+- **By Family** — grouped.
+- **Subscriptions** — `category = subscription OR billing_type IN [monthly, quarterly, annual]`.
+- **Low Stock** — `quantity_on_hand < reorder_point` (for inventory products).
+
+## Tips for product managers
+
+- ✅ **Keep the datasheet up to date** — the Sales Copilot uses it to draft customer-facing content.
+- ✅ **Use the Product Image** — it dramatically improves the look of customer-facing quotes.
+- ✅ **Mark old products as inactive**, don't delete them — past quotes and contracts still reference them.
+
+## Tips for sales reps
+
+- ✅ Use products from the catalog rather than typing line items by hand — pricing and tax are auto-filled.
+- ✅ Check the datasheet before proposing — it usually has the exact spec sheet you need for the proposal.
+
+## Tips for admins
+
+- The category, family, billing type and unit-of-measure picklists can be extended. See [Customization › Extending Objects](/docs/customization/extending-objects).
+- A product can be linked to multiple opportunities and quotes — deactivation doesn't break historical records.

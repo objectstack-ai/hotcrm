@@ -1,0 +1,129 @@
+---
+title: SLA & Escalation
+description: How priorities drive deadlines, when cases escalate automatically, and how breaches are surfaced.
+---
+
+# SLA & Escalation
+
+The SLA (Service-Level Agreement) system gives every case a **deadline** based on its priority, surfaces **breaches** in real time, and **escalates** stuck cases to senior staff automatically.
+
+## How SLA targets are calculated
+
+Every case gets an **SLA due date** the moment it's created. The target is based on priority:
+
+| Priority | Default SLA target | What "breach" looks like |
+| --- | --- | --- |
+| **Critical** | 4 hours | Red banner on case detail, alert to support manager |
+| **High** | 8 hours | Red badge in list views |
+| **Medium** | 2 business days | Amber badge |
+| **Low** | 7 business days | Grey badge |
+
+The SLA target is configurable per priority — see the *Tips for admins* section below.
+
+> **Business hours** — the system can be configured to count only business hours (e.g., 9-5 Mon-Fri) rather than calendar hours. See [Administration › Setup](/docs/administration/setup).
+
+## How the SLA is tracked
+
+Two fields on every case:
+
+- **SLA Due Date** — when the case must be resolved by.
+- **SLA Breached?** — `true` when the resolution time exceeds the target.
+
+The breach flag is **read-only for agents** — they can't fudge it. It's auto-calculated by the system.
+
+The case detail page shows a live SLA countdown in the header:
+
+- ⏱ *2h 14m remaining* — fine
+- ⚠️ *24m remaining* — warning zone
+- 🚨 *BREACHED – 1h 32m over* — escalation territory
+
+## SLA performance reporting
+
+The **SLA Performance** report shows the percentage of cases resolved within their SLA target, broken down by:
+
+- Agent (who's hitting their SLA?)
+- Priority (which priority bucket is leaking?)
+- Account tier (are customers being treated worse than prospects?)
+- Month (is performance trending up or down?)
+
+This report is the support team's most-used KPI.
+
+## Case escalation
+
+The Case Escalation process automatically reassigns stuck or critical cases to senior staff.
+
+### When escalation triggers
+
+The escalation flow runs the moment a case meets either of these conditions:
+
+- The case is set to **Critical** priority, OR
+- The case is **High** priority **AND** the related account is a **Customer** (not a prospect)
+
+### What the escalation does
+
+When triggered, the flow performs these steps in order:
+
+1. **Reassigns** the case to the current agent's **manager**.
+2. **Sets the `Escalated` flag** to true and stamps the escalated date.
+3. **Changes the status** to *Escalated*.
+4. **Creates a follow-up task** on the original agent due tomorrow (so they stay in the loop and learn).
+5. **Sends an email** to the original agent, their manager, and the broader `support-team@example.com` list, with case number, priority, and account name.
+
+The result: the customer's issue is now in the hands of a senior agent within minutes, and the support team sees the escalation alert immediately.
+
+### Required: escalation reason
+
+You can't escalate a case without filling in an **Escalation Reason** — a short text field explaining *why* the escalation happened. This becomes part of the case audit trail and feeds the QBR reporting.
+
+## Other case automations
+
+| Automation | When it fires | What it does |
+| --- | --- | --- |
+| **Notify on Critical** | Priority set to Critical | Emails `support_manager@example.com` |
+| **Notify on Escalation** | `Escalated` flag flips to true | Emails `escalation_team@example.com` |
+| **Calculate resolution time** | Case is closed | Computes hours from created → closed |
+| **Set closed flag** | Status changes | `is_closed = (status == "closed")` |
+| **Set closed date** | Status changes to *Closed* | Stamps closed date to NOW |
+| **Update account last activity** | Case updated | Bumps `account.last_activity_date` to today |
+
+## Sharing — escalated cases get team visibility
+
+By default cases are **private**. But **critical open cases** are automatically shared (read + edit) with all service managers and their subordinates, via the *Escalated Cases* sharing rule. So when something blows up, leadership doesn't have to ask for access.
+
+## How the AI Copilot uses SLA
+
+The [Service Copilot's Case Triage skill](/docs/ai-copilot/skills#case-triage) considers SLA when recommending a priority:
+
+- A customer-tier account with a vague subject still gets **High** because of the customer relationship.
+- A prospect with *"production is down"* in the description gets **Critical** despite not being a paying customer.
+- The Copilot uses the [Support Knowledge Base](/docs/service/knowledge-base) to pattern-match against similar past cases.
+
+If priority resolves to **Critical**, the Copilot immediately recommends escalation and drafts an internal notification message.
+
+## Recommended cadence
+
+| Role | What to check | When |
+| --- | --- | --- |
+| **Agent** | My Open Cases (sorted by SLA Due Date) | Hourly during your shift |
+| **Service Manager** | Breached SLA + Critical Cases | First thing every morning |
+| **Service Director** | SLA Performance report | Weekly |
+| **Executive** | Service Dashboard | Weekly |
+
+## Tips for service agents
+
+- ✅ Watch your SLA countdown — when you see the amber zone, ask for help.
+- ✅ Use **Waiting on Customer** when you're genuinely blocked — depending on your config, this can pause the SLA clock.
+- ✅ Don't artificially down-prioritise to extend your SLA — managers see priority change history.
+
+## Tips for service managers
+
+- ✅ Run the **Breached SLA** list view every morning.
+- ✅ Use the **Service Board** kanban for daily standups.
+- ✅ Coach agents whose breach rate trends up — surface it 1:1 before it becomes a pattern.
+
+## Tips for admins
+
+- The SLA target per priority is set via the case object's automation (a SLA-calculation hook). To adjust, edit `src/objects/case.hook.ts` or change the underlying configuration — see [Administration › Automation](/docs/administration/automation).
+- Business-hours vs. calendar-hours behaviour is controlled by your tenant's business-hours setup. See [Administration › Setup](/docs/administration/setup).
+- Escalation triggers (Critical, or High+Customer) live in the [Case Escalation flow definition](/docs/administration/automation#case-escalation). Adjust the condition there to change when escalation fires.
+- The recipient lists for *Notify on Critical* and *Notify on Escalation* are configurable in the case workflow rules.

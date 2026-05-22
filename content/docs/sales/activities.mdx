@@ -1,0 +1,119 @@
+---
+title: Activities
+description: Tasks, calls, emails and meetings scheduled on any record. The shared to-do list for every team.
+---
+
+# Activities
+
+An **activity** (stored as a *Task* record) is anything you need to do or track in relation to another record — a call to make, an email to send, a meeting to attend, a follow-up to schedule.
+
+Activities can be attached to almost anything: an account, a contact, an opportunity, a lead, or a case.
+
+## What activities are for
+
+- 🗓 **Tracking what you owe a customer** — *"Follow up with Jane on Tuesday"*.
+- 🔁 **Standardising the playbook** — *"Send proposal recap email 24h after demo"*.
+- 📈 **Measuring activity** — a rep with no calls logged this week is a coaching opportunity.
+- 🤝 **Handing off** — when you go on leave, your manager can see your open tasks.
+
+## The 5 activity statuses
+
+| Status | What it means |
+| --- | --- |
+| ⚪ **Not Started** | Created but not begun *(default)* |
+| 🟠 **In Progress** | You're working on it |
+| 🟡 **Waiting** | Blocked on someone else |
+| 🟢 **Completed** | Done |
+| ⚪ **Deferred** | Postponed indefinitely |
+
+## The 4 priority levels
+
+| Priority | When to use |
+| --- | --- |
+| 🔵 **Low** *(default)* | Nice to have |
+| 🟢 **Normal** | Routine work |
+| 🟠 **High** | Important, do today |
+| 🔴 **Urgent** | Drop everything |
+
+When you create an Urgent task, the owner gets an email alert.
+
+## The 6 activity types
+
+- **Call** — a phone call to make or log
+- **Email** — an outbound or inbound email
+- **Meeting** — a scheduled conversation (call or in-person)
+- **Follow-up** — a generic check-in
+- **Demo** — a product demonstration
+- **Other** — anything else
+
+## What an activity record stores
+
+| Section | Fields |
+| --- | --- |
+| **Basic** | Subject, description, type, status, priority |
+| **Schedule** | Due date, reminder date/time, completed date |
+| **Assignment** | Owner |
+| **Related To** | Account, contact, opportunity, lead or case |
+| **Recurrence** | Is it recurring? Daily / weekly / monthly / yearly with an interval and end date |
+| **Tracking** | Estimated hours, actual hours, progress % |
+
+## Recurring tasks
+
+Mark a task as recurring and pick the rhythm (daily / weekly / monthly / yearly) and interval (every 1 week, every 2 months, etc.). The system spawns new instances when you complete the current one, all the way to the recurrence end date.
+
+Use cases:
+
+- *Quarterly check-in with key accounts* — monthly recurrence × 3.
+- *Daily standup notes* — daily recurrence.
+- *Renewal reminder 60 days before contract end* — set automatically by the contract flow.
+
+## What happens automatically
+
+- **Mark completed** → `is_completed` is set to true, `completed_date` is stamped to now, and `progress_percent` becomes 100. You don't have to set any of these manually.
+- **Past due** → if a task is past its due date and not completed, the system flags it as **overdue** (red badge in list views).
+- **Urgent alert** → creating or saving an *Urgent* task emails the owner.
+
+## Built-in rules
+
+- A task marked **Completed** must have a completed date (the system fills this in for you).
+- A **recurring** task must have a recurrence type set, otherwise the system asks for it.
+- A warning prompt suggests linking the task to at least one related record (account, opportunity, etc.) so it doesn't get lost.
+
+## Where activities appear
+
+Activities show up in **three** places:
+
+1. **The task list** — global "My Tasks" tab.
+2. **The Activity tab on the related record** — open an account, see all related tasks.
+3. **The home page activity widget** — *Today's Tasks* and *Overdue Tasks*.
+
+## Standard list views
+
+- **My Open Tasks** — your incomplete tasks.
+- **Overdue** — past due date, not completed.
+- **Today** — due today.
+- **This Week** — due in the next 7 days.
+- **Completed This Week** — for activity reporting.
+- **By Priority** — sorted by priority descending.
+
+## How the system uses activities
+
+- **Account last activity date** — automatically stamped whenever a task on the account is completed. Surfaces stale accounts.
+- **Opportunity last activity date** — same idea; surfaces stalled deals.
+- **Sales Dashboard** — "Activities per rep this week" widget.
+
+## Tips for sales reps
+
+- ✅ Always log a *Call* task after each customer call — it's how the team sees what's happening.
+- ✅ Set the *Reminder Date/Time* if you'll forget by the due date.
+- ✅ Link the task to the **opportunity**, not just the account — this is what surfaces it on the opportunity timeline.
+
+## Tips for service agents
+
+- ✅ Use *Follow-up* tasks on cases that are waiting on the customer; set the due date to today + 3 to remember to chase.
+
+## Tips for admins
+
+- The urgent-task email alert template can be customised.
+- Recurring tasks generate one new instance per cycle. There's no calendar-style recurrence editor — adjust intervals individually.
+- Activity types (Call / Email / Meeting / etc.) can be extended via the picklist. See [Customization › Extending Objects](/docs/customization/extending-objects).

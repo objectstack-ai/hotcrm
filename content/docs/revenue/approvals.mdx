@@ -1,0 +1,116 @@
+---
+title: Approvals
+description: Multi-step approval for high-value discounts — what triggers it, who approves, and what happens at each step.
+---
+
+# Approvals
+
+HotCRM ships with one built-in approval process: the **Opportunity Discount Approval**. It enforces a "two pairs of eyes" rule on big-money discounts so no rep can give away margin without manager and director sign-off.
+
+## What triggers an approval
+
+The Opportunity Discount Approval is triggered when:
+
+- An **opportunity** is submitted for approval, AND
+- The **opportunity amount is greater than $500,000**
+
+Below the threshold, no approval is needed — the rep can move the opportunity directly to *Closed Won*.
+
+## The 2-step process
+
+| Step | Approver | Why |
+| --- | --- | --- |
+| **1. Sales Manager** | The submitter's manager (from the role hierarchy) | First line of defense — sanity-check the deal |
+| **2. Sales Director** | The sales director role | Final sign-off — protect company margin |
+
+Both approvals must be granted in order. Rejection at either step sends the request back.
+
+## What submitters see
+
+When a sales rep clicks **Submit for Approval** on a qualifying opportunity:
+
+1. They're prompted for a **comment** explaining the discount rationale.
+2. The opportunity is **locked** — no edits to amount, stage, or close date until the process resolves.
+3. The status indicator shows **In Approval**.
+4. The first approver gets an email and an in-app notification.
+
+## What approvers see
+
+Each approver receives:
+
+- An **email** with the opportunity summary, amount, account, stage, and the submitter's comment.
+- An **in-app task** in their *Approval Inbox*.
+- A one-click **Approve** / **Reject** with a comment box.
+
+Approvers can also delegate during PTO (configured in their profile).
+
+## First-response behavior
+
+The process uses **first-response** behavior — the first approver to respond at each step (in case of delegates or multiple eligible approvers) decides the outcome. No "wait for all" voting.
+
+## What happens on each outcome
+
+### ✅ Approved (both steps)
+1. Opportunity is **unlocked**.
+2. Status returns to its previous stage (typically *Negotiation* or *Proposal*).
+3. A note is added to the activity timeline: *"Discount approved by [Director] on [date]"*.
+4. The rep can now move the opportunity to *Closed Won*.
+
+### ❌ Rejected (at any step)
+- The opportunity moves **back to the previous step** in the process.
+- If rejected at Step 1, the submitter is notified and the opportunity is unlocked for revision.
+- If rejected at Step 2, it goes back to Step 1 for the manager to re-review (after the submitter revises the deal).
+- The rejection comment is captured in the audit log.
+
+### ⏪ Recalled
+The submitter can recall the request as long as no one has acted on it. The opportunity is unlocked and returns to its previous stage.
+
+## Record locking
+
+While in approval, these fields on the opportunity are **read-only for everyone except the system**:
+
+- Amount
+- Stage
+- Close Date
+- Probability
+
+The rest of the record (description, next steps, notes) remains editable.
+
+## The approval audit trail
+
+Every action is logged in the opportunity's *Approval History* section:
+
+| Date | Step | Actor | Action | Comment |
+| --- | --- | --- | --- | --- |
+| 2024-03-12 09:14 | Submit | Alex Chen | Submitted | "5% discount to close before Q1" |
+| 2024-03-12 11:30 | 1 | Sam Lee | Approved | "OK given strategic logo" |
+| 2024-03-12 14:02 | 2 | Pat Wong | Approved | "Approved — book it" |
+
+This history is permanent and surfaces in deal-review reports.
+
+## Where to find pending approvals
+
+In the Enterprise CRM app, the **Approvals** group:
+
+- **Approval Requests** — everything pending, with views *Pending My Approval*, *Submitted by Me*, *Recently Approved*.
+- **Action History** — the full audit trail across all approvals.
+- **Processes** — admin view of the approval rules and steps.
+
+## Tips for sales reps
+
+- ✅ **Submit early** — don't wait until the customer is signing. Most approvals come back same-day.
+- ✅ **Write a strong rationale** in the comment — "strategic logo", "competitive displacement", "expansion follow-on". Approvers reject vague justifications.
+- ✅ **Don't keep editing the opportunity after submission** — the record is locked. Recall, edit, resubmit.
+
+## Tips for managers
+
+- ✅ **Respond within 24 hours** — sales velocity matters; a stuck approval kills deal momentum.
+- ✅ **Use the comment field** even on approvals — *"Approved; please attach signed NDA before booking"*.
+- ✅ **Reject with specifics** — *"Need exec sponsor letter from customer"* is far more useful than *"Not yet"*.
+
+## Tips for admins
+
+- The threshold ($500K), the steps (manager → director), and the lock fields can all be customized.
+- You can add **additional approval processes** for different objects — contract approval, expense approval, etc.
+- The approval process definition lives alongside other automation in the codebase; see [Administration › Automation](/docs/administration/automation) for how to configure new ones.
+- Delegated approvers are set in user profile preferences. See [Administration › Profiles](/docs/administration/profiles).

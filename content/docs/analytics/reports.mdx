@@ -1,0 +1,126 @@
+---
+title: Reports
+description: The standard report library — pipeline, win/loss, forecast, case volume, SLA performance and more.
+---
+
+# Reports
+
+Reports are filterable, exportable lists with grouping and summary totals. Where dashboards show the *what*, reports answer the *why* and *which*.
+
+## Standard reports
+
+HotCRM ships with these reports out of the box:
+
+### 📈 Sales reports
+
+| Report | What it shows |
+| --- | --- |
+| **Pipeline by Stage** | All open deals grouped by stage with $ totals |
+| **Forecast vs Actual** | Closed Won vs forecast, by period |
+| **Win/Loss Analysis** | Closed deals grouped by win/loss with reason breakdown |
+| **Sales Cycle Length** | Days from creation to close, by owner and product |
+| **Top Performing Reps** | Bookings leaderboard |
+| **Stale Opportunities** | Deals with no activity in 14+ days |
+| **Big Deals Won** | Closed-won opportunities ≥ $100K |
+| **Discount Approval Activity** | All approval requests by status and approver |
+
+### 🎯 Lead reports
+
+| Report | What it shows |
+| --- | --- |
+| **Lead Conversion Funnel** | New → Working → Qualified → Converted |
+| **Lead Source ROI** | Volume, conversion rate, and revenue by source |
+| **Aged Leads** | Leads in *New* or *Working* status > 30 days |
+
+### 🎧 Service reports
+
+| Report | What it shows |
+| --- | --- |
+| **Case Volume by Origin** | New cases by Email / Phone / Web / Chat / Portal |
+| **SLA Performance** | % first-response on time, % resolved on time, by priority |
+| **Case Resolution Time** | Average time-to-resolve, by category and agent |
+| **Top Accounts by Case Volume** | Accounts with the most cases |
+| **Reopened Cases** | Cases reopened in the period (quality signal) |
+| **CSAT by Agent** | Average customer satisfaction by agent |
+
+### 💰 Revenue reports
+
+| Report | What it shows |
+| --- | --- |
+| **Contracts Expiring** | Active contracts ending in next 30/60/90 days |
+| **Active Contracts by Product** | Recurring revenue rollup |
+| **Renewal Pipeline** | Opportunities tied to renewing contracts |
+
+### 📣 Marketing reports
+
+| Report | What it shows |
+| --- | --- |
+| **Campaign ROI** | Spend vs sourced/influenced pipeline and revenue |
+| **Campaign Engagement** | Open / click / response / conversion by campaign |
+
+## Working with reports
+
+Every report has the same basic controls:
+
+| Control | What it does |
+| --- | --- |
+| **Filter** | Add criteria (date range, owner, stage, etc.) |
+| **Group by** | Roll up by any field — owner, stage, product, region |
+| **Sort** | Click any column header |
+| **Summary** | Show totals, averages, min, max at group and overall level |
+| **Drill in** | Click any row to open the source record |
+| **Export** | Download as CSV or Excel |
+| **Save as** | Save your filtered/grouped version with a new name |
+| **Schedule** | Email a PDF or CSV on a recurring schedule |
+| **Subscribe** | Get notified when the report changes |
+
+## Permissions
+
+- A user only sees records they have access to — a rep running *Pipeline by Stage* sees their own deals; a manager sees the team's.
+- Admins can lock down which fields appear in reports via **Field-Level Security**.
+- Sensitive reports can be restricted to specific [profiles](/docs/administration/profiles).
+
+## Custom reports
+
+Anyone with the *Report Builder* permission can:
+
+1. Pick a **source object** (lead, opportunity, case, etc.).
+2. Pick **columns** to display.
+3. Add **filters**.
+4. Pick **grouping** and **summary fields**.
+5. Choose a **chart** to visualise.
+6. **Save and share**.
+
+For more advanced analysis — multi-object joins, time-series, cohort analysis — use [cubes](/docs/analytics/cubes).
+
+## Subscriptions and scheduled delivery
+
+The most common way to consume reports is by **email subscription**:
+
+- **Frequency**: daily, weekly, monthly.
+- **Day & time** of delivery.
+- **Format**: PDF (formatted) or CSV (raw data).
+- **Recipients**: yourself, a team alias, or specific users (subject to their own permissions).
+
+A common pattern:
+
+- *Pipeline by Stage* → Mondays 8 AM to the sales team.
+- *SLA Performance* → daily 6 PM to the service manager.
+- *Top Accounts by Case Volume* → Fridays 4 PM to the customer success team.
+
+## Tips for users
+
+- ✅ Save filtered versions for the views you run weekly — don't re-filter from scratch.
+- ✅ Use **Group by Owner** on team reports to spotlight outperformers and stragglers.
+- ✅ Export to Excel only when you need to combine with external data — otherwise stay in-app for live data.
+
+## Tips for managers
+
+- ✅ Schedule **Stale Opportunities** weekly to your team — it forces follow-up discipline.
+- ✅ Use **Win/Loss Analysis** monthly with sales coaches — it's the single best coaching tool.
+
+## Tips for admins
+
+- ✅ When users keep building the same report, **promote it** to the standard library.
+- ✅ Retire reports no one runs — keep the library curated.
+- ✅ Set up **default report folders** by team (Sales, Service, Marketing, Exec) for easy discovery.

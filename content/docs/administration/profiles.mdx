@@ -1,0 +1,137 @@
+---
+title: Profiles
+description: The six built-in user profiles and what each can see, edit, and do.
+---
+
+# Profiles
+
+A **profile** is the bundle of permissions assigned to a user. It controls what they can see, edit, delete, and configure across the entire CRM. Every user has exactly one profile.
+
+## The six built-in profiles
+
+| Profile | For | Typical user |
+| --- | --- | --- |
+| 👑 **System Administrator** | CRM admins | IT, ops, implementation lead |
+| 👔 **Executive** | C-level | CEO, CRO, VP Sales/Service |
+| 💼 **Sales User** | Sales reps | AE, SDR, BDR |
+| 🎧 **Service User** | Service agents | Support agent, success manager |
+| 📣 **Marketing User** | Marketers | Demand gen, campaign manager |
+| 👀 **Read Only** | Auditors, observers | Finance reviewer, contractor |
+
+## What each profile can do
+
+### 👑 System Administrator
+
+- Full read/write/delete on **all** objects
+- Can configure **everything**: objects, fields, profiles, sharing, automation, AI skills
+- Can impersonate other users (for support / debugging)
+- Bypasses sharing rules and field-level security
+
+⚠️ **Use sparingly** — typically 2–3 people per organisation.
+
+### 👔 Executive
+
+- Full **read** on all CRM objects (across the company)
+- **Edit** access only to records they own or are on the team for
+- Access to all **dashboards** and **reports**, including the Executive Scorecard
+- Cannot delete records
+- Cannot configure the system
+
+Designed for *"see everything, change nothing"* leadership.
+
+### 💼 Sales User
+
+- Full read/write on **accounts** they own or are on the team for
+- Full read/write on **contacts**, **opportunities**, **quotes**, **contracts** linked to their accounts
+- Full read/write on **leads** they own
+- Read/write **tasks** and **events**
+- **Submit for approval** (e.g., discount approval)
+- Read on **products** (catalog)
+- Cannot delete records (manager privilege)
+- No configuration access
+
+### 🎧 Service User
+
+- Full read/write on **cases** in their queue or assigned to them
+- Full read on **accounts**, **contacts**, **contracts** linked to those cases
+- Read/write on **knowledge base** articles (subject to KB workflow)
+- Read on **products**
+- Read on **opportunities** linked to the customer (for context)
+- No configuration access
+
+### 📣 Marketing User
+
+- Full read/write on **campaigns** and **campaign members**
+- Full read/write on **leads** (especially un-owned ones)
+- Read on **contacts**, **accounts**, **opportunities** (for ROI analysis)
+- Read/write on the **Sales Knowledge** and **Competitive Intel** knowledge bases
+- No configuration access
+
+### 👀 Read Only
+
+- Read on **all** standard objects
+- No edit, delete, or create
+- Read on dashboards and reports
+- No export rights (configurable)
+
+## Assigning a profile
+
+1. Go to **Setup → Users**.
+2. Open the user record.
+3. Select the **Profile** from the dropdown.
+4. Save — change takes effect immediately.
+
+A user can only have **one profile at a time**. To grant extra permissions on top of their base profile, use **Permission Sets** (the *"extra hat"* mechanism).
+
+## Cloning profiles
+
+If a built-in profile is *almost* right but needs tweaking:
+
+1. **Setup → Profiles**.
+2. Open the profile and click **Clone**.
+3. Rename (e.g., *"Senior Sales Rep"*).
+4. Adjust permissions.
+5. Save and assign to users.
+
+⚠️ **Do not modify built-in profiles** — clone them. Updates to HotCRM may reset built-in profile settings.
+
+## What's in a profile
+
+Each profile controls:
+
+| Permission area | Controls |
+| --- | --- |
+| **Object permissions** | Read, Create, Edit, Delete on each object |
+| **Field-level security** | Visibility and read/edit per field |
+| **App access** | Which apps the user can open (Enterprise CRM, Admin, etc.) |
+| **System permissions** | Special abilities (Mass Edit, Export, View All Data, Modify All Data) |
+| **AI permissions** | Which AI skills the user can invoke |
+| **Approval permissions** | Submit, approve, recall |
+
+## Profile vs Role vs Sharing — what's the difference?
+
+This trips up new admins. The short answer:
+
+- **Profile** = *what you can do* (the verbs: create, edit, delete, submit-for-approval).
+- **Role** = *where you sit in the hierarchy* (drives whose records you can see).
+- **Sharing rules** = *the exceptions* (e.g., "everyone in EU can see EU accounts even though they're not in the role hierarchy").
+
+A sales rep has the **Sales User profile** (lets them edit opportunities) AND a **role** like *AE - East* (which controls *whose* opportunities). Both must allow access for them to see + edit a given record.
+
+See [Sharing & security](/docs/administration/sharing-and-security) for the role + sharing side.
+
+## Tips for admins
+
+- ✅ **Start with built-in profiles** — don't customise unless necessary.
+- ✅ When in doubt, **clone** rather than modify.
+- ✅ Use **Permission Sets** for one-off grants ("Sarah needs Export for Q3") rather than creating new profiles.
+- ✅ **Audit profiles quarterly** — when people change roles, their profile often doesn't.
+- ✅ Limit System Administrator to **2–3 people maximum** — it's the keys to the kingdom.
+
+## Tips for users
+
+If you can't do something you think you should be able to do:
+
+1. Check your profile (top right → your name → Profile).
+2. Ask your admin if your profile is correct for your role.
+3. If the profile is right but you still can't see a specific record, it's a [sharing](/docs/administration/sharing-and-security) issue, not a profile issue.

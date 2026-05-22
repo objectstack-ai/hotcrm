@@ -1,0 +1,100 @@
+---
+title: Contacts
+description: The people at the accounts you sell to and support — decision-makers, influencers and end users.
+---
+
+# Contacts
+
+A **contact** is an individual person at an account — typically a decision-maker, influencer, or end user. Every contact belongs to an account.
+
+## What a contact record stores
+
+The contact detail screen has 6 collapsible sections:
+
+| Section | Fields |
+| --- | --- |
+| **Identity** | Salutation, first name, last name, full name |
+| **Account & Role** | Account, job title, department, primary contact flag |
+| **Contact Information** | Email, phone, mobile, fax |
+| **Mailing Address** | Full structured address |
+| **Additional Info** | Description, birthday, lead source, reports-to |
+| **Communication Preferences** | Email opt-out, do-not-call, fax opt-out |
+
+## The primary contact
+
+Each account has **one primary contact** — usually the main decision-maker or business sponsor. Setting a contact as primary automatically clears the flag on the previous one, so you never end up with two.
+
+The primary contact is auto-suggested as the default on:
+
+- Opportunities (Primary Contact field)
+- Quotes (Contact field)
+- Contracts (Primary Contact field)
+
+This saves a lot of clicks.
+
+## Org chart at the account
+
+Use **Reports To** to model the org structure inside an account:
+
+```
+CEO
+├── VP Sales
+│   └── Sales Director
+└── VP Engineering
+```
+
+The account detail page renders this as a clickable tree, so you can see at a glance who reports to whom. The AI Copilot uses it when summarising the account — it can tell you which people are decision-makers vs. influencers.
+
+## Communication preferences (GDPR / CCPA)
+
+Three opt-out flags tell the system this person doesn't want to be contacted. Every flag is shown as a **red badge** at the top of the contact screen so it's impossible to miss:
+
+| Flag | What happens |
+| --- | --- |
+| **Email Opt-out** | The Sales Copilot refuses to draft outbound emails to this person; marketing campaigns exclude them. |
+| **Do Not Call** | The system blocks you from logging a *Call* task to this contact. |
+| **Fax Opt-out** | Fax-based campaigns skip this contact. |
+
+Reps can request a flag change but cannot remove these themselves — it's an admin-only action.
+
+## Built-in rules
+
+- An **email address must be unique within the same account**. The same person can appear under multiple companies (a board member, for example) but not twice in one company.
+- **Welcome email** — when a contact is created, the system automatically sends them the *contact_welcome* email template.
+
+## Sharing — who can see which contact
+
+Contact visibility **inherits from the parent account**. If you can see the account, you can see all its contacts. There's no separate contact sharing model to manage.
+
+This makes the security story simple: get the account-sharing right and contacts follow.
+
+## Standard list views
+
+- **My Contacts** — contacts you own.
+- **Primary Contacts** — `is_primary = true`.
+- **Decision Makers** — title contains "VP", "Chief", or "Director".
+- **By Title** — grouped.
+- **Recently Added** — newest first.
+
+## How the AI Copilot uses contacts
+
+When you ask the Sales Copilot to draft an email, it uses:
+
+- The contact's first name and title (for personalisation).
+- The account name and industry (for context).
+- The product catalog (for relevant talking points).
+- The contact's communication preferences (to skip opt-outs).
+
+So *"Draft a follow-up to Jane"* gives you a personalised, on-brand email in seconds.
+
+## Tips for sales reps
+
+- ✅ Always set a job title and department — it's used by reports and by the Copilot.
+- ✅ Use the Reports To field — it makes account meetings much easier to prep for.
+- ✅ Mark exactly one primary contact per account.
+
+## Tips for admins
+
+- The list of departments (Sales, Marketing, Engineering, Finance, IT, Operations, HR, Legal, Executive, Other) is configurable per the picklist values. See [Customization › Extending Objects](/docs/customization/extending-objects).
+- The welcome email template can be customised in your email-template settings.
+- Sharing inheritance from accounts means you generally never need account-specific contact sharing rules.

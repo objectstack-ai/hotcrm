@@ -3,12 +3,17 @@
   "pages": [
     "index",
     "getting-started",
-    "---Build & Extend---",
-    "developers",
-    "guides",
-    "architecture",
-    "---Operate---",
-    "admin",
+    "---Product---",
+    "sales",
+    "service",
+    "marketing",
+    "revenue",
+    "---Intelligence---",
+    "ai-copilot",
+    "analytics",
+    "---Operate & Extend---",
+    "administration",
+    "customization",
     "---Resources---",
     "whats-new"
   ]

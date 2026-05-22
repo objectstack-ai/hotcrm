@@ -1,0 +1,121 @@
+---
+title: Accounts
+description: The companies you do business with — your prospects, customers and partners.
+---
+
+# Accounts
+
+An **account** is a company (or any organisation) you do business with. It's the central hub everything else hangs off:
+
+- Contacts work *for* an account.
+- Opportunities are *with* an account.
+- Cases are *raised by* an account.
+- Quotes and contracts are *signed by* an account.
+
+## The 4 account types
+
+Every account has a **type** that drives how the rest of the system treats it:
+
+| Type | When to use |
+| --- | --- |
+| 🟠 **Prospect** | Pre-sale — no contract yet. *(Default for new accounts.)* |
+| 🟢 **Customer** | Actively paying customer. |
+| 🔵 **Partner** | Reseller, integrator or channel partner. |
+| ⚪ **Former Customer** | Churned — kept around for win-back campaigns. |
+
+When a contract is activated for a prospect, the system automatically promotes the account to **Customer**. You don't have to remember to update it.
+
+## What each account record stores
+
+The account detail screen is organised into 6 sections:
+
+| Section | Fields |
+| --- | --- |
+| **Basic Information** | Account number, name, type, industry, description |
+| **Financials** | Annual revenue, number of employees |
+| **Contact Information** | Phone, website, billing address, office location (with map) |
+| **Ownership & Status** | Owner, parent account, active flag |
+| **Branding** | Brand color (used as the avatar accent) |
+| **System** | Timestamps, audit trail |
+
+## Account hierarchy
+
+Use **Parent Account** to model global companies with subsidiaries:
+
+```
+Acme Corp Global
+├── Acme Corp US
+├── Acme Corp EMEA
+│   ├── Acme Corp UK
+│   └── Acme Corp Germany
+└── Acme Corp APAC
+```
+
+The hierarchy gives you:
+
+- **Roll-up reports** — annual revenue of the global parent sums all children.
+- **Cascading sharing** — when an admin grants access to the parent, all children inherit it.
+- **Easier navigation** — from a child you can jump to the global parent.
+
+## Built-in rules
+
+- The account **name must be unique** across the system (case-insensitive). You'll get an error if you try to create a duplicate.
+- **Annual revenue must be zero or positive** — no negative numbers allowed.
+- You **cannot delete** an account that has open opportunities or active contracts. Set it to *Inactive* instead (`is_active = false`).
+
+## Automatic updates
+
+- **Last Activity Date** is auto-stamped whenever the account changes owner or type, so you can always tell when there was last meaningful movement.
+- The **Customer Since** date is captured on the first contract activation.
+- The **Total Opportunity Amount** and **Won Opportunity Amount** roll up automatically from related opportunities.
+- The **Open Case Count** is always live, so you can see at a glance if a customer is having a rough time.
+
+## Account detail layout
+
+When you open an account, you'll see tabs for:
+
+- **Overview** — description, key contacts, owner, primary address with a small map.
+- **Opportunities** — all related deals, grouped by stage, with the pipeline total at the top.
+- **Contacts** — everyone at this account, with the primary contact highlighted.
+- **Cases** — open and recently closed support cases.
+- **Activity** — calls, emails, meetings, latest first.
+- **Contracts** — active and historical contracts.
+- **Files** — attached documents (logos, signed PDFs, datasheets).
+
+## Sharing — who can see which account
+
+By default accounts are **private** — only the owner and people above them in the role hierarchy can see them.
+
+On top of that:
+
+- **Active customer accounts** are shared automatically with all Sales Managers (read/edit).
+- **Territory rules** share accounts by billing country:
+  - North America (US, CA, MX) → North America sales team
+  - Europe (UK, DE, FR, IT, ES) → Europe sales team
+
+Admins can change these rules — see [Administration › Sharing](/docs/administration/sharing-and-security).
+
+## Who can edit what
+
+- **Annual revenue** is **read-only for Sales Reps**. Only Sales Managers and above can change it (protects financial estimates).
+- **Description** is editable by everyone with access to the account.
+
+## Standard list views
+
+- **My Accounts** — accounts you own.
+- **All Customers** — active customers.
+- **Top Accounts by Revenue** — biggest first.
+- **Inactive Accounts** — `is_active = false`, for clean-up.
+- **By Industry** — grouped.
+- **Recently Updated** — what changed last.
+
+## Tips for sales reps
+
+- ✅ Always set a **primary contact** — many flows default to it (quotes, contracts).
+- ✅ Use **Parent Account** rather than creating duplicate accounts per region.
+- ✅ Promote prospect → customer the moment a contract is signed (this happens automatically, but verify).
+
+## Tips for admins
+
+- Adding a new industry or country territory? See [Administration › Sharing](/docs/administration/sharing-and-security) and [Customization › Extending Objects](/docs/customization/extending-objects).
+- The 6 default sections on the detail screen can be reordered or hidden per profile.

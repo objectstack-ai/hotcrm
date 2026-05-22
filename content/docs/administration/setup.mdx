@@ -1,0 +1,163 @@
+---
+title: Setup Checklist
+description: First-week tasks to get HotCRM production-ready for your team.
+---
+
+# Setup Checklist
+
+A practical, week-one checklist for the new HotCRM admin. Work through it in order — each section builds on the previous.
+
+## ✅ Day 1 — Foundation
+
+### 1. Company profile
+
+Navigate to **Setup → Company Information**:
+
+- [ ] Company name, address, time zone, default currency
+- [ ] Fiscal year start month (used by all forecast reports)
+- [ ] Default language
+
+### 2. Business hours
+
+**Setup → Business Hours**:
+
+- [ ] Working days (e.g., Mon–Fri)
+- [ ] Working hours (e.g., 9 AM – 6 PM)
+- [ ] Holidays for the year
+
+Business hours drive [SLA calculations](/docs/service/sla-and-escalation) — e.g., "resolve within 8 business hours" uses these.
+
+### 3. Email setup
+
+**Setup → Email**:
+
+- [ ] Inbound email forwarding for cases (e.g., `support@yourdomain.com`)
+- [ ] Outbound email signature templates
+- [ ] DKIM / SPF for sender authentication
+
+## ✅ Day 2 — People
+
+### 4. User invites
+
+**Setup → Users**:
+
+- [ ] Import or invite all users
+- [ ] Assign each user a [profile](/docs/administration/profiles)
+- [ ] Assign each user a role in the hierarchy
+- [ ] Set a manager for each user (drives approval routing)
+
+### 5. Role hierarchy
+
+**Setup → Roles**:
+
+- [ ] Confirm the default hierarchy (Executive → Directors → Managers → Reps) matches your org
+- [ ] Add custom roles for regional or specialised teams
+
+### 6. Profiles & permissions
+
+**Setup → Profiles**:
+
+- [ ] Review the six built-in profiles (see [Profiles](/docs/administration/profiles))
+- [ ] Clone and customise if needed (e.g., a *Junior Sales Rep* profile with limited delete rights)
+
+## ✅ Day 3 — Data foundations
+
+### 7. Account & contact ownership
+
+- [ ] Decide org-wide default for accounts and contacts (private vs public read vs public read/write) — see [Sharing & security](/docs/administration/sharing-and-security)
+- [ ] Configure account teams if you sell as pods rather than solo reps
+
+### 8. Lead routing
+
+**Setup → Lead Settings**:
+
+- [ ] Default lead owner / queue (when no rule matches)
+- [ ] Routing rules (by region, industry, source)
+- [ ] Auto-response email to new leads from the web form
+
+### 9. Product catalog
+
+- [ ] Import [products](/docs/revenue/products) — at minimum: code, name, list price, billing type
+- [ ] Set up product manager (the contact for each product line)
+- [ ] Upload datasheets (feeds the AI Copilot's Product Information knowledge base)
+
+## ✅ Day 4 — Process
+
+### 10. Opportunity stages
+
+Confirm the 7-stage default pipeline matches your sales process. Stages and probabilities are:
+
+| Stage | Probability |
+| --- | --- |
+| Prospecting | 10% |
+| Qualification | 25% |
+| Proposal | 40% |
+| Negotiation | 60% |
+| Closed Won | 100% |
+| Closed Lost | 0% |
+| Closed Without Decision | 0% |
+
+If your process differs, adjust in **Setup → Opportunity → Stages**.
+
+### 11. Case SLAs
+
+Confirm the default [SLA matrix](/docs/service/sla-and-escalation):
+
+| Priority | First response | Resolution |
+| --- | --- | --- |
+| Critical | 1 hour | 4 hours |
+| High | 2 hours | 8 hours |
+| Medium | 4 hours | 2 business days |
+| Low | 1 business day | 7 business days |
+
+Adjust if your support promise differs.
+
+### 12. Approval process
+
+- [ ] Confirm the discount approval threshold ($500K default) — see [Approvals](/docs/revenue/approvals)
+- [ ] Confirm approvers (manager + director by role)
+- [ ] Test by submitting a sample opportunity
+
+## ✅ Day 5 — Knowledge & AI
+
+### 13. Knowledge bases
+
+- [ ] Seed **Support Knowledge** with your top 20 FAQ articles
+- [ ] Seed **Sales Knowledge** with your sales playbook
+- [ ] Seed **Competitive Intel** with battle cards for your top 5 competitors
+- [ ] Product datasheets — already in product records (synced automatically)
+
+See [Knowledge Bases](/docs/ai-copilot/knowledge-bases).
+
+### 14. AI Copilot
+
+- [ ] Confirm the AI Copilot is enabled (Setup → AI)
+- [ ] Choose which skills to enable
+- [ ] Run a sample query (*"Give me Customer 360 on [test account]"*) to verify
+- [ ] Configure data sensitivity rules — which fields the Copilot must redact
+
+## ✅ Day 6 — Dashboards & reports
+
+- [ ] Pin **CRM Overview** as the home dashboard for everyone
+- [ ] Set up team-specific dashboards (sales / service / exec)
+- [ ] Schedule weekly subscription emails for managers
+- [ ] Review the [standard reports](/docs/analytics/reports) and customise filters
+
+## ✅ Day 7 — Launch
+
+- [ ] Run the **migration check** (all imported records have owners and required fields)
+- [ ] Run a **smoke test**: create a lead → convert → opportunity → quote → close-won → contract
+- [ ] Train users on their daily workflow (45-minute role-based sessions)
+- [ ] Set up an internal **#hotcrm-help** channel for questions
+
+## After launch
+
+- **Week 2**: Review dashboard usage and adoption metrics.
+- **Month 1**: First retrospective — what's working, what's not.
+- **Quarterly**: Review profiles, sharing rules, knowledge bases for drift.
+
+## Need help?
+
+- [Sharing & security](/docs/administration/sharing-and-security) — most "I can't see X" questions
+- [Profiles](/docs/administration/profiles) — most "I can't do X" questions
+- [Automation](/docs/administration/automation) — for adding new business rules

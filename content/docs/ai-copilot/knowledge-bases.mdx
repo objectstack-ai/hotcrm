@@ -1,0 +1,137 @@
+---
+title: Knowledge Bases
+description: The four searchable knowledge libraries that ground the AI Copilot — sales playbooks, product info, support articles, competitive intel.
+---
+
+# Knowledge Bases
+
+A **knowledge base** is a searchable library of documents and articles the AI Copilot reads from when answering questions. HotCRM ships with **four** built-in knowledge bases, each tuned for a specific kind of question.
+
+This is the layer that makes the Copilot's answers **grounded** — every fact, talking point, or article suggestion is traceable to a source document.
+
+## The four built-in knowledge bases
+
+| Knowledge base | Used by | What's in it |
+| --- | --- | --- |
+| 📘 **Sales Knowledge** | Sales Copilot | Playbooks, objection handling, qualification frameworks, win/loss notes |
+| 📗 **Product Information** | Sales + Service | Product datasheets, feature specs, release notes, FAQs |
+| 🎧 **Support Knowledge** | Service Copilot | KB articles, troubleshooting guides, runbooks |
+| ⚔️ **Competitive Intel** | Sales | Competitor profiles, battle cards, win/loss analyses |
+
+## How they work (in plain terms)
+
+Each knowledge base is a **library of documents** that the Copilot can search semantically — meaning it finds documents by meaning, not just keyword. When the Copilot needs to answer a question, it:
+
+1. **Searches** the relevant knowledge bases for matching content.
+2. **Picks** the top 3-5 most relevant passages.
+3. **Grounds** its answer in those passages and **cites** them in the response.
+
+If the knowledge base doesn't have a good match, the Copilot **says so** rather than guessing. This is the *"I don't know, but here's what I found"* behavior — far safer than hallucination.
+
+## 📘 Sales Knowledge
+
+The sales rep's playbook, in searchable form.
+
+**Typical contents**:
+
+- Discovery-call frameworks (BANT, MEDDIC, SPIN).
+- Objection-handling cheat sheets.
+- Email templates by stage and persona.
+- Deal-stage exit criteria.
+- Forecast definitions (commit vs best case vs pipeline).
+- Win-stories — examples of successful deals to mirror.
+
+**Used by**:
+
+- Lead Qualification skill — to score on the agreed framework.
+- Email Drafting skill — to match your company's voice.
+- Revenue Forecasting skill — for the methodology.
+
+## 📗 Product Information
+
+Everything about what you sell. Read by both sales and service copilots.
+
+**Typical contents**:
+
+- Product datasheets (auto-pulled from the [product catalog](/docs/revenue/products)).
+- Feature specifications.
+- Pricing and packaging.
+- Release notes and changelogs.
+- Integration guides.
+- Common how-to articles.
+
+**Used by**:
+
+- Email Drafting — to insert accurate product details into customer emails.
+- Case Triage — to find the right product context for a case.
+- Customer 360 — to summarise what a customer owns.
+
+## 🎧 Support Knowledge
+
+The service team's article library.
+
+**Typical contents**:
+
+- Troubleshooting articles ("Symptom → Cause → Fix").
+- Step-by-step setup guides.
+- Error-code explanations.
+- Known issues with workarounds.
+- Internal runbooks (private to staff).
+
+**Used by**:
+
+- Case Triage skill — to recommend the top 3 matching articles.
+- Email Drafting skill — to ground customer-facing fixes in approved guidance.
+
+See also: [Service › Knowledge Base](/docs/service/knowledge-base) for how agents read, write, and rate these articles.
+
+## ⚔️ Competitive Intel
+
+Battle cards and competitor research — typically maintained by product marketing.
+
+**Typical contents**:
+
+- Competitor profiles (positioning, pricing, target market).
+- Feature-by-feature comparisons.
+- Battle cards by competitor (strengths, weaknesses, talk-tracks).
+- Win/loss analysis themes.
+- Quotes from won deals against each competitor.
+
+**Used by**:
+
+- Email Drafting skill — when a customer mentions a competitor.
+- Lead Qualification skill — when a lead's source suggests they're evaluating alternatives.
+
+## How content gets into a knowledge base
+
+Three ways:
+
+1. **Manual upload** — admins or knowledge managers upload PDFs, Word docs, Markdown.
+2. **Sync from objects** — product datasheets sync automatically from the [product catalog](/docs/revenue/products); KB articles sync from the [Knowledge Base object](/docs/service/knowledge-base).
+3. **External integrations** — pull from Confluence, Notion, Google Drive, SharePoint (via connectors).
+
+## How content stays fresh
+
+- **Auto re-indexing** runs nightly to pick up edits.
+- **Manual re-index** button in the admin console for urgent updates.
+- **Version tracking** — the Copilot always cites the latest version.
+
+## What every knowledge base respects
+
+- **Permissions** — internal-only articles aren't surfaced to customer-facing answers.
+- **Recency** — newer documents are weighted higher than stale ones.
+- **Source citations** — every answer links back to the originating document so the user can verify.
+
+## Tips for admins
+
+- ✅ **Audit the citations** — at least monthly, review what articles the Copilot is citing. Frequently-cited articles deserve extra polish; never-cited articles may be dead weight.
+- ✅ **Watch the "no result" log** — questions the Copilot couldn't answer are gold for prioritising new content.
+- ✅ **Tag content with audience** (sales / service / customer-facing / internal) so the Copilot picks the right voice.
+
+## Tips for knowledge managers
+
+- ✅ Keep articles **short and scannable** — the Copilot extracts passages, not whole documents.
+- ✅ Include **explicit symptoms** ("Error 503", "Cannot login") at the top — improves match quality.
+- ✅ **Date your release-note articles** clearly — the Copilot uses dates to prefer current info.
+
+See [Customization › AI Skills](/docs/customization/ai-skills) for how to wire a new skill to a knowledge base.

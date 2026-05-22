@@ -1,0 +1,177 @@
+---
+title: Cubes
+description: The data layer that powers HotCRM analytics — four built-in cubes for self-service slice and dice.
+---
+
+# Cubes
+
+A **cube** is a pre-modeled, multi-dimensional dataset designed for fast analytics. Cubes are the layer underneath [dashboards](/docs/analytics/dashboards) and [reports](/docs/analytics/reports) — they're what makes analytics fast, consistent, and self-service.
+
+## Why cubes (instead of querying raw tables)
+
+Cubes solve three problems:
+
+1. **Consistency** — *"bookings"* means the same thing in every dashboard.
+2. **Speed** — pre-aggregated, sub-second response on millions of records.
+3. **Self-service** — business users can slice and dice without writing queries.
+
+## The four built-in cubes
+
+| Cube | Built for | Slices by |
+| --- | --- | --- |
+| 💰 **Sales Cube** | Revenue analysis | Account, owner, region, product, period |
+| 📊 **Pipeline Cube** | Pipeline analysis | Stage, owner, age, source, probability |
+| 🎧 **Service Cube** | Case and SLA analysis | Priority, status, agent, origin, account |
+| 📣 **Marketing Cube** | Campaign performance | Campaign, source, channel, period |
+
+## 💰 Sales Cube
+
+The cube that powers all "how much did we book?" questions.
+
+**Measures**:
+- Bookings (closed-won $)
+- Deal count
+- Average deal size
+- Win rate
+- Sales cycle (days)
+- Average discount %
+
+**Dimensions**:
+- Account (and account tier, industry, size)
+- Owner (and team, region)
+- Product (and category, family)
+- Period (day, week, month, quarter, year)
+- Won/Lost reason
+- Lead source
+
+**Sample questions**:
+- *"Bookings by region by quarter."*
+- *"Win rate by lead source over the last year."*
+- *"Average deal size by product family."*
+
+## 📊 Pipeline Cube
+
+For "what's in the funnel?" questions. A snapshot view + a time-series view.
+
+**Measures**:
+- Pipeline value ($)
+- Pipeline count
+- Weighted pipeline (value × probability)
+- Days in stage
+- Days in pipeline
+
+**Dimensions**:
+- Stage
+- Owner (and team)
+- Source
+- Product
+- Probability bucket (commit / best case / pipeline)
+- Snapshot date (for trend analysis)
+
+**Sample questions**:
+- *"Pipeline by stage today vs 30 days ago."*
+- *"Average days-in-stage for the Proposal stage."*
+- *"Coverage ratio (pipeline ÷ quota) by team."*
+
+## 🎧 Service Cube
+
+The cube behind every case-related dashboard and SLA report.
+
+**Measures**:
+- Open case count
+- New case count
+- Resolved case count
+- First-response time (minutes)
+- Resolution time (hours)
+- SLA met % (first response and resolution)
+- CSAT score
+
+**Dimensions**:
+- Status, priority, category, origin
+- Agent (and team)
+- Account (and tier)
+- Product
+- Period
+
+**Sample questions**:
+- *"SLA met % by priority by month."*
+- *"Cases by category by product — which products generate the most support load?"*
+- *"Reopened cases by agent — quality signal."*
+
+## 📣 Marketing Cube
+
+Powers campaign and lead-source ROI analysis.
+
+**Measures**:
+- Members enrolled
+- Members responded
+- Conversion count (member → opportunity)
+- Sourced revenue (closed-won where campaign was first touch)
+- Influenced revenue (closed-won where campaign was any touch)
+- Campaign spend
+- Cost per lead, cost per opportunity, ROI %
+
+**Dimensions**:
+- Campaign (and type)
+- Channel (email, webinar, event, etc.)
+- Period
+- Lead source
+- Persona (job role)
+
+**Sample questions**:
+- *"ROI by campaign type."*
+- *"Cost per opportunity by channel."*
+- *"Conversion rate by persona."*
+
+## How users interact with cubes
+
+The cube UI lets anyone:
+
+1. **Pick** a cube.
+2. **Drag** dimensions to rows and columns.
+3. **Pick** measures to display.
+4. **Filter** to narrow the view.
+5. **Pivot** instantly to see the data differently.
+6. **Chart** the result as bar, line, area, heatmap, or table.
+7. **Save** the view as a report.
+8. **Pin** the view to a dashboard.
+
+No SQL, no formulas — just drag and drop.
+
+## How cubes stay fresh
+
+- **Incremental refresh** every few minutes for hot data (today's activity).
+- **Full refresh** nightly.
+- **Snapshots** for time-series analysis (e.g., daily pipeline snapshots that power trend charts).
+
+Refresh status is visible in the admin console.
+
+## AI Copilot and cubes
+
+The AI Copilot reads directly from cubes — when you ask *"What's our win rate by region?"*, it's the Sales Cube responding. This means:
+
+- **AI answers are consistent** with dashboards and reports (same source of truth).
+- **AI can explain** the answer by referencing the cube measure and dimension.
+- **Admins can audit** AI queries through the cube access log.
+
+## Custom cubes
+
+Admins and developers can build new cubes for domain-specific analysis:
+
+- A **Subscriptions Cube** for SaaS revenue (ARR, NRR, churn).
+- A **Renewal Cube** for renewal pipeline visibility.
+- A **Partner Cube** if you sell through channels.
+
+See [Customization › Extending Objects](/docs/customization/extending-objects) for how to define new cubes, dimensions, and measures.
+
+## Tips for analysts
+
+- ✅ Start every new analysis from a cube — don't build dashboards on raw queries.
+- ✅ Use **snapshot dimensions** for trend questions ("How did this metric change?").
+- ✅ Save **shared views** that the team can subscribe to.
+
+## Tips for admins
+
+- ✅ When a measure is computed inconsistently across reports, **promote it to a cube measure** — single source of truth.
+- ✅ Monitor cube refresh times — if they slow down, prune unused dimensions.
+- ✅ Document each cube's measures and dimensions for end users — discoverability is the #1 adoption blocker.

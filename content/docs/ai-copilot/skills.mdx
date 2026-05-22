@@ -1,0 +1,111 @@
+---
+title: Skills
+description: The full library of AI Copilot skills — what each one does, where it appears, and what data it uses.
+---
+
+# Skills
+
+A **skill** is a bite-sized AI ability the Copilot can perform — like *"qualify this lead"* or *"draft a customer reply"*. Skills are the building blocks of both the [Sales Copilot](/docs/ai-copilot/sales-copilot) and the [Service Copilot](/docs/ai-copilot/service-copilot).
+
+## Why skills, not "one big AI"
+
+Breaking the Copilot into skills makes it:
+
+- **Predictable** — each skill has a defined input, output, and behavior.
+- **Auditable** — admins can see what each skill reads from and writes to.
+- **Improvable** — you can refine one skill (e.g., better lead qualification) without touching others.
+- **Permission-aware** — skills inherit the user's record visibility.
+
+## Built-in skills
+
+HotCRM ships with five core skills:
+
+| Skill | Used by | What it does |
+| --- | --- | --- |
+| **🎯 Lead Qualification** | Sales | Scores a lead on BANT, recommends next action |
+| **✍️ Email Drafting** | Sales + Service | Drafts a context-aware email or reply |
+| **📈 Revenue Forecasting** | Sales | Rolls up pipeline into commit / best-case / pipeline buckets |
+| **🔭 Customer 360°** | Sales + Service | One-page summary of an account or contact |
+| **🚦 Case Triage** | Service | Suggests priority, category, queue, and matching KB articles |
+
+### 🎯 Lead Qualification
+
+| | |
+| --- | --- |
+| **Input** | A lead record |
+| **Reads** | Lead fields, campaign engagement, matched account history |
+| **Output** | Rating (Hot/Warm/Cold), BANT score, recommended status, rationale |
+| **Writes** | Updates `rating` and `status` if user accepts |
+| **Knowledge base** | Sales Knowledge |
+
+### ✍️ Email Drafting
+
+| | |
+| --- | --- |
+| **Input** | A record (lead, contact, opportunity, case) + a goal sentence |
+| **Reads** | Record fields, related activities, contact history |
+| **Output** | Draft email with subject + body |
+| **Writes** | Nothing automatically — user reviews and sends |
+| **Knowledge base** | Sales Knowledge (sales context), Support Knowledge (service context), Product Information (technical content) |
+
+### 📈 Revenue Forecasting
+
+| | |
+| --- | --- |
+| **Input** | A user (or team) + a period (this quarter, next quarter, custom) |
+| **Reads** | Opportunities visible to the user, opportunity history |
+| **Output** | Forecast bucketed by Closed / Commit / Best Case / Pipeline + risk callouts |
+| **Writes** | Nothing — read-only |
+| **Knowledge base** | Sales Knowledge (for forecast methodology) |
+
+### 🔭 Customer 360°
+
+| | |
+| --- | --- |
+| **Input** | An account or contact |
+| **Reads** | Account, contacts, opportunities, contracts, cases, recent activities, campaign memberships |
+| **Output** | Structured snapshot with sections for sales, service, contracts, and engagement |
+| **Writes** | Nothing — read-only |
+| **Knowledge base** | None — purely data-driven |
+
+### 🚦 Case Triage
+
+| | |
+| --- | --- |
+| **Input** | A new case |
+| **Reads** | Case subject/description, contact and account context, prior cases, product |
+| **Output** | Suggested priority, category, team, top 3 KB articles, draft acknowledgment |
+| **Writes** | Updates `priority`, `category`, `queue` if user accepts |
+| **Knowledge base** | Support Knowledge, Product Information |
+
+## How skills work together
+
+Skills can call other skills. For example:
+
+- The Service Copilot's *Case Triage* skill can invoke *Customer 360* to check if the customer is high-value before assigning priority.
+- The Sales Copilot's *Email Drafting* skill can invoke *Customer 360* to ground the email in real account context.
+
+This composition is automatic — you ask one question, the Copilot wires up whatever skills it needs.
+
+## What every skill respects
+
+- **Sharing rules** — a skill running for user X can only read records visible to X.
+- **Field-level security** — restricted fields are hidden from skill input.
+- **Audit log** — every skill invocation, with input and output, is logged for review.
+- **Confirmation** — any skill that *writes* requires explicit user confirmation before commit.
+
+## Adding your own skills
+
+Admins and developers can build custom skills — for example:
+
+- *Generate a renewal pitch* for a contract about to expire.
+- *Score account health* combining usage, NPS, and case volume.
+- *Draft a release-notes email* when a product hits a milestone.
+
+See [Customization › AI Skills](/docs/customization/ai-skills) for how to define a new skill, what knowledge bases it can use, and how to test it.
+
+## Tips for admins
+
+- ✅ **Monitor skill usage** in the AI dashboard — which skills are used most, which have low acceptance.
+- ✅ **Tune knowledge bases** for the skills that under-perform — most accuracy issues are knowledge issues.
+- ✅ **Disable skills** that don't fit your business — each skill can be toggled in admin settings.

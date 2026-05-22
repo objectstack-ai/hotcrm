@@ -1,0 +1,98 @@
+---
+title: Customization
+description: For developers — extend HotCRM with custom objects, fields, AI skills, and UI components.
+---
+
+# Customization
+
+This section is for **developers and technical implementers** extending HotCRM with code. If you're a CRM admin configuring profiles and workflows, head to [Administration](/docs/administration/index) instead.
+
+## What you can build
+
+| Area | What it covers |
+| --- | --- |
+| [**Extending objects**](/docs/customization/extending-objects) | Adding fields, custom objects, hooks, flows, validation, sharing |
+| [**AI skills**](/docs/customization/ai-skills) | Building new AI Copilot skills wired to knowledge bases |
+| [**UI extensions**](/docs/customization/ui-extensions) | Custom pages, list views, dashboards, dropdown actions |
+
+## Prerequisites
+
+- **TypeScript** and Node.js fundamentals.
+- Familiarity with the **@objectstack/runtime** engine (HotCRM is built on it).
+- Access to the **HotCRM source repo** and a development sandbox.
+
+## The HotCRM file convention
+
+HotCRM follows the *"file suffix protocol"* — each kind of artifact lives in a file with a specific suffix:
+
+| Suffix | What it defines |
+| --- | --- |
+| `*.object.ts` | Data model — fields, validation, sharing |
+| `*.hook.ts` | Server-side business logic on data lifecycle |
+| `*.action.ts` | API endpoints and AI-callable tools |
+| `*.flow.ts` | Multi-step automation |
+| `*.skill.ts` | An AI Copilot skill definition |
+| `*.agent.ts` | A composite AI agent (multiple skills + knowledge) |
+| `*.page.ts` | A UI page layout |
+| `*.view.ts` | A list view |
+| `*.dashboard.ts` | A dashboard definition |
+| `*.sharing.ts` | Sharing rules (criteria-based or owner-based) |
+| `*.approval.ts` | Approval process definition |
+| `*.statemachine.ts` | State transitions |
+| `*.permission.ts` | Permission sets |
+
+All files live under `packages/{package}/src/`. Names are `snake_case`.
+
+## Project structure
+
+```
+hotcrm/
+├── packages/
+│   ├── crm/           # Sales (account, lead, contact, opportunity, ...)
+│   ├── finance/       # Revenue (contract, invoice)
+│   ├── products/      # Product catalog
+│   ├── service/       # Cases, knowledge base
+│   ├── marketing/     # Campaigns
+│   └── ai/            # Copilot agents and skills
+└── apps/
+    └── docs/          # This documentation site
+```
+
+Add your customization in **its own package** (e.g., `packages/acme-crm-extension/`) to keep core HotCRM upgradable.
+
+## Where to start
+
+1. **Set up a sandbox** — clone the repo, install deps, run the dev environment.
+2. **Read** [Extending Objects](/docs/customization/extending-objects) for the data layer.
+3. **Read** [AI Skills](/docs/customization/ai-skills) for Copilot extensions.
+4. **Read** [UI Extensions](/docs/customization/ui-extensions) for the front-end.
+5. **Validate** every metadata file with the corresponding `@objectstack/spec` schema before committing.
+
+## Schema validation
+
+Every metadata file must validate against an `@objectstack/spec` schema:
+
+| File type | Schema |
+| --- | --- |
+| `*.object.ts` | `ObjectSchema.parse()` from `@objectstack/spec/data` |
+| `*.page.ts` | `PageSchema` from `@objectstack/spec/ui` |
+| `*.flow.ts` | `WorkflowRuleSchema.parse()` from `@objectstack/spec/automation` |
+| `*.statemachine.ts` | `StateMachineSchema.parse()` from `@objectstack/spec/automation` |
+| `*.skill.ts` | Skill schema from `@objectstack/spec/ai` |
+| `*.permission.ts` | `PermissionSetSchema.parse()` from `@objectstack/spec/security` |
+
+CI fails if validation fails — so you'll know immediately.
+
+## Golden rules
+
+- ✅ **Don't fork core packages** — extend with hooks and new objects in your own package.
+- ✅ **Use ObjectQL, not SQL** — `broker.find('opportunity', {...})` is the only supported data access.
+- ✅ **Snake_case** for object and field names.
+- ✅ **Validate everything** against `@objectstack/spec` schemas.
+- ✅ **Test in sandbox** before deploying to production.
+
+## Next
+
+- [Extending Objects](/docs/customization/extending-objects)
+- [AI Skills](/docs/customization/ai-skills)
+- [UI Extensions](/docs/customization/ui-extensions)

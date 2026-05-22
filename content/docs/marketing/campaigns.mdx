@@ -1,0 +1,124 @@
+---
+title: Campaigns
+description: Plan, launch, and measure marketing initiatives — emails, webinars, events, content and more.
+---
+
+# Campaigns
+
+A **campaign** is any marketing initiative — an email blast, a webinar, a trade show booth, a content download, a paid social ad campaign. Each campaign has a budget, a target audience, a duration, and a measurable outcome (revenue, leads, opportunities).
+
+## The 4 campaign statuses
+
+| Status | What it means |
+| --- | --- |
+| ⚪ **Planning** | Being designed — audience, budget, content *(default)* |
+| 🟠 **In Progress** | Live — members are enrolled, engagement is being tracked |
+| 🟢 **Completed** | Finished — metrics are final, ROI is calculated |
+| 🔴 **Aborted** | Cancelled before completion |
+
+The system auto-moves campaigns from *In Progress* to *Completed* the day after their end date — so you don't have to remember.
+
+## The 8 campaign types
+
+| Type | Use for |
+| --- | --- |
+| **Email** *(default)* | Newsletters, drip programmes, broadcast emails |
+| **Webinar** | Virtual events with registration and attendance tracking |
+| **Trade Show** | In-person booth presence at industry events |
+| **Conference** | Speaking slots, sponsorships |
+| **Direct Mail** | Physical letters, gifts, packages |
+| **Social Media** | Paid or organic social campaigns |
+| **Content Marketing** | Blog posts, ebooks, whitepapers, gated content |
+| **Partner Marketing** | Joint campaigns with channel partners |
+
+And 5 primary channels: **Digital · Social · Email · Events · Partner**. Pick the channel that best describes how the campaign reaches the audience — it's used by the channel-mix report.
+
+## What a campaign record stores
+
+The detail screen has several sections:
+
+| Section | Fields |
+| --- | --- |
+| **Basic** | Campaign code, name, description, type, channel, status |
+| **Schedule** | Start date, end date |
+| **Budget** | Budgeted cost, actual cost, expected revenue, actual revenue *(rolled up)* |
+| **Audience** | Target size, number sent |
+| **Engagement** *(rollup)* | Opens, clicks, responses, conversions |
+| **Attribution** *(rollup)* | Leads generated, opportunities created, closed-won revenue |
+
+The **Campaign Code** is auto-generated (e.g., CAMP-000123) so every campaign has a unique short reference for email subject lines and tracking URLs.
+
+## Built-in rules
+
+- **End date must be on or after the start date** — basic sanity check.
+- **Over-budget warning** — if actual cost exceeds budgeted cost, a warning shows on the record. Doesn't block saves, but flags the campaign for finance review.
+
+## What happens automatically
+
+- **Auto-complete** — at 2 AM daily, any *In Progress* campaign past its end date is marked *Completed*. The campaign's final metrics (sent, responded, converted, ROI) snapshot at that moment.
+- **Member enrollment** — when a campaign goes *In Progress*, the [Campaign Enrollment flow](#campaign-enrollment-flow) runs every Monday at 9 AM and adds new matching audience members.
+- **ROI calculation** — the campaign's actual revenue is the rolled-up sum of related closed-won opportunity amounts. ROI = (actual revenue − actual cost) ÷ actual cost.
+
+## Campaign enrollment flow
+
+When you launch a campaign (status → *In Progress*), the system bulk-enrolls your target audience as [campaign members](/docs/marketing/campaign-members).
+
+The flow runs on a schedule (default Monday 9 AM) and:
+
+1. Reads the campaign's target audience criteria (e.g., "all leads in Technology industry with rating ≥ 3").
+2. Finds matching leads and contacts.
+3. Creates a campaign member record per person with status = *Sent*.
+4. Optionally triggers the campaign's send action (email send, mailer dispatch, etc.).
+
+For real-time campaigns (e.g., a webinar with a registration form), you can also add members **manually** from the campaign detail page or via the **Add to Campaign** action on any lead/contact.
+
+## Measuring a campaign
+
+The right-hand panel of the campaign detail page shows:
+
+- **Sent** — number of members enrolled.
+- **Open rate** — % of members with status ≥ Opened.
+- **Click rate** — % of members with status ≥ Clicked.
+- **Response rate** — % of members with status ≥ Responded.
+- **Conversion rate** — % of members with status = Converted (i.e., became opportunities).
+- **Opportunities generated** — count of opportunities with this campaign as the source.
+- **Pipeline value** — sum of those opportunities' amount.
+- **Closed-won revenue** — sum of those opportunities' amount where stage = closed_won.
+- **ROI** — (closed-won revenue − actual cost) ÷ actual cost.
+
+## Attribution: from campaign to revenue
+
+The link is the **Source Campaign** lookup on the opportunity. When a sales rep converts a lead that came from a campaign — or manually sets the source campaign on an opportunity — the system credits the revenue back to the campaign.
+
+For deals influenced by multiple campaigns (multi-touch), the convention is to record the **last-touch** campaign (the one closest to conversion). For full multi-touch attribution, consider extending the model with a campaign-influence join object — see [Customization](/docs/customization/extending-objects).
+
+## Standard list views
+
+- **Active Campaigns** — status = *In Progress*.
+- **Upcoming Campaigns** — start date in the future, status = *Planning*.
+- **Completed This Quarter** — status = *Completed* AND end date in current quarter.
+- **Over Budget** — actual cost > budgeted cost.
+- **By Type** — grouped.
+- **Best ROI** — sorted by ROI descending.
+
+## Sharing — campaigns are public by default
+
+Campaigns are **public read-only** for the whole organisation. Anyone in sales can see what marketing is running, and use that context in customer conversations. Edit access is reserved for marketing users.
+
+## Tips for marketers
+
+- ✅ **Set the expected revenue** at launch — it's how finance forecasts the campaign's contribution.
+- ✅ **Record actual cost as soon as you know it** — over-budget warnings can't help if the field is empty.
+- ✅ **Update the campaign status to *Completed*** if you finish early; don't wait for the auto-complete.
+- ✅ **Document what worked** in the description — future you and future colleagues will thank you.
+
+## Tips for sales reps
+
+- ✅ When a lead arrives, check whether they're in a campaign — it tells you what they've already seen.
+- ✅ Set **Source Campaign** on opportunities you closed — marketing can't measure ROI without this.
+
+## Tips for admins
+
+- The auto-complete cron (2 AM daily) and the enrollment cron (Monday 9 AM) are configurable. See [Administration › Automation](/docs/administration/automation).
+- To add a new campaign type or channel, edit the campaign object's picklists. See [Customization › Extending Objects](/docs/customization/extending-objects).
+- For multi-touch attribution, see the customisation guide.

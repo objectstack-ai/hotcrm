@@ -1,0 +1,10 @@
+{
+  "title": "Revenue Cloud",
+  "defaultOpen": true,
+  "pages": [
+    "index",
+    "products",
+    "contracts",
+    "approvals"
+  ]
+}

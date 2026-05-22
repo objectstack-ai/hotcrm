@@ -1,0 +1,122 @@
+---
+title: Dashboards
+description: Four ready-made dashboards — CRM overview, sales pipeline, service operations, and executive scorecard.
+---
+
+# Dashboards
+
+HotCRM ships with four dashboards. Each one is built for a specific role and answers the questions that role asks every day.
+
+## The four dashboards
+
+| Dashboard | Built for | Answers |
+| --- | --- | --- |
+| 🏠 **CRM Overview** | Everyone | "What's going on across the business today?" |
+| 📈 **Sales Dashboard** | Sales reps, managers | "How healthy is my pipeline?" |
+| 🎧 **Service Dashboard** | Service agents, managers | "How are we doing on cases and SLAs?" |
+| 👔 **Executive Scorecard** | Execs, finance | "Are we hitting the number?" |
+
+All four respect [sharing rules](/docs/administration/sharing-and-security) — what you see depends on your role.
+
+## 🏠 CRM Overview
+
+The cross-functional home dashboard, visible by default to all users.
+
+**Tiles**:
+
+- **Open Leads** — count, by status.
+- **New Leads This Week** — trend vs prior week.
+- **My Open Opportunities** — count and value.
+- **Cases Awaiting Response** — count, with SLA risk highlights.
+- **Top 5 Accounts by Pipeline** — bar chart.
+- **Recent Activity** — last 24 hours of calls, meetings, emails (yours).
+
+Great as a daily start-of-day landing page.
+
+## 📈 Sales Dashboard
+
+The sales team's daily operational dashboard.
+
+**Tiles**:
+
+- **Pipeline by Stage** — funnel chart showing $ by stage.
+- **Forecast vs Quota** — gauge.
+- **Closed Won this Quarter** — running total with target line.
+- **Win Rate (last 90 days)** — percentage with trend.
+- **Average Deal Size** — current quarter vs last quarter.
+- **Average Sales Cycle** — days from creation to close (won deals).
+- **Top 10 Open Deals** — sortable table.
+- **Slipping Deals** — opportunities whose close date moved out this week.
+- **Activity Heatmap** — calls + meetings + emails per rep per day.
+
+Role-aware: reps see their own, managers see their team, directors see the rollup.
+
+## 🎧 Service Dashboard
+
+The service team's daily ops view.
+
+**Tiles**:
+
+- **Open Cases by Priority** — bar chart.
+- **Cases Approaching SLA** — table sorted by time-to-breach.
+- **Cases Breached** — last 7 days (with case owners).
+- **First Response Time** — average vs target.
+- **Resolution Time** — average vs target.
+- **Customer Satisfaction (CSAT)** — last 30 days, trend.
+- **Case Volume by Origin** — Email / Phone / Web / Chat / Portal.
+- **Top Case Categories** — to spot product issues.
+- **Agent Workload** — open cases per agent.
+
+The *Cases Approaching SLA* tile is the most-clicked widget on this dashboard — it's how agents prioritise.
+
+## 👔 Executive Scorecard
+
+The exec / finance view of the business.
+
+**Tiles**:
+
+- **Bookings This Quarter** — closed-won, vs plan and prior year.
+- **Pipeline Coverage** — pipeline ÷ remaining quota.
+- **Forecast Confidence** — commit + best case vs target.
+- **Net New ARR** — for subscription businesses.
+- **Renewals This Quarter** — coming up, renewed, lost.
+- **CSAT and NPS** — customer health.
+- **Customer Acquisition Cost** — campaign spend ÷ new customers.
+- **Top 10 Accounts by ACV** — annual contract value leaderboard.
+- **Pipeline Trend** — 4-week pipeline value chart.
+
+This dashboard is the basis for the weekly leadership review.
+
+## Personalising and creating dashboards
+
+Every user can:
+
+- **Pin** any dashboard as their landing page.
+- **Filter** the dashboard by date range, team, region, product.
+- **Drill in** to any tile to see the underlying records.
+- **Export** any tile to image or PDF.
+- **Subscribe** to receive a weekly PDF by email.
+
+Admins can:
+
+- Create new dashboards from the **Analytics › Dashboards › New** menu.
+- Pick widgets from the standard library or build custom ones from [cubes](/docs/analytics/cubes).
+- Set audience — who sees each dashboard by default.
+- Schedule snapshots (e.g., a quarterly QBR deck auto-generated).
+
+## Tips for managers
+
+- ✅ **Subscribe to the dashboard PDF** for your team — Monday 8 AM is a great cadence.
+- ✅ Use the **Slipping Deals** tile every Friday to plan the next week's deal-review calls.
+- ✅ Don't manage from email — manage from the dashboard. Email is for actions; the dashboard is for the truth.
+
+## Tips for execs
+
+- ✅ Build a **board view** dashboard from cubes — bookings, pipeline, churn, CSAT — one page.
+- ✅ Set up **threshold alerts** (e.g., pipeline coverage <2.5×) to get a nudge before it's a problem.
+
+## Tips for admins
+
+- ✅ When building dashboards, **start from cubes** rather than ad-hoc queries — they're faster and more consistent.
+- ✅ Encourage users to **clone and personalise** rather than rebuilding from scratch.
+- ✅ Audit dashboard usage quarterly — retire dashboards no one opens.

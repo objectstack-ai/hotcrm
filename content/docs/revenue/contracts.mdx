@@ -1,0 +1,129 @@
+---
+title: Contracts
+description: Signed agreements with customers — terms, value, renewals and the automatic expiration sweep.
+---
+
+# Contracts
+
+A **contract** is the legal agreement between your company and a customer — what they buy, for how long, at what price, on what payment terms. In HotCRM, contracts are the **system of record for active customer relationships**: once activated, they unlock the *Customer* status on the account.
+
+## The 5 statuses
+
+| Status | Color | What it means |
+| --- | --- | --- |
+| ⚪ **Draft** | Gray | Being negotiated, not signed |
+| 🔵 **In Approval** | Blue | Sent for internal sign-off |
+| 🟢 **Activated** | Green | Signed and in force |
+| 🟠 **Expired** | Orange | End date has passed |
+| 🔴 **Terminated** | Red | Cancelled early |
+
+Activation is the key transition — it triggers the account to be promoted to *Customer*.
+
+## The 6 contract types
+
+| Type | Use for |
+| --- | --- |
+| **Subscription** | Recurring access — SaaS, software subs |
+| **Service** | Time-bounded services — consulting, training |
+| **License** | Perpetual software licenses |
+| **Partnership** | Reseller, referral, channel partner agreements |
+| **NDA** | Non-disclosure (zero-value) |
+| **MSA** | Master Service Agreement — umbrella for many SOWs |
+
+## What a contract record stores
+
+| Section | Fields |
+| --- | --- |
+| **Parties & Type** | Contract number *(auto)*, account, type, opportunity *(if originated from a deal)* |
+| **Status & Dates** | Status, start date, end date, signed date, activation date |
+| **Financials** | Contract value, billing frequency, payment terms |
+| **Renewal** | Auto-renewal flag, renewal notice (days), renewal terms |
+| **Ownership** | Contract owner, account exec |
+| **Documents** | Signed contract (file), order form (file) |
+
+## Billing frequency
+
+How often the customer is invoiced:
+
+- **One-Time**
+- **Monthly**
+- **Quarterly**
+- **Annual**
+- **Custom**
+
+## Payment terms
+
+When the customer pays:
+
+- **Net 15** — within 15 days of invoice
+- **Net 30** *(default)* — within 30 days
+- **Net 45 / Net 60 / Net 90**
+- **Due on Receipt** — immediately
+- **Prepaid** — paid upfront
+
+## Renewals
+
+Three fields drive renewals:
+
+- **Auto-Renew** — does the contract roll over automatically?
+- **Renewal Notice Days** — how many days before end-date to alert the team (e.g., 60 days)
+- **Renewal Terms** — free-text instructions ("renew at 5% uplift unless customer opts out")
+
+When the contract enters its renewal window, the system creates a follow-up task and emails the contract owner.
+
+## What the system does automatically
+
+### On contract activation
+The owner promotes the contract to *Activated*:
+
+1. **Account status → Customer** if it was a Prospect.
+2. **Customer Since date** stamped on the account if blank.
+3. **Welcome email** sent to the primary contact (configurable).
+4. **Notification** to the account owner.
+
+### Daily — expiration sweep
+Each night at midnight the system finds *Activated* contracts whose end date has passed:
+
+1. **Status → Expired**.
+2. **Notification** to the contract owner.
+3. **Notification** to the account owner.
+
+### Daily — renewal reminder
+At 8 AM the system finds contracts entering their renewal window (within `renewal_notice_days` of end date) and sends a reminder to the contract owner with a one-click action to "Create Renewal Opportunity".
+
+### Manual termination
+The owner can change status to *Terminated*. This is a one-way action — terminated contracts can't be reactivated. Audit log records who and when.
+
+## Built-in rules
+
+- **End date must be after start date** — basic sanity check.
+- **Contract value must be zero or positive** — NDAs can be $0.
+- **Activated contracts cannot be deleted** — change status to Terminated instead.
+
+## Sharing
+
+Contracts follow the account's sharing — if you can see the account, you can see its contracts. The contract owner, the account owner, and the account team have edit access. Read access flows up the role hierarchy.
+
+## Standard list views
+
+- **My Active Contracts** — `owner = me AND status = Activated`.
+- **Expiring in 60 Days** — `end_date <= TODAY + 60 AND status = Activated`.
+- **Up for Renewal** — within renewal-notice window.
+- **Expired This Month** — `status = Expired AND last_modified IN this month`.
+- **Pending Activation** — `status IN [Draft, In Approval]`.
+
+## Tips for contract owners
+
+- ✅ **Attach the signed PDF** when activating — auditors will thank you.
+- ✅ **Set Renewal Notice Days = 90** for enterprise deals — gives you a full quarter to negotiate.
+- ✅ **Use Renewal Terms field** to capture the deal — "price-locked for 3 years; 5% uplift on renewal".
+
+## Tips for sales reps
+
+- ✅ When a quote is accepted and you create the contract, the **opportunity link** is pre-filled — keep it; it powers post-sale reporting.
+- ✅ Don't sneak edits into Activated contracts — create an amendment instead (a new contract linked to the same account).
+
+## Tips for admins
+
+- The contract activation flow and expiration sweep can be customized. See [Administration › Automation](/docs/administration/automation).
+- Contract types and billing frequency picklists are extensible.

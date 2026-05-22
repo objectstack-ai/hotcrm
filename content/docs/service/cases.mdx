@@ -1,0 +1,162 @@
+---
+title: Cases
+description: The customer support ticket — subject, priority, status, resolution and escalation.
+---
+
+# Cases
+
+A **case** is a customer support ticket. Every customer-reported issue, question or feature request lives as a case so the team can route it, work it, and resolve it consistently.
+
+## The 7 case statuses
+
+| Status | What it means |
+| --- | --- |
+| ⚪ **New** | Just received, not yet assigned to an agent *(default)* |
+| 🟠 **In Progress** | An agent is actively working on it |
+| 🟡 **Waiting on Customer** | Pending the customer's response |
+| 🔵 **Waiting on Support** | Pending another team (engineering, finance, etc.) |
+| 🔴 **Escalated** | Bumped to a senior agent or management |
+| 🟢 **Resolved** | Fix delivered, awaiting customer confirmation |
+| 🟢 **Closed** | Case is done |
+
+A typical resolved-quickly case: **New → In Progress → Resolved → Closed**.
+A typical stuck case: **New → In Progress → Waiting on Customer → In Progress → Resolved → Closed**.
+
+## The 4 priority levels
+
+| Priority | Typical SLA target | When to use |
+| --- | --- | --- |
+| 🔵 **Low** | 7 business days | Cosmetic issue, low-impact question *(default)* |
+| 🟠 **Medium** | 2 business days | Standard issue, work continues |
+| 🔴 **High** | 8 hours | Significant impact, customer is upset |
+| 🔴 **Critical** | 4 hours | Production down, immediate response needed |
+
+When a case is set to **Critical**, the support manager is notified by email. When set to **High** for a customer account, the case is auto-escalated.
+
+## Case types
+
+| Type | Use for |
+| --- | --- |
+| **Question** | How-to enquiries |
+| **Problem** | Something isn't working |
+| **Feature Request** | Customer is asking for new functionality |
+| **Bug** | Confirmed software defect |
+
+## Case origins
+
+Where the case came from: **Email · Phone · Web · Chat · Social Media**.
+
+This drives reporting (which channels generate the most volume) and is auto-filled when the case is created from an inbound channel (e.g., the email-to-case integration sets origin = Email).
+
+## What a case record stores
+
+The detail screen is organised into 6 sections:
+
+| Section | Fields |
+| --- | --- |
+| **Case Information** | Case number, subject, description, account, contact |
+| **Origin & Routing** | Origin, owner, parent case |
+| **SLA & Priority** | Status, priority, type, first response time, SLA due date, breach flag |
+| **Resolution** | Closed date, resolution, customer signature |
+| **Escalation** *(collapsed by default)* | Escalation flag, escalated date, escalation reason |
+| **System** *(collapsed by default)* | Audit trail, timestamps |
+
+## What happens automatically
+
+- **First response time** — stamped the first time an agent comments or replies.
+- **Closed flag** — set automatically when status changes to *Closed*.
+- **Closed date** — stamped to NOW when status changes to *Closed*.
+- **Resolution time (hours)** — calculated as the difference between *Created date* and *Closed date*.
+- **SLA due date** — calculated when the case is created, based on priority.
+- **SLA breached flag** — flipped to true if the resolution time exceeds the SLA target.
+- **Account's last activity date** — bumped to today when the case is updated.
+
+## Built-in rules
+
+- **Closed cases must have a resolution** — you can't close a case with an empty Resolution field.
+- **Escalated cases must have an escalation reason** — explains why a senior agent was pulled in.
+- **Status progression is enforced** — you can't jump from *New* straight to *Resolved* without going through *In Progress*.
+
+## Workflow automation
+
+- **Notify on Critical** — when priority is set to Critical, an email goes to `support_manager@example.com`.
+- **Notify on Escalation** — when a case is escalated, an email goes to the escalation team.
+- **Calculate resolution time** — automatic on close.
+- **Auto-set closed date and flag** — on status change.
+
+## Case escalation
+
+The [Case Escalation flow](/docs/service/sla-and-escalation#case-escalation) runs automatically when:
+
+- Priority is **Critical**, OR
+- Priority is **High** AND the account is a **Customer** (not a prospect)
+
+It performs:
+
+1. **Reassign** the case to the agent's manager.
+2. **Flag** as escalated, stamp the escalated date.
+3. **Set status** to *Escalated*.
+4. **Create a follow-up task** on the original agent due tomorrow.
+5. **Notify** the agent, the manager, and the support team via email.
+
+See [SLA & Escalation](/docs/service/sla-and-escalation) for the full mechanics.
+
+## Sharing — who can see which case
+
+- By default, cases are **private** — only the owner and managers above in the role hierarchy.
+- **Critical open cases** are auto-shared (read/edit) with all service managers and their subordinates. Critical issues get team-wide visibility.
+
+## Field-level security
+
+- **SLA breach flag** and **Resolution time** are **read-only for agents** — these are auto-calculated and can't be hand-fudged.
+
+## Standard list views
+
+- **My Open Cases** — your cases not yet closed.
+- **Critical Cases** — priority = Critical, all owners.
+- **Cases Due Today** — SLA due date is today.
+- **Breached SLA** — SLA breach flag is true.
+- **Recently Closed** — closed in the last 7 days.
+- **By Account** — grouped by customer.
+- **Service Board** — kanban grouped by status.
+
+## The case detail layout
+
+When you open a case, you'll see:
+
+- **Header** — case number, subject, status badge, priority badge, SLA countdown.
+- **Customer panel** — account, primary contact, contract tier, open cases this month.
+- **Case description and resolution** as the main content area.
+- **Comments thread** — internal and customer-facing.
+- **Related list** — tasks, attached files.
+- **AI Reference Rail** — the Service Copilot's suggestions.
+
+## How the AI Copilot helps
+
+The [Service Copilot](/docs/ai-copilot/service-copilot) auto-activates on any case. Ask:
+
+- *"Triage this case"* — Case Triage skill recommends a priority based on subject and description.
+- *"Suggest a resolution"* — searches the [Support Knowledge Base](/docs/service/knowledge-base) and drafts a customer reply.
+- *"Customer 360"* — pulls the full account context (open opportunities, past cases, contract tier).
+
+If the Copilot decides the priority is *Critical*, it will also recommend immediate escalation and draft an internal notification message.
+
+## Tips for service agents
+
+- ✅ **Triage incoming cases promptly** — *New* cases should not sit for more than the first-response SLA.
+- ✅ **Use "Waiting on Customer"** when you're blocked — it stops the SLA clock in some configurations.
+- ✅ **Always write a resolution** — it's mandatory, but also feeds the knowledge base for future cases.
+- ✅ **Link a task** when the case requires future follow-up (e.g., "verify fix worked in 7 days").
+- ❌ Don't close a case without confirming the fix worked.
+
+## Tips for service managers
+
+- ✅ Watch the **Breached SLA** view daily — every red badge represents a customer trust event.
+- ✅ Use the **Service Board** kanban for daily standups.
+- ✅ Coach agents whose **Resolution Time** trends up — there's a column on the agent leaderboard.
+
+## Tips for admins
+
+- The SLA targets per priority are stored in the case object's automation. To change them, edit the case automation — see [Administration › Automation](/docs/administration/automation).
+- The escalation team email recipient (`escalation_team@example.com`) and support manager email (`support_manager@example.com`) are configured in case workflow rules.
+- Email-to-case ingestion (auto-create case from an inbound email) requires the email plugin — see [Customization › Extending Objects](/docs/customization/extending-objects).

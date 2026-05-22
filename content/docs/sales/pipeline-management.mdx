@@ -1,0 +1,114 @@
+---
+title: Pipeline Management
+description: How the sales pipeline works day-to-day — moving deals, automatic probability, forecasting and the kanban board.
+---
+
+# Pipeline Management
+
+The pipeline is the sum of all your open opportunities. HotCRM gives you a governed pipeline where stage progression, win probability and forecast values are all kept in sync automatically — reps focus on selling, not on data hygiene.
+
+## How probability is set
+
+Win probability is **set from the stage automatically**, so every rep's forecast uses the same numbers:
+
+| Stage | Default win probability |
+| --- | --- |
+| Prospecting | 10 % |
+| Qualification | 25 % |
+| Needs Analysis | 40 % |
+| Proposal | 60 % |
+| Negotiation | 80 % |
+| Closed Won | 100 % |
+| Closed Lost | 0 % |
+
+You can override the probability manually on an individual deal if you have a special situation, but the override is reset the next time the stage changes. This prevents reps from inflating their forecast by hand.
+
+> Admins can adjust the percentages per stage — see [Administration › Automation](/docs/administration/automation).
+
+## How expected revenue is calculated
+
+**Expected Revenue = Amount × Probability ÷ 100**
+
+This number is the heart of the weighted forecast. It's recalculated automatically every time the amount or probability changes (including the auto-updates from stage changes).
+
+The **Sales Dashboard** sums *Expected Revenue* across the open pipeline to give you the weighted forecast for the quarter.
+
+## The pipeline kanban view
+
+The **Pipeline Kanban** (sidebar shortcut **Sales Pipeline**) shows the pipeline as 7 columns — one per stage. Each card shows:
+
+- Opportunity name
+- Account
+- Amount
+- Close date
+- Owner avatar
+
+To advance a deal, just **drag the card** to the next column. The system enforces the stage rules, so you can't drag from *Prospecting* directly to *Closed Won*.
+
+At the top of each column you'll see two numbers:
+
+- The **unweighted total** (sum of amount)
+- The **weighted total** (sum of expected revenue)
+
+## Pipeline health signals
+
+A few derived fields surface deal risk so you can act on them in your weekly review:
+
+| Signal | What it tells you |
+| --- | --- |
+| **Days in current stage** > 30 | Deal is stagnant — push or close it. |
+| **Close date in the past** AND stage still open | Forecast is wrong; reset the date or accept the loss. |
+| **Amount > $500K** with no submitted approval | Discount approval is required before this can close. |
+| **Competitors set** with no win plan | The Sales Copilot can suggest a strategy. |
+
+The Sales Copilot surfaces at-risk deals when you ask *"what's slipping?"* or *"how does my pipeline look?"*
+
+## Pipeline reports worth bookmarking
+
+You'll find these in the **Reports** section of the sidebar:
+
+| Report | What it shows |
+| --- | --- |
+| **Pipeline Coverage (Quarter)** | Are we covering 3x the quota for the upcoming quarter? Matrix of quarter × stage. |
+| **Funnel by Owner → Stage** | Per-rep funnel health — spot leaky stages. |
+| **Opportunities by Stage** | Bar chart of pipeline by stage. |
+| **Won by Owner** | Leaderboard for quarter-end recognition. |
+| **Customer Churn Signals** | Open cases + low NPS on existing customers = churn risk. |
+
+See [Analytics › Reports](/docs/analytics/reports) for details.
+
+## Recommended pipeline cadence
+
+| Cadence | What to do |
+| --- | --- |
+| **Daily** | Open Pipeline Kanban. Find stalled cards (in-stage > 14 days). Push or close. |
+| **Weekly** | Run *Pipeline Coverage*. Ask the Sales Copilot: *"what's at risk?"* |
+| **Monthly** | Run *Funnel by Owner → Stage*. Coach reps with leaky stages 1:1. |
+| **Quarter-end** | Run *Won by Owner* for commissions. Archive lost deals with a *loss reason*. |
+
+## Forecasting roll-up
+
+The Sales Manager / Director view of the forecast is built from:
+
+- The **Opportunity** analytic cube (measure: sum of amount, dimension: stage)
+- The **Sales Dashboard** widgets (pipeline by stage, win rate, top deals)
+- The **Pipeline Coverage** report (quarter × stage matrix)
+
+Together they answer: *"do we have enough pipeline to make the quarter, and where are the risks?"*
+
+## Tips for sales reps
+
+- ✅ Move stage promptly — your forecast is wrong if your stage is wrong.
+- ✅ Use *Next Steps* — your manager reads it every Monday standup.
+- ❌ Don't slide the close date to hide slippage; use *Closed Lost* with a reason.
+
+## Tips for sales managers
+
+- ✅ Run *Funnel by Owner → Stage* monthly to catch reps with leaky funnels.
+- ✅ Use *Pipeline Coverage by Quarter* in QBRs to set the next quarter's targets.
+- ✅ Coach reps to fill in *Competitors* — it dramatically improves Copilot quality.
+
+## Tips for admins
+
+- Add or remove stages? You need to update three places: the picklist on the opportunity object, the workflow rule that sets probabilities, and the state machine that controls transitions. See [Customization › Extending Objects](/docs/customization/extending-objects).
+- The $100K *large deal* notification threshold lives in the opportunity workflow rules.

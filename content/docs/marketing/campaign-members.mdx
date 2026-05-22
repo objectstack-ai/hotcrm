@@ -1,0 +1,108 @@
+---
+title: Campaign Members
+description: The leads and contacts enrolled in each campaign, and how their engagement is tracked.
+---
+
+# Campaign Members
+
+A **campaign member** is the link between a [campaign](/docs/marketing/campaigns) and a person (a [lead](/docs/sales/leads) or a [contact](/docs/sales/contacts)). It tracks whether that person was sent the campaign, opened it, clicked, responded, or converted.
+
+## How members get enrolled
+
+Three ways:
+
+1. **Bulk enrollment via the campaign flow** — when a campaign moves to *In Progress*, the [Campaign Enrollment flow](/docs/marketing/campaigns#campaign-enrollment-flow) runs and adds everyone matching the audience criteria.
+2. **Manual enrollment** — open a campaign and click **Add Members**, then pick from lead and contact list views.
+3. **From a lead or contact** — open the record and click **Add to Campaign**.
+
+A person can be in many campaigns over time, but only once per campaign (one membership per person per campaign).
+
+## The 7 member statuses
+
+The member status tracks engagement and progresses naturally as the campaign runs:
+
+| Status | What it means | Updated by |
+| --- | --- | --- |
+| ⚪ **Sent** | The campaign reached them *(default for new members)* | Initial enrollment |
+| 🔵 **Opened** | Email opened, webinar joined, etc. | Email tracking / event check-in |
+| 🟢 **Clicked** | Clicked a tracked link | Email tracking |
+| 🟢 **Responded** | Replied, registered, downloaded | Form submission |
+| 🟣 **Converted** | Became a lead-to-opportunity or contact-to-deal | Sales conversion |
+| 🟠 **Bounced** | Email bounced or undeliverable | Email gateway |
+| 🔴 **Unsubscribed** | Opted out of future contact | Customer action |
+
+The status is *monotonic* — a member who has *Clicked* won't be downgraded to *Opened* if you process events out of order.
+
+## Why both lead and contact?
+
+A campaign member can be linked to either a **lead** (someone not yet qualified) or a **contact** (someone at an existing account) — but not both. This is enforced by a built-in rule: exactly one of `lead` or `contact` must be set.
+
+This dual support means:
+
+- Marketing can target **prospects** (leads) for top-of-funnel campaigns.
+- Marketing can target **existing customers** (contacts) for upsell, cross-sell or renewal campaigns.
+
+If a lead is later converted to a contact, the existing campaign memberships stay linked to the lead, and new campaigns can re-target the same person as a contact.
+
+## What the member record stores
+
+| Field | Purpose |
+| --- | --- |
+| Campaign | The campaign |
+| Lead | The lead (if a prospect) |
+| Contact | The contact (if an existing person) |
+| Status | Engagement status (see above) |
+| Added Date | When the person was enrolled |
+| First Opened | First time the email was opened |
+| First Clicked | First time a tracked link was clicked |
+| Response Date | When they responded / registered |
+| Has Responded | Boolean shortcut |
+
+## Engagement tracking
+
+Email-tracking integrations write back to the member record automatically:
+
+- **Email service** → updates *First Opened*, *First Clicked*, status.
+- **Form submissions** → updates *Response Date*, status = *Responded*.
+- **Conversion events** (lead → opportunity) → status = *Converted*.
+
+These updates happen near-real-time via the email/form integration.
+
+## How the metrics roll up
+
+The campaign detail page rolls up its members:
+
+```
+Sent      = count of members
+Open rate = members where status >= Opened ÷ Sent
+Click rate = members where status >= Clicked ÷ Sent
+Response rate = members where status >= Responded ÷ Sent
+Conversion rate = members where status == Converted ÷ Sent
+```
+
+This means the campaign-level metrics are always live. As soon as a person opens an email, the campaign's *Open Rate* ticks up.
+
+## Standard list views
+
+On the campaign detail page's *Members* tab:
+
+- **All Members** — everyone enrolled.
+- **Responded** — status ≥ Responded.
+- **Bounced / Unsubscribed** — to clean up the audience.
+- **Converted to Opportunity** — the wins.
+
+## Tips for marketers
+
+- ✅ **Clean bounces and unsubscribes** weekly — they pollute your engagement rates if left in active campaigns.
+- ✅ **Use Converted status** to measure true campaign impact — *Opened* and *Clicked* are vanity metrics.
+- ✅ **Tag campaign source on opportunities** — without it the conversion won't roll up.
+
+## Tips for sales reps
+
+- ✅ When you open a lead, check **Campaign Memberships** in the sidebar — it tells you what content they've already engaged with.
+- ✅ Use the campaign as a conversation starter — *"I saw you joined our recent webinar on..."*
+
+## Tips for admins
+
+- Email tracking and form integration require connectors. See [Customization › Building Connectors](/docs/customization/extending-objects).
+- The rule that exactly one of *Lead* or *Contact* must be set lives in the campaign_member object's validation rules.

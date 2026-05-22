@@ -1,0 +1,73 @@
+---
+title: Service Cloud
+description: Receive customer issues, route them by priority, meet your SLA targets and escalate when needed.
+---
+
+# Service Cloud
+
+The Service module helps your support team **receive customer issues, prioritise them, resolve them inside SLA, and escalate when things go wrong**. Every case is tied back to the account and contact, so you always see the full customer history while you're solving the problem.
+
+## What's included
+
+| Area | What it does |
+| --- | --- |
+| [**Cases**](/docs/service/cases) | The ticket record — subject, priority, status, resolution. |
+| [**SLA & Escalation**](/docs/service/sla-and-escalation) | Automatic deadlines, the escalation process, and how the system surfaces breaches. |
+| [**Knowledge Base**](/docs/service/knowledge-base) | The support knowledge the AI Service Copilot reads from. |
+
+## A typical case life
+
+```
+New ──► In Progress ──► Waiting on Customer ──► Resolved ──► Closed
+                  ╲                          ╱
+                   ╲ Escalated ────────────╱
+```
+
+1. **Case is created** (via email, web form, phone log or the **Service Copilot** triaging an inbound message).
+2. **Priority is assigned** — Low, Medium, High or Critical. *Critical* alerts the support manager immediately.
+3. **SLA target is calculated** — every case gets a deadline based on priority.
+4. **Agent works the case**, moving status as they go.
+5. **If it's stuck** (or critical, or a customer's), the [escalation process](/docs/service/sla-and-escalation#case-escalation) reassigns it to a senior agent.
+6. **Resolution is recorded**, the resolution time is auto-stamped, and the case is closed.
+
+## What the system does for you
+
+- **Auto-prioritise** with the Case Triage skill (the Service Copilot reads the case and recommends a priority).
+- **Auto-escalate** critical cases or high-priority customer cases to a senior agent.
+- **Notify on critical** — emails the support manager whenever a case is set to Critical.
+- **Notify on escalation** — emails the escalation team whenever a case is escalated.
+- **Stamp resolution time** automatically when a case is closed.
+- **Flag SLA breaches** with a red banner once the SLA target passes.
+- **Block bad closes** — you can't mark a case Closed without a resolution written.
+
+## The Service Copilot
+
+The [Service Copilot](/docs/ai-copilot/service-copilot) is built into every case. Ask it:
+
+- *"Triage this case"* — assigns a priority based on subject, description and customer tier.
+- *"Suggest a resolution"* — searches the support knowledge base and drafts a customer reply.
+- *"Summarise this customer"* — Customer 360 view including past cases and open opportunities.
+
+## Standard dashboards & reports
+
+- **Service Dashboard** — open cases by priority, SLA performance, top agents, oldest open cases.
+- **Cases Opened by Day × Priority** — daily inflow.
+- **Cases by Status × Priority** — current snapshot.
+- **SLA Performance** — % of cases resolved within SLA target.
+
+See [Analytics › Dashboards](/docs/analytics/dashboards) and [Reports](/docs/analytics/reports).
+
+## Where to find things
+
+In the Enterprise CRM app, the **Service** group contains:
+
+- **Cases**
+- **Tasks**
+- **Service Board** — kanban-style case workflow
+- **Service Dashboard**
+
+## Start here
+
+- [Cases](/docs/service/cases) — the core ticket record.
+- [SLA & Escalation](/docs/service/sla-and-escalation) — how priorities drive deadlines and escalation.
+- [Knowledge Base](/docs/service/knowledge-base) — what the AI Copilot reads from.

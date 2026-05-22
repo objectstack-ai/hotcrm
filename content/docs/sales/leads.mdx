@@ -1,0 +1,120 @@
+---
+title: Leads
+description: Capture, score and qualify inbound enquiries before they become real deals.
+---
+
+# Leads
+
+A **lead** is an inbound enquiry — someone who has shown interest but hasn't yet been confirmed as a real sales opportunity. Leads are kept separate from your real accounts and contacts until you've decided they're worth pursuing.
+
+## When you'd use a lead (vs. a contact)
+
+| Scenario | Use a… |
+| --- | --- |
+| Someone filled in a web form | Lead |
+| A name on a trade-show list | Lead |
+| You bought a marketing list | Lead |
+| Existing customer's new buyer joined | Contact (under the existing account) |
+| Confirmed decision-maker at a real account | Contact |
+
+The point is to keep unqualified noise out of your real customer database.
+
+## The 5 lead statuses
+
+Every lead moves through these states. Reps can only advance one step at a time — the system blocks invalid jumps.
+
+| Status | What it means | What you typically do next |
+| --- | --- | --- |
+| **New** | Just arrived, nobody has reached out | Make first contact within SLA |
+| **Contacted** | A rep has reached out by phone/email | Apply BANT qualification |
+| **Qualified** | Passes BANT — worth pursuing | **Convert** to an account, contact and opportunity |
+| **Unqualified** | Not a fit (wrong industry, no budget, etc.) | Optionally reopen later if things change |
+| **Converted** | Has become a real account & contact | (Lead is now locked) |
+
+You can also **reopen** an unqualified lead back to *New* if circumstances change (budget freed up, new project announced).
+
+## What each lead record stores
+
+The lead detail screen has 9 collapsible sections. Open only what you need:
+
+| Section | What's in it |
+| --- | --- |
+| **Identity** | Salutation, first/last name, full name |
+| **Company Information** | Company name, job title, industry, annual revenue, employees, website |
+| **Contact Information** | Email, phone, mobile |
+| **Qualification** | Status, rating (0-5 stars), score (0-100), budget, timeline |
+| **Assignment** | Owner, next follow-up date, lead source |
+| **Address** | Mailing address |
+| **Additional Info** | Description, tags |
+| **Communication Preferences** | Email opt-out, do-not-call |
+| **Conversion** | Auto-filled after the lead is converted |
+
+The available **industries** include Technology, Software/SaaS, Finance, Healthcare, Retail, Manufacturing, Education, Real Estate, Media, Logistics, Hospitality, Energy, Government, Non-profit, and Other.
+
+The available **lead sources** include Web, Referral, Event, Trade Show, Webinar, Partner, Advertisement, Cold Call, and Other.
+
+## Lead scoring — what the score means
+
+Every lead automatically gets a **score from 0 to 100**, recalculated whenever the lead is created or updated. The score considers:
+
+- **Company size** — bigger company revenue and headcount → higher score.
+- **Industry fit** — Technology, Finance and Healthcare score highest by default.
+- **Job title seniority** — VPs and C-level titles add weight.
+- **Engagement signals** — recent web visits, webinar attendance, etc.
+
+You can also set a manual **star rating (0-5)** as a human override:
+
+- ⭐⭐⭐⭐ or higher → the system flags the lead as **hot** and sets the next follow-up to today.
+- ⭐⭐⭐⭐⭐ → the owner is emailed immediately.
+
+> An admin can adjust the scoring weights — see [Administration › Automation](/docs/administration/automation).
+
+## Converting a qualified lead
+
+When a lead is qualified, click **Convert**. A small form pops up asking:
+
+- Should we also create an Opportunity?
+- If yes — what's the opportunity name and amount?
+
+The system then, in a single step:
+
+1. Creates an **Account** from the lead's company information.
+2. Creates a **Contact** from the lead's person information, attached to that account, marked as primary.
+3. *(Optional)* Creates an **Opportunity** in the *Prospecting* stage with a 90-day close date.
+4. Marks the lead as **Converted** and locks it.
+5. Sends you a confirmation email summarising what was created.
+
+After conversion, the lead becomes read-only — all future activity happens on the new account, contact and opportunity.
+
+## How the AI Copilot helps
+
+When you open a lead, the Sales Copilot is available in the side panel. Try asking:
+
+- *"Qualify this lead"* — runs BANT, gives you a score and a one-line justification per dimension.
+- *"Is this a hot lead?"* — quick yes/no plus reasoning.
+- *"Draft an intro email"* — writes a personalised first outreach.
+
+The Copilot will recommend the next action (e.g., schedule a call, send a follow-up, disqualify).
+
+## Standard list views
+
+Open the Leads tab to see these saved views:
+
+- **My Open Leads** — leads you own that aren't converted or unqualified.
+- **Hot Leads** — rating ≥ 4 stars.
+- **Today's Follow-ups** — leads with next follow-up date = today.
+- **Recently Created** — newest first.
+- **By Source** — grouped by where the lead came from.
+
+## Tips for sales reps
+
+- ✅ Add the next follow-up date as soon as you contact a lead — it powers the "Today's Follow-ups" view.
+- ✅ Use the star rating if you have a strong gut feel — the score doesn't capture everything.
+- ✅ Don't convert too early — a converted lead can't be reverted. Use *Qualified* status while you confirm.
+- ❌ Don't keep noise in *New* forever — disqualify after 3 failed contact attempts.
+
+## Tips for admins
+
+- The score formula lives in the lead's automation. To re-weight it, edit `src/objects/lead.hook.ts` (see [Customization](/docs/customization/extending-objects)).
+- Web-to-Lead can be enabled by granting the Guest Portal profile *insert-only* on the lead object — see [Administration › Profiles](/docs/administration/profiles).
+- To add a new industry or lead source, edit the lead object's picklists — see [Customization](/docs/customization/extending-objects).

@@ -1,0 +1,135 @@
+---
+title: Opportunities
+description: Active sales deals — the heart of the pipeline, with 7 stages, line items and discount approvals.
+---
+
+# Opportunities
+
+An **opportunity** is an active deal — a potential revenue event with a known account, amount, close date and stage. This is the record sales reps work on every day.
+
+## The 7 sales stages
+
+Every opportunity moves through these stages. The system tracks where you are and updates the win probability automatically.
+
+| Stage | Default win probability | When you're in this stage |
+| --- | --- | --- |
+| ⚪ **Prospecting** | 10% | First contact, qualifying budget and need |
+| 🟠 **Qualification** | 25% | You've identified the decision-maker |
+| 🟡 **Needs Analysis** | 40% | Requirements have been documented |
+| 🔵 **Proposal** | 60% | Quote has been sent |
+| 🟣 **Negotiation** | 80% | Pricing and terms are being negotiated |
+| 🟢 **Closed Won** | 100% | **Deal won** *(final stage)* |
+| 🔴 **Closed Lost** | 0% | **Deal lost** *(final stage)* |
+
+You can move from any open stage directly to **Closed Lost** (deals can be lost at any point), but you can't skip forward — you have to walk through the funnel one stage at a time. The system blocks invalid jumps to keep your forecast honest.
+
+## What an opportunity record stores
+
+The detail screen has 7 sections:
+
+| Section | Fields |
+| --- | --- |
+| **Basic Information** | Name, account, primary contact, owner |
+| **Financials** | Amount, expected revenue *(auto)*, probability *(auto from stage)* |
+| **Sales Process** | Stage, close date, created date, days in current stage |
+| **Classification** | Type (New Business / Upgrade / Renewal / Expansion), lead source |
+| **Competition & Campaigns** | Competitors, source campaign |
+| **Notes & Next Steps** | Description, next steps |
+| **Forecast & Metrics** | Line item totals, approval status |
+
+## Opportunity types
+
+| Type | What it means |
+| --- | --- |
+| **New Business** | A brand-new logo / customer |
+| **Existing - Upgrade** | Existing customer moving up tiers |
+| **Existing - Renewal** | Existing contract renewing |
+| **Existing - Expansion** | Existing customer adding new product lines |
+
+Splitting deals by type is essential for accurate revenue forecasting — new business and renewals have very different win rates.
+
+## What happens automatically
+
+You don't have to remember any of this — the system does it for you:
+
+- **Probability** is set from the stage whenever you move the deal (you *can* override it manually if you have a special situation, but it'll reset next time the stage changes).
+- **Expected revenue** = amount × probability ÷ 100, recalculated whenever amount or probability changes.
+- **Days in current stage** is recomputed daily — it surfaces stagnant deals.
+- When you mark a deal **Closed Won and the amount is over $100K**, sales management gets an email.
+- When the amount exceeds **$500K**, the deal enters the [Discount Approval](/docs/revenue/approvals) process automatically.
+
+## Line items — what's actually being sold
+
+Each opportunity can have line items — one per product being sold. Each line stores:
+
+- The product (from the catalog)
+- Quantity
+- Unit price (defaults to the product's list price, can be overridden)
+- Discount %
+- Line total
+
+The sum of all line items rolls up into the opportunity **Amount**. If you'd rather just type the amount manually without configuring line items, you can — both work.
+
+## Discount approval for high-value deals
+
+If a deal's **amount goes over $500,000**, the opportunity is automatically routed for approval:
+
+1. The opportunity is **locked** — nobody can edit it.
+2. **Sales Manager** reviews first.
+3. If approved, **Sales Director** signs off.
+4. On final approval, the stage is automatically set to **Closed Won**.
+5. If rejected at any step, the deal is returned to the rep to re-justify.
+
+The approval status is shown as a banner at the top of the opportunity detail screen. See [Revenue › Approvals](/docs/revenue/approvals) for the full process.
+
+## Sharing — who can see which deal
+
+By default opportunities are **private** — only the owner and people above them in the role hierarchy can see them.
+
+On top of that:
+
+- **Open opportunities of $100K or more** are shared *read-only* with the Sales Director and everyone below them in the hierarchy. This way leadership sees the big deals without having to follow up.
+- **High-value deals in approval** are visible to the approvers regardless of ownership.
+
+## Standard list views
+
+- **My Opportunities** — opportunities you own.
+- **Pipeline This Quarter** — open deals closing this quarter.
+- **Closing This Month** — open deals closing this month.
+- **At Risk** — past their close date but still open.
+- **Top Deals by Amount** — biggest first.
+- **Pipeline Kanban** — the kanban board grouped by stage (also accessible via the sidebar shortcut "Sales Pipeline").
+
+## The opportunity detail layout
+
+When you open an opportunity, you'll see:
+
+- **Header** — name, stage badge with the 7-stage path, amount, close date, owner. Click any stage on the path to jump directly to it.
+- **Sales Path** — one-click stage progression.
+- **Quote** related list — with a **Generate Quote** button that runs the [Quote Generation flow](/docs/sales/quotes#generating-a-quote).
+- **Line Items** — with an **Add Product** button.
+- **Activity timeline** — calls, emails, meetings, notes.
+- **Competitors & Notes** — side panel with talking points.
+- **AI Reference Rail** — Sales Copilot suggestions (Customer 360, Revenue Forecast, related signals).
+
+## How the AI Copilot helps
+
+When you open an opportunity, ask:
+
+- *"What's at risk here?"* — Revenue Forecasting skill examines stage age, competitor signals and close-date slippage.
+- *"Draft a follow-up email"* — Email Drafting skill writes the next outbound message.
+- *"Summarise this account"* — Customer 360 skill gives you a one-screen briefing on the account history.
+
+## Tips for sales reps
+
+- ✅ **Move stages promptly** — the probability is wrong if your stage is wrong.
+- ✅ **Add line items** for proper revenue forecasting; the rolled-up amount is more accurate.
+- ✅ **Fill in Next Steps** — it's the single most useful field for handoffs and standups.
+- ✅ **Pick competitors** — the AI uses this to surface win strategies.
+- ❌ Don't change the close date just because a deal is slipping. The **At Risk** view exists to surface honest slippage.
+
+## Tips for admins
+
+- The stage list and default probabilities live in the opportunity object's automation. See [Customization › Extending Objects](/docs/customization/extending-objects) to change them — you'll need to update the workflow rule and the state machine in lockstep.
+- The $500K discount approval threshold can be changed in the [approval process configuration](/docs/revenue/approvals).
+- The $100K large-deal notification threshold lives in the opportunity workflow rules.

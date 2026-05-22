@@ -1,0 +1,125 @@
+---
+title: Quotes
+description: Generate pricing proposals from opportunities, with line items, discounts and automatic expiration.
+---
+
+# Quotes
+
+A **quote** is a formal pricing proposal sent to a customer. Quotes always belong to an opportunity and capture the pricing at the moment they're presented. Once a quote is accepted, it becomes the basis of a contract.
+
+## The 6 quote statuses
+
+| Status | What it means |
+| --- | --- |
+| ⚪ **Draft** | Being prepared internally *(default for new quotes)* |
+| 🟠 **In Review** | Pending internal review (e.g., discount approval) |
+| 🔵 **Presented** | Sent to the customer |
+| 🟢 **Accepted** | Customer agreed — automatically triggers contract creation |
+| 🔴 **Rejected** | Customer declined |
+| ⚪ **Expired** | Validity period passed without a decision |
+
+A typical journey: **Draft → Presented → Accepted → (Contract)**.
+
+## What a quote record stores
+
+The detail screen has 5 sections:
+
+| Section | Fields |
+| --- | --- |
+| **Quote Information** | Quote number, name, status, account, contact, opportunity, owner |
+| **Pricing** | Subtotal, discount %, discount amount, tax, shipping & handling, total |
+| **Terms & Validity** | Quote date, expiration date, payment terms, shipping terms |
+| **Addresses** | Billing address, shipping address |
+| **System** | Description (customer-facing), internal notes (your eyes only) |
+
+### Payment terms
+
+Net 15 · Net 30 *(default)* · Net 60 · Net 90 · Due on Receipt.
+
+## How prices are calculated
+
+The system does the math for you:
+
+```
+Subtotal       = sum of all line items
+Discount       = Subtotal × Discount % ÷ 100
+Total Price    = Subtotal − Discount + Tax + Shipping & Handling
+```
+
+Anything you change in the line items, discount, tax or shipping fields, the totals update automatically.
+
+## Line items
+
+A quote can have any number of line items — one per product being sold. Each line stores:
+
+- Product (from the catalog)
+- Quantity
+- Unit price (defaults to the product's list price)
+- Per-line discount %
+- Line total
+
+The sum of line items rolls up into the quote subtotal.
+
+## Built-in rules
+
+- **Expiration date must be after the quote date** — no expired-on-creation quotes.
+- **Discount cannot exceed 100%** — basic sanity check.
+
+## What happens automatically
+
+- **Daily expiration sweep** — every night at 1 AM, the system marks any quote whose expiration has passed as **Expired** (unless it's already accepted or rejected). Keeps your active list clean.
+- **On acceptance** — when you mark a quote as *Accepted*, the system creates a contract automatically with the quote's terms, advances the opportunity to *Closed Won*, promotes the account from prospect to customer (if applicable), and schedules a renewal reminder task 60 days before contract end.
+
+## Generating a quote
+
+You don't manually create quotes — instead, open any opportunity and click **Generate Quote**. A short form pops up:
+
+- Quote name
+- Valid for (days) — default 30
+- Discount %
+
+Then the system, in a single step:
+
+1. Creates the quote in **Draft** status with the opportunity's amount as the subtotal.
+2. Applies the discount and recalculates the total.
+3. Advances the opportunity to **Proposal** stage.
+4. Stamps the opportunity's last activity to today.
+5. Sends you a confirmation email.
+
+The rep then reviews the draft, attaches a PDF (or uses the built-in templating), and changes the status to *Presented* to send it to the customer.
+
+## Sending a quote to the customer
+
+From the quote detail page, click **Send to Customer**. This sets the status to *Presented* and emails the PDF using a quote-cover-email template. The Sales Copilot can draft the cover email for you — *"Draft a cover note for this quote"*.
+
+## Mark as Accepted / Rejected
+
+Two buttons on the detail screen close the loop:
+
+- **Mark Accepted** → status = Accepted; triggers the contract chain described above.
+- **Mark Rejected** → status = Rejected; the opportunity stays open (you can re-quote at a lower price).
+
+## High-value discount approval
+
+If a quote's total exceeds the discount-approval threshold (e.g., total > $500K or discount > 30%), the linked opportunity enters the [Discount Approval](/docs/revenue/approvals) process. The quote shows a banner at the top — you can't mark it *Presented* until approval clears.
+
+## Standard list views
+
+- **My Quotes** — quotes you own.
+- **Active Quotes** — Draft, In Review or Presented.
+- **Expiring This Week** — about to expire and still open.
+- **Won Quotes** — Accepted.
+- **By Account** — grouped.
+
+## Tips for sales reps
+
+- ✅ Always include a discount reason in *Internal Notes* if you're discounting heavily.
+- ✅ Use the **Generate Quote** button from an opportunity rather than creating quotes from scratch — it auto-fills everything.
+- ✅ Check the validity (expiration date) matches your business cycle. Quarterly buyers need quotes valid till quarter-end.
+- ❌ Don't change pricing on a Presented quote — it confuses the customer. Create a new revision instead.
+
+## Tips for admins
+
+- The daily expiration sweep runs at 1 AM. To change the time, adjust the schedule on the quote object's workflow.
+- The quote PDF template (cover and line item layout) is stored in your email-template settings.
+- To require manager approval below the system-wide $500K threshold (for example, on every quote with >20% discount), add a workflow that flips the quote to *In Review* and notifies the manager. See [Administration › Automation](/docs/administration/automation).

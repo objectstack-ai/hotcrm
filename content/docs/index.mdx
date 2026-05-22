@@ -1,78 +1,70 @@
 ---
-title: HotCRM Documentation
-description: A production-ready CRM built on the ObjectStack runtime — metadata-driven, AI-extensible.
+title: HotCRM
+description: An AI-powered enterprise CRM — manage your sales pipeline, support cases, marketing campaigns and customer contracts in one place, with AI copilots built in.
 ---
 
-# HotCRM Documentation
+# Welcome to HotCRM
 
-**HotCRM** is a production CRM application built on top of [`@objectstack/runtime`](https://github.com/objectstack-ai/framework). Everything — objects, hooks, pages, flows, agents — is declared as **TypeScript metadata** and executed by the platform.
+**HotCRM** is a full-featured enterprise CRM. It helps your team:
 
-This is the documentation for the **current baseline** (v0.1). The baseline ships **10 core sales-cloud objects**, 10 server-side hooks, 12 pages, 5 automation flows and 2 AI agents. Iterations add capabilities incrementally — see [What's New](/docs/whats-new).
+- 🎯 **Sales** — capture leads, qualify them, work deals through a pipeline, and close them with quotes and contracts.
+- 🎧 **Service** — log customer cases, route them by priority, meet your SLA, and escalate when needed.
+- 📣 **Marketing** — plan campaigns, track who responded, and measure ROI.
+- 💰 **Revenue** — manage products, prices, contracts and discount approvals.
+- 🤖 **AI Copilots** — let the Sales Copilot qualify leads for you and the Service Copilot triage incoming cases.
+- 📊 **Analytics** — see dashboards and reports for executives, sales managers and support leads.
 
-## 🚀 Get Started
+This documentation is organised by **what you want to do**. Pick the section that matches your role.
+
+## I want to…
 
 <Cards>
-  <Card title="Introduction" href="/docs/getting-started/introduction" icon="book-open">
-    What HotCRM is, what's included, and how it differs from a SaaS CRM.
+  <Card title="Get up and running" href="/docs/getting-started/introduction" icon="play">
+    First-time tour: install, sign in, and explore the demo data.
   </Card>
-  <Card title="Installation" href="/docs/getting-started/installation" icon="download">
-    Clone, install, and start the dev server in 5 minutes.
+  <Card title="Work my sales pipeline" href="/docs/sales" icon="trending-up">
+    Leads, accounts, opportunities, quotes — the full lead-to-cash flow.
   </Card>
-  <Card title="Quick Start" href="/docs/getting-started/quick-start" icon="zap">
-    Sign up, browse the seeded data, and create your first record.
+  <Card title="Handle customer cases" href="/docs/service" icon="life-buoy">
+    Receive cases, prioritise them, meet SLA targets, and resolve faster.
+  </Card>
+  <Card title="Run marketing campaigns" href="/docs/marketing" icon="megaphone">
+    Plan campaigns, enroll leads & contacts, track responses and ROI.
+  </Card>
+  <Card title="Manage products & contracts" href="/docs/revenue" icon="receipt">
+    Product catalog, pricing, contract lifecycle, renewals and discount approvals.
+  </Card>
+  <Card title="Use the AI Copilot" href="/docs/ai-copilot" icon="sparkles">
+    How the Sales and Service Copilots help you day-to-day.
+  </Card>
+  <Card title="Read dashboards & reports" href="/docs/analytics" icon="chart-bar">
+    Standard dashboards, reports, and the numbers behind them.
+  </Card>
+  <Card title="Administer the system" href="/docs/administration" icon="shield">
+    Users, profiles, sharing rules, approvals, automation — for admins.
   </Card>
 </Cards>
 
-## 🧱 Build & Extend
+## What's in HotCRM
 
-<Cards>
-  <Card title="Creating Objects" href="/docs/developers/creating-objects" icon="database">
-    Add a new business object using <code>ObjectSchema</code>.
-  </Card>
-  <Card title="Business Logic (Hooks)" href="/docs/developers/business-logic" icon="zap">
-    Validate, normalize, and protect data via <code>beforeInsert/Update/Delete</code> hooks.
-  </Card>
-  <Card title="Page Layouts" href="/docs/developers/page-layouts" icon="layout">
-    Compose detail and list pages declaratively.
-  </Card>
-  <Card title="Seed Data" href="/docs/guides/seed-data" icon="seedling">
-    Author <code>defineDataset()</code> records with compile-time field checking.
-  </Card>
-</Cards>
+| Area | What you get |
+| --- | --- |
+| **Sales** | Leads, Accounts, Contacts, Opportunities (7-stage pipeline), Quotes, Activities |
+| **Service** | Cases (with SLA and escalation), Tasks, knowledge base for the copilot |
+| **Marketing** | Campaigns (8 types), Campaign Members (lead/contact enrollment), ROI tracking |
+| **Revenue** | Products, Contracts (5 types), Discount Approvals |
+| **AI** | Sales Copilot, Service Copilot, 5 skills (lead qualification, case triage, email drafting, revenue forecasting, customer 360) |
+| **Analytics** | 4 dashboards (CRM / Sales / Service / Executive), 10+ standard reports |
+| **Security** | 6 user profiles, role hierarchy, sharing rules, multi-step approvals |
 
-## 🏛 Architecture
+## Roles & where to start
 
-<Cards>
-  <Card title="Overview" href="/docs/architecture/overview" icon="layers">
-    How the runtime, plugins, and metadata fit together.
-  </Card>
-  <Card title="Data Protocol" href="/docs/architecture/data-protocol" icon="database">
-    Object schema, fields, relationships, ObjectQL.
-  </Card>
-  <Card title="UI Protocol" href="/docs/architecture/ui-protocol" icon="monitor">
-    Apps, pages, views, dashboards.
-  </Card>
-  <Card title="Automation Protocol" href="/docs/architecture/automation-protocol" icon="git-branch">
-    Flows, approvals, hooks.
-  </Card>
-</Cards>
+- **Sales rep** → start with [Leads](/docs/sales/leads), then [Opportunities](/docs/sales/opportunities).
+- **Sales manager** → start with [Pipeline Management](/docs/sales/pipeline-management) and the [Sales Dashboard](/docs/analytics/dashboards#sales-dashboard).
+- **Service agent** → start with [Cases](/docs/service/cases).
+- **Service manager** → start with [SLA & Escalation](/docs/service/sla-and-escalation).
+- **Marketer** → start with [Campaigns](/docs/marketing/campaigns).
+- **CRM admin** → start with [Administration overview](/docs/administration).
+- **Developer / customiser** → start with [Customization](/docs/customization).
 
-## What's in the Box (v0.1 Baseline)
-
-| Layer | Items |
-|---|---|
-| **Objects** | account, contact, lead, opportunity, opportunity_line_item, product, quote, quote_line_item, contract, campaign, campaign_member, case, task |
-| **Hooks** | 10 — field validation, status normalization, deletion protection |
-| **Pages** | Home, App Launcher, Utility Bar, Account / Lead / Opportunity detail, Action Modals |
-| **Views** | 10 — one list view per core object |
-| **Flows** | 5 — automation pipelines |
-| **Agents** | 2 — AI assistants |
-| **Sharing** | 4 sharing rules + role hierarchy |
-| **Seed Data** | ~90 records across 9 tables (verified on first sign-up) |
-
-## Why HotCRM
-
-- **Code-as-source-of-truth** — every field, hook, page, and flow is checked into git as TypeScript. No clicks-not-code drift between dev and prod.
-- **AI-extensible** — agents and skills are first-class metadata; the same record can be operated by a human at `/_console/` or an LLM via the agent runtime.
-- **Self-hosted** — runs on SQLite for dev and Postgres / MongoDB / Turso for production. No vendor lock-in.
-- **Incremental** — iterations add 1 verified feature at a time. See [What's New](/docs/whats-new) for the changelog.
+Need to see what changed in the latest version? Head over to [What's New](/docs/whats-new).

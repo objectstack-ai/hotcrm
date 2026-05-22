@@ -4,7 +4,7 @@
   "defaultOpen": true,
   "pages": [
     "introduction",
-    "installation",
-    "quick-start"
+    "quick-tour",
+    "for-developers"
   ]
 }

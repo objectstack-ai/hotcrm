@@ -1,97 +1,76 @@
 ---
 title: Introduction
-description: What HotCRM is, what's inside, and how it compares to a SaaS CRM.
+description: What HotCRM is, who it's for, and what's included out of the box.
 ---
 
 # Introduction
 
-**HotCRM is a self-hosted, metadata-driven CRM application.** It is built on top of the [ObjectStack runtime](https://github.com/objectstack-ai/framework) and ships everything an early-stage sales team needs: accounts, contacts, leads, opportunities, quotes, contracts, campaigns, cases, and tasks.
+**HotCRM is an AI-native enterprise CRM.** It helps your team manage the entire customer journey — from the first marketing touch to a closed deal and beyond — with an AI Copilot built into every screen.
 
-Unlike a SaaS CRM, every piece of HotCRM's behaviour — fields, validation rules, page layouts, automation flows, AI agents — is **TypeScript source code in this repository**. There is no clicking through admin UIs hoping to remember what you changed; the code is the source of truth.
+## What's included
 
-## What's in v0.1
+The platform spans the four classic CRM pillars, plus an AI layer that knows your data:
 
-| Layer | Count | Examples |
-|---|---|---|
-| Business objects | 13 | account, contact, lead, opportunity, quote, contract, campaign, case, task |
-| Server-side hooks | 10 | account_protection, lead_validation, opportunity_close_guard |
-| State machines | 2 | lead (open → qualified → converted), opportunity (prospecting → won/lost) |
-| List views | 10 | one per core object |
-| Pages | 12 | Home, App Launcher, detail pages, action modals |
-| Automation flows | 5 | inline declarative pipelines |
-| AI agents / skills | 2 / 2 | callable via `/api/v1/ai/*` |
-| Sharing rules | 4 | + 10-level role hierarchy |
-| Approval processes | 1 | quote discount approval |
+| Pillar | What you can do |
+| --- | --- |
+| [**Sales**](/docs/sales/index) | Manage leads, accounts, contacts, opportunities, quotes, and pipeline |
+| [**Service**](/docs/service/index) | Track cases, enforce SLAs, manage a knowledge base |
+| [**Marketing**](/docs/marketing/index) | Run campaigns, score engagement, measure ROI |
+| [**Revenue**](/docs/revenue/index) | Maintain products, govern contracts, route discount approvals |
+| [**AI Copilot**](/docs/ai-copilot/index) | An assistant that drafts emails, triages cases, summarises accounts |
+| [**Analytics**](/docs/analytics/index) | Dashboards, reports, and self-service data cubes |
 
-About **90 seed records** ship in the box; they insert the first time a user signs up.
+Everything is **wired together** out of the box — leads convert into opportunities, opportunities link to quotes and contracts, contracts trigger renewals, support cases see the customer's full history.
 
-## Three Core Principles
+## Who HotCRM is for
 
-### 1. Metadata-First
+- **Sales reps and managers** — for working leads, deals, and forecasts.
+- **Service agents and managers** — for resolving customer cases on time.
+- **Marketers** — for running campaigns and proving ROI.
+- **Sales operations & administrators** — for configuring the system to fit your business.
+- **Executives** — for the rolled-up view across the entire revenue funnel.
 
-Everything is `*.object.ts`, `*.hook.ts`, `*.page.ts`, etc. There is no YAML or JSON. The compiler validates every field, every reference, every page binding **at build time** using `@objectstack/spec` schemas.
+## What makes it different
 
-```ts
-// src/objects/account.object.ts
-export const Account = ObjectSchema.parse({
-  name: 'account',
-  label: 'Account',
-  fields: {
-    name: Field.text({ required: true, unique: true }),
-    annual_revenue: Field.currency({ scale: 2 }),
-    industry: Field.select({ options: industryOptions }),
-    owner: Field.lookup({ object: 'sys_user' }),
-  },
-});
-```
+### 1. AI-native, not AI-added
 
-### 2. ObjectQL, not SQL
+The Copilot is built into the product, not bolted on. It respects your sharing rules, draws on your real CRM data, and grounds answers in knowledge bases you control.
 
-Data access goes through `broker.find(...)` / `broker.create(...)`. The runtime translates to SQL, MongoDB, or whichever driver is plugged in. Your business code stays driver-agnostic.
+### 2. Process-aware out of the box
 
-```ts
-await ctx.api.find('opportunity', {
-  filters: [['amount', '>', 50_000], ['stage', '!=', 'lost']],
-  orderBy: [{ field: 'close_date', dir: 'asc' }],
-});
-```
+You don't have to build approval flows, SLA escalation, or campaign automation from scratch. They ship configured to industry best practice — adjust, don't build.
 
-### 3. AI-Native
+### 3. Built on a modern, extensible platform
 
-AI agents are first-class metadata, not bolt-ons. The same `ctx.api` exposed to hooks is exposed to agents via tool definitions in `*.action.ts`. A human in `/_console/` and an LLM in `/api/v1/ai/agents/run` see exactly the same data plane.
+HotCRM runs on [**ObjectStack**](https://github.com/objectstack-ai/framework) — a metadata-first runtime. That means every field, rule, page, and workflow is defined as code in a Git repo. No clicking through admin UIs and forgetting what changed.
 
-## How It Compares
+If you're a developer, see [For Developers](/docs/getting-started/for-developers) for what that means in practice.
 
-| | SaaS CRM (e.g. Salesforce) | HotCRM |
-|---|---|---|
-| Customisation | Clicks-then-code, locked schema | TypeScript everywhere |
-| Hosting | Vendor cloud | Your machine, your VPC, your K8s |
-| Data | Vendor's DB | SQLite / Postgres / Mongo / Turso |
-| Plugin model | AppExchange | npm + plugin protocol |
-| AI | Einstein (closed) | Bring-your-own LLM, declared in metadata |
-| Source of truth | Production org | Git repo |
-| Price | Per-seat SaaS | Open-source runtime + your infra |
+## What ships in the box
 
-## Who Is This For?
+The system you get on day one already includes:
 
-- **Engineering teams** that need a CRM but refuse a closed SaaS lock-in.
-- **AI startups** building agent-driven business systems and need a real data plane.
-- **Platform teams** that want to extend a working CRM rather than build from scratch.
+- **13 business objects** (account, lead, contact, opportunity, product, quote, contract, case, campaign, and more) with industry-standard fields, picklists, and validations.
+- **A 9-role hierarchy** mapped to typical sales / service / marketing org structures.
+- **Built-in automation** for lead routing, opportunity wins, contract expiration, quote expiration, campaign auto-enrollment, and SLA escalation.
+- **Approval processes** for high-value discounts.
+- **Standard list views, dashboards, and reports** for every role.
+- **AI skills** for lead qualification, email drafting, case triage, revenue forecasting, and customer 360°.
+- **Knowledge bases** for sales playbooks, product info, support articles, and competitive intel.
 
-## What HotCRM Is **Not** (yet)
-
-The legacy 146-object scope (HR, Healthcare, Education, Real Estate, Financial Services) has been removed from the active codebase. The previous version of those docs is archived on the `legacy-archive` branch. If you need one of those verticals, port the relevant `*.object.ts` files into `src/objects/` and verify hooks against the runtime — see [Creating Objects](/docs/developers/creating-objects).
-
-## Next Steps
+## Where to go next
 
 <Cards>
-  <Card title="Install HotCRM" href="/docs/getting-started/installation" icon="download">
-    Get the dev server running in 5 minutes.
+  <Card title="Quick Tour" href="/docs/getting-started/quick-tour" icon="play">
+    A 5-minute walkthrough of the app.
   </Card>
-  <Card title="Quick Start" href="/docs/getting-started/quick-start" icon="zap">
-    Sign up, see seeded data, create a record.
+  <Card title="Sales" href="/docs/sales/index" icon="briefcase">
+    Start here if you're a sales rep.
   </Card>
-  <Card title="Architecture Overview" href="/docs/architecture/overview" icon="layers">
-    How the runtime and metadata fit together.
+  <Card title="Service" href="/docs/service/index" icon="headphones">
+    Start here if you're a service agent.
+  </Card>
+  <Card title="Administration" href="/docs/administration/index" icon="settings">
+    Start here if you're setting up the system.
   </Card>
 </Cards>

@@ -1,0 +1,78 @@
+---
+title: Knowledge Base
+description: The support knowledge the AI Service Copilot reads from, so agents can answer customers consistently and faster.
+---
+
+# Knowledge Base
+
+The knowledge base is the **library of support content** the AI Service Copilot reads from when it drafts responses, suggests resolutions, or triages cases. A well-maintained knowledge base is what makes the Copilot useful — it's the difference between vague AI fluff and accurate, on-brand customer answers.
+
+## What's in the knowledge base
+
+The Support Knowledge index covers four content types:
+
+| Content type | Examples |
+| --- | --- |
+| **FAQs** | "How do I reset my password?", "What are your support hours?" |
+| **Troubleshooting guides** | Step-by-step problem-solving for common issues |
+| **SLA policies** | The promises you make to customers — response and resolution times |
+| **Resolution templates** | Reusable answer drafts for recurring case types |
+
+These are stored as Markdown files under `/knowledge/support/` and re-indexed automatically when changed.
+
+## How the Service Copilot uses it
+
+When an agent asks the Service Copilot to *"suggest a resolution"* or *"help me reply to this customer"*, the Copilot:
+
+1. Takes the case subject and description as the question.
+2. Searches the knowledge base for the **5 most relevant snippets** above a quality threshold.
+3. Drafts a customer-facing response grounded in those snippets.
+4. **Cites the source** for each claim, so the agent can verify before sending.
+
+This means the AI never makes things up — it can only repeat what's in your knowledge base.
+
+## How the Sales Copilot uses other knowledge
+
+HotCRM ships with **four** AI knowledge bases, each tuned for different teams:
+
+| Knowledge Base | Used by | Content |
+| --- | --- | --- |
+| **Sales Knowledge** | Sales Copilot | Sales playbook, qualification methodology, objection handling |
+| **Product Information** | Sales Copilot | Product catalog, specifications, pricing, positioning |
+| **Support Knowledge** | Service Copilot | FAQs, troubleshooting, SLA policies |
+| **Competitive Intelligence** | Sales Copilot | Competitor profiles, battlecards, win/loss analysis |
+
+See [AI Copilot › Knowledge Bases](/docs/ai-copilot/knowledge-bases) for the technical details.
+
+## Curating the knowledge base
+
+The knowledge base is **only as good as what you put in it**. A typical content-curation workflow:
+
+### 1. Capture what's working
+
+When an agent resolves a tricky case with a great answer, copy that answer into the knowledge base. The next agent (or the AI) will reuse it.
+
+### 2. Triage incoming questions
+
+Every week, look at the most common case subjects. The top 10 questions deserve dedicated FAQ entries — if 30 customers asked the same thing, the 31st should be answered automatically.
+
+### 3. Retire stale content
+
+If a product changes, the corresponding KB articles need updating. Set a quarterly review on each article's owner.
+
+### 4. Watch the AI's citations
+
+When the Service Copilot drafts a response, it cites which KB articles it used. If the same article is cited every day, it's pulling its weight. If an article is never cited, consider rewriting or removing it.
+
+## Tips for service managers
+
+- ✅ Make KB updates part of the weekly team meeting — "what 3 new articles do we need this week?"
+- ✅ Reward agents who contribute KB content; it scales their expertise.
+- ✅ Audit the AI's recent answers — pick 10 at random per week and check the cited articles were used correctly.
+
+## Tips for admins
+
+- Place new Markdown files under `/knowledge/support/` and they'll be indexed on the next embedding refresh (configurable interval).
+- The AI uses *retrieval augmentation* — it never trains on your KB, just searches it at query time. New content takes effect immediately after the index updates.
+- For details on chunking, embeddings, retrieval thresholds and caching, see [AI Copilot › Knowledge Bases](/docs/ai-copilot/knowledge-bases).
+- You can add new knowledge bases (e.g., a separate compliance KB) and wire them to specific skills. See [Customization › Adding AI Skills](/docs/customization/ai-skills).

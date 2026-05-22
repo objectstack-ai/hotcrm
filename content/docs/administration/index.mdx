@@ -1,0 +1,49 @@
+---
+title: Administration
+description: The CRM admin's handbook — profiles, sharing, automation, state machines, and the initial setup checklist.
+---
+
+# Administration
+
+The Administration section is for **CRM administrators** — the people who configure profiles, sharing rules, automation, and process governance for the team. No coding required.
+
+## What you'll find here
+
+| Page | What it covers |
+| --- | --- |
+| [**Setup checklist**](/docs/administration/setup) | First-week tasks to get HotCRM ready for your team |
+| [**Profiles**](/docs/administration/profiles) | The six built-in profiles and how to assign users |
+| [**Sharing & security**](/docs/administration/sharing-and-security) | Org-wide defaults, role hierarchy, sharing rules, FLS |
+| [**Automation**](/docs/administration/automation) | Workflow rules, flows, scheduled jobs |
+| [**State machines**](/docs/administration/state-machines) | Status transitions and enforcement |
+
+## Who this section is for
+
+- **CRM administrators** — your day-to-day handbook.
+- **Sales / service operations** — for understanding why things behave the way they do.
+- **Implementation consultants** — during initial rollout.
+
+If you're a **developer extending HotCRM** with code, head to [Customization](/docs/customization/extending-objects) instead.
+
+## The admin's mental model
+
+HotCRM is built on three core abstractions:
+
+1. **Objects** — the data entities (accounts, contacts, opportunities, cases).
+2. **Automation** — what happens when objects change (workflows, flows, state machines).
+3. **Security** — who can see and edit what (profiles, sharing rules, field-level security).
+
+Most admin tasks fall into one of these buckets. The pages in this section show you the controls for each.
+
+## Tools you have
+
+- **Setup UI** — find it under the gear icon (top right). The main hub for all admin tasks.
+- **Audit logs** — every config change is logged with who/when/what.
+- **Sandbox** — test config changes safely before production rollout.
+
+## Start here
+
+1. New install? Follow the [Setup checklist](/docs/administration/setup).
+2. Need to give a user different access? See [Profiles](/docs/administration/profiles).
+3. Working out who-can-see-what? See [Sharing & security](/docs/administration/sharing-and-security).
+4. Adding automation? See [Automation](/docs/administration/automation).

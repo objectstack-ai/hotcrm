@@ -1,0 +1,14 @@
+{
+  "title": "Sales Cloud",
+  "defaultOpen": true,
+  "pages": [
+    "index",
+    "leads",
+    "accounts",
+    "contacts",
+    "opportunities",
+    "pipeline-management",
+    "quotes",
+    "activities"
+  ]
+}

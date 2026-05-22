@@ -1,0 +1,11 @@
+{
+  "title": "AI Copilot",
+  "defaultOpen": true,
+  "pages": [
+    "index",
+    "sales-copilot",
+    "service-copilot",
+    "skills",
+    "knowledge-bases"
+  ]
+}

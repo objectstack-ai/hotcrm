@@ -1,0 +1,12 @@
+{
+  "title": "Administration",
+  "defaultOpen": false,
+  "pages": [
+    "index",
+    "setup",
+    "profiles",
+    "sharing-and-security",
+    "automation",
+    "state-machines"
+  ]
+}

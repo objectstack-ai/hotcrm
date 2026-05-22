@@ -1,0 +1,251 @@
+---
+title: Extending Objects
+description: Add custom fields, define new objects, write hooks and flows, configure validation and sharing.
+---
+
+# Extending Objects
+
+This page covers the data layer — adding fields, defining new objects, writing server-side logic, and configuring sharing.
+
+## Adding a custom field
+
+The simplest extension. To add a field to an existing object (e.g., `opportunity`), create a *field augmentation* in your own package.
+
+```ts
+// packages/acme-extension/src/opportunity.object.ts
+import { defineObject, Field, ObjectSchema } from '@objectstack/spec/data';
+
+export default ObjectSchema.parse(defineObject({
+  name: 'opportunity',
+  extends: 'crm.opportunity',           // augment, don't replace
+  fields: {
+    custom_deal_health: Field.select({
+      label: 'Deal Health',
+      options: [
+        { value: 'green',  label: 'Green',  color: 'green'  },
+        { value: 'yellow', label: 'Yellow', color: 'yellow' },
+        { value: 'red',    label: 'Red',    color: 'red'    },
+      ],
+      default: 'green',
+    }),
+    custom_competitor: Field.lookup({
+      label: 'Primary Competitor',
+      reference_to: 'account',
+    }),
+  },
+}));
+```
+
+This adds two new fields without modifying core HotCRM.
+
+## Field type quick reference
+
+| Use case | Field type |
+| --- | --- |
+| Parent reference (optional) | `Field.lookup({ reference_to: 'account' })` |
+| Required parent-child | `Field.masterDetail({ reference_to: 'opportunity' })` |
+| Rollup (count/sum/min/max) | `Field.summary({ reference: 'opportunity_line_item', operation: 'sum', field: 'total_price' })` |
+| Picklist (single) | `Field.select({ options: [...] })` |
+| Picklist (multi) | `Field.select({ options: [...], multiple: true })` |
+| File upload | `Field.file()` |
+| Image | `Field.image()` |
+| Address | `Field.address()` |
+| GPS | `Field.location()` |
+| Money | `Field.currency({ currency: 'USD' })` |
+| Email | `Field.email()` |
+| URL | `Field.url()` |
+| Formula | `Field.formula({ return_type: 'number', expression: 'amount * (1 - discount_pct/100)' })` |
+
+## Defining a new object
+
+```ts
+// packages/acme-extension/src/territory.object.ts
+import { defineObject, Field, ObjectSchema } from '@objectstack/spec/data';
+
+export default ObjectSchema.parse(defineObject({
+  name: 'territory',
+  label: 'Territory',
+  plural: 'Territories',
+  description: 'Geographic sales territory',
+  fields: {
+    name: Field.text({ label: 'Name', required: true, unique: true }),
+    region: Field.select({
+      label: 'Region',
+      required: true,
+      options: [
+        { value: 'amer', label: 'Americas' },
+        { value: 'emea', label: 'EMEA' },
+        { value: 'apac', label: 'APAC' },
+      ],
+    }),
+    owner: Field.lookup({ label: 'Territory Owner', reference_to: 'user' }),
+    quota: Field.currency({ label: 'Annual Quota', currency: 'USD' }),
+  },
+  list_views: { default: ['name', 'region', 'owner', 'quota'] },
+  detail_view: ['name', 'region', 'owner', 'quota'],
+}));
+```
+
+## Hooks — server-side business logic
+
+Hooks fire on data lifecycle events (`before_create`, `after_create`, `before_update`, `after_update`, `before_delete`).
+
+```ts
+// packages/acme-extension/src/territory.hook.ts
+import { defineHook } from '@objectstack/runtime';
+
+export default defineHook({
+  object: 'opportunity',
+  event: 'before_create',
+  handler: async ({ record, broker, context }) => {
+    // Auto-assign territory based on account region
+    if (record.account) {
+      const acc = await broker.findOne('account', { id: record.account });
+      const territory = await broker.findOne('territory', {
+        filters: [['region', '=', acc.region]],
+      });
+      if (territory) record.territory = territory.id;
+    }
+    return record;
+  },
+});
+```
+
+Use hooks for:
+- Field defaulting based on related records.
+- Cross-object validation.
+- Audit trail writes.
+- Triggering external side effects (with caution — prefer flows for retries).
+
+## Flows — multi-step automation
+
+Use flows for branching, loops, multi-record updates, scheduled work.
+
+```ts
+// packages/acme-extension/src/territory_rebalance.flow.ts
+import { defineFlow } from '@objectstack/spec/automation';
+
+export default defineFlow({
+  name: 'territory_rebalance',
+  trigger: { type: 'scheduled', cron: '0 2 1 * *' },  // monthly
+  steps: [
+    {
+      id: 'find_uncovered',
+      type: 'query',
+      object: 'account',
+      filters: [['territory', '=', null], ['status', '=', 'customer']],
+    },
+    {
+      id: 'assign',
+      type: 'for_each',
+      input: '{{find_uncovered}}',
+      steps: [
+        {
+          type: 'find_one',
+          object: 'territory',
+          filters: [['region', '=', '{{item.region}}']],
+          as: 'territory',
+        },
+        {
+          type: 'update',
+          object: 'account',
+          id: '{{item.id}}',
+          fields: { territory: '{{territory.id}}' },
+        },
+      ],
+    },
+  ],
+});
+```
+
+## Validation rules
+
+Block invalid saves with a validation rule:
+
+```ts
+// packages/acme-extension/src/opportunity.validation.ts
+import { defineValidation } from '@objectstack/spec/data';
+
+export default defineValidation({
+  object: 'opportunity',
+  name: 'win_requires_competitor',
+  condition: "stage == 'closed_won' AND custom_competitor == null",
+  error_message: 'You must select a primary competitor before marking the deal Closed Won.',
+});
+```
+
+## Sharing rules
+
+Open up record visibility beyond OWD:
+
+```ts
+// packages/acme-extension/src/account.sharing.ts
+import { defineSharing } from '@objectstack/spec/security';
+
+export default defineSharing({
+  object: 'account',
+  rules: [
+    {
+      name: 'amer_accounts_to_amer_team',
+      type: 'criteria',
+      criteria: [['region', '=', 'amer']],
+      shared_with: { group: 'amer_sales_team' },
+      access: 'read',
+    },
+  ],
+});
+```
+
+## Permission sets
+
+Grant extra abilities beyond a user's profile:
+
+```ts
+// packages/acme-extension/src/territory_manager.permission.ts
+import { PermissionSetSchema, definePermissionSet } from '@objectstack/spec/security';
+
+export default PermissionSetSchema.parse(definePermissionSet({
+  name: 'territory_manager',
+  label: 'Territory Manager',
+  object_permissions: {
+    territory: { read: true, create: true, edit: true, delete: false },
+  },
+  field_permissions: {
+    'territory.quota': { read: true, edit: true },
+  },
+  system_permissions: ['view_all_data'],
+}));
+```
+
+## Testing
+
+```bash
+pnpm test                    # unit tests
+pnpm typecheck               # @objectstack/spec validation
+pnpm test:integration        # against a dev sandbox
+```
+
+CI runs all three on every PR.
+
+## Deploying
+
+```bash
+pnpm build
+pnpm deploy --env=production
+```
+
+Deploy from a feature branch first to a staging tenant; promote after sign-off.
+
+## Tips
+
+- ✅ Keep customisation in its own package — don't fork `packages/crm`.
+- ✅ Snake_case object and field names — convention over configuration.
+- ✅ Use `Field.summary()` rather than maintaining counts manually.
+- ✅ Hooks for record-level logic, flows for multi-record or scheduled.
+- ✅ Validate against `@objectstack/spec` schemas — CI catches mistakes early.
+
+## Related
+
+- [AI Skills](/docs/customization/ai-skills) — expose your custom logic to the Copilot.
+- [UI Extensions](/docs/customization/ui-extensions) — build the screens.
+- [Automation](/docs/administration/automation) — admin-configurable automation alternatives.

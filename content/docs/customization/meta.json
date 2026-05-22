@@ -1,0 +1,10 @@
+{
+  "title": "Customization",
+  "defaultOpen": false,
+  "pages": [
+    "index",
+    "extending-objects",
+    "ai-skills",
+    "ui-extensions"
+  ]
+}

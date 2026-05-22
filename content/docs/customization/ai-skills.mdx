@@ -1,0 +1,201 @@
+---
+title: Building AI Skills
+description: Define new AI Copilot skills that read CRM data, ground in knowledge bases, and respect sharing.
+---
+
+# Building AI Skills
+
+A **skill** is the unit of AI functionality in HotCRM — *"qualify this lead"*, *"draft an email"*, *"forecast revenue"*. This page shows how to build a new one.
+
+## When to build a skill
+
+Build a skill when:
+
+- The task is **bounded and reusable** (not a one-off).
+- The output is **structured** enough to reason about (suggestion + rationale + action).
+- It benefits from **grounding** in CRM data or a knowledge base.
+
+If you just need a server-side workflow or a one-shot script, use a [flow or hook](/docs/customization/extending-objects) instead.
+
+## Anatomy of a skill
+
+A skill is a TypeScript file with the `*.skill.ts` suffix.
+
+```ts
+// packages/acme-extension/src/renewal_pitch.skill.ts
+import { defineSkill } from '@objectstack/spec/ai';
+
+export default defineSkill({
+  name: 'renewal_pitch',
+  label: 'Draft renewal pitch',
+  description: 'Generates a customer-facing renewal pitch grounded in their usage and contract history.',
+
+  // What the skill takes as input
+  input: {
+    contract_id: { type: 'reference', object: 'contract', required: true },
+    tone: { type: 'enum', options: ['friendly', 'formal', 'urgent'], default: 'friendly' },
+  },
+
+  // What it returns
+  output: {
+    subject:    { type: 'text' },
+    body:       { type: 'text' },
+    talking_points: { type: 'array', items: { type: 'text' } },
+    citations:  { type: 'array', items: { type: 'reference' } },
+  },
+
+  // What data sources the skill can read
+  data_sources: {
+    contract:      { object: 'contract',     by: 'id' },
+    account:       { object: 'account',      by: 'contract.account' },
+    primary_contact: { object: 'contact',    by: 'contract.account.primary_contact' },
+    usage:         { object: 'usage_metric', by: 'contract.id', last_n_months: 6 },
+  },
+
+  // Knowledge bases the skill can ground in
+  knowledge_bases: ['sales_knowledge', 'product_information'],
+
+  // Tone, length, format
+  prompt_template: `
+    You are a sales rep writing a renewal pitch for {{primary_contact.name}}
+    at {{account.name}}, who has been a customer since {{account.customer_since}}.
+    Their contract for {{contract.value | currency}} expires on {{contract.end_date}}.
+    Their last 6 months of usage: {{usage.summary}}.
+
+    Write a {{tone}} renewal pitch. Cite specific value they've gotten.
+    Cite at most 2 KB articles for talking points.
+  `,
+
+  // Behaviour
+  behaviour: {
+    requires_confirmation_before_write: true,
+    respects_sharing: true,
+    log_invocations: true,
+    max_tokens: 800,
+  },
+});
+```
+
+## Registering the skill with an agent
+
+Skills are surfaced to users via an **agent** — typically the Sales Copilot or Service Copilot.
+
+```ts
+// packages/ai/src/sales_copilot.agent.ts (extension)
+import { defineAgent } from '@objectstack/spec/ai';
+
+export default defineAgent({
+  name: 'sales_copilot',
+  skills: [
+    'lead_qualification',
+    'email_drafting',
+    'revenue_forecasting',
+    'customer_360',
+    'renewal_pitch',          // ← new skill registered here
+  ],
+});
+```
+
+Or attach it directly to a record's inline-actions:
+
+```ts
+// packages/acme-extension/src/contract.page.ts
+import { definePage } from '@objectstack/spec/ui';
+
+export default definePage({
+  object: 'contract',
+  inline_actions: [
+    { type: 'ai_skill', skill: 'renewal_pitch', label: '✍️ Draft Renewal Pitch' },
+  ],
+});
+```
+
+This adds a button to every contract detail page.
+
+## Grounding in knowledge bases
+
+Reference one or more knowledge bases in `knowledge_bases`. The runtime will:
+
+1. Generate query embeddings from the prompt context.
+2. Search the bases for top-k passages.
+3. Inject them into the prompt with citation tokens.
+4. Surface citations in the output for the user to verify.
+
+To define a custom knowledge base:
+
+```ts
+// packages/acme-extension/src/renewal_playbook.knowledge.ts
+import { defineKnowledgeBase } from '@objectstack/spec/ai';
+
+export default defineKnowledgeBase({
+  name: 'renewal_playbook',
+  label: 'Renewal Playbook',
+  sources: [
+    { type: 'object', object: 'kb_article', filters: [['category', '=', 'renewal']] },
+    { type: 'file_storage', folder: '/playbooks/renewals' },
+    { type: 'confluence', space: 'CSM', label_filter: 'renewals' },
+  ],
+  refresh_schedule: '0 2 * * *',   // nightly at 2 AM
+  permissions: { read_for_profiles: ['sales_user', 'system_admin'] },
+});
+```
+
+## Permissions and sharing
+
+By default, skills run as the calling user — they see only records the user can see. This is non-negotiable for safety.
+
+If a skill **must** read more (e.g., a manager-only forecast skill), declare an `elevated_data_sources` block and the runtime will require the calling user to hold a matching permission:
+
+```ts
+elevated_data_sources: {
+  all_team_opportunities: {
+    object: 'opportunity',
+    requires_permission: 'view_team_pipeline',
+  },
+},
+```
+
+## Testing skills
+
+Unit-test the prompt logic and output shape:
+
+```ts
+import { runSkill } from '@objectstack/runtime/ai/testing';
+import renewalPitch from './renewal_pitch.skill';
+
+it('produces a pitch with citations', async () => {
+  const result = await runSkill(renewalPitch, {
+    input: { contract_id: 'ctr_123' },
+    as_user: 'usr_alex',
+  });
+  expect(result.subject).toContain('renewal');
+  expect(result.citations.length).toBeGreaterThan(0);
+});
+```
+
+Integration-test against a sandbox tenant with real CRM data.
+
+## Monitoring
+
+After deployment, monitor:
+
+- **Invocation volume** — how often is the skill used?
+- **Acceptance rate** — how often does the user accept the output?
+- **Latency** — p50 / p95.
+- **Error rate** — schema mismatches, missing data, timeouts.
+
+Surfaced in **Setup → AI → Skills → Performance**.
+
+## Tips
+
+- ✅ Keep the prompt **short and structured** — better outputs and lower latency.
+- ✅ Always include `citations` in the output schema — trust is built on traceability.
+- ✅ Start with `requires_confirmation_before_write: true` — earn trust before automating.
+- ✅ Watch the acceptance rate — if <50%, the prompt or knowledge base needs work.
+- ✅ Version your prompts — keep a history when you tune.
+
+## Related
+
+- [AI Copilot › Skills](/docs/ai-copilot/skills) — the user-facing perspective.
+- [AI Copilot › Knowledge Bases](/docs/ai-copilot/knowledge-bases) — the RAG layer.
+- [Extending Objects](/docs/customization/extending-objects) — for the data model behind your skill.

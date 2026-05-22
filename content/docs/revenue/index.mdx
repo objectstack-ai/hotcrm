@@ -1,0 +1,66 @@
+---
+title: Revenue Cloud
+description: Product catalog, contract lifecycle, renewals, and high-value discount approvals — the back office of every deal.
+---
+
+# Revenue Cloud
+
+The Revenue module covers everything that happens **after sales says "we won"**: managing the product catalog and prices, governing contracts and renewals, and approving high-value discounts.
+
+## What's included
+
+| Area | What it does |
+| --- | --- |
+| [**Products**](/docs/revenue/products) | The catalog of what you sell — names, codes, list prices, billing types. |
+| [**Contracts**](/docs/revenue/contracts) | Signed agreements with customers — terms, value, renewals. |
+| [**Approvals**](/docs/revenue/approvals) | Multi-step approval for high-value discounts. |
+
+## The revenue lifecycle
+
+```
+Product (catalog)
+   │
+   ▼
+Quote with line items
+   │ (accepted)
+   ▼
+Contract (Activated)
+   │
+   ▼ (renewal_notice_days before end_date)
+Renewal task ──► Renewal opportunity
+```
+
+1. **Set up the catalog** — Products with codes, list prices, billing types.
+2. **Build quotes** with line items from the catalog (see [Quotes](/docs/sales/quotes)).
+3. **On acceptance** the system creates a contract with the quote's terms.
+4. **Contract is activated** — the account is promoted to *Customer*.
+5. **Before the contract ends**, the system schedules a renewal task and a renewal reminder.
+6. **Renewal opportunity** can be created when the customer wants to extend.
+
+## What the system does for you
+
+- **Auto-promote account** to *Customer* the moment a contract is activated.
+- **Auto-stamp Customer Since** date on the first activation.
+- **Daily expiration sweep** — at midnight, contracts past their end date are marked *Expired* and the owner is notified.
+- **Daily renewal reminder** — when a contract is within its renewal-notice window (e.g., 60 days before end), the owner and the account owner get a reminder email.
+- **Discount approval** — opportunities over $500K auto-route for manager + director sign-off.
+
+## Where to find things
+
+In the Enterprise CRM app, the **Products** group contains:
+
+- **Products** — the catalog
+
+And the **Sales** group contains **Contracts** (because they belong to the sales process).
+
+Approvals live in the **Approvals** group:
+
+- **Approval Requests** — what's pending
+- **Action History** — who approved what, when
+- **Processes** — admin view of the approval rules
+
+## Start here
+
+- [Products](/docs/revenue/products) — the catalog you build quotes from.
+- [Contracts](/docs/revenue/contracts) — the signed agreement.
+- [Approvals](/docs/revenue/approvals) — the discount approval process.
