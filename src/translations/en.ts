@@ -595,7 +595,7 @@ export const en: TranslationData = {
 
   apps: {
     crm_enterprise: {
-      label: 'Enterprise CRM',
+      label: 'HotCRM',
       description: 'Customer relationship management for sales, service, and marketing',
       navigation: {
         group_sales: { label: 'Sales' },

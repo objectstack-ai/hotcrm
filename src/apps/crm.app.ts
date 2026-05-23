@@ -4,7 +4,7 @@ import { App } from '@objectstack/spec/ui';
 
 export const CrmApp = App.create({
   name: 'crm_enterprise',
-  label: 'Enterprise CRM',
+  label: 'HotCRM',
   icon: 'briefcase',
   defaultAgent: 'sales_copilot',
   branding: {

@@ -553,7 +553,7 @@ export const esES: TranslationData = {
 
   apps: {
     crm_enterprise: {
-      label: 'CRM Empresarial',
+      label: 'HotCRM',
       description: 'Gestión de relaciones con clientes para ventas, servicio y marketing',
       navigation: {
         group_sales: { label: 'Ventas' },

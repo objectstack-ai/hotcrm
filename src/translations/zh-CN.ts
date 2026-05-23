@@ -678,7 +678,7 @@ export const zhCN: TranslationData = {
 
   apps: {
     crm_enterprise: {
-      label: '企业 CRM',
+      label: 'HotCRM',
       description: '涵盖销售、服务和市场营销的客户关系管理系统',
       navigation: {
         group_sales: { label: '销售' },

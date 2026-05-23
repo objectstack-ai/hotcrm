@@ -553,7 +553,7 @@ export const jaJP: TranslationData = {
 
   apps: {
     crm_enterprise: {
-      label: 'エンタープライズ CRM',
+      label: 'HotCRM',
       description: '営業・サービス・マーケティング向け顧客関係管理システム',
       navigation: {
         group_sales: { label: '営業' },

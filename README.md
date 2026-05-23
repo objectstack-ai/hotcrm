@@ -15,6 +15,24 @@ HotCRM is a complete, opinionated CRM built as the **first official application*
 
 ---
 
+## 📸 Screenshots
+
+| Sales pipeline (kanban) | All opportunities (table) |
+|---|---|
+| ![Sales pipeline](assets/screenshots/01-sales-pipeline.png) | ![All opportunities](assets/screenshots/03-opportunities-list.png) |
+
+| Accounts (cards) | Service cases (kanban) |
+|---|---|
+| ![Accounts](assets/screenshots/02-accounts-list.png) | ![Service cases](assets/screenshots/05-service-cases.png) |
+
+| Executive dashboard |
+|---|
+| ![Executive dashboard](assets/screenshots/04-executive-dashboard.png) |
+
+> Screenshots show HotCRM running in zh-CN with seeded data. Bundled translations: en, zh-CN, es-ES, ja-JP.
+
+---
+
 ## ✨ What you get
 
 **15 business objects** spanning the full Lead-to-Cash cycle:
