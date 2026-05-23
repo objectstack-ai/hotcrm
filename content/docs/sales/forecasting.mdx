@@ -1,0 +1,75 @@
+---
+title: Forecasting
+description: Pipeline snapshots by owner and period — the foundation of revenue forecasting.
+---
+
+# Forecasting
+
+A **forecast** is a frozen snapshot of pipeline at a moment in time. One record per owner per period — typically one per sales rep per quarter or per month. You build a trend (“how did our Q3 number change week-over-week?”) by stacking snapshots, not by re-reading live opportunity data.
+
+This page is about the **forecast object** that stores those snapshots. For the AI conversation that *generates* a forecast narrative, see **AI Copilot → Revenue Forecasting**.
+
+## What lives on a forecast record
+
+| Section | Fields |
+| --- | --- |
+| **Period** | Owner, period (`month` / `quarter`), period start. Period end and the friendly label (e.g. **Q3 2026**) are derived. |
+| **Numbers** | Quota, pipeline amount, best-case amount, commit amount, closed amount. |
+| **Source** | `scheduled` (nightly job), `ai` (Copilot-generated), `manual` (rep entry). |
+| **Narrative** | Optional commentary — what changed, what's at risk, what to ask in the next 1:1. |
+
+Pipeline, best-case, commit and closed are independent buckets — they answer different questions:
+
+- **Pipeline** — every open deal in this period, regardless of confidence.
+- **Best case** — deals the rep believes are winnable with a stretch effort.
+- **Commit** — deals the rep is willing to put their name on (≥ 80% probability by convention).
+- **Closed** — already won; cannot move.
+
+## How periods are derived
+
+You enter `period` and `period_start`; the system computes the rest. For a quarterly forecast starting 2026-07-01:
+
+- `period_end` → 2026-09-30
+- `period_label` → **Q3 2026**
+
+So you'll never see a record labelled “2026-07-01 through ???” — only the human label. The list view and dashboards group by `period_label` directly.
+
+## How forecasts get created
+
+There are three sources, recorded in the `source` field:
+
+1. **Scheduled** — a nightly job (built on the platform's flow engine) snapshots every rep's pipeline. This is the spine of the historical trend.
+2. **AI** — the Copilot skill generates a forecast from current pipeline + recent stage moves + similar past deals. The conversation transcript is stored alongside the record.
+3. **Manual** — a manager enters a number directly. Used for adjustments and overrides.
+
+You can have all three for the same owner/period — they sit next to each other in the trend chart, so disagreements are visible.
+
+## What you do with them
+
+- **Roll-up dashboards** — Sales dashboard groups by `period_label` and sums `commit_amount` across the team.
+- **Trend** — pick an owner and a period and chart `commit_amount` over the `created_at` of every snapshot. Sudden drops trigger the *“why did commit fall ¥800k this week?”* conversation.
+- **Attainment** — `closed_amount / quota` is computed in the report layer; no dedicated field.
+- **AI grounding** — the AI agent reads recent snapshots to ground its narrative in real movement, not imagined deals.
+
+## Who can edit
+
+Forecasts inherit the standard CRM permission model:
+
+- **Sales reps** see and edit their own forecasts.
+- **Sales managers** see and edit forecasts for everyone in their territory (via the role hierarchy).
+- **Sales operations** see all forecasts and can override any number.
+- All edits are tracked in the platform audit log — every commit change is attributed and time-stamped.
+
+## Common questions
+
+**Should I snapshot weekly or just at quarter-end?**
+Weekly. The whole value of forecasts is the trend, and a single snapshot at quarter-end tells you nothing.
+
+**What happens if a rep moves a deal between snapshots?**
+Both snapshots are preserved. The next dashboard refresh shows the new number; the trend chart shows the old one as a historical point.
+
+**Can a forecast roll up from opportunities automatically?**
+The numbers you put on the snapshot are whatever you want them to be — usually computed by your flow or your AI agent from live opportunities. The object itself doesn't recompute them; it preserves the value at the moment of the snapshot, on purpose.
+
+**How does this differ from a saved report?**
+A report runs against *current* data. A forecast is a *frozen* number — even six months later, looking at last quarter's commit will give you the number the rep was on the hook for, not a number recomputed from records that have since moved.
