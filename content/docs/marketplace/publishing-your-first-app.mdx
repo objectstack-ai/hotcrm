@@ -1,0 +1,170 @@
+---
+title: Publishing your first marketplace app
+description: Build, publish, and install a package to cloud.objectos.app — using HotCRM as the worked example.
+---
+
+This guide walks through publishing an ObjectStack package to the [cloud.objectos.app](https://cloud.objectos.app) marketplace, using **HotCRM** as the worked example. Every step generalizes to your own app.
+
+## Prerequisites
+
+- Node.js 20.9+ and pnpm 9+
+- An ObjectStack Cloud account (sign up at [cloud.objectos.app](https://cloud.objectos.app))
+- The `objectstack` CLI: `pnpm add -g @objectstack/cli` (or use `pnpm dlx objectstack`)
+- A repository that builds to a valid `dist/objectstack.json` (this repo is the canonical example)
+
+## 1. Authenticate
+
+Run once per machine. The CLI stores a token at `~/.objectstack/cloud.json`.
+
+```bash
+objectstack cloud login
+```
+
+For CI, set the bearer token directly:
+
+```bash
+export OS_CLOUD_API_KEY="cloud_xxx"
+export OS_ORG_ID="org_xxx"           # required when using a bearer token
+```
+
+## 2. Pick a `manifest_id`
+
+The `manifest_id` is your package's permanent identity on the marketplace. It must be **reverse-domain** (`a-z0-9._-`) and never changes once published.
+
+| Convention | Example |
+|---|---|
+| First-party (ObjectStack-published) | `app.objectstack.hotcrm` |
+| Third-party app | `app.acme.crm` |
+| Internal / private | `com.acme.internal.tools` |
+
+Set it in `objectstack.config.ts`:
+
+```ts
+export default defineStack({
+  manifest: {
+    id: 'app.acme.crm',
+    namespace: 'acme',
+    version: '1.0.0',
+    type: 'app',
+    name: 'Acme CRM',
+    description: 'Customer management for Acme Corp.',
+  },
+  // ...
+});
+```
+
+Pair the `id` with a `namespace` (2–20 lowercase alnum+underscore) and prefix every object name with `<namespace>_`. HotCRM uses `namespace: 'crm'` and every object is `crm_account`, `crm_contact`, etc. — see the [HotCRM ADR](../administration/) for why this matters.
+
+## 3. Build the artifact
+
+```bash
+pnpm build
+```
+
+This produces `dist/objectstack.json` — a single file that contains your entire stack (objects, actions, flows, agents, i18n, security). **That file is the package.**
+
+Inspect it:
+
+```bash
+node -e "console.log(JSON.stringify(require('./dist/objectstack.json').manifest, null, 2))"
+```
+
+You should see the `id`, `version`, `name`, `description` you set in `objectstack.config.ts`.
+
+## 4. Publish
+
+```bash
+objectstack package publish dist/objectstack.json \
+  --visibility marketplace \
+  --category crm \
+  --note "Initial public release."
+```
+
+The CLI:
+
+1. Reads the artifact and derives `manifest_id` and `version` from it.
+2. Upserts a `sys_package` row keyed by `manifest_id` (idempotent — re-runs update metadata but never change `manifest_id`).
+3. Creates an immutable `sys_package_version` snapshot with a SHA-256 checksum of the artifact.
+
+### CLI flags reference
+
+| Flag | Purpose |
+|---|---|
+| `--manifest-id` | Override the artifact's id (use sparingly — id is immutable per package). |
+| `--version` | Override `manifest.version`. Must be strict semver (`1.2.3`). |
+| `--display-name` | Human-readable name shown in the marketplace UI. |
+| `--description` | Short package description. |
+| `--category` | Marketplace category slug (`crm`, `hr`, `devtools`, `business`, ...). |
+| `--visibility` | `private` (default), `org`, or `marketplace`. |
+| `--note` | Release notes for this version (markdown OK). |
+| `--pre-release` | Mark this version as pre-release. |
+| `--env <env_id>` + `--install` | Auto-install into an environment after publish. |
+| `--seed-sample-data` | Include seed data when auto-installing. |
+| `--server` | Override cloud URL (default `https://cloud.objectos.app`; use `http://localhost:4000` against a local cloud). |
+
+## 5. Verify on the marketplace
+
+1. Open [cloud.objectos.app](https://cloud.objectos.app) → **Marketplace**.
+2. Search for your `display-name`. The package appears with the latest published version.
+3. Click **Install** into a test environment and verify it works end-to-end.
+
+## 6. Ship new versions
+
+Bump `manifest.version` in `objectstack.config.ts`, rebuild, re-publish:
+
+```bash
+# In objectstack.config.ts: version: '1.0.0' → '1.1.0'
+pnpm build
+objectstack package publish dist/objectstack.json --note "Adds X, fixes Y."
+```
+
+Each `version` value can only be published **once** per `manifest_id`. The marketplace stores every version forever — installed environments can pin to a specific version.
+
+## Versioning rules
+
+- Strict semver: `MAJOR.MINOR.PATCH` (no pre-release qualifiers in the version string itself; use `--pre-release` flag instead).
+- **Breaking schema changes** (renamed/removed field, changed field type) → bump MAJOR.
+- **Additive changes** (new object, new field, new action) → bump MINOR.
+- **Internal fixes** (hook bug, label tweak) → bump PATCH.
+
+## CI publishing
+
+Drop this in `.github/workflows/publish.yml`:
+
+```yaml
+name: Publish to ObjectStack Cloud
+on:
+  push:
+    tags: ['v*']
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: |
+          pnpm dlx objectstack package publish dist/objectstack.json \
+            --visibility marketplace \
+            --note "$(git tag -l --format='%(contents)' ${{ github.ref_name }})"
+        env:
+          OS_CLOUD_API_KEY: ${{ secrets.OS_CLOUD_API_KEY }}
+          OS_ORG_ID: ${{ secrets.OS_ORG_ID }}
+```
+
+## Troubleshooting
+
+- **`Invalid manifest-id`** — must match `/^[a-z0-9][a-z0-9._-]{0,254}$/i`. No uppercase, no spaces.
+- **`Version already exists`** — bump `manifest.version`. Versions are immutable.
+- **`Cannot read artifact`** — run `pnpm build` first.
+- **`401 Unauthorized`** — run `objectstack cloud login` again or refresh `OS_CLOUD_API_KEY`.
+- **`owner_org_id required`** — set `OS_ORG_ID` (bearer-token mode requires explicit org).
+
+## What's next
+
+- [Manifest and versioning →](manifest-and-versioning)
+- [Forking HotCRM →](fork-hotcrm)

@@ -30,12 +30,12 @@ import { allHooks } from './src/hooks/index.js';
 
 export default defineStack({
   manifest: {
-    id: 'com.example.crm',
+    id: 'app.objectstack.hotcrm',
     namespace: 'crm',
-    version: '3.0.0',
+    version: '1.0.0',
     type: 'app',
-    name: 'Enterprise CRM',
-    description: 'Comprehensive enterprise CRM demonstrating all ObjectStack Protocol features including AI, security, and automation',
+    name: 'HotCRM',
+    description: 'AI-Native CRM for the ObjectStack marketplace — Accounts, Contacts, Leads, Opportunities, Cases, Knowledge, Forecasts, Campaigns, Contracts.',
   },
 
   // ─── Platform capabilities this app needs ─────────────────────────

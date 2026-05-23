@@ -1,0 +1,87 @@
+---
+title: Manifest and versioning
+description: What goes in objectstack.config.ts's manifest, and how marketplace versioning works.
+---
+
+The `manifest` section of `objectstack.config.ts` is your package's public identity. Once published, several fields are **immutable** — get them right before your first `objectstack package publish`.
+
+## Fields
+
+```ts
+manifest: {
+  id: 'app.acme.crm',          // IMMUTABLE — reverse-domain, lowercase
+  namespace: 'acme',           // 2–20 lowercase alphanumeric + underscore
+  version: '1.0.0',            // strict semver, unique per id
+  type: 'app',                 // app | plugin | driver | server | ui | theme | agent | module
+  name: 'Acme CRM',            // display name
+  description: 'CRM for Acme.',
+},
+```
+
+### `id` (immutable)
+
+Your permanent identifier. Reverse-domain (`a-z0-9._-`). Pick carefully — changing `id` creates a new, unrelated package. There is no rename.
+
+Conventions:
+
+| Owner | Pattern |
+|---|---|
+| ObjectStack (first-party) | `app.objectstack.<name>` |
+| Third-party app | `app.<vendor>.<name>` |
+| Internal / private | `com.<vendor>.internal.<name>` |
+| Local dev (auto-derived) | `local.<slug>` |
+
+### `namespace` (effectively immutable)
+
+The prefix every business object in your package must use. HotCRM uses `crm`, so every object is `crm_account`, `crm_contact`, etc. Renaming the namespace is a breaking schema change that requires a major version bump and a migration.
+
+> 💡 **No auto-injection.** The ObjectStack platform does *not* automatically prepend the namespace at runtime. You write `crm_account` everywhere — in source, in REST URLs, in audit logs, in AI tool names. One name, no leaky abstraction.
+
+### `version` (immutable per value)
+
+Strict semver: `MAJOR.MINOR.PATCH`. Each value can only be published once per `id`. Pre-release? Bump the patch and pass `--pre-release` to the CLI.
+
+| Change | Bump |
+|---|---|
+| Remove field, change field type, rename object | MAJOR |
+| Add object, add field, add action, add flow | MINOR |
+| Fix hook, change label, tweak seed | PATCH |
+
+### `type`
+
+| Value | Use for |
+|---|---|
+| `app` | End-user applications (HotCRM, an HR app, a help desk) |
+| `plugin` | Server-side extensions (a custom AI provider, a webhook integration) |
+| `driver` | Data drivers (Postgres, MongoDB, custom backend) |
+| `ui` / `theme` | UI extensions |
+| `agent` | Standalone AI agents |
+
+Most marketplace packages are `app`.
+
+### `name` and `description` (mutable)
+
+Free to change between versions — the marketplace shows the latest published values.
+
+## Marketplace-only metadata (CLI flags)
+
+Some fields aren't in the manifest — pass them at publish time:
+
+```bash
+objectstack package publish dist/objectstack.json \
+  --display-name "Acme CRM" \
+  --description "Customer management for Acme Corp." \
+  --category crm \
+  --visibility marketplace
+```
+
+These update the `sys_package` row, not the artifact. You can change them anytime by re-running publish (no version bump required).
+
+## Frozen artifact vs mutable package
+
+Two layers:
+
+- **`sys_package`** — the marketplace listing. Mutable. One row per `manifest_id`. Holds display_name, description, category, visibility, icon_url, tags, etc.
+- **`sys_package_version`** — an immutable snapshot. One row per `(manifest_id, version)`. Stores the SHA-256 checksum and frozen copy of `dist/objectstack.json`.
+
+When someone installs your package, they're installing a specific `sys_package_version` row's frozen `manifest_json`. That's why versions are immutable — they're the source of truth installed environments depend on.

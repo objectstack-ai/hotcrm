@@ -1,0 +1,134 @@
+---
+title: Forking HotCRM
+description: Use HotCRM as the starting point for your own marketplace app.
+---
+
+HotCRM is the **reference implementation** for ObjectStack marketplace apps. Forking it gives you a battle-tested skeleton (objects, hooks, AI agents, dashboards, i18n, security) that you can rename and customize for any vertical — HR, project management, help desk, billing, you name it.
+
+## Why fork?
+
+A working ObjectStack app needs ~15 conventions wired correctly:
+
+- Namespace prefix on every object
+- File-suffix protocol (`*.object.ts`, `*.hook.ts`, `*.action.ts`)
+- ObjectQL (no raw SQL)
+- AI tool exposure via `*.action.ts`
+- Strict `@objectstack/spec` schema validation
+- i18n bundles for all locales you ship
+- Profile + role hierarchy + sharing rules
+- Approval processes
+- Hooks correctly lowered for the build pipeline
+- Dashboards backed by analytics cubes
+- Documentation that's actually accurate
+
+Writing all of that from scratch is a week. Forking HotCRM and renaming it is an hour.
+
+## Step-by-step
+
+### 1. Clone
+
+```bash
+git clone https://github.com/objectstack-ai/hotcrm.git my-app
+cd my-app
+git remote rename origin upstream     # so you can `git pull upstream main` for HotCRM updates
+git remote add origin git@github.com:<you>/<my-app>.git
+```
+
+### 2. Rename the manifest
+
+Edit `objectstack.config.ts`:
+
+```diff
+ manifest: {
+-  id: 'app.objectstack.hotcrm',
+-  namespace: 'crm',
++  id: 'app.acme.myapp',
++  namespace: 'acme',
+   version: '1.0.0',
+   type: 'app',
+-  name: 'HotCRM',
+-  description: 'AI-Native CRM for the ObjectStack marketplace ...',
++  name: 'Acme MyApp',
++  description: 'Your app, your tagline.',
+ },
+```
+
+### 3. Rename the prefix everywhere
+
+The `crm_` prefix is in ~85 files. Use a one-shot rename:
+
+```bash
+# macOS (BSD sed)
+find src apps/docs/content -type f \( -name "*.ts" -o -name "*.mdx" -o -name "*.json" \) \
+  -exec sed -i '' 's/crm_/acme_/g' {} +
+
+# Linux (GNU sed)
+find src apps/docs/content -type f \( -name "*.ts" -o -name "*.mdx" -o -name "*.json" \) \
+  -exec sed -i 's/crm_/acme_/g' {} +
+
+# Rename the translation file that's literally called crm.translation.ts
+mv src/translations/crm.translation.ts src/translations/acme.translation.ts
+```
+
+Then update `src/translations/index.ts` to reference the new filename.
+
+### 4. Cut what you don't need
+
+HotCRM ships 15 objects across Sales / Service / Marketing / Revenue. Most apps need fewer:
+
+```bash
+# Example: keep only Sales-related objects
+rm src/objects/{case,knowledge_article,campaign,campaign_member,contract,quote,quote_line_item,forecast}.object.ts
+```
+
+Then prune the corresponding hooks, actions, flows, dashboards, translations, and docs that reference removed objects. `pnpm typecheck` will flag the broken references.
+
+### 5. Add what you do need
+
+Follow the file-suffix protocol:
+
+| New entity | File |
+|---|---|
+| Data model | `src/objects/<entity>.object.ts` |
+| Server-side trigger | `src/hooks/<entity>.hook.ts` |
+| API + AI tool | `src/actions/<entity>.action.ts` |
+| UI layout | `src/pages/<entity>.page.ts` |
+| List view | `src/views/<entity>.view.ts` |
+| i18n | append to `src/translations/{en,zh-CN,es-ES,ja-JP}.ts` |
+
+Every file goes through `@objectstack/spec` schema validation at build time. Mistakes fail loudly.
+
+### 6. Verify
+
+```bash
+pnpm typecheck
+pnpm build
+pnpm dev    # smoke-test in the browser at http://localhost:3000
+```
+
+### 7. Publish
+
+```bash
+objectstack cloud login
+objectstack package publish dist/objectstack.json \
+  --visibility marketplace \
+  --category <your-category> \
+  --note "Initial release."
+```
+
+See [Publishing your first marketplace app](publishing-your-first-app) for full CLI reference.
+
+## Stay in sync with HotCRM
+
+HotCRM keeps evolving. Pull in upstream improvements:
+
+```bash
+git fetch upstream
+git merge upstream/main          # or rebase, your call
+```
+
+Merge conflicts mostly happen in `src/translations/*` (additive) and `src/objects/*.object.ts` (if you renamed them). The file-suffix protocol keeps conflict surface small.
+
+## What you can safely change
+
+Everything. HotCRM ships under Apache-2.0 — you can rename it, rebrand it, sell support around it. The only ask: if you find a bug in the **convention** (not your business logic), upstream it back. That makes the reference better for everyone.
