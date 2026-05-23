@@ -118,6 +118,86 @@ export const en: TranslationData = {
       },
     },
 
+    crm_knowledge_article: {
+      label: 'Knowledge Article',
+      pluralLabel: 'Knowledge Base',
+      description: 'Reusable answers and how-to guides for customers and agents',
+      fields: {
+        article_number: { label: 'Article #' },
+        title: { label: 'Title' },
+        summary: { label: 'Summary' },
+        body: { label: 'Body' },
+        category: {
+          label: 'Category',
+          options: {
+            getting_started: 'Getting Started', how_to: 'How-To',
+            troubleshooting: 'Troubleshooting', billing: 'Billing & Pricing', api: 'API & Integrations',
+          },
+        },
+        tags: {
+          label: 'Tags',
+          options: { auth: 'Auth', sso: 'SSO', mobile: 'Mobile', email: 'Email' },
+        },
+        status: {
+          label: 'Status',
+          options: { draft: 'Draft', in_review: 'In Review', published: 'Published', archived: 'Archived' },
+        },
+        audience: {
+          label: 'Audience',
+          options: { public: 'Public', internal: 'Internal' },
+        },
+        language: {
+          label: 'Language',
+          options: { en: 'English', zh_cn: 'Simplified Chinese', es_es: 'Spanish', ja_jp: 'Japanese' },
+        },
+        owner: { label: 'Owner' },
+        related_to_case: { label: 'Source Case' },
+        published_at: { label: 'Published At' },
+        last_reviewed_at: { label: 'Last Reviewed' },
+        view_count: { label: 'Views' },
+        helpful_count: { label: 'Helpful' },
+        not_helpful_count: { label: 'Not Helpful' },
+      },
+      _views: {
+        all_articles: { label: 'All Articles' },
+        published_articles: { label: 'Published' },
+        my_drafts: { label: 'My Drafts' },
+        stale_articles: { label: 'Stale (>180d)' },
+      },
+    },
+
+    crm_forecast: {
+      label: 'Forecast',
+      pluralLabel: 'Forecasts',
+      description: 'Periodic pipeline snapshot by owner used for revenue forecasting',
+      fields: {
+        owner: { label: 'Owner' },
+        period: { label: 'Period', options: { month: 'Month', quarter: 'Quarter' } },
+        period_start: { label: 'Period Start' },
+        period_end: { label: 'Period End' },
+        period_label: { label: 'Period' },
+        snapshot_date: { label: 'Snapshot Date' },
+        source: {
+          label: 'Source',
+          options: { scheduled: 'Scheduled snapshot', ai: 'AI skill', manual: 'Manual entry' },
+        },
+        quota: { label: 'Quota' },
+        pipeline_amount: { label: 'Pipeline' },
+        best_case_amount: { label: 'Best Case' },
+        commit_amount: { label: 'Commit' },
+        closed_amount: { label: 'Closed' },
+        expected_amount: { label: 'Expected' },
+        attainment_pct: { label: 'Attainment %' },
+        coverage_ratio: { label: 'Coverage' },
+        notes: { label: 'Notes' },
+      },
+      _views: {
+        all_forecasts: { label: 'All Forecasts' },
+        this_quarter_forecasts: { label: 'This Quarter' },
+        my_forecast: { label: 'My Forecast' },
+      },
+    },
+
     crm_lead: {
       label: 'Lead',
       pluralLabel: 'Leads',

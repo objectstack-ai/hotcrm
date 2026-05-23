@@ -125,6 +125,80 @@ export const zhCN: TranslationData = {
       },
     },
 
+    crm_knowledge_article: {
+      label: '知识文章',
+      pluralLabel: '知识库',
+      description: '面向客户和坐席的可复用问答与操作指南',
+      fields: {
+        article_number: { label: '文章编号' },
+        title: { label: '标题' },
+        summary: { label: '摘要' },
+        body: { label: '正文' },
+        category: {
+          label: '分类',
+          options: {
+            getting_started: '入门指南', how_to: '操作指南',
+            troubleshooting: '故障排查', billing: '账务与价格', api: 'API 与集成',
+          },
+        },
+        tags: { label: '标签', options: { auth: '身份认证', sso: '单点登录', mobile: '移动端', email: '邮件' } },
+        status: {
+          label: '状态',
+          options: { draft: '草稿', in_review: '审核中', published: '已发布', archived: '已归档' },
+        },
+        audience: { label: '受众', options: { public: '公开', internal: '仅内部' } },
+        language: {
+          label: '语言',
+          options: { en: '英语', zh_cn: '简体中文', es_es: '西班牙语', ja_jp: '日语' },
+        },
+        owner: { label: '负责人' },
+        related_to_case: { label: '来源案例' },
+        published_at: { label: '发布时间' },
+        last_reviewed_at: { label: '最近复核' },
+        view_count: { label: '浏览数' },
+        helpful_count: { label: '有用' },
+        not_helpful_count: { label: '没用' },
+      },
+      _views: {
+        all_articles: { label: '全部文章' },
+        published_articles: { label: '已发布' },
+        my_drafts: { label: '我的草稿' },
+        stale_articles: { label: '过期 (>180 天)' },
+      },
+    },
+
+    crm_forecast: {
+      label: '销售预测',
+      pluralLabel: '销售预测',
+      description: '按销售负责人定期记录的管道快照，用于收入预测',
+      fields: {
+        owner: { label: '负责人' },
+        period: { label: '周期', options: { month: '月度', quarter: '季度' } },
+        period_start: { label: '周期起始' },
+        period_end: { label: '周期截止' },
+        period_label: { label: '周期标签' },
+        snapshot_date: { label: '快照日期' },
+        source: {
+          label: '来源',
+          options: { scheduled: '定时快照', ai: 'AI 技能', manual: '手工录入' },
+        },
+        quota: { label: '配额' },
+        pipeline_amount: { label: '管道金额' },
+        best_case_amount: { label: '最佳情况' },
+        commit_amount: { label: '承诺金额' },
+        closed_amount: { label: '已成交金额' },
+        expected_amount: { label: '预期金额' },
+        attainment_pct: { label: '达成率（%）' },
+        coverage_ratio: { label: '覆盖倍数' },
+        notes: { label: '备注' },
+      },
+      _views: {
+        all_forecasts: { label: '全部预测' },
+        this_quarter_forecasts: { label: '本季度' },
+        my_forecast: { label: '我的预测' },
+      },
+    },
+
     crm_lead: {
       label: '线索',
       pluralLabel: '线索',

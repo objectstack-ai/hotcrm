@@ -8,26 +8,10 @@ import type { Hook, HookContext } from '@objectstack/spec/data';
  * Auto-derives `period_end` and `period_label` from `period` + `period_start`
  * so callers (UI, AI skill, scheduled snapshot job) don't have to compute
  * them. Also stamps `snapshot_date` to today on insert if unset.
+ *
+ * NOTE: all helpers are inlined into `handler` because the build pipeline
+ * lowers inline handlers — module-scope helpers would not survive lowering.
  */
-
-const pad = (n: number) => String(n).padStart(2, '0');
-const isoDate = (d: Date) => `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
-const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-
-function endOfMonth(start: Date): Date {
-  return new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + 1, 0));
-}
-function endOfQuarter(start: Date): Date {
-  return new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + 3, 0));
-}
-function labelFor(period: string, start: Date): string {
-  if (period === 'quarter') {
-    const q = Math.floor(start.getUTCMonth() / 3) + 1;
-    return `Q${q} ${start.getUTCFullYear()}`;
-  }
-  return `${MONTHS[start.getUTCMonth()]} ${start.getUTCFullYear()}`;
-}
-
 const forecastDerive: Hook = {
   name: 'forecast_derive_period',
   object: 'crm_forecast',
@@ -35,6 +19,22 @@ const forecastDerive: Hook = {
   priority: 200,
   description: 'Derive period_end and period_label from period + period_start.',
   handler: async (ctx: HookContext) => {
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const isoDate = (d: Date) =>
+      `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
+    const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const endOfMonth = (start: Date) =>
+      new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + 1, 0));
+    const endOfQuarter = (start: Date) =>
+      new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + 3, 0));
+    const labelFor = (period: string, start: Date) => {
+      if (period === 'quarter') {
+        const q = Math.floor(start.getUTCMonth() / 3) + 1;
+        return `Q${q} ${start.getUTCFullYear()}`;
+      }
+      return `${MONTHS[start.getUTCMonth()]} ${start.getUTCFullYear()}`;
+    };
+
     const { input } = ctx;
     const previous = ctx.previous;
     const period =

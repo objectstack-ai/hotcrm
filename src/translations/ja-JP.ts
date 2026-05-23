@@ -102,6 +102,80 @@ export const jaJP: TranslationData = {
       },
     },
 
+    crm_knowledge_article: {
+      label: 'ナレッジ記事',
+      pluralLabel: 'ナレッジベース',
+      description: '顧客とエージェントが再利用できる回答とハウツーガイド',
+      fields: {
+        article_number: { label: '記事番号' },
+        title: { label: 'タイトル' },
+        summary: { label: '要約' },
+        body: { label: '本文' },
+        category: {
+          label: 'カテゴリ',
+          options: {
+            getting_started: 'はじめに', how_to: 'ハウツー',
+            troubleshooting: 'トラブルシューティング', billing: '請求と料金', api: 'API と連携',
+          },
+        },
+        tags: { label: 'タグ', options: { auth: '認証', sso: 'SSO', mobile: 'モバイル', email: 'メール' } },
+        status: {
+          label: 'ステータス',
+          options: { draft: '下書き', in_review: 'レビュー中', published: '公開済み', archived: 'アーカイブ' },
+        },
+        audience: { label: '対象', options: { public: '公開', internal: '社内' } },
+        language: {
+          label: '言語',
+          options: { en: '英語', zh_cn: '簡体字中国語', es_es: 'スペイン語', ja_jp: '日本語' },
+        },
+        owner: { label: '所有者' },
+        related_to_case: { label: '元のケース' },
+        published_at: { label: '公開日時' },
+        last_reviewed_at: { label: '最終レビュー' },
+        view_count: { label: '閲覧数' },
+        helpful_count: { label: '役に立った' },
+        not_helpful_count: { label: '役に立たなかった' },
+      },
+      _views: {
+        all_articles: { label: 'すべての記事' },
+        published_articles: { label: '公開済み' },
+        my_drafts: { label: '自分の下書き' },
+        stale_articles: { label: '古い (>180日)' },
+      },
+    },
+
+    crm_forecast: {
+      label: 'フォーキャスト',
+      pluralLabel: 'フォーキャスト',
+      description: '担当者ごとの定期パイプラインスナップショットで収益予測に使用',
+      fields: {
+        owner: { label: '担当者' },
+        period: { label: '期間', options: { month: '月次', quarter: '四半期' } },
+        period_start: { label: '期間開始' },
+        period_end: { label: '期間終了' },
+        period_label: { label: '期間' },
+        snapshot_date: { label: 'スナップショット日' },
+        source: {
+          label: 'ソース',
+          options: { scheduled: '定期スナップショット', ai: 'AI スキル', manual: '手動入力' },
+        },
+        quota: { label: 'クォータ' },
+        pipeline_amount: { label: 'パイプライン' },
+        best_case_amount: { label: 'ベストケース' },
+        commit_amount: { label: 'コミット' },
+        closed_amount: { label: 'クローズ' },
+        expected_amount: { label: '予想' },
+        attainment_pct: { label: '達成率 %' },
+        coverage_ratio: { label: 'カバレッジ' },
+        notes: { label: 'メモ' },
+      },
+      _views: {
+        all_forecasts: { label: 'すべてのフォーキャスト' },
+        this_quarter_forecasts: { label: '今四半期' },
+        my_forecast: { label: '自分のフォーキャスト' },
+      },
+    },
+
     crm_lead: {
       label: 'リード',
       pluralLabel: 'リード',

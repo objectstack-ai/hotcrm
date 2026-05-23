@@ -102,6 +102,80 @@ export const esES: TranslationData = {
       },
     },
 
+    crm_knowledge_article: {
+      label: 'Artículo de Conocimiento',
+      pluralLabel: 'Base de Conocimiento',
+      description: 'Respuestas y guías reutilizables para clientes y agentes',
+      fields: {
+        article_number: { label: 'N.º Artículo' },
+        title: { label: 'Título' },
+        summary: { label: 'Resumen' },
+        body: { label: 'Contenido' },
+        category: {
+          label: 'Categoría',
+          options: {
+            getting_started: 'Primeros pasos', how_to: 'Cómo hacerlo',
+            troubleshooting: 'Resolución de problemas', billing: 'Facturación', api: 'API e Integraciones',
+          },
+        },
+        tags: { label: 'Etiquetas', options: { auth: 'Autenticación', sso: 'SSO', mobile: 'Móvil', email: 'Correo' } },
+        status: {
+          label: 'Estado',
+          options: { draft: 'Borrador', in_review: 'En revisión', published: 'Publicado', archived: 'Archivado' },
+        },
+        audience: { label: 'Audiencia', options: { public: 'Público', internal: 'Interno' } },
+        language: {
+          label: 'Idioma',
+          options: { en: 'Inglés', zh_cn: 'Chino simplificado', es_es: 'Español', ja_jp: 'Japonés' },
+        },
+        owner: { label: 'Propietario' },
+        related_to_case: { label: 'Caso de origen' },
+        published_at: { label: 'Publicado el' },
+        last_reviewed_at: { label: 'Última revisión' },
+        view_count: { label: 'Vistas' },
+        helpful_count: { label: 'Útil' },
+        not_helpful_count: { label: 'No útil' },
+      },
+      _views: {
+        all_articles: { label: 'Todos los artículos' },
+        published_articles: { label: 'Publicados' },
+        my_drafts: { label: 'Mis borradores' },
+        stale_articles: { label: 'Obsoletos (>180d)' },
+      },
+    },
+
+    crm_forecast: {
+      label: 'Previsión',
+      pluralLabel: 'Previsiones',
+      description: 'Instantánea periódica del pipeline por propietario para previsión de ingresos',
+      fields: {
+        owner: { label: 'Propietario' },
+        period: { label: 'Periodo', options: { month: 'Mes', quarter: 'Trimestre' } },
+        period_start: { label: 'Inicio del periodo' },
+        period_end: { label: 'Fin del periodo' },
+        period_label: { label: 'Periodo' },
+        snapshot_date: { label: 'Fecha de instantánea' },
+        source: {
+          label: 'Origen',
+          options: { scheduled: 'Instantánea programada', ai: 'Skill de IA', manual: 'Entrada manual' },
+        },
+        quota: { label: 'Cuota' },
+        pipeline_amount: { label: 'Pipeline' },
+        best_case_amount: { label: 'Mejor caso' },
+        commit_amount: { label: 'Compromiso' },
+        closed_amount: { label: 'Cerrado' },
+        expected_amount: { label: 'Esperado' },
+        attainment_pct: { label: 'Cumplimiento %' },
+        coverage_ratio: { label: 'Cobertura' },
+        notes: { label: 'Notas' },
+      },
+      _views: {
+        all_forecasts: { label: 'Todas las previsiones' },
+        this_quarter_forecasts: { label: 'Este trimestre' },
+        my_forecast: { label: 'Mi previsión' },
+      },
+    },
+
     crm_lead: {
       label: 'Prospecto',
       pluralLabel: 'Prospectos',
