@@ -26,9 +26,9 @@ export const EscalateCaseAction: Action = {
         id,
         is_escalated: true,
         escalation_reason: input.reason ?? null,
-        escalated_by: ctx.user?.id ?? null,
-        escalated_at: new Date().toISOString(),
-        priority: 'urgent',
+        escalated_date: new Date().toISOString(),
+        status: 'escalated',
+        priority: 'critical',
       }, { where: { id } });
       return { ok: true, id };
     `,
@@ -72,8 +72,6 @@ export const CloseCaseAction: Action = {
         id,
         is_closed: true,
         resolution: input.resolution ?? null,
-        closed_by: ctx.user?.id ?? null,
-        closed_at: new Date().toISOString(),
         status: 'closed',
       }, { where: { id } });
       return { ok: true, id };

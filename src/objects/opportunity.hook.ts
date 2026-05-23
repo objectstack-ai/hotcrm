@@ -69,6 +69,10 @@ const opportunityValidationHook: Hook = {
     if (typeof amount === 'number' && stage && STAGE_PROBABILITY[stage] !== undefined) {
       input.expected_revenue = Math.round(amount * STAGE_PROBABILITY[stage]) / 100;
     }
+    if (stage && STAGE_PROBABILITY[stage] !== undefined) {
+      // Always sync probability with stage (single source of truth = stage).
+      input.probability = STAGE_PROBABILITY[stage];
+    }
 
     if (event === 'beforeUpdate' && previous) {
       const prevStage = previous.stage as string | undefined;
