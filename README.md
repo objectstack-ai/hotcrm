@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/icon.svg" alt="HotCRM" width="128" height="128"/>
+</p>
+
 # HotCRM
 
 > **AI-Native CRM for the ObjectStack marketplace.** The reference implementation every future marketplace app forks from.
