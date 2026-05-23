@@ -26,7 +26,7 @@ function addDays(iso: string, days: number): string {
 
 const quoteValidation: Hook = {
   name: 'quote_workflow',
-  object: 'quote',
+  object: 'crm_quote',
   events: ['beforeInsert', 'beforeUpdate'],
   priority: 200,
   description: 'Default expiration date and freeze accepted/expired quotes.',
@@ -67,7 +67,7 @@ const quoteValidation: Hook = {
 
 const quoteAccepted: Hook = {
   name: 'quote_on_accepted',
-  object: 'quote',
+  object: 'crm_quote',
   events: ['afterUpdate'],
   priority: 800,
   async: true,
@@ -105,7 +105,7 @@ const quoteAccepted: Hook = {
 
     const today = new Date().toISOString().slice(0, 10);
     const months = 12;
-    await api.object('contract').insert({
+    await api.object('crm_contract').insert({
       account: accountId,
       contact: contactId,
       opportunity: opportunityId,
@@ -123,9 +123,9 @@ const quoteAccepted: Hook = {
     });
 
     if (opportunityId) {
-      const opp = await api.object('opportunity').findOne({ filter: { id: opportunityId } });
+      const opp = await api.object('crm_opportunity').findOne({ filter: { id: opportunityId } });
       if (opp && opp.stage !== 'closed_won' && opp.stage !== 'closed_lost') {
-        await api.object('opportunity').update(opportunityId, {
+        await api.object('crm_opportunity').update(opportunityId, {
           stage: 'closed_won',
           close_date: today,
         });

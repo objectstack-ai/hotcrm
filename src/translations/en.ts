@@ -10,7 +10,7 @@ import type { TranslationData } from '@objectstack/spec/system';
  */
 export const en: TranslationData = {
   objects: {
-    account: {
+    crm_account: {
       label: 'Account',
       pluralLabel: 'Accounts',
       fields: {
@@ -65,7 +65,7 @@ export const en: TranslationData = {
       },
     },
 
-    contact: {
+    crm_contact: {
       label: 'Contact',
       pluralLabel: 'Contacts',
       fields: {
@@ -73,7 +73,7 @@ export const en: TranslationData = {
         first_name: { label: 'First Name' },
         last_name: { label: 'Last Name' },
         full_name: { label: 'Full Name' },
-        account: { label: 'Account' },
+        crm_account: { label: 'Account' },
         email: { label: 'Email' },
         phone: { label: 'Phone' },
         mobile: { label: 'Mobile' },
@@ -118,7 +118,7 @@ export const en: TranslationData = {
       },
     },
 
-    lead: {
+    crm_lead: {
       label: 'Lead',
       pluralLabel: 'Leads',
       fields: {
@@ -183,12 +183,12 @@ export const en: TranslationData = {
       },
     },
 
-    opportunity: {
+    crm_opportunity: {
       label: 'Opportunity',
       pluralLabel: 'Opportunities',
       fields: {
         name: { label: 'Opportunity Name' },
-        account: { label: 'Account' },
+        crm_account: { label: 'Account' },
         primary_contact: { label: 'Primary Contact' },
         owner: { label: 'Opportunity Owner' },
         amount: { label: 'Amount' },
@@ -230,7 +230,7 @@ export const en: TranslationData = {
           },
         },
         competitors: { label: 'Competitors' },
-        campaign: { label: 'Campaign' },
+        crm_campaign: { label: 'Campaign' },
         days_in_stage: { label: 'Days in Current Stage' },
         is_private: { label: 'Private' },
         approval_status: {
@@ -274,15 +274,15 @@ export const en: TranslationData = {
       },
     },
 
-    case: {
+    crm_case: {
       label: 'Case',
       pluralLabel: 'Cases',
       fields: {
         case_number: { label: 'Case Number' },
         subject: { label: 'Subject' },
         description: { label: 'Description' },
-        account: { label: 'Account' },
-        contact: { label: 'Contact' },
+        crm_account: { label: 'Account' },
+        crm_contact: { label: 'Contact' },
         status: { label: 'Status' },
         priority: { label: 'Priority' },
         type: { label: 'Case Type' },
@@ -328,14 +328,14 @@ export const en: TranslationData = {
       },
     },
 
-    contract: {
+    crm_contract: {
       label: 'Contract',
       pluralLabel: 'Contracts',
       fields: {
         contract_number: { label: 'Contract Number' },
-        account: { label: 'Account' },
-        contact: { label: 'Primary Contact' },
-        opportunity: { label: 'Related Opportunity' },
+        crm_account: { label: 'Account' },
+        crm_contact: { label: 'Primary Contact' },
+        crm_opportunity: { label: 'Related Opportunity' },
         owner: { label: 'Contract Owner' },
         status: { label: 'Status' },
         contract_term_months: { label: 'Contract Term (Months)' },
@@ -362,7 +362,7 @@ export const en: TranslationData = {
       },
     },
 
-    product: {
+    crm_product: {
       label: 'Product',
       pluralLabel: 'Products',
       fields: {
@@ -391,15 +391,15 @@ export const en: TranslationData = {
       },
     },
 
-    quote: {
+    crm_quote: {
       label: 'Quote',
       pluralLabel: 'Quotes',
       fields: {
         quote_number: { label: 'Quote Number' },
         name: { label: 'Quote Name' },
-        account: { label: 'Account' },
-        contact: { label: 'Contact' },
-        opportunity: { label: 'Opportunity' },
+        crm_account: { label: 'Account' },
+        crm_contact: { label: 'Contact' },
+        crm_opportunity: { label: 'Opportunity' },
         owner: { label: 'Quote Owner' },
         status: { label: 'Status' },
         quote_date: { label: 'Quote Date' },
@@ -424,7 +424,7 @@ export const en: TranslationData = {
       },
     },
 
-    task: {
+    crm_task: {
       label: 'Task',
       pluralLabel: 'Tasks',
       fields: {
@@ -463,7 +463,7 @@ export const en: TranslationData = {
       },
     },
 
-    campaign: {
+    crm_campaign: {
       label: 'Campaign',
       pluralLabel: 'Campaigns',
       fields: {

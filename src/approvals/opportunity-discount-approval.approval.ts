@@ -23,7 +23,7 @@ import { ApprovalProcess } from '@objectstack/spec/automation';
 export const OpportunityDiscountApproval = ApprovalProcess.create({
   name: 'opportunity_discount_approval',
   label: 'Opportunity Discount Approval',
-  object: 'opportunity',
+  object: 'crm_opportunity',
   active: true,
   description:
     'High-value opportunities (amount > 500k) require manager + director sign-off.',

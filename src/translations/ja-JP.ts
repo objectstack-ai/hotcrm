@@ -9,7 +9,7 @@ import type { TranslationData } from '@objectstack/spec/system';
  */
 export const jaJP: TranslationData = {
   objects: {
-    account: {
+    crm_account: {
       label: '取引先',
       pluralLabel: '取引先',
       fields: {
@@ -49,7 +49,7 @@ export const jaJP: TranslationData = {
       },
     },
 
-    contact: {
+    crm_contact: {
       label: '取引先責任者',
       pluralLabel: '取引先責任者',
       fields: {
@@ -57,7 +57,7 @@ export const jaJP: TranslationData = {
         first_name: { label: '名' },
         last_name: { label: '姓' },
         full_name: { label: '氏名' },
-        account: { label: '取引先' },
+        crm_account: { label: '取引先' },
         email: { label: 'メール' },
         phone: { label: '電話' },
         mobile: { label: '携帯電話' },
@@ -102,7 +102,7 @@ export const jaJP: TranslationData = {
       },
     },
 
-    lead: {
+    crm_lead: {
       label: 'リード',
       pluralLabel: 'リード',
       fields: {
@@ -167,12 +167,12 @@ export const jaJP: TranslationData = {
       },
     },
 
-    opportunity: {
+    crm_opportunity: {
       label: '商談',
       pluralLabel: '商談',
       fields: {
         name: { label: '商談名' },
-        account: { label: '取引先' },
+        crm_account: { label: '取引先' },
         primary_contact: { label: '主担当者' },
         owner: { label: '商談所有者' },
         amount: { label: '金額' },
@@ -214,7 +214,7 @@ export const jaJP: TranslationData = {
           },
         },
         competitors: { label: '競合他社' },
-        campaign: { label: 'キャンペーン' },
+        crm_campaign: { label: 'キャンペーン' },
         days_in_stage: { label: '現ステージ滞在日数' },
         is_private: { label: '非公開' },
       },
@@ -238,15 +238,15 @@ export const jaJP: TranslationData = {
       },
     },
 
-    case: {
+    crm_case: {
       label: 'ケース',
       pluralLabel: 'ケース',
       fields: {
         case_number: { label: 'ケース番号' },
         subject: { label: '件名' },
         description: { label: '説明' },
-        account: { label: 'アカウント' },
-        contact: { label: '連絡先' },
+        crm_account: { label: 'アカウント' },
+        crm_contact: { label: '連絡先' },
         status: { label: 'ステータス' },
         priority: { label: '優先度' },
         type: { label: 'ケース種別' },
@@ -292,14 +292,14 @@ export const jaJP: TranslationData = {
       },
     },
 
-    contract: {
+    crm_contract: {
       label: '契約',
       pluralLabel: '契約',
       fields: {
         contract_number: { label: '契約番号' },
-        account: { label: 'アカウント' },
-        contact: { label: '主担当連絡先' },
-        opportunity: { label: '関連商談' },
+        crm_account: { label: 'アカウント' },
+        crm_contact: { label: '主担当連絡先' },
+        crm_opportunity: { label: '関連商談' },
         owner: { label: '契約担当者' },
         status: { label: 'ステータス' },
         contract_term_months: { label: '契約期間（月）' },
@@ -326,7 +326,7 @@ export const jaJP: TranslationData = {
       },
     },
 
-    product: {
+    crm_product: {
       label: '製品',
       pluralLabel: '製品',
       fields: {
@@ -355,15 +355,15 @@ export const jaJP: TranslationData = {
       },
     },
 
-    quote: {
+    crm_quote: {
       label: '見積',
       pluralLabel: '見積',
       fields: {
         quote_number: { label: '見積番号' },
         name: { label: '見積名' },
-        account: { label: 'アカウント' },
-        contact: { label: '連絡先' },
-        opportunity: { label: '商談' },
+        crm_account: { label: 'アカウント' },
+        crm_contact: { label: '連絡先' },
+        crm_opportunity: { label: '商談' },
         owner: { label: '見積担当者' },
         status: { label: 'ステータス' },
         quote_date: { label: '見積日' },
@@ -388,7 +388,7 @@ export const jaJP: TranslationData = {
       },
     },
 
-    task: {
+    crm_task: {
       label: 'タスク',
       pluralLabel: 'タスク',
       fields: {
@@ -427,7 +427,7 @@ export const jaJP: TranslationData = {
       },
     },
 
-    campaign: {
+    crm_campaign: {
       label: 'キャンペーン',
       pluralLabel: 'キャンペーン',
       fields: {

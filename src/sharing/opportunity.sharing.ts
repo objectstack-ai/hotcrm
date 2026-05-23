@@ -5,7 +5,7 @@ import { P } from '@objectstack/spec';
 export const OpportunitySalesSharingRule = {
   name: 'opportunity_sales_sharing',
   label: 'Opportunity Sales Team Sharing',
-  object: 'opportunity',
+  object: 'crm_opportunity',
   type: 'criteria' as const,
   condition: P`!(record.stage in ["closed_won", "closed_lost"]) && record.amount >= 100000`,
   accessLevel: 'read' as const,

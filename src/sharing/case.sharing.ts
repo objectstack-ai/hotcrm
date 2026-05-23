@@ -5,7 +5,7 @@ import { P } from '@objectstack/spec';
 export const CaseEscalationSharingRule = {
   name: 'case_escalation_sharing',
   label: 'Escalated Cases Sharing',
-  object: 'case',
+  object: 'crm_case',
   type: 'criteria' as const,
   condition: P`record.priority == "critical" && record.is_closed == false`,
   accessLevel: 'edit' as const,

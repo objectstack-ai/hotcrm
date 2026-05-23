@@ -86,7 +86,7 @@ CI fails if validation fails — so you'll know immediately.
 ## Golden rules
 
 - ✅ **Don't fork core packages** — extend with hooks and new objects in your own package.
-- ✅ **Use ObjectQL, not SQL** — `broker.find('opportunity', {...})` is the only supported data access.
+- ✅ **Use ObjectQL, not SQL** — `broker.find('crm_opportunity', {...})` is the only supported data access.
 - ✅ **Snake_case** for object and field names.
 - ✅ **Validate everything** against `@objectstack/spec` schemas.
 - ✅ **Test in sandbox** before deploying to production.

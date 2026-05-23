@@ -16,7 +16,7 @@ export const TaskViews = defineView({
     type: 'grid',
     name: 'all_tasks',
     label: 'All Tasks',
-    data: { provider: 'object', object: 'task' },
+    data: { provider: 'object', object: 'crm_task' },
     columns: [
       { field: 'is_completed', width: 60, align: 'center' },
       { field: 'subject', width: 280, sortable: true, link: true },
@@ -57,7 +57,7 @@ export const TaskViews = defineView({
       name: 'task_board',
       type: 'kanban',
       label: 'Task Board',
-      data: { provider: 'object', object: 'task' },
+      data: { provider: 'object', object: 'crm_task' },
       columns: ['subject', 'priority', 'due_date', 'owner'],
       kanban: {
         groupByField: 'status',
@@ -72,7 +72,7 @@ export const TaskViews = defineView({
       name: 'task_calendar',
       type: 'calendar',
       label: 'Task Schedule',
-      data: { provider: 'object', object: 'task' },
+      data: { provider: 'object', object: 'crm_task' },
       columns: ['subject', 'priority', 'owner'],
       calendar: {
         startDateField: 'due_date',
@@ -86,7 +86,7 @@ export const TaskViews = defineView({
       name: 'task_gantt',
       type: 'gantt',
       label: 'Execution Plan',
-      data: { provider: 'object', object: 'task' },
+      data: { provider: 'object', object: 'crm_task' },
       columns: ['subject', 'owner', 'progress_percent'],
       gantt: {
         startDateField: 'reminder_date',
@@ -101,7 +101,7 @@ export const TaskViews = defineView({
       name: 'task_timeline',
       type: 'timeline',
       label: 'Worklog Timeline',
-      data: { provider: 'object', object: 'task' },
+      data: { provider: 'object', object: 'crm_task' },
       columns: ['subject', 'status'],
       timeline: {
         startDateField: 'reminder_date',
@@ -117,7 +117,7 @@ export const TaskViews = defineView({
       name: 'my_open_tasks',
       type: 'grid',
       label: 'My Open Tasks',
-      data: { provider: 'object', object: 'task' },
+      data: { provider: 'object', object: 'crm_task' },
       columns: ['subject', 'priority', 'due_date', 'progress_percent'],
       filter: [
         { field: 'owner', operator: 'equals', value: '{current_user_id}' },
@@ -131,7 +131,7 @@ export const TaskViews = defineView({
       name: 'todays_tasks',
       type: 'grid',
       label: '📅 My Priority Tasks',
-      data: { provider: 'object', object: 'task' },
+      data: { provider: 'object', object: 'crm_task' },
       columns: ['subject', 'priority', 'status', 'due_date', 'related_to_type', 'owner'],
       // Operator-only filter (the view runtime does not interpolate
       // `{TODAY()}` / `{current_user_id}` templates). Sort puts urgent at top.
@@ -147,7 +147,7 @@ export const TaskViews = defineView({
       name: 'overdue_tasks',
       type: 'grid',
       label: '⏰ Open Tasks Past Due',
-      data: { provider: 'object', object: 'task' },
+      data: { provider: 'object', object: 'crm_task' },
       columns: ['subject', 'priority', 'status', 'due_date', 'owner'],
       // Cannot filter `due_date < TODAY()` at the view layer; rely on sort
       // ascending so the most overdue surface first.
@@ -160,7 +160,7 @@ export const TaskViews = defineView({
 
   form: {
     type: 'simple',
-    data: { provider: 'object', object: 'task' },
+    data: { provider: 'object', object: 'crm_task' },
     sections: [
       {
         label: 'Task',

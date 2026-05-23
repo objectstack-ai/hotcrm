@@ -13,7 +13,7 @@ import { P } from '@objectstack/spec';
 export const EscalateCaseAction: Action = {
   name: 'escalate_case',
   label: 'Escalate Case',
-  objectName: 'case',
+  objectName: 'crm_case',
   icon: 'alert-triangle',
   type: 'modal',
   target: 'escalate_case',
@@ -22,7 +22,7 @@ export const EscalateCaseAction: Action = {
     source: `
       const id = ctx.recordId;
       if (!id) throw new Error('escalate_case requires a recordId');
-      await ctx.api.object('case').update({
+      await ctx.api.object('crm_case').update({
         id,
         is_escalated: true,
         escalation_reason: input.reason ?? null,
@@ -59,7 +59,7 @@ export const EscalateCaseAction: Action = {
 export const CloseCaseAction: Action = {
   name: 'close_case',
   label: 'Close Case',
-  objectName: 'case',
+  objectName: 'crm_case',
   icon: 'check-circle',
   type: 'modal',
   target: 'close_case',
@@ -68,7 +68,7 @@ export const CloseCaseAction: Action = {
     source: `
       const id = ctx.recordId;
       if (!id) throw new Error('close_case requires a recordId');
-      await ctx.api.object('case').update({
+      await ctx.api.object('crm_case').update({
         id,
         is_closed: true,
         resolution: input.resolution ?? null,

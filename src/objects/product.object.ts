@@ -8,7 +8,7 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
  * Represents products/services offered by the company
  */
 export const Product = ObjectSchema.create({
-  name: 'product',
+  name: 'crm_product',
   label: 'Product',
   pluralLabel: 'Products',
   icon: 'box',

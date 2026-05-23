@@ -6,12 +6,12 @@ export const CasesByStatusPriorityReport: ReportInput = {
   name: 'cases_by_status_priority',
   label: 'Cases by Status and Priority',
   description: 'Summary of cases by status and priority',
-  objectName: 'case',
+  objectName: 'crm_case',
   type: 'summary',
   columns: [
     { field: 'case_number', label: 'Case Number' },
     { field: 'subject', label: 'Subject' },
-    { field: 'account', label: 'Account' },
+    { field: 'crm_account', label: 'Account' },
     { field: 'owner', label: 'Owner' },
     { field: 'resolution_time_hours', label: 'Resolution Time', aggregate: 'avg' },
   ],
@@ -26,7 +26,7 @@ export const SlaPerformanceReport: ReportInput = {
   name: 'sla_performance',
   label: 'SLA Performance Report',
   description: 'Analysis of SLA compliance',
-  objectName: 'case',
+  objectName: 'crm_case',
   type: 'summary',
   columns: [
     { field: 'case_number', label: 'Cases', aggregate: 'count' },
@@ -48,7 +48,7 @@ export const CasesOpenedByDayPriorityReport: ReportInput = {
   name: 'cases_opened_by_day_priority',
   label: 'Cases Opened by Priority × Day',
   description: 'Daily case inflow split by priority',
-  objectName: 'case',
+  objectName: 'crm_case',
   type: 'matrix',
   columns: [
     { field: 'case_number', label: 'Cases', aggregate: 'count' },

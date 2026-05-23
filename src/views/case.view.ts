@@ -15,12 +15,12 @@ export const CaseViews = defineView({
     type: 'grid',
     name: 'all_cases',
     label: 'All Cases',
-    data: { provider: 'object', object: 'case' },
+    data: { provider: 'object', object: 'crm_case' },
     columns: [
       { field: 'case_number', width: 130, sortable: true, link: true, pinned: 'left' },
       { field: 'subject', width: 280, sortable: true },
-      { field: 'account', width: 180 },
-      { field: 'contact', width: 160 },
+      { field: 'crm_account', width: 180 },
+      { field: 'crm_contact', width: 160 },
       { field: 'priority', width: 110, sortable: true },
       { field: 'status', width: 130, sortable: true },
       { field: 'origin', width: 120 },
@@ -58,11 +58,11 @@ export const CaseViews = defineView({
       name: 'case_workflow',
       type: 'kanban',
       label: 'Service Workflow',
-      data: { provider: 'object', object: 'case' },
+      data: { provider: 'object', object: 'crm_case' },
       columns: ['case_number', 'subject', 'priority', 'sla_due_date'],
       kanban: {
         groupByField: 'status',
-        columns: ['case_number', 'subject', 'account', 'priority', 'owner'],
+        columns: ['case_number', 'subject', 'crm_account', 'priority', 'owner'],
       },
       filter: [{ field: 'is_closed', operator: 'equals', value: false }],
       navigation: { mode: 'drawer', width: '640px' },
@@ -73,7 +73,7 @@ export const CaseViews = defineView({
       name: 'sla_calendar',
       type: 'calendar',
       label: 'SLA Calendar',
-      data: { provider: 'object', object: 'case' },
+      data: { provider: 'object', object: 'crm_case' },
       columns: ['case_number', 'subject', 'priority'],
       calendar: {
         startDateField: 'sla_due_date',
@@ -87,7 +87,7 @@ export const CaseViews = defineView({
       name: 'case_timeline',
       type: 'timeline',
       label: 'Case Timeline',
-      data: { provider: 'object', object: 'case' },
+      data: { provider: 'object', object: 'crm_case' },
       columns: ['case_number', 'subject'],
       timeline: {
         startDateField: 'created_date',
@@ -103,8 +103,8 @@ export const CaseViews = defineView({
       name: 'escalated_cases',
       type: 'grid',
       label: 'Escalated Cases',
-      data: { provider: 'object', object: 'case' },
-      columns: ['case_number', 'subject', 'account', 'priority', 'sla_due_date', 'owner'],
+      data: { provider: 'object', object: 'crm_case' },
+      columns: ['case_number', 'subject', 'crm_account', 'priority', 'sla_due_date', 'owner'],
       filter: [{ field: 'is_escalated', operator: 'equals', value: true }],
       sort: [{ field: 'priority', order: 'desc' }],
     },
@@ -114,8 +114,8 @@ export const CaseViews = defineView({
       name: 'sla_at_risk',
       type: 'grid',
       label: '⏰ SLA at Risk',
-      data: { provider: 'object', object: 'case' },
-      columns: ['case_number', 'subject', 'account', 'priority', 'sla_due_date', 'owner'],
+      data: { provider: 'object', object: 'crm_case' },
+      columns: ['case_number', 'subject', 'crm_account', 'priority', 'sla_due_date', 'owner'],
       // Operator-only filter — sort by SLA due date ascending so the soonest
       // surface first. (The view runtime does not interpolate `{NOW() + 4h}`.)
       filter: [
@@ -128,7 +128,7 @@ export const CaseViews = defineView({
 
   form: {
     type: 'tabbed',
-    data: { provider: 'object', object: 'case' },
+    data: { provider: 'object', object: 'crm_case' },
     sections: [
       {
         label: 'Case',
@@ -136,8 +136,8 @@ export const CaseViews = defineView({
         fields: [
           'case_number',
           { field: 'subject', required: true, colSpan: 2 },
-          { field: 'account', required: true },
-          'contact',
+          { field: 'crm_account', required: true },
+          'crm_contact',
           { field: 'status', required: true },
           'priority',
           'origin',
@@ -172,14 +172,14 @@ export const CaseViews = defineView({
    * `web_to_case` is a PUBLIC / ANONYMOUS support form (Salesforce
    * Web-to-Case equivalent). Hosted at `/forms/support` and embeddable in
    * a help center. Guests can ONLY submit — the `guest_portal` profile
-   * denies read/edit/delete on `case`. Internal fields (status, origin,
+   * denies read/edit/delete on `crm_case`. Internal fields (status, origin,
    * priority defaults, owner, SLA) are stamped by `case.hook.ts` after a
    * guest submission.
    */
   formViews: {
     web_to_case: {
       type: 'simple',
-      data: { provider: 'object', object: 'case' },
+      data: { provider: 'object', object: 'crm_case' },
       sections: [
         {
           label: 'How can we help?',

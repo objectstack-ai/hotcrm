@@ -5,13 +5,13 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 import { OpportunityStateMachine } from './opportunity.state';
 
 export const Opportunity = ObjectSchema.create({
-  name: 'opportunity',
+  name: 'crm_opportunity',
   label: 'Opportunity',
   pluralLabel: 'Opportunities',
   icon: 'dollar-sign',
   description: 'Sales opportunities and deals in the pipeline',
   titleFormat: '{name} - {stage}',
-  compactLayout: ['name', 'account', 'amount', 'stage', 'owner'],
+  compactLayout: ['name', 'crm_account', 'amount', 'stage', 'owner'],
 
   fieldGroups: [
     { key: 'basic',       label: 'Basic Information',   icon: 'dollar-sign' },
@@ -20,7 +20,7 @@ export const Opportunity = ObjectSchema.create({
     { key: 'classification', label: 'Classification',   icon: 'tag' },
     { key: 'competition', label: 'Competition & Campaigns', icon: 'flag', defaultExpanded: false },
     { key: 'notes',       label: 'Notes & Next Steps',  icon: 'file-text' },
-    { key: 'forecast',    label: 'Forecast & Metrics',  icon: 'bar-chart', defaultExpanded: false },
+    { key: 'crm_forecast',    label: 'Forecast & Metrics',  icon: 'bar-chart', defaultExpanded: false },
   ],
 
   fields: {
@@ -33,13 +33,13 @@ export const Opportunity = ObjectSchema.create({
     }),
 
     // Relationships
-    account: Field.lookup('account', {
+    account: Field.lookup('crm_account', {
       label: 'Account',
       required: true,
       group: 'basic',
     }),
 
-    primary_contact: Field.lookup('contact', {
+    primary_contact: Field.lookup('crm_contact', {
       label: 'Primary Contact',
       referenceFilters: ['account = {opportunity.account}'],  // Filter contacts by account
       group: 'basic',
@@ -141,7 +141,7 @@ export const Opportunity = ObjectSchema.create({
     }),
 
     // Campaign tracking
-    campaign: Field.lookup('campaign', {
+    campaign: Field.lookup('crm_campaign', {
       label: 'Campaign',
       description: 'Marketing campaign that generated this opportunity',
       group: 'competition',
@@ -151,7 +151,7 @@ export const Opportunity = ObjectSchema.create({
     days_in_stage: Field.number({
       label: 'Days in Current Stage',
       readonly: true,
-      group: 'forecast',
+      group: 'crm_forecast',
     }),
 
     // Additional information
@@ -169,12 +169,12 @@ export const Opportunity = ObjectSchema.create({
     is_private: Field.boolean({
       label: 'Private',
       defaultValue: false,
-      group: 'forecast',
+      group: 'crm_forecast',
     }),
 
     forecast_category: Field.select({
       label: 'Forecast Category',
-      group: 'forecast',
+      group: 'crm_forecast',
       options: [
         { label: 'Pipeline', value: 'pipeline' },
         { label: 'Best Case', value: 'best_case' },
@@ -240,7 +240,7 @@ export const Opportunity = ObjectSchema.create({
   // Database indexes for performance
   indexes: [
     { fields: ['name'] },
-    { fields: ['account'] },
+    { fields: ['crm_account'] },
     { fields: ['owner'] },
     { fields: ['stage'] },
     { fields: ['close_date'] },
@@ -288,7 +288,7 @@ export const Opportunity = ObjectSchema.create({
   workflows: [
     {
       name: 'update_probability_by_stage',
-      objectName: 'opportunity',
+      objectName: 'crm_opportunity',
       triggerType: 'on_create_or_update',
       criteria: P`record.stage != previous.stage`,
       active: true,
@@ -327,7 +327,7 @@ export const Opportunity = ObjectSchema.create({
     },
     {
       name: 'calculate_expected_revenue',
-      objectName: 'opportunity',
+      objectName: 'crm_opportunity',
       triggerType: 'on_create_or_update',
       criteria: P`record.amount != previous.amount || record.probability != previous.probability`,
       active: true,
@@ -342,7 +342,7 @@ export const Opportunity = ObjectSchema.create({
     },
     {
       name: 'notify_on_large_deal_won',
-      objectName: 'opportunity',
+      objectName: 'crm_opportunity',
       triggerType: 'on_update',
       criteria: P`record.stage != previous.stage && record.stage == "closed_won" && record.amount > 100000`,
       active: true,

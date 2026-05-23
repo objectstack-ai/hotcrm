@@ -33,7 +33,7 @@ const NARRATIVE_FIELDS = new Set(['description', 'next_step', 'notes']);
 
 const opportunityValidationHook: Hook = {
   name: 'opportunity_lifecycle',
-  object: 'opportunity',
+  object: 'crm_opportunity',
   events: ['beforeInsert', 'beforeUpdate'],
   priority: 200,
   description:
@@ -94,7 +94,7 @@ const opportunityValidationHook: Hook = {
 
 const opportunityWonHook: Hook = {
   name: 'opportunity_promote_account',
-  object: 'opportunity',
+  object: 'crm_opportunity',
   events: ['afterUpdate'],
   priority: 800,
   async: true,
@@ -115,9 +115,9 @@ const opportunityWonHook: Hook = {
       undefined;
     if (!accountId) return;
 
-    const account = await api.object('account').findOne({ filter: { id: accountId } });
+    const account = await api.object('crm_account').findOne({ filter: { id: accountId } });
     if (account && account.type !== 'customer') {
-      await api.object('account').update(accountId, { type: 'customer' });
+      await api.object('crm_account').update(accountId, { type: 'customer' });
     }
 
     const oppId = (typeof input.id === 'string' && input.id) || previous?.id;
@@ -127,14 +127,14 @@ const opportunityWonHook: Hook = {
       ctx.user?.id;
     const due = new Date();
     due.setDate(due.getDate() + 3);
-    await api.object('task').insert({
+    await api.object('crm_task').insert({
       subject: `Activate new customer for opportunity ${oppId ?? ''}`.trim(),
       status: 'not_started',
       priority: 'high',
       type: 'follow_up',
       due_date: due.toISOString().slice(0, 10),
       owner: ownerId,
-      related_to_type: 'opportunity',
+      related_to_type: 'crm_opportunity',
       related_to_opportunity: oppId,
       related_to_account: accountId,
     });

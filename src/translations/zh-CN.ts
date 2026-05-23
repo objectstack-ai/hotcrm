@@ -9,7 +9,7 @@ import type { TranslationData } from '@objectstack/spec/system';
  */
 export const zhCN: TranslationData = {
   objects: {
-    account: {
+    crm_account: {
       label: '客户',
       pluralLabel: '客户',
       description: '与我们有业务往来的公司和组织',
@@ -65,7 +65,7 @@ export const zhCN: TranslationData = {
       },
     },
 
-    contact: {
+    crm_contact: {
       label: '联系人',
       pluralLabel: '联系人',
       description: '客户与商机的关键人物联系人',
@@ -74,7 +74,7 @@ export const zhCN: TranslationData = {
         first_name: { label: '名' },
         last_name: { label: '姓' },
         full_name: { label: '全名' },
-        account: { label: '所属客户' },
+        crm_account: { label: '所属客户' },
         email: { label: '邮箱' },
         phone: { label: '电话' },
         mobile: { label: '手机' },
@@ -125,7 +125,7 @@ export const zhCN: TranslationData = {
       },
     },
 
-    lead: {
+    crm_lead: {
       label: '线索',
       pluralLabel: '线索',
       description: '尚未确认的潜在客户',
@@ -189,7 +189,7 @@ export const zhCN: TranslationData = {
       },
       _sections: {
         info: { label: '线索信息' },
-        contact: { label: '联系方式' },
+        crm_contact: { label: '联系方式' },
         detail: { label: '线索详情' },
         address: { label: '地址' },
         description: { label: '描述' },
@@ -207,15 +207,15 @@ export const zhCN: TranslationData = {
       },
     },
 
-    quote: {
+    crm_quote: {
       label: '报价单',
       pluralLabel: '报价单',
       description: '发送给客户的价格报价',
       fields: {
         quote_number: { label: '报价单编号' },
         name: { label: '报价名称' },
-        account: { label: '所属客户' },
-        opportunity: { label: '关联商机' },
+        crm_account: { label: '所属客户' },
+        crm_opportunity: { label: '关联商机' },
         status: {
           label: '状态',
           options: {
@@ -227,7 +227,7 @@ export const zhCN: TranslationData = {
         discount: { label: '折扣 (%)' },
         expiration_date: { label: '到期日期' },
         description: { label: '描述' },
-        contact: { label: '联系人' },
+        crm_contact: { label: '联系人' },
         owner: { label: '报价负责人' },
         quote_date: { label: '报价日期' },
         subtotal: { label: '小计' },
@@ -247,13 +247,13 @@ export const zhCN: TranslationData = {
       },
     },
 
-    contract: {
+    crm_contract: {
       label: '合同',
       pluralLabel: '合同',
       description: '与客户签署的法律合同',
       fields: {
         contract_number: { label: '合同编号' },
-        account: { label: '所属客户' },
+        crm_account: { label: '所属客户' },
         status: {
           label: '状态',
           options: {
@@ -265,8 +265,8 @@ export const zhCN: TranslationData = {
         end_date: { label: '结束日期' },
         contract_value: { label: '合同金额' },
         description: { label: '描述' },
-        contact: { label: '主要联系人' },
-        opportunity: { label: '关联商机' },
+        crm_contact: { label: '主要联系人' },
+        crm_opportunity: { label: '关联商机' },
         owner: { label: '合同负责人' },
         contract_term_months: { label: '合同期限（月）' },
         billing_frequency: { label: '计费周期' },
@@ -288,7 +288,7 @@ export const zhCN: TranslationData = {
       },
     },
 
-    case: {
+    crm_case: {
       label: '服务案例',
       pluralLabel: '服务案例',
       description: '客户支持案例与服务请求',
@@ -296,8 +296,8 @@ export const zhCN: TranslationData = {
         case_number: { label: '案例编号' },
         subject: { label: '主题' },
         description: { label: '描述' },
-        account: { label: '所属客户' },
-        contact: { label: '联系人' },
+        crm_account: { label: '所属客户' },
+        crm_contact: { label: '联系人' },
         status: {
           label: '状态',
           options: {
@@ -353,7 +353,7 @@ export const zhCN: TranslationData = {
       },
     },
 
-    task: {
+    crm_task: {
       label: '任务',
       pluralLabel: '任务',
       description: '活动与待办事项',
@@ -404,7 +404,7 @@ export const zhCN: TranslationData = {
       },
     },
 
-    campaign: {
+    crm_campaign: {
       label: '营销活动',
       pluralLabel: '营销活动',
       description: '市场营销活动与推广',
@@ -456,7 +456,7 @@ export const zhCN: TranslationData = {
       },
     },
 
-    product: {
+    crm_product: {
       label: '产品',
       pluralLabel: '产品',
       description: '公司提供的产品与服务',
@@ -493,13 +493,13 @@ export const zhCN: TranslationData = {
       },
     },
 
-    opportunity: {
+    crm_opportunity: {
       label: '商机',
       pluralLabel: '商机',
       description: '销售流程中的商机与交易',
       fields: {
         name: { label: '商机名称' },
-        account: { label: '所属客户' },
+        crm_account: { label: '所属客户' },
         primary_contact: { label: '主要联系人' },
         owner: { label: '商机负责人' },
         amount: { label: '金额' },
@@ -541,7 +541,7 @@ export const zhCN: TranslationData = {
           },
         },
         competitors: { label: '竞争对手' },
-        campaign: { label: '营销活动' },
+        crm_campaign: { label: '营销活动' },
         days_in_stage: { label: '当前阶段天数' },
         is_private: { label: '私密' },
         approval_status: {
@@ -575,7 +575,7 @@ export const zhCN: TranslationData = {
       },
       _sections: {
         info: { label: '商机信息' },
-        forecast: { label: '阶段与预测' },
+        crm_forecast: { label: '阶段与预测' },
         description: { label: '描述' },
       },
       _actions: {

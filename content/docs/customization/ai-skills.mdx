@@ -32,7 +32,7 @@ export default defineSkill({
 
   // What the skill takes as input
   input: {
-    contract_id: { type: 'reference', object: 'contract', required: true },
+    contract_id: { type: 'reference', object: 'crm_contract', required: true },
     tone: { type: 'enum', options: ['friendly', 'formal', 'urgent'], default: 'friendly' },
   },
 
@@ -46,9 +46,9 @@ export default defineSkill({
 
   // What data sources the skill can read
   data_sources: {
-    contract:      { object: 'contract',     by: 'id' },
-    account:       { object: 'account',      by: 'contract.account' },
-    primary_contact: { object: 'contact',    by: 'contract.account.primary_contact' },
+    contract:      { object: 'crm_contract',     by: 'id' },
+    account:       { object: 'crm_account',      by: 'contract.account' },
+    primary_contact: { object: 'crm_contact',    by: 'contract.account.primary_contact' },
     usage:         { object: 'usage_metric', by: 'contract.id', last_n_months: 6 },
   },
 
@@ -103,7 +103,7 @@ Or attach it directly to a record's inline-actions:
 import { definePage } from '@objectstack/spec/ui';
 
 export default definePage({
-  object: 'contract',
+  object: 'crm_contract',
   inline_actions: [
     { type: 'ai_skill', skill: 'renewal_pitch', label: '✍️ Draft Renewal Pitch' },
   ],
@@ -149,7 +149,7 @@ If a skill **must** read more (e.g., a manager-only forecast skill), declare an 
 ```ts
 elevated_data_sources: {
   all_team_opportunities: {
-    object: 'opportunity',
+    object: 'crm_opportunity',
     requires_permission: 'view_team_pipeline',
   },
 },

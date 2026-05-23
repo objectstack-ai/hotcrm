@@ -4,7 +4,7 @@ import { P } from '@objectstack/spec';
 import { ObjectSchema, Field } from '@objectstack/spec/data';
 
 export const Account = ObjectSchema.create({
-  name: 'account',
+  name: 'crm_account',
   label: 'Account',
   pluralLabel: 'Accounts',
   icon: 'building',
@@ -117,7 +117,7 @@ export const Account = ObjectSchema.create({
       group: 'ownership',
     }),
 
-    parent_account: Field.lookup('account', {
+    parent_account: Field.lookup('crm_account', {
       label: 'Parent Account',
       description: 'Parent company in hierarchy',
       group: 'ownership',
@@ -240,7 +240,7 @@ export const Account = ObjectSchema.create({
   workflows: [
     {
       name: 'update_last_activity',
-      objectName: 'account',
+      objectName: 'crm_account',
       triggerType: 'on_update',
       criteria: P`record.owner != previous.owner || record.type != previous.type`,
       actions: [

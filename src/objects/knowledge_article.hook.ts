@@ -11,7 +11,7 @@ import type { Hook, HookContext } from '@objectstack/spec/data';
  */
 const knowledgeArticlePublish: Hook = {
   name: 'knowledge_article_publish_timestamps',
-  object: 'knowledge_article',
+  object: 'crm_knowledge_article',
   events: ['beforeInsert', 'beforeUpdate'],
   priority: 300,
   description: 'Stamp published_at / last_reviewed_at on status transitions.',

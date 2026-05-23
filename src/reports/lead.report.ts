@@ -13,7 +13,7 @@ export const LeadInflowByMonthSourceReport: ReportInput = {
   name: 'lead_inflow_by_month_source',
   label: 'Lead Engagement by Month × Source',
   description: 'Contacted-lead volume per month, broken down by acquisition channel',
-  objectName: 'lead',
+  objectName: 'crm_lead',
   type: 'matrix',
   columns: [
     { field: 'id', label: 'Leads Touched', aggregate: 'count' },

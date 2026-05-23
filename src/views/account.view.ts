@@ -14,7 +14,7 @@ export const AccountViews = defineView({
     type: 'grid',
     name: 'all_accounts',
     label: 'All Accounts',
-    data: { provider: 'object', object: 'account' },
+    data: { provider: 'object', object: 'crm_account' },
     columns: [
       { field: 'name', width: 220, sortable: true, link: true, pinned: 'left' },
       { field: 'account_number', width: 140 },
@@ -100,7 +100,7 @@ export const AccountViews = defineView({
       name: 'account_gallery',
       type: 'gallery',
       label: 'Account Cards',
-      data: { provider: 'object', object: 'account' },
+      data: { provider: 'object', object: 'crm_account' },
       columns: ['name', 'industry', 'annual_revenue', 'phone'],
       gallery: {
         cardSize: 'medium',
@@ -114,7 +114,7 @@ export const AccountViews = defineView({
       name: 'account_map',
       type: 'map',
       label: 'Accounts by Location',
-      data: { provider: 'object', object: 'account' },
+      data: { provider: 'object', object: 'crm_account' },
       columns: ['name', 'industry', 'office_location', 'billing_address'],
     },
 
@@ -123,7 +123,7 @@ export const AccountViews = defineView({
       name: 'enterprise_accounts',
       type: 'grid',
       label: 'Enterprise Accounts',
-      data: { provider: 'object', object: 'account' },
+      data: { provider: 'object', object: 'crm_account' },
       columns: ['name', 'industry', 'annual_revenue', 'number_of_employees', 'owner'],
       filter: [{ field: 'annual_revenue', operator: 'greater_than_or_equal', value: 10000000 }],
       sort: [{ field: 'annual_revenue', order: 'desc' }],
@@ -133,7 +133,7 @@ export const AccountViews = defineView({
       name: 'my_accounts',
       type: 'grid',
       label: 'My Accounts',
-      data: { provider: 'object', object: 'account' },
+      data: { provider: 'object', object: 'crm_account' },
       columns: ['name', 'industry', 'annual_revenue', 'phone', 'last_activity_date'],
       filter: [{ field: 'owner', operator: 'equals', value: '{current_user_id}' }],
       sort: [{ field: 'last_activity_date', order: 'desc' }],
@@ -144,7 +144,7 @@ export const AccountViews = defineView({
       name: 'renewals_due',
       type: 'grid',
       label: '🔄 Upcoming Renewals',
-      data: { provider: 'object', object: 'account' },
+      data: { provider: 'object', object: 'crm_account' },
       columns: ['name', 'tier', 'health_score', 'next_renewal_date', 'renewal_owner', 'annual_revenue'],
       // Operator-only filter (no `{TODAY() + 90d}` template — sort exposes
       // the soonest renewals at the top of the list).
@@ -160,7 +160,7 @@ export const AccountViews = defineView({
       name: 'at_risk_accounts',
       type: 'grid',
       label: '⚠️ At-Risk Accounts',
-      data: { provider: 'object', object: 'account' },
+      data: { provider: 'object', object: 'crm_account' },
       columns: ['name', 'tier', 'health_score', 'segment', 'renewal_owner', 'last_activity_date'],
       filter: [
         { field: 'type', operator: 'equals', value: 'customer' },
@@ -172,7 +172,7 @@ export const AccountViews = defineView({
 
   form: {
     type: 'tabbed',
-    data: { provider: 'object', object: 'account' },
+    data: { provider: 'object', object: 'crm_account' },
     sections: [
       {
         label: 'Profile',

@@ -31,6 +31,7 @@ hotcrm/
     - strictly typed using `@objectstack/spec`.
     - **NEVER** use YAML or JSON for metadata.
     - Object names must be `snake_case`.
+    - **All HotCRM business object names MUST use the `crm_` prefix and the prefix MUST be written explicitly in source** (e.g., `crm_account`, `crm_opportunity`, `crm_knowledge_article`). **No automatic prefix injection by the runtime.** Open architectural decision: AI-authored metadata is fragile around "context-aware" naming, so we trade verbosity for grep-ability. Cross-references via `reference_to` / `lookup` / `masterDetail` MUST use the prefixed name. Cube `sql:` fields, view `data.object`, hook `object:`, action `objectName:`, navigation `objectName:`, dashboard `object:`, translation `objects.{key}`, REST URLs, and DB table names ALL use the same prefixed name. The name in source = the name at runtime = the name in DB = the name in URL = the name in docs. No translation layer.
 
 2.  **ObjectQL (No-SQL)**:
     - Data access MUST use **ObjectQL**.
@@ -122,6 +123,10 @@ Use the most specific `Field` type available from `@objectstack/spec/data`:
 4.  **Config UI**: Create `packages/{pkg}/src/{entity}.page.ts`.
 
 ## ⚠️ Constraint Checklist
+
+- **Object Naming**: All HotCRM business objects MUST be prefixed with `crm_` (e.g., `crm_account`, `crm_opportunity`, `crm_case`, `crm_lead`, `crm_campaign`, `crm_contact`, `crm_contract`, `crm_product`, `crm_quote`, `crm_quote_line_item`, `crm_opportunity_line_item`, `crm_task`, `crm_campaign_member`, `crm_knowledge_article`, `crm_forecast`). All references — `reference_to`, `lookup`, `masterDetail`, cube `sql`, view `data.object`, hook `object`, navigation `objectName`, action `objectName`, dashboard `object` — MUST use the prefixed form. Platform objects keep their existing `sys_*` prefix.
+- **i18n**: Every new object must have entries in all 4 locale files (`src/translations/{en,zh-CN,es-ES,ja-JP}.ts`) — label, pluralLabel, all field labels + option labels, view labels, navigation labels. No new feature ships without all 4 locales.
+- **Docs**: Every new object/feature requires user-facing documentation under `content/docs/{sales|service|marketing|...}/` written for business users + admins (not developers).
 
 - **Documentation**: All documentation MUST be in English.
 - **No Engine Code**: Do not try to modify the core runtime code. Focus on the *usage* of the runtime.

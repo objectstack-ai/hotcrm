@@ -14,7 +14,7 @@ export const KnowledgeArticleViews = defineView({
     type: 'grid',
     name: 'all_articles',
     label: 'All Articles',
-    data: { provider: 'object', object: 'knowledge_article' },
+    data: { provider: 'object', object: 'crm_knowledge_article' },
     columns: [
       { field: 'article_number', width: 120, link: true, pinned: 'left', sortable: true },
       { field: 'title',          width: 320, sortable: true },
@@ -52,7 +52,7 @@ export const KnowledgeArticleViews = defineView({
       name: 'published_articles',
       type: 'grid',
       label: 'Published',
-      data: { provider: 'object', object: 'knowledge_article' },
+      data: { provider: 'object', object: 'crm_knowledge_article' },
       columns: ['article_number', 'title', 'category', 'audience', 'view_count', 'helpful_count', 'published_at'],
       filter: [{ field: 'status', operator: 'equals', value: 'published' }],
       sort: [{ field: 'view_count', order: 'desc' }],
@@ -61,7 +61,7 @@ export const KnowledgeArticleViews = defineView({
       name: 'my_drafts',
       type: 'grid',
       label: 'My Drafts',
-      data: { provider: 'object', object: 'knowledge_article' },
+      data: { provider: 'object', object: 'crm_knowledge_article' },
       columns: ['article_number', 'title', 'category', 'status', 'updated_at'],
       filter: [
         { field: 'status', operator: 'in',     value: ['draft', 'in_review'] },
@@ -73,7 +73,7 @@ export const KnowledgeArticleViews = defineView({
       name: 'stale_articles',
       type: 'grid',
       label: 'Stale',
-      data: { provider: 'object', object: 'knowledge_article' },
+      data: { provider: 'object', object: 'crm_knowledge_article' },
       columns: ['article_number', 'title', 'category', 'owner', 'last_reviewed_at'],
       filter: [
         { field: 'status',           operator: 'equals',   value: 'published' },
@@ -85,7 +85,7 @@ export const KnowledgeArticleViews = defineView({
 
   form: {
     type: 'simple',
-    data: { provider: 'object', object: 'knowledge_article' },
+    data: { provider: 'object', object: 'crm_knowledge_article' },
     sections: [
       {
         label: 'Article',

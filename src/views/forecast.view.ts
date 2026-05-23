@@ -14,7 +14,7 @@ export const ForecastViews = defineView({
     type: 'grid',
     name: 'all_forecasts',
     label: 'All Forecasts',
-    data: { provider: 'object', object: 'forecast' },
+    data: { provider: 'object', object: 'crm_forecast' },
     columns: [
       { field: 'owner',            width: 160, pinned: 'left', link: true },
       { field: 'period_label',     width: 130, sortable: true },
@@ -49,7 +49,7 @@ export const ForecastViews = defineView({
       name: 'this_quarter_forecasts',
       type: 'grid',
       label: 'This Quarter',
-      data: { provider: 'object', object: 'forecast' },
+      data: { provider: 'object', object: 'crm_forecast' },
       columns: ['owner', 'quota', 'closed_amount', 'commit_amount', 'best_case_amount', 'pipeline_amount', 'attainment_pct', 'coverage_ratio'],
       filter: [
         { field: 'period',       operator: 'equals', value: 'quarter' },
@@ -61,7 +61,7 @@ export const ForecastViews = defineView({
       name: 'my_forecast',
       type: 'grid',
       label: 'My Forecast',
-      data: { provider: 'object', object: 'forecast' },
+      data: { provider: 'object', object: 'crm_forecast' },
       columns: ['period_label', 'snapshot_date', 'quota', 'closed_amount', 'commit_amount', 'pipeline_amount', 'attainment_pct'],
       filter: [{ field: 'owner', operator: 'equals', value: '{current_user}' }],
       sort: [{ field: 'period_start', order: 'desc' }],
@@ -70,7 +70,7 @@ export const ForecastViews = defineView({
 
   form: {
     type: 'simple',
-    data: { provider: 'object', object: 'forecast' },
+    data: { provider: 'object', object: 'crm_forecast' },
     sections: [
       {
         label: 'Snapshot',

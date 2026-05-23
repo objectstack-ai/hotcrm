@@ -12,7 +12,7 @@ import { P } from '@objectstack/spec';
  * a single typed-in total.
  */
 export const OpportunityLineItem = ObjectSchema.create({
-  name: 'opportunity_line_item',
+  name: 'crm_opportunity_line_item',
   label: 'Opportunity Line Item',
   pluralLabel: 'Opportunity Line Items',
   icon: 'package',
@@ -21,15 +21,15 @@ export const OpportunityLineItem = ObjectSchema.create({
   trackHistory: true,
   shareModel: 'controlled-by-parent',
 
-  compactLayout: ['product', 'quantity', 'unit_price', 'total_price'],
+  compactLayout: ['crm_product', 'quantity', 'unit_price', 'total_price'],
 
   fields: {
-    opportunity: Field.lookup('opportunity', {
+    opportunity: Field.lookup('crm_opportunity', {
       label: 'Opportunity',
       required: true,
     }),
 
-    product: Field.lookup('product', {
+    product: Field.lookup('crm_product', {
       label: 'Product',
       required: true,
     }),

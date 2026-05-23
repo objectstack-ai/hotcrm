@@ -13,7 +13,7 @@ import { P } from '@objectstack/spec';
  * Audience:  public (customer portal visible) | internal (agent-only).
  */
 export const KnowledgeArticle = ObjectSchema.create({
-  name: 'knowledge_article',
+  name: 'crm_knowledge_article',
   label: 'Knowledge Article',
   pluralLabel: 'Knowledge Articles',
   icon: 'book-open',
@@ -121,7 +121,7 @@ export const KnowledgeArticle = ObjectSchema.create({
       ],
     }),
 
-    related_to_case: Field.lookup('case', {
+    related_to_case: Field.lookup('crm_case', {
       label: 'Originating Case',
       description: 'Case this article was authored from (optional).',
       group: 'content',

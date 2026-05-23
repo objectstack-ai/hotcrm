@@ -19,7 +19,7 @@ type ApiShape = {
 
 const productHook: Hook = {
   name: 'product_catalog',
-  object: 'product',
+  object: 'crm_product',
   events: ['beforeInsert', 'beforeUpdate', 'beforeDelete'],
   priority: 200,
   description: 'Pricing sanity, SKU normalization, and protect referenced products from deletion.',
@@ -55,8 +55,8 @@ const productHook: Hook = {
       const id = previous?.id;
       if (!api || !id) return;
       const [oppRefs, quoteRefs] = await Promise.all([
-        api.object('opportunity').count({ filter: { product: id } }).catch(() => 0),
-        api.object('quote').count({ filter: { product: id } }).catch(() => 0),
+        api.object('crm_opportunity').count({ filter: { product: id } }).catch(() => 0),
+        api.object('crm_quote').count({ filter: { product: id } }).catch(() => 0),
       ]);
       const total = oppRefs + quoteRefs;
       if (total > 0) {

@@ -21,7 +21,7 @@ type ApiShape = {
 
 const caseValidation: Hook = {
   name: 'case_sla_defaults',
-  object: 'case',
+  object: 'crm_case',
   events: ['beforeInsert', 'beforeUpdate'],
   priority: 200,
   description: 'Apply SLA defaults for critical cases.',
@@ -54,7 +54,7 @@ const caseValidation: Hook = {
 
 const caseSideEffects: Hook = {
   name: 'case_status_side_effects',
-  object: 'case',
+  object: 'crm_case',
   events: ['afterUpdate'],
   priority: 800,
   async: true,
@@ -77,18 +77,18 @@ const caseSideEffects: Hook = {
 
     // Escalation: open task for account owner
     if (input.status === 'escalated' && previous.status !== 'escalated' && accountId) {
-      const account = await api.object('account').findOne({ filter: { id: accountId } });
+      const account = await api.object('crm_account').findOne({ filter: { id: accountId } });
       const ownerId = (account as { owner?: string } | null)?.owner ?? ctx.user?.id;
       const due = new Date();
       due.setDate(due.getDate() + 1);
-      await api.object('task').insert({
+      await api.object('crm_task').insert({
         subject: `Escalated case ${caseId ?? ''} needs attention`.trim(),
         status: 'not_started',
         priority: 'urgent',
         type: 'follow_up',
         due_date: due.toISOString().slice(0, 10),
         owner: ownerId,
-        related_to_type: 'case',
+        related_to_type: 'crm_case',
         related_to_case: caseId,
         related_to_account: accountId,
       });
@@ -98,10 +98,10 @@ const caseSideEffects: Hook = {
     if (input.status === 'resolved' && previous.status !== 'resolved') {
       if (caseId && !input.closed_date && !previous.closed_date) {
         // Use closed_date as a proxy for resolved_date (schema field).
-        await api.object('case').update(caseId, { closed_date: new Date().toISOString() });
+        await api.object('crm_case').update(caseId, { closed_date: new Date().toISOString() });
       }
       if (accountId) {
-        await api.object('account').update(accountId, {
+        await api.object('crm_account').update(accountId, {
           last_activity_date: new Date().toISOString().slice(0, 10),
         });
       }

@@ -85,7 +85,7 @@ export const CreateCampaignPage = modalPage('create_campaign', {
   heading: 'Add selected leads to a campaign',
   body:
     'Each selected lead will be added to the chosen campaign as a ' +
-    '`campaign_member` with status **Sent**. Existing members on the same ' +
+    '`crm_campaign_member` with status **Sent**. Existing members on the same ' +
     'campaign are skipped. Use this to track marketing touches on a list ' +
     'of leads in bulk.',
 });

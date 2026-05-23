@@ -18,7 +18,7 @@ type ApiShape = {
 
 const taskValidation: Hook = {
   name: 'task_completion',
-  object: 'task',
+  object: 'crm_task',
   events: ['beforeUpdate'],
   priority: 200,
   description: 'Stamp completed_date/progress on completion and validate reminder timing.',
@@ -50,7 +50,7 @@ const taskValidation: Hook = {
 
 const taskBubble: Hook = {
   name: 'task_activity_bubble',
-  object: 'task',
+  object: 'crm_task',
   events: ['afterUpdate'],
   priority: 800,
   async: true,
@@ -85,7 +85,7 @@ const taskBubble: Hook = {
     if (!targetId) return;
 
     // Only bubble to objects that have a `last_activity_date` field (account/lead).
-    if (targetType !== 'account' && targetType !== 'lead') return;
+    if (targetType !== 'crm_account' && targetType !== 'crm_lead') return;
     try {
       await api.object(targetType).update(targetId, { last_activity_date: today });
     } catch (err) {

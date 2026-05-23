@@ -9,7 +9,7 @@ import type { TranslationData } from '@objectstack/spec/system';
  */
 export const esES: TranslationData = {
   objects: {
-    account: {
+    crm_account: {
       label: 'Cuenta',
       pluralLabel: 'Cuentas',
       fields: {
@@ -49,7 +49,7 @@ export const esES: TranslationData = {
       },
     },
 
-    contact: {
+    crm_contact: {
       label: 'Contacto',
       pluralLabel: 'Contactos',
       fields: {
@@ -57,7 +57,7 @@ export const esES: TranslationData = {
         first_name: { label: 'Nombre' },
         last_name: { label: 'Apellido' },
         full_name: { label: 'Nombre Completo' },
-        account: { label: 'Cuenta' },
+        crm_account: { label: 'Cuenta' },
         email: { label: 'Correo Electrónico' },
         phone: { label: 'Teléfono' },
         mobile: { label: 'Móvil' },
@@ -102,7 +102,7 @@ export const esES: TranslationData = {
       },
     },
 
-    lead: {
+    crm_lead: {
       label: 'Prospecto',
       pluralLabel: 'Prospectos',
       fields: {
@@ -167,12 +167,12 @@ export const esES: TranslationData = {
       },
     },
 
-    opportunity: {
+    crm_opportunity: {
       label: 'Oportunidad',
       pluralLabel: 'Oportunidades',
       fields: {
         name: { label: 'Nombre de Oportunidad' },
-        account: { label: 'Cuenta' },
+        crm_account: { label: 'Cuenta' },
         primary_contact: { label: 'Contacto Principal' },
         owner: { label: 'Propietario de Oportunidad' },
         amount: { label: 'Monto' },
@@ -214,7 +214,7 @@ export const esES: TranslationData = {
           },
         },
         competitors: { label: 'Competidores' },
-        campaign: { label: 'Campaña' },
+        crm_campaign: { label: 'Campaña' },
         days_in_stage: { label: 'Días en Etapa Actual' },
         is_private: { label: 'Privado' },
       },
@@ -238,15 +238,15 @@ export const esES: TranslationData = {
       },
     },
 
-    case: {
+    crm_case: {
       label: 'Caso',
       pluralLabel: 'Casos',
       fields: {
         case_number: { label: 'Número de Caso' },
         subject: { label: 'Asunto' },
         description: { label: 'Descripción' },
-        account: { label: 'Cuenta' },
-        contact: { label: 'Contacto' },
+        crm_account: { label: 'Cuenta' },
+        crm_contact: { label: 'Contacto' },
         status: { label: 'Estado' },
         priority: { label: 'Prioridad' },
         type: { label: 'Tipo de Caso' },
@@ -292,14 +292,14 @@ export const esES: TranslationData = {
       },
     },
 
-    contract: {
+    crm_contract: {
       label: 'Contrato',
       pluralLabel: 'Contratos',
       fields: {
         contract_number: { label: 'Número de Contrato' },
-        account: { label: 'Cuenta' },
-        contact: { label: 'Contacto Principal' },
-        opportunity: { label: 'Oportunidad Relacionada' },
+        crm_account: { label: 'Cuenta' },
+        crm_contact: { label: 'Contacto Principal' },
+        crm_opportunity: { label: 'Oportunidad Relacionada' },
         owner: { label: 'Propietario del Contrato' },
         status: { label: 'Estado' },
         contract_term_months: { label: 'Plazo del Contrato (Meses)' },
@@ -326,7 +326,7 @@ export const esES: TranslationData = {
       },
     },
 
-    product: {
+    crm_product: {
       label: 'Producto',
       pluralLabel: 'Productos',
       fields: {
@@ -355,15 +355,15 @@ export const esES: TranslationData = {
       },
     },
 
-    quote: {
+    crm_quote: {
       label: 'Cotización',
       pluralLabel: 'Cotizaciones',
       fields: {
         quote_number: { label: 'Número de Cotización' },
         name: { label: 'Nombre de Cotización' },
-        account: { label: 'Cuenta' },
-        contact: { label: 'Contacto' },
-        opportunity: { label: 'Oportunidad' },
+        crm_account: { label: 'Cuenta' },
+        crm_contact: { label: 'Contacto' },
+        crm_opportunity: { label: 'Oportunidad' },
         owner: { label: 'Propietario de Cotización' },
         status: { label: 'Estado' },
         quote_date: { label: 'Fecha de Cotización' },
@@ -388,7 +388,7 @@ export const esES: TranslationData = {
       },
     },
 
-    task: {
+    crm_task: {
       label: 'Tarea',
       pluralLabel: 'Tareas',
       fields: {
@@ -427,7 +427,7 @@ export const esES: TranslationData = {
       },
     },
 
-    campaign: {
+    crm_campaign: {
       label: 'Campaña',
       pluralLabel: 'Campañas',
       fields: {

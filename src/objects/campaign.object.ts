@@ -8,7 +8,7 @@ import { F, P } from '@objectstack/spec';
  * Represents marketing campaigns
  */
 export const Campaign = ObjectSchema.create({
-  name: 'campaign',
+  name: 'crm_campaign',
   label: 'Campaign',
   pluralLabel: 'Campaigns',
   icon: 'megaphone',
@@ -167,7 +167,7 @@ export const Campaign = ObjectSchema.create({
     }),
     
     // Relationships
-    parent_campaign: Field.lookup('campaign', {
+    parent_campaign: Field.lookup('crm_campaign', {
       label: 'Parent Campaign',
       description: 'Parent campaign in hierarchy',
     }),
@@ -231,7 +231,7 @@ export const Campaign = ObjectSchema.create({
   workflows: [
     {
       name: 'campaign_completion_check',
-      objectName: 'campaign',
+      objectName: 'crm_campaign',
       triggerType: 'scheduled',
       schedule: '0 2 * * *',
       criteria: P`record.end_date < today() && record.status == "in_progress"`,

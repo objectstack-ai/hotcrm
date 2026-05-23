@@ -9,14 +9,14 @@ This page covers the data layer — adding fields, defining new objects, writing
 
 ## Adding a custom field
 
-The simplest extension. To add a field to an existing object (e.g., `opportunity`), create a *field augmentation* in your own package.
+The simplest extension. To add a field to an existing object (e.g., `crm_opportunity`), create a *field augmentation* in your own package.
 
 ```ts
 // packages/acme-extension/src/opportunity.object.ts
 import { defineObject, Field, ObjectSchema } from '@objectstack/spec/data';
 
 export default ObjectSchema.parse(defineObject({
-  name: 'opportunity',
+  name: 'crm_opportunity',
   extends: 'crm.opportunity',           // augment, don't replace
   fields: {
     custom_deal_health: Field.select({
@@ -30,7 +30,7 @@ export default ObjectSchema.parse(defineObject({
     }),
     custom_competitor: Field.lookup({
       label: 'Primary Competitor',
-      reference_to: 'account',
+      reference_to: 'crm_account',
     }),
   },
 }));
@@ -42,9 +42,9 @@ This adds two new fields without modifying core HotCRM.
 
 | Use case | Field type |
 | --- | --- |
-| Parent reference (optional) | `Field.lookup({ reference_to: 'account' })` |
-| Required parent-child | `Field.masterDetail({ reference_to: 'opportunity' })` |
-| Rollup (count/sum/min/max) | `Field.summary({ reference: 'opportunity_line_item', operation: 'sum', field: 'total_price' })` |
+| Parent reference (optional) | `Field.lookup({ reference_to: 'crm_account' })` |
+| Required parent-child | `Field.masterDetail({ reference_to: 'crm_opportunity' })` |
+| Rollup (count/sum/min/max) | `Field.summary({ reference: 'crm_opportunity_line_item', operation: 'sum', field: 'total_price' })` |
 | Picklist (single) | `Field.select({ options: [...] })` |
 | Picklist (multi) | `Field.select({ options: [...], multiple: true })` |
 | File upload | `Field.file()` |
@@ -95,12 +95,12 @@ Hooks fire on data lifecycle events (`before_create`, `after_create`, `before_up
 import { defineHook } from '@objectstack/runtime';
 
 export default defineHook({
-  object: 'opportunity',
+  object: 'crm_opportunity',
   event: 'before_create',
   handler: async ({ record, broker, context }) => {
     // Auto-assign territory based on account region
     if (record.account) {
-      const acc = await broker.findOne('account', { id: record.account });
+      const acc = await broker.findOne('crm_account', { id: record.account });
       const territory = await broker.findOne('territory', {
         filters: [['region', '=', acc.region]],
       });
@@ -132,7 +132,7 @@ export default defineFlow({
     {
       id: 'find_uncovered',
       type: 'query',
-      object: 'account',
+      object: 'crm_account',
       filters: [['territory', '=', null], ['status', '=', 'customer']],
     },
     {
@@ -148,7 +148,7 @@ export default defineFlow({
         },
         {
           type: 'update',
-          object: 'account',
+          object: 'crm_account',
           id: '{{item.id}}',
           fields: { territory: '{{territory.id}}' },
         },
@@ -167,7 +167,7 @@ Block invalid saves with a validation rule:
 import { defineValidation } from '@objectstack/spec/data';
 
 export default defineValidation({
-  object: 'opportunity',
+  object: 'crm_opportunity',
   name: 'win_requires_competitor',
   condition: "stage == 'closed_won' AND custom_competitor == null",
   error_message: 'You must select a primary competitor before marking the deal Closed Won.',
@@ -183,7 +183,7 @@ Open up record visibility beyond OWD:
 import { defineSharing } from '@objectstack/spec/security';
 
 export default defineSharing({
-  object: 'account',
+  object: 'crm_account',
   rules: [
     {
       name: 'amer_accounts_to_amer_team',

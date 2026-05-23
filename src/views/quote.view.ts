@@ -14,11 +14,11 @@ export const QuoteViews = defineView({
     type: 'grid',
     name: 'all_quotes',
     label: 'All Quotes',
-    data: { provider: 'object', object: 'quote' },
+    data: { provider: 'object', object: 'crm_quote' },
     columns: [
       { field: 'quote_number', width: 140, link: true, pinned: 'left' },
-      { field: 'account', width: 200 },
-      { field: 'opportunity', width: 200 },
+      { field: 'crm_account', width: 200 },
+      { field: 'crm_opportunity', width: 200 },
       { field: 'status', width: 130, sortable: true },
       { field: 'quote_date', width: 130, sortable: true },
       { field: 'expiration_date', width: 140, sortable: true },
@@ -47,12 +47,12 @@ export const QuoteViews = defineView({
       name: 'quote_pipeline',
       type: 'kanban',
       label: 'Quote Pipeline',
-      data: { provider: 'object', object: 'quote' },
-      columns: ['quote_number', 'account', 'total_price', 'expiration_date'],
+      data: { provider: 'object', object: 'crm_quote' },
+      columns: ['quote_number', 'crm_account', 'total_price', 'expiration_date'],
       kanban: {
         groupByField: 'status',
         summarizeField: 'total_price',
-        columns: ['quote_number', 'account', 'total_price', 'expiration_date'],
+        columns: ['quote_number', 'crm_account', 'total_price', 'expiration_date'],
       },
     },
 
@@ -61,8 +61,8 @@ export const QuoteViews = defineView({
       name: 'quote_calendar',
       type: 'calendar',
       label: 'Quote Calendar',
-      data: { provider: 'object', object: 'quote' },
-      columns: ['quote_number', 'account', 'total_price'],
+      data: { provider: 'object', object: 'crm_quote' },
+      columns: ['quote_number', 'crm_account', 'total_price'],
       calendar: {
         startDateField: 'quote_date',
         endDateField: 'expiration_date',
@@ -74,12 +74,12 @@ export const QuoteViews = defineView({
 
   form: {
     type: 'tabbed',
-    data: { provider: 'object', object: 'quote' },
+    data: { provider: 'object', object: 'crm_quote' },
     sections: [
       {
         label: 'Quote',
         columns: 2,
-        fields: ['quote_number', 'account', 'contact', 'opportunity', 'owner', 'status', 'quote_date', 'expiration_date'],
+        fields: ['quote_number', 'crm_account', 'crm_contact', 'crm_opportunity', 'owner', 'status', 'quote_date', 'expiration_date'],
       },
       {
         label: 'Totals',

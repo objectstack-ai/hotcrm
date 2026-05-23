@@ -8,13 +8,13 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
  * Represents legal contracts with customers
  */
 export const Contract = ObjectSchema.create({
-  name: 'contract',
+  name: 'crm_contract',
   label: 'Contract',
   pluralLabel: 'Contracts',
   icon: 'file-pen-line',
   description: 'Legal contracts and agreements',
   titleFormat: '{contract_number} - {account.name}',
-  compactLayout: ['contract_number', 'account', 'status', 'start_date', 'end_date'],
+  compactLayout: ['contract_number', 'crm_account', 'status', 'start_date', 'end_date'],
 
   fieldGroups: [
     { key: 'basic',     label: 'Contract Information', icon: 'info' },
@@ -33,12 +33,12 @@ export const Contract = ObjectSchema.create({
     }),
     
     // Relationships
-    account: Field.lookup('account', {
+    account: Field.lookup('crm_account', {
       label: 'Account',
       required: true,
     }),
     
-    contact: Field.lookup('contact', {
+    contact: Field.lookup('crm_contact', {
       label: 'Primary Contact',
       required: true,
       referenceFilters: [
@@ -46,7 +46,7 @@ export const Contract = ObjectSchema.create({
       ]
     }),
     
-    opportunity: Field.lookup('opportunity', {
+    opportunity: Field.lookup('crm_opportunity', {
       label: 'Related Opportunity',
       referenceFilters: [
         'account = {account}',
@@ -171,7 +171,7 @@ export const Contract = ObjectSchema.create({
   
   // Database indexes
   indexes: [
-    { fields: ['account'] },
+    { fields: ['crm_account'] },
     { fields: ['status'] },
     { fields: ['start_date'] },
     { fields: ['end_date'] },
@@ -213,7 +213,7 @@ export const Contract = ObjectSchema.create({
   workflows: [
     {
       name: 'contract_expiration_check',
-      objectName: 'contract',
+      objectName: 'crm_contract',
       triggerType: 'scheduled',
       schedule: '0 0 * * *', // Daily at midnight
       criteria: P`record.end_date <= today() && record.status == "activated"`,
@@ -235,7 +235,7 @@ export const Contract = ObjectSchema.create({
     },
     {
       name: 'renewal_reminder',
-      objectName: 'contract',
+      objectName: 'crm_contract',
       triggerType: 'scheduled',
       schedule: '0 0 * * *', // Daily at midnight
       criteria: P`(record.end_date - today()) <= record.renewal_notice_days && record.status == "activated"`,

@@ -37,7 +37,7 @@ function addDays(iso: string, days: number): string {
 
 const contractValidation: Hook = {
   name: 'contract_validation',
-  object: 'contract',
+  object: 'crm_contract',
   events: ['beforeInsert', 'beforeUpdate'],
   priority: 200,
   description: 'Enforce contract term math and prevent shrinking end_date once activated.',
@@ -94,7 +94,7 @@ const contractValidation: Hook = {
 
 const contractActivation: Hook = {
   name: 'contract_on_activation',
-  object: 'contract',
+  object: 'crm_contract',
   events: ['afterUpdate'],
   priority: 800,
   async: true,
@@ -126,19 +126,19 @@ const contractActivation: Hook = {
       undefined;
 
     if (id && !input.signed_date && !previous?.signed_date) {
-      await api.object('contract').update(id, { signed_date: new Date().toISOString().slice(0, 10) });
+      await api.object('crm_contract').update(id, { signed_date: new Date().toISOString().slice(0, 10) });
     }
 
     if (accountId) {
-      const account = await api.object('account').findOne({ filter: { id: accountId } });
+      const account = await api.object('crm_account').findOne({ filter: { id: accountId } });
       if (account && account.type !== 'customer') {
-        await api.object('account').update(accountId, { type: 'customer' });
+        await api.object('crm_account').update(accountId, { type: 'customer' });
       }
     }
 
     if (endDate) {
       const renewalDue = addDays(endDate, -60);
-      await api.object('task').insert({
+      await api.object('crm_task').insert({
         subject: `Renewal review for contract ${id ?? ''}`.trim(),
         status: 'not_started',
         priority: 'high',
@@ -148,7 +148,7 @@ const contractActivation: Hook = {
           (typeof input.owner === 'string' && input.owner) ||
           (typeof previous?.owner === 'string' && previous.owner) ||
           ctx.user?.id,
-        related_to_type: 'account',
+        related_to_type: 'crm_account',
         related_to_account: accountId,
       });
     }

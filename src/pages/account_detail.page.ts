@@ -30,7 +30,7 @@ export const AccountDetailPage = {
     'all other regions (highlights, tabs, history) ride synthesized defaults.',
 
   type: 'record',
-  object: 'account',
+  object: 'crm_account',
 
   kind: 'slotted',
 

@@ -15,7 +15,7 @@ export const CampaignViews = defineView({
     type: 'grid',
     name: 'all_campaigns',
     label: 'All Campaigns',
-    data: { provider: 'object', object: 'campaign' },
+    data: { provider: 'object', object: 'crm_campaign' },
     columns: [
       { field: 'name', width: 240, sortable: true, link: true, pinned: 'left' },
       { field: 'channel', width: 130 },
@@ -52,7 +52,7 @@ export const CampaignViews = defineView({
       name: 'campaign_gantt',
       type: 'gantt',
       label: 'Campaign Schedule',
-      data: { provider: 'object', object: 'campaign' },
+      data: { provider: 'object', object: 'crm_campaign' },
       columns: ['name', 'channel', 'owner'],
       gantt: {
         startDateField: 'start_date',
@@ -66,7 +66,7 @@ export const CampaignViews = defineView({
       name: 'campaign_calendar',
       type: 'calendar',
       label: 'Launch Calendar',
-      data: { provider: 'object', object: 'campaign' },
+      data: { provider: 'object', object: 'crm_campaign' },
       columns: ['name', 'channel', 'status'],
       calendar: {
         startDateField: 'start_date',
@@ -81,7 +81,7 @@ export const CampaignViews = defineView({
       name: 'campaign_timeline',
       type: 'timeline',
       label: 'Marketing Timeline',
-      data: { provider: 'object', object: 'campaign' },
+      data: { provider: 'object', object: 'crm_campaign' },
       columns: ['name', 'channel'],
       timeline: {
         startDateField: 'start_date',
@@ -96,7 +96,7 @@ export const CampaignViews = defineView({
 
   form: {
     type: 'tabbed',
-    data: { provider: 'object', object: 'campaign' },
+    data: { provider: 'object', object: 'crm_campaign' },
     sections: [
       {
         label: 'Overview',

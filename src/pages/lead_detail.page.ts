@@ -20,7 +20,7 @@ export const LeadDetailPage: Page = {
   description: 'Comprehensive lead detail page with highlights, details, and related information',
 
   type: 'record',
-  object: 'lead',
+  object: 'crm_lead',
 
   // Template defines the overall layout structure. We use `full-width`
   // (single column) because the previous `header-sidebar-main` layout
@@ -126,7 +126,7 @@ export const LeadDetailPage: Page = {
                           fields: ['salutation', 'first_name', 'last_name', 'title', 'company', 'industry'],
                         },
                         {
-                          name: 'contact',
+                          name: 'crm_contact',
                           label: 'Contact',
                           fields: ['email', 'phone', 'mobile', 'website'],
                         },
@@ -172,7 +172,7 @@ export const LeadDetailPage: Page = {
                               id: 'related_tasks',
                               label: 'Tasks',
                               properties: {
-                                objectName: 'task',
+                                objectName: 'crm_task',
                                 relationshipField: 'lead_id',
                                 columns: ['subject', 'status', 'priority', 'due_date', 'assigned_to'],
                                 sort: [
@@ -246,7 +246,7 @@ export const LeadDetailPage: Page = {
                     id: 'lead_activity',
                     label: 'Activity Timeline',
                     properties: {
-                      types: ['task', 'event', 'email', 'call', 'note'],
+                      types: ['crm_task', 'event', 'email', 'call', 'note'],
                       limit: 20,
                       showCompleted: false,
                     },

@@ -10,9 +10,9 @@ import type { Cube } from '@objectstack/spec/data';
  */
 
 export const opportunityCube: Cube = {
-  name: 'opportunity',
+  name: 'crm_opportunity',
   title: 'Opportunities',
-  sql: 'opportunity',
+  sql: 'crm_opportunity',
   public: true,
   measures: {
     count:  { name: 'count',  label: 'Count',           type: 'count', sql: '*' },
@@ -27,9 +27,9 @@ export const opportunityCube: Cube = {
 };
 
 export const accountCube: Cube = {
-  name: 'account',
+  name: 'crm_account',
   title: 'Accounts',
-  sql: 'account',
+  sql: 'crm_account',
   public: true,
   measures: {
     count: { name: 'count', label: 'Count', type: 'count', sql: '*' },
@@ -46,9 +46,9 @@ export const accountCube: Cube = {
 };
 
 export const contactCube: Cube = {
-  name: 'contact',
+  name: 'crm_contact',
   title: 'Contacts',
-  sql: 'contact',
+  sql: 'crm_contact',
   public: true,
   measures: {
     count: { name: 'count', label: 'Count', type: 'count', sql: '*' },
@@ -57,9 +57,9 @@ export const contactCube: Cube = {
 };
 
 export const leadCube: Cube = {
-  name: 'lead',
+  name: 'crm_lead',
   title: 'Leads',
-  sql: 'lead',
+  sql: 'crm_lead',
   public: true,
   measures: {
     count: { name: 'count', label: 'Count', type: 'count', sql: '*' },
@@ -70,9 +70,9 @@ export const leadCube: Cube = {
 };
 
 export const caseCube: Cube = {
-  name: 'case',
+  name: 'crm_case',
   title: 'Cases',
-  sql: 'case',
+  sql: 'crm_case',
   public: true,
   measures: {
     count:                 { name: 'count',                 label: 'Count',                 type: 'count', sql: '*' },
@@ -87,15 +87,15 @@ export const caseCube: Cube = {
     type:       { name: 'type',       label: 'Type',     type: 'string',  sql: 'type' },
     owner:      { name: 'owner',      label: 'Owner',    type: 'string',  sql: 'owner' },
     is_closed:  { name: 'is_closed',  label: 'Closed',   type: 'boolean', sql: 'is_closed' },
-    account:    { name: 'account',    label: 'Account',  type: 'string',  sql: 'account' },
+    account:    { name: 'crm_account',    label: 'Account',  type: 'string',  sql: 'crm_account' },
     created_at: { name: 'created_at', label: 'Created',  type: 'time',    sql: 'created_at', granularities: ['day', 'week', 'month', 'quarter', 'year'] },
   },
 };
 
 export const campaignCube: Cube = {
-  name: 'campaign',
+  name: 'crm_campaign',
   title: 'Campaigns',
-  sql: 'campaign',
+  sql: 'crm_campaign',
   public: true,
   measures: {
     count:            { name: 'count',            label: 'Count',            type: 'count', sql: '*' },
@@ -118,15 +118,15 @@ export const campaignCube: Cube = {
 };
 
 export const campaignMemberCube: Cube = {
-  name: 'campaign_member',
+  name: 'crm_campaign_member',
   title: 'Campaign Members',
-  sql: 'campaign_member',
+  sql: 'crm_campaign_member',
   public: true,
   measures: {
     count: { name: 'count', label: 'Count', type: 'count', sql: '*' },
   },
   dimensions: {
-    campaign:      { name: 'campaign',      label: 'Campaign', type: 'string', sql: 'campaign' },
+    campaign:      { name: 'crm_campaign',      label: 'Campaign', type: 'string', sql: 'crm_campaign' },
     status:        { name: 'status',        label: 'Status',   type: 'string', sql: 'status' },
     response_date: { name: 'response_date', label: 'Responded',type: 'time',   sql: 'response_date', granularities: ['day', 'week', 'month'] },
   },

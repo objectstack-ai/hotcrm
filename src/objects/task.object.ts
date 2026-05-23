@@ -4,7 +4,7 @@ import { P } from '@objectstack/spec';
 import { ObjectSchema, Field } from '@objectstack/spec/data';
 
 export const Task = ObjectSchema.create({
-  name: 'task',
+  name: 'crm_task',
   label: 'Task',
   pluralLabel: 'Tasks',
   icon: 'check-square',
@@ -89,31 +89,31 @@ export const Task = ObjectSchema.create({
     related_to_type: Field.select({
       label: 'Related To Type',
       options: [
-        { label: 'Account', value: 'account' },
-        { label: 'Contact', value: 'contact' },
-        { label: 'Opportunity', value: 'opportunity' },
-        { label: 'Lead', value: 'lead' },
-        { label: 'Case', value: 'case' },
+        { label: 'Account', value: 'crm_account' },
+        { label: 'Contact', value: 'crm_contact' },
+        { label: 'Opportunity', value: 'crm_opportunity' },
+        { label: 'Lead', value: 'crm_lead' },
+        { label: 'Case', value: 'crm_case' },
       ]
     }),
     
-    related_to_account: Field.lookup('account', {
+    related_to_account: Field.lookup('crm_account', {
       label: 'Related Account',
     }),
     
-    related_to_contact: Field.lookup('contact', {
+    related_to_contact: Field.lookup('crm_contact', {
       label: 'Related Contact',
     }),
     
-    related_to_opportunity: Field.lookup('opportunity', {
+    related_to_opportunity: Field.lookup('crm_opportunity', {
       label: 'Related Opportunity',
     }),
     
-    related_to_lead: Field.lookup('lead', {
+    related_to_lead: Field.lookup('crm_lead', {
       label: 'Related Lead',
     }),
     
-    related_to_case: Field.lookup('case', {
+    related_to_case: Field.lookup('crm_case', {
       label: 'Related Case',
     }),
     
@@ -229,7 +229,7 @@ export const Task = ObjectSchema.create({
   workflows: [
     {
       name: 'set_completed_flag',
-      objectName: 'task',
+      objectName: 'crm_task',
       triggerType: 'on_create_or_update',
       criteria: P`record.status != previous.status`,
       active: true,
@@ -244,7 +244,7 @@ export const Task = ObjectSchema.create({
     },
     {
       name: 'set_completed_date',
-      objectName: 'task',
+      objectName: 'crm_task',
       triggerType: 'on_update',
       criteria: P`record.status != previous.status && record.status == "completed"`,
       active: true,
@@ -265,7 +265,7 @@ export const Task = ObjectSchema.create({
     },
     {
       name: 'check_overdue',
-      objectName: 'task',
+      objectName: 'crm_task',
       triggerType: 'on_create_or_update',
       criteria: P`record.due_date < today() && record.is_completed == false`,
       active: true,
@@ -280,7 +280,7 @@ export const Task = ObjectSchema.create({
     },
     {
       name: 'notify_on_urgent',
-      objectName: 'task',
+      objectName: 'crm_task',
       triggerType: 'on_create_or_update',
       criteria: P`record.priority == "urgent" && record.is_completed == false`,
       active: true,

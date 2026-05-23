@@ -4,7 +4,7 @@ import { P } from '@objectstack/spec';
 import { ObjectSchema, Field } from '@objectstack/spec/data';
 
 export const Case = ObjectSchema.create({
-  name: 'case',
+  name: 'crm_case',
   label: 'Case',
   pluralLabel: 'Cases',
   icon: 'life-buoy',
@@ -39,11 +39,11 @@ export const Case = ObjectSchema.create({
     }),
     
     // Relationships
-    account: Field.lookup('account', {
+    account: Field.lookup('crm_account', {
       label: 'Account',
     }),
     
-    contact: Field.lookup('contact', {
+    contact: Field.lookup('crm_contact', {
       label: 'Contact',
       // Optional so Web-to-Case (anonymous) submissions can land without
       // an existing CRM contact. Back-office staff or a triage flow links
@@ -152,7 +152,7 @@ export const Case = ObjectSchema.create({
     }),
     
     // Related case
-    parent_case: Field.lookup('case', {
+    parent_case: Field.lookup('crm_case', {
       label: 'Parent Case',
       description: 'Related parent case',
     }),
@@ -195,7 +195,7 @@ export const Case = ObjectSchema.create({
   // Database indexes for performance
   indexes: [
     { fields: ['case_number'], unique: true },
-    { fields: ['account'] },
+    { fields: ['crm_account'] },
     { fields: ['owner'] },
     { fields: ['status'] },
     { fields: ['priority'] },
@@ -213,7 +213,7 @@ export const Case = ObjectSchema.create({
   },
   
   titleFormat: '{case_number} - {subject}',
-  compactLayout: ['case_number', 'subject', 'account', 'status', 'priority'],
+  compactLayout: ['case_number', 'subject', 'crm_account', 'status', 'priority'],
   
   // Removed: list_views and form_views belong in UI configuration, not object definition
   
@@ -253,7 +253,7 @@ export const Case = ObjectSchema.create({
   workflows: [
     {
       name: 'set_closed_flag',
-      objectName: 'case',
+      objectName: 'crm_case',
       triggerType: 'on_create_or_update',
       criteria: P`record.status != previous.status`,
       active: true,
@@ -268,7 +268,7 @@ export const Case = ObjectSchema.create({
     },
     {
       name: 'set_closed_date',
-      objectName: 'case',
+      objectName: 'crm_case',
       triggerType: 'on_update',
       criteria: P`record.status != previous.status && record.status == "closed"`,
       active: true,
@@ -283,7 +283,7 @@ export const Case = ObjectSchema.create({
     },
     {
       name: 'calculate_resolution_time',
-      objectName: 'case',
+      objectName: 'crm_case',
       triggerType: 'on_update',
       criteria: P`record.closed_date != previous.closed_date && !(isBlank(record.closed_date))`,
       active: true,
@@ -298,7 +298,7 @@ export const Case = ObjectSchema.create({
     },
     {
       name: 'notify_on_critical',
-      objectName: 'case',
+      objectName: 'crm_case',
       triggerType: 'on_create_or_update',
       criteria: P`record.priority == "critical"`,
       active: true,
@@ -313,7 +313,7 @@ export const Case = ObjectSchema.create({
     },
     {
       name: 'notify_on_escalation',
-      objectName: 'case',
+      objectName: 'crm_case',
       triggerType: 'on_update',
       criteria: P`record.is_escalated != previous.is_escalated && record.is_escalated == true`,
       active: true,

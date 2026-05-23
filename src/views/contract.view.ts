@@ -15,11 +15,11 @@ export const ContractViews = defineView({
     type: 'grid',
     name: 'all_contracts',
     label: 'All Contracts',
-    data: { provider: 'object', object: 'contract' },
+    data: { provider: 'object', object: 'crm_contract' },
     columns: [
       { field: 'contract_number', width: 150, link: true, pinned: 'left' },
-      { field: 'account', width: 200 },
-      { field: 'opportunity', width: 200 },
+      { field: 'crm_account', width: 200 },
+      { field: 'crm_opportunity', width: 200 },
       { field: 'status', width: 130, sortable: true },
       { field: 'contract_value', width: 140, align: 'right', summary: 'sum' },
       { field: 'contract_term_months', width: 130, align: 'right' },
@@ -48,8 +48,8 @@ export const ContractViews = defineView({
       name: 'renewal_calendar',
       type: 'calendar',
       label: 'Renewal Calendar',
-      data: { provider: 'object', object: 'contract' },
-      columns: ['contract_number', 'account', 'status'],
+      data: { provider: 'object', object: 'crm_contract' },
+      columns: ['contract_number', 'crm_account', 'status'],
       calendar: {
         startDateField: 'end_date',
         titleField: 'contract_number',
@@ -62,8 +62,8 @@ export const ContractViews = defineView({
       name: 'contract_gantt',
       type: 'gantt',
       label: 'Contract Terms',
-      data: { provider: 'object', object: 'contract' },
-      columns: ['contract_number', 'account', 'contract_value'],
+      data: { provider: 'object', object: 'crm_contract' },
+      columns: ['contract_number', 'crm_account', 'contract_value'],
       gantt: {
         startDateField: 'start_date',
         endDateField: 'end_date',
@@ -76,13 +76,13 @@ export const ContractViews = defineView({
       name: 'contract_timeline',
       type: 'timeline',
       label: 'Contract Timeline',
-      data: { provider: 'object', object: 'contract' },
-      columns: ['contract_number', 'account'],
+      data: { provider: 'object', object: 'crm_contract' },
+      columns: ['contract_number', 'crm_account'],
       timeline: {
         startDateField: 'start_date',
         endDateField: 'end_date',
         titleField: 'contract_number',
-        groupByField: 'account',
+        groupByField: 'crm_account',
         colorField: 'status',
         scale: 'quarter',
       },
@@ -91,12 +91,12 @@ export const ContractViews = defineView({
 
   form: {
     type: 'tabbed',
-    data: { provider: 'object', object: 'contract' },
+    data: { provider: 'object', object: 'crm_contract' },
     sections: [
       {
         label: 'Parties',
         columns: 2,
-        fields: ['contract_number', 'account', 'contact', 'opportunity', 'owner', 'status'],
+        fields: ['contract_number', 'crm_account', 'crm_contact', 'crm_opportunity', 'owner', 'status'],
       },
       {
         label: 'Terms',

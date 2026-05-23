@@ -22,7 +22,7 @@ import { F, P } from '@objectstack/spec';
  *   closed    → already-won amount
  */
 export const Forecast = ObjectSchema.create({
-  name: 'forecast',
+  name: 'crm_forecast',
   label: 'Forecast',
   pluralLabel: 'Forecasts',
   icon: 'trending-up',

@@ -5,7 +5,7 @@ import type { Hook, HookContext } from '@objectstack/spec/data';
 /**
  * Contact integrity hook.
  *
- * - On insert/update, dedupes by `email` within the same `account`.
+ * - On insert/update, dedupes by `email` within the same `crm_account`.
  * - On email/phone change, propagates the new value to opportunities where this
  *   contact is the `primary_contact` (best-effort rollup).
  * - On delete, refuses if the contact is referenced by an active opportunity,
@@ -22,7 +22,7 @@ type ApiShape = {
 
 const contactHook: Hook = {
   name: 'contact_integrity',
-  object: 'contact',
+  object: 'crm_contact',
   events: ['beforeInsert', 'beforeUpdate', 'afterUpdate', 'beforeDelete'],
   priority: 200,
   description:
@@ -36,7 +36,7 @@ const contactHook: Hook = {
       const account = typeof input.account === 'string' ? input.account : ctx.previous?.account;
       if (email && account) {
         input.email = email;
-        const dup = await api.object('contact').findOne({
+        const dup = await api.object('crm_contact').findOne({
           where: { email, account },
         });
         const dupId = (dup as { id?: string } | null)?.id;
@@ -62,7 +62,7 @@ const contactHook: Hook = {
       }
       if (Object.keys(patch).length === 0) return;
       try {
-        await api.object('opportunity').updateMany({
+        await api.object('crm_opportunity').updateMany({
           where: { primary_contact: id },
           doc: patch,
         });
@@ -75,13 +75,13 @@ const contactHook: Hook = {
       const id = ctx.previous?.id;
       if (!id) return;
       const [openOpps, openQuotes, activeContracts] = await Promise.all([
-        api.object('opportunity').count({
+        api.object('crm_opportunity').count({
           where: { primary_contact: id, stage: { $nin: ['closed_won', 'closed_lost'] } },
         }),
-        api.object('quote').count({
+        api.object('crm_quote').count({
           where: { contact: id, status: { $nin: ['rejected', 'expired'] } },
         }),
-        api.object('contract').count({
+        api.object('crm_contract').count({
           where: { contact: id, status: 'activated' },
         }),
       ]);

@@ -10,7 +10,7 @@ import { LogCallAction } from '../actions/global.actions';
 /**
  * Case Detail Record Page
  *
- * Service-agent record page for the `case` object. Mirrors the
+ * Service-agent record page for the `crm_case` object. Mirrors the
  * opportunity_detail layout: highlights strip, status path, then a tab
  * strip with **Details / Related / Activity**.
  *
@@ -26,7 +26,7 @@ export const CaseDetailPage: Page = {
     'Service-agent case record: highlights, SLA path, details and activity timeline.',
 
   type: 'record',
-  object: 'case',
+  object: 'crm_case',
 
   template: 'full-width',
   kind: 'full',
@@ -62,7 +62,7 @@ export const CaseDetailPage: Page = {
               'sla_response_due',
               'sla_resolution_due',
               'owner',
-              'account',
+              'crm_account',
             ],
           },
         },
@@ -113,8 +113,8 @@ export const CaseDetailPage: Page = {
                           fields: [
                             'case_number',
                             'subject',
-                            'account',
-                            'contact',
+                            'crm_account',
+                            'crm_contact',
                             'type',
                             'origin',
                           ],
@@ -160,7 +160,7 @@ export const CaseDetailPage: Page = {
                               type: 'record:related_list',
                               id: 'case_tasks',
                               properties: {
-                                objectName: 'task',
+                                objectName: 'crm_task',
                                 relationshipField: 'related_to_case',
                                 columns: [
                                   'subject',

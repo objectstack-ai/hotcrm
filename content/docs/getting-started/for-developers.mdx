@@ -64,7 +64,7 @@ HotCRM runs on [**@objectstack/runtime**](https://github.com/objectstack-ai/fram
 Key concepts:
 
 - **Objects** are TypeScript files (no YAML, no JSON, no UI clicking).
-- **ObjectQL** is the data-access API — `broker.find('opportunity', {...})` instead of SQL.
+- **ObjectQL** is the data-access API — `broker.find('crm_opportunity', {...})` instead of SQL.
 - **Hooks** fire on lifecycle events (`before_create`, `after_update`, etc.).
 - **Flows** orchestrate multi-step business logic visually defined in TS.
 - Every metadata file is **validated** at compile time against `@objectstack/spec` schemas.
@@ -78,7 +78,7 @@ Key concepts:
 import { defineObject, Field, ObjectSchema } from '@objectstack/spec/data';
 
 export default ObjectSchema.parse(defineObject({
-  name: 'opportunity',
+  name: 'crm_opportunity',
   extends: 'crm.opportunity',
   fields: {
     custom_priority: Field.select({
@@ -114,7 +114,7 @@ export default defineSkill({
 import { definePage, PageSchema } from '@objectstack/spec/ui';
 
 export default PageSchema.parse(definePage({
-  object: 'opportunity',
+  object: 'crm_opportunity',
   // ...
 }));
 ```

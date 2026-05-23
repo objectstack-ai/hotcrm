@@ -18,7 +18,7 @@ export const QuoteGenerationFlow: Flow = {
   ],
 
   nodes: [
-    { id: 'start', type: 'start', label: 'Start', config: { objectName: 'opportunity' } },
+    { id: 'start', type: 'start', label: 'Start', config: { objectName: 'crm_opportunity' } },
     {
       id: 'screen_1', type: 'screen', label: 'Quote Details',
       config: {
@@ -31,12 +31,12 @@ export const QuoteGenerationFlow: Flow = {
     },
     {
       id: 'get_opportunity', type: 'get_record', label: 'Get Opportunity',
-      config: { objectName: 'opportunity', filter: { id: '{opportunityId}' }, outputVariable: 'oppRecord' },
+      config: { objectName: 'crm_opportunity', filter: { id: '{opportunityId}' }, outputVariable: 'oppRecord' },
     },
     {
       id: 'create_quote', type: 'create_record', label: 'Create Quote',
       config: {
-        objectName: 'quote',
+        objectName: 'crm_quote',
         fields: {
           name: '{quoteName}', opportunity: '{opportunityId}',
           account: '{oppRecord.account}', contact: '{oppRecord.contact}',
@@ -53,7 +53,7 @@ export const QuoteGenerationFlow: Flow = {
     {
       id: 'update_opportunity', type: 'update_record', label: 'Update Opportunity',
       config: {
-        objectName: 'opportunity', filter: { id: '{opportunityId}' },
+        objectName: 'crm_opportunity', filter: { id: '{opportunityId}' },
         fields: { stage: 'proposal', last_activity_date: '{TODAY()}' },
       },
     },

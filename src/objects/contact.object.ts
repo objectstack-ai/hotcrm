@@ -4,7 +4,7 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 import { F, P } from '@objectstack/spec';
 
 export const Contact = ObjectSchema.create({
-  name: 'contact',
+  name: 'crm_contact',
   label: 'Contact',
   pluralLabel: 'Contacts',
   icon: 'user',
@@ -59,7 +59,7 @@ export const Contact = ObjectSchema.create({
     }),
 
     // Relationship: Link to Account (Master-Detail)
-    account: Field.masterDetail('account', {
+    account: Field.masterDetail('crm_account', {
       label: 'Account',
       required: true,
       writeRequiresMasterRead: true,
@@ -89,7 +89,7 @@ export const Contact = ObjectSchema.create({
     }),
 
     // Relationship fields
-    reports_to: Field.lookup('contact', {
+    reports_to: Field.lookup('crm_contact', {
       label: 'Reports To',
       description: 'Direct manager/supervisor',
       group: 'account_info',
@@ -185,7 +185,7 @@ export const Contact = ObjectSchema.create({
   
   // Database indexes for performance
   indexes: [
-    { fields: ['account'] },
+    { fields: ['crm_account'] },
     { fields: ['email'], unique: true },
     { fields: ['owner'] },
     { fields: ['last_name', 'first_name'] },
@@ -193,7 +193,7 @@ export const Contact = ObjectSchema.create({
   
   // Display configuration
   titleFormat: '{full_name}',
-  compactLayout: ['full_name', 'email', 'account', 'phone'],
+  compactLayout: ['full_name', 'email', 'crm_account', 'phone'],
   
   // Validation Rules
   validations: [
@@ -202,7 +202,7 @@ export const Contact = ObjectSchema.create({
       type: 'unique',
       severity: 'error',
       message: 'Email must be unique within an account',
-      fields: ['email', 'account'],
+      fields: ['email', 'crm_account'],
       caseSensitive: false,
     },
   ],
@@ -211,7 +211,7 @@ export const Contact = ObjectSchema.create({
   workflows: [
     {
       name: 'welcome_email',
-      objectName: 'contact',
+      objectName: 'crm_contact',
       triggerType: 'on_create',
       active: true,
       actions: [

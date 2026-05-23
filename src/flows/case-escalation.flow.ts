@@ -17,26 +17,26 @@ export const CaseEscalationFlow: Flow = {
   nodes: [
     {
       id: 'start', type: 'start', label: 'Start',
-      config: { objectName: 'case', criteria: 'priority = "critical" OR (priority = "high" AND account.type = "customer")' },
+      config: { objectName: 'crm_case', criteria: 'priority = "critical" OR (priority = "high" AND account.type = "customer")' },
     },
     {
       id: 'get_case', type: 'get_record', label: 'Get Case Record',
-      config: { objectName: 'case', filter: { id: '{caseId}' }, outputVariable: 'caseRecord' },
+      config: { objectName: 'crm_case', filter: { id: '{caseId}' }, outputVariable: 'caseRecord' },
     },
     {
       id: 'assign_senior_agent', type: 'update_record', label: 'Assign to Senior Agent',
       config: {
-        objectName: 'case', filter: { id: '{caseId}' },
+        objectName: 'crm_case', filter: { id: '{caseId}' },
         fields: { owner: '{caseRecord.owner.manager}', is_escalated: true, escalated_date: '{NOW()}', status: 'escalated' },
       },
     },
     {
       id: 'create_task', type: 'create_record', label: 'Create Follow-up Task',
       config: {
-        objectName: 'task',
+        objectName: 'crm_task',
         fields: {
           subject: 'Follow up on escalated case: {caseRecord.case_number}',
-          related_to_type: 'case',
+          related_to_type: 'crm_case',
           related_to_case: '{caseId}',
           owner: '{caseRecord.owner}',
           priority: 'high', status: 'not_started', due_date: '{TODAY() + 1}',

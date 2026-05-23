@@ -71,7 +71,7 @@ export const LogCallAction: Action = {
  *
  * Script-typed cross-domain (global) action: dumps the rows of the
  * target object to a CSV string. Object name is forwarded by the
- * dispatcher via `input.objectName` (defaults to `account`).
+ * dispatcher via `input.objectName` (defaults to `crm_account`).
  */
 export const ExportToCsvAction: Action = {
   name: 'export_csv',
@@ -81,7 +81,7 @@ export const ExportToCsvAction: Action = {
   body: {
     language: 'js',
     source: `
-      const objectName = input.objectName ?? 'account';
+      const objectName = input.objectName ?? 'crm_account';
       const raw = await ctx.api.object(objectName).find();
       // Drivers may return either a plain array or { records, total }.
       const records = Array.isArray(raw) ? raw : (raw?.records ?? raw?.value ?? []);

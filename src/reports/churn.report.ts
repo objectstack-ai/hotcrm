@@ -23,8 +23,8 @@ const daysAgo = (n: number): string => {
  *
  * Each block is an independent sub-report; the joined renderer stacks them
  * vertically. There is no container-level filter on this report — each block
- * carries its own scope because they query different objects (`account`,
- * `opportunity`) at different time horizons.
+ * carries its own scope because they query different objects (`crm_account`,
+ * `crm_opportunity`) at different time horizons.
  *
  * Joined Reports demonstrate the spec's M3 capability: multi-block analytic
  * surfaces with shared chrome but independent data binding.
@@ -34,7 +34,7 @@ export const CustomerChurnSignalsReport: ReportInput = {
   label: 'Customer Churn Signals',
   description:
     'Three-panel early-warning view: at-risk customers, silent high-value accounts, and recently-lost opportunities.',
-  objectName: 'account',
+  objectName: 'crm_account',
   type: 'joined',
   // Container columns: joined reports declare their effective columns inside
   // each block, so the top-level `columns` is intentionally empty.
@@ -45,7 +45,7 @@ export const CustomerChurnSignalsReport: ReportInput = {
       label: 'At-Risk Accounts',
       description: 'Active accounts with no activity in 14+ days, grouped by industry.',
       type: 'summary',
-      objectName: 'account',
+      objectName: 'crm_account',
       columns: [
         { field: 'name', label: 'Account' },
         { field: 'id', label: 'Accounts', aggregate: 'count' },
@@ -61,7 +61,7 @@ export const CustomerChurnSignalsReport: ReportInput = {
       label: 'Silent High-Value Accounts',
       description: 'Active accounts gone quiet for 30+ days, grouped by type.',
       type: 'summary',
-      objectName: 'account',
+      objectName: 'crm_account',
       columns: [
         { field: 'id', label: 'Accounts', aggregate: 'count' },
       ],
@@ -76,7 +76,7 @@ export const CustomerChurnSignalsReport: ReportInput = {
       label: 'Recently Lost Opportunities',
       description: 'Opportunities closed-lost in the last 30 days — investigate before the customer fully churns.',
       type: 'summary',
-      objectName: 'opportunity',
+      objectName: 'crm_opportunity',
       columns: [
         { field: 'amount', label: 'Lost Revenue', aggregate: 'sum' },
         { field: 'id', label: 'Deals', aggregate: 'count' },

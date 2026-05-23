@@ -30,7 +30,7 @@ function labelFor(period: string, start: Date): string {
 
 const forecastDerive: Hook = {
   name: 'forecast_derive_period',
-  object: 'forecast',
+  object: 'crm_forecast',
   events: ['beforeInsert', 'beforeUpdate'],
   priority: 200,
   description: 'Derive period_end and period_label from period + period_start.',

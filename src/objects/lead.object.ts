@@ -5,7 +5,7 @@ import { F, P } from '@objectstack/spec';
 import { LeadStateMachine } from './lead.state';
 
 export const Lead = ObjectSchema.create({
-  name: 'lead',
+  name: 'crm_lead',
   label: 'Lead',
   pluralLabel: 'Leads',
   icon: 'user-plus',
@@ -170,19 +170,19 @@ export const Lead = ObjectSchema.create({
       group: 'conversion',
     }),
 
-    converted_account: Field.lookup('account', {
+    converted_account: Field.lookup('crm_account', {
       label: 'Converted Account',
       readonly: true,
       group: 'conversion',
     }),
 
-    converted_contact: Field.lookup('contact', {
+    converted_contact: Field.lookup('crm_contact', {
       label: 'Converted Contact',
       readonly: true,
       group: 'conversion',
     }),
 
-    converted_opportunity: Field.lookup('opportunity', {
+    converted_opportunity: Field.lookup('crm_opportunity', {
       label: 'Converted Opportunity',
       readonly: true,
       group: 'conversion',
@@ -318,7 +318,7 @@ export const Lead = ObjectSchema.create({
   workflows: [
     {
       name: 'auto_flag_hot_lead',
-      objectName: 'lead',
+      objectName: 'crm_lead',
       triggerType: 'on_create_or_update',
       criteria: P`record.rating >= 4 && record.status == "new"`,
       active: true,
@@ -334,7 +334,7 @@ export const Lead = ObjectSchema.create({
     },
     {
       name: 'notify_owner_on_high_score_lead',
-      objectName: 'lead',
+      objectName: 'crm_lead',
       triggerType: 'on_create_or_update',
       criteria: P`record.rating != previous.rating && record.rating >= 4.5`,
       active: true,

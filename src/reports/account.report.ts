@@ -6,7 +6,7 @@ export const AccountsByIndustryTypeReport: ReportInput = {
   name: 'accounts_by_industry_type',
   label: 'Accounts by Industry and Type',
   description: 'Matrix report showing accounts by industry and type',
-  objectName: 'account',
+  objectName: 'crm_account',
   type: 'matrix',
   columns: [
     { field: 'name', aggregate: 'count' },

@@ -11,7 +11,7 @@ import type { Hook, HookContext } from '@objectstack/spec/data';
  */
 const accountHook: Hook = {
   name: 'account_protection',
-  object: 'account',
+  object: 'crm_account',
   events: ['beforeInsert', 'beforeUpdate', 'beforeDelete'],
   priority: 200,
   description:
@@ -47,7 +47,7 @@ const accountHook: Hook = {
           }
         | undefined;
       if (!api) return;
-      const openOpps = await api.object('opportunity').count({
+      const openOpps = await api.object('crm_opportunity').count({
         filter: {
           account: previous.id,
           stage: { $nin: ['closed_won', 'closed_lost'] },

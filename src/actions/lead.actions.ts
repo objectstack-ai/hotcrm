@@ -13,7 +13,7 @@ import { P } from '@objectstack/spec';
 export const ConvertLeadAction: Action = {
   name: 'convert_lead',
   label: 'Convert Lead',
-  objectName: 'lead',
+  objectName: 'crm_lead',
   icon: 'arrow-right-circle',
   type: 'flow',
   target: 'lead_conversion',
@@ -28,14 +28,14 @@ export const ConvertLeadAction: Action = {
  * Add selected leads to a Campaign.
  *
  * Modal-typed action: collects a campaign id then writes one
- * `campaign_member` record per selected lead via the metadata body.
+ * `crm_campaign_member` record per selected lead via the metadata body.
  * Selected ids are surfaced through `input.selectedIds` (populated by
  * the list toolbar) and the chosen campaign through `input.campaign`.
  */
 export const CreateCampaignAction: Action = {
   name: 'create_campaign',
   label: 'Add to Campaign',
-  objectName: 'lead',
+  objectName: 'crm_lead',
   icon: 'send',
   type: 'modal',
   target: 'create_campaign',
@@ -47,7 +47,7 @@ export const CreateCampaignAction: Action = {
       const ids = Array.isArray(input.selectedIds) ? input.selectedIds : [];
       const inserted = [];
       for (const leadId of ids) {
-        const row = await ctx.api.object('campaign_member').insert({
+        const row = await ctx.api.object('crm_campaign_member').insert({
           campaign_id: campaignId,
           lead_id: leadId,
           status: 'sent',
@@ -62,7 +62,7 @@ export const CreateCampaignAction: Action = {
   locations: ['list_toolbar'],
   params: [
     {
-      name: 'campaign',
+      name: 'crm_campaign',
       label: 'Campaign',
       type: 'lookup',
       required: true,

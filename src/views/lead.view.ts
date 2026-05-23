@@ -23,7 +23,7 @@ export const LeadViews = defineView({
     label: 'All Leads',
     data: {
       provider: 'object',
-      object: 'lead',
+      object: 'crm_lead',
     },
     
     // Column Configuration with Enhanced Features
@@ -111,7 +111,7 @@ export const LeadViews = defineView({
     type: 'simple',
     data: {
       provider: 'object',
-      object: 'lead',
+      object: 'crm_lead',
     },
     
     sections: [
@@ -227,7 +227,7 @@ export const LeadViews = defineView({
       label: 'Lead Pipeline',
       data: {
         provider: 'object',
-        object: 'lead',
+        object: 'crm_lead',
       },
       columns: ['first_name', 'last_name', 'company', 'email'],
       kanban: {
@@ -250,7 +250,7 @@ export const LeadViews = defineView({
       label: 'Lead Calendar',
       data: {
         provider: 'object',
-        object: 'lead',
+        object: 'crm_lead',
       },
       columns: ['first_name', 'last_name', 'company'],
       calendar: {
@@ -269,7 +269,7 @@ export const LeadViews = defineView({
       label: 'Lead Cards',
       data: {
         provider: 'object',
-        object: 'lead',
+        object: 'crm_lead',
       },
       columns: ['first_name', 'last_name', 'company', 'email', 'status'],
       gallery: {
@@ -288,7 +288,7 @@ export const LeadViews = defineView({
       label: 'My Leads',
       data: {
         provider: 'object',
-        object: 'lead',
+        object: 'crm_lead',
       },
       columns: ['first_name', 'last_name', 'company', 'email', 'status', 'rating'],
       filter: [
@@ -309,7 +309,7 @@ export const LeadViews = defineView({
       label: 'High Priority',
       data: {
         provider: 'object',
-        object: 'lead',
+        object: 'crm_lead',
       },
       columns: ['first_name', 'last_name', 'company', 'email', 'status', 'rating', 'lead_source'],
       filter: [
@@ -332,7 +332,7 @@ export const LeadViews = defineView({
       name: 'hot_leads',
       type: 'grid',
       label: '🔥 Hot Leads',
-      data: { provider: 'object', object: 'lead' },
+      data: { provider: 'object', object: 'crm_lead' },
       columns: ['first_name', 'last_name', 'company', 'phone', 'email', 'rating', 'next_followup_date', 'owner'],
       // High-rating, still-actionable leads — sort by next-follow-up so reps
       // see the most urgent first. (Pure operator-based filters; no date
@@ -357,7 +357,7 @@ export const LeadViews = defineView({
       type: 'simple',
       data: {
         provider: 'object',
-        object: 'lead',
+        object: 'crm_lead',
       },
       sections: [
         {
@@ -384,7 +384,7 @@ export const LeadViews = defineView({
       type: 'tabbed',
       data: {
         provider: 'object',
-        object: 'lead',
+        object: 'crm_lead',
       },
       sections: [
         {
@@ -448,7 +448,7 @@ export const LeadViews = defineView({
       type: 'wizard',
       data: {
         provider: 'object',
-        object: 'lead',
+        object: 'crm_lead',
       },
       sections: [
         {
@@ -508,7 +508,7 @@ export const LeadViews = defineView({
       type: 'split',
       data: {
         provider: 'object',
-        object: 'lead',
+        object: 'crm_lead',
       },
       sections: [
         {
@@ -548,7 +548,7 @@ export const LeadViews = defineView({
       type: 'drawer',
       data: {
         provider: 'object',
-        object: 'lead',
+        object: 'crm_lead',
       },
       sections: [
         {
@@ -580,7 +580,7 @@ export const LeadViews = defineView({
       type: 'modal',
       data: {
         provider: 'object',
-        object: 'lead',
+        object: 'crm_lead',
       },
       sections: [
         {
@@ -615,7 +615,7 @@ export const LeadViews = defineView({
      *
      * Airtable-style public form hosted at `/forms/contact-us`. Embeddable
      * via iframe on a marketing site. Guests can ONLY submit (insert) — the
-     * `guest_portal` profile denies read/edit/delete on `lead`.
+     * `guest_portal` profile denies read/edit/delete on `crm_lead`.
      *
      * Fields not on the form (status, lead_source, owner, rating) are stamped
      * by the `lead_automation` hook in `lead.hook.ts` after a guest submission.
@@ -624,7 +624,7 @@ export const LeadViews = defineView({
       type: 'simple',
       data: {
         provider: 'object',
-        object: 'lead',
+        object: 'crm_lead',
       },
       sections: [
         {
@@ -676,7 +676,7 @@ export const LeadViews = defineView({
       type: 'simple',
       data: {
         provider: 'object',
-        object: 'lead',
+        object: 'crm_lead',
       },
       sections: [
         {

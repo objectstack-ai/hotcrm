@@ -9,12 +9,12 @@ import { P } from '@objectstack/spec';
  * Demonstrates the L2 metadata-body action shape. The `body.source` runs
  * in the QuickJS sandbox via `actionBodyRunnerFactory`. The script receives
  * `(input, ctx)` where `ctx.recordId` is the contact id from the action
- * URL and `ctx.api.object('contact').update(...)` is gated by `api.write`.
+ * URL and `ctx.api.object('crm_contact').update(...)` is gated by `api.write`.
  */
 export const MarkPrimaryContactAction: Action = {
   name: 'mark_primary',
   label: 'Mark as Primary Contact',
-  objectName: 'contact',
+  objectName: 'crm_contact',
   icon: 'star',
   type: 'script',
   body: {
@@ -22,7 +22,7 @@ export const MarkPrimaryContactAction: Action = {
     source: `
       const id = ctx.recordId;
       if (!id) throw new Error('mark_primary requires a recordId');
-      await ctx.api.object('contact').update({ id, is_primary: true }, { where: { id } });
+      await ctx.api.object('crm_contact').update({ id, is_primary: true }, { where: { id } });
       return { ok: true, id, is_primary: true };
     `,
     capabilities: ['api.write'],
@@ -44,7 +44,7 @@ export const MarkPrimaryContactAction: Action = {
 export const SendEmailAction: Action = {
   name: 'send_email',
   label: 'Send Email',
-  objectName: 'contact',
+  objectName: 'crm_contact',
   icon: 'mail',
   type: 'modal',
   target: 'send_email',
@@ -63,7 +63,7 @@ export const SendEmailAction: Action = {
         subject,
         body_text: body,
         status: 'queued',
-        related_object: 'contact',
+        related_object: 'crm_contact',
         related_id: recipientId,
         sent_by: ctx.user?.id ?? null,
       });

@@ -11,7 +11,7 @@ import { P } from '@objectstack/spec';
  * after the quote is sent without affecting the underlying opportunity.
  */
 export const QuoteLineItem = ObjectSchema.create({
-  name: 'quote_line_item',
+  name: 'crm_quote_line_item',
   label: 'Quote Line Item',
   pluralLabel: 'Quote Line Items',
   icon: 'package',
@@ -20,15 +20,15 @@ export const QuoteLineItem = ObjectSchema.create({
   trackHistory: true,
   shareModel: 'controlled-by-parent',
 
-  compactLayout: ['product', 'quantity', 'unit_price', 'total_price'],
+  compactLayout: ['crm_product', 'quantity', 'unit_price', 'total_price'],
 
   fields: {
-    quote: Field.lookup('quote', {
+    quote: Field.lookup('crm_quote', {
       label: 'Quote',
       required: true,
     }),
 
-    product: Field.lookup('product', {
+    product: Field.lookup('crm_product', {
       label: 'Product',
       required: true,
     }),

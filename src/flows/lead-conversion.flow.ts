@@ -18,7 +18,7 @@ export const LeadConversionFlow: Flow = {
   ],
 
   nodes: [
-    { id: 'start', type: 'start', label: 'Start', config: { objectName: 'lead' } },
+    { id: 'start', type: 'start', label: 'Start', config: { objectName: 'crm_lead' } },
     {
       id: 'screen_1', type: 'screen', label: 'Conversion Details',
       config: {
@@ -31,12 +31,12 @@ export const LeadConversionFlow: Flow = {
     },
     {
       id: 'get_lead', type: 'get_record', label: 'Get Lead Record',
-      config: { objectName: 'lead', filter: { id: '{leadId}' }, outputVariable: 'leadRecord' },
+      config: { objectName: 'crm_lead', filter: { id: '{leadId}' }, outputVariable: 'leadRecord' },
     },
     {
       id: 'create_account', type: 'create_record', label: 'Create Account',
       config: {
-        objectName: 'account',
+        objectName: 'crm_account',
         fields: {
           name: '{leadRecord.company}', phone: '{leadRecord.phone}',
           website: '{leadRecord.website}', industry: '{leadRecord.industry}',
@@ -51,7 +51,7 @@ export const LeadConversionFlow: Flow = {
     {
       id: 'create_contact', type: 'create_record', label: 'Create Contact',
       config: {
-        objectName: 'contact',
+        objectName: 'crm_contact',
         fields: {
           first_name: '{leadRecord.first_name}', last_name: '{leadRecord.last_name}',
           email: '{leadRecord.email}', phone: '{leadRecord.phone}',
@@ -68,7 +68,7 @@ export const LeadConversionFlow: Flow = {
     {
       id: 'create_opportunity', type: 'create_record', label: 'Create Opportunity',
       config: {
-        objectName: 'opportunity',
+        objectName: 'crm_opportunity',
         fields: {
           name: '{opportunityName}', account: '{accountId}', contact: '{contactId}',
           amount: '{opportunityAmount}', stage: 'prospecting', probability: 10,
@@ -80,7 +80,7 @@ export const LeadConversionFlow: Flow = {
     {
       id: 'mark_converted', type: 'update_record', label: 'Mark Lead as Converted',
       config: {
-        objectName: 'lead', filter: { id: '{leadId}' },
+        objectName: 'crm_lead', filter: { id: '{leadId}' },
         fields: {
           is_converted: true, converted_date: '{NOW()}',
           converted_account: '{accountId}', converted_contact: '{contactId}',

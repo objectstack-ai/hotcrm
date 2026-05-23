@@ -5,7 +5,7 @@ import { P } from '@objectstack/spec';
 export const AccountTeamSharingRule = {
   name: 'account_team_sharing',
   label: 'Account Team Sharing',
-  object: 'account',
+  object: 'crm_account',
   type: 'criteria' as const,
   condition: P`record.type == "customer" && record.is_active == true`,
   accessLevel: 'edit' as const,
@@ -17,7 +17,7 @@ export const TerritorySharingRules = [
   {
     name: 'north_america_territory',
     label: 'North America Territory',
-    object: 'account',
+    object: 'crm_account',
     type: 'criteria' as const,
     condition: P`record.billing_country in ["US", "CA", "MX"]`,
     accessLevel: 'edit' as const,
@@ -26,7 +26,7 @@ export const TerritorySharingRules = [
   {
     name: 'europe_territory',
     label: 'Europe Territory',
-    object: 'account',
+    object: 'crm_account',
     type: 'criteria' as const,
     condition: P`record.billing_country in ["UK", "DE", "FR", "IT", "ES"]`,
     accessLevel: 'edit' as const,

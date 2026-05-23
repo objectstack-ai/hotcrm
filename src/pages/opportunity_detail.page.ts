@@ -6,7 +6,7 @@ import { CloneOpportunityAction } from '../actions/opportunity.actions';
 /**
  * Opportunity Detail Record Page
  *
- * Salesforce Lightning-style record page for the `opportunity` object.
+ * Salesforce Lightning-style record page for the `crm_opportunity` object.
  * Mirrors the lead_detail blueprint: single-column full-width layout with
  * a Lightning-style header chip, primary action, key highlights strip and
  * status path, then a tab strip below. No sidebar — secondary widgets such
@@ -18,7 +18,7 @@ export const OpportunityDetailPage: Page = {
   description: 'Comprehensive opportunity detail page with path, highlights, details, and related lists',
 
   type: 'record',
-  object: 'opportunity',
+  object: 'crm_opportunity',
 
   template: 'full-width',
   kind: 'full',
@@ -48,7 +48,7 @@ export const OpportunityDetailPage: Page = {
           id: 'opp_highlights',
           label: 'Key Information',
           properties: {
-            fields: ['amount', 'close_date', 'probability', 'expected_revenue', 'owner', 'account'],
+            fields: ['amount', 'close_date', 'probability', 'expected_revenue', 'owner', 'crm_account'],
           },
         },
         {
@@ -95,10 +95,10 @@ export const OpportunityDetailPage: Page = {
                         {
                           name: 'info',
                           label: 'Opportunity Information',
-                          fields: ['name', 'account', 'owner', 'type', 'lead_source', 'campaign'],
+                          fields: ['name', 'crm_account', 'owner', 'type', 'lead_source', 'crm_campaign'],
                         },
                         {
-                          name: 'forecast',
+                          name: 'crm_forecast',
                           label: 'Stage & Forecast',
                           fields: ['stage', 'probability', 'amount', 'expected_revenue', 'close_date', 'forecast_category'],
                         },
@@ -131,8 +131,8 @@ export const OpportunityDetailPage: Page = {
                               type: 'record:related_list',
                               id: 'opp_quotes',
                               properties: {
-                                objectName: 'quote',
-                                relationshipField: 'opportunity',
+                                objectName: 'crm_quote',
+                                relationshipField: 'crm_opportunity',
                                 columns: ['quote_number', 'name', 'status', 'total_price', 'expiration_date'],
                                 limit: 10,
                               },
@@ -147,9 +147,9 @@ export const OpportunityDetailPage: Page = {
                               type: 'record:related_list',
                               id: 'opp_products',
                               properties: {
-                                objectName: 'opportunity_line_item',
-                                relationshipField: 'opportunity',
-                                columns: ['product', 'quantity', 'unit_price', 'total_price'],
+                                objectName: 'crm_opportunity_line_item',
+                                relationshipField: 'crm_opportunity',
+                                columns: ['crm_product', 'quantity', 'unit_price', 'total_price'],
                                 limit: 10,
                               },
                             },
@@ -163,7 +163,7 @@ export const OpportunityDetailPage: Page = {
                               type: 'record:related_list',
                               id: 'opp_tasks',
                               properties: {
-                                objectName: 'task',
+                                objectName: 'crm_task',
                                 relationshipField: 'related_to_opportunity',
                                 columns: ['subject', 'status', 'priority', 'due_date', 'owner'],
                                 filter: [{ field: 'status', op: 'neq', value: 'completed' }],
@@ -206,19 +206,19 @@ export const OpportunityDetailPage: Page = {
           properties: {
             entries: [
               {
-                objectName: 'quote',
-                relationshipField: 'opportunity',
+                objectName: 'crm_quote',
+                relationshipField: 'crm_opportunity',
                 title: 'Quotes',
                 limit: 3,
               },
               {
-                objectName: 'opportunity_line_item',
-                relationshipField: 'opportunity',
+                objectName: 'crm_opportunity_line_item',
+                relationshipField: 'crm_opportunity',
                 title: 'Products',
                 limit: 3,
               },
               {
-                objectName: 'task',
+                objectName: 'crm_task',
                 relationshipField: 'related_to_opportunity',
                 title: 'Open Tasks',
                 limit: 3,

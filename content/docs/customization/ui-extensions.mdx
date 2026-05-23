@@ -16,7 +16,7 @@ Every object has a default detail page. Override it with a `*.page.ts` file:
 import { definePage, PageSchema } from '@objectstack/spec/ui';
 
 export default PageSchema.parse(definePage({
-  object: 'opportunity',
+  object: 'crm_opportunity',
   layout: 'two_column',
 
   header: {
@@ -36,7 +36,7 @@ export default PageSchema.parse(definePage({
     },
     {
       label: 'Account & Contacts',
-      columns: ['account', 'primary_contact', 'opportunity_contact_roles'],
+      columns: ['crm_account', 'primary_contact', 'opportunity_contact_roles'],
     },
     {
       label: 'Health',
@@ -45,13 +45,13 @@ export default PageSchema.parse(definePage({
     {
       label: 'Line Items',
       type: 'related_list',
-      related: 'opportunity_line_item',
-      columns: ['product', 'quantity', 'unit_price', 'total_price'],
+      related: 'crm_opportunity_line_item',
+      columns: ['crm_product', 'quantity', 'unit_price', 'total_price'],
     },
     {
       label: 'Activity Timeline',
       type: 'timeline',
-      sources: ['task', 'event', 'email_message', 'note'],
+      sources: ['crm_task', 'event', 'email_message', 'note'],
     },
   ],
 
@@ -74,7 +74,7 @@ Customise the columns, filters, and default sort on list views:
 import { defineView, ViewSchema } from '@objectstack/spec/ui';
 
 export default ViewSchema.parse(defineView({
-  object: 'opportunity',
+  object: 'crm_opportunity',
   name: 'my_team_open_deals',
   label: 'My Team Open Deals',
   columns: [
@@ -145,7 +145,7 @@ Bulk = multi-record buttons on list views.
 import { defineAction } from '@objectstack/spec/ui';
 
 export const summariseOpportunity = defineAction({
-  object: 'opportunity',
+  object: 'crm_opportunity',
   surface: 'bulk',     // shows in list-view actions menu
   label: 'Summarise selected',
   icon: '✨',
@@ -169,9 +169,9 @@ import { useRecord } from '@objectstack/runtime/ui/hooks';
 export default defineWidget({
   name: 'health_score',
   surface: 'detail_sidebar',
-  object: 'account',
+  object: 'crm_account',
   component: ({ recordId }) => {
-    const { record } = useRecord('account', recordId);
+    const { record } = useRecord('crm_account', recordId);
     const score = computeHealth(record);
     return (
       <div className={`health-score health-${score.tier}`}>

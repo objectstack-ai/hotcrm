@@ -10,7 +10,7 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
  * Used by the campaign-enrollment flow and by ROI dashboards.
  */
 export const CampaignMember = ObjectSchema.create({
-  name: 'campaign_member',
+  name: 'crm_campaign_member',
   label: 'Campaign Member',
   pluralLabel: 'Campaign Members',
   icon: 'user-plus',
@@ -19,7 +19,7 @@ export const CampaignMember = ObjectSchema.create({
   trackHistory: true,
   shareModel: 'controlled-by-parent',
 
-  compactLayout: ['campaign', 'lead', 'contact', 'status', 'response_date'],
+  compactLayout: ['crm_campaign', 'crm_lead', 'crm_contact', 'status', 'response_date'],
 
   fieldGroups: [
     { key: 'basic',    label: 'Basic Information', icon: 'info' },
@@ -27,19 +27,19 @@ export const CampaignMember = ObjectSchema.create({
   ],
 
   fields: {
-    campaign: Field.lookup('campaign', {
+    campaign: Field.lookup('crm_campaign', {
       label: 'Campaign',
       required: true,
       group: 'basic',
     }),
 
-    lead: Field.lookup('lead', {
+    lead: Field.lookup('crm_lead', {
       label: 'Lead',
       group: 'basic',
       description: 'Set when the member was a Lead at enrollment time',
     }),
 
-    contact: Field.lookup('contact', {
+    contact: Field.lookup('crm_contact', {
       label: 'Contact',
       group: 'basic',
       description: 'Set when the member is an existing Contact',

@@ -20,7 +20,7 @@ type ApiShape = {
 
 const campaignValidation: Hook = {
   name: 'campaign_validation',
-  object: 'campaign',
+  object: 'crm_campaign',
   events: ['beforeInsert', 'beforeUpdate'],
   priority: 200,
   description: 'Validate campaign date range and required fields per status.',
@@ -50,7 +50,7 @@ const campaignValidation: Hook = {
 
 const campaignCompleted: Hook = {
   name: 'campaign_snapshot_metrics',
-  object: 'campaign',
+  object: 'crm_campaign',
   events: ['afterUpdate'],
   priority: 800,
   async: true,
@@ -77,14 +77,14 @@ const campaignCompleted: Hook = {
       sent,
       wonOppRecords,
     ] = await Promise.all([
-      api.object('lead').count({ filter: { campaign: id } }),
-      api.object('lead').count({ filter: { campaign: id, is_converted: true } }),
-      api.object('opportunity').count({ filter: { campaign: id } }),
-      api.object('opportunity').count({ filter: { campaign: id, stage: 'closed_won' } }),
-      api.object('campaign_member').count({ filter: { campaign: id } }),
-      api.object('campaign_member').count({ filter: { campaign: id, status: 'responded' } }),
-      api.object('campaign_member').count({ filter: { campaign: id, status: 'sent' } }),
-      api.object('opportunity').find({
+      api.object('crm_lead').count({ filter: { campaign: id } }),
+      api.object('crm_lead').count({ filter: { campaign: id, is_converted: true } }),
+      api.object('crm_opportunity').count({ filter: { campaign: id } }),
+      api.object('crm_opportunity').count({ filter: { campaign: id, stage: 'closed_won' } }),
+      api.object('crm_campaign_member').count({ filter: { campaign: id } }),
+      api.object('crm_campaign_member').count({ filter: { campaign: id, status: 'responded' } }),
+      api.object('crm_campaign_member').count({ filter: { campaign: id, status: 'sent' } }),
+      api.object('crm_opportunity').find({
         filter: { campaign: id, stage: 'closed_won' },
         fields: ['amount'],
         top: 5000,
@@ -96,7 +96,7 @@ const campaignCompleted: Hook = {
       return sum + amt;
     }, 0);
 
-    await api.object('campaign').update(id, {
+    await api.object('crm_campaign').update(id, {
       num_leads: leads,
       num_converted_leads: convertedLeads,
       num_opportunities: opportunities,

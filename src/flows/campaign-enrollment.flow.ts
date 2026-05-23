@@ -19,11 +19,11 @@ export const CampaignEnrollmentFlow: Flow = {
     { id: 'start', type: 'start', label: 'Start (Monday 9 AM)', config: { schedule: '0 9 * * 1' } },
     {
       id: 'get_campaign', type: 'get_record', label: 'Get Campaign',
-      config: { objectName: 'campaign', filter: { id: '{campaignId}' }, outputVariable: 'campaignRecord' },
+      config: { objectName: 'crm_campaign', filter: { id: '{campaignId}' }, outputVariable: 'campaignRecord' },
     },
     {
       id: 'query_leads', type: 'get_record', label: 'Find Eligible Leads',
-      config: { objectName: 'lead', filter: { status: '{leadStatus}', is_converted: false, email: { $ne: null } }, limit: 1000, outputVariable: 'leadList' },
+      config: { objectName: 'crm_lead', filter: { status: '{leadStatus}', is_converted: false, email: { $ne: null } }, limit: 1000, outputVariable: 'leadList' },
     },
     {
       id: 'loop_leads', type: 'loop', label: 'Process Each Lead',
@@ -32,13 +32,13 @@ export const CampaignEnrollmentFlow: Flow = {
     {
       id: 'create_campaign_member', type: 'create_record', label: 'Add to Campaign',
       config: {
-        objectName: 'campaign_member',
+        objectName: 'crm_campaign_member',
         fields: { campaign: '{campaignId}', lead: '{currentLead.id}', status: 'sent', added_date: '{NOW()}' },
       },
     },
     {
       id: 'update_campaign_stats', type: 'update_record', label: 'Update Campaign Stats',
-      config: { objectName: 'campaign', filter: { id: '{campaignId}' }, fields: { num_sent: '{leadList.length}' } },
+      config: { objectName: 'crm_campaign', filter: { id: '{campaignId}' }, fields: { num_sent: '{leadList.length}' } },
     },
     { id: 'end', type: 'end', label: 'End' },
   ],

@@ -17,11 +17,11 @@ export const OpportunityApprovalFlow: Flow = {
   nodes: [
     {
       id: 'start', type: 'start', label: 'Start',
-      config: { objectName: 'opportunity', criteria: 'amount > 100000 AND stage = "proposal"' },
+      config: { objectName: 'crm_opportunity', criteria: 'amount > 100000 AND stage = "proposal"' },
     },
     {
       id: 'get_opportunity', type: 'get_record', label: 'Get Opportunity',
-      config: { objectName: 'opportunity', filter: { id: '{opportunityId}' }, outputVariable: 'oppRecord' },
+      config: { objectName: 'crm_opportunity', filter: { id: '{opportunityId}' }, outputVariable: 'oppRecord' },
     },
     {
       id: 'approval_step_manager', type: 'connector_action', label: 'Sales Manager Approval',
@@ -57,7 +57,7 @@ export const OpportunityApprovalFlow: Flow = {
     {
       id: 'mark_approved', type: 'update_record', label: 'Mark as Approved',
       config: {
-        objectName: 'opportunity', filter: { id: '{opportunityId}' },
+        objectName: 'crm_opportunity', filter: { id: '{opportunityId}' },
         fields: { approval_status: 'approved', approved_date: '{NOW()}' },
       },
     },

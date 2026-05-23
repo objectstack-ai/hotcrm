@@ -8,13 +8,13 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
  * Represents price quotes sent to customers
  */
 export const Quote = ObjectSchema.create({
-  name: 'quote',
+  name: 'crm_quote',
   label: 'Quote',
   pluralLabel: 'Quotes',
   icon: 'file-text',
   description: 'Price quotes for customers',
   titleFormat: '{quote_number} - {name}',
-  compactLayout: ['quote_number', 'name', 'account', 'status', 'total_price'],
+  compactLayout: ['quote_number', 'name', 'crm_account', 'status', 'total_price'],
 
   fieldGroups: [
     { key: 'basic',     label: 'Quote Information', icon: 'info' },
@@ -40,12 +40,12 @@ export const Quote = ObjectSchema.create({
     }),
     
     // Relationships
-    account: Field.lookup('account', {
+    account: Field.lookup('crm_account', {
       label: 'Account',
       required: true,
     }),
     
-    contact: Field.lookup('contact', {
+    contact: Field.lookup('crm_contact', {
       label: 'Contact',
       required: true,
       referenceFilters: [
@@ -53,7 +53,7 @@ export const Quote = ObjectSchema.create({
       ]
     }),
     
-    opportunity: Field.lookup('opportunity', {
+    opportunity: Field.lookup('crm_opportunity', {
       label: 'Opportunity',
       referenceFilters: [
         'account = {account}',
@@ -166,8 +166,8 @@ export const Quote = ObjectSchema.create({
   
   // Database indexes
   indexes: [
-    { fields: ['account'] },
-    { fields: ['opportunity'] },
+    { fields: ['crm_account'] },
+    { fields: ['crm_opportunity'] },
     { fields: ['owner'] },
     { fields: ['status'] },
     { fields: ['quote_date'] },
@@ -208,7 +208,7 @@ export const Quote = ObjectSchema.create({
   workflows: [
     {
       name: 'quote_expired_check',
-      objectName: 'quote',
+      objectName: 'crm_quote',
       triggerType: 'scheduled',
       schedule: '0 1 * * *',
       criteria: P`record.expiration_date < today() && !(record.status in ["accepted", "rejected", "expired"])`,

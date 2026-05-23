@@ -12,7 +12,7 @@ import type { Action } from '@objectstack/spec/ui';
 export const CloneOpportunityAction: Action = {
   name: 'clone_opportunity',
   label: 'Clone Opportunity',
-  objectName: 'opportunity',
+  objectName: 'crm_opportunity',
   icon: 'copy',
   type: 'script',
   body: {
@@ -26,7 +26,7 @@ export const CloneOpportunityAction: Action = {
       // when marshalling certain row shapes. As a workaround we clone the
       // minimal field set required to seed a new opportunity, copying only
       // the source id reference; downstream owners can hydrate the rest.
-      const inserted = await ctx.api.object('opportunity').insert({
+      const inserted = await ctx.api.object('crm_opportunity').insert({
         name: 'Copy of opportunity ' + id,
         stage: 'prospecting',
       });
@@ -50,7 +50,7 @@ export const CloneOpportunityAction: Action = {
 export const MassUpdateStageAction: Action = {
   name: 'mass_update_stage',
   label: 'Update Stage',
-  objectName: 'opportunity',
+  objectName: 'crm_opportunity',
   icon: 'layers',
   type: 'modal',
   target: 'mass_update_stage',
@@ -62,7 +62,7 @@ export const MassUpdateStageAction: Action = {
       const ids = Array.isArray(input.selectedIds) ? input.selectedIds : [];
       let updated = 0;
       for (const id of ids) {
-        await ctx.api.object('opportunity').update({ id, stage: newStage }, { where: { id } });
+        await ctx.api.object('crm_opportunity').update({ id, stage: newStage }, { where: { id } });
         updated++;
       }
       return { stage: newStage, updated };

@@ -7,7 +7,7 @@ import type { Hook, HookContext } from '@objectstack/spec/data';
  *
  * - Auto-scores incoming leads into `rating` (1-5) using industry/title/email/phone weights.
  * - Refuses edits to a converted lead.
- * - When status flips to `qualified`, schedules a follow-up `task` for the current user.
+ * - When status flips to `qualified`, schedules a follow-up `crm_task` for the current user.
  */
 
 type ApiShape = {
@@ -47,7 +47,7 @@ function computeRating(input: Record<string, unknown>): number {
 
 const leadHook: Hook = {
   name: 'lead_automation',
-  object: 'lead',
+  object: 'crm_lead',
   events: ['beforeInsert', 'beforeUpdate', 'afterUpdate'],
   priority: 200,
   description:
@@ -80,7 +80,7 @@ const leadHook: Hook = {
       // sensible defaults stamped server-side so they cannot be spoofed
       // by the client. Guests are unauthenticated, so we identify them
       // by the absence of `ctx.user?.id`. (The `guest_portal` profile
-      // already restricts them to INSERT-only on `lead`.)
+      // already restricts them to INSERT-only on `crm_lead`.)
       const isGuestSubmission = !ctx.user?.id;
       if (isGuestSubmission) {
         if (!input.lead_source) input.lead_source = 'web';
@@ -129,14 +129,14 @@ const leadHook: Hook = {
       dueDate.setDate(dueDate.getDate() + 2);
 
       try {
-        await api.object('task').insert({
+        await api.object('crm_task').insert({
           subject: `Follow up with qualified lead${leadId ? ` (${leadId})` : ''}`,
           status: 'not_started',
           priority: 'high',
           type: 'follow_up',
           due_date: dueDate.toISOString().slice(0, 10),
           owner: ownerId,
-          related_to_type: 'lead',
+          related_to_type: 'crm_lead',
           related_to_lead: leadId,
         });
       } catch (err) {

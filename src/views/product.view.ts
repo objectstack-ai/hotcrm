@@ -13,7 +13,7 @@ export const ProductViews = defineView({
     type: 'grid',
     name: 'all_products',
     label: 'All Products',
-    data: { provider: 'object', object: 'product' },
+    data: { provider: 'object', object: 'crm_product' },
     columns: [
       { field: 'product_code', width: 140, link: true, pinned: 'left' },
       { field: 'name', width: 240, sortable: true },
@@ -46,7 +46,7 @@ export const ProductViews = defineView({
       name: 'product_catalog',
       type: 'gallery',
       label: 'Product Catalog',
-      data: { provider: 'object', object: 'product' },
+      data: { provider: 'object', object: 'crm_product' },
       columns: ['name', 'category', 'list_price'],
       gallery: {
         coverField: 'image',
@@ -62,7 +62,7 @@ export const ProductViews = defineView({
       name: 'low_stock',
       type: 'grid',
       label: 'Low Stock',
-      data: { provider: 'object', object: 'product' },
+      data: { provider: 'object', object: 'crm_product' },
       columns: ['product_code', 'name', 'quantity_on_hand', 'reorder_point', 'product_manager'],
       filter: [{ field: 'quantity_on_hand', operator: 'less_than_or_equal', value: 10 }],
       sort: [{ field: 'quantity_on_hand', order: 'asc' }],
@@ -72,7 +72,7 @@ export const ProductViews = defineView({
 
   form: {
     type: 'simple',
-    data: { provider: 'object', object: 'product' },
+    data: { provider: 'object', object: 'crm_product' },
     sections: [
       {
         label: 'Product Info',

@@ -7,7 +7,7 @@
  * the public Web-to-Lead and Web-to-Case forms.
  *
  * IRON-CLAD RULE: guests must NEVER be able to read existing CRM data.
- * The only thing they can do is INSERT a new `lead` or `case` row through
+ * The only thing they can do is INSERT a new `crm_lead` or `crm_case` row through
  * the form views whose `sharing.allowAnonymous = true`.
  *
  * Any new object added to the CRM stack is implicitly DENIED for guests —

@@ -63,7 +63,7 @@ API keys can be scoped to specific objects + actions and have their own rate lim
 
 ## Object endpoints
 
-Every object exposes a uniform set of endpoints. Examples for `opportunity`:
+Every object exposes a uniform set of endpoints. Examples for `crm_opportunity`:
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
@@ -95,7 +95,7 @@ POST /api/v1/opportunities/query
   "limit": 200,
   "cursor": "...",
   "fields": ["id", "name", "amount", "stage", "account.name", "owner.name"],
-  "expand": ["account", "owner", "opportunity_line_item"]
+  "expand": ["crm_account", "owner", "crm_opportunity_line_item"]
 }
 ```
 
@@ -124,7 +124,7 @@ Use `expand` to inline lookup targets:
 ```json
 {
   "fields": ["id", "name", "account.name", "account.industry"],
-  "expand": ["account"]
+  "expand": ["crm_account"]
 }
 ```
 
@@ -153,7 +153,7 @@ POST /api/v1/opportunities/aggregate
 POST /api/v1/webhooks
 {
   "name": "stripe-sync-on-contract-active",
-  "object": "contract",
+  "object": "crm_contract",
   "events": ["updated"],
   "filter": [["status", "=", "activated"]],
   "url": "https://your-app/webhooks/contract-activated",
