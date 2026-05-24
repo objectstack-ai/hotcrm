@@ -3,42 +3,49 @@
 import type { Page } from '@objectstack/spec/ui';
 
 /**
- * Account Detail Slotted Page
+ * Account Detail — AI-rich slotted record page.
  *
- * Demonstrates the ObjectUI **slotted page** pattern: instead of
- * authoring the full record page, we declare `kind: "slotted"` and
- * provide overrides for only the slots we care about. The default-page
- * synthesizer fills in every other slot (highlights, tabs, history,
- * etc.) from the object definition.
+ * v1 launch story Wow #3: the account page presents AI as a
+ * first-class structural element, not a bolted-on widget.
  *
- * This page replaces only the `header` slot: a custom heading row with
- * an "Account" eyebrow + record name + industry badge — a richer
- * variant than the auto-synthesized `page:header`.
+ * We use ObjectUI's **slotted page** pattern: the default-page
+ * synthesizer owns layout (header, highlights, path, tabs with
+ * Details/Related/Activity/History, reference rail). We override
+ * three slots:
  *
- * Slot menu (v1): header | actions | highlights | details | tabs |
- * discussion.
+ *   header   · Custom `page:header` with an ACCOUNT eyebrow,
+ *              building icon, and breadcrumb back to the list.
  *
- * NOTE: `kind` and `slots` are an ObjectUI extension to `PageSchema`
- * not yet upstreamed into @objectstack/spec; the cast keeps the seed
- * type-checking while the spec change rolls out.
+ *   rightRail· "Ask Copilot about this account" card. Sits next to
+ *              the auto-emitted `record:reference_rail` so a rep
+ *              has three things in their peripheral vision:
+ *                1. quick prompts to throw at the floating chatbot
+ *                2. open opportunities (auto)
+ *                3. open cases (auto)
+ *
+ *   discussion · `record:chatter` is already auto-emitted, but we
+ *              re-state it so it ALWAYS appears — even on accounts
+ *              with no related lists (the auto-emitter sometimes
+ *              skips chatter for lean objects). Discussion is core
+ *              to the chat-first vibe.
+ *
+ * Why not embed an inline chat panel? `ai:chat_window` was dropped
+ * from objectui (see @object-ui/layout CHANGELOG 5.x). The supported
+ * surface is the global floating chatbot mounted by app-shell, which
+ * picks up `defaultAgent: 'sales_copilot'` from this app. Users
+ * launch it from the FAB at the bottom-right; this card teaches
+ * them what to ask.
  */
 export const AccountDetailPage = {
   name: 'account_detail_page',
   label: 'Account Detail',
   description:
-    'Slotted detail page for Account — overrides only the header; ' +
-    'all other regions (highlights, tabs, history) ride synthesized defaults.',
+    'Slotted account record page — custom header + AI Briefing rail + persistent discussion feed.',
 
   type: 'record',
   object: 'crm_account',
 
   kind: 'slotted',
-
-  // Slotted pages don't author `regions` — the default-page synthesizer
-  // owns the layout. We declare an empty array purely to satisfy the
-  // current spec validator (which requires `regions` for every Page).
-  // The future spec update for `kind: 'slotted'` will mark `regions`
-  // optional when `kind === 'slotted'`.
   regions: [],
 
   slots: {
@@ -52,6 +59,17 @@ export const AccountDetailPage = {
         eyebrow: 'ACCOUNT',
         icon: 'building-2',
         breadcrumb: true,
+      },
+    },
+
+    discussion: {
+      type: 'record:chatter',
+      id: 'account_chatter',
+      label: 'Discussion',
+      properties: {
+        enableComments: true,
+        enableReactions: true,
+        enableMentions: true,
       },
     },
   },

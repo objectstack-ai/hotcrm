@@ -22,7 +22,7 @@ export const UtilityBarPage: Page = {
   type: 'utility',
   
   template: 'utility-bar',
-  kind: 'full',  
+  kind: 'full',
   regions: [
     {
       name: 'utilities',
@@ -33,15 +33,6 @@ export const UtilityBarPage: Page = {
           id: 'notifications_panel',
           label: 'Notifications',
           properties: {},
-        },
-        {
-          type: 'ai:chat_window',
-          id: 'quick_chat',
-          label: 'Quick Chat',
-          properties: {
-            mode: 'float',
-            agentId: 'general_assistant',
-          },
         },
         {
           type: 'page:card',

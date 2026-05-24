@@ -154,16 +154,14 @@ export const SalesHomePage: Page = {
       width: 'medium',
       components: [
         {
-          type: 'ai:chat_window',
-          id: 'sales_assistant',
-          label: 'Sales Assistant',
+          type: 'page:card',
+          id: 'ai_briefing',
+          label: 'Today with Copilot',
           properties: {
-            mode: 'sidebar',
-            agentId: 'sales_assistant',
-            context: {
-              page: 'home',
-              user: '{current_user.id}',
-            },
+            title: 'Ask the Sales Copilot',
+            description:
+              'Open the floating Copilot (bottom-right) and ask "what should I focus on today?" — it sees your live pipeline, schema, and accounts.',
+            bordered: true,
           },
         },
         {
