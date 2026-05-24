@@ -10,7 +10,6 @@ import * as reports from './src/reports/index.js';
 import { allFlows } from './src/flows/index.js';
 import { allAgents } from './src/agents/index.js';
 import { allSkills } from './src/skills/index.js';
-import * as ragPipelines from './src/rag/index.js';
 import * as profiles from './src/profiles/index.js';
 import * as apps from './src/apps/index.js';
 import * as views from './src/views/index.js';
@@ -62,7 +61,6 @@ export default defineStack({
   flows: allFlows,
   agents: allAgents,
   skills: allSkills,
-  ragPipelines: Object.values(ragPipelines),
   permissions: Object.values(profiles),
   apps: Object.values(apps),
   views: Object.values(views),
