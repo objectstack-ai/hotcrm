@@ -1,0 +1,69 @@
+---
+title: Live Schema (Wow #1)
+description: HotCRM's AI sees schema changes the moment they happen — no retraining, no restart, no waiting.
+---
+
+# Live Schema — the CRM that rewrites itself
+
+Most "AI CRMs" bolt a chatbot on top of a static schema. The moment
+an admin adds a custom field, the bot is wrong: it answers from the
+schema it was trained against last week, not the one you ship today.
+
+HotCRM is different. The **schema is the system prompt**.
+
+Every time the Sales Copilot answers a data question it calls
+`describe_object` against `@objectstack/runtime`'s metadata service —
+which re-reads the live registry. Add a field at 10:00:00, and the
+next user question at 10:00:05 sees it.
+
+## The 30-second demo
+
+```bash
+# 1. Admin adds a field — no migration, no deploy.
+curl -X POST $HOTCRM/api/v1/ai/tools/add_field/invoke \
+  -d '{
+    "objectName": "crm_account",
+    "name": "health_score",
+    "label": "Health Score",
+    "type": "number"
+  }'
+
+# 2. Sales rep asks Copilot — five seconds later.
+curl -X POST $HOTCRM/api/v1/ai/chat \
+  -d '{
+    "agent": "sales_copilot",
+    "messages": [{ "role": "user",
+      "content": "Top 5 accounts by health_score — cite IDs." }]
+  }'
+```
+
+The Copilot's tool trace:
+
+1. `describe_object('crm_account')` → sees `health_score` (number).
+2. `query_records('crm_account', orderBy: [{ field: 'health_score', order: 'desc' }], limit: 5)`.
+3. Returns a ranked list with record IDs.
+
+Total time: under 30 seconds. No retraining. No restart. Nothing
+to deploy.
+
+## Why this works
+
+| Layer            | What it does                                                                   |
+|------------------|--------------------------------------------------------------------------------|
+| Metadata service | Single source of truth for objects + fields. Hot-reloads on every write.       |
+| `describe_object`| Built-in AI tool. Re-reads metadata on every call. Never caches.               |
+| Live Data skill  | Bundles `describe_object` + `query_records` + nudges the agent to inspect first. |
+| Sales Copilot    | Always inspects schema before answering. Surfaces unknown fields automatically. |
+
+Run the full demo with:
+
+```bash
+./scripts/wow1-live-schema.sh
+```
+
+## What this enables
+
+* Custom fields by ops, not engineering.
+* Per-tenant schema extensions that the AI surfaces automatically.
+* Field deprecations that the AI stops referencing the moment they're removed.
+* Iteration speed measured in seconds, not sprints.

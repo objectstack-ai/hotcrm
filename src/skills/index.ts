@@ -7,12 +7,14 @@ export { EmailDraftingSkill } from './email-drafting.skill';
 export { RevenueForecastingSkill } from './revenue-forecasting.skill';
 export { CaseTriageSkill } from './case-triage.skill';
 export { Customer360Skill } from './customer-360.skill';
+export { LiveDataSkill } from './live-data.skill';
 
 import { LeadQualificationSkill } from './lead-qualification.skill';
 import { EmailDraftingSkill } from './email-drafting.skill';
 import { RevenueForecastingSkill } from './revenue-forecasting.skill';
 import { CaseTriageSkill } from './case-triage.skill';
 import { Customer360Skill } from './customer-360.skill';
+import { LiveDataSkill } from './live-data.skill';
 
 /** All CRM skill definitions, typed for `defineStack({ skills })`. */
 export const allSkills: Skill[] = [
@@ -21,4 +23,5 @@ export const allSkills: Skill[] = [
   RevenueForecastingSkill,
   CaseTriageSkill,
   Customer360Skill,
+  LiveDataSkill,
 ];

@@ -16,11 +16,19 @@ export const SalesCopilotAgent = defineAgent({
 helps sales reps work an account end-to-end. Use the Active Skills
 block in your system context to pick capabilities; do NOT enumerate
 skills back to the user. Answer concisely, lead with the
-recommendation, and cite record IDs whenever you reference data.`,
+recommendation, and cite record IDs whenever you reference data.
+
+CRITICAL: HotCRM's schema is alive — admins add, modify and remove
+fields at any time. Before answering any question about a record,
+call \`describe_object\` (via the Live Data skill) to see the
+CURRENT fields. Never assume the schema you saw on a previous
+turn is still accurate. If you spot a field you don't recognise,
+use it — that's almost certainly what the user wants you to surface.`,
 
   model: { provider: 'openai', model: 'gpt-4', temperature: 0.6, maxTokens: 2000 },
 
   skills: [
+    'live_data',
     'lead_qualification',
     'email_drafting',
     'revenue_forecasting',
