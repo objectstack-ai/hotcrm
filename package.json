@@ -10,35 +10,43 @@
     "./objectstack.config": "./objectstack.config.ts"
   },
   "scripts": {
-    "dev": "objectstack dev",
-    "start": "objectstack start",
+    "dev": "objectstack dev -p 4001",
+    "start": "objectstack start -p 4001",
     "build": "objectstack build",
     "typecheck": "tsc --noEmit",
     "test": "objectstack test",
     "test:e2e": "playwright test"
   },
   "dependencies": {
-    "@objectstack/account": "^5.1.0",
-    "@objectstack/cli": "^5.1.0",
+    "@objectstack/account": "^5.2.0",
+    "@objectstack/cli": "^5.2.0",
     "@objectstack/console": "^5.1.0",
-    "@objectstack/driver-memory": "^5.1.0",
-    "@objectstack/driver-sql": "^5.1.0",
-    "@objectstack/metadata": "^5.1.0",
-    "@objectstack/objectql": "^5.1.0",
-    "@objectstack/runtime": "^5.1.0",
-    "@objectstack/service-analytics": "^5.1.0",
-    "@objectstack/service-automation": "^5.1.0",
-    "@objectstack/spec": "^5.1.0",
-    "@objectstack/studio": "^5.1.0",
+    "@objectstack/driver-memory": "^5.2.0",
+    "@objectstack/driver-sql": "^5.2.0",
+    "@objectstack/metadata": "^5.2.0",
+    "@objectstack/objectql": "^5.2.0",
+    "@objectstack/runtime": "^5.2.0",
+    "@objectstack/service-analytics": "^5.2.0",
+    "@objectstack/service-automation": "^5.2.0",
+    "@objectstack/spec": "^5.2.0",
+    "@objectstack/studio": "^5.2.0",
     "better-sqlite3": "^12.10.0"
   },
   "devDependencies": {
-    "@objectstack/cli": "^5.0.0",
+    "@objectstack/cli": "^5.2.0",
     "@playwright/test": "^1.60.0",
     "typescript": "^6.0.3"
   },
   "engines": {
     "node": ">=20",
     "pnpm": ">=10.0.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "better-sqlite3",
+      "esbuild",
+      "sharp",
+      "msw"
+    ]
   }
 }

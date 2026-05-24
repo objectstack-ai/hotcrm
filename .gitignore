@@ -35,3 +35,9 @@ public/console/
 public/_studio/
 
 .objectstack
+# Playwright MCP browser artifacts (transient screenshots/snapshots/logs)
+.playwright-mcp/
+
+# Test outputs
+test-results/
+playwright-report/
