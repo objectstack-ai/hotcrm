@@ -18,15 +18,28 @@ Breaking the Copilot into skills makes it:
 
 ## Built-in skills
 
-HotCRM ships with five core skills:
+HotCRM ships with six core skills:
 
 | Skill | Used by | What it does |
 | --- | --- | --- |
+| **🔄 Live Data** | Sales + Service | Reads the live schema and the live records — every turn |
 | **🎯 Lead Qualification** | Sales | Scores a lead on BANT, recommends next action |
 | **✍️ Email Drafting** | Sales + Service | Drafts a context-aware email or reply |
 | **📈 Revenue Forecasting** | Sales | Rolls up pipeline into commit / best-case / pipeline buckets |
 | **🔭 Customer 360°** | Sales + Service | One-page summary of an account or contact |
 | **🚦 Case Triage** | Service | Suggests priority, category, queue, and matching KB articles |
+
+### 🔄 Live Data
+
+| | |
+| --- | --- |
+| **Input** | Any natural-language question about CRM data ("which accounts…", "show me the top…") |
+| **Reads** | The **live** object metadata (`describe_object`, `list_objects`) and the **live** records (`query_records`, `get_record`, `aggregate_data`) at the moment of the question — no cached snapshot |
+| **Output** | Direct answer with cited record IDs |
+| **Writes** | Nothing — read-only |
+| **Knowledge base** | None — purely metadata + records |
+
+This is the skill behind **[Wow #1 — Live Schema](/docs/ai-copilot/live-schema)**: add a field in the admin console, and the Copilot uses it on the very next turn. Every other Sales / Service skill composes on top of Live Data, so the same live-schema property applies transitively — Lead Qualification can score a lead on a custom field added 10 seconds ago.
 
 ### 🎯 Lead Qualification
 
