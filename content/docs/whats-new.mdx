@@ -5,6 +5,64 @@ description: Recent releases, new capabilities, and what's coming next.
 
 # What's New
 
+## v1.0 — HotCRM, the CRM that rewrites itself
+
+**The first launch.** HotCRM v1 is for teams who are sick of waiting on
+their CRM vendor to add the field they need next quarter. You add the
+field; the AI uses it the next time you ask. Three things in this
+release make it different from every CRM you've used before.
+
+### ✨ Wow #1 — Live schema, live AI
+
+Add a field in the admin console. Ten seconds later, ask the Sales
+Copilot a question about it. It already knows. No retraining, no
+restart, no redeploy — the platform re-reads metadata on every
+agent turn and the Copilot's `describe_object` tool returns your
+new field as soon as it's saved.
+
+Try it in 30 seconds with the script we ship:
+
+```bash
+HOTCRM_TOKEN=... ./scripts/wow1-live-schema.sh
+```
+
+### 💬 Wow #2 — Chat-first record pages
+
+Open any account, opportunity, case, or contract. The Copilot is
+always one click away in the floating chat bubble — and it already
+has the live schema **and** this record in scope. Ask:
+
+- "Give me the full picture of this account."
+- "Draft a follow-up email to the primary contact."
+- "What are the next 3 actions I should take?"
+
+The discussion feed at the bottom of every record page captures the
+back-and-forth so it stays as institutional memory, not a Slack
+thread that nobody can find next quarter.
+
+### 🛠️ Wow #3 — Honest about what's in the box
+
+We don't pretend the platform does things it doesn't. The natural-
+language **flow builder** is a platform capability we've designed
+([ADR-0010](https://github.com/objectstack-ai/framework/blob/main/docs/adr/0010-nl-to-flow-authoring.md))
+and is on the roadmap, but doesn't ship in v1. What does ship: every
+business object, view, page, dashboard, role, and seed record is a
+plain TypeScript file you can edit, diff, and commit — and the AI
+sees those edits the moment you save.
+
+### What's in v1.0
+
+- **15 business objects** across Sales / Service / Marketing / Revenue.
+- **Sales Copilot** with 5 skills: live data, lead qualification, email drafting, revenue forecasting, customer 360°.
+- **Executive Dashboard** + 9 pre-built reports.
+- **Slimmed nav** — 5 core surfaces (Sales, Service, Insights, Approvals) so a new user can find their way around in 30 seconds.
+- **Demo seed** — Acme Corporation is a fully-formed customer (3 opps, 2 cases, 1 contract, 3 narrative tasks, a 1KB strategic brief) so the Copilot has real material to summarize the moment you log in.
+
+Ready to try? `pnpm install && pnpm demo:reset && pnpm dev`, then open
+http://localhost:4001 and create the first admin account.
+
+---
+
 ## v5.0 — Latest release
 
 The biggest release yet — a foundational upgrade plus a major documentation overhaul.
