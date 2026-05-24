@@ -46,6 +46,33 @@ const accounts = defineDataset(Account, {
       health_score: 'healthy',
       next_renewal_date: cel`daysFromNow(45)`,
       last_activity_date: cel`daysAgo(3)`,
+      description: `**Strategic Customer · Enterprise Tier**
+
+Acme Corporation is a Series-C robotics & industrial automation
+company that switched from a competitor 18 months ago. They run
+HotCRM as their system of record for sales + service across
+three regional teams (NA, EMEA, APAC).
+
+**Relationship**
+- Primary economic buyer: Jordan Park (CTO) — values our open
+  architecture and AI roadmap.
+- Day-to-day champion: John Smith (VP Engineering) — owns the
+  technical evaluation and integration questions.
+- Procurement: handled by Lisa Kim — prefers annual contracts,
+  net-30 terms.
+
+**Current state**
+- ARR: $220K (signed Q1 2025 renewal). Up 22% YoY.
+- 1 open enterprise opportunity ($150K platform upgrade) in proposal
+  stage, 1 service ticket open (login issues), 1 billing dispute
+  awaiting customer response.
+- Renewal due in 45 days — they've already verbally committed but
+  want a workshop on AI agent governance before signing.
+
+**Red flags**
+- Slipped one opportunity ($75K add-on) in the last quarter due
+  to slow procurement cycle on their side.
+- Login issues ticket is approaching its SLA — needs eyes today.`,
     },
     {
       name: 'Globex Industries',
@@ -256,6 +283,11 @@ const opportunities = defineDataset(Opportunity, {
       forecast_category: 'pipeline',
       lead_source: 'web',
       days_in_stage: 12,
+      description: `Upgrade from Standard to Enterprise edition for the
+NA + EMEA teams. Drivers: (1) AI agent governance becomes a hard
+requirement after their internal compliance review, (2) advanced
+analytics seats for the Ops org, (3) priority support SLA.`,
+      next_step: `Send the revised proposal (Enterprise edition, 18-month term, 12% multi-year discount) to Jordan Park by EOW. Schedule the AI governance workshop for the week of close_date - 14d.`,
     },
     {
       name: 'Globex Manufacturing Suite',
@@ -304,6 +336,7 @@ const opportunities = defineDataset(Opportunity, {
       type: 'renewal',
       forecast_category: 'closed',
       lead_source: 'partner',
+      description: `Annual renewal of the Acme Standard subscription (40 seats), signed two weeks ahead of the renewal date. 22% YoY uplift driven by seat expansion in the new EMEA team. Multi-year option declined this round — they want to see how the platform upgrade lands first.`,
     },
     {
       name: 'Stark Medical Pilot',
@@ -360,6 +393,7 @@ const opportunities = defineDataset(Opportunity, {
       type: 'existing_upgrade',
       forecast_category: 'omitted',
       lead_source: 'cold_call',
+      description: `Tried to bolt on the Marketing Cloud module via cold outbound. Lost because Acme's marketing org is already on a 2-year HubSpot contract. Revisit in Q3 when that contract is up for renewal.`,
     },
     {
       name: 'Stark Expansion (Lost)',
@@ -457,9 +491,30 @@ const tasks = defineDataset(Task, {
   records: [
     {
       subject: 'Follow up with Acme on proposal',
+      description: 'Send Jordan Park the revised Enterprise proposal and a 30-min calendar slot to walk through the AI governance section.',
       status: 'not_started',
       priority: 'high',
       due_date: cel`daysFromNow(2)`,
+      related_to_account: 'Acme Corporation',
+      related_to_opportunity: 'Acme Platform Upgrade',
+    },
+    {
+      subject: 'Acme — schedule AI governance workshop',
+      description: 'Block a 90-min joint workshop with Acme’s compliance team to walk through how HotCRM agents handle data scoping, RBAC, audit trails, and human-in-the-loop. Pre-read: ADR-0007 + the governance demo deck.',
+      status: 'not_started',
+      priority: 'high',
+      due_date: cel`daysFromNow(7)`,
+      related_to_account: 'Acme Corporation',
+      related_to_opportunity: 'Acme Platform Upgrade',
+    },
+    {
+      subject: 'Acme — close out login-issues ticket before SLA',
+      description: 'Confirm engineering has the EMEA SSO clock-skew patch ready, deploy to Acme’s tenant, and send Lisa Kim a customer-facing post-mortem.',
+      status: 'in_progress',
+      priority: 'urgent',
+      due_date: cel`daysFromNow(1)`,
+      related_to_account: 'Acme Corporation',
+      related_to_case: 'Login issues after platform upgrade',
     },
     {
       subject: 'Schedule demo for Globex team',
@@ -494,7 +549,11 @@ const cases = defineDataset(Case, {
   records: [
     {
       subject: 'Login issues after platform upgrade',
-      description: 'Users unable to log in after the v4.2 upgrade.',
+      description: `Users in the EMEA office report intermittent 401 errors when logging in after the v4.2 upgrade rolled out Wednesday night. Pattern: only affects users authenticating via SAML through Okta, only between 09:00–10:30 UTC. NA and APAC users are unaffected.
+
+**Customer impact:** ~40 users blocked at peak, costing ~3 productive hours per affected user.
+
+**Initial triage:** Suspect a clock-skew issue on the EMEA SSO relay added during the upgrade window. Engineering is reproducing in staging.`,
       account: 'Acme Corporation',
       contact: 'john.smith@acme.example.com',
       status: 'in_progress',
@@ -578,7 +637,11 @@ const cases = defineDataset(Case, {
     },
     {
       subject: 'Billing discrepancy on last invoice',
-      description: 'Customer billed for 15 seats but only uses 12.',
+      description: `Customer (Lisa Kim, Procurement) flagged that the May invoice shows 15 active seats but Acme is only using 12. Two of the seats were de-provisioned in early April when two engineers left the company.
+
+**Root cause:** the de-provisioning happened in our admin console but the seat-count metric in billing only refreshes monthly, so the May invoice picked up the pre-change count.
+
+**Resolution path:** issue a $1,200 credit memo and switch Acme to the new real-time seat-billing pipeline so this can't recur. Waiting on Lisa to confirm she's good with the credit-memo treatment vs a refund.`,
       account: 'Acme Corporation',
       contact: 'john.smith@acme.example.com',
       status: 'waiting_customer',

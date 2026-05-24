@@ -15,7 +15,8 @@
     "build": "objectstack build",
     "typecheck": "tsc --noEmit",
     "test": "objectstack test",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "demo:reset": "rm -rf .objectstack/data && pnpm build && echo '✅ DB reset — start the server with: pnpm dev (or pnpm start). Seed data loads on first boot.'"
   },
   "dependencies": {
     "@objectstack/account": "^5.2.0",
