@@ -18,17 +18,21 @@
     "test:e2e": "playwright test",
     "demo:reset": "rm -rf .objectstack/data && pnpm build && echo '✅ DB reset — start the server with: pnpm dev (or pnpm start). Seed data loads on first boot.'"
   },
+  "packageManager": "pnpm@10.33.0",
   "dependencies": {
     "@objectstack/account": "^6.6.0",
     "@objectstack/cli": "^6.6.0",
     "@objectstack/driver-memory": "^6.6.0",
     "@objectstack/driver-sql": "^6.6.0",
+    "@objectstack/driver-sqlite-wasm": "^6.6.0",
     "@objectstack/metadata": "^6.6.0",
     "@objectstack/objectql": "^6.6.0",
     "@objectstack/runtime": "^6.6.0",
     "@objectstack/service-analytics": "^6.6.0",
     "@objectstack/service-automation": "^6.6.0",
-    "@objectstack/spec": "^6.6.0",
+    "@objectstack/spec": "^6.6.0"
+  },
+  "optionalDependencies": {
     "better-sqlite3": "^12.10.0"
   },
   "devDependencies": {

@@ -1,0 +1,8 @@
+{
+  "installDependencies": false,
+  "startCommand": "pnpm install && pnpm dev",
+  "env": {
+    "OS_DATABASE_URL": ".objectstack/data/hotcrm.wasm.db",
+    "OS_DATABASE_DRIVER": "sqlite-wasm"
+  }
+}
