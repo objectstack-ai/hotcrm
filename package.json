@@ -19,22 +19,20 @@
     "demo:reset": "rm -rf .objectstack/data && pnpm build && echo '✅ DB reset — start the server with: pnpm dev (or pnpm start). Seed data loads on first boot.'"
   },
   "dependencies": {
-    "@objectstack/account": "^6.0.0",
-    "@objectstack/cli": "^6.0.0",
-    "@objectstack/console": "^5.1.0",
-    "@objectstack/driver-memory": "^6.0.0",
-    "@objectstack/driver-sql": "^6.0.0",
-    "@objectstack/metadata": "^6.0.0",
-    "@objectstack/objectql": "^6.0.0",
-    "@objectstack/runtime": "^6.0.0",
-    "@objectstack/service-analytics": "^6.0.0",
-    "@objectstack/service-automation": "^6.0.0",
-    "@objectstack/spec": "^6.0.0",
-    "@objectstack/studio": "^5.2.0",
+    "@objectstack/account": "^6.6.0",
+    "@objectstack/cli": "^6.6.0",
+    "@objectstack/driver-memory": "^6.6.0",
+    "@objectstack/driver-sql": "^6.6.0",
+    "@objectstack/metadata": "^6.6.0",
+    "@objectstack/objectql": "^6.6.0",
+    "@objectstack/runtime": "^6.6.0",
+    "@objectstack/service-analytics": "^6.6.0",
+    "@objectstack/service-automation": "^6.6.0",
+    "@objectstack/spec": "^6.6.0",
     "better-sqlite3": "^12.10.0"
   },
   "devDependencies": {
-    "@objectstack/cli": "^6.0.0",
+    "@objectstack/cli": "^6.6.0",
     "@playwright/test": "^1.60.0",
     "typescript": "^6.0.3"
   },
