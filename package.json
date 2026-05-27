@@ -10,8 +10,8 @@
     "./objectstack.config": "./objectstack.config.ts"
   },
   "scripts": {
-    "dev": "objectstack dev -p 4001",
-    "start": "objectstack start -p 4001",
+    "dev": "objectstack dev -p 4001 --database file:./.objectstack/data/hotcrm.db",
+    "start": "objectstack start -p 4001 --database file:./.objectstack/data/hotcrm.db",
     "build": "objectstack build",
     "typecheck": "tsc --noEmit",
     "test": "objectstack test",
