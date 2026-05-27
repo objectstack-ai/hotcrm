@@ -52,7 +52,7 @@ export const CaseEscalationFlow: Flow = {
         variables: {
           caseNumber: '{caseRecord.case_number}',
           priority: '{caseRecord.priority}',
-          accountName: '{caseRecord.account.name}',
+          accountName: '{caseRecord.crm_account.name}',
         },
       },
     },

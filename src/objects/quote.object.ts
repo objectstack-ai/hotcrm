@@ -40,23 +40,23 @@ export const Quote = ObjectSchema.create({
     }),
     
     // Relationships
-    account: Field.lookup('crm_account', {
+    crm_account: Field.lookup('crm_account', {
       label: 'Account',
       required: true,
     }),
     
-    contact: Field.lookup('crm_contact', {
+    crm_contact: Field.lookup('crm_contact', {
       label: 'Contact',
       required: true,
       referenceFilters: [
-        'account = {account}',
+        'crm_account = {crm_account}',
       ]
     }),
     
-    opportunity: Field.lookup('crm_opportunity', {
+    crm_opportunity: Field.lookup('crm_opportunity', {
       label: 'Opportunity',
       referenceFilters: [
-        'account = {account}',
+        'crm_account = {crm_account}',
       ]
     }),
     

@@ -24,12 +24,12 @@ export const OpportunityLineItem = ObjectSchema.create({
   compactLayout: ['crm_product', 'quantity', 'unit_price', 'total_price'],
 
   fields: {
-    opportunity: Field.lookup('crm_opportunity', {
+    crm_opportunity: Field.lookup('crm_opportunity', {
       label: 'Opportunity',
       required: true,
     }),
 
-    product: Field.lookup('crm_product', {
+    crm_product: Field.lookup('crm_product', {
       label: 'Product',
       required: true,
     }),

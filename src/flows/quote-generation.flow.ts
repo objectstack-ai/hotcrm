@@ -38,8 +38,8 @@ export const QuoteGenerationFlow: Flow = {
       config: {
         objectName: 'crm_quote',
         fields: {
-          name: '{quoteName}', opportunity: '{opportunityId}',
-          account: '{oppRecord.account}', contact: '{oppRecord.contact}',
+          name: '{quoteName}', crm_opportunity: '{opportunityId}',
+          crm_account: '{oppRecord.crm_account}', crm_contact: '{oppRecord.primary_contact}',
           owner: '{$User.Id}', status: 'draft',
           quote_date: '{TODAY()}', expiration_date: '{TODAY() + expirationDays}',
           subtotal: '{oppRecord.amount}', discount: '{discount}',

@@ -33,7 +33,7 @@ export const Opportunity = ObjectSchema.create({
     }),
 
     // Relationships
-    account: Field.lookup('crm_account', {
+    crm_account: Field.lookup('crm_account', {
       label: 'Account',
       required: true,
       group: 'basic',
@@ -41,7 +41,7 @@ export const Opportunity = ObjectSchema.create({
 
     primary_contact: Field.lookup('crm_contact', {
       label: 'Primary Contact',
-      referenceFilters: ['account = {opportunity.account}'],  // Filter contacts by account
+      referenceFilters: ['crm_account = {opportunity.crm_account}'],  // Filter contacts by account
       group: 'basic',
     }),
 
@@ -141,7 +141,7 @@ export const Opportunity = ObjectSchema.create({
     }),
 
     // Campaign tracking
-    campaign: Field.lookup('crm_campaign', {
+    crm_campaign: Field.lookup('crm_campaign', {
       label: 'Campaign',
       description: 'Marketing campaign that generated this opportunity',
       group: 'competition',

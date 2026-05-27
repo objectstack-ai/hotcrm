@@ -59,7 +59,7 @@ export const Contact = ObjectSchema.create({
     }),
 
     // Relationship: Link to Account (Master-Detail)
-    account: Field.masterDetail('crm_account', {
+    crm_account: Field.masterDetail('crm_account', {
       label: 'Account',
       required: true,
       writeRequiresMasterRead: true,

@@ -70,11 +70,11 @@ const taskBubble: Hook = {
     if (!targetType) return;
 
     const fieldByType: Record<string, string> = {
-      account: 'related_to_account',
-      contact: 'related_to_contact',
-      opportunity: 'related_to_opportunity',
-      lead: 'related_to_lead',
-      case: 'related_to_case',
+      crm_account: 'related_to_account',
+      crm_contact: 'related_to_contact',
+      crm_opportunity: 'related_to_opportunity',
+      crm_lead: 'related_to_lead',
+      crm_case: 'related_to_case',
     };
     const refField = fieldByType[targetType];
     if (!refField) return;

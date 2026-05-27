@@ -55,8 +55,8 @@ const productHook: Hook = {
       const id = previous?.id;
       if (!api || !id) return;
       const [oppRefs, quoteRefs] = await Promise.all([
-        api.object('crm_opportunity').count({ filter: { product: id } }).catch(() => 0),
-        api.object('crm_quote').count({ filter: { product: id } }).catch(() => 0),
+        api.object('crm_opportunity_line_item').count({ filter: { crm_product: id } }).catch(() => 0),
+        api.object('crm_quote_line_item').count({ filter: { crm_product: id } }).catch(() => 0),
       ]);
       const total = oppRefs + quoteRefs;
       if (total > 0) {

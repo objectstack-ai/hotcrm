@@ -33,7 +33,7 @@ export const CampaignEnrollmentFlow: Flow = {
       id: 'create_campaign_member', type: 'create_record', label: 'Add to Campaign',
       config: {
         objectName: 'crm_campaign_member',
-        fields: { campaign: '{campaignId}', lead: '{currentLead.id}', status: 'sent', added_date: '{NOW()}' },
+        fields: { crm_campaign: '{campaignId}', crm_lead: '{currentLead.id}', status: 'sent', added_date: '{NOW()}' },
       },
     },
     {

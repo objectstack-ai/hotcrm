@@ -281,7 +281,7 @@ export const SalesDashboard: Dashboard = {
           // opportunity records for that stage + lead-source slice — the
           // same drill-through pattern used by the other dashboard widgets.
           target: 'drawer',
-          columns: ['name', 'account', 'amount', 'forecast_category', 'close_date', 'owner'],
+          columns: ['name', 'crm_account', 'amount', 'forecast_category', 'close_date', 'owner'],
           maxRows: 100,
         },
       },

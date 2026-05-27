@@ -55,7 +55,7 @@ export const LeadConversionFlow: Flow = {
         fields: {
           first_name: '{leadRecord.first_name}', last_name: '{leadRecord.last_name}',
           email: '{leadRecord.email}', phone: '{leadRecord.phone}',
-          title: '{leadRecord.title}', account: '{accountId}',
+          title: '{leadRecord.title}', crm_account: '{accountId}',
           is_primary: true, owner: '{$User.Id}',
         },
         outputVariable: 'contactId',
@@ -70,7 +70,7 @@ export const LeadConversionFlow: Flow = {
       config: {
         objectName: 'crm_opportunity',
         fields: {
-          name: '{opportunityName}', account: '{accountId}', contact: '{contactId}',
+          name: '{opportunityName}', crm_account: '{accountId}', primary_contact: '{contactId}',
           amount: '{opportunityAmount}', stage: 'prospecting', probability: 10,
           lead_source: '{leadRecord.lead_source}', close_date: '{TODAY() + 90}', owner: '{$User.Id}',
         },

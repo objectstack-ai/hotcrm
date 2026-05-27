@@ -13,7 +13,7 @@ export const Contract = ObjectSchema.create({
   pluralLabel: 'Contracts',
   icon: 'file-pen-line',
   description: 'Legal contracts and agreements',
-  titleFormat: '{contract_number} - {account.name}',
+  titleFormat: '{contract_number} - {crm_account.name}',
   compactLayout: ['contract_number', 'crm_account', 'status', 'start_date', 'end_date'],
 
   fieldGroups: [
@@ -33,23 +33,23 @@ export const Contract = ObjectSchema.create({
     }),
     
     // Relationships
-    account: Field.lookup('crm_account', {
+    crm_account: Field.lookup('crm_account', {
       label: 'Account',
       required: true,
     }),
     
-    contact: Field.lookup('crm_contact', {
+    crm_contact: Field.lookup('crm_contact', {
       label: 'Primary Contact',
       required: true,
       referenceFilters: [
-        'account = {account}',
+        'crm_account = {crm_account}',
       ]
     }),
     
-    opportunity: Field.lookup('crm_opportunity', {
+    crm_opportunity: Field.lookup('crm_opportunity', {
       label: 'Related Opportunity',
       referenceFilters: [
-        'account = {account}',
+        'crm_account = {crm_account}',
       ]
     }),
     

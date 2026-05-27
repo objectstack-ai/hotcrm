@@ -88,14 +88,14 @@ const quoteAccepted: Hook = {
 
     const quoteId = (typeof input.id === 'string' && input.id) || previous?.id;
     const accountId =
-      (typeof input.account === 'string' && input.account) ||
-      (typeof previous?.account === 'string' && previous.account);
+      (typeof input.crm_account === 'string' && input.crm_account) ||
+      (typeof previous?.crm_account === 'string' && previous.crm_account);
     const contactId =
-      (typeof input.contact === 'string' && input.contact) ||
-      (typeof previous?.contact === 'string' && previous.contact);
+      (typeof input.crm_contact === 'string' && input.crm_contact) ||
+      (typeof previous?.crm_contact === 'string' && previous.crm_contact);
     const opportunityId =
-      (typeof input.opportunity === 'string' && input.opportunity) ||
-      (typeof previous?.opportunity === 'string' && previous.opportunity);
+      (typeof input.crm_opportunity === 'string' && input.crm_opportunity) ||
+      (typeof previous?.crm_opportunity === 'string' && previous.crm_opportunity);
     const totalPrice =
       typeof input.total_price === 'number'
         ? input.total_price
@@ -106,9 +106,9 @@ const quoteAccepted: Hook = {
     const today = new Date().toISOString().slice(0, 10);
     const months = 12;
     await api.object('crm_contract').insert({
-      account: accountId,
-      contact: contactId,
-      opportunity: opportunityId,
+      crm_account: accountId,
+      crm_contact: contactId,
+      crm_opportunity: opportunityId,
       owner:
         (typeof input.owner === 'string' && input.owner) ||
         (typeof previous?.owner === 'string' && previous.owner) ||

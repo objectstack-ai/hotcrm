@@ -27,19 +27,19 @@ export const CampaignMember = ObjectSchema.create({
   ],
 
   fields: {
-    campaign: Field.lookup('crm_campaign', {
+    crm_campaign: Field.lookup('crm_campaign', {
       label: 'Campaign',
       required: true,
       group: 'basic',
     }),
 
-    lead: Field.lookup('crm_lead', {
+    crm_lead: Field.lookup('crm_lead', {
       label: 'Lead',
       group: 'basic',
       description: 'Set when the member was a Lead at enrollment time',
     }),
 
-    contact: Field.lookup('crm_contact', {
+    crm_contact: Field.lookup('crm_contact', {
       label: 'Contact',
       group: 'basic',
       description: 'Set when the member is an existing Contact',

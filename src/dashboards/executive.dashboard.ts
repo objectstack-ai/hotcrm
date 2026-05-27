@@ -171,7 +171,7 @@ export const ExecutiveDashboard: Dashboard = {
       type: 'donut',
       object: 'crm_opportunity',
       filter: { stage: 'closed_won', close_date: { $gte: '{current_year_start}' } },
-      categoryField: 'account.industry',
+      categoryField: 'crm_account.industry',
       valueField: 'amount',
       aggregate: 'sum',
       colorVariant: 'blue',

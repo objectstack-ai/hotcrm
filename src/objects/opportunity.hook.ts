@@ -114,8 +114,8 @@ const opportunityWonHook: Hook = {
     if (!api) return;
 
     const accountId =
-      (typeof input.account === 'string' && input.account) ||
-      (typeof previous?.account === 'string' && previous.account) ||
+      (typeof input.crm_account === 'string' && input.crm_account) ||
+      (typeof previous?.crm_account === 'string' && previous.crm_account) ||
       undefined;
     if (!accountId) return;
 

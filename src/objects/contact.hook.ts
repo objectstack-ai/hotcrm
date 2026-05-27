@@ -33,11 +33,11 @@ const contactHook: Hook = {
 
     if ((event === 'beforeInsert' || event === 'beforeUpdate') && api) {
       const email = typeof input.email === 'string' ? input.email.toLowerCase() : '';
-      const account = typeof input.account === 'string' ? input.account : ctx.previous?.account;
+      const account = typeof input.crm_account === 'string' ? input.crm_account : ctx.previous?.crm_account;
       if (email && account) {
         input.email = email;
         const dup = await api.object('crm_contact').findOne({
-          where: { email, account },
+          where: { email, crm_account: account },
         });
         const dupId = (dup as { id?: string } | null)?.id;
         const selfId = ctx.previous?.id ?? input.id;
@@ -79,10 +79,10 @@ const contactHook: Hook = {
           where: { primary_contact: id, stage: { $nin: ['closed_won', 'closed_lost'] } },
         }),
         api.object('crm_quote').count({
-          where: { contact: id, status: { $nin: ['rejected', 'expired'] } },
+          where: { crm_contact: id, status: { $nin: ['rejected', 'expired'] } },
         }),
         api.object('crm_contract').count({
-          where: { contact: id, status: 'activated' },
+          where: { crm_contact: id, status: 'activated' },
         }),
       ]);
       const total = openOpps + openQuotes + activeContracts;

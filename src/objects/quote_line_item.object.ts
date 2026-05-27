@@ -23,12 +23,12 @@ export const QuoteLineItem = ObjectSchema.create({
   compactLayout: ['crm_product', 'quantity', 'unit_price', 'total_price'],
 
   fields: {
-    quote: Field.lookup('crm_quote', {
+    crm_quote: Field.lookup('crm_quote', {
       label: 'Quote',
       required: true,
     }),
 
-    product: Field.lookup('crm_product', {
+    crm_product: Field.lookup('crm_product', {
       label: 'Product',
       required: true,
     }),

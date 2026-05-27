@@ -39,17 +39,17 @@ export const Case = ObjectSchema.create({
     }),
     
     // Relationships
-    account: Field.lookup('crm_account', {
+    crm_account: Field.lookup('crm_account', {
       label: 'Account',
     }),
     
-    contact: Field.lookup('crm_contact', {
+    crm_contact: Field.lookup('crm_contact', {
       label: 'Contact',
       // Optional so Web-to-Case (anonymous) submissions can land without
       // an existing CRM contact. Back-office staff or a triage flow links
       // the case to a contact after the fact. This matches the Salesforce
       // Web-to-Case convention.
-      referenceFilters: ['account = {case.account}'],
+      referenceFilters: ['crm_account = {case.crm_account}'],
     }),
     
     // Case Management
