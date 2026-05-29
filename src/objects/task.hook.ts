@@ -1,6 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import type { Hook, HookContext } from '@objectstack/spec/data';
+import type { HookApi } from './_hook-api';
 
 /**
  * Task lifecycle hook.
@@ -9,12 +10,6 @@ import type { Hook, HookContext } from '@objectstack/spec/data';
  * - Warns when `reminder_date` is after `due_date`.
  * - Bubbles `last_activity_date` to the polymorphic parent (account/opportunity/lead).
  */
-
-type ApiShape = {
-  object: (n: string) => {
-    update: (id: string, doc: Record<string, unknown>) => Promise<unknown>;
-  };
-};
 
 const taskValidation: Hook = {
   name: 'task_completion',
@@ -59,7 +54,7 @@ const taskBubble: Hook = {
   handler: async (ctx: HookContext) => {
     const { input } = ctx;
     const previous = ctx.previous;
-    const api = ctx.api as ApiShape | undefined;
+    const api = ctx.api as HookApi | undefined;
     if (!api) return;
 
     const today = new Date().toISOString().slice(0, 10);

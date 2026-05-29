@@ -20,23 +20,23 @@
   },
   "packageManager": "pnpm@10.33.0",
   "dependencies": {
-    "@objectstack/account": "^7.0.0",
-    "@objectstack/cli": "^7.0.0",
-    "@objectstack/driver-memory": "^7.0.0",
-    "@objectstack/driver-sql": "^7.0.0",
-    "@objectstack/driver-sqlite-wasm": "^7.0.0",
-    "@objectstack/metadata": "^7.0.0",
-    "@objectstack/objectql": "^7.0.0",
-    "@objectstack/runtime": "^7.0.0",
-    "@objectstack/service-analytics": "^7.0.0",
-    "@objectstack/service-automation": "^7.0.0",
-    "@objectstack/spec": "^7.0.0"
+    "@objectstack/account": "^7.1.0",
+    "@objectstack/cli": "^7.1.0",
+    "@objectstack/driver-memory": "^7.1.0",
+    "@objectstack/driver-sql": "^7.1.0",
+    "@objectstack/driver-sqlite-wasm": "^7.1.0",
+    "@objectstack/metadata": "^7.1.0",
+    "@objectstack/objectql": "^7.1.0",
+    "@objectstack/runtime": "^7.1.0",
+    "@objectstack/service-analytics": "^7.1.0",
+    "@objectstack/service-automation": "^7.1.0",
+    "@objectstack/spec": "^7.1.0"
   },
   "optionalDependencies": {
     "better-sqlite3": "^12.10.0"
   },
   "devDependencies": {
-    "@objectstack/cli": "^7.0.0",
+    "@objectstack/cli": "^7.1.0",
     "@playwright/test": "^1.60.0",
     "typescript": "^6.0.3"
   },

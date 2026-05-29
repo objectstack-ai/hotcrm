@@ -1,6 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import type { Hook, HookContext } from '@objectstack/spec/data';
+import type { HookApi } from './_hook-api';
 
 /**
  * Campaign lifecycle hook.
@@ -9,14 +10,6 @@ import type { Hook, HookContext } from '@objectstack/spec/data';
  * - On `completed`: snapshots the lead/opportunity counts attributed to the campaign
  *   into the campaign's metric fields.
  */
-
-type ApiShape = {
-  object: (n: string) => {
-    count: (q: { filter: Record<string, unknown> }) => Promise<number>;
-    find: (q: { filter: Record<string, unknown>; fields?: string[]; top?: number }) => Promise<Array<Record<string, unknown>>>;
-    update: (id: string, doc: Record<string, unknown>) => Promise<unknown>;
-  };
-};
 
 const campaignValidation: Hook = {
   name: 'campaign_validation',
@@ -60,7 +53,7 @@ const campaignCompleted: Hook = {
     const { input } = ctx;
     const previous = ctx.previous;
     if (input.status !== 'completed' || previous?.status === 'completed') return;
-    const api = ctx.api as ApiShape | undefined;
+    const api = ctx.api as HookApi | undefined;
     if (!api) return;
     const id =
       (typeof input.id === 'string' && input.id) ||

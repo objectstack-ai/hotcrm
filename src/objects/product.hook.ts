@@ -1,6 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import type { Hook, HookContext } from '@objectstack/spec/data';
+import type { HookApi } from './_hook-api';
 
 /**
  * Product catalog hook.
@@ -10,12 +11,6 @@ import type { Hook, HookContext } from '@objectstack/spec/data';
  * - Refuses delete when the product is referenced by an active opportunity or quote;
  *   suggests deactivating instead.
  */
-
-type ApiShape = {
-  object: (n: string) => {
-    count: (q: { filter: Record<string, unknown> }) => Promise<number>;
-  };
-};
 
 const productHook: Hook = {
   name: 'product_catalog',
@@ -51,7 +46,7 @@ const productHook: Hook = {
     }
 
     if (event === 'beforeDelete') {
-      const api = ctx.api as ApiShape | undefined;
+      const api = ctx.api as HookApi | undefined;
       const id = previous?.id;
       if (!api || !id) return;
       const [oppRefs, quoteRefs] = await Promise.all([

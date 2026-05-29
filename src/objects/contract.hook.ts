@@ -1,6 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import type { Hook, HookContext } from '@objectstack/spec/data';
+import type { HookApi } from './_hook-api';
 
 /**
  * Contract lifecycle hook.
@@ -10,14 +11,6 @@ import type { Hook, HookContext } from '@objectstack/spec/data';
  * - On `activated`: stamps `signed_date` (if missing), promotes the account to `customer`,
  *   and schedules a renewal task 60 days before `end_date`.
  */
-
-type ApiShape = {
-  object: (n: string) => {
-    findOne: (q: { filter: Record<string, unknown> }) => Promise<Record<string, unknown> | null>;
-    update: (id: string, doc: Record<string, unknown>) => Promise<unknown>;
-    insert: (doc: Record<string, unknown>) => Promise<unknown>;
-  };
-};
 
 function monthsBetween(startISO: string, endISO: string): number {
   const s = new Date(startISO);
@@ -104,7 +97,7 @@ const contractActivation: Hook = {
     const { input } = ctx;
     const previous = ctx.previous;
     if (input.status !== 'activated' || previous?.status === 'activated') return;
-    const api = ctx.api as ApiShape | undefined;
+    const api = ctx.api as HookApi | undefined;
     if (!api) return;
 
     function addDays(iso: string, days: number): string {

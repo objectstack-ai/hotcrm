@@ -307,7 +307,8 @@ export const Case = ObjectSchema.create({
           name: 'email_support_manager',
           type: 'email_alert',
           template: 'critical_case_alert',
-          recipients: ['support_manager@example.com'],
+          // Route to the case owner's manager instead of a fixed mailbox.
+          recipients: ['{owner}', '{owner.manager}'],
         }
       ],
     },
@@ -322,7 +323,8 @@ export const Case = ObjectSchema.create({
           name: 'email_escalation_team',
           type: 'email_alert',
           template: 'case_escalation_alert',
-          recipients: ['escalation_team@example.com'],
+          // Escalations go to the owner's manager and the account owner.
+          recipients: ['{owner.manager}', '{crm_account.owner}'],
         }
       ],
     },

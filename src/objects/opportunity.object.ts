@@ -285,29 +285,21 @@ export const Opportunity = ObjectSchema.create({
   ],
   
   // Workflow Rules
+  //
+  // NOTE: `probability` and `expected_revenue` are NOT computed here. They are
+  // derived imperatively in `opportunity.hook.ts` (single source of truth =
+  // stage → STAGE_PROBABILITY). Keeping the math in one place avoids drift
+  // between a declarative CASE() table and the hook's lookup table.
+  // `forecast_category` remains a declarative workflow below since the hook
+  // does not own it.
   workflows: [
     {
-      name: 'update_probability_by_stage',
+      name: 'set_forecast_category_by_stage',
       objectName: 'crm_opportunity',
       triggerType: 'on_create_or_update',
       criteria: P`record.stage != previous.stage`,
       active: true,
       actions: [
-        {
-          name: 'set_probability',
-          type: 'field_update',
-          field: 'probability',
-          value: `CASE(record.stage,
-            "prospecting", 10,
-            "qualification", 25,
-            "needs_analysis", 40,
-            "proposal", 60,
-            "negotiation", 80,
-            "closed_won", 100,
-            "closed_lost", 0,
-            record.probability
-          )`,
-        },
         {
           name: 'set_forecast_category',
           type: 'field_update',
@@ -326,21 +318,6 @@ export const Opportunity = ObjectSchema.create({
       ],
     },
     {
-      name: 'calculate_expected_revenue',
-      objectName: 'crm_opportunity',
-      triggerType: 'on_create_or_update',
-      criteria: P`record.amount != previous.amount || record.probability != previous.probability`,
-      active: true,
-      actions: [
-        {
-          name: 'update_expected_revenue',
-          type: 'field_update',
-          field: 'expected_revenue',
-          value: 'record.amount * (record.probability / 100)',
-        }
-      ],
-    },
-    {
       name: 'notify_on_large_deal_won',
       objectName: 'crm_opportunity',
       triggerType: 'on_update',
@@ -351,7 +328,9 @@ export const Opportunity = ObjectSchema.create({
           name: 'notify_management',
           type: 'email_alert',
           template: 'large_deal_won',
-          recipients: ['sales_management@example.com'],
+          // Notify the deal owner and their manager rather than a hardcoded
+          // mailbox, so this scales with the org's role hierarchy.
+          recipients: ['{owner}', '{owner.manager}'],
         }
       ],
     }
