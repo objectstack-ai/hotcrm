@@ -1,6 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import type { Hook, HookContext } from '@objectstack/spec/data';
+import type { HookApi } from './_hook-api';
 
 /**
  * Case SLA & escalation hook.
@@ -10,14 +11,6 @@ import type { Hook, HookContext } from '@objectstack/spec/data';
  * - On `resolved`: stamps `resolved_date` and bumps account `last_activity_date`.
  * - Declarative `condition` flags SLA breach when due date is past and case not closed.
  */
-
-type ApiShape = {
-  object: (n: string) => {
-    findOne: (q: { filter: Record<string, unknown> }) => Promise<Record<string, unknown> | null>;
-    update: (id: string, doc: Record<string, unknown>) => Promise<unknown>;
-    insert: (doc: Record<string, unknown>) => Promise<unknown>;
-  };
-};
 
 const caseValidation: Hook = {
   name: 'case_sla_defaults',
@@ -64,7 +57,7 @@ const caseSideEffects: Hook = {
     const { input } = ctx;
     const previous = ctx.previous;
     if (!previous) return;
-    const api = ctx.api as ApiShape | undefined;
+    const api = ctx.api as HookApi | undefined;
     if (!api) return;
 
     const caseId =

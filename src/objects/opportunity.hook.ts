@@ -1,6 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import type { Hook, HookContext } from '@objectstack/spec/data';
+import type { HookApi } from './_hook-api';
 
 /**
  * Opportunity lifecycle hook.
@@ -10,14 +11,6 @@ import type { Hook, HookContext } from '@objectstack/spec/data';
  * - On `closed_won`: stamps `close_date=today`, promotes the parent account to `customer`,
  *   and asynchronously schedules an "Activate customer" task.
  */
-
-type ApiShape = {
-  object: (n: string) => {
-    findOne: (q: { filter: Record<string, unknown> }) => Promise<Record<string, unknown> | null>;
-    update: (id: string, doc: Record<string, unknown>) => Promise<unknown>;
-    insert: (doc: Record<string, unknown>) => Promise<unknown>;
-  };
-};
 
 const STAGE_PROBABILITY: Record<string, number> = {
   prospecting: 10,
@@ -41,17 +34,6 @@ const opportunityValidationHook: Hook = {
   handler: async (ctx: HookContext) => {
     const { event, input } = ctx;
     const previous = ctx.previous;
-
-    const STAGE_PROBABILITY: Record<string, number> = {
-      prospecting: 10,
-      qualification: 25,
-      needs_analysis: 40,
-      proposal: 60,
-      negotiation: 80,
-      closed_won: 100,
-      closed_lost: 0,
-    };
-    const NARRATIVE_FIELDS = new Set(['description', 'next_step', 'notes']);
 
     // Recompute expected_revenue
     const amount =
@@ -110,7 +92,7 @@ const opportunityWonHook: Hook = {
     const previous = ctx.previous;
     const becameWon = input.stage === 'closed_won' && previous?.stage !== 'closed_won';
     if (!becameWon) return;
-    const api = ctx.api as ApiShape | undefined;
+    const api = ctx.api as HookApi | undefined;
     if (!api) return;
 
     const accountId =

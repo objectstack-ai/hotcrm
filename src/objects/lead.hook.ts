@@ -1,6 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import type { Hook, HookContext } from '@objectstack/spec/data';
+import type { HookApi } from './_hook-api';
 
 /**
  * Lead automation hook.
@@ -9,12 +10,6 @@ import type { Hook, HookContext } from '@objectstack/spec/data';
  * - Refuses edits to a converted lead.
  * - When status flips to `qualified`, schedules a follow-up `crm_task` for the current user.
  */
-
-type ApiShape = {
-  object: (n: string) => {
-    insert: (doc: Record<string, unknown>) => Promise<unknown>;
-  };
-};
 
 const HIGH_VALUE_INDUSTRIES = new Set([
   'technology',
@@ -113,7 +108,7 @@ const leadHook: Hook = {
         input.status === 'qualified' && previous?.status !== 'qualified';
       if (!becameQualified) return;
 
-      const api = ctx.api as ApiShape | undefined;
+      const api = ctx.api as HookApi | undefined;
       if (!api) return;
 
       const leadId =

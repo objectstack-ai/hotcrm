@@ -1,6 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import type { Hook, HookContext } from '@objectstack/spec/data';
+import type { HookApi } from './_hook-api';
 
 /**
  * Quote workflow hook.
@@ -9,14 +10,6 @@ import type { Hook, HookContext } from '@objectstack/spec/data';
  * - Freezes quotes once `accepted` or `expired`.
  * - On `accepted`, drafts a contract and pushes the linked opportunity to `closed_won`.
  */
-
-type ApiShape = {
-  object: (n: string) => {
-    insert: (doc: Record<string, unknown>) => Promise<unknown>;
-    update: (id: string, doc: Record<string, unknown>) => Promise<unknown>;
-    findOne: (q: { filter: Record<string, unknown> }) => Promise<Record<string, unknown> | null>;
-  };
-};
 
 function addDays(iso: string, days: number): string {
   const d = new Date(iso);
@@ -77,7 +70,7 @@ const quoteAccepted: Hook = {
     const { input } = ctx;
     const previous = ctx.previous;
     if (input.status !== 'accepted' || previous?.status === 'accepted') return;
-    const api = ctx.api as ApiShape | undefined;
+    const api = ctx.api as HookApi | undefined;
     if (!api) return;
 
     function addDays(iso: string, days: number): string {

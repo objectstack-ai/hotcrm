@@ -1,6 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import type { Hook, HookContext } from '@objectstack/spec/data';
+import type { HookApi } from './_hook-api';
 
 /**
  * Contact integrity hook.
@@ -12,14 +13,6 @@ import type { Hook, HookContext } from '@objectstack/spec/data';
  *   open quote or active contract.
  */
 
-type ApiShape = {
-  object: (n: string) => {
-    count: (q: { where: Record<string, unknown> }) => Promise<number>;
-    findOne: (q: { where: Record<string, unknown> }) => Promise<Record<string, unknown> | null>;
-    updateMany: (q: { where: Record<string, unknown>; doc: Record<string, unknown> }) => Promise<unknown>;
-  };
-};
-
 const contactHook: Hook = {
   name: 'contact_integrity',
   object: 'crm_contact',
@@ -29,7 +22,7 @@ const contactHook: Hook = {
     'Dedupe contacts per account, propagate contact info to linked opportunities, and protect referenced contacts from deletion.',
   handler: async (ctx: HookContext) => {
     const { event, input } = ctx;
-    const api = ctx.api as ApiShape | undefined;
+    const api = ctx.api as HookApi | undefined;
 
     if ((event === 'beforeInsert' || event === 'beforeUpdate') && api) {
       const email = typeof input.email === 'string' ? input.email.toLowerCase() : '';

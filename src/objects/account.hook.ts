@@ -1,6 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import type { Hook, HookContext } from '@objectstack/spec/data';
+import type { HookApi } from './_hook-api';
 
 /**
  * Account protection hook.
@@ -39,13 +40,7 @@ const accountHook: Hook = {
     if (event === 'beforeDelete') {
       const previous = ctx.previous;
       if (!previous || previous.type !== 'customer') return;
-      const api = ctx.api as
-        | {
-            object: (n: string) => {
-              count: (q: { filter: Record<string, unknown> }) => Promise<number>;
-            };
-          }
-        | undefined;
+      const api = ctx.api as HookApi | undefined;
       if (!api) return;
       const openOpps = await api.object('crm_opportunity').count({
         filter: {
