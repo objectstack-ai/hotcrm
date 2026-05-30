@@ -1,0 +1,10 @@
+{
+  "title": "快速上手",
+  "description": "面向所有使用者的 HotCRM 快速簡介",
+  "defaultOpen": true,
+  "pages": [
+    "introduction",
+    "quick-tour",
+    "for-developers"
+  ]
+}

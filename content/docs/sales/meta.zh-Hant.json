@@ -1,0 +1,15 @@
+{
+  "title": "銷售雲",
+  "defaultOpen": true,
+  "pages": [
+    "index",
+    "leads",
+    "accounts",
+    "contacts",
+    "opportunities",
+    "pipeline-management",
+    "forecasting",
+    "quotes",
+    "activities"
+  ]
+}

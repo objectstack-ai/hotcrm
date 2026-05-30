@@ -1,0 +1,87 @@
+---
+title: 資訊清單與版本管理
+description: objectstack.config.ts 的資訊清單中包含什麼，以及應用市集版本管理如何運作。
+---
+
+`objectstack.config.ts` 的 `manifest` 部分是你的套件的公開身分。一旦發布，若干欄位就是**不可變的** —— 在第一次執行 `objectstack package publish` 之前請把它們確定好。
+
+## 欄位
+
+```ts
+manifest: {
+  id: 'app.acme.crm',          // IMMUTABLE — reverse-domain, lowercase
+  namespace: 'acme',           // 2–20 lowercase alphanumeric + underscore
+  version: '1.0.0',            // strict semver, unique per id
+  type: 'app',                 // app | plugin | driver | server | ui | theme | agent | module
+  name: 'Acme CRM',            // display name
+  description: 'CRM for Acme.',
+},
+```
+
+### `id`（不可變）
+
+你的永久識別碼。反向網域格式（`a-z0-9._-`）。請謹慎選擇 —— 變更 `id` 會建立一個全新的、不相關的套件。無法重新命名。
+
+約定：
+
+| 擁有者 | 模式 |
+|---|---|
+| ObjectStack（第一方） | `app.objectstack.<name>` |
+| 第三方應用程式 | `app.<vendor>.<name>` |
+| 內部 / 私有 | `com.<vendor>.internal.<name>` |
+| 本機開發（自動衍生） | `local.<slug>` |
+
+### `namespace`（實際上不可變）
+
+你的套件中每個業務物件都必須使用的前綴。HotCRM 使用 `crm`，因此每個物件都是 `crm_account`、`crm_contact` 等。重新命名命名空間是破壞性的結構描述變更，需要主版本號升級和移轉。
+
+> 💡 **無自動注入。** ObjectStack 平台在執行時*不會*自動加上命名空間前綴。你在各處都要寫 `crm_account` —— 在原始碼中、在 REST URL 中、在稽核記錄中、在 AI 工具名稱中。一個名稱，沒有洩漏的抽象。
+
+### `version`（每個取值不可變）
+
+嚴格的 semver：`MAJOR.MINOR.PATCH`。每個取值在同一 `id` 下只能發布一次。預先發行？升級修補號並向 CLI 傳入 `--pre-release`。
+
+| 變更 | 升級 |
+|---|---|
+| 移除欄位、變更欄位類型、重新命名物件 | MAJOR |
+| 新增物件、新增欄位、新增動作、新增流程 | MINOR |
+| 修復鉤子、變更標籤、調整種子資料 | PATCH |
+
+### `type`
+
+| 取值 | 用於 |
+|---|---|
+| `app` | 終端使用者應用程式（HotCRM、HR 應用程式、服務台） |
+| `plugin` | 伺服器端擴充功能（自訂 AI 提供者、webhook 整合） |
+| `driver` | 資料驅動程式（Postgres、MongoDB、自訂後端） |
+| `ui` / `theme` | UI 擴充功能 |
+| `agent` | 獨立 AI 智慧代理 |
+
+大多數應用市集套件都是 `app`。
+
+### `name` 和 `description`（可變）
+
+可在不同版本間自由變更 —— 應用市集顯示最新發布的取值。
+
+## 僅應用市集的中繼資料（CLI 旗標）
+
+有些欄位不在資訊清單中 —— 在發布時傳入它們：
+
+```bash
+objectstack package publish dist/objectstack.json \
+  --display-name "Acme CRM" \
+  --description "Customer management for Acme Corp." \
+  --category crm \
+  --visibility marketplace
+```
+
+這些會更新 `sys_package` 列，而不是構件。你可以隨時透過重新執行 publish 來變更它們（無需升級版本）。
+
+## 凍結的構件 vs 可變的套件
+
+兩個層級：
+
+- **`sys_package`** —— 應用市集清單項目。可變。每個 `manifest_id` 一列。保存 display_name、description、category、visibility、icon_url、tags 等。
+- **`sys_package_version`** —— 不可變的快照。每個 `(manifest_id, version)` 一列。儲存 SHA-256 總和檢查碼以及 `dist/objectstack.json` 的凍結副本。
+
+當有人安裝你的套件時，他們安裝的是某個特定 `sys_package_version` 列的凍結 `manifest_json`。這就是為什麼版本是不可變的 —— 它們是已安裝環境所依賴的事實來源。

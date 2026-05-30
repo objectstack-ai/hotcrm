@@ -1,0 +1,11 @@
+{
+  "title": "参考",
+  "defaultOpen": false,
+  "pages": [
+    "index",
+    "glossary",
+    "faq",
+    "security-and-compliance",
+    "performance-and-limits"
+  ]
+}

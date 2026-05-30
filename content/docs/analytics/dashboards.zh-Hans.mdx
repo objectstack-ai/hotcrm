@@ -1,0 +1,122 @@
+---
+title: 仪表盘
+description: 四个开箱即用的仪表盘——CRM 概览、销售管道、服务运营和高管记分卡。
+---
+
+# 仪表盘
+
+HotCRM 内置四个仪表盘。每个都为特定角色而构建，回答该角色每天提出的问题。
+
+## 四个仪表盘
+
+| 仪表盘 | 面向 | 回答 |
+| --- | --- | --- |
+| 🏠 **CRM Overview** | 所有人 | "今天整个业务发生了什么？" |
+| 📈 **Sales Dashboard** | 销售代表、经理 | "我的管道健康状况如何？" |
+| 🎧 **Service Dashboard** | 服务客服、经理 | "我们在工单和 SLA 上表现如何？" |
+| 👔 **Executive Scorecard** | 高管、财务 | "我们达成目标了吗？" |
+
+四者都遵守 [共享规则](/zh-Hans/docs/administration/sharing-and-security)——你看到的内容取决于你的角色。
+
+## 🏠 CRM Overview
+
+跨职能的主页仪表盘，默认对所有用户可见。
+
+**磁贴**：
+
+- **Open Leads** — 数量，按状态。
+- **New Leads This Week** — 与上周对比的趋势。
+- **My Open Opportunities** — 数量和价值。
+- **Cases Awaiting Response** — 数量，并突出 SLA 风险。
+- **Top 5 Accounts by Pipeline** — 柱状图。
+- **Recent Activity** — 过去 24 小时的通话、会议、电子邮件（你的）。
+
+非常适合作为每天开始时的着陆页。
+
+## 📈 Sales Dashboard
+
+销售团队的日常运营仪表盘。
+
+**磁贴**：
+
+- **Pipeline by Stage** — 显示各阶段 $ 的漏斗图。
+- **Forecast vs Quota** — 仪表盘图。
+- **Closed Won this Quarter** — 带目标线的累计总额。
+- **Win Rate (last 90 days)** — 带趋势的百分比。
+- **Average Deal Size** — 本季度对比上季度。
+- **Average Sales Cycle** — 从创建到成交的天数（赢单交易）。
+- **Top 10 Open Deals** — 可排序的表格。
+- **Slipping Deals** — 本周成交日期被推后的商机。
+- **Activity Heatmap** — 每位销售代表每天的通话 + 会议 + 电子邮件。
+
+角色感知：销售代表看到自己的，经理看到团队的，总监看到汇总。
+
+## 🎧 Service Dashboard
+
+服务团队的日常运营视图。
+
+**磁贴**：
+
+- **Open Cases by Priority** — 柱状图。
+- **Cases Approaching SLA** — 按距违约时间排序的表格。
+- **Cases Breached** — 过去 7 天（含工单所有者）。
+- **First Response Time** — 平均值对比目标。
+- **Resolution Time** — 平均值对比目标。
+- **Customer Satisfaction (CSAT)** — 过去 30 天，趋势。
+- **Case Volume by Origin** — Email / Phone / Web / Chat / Portal。
+- **Top Case Categories** — 用于发现产品问题。
+- **Agent Workload** — 每位客服的未结工单数。
+
+*Cases Approaching SLA* 磁贴是此仪表盘上点击最多的小部件——它是客服确定优先级的方式。
+
+## 👔 Executive Scorecard
+
+业务的高管 / 财务视图。
+
+**磁贴**：
+
+- **Bookings This Quarter** — 成交赢单，对比计划和去年同期。
+- **Pipeline Coverage** — 管道 ÷ 剩余配额。
+- **Forecast Confidence** — 承诺 + 最佳情况对比目标。
+- **Net New ARR** — 适用于订阅业务。
+- **Renewals This Quarter** — 即将到来、已续约、已流失。
+- **CSAT and NPS** — 客户健康度。
+- **Customer Acquisition Cost** — 营销活动支出 ÷ 新客户数。
+- **Top 10 Accounts by ACV** — 年度合同价值排行榜。
+- **Pipeline Trend** — 4 周管道价值图表。
+
+此仪表盘是每周领导层评审的基础。
+
+## 个性化和创建仪表盘
+
+每位用户都可以：
+
+- 将任何仪表盘**固定**为着陆页。
+- 按日期范围、团队、地区、产品**筛选**仪表盘。
+- **下钻**到任何磁贴以查看底层记录。
+- 将任何磁贴**导出**为图片或 PDF。
+- **订阅**以通过电子邮件接收每周 PDF。
+
+管理员可以：
+
+- 从 **Analytics › Dashboards › New** 菜单创建新仪表盘。
+- 从标准库选择小部件，或从 [多维数据集](/zh-Hans/docs/analytics/cubes) 构建自定义小部件。
+- 设置受众——谁默认看到每个仪表盘。
+- 安排快照（例如自动生成的季度 QBR 演示文稿）。
+
+## 给经理的提示
+
+- ✅ 为你的团队**订阅仪表盘 PDF**——周一早上 8 点是很好的节奏。
+- ✅ 每周五使用 **Slipping Deals** 磁贴来规划下周的交易评审通话。
+- ✅ 不要从电子邮件管理——从仪表盘管理。电子邮件用于采取行动；仪表盘用于呈现事实。
+
+## 给高管的提示
+
+- ✅ 从多维数据集构建一个**董事会视图**仪表盘——成交、管道、流失、CSAT——一页搞定。
+- ✅ 设置**阈值告警**（例如管道覆盖率 &lt;2.5×），以便在问题出现前得到提醒。
+
+## 给管理员的提示
+
+- ✅ 构建仪表盘时，**从多维数据集开始**而非临时查询——它们更快也更一致。
+- ✅ 鼓励用户**克隆并个性化**，而非从头重建。
+- ✅ 每季度审计仪表盘使用情况——淘汰无人打开的仪表盘。

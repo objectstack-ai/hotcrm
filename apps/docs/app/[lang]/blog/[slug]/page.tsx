@@ -34,11 +34,13 @@ export default async function BlogPost(props: PageProps<'/[lang]/blog/[slug]'>) 
 
   const MDX = page.data.body;
   const prefix = lang === i18n.defaultLanguage ? '' : `/${lang}`;
+  const backLabel =
+    lang === 'zh-Hans' ? '← 博客' : lang === 'zh-Hant' ? '← 部落格' : '← Blog';
 
   return (
     <main className="container mx-auto max-w-3xl px-4 py-16">
       <Link href={`${prefix}/blog`} className="text-sm text-fd-muted-foreground hover:underline">
-        ← Blog
+        {backLabel}
       </Link>
 
       <article className="mt-6">

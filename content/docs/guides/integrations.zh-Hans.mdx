@@ -1,0 +1,137 @@
+---
+title: 集成
+description: 将 HotCRM 连接到 Slack、Teams、DocuSign、Stripe、电话系统和其他工具 —— 以及如何构建你自己的集成。
+---
+
+# 集成
+
+HotCRM 的设计目标是**融入你的技术栈**，而非取代它。本页列出了受支持的集成，以及如何将 HotCRM 接入你业务系统的其余部分。
+
+## 内置连接器
+
+| 工具 | 功能 | 设置位置 |
+| --- | --- | --- |
+| 💬 **Slack** | 通知、斜杠命令、交易室频道 | 设置 → 集成 → Slack |
+| 💬 **Microsoft Teams** | 与 Slack 相同 | 设置 → 集成 → Teams |
+| ✍️ **DocuSign** | 发送报价/合同进行电子签名；状态会回流 | 设置 → 集成 → DocuSign |
+| 💳 **Stripe** | 客户、订阅、发票同步到客户/合同 | 设置 → 集成 → Stripe |
+| 📞 **Twilio Voice** | 点击拨号、通话录音、AI 转录 | 设置 → 集成 → Twilio |
+| 📞 **Aircall / RingCentral / Five9** | 与 Twilio 相同 | 设置 → 集成 → 电话系统 |
+| 💬 **Intercom / Zendesk Chat** | 在线聊天会话作为工单落地 | 设置 → 集成 → 聊天 |
+| 📧 **Gmail / Outlook** | 邮件与日历同步（参见 [邮件与日历](/zh-Hans/docs/guides/email-and-calendar)） | 设置 → 邮件与日历 |
+| 📊 **Snowflake / BigQuery / Redshift** | 数据仓库导出 | 设置 → 数据 → 计划导出 |
+| 🔗 **Zapier / Make / n8n** | 通向 5,000+ 应用的无代码自动化 | 设置 → 集成 → Webhooks |
+
+## 每个连接器的功能
+
+### 💬 Slack
+
+- **通知**：交易赢单、工单升级、审批、@提及 → 私信或频道。
+- **斜杠命令**：`/hotcrm lookup acme` 获取一个客户；`/hotcrm log call` 从 Slack 记录活动。
+- **交易室**：为超过某个阈值的每个商机自动创建一个 Slack 频道，并邀请客户团队和产品专家加入。
+- **审批操作**：直接从 Slack 批准/拒绝折扣请求。
+
+### ✍️ DocuSign
+
+1. 从报价或合同 → 点击 **发送以签名**。
+2. 选择收件人、签署顺序、字段。
+3. DocuSign 向客户发送邮件；状态（已发送 → 已查看 → 已签署）会回流到 HotCRM。
+4. 一旦签署，已签署的 PDF 会作为附件添加，记录的状态会自动更新。
+
+### 💳 Stripe
+
+- Stripe 中的**客户**会按邮件或外部 ID 同步到 HotCRM **客户**。
+- **订阅**同步到**合同** —— 状态、MRR、计费频率。
+- **发票**会显示在客户的活动时间线上。
+- **付款失败**会为客户所有者 / 客户成功经理（CSM）创建一个高优先级工单。
+- **取消**会提醒 CSM 并创建一个流失商机。
+
+### 📞 电话系统（Twilio / Aircall / RingCentral / Five9）
+
+- 点击任何电话号码即可拨打 —— 通话会自动记录。
+- 来电会弹出屏幕弹窗，显示联系人、客户、近期工单、近期邮件。
+- 可选的**通话录音** —— 作为音频文件保存在活动上。
+- 每次通话后提供 AI **转录** + **通话摘要**。
+
+### 💬 在线聊天（Intercom、Zendesk Chat 等）
+
+- 聊天会话会自动作为工单落地。
+- 访客按邮件识别 → 关联到现有联系人 + 客户。
+- 匿名聊天会变成潜在客户。
+
+### 📊 数据仓库
+
+- 每晚对每个 CRM 对象进行增量导出。
+- 为 Snowflake / BigQuery / Redshift 预构建的 dbt 模型。
+- 为 BI 工具（Tableau、Looker、Power BI、Metabase、Hex）提供支持。
+
+## Webhooks（出站）
+
+当 CRM 记录发生变化时触发外部系统。
+
+1. **设置 → 集成 → Webhooks → 新建**。
+2. 选择**对象**和**事件**（`created`、`updated`、`deleted`、自定义）。
+3. 添加**条件**（例如，*仅当商机阶段 = Closed Won 时*）。
+4. 设置**目标 URL** 和身份验证（Bearer / Basic / HMAC 签名）。
+5. 选择**载荷结构** —— 完整记录、仅差异，或自定义。
+6. 测试 → 激活。
+
+Webhooks 会以指数退避方式重试最多 5 次。失败可在**投递日志**中查看。
+
+## 入站 Webhooks / HTTP API
+
+外部系统可以通过 REST / GraphQL 创建 / 更新 HotCRM 记录。请参阅 [API 参考](/zh-Hans/docs/customization/api-reference) 了解端点和身份验证。
+
+常见模式：
+
+- 一个**网站表单** → POST 到 `/api/v1/leads` → 创建来源 = *Web* 的新潜在客户。
+- 一个**产品**发送使用数据 → PATCH 客户上的自定义使用字段。
+- 一个**财务系统** → POST 合同激活，从而触发标准合同工作流。
+
+## 事件总线（Kafka / EventBridge / Pub/Sub）
+
+对于大批量集成，HotCRM 会将事件发布到可配置的事件总线。
+
+- **所有记录生命周期事件**（`created`、`updated`、`deleted`）。
+- **领域事件**（opportunity_won、contract_activated、case_escalated、approval_granted）。
+- 在 [@objectstack/spec](/zh-Hans/docs/customization/index) 仓库中使用版本化的结构进行**结构校验**。
+
+在 **设置 → 集成 → 事件总线** 中配置。
+
+## 构建自定义集成
+
+如果你需要的连接器不是内置的，你有三种选择，从简单到强大排列：
+
+### 1. Zapier / Make / n8n（无代码）
+
+在 **设置 → 集成 → Webhooks** 中设置 webhooks 和一个入站端点，然后使用 Zapier 桥接到任何应用。
+
+最适合：系统之间简单的字段同步、小型团队。
+
+### 2. 服务器到服务器脚本
+
+使用 REST API 从脚本（cron 作业、AWS Lambda、GitHub Action）调用 HotCRM。请参阅 [API 参考](/zh-Hans/docs/customization/api-reference)。
+
+最适合：计划同步、内部工具，以及任何比无代码工具更可靠的需求。
+
+### 3. 原生插件
+
+构建一个 `*.connector.ts` 插件，它驻留在 HotCRM 内部，具有一流的生命周期（认证、同步、监控）。请参阅 [自定义 › 扩展对象](/zh-Hans/docs/customization/extending-objects)。
+
+最适合：你将交付给其他 HotCRM 客户的集成；需要双向同步和可观测性的集成。
+
+## 认证与密钥
+
+所有集成凭据都存储在平台的密钥存储中（HashiCorp Vault / AWS Secrets Manager / GCP Secret Manager —— 可配置）。
+
+- **切勿**将令牌粘贴到工作流 / 钩子代码中 —— 始终从密钥存储引用。
+- 每 90 天自动**轮换** OAuth 刷新令牌。
+- **审计日志**记录每一次密钥访问。
+
+## 给管理员的提示
+
+- ✅ **首先连接 Slack** —— 对第 1 天采用率的提升最大。
+- ✅ 为通话频繁的团队**连接电话系统** —— 消除"Alex 到底有没有记录这通电话？"的盲区。
+- ✅ 用 **DocuSign** 来成交 —— "在 DocuSign 中已签署"与"在 CRM 中标记为赢单"之间的鸿沟正是交易夭折之处。
+- ✅ 对每个集成，每周**监控投递日志** —— webhook 失败会悄无声息地堆积。
+- ✅ 一旦你有 >3 个下游消费者，就使用**事件总线**而非 webhooks —— 扩展性更好。

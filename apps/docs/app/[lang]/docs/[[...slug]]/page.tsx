@@ -18,10 +18,11 @@ export default async function Page(props: PageProps<'/[lang]/docs/[[...slug]]'>)
       <DocsTitle>{page.data.title}</DocsTitle>
       <DocsDescription className="mb-0">{page.data.description}</DocsDescription>
       <div className="flex flex-row gap-2 items-center border-b pb-6">
-        <LLMCopyButton markdownUrl={`${page.url}.mdx`} />
+        <LLMCopyButton markdownUrl={`${page.url}.mdx`} lang={lang} />
         <ViewOptions
           markdownUrl={`${page.url}.mdx`}
           githubUrl={`https://github.com/objectstack-ai/hotcrm/blob/main/content/docs/${page.path}`}
+          lang={lang}
         />
       </div>
       <DocsBody>

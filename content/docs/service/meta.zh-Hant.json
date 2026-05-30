@@ -1,0 +1,10 @@
+{
+  "title": "服務雲",
+  "defaultOpen": true,
+  "pages": [
+    "index",
+    "cases",
+    "sla-and-escalation",
+    "knowledge-base"
+  ]
+}

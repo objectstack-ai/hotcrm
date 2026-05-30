@@ -1,0 +1,108 @@
+---
+title: 活動成員
+description: 加入每個行銷活動的潛在客戶和聯絡人，以及如何追蹤他們的互動。
+---
+
+# 活動成員
+
+**活動成員**是 [行銷活動](/zh-Hant/docs/marketing/campaigns) 與某個人（一個 [潛在客戶](/zh-Hant/docs/sales/leads) 或一個 [聯絡人](/zh-Hant/docs/sales/contacts)）之間的連接。它追蹤該人是否收到了行銷活動、是否開啟、點擊、回應或轉換。
+
+## 成員如何加入
+
+三種方式：
+
+1. **透過行銷活動流程批次加入** — 當行銷活動進入 *In Progress* 時，[Campaign Enrollment flow](/zh-Hant/docs/marketing/campaigns#campaign-enrollment-flow) 執行並新增所有符合受眾條件的人。
+2. **手動加入** — 開啟一個行銷活動並點擊 **Add Members**，然後從潛在客戶和聯絡人清單檢視中選擇。
+3. **從潛在客戶或聯絡人** — 開啟記錄並點擊 **Add to Campaign**。
+
+一個人隨著時間推移可以加入多個行銷活動，但每個行銷活動只能加入一次（每人每個行銷活動一個成員身分）。
+
+## 7 種成員狀態
+
+成員狀態追蹤互動，並隨著行銷活動執行自然推進：
+
+| 狀態 | 含義 | 由誰更新 |
+| --- | --- | --- |
+| ⚪ **Sent** | 行銷活動已觸達他們 *(新成員的預設狀態)* | 初次加入 |
+| 🔵 **Opened** | 郵件已開啟、網路研討會已加入等 | 郵件追蹤 / 活動簽到 |
+| 🟢 **Clicked** | 點擊了一個被追蹤的連結 | 郵件追蹤 |
+| 🟢 **Responded** | 回覆、註冊、下載 | 表單提交 |
+| 🟣 **Converted** | 成為潛在客戶轉商機或聯絡人轉交易 | 銷售轉換 |
+| 🟠 **Bounced** | 郵件退信或無法投遞 | 郵件閘道 |
+| 🔴 **Unsubscribed** | 選擇退出未來的聯絡 | 客戶操作 |
+
+狀態是*單調的*——已經 *Clicked* 的成員不會因為你亂序處理事件而被降級回 *Opened*。
+
+## 為什麼同時支援潛在客戶和聯絡人？
+
+活動成員可以關聯到一個**潛在客戶**（尚未合格的人）或一個**聯絡人**（現有客戶處的人）——但不能同時關聯兩者。這由一條內建規則強制執行：`crm_lead` 或 `crm_contact` 必須且只能設定其一。
+
+這種雙重支援意味著：
+
+- 行銷可以針對**潛在客戶**（潛在客戶）開展漏斗頂端行銷活動。
+- 行銷可以針對**現有客戶**（聯絡人）開展追加銷售、交叉銷售或續約行銷活動。
+
+如果一個潛在客戶後來被轉換為聯絡人，現有的活動成員身分仍與該潛在客戶關聯，而新的行銷活動可以將同一個人作為聯絡人重新定位。
+
+## 成員記錄儲存什麼
+
+| 欄位 | 用途 |
+| --- | --- |
+| Campaign | 行銷活動 |
+| Lead | 潛在客戶（如果是潛在客戶） |
+| Contact | 聯絡人（如果是現有人員） |
+| Status | 互動狀態（見上文） |
+| Added Date | 該人加入的時間 |
+| First Opened | 首次開啟郵件的時間 |
+| First Clicked | 首次點擊被追蹤連結的時間 |
+| Response Date | 他們回應 / 註冊的時間 |
+| Has Responded | 布林快捷標識 |
+
+## 互動追蹤
+
+郵件追蹤整合會自動回寫到成員記錄：
+
+- **郵件服務** → 更新 *First Opened*、*First Clicked*、狀態。
+- **表單提交** → 更新 *Response Date*，狀態 = *Responded*。
+- **轉換事件**（潛在客戶 → 商機）→ 狀態 = *Converted*。
+
+這些更新透過郵件/表單整合近乎即時地發生。
+
+## 指標如何彙總
+
+行銷活動詳情頁會彙總其成員：
+
+```
+Sent      = count of members
+Open rate = members where status >= Opened ÷ Sent
+Click rate = members where status >= Clicked ÷ Sent
+Response rate = members where status >= Responded ÷ Sent
+Conversion rate = members where status == Converted ÷ Sent
+```
+
+這意味著行銷活動級別的指標始終是即時的。只要有人開啟了郵件，行銷活動的 *Open Rate* 就會上升。
+
+## 標準清單檢視
+
+在行銷活動詳情頁的 *Members* 索引標籤上：
+
+- **All Members** — 所有加入的人。
+- **Responded** — 狀態 ≥ Responded。
+- **Bounced / Unsubscribed** — 用於清理受眾。
+- **Converted to Opportunity** — 贏單。
+
+## 給行銷人員的提示
+
+- ✅ 每週**清理退信和取消訂閱**——如果留在活躍行銷活動中，它們會污染你的互動率。
+- ✅ **使用 Converted 狀態**來衡量真正的行銷活動影響——*Opened* 和 *Clicked* 是虛榮指標。
+- ✅ **在商機上標記行銷活動來源**——沒有它，轉換就無法彙總。
+
+## 給業務代表的提示
+
+- ✅ 當你開啟一個潛在客戶時，查看側邊欄中的 **Campaign Memberships**——它會告訴你他們已經參與過哪些內容。
+- ✅ 用行銷活動作為對話開場白——*"我看到你參加了我們最近關於……的網路研討會。"*
+
+## 給管理員的提示
+
+- 郵件追蹤和表單整合需要連接器。請參閱 [自訂 › 建構連接器](/zh-Hant/docs/customization/extending-objects)。
+- "*Lead* 或 *Contact* 必須且只能設定其一"這條規則存在於 campaign_member 物件的驗證規則中。

@@ -1,0 +1,10 @@
+{
+  "title": "营收云",
+  "defaultOpen": true,
+  "pages": [
+    "index",
+    "products",
+    "contracts",
+    "approvals"
+  ]
+}

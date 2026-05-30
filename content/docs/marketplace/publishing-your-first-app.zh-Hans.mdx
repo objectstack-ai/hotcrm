@@ -1,0 +1,170 @@
+---
+title: 发布你的第一个应用市场应用
+description: 构建、发布并安装一个包到 cloud.objectos.app —— 以 HotCRM 作为示例。
+---
+
+本指南将引导你把一个 ObjectStack 包发布到 [cloud.objectos.app](https://cloud.objectos.app) 应用市场，并以 **HotCRM** 作为示例。每个步骤都可以推广到你自己的应用。
+
+## 先决条件
+
+- Node.js 20.9+ 和 pnpm 9+
+- 一个 ObjectStack Cloud 账户（在 [cloud.objectos.app](https://cloud.objectos.app) 注册）
+- `objectstack` CLI：`pnpm add -g @objectstack/cli`（或使用 `pnpm dlx objectstack`）
+- 一个能构建出有效 `dist/objectstack.json` 的仓库（本仓库就是规范示例）
+
+## 1. 身份认证
+
+每台机器运行一次。CLI 会把令牌存储在 `~/.objectstack/cloud.json`。
+
+```bash
+objectstack cloud login
+```
+
+对于 CI，直接设置 bearer 令牌：
+
+```bash
+export OS_CLOUD_API_KEY="cloud_xxx"
+export OS_ORG_ID="org_xxx"           # required when using a bearer token
+```
+
+## 2. 选择一个 `manifest_id`
+
+`manifest_id` 是你的包在应用市场上的永久身份。它必须是**反向域名**格式（`a-z0-9._-`），且一旦发布就永不改变。
+
+| 约定 | 示例 |
+|---|---|
+| 第一方（由 ObjectStack 发布） | `app.objectstack.hotcrm` |
+| 第三方应用 | `app.acme.crm` |
+| 内部 / 私有 | `com.acme.internal.tools` |
+
+在 `objectstack.config.ts` 中设置它：
+
+```ts
+export default defineStack({
+  manifest: {
+    id: 'app.acme.crm',
+    namespace: 'acme',
+    version: '1.0.0',
+    type: 'app',
+    name: 'Acme CRM',
+    description: 'Customer management for Acme Corp.',
+  },
+  // ...
+});
+```
+
+将 `id` 与一个 `namespace`（2–20 个小写字母数字+下划线）配对，并为每个对象名称添加 `<namespace>_` 前缀。HotCRM 使用 `namespace: 'crm'`，每个对象都是 `crm_account`、`crm_contact` 等 —— 关于为什么这很重要，请参阅 [HotCRM ADR](../administration/)。
+
+## 3. 构建构件
+
+```bash
+pnpm build
+```
+
+这会生成 `dist/objectstack.json` —— 一个包含你整个 stack（对象、动作、流程、智能体、i18n、安全）的单一文件。**那个文件就是这个包。**
+
+检查它：
+
+```bash
+node -e "console.log(JSON.stringify(require('./dist/objectstack.json').manifest, null, 2))"
+```
+
+你应该会看到在 `objectstack.config.ts` 中设置的 `id`、`version`、`name`、`description`。
+
+## 4. 发布
+
+```bash
+objectstack package publish dist/objectstack.json \
+  --visibility marketplace \
+  --category crm \
+  --note "Initial public release."
+```
+
+CLI 会：
+
+1. 读取构件并从中派生 `manifest_id` 和 `version`。
+2. 以 `manifest_id` 为键插入或更新一个 `sys_package` 行（幂等 —— 重新运行会更新元数据但绝不会更改 `manifest_id`）。
+3. 创建一个不可变的 `sys_package_version` 快照，并附上构件的 SHA-256 校验和。
+
+### CLI 标志参考
+
+| 标志 | 用途 |
+|---|---|
+| `--manifest-id` | 覆盖构件的 id（请谨慎使用 —— id 在每个包中是不可变的）。 |
+| `--version` | 覆盖 `manifest.version`。必须是严格的 semver（`1.2.3`）。 |
+| `--display-name` | 在应用市场 UI 中显示的可读名称。 |
+| `--description` | 简短的包描述。 |
+| `--category` | 应用市场分类 slug（`crm`、`hr`、`devtools`、`business` 等）。 |
+| `--visibility` | `private`（默认）、`org` 或 `marketplace`。 |
+| `--note` | 此版本的发布说明（支持 markdown）。 |
+| `--pre-release` | 将此版本标记为预发布。 |
+| `--env <env_id>` + `--install` | 发布后自动安装到某个环境。 |
+| `--seed-sample-data` | 自动安装时包含种子数据。 |
+| `--server` | 覆盖云 URL（默认 `https://cloud.objectos.app`；针对本地云使用 `http://localhost:4000`）。 |
+
+## 5. 在应用市场上验证
+
+1. 打开 [cloud.objectos.app](https://cloud.objectos.app) → **Marketplace**。
+2. 搜索你的 `display-name`。该包会以最新发布的版本出现。
+3. 点击 **Install** 安装到测试环境并验证它端到端正常工作。
+
+## 6. 发布新版本
+
+在 `objectstack.config.ts` 中升级 `manifest.version`，重新构建，重新发布：
+
+```bash
+# In objectstack.config.ts: version: '1.0.0' → '1.1.0'
+pnpm build
+objectstack package publish dist/objectstack.json --note "Adds X, fixes Y."
+```
+
+每个 `version` 取值在同一 `manifest_id` 下只能发布**一次**。应用市场会永久存储每个版本 —— 已安装的环境可以固定到某个特定版本。
+
+## 版本管理规则
+
+- 严格的 semver：`MAJOR.MINOR.PATCH`（版本字符串本身不带预发布限定符；改用 `--pre-release` 标志）。
+- **破坏性的模式更改**（重命名/移除字段、更改字段类型）→ 升级 MAJOR。
+- **追加式更改**（新增对象、新增字段、新增动作）→ 升级 MINOR。
+- **内部修复**（钩子 bug、标签调整）→ 升级 PATCH。
+
+## CI 发布
+
+把下面这段放进 `.github/workflows/publish.yml`：
+
+```yaml
+name: Publish to ObjectStack Cloud
+on:
+  push:
+    tags: ['v*']
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: |
+          pnpm dlx objectstack package publish dist/objectstack.json \
+            --visibility marketplace \
+            --note "$(git tag -l --format='%(contents)' ${{ github.ref_name }})"
+        env:
+          OS_CLOUD_API_KEY: ${{ secrets.OS_CLOUD_API_KEY }}
+          OS_ORG_ID: ${{ secrets.OS_ORG_ID }}
+```
+
+## 故障排查
+
+- **`Invalid manifest-id`** —— 必须匹配 `/^[a-z0-9][a-z0-9._-]{0,254}$/i`。不能有大写字母，不能有空格。
+- **`Version already exists`** —— 升级 `manifest.version`。版本是不可变的。
+- **`Cannot read artifact`** —— 先运行 `pnpm build`。
+- **`401 Unauthorized`** —— 重新运行 `objectstack cloud login` 或刷新 `OS_CLOUD_API_KEY`。
+- **`owner_org_id required`** —— 设置 `OS_ORG_ID`（bearer 令牌模式需要明确的 org）。
+
+## 接下来
+
+- [清单与版本管理 →](manifest-and-versioning)
+- [复刻 HotCRM →](fork-hotcrm)
