@@ -1,4 +1,5 @@
 import type { BaseLayoutProps } from 'fumadocs-ui/layouts/shared';
+import { i18n } from '@/lib/i18n';
 
 export const siteConfig = {
   name: 'HotCRM',
@@ -33,11 +34,25 @@ function Logo() {
   );
 }
 
-export function baseOptions(): BaseLayoutProps {
+export function baseOptions(locale: string): BaseLayoutProps {
+  // Default locale has no URL prefix (hideLocale: 'default-locale'); others do.
+  const prefix = locale === i18n.defaultLanguage ? '' : `/${locale}`;
+
   return {
+    // `true` enables the language switcher; the locale list comes from the
+    // RootProvider context. Passing the full i18n config here would leak its
+    // `translations()` function into a Client Component and break the build.
+    i18n: true,
     nav: {
       title: <Logo />,
+      url: `${prefix}/`,
     },
+    links: [
+      {
+        text: 'Blog',
+        url: `${prefix}/blog`,
+      },
+    ],
     githubUrl: siteConfig.github,
   };
 }
