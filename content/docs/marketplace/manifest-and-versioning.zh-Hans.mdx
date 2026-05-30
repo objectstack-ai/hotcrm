@@ -1,0 +1,87 @@
+---
+title: 清单与版本管理
+description: objectstack.config.ts 的清单中包含什么，以及应用市场版本管理如何运作。
+---
+
+`objectstack.config.ts` 的 `manifest` 部分是你的包的公开身份。一旦发布，若干字段就是**不可变的** —— 在第一次执行 `objectstack package publish` 之前请把它们确定好。
+
+## 字段
+
+```ts
+manifest: {
+  id: 'app.acme.crm',          // IMMUTABLE — reverse-domain, lowercase
+  namespace: 'acme',           // 2–20 lowercase alphanumeric + underscore
+  version: '1.0.0',            // strict semver, unique per id
+  type: 'app',                 // app | plugin | driver | server | ui | theme | agent | module
+  name: 'Acme CRM',            // display name
+  description: 'CRM for Acme.',
+},
+```
+
+### `id`（不可变）
+
+你的永久标识符。反向域名格式（`a-z0-9._-`）。请谨慎选择 —— 更改 `id` 会创建一个全新的、不相关的包。无法重命名。
+
+约定：
+
+| 所有者 | 模式 |
+|---|---|
+| ObjectStack（第一方） | `app.objectstack.<name>` |
+| 第三方应用 | `app.<vendor>.<name>` |
+| 内部 / 私有 | `com.<vendor>.internal.<name>` |
+| 本地开发（自动派生） | `local.<slug>` |
+
+### `namespace`（实际上不可变）
+
+你的包中每个业务对象都必须使用的前缀。HotCRM 使用 `crm`，因此每个对象都是 `crm_account`、`crm_contact` 等。重命名命名空间是破坏性的模式更改，需要主版本号升级和迁移。
+
+> 💡 **无自动注入。** ObjectStack 平台在运行时*不会*自动添加命名空间前缀。你在各处都要写 `crm_account` —— 在源代码中、在 REST URL 中、在审计日志中、在 AI 工具名称中。一个名称，没有泄漏的抽象。
+
+### `version`（每个取值不可变）
+
+严格的 semver：`MAJOR.MINOR.PATCH`。每个取值在同一 `id` 下只能发布一次。预发布？升级补丁号并向 CLI 传入 `--pre-release`。
+
+| 更改 | 升级 |
+|---|---|
+| 移除字段、更改字段类型、重命名对象 | MAJOR |
+| 新增对象、新增字段、新增动作、新增流程 | MINOR |
+| 修复钩子、更改标签、调整种子数据 | PATCH |
+
+### `type`
+
+| 取值 | 用于 |
+|---|---|
+| `app` | 终端用户应用（HotCRM、HR 应用、服务台） |
+| `plugin` | 服务端扩展（自定义 AI 提供方、webhook 集成） |
+| `driver` | 数据驱动（Postgres、MongoDB、自定义后端） |
+| `ui` / `theme` | UI 扩展 |
+| `agent` | 独立 AI 智能体 |
+
+大多数应用市场包都是 `app`。
+
+### `name` 和 `description`（可变）
+
+可在不同版本间自由更改 —— 应用市场显示最新发布的取值。
+
+## 仅应用市场的元数据（CLI 标志）
+
+有些字段不在清单中 —— 在发布时传入它们：
+
+```bash
+objectstack package publish dist/objectstack.json \
+  --display-name "Acme CRM" \
+  --description "Customer management for Acme Corp." \
+  --category crm \
+  --visibility marketplace
+```
+
+这些会更新 `sys_package` 行，而不是构件。你可以随时通过重新运行 publish 来更改它们（无需升级版本）。
+
+## 冻结的构件 vs 可变的包
+
+两个层级：
+
+- **`sys_package`** —— 应用市场列表项。可变。每个 `manifest_id` 一行。保存 display_name、description、category、visibility、icon_url、tags 等。
+- **`sys_package_version`** —— 不可变的快照。每个 `(manifest_id, version)` 一行。存储 SHA-256 校验和以及 `dist/objectstack.json` 的冻结副本。
+
+当有人安装你的包时，他们安装的是某个特定 `sys_package_version` 行的冻结 `manifest_json`。这就是为什么版本是不可变的 —— 它们是已安装环境所依赖的事实来源。

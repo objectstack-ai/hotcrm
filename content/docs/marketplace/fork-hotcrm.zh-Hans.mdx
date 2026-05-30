@@ -1,0 +1,134 @@
+---
+title: 复刻 HotCRM
+description: 以 HotCRM 作为你自己应用市场应用的起点。
+---
+
+HotCRM 是 ObjectStack 应用市场应用的**参考实现**。复刻它可以让你获得一套久经考验的骨架（对象、钩子、AI 智能体、仪表盘、i18n、安全），你可以重命名并为任何垂直领域定制它 —— HR、项目管理、服务台、计费，应有尽有。
+
+## 为什么要复刻？
+
+一个可运行的 ObjectStack 应用需要正确连接约 15 项约定：
+
+- 每个对象上的命名空间前缀
+- 文件后缀协议（`*.object.ts`、`*.hook.ts`、`*.action.ts`）
+- ObjectQL（不使用原生 SQL）
+- 通过 `*.action.ts` 暴露 AI 工具
+- 严格的 `@objectstack/spec` 模式校验
+- 你所发布的所有语言区域的 i18n 包
+- 配置文件 + 角色层级 + 共享规则
+- 审批流程
+- 为构建管线正确下沉的钩子
+- 由分析多维数据集支撑的仪表盘
+- 真正准确的文档
+
+从零编写所有这些需要一周。复刻 HotCRM 并重命名只需一小时。
+
+## 分步操作
+
+### 1. 克隆
+
+```bash
+git clone https://github.com/objectstack-ai/hotcrm.git my-app
+cd my-app
+git remote rename origin upstream     # so you can `git pull upstream main` for HotCRM updates
+git remote add origin git@github.com:<you>/<my-app>.git
+```
+
+### 2. 重命名清单
+
+编辑 `objectstack.config.ts`：
+
+```diff
+ manifest: {
+-  id: 'app.objectstack.hotcrm',
+-  namespace: 'crm',
++  id: 'app.acme.myapp',
++  namespace: 'acme',
+   version: '1.0.0',
+   type: 'app',
+-  name: 'HotCRM',
+-  description: 'AI-Native CRM for the ObjectStack marketplace ...',
++  name: 'Acme MyApp',
++  description: 'Your app, your tagline.',
+ },
+```
+
+### 3. 在各处重命名前缀
+
+`crm_` 前缀分布在约 85 个文件中。使用一次性重命名：
+
+```bash
+# macOS (BSD sed)
+find src apps/docs/content -type f \( -name "*.ts" -o -name "*.mdx" -o -name "*.json" \) \
+  -exec sed -i '' 's/crm_/acme_/g' {} +
+
+# Linux (GNU sed)
+find src apps/docs/content -type f \( -name "*.ts" -o -name "*.mdx" -o -name "*.json" \) \
+  -exec sed -i 's/crm_/acme_/g' {} +
+
+# Rename the translation file that's literally called crm.translation.ts
+mv src/translations/crm.translation.ts src/translations/acme.translation.ts
+```
+
+然后更新 `src/translations/index.ts` 以引用新的文件名。
+
+### 4. 删除你不需要的部分
+
+HotCRM 在销售 / 服务 / 营销 / 营收领域提供了 15 个对象。大多数应用需要更少：
+
+```bash
+# Example: keep only Sales-related objects
+rm src/objects/{case,knowledge_article,campaign,campaign_member,contract,quote,quote_line_item,forecast}.object.ts
+```
+
+然后修剪引用了已删除对象的相应钩子、动作、流程、仪表盘、翻译和文档。`pnpm typecheck` 会标记出断裂的引用。
+
+### 5. 添加你确实需要的部分
+
+遵循文件后缀协议：
+
+| 新实体 | 文件 |
+|---|---|
+| 数据模型 | `src/objects/<entity>.object.ts` |
+| 服务端触发器 | `src/hooks/<entity>.hook.ts` |
+| API + AI 工具 | `src/actions/<entity>.action.ts` |
+| UI 布局 | `src/pages/<entity>.page.ts` |
+| 列表视图 | `src/views/<entity>.view.ts` |
+| i18n | 追加到 `src/translations/{en,zh-CN,es-ES,ja-JP}.ts` |
+
+每个文件在构建时都要经过 `@objectstack/spec` 模式校验。出错会显著报错。
+
+### 6. 验证
+
+```bash
+pnpm typecheck
+pnpm build
+pnpm dev    # smoke-test in the browser at http://localhost:3000
+```
+
+### 7. 发布
+
+```bash
+objectstack cloud login
+objectstack package publish dist/objectstack.json \
+  --visibility marketplace \
+  --category <your-category> \
+  --note "Initial release."
+```
+
+完整的 CLI 参考请参阅[发布你的第一个应用市场应用](publishing-your-first-app)。
+
+## 与 HotCRM 保持同步
+
+HotCRM 一直在演进。拉取上游改进：
+
+```bash
+git fetch upstream
+git merge upstream/main          # or rebase, your call
+```
+
+合并冲突大多发生在 `src/translations/*`（追加式）和 `src/objects/*.object.ts`（如果你重命名了它们）。文件后缀协议使冲突面保持很小。
+
+## 你可以放心更改的内容
+
+一切。HotCRM 以 Apache-2.0 许可发布 —— 你可以重命名它、重新打造品牌、围绕它销售支持服务。唯一的请求：如果你在**约定**（而非你的业务逻辑）中发现了 bug，请把它上游回馈。这能让参考实现对所有人都更好。

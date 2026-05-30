@@ -1,0 +1,251 @@
+---
+title: 擴充物件
+description: 新增自訂欄位、定義新物件、撰寫掛鉤與流程、設定驗證與共用。
+---
+
+# 擴充物件
+
+本頁涵蓋資料層 —— 新增欄位、定義新物件、撰寫伺服器端邏輯，以及設定共用。
+
+## 新增自訂欄位
+
+最簡單的擴充。要向現有物件（例如 `crm_opportunity`）新增欄位，請在你自己的 package 中建立一個 *欄位增強*。
+
+```ts
+// packages/acme-extension/src/opportunity.object.ts
+import { defineObject, Field, ObjectSchema } from '@objectstack/spec/data';
+
+export default ObjectSchema.parse(defineObject({
+  name: 'crm_opportunity',
+  extends: 'crm.opportunity',           // augment, don't replace
+  fields: {
+    custom_deal_health: Field.select({
+      label: 'Deal Health',
+      options: [
+        { value: 'green',  label: 'Green',  color: 'green'  },
+        { value: 'yellow', label: 'Yellow', color: 'yellow' },
+        { value: 'red',    label: 'Red',    color: 'red'    },
+      ],
+      default: 'green',
+    }),
+    custom_competitor: Field.lookup({
+      label: 'Primary Competitor',
+      reference_to: 'crm_account',
+    }),
+  },
+}));
+```
+
+這會在不修改核心 HotCRM 的情況下新增兩個新欄位。
+
+## 欄位型別速查
+
+| 用例 | 欄位型別 |
+| --- | --- |
+| 父級參照（可選） | `Field.lookup({ reference_to: 'crm_account' })` |
+| 必填的父子關係 | `Field.masterDetail({ reference_to: 'crm_opportunity' })` |
+| 彙總（count/sum/min/max） | `Field.summary({ reference: 'crm_opportunity_line_item', operation: 'sum', field: 'total_price' })` |
+| 選擇清單（單選） | `Field.select({ options: [...] })` |
+| 選擇清單（多選） | `Field.select({ options: [...], multiple: true })` |
+| 檔案上傳 | `Field.file()` |
+| 圖片 | `Field.image()` |
+| 地址 | `Field.address()` |
+| GPS | `Field.location()` |
+| 貨幣 | `Field.currency({ currency: 'USD' })` |
+| 電子郵件 | `Field.email()` |
+| URL | `Field.url()` |
+| 公式 | `Field.formula({ return_type: 'number', expression: 'amount * (1 - discount_pct/100)' })` |
+
+## 定義新物件
+
+```ts
+// packages/acme-extension/src/territory.object.ts
+import { defineObject, Field, ObjectSchema } from '@objectstack/spec/data';
+
+export default ObjectSchema.parse(defineObject({
+  name: 'territory',
+  label: 'Territory',
+  plural: 'Territories',
+  description: 'Geographic sales territory',
+  fields: {
+    name: Field.text({ label: 'Name', required: true, unique: true }),
+    region: Field.select({
+      label: 'Region',
+      required: true,
+      options: [
+        { value: 'amer', label: 'Americas' },
+        { value: 'emea', label: 'EMEA' },
+        { value: 'apac', label: 'APAC' },
+      ],
+    }),
+    owner: Field.lookup({ label: 'Territory Owner', reference_to: 'user' }),
+    quota: Field.currency({ label: 'Annual Quota', currency: 'USD' }),
+  },
+  list_views: { default: ['name', 'region', 'owner', 'quota'] },
+  detail_view: ['name', 'region', 'owner', 'quota'],
+}));
+```
+
+## 掛鉤 —— 伺服器端商業邏輯
+
+掛鉤在資料生命週期事件（`before_create`、`after_create`、`before_update`、`after_update`、`before_delete`）上觸發。
+
+```ts
+// packages/acme-extension/src/territory.hook.ts
+import { defineHook } from '@objectstack/runtime';
+
+export default defineHook({
+  object: 'crm_opportunity',
+  event: 'before_create',
+  handler: async ({ record, broker, context }) => {
+    // Auto-assign territory based on account region
+    if (record.account) {
+      const acc = await broker.findOne('crm_account', { id: record.account });
+      const territory = await broker.findOne('territory', {
+        filters: [['region', '=', acc.region]],
+      });
+      if (territory) record.territory = territory.id;
+    }
+    return record;
+  },
+});
+```
+
+掛鉤可用於：
+- 基於相關記錄的欄位預設值設定。
+- 跨物件驗證。
+- 稽核軌跡寫入。
+- 觸發外部副作用（請謹慎 —— 如需重試，優先使用流程）。
+
+## 流程 —— 多步驟自動化
+
+流程可用於分支、迴圈、多記錄更新以及排程工作。
+
+```ts
+// packages/acme-extension/src/territory_rebalance.flow.ts
+import { defineFlow } from '@objectstack/spec/automation';
+
+export default defineFlow({
+  name: 'territory_rebalance',
+  trigger: { type: 'scheduled', cron: '0 2 1 * *' },  // monthly
+  steps: [
+    {
+      id: 'find_uncovered',
+      type: 'query',
+      object: 'crm_account',
+      filters: [['territory', '=', null], ['status', '=', 'customer']],
+    },
+    {
+      id: 'assign',
+      type: 'for_each',
+      input: '{{find_uncovered}}',
+      steps: [
+        {
+          type: 'find_one',
+          object: 'territory',
+          filters: [['region', '=', '{{item.region}}']],
+          as: 'territory',
+        },
+        {
+          type: 'update',
+          object: 'crm_account',
+          id: '{{item.id}}',
+          fields: { territory: '{{territory.id}}' },
+        },
+      ],
+    },
+  ],
+});
+```
+
+## 驗證規則
+
+用驗證規則阻止無效的儲存：
+
+```ts
+// packages/acme-extension/src/opportunity.validation.ts
+import { defineValidation } from '@objectstack/spec/data';
+
+export default defineValidation({
+  object: 'crm_opportunity',
+  name: 'win_requires_competitor',
+  condition: "stage == 'closed_won' AND custom_competitor == null",
+  error_message: 'You must select a primary competitor before marking the deal Closed Won.',
+});
+```
+
+## 共用規則
+
+將記錄可見性擴充到 OWD 之外：
+
+```ts
+// packages/acme-extension/src/account.sharing.ts
+import { defineSharing } from '@objectstack/spec/security';
+
+export default defineSharing({
+  object: 'crm_account',
+  rules: [
+    {
+      name: 'amer_accounts_to_amer_team',
+      type: 'criteria',
+      criteria: [['region', '=', 'amer']],
+      shared_with: { group: 'amer_sales_team' },
+      access: 'read',
+    },
+  ],
+});
+```
+
+## 權限集
+
+授予超出使用者概要檔之外的額外能力：
+
+```ts
+// packages/acme-extension/src/territory_manager.permission.ts
+import { PermissionSetSchema, definePermissionSet } from '@objectstack/spec/security';
+
+export default PermissionSetSchema.parse(definePermissionSet({
+  name: 'territory_manager',
+  label: 'Territory Manager',
+  object_permissions: {
+    territory: { read: true, create: true, edit: true, delete: false },
+  },
+  field_permissions: {
+    'territory.quota': { read: true, edit: true },
+  },
+  system_permissions: ['view_all_data'],
+}));
+```
+
+## 測試
+
+```bash
+pnpm test                    # unit tests
+pnpm typecheck               # @objectstack/spec validation
+pnpm test:integration        # against a dev sandbox
+```
+
+CI 會在每個 PR 上執行這三者。
+
+## 部署
+
+```bash
+pnpm build
+pnpm deploy --env=production
+```
+
+請先從功能分支部署到預備租戶；在簽署確認後再推廣。
+
+## 提示
+
+- ✅ 將客製化保持在它自己的 package 中 —— 不要 fork `packages/crm`。
+- ✅ 物件名和欄位名使用 Snake_case —— 慣例優於設定。
+- ✅ 使用 `Field.summary()`，而非手動維護計數。
+- ✅ 掛鉤用於記錄級邏輯，流程用於多記錄或排程工作。
+- ✅ 針對 `@objectstack/spec` schema 驗證 —— CI 能盡早捕捉錯誤。
+
+## 相關
+
+- [AI 技能](/zh-Hant/docs/customization/ai-skills) —— 將你的自訂邏輯公開給 Copilot。
+- [UI 擴充](/zh-Hant/docs/customization/ui-extensions) —— 建構相應的介面。
+- [自動化](/zh-Hant/docs/administration/automation) —— 可由管理員設定的自動化替代方案。

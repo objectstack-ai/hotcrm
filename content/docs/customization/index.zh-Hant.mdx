@@ -1,0 +1,98 @@
+---
+title: 客製化
+description: 面向開發者 —— 透過自訂物件、欄位、AI 技能和 UI 元件擴充 HotCRM。
+---
+
+# 客製化
+
+本章節面向使用程式碼擴充 HotCRM 的 **開發者和技術實作人員**。如果你是設定概要檔和工作流程的 CRM 管理員，請前往 [管理](/zh-Hant/docs/administration/index)。
+
+## 你可以建構什麼
+
+| 領域 | 涵蓋內容 |
+| --- | --- |
+| [**擴充物件**](/zh-Hant/docs/customization/extending-objects) | 新增欄位、自訂物件、掛鉤、流程、驗證、共用 |
+| [**AI 技能**](/zh-Hant/docs/customization/ai-skills) | 建構接入知識庫的全新 AI Copilot 技能 |
+| [**UI 擴充**](/zh-Hant/docs/customization/ui-extensions) | 自訂頁面、清單檢視、儀表板、下拉動作 |
+
+## 前置條件
+
+- **TypeScript** 與 Node.js 基礎知識。
+- 熟悉 **@objectstack/runtime** 引擎（HotCRM 基於它建構）。
+- 擁有 **HotCRM 原始碼儲存庫** 與開發沙盒的存取權限。
+
+## HotCRM 檔案慣例
+
+HotCRM 遵循 *「檔案後綴協定」* —— 每一類成品都存放在具有特定後綴的檔案中：
+
+| 後綴 | 它定義什麼 |
+| --- | --- |
+| `*.object.ts` | 資料模型 —— 欄位、驗證、共用 |
+| `*.hook.ts` | 資料生命週期上的伺服器端商業邏輯 |
+| `*.action.ts` | API 端點與可被 AI 呼叫的工具 |
+| `*.flow.ts` | 多步驟自動化 |
+| `*.skill.ts` | 一個 AI Copilot 技能定義 |
+| `*.agent.ts` | 一個複合 AI 代理（多個技能 + 知識） |
+| `*.page.ts` | 一個 UI 頁面版面配置 |
+| `*.view.ts` | 一個清單檢視 |
+| `*.dashboard.ts` | 一個儀表板定義 |
+| `*.sharing.ts` | 共用規則（基於條件或基於擁有者） |
+| `*.approval.ts` | 核准流程定義 |
+| `*.statemachine.ts` | 狀態轉換 |
+| `*.permission.ts` | 權限集 |
+
+所有檔案都位於 `packages/{package}/src/` 下。名稱使用 `snake_case`。
+
+## 專案結構
+
+```
+hotcrm/
+├── packages/
+│   ├── crm/           # Sales (account, lead, contact, opportunity, ...)
+│   ├── finance/       # Revenue (contract, invoice)
+│   ├── products/      # Product catalog
+│   ├── service/       # Cases, knowledge base
+│   ├── marketing/     # Campaigns
+│   └── ai/            # Copilot agents and skills
+└── apps/
+    └── docs/          # This documentation site
+```
+
+請將你的客製化放在 **它自己的 package 中**（例如 `packages/acme-crm-extension/`），以保持核心 HotCRM 可升級。
+
+## 從何處開始
+
+1. **搭建沙盒** —— 複製儲存庫、安裝相依套件、執行開發環境。
+2. **閱讀** [擴充物件](/zh-Hant/docs/customization/extending-objects) 了解資料層。
+3. **閱讀** [AI 技能](/zh-Hant/docs/customization/ai-skills) 了解 Copilot 擴充。
+4. **閱讀** [UI 擴充](/zh-Hant/docs/customization/ui-extensions) 了解前端。
+5. 在提交之前，用對應的 `@objectstack/spec` schema **驗證** 每個中繼資料檔案。
+
+## Schema 驗證
+
+每個中繼資料檔案都必須能通過某個 `@objectstack/spec` schema 的驗證：
+
+| 檔案類型 | Schema |
+| --- | --- |
+| `*.object.ts` | 來自 `@objectstack/spec/data` 的 `ObjectSchema.parse()` |
+| `*.page.ts` | 來自 `@objectstack/spec/ui` 的 `PageSchema` |
+| `*.flow.ts` | 來自 `@objectstack/spec/automation` 的 `WorkflowRuleSchema.parse()` |
+| `*.statemachine.ts` | 來自 `@objectstack/spec/automation` 的 `StateMachineSchema.parse()` |
+| `*.skill.ts` | 來自 `@objectstack/spec/ai` 的 Skill schema |
+| `*.permission.ts` | 來自 `@objectstack/spec/security` 的 `PermissionSetSchema.parse()` |
+
+如果驗證失敗，CI 也會失敗 —— 因此你會立即知道。
+
+## 黃金法則
+
+- ✅ **不要 fork 核心 package** —— 在你自己的 package 中用掛鉤和新物件進行擴充。
+- ✅ **使用 ObjectQL，而非 SQL** —— `broker.find('crm_opportunity', {...})` 是唯一受支援的資料存取方式。
+- ✅ 物件名和欄位名使用 **Snake_case**。
+- ✅ 針對 `@objectstack/spec` schema **驗證一切**。
+- ✅ 在部署到生產之前 **在沙盒中測試**。
+
+## 下一步
+
+- [擴充物件](/zh-Hant/docs/customization/extending-objects)
+- [AI 技能](/zh-Hant/docs/customization/ai-skills)
+- [UI 擴充](/zh-Hant/docs/customization/ui-extensions)

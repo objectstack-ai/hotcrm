@@ -1,0 +1,201 @@
+---
+title: 构建 AI 技能
+description: 定义可读取 CRM 数据、以知识库为依据、并遵守共享规则的全新 AI Copilot 技能。
+---
+
+# 构建 AI 技能
+
+**技能** 是 HotCRM 中 AI 功能的基本单元 —— *“资格审核这条线索”*、*“起草一封邮件”*、*“预测营收”*。本页展示如何构建一个新技能。
+
+## 何时构建技能
+
+在以下情况下构建技能：
+
+- 该任务是 **有边界且可复用的**（而非一次性的）。
+- 输出 **足够结构化**，便于推理（建议 + 理由 + 操作）。
+- 它能从 CRM 数据或知识库的 **依据** 中受益。
+
+如果你只是需要一个服务端工作流或一次性脚本，请改用 [流程或钩子](/zh-Hans/docs/customization/extending-objects)。
+
+## 技能的剖析
+
+技能是一个带有 `*.skill.ts` 后缀的 TypeScript 文件。
+
+```ts
+// packages/acme-extension/src/renewal_pitch.skill.ts
+import { defineSkill } from '@objectstack/spec/ai';
+
+export default defineSkill({
+  name: 'renewal_pitch',
+  label: 'Draft renewal pitch',
+  description: 'Generates a customer-facing renewal pitch grounded in their usage and contract history.',
+
+  // What the skill takes as input
+  input: {
+    contract_id: { type: 'reference', object: 'crm_contract', required: true },
+    tone: { type: 'enum', options: ['friendly', 'formal', 'urgent'], default: 'friendly' },
+  },
+
+  // What it returns
+  output: {
+    subject:    { type: 'text' },
+    body:       { type: 'text' },
+    talking_points: { type: 'array', items: { type: 'text' } },
+    citations:  { type: 'array', items: { type: 'reference' } },
+  },
+
+  // What data sources the skill can read
+  data_sources: {
+    contract:      { object: 'crm_contract',     by: 'id' },
+    account:       { object: 'crm_account',      by: 'contract.account' },
+    primary_contact: { object: 'crm_contact',    by: 'contract.account.primary_contact' },
+    usage:         { object: 'usage_metric', by: 'contract.id', last_n_months: 6 },
+  },
+
+  // Knowledge bases the skill can ground in
+  knowledge_bases: ['sales_knowledge', 'product_information'],
+
+  // Tone, length, format
+  prompt_template: `
+    You are a sales rep writing a renewal pitch for {{primary_contact.name}}
+    at {{account.name}}, who has been a customer since {{account.customer_since}}.
+    Their contract for {{contract.value | currency}} expires on {{contract.end_date}}.
+    Their last 6 months of usage: {{usage.summary}}.
+
+    Write a {{tone}} renewal pitch. Cite specific value they've gotten.
+    Cite at most 2 KB articles for talking points.
+  `,
+
+  // Behaviour
+  behaviour: {
+    requires_confirmation_before_write: true,
+    respects_sharing: true,
+    log_invocations: true,
+    max_tokens: 800,
+  },
+});
+```
+
+## 将技能注册到智能体
+
+技能通过 **智能体** 呈现给用户 —— 通常是 Sales Copilot 或 Service Copilot。
+
+```ts
+// packages/ai/src/sales_copilot.agent.ts (extension)
+import { defineAgent } from '@objectstack/spec/ai';
+
+export default defineAgent({
+  name: 'sales_copilot',
+  skills: [
+    'lead_qualification',
+    'email_drafting',
+    'revenue_forecasting',
+    'customer_360',
+    'renewal_pitch',          // ← new skill registered here
+  ],
+});
+```
+
+或者将它直接附加到某条记录的 inline-actions 上：
+
+```ts
+// packages/acme-extension/src/contract.page.ts
+import { definePage } from '@objectstack/spec/ui';
+
+export default definePage({
+  object: 'crm_contract',
+  inline_actions: [
+    { type: 'ai_skill', skill: 'renewal_pitch', label: '✍️ Draft Renewal Pitch' },
+  ],
+});
+```
+
+这会在每个合同详情页上添加一个按钮。
+
+## 以知识库为依据
+
+在 `knowledge_bases` 中引用一个或多个知识库。运行时将会：
+
+1. 从提示上下文生成查询嵌入向量。
+2. 在这些知识库中搜索 top-k 段落。
+3. 将它们连同引用标记一起注入到提示中。
+4. 在输出中呈现引用，供用户验证。
+
+定义一个自定义知识库：
+
+```ts
+// packages/acme-extension/src/renewal_playbook.knowledge.ts
+import { defineKnowledgeBase } from '@objectstack/spec/ai';
+
+export default defineKnowledgeBase({
+  name: 'renewal_playbook',
+  label: 'Renewal Playbook',
+  sources: [
+    { type: 'object', object: 'kb_article', filters: [['category', '=', 'renewal']] },
+    { type: 'file_storage', folder: '/playbooks/renewals' },
+    { type: 'confluence', space: 'CSM', label_filter: 'renewals' },
+  ],
+  refresh_schedule: '0 2 * * *',   // nightly at 2 AM
+  permissions: { read_for_profiles: ['sales_user', 'system_admin'] },
+});
+```
+
+## 权限与共享
+
+默认情况下，技能以调用用户的身份运行 —— 它们只能看到该用户能看到的记录。这一点出于安全考虑没有商量余地。
+
+如果某个技能 **必须** 读取更多数据（例如仅限经理使用的预测技能），请声明一个 `elevated_data_sources` 块，运行时将要求调用用户持有匹配的权限：
+
+```ts
+elevated_data_sources: {
+  all_team_opportunities: {
+    object: 'crm_opportunity',
+    requires_permission: 'view_team_pipeline',
+  },
+},
+```
+
+## 测试技能
+
+对提示逻辑和输出形态进行单元测试：
+
+```ts
+import { runSkill } from '@objectstack/runtime/ai/testing';
+import renewalPitch from './renewal_pitch.skill';
+
+it('produces a pitch with citations', async () => {
+  const result = await runSkill(renewalPitch, {
+    input: { contract_id: 'ctr_123' },
+    as_user: 'usr_alex',
+  });
+  expect(result.subject).toContain('renewal');
+  expect(result.citations.length).toBeGreaterThan(0);
+});
+```
+
+针对带有真实 CRM 数据的沙盒租户进行集成测试。
+
+## 监控
+
+部署后，请监控：
+
+- **调用量** —— 该技能被使用的频率如何？
+- **接受率** —— 用户接受输出的频率如何？
+- **延迟** —— p50 / p95。
+- **错误率** —— schema 不匹配、数据缺失、超时。
+
+呈现在 **Setup → AI → Skills → Performance** 中。
+
+## 提示
+
+- ✅ 让提示 **简短且结构化** —— 输出更好、延迟更低。
+- ✅ 始终在输出 schema 中包含 `citations` —— 信任建立在可追溯性之上。
+- ✅ 以 `requires_confirmation_before_write: true` 起步 —— 在自动化之前先赢得信任。
+- ✅ 关注接受率 —— 如果 &lt;50%，则提示或知识库需要改进。
+- ✅ 为你的提示做版本管理 —— 在调优时保留一份历史记录。
+
+## 相关
+
+- [AI Copilot › 技能](/zh-Hans/docs/ai-copilot/skills) —— 面向用户的视角。
+- [AI Copilot › 知识库](/zh-Hans/docs/ai-copilot/knowledge-bases) —— RAG 层。
+- [扩展对象](/zh-Hans/docs/customization/extending-objects) —— 用于支撑你技能背后的数据模型。

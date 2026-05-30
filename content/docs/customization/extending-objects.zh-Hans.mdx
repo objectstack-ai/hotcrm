@@ -1,0 +1,251 @@
+---
+title: 扩展对象
+description: 添加自定义字段、定义新对象、编写钩子与流程、配置验证与共享。
+---
+
+# 扩展对象
+
+本页涵盖数据层 —— 添加字段、定义新对象、编写服务端逻辑，以及配置共享。
+
+## 添加自定义字段
+
+最简单的扩展。要向现有对象（例如 `crm_opportunity`）添加字段，请在你自己的 package 中创建一个 *字段增强*。
+
+```ts
+// packages/acme-extension/src/opportunity.object.ts
+import { defineObject, Field, ObjectSchema } from '@objectstack/spec/data';
+
+export default ObjectSchema.parse(defineObject({
+  name: 'crm_opportunity',
+  extends: 'crm.opportunity',           // augment, don't replace
+  fields: {
+    custom_deal_health: Field.select({
+      label: 'Deal Health',
+      options: [
+        { value: 'green',  label: 'Green',  color: 'green'  },
+        { value: 'yellow', label: 'Yellow', color: 'yellow' },
+        { value: 'red',    label: 'Red',    color: 'red'    },
+      ],
+      default: 'green',
+    }),
+    custom_competitor: Field.lookup({
+      label: 'Primary Competitor',
+      reference_to: 'crm_account',
+    }),
+  },
+}));
+```
+
+这会在不修改核心 HotCRM 的情况下添加两个新字段。
+
+## 字段类型速查
+
+| 用例 | 字段类型 |
+| --- | --- |
+| 父级引用（可选） | `Field.lookup({ reference_to: 'crm_account' })` |
+| 必填的父子关系 | `Field.masterDetail({ reference_to: 'crm_opportunity' })` |
+| 汇总（count/sum/min/max） | `Field.summary({ reference: 'crm_opportunity_line_item', operation: 'sum', field: 'total_price' })` |
+| 选择列表（单选） | `Field.select({ options: [...] })` |
+| 选择列表（多选） | `Field.select({ options: [...], multiple: true })` |
+| 文件上传 | `Field.file()` |
+| 图片 | `Field.image()` |
+| 地址 | `Field.address()` |
+| GPS | `Field.location()` |
+| 货币 | `Field.currency({ currency: 'USD' })` |
+| 邮箱 | `Field.email()` |
+| URL | `Field.url()` |
+| 公式 | `Field.formula({ return_type: 'number', expression: 'amount * (1 - discount_pct/100)' })` |
+
+## 定义新对象
+
+```ts
+// packages/acme-extension/src/territory.object.ts
+import { defineObject, Field, ObjectSchema } from '@objectstack/spec/data';
+
+export default ObjectSchema.parse(defineObject({
+  name: 'territory',
+  label: 'Territory',
+  plural: 'Territories',
+  description: 'Geographic sales territory',
+  fields: {
+    name: Field.text({ label: 'Name', required: true, unique: true }),
+    region: Field.select({
+      label: 'Region',
+      required: true,
+      options: [
+        { value: 'amer', label: 'Americas' },
+        { value: 'emea', label: 'EMEA' },
+        { value: 'apac', label: 'APAC' },
+      ],
+    }),
+    owner: Field.lookup({ label: 'Territory Owner', reference_to: 'user' }),
+    quota: Field.currency({ label: 'Annual Quota', currency: 'USD' }),
+  },
+  list_views: { default: ['name', 'region', 'owner', 'quota'] },
+  detail_view: ['name', 'region', 'owner', 'quota'],
+}));
+```
+
+## 钩子 —— 服务端业务逻辑
+
+钩子在数据生命周期事件（`before_create`、`after_create`、`before_update`、`after_update`、`before_delete`）上触发。
+
+```ts
+// packages/acme-extension/src/territory.hook.ts
+import { defineHook } from '@objectstack/runtime';
+
+export default defineHook({
+  object: 'crm_opportunity',
+  event: 'before_create',
+  handler: async ({ record, broker, context }) => {
+    // Auto-assign territory based on account region
+    if (record.account) {
+      const acc = await broker.findOne('crm_account', { id: record.account });
+      const territory = await broker.findOne('territory', {
+        filters: [['region', '=', acc.region]],
+      });
+      if (territory) record.territory = territory.id;
+    }
+    return record;
+  },
+});
+```
+
+钩子可用于：
+- 基于相关记录的字段默认值设置。
+- 跨对象验证。
+- 审计跟踪写入。
+- 触发外部副作用（请谨慎 —— 如需重试，优先使用流程）。
+
+## 流程 —— 多步骤自动化
+
+流程可用于分支、循环、多记录更新以及计划任务。
+
+```ts
+// packages/acme-extension/src/territory_rebalance.flow.ts
+import { defineFlow } from '@objectstack/spec/automation';
+
+export default defineFlow({
+  name: 'territory_rebalance',
+  trigger: { type: 'scheduled', cron: '0 2 1 * *' },  // monthly
+  steps: [
+    {
+      id: 'find_uncovered',
+      type: 'query',
+      object: 'crm_account',
+      filters: [['territory', '=', null], ['status', '=', 'customer']],
+    },
+    {
+      id: 'assign',
+      type: 'for_each',
+      input: '{{find_uncovered}}',
+      steps: [
+        {
+          type: 'find_one',
+          object: 'territory',
+          filters: [['region', '=', '{{item.region}}']],
+          as: 'territory',
+        },
+        {
+          type: 'update',
+          object: 'crm_account',
+          id: '{{item.id}}',
+          fields: { territory: '{{territory.id}}' },
+        },
+      ],
+    },
+  ],
+});
+```
+
+## 验证规则
+
+用验证规则阻止无效的保存：
+
+```ts
+// packages/acme-extension/src/opportunity.validation.ts
+import { defineValidation } from '@objectstack/spec/data';
+
+export default defineValidation({
+  object: 'crm_opportunity',
+  name: 'win_requires_competitor',
+  condition: "stage == 'closed_won' AND custom_competitor == null",
+  error_message: 'You must select a primary competitor before marking the deal Closed Won.',
+});
+```
+
+## 共享规则
+
+将记录可见性扩展到 OWD 之外：
+
+```ts
+// packages/acme-extension/src/account.sharing.ts
+import { defineSharing } from '@objectstack/spec/security';
+
+export default defineSharing({
+  object: 'crm_account',
+  rules: [
+    {
+      name: 'amer_accounts_to_amer_team',
+      type: 'criteria',
+      criteria: [['region', '=', 'amer']],
+      shared_with: { group: 'amer_sales_team' },
+      access: 'read',
+    },
+  ],
+});
+```
+
+## 权限集
+
+授予超出用户概要文件之外的额外能力：
+
+```ts
+// packages/acme-extension/src/territory_manager.permission.ts
+import { PermissionSetSchema, definePermissionSet } from '@objectstack/spec/security';
+
+export default PermissionSetSchema.parse(definePermissionSet({
+  name: 'territory_manager',
+  label: 'Territory Manager',
+  object_permissions: {
+    territory: { read: true, create: true, edit: true, delete: false },
+  },
+  field_permissions: {
+    'territory.quota': { read: true, edit: true },
+  },
+  system_permissions: ['view_all_data'],
+}));
+```
+
+## 测试
+
+```bash
+pnpm test                    # unit tests
+pnpm typecheck               # @objectstack/spec validation
+pnpm test:integration        # against a dev sandbox
+```
+
+CI 会在每个 PR 上运行这三者。
+
+## 部署
+
+```bash
+pnpm build
+pnpm deploy --env=production
+```
+
+请先从功能分支部署到预发布租户；在签署确认后再推广。
+
+## 提示
+
+- ✅ 将定制化保持在它自己的 package 中 —— 不要 fork `packages/crm`。
+- ✅ 对象名和字段名使用 Snake_case —— 约定优于配置。
+- ✅ 使用 `Field.summary()`，而非手动维护计数。
+- ✅ 钩子用于记录级逻辑，流程用于多记录或计划任务。
+- ✅ 针对 `@objectstack/spec` schema 校验 —— CI 能尽早捕捉错误。
+
+## 相关
+
+- [AI 技能](/zh-Hans/docs/customization/ai-skills) —— 将你的自定义逻辑暴露给 Copilot。
+- [UI 扩展](/zh-Hans/docs/customization/ui-extensions) —— 构建相应的界面。
+- [自动化](/zh-Hans/docs/administration/automation) —— 可由管理员配置的自动化替代方案。

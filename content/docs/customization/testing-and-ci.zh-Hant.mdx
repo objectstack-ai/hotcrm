@@ -1,0 +1,264 @@
+---
+title: 測試與 CI
+description: HotCRM 客製化的單元、整合與端對端測試 —— 以及 CI 模式和一個範例 GitHub Actions 工作流程。
+---
+
+# 測試與 CI
+
+如何在發佈之前自信地測試你的 HotCRM 客製化。
+
+## 測試什麼
+
+| 層 | 測試類型 | 工具 |
+| --- | --- | --- |
+| 物件中繼資料 | Schema 驗證 | `@objectstack/spec` schema + `vitest` |
+| 掛鉤邏輯 | 單元測試 | `vitest` |
+| 流程 | 整合測試 | `@objectstack/runtime/testing` |
+| AI 技能 | 快照 + 整合 | `@objectstack/runtime/ai/testing` |
+| 驗證規則 | 單元測試 | `vitest` |
+| 共用規則 | 整合測試（多使用者） | `@objectstack/runtime/testing` |
+| UI 頁面 / 儀表板 | Schema 驗證 + 視覺化 | `@objectstack/spec` + Playwright |
+| 端對端使用者流程 | E2E | Playwright |
+
+## 1. Schema 驗證測試
+
+每個中繼資料檔案都應能通過其 spec schema 的驗證。新增一個走訪所有檔案的單一測試：
+
+```ts
+// packages/your-extension/test/metadata.test.ts
+import { describe, it, expect } from 'vitest';
+import { ObjectSchema } from '@objectstack/spec/data';
+import { PageSchema, ViewSchema, DashboardSchema } from '@objectstack/spec/ui';
+import { WorkflowRuleSchema, StateMachineSchema } from '@objectstack/spec/automation';
+import opportunityObj from '../src/opportunity.object';
+import opportunityPage from '../src/opportunity.page';
+
+describe('metadata schemas', () => {
+  it('opportunity object', () => {
+    expect(() => ObjectSchema.parse(opportunityObj)).not.toThrow();
+  });
+
+  it('opportunity page', () => {
+    expect(() => PageSchema.parse(opportunityPage)).not.toThrow();
+  });
+});
+```
+
+這些測試在毫秒級執行，並能在 CI 階段捕捉大多數中繼資料缺陷。
+
+## 2. 掛鉤單元測試
+
+```ts
+// packages/your-extension/test/opportunity_territory.hook.test.ts
+import { it, expect, vi } from 'vitest';
+import territoryHook from '../src/opportunity_territory.hook';
+
+it('assigns territory from account region', async () => {
+  const broker = {
+    findOne: vi.fn().mockResolvedValue({ id: 'ter_amer', region: 'amer' }),
+  };
+  const record = { account: 'acc_123' };
+  // mock the account lookup
+  broker.findOne
+    .mockResolvedValueOnce({ id: 'acc_123', region: 'amer' })
+    .mockResolvedValueOnce({ id: 'ter_amer', region: 'amer' });
+
+  const result = await territoryHook.handler({ record, broker, context: {} });
+
+  expect(result.territory).toBe('ter_amer');
+});
+```
+
+提示：掛鉤處理器應當是 **（record, context, broker）的純函式** —— 便於單元測試。
+
+## 3. 流程 / 自動化測試
+
+使用執行階段的測試套件來演練多步驟流程：
+
+```ts
+// packages/your-extension/test/contract_renewal.flow.test.ts
+import { createTestRuntime } from '@objectstack/runtime/testing';
+import { it, expect } from 'vitest';
+
+it('creates a renewal task when contract enters renewal window', async () => {
+  const rt = await createTestRuntime();
+  await rt.seed.contract({
+    id: 'ctr_abc',
+    end_date: '2026-05-01',
+    renewal_notice_days: 60,
+    owner: 'usr_alex',
+    status: 'activated',
+  });
+
+  await rt.advanceTime('2026-03-02T08:00:00Z');  // crosses renewal window
+  await rt.runScheduledJobs();
+
+  const tasks = await rt.query.task({ filters: [['related_to', '=', 'ctr_abc']] });
+  expect(tasks).toHaveLength(1);
+  expect(tasks[0].subject).toContain('Renewal');
+});
+```
+
+`createTestRuntime` 會啟動一個載入了你 package 的記憶體租戶 —— 快速、隔離、確定性。
+
+## 4. AI 技能測試
+
+當你對 LLM 進行 mock 時，技能是確定性的：
+
+```ts
+// packages/your-extension/test/renewal_pitch.skill.test.ts
+import { runSkill } from '@objectstack/runtime/ai/testing';
+import renewalPitch from '../src/renewal_pitch.skill';
+
+it('produces a pitch with citations', async () => {
+  const result = await runSkill(renewalPitch, {
+    input: { contract_id: 'ctr_123' },
+    as_user: 'usr_alex',
+    mock_llm: 'echo',           // deterministic mode
+  });
+  expect(result.subject).toMatch(/renewal/i);
+  expect(result.citations.length).toBeGreaterThan(0);
+});
+
+it('snapshot of prompt for renewal pitch', async () => {
+  const { rendered_prompt } = await runSkill(renewalPitch, {
+    input: { contract_id: 'ctr_123' },
+    as_user: 'usr_alex',
+    return_prompt_only: true,
+  });
+  expect(rendered_prompt).toMatchSnapshot();
+});
+```
+
+為算繪後的提示拍快照 —— 當你調整範本時，你會確切看到改變了什麼。
+
+對於使用真實 LLM 的端對端整合測試，請使用 **專用的測試租戶** 並搭配一個小型免費層模型，以控制成本。
+
+## 5. 共用規則測試
+
+```ts
+import { createTestRuntime } from '@objectstack/runtime/testing';
+
+it('AMER reps can see AMER accounts via sharing rule', async () => {
+  const rt = await createTestRuntime();
+  await rt.seed.user({ id: 'usr_amer_rep', role: 'ae_amer', profile: 'sales_user' });
+  await rt.seed.account({ id: 'acc_us', region: 'amer', owner: 'usr_someone_else' });
+
+  const accounts = await rt.as('usr_amer_rep').query.account({});
+  expect(accounts.find(a => a.id === 'acc_us')).toBeDefined();
+});
+
+it('AMER reps cannot see EMEA accounts', async () => {
+  const rt = await createTestRuntime();
+  await rt.seed.user({ id: 'usr_amer_rep', role: 'ae_amer', profile: 'sales_user' });
+  await rt.seed.account({ id: 'acc_de', region: 'emea', owner: 'usr_someone_else' });
+
+  const accounts = await rt.as('usr_amer_rep').query.account({});
+  expect(accounts.find(a => a.id === 'acc_de')).toBeUndefined();
+});
+```
+
+## 6. 使用 Playwright 進行端對端測試
+
+```ts
+// e2e/lead-conversion.spec.ts
+import { test, expect } from '@playwright/test';
+
+test('rep can convert a qualified lead to an opportunity', async ({ page }) => {
+  await page.goto('/');
+  await page.fill('[name=email]', 'rep@test.com');
+  await page.fill('[name=password]', process.env.TEST_PASSWORD!);
+  await page.click('button[type=submit]');
+
+  await page.click('text=Leads');
+  await page.click('text=New Lead');
+  await page.fill('[name=name]', 'Jane Doe');
+  await page.fill('[name=company]', 'Acme Corp');
+  await page.fill('[name=email]', 'jane@acme.test');
+  await page.click('text=Save');
+
+  await page.click('text=Mark Qualified');
+  await page.click('text=Convert');
+  await expect(page).toHaveURL(/\/opportunities\//);
+  await expect(page.locator('h1')).toContainText('Acme Corp');
+});
+```
+
+用 `pnpm e2e` 執行。
+
+## CI：GitHub Actions 範例
+
+```yaml
+# .github/workflows/ci.yaml
+name: ci
+
+on: [push, pull_request]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck       # @objectstack/spec validation
+      - run: pnpm lint
+      - run: pnpm test            # unit + integration
+      - run: pnpm test:metadata   # schema validation
+
+  e2e:
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm playwright install --with-deps
+      - run: pnpm dev &           # boot the runtime
+      - run: pnpm wait-on http://localhost:3000
+      - run: pnpm e2e
+
+  deploy-sandbox:
+    runs-on: ubuntu-latest
+    needs: e2e
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - run: pnpm deploy --tenant=sandbox-uat --token=${{ secrets.HOTCRM_DEPLOY_TOKEN }}
+```
+
+## 測試資料
+
+不要手寫種子資料 —— 使用執行階段的種子建構器：
+
+```ts
+await rt.seed.account({ region: 'amer' });           // sensible defaults
+await rt.seed.opportunity({ stage: 'negotiation' }); // links to a fresh account
+```
+
+對於較大的測試，請使用 **工廠**：
+
+```ts
+const accounts = await rt.seed.accountFactory(50, { tier: 'platinum' });
+```
+
+## 涵蓋率目標
+
+- **掛鉤** —— 90%+ 分支涵蓋率。
+- **流程** —— 每個決策中的每條路徑。
+- **驗證規則** —— 通過和失敗兩種情形。
+- **共用規則** —— 每條規則至少一個正向和一個負向用例。
+- **AI 技能** —— 對提示做快照測試；每週對輸出進行抽樣的整合測試。
+
+## 提示
+
+- ✅ **CI 中的 Schema 驗證** 能捕捉 80% 的中繼資料缺陷。
+- ✅ **對 AI 提示拍快照** —— 微小的提示變更會明顯改變輸出。
+- ✅ **雙向測試共用** —— 使用者能看到什麼 + 不能看到什麼。
+- ✅ 在 CI 中使用 **確定性的 LLM mock**；真實 LLM 測試在獨立的工作流程中每晚執行。
+- ✅ 讓 E2E 測試少而 **關鍵** —— 涵蓋登入、線索轉換、成交、案例解決。
+- ✅ **在每次推廣到 UAT 之前** 執行完整套件 —— 絕不部署一個失敗的建構。

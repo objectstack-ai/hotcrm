@@ -1,0 +1,10 @@
+{
+  "title": "分析",
+  "defaultOpen": true,
+  "pages": [
+    "index",
+    "dashboards",
+    "reports",
+    "cubes"
+  ]
+}

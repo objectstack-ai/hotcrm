@@ -1,0 +1,12 @@
+{
+  "title": "AI Copilot",
+  "defaultOpen": true,
+  "pages": [
+    "index",
+    "live-schema",
+    "sales-copilot",
+    "service-copilot",
+    "skills",
+    "knowledge-bases"
+  ]
+}

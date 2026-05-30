@@ -1,0 +1,10 @@
+{
+  "title": "營收雲",
+  "defaultOpen": true,
+  "pages": [
+    "index",
+    "products",
+    "contracts",
+    "approvals"
+  ]
+}

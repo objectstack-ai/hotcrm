@@ -1,0 +1,13 @@
+{
+  "title": "定制化",
+  "defaultOpen": false,
+  "pages": [
+    "index",
+    "extending-objects",
+    "ai-skills",
+    "ui-extensions",
+    "api-reference",
+    "testing-and-ci",
+    "theming-and-i18n"
+  ]
+}

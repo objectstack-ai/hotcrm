@@ -8,13 +8,27 @@ import { Popover, PopoverContent, PopoverTrigger } from 'fumadocs-ui/components/
 
 const cache = new Map<string, string>();
 
+// Localised labels for the two visible page-action buttons. The dropdown
+// items keep their "Open in <product>" titles since those name the products.
+const labels = {
+  en: { copy: 'Copy Markdown', open: 'Open' },
+  'zh-Hans': { copy: '复制 Markdown', open: '打开' },
+  'zh-Hant': { copy: '複製 Markdown', open: '開啟' },
+} as const;
+
+function pick(lang?: string) {
+  return labels[lang as keyof typeof labels] ?? labels.en;
+}
+
 export function LLMCopyButton({
   /**
    * A URL to fetch the raw Markdown/MDX content of page
    */
   markdownUrl,
+  lang,
 }: {
   markdownUrl: string;
+  lang?: string;
 }) {
   const [isLoading, setLoading] = useState(false);
   const [checked, onClick] = useCopyButton(async () => {
@@ -52,7 +66,7 @@ export function LLMCopyButton({
       onClick={onClick}
     >
       {checked ? <Check /> : <Copy />}
-      Copy Markdown
+      {pick(lang).copy}
     </button>
   );
 }
@@ -60,6 +74,7 @@ export function LLMCopyButton({
 export function ViewOptions({
   markdownUrl,
   githubUrl,
+  lang,
 }: {
   /**
    * A URL to the raw Markdown/MDX content of page
@@ -70,6 +85,8 @@ export function ViewOptions({
    * Source file URL on GitHub
    */
   githubUrl: string;
+
+  lang?: string;
 }) {
   const items = useMemo(() => {
     const fullMarkdownUrl =
@@ -207,7 +224,7 @@ export function ViewOptions({
           }),
         )}
       >
-        Open
+        {pick(lang).open}
         <ChevronDown className="size-3.5 text-fd-muted-foreground" />
       </PopoverTrigger>
       <PopoverContent className="flex flex-col">

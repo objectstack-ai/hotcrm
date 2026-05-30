@@ -1,0 +1,122 @@
+---
+title: 儀表板
+description: 四個開箱即用的儀表板——CRM 概覽、銷售管道、服務營運和高階主管記分卡。
+---
+
+# 儀表板
+
+HotCRM 內建四個儀表板。每個都為特定角色而建構，回答該角色每天提出的問題。
+
+## 四個儀表板
+
+| 儀表板 | 面向 | 回答 |
+| --- | --- | --- |
+| 🏠 **CRM Overview** | 所有人 | "今天整個業務發生了什麼？" |
+| 📈 **Sales Dashboard** | 業務代表、經理 | "我的管道健康狀況如何？" |
+| 🎧 **Service Dashboard** | 服務客服、經理 | "我們在工單和 SLA 上表現如何？" |
+| 👔 **Executive Scorecard** | 高階主管、財務 | "我們達成目標了嗎？" |
+
+四者都遵守 [共享規則](/zh-Hant/docs/administration/sharing-and-security)——你看到的內容取決於你的角色。
+
+## 🏠 CRM Overview
+
+跨職能的首頁儀表板，預設對所有使用者可見。
+
+**磚貼**：
+
+- **Open Leads** — 數量，按狀態。
+- **New Leads This Week** — 與上週對比的趨勢。
+- **My Open Opportunities** — 數量和價值。
+- **Cases Awaiting Response** — 數量，並突出 SLA 風險。
+- **Top 5 Accounts by Pipeline** — 長條圖。
+- **Recent Activity** — 過去 24 小時的通話、會議、電子郵件（你的）。
+
+非常適合作為每天開始時的著陸頁。
+
+## 📈 Sales Dashboard
+
+業務團隊的日常營運儀表板。
+
+**磚貼**：
+
+- **Pipeline by Stage** — 顯示各階段 $ 的漏斗圖。
+- **Forecast vs Quota** — 量表圖。
+- **Closed Won this Quarter** — 帶目標線的累計總額。
+- **Win Rate (last 90 days)** — 帶趨勢的百分比。
+- **Average Deal Size** — 本季對比上一季。
+- **Average Sales Cycle** — 從建立到成交的天數（贏單交易）。
+- **Top 10 Open Deals** — 可排序的表格。
+- **Slipping Deals** — 本週成交日期被推後的商機。
+- **Activity Heatmap** — 每位業務代表每天的通話 + 會議 + 電子郵件。
+
+角色感知：業務代表看到自己的，經理看到團隊的，總監看到彙總。
+
+## 🎧 Service Dashboard
+
+服務團隊的日常營運檢視。
+
+**磚貼**：
+
+- **Open Cases by Priority** — 長條圖。
+- **Cases Approaching SLA** — 按距違約時間排序的表格。
+- **Cases Breached** — 過去 7 天（含工單擁有者）。
+- **First Response Time** — 平均值對比目標。
+- **Resolution Time** — 平均值對比目標。
+- **Customer Satisfaction (CSAT)** — 過去 30 天，趨勢。
+- **Case Volume by Origin** — Email / Phone / Web / Chat / Portal。
+- **Top Case Categories** — 用於發現產品問題。
+- **Agent Workload** — 每位客服的未結工單數。
+
+*Cases Approaching SLA* 磚貼是此儀表板上點擊最多的小工具——它是客服確定優先順序的方式。
+
+## 👔 Executive Scorecard
+
+業務的高階主管 / 財務檢視。
+
+**磚貼**：
+
+- **Bookings This Quarter** — 成交贏單，對比計畫和去年同期。
+- **Pipeline Coverage** — 管道 ÷ 剩餘配額。
+- **Forecast Confidence** — 承諾 + 最佳情況對比目標。
+- **Net New ARR** — 適用於訂閱業務。
+- **Renewals This Quarter** — 即將到來、已續約、已流失。
+- **CSAT and NPS** — 客戶健康度。
+- **Customer Acquisition Cost** — 行銷活動支出 ÷ 新客戶數。
+- **Top 10 Accounts by ACV** — 年度合約價值排行榜。
+- **Pipeline Trend** — 4 週管道價值圖表。
+
+此儀表板是每週領導層評審的基礎。
+
+## 個人化和建立儀表板
+
+每位使用者都可以：
+
+- 將任何儀表板**釘選**為著陸頁。
+- 按日期範圍、團隊、地區、產品**篩選**儀表板。
+- **下鑽**到任何磚貼以檢視底層記錄。
+- 將任何磚貼**匯出**為圖片或 PDF。
+- **訂閱**以透過電子郵件接收每週 PDF。
+
+管理員可以：
+
+- 從 **Analytics › Dashboards › New** 選單建立新儀表板。
+- 從標準庫選擇小工具，或從 [多維資料集](/zh-Hant/docs/analytics/cubes) 建構自訂小工具。
+- 設定受眾——誰預設看到每個儀表板。
+- 安排快照（例如自動產生的季度 QBR 簡報）。
+
+## 給經理的提示
+
+- ✅ 為你的團隊**訂閱儀表板 PDF**——週一早上 8 點是很好的節奏。
+- ✅ 每週五使用 **Slipping Deals** 磚貼來規劃下週的交易評審通話。
+- ✅ 不要從電子郵件管理——從儀表板管理。電子郵件用於採取行動；儀表板用於呈現事實。
+
+## 給高階主管的提示
+
+- ✅ 從多維資料集建構一個**董事會檢視**儀表板——成交、管道、流失、CSAT——一頁搞定。
+- ✅ 設定**閾值告警**（例如管道覆蓋率 &lt;2.5×），以便在問題出現前得到提醒。
+
+## 給管理員的提示
+
+- ✅ 建構儀表板時，**從多維資料集開始**而非臨時查詢——它們更快也更一致。
+- ✅ 鼓勵使用者**複製並個人化**，而非從頭重建。
+- ✅ 每季稽核儀表板使用情況——淘汰無人開啟的儀表板。

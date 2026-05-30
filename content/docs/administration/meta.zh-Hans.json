@@ -1,0 +1,13 @@
+{
+  "title": "系统管理",
+  "defaultOpen": false,
+  "pages": [
+    "index",
+    "setup",
+    "profiles",
+    "sharing-and-security",
+    "automation",
+    "state-machines",
+    "sandbox-and-releases"
+  ]
+}

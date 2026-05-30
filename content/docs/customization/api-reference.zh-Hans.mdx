@@ -1,0 +1,291 @@
+---
+title: API 参考
+description: REST 与 ObjectQL 端点、认证、分页、Webhook，以及平台 SDK。
+---
+
+# API 参考
+
+HotCRM 通过 **REST + ObjectQL** API 暴露其完整的数据平面。Web UI、移动应用、AI Copilot 以及任何外部集成都使用同一套端点。
+
+> 如需逐个端点的完整参考（由 OpenAPI 规范自动生成），请查看位于 `your-hotcrm-url/api/explorer` 的 **API Explorer**。
+
+## 认证
+
+### OAuth 2.0（推荐用于应用）
+
+标准的授权码流程：
+
+```http
+GET /oauth/authorize
+  ?response_type=code
+  &client_id=YOUR_CLIENT_ID
+  &redirect_uri=https://your-app/callback
+  &scope=read:opportunity write:opportunity
+```
+
+用授权码换取令牌：
+
+```http
+POST /oauth/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=authorization_code
+&code=...
+&client_id=YOUR_CLIENT_ID
+&client_secret=YOUR_CLIENT_SECRET
+&redirect_uri=https://your-app/callback
+```
+
+在后续请求中使用 **访问令牌**：
+
+```http
+GET /api/v1/opportunities
+Authorization: Bearer <access_token>
+```
+
+令牌有效期为 **1 小时**；使用刷新令牌进行刷新。
+
+### 个人访问令牌（用于脚本）
+
+对于服务器到服务器的脚本，请在 **Settings → Developer → Personal Access Tokens** 中生成一个 PAT。将其作为 Bearer 令牌使用。
+
+⚠️ PAT 会继承你用户的权限。请将其视为机密。
+
+### API 密钥（用于集成）
+
+对于具名集成（Stripe、DocuSign、你自己的）：
+
+1. **Setup → Integrations → API Keys → New**。
+2. 选择作用域。
+3. 复制密钥（仅显示一次）。
+
+API 密钥可以限定到特定的对象 + 操作，并拥有各自独立的速率限制。
+
+## 对象端点
+
+每个对象都暴露一套统一的端点。以 `crm_opportunity` 为例：
+
+| 方法 | 端点 | 用途 |
+| --- | --- | --- |
+| `GET` | `/api/v1/opportunities` | 带过滤 / 排序 / 分页的列表 |
+| `GET` | `/api/v1/opportunities/{id}` | 按 ID 获取单条记录 |
+| `POST` | `/api/v1/opportunities` | 创建 |
+| `PATCH` | `/api/v1/opportunities/{id}` | 部分更新 |
+| `PUT` | `/api/v1/opportunities/{id}` | 完整替换 |
+| `DELETE` | `/api/v1/opportunities/{id}` | 软删除（回收站） |
+| `POST` | `/api/v1/opportunities/{id}/restore` | 从回收站恢复 |
+| `POST` | `/api/v1/opportunities/bulk` | 以最多 10,000 条为一批进行创建 / 更新 |
+| `POST` | `/api/v1/opportunities/query` | ObjectQL 查询 |
+
+替换为对象名称（列表使用 snake_case 复数形式）—— `accounts`、`contacts`、`leads`、`cases`、`contracts`、`products`、`quotes`、`campaigns`、`tasks`、`events` 等。
+
+## ObjectQL
+
+对于任何超出简单字段相等的查询，请通过 `POST /api/v1/{object}/query` 使用 ObjectQL：
+
+```json
+POST /api/v1/opportunities/query
+{
+  "filters": [
+    ["stage", "in", ["proposal", "negotiation"]],
+    ["amount", ">", 100000],
+    ["close_date", "between", "2026-01-01", "2026-03-31"]
+  ],
+  "sort": [{ "field": "amount", "direction": "desc" }],
+  "limit": 200,
+  "cursor": "...",
+  "fields": ["id", "name", "amount", "stage", "account.name", "owner.name"],
+  "expand": ["crm_account", "owner", "crm_opportunity_line_item"]
+}
+```
+
+### 受支持的操作符
+
+`=`、`!=`、`>`、`>=`、`<`、`<=`、`in`、`not_in`、`between`、`contains`、`starts_with`、`ends_with`、`is_null`、`is_not_null`、`in_role_subordinates`、`in_group`。
+
+### 分页
+
+基于游标。每个响应都包含 `next_cursor`。将其回传以获取下一页。
+
+```json
+{
+  "results": [...],
+  "next_cursor": "eyJpZCI6...",
+  "has_more": true
+}
+```
+
+切勿对大型数据集使用基于偏移量的分页 —— 它是 O(n) 的。
+
+### 联接相关记录
+
+使用 `expand` 内联展开 lookup 目标：
+
+```json
+{
+  "fields": ["id", "name", "account.name", "account.industry"],
+  "expand": ["crm_account"]
+}
+```
+
+支持多级联接（例如 `opportunity.account.parent_account`），最深可达 3 级。
+
+## 聚合
+
+```json
+POST /api/v1/opportunities/aggregate
+{
+  "filters": [["stage", "=", "closed_won"], ["close_date", "in_year", 2026]],
+  "group_by": ["owner", "month(close_date)"],
+  "metrics": [
+    { "field": "amount", "op": "sum",   "as": "total_bookings" },
+    { "field": "amount", "op": "avg",   "as": "avg_deal_size" },
+    { "field": "id",     "op": "count", "as": "deal_count" }
+  ]
+}
+```
+
+## Webhook
+
+### 订阅
+
+```json
+POST /api/v1/webhooks
+{
+  "name": "stripe-sync-on-contract-active",
+  "object": "crm_contract",
+  "events": ["updated"],
+  "filter": [["status", "=", "activated"]],
+  "url": "https://your-app/webhooks/contract-activated",
+  "secret": "shhh",
+  "auth": { "type": "hmac_sha256", "header": "X-Signature" }
+}
+```
+
+### 载荷
+
+```json
+{
+  "event": "contract.updated",
+  "occurred_at": "2026-03-12T14:23:11Z",
+  "tenant_id": "ten_abc",
+  "record_id": "ctr_xyz",
+  "before": { ... },
+  "after":  { ... },
+  "user_id": "usr_alex"
+}
+```
+
+在处理之前，请验证 `X-Signature` 标头。
+
+## 事件总线（流式）
+
+对于高吞吐量的集成，请订阅事件总线（Kafka / EventBridge / Pub/Sub），而非 HTTP Webhook：
+
+```ts
+import { EventBus } from '@hotcrm/sdk';
+
+const bus = new EventBus({ token: process.env.HOTCRM_TOKEN });
+
+bus.subscribe('opportunity.closed_won', async (event) => {
+  await provisionCustomer(event.record);
+});
+```
+
+## SDK
+
+官方 SDK：
+
+- **TypeScript / Node** —— `@hotcrm/sdk`
+- **Python** —— `hotcrm-sdk`
+- **Go** —— `github.com/hotcrm/hotcrm-go`
+
+所有 SDK 都会：
+
+- 处理认证、重试、退避、分页。
+- 提供带类型的对象（根据你租户的 schema 生成）。
+- 从事件总线流式接收事件。
+
+```ts
+import { Hotcrm } from '@hotcrm/sdk';
+
+const crm = new Hotcrm({ token: process.env.HOTCRM_TOKEN });
+
+const opps = await crm.opportunity.query({
+  filters: [['stage', '=', 'closed_won']],
+  limit: 200,
+});
+
+for await (const opp of crm.opportunity.queryAll({ filters: [...] })) {
+  console.log(opp.name);
+}
+
+await crm.opportunity.update('opp_123', { amount: 50000 });
+```
+
+## AI 技能 API
+
+调用该用户有权访问的任何 AI 技能：
+
+```http
+POST /api/v1/ai/skills/email_drafting/invoke
+{
+  "input": {
+    "record_id": "opp_123",
+    "goal": "discovery follow-up after demo"
+  }
+}
+```
+
+响应包含结构化输出 + 引用。
+
+对于流式响应（打字机式体验）：
+
+```http
+POST /api/v1/ai/skills/{skill}/stream
+```
+
+返回 server-sent events。
+
+## 速率限制
+
+请参阅 [性能与限制](/zh-Hans/docs/reference/performance-and-limits)。在收到 429 响应时，请遵守 `Retry-After` 标头。
+
+## 错误
+
+标准 HTTP 状态码。正文：
+
+```json
+{
+  "error": {
+    "code": "validation_failed",
+    "message": "Amount is required when moving to Negotiation",
+    "field": "amount",
+    "request_id": "req_abc123"
+  }
+}
+```
+
+提交问题时请附带 `request_id`。
+
+## 版本管理
+
+- **URL 版本化**：`/api/v1/...`
+- **破坏性变更** 发布在 `/api/v2/...` 中 —— 在 `v2` GA 之后，`v1` 仍受支持 24 个月。
+- **新增性变更**（新字段、新端点）无需通知即发布在 `v1` 中。
+- **弃用** 会在移除前至少 6 个月出现在 `Sunset` 标头中。
+
+## 沙盒与测试
+
+**测试模式** API 的基础 URL 为 `your-sandbox-url/api/v1/`。端点完全相同，数据相互隔离。
+
+对于本地开发，开源开发运行时会在 `localhost:3000/api/v1/` 暴露完整的 API。
+
+## 提示
+
+- ✅ 使用 **SDK** —— 手写 HTTP 既繁琐又容易出错。
+- ✅ 始终实现 **退避** —— 即使你认为自己未超出限制。
+- ✅ 使用 **游标分页**，绝不要用偏移量。
+- ✅ 优先使用 **事件总线** 而非轮询。
+- ✅ **验证 Webhook 签名** —— 切勿仅凭来源 IP 就信任。
+- ✅ 在生产之前针对 **沙盒** 进行测试。

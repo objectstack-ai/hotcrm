@@ -1,0 +1,157 @@
+---
+title: 面向开发者
+description: 如何克隆、运行和扩展 HotCRM —— 面向构建定制化的工程师。
+---
+
+# 面向开发者
+
+本页面向**工程师**。终端用户和管理员可以跳过。
+
+## 前置条件
+
+- **Node.js 20+**
+- **pnpm 9+**（工作区包管理器）
+- `objectstack-ai/hotcrm` 仓库的克隆
+
+## 本地设置
+
+```bash
+git clone https://github.com/objectstack-ai/hotcrm.git
+cd hotcrm
+pnpm install
+pnpm dev
+```
+
+打开 http://localhost:3000 —— 应用在你首次注册时会随种子数据启动。
+
+## 仓库中有什么
+
+```
+hotcrm/
+├── packages/             # Business capability packages
+│   ├── crm/              # Sales objects, flows, sharing, approvals
+│   ├── finance/          # Contracts, revenue
+│   ├── products/         # Product catalog
+│   ├── service/          # Cases, knowledge base
+│   ├── marketing/        # Campaigns
+│   └── ai/               # Copilot agents, skills, knowledge bases
+└── apps/
+    ├── crm/              # The CRM application
+    └── docs/             # This documentation site
+```
+
+每个包都遵循**文件后缀协议**：
+
+| 后缀 | 定义 |
+| --- | --- |
+| `*.object.ts` | 数据模型 |
+| `*.hook.ts` | 服务器端生命周期逻辑 |
+| `*.action.ts` | API 端点 / 可供 AI 调用的工具 |
+| `*.flow.ts` | 多步骤自动化 |
+| `*.skill.ts` | AI 技能 |
+| `*.agent.ts` | 复合型 AI 代理 |
+| `*.page.ts` | UI 页面布局 |
+| `*.view.ts` | 列表视图 |
+| `*.dashboard.ts` | 仪表盘 |
+| `*.sharing.ts` | 共享规则 |
+| `*.approval.ts` | 审批流程 |
+| `*.statemachine.ts` | 状态转换 |
+
+## 核心平台：ObjectStack
+
+HotCRM 运行于 [**@objectstack/runtime**](https://github.com/objectstack-ai/framework) —— 一个元数据优先的运行时，负责持久化、共享、验证、自动化和 AI。我们*不*修改运行时；我们**定义元数据**，由运行时执行。
+
+关键概念：
+
+- **对象**是 TypeScript 文件（无 YAML、无 JSON、无 UI 点击）。
+- **ObjectQL** 是数据访问 API —— `broker.find('crm_opportunity', {...})` 而非 SQL。
+- **钩子**在生命周期事件（`before_create`、`after_update` 等）上触发。
+- **流程**以可视化方式编排多步骤业务逻辑，并在 TS 中定义。
+- 每个元数据文件在编译时都会针对 `@objectstack/spec` schema 进行**验证**。
+
+## 常见任务
+
+### 向现有对象添加字段
+
+```ts
+// packages/your-extension/src/opportunity.object.ts
+import { defineObject, Field, ObjectSchema } from '@objectstack/spec/data';
+
+export default ObjectSchema.parse(defineObject({
+  name: 'crm_opportunity',
+  extends: 'crm.opportunity',
+  fields: {
+    custom_priority: Field.select({
+      options: [
+        { value: 'a', label: 'A' },
+        { value: 'b', label: 'B' },
+      ],
+    }),
+  },
+}));
+```
+
+➜ 完整指南：[扩展对象](/zh-Hans/docs/customization/extending-objects)
+
+### 添加 AI 技能
+
+```ts
+// packages/your-extension/src/your_skill.skill.ts
+import { defineSkill } from '@objectstack/spec/ai';
+
+export default defineSkill({
+  name: 'your_skill',
+  // ...
+});
+```
+
+➜ 完整指南：[构建 AI 技能](/zh-Hans/docs/customization/ai-skills)
+
+### 定制页面
+
+```ts
+// packages/your-extension/src/opportunity.page.ts
+import { definePage, PageSchema } from '@objectstack/spec/ui';
+
+export default PageSchema.parse(definePage({
+  object: 'crm_opportunity',
+  // ...
+}));
+```
+
+➜ 完整指南：[UI 扩展](/zh-Hans/docs/customization/ui-extensions)
+
+## 验证你的更改
+
+```bash
+pnpm typecheck       # validates all metadata against @objectstack/spec
+pnpm test            # unit tests
+pnpm lint            # code style
+pnpm build           # full build
+```
+
+CI 在每个 PR 上运行相同的检查。
+
+## 把定制化放在哪里
+
+在 `packages/` 下添加一个**新包**，而不是编辑核心包。这能让你在 HotCRM 发布更新时保持可升级。
+
+```bash
+packages/
+  acme-crm-extension/    # your customisations
+```
+
+你的包可以 `extends:` 任何核心对象，针对现有 Copilot 注册新技能，并在内置的页面/视图/仪表盘旁边添加新的。
+
+## 接下来去哪里
+
+- [扩展对象](/zh-Hans/docs/customization/extending-objects) —— 数据层。
+- [构建 AI 技能](/zh-Hans/docs/customization/ai-skills) —— AI 层。
+- [UI 扩展](/zh-Hans/docs/customization/ui-extensions) —— 前端。
+- [管理](/zh-Hans/docs/administration/index) —— 管理员如何配置你构建的系统。
+
+## 实用链接
+
+- 📦 [ObjectStack 框架](https://github.com/objectstack-ai/framework)
+- 📚 [@objectstack/spec schema](https://github.com/objectstack-ai/framework/tree/main/packages/spec)
+- 🐛 [报告问题](https://github.com/objectstack-ai/hotcrm/issues)

@@ -1,0 +1,23 @@
+{
+  "title": "HotCRM 文档",
+  "pages": [
+    "index",
+    "getting-started",
+    "guides",
+    "---产品---",
+    "sales",
+    "service",
+    "marketing",
+    "revenue",
+    "---智能---",
+    "ai-copilot",
+    "analytics",
+    "---运营与扩展---",
+    "administration",
+    "customization",
+    "marketplace",
+    "---资源---",
+    "reference",
+    "whats-new"
+  ]
+}

@@ -1,0 +1,108 @@
+---
+title: 活动成员
+description: 加入每个营销活动的线索和联系人，以及如何跟踪他们的互动。
+---
+
+# 活动成员
+
+**活动成员**是 [营销活动](/zh-Hans/docs/marketing/campaigns) 与某个人（一个 [线索](/zh-Hans/docs/sales/leads) 或一个 [联系人](/zh-Hans/docs/sales/contacts)）之间的联系。它跟踪该人是否收到了营销活动、是否打开、点击、响应或转化。
+
+## 成员如何加入
+
+三种方式：
+
+1. **通过营销活动流程批量加入** — 当营销活动进入 *In Progress* 时，[Campaign Enrollment flow](/zh-Hans/docs/marketing/campaigns#campaign-enrollment-flow) 运行并添加所有匹配受众条件的人。
+2. **手动加入** — 打开一个营销活动并点击 **Add Members**，然后从线索和联系人列表视图中选择。
+3. **从线索或联系人** — 打开记录并点击 **Add to Campaign**。
+
+一个人随着时间推移可以加入多个营销活动，但每个营销活动只能加入一次（每人每个营销活动一个成员身份）。
+
+## 7 种成员状态
+
+成员状态跟踪互动，并随着营销活动运行自然推进：
+
+| 状态 | 含义 | 由谁更新 |
+| --- | --- | --- |
+| ⚪ **Sent** | 营销活动已触达他们 *(新成员的默认状态)* | 初次加入 |
+| 🔵 **Opened** | 邮件已打开、网络研讨会已加入等 | 邮件跟踪 / 活动签到 |
+| 🟢 **Clicked** | 点击了一个被跟踪的链接 | 邮件跟踪 |
+| 🟢 **Responded** | 回复、注册、下载 | 表单提交 |
+| 🟣 **Converted** | 成为线索转商机或联系人转交易 | 销售转化 |
+| 🟠 **Bounced** | 邮件退信或无法投递 | 邮件网关 |
+| 🔴 **Unsubscribed** | 选择退出未来的联系 | 客户操作 |
+
+状态是*单调的*——已经 *Clicked* 的成员不会因为你乱序处理事件而被降级回 *Opened*。
+
+## 为什么同时支持线索和联系人？
+
+活动成员可以关联到一个**线索**（尚未合格的人）或一个**联系人**（现有客户处的人）——但不能同时关联两者。这由一条内置规则强制执行：`crm_lead` 或 `crm_contact` 必须且只能设置其一。
+
+这种双重支持意味着：
+
+- 市场营销可以针对**潜在客户**（线索）开展漏斗顶端营销活动。
+- 市场营销可以针对**现有客户**（联系人）开展追加销售、交叉销售或续约营销活动。
+
+如果一个线索后来被转化为联系人，现有的活动成员身份仍与该线索关联，而新的营销活动可以将同一个人作为联系人重新定位。
+
+## 成员记录存储什么
+
+| 字段 | 用途 |
+| --- | --- |
+| Campaign | 营销活动 |
+| Lead | 线索（如果是潜在客户） |
+| Contact | 联系人（如果是现有人员） |
+| Status | 互动状态（见上文） |
+| Added Date | 该人加入的时间 |
+| First Opened | 首次打开邮件的时间 |
+| First Clicked | 首次点击被跟踪链接的时间 |
+| Response Date | 他们响应 / 注册的时间 |
+| Has Responded | 布尔快捷标识 |
+
+## 互动跟踪
+
+邮件跟踪集成会自动回写到成员记录：
+
+- **邮件服务** → 更新 *First Opened*、*First Clicked*、状态。
+- **表单提交** → 更新 *Response Date*，状态 = *Responded*。
+- **转化事件**（线索 → 商机）→ 状态 = *Converted*。
+
+这些更新通过邮件/表单集成近乎实时地发生。
+
+## 指标如何汇总
+
+营销活动详情页会汇总其成员：
+
+```
+Sent      = count of members
+Open rate = members where status >= Opened ÷ Sent
+Click rate = members where status >= Clicked ÷ Sent
+Response rate = members where status >= Responded ÷ Sent
+Conversion rate = members where status == Converted ÷ Sent
+```
+
+这意味着营销活动级别的指标始终是实时的。只要有人打开了邮件，营销活动的 *Open Rate* 就会上升。
+
+## 标准列表视图
+
+在营销活动详情页的 *Members* 选项卡上：
+
+- **All Members** — 所有加入的人。
+- **Responded** — 状态 ≥ Responded。
+- **Bounced / Unsubscribed** — 用于清理受众。
+- **Converted to Opportunity** — 赢单。
+
+## 给营销人员的提示
+
+- ✅ 每周**清理退信和退订**——如果留在活跃营销活动中，它们会污染你的互动率。
+- ✅ **使用 Converted 状态**来衡量真正的营销活动影响——*Opened* 和 *Clicked* 是虚荣指标。
+- ✅ **在商机上标记营销活动来源**——没有它，转化就无法汇总。
+
+## 给销售代表的提示
+
+- ✅ 当你打开一个线索时，查看侧边栏中的 **Campaign Memberships**——它会告诉你他们已经参与过哪些内容。
+- ✅ 用营销活动作为对话开场白——*"我看到你参加了我们最近关于……的网络研讨会。"*
+
+## 给管理员的提示
+
+- 邮件跟踪和表单集成需要连接器。请参阅 [自定义 › 构建连接器](/zh-Hans/docs/customization/extending-objects)。
+- "*Lead* 或 *Contact* 必须且只能设置其一"这条规则存在于 campaign_member 对象的验证规则中。

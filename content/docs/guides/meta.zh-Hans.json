@@ -1,0 +1,12 @@
+{
+  "title": "指南",
+  "defaultOpen": false,
+  "pages": [
+    "index",
+    "search-and-navigation",
+    "email-and-calendar",
+    "mobile",
+    "import-and-export",
+    "integrations"
+  ]
+}

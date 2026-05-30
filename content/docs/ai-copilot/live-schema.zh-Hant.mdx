@@ -1,0 +1,63 @@
+---
+title: 即時結構（Wow #1）
+description: HotCRM 的 AI 在結構變更發生的那一刻就能看到——無需重新訓練、無需重啟、無需等待。
+---
+
+# 即時結構——會自我改寫的 CRM
+
+大多數「AI CRM」是在一個靜態結構之上外掛一個聊天機器人。一旦管理員新增了一個自訂欄位，機器人就會出錯：它依據的是上週訓練時的結構，而非你今天發布的結構。
+
+HotCRM 與眾不同。**結構即系統提示詞。**
+
+每次銷售 Copilot 回答資料問題時，它都會針對 `@objectstack/runtime` 的元資料服務呼叫 `describe_object`——該服務會重新讀取即時註冊表。在 10:00:00 新增一個欄位，下一位使用者在 10:00:05 提問時就能看到它。
+
+## 30 秒示範
+
+```bash
+# 1. Admin adds a field — no migration, no deploy.
+curl -X POST $HOTCRM/api/v1/ai/tools/add_field/invoke \
+  -d '{
+    "objectName": "crm_account",
+    "name": "health_score",
+    "label": "Health Score",
+    "type": "number"
+  }'
+
+# 2. Sales rep asks Copilot — five seconds later.
+curl -X POST $HOTCRM/api/v1/ai/chat \
+  -d '{
+    "agent": "sales_copilot",
+    "messages": [{ "role": "user",
+      "content": "Top 5 accounts by health_score — cite IDs." }]
+  }'
+```
+
+Copilot 的工具呼叫軌跡：
+
+1. `describe_object('crm_account')` → 看到 `health_score`（number）。
+2. `query_records('crm_account', orderBy: [{ field: 'health_score', order: 'desc' }], limit: 5)`。
+3. 返回帶有記錄 ID 的排序清單。
+
+總耗時：不到 30 秒。無需重新訓練。無需重啟。無需部署任何東西。
+
+## 為什麼這能成立
+
+| 層級            | 它的作用                                                                   |
+|------------------|--------------------------------------------------------------------------------|
+| 元資料服務 | 物件 + 欄位的單一事實來源。每次寫入時熱重載。       |
+| `describe_object`| 內建 AI 工具。每次呼叫都重新讀取元資料。從不快取。               |
+| 即時資料技能  | 捆綁 `describe_object` + `query_records`，並促使智慧體先行檢查。 |
+| 銷售 Copilot    | 始終在回答前檢查結構。自動呈現未知欄位。 |
+
+執行完整示範：
+
+```bash
+./scripts/wow1-live-schema.sh
+```
+
+## 這帶來了什麼
+
+* 欄位由維運而非工程新增。
+* 每租戶的結構擴充，AI 會自動呈現。
+* 欄位棄用，AI 在它們被移除的那一刻就停止引用。
+* 迭代速度以秒計，而非以衝刺週期計。
