@@ -3,12 +3,37 @@
 import type * as Automation from '@objectstack/spec/automation';
 type Flow = Automation.Flow;
 
-/** Opportunity Approval — multi-level approval for deals over $100K */
+/**
+ * Opportunity Approval — tiered sign-off for large deals.
+ *
+ * ADR-0019 / ADR-0012 migration note
+ * ----------------------------------
+ * This flow replaces TWO legacy implementations that used capabilities removed
+ * in ObjectStack 7.4:
+ *   - the old `opportunity-approval` flow, which requested approvals through a
+ *     `connector_action` (`connectorId: 'approval'`) — the pre-ADR-0019 pattern,
+ *     no longer registered (it only ever type-checked behind an `as any` cast); and
+ *   - the standalone `OpportunityDiscountApproval` `ApprovalProcess`, whose
+ *     authoring type was deleted in 7.4.
+ * Both are now expressed natively as **Approval nodes** (`type: 'approval'`,
+ * ADR-0019): the engine opens an approval request on entry, suspends the run,
+ * and resumes down the out-edge whose `label` matches the decision
+ * (`approve` / `reject`). Notifications use the **`notify` node** (ADR-0012)
+ * instead of the no-op `script` + `actionType:'email'` shape.
+ *
+ * Tiered policy (single source of truth — no double-firing):
+ *   - amount > $100K          → Sales Manager review
+ *   - amount > $500K          → additionally Sales Director sign-off
+ * On full approval the deal is stamped `approval_status = approved` (+ date);
+ * any rejection stamps `approval_status = rejected`. The record is locked while
+ * a step is pending and `approval_status` mirrors the live request status.
+ */
 export const OpportunityApprovalFlow: Flow = {
   name: 'opportunity_approval',
   label: 'Large Deal Approval',
-  description: 'Approval process for opportunities over $100K',
+  description: 'Tiered approval for opportunities: manager review > $100K, director sign-off > $500K.',
   type: 'record_change',
+  status: 'active',
 
   variables: [
     { name: 'opportunityId', type: 'text', isInput: true, isOutput: false },
@@ -16,73 +41,127 @@ export const OpportunityApprovalFlow: Flow = {
 
   nodes: [
     {
-      id: 'start', type: 'start', label: 'Start',
-      config: { objectName: 'crm_opportunity', criteria: 'amount > 100000 AND stage = "proposal"' },
+      id: 'start',
+      type: 'start',
+      label: 'Start',
+      // Auto-submit on insert/update once the deal crosses the entry threshold.
+      config: { objectName: 'crm_opportunity', criteria: 'amount > 100000' },
     },
     {
-      id: 'get_opportunity', type: 'get_record', label: 'Get Opportunity',
+      id: 'get_opportunity',
+      type: 'get_record',
+      label: 'Get Opportunity',
       config: { objectName: 'crm_opportunity', filter: { id: '{opportunityId}' }, outputVariable: 'oppRecord' },
     },
+
+    // ── Tier 1: Sales Manager review (all deals > $100K) ────────────
     {
-      id: 'approval_step_manager', type: 'connector_action', label: 'Sales Manager Approval',
-      connectorConfig: {
-        connectorId: 'approval',
-        actionId: 'request_approval',
-        input: {
-          approver: '{oppRecord.owner.manager}',
-          emailTemplate: 'opportunity_approval_request',
-          comments: 'required',
-        },
-      },
-    } as any,
-    {
-      id: 'decision_manager', type: 'decision', label: 'Manager Approved?',
-      config: { condition: 'vars.approval_step_manager.result == "approved"' },
-    },
-    {
-      id: 'approval_step_director', type: 'connector_action', label: 'Sales Director Approval',
-      connectorConfig: {
-        connectorId: 'approval',
-        actionId: 'request_approval',
-        input: {
-          approver: '{oppRecord.owner.manager.manager}',
-          emailTemplate: 'opportunity_approval_request',
-        },
-      },
-    } as any,
-    {
-      id: 'decision_director', type: 'decision', label: 'Director Approved?',
-      config: { condition: 'vars.approval_step_director.result == "approved"' },
-    },
-    {
-      id: 'mark_approved', type: 'update_record', label: 'Mark as Approved',
+      id: 'manager_review',
+      type: 'approval',
+      label: 'Sales Manager Review',
       config: {
-        objectName: 'crm_opportunity', filter: { id: '{opportunityId}' },
+        approvers: [{ type: 'role', value: 'sales_manager' }],
+        behavior: 'first_response',
+        lockRecord: true,
+        approvalStatusField: 'approval_status',
+      },
+    },
+
+    // ── Tier gate: does this deal also need director sign-off? ──────
+    {
+      id: 'check_high_value',
+      type: 'decision',
+      label: 'High Value (> $500K)?',
+      config: { condition: 'oppRecord.amount > 500000' },
+    },
+
+    // ── Tier 2: Sales Director sign-off (deals > $500K only) ────────
+    {
+      id: 'director_signoff',
+      type: 'approval',
+      label: 'Sales Director Sign-off',
+      config: {
+        approvers: [{ type: 'role', value: 'sales_director' }],
+        behavior: 'first_response',
+        lockRecord: true,
+        approvalStatusField: 'approval_status',
+      },
+    },
+
+    // ── Final approve: stamp status + notify owner ──────────────────
+    {
+      id: 'mark_approved',
+      type: 'update_record',
+      label: 'Mark Approved',
+      config: {
+        objectName: 'crm_opportunity',
+        filter: { id: '{opportunityId}' },
         fields: { approval_status: 'approved', approved_date: '{NOW()}' },
       },
     },
     {
-      id: 'notify_approval', type: 'script', label: 'Send Approval Notification',
-      config: { actionType: 'email', template: 'opportunity_approved', recipients: ['{oppRecord.owner}'] },
+      id: 'notify_approved',
+      type: 'notify',
+      label: 'Notify Owner — Approved',
+      config: {
+        to: ['{oppRecord.owner}'],
+        channels: ['inbox', 'email'],
+        topic: 'opportunity_approved',
+        title: 'Deal approved: {oppRecord.name}',
+        body: 'Your opportunity {oppRecord.name} has been approved.',
+        actionUrl: '/crm_opportunity/{opportunityId}',
+      },
+    },
+
+    // ── Rejection: stamp status + notify owner ──────────────────────
+    {
+      id: 'mark_rejected',
+      type: 'update_record',
+      label: 'Mark Rejected',
+      config: {
+        objectName: 'crm_opportunity',
+        filter: { id: '{opportunityId}' },
+        fields: { approval_status: 'rejected' },
+      },
     },
     {
-      id: 'notify_rejection', type: 'script', label: 'Send Rejection Notification',
-      config: { actionType: 'email', template: 'opportunity_rejected', recipients: ['{oppRecord.owner}'] },
+      id: 'notify_rejected',
+      type: 'notify',
+      label: 'Notify Owner — Rejected',
+      config: {
+        to: ['{oppRecord.owner}'],
+        channels: ['inbox', 'email'],
+        severity: 'high',
+        topic: 'opportunity_rejected',
+        title: 'Deal rejected: {oppRecord.name}',
+        body: 'Your opportunity {oppRecord.name} was not approved. Review and revise before resubmitting.',
+        actionUrl: '/crm_opportunity/{opportunityId}',
+      },
     },
+
     { id: 'end', type: 'end', label: 'End' },
   ],
 
   edges: [
     { id: 'e1', source: 'start', target: 'get_opportunity', type: 'default' },
-    { id: 'e2', source: 'get_opportunity', target: 'approval_step_manager', type: 'default' },
-    { id: 'e3', source: 'approval_step_manager', target: 'decision_manager', type: 'default' },
-    { id: 'e4', source: 'decision_manager', target: 'approval_step_director', type: 'default', condition: 'vars.approval_step_manager.result == "approved"', label: 'Approved' },
-    { id: 'e5', source: 'decision_manager', target: 'notify_rejection', type: 'default', condition: 'vars.approval_step_manager.result != "approved"', label: 'Rejected' },
-    { id: 'e6', source: 'approval_step_director', target: 'decision_director', type: 'default' },
-    { id: 'e7', source: 'decision_director', target: 'mark_approved', type: 'default', condition: 'vars.approval_step_director.result == "approved"', label: 'Approved' },
-    { id: 'e8', source: 'decision_director', target: 'notify_rejection', type: 'default', condition: 'vars.approval_step_director.result != "approved"', label: 'Rejected' },
-    { id: 'e9', source: 'mark_approved', target: 'notify_approval', type: 'default' },
-    { id: 'e10', source: 'notify_approval', target: 'end', type: 'default' },
-    { id: 'e11', source: 'notify_rejection', target: 'end', type: 'default' },
+    { id: 'e2', source: 'get_opportunity', target: 'manager_review', type: 'default' },
+
+    // Manager decision (approval-node branch labels)
+    { id: 'e3', source: 'manager_review', target: 'check_high_value', type: 'default', label: 'approve' },
+    { id: 'e4', source: 'manager_review', target: 'mark_rejected', type: 'default', label: 'reject' },
+
+    // Tier gate (decision-node conditional branches)
+    { id: 'e5', source: 'check_high_value', target: 'director_signoff', type: 'conditional', condition: 'oppRecord.amount > 500000', label: 'High value (> $500K)' },
+    { id: 'e6', source: 'check_high_value', target: 'mark_approved', type: 'conditional', condition: 'oppRecord.amount <= 500000', label: 'Standard (≤ $500K)' },
+
+    // Director decision (approval-node branch labels)
+    { id: 'e7', source: 'director_signoff', target: 'mark_approved', type: 'default', label: 'approve' },
+    { id: 'e8', source: 'director_signoff', target: 'mark_rejected', type: 'default', label: 'reject' },
+
+    // Terminal branches
+    { id: 'e9', source: 'mark_approved', target: 'notify_approved', type: 'default' },
+    { id: 'e10', source: 'notify_approved', target: 'end', type: 'default' },
+    { id: 'e11', source: 'mark_rejected', target: 'notify_rejected', type: 'default' },
+    { id: 'e12', source: 'notify_rejected', target: 'end', type: 'default' },
   ],
 };

@@ -9,16 +9,18 @@ test('health endpoint reports ok', async ({ request }) => {
   expect(body.data.version).toBe('1.0.0');
 });
 
-test('studio shell loads', async ({ page }) => {
-  const response = await page.goto('/_studio/');
+// ObjectStack 7.x serves the unified UI shell (Studio + apps) under
+// `/_console/`; the legacy `/_studio/` and `/_account/` mounts were removed.
+test('console shell loads', async ({ page }) => {
+  const response = await page.goto('/_console/');
   expect(response?.status()).toBeLessThan(400);
   await expect(page).toHaveTitle(/.+/);
   const html = await page.content();
   expect(html.length).toBeGreaterThan(100);
 });
 
-test('account login page loads', async ({ page }) => {
-  const response = await page.goto('/_account/');
+test('login page loads', async ({ page }) => {
+  const response = await page.goto('/_console/login');
   expect(response?.status()).toBeLessThan(400);
   const html = await page.content();
   expect(html.length).toBeGreaterThan(100);
