@@ -24,8 +24,8 @@ importers:
         specifier: ^7.2.0
         version: 7.2.0(ai@6.0.193(zod@4.4.3))(better-sqlite3@12.10.0)
       '@objectstack/metadata':
-        specifier: ^7.2.0
-        version: 7.2.0(ai@6.0.193(zod@4.4.3))
+        specifier: ^7.3.0
+        version: 7.3.0(ai@6.0.193(zod@4.4.3))
       '@objectstack/objectql':
         specifier: ^7.2.0
         version: 7.2.0(ai@6.0.193(zod@4.4.3))
@@ -702,6 +702,10 @@ packages:
     resolution: {integrity: sha512-e1CS0hnMyl2Qlc+PBylutkN4c0LxRLJWqrHwnNnFqrblwK4iA+6c4YLRdv7/+tPx+4J4/uc/wKpCS7lpiWgHng==}
     engines: {node: '>=18.0.0'}
 
+  '@objectstack/core@7.3.0':
+    resolution: {integrity: sha512-DFyI3DF/rQnN2Ld2ZCatr+OMh6uMVhrHeUnewcSWgVkxph6aXJS7JdUdTkxj0j0jBTGhNFcZxAwASp8QwVXdKQ==}
+    engines: {node: '>=18.0.0'}
+
   '@objectstack/driver-memory@7.2.0':
     resolution: {integrity: sha512-neRUhyxA6Tk+VXEIkdREEBUei6r7oYHefgXUSjmz1POeeNwhmqaVQNGGv+ylf3wNRg8wHwBgwV/xwiEQNcDvQw==}
     engines: {node: '>=18.0.0'}
@@ -744,12 +748,29 @@ packages:
       vitest:
         optional: true
 
+  '@objectstack/metadata-core@7.3.0':
+    resolution: {integrity: sha512-jbH5ZkCmKCDr+XKPrh3Ei0+q+jbt5w0r7dBmdgJFqXp7xc01qcPkCmB33PBQGXSrPfjWNP8KXDl5euYtNQ/s4A==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      vitest: ^4.0.0
+    peerDependenciesMeta:
+      vitest:
+        optional: true
+
   '@objectstack/metadata-fs@7.2.0':
     resolution: {integrity: sha512-73tV8TwQ4Sa1durYkZ+dA6/YPXoE6FP7gWR7agRzMy+UayLLcZy4SIur/uV9xQBswk88+L2FG15CQbaNEzQzWw==}
     engines: {node: '>=18.0.0'}
 
+  '@objectstack/metadata-fs@7.3.0':
+    resolution: {integrity: sha512-FCkhImn7krA/ujuAza30cQICHCuE9gOSFAQNGig54hjRgL4eWg9Ug+rmBk+PSCVYuHuxqEh1o7j9cBQbhJpozA==}
+    engines: {node: '>=18.0.0'}
+
   '@objectstack/metadata@7.2.0':
     resolution: {integrity: sha512-Wg8OOxc5tIItl/SRk8FEye8dRCSABVBKehwUMGzjRWsVpXqbzMbnPUo/JhmWuHxi4pbK4OwKxnQGm7rPJ2+Z6Q==}
+    engines: {node: '>=18.0.0'}
+
+  '@objectstack/metadata@7.3.0':
+    resolution: {integrity: sha512-JtbS3tnHUP+hOkekCYMuUJ1eIhPqPuRK2kf1dkcs27SaFw3DbwzXZXYcmVx54IwwCqvtUPTP5ztc1vQsKNRqHQ==}
     engines: {node: '>=18.0.0'}
 
   '@objectstack/objectql@7.2.0':
@@ -762,6 +783,10 @@ packages:
 
   '@objectstack/platform-objects@7.2.0':
     resolution: {integrity: sha512-kT0jll1D29AXDKiTxe+Z47GlMfEEydcxU2ATniiR3EQfcB94sHnA2W5ZkQwkE5dLoclvfGFYsBhJisAos2Cc3w==}
+    engines: {node: '>=18.0.0'}
+
+  '@objectstack/platform-objects@7.3.0':
+    resolution: {integrity: sha512-j+aO47bI0fj1O/M/9O16N/wJpT8Qdstzufmto6jCj2eHowjq57hs/3x60cSDnMfadZgugwGqhrjEKElbN/jjjw==}
     engines: {node: '>=18.0.0'}
 
   '@objectstack/plugin-approvals@7.2.0':
@@ -896,8 +921,21 @@ packages:
       ai:
         optional: true
 
+  '@objectstack/spec@7.3.0':
+    resolution: {integrity: sha512-yoa721aRJ+9w59PpKeDW4odNGk1Quy2OhOz0RwqTHTMxX3hC+iyufcLxu5C7k0VPbE/pM51yZ+fXsvxNBi246w==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      ai: ^6.0.0
+    peerDependenciesMeta:
+      ai:
+        optional: true
+
   '@objectstack/types@7.2.0':
     resolution: {integrity: sha512-OoIswW96daZtxopK7tBdH7Tu/AzAjd/vHn2XYhq2WJ00sjUvzOmLagLFjvAklhUGP3lABq+RV57OPJfnsxs3AA==}
+    engines: {node: '>=18.0.0'}
+
+  '@objectstack/types@7.3.0':
+    resolution: {integrity: sha512-aAJPEEfiO7reB+T4+MsuvGrNgxIxXXYQmX7OQZKixkGed7/9BoehVgEOVNT6QKn9sg9MC/zIOLzRxaq5B6rS6Q==}
     engines: {node: '>=18.0.0'}
 
   '@oclif/core@4.11.4':
@@ -2298,6 +2336,10 @@ packages:
 
   js-yaml@4.1.1:
     resolution: {integrity: sha512-qQKT4zQxXl8lLwBtHMWwaTcGfFOZviOJet3Oy/xmGk2gZH677CJM9EvtfdSkgWcATZhj/55JZ0rmy3myCT5lsA==}
+    hasBin: true
+
+  js-yaml@4.2.0:
+    resolution: {integrity: sha512-ePWsvanv0DWuDRsW8dnt+R4jQ31SCRCQ7hhNcPXZPsoBZiemuZNYGf7adZdqX2D86j6rvKp3RpCxVTSb8WQlOw==}
     hasBin: true
 
   json-schema-traverse@1.0.0:
@@ -3873,6 +3915,13 @@ snapshots:
     transitivePeerDependencies:
       - ai
 
+  '@objectstack/core@7.3.0(ai@6.0.193(zod@4.4.3))':
+    dependencies:
+      '@objectstack/spec': 7.3.0(ai@6.0.193(zod@4.4.3))
+      zod: 4.4.3
+    transitivePeerDependencies:
+      - ai
+
   '@objectstack/driver-memory@7.2.0(ai@6.0.193(zod@4.4.3))':
     dependencies:
       '@objectstack/core': 7.2.0(ai@6.0.193(zod@4.4.3))
@@ -3943,9 +3992,20 @@ snapshots:
     dependencies:
       zod: 4.4.3
 
+  '@objectstack/metadata-core@7.3.0':
+    dependencies:
+      zod: 4.4.3
+
   '@objectstack/metadata-fs@7.2.0':
     dependencies:
       '@objectstack/metadata-core': 7.2.0
+      chokidar: 5.0.0
+    transitivePeerDependencies:
+      - vitest
+
+  '@objectstack/metadata-fs@7.3.0':
+    dependencies:
+      '@objectstack/metadata-core': 7.3.0
       chokidar: 5.0.0
     transitivePeerDependencies:
       - vitest
@@ -3960,7 +4020,23 @@ snapshots:
       '@objectstack/types': 7.2.0(ai@6.0.193(zod@4.4.3))
       chokidar: 5.0.0
       glob: 13.0.6
-      js-yaml: 4.1.1
+      js-yaml: 4.2.0
+      zod: 4.4.3
+    transitivePeerDependencies:
+      - ai
+      - vitest
+
+  '@objectstack/metadata@7.3.0(ai@6.0.193(zod@4.4.3))':
+    dependencies:
+      '@objectstack/core': 7.3.0(ai@6.0.193(zod@4.4.3))
+      '@objectstack/metadata-core': 7.3.0
+      '@objectstack/metadata-fs': 7.3.0
+      '@objectstack/platform-objects': 7.3.0(ai@6.0.193(zod@4.4.3))
+      '@objectstack/spec': 7.3.0(ai@6.0.193(zod@4.4.3))
+      '@objectstack/types': 7.3.0(ai@6.0.193(zod@4.4.3))
+      chokidar: 5.0.0
+      glob: 13.0.6
+      js-yaml: 4.2.0
       zod: 4.4.3
     transitivePeerDependencies:
       - ai
@@ -3987,6 +4063,12 @@ snapshots:
   '@objectstack/platform-objects@7.2.0(ai@6.0.193(zod@4.4.3))':
     dependencies:
       '@objectstack/spec': 7.2.0(ai@6.0.193(zod@4.4.3))
+    transitivePeerDependencies:
+      - ai
+
+  '@objectstack/platform-objects@7.3.0(ai@6.0.193(zod@4.4.3))':
+    dependencies:
+      '@objectstack/spec': 7.3.0(ai@6.0.193(zod@4.4.3))
     transitivePeerDependencies:
       - ai
 
@@ -4302,9 +4384,21 @@ snapshots:
     optionalDependencies:
       ai: 6.0.193(zod@4.4.3)
 
+  '@objectstack/spec@7.3.0(ai@6.0.193(zod@4.4.3))':
+    dependencies:
+      zod: 4.4.3
+    optionalDependencies:
+      ai: 6.0.193(zod@4.4.3)
+
   '@objectstack/types@7.2.0(ai@6.0.193(zod@4.4.3))':
     dependencies:
       '@objectstack/spec': 7.2.0(ai@6.0.193(zod@4.4.3))
+    transitivePeerDependencies:
+      - ai
+
+  '@objectstack/types@7.3.0(ai@6.0.193(zod@4.4.3))':
+    dependencies:
+      '@objectstack/spec': 7.3.0(ai@6.0.193(zod@4.4.3))
     transitivePeerDependencies:
       - ai
 
@@ -5707,6 +5801,10 @@ snapshots:
   jose@6.2.3: {}
 
   js-yaml@4.1.1:
+    dependencies:
+      argparse: 2.0.1
+
+  js-yaml@4.2.0:
     dependencies:
       argparse: 2.0.1
 
