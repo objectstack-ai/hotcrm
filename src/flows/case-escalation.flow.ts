@@ -44,16 +44,18 @@ export const CaseEscalationFlow: Flow = {
       },
     },
     {
-      id: 'notify_team', type: 'script', label: 'Notify Support Team',
+      // ADR-0012: the dedicated `notify` node dispatches through the messaging
+      // service (inbox + email + push). The legacy `script` + `actionType:'email'`
+      // shape is a no-op stub in 7.4 and never delivered anything.
+      id: 'notify_team', type: 'notify', label: 'Notify Support Team',
       config: {
-        actionType: 'email',
-        template: 'case_escalated',
-        recipients: ['{caseRecord.owner}', '{caseRecord.owner.manager}', 'support-team@example.com'],
-        variables: {
-          caseNumber: '{caseRecord.case_number}',
-          priority: '{caseRecord.priority}',
-          accountName: '{caseRecord.crm_account.name}',
-        },
+        to: ['{caseRecord.owner}', '{caseRecord.owner.manager}'],
+        channels: ['inbox', 'email'],
+        severity: 'high',
+        topic: 'case_escalated',
+        title: 'Case escalated: {caseRecord.case_number}',
+        body: 'Case {caseRecord.case_number} ({caseRecord.priority}) for {caseRecord.crm_account.name} has been escalated and reassigned.',
+        actionUrl: '/crm_case/{caseId}',
       },
     },
     { id: 'end', type: 'end', label: 'End' },

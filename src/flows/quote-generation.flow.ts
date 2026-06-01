@@ -58,11 +58,16 @@ export const QuoteGenerationFlow: Flow = {
       },
     },
     {
-      id: 'notify_owner', type: 'script', label: 'Send Notification',
+      // ADR-0012: deliver via the `notify` node (inbox + email). The legacy
+      // `script` + `actionType:'email'` shape is a no-op stub in 7.4.
+      id: 'notify_owner', type: 'notify', label: 'Send Notification',
       config: {
-        actionType: 'email', template: 'quote_created',
-        recipients: ['{$User.Email}'],
-        variables: { quoteName: '{quoteName}', quoteId: '{quoteId}' },
+        to: ['{$User.Id}'],
+        channels: ['inbox', 'email'],
+        topic: 'quote_created',
+        title: 'Quote created: {quoteName}',
+        body: 'Your quote {quoteName} has been created from this opportunity.',
+        actionUrl: '/crm_quote/{quoteId}',
       },
     },
     { id: 'end', type: 'end', label: 'End' },

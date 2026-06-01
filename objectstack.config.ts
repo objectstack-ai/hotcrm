@@ -14,7 +14,6 @@ import * as profiles from './src/profiles/index.js';
 import * as apps from './src/apps/index.js';
 import * as views from './src/views/index.js';
 import * as pages from './src/pages/index.js';
-import * as approvals from './src/approvals/index.js';
 import * as translations from './src/translations/index.js';
 import { CrmSeedData } from './src/data/index.js';
 
@@ -43,8 +42,10 @@ export default defineStack({
   // to hand-instantiate plugins or pass `--preset` flags. See
   // packages/cli/src/commands/serve.ts CAPABILITY_PROVIDERS for the
   // complete map; explicit `plugins: [...]` always shadows the resolver.
-  // `auth` enables /api/v1/auth/* (login/register) via @objectstack/plugin-auth.
-  // `ui`   serves the Studio shell and CRM apps under /_studio/.
+  // `auth` enables the auth/login surface (login/register) via @objectstack/plugin-auth.
+  // `ui`   serves the unified Console shell and CRM apps under /_console/
+  //        (login at /_console/login). ObjectStack 7.x replaced the legacy
+  //        /_studio/ and /_account/ mounts with this single /_console/ surface.
   // Both are required for a clickable login flow when running `objectstack start`
   // off the compiled artifact.
   // Note: the foundational slate (queue, job, cache, settings, email,
@@ -65,7 +66,9 @@ export default defineStack({
   apps: Object.values(apps),
   views: Object.values(views),
   pages: Object.values(pages),
-  approvals: Object.values(approvals),
+  // Approvals are modeled as `record_change` flows with `approval` nodes
+  // (ADR-0019); see src/flows/opportunity-discount-approval.flow.ts. The
+  // standalone `approvals` stack field was removed in ObjectStack 7.4.
   analyticsCubes: Object.values(cubes),
 
   hooks: allHooks,

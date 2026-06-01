@@ -89,11 +89,16 @@ export const LeadConversionFlow: Flow = {
       },
     },
     {
-      id: 'send_notification', type: 'script', label: 'Send Confirmation Email',
+      // ADR-0012: deliver via the `notify` node (inbox + email). The legacy
+      // `script` + `actionType:'email'` shape is a no-op stub in 7.4.
+      id: 'send_notification', type: 'notify', label: 'Send Confirmation',
       config: {
-        actionType: 'email', template: 'lead_converted_notification',
-        recipients: ['{$User.Email}'],
-        variables: { leadName: '{leadRecord.full_name}', accountName: '{accountId.name}', contactName: '{contactId.full_name}' },
+        to: ['{$User.Id}'],
+        channels: ['inbox', 'email'],
+        topic: 'lead_converted',
+        title: 'Lead converted: {leadRecord.full_name}',
+        body: 'Lead {leadRecord.full_name} was converted into an account and contact.',
+        actionUrl: '/crm_account/{accountId}',
       },
     },
     { id: 'end', type: 'end', label: 'End' },
