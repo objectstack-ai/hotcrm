@@ -24,7 +24,7 @@
     "@objectstack/cli": "^7.2.0",
     "@objectstack/driver-memory": "^7.2.0",
     "@objectstack/driver-sql": "^7.2.0",
-    "@objectstack/driver-sqlite-wasm": "^7.2.0",
+    "@objectstack/driver-sqlite-wasm": "^7.3.0",
     "@objectstack/metadata": "^7.2.0",
     "@objectstack/objectql": "^7.2.0",
     "@objectstack/runtime": "^7.2.0",
