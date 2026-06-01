@@ -9,6 +9,7 @@ export const QuoteGenerationFlow: Flow = {
   label: 'Generate Quote from Opportunity',
   description: 'Create a quote based on opportunity details',
   type: 'screen',
+  status: 'active',
 
   variables: [
     { name: 'opportunityId', type: 'text', isInput: true, isOutput: false },

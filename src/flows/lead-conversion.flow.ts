@@ -9,6 +9,7 @@ export const LeadConversionFlow: Flow = {
   label: 'Lead Conversion Process',
   description: 'Automated flow to convert qualified leads to accounts, contacts, and opportunities',
   type: 'screen',
+  status: 'active',
 
   variables: [
     { name: 'leadId', type: 'text', isInput: true, isOutput: false },

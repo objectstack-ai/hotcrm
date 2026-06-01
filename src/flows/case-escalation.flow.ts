@@ -9,6 +9,7 @@ export const CaseEscalationFlow: Flow = {
   label: 'Case Escalation Process',
   description: 'Automatically escalate high-priority cases',
   type: 'record_change',
+  status: 'active',
 
   variables: [
     { name: 'caseId', type: 'text', isInput: true, isOutput: false },

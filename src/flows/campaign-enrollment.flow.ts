@@ -9,6 +9,7 @@ export const CampaignEnrollmentFlow: Flow = {
   label: 'Enroll Leads in Campaign',
   description: 'Bulk enroll leads into marketing campaigns',
   type: 'schedule',
+  status: 'active',
 
   variables: [
     { name: 'campaignId', type: 'text', isInput: true, isOutput: false },
