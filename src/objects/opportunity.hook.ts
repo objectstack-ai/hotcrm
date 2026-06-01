@@ -12,18 +12,6 @@ import type { HookApi } from './_hook-api';
  *   and asynchronously schedules an "Activate customer" task.
  */
 
-const STAGE_PROBABILITY: Record<string, number> = {
-  prospecting: 10,
-  qualification: 25,
-  needs_analysis: 40,
-  proposal: 60,
-  negotiation: 80,
-  closed_won: 100,
-  closed_lost: 0,
-};
-
-const NARRATIVE_FIELDS = new Set(['description', 'next_step', 'notes']);
-
 const opportunityValidationHook: Hook = {
   name: 'opportunity_lifecycle',
   object: 'crm_opportunity',
@@ -32,6 +20,21 @@ const opportunityValidationHook: Hook = {
   description:
     'Recompute expected_revenue, freeze closed opportunities except narrative fields.',
   handler: async (ctx: HookContext) => {
+    // NOTE: L2 hook bodies run *body-only* in a sandbox (QuickJS) — module-level
+    // constants are NOT in scope at runtime. These MUST be declared inside the
+    // handler or the body throws `ReferenceError` on every write. (See ADR on
+    // sandboxed hooks; same pattern as lead.hook.ts.)
+    const STAGE_PROBABILITY: Record<string, number> = {
+      prospecting: 10,
+      qualification: 25,
+      needs_analysis: 40,
+      proposal: 60,
+      negotiation: 80,
+      closed_won: 100,
+      closed_lost: 0,
+    };
+    const NARRATIVE_FIELDS = new Set(['description', 'next_step', 'notes']);
+
     const { event, input } = ctx;
     const previous = ctx.previous;
 
