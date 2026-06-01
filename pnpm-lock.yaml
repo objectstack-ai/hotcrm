@@ -18,8 +18,8 @@ importers:
         specifier: ^7.2.0
         version: 7.2.0(ai@6.0.193(zod@4.4.3))
       '@objectstack/driver-sql':
-        specifier: ^7.2.0
-        version: 7.2.0(ai@6.0.193(zod@4.4.3))
+        specifier: ^7.3.0
+        version: 7.3.0(ai@6.0.193(zod@4.4.3))
       '@objectstack/driver-sqlite-wasm':
         specifier: ^7.2.0
         version: 7.2.0(ai@6.0.193(zod@4.4.3))(better-sqlite3@12.10.0)
@@ -702,6 +702,10 @@ packages:
     resolution: {integrity: sha512-e1CS0hnMyl2Qlc+PBylutkN4c0LxRLJWqrHwnNnFqrblwK4iA+6c4YLRdv7/+tPx+4J4/uc/wKpCS7lpiWgHng==}
     engines: {node: '>=18.0.0'}
 
+  '@objectstack/core@7.3.0':
+    resolution: {integrity: sha512-DFyI3DF/rQnN2Ld2ZCatr+OMh6uMVhrHeUnewcSWgVkxph6aXJS7JdUdTkxj0j0jBTGhNFcZxAwASp8QwVXdKQ==}
+    engines: {node: '>=18.0.0'}
+
   '@objectstack/driver-memory@7.2.0':
     resolution: {integrity: sha512-neRUhyxA6Tk+VXEIkdREEBUei6r7oYHefgXUSjmz1POeeNwhmqaVQNGGv+ylf3wNRg8wHwBgwV/xwiEQNcDvQw==}
     engines: {node: '>=18.0.0'}
@@ -712,6 +716,24 @@ packages:
 
   '@objectstack/driver-sql@7.2.0':
     resolution: {integrity: sha512-PhHLf7W+57wi5HIAibM9t19GNC6JnWJDFmCjggnhQTVXlT8xOXKDrIu6udqUi4ohR+fEEB+evIfcpVWndhHmuw==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      mysql2: ^3.0.0
+      pg: ^8.0.0
+      sqlite3: ^5.0.0
+      tedious: ^18.0.0
+    peerDependenciesMeta:
+      mysql2:
+        optional: true
+      pg:
+        optional: true
+      sqlite3:
+        optional: true
+      tedious:
+        optional: true
+
+  '@objectstack/driver-sql@7.3.0':
+    resolution: {integrity: sha512-5r8fo3yluuBfc8vEiw3X1/+yeG79XQUCaHTWdCp/KVCH40LGRpjWWyCc+5UsVWwd3ZsTFIG9xTGM8REwCuBLHQ==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       mysql2: ^3.0.0
@@ -889,6 +911,15 @@ packages:
 
   '@objectstack/spec@7.2.0':
     resolution: {integrity: sha512-basKd+cDL24aw8aYda9botWN5xGfAByAAc4cK9E2p3cpX0faAbCUCZ9mlIwhaWk/g5rHo0a0KlR5hcbTq7UZ+Q==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      ai: ^6.0.0
+    peerDependenciesMeta:
+      ai:
+        optional: true
+
+  '@objectstack/spec@7.3.0':
+    resolution: {integrity: sha512-yoa721aRJ+9w59PpKeDW4odNGk1Quy2OhOz0RwqTHTMxX3hC+iyufcLxu5C7k0VPbE/pM51yZ+fXsvxNBi246w==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       ai: ^6.0.0
@@ -3767,7 +3798,7 @@ snapshots:
       '@objectstack/core': 7.2.0(ai@6.0.193(zod@4.4.3))
       '@objectstack/driver-memory': 7.2.0(ai@6.0.193(zod@4.4.3))
       '@objectstack/driver-mongodb': 7.2.0(ai@6.0.193(zod@4.4.3))
-      '@objectstack/driver-sql': 7.2.0(ai@6.0.193(zod@4.4.3))
+      '@objectstack/driver-sql': 7.3.0(ai@6.0.193(zod@4.4.3))
       '@objectstack/driver-sqlite-wasm': 7.2.0(ai@6.0.193(zod@4.4.3))(better-sqlite3@12.10.0)
       '@objectstack/objectql': 7.2.0(ai@6.0.193(zod@4.4.3))
       '@objectstack/observability': 7.2.0(ai@6.0.193(zod@4.4.3))
@@ -3873,6 +3904,13 @@ snapshots:
     transitivePeerDependencies:
       - ai
 
+  '@objectstack/core@7.3.0(ai@6.0.193(zod@4.4.3))':
+    dependencies:
+      '@objectstack/spec': 7.3.0(ai@6.0.193(zod@4.4.3))
+      zod: 4.4.3
+    transitivePeerDependencies:
+      - ai
+
   '@objectstack/driver-memory@7.2.0(ai@6.0.193(zod@4.4.3))':
     dependencies:
       '@objectstack/core': 7.2.0(ai@6.0.193(zod@4.4.3))
@@ -3901,6 +3939,21 @@ snapshots:
     dependencies:
       '@objectstack/core': 7.2.0(ai@6.0.193(zod@4.4.3))
       '@objectstack/spec': 7.2.0(ai@6.0.193(zod@4.4.3))
+      knex: 3.2.10(better-sqlite3@12.10.0)
+      nanoid: 5.1.11
+    optionalDependencies:
+      better-sqlite3: 12.10.0
+    transitivePeerDependencies:
+      - ai
+      - mysql
+      - pg-native
+      - pg-query-stream
+      - supports-color
+
+  '@objectstack/driver-sql@7.3.0(ai@6.0.193(zod@4.4.3))':
+    dependencies:
+      '@objectstack/core': 7.3.0(ai@6.0.193(zod@4.4.3))
+      '@objectstack/spec': 7.3.0(ai@6.0.193(zod@4.4.3))
       knex: 3.2.10(better-sqlite3@12.10.0)
       nanoid: 5.1.11
     optionalDependencies:
@@ -4297,6 +4350,12 @@ snapshots:
       - ai
 
   '@objectstack/spec@7.2.0(ai@6.0.193(zod@4.4.3))':
+    dependencies:
+      zod: 4.4.3
+    optionalDependencies:
+      ai: 6.0.193(zod@4.4.3)
+
+  '@objectstack/spec@7.3.0(ai@6.0.193(zod@4.4.3))':
     dependencies:
       zod: 4.4.3
     optionalDependencies:
