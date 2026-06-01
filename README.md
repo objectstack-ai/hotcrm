@@ -51,7 +51,7 @@ HotCRM is a complete, opinionated CRM built as the **first official application*
 | `crm_product` | | | |
 | `crm_forecast` | | | |
 
-Plus **2 AI agents** (sales-copilot, service-copilot), **4 dashboards**, **6 workflows**, **10 actions**, **4 RAG knowledge bases**, **4 language bundles** (en, zh-CN, es-ES, ja-JP), **10 role hierarchy**, and **3 sharing rules**.
+Plus **2 AI agents** (sales-copilot, service-copilot), **4 dashboards**, **10 flows**, **10 actions**, **4 RAG knowledge bases**, **4 language bundles** (en, zh-CN, es-ES, ja-JP), **10 role hierarchy**, and **5 sharing rules**.
 
 ---
 
@@ -118,7 +118,7 @@ hotcrm/
 ├── src/
 │   ├── objects/                  # *.object.ts — data model (15 objects)
 │   ├── actions/                  # *.action.ts — server actions + AI tools (10)
-│   ├── flows/                    # *.flow.ts — visual workflows (6)
+│   ├── flows/                    # *.flow.ts — visual flows (10): screen, record-change & scheduled
 │   ├── hooks/                    # *.hook.ts — server-side triggers
 │   ├── agents/                   # *.agent.ts — AI copilots (2)
 │   ├── skills/                   # *.skill.ts — AI skills (5)
@@ -127,7 +127,6 @@ hotcrm/
 │   ├── dashboards/, reports/     # analytics UI
 │   ├── pages/, views/, apps/     # UI definitions
 │   ├── profiles/, sharing/       # security
-│   ├── approvals/                # approval processes
 │   ├── translations/             # en / zh-CN / es-ES / ja-JP
 │   └── data/                     # seed data
 └── apps/docs/                    # Fumadocs site (https://github.com/objectstack-ai/hotcrm/tree/main/apps/docs)

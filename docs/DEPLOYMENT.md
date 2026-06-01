@@ -183,8 +183,8 @@ the driver falls back to `:memory:` (ephemeral SQLite, same behaviour as the old
 3. `HonoHttpServer` from `@objectstack/plugin-hono-server` handles HTTP routing (without TCP listener).
 4. `createRestApiPlugin()` auto-generates CRUD endpoints for all 65+ business objects.
 5. The kernel instance is reused across warm invocations (Vercel Fluid Compute).
-6. **Console UI** is served at `/console/` (default redirect from `/`) for data browsing and management.
-7. **Studio UI** is served at `/_studio/` for metadata inspection and development.
+6. **Console UI** is served at `/_console/` (default redirect from `/`) for data browsing and management.
+7. **Studio** (metadata inspection and development) lives inside the unified Console at `/_console/apps/studio`. (The legacy standalone `/_studio/` and `/_account/` routes were removed in ObjectStack 7.4.)
 
 ```
 Vercel Serverless Function
@@ -196,8 +196,8 @@ Vercel Serverless Function
 │  ├── REST API Plugin (auto CRUD)         │
 │  ├── Dispatcher Plugin (auth, graphql)   │
 │  ├── 6 Business Plugins                  │
-│  ├── Console UI (/console/)              │
-│  ├── Studio UI (/_studio/)               │
+│  ├── Console UI (/_console/)             │
+│  │   └── Studio (/_console/apps/studio)  │
 │  └── TursoDriver (Turso cloud / :memory:) │
 │        ↓                                 │
 │  Response                                │
@@ -293,7 +293,7 @@ Build pipeline:
 | `functions.memory` | `1024` MB | Memory allocated to the serverless function |
 | `functions.maxDuration` | `60` s | Maximum execution time per request (Pro plan) |
 | `functions.includeFiles` | `{packages/*/dist,node_modules/@object-ui/console/dist,node_modules/@objectstack/*/dist,node_modules/@libsql,node_modules/better-sqlite3,node_modules/@opentelemetry/api}/**` | Bundles business plugin dist/, all @objectstack packages (including Auth, Studio, TursoDriver), libSQL/better-sqlite3 native deps, and OpenTelemetry with the function |
-| `headers` | `/console/assets/*`, `/_studio/assets/*` | Sets `Cache-Control: public, max-age=31536000, immutable` on content-hashed static assets |
+| `headers` | `/_console/assets/*` | Sets `Cache-Control: public, max-age=31536000, immutable` on content-hashed static assets |
 | `rewrites` | `/(.*) → /api/[[...route]]` | Routes non-static requests to the catch-all handler (static files in `public/` are served by Vercel's CDN before rewrites are evaluated) |
 
 ### Static Asset Optimization
@@ -301,8 +301,8 @@ Build pipeline:
 SPA static assets (JS, CSS, fonts, images) are served directly from Vercel's CDN edge network
 instead of routing through the serverless function:
 
-- **Build step**: `scripts/build-vercel.sh` copies Console assets to `public/console/assets/`
-  and Studio assets to `public/_studio/assets/` after building all packages.
+- **Build step**: the Vercel build copies the unified Console assets (Studio included) to
+  `public/_console/assets/` after building all packages.
 - **Vercel routing order**: redirects → headers → **filesystem** → rewrites. Files in `public/`
   (the output directory) are matched at the filesystem step, **before** rewrites, so they bypass
   the `api/[[...route]]` serverless function entirely.
