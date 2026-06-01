@@ -53,7 +53,11 @@ export default defineStack({
   // preset — see `ALWAYS_CAPS` in packages/cli/src/commands/serve.ts.
   // Listed below only the *opt-in* capabilities this stack actually
   // wants on top of that slate.
-  requires: ['ai', 'automation', 'analytics', 'auth', 'ui', 'approvals', 'sharing'],
+  // `triggers` installs the record-change + schedule trigger providers that
+  // actually fire autolaunched flows (record_change & schedule types). Without
+  // it the `automation` engine registers flows but nothing ever launches them.
+  // Schedule triggers run via the job service (in the always-on slate).
+  requires: ['ai', 'automation', 'triggers', 'analytics', 'auth', 'ui', 'approvals', 'sharing'],
 
   objects: Object.values(objects),
   actions: Object.values(actions),

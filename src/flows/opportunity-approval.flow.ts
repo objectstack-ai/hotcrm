@@ -44,14 +44,20 @@ export const OpportunityApprovalFlow: Flow = {
       id: 'start',
       type: 'start',
       label: 'Start',
-      // Auto-submit on insert/update once the deal crosses the entry threshold.
-      config: { objectName: 'crm_opportunity', criteria: 'amount > 100000' },
+      // Trigger wiring (7.4): bind to afterUpdate; gate on crossing the entry
+      // threshold while not already in an approval state. The `not_required`
+      // guard stops the flow's own approval_status writes from re-triggering it.
+      config: {
+        objectName: 'crm_opportunity',
+        triggerType: 'record-after-update',
+        condition: 'record.amount > 100000 && record.approval_status == "not_required"',
+      },
     },
     {
       id: 'get_opportunity',
       type: 'get_record',
       label: 'Get Opportunity',
-      config: { objectName: 'crm_opportunity', filter: { id: '{opportunityId}' }, outputVariable: 'oppRecord' },
+      config: { objectName: 'crm_opportunity', filter: { id: '{record.id}' }, outputVariable: 'oppRecord' },
     },
 
     // ── Tier 1: Sales Manager review (all deals > $100K) ────────────
@@ -95,7 +101,7 @@ export const OpportunityApprovalFlow: Flow = {
       label: 'Mark Approved',
       config: {
         objectName: 'crm_opportunity',
-        filter: { id: '{opportunityId}' },
+        filter: { id: '{record.id}' },
         fields: { approval_status: 'approved', approved_date: '{NOW()}' },
       },
     },
@@ -109,7 +115,7 @@ export const OpportunityApprovalFlow: Flow = {
         topic: 'opportunity_approved',
         title: 'Deal approved: {oppRecord.name}',
         body: 'Your opportunity {oppRecord.name} has been approved.',
-        actionUrl: '/crm_opportunity/{opportunityId}',
+        actionUrl: '/crm_opportunity/{record.id}',
       },
     },
 
@@ -120,7 +126,7 @@ export const OpportunityApprovalFlow: Flow = {
       label: 'Mark Rejected',
       config: {
         objectName: 'crm_opportunity',
-        filter: { id: '{opportunityId}' },
+        filter: { id: '{record.id}' },
         fields: { approval_status: 'rejected' },
       },
     },
@@ -135,7 +141,7 @@ export const OpportunityApprovalFlow: Flow = {
         topic: 'opportunity_rejected',
         title: 'Deal rejected: {oppRecord.name}',
         body: 'Your opportunity {oppRecord.name} was not approved. Review and revise before resubmitting.',
-        actionUrl: '/crm_opportunity/{opportunityId}',
+        actionUrl: '/crm_opportunity/{record.id}',
       },
     },
 

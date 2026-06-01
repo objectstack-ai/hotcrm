@@ -17,17 +17,24 @@ export const CaseEscalationFlow: Flow = {
 
   nodes: [
     {
+      // Trigger wiring (7.4): bind to afterUpdate and gate on the critical
+      // transition. `is_escalated != true` guard prevents the flow's own
+      // escalation write from re-triggering it (infinite-loop safe).
       id: 'start', type: 'start', label: 'Start',
-      config: { objectName: 'crm_case', criteria: 'priority = "critical" OR (priority = "high" AND account.type = "customer")' },
+      config: {
+        objectName: 'crm_case',
+        triggerType: 'record-after-update',
+        condition: 'record.priority == "critical" && record.is_escalated != true',
+      },
     },
     {
       id: 'get_case', type: 'get_record', label: 'Get Case Record',
-      config: { objectName: 'crm_case', filter: { id: '{caseId}' }, outputVariable: 'caseRecord' },
+      config: { objectName: 'crm_case', filter: { id: '{record.id}' }, outputVariable: 'caseRecord' },
     },
     {
       id: 'assign_senior_agent', type: 'update_record', label: 'Assign to Senior Agent',
       config: {
-        objectName: 'crm_case', filter: { id: '{caseId}' },
+        objectName: 'crm_case', filter: { id: '{record.id}' },
         fields: { owner: '{caseRecord.owner.manager}', is_escalated: true, escalated_date: '{NOW()}', status: 'escalated' },
       },
     },
@@ -38,7 +45,7 @@ export const CaseEscalationFlow: Flow = {
         fields: {
           subject: 'Follow up on escalated case: {caseRecord.case_number}',
           related_to_type: 'crm_case',
-          related_to_case: '{caseId}',
+          related_to_case: '{record.id}',
           owner: '{caseRecord.owner}',
           priority: 'high', status: 'not_started', due_date: '{TODAY() + 1}',
         },
@@ -56,7 +63,7 @@ export const CaseEscalationFlow: Flow = {
         topic: 'case_escalated',
         title: 'Case escalated: {caseRecord.case_number}',
         body: 'Case {caseRecord.case_number} ({caseRecord.priority}) for {caseRecord.crm_account.name} has been escalated and reassigned.',
-        actionUrl: '/crm_case/{caseId}',
+        actionUrl: '/crm_case/{record.id}',
       },
     },
     { id: 'end', type: 'end', label: 'End' },

@@ -10,18 +10,36 @@ export { CaseEscalationFlow } from './case-escalation.flow';
 export { LeadConversionFlow } from './lead-conversion.flow';
 export { OpportunityApprovalFlow } from './opportunity-approval.flow';
 export { QuoteGenerationFlow } from './quote-generation.flow';
+// Time/event-driven automation (scheduled + wait-node + record-change)
+export { ContractRenewalFlow } from './contract-renewal.flow';
+export { CaseSlaMonitorFlow } from './case-sla-monitor.flow';
+export { OpportunityStagnationFlow } from './opportunity-stagnation.flow';
+export { LeadAssignmentFlow } from './lead-assignment.flow';
+export { CaseCsatFollowupFlow } from './case-csat-followup.flow';
 
 import { CampaignEnrollmentFlow } from './campaign-enrollment.flow';
 import { CaseEscalationFlow } from './case-escalation.flow';
 import { LeadConversionFlow } from './lead-conversion.flow';
 import { OpportunityApprovalFlow } from './opportunity-approval.flow';
 import { QuoteGenerationFlow } from './quote-generation.flow';
+import { ContractRenewalFlow } from './contract-renewal.flow';
+import { CaseSlaMonitorFlow } from './case-sla-monitor.flow';
+import { OpportunityStagnationFlow } from './opportunity-stagnation.flow';
+import { LeadAssignmentFlow } from './lead-assignment.flow';
+import { CaseCsatFollowupFlow } from './case-csat-followup.flow';
 
 /** All flow definitions as a typed array for defineStack() */
 export const allFlows: Flow[] = [
+  // Core process flows
   CampaignEnrollmentFlow,
   CaseEscalationFlow,
   LeadConversionFlow,
   OpportunityApprovalFlow,
   QuoteGenerationFlow,
+  // Time/event-driven automation
+  ContractRenewalFlow,
+  CaseSlaMonitorFlow,
+  OpportunityStagnationFlow,
+  LeadAssignmentFlow,
+  CaseCsatFollowupFlow,
 ];
