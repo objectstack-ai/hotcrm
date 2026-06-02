@@ -1,38 +1,41 @@
 ---
 title: Approvals
-description: Multi-step approval for high-value discounts — what triggers it, who approves, and what happens at each step.
+description: Tiered approval for large opportunities — what triggers it, who approves at each tier, and what happens on approve/reject.
 ---
 
 # Approvals
 
-HotCRM ships with one built-in approval process: the **Opportunity Discount Approval**. It enforces a "two pairs of eyes" rule on big-money discounts so no rep can give away margin without manager and director sign-off.
+HotCRM ships with one built-in approval: the **Opportunity Approval** flow. It enforces a *tiered* "extra pairs of eyes" rule on large deals so no rep can commit a big-ticket opportunity without the right level of sign-off.
+
+> **Since ObjectStack 7.4** this is modeled as a **flow with `approval` nodes** (ADR-0019), not a standalone approval-process object. The flow chains the approval steps, locks the record while a step is pending, and mirrors the live decision onto the opportunity's `approval_status` field. Auto-launch requires the `triggers` capability (see [Administration › Automation](/docs/administration/automation)).
 
 ## What triggers an approval
 
-The Opportunity Discount Approval is triggered when:
+The flow runs automatically when an **opportunity is saved** and its **amount crosses a threshold** — no manual "submit" step:
 
-- An **opportunity** is submitted for approval, AND
-- The **opportunity amount is greater than $500,000**
+- **Amount > $100K** → **Sales Manager** review.
+- **Amount > $500K** → **Sales Manager** review **and** **Sales Director** sign-off.
 
-Below the threshold, no approval is needed — the rep can move the opportunity directly to *Closed Won*.
+Below $100K, no approval is needed — the rep can progress the deal directly. The entry guard (`approval_status = not_required`) means the flow's own status writes don't re-trigger it.
 
-## The 2-step process
+## The tiered process
 
-| Step | Approver | Why |
-| --- | --- | --- |
-| **1. Sales Manager** | The submitter's manager (from the role hierarchy) | First line of defense — sanity-check the deal |
-| **2. Sales Director** | The sales director role | Final sign-off — protect company margin |
+| Tier | Approver | Applies when | Why |
+| --- | --- | --- | --- |
+| **1. Sales Manager** | The `sales_manager` role | Amount > $100K | First line of defense — sanity-check the deal |
+| **2. Sales Director** | The `sales_director` role | Amount > $500K | Final sign-off — protect company margin on the largest deals |
 
-Both approvals must be granted in order. Rejection at either step sends the request back.
+A `> $500K` deal goes Manager → (decision gate) → Director. A `$100K–$500K` deal needs only the Manager. Rejection at **either** tier ends the run as rejected and notifies the owner.
 
 ## What submitters see
 
-When a sales rep clicks **Submit for Approval** on a qualifying opportunity:
+When a rep saves an opportunity whose amount crosses the threshold, the flow submits it automatically:
 
-1. They're prompted for a **comment** explaining the discount rationale.
-2. The opportunity is **locked** — no edits to amount, stage, or close date until the process resolves.
-3. The status indicator shows **In Approval**.
-4. The first approver gets an email and an in-app notification.
+1. The opportunity is **locked** — the approval node holds the record until the step resolves.
+2. `approval_status` flips to **pending** (shown as *In Approval*).
+3. The first approver gets an in-app notification and email.
+
+There's no separate "Submit for Approval" click — crossing the amount threshold on save is the trigger.
 
 ## What approvers see
 
@@ -50,41 +53,29 @@ The process uses **first-response** behavior — the first approver to respond a
 
 ## What happens on each outcome
 
-### ✅ Approved (both steps)
-1. Opportunity is **unlocked**.
-2. Status returns to its previous stage (typically *Negotiation* or *Proposal*).
-3. A note is added to the activity timeline: *"Discount approved by [Director] on [date]"*.
-4. The rep can now move the opportunity to *Closed Won*.
+### ✅ Approved (all required tiers)
+1. The opportunity is **unlocked**.
+2. `approval_status` is stamped **approved** and `approved_date` is set to today.
+3. The owner is notified (*"Deal approved"*).
 
-### ❌ Rejected (at any step)
-- The opportunity moves **back to the previous step** in the process.
-- If rejected at Step 1, the submitter is notified and the opportunity is unlocked for revision.
-- If rejected at Step 2, it goes back to Step 1 for the manager to re-review (after the submitter revises the deal).
-- The rejection comment is captured in the audit log.
-
-### ⏪ Recalled
-The submitter can recall the request as long as no one has acted on it. The opportunity is unlocked and returns to its previous stage.
+### ❌ Rejected (at any tier)
+- The run ends immediately as rejected — a reject at the Manager tier never reaches the Director.
+- `approval_status` is stamped **rejected** and the owner is notified to revise and resubmit.
+- The rejection is captured in the approval request's history.
 
 ## Record locking
 
-While in approval, these fields on the opportunity are **read-only for everyone except the system**:
-
-- Amount
-- Stage
-- Close Date
-- Probability
-
-The rest of the record (description, next steps, notes) remains editable.
+Each approval node sets `lockRecord: true`, so while a step is pending the opportunity is **locked by the approval engine** — edits are blocked until the step resolves. The lock is released automatically on the final approve/reject.
 
 ## The approval audit trail
 
-Every action is logged in the opportunity's *Approval History* section:
+Every action is recorded on the **approval request** (`sys_approval_request`) created by the flow:
 
-| Date | Step | Actor | Action | Comment |
+| Date | Tier | Actor | Action | Comment |
 | --- | --- | --- | --- | --- |
-| 2024-03-12 09:14 | Submit | Alex Chen | Submitted | "5% discount to close before Q1" |
-| 2024-03-12 11:30 | 1 | Sam Lee | Approved | "OK given strategic logo" |
-| 2024-03-12 14:02 | 2 | Pat Wong | Approved | "Approved — book it" |
+| 2024-03-12 09:14 | — | system | Submitted | Auto-submitted (amount $620K > $500K) |
+| 2024-03-12 11:30 | Manager | Sam Lee | Approved | "OK given strategic logo" |
+| 2024-03-12 14:02 | Director | Pat Wong | Approved | "Approved — book it" |
 
 This history is permanent and surfaces in deal-review reports.
 
@@ -94,13 +85,12 @@ In the Enterprise CRM app, the **Approvals** group:
 
 - **Approval Requests** — everything pending, with views *Pending My Approval*, *Submitted by Me*, *Recently Approved*.
 - **Action History** — the full audit trail across all approvals.
-- **Processes** — admin view of the approval rules and steps.
 
 ## Tips for sales reps
 
-- ✅ **Submit early** — don't wait until the customer is signing. Most approvals come back same-day.
-- ✅ **Write a strong rationale** in the comment — "strategic logo", "competitive displacement", "expansion follow-on". Approvers reject vague justifications.
-- ✅ **Don't keep editing the opportunity after submission** — the record is locked. Recall, edit, resubmit.
+- ✅ **Mind the thresholds** — an amount over $100K (and especially over $500K) will auto-launch approval the moment you save. Plan for the review window before promising a close date.
+- ✅ **Get the deal right before saving over the threshold** — the record locks while a tier is pending; you can't tweak it mid-review.
+- ✅ **Watch for the rejection notification** — a reject ends the run; revise and save again to re-submit.
 
 ## Tips for managers
 
@@ -110,7 +100,7 @@ In the Enterprise CRM app, the **Approvals** group:
 
 ## Tips for admins
 
-- The threshold ($500K), the steps (manager → director), and the lock fields can all be customized.
-- You can add **additional approval processes** for different objects — contract approval, expense approval, etc.
-- The approval process definition lives alongside other automation in the codebase; see [Administration › Automation](/docs/administration/automation) for how to configure new ones.
+- The thresholds ($100K / $500K), the tiers (manager → director), and `lockRecord` are all defined in the **Opportunity Approval flow** — edit the approval nodes and the decision gate to change them.
+- Add **more approvals** by dropping `approval` nodes into any flow (contract approval, expense approval, etc.) — see [Administration › Automation](/docs/administration/automation).
+- The flow lives alongside other automation in the codebase (`src/flows/opportunity-approval.flow.ts`).
 - Delegated approvers are set in user profile preferences. See [Administration › Profiles](/docs/administration/profiles).
