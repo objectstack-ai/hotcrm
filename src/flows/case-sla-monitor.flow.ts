@@ -53,7 +53,7 @@ export const CaseSlaMonitorFlow: Flow = {
       config: {
         to: ['{currentCase.owner}', '{currentCase.owner.manager}'],
         channels: ['inbox', 'email'],
-        severity: 'high',
+        severity: 'critical',
         topic: 'case_sla_breach',
         title: 'SLA breached: case {currentCase.case_number}',
         body: 'Case {currentCase.case_number} ({currentCase.priority}) passed its SLA due date and has been auto-escalated.',
