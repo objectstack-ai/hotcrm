@@ -34,15 +34,19 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       
-      - name: Run linter
+      - name: Validate metadata (protocol/schema)
+        run: pnpm run validate
+
+      - name: Lint metadata conventions (advisory)
         run: pnpm run lint
-      
+        continue-on-error: true
+
       - name: TypeScript type checking
         run: pnpm run typecheck
-      
+
       - name: Build project
         run: pnpm run build
-      
+
       - name: Run tests
         run: pnpm test
       

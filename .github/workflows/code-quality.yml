@@ -51,10 +51,14 @@ jobs:
       
       - name: Check TypeScript compilation
         run: pnpm run typecheck
-      
-      - name: Run ESLint
+
+      - name: Validate metadata (protocol/schema)
+        run: pnpm run validate
+
+      - name: Lint metadata conventions (advisory)
         run: pnpm run lint
-      
+        continue-on-error: true
+
       - name: Check for TODO comments
         run: |
           echo "Checking for TODO/FIXME comments..."

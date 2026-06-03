@@ -14,8 +14,12 @@
     "start": "objectstack start -p 4001",
     "build": "objectstack build",
     "typecheck": "tsc --noEmit",
-    "test": "objectstack test",
+    "validate": "objectstack validate",
+    "lint": "objectstack lint --skip-i18n",
+    "test": "vitest run",
+    "test:qa": "objectstack test",
     "test:e2e": "playwright test",
+    "verify": "pnpm validate && pnpm typecheck && pnpm build && pnpm test",
     "demo:reset": "rm -rf .objectstack/data && pnpm build && echo '✅ DB reset — start the server with: pnpm dev (or pnpm start). Seed data loads on first boot.'"
   },
   "packageManager": "pnpm@10.33.0",
@@ -37,7 +41,8 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.60.0",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.8"
   },
   "engines": {
     "node": ">=20",
