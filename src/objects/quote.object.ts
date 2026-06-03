@@ -205,22 +205,7 @@ export const Quote = ObjectSchema.create({
   ],
   
   // Workflow Rules
-  workflows: [
-    {
-      name: 'quote_expired_check',
-      objectName: 'crm_quote',
-      triggerType: 'scheduled',
-      schedule: '0 1 * * *',
-      criteria: P`record.expiration_date < today() && !(record.status in ["accepted", "rejected", "expired"])`,
-      actions: [
-        {
-          name: 'mark_expired',
-          type: 'field_update',
-          field: 'status',
-          value: '"expired"',
-        }
-      ],
-      active: true,
-    }
-  ],
+  // NOTE: object `workflows[]` were removed in @objectstack 7.7. Field-updates
+  // moved to this object's *.hook.ts; scheduled status-flips & notifications
+  // moved to src/flows/*.flow.ts (see flows/index.ts).
 });

@@ -16,6 +16,13 @@ export { CaseSlaMonitorFlow } from './case-sla-monitor.flow';
 export { OpportunityStagnationFlow } from './opportunity-stagnation.flow';
 export { LeadAssignmentFlow } from './lead-assignment.flow';
 export { CaseCsatFollowupFlow } from './case-csat-followup.flow';
+// Migrated from object workflows[] (removed in 7.7): scheduled status-flips + notifications
+export { CampaignCompletionFlow } from './campaign-completion.flow';
+export { QuoteExpirationFlow } from './quote-expiration.flow';
+export { ContractExpirationFlow } from './contract-expiration.flow';
+export { ContactWelcomeFlow } from './contact-welcome.flow';
+export { OpportunityWonAlertFlow } from './opportunity-won-alert.flow';
+export { TaskUrgentAlertFlow } from './task-urgent-alert.flow';
 
 import { CampaignEnrollmentFlow } from './campaign-enrollment.flow';
 import { CaseEscalationFlow } from './case-escalation.flow';
@@ -27,6 +34,12 @@ import { CaseSlaMonitorFlow } from './case-sla-monitor.flow';
 import { OpportunityStagnationFlow } from './opportunity-stagnation.flow';
 import { LeadAssignmentFlow } from './lead-assignment.flow';
 import { CaseCsatFollowupFlow } from './case-csat-followup.flow';
+import { CampaignCompletionFlow } from './campaign-completion.flow';
+import { QuoteExpirationFlow } from './quote-expiration.flow';
+import { ContractExpirationFlow } from './contract-expiration.flow';
+import { ContactWelcomeFlow } from './contact-welcome.flow';
+import { OpportunityWonAlertFlow } from './opportunity-won-alert.flow';
+import { TaskUrgentAlertFlow } from './task-urgent-alert.flow';
 
 /** All flow definitions as a typed array for defineStack() */
 export const allFlows: Flow[] = [
@@ -42,4 +55,11 @@ export const allFlows: Flow[] = [
   OpportunityStagnationFlow,
   LeadAssignmentFlow,
   CaseCsatFollowupFlow,
+  // Migrated from object workflows[] (removed in 7.7)
+  CampaignCompletionFlow,
+  QuoteExpirationFlow,
+  ContractExpirationFlow,
+  ContactWelcomeFlow,
+  OpportunityWonAlertFlow,
+  TaskUrgentAlertFlow,
 ];

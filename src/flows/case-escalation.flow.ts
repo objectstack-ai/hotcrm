@@ -35,7 +35,10 @@ export const CaseEscalationFlow: Flow = {
       id: 'assign_senior_agent', type: 'update_record', label: 'Assign to Senior Agent',
       config: {
         objectName: 'crm_case', filter: { id: '{record.id}' },
-        fields: { owner: '{caseRecord.owner.manager}', is_escalated: true, escalated_date: '{NOW()}', status: 'escalated' },
+        // `escalation_reason` must be set whenever `is_escalated` flips true — the
+        // object's `escalation_reason_required` validation rejects the write
+        // otherwise (which silently aborted this flow until it was supplied).
+        fields: { owner: '{caseRecord.owner.manager}', is_escalated: true, escalation_reason: 'Auto-escalated: critical priority', escalated_date: '{NOW()}', status: 'escalated' },
       },
     },
     {
@@ -59,7 +62,7 @@ export const CaseEscalationFlow: Flow = {
       config: {
         to: ['{caseRecord.owner}', '{caseRecord.owner.manager}'],
         channels: ['inbox', 'email'],
-        severity: 'high',
+        severity: 'critical',
         topic: 'case_escalated',
         title: 'Case escalated: {caseRecord.case_number}',
         body: 'Case {caseRecord.case_number} ({caseRecord.priority}) for {caseRecord.crm_account.name} has been escalated and reassigned.',

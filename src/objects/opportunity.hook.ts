@@ -34,6 +34,17 @@ const opportunityValidationHook: Hook = {
       closed_lost: 0,
     };
     const NARRATIVE_FIELDS = new Set(['description', 'next_step', 'notes']);
+    // Stage → forecast category (migrated from the removed
+    // `set_forecast_category_by_stage` object workflow — 7.7 dropped workflows[]).
+    const STAGE_FORECAST: Record<string, string> = {
+      prospecting: 'pipeline',
+      qualification: 'pipeline',
+      needs_analysis: 'best_case',
+      proposal: 'commit',
+      negotiation: 'commit',
+      closed_won: 'closed',
+      closed_lost: 'omitted',
+    };
 
     const { event, input } = ctx;
     const previous = ctx.previous;
@@ -57,6 +68,11 @@ const opportunityValidationHook: Hook = {
     if (stage && STAGE_PROBABILITY[stage] !== undefined) {
       // Always sync probability with stage (single source of truth = stage).
       input.probability = STAGE_PROBABILITY[stage];
+    }
+    // Sync forecast_category with stage on insert and whenever stage changes.
+    if (stage && STAGE_FORECAST[stage] !== undefined) {
+      const stageChanged = event === 'beforeInsert' || (typeof input.stage === 'string' && input.stage !== previous?.stage);
+      if (stageChanged) input.forecast_category = STAGE_FORECAST[stage];
     }
 
     if (event === 'beforeUpdate' && previous) {

@@ -48,7 +48,7 @@ export const ContractRenewalFlow: Flow = {
     },
     {
       id: 'check_notice_window', type: 'decision', label: 'Within Notice Window?',
-      config: { condition: '{currentContract.end_date} <= {TODAY() + currentContract.renewal_notice_days}' },
+      config: { condition: 'timestamp(currentContract.end_date) <= daysFromNow(int(currentContract.renewal_notice_days))' },
     },
     {
       id: 'create_renewal_task', type: 'create_record', label: 'Create Renewal Task',
@@ -77,7 +77,7 @@ export const ContractRenewalFlow: Flow = {
     },
     {
       id: 'check_auto_renewal', type: 'decision', label: 'Auto-Renewal On?',
-      config: { condition: '{currentContract.auto_renewal} == true' },
+      config: { condition: 'currentContract.auto_renewal == true' },
     },
     {
       id: 'create_renewal_opp', type: 'create_record', label: 'Open Renewal Opportunity',
@@ -103,12 +103,12 @@ export const ContractRenewalFlow: Flow = {
     { id: 'e2', source: 'query_contracts', target: 'loop_contracts', type: 'default' },
     { id: 'e3', source: 'loop_contracts', target: 'check_notice_window', type: 'default' },
     // Only act when the contract is inside its own notice window
-    { id: 'e4', source: 'check_notice_window', target: 'create_renewal_task', type: 'conditional', condition: '{currentContract.end_date} <= {TODAY() + currentContract.renewal_notice_days}', label: 'In window' },
-    { id: 'e5', source: 'check_notice_window', target: 'end', type: 'conditional', condition: '{currentContract.end_date} > {TODAY() + currentContract.renewal_notice_days}', label: 'Not yet' },
+    { id: 'e4', source: 'check_notice_window', target: 'create_renewal_task', type: 'conditional', condition: 'timestamp(currentContract.end_date) <= daysFromNow(int(currentContract.renewal_notice_days))', label: 'In window' },
+    { id: 'e5', source: 'check_notice_window', target: 'end', type: 'conditional', condition: 'timestamp(currentContract.end_date) > daysFromNow(int(currentContract.renewal_notice_days))', label: 'Not yet' },
     { id: 'e6', source: 'create_renewal_task', target: 'notify_owner', type: 'default' },
     { id: 'e7', source: 'notify_owner', target: 'check_auto_renewal', type: 'default' },
-    { id: 'e8', source: 'check_auto_renewal', target: 'create_renewal_opp', type: 'conditional', condition: '{currentContract.auto_renewal} == true', label: 'Auto-renew' },
-    { id: 'e9', source: 'check_auto_renewal', target: 'end', type: 'conditional', condition: '{currentContract.auto_renewal} != true', label: 'Manual' },
+    { id: 'e8', source: 'check_auto_renewal', target: 'create_renewal_opp', type: 'conditional', condition: 'currentContract.auto_renewal == true', label: 'Auto-renew' },
+    { id: 'e9', source: 'check_auto_renewal', target: 'end', type: 'conditional', condition: 'currentContract.auto_renewal != true', label: 'Manual' },
     { id: 'e10', source: 'create_renewal_opp', target: 'end', type: 'default' },
   ],
 };

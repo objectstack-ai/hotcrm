@@ -137,7 +137,7 @@ export const OpportunityApprovalFlow: Flow = {
       config: {
         to: ['{oppRecord.owner}'],
         channels: ['inbox', 'email'],
-        severity: 'high',
+        severity: 'warning',
         topic: 'opportunity_rejected',
         title: 'Deal rejected: {oppRecord.name}',
         body: 'Your opportunity {oppRecord.name} was not approved. Review and revise before resubmitting.',

@@ -228,22 +228,7 @@ export const Campaign = ObjectSchema.create({
   ],
   
   // Workflow Rules
-  workflows: [
-    {
-      name: 'campaign_completion_check',
-      objectName: 'crm_campaign',
-      triggerType: 'scheduled',
-      schedule: '0 2 * * *',
-      criteria: P`record.end_date < today() && record.status == "in_progress"`,
-      actions: [
-        {
-          name: 'mark_completed',
-          type: 'field_update',
-          field: 'status',
-          value: '"completed"',
-        }
-      ],
-      active: true,
-    }
-  ],
+  // NOTE: object `workflows[]` were removed in @objectstack 7.7. Field-updates
+  // moved to this object's *.hook.ts; scheduled status-flips & notifications
+  // moved to src/flows/*.flow.ts (see flows/index.ts).
 });
