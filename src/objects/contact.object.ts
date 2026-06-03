@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
-import { F, P } from '@objectstack/spec';
+import { F } from '@objectstack/spec';
 
 export const Contact = ObjectSchema.create({
   name: 'crm_contact',
@@ -196,32 +196,13 @@ export const Contact = ObjectSchema.create({
   compactLayout: ['full_name', 'email', 'crm_account', 'phone'],
   
   // Validation Rules
-  validations: [
-    {
-      name: 'email_unique_per_account',
-      type: 'unique',
-      severity: 'error',
-      message: 'Email must be unique within an account',
-      fields: ['email', 'crm_account'],
-      caseSensitive: false,
-    },
-  ],
-  
+  // `email_unique_per_account` (type: 'unique') was removed in 7.6 — the
+  // standalone unique-validation type no longer exists (ADR-0032 validation
+  // union). Email uniqueness is already enforced (globally, which is stricter
+  // than per-account) by the `{ fields: ['email'], unique: true }` index above.
+
   // Workflow Rules
-  workflows: [
-    {
-      name: 'welcome_email',
-      objectName: 'crm_contact',
-      triggerType: 'on_create',
-      active: true,
-      actions: [
-        {
-          name: 'send_welcome',
-          type: 'email_alert',
-          template: 'contact_welcome',
-          recipients: ['{contact.email}'],
-        }
-      ],
-    }
-  ],
+  // NOTE: object `workflows[]` were removed in @objectstack 7.7. Field-updates
+  // moved to this object's *.hook.ts; scheduled status-flips & notifications
+  // moved to src/flows/*.flow.ts (see flows/index.ts).
 });

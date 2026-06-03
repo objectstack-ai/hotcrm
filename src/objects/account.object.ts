@@ -199,7 +199,10 @@ export const Account = ObjectSchema.create({
   
   // Database indexes for performance
   indexes: [
-    { fields: ['name'] },
+    // Account name is the external id / upsert key (see src/data) and must be
+    // unique. In 7.6 uniqueness is expressed as a unique index — the standalone
+    // `type: 'unique'` validation rule was removed (ADR-0032 validation union).
+    { fields: ['name'], unique: true },
     { fields: ['owner'] },
     { fields: ['type', 'is_active'] },
   ],
@@ -226,32 +229,12 @@ export const Account = ObjectSchema.create({
       message: 'Annual Revenue must be positive',
       condition: P`record.annual_revenue < 0`,
     },
-    {
-      name: 'account_name_unique',
-      type: 'unique',
-      severity: 'error',
-      message: 'Account name must be unique',
-      fields: ['name'],
-      caseSensitive: false,
-    },
+    // `account_name_unique` (type: 'unique') was removed in 7.6 — uniqueness now
+    // lives on the `name` index above (unique: true).
   ],
   
   // Workflow Rules
-  workflows: [
-    {
-      name: 'update_last_activity',
-      objectName: 'crm_account',
-      triggerType: 'on_update',
-      criteria: P`record.owner != previous.owner || record.type != previous.type`,
-      actions: [
-        {
-          name: 'set_activity_date',
-          type: 'field_update',
-          field: 'last_activity_date',
-          value: 'TODAY()',
-        }
-      ],
-      active: true,
-    }
-  ],
+  // NOTE: object `workflows[]` were removed in @objectstack 7.7. Field-updates
+  // moved to this object's *.hook.ts; scheduled status-flips & notifications
+  // moved to src/flows/*.flow.ts (see flows/index.ts).
 });

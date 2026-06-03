@@ -42,6 +42,37 @@ const caseValidation: Hook = {
       due.setHours(due.getHours() + 4);
       input.sla_due_date = due.toISOString();
     }
+
+    // Closed flag/date + resolution time (migrated from removed `set_closed_flag`
+    // / `set_closed_date` / `calculate_resolution_time` workflows — 7.7 dropped
+    // workflows[]). Guest submissions had is_closed stripped above; recompute it
+    // here for trusted writes.
+    if (!isGuestSubmission) {
+      const effStatus =
+        (typeof input.status === 'string' && input.status) ||
+        (typeof ctx.previous?.status === 'string' && (ctx.previous.status as string)) ||
+        undefined;
+      if (typeof effStatus === 'string') input.is_closed = effStatus === 'closed';
+
+      const becameClosed = input.status === 'closed' && ctx.previous?.status !== 'closed';
+      if (becameClosed && !input.closed_date && !ctx.previous?.closed_date) {
+        input.closed_date = new Date().toISOString();
+      }
+
+      const closedDate =
+        (typeof input.closed_date === 'string' && input.closed_date) ||
+        (typeof ctx.previous?.closed_date === 'string' && (ctx.previous.closed_date as string)) ||
+        undefined;
+      const createdDate =
+        (typeof input.created_date === 'string' && input.created_date) ||
+        (typeof ctx.previous?.created_date === 'string' && (ctx.previous.created_date as string)) ||
+        (typeof ctx.previous?.created_at === 'string' && (ctx.previous.created_at as string)) ||
+        undefined;
+      if (closedDate && createdDate) {
+        const hrs = (new Date(closedDate).getTime() - new Date(createdDate).getTime()) / 3_600_000;
+        if (Number.isFinite(hrs) && hrs >= 0) input.resolution_time_hours = Math.round(hrs * 10) / 10;
+      }
+    }
   },
 };
 

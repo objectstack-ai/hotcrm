@@ -210,44 +210,7 @@ export const Contract = ObjectSchema.create({
   ],
   
   // Workflow Rules
-  workflows: [
-    {
-      name: 'contract_expiration_check',
-      objectName: 'crm_contract',
-      triggerType: 'scheduled',
-      schedule: '0 0 * * *', // Daily at midnight
-      criteria: P`record.end_date <= today() && record.status == "activated"`,
-      actions: [
-        {
-          name: 'mark_expired',
-          type: 'field_update',
-          field: 'status',
-          value: '"expired"',
-        },
-        {
-          name: 'notify_owner',
-          type: 'email_alert',
-          template: 'contract_expired',
-          recipients: ['{owner}'],
-        }
-      ],
-      active: true,
-    },
-    {
-      name: 'renewal_reminder',
-      objectName: 'crm_contract',
-      triggerType: 'scheduled',
-      schedule: '0 0 * * *', // Daily at midnight
-      criteria: P`(record.end_date - today()) <= record.renewal_notice_days && record.status == "activated"`,
-      actions: [
-        {
-          name: 'notify_renewal',
-          type: 'email_alert',
-          template: 'contract_renewal_reminder',
-          recipients: ['{owner}', '{account.owner}'],
-        }
-      ],
-      active: true,
-    }
-  ],
+  // NOTE: object `workflows[]` were removed in @objectstack 7.7. Field-updates
+  // moved to this object's *.hook.ts; scheduled status-flips & notifications
+  // moved to src/flows/*.flow.ts (see flows/index.ts).
 });

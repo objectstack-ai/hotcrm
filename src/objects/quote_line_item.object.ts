@@ -17,8 +17,9 @@ export const QuoteLineItem = ObjectSchema.create({
   icon: 'package',
   description: 'A single product line on a Quote',
 
-  trackHistory: true,
-  shareModel: 'controlled-by-parent',
+  // 7.7: trackHistory moved under `enable`; shareModel 'controlled-by-parent'
+  // dropped (master-detail children inherit the master's sharing).
+  enable: { trackHistory: true },
 
   compactLayout: ['crm_product', 'quantity', 'unit_price', 'total_price'],
 

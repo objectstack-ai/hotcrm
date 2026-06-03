@@ -2,7 +2,6 @@ import { P } from '@objectstack/spec';
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
-import { OpportunityStateMachine } from './opportunity.state';
 
 export const Opportunity = ObjectSchema.create({
   name: 'crm_opportunity',
@@ -261,11 +260,9 @@ export const Opportunity = ObjectSchema.create({
   
   // Removed: list_views and form_views belong in UI configuration, not object definition
   
-  // Lifecycle State Machine(s)
-  stateMachines: {
-    lifecycle: OpportunityStateMachine,
-  },
-  
+  // Lifecycle transitions are enforced via a `state_machine` validation rule
+  // (see validations[] below). 7.7 removed the top-level `stateMachines` key.
+
   // Validation Rules
   validations: [
     {
@@ -282,6 +279,23 @@ export const Opportunity = ObjectSchema.create({
       message: 'Amount must be greater than zero',
       condition: P`record.amount <= 0`,
     },
+    {
+      // Migrated from the removed top-level `stateMachines` key (OpportunityStateMachine).
+      name: 'opportunity_stage_progression',
+      type: 'state_machine',
+      severity: 'warning',
+      message: 'Invalid opportunity stage transition',
+      field: 'stage',
+      transitions: {
+        prospecting: ['qualification', 'closed_lost'],
+        qualification: ['needs_analysis', 'closed_lost'],
+        needs_analysis: ['proposal', 'closed_lost'],
+        proposal: ['negotiation', 'closed_lost'],
+        negotiation: ['closed_won', 'closed_lost'],
+        closed_won: [],
+        closed_lost: [],
+      },
+    },
   ],
   
   // Workflow Rules
@@ -292,47 +306,7 @@ export const Opportunity = ObjectSchema.create({
   // between a declarative CASE() table and the hook's lookup table.
   // `forecast_category` remains a declarative workflow below since the hook
   // does not own it.
-  workflows: [
-    {
-      name: 'set_forecast_category_by_stage',
-      objectName: 'crm_opportunity',
-      triggerType: 'on_create_or_update',
-      criteria: P`record.stage != previous.stage`,
-      active: true,
-      actions: [
-        {
-          name: 'set_forecast_category',
-          type: 'field_update',
-          field: 'forecast_category',
-          value: `CASE(record.stage,
-            "prospecting", "pipeline",
-            "qualification", "pipeline",
-            "needs_analysis", "best_case",
-            "proposal", "commit",
-            "negotiation", "commit",
-            "closed_won", "closed",
-            "closed_lost", "omitted",
-            record.forecast_category
-          )`,
-        }
-      ],
-    },
-    {
-      name: 'notify_on_large_deal_won',
-      objectName: 'crm_opportunity',
-      triggerType: 'on_update',
-      criteria: P`record.stage != previous.stage && record.stage == "closed_won" && record.amount > 100000`,
-      active: true,
-      actions: [
-        {
-          name: 'notify_management',
-          type: 'email_alert',
-          template: 'large_deal_won',
-          // Notify the deal owner and their manager rather than a hardcoded
-          // mailbox, so this scales with the org's role hierarchy.
-          recipients: ['{owner}', '{owner.manager}'],
-        }
-      ],
-    }
-  ],
+  // NOTE: object `workflows[]` were removed in @objectstack 7.7. Field-updates
+  // moved to this object's *.hook.ts; scheduled status-flips & notifications
+  // moved to src/flows/*.flow.ts (see flows/index.ts).
 });

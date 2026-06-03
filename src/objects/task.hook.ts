@@ -14,9 +14,9 @@ import type { HookApi } from './_hook-api';
 const taskValidation: Hook = {
   name: 'task_completion',
   object: 'crm_task',
-  events: ['beforeUpdate'],
+  events: ['beforeInsert', 'beforeUpdate'],
   priority: 200,
-  description: 'Stamp completed_date/progress on completion and validate reminder timing.',
+  description: 'Stamp completed/overdue flags + dates on completion and validate reminder timing.',
   handler: async (ctx: HookContext) => {
     const { input } = ctx;
     const previous = ctx.previous;
@@ -26,6 +26,20 @@ const taskValidation: Hook = {
       if (typeof input.progress_percent !== 'number') input.progress_percent = 100;
       input.is_completed = true;
     }
+
+    // Derived flags (migrated from removed `set_completed_flag` / `check_overdue`
+    // object workflows — 7.7 dropped workflows[]).
+    const effStatus =
+      (typeof input.status === 'string' && input.status) ||
+      (typeof previous?.status === 'string' && (previous.status as string)) ||
+      undefined;
+    if (typeof effStatus === 'string') input.is_completed = effStatus === 'completed';
+    const effDue =
+      (typeof input.due_date === 'string' && input.due_date) ||
+      (typeof previous?.due_date === 'string' && (previous.due_date as string)) ||
+      undefined;
+    const todayStr = new Date().toISOString().slice(0, 10);
+    input.is_overdue = !!effDue && effDue.slice(0, 10) < todayStr && input.is_completed !== true;
 
     const reminder =
       (typeof input.reminder_date === 'string' && input.reminder_date) ||

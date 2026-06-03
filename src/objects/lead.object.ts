@@ -2,7 +2,6 @@
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
 import { F, P } from '@objectstack/spec';
-import { LeadStateMachine } from './lead.state';
 
 export const Lead = ObjectSchema.create({
   name: 'crm_lead',
@@ -266,14 +265,10 @@ export const Lead = ObjectSchema.create({
     }),
   },
 
-  // Lifecycle State Machine(s)
-  // Enforces valid status transitions to prevent AI hallucinations
-  // Using `stateMachines` (plural) for future extensibility.
-  // For simple objects with one lifecycle, `stateMachine` (singular) is also supported.
-  stateMachines: {
-    lifecycle: LeadStateMachine,
-  },
-  
+  // Lifecycle transitions are enforced via a `state_machine` validation rule
+  // (see validations[] below). 7.7 removed the top-level `stateMachines` key —
+  // status state machines are now expressed in the validation union.
+
   // Database indexes for performance
   indexes: [
     { fields: ['email'], unique: true },
@@ -313,39 +308,24 @@ export const Lead = ObjectSchema.create({
       message: 'Cannot edit a converted lead',
       condition: P`record.is_converted == true && (record.company != previous.company || record.email != previous.email || record.first_name != previous.first_name || record.last_name != previous.last_name)`,
     },
+    {
+      // Migrated from the removed top-level `stateMachines` key (LeadStateMachine).
+      name: 'lead_status_progression',
+      type: 'state_machine',
+      severity: 'warning',
+      message: 'Invalid lead status transition',
+      field: 'status',
+      transitions: {
+        new: ['contacted', 'unqualified'],
+        contacted: ['qualified', 'unqualified'],
+        qualified: ['converted', 'unqualified'],
+        unqualified: ['new'],
+        converted: [],
+      },
+    },
   ],
   
-  workflows: [
-    {
-      name: 'auto_flag_hot_lead',
-      objectName: 'crm_lead',
-      triggerType: 'on_create_or_update',
-      criteria: P`record.rating >= 4 && record.status == "new"`,
-      active: true,
-      actions: [
-        {
-          name: 'route_to_followup',
-          type: 'field_update',
-          field: 'next_followup_date',
-          // Hot leads must be contacted within 24h; do NOT lie about status.
-          value: 'TODAY()',
-        }
-      ],
-    },
-    {
-      name: 'notify_owner_on_high_score_lead',
-      objectName: 'crm_lead',
-      triggerType: 'on_create_or_update',
-      criteria: P`record.rating != previous.rating && record.rating >= 4.5`,
-      active: true,
-      actions: [
-        {
-          name: 'email_owner',
-          type: 'email_alert',
-          template: 'high_score_lead_notification',
-          recipients: ['{owner.email}'],
-        }
-      ],
-    }
-  ],
+  // NOTE: object `workflows[]` were removed in @objectstack 7.7. Field-updates
+  // moved to this object's *.hook.ts; scheduled status-flips & notifications
+  // moved to src/flows/*.flow.ts (see flows/index.ts).
 });

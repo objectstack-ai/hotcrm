@@ -16,8 +16,10 @@ export const CampaignMember = ObjectSchema.create({
   icon: 'user-plus',
   description: 'Membership and response tracking for marketing campaigns',
 
-  trackHistory: true,
-  shareModel: 'controlled-by-parent',
+  // 7.7: top-level `trackHistory` moved under `enable`; `shareModel:
+  // 'controlled-by-parent'` dropped — master-detail children inherit the
+  // master's sharing automatically (sharingModel enum no longer has it).
+  enable: { trackHistory: true },
 
   compactLayout: ['crm_campaign', 'crm_lead', 'crm_contact', 'status', 'response_date'],
 
@@ -94,7 +96,7 @@ export const CampaignMember = ObjectSchema.create({
       type: 'script',
       severity: 'error',
       message: 'A campaign member must reference either a Lead or a Contact',
-      condition: { dialect: 'cel', source: 'isBlank(record.lead) && isBlank(record.contact)' },
+      condition: { dialect: 'cel', source: 'isBlank(record.crm_lead) && isBlank(record.crm_contact)' },
     },
   ],
 });

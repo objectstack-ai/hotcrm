@@ -31,6 +31,17 @@ const accountHook: Hook = {
       }
     }
 
+    // Stamp last_activity_date when ownership or type changes (migrated from the
+    // removed `update_last_activity` object workflow — 7.7 dropped workflows[]).
+    if (event === 'beforeUpdate') {
+      const prev = ctx.previous ?? {};
+      const ownerChanged = typeof input.owner !== 'undefined' && input.owner !== prev.owner;
+      const typeChanged = typeof input.type !== 'undefined' && input.type !== prev.type;
+      if (ownerChanged || typeChanged) {
+        input.last_activity_date = new Date().toISOString().slice(0, 10);
+      }
+    }
+
     if (event === 'beforeInsert') {
       if (typeof input.account_number === 'string') {
         input.account_number = input.account_number.toUpperCase();
