@@ -1,95 +1,67 @@
 ---
 title: Customization
-description: For developers — extend HotCRM with custom objects, fields, AI skills, and UI components.
+description: Extend HotCRM with ObjectStack metadata, actions, flows, AI skills, and UI definitions.
 ---
 
 # Customization
 
-This section is for **developers and technical implementers** extending HotCRM with code. If you're a CRM admin configuring profiles and workflows, head to [Administration](/docs/administration/index) instead.
+This section is for developers and technical implementers extending HotCRM with code. If you are configuring users, profiles, workflows, or sharing from the app, start with [Administration](/docs/administration/index).
 
 ## What you can build
 
 | Area | What it covers |
 | --- | --- |
-| [**Extending objects**](/docs/customization/extending-objects) | Adding fields, custom objects, hooks, flows, validation, sharing |
-| [**AI skills**](/docs/customization/ai-skills) | Building new AI Copilot skills wired to knowledge bases |
-| [**UI extensions**](/docs/customization/ui-extensions) | Custom pages, list views, dashboards, dropdown actions |
+| [Extending objects](/docs/customization/extending-objects) | Fields, objects, hooks, flows, validation, sharing |
+| [AI skills](/docs/customization/ai-skills) | Copilot skills and agent wiring |
+| [UI extensions](/docs/customization/ui-extensions) | Pages, views, dashboards, actions |
+| [Testing and CI](/docs/customization/testing-and-ci) | Metadata validation and automated checks |
 
-## Prerequisites
+## Current source layout
 
-- **TypeScript** and Node.js fundamentals.
-- Familiarity with the **@objectstack/runtime** engine (HotCRM is built on it).
-- Access to the **HotCRM source repo** and a development sandbox.
+HotCRM is a single ObjectStack app. Add or modify metadata under `src/`, then export it from the matching barrel file.
 
-## The HotCRM file convention
+```text
+src/
+├── objects/        # data model and object hooks
+├── actions/        # UI actions and executable action bodies
+├── flows/          # automation
+├── agents/         # AI agents
+├── skills/         # AI skills
+├── apps/
+├── views/
+├── pages/
+├── dashboards/
+├── reports/
+├── profiles/
+├── sharing/
+├── translations/
+└── data/
+```
 
-HotCRM follows the *"file suffix protocol"* — each kind of artifact lives in a file with a specific suffix:
+## File suffix protocol
 
 | Suffix | What it defines |
 | --- | --- |
-| `*.object.ts` | Data model — fields, validation, sharing |
-| `*.hook.ts` | Server-side business logic on data lifecycle |
-| `*.action.ts` | API endpoints and AI-callable tools |
-| `*.flow.ts` | Multi-step automation |
-| `*.skill.ts` | An AI Copilot skill definition |
-| `*.agent.ts` | A composite AI agent (multiple skills + knowledge) |
-| `*.page.ts` | A UI page layout |
-| `*.view.ts` | A list view |
-| `*.dashboard.ts` | A dashboard definition |
-| `*.sharing.ts` | Sharing rules (criteria-based or owner-based) |
-| `*.approval.ts` | Approval process definition |
-| `*.statemachine.ts` | State transitions |
-| `*.permission.ts` | Permission sets |
-
-All files live under `packages/{package}/src/`. Names are `snake_case`.
-
-## Project structure
-
-```
-hotcrm/
-├── packages/
-│   ├── crm/           # Sales (account, lead, contact, opportunity, ...)
-│   ├── finance/       # Revenue (contract, invoice)
-│   ├── products/      # Product catalog
-│   ├── service/       # Cases, knowledge base
-│   ├── marketing/     # Campaigns
-│   └── ai/            # Copilot agents and skills
-└── apps/
-    └── docs/          # This documentation site
-```
-
-Add your customization in **its own package** (e.g., `packages/acme-crm-extension/`) to keep core HotCRM upgradable.
-
-## Where to start
-
-1. **Set up a sandbox** — clone the repo, install deps, run the dev environment.
-2. **Read** [Extending Objects](/docs/customization/extending-objects) for the data layer.
-3. **Read** [AI Skills](/docs/customization/ai-skills) for Copilot extensions.
-4. **Read** [UI Extensions](/docs/customization/ui-extensions) for the front-end.
-5. **Validate** every metadata file with the corresponding `@objectstack/spec` schema before committing.
-
-## Schema validation
-
-Every metadata file must validate against an `@objectstack/spec` schema:
-
-| File type | Schema |
-| --- | --- |
-| `*.object.ts` | `ObjectSchema.parse()` from `@objectstack/spec/data` |
-| `*.page.ts` | `PageSchema` from `@objectstack/spec/ui` |
-| `*.flow.ts` | `WorkflowRuleSchema.parse()` from `@objectstack/spec/automation` |
-| `*.statemachine.ts` | `StateMachineSchema.parse()` from `@objectstack/spec/automation` |
-| `*.skill.ts` | Skill schema from `@objectstack/spec/ai` |
-| `*.permission.ts` | `PermissionSetSchema.parse()` from `@objectstack/spec/security` |
-
-CI fails if validation fails — so you'll know immediately.
+| `*.object.ts` | Data model |
+| `*.hook.ts` | Object lifecycle logic |
+| `*.actions.ts` | UI actions and executable actions |
+| `*.flow.ts` | Automation |
+| `*.skill.ts` | AI Copilot skill |
+| `*.agent.ts` | AI agent |
+| `*.page.ts` | UI page |
+| `*.view.ts` | List or kanban view |
+| `*.dashboard.ts` | Dashboard |
+| `*.report.ts` | Report |
+| `*.sharing.ts` | Sharing rule |
+| `*.profile.ts` | Permission profile |
 
 ## Golden rules
 
-- ✅ **Don't fork core packages** — extend with hooks and new objects in your own package.
-- ✅ **Use ObjectQL, not SQL** — `broker.find('crm_opportunity', {...})` is the only supported data access.
-- ✅ **Snake_case** for object and field names.
-- ✅ **Validate everything** against `@objectstack/spec` schemas.
-- ✅ **Test in sandbox** before deploying to production.
+- Use the `crm_` prefix for HotCRM object names.
+- Use ObjectQL and ObjectStack APIs, not raw SQL.
+- Keep metadata exported from the relevant `src/**/index.ts` file.
+- Update translations when adding user-visible labels.
+- Run `pnpm verify` before publishing.
 
 ## Next
 

@@ -1,304 +1,68 @@
 ---
-title: 佈景主題與 i18n
-description: 用你的色彩、字型、標誌為 HotCRM 打造品牌 —— 並將其翻譯成你使用者所說的語言。
+title: 主題與 i18n
+description: 處理 HotCRM 標籤、翻譯和本地化文件。
 ---
 
-# 佈景主題與 i18n
+# 主題與 i18n
 
-本頁涵蓋兩項相關的客製化：**佈景主題**（外觀風格）和 **國際化**（多語言支援）。
+目前倉庫主要維護中繼資料標籤和 locale bundles。執行時主題由 ObjectStack shell 處理；應用內文案放在翻譯檔案中。
 
----
+## 應用翻譯
 
-## 佈景主題
+Locale bundles 位於 `src/translations/`。
 
-一個完整的佈景主題控制色彩、排版、密度、標誌、favicon、登入介面和郵件範本。
-
-### 定義佈景主題
-
-```ts
-// packages/your-extension/src/theme.ts
-import { defineTheme } from '@objectstack/spec/ui';
-
-export default defineTheme({
-  name: 'acme',
-  brand: {
-    primary:    '#0E4DA4',
-    primary_dark: '#093470',
-    accent:     '#FFB000',
-    success:    '#16A34A',
-    warning:    '#F59E0B',
-    danger:     '#DC2626',
-    neutral:    { 50: '#F8FAFC', 900: '#0F172A' },  // light + dark anchor
-    logo:       { light: '/branding/logo-light.svg', dark: '/branding/logo-dark.svg' },
-    favicon:    '/branding/favicon.ico',
-    app_icon:   '/branding/app-icon-512.png',       // PWA icon
-  },
-  typography: {
-    sans:    'Inter, system-ui, sans-serif',
-    display: 'Söhne, Inter, sans-serif',
-    mono:    'JetBrains Mono, monospace',
-    base_size: 14,
-  },
-  density: 'comfortable',                            // 'comfortable' | 'compact' | 'spacious'
-  radius:  'md',                                     // 'none' | 'sm' | 'md' | 'lg' | 'pill'
-  shadow:  'subtle',                                 // 'none' | 'subtle' | 'pronounced'
-});
+```text
+src/translations/
+├── en.ts
+├── zh-CN.ts
+├── es-ES.ts
+├── ja-JP.ts
+└── crm.translation.ts
 ```
 
-註冊佈景主題：
+新增帶使用者可見標籤的物件、動作、頁面、視圖、儀表板或報表時，請同步更新相關翻譯檔案。
 
-```ts
-// packages/your-extension/src/index.ts
-import theme from './theme';
-export { theme };
+## 文件翻譯
+
+產品文件位於 `content/docs/`。
+
+| 語言 | 檔案模式 |
+| --- | --- |
+| 英文 | `*.mdx` |
+| 簡體中文 | `*.zh-Hans.mdx` |
+| 繁體中文 | `*.zh-Hant.mdx` |
+
+導覽中繼資料遵循同樣模式：
+
+```text
+meta.json
+meta.zh-Hans.json
+meta.zh-Hant.json
 ```
 
-在 **Setup → Branding → Theme → Activate** 中將其套用到整個租戶。
+## 工作流
 
-### 登入介面
+1. 先更新英文源頁面。
+2. 在本地化頁面中同步結構變化。
+3. 連結保持 locale-aware，例如 `/zh-Hant/docs/...`。
+4. 執行文件類型檢查或構建。
 
-一個獨立的 `login_theme.ts` 控制登入頁（它在使用者的佈景主題載入之前算繪）：
-
-```ts
-import { defineLoginTheme } from '@objectstack/spec/ui';
-
-export default defineLoginTheme({
-  name: 'acme-login',
-  background: { type: 'gradient', from: '#0E4DA4', to: '#093470' },
-  hero:       { logo: '/branding/logo-light.svg', tagline: 'Built for builders.' },
-  card:       { radius: 'lg', shadow: 'pronounced', max_width: 420 },
-  footer:     '© Acme 2026 · privacy.acme.com',
-});
+```bash
+pnpm --filter @hotcrm/docs types:check
+pnpm --filter @hotcrm/docs build
 ```
 
-### 郵件範本
+## 驗證
 
-用你的色彩和標誌為郵件範本打造品牌：
+應用中繼資料：
 
-```ts
-// packages/your-extension/src/email/_layout.email.ts
-import { defineEmailLayout } from '@objectstack/spec/ui';
-
-export default defineEmailLayout({
-  name: 'acme_layout',
-  header: { logo: '/branding/email-logo.png', background: '#0E4DA4' },
-  footer: { text: 'Acme · 1 Market St · San Francisco', unsubscribe_required: true },
-  fonts:  ['Inter', 'Helvetica Neue', 'Arial', 'sans-serif'],
-});
+```bash
+pnpm validate
+pnpm typecheck
 ```
 
-每一封交易性郵件（線索告警、核准請求、案例通知、密碼重設）都會繼承這套版面配置。
+文件：
 
-### 依租戶佈景主題（多品牌）
-
-如果你服務於多個品牌（例如 HotCRM 以不同標籤轉售）：
-
-```ts
-defineTheme({
-  name: 'acme',
-  scope: { tenant_tag: 'brand=acme' },
-});
-
-defineTheme({
-  name: 'beta',
-  scope: { tenant_tag: 'brand=beta' },
-});
+```bash
+pnpm --filter @hotcrm/docs types:check
 ```
-
-執行階段會為每個租戶選取與其標籤相符的佈景主題。
-
-### 依使用者佈景主題
-
-使用者可以在 Settings → Preferences 中選擇 **深色模式** / **淺色模式** / **跟隨系統**。佈景主題必須同時定義淺色和深色變體：
-
-```ts
-defineTheme({
-  name: 'acme',
-  variants: {
-    light: { brand: { surface: '#FFFFFF', text: '#0F172A' } },
-    dark:  { brand: { surface: '#0F172A', text: '#F8FAFC' } },
-  },
-});
-```
-
-### 無障礙
-
-執行階段會強制執行：
-
-- 文字 + 背景上的 **AA 對比度**。
-- 每個可互動元素上的 **焦點指示器**。
-- **減弱動態效果** 支援（遵守 `prefers-reduced-motion`）。
-
-在驗證時未通過對比度檢查的佈景主題將被拒絕。
-
-### 自訂 CSS 應急通道
-
-用於一次性的像素微調：
-
-```ts
-defineTheme({
-  name: 'acme',
-  extra_css: `
-    .dashboard-tile h3 { letter-spacing: -0.02em; }
-    .login-card        { backdrop-filter: blur(8px); }
-  `,
-});
-```
-
-請謹慎使用 —— 自訂 CSS 可能會隨平台 UI 更新而失效。
-
----
-
-## 國際化（i18n）
-
-HotCRM 預設提供英語。每個租戶都可以啟用額外的語言。
-
-### 開箱即用支援的語言
-
-HotCRM 目前為以下四個地區設定隨附了翻譯好的 UI 套件。其他所有地區設定都是 **已啟用但未翻譯** —— 在你撰寫翻譯套件期間，UI 字串會回退為英語（參見 [翻譯自訂標籤](#translating-custom-labels)）。
-
-| 語言 | 地區代碼 | 狀態 |
-| --- | --- | --- |
-| English | `en` | ✅ 預設 |
-| 简体中文 | `zh-CN` | ✅ 已隨附 |
-| Español | `es-ES` | ✅ 已隨附 |
-| 日本語 | `ja-JP` | ✅ 已隨附 |
-
-**藍圖上（歡迎社群翻譯套件）：** 繁體中文 `zh-TW`、한국어 `ko-KR`、Português `pt-BR`、Français `fr-FR`、Deutsch `de-DE`、Italiano `it-IT`、Русский `ru-RU`、Türkçe `tr-TR`、العربية `ar-SA`（RTL）、עברית `he-IL`（RTL）、Tiếng Việt `vi-VN`、ไทย `th-TH`、Bahasa Indonesia `id-ID`、Nederlands `nl-NL`、Polski `pl-PL`。
-
-### 啟用語言
-
-**Setup → Internationalisation → Languages → Enable**。每個使用者在 **Settings → Preferences** 中選擇自己的語言。
-
-### 什麼會被翻譯
-
-| 層 | 來源 | 備註 |
-| --- | --- | --- |
-| **系統 UI 字串** | 平台套件 | 由 ObjectStack 隨附 |
-| **標準物件標籤** | HotCRM 套件 | 由 HotCRM 隨附 |
-| **自訂欄位標籤** | 你的翻譯檔案 | 由你撰寫 |
-| **選擇清單值** | 你的翻譯檔案 | 由你撰寫 |
-| **驗證訊息** | 你的翻譯檔案 | 由你撰寫 |
-| **郵件範本** | 依地區設定的範本 | 由你撰寫 |
-| **AI Copilot 回應** | LLM（自動） | 品質因語言而異 |
-| **使用者輸入的資料** | 不翻譯 | 記錄內容保持輸入時的原樣 |
-
-### 翻譯自訂標籤
-
-將標籤包裹在 `t()` 函式中：
-
-```ts
-import { t } from '@objectstack/runtime/i18n';
-import { Field } from '@objectstack/spec/data';
-
-custom_priority: Field.select({
-  label: t('opportunity.field.custom_priority', 'Priority'),
-  options: [
-    { value: 'a', label: t('opportunity.priority.a', 'Top') },
-    { value: 'b', label: t('opportunity.priority.b', 'High') },
-  ],
-}),
-```
-
-第二個引數是 **回退值**（當使用者地區設定不存在翻譯時使用）。
-
-### 翻譯檔案
-
-```
-packages/your-extension/
-  i18n/
-    en.json          // source language
-    zh-CN.json
-    ja.json
-    es.json
-    ...
-```
-
-```json
-// i18n/zh-CN.json
-{
-  "opportunity.field.custom_priority": "优先级",
-  "opportunity.priority.a": "最高",
-  "opportunity.priority.b": "高"
-}
-```
-
-### 複數化
-
-```ts
-t('inbox.cases', {
-  count: 5,
-  one:   '1 case',
-  other: '{count} cases',
-});
-```
-
-每個語言檔案都可以覆寫依地區設定的複數化規則（zero / one / few / many / other）—— 這對波蘭語、俄語、阿拉伯語尤為重要。
-
-### 格式化
-
-數字、日期、貨幣會依使用者的地區設定進行格式化：
-
-```ts
-import { fmt } from '@objectstack/runtime/i18n';
-
-fmt.currency(1234.5, 'USD', user.locale);   // "$1,234.50" or "1.234,50 $" depending on locale
-fmt.date(new Date(), 'long', user.locale);  // "March 12, 2026" or "12 mars 2026"
-fmt.relative(then, user.locale);            // "3 days ago" / "il y a 3 jours"
-```
-
-請使用 `fmt.*` 而非自行撰寫 —— 它能處理地區設定規則、RTL 和時區。
-
-### RTL（阿拉伯語、希伯來語）
-
-當使用者的地區設定為 RTL 時：
-
-- **頁面方向** 自動翻轉。
-- 具有方向含義的 **圖示**（箭頭、尖角）會翻轉。
-- **邏輯 CSS 屬性**（`margin-inline-start`）能正確運作。
-- **數字和程式碼** 在 RTL 文字中保持 LTR。
-
-請在開發工具中用 **地區設定切換器** 在 RTL 下測試你的自訂 UI。
-
-### 非英語地區設定下的 AI Copilot
-
-Copilot 會偵測使用者的地區設定並：
-
-- 以該語言輸出回應。
-- 以 **客戶的** 語言（從聯絡人記錄偵測）起草面向客戶的郵件。
-- 在有可用時以使用者的語言引用知識庫文章，否則使用原文。
-
-為獲得最佳效果，請 **以你服務客戶所用的相同語言維護知識庫**。
-
-### 翻譯工作流程
-
-新增語言的典型工作流程：
-
-1. 在 setup 中將該語言標記為 **進行中**。
-2. 匯出英語套件 → 翻譯供應商（或內部譯者）。
-3. 匯入翻譯好的套件。
-4. 用平台 LLM **自動翻譯** 缺失的鍵（僅限低風險的 UI 字串）。
-5. **審核者** 在應用內翻譯編輯器中簽署確認。
-6. 將該語言標記為 **啟用**。
-
-### 日期 / 數字 / 貨幣設定
-
-除地區設定外，每個使用者還可以設定：
-
-- **時區** —— 用於所有日期顯示。
-- **日期格式** —— 自動取自地區設定或自訂。
-- **每週的第一天** —— 自動取自地區設定。
-- **貨幣** —— 當記錄使用不同貨幣時用於顯示。
-
-這些設定位於 **Settings → Preferences → Region & Time**。
-
----
-
-## 提示
-
-- ✅ 始終提供一個 **深色變體** —— 現代使用者對此有所期待。
-- ✅ 在啟用佈景主題之前執行 **無障礙驗證器**。
-- ✅ 對 **每個面向使用者的字串** 使用 `t()` —— 即使你今天只支援英語。
-- ✅ **不要翻譯資料** —— 翻譯圍繞資料的 *外殼*。
-- ✅ 對於非英語知識庫，**撰寫原生內容** 而非自動翻譯英語。
-- ✅ **至少用一種 RTL 語言** 測試關鍵流程 —— 能捕捉大量版面配置缺陷。

@@ -1,291 +1,88 @@
 ---
 title: API Reference
-description: REST and ObjectQL endpoints, authentication, pagination, webhooks, and the platform SDKs.
+description: ObjectStack API basics for HotCRM objects, ObjectQL queries, and local development.
 ---
 
 # API Reference
 
-HotCRM exposes its full data plane through a **REST + ObjectQL** API. The same endpoints are used by the web UI, the mobile app, the AI Copilot, and any external integration.
+HotCRM runs on ObjectStack. The web UI, automation, actions, and AI skills all work against the same object metadata registered by `objectstack.config.ts`.
 
-> For comprehensive endpoint-by-endpoint reference (auto-generated from the OpenAPI spec), see the **API Explorer** at `your-hotcrm-url/api/explorer`.
+For the current object and field inventory, see the internal reference at [`docs/developers/api_reference.md`](../../../docs/developers/api_reference.md).
 
-## Authentication
+## Local base URL
 
-### OAuth 2.0 (recommended for apps)
+When running HotCRM locally:
 
-Standard authorisation code flow:
-
-```http
-GET /oauth/authorize
-  ?response_type=code
-  &client_id=YOUR_CLIENT_ID
-  &redirect_uri=https://your-app/callback
-  &scope=read:opportunity write:opportunity
+```bash
+pnpm dev
 ```
 
-Exchange the code for tokens:
+the app is available at:
 
-```http
-POST /oauth/token
-Content-Type: application/x-www-form-urlencoded
-
-grant_type=authorization_code
-&code=...
-&client_id=YOUR_CLIENT_ID
-&client_secret=YOUR_CLIENT_SECRET
-&redirect_uri=https://your-app/callback
+```text
+http://localhost:4001
 ```
 
-Use the **access token** in subsequent requests:
+Object API routes are served by the ObjectStack runtime. Route shape can vary by runtime version and enabled capabilities, so prefer the runtime API explorer when available in your environment.
 
-```http
-GET /api/v1/opportunities
-Authorization: Bearer <access_token>
-```
+## Current objects
 
-Tokens last **1 hour**; refresh with the refresh token.
+| Area | Objects |
+| --- | --- |
+| Sales | `crm_lead`, `crm_account`, `crm_contact`, `crm_opportunity`, `crm_opportunity_line_item`, `crm_forecast` |
+| Service | `crm_case`, `crm_knowledge_article`, `crm_task` |
+| Marketing | `crm_campaign`, `crm_campaign_member` |
+| Revenue | `crm_product`, `crm_quote`, `crm_quote_line_item`, `crm_contract` |
 
-### Personal Access Tokens (for scripts)
+## ObjectQL shape
 
-For server-to-server scripts, generate a PAT in **Settings → Developer → Personal Access Tokens**. Use as a Bearer token.
-
-⚠️ PATs inherit your user's permissions. Treat as secrets.
-
-### API keys (for integrations)
-
-For named integrations (Stripe, DocuSign, your own):
-
-1. **Setup → Integrations → API Keys → New**.
-2. Pick scopes.
-3. Copy the key (shown once).
-
-API keys can be scoped to specific objects + actions and have their own rate limits.
-
-## Object endpoints
-
-Every object exposes a uniform set of endpoints. Examples for `crm_opportunity`:
-
-| Method | Endpoint | Purpose |
-| --- | --- | --- |
-| `GET` | `/api/v1/opportunities` | List with filter / sort / paginate |
-| `GET` | `/api/v1/opportunities/{id}` | Single record by ID |
-| `POST` | `/api/v1/opportunities` | Create |
-| `PATCH` | `/api/v1/opportunities/{id}` | Partial update |
-| `PUT` | `/api/v1/opportunities/{id}` | Full replace |
-| `DELETE` | `/api/v1/opportunities/{id}` | Soft delete (recycle bin) |
-| `POST` | `/api/v1/opportunities/{id}/restore` | Restore from recycle bin |
-| `POST` | `/api/v1/opportunities/bulk` | Create / update in batches of up to 10,000 |
-| `POST` | `/api/v1/opportunities/query` | ObjectQL query |
-
-Substitute the object name (snake_case plural for list) — `accounts`, `contacts`, `leads`, `cases`, `contracts`, `products`, `quotes`, `campaigns`, `tasks`, `events`, etc.
-
-## ObjectQL
-
-For anything beyond simple field equality, use ObjectQL via `POST /api/v1/{object}/query`:
+Use ObjectQL-style filters and field selection in actions, flows, hooks, and integrations that call the ObjectStack data layer.
 
 ```json
-POST /api/v1/opportunities/query
 {
   "filters": [
     ["stage", "in", ["proposal", "negotiation"]],
-    ["amount", ">", 100000],
-    ["close_date", "between", "2026-01-01", "2026-03-31"]
+    ["amount", ">", 100000]
   ],
   "sort": [{ "field": "amount", "direction": "desc" }],
-  "limit": 200,
-  "cursor": "...",
-  "fields": ["id", "name", "amount", "stage", "account.name", "owner.name"],
-  "expand": ["crm_account", "owner", "crm_opportunity_line_item"]
+  "limit": 50,
+  "fields": ["id", "name", "amount", "stage", "crm_account"]
 }
 ```
 
-### Supported operators
+Common operators include `=`, `!=`, `>`, `>=`, `<`, `<=`, `in`, `not_in`, `between`, `contains`, `starts_with`, `ends_with`, `is_null`, and `is_not_null`.
 
-`=`, `!=`, `>`, `>=`, `<`, `<=`, `in`, `not_in`, `between`, `contains`, `starts_with`, `ends_with`, `is_null`, `is_not_null`, `in_role_subordinates`, `in_group`.
+## Action bodies
 
-### Pagination
-
-Cursor-based. Each response includes `next_cursor`. Pass it back to fetch the next page.
-
-```json
-{
-  "results": [...],
-  "next_cursor": "eyJpZCI6...",
-  "has_more": true
-}
-```
-
-Never use offset-based pagination for large datasets — it's O(n).
-
-### Joining related records
-
-Use `expand` to inline lookup targets:
-
-```json
-{
-  "fields": ["id", "name", "account.name", "account.industry"],
-  "expand": ["crm_account"]
-}
-```
-
-Multi-level joins (e.g., `opportunity.account.parent_account`) are supported up to 3 levels deep.
-
-## Aggregation
-
-```json
-POST /api/v1/opportunities/aggregate
-{
-  "filters": [["stage", "=", "closed_won"], ["close_date", "in_year", 2026]],
-  "group_by": ["owner", "month(close_date)"],
-  "metrics": [
-    { "field": "amount", "op": "sum",   "as": "total_bookings" },
-    { "field": "amount", "op": "avg",   "as": "avg_deal_size" },
-    { "field": "id",     "op": "count", "as": "deal_count" }
-  ]
-}
-```
-
-## Webhooks
-
-### Subscribe
-
-```json
-POST /api/v1/webhooks
-{
-  "name": "stripe-sync-on-contract-active",
-  "object": "crm_contract",
-  "events": ["updated"],
-  "filter": [["status", "=", "activated"]],
-  "url": "https://your-app/webhooks/contract-activated",
-  "secret": "shhh",
-  "auth": { "type": "hmac_sha256", "header": "X-Signature" }
-}
-```
-
-### Payload
-
-```json
-{
-  "event": "contract.updated",
-  "occurred_at": "2026-03-12T14:23:11Z",
-  "tenant_id": "ten_abc",
-  "record_id": "ctr_xyz",
-  "before": { ... },
-  "after":  { ... },
-  "user_id": "usr_alex"
-}
-```
-
-Verify the `X-Signature` header before processing.
-
-## Event bus (streaming)
-
-For high-volume integrations, subscribe to the event bus (Kafka / EventBridge / Pub/Sub) instead of HTTP webhooks:
+HotCRM actions can include executable metadata bodies with constrained capabilities.
 
 ```ts
-import { EventBus } from '@hotcrm/sdk';
-
-const bus = new EventBus({ token: process.env.HOTCRM_TOKEN });
-
-bus.subscribe('opportunity.closed_won', async (event) => {
-  await provisionCustomer(event.record);
-});
+export const CreateCampaignAction = {
+  name: 'create_campaign',
+  objectName: 'crm_lead',
+  type: 'modal',
+  body: {
+    language: 'js',
+    capabilities: ['api.write'],
+    source: `
+      await ctx.api.object('crm_campaign_member').insert({
+        crm_campaign: input.campaign,
+        crm_lead: input.leadId,
+        status: 'sent'
+      });
+    `,
+  },
+};
 ```
 
-## SDKs
+## Verification
 
-Official SDKs:
+After changing API-facing metadata:
 
-- **TypeScript / Node** — `@hotcrm/sdk`
-- **Python** — `hotcrm-sdk`
-- **Go** — `github.com/hotcrm/hotcrm-go`
-
-All SDKs:
-
-- Handle auth, retries, back-off, pagination.
-- Provide typed objects (generated from your tenant's schema).
-- Stream events from the event bus.
-
-```ts
-import { Hotcrm } from '@hotcrm/sdk';
-
-const crm = new Hotcrm({ token: process.env.HOTCRM_TOKEN });
-
-const opps = await crm.opportunity.query({
-  filters: [['stage', '=', 'closed_won']],
-  limit: 200,
-});
-
-for await (const opp of crm.opportunity.queryAll({ filters: [...] })) {
-  console.log(opp.name);
-}
-
-await crm.opportunity.update('opp_123', { amount: 50000 });
+```bash
+pnpm validate
+pnpm typecheck
+pnpm test
 ```
 
-## AI skill API
-
-Invoke any AI skill the user has access to:
-
-```http
-POST /api/v1/ai/skills/email_drafting/invoke
-{
-  "input": {
-    "record_id": "opp_123",
-    "goal": "discovery follow-up after demo"
-  }
-}
-```
-
-Response includes the structured output + citations.
-
-For streaming responses (typewriter UX):
-
-```http
-POST /api/v1/ai/skills/{skill}/stream
-```
-
-returns server-sent events.
-
-## Rate limits
-
-See [Performance & Limits](/docs/reference/performance-and-limits). Honour the `Retry-After` header on 429 responses.
-
-## Errors
-
-Standard HTTP status codes. Body:
-
-```json
-{
-  "error": {
-    "code": "validation_failed",
-    "message": "Amount is required when moving to Negotiation",
-    "field": "amount",
-    "request_id": "req_abc123"
-  }
-}
-```
-
-Include `request_id` when filing issues.
-
-## Versioning
-
-- **URL-versioned**: `/api/v1/...`
-- **Breaking changes** ship in `/api/v2/...` — `v1` supported for 24 months after `v2` GA.
-- **Additive changes** (new fields, new endpoints) ship in `v1` without notice.
-- **Deprecations** appear in the `Sunset` header at least 6 months before removal.
-
-## Sandbox & testing
-
-The **test mode** API base URL is `your-sandbox-url/api/v1/`. Identical endpoints, isolated data.
-
-For local development, the open-source dev runtime exposes the full API at `localhost:3000/api/v1/`.
-
-## Tips
-
-- ✅ Use the **SDK** — handwriting HTTP gets tedious and error-prone.
-- ✅ Always implement **back-off** — even if you think you're under the limit.
-- ✅ Use **cursor pagination**, never offset.
-- ✅ Prefer the **event bus** over polling.
-- ✅ **Verify webhook signatures** — never trust the source IP alone.
-- ✅ Test against a **sandbox** before production.
+Use `pnpm verify` before publishing.

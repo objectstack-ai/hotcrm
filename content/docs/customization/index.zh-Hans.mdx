@@ -1,98 +1,70 @@
 ---
 title: 定制化
-description: 面向开发者 —— 通过自定义对象、字段、AI 技能和 UI 组件扩展 HotCRM。
+description: 用 ObjectStack 元数据、动作、流程、AI skills 和 UI 定义扩展 HotCRM。
 ---
 
 # 定制化
 
-本章节面向使用代码扩展 HotCRM 的 **开发者和技术实施人员**。如果你是配置概要文件和工作流的 CRM 管理员，请前往 [管理](/zh-Hans/docs/administration/index)。
+本节面向用代码扩展 HotCRM 的开发者和技术实施人员。如果你是在应用里配置用户、权限、流程或共享规则，请从[管理](/zh-Hans/docs/administration/index)开始。
 
 ## 你可以构建什么
 
-| 领域 | 涵盖内容 |
+| 领域 | 内容 |
 | --- | --- |
-| [**扩展对象**](/zh-Hans/docs/customization/extending-objects) | 添加字段、自定义对象、钩子、流程、验证、共享 |
-| [**AI 技能**](/zh-Hans/docs/customization/ai-skills) | 构建接入知识库的全新 AI Copilot 技能 |
-| [**UI 扩展**](/zh-Hans/docs/customization/ui-extensions) | 自定义页面、列表视图、仪表板、下拉操作 |
+| [扩展对象](/zh-Hans/docs/customization/extending-objects) | 字段、对象、hooks、流程、校验、共享 |
+| [AI skills](/zh-Hans/docs/customization/ai-skills) | Copilot skills 和 agent 接线 |
+| [UI 扩展](/zh-Hans/docs/customization/ui-extensions) | 页面、视图、仪表盘、动作 |
+| [测试与 CI](/zh-Hans/docs/customization/testing-and-ci) | 元数据校验和自动化检查 |
 
-## 前置条件
+## 当前源码结构
 
-- **TypeScript** 与 Node.js 基础知识。
-- 熟悉 **@objectstack/runtime** 引擎（HotCRM 基于它构建）。
-- 拥有 **HotCRM 源码仓库** 与开发沙盒的访问权限。
+HotCRM 是一个单体 ObjectStack 应用。请在 `src/` 下新增或修改元数据，然后从对应的 barrel 文件导出。
 
-## HotCRM 文件约定
-
-HotCRM 遵循 *“文件后缀协议”* —— 每一类工件都存放在具有特定后缀的文件中：
-
-| 后缀 | 它定义什么 |
-| --- | --- |
-| `*.object.ts` | 数据模型 —— 字段、验证、共享 |
-| `*.hook.ts` | 数据生命周期上的服务端业务逻辑 |
-| `*.action.ts` | API 端点与可被 AI 调用的工具 |
-| `*.flow.ts` | 多步骤自动化 |
-| `*.skill.ts` | 一个 AI Copilot 技能定义 |
-| `*.agent.ts` | 一个复合 AI 智能体（多个技能 + 知识） |
-| `*.page.ts` | 一个 UI 页面布局 |
-| `*.view.ts` | 一个列表视图 |
-| `*.dashboard.ts` | 一个仪表板定义 |
-| `*.sharing.ts` | 共享规则（基于条件或基于所有者） |
-| `*.approval.ts` | 审批流程定义 |
-| `*.statemachine.ts` | 状态转换 |
-| `*.permission.ts` | 权限集 |
-
-所有文件都位于 `packages/{package}/src/` 下。名称使用 `snake_case`。
-
-## 项目结构
-
-```
-hotcrm/
-├── packages/
-│   ├── crm/           # Sales (account, lead, contact, opportunity, ...)
-│   ├── finance/       # Revenue (contract, invoice)
-│   ├── products/      # Product catalog
-│   ├── service/       # Cases, knowledge base
-│   ├── marketing/     # Campaigns
-│   └── ai/            # Copilot agents and skills
-└── apps/
-    └── docs/          # This documentation site
+```text
+src/
+├── objects/        # 数据模型和对象 hooks
+├── actions/        # UI 动作和可执行动作体
+├── flows/          # 自动化
+├── agents/         # AI agents
+├── skills/         # AI skills
+├── apps/
+├── views/
+├── pages/
+├── dashboards/
+├── reports/
+├── profiles/
+├── sharing/
+├── translations/
+└── data/
 ```
 
-请将你的定制化放在 **它自己的 package 中**（例如 `packages/acme-crm-extension/`），以保持核心 HotCRM 可升级。
+## 文件后缀协议
 
-## 从何处开始
-
-1. **搭建沙盒** —— 克隆仓库、安装依赖、运行开发环境。
-2. **阅读** [扩展对象](/zh-Hans/docs/customization/extending-objects) 了解数据层。
-3. **阅读** [AI 技能](/zh-Hans/docs/customization/ai-skills) 了解 Copilot 扩展。
-4. **阅读** [UI 扩展](/zh-Hans/docs/customization/ui-extensions) 了解前端。
-5. 在提交之前，用对应的 `@objectstack/spec` schema **校验** 每个元数据文件。
-
-## Schema 校验
-
-每个元数据文件都必须能通过某个 `@objectstack/spec` schema 的校验：
-
-| 文件类型 | Schema |
+| 后缀 | 定义 |
 | --- | --- |
-| `*.object.ts` | 来自 `@objectstack/spec/data` 的 `ObjectSchema.parse()` |
-| `*.page.ts` | 来自 `@objectstack/spec/ui` 的 `PageSchema` |
-| `*.flow.ts` | 来自 `@objectstack/spec/automation` 的 `WorkflowRuleSchema.parse()` |
-| `*.statemachine.ts` | 来自 `@objectstack/spec/automation` 的 `StateMachineSchema.parse()` |
-| `*.skill.ts` | 来自 `@objectstack/spec/ai` 的 Skill schema |
-| `*.permission.ts` | 来自 `@objectstack/spec/security` 的 `PermissionSetSchema.parse()` |
+| `*.object.ts` | 数据模型 |
+| `*.hook.ts` | 对象生命周期逻辑 |
+| `*.actions.ts` | UI 动作和可执行动作 |
+| `*.flow.ts` | 自动化 |
+| `*.skill.ts` | AI Copilot skill |
+| `*.agent.ts` | AI agent |
+| `*.page.ts` | UI 页面 |
+| `*.view.ts` | 列表或看板视图 |
+| `*.dashboard.ts` | 仪表盘 |
+| `*.report.ts` | 报表 |
+| `*.sharing.ts` | 共享规则 |
+| `*.profile.ts` | 权限档案 |
 
-如果校验失败，CI 也会失败 —— 因此你会立即知道。
+## 黄金规则
 
-## 黄金法则
-
-- ✅ **不要 fork 核心 package** —— 在你自己的 package 中用钩子和新对象进行扩展。
-- ✅ **使用 ObjectQL，而非 SQL** —— `broker.find('crm_opportunity', {...})` 是唯一受支持的数据访问方式。
-- ✅ 对象名和字段名使用 **Snake_case**。
-- ✅ 针对 `@objectstack/spec` schema **校验一切**。
-- ✅ 在部署到生产之前 **在沙盒中测试**。
+- HotCRM 对象名使用 `crm_` 前缀。
+- 使用 ObjectQL 和 ObjectStack API，不使用原始 SQL。
+- 从对应的 `src/**/index.ts` 文件导出元数据。
+- 新增用户可见标签时同步更新翻译。
+- 发布前运行 `pnpm verify`。
 
 ## 下一步
 
 - [扩展对象](/zh-Hans/docs/customization/extending-objects)
-- [AI 技能](/zh-Hans/docs/customization/ai-skills)
+- [AI Skills](/zh-Hans/docs/customization/ai-skills)
 - [UI 扩展](/zh-Hans/docs/customization/ui-extensions)

@@ -25,7 +25,7 @@ description: HotCRM 客製化的單元、整合與端對端測試 —— 以及 
 每個中繼資料檔案都應能通過其 spec schema 的驗證。新增一個走訪所有檔案的單一測試：
 
 ```ts
-// packages/your-extension/test/metadata.test.ts
+// test/metadata.test.ts
 import { describe, it, expect } from 'vitest';
 import { ObjectSchema } from '@objectstack/spec/data';
 import { PageSchema, ViewSchema, DashboardSchema } from '@objectstack/spec/ui';
@@ -35,7 +35,7 @@ import opportunityPage from '../src/opportunity.page';
 
 describe('metadata schemas', () => {
   it('opportunity object', () => {
-    expect(() => ObjectSchema.parse(opportunityObj)).not.toThrow();
+    expect(() => ObjectSchema.create(opportunityObj)).not.toThrow();
   });
 
   it('opportunity page', () => {
@@ -49,7 +49,7 @@ describe('metadata schemas', () => {
 ## 2. 掛鉤單元測試
 
 ```ts
-// packages/your-extension/test/opportunity_territory.hook.test.ts
+// test/opportunity_territory.hook.test.ts
 import { it, expect, vi } from 'vitest';
 import territoryHook from '../src/opportunity_territory.hook';
 
@@ -76,7 +76,7 @@ it('assigns territory from account region', async () => {
 使用執行階段的測試套件來演練多步驟流程：
 
 ```ts
-// packages/your-extension/test/contract_renewal.flow.test.ts
+// test/contract_renewal.flow.test.ts
 import { createTestRuntime } from '@objectstack/runtime/testing';
 import { it, expect } from 'vitest';
 
@@ -106,7 +106,7 @@ it('creates a renewal task when contract enters renewal window', async () => {
 當你對 LLM 進行 mock 時，技能是確定性的：
 
 ```ts
-// packages/your-extension/test/renewal_pitch.skill.test.ts
+// test/renewal_pitch.skill.test.ts
 import { runSkill } from '@objectstack/runtime/ai/testing';
 import renewalPitch from '../src/renewal_pitch.skill';
 
@@ -219,7 +219,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm playwright install --with-deps
       - run: pnpm dev &           # boot the runtime
-      - run: pnpm wait-on http://localhost:3000
+      - run: pnpm wait-on http://localhost:4001
       - run: pnpm e2e
 
   deploy-sandbox:

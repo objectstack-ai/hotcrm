@@ -1,265 +1,51 @@
 ---
 title: UI Extensions
-description: Customize pages, list views, dashboards and inline actions across HotCRM.
+description: Add HotCRM views, pages, dashboards, and actions.
 ---
 
 # UI Extensions
 
-This page covers the front-end layer — how to customise list views, detail pages, dashboards, and add inline actions to records.
+HotCRM UI metadata lives under `src/views/`, `src/pages/`, `src/dashboards/`, `src/reports/`, and `src/actions/`.
 
-## Pages — the detail screen
-
-Every object has a default detail page. Override it with a `*.page.ts` file:
+## Add an action
 
 ```ts
-// packages/acme-extension/src/opportunity.page.ts
-import { definePage, PageSchema } from '@objectstack/spec/ui';
+// src/actions/opportunity.actions.ts
+import type { Action } from '@objectstack/spec/ui';
 
-export default PageSchema.parse(definePage({
-  object: 'crm_opportunity',
-  layout: 'two_column',
-
-  header: {
-    title: '{{name}}',
-    subtitle: '{{account.name}} · {{stage}}',
-    badges: [
-      { field: 'stage' },
-      { field: 'amount', format: 'currency' },
-      { field: 'close_date', format: 'date' },
-    ],
+export const MarkOpportunityReviewedAction: Action = {
+  name: 'mark_opportunity_reviewed',
+  label: 'Mark Reviewed',
+  objectName: 'crm_opportunity',
+  icon: 'check-circle',
+  type: 'modal',
+  target: 'mark_opportunity_reviewed',
+  locations: ['record_header'],
+  body: {
+    language: 'js',
+    capabilities: ['api.write'],
+    source: `
+      await ctx.api.object('crm_opportunity').update(input.id, {
+        next_step: 'Reviewed by manager'
+      });
+      return { id: input.id };
+    `,
   },
-
-  sections: [
-    {
-      label: 'Deal Overview',
-      columns: ['amount', 'close_date', 'probability', 'stage'],
-    },
-    {
-      label: 'Account & Contacts',
-      columns: ['crm_account', 'primary_contact', 'opportunity_contact_roles'],
-    },
-    {
-      label: 'Health',
-      columns: ['custom_deal_health', 'custom_competitor', 'last_activity_date'],
-    },
-    {
-      label: 'Line Items',
-      type: 'related_list',
-      related: 'crm_opportunity_line_item',
-      columns: ['crm_product', 'quantity', 'unit_price', 'total_price'],
-    },
-    {
-      label: 'Activity Timeline',
-      type: 'timeline',
-      sources: ['crm_task', 'event', 'email_message', 'note'],
-    },
-  ],
-
-  inline_actions: [
-    { type: 'standard', action: 'edit' },
-    { type: 'standard', action: 'clone' },
-    { type: 'ai_skill', skill: 'customer_360', label: '🔭 Customer 360' },
-    { type: 'ai_skill', skill: 'email_drafting', label: '✍️ Draft Email' },
-    { type: 'submit_for_approval', label: 'Submit for Discount Approval', condition: 'amount > 500000' },
-  ],
-}));
-```
-
-## List views
-
-Customise the columns, filters, and default sort on list views:
-
-```ts
-// packages/acme-extension/src/opportunity_my_team.view.ts
-import { defineView, ViewSchema } from '@objectstack/spec/ui';
-
-export default ViewSchema.parse(defineView({
-  object: 'crm_opportunity',
-  name: 'my_team_open_deals',
-  label: 'My Team Open Deals',
-  columns: [
-    'name',
-    'account.name',
-    'owner.name',
-    'stage',
-    'amount',
-    'close_date',
-    'custom_deal_health',
-    'last_activity_date',
-  ],
-  filters: [
-    ['owner', 'in_role_subordinates', 'current_user'],
-    ['stage', 'not_in', ['closed_won', 'closed_lost', 'closed_without_decision']],
-  ],
-  sort: [{ field: 'amount', direction: 'desc' }],
-  scope: { profile: ['sales_user'], min_role: 'sales_manager' },
-}));
-```
-
-## Dashboards
-
-```ts
-// packages/acme-extension/src/team_health.dashboard.ts
-import { defineDashboard, DashboardSchema } from '@objectstack/spec/ui';
-
-export default DashboardSchema.parse(defineDashboard({
-  name: 'team_health',
-  label: 'Team Health',
-  audience: { profile: ['sales_user'], min_role: 'sales_manager' },
-  layout: 'grid_12',
-  widgets: [
-    {
-      type: 'kpi',
-      title: 'Open Pipeline',
-      cube: 'pipeline_cube',
-      measure: 'pipeline_value',
-      filter: { owner: 'in_role_subordinates(current_user)' },
-      width: 4,
-    },
-    {
-      type: 'chart',
-      title: 'Pipeline by Stage',
-      chart: 'funnel',
-      cube: 'pipeline_cube',
-      measure: 'pipeline_value',
-      dimension: 'stage',
-      width: 8,
-    },
-    {
-      type: 'list',
-      title: 'Slipping Deals',
-      source_view: 'opportunity.slipping_this_week',
-      width: 12,
-    },
-  ],
-}));
-```
-
-## Inline actions and bulk actions
-
-Inline = single-record buttons on detail pages.
-Bulk = multi-record buttons on list views.
-
-```ts
-// packages/acme-extension/src/opportunity.actions.ts
-import { defineAction } from '@objectstack/spec/ui';
-
-export const summariseOpportunity = defineAction({
-  object: 'crm_opportunity',
-  surface: 'bulk',     // shows in list-view actions menu
-  label: 'Summarise selected',
-  icon: '✨',
-  handler: {
-    type: 'ai_skill',
-    skill: 'opportunity_batch_summary',
-    input: { opportunity_ids: '{{selected_ids}}' },
-  },
-});
-```
-
-## Custom widgets
-
-For UI that doesn't fit a standard widget, build a React component:
-
-```tsx
-// packages/acme-extension/src/widgets/health_score.widget.tsx
-import { defineWidget } from '@objectstack/runtime/ui';
-import { useRecord } from '@objectstack/runtime/ui/hooks';
-
-export default defineWidget({
-  name: 'health_score',
-  surface: 'detail_sidebar',
-  object: 'crm_account',
-  component: ({ recordId }) => {
-    const { record } = useRecord('crm_account', recordId);
-    const score = computeHealth(record);
-    return (
-      <div className={`health-score health-${score.tier}`}>
-        <h4>Account Health</h4>
-        <div className="score">{score.value}/100</div>
-        <ul>
-          {score.signals.map(s => (
-            <li key={s.label}>{s.label}: {s.value}</li>
-          ))}
-        </ul>
-      </div>
-    );
-  },
-});
-
-function computeHealth(account) {
-  // domain logic
-}
-```
-
-Drop it into a page:
-
-```ts
-sidebar: [
-  { type: 'widget', widget: 'health_score' },
-],
-```
-
-## Theming
-
-Each tenant can theme HotCRM:
-
-```ts
-// packages/acme-extension/src/theme.ts
-export default {
-  name: 'acme',
-  brand: {
-    primary: '#0E4DA4',
-    accent:  '#FFB000',
-    logo:    '/branding/acme-logo.svg',
-    favicon: '/branding/acme.ico',
-  },
-  typography: {
-    sans: 'Inter, system-ui, sans-serif',
-    display: 'Söhne, Inter, sans-serif',
-  },
-  density: 'comfortable',   // 'comfortable' | 'compact'
+  refreshAfter: true,
 };
 ```
 
-## Internationalisation
+## Add views and pages
 
-All UI strings should be wrapped:
+- Put list and kanban definitions in `src/views/`.
+- Put record pages and utility pages in `src/pages/`.
+- Export new metadata from the matching `index.ts` file.
+- Add user-visible labels to `src/translations/{locale}.ts`.
 
-```ts
-import { t } from '@objectstack/runtime/i18n';
+## Verify
 
-label: t('opportunity.field.amount', 'Amount'),
+```bash
+pnpm validate
+pnpm typecheck
+pnpm test
 ```
-
-Translations live in `packages/{pkg}/i18n/{locale}.json`.
-
-## Testing UI extensions
-
-Snapshot-test page layouts with `@objectstack/spec` validation:
-
-```ts
-import opportunityPage from './opportunity.page';
-import { PageSchema } from '@objectstack/spec/ui';
-
-it('opportunity.page.ts is valid', () => {
-  expect(() => PageSchema.parse(opportunityPage)).not.toThrow();
-});
-```
-
-Component-test custom widgets with React Testing Library.
-
-E2E-test critical flows with Playwright in the dev sandbox.
-
-## Tips
-
-- ✅ **Prefer config over code** — page/view/dashboard definitions cover 90% of needs.
-- ✅ **Build custom widgets** only when standard widgets don't fit — they have lifecycle cost.
-- ✅ **Audience-scope** every list view and dashboard so users only see what's relevant.
-- ✅ **Inline actions** are the cheapest way to expose new functionality — surface every new skill as a button.
-- ✅ Validate every `*.page.ts` / `*.view.ts` / `*.dashboard.ts` with `@objectstack/spec` schemas in CI.
-
-## Related
-
-- [Extending Objects](/docs/customization/extending-objects) — the data layer your UI shows.
-- [AI Skills](/docs/customization/ai-skills) — to wire AI actions into pages.

@@ -51,7 +51,7 @@ HotCRM is a complete, opinionated CRM built as the **first official application*
 | `crm_product` | | | |
 | `crm_forecast` | | | |
 
-Plus **2 AI agents** (sales-copilot, service-copilot), **4 dashboards**, **10 flows**, **10 actions**, **4 RAG knowledge bases**, **4 language bundles** (en, zh-CN, es-ES, ja-JP), **10 role hierarchy**, and **5 sharing rules**.
+Plus **2 AI agents** (sales-copilot, service-copilot), **4 dashboards**, **10 flows**, **10 actions**, **6 AI skills**, **4 language bundles** (en, zh-CN, es-ES, ja-JP), **10 roles**, and **5 sharing rules**.
 
 ---
 
@@ -71,7 +71,7 @@ Plus **2 AI agents** (sales-copilot, service-copilot), **4 dashboards**, **10 fl
 git clone https://github.com/objectstack-ai/hotcrm.git
 cd hotcrm
 pnpm install
-pnpm dev                    # ObjectStack runtime starts at http://localhost:3000
+pnpm dev                    # ObjectStack runtime starts at http://localhost:4001
 ```
 
 ```bash
@@ -106,7 +106,7 @@ objectstack package publish dist/objectstack.json \
 
 The CLI is idempotent: re-running with the same `--manifest-id` updates the package; new `--version` values create immutable versioned snapshots.
 
-See [docs: Publishing your first marketplace app](apps/docs/content/docs/marketplace/publishing-your-first-app.mdx) for the full walkthrough.
+See [docs: Publishing your first marketplace app](content/docs/marketplace/publishing-your-first-app.mdx) for the full walkthrough.
 
 ---
 
@@ -119,17 +119,17 @@ hotcrm/
 │   ├── objects/                  # *.object.ts — data model (15 objects)
 │   ├── actions/                  # *.action.ts — server actions + AI tools (10)
 │   ├── flows/                    # *.flow.ts — visual flows (10): screen, record-change & scheduled
-│   ├── hooks/                    # *.hook.ts — server-side triggers
+│   ├── hooks/                    # hook registry barrel
 │   ├── agents/                   # *.agent.ts — AI copilots (2)
-│   ├── skills/                   # *.skill.ts — AI skills (5)
-│   ├── rag/                      # *.rag.ts — RAG knowledge bases (4)
+│   ├── skills/                   # *.skill.ts — AI skills (6)
 │   ├── cubes/                    # *.cube.ts — analytics cubes
 │   ├── dashboards/, reports/     # analytics UI
 │   ├── pages/, views/, apps/     # UI definitions
 │   ├── profiles/, sharing/       # security
 │   ├── translations/             # en / zh-CN / es-ES / ja-JP
 │   └── data/                     # seed data
-└── apps/docs/                    # Fumadocs site (https://github.com/objectstack-ai/hotcrm/tree/main/apps/docs)
+├── apps/docs/                    # Fumadocs app
+└── content/docs/                 # Documentation content
 ```
 
 Every file follows the **`<entity>.<kind>.ts`** convention. The `crm_` prefix on object names is explicit in source — no runtime magic. Both rules are required for marketplace acceptance.
@@ -138,7 +138,7 @@ Every file follows the **`<entity>.<kind>.ts`** convention. The `crm_` prefix on
 
 ## 📚 Documentation
 
-- **Live docs:** start `pnpm --filter docs dev`, then open <http://localhost:3001/docs>
+- **Live docs:** start `pnpm --filter @hotcrm/docs dev -- -p 3001`, then open <http://localhost:3001/docs>
 - **For business users:** Sales, Service, Marketing, Revenue, AI Copilot guides
 - **For developers:** Architecture, Customization, API reference, Testing & CI
 - **For publishers:** Marketplace publishing guide

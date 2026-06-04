@@ -1,98 +1,70 @@
 ---
 title: 客製化
-description: 面向開發者 —— 透過自訂物件、欄位、AI 技能和 UI 元件擴充 HotCRM。
+description: 用 ObjectStack 中繼資料、動作、流程、AI skills 和 UI 定義擴展 HotCRM。
 ---
 
 # 客製化
 
-本章節面向使用程式碼擴充 HotCRM 的 **開發者和技術實作人員**。如果你是設定概要檔和工作流程的 CRM 管理員，請前往 [管理](/zh-Hant/docs/administration/index)。
+本節面向用程式碼擴展 HotCRM 的開發者和技術實施人員。如果你是在應用裡配置使用者、權限、流程或共享規則，請從[管理](/zh-Hant/docs/administration/index)開始。
 
-## 你可以建構什麼
+## 你可以構建什麼
 
-| 領域 | 涵蓋內容 |
+| 領域 | 內容 |
 | --- | --- |
-| [**擴充物件**](/zh-Hant/docs/customization/extending-objects) | 新增欄位、自訂物件、掛鉤、流程、驗證、共用 |
-| [**AI 技能**](/zh-Hant/docs/customization/ai-skills) | 建構接入知識庫的全新 AI Copilot 技能 |
-| [**UI 擴充**](/zh-Hant/docs/customization/ui-extensions) | 自訂頁面、清單檢視、儀表板、下拉動作 |
+| [擴展物件](/zh-Hant/docs/customization/extending-objects) | 欄位、物件、hooks、流程、校驗、共享 |
+| [AI skills](/zh-Hant/docs/customization/ai-skills) | Copilot skills 和 agent 接線 |
+| [UI 擴展](/zh-Hant/docs/customization/ui-extensions) | 頁面、視圖、儀表板、動作 |
+| [測試與 CI](/zh-Hant/docs/customization/testing-and-ci) | 中繼資料校驗和自動化檢查 |
 
-## 前置條件
+## 目前原始碼結構
 
-- **TypeScript** 與 Node.js 基礎知識。
-- 熟悉 **@objectstack/runtime** 引擎（HotCRM 基於它建構）。
-- 擁有 **HotCRM 原始碼儲存庫** 與開發沙盒的存取權限。
+HotCRM 是一個單體 ObjectStack 應用。請在 `src/` 下新增或修改中繼資料，然後從對應的 barrel 檔案匯出。
 
-## HotCRM 檔案慣例
-
-HotCRM 遵循 *「檔案後綴協定」* —— 每一類成品都存放在具有特定後綴的檔案中：
-
-| 後綴 | 它定義什麼 |
-| --- | --- |
-| `*.object.ts` | 資料模型 —— 欄位、驗證、共用 |
-| `*.hook.ts` | 資料生命週期上的伺服器端商業邏輯 |
-| `*.action.ts` | API 端點與可被 AI 呼叫的工具 |
-| `*.flow.ts` | 多步驟自動化 |
-| `*.skill.ts` | 一個 AI Copilot 技能定義 |
-| `*.agent.ts` | 一個複合 AI 代理（多個技能 + 知識） |
-| `*.page.ts` | 一個 UI 頁面版面配置 |
-| `*.view.ts` | 一個清單檢視 |
-| `*.dashboard.ts` | 一個儀表板定義 |
-| `*.sharing.ts` | 共用規則（基於條件或基於擁有者） |
-| `*.approval.ts` | 核准流程定義 |
-| `*.statemachine.ts` | 狀態轉換 |
-| `*.permission.ts` | 權限集 |
-
-所有檔案都位於 `packages/{package}/src/` 下。名稱使用 `snake_case`。
-
-## 專案結構
-
-```
-hotcrm/
-├── packages/
-│   ├── crm/           # Sales (account, lead, contact, opportunity, ...)
-│   ├── finance/       # Revenue (contract, invoice)
-│   ├── products/      # Product catalog
-│   ├── service/       # Cases, knowledge base
-│   ├── marketing/     # Campaigns
-│   └── ai/            # Copilot agents and skills
-└── apps/
-    └── docs/          # This documentation site
+```text
+src/
+├── objects/        # 資料模型和物件 hooks
+├── actions/        # UI 動作和可執行動作體
+├── flows/          # 自動化
+├── agents/         # AI agents
+├── skills/         # AI skills
+├── apps/
+├── views/
+├── pages/
+├── dashboards/
+├── reports/
+├── profiles/
+├── sharing/
+├── translations/
+└── data/
 ```
 
-請將你的客製化放在 **它自己的 package 中**（例如 `packages/acme-crm-extension/`），以保持核心 HotCRM 可升級。
+## 檔案後綴協議
 
-## 從何處開始
-
-1. **搭建沙盒** —— 複製儲存庫、安裝相依套件、執行開發環境。
-2. **閱讀** [擴充物件](/zh-Hant/docs/customization/extending-objects) 了解資料層。
-3. **閱讀** [AI 技能](/zh-Hant/docs/customization/ai-skills) 了解 Copilot 擴充。
-4. **閱讀** [UI 擴充](/zh-Hant/docs/customization/ui-extensions) 了解前端。
-5. 在提交之前，用對應的 `@objectstack/spec` schema **驗證** 每個中繼資料檔案。
-
-## Schema 驗證
-
-每個中繼資料檔案都必須能通過某個 `@objectstack/spec` schema 的驗證：
-
-| 檔案類型 | Schema |
+| 後綴 | 定義 |
 | --- | --- |
-| `*.object.ts` | 來自 `@objectstack/spec/data` 的 `ObjectSchema.parse()` |
-| `*.page.ts` | 來自 `@objectstack/spec/ui` 的 `PageSchema` |
-| `*.flow.ts` | 來自 `@objectstack/spec/automation` 的 `WorkflowRuleSchema.parse()` |
-| `*.statemachine.ts` | 來自 `@objectstack/spec/automation` 的 `StateMachineSchema.parse()` |
-| `*.skill.ts` | 來自 `@objectstack/spec/ai` 的 Skill schema |
-| `*.permission.ts` | 來自 `@objectstack/spec/security` 的 `PermissionSetSchema.parse()` |
+| `*.object.ts` | 資料模型 |
+| `*.hook.ts` | 物件生命週期邏輯 |
+| `*.actions.ts` | UI 動作和可執行動作 |
+| `*.flow.ts` | 自動化 |
+| `*.skill.ts` | AI Copilot skill |
+| `*.agent.ts` | AI agent |
+| `*.page.ts` | UI 頁面 |
+| `*.view.ts` | 清單或看板視圖 |
+| `*.dashboard.ts` | 儀表板 |
+| `*.report.ts` | 報表 |
+| `*.sharing.ts` | 共享規則 |
+| `*.profile.ts` | 權限設定檔 |
 
-如果驗證失敗，CI 也會失敗 —— 因此你會立即知道。
+## 黃金規則
 
-## 黃金法則
-
-- ✅ **不要 fork 核心 package** —— 在你自己的 package 中用掛鉤和新物件進行擴充。
-- ✅ **使用 ObjectQL，而非 SQL** —— `broker.find('crm_opportunity', {...})` 是唯一受支援的資料存取方式。
-- ✅ 物件名和欄位名使用 **Snake_case**。
-- ✅ 針對 `@objectstack/spec` schema **驗證一切**。
-- ✅ 在部署到生產之前 **在沙盒中測試**。
+- HotCRM 物件名使用 `crm_` 前綴。
+- 使用 ObjectQL 和 ObjectStack API，不使用原始 SQL。
+- 從對應的 `src/**/index.ts` 檔案匯出中繼資料。
+- 新增使用者可見標籤時同步更新翻譯。
+- 發布前執行 `pnpm verify`。
 
 ## 下一步
 
-- [擴充物件](/zh-Hant/docs/customization/extending-objects)
-- [AI 技能](/zh-Hant/docs/customization/ai-skills)
-- [UI 擴充](/zh-Hant/docs/customization/ui-extensions)
+- [擴展物件](/zh-Hant/docs/customization/extending-objects)
+- [AI Skills](/zh-Hant/docs/customization/ai-skills)
+- [UI 擴展](/zh-Hant/docs/customization/ui-extensions)

@@ -59,11 +59,11 @@ git remote add origin git@github.com:<you>/<my-app>.git
 
 ```bash
 # macOS (BSD sed)
-find src apps/docs/content -type f \( -name "*.ts" -o -name "*.mdx" -o -name "*.json" \) \
+find src content -type f \( -name "*.ts" -o -name "*.mdx" -o -name "*.json" \) \
   -exec sed -i '' 's/crm_/acme_/g' {} +
 
 # Linux (GNU sed)
-find src apps/docs/content -type f \( -name "*.ts" -o -name "*.mdx" -o -name "*.json" \) \
+find src content -type f \( -name "*.ts" -o -name "*.mdx" -o -name "*.json" \) \
   -exec sed -i 's/crm_/acme_/g' {} +
 
 # Rename the translation file that's literally called crm.translation.ts
@@ -103,7 +103,7 @@ rm src/objects/{case,knowledge_article,campaign,campaign_member,contract,quote,q
 ```bash
 pnpm typecheck
 pnpm build
-pnpm dev    # smoke-test in the browser at http://localhost:3000
+pnpm dev    # smoke-test in the browser at http://localhost:4001
 ```
 
 ### 7. 發布

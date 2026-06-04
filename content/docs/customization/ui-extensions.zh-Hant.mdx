@@ -1,265 +1,51 @@
 ---
-title: UI 擴充
-description: 在 HotCRM 中自訂頁面、清單檢視、儀表板和內聯動作。
+title: UI 擴展
+description: 新增 HotCRM 視圖、頁面、儀表板和動作。
 ---
 
-# UI 擴充
+# UI 擴展
 
-本頁涵蓋前端層 —— 如何自訂清單檢視、詳情頁、儀表板，以及向記錄新增內聯動作。
+HotCRM UI 中繼資料位於 `src/views/`、`src/pages/`、`src/dashboards/`、`src/reports/` 和 `src/actions/`。
 
-## 頁面 —— 詳情介面
-
-每個物件都有一個預設的詳情頁。用 `*.page.ts` 檔案覆寫它：
+## 新增動作
 
 ```ts
-// packages/acme-extension/src/opportunity.page.ts
-import { definePage, PageSchema } from '@objectstack/spec/ui';
+// src/actions/opportunity.actions.ts
+import type { Action } from '@objectstack/spec/ui';
 
-export default PageSchema.parse(definePage({
-  object: 'crm_opportunity',
-  layout: 'two_column',
-
-  header: {
-    title: '{{name}}',
-    subtitle: '{{account.name}} · {{stage}}',
-    badges: [
-      { field: 'stage' },
-      { field: 'amount', format: 'currency' },
-      { field: 'close_date', format: 'date' },
-    ],
+export const MarkOpportunityReviewedAction: Action = {
+  name: 'mark_opportunity_reviewed',
+  label: 'Mark Reviewed',
+  objectName: 'crm_opportunity',
+  icon: 'check-circle',
+  type: 'modal',
+  target: 'mark_opportunity_reviewed',
+  locations: ['record_header'],
+  body: {
+    language: 'js',
+    capabilities: ['api.write'],
+    source: `
+      await ctx.api.object('crm_opportunity').update(input.id, {
+        next_step: 'Reviewed by manager'
+      });
+      return { id: input.id };
+    `,
   },
-
-  sections: [
-    {
-      label: 'Deal Overview',
-      columns: ['amount', 'close_date', 'probability', 'stage'],
-    },
-    {
-      label: 'Account & Contacts',
-      columns: ['crm_account', 'primary_contact', 'opportunity_contact_roles'],
-    },
-    {
-      label: 'Health',
-      columns: ['custom_deal_health', 'custom_competitor', 'last_activity_date'],
-    },
-    {
-      label: 'Line Items',
-      type: 'related_list',
-      related: 'crm_opportunity_line_item',
-      columns: ['crm_product', 'quantity', 'unit_price', 'total_price'],
-    },
-    {
-      label: 'Activity Timeline',
-      type: 'timeline',
-      sources: ['crm_task', 'event', 'email_message', 'note'],
-    },
-  ],
-
-  inline_actions: [
-    { type: 'standard', action: 'edit' },
-    { type: 'standard', action: 'clone' },
-    { type: 'ai_skill', skill: 'customer_360', label: '🔭 Customer 360' },
-    { type: 'ai_skill', skill: 'email_drafting', label: '✍️ Draft Email' },
-    { type: 'submit_for_approval', label: 'Submit for Discount Approval', condition: 'amount > 500000' },
-  ],
-}));
-```
-
-## 清單檢視
-
-自訂清單檢視上的欄、篩選器和預設排序：
-
-```ts
-// packages/acme-extension/src/opportunity_my_team.view.ts
-import { defineView, ViewSchema } from '@objectstack/spec/ui';
-
-export default ViewSchema.parse(defineView({
-  object: 'crm_opportunity',
-  name: 'my_team_open_deals',
-  label: 'My Team Open Deals',
-  columns: [
-    'name',
-    'account.name',
-    'owner.name',
-    'stage',
-    'amount',
-    'close_date',
-    'custom_deal_health',
-    'last_activity_date',
-  ],
-  filters: [
-    ['owner', 'in_role_subordinates', 'current_user'],
-    ['stage', 'not_in', ['closed_won', 'closed_lost', 'closed_without_decision']],
-  ],
-  sort: [{ field: 'amount', direction: 'desc' }],
-  scope: { profile: ['sales_user'], min_role: 'sales_manager' },
-}));
-```
-
-## 儀表板
-
-```ts
-// packages/acme-extension/src/team_health.dashboard.ts
-import { defineDashboard, DashboardSchema } from '@objectstack/spec/ui';
-
-export default DashboardSchema.parse(defineDashboard({
-  name: 'team_health',
-  label: 'Team Health',
-  audience: { profile: ['sales_user'], min_role: 'sales_manager' },
-  layout: 'grid_12',
-  widgets: [
-    {
-      type: 'kpi',
-      title: 'Open Pipeline',
-      cube: 'pipeline_cube',
-      measure: 'pipeline_value',
-      filter: { owner: 'in_role_subordinates(current_user)' },
-      width: 4,
-    },
-    {
-      type: 'chart',
-      title: 'Pipeline by Stage',
-      chart: 'funnel',
-      cube: 'pipeline_cube',
-      measure: 'pipeline_value',
-      dimension: 'stage',
-      width: 8,
-    },
-    {
-      type: 'list',
-      title: 'Slipping Deals',
-      source_view: 'opportunity.slipping_this_week',
-      width: 12,
-    },
-  ],
-}));
-```
-
-## 內聯動作與批次動作
-
-內聯 = 詳情頁上的單記錄按鈕。
-批次 = 清單檢視上的多記錄按鈕。
-
-```ts
-// packages/acme-extension/src/opportunity.actions.ts
-import { defineAction } from '@objectstack/spec/ui';
-
-export const summariseOpportunity = defineAction({
-  object: 'crm_opportunity',
-  surface: 'bulk',     // shows in list-view actions menu
-  label: 'Summarise selected',
-  icon: '✨',
-  handler: {
-    type: 'ai_skill',
-    skill: 'opportunity_batch_summary',
-    input: { opportunity_ids: '{{selected_ids}}' },
-  },
-});
-```
-
-## 自訂元件
-
-對於不適合標準元件的 UI，請建構一個 React 元件：
-
-```tsx
-// packages/acme-extension/src/widgets/health_score.widget.tsx
-import { defineWidget } from '@objectstack/runtime/ui';
-import { useRecord } from '@objectstack/runtime/ui/hooks';
-
-export default defineWidget({
-  name: 'health_score',
-  surface: 'detail_sidebar',
-  object: 'crm_account',
-  component: ({ recordId }) => {
-    const { record } = useRecord('crm_account', recordId);
-    const score = computeHealth(record);
-    return (
-      <div className={`health-score health-${score.tier}`}>
-        <h4>Account Health</h4>
-        <div className="score">{score.value}/100</div>
-        <ul>
-          {score.signals.map(s => (
-            <li key={s.label}>{s.label}: {s.value}</li>
-          ))}
-        </ul>
-      </div>
-    );
-  },
-});
-
-function computeHealth(account) {
-  // domain logic
-}
-```
-
-將它放入頁面中：
-
-```ts
-sidebar: [
-  { type: 'widget', widget: 'health_score' },
-],
-```
-
-## 佈景主題
-
-每個租戶都可以為 HotCRM 設定佈景主題：
-
-```ts
-// packages/acme-extension/src/theme.ts
-export default {
-  name: 'acme',
-  brand: {
-    primary: '#0E4DA4',
-    accent:  '#FFB000',
-    logo:    '/branding/acme-logo.svg',
-    favicon: '/branding/acme.ico',
-  },
-  typography: {
-    sans: 'Inter, system-ui, sans-serif',
-    display: 'Söhne, Inter, sans-serif',
-  },
-  density: 'comfortable',   // 'comfortable' | 'compact'
+  refreshAfter: true,
 };
 ```
 
-## 國際化
+## 新增視圖和頁面
 
-所有 UI 字串都應被包裹：
+- 清單和看板定義放在 `src/views/`。
+- 記錄頁面和工具頁面放在 `src/pages/`。
+- 從對應的 `index.ts` 匯出新中繼資料。
+- 將使用者可見標籤加入 `src/translations/{locale}.ts`。
 
-```ts
-import { t } from '@objectstack/runtime/i18n';
+## 驗證
 
-label: t('opportunity.field.amount', 'Amount'),
+```bash
+pnpm validate
+pnpm typecheck
+pnpm test
 ```
-
-翻譯位於 `packages/{pkg}/i18n/{locale}.json` 中。
-
-## 測試 UI 擴充
-
-用 `@objectstack/spec` 驗證對頁面版面配置進行快照測試：
-
-```ts
-import opportunityPage from './opportunity.page';
-import { PageSchema } from '@objectstack/spec/ui';
-
-it('opportunity.page.ts is valid', () => {
-  expect(() => PageSchema.parse(opportunityPage)).not.toThrow();
-});
-```
-
-用 React Testing Library 對自訂元件進行元件測試。
-
-用 Playwright 在開發沙盒中對關鍵流程進行 E2E 測試。
-
-## 提示
-
-- ✅ **設定優於程式碼** —— 頁面 / 檢視 / 儀表板定義能涵蓋 90% 的需求。
-- ✅ 僅當標準元件不適合時才 **建構自訂元件** —— 它們有生命週期成本。
-- ✅ 為每個清單檢視和儀表板 **設定受眾範圍**，使使用者只看到與自己相關的內容。
-- ✅ **內聯動作** 是公開新功能最廉價的方式 —— 將每個新技能都呈現為一個按鈕。
-- ✅ 在 CI 中用 `@objectstack/spec` schema 驗證每個 `*.page.ts` / `*.view.ts` / `*.dashboard.ts`。
-
-## 相關
-
-- [擴充物件](/zh-Hant/docs/customization/extending-objects) —— 你 UI 所展示的資料層。
-- [AI 技能](/zh-Hant/docs/customization/ai-skills) —— 將 AI 動作接入頁面。

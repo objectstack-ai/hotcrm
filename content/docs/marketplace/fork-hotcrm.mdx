@@ -59,11 +59,11 @@ The `crm_` prefix is in ~85 files. Use a one-shot rename:
 
 ```bash
 # macOS (BSD sed)
-find src apps/docs/content -type f \( -name "*.ts" -o -name "*.mdx" -o -name "*.json" \) \
+find src content -type f \( -name "*.ts" -o -name "*.mdx" -o -name "*.json" \) \
   -exec sed -i '' 's/crm_/acme_/g' {} +
 
 # Linux (GNU sed)
-find src apps/docs/content -type f \( -name "*.ts" -o -name "*.mdx" -o -name "*.json" \) \
+find src content -type f \( -name "*.ts" -o -name "*.mdx" -o -name "*.json" \) \
   -exec sed -i 's/crm_/acme_/g' {} +
 
 # Rename the translation file that's literally called crm.translation.ts
@@ -103,7 +103,7 @@ Every file goes through `@objectstack/spec` schema validation at build time. Mis
 ```bash
 pnpm typecheck
 pnpm build
-pnpm dev    # smoke-test in the browser at http://localhost:3000
+pnpm dev    # smoke-test in the browser at http://localhost:4001
 ```
 
 ### 7. Publish

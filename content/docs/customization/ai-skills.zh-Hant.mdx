@@ -1,201 +1,56 @@
 ---
-title: 建構 AI 技能
-description: 定義可讀取 CRM 資料、以知識庫為依據、並遵守共用規則的全新 AI Copilot 技能。
+title: AI Skills
+description: 新增 Copilot skills，並接入 HotCRM agents。
 ---
 
-# 建構 AI 技能
+# AI Skills
 
-**技能** 是 HotCRM 中 AI 功能的基本單元 —— *「資格審核這條線索」*、*「起草一封郵件」*、*「預測營收」*。本頁展示如何建構一個新技能。
+AI skills 位於 `src/skills/`，並從 `src/skills/index.ts` 註冊。Agents 位於 `src/agents/`。
 
-## 何時建構技能
-
-在以下情況下建構技能：
-
-- 該任務是 **有邊界且可重複使用的**（而非一次性的）。
-- 輸出 **足夠結構化**，便於推理（建議 + 理由 + 動作）。
-- 它能從 CRM 資料或知識庫的 **依據** 中受益。
-
-如果你只是需要一個伺服器端工作流程或一次性指令稿，請改用 [流程或掛鉤](/zh-Hant/docs/customization/extending-objects)。
-
-## 技能的剖析
-
-技能是一個帶有 `*.skill.ts` 後綴的 TypeScript 檔案。
+## 新增 skill
 
 ```ts
-// packages/acme-extension/src/renewal_pitch.skill.ts
-import { defineSkill } from '@objectstack/spec/ai';
+// src/skills/renewal_pitch.skill.ts
+import { defineSkill } from '@objectstack/spec';
 
-export default defineSkill({
+export const RenewalPitchSkill = defineSkill({
   name: 'renewal_pitch',
-  label: 'Draft renewal pitch',
-  description: 'Generates a customer-facing renewal pitch grounded in their usage and contract history.',
-
-  // What the skill takes as input
-  input: {
-    contract_id: { type: 'reference', object: 'crm_contract', required: true },
-    tone: { type: 'enum', options: ['friendly', 'formal', 'urgent'], default: 'friendly' },
-  },
-
-  // What it returns
-  output: {
-    subject:    { type: 'text' },
-    body:       { type: 'text' },
-    talking_points: { type: 'array', items: { type: 'text' } },
-    citations:  { type: 'array', items: { type: 'reference' } },
-  },
-
-  // What data sources the skill can read
-  data_sources: {
-    contract:      { object: 'crm_contract',     by: 'id' },
-    account:       { object: 'crm_account',      by: 'contract.account' },
-    primary_contact: { object: 'crm_contact',    by: 'contract.account.primary_contact' },
-    usage:         { object: 'usage_metric', by: 'contract.id', last_n_months: 6 },
-  },
-
-  // Knowledge bases the skill can ground in
-  knowledge_bases: ['sales_knowledge', 'product_information'],
-
-  // Tone, length, format
-  prompt_template: `
-    You are a sales rep writing a renewal pitch for {{primary_contact.name}}
-    at {{account.name}}, who has been a customer since {{account.customer_since}}.
-    Their contract for {{contract.value | currency}} expires on {{contract.end_date}}.
-    Their last 6 months of usage: {{usage.summary}}.
-
-    Write a {{tone}} renewal pitch. Cite specific value they've gotten.
-    Cite at most 2 KB articles for talking points.
-  `,
-
-  // Behaviour
-  behaviour: {
-    requires_confirmation_before_write: true,
-    respects_sharing: true,
-    log_invocations: true,
-    max_tokens: 800,
-  },
+  label: 'Renewal Pitch',
+  description: 'Drafts renewal talk tracks from account and contract context.',
+  instructions: `When asked for a renewal pitch, inspect the current
+account and contract records, summarize risk, and draft a concise
+customer-facing talk track.`,
+  tools: ['describe_object', 'query_records'],
+  triggerPhrases: ['draft renewal pitch', 'renewal talk track'],
+  permissions: ['crm:account:read'],
 });
 ```
 
-## 將技能註冊到代理
-
-技能透過 **代理** 呈現給使用者 —— 通常是 Sales Copilot 或 Service Copilot。
+匯出：
 
 ```ts
-// packages/ai/src/sales_copilot.agent.ts (extension)
-import { defineAgent } from '@objectstack/spec/ai';
-
-export default defineAgent({
-  name: 'sales_copilot',
-  skills: [
-    'lead_qualification',
-    'email_drafting',
-    'revenue_forecasting',
-    'customer_360',
-    'renewal_pitch',          // ← new skill registered here
-  ],
-});
+// src/skills/index.ts
+export { RenewalPitchSkill } from './renewal_pitch.skill.js';
 ```
 
-或者將它直接附加到某筆記錄的 inline-actions 上：
+## 接入 agent
 
 ```ts
-// packages/acme-extension/src/contract.page.ts
-import { definePage } from '@objectstack/spec/ui';
-
-export default definePage({
-  object: 'crm_contract',
-  inline_actions: [
-    { type: 'ai_skill', skill: 'renewal_pitch', label: '✍️ Draft Renewal Pitch' },
-  ],
-});
+// src/agents/sales-copilot.agent.ts
+skills: [
+  'live_data',
+  'lead_qualification',
+  'email_drafting',
+  'revenue_forecasting',
+  'customer_360',
+  'renewal_pitch',
+],
 ```
 
-這會在每個合約詳情頁上新增一個按鈕。
+## 驗證
 
-## 以知識庫為依據
-
-在 `knowledge_bases` 中參照一個或多個知識庫。執行階段將會：
-
-1. 從提示上下文產生查詢嵌入向量。
-2. 在這些知識庫中搜尋 top-k 段落。
-3. 將它們連同引用標記一起注入到提示中。
-4. 在輸出中呈現引用，供使用者驗證。
-
-定義一個自訂知識庫：
-
-```ts
-// packages/acme-extension/src/renewal_playbook.knowledge.ts
-import { defineKnowledgeBase } from '@objectstack/spec/ai';
-
-export default defineKnowledgeBase({
-  name: 'renewal_playbook',
-  label: 'Renewal Playbook',
-  sources: [
-    { type: 'object', object: 'kb_article', filters: [['category', '=', 'renewal']] },
-    { type: 'file_storage', folder: '/playbooks/renewals' },
-    { type: 'confluence', space: 'CSM', label_filter: 'renewals' },
-  ],
-  refresh_schedule: '0 2 * * *',   // nightly at 2 AM
-  permissions: { read_for_profiles: ['sales_user', 'system_admin'] },
-});
+```bash
+pnpm validate
+pnpm typecheck
+pnpm test
 ```
-
-## 權限與共用
-
-預設情況下，技能以呼叫使用者的身分執行 —— 它們只能看到該使用者能看到的記錄。這一點出於安全考量沒有商量餘地。
-
-如果某個技能 **必須** 讀取更多資料（例如僅限經理使用的預測技能），請宣告一個 `elevated_data_sources` 區塊，執行階段將要求呼叫使用者持有相符的權限：
-
-```ts
-elevated_data_sources: {
-  all_team_opportunities: {
-    object: 'crm_opportunity',
-    requires_permission: 'view_team_pipeline',
-  },
-},
-```
-
-## 測試技能
-
-對提示邏輯和輸出形態進行單元測試：
-
-```ts
-import { runSkill } from '@objectstack/runtime/ai/testing';
-import renewalPitch from './renewal_pitch.skill';
-
-it('produces a pitch with citations', async () => {
-  const result = await runSkill(renewalPitch, {
-    input: { contract_id: 'ctr_123' },
-    as_user: 'usr_alex',
-  });
-  expect(result.subject).toContain('renewal');
-  expect(result.citations.length).toBeGreaterThan(0);
-});
-```
-
-針對帶有真實 CRM 資料的沙盒租戶進行整合測試。
-
-## 監控
-
-部署後，請監控：
-
-- **呼叫量** —— 該技能被使用的頻率如何？
-- **接受率** —— 使用者接受輸出的頻率如何？
-- **延遲** —— p50 / p95。
-- **錯誤率** —— schema 不相符、資料缺失、逾時。
-
-呈現在 **Setup → AI → Skills → Performance** 中。
-
-## 提示
-
-- ✅ 讓提示 **簡短且結構化** —— 輸出更好、延遲更低。
-- ✅ 始終在輸出 schema 中包含 `citations` —— 信任建立在可追溯性之上。
-- ✅ 以 `requires_confirmation_before_write: true` 起步 —— 在自動化之前先贏得信任。
-- ✅ 關注接受率 —— 如果 &lt;50%，則提示或知識庫需要改進。
-- ✅ 為你的提示做版本管理 —— 在調校時保留一份歷史記錄。
-
-## 相關
-
-- [AI Copilot › 技能](/zh-Hant/docs/ai-copilot/skills) —— 面向使用者的視角。
-- [AI Copilot › 知識庫](/zh-Hant/docs/ai-copilot/knowledge-bases) —— RAG 層。
-- [擴充物件](/zh-Hant/docs/customization/extending-objects) —— 用於支撐你技能背後的資料模型。

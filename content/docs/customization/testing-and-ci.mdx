@@ -25,7 +25,7 @@ How to test your HotCRM customisations confidently before shipping.
 Every metadata file should validate against its spec schema. Add a single test that walks all files:
 
 ```ts
-// packages/your-extension/test/metadata.test.ts
+// test/metadata.test.ts
 import { describe, it, expect } from 'vitest';
 import { ObjectSchema } from '@objectstack/spec/data';
 import { PageSchema, ViewSchema, DashboardSchema } from '@objectstack/spec/ui';
@@ -35,7 +35,7 @@ import opportunityPage from '../src/opportunity.page';
 
 describe('metadata schemas', () => {
   it('opportunity object', () => {
-    expect(() => ObjectSchema.parse(opportunityObj)).not.toThrow();
+    expect(() => ObjectSchema.create(opportunityObj)).not.toThrow();
   });
 
   it('opportunity page', () => {
@@ -49,7 +49,7 @@ These run in milliseconds and catch most metadata bugs at CI time.
 ## 2. Hook unit tests
 
 ```ts
-// packages/your-extension/test/opportunity_territory.hook.test.ts
+// test/opportunity_territory.hook.test.ts
 import { it, expect, vi } from 'vitest';
 import territoryHook from '../src/opportunity_territory.hook';
 
@@ -76,7 +76,7 @@ Tip: hook handlers should be **pure functions of (record, context, broker)** â€”
 Use the runtime's test harness to exercise multi-step flows:
 
 ```ts
-// packages/your-extension/test/contract_renewal.flow.test.ts
+// test/contract_renewal.flow.test.ts
 import { createTestRuntime } from '@objectstack/runtime/testing';
 import { it, expect } from 'vitest';
 
@@ -106,7 +106,7 @@ The `createTestRuntime` spins up an in-memory tenant with your packages loaded â
 Skills are deterministic when you mock the LLM:
 
 ```ts
-// packages/your-extension/test/renewal_pitch.skill.test.ts
+// test/renewal_pitch.skill.test.ts
 import { runSkill } from '@objectstack/runtime/ai/testing';
 import renewalPitch from '../src/renewal_pitch.skill';
 
@@ -219,7 +219,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm playwright install --with-deps
       - run: pnpm dev &           # boot the runtime
-      - run: pnpm wait-on http://localhost:3000
+      - run: pnpm wait-on http://localhost:4001
       - run: pnpm e2e
 
   deploy-sandbox:

@@ -1,19 +1,19 @@
 ---
 title: For Developers
-description: How to clone, run, and extend HotCRM — for engineers building customisations.
+description: How to clone, run, and extend HotCRM as an ObjectStack marketplace app.
 ---
 
 # For Developers
 
-This page is for **engineers**. End users and admins can skip it.
+This page is for engineers working with the HotCRM source repo.
 
 ## Prerequisites
 
-- **Node.js 20+**
-- **pnpm 9+** (workspace package manager)
-- A clone of the `objectstack-ai/hotcrm` repository
+- Node.js 20+
+- pnpm 10+
+- A clone of `objectstack-ai/hotcrm`
 
-## Setting up locally
+## Run locally
 
 ```bash
 git clone https://github.com/objectstack-ai/hotcrm.git
@@ -22,136 +22,92 @@ pnpm install
 pnpm dev
 ```
 
-Open http://localhost:3000 — the app boots with seed data the first time you sign up.
+Open http://localhost:4001. The app boots with seed data on first start.
 
-## What's in the repo
+## Repository shape
 
-```
+HotCRM is a single ObjectStack app. `objectstack.config.ts` is the source of truth that registers metadata from `src/`.
+
+```text
 hotcrm/
-├── packages/             # Business capability packages
-│   ├── crm/              # Sales objects, flows, sharing, approvals
-│   ├── finance/          # Contracts, revenue
-│   ├── products/         # Product catalog
-│   ├── service/          # Cases, knowledge base
-│   ├── marketing/        # Campaigns
-│   └── ai/               # Copilot agents, skills, knowledge bases
-└── apps/
-    ├── crm/              # The CRM application
-    └── docs/             # This documentation site
+├── objectstack.config.ts
+├── src/
+│   ├── objects/        # *.object.ts and object lifecycle hooks
+│   ├── actions/        # UI actions and executable action bodies
+│   ├── flows/          # automation flows
+│   ├── agents/         # AI agents
+│   ├── skills/         # AI skills
+│   ├── apps/, views/, pages/
+│   ├── dashboards/, reports/, cubes/
+│   ├── profiles/, sharing/
+│   ├── translations/
+│   └── data/
+├── apps/docs/          # Fumadocs app
+└── content/docs/       # documentation content
 ```
 
-Each package follows the **file suffix protocol**:
+## File suffix protocol
 
 | Suffix | Defines |
 | --- | --- |
 | `*.object.ts` | Data model |
 | `*.hook.ts` | Server-side lifecycle logic |
-| `*.action.ts` | API endpoints / AI-callable tools |
-| `*.flow.ts` | Multi-step automation |
+| `*.actions.ts` | UI actions and AI-callable action bodies |
+| `*.flow.ts` | Automation |
 | `*.skill.ts` | AI skill |
-| `*.agent.ts` | Composite AI agent |
-| `*.page.ts` | UI page layout |
-| `*.view.ts` | List view |
+| `*.agent.ts` | AI agent |
+| `*.page.ts` | UI page |
+| `*.view.ts` | List or kanban view |
 | `*.dashboard.ts` | Dashboard |
+| `*.report.ts` | Report |
 | `*.sharing.ts` | Sharing rule |
-| `*.approval.ts` | Approval process |
-| `*.statemachine.ts` | State transitions |
-
-## Core platform: ObjectStack
-
-HotCRM runs on [**@objectstack/runtime**](https://github.com/objectstack-ai/framework) — a metadata-first runtime that handles persistence, sharing, validation, automation, and AI. We *don't* modify the runtime; we **define metadata** that the runtime executes.
-
-Key concepts:
-
-- **Objects** are TypeScript files (no YAML, no JSON, no UI clicking).
-- **ObjectQL** is the data-access API — `broker.find('crm_opportunity', {...})` instead of SQL.
-- **Hooks** fire on lifecycle events (`before_create`, `after_update`, etc.).
-- **Flows** orchestrate multi-step business logic visually defined in TS.
-- Every metadata file is **validated** at compile time against `@objectstack/spec` schemas.
+| `*.profile.ts` | Permission profile |
 
 ## Common tasks
 
-### Add a field to an existing object
+### Add or change an object
+
+Edit or add a file under `src/objects/`, then export it from `src/objects/index.ts`.
 
 ```ts
-// packages/your-extension/src/opportunity.object.ts
-import { defineObject, Field, ObjectSchema } from '@objectstack/spec/data';
+import { ObjectSchema, Field } from '@objectstack/spec/data';
 
-export default ObjectSchema.parse(defineObject({
-  name: 'crm_opportunity',
-  extends: 'crm.opportunity',
+export const Warranty = ObjectSchema.create({
+  name: 'crm_warranty',
+  label: 'Warranty',
   fields: {
-    custom_priority: Field.select({
-      options: [
-        { value: 'a', label: 'A' },
-        { value: 'b', label: 'B' },
-      ],
-    }),
+    name: Field.text({ label: 'Warranty Name', required: true }),
+    crm_account: Field.lookup('crm_account', { label: 'Account' }),
   },
-}));
-```
-
-➜ Full guide: [Extending Objects](/docs/customization/extending-objects)
-
-### Add an AI skill
-
-```ts
-// packages/your-extension/src/your_skill.skill.ts
-import { defineSkill } from '@objectstack/spec/ai';
-
-export default defineSkill({
-  name: 'your_skill',
-  // ...
 });
 ```
 
-➜ Full guide: [Building AI Skills](/docs/customization/ai-skills)
+### Add an AI skill
 
-### Customise a page
+Create `src/skills/<name>.skill.ts`, export it from `src/skills/index.ts`, and add the skill name to the relevant agent in `src/agents/`.
 
-```ts
-// packages/your-extension/src/opportunity.page.ts
-import { definePage, PageSchema } from '@objectstack/spec/ui';
+### Add UI metadata
 
-export default PageSchema.parse(definePage({
-  object: 'crm_opportunity',
-  // ...
-}));
-```
+Use `src/views/` for list and kanban views, `src/pages/` for record pages, and `src/actions/` for buttons and modal actions.
 
-➜ Full guide: [UI Extensions](/docs/customization/ui-extensions)
-
-## Validating your changes
+## Verify changes
 
 ```bash
-pnpm typecheck       # validates all metadata against @objectstack/spec
-pnpm test            # unit tests
-pnpm lint            # code style
-pnpm build           # full build
+pnpm validate
+pnpm typecheck
+pnpm build
+pnpm test
 ```
 
-CI runs the same checks on every PR.
-
-## Where to keep customisations
-
-Add a **new package** under `packages/` rather than editing core packages. This keeps you upgradable when HotCRM ships updates.
+The shortcut is:
 
 ```bash
-packages/
-  acme-crm-extension/    # your customisations
+pnpm verify
 ```
-
-Your package can `extends:` any core object, register new skills against the existing Copilot, and add pages/views/dashboards alongside the built-in ones.
 
 ## Where to go next
 
-- [Extending Objects](/docs/customization/extending-objects) — the data layer.
-- [Building AI Skills](/docs/customization/ai-skills) — the AI layer.
-- [UI Extensions](/docs/customization/ui-extensions) — the front-end.
-- [Administration](/docs/administration/index) — how admins configure the system you build.
-
-## Useful links
-
-- 📦 [ObjectStack framework](https://github.com/objectstack-ai/framework)
-- 📚 [@objectstack/spec schemas](https://github.com/objectstack-ai/framework/tree/main/packages/spec)
-- 🐛 [Report an issue](https://github.com/objectstack-ai/hotcrm/issues)
+- [Extending Objects](/docs/customization/extending-objects)
+- [AI Skills](/docs/customization/ai-skills)
+- [UI Extensions](/docs/customization/ui-extensions)
+- [Marketplace Publishing](/docs/marketplace/publishing-your-first-app)

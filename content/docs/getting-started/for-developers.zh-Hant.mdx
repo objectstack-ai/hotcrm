@@ -1,19 +1,19 @@
 ---
 title: 面向開發者
-description: 如何複製、執行和擴展 HotCRM —— 面向建構客製化的工程師。
+description: 如何克隆、執行並擴展作為 ObjectStack 市場應用的 HotCRM。
 ---
 
 # 面向開發者
 
-本頁面向**工程師**。終端使用者和管理員可以跳過。
+本頁面面向使用 HotCRM 原始碼倉庫的工程師。
 
 ## 前置條件
 
-- **Node.js 20+**
-- **pnpm 9+**（工作區套件管理器）
-- `objectstack-ai/hotcrm` 儲存庫的複製
+- Node.js 20+
+- pnpm 10+
+- 已克隆 `objectstack-ai/hotcrm`
 
-## 本地設定
+## 本機執行
 
 ```bash
 git clone https://github.com/objectstack-ai/hotcrm.git
@@ -22,136 +22,92 @@ pnpm install
 pnpm dev
 ```
 
-打開 http://localhost:3000 —— 應用在你首次註冊時會隨種子資料啟動。
+打開 http://localhost:4001。應用會在首次啟動時載入種子資料。
 
-## 儲存庫中有什麼
+## 倉庫結構
 
-```
+HotCRM 是一個單體 ObjectStack 應用。`objectstack.config.ts` 是註冊 `src/` 中全部中繼資料的唯一事實來源。
+
+```text
 hotcrm/
-├── packages/             # Business capability packages
-│   ├── crm/              # Sales objects, flows, sharing, approvals
-│   ├── finance/          # Contracts, revenue
-│   ├── products/         # Product catalog
-│   ├── service/          # Cases, knowledge base
-│   ├── marketing/        # Campaigns
-│   └── ai/               # Copilot agents, skills, knowledge bases
-└── apps/
-    ├── crm/              # The CRM application
-    └── docs/             # This documentation site
+├── objectstack.config.ts
+├── src/
+│   ├── objects/        # *.object.ts 和物件生命週期 hooks
+│   ├── actions/        # UI 動作和可執行動作體
+│   ├── flows/          # 自動化流程
+│   ├── agents/         # AI agents
+│   ├── skills/         # AI skills
+│   ├── apps/, views/, pages/
+│   ├── dashboards/, reports/, cubes/
+│   ├── profiles/, sharing/
+│   ├── translations/
+│   └── data/
+├── apps/docs/          # Fumadocs 應用
+└── content/docs/       # 文件內容
 ```
 
-每個套件都遵循**檔案後綴協定**：
+## 檔案後綴協議
 
 | 後綴 | 定義 |
 | --- | --- |
 | `*.object.ts` | 資料模型 |
-| `*.hook.ts` | 伺服器端生命週期邏輯 |
-| `*.action.ts` | API 端點 / 可供 AI 呼叫的工具 |
-| `*.flow.ts` | 多步驟自動化 |
-| `*.skill.ts` | AI 技能 |
-| `*.agent.ts` | 複合型 AI 代理 |
-| `*.page.ts` | UI 頁面版面 |
-| `*.view.ts` | 清單檢視 |
+| `*.hook.ts` | 服務端生命週期邏輯 |
+| `*.actions.ts` | UI 動作和 AI 可呼叫動作體 |
+| `*.flow.ts` | 自動化 |
+| `*.skill.ts` | AI skill |
+| `*.agent.ts` | AI agent |
+| `*.page.ts` | UI 頁面 |
+| `*.view.ts` | 清單或看板視圖 |
 | `*.dashboard.ts` | 儀表板 |
+| `*.report.ts` | 報表 |
 | `*.sharing.ts` | 共享規則 |
-| `*.approval.ts` | 審批流程 |
-| `*.statemachine.ts` | 狀態轉換 |
-
-## 核心平台：ObjectStack
-
-HotCRM 執行於 [**@objectstack/runtime**](https://github.com/objectstack-ai/framework) —— 一個中繼資料優先的執行時，負責持久化、共享、驗證、自動化和 AI。我們*不*修改執行時；我們**定義中繼資料**，由執行時執行。
-
-關鍵概念：
-
-- **物件**是 TypeScript 檔案（無 YAML、無 JSON、無 UI 點擊）。
-- **ObjectQL** 是資料存取 API —— `broker.find('crm_opportunity', {...})` 而非 SQL。
-- **鉤子**在生命週期事件（`before_create`、`after_update` 等）上觸發。
-- **流程**以視覺化方式編排多步驟業務邏輯，並在 TS 中定義。
-- 每個中繼資料檔案在編譯時都會針對 `@objectstack/spec` schema 進行**驗證**。
+| `*.profile.ts` | 權限設定檔 |
 
 ## 常見任務
 
-### 向現有物件加入欄位
+### 新增或修改物件
+
+在 `src/objects/` 下編輯或新增檔案，然後從 `src/objects/index.ts` 匯出。
 
 ```ts
-// packages/your-extension/src/opportunity.object.ts
-import { defineObject, Field, ObjectSchema } from '@objectstack/spec/data';
+import { ObjectSchema, Field } from '@objectstack/spec/data';
 
-export default ObjectSchema.parse(defineObject({
-  name: 'crm_opportunity',
-  extends: 'crm.opportunity',
+export const Warranty = ObjectSchema.create({
+  name: 'crm_warranty',
+  label: 'Warranty',
   fields: {
-    custom_priority: Field.select({
-      options: [
-        { value: 'a', label: 'A' },
-        { value: 'b', label: 'B' },
-      ],
-    }),
+    name: Field.text({ label: 'Warranty Name', required: true }),
+    crm_account: Field.lookup('crm_account', { label: 'Account' }),
   },
-}));
-```
-
-➜ 完整指南：[擴展物件](/zh-Hant/docs/customization/extending-objects)
-
-### 加入 AI 技能
-
-```ts
-// packages/your-extension/src/your_skill.skill.ts
-import { defineSkill } from '@objectstack/spec/ai';
-
-export default defineSkill({
-  name: 'your_skill',
-  // ...
 });
 ```
 
-➜ 完整指南：[建構 AI 技能](/zh-Hant/docs/customization/ai-skills)
+### 新增 AI skill
 
-### 客製化頁面
+建立 `src/skills/<name>.skill.ts`，從 `src/skills/index.ts` 匯出，並把 skill 名稱加入 `src/agents/` 中對應的 agent。
 
-```ts
-// packages/your-extension/src/opportunity.page.ts
-import { definePage, PageSchema } from '@objectstack/spec/ui';
+### 新增 UI 中繼資料
 
-export default PageSchema.parse(definePage({
-  object: 'crm_opportunity',
-  // ...
-}));
-```
+使用 `src/views/` 定義清單和看板視圖，使用 `src/pages/` 定義記錄頁面，使用 `src/actions/` 定義按鈕和彈窗動作。
 
-➜ 完整指南：[UI 擴展](/zh-Hant/docs/customization/ui-extensions)
-
-## 驗證你的變更
+## 驗證改動
 
 ```bash
-pnpm typecheck       # validates all metadata against @objectstack/spec
-pnpm test            # unit tests
-pnpm lint            # code style
-pnpm build           # full build
+pnpm validate
+pnpm typecheck
+pnpm build
+pnpm test
 ```
 
-CI 在每個 PR 上執行相同的檢查。
-
-## 把客製化放在哪裡
-
-在 `packages/` 下加入一個**新套件**，而不是編輯核心套件。這能讓你在 HotCRM 發布更新時保持可升級。
+快捷命令：
 
 ```bash
-packages/
-  acme-crm-extension/    # your customisations
+pnpm verify
 ```
 
-你的套件可以 `extends:` 任何核心物件，針對現有 Copilot 註冊新技能，並在內建的頁面/檢視/儀表板旁邊加入新的。
+## 下一步
 
-## 接下來去哪裡
-
-- [擴展物件](/zh-Hant/docs/customization/extending-objects) —— 資料層。
-- [建構 AI 技能](/zh-Hant/docs/customization/ai-skills) —— AI 層。
-- [UI 擴展](/zh-Hant/docs/customization/ui-extensions) —— 前端。
-- [管理](/zh-Hant/docs/administration/index) —— 管理員如何設定你建構的系統。
-
-## 實用連結
-
-- 📦 [ObjectStack 框架](https://github.com/objectstack-ai/framework)
-- 📚 [@objectstack/spec schema](https://github.com/objectstack-ai/framework/tree/main/packages/spec)
-- 🐛 [報告問題](https://github.com/objectstack-ai/hotcrm/issues)
+- [擴展物件](/zh-Hant/docs/customization/extending-objects)
+- [AI Skills](/zh-Hant/docs/customization/ai-skills)
+- [UI 擴展](/zh-Hant/docs/customization/ui-extensions)
+- [市場發布](/zh-Hant/docs/marketplace/publishing-your-first-app)
