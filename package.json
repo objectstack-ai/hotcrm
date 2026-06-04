@@ -20,6 +20,8 @@
     "test:qa": "objectstack test",
     "test:e2e": "playwright test",
     "verify": "pnpm validate && pnpm typecheck && pnpm build && pnpm test",
+    "publish:marketplace": "node scripts/publish-marketplace.mjs",
+    "publish:marketplace:dry-run": "DRY_RUN=1 node scripts/publish-marketplace.mjs",
     "demo:reset": "rm -rf .objectstack/data && pnpm build && echo '✅ DB reset — start the server with: pnpm dev (or pnpm start). Seed data loads on first boot.'"
   },
   "packageManager": "pnpm@10.33.0",

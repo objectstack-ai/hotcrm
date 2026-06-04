@@ -1,0 +1,24 @@
+{
+  "$schema": "https://schemas.objectstack.dev/template-manifest.json",
+  "name": "hotcrm",
+  "specVersion": "^7.7.0",
+  "manifestId": "app.objectstack.hotcrm",
+  "displayName": "HotCRM",
+  "description": "AI-Native CRM for the ObjectStack marketplace — Accounts, Contacts, Leads, Opportunities, Cases, Knowledge, Forecasts, Campaigns, and Contracts in one production-grade workspace.",
+  "tagline": "Production AI-native CRM — accounts to forecasts.",
+  "category": "crm",
+  "isStarter": false,
+  "publisher": "objectstack",
+  "license": "MIT",
+  "iconUrl": "https://raw.githubusercontent.com/objectstack-ai/hotcrm/main/assets/icon.svg",
+  "homepageUrl": "https://github.com/objectstack-ai/hotcrm",
+  "tags": ["crm", "sales", "accounts", "leads", "opportunities", "cases", "campaigns"],
+  "skills": [
+    "objectstack-platform",
+    "objectstack-data",
+    "objectstack-ui",
+    "objectstack-automation",
+    "objectstack-ai"
+  ],
+  "readmePath": "README.md"
+}
