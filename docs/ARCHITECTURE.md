@@ -1,323 +1,160 @@
-# HotCRM Architecture Guide
+# HotCRM Architecture
 
-> Consolidated architecture overview and plugin system guide for HotCRM.
+> Current architecture for the single-app HotCRM repository.
 
 ## Overview
 
-HotCRM is an **AI-Native Enterprise CRM** built on the **@objectstack/runtime** engine. It follows a **Plugin-Based Monorepo** architecture where each business cloud is an independent plugin package.
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                   HotCRM Application                     │
-│              (objectstack.config.ts)                     │
-├─────────────────────────────────────────────────────────┤
-│  ┌─────────┐ ┌─────────┐ ┌──────────┐ ┌─────────────┐  │
-│  │   CRM   │ │Marketing│ │ Products │ │   Finance   │  │
-│  │  Sales  │ │  Cloud  │ │   CPQ    │ │  Revenue    │  │
-│  └─────────┘ └─────────┘ └──────────┘ └─────────────┘  │
-│  ┌─────────┐ ┌─────────┐ ┌──────────┐ ┌─────────────┐  │
-│  │ Support │ │   HR    │ │    AI    │ │    Core     │  │
-│  │ Service │ │  HCM    │ │  Intel   │ │  Utilities  │  │
-│  └─────────┘ └─────────┘ └──────────┘ └─────────────┘  │
-├─────────────────────────────────────────────────────────┤
-│               @objectstack/runtime                       │
-│     ObjectQL  ·  Metadata Registry  ·  REST API          │
-└─────────────────────────────────────────────────────────┘
-```
-
-## Core Principles
-
-1. **Metadata-First**: All business objects defined in TypeScript (`.object.ts`) — the single source of truth for schema, validation, and UI rendering.
-2. **Plugin Architecture**: Each business package is self-contained with objects, hooks, actions, and UI metadata.
-3. **ObjectQL**: Type-safe query language replacing raw SQL for all data access.
-4. **AI-Native**: Every business object is designed for AI augmentation — scoring, predictions, recommendations.
-5. **Schema-Validated**: All metadata files validated against `@objectstack/spec` Zod schemas at module load time.
-
-## Plugin System
-
-### Plugin Definition
-
-Each package exports a plugin definition validated by `PluginSchema.parse()`:
-
-```typescript
-// packages/{pkg}/src/plugin.ts
-import { PluginSchema } from '@objectstack/spec/kernel';
-
-export default PluginSchema.parse({
-  name: 'crm',
-  label: 'Sales Cloud',
-  description: 'Core CRM objects and business logic',
-  objects: { account, contact, lead, opportunity /* ... */ },
-  hooks: { account: accountHooks, lead: leadHooks /* ... */ },
-  actions: { lead_convert: leadConvertAction /* ... */ },
-  workflows: { lead_assignment: leadWorkflow /* ... */ },
-});
-```
-
-### Plugin Lifecycle
-
-1. **Registration**: Plugins declare objects, hooks, actions, and workflows.
-2. **Dependency Resolution**: ObjectStack runtime resolves inter-plugin dependencies.
-3. **Metadata Loading**: Object schemas are validated and registered in the metadata registry.
-4. **Hook Binding**: Hooks are bound to object lifecycle events (beforeInsert, afterUpdate, etc.).
-5. **API Generation**: REST endpoints are auto-generated for all registered objects.
-
-### Plugin Capabilities
-
-Each plugin declares its capabilities via `PluginCapabilityManifestSchema`:
-
-```typescript
-// packages/{pkg}/src/{pkg}.capabilities.ts
-import { PluginCapabilityManifestSchema } from '@objectstack/spec/kernel';
-
-export default PluginCapabilityManifestSchema.parse({
-  pluginName: 'crm',
-  capabilities: ['object_management', 'workflow_automation', 'ai_integration'],
-  providedObjects: ['account', 'contact', 'lead', 'opportunity'],
-  requiredDependencies: [],
-});
-```
-
-## Package Dependency Graph
+HotCRM is an ObjectStack marketplace app. It is not currently organized as multiple scoped npm packages; the app is assembled from the local `src/` tree and registered through [`objectstack.config.ts`](../objectstack.config.ts).
 
 ```mermaid
-graph TD
-    RT["@objectstack/runtime"] --> CORE["@hotcrm/core"]
-    RT --> CRM["@hotcrm/crm<br/>Sales Cloud"]
-    RT --> MKT["@hotcrm/marketing<br/>Marketing Cloud"]
-    RT --> FIN["@hotcrm/finance<br/>Revenue Cloud"]
-    RT --> PRD["@hotcrm/products<br/>CPQ Cloud"]
-    RT --> SUP["@hotcrm/support<br/>Service Cloud"]
-    RT --> HR["@hotcrm/hr<br/>HR Cloud"]
-    RT --> AI["@hotcrm/ai<br/>Intelligence"]
-
-    CRM --> MKT
-    CRM --> FIN
-    CRM --> PRD
-    CRM --> SUP
-
-    CORE --> CRM
-    CORE --> MKT
-    CORE --> FIN
-    CORE --> PRD
-    CORE --> SUP
-    CORE --> HR
-    CORE --> AI
+flowchart TD
+  Config["objectstack.config.ts"] --> Stack["defineStack()"]
+  Stack --> Objects["src/objects"]
+  Stack --> Actions["src/actions"]
+  Stack --> Flows["src/flows"]
+  Stack --> Agents["src/agents"]
+  Stack --> Skills["src/skills"]
+  Stack --> UI["src/apps, src/views, src/pages"]
+  Stack --> Analytics["src/dashboards, src/reports, src/cubes"]
+  Stack --> Security["src/profiles, src/sharing"]
+  Stack --> Data["src/data"]
+  Stack --> Runtime["@objectstack/runtime"]
 ```
 
-## Data Layer
+The compiled marketplace artifact is produced by `pnpm build`. The generated artifact is the package that gets published, not the TypeScript source layout itself.
 
-### Object Schema
+## Stack Manifest
 
-All objects are defined using `ObjectSchema.create()` from `@objectstack/spec/data`:
+The stack manifest defines:
+
+| Field | Current value |
+| --- | --- |
+| id | `app.objectstack.hotcrm` |
+| namespace | `crm` |
+| version | `1.0.5` |
+| type | `app` |
+| name | `HotCRM` |
+
+Runtime capabilities are declared in `requires`: `ai`, `automation`, `triggers`, `analytics`, `auth`, `ui`, `approvals`, and `sharing`.
+
+## Metadata Areas
+
+| Area | Files | Registered as |
+| --- | --- | --- |
+| Data model | `src/objects/*.object.ts` | `objects` |
+| Lifecycle hooks | `src/objects/*.hook.ts` via `src/hooks/index.ts` | `hooks` |
+| UI actions | `src/actions/*.actions.ts` | `actions` |
+| Automation | `src/flows/*.flow.ts` | `flows` |
+| AI agents | `src/agents/*.agent.ts` | `agents` |
+| AI skills | `src/skills/*.skill.ts` | `skills` |
+| Apps, views, pages | `src/apps/`, `src/views/`, `src/pages/` | `apps`, `views`, `pages` |
+| Analytics | `src/cubes/`, `src/dashboards/`, `src/reports/` | `analyticsCubes`, `dashboards`, `reports` |
+| Security | `src/profiles/`, `src/sharing/` | `permissions`, `sharingRules`, `roles` |
+| i18n | `src/translations/` | `translations`, `i18n` |
+| Demo data | `src/data/` | `data` |
+
+## Data Model
+
+Objects are declared with `ObjectSchema.create()` and use the explicit `crm_` namespace prefix.
 
 ```typescript
 import { ObjectSchema, Field } from '@objectstack/spec/data';
 
-export default ObjectSchema.create({
-  name: 'opportunity',
-  label: 'Opportunity',
-  description: 'Sales pipeline deal',
+export const Account = ObjectSchema.create({
+  name: 'crm_account',
+  label: 'Account',
   fields: {
-    name: Field.text({ label: 'Deal Name', required: true }),
-    amount: Field.currency({ label: 'Amount', precision: 18, scale: 2 }),
-    stage: Field.select({ label: 'Stage', options: [...] }),
-    account: Field.lookup('account', { label: 'Account' }),
-    close_date: Field.date({ label: 'Expected Close Date' }),
+    name: Field.text({ label: 'Account Name', required: true }),
+    owner: Field.lookup('user', { label: 'Account Owner' }),
   },
 });
 ```
 
-### Field Types
+Current objects:
 
-HotCRM uses 20+ of the 44 available field types:
+| Domain | Objects |
+| --- | --- |
+| Sales | `crm_lead`, `crm_account`, `crm_contact`, `crm_opportunity`, `crm_opportunity_line_item`, `crm_forecast` |
+| Service | `crm_case`, `crm_knowledge_article`, `crm_task` |
+| Marketing | `crm_campaign`, `crm_campaign_member` |
+| Revenue | `crm_product`, `crm_quote`, `crm_quote_line_item`, `crm_contract` |
 
-| Category | Field Types |
-|----------|-------------|
-| **Text** | `text`, `textarea`, `email`, `phone`, `url` |
-| **Numeric** | `number`, `currency`, `percent` |
-| **Date/Time** | `date`, `datetime` |
-| **Choice** | `select`, `select({ multiple: true })`, `boolean` |
-| **Relationship** | `lookup`, `masterDetail`, `summary` |
-| **Media** | `file`, `image` |
-| **Location** | `location`, `address` |
-| **Computed** | `formula`, `autonumber` |
+## Hooks
 
-### ObjectQL
+Object lifecycle hooks live beside object definitions in `src/objects/*.hook.ts`. They are collected in `src/hooks/index.ts` and passed to `defineStack({ hooks: allHooks })`.
 
-Data access uses ObjectQL — never raw SQL:
+Use hooks for record-level invariants and cross-object maintenance that must run with data changes, such as:
 
-```typescript
-// Find records
-const leads = await broker.find('lead', {
-  filters: [['score', '>', 80], ['status', '=', 'qualified']],
-  fields: ['name', 'email', 'score', 'company'],
-  sort: [{ field: 'score', order: 'desc' }],
-  limit: 20,
-});
+- lead defaults and conversion bookkeeping
+- opportunity probability and approval fields
+- quote and line-item total calculations
+- case SLA and escalation fields
+- account and contact relationship maintenance
 
-// Create record
-await broker.insert('opportunity', {
-  name: 'Enterprise Deal',
-  amount: 250000,
-  stage: 'proposal',
-  account: accountId,
-});
+## Actions
 
-// Update record
-await broker.update('opportunity', id, { stage: 'negotiation' });
-```
+Actions live in `src/actions/*.actions.ts`. They define record-header, list-item, list-toolbar, modal, and flow-triggering behaviors. Some action bodies are executable metadata and can use constrained capabilities such as `api.write`.
 
-## Business Logic Layer
-
-### Hooks (Triggers)
-
-Server-side hooks execute during object lifecycle events:
-
-| Event | Timing | Use Case |
-|-------|--------|----------|
-| `beforeInsert` | Before creation | Validation, field defaulting, de-duplication |
-| `afterInsert` | After creation | Notifications, related record creation |
-| `beforeUpdate` | Before update | Validation, field recalculation |
-| `afterUpdate` | After update | Cascade updates, workflow triggers |
-| `beforeDelete` | Before deletion | Referential integrity checks |
-| `afterDelete` | After deletion | Cleanup, audit logging |
-
-### Actions
-
-API endpoints and AI-callable tools:
+Example shape:
 
 ```typescript
-// packages/crm/src/lead_convert.action.ts
-export async function convertLead(params: { leadId: string }, broker: any) {
-  const lead = await broker.findOne('lead', params.leadId);
-  const account = await broker.insert('account', { name: lead.company });
-  const contact = await broker.insert('contact', { name: lead.name, account: account.id });
-  const opportunity = await broker.insert('opportunity', { name: `${lead.company} - New Deal`, account: account.id });
-  return { account, contact, opportunity };
-}
-```
-
-### Workflows
-
-Automated business processes defined via `WorkflowRuleSchema`:
-
-```typescript
-import { WorkflowRuleSchema } from '@objectstack/spec/automation';
-
-export default WorkflowRuleSchema.parse({
-  name: 'lead_assignment',
-  object: 'lead',
-  trigger: 'on_create',
-  conditions: [{ field: 'status', operator: 'equals', value: 'new' }],
-  actions: [{ type: 'field_update', field: 'owner', value: '{{round_robin}}' }],
-});
-```
-
-## UI Layer
-
-### Page Layouts
-
-Page layouts define the detail view for an object:
-
-```typescript
-import { PageSchema } from '@objectstack/spec/ui';
-
-export default PageSchema.parse({
-  object: 'account',
-  label: 'Account Detail',
-  sections: [
-    { label: 'Overview', fields: ['name', 'industry', 'website'] },
-    { label: 'Financial', fields: ['annual_revenue', 'employee_count'] },
-  ],
-  relatedLists: ['contacts', 'opportunities'],
-});
-```
-
-### Dashboards
-
-Dashboards aggregate KPIs from multiple objects:
-
-```typescript
-import { DashboardSchema } from '@objectstack/spec/ui';
-
-export default DashboardSchema.parse({
-  name: 'sales_dashboard',
-  label: 'Sales Performance',
-  widgets: [
-    { type: 'metric', label: 'Pipeline Value', source: 'opportunity', aggregate: 'sum', field: 'amount' },
-    { type: 'chart', label: 'Win Rate by Stage', source: 'opportunity', chartType: 'bar' },
-  ],
-});
-```
-
-## AI Layer
-
-### Agent Workflows
-
-Six autonomous AI agent workflows orchestrate cross-cloud data:
-
-| Agent | Scope | Input → Output |
-|-------|-------|----------------|
-| **Lead-to-Close** | CRM | Lead → Qualified → Opportunity → Won |
-| **Customer 360** | CRM + Finance + Support | Account → Unified profile |
-| **Churn Prevention** | CRM + Support + Finance | At-risk signals → Retention actions |
-| **Case Resolution** | Support + Knowledge | Case → KB search → Resolution |
-| **Talent Acquisition** | HR | Requisition → Source → Interview → Offer |
-| **Revenue Optimization** | Finance + Products | Pipeline → Forecast → Pricing |
-
-### MCP Integration
-
-HotCRM provides a Model Context Protocol server for AI agent integration:
-
-```typescript
-import { MCPServerConfig } from '@objectstack/spec/ai';
-
-export const mcpServer = {
-  tools: 8,       // find_accounts, create_lead, search_knowledge, ...
-  resources: 4,   // account_list, pipeline_summary, ...
-  prompts: 3,     // sales_briefing, case_summary, ...
+export const ConvertLeadAction = {
+  name: 'convert_lead',
+  label: 'Convert Lead',
+  objectName: 'crm_lead',
+  type: 'flow',
+  target: 'lead_conversion',
+  locations: ['record_header', 'list_item'],
 };
 ```
 
-## Security Layer
+## Flows
 
-### Permission Sets
+Flows live in `src/flows/*.flow.ts` and are registered through `allFlows`. HotCRM uses record-change, scheduled, and screen-style automation for lead conversion, routing, alerts, SLA monitoring, contract renewal, quote expiration, campaign enrollment, and approval paths.
 
-Each cloud defines role-based permissions:
+Record-change flows rely on the `triggers` capability declared in the stack manifest.
 
-```typescript
-import { PermissionSetSchema } from '@objectstack/spec/security';
+## UI
 
-export default PermissionSetSchema.parse({
-  name: 'sales_user',
-  label: 'Sales User',
-  objectPermissions: [
-    { object: 'account', read: true, create: true, edit: true, delete: false },
-    { object: 'opportunity', read: true, create: true, edit: true, delete: false },
-  ],
-});
+HotCRM ships metadata for:
+
+- one primary app surface
+- list, kanban, and object-specific views
+- record detail pages and utility pages
+- dashboards and reports
+
+The UI is metadata-driven. Object field definitions, views, pages, actions, permissions, translations, and sharing rules all influence the rendered experience.
+
+## AI
+
+AI is modeled as ObjectStack metadata:
+
+| Layer | Files | Examples |
+| --- | --- | --- |
+| Agents | `src/agents/*.agent.ts` | `sales_copilot`, `service_copilot` |
+| Skills | `src/skills/*.skill.ts` | `live_data`, `lead_qualification`, `email_drafting`, `revenue_forecasting`, `customer_360` |
+| Actions and flows | `src/actions/`, `src/flows/` | lead conversion, case triage, alerts |
+
+The Sales Copilot instructions explicitly require live schema inspection before answering record questions, because admins can change metadata over time.
+
+## Security
+
+Security is assembled from:
+
+- permission profiles in `src/profiles/`
+- sharing rules in `src/sharing/`
+- role hierarchy in `src/sharing/role-hierarchy.ts`
+
+The stack maps `RoleHierarchy.roles` into the ObjectStack `roles` field and registers sharing rules for accounts, opportunities, cases, and territory-style visibility.
+
+## Verification
+
+Use these commands after architecture-affecting changes:
+
+```bash
+pnpm validate
+pnpm typecheck
+pnpm test
 ```
 
-### Sharing Rules
-
-Data visibility is controlled by sharing rules and territory models for account/opportunity access.
-
-## Cross-Cloud Integration
-
-### Integration Patterns
-
-| Flow | Path | Trigger |
-|------|------|---------|
-| **Lead Conversion** | Lead → Account + Contact + Opportunity | Manual action |
-| **Quote to Contract** | Quote → Contract → Invoice | Quote accepted |
-| **Campaign Attribution** | Campaign → Lead → Opportunity | Lead created |
-| **Case Self-Service** | Case → Knowledge Article search | Case created |
-| **Employee Onboarding** | Offer → Employee → Onboarding → Training | Offer accepted |
-
-## Further Reading
-
-- **[DEVELOPMENT_WORKFLOW.md](../DEVELOPMENT_WORKFLOW.md)** — Developer quickstart and contribution guide
-- **[ROADMAP.md](../ROADMAP.md)** — Development roadmap and phased execution plan
-- **[TESTING.md](../TESTING.md)** — Testing strategy and patterns
-- **[CONTRIBUTING.md](../CONTRIBUTING.md)** — Contribution guidelines
+See [STATUS.md](STATUS.md) for the current validation snapshot.

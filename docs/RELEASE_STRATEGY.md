@@ -1,286 +1,95 @@
-# HotCRM Release & Distribution Strategy
+# HotCRM Release Strategy
 
-This document describes the release strategy for HotCRM packages, designed to:
+> Current release model for the single ObjectStack marketplace app.
 
-1. **Protect source code** — third parties receive only compiled JavaScript, never TypeScript source
-2. **Enable metadata loading** — the ObjectStack runtime can load and execute compiled plugin metadata
-3. **Support selective installation** — customers install only the modules they need
+## Release Unit
 
-## Architecture Overview
+HotCRM releases as one ObjectStack app package:
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    HotCRM Monorepo                          │
-│                                                             │
-│  Source (private)          Published (dist/ only)            │
-│  ┌──────────────┐         ┌──────────────────────┐          │
-│  │ src/*.ts      │  tsc   │ dist/*.js             │  npm    │
-│  │ (TypeScript)  │ ─────► │ dist/*.d.ts           │ ─────►  │
-│  │ hooks, logic  │        │ (JavaScript + types)  │ Registry│
-│  └──────────────┘         └──────────────────────┘          │
-│                                                             │
-│  NOT shipped:              Shipped:                         │
-│  - src/ directory          - dist/*.js (compiled)           │
-│  - *.ts source files       - dist/*.d.ts (declarations)     │
-│  - __tests__/              - dist/*.d.ts.map (source maps)  │
-│  - objectstack.config.ts   - package.json                   │
-│  - tsconfig.json           - README.md / LICENSE            │
-└─────────────────────────────────────────────────────────────┘
-```
+| Field | Value |
+| --- | --- |
+| npm package name | `hotcrm` |
+| ObjectStack manifest id | `app.objectstack.hotcrm` |
+| Namespace | `crm` |
+| Current version | `1.0.5` |
+| Publish artifact | output from `pnpm build` |
 
-## Source Code Protection
+The active repository is not released as separate scoped npm packages.
 
-### How it works
+## Version Sources
 
-Each package's `package.json` includes a `files` field that restricts what gets published:
+Keep these aligned for each release:
 
-```json
-{
-  "files": ["dist"]
-}
-```
+- `package.json` `version`
+- `objectstack.config.ts` manifest `version`
+- `CHANGELOG.md`
+- marketplace publish note
 
-When `changeset publish` (or `npm publish`) runs, **only** the files listed in `files` plus standard files (`package.json`, `README.md`, `LICENSE`, `CHANGELOG.md`) are included in the tarball. The `src/` directory, test files, and build configs are **excluded**.
+## Release Checklist
 
-### What customers receive
+1. Update source metadata and docs.
+2. Run:
 
-| Included in package | NOT included |
-|---|---|
-| `dist/*.js` (compiled JavaScript) | `src/*.ts` (TypeScript source) |
-| `dist/*.d.ts` (type declarations) | `__tests__/` (test files) |
-| `dist/*.d.ts.map` (declaration maps) | `objectstack.config.ts` |
-| `package.json` | `tsconfig.json` |
-| `README.md`, `LICENSE` | `.changeset/` |
+   ```bash
+   pnpm verify
+   ```
 
-### Additional protections
+3. Update `CHANGELOG.md`.
+4. Confirm `package.json` and `objectstack.config.ts` carry the same version.
+5. Build the artifact:
 
-- **Private registry**: Packages are published to GitHub Packages (`https://npm.pkg.github.com`) with `restricted` access, requiring authentication
-- **No source maps for JS**: The `sourceMap` setting in `tsconfig.json` produces declaration maps (`.d.ts.map`) but `.js.map` files map back to type declarations, not original source
-- **Minification** (optional): For additional protection, a minification step can be added to the build pipeline
+   ```bash
+   pnpm build
+   ```
 
-## Selective Module Installation
+6. Publish or dry-run publish:
 
-### Package independence
+   ```bash
+   pnpm publish:marketplace:dry-run
+   pnpm publish:marketplace
+   ```
 
-Each HotCRM module is an independent npm package. Customers install only what they need:
+## Marketplace Publish
+
+The publish script is [`scripts/publish-marketplace.mjs`](../scripts/publish-marketplace.mjs). It is the preferred release path because it keeps marketplace package metadata in one place.
+
+Authenticate once:
 
 ```bash
-# Install just CRM (Sales Cloud)
-npm install @hotcrm/crm
-
-# Install CRM + Finance
-npm install @hotcrm/crm @hotcrm/finance
-
-# Install industry vertical
-npm install @hotcrm/healthcare
-
-# Install everything
-npm install @hotcrm/crm @hotcrm/finance @hotcrm/marketing @hotcrm/products @hotcrm/support @hotcrm/hr
+objectstack cloud login
 ```
 
-### Dependency resolution
-
-Inter-package dependencies are declared in `package.json` and resolved automatically:
-
-| Package | Dependencies |
-|---|---|
-| `@hotcrm/ai` | (standalone) |
-| `@hotcrm/crm` | `@hotcrm/ai` |
-| `@hotcrm/finance` | (standalone) |
-| `@hotcrm/support` | (standalone) |
-| `@hotcrm/marketing` | (standalone) |
-| `@hotcrm/products` | (standalone) |
-| `@hotcrm/hr` | (standalone) |
-| `@hotcrm/analytics` | `@hotcrm/ai` |
-| `@hotcrm/integration` | `@hotcrm/ai` |
-| `@hotcrm/community` | (standalone) |
-| `@hotcrm/education` | (standalone) |
-| `@hotcrm/healthcare` | (standalone) |
-| `@hotcrm/financial-services` | (standalone) |
-| `@hotcrm/real-estate` | (standalone) |
-
-When a customer installs `@hotcrm/crm`, npm automatically installs `@hotcrm/ai` as a transitive dependency.
-
-### Customer integration example
-
-A customer creates their own `objectstack.config.ts` selecting only the modules they need:
-
-```typescript
-import { defineStack } from '@objectstack/spec';
-import { CRMPlugin } from '@hotcrm/crm/plugin';
-import { FinancePlugin } from '@hotcrm/finance/plugin';
-
-export default defineStack({
-  manifest: {
-    id: 'com.customer.app',
-    version: '1.0.0',
-    type: 'app',
-    name: 'My CRM App',
-  },
-  objects: [],
-  plugins: [CRMPlugin, FinancePlugin],
-});
-```
-
-## Build Pipeline
-
-### Per-package build
-
-Each package has a `build` script that produces distribution-ready output:
-
-**Plugin packages** (crm, finance, support, etc.):
-```bash
-# Runs: tsc && objectstack compile
-pnpm --filter @hotcrm/crm build
-```
-
-1. `tsc` — Compiles TypeScript to JavaScript in `dist/`, producing `.js`, `.d.ts`, and `.d.ts.map` files
-2. `objectstack compile` — Validates metadata against `@objectstack/spec` schemas
-
-**Library packages** (ai):
-```bash
-# Runs: tsc
-pnpm --filter @hotcrm/ai build
-```
-
-### Monorepo build
-
-Build all packages in dependency order:
+Then publish:
 
 ```bash
-pnpm build
+pnpm publish:marketplace
 ```
 
-## Version Management
+## Source Availability
 
-### Linked releases
+This repository contains TypeScript source. Marketplace consumers install the compiled ObjectStack package artifact, not a set of separate source packages.
 
-All `@hotcrm/*` packages use [Changesets](https://github.com/changesets/changesets) with **linked releases** — all packages share the same version number.
+If source-code protection becomes a product requirement, document that as a new distribution design. Do not revive older multi-package instructions without re-validating them against the current repository.
 
-```json
-// .changeset/config.json
-{
-  "linked": [["@hotcrm/*"]],
-  "access": "restricted"
-}
-```
+## Compatibility Policy
 
-### Release workflow
+Use semantic versioning for the app:
 
-```bash
-# 1. Developer adds a changeset describing their changes
-pnpm changeset
+| Change type | Version impact |
+| --- | --- |
+| Fixes, docs, seed data corrections | Patch |
+| Backward-compatible objects, fields, views, flows, actions | Minor |
+| Renamed or removed objects/fields, permission changes that break users, migration-required behavior | Major |
 
-# 2. Maintainer consumes changesets and bumps versions
-pnpm version
+## Release Artifacts To Check
 
-# 3. Maintainer builds and publishes all packages
-pnpm release
-```
+Before announcing a release, confirm:
 
-### Excluded packages
+- `pnpm validate` reports the expected app name, version, object count, and UI count.
+- screenshots in `assets/screenshots/` still represent the product.
+- product docs in `content/docs/` match the behavior being released.
+- internal docs in `docs/` do not reference retired multi-package paths.
 
-The following packages are **never published** (marked `private: true`):
+## Historical Notes
 
-- `@hotcrm/core` — Internal shared utilities (excluded from workspace)
-- `@hotcrm/server` — Deprecated server package (excluded from workspace)
-
-## Registry Configuration
-
-### GitHub Packages (default)
-
-Packages are published to GitHub Packages with restricted access:
-
-```json
-// package.json (per package)
-{
-  "publishConfig": {
-    "access": "restricted",
-    "registry": "https://npm.pkg.github.com"
-  }
-}
-```
-
-### Customer setup
-
-Customers must configure their npm client to authenticate with the private registry:
-
-```bash
-# .npmrc (customer project)
-@hotcrm:registry=https://npm.pkg.github.com
-//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
-```
-
-### Alternative registries
-
-To use a different private registry (e.g., Verdaccio, Artifactory, or npm Enterprise), update `publishConfig.registry` in each package:
-
-```json
-{
-  "publishConfig": {
-    "access": "restricted",
-    "registry": "https://your-registry.example.com"
-  }
-}
-```
-
-## Package Structure (Published)
-
-After build, a published package contains:
-
-```
-@hotcrm/crm/
-├── dist/
-│   ├── index.js              # Main entry (barrel exports)
-│   ├── index.d.ts            # Type declarations
-│   ├── index.d.ts.map        # Declaration source map
-│   ├── plugin.js             # Plugin definition
-│   ├── plugin.d.ts           # Plugin types
-│   ├── account.object.js     # Compiled object definitions
-│   ├── account.object.d.ts
-│   ├── hooks/
-│   │   ├── lead.hook.js      # Compiled hooks
-│   │   └── lead.hook.d.ts
-│   └── actions/
-│       ├── lead_convert.action.js
-│       └── lead_convert.action.d.ts
-├── package.json
-├── README.md
-└── LICENSE
-```
-
-Note: The `src/` directory, `objectstack.config.ts`, `tsconfig.json`, and `__tests__/` are **not** included.
-
-## Security Considerations
-
-| Concern | Mitigation |
-|---|---|
-| Source code exposure | `files: ["dist"]` ensures only compiled JS is published |
-| Unauthorized access | Private registry with token-based authentication |
-| Version tampering | Changesets + linked releases ensure version consistency |
-| Dependency confusion | Scoped packages (`@hotcrm/*`) with restricted access |
-| Reverse engineering | Compiled JS without comments; optional minification for additional protection |
-
-## FAQ
-
-### Can customers see the original TypeScript source?
-
-No. Only compiled JavaScript (`.js`) and type declarations (`.d.ts`) are published. The `.d.ts.map` files map to declaration files, not source. The actual business logic is compiled and stripped of comments.
-
-### What if a customer only needs one module?
-
-Each module is independently installable. Install only what you need:
-
-```bash
-npm install @hotcrm/finance
-```
-
-Dependencies (like `@hotcrm/ai` for `@hotcrm/crm`) are resolved automatically.
-
-### How do we handle breaking changes?
-
-Changesets enforce semantic versioning. All packages are version-linked, so a major version bump in one package triggers a major bump across all packages, ensuring compatibility.
-
-### Can we switch to a different registry later?
-
-Yes. Update `publishConfig.registry` in each package's `package.json`. The build and distribution process is registry-agnostic.
+Older release notes described private npm publishing for standalone domain packages. That model is archived under `docs/archive/2026-02/` and is not the current release process.

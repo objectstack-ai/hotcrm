@@ -1,211 +1,65 @@
-# HotCRM Documentation Index
+# HotCRM Docs
 
-> **Last Updated**: February 12, 2026  
-> **Status**: Ready for Implementation
+> Last reviewed: June 4, 2026
+> Scope: internal engineering, release, and operational documentation for this repository.
 
-## 🚀 Quick Start
+HotCRM also has product-facing documentation under [`content/docs/`](../content/docs/). Use that tree for user, admin, and marketplace docs. Use this `docs/` tree for implementation notes, current technical status, deployment, release, and developer reference.
 
-**New to HotCRM development?** Start here:
+## Start Here
 
-1. Read [IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md) (5 min) - High-level overview
-2. Review [CURRENT_STATE_ASSESSMENT.md](CURRENT_STATE_ASSESSMENT.md) (15 min) - Detailed analysis
-3. Follow [NEXT_SPRINT_GUIDE.md](NEXT_SPRINT_GUIDE.md) (30 min) - Week-by-week tasks
+| Need | Document |
+| --- | --- |
+| Current facts and verification commands | [STATUS.md](STATUS.md) |
+| Runtime and metadata architecture | [ARCHITECTURE.md](ARCHITECTURE.md) |
+| Local, artifact, and marketplace deployment | [DEPLOYMENT.md](DEPLOYMENT.md) |
+| Versioning and distribution | [RELEASE_STRATEGY.md](RELEASE_STRATEGY.md) |
+| Object field reference | [developers/api_reference.md](developers/api_reference.md) |
+| ObjectStack code examples | [developers/code_examples.md](developers/code_examples.md) |
 
-## 📚 Documentation Structure
+## Documentation Boundaries
 
-### Strategic Planning (2026-2027)
+| Location | Audience | Contents |
+| --- | --- | --- |
+| `content/docs/` | Product users, admins, customizers | Fumadocs content, localized docs, marketplace guides |
+| `docs/` | Maintainers and contributors | Current architecture, status, deployment, release, developer reference |
+| `docs/archive/` | Maintainers | Historical strategy reports, retired sprint plans, legacy package specs |
 
-| Document | Purpose | Audience | Time to Read |
-|----------|---------|----------|--------------|
-| [IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md) | Executive summary of current state and next steps | All stakeholders | 5 min |
-| [CURRENT_STATE_ASSESSMENT.md](CURRENT_STATE_ASSESSMENT.md) | Comprehensive analysis of all 6 business packages | Product, Engineering | 15 min |
-| [SALESFORCE_FEATURE_COMPARISON.md](SALESFORCE_FEATURE_COMPARISON.md) | Deep feature comparison with Salesforce and gap-driven roadmap | Product, Engineering, Leadership | 20 min |
-| [NEXT_SPRINT_GUIDE.md](NEXT_SPRINT_GUIDE.md) | Detailed 12-week sprint plan with weekly tasks | Engineering | 30 min |
+## Current Repository Shape
 
-### Roadmap & Vision
+HotCRM is a single ObjectStack marketplace app. The source of truth is [`objectstack.config.ts`](../objectstack.config.ts), which registers metadata from `src/`.
 
-| Document | Purpose | Location |
-|----------|---------|----------|
-| **Development Roadmap** | Long-term feature roadmap and version history | [/ROADMAP.md](../ROADMAP.md) |
-| **README** | Project overview and getting started | [/README.md](../README.md) |
-| **Contributing Guide** | How to contribute to HotCRM | [/CONTRIBUTING.md](../CONTRIBUTING.md) |
-
-### Technical Specifications
-
-| Document | Purpose | Location |
-|----------|---------|----------|
-| **Copilot Instructions** | Development standards and protocols | [/.github/copilot-instructions.md](../.github/copilot-instructions.md) |
-| **Testing Guide** | Testing standards and practices | [/TESTING.md](../TESTING.md) |
-| **Package Testing** | Per-package testing documentation | [/packages/TESTING.md](../packages/TESTING.md) |
-| **Architecture Guide** | Plugin architecture and system design | [/docs/ARCHITECTURE.md](ARCHITECTURE.md) |
-| **Development Workflow** | Quickstart, tutorials, and troubleshooting | [/DEVELOPMENT_WORKFLOW.md](../DEVELOPMENT_WORKFLOW.md) |
-| **API Reference** | Per-object field reference for all packages | [developers/api_reference.md](developers/api_reference.md) |
-| **Code Examples** | Hooks, actions, workflows, MCP examples | [developers/code_examples.md](developers/code_examples.md) |
-
-### Package Technical Specs
-
-| Package | Documentation | Contents |
-|---------|--------------|----------|
-| **HR** | [developers/specs/hr/](developers/specs/hr/README.md) | Recruitment pipeline, payroll calculations |
-| **AI** | [developers/specs/ai/](developers/specs/ai/README.md) | Model registry, agent architecture, MCP integration |
-
-### AI Transformation Analysis
-
-| Document | Purpose | Location |
-|----------|---------|----------|
-| **Industry AI Transformation** | CRM industry AI impact analysis | [CRM_INDUSTRY_AI_TRANSFORMATION_REPORT.md](CRM_INDUSTRY_AI_TRANSFORMATION_REPORT.md) |
-| **Business Domain AI Analysis** | Domain-specific AI capabilities | [BUSINESS_DOMAIN_AI_ANALYSIS.md](BUSINESS_DOMAIN_AI_ANALYSIS.md) |
-| **Strategic Design Report** | Plugin roadmap and vertical strategies | [STRATEGIC_DESIGN_REPORT.md](STRATEGIC_DESIGN_REPORT.md) |
-
-## 🎯 Current State (Feb 12, 2026)
-
-### System Health: ✅ EXCELLENT
-
-```
-Protocol Compliance: 100%  ████████████████████  @objectstack/spec v3.0.0
-TypeScript Errors:   0     ████████████████████  Zero errors
-Test Coverage:       1759  ████████████████████  1759/1759 passing
-Overall Grade:       A+    ████████████████████  Production-ready
+```text
+hotcrm/
+├── objectstack.config.ts
+├── src/
+│   ├── objects/        # ObjectSchema.create metadata, object lifecycle hooks
+│   ├── actions/        # UI actions and AI-callable action bodies
+│   ├── flows/          # ObjectStack automation flows
+│   ├── agents/         # AI agent definitions
+│   ├── skills/         # AI skills used by agents
+│   ├── dashboards/     # Dashboard metadata
+│   ├── reports/        # Report metadata
+│   ├── views/, pages/  # App UI metadata
+│   ├── profiles/       # Permission sets
+│   ├── sharing/        # Sharing rules and role hierarchy
+│   ├── translations/   # Locale bundles
+│   └── data/           # Seed data
+├── content/docs/       # Product documentation site content
+└── docs/               # Internal documentation
 ```
 
-### Business Packages (6 Clouds)
+Older documents may mention a retired multi-package direction. Those files now live in `docs/archive/`.
 
-| Package | Objects | Hooks | Coverage | Status | Priority |
-|---------|---------|-------|----------|--------|----------|
-| **Support** | 23 | 9 | 39% | 🟢 Good | 🟢 MAINTAIN |
-| **HR** | 18 | 18 | 100% | 🟢 Excellent | 🟢 MAINTAIN |
-| **Marketing** | 15 | 15 | 100% | 🟢 Excellent | 🟢 MAINTAIN |
-| **CRM** | 16 | 11 | 69% | 🟢 Mature | 🟢 MAINTAIN |
-| **Products** | 13 | 10 | 77% | 🟢 Good | 🟢 MAINTAIN |
-| **Finance** | 9 | 8 | 89% | 🟢 Complete | 🟢 MAINTAIN |
-| **AI** | - | - | - | 🟢 Excellent | 🟢 MAINTAIN |
+## Maintain The Docs
 
-**Overall**: 94 objects, 71 hooks
+When changing metadata or runtime behavior:
 
-## 🗺️ Roadmap Overview
+1. Update the closest product docs in `content/docs/` if the user-facing behavior changed.
+2. Update `docs/STATUS.md` when counts or verification commands change.
+3. Update `docs/developers/api_reference.md` when object fields change.
+4. Update `docs/developers/code_examples.md` when ObjectStack conventions change.
+5. Run the checks listed in `docs/STATUS.md`.
 
-### Current: Phase 11 — Ecosystem & Connectivity
+## Archive Policy
 
-Building integration connectors and new business packages. Phase 10 (Salesforce Feature Parity) is complete — 94 objects, ~92% parity.
-
-```
-Phase 11A (Q3 2026)  → Analytics Package (@hotcrm/analytics)
-                       ├─ Reporting Engine
-                       ├─ Dashboard Framework
-                       └─ Predictive Analytics
-
-Phase 11B (Q4 2026)  → Integration Package (@hotcrm/integration)
-                       ├─ Stripe (Payments)
-                       ├─ DocuSign (E-Signatures)
-                       ├─ Slack (Notifications)
-                       └─ 5+ more connectors
-
-Phase 11C (Q4 2026)  → Community Package (@hotcrm/community)
-                       ├─ Discussion Forums
-                       ├─ Idea Management
-                       └─ Gamification
-```
-
-### 2026 Q3-Q4: Phase 11 — Ecosystem & Connectivity
-
-```
-Q3 2026 → Analytics Package (@hotcrm/analytics)
-          ├─ Reporting Engine
-          ├─ Dashboard Framework
-          ├─ Predictive Analytics
-          └─ Cross-Object Insights
-
-Q4 2026 → Integration Package (@hotcrm/integration)
-          ├─ Stripe (Payments)
-          ├─ DocuSign (E-Signatures)
-          ├─ Slack (Notifications)
-          └─ 5+ more connectors
-
-Q4 2026 → Community Package (@hotcrm/community)
-          ├─ Discussion Forums
-          ├─ Idea Management
-          ├─ User Groups
-          └─ Gamification
-```
-
-## 🎓 Learning Path
-
-### For New Developers
-
-1. **Day 1**: Read [IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md)
-2. **Day 1**: Review [/.github/copilot-instructions.md](../.github/copilot-instructions.md)
-3. **Day 2**: Study [CURRENT_STATE_ASSESSMENT.md](CURRENT_STATE_ASSESSMENT.md)
-4. **Day 3-5**: Review existing hooks in `packages/*/src/hooks/*.hook.ts`
-5. **Week 2+**: Follow [NEXT_SPRINT_GUIDE.md](NEXT_SPRINT_GUIDE.md) for implementation
-
-### For Product Managers
-
-1. Read [IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md)
-2. Review [CURRENT_STATE_ASSESSMENT.md](CURRENT_STATE_ASSESSMENT.md) module rankings
-3. Review [/ROADMAP.md](../ROADMAP.md) for long-term vision
-4. Prioritize features based on ROI analysis
-
-### For AI Researchers
-
-1. Review [BUSINESS_DOMAIN_AI_ANALYSIS.md](BUSINESS_DOMAIN_AI_ANALYSIS.md)
-2. Review [CRM_INDUSTRY_AI_TRANSFORMATION_REPORT.md](CRM_INDUSTRY_AI_TRANSFORMATION_REPORT.md)
-3. Study AI actions in `packages/*/src/actions/*.action.ts`
-4. Explore AI infrastructure in `packages/ai/src/`
-
-## 📊 Key Metrics Dashboard
-
-### Current (Feb 12, 2026)
-
-| Metric | Value | Trend |
-|--------|-------|-------|
-| Business Objects | 94 | ✅ Complete |
-| Automation Hooks | 71 | ✅ Comprehensive |
-| AI Actions | 32 | ✅ Strong |
-| Test Coverage | 1,759 tests | ✅ Excellent |
-| TypeScript Errors | 0 | ✅ Clean |
-| Protocol Compliance | 100% | ✅ Perfect |
-
-## 🚫 What's Out of Scope
-
-HotCRM focuses on **business capabilities only**. The following are handled by `@objectstack/runtime`:
-
-### Platform Features (Out of Scope)
-- ❌ Visual Workflow Builder (no-code designer)
-- ❌ Report/Dashboard Designer (drag-and-drop UI)
-- ❌ Page Layout Designer (visual editor)
-- ❌ Formula Builder (visual formula editor)
-- ❌ Process Builder (visual automation)
-
-### Infrastructure (Out of Scope)
-- ❌ Database engine
-- ❌ Authentication/SSO
-- ❌ Multi-tenancy
-- ❌ API gateway
-- ❌ Message queue
-- ❌ File storage
-
-**Focus**: Business objects, business logic, AI capabilities, domain workflows
-
-## 🤝 How to Contribute
-
-1. **Read**: [/CONTRIBUTING.md](../CONTRIBUTING.md)
-2. **Choose**: Pick a task from [NEXT_SPRINT_GUIDE.md](NEXT_SPRINT_GUIDE.md)
-3. **Follow**: Development standards in [/.github/copilot-instructions.md](../.github/copilot-instructions.md)
-4. **Test**: Run `pnpm exec tsc --noEmit` and `pnpm exec vitest run`
-5. **Submit**: Create PR following the checklist
-
-## 📞 Getting Help
-
-- **Technical Questions**: Review existing hooks in similar packages
-- **Business Logic**: See [CURRENT_STATE_ASSESSMENT.md](CURRENT_STATE_ASSESSMENT.md) module analysis
-- **Testing**: Check [/TESTING.md](../TESTING.md) and [/packages/TESTING.md](../packages/TESTING.md)
-- **Roadmap**: See [/ROADMAP.md](../ROADMAP.md)
-
-## 🎉 Ready to Start?
-
-**Next Action**: Read [NEXT_SPRINT_GUIDE.md](NEXT_SPRINT_GUIDE.md) and start Week 1!
-
----
-
-**Questions?** Open an issue on GitHub.  
-**Want to contribute?** See [/CONTRIBUTING.md](../CONTRIBUTING.md).
+Keep historical analysis, old sprint plans, and retired architecture proposals under `docs/archive/`. Do not link archived material from this index unless the reader explicitly needs historical context.
