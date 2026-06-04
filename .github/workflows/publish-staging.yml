@@ -1,0 +1,44 @@
+name: Publish to marketplace (staging)
+
+# Publishes HotCRM to the STAGING marketplace (https://cloud.objectos.app).
+# Target URL is hard-coded; the credential is the staging-only org secret
+# `OS_CLOUD_API_KEY_STAGING`. Production is a separate, manual-only workflow.
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry-run (print payloads, no HTTP)'
+        type: boolean
+        default: false
+  release:
+    types: [published]
+
+concurrency:
+  group: publish-marketplace-staging
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Build + publish HotCRM → staging
+    runs-on: ubuntu-latest
+    if: github.repository == 'objectstack-ai/hotcrm'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Build
+        run: pnpm build
+      - name: Publish to STAGING marketplace
+        env:
+          OS_CLOUD_URL: https://cloud.objectos.app
+          OS_CLOUD_API_KEY: ${{ secrets.OS_CLOUD_API_KEY_STAGING }}
+          DRY_RUN: ${{ inputs.dry_run && '1' || '' }}
+        run: pnpm publish:marketplace

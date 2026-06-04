@@ -1,0 +1,45 @@
+name: Publish to marketplace (production)
+
+# Publishes HotCRM to the PRODUCTION marketplace (https://cloud.objectos.ai).
+# Target URL is hard-coded; the credential is the production-only org secret
+# `OS_CLOUD_API_KEY_PRODUCTION`.
+#
+# MANUAL ONLY — no release/push trigger. Cut to staging first, verify, then
+# dispatch this to promote.
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry-run (print payloads, no HTTP)'
+        type: boolean
+        default: false
+
+concurrency:
+  group: publish-marketplace-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Build + publish HotCRM → production
+    runs-on: ubuntu-latest
+    if: github.repository == 'objectstack-ai/hotcrm'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Build
+        run: pnpm build
+      - name: Publish to PRODUCTION marketplace
+        env:
+          OS_CLOUD_URL: https://cloud.objectos.ai
+          OS_CLOUD_API_KEY: ${{ secrets.OS_CLOUD_API_KEY_PRODUCTION }}
+          DRY_RUN: ${{ inputs.dry_run && '1' || '' }}
+        run: pnpm publish:marketplace
