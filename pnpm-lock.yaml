@@ -27,8 +27,8 @@ importers:
         specifier: ^7.7.0
         version: 7.7.0(ai@6.0.193(zod@4.4.3))(vitest@4.1.8(@opentelemetry/api@1.9.1)(@types/node@25.9.1)(esbuild@0.28.0)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0))
       '@objectstack/objectql':
-        specifier: ^7.7.0
-        version: 7.7.0(ai@6.0.193(zod@4.4.3))(vitest@4.1.8(@opentelemetry/api@1.9.1)(@types/node@25.9.1)(esbuild@0.28.0)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0))
+        specifier: ^8.0.0
+        version: 8.0.0(ai@6.0.193(zod@4.4.3))(vitest@4.1.8(@opentelemetry/api@1.9.1)(@types/node@25.9.1)(esbuild@0.28.0)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0))
       '@objectstack/runtime':
         specifier: ^7.7.0
         version: 7.7.0(@better-auth/utils@0.4.1)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.1)(ai@6.0.193(zod@4.4.3))(better-call@1.3.5(zod@4.4.3))(better-sqlite3@12.10.0)(jose@6.2.3)(kysely@0.28.17)(mongodb@7.2.0)(nanostores@1.3.0)(next@16.2.1(@opentelemetry/api@1.9.1)(@playwright/test@1.60.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(vitest@4.1.8(@opentelemetry/api@1.9.1)(@types/node@25.9.1)(esbuild@0.28.0)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0))
@@ -717,6 +717,14 @@ packages:
     resolution: {integrity: sha512-HwgkV2QInlT2q5QJQP11DM7/k/WSKvz2T1k78kQKFWB1zp2hhSNVy0C0f0pOPgNcLkShiIEPsFMPY5qV4zq1eA==}
     engines: {node: '>=18.0.0'}
 
+  '@objectstack/core@7.9.0':
+    resolution: {integrity: sha512-mZXkHiBiCJNHFxNKrHJNfYvJbO1mJX8fmRmtHXwvBawGsr8l/Q/iHk4pbZMEXxoL/YJK8EdEaerJ4/tGhJhmXg==}
+    engines: {node: '>=18.0.0'}
+
+  '@objectstack/core@8.0.0':
+    resolution: {integrity: sha512-Ya+RpSCj9VkITqKs+L33YXZG2iu8Aw6B+v7dXiirHP7q2OPywV2ztvzvnqenxx0Gd/wT96hafeTHotOPtA1AHg==}
+    engines: {node: '>=18.0.0'}
+
   '@objectstack/driver-memory@7.7.0':
     resolution: {integrity: sha512-xUWXBIs6cTKlFzxSPLw3rpPF+VZ/b7huewWgrImaW27c7sZ39gWtiISlxI+4PdyJIlZFZq+V/rX0/XCn1UYpow==}
     engines: {node: '>=18.0.0'}
@@ -750,8 +758,32 @@ packages:
   '@objectstack/formula@7.7.0':
     resolution: {integrity: sha512-N0ZWFMYmEyz1wgY9FAcsAtYLOSmtvAOn0sxr1hU2SIpK6ZeSr5IZyLn7Pss+mpRLC3lPAiF5SsgutxCEixoy3A==}
 
+  '@objectstack/formula@7.9.0':
+    resolution: {integrity: sha512-58RShr27FiB/zNydIRi+pEkmnnR/lQe3uWlS/5o6J5UHtLERSRTPv0qqHiMIjHvLGVtx3qUeSnnGBVrFQJeqPA==}
+
+  '@objectstack/formula@8.0.0':
+    resolution: {integrity: sha512-1wcIPDRAsQ/QO+9wsDEkyzlWSlVdlKXrq39ek5W5sB/jqdhEs7or4frTCpybisUNGlaptn+OPvFktyR6Q4npng==}
+
   '@objectstack/metadata-core@7.7.0':
     resolution: {integrity: sha512-W4a1Fm98KGPVsCuJtorlAZd7DkXSKh3Gqeb4+2/JdZFuQVQbJ3bJwtI3V3yxqUfGDBu7iwRzPemdgh08R8Mc+g==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      vitest: ^4.0.0
+    peerDependenciesMeta:
+      vitest:
+        optional: true
+
+  '@objectstack/metadata-core@7.9.0':
+    resolution: {integrity: sha512-yx1C2n/E227URt4WmhmPkKrGThTTPRtcIC8sscxEp9/pPfeONuUJ2+KExieMp0KmMlZco22dPDxsN19u2QI1Fg==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      vitest: ^4.0.0
+    peerDependenciesMeta:
+      vitest:
+        optional: true
+
+  '@objectstack/metadata-core@8.0.0':
+    resolution: {integrity: sha512-BW6KedQy8m/R322a7mCzY4r4rPmHwvWaj9b7cxzCk/s9rSCUuVlIKhWduZwXatvO39hq0TsseA1bZoQHOdqlsA==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       vitest: ^4.0.0
@@ -769,6 +801,14 @@ packages:
 
   '@objectstack/objectql@7.7.0':
     resolution: {integrity: sha512-k+Lx/iN+pKgYkHNy1hIMXu8ByNBaIUK22TW6HblkvFvBm6SlOiXLlV5SIF3AX7V+Dv3t8VPTTdWMWFXDkL2CZw==}
+    engines: {node: '>=18.0.0'}
+
+  '@objectstack/objectql@7.9.0':
+    resolution: {integrity: sha512-eQMxyLcMCuLQfPojyxqkp1O2B8mXx6WeQQaF4PKBZdIdVcEJ01GmLXFyy+M48lQLuVsDAc5OWIp91WgHskyVQQ==}
+    engines: {node: '>=18.0.0'}
+
+  '@objectstack/objectql@8.0.0':
+    resolution: {integrity: sha512-pD/KLJ0hC6FSnEyo3nOhP0UinMjDsl9TaEpgAdDC9vUwJfwJvj/6ISqwayKbK6lVw0pjFuTItAs6rnz2sxKiaw==}
     engines: {node: '>=18.0.0'}
 
   '@objectstack/observability@7.7.0':
@@ -923,8 +963,34 @@ packages:
       ai:
         optional: true
 
+  '@objectstack/spec@7.9.0':
+    resolution: {integrity: sha512-B/tEB4Xggdwck9v4d97dB+K3dOjgjjm/TALcRqSFotRmBs3hbsiLXxKYMsyhl71E57/DNxwwikaZ3inwOi+ZUA==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      ai: ^6.0.0
+    peerDependenciesMeta:
+      ai:
+        optional: true
+
+  '@objectstack/spec@8.0.0':
+    resolution: {integrity: sha512-6LZwZ0whERXToD4D6K2kQGuC1V2FspEbgDLFrWSXvQxSZE5d791xNPTS2Ayxo4iMBgWk+Coukmxf5F/owIsVCQ==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      ai: ^6.0.0
+    peerDependenciesMeta:
+      ai:
+        optional: true
+
   '@objectstack/types@7.7.0':
     resolution: {integrity: sha512-msQcyAmD1cFB4KQ3EH9brnoqBIXMTwwmSAagtbJqCBj7bFLKmtAXdjWHp+6FQFG5lHDBwldA0aRO5DEvdzOZaA==}
+    engines: {node: '>=18.0.0'}
+
+  '@objectstack/types@7.9.0':
+    resolution: {integrity: sha512-5tV3ToT7fmYMUH6Jgz+m9kXv5A+l/WXd1GGk+7t1LXLdS8d5Urg9GWb0EUh+A/6Ximi5mwLeA1x2+JzLThQJ6A==}
+    engines: {node: '>=18.0.0'}
+
+  '@objectstack/types@8.0.0':
+    resolution: {integrity: sha512-VI9Ayvw9yZ5JIb4dvgy+++MnycyL1xBRrMIP54zbWV5/Bmkvm0c84VHgRjHYxiu3trXl1yOWMxFX6G2cpmFgRw==}
     engines: {node: '>=18.0.0'}
 
   '@oclif/core@4.11.4':
@@ -4095,7 +4161,7 @@ snapshots:
       '@objectstack/driver-sql': 7.7.0(ai@6.0.193(zod@4.4.3))
       '@objectstack/driver-sqlite-wasm': 7.7.0(ai@6.0.193(zod@4.4.3))(better-sqlite3@12.10.0)
       '@objectstack/formula': 7.7.0(ai@6.0.193(zod@4.4.3))
-      '@objectstack/objectql': 7.7.0(ai@6.0.193(zod@4.4.3))(vitest@4.1.8(@opentelemetry/api@1.9.1)(@types/node@25.9.1)(esbuild@0.28.0)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0))
+      '@objectstack/objectql': 7.9.0(ai@6.0.193(zod@4.4.3))(vitest@4.1.8(@opentelemetry/api@1.9.1)(@types/node@25.9.1)(esbuild@0.28.0)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0))
       '@objectstack/observability': 7.7.0(ai@6.0.193(zod@4.4.3))
       '@objectstack/platform-objects': 7.7.0(ai@6.0.193(zod@4.4.3))(vitest@4.1.8(@opentelemetry/api@1.9.1)(@types/node@25.9.1)(esbuild@0.28.0)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0))
       '@objectstack/plugin-approvals': 7.7.0(ai@6.0.193(zod@4.4.3))(vitest@4.1.8(@opentelemetry/api@1.9.1)(@types/node@25.9.1)(esbuild@0.28.0)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0))
@@ -4203,6 +4269,20 @@ snapshots:
     transitivePeerDependencies:
       - ai
 
+  '@objectstack/core@7.9.0(ai@6.0.193(zod@4.4.3))':
+    dependencies:
+      '@objectstack/spec': 7.9.0(ai@6.0.193(zod@4.4.3))
+      zod: 4.4.3
+    transitivePeerDependencies:
+      - ai
+
+  '@objectstack/core@8.0.0(ai@6.0.193(zod@4.4.3))':
+    dependencies:
+      '@objectstack/spec': 8.0.0(ai@6.0.193(zod@4.4.3))
+      zod: 4.4.3
+    transitivePeerDependencies:
+      - ai
+
   '@objectstack/driver-memory@7.7.0(ai@6.0.193(zod@4.4.3))':
     dependencies:
       '@objectstack/core': 7.7.0(ai@6.0.193(zod@4.4.3))
@@ -4269,9 +4349,41 @@ snapshots:
     transitivePeerDependencies:
       - ai
 
+  '@objectstack/formula@7.9.0(ai@6.0.193(zod@4.4.3))':
+    dependencies:
+      '@marcbachmann/cel-js': 7.6.1
+      '@objectstack/spec': 7.9.0(ai@6.0.193(zod@4.4.3))
+    transitivePeerDependencies:
+      - ai
+
+  '@objectstack/formula@8.0.0(ai@6.0.193(zod@4.4.3))':
+    dependencies:
+      '@marcbachmann/cel-js': 7.6.1
+      '@objectstack/spec': 8.0.0(ai@6.0.193(zod@4.4.3))
+    transitivePeerDependencies:
+      - ai
+
   '@objectstack/metadata-core@7.7.0(ai@6.0.193(zod@4.4.3))(vitest@4.1.8(@opentelemetry/api@1.9.1)(@types/node@25.9.1)(esbuild@0.28.0)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0))':
     dependencies:
       '@objectstack/spec': 7.7.0(ai@6.0.193(zod@4.4.3))
+      zod: 4.4.3
+    optionalDependencies:
+      vitest: 4.1.8(@opentelemetry/api@1.9.1)(@types/node@25.9.1)(esbuild@0.28.0)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0)
+    transitivePeerDependencies:
+      - ai
+
+  '@objectstack/metadata-core@7.9.0(ai@6.0.193(zod@4.4.3))(vitest@4.1.8(@opentelemetry/api@1.9.1)(@types/node@25.9.1)(esbuild@0.28.0)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0))':
+    dependencies:
+      '@objectstack/spec': 7.9.0(ai@6.0.193(zod@4.4.3))
+      zod: 4.4.3
+    optionalDependencies:
+      vitest: 4.1.8(@opentelemetry/api@1.9.1)(@types/node@25.9.1)(esbuild@0.28.0)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0)
+    transitivePeerDependencies:
+      - ai
+
+  '@objectstack/metadata-core@8.0.0(ai@6.0.193(zod@4.4.3))(vitest@4.1.8(@opentelemetry/api@1.9.1)(@types/node@25.9.1)(esbuild@0.28.0)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0))':
+    dependencies:
+      '@objectstack/spec': 8.0.0(ai@6.0.193(zod@4.4.3))
       zod: 4.4.3
     optionalDependencies:
       vitest: 4.1.8(@opentelemetry/api@1.9.1)(@types/node@25.9.1)(esbuild@0.28.0)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0)
@@ -4309,6 +4421,32 @@ snapshots:
       '@objectstack/metadata-core': 7.7.0(ai@6.0.193(zod@4.4.3))(vitest@4.1.8(@opentelemetry/api@1.9.1)(@types/node@25.9.1)(esbuild@0.28.0)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0))
       '@objectstack/spec': 7.7.0(ai@6.0.193(zod@4.4.3))
       '@objectstack/types': 7.7.0(ai@6.0.193(zod@4.4.3))
+      ajv: 8.20.0
+      zod: 4.4.3
+    transitivePeerDependencies:
+      - ai
+      - vitest
+
+  '@objectstack/objectql@7.9.0(ai@6.0.193(zod@4.4.3))(vitest@4.1.8(@opentelemetry/api@1.9.1)(@types/node@25.9.1)(esbuild@0.28.0)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0))':
+    dependencies:
+      '@objectstack/core': 7.9.0(ai@6.0.193(zod@4.4.3))
+      '@objectstack/formula': 7.9.0(ai@6.0.193(zod@4.4.3))
+      '@objectstack/metadata-core': 7.9.0(ai@6.0.193(zod@4.4.3))(vitest@4.1.8(@opentelemetry/api@1.9.1)(@types/node@25.9.1)(esbuild@0.28.0)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0))
+      '@objectstack/spec': 7.9.0(ai@6.0.193(zod@4.4.3))
+      '@objectstack/types': 7.9.0(ai@6.0.193(zod@4.4.3))
+      ajv: 8.20.0
+      zod: 4.4.3
+    transitivePeerDependencies:
+      - ai
+      - vitest
+
+  '@objectstack/objectql@8.0.0(ai@6.0.193(zod@4.4.3))(vitest@4.1.8(@opentelemetry/api@1.9.1)(@types/node@25.9.1)(esbuild@0.28.0)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0))':
+    dependencies:
+      '@objectstack/core': 8.0.0(ai@6.0.193(zod@4.4.3))
+      '@objectstack/formula': 8.0.0(ai@6.0.193(zod@4.4.3))
+      '@objectstack/metadata-core': 8.0.0(ai@6.0.193(zod@4.4.3))(vitest@4.1.8(@opentelemetry/api@1.9.1)(@types/node@25.9.1)(esbuild@0.28.0)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0))
+      '@objectstack/spec': 8.0.0(ai@6.0.193(zod@4.4.3))
+      '@objectstack/types': 8.0.0(ai@6.0.193(zod@4.4.3))
       ajv: 8.20.0
       zod: 4.4.3
     transitivePeerDependencies:
@@ -4683,9 +4821,33 @@ snapshots:
     optionalDependencies:
       ai: 6.0.193(zod@4.4.3)
 
+  '@objectstack/spec@7.9.0(ai@6.0.193(zod@4.4.3))':
+    dependencies:
+      zod: 4.4.3
+    optionalDependencies:
+      ai: 6.0.193(zod@4.4.3)
+
+  '@objectstack/spec@8.0.0(ai@6.0.193(zod@4.4.3))':
+    dependencies:
+      zod: 4.4.3
+    optionalDependencies:
+      ai: 6.0.193(zod@4.4.3)
+
   '@objectstack/types@7.7.0(ai@6.0.193(zod@4.4.3))':
     dependencies:
       '@objectstack/spec': 7.7.0(ai@6.0.193(zod@4.4.3))
+    transitivePeerDependencies:
+      - ai
+
+  '@objectstack/types@7.9.0(ai@6.0.193(zod@4.4.3))':
+    dependencies:
+      '@objectstack/spec': 7.9.0(ai@6.0.193(zod@4.4.3))
+    transitivePeerDependencies:
+      - ai
+
+  '@objectstack/types@8.0.0(ai@6.0.193(zod@4.4.3))':
+    dependencies:
+      '@objectstack/spec': 8.0.0(ai@6.0.193(zod@4.4.3))
     transitivePeerDependencies:
       - ai
 
