@@ -36,8 +36,8 @@ importers:
         specifier: ^7.7.0
         version: 7.7.0(ai@6.0.193(zod@4.4.3))
       '@objectstack/service-automation':
-        specifier: ^7.7.0
-        version: 7.7.0(ai@6.0.193(zod@4.4.3))
+        specifier: ^8.0.0
+        version: 8.0.0(ai@6.0.193(zod@4.4.3))
       '@objectstack/spec':
         specifier: ^7.7.0
         version: 7.7.0(ai@6.0.193(zod@4.4.3))
@@ -717,6 +717,10 @@ packages:
     resolution: {integrity: sha512-HwgkV2QInlT2q5QJQP11DM7/k/WSKvz2T1k78kQKFWB1zp2hhSNVy0C0f0pOPgNcLkShiIEPsFMPY5qV4zq1eA==}
     engines: {node: '>=18.0.0'}
 
+  '@objectstack/core@8.0.0':
+    resolution: {integrity: sha512-Ya+RpSCj9VkITqKs+L33YXZG2iu8Aw6B+v7dXiirHP7q2OPywV2ztvzvnqenxx0Gd/wT96hafeTHotOPtA1AHg==}
+    engines: {node: '>=18.0.0'}
+
   '@objectstack/driver-memory@7.7.0':
     resolution: {integrity: sha512-xUWXBIs6cTKlFzxSPLw3rpPF+VZ/b7huewWgrImaW27c7sZ39gWtiISlxI+4PdyJIlZFZq+V/rX0/XCn1UYpow==}
     engines: {node: '>=18.0.0'}
@@ -749,6 +753,9 @@ packages:
 
   '@objectstack/formula@7.7.0':
     resolution: {integrity: sha512-N0ZWFMYmEyz1wgY9FAcsAtYLOSmtvAOn0sxr1hU2SIpK6ZeSr5IZyLn7Pss+mpRLC3lPAiF5SsgutxCEixoy3A==}
+
+  '@objectstack/formula@8.0.0':
+    resolution: {integrity: sha512-1wcIPDRAsQ/QO+9wsDEkyzlWSlVdlKXrq39ek5W5sB/jqdhEs7or4frTCpybisUNGlaptn+OPvFktyR6Q4npng==}
 
   '@objectstack/metadata-core@7.7.0':
     resolution: {integrity: sha512-W4a1Fm98KGPVsCuJtorlAZd7DkXSKh3Gqeb4+2/JdZFuQVQbJ3bJwtI3V3yxqUfGDBu7iwRzPemdgh08R8Mc+g==}
@@ -860,6 +867,10 @@ packages:
     resolution: {integrity: sha512-MdW1o2A40UUzZTCG5+XVbTbY7jCViNRPo5lgSYzIVMbfklhQjEYQNIHU2WlP1HgbOlf78NyVUl+lpyscX+tSzg==}
     engines: {node: '>=18.0.0'}
 
+  '@objectstack/service-automation@8.0.0':
+    resolution: {integrity: sha512-9U7HDAs4fMTMynYFA4Iygfd9mbO/s/NRiHN7CoUk9XJGUtQdf9bCjrZMVnrwrojCwaGxefUgfYqLHrn19c6JtA==}
+    engines: {node: '>=18.0.0'}
+
   '@objectstack/service-cache@7.7.0':
     resolution: {integrity: sha512-0TBJ5yCGBpsWCOOnmJbWoefSJsXWicl4YVxKouC4bolbYJLMWlCH7D3ZoI2f4zQvb/uguIx2p/+rrSsfT6SR/Q==}
     engines: {node: '>=18.0.0'}
@@ -916,6 +927,15 @@ packages:
 
   '@objectstack/spec@7.7.0':
     resolution: {integrity: sha512-p9GxtbD8oJFkf9tjNlaOZmBxufskk683IhBL0My8NK0EOH/xG1xbbeAWctpHHIdK91hz9EkZLthtJVbnBNaMPw==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      ai: ^6.0.0
+    peerDependenciesMeta:
+      ai:
+        optional: true
+
+  '@objectstack/spec@8.0.0':
+    resolution: {integrity: sha512-6LZwZ0whERXToD4D6K2kQGuC1V2FspEbgDLFrWSXvQxSZE5d791xNPTS2Ayxo4iMBgWk+Coukmxf5F/owIsVCQ==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       ai: ^6.0.0
@@ -4203,6 +4223,13 @@ snapshots:
     transitivePeerDependencies:
       - ai
 
+  '@objectstack/core@8.0.0(ai@6.0.193(zod@4.4.3))':
+    dependencies:
+      '@objectstack/spec': 8.0.0(ai@6.0.193(zod@4.4.3))
+      zod: 4.4.3
+    transitivePeerDependencies:
+      - ai
+
   '@objectstack/driver-memory@7.7.0(ai@6.0.193(zod@4.4.3))':
     dependencies:
       '@objectstack/core': 7.7.0(ai@6.0.193(zod@4.4.3))
@@ -4266,6 +4293,13 @@ snapshots:
     dependencies:
       '@marcbachmann/cel-js': 7.6.1
       '@objectstack/spec': 7.7.0(ai@6.0.193(zod@4.4.3))
+    transitivePeerDependencies:
+      - ai
+
+  '@objectstack/formula@8.0.0(ai@6.0.193(zod@4.4.3))':
+    dependencies:
+      '@marcbachmann/cel-js': 7.6.1
+      '@objectstack/spec': 8.0.0(ai@6.0.193(zod@4.4.3))
     transitivePeerDependencies:
       - ai
 
@@ -4580,6 +4614,14 @@ snapshots:
     transitivePeerDependencies:
       - ai
 
+  '@objectstack/service-automation@8.0.0(ai@6.0.193(zod@4.4.3))':
+    dependencies:
+      '@objectstack/core': 8.0.0(ai@6.0.193(zod@4.4.3))
+      '@objectstack/formula': 8.0.0(ai@6.0.193(zod@4.4.3))
+      '@objectstack/spec': 8.0.0(ai@6.0.193(zod@4.4.3))
+    transitivePeerDependencies:
+      - ai
+
   '@objectstack/service-cache@7.7.0(ai@6.0.193(zod@4.4.3))':
     dependencies:
       '@objectstack/core': 7.7.0(ai@6.0.193(zod@4.4.3))
@@ -4678,6 +4720,12 @@ snapshots:
       - ai
 
   '@objectstack/spec@7.7.0(ai@6.0.193(zod@4.4.3))':
+    dependencies:
+      zod: 4.4.3
+    optionalDependencies:
+      ai: 6.0.193(zod@4.4.3)
+
+  '@objectstack/spec@8.0.0(ai@6.0.193(zod@4.4.3))':
     dependencies:
       zod: 4.4.3
     optionalDependencies:
