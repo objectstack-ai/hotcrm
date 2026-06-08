@@ -33,8 +33,8 @@ importers:
         specifier: ^7.7.0
         version: 7.7.0(@better-auth/utils@0.4.1)(@better-fetch/fetch@1.1.21)(@opentelemetry/api@1.9.1)(ai@6.0.193(zod@4.4.3))(better-call@1.3.5(zod@4.4.3))(better-sqlite3@12.10.0)(jose@6.2.3)(kysely@0.28.17)(mongodb@7.2.0)(nanostores@1.3.0)(next@16.2.1(@opentelemetry/api@1.9.1)(@playwright/test@1.60.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(vitest@4.1.8(@opentelemetry/api@1.9.1)(@types/node@25.9.1)(esbuild@0.28.0)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0))
       '@objectstack/service-analytics':
-        specifier: ^7.7.0
-        version: 7.7.0(ai@6.0.193(zod@4.4.3))
+        specifier: ^8.0.0
+        version: 8.0.0(ai@6.0.193(zod@4.4.3))
       '@objectstack/service-automation':
         specifier: ^7.7.0
         version: 7.7.0(ai@6.0.193(zod@4.4.3))
@@ -717,6 +717,10 @@ packages:
     resolution: {integrity: sha512-HwgkV2QInlT2q5QJQP11DM7/k/WSKvz2T1k78kQKFWB1zp2hhSNVy0C0f0pOPgNcLkShiIEPsFMPY5qV4zq1eA==}
     engines: {node: '>=18.0.0'}
 
+  '@objectstack/core@8.0.0':
+    resolution: {integrity: sha512-Ya+RpSCj9VkITqKs+L33YXZG2iu8Aw6B+v7dXiirHP7q2OPywV2ztvzvnqenxx0Gd/wT96hafeTHotOPtA1AHg==}
+    engines: {node: '>=18.0.0'}
+
   '@objectstack/driver-memory@7.7.0':
     resolution: {integrity: sha512-xUWXBIs6cTKlFzxSPLw3rpPF+VZ/b7huewWgrImaW27c7sZ39gWtiISlxI+4PdyJIlZFZq+V/rX0/XCn1UYpow==}
     engines: {node: '>=18.0.0'}
@@ -856,6 +860,10 @@ packages:
     resolution: {integrity: sha512-8vH7T7BuVyRp7QPc9thMlEYfdIMIQpasH5NzBVR079vOOcFoZfHzIKvQONUgEBB3bCM6Zl6+p86kMdEWAfL07Q==}
     engines: {node: '>=18.0.0'}
 
+  '@objectstack/service-analytics@8.0.0':
+    resolution: {integrity: sha512-JtBuEVw0L/uz8KlU+d0KjwOQVcJSprVVSqJgbT60q10fjY2/8Q1faz6isyXzihgmbXnvXVqmASnu0OUruYjV1Q==}
+    engines: {node: '>=18.0.0'}
+
   '@objectstack/service-automation@7.7.0':
     resolution: {integrity: sha512-MdW1o2A40UUzZTCG5+XVbTbY7jCViNRPo5lgSYzIVMbfklhQjEYQNIHU2WlP1HgbOlf78NyVUl+lpyscX+tSzg==}
     engines: {node: '>=18.0.0'}
@@ -916,6 +924,15 @@ packages:
 
   '@objectstack/spec@7.7.0':
     resolution: {integrity: sha512-p9GxtbD8oJFkf9tjNlaOZmBxufskk683IhBL0My8NK0EOH/xG1xbbeAWctpHHIdK91hz9EkZLthtJVbnBNaMPw==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      ai: ^6.0.0
+    peerDependenciesMeta:
+      ai:
+        optional: true
+
+  '@objectstack/spec@8.0.0':
+    resolution: {integrity: sha512-6LZwZ0whERXToD4D6K2kQGuC1V2FspEbgDLFrWSXvQxSZE5d791xNPTS2Ayxo4iMBgWk+Coukmxf5F/owIsVCQ==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       ai: ^6.0.0
@@ -4203,6 +4220,13 @@ snapshots:
     transitivePeerDependencies:
       - ai
 
+  '@objectstack/core@8.0.0(ai@6.0.193(zod@4.4.3))':
+    dependencies:
+      '@objectstack/spec': 8.0.0(ai@6.0.193(zod@4.4.3))
+      zod: 4.4.3
+    transitivePeerDependencies:
+      - ai
+
   '@objectstack/driver-memory@7.7.0(ai@6.0.193(zod@4.4.3))':
     dependencies:
       '@objectstack/core': 7.7.0(ai@6.0.193(zod@4.4.3))
@@ -4572,6 +4596,13 @@ snapshots:
     transitivePeerDependencies:
       - ai
 
+  '@objectstack/service-analytics@8.0.0(ai@6.0.193(zod@4.4.3))':
+    dependencies:
+      '@objectstack/core': 8.0.0(ai@6.0.193(zod@4.4.3))
+      '@objectstack/spec': 8.0.0(ai@6.0.193(zod@4.4.3))
+    transitivePeerDependencies:
+      - ai
+
   '@objectstack/service-automation@7.7.0(ai@6.0.193(zod@4.4.3))':
     dependencies:
       '@objectstack/core': 7.7.0(ai@6.0.193(zod@4.4.3))
@@ -4678,6 +4709,12 @@ snapshots:
       - ai
 
   '@objectstack/spec@7.7.0(ai@6.0.193(zod@4.4.3))':
+    dependencies:
+      zod: 4.4.3
+    optionalDependencies:
+      ai: 6.0.193(zod@4.4.3)
+
+  '@objectstack/spec@8.0.0(ai@6.0.193(zod@4.4.3))':
     dependencies:
       zod: 4.4.3
     optionalDependencies:

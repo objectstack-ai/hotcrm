@@ -34,7 +34,7 @@
     "@objectstack/metadata": "^7.7.0",
     "@objectstack/objectql": "^7.7.0",
     "@objectstack/runtime": "^7.7.0",
-    "@objectstack/service-analytics": "^7.7.0",
+    "@objectstack/service-analytics": "^8.0.0",
     "@objectstack/service-automation": "^7.7.0",
     "@objectstack/spec": "^7.7.0"
   },
