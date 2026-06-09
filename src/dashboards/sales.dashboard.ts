@@ -70,6 +70,7 @@ export const SalesDashboard: Dashboard = {
       actionUrl: '/objects/opportunity?filter=open',
       actionType: 'url',
       actionIcon: 'ArrowUpRight',
+      dataset: 'opportunity_metrics', values: ['total_amount'],
       layout: { x: 0, y: 0, w: 3, h: 2 },
       options: {
         icon: 'DollarSign',
@@ -90,6 +91,7 @@ export const SalesDashboard: Dashboard = {
       actionUrl: '/reports/closed-won',
       actionType: 'url',
       actionIcon: 'ArrowUpRight',
+      dataset: 'opportunity_metrics', values: ['total_amount'],
       layout: { x: 3, y: 0, w: 3, h: 2 },
       options: {
         icon: 'Trophy',
@@ -109,6 +111,7 @@ export const SalesDashboard: Dashboard = {
       actionUrl: '/objects/opportunity?filter=open',
       actionType: 'url',
       actionIcon: 'ArrowUpRight',
+      dataset: 'opportunity_metrics', values: ['opp_count'],
       layout: { x: 6, y: 0, w: 3, h: 2 },
       options: {
         icon: 'Briefcase',
@@ -129,6 +132,7 @@ export const SalesDashboard: Dashboard = {
       actionUrl: '/reports/avg-deal-size',
       actionType: 'url',
       actionIcon: 'ArrowUpRight',
+      dataset: 'opportunity_metrics', values: ['avg_amount'],
       layout: { x: 9, y: 0, w: 3, h: 2 },
       options: {
         icon: 'bar-chart',
@@ -149,6 +153,7 @@ export const SalesDashboard: Dashboard = {
       valueField: 'amount',
       aggregate: 'sum',
       colorVariant: 'teal',
+      dataset: 'opportunity_metrics', dimensions: ['stage'], values: ['total_amount'],
       layout: { x: 0, y: 2, w: 6, h: 4 },
       chartConfig: {
         type: 'funnel',
@@ -168,6 +173,7 @@ export const SalesDashboard: Dashboard = {
       valueField: 'amount',
       aggregate: 'sum',
       colorVariant: 'success',
+      dataset: 'opportunity_metrics', dimensions: ['close_date'], values: ['total_amount'],
       layout: { x: 6, y: 2, w: 6, h: 4 },
       chartConfig: {
         type: 'area',
@@ -196,6 +202,7 @@ export const SalesDashboard: Dashboard = {
       valueField: 'amount',
       aggregate: 'sum',
       colorVariant: 'blue',
+      dataset: 'opportunity_metrics', dimensions: ['forecast_category'], values: ['total_amount'],
       layout: { x: 0, y: 6, w: 6, h: 4 },
       chartConfig: {
         type: 'horizontal-bar',
@@ -217,6 +224,7 @@ export const SalesDashboard: Dashboard = {
       valueField: 'amount',
       aggregate: 'sum',
       colorVariant: 'purple',
+      dataset: 'opportunity_metrics', dimensions: ['lead_source'], values: ['total_amount'],
       layout: { x: 6, y: 6, w: 6, h: 4 },
       chartConfig: {
         type: 'donut',
@@ -236,6 +244,7 @@ export const SalesDashboard: Dashboard = {
       filter: { stage: { $nin: ['closed_won', 'closed_lost'] } },
       aggregate: 'count',
       colorVariant: 'default',
+      dataset: 'opportunity_metrics', values: ['opp_count'],
       layout: { x: 0, y: 10, w: 12, h: 4 },
       options: {
         columns: [
@@ -264,6 +273,7 @@ export const SalesDashboard: Dashboard = {
       object: 'crm_opportunity',
       filter: { stage: { $nin: ['closed_won', 'closed_lost'] } },
       colorVariant: 'default',
+      dataset: 'opportunity_metrics', dimensions: ['stage', 'lead_source'], values: ['total_amount'],
       layout: { x: 0, y: 14, w: 12, h: 4 },
       valueField: 'amount',
       aggregate: 'sum',

@@ -6,6 +6,7 @@ import * as cubes from './src/cubes/index.js';
 import * as objects from './src/objects/index.js';
 import * as actions from './src/actions/index.js';
 import * as dashboards from './src/dashboards/index.js';
+import * as datasets from './src/datasets/index.js';
 import * as reports from './src/reports/index.js';
 import { allFlows } from './src/flows/index.js';
 import { allAgents } from './src/agents/index.js';
@@ -62,6 +63,7 @@ export default defineStack({
   objects: Object.values(objects),
   actions: Object.values(actions),
   dashboards: Object.values(dashboards),
+  datasets: Object.values(datasets),
   reports: Object.values(reports),
   flows: allFlows,
   agents: allAgents,
