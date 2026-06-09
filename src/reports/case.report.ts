@@ -7,6 +7,7 @@ export const CasesByStatusPriorityReport: ReportInput = {
   label: 'Cases by Status and Priority',
   description: 'Summary of cases by status and priority',
   objectName: 'crm_case',
+  dataset: 'case_metrics', rows: ['status', 'priority'], values: ['avg_resolution'],
   type: 'summary',
   columns: [
     { field: 'case_number', label: 'Case Number' },
@@ -27,6 +28,7 @@ export const SlaPerformanceReport: ReportInput = {
   label: 'SLA Performance Report',
   description: 'Analysis of SLA compliance',
   objectName: 'crm_case',
+  dataset: 'case_metrics', rows: ['priority'], values: ['case_count', 'case_count', 'avg_resolution'],
   type: 'summary',
   columns: [
     { field: 'case_number', label: 'Cases', aggregate: 'count' },
@@ -49,6 +51,7 @@ export const CasesOpenedByDayPriorityReport: ReportInput = {
   label: 'Cases Opened by Priority × Day',
   description: 'Daily case inflow split by priority',
   objectName: 'crm_case',
+  dataset: 'case_metrics', rows: ['priority', 'created_date'], values: ['case_count'],
   type: 'matrix',
   columns: [
     { field: 'case_number', label: 'Cases', aggregate: 'count' },

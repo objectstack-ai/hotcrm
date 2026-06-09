@@ -46,6 +46,7 @@ export const CustomerChurnSignalsReport: ReportInput = {
       description: 'Active accounts with no activity in 14+ days, grouped by industry.',
       type: 'summary',
       objectName: 'crm_account',
+      dataset: 'account_metrics', rows: ['industry'], values: ['account_count'],
       columns: [
         { field: 'name', label: 'Account' },
         { field: 'id', label: 'Accounts', aggregate: 'count' },
@@ -62,6 +63,7 @@ export const CustomerChurnSignalsReport: ReportInput = {
       description: 'Active accounts gone quiet for 30+ days, grouped by type.',
       type: 'summary',
       objectName: 'crm_account',
+      dataset: 'account_metrics', rows: ['type'], values: ['account_count'],
       columns: [
         { field: 'id', label: 'Accounts', aggregate: 'count' },
       ],
@@ -77,6 +79,7 @@ export const CustomerChurnSignalsReport: ReportInput = {
       description: 'Opportunities closed-lost in the last 30 days — investigate before the customer fully churns.',
       type: 'summary',
       objectName: 'crm_opportunity',
+      dataset: 'opportunity_metrics', rows: ['owner'], values: ['total_amount', 'opp_count'],
       columns: [
         { field: 'amount', label: 'Lost Revenue', aggregate: 'sum' },
         { field: 'id', label: 'Deals', aggregate: 'count' },

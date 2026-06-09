@@ -12,6 +12,7 @@ export const LeadDataset = defineDataset({
     { name: 'status', label: 'Status', field: 'status', type: 'string' },
     { name: 'lead_source', label: 'Source', field: 'lead_source', type: 'string' },
     { name: 'created_at', label: 'Created', field: 'created_at', type: 'date' },
+    { name: 'last_contacted_date', label: 'Last Contacted', field: 'last_contacted_date', type: 'date' },
   ],
   measures: [{ name: 'lead_count', label: 'Leads', aggregate: 'count' }],
 });
