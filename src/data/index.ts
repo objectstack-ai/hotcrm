@@ -4,9 +4,9 @@
  * CRM Seed Data
  *
  * Demo records for all core CRM objects.
- * Uses defineDataset() for type-safe field name checking at compile time.
+ * Uses defineSeed() for type-safe field name checking at compile time.
  */
-import { defineDataset } from '@objectstack/spec/data';
+import { defineSeed } from '@objectstack/spec/data';
 import { cel } from '@objectstack/spec';
 import { Account } from '../objects/account.object';
 import { Contact } from '../objects/contact.object';
@@ -29,7 +29,7 @@ const celDaysAgo = (n: number) => cel`daysAgo(${n})`;
 const celDaysFromNow = (n: number) => cel`daysFromNow(${n})`;
 
 // ─── Accounts ─────────────────────────────────────────────────────────
-const accounts = defineDataset(Account, {
+const accounts = defineSeed(Account, {
   mode: 'upsert',
   externalId: 'name',
   records: [
@@ -130,7 +130,7 @@ three regional teams (NA, EMEA, APAC).
 });
 
 // ─── Contacts ─────────────────────────────────────────────────────────
-const contacts = defineDataset(Contact, {
+const contacts = defineSeed(Contact, {
   mode: 'upsert',
   externalId: 'email',
   records: [
@@ -188,7 +188,7 @@ const contacts = defineDataset(Contact, {
 });
 
 // ─── Leads ────────────────────────────────────────────────────────────
-const leads = defineDataset(Lead, {
+const leads = defineSeed(Lead, {
   mode: 'upsert',
   externalId: 'email',
   records: [
@@ -268,7 +268,7 @@ const leads = defineDataset(Lead, {
 });
 
 // ─── Opportunities ────────────────────────────────────────────────────
-const opportunities = defineDataset(Opportunity, {
+const opportunities = defineSeed(Opportunity, {
   mode: 'upsert',
   externalId: 'name',
   records: [
@@ -449,7 +449,7 @@ analytics seats for the Ops org, (3) priority support SLA.`,
 });
 
 // ─── Products ─────────────────────────────────────────────────────────
-const products = defineDataset(Product, {
+const products = defineSeed(Product, {
   mode: 'upsert',
   externalId: 'name',
   records: [
@@ -485,7 +485,7 @@ const products = defineDataset(Product, {
 });
 
 // ─── Tasks ────────────────────────────────────────────────────────────
-const tasks = defineDataset(Task, {
+const tasks = defineSeed(Task, {
   mode: 'upsert',
   externalId: 'subject',
   records: [
@@ -543,7 +543,7 @@ const tasks = defineDataset(Task, {
 });
 
 // ─── Cases ────────────────────────────────────────────────────────────
-const cases = defineDataset(Case, {
+const cases = defineSeed(Case, {
   mode: 'upsert',
   externalId: 'subject',
   records: [
@@ -729,7 +729,7 @@ const cases = defineDataset(Case, {
 });
 
 // ─── Campaigns ────────────────────────────────────────────────────────
-const campaigns = defineDataset(Campaign, {
+const campaigns = defineSeed(Campaign, {
   mode: 'upsert',
   externalId: 'name',
   records: [
@@ -809,7 +809,7 @@ const campaigns = defineDataset(Campaign, {
 });
 
 // ─── Contracts ────────────────────────────────────────────────────────
-const contracts = defineDataset(Contract, {
+const contracts = defineSeed(Contract, {
   mode: 'upsert',
   externalId: 'contract_number',
   records: [
@@ -887,7 +887,7 @@ const contracts = defineDataset(Contract, {
 });
 
 // ─── Quotes ───────────────────────────────────────────────────────────
-const quotes = defineDataset(Quote, {
+const quotes = defineSeed(Quote, {
   mode: 'upsert',
   externalId: 'quote_number',
   records: [
