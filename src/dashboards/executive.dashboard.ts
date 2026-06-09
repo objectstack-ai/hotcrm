@@ -75,6 +75,7 @@ export const ExecutiveDashboard: Dashboard = {
       actionUrl: '/reports/revenue-ytd',
       actionType: 'url',
       actionIcon: 'ArrowUpRight',
+      dataset: 'opportunity_metrics', values: ['total_amount'],
       layout: { x: 0, y: 0, w: 3, h: 2 },
       options: {
         icon: 'DollarSign',
@@ -93,6 +94,7 @@ export const ExecutiveDashboard: Dashboard = {
       actionUrl: '/objects/account',
       actionType: 'url',
       actionIcon: 'ArrowUpRight',
+      dataset: 'account_metrics', values: ['account_count'],
       layout: { x: 3, y: 0, w: 3, h: 2 },
       options: {
         icon: 'Building2',
@@ -111,6 +113,7 @@ export const ExecutiveDashboard: Dashboard = {
       actionUrl: '/objects/contact',
       actionType: 'url',
       actionIcon: 'ArrowUpRight',
+      dataset: 'contact_metrics', values: ['contact_count'],
       layout: { x: 6, y: 0, w: 3, h: 2 },
       options: {
         icon: 'Users',
@@ -130,6 +133,7 @@ export const ExecutiveDashboard: Dashboard = {
       actionUrl: '/objects/lead',
       actionType: 'url',
       actionIcon: 'ArrowUpRight',
+      dataset: 'lead_metrics', values: ['lead_count'],
       layout: { x: 9, y: 0, w: 3, h: 2 },
       options: {
         icon: 'Sparkles',
@@ -150,6 +154,7 @@ export const ExecutiveDashboard: Dashboard = {
       valueField: 'amount',
       aggregate: 'sum',
       colorVariant: 'success',
+      dataset: 'opportunity_metrics', dimensions: ['close_date'], values: ['total_amount'],
       layout: { x: 0, y: 2, w: 8, h: 4 },
       chartConfig: {
         type: 'area',
@@ -175,6 +180,7 @@ export const ExecutiveDashboard: Dashboard = {
       valueField: 'amount',
       aggregate: 'sum',
       colorVariant: 'blue',
+      dataset: 'opportunity_metrics', dimensions: ['account_industry'], values: ['total_amount'],
       layout: { x: 8, y: 2, w: 4, h: 4 },
       chartConfig: {
         type: 'donut',
@@ -196,6 +202,7 @@ export const ExecutiveDashboard: Dashboard = {
       valueField: 'amount',
       aggregate: 'sum',
       colorVariant: 'teal',
+      dataset: 'opportunity_metrics', dimensions: ['stage'], values: ['total_amount'],
       layout: { x: 0, y: 6, w: 6, h: 4 },
       chartConfig: {
         type: 'funnel',
@@ -214,6 +221,7 @@ export const ExecutiveDashboard: Dashboard = {
       categoryField: 'created_at',
       aggregate: 'count',
       colorVariant: 'purple',
+      dataset: 'account_metrics', dimensions: ['created_at'], values: ['account_count'],
       layout: { x: 6, y: 6, w: 6, h: 4 },
       chartConfig: {
         type: 'bar',
@@ -235,6 +243,7 @@ export const ExecutiveDashboard: Dashboard = {
       object: 'crm_account',
       aggregate: 'count',
       colorVariant: 'default',
+      dataset: 'account_metrics', values: ['account_count'],
       layout: { x: 0, y: 10, w: 12, h: 4 },
       options: {
         columns: [

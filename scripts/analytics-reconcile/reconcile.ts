@@ -202,6 +202,18 @@ export async function reconcileWidget(
   if (dims.length > 1 && w.categoryField) {
     return { widgetId: w.id, status: 'skipped', issues: ['multi-dimension widget cannot reconcile against single categoryField legacy form'] };
   }
+  // Cross-object (relationship-traversal) dimension: a selected dimension whose
+  // dataset field is dotted (e.g. `crm_account.industry`). The legacy inline
+  // `categoryField` had no server-side join (engine.aggregate can't traverse a
+  // lookup) — it was expanded client-side — so there is NO legacy server path to
+  // reconcile against. The dataset binding is the first server-side join (the
+  // ADR's headline win); skip it rather than flag a non-existent baseline.
+  const crossObject =
+    (typeof w.categoryField === 'string' && w.categoryField.includes('.')) ||
+    dims.some((name) => (dataset.dimensions.find((d) => d.name === name)?.field ?? '').includes('.'));
+  if (crossObject) {
+    return { widgetId: w.id, status: 'skipped', issues: ['cross-object relationship dimension — no legacy server-side join to reconcile (dataset enables it)'] };
+  }
 
   // Resolve date macros once, then feed the identical filter to both paths.
   const wResolved = exec.resolveFilter

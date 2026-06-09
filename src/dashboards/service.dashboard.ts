@@ -71,6 +71,7 @@ export const ServiceDashboard: Dashboard = {
       actionUrl: '/objects/case?filter=open',
       actionType: 'url',
       actionIcon: 'ArrowUpRight',
+      dataset: 'case_metrics', values: ['case_count'],
       layout: { x: 0, y: 0, w: 3, h: 2 },
       options: {
         icon: 'Inbox',
@@ -90,6 +91,7 @@ export const ServiceDashboard: Dashboard = {
       actionUrl: '/objects/case?priority=critical',
       actionType: 'url',
       actionIcon: 'ArrowUpRight',
+      dataset: 'case_metrics', values: ['case_count'],
       layout: { x: 3, y: 0, w: 3, h: 2 },
       options: {
         icon: 'AlertTriangle',
@@ -110,6 +112,7 @@ export const ServiceDashboard: Dashboard = {
       actionUrl: '/reports/resolution-time',
       actionType: 'url',
       actionIcon: 'ArrowUpRight',
+      dataset: 'case_metrics', values: ['avg_resolution'],
       layout: { x: 6, y: 0, w: 3, h: 2 },
       options: {
         icon: 'Clock',
@@ -130,6 +133,7 @@ export const ServiceDashboard: Dashboard = {
       actionUrl: '/objects/case?filter=sla_violated',
       actionType: 'url',
       actionIcon: 'ArrowUpRight',
+      dataset: 'case_metrics', values: ['case_count'],
       layout: { x: 9, y: 0, w: 3, h: 2 },
       options: {
         icon: 'ShieldAlert',
@@ -149,6 +153,7 @@ export const ServiceDashboard: Dashboard = {
       categoryField: 'status',
       aggregate: 'count',
       colorVariant: 'blue',
+      dataset: 'case_metrics', dimensions: ['status'], values: ['case_count'],
       layout: { x: 0, y: 2, w: 4, h: 4 },
       chartConfig: {
         type: 'donut',
@@ -167,6 +172,7 @@ export const ServiceDashboard: Dashboard = {
       categoryField: 'priority',
       aggregate: 'count',
       colorVariant: 'warning',
+      dataset: 'case_metrics', dimensions: ['priority'], values: ['case_count'],
       layout: { x: 4, y: 2, w: 4, h: 4 },
       chartConfig: {
         type: 'pie',
@@ -185,6 +191,7 @@ export const ServiceDashboard: Dashboard = {
       categoryField: 'origin',
       aggregate: 'count',
       colorVariant: 'purple',
+      dataset: 'case_metrics', dimensions: ['origin'], values: ['case_count'],
       layout: { x: 8, y: 2, w: 4, h: 4 },
       chartConfig: {
         type: 'bar',
@@ -207,6 +214,7 @@ export const ServiceDashboard: Dashboard = {
       categoryField: 'created_date',
       aggregate: 'count',
       colorVariant: 'blue',
+      dataset: 'case_metrics', dimensions: ['created_date'], values: ['case_count'],
       layout: { x: 0, y: 6, w: 8, h: 4 },
       chartConfig: {
         type: 'area',
@@ -229,6 +237,7 @@ export const ServiceDashboard: Dashboard = {
       valueField: 'is_sla_violated',
       aggregate: 'avg',
       colorVariant: 'success',
+      dataset: 'case_metrics', values: ['avg_sla_violated'],
       layout: { x: 8, y: 6, w: 4, h: 4 },
       chartConfig: {
         type: 'gauge',
@@ -260,6 +269,7 @@ export const ServiceDashboard: Dashboard = {
       filter: { owner: '{current_user}', is_closed: false },
       aggregate: 'count',
       colorVariant: 'default',
+      dataset: 'case_metrics', values: ['case_count'],
       layout: { x: 0, y: 10, w: 12, h: 4 },
       options: {
         columns: [

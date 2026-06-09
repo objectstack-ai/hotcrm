@@ -8,13 +8,17 @@ import { defineDataset } from '@objectstack/spec/ui';
  * The single semantic source of truth for pipeline metrics across the Sales,
  * CRM and Executive dashboards. Widgets bind to this dataset and select
  * measures BY NAME (`total_amount`, `avg_amount`, `opp_count`) so "pipeline
- * revenue" means the same thing everywhere. Single-object dataset (no joins).
+ * revenue" means the same thing everywhere.
  */
 export const OpportunityDataset = defineDataset({
   name: 'opportunity_metrics',
   label: 'Opportunity Metrics',
   description: 'Semantic layer for sales-pipeline counts and amounts',
   object: 'crm_opportunity',
+
+  // Include the account relationship so dimensions can traverse it (the join is
+  // derived from the `crm_account` lookup — no hand-written ON clause).
+  include: ['crm_account'],
 
   dimensions: [
     { name: 'stage', label: 'Stage', field: 'stage', type: 'string' },
@@ -23,6 +27,8 @@ export const OpportunityDataset = defineDataset({
     { name: 'type', label: 'Deal Type', field: 'type', type: 'string' },
     { name: 'owner', label: 'Owner', field: 'owner', type: 'lookup' },
     { name: 'close_date', label: 'Close Date', field: 'close_date', type: 'date' },
+    // Cross-object dimension: account industry via the crm_account relationship.
+    { name: 'account_industry', label: 'Account Industry', field: 'crm_account.industry', type: 'string' },
   ],
 
   measures: [
