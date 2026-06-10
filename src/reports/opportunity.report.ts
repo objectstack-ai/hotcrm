@@ -12,6 +12,7 @@ export const OpportunitiesByStageReport: ReportInput = {
   label: 'Opportunities by Stage',
   description: 'Summary of opportunities grouped by stage',
   objectName: 'crm_opportunity',
+  dataset: 'opportunity_metrics', rows: ['stage'], values: ['total_amount', 'avg_probability'],
   type: 'summary',
   columns: [
     { field: 'name', label: 'Opportunity Name' },
@@ -30,6 +31,7 @@ export const WonOpportunitiesByOwnerReport: ReportInput = {
   label: 'Won Opportunities by Owner',
   description: 'Closed won opportunities grouped by owner',
   objectName: 'crm_opportunity',
+  dataset: 'opportunity_metrics', rows: ['owner'], values: ['total_amount'],
   type: 'summary',
   columns: [
     { field: 'name', label: 'Opportunity Name' },
@@ -54,6 +56,7 @@ export const PipelineCoverageByQuarterReport: ReportInput = {
   label: 'Pipeline Coverage by Forecast × Quarter',
   description: 'Open pipeline amount by forecast category, bucketed by close quarter',
   objectName: 'crm_opportunity',
+  dataset: 'opportunity_metrics', rows: ['forecast_category', 'close_date'], values: ['total_amount', 'opp_count'],
   type: 'matrix',
   columns: [
     { field: 'amount', label: 'Pipeline', aggregate: 'sum' },
@@ -76,6 +79,7 @@ export const OpportunityFunnelByOwnerStageReport: ReportInput = {
   label: 'Opportunity Funnel by Owner → Stage',
   description: 'Per-rep stage-by-stage pipeline funnel',
   objectName: 'crm_opportunity',
+  dataset: 'opportunity_metrics', rows: ['owner', 'stage'], values: ['total_amount', 'opp_count', 'avg_probability'],
   type: 'summary',
   columns: [
     { field: 'amount', label: 'Total Amount', aggregate: 'sum' },

@@ -7,6 +7,7 @@ export const AccountsByIndustryTypeReport: ReportInput = {
   label: 'Accounts by Industry and Type',
   description: 'Matrix report showing accounts by industry and type',
   objectName: 'crm_account',
+  dataset: 'account_metrics', rows: ['industry', 'type'], values: ['account_count', 'annual_revenue_sum'],
   type: 'matrix',
   columns: [
     { field: 'name', aggregate: 'count' },
