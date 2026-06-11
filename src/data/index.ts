@@ -242,16 +242,16 @@ const leads = defineSeed(Lead, {
       { fn: 'Iris',    ln: 'Okafor',   co: 'PulseHealth',          src: 'cold_call',   ind: 'healthcare',   age: 45  },
       { fn: 'Ravi',    ln: 'Mehta',    co: 'Foundry Robotics',     src: 'event',       ind: 'manufacturing',age: 52  },
       { fn: 'Tess',    ln: 'Brown',    co: 'Lattice Education',    src: 'referral',    ind: 'education',    age: 67  },
-      { fn: 'Marco',   ln: 'Ricci',    co: 'Aurora Travel',        src: 'advertising', ind: 'travel',       age: 74  },
-      { fn: 'Pia',     ln: 'Anand',    co: 'Citrine Finance',      src: 'partner',     ind: 'financial_services', age: 81 },
+      { fn: 'Marco',   ln: 'Ricci',    co: 'Aurora Travel',        src: 'advertisement', ind: 'hospitality',       age: 74  },
+      { fn: 'Pia',     ln: 'Anand',    co: 'Citrine Finance',      src: 'partner',     ind: 'finance', age: 81 },
       { fn: 'Jonas',   ln: 'Holt',     co: 'Polar Cargo',          src: 'web',         ind: 'logistics',    age: 95  },
       { fn: 'Anya',    ln: 'Volkov',   co: 'RedOak Realty',        src: 'cold_call',   ind: 'real_estate',  age: 102 },
-      { fn: 'Theo',    ln: 'Park',     co: 'Skyline Media',        src: 'advertising', ind: 'media',        age: 116 },
-      { fn: 'Wren',    ln: 'Garcia',   co: 'Maple Bakery Group',   src: 'event',       ind: 'consumer_goods', age: 123 },
+      { fn: 'Theo',    ln: 'Park',     co: 'Skyline Media',        src: 'advertisement', ind: 'media',        age: 116 },
+      { fn: 'Wren',    ln: 'Garcia',   co: 'Maple Bakery Group',   src: 'event',       ind: 'retail', age: 123 },
       { fn: 'Hugo',    ln: 'Dubois',   co: 'Nimbus Aerospace',     src: 'referral',    ind: 'manufacturing',age: 138 },
-      { fn: 'Lena',    ln: 'Fischer',  co: 'Granite Insurance',    src: 'partner',     ind: 'financial_services', age: 145 },
-      { fn: 'Kai',     ln: 'Watanabe', co: 'Coral Reef Hotels',    src: 'web',         ind: 'travel',       age: 162 },
-      { fn: 'Mira',    ln: 'Costa',    co: 'Atlas Construction',   src: 'cold_call',   ind: 'construction', age: 175 },
+      { fn: 'Lena',    ln: 'Fischer',  co: 'Granite Insurance',    src: 'partner',     ind: 'finance', age: 145 },
+      { fn: 'Kai',     ln: 'Watanabe', co: 'Coral Reef Hotels',    src: 'web',         ind: 'hospitality',       age: 162 },
+      { fn: 'Mira',    ln: 'Costa',    co: 'Atlas Construction',   src: 'cold_call',   ind: 'other', age: 175 },
     ].map((l, i) => ({
       first_name: l.fn,
       last_name: l.ln,
@@ -333,7 +333,7 @@ analytics seats for the Ops org, (3) priority support SLA.`,
       stage: 'closed_won',
       probability: 100,
       close_date: cel`daysAgo(15)`,
-      type: 'renewal',
+      type: 'existing_renewal',
       forecast_category: 'closed',
       lead_source: 'partner',
       description: `Annual renewal of the Acme Standard subscription (40 seats), signed two weeks ahead of the renewal date. 22% YoY uplift driven by seat expansion in the new EMEA team. Multi-year option declined this round — they want to see how the platform upgrade lands first.`,
@@ -404,7 +404,7 @@ analytics seats for the Ops org, (3) priority support SLA.`,
       close_date: cel`daysAgo(60)`,
       type: 'new_business',
       forecast_category: 'omitted',
-      lead_source: 'advertising',
+      lead_source: 'advertisement',
     },
     // ─── Generated demo opportunities — ~50 deals across ~6 months close_date
     // spread over every stage / forecast / source combination so the
@@ -420,8 +420,8 @@ analytics seats for the Ops org, (3) priority support SLA.`,
         closed_won: 'closed',
         closed_lost: 'omitted',
       };
-      const sources = ['web', 'referral', 'partner', 'event', 'cold_call', 'advertising'] as const;
-      const types = ['new_business', 'existing_upgrade', 'renewal'] as const;
+      const sources = ['web', 'referral', 'partner', 'event', 'cold_call', 'advertisement'] as const;
+      const types = ['new_business', 'existing_upgrade', 'existing_renewal'] as const;
       const accountsList = ['Acme Corporation', 'Globex Industries', 'Wayne Enterprises', 'Initech Solutions', 'Stark Medical'] as const;
       const out: Record<string, unknown>[] = [];
       for (let i = 0; i < 50; i++) {
