@@ -34,25 +34,15 @@ export const CustomerChurnSignalsReport: ReportInput = {
   label: 'Customer Churn Signals',
   description:
     'Three-panel early-warning view: at-risk customers, silent high-value accounts, and recently-lost opportunities.',
-  objectName: 'crm_account',
   type: 'joined',
-  // Container columns: joined reports declare their effective columns inside
-  // each block, so the top-level `columns` is intentionally empty.
-  columns: [],
   blocks: [
     {
       name: 'at_risk_accounts',
       label: 'At-Risk Accounts',
       description: 'Active accounts with no activity in 14+ days, grouped by industry.',
       type: 'summary',
-      objectName: 'crm_account',
       dataset: 'account_metrics', rows: ['industry'], values: ['account_count'],
-      columns: [
-        { field: 'name', label: 'Account' },
-        { field: 'id', label: 'Accounts', aggregate: 'count' },
-      ],
-      groupingsDown: [{ field: 'industry', sortOrder: 'asc' }],
-      filter: {
+      runtimeFilter: {
         is_active: true,
         last_activity_date: { $lt: daysAgo(14) },
       },
@@ -62,13 +52,8 @@ export const CustomerChurnSignalsReport: ReportInput = {
       label: 'Silent High-Value Accounts',
       description: 'Active accounts gone quiet for 30+ days, grouped by type.',
       type: 'summary',
-      objectName: 'crm_account',
       dataset: 'account_metrics', rows: ['type'], values: ['account_count'],
-      columns: [
-        { field: 'id', label: 'Accounts', aggregate: 'count' },
-      ],
-      groupingsDown: [{ field: 'type', sortOrder: 'asc' }],
-      filter: {
+      runtimeFilter: {
         is_active: true,
         last_activity_date: { $lt: daysAgo(30) },
       },
@@ -78,14 +63,8 @@ export const CustomerChurnSignalsReport: ReportInput = {
       label: 'Recently Lost Opportunities',
       description: 'Opportunities closed-lost in the last 30 days — investigate before the customer fully churns.',
       type: 'summary',
-      objectName: 'crm_opportunity',
       dataset: 'opportunity_metrics', rows: ['owner'], values: ['total_amount', 'opp_count'],
-      columns: [
-        { field: 'amount', label: 'Lost Revenue', aggregate: 'sum' },
-        { field: 'id', label: 'Deals', aggregate: 'count' },
-      ],
-      groupingsDown: [{ field: 'owner', sortOrder: 'asc' }],
-      filter: {
+      runtimeFilter: {
         stage: 'closed_lost',
         close_date: { $gte: daysAgo(30) },
       },

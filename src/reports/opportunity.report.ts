@@ -11,18 +11,9 @@ export const OpportunitiesByStageReport: ReportInput = {
   name: 'opportunities_by_stage',
   label: 'Opportunities by Stage',
   description: 'Summary of opportunities grouped by stage',
-  objectName: 'crm_opportunity',
   dataset: 'opportunity_metrics', rows: ['stage'], values: ['total_amount', 'avg_probability'],
   type: 'summary',
-  columns: [
-    { field: 'name', label: 'Opportunity Name' },
-    { field: 'crm_account', label: 'Account' },
-    { field: 'amount', label: 'Amount', aggregate: 'sum' },
-    { field: 'close_date', label: 'Close Date' },
-    { field: 'probability', label: 'Probability', aggregate: 'avg' },
-  ],
-  groupingsDown: [{ field: 'stage', sortOrder: 'asc' }],
-  filter: { stage: { $ne: 'closed_lost' }, close_date: { $gte: CURRENT_YEAR_START } },
+  runtimeFilter: { stage: { $ne: 'closed_lost' }, close_date: { $gte: CURRENT_YEAR_START } },
   chart: { type: 'bar', title: 'Pipeline by Stage', showLegend: true, xAxis: 'stage', yAxis: 'amount' }
 };
 
@@ -30,17 +21,9 @@ export const WonOpportunitiesByOwnerReport: ReportInput = {
   name: 'won_opportunities_by_owner',
   label: 'Won Opportunities by Owner',
   description: 'Closed won opportunities grouped by owner',
-  objectName: 'crm_opportunity',
   dataset: 'opportunity_metrics', rows: ['owner'], values: ['total_amount'],
   type: 'summary',
-  columns: [
-    { field: 'name', label: 'Opportunity Name' },
-    { field: 'crm_account', label: 'Account' },
-    { field: 'amount', label: 'Amount', aggregate: 'sum' },
-    { field: 'close_date', label: 'Close Date' },
-  ],
-  groupingsDown: [{ field: 'owner', sortOrder: 'desc' }],
-  filter: { stage: 'closed_won' },
+  runtimeFilter: { stage: 'closed_won' },
   chart: { type: 'column', title: 'Revenue by Sales Rep', showLegend: false, xAxis: 'owner', yAxis: 'amount' }
 };
 
@@ -55,18 +38,9 @@ export const PipelineCoverageByQuarterReport: ReportInput = {
   name: 'pipeline_coverage_by_quarter',
   label: 'Pipeline Coverage by Forecast × Quarter',
   description: 'Open pipeline amount by forecast category, bucketed by close quarter',
-  objectName: 'crm_opportunity',
   dataset: 'opportunity_metrics', rows: ['forecast_category', 'close_date'], values: ['total_amount', 'opp_count'],
   type: 'matrix',
-  columns: [
-    { field: 'amount', label: 'Pipeline', aggregate: 'sum' },
-    { field: 'name', label: 'Deals', aggregate: 'count' },
-  ],
-  groupingsDown: [{ field: 'forecast_category', sortOrder: 'asc' }],
-  groupingsAcross: [
-    { field: 'close_date', dateGranularity: 'quarter', sortOrder: 'asc' },
-  ],
-  filter: { stage: { $nin: ['closed_won', 'closed_lost'] } },
+  runtimeFilter: { stage: { $nin: ['closed_won', 'closed_lost'] } },
 };
 
 /**
@@ -78,18 +52,8 @@ export const OpportunityFunnelByOwnerStageReport: ReportInput = {
   name: 'opportunity_funnel_owner_stage',
   label: 'Opportunity Funnel by Owner → Stage',
   description: 'Per-rep stage-by-stage pipeline funnel',
-  objectName: 'crm_opportunity',
   dataset: 'opportunity_metrics', rows: ['owner', 'stage'], values: ['total_amount', 'opp_count', 'avg_probability'],
   type: 'summary',
-  columns: [
-    { field: 'amount', label: 'Total Amount', aggregate: 'sum' },
-    { field: 'name', label: 'Deals', aggregate: 'count' },
-    { field: 'probability', label: 'Avg Probability', aggregate: 'avg' },
-  ],
-  groupingsDown: [
-    { field: 'owner', sortOrder: 'asc' },
-    { field: 'stage', sortOrder: 'asc' },
-  ],
-  filter: { stage: { $ne: 'closed_lost' } },
+  runtimeFilter: { stage: { $ne: 'closed_lost' } },
   chart: { type: 'funnel', title: 'Pipeline Funnel', showLegend: false, xAxis: 'stage', yAxis: 'amount' },
 };

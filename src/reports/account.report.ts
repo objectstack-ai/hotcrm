@@ -6,14 +6,7 @@ export const AccountsByIndustryTypeReport: ReportInput = {
   name: 'accounts_by_industry_type',
   label: 'Accounts by Industry and Type',
   description: 'Matrix report showing accounts by industry and type',
-  objectName: 'crm_account',
   dataset: 'account_metrics', rows: ['industry', 'type'], values: ['account_count', 'annual_revenue_sum'],
   type: 'matrix',
-  columns: [
-    { field: 'name', aggregate: 'count' },
-    { field: 'annual_revenue', aggregate: 'sum' },
-  ],
-  groupingsDown: [{ field: 'industry', sortOrder: 'asc' }],
-  groupingsAcross: [{ field: 'type', sortOrder: 'asc' }],
-  filter: { is_active: true },
+  runtimeFilter: { is_active: true },
 };
