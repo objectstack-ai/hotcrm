@@ -31,6 +31,6 @@ export const CasesOpenedByDayPriorityReport: ReportInput = {
   name: 'cases_opened_by_day_priority',
   label: 'Cases Opened by Priority × Day',
   description: 'Daily case inflow split by priority',
-  dataset: 'case_metrics', rows: ['priority', 'created_date'], values: ['case_count'],
+  dataset: 'case_metrics', rows: ['priority'], columns: ['created_date'], values: ['case_count'],
   type: 'matrix',
 };

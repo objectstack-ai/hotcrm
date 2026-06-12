@@ -30,23 +30,23 @@ export const WonOpportunitiesByOwnerReport: ReportInput = {
 /**
  * Quarterly pipeline coverage — the matrix view that powers the classic
  * sales-ops "pipeline coverage" conversation: each forecast category against
- * the quarter the deal is expected to close in. Uses the spec's
- * `dateGranularity` on `groupingsAcross` so the server can bucket close_date
- * into quarters in a single aggregate query.
+ * the quarter the deal is expected to close in. `close_date` is the across
+ * dimension (`columns`); the dataset's `dateGranularity` buckets it into
+ * quarters in a single server-side aggregate query.
  */
 export const PipelineCoverageByQuarterReport: ReportInput = {
   name: 'pipeline_coverage_by_quarter',
   label: 'Pipeline Coverage by Forecast × Quarter',
   description: 'Open pipeline amount by forecast category, bucketed by close quarter',
-  dataset: 'opportunity_metrics', rows: ['forecast_category', 'close_date'], values: ['total_amount', 'opp_count'],
+  dataset: 'opportunity_metrics', rows: ['forecast_category'], columns: ['close_date'], values: ['total_amount', 'opp_count'],
   type: 'matrix',
   runtimeFilter: { stage: { $nin: ['closed_won', 'closed_lost'] } },
 };
 
 /**
  * Sales-rep funnel — two-level summary that mirrors how reps drill into their
- * own book of business. Tests the multi-level `groupingsDown` rendering and
- * the `aggregate`-mixed-with-`detail` column pattern.
+ * own book of business. Exercises multi-level `rows` grouping (owner → stage)
+ * over the dataset's measures.
  */
 export const OpportunityFunnelByOwnerStageReport: ReportInput = {
   name: 'opportunity_funnel_owner_stage',

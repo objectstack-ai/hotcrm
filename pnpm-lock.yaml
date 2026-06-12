@@ -39,8 +39,8 @@ importers:
         specifier: ^9.0.0
         version: 9.0.0(ai@6.0.201(zod@4.4.3))
       '@objectstack/spec':
-        specifier: ^9.0.0
-        version: 9.0.0(ai@6.0.201(zod@4.4.3))
+        specifier: ^9.2.0
+        version: 9.2.0(ai@6.0.201(zod@4.4.3))
     devDependencies:
       '@playwright/test':
         specifier: ^1.60.0
@@ -934,6 +934,15 @@ packages:
 
   '@objectstack/spec@9.0.0':
     resolution: {integrity: sha512-02/NF7c/oAFr4pfpyBgsly9Tv1LFZFaX5rXVtjLCJOMYBVBqAXctOUuhUsv7G7RGOYubNuuig0PsNlK+EtX1DA==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      ai: ^6.0.0
+    peerDependenciesMeta:
+      ai:
+        optional: true
+
+  '@objectstack/spec@9.2.0':
+    resolution: {integrity: sha512-nM0yCg1ya3CHIgF4zI9ENrhHaiwkEEEOu1mtAIwywxcJfl2eZ7DZAUbKvqy6t+U64BbslQthpQz/ktY0/tNbJQ==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       ai: ^6.0.0
@@ -4721,6 +4730,12 @@ snapshots:
       - ai
 
   '@objectstack/spec@9.0.0(ai@6.0.201(zod@4.4.3))':
+    dependencies:
+      zod: 4.4.3
+    optionalDependencies:
+      ai: 6.0.201(zod@4.4.3)
+
+  '@objectstack/spec@9.2.0(ai@6.0.201(zod@4.4.3))':
     dependencies:
       zod: 4.4.3
     optionalDependencies:
