@@ -41,6 +41,9 @@ export const CrmApp = App.create({
       children: [
         { id: 'nav_lead',        type: 'object', objectName: 'crm_lead',        label: 'Leads',         icon: 'user-plus' },
         { id: 'nav_account',     type: 'object', objectName: 'crm_account',     label: 'Accounts',      icon: 'building' },
+        // ADR-0047 interface page — the curated counterpart to the Accounts
+        // object entry (quick filters only; activates with spec > 9.2.0).
+        { id: 'nav_account_workbench', type: 'page', pageName: 'account_workbench', label: 'Account Workbench', icon: 'sliders-horizontal' },
         { id: 'nav_contact',     type: 'object', objectName: 'crm_contact',     label: 'Contacts',      icon: 'user' },
         { id: 'nav_opportunity', type: 'object', objectName: 'crm_opportunity', label: 'Opportunities', icon: 'target' },
         { id: 'nav_pipeline',    type: 'object', objectName: 'crm_opportunity', viewName: 'pipeline_kanban', label: 'Pipeline', icon: 'columns-3' },

@@ -127,6 +127,26 @@ export const AccountViews = defineView({
       columns: ['name', 'industry', 'annual_revenue', 'number_of_employees', 'owner'],
       filter: [{ field: 'annual_revenue', operator: 'greater_than_or_equal', value: 10000000 }],
       sort: [{ field: 'annual_revenue', order: 'desc' }],
+
+      // ADR-0047 end-user quick filters (Airtable "User filters", Elements:
+      // dropdowns). Lives on THIS view, not the default one: the default
+      // view's `tabs` act as the view switcher, and filter tabs/dropdowns
+      // are mutually exclusive with a tab row on the same toolbar.
+      // `owner` is a user lookup — it renders as a record-picker dropdown.
+      // NOTE: requires @objectstack/spec > 9.2.0 (ADR-0047 UserFiltersSchema);
+      // on older specs defineStack strips this block — harmless no-op.
+      ...({
+        userFilters: {
+          element: 'dropdown',
+          fields: [
+            { field: 'industry', showCount: true },
+            { field: 'type' },
+            { field: 'owner' },
+          ],
+        },
+        // typed via spread-as-any until @objectstack/spec ships ADR-0047
+        // (UserFiltersSchema is in framework main, > 9.2.0)
+      } as any),
     },
 
     my_accounts: {
