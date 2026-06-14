@@ -1,17 +1,183 @@
 # AGENTS.md — HotCRM
 
-Guidance for AI coding agents working in this repo. For full architecture and
-metadata conventions, see [`.github/copilot-instructions.md`](.github/copilot-instructions.md)
-(the `crm_` naming rule, ObjectQL-only data access, metadata-first design, etc.).
-This file captures **working practices** — how to verify changes — that are easy
-to get wrong.
+Single source of truth for AI coding agents working on **HotCRM**, the AI-Native
+Enterprise CRM built on the **@objectstack/runtime** engine. Tool-specific files
+(e.g. `.github/copilot-instructions.md`) point here.
 
-## Verifying UI changes in the browser
+You are an expert developer working on HotCRM, delivering business capabilities
+through modular packages on top of the ObjectStack platform.
 
-The Console renders dashboards, charts, and views from metadata. When you verify
-a change by driving the browser, follow these rules.
+## 🏗️ Project Architecture
 
-### Rule: wait for lazy-loaded UI before judging — never conclude from an early screenshot
+HotCRM follows a **Plugin-Based Monorepo** structure:
+
+- **Engine**: We DO NOT build the core engine. We use `@objectstack/runtime` as the platform dependency.
+- **Business Packages** (`packages/*`): We develop independent functional modules here.
+- **Apps** (`apps/*`): Deployable applications (Documentation, Admin Portal).
+
+**Directory Structure**:
+```
+hotcrm/
+├── packages/               # Business Capabilities (Plugins)
+│   ├── crm/               # Sales Cloud (Account, Opportunity)
+│   ├── finance/           # Revenue Cloud (Contract, Invoice)
+│   ├── products/          # CPQ Product Catalog
+│   └── ...
+│
+└── apps/
+    └── docs/              # Official Documentation
+```
+
+## 💻 Tech Stack & Protocol
+
+1.  **Metadata-First (`*object.ts`)**:
+    - All business objects are defined in **TypeScript** using the `ServiceObject` interface.
+    - strictly typed using `@objectstack/spec`.
+    - **NEVER** use YAML or JSON for metadata.
+    - Object names must be `snake_case`.
+    - **All HotCRM business object names MUST use the `crm_` prefix and the prefix MUST be written explicitly in source** (e.g., `crm_account`, `crm_opportunity`, `crm_knowledge_article`). **No automatic prefix injection by the runtime.** Open architectural decision: AI-authored metadata is fragile around "context-aware" naming, so we trade verbosity for grep-ability. Cross-references via `reference_to` / `lookup` / `masterDetail` MUST use the prefixed name. Cube `sql:` fields, view `data.object`, hook `object:`, action `objectName:`, navigation `objectName:`, dashboard `object:`, translation `objects.{key}`, REST URLs, and DB table names ALL use the same prefixed name. The name in source = the name at runtime = the name in DB = the name in URL = the name in docs. No translation layer.
+
+2.  **ObjectQL (No-SQL)**:
+    - Data access MUST use **ObjectQL**.
+    - **NEVER** write raw SQL.
+    - Format: `broker.find('opportunity', { filters: [['amount', '>', 50000]] })`.
+
+3.  **AI-Native**:
+    - Every feature should consider AI augmentation (Co-Pilot, Agents).
+    - Use `*.action.ts` to define tools callable by AI agents.
+
+## 🧠 Autonomous Iteration Protocol
+
+When asked to implement a feature, you MUST follow this **Thinking Process**:
+
+### Phase 1: Architecture & Planning
+1.  **Analyze**: Identify the Business Package (e.g., `packages/hr`) and Dependencies.
+2.  **Schema Design**: List all necessary Objects, Fields, and Relationships.
+3.  **File Inventory**: List exact file paths to be created.
+    *   `src/candidate.object.ts` (Data)
+    *   `src/candidate.workflow.ts` (Automation)
+    *   `src/candidate.page.ts` (UI)
+
+### Phase 2: Implementation (Iterative)
+1.  **Metadata First**: Create `*.object.ts` files first. They are the source of truth.
+2.  **Logic Second**: Create `*.hook.ts` and `*.action.ts` utilizing the defined objects.
+3.  **UI Last**: Create `*.page.ts` and Actions to expose functionality to users.
+
+### Phase 3: Self-Correction
+After generating code, ask yourself:
+*   [ ] Did I respect the strictly typed `ServiceObject` interface?
+*   [ ] Are all `reference_to` pointing to real objects?
+*   [ ] Did I use ObjectQL instead of SQL?
+*   [ ] are file names strictly `snake_case`?
+
+## 📝 Coding Standards (The "File Suffix Protocol")
+
+We enforce strict file naming to separate concerns. Files should be located in `packages/{package_name}/src/`.
+
+### Core File Types
+- `*.object.ts`: Data Model (Schema) — validated with `ObjectSchema.parse()`
+- `*.hook.ts`: Server-side Business Logic (Triggers)
+- `*.action.ts`: API Endpoints & AI Tools
+- `*.page.ts`: UI Page Layouts — validated with `PageSchema` from `@objectstack/spec/ui`
+- `*.view.ts`: List View Configurations — validated with `ViewSchema` from `@objectstack/spec/ui`
+
+### Extended File Types (Phase 6+)
+- `*.dashboard.ts`: Dashboard Definitions — validated with `DashboardSchema` from `@objectstack/spec/ui`
+- `*.form.ts`: Form View Definitions — validated with `FormViewSchema` from `@objectstack/spec/ui`
+- `*.statemachine.ts`: State Machine Definitions — validated with `StateMachineSchema` from `@objectstack/spec/automation`
+- `*.permission.ts`: Permission Set Definitions — validated with `PermissionSetSchema` from `@objectstack/spec/security`
+- `*.capabilities.ts`: Plugin Capability Manifests — validated with `PluginCapabilityManifestSchema` from `@objectstack/spec/kernel`
+- `*.events.ts`: Domain Event Definitions — validated with `EventSchema` from `@objectstack/spec/kernel`
+
+## 🔒 Schema Validation Requirements
+
+All metadata files MUST be validated against their corresponding `@objectstack/spec` schemas:
+
+1. **Objects**: Use `ObjectSchema.parse()` from `@objectstack/spec/data`
+2. **Pages/Views/Dashboards/Forms**: Use schemas from `@objectstack/spec/ui`
+3. **Workflows**: Use `WorkflowRuleSchema.parse()` from `@objectstack/spec/automation`
+4. **State Machines**: Use `StateMachineSchema.parse()` from `@objectstack/spec/automation`
+5. **Plugins**: Use `PluginSchema.parse()` from `@objectstack/spec/kernel` (remove `: any` annotations)
+6. **Permissions**: Use `PermissionSetSchema.parse()` from `@objectstack/spec/security`
+7. **AI Agents**: Use `AgentSchema.parse()` from `@objectstack/spec/ai`
+
+## 🏷️ Field Type Guidance
+
+Use the most specific `Field` type available from `@objectstack/spec/data`:
+
+| Relationship | Field Type | When to Use |
+|---|---|---|
+| Parent reference | `Field.lookup()` | Optional association to another object |
+| Child of parent | `Field.masterDetail()` | Required parent-child with cascade delete |
+| Rollup value | `Field.summary()` | Aggregate child records (sum, count, min, max) |
+
+| Data Type | Field Type | When to Use |
+|---|---|---|
+| Multiple choices | `Field.select({ multiple: true })` | Multi-select picklist |
+| File upload | `Field.file()` | Document/attachment fields |
+| Image upload | `Field.image()` | Photo/avatar fields |
+| GPS coordinates | `Field.location()` | Geographic location data |
+| Mailing address | `Field.address()` | Structured postal address |
+
+## 🚀 Development Workflow
+
+1.  **Define Object**: Create `packages/{pkg}/src/{entity}.object.ts`.
+2.  **Add Logic**: Create `packages/{pkg}/src/{entity}.hook.ts`.
+3.  **Expose Action**: Create `packages/{pkg}/src/{action}.action.ts` if external API/AI needed.
+4.  **Config UI**: Create `packages/{pkg}/src/{entity}.page.ts`.
+
+## ⚠️ Constraint Checklist
+
+- **Object Naming**: All HotCRM business objects MUST be prefixed with `crm_` (e.g., `crm_account`, `crm_opportunity`, `crm_case`, `crm_lead`, `crm_campaign`, `crm_contact`, `crm_contract`, `crm_product`, `crm_quote`, `crm_quote_line_item`, `crm_opportunity_line_item`, `crm_task`, `crm_campaign_member`, `crm_knowledge_article`, `crm_forecast`). All references — `reference_to`, `lookup`, `masterDetail`, cube `sql`, view `data.object`, hook `object`, navigation `objectName`, action `objectName`, dashboard `object` — MUST use the prefixed form. Platform objects keep their existing `sys_*` prefix.
+- **i18n**: Every new object must have entries in all 4 locale files (`src/translations/{en,zh-CN,es-ES,ja-JP}.ts`) — label, pluralLabel, all field labels + option labels, view labels, navigation labels. No new feature ships without all 4 locales.
+- **Docs**: Every new object/feature requires user-facing documentation under `content/docs/{sales|service|marketing|...}/` written for business users + admins (not developers).
+- **Documentation**: All documentation MUST be in English.
+- **No Engine Code**: Do not try to modify the core runtime code. Focus on the *usage* of the runtime.
+- **Dependencies**: HotCRM packages should depend on `@objectstack/runtime` (as peerDependency) and other sibling packages if structure allows.
+- **Tone**: Act as a Senior 10x Engineer. Be concise, professional, and technically accurate.
+
+> **Naming note (ADR-0048):** the `crm_` prefix above is a deliberate HotCRM
+> convention for **grep-ability**, and it is enforced for **objects**. It is
+> *not* required for collision avoidance: as of ObjectStack 9.4 the cross-package
+> collision throw was retired (ADR-0048 §3.4) — packages coexist via
+> `packageId`-scoped resolution. So the `os lint` `naming/namespace-prefix`
+> warning on non-object items (pages/flows/datasets/etc.) is advisory only; its
+> "fail at install" wording is stale. Don't mass-rename UI/automation items to
+> chase that warning.
+
+## 🚫 Out of Scope (Platform Features)
+
+The following are **NOT** in HotCRM's scope — they are platform-level features provided by `@objectstack/runtime` or other platform packages:
+
+- **Platform infrastructure**: visual workflow/process/approval builders, formula builder, report & page-layout designers.
+- **Low-level services**: database engine, auth (OAuth/SAML/SSO), multi-tenancy, encryption, API gateway, caching, message queue, file storage.
+- **Dev tools**: schema migration, CLI scaffolding, metadata deployment pipeline, VCS integration, IDE extensions.
+
+**Focus Area**: HotCRM focuses exclusively on **business domain packages** (CRM, Finance, HR, Marketing, Products, Support) and their **business logic, data models, and AI capabilities**.
+
+---
+
+## ✅ Verifying changes
+
+### Verify before opening a PR
+
+Run the full suite and make sure it's green:
+
+```
+pnpm validate && pnpm typecheck && pnpm build && pnpm test
+```
+
+`pnpm validate` enforces ADR-0021 dashboard-widget binding integrity: a chart's
+`chartConfig.xAxis.field` must resolve to a dataset **dimension** and
+`yAxis[].field` to a **measure**, regardless of chart orientation (the renderer
+handles the visual flip). A swapped axis is a hard validation error.
+
+### Verifying UI in the browser
+
+The Console renders dashboards, charts, and views from metadata. When verifying a
+change by driving the browser, follow these rules.
+
+#### Rule: wait for lazy-loaded UI before judging — never conclude from an early screenshot
 
 Dashboard charts (`AdvancedChartImpl` / Recharts) and other heavy widgets are
 **`React.lazy`-loaded** — the chart bundle hydrates a beat *after* the page
@@ -39,7 +205,7 @@ numeric value (no dial yet — by ADR-0021 design), which is expected, not a bug
 > too early, saw blank funnel/donut cards, and wrongly reported the renderers as
 > broken. They were fine — it was the lazy-load race. Verify hydration first.
 
-### Other browser-verify gotchas (same workflow)
+#### Other browser-verify gotchas (same workflow)
 
 - **`better-sqlite3` native ABI mismatch.** If boot floods
   `NODE_MODULE_VERSION ... requires ...` errors, the SQLite native binary was
@@ -50,16 +216,3 @@ numeric value (no dial yet — by ADR-0021 design), which is expected, not a bug
   (e.g. `app.objectstack.hotcrm`), **not** `/_console/a/<appName>` — the latter
   bounces to `/_console/home`.
 - Dev admin (seeded on an empty DB, dev only): `admin@objectos.ai` / `admin123`.
-
-## Verify before opening a PR
-
-Run the full suite and make sure it's green:
-
-```
-pnpm validate && pnpm typecheck && pnpm build && pnpm test
-```
-
-`pnpm validate` enforces ADR-0021 dashboard-widget binding integrity (a chart's
-`chartConfig.xAxis.field` must resolve to a dataset **dimension** and
-`yAxis[].field` to a **measure**, regardless of chart orientation — the renderer
-handles the visual flip). A swapped axis is a hard validation error.
