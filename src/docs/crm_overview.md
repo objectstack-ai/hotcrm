@@ -1,6 +1,14 @@
 ---
 title: HotCRM Overview
 description: How HotCRM is organized and where the automated business rules live.
+# sources: the metadata this doc describes — kept in sync by the doc-sync agent
+# and the docs-drift test. Build ignores unknown frontmatter keys.
+sources:
+  - object:crm_lead
+  - object:crm_opportunity
+  - object:crm_quote
+  - object:crm_contract
+  - object:crm_case
 ---
 
 # HotCRM Overview

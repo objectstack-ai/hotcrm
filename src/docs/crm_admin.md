@@ -1,6 +1,22 @@
 ---
 title: Administration — Roles, Sharing & Automation Knobs
 description: The role hierarchy, record-visibility (sharing) rules, profiles, and where every automated threshold is configured.
+# sources: the automation/sharing/role metadata this doc documents. The knobs
+# table is guarded by test/docs-drift.test.ts; build ignores unknown frontmatter keys.
+sources:
+  - flow:opportunity_approval
+  - flow:lead_assignment
+  - flow:opportunity_stagnation
+  - flow:opportunity_won_alert
+  - flow:quote_generation
+  - flow:quote_expiration
+  - flow:case_sla_monitor
+  - flow:case_escalation
+  - flow:case_csat_followup
+  - sharing_rule:account_team_sharing
+  - sharing_rule:opportunity_sales_sharing
+  - sharing_rule:case_escalation_sharing
+  - role:crm_role_hierarchy
 ---
 
 # Administration — Roles, Sharing & Automation

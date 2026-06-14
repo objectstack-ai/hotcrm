@@ -1,6 +1,20 @@
 ---
 title: Sales Process & Rules
 description: Lead routing, conversion, opportunity stages, large-deal approvals, and quotes — including every automated rule and threshold.
+# sources: flows/objects this doc documents. Thresholds here are guarded by
+# test/docs-drift.test.ts; build ignores unknown frontmatter keys.
+sources:
+  - flow:lead_assignment
+  - flow:lead_conversion
+  - flow:opportunity_approval
+  - flow:opportunity_stagnation
+  - flow:opportunity_won_alert
+  - flow:quote_generation
+  - flow:quote_expiration
+  - flow:task_urgent_alert
+  - object:crm_lead
+  - object:crm_opportunity
+  - object:crm_quote
 ---
 
 # Sales Process & Rules

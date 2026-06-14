@@ -1,6 +1,14 @@
 ---
 title: Service Process & SLA Rules
 description: Case priority, SLA breach handling, automatic escalation, and satisfaction follow-up — the rules behind the Service desk.
+# sources: flows/objects this doc documents. Schedules/rules here are guarded by
+# test/docs-drift.test.ts; build ignores unknown frontmatter keys.
+sources:
+  - flow:case_sla_monitor
+  - flow:case_escalation
+  - flow:case_csat_followup
+  - object:crm_case
+  - object:crm_knowledge_article
 ---
 
 # Service Process & SLA Rules
