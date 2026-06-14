@@ -1,6 +1,6 @@
 {
   "name": "hotcrm",
-  "version": "1.0.5",
+  "version": "1.1.0",
   "description": "HotCRM - Production CRM built on ObjectStack",
   "private": true,
   "main": "./objectstack.config.ts",
