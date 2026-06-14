@@ -187,8 +187,8 @@ export const SalesDashboard: Dashboard = {
         showLegend: false,
         showDataLabels: true,
         colors: ['#4F46E5'],
-        xAxis: { field: 'total_amount', title: 'Pipeline value', format: '0,0', showGridLines: true, logarithmic: false },
-        yAxis: [{ field: 'forecast_category', title: 'Forecast', showGridLines: false, logarithmic: false }],
+        xAxis: { field: 'forecast_category', title: 'Forecast', showGridLines: false, logarithmic: false },
+        yAxis: [{ field: 'total_amount', title: 'Pipeline value', format: '0,0', showGridLines: true, logarithmic: false }],
       },
     },
     {
