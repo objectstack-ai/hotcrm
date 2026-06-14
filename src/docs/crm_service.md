@@ -15,8 +15,9 @@ Every case carries a **priority** that drives its urgency:
 
 `Low → Medium → High → Critical`
 
-Each case also has an **SLA Due Date**. The automation below watches that clock
-and the priority for you.
+Each case also carries an **SLA Due Date** — the deadline to resolve it, set
+when the case is logged per your support policy. The automation below watches
+that clock and the priority for you.
 
 ## The clock is watched for you — SLA breach handling (automatic)
 
@@ -51,9 +52,11 @@ This keeps CSAT capture consistent without anyone remembering to chase it.
 
 ## Knowledge articles
 
-Use **Knowledge** articles to resolve cases faster and enable self-service.
-Linking a relevant article to a case (and keeping articles current) is the main
-lever for deflection and faster resolution times.
+**Knowledge** articles are your searchable library of solutions — for agents to
+reference while resolving a case and for customers to self-serve. Keeping
+articles current and well-titled is the main lever for deflection and faster
+resolution times. (Today a case isn't directly linked to an article; agents
+search Knowledge by topic.)
 
 ---
 

@@ -14,10 +14,13 @@ automatically along the way.
 When a lead is created, HotCRM scores its urgency and sets a follow-up deadline
 automatically:
 
-| Lead rating | Follow-up SLA | What happens |
+| Lead Score | Follow-up SLA | What happens |
 |---|---|---|
-| **Hot** (rating ≥ 4) | **1 day** | Manager is alerted to *assign within 24h*. |
+| **Hot** — 4★ or higher | **1 day** | Manager is alerted to *assign within 24h*. |
 | Everything else | **3 days** | Lead is queued for assignment. |
+
+**Lead Score** is the 1–5 star field on each lead (shown as *Lead Score* in the
+UI). A score of 4★ or more marks the lead "hot" and triggers the 1-day SLA.
 
 Every new lead lands in the **sales-manager queue**. Ownership is assigned by a
 manager — there is no automatic territory or round-robin assignment, so a lead
@@ -58,8 +61,10 @@ notified automatically.
 
 ## 4. Large-deal approval — when a deal pauses for sign-off
 
-Deals above a threshold **lock and wait** for approval. You can't move them
-forward until each required approver signs off.
+Deals above a threshold **lock and wait** for approval. There is no "submit"
+step — the moment a deal's **amount** crosses $100K, it routes for approval
+automatically, and you can't move it forward until each required approver signs
+off.
 
 | Deal amount | Required approval |
 |---|---|
