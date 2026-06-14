@@ -12,9 +12,12 @@ sources:
   - flow:quote_generation
   - flow:quote_expiration
   - flow:task_urgent_alert
+  - flow:contract_renewal
+  - flow:contract_expiration
   - object:crm_lead
   - object:crm_opportunity
   - object:crm_quote
+  - object:crm_contract
 ---
 
 # Sales Process & Rules
@@ -105,7 +108,33 @@ discount amount = subtotal × discount %, and **total = amount × (1 − discoun
 A daily **01:00** job marks any still-open quote past its expiration date as
 **Expired**. Re-issue a fresh quote if the deal is still live.
 
-## 6. Tasks
+## 6. After the win: contracts & renewals
+
+Closing a deal isn't the end of the relationship — it's the start of a contract
+you'll eventually renew. Two automatic jobs make sure a contract never lapses
+unnoticed.
+
+### Renewal reminders (automatic)
+Each contract carries its own **Renewal Notice Days** — how far ahead to start
+the renewal conversation. A daily sweep finds **activated** contracts whose
+**end date** has entered that notice window and:
+
+- creates a **high-priority renewal task** for the owner (due on the contract's
+  end date), and
+- notifies the owner to start the renewal conversation.
+
+### Auto-renewal → a deal already in your pipeline (automatic)
+If a contract has **Auto-Renewal** switched on, the same sweep also opens a
+renewal **opportunity** (type *Existing Customer — Renewal*), pre-filled from
+the contract value — so the renewal is already sitting in your pipeline to work,
+not something you have to remember to create.
+
+### Expiration (automatic)
+A contract that passes its **end date** without being renewed is automatically
+marked **Expired**, and the owner is notified. Renew before the end date to
+avoid the lapse.
+
+## 7. Tasks
 
 Creating a task with **Urgent** priority immediately notifies its owner. Routine
 follow-up tasks (e.g. from the stalled-deal nudge) are created as **High**
