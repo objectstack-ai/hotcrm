@@ -13,6 +13,8 @@ sources:
   - flow:case_sla_monitor
   - flow:case_escalation
   - flow:case_csat_followup
+  - flow:contract_renewal
+  - flow:contract_expiration
   - sharing_rule:account_team_sharing
   - sharing_rule:opportunity_sales_sharing
   - sharing_rule:case_escalation_sharing
@@ -68,7 +70,7 @@ revisits:
 |---|---|---|
 | Large-deal approval (manager) | amount **> $100,000** | `opportunity-approval.flow.ts` |
 | Large-deal approval (+ director) | amount **> $500,000** | `opportunity-approval.flow.ts` |
-| Hot-lead follow-up SLA | **1 day** (rating ≥ 4) | `lead-assignment.flow.ts` |
+| Hot-lead follow-up SLA | **1 day** (Lead Score ≥ 4★) | `lead-assignment.flow.ts` |
 | Standard-lead follow-up SLA | **3 days** | `lead-assignment.flow.ts` |
 | Stalled-deal nudge | **> 14 days** in stage, swept daily **07:30** | `opportunity-stagnation.flow.ts` |
 | Won-deal alert | **Closed Won** over **$100,000** | `opportunity-won-alert.flow.ts` |
@@ -77,6 +79,8 @@ revisits:
 | Case SLA breach sweep | **hourly** | `case-sla-monitor.flow.ts` |
 | Critical-case auto-escalation | priority = **Critical** | `case-escalation.flow.ts` |
 | CSAT request delay after close | **1 day** | `case-csat-followup.flow.ts` |
+| Contract renewal reminder | each contract's **Renewal Notice Days**, swept daily **08:00** | `contract-renewal.flow.ts` |
+| Contract auto-expiration | past **end date**, swept daily **00:00** | `contract-expiration.flow.ts` |
 
 > Object names, fields, and relationships are visible directly in **Studio** and
 > on each record's detail page — they are intentionally **not** duplicated here.

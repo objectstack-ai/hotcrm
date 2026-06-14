@@ -30,6 +30,8 @@ const CRON_LABEL: Record<string, string> = {
   '30 7 * * *': '07:30',
   '0 1 * * *': '01:00',
   '0 * * * *': 'hourly',
+  '0 8 * * *': '08:00',
+  '0 0 * * *': '00:00',
 };
 
 type Rule = {
@@ -109,6 +111,18 @@ const RULES: Rule[] = [
     extract: () => cap('case-sla-monitor.flow.ts', /schedule: '([^']+)'/),
     display: cronDisplay,
     docs: ['crm_service.md', 'crm_admin.md'],
+  },
+  {
+    label: 'contract renewal sweep schedule',
+    extract: () => cap('contract-renewal.flow.ts', /schedule: '([^']+)'/),
+    display: cronDisplay,
+    docs: ['crm_admin.md'],
+  },
+  {
+    label: 'contract expiration sweep schedule',
+    extract: () => cap('contract-expiration.flow.ts', /schedule: '([^']+)'/),
+    display: cronDisplay,
+    docs: ['crm_admin.md'],
   },
 ];
 
