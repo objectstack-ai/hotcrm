@@ -24,8 +24,8 @@ importers:
         specifier: ^9.4.0
         version: 9.4.0(ai@6.0.201(zod@4.4.3))(better-sqlite3@12.10.0)
       '@objectstack/metadata':
-        specifier: ^9.4.0
-        version: 9.4.0(ai@6.0.201(zod@4.4.3))(vitest@4.1.8(@opentelemetry/api@1.9.1)(@types/node@25.9.1)(esbuild@0.28.0)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0))
+        specifier: ^9.5.0
+        version: 9.5.0(ai@6.0.201(zod@4.4.3))(vitest@4.1.8(@opentelemetry/api@1.9.1)(@types/node@25.9.1)(esbuild@0.28.0)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0))
       '@objectstack/objectql':
         specifier: ^9.4.0
         version: 9.4.0(ai@6.0.201(zod@4.4.3))(vitest@4.1.8(@opentelemetry/api@1.9.1)(@types/node@25.9.1)(esbuild@0.28.0)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0))
@@ -736,6 +736,10 @@ packages:
     resolution: {integrity: sha512-vWptTRcrjHE3bJclOW3NofYQwDmRts056NBwFoRIFhqLDw/8ibVOYCeA3AhAgpnPIztNlSFOr/44vhUhtMSF3w==}
     engines: {node: '>=18.0.0'}
 
+  '@objectstack/core@9.5.0':
+    resolution: {integrity: sha512-OlWxF2LG/amagUD0iZmOxpBYugvjAS/9wD/mLBKYEfGKrc9Ilv+LpzdBb6haEpUFLBQYUTw3JmCBrDwDCfJbQQ==}
+    engines: {node: '>=18.0.0'}
+
   '@objectstack/driver-memory@9.4.0':
     resolution: {integrity: sha512-GjUwsSxcPninkm4KbqC+yZBImhRHxMVV+sYEWWtiub095/1yRSaKOonHzU0OfYC7etiSBZdp2uoyswCkeURxYw==}
     engines: {node: '>=18.0.0'}
@@ -782,12 +786,29 @@ packages:
       vitest:
         optional: true
 
+  '@objectstack/metadata-core@9.5.0':
+    resolution: {integrity: sha512-RThZ515jInhNasGy9grrthZSpXTkVRayhaFG+ADkHKWgDFpnONJCqgoB40R7kGSyLQ69yxw3OsXCNegHvfx0WQ==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      vitest: ^4.0.0
+    peerDependenciesMeta:
+      vitest:
+        optional: true
+
   '@objectstack/metadata-fs@9.4.0':
     resolution: {integrity: sha512-cu2QGyRjKXRq9dywVRkd0RkQ16ZM1WW/XzfSDnIOkDTFP3K0sAz8Q5tqcm+mLWpmp3aFS69U9apEeUKwhWC6ag==}
     engines: {node: '>=18.0.0'}
 
+  '@objectstack/metadata-fs@9.5.0':
+    resolution: {integrity: sha512-E9yHI3SQ5tqbYdHG+i1aLU8KvYUXBrLGnZsq05f53k1Exl1Q0Rp7eo1LDeo2HmVpLeO/OJqz12+ctt35qLw55A==}
+    engines: {node: '>=18.0.0'}
+
   '@objectstack/metadata@9.4.0':
     resolution: {integrity: sha512-2lmhylHeKCEmUVGis+wxy2XsDOefyCe0q6taiehQ2B75BCrz7yZlbQyjK+EPPDl6Nhsc9GCkmEfUgrl8P1lHrw==}
+    engines: {node: '>=18.0.0'}
+
+  '@objectstack/metadata@9.5.0':
+    resolution: {integrity: sha512-DR8TDwq2FwTJcbMJi8WeeWV6G+qfwC/YL9gJSVu+kOdfgBecIjFs//TQhHuzjWHwDuCUmoPo18F6naB0Sf/FmQ==}
     engines: {node: '>=18.0.0'}
 
   '@objectstack/objectql@9.4.0':
@@ -800,6 +821,10 @@ packages:
 
   '@objectstack/platform-objects@9.4.0':
     resolution: {integrity: sha512-GENDIJif4eOUupFLf74E7r+0Y+8fGEZGJyQxKpnftqhybbrG8Y8JZFUGiOokiYYxyrbGlheJP/KEhqj52WIPAw==}
+    engines: {node: '>=18.0.0'}
+
+  '@objectstack/platform-objects@9.5.0':
+    resolution: {integrity: sha512-oOVkJrHXOJnWskV/85ObAZrEH0zVg2wfdNBZaOgTNHx1A5ol/vBsAi1Obo0CrRHrjsTmtS4UjQZBda/ntF6FHg==}
     engines: {node: '>=18.0.0'}
 
   '@objectstack/plugin-approvals@9.4.0':
@@ -938,6 +963,15 @@ packages:
       ai:
         optional: true
 
+  '@objectstack/spec@9.5.0':
+    resolution: {integrity: sha512-XBkIme3aCOJRoXkd6a9mMjAbBPB3NXgwNALjqrEPqp9l7GeMZP63bflW33EPNalgb04iDTxrOzCFAdecbZyQ3g==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      ai: ^6.0.0
+    peerDependenciesMeta:
+      ai:
+        optional: true
+
   '@objectstack/studio@9.4.0':
     resolution: {integrity: sha512-tozdIiqtK89Teui5A2glfJW8tLh8+VmpbPMImzos3vggtDdI2xCzu52e3BqS3uEASNXP+dG8N7xLBUOMjRGrNA==}
     engines: {node: '>=18.0.0'}
@@ -955,6 +989,10 @@ packages:
 
   '@objectstack/types@9.4.0':
     resolution: {integrity: sha512-FwhXe/p4oYfE7I+3xxpqCn47akTgzpnxH6UDYQCV0zWYPfoDR6sY3EEMIsswLnyJZpYynhw5qzKIwYebjDe+VA==}
+    engines: {node: '>=18.0.0'}
+
+  '@objectstack/types@9.5.0':
+    resolution: {integrity: sha512-rWZHR8sj7Ifk5Ey40OTHJOjcbwOPtuIE375i/1qbnQwDJ9pnKros6xthuUNGli31LClepSqT4Noau2Cw11ZhrA==}
     engines: {node: '>=18.0.0'}
 
   '@oclif/core@4.11.4':
@@ -4260,6 +4298,13 @@ snapshots:
     transitivePeerDependencies:
       - ai
 
+  '@objectstack/core@9.5.0(ai@6.0.201(zod@4.4.3))':
+    dependencies:
+      '@objectstack/spec': 9.5.0(ai@6.0.201(zod@4.4.3))
+      zod: 4.4.3
+    transitivePeerDependencies:
+      - ai
+
   '@objectstack/driver-memory@9.4.0(ai@6.0.201(zod@4.4.3))':
     dependencies:
       '@objectstack/core': 9.4.0(ai@6.0.201(zod@4.4.3))
@@ -4347,9 +4392,26 @@ snapshots:
     transitivePeerDependencies:
       - ai
 
+  '@objectstack/metadata-core@9.5.0(ai@6.0.201(zod@4.4.3))(vitest@4.1.8(@opentelemetry/api@1.9.1)(@types/node@25.9.1)(esbuild@0.28.0)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0))':
+    dependencies:
+      '@objectstack/spec': 9.5.0(ai@6.0.201(zod@4.4.3))
+      zod: 4.4.3
+    optionalDependencies:
+      vitest: 4.1.8(@opentelemetry/api@1.9.1)(@types/node@25.9.1)(esbuild@0.28.0)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0)
+    transitivePeerDependencies:
+      - ai
+
   '@objectstack/metadata-fs@9.4.0(ai@6.0.201(zod@4.4.3))(vitest@4.1.8(@opentelemetry/api@1.9.1)(@types/node@25.9.1)(esbuild@0.28.0)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0))':
     dependencies:
       '@objectstack/metadata-core': 9.4.0(ai@6.0.201(zod@4.4.3))(vitest@4.1.8(@opentelemetry/api@1.9.1)(@types/node@25.9.1)(esbuild@0.28.0)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0))
+      chokidar: 5.0.0
+    transitivePeerDependencies:
+      - ai
+      - vitest
+
+  '@objectstack/metadata-fs@9.5.0(ai@6.0.201(zod@4.4.3))(vitest@4.1.8(@opentelemetry/api@1.9.1)(@types/node@25.9.1)(esbuild@0.28.0)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0))':
+    dependencies:
+      '@objectstack/metadata-core': 9.5.0(ai@6.0.201(zod@4.4.3))(vitest@4.1.8(@opentelemetry/api@1.9.1)(@types/node@25.9.1)(esbuild@0.28.0)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0))
       chokidar: 5.0.0
     transitivePeerDependencies:
       - ai
@@ -4363,6 +4425,22 @@ snapshots:
       '@objectstack/platform-objects': 9.4.0(ai@6.0.201(zod@4.4.3))(vitest@4.1.8(@opentelemetry/api@1.9.1)(@types/node@25.9.1)(esbuild@0.28.0)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0))
       '@objectstack/spec': 9.4.0(ai@6.0.201(zod@4.4.3))
       '@objectstack/types': 9.4.0(ai@6.0.201(zod@4.4.3))
+      chokidar: 5.0.0
+      glob: 13.0.6
+      js-yaml: 4.2.0
+      zod: 4.4.3
+    transitivePeerDependencies:
+      - ai
+      - vitest
+
+  '@objectstack/metadata@9.5.0(ai@6.0.201(zod@4.4.3))(vitest@4.1.8(@opentelemetry/api@1.9.1)(@types/node@25.9.1)(esbuild@0.28.0)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0))':
+    dependencies:
+      '@objectstack/core': 9.5.0(ai@6.0.201(zod@4.4.3))
+      '@objectstack/metadata-core': 9.5.0(ai@6.0.201(zod@4.4.3))(vitest@4.1.8(@opentelemetry/api@1.9.1)(@types/node@25.9.1)(esbuild@0.28.0)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0))
+      '@objectstack/metadata-fs': 9.5.0(ai@6.0.201(zod@4.4.3))(vitest@4.1.8(@opentelemetry/api@1.9.1)(@types/node@25.9.1)(esbuild@0.28.0)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0))
+      '@objectstack/platform-objects': 9.5.0(ai@6.0.201(zod@4.4.3))(vitest@4.1.8(@opentelemetry/api@1.9.1)(@types/node@25.9.1)(esbuild@0.28.0)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0))
+      '@objectstack/spec': 9.5.0(ai@6.0.201(zod@4.4.3))
+      '@objectstack/types': 9.5.0(ai@6.0.201(zod@4.4.3))
       chokidar: 5.0.0
       glob: 13.0.6
       js-yaml: 4.2.0
@@ -4394,6 +4472,14 @@ snapshots:
     dependencies:
       '@objectstack/metadata-core': 9.4.0(ai@6.0.201(zod@4.4.3))(vitest@4.1.8(@opentelemetry/api@1.9.1)(@types/node@25.9.1)(esbuild@0.28.0)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0))
       '@objectstack/spec': 9.4.0(ai@6.0.201(zod@4.4.3))
+    transitivePeerDependencies:
+      - ai
+      - vitest
+
+  '@objectstack/platform-objects@9.5.0(ai@6.0.201(zod@4.4.3))(vitest@4.1.8(@opentelemetry/api@1.9.1)(@types/node@25.9.1)(esbuild@0.28.0)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0))':
+    dependencies:
+      '@objectstack/metadata-core': 9.5.0(ai@6.0.201(zod@4.4.3))(vitest@4.1.8(@opentelemetry/api@1.9.1)(@types/node@25.9.1)(esbuild@0.28.0)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0))
+      '@objectstack/spec': 9.5.0(ai@6.0.201(zod@4.4.3))
     transitivePeerDependencies:
       - ai
       - vitest
@@ -4737,6 +4823,12 @@ snapshots:
     optionalDependencies:
       ai: 6.0.201(zod@4.4.3)
 
+  '@objectstack/spec@9.5.0(ai@6.0.201(zod@4.4.3))':
+    dependencies:
+      zod: 4.4.3
+    optionalDependencies:
+      ai: 6.0.201(zod@4.4.3)
+
   '@objectstack/studio@9.4.0(ai@6.0.201(zod@4.4.3))(vitest@4.1.8(@opentelemetry/api@1.9.1)(@types/node@25.9.1)(esbuild@0.28.0)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0))':
     dependencies:
       '@objectstack/platform-objects': 9.4.0(ai@6.0.201(zod@4.4.3))(vitest@4.1.8(@opentelemetry/api@1.9.1)(@types/node@25.9.1)(esbuild@0.28.0)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0))
@@ -4769,6 +4861,12 @@ snapshots:
   '@objectstack/types@9.4.0(ai@6.0.201(zod@4.4.3))':
     dependencies:
       '@objectstack/spec': 9.4.0(ai@6.0.201(zod@4.4.3))
+    transitivePeerDependencies:
+      - ai
+
+  '@objectstack/types@9.5.0(ai@6.0.201(zod@4.4.3))':
+    dependencies:
+      '@objectstack/spec': 9.5.0(ai@6.0.201(zod@4.4.3))
     transitivePeerDependencies:
       - ai
 
