@@ -35,7 +35,7 @@
     "@objectstack/objectql": "^9.4.0",
     "@objectstack/runtime": "^9.4.0",
     "@objectstack/service-analytics": "^9.4.0",
-    "@objectstack/service-automation": "^9.4.0",
+    "@objectstack/service-automation": "^9.5.0",
     "@objectstack/spec": "^9.4.0"
   },
   "optionalDependencies": {
