@@ -77,7 +77,12 @@ export const SendEmailAction: Action = {
         object_name: 'crm_contact',
         record_id: recipientId,
         record_label: record.full_name ?? record.name ?? to,
-        metadata: JSON.stringify({ kind: 'email', to, subject, email_id: email?.id ?? null }),
+        // ADR-0052 ActivityPointer: structured pointer to the rich source entity
+        // (the sys_email row) so the timeline renders a "View source →" drill to
+        // the full email — the queryable replacement for stashing the id in metadata.
+        source_object: 'sys_email',
+        source_id: email?.id ?? null,
+        metadata: JSON.stringify({ kind: 'email', to, subject }),
       });
       return { emailId: email?.id, activityId: activity?.id };
     `,
