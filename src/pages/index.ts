@@ -13,6 +13,7 @@ export {
   CloseCasePage,
   CreateCampaignPage,
   LogCallPage,
+  LogMeetingPage,
   MassUpdateStagePage,
   SendEmailPage,
 } from './action_modals.page';

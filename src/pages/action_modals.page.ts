@@ -101,6 +101,17 @@ export const LogCallPage = modalPage('log_call', {
     'objections, next steps or commitments in **Notes**.',
 });
 
+export const LogMeetingPage = modalPage('log_meeting', {
+  label: 'Log a Meeting',
+  icon: 'calendar',
+  heading: 'Log a meeting against this record',
+  body:
+    'Captures a meeting as a `sys_activity` entry of type **completed**. ' +
+    'Visible in the record activity timeline alongside calls and emails. ' +
+    'Use **Duration** in whole minutes, list **Attendees**, and record ' +
+    'decisions or next steps in **Notes**.',
+});
+
 export const MassUpdateStagePage = modalPage('mass_update_stage', {
   label: 'Update Stage',
   icon: 'layers',

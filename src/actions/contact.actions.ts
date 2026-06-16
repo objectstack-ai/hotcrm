@@ -67,7 +67,19 @@ export const SendEmailAction: Action = {
         related_id: recipientId,
         sent_by: ctx.user?.id ?? null,
       });
-      return { emailId: email?.id };
+      // Surface the email on the contact's unified activity timeline
+      // (the audit writer only logs generic CRUD; this is the semantic event).
+      const activity = await ctx.api.object('sys_activity').insert({
+        type: 'completed',
+        summary: 'Email: ' + subject,
+        actor_id: ctx.user?.id ?? null,
+        actor_name: ctx.user?.name ?? null,
+        object_name: 'crm_contact',
+        record_id: recipientId,
+        record_label: record.full_name ?? record.name ?? to,
+        metadata: JSON.stringify({ kind: 'email', to, subject, email_id: email?.id ?? null }),
+      });
+      return { emailId: email?.id, activityId: activity?.id };
     `,
     capabilities: ['api.write'],
     timeoutMs: 5000,
