@@ -146,4 +146,100 @@ const opportunityWonHook: Hook = {
   },
 };
 
-export default [opportunityValidationHook, opportunityWonHook];
+/**
+ * Opportunity activity-timeline hook.
+ *
+ * On every stage transition, write a *semantic* `sys_activity` row so the
+ * record's unified timeline reads like a sales narrative ("Stage advanced to
+ * Negotiation", "Deal won — Acme Renewal ($250000)") instead of the generic
+ * "updated crm_opportunity" the audit writer emits. Win/loss is mirrored onto
+ * the linked account's timeline too. Side-effect only: `async` + `onError:'log'`
+ * so a timeline write can never block or fail the underlying update.
+ */
+const opportunityActivityHook: Hook = {
+  name: 'opportunity_activity_timeline',
+  object: 'crm_opportunity',
+  events: ['afterUpdate'],
+  priority: 850,
+  async: true,
+  onError: 'log',
+  description: 'Write semantic activity-timeline rows on stage advance and win/loss.',
+  handler: async (ctx: HookContext) => {
+    const STAGE_LABELS: Record<string, string> = {
+      prospecting: 'Prospecting',
+      qualification: 'Qualification',
+      needs_analysis: 'Needs Analysis',
+      proposal: 'Proposal',
+      negotiation: 'Negotiation',
+      closed_won: 'Closed Won',
+      closed_lost: 'Closed Lost',
+    };
+
+    const { input } = ctx;
+    const previous = ctx.previous;
+    const newStage = typeof input.stage === 'string' ? input.stage : undefined;
+    if (!newStage || newStage === previous?.stage) return;
+
+    const api = ctx.api as HookApi | undefined;
+    if (!api) return;
+
+    const oppId =
+      (typeof input.id === 'string' && input.id) ||
+      (typeof previous?.id === 'string' ? (previous.id as string) : undefined);
+    if (!oppId) return;
+
+    const label =
+      (typeof input.name === 'string' && input.name) ||
+      (typeof previous?.name === 'string' ? (previous.name as string) : oppId);
+    const amount =
+      typeof input.amount === 'number'
+        ? input.amount
+        : typeof previous?.amount === 'number'
+          ? (previous.amount as number)
+          : undefined;
+    const accountId =
+      (typeof input.crm_account === 'string' && input.crm_account) ||
+      (typeof previous?.crm_account === 'string' && previous.crm_account) ||
+      undefined;
+
+    let type = 'updated';
+    let kind = 'stage_change';
+    let summary = `Stage advanced to ${STAGE_LABELS[newStage] ?? newStage} — ${label}`;
+    if (newStage === 'closed_won') {
+      type = 'completed';
+      kind = 'deal_won';
+      summary = `Deal won — ${label}${typeof amount === 'number' ? ` ($${amount})` : ''}`;
+    } else if (newStage === 'closed_lost') {
+      type = 'completed';
+      kind = 'deal_lost';
+      const reason = typeof input.loss_reason === 'string' ? input.loss_reason : undefined;
+      summary = `Deal lost — ${label}${reason ? ` (${reason})` : ''}`;
+    }
+
+    const base = {
+      type,
+      summary,
+      actor_id: ctx.user?.id ?? null,
+      actor_name: ctx.user?.name ?? null,
+      record_label: label,
+      metadata: JSON.stringify({ kind, stage: newStage, amount: amount ?? null }),
+    };
+
+    await api.object('sys_activity').insert({
+      ...base,
+      object_name: 'crm_opportunity',
+      record_id: oppId,
+    });
+
+    // Mirror win/loss onto the account timeline so the account narrative shows it.
+    if ((newStage === 'closed_won' || newStage === 'closed_lost') && accountId) {
+      await api.object('sys_activity').insert({
+        ...base,
+        object_name: 'crm_account',
+        record_id: accountId,
+      });
+    }
+  },
+};
+
+export default [opportunityValidationHook, opportunityWonHook, opportunityActivityHook];

@@ -67,6 +67,77 @@ export const LogCallAction: Action = {
 };
 
 /**
+ * Log a Meeting.
+ *
+ * Modal-typed cross-domain (global) action: companion to `log_call`.
+ * Collects subject / duration / attendees / notes then writes a semantic
+ * `sys_activity` row so the meeting lands on the record's unified timeline.
+ */
+export const LogMeetingAction: Action = {
+  name: 'log_meeting',
+  label: 'Log a Meeting',
+  icon: 'calendar',
+  type: 'modal',
+  target: 'log_meeting',
+  body: {
+    language: 'js',
+    source: `
+      const recordId = ctx.recordId ?? ctx.record?.id ?? null;
+      const objectName = ctx.objectName ?? input.objectName ?? null;
+      const subject = input.subject ? String(input.subject) : 'Untitled Meeting';
+      const duration = input.duration ? Number(input.duration) : 0;
+      const attendees = input.attendees ? String(input.attendees) : '';
+      const notes = input.notes ? String(input.notes) : '';
+      const summary = duration
+        ? subject + ' (' + duration + ' min)'
+        : subject;
+      const activity = await ctx.api.object('sys_activity').insert({
+        type: 'completed',
+        summary: 'Meeting: ' + summary,
+        actor_id: ctx.user?.id ?? null,
+        actor_name: ctx.user?.name ?? null,
+        object_name: objectName,
+        record_id: recordId,
+        record_label: ctx.record?.name ?? null,
+        metadata: JSON.stringify({ kind: 'meeting', duration_minutes: duration, attendees, notes }),
+      });
+      return { activityId: activity?.id };
+    `,
+    capabilities: ['api.write'],
+    timeoutMs: 5000,
+  },
+  locations: ['record_header', 'list_item', 'record_related'],
+  params: [
+    {
+      name: 'subject',
+      label: 'Meeting Subject',
+      type: 'text',
+      required: true,
+    },
+    {
+      name: 'duration',
+      label: 'Duration (minutes)',
+      type: 'number',
+      required: false,
+    },
+    {
+      name: 'attendees',
+      label: 'Attendees',
+      type: 'text',
+      required: false,
+    },
+    {
+      name: 'notes',
+      label: 'Meeting Notes',
+      type: 'textarea',
+      required: false,
+    }
+  ],
+  successMessage: 'Meeting logged successfully!',
+  refreshAfter: true,
+};
+
+/**
  * Export to CSV.
  *
  * Script-typed cross-domain (global) action: dumps the rows of the
