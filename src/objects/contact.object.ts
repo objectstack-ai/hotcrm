@@ -62,7 +62,6 @@ export const Contact = ObjectSchema.create({
     crm_account: Field.masterDetail('crm_account', {
       label: 'Account',
       required: true,
-      writeRequiresMasterRead: true,
       deleteBehavior: 'cascade',  // Delete contacts when account is deleted
       group: 'account_info',
     }),

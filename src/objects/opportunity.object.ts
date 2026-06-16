@@ -70,6 +70,9 @@ export const Opportunity = ObjectSchema.create({
       label: 'Stage',
       required: true,
       group: 'sales_process',
+      // ADR-0052 §5b.1 — the platform auto-renders each stage change on the
+      // activity timeline as "Stage: Proposal → Negotiation" (no hook code).
+      trackHistory: true,
       options: [
         { label: 'Prospecting', value: 'prospecting', color: '#808080', default: true },
         { label: 'Qualification', value: 'qualification', color: '#FFA500' },
@@ -257,7 +260,16 @@ export const Opportunity = ObjectSchema.create({
     trash: true,
     mru: true,             // Track Most Recently Used
   },
-  
+
+  // ADR-0052 §5b.2 — declarative milestone activity. When `stage` enters these
+  // values the platform emits a semantic timeline entry (no hook code). Combined
+  // with the field-level `trackHistory` above (stage-change rows), this fully
+  // replaces the former hand-coded `opportunityActivityHook`.
+  activityMilestones: [
+    { field: 'stage', value: 'closed_won', summary: 'Deal won — {name}', type: 'completed' },
+    { field: 'stage', value: 'closed_lost', summary: 'Deal lost — {name}', type: 'completed' },
+  ],
+
   // Removed: list_views and form_views belong in UI configuration, not object definition
   
   // Lifecycle transitions are enforced via a `state_machine` validation rule

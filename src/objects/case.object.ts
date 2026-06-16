@@ -56,6 +56,10 @@ export const Case = ObjectSchema.create({
     status: Field.select({
       label: 'Status',
       required: true,
+      // ADR-0052 §5b.1 — platform auto-renders status changes on the timeline
+      // ("Status: New → Escalated"). Delivers the case timeline declaratively
+      // (the hand-coded version was deferred in #396 due to a hook-crash bug).
+      trackHistory: true,
       options: [
         { label: 'New', value: 'new', color: '#808080', default: true },
         { label: 'In Progress', value: 'in_progress', color: '#FFA500' },
@@ -211,7 +215,16 @@ export const Case = ObjectSchema.create({
     trash: true,
     mru: true,              // Track Most Recently Used
   },
-  
+
+  // ADR-0052 §5b.2 — declarative milestone activity for the service narrative.
+  // The caseSideEffects hook still owns its real side-effects (escalation task,
+  // closed-date stamping); these are timeline entries only, emitted by the platform.
+  activityMilestones: [
+    { field: 'status', value: 'escalated', summary: 'Case escalated — {subject}', type: 'updated' },
+    { field: 'status', value: 'resolved', summary: 'Case resolved — {subject}', type: 'completed' },
+    { field: 'status', value: 'closed', summary: 'Case closed — {subject}', type: 'completed' },
+  ],
+
   titleFormat: '{case_number} - {subject}',
   compactLayout: ['case_number', 'subject', 'crm_account', 'status', 'priority'],
   

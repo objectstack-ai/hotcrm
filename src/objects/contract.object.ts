@@ -165,7 +165,6 @@ export const Contract = ObjectSchema.create({
     // Billing Address
     billing_address: Field.address({
       label: 'Billing Address',
-      addressFormat: 'international',
     }),
   },
   
@@ -200,13 +199,10 @@ export const Contract = ObjectSchema.create({
       message: 'End Date must be after Start Date',
       condition: P`record.end_date <= record.start_date`,
     },
-    {
-      name: 'valid_contract_term',
-      type: 'script',
-      severity: 'warning',
-      message: 'Contract Term should match the date range (months between start and end)',
-      condition: P`monthsBetween(record.start_date, record.end_date) != record.contract_term_months`,
-    },
+    // NOTE: the `valid_contract_term` warning (months-between term check) was
+    // dropped in the 9.8.0 upgrade — its CEL predicate used `monthsBetween()`,
+    // which 9.8.0's aligned CEL stdlib (ADR-0032) no longer provides. It was a
+    // non-blocking warning; the hard end-date>start-date rule above remains.
   ],
   
   // Workflow Rules
