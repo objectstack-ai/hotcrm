@@ -21,7 +21,7 @@ export const GuestPortalProfile = {
     'Anonymous visitors submitting public Web-to-Lead / Web-to-Case forms. ' +
     'INSERT-only on lead and case; no read/edit/delete on any object.',
   objects: {
-    lead: {
+    crm_lead: {
       allowCreate: true,
       allowRead: false,
       allowEdit: false,
@@ -29,7 +29,7 @@ export const GuestPortalProfile = {
       viewAllRecords: false,
       modifyAllRecords: false,
     },
-    case: {
+    crm_case: {
       allowCreate: true,
       allowRead: false,
       allowEdit: false,
