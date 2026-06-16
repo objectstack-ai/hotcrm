@@ -146,12 +146,10 @@ export const Quote = ObjectSchema.create({
     // Billing & Shipping Address
     billing_address: Field.address({
       label: 'Billing Address',
-      addressFormat: 'international',
     }),
-    
+
     shipping_address: Field.address({
       label: 'Shipping Address',
-      addressFormat: 'international',
     }),
     
     // Notes

@@ -132,7 +132,6 @@ export const Lead = ObjectSchema.create({
     rating: Field.rating(5, {
       label: 'Lead Score',
       description: 'Lead quality score (1-5 stars)',
-      allowHalf: true,
       group: 'qualification',
     }),
 
@@ -196,7 +195,6 @@ export const Lead = ObjectSchema.create({
     // Address (using new address field type)
     address: Field.address({
       label: 'Address',
-      addressFormat: 'international',
       group: 'address',
     }),
 

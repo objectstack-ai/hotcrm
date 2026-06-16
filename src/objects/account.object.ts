@@ -99,15 +99,12 @@ export const Account = ObjectSchema.create({
     // Structured Address field (new field type)
     billing_address: Field.address({
       label: 'Billing Address',
-      addressFormat: 'international',
       group: 'contact_info',
     }),
 
     // Office Location (new field type)
     office_location: Field.location({
       label: 'Office Location',
-      displayMap: true,
-      allowGeocoding: true,
       group: 'contact_info',
     }),
 
@@ -133,8 +130,6 @@ export const Account = ObjectSchema.create({
     // Brand color (new field type)
     brand_color: Field.color({
       label: 'Brand Color',
-      colorFormat: 'hex',
-      presetColors: ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF'],
       group: 'branding',
     }),
 
