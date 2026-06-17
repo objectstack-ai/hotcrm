@@ -613,6 +613,9 @@ const cases = defineSeed(Case, {
       is_closed: true,
       is_sla_violated: false,
       is_escalated: false,
+      // `resolution` is REQUIRED when status is 'closed' (object validation
+      // `resolution_required_for_closed`) — without it the seed row is rejected.
+      resolution: 'Raised the production rate-limit tier and added client-side backoff; usage now within limits.',
       resolution_time_hours: 2.0,
       case_number: 'CASE-00004',
       created_date: cel`daysAgo(7)`,
@@ -684,6 +687,8 @@ const cases = defineSeed(Case, {
       is_closed: true,
       is_sla_violated: false,
       is_escalated: false,
+      // Required for closed cases (resolution_required_for_closed).
+      resolution: 'Delivered CSV bulk-import in the 9.4 release; shared the docs link with the customer.',
       resolution_time_hours: 8.0,
       case_number: 'CASE-00008',
       created_date: cel`daysAgo(10)`,
@@ -717,6 +722,11 @@ const cases = defineSeed(Case, {
           is_sla_violated: priority === 'critical' && i % 3 === 0,
           is_escalated: status === 'escalated',
           ...(closed ? { resolution_time_hours: 1 + (i * 7) % 48 } : {}),
+          // Object validations require these when closed/escalated — without
+          // them the generated rows are rejected (resolution_required_for_closed
+          // / escalation_reason_required).
+          ...(status === 'closed' ? { resolution: 'Resolved per standard runbook; root cause documented and customer confirmed.' } : {}),
+          ...(status === 'escalated' ? { escalation_reason: 'Escalated to tier-2 engineering for SLA-risk review.' } : {}),
           case_number: `CASE-${String(i + 9).padStart(5, '0')}`,
           created_date: celDaysAgo(ageDays),
           ...(closed ? { closed_date: celDaysAgo(Math.max(0, ageDays - 1)) } : {}),

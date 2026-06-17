@@ -155,7 +155,16 @@ export const Task = ObjectSchema.create({
       defaultValue: false,
       readonly: true,
     }),
-    
+
+    // Set by the `task_due_reminder` schedule flow once a reminder has fired,
+    // so the hourly sweep never re-alerts the same task. Reset to false if you
+    // push `reminder_date` into the future.
+    reminder_sent: Field.boolean({
+      label: 'Reminder Sent',
+      defaultValue: false,
+      readonly: true,
+    }),
+
     // Progress
     progress_percent: Field.percent({
       label: 'Progress (%)',

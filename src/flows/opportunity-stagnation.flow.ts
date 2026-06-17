@@ -42,30 +42,40 @@ export const OpportunityStagnationFlow: Flow = {
     },
     {
       id: 'loop_opps', type: 'loop', label: 'For Each Stalled Deal',
-      config: { collection: '{oppList}', iteratorVariable: 'currentOpp' },
-    },
-    {
-      id: 'notify_owner', type: 'notify', label: 'Nudge Owner & Manager',
       config: {
-        to: ['{currentOpp.owner}', '{currentOpp.owner.manager}'],
-        channels: ['inbox', 'email'],
-        topic: 'deal_stalled',
-        title: 'Stalled deal: {currentOpp.name}',
-        body: 'Opportunity {currentOpp.name} has sat in {currentOpp.stage} for {currentOpp.days_in_stage} days. Time to advance or re-qualify it.',
-        actionUrl: '/crm_opportunity/{currentOpp.id}',
-      },
-    },
-    {
-      id: 'create_followup_task', type: 'create_record', label: 'Create Follow-up Task',
-      config: {
-        objectName: 'crm_task',
-        fields: {
-          subject: 'Advance stalled deal: {currentOpp.name}',
-          type: 'follow_up', priority: 'high', status: 'not_started',
-          due_date: '{TODAY() + 2}',
-          owner: '{currentOpp.owner}',
-          related_to_type: 'crm_opportunity',
-          related_to_opportunity: '{currentOpp.id}',
+        collection: '{oppList}',
+        iteratorVariable: 'currentOpp',
+        body: {
+          nodes: [
+            {
+              id: 'notify_owner', type: 'notify', label: 'Nudge Owner & Manager',
+              config: {
+                to: ['{currentOpp.owner}', '{currentOpp.owner.manager}'],
+                channels: ['inbox', 'email'],
+                topic: 'deal_stalled',
+                title: 'Stalled deal: {currentOpp.name}',
+                body: 'Opportunity {currentOpp.name} has sat in {currentOpp.stage} for {currentOpp.days_in_stage} days. Time to advance or re-qualify it.',
+                actionUrl: '/crm_opportunity/{currentOpp.id}',
+              },
+            },
+            {
+              id: 'create_followup_task', type: 'create_record', label: 'Create Follow-up Task',
+              config: {
+                objectName: 'crm_task',
+                fields: {
+                  subject: 'Advance stalled deal: {currentOpp.name}',
+                  type: 'follow_up', priority: 'high', status: 'not_started',
+                  due_date: '{TODAY() + 2}',
+                  owner: '{currentOpp.owner}',
+                  related_to_type: 'crm_opportunity',
+                  related_to_opportunity: '{currentOpp.id}',
+                },
+              },
+            },
+          ],
+          edges: [
+            { id: 'b1', source: 'notify_owner', target: 'create_followup_task', type: 'default' },
+          ],
         },
       },
     },
@@ -75,8 +85,6 @@ export const OpportunityStagnationFlow: Flow = {
   edges: [
     { id: 'e1', source: 'start', target: 'query_stalled', type: 'default' },
     { id: 'e2', source: 'query_stalled', target: 'loop_opps', type: 'default' },
-    { id: 'e3', source: 'loop_opps', target: 'notify_owner', type: 'default' },
-    { id: 'e4', source: 'notify_owner', target: 'create_followup_task', type: 'default' },
-    { id: 'e5', source: 'create_followup_task', target: 'end', type: 'default' },
+    { id: 'e3', source: 'loop_opps', target: 'end', type: 'default' },
   ],
 };

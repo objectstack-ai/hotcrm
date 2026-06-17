@@ -30,17 +30,27 @@ export const CampaignCompletionFlow: Flow = {
         outputVariable: 'campaignList',
       },
     },
-    { id: 'loop_campaigns', type: 'loop', label: 'For Each Campaign', config: { collection: '{campaignList}', iteratorVariable: 'currentCampaign' } },
     {
-      id: 'mark_completed', type: 'update_record', label: 'Mark Completed',
-      config: { objectName: 'crm_campaign', filter: { id: '{currentCampaign.id}' }, fields: { status: 'completed' } },
+      id: 'loop_campaigns', type: 'loop', label: 'For Each Campaign',
+      config: {
+        collection: '{campaignList}',
+        iteratorVariable: 'currentCampaign',
+        body: {
+          nodes: [
+            {
+              id: 'mark_completed', type: 'update_record', label: 'Mark Completed',
+              config: { objectName: 'crm_campaign', filter: { id: '{currentCampaign.id}' }, fields: { status: 'completed' } },
+            },
+          ],
+          edges: [],
+        },
+      },
     },
     { id: 'end', type: 'end', label: 'End' },
   ],
   edges: [
     { id: 'e1', source: 'start', target: 'query_campaigns', type: 'default' },
     { id: 'e2', source: 'query_campaigns', target: 'loop_campaigns', type: 'default' },
-    { id: 'e3', source: 'loop_campaigns', target: 'mark_completed', type: 'default' },
-    { id: 'e4', source: 'mark_completed', target: 'end', type: 'default' },
+    { id: 'e3', source: 'loop_campaigns', target: 'end', type: 'default' },
   ],
 };
