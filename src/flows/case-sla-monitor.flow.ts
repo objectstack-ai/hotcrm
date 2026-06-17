@@ -38,26 +38,36 @@ export const CaseSlaMonitorFlow: Flow = {
     },
     {
       id: 'loop_cases', type: 'loop', label: 'For Each Breached Case',
-      config: { collection: '{caseList}', iteratorVariable: 'currentCase' },
-    },
-    {
-      id: 'flag_breach', type: 'update_record', label: 'Flag SLA Breach',
       config: {
-        objectName: 'crm_case',
-        filter: { id: '{currentCase.id}' },
-        fields: { is_sla_violated: true, is_escalated: true, status: 'escalated', escalated_date: '{NOW()}' },
-      },
-    },
-    {
-      id: 'notify_team', type: 'notify', label: 'Alert Owner & Manager',
-      config: {
-        to: ['{currentCase.owner}', '{currentCase.owner.manager}'],
-        channels: ['inbox', 'email'],
-        severity: 'critical',
-        topic: 'case_sla_breach',
-        title: 'SLA breached: case {currentCase.case_number}',
-        body: 'Case {currentCase.case_number} ({currentCase.priority}) passed its SLA due date and has been auto-escalated.',
-        actionUrl: '/crm_case/{currentCase.id}',
+        collection: '{caseList}',
+        iteratorVariable: 'currentCase',
+        body: {
+          nodes: [
+            {
+              id: 'flag_breach', type: 'update_record', label: 'Flag SLA Breach',
+              config: {
+                objectName: 'crm_case',
+                filter: { id: '{currentCase.id}' },
+                fields: { is_sla_violated: true, is_escalated: true, status: 'escalated', escalated_date: '{NOW()}' },
+              },
+            },
+            {
+              id: 'notify_team', type: 'notify', label: 'Alert Owner & Manager',
+              config: {
+                to: ['{currentCase.owner}', '{currentCase.owner.manager}'],
+                channels: ['inbox', 'email'],
+                severity: 'critical',
+                topic: 'case_sla_breach',
+                title: 'SLA breached: case {currentCase.case_number}',
+                body: 'Case {currentCase.case_number} ({currentCase.priority}) passed its SLA due date and has been auto-escalated.',
+                actionUrl: '/crm_case/{currentCase.id}',
+              },
+            },
+          ],
+          edges: [
+            { id: 'b1', source: 'flag_breach', target: 'notify_team', type: 'default' },
+          ],
+        },
       },
     },
     { id: 'end', type: 'end', label: 'End' },
@@ -66,8 +76,6 @@ export const CaseSlaMonitorFlow: Flow = {
   edges: [
     { id: 'e1', source: 'start', target: 'query_breached', type: 'default' },
     { id: 'e2', source: 'query_breached', target: 'loop_cases', type: 'default' },
-    { id: 'e3', source: 'loop_cases', target: 'flag_breach', type: 'default' },
-    { id: 'e4', source: 'flag_breach', target: 'notify_team', type: 'default' },
-    { id: 'e5', source: 'notify_team', target: 'end', type: 'default' },
+    { id: 'e3', source: 'loop_cases', target: 'end', type: 'default' },
   ],
 };

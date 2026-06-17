@@ -29,20 +29,33 @@ export const ContractExpirationFlow: Flow = {
         outputVariable: 'contractList',
       },
     },
-    { id: 'loop_contracts', type: 'loop', label: 'For Each Contract', config: { collection: '{contractList}', iteratorVariable: 'currentContract' } },
     {
-      id: 'mark_expired', type: 'update_record', label: 'Mark Expired',
-      config: { objectName: 'crm_contract', filter: { id: '{currentContract.id}' }, fields: { status: 'expired' } },
-    },
-    {
-      id: 'notify_owner', type: 'notify', label: 'Notify Owner',
+      id: 'loop_contracts', type: 'loop', label: 'For Each Contract',
       config: {
-        to: ['{currentContract.owner}'],
-        channels: ['inbox', 'email'],
-        topic: 'contract_expired',
-        title: 'Contract expired: {currentContract.contract_number}',
-        body: 'Contract {currentContract.contract_number} reached its end date and has been marked expired.',
-        actionUrl: '/crm_contract/{currentContract.id}',
+        collection: '{contractList}',
+        iteratorVariable: 'currentContract',
+        body: {
+          nodes: [
+            {
+              id: 'mark_expired', type: 'update_record', label: 'Mark Expired',
+              config: { objectName: 'crm_contract', filter: { id: '{currentContract.id}' }, fields: { status: 'expired' } },
+            },
+            {
+              id: 'notify_owner', type: 'notify', label: 'Notify Owner',
+              config: {
+                to: ['{currentContract.owner}'],
+                channels: ['inbox', 'email'],
+                topic: 'contract_expired',
+                title: 'Contract expired: {currentContract.contract_number}',
+                body: 'Contract {currentContract.contract_number} reached its end date and has been marked expired.',
+                actionUrl: '/crm_contract/{currentContract.id}',
+              },
+            },
+          ],
+          edges: [
+            { id: 'b1', source: 'mark_expired', target: 'notify_owner', type: 'default' },
+          ],
+        },
       },
     },
     { id: 'end', type: 'end', label: 'End' },
@@ -50,8 +63,6 @@ export const ContractExpirationFlow: Flow = {
   edges: [
     { id: 'e1', source: 'start', target: 'query_contracts', type: 'default' },
     { id: 'e2', source: 'query_contracts', target: 'loop_contracts', type: 'default' },
-    { id: 'e3', source: 'loop_contracts', target: 'mark_expired', type: 'default' },
-    { id: 'e4', source: 'mark_expired', target: 'notify_owner', type: 'default' },
-    { id: 'e5', source: 'notify_owner', target: 'end', type: 'default' },
+    { id: 'e3', source: 'loop_contracts', target: 'end', type: 'default' },
   ],
 };

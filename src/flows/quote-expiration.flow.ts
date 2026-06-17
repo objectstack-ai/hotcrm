@@ -28,17 +28,27 @@ export const QuoteExpirationFlow: Flow = {
         outputVariable: 'quoteList',
       },
     },
-    { id: 'loop_quotes', type: 'loop', label: 'For Each Quote', config: { collection: '{quoteList}', iteratorVariable: 'currentQuote' } },
     {
-      id: 'mark_expired', type: 'update_record', label: 'Mark Expired',
-      config: { objectName: 'crm_quote', filter: { id: '{currentQuote.id}' }, fields: { status: 'expired' } },
+      id: 'loop_quotes', type: 'loop', label: 'For Each Quote',
+      config: {
+        collection: '{quoteList}',
+        iteratorVariable: 'currentQuote',
+        body: {
+          nodes: [
+            {
+              id: 'mark_expired', type: 'update_record', label: 'Mark Expired',
+              config: { objectName: 'crm_quote', filter: { id: '{currentQuote.id}' }, fields: { status: 'expired' } },
+            },
+          ],
+          edges: [],
+        },
+      },
     },
     { id: 'end', type: 'end', label: 'End' },
   ],
   edges: [
     { id: 'e1', source: 'start', target: 'query_quotes', type: 'default' },
     { id: 'e2', source: 'query_quotes', target: 'loop_quotes', type: 'default' },
-    { id: 'e3', source: 'loop_quotes', target: 'mark_expired', type: 'default' },
-    { id: 'e4', source: 'mark_expired', target: 'end', type: 'default' },
+    { id: 'e3', source: 'loop_quotes', target: 'end', type: 'default' },
   ],
 };

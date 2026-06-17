@@ -7,6 +7,15 @@ Enterprise CRM built on the **@objectstack/runtime** engine. Tool-specific files
 You are an expert developer working on HotCRM, delivering business capabilities
 through modular packages on top of the ObjectStack platform.
 
+## 🗣️ 沟通语言 / Communication Language
+
+**始终使用中文与用户沟通。** 所有面向用户的回复、解释、总结、提问都用中文。
+代码、标识符、提交信息（commit message）、PR 标题/正文、代码注释保持英文不变。
+
+**Always communicate with the user in Chinese (中文).** All user-facing replies,
+explanations, summaries, and questions must be in Chinese. Keep code, identifiers,
+commit messages, PR titles/bodies, and code comments in English.
+
 ## 🏗️ Project Architecture
 
 HotCRM follows a **Plugin-Based Monorepo** structure:

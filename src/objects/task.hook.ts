@@ -21,6 +21,15 @@ const taskValidation: Hook = {
     const { input } = ctx;
     const previous = ctx.previous;
 
+    // Land `reminder_sent` as a real boolean on insert, never NULL. The
+    // task_due_reminder sweep filters `reminder_sent != true`, and SQL's
+    // three-valued logic means NULL rows never match `!= true` — so without
+    // this, freshly-created tasks (column defaulted at the schema layer but
+    // stored NULL) would never be picked up by the reminder sweep.
+    if (!previous && input.reminder_sent == null) {
+      input.reminder_sent = false;
+    }
+
     if (input.status === 'completed' && previous?.status !== 'completed') {
       if (!input.completed_date) input.completed_date = new Date().toISOString();
       if (typeof input.progress_percent !== 'number') input.progress_percent = 100;
@@ -53,6 +62,101 @@ const taskValidation: Hook = {
       throw new Error(
         `Reminder (${reminder}) is after the due date (${due}); reminders should fire before the deadline.`,
       );
+    }
+  },
+};
+
+/** Advance a date by `interval` units of the given recurrence type. */
+function advanceDate(d: Date, type: string, interval: number): Date {
+  const next = new Date(d);
+  if (type === 'daily') next.setDate(next.getDate() + interval);
+  else if (type === 'weekly') next.setDate(next.getDate() + 7 * interval);
+  else if (type === 'monthly') next.setMonth(next.getMonth() + interval);
+  else if (type === 'yearly') next.setFullYear(next.getFullYear() + interval);
+  return next;
+}
+
+/**
+ * Recurring-task generator.
+ *
+ * The schema carries `is_recurring` / `recurrence_type` / `recurrence_interval`
+ * / `recurrence_end_date`, but nothing ever spawned the next occurrence — so a
+ * "recurring" task was recurring in name only. On the completing transition of a
+ * recurring task, this clones it with `due_date` (and `reminder_date`) advanced
+ * by `recurrence_type × interval`, until `recurrence_end_date` is passed.
+ *
+ * Done in a hook (not a flow) because the next due date needs real calendar math
+ * (month/year rollover); the flow runtime's `{NOW()+n}` only does day offsets and
+ * has no `DATEADD`. The spawned task is `not_started`, so it never re-triggers
+ * this completion hook (no recursion).
+ */
+const taskRecurrence: Hook = {
+  name: 'task_recurrence',
+  object: 'crm_task',
+  events: ['afterUpdate'],
+  priority: 700,
+  async: true,
+  onError: 'log',
+  description: 'On completion of a recurring task, spawn the next occurrence (dates advanced by recurrence_type × interval).',
+  handler: async (ctx: HookContext) => {
+    const { input } = ctx;
+    const previous = ctx.previous;
+    const api = ctx.api as HookApi | undefined;
+    if (!api) return;
+
+    // Fire only on the transition INTO completed (not on later edits of an
+    // already-completed task).
+    const nowDone = input.status === 'completed' || input.is_completed === true;
+    const wasDone = previous?.status === 'completed' || previous?.is_completed === true;
+    if (!nowDone || wasDone) return;
+
+    const r: Record<string, any> = { ...(previous ?? {}), ...input };
+    if (r.is_recurring !== true) return;
+
+    const type = typeof r.recurrence_type === 'string' ? r.recurrence_type : undefined;
+    if (!type || !['daily', 'weekly', 'monthly', 'yearly'].includes(type)) return;
+    const interval = Number(r.recurrence_interval) > 0 ? Number(r.recurrence_interval) : 1;
+
+    const baseDue = r.due_date ? new Date(r.due_date) : new Date();
+    if (isNaN(baseDue.getTime())) return;
+    const nextDue = advanceDate(baseDue, type, interval);
+
+    // Stop the series once the next occurrence would fall past the end date.
+    if (r.recurrence_end_date) {
+      const end = new Date(r.recurrence_end_date);
+      if (!isNaN(end.getTime()) && nextDue > end) return;
+    }
+
+    const doc: Record<string, any> = {
+      subject: r.subject,
+      description: r.description ?? null,
+      priority: r.priority,
+      type: r.type ?? null,
+      owner: r.owner ?? null,
+      status: 'not_started',
+      is_completed: false,
+      reminder_sent: false,
+      due_date: nextDue.toISOString().slice(0, 10),
+      is_recurring: true,
+      recurrence_type: type,
+      recurrence_interval: interval,
+      recurrence_end_date: r.recurrence_end_date ?? null,
+      related_to_type: r.related_to_type ?? null,
+      related_to_account: r.related_to_account ?? null,
+      related_to_contact: r.related_to_contact ?? null,
+      related_to_opportunity: r.related_to_opportunity ?? null,
+      related_to_lead: r.related_to_lead ?? null,
+      related_to_case: r.related_to_case ?? null,
+    };
+    if (r.reminder_date) {
+      const baseRem = new Date(r.reminder_date);
+      if (!isNaN(baseRem.getTime())) doc.reminder_date = advanceDate(baseRem, type, interval).toISOString();
+    }
+
+    try {
+      await api.object('crm_task').insert(doc);
+    } catch (err) {
+      console.warn('[task_recurrence] failed to spawn next occurrence:', err);
     }
   },
 };
@@ -103,4 +207,4 @@ const taskBubble: Hook = {
   },
 };
 
-export default [taskValidation, taskBubble];
+export default [taskValidation, taskRecurrence, taskBubble];

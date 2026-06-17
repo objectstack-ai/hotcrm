@@ -28,16 +28,25 @@ export const CampaignEnrollmentFlow: Flow = {
     },
     {
       id: 'loop_leads', type: 'loop', label: 'Process Each Lead',
-      config: { collection: '{leadList}', iteratorVariable: 'currentLead' },
-    },
-    {
-      id: 'create_campaign_member', type: 'create_record', label: 'Add to Campaign',
       config: {
-        objectName: 'crm_campaign_member',
-        fields: { crm_campaign: '{campaignId}', crm_lead: '{currentLead.id}', status: 'sent', added_date: '{NOW()}' },
+        collection: '{leadList}',
+        iteratorVariable: 'currentLead',
+        body: {
+          nodes: [
+            {
+              id: 'create_campaign_member', type: 'create_record', label: 'Add to Campaign',
+              config: {
+                objectName: 'crm_campaign_member',
+                fields: { crm_campaign: '{campaignId}', crm_lead: '{currentLead.id}', status: 'sent', added_date: '{NOW()}' },
+              },
+            },
+          ],
+          edges: [],
+        },
       },
     },
     {
+      // Runs once after the loop completes; leadList is in outer scope.
       id: 'update_campaign_stats', type: 'update_record', label: 'Update Campaign Stats',
       config: { objectName: 'crm_campaign', filter: { id: '{campaignId}' }, fields: { num_sent: '{leadList.length}' } },
     },
@@ -48,8 +57,7 @@ export const CampaignEnrollmentFlow: Flow = {
     { id: 'e1', source: 'start', target: 'get_campaign', type: 'default' },
     { id: 'e2', source: 'get_campaign', target: 'query_leads', type: 'default' },
     { id: 'e3', source: 'query_leads', target: 'loop_leads', type: 'default' },
-    { id: 'e4', source: 'loop_leads', target: 'create_campaign_member', type: 'default' },
-    { id: 'e5', source: 'create_campaign_member', target: 'update_campaign_stats', type: 'default' },
-    { id: 'e6', source: 'update_campaign_stats', target: 'end', type: 'default' },
+    { id: 'e4', source: 'loop_leads', target: 'update_campaign_stats', type: 'default' },
+    { id: 'e5', source: 'update_campaign_stats', target: 'end', type: 'default' },
   ],
 };

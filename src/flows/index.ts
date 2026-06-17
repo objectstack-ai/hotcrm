@@ -23,6 +23,7 @@ export { ContractExpirationFlow } from './contract-expiration.flow';
 export { ContactWelcomeFlow } from './contact-welcome.flow';
 export { OpportunityWonAlertFlow } from './opportunity-won-alert.flow';
 export { TaskUrgentAlertFlow } from './task-urgent-alert.flow';
+export { TaskDueReminderFlow } from './task-due-reminder.flow';
 
 import { CampaignEnrollmentFlow } from './campaign-enrollment.flow';
 import { CaseEscalationFlow } from './case-escalation.flow';
@@ -40,6 +41,7 @@ import { ContractExpirationFlow } from './contract-expiration.flow';
 import { ContactWelcomeFlow } from './contact-welcome.flow';
 import { OpportunityWonAlertFlow } from './opportunity-won-alert.flow';
 import { TaskUrgentAlertFlow } from './task-urgent-alert.flow';
+import { TaskDueReminderFlow } from './task-due-reminder.flow';
 
 /** All flow definitions as a typed array for defineStack() */
 export const allFlows: Flow[] = [
@@ -62,4 +64,5 @@ export const allFlows: Flow[] = [
   ContactWelcomeFlow,
   OpportunityWonAlertFlow,
   TaskUrgentAlertFlow,
+  TaskDueReminderFlow,
 ];

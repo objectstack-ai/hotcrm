@@ -44,54 +44,69 @@ export const ContractRenewalFlow: Flow = {
     },
     {
       id: 'loop_contracts', type: 'loop', label: 'For Each Contract',
-      config: { collection: '{contractList}', iteratorVariable: 'currentContract' },
-    },
-    {
-      id: 'check_notice_window', type: 'decision', label: 'Within Notice Window?',
-      config: { condition: 'timestamp(currentContract.end_date) <= daysFromNow(int(currentContract.renewal_notice_days))' },
-    },
-    {
-      id: 'create_renewal_task', type: 'create_record', label: 'Create Renewal Task',
       config: {
-        objectName: 'crm_task',
-        fields: {
-          subject: 'Renewal due: contract {currentContract.contract_number}',
-          type: 'follow_up', priority: 'high', status: 'not_started',
-          due_date: '{currentContract.end_date}',
-          owner: '{currentContract.owner}',
-          related_to_type: 'crm_account',
-          related_to_account: '{currentContract.crm_account}',
-        },
-      },
-    },
-    {
-      id: 'notify_owner', type: 'notify', label: 'Notify Owner',
-      config: {
-        to: ['{currentContract.owner}'],
-        channels: ['inbox', 'email'],
-        topic: 'contract_renewal',
-        title: 'Contract renewal due: {currentContract.contract_number}',
-        body: 'Contract {currentContract.contract_number} ends on {currentContract.end_date}. Start the renewal conversation now.',
-        actionUrl: '/crm_contract/{currentContract.id}',
-      },
-    },
-    {
-      id: 'check_auto_renewal', type: 'decision', label: 'Auto-Renewal On?',
-      config: { condition: 'currentContract.auto_renewal == true' },
-    },
-    {
-      id: 'create_renewal_opp', type: 'create_record', label: 'Open Renewal Opportunity',
-      config: {
-        objectName: 'crm_opportunity',
-        fields: {
-          name: 'Renewal — {currentContract.contract_number}',
-          crm_account: '{currentContract.crm_account}',
-          amount: '{currentContract.contract_value}',
-          stage: 'proposal',
-          type: 'existing_renewal',
-          close_date: '{currentContract.end_date}',
-          owner: '{currentContract.owner}',
-          next_step: 'Confirm renewal terms with customer',
+        collection: '{contractList}',
+        iteratorVariable: 'currentContract',
+        body: {
+          nodes: [
+            {
+              id: 'check_notice_window', type: 'decision', label: 'Within Notice Window?',
+              config: { condition: 'timestamp(currentContract.end_date) <= daysFromNow(int(currentContract.renewal_notice_days))' },
+            },
+            {
+              id: 'create_renewal_task', type: 'create_record', label: 'Create Renewal Task',
+              config: {
+                objectName: 'crm_task',
+                fields: {
+                  subject: 'Renewal due: contract {currentContract.contract_number}',
+                  type: 'follow_up', priority: 'high', status: 'not_started',
+                  due_date: '{currentContract.end_date}',
+                  owner: '{currentContract.owner}',
+                  related_to_type: 'crm_account',
+                  related_to_account: '{currentContract.crm_account}',
+                },
+              },
+            },
+            {
+              id: 'notify_owner', type: 'notify', label: 'Notify Owner',
+              config: {
+                to: ['{currentContract.owner}'],
+                channels: ['inbox', 'email'],
+                topic: 'contract_renewal',
+                title: 'Contract renewal due: {currentContract.contract_number}',
+                body: 'Contract {currentContract.contract_number} ends on {currentContract.end_date}. Start the renewal conversation now.',
+                actionUrl: '/crm_contract/{currentContract.id}',
+              },
+            },
+            {
+              id: 'check_auto_renewal', type: 'decision', label: 'Auto-Renewal On?',
+              config: { condition: 'currentContract.auto_renewal == true' },
+            },
+            {
+              id: 'create_renewal_opp', type: 'create_record', label: 'Open Renewal Opportunity',
+              config: {
+                objectName: 'crm_opportunity',
+                fields: {
+                  name: 'Renewal — {currentContract.contract_number}',
+                  crm_account: '{currentContract.crm_account}',
+                  amount: '{currentContract.contract_value}',
+                  stage: 'proposal',
+                  type: 'existing_renewal',
+                  close_date: '{currentContract.end_date}',
+                  owner: '{currentContract.owner}',
+                  next_step: 'Confirm renewal terms with customer',
+                },
+              },
+            },
+          ],
+          edges: [
+            // Only act when inside the per-contract notice window; "Not yet" paths
+            // simply have no edge, so the loop moves to the next item.
+            { id: 'b1', source: 'check_notice_window', target: 'create_renewal_task', type: 'conditional', condition: 'timestamp(currentContract.end_date) <= daysFromNow(int(currentContract.renewal_notice_days))', label: 'In window' },
+            { id: 'b2', source: 'create_renewal_task', target: 'notify_owner', type: 'default' },
+            { id: 'b3', source: 'notify_owner', target: 'check_auto_renewal', type: 'default' },
+            { id: 'b4', source: 'check_auto_renewal', target: 'create_renewal_opp', type: 'conditional', condition: 'currentContract.auto_renewal == true', label: 'Auto-renew' },
+          ],
         },
       },
     },
@@ -101,14 +116,6 @@ export const ContractRenewalFlow: Flow = {
   edges: [
     { id: 'e1', source: 'start', target: 'query_contracts', type: 'default' },
     { id: 'e2', source: 'query_contracts', target: 'loop_contracts', type: 'default' },
-    { id: 'e3', source: 'loop_contracts', target: 'check_notice_window', type: 'default' },
-    // Only act when the contract is inside its own notice window
-    { id: 'e4', source: 'check_notice_window', target: 'create_renewal_task', type: 'conditional', condition: 'timestamp(currentContract.end_date) <= daysFromNow(int(currentContract.renewal_notice_days))', label: 'In window' },
-    { id: 'e5', source: 'check_notice_window', target: 'end', type: 'conditional', condition: 'timestamp(currentContract.end_date) > daysFromNow(int(currentContract.renewal_notice_days))', label: 'Not yet' },
-    { id: 'e6', source: 'create_renewal_task', target: 'notify_owner', type: 'default' },
-    { id: 'e7', source: 'notify_owner', target: 'check_auto_renewal', type: 'default' },
-    { id: 'e8', source: 'check_auto_renewal', target: 'create_renewal_opp', type: 'conditional', condition: 'currentContract.auto_renewal == true', label: 'Auto-renew' },
-    { id: 'e9', source: 'check_auto_renewal', target: 'end', type: 'conditional', condition: 'currentContract.auto_renewal != true', label: 'Manual' },
-    { id: 'e10', source: 'create_renewal_opp', target: 'end', type: 'default' },
+    { id: 'e3', source: 'loop_contracts', target: 'end', type: 'default' },
   ],
 };
