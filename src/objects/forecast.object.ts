@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
-import { F, P } from '@objectstack/spec';
+import { F, P, cel } from '@objectstack/spec';
 
 /**
  * Forecast Object
@@ -38,8 +38,11 @@ export const Forecast = ObjectSchema.create({
 
   fields: {
     owner: Field.lookup('user', {
+      defaultValue: cel`os.user.id`,
       label: 'Owner',
-      required: true,
+      // Optional so seed inserts (which run before any human user exists and
+      // bypass field defaults) succeed; ownership is backfilled to the active
+      // user at runtime, matching every other CRM object's owner field.
       group: 'basic',
     }),
 

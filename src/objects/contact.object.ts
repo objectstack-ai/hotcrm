@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
-import { F } from '@objectstack/spec';
+import { F, cel } from '@objectstack/spec';
 
 export const Contact = ObjectSchema.create({
   name: 'crm_contact',
@@ -95,6 +95,8 @@ export const Contact = ObjectSchema.create({
     }),
 
     owner: Field.lookup('user', {
+
+      defaultValue: cel`os.user.id`,
       label: 'Contact Owner',
       group: 'account_info',
     }),

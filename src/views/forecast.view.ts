@@ -63,7 +63,9 @@ export const ForecastViews = defineView({
       label: 'My Forecast',
       data: { provider: 'object', object: 'crm_forecast' },
       columns: ['period_label', 'snapshot_date', 'quota', 'closed_amount', 'commit_amount', 'pipeline_amount', 'attainment_pct'],
-      filter: [{ field: 'owner', operator: 'equals', value: '{current_user}' }],
+      // `{current_user_id}` is the only user token the view runtime resolves
+      // (`{current_user}` silently never matches).
+      filter: [{ field: 'owner', operator: 'equals', value: '{current_user_id}' }],
       sort: [{ field: 'period_start', order: 'desc' }],
     },
   },

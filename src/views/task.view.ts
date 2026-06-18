@@ -146,11 +146,16 @@ export const TaskViews = defineView({
     overdue_tasks: {
       name: 'overdue_tasks',
       type: 'grid',
-      label: '⏰ Open Tasks Past Due',
+      // Honest label: the view layer cannot resolve `due_date < {TODAY()}`
+      // (only `{current_user_id}` interpolates) and `is_overdue` is a
+      // write-time snapshot that goes stale, so we cannot reliably filter to
+      // *strictly* past-due rows here. Instead this is the open-task backlog
+      // ordered most-overdue-first (oldest due date on top), which is the
+      // actionable queue a manager wants. A truly-overdue gauge belongs to an
+      // hourly flow that stamps `is_overdue` (follow-up).
+      label: '⏰ Open Tasks · Most Overdue First',
       data: { provider: 'object', object: 'crm_task' },
       columns: ['subject', 'priority', 'status', 'due_date', 'owner'],
-      // Cannot filter `due_date < TODAY()` at the view layer; rely on sort
-      // ascending so the most overdue surface first.
       filter: [
         { field: 'is_completed', operator: 'equals', value: false },
       ],

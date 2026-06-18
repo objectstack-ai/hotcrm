@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
-import { F, P } from '@objectstack/spec';
+import { F, P, cel } from '@objectstack/spec';
 
 /**
  * Campaign Object
@@ -173,6 +173,8 @@ export const Campaign = ObjectSchema.create({
     }),
     
     owner: Field.lookup('user', {
+    
+      defaultValue: cel`os.user.id`,
       label: 'Campaign Owner',
     }),
     

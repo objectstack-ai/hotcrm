@@ -142,11 +142,14 @@ export const OpportunityViews = defineView({
       label: '⚠️ Stale Opportunities',
       data: { provider: 'object', object: 'crm_opportunity' },
       columns: ['name', 'crm_account', 'stage', 'amount', 'days_in_stage', 'close_date', 'owner'],
-      // Operator-only filter — `days_in_stage` is only populated for deals
-      // that have moved at least once, so we sort desc to surface the most
-      // stagnant first instead of filtering by a numeric threshold.
+      // Genuinely stale = open AND parked in-stage beyond the threshold the
+      // `opportunity_stagnation` flow acts on (STALE_THRESHOLD_DAYS = 14), so
+      // the view and the automation agree on what "stalled" means. Deals that
+      // never moved have a null `days_in_stage` and are intentionally excluded
+      // (nothing has stagnated yet). Most-stagnant first.
       filter: [
         { field: 'stage', operator: 'not_in', value: ['closed_won', 'closed_lost'] },
+        { field: 'days_in_stage', operator: 'greater_than', value: 14 },
       ],
       sort: [{ field: 'days_in_stage', order: 'desc' }, { field: 'close_date', order: 'asc' }],
     },

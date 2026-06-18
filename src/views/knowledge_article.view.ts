@@ -65,7 +65,8 @@ export const KnowledgeArticleViews = defineView({
       columns: ['article_number', 'title', 'category', 'status', 'updated_at'],
       filter: [
         { field: 'status', operator: 'in',     value: ['draft', 'in_review'] },
-        { field: 'owner',  operator: 'equals', value: '{current_user}' },
+        // `{current_user_id}` is the only user token the view runtime resolves.
+        { field: 'owner',  operator: 'equals', value: '{current_user_id}' },
       ],
       sort: [{ field: 'updated_at', order: 'desc' }],
     },

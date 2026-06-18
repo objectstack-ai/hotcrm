@@ -334,11 +334,13 @@ export const LeadViews = defineView({
       label: '🔥 Hot Leads',
       data: { provider: 'object', object: 'crm_lead' },
       columns: ['first_name', 'last_name', 'company', 'phone', 'email', 'rating', 'next_followup_date', 'owner'],
-      // High-rating, still-actionable leads — sort by next-follow-up so reps
-      // see the most urgent first. (Pure operator-based filters; no date
-      // template strings since the view runtime does not resolve them.)
+      // The HOTTEST actionable subset (rating >= 4.5) — a tighter cut than the
+      // "High Priority" view (rating >= 4) so the two are not duplicates. Hot
+      // Leads is what a rep works first; sort by next-follow-up so the most
+      // time-sensitive surface on top. (Operator-only filters; the view runtime
+      // does not resolve date template strings.)
       filter: [
-        { field: 'rating', operator: 'greater_than_or_equal', value: 4 },
+        { field: 'rating', operator: 'greater_than_or_equal', value: 4.5 },
         { field: 'status', operator: 'in', value: ['new', 'contacted'] },
       ],
       sort: [{ field: 'next_followup_date', order: 'asc' }],
