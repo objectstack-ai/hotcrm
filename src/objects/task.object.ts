@@ -1,4 +1,4 @@
-import { P } from '@objectstack/spec';
+import { P, cel } from '@objectstack/spec';
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
@@ -82,6 +82,7 @@ export const Task = ObjectSchema.create({
     
     // Assignment
     owner: Field.lookup('user', {
+      defaultValue: cel`os.user.id`,
       label: 'Assigned To',
     }),
     

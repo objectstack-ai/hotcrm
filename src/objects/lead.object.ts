@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
-import { F, P } from '@objectstack/spec';
+import { F, P, cel } from '@objectstack/spec';
 
 export const Lead = ObjectSchema.create({
   name: 'crm_lead',
@@ -156,6 +156,7 @@ export const Lead = ObjectSchema.create({
 
     // Assignment
     owner: Field.lookup('user', {
+      defaultValue: cel`os.user.id`,
       label: 'Lead Owner',
       group: 'assignment',
     }),

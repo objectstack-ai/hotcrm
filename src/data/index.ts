@@ -18,6 +18,8 @@ import { Case } from '../objects/case.object';
 import { Campaign } from '../objects/campaign.object';
 import { Contract } from '../objects/contract.object';
 import { Quote } from '../objects/quote.object';
+import { Forecast } from '../objects/forecast.object';
+import { KnowledgeArticle } from '../objects/knowledge_article.object';
 
 /**
  * Build a CEL `daysAgo(N)` expression from a runtime number. Mirrors the
@@ -143,6 +145,7 @@ const contacts = defineSeed(Contact, {
       title: 'VP of Engineering',
       department: 'engineering',
       crm_account: 'Acme Corporation',
+      is_primary: true,
     },
     {
       salutation: 'ms',
@@ -153,6 +156,7 @@ const contacts = defineSeed(Contact, {
       title: 'Chief Procurement Officer',
       department: 'executive',
       crm_account: 'Globex Industries',
+      is_primary: true,
     },
     {
       salutation: 'dr',
@@ -163,6 +167,7 @@ const contacts = defineSeed(Contact, {
       title: 'Director of Operations',
       department: 'operations',
       crm_account: 'Initech Solutions',
+      is_primary: true,
     },
     {
       salutation: 'ms',
@@ -173,6 +178,7 @@ const contacts = defineSeed(Contact, {
       title: 'Head of Partnerships',
       department: 'sales',
       crm_account: 'Stark Medical',
+      is_primary: true,
     },
     {
       salutation: 'mr',
@@ -183,6 +189,7 @@ const contacts = defineSeed(Contact, {
       title: 'CTO',
       department: 'engineering',
       crm_account: 'Wayne Enterprises',
+      is_primary: true,
     },
   ]
 });
@@ -994,6 +1001,141 @@ const quotes = defineSeed(Quote, {
   ]
 });
 
+// ─── Forecasts ────────────────────────────────────────────────────────
+// `owner` is left unset: seed inserts bypass field-level defaults and run
+// before any human user exists, so ownership is backfilled to the active user
+// at runtime (same as every other CRM object).
+const forecasts = defineSeed(Forecast, {
+  mode: 'upsert',
+  externalId: 'period_label',
+  records: [
+    {
+      period: 'quarter',
+      period_label: 'This Quarter',
+      period_start: cel`daysAgo(45)`,
+      period_end: cel`daysFromNow(45)`,
+      snapshot_date: cel`today()`,
+      quota: 1500000,
+      pipeline_amount: 2400000,
+      best_case_amount: 1800000,
+      commit_amount: 1100000,
+      closed_amount: 820000,
+      source: 'scheduled',
+      notes: 'On track — commit + closed covers 64% of quota with 45 days left.',
+    },
+    {
+      period: 'month',
+      period_label: 'This Month',
+      period_start: cel`daysAgo(15)`,
+      period_end: cel`daysFromNow(15)`,
+      snapshot_date: cel`today()`,
+      quota: 500000,
+      pipeline_amount: 760000,
+      best_case_amount: 540000,
+      commit_amount: 360000,
+      closed_amount: 295000,
+      source: 'scheduled',
+      notes: 'Healthy coverage; two commit deals expected to close this week.',
+    },
+    {
+      period: 'quarter',
+      period_label: 'Last Quarter',
+      period_start: cel`daysAgo(135)`,
+      period_end: cel`daysAgo(46)`,
+      snapshot_date: cel`daysAgo(46)`,
+      quota: 1400000,
+      pipeline_amount: 0,
+      best_case_amount: 0,
+      commit_amount: 0,
+      closed_amount: 1485000,
+      source: 'scheduled',
+      notes: 'Closed at 106% of quota.',
+    },
+  ]
+});
+
+// ─── Knowledge Articles ───────────────────────────────────────────────
+const knowledgeArticles = defineSeed(KnowledgeArticle, {
+  mode: 'upsert',
+  externalId: 'title',
+  records: [
+    {
+      title: 'Getting Started with HotCRM',
+      summary: 'A five-minute tour of accounts, contacts, leads and the sales pipeline.',
+      category: 'getting_started',
+      status: 'published',
+      audience: 'public',
+      language: 'en',
+      body: `# Getting Started with HotCRM
+
+Welcome! This guide walks you through the core objects:
+
+1. **Accounts** — the companies you sell to and serve.
+2. **Contacts** — the people at those accounts.
+3. **Leads** — unqualified prospects in the top of the funnel.
+4. **Opportunities** — qualified deals moving through your pipeline.
+
+Open the **Sales Pipeline** kanban to drag deals between stages, and use the
+**Executive Overview** dashboard to track revenue at a glance.`,
+      published_at: cel`daysAgo(40)`,
+      last_reviewed_at: cel`daysAgo(20)`,
+      view_count: 412,
+      helpful_count: 38,
+      not_helpful_count: 2,
+    },
+    {
+      title: 'Resetting Your Password',
+      summary: 'How end users reset a forgotten password from the login screen.',
+      category: 'how_to',
+      status: 'published',
+      audience: 'public',
+      language: 'en',
+      body: `# Resetting Your Password
+
+1. On the login screen, click **Forgot password?**
+2. Enter the email associated with your account.
+3. Check your inbox for a reset link (valid for 30 minutes).
+4. Choose a new password of at least 12 characters.
+
+If the email does not arrive, check spam or contact your administrator.`,
+      published_at: cel`daysAgo(25)`,
+      last_reviewed_at: cel`daysAgo(10)`,
+      view_count: 1280,
+      helpful_count: 96,
+      not_helpful_count: 7,
+    },
+    {
+      title: 'API Rate Limits',
+      summary: 'Per-token request quotas and recommended back-off strategy.',
+      category: 'api',
+      status: 'draft',
+      audience: 'internal',
+      language: 'en',
+      body: `# API Rate Limits (DRAFT)
+
+Default quota is 600 requests/minute per token. On HTTP 429, back off
+exponentially starting at 1s. Numbers pending final review with platform team.`,
+    },
+    {
+      title: 'Legacy SSO Setup',
+      summary: 'SAML configuration for the pre-2025 identity stack.',
+      category: 'troubleshooting',
+      status: 'published',
+      audience: 'internal',
+      language: 'en',
+      body: `# Legacy SSO Setup
+
+This covers the deprecated SAML 1.1 flow. New tenants should use the OIDC
+connector instead. Retained for customers still on the legacy stack.`,
+      published_at: cel`daysAgo(240)`,
+      last_reviewed_at: cel`daysAgo(220)`,
+      view_count: 64,
+      helpful_count: 5,
+      not_helpful_count: 9,
+    },
+  ]
+});
+
 /** All CRM seed datasets */
 export const CrmSeedData = [
   accounts,
@@ -1006,4 +1148,6 @@ export const CrmSeedData = [
   campaigns,
   contracts,
   quotes,
+  forecasts,
+  knowledgeArticles,
 ];
