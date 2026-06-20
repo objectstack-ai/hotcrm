@@ -48,7 +48,9 @@ describe('hotcrm metadata bundle', () => {
     ]) {
       expect(names, `missing migrated flow ${n}`).toContain(n);
     }
-    expect(flows.length).toBe(16);
+    // Lower bound on the named flows above; stays green when new flows are added
+    // (e.g. the task reminder/recurrence flows) without re-pinning a brittle count.
+    expect(flows.length).toBeGreaterThanOrEqual(16);
   });
 
   it('ships object lifecycle hooks', () => {

@@ -45,8 +45,15 @@ const quoteValidation: Hook = {
       const frozen = previous.status === 'accepted' || previous.status === 'expired';
       if (frozen) {
         const allowed = new Set(['internal_notes']);
+        // Framework-managed columns (ownership, audit timestamps) are re-stamped
+        // by the 9.x runtime — never treat those system writes as edits to a
+        // frozen quote, only user changes to business fields.
+        const SYSTEM_FIELDS = new Set([
+          'id', 'owner', 'owner_id', 'created_at', 'updated_at',
+          'created_by', 'updated_by', 'space_id', 'organization_id', 'org_id', 'version',
+        ]);
         const changed = Object.keys(input).filter(
-          (k) => !allowed.has(k) && input[k] !== previous[k],
+          (k) => !allowed.has(k) && !SYSTEM_FIELDS.has(k) && input[k] !== previous[k],
         );
         if (changed.length > 0) {
           throw new Error(

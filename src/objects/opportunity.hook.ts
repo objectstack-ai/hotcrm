@@ -34,6 +34,15 @@ const opportunityValidationHook: Hook = {
       closed_lost: 0,
     };
     const NARRATIVE_FIELDS = new Set(['description', 'next_step', 'notes']);
+    // Framework-managed columns are re-stamped by the runtime itself (ownership
+    // reassignment, audit timestamps) — including during post-seed ownership
+    // assignment introduced in ObjectStack 9.x. The "freeze closed record" guard
+    // must never reject these system writes, only user edits to business fields.
+    // (Declared in-handler: sandboxed bodies have no module scope.)
+    const SYSTEM_FIELDS = new Set([
+      'id', 'owner', 'owner_id', 'created_at', 'updated_at',
+      'created_by', 'updated_by', 'space_id', 'organization_id', 'org_id', 'version',
+    ]);
     // Stage → forecast category (migrated from the removed
     // `set_forecast_category_by_stage` object workflow — 7.7 dropped workflows[]).
     const STAGE_FORECAST: Record<string, string> = {
@@ -80,7 +89,7 @@ const opportunityValidationHook: Hook = {
       const isClosed = prevStage === 'closed_won' || prevStage === 'closed_lost';
       if (isClosed) {
         const violating = Object.keys(input).filter(
-          (k) => !NARRATIVE_FIELDS.has(k) && input[k] !== previous[k],
+          (k) => !NARRATIVE_FIELDS.has(k) && !SYSTEM_FIELDS.has(k) && input[k] !== previous[k],
         );
         if (violating.length > 0) {
           throw new Error(
