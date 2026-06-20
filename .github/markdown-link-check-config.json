@@ -5,7 +5,7 @@
   "aliveStatusCodes": [200, 206, 301, 302, 307, 308],
   "ignorePatterns": [
     {
-      "pattern": "^https://github.com/objectstack-ai/hotcrm/(actions|workflows)"
+      "pattern": "^https://github.com/objectstack-ai/hotcrm/(actions|workflows|releases)"
     },
     {
       "pattern": "^https://img.shields.io/"
