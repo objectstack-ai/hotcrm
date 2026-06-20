@@ -9,6 +9,7 @@ Platform upgrade to ObjectStack **9.11** — the release cut that promotes the i
 ### Changed
 
 - **ObjectStack platform → 9.11** across all `@objectstack/*` packages (from `9.9.1`). 9.10/9.11 are additive on the metadata surface except for the lifecycle-hook change below.
+- **Minimum Node bumped to 22** (`engines.node`, `.nvmrc`, CI/release workflows). `@objectstack/driver-sql` 9.11 pulls in `kysely@0.29`, which requires Node `>=22`; with `engine-strict=true` the old Node 20 CI matrix failed `pnpm install`. The publish workflows already targeted Node 22.
 
 ### Fixed
 
