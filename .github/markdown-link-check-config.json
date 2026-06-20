@@ -9,6 +9,9 @@
     },
     {
       "pattern": "^https://img.shields.io/"
+    },
+    {
+      "pattern": "^https?://localhost"
     }
   ]
 }
