@@ -1,3 +1,7 @@
+<!-- markdown-link-check-disable -->
+<!-- Archived 2026-02 snapshot — references planning docs that have since been
+     removed. Frozen for history; not link-checked. -->
+
 # HotCRM vs Salesforce: Deep Feature Comparison
 
 > **Version**: 3.0  

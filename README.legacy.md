@@ -1,3 +1,8 @@
+<!-- markdown-link-check-disable -->
+<!-- Frozen legacy doc from the monorepo era — links point at packages/ and
+     planning files that no longer exist in this single-package repo. Kept for
+     historical reference only; superseded by README.md. -->
+
 # HotCRM - Enterprise-Level CRM System
 
 [![CI](https://github.com/objectstack-ai/hotcrm/workflows/CI/badge.svg)](https://github.com/objectstack-ai/hotcrm/actions/workflows/ci.yml)
