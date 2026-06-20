@@ -71,5 +71,6 @@ First marketplace release. HotCRM is now publishable to [cloud.objectos.app](htt
 
 - All 15 business objects renamed with explicit `crm_` prefix (576 replacements across 85 files). The platform no longer relies on namespace auto-injection — see the ADR in [.github/copilot-instructions.md](.github/copilot-instructions.md).
 
+[1.2.0]: https://github.com/objectstack-ai/hotcrm/releases/tag/v1.2.0
 [1.1.0]: https://github.com/objectstack-ai/hotcrm/releases/tag/v1.1.0
 [1.0.0]: https://github.com/objectstack-ai/hotcrm/releases/tag/v1.0.0
