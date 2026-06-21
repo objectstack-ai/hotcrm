@@ -13,6 +13,8 @@ HotCRM also has product-facing documentation under [`content/docs/`](../content/
 | Runtime and metadata architecture | [ARCHITECTURE.md](ARCHITECTURE.md) |
 | Local, artifact, and marketplace deployment | [DEPLOYMENT.md](DEPLOYMENT.md) |
 | Versioning and distribution | [RELEASE_STRATEGY.md](RELEASE_STRATEGY.md) |
+| Upgrade, seeding, and version alignment | [MAINTENANCE.md](MAINTENANCE.md) |
+| Customer requirements and product disposition | [requirements/README.md](requirements/README.md) |
 | Object field reference | [developers/api_reference.md](developers/api_reference.md) |
 | ObjectStack code examples | [developers/code_examples.md](developers/code_examples.md) |
 

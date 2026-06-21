@@ -5,7 +5,7 @@ Enterprise CRM built on the **@objectstack/runtime** engine. Tool-specific files
 (e.g. `.github/copilot-instructions.md`) point here.
 
 You are an expert developer working on HotCRM, delivering business capabilities
-through modular packages on top of the ObjectStack platform.
+as metadata on top of the ObjectStack platform.
 
 ## 🗣️ 沟通语言 / Communication Language
 
@@ -18,24 +18,36 @@ commit messages, PR titles/bodies, and code comments in English.
 
 ## 🏗️ Project Architecture
 
-HotCRM follows a **Plugin-Based Monorepo** structure:
+HotCRM is a **single ObjectStack marketplace app**, not a multi-package monorepo.
+The source of truth is `objectstack.config.ts`, which registers all metadata from a
+flat `src/` tree organised **by metadata type** (not by business package).
 
 - **Engine**: We DO NOT build the core engine. We use `@objectstack/runtime` as the platform dependency.
-- **Business Packages** (`packages/*`): We develop independent functional modules here.
-- **Apps** (`apps/*`): Deployable applications (Documentation, Admin Portal).
+- **Metadata** (`src/{type}/`): All business capability lives here as typed metadata files.
+- **Product docs** (`content/docs/`): User/admin/marketplace documentation (Fumadocs).
+- **Internal docs** (`docs/`): Architecture, status, release, and maintenance notes.
 
-**Directory Structure**:
+**Directory Structure** (see `docs/README.md` for the full map):
 ```
 hotcrm/
-├── packages/               # Business Capabilities (Plugins)
-│   ├── crm/               # Sales Cloud (Account, Opportunity)
-│   ├── finance/           # Revenue Cloud (Contract, Invoice)
-│   ├── products/          # CPQ Product Catalog
-│   └── ...
-│
-└── apps/
-    └── docs/              # Official Documentation
+├── objectstack.config.ts   # App manifest — registers metadata from src/
+├── src/
+│   ├── objects/            # *.object.ts schemas + *.hook.ts lifecycle hooks
+│   ├── views/  pages/      # App UI metadata (*.view.ts / *.page.ts)
+│   ├── flows/              # Automation (*.flow.ts)
+│   ├── actions/            # UI actions + AI-callable tools (*.action.ts)
+│   ├── dashboards/ reports/ datasets/ cubes/   # Analytics metadata
+│   ├── agents/ skills/     # AI agent + skill metadata
+│   ├── profiles/ sharing/  # Permission sets, role hierarchy, sharing rules
+│   ├── translations/       # Locale bundles (en / zh-CN / es-ES / ja-JP)
+│   └── data/               # Seed data (defineDataset)
+├── content/docs/           # Product documentation site content
+└── docs/                   # Internal maintainer documentation
 ```
+
+> The retired multi-package (`packages/*`) direction is archived under
+> `docs/archive/`. Do NOT create `packages/<x>/src/` paths — everything lives in the
+> flat `src/{type}/` tree above.
 
 ## 💻 Tech Stack & Protocol
 
@@ -60,12 +72,12 @@ hotcrm/
 When asked to implement a feature, you MUST follow this **Thinking Process**:
 
 ### Phase 1: Architecture & Planning
-1.  **Analyze**: Identify the Business Package (e.g., `packages/hr`) and Dependencies.
+1.  **Analyze**: Identify the domain area (e.g., sales, service, marketing) and the metadata it touches.
 2.  **Schema Design**: List all necessary Objects, Fields, and Relationships.
 3.  **File Inventory**: List exact file paths to be created.
-    *   `src/candidate.object.ts` (Data)
-    *   `src/candidate.workflow.ts` (Automation)
-    *   `src/candidate.page.ts` (UI)
+    *   `src/objects/candidate.object.ts` (Data)
+    *   `src/flows/candidate.flow.ts` (Automation)
+    *   `src/pages/candidate.page.ts` (UI)
 
 ### Phase 2: Implementation (Iterative)
 1.  **Metadata First**: Create `*.object.ts` files first. They are the source of truth.
@@ -81,12 +93,13 @@ After generating code, ask yourself:
 
 ## 📝 Coding Standards (The "File Suffix Protocol")
 
-We enforce strict file naming to separate concerns. Files should be located in `packages/{package_name}/src/`.
+We enforce strict file naming to separate concerns. Files live under `src/{type}/`, grouped by metadata type (e.g. `src/objects/`, `src/flows/`, `src/views/`).
 
 ### Core File Types
 - `*.object.ts`: Data Model (Schema) — validated with `ObjectSchema.parse()`
 - `*.hook.ts`: Server-side Business Logic (Triggers)
 - `*.action.ts`: API Endpoints & AI Tools
+- `*.flow.ts`: Automation Flows — typed as `Automation.Flow` from `@objectstack/spec/automation`
 - `*.page.ts`: UI Page Layouts — validated with `PageSchema` from `@objectstack/spec/ui`
 - `*.view.ts`: List View Configurations — validated with `ViewSchema` from `@objectstack/spec/ui`
 
@@ -130,19 +143,19 @@ Use the most specific `Field` type available from `@objectstack/spec/data`:
 
 ## 🚀 Development Workflow
 
-1.  **Define Object**: Create `packages/{pkg}/src/{entity}.object.ts`.
-2.  **Add Logic**: Create `packages/{pkg}/src/{entity}.hook.ts`.
-3.  **Expose Action**: Create `packages/{pkg}/src/{action}.action.ts` if external API/AI needed.
-4.  **Config UI**: Create `packages/{pkg}/src/{entity}.page.ts`.
+1.  **Define Object**: Create `src/objects/{entity}.object.ts`.
+2.  **Add Logic**: Create `src/objects/{entity}.hook.ts`.
+3.  **Expose Action**: Create `src/actions/{action}.action.ts` if external API/AI needed.
+4.  **Config UI**: Create `src/views/{entity}.view.ts` and `src/pages/{entity}.page.ts`.
 
 ## ⚠️ Constraint Checklist
 
 - **Object Naming**: All HotCRM business objects MUST be prefixed with `crm_` (e.g., `crm_account`, `crm_opportunity`, `crm_case`, `crm_lead`, `crm_campaign`, `crm_contact`, `crm_contract`, `crm_product`, `crm_quote`, `crm_quote_line_item`, `crm_opportunity_line_item`, `crm_task`, `crm_campaign_member`, `crm_knowledge_article`, `crm_forecast`). All references — `reference_to`, `lookup`, `masterDetail`, cube `sql`, view `data.object`, hook `object`, navigation `objectName`, action `objectName`, dashboard `object` — MUST use the prefixed form. Platform objects keep their existing `sys_*` prefix.
 - **i18n**: Every new object must have entries in all 4 locale files (`src/translations/{en,zh-CN,es-ES,ja-JP}.ts`) — label, pluralLabel, all field labels + option labels, view labels, navigation labels. No new feature ships without all 4 locales.
-- **Docs**: Every new object/feature requires user-facing documentation under `content/docs/{sales|service|marketing|...}/` written for business users + admins (not developers).
+- **Docs**: Every new object/feature requires user-facing documentation under `content/docs/` (e.g. `getting-started/`, `guides/`, `marketing/`, `analytics/`, `administration/`) written for business users + admins (not developers).
 - **Documentation**: All documentation MUST be in English.
 - **No Engine Code**: Do not try to modify the core runtime code. Focus on the *usage* of the runtime.
-- **Dependencies**: HotCRM packages should depend on `@objectstack/runtime` (as peerDependency) and other sibling packages if structure allows.
+- **Dependencies**: HotCRM depends on the published `@objectstack/*` packages (runtime, spec, drivers, services) declared in `package.json`. Keep `specVersion` in `objectstack.manifest.json` aligned with the installed `@objectstack/spec`.
 - **Tone**: Act as a Senior 10x Engineer. Be concise, professional, and technically accurate.
 
 > **Naming note (ADR-0048):** the `crm_` prefix above is a deliberate HotCRM
@@ -162,7 +175,7 @@ The following are **NOT** in HotCRM's scope — they are platform-level features
 - **Low-level services**: database engine, auth (OAuth/SAML/SSO), multi-tenancy, encryption, API gateway, caching, message queue, file storage.
 - **Dev tools**: schema migration, CLI scaffolding, metadata deployment pipeline, VCS integration, IDE extensions.
 
-**Focus Area**: HotCRM focuses exclusively on **business domain packages** (CRM, Finance, HR, Marketing, Products, Support) and their **business logic, data models, and AI capabilities**.
+**Focus Area**: HotCRM focuses exclusively on **business domains** (CRM, Finance, HR, Marketing, Products, Support) and their **business logic, data models, and AI capabilities** — authored as metadata in `src/`.
 
 ---
 
