@@ -49,7 +49,7 @@ can silently invalidate existing metadata or **seed data** (see §4). Treat ever
 1. Bump all `@objectstack/*` deps in [`package.json`](../package.json) together —
    they are released in lockstep, so keep them on one version line.
 2. Update `specVersion` in [`objectstack.manifest.json`](../objectstack.manifest.json)
-   to match the installed `@objectstack/spec` (e.g. `^9.11.0`).
+   to match the installed `@objectstack/spec` (e.g. `^10.0.0`).
 3. `pnpm install`.
 4. `pnpm verify`. Validation failures here are usually metadata that a new
    platform contract just started enforcing — fix the metadata, do not pin back.
