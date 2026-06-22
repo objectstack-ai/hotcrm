@@ -1,11 +1,11 @@
 # HotCRM Status
 
-> Snapshot date: June 4, 2026
+> Snapshot date: June 22, 2026
 > Source of truth: `pnpm validate`, `pnpm typecheck`, and `pnpm test`
 
 ## Summary
 
-HotCRM is a single ObjectStack marketplace app at version `1.0.5`. The app manifest is defined in [`objectstack.config.ts`](../objectstack.config.ts) with id `app.objectstack.hotcrm` and namespace `crm`.
+HotCRM is a single ObjectStack marketplace app at version `1.3.0`. The app manifest is defined in [`objectstack.config.ts`](../objectstack.config.ts) with id `app.objectstack.hotcrm` and namespace `crm`.
 
 ## ObjectStack Validation
 

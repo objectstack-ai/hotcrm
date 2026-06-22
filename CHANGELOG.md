@@ -2,6 +2,18 @@
 
 All notable changes to HotCRM are documented in this file. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); HotCRM follows [Semantic Versioning](https://semver.org/).
 
+## [1.3.0] — 2026-06-22
+
+Platform upgrade to ObjectStack **10.0** — the first major line bump. Manifest `specVersion` now declares `^10.0.0` (was `^9.11.0`); app version `1.3.0`. The 10.0 metadata surface is **additive** for HotCRM except for one newly-enforced validation (below). Built, validated, type-checked, unit-tested (17/17), and browser-verified against `@objectstack/* ^10.0.0` (login → home → Executive Dashboard with live seeded data and lazy charts → Accounts list → record detail; no console errors, no failed requests).
+
+### Changed
+
+- **ObjectStack platform → 10.0** across all `@objectstack/*` packages (from `9.11`). Schema-level changes are additive and required no metadata edits: new `tree` view type + `TreeConfig` (ui); optional `readScope`/`writeScope` access-depth on object permissions and a new `ObjectAccessScope` enum (security, ADR-0057); optional `currency` on `Dataset`/`DatasetMeasure`; `actor`/`currency` fields on the execution context; AI `Agent`/`Skill` gained a `surface` field (defaulted, so existing agents/skills validate unchanged). No use of these is required by HotCRM today.
+
+### Fixed
+
+- **Territory sharing rules referenced a non-existent `billing_country` field.** 10.0's build-time expression validator (ADR-0032) now also checks **sharing-rule** CEL conditions against the object schema, which surfaced this latent dangling reference — `crm_account` has no `billing_country`; the country lives inside the structured `billing_address` field. The `north_america_territory` and `europe_territory` rules in [`src/sharing/account.sharing.ts`](src/sharing/account.sharing.ts) now read `record.billing_address.country`. No behavioral change (the dangling field matched nothing before; the seed does not populate `billing_address`), but the metadata is now valid and the rule expresses its stated "by billing country" intent against a real field.
+
 ## [1.2.0] — 2026-06-20
 
 Platform upgrade to ObjectStack **9.11** — the release cut that promotes the in-tree 9.9.1 work to the latest line. Manifest `specVersion` now declares `^9.11.0` (was `^9.4.0`); app version `1.2.0`. Built, validated, type-checked, unit-tested (17/17), and browser-verified against `@objectstack/* ^9.11.0`.

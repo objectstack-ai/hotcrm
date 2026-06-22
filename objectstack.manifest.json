@@ -1,7 +1,7 @@
 {
   "$schema": "https://schemas.objectstack.dev/template-manifest.json",
   "name": "hotcrm",
-  "specVersion": "^9.11.0",
+  "specVersion": "^10.0.0",
   "manifestId": "app.objectstack.hotcrm",
   "displayName": "HotCRM",
   "description": "AI-Native CRM for the ObjectStack marketplace — Accounts, Contacts, Leads, Opportunities, Cases, Knowledge, Forecasts, Campaigns, and Contracts in one production-grade workspace.",
