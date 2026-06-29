@@ -27,11 +27,11 @@ export const Forecast = ObjectSchema.create({
   pluralLabel: 'Forecasts',
   icon: 'trending-up',
   description: 'Periodic pipeline snapshot by owner used for revenue forecasting.',
-  // ADR-0079: render-only `titleFormat` retired in favor of `displayNameField`.
+  // ADR-0079: render-only `titleFormat` retired in favor of `nameField`.
   // The former template led with `{owner}`, a lookup — DROPPED here because a
   // formula cannot dot-walk a lookup (ADR-0072). The `display_title` formula
   // composes the local fields only: period_label + (period_start).
-  displayNameField: 'display_title',
+  nameField: 'display_title',
   compactLayout: ['owner', 'period', 'period_start', 'commit_amount', 'closed_amount'],
 
   fieldGroups: [

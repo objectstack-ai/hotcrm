@@ -13,10 +13,10 @@ export const Quote = ObjectSchema.create({
   pluralLabel: 'Quotes',
   icon: 'file-text',
   description: 'Price quotes for customers',
-  // ADR-0079: render-only `titleFormat` retired in favor of `displayNameField`,
+  // ADR-0079: render-only `titleFormat` retired in favor of `nameField`,
   // which names a real field. The former template composed two local fields, so
   // a `display_title` formula field reproduces it for the record title.
-  displayNameField: 'display_title',
+  nameField: 'display_title',
   compactLayout: ['quote_number', 'name', 'crm_account', 'status', 'total_price'],
 
   fieldGroups: [

@@ -296,9 +296,9 @@ export const Lead = ObjectSchema.create({
     mru: true,              // Track Most Recently Used
   },
   
-  // ADR-0079: render-only `titleFormat` retired in favor of `displayNameField`
+  // ADR-0079: render-only `titleFormat` retired in favor of `nameField`
   // (the `display_title` formula field defined above).
-  displayNameField: 'display_title',
+  nameField: 'display_title',
   compactLayout: ['full_name', 'company', 'email', 'status', 'owner'],
   
   // Removed: list_views and form_views belong in UI configuration, not object definition

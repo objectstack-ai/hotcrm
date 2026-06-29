@@ -9,10 +9,10 @@ export const Opportunity = ObjectSchema.create({
   pluralLabel: 'Opportunities',
   icon: 'dollar-sign',
   description: 'Sales opportunities and deals in the pipeline',
-  // ADR-0079: render-only `titleFormat` retired in favor of `displayNameField`.
+  // ADR-0079: render-only `titleFormat` retired in favor of `nameField`.
   // `stage` is a select — the formula references its stored value directly
   // (no label resolution), matching ADR-0079 guidance.
-  displayNameField: 'display_title',
+  nameField: 'display_title',
   compactLayout: ['name', 'crm_account', 'amount', 'stage', 'owner'],
 
   fieldGroups: [

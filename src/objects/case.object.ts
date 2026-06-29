@@ -232,10 +232,10 @@ export const Case = ObjectSchema.create({
     { field: 'status', value: 'closed', summary: 'Case closed — {subject}', type: 'completed' },
   ],
 
-  // ADR-0079: render-only `titleFormat` retired in favor of `displayNameField`,
+  // ADR-0079: render-only `titleFormat` retired in favor of `nameField`,
   // which names a real field. The former template composed two local fields, so
   // the `display_title` formula field (see fields) reproduces it.
-  displayNameField: 'display_title',
+  nameField: 'display_title',
   compactLayout: ['case_number', 'subject', 'crm_account', 'status', 'priority'],
   
   // Removed: list_views and form_views belong in UI configuration, not object definition

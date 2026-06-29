@@ -193,10 +193,10 @@ export const Contact = ObjectSchema.create({
   ],
   
   // Display configuration
-  // ADR-0079: render-only `titleFormat` retired in favor of `displayNameField`,
+  // ADR-0079: render-only `titleFormat` retired in favor of `nameField`,
   // which names the real field holding the record title (here: the `full_name`
   // formula field already defined above).
-  displayNameField: 'full_name',
+  nameField: 'full_name',
   compactLayout: ['full_name', 'email', 'crm_account', 'phone'],
   
   // Validation Rules

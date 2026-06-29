@@ -18,10 +18,10 @@ export const KnowledgeArticle = ObjectSchema.create({
   pluralLabel: 'Knowledge Articles',
   icon: 'book-open',
   description: 'Reusable knowledge base articles for self-service and AI grounding',
-  // ADR-0079: render-only `titleFormat` retired in favor of `displayNameField`,
+  // ADR-0079: render-only `titleFormat` retired in favor of `nameField`,
   // which names a real field. The former template composed two local fields, so
   // a `display_title` formula field reproduces it for the record title.
-  displayNameField: 'display_title',
+  nameField: 'display_title',
   compactLayout: ['article_number', 'title', 'category', 'status', 'audience'],
 
   fieldGroups: [
