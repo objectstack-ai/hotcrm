@@ -1,4 +1,4 @@
-import { P, cel } from '@objectstack/spec';
+import { F, P, cel } from '@objectstack/spec';
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
@@ -13,7 +13,10 @@ export const Quote = ObjectSchema.create({
   pluralLabel: 'Quotes',
   icon: 'file-text',
   description: 'Price quotes for customers',
-  titleFormat: '{quote_number} - {name}',
+  // ADR-0079: render-only `titleFormat` retired in favor of `nameField`,
+  // which names a real field. The former template composed two local fields, so
+  // a `display_title` formula field reproduces it for the record title.
+  nameField: 'display_title',
   compactLayout: ['quote_number', 'name', 'crm_account', 'status', 'total_price'],
 
   fieldGroups: [
@@ -32,13 +35,19 @@ export const Quote = ObjectSchema.create({
     }),
     
     // Basic Information
-    name: Field.text({ 
-      label: 'Quote Name', 
-      required: true, 
+    name: Field.text({
+      label: 'Quote Name',
+      required: true,
       searchable: true,
       maxLength: 255,
     }),
-    
+
+    // ADR-0079 record title (was titleFormat '{quote_number} - {name}').
+    display_title: Field.formula({
+      label: 'Display Title',
+      expression: F`record.quote_number + " - " + record.name`,
+    }),
+
     // Relationships
     crm_account: Field.lookup('crm_account', {
       label: 'Account',

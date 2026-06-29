@@ -1,4 +1,4 @@
-import { P } from '@objectstack/spec';
+import { F, P } from '@objectstack/spec';
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
@@ -13,7 +13,10 @@ export const Product = ObjectSchema.create({
   pluralLabel: 'Products',
   icon: 'box',
   description: 'Products and services offered by the company',
-  titleFormat: '{product_code} - {name}',
+  // ADR-0079: render-only `titleFormat` retired in favor of `nameField`,
+  // which names a real field. The former template composed two local fields, so
+  // a `display_title` formula field reproduces it for the record title.
+  nameField: 'display_title',
   compactLayout: ['product_code', 'name', 'category', 'is_active'],
 
   // Product detail pages are catalog-style — users edit attributes in
@@ -37,17 +40,23 @@ export const Product = ObjectSchema.create({
     }),
     
     // Basic Information
-    name: Field.text({ 
-      label: 'Product Name', 
-      required: true, 
+    name: Field.text({
+      label: 'Product Name',
+      required: true,
       searchable: true,
       maxLength: 255,
     }),
-    
+
+    // ADR-0079 record title (was titleFormat '{product_code} - {name}').
+    display_title: Field.formula({
+      label: 'Display Title',
+      expression: F`record.product_code + " - " + record.name`,
+    }),
+
     description: Field.markdown({
       label: 'Description',
     }),
-    
+
     // Categorization
     category: Field.select({
       label: 'Category',

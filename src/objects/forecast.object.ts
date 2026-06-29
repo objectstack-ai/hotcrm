@@ -27,7 +27,11 @@ export const Forecast = ObjectSchema.create({
   pluralLabel: 'Forecasts',
   icon: 'trending-up',
   description: 'Periodic pipeline snapshot by owner used for revenue forecasting.',
-  titleFormat: '{owner} — {period_label} ({period_start})',
+  // ADR-0079: render-only `titleFormat` retired in favor of `nameField`.
+  // The former template led with `{owner}`, a lookup — DROPPED here because a
+  // formula cannot dot-walk a lookup (ADR-0072). The `display_title` formula
+  // composes the local fields only: period_label + (period_start).
+  nameField: 'display_title',
   compactLayout: ['owner', 'period', 'period_start', 'commit_amount', 'closed_amount'],
 
   fieldGroups: [
@@ -71,6 +75,16 @@ export const Forecast = ObjectSchema.create({
     period_label: Field.text({
       label: 'Period Label',
       description: 'Human-friendly label, e.g. "Q3 2026" or "Aug 2026".',
+      group: 'basic',
+    }),
+
+    // ADR-0079 record title. Original titleFormat was
+    // '{owner} — {period_label} ({period_start})'; the leading `{owner}` lookup
+    // is DROPPED (a formula cannot dot-walk a lookup, ADR-0072). Composes the
+    // local fields only; `period_start` (a date) is text()-coerced for concat.
+    display_title: Field.formula({
+      label: 'Display Title',
+      expression: F`record.period_label + " (" + text(record.period_start) + ")"`,
       group: 'basic',
     }),
 

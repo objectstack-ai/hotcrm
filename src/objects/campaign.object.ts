@@ -13,7 +13,10 @@ export const Campaign = ObjectSchema.create({
   pluralLabel: 'Campaigns',
   icon: 'megaphone',
   description: 'Marketing campaigns and initiatives',
-  titleFormat: '{campaign_code} - {name}',
+  // ADR-0079: render-only `titleFormat` retired in favor of `nameField`,
+  // which names a real field. The former template composed two local fields, so
+  // a `display_title` formula field reproduces it for the record title.
+  nameField: 'display_title',
   compactLayout: ['campaign_code', 'name', 'type', 'status', 'start_date'],
   
   fields: {
@@ -24,13 +27,19 @@ export const Campaign = ObjectSchema.create({
     }),
     
     // Basic Information
-    name: Field.text({ 
-      label: 'Campaign Name', 
-      required: true, 
+    name: Field.text({
+      label: 'Campaign Name',
+      required: true,
       searchable: true,
       maxLength: 255,
     }),
-    
+
+    // ADR-0079 record title (was titleFormat '{campaign_code} - {name}').
+    display_title: Field.formula({
+      label: 'Display Title',
+      expression: F`record.campaign_code + " - " + record.name`,
+    }),
+
     description: Field.markdown({
       label: 'Description',
     }),

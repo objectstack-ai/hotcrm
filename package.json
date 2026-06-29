@@ -26,17 +26,17 @@
   },
   "packageManager": "pnpm@10.33.0",
   "dependencies": {
-    "@objectstack/account": "^10.0.0",
-    "@objectstack/cli": "^10.0.0",
-    "@objectstack/driver-memory": "^10.0.0",
-    "@objectstack/driver-sql": "^10.0.0",
-    "@objectstack/driver-sqlite-wasm": "^10.0.0",
-    "@objectstack/metadata": "^10.0.0",
-    "@objectstack/objectql": "^10.0.0",
-    "@objectstack/runtime": "^10.0.0",
-    "@objectstack/service-analytics": "^10.0.0",
-    "@objectstack/service-automation": "^10.0.0",
-    "@objectstack/spec": "^10.0.0"
+    "@objectstack/account": "^11.2.0",
+    "@objectstack/cli": "^11.2.0",
+    "@objectstack/driver-memory": "^11.2.0",
+    "@objectstack/driver-sql": "^11.2.0",
+    "@objectstack/driver-sqlite-wasm": "^11.2.0",
+    "@objectstack/metadata": "^11.2.0",
+    "@objectstack/objectql": "^11.2.0",
+    "@objectstack/runtime": "^11.2.0",
+    "@objectstack/service-analytics": "^11.2.0",
+    "@objectstack/service-automation": "^11.2.0",
+    "@objectstack/spec": "^11.2.0"
   },
   "optionalDependencies": {
     "better-sqlite3": "^12.11.1"
