@@ -1,4 +1,4 @@
-import { P, cel } from '@objectstack/spec';
+import { F, P, cel } from '@objectstack/spec';
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
@@ -32,7 +32,13 @@ export const Case = ObjectSchema.create({
       searchable: true,
       maxLength: 255,
     }),
-    
+
+    // ADR-0079 record title (was titleFormat '{case_number} - {subject}').
+    display_title: Field.formula({
+      label: 'Display Title',
+      expression: F`record.case_number + " - " + record.subject`,
+    }),
+
     description: Field.markdown({
       label: 'Description',
       required: true,
@@ -226,7 +232,10 @@ export const Case = ObjectSchema.create({
     { field: 'status', value: 'closed', summary: 'Case closed — {subject}', type: 'completed' },
   ],
 
-  titleFormat: '{case_number} - {subject}',
+  // ADR-0079: render-only `titleFormat` retired in favor of `displayNameField`,
+  // which names a real field. The former template composed two local fields, so
+  // the `display_title` formula field (see fields) reproduces it.
+  displayNameField: 'display_title',
   compactLayout: ['case_number', 'subject', 'crm_account', 'status', 'priority'],
   
   // Removed: list_views and form_views belong in UI configuration, not object definition

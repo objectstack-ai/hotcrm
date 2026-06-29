@@ -13,7 +13,13 @@ export const Contract = ObjectSchema.create({
   pluralLabel: 'Contracts',
   icon: 'file-pen-line',
   description: 'Legal contracts and agreements',
-  titleFormat: '{contract_number} - {crm_account.name}',
+  // ADR-0079: render-only `titleFormat` retired in favor of `displayNameField`.
+  // Original template was '{contract_number} - {crm_account.name}'. The
+  // `crm_account.name` segment is a lookup DOT-WALK, which a formula field
+  // cannot reference (ADR-0072), so it is DROPPED. Only the local
+  // `contract_number` (autonumber) remains, so no formula is needed — point
+  // `displayNameField` straight at it.
+  displayNameField: 'contract_number',
   compactLayout: ['contract_number', 'crm_account', 'status', 'start_date', 'end_date'],
 
   fieldGroups: [

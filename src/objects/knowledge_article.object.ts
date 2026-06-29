@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
-import { P, cel } from '@objectstack/spec';
+import { F, P, cel } from '@objectstack/spec';
 
 /**
  * Knowledge Article Object
@@ -18,7 +18,10 @@ export const KnowledgeArticle = ObjectSchema.create({
   pluralLabel: 'Knowledge Articles',
   icon: 'book-open',
   description: 'Reusable knowledge base articles for self-service and AI grounding',
-  titleFormat: '{article_number} - {title}',
+  // ADR-0079: render-only `titleFormat` retired in favor of `displayNameField`,
+  // which names a real field. The former template composed two local fields, so
+  // a `display_title` formula field reproduces it for the record title.
+  displayNameField: 'display_title',
   compactLayout: ['article_number', 'title', 'category', 'status', 'audience'],
 
   fieldGroups: [
@@ -39,6 +42,13 @@ export const KnowledgeArticle = ObjectSchema.create({
       required: true,
       searchable: true,
       maxLength: 255,
+      group: 'basic',
+    }),
+
+    // ADR-0079 record title (was titleFormat '{article_number} - {title}').
+    display_title: Field.formula({
+      label: 'Display Title',
+      expression: F`record.article_number + " - " + record.title`,
       group: 'basic',
     }),
 

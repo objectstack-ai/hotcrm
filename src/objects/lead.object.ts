@@ -55,6 +55,15 @@ export const Lead = ObjectSchema.create({
       group: 'identity',
     }),
 
+    // ADR-0079 record title (was titleFormat '{full_name} - {company}').
+    // Composed from the same source fields as `full_name` (not formula-on-formula)
+    // plus `company`, so the title resolves from real stored values.
+    display_title: Field.formula({
+      label: 'Display Title',
+      expression: F`joinNonEmpty([record.salutation, record.first_name, record.last_name], ' ') + " - " + record.company`,
+      group: 'identity',
+    }),
+
     // Company Information
     company: Field.text({
       label: 'Company',
@@ -287,7 +296,9 @@ export const Lead = ObjectSchema.create({
     mru: true,              // Track Most Recently Used
   },
   
-  titleFormat: '{full_name} - {company}',
+  // ADR-0079: render-only `titleFormat` retired in favor of `displayNameField`
+  // (the `display_title` formula field defined above).
+  displayNameField: 'display_title',
   compactLayout: ['full_name', 'company', 'email', 'status', 'owner'],
   
   // Removed: list_views and form_views belong in UI configuration, not object definition

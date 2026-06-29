@@ -1,4 +1,4 @@
-import { P, cel } from '@objectstack/spec';
+import { F, P, cel } from '@objectstack/spec';
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
@@ -9,7 +9,10 @@ export const Account = ObjectSchema.create({
   pluralLabel: 'Accounts',
   icon: 'building',
   description: 'Companies and organizations doing business with us',
-  titleFormat: '{account_number} - {name}',
+  // ADR-0079: render-only `titleFormat` retired in favor of `displayNameField`,
+  // which names a real field. The former template composed two local fields, so
+  // a `display_title` formula field reproduces it for the record title.
+  displayNameField: 'display_title',
   compactLayout: ['account_number', 'name', 'type', 'owner'],
 
   // Field groups organize the form layout. Array order == display order.
@@ -37,6 +40,13 @@ export const Account = ObjectSchema.create({
       required: true,
       searchable: true,
       maxLength: 255,
+      group: 'basic',
+    }),
+
+    // ADR-0079 record title (was titleFormat '{account_number} - {name}').
+    display_title: Field.formula({
+      label: 'Display Title',
+      expression: F`record.account_number + " - " + record.name`,
       group: 'basic',
     }),
 

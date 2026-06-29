@@ -1,4 +1,4 @@
-import { P, cel } from '@objectstack/spec';
+import { F, P, cel } from '@objectstack/spec';
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
@@ -9,7 +9,10 @@ export const Opportunity = ObjectSchema.create({
   pluralLabel: 'Opportunities',
   icon: 'dollar-sign',
   description: 'Sales opportunities and deals in the pipeline',
-  titleFormat: '{name} - {stage}',
+  // ADR-0079: render-only `titleFormat` retired in favor of `displayNameField`.
+  // `stage` is a select — the formula references its stored value directly
+  // (no label resolution), matching ADR-0079 guidance.
+  displayNameField: 'display_title',
   compactLayout: ['name', 'crm_account', 'amount', 'stage', 'owner'],
 
   fieldGroups: [
@@ -28,6 +31,14 @@ export const Opportunity = ObjectSchema.create({
       label: 'Opportunity Name',
       required: true,
       searchable: true,
+      group: 'basic',
+    }),
+
+    // ADR-0079 record title (was titleFormat '{name} - {stage}').
+    // `stage` is referenced by its stored select value.
+    display_title: Field.formula({
+      label: 'Display Title',
+      expression: F`record.name + " - " + record.stage`,
       group: 'basic',
     }),
 
