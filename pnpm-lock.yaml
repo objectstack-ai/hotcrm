@@ -18,8 +18,8 @@ importers:
         specifier: ^10.0.0
         version: 10.0.0(ai@6.0.208(zod@4.4.3))
       '@objectstack/driver-sql':
-        specifier: ^10.0.0
-        version: 10.0.0(ai@6.0.208(zod@4.4.3))
+        specifier: ^11.1.0
+        version: 11.1.0(ai@6.0.208(zod@4.4.3))
       '@objectstack/driver-sqlite-wasm':
         specifier: ^10.0.0
         version: 10.0.0(ai@6.0.208(zod@4.4.3))(better-sqlite3@12.11.1)
@@ -743,6 +743,14 @@ packages:
     resolution: {integrity: sha512-L6h7qO+2YWnLb5G8Z4c2oRnY1HGPCrrLH2Qm0mZbJtsOE+FCaDJJPjtZgPwNffvXmS9NPwVwQEnZOp/Ck9U10g==}
     engines: {node: '>=18.0.0'}
 
+  '@objectstack/core@10.3.0':
+    resolution: {integrity: sha512-UFr/5BY0a0qUK/uYP8+ekumtolhDjApuFb8B5a8dFf0HmoJbymA/hocuCbqm644ateWY4OMmDStvnvPJ/wHEiA==}
+    engines: {node: '>=18.0.0'}
+
+  '@objectstack/core@11.1.0':
+    resolution: {integrity: sha512-XFis2qzNXSMzlItt0h6PaP9RTBV8iJN/T38oL5uUouBea31VpCJJ+Wqigf0gl2ywR6eXGHlJFgIG45OhJvRkYQ==}
+    engines: {node: '>=18.0.0'}
+
   '@objectstack/driver-memory@10.0.0':
     resolution: {integrity: sha512-dqz4aF7bzGVHzsXi4UPM5RR/qXMvzni5ub1HNhNi0z40n/BlfaRMYy3XXNwSAhAou42Ih5IQmg3OK/kkjts24w==}
     engines: {node: '>=18.0.0'}
@@ -753,6 +761,42 @@ packages:
 
   '@objectstack/driver-sql@10.0.0':
     resolution: {integrity: sha512-t+u8/aY4FojSa9Y/hJ3jUkrpDVxLOwGi4XumaFQJPKN1aQ8V/ItKMOm+lgaNtVlN/N4HoIXjzmvl18DgViVRyw==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      mysql2: ^3.0.0
+      pg: ^8.0.0
+      sqlite3: ^5.0.0
+      tedious: ^18.0.0
+    peerDependenciesMeta:
+      mysql2:
+        optional: true
+      pg:
+        optional: true
+      sqlite3:
+        optional: true
+      tedious:
+        optional: true
+
+  '@objectstack/driver-sql@10.3.0':
+    resolution: {integrity: sha512-EAbAXdGz87RSOhzu0PNaq8vzIgvPTrywCJCeoa2xGwmvlriT2fpSzZ3mUrU+7GOEWWdOAbqJJlZyb2OGuliKcQ==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      mysql2: ^3.0.0
+      pg: ^8.0.0
+      sqlite3: ^5.0.0
+      tedious: ^18.0.0
+    peerDependenciesMeta:
+      mysql2:
+        optional: true
+      pg:
+        optional: true
+      sqlite3:
+        optional: true
+      tedious:
+        optional: true
+
+  '@objectstack/driver-sql@11.1.0':
+    resolution: {integrity: sha512-coPyZHcRodzPpyetU/gIfvqY/GUWW4n5fhmwn951fzZNUZ7bU0O+W+AdIxQjuhTAnjA69LHDAZROz4iJUJf8EQ==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       mysql2: ^3.0.0
@@ -941,6 +985,24 @@ packages:
       ai:
         optional: true
 
+  '@objectstack/spec@10.3.0':
+    resolution: {integrity: sha512-8fEpISYU9lMcHygimVqBahVF/1NCVO5+Nv9/xYb/oqWfJvA5diy7ByD53tG71zgIQQKzoEfBZSeillln8qeczw==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      ai: ^6.0.0
+    peerDependenciesMeta:
+      ai:
+        optional: true
+
+  '@objectstack/spec@11.1.0':
+    resolution: {integrity: sha512-2DvwG/9p84K4BNA31lcmj7CVfOvnc8tPMfQJ/pi/os5GobULqoqwyaq6L8twtY7NMUkZUjDqnbRPcZpmTqpqHw==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      ai: ^6.0.0
+    peerDependenciesMeta:
+      ai:
+        optional: true
+
   '@objectstack/studio@10.0.0':
     resolution: {integrity: sha512-ugPyOx8Fy8Jqb3wMhRFQ12jkPNR802z8/XemFSxoiFg0odc2y/Ws6FuT+HkTzTh948uWin1Df2Z5vF8U6f4Jnw==}
     engines: {node: '>=18.0.0'}
@@ -958,6 +1020,10 @@ packages:
 
   '@objectstack/types@10.0.0':
     resolution: {integrity: sha512-aOinvdfxYgYA0PDvO7WpadTd4Z6Dx6bVWFSwXyv7CQSoLQzO3SjixmrL/6NDzpxmN2OYQvldhx8nOFgYt7EazA==}
+    engines: {node: '>=18.0.0'}
+
+  '@objectstack/types@11.1.0':
+    resolution: {integrity: sha512-OytP7Cc+l6IjOqh+7GtI/fTRXGMyKr8pOL1W8UezUJYr9A0qFO3ptkQxDUN2SBNZpUc9bAiG4W/iBAHuNVxGCA==}
     engines: {node: '>=18.0.0'}
 
   '@objectstack/verify@10.0.0':
@@ -2556,6 +2622,40 @@ packages:
       tedious:
         optional: true
 
+  knex@3.3.0:
+    resolution: {integrity: sha512-LgWl031hNuLv9Lhxdd9093zULa2aNcoP04Bk29e5NidgRcEr/T0rAr2WYi4BhjTiCDoQiRU56meUE5rppLKZzQ==}
+    engines: {node: '>=16'}
+    hasBin: true
+    peerDependencies:
+      better-sqlite3: '*'
+      mariadb: '*'
+      mysql: '*'
+      mysql2: '*'
+      pg: '*'
+      pg-native: '*'
+      pg-query-stream: ^4.14.0
+      sqlite3: '*'
+      tedious: '*'
+    peerDependenciesMeta:
+      better-sqlite3:
+        optional: true
+      mariadb:
+        optional: true
+      mysql:
+        optional: true
+      mysql2:
+        optional: true
+      pg:
+        optional: true
+      pg-native:
+        optional: true
+      pg-query-stream:
+        optional: true
+      sqlite3:
+        optional: true
+      tedious:
+        optional: true
+
   kysely@0.29.2:
     resolution: {integrity: sha512-s6WVJyEZrbm6jhBpiKHsGHyePMrVQKJ85wZCFCr9W4QHv6WTjWIrdvTmO9hDEA3bNK0xkrE2DqrHsXMLWuZpQg==}
     engines: {node: '>=22.0.0'}
@@ -2930,8 +3030,18 @@ packages:
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
 
+  nanoid@3.3.15:
+    resolution: {integrity: sha512-y7Wygv/7mEOvxTuEQDB8StXdMRBWf1kR/tlhAzBRUFkB2jfcLOAxO/SHmOO2zgz1pVgK29/kyupn059/bCHdjA==}
+    engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
+    hasBin: true
+
   nanoid@5.1.15:
     resolution: {integrity: sha512-kBg3RpGtIe+RpTbyXwoI6pk5yD7KUiI3sygUqgeBMRst42KmhB4RZC7eiO9Wa1HIpaCCtpE2DJ6OI4Wi5ebwFw==}
+    engines: {node: ^18 || >=20}
+    hasBin: true
+
+  nanoid@5.1.16:
+    resolution: {integrity: sha512-kVrnsrJqMR8+oLJnGEmSWw9BivK5mt7H3FZatVRjrc5wGqFYuBxX1yG7+A7Gi5AefkX6t/oCkizcQgpu0cY1dQ==}
     engines: {node: ^18 || >=20}
     hasBin: true
 
@@ -3391,8 +3501,8 @@ packages:
     resolution: {integrity: sha512-ujeqbceABgwMZxEJnk2HDY2DlnUZ+9oEcb1KzTVfYHio0UE6dG71n60d8D2I4qNvleWrrXpmjpt7vZeF1LnMZQ==}
     engines: {node: '>=6'}
 
-  tarn@3.0.2:
-    resolution: {integrity: sha512-51LAVKUSZSVfI05vjPESNc5vwqqZpbXCsU+/+wxlOrUjk2SnFTt97v9ZgQrD4YmxYW1Px6w2KjaDitCfkvgxMQ==}
+  tarn@3.1.0:
+    resolution: {integrity: sha512-QDihlHbXxQ4SnuQcRd1TPNBHUYo/hafDRDP82COYSVfRcx/3qnfGDkn1WFjozVl+AYr8ZyDKSQ/kIgHH1ri1yg==}
     engines: {node: '>=8.0.0'}
 
   tildify@2.0.0:
@@ -4145,7 +4255,7 @@ snapshots:
       '@objectstack/core': 10.0.0(ai@6.0.208(zod@4.4.3))
       '@objectstack/driver-memory': 10.0.0(ai@6.0.208(zod@4.4.3))
       '@objectstack/driver-mongodb': 10.0.0(ai@6.0.208(zod@4.4.3))
-      '@objectstack/driver-sql': 10.0.0(ai@6.0.208(zod@4.4.3))
+      '@objectstack/driver-sql': 10.3.0(ai@6.0.208(zod@4.4.3))
       '@objectstack/driver-sqlite-wasm': 10.0.0(ai@6.0.208(zod@4.4.3))(better-sqlite3@12.11.1)
       '@objectstack/formula': 10.0.0(ai@6.0.208(zod@4.4.3))
       '@objectstack/mcp': 10.0.0(ai@6.0.208(zod@4.4.3))
@@ -4218,6 +4328,7 @@ snapshots:
       - jose
       - kerberos
       - kysely
+      - mariadb
       - mongodb
       - mongodb-client-encryption
       - mysql
@@ -4274,6 +4385,7 @@ snapshots:
       - jose
       - kerberos
       - kysely
+      - mariadb
       - mongodb
       - mongodb-client-encryption
       - mysql
@@ -4305,6 +4417,20 @@ snapshots:
     transitivePeerDependencies:
       - ai
 
+  '@objectstack/core@10.3.0(ai@6.0.208(zod@4.4.3))':
+    dependencies:
+      '@objectstack/spec': 10.3.0(ai@6.0.208(zod@4.4.3))
+      zod: 4.4.3
+    transitivePeerDependencies:
+      - ai
+
+  '@objectstack/core@11.1.0(ai@6.0.208(zod@4.4.3))':
+    dependencies:
+      '@objectstack/spec': 11.1.0(ai@6.0.208(zod@4.4.3))
+      zod: 4.4.3
+    transitivePeerDependencies:
+      - ai
+
   '@objectstack/driver-memory@10.0.0(ai@6.0.208(zod@4.4.3))':
     dependencies:
       '@objectstack/core': 10.0.0(ai@6.0.208(zod@4.4.3))
@@ -4318,7 +4444,7 @@ snapshots:
       '@objectstack/core': 10.0.0(ai@6.0.208(zod@4.4.3))
       '@objectstack/spec': 10.0.0(ai@6.0.208(zod@4.4.3))
       mongodb: 7.3.0
-      nanoid: 5.1.15
+      nanoid: 5.1.16
     transitivePeerDependencies:
       - '@aws-sdk/credential-providers'
       - '@mongodb-js/zstd'
@@ -4333,12 +4459,46 @@ snapshots:
     dependencies:
       '@objectstack/core': 10.0.0(ai@6.0.208(zod@4.4.3))
       '@objectstack/spec': 10.0.0(ai@6.0.208(zod@4.4.3))
-      knex: 3.2.10(better-sqlite3@12.11.1)
-      nanoid: 5.1.15
+      knex: 3.3.0(better-sqlite3@12.11.1)
+      nanoid: 5.1.16
     optionalDependencies:
       better-sqlite3: 12.11.1
     transitivePeerDependencies:
       - ai
+      - mariadb
+      - mysql
+      - pg-native
+      - pg-query-stream
+      - supports-color
+
+  '@objectstack/driver-sql@10.3.0(ai@6.0.208(zod@4.4.3))':
+    dependencies:
+      '@objectstack/core': 10.3.0(ai@6.0.208(zod@4.4.3))
+      '@objectstack/spec': 10.3.0(ai@6.0.208(zod@4.4.3))
+      knex: 3.3.0(better-sqlite3@12.11.1)
+      nanoid: 5.1.16
+    optionalDependencies:
+      better-sqlite3: 12.11.1
+    transitivePeerDependencies:
+      - ai
+      - mariadb
+      - mysql
+      - pg-native
+      - pg-query-stream
+      - supports-color
+
+  '@objectstack/driver-sql@11.1.0(ai@6.0.208(zod@4.4.3))':
+    dependencies:
+      '@objectstack/core': 11.1.0(ai@6.0.208(zod@4.4.3))
+      '@objectstack/spec': 11.1.0(ai@6.0.208(zod@4.4.3))
+      '@objectstack/types': 11.1.0(ai@6.0.208(zod@4.4.3))
+      knex: 3.3.0(better-sqlite3@12.11.1)
+      nanoid: 5.1.16
+    optionalDependencies:
+      better-sqlite3: 12.11.1
+    transitivePeerDependencies:
+      - ai
+      - mariadb
       - mysql
       - pg-native
       - pg-query-stream
@@ -4355,6 +4515,7 @@ snapshots:
     transitivePeerDependencies:
       - ai
       - better-sqlite3
+      - mariadb
       - mysql
       - mysql2
       - pg
@@ -4623,6 +4784,7 @@ snapshots:
       - jose
       - kerberos
       - kysely
+      - mariadb
       - mongodb
       - mongodb-client-encryption
       - mysql
@@ -4781,6 +4943,18 @@ snapshots:
     optionalDependencies:
       ai: 6.0.208(zod@4.4.3)
 
+  '@objectstack/spec@10.3.0(ai@6.0.208(zod@4.4.3))':
+    dependencies:
+      zod: 4.4.3
+    optionalDependencies:
+      ai: 6.0.208(zod@4.4.3)
+
+  '@objectstack/spec@11.1.0(ai@6.0.208(zod@4.4.3))':
+    dependencies:
+      zod: 4.4.3
+    optionalDependencies:
+      ai: 6.0.208(zod@4.4.3)
+
   '@objectstack/studio@10.0.0(ai@6.0.208(zod@4.4.3))(vitest@4.1.9(@opentelemetry/api@1.9.1)(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0))':
     dependencies:
       '@objectstack/platform-objects': 10.0.0(ai@6.0.208(zod@4.4.3))(vitest@4.1.9(@opentelemetry/api@1.9.1)(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0))
@@ -4813,6 +4987,12 @@ snapshots:
   '@objectstack/types@10.0.0(ai@6.0.208(zod@4.4.3))':
     dependencies:
       '@objectstack/spec': 10.0.0(ai@6.0.208(zod@4.4.3))
+    transitivePeerDependencies:
+      - ai
+
+  '@objectstack/types@11.1.0(ai@6.0.208(zod@4.4.3))':
+    dependencies:
+      '@objectstack/spec': 11.1.0(ai@6.0.208(zod@4.4.3))
     transitivePeerDependencies:
       - ai
 
@@ -4853,6 +5033,7 @@ snapshots:
       - jose
       - kerberos
       - kysely
+      - mariadb
       - mongodb
       - mongodb-client-encryption
       - mysql
@@ -6412,7 +6593,28 @@ snapshots:
       pg-connection-string: 2.6.2
       rechoir: 0.8.0
       resolve-from: 5.0.0
-      tarn: 3.0.2
+      tarn: 3.1.0
+      tildify: 2.0.0
+    optionalDependencies:
+      better-sqlite3: 12.11.1
+    transitivePeerDependencies:
+      - supports-color
+
+  knex@3.3.0(better-sqlite3@12.11.1):
+    dependencies:
+      colorette: 2.0.19
+      commander: 10.0.1
+      debug: 4.3.4
+      escalade: 3.2.0
+      esm: 3.2.25
+      get-package-type: 0.1.0
+      getopts: 2.3.0
+      interpret: 2.2.0
+      lodash: 4.18.1
+      pg-connection-string: 2.6.2
+      rechoir: 0.8.0
+      resolve-from: 5.0.0
+      tarn: 3.1.0
       tildify: 2.0.0
     optionalDependencies:
       better-sqlite3: 12.11.1
@@ -6985,7 +7187,11 @@ snapshots:
 
   nanoid@3.3.12: {}
 
+  nanoid@3.3.15: {}
+
   nanoid@5.1.15: {}
+
+  nanoid@5.1.16: {}
 
   nanostores@1.3.0: {}
 
@@ -7101,7 +7307,7 @@ snapshots:
 
   postcss@8.4.31:
     dependencies:
-      nanoid: 3.3.12
+      nanoid: 3.3.15
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
@@ -7583,7 +7789,7 @@ snapshots:
       readable-stream: 3.6.2
     optional: true
 
-  tarn@3.0.2: {}
+  tarn@3.1.0: {}
 
   tildify@2.0.0: {}
 

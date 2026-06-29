@@ -29,7 +29,7 @@
     "@objectstack/account": "^10.0.0",
     "@objectstack/cli": "^10.0.0",
     "@objectstack/driver-memory": "^10.0.0",
-    "@objectstack/driver-sql": "^10.0.0",
+    "@objectstack/driver-sql": "^11.1.0",
     "@objectstack/driver-sqlite-wasm": "^10.0.0",
     "@objectstack/metadata": "^10.0.0",
     "@objectstack/objectql": "^10.0.0",
