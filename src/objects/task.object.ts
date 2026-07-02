@@ -10,13 +10,6 @@ export const Task = ObjectSchema.create({
   icon: 'check-square',
   description: 'Activities and to-do items',
 
-  // Tasks are atomic action items, not Hub objects. Keep the detail
-  // page single-column so the assignment + due-date + completion flow
-  // dominates instead of being shoulder-bumped by a related-list rail.
-  detail: {
-    hideReferenceRail: true,
-  },
-
   fields: {
     // Task Information
     subject: Field.text({
