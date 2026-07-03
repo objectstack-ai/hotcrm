@@ -17,7 +17,7 @@ export const Campaign = ObjectSchema.create({
   // which names a real field. The former template composed two local fields, so
   // a `display_title` formula field reproduces it for the record title.
   nameField: 'display_title',
-  compactLayout: ['campaign_code', 'name', 'type', 'status', 'start_date'],
+  highlightFields: ['campaign_code', 'name', 'type', 'status', 'start_date'],
   
   fields: {
     // AutoNumber field

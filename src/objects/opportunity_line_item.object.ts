@@ -22,7 +22,7 @@ export const OpportunityLineItem = ObjectSchema.create({
   // dropped (master-detail children inherit the master's sharing).
   enable: { trackHistory: true },
 
-  compactLayout: ['crm_product', 'quantity', 'unit_price', 'total_price'],
+  highlightFields: ['crm_product', 'quantity', 'unit_price', 'total_price'],
 
   fields: {
     crm_opportunity: Field.lookup('crm_opportunity', {

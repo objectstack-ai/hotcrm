@@ -21,7 +21,7 @@ export const CampaignMember = ObjectSchema.create({
   // master's sharing automatically (sharingModel enum no longer has it).
   enable: { trackHistory: true },
 
-  compactLayout: ['crm_campaign', 'crm_lead', 'crm_contact', 'status', 'response_date'],
+  highlightFields: ['crm_campaign', 'crm_lead', 'crm_contact', 'status', 'response_date'],
 
   fieldGroups: [
     { key: 'basic',    label: 'Basic Information', icon: 'info' },

@@ -32,7 +32,7 @@ export const Forecast = ObjectSchema.create({
   // formula cannot dot-walk a lookup (ADR-0072). The `display_title` formula
   // composes the local fields only: period_label + (period_start).
   nameField: 'display_title',
-  compactLayout: ['owner', 'period', 'period_start', 'commit_amount', 'closed_amount'],
+  highlightFields: ['owner', 'period', 'period_start', 'commit_amount', 'closed_amount'],
 
   fieldGroups: [
     { key: 'basic',   label: 'Snapshot',    icon: 'info' },
