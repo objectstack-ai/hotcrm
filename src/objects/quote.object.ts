@@ -17,7 +17,7 @@ export const Quote = ObjectSchema.create({
   // which names a real field. The former template composed two local fields, so
   // a `display_title` formula field reproduces it for the record title.
   nameField: 'display_title',
-  compactLayout: ['quote_number', 'name', 'crm_account', 'status', 'total_price'],
+  highlightFields: ['quote_number', 'name', 'crm_account', 'status', 'total_price'],
 
   fieldGroups: [
     { key: 'basic',     label: 'Quote Information', icon: 'info' },

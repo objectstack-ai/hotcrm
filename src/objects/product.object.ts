@@ -17,7 +17,7 @@ export const Product = ObjectSchema.create({
   // which names a real field. The former template composed two local fields, so
   // a `display_title` formula field reproduces it for the record title.
   nameField: 'display_title',
-  compactLayout: ['product_code', 'name', 'category', 'is_active'],
+  highlightFields: ['product_code', 'name', 'category', 'is_active'],
 
   fieldGroups: [
     { key: 'basic',    label: 'Product Information', icon: 'info' },

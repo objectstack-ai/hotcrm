@@ -13,7 +13,7 @@ export const Account = ObjectSchema.create({
   // which names a real field. The former template composed two local fields, so
   // a `display_title` formula field reproduces it for the record title.
   nameField: 'display_title',
-  compactLayout: ['account_number', 'name', 'type', 'owner'],
+  highlightFields: ['account_number', 'name', 'type', 'owner'],
 
   // Field groups organize the form layout. Array order == display order.
   // Each field below opts in via `group: '<key>'`.

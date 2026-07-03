@@ -13,7 +13,7 @@ export const Opportunity = ObjectSchema.create({
   // `stage` is a select — the formula references its stored value directly
   // (no label resolution), matching ADR-0079 guidance.
   nameField: 'display_title',
-  compactLayout: ['name', 'crm_account', 'amount', 'stage', 'owner'],
+  highlightFields: ['name', 'crm_account', 'amount', 'stage', 'owner'],
 
   fieldGroups: [
     { key: 'basic',       label: 'Basic Information',   icon: 'dollar-sign' },

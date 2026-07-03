@@ -203,7 +203,7 @@ export const Task = ObjectSchema.create({
   // ADR-0079: render-only `titleFormat` retired in favor of `nameField`,
   // which names the real field holding the record title (here: `subject`).
   nameField: 'subject',
-  compactLayout: ['subject', 'status', 'priority', 'due_date', 'owner'],
+  highlightFields: ['subject', 'status', 'priority', 'due_date', 'owner'],
   
   // Removed: list_views and form_views belong in UI configuration, not object definition
   

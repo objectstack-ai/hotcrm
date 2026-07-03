@@ -22,7 +22,7 @@ export const KnowledgeArticle = ObjectSchema.create({
   // which names a real field. The former template composed two local fields, so
   // a `display_title` formula field reproduces it for the record title.
   nameField: 'display_title',
-  compactLayout: ['article_number', 'title', 'category', 'status', 'audience'],
+  highlightFields: ['article_number', 'title', 'category', 'status', 'audience'],
 
   fieldGroups: [
     { key: 'basic',     label: 'Article Information', icon: 'info' },

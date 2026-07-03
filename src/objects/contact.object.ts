@@ -197,7 +197,7 @@ export const Contact = ObjectSchema.create({
   // which names the real field holding the record title (here: the `full_name`
   // formula field already defined above).
   nameField: 'full_name',
-  compactLayout: ['full_name', 'email', 'crm_account', 'phone'],
+  highlightFields: ['full_name', 'email', 'crm_account', 'phone'],
   
   // Validation Rules
   // `email_unique_per_account` (type: 'unique') was removed in 7.6 — the

@@ -20,7 +20,7 @@ export const Contract = ObjectSchema.create({
   // `contract_number` (autonumber) remains, so no formula is needed — point
   // `nameField` straight at it.
   nameField: 'contract_number',
-  compactLayout: ['contract_number', 'crm_account', 'status', 'start_date', 'end_date'],
+  highlightFields: ['contract_number', 'crm_account', 'status', 'start_date', 'end_date'],
 
   fieldGroups: [
     { key: 'basic',     label: 'Contract Information', icon: 'info' },
