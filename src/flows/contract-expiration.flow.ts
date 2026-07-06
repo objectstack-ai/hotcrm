@@ -17,6 +17,10 @@ export const ContractExpirationFlow: Flow = {
   description: 'Daily: expire activated contracts past their end_date and notify the owner.',
   type: 'schedule',
   status: 'active',
+  // Scheduled runs have no trigger user, so under the default runAs:'user' the
+  // data nodes execute UNSCOPED anyway. Declare runAs:'system' to make that
+  // RLS-bypassing elevation explicit and intended (ADR-0049, #1888).
+  runAs: 'system',
   variables: [],
   nodes: [
     { id: 'start', type: 'start', label: 'Start (daily 00:00)', config: { schedule: '0 0 * * *' } },

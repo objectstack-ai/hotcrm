@@ -210,24 +210,28 @@ export const ExecutiveDashboard: Dashboard = {
       options: { dateGranularity: 'month' },
     },
 
-    // ─── Row 4: Top Customers ─────────────────────────────────────────
+    // ─── Row 4: Revenue by Industry ───────────────────────────────────
+    // A dashboard `table` binds to an analytics cube, so it aggregates rather
+    // than listing raw accounts (ADR-0021). The previous "Top Accounts by
+    // Revenue" table selected only the `account_count` measure with no
+    // dimension — a single summary row, not a customer ranking. Grouping by
+    // industry gives a real multi-row breakdown of book-of-business by sector;
+    // for a per-account list, use an object-bound ListView (ADR-0017).
     {
-      id: 'top_accounts_by_revenue',
-      title: 'Top Accounts by Revenue',
-      description: 'Largest customers ranked by annual revenue',
+      id: 'accounts_by_industry',
+      title: 'Accounts by Industry',
+      description: 'Total annual revenue and account count per industry',
       type: 'table',
       colorVariant: 'default',
-      dataset: 'account_metrics', values: ['account_count'],
+      dataset: 'account_metrics', dimensions: ['industry'], values: ['annual_revenue_sum', 'account_count'],
       layout: { x: 0, y: 10, w: 12, h: 4 },
       options: {
         columns: [
-          { header: 'Account',         accessorKey: 'name' },
           { header: 'Industry',        accessorKey: 'industry' },
-          { header: 'Annual Revenue',  accessorKey: 'annual_revenue' },
-          { header: 'Type',            accessorKey: 'type' },
-          { header: 'Owner',           accessorKey: 'owner' },
+          { header: 'Annual Revenue',  accessorKey: 'annual_revenue_sum', format: '$0,0' },
+          { header: 'Accounts',        accessorKey: 'account_count' },
         ],
-        sortBy: 'annual_revenue',
+        sortBy: 'annual_revenue_sum',
         sortOrder: 'desc',
         limit: 10,
         striped: true,

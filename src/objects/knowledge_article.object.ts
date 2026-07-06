@@ -101,6 +101,7 @@ export const KnowledgeArticle = ObjectSchema.create({
       label: 'Status',
       required: true,
       group: 'basic',
+      trackHistory: true,
       options: [
         { label: 'Draft',      value: 'draft',     color: '#94A3B8', default: true },
         { label: 'In Review',  value: 'in_review', color: '#F59E0B' },
@@ -142,6 +143,7 @@ export const KnowledgeArticle = ObjectSchema.create({
       defaultValue: cel`os.user.id`,
       label: 'Article Owner',
       group: 'basic',
+      trackHistory: true,
     }),
 
     published_at: Field.datetime({
@@ -186,16 +188,11 @@ export const KnowledgeArticle = ObjectSchema.create({
     { fields: ['language'] },
   ],
 
+  // Dead object-level enable.* flags removed in @objectstack 12 (ADR-0049);
+  // only the live API surface remains. History → Field.trackHistory (ADR-0052).
   enable: {
-    trackHistory: true,
-    searchable: true,
     apiEnabled: true,
     apiMethods: ['get', 'list', 'create', 'update', 'delete', 'search', 'export'],
-    files: true,
-    feeds: true,
-    activities: true,
-    trash: true,
-    mru: true,
   },
 
   validations: [

@@ -208,27 +208,30 @@ export const SalesDashboard: Dashboard = {
       },
     },
 
-    // ─── Row 4: Top Deals ─────────────────────────────────────────────
+    // ─── Row 4: Rep Leaderboard ───────────────────────────────────────
+    // A dashboard `table` binds to an analytics cube and aggregates; it cannot
+    // list raw deals (ADR-0021). The previous "Top Open Opportunities" table
+    // selected only `opp_count` with no dimension — one summary row, not a deal
+    // ranking. Grouping open pipeline by owner yields a rep leaderboard (one
+    // row per rep). For a per-deal list, surface an object-bound ListView
+    // through app navigation (ADR-0017).
     {
-      id: 'top_opportunities',
-      title: 'Top Open Opportunities',
-      description: 'Highest-value deals still in flight',
+      id: 'open_pipeline_by_owner',
+      title: 'Open Pipeline by Owner',
+      description: 'In-flight pipeline value, deal count and avg win probability per rep',
       type: 'table',
       filter: { stage: { $nin: ['closed_won', 'closed_lost'] } },
       colorVariant: 'default',
-      dataset: 'opportunity_metrics', values: ['opp_count'],
+      dataset: 'opportunity_metrics', dimensions: ['owner'], values: ['total_amount', 'opp_count', 'avg_probability'],
       layout: { x: 0, y: 10, w: 12, h: 4 },
       options: {
         columns: [
-          { header: 'Opportunity', accessorKey: 'name' },
-          { header: 'Account',     accessorKey: 'crm_account' },
-          { header: 'Amount',      accessorKey: 'amount', format: '0,0' },
-          { header: 'Stage',       accessorKey: 'stage' },
-          { header: 'Probability', accessorKey: 'probability', format: '0%' },
-          { header: 'Close Date',  accessorKey: 'close_date', format: 'MMM D, YYYY' },
-          { header: 'Owner',       accessorKey: 'owner' },
+          { header: 'Owner',         accessorKey: 'owner' },
+          { header: 'Open Pipeline', accessorKey: 'total_amount', format: '$0,0' },
+          { header: 'Open Deals',    accessorKey: 'opp_count' },
+          { header: 'Avg Win Prob.', accessorKey: 'avg_probability', format: '0%' },
         ],
-        sortBy: 'amount',
+        sortBy: 'total_amount',
         sortOrder: 'desc',
         limit: 10,
         striped: true,

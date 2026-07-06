@@ -48,6 +48,7 @@ export const Forecast = ObjectSchema.create({
       // bypass field defaults) succeed; ownership is backfilled to the active
       // user at runtime, matching every other CRM object's owner field.
       group: 'basic',
+      trackHistory: true,
     }),
 
     period: Field.select({
@@ -100,6 +101,7 @@ export const Forecast = ObjectSchema.create({
       scale: 2,
       min: 0,
       group: 'amounts',
+      trackHistory: true,
     }),
 
     pipeline_amount: Field.currency({
@@ -178,15 +180,11 @@ export const Forecast = ObjectSchema.create({
     { fields: ['period_start'] },
   ],
 
+  // Dead object-level enable.* flags removed in @objectstack 12 (ADR-0049);
+  // only the live API surface remains. History → Field.trackHistory (ADR-0052).
   enable: {
-    trackHistory: true,
-    searchable: true,
     apiEnabled: true,
     apiMethods: ['get', 'list', 'create', 'update', 'delete', 'search', 'export'],
-    feeds: false,
-    activities: false,
-    trash: true,
-    mru: false,
   },
 
   validations: [

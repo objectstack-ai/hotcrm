@@ -18,9 +18,10 @@ export const OpportunityLineItem = ObjectSchema.create({
   icon: 'package',
   description: 'A single product line on an Opportunity',
 
-  // 7.7: trackHistory moved under `enable`; shareModel 'controlled-by-parent'
-  // dropped (master-detail children inherit the master's sharing).
-  enable: { trackHistory: true },
+  // @objectstack 12: the dead object-level `enable.trackHistory` flag was
+  // removed (ADR-0049) — per-field history is opt-in via `Field.trackHistory`
+  // (ADR-0052), set on quantity/unit_price/discount below. Master-detail
+  // children still inherit the master's sharing automatically.
 
   highlightFields: ['crm_product', 'quantity', 'unit_price', 'total_price'],
 
@@ -46,6 +47,7 @@ export const OpportunityLineItem = ObjectSchema.create({
       scale: 2,
       min: 0,
       defaultValue: 1,
+      trackHistory: true,
     }),
 
     list_price: Field.currency({
@@ -58,6 +60,7 @@ export const OpportunityLineItem = ObjectSchema.create({
       label: 'Sales Price',
       required: true,
       description: 'Negotiated unit price (may differ from list price)',
+      trackHistory: true,
     }),
 
     discount: Field.percent({
@@ -66,6 +69,7 @@ export const OpportunityLineItem = ObjectSchema.create({
       min: 0,
       max: 100,
       defaultValue: 0,
+      trackHistory: true,
     }),
 
     total_price: Field.formula({

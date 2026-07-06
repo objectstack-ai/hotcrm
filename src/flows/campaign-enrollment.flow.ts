@@ -10,6 +10,10 @@ export const CampaignEnrollmentFlow: Flow = {
   description: 'Bulk enroll leads into marketing campaigns',
   type: 'schedule',
   status: 'active',
+  // Scheduled runs have no trigger user, so under the default runAs:'user' the
+  // data nodes execute UNSCOPED anyway. Declare runAs:'system' to make that
+  // RLS-bypassing elevation explicit and intended (ADR-0049, #1888).
+  runAs: 'system',
 
   variables: [
     { name: 'campaignId', type: 'text', isInput: true, isOutput: false },

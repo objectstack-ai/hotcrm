@@ -51,7 +51,10 @@ export const Opportunity = ObjectSchema.create({
 
     primary_contact: Field.lookup('crm_contact', {
       label: 'Primary Contact',
-      referenceFilters: ['crm_account = {opportunity.crm_account}'],  // Filter contacts by account
+      // @objectstack 12: string[] `referenceFilters` is dead (not read by the
+      // picker); `dependsOn` is the live cascading form — scopes contacts to the
+      // opportunity's `crm_account` (ADR-0049).
+      dependsOn: ['crm_account'],
       group: 'basic',
     }),
 
@@ -60,6 +63,7 @@ export const Opportunity = ObjectSchema.create({
       defaultValue: cel`os.user.id`,
       label: 'Opportunity Owner',
       group: 'basic',
+      trackHistory: true,
     }),
 
     // Financial Information
@@ -69,6 +73,7 @@ export const Opportunity = ObjectSchema.create({
       scale: 2,
       min: 0,
       group: 'financials',
+      trackHistory: true,
     }),
 
     expected_revenue: Field.currency({
@@ -110,6 +115,7 @@ export const Opportunity = ObjectSchema.create({
       label: 'Close Date',
       required: true,
       group: 'sales_process',
+      trackHistory: true,
     }),
 
     created_date: Field.datetime({
@@ -262,16 +268,12 @@ export const Opportunity = ObjectSchema.create({
   ],
   
   // Enable advanced features
+  // Dead object-level enable.* flags removed in @objectstack 12 (ADR-0049);
+  // only the live API surface remains. Stage/amount/owner history is tracked
+  // per-field via Field.trackHistory (ADR-0052).
   enable: {
-    trackHistory: true,    // Critical for tracking stage changes
-    searchable: true,
     apiEnabled: true,
     apiMethods: ['get', 'list', 'create', 'update', 'delete', 'aggregate', 'search'], // Whitelist allowed API operations
-    files: true,           // Attach proposals, contracts
-    feeds: true,           // Team collaboration (Chatter-like)
-    activities: true,      // Enable tasks and events tracking
-    trash: true,
-    mru: true,             // Track Most Recently Used
   },
 
   // ADR-0052 §5b.2 — declarative milestone activity. When `stage` enters these

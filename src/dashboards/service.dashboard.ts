@@ -235,26 +235,29 @@ export const ServiceDashboard: Dashboard = {
       },
     },
 
-    // ─── Row 4: Personal Queue ────────────────────────────────────────
+    // ─── Row 4: My Open Cases by Priority ─────────────────────────────
+    // A dashboard `table` binds to an analytics cube and aggregates; it cannot
+    // list individual cases (ADR-0021). The previous "My Open Cases" table
+    // selected only `case_count` with no dimension — one summary row, not a
+    // queue. Keeping the personal filter but grouping by priority yields a
+    // per-priority breakdown of the agent's open queue with its SLA-breach
+    // rate. For a clickable case list, use an object-bound ListView (ADR-0017).
     {
-      id: 'my_open_cases',
-      title: 'My Open Cases',
-      description: 'Cases assigned to you, sorted by priority',
+      id: 'my_open_cases_by_priority',
+      title: 'My Open Cases by Priority',
+      description: 'Your open cases and their SLA-violation rate, broken down by priority',
       type: 'table',
       filter: { owner: '{current_user}', is_closed: false },
       colorVariant: 'default',
-      dataset: 'case_metrics', values: ['case_count'],
+      dataset: 'case_metrics', dimensions: ['priority'], values: ['case_count', 'avg_sla_violated'],
       layout: { x: 0, y: 10, w: 12, h: 4 },
       options: {
         columns: [
-          { header: 'Case #',     accessorKey: 'case_number' },
-          { header: 'Subject',    accessorKey: 'subject' },
-          { header: 'Account',    accessorKey: 'crm_account' },
-          { header: 'Priority',   accessorKey: 'priority' },
-          { header: 'Status',     accessorKey: 'status' },
-          { header: 'Created',    accessorKey: 'created_date', format: 'MMM D, h:mm A' },
+          { header: 'Priority',            accessorKey: 'priority' },
+          { header: 'Open Cases',          accessorKey: 'case_count' },
+          { header: 'SLA Violation Rate',  accessorKey: 'avg_sla_violated', format: '0.0%' },
         ],
-        sortBy: 'priority',
+        sortBy: 'case_count',
         sortOrder: 'desc',
         limit: 10,
         striped: true,

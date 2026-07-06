@@ -80,6 +80,7 @@ export const Campaign = ObjectSchema.create({
         { label: 'Aborted', value: 'aborted', color: '#FF0000' },
       ],
       required: true,
+      trackHistory: true,
     }),
     
     // Dates
@@ -182,9 +183,10 @@ export const Campaign = ObjectSchema.create({
     }),
     
     owner: Field.lookup('user', {
-    
+
       defaultValue: cel`os.user.id`,
       label: 'Campaign Owner',
+      trackHistory: true,
     }),
     
     // Campaign Assets
@@ -208,16 +210,11 @@ export const Campaign = ObjectSchema.create({
   ],
   
   // Enable advanced features
+  // Dead object-level enable.* flags removed in @objectstack 12 (ADR-0049);
+  // only the live API surface remains. History → Field.trackHistory (ADR-0052).
   enable: {
-    trackHistory: true,
-    searchable: true,
     apiEnabled: true,
     apiMethods: ['get', 'list', 'create', 'update', 'delete', 'search', 'export'],
-    files: true,
-    feeds: true,
-    activities: true,
-    trash: true,
-    mru: true,
   },
   
   // Validation Rules

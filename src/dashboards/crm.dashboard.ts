@@ -195,26 +195,31 @@ export const CrmOverviewDashboard: Dashboard = {
       },
     },
 
-    // ─── Recent Deals Table ───────────────────────────────────────────
+    // ─── Pipeline by Owner ────────────────────────────────────────────
+    // A dashboard `table` binds to an analytics dataset (a cube), so it must
+    // aggregate — it cannot list raw records (ADR-0021). The previous
+    // "Recent Opportunities" table selected only the `opp_count` measure with
+    // no dimension, which renders a single summary row, not a per-deal list.
+    // For a true per-record listing, surface an object-bound ListView through
+    // app navigation instead (ADR-0017). Here we group by owner for a rep
+    // pipeline breakdown that renders one row per owner.
     {
-      id: 'recent_opportunities',
-      title: 'Recent Opportunities',
-      description: 'Most recently updated deals across the team',
+      id: 'pipeline_by_owner',
+      title: 'Pipeline by Owner',
+      description: 'Open pipeline value and deal count per sales rep',
       type: 'table',
+      filter: { stage: { $nin: ['closed_won', 'closed_lost'] } },
       colorVariant: 'default',
-      dataset: 'opportunity_metrics', values: ['opp_count'],
+      dataset: 'opportunity_metrics', dimensions: ['owner'], values: ['total_amount', 'opp_count', 'avg_amount'],
       layout: { x: 0, y: 10, w: 12, h: 4 },
       options: {
         columns: [
-          { header: 'Opportunity', accessorKey: 'name' },
-          { header: 'Account',     accessorKey: 'crm_account' },
-          { header: 'Amount',      accessorKey: 'amount' },
-          { header: 'Stage',       accessorKey: 'stage' },
-          { header: 'Probability', accessorKey: 'probability', format: '0%' },
-          { header: 'Close Date',  accessorKey: 'close_date', format: 'MMM D, YYYY' },
-          { header: 'Owner',       accessorKey: 'owner' },
+          { header: 'Owner',         accessorKey: 'owner' },
+          { header: 'Pipeline',      accessorKey: 'total_amount', format: '$0,0' },
+          { header: 'Opportunities', accessorKey: 'opp_count' },
+          { header: 'Avg Deal Size', accessorKey: 'avg_amount', format: '$0,0' },
         ],
-        sortBy: 'last_modified_date',
+        sortBy: 'total_amount',
         sortOrder: 'desc',
         limit: 10,
         striped: true,
