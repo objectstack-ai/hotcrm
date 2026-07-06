@@ -86,6 +86,7 @@ export const Account = ObjectSchema.create({
       scale: 2,
       min: 0,
       group: 'financials',
+      trackHistory: true,
     }),
 
     number_of_employees: Field.number({
@@ -123,6 +124,7 @@ export const Account = ObjectSchema.create({
       defaultValue: cel`os.user.id`,
       label: 'Account Owner',
       group: 'ownership',
+      trackHistory: true,
     }),
 
     parent_account: Field.lookup('crm_account', {
@@ -136,6 +138,7 @@ export const Account = ObjectSchema.create({
       label: 'Active',
       defaultValue: true,
       group: 'ownership',
+      trackHistory: true,
     }),
 
     // Brand color (new field type)
@@ -213,17 +216,14 @@ export const Account = ObjectSchema.create({
     { fields: ['type', 'is_active'] },
   ],
   
-  // Enable advanced features
+  // API surface. Other object-level `enable.*` flags (trackHistory, files,
+  // feeds, activities, trash, mru, searchable) were removed in @objectstack 12
+  // — they were dead no-ops (ADR-0049 liveness). Field history now lives on
+  // individual `Field.trackHistory` (ADR-0052); global search uses
+  // `searchableFields`/per-field `searchable`.
   enable: {
-    trackHistory: true,     // Track field changes
-    searchable: true,       // Include in global search
     apiEnabled: true,       // Expose via REST/GraphQL
     apiMethods: ['get', 'list', 'create', 'update', 'delete', 'search', 'export'], // Whitelist allowed API operations
-    files: true,            // Allow file attachments
-    feeds: true,            // Enable activity feed/chatter (Chatter-like)
-    activities: true,       // Enable tasks and events tracking
-    trash: true,            // Recycle bin support
-    mru: true,              // Track Most Recently Used
   },
   
   // Validation Rules

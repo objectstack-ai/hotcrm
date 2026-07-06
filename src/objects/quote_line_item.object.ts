@@ -17,9 +17,10 @@ export const QuoteLineItem = ObjectSchema.create({
   icon: 'package',
   description: 'A single product line on a Quote',
 
-  // 7.7: trackHistory moved under `enable`; shareModel 'controlled-by-parent'
-  // dropped (master-detail children inherit the master's sharing).
-  enable: { trackHistory: true },
+  // @objectstack 12: the dead object-level `enable.trackHistory` flag was
+  // removed (ADR-0049) — per-field history is opt-in via `Field.trackHistory`
+  // (ADR-0052), set on quantity/unit_price/discount below. Master-detail
+  // children still inherit the master's sharing automatically.
 
   highlightFields: ['crm_product', 'quantity', 'unit_price', 'total_price'],
 
@@ -45,6 +46,7 @@ export const QuoteLineItem = ObjectSchema.create({
       scale: 2,
       min: 0,
       defaultValue: 1,
+      trackHistory: true,
     }),
 
     list_price: Field.currency({
@@ -55,6 +57,7 @@ export const QuoteLineItem = ObjectSchema.create({
     unit_price: Field.currency({
       label: 'Sales Price',
       required: true,
+      trackHistory: true,
     }),
 
     discount: Field.percent({
@@ -63,6 +66,7 @@ export const QuoteLineItem = ObjectSchema.create({
       min: 0,
       max: 100,
       defaultValue: 0,
+      trackHistory: true,
     }),
 
     subtotal: Field.formula({

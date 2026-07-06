@@ -16,10 +16,10 @@ export const CampaignMember = ObjectSchema.create({
   icon: 'user-plus',
   description: 'Membership and response tracking for marketing campaigns',
 
-  // 7.7: top-level `trackHistory` moved under `enable`; `shareModel:
-  // 'controlled-by-parent'` dropped — master-detail children inherit the
-  // master's sharing automatically (sharingModel enum no longer has it).
-  enable: { trackHistory: true },
+  // @objectstack 12: the dead object-level `enable.trackHistory` flag was
+  // removed (ADR-0049) — per-field history is opt-in via `Field.trackHistory`
+  // (ADR-0052), set on `status` below. Master-detail children still inherit the
+  // master's sharing automatically (sharingModel enum has no controlled-by-parent).
 
   highlightFields: ['crm_campaign', 'crm_lead', 'crm_contact', 'status', 'response_date'],
 
@@ -51,6 +51,7 @@ export const CampaignMember = ObjectSchema.create({
       label: 'Status',
       required: true,
       group: 'response',
+      trackHistory: true,
       options: [
         { label: 'Sent',      value: 'sent',      default: true, color: '#A0A0A0' },
         { label: 'Opened',    value: 'opened',    color: '#4169E1' },

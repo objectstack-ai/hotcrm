@@ -99,6 +99,7 @@ export const Contact = ObjectSchema.create({
       defaultValue: cel`os.user.id`,
       label: 'Contact Owner',
       group: 'account_info',
+      trackHistory: true,
     }),
 
     // Contact Information
@@ -173,15 +174,10 @@ export const Contact = ObjectSchema.create({
   },
   
   // Enable features
+  // Dead object-level enable.* flags removed in @objectstack 12 (ADR-0049);
+  // only the live API surface remains. History → Field.trackHistory (ADR-0052).
   enable: {
-    trackHistory: true,
-    searchable: true,
     apiEnabled: true,
-    files: true,
-    feeds: true,            // Enable social feed, comments, and mentions
-    activities: true,       // Enable tasks and events tracking
-    trash: true,
-    mru: true,              // Track Most Recently Used
   },
   
   // Database indexes for performance

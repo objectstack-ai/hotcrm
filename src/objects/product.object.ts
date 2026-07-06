@@ -108,8 +108,9 @@ export const Product = ObjectSchema.create({
     is_active: Field.boolean({
       label: 'Active',
       defaultValue: true,
+      trackHistory: true,
     }),
-    
+
     is_taxable: Field.boolean({
       label: 'Taxable',
       defaultValue: true,
@@ -171,15 +172,11 @@ export const Product = ObjectSchema.create({
   ],
   
   // Enable advanced features
+  // Dead object-level enable.* flags removed in @objectstack 12 (ADR-0049);
+  // only the live API surface remains. History → Field.trackHistory (ADR-0052).
   enable: {
-    trackHistory: true,
-    searchable: true,
     apiEnabled: true,
     apiMethods: ['get', 'list', 'create', 'update', 'delete', 'search'],
-    files: true,
-    feeds: true,
-    trash: true,
-    mru: true,
   },
   
   // Validation Rules

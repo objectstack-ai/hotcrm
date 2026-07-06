@@ -129,6 +129,7 @@ export const Lead = ObjectSchema.create({
       label: 'Lead Status',
       required: true,
       group: 'qualification',
+      trackHistory: true,
       options: [
         { label: 'New', value: 'new', color: '#808080', default: true },
         { label: 'Contacted', value: 'contacted', color: '#FFA500' },
@@ -168,6 +169,7 @@ export const Lead = ObjectSchema.create({
       defaultValue: cel`os.user.id`,
       label: 'Lead Owner',
       group: 'assignment',
+      trackHistory: true,
     }),
 
     // Conversion tracking
@@ -176,6 +178,7 @@ export const Lead = ObjectSchema.create({
       defaultValue: false,
       readonly: true,
       group: 'conversion',
+      trackHistory: true,
     }),
 
     converted_account: Field.lookup('crm_account', {
@@ -285,15 +288,10 @@ export const Lead = ObjectSchema.create({
     { fields: ['company'] },
   ],
   
+  // Dead object-level enable.* flags removed in @objectstack 12 (ADR-0049);
+  // only the live API surface remains. History → Field.trackHistory (ADR-0052).
   enable: {
-    trackHistory: true,
-    searchable: true,
     apiEnabled: true,
-    files: true,
-    feeds: true,            // Enable social feed, comments, and mentions
-    activities: true,       // Enable tasks and events tracking
-    trash: true,
-    mru: true,              // Track Most Recently Used
   },
   
   // ADR-0079: render-only `titleFormat` retired in favor of `nameField`

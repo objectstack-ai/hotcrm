@@ -27,6 +27,7 @@ export const Task = ObjectSchema.create({
     status: Field.select({
       label: 'Status',
       required: true,
+      trackHistory: true,
       options: [
         { label: 'Not Started', value: 'not_started', color: '#808080', default: true },
         { label: 'In Progress', value: 'in_progress', color: '#FFA500' },
@@ -35,10 +36,11 @@ export const Task = ObjectSchema.create({
         { label: 'Deferred', value: 'deferred', color: '#999999' },
       ]
     }),
-    
+
     priority: Field.select({
       label: 'Priority',
       required: true,
+      trackHistory: true,
       options: [
         { label: 'Low', value: 'low', color: '#4169E1', default: true },
         { label: 'Normal', value: 'normal', color: '#00AA00' },
@@ -77,6 +79,7 @@ export const Task = ObjectSchema.create({
     owner: Field.lookup('user', {
       defaultValue: cel`os.user.id`,
       label: 'Assigned To',
+      trackHistory: true,
     }),
     
     // Related To (Polymorphic relationship - can link to multiple object types)
@@ -181,15 +184,10 @@ export const Task = ObjectSchema.create({
     }),
   },
   
+  // Dead object-level enable.* flags removed in @objectstack 12 (ADR-0049);
+  // only the live API surface remains. History → Field.trackHistory (ADR-0052).
   enable: {
-    trackHistory: true,
-    searchable: true,
     apiEnabled: true,
-    files: true,
-    feeds: true,            // Enable social feed, comments, and mentions
-    activities: true,       // Enable tasks and events tracking
-    trash: true,
-    mru: true,              // Track Most Recently Used
   },
   
   // Database indexes for performance

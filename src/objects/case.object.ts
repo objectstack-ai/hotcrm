@@ -55,7 +55,10 @@ export const Case = ObjectSchema.create({
       // an existing CRM contact. Back-office staff or a triage flow links
       // the case to a contact after the fact. This matches the Salesforce
       // Web-to-Case convention.
-      referenceFilters: ['crm_account = {case.crm_account}'],
+      // @objectstack 12: string[] `referenceFilters` is dead (not read by the
+      // picker). `dependsOn` is the live cascading-lookup form — it scopes the
+      // contact candidates to those sharing the case's `crm_account` (ADR-0049).
+      dependsOn: ['crm_account'],
     }),
     
     // Case Management
@@ -80,6 +83,7 @@ export const Case = ObjectSchema.create({
     priority: Field.select({
       label: 'Priority',
       required: true,
+      trackHistory: true,
       options: [
         { label: 'Low', value: 'low', color: '#4169E1', default: true },
         { label: 'Medium', value: 'medium', color: '#FFA500' },
@@ -113,6 +117,7 @@ export const Case = ObjectSchema.create({
     owner: Field.lookup('user', {
       defaultValue: cel`os.user.id`,
       label: 'Case Owner',
+      trackHistory: true,
     }),
     
     // SLA and Metrics
@@ -212,15 +217,10 @@ export const Case = ObjectSchema.create({
     { fields: ['priority'] },
   ],
   
+  // Dead object-level enable.* flags removed in @objectstack 12 (ADR-0049);
+  // only the live API surface remains. History → Field.trackHistory (ADR-0052).
   enable: {
-    trackHistory: true,
-    searchable: true,
     apiEnabled: true,
-    files: true,
-    feeds: true,            // Enable social feed, comments, and mentions
-    activities: true,       // Enable tasks and events tracking
-    trash: true,
-    mru: true,              // Track Most Recently Used
   },
 
   // ADR-0052 §5b.2 — declarative milestone activity for the service narrative.

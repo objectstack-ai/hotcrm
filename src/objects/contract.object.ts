@@ -47,24 +47,25 @@ export const Contract = ObjectSchema.create({
     crm_contact: Field.lookup('crm_contact', {
       label: 'Primary Contact',
       required: true,
-      referenceFilters: [
-        'crm_account = {crm_account}',
-      ]
+      // @objectstack 12: string[] `referenceFilters` is dead (not read by the
+      // picker); `dependsOn` is the live cascading-lookup form — scopes contacts
+      // to the contract's `crm_account` (ADR-0049).
+      dependsOn: ['crm_account'],
     }),
-    
+
     crm_opportunity: Field.lookup('crm_opportunity', {
       label: 'Related Opportunity',
-      referenceFilters: [
-        'crm_account = {crm_account}',
-      ]
+      // Scope opportunities to the contract's account (was dead referenceFilters).
+      dependsOn: ['crm_account'],
     }),
     
     owner: Field.lookup('user', {
-    
+
       defaultValue: cel`os.user.id`,
       label: 'Contract Owner',
+      trackHistory: true,
     }),
-    
+
     // Status
     status: Field.select({
       label: 'Status',
@@ -76,6 +77,7 @@ export const Contract = ObjectSchema.create({
         { label: 'Terminated', value: 'terminated', color: '#666666' },
       ],
       required: true,
+      trackHistory: true,
     }),
     
     // Contract Terms
@@ -186,16 +188,11 @@ export const Contract = ObjectSchema.create({
   ],
   
   // Enable advanced features
+  // Dead object-level enable.* flags removed in @objectstack 12 (ADR-0049);
+  // only the live API surface remains. History → Field.trackHistory (ADR-0052).
   enable: {
-    trackHistory: true,
-    searchable: true,
     apiEnabled: true,
     apiMethods: ['get', 'list', 'create', 'update', 'delete', 'search', 'export'],
-    files: true,
-    feeds: true,
-    activities: true,
-    trash: true,
-    mru: true,
   },
   
   // Validation Rules
