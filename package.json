@@ -28,7 +28,7 @@
   "dependencies": {
     "@objectstack/account": "^11.7.0",
     "@objectstack/cli": "^11.7.0",
-    "@objectstack/driver-memory": "^11.7.0",
+    "@objectstack/driver-memory": "^12.3.0",
     "@objectstack/driver-sql": "^11.7.0",
     "@objectstack/driver-sqlite-wasm": "^11.7.0",
     "@objectstack/metadata": "^11.7.0",
