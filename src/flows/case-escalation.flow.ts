@@ -18,13 +18,18 @@ export const CaseEscalationFlow: Flow = {
   nodes: [
     {
       // Trigger wiring (7.4): bind to afterUpdate and gate on the critical
-      // transition. `is_escalated != true` guard prevents the flow's own
-      // escalation write from re-triggering it (infinite-loop safe).
+      // transition. The re-fire guard MUST use `status` (a string enum), NOT the
+      // boolean `is_escalated`: this flow's own escalation write re-triggers
+      // record-after-update, and on SQLite/libsql a boolean persists as integer
+      // `1`, so `record.is_escalated != true` is `1 != true` = true — the guard
+      // never trips and the flow loops forever (it wedged a first-boot seed on
+      // 2026-07-06). The same write sets `status: 'escalated'`, so
+      // `status != "escalated"` reliably suppresses the second fire.
       id: 'start', type: 'start', label: 'Start',
       config: {
         objectName: 'crm_case',
         triggerType: 'record-after-update',
-        condition: 'record.priority == "critical" && record.is_escalated != true',
+        condition: 'record.priority == "critical" && record.status != "escalated"',
       },
     },
     {
