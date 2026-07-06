@@ -36,7 +36,7 @@
     "@objectstack/runtime": "^11.7.0",
     "@objectstack/service-analytics": "^11.7.0",
     "@objectstack/service-automation": "^11.7.0",
-    "@objectstack/spec": "^11.7.0"
+    "@objectstack/spec": "^12.3.0"
   },
   "optionalDependencies": {
     "better-sqlite3": "^12.11.1"

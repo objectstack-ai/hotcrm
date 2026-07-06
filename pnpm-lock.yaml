@@ -39,8 +39,8 @@ importers:
         specifier: ^11.7.0
         version: 11.7.0
       '@objectstack/spec':
-        specifier: ^11.7.0
-        version: 11.7.0
+        specifier: ^12.3.0
+        version: 12.3.0
     devDependencies:
       '@playwright/test':
         specifier: ^1.61.1
@@ -920,6 +920,15 @@ packages:
 
   '@objectstack/spec@11.7.0':
     resolution: {integrity: sha512-cNK0Gh+mV2L9SyDBL0daWlJpOUcnADOCHpVlkiqq8Oi6lkixPrakvfLxFtmIoOEBNSbPiHepBdNgmGA9nCthXQ==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      ai: ^7.0.0
+    peerDependenciesMeta:
+      ai:
+        optional: true
+
+  '@objectstack/spec@12.3.0':
+    resolution: {integrity: sha512-DzLELgGO1D4f7dqQc7MSqJ5rk4NNzNeJz70KzhV9+TLKJLNUjXNDlXqYUNAYWs3qwMYxtWokmjyVVty0hOZM7Q==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       ai: ^7.0.0
@@ -5109,6 +5118,10 @@ snapshots:
       - vitest
 
   '@objectstack/spec@11.7.0':
+    dependencies:
+      zod: 4.4.3
+
+  '@objectstack/spec@12.3.0':
     dependencies:
       zod: 4.4.3
 
