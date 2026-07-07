@@ -227,7 +227,7 @@ export const SalesDashboard: Dashboard = {
       options: {
         columns: [
           { header: 'Owner',         accessorKey: 'owner' },
-          { header: 'Open Pipeline', accessorKey: 'total_amount', format: '$0,0' },
+          { header: 'Open Pipeline', accessorKey: 'total_amount', format: '0,0' },
           { header: 'Open Deals',    accessorKey: 'opp_count' },
           { header: 'Avg Win Prob.', accessorKey: 'avg_probability', format: '0%' },
         ],
