@@ -2,6 +2,19 @@
 
 All notable changes to HotCRM are documented in this file. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); HotCRM follows [Semantic Versioning](https://semver.org/).
 
+## [2.0.0] — 2026-07-07
+
+Platform upgrade to ObjectStack **12.3** — a major line bump. Manifest `specVersion` now declares `^12.0.0` (was `^10.0.0`); app version `2.0.0`. ObjectStack 12 introduces the **metadata-liveness** gate (ADR-0049): the compiler now emits an advisory warning for any authored property that is parsed but has no runtime consumer. This release migrates HotCRM off that dead surface so `pnpm build` / `pnpm dev` compile with **zero warnings**. Built, validated, type-checked, unit-tested (17/17), and browser-verified against `@objectstack/* ^12.3.0` (login → HotCRM app → Executive / Sales / Service / CRM Overview dashboards with live seeded data and the reworked aggregated tables; no console errors).
+
+### Changed
+
+- **ObjectStack platform → 12.3** across all `@objectstack/*` packages (from `10.0`).
+- **Field history migrated to `Field.trackHistory` (ADR-0052).** The object-level `enable.trackHistory` flag is dead in 12 (no runtime consumer); per-field history is now opt-in. Enabled on each object's key lifecycle / owner / amount fields (e.g. opportunity `stage`/`amount`/`owner`/`close_date`, case `status`/`priority`/`owner`).
+- **Dead object-level `enable.*` flags removed** (`trackHistory`, `files`, `feeds`, `activities`, `trash`, `mru`, `searchable`) from all 15 objects, keeping only the live API surface (`apiEnabled`/`apiMethods`).
+- **Constrained lookups use `dependsOn` instead of the dead `referenceFilters`.** On `crm_contract`, `crm_case`, `crm_quote` and `crm_opportunity` the primary-contact / opportunity pickers now actually scope their candidate query to the record's `crm_account` (the string[] `referenceFilters` form was never read by the picker).
+- **Scheduled flows declare `runAs: 'system'` (ADR-0049, #1888).** A schedule-triggered run has no trigger user, so under the default `runAs:'user'` its data nodes already executed unscoped; the 8 sweep flows now state the RLS-bypassing elevation explicitly.
+- **Dashboard record-listing tables reworked into aggregated breakdowns (ADR-0021).** Four `table` widgets were bound to analytics cubes but selected only a count measure with no dimension — rendering a single summary row, not the per-record list their columns implied. They are now real multi-row aggregations: *Pipeline by Owner* (CRM Overview), *Accounts by Industry* (Executive), *Open Pipeline by Owner* (Sales) and *My Open Cases by Priority* (Service), with widget ids and i18n keys updated across all four locales.
+
 ## [1.3.0] — 2026-06-22
 
 Platform upgrade to ObjectStack **10.0** — the first major line bump. Manifest `specVersion` now declares `^10.0.0` (was `^9.11.0`); app version `1.3.0`. The 10.0 metadata surface is **additive** for HotCRM except for one newly-enforced validation (below). Built, validated, type-checked, unit-tested (17/17), and browser-verified against `@objectstack/* ^10.0.0` (login → home → Executive Dashboard with live seeded data and lazy charts → Accounts list → record detail; no console errors, no failed requests).
