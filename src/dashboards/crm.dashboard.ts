@@ -139,7 +139,7 @@ export const CrmOverviewDashboard: Dashboard = {
         showDataLabels: false,
         colors: ['#10B981'],
         xAxis: { field: 'close_date', title: 'Month', showGridLines: false, logarithmic: false },
-        yAxis: [{ field: 'total_amount', title: 'Revenue', format: '$0,0', showGridLines: true, logarithmic: false }],
+        yAxis: [{ field: 'total_amount', title: 'Revenue', format: '0,0', showGridLines: true, logarithmic: false }],
         interaction: { tooltips: true, brush: true, zoom: false },
       },
       options: { dateGranularity: 'month' },
@@ -191,7 +191,7 @@ export const CrmOverviewDashboard: Dashboard = {
         showDataLabels: true,
         colors: ['#4F46E5'],
         xAxis: { field: 'category', title: 'Category', showGridLines: false, logarithmic: false },
-        yAxis: [{ field: 'list_price_sum', title: 'Revenue', format: '$0,0', showGridLines: true, logarithmic: false }],
+        yAxis: [{ field: 'list_price_sum', title: 'Revenue', format: '0,0', showGridLines: true, logarithmic: false }],
       },
     },
 
@@ -215,9 +215,9 @@ export const CrmOverviewDashboard: Dashboard = {
       options: {
         columns: [
           { header: 'Owner',         accessorKey: 'owner' },
-          { header: 'Pipeline',      accessorKey: 'total_amount', format: '$0,0' },
+          { header: 'Pipeline',      accessorKey: 'total_amount', format: '0,0' },
           { header: 'Opportunities', accessorKey: 'opp_count' },
-          { header: 'Avg Deal Size', accessorKey: 'avg_amount', format: '$0,0' },
+          { header: 'Avg Deal Size', accessorKey: 'avg_amount', format: '0,0' },
         ],
         sortBy: 'total_amount',
         sortOrder: 'desc',

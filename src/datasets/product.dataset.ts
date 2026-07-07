@@ -13,6 +13,6 @@ export const ProductDataset = defineDataset({
   ],
   measures: [
     { name: 'product_count', label: 'Products', aggregate: 'count' },
-    { name: 'list_price_sum', label: 'Total List Price', aggregate: 'sum', field: 'list_price', format: '$0,0' },
+    { name: 'list_price_sum', label: 'Total List Price', aggregate: 'sum', field: 'list_price', format: '0,0' },
   ],
 });

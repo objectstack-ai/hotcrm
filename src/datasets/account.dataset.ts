@@ -15,6 +15,6 @@ export const AccountDataset = defineDataset({
   ],
   measures: [
     { name: 'account_count', label: 'Accounts', aggregate: 'count' },
-    { name: 'annual_revenue_sum', label: 'Annual Revenue', aggregate: 'sum', field: 'annual_revenue', format: '$0,0' },
+    { name: 'annual_revenue_sum', label: 'Annual Revenue', aggregate: 'sum', field: 'annual_revenue', format: '0,0' },
   ],
 });
