@@ -3,7 +3,6 @@
 export const SystemAdminProfile = {
   name: 'system_admin',
   label: 'System Administrator',
-  isProfile: true,
   objects: {
     crm_lead:        { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: true, modifyAllRecords: true },
     crm_account:     { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: true, modifyAllRecords: true },

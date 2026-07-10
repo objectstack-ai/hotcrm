@@ -10,6 +10,9 @@ export const Case = ObjectSchema.create({
   icon: 'life-buoy',
   description: 'Customer support cases and service requests',
 
+  // ADR-0090 D1/D7: OWD is an authored decision. Owner + escalation sharing rule.
+  sharingModel: 'private',
+
   fieldGroups: [
     { key: 'basic',       label: 'Case Information', icon: 'info' },
     { key: 'origin',      label: 'Origin & Routing', icon: 'route' },

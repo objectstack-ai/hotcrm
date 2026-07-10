@@ -9,6 +9,9 @@ export const Contact = ObjectSchema.create({
   pluralLabel: 'Contacts',
   icon: 'user',
   description: 'People associated with accounts',
+
+  // ADR-0090 D1/D7: OWD is an authored decision. Master-detail child of crm_account — inherits the account's sharing.
+  sharingModel: 'controlled_by_parent',
   
   fieldGroups: [
     { key: 'identity',        label: 'Identity',             icon: 'user' },

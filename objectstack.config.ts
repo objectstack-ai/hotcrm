@@ -22,7 +22,7 @@ import {
   AccountTeamSharingRule, TerritorySharingRules,
   OpportunitySalesSharingRule,
   CaseEscalationSharingRule,
-  RoleHierarchy,
+  CrmPositions,
 } from './src/sharing/index.js';
 
 import { allHooks } from './src/hooks/index.js';
@@ -96,9 +96,8 @@ export default defineStack({
     CaseEscalationSharingRule,
     ...TerritorySharingRules,
   ],
-  roles: RoleHierarchy.roles.map((r: { name: string; label: string; parentRole: string | null }) => ({
-    name: r.name,
-    label: r.label,
-    parent: r.parentRole ?? undefined,
-  })),
+  // ADR-0090 D3: positions are flat capability-distribution groups — the v1
+  // role hierarchy's parent links are gone (hierarchy belongs to the
+  // business-unit tree, which this app does not model).
+  positions: CrmPositions,
 });

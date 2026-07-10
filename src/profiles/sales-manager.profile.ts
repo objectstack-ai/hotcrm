@@ -3,7 +3,6 @@
 export const SalesManagerProfile = {
   name: 'sales_manager',
   label: 'Sales Manager',
-  isProfile: true,
   objects: {
     crm_lead:        { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: true,  modifyAllRecords: true },
     crm_account:     { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: true,  modifyAllRecords: true },

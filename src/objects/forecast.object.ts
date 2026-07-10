@@ -27,6 +27,9 @@ export const Forecast = ObjectSchema.create({
   pluralLabel: 'Forecasts',
   icon: 'trending-up',
   description: 'Periodic pipeline snapshot by owner used for revenue forecasting.',
+
+  // ADR-0090 D1/D7: OWD is an authored decision. Forecasts are personal to the owner.
+  sharingModel: 'private',
   // ADR-0079: render-only `titleFormat` retired in favor of `nameField`.
   // The former template led with `{owner}`, a lookup — DROPPED here because a
   // formula cannot dot-walk a lookup (ADR-0072). The `display_title` formula

@@ -13,6 +13,9 @@ export const Product = ObjectSchema.create({
   pluralLabel: 'Products',
   icon: 'box',
   description: 'Products and services offered by the company',
+
+  // ADR-0090 D1/D7: OWD is an authored decision. Product catalog is org-visible; only owners edit.
+  sharingModel: 'public_read',
   // ADR-0079: render-only `titleFormat` retired in favor of `nameField`,
   // which names a real field. The former template composed two local fields, so
   // a `display_title` formula field reproduces it for the record title.

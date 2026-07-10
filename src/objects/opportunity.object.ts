@@ -9,6 +9,9 @@ export const Opportunity = ObjectSchema.create({
   pluralLabel: 'Opportunities',
   icon: 'dollar-sign',
   description: 'Sales opportunities and deals in the pipeline',
+
+  // ADR-0090 D1/D7: OWD is an authored decision. Owner + high-value management sharing rule.
+  sharingModel: 'private',
   // ADR-0079: render-only `titleFormat` retired in favor of `nameField`.
   // `stage` is a select — the formula references its stored value directly
   // (no label resolution), matching ADR-0079 guidance.

@@ -3,7 +3,6 @@
 export const MarketingUserProfile = {
   name: 'marketing_user',
   label: 'Marketing User',
-  isProfile: true,
   objects: {
     crm_lead:        { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: false, viewAllRecords: true,  modifyAllRecords: false },
     crm_account:     { allowCreate: false, allowRead: true,  allowEdit: false, allowDelete: false, viewAllRecords: true,  modifyAllRecords: false },

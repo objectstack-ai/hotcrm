@@ -16,7 +16,6 @@
 export const GuestPortalProfile = {
   name: 'guest_portal',
   label: 'Guest (Public Forms)',
-  isProfile: true,
   description:
     'Anonymous visitors submitting public Web-to-Lead / Web-to-Case forms. ' +
     'INSERT-only on lead and case; no read/edit/delete on any object.',

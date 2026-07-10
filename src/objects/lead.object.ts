@@ -9,6 +9,9 @@ export const Lead = ObjectSchema.create({
   pluralLabel: 'Leads',
   icon: 'user-plus',
   description: 'Potential customers not yet qualified',
+
+  // ADR-0090 D1/D7: OWD is an authored decision. Owner-worked queue.
+  sharingModel: 'private',
   
   fieldGroups: [
     { key: 'identity',     label: 'Identity',           icon: 'user-plus' },
