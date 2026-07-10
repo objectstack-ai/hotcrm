@@ -9,6 +9,9 @@ export const Account = ObjectSchema.create({
   pluralLabel: 'Accounts',
   icon: 'building',
   description: 'Companies and organizations doing business with us',
+
+  // ADR-0090 D1/D7: OWD is an authored decision. Owner + sharing rules (team/territory grants below).
+  sharingModel: 'private',
   // ADR-0079: render-only `titleFormat` retired in favor of `nameField`,
   // which names a real field. The former template composed two local fields, so
   // a `display_title` formula field reproduces it for the record title.

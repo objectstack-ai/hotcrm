@@ -10,6 +10,9 @@ export const Task = ObjectSchema.create({
   icon: 'check-square',
   description: 'Activities and to-do items',
 
+  // ADR-0090 D1/D7: OWD is an authored decision. Personal activity records.
+  sharingModel: 'private',
+
   fields: {
     // Task Information
     subject: Field.text({

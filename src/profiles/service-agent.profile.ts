@@ -3,7 +3,6 @@
 export const ServiceAgentProfile = {
   name: 'service_agent',
   label: 'Service Agent',
-  isProfile: true,
   objects: {
     crm_lead:        { allowCreate: false, allowRead: true,  allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
     crm_account:     { allowCreate: false, allowRead: true,  allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },

@@ -18,6 +18,9 @@ export const OpportunityLineItem = ObjectSchema.create({
   icon: 'package',
   description: 'A single product line on an Opportunity',
 
+  // ADR-0090 D1/D7: OWD is an authored decision. Follows the opportunity owner; lookup child (not master-detail).
+  sharingModel: 'private',
+
   // @objectstack 12: the dead object-level `enable.trackHistory` flag was
   // removed (ADR-0049) — per-field history is opt-in via `Field.trackHistory`
   // (ADR-0052), set on quantity/unit_price/discount below. Master-detail

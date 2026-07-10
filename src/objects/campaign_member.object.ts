@@ -16,10 +16,12 @@ export const CampaignMember = ObjectSchema.create({
   icon: 'user-plus',
   description: 'Membership and response tracking for marketing campaigns',
 
+  // ADR-0090 D1/D7: OWD is an authored decision. Follows the campaign team's ownership; lookup child (not master-detail).
+  sharingModel: 'private',
+
   // @objectstack 12: the dead object-level `enable.trackHistory` flag was
   // removed (ADR-0049) — per-field history is opt-in via `Field.trackHistory`
-  // (ADR-0052), set on `status` below. Master-detail children still inherit the
-  // master's sharing automatically (sharingModel enum has no controlled-by-parent).
+  // (ADR-0052), set on `status` below.
 
   highlightFields: ['crm_campaign', 'crm_lead', 'crm_contact', 'status', 'response_date'],
 
