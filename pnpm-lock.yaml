@@ -15,8 +15,8 @@ importers:
         specifier: ^13.0.0
         version: 13.0.0(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(better-sqlite3@12.11.1)(kysely@0.29.2)(mongodb@7.4.0)(nanostores@1.4.0)(next@16.2.1(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vitest@4.1.9(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.0)(yaml@2.9.0))
       '@objectstack/driver-memory':
-        specifier: ^13.0.0
-        version: 13.0.0
+        specifier: ^14.3.0
+        version: 14.3.0
       '@objectstack/driver-sql':
         specifier: ^13.0.0
         version: 13.0.0
@@ -736,8 +736,16 @@ packages:
     resolution: {integrity: sha512-thhTVC6vot76inJDy76Cc8GPlyfyEOpOmr4Cqx6WuInwZJi4n1ItxGqUV/Xsognz10/E6ZdtTHRr3Sw9NsLHlA==}
     engines: {node: '>=18.0.0'}
 
+  '@objectstack/core@14.3.0':
+    resolution: {integrity: sha512-NkcL65r+rYozHpDyErPhni4aBjpMehvZifxQ+/o8dU6jRZNauP3hhXI1lYkznPtr77JRlY9u1uKgzQdKSv65zQ==}
+    engines: {node: '>=18.0.0'}
+
   '@objectstack/driver-memory@13.0.0':
     resolution: {integrity: sha512-eLfwhU5hiorUW88kcCQu1/JYweAuUoKM01S1R5OMfsB1Hl+SYMiVQTm2ZxnCu/Sw+PK1axlCEUXLCBIKgWOfug==}
+    engines: {node: '>=18.0.0'}
+
+  '@objectstack/driver-memory@14.3.0':
+    resolution: {integrity: sha512-Kse3kf0ZOPQqCH8ZChmD0v7ww2A+cC8yzSBryz3Uy+rgpLLp13twVDNmuDtkPq96+TQqYKrO6T5D1FMS1ur2bQ==}
     engines: {node: '>=18.0.0'}
 
   '@objectstack/driver-mongodb@13.0.0':
@@ -916,6 +924,15 @@ packages:
 
   '@objectstack/spec@13.0.0':
     resolution: {integrity: sha512-qBqhMLbZSUBveG3njAazujGAUN1b2JSXhGpgiV8fQVTx9jLs5Ywpu2MVZRPBCg79TXfKGJ+eOAFSUnQyTFt6yA==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      ai: ^7.0.0
+    peerDependenciesMeta:
+      ai:
+        optional: true
+
+  '@objectstack/spec@14.3.0':
+    resolution: {integrity: sha512-SLKNXSJxGP2Ipw+yr95cLPtbZcQv51RJ7I5GC6yEo6DUnPucrdrNIa5qGesFs1YMXu6dwh19gQicPvAOB106OA==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       ai: ^7.0.0
@@ -4609,10 +4626,25 @@ snapshots:
     transitivePeerDependencies:
       - ai
 
+  '@objectstack/core@14.3.0':
+    dependencies:
+      '@objectstack/spec': 14.3.0
+      zod: 4.4.3
+    transitivePeerDependencies:
+      - ai
+
   '@objectstack/driver-memory@13.0.0':
     dependencies:
       '@objectstack/core': 13.0.0
       '@objectstack/spec': 13.0.0
+      mingo: 7.2.2
+    transitivePeerDependencies:
+      - ai
+
+  '@objectstack/driver-memory@14.3.0':
+    dependencies:
+      '@objectstack/core': 14.3.0
+      '@objectstack/spec': 14.3.0
       mingo: 7.2.2
     transitivePeerDependencies:
       - ai
@@ -5091,6 +5123,10 @@ snapshots:
       - vitest
 
   '@objectstack/spec@13.0.0':
+    dependencies:
+      zod: 4.4.3
+
+  '@objectstack/spec@14.3.0':
     dependencies:
       zod: 4.4.3
 
