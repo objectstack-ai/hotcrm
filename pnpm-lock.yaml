@@ -27,8 +27,8 @@ importers:
         specifier: ^13.0.0
         version: 13.0.0(vitest@4.1.9(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.0)(yaml@2.9.0))
       '@objectstack/objectql':
-        specifier: ^13.0.0
-        version: 13.0.0(vitest@4.1.9(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.0)(yaml@2.9.0))
+        specifier: ^14.3.0
+        version: 14.3.0(vitest@4.1.9(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.0)(yaml@2.9.0))
       '@objectstack/runtime':
         specifier: ^13.0.0
         version: 13.0.0(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(better-sqlite3@12.11.1)(kysely@0.29.2)(mongodb@7.4.0)(nanostores@1.4.0)(next@16.2.1(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vitest@4.1.9(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.0)(yaml@2.9.0))
@@ -736,6 +736,10 @@ packages:
     resolution: {integrity: sha512-thhTVC6vot76inJDy76Cc8GPlyfyEOpOmr4Cqx6WuInwZJi4n1ItxGqUV/Xsognz10/E6ZdtTHRr3Sw9NsLHlA==}
     engines: {node: '>=18.0.0'}
 
+  '@objectstack/core@14.3.0':
+    resolution: {integrity: sha512-NkcL65r+rYozHpDyErPhni4aBjpMehvZifxQ+/o8dU6jRZNauP3hhXI1lYkznPtr77JRlY9u1uKgzQdKSv65zQ==}
+    engines: {node: '>=18.0.0'}
+
   '@objectstack/driver-memory@13.0.0':
     resolution: {integrity: sha512-eLfwhU5hiorUW88kcCQu1/JYweAuUoKM01S1R5OMfsB1Hl+SYMiVQTm2ZxnCu/Sw+PK1axlCEUXLCBIKgWOfug==}
     engines: {node: '>=18.0.0'}
@@ -769,6 +773,9 @@ packages:
   '@objectstack/formula@13.0.0':
     resolution: {integrity: sha512-l/YRTURyMHI8UypIrApCZ9r9lS3vXvUDAl4X4kntTgDCn+DRQLDVAoohKgcRa+31akJmquRaZWNGhnTRnHOqOQ==}
 
+  '@objectstack/formula@14.3.0':
+    resolution: {integrity: sha512-QvvQ+2afKVRoXgtD7BQkoH6JXPzMURJFzI6hQ6T41Z5lL9B11+TSpg/w1s6L1y8L0fDGin8D587UyWKwRLjJCg==}
+
   '@objectstack/lint@13.0.0':
     resolution: {integrity: sha512-Ah0gpDkn0ZskgFKsZELwp04KGEJBZlO/9j2xnOxW9y8xOMcgK8ZwzFi7/04Zal5Ku93eST2eZNh0zWlsfNZhPg==}
     engines: {node: '>=18.0.0'}
@@ -786,6 +793,15 @@ packages:
       vitest:
         optional: true
 
+  '@objectstack/metadata-core@14.3.0':
+    resolution: {integrity: sha512-bXGctH8GlnGm23Bcu7WPbrob1D8+3j0k5yzrRp0DD43Yu3XIy1GVqL4ujUaBL25+balfJ4X4+IX7nJScvI8T2A==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      vitest: ^4.0.0
+    peerDependenciesMeta:
+      vitest:
+        optional: true
+
   '@objectstack/metadata-fs@13.0.0':
     resolution: {integrity: sha512-DzVkhi0DFkcjSge7lJNP/+f1nbCr44TJNI+kUhGx4Sjzz2E1Ctfopu+Bd0WgAV6cWDZKfgj0olB4j5hhhHjENg==}
     engines: {node: '>=18.0.0'}
@@ -794,12 +810,20 @@ packages:
     resolution: {integrity: sha512-KqWDl7L32zHZBvIRwOZQeoW6NS5EgvOZY5ZTGL9KwCs4ZglyoO1JpWR/Raof76gs2aU2CoSYkWhfC79UblxZ4A==}
     engines: {node: '>=18.0.0'}
 
+  '@objectstack/metadata-protocol@14.3.0':
+    resolution: {integrity: sha512-I+BcEDE5RyFu2qWdAzjF90csJafWJry6bnsstbKacbYORcAx9knKkWn2hETP3q+GZSE17iq4nUcQY0KDhRCb1w==}
+    engines: {node: '>=18.0.0'}
+
   '@objectstack/metadata@13.0.0':
     resolution: {integrity: sha512-WeYHLbu7RI5o3ojONJxXqULJBrgcGBbfGtadQImFz0qw7EVDOcRvrXrnAo3U0QMkFxzp1+5pq4oVJ184iLwZ1A==}
     engines: {node: '>=18.0.0'}
 
   '@objectstack/objectql@13.0.0':
     resolution: {integrity: sha512-R/7gcVSCeb43o7MPEW63Pap7NBaAMxMBLaBXOJ+z1bQnGKd3m2WsR6xPJcRIHNoKGHsOrRKaQccyu0qs8IB4FQ==}
+    engines: {node: '>=18.0.0'}
+
+  '@objectstack/objectql@14.3.0':
+    resolution: {integrity: sha512-qP8B6Z6VhSx6k4Sxb21TRv4euE9aGBTZiTs0he8RWpAvUuOgwAfpkcIN2y/saXN0PVDaAmAAN4DkfA9ctSY8oA==}
     engines: {node: '>=18.0.0'}
 
   '@objectstack/observability@13.0.0':
@@ -923,6 +947,15 @@ packages:
       ai:
         optional: true
 
+  '@objectstack/spec@14.3.0':
+    resolution: {integrity: sha512-SLKNXSJxGP2Ipw+yr95cLPtbZcQv51RJ7I5GC6yEo6DUnPucrdrNIa5qGesFs1YMXu6dwh19gQicPvAOB106OA==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      ai: ^7.0.0
+    peerDependenciesMeta:
+      ai:
+        optional: true
+
   '@objectstack/trigger-api@13.0.0':
     resolution: {integrity: sha512-bbYbaQ9p5C5rbxmTW+E7AYs+Cupc+ar2XjK34X/nCQnlQuwVk+cidFKtb3M3w3TZ5+WGrZyRdXZ6siDNQUY7bw==}
 
@@ -936,6 +969,10 @@ packages:
 
   '@objectstack/types@13.0.0':
     resolution: {integrity: sha512-6GpmSizy+TugUKpQd4Dtw0GtG6eWhRPSE3OoLm3dasGPuZlEdnbSEeflntgvUH1bqzBA4UDSPthnzA5YWTZD4A==}
+    engines: {node: '>=18.0.0'}
+
+  '@objectstack/types@14.3.0':
+    resolution: {integrity: sha512-gLYI3d1BrRL1q+4vguMh9ZTXyipVQ0aH/quH7fBtZYzS2XoNwryFmZcp7QNA2P7nfMT0fgKssV13CDhu87fsfg==}
     engines: {node: '>=18.0.0'}
 
   '@objectstack/verify@13.0.0':
@@ -4609,6 +4646,13 @@ snapshots:
     transitivePeerDependencies:
       - ai
 
+  '@objectstack/core@14.3.0':
+    dependencies:
+      '@objectstack/spec': 14.3.0
+      zod: 4.4.3
+    transitivePeerDependencies:
+      - ai
+
   '@objectstack/driver-memory@13.0.0':
     dependencies:
       '@objectstack/core': 13.0.0
@@ -4678,6 +4722,13 @@ snapshots:
     transitivePeerDependencies:
       - ai
 
+  '@objectstack/formula@14.3.0':
+    dependencies:
+      '@marcbachmann/cel-js': 7.6.1
+      '@objectstack/spec': 14.3.0
+    transitivePeerDependencies:
+      - ai
+
   '@objectstack/lint@13.0.0':
     dependencies:
       '@objectstack/formula': 13.0.0
@@ -4709,6 +4760,15 @@ snapshots:
     transitivePeerDependencies:
       - ai
 
+  '@objectstack/metadata-core@14.3.0(vitest@4.1.9(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.0)(yaml@2.9.0))':
+    dependencies:
+      '@objectstack/spec': 14.3.0
+      zod: 4.4.3
+    optionalDependencies:
+      vitest: 4.1.9(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.0)(yaml@2.9.0)
+    transitivePeerDependencies:
+      - ai
+
   '@objectstack/metadata-fs@13.0.0(vitest@4.1.9(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.0)(yaml@2.9.0))':
     dependencies:
       '@objectstack/metadata-core': 13.0.0(vitest@4.1.9(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.0)(yaml@2.9.0))
@@ -4724,6 +4784,18 @@ snapshots:
       '@objectstack/metadata-core': 13.0.0(vitest@4.1.9(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.0)(yaml@2.9.0))
       '@objectstack/spec': 13.0.0
       '@objectstack/types': 13.0.0
+      zod: 4.4.3
+    transitivePeerDependencies:
+      - ai
+      - vitest
+
+  '@objectstack/metadata-protocol@14.3.0(vitest@4.1.9(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.0)(yaml@2.9.0))':
+    dependencies:
+      '@objectstack/core': 14.3.0
+      '@objectstack/formula': 14.3.0
+      '@objectstack/metadata-core': 14.3.0(vitest@4.1.9(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.0)(yaml@2.9.0))
+      '@objectstack/spec': 14.3.0
+      '@objectstack/types': 14.3.0
       zod: 4.4.3
     transitivePeerDependencies:
       - ai
@@ -4753,6 +4825,20 @@ snapshots:
       '@objectstack/metadata-protocol': 13.0.0(vitest@4.1.9(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.0)(yaml@2.9.0))
       '@objectstack/spec': 13.0.0
       '@objectstack/types': 13.0.0
+      ajv: 8.20.0
+      zod: 4.4.3
+    transitivePeerDependencies:
+      - ai
+      - vitest
+
+  '@objectstack/objectql@14.3.0(vitest@4.1.9(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.0)(yaml@2.9.0))':
+    dependencies:
+      '@objectstack/core': 14.3.0
+      '@objectstack/formula': 14.3.0
+      '@objectstack/metadata-core': 14.3.0(vitest@4.1.9(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.0)(yaml@2.9.0))
+      '@objectstack/metadata-protocol': 14.3.0(vitest@4.1.9(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.0)(yaml@2.9.0))
+      '@objectstack/spec': 14.3.0
+      '@objectstack/types': 14.3.0
       ajv: 8.20.0
       zod: 4.4.3
     transitivePeerDependencies:
@@ -5094,6 +5180,10 @@ snapshots:
     dependencies:
       zod: 4.4.3
 
+  '@objectstack/spec@14.3.0':
+    dependencies:
+      zod: 4.4.3
+
   '@objectstack/trigger-api@13.0.0':
     dependencies:
       '@objectstack/core': 13.0.0
@@ -5118,6 +5208,12 @@ snapshots:
   '@objectstack/types@13.0.0':
     dependencies:
       '@objectstack/spec': 13.0.0
+    transitivePeerDependencies:
+      - ai
+
+  '@objectstack/types@14.3.0':
+    dependencies:
+      '@objectstack/spec': 14.3.0
     transitivePeerDependencies:
       - ai
 
