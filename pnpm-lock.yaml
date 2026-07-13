@@ -21,8 +21,8 @@ importers:
         specifier: ^13.0.0
         version: 13.0.0
       '@objectstack/driver-sqlite-wasm':
-        specifier: ^13.0.0
-        version: 13.0.0(better-sqlite3@12.11.1)
+        specifier: ^14.3.0
+        version: 14.3.0(better-sqlite3@12.11.1)
       '@objectstack/metadata':
         specifier: ^13.0.0
         version: 13.0.0(vitest@4.1.9(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.0)(yaml@2.9.0))
@@ -736,6 +736,10 @@ packages:
     resolution: {integrity: sha512-thhTVC6vot76inJDy76Cc8GPlyfyEOpOmr4Cqx6WuInwZJi4n1ItxGqUV/Xsognz10/E6ZdtTHRr3Sw9NsLHlA==}
     engines: {node: '>=18.0.0'}
 
+  '@objectstack/core@14.3.0':
+    resolution: {integrity: sha512-NkcL65r+rYozHpDyErPhni4aBjpMehvZifxQ+/o8dU6jRZNauP3hhXI1lYkznPtr77JRlY9u1uKgzQdKSv65zQ==}
+    engines: {node: '>=18.0.0'}
+
   '@objectstack/driver-memory@13.0.0':
     resolution: {integrity: sha512-eLfwhU5hiorUW88kcCQu1/JYweAuUoKM01S1R5OMfsB1Hl+SYMiVQTm2ZxnCu/Sw+PK1axlCEUXLCBIKgWOfug==}
     engines: {node: '>=18.0.0'}
@@ -762,8 +766,30 @@ packages:
       tedious:
         optional: true
 
+  '@objectstack/driver-sql@14.3.0':
+    resolution: {integrity: sha512-WFw1Xa3t5sEcA1NrzYqls9ONgYhbSkJRNDj5EHSpTy9iha2ABpwzLkgwsqnlnTvsAWjvUxJ/aFzWbJBfonLf4w==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      mysql2: ^3.0.0
+      pg: ^8.0.0
+      sqlite3: ^5.0.0
+      tedious: ^18.0.0
+    peerDependenciesMeta:
+      mysql2:
+        optional: true
+      pg:
+        optional: true
+      sqlite3:
+        optional: true
+      tedious:
+        optional: true
+
   '@objectstack/driver-sqlite-wasm@13.0.0':
     resolution: {integrity: sha512-8nyb1+xE6dawnUkxPMg3HYRM8I6JWvrmMiU1qofONcJRuqPxuyu/fYuRKesmgBsNYWYym7pRV3f+iYdxCgG/Lg==}
+    engines: {node: '>=18.0.0'}
+
+  '@objectstack/driver-sqlite-wasm@14.3.0':
+    resolution: {integrity: sha512-/Nvrhbk+A1h/R0y8rDe6mswsqSY0oXGxumuYnvT9Z5Yr06ZBifM4tILBgDz0p4i6FGg9R2KiWRq4R5WIfPI6Iw==}
     engines: {node: '>=18.0.0'}
 
   '@objectstack/formula@13.0.0':
@@ -923,6 +949,15 @@ packages:
       ai:
         optional: true
 
+  '@objectstack/spec@14.3.0':
+    resolution: {integrity: sha512-SLKNXSJxGP2Ipw+yr95cLPtbZcQv51RJ7I5GC6yEo6DUnPucrdrNIa5qGesFs1YMXu6dwh19gQicPvAOB106OA==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      ai: ^7.0.0
+    peerDependenciesMeta:
+      ai:
+        optional: true
+
   '@objectstack/trigger-api@13.0.0':
     resolution: {integrity: sha512-bbYbaQ9p5C5rbxmTW+E7AYs+Cupc+ar2XjK34X/nCQnlQuwVk+cidFKtb3M3w3TZ5+WGrZyRdXZ6siDNQUY7bw==}
 
@@ -936,6 +971,10 @@ packages:
 
   '@objectstack/types@13.0.0':
     resolution: {integrity: sha512-6GpmSizy+TugUKpQd4Dtw0GtG6eWhRPSE3OoLm3dasGPuZlEdnbSEeflntgvUH1bqzBA4UDSPthnzA5YWTZD4A==}
+    engines: {node: '>=18.0.0'}
+
+  '@objectstack/types@14.3.0':
+    resolution: {integrity: sha512-gLYI3d1BrRL1q+4vguMh9ZTXyipVQ0aH/quH7fBtZYzS2XoNwryFmZcp7QNA2P7nfMT0fgKssV13CDhu87fsfg==}
     engines: {node: '>=18.0.0'}
 
   '@objectstack/verify@13.0.0':
@@ -3092,8 +3131,8 @@ packages:
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
 
-  nanoid@3.3.15:
-    resolution: {integrity: sha512-y7Wygv/7mEOvxTuEQDB8StXdMRBWf1kR/tlhAzBRUFkB2jfcLOAxO/SHmOO2zgz1pVgK29/kyupn059/bCHdjA==}
+  nanoid@3.3.16:
+    resolution: {integrity: sha512-bzlKTyNJ7+LdGIIwy8ijFpIqEQIvafahV7eYykJ8Cvh42EdJeODoJ6gUJXpQJvej1BddH8OqTXZNE/KfbWAu8Q==}
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
 
@@ -3631,8 +3670,8 @@ packages:
     resolution: {integrity: sha512-ujeqbceABgwMZxEJnk2HDY2DlnUZ+9oEcb1KzTVfYHio0UE6dG71n60d8D2I4qNvleWrrXpmjpt7vZeF1LnMZQ==}
     engines: {node: '>=6'}
 
-  tarn@3.1.0:
-    resolution: {integrity: sha512-QDihlHbXxQ4SnuQcRd1TPNBHUYo/hafDRDP82COYSVfRcx/3qnfGDkn1WFjozVl+AYr8ZyDKSQ/kIgHH1ri1yg==}
+  tarn@3.1.2:
+    resolution: {integrity: sha512-3RTvqKZcK/17jnJ8rMKFXbyNogywTs1z0gVPPwFsJGX46rkmUHOdIaSQ/aVO1rS7nH+soiXiWk7rvUXxndm8Dg==}
     engines: {node: '>=8.0.0'}
 
   thenify-all@1.6.0:
@@ -4609,6 +4648,13 @@ snapshots:
     transitivePeerDependencies:
       - ai
 
+  '@objectstack/core@14.3.0':
+    dependencies:
+      '@objectstack/spec': 14.3.0
+      zod: 4.4.3
+    transitivePeerDependencies:
+      - ai
+
   '@objectstack/driver-memory@13.0.0':
     dependencies:
       '@objectstack/core': 13.0.0
@@ -4650,11 +4696,49 @@ snapshots:
       - pg-query-stream
       - supports-color
 
+  '@objectstack/driver-sql@14.3.0':
+    dependencies:
+      '@objectstack/core': 14.3.0
+      '@objectstack/spec': 14.3.0
+      '@objectstack/types': 14.3.0
+      knex: 3.3.0(better-sqlite3@12.11.1)
+      nanoid: 5.1.16
+    optionalDependencies:
+      better-sqlite3: 12.11.1
+    transitivePeerDependencies:
+      - ai
+      - mariadb
+      - mysql
+      - pg-native
+      - pg-query-stream
+      - supports-color
+
   '@objectstack/driver-sqlite-wasm@13.0.0(better-sqlite3@12.11.1)':
     dependencies:
       '@objectstack/core': 13.0.0
       '@objectstack/driver-sql': 13.0.0
       '@objectstack/spec': 13.0.0
+      knex: 3.3.0(better-sqlite3@12.11.1)
+      nanoid: 5.1.16
+      sql.js: 1.14.1
+    transitivePeerDependencies:
+      - ai
+      - better-sqlite3
+      - mariadb
+      - mysql
+      - mysql2
+      - pg
+      - pg-native
+      - pg-query-stream
+      - sqlite3
+      - supports-color
+      - tedious
+
+  '@objectstack/driver-sqlite-wasm@14.3.0(better-sqlite3@12.11.1)':
+    dependencies:
+      '@objectstack/core': 14.3.0
+      '@objectstack/driver-sql': 14.3.0
+      '@objectstack/spec': 14.3.0
       knex: 3.3.0(better-sqlite3@12.11.1)
       nanoid: 5.1.16
       sql.js: 1.14.1
@@ -5094,6 +5178,10 @@ snapshots:
     dependencies:
       zod: 4.4.3
 
+  '@objectstack/spec@14.3.0':
+    dependencies:
+      zod: 4.4.3
+
   '@objectstack/trigger-api@13.0.0':
     dependencies:
       '@objectstack/core': 13.0.0
@@ -5118,6 +5206,12 @@ snapshots:
   '@objectstack/types@13.0.0':
     dependencies:
       '@objectstack/spec': 13.0.0
+    transitivePeerDependencies:
+      - ai
+
+  '@objectstack/types@14.3.0':
+    dependencies:
+      '@objectstack/spec': 14.3.0
     transitivePeerDependencies:
       - ai
 
@@ -6866,7 +6960,7 @@ snapshots:
       pg-connection-string: 2.6.2
       rechoir: 0.8.0
       resolve-from: 5.0.0
-      tarn: 3.1.0
+      tarn: 3.1.2
       tildify: 2.0.0
     optionalDependencies:
       better-sqlite3: 12.11.1
@@ -7490,7 +7584,7 @@ snapshots:
 
   nanoid@3.3.12: {}
 
-  nanoid@3.3.15: {}
+  nanoid@3.3.16: {}
 
   nanoid@5.1.16: {}
 
@@ -7623,7 +7717,7 @@ snapshots:
 
   postcss@8.4.31:
     dependencies:
-      nanoid: 3.3.15
+      nanoid: 3.3.16
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
@@ -7635,7 +7729,7 @@ snapshots:
 
   postcss@8.5.16:
     dependencies:
-      nanoid: 3.3.15
+      nanoid: 3.3.16
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
@@ -8167,7 +8261,7 @@ snapshots:
       inherits: 2.0.4
       readable-stream: 3.6.2
 
-  tarn@3.1.0: {}
+  tarn@3.1.2: {}
 
   thenify-all@1.6.0:
     dependencies:

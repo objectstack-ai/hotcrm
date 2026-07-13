@@ -30,7 +30,7 @@
     "@objectstack/cli": "^13.0.0",
     "@objectstack/driver-memory": "^13.0.0",
     "@objectstack/driver-sql": "^13.0.0",
-    "@objectstack/driver-sqlite-wasm": "^13.0.0",
+    "@objectstack/driver-sqlite-wasm": "^14.3.0",
     "@objectstack/metadata": "^13.0.0",
     "@objectstack/objectql": "^13.0.0",
     "@objectstack/runtime": "^13.0.0",
