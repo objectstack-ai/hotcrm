@@ -16,9 +16,9 @@ export const SalesRepProfile = {
     crm_task:        { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: true,  viewAllRecords: false, modifyAllRecords: false },
   },
   fields: {
-    'account.annual_revenue': { readable: true, editable: false },
-    'account.description':    { readable: true, editable: true },
-    'opportunity.amount':     { readable: true, editable: true },
-    'opportunity.probability': { readable: true, editable: true },
+    'crm_account.annual_revenue':     { readable: true, editable: false },
+    'crm_account.description':        { readable: true, editable: true },
+    'crm_opportunity.amount':         { readable: true, editable: true },
+    'crm_opportunity.probability':    { readable: true, editable: true },
   },
 };

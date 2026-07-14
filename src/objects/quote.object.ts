@@ -34,12 +34,14 @@ export const Quote = ObjectSchema.create({
     // AutoNumber field
     quote_number: Field.autonumber({
       label: 'Quote Number',
+      group: 'basic',
       format: 'QTE-{0000}',
     }),
     
     // Basic Information
     name: Field.text({
       label: 'Quote Name',
+      group: 'basic',
       required: true,
       searchable: true,
       maxLength: 255,
@@ -48,17 +50,20 @@ export const Quote = ObjectSchema.create({
     // ADR-0079 record title (was titleFormat '{quote_number} - {name}').
     display_title: Field.formula({
       label: 'Display Title',
+      group: 'basic',
       expression: F`record.quote_number + " - " + record.name`,
     }),
 
     // Relationships
     crm_account: Field.lookup('crm_account', {
       label: 'Account',
+      group: 'basic',
       required: true,
     }),
     
     crm_contact: Field.lookup('crm_contact', {
       label: 'Contact',
+      group: 'basic',
       required: true,
       // @objectstack 12: string[] `referenceFilters` is dead (not read by the
       // picker); `dependsOn` is the live cascading form — scopes contacts to the
@@ -68,18 +73,21 @@ export const Quote = ObjectSchema.create({
 
     crm_opportunity: Field.lookup('crm_opportunity', {
       label: 'Opportunity',
+      group: 'basic',
       // Scope opportunities to the quote's account (was dead referenceFilters).
       dependsOn: ['crm_account'],
     }),
 
     owner: Field.lookup('user', {
       label: 'Quote Owner',
+      group: 'basic',
       trackHistory: true,
     }),
 
     // Status
     status: Field.select({
       label: 'Status',
+      group: 'basic',
       options: [
         { label: 'Draft', value: 'draft', color: '#999999', default: true },
         { label: 'In Review', value: 'in_review', color: '#FFA500' },
@@ -95,24 +103,28 @@ export const Quote = ObjectSchema.create({
     // Dates
     quote_date: Field.date({
       label: 'Quote Date',
+      group: 'terms',
       required: true,
       defaultValue: cel`today()`,
     }),
     
     expiration_date: Field.date({
       label: 'Expiration Date',
+      group: 'terms',
       required: true,
     }),
     
     // Pricing
     subtotal: Field.currency({ 
       label: 'Subtotal',
+      group: 'pricing',
       scale: 2,
       readonly: true,
     }),
     
     discount: Field.percent({
       label: 'Discount %',
+      group: 'pricing',
       scale: 2,
       min: 0,
       max: 100,
@@ -120,22 +132,26 @@ export const Quote = ObjectSchema.create({
     
     discount_amount: Field.currency({ 
       label: 'Discount Amount',
+      group: 'pricing',
       scale: 2,
       readonly: true,
     }),
     
     tax: Field.currency({ 
       label: 'Tax',
+      group: 'pricing',
       scale: 2,
     }),
     
     shipping_handling: Field.currency({ 
       label: 'Shipping & Handling',
+      group: 'pricing',
       scale: 2,
     }),
     
     total_price: Field.currency({ 
       label: 'Total Price',
+      group: 'pricing',
       scale: 2,
       readonly: true,
     }),
@@ -143,6 +159,7 @@ export const Quote = ObjectSchema.create({
     // Terms
     payment_terms: Field.select({
       label: 'Payment Terms',
+      group: 'terms',
       options: [
         { label: 'Net 15', value: 'net_15' },
         { label: 'Net 30', value: 'net_30', default: true },
@@ -154,25 +171,30 @@ export const Quote = ObjectSchema.create({
     
     shipping_terms: Field.text({
       label: 'Shipping Terms',
+      group: 'terms',
       maxLength: 255,
     }),
     
     // Billing & Shipping Address
     billing_address: Field.address({
       label: 'Billing Address',
+      group: 'address',
     }),
 
     shipping_address: Field.address({
       label: 'Shipping Address',
+      group: 'address',
     }),
     
     // Notes
     description: Field.markdown({
       label: 'Description',
+      group: 'basic',
     }),
     
     internal_notes: Field.textarea({
       label: 'Internal Notes',
+      group: 'system',
     }),
   },
   

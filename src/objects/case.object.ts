@@ -26,11 +26,13 @@ export const Case = ObjectSchema.create({
     // Case Information
     case_number: Field.autonumber({
       label: 'Case Number',
+      group: 'basic',
       format: 'CASE-{00000}',
     }),
     
     subject: Field.text({
       label: 'Subject',
+      group: 'basic',
       required: true,
       searchable: true,
       maxLength: 255,
@@ -39,21 +41,25 @@ export const Case = ObjectSchema.create({
     // ADR-0079 record title (was titleFormat '{case_number} - {subject}').
     display_title: Field.formula({
       label: 'Display Title',
+      group: 'basic',
       expression: F`record.case_number + " - " + record.subject`,
     }),
 
     description: Field.markdown({
       label: 'Description',
+      group: 'basic',
       required: true,
     }),
     
     // Relationships
     crm_account: Field.lookup('crm_account', {
       label: 'Account',
+      group: 'basic',
     }),
     
     crm_contact: Field.lookup('crm_contact', {
       label: 'Contact',
+      group: 'basic',
       // Optional so Web-to-Case (anonymous) submissions can land without
       // an existing CRM contact. Back-office staff or a triage flow links
       // the case to a contact after the fact. This matches the Salesforce
@@ -67,6 +73,7 @@ export const Case = ObjectSchema.create({
     // Case Management
     status: Field.select({
       label: 'Status',
+      group: 'basic',
       required: true,
       // ADR-0052 §5b.1 — platform auto-renders status changes on the timeline
       // ("Status: New → Escalated"). Delivers the case timeline declaratively
@@ -85,6 +92,7 @@ export const Case = ObjectSchema.create({
     
     priority: Field.select({
       label: 'Priority',
+      group: 'sla',
       required: true,
       trackHistory: true,
       options: [
@@ -97,6 +105,7 @@ export const Case = ObjectSchema.create({
     
     type: Field.select({
       label: 'Case Type',
+      group: 'basic',
       options: [
         { label: 'Question', value: 'question' },
         { label: 'Problem', value: 'problem' },
@@ -107,6 +116,7 @@ export const Case = ObjectSchema.create({
     
     origin: Field.select({
       label: 'Case Origin',
+      group: 'origin',
       options: [
         { label: 'Email', value: 'email' },
         { label: 'Phone', value: 'phone' },
@@ -120,37 +130,44 @@ export const Case = ObjectSchema.create({
     owner: Field.lookup('user', {
       defaultValue: cel`os.user.id`,
       label: 'Case Owner',
+      group: 'origin',
       trackHistory: true,
     }),
     
     // SLA and Metrics
     created_date: Field.datetime({
       label: 'Created Date',
+      group: 'sla',
       readonly: true,
     }),
     
     closed_date: Field.datetime({
       label: 'Closed Date',
+      group: 'sla',
       readonly: true,
     }),
     
     first_response_date: Field.datetime({
       label: 'First Response Date',
+      group: 'sla',
       readonly: true,
     }),
     
     resolution_time_hours: Field.number({
       label: 'Resolution Time (Hours)',
+      group: 'sla',
       readonly: true,
       scale: 2,
     }),
     
     sla_due_date: Field.datetime({
       label: 'SLA Due Date',
+      group: 'sla',
     }),
     
     is_sla_violated: Field.boolean({
       label: 'SLA Violated',
+      group: 'sla',
       defaultValue: false,
       readonly: true,
     }),
@@ -158,54 +175,64 @@ export const Case = ObjectSchema.create({
     // Escalation
     is_escalated: Field.boolean({
       label: 'Escalated',
+      group: 'escalation',
       defaultValue: false,
     }),
     
     escalated_date: Field.datetime({
       label: 'Escalated Date',
+      group: 'escalation',
       readonly: true,
     }),
     
     escalation_reason: Field.textarea({
       label: 'Escalation Reason',
+      group: 'escalation',
     }),
     
     // Related case
     parent_case: Field.lookup('crm_case', {
       label: 'Parent Case',
+      group: 'basic',
       description: 'Related parent case',
     }),
     
     // Resolution
     resolution: Field.markdown({
       label: 'Resolution',
+      group: 'resolution',
     }),
     
     // Customer satisfaction
     customer_rating: Field.rating(5, {
       label: 'Customer Satisfaction',
+      group: 'resolution',
       description: 'Customer satisfaction rating (1-5 stars)',
     }),
     
     customer_feedback: Field.textarea({
       label: 'Customer Feedback',
+      group: 'resolution',
     }),
     
     // Customer signature (for case resolution acknowledgment)
     customer_signature: Field.signature({
       label: 'Customer Signature',
+      group: 'resolution',
       description: 'Digital signature acknowledging case resolution',
     }),
     
     // Internal notes
     internal_notes: Field.markdown({
       label: 'Internal Notes',
+      group: 'system',
       description: 'Internal notes not visible to customer',
     }),
     
     // Flags
     is_closed: Field.boolean({
       label: 'Is Closed',
+      group: 'system',
       defaultValue: false,
       readonly: true,
     }),

@@ -2,6 +2,25 @@
 
 All notable changes to HotCRM are documented in this file. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); HotCRM follows [Semantic Versioning](https://semver.org/).
 
+## [2.1.0] — 2026-07-14
+
+Platform upgrade to ObjectStack **14.7** — a major line bump (from 12/13). Manifest `specVersion` now declares `^14.0.0` (was `^12.0.0`); app version `2.1.0`. ObjectStack 14 completes the ADR-0090 permission-model vocabulary convergence and turns the object `enable.*` capability flags into real runtime gates. This release migrates HotCRM's metadata off every 14.0 breaking surface and hardens the seed + opportunity-lifecycle hook so a fresh-DB boot is completely clean. Built, validated, type-checked, linted (zero warnings), unit-tested (17/17), and browser-verified against `@objectstack/* ^14.7.0` (login → HotCRM app → Executive / Sales / Service / CRM Overview dashboards with live seeded data → Accounts / Opportunities / Cases lists → account record detail with grouped field sections; no boot errors, no post-login console errors).
+
+Upgrade migration was driven from the official release notes at <https://docs.objectstack.ai/docs/releases> (per-major page `/docs/releases/v14`), and [`AGENTS.md`](AGENTS.md) now documents that page as the required first reference for any future platform bump.
+
+### Changed
+
+- **ObjectStack platform → 14.7** across all `@objectstack/*` packages (from `12`/`13`).
+- **Approval approvers use `type: 'position'` instead of `type: 'role'` (ADR-0090 D3, spec 14.0).** In 14 the `role` approver type resolves against the better-auth org-membership tier (`sys_member.role`: owner/admin/member) — the CRM's `sales_manager` / `sales_director` are org **positions**, not membership tiers, so under the old spelling the opportunity-approval flow routed to nobody and stalled. Both approval nodes in [`src/flows/opportunity-approval.flow.ts`](src/flows/opportunity-approval.flow.ts) now target the declared positions via `type: 'position'`.
+- **FLS keys are object-qualified (spec 14.4, `security-fls-unqualified-key`).** The runtime evaluator matches field-permission keys by `<object>.<field>` prefix; the bare keys in the `sales_rep` and `service_agent` permission sets (`account.*`, `opportunity.*`, `case.*`) matched nothing and their declared masking never enforced. Requalified to `crm_account.*` / `crm_opportunity.*` / `crm_case.*` so the FLS actually applies.
+- **`fieldGroups` are now referenced by their fields.** Spec 14's lint flagged `crm_case`, `crm_contract`, `crm_product` and `crm_quote` declaring field groups that no field pointed at — the groups never rendered. Every field on those four objects now carries a `group:` assignment, so record detail pages render the intended grouped sections (verified in the browser on the account/case detail layout).
+- **`crm_campaign_member` declares a resolvable record title (ADR-0079).** The junction object had no title-eligible stored field, so records displayed as raw IDs. Added a `member_number` autonumber and pointed `nameField` at it explicitly.
+
+### Fixed
+
+- **Opportunity-lifecycle hook no longer rejects system writes to closed deals.** The `beforeUpdate` freeze-guard ran *after* the derived-field recompute injected `expected_revenue`/`probability` into the input, so the post-seed ownership backfill (and any framework re-stamp) on a closed opportunity was rejected for fields the caller never touched — surfacing as 23 `BodyRunner` errors on every fresh-DB boot. The guard now runs first and judges only the caller's actual field edits; a fresh boot is error-free.
+- **Seed task with `status: 'completed'` now sets `completed_date`.** The "Send welcome package to Stark Medical" seed row tripped the `completed_date_required` validation rule (an `Insert operation failed` on every fresh boot). Added `completed_date` to satisfy the rule.
+
 ## [2.0.0] — 2026-07-07
 
 Platform upgrade to ObjectStack **12.3** — a major line bump. Manifest `specVersion` now declares `^12.0.0` (was `^10.0.0`); app version `2.0.0`. ObjectStack 12 introduces the **metadata-liveness** gate (ADR-0049): the compiler now emits an advisory warning for any authored property that is parsed but has no runtime consumer. This release migrates HotCRM off that dead surface so `pnpm build` / `pnpm dev` compile with **zero warnings**. Built, validated, type-checked, unit-tested (17/17), and browser-verified against `@objectstack/* ^12.3.0` (login → HotCRM app → Executive / Sales / Service / CRM Overview dashboards with live seeded data and the reworked aggregated tables; no console errors).

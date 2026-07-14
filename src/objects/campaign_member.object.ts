@@ -23,6 +23,11 @@ export const CampaignMember = ObjectSchema.create({
   // removed (ADR-0049) — per-field history is opt-in via `Field.trackHistory`
   // (ADR-0052), set on `status` below.
 
+  // ADR-0079: junction rows have no derivable text title; point the canonical
+  // nameField at the stored autonumber explicitly (autonumber is not in the
+  // auto-derivation whitelist).
+  nameField: 'member_number',
+
   highlightFields: ['crm_campaign', 'crm_lead', 'crm_contact', 'status', 'response_date'],
 
   fieldGroups: [
@@ -31,6 +36,12 @@ export const CampaignMember = ObjectSchema.create({
   ],
 
   fields: {
+    member_number: Field.autonumber({
+      label: 'Member Number',
+      format: 'CM-{00000}',
+      group: 'basic',
+    }),
+
     crm_campaign: Field.lookup('crm_campaign', {
       label: 'Campaign',
       required: true,

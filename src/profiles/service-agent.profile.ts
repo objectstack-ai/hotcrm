@@ -13,7 +13,7 @@ export const ServiceAgentProfile = {
     crm_product:     { allowCreate: false, allowRead: true,  allowEdit: false, allowDelete: false, viewAllRecords: true,  modifyAllRecords: false },
   },
   fields: {
-    'case.is_sla_violated':        { readable: true, editable: false },
-    'case.resolution_time_hours':  { readable: true, editable: false },
+    'crm_case.is_sla_violated':        { readable: true, editable: false },
+    'crm_case.resolution_time_hours':  { readable: true, editable: false },
   },
 };
