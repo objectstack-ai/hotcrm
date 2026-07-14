@@ -66,7 +66,7 @@ export const OpportunityApprovalFlow: Flow = {
       type: 'approval',
       label: 'Sales Manager Review',
       config: {
-        approvers: [{ type: 'role', value: 'sales_manager' }],
+        approvers: [{ type: 'position', value: 'sales_manager' }],
         behavior: 'first_response',
         lockRecord: true,
         approvalStatusField: 'approval_status',
@@ -87,7 +87,7 @@ export const OpportunityApprovalFlow: Flow = {
       type: 'approval',
       label: 'Sales Director Sign-off',
       config: {
-        approvers: [{ type: 'role', value: 'sales_director' }],
+        approvers: [{ type: 'position', value: 'sales_director' }],
         behavior: 'first_response',
         lockRecord: true,
         approvalStatusField: 'approval_status',

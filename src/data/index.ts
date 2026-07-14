@@ -539,6 +539,7 @@ const tasks = defineSeed(Task, {
       subject: 'Send welcome package to Stark Medical',
       status: 'completed',
       priority: 'low',
+      completed_date: cel`daysAgo(2)`,
     },
     {
       subject: 'Update CRM pipeline report',

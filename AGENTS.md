@@ -167,6 +167,24 @@ Use the most specific `Field` type available from `@objectstack/spec/data`:
 > "fail at install" wording is stale. Don't mass-rename UI/automation items to
 > chase that warning.
 
+## ⬆️ Platform Upgrades (ObjectStack version bumps)
+
+When upgrading the `@objectstack/*` dependency line, **start from the official
+release notes — do not reverse-engineer breaking changes from `node_modules`
+changelogs**:
+
+1. **Read the release notes first**: <https://docs.objectstack.ai/docs/releases>
+   (per-major pages, e.g. `/docs/releases/v14`, carry the breaking-change list
+   and a migration checklist with before/after examples).
+2. Per-package details live in each package's `CHANGELOG.md`
+   (`node_modules/@objectstack/<pkg>/CHANGELOG.md`) — use these to supplement,
+   not replace, the release notes. Breaking changes reference ADRs for rationale.
+3. Bump all `@objectstack/*` packages **together** (they are version-locked),
+   update `specVersion` in `objectstack.manifest.json` to the new major,
+   then run the full verify suite and browser-verify (see below).
+4. Record the upgrade in `CHANGELOG.md` following the existing entry format
+   (what changed on the platform, what metadata was migrated and why).
+
 ## 🚫 Out of Scope (Platform Features)
 
 The following are **NOT** in HotCRM's scope — they are platform-level features provided by `@objectstack/runtime` or other platform packages:

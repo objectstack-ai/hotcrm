@@ -58,6 +58,28 @@ const opportunityValidationHook: Hook = {
     const { event, input } = ctx;
     const previous = ctx.previous;
 
+    // Freeze closed opportunities FIRST, judging only the caller's actual
+    // edits. This must run before the derived-field recompute below injects
+    // expected_revenue/probability into `input` — otherwise a system write
+    // (e.g. the post-seed ownership backfill) on a record whose stored
+    // derived values are stale gets rejected for fields the caller never
+    // touched, and the backfill silently fails (seen as 23 boot-time
+    // BodyRunner errors on every fresh-DB boot).
+    if (event === 'beforeUpdate' && previous) {
+      const prevStage = previous.stage as string | undefined;
+      const isClosed = prevStage === 'closed_won' || prevStage === 'closed_lost';
+      if (isClosed) {
+        const violating = Object.keys(input).filter(
+          (k) => !NARRATIVE_FIELDS.has(k) && !SYSTEM_FIELDS.has(k) && input[k] !== previous[k],
+        );
+        if (violating.length > 0) {
+          throw new Error(
+            `Opportunity is closed (${prevStage}); only ${[...NARRATIVE_FIELDS].join(', ')} may be edited. Attempted: ${violating.join(', ')}.`,
+          );
+        }
+      }
+    }
+
     // Recompute expected_revenue
     const amount =
       typeof input.amount === 'number'
@@ -85,21 +107,8 @@ const opportunityValidationHook: Hook = {
     }
 
     if (event === 'beforeUpdate' && previous) {
-      const prevStage = previous.stage as string | undefined;
-      const isClosed = prevStage === 'closed_won' || prevStage === 'closed_lost';
-      if (isClosed) {
-        const violating = Object.keys(input).filter(
-          (k) => !NARRATIVE_FIELDS.has(k) && !SYSTEM_FIELDS.has(k) && input[k] !== previous[k],
-        );
-        if (violating.length > 0) {
-          throw new Error(
-            `Opportunity is closed (${prevStage}); only ${[...NARRATIVE_FIELDS].join(', ')} may be edited. Attempted: ${violating.join(', ')}.`,
-          );
-        }
-      }
-
       // Stamp close_date when transitioning into closed_won
-      if (input.stage === 'closed_won' && prevStage !== 'closed_won' && !input.close_date) {
+      if (input.stage === 'closed_won' && previous.stage !== 'closed_won' && !input.close_date) {
         input.close_date = new Date().toISOString().slice(0, 10);
       }
     }

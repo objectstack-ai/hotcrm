@@ -32,12 +32,14 @@ export const Product = ObjectSchema.create({
     // AutoNumber field - Unique product identifier
     product_code: Field.autonumber({
       label: 'Product Code',
+      group: 'basic',
       format: 'PRD-{0000}',
     }),
     
     // Basic Information
     name: Field.text({
       label: 'Product Name',
+      group: 'basic',
       required: true,
       searchable: true,
       maxLength: 255,
@@ -46,16 +48,19 @@ export const Product = ObjectSchema.create({
     // ADR-0079 record title (was titleFormat '{product_code} - {name}').
     display_title: Field.formula({
       label: 'Display Title',
+      group: 'basic',
       expression: F`record.product_code + " - " + record.name`,
     }),
 
     description: Field.markdown({
       label: 'Description',
+      group: 'basic',
     }),
 
     // Categorization
     category: Field.select({
       label: 'Category',
+      group: 'basic',
       options: [
         { label: 'Software', value: 'software', default: true },
         { label: 'Hardware', value: 'hardware' },
@@ -67,6 +72,7 @@ export const Product = ObjectSchema.create({
     
     family: Field.select({
       label: 'Product Family',
+      group: 'basic',
       options: [
         { label: 'Enterprise Solutions', value: 'enterprise' },
         { label: 'SMB Solutions', value: 'smb' },
@@ -78,6 +84,7 @@ export const Product = ObjectSchema.create({
     // Pricing
     list_price: Field.currency({ 
       label: 'List Price',
+      group: 'pricing',
       scale: 2,
       min: 0,
       required: true,
@@ -85,6 +92,7 @@ export const Product = ObjectSchema.create({
     
     cost: Field.currency({ 
       label: 'Cost',
+      group: 'pricing',
       scale: 2,
       min: 0,
     }),
@@ -92,50 +100,59 @@ export const Product = ObjectSchema.create({
     // SKU and Inventory
     sku: Field.text({
       label: 'SKU',
+      group: 'basic',
       maxLength: 50,
       unique: true,
     }),
     
     quantity_on_hand: Field.number({
       label: 'Quantity on Hand',
+      group: 'basic',
       min: 0,
       defaultValue: 0,
     }),
     
     reorder_point: Field.number({
       label: 'Reorder Point',
+      group: 'basic',
       min: 0,
     }),
     
     // Status
     is_active: Field.boolean({
       label: 'Active',
+      group: 'basic',
       defaultValue: true,
       trackHistory: true,
     }),
 
     is_taxable: Field.boolean({
       label: 'Taxable',
+      group: 'pricing',
       defaultValue: true,
     }),
     
     // Relationships
     product_manager: Field.lookup('user', {
       label: 'Product Manager',
+      group: 'basic',
     }),
     
     // Images and Assets
     image: Field.image({
       label: 'Product Image',
+      group: 'metadata',
     }),
 
     datasheet: Field.file({
       label: 'Datasheet',
+      group: 'metadata',
     }),
 
     // Tax & billing
     tax_rate: Field.percent({
       label: 'Default Tax Rate %',
+      group: 'pricing',
       scale: 2,
       min: 0,
       max: 100,
@@ -144,6 +161,7 @@ export const Product = ObjectSchema.create({
 
     billing_type: Field.select({
       label: 'Billing Type',
+      group: 'pricing',
       options: [
         { label: 'One-Time',  value: 'one_time', default: true },
         { label: 'Monthly',   value: 'monthly' },
@@ -155,6 +173,7 @@ export const Product = ObjectSchema.create({
 
     unit_of_measure: Field.select({
       label: 'Unit of Measure',
+      group: 'pricing',
       options: [
         { label: 'Each',       value: 'each', default: true },
         { label: 'License',    value: 'license' },

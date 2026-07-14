@@ -38,17 +38,20 @@ export const Contract = ObjectSchema.create({
     // AutoNumber field
     contract_number: Field.autonumber({
       label: 'Contract Number',
+      group: 'basic',
       format: 'CTR-{0000}',
     }),
     
     // Relationships
     crm_account: Field.lookup('crm_account', {
       label: 'Account',
+      group: 'parties',
       required: true,
     }),
     
     crm_contact: Field.lookup('crm_contact', {
       label: 'Primary Contact',
+      group: 'parties',
       required: true,
       // @objectstack 12: string[] `referenceFilters` is dead (not read by the
       // picker); `dependsOn` is the live cascading-lookup form — scopes contacts
@@ -58,6 +61,7 @@ export const Contract = ObjectSchema.create({
 
     crm_opportunity: Field.lookup('crm_opportunity', {
       label: 'Related Opportunity',
+      group: 'parties',
       // Scope opportunities to the contract's account (was dead referenceFilters).
       dependsOn: ['crm_account'],
     }),
@@ -66,12 +70,14 @@ export const Contract = ObjectSchema.create({
 
       defaultValue: cel`os.user.id`,
       label: 'Contract Owner',
+      group: 'parties',
       trackHistory: true,
     }),
 
     // Status
     status: Field.select({
       label: 'Status',
+      group: 'status',
       options: [
         { label: 'Draft', value: 'draft', color: '#999999', default: true },
         { label: 'In Approval', value: 'in_approval', color: '#FFA500' },
@@ -86,23 +92,27 @@ export const Contract = ObjectSchema.create({
     // Contract Terms
     contract_term_months: Field.number({
       label: 'Contract Term (Months)',
+      group: 'terms',
       required: true,
       min: 1,
     }),
     
     start_date: Field.date({
       label: 'Start Date',
+      group: 'terms',
       required: true,
     }),
     
     end_date: Field.date({
       label: 'End Date',
+      group: 'terms',
       required: true,
     }),
     
     // Financial
     contract_value: Field.currency({ 
       label: 'Contract Value',
+      group: 'value',
       scale: 2,
       min: 0,
       required: true,
@@ -110,6 +120,7 @@ export const Contract = ObjectSchema.create({
     
     billing_frequency: Field.select({
       label: 'Billing Frequency',
+      group: 'value',
       options: [
         { label: 'Monthly', value: 'monthly', default: true },
         { label: 'Quarterly', value: 'quarterly' },
@@ -120,6 +131,7 @@ export const Contract = ObjectSchema.create({
     
     payment_terms: Field.select({
       label: 'Payment Terms',
+      group: 'value',
       options: [
         { label: 'Net 15', value: 'net_15' },
         { label: 'Net 30', value: 'net_30', default: true },
@@ -131,11 +143,13 @@ export const Contract = ObjectSchema.create({
     // Renewal
     auto_renewal: Field.boolean({
       label: 'Auto Renewal',
+      group: 'renewal',
       defaultValue: false,
     }),
     
     renewal_notice_days: Field.number({
       label: 'Renewal Notice (Days)',
+      group: 'renewal',
       min: 0,
       defaultValue: 30,
     }),
@@ -143,6 +157,7 @@ export const Contract = ObjectSchema.create({
     // Legal
     contract_type: Field.select({
       label: 'Contract Type',
+      group: 'basic',
       options: [
         { label: 'Subscription', value: 'subscription' },
         { label: 'Service Agreement', value: 'service' },
@@ -155,29 +170,35 @@ export const Contract = ObjectSchema.create({
     
     signed_date: Field.date({
       label: 'Signed Date',
+      group: 'status',
     }),
     
     signed_by: Field.text({
       label: 'Signed By',
+      group: 'status',
       maxLength: 255,
     }),
     
     document_url: Field.url({
       label: 'Contract Document',
+      group: 'basic',
     }),
     
     // Terms & Conditions
     special_terms: Field.markdown({
       label: 'Special Terms',
+      group: 'terms',
     }),
     
     description: Field.markdown({
       label: 'Description',
+      group: 'basic',
     }),
     
     // Billing Address
     billing_address: Field.address({
       label: 'Billing Address',
+      group: 'value',
     }),
   },
   
