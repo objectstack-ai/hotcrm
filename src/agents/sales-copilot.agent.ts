@@ -10,7 +10,6 @@ export const SalesCopilotAgent = defineAgent({
   label: 'Sales Copilot',
   role: 'assistant',
   active: true,
-  visibility: 'organization',
 
   instructions: `You are the Sales Copilot — a single AI surface that
 helps sales reps work an account end-to-end. Use the Active Skills

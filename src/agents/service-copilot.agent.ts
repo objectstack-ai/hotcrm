@@ -7,7 +7,6 @@ export const ServiceCopilotAgent = defineAgent({
   label: 'Service Copilot',
   role: 'assistant',
   active: true,
-  visibility: 'organization',
 
   instructions: `You are the Service Copilot — a single AI surface
 that helps support reps triage and resolve cases. Be empathetic and
