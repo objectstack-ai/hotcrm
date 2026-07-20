@@ -599,11 +599,6 @@ export const esES: TranslationData = {
     crm_overview_dashboard: {
       label: 'Resumen CRM',
       description: 'Métricas de ingresos, analítica de pipeline e información de oportunidades',
-      actions: {
-        create_opportunity: { label: 'Nueva oportunidad' },
-        create_lead: { label: 'Nuevo prospecto' },
-        '/reports': { label: 'Informes' },
-      },
       widgets: {
         total_revenue: { title: 'Ingresos totales', description: 'Ingresos cerrados ganados en este período' },
         active_deals: { title: 'Negocios activos', description: 'Oportunidades abiertas en el pipeline' },
@@ -619,11 +614,6 @@ export const esES: TranslationData = {
     executive_dashboard: {
       label: 'Vista ejecutiva',
       description: 'KPI de alto nivel sobre ingresos, clientes y pipeline para la dirección',
-      actions: {
-        export_dashboard_pdf: { label: 'Exportar PDF' },
-        schedule_dashboard_email: { label: 'Programar correo' },
-        customize_dashboard: { label: 'Personalizar' },
-      },
       widgets: {
         total_revenue_ytd: { title: 'Ingresos totales (YTD)', description: 'Ingresos cerrados ganados en lo que va del año' },
         total_accounts: { title: 'Cuentas activas', description: 'Clientes con al menos una relación activa' },
@@ -639,11 +629,6 @@ export const esES: TranslationData = {
     sales_dashboard: {
       label: 'Rendimiento de ventas',
       description: 'Analítica de pipeline, tendencias de tasa de éxito y rendimiento de los representantes',
-      actions: {
-        create_opportunity: { label: 'Nueva oportunidad' },
-        '/reports/forecast': { label: 'Previsión' },
-        export_dashboard_pdf: { label: 'Exportar' },
-      },
       widgets: {
         total_pipeline_value: { title: 'Pipeline total', description: 'Suma del valor de las oportunidades abiertas' },
         closed_won_qtd: { title: 'Cerrado ganado (trimestre)', description: 'Ingresos cerrados este trimestre' },
@@ -660,11 +645,6 @@ export const esES: TranslationData = {
     service_dashboard: {
       label: 'Servicio al cliente',
       description: 'Carga de casos, salud del SLA y rendimiento de resolución',
-      actions: {
-        create_case: { label: 'Nuevo caso' },
-        '/objects/case?owner=current_user': { label: 'Mi cola' },
-        '/reports/sla': { label: 'Informe de SLA' },
-      },
       widgets: {
         open_cases: { title: 'Casos abiertos', description: 'Casos que aún no se han cerrado' },
         critical_cases: { title: 'Casos críticos', description: 'Casos abiertos marcados como prioridad crítica' },

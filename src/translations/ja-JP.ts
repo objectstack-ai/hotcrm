@@ -599,11 +599,6 @@ export const jaJP: TranslationData = {
     crm_overview_dashboard: {
       label: 'CRM 概要',
       description: '売上指標、パイプライン分析、商談インサイト',
-      actions: {
-        create_opportunity: { label: '商談を新規作成' },
-        create_lead: { label: 'リードを新規作成' },
-        '/reports': { label: 'レポート' },
-      },
       widgets: {
         total_revenue: { title: '総売上', description: '当期の成立済み売上' },
         active_deals: { title: '進行中の商談', description: 'パイプライン上のオープン商談' },
@@ -619,11 +614,6 @@ export const jaJP: TranslationData = {
     executive_dashboard: {
       label: 'エグゼクティブ概要',
       description: '経営層向けの売上・顧客・パイプラインの主要KPI',
-      actions: {
-        export_dashboard_pdf: { label: 'PDF エクスポート' },
-        schedule_dashboard_email: { label: 'メール配信' },
-        customize_dashboard: { label: 'カスタマイズ' },
-      },
       widgets: {
         total_revenue_ytd: { title: '年度累計売上', description: '本年度の成立済み売上' },
         total_accounts: { title: 'アクティブ取引先', description: '少なくとも1つの有効な関係を持つ顧客' },
@@ -639,11 +629,6 @@ export const jaJP: TranslationData = {
     sales_dashboard: {
       label: '営業実績',
       description: 'パイプライン分析、勝率トレンド、担当者別パフォーマンス',
-      actions: {
-        create_opportunity: { label: '商談を新規作成' },
-        '/reports/forecast': { label: '予測' },
-        export_dashboard_pdf: { label: 'エクスポート' },
-      },
       widgets: {
         total_pipeline_value: { title: 'パイプライン合計', description: 'オープン商談金額の合計' },
         closed_won_qtd: { title: '今四半期成立額', description: '今四半期に成立した売上' },
@@ -660,11 +645,6 @@ export const jaJP: TranslationData = {
     service_dashboard: {
       label: 'カスタマーサービス',
       description: 'ケース負荷、SLA健全性、解決パフォーマンス',
-      actions: {
-        create_case: { label: 'ケースを新規作成' },
-        '/objects/case?owner=current_user': { label: 'マイキュー' },
-        '/reports/sla': { label: 'SLA レポート' },
-      },
       widgets: {
         open_cases: { title: 'オープンケース', description: 'まだクローズされていないケース' },
         critical_cases: { title: '重大ケース', description: '優先度「重大」のオープンケース' },

@@ -21,11 +21,9 @@ export const SalesDashboard: Dashboard = {
   header: {
     showTitle: true,
     showDescription: true,
-    actions: [
-      { label: 'New Opportunity', icon: 'Plus',     actionType: 'modal', actionUrl: 'create_opportunity' },
-      { label: 'Forecast',        icon: 'TrendingUp', actionType: 'url', actionUrl: '/reports/forecast' },
-      { label: 'Export',          icon: 'Download', actionType: 'script', actionUrl: 'export_dashboard_pdf' },
-    ],
+    // Header action buttons removed: `create_opportunity` / `export_dashboard_pdf`
+    // are not defined actions, and `/reports/forecast` matches no report route —
+    // all three were dead. Re-add real, wired-up actions here when available.
   },
 
   dateRange: {

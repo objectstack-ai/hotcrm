@@ -22,11 +22,9 @@ export const ServiceDashboard: Dashboard = {
   header: {
     showTitle: true,
     showDescription: true,
-    actions: [
-      { label: 'New Case',     icon: 'Plus',     actionType: 'modal',  actionUrl: 'create_case' },
-      { label: 'My Queue',     icon: 'Inbox',    actionType: 'url',    actionUrl: '/objects/case?owner=current_user' },
-      { label: 'SLA Report',   icon: 'bar-chart', actionType: 'url',   actionUrl: '/reports/sla' },
-    ],
+    // Header action buttons removed: `create_case` is not a defined action and
+    // `/objects/case?owner=current_user` / `/reports/sla` are not in-app view
+    // routes — all three were dead. Re-add real, wired-up actions here when available.
   },
 
   dateRange: {

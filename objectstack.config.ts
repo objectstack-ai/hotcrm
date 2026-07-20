@@ -31,7 +31,7 @@ export default defineStack({
   manifest: {
     id: 'app.objectstack.hotcrm',
     namespace: 'crm',
-    version: '2.1.0',
+    version: '2.2.0',
     type: 'app',
     name: 'HotCRM',
     description: 'AI-Native CRM for the ObjectStack marketplace — Accounts, Contacts, Leads, Opportunities, Cases, Knowledge, Forecasts, Campaigns, Contracts.',
@@ -58,7 +58,20 @@ export default defineStack({
   // actually fire autolaunched flows (record_change & schedule types). Without
   // it the `automation` engine registers flows but nothing ever launches them.
   // Schedule triggers run via the job service (in the always-on slate).
-  requires: ['ai', 'automation', 'triggers', 'analytics', 'auth', 'ui', 'approvals', 'sharing'],
+  //
+  // `ai` is deliberately NOT listed. ObjectStack 11.3.0 (ADR-0025 S2) removed
+  // `@objectstack/service-ai` from the open edition — the AI runtime now ships
+  // only in the closed cloud package, and the framework CLI does not depend on
+  // it. Under ObjectStack 16, `requires: ['ai']` is a *fail-fast* capability:
+  // the serve command hard-aborts boot when the package is absent, so keeping it
+  // here would break `objectstack start`/`dev` for this open-edition app (the AI
+  // block runs before every other capability resolves). The AI metadata is
+  // unaffected — the two agents + skills still validate, build into the artifact,
+  // and run wherever a runtime provides the `ai` tier (cloud's objectos-runtime).
+  // A local open-edition boot simply omits the AI service and hides its console
+  // surface. To run AI locally, declare `@objectstack/service-ai` (cloud) in
+  // package.json — its mere presence best-effort auto-loads it.
+  requires: ['automation', 'triggers', 'analytics', 'auth', 'ui', 'approvals', 'sharing'],
 
   objects: Object.values(objects),
   actions: Object.values(actions),
