@@ -58,14 +58,18 @@ const opportunityValidationHook: Hook = {
     const { event, input } = ctx;
     const previous = ctx.previous;
 
-    // Freeze closed opportunities FIRST, judging only the caller's actual
-    // edits. This must run before the derived-field recompute below injects
-    // expected_revenue/probability into `input` — otherwise a system write
-    // (e.g. the post-seed ownership backfill) on a record whose stored
-    // derived values are stale gets rejected for fields the caller never
-    // touched, and the backfill silently fails (seen as 23 boot-time
-    // BodyRunner errors on every fresh-DB boot).
-    if (event === 'beforeUpdate' && previous) {
+    // Freeze closed opportunities — but guard ONLY genuine USER edits. A write
+    // with no authenticated user (`ctx.user?.id` absent) is a system / seed /
+    // backfill write and must pass: the seed's `close_date: daysAgo(15)`
+    // re-evaluates to a new date on every reboot, so a re-seed legitimately
+    // changes close_date on already-closed opps. Guarding those threw 23
+    // boot-time BodyRunner errors AND blocked the seed from correcting
+    // closed-won `probability` to 100 (#459). `ctx.user?.id` is this repo's
+    // system-write signal (cf. case/lead/quote hooks) and matches the
+    // SYSTEM_FIELDS intent above ("only user edits to business fields").
+    // Still runs before the derived-field recompute below so a genuine user
+    // edit is judged on the caller's own fields, not injected ones.
+    if (event === 'beforeUpdate' && previous && ctx.user?.id) {
       const prevStage = previous.stage as string | undefined;
       const isClosed = prevStage === 'closed_won' || prevStage === 'closed_lost';
       if (isClosed) {
