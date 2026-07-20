@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@objectstack/account':
-        specifier: ^14.7.0
-        version: 14.7.0(vitest@4.1.9(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.0)(yaml@2.9.0))
+        specifier: ^15.1.1
+        version: 15.1.1(vitest@4.1.9(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.0)(yaml@2.9.0))
       '@objectstack/cli':
         specifier: ^14.7.0
         version: 14.7.0(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(better-sqlite3@12.11.1)(kysely@0.29.2)(mongodb@7.5.0)(nanostores@1.4.0)(next@16.2.1(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vitest@4.1.9(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.0)(yaml@2.9.0))
@@ -716,6 +716,10 @@ packages:
     resolution: {integrity: sha512-2ld+QIUpSd7XV41nWy/4GEn6CJ9B0NZyW6083c4fdcTtSos6gdo3yn7FuG0rIj031ifThhMvZZL3VUERbTdurA==}
     engines: {node: '>=18.0.0'}
 
+  '@objectstack/account@15.1.1':
+    resolution: {integrity: sha512-K4nn+3JBmYblGw4rmPHOBtvrOcMD4e3gbotKFVq+ylqeoW8zFmw7wZEVk4GWmKa8y3UR1I3ozmypW7OlueCSIg==}
+    engines: {node: '>=18.0.0'}
+
   '@objectstack/cli@14.7.0':
     resolution: {integrity: sha512-r2ialZ0fIwWLNLk617hxWT0cX8qE+QmlmcyCPIVm1CmbZkjiv1KCB7kRVRjkzo2MOtJfhjfou27SpQtB68Xz0A==}
     engines: {node: '>=18.0.0'}
@@ -786,6 +790,15 @@ packages:
       vitest:
         optional: true
 
+  '@objectstack/metadata-core@15.1.1':
+    resolution: {integrity: sha512-EQfJtA0E+fXxWCRt5QNxbCrRmOygAgfw41YMdEwLBFpTnRaJ0XD5HziyyHulNf+B3gtrX94xc47jZ6lo4Aka5A==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      vitest: ^4.0.0
+    peerDependenciesMeta:
+      vitest:
+        optional: true
+
   '@objectstack/metadata-fs@14.7.0':
     resolution: {integrity: sha512-d4VkI0cuez9h9bwqec8P6n+5/bLysdo4Qm28cqwZes445qXdj+riOf/oPd+lrS792W66/Zso/S6gbO/KGMgRDQ==}
     engines: {node: '>=18.0.0'}
@@ -808,6 +821,10 @@ packages:
 
   '@objectstack/platform-objects@14.7.0':
     resolution: {integrity: sha512-fXLbvHZkJqcKqVW20HY4Nb0bCKmqoFErnyK+ofnr7it8j2TABHUoOxkTrV3kkG2aSZgv49oohcXuGH9o5NZ/dw==}
+    engines: {node: '>=18.0.0'}
+
+  '@objectstack/platform-objects@15.1.1':
+    resolution: {integrity: sha512-as35ael1foO49V4hiVrjmTlY6JPyg8K9EhqrXDI0TbS+6LuRz0GCe7O8vRpDD5xiWDTfgMM66rqgsJOsNuvwpw==}
     engines: {node: '>=18.0.0'}
 
   '@objectstack/plugin-approvals@14.7.0':
@@ -919,6 +936,15 @@ packages:
 
   '@objectstack/spec@14.7.0':
     resolution: {integrity: sha512-ZSn60tK3+wHCsfQVutGiITaB+PUuSqsv3cphsce0+jQe+No5ZItUy86eR4zP5nvY5RwNHokcKpvhvjgYlo+hlA==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      ai: ^7.0.0
+    peerDependenciesMeta:
+      ai:
+        optional: true
+
+  '@objectstack/spec@15.1.1':
+    resolution: {integrity: sha512-Eto1iLtzmnh3kSzIVGPUQF9DZGE1dY3YWFm+3qRpNBFB8iSvOilLwNYVSF64D5sTobp0CZSzB1/GalzFAR1icA==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       ai: ^7.0.0
@@ -4440,6 +4466,14 @@ snapshots:
       - ai
       - vitest
 
+  '@objectstack/account@15.1.1(vitest@4.1.9(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.0)(yaml@2.9.0))':
+    dependencies:
+      '@objectstack/platform-objects': 15.1.1(vitest@4.1.9(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.0)(yaml@2.9.0))
+      '@objectstack/spec': 15.1.1
+    transitivePeerDependencies:
+      - ai
+      - vitest
+
   '@objectstack/cli@14.7.0(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(better-sqlite3@12.11.1)(kysely@0.29.2)(mongodb@7.5.0)(nanostores@1.4.0)(next@16.2.1(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vitest@4.1.9(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.0)(yaml@2.9.0))':
     dependencies:
       '@objectstack/account': 14.7.0(vitest@4.1.9(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.0)(yaml@2.9.0))
@@ -4709,6 +4743,15 @@ snapshots:
     transitivePeerDependencies:
       - ai
 
+  '@objectstack/metadata-core@15.1.1(vitest@4.1.9(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.0)(yaml@2.9.0))':
+    dependencies:
+      '@objectstack/spec': 15.1.1
+      zod: 4.4.3
+    optionalDependencies:
+      vitest: 4.1.9(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.0)(yaml@2.9.0)
+    transitivePeerDependencies:
+      - ai
+
   '@objectstack/metadata-fs@14.7.0(vitest@4.1.9(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.0)(yaml@2.9.0))':
     dependencies:
       '@objectstack/metadata-core': 14.7.0(vitest@4.1.9(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.0)(yaml@2.9.0))
@@ -4769,6 +4812,14 @@ snapshots:
     dependencies:
       '@objectstack/metadata-core': 14.7.0(vitest@4.1.9(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.0)(yaml@2.9.0))
       '@objectstack/spec': 14.7.0
+    transitivePeerDependencies:
+      - ai
+      - vitest
+
+  '@objectstack/platform-objects@15.1.1(vitest@4.1.9(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.0)(yaml@2.9.0))':
+    dependencies:
+      '@objectstack/metadata-core': 15.1.1(vitest@4.1.9(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.0)(yaml@2.9.0))
+      '@objectstack/spec': 15.1.1
     transitivePeerDependencies:
       - ai
       - vitest
@@ -5099,6 +5150,10 @@ snapshots:
       - vitest
 
   '@objectstack/spec@14.7.0':
+    dependencies:
+      zod: 4.4.3
+
+  '@objectstack/spec@15.1.1':
     dependencies:
       zod: 4.4.3
 
