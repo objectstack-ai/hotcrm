@@ -2,6 +2,14 @@
 
 All notable changes to HotCRM are documented in this file. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); HotCRM follows [Semantic Versioning](https://semver.org/).
 
+## [2.2.2] — 2026-07-21
+
+Patch before the ObjectStack 16 marketplace release. Fixes [#459](https://github.com/objectstack-ai/hotcrm/issues/459) — the highest-severity issue from the v2.2.1 QA dogfood.
+
+### Fixed
+
+- **Opportunity/quote freeze-guards no longer reject system/seed writes → 23 boot errors gone + closed-won probability corrected.** The `opportunity_lifecycle` and quote freeze-guards ran on **every** write to a closed/accepted record, so the seed re-applying rows on reboot (its `close_date: daysAgo(15)` / `quote_date` re-evaluate to a *new* date each boot) was rejected — logging 23 `BodyRunner` errors per boot and blocking the seed from setting closed-won `probability` to 100 (it fell back to the field default `10`). Both guards now fire **only for genuine user edits** (`ctx.user?.id` present); system/seed/backfill writes (no user) pass — matching this repo's system-write convention (`case`/`lead` hooks) and the guards' own stated intent. A user editing a closed opportunity or accepted quote through the UI is still blocked. Fixes [opportunity.hook.ts](src/objects/opportunity.hook.ts) + [quote.hook.ts](src/objects/quote.hook.ts).
+
 ## [2.2.1] — 2026-07-20
 
 Follow-up patch to 2.2.0. The dashboard-filter fix in 2.2.0 only covered the built-in `dateRange` picker; the **`globalFilters[]`** have the same propagation behaviour (ObjectStack 15 / framework#2501 injects every dashboard filter into each widget's query) and were still crashing widgets on objects that lack the filtered field. Browser-verified by actually selecting the filter values, not just loading the dashboards.

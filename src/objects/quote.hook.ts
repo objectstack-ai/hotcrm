@@ -41,7 +41,12 @@ const quoteValidation: Hook = {
       input.expiration_date = addDays(base, 30);
     }
 
-    if (event === 'beforeUpdate' && previous) {
+    // Guard ONLY genuine USER edits (`ctx.user?.id` present). System / seed /
+    // backfill writes carry no user and legitimately re-apply business fields
+    // (the seed's quote_date/expiration_date re-evaluate on every reboot), so
+    // guarding them threw boot-time BodyRunner errors (#459). Matches the
+    // system-write convention used across the case/lead/opportunity hooks.
+    if (event === 'beforeUpdate' && previous && ctx.user?.id) {
       const frozen = previous.status === 'accepted' || previous.status === 'expired';
       if (frozen) {
         const allowed = new Set(['internal_notes']);
