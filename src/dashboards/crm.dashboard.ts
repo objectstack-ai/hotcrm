@@ -181,10 +181,12 @@ export const CrmOverviewDashboard: Dashboard = {
       description: 'Total list-price revenue by product category',
       type: 'bar',
       colorVariant: 'blue',
-      // crm_product has no `close_date`; opt out of the dashboard date-range
-      // picker (ObjectStack 15 framework#2501 wired dashboard filters into every
-      // widget query, so an unbound widget here fails with `no such column`).
-      filterBindings: { dateRange: false },
+      // crm_product has neither `close_date` nor `owner`; opt out of both
+      // dashboard filters bound to those fields. ObjectStack 15 (framework#2501)
+      // injects every dashboard filter (dateRange + globalFilters) into each
+      // widget's query, so a widget on an object lacking a filter field fails
+      // with `no such column`.
+      filterBindings: { dateRange: false, owner: false },
       dataset: 'product_metrics', dimensions: ['category'], values: ['list_price_sum'],
       layout: { x: 6, y: 6, w: 6, h: 4 },
       chartConfig: {
