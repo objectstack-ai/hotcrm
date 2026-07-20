@@ -724,11 +724,6 @@ export const zhCN: TranslationData = {
     crm_overview_dashboard: {
       label: 'CRM 总览',
       description: '收入指标、管道分析与商机洞察',
-      actions: {
-        create_opportunity: { label: '新建商机' },
-        create_lead: { label: '新建线索' },
-        '/reports': { label: '报表' },
-      },
       widgets: {
         total_revenue: { title: '总收入', description: '本期已成交收入' },
         active_deals: { title: '活跃商机', description: '管道中进行中的商机' },
@@ -744,11 +739,6 @@ export const zhCN: TranslationData = {
     executive_dashboard: {
       label: '高管总览',
       description: '面向管理层的收入、客户与管道高阶指标',
-      actions: {
-        export_dashboard_pdf: { label: '导出 PDF' },
-        schedule_dashboard_email: { label: '邮件订阅' },
-        customize_dashboard: { label: '自定义' },
-      },
       widgets: {
         total_revenue_ytd: { title: '年度累计收入', description: '本年度已成交收入' },
         total_accounts: { title: '活跃客户', description: '至少存在一项活跃关系的客户' },
@@ -764,11 +754,6 @@ export const zhCN: TranslationData = {
     sales_dashboard: {
       label: '销售业绩',
       description: '管道分析、赢率趋势及销售代表绩效',
-      actions: {
-        create_opportunity: { label: '新建商机' },
-        '/reports/forecast': { label: '预测' },
-        export_dashboard_pdf: { label: '导出' },
-      },
       widgets: {
         total_pipeline_value: { title: '管道总额', description: '所有进行中商机金额合计' },
         closed_won_qtd: { title: '本季度已成交', description: '本季度已赢得的收入' },
@@ -785,11 +770,6 @@ export const zhCN: TranslationData = {
     service_dashboard: {
       label: '客户服务',
       description: '工单负载、SLA 健康度与处理绩效',
-      actions: {
-        create_case: { label: '新建工单' },
-        '/objects/case?owner=current_user': { label: '我的队列' },
-        '/reports/sla': { label: 'SLA 报表' },
-      },
       widgets: {
         open_cases: { title: '未关闭工单', description: '尚未关闭的工单' },
         critical_cases: { title: '紧急工单', description: '标记为紧急优先级的未关闭工单' },

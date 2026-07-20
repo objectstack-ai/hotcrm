@@ -27,11 +27,9 @@ export const CrmOverviewDashboard: Dashboard = {
   header: {
     showTitle: true,
     showDescription: true,
-    actions: [
-      { label: 'New Deal',   icon: 'Plus',     actionType: 'modal', actionUrl: 'create_opportunity' },
-      { label: 'New Lead',   icon: 'Sparkles', actionType: 'modal', actionUrl: 'create_lead' },
-      { label: 'Reports',    icon: 'bar-chart', actionType: 'url',  actionUrl: '/reports' },
-    ],
+    // Header action buttons removed: `create_opportunity` / `create_lead` are not
+    // defined actions and `/reports` is not an in-app view route — all three were
+    // dead. Re-add real, wired-up actions here when available.
   },
 
   dateRange: {
@@ -183,6 +181,10 @@ export const CrmOverviewDashboard: Dashboard = {
       description: 'Total list-price revenue by product category',
       type: 'bar',
       colorVariant: 'blue',
+      // crm_product has no `close_date`; opt out of the dashboard date-range
+      // picker (ObjectStack 15 framework#2501 wired dashboard filters into every
+      // widget query, so an unbound widget here fails with `no such column`).
+      filterBindings: { dateRange: false },
       dataset: 'product_metrics', dimensions: ['category'], values: ['list_price_sum'],
       layout: { x: 6, y: 6, w: 6, h: 4 },
       chartConfig: {

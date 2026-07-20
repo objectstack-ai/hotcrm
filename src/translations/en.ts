@@ -641,11 +641,6 @@ export const en: TranslationData = {
     crm_overview_dashboard: {
       label: 'CRM Overview',
       description: 'Revenue metrics, pipeline analytics, and deal insights',
-      actions: {
-        create_opportunity: { label: 'New Deal' },
-        create_lead: { label: 'New Lead' },
-        '/reports': { label: 'Reports' },
-      },
       widgets: {
         total_revenue: { title: 'Total Revenue', description: 'Closed-won revenue this period' },
         active_deals: { title: 'Active Deals', description: 'Open opportunities in the pipeline' },
@@ -661,11 +656,6 @@ export const en: TranslationData = {
     executive_dashboard: {
       label: 'Executive Overview',
       description: 'High-level revenue, customer, and pipeline KPIs for leadership',
-      actions: {
-        export_dashboard_pdf: { label: 'Export PDF' },
-        schedule_dashboard_email: { label: 'Schedule Email' },
-        customize_dashboard: { label: 'Customize' },
-      },
       widgets: {
         total_revenue_ytd: { title: 'Total Revenue (YTD)', description: 'Closed-won revenue this year' },
         total_accounts: { title: 'Active Accounts', description: 'Customers with at least one active relationship' },
@@ -681,11 +671,6 @@ export const en: TranslationData = {
     sales_dashboard: {
       label: 'Sales Performance',
       description: 'Pipeline analytics, win rate trends, and rep performance',
-      actions: {
-        create_opportunity: { label: 'New Opportunity' },
-        '/reports/forecast': { label: 'Forecast' },
-        export_dashboard_pdf: { label: 'Export' },
-      },
       widgets: {
         total_pipeline_value: { title: 'Total Pipeline', description: 'Sum of open opportunity value' },
         closed_won_qtd: { title: 'Closed Won (QTD)', description: 'Revenue closed this quarter' },
@@ -702,11 +687,6 @@ export const en: TranslationData = {
     service_dashboard: {
       label: 'Customer Service',
       description: 'Case load, SLA health, and resolution performance',
-      actions: {
-        create_case: { label: 'New Case' },
-        '/objects/case?owner=current_user': { label: 'My Queue' },
-        '/reports/sla': { label: 'SLA Report' },
-      },
       widgets: {
         open_cases: { title: 'Open Cases', description: 'Cases that are not yet closed' },
         critical_cases: { title: 'Critical Cases', description: 'Open cases marked as critical priority' },
