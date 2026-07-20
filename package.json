@@ -32,7 +32,7 @@
     "@objectstack/driver-sql": "^14.7.0",
     "@objectstack/driver-sqlite-wasm": "^14.7.0",
     "@objectstack/metadata": "^14.7.0",
-    "@objectstack/objectql": "^14.7.0",
+    "@objectstack/objectql": "^15.1.1",
     "@objectstack/runtime": "^14.7.0",
     "@objectstack/service-analytics": "^14.7.0",
     "@objectstack/service-automation": "^14.7.0",
