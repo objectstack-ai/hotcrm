@@ -88,11 +88,13 @@ export const ExecutiveDashboard: Dashboard = {
       actionUrl: '/objects/account',
       actionType: 'url',
       actionIcon: 'ArrowUpRight',
-      // crm_account has no `close_date`; opt out of the dashboard date-range
-      // picker (bound to close_date) — ObjectStack 15 (framework#2501) wired
-      // dashboard filters into every widget's query, so an unbound widget on an
-      // object lacking the date field would fail with `no such column`.
-      filterBindings: { dateRange: false },
+      // crm_account has neither `close_date` nor `lead_source`; opt this widget
+      // out of both dashboard filters bound to those fields. ObjectStack 15
+      // (framework#2501) injects every dashboard filter (dateRange + globalFilters)
+      // into each widget's query, so a widget on an object lacking a filter field
+      // fails with `no such column`. crm_account DOES have `owner`, so the owner
+      // filter is left to apply.
+      filterBindings: { dateRange: false, lead_source: false },
       dataset: 'account_metrics', values: ['account_count'],
       layout: { x: 3, y: 0, w: 3, h: 2 },
       options: {
@@ -203,7 +205,7 @@ export const ExecutiveDashboard: Dashboard = {
       type: 'bar',
       filter: { created_at: { $gte: '{6_months_ago}' } },
       colorVariant: 'purple',
-      filterBindings: { dateRange: false }, // crm_account has no close_date; this widget scopes itself by created_at
+      filterBindings: { dateRange: false, lead_source: false }, // crm_account has no close_date/lead_source; scopes itself by created_at
       dataset: 'account_metrics', dimensions: ['created_at'], values: ['account_count'],
       layout: { x: 6, y: 6, w: 6, h: 4 },
       chartConfig: {
@@ -230,7 +232,7 @@ export const ExecutiveDashboard: Dashboard = {
       description: 'Total annual revenue and account count per industry',
       type: 'table',
       colorVariant: 'default',
-      filterBindings: { dateRange: false }, // crm_account has no close_date — opt out of the date picker
+      filterBindings: { dateRange: false, lead_source: false }, // crm_account has no close_date/lead_source — opt out of both
       dataset: 'account_metrics', dimensions: ['industry'], values: ['annual_revenue_sum', 'account_count'],
       layout: { x: 0, y: 10, w: 12, h: 4 },
       options: {

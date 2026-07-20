@@ -2,6 +2,16 @@
 
 All notable changes to HotCRM are documented in this file. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); HotCRM follows [Semantic Versioning](https://semver.org/).
 
+## [2.2.1] — 2026-07-20
+
+Follow-up patch to 2.2.0. The dashboard-filter fix in 2.2.0 only covered the built-in `dateRange` picker; the **`globalFilters[]`** have the same propagation behaviour (ObjectStack 15 / framework#2501 injects every dashboard filter into each widget's query) and were still crashing widgets on objects that lack the filtered field. Browser-verified by actually selecting the filter values, not just loading the dashboards.
+
+### Fixed
+
+- **Selecting the Executive dashboard's `Lead Source` filter crashed every account widget.** The `lead_source` global filter was injected into each widget's query; `crm_account` has no `lead_source` column, so `total_accounts`, `new_accounts_by_month`, and `accounts_by_industry` failed with `SqliteError: no such column: lead_source`. Added `lead_source: false` to those three widgets' [`filterBindings`](src/dashboards/executive.dashboard.ts) (they keep `dateRange: false` too). `crm_contact` and `crm_lead` *do* have `lead_source`, so `total_contacts` / `open_leads` correctly keep filtering. Verified in the browser: selecting `Lead Source = Web` now returns filtered/empty results with zero analytics errors.
+- **CRM dashboard's `Owner` filter would crash `top_products`.** `crm_product` has no `owner` column, so the `owner` global filter would fail the product-category widget the same way. Added `owner: false` to its [`filterBindings`](src/dashboards/crm.dashboard.ts) (alongside the existing `dateRange: false`).
+- Full field-vs-filter matrix audited across all four dashboards: Sales (all `opportunity_metrics`, which has `owner`/`type`/`close_date`) and Service (`created_date`/`owner`/`priority` all on `crm_case`) needed no change.
+
 ## [2.2.0] — 2026-07-20
 
 Platform upgrade to ObjectStack **16.0.0-rc.1** — the 16 release-candidate line (from 14.7, skipping the entire 15.x line). Manifest `specVersion` now declares `^16.0.0-rc.1` (was `^14.0.0`); app version `2.2.0`. ObjectStack 16 finishes the ADR-0049 "enforce-or-remove" sweep (dead metadata props now fail loudly instead of parsing inert), converges the hook/action org identifier on `organizationId`, flips `.strict()` on dashboard-widget / view-form / page schemas, and — most consequentially for this app — makes the `ai` capability a **fail-fast hard requirement** resolved to the closed `@objectstack/service-ai` package. Built, validated, type-checked, unit-tested (17/17), and browser-verified against `@objectstack/* 16.0.0-rc.1` (boot → 38 plugins loaded → 17 flows / 15 trigger-bound → `/_console/` login renders at HTTP 200 with no boot or console errors).
