@@ -4,7 +4,12 @@
 
 # HotCRM
 
-> **AI-Native CRM for the ObjectStack marketplace.** The reference implementation every future marketplace app forks from.
+> **The reference app for AI-written enterprise software.** A complete CRM —
+> 15 objects, 10 flows, 4 dashboards, 2 AI copilots, 4 languages — written as
+> ~17,000 lines of typed [ObjectStack](https://github.com/objectstack-ai/objectstack)
+> metadata, so the whole app still fits in a single agent context window.
+> **Install it online in one click, or fork it and build & ask with Claude
+> Code** — it's the reference implementation every marketplace app forks from.
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Manifest](https://img.shields.io/badge/manifest-app.objectstack.hotcrm-blueviolet)](objectstack.config.ts)
