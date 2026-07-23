@@ -130,10 +130,11 @@ export const Campaign = ObjectSchema.create({
       min: 0,
     }),
     
+    // NOT `readonly`: the campaign_enrollment flow writes this rollup
+    // (16.x drops readonly writes, #2948).
     num_sent: Field.number({
       label: 'Number Sent',
       min: 0,
-      readonly: true,
     }),
     
     num_responses: Field.number({
@@ -185,7 +186,7 @@ export const Campaign = ObjectSchema.create({
       description: 'Parent campaign in hierarchy',
     }),
     
-    owner: Field.lookup('user', {
+    owner: Field.lookup('sys_user', {
 
       defaultValue: cel`os.user.id`,
       label: 'Campaign Owner',

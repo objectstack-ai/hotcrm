@@ -168,43 +168,42 @@ export const Lead = ObjectSchema.create({
     }),
 
     // Assignment
-    owner: Field.lookup('user', {
+    owner: Field.lookup('sys_user', {
       defaultValue: cel`os.user.id`,
       label: 'Lead Owner',
       group: 'assignment',
       trackHistory: true,
     }),
 
-    // Conversion tracking
+    // Conversion tracking.
+    // NOT `readonly`: since 16.x the platform drops writes to readonly fields
+    // outright (#2948), including the lead_conversion flow's mark_converted
+    // update. Edit-protection instead comes from the `cannot_edit_converted`
+    // validation below, which blocks user edits once is_converted is set.
     is_converted: Field.boolean({
       label: 'Converted',
       defaultValue: false,
-      readonly: true,
       group: 'conversion',
       trackHistory: true,
     }),
 
     converted_account: Field.lookup('crm_account', {
       label: 'Converted Account',
-      readonly: true,
       group: 'conversion',
     }),
 
     converted_contact: Field.lookup('crm_contact', {
       label: 'Converted Contact',
-      readonly: true,
       group: 'conversion',
     }),
 
     converted_opportunity: Field.lookup('crm_opportunity', {
       label: 'Converted Opportunity',
-      readonly: true,
       group: 'conversion',
     }),
 
     converted_date: Field.datetime({
       label: 'Converted Date',
-      readonly: true,
       group: 'conversion',
     }),
 

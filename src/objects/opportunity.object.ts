@@ -61,7 +61,7 @@ export const Opportunity = ObjectSchema.create({
       group: 'basic',
     }),
 
-    owner: Field.lookup('user', {
+    owner: Field.lookup('sys_user', {
 
       defaultValue: cel`os.user.id`,
       label: 'Opportunity Owner',
@@ -208,11 +208,16 @@ export const Opportunity = ObjectSchema.create({
       ]
     }),
 
-    // Approval workflow tracking
+    // Approval workflow tracking.
+    // NOT `readonly`: the opportunity_approval flow writes pending/approved/
+    // rejected here, and since 16.x readonly writes are dropped (#2948).
+    // `defaultValue` at field level: option-level `default: true` only
+    // preselects in UI forms — API/flow inserts land null without it, and a
+    // null approval_status never matches the flow's entry condition.
     approval_status: Field.select({
       label: 'Approval Status',
       group: 'sales_process',
-      readonly: true,
+      defaultValue: 'not_required',
       options: [
         { label: 'Not Required', value: 'not_required', default: true },
         { label: 'Pending', value: 'pending', color: '#FFA500' },
@@ -223,7 +228,6 @@ export const Opportunity = ObjectSchema.create({
 
     approved_date: Field.datetime({
       label: 'Approved Date',
-      readonly: true,
       group: 'sales_process',
     }),
 

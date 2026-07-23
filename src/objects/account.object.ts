@@ -123,7 +123,7 @@ export const Account = ObjectSchema.create({
     }),
 
     // Relationship fields
-    owner: Field.lookup('user', {
+    owner: Field.lookup('sys_user', {
       defaultValue: cel`os.user.id`,
       label: 'Account Owner',
       group: 'ownership',
@@ -198,7 +198,7 @@ export const Account = ObjectSchema.create({
       ],
     }),
 
-    renewal_owner: Field.lookup('user', {
+    renewal_owner: Field.lookup('sys_user', {
       label: 'Renewal Owner (CSM)',
       group: 'ownership',
     }),
@@ -236,7 +236,9 @@ export const Account = ObjectSchema.create({
       type: 'script',
       severity: 'error',
       message: 'Annual Revenue must be positive',
-      condition: P`record.annual_revenue < 0`,
+      // Null-guard: strict CEL cannot compare dyn<null> < int, and an
+      // unguarded predicate aborts evaluation (rule silently skipped).
+      condition: P`record.annual_revenue != null && record.annual_revenue < 0`,
     },
     // `account_name_unique` (type: 'unique') was removed in 7.6 — uniqueness now
     // lives on the `name` index above (unique: true).

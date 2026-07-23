@@ -44,7 +44,7 @@ export const Forecast = ObjectSchema.create({
   ],
 
   fields: {
-    owner: Field.lookup('user', {
+    owner: Field.lookup('sys_user', {
       defaultValue: cel`os.user.id`,
       label: 'Owner',
       // Optional so seed inserts (which run before any human user exists and

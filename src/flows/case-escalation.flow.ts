@@ -43,7 +43,11 @@ export const CaseEscalationFlow: Flow = {
         // `escalation_reason` must be set whenever `is_escalated` flips true — the
         // object's `escalation_reason_required` validation rejects the write
         // otherwise (which silently aborted this flow until it was supplied).
-        fields: { owner: '{caseRecord.owner.manager}', is_escalated: true, escalation_reason: 'Auto-escalated: critical priority', escalated_date: '{NOW()}', status: 'escalated' },
+        // No owner reassignment: `{caseRecord.owner.manager}` cannot traverse a
+        // lookup in flow templates — it interpolates to the literal "undefined",
+        // orphaning the case under a phantom owner. The case stays with its
+        // owner; the escalation flag + follow-up task carry the hand-off.
+        fields: { is_escalated: true, escalation_reason: 'Auto-escalated: critical priority', escalated_date: '{NOW()}', status: 'escalated' },
       },
     },
     {
@@ -84,4 +88,23 @@ export const CaseEscalationFlow: Flow = {
     { id: 'e4', source: 'create_task', target: 'notify_team', type: 'default' },
     { id: 'e5', source: 'notify_team', target: 'end', type: 'default' },
   ],
+};
+
+/**
+ * Insert-time twin of `case_escalation`: a record-change flow binds exactly one
+ * hook event, so the afterUpdate flow above never sees cases that are BORN
+ * critical (phone-in P1s — the common path). Same nodes/edges, only the start
+ * node is rebound to afterInsert. The `status != "escalated"` guard carries
+ * over untouched.
+ */
+export const CaseEscalationOnCreateFlow: Flow = {
+  ...CaseEscalationFlow,
+  name: 'case_escalation_on_create',
+  label: 'Case Escalation Process (on create)',
+  description: 'Escalate cases created critical (insert-time twin of case_escalation)',
+  nodes: CaseEscalationFlow.nodes.map((n) =>
+    n.id === 'start'
+      ? { ...n, config: { ...n.config, triggerType: 'record-after-create' } }
+      : n,
+  ),
 };

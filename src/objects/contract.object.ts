@@ -66,7 +66,7 @@ export const Contract = ObjectSchema.create({
       dependsOn: ['crm_account'],
     }),
     
-    owner: Field.lookup('user', {
+    owner: Field.lookup('sys_user', {
 
       defaultValue: cel`os.user.id`,
       label: 'Contract Owner',

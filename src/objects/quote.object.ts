@@ -78,7 +78,7 @@ export const Quote = ObjectSchema.create({
       dependsOn: ['crm_account'],
     }),
 
-    owner: Field.lookup('user', {
+    owner: Field.lookup('sys_user', {
       label: 'Quote Owner',
       group: 'basic',
       trackHistory: true,

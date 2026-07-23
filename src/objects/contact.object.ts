@@ -97,7 +97,7 @@ export const Contact = ObjectSchema.create({
       group: 'account_info',
     }),
 
-    owner: Field.lookup('user', {
+    owner: Field.lookup('sys_user', {
 
       defaultValue: cel`os.user.id`,
       label: 'Contact Owner',

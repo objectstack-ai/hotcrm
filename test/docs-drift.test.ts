@@ -60,7 +60,7 @@ const cronDisplay = (raw: string) => {
 const RULES: Rule[] = [
   {
     label: 'manager approval threshold',
-    extract: () => cap('opportunity-approval.flow.ts', /record\.amount > (\d+) && record\.approval_status/),
+    extract: () => cap('opportunity-approval.flow.ts', /record\.amount > (\d+) && \(?record\.approval_status/),
     display: money,
     docs: ['crm_sales.md', 'crm_admin.md'],
   },

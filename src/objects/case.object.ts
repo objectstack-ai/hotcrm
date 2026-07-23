@@ -127,7 +127,7 @@ export const Case = ObjectSchema.create({
     }),
     
     // Assignment
-    owner: Field.lookup('user', {
+    owner: Field.lookup('sys_user', {
       defaultValue: cel`os.user.id`,
       label: 'Case Owner',
       group: 'origin',
@@ -165,11 +165,13 @@ export const Case = ObjectSchema.create({
       group: 'sla',
     }),
     
+    // NOT `readonly`: the case_sla_monitor flow stamps this, and 16.x drops
+    // writes to readonly fields (#2948) — readonly here silently disabled
+    // SLA violation tracking.
     is_sla_violated: Field.boolean({
       label: 'SLA Violated',
       group: 'sla',
       defaultValue: false,
-      readonly: true,
     }),
     
     // Escalation
@@ -179,10 +181,11 @@ export const Case = ObjectSchema.create({
       defaultValue: false,
     }),
     
+    // NOT `readonly`: written by case_escalation / case_sla_monitor flows
+    // (16.x drops readonly writes, #2948).
     escalated_date: Field.datetime({
       label: 'Escalated Date',
       group: 'escalation',
-      readonly: true,
     }),
     
     escalation_reason: Field.textarea({

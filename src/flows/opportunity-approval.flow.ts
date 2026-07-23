@@ -50,7 +50,10 @@ export const OpportunityApprovalFlow: Flow = {
       config: {
         objectName: 'crm_opportunity',
         triggerType: 'record-after-update',
-        condition: 'record.amount > 100000 && record.approval_status == "not_required"',
+        // Null-tolerant: rows inserted before approval_status had a field-level
+        // defaultValue (e.g. flow-created opportunities) carry null, which must
+        // still enter approval.
+        condition: 'record.amount > 100000 && (record.approval_status == "not_required" || record.approval_status == null)',
       },
     },
     {

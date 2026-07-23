@@ -141,7 +141,7 @@ export const KnowledgeArticle = ObjectSchema.create({
       group: 'content',
     }),
 
-    owner: Field.lookup('user', {
+    owner: Field.lookup('sys_user', {
 
       defaultValue: cel`os.user.id`,
       label: 'Article Owner',

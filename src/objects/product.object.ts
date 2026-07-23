@@ -133,7 +133,7 @@ export const Product = ObjectSchema.create({
     }),
     
     // Relationships
-    product_manager: Field.lookup('user', {
+    product_manager: Field.lookup('sys_user', {
       label: 'Product Manager',
       group: 'basic',
     }),
