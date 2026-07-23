@@ -133,6 +133,10 @@ export const Lead = ObjectSchema.create({
       required: true,
       group: 'qualification',
       trackHistory: true,
+      // Field-level default: option-level `default: true` only preselects in
+      // UI forms after first paint; the quick-create dialog and API inserts
+      // need a real defaultValue (see approval_status for the same lesson).
+      defaultValue: 'new',
       options: [
         { label: 'New', value: 'new', color: '#808080', default: true },
         { label: 'Contacted', value: 'contacted', color: '#FFA500' },

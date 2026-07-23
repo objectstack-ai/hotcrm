@@ -226,7 +226,7 @@ export const Contract = ObjectSchema.create({
       type: 'script',
       severity: 'error',
       message: 'End Date must be after Start Date',
-      condition: P`record.end_date <= record.start_date`,
+      condition: P`record.end_date != null && record.start_date != null && record.end_date <= record.start_date`,
     },
     // NOTE: the `valid_contract_term` warning (months-between term check) was
     // dropped in the 9.8.0 upgrade — its CEL predicate used `monthsBetween()`,

@@ -1,6 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import type { Action } from '@objectstack/spec/ui';
+import { P } from '@objectstack/spec';
 
 /**
  * Clone Opportunity.
@@ -89,5 +90,29 @@ export const MassUpdateStageAction: Action = {
     }
   ],
   successMessage: 'Opportunities updated successfully!',
+  refreshAfter: true,
+};
+
+/**
+ * Generate a Quote from this Opportunity.
+ *
+ * Flow-typed action: launches the `quote_generation` screen flow (name,
+ * validity, discount) which creates the draft crm_quote and moves the deal
+ * to `proposal`. Without this action the flow was unreachable from the UI —
+ * the CPQ leg (opportunity → quote) had no entry point.
+ */
+export const GenerateQuoteAction: Action = {
+  name: 'generate_quote',
+  label: 'Generate Quote',
+  objectName: 'crm_opportunity',
+  icon: 'receipt',
+  type: 'flow',
+  target: 'quote_generation',
+  // Mirror clone_opportunity's placement (header + overflow menu) so the action
+  // is reachable both as a primary button and from the "…" menu on narrow
+  // viewports where the header collapses.
+  locations: ['record_header', 'record_more', 'list_item'],
+  visible: P`record.stage != "closed_won" && record.stage != "closed_lost"`,
+  successMessage: 'Quote created from opportunity!',
   refreshAfter: true,
 };

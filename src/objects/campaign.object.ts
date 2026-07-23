@@ -228,14 +228,14 @@ export const Campaign = ObjectSchema.create({
       type: 'script',
       severity: 'error',
       message: 'End Date must be after Start Date',
-      condition: P`record.end_date < record.start_date`,
+      condition: P`record.end_date != null && record.start_date != null && record.end_date < record.start_date`,
     },
     {
       name: 'actual_cost_within_budget',
       type: 'script',
       severity: 'warning',
       message: 'Actual Cost exceeds Budgeted Cost',
-      condition: P`record.actual_cost > record.budgeted_cost`,
+      condition: P`record.actual_cost != null && record.budgeted_cost != null && record.actual_cost > record.budgeted_cost`,
     },
   ],
   

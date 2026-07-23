@@ -87,7 +87,10 @@ export const LeadConversionFlow: Flow = {
       config: {
         objectName: 'crm_lead', filter: { id: '{recordId}' },
         fields: {
-          is_converted: true, converted_date: '{NOW()}',
+          // `status: 'converted'` rides along so list views agree with the
+          // conversion flags (the qualified → converted transition is legal
+          // per the lead_status_progression state machine).
+          is_converted: true, status: 'converted', converted_date: '{NOW()}',
           converted_account: '{accountId.id}', converted_contact: '{contactId.id}',
           converted_opportunity: '{opportunityId.id}',
         },

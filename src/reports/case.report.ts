@@ -15,10 +15,14 @@ export const SlaPerformanceReport: ReportInput = {
   name: 'sla_performance',
   label: 'SLA Performance Report',
   description: 'Analysis of SLA compliance',
-  dataset: 'case_metrics', rows: ['priority'], values: ['case_count', 'case_count', 'avg_resolution'],
+  // 'avg_sla_violated' (not a duplicated 'case_count') — the table showed two
+  // identical Cases columns and no violation measure; the chart's yAxis must
+  // name a dataset MEASURE, not a raw field ('is_sla_violated' leaked the
+  // column name onto the axis).
+  dataset: 'case_metrics', rows: ['priority'], values: ['case_count', 'avg_sla_violated', 'avg_resolution'],
   type: 'summary',
   runtimeFilter: { is_closed: true },
-  chart: { type: 'column', title: 'SLA Violations by Priority', showLegend: false, xAxis: 'priority', yAxis: 'is_sla_violated' }
+  chart: { type: 'column', title: 'SLA Violations by Priority', showLegend: false, xAxis: 'priority', yAxis: 'avg_sla_violated' }
 };
 
 /**

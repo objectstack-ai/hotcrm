@@ -304,14 +304,14 @@ export const Opportunity = ObjectSchema.create({
       type: 'script',
       severity: 'warning',
       message: 'Close date should not be in the past unless opportunity is closed',
-      condition: P`record.close_date < today() && record.stage != "closed_won" && record.stage != "closed_lost"`,
+      condition: P`record.close_date != null && record.close_date < today() && record.stage != "closed_won" && record.stage != "closed_lost"`,
     },
     {
       name: 'amount_positive',
       type: 'script',
       severity: 'error',
       message: 'Amount must be greater than zero',
-      condition: P`record.amount <= 0`,
+      condition: P`record.amount != null && record.amount <= 0`,
     },
     {
       // Migrated from the removed top-level `stateMachines` key (OpportunityStateMachine).
