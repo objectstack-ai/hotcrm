@@ -20,6 +20,7 @@ import forecastHook from '../objects/forecast.hook';
 import knowledgeArticleHook from '../objects/knowledge_article.hook';
 import leadHook from '../objects/lead.hook';
 import opportunityHook from '../objects/opportunity.hook';
+import opportunityLineItemHook from '../objects/opportunity_line_item.hook';
 import productHook from '../objects/product.hook';
 import quoteHook from '../objects/quote.hook';
 import taskHook from '../objects/task.hook';
@@ -34,6 +35,7 @@ const entries: Array<Hook | Hook[]> = [
   knowledgeArticleHook,
   leadHook,
   opportunityHook,
+  opportunityLineItemHook,
   productHook,
   quoteHook,
   taskHook,

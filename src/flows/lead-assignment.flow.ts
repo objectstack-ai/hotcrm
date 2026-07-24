@@ -8,10 +8,12 @@ type Flow = Automation.Flow;
  *
  * New leads previously sat with no follow-up SLA and no routing, so hot leads
  * could go cold before anyone looked. This flow fires on lead *insert*, sets a
- * rating-based `next_followup_date` SLA, and routes an alert to the
- * sales-manager queue to claim/assign it. (Owner assignment is left to the
- * manager rather than hard-coded, since this app has no territory / round-robin
- * routing table — the flow handles the urgency + hand-off.)
+ * rating-based `next_followup_date` SLA, and alerts the lead's OWNER (the
+ * accountable party) to follow up. The alert originally targeted a
+ * 'sales_manager' position, but positions aren't a messaging audience so it
+ * reached nobody; with no territory / round-robin table modelled, the owner is
+ * the correct recipient. (Swap to a `team:`/`role:` audience once a manager
+ * group is seeded.)
  *
  * Trigger wiring (7.4): the `start` node declares `triggerType:
  * 'record-after-create'` so the record-change trigger provider binds it to the
@@ -49,7 +51,13 @@ export const LeadAssignmentFlow: Flow = {
     {
       id: 'notify_hot', type: 'notify', label: 'Alert — Hot Lead',
       config: {
-        to: ['sales_manager'],
+        // Route to the lead's OWNER (a real user id). A CRM position like
+        // 'sales_manager' is NOT a messaging audience — the messaging service
+        // resolves user:/role:(sys_member)/team:/owner_of:, and a bare
+        // 'sales_manager' was stored verbatim as sys_inbox_message.user_id,
+        // matching no real user, so these alerts reached nobody. owner is set
+        // on insert (defaultValue os.user.id) and is the accountable party.
+        to: ['{record.owner}'],
         channels: ['inbox', 'email'],
         severity: 'warning',
         topic: 'lead_routing',
@@ -67,7 +75,9 @@ export const LeadAssignmentFlow: Flow = {
     {
       id: 'notify_std', type: 'notify', label: 'Alert — New Lead',
       config: {
-        to: ['sales_manager'],
+        // Route to the lead's owner — see notify_hot for why a bare
+        // 'sales_manager' position never reached anyone.
+        to: ['{record.owner}'],
         channels: ['inbox'],
         topic: 'lead_routing',
         title: 'New lead to assign: {record.first_name} {record.last_name}',
