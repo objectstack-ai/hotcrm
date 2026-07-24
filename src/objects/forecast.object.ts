@@ -44,7 +44,7 @@ export const Forecast = ObjectSchema.create({
   ],
 
   fields: {
-    owner: Field.lookup('user', {
+    owner: Field.lookup('sys_user', {
       defaultValue: cel`os.user.id`,
       label: 'Owner',
       // Optional so seed inserts (which run before any human user exists and
@@ -196,14 +196,14 @@ export const Forecast = ObjectSchema.create({
       type: 'script',
       severity: 'error',
       message: 'Period End must be on or after Period Start.',
-      condition: P`record.period_end < record.period_start`,
+      condition: P`record.period_end != null && record.period_start != null && record.period_end < record.period_start`,
     },
     {
       name: 'snapshot_amounts_non_negative',
       type: 'script',
       severity: 'error',
       message: 'Snapshot amounts cannot be negative.',
-      condition: P`record.pipeline_amount < 0 || record.best_case_amount < 0 || record.commit_amount < 0 || record.closed_amount < 0`,
+      condition: P`(record.pipeline_amount != null && record.pipeline_amount < 0) || (record.best_case_amount != null && record.best_case_amount < 0) || (record.commit_amount != null && record.commit_amount < 0) || (record.closed_amount != null && record.closed_amount < 0)`,
     },
   ],
 });

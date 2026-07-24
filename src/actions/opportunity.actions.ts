@@ -1,6 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import type { Action } from '@objectstack/spec/ui';
+import { P } from '@objectstack/spec';
 
 /**
  * Clone Opportunity.
@@ -20,15 +21,32 @@ export const CloneOpportunityAction: Action = {
     source: `
       const id = ctx.recordId;
       if (!id) throw new Error('clone_opportunity requires a recordId');
-      // NOTE: The previous implementation read the source record via find()
-      // and copied selected fields. Under the QuickJS WASM sandbox this
-      // pattern triggers an emscripten 'memory access out of bounds' fault
-      // when marshalling certain row shapes. As a workaround we clone the
-      // minimal field set required to seed a new opportunity, copying only
-      // the source id reference; downstream owners can hydrate the rest.
+      // Read the source from ctx.record (seeded by the runner for record-scoped
+      // actions — same source send_email uses). This avoids the in-sandbox
+      // find() that previously faulted, WHILE still copying the REQUIRED fields
+      // (crm_account / amount / close_date). The old minimal insert set only
+      // name+stage, so every clone failed the object's required-field + amount>0
+      // validations at runtime and no opportunity was ever created.
+      const src = ctx.record ?? {};
+      if (!src.crm_account) {
+        throw new Error('clone_opportunity: source account not loaded; cannot clone.');
+      }
+      // Give the clone a fresh 90-day close horizon so a copied past date can't
+      // trip the "close date in the past" validation on a new prospecting deal.
+      const horizon = new Date();
+      horizon.setDate(horizon.getDate() + 90);
       const inserted = await ctx.api.object('crm_opportunity').insert({
-        name: 'Copy of opportunity ' + id,
+        name: 'Copy of ' + (src.name ?? ('opportunity ' + id)),
+        crm_account: src.crm_account,
+        primary_contact: src.primary_contact ?? null,
+        amount: src.amount ?? 1,
         stage: 'prospecting',
+        probability: 10,
+        close_date: horizon.toISOString().slice(0, 10),
+        type: src.type ?? null,
+        lead_source: src.lead_source ?? null,
+        crm_campaign: src.crm_campaign ?? null,
+        owner: ctx.user?.id ?? null,
       });
       return { id: inserted?.id ?? null };
     `,
@@ -89,5 +107,29 @@ export const MassUpdateStageAction: Action = {
     }
   ],
   successMessage: 'Opportunities updated successfully!',
+  refreshAfter: true,
+};
+
+/**
+ * Generate a Quote from this Opportunity.
+ *
+ * Flow-typed action: launches the `quote_generation` screen flow (name,
+ * validity, discount) which creates the draft crm_quote and moves the deal
+ * to `proposal`. Without this action the flow was unreachable from the UI —
+ * the CPQ leg (opportunity → quote) had no entry point.
+ */
+export const GenerateQuoteAction: Action = {
+  name: 'generate_quote',
+  label: 'Generate Quote',
+  objectName: 'crm_opportunity',
+  icon: 'receipt',
+  type: 'flow',
+  target: 'quote_generation',
+  // Mirror clone_opportunity's placement (header + overflow menu) so the action
+  // is reachable both as a primary button and from the "…" menu on narrow
+  // viewports where the header collapses.
+  locations: ['record_header', 'record_more', 'list_item'],
+  visible: P`record.stage != "closed_won" && record.stage != "closed_lost"`,
+  successMessage: 'Quote created from opportunity!',
   refreshAfter: true,
 };

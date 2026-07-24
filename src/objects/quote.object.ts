@@ -64,7 +64,10 @@ export const Quote = ObjectSchema.create({
     crm_contact: Field.lookup('crm_contact', {
       label: 'Contact',
       group: 'basic',
-      required: true,
+      // Optional: quote_generation maps the opportunity's primary_contact,
+      // which is itself optional — requiring it here meant contact-less
+      // opportunities could never draft a quote. Recipient is nailed down by
+      // the time a quote is presented, not when it is drafted.
       // @objectstack 12: string[] `referenceFilters` is dead (not read by the
       // picker); `dependsOn` is the live cascading form — scopes contacts to the
       // quote's `crm_account` (ADR-0049).
@@ -78,7 +81,7 @@ export const Quote = ObjectSchema.create({
       dependsOn: ['crm_account'],
     }),
 
-    owner: Field.lookup('user', {
+    owner: Field.lookup('sys_user', {
       label: 'Quote Owner',
       group: 'basic',
       trackHistory: true,
@@ -115,11 +118,13 @@ export const Quote = ObjectSchema.create({
     }),
     
     // Pricing
+    // subtotal/discount_amount/total_price are NOT `readonly`: the
+    // quote_generation flow writes them at create time, and 16.x silently
+    // drops writes to readonly fields (#2948).
     subtotal: Field.currency({ 
       label: 'Subtotal',
       group: 'pricing',
       scale: 2,
-      readonly: true,
     }),
     
     discount: Field.percent({
@@ -134,7 +139,6 @@ export const Quote = ObjectSchema.create({
       label: 'Discount Amount',
       group: 'pricing',
       scale: 2,
-      readonly: true,
     }),
     
     tax: Field.currency({ 
@@ -153,7 +157,6 @@ export const Quote = ObjectSchema.create({
       label: 'Total Price',
       group: 'pricing',
       scale: 2,
-      readonly: true,
     }),
     
     // Terms
@@ -222,14 +225,14 @@ export const Quote = ObjectSchema.create({
       type: 'script',
       severity: 'error',
       message: 'Expiration Date must be after Quote Date',
-      condition: P`record.expiration_date <= record.quote_date`,
+      condition: P`record.expiration_date != null && record.quote_date != null && record.expiration_date <= record.quote_date`,
     },
     {
       name: 'valid_discount',
       type: 'script',
       severity: 'error',
       message: 'Discount cannot exceed 100%',
-      condition: P`record.discount > 100`,
+      condition: P`record.discount != null && record.discount > 100`,
     },
   ],
   

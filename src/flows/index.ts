@@ -6,7 +6,7 @@ import type { Flow } from '@objectstack/spec/automation';
  * Flow Definitions Barrel
  */
 export { CampaignEnrollmentFlow } from './campaign-enrollment.flow';
-export { CaseEscalationFlow } from './case-escalation.flow';
+export { CaseEscalationFlow, CaseEscalationOnCreateFlow } from './case-escalation.flow';
 export { LeadConversionFlow } from './lead-conversion.flow';
 export { OpportunityApprovalFlow } from './opportunity-approval.flow';
 export { QuoteGenerationFlow } from './quote-generation.flow';
@@ -26,7 +26,7 @@ export { TaskUrgentAlertFlow } from './task-urgent-alert.flow';
 export { TaskDueReminderFlow } from './task-due-reminder.flow';
 
 import { CampaignEnrollmentFlow } from './campaign-enrollment.flow';
-import { CaseEscalationFlow } from './case-escalation.flow';
+import { CaseEscalationFlow, CaseEscalationOnCreateFlow } from './case-escalation.flow';
 import { LeadConversionFlow } from './lead-conversion.flow';
 import { OpportunityApprovalFlow } from './opportunity-approval.flow';
 import { QuoteGenerationFlow } from './quote-generation.flow';
@@ -48,6 +48,7 @@ export const allFlows: Flow[] = [
   // Core process flows
   CampaignEnrollmentFlow,
   CaseEscalationFlow,
+  CaseEscalationOnCreateFlow,
   LeadConversionFlow,
   OpportunityApprovalFlow,
   QuoteGenerationFlow,

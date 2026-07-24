@@ -127,7 +127,7 @@ export const Case = ObjectSchema.create({
     }),
     
     // Assignment
-    owner: Field.lookup('user', {
+    owner: Field.lookup('sys_user', {
       defaultValue: cel`os.user.id`,
       label: 'Case Owner',
       group: 'origin',
@@ -165,11 +165,13 @@ export const Case = ObjectSchema.create({
       group: 'sla',
     }),
     
+    // NOT `readonly`: the case_sla_monitor flow stamps this, and 16.x drops
+    // writes to readonly fields (#2948) — readonly here silently disabled
+    // SLA violation tracking.
     is_sla_violated: Field.boolean({
       label: 'SLA Violated',
       group: 'sla',
       defaultValue: false,
-      readonly: true,
     }),
     
     // Escalation
@@ -179,10 +181,11 @@ export const Case = ObjectSchema.create({
       defaultValue: false,
     }),
     
+    // NOT `readonly`: written by case_escalation / case_sla_monitor flows
+    // (16.x drops readonly writes, #2948).
     escalated_date: Field.datetime({
       label: 'Escalated Date',
       group: 'escalation',
-      readonly: true,
     }),
     
     escalation_reason: Field.textarea({
@@ -291,12 +294,17 @@ export const Case = ObjectSchema.create({
       severity: 'warning',
       message: 'Invalid status transition',
       field: 'status',
+      // Escalate + Close actions are available from ANY open status (see
+      // escalate_case / close_case visibility). The transition map must permit
+      // →escalated and →closed from every open state, else those actions emit a
+      // spurious "Invalid status transition" warning (e.g. escalating a brand-new
+      // case, which is a legitimate support move).
       transitions: {
-        'new': ['in_progress', 'waiting_customer', 'closed'],
-        'in_progress': ['waiting_customer', 'waiting_support', 'escalated', 'resolved'],
-        'waiting_customer': ['in_progress', 'closed'],
-        'waiting_support': ['in_progress', 'escalated'],
-        'escalated': ['in_progress', 'resolved'],
+        'new': ['in_progress', 'waiting_customer', 'escalated', 'closed'],
+        'in_progress': ['waiting_customer', 'waiting_support', 'escalated', 'resolved', 'closed'],
+        'waiting_customer': ['in_progress', 'waiting_support', 'escalated', 'closed'],
+        'waiting_support': ['in_progress', 'waiting_customer', 'escalated', 'closed'],
+        'escalated': ['in_progress', 'resolved', 'closed'],
         'resolved': ['closed', 'in_progress'],  // Can reopen
         'closed': ['in_progress'],  // Can reopen
       }

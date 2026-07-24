@@ -130,10 +130,11 @@ export const Campaign = ObjectSchema.create({
       min: 0,
     }),
     
+    // NOT `readonly`: the campaign_enrollment flow writes this rollup
+    // (16.x drops readonly writes, #2948).
     num_sent: Field.number({
       label: 'Number Sent',
       min: 0,
-      readonly: true,
     }),
     
     num_responses: Field.number({
@@ -185,7 +186,7 @@ export const Campaign = ObjectSchema.create({
       description: 'Parent campaign in hierarchy',
     }),
     
-    owner: Field.lookup('user', {
+    owner: Field.lookup('sys_user', {
 
       defaultValue: cel`os.user.id`,
       label: 'Campaign Owner',
@@ -227,14 +228,14 @@ export const Campaign = ObjectSchema.create({
       type: 'script',
       severity: 'error',
       message: 'End Date must be after Start Date',
-      condition: P`record.end_date < record.start_date`,
+      condition: P`record.end_date != null && record.start_date != null && record.end_date < record.start_date`,
     },
     {
       name: 'actual_cost_within_budget',
       type: 'script',
       severity: 'warning',
       message: 'Actual Cost exceeds Budgeted Cost',
-      condition: P`record.actual_cost > record.budgeted_cost`,
+      condition: P`record.actual_cost != null && record.budgeted_cost != null && record.actual_cost > record.budgeted_cost`,
     },
   ],
   

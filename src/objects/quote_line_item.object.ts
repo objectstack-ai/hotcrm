@@ -103,7 +103,7 @@ export const QuoteLineItem = ObjectSchema.create({
       type: 'script',
       severity: 'error',
       message: 'Sales price cannot be negative',
-      condition: P`record.unit_price < 0`,
+      condition: P`record.unit_price != null && record.unit_price < 0`,
     },
   ],
 });

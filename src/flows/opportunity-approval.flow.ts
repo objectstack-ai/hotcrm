@@ -50,7 +50,10 @@ export const OpportunityApprovalFlow: Flow = {
       config: {
         objectName: 'crm_opportunity',
         triggerType: 'record-after-update',
-        condition: 'record.amount > 100000 && record.approval_status == "not_required"',
+        // Null-tolerant: rows inserted before approval_status had a field-level
+        // defaultValue (e.g. flow-created opportunities) carry null, which must
+        // still enter approval.
+        condition: 'record.amount > 100000 && (record.approval_status == "not_required" || record.approval_status == null)',
       },
     },
     {
@@ -66,7 +69,15 @@ export const OpportunityApprovalFlow: Flow = {
       type: 'approval',
       label: 'Sales Manager Review',
       config: {
-        approvers: [{ type: 'position', value: 'sales_manager' }],
+        // Org-owner backstop: approvers snapshot at request creation, and a
+        // position with no holders leaves the request undecidable while
+        // lockRecord holds the record hostage (no admin override exists).
+        // behavior:'first_response' means whoever responds first wins, so the
+        // backstop changes nothing when the sales-manager bench is staffed.
+        approvers: [
+          { type: 'position', value: 'sales_manager' },
+          { type: 'org_membership_level', value: 'owner' },
+        ],
         behavior: 'first_response',
         lockRecord: true,
         approvalStatusField: 'approval_status',
@@ -87,7 +98,11 @@ export const OpportunityApprovalFlow: Flow = {
       type: 'approval',
       label: 'Sales Director Sign-off',
       config: {
-        approvers: [{ type: 'position', value: 'sales_director' }],
+        // Same org-owner backstop as manager_review (empty-position dead-end).
+        approvers: [
+          { type: 'position', value: 'sales_director' },
+          { type: 'org_membership_level', value: 'owner' },
+        ],
         behavior: 'first_response',
         lockRecord: true,
         approvalStatusField: 'approval_status',

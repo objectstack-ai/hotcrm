@@ -12,7 +12,10 @@ export const QuoteGenerationFlow: Flow = {
   status: 'active',
 
   variables: [
-    { name: 'opportunityId', type: 'text', isInput: true, isOutput: false },
+    // `recordId` matches the console's flow-action trigger contract
+    // ({ recordId, objectName }); a custom name like `opportunityId` is never
+    // seeded — same lesson as lead_conversion.
+    { name: 'recordId', type: 'text', isInput: true, isOutput: false },
     { name: 'quoteName', type: 'text', isInput: true, isOutput: false },
     { name: 'expirationDays', type: 'number', isInput: true, isOutput: false },
     { name: 'discount', type: 'number', isInput: true, isOutput: false },
@@ -32,14 +35,14 @@ export const QuoteGenerationFlow: Flow = {
     },
     {
       id: 'get_opportunity', type: 'get_record', label: 'Get Opportunity',
-      config: { objectName: 'crm_opportunity', filter: { id: '{opportunityId}' }, outputVariable: 'oppRecord' },
+      config: { objectName: 'crm_opportunity', filter: { id: '{recordId}' }, outputVariable: 'oppRecord' },
     },
     {
       id: 'create_quote', type: 'create_record', label: 'Create Quote',
       config: {
         objectName: 'crm_quote',
         fields: {
-          name: '{quoteName}', crm_opportunity: '{opportunityId}',
+          name: '{quoteName}', crm_opportunity: '{recordId}',
           crm_account: '{oppRecord.crm_account}', crm_contact: '{oppRecord.primary_contact}',
           owner: '{$User.Id}', status: 'draft',
           quote_date: '{TODAY()}', expiration_date: '{TODAY() + expirationDays}',
@@ -54,8 +57,10 @@ export const QuoteGenerationFlow: Flow = {
     {
       id: 'update_opportunity', type: 'update_record', label: 'Update Opportunity',
       config: {
-        objectName: 'crm_opportunity', filter: { id: '{opportunityId}' },
-        fields: { stage: 'proposal', last_activity_date: '{TODAY()}' },
+        // No `last_activity_date` write: crm_opportunity has no such field
+        // (it lives on crm_account) — the unknown column made this node fail.
+        objectName: 'crm_opportunity', filter: { id: '{recordId}' },
+        fields: { stage: 'proposal' },
       },
     },
     {
@@ -68,7 +73,7 @@ export const QuoteGenerationFlow: Flow = {
         topic: 'quote_created',
         title: 'Quote created: {quoteName}',
         body: 'Your quote {quoteName} has been created from this opportunity.',
-        actionUrl: '/crm_quote/{quoteId}',
+        actionUrl: '/crm_quote/{quoteId.id}',
       },
     },
     { id: 'end', type: 'end', label: 'End' },

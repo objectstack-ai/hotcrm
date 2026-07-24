@@ -363,7 +363,9 @@ export const LeadViews = defineView({
       },
       sections: [
         {
-          label: 'Quick Lead Creation',
+          // Neutral label — this form backs BOTH the create and edit dialogs,
+          // so "Quick Lead Creation" read wrong when editing.
+          label: 'Lead Details',
           columns: 2,
           fields: [
             { field: 'first_name', required: true },
@@ -372,6 +374,9 @@ export const LeadViews = defineView({
             { field: 'email', required: true },
             'phone',
             'status',
+            // Source at intake — attribution is unrecoverable if not captured
+            // when the lead is keyed in.
+            'lead_source',
             'owner',
           ],
         },

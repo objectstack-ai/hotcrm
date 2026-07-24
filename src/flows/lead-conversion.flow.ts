@@ -12,7 +12,11 @@ export const LeadConversionFlow: Flow = {
   status: 'active',
 
   variables: [
-    { name: 'leadId', type: 'text', isInput: true, isOutput: false },
+    // Named `recordId` to match the console's flow-action invocation contract:
+    // POST /automation/:name/trigger sends { recordId, objectName } and the
+    // dispatcher exposes them as params.recordId / params.crmLeadId. A custom
+    // name like `leadId` never gets seeded (16.x runtime).
+    { name: 'recordId', type: 'text', isInput: true, isOutput: false },
     { name: 'createOpportunity', type: 'boolean', isInput: true, isOutput: false },
     { name: 'opportunityName', type: 'text', isInput: true, isOutput: false },
     { name: 'opportunityAmount', type: 'text', isInput: true, isOutput: false },
@@ -32,7 +36,7 @@ export const LeadConversionFlow: Flow = {
     },
     {
       id: 'get_lead', type: 'get_record', label: 'Get Lead Record',
-      config: { objectName: 'crm_lead', filter: { id: '{leadId}' }, outputVariable: 'leadRecord' },
+      config: { objectName: 'crm_lead', filter: { id: '{recordId}' }, outputVariable: 'leadRecord' },
     },
     {
       id: 'create_account', type: 'create_record', label: 'Create Account',
@@ -56,7 +60,7 @@ export const LeadConversionFlow: Flow = {
         fields: {
           first_name: '{leadRecord.first_name}', last_name: '{leadRecord.last_name}',
           email: '{leadRecord.email}', phone: '{leadRecord.phone}',
-          title: '{leadRecord.title}', crm_account: '{accountId}',
+          title: '{leadRecord.title}', crm_account: '{accountId.id}',
           is_primary: true, owner: '{$User.Id}',
         },
         outputVariable: 'contactId',
@@ -71,7 +75,7 @@ export const LeadConversionFlow: Flow = {
       config: {
         objectName: 'crm_opportunity',
         fields: {
-          name: '{opportunityName}', crm_account: '{accountId}', primary_contact: '{contactId}',
+          name: '{opportunityName}', crm_account: '{accountId.id}', primary_contact: '{contactId.id}',
           amount: '{opportunityAmount}', stage: 'prospecting', probability: 10,
           lead_source: '{leadRecord.lead_source}', close_date: '{TODAY() + 90}', owner: '{$User.Id}',
         },
@@ -81,11 +85,14 @@ export const LeadConversionFlow: Flow = {
     {
       id: 'mark_converted', type: 'update_record', label: 'Mark Lead as Converted',
       config: {
-        objectName: 'crm_lead', filter: { id: '{leadId}' },
+        objectName: 'crm_lead', filter: { id: '{recordId}' },
         fields: {
-          is_converted: true, converted_date: '{NOW()}',
-          converted_account: '{accountId}', converted_contact: '{contactId}',
-          converted_opportunity: '{opportunityId}',
+          // `status: 'converted'` rides along so list views agree with the
+          // conversion flags (the qualified → converted transition is legal
+          // per the lead_status_progression state machine).
+          is_converted: true, status: 'converted', converted_date: '{NOW()}',
+          converted_account: '{accountId.id}', converted_contact: '{contactId.id}',
+          converted_opportunity: '{opportunityId.id}',
         },
       },
     },
@@ -99,7 +106,7 @@ export const LeadConversionFlow: Flow = {
         topic: 'lead_converted',
         title: 'Lead converted: {leadRecord.full_name}',
         body: 'Lead {leadRecord.full_name} was converted into an account and contact.',
-        actionUrl: '/crm_account/{accountId}',
+        actionUrl: '/crm_account/{accountId.id}',
       },
     },
     { id: 'end', type: 'end', label: 'End' },
