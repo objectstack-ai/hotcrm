@@ -59,8 +59,10 @@ const contactHook: Hook = {
           where: { primary_contact: id },
           doc: patch,
         });
-      } catch (err) {
-        console.warn('[contact_integrity] propagate to opportunity failed:', err);
+      } catch {
+        // Best-effort propagation — never break the parent write. No `console`
+        // in the L2 hook sandbox (QuickJS): a log call here would throw its own
+        // ReferenceError and mask the real failure (cf. lead_auto_assign / #471).
       }
     }
 
