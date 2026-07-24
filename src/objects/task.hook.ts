@@ -155,8 +155,9 @@ const taskRecurrence: Hook = {
 
     try {
       await api.object('crm_task').insert(doc);
-    } catch (err) {
-      console.warn('[task_recurrence] failed to spawn next occurrence:', err);
+    } catch {
+      // Best-effort; never break the parent write. No `console` in the L2 hook
+      // sandbox — logging here would throw its own ReferenceError (cf. #471).
     }
   },
 };
@@ -201,8 +202,9 @@ const taskBubble: Hook = {
     if (targetType !== 'crm_account' && targetType !== 'crm_lead') return;
     try {
       await api.object(targetType).update(targetId, { last_activity_date: today });
-    } catch (err) {
-      console.warn('[task_activity_bubble] update failed:', err);
+    } catch {
+      // Best-effort activity bubble; never break the parent write. No `console`
+      // in the L2 hook sandbox (would throw ReferenceError — cf. #471).
     }
   },
 };

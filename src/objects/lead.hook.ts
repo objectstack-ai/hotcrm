@@ -208,9 +208,10 @@ const leadHook: Hook = {
           related_to_type: 'crm_lead',
           related_to_lead: leadId,
         });
-      } catch (err) {
-        // Side-effect failure must not break the parent transaction.
-        console.warn('[lead_automation] failed to create follow-up task:', err);
+      } catch {
+        // Side-effect failure must not break the parent transaction. No
+        // `console` in the L2 hook sandbox — logging would throw its own
+        // ReferenceError and mask the real failure (cf. #471).
       }
     }
   },
