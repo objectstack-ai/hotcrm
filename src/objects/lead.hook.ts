@@ -71,32 +71,46 @@ const leadAutoAssignHook: Hook = {
     const api = ctx.api as HookApi | undefined;
     if (!api) return;
 
-    // Rep pool = holders of the sales_rep position.
-    const holders = await api.object('sys_user_position').find({
-      where: { position: 'sales_rep' }, fields: ['user_id'], top: 1000,
-    });
-    const repIds = Array.from(
-      new Set(
-        (holders ?? [])
-          .map((r) => (typeof r.user_id === 'string' ? r.user_id : ''))
-          .filter(Boolean),
-      ),
-    );
-    if (repIds.length === 0) return; // no pool → leave ownerless (no-op)
-
-    // Pick the rep with the fewest OPEN (non-converted) leads.
-    let best: string | undefined;
-    let bestCount = Infinity;
-    for (const repId of repIds) {
-      const openCount = await api.object('crm_lead').count({
-        where: { owner: repId, is_converted: false },
+    // Auto-assignment is a best-effort ENHANCEMENT — it must NEVER block lead
+    // creation. In particular an anonymous Web-to-Lead submission runs under the
+    // public-form grant, which permits only create/read-back on crm_lead and
+    // DENIES `find` on sys_user_position; letting that denial propagate would
+    // reject the whole insert and break the public form. So the pool lookup +
+    // load balancing are wrapped: on ANY error (permission, etc.) we log and
+    // leave the lead ownerless (a manager / the lead_assignment flow routes it).
+    try {
+      // Rep pool = holders of the sales_rep position.
+      const holders = await api.object('sys_user_position').find({
+        where: { position: 'sales_rep' }, fields: ['user_id'], top: 1000,
       });
-      if (openCount < bestCount) {
-        bestCount = openCount;
-        best = repId;
+      const repIds = Array.from(
+        new Set(
+          (holders ?? [])
+            .map((r) => (typeof r.user_id === 'string' ? r.user_id : ''))
+            .filter(Boolean),
+        ),
+      );
+      if (repIds.length === 0) return; // no pool → leave ownerless (no-op)
+
+      // Pick the rep with the fewest OPEN (non-converted) leads.
+      let best: string | undefined;
+      let bestCount = Infinity;
+      for (const repId of repIds) {
+        const openCount = await api.object('crm_lead').count({
+          where: { owner: repId, is_converted: false },
+        });
+        if (openCount < bestCount) {
+          bestCount = openCount;
+          best = repId;
+        }
       }
+      if (best) input.owner = best;
+    } catch {
+      // Swallow: auto-assignment must never block the insert. Common case is the
+      // anonymous public-form context, which can't read sys_user_position — the
+      // lead is still captured, ownerless, for downstream routing. (No `console`
+      // here — the L2 hook sandbox doesn't define it.)
     }
-    if (best) input.owner = best;
   },
 };
 
