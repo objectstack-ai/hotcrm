@@ -35,6 +35,11 @@ export const Forecast = ObjectSchema.create({
   // formula cannot dot-walk a lookup (ADR-0072). The `display_title` formula
   // composes the local fields only: period_label + (period_start).
   nameField: 'display_title',
+  // Explicit search targets (ADR-0061). REQUIRED because nameField is a
+  // FORMULA (display_title/full_name): without this, $search auto-defaults to
+  // the formula field, which isn't a real column, so the lookup picker + global
+  // search silently return zero. These are real, indexed columns.
+  searchableFields: ['period_label'],
   highlightFields: ['owner', 'period', 'period_start', 'commit_amount', 'closed_amount'],
 
   fieldGroups: [

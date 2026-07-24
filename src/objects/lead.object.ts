@@ -303,6 +303,11 @@ export const Lead = ObjectSchema.create({
   // ADR-0079: render-only `titleFormat` retired in favor of `nameField`
   // (the `display_title` formula field defined above).
   nameField: 'display_title',
+  // Explicit search targets (ADR-0061). REQUIRED because nameField is a
+  // FORMULA (display_title/full_name): without this, $search auto-defaults to
+  // the formula field, which isn't a real column, so the lookup picker + global
+  // search silently return zero. These are real, indexed columns.
+  searchableFields: ['first_name', 'last_name', 'company', 'email'],
   highlightFields: ['full_name', 'company', 'email', 'status', 'owner'],
   
   // Removed: list_views and form_views belong in UI configuration, not object definition
