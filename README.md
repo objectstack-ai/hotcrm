@@ -5,7 +5,7 @@
 # HotCRM
 
 > **The reference app for AI-written enterprise software.** A complete CRM —
-> 15 objects, 10 flows, 4 dashboards, 2 AI copilots, 4 languages — written as
+> 15 objects, 17 flows, 4 dashboards, 2 AI copilots, 4 languages — written as
 > ~17,000 lines of typed [ObjectStack](https://github.com/objectstack-ai/objectstack)
 > metadata, so the whole app still fits in a single agent context window.
 > **Install it online in one click, or fork it and build & ask with Claude
@@ -56,7 +56,9 @@ HotCRM is a complete, opinionated CRM built as the **first official application*
 | `crm_product` | | | |
 | `crm_forecast` | | | |
 
-Plus **2 AI agents** (sales-copilot, service-copilot), **4 dashboards**, **10 flows**, **10 actions**, **6 AI skills**, **4 language bundles** (en, zh-CN, es-ES, ja-JP), **10 roles**, and **5 sharing rules**.
+Plus **2 AI agents** (sales-copilot, service-copilot), **4 dashboards**, **17 flows**, **10 actions**, **6 AI skills**, **4 language bundles** (en, zh-CN, es-ES, ja-JP), **6 permission profiles**, **10 positions**, and **5 sharing rules**.
+
+> **Business reader?** The ObjectStack docs tour every one of these capabilities in plain business language — [What Can It Do?](https://objectstack.ai/docs/capabilities) — with HotCRM as the running example on every page.
 
 ---
 
