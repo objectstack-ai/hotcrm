@@ -329,9 +329,13 @@ export const Lead = ObjectSchema.create({
       severity: 'warning',
       message: 'Invalid lead status transition',
       field: 'status',
+      // Conversion (→ converted) is allowed from any worked-open status so the
+      // Convert action's widened visibility (new/contacted/qualified) never trips
+      // a spurious "invalid transition" warning when the flow stamps
+      // status:'converted'.
       transitions: {
-        new: ['contacted', 'unqualified'],
-        contacted: ['qualified', 'unqualified'],
+        new: ['contacted', 'qualified', 'unqualified', 'converted'],
+        contacted: ['qualified', 'unqualified', 'converted'],
         qualified: ['converted', 'unqualified'],
         unqualified: ['new'],
         converted: [],

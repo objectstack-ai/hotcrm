@@ -21,15 +21,32 @@ export const CloneOpportunityAction: Action = {
     source: `
       const id = ctx.recordId;
       if (!id) throw new Error('clone_opportunity requires a recordId');
-      // NOTE: The previous implementation read the source record via find()
-      // and copied selected fields. Under the QuickJS WASM sandbox this
-      // pattern triggers an emscripten 'memory access out of bounds' fault
-      // when marshalling certain row shapes. As a workaround we clone the
-      // minimal field set required to seed a new opportunity, copying only
-      // the source id reference; downstream owners can hydrate the rest.
+      // Read the source from ctx.record (seeded by the runner for record-scoped
+      // actions — same source send_email uses). This avoids the in-sandbox
+      // find() that previously faulted, WHILE still copying the REQUIRED fields
+      // (crm_account / amount / close_date). The old minimal insert set only
+      // name+stage, so every clone failed the object's required-field + amount>0
+      // validations at runtime and no opportunity was ever created.
+      const src = ctx.record ?? {};
+      if (!src.crm_account) {
+        throw new Error('clone_opportunity: source account not loaded; cannot clone.');
+      }
+      // Give the clone a fresh 90-day close horizon so a copied past date can't
+      // trip the "close date in the past" validation on a new prospecting deal.
+      const horizon = new Date();
+      horizon.setDate(horizon.getDate() + 90);
       const inserted = await ctx.api.object('crm_opportunity').insert({
-        name: 'Copy of opportunity ' + id,
+        name: 'Copy of ' + (src.name ?? ('opportunity ' + id)),
+        crm_account: src.crm_account,
+        primary_contact: src.primary_contact ?? null,
+        amount: src.amount ?? 1,
         stage: 'prospecting',
+        probability: 10,
+        close_date: horizon.toISOString().slice(0, 10),
+        type: src.type ?? null,
+        lead_source: src.lead_source ?? null,
+        crm_campaign: src.crm_campaign ?? null,
+        owner: ctx.user?.id ?? null,
       });
       return { id: inserted?.id ?? null };
     `,

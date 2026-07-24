@@ -18,7 +18,11 @@ export const ConvertLeadAction: Action = {
   type: 'flow',
   target: 'lead_conversion',
   locations: ['record_header', 'list_item'],
-  visible: P`record.status == "qualified" && record.is_converted == false`,
+  // Convert is the lead's most basic outcome — surface it on ANY open lead
+  // (new / contacted / qualified), not just qualified. Gating to qualified-only
+  // hid the button on most seeded leads, so it read as "conversion is missing".
+  // Only already-converted or disqualified leads hide it.
+  visible: P`record.is_converted == false && record.status != "unqualified" && record.status != "converted"`,
   confirmText: 'Are you sure you want to convert this lead?',
   successMessage: 'Lead converted successfully!',
   refreshAfter: true,
@@ -42,14 +46,19 @@ export const CreateCampaignAction: Action = {
   body: {
     language: 'js',
     source: `
-      const campaignId = input.campaign ?? null;
+      // Value key = the param's field name ('crm_campaign') since the param
+      // omits an explicit 'name'. Insert uses the REAL lookup field names on
+      // crm_campaign_member (crm_campaign / crm_lead) — not the generic
+      // campaign_id / lead_id from the doc example, which don't exist here and
+      // left crm_campaign null → 'Campaign required' validation failure.
+      const campaignId = input.crm_campaign ?? null;
       if (!campaignId) throw new Error('create_campaign requires a campaign id');
       const ids = Array.isArray(input.selectedIds) ? input.selectedIds : [];
       const inserted = [];
       for (const leadId of ids) {
         const row = await ctx.api.object('crm_campaign_member').insert({
-          campaign_id: campaignId,
-          lead_id: leadId,
+          crm_campaign: campaignId,
+          crm_lead: leadId,
           status: 'sent',
         });
         inserted.push(row?.id ?? null);
@@ -61,10 +70,14 @@ export const CreateCampaignAction: Action = {
   },
   locations: ['list_toolbar'],
   params: [
+    // Field-backed param: `field` + `objectOverride` make the console resolve
+    // the widget from crm_campaign_member.crm_campaign (a lookup → crm_campaign),
+    // rendering a RECORD PICKER. A bare `{ type:'lookup' }` with no field can't
+    // resolve a target object and silently falls back to a paste-the-ID textbox.
     {
-      name: 'crm_campaign',
+      field: 'crm_campaign',
+      objectOverride: 'crm_campaign_member',
       label: 'Campaign',
-      type: 'lookup',
       required: true,
     }
   ],

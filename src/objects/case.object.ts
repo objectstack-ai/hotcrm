@@ -294,12 +294,17 @@ export const Case = ObjectSchema.create({
       severity: 'warning',
       message: 'Invalid status transition',
       field: 'status',
+      // Escalate + Close actions are available from ANY open status (see
+      // escalate_case / close_case visibility). The transition map must permit
+      // →escalated and →closed from every open state, else those actions emit a
+      // spurious "Invalid status transition" warning (e.g. escalating a brand-new
+      // case, which is a legitimate support move).
       transitions: {
-        'new': ['in_progress', 'waiting_customer', 'closed'],
-        'in_progress': ['waiting_customer', 'waiting_support', 'escalated', 'resolved'],
-        'waiting_customer': ['in_progress', 'closed'],
-        'waiting_support': ['in_progress', 'escalated'],
-        'escalated': ['in_progress', 'resolved'],
+        'new': ['in_progress', 'waiting_customer', 'escalated', 'closed'],
+        'in_progress': ['waiting_customer', 'waiting_support', 'escalated', 'resolved', 'closed'],
+        'waiting_customer': ['in_progress', 'waiting_support', 'escalated', 'closed'],
+        'waiting_support': ['in_progress', 'waiting_customer', 'escalated', 'closed'],
+        'escalated': ['in_progress', 'resolved', 'closed'],
         'resolved': ['closed', 'in_progress'],  // Can reopen
         'closed': ['in_progress'],  // Can reopen
       }
