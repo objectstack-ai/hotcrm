@@ -16,6 +16,11 @@ export const Opportunity = ObjectSchema.create({
   // `stage` is a select — the formula references its stored value directly
   // (no label resolution), matching ADR-0079 guidance.
   nameField: 'display_title',
+  // Explicit search targets (ADR-0061). REQUIRED because nameField is a
+  // FORMULA (display_title/full_name): without this, $search auto-defaults to
+  // the formula field, which isn't a real column, so the lookup picker + global
+  // search silently return zero. These are real, indexed columns.
+  searchableFields: ['name'],
   highlightFields: ['name', 'crm_account', 'amount', 'stage', 'owner'],
 
   fieldGroups: [

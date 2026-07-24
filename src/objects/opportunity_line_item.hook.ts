@@ -29,6 +29,44 @@ import type { HookApi } from './_hook-api';
  * - On re-parenting (update that moves a line to another opportunity), BOTH the
  *   old and new parents are recomputed.
  */
+/**
+ * Line-item price fill.
+ *
+ * `list_price` was documented as "Auto-populated from product.list_price" but
+ * nothing implemented it. On write, when a product is chosen this stamps the
+ * catalog `list_price`, and on INSERT defaults the negotiated `unit_price` to
+ * the list price when the rep left it blank (they can still override). On update
+ * the negotiated `unit_price` is left alone so a re-synced catalog price never
+ * clobbers a negotiated one.
+ */
+const opportunityLineItemPriceFill: Hook = {
+  name: 'opportunity_line_item_price_fill',
+  object: 'crm_opportunity_line_item',
+  events: ['beforeInsert', 'beforeUpdate'],
+  priority: 100,
+  description: 'Default list_price / unit_price from the chosen product.',
+  handler: async (ctx: HookContext) => {
+    const { event, input } = ctx;
+    const api = ctx.api as HookApi | undefined;
+    if (!api) return;
+    // Only act when a product reference is part of THIS write.
+    const productId = typeof input.crm_product === 'string' ? input.crm_product : undefined;
+    if (!productId) return;
+    const product = await api.object('crm_product').findOne({
+      filter: { id: productId }, fields: ['id', 'list_price'],
+    });
+    const listPrice = product && typeof product.list_price === 'number' ? product.list_price : undefined;
+    if (listPrice === undefined) return;
+    // Catalog reference always tracks the product.
+    input.list_price = listPrice;
+    // Negotiated price defaults to list on create when left blank; never
+    // overwritten on update (respect a rep's negotiated figure).
+    if (event === 'beforeInsert' && input.unit_price == null) {
+      input.unit_price = listPrice;
+    }
+  },
+};
+
 const opportunityAmountRollup: Hook = {
   name: 'opportunity_amount_rollup',
   object: 'crm_opportunity_line_item',
@@ -85,4 +123,4 @@ const opportunityAmountRollup: Hook = {
   },
 };
 
-export default opportunityAmountRollup;
+export default [opportunityLineItemPriceFill, opportunityAmountRollup];

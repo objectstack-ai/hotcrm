@@ -196,6 +196,11 @@ export const Contact = ObjectSchema.create({
   // which names the real field holding the record title (here: the `full_name`
   // formula field already defined above).
   nameField: 'full_name',
+  // Explicit search targets (ADR-0061). REQUIRED because nameField is a
+  // FORMULA (display_title/full_name): without this, $search auto-defaults to
+  // the formula field, which isn't a real column, so the lookup picker + global
+  // search silently return zero. These are real, indexed columns.
+  searchableFields: ['first_name', 'last_name', 'email'],
   highlightFields: ['full_name', 'email', 'crm_account', 'phone'],
   
   // Validation Rules

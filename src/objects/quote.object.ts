@@ -20,6 +20,11 @@ export const Quote = ObjectSchema.create({
   // which names a real field. The former template composed two local fields, so
   // a `display_title` formula field reproduces it for the record title.
   nameField: 'display_title',
+  // Explicit search targets (ADR-0061). REQUIRED because nameField is a
+  // FORMULA (display_title/full_name): without this, $search auto-defaults to
+  // the formula field, which isn't a real column, so the lookup picker + global
+  // search silently return zero. These are real, indexed columns.
+  searchableFields: ['name', 'quote_number'],
   highlightFields: ['quote_number', 'name', 'crm_account', 'status', 'total_price'],
 
   fieldGroups: [

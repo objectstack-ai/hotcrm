@@ -269,6 +269,11 @@ export const Case = ObjectSchema.create({
   // which names a real field. The former template composed two local fields, so
   // the `display_title` formula field (see fields) reproduces it.
   nameField: 'display_title',
+  // Explicit search targets (ADR-0061). REQUIRED because nameField is a
+  // FORMULA (display_title/full_name): without this, $search auto-defaults to
+  // the formula field, which isn't a real column, so the lookup picker + global
+  // search silently return zero. These are real, indexed columns.
+  searchableFields: ['subject', 'case_number'],
   highlightFields: ['case_number', 'subject', 'crm_account', 'status', 'priority'],
   
   // Removed: list_views and form_views belong in UI configuration, not object definition
