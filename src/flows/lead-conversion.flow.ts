@@ -39,6 +39,20 @@ export const LeadConversionFlow: Flow = {
       config: { objectName: 'crm_lead', filter: { id: '{recordId}' }, outputVariable: 'leadRecord' },
     },
     {
+      // Account dedupe: before creating a new account, look for an existing one
+      // with the same company name. Exact-name match (case/whitespace sensitive)
+      // — the standard lightweight dedupe; fuzzy matching is out of scope here.
+      id: 'find_account', type: 'get_record', label: 'Find Existing Account',
+      config: { objectName: 'crm_account', filter: { name: '{leadRecord.company}' }, outputVariable: 'matchedAccount' },
+    },
+    {
+      id: 'decision_account', type: 'decision', label: 'Account Already Exists?',
+      config: { condition: 'vars.matchedAccount != null' },
+    },
+    {
+      // NEW-account branch. outputVariable is `createdAccount`; the assignment
+      // below normalizes both branches onto a single `accountId` id string so
+      // downstream nodes don't need to know which path ran.
       id: 'create_account', type: 'create_record', label: 'Create Account',
       config: {
         objectName: 'crm_account',
@@ -50,17 +64,26 @@ export const LeadConversionFlow: Flow = {
           billing_address: '{leadRecord.address}',
           owner: '{$User.Id}', is_active: true,
         },
-        outputVariable: 'accountId',
+        outputVariable: 'createdAccount',
       },
     },
     {
+      id: 'use_new_account', type: 'assignment', label: 'Use New Account',
+      config: { assignments: { accountId: '{createdAccount.id}' } },
+    },
+    {
+      id: 'use_existing_account', type: 'assignment', label: 'Reuse Existing Account',
+      config: { assignments: { accountId: '{matchedAccount.id}' } },
+    },
+    {
+      // `accountId` is now a bare id string from whichever branch ran.
       id: 'create_contact', type: 'create_record', label: 'Create Contact',
       config: {
         objectName: 'crm_contact',
         fields: {
           first_name: '{leadRecord.first_name}', last_name: '{leadRecord.last_name}',
           email: '{leadRecord.email}', phone: '{leadRecord.phone}',
-          title: '{leadRecord.title}', crm_account: '{accountId.id}',
+          title: '{leadRecord.title}', crm_account: '{accountId}',
           is_primary: true, owner: '{$User.Id}',
         },
         outputVariable: 'contactId',
@@ -75,7 +98,7 @@ export const LeadConversionFlow: Flow = {
       config: {
         objectName: 'crm_opportunity',
         fields: {
-          name: '{opportunityName}', crm_account: '{accountId.id}', primary_contact: '{contactId.id}',
+          name: '{opportunityName}', crm_account: '{accountId}', primary_contact: '{contactId.id}',
           amount: '{opportunityAmount}', stage: 'prospecting', probability: 10,
           lead_source: '{leadRecord.lead_source}', close_date: '{TODAY() + 90}', owner: '{$User.Id}',
         },
@@ -91,7 +114,7 @@ export const LeadConversionFlow: Flow = {
           // conversion flags (the qualified → converted transition is legal
           // per the lead_status_progression state machine).
           is_converted: true, status: 'converted', converted_date: '{NOW()}',
-          converted_account: '{accountId.id}', converted_contact: '{contactId.id}',
+          converted_account: '{accountId}', converted_contact: '{contactId.id}',
           converted_opportunity: '{opportunityId.id}',
         },
       },
@@ -104,9 +127,9 @@ export const LeadConversionFlow: Flow = {
         to: ['{$User.Id}'],
         channels: ['inbox', 'email'],
         topic: 'lead_converted',
-        title: 'Lead converted: {leadRecord.full_name}',
-        body: 'Lead {leadRecord.full_name} was converted into an account and contact.',
-        actionUrl: '/crm_account/{accountId.id}',
+        title: 'Lead converted: {leadRecord.first_name} {leadRecord.last_name}',
+        body: 'Lead {leadRecord.first_name} {leadRecord.last_name} was converted into an account and contact.',
+        actionUrl: '/crm_account/{accountId}',
       },
     },
     { id: 'end', type: 'end', label: 'End' },
@@ -115,13 +138,19 @@ export const LeadConversionFlow: Flow = {
   edges: [
     { id: 'e1', source: 'start', target: 'screen_1', type: 'default' },
     { id: 'e2', source: 'screen_1', target: 'get_lead', type: 'default' },
-    { id: 'e3', source: 'get_lead', target: 'create_account', type: 'default' },
-    { id: 'e4', source: 'create_account', target: 'create_contact', type: 'default' },
-    { id: 'e5', source: 'create_contact', target: 'decision_opportunity', type: 'default' },
-    { id: 'e6', source: 'decision_opportunity', target: 'create_opportunity', type: 'default', condition: 'vars.createOpportunity == true', label: 'Yes' },
-    { id: 'e7', source: 'decision_opportunity', target: 'mark_converted', type: 'default', condition: 'vars.createOpportunity != true', label: 'No' },
-    { id: 'e8', source: 'create_opportunity', target: 'mark_converted', type: 'default' },
-    { id: 'e9', source: 'mark_converted', target: 'send_notification', type: 'default' },
-    { id: 'e10', source: 'send_notification', target: 'end', type: 'default' },
+    { id: 'e3', source: 'get_lead', target: 'find_account', type: 'default' },
+    { id: 'e4', source: 'find_account', target: 'decision_account', type: 'default' },
+    // Existing account → reuse; no account → create. Both converge on create_contact.
+    { id: 'e5', source: 'decision_account', target: 'use_existing_account', type: 'default', condition: 'vars.matchedAccount != null', label: 'Existing' },
+    { id: 'e6', source: 'decision_account', target: 'create_account', type: 'default', condition: 'vars.matchedAccount == null', label: 'New' },
+    { id: 'e7', source: 'create_account', target: 'use_new_account', type: 'default' },
+    { id: 'e8', source: 'use_new_account', target: 'create_contact', type: 'default' },
+    { id: 'e9', source: 'use_existing_account', target: 'create_contact', type: 'default' },
+    { id: 'e10', source: 'create_contact', target: 'decision_opportunity', type: 'default' },
+    { id: 'e11', source: 'decision_opportunity', target: 'create_opportunity', type: 'default', condition: 'vars.createOpportunity == true', label: 'Yes' },
+    { id: 'e12', source: 'decision_opportunity', target: 'mark_converted', type: 'default', condition: 'vars.createOpportunity != true', label: 'No' },
+    { id: 'e13', source: 'create_opportunity', target: 'mark_converted', type: 'default' },
+    { id: 'e14', source: 'mark_converted', target: 'send_notification', type: 'default' },
+    { id: 'e15', source: 'send_notification', target: 'end', type: 'default' },
   ],
 };
