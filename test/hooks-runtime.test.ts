@@ -186,4 +186,22 @@ describe('lead_auto_assign', () => {
     await assign.handler({ event: 'beforeInsert', input, api: makeApi(store) } as any);
     expect(input.owner).toBe('someone');
   });
+
+  it('never throws when the rep-pool lookup is denied (anonymous Web-to-Lead)', async () => {
+    // The public-form grant denies `find` on sys_user_position. The hook must
+    // swallow that and leave the lead ownerless — NOT reject the insert.
+    const api: any = {
+      object() {
+        return {
+          async find() { throw new Error("Access denied: not 'find' on 'sys_user_position'"); },
+          async count() { return 0; },
+        };
+      },
+    };
+    const input: Rec = { company: 'FromWebForm' };
+    await expect(
+      assign.handler({ event: 'beforeInsert', input, api } as any),
+    ).resolves.toBeUndefined();
+    expect(input.owner).toBeUndefined(); // ownerless, but the insert proceeds
+  });
 });
