@@ -114,13 +114,66 @@ describe('notify recipients resolve to real audiences', () => {
   });
 });
 
-describe('opportunity amount rollup', () => {
-  it('a hook keeps opportunity.amount in sync with its line items', () => {
-    const h = hooks.find((x) => x.object === 'crm_opportunity_line_item');
-    expect(h, 'no rollup hook on crm_opportunity_line_item').toBeTruthy();
+describe('line-item rollups keep parent totals in sync', () => {
+  it('opportunity amount rollup fires on line-item insert/update/delete', () => {
+    const h = hooks.find((x) => x.name === 'opportunity_amount_rollup');
+    expect(h, 'no opportunity_amount_rollup hook').toBeTruthy();
     for (const ev of ['afterInsert', 'afterUpdate', 'afterDelete']) {
       expect(h.events, `rollup must fire on ${ev}`).toContain(ev);
     }
+  });
+
+  it('quote total rollup fires on line-item insert/update/delete', () => {
+    const h = hooks.find((x) => x.name === 'quote_total_rollup');
+    expect(h, 'no quote_total_rollup hook').toBeTruthy();
+    for (const ev of ['afterInsert', 'afterUpdate', 'afterDelete']) {
+      expect(h.events, `rollup must fire on ${ev}`).toContain(ev);
+    }
+  });
+
+  it('line-item price-fill hooks default price from the product on write', () => {
+    for (const name of ['opportunity_line_item_price_fill', 'quote_line_item_price_fill']) {
+      const h = hooks.find((x) => x.name === name);
+      expect(h, `no ${name} hook`).toBeTruthy();
+      expect(h.events).toContain('beforeInsert');
+    }
+  });
+});
+
+describe('lead conversion dedupes the contact too', () => {
+  it('looks up an existing contact before creating one', () => {
+    const f = flow('lead_conversion');
+    const find = nodeOf(f, 'find_contact');
+    expect(find, 'find_contact node missing — conversion would always create a duplicate contact').toBeTruthy();
+    expect(find.type).toBe('get_record');
+    expect(find.config?.objectName).toBe('crm_contact');
+    // Converge on a bare {contactId} id (no stale {contactId.id}).
+    expect(JSON.stringify(f)).not.toContain('{contactId.id}');
+  });
+});
+
+describe('lead auto-assignment', () => {
+  it('a beforeInsert hook assigns ownerless leads', () => {
+    const h = hooks.find((x) => x.name === 'lead_auto_assign');
+    expect(h, 'no lead_auto_assign hook').toBeTruthy();
+    expect(h.events).toContain('beforeInsert');
+  });
+});
+
+describe('search works via explicit searchableFields', () => {
+  it('objects with a formula nameField declare real searchableFields', () => {
+    // The formula nameField (display_title/full_name) can't be searched; each
+    // such object must list real columns or the picker/global search return 0.
+    const offenders: string[] = [];
+    for (const o of objects) {
+      const nf = o.nameField;
+      const nfType = nf ? o.fields?.[nf]?.type : undefined;
+      if (nfType === 'formula') {
+        const sf = o.searchableFields;
+        if (!Array.isArray(sf) || sf.length === 0) offenders.push(o.name);
+      }
+    }
+    expect(offenders, `formula-nameField objects missing searchableFields:\n${offenders.join(', ')}`).toEqual([]);
   });
 });
 

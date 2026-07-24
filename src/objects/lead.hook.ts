@@ -40,6 +40,66 @@ function computeRating(input: Record<string, unknown>): number {
   return Math.round(clamped * 2) / 2;
 }
 
+/**
+ * Lead auto-assignment (load-balanced round-robin).
+ *
+ * A lead created without an owner (CSV import, web-to-lead, API capture) used to
+ * land ownerless and rely on a manager noticing it. This assigns it to the
+ * sales rep with the FEWEST open leads — a self-balancing round-robin that needs
+ * no rotation counter.
+ *
+ * The rep pool is whoever holds the `sales_rep` position (`sys_user_position`).
+ * When that pool is empty (e.g. a fresh org before positions are assigned) the
+ * hook is a NO-OP and the lead keeps whatever owner it had — so it never blocks
+ * lead creation. UI-created leads already carry owner = creator (field default),
+ * so this only kicks in for genuinely ownerless intake.
+ *
+ * Runs beforeInsert so the downstream lead_assignment flow (afterInsert) sees
+ * the assigned owner and routes its SLA alert to that rep. Territory-based
+ * routing is a future extension on top of this pool query.
+ */
+const leadAutoAssignHook: Hook = {
+  name: 'lead_auto_assign',
+  object: 'crm_lead',
+  events: ['beforeInsert'],
+  priority: 150,
+  description: 'Assign ownerless new leads to the least-loaded sales rep.',
+  handler: async (ctx: HookContext) => {
+    const { input } = ctx;
+    // Respect an explicit / creator-assigned owner.
+    if (typeof input.owner === 'string' && input.owner) return;
+    const api = ctx.api as HookApi | undefined;
+    if (!api) return;
+
+    // Rep pool = holders of the sales_rep position.
+    const holders = await api.object('sys_user_position').find({
+      where: { position: 'sales_rep' }, fields: ['user_id'], top: 1000,
+    });
+    const repIds = Array.from(
+      new Set(
+        (holders ?? [])
+          .map((r) => (typeof r.user_id === 'string' ? r.user_id : ''))
+          .filter(Boolean),
+      ),
+    );
+    if (repIds.length === 0) return; // no pool → leave ownerless (no-op)
+
+    // Pick the rep with the fewest OPEN (non-converted) leads.
+    let best: string | undefined;
+    let bestCount = Infinity;
+    for (const repId of repIds) {
+      const openCount = await api.object('crm_lead').count({
+        where: { owner: repId, is_converted: false },
+      });
+      if (openCount < bestCount) {
+        bestCount = openCount;
+        best = repId;
+      }
+    }
+    if (best) input.owner = best;
+  },
+};
+
 const leadHook: Hook = {
   name: 'lead_automation',
   object: 'crm_lead',
@@ -142,4 +202,4 @@ const leadHook: Hook = {
   },
 };
 
-export default leadHook;
+export default [leadAutoAssignHook, leadHook];

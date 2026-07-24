@@ -76,7 +76,23 @@ export const LeadConversionFlow: Flow = {
       config: { assignments: { accountId: '{matchedAccount.id}' } },
     },
     {
-      // `accountId` is now a bare id string from whichever branch ran.
+      // Contact dedupe: within the (possibly reused) account, look for a contact
+      // with the same email before creating one — mirrors the account dedupe so
+      // re-converting a known person doesn't spawn a duplicate contact. Leads
+      // require an email, so the match key is reliable.
+      id: 'find_contact', type: 'get_record', label: 'Find Existing Contact',
+      config: {
+        objectName: 'crm_contact',
+        filter: { email: '{leadRecord.email}', crm_account: '{accountId}' },
+        outputVariable: 'matchedContact',
+      },
+    },
+    {
+      id: 'decision_contact', type: 'decision', label: 'Contact Already Exists?',
+      config: { condition: 'vars.matchedContact != null' },
+    },
+    {
+      // `accountId` is a bare id string from whichever account branch ran.
       id: 'create_contact', type: 'create_record', label: 'Create Contact',
       config: {
         objectName: 'crm_contact',
@@ -86,8 +102,16 @@ export const LeadConversionFlow: Flow = {
           title: '{leadRecord.title}', crm_account: '{accountId}',
           is_primary: true, owner: '{$User.Id}',
         },
-        outputVariable: 'contactId',
+        outputVariable: 'createdContact',
       },
+    },
+    {
+      id: 'use_new_contact', type: 'assignment', label: 'Use New Contact',
+      config: { assignments: { contactId: '{createdContact.id}' } },
+    },
+    {
+      id: 'use_existing_contact', type: 'assignment', label: 'Reuse Existing Contact',
+      config: { assignments: { contactId: '{matchedContact.id}' } },
     },
     {
       id: 'decision_opportunity', type: 'decision', label: 'Create Opportunity?',
@@ -98,7 +122,7 @@ export const LeadConversionFlow: Flow = {
       config: {
         objectName: 'crm_opportunity',
         fields: {
-          name: '{opportunityName}', crm_account: '{accountId}', primary_contact: '{contactId.id}',
+          name: '{opportunityName}', crm_account: '{accountId}', primary_contact: '{contactId}',
           amount: '{opportunityAmount}', stage: 'prospecting', probability: 10,
           lead_source: '{leadRecord.lead_source}', close_date: '{TODAY() + 90}', owner: '{$User.Id}',
         },
@@ -114,7 +138,7 @@ export const LeadConversionFlow: Flow = {
           // conversion flags (the qualified → converted transition is legal
           // per the lead_status_progression state machine).
           is_converted: true, status: 'converted', converted_date: '{NOW()}',
-          converted_account: '{accountId}', converted_contact: '{contactId.id}',
+          converted_account: '{accountId}', converted_contact: '{contactId}',
           converted_opportunity: '{opportunityId.id}',
         },
       },
@@ -144,13 +168,20 @@ export const LeadConversionFlow: Flow = {
     { id: 'e5', source: 'decision_account', target: 'use_existing_account', type: 'default', condition: 'vars.matchedAccount != null', label: 'Existing' },
     { id: 'e6', source: 'decision_account', target: 'create_account', type: 'default', condition: 'vars.matchedAccount == null', label: 'New' },
     { id: 'e7', source: 'create_account', target: 'use_new_account', type: 'default' },
-    { id: 'e8', source: 'use_new_account', target: 'create_contact', type: 'default' },
-    { id: 'e9', source: 'use_existing_account', target: 'create_contact', type: 'default' },
-    { id: 'e10', source: 'create_contact', target: 'decision_opportunity', type: 'default' },
-    { id: 'e11', source: 'decision_opportunity', target: 'create_opportunity', type: 'default', condition: 'vars.createOpportunity == true', label: 'Yes' },
-    { id: 'e12', source: 'decision_opportunity', target: 'mark_converted', type: 'default', condition: 'vars.createOpportunity != true', label: 'No' },
-    { id: 'e13', source: 'create_opportunity', target: 'mark_converted', type: 'default' },
-    { id: 'e14', source: 'mark_converted', target: 'send_notification', type: 'default' },
-    { id: 'e15', source: 'send_notification', target: 'end', type: 'default' },
+    // Both account branches converge on the contact-dedupe lookup.
+    { id: 'e8', source: 'use_new_account', target: 'find_contact', type: 'default' },
+    { id: 'e9', source: 'use_existing_account', target: 'find_contact', type: 'default' },
+    { id: 'e10', source: 'find_contact', target: 'decision_contact', type: 'default' },
+    // Existing contact → reuse; none → create. Both converge on decision_opportunity.
+    { id: 'e11', source: 'decision_contact', target: 'use_existing_contact', type: 'default', condition: 'vars.matchedContact != null', label: 'Existing' },
+    { id: 'e12', source: 'decision_contact', target: 'create_contact', type: 'default', condition: 'vars.matchedContact == null', label: 'New' },
+    { id: 'e13', source: 'create_contact', target: 'use_new_contact', type: 'default' },
+    { id: 'e14', source: 'use_new_contact', target: 'decision_opportunity', type: 'default' },
+    { id: 'e15', source: 'use_existing_contact', target: 'decision_opportunity', type: 'default' },
+    { id: 'e16', source: 'decision_opportunity', target: 'create_opportunity', type: 'default', condition: 'vars.createOpportunity == true', label: 'Yes' },
+    { id: 'e17', source: 'decision_opportunity', target: 'mark_converted', type: 'default', condition: 'vars.createOpportunity != true', label: 'No' },
+    { id: 'e18', source: 'create_opportunity', target: 'mark_converted', type: 'default' },
+    { id: 'e19', source: 'mark_converted', target: 'send_notification', type: 'default' },
+    { id: 'e20', source: 'send_notification', target: 'end', type: 'default' },
   ],
 };
