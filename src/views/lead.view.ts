@@ -180,15 +180,15 @@ export const LeadViews = defineView({
         collapsible: true,
         collapsed: true,
         columns: 2,
+        // `crm_lead` stores the location in one composite `Field.address`;
+        // the discrete street/city/state/postal_code/country columns this
+        // section used to list do not exist on the object, so the whole
+        // section rendered blank.
         fields: [
           {
-            field: 'street',
-            colSpan: 2, // Full width
+            field: 'address',
+            colSpan: 2,
           },
-          'city',
-          'state',
-          'postal_code',
-          'country',
         ],
       },
       {
@@ -423,15 +423,10 @@ export const LeadViews = defineView({
         {
           label: 'Address',
           columns: 2,
+          // Single composite `Field.address` — see the note on the default
+          // form's Address section.
           fields: [
-            { field: 'street', colSpan: 2 },
-            'city',
-            {
-              field: 'state',
-              dependsOn: 'country', // Cascade: country determines available states
-            },
-            'postal_code',
-            'country',
+            { field: 'address', colSpan: 2 },
           ],
         },
         {
@@ -731,15 +726,10 @@ export const LeadViews = defineView({
           collapsible: true,
           collapsed: true,
           columns: 2,
+          // Single composite `Field.address` — the discrete street/city/state/
+          // postal_code/country columns do not exist on crm_lead.
           fields: [
-            { field: 'street', colSpan: 2 },
-            'city',
-            {
-              field: 'state',
-              dependsOn: 'country', // Country determines state options
-            },
-            'postal_code',
-            'country',
+            { field: 'address', colSpan: 2 },
           ],
         },
         {

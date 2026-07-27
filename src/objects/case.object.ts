@@ -102,7 +102,19 @@ export const Case = ObjectSchema.create({
         { label: 'Critical', value: 'critical', color: '#FF0000' },
       ]
     }),
-    
+
+    // Sortable ordinal for `priority`. Ordering a queue by the select field
+    // itself sorts the raw strings, so `priority desc` yields
+    // medium > low > high > critical — the exact inversion of urgency, which
+    // buried every critical case at the bottom of the agent's queue. Select
+    // options carry no ordinal in the spec, so the rank is materialised here
+    // and stamped by `case_sla_defaults`; queue views sort on it instead.
+    priority_rank: Field.number({
+      label: 'Priority Rank',
+      readonly: true,
+      defaultValue: 1,
+    }),
+
     type: Field.select({
       label: 'Case Type',
       group: 'basic',

@@ -139,7 +139,7 @@ export const TaskViews = defineView({
         { field: 'status', operator: 'in', value: ['not_started', 'in_progress'] },
         { field: 'priority', operator: 'in', value: ['high', 'urgent'] },
       ],
-      sort: [{ field: 'due_date', order: 'asc' }, { field: 'priority', order: 'desc' }],
+      sort: [{ field: 'due_date', order: 'asc' }, { field: 'priority_rank', order: 'desc' }],
     },
 
     /** Overdue / open tasks across the team — sorted oldest-due first */

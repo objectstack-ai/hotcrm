@@ -81,10 +81,14 @@ export const LeadDetailPage: Page = {
           label: 'Lead Status Path',
           properties: {
             statusField: 'status',
+            // `converted` is the terminal WIN state and must be on the path —
+            // without it the strip reads as if "Unqualified" were the goal, and
+            // a converted lead had no stage to light up at all.
             stages: [
               { value: 'new', label: 'New' },
               { value: 'contacted', label: 'Contacted' },
               { value: 'qualified', label: 'Qualified' },
+              { value: 'converted', label: 'Converted' },
               { value: 'unqualified', label: 'Unqualified' },
             ],
           },
@@ -173,8 +177,13 @@ export const LeadDetailPage: Page = {
                               label: 'Tasks',
                               properties: {
                                 objectName: 'crm_task',
-                                relationshipField: 'lead_id',
-                                columns: ['subject', 'status', 'priority', 'due_date', 'assigned_to'],
+                                // crm_task links back through the polymorphic
+                                // `related_to_lead` lookup; there is no `lead_id`
+                                // column, so the old binding matched nothing and
+                                // this list read "0" no matter how many follow-ups
+                                // the rep had filed.
+                                relationshipField: 'related_to_lead',
+                                columns: ['subject', 'status', 'priority', 'due_date', 'owner'],
                                 sort: [
                                   { field: 'due_date', order: 'asc' }
                                 ],
@@ -183,51 +192,6 @@ export const LeadDetailPage: Page = {
                                 filter: [['status', '!=', 'completed']],
                                 showViewAll: true,
                                 actions: ['new_task', 'edit', 'complete'],
-                              },
-                            },
-                          ],
-                        },
-                        {
-                          label: 'Events',
-                          icon: 'calendar',
-                          collapsed: true,
-                          children: [
-                            {
-                              type: 'record:related_list',
-                              id: 'related_events',
-                              label: 'Events',
-                              properties: {
-                                objectName: 'event',
-                                relationshipField: 'lead_id',
-                                columns: ['subject', 'start_date', 'end_date', 'location'],
-                                sort: [
-                                  { field: 'start_date', order: 'desc' }
-                                ],
-                                limit: 5,
-                                showViewAll: true,
-                                actions: ['new_event'],
-                              },
-                            },
-                          ],
-                        },
-                        {
-                          label: 'Notes & Attachments',
-                          icon: 'paperclip',
-                          collapsed: true,
-                          children: [
-                            {
-                              type: 'record:related_list',
-                              id: 'related_files',
-                              label: 'Files',
-                              properties: {
-                                objectName: 'file',
-                                relationshipField: 'parent_id',
-                                columns: ['title', 'file_type', 'size', 'created_by', 'created_date'],
-                                sort: [
-                                  { field: 'created_date', order: 'desc' }
-                                ],
-                                limit: 5,
-                                showViewAll: true,
                               },
                             },
                           ],
@@ -246,7 +210,10 @@ export const LeadDetailPage: Page = {
                     id: 'lead_activity',
                     label: 'Activity Timeline',
                     properties: {
-                      types: ['crm_task', 'event', 'email', 'call', 'note'],
+                      // Only `crm_task` exists in this app — `event` / `email` /
+                      // `call` / `note` were aspirational object names that the
+                      // timeline silently skipped.
+                      types: ['crm_task'],
                       limit: 20,
                       showCompleted: false,
                     },
@@ -258,18 +225,16 @@ export const LeadDetailPage: Page = {
                 icon: 'history',
                 children: [
                   {
-                    type: 'record:related_list',
-                    id: 'field_history',
+                    // `record:history` is the platform's own audit feed over the
+                    // fields marked `trackHistory` (status / rating / owner).
+                    // The hand-rolled version queried an object named
+                    // `field_history`, which this app does not define, so the
+                    // tab could only ever render empty.
+                    type: 'record:history',
+                    id: 'lead_history',
                     label: 'Field History',
                     properties: {
-                      objectName: 'field_history',
-                      relationshipField: 'record_id',
-                      columns: ['field', 'old_value', 'new_value', 'changed_by', 'changed_date'],
-                      sort: [
-                        { field: 'changed_date', order: 'desc' }
-                      ],
                       limit: 25,
-                      showViewAll: true,
                     },
                   },
                 ],
@@ -284,8 +249,10 @@ export const LeadDetailPage: Page = {
   // Make this the default page for leads
   isDefault: true,
 
-  // Assign to specific profiles
-  assignedProfiles: ['sales_user', 'sales_manager', 'system_administrator'],
+  // Assign to specific profiles. These must match the profile `name`s declared
+  // in src/profiles — `sales_user` / `system_administrator` never existed, so
+  // the assignment silently matched nobody.
+  assignedProfiles: ['sales_rep', 'sales_manager', 'system_admin'],
 
   // ARIA accessibility
   aria: {

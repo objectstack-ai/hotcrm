@@ -31,6 +31,11 @@ export const Task = ObjectSchema.create({
       label: 'Status',
       required: true,
       trackHistory: true,
+      // Field-level default, not just the option flag: the option `default`
+      // only preselects in some form surfaces, so a quick-create modal opened
+      // from a related list left this required field blank and the rep had to
+      // pick "Not Started" by hand every time.
+      defaultValue: 'not_started',
       options: [
         { label: 'Not Started', value: 'not_started', color: '#808080', default: true },
         { label: 'In Progress', value: 'in_progress', color: '#FFA500' },
@@ -44,14 +49,27 @@ export const Task = ObjectSchema.create({
       label: 'Priority',
       required: true,
       trackHistory: true,
+      // `normal` is the default rather than `low`: a rep filing a to-do has
+      // made no priority judgement, and defaulting everything to Low made the
+      // field meaningless (nothing ever sorted above the noise).
+      defaultValue: 'normal',
       options: [
-        { label: 'Low', value: 'low', color: '#4169E1', default: true },
-        { label: 'Normal', value: 'normal', color: '#00AA00' },
+        { label: 'Low', value: 'low', color: '#4169E1' },
+        { label: 'Normal', value: 'normal', color: '#00AA00', default: true },
         { label: 'High', value: 'high', color: '#FFA500' },
         { label: 'Urgent', value: 'urgent', color: '#FF0000' },
       ]
     }),
-    
+
+    // Sortable ordinal for `priority` — see crm_case.priority_rank. Sorting on
+    // the select itself compares raw strings (normal > low > high > urgent),
+    // which pushes urgent work to the bottom of the to-do queue.
+    priority_rank: Field.number({
+      label: 'Priority Rank',
+      readonly: true,
+      defaultValue: 2,
+    }),
+
     type: Field.select({
       label: 'Task Type',
       options: [

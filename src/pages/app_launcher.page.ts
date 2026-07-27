@@ -61,7 +61,7 @@ export const AppLauncherPage: Page = {
   ],
   
   isDefault: false,
-  assignedProfiles: ['sales_user', 'sales_manager', 'service_user', 'system_administrator'],
+  assignedProfiles: ['sales_rep', 'sales_manager', 'service_agent', 'system_admin'],
   
   aria: {
     ariaLabel: 'App Launcher Page',
