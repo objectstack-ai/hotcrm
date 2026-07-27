@@ -11,7 +11,7 @@
     {
       "name": "docs",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "@hotcrm/docs", "dev"],
+      "runtimeArgs": ["-C", "apps/docs", "dev"],
       "port": 3210,
       "autoPort": true
     }

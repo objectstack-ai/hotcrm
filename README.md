@@ -136,7 +136,7 @@ hotcrm/
 │   ├── profiles/, sharing/       # security
 │   ├── translations/             # en / zh-CN / es-ES / ja-JP
 │   └── data/                     # seed data
-├── apps/docs/                    # Fumadocs app
+├── apps/docs/                    # Fumadocs site — standalone, own lockfile (not a pnpm workspace member)
 └── content/docs/                 # Documentation content
 ```
 
@@ -146,7 +146,7 @@ Every file follows the **`<entity>.<kind>.ts`** convention. The `crm_` prefix on
 
 ## 📚 Documentation
 
-- **Live docs:** start `pnpm --filter @hotcrm/docs dev -- -p 3001`, then open <http://localhost:3001/docs>
+- **Live docs:** start `pnpm -C apps/docs install && pnpm -C apps/docs dev -p 3001`, then open <http://localhost:3001/docs>
 - **For business users:** Sales, Service, Marketing, Revenue, AI Copilot guides
 - **For developers:** Architecture, Customization, API reference, Testing & CI
 - **For publishers:** Marketplace publishing guide
