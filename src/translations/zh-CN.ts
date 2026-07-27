@@ -579,7 +579,10 @@ export const zhCN: TranslationData = {
         end_date: { label: '结束日期' },
         expected_revenue: { label: '预期收入' },
         description: { label: '描述' },
-        channel: { label: '主要渠道' },
+        channel: {
+          label: '主要渠道',
+          options: { digital: '数字渠道', social: '社交媒体', email: '邮件', events: '线下活动', partner: '合作伙伴' },
+        },
         budgeted_cost: { label: '预算成本' },
         actual_cost: { label: '实际成本' },
         actual_revenue: { label: '实际收入' },
