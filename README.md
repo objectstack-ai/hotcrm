@@ -5,9 +5,10 @@
 # HotCRM
 
 > **The reference app for AI-written enterprise software.** A complete CRM —
-> 15 objects, 17 flows, 4 dashboards, 2 AI copilots, 4 languages — written as
-> ~17,000 lines of typed [ObjectStack](https://github.com/objectstack-ai/objectstack)
-> metadata, so the whole app still fits in a single agent context window.
+> 15 objects, 17 flows, 4 dashboards, 2 AI copilots, 4 languages — is roughly
+> **170k tokens** of typed [ObjectStack](https://github.com/objectstack-ai/objectstack)
+> metadata (~18,000 lines): the entire enterprise CRM fits in a single agent
+> context window, so an AI can hold it whole, reason about it, and refactor it.
 > **Install it online in one click, or fork it and build & ask with Claude
 > Code** — it's the reference implementation every marketplace app forks from.
 
