@@ -229,3 +229,73 @@ describe('priority queues sort by urgency, not alphabetically', () => {
     expect(bad, `${bad.join('\n  ')}`).toEqual([]);
   });
 });
+
+describe('navigation reaches everything the app ships', () => {
+  const apps: AnyRec[] = (stack as any).apps ?? [];
+  const dashboards: AnyRec[] = (stack as any).dashboards ?? [];
+  const reports: AnyRec[] = (stack as any).reports ?? [];
+
+  /** Flatten the (possibly nested) navigation tree. */
+  const navNodes = (app: AnyRec): AnyRec[] =>
+    (app.navigation ?? []).flatMap(function walk(n: AnyRec): AnyRec[] {
+      return [n, ...(n.children ?? []).flatMap(walk)];
+    });
+  const allNodes = apps.flatMap(navNodes);
+
+  it('every nav entry points at something that exists', () => {
+    const dashboardNames = new Set(dashboards.map((d) => d.name));
+    const reportNames = new Set(reports.map((r) => r.name));
+    const bad: string[] = [];
+    for (const n of allNodes) {
+      // `sys_*` are platform objects the app legitimately links to (the
+      // approval inbox and process list); those nodes carry their own
+      // `requiresObject` guard for installs where the plugin is absent.
+      if (n.objectName && !n.objectName.startsWith('sys_') && !objectNames.has(n.objectName)) {
+        bad.push(`${n.id}: object "${n.objectName}" is not defined`);
+      }
+      if (n.dashboardName && !dashboardNames.has(n.dashboardName)) {
+        bad.push(`${n.id}: dashboard "${n.dashboardName}" is not defined`);
+      }
+      if (n.reportName && !reportNames.has(n.reportName)) {
+        bad.push(`${n.id}: report "${n.reportName}" is not defined`);
+      }
+    }
+    expect(bad, `dangling navigation targets:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
+  it('no user-facing object is stranded without a way to reach it', () => {
+    // Campaigns, Contracts, Products, Forecasts and Tasks each shipped with
+    // views, seed data and automation — and no entry point. The only way to
+    // see a task was to open the record it hung off.
+    const reachable = new Set(allNodes.map((n) => n.objectName).filter(Boolean));
+    const stranded = objects
+      .map((o) => o.name)
+      .filter((name: string) =>
+        // Line items and junctions are edited inside their parent, never
+        // reached on their own.
+        !/_line_item$|_member$/.test(name) && !reachable.has(name));
+    expect(stranded, `objects with no navigation entry:\n  ${stranded.join('\n  ')}`).toEqual([]);
+  });
+
+  it('every dashboard is reachable', () => {
+    const reachable = new Set(allNodes.map((n) => n.dashboardName).filter(Boolean));
+    const stranded = dashboards.map((d) => d.name).filter((n: string) => !reachable.has(n));
+    expect(stranded, `dashboards nobody can open:\n  ${stranded.join('\n  ')}`).toEqual([]);
+  });
+
+  it('every navigation node has a zh-CN label', () => {
+    // The groups were translated and the leaves were not, so the sidebar read
+    // half Chinese, half English.
+    const translations: AnyRec[] = (stack as any).translations ?? [];
+    const zh = translations.find((t) => t.locale === 'zh-CN' || t.name === 'zh-CN');
+    if (!zh) return; // no zh bundle in this build — nothing to assert
+    const bad: string[] = [];
+    for (const app of apps) {
+      const nav = zh.data?.apps?.[app.name]?.navigation ?? zh.apps?.[app.name]?.navigation ?? {};
+      for (const n of navNodes(app)) {
+        if (n.id && !nav[n.id]?.label) bad.push(`${app.name}/${n.id}`);
+      }
+    }
+    expect(bad, `navigation nodes with no zh-CN label:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+});

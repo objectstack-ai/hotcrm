@@ -225,8 +225,10 @@ export const zhCN: TranslationData = {
         status: {
           label: '状态',
           options: {
+            // 已确认 / 未通过 是同一个动作(线索确认)的正反两面;原先的
+            // 已确认 / 不合格 出自两套说法,在状态条上并排时读起来不成对。
             new: '新建', contacted: '已联系', qualified: '已确认',
-            unqualified: '不合格', converted: '已转化',
+            unqualified: '未通过', converted: '已转化',
           },
         },
         lead_source: {
@@ -681,12 +683,47 @@ export const zhCN: TranslationData = {
     crm_enterprise: {
       label: 'HotCRM',
       description: '涵盖销售、服务和市场营销的客户关系管理系统',
+      // Keyed by navigation-node `id` (a flat keyspace regardless of depth).
+      // The groups were translated but every leaf was not, so the sidebar read
+      // "销售 / Leads / Accounts / …" — half Chinese, half English. `group_products`
+      // and `group_analytics` were translations for nodes that don't exist.
       navigation: {
+        nav_home: { label: '首页' },
+
         group_sales: { label: '销售' },
+        nav_lead: { label: '线索' },
+        nav_account: { label: '客户' },
+        nav_account_workbench: { label: '客户工作台' },
+        nav_contact: { label: '联系人' },
+        nav_opportunity: { label: '商机' },
+        nav_pipeline: { label: '销售管道' },
+        nav_quote: { label: '报价' },
+        nav_contract: { label: '合同' },
+        nav_sales_dashboard: { label: '销售业绩' },
+
+        group_work: { label: '我的工作' },
+        nav_my_tasks: { label: '我的任务' },
+        nav_all_tasks: { label: '全部任务' },
+
+        group_marketing: { label: '市场营销' },
+        nav_campaign: { label: '营销活动' },
+        nav_product: { label: '产品' },
+
         group_service: { label: '服务' },
-        group_marketing: { label: '营销' },
-        group_products: { label: '产品' },
-        group_analytics: { label: '数据分析' },
+        nav_case: { label: '服务案例' },
+        nav_knowledge: { label: '知识库' },
+        nav_service_dashboard: { label: '服务概览' },
+
+        group_insights: { label: '数据洞察' },
+        nav_crm_dashboard: { label: 'CRM 总览' },
+        nav_forecast: { label: '销售预测' },
+        nav_report_pipeline_coverage: { label: '管道覆盖率' },
+        nav_report_lead_inflow: { label: '线索流入' },
+        nav_report_sla: { label: 'SLA 达成' },
+
+        group_approvals: { label: '审批' },
+        nav_approval_requests: { label: '待我审批' },
+        nav_approval_processes: { label: '审批流程' },
       },
     },
   },
