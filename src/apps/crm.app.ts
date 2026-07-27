@@ -65,8 +65,19 @@ export const CrmApp = App.create({
       label: 'My Work',
       icon: 'list-checks',
       expanded: true,
+      // These are ListViews, not a dashboard, and that is deliberate. A
+      // "My Day" dashboard was built and removed: dashboard widget filters do
+      // NOT interpolate `{current_user}` / `{current_user_id}` — the literal
+      // string reaches the query and matches no owner, so every widget renders
+      // 0. Proven side by side on one dashboard: `{current_user}` → 0,
+      // `{current_user_id}` → 0, no owner filter → 10,100,081. The token is
+      // implemented in platform-objects (the ListView data path) and has no
+      // counterpart in service-analytics. Filed upstream; until it lands, a
+      // ListView is the only surface where "mine" actually means mine.
       children: [
         { id: 'nav_my_tasks', type: 'object', objectName: 'crm_task', viewName: 'my_open_tasks', label: 'My Tasks', icon: 'circle-check' },
+        { id: 'nav_my_deals', type: 'object', objectName: 'crm_opportunity', viewName: 'my_open_deals', label: 'My Deals', icon: 'target' },
+        { id: 'nav_my_leads', type: 'object', objectName: 'crm_lead', viewName: 'my_leads', label: 'My Leads', icon: 'user-plus' },
         { id: 'nav_all_tasks', type: 'object', objectName: 'crm_task', label: 'All Tasks', icon: 'list' },
       ],
     },

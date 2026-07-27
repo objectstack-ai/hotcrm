@@ -703,6 +703,8 @@ export const zhCN: TranslationData = {
 
         group_work: { label: '我的工作' },
         nav_my_tasks: { label: '我的任务' },
+        nav_my_deals: { label: '我的商机' },
+        nav_my_leads: { label: '我的线索' },
         nav_all_tasks: { label: '全部任务' },
 
         group_marketing: { label: '市场营销' },
