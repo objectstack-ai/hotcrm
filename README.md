@@ -21,7 +21,7 @@
 
 HotCRM is a complete, opinionated CRM built as the **first official application** on the [ObjectStack](https://cloud.objectos.app) marketplace. Install it into any ObjectStack environment in one click and get a working CRM in 30 seconds — or fork it as the canonical example of how to build your own marketplace app.
 
-> **Try it in your browser (no install):** click the StackBlitz badge above. It boots HotCRM in a WebContainer using `@objectstack/driver-sqlite-wasm` (sql.js) instead of `better-sqlite3`, which can't compile inside the WebContainer sandbox. `.stackblitzrc` sets `OS_DATABASE_DRIVER=sqlite-wasm` so the runtime picks the WASM driver automatically. First load takes ~60s while pnpm installs.
+> **Try it in your browser (no install):** click the StackBlitz badge above. It boots HotCRM in a WebContainer using `@objectstack/driver-sqlite-wasm` (sql.js) instead of `better-sqlite3`, which can't compile inside the WebContainer sandbox. `.stackblitzrc` sets `OS_DATABASE_DRIVER=sqlite-wasm` so the runtime picks the WASM driver automatically. The sandbox boots with `npm install --omit=dev --omit=optional` — WebContainers forbid `npm i -g`, and their bundled pnpm 8 can't read this repo's lockfile — so first load takes ~2 min while npm installs. Local development still uses pnpm 10 as usual.
 
 ---
 
