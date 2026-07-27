@@ -65,9 +65,9 @@ export const esES: TranslationData = {
         department: {
           label: 'Departamento',
           options: {
-            Executive: 'Ejecutivo', Sales: 'Ventas', Marketing: 'Marketing',
-            Engineering: 'Ingeniería', Support: 'Soporte', Finance: 'Finanzas',
-            HR: 'Recursos Humanos', Operations: 'Operaciones',
+            executive: 'Ejecutivo', sales: 'Ventas', marketing: 'Marketing',
+            engineering: 'Ingeniería', support: 'Soporte', finance: 'Finanzas',
+            hr: 'Recursos Humanos', operations: 'Operaciones',
           },
         },
         owner: { label: 'Propietario de Contacto' },
@@ -264,17 +264,17 @@ export const esES: TranslationData = {
         type: {
           label: 'Tipo',
           options: {
-            'New Business': 'Nuevo Negocio',
-            'Existing Customer - Upgrade': 'Cliente Existente - Mejora',
-            'Existing Customer - Renewal': 'Cliente Existente - Renovación',
-            'Existing Customer - Expansion': 'Cliente Existente - Expansión',
+            new_business: 'Nuevo Negocio',
+            existing_upgrade: 'Cliente Existente - Mejora',
+            existing_renewal: 'Cliente Existente - Renovación',
+            existing_expansion: 'Cliente Existente - Expansión',
           },
         },
         forecast_category: {
           label: 'Categoría de Pronóstico',
           options: {
-            Pipeline: 'Pipeline', 'Best Case': 'Mejor Caso',
-            Commit: 'Compromiso', Omitted: 'Omitida', Closed: 'Cerrada',
+            pipeline: 'Pipeline', best_case: 'Mejor Caso',
+            commit: 'Compromiso', omitted: 'Omitida', closed: 'Cerrada',
           },
         },
         description: { label: 'Descripción' },
@@ -418,8 +418,6 @@ export const esES: TranslationData = {
         is_active: { label: 'Activo' },
         is_taxable: { label: 'Imponible' },
         product_manager: { label: 'Gerente de Producto' },
-        image_url: { label: 'Imagen de Producto' },
-        datasheet_url: { label: 'URL de Ficha Técnica' },
         image: { label: 'Imagen de Producto' },
         datasheet: { label: 'Ficha Técnica' },
       },
@@ -539,6 +537,71 @@ export const esES: TranslationData = {
         campaign_timeline: { label: 'Línea de Tiempo de Marketing' },
       },
     },
+
+    crm_campaign_member: {
+      label: 'Miembro de Campaña',
+      pluralLabel: 'Miembros de Campaña',
+      description: 'Prospectos y contactos alcanzados por una campaña, con su estado de respuesta',
+      fields: {
+        member_number: { label: 'Número de Miembro' },
+        crm_campaign: { label: 'Campaña' },
+        crm_lead: { label: 'Prospecto' },
+        crm_contact: { label: 'Contacto' },
+        status: {
+          label: 'Estado',
+          options: {
+            sent: 'Enviado', opened: 'Abierto', clicked: 'Clicado',
+            responded: 'Respondido', converted: 'Convertido', bounced: 'Rebotado',
+            unsubscribed: 'Dado de Baja',
+          },
+        },
+        added_date: { label: 'Fecha de Alta' },
+        first_opened_date: { label: 'Primera Apertura' },
+        first_clicked_date: { label: 'Primer Clic' },
+        response_date: { label: 'Fecha de Respuesta' },
+        has_responded: { label: 'Ha Respondido' },
+      },
+      _sections: {
+        basic: { label: 'Información Básica' },
+        response: { label: 'Seguimiento de Respuesta' },
+      },
+    },
+
+    crm_opportunity_line_item: {
+      label: 'Línea de Oportunidad',
+      pluralLabel: 'Líneas de Oportunidad',
+      description: 'Líneas de precio por producto dentro de una oportunidad',
+      fields: {
+        crm_opportunity: { label: 'Oportunidad' },
+        crm_product: { label: 'Producto' },
+        description: { label: 'Descripción' },
+        quantity: { label: 'Cantidad' },
+        list_price: { label: 'Precio de Lista' },
+        unit_price: { label: 'Precio de Venta' },
+        discount: { label: 'Descuento (%)' },
+        total_price: { label: 'Total' },
+        line_number: { label: 'Nº de Línea' },
+      },
+    },
+
+    crm_quote_line_item: {
+      label: 'Línea de Presupuesto',
+      pluralLabel: 'Líneas de Presupuesto',
+      description: 'Líneas de precio por producto dentro de un presupuesto',
+      fields: {
+        crm_quote: { label: 'Presupuesto' },
+        crm_product: { label: 'Producto' },
+        description: { label: 'Descripción' },
+        quantity: { label: 'Cantidad' },
+        list_price: { label: 'Precio de Lista' },
+        unit_price: { label: 'Precio de Venta' },
+        discount: { label: 'Descuento (%)' },
+        subtotal: { label: 'Subtotal' },
+        tax_rate: { label: 'Tasa de Impuesto (%)' },
+        total_price: { label: 'Total' },
+        line_number: { label: 'Nº de Línea' },
+      },
+    },
   },
 
   globalActions: {
@@ -637,7 +700,7 @@ export const esES: TranslationData = {
         avg_deal_size: { title: 'Tamaño medio del negocio', description: 'Valor medio de los negocios cerrados ganados este trimestre' },
         pipeline_by_stage: { title: 'Pipeline por etapa', description: 'Valor de oportunidades abiertas en cada etapa de venta' },
         monthly_revenue_trend: { title: 'Tendencia mensual de ingresos', description: 'Ingresos cerrados ganados de los últimos 12 meses' },
-        opportunities_by_owner: { title: 'Oportunidades por responsable', description: 'Valor del pipeline abierto por representante' },
+        pipeline_by_forecast_category: { title: 'Pipeline por categoría de pronóstico', description: 'Pipeline abierto agrupado por categoría de pronóstico de ventas' },
         lead_source_breakdown: { title: 'Origen del prospecto', description: 'De dónde proviene nuestro pipeline' },
         open_pipeline_by_owner: { title: 'Pipeline abierto por responsable', description: 'Valor del pipeline en curso, número de negocios y probabilidad media de cierre por comercial' },
         pipeline_stage_by_source: { title: 'Pipeline por Etapa × Origen', description: 'Tabla cruzada del importe de oportunidades abiertas por etapa y origen' },

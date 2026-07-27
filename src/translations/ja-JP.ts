@@ -65,9 +65,9 @@ export const jaJP: TranslationData = {
         department: {
           label: '部門',
           options: {
-            Executive: '経営層', Sales: '営業部', Marketing: 'マーケティング部',
-            Engineering: 'エンジニアリング部', Support: 'サポート部', Finance: '経理部',
-            HR: '人事部', Operations: 'オペレーション部',
+            executive: '経営層', sales: '営業部', marketing: 'マーケティング部',
+            engineering: 'エンジニアリング部', support: 'サポート部', finance: '経理部',
+            hr: '人事部', operations: 'オペレーション部',
           },
         },
         owner: { label: '所有者' },
@@ -264,17 +264,17 @@ export const jaJP: TranslationData = {
         type: {
           label: 'タイプ',
           options: {
-            'New Business': '新規ビジネス',
-            'Existing Customer - Upgrade': '既存顧客 - アップグレード',
-            'Existing Customer - Renewal': '既存顧客 - 更新',
-            'Existing Customer - Expansion': '既存顧客 - 拡大',
+            new_business: '新規ビジネス',
+            existing_upgrade: '既存顧客 - アップグレード',
+            existing_renewal: '既存顧客 - 更新',
+            existing_expansion: '既存顧客 - 拡大',
           },
         },
         forecast_category: {
           label: '売上予測カテゴリ',
           options: {
-            Pipeline: 'パイプライン', 'Best Case': '最良ケース',
-            Commit: 'コミット', Omitted: '除外', Closed: '完了',
+            pipeline: 'パイプライン', best_case: '最良ケース',
+            commit: 'コミット', omitted: '除外', closed: '完了',
           },
         },
         description: { label: '説明' },
@@ -418,8 +418,6 @@ export const jaJP: TranslationData = {
         is_active: { label: '有効' },
         is_taxable: { label: '課税対象' },
         product_manager: { label: 'プロダクトマネージャー' },
-        image_url: { label: '製品画像' },
-        datasheet_url: { label: 'データシートURL' },
         image: { label: '製品画像' },
         datasheet: { label: 'データシート' },
       },
@@ -539,6 +537,71 @@ export const jaJP: TranslationData = {
         campaign_timeline: { label: 'マーケティングタイムライン' },
       },
     },
+
+    crm_campaign_member: {
+      label: 'キャンペーンメンバー',
+      pluralLabel: 'キャンペーンメンバー',
+      description: 'キャンペーンの対象となったリード・連絡先とその反応状況',
+      fields: {
+        member_number: { label: 'メンバー番号' },
+        crm_campaign: { label: 'キャンペーン' },
+        crm_lead: { label: 'リード' },
+        crm_contact: { label: '連絡先' },
+        status: {
+          label: 'ステータス',
+          options: {
+            sent: '送信済', opened: '開封済', clicked: 'クリック済',
+            responded: '応答済', converted: '変換済', bounced: 'バウンス',
+            unsubscribed: '配信停止',
+          },
+        },
+        added_date: { label: '追加日時' },
+        first_opened_date: { label: '初回開封' },
+        first_clicked_date: { label: '初回クリック' },
+        response_date: { label: '応答日時' },
+        has_responded: { label: '応答済' },
+      },
+      _sections: {
+        basic: { label: '基本情報' },
+        response: { label: '反応トラッキング' },
+      },
+    },
+
+    crm_opportunity_line_item: {
+      label: '商談商品明細',
+      pluralLabel: '商談商品明細',
+      description: '商談配下の製品別価格明細行',
+      fields: {
+        crm_opportunity: { label: '商談' },
+        crm_product: { label: '製品' },
+        description: { label: '説明' },
+        quantity: { label: '数量' },
+        list_price: { label: '定価' },
+        unit_price: { label: '販売価格' },
+        discount: { label: '割引率（%）' },
+        total_price: { label: '合計' },
+        line_number: { label: '行番号' },
+      },
+    },
+
+    crm_quote_line_item: {
+      label: '見積明細',
+      pluralLabel: '見積明細',
+      description: '見積配下の製品別価格明細行',
+      fields: {
+        crm_quote: { label: '見積' },
+        crm_product: { label: '製品' },
+        description: { label: '説明' },
+        quantity: { label: '数量' },
+        list_price: { label: '定価' },
+        unit_price: { label: '販売価格' },
+        discount: { label: '割引率（%）' },
+        subtotal: { label: '小計' },
+        tax_rate: { label: '税率（%）' },
+        total_price: { label: '合計' },
+        line_number: { label: '行番号' },
+      },
+    },
   },
 
   globalActions: {
@@ -637,7 +700,7 @@ export const jaJP: TranslationData = {
         avg_deal_size: { title: '平均商談規模', description: '今四半期の成立済み商談の平均金額' },
         pipeline_by_stage: { title: 'フェーズ別パイプライン', description: '各営業フェーズのオープン商談金額' },
         monthly_revenue_trend: { title: '月次売上トレンド', description: '過去12か月の成立済み売上' },
-        opportunities_by_owner: { title: '担当者別商談', description: '営業担当ごとのオープンパイプライン金額' },
+        pipeline_by_forecast_category: { title: '予測カテゴリ別パイプライン', description: '売上予測カテゴリ別のオープンパイプライン金額' },
         lead_source_breakdown: { title: 'リードソース', description: 'パイプラインの流入元' },
         open_pipeline_by_owner: { title: '担当者別オープンパイプライン', description: '営業担当者ごとの進行中パイプライン金額・商談数・平均勝率' },
         pipeline_stage_by_source: { title: 'ステージ × リードソース', description: 'ステージとソース別の進行中商談金額のクロス集計' },
