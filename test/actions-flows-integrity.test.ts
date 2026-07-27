@@ -186,3 +186,62 @@ describe('lead conversion is discoverable', () => {
     expect(src).not.toMatch(/status\s*==\s*["']qualified["']/);
   });
 });
+
+describe('demo data is demo-ready', () => {
+  /**
+   * A seed can't name a user (lookups resolve against the target's externalId,
+   * which only works for objects in the app's own graph; `cel`os.user.id`` in a
+   * seed evaluates to nothing), and a hook on `sys_user` is rejected at build
+   * time. So ownership is claimed by a scheduled sweep — without which every
+   * "My …" view is empty and owner-addressed notify reaches nobody.
+   */
+  it('demo_bootstrap claims every owner-scoped object', () => {
+    const f = flow('demo_bootstrap');
+    expect(f, 'demo_bootstrap flow missing').toBeTruthy();
+    expect(f!.type).toBe('schedule');
+    // System context: a scheduled run has no trigger user, and these writes
+    // must bypass RLS to touch records nobody owns yet.
+    expect(f!.runAs).toBe('system');
+
+    const claimed = (f!.nodes ?? [])
+      .filter((n: AnyRec) => n.type === 'get_record' && n.config?.filter?.owner === null)
+      .map((n: AnyRec) => n.config.objectName);
+    // The objects behind My Leads / My Deals / My Cases and the task queue.
+    for (const objectName of ['crm_lead', 'crm_account', 'crm_opportunity', 'crm_case', 'crm_task']) {
+      expect(claimed, `demo_bootstrap never claims ${objectName}`).toContain(objectName);
+    }
+  });
+
+  it('every claim runs per-record inside a loop, not as a filtered mass update', () => {
+    // The update_record node calls data.update() WITHOUT options.multi, so a
+    // filter matching more than one row fails at runtime with "Update requires
+    // an ID or options.multi=true" — invisible to build and validate.
+    const f = flow('demo_bootstrap');
+    const loops = (f!.nodes ?? []).filter((n: AnyRec) => n.type === 'loop');
+    expect(loops.length).toBeGreaterThanOrEqual(5);
+    for (const loop of loops) {
+      const body = loop.config?.body?.nodes ?? [];
+      const update = body.find((n: AnyRec) => n.type === 'update_record');
+      expect(update, `loop ${loop.id} has no update_record`).toBeTruthy();
+      // Keyed by the iterator's id — the only shape update_record supports.
+      expect(String(update.config?.filter?.id ?? '')).toMatch(/^\{current_\w+\.id\}$/);
+    }
+  });
+
+  it('open demo deals close in the future and settled ones in the past', () => {
+    // The generator used to scatter close_date across ±180 days regardless of
+    // stage, so the pipeline was full of open deals that "closed" six months
+    // ago and won deals still to close — a book that reads as abandoned.
+    const seeds: AnyRec[] = (stack as any).data ?? (stack as any).seeds ?? [];
+    const opps = seeds.find((s) => s.object === 'crm_opportunity');
+    expect(opps, 'opportunity seed missing').toBeTruthy();
+    const demo = (opps!.records ?? []).filter((r: AnyRec) => String(r.name ?? '').startsWith('Demo Deal'));
+    expect(demo.length).toBeGreaterThan(0);
+    for (const r of demo) {
+      const expr = String(r.close_date?.source ?? r.close_date ?? '');
+      const closed = r.stage === 'closed_won' || r.stage === 'closed_lost';
+      expect(expr, `${r.name} (${r.stage}) has the wrong close-date direction`)
+        .toMatch(closed ? /daysAgo/ : /daysFromNow/);
+    }
+  });
+});
