@@ -212,6 +212,23 @@ pnpm validate && pnpm typecheck && pnpm build && pnpm test
 `yAxis[].field` to a **measure**, regardless of chart orientation (the renderer
 handles the visual flip). A swapped axis is a hard validation error.
 
+### Every PR carries a changeset
+
+A PR is not finished until it adds a `.changeset/*.md` entry. Run `pnpm changeset`
+(or hand-write the file) and commit it with the rest of the change — the
+`Changeset Check` workflow diffs against the PR base and fails when the PR adds
+none. Counting the files already in `.changeset/` proves nothing: the directory
+always holds a `README.md` plus whatever is awaiting the next release, so only
+what *this* PR adds counts.
+
+Write the summary for the release-notes reader — what changed and why it matters,
+not which files moved. A breaking change must state the FROM → TO migration in
+the body; that text ships to consumers as `CHANGELOG.md`.
+
+The lone exception is the **`skip-changeset`** label, for PRs that ship nothing to
+users (CI-only chores, repo housekeeping). Do not reach for it to get a red check
+green — write the changeset instead.
+
 ### Verifying UI in the browser
 
 The Console renders dashboards, charts, and views from metadata. When verifying a
