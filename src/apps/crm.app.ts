@@ -48,6 +48,40 @@ export const CrmApp = App.create({
         { id: 'nav_opportunity', type: 'object', objectName: 'crm_opportunity', label: 'Opportunities', icon: 'target' },
         { id: 'nav_pipeline',    type: 'object', objectName: 'crm_opportunity', viewName: 'pipeline_kanban', label: 'Pipeline', icon: 'columns-3' },
         { id: 'nav_quote',       type: 'object', objectName: 'crm_quote',       label: 'Quotes',        icon: 'receipt' },
+        // Contracts close the sales cycle: quote → signed agreement → renewal.
+        // The object, its views and its renewal automation all shipped, but
+        // there was no way to reach any of it from the app.
+        { id: 'nav_contract',    type: 'object', objectName: 'crm_contract',    label: 'Contracts',     icon: 'file-signature' },
+        { id: 'nav_sales_dashboard', type: 'dashboard', dashboardName: 'sales_dashboard', label: 'Sales Performance', icon: 'chart-line' },
+      ],
+    },
+
+    {
+      // Everything a rep owes someone. `crm_task` had views, seed data, a
+      // recurrence hook and two reminder flows, and no entry point — the only
+      // way to see a task was to open the record it hung off.
+      id: 'group_work',
+      type: 'group',
+      label: 'My Work',
+      icon: 'list-checks',
+      expanded: true,
+      children: [
+        { id: 'nav_my_tasks', type: 'object', objectName: 'crm_task', viewName: 'my_open_tasks', label: 'My Tasks', icon: 'circle-check' },
+        { id: 'nav_all_tasks', type: 'object', objectName: 'crm_task', label: 'All Tasks', icon: 'list' },
+      ],
+    },
+
+    {
+      // Campaigns drive lead_source and the campaign-member records that
+      // "Add to Campaign" writes — with no nav entry the marketing half of
+      // the data model was invisible.
+      id: 'group_marketing',
+      type: 'group',
+      label: 'Marketing',
+      icon: 'megaphone',
+      children: [
+        { id: 'nav_campaign', type: 'object', objectName: 'crm_campaign', label: 'Campaigns', icon: 'megaphone' },
+        { id: 'nav_product',  type: 'object', objectName: 'crm_product',  label: 'Products',  icon: 'package' },
       ],
     },
 
@@ -60,6 +94,7 @@ export const CrmApp = App.create({
       children: [
         { id: 'nav_case',      type: 'object', objectName: 'crm_case',              label: 'Cases',     icon: 'life-buoy' },
         { id: 'nav_knowledge', type: 'object', objectName: 'crm_knowledge_article', label: 'Knowledge', icon: 'book-open' },
+        { id: 'nav_service_dashboard', type: 'dashboard', dashboardName: 'service_dashboard', label: 'Service Overview', icon: 'gauge' },
       ],
     },
 
@@ -71,6 +106,8 @@ export const CrmApp = App.create({
       children: [
         // Trimmed to three high-signal reports. Full report catalogue still
         // ships as metadata; admins can pin more from the report picker.
+        { id: 'nav_crm_dashboard',            type: 'dashboard', dashboardName: 'crm_overview_dashboard', label: 'CRM Overview',      icon: 'layout-dashboard' },
+        { id: 'nav_forecast',                 type: 'object', objectName: 'crm_forecast',                 label: 'Forecasts',         icon: 'trending-up' },
         { id: 'nav_report_pipeline_coverage', type: 'report', reportName: 'pipeline_coverage_by_quarter', label: 'Pipeline Coverage', icon: 'columns-3' },
         { id: 'nav_report_lead_inflow',       type: 'report', reportName: 'lead_inflow_by_month_source',  label: 'Lead Inflow',       icon: 'trending-up' },
         { id: 'nav_report_sla',               type: 'report', reportName: 'sla_performance',              label: 'SLA Performance',   icon: 'timer' },
