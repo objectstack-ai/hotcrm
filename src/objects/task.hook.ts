@@ -30,6 +30,17 @@ const taskValidation: Hook = {
       input.reminder_sent = false;
     }
 
+    // Materialise the urgency ordinal so the to-do queue can sort by it —
+    // sorting on `priority` itself compares raw strings and inverts urgency.
+    const effPriority =
+      (typeof input.priority === 'string' && input.priority) ||
+      (typeof previous?.priority === 'string' && (previous.priority as string)) ||
+      undefined;
+    if (effPriority) {
+      const rank: Record<string, number> = { low: 1, normal: 2, high: 3, urgent: 4 };
+      input.priority_rank = rank[effPriority] ?? 2;
+    }
+
     if (input.status === 'completed' && previous?.status !== 'completed') {
       if (!input.completed_date) input.completed_date = new Date().toISOString();
       if (typeof input.progress_percent !== 'number') input.progress_percent = 100;

@@ -29,8 +29,11 @@ export const CaseViews = defineView({
       { field: 'is_escalated', width: 110, align: 'center' },
       { field: 'owner', width: 150 },
     ],
+    // Sort on the materialised ordinal, not the select itself: `priority desc`
+    // compares raw strings and lands medium > low > high > critical, burying
+    // every critical case at the bottom of the queue.
     sort: [
-      { field: 'priority', order: 'desc' },
+      { field: 'priority_rank', order: 'desc' },
       { field: 'sla_due_date', order: 'asc' },
     ],
     rowColor: {
@@ -106,7 +109,7 @@ export const CaseViews = defineView({
       data: { provider: 'object', object: 'crm_case' },
       columns: ['case_number', 'subject', 'crm_account', 'priority', 'sla_due_date', 'owner'],
       filter: [{ field: 'is_escalated', operator: 'equals', value: true }],
-      sort: [{ field: 'priority', order: 'desc' }],
+      sort: [{ field: 'priority_rank', order: 'desc' }],
     },
 
     /** SLA-at-risk: open, high/urgent priority cases needing attention */

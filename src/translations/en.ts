@@ -335,6 +335,7 @@ export const en: TranslationData = {
         loss_details: { label: 'Loss/Win Details' },
       },
       _views: {
+        open_opportunities: { label: 'Open Deals' },
         all_opportunities: { label: 'All Opportunities' },
         pipeline_kanban: { label: 'Sales Pipeline' },
         close_date_calendar: { label: 'Forecast Calendar' },

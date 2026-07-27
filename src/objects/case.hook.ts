@@ -37,6 +37,15 @@ const caseValidation: Hook = {
       (typeof input.priority === 'string' && input.priority) ||
       (typeof ctx.previous?.priority === 'string' && (ctx.previous.priority as string)) ||
       undefined;
+
+    // Materialise the urgency ordinal so queue views can sort by it. Sorting
+    // on `priority` itself compares raw strings and inverts urgency
+    // (medium > low > high > critical).
+    if (priority) {
+      const rank: Record<string, number> = { low: 1, medium: 2, high: 3, critical: 4 };
+      input.priority_rank = rank[priority] ?? 1;
+    }
+
     if (priority === 'critical' && !input.sla_due_date && !ctx.previous?.sla_due_date) {
       const due = new Date();
       due.setHours(due.getHours() + 4);

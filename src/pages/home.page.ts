@@ -178,7 +178,7 @@ export const SalesHomePage: Page = {
   ],
   
   isDefault: true,
-  assignedProfiles: ['sales_user', 'sales_manager'],
+  assignedProfiles: ['sales_rep', 'sales_manager'],
   
   aria: {
     ariaLabel: 'Sales Home Page',

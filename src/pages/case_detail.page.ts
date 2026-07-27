@@ -56,11 +56,15 @@ export const CaseDetailPage: Page = {
           id: 'case_highlights',
           label: 'Key Information',
           properties: {
+            // crm_case carries a single `sla_due_date` plus the derived
+            // `is_sla_violated` flag — the split response/resolution deadlines
+            // named here do not exist, so the agent's most time-critical fact
+            // was missing from the strip entirely.
             fields: [
               'status',
               'priority',
-              'sla_response_due',
-              'sla_resolution_due',
+              'sla_due_date',
+              'is_sla_violated',
               'owner',
               'crm_account',
             ],
@@ -75,7 +79,10 @@ export const CaseDetailPage: Page = {
             stages: [
               { value: 'new', label: 'New' },
               { value: 'in_progress', label: 'In Progress' },
-              { value: 'waiting_on_customer', label: 'Waiting on Customer' },
+              // The status option is `waiting_customer`; the longer spelling
+              // matched no option, so this stage never lit up and rendered
+              // untranslated next to its neighbours.
+              { value: 'waiting_customer', label: 'Waiting on Customer' },
               { value: 'escalated', label: 'Escalated' },
               { value: 'resolved', label: 'Resolved' },
               { value: 'closed', label: 'Closed' },
@@ -127,8 +134,10 @@ export const CaseDetailPage: Page = {
                             'priority',
                             'owner',
                             'is_escalated',
-                            'sla_response_due',
-                            'sla_resolution_due',
+                            'escalation_reason',
+                            'sla_due_date',
+                            'is_sla_violated',
+                            'resolution_time_hours',
                           ],
                         },
                         {
@@ -210,7 +219,7 @@ export const CaseDetailPage: Page = {
   ],
 
   isDefault: true,
-  assignedProfiles: ['service_agent', 'service_manager', 'system_administrator'],
+  assignedProfiles: ['service_agent', 'system_admin'],
 
   aria: {
     ariaLabel: 'Case Detail Page',

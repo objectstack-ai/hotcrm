@@ -640,6 +640,7 @@ export const zhCN: TranslationData = {
         loss_details: { label: '赢/丢单详情' },
       },
       _views: {
+        open_opportunities: { label: '进行中商机' },
         all_opportunities: { label: '全部商机' },
         pipeline_kanban: { label: '销售流水线' },
         close_date_calendar: { label: '预测日历' },

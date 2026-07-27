@@ -13,11 +13,21 @@ import { defineView } from '@objectstack/spec/ui';
  *   • gallery  — pinboard / executive review cards
  */
 export const OpportunityViews = defineView({
+  // The landing view is OPEN deals, not every deal ever recorded.
+  //
+  // Sorted by close_date ascending and unfiltered, "All Opportunities" opened
+  // on settled history: the first screen was 7 closed-won and 4 closed-lost
+  // records, and a rep had to scroll past months of finished business to reach
+  // anything they could still act on. The full unfiltered list is still one
+  // click away on the "All Opportunities" tab.
   list: {
     type: 'grid',
-    name: 'all_opportunities',
-    label: 'All Opportunities',
+    name: 'open_opportunities',
+    label: 'Open Deals',
     data: { provider: 'object', object: 'crm_opportunity' },
+    filter: [
+      { field: 'stage', operator: 'not_in', value: ['closed_won', 'closed_lost'] },
+    ],
     columns: [
       { field: 'name', width: 220, sortable: true, link: true },
       { field: 'crm_account', label: 'Account', width: 180 },
@@ -50,16 +60,43 @@ export const OpportunityViews = defineView({
       allowedVisualizations: ['grid', 'kanban', 'calendar', 'timeline', 'gallery'],
     },
     tabs: [
-      { name: 'all', label: 'All', view: 'all_opportunities', isDefault: true, pinned: true },
+      { name: 'open', label: 'Open Deals', icon: 'target', view: 'open_opportunities', isDefault: true, pinned: true },
+      { name: 'mine', label: 'My Deals', icon: 'user', view: 'my_open_deals' },
       { name: 'pipeline', label: 'Pipeline', icon: 'columns-3', view: 'pipeline_kanban' },
+      { name: 'all', label: 'All Opportunities', view: 'all_opportunities' },
       { name: 'crm_forecast', label: 'Forecast', icon: 'calendar', view: 'close_date_calendar' },
       { name: 'timeline', label: 'Timeline', icon: 'git-commit-horizontal', view: 'deal_timeline' },
       { name: 'cards', label: 'Cards', icon: 'gallery-thumbnails', view: 'deal_gallery' },
-      { name: 'mine', label: 'My Deals', icon: 'user', view: 'my_open_deals' },
     ],
   },
 
   listViews: {
+    /**
+     * All Opportunities — the unfiltered book, including closed business.
+     *
+     * Demoted from the landing view (see the note on `list` above) but kept
+     * whole: reporting, audits and win/loss reviews all need the closed rows,
+     * and a manager reaches this in one click.
+     */
+    all_opportunities: {
+      name: 'all_opportunities',
+      type: 'grid',
+      label: 'All Opportunities',
+      data: { provider: 'object', object: 'crm_opportunity' },
+      columns: [
+        { field: 'name', width: 220, sortable: true, link: true },
+        { field: 'crm_account', label: 'Account', width: 180 },
+        { field: 'stage', width: 140, sortable: true },
+        { field: 'amount', width: 140, align: 'right', sortable: true, summary: 'sum' },
+        { field: 'probability', width: 110, align: 'right' },
+        { field: 'expected_revenue', width: 160, align: 'right', summary: 'sum' },
+        { field: 'close_date', width: 140, sortable: true },
+        { field: 'owner', width: 150 },
+      ],
+      sort: [{ field: 'close_date', order: 'desc' }],
+      showRecordCount: true,
+    },
+
     /** Drag-and-drop sales pipeline */
     pipeline_kanban: {
       name: 'pipeline_kanban',
