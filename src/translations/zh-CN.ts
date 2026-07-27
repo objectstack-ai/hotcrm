@@ -63,6 +63,14 @@ export const zhCN: TranslationData = {
         enterprise_accounts: { label: '企业客户', description: '年营收最高的大客户' },
         my_accounts: { label: '我的客户', description: '由当前用户负责的客户' },
       },
+      _sections: {
+        basic: { label: '基本信息' },
+        financials: { label: '财务信息' },
+        contact_info: { label: '联系信息' },
+        ownership: { label: '归属与状态' },
+        branding: { label: '品牌' },
+        system: { label: '系统' },
+      },
     },
 
     crm_contact: {
@@ -82,9 +90,9 @@ export const zhCN: TranslationData = {
         department: {
           label: '部门',
           options: {
-            Executive: '管理层', Sales: '销售部', Marketing: '市场部',
-            Engineering: '工程部', Support: '支持部', Finance: '财务部',
-            HR: '人力资源', Operations: '运营部',
+            executive: '管理层', sales: '销售部', marketing: '市场部',
+            engineering: '工程部', support: '支持部', finance: '财务部',
+            hr: '人力资源', operations: '运营部',
           },
         },
         owner: { label: '联系人负责人' },
@@ -121,7 +129,19 @@ export const zhCN: TranslationData = {
         },
         send_email: {
           label: '发送邮件',
+          params: {
+            subject: { label: '主题' },
+            body: { label: '正文' },
+          },
         },
+      },
+      _sections: {
+        identity: { label: '身份信息' },
+        account_info: { label: '客户与职务' },
+        contact_info: { label: '联系方式' },
+        mailing_address: { label: '邮寄地址' },
+        additional: { label: '附加信息' },
+        preferences: { label: '沟通偏好' },
       },
     },
 
@@ -165,6 +185,12 @@ export const zhCN: TranslationData = {
         my_drafts: { label: '我的草稿' },
         stale_articles: { label: '过期 (>180 天)' },
       },
+      _sections: {
+        basic: { label: '文章信息' },
+        content: { label: '内容' },
+        taxonomy: { label: '分类' },
+        metrics: { label: '互动数据' },
+      },
     },
 
     crm_forecast: {
@@ -196,6 +222,11 @@ export const zhCN: TranslationData = {
         all_forecasts: { label: '全部预测' },
         this_quarter_forecasts: { label: '本季度' },
         my_forecast: { label: '我的预测' },
+      },
+      _sections: {
+        basic: { label: '快照' },
+        amounts: { label: '金额' },
+        meta: { label: '来源' },
       },
     },
 
@@ -264,11 +295,21 @@ export const zhCN: TranslationData = {
         high_priority: { label: '高优先级' },
       },
       _sections: {
+        // Detail-page `record:details` section names (lead_detail.page.ts)
         info: { label: '线索信息' },
         crm_contact: { label: '联系方式' },
         detail: { label: '线索详情' },
         address: { label: '地址' },
         description: { label: '描述' },
+        // Object-level section keys (lead.object.ts) used by record forms
+        identity: { label: '身份信息' },
+        company_info: { label: '公司信息' },
+        contact_info: { label: '联系方式' },
+        qualification: { label: '资格评估' },
+        assignment: { label: '分配' },
+        additional: { label: '附加信息' },
+        preferences: { label: '沟通偏好' },
+        conversion: { label: '转化' },
       },
       _actions: {
         convert_lead: {
@@ -321,6 +362,13 @@ export const zhCN: TranslationData = {
         quote_pipeline: { label: '报价流水线' },
         quote_calendar: { label: '报价日历' },
       },
+      _sections: {
+        basic: { label: '报价信息' },
+        pricing: { label: '价格' },
+        terms: { label: '条款与有效期' },
+        address: { label: '地址' },
+        system: { label: '系统' },
+      },
     },
 
     crm_contract: {
@@ -361,6 +409,14 @@ export const zhCN: TranslationData = {
         renewal_calendar: { label: '续约日历' },
         contract_gantt: { label: '合同条款' },
         contract_timeline: { label: '合同时间线' },
+      },
+      _sections: {
+        basic: { label: '合同信息' },
+        parties: { label: '签约方' },
+        terms: { label: '条款与日期' },
+        value: { label: '合同金额' },
+        status: { label: '状态与审批' },
+        renewal: { label: '续约' },
       },
     },
 
@@ -420,12 +476,31 @@ export const zhCN: TranslationData = {
           label: '升级工单',
           confirmText: '此操作会将工单升级到升级处理团队，是否继续？',
           successMessage: '工单升级成功！',
+          params: {
+            reason: { label: '升级原因' },
+          },
         },
         close_case: {
           label: '关闭工单',
           confirmText: '确定要关闭此工单吗？',
           successMessage: '工单已成功关闭！',
+          params: {
+            resolution: { label: '解决方案' },
+          },
         },
+      },
+      _sections: {
+        // Detail-page `record:details` section names (case_detail.page.ts)
+        info: { label: '工单信息' },
+        status: { label: '状态与 SLA' },
+        description: { label: '描述' },
+        // Object-level section keys (case.object.ts) used by record forms
+        basic: { label: '工单信息' },
+        origin: { label: '来源与路由' },
+        sla: { label: 'SLA 与优先级' },
+        resolution: { label: '解决方案' },
+        escalation: { label: '升级' },
+        system: { label: '系统' },
       },
     },
 
@@ -448,8 +523,6 @@ export const zhCN: TranslationData = {
           options: { low: '低', normal: '普通', high: '高', urgent: '紧急' },
         },
         due_date: { label: '截止日期' },
-        assigned_to: { label: '负责人' },
-        related_to: { label: '关联对象' },
         type: { label: '任务类型' },
         reminder_date: { label: '提醒时间' },
         completed_date: { label: '完成日期' },
@@ -490,23 +563,26 @@ export const zhCN: TranslationData = {
         type: {
           label: '类型',
           options: {
-            email: '邮件营销', webinar: '线上研讨会', event: '线下活动',
-            advertising: '广告', 'direct-mail': '直邮', telemarketing: '电话营销',
+            email: '邮件营销', webinar: '线上研讨会', trade_show: '展会',
+            conference: '行业会议', direct_mail: '直邮', social_media: '社交媒体',
+            content: '内容营销', partner: '伙伴联合营销',
           },
         },
         status: {
           label: '状态',
           options: {
-            planned: '已计划', in_progress: '进行中',
+            planning: '规划中', in_progress: '进行中',
             completed: '已完成', aborted: '已中止',
           },
         },
         start_date: { label: '开始日期' },
         end_date: { label: '结束日期' },
-        budget: { label: '预算' },
         expected_revenue: { label: '预期收入' },
         description: { label: '描述' },
-        channel: { label: '主要渠道' },
+        channel: {
+          label: '主要渠道',
+          options: { digital: '数字渠道', social: '社交媒体', email: '邮件', events: '线下活动', partner: '合作伙伴' },
+        },
         budgeted_cost: { label: '预算成本' },
         actual_cost: { label: '实际成本' },
         actual_revenue: { label: '实际收入' },
@@ -543,10 +619,9 @@ export const zhCN: TranslationData = {
           label: '产品类别',
           options: {
             software: '软件', hardware: '硬件', service: '服务',
-            subscription: '订阅', training: '培训',
+            subscription: '订阅', support: '支持服务',
           },
         },
-        price: { label: '单价' },
         cost: { label: '成本' },
         is_active: { label: '是否启用' },
         description: { label: '描述' },
@@ -557,8 +632,6 @@ export const zhCN: TranslationData = {
         reorder_point: { label: '补货阈值' },
         is_taxable: { label: '应税' },
         product_manager: { label: '产品经理' },
-        image_url: { label: '产品图片' },
-        datasheet_url: { label: '规格书链接' },
         image: { label: '产品图片' },
         datasheet: { label: '规格书' },
       },
@@ -566,6 +639,11 @@ export const zhCN: TranslationData = {
         all_products: { label: '全部产品' },
         product_catalog: { label: '产品目录' },
         low_stock: { label: '低库存' },
+      },
+      _sections: {
+        basic: { label: '产品信息' },
+        pricing: { label: '价格与计费' },
+        metadata: { label: '资源' },
       },
     },
 
@@ -593,17 +671,17 @@ export const zhCN: TranslationData = {
         type: {
           label: '类型',
           options: {
-            'New Business': '新业务',
-            'Existing Customer - Upgrade': '老客户升级',
-            'Existing Customer - Renewal': '老客户续约',
-            'Existing Customer - Expansion': '老客户拓展',
+            new_business: '新业务',
+            existing_upgrade: '老客户升级',
+            existing_renewal: '老客户续约',
+            existing_expansion: '老客户拓展',
           },
         },
         forecast_category: {
           label: '预测类别',
           options: {
-            Pipeline: '管道', 'Best Case': '最佳情况',
-            Commit: '承诺', Omitted: '已排除', Closed: '已关闭',
+            pipeline: '管道', best_case: '最佳情况',
+            commit: '承诺', omitted: '已排除', closed: '已关闭',
           },
         },
         description: { label: '描述' },
@@ -651,9 +729,17 @@ export const zhCN: TranslationData = {
         my_open_deals: { label: '我的进行中商机' },
       },
       _sections: {
+        // Detail-page `record:details` section names (opportunity_detail.page.ts)
         info: { label: '商机信息' },
         crm_forecast: { label: '阶段与预测' },
         description: { label: '描述' },
+        // Object-level section keys (opportunity.object.ts) used by record forms
+        basic: { label: '基本信息' },
+        financials: { label: '财务信息' },
+        sales_process: { label: '销售流程' },
+        classification: { label: '分类' },
+        competition: { label: '竞争与营销' },
+        notes: { label: '备注与下一步' },
       },
       _actions: {
         clone_opportunity: {
@@ -663,7 +749,82 @@ export const zhCN: TranslationData = {
         mass_update_stage: {
           label: '更新阶段',
           successMessage: '商机阶段已更新！',
+          params: {
+            stage: {
+              label: '新阶段',
+              options: {
+                prospecting: '寻找客户', qualification: '资格审查',
+                needs_analysis: '需求分析', proposal: '提案',
+                negotiation: '谈判', closed_won: '成交', closed_lost: '失败',
+              },
+            },
+          },
         },
+      },
+    },
+
+    crm_campaign_member: {
+      label: '活动成员',
+      pluralLabel: '活动成员',
+      description: '营销活动所触达的线索与联系人及其响应状态',
+      fields: {
+        member_number: { label: '成员编号' },
+        crm_campaign: { label: '营销活动' },
+        crm_lead: { label: '线索' },
+        crm_contact: { label: '联系人' },
+        status: {
+          label: '状态',
+          options: {
+            sent: '已发送', opened: '已打开', clicked: '已点击',
+            responded: '已响应', converted: '已转化', bounced: '已退回',
+            unsubscribed: '已退订',
+          },
+        },
+        added_date: { label: '加入时间' },
+        first_opened_date: { label: '首次打开' },
+        first_clicked_date: { label: '首次点击' },
+        response_date: { label: '响应时间' },
+        has_responded: { label: '已响应' },
+      },
+      _sections: {
+        basic: { label: '基本信息' },
+        response: { label: '响应跟踪' },
+      },
+    },
+
+    crm_opportunity_line_item: {
+      label: '商机产品明细',
+      pluralLabel: '商机产品明细',
+      description: '商机下按产品拆分的报价行',
+      fields: {
+        crm_opportunity: { label: '关联商机' },
+        crm_product: { label: '产品' },
+        description: { label: '描述' },
+        quantity: { label: '数量' },
+        list_price: { label: '标价' },
+        unit_price: { label: '销售单价' },
+        discount: { label: '折扣（%）' },
+        total_price: { label: '总计' },
+        line_number: { label: '行号' },
+      },
+    },
+
+    crm_quote_line_item: {
+      label: '报价单明细',
+      pluralLabel: '报价单明细',
+      description: '报价单下按产品拆分的报价行',
+      fields: {
+        crm_quote: { label: '关联报价单' },
+        crm_product: { label: '产品' },
+        description: { label: '描述' },
+        quantity: { label: '数量' },
+        list_price: { label: '标价' },
+        unit_price: { label: '销售单价' },
+        discount: { label: '折扣（%）' },
+        subtotal: { label: '小计' },
+        tax_rate: { label: '税率（%）' },
+        total_price: { label: '总计' },
+        line_number: { label: '行号' },
       },
     },
   },
@@ -672,6 +833,21 @@ export const zhCN: TranslationData = {
     log_call: {
       label: '记录通话',
       successMessage: '通话记录成功！',
+      params: {
+        subject: { label: '通话主题' },
+        duration: { label: '时长（分钟）' },
+        notes: { label: '通话记录' },
+      },
+    },
+    log_meeting: {
+      label: '记录会议',
+      successMessage: '会议记录成功！',
+      params: {
+        subject: { label: '会议主题' },
+        duration: { label: '时长（分钟）' },
+        attendees: { label: '参会人' },
+        notes: { label: '会议纪要' },
+      },
     },
     export_csv: {
       label: '导出 CSV',
@@ -801,7 +977,7 @@ export const zhCN: TranslationData = {
         avg_deal_size: { title: '平均订单金额', description: '本季度已成交商机的平均金额' },
         pipeline_by_stage: { title: '阶段管道分布', description: '按阶段统计的进行中商机金额' },
         monthly_revenue_trend: { title: '月度收入趋势', description: '过去 12 个月的已成交收入' },
-        opportunities_by_owner: { title: '负责人商机分布', description: '各销售负责的进行中商机' },
+        pipeline_by_forecast_category: { title: '预测类别管道分布', description: '按预测类别统计的进行中管道金额' },
         lead_source_breakdown: { title: '线索来源分布', description: '按来源统计的线索数量' },
         open_pipeline_by_owner: { title: '按负责人统计进行中管道', description: '各销售负责人的进行中管道金额、商机数与平均赢单概率' },
         pipeline_stage_by_source: { title: '阶段 × 线索来源', description: '按阶段和来源交叉统计进行中商机金额' },

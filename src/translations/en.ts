@@ -81,9 +81,9 @@ export const en: TranslationData = {
         department: {
           label: 'Department',
           options: {
-            Executive: 'Executive', Sales: 'Sales', Marketing: 'Marketing',
-            Engineering: 'Engineering', Support: 'Support', Finance: 'Finance',
-            HR: 'Human Resources', Operations: 'Operations',
+            executive: 'Executive', sales: 'Sales', marketing: 'Marketing',
+            engineering: 'Engineering', support: 'Support', finance: 'Finance',
+            hr: 'Human Resources', operations: 'Operations',
           },
         },
         owner: { label: 'Contact Owner' },
@@ -286,17 +286,17 @@ export const en: TranslationData = {
         type: {
           label: 'Type',
           options: {
-            'New Business': 'New Business',
-            'Existing Customer - Upgrade': 'Existing Customer - Upgrade',
-            'Existing Customer - Renewal': 'Existing Customer - Renewal',
-            'Existing Customer - Expansion': 'Existing Customer - Expansion',
+            new_business: 'New Business',
+            existing_upgrade: 'Existing Customer - Upgrade',
+            existing_renewal: 'Existing Customer - Renewal',
+            existing_expansion: 'Existing Customer - Expansion',
           },
         },
         forecast_category: {
           label: 'Forecast Category',
           options: {
-            Pipeline: 'Pipeline', 'Best Case': 'Best Case',
-            Commit: 'Commit', Omitted: 'Omitted', Closed: 'Closed',
+            pipeline: 'Pipeline', best_case: 'Best Case',
+            commit: 'Commit', omitted: 'Omitted', closed: 'Closed',
           },
         },
         description: { label: 'Description' },
@@ -460,8 +460,6 @@ export const en: TranslationData = {
         is_active: { label: 'Active' },
         is_taxable: { label: 'Taxable' },
         product_manager: { label: 'Product Manager' },
-        image_url: { label: 'Product Image' },
-        datasheet_url: { label: 'Datasheet URL' },
         image: { label: 'Product Image' },
         datasheet: { label: 'Datasheet' },
       },
@@ -581,6 +579,71 @@ export const en: TranslationData = {
         campaign_timeline: { label: 'Marketing Timeline' },
       },
     },
+
+    crm_campaign_member: {
+      label: 'Campaign Member',
+      pluralLabel: 'Campaign Members',
+      description: 'Leads and contacts touched by a campaign, with response status',
+      fields: {
+        member_number: { label: 'Member Number' },
+        crm_campaign: { label: 'Campaign' },
+        crm_lead: { label: 'Lead' },
+        crm_contact: { label: 'Contact' },
+        status: {
+          label: 'Status',
+          options: {
+            sent: 'Sent', opened: 'Opened', clicked: 'Clicked',
+            responded: 'Responded', converted: 'Converted', bounced: 'Bounced',
+            unsubscribed: 'Unsubscribed',
+          },
+        },
+        added_date: { label: 'Added Date' },
+        first_opened_date: { label: 'First Opened' },
+        first_clicked_date: { label: 'First Clicked' },
+        response_date: { label: 'Response Date' },
+        has_responded: { label: 'Has Responded' },
+      },
+      _sections: {
+        basic: { label: 'Basic Information' },
+        response: { label: 'Response Tracking' },
+      },
+    },
+
+    crm_opportunity_line_item: {
+      label: 'Opportunity Line Item',
+      pluralLabel: 'Opportunity Line Items',
+      description: 'Per-product pricing lines under an opportunity',
+      fields: {
+        crm_opportunity: { label: 'Opportunity' },
+        crm_product: { label: 'Product' },
+        description: { label: 'Description' },
+        quantity: { label: 'Quantity' },
+        list_price: { label: 'List Price' },
+        unit_price: { label: 'Sales Price' },
+        discount: { label: 'Discount %' },
+        total_price: { label: 'Total' },
+        line_number: { label: 'Line #' },
+      },
+    },
+
+    crm_quote_line_item: {
+      label: 'Quote Line Item',
+      pluralLabel: 'Quote Line Items',
+      description: 'Per-product pricing lines under a quote',
+      fields: {
+        crm_quote: { label: 'Quote' },
+        crm_product: { label: 'Product' },
+        description: { label: 'Description' },
+        quantity: { label: 'Quantity' },
+        list_price: { label: 'List Price' },
+        unit_price: { label: 'Sales Price' },
+        discount: { label: 'Discount %' },
+        subtotal: { label: 'Subtotal' },
+        tax_rate: { label: 'Tax Rate %' },
+        total_price: { label: 'Total' },
+        line_number: { label: 'Line #' },
+      },
+    },
   },
 
   globalActions: {
@@ -679,7 +742,7 @@ export const en: TranslationData = {
         avg_deal_size: { title: 'Avg Deal Size', description: 'Average value of closed-won deals this quarter' },
         pipeline_by_stage: { title: 'Pipeline by Stage', description: 'Open opportunity value at each sales stage' },
         monthly_revenue_trend: { title: 'Monthly Revenue Trend', description: 'Closed-won revenue, last 12 months' },
-        opportunities_by_owner: { title: 'Opportunities by Owner', description: 'Open pipeline value per sales rep' },
+        pipeline_by_forecast_category: { title: 'Pipeline by Forecast Category', description: 'Open pipeline grouped by sales forecast category' },
         lead_source_breakdown: { title: 'Lead Source', description: 'Where our pipeline is coming from' },
         open_pipeline_by_owner: { title: 'Open Pipeline by Owner', description: 'In-flight pipeline value, deal count and avg win probability per rep' },
         pipeline_stage_by_source: { title: 'Pipeline by Stage × Lead Source', description: 'Cross-tab of open opportunity amount by stage and source' },
