@@ -165,9 +165,12 @@ export const OpportunityViews = defineView({
       label: 'My Open Deals',
       data: { provider: 'object', object: 'crm_opportunity' },
       columns: ['name', 'crm_account', 'stage', 'amount', 'close_date'],
+      // "Open" has to exclude BOTH closed stages. Excluding only closed_won
+      // meant a rep's own queue opened on their lost deals, sorted to the top
+      // by close_date — the least actionable rows in the system.
       filter: [
         { field: 'owner', operator: 'equals', value: '{current_user_id}' },
-        { field: 'stage', operator: 'not_equals', value: 'closed_won' },
+        { field: 'stage', operator: 'not_in', value: ['closed_won', 'closed_lost'] },
       ],
       sort: [{ field: 'close_date', order: 'asc' }],
     },

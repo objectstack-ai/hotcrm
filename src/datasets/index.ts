@@ -7,3 +7,4 @@ export { ProductDataset } from './product.dataset';
 export { AccountDataset } from './account.dataset';
 export { ContactDataset } from './contact.dataset';
 export { LeadDataset } from './lead.dataset';
+export { TaskDataset } from './task.dataset';
