@@ -259,18 +259,38 @@ const leads = defineSeed(Lead, {
       { fn: 'Lena',    ln: 'Fischer',  co: 'Granite Insurance',    src: 'partner',     ind: 'finance', age: 145 },
       { fn: 'Kai',     ln: 'Watanabe', co: 'Coral Reef Hotels',    src: 'web',         ind: 'hospitality',       age: 162 },
       { fn: 'Mira',    ln: 'Costa',    co: 'Atlas Construction',   src: 'cold_call',   ind: 'other', age: 175 },
-    ].map((l, i) => ({
-      first_name: l.fn,
-      last_name: l.ln,
-      company: l.co,
-      email: `${l.fn.toLowerCase()}.${l.ln.toLowerCase()}@${l.co.toLowerCase().replace(/\s+/g, '')}.example.com`,
-      phone: `+1-555-01${String(i).padStart(2, '0')}-${String(1000 + i * 7)}`,
-      status: (['new', 'contacted', 'qualified', 'unqualified'] as const)[i % 4],
-      lead_source: l.src,
-      industry: l.ind,
-      rating: 1 + ((i * 7) % 5),
-      last_contacted_date: celDaysAgo(l.age),
-    })),
+    ].map((l, i) => {
+      const domain = `${l.co.toLowerCase().replace(/\s+/g, '')}.example.com`;
+      const status = (['new', 'contacted', 'qualified', 'unqualified'] as const)[i % 4];
+      return {
+        first_name: l.fn,
+        last_name: l.ln,
+        company: l.co,
+        email: `${l.fn.toLowerCase()}.${l.ln.toLowerCase()}@${domain}`,
+        phone: `+1-555-01${String(i).padStart(2, '0')}-${String(1000 + i * 7)}`,
+        status,
+        lead_source: l.src,
+        industry: l.ind,
+        rating: 1 + ((i * 7) % 5),
+        last_contacted_date: celDaysAgo(l.age),
+        // The qualification fields were left blank on every generated lead, so
+        // the detail page's Contact / Lead Detail / Description sections had
+        // nothing to render (they also drop whatever the highlights strip
+        // already shows, so all four collapsed to nothing) and the demo read
+        // like a half-finished import.
+        title: (['VP Operations', 'Head of IT', 'Director of Sales', 'COO', 'Procurement Lead'] as const)[i % 5],
+        mobile: `+1-555-02${String(i).padStart(2, '0')}-${String(2000 + i * 3)}`,
+        website: `https://${domain}`,
+        annual_revenue: 2_000_000 + ((i * 3_700_000) % 90_000_000),
+        number_of_employees: 25 + ((i * 137) % 4_800),
+        description:
+          `Inbound via ${l.src.replace(/_/g, ' ')}. Evaluating a CRM to replace spreadsheets ` +
+          `across their ${l.ind.replace(/_/g, ' ')} operation.`,
+        ...(status === 'unqualified'
+          ? { notes: 'No budget approved for this fiscal year — revisit next planning cycle.' }
+          : {}),
+      };
+    }),
   ]
 });
 
@@ -430,24 +450,30 @@ analytics seats for the Ops org, (3) priority support SLA.`,
       const sources = ['web', 'referral', 'partner', 'event', 'cold_call', 'advertisement'] as const;
       const types = ['new_business', 'existing_upgrade', 'existing_renewal'] as const;
       const accountsList = ['Acme Corporation', 'Globex Industries', 'Wayne Enterprises', 'Initech Solutions', 'Stark Medical'] as const;
+      const isClosed = (s: string) => s === 'closed_won' || s === 'closed_lost';
       const out: Record<string, unknown>[] = [];
       for (let i = 0; i < 50; i++) {
         const stage = stages[i % stages.length];
-        // Spread close_date across +/- 180 days for ~6 months of buckets.
-        const dayOffset = -180 + Math.floor((i * 367) % 360);
+        // Close date follows the stage instead of being scattered blindly
+        // across ±180 days. The old spread produced open deals whose close
+        // date was six months in the PAST — a pipeline that looks abandoned —
+        // and won deals still to close in the future. Open deals land 7–180
+        // days out; settled ones 5–180 days back.
+        const spread = Math.floor((i * 367) % 174);
+        const close_date = isClosed(stage)
+          ? celDaysAgo(5 + spread)
+          : celDaysFromNow(7 + spread);
         out.push({
           name: `Demo Deal ${String(i + 1).padStart(2, '0')}`,
           crm_account: accountsList[i % accountsList.length],
           amount: 20000 + ((i * 17_393) % 480_000),
           stage,
           probability: stage === 'closed_won' ? 100 : stage === 'closed_lost' ? 0 : 10 + (i * 13) % 80,
-          close_date: dayOffset >= 0 ? celDaysFromNow(dayOffset) : celDaysAgo(-dayOffset),
+          close_date,
           type: types[i % types.length],
           forecast_category: forecastByStage[stage],
           lead_source: sources[i % sources.length],
-          ...(stage !== 'closed_won' && stage !== 'closed_lost'
-            ? { days_in_stage: 3 + (i * 11) % 60 }
-            : {}),
+          ...(isClosed(stage) ? {} : { days_in_stage: 3 + (i * 11) % 60 }),
         });
       }
       return out;
@@ -1136,6 +1162,21 @@ connector instead. Retained for customers still on the legacy stack.`,
     },
   ]
 });
+
+/**
+ * Ownership and CRM positions are NOT seeded here — they can't be.
+ *
+ * A seed can't name a user. Lookup values are resolved against the target's
+ * externalId and that only works for objects in the app's own graph, so
+ * `owner: 'Dev Admin'` stores the literal string rather than an id (verified:
+ * a `sys_user_position` row seeded that way is unmatchable by the real user
+ * id), and `cel\`os.user.id\`` inside a seed evaluates to nothing. The id does
+ * not exist until first boot.
+ *
+ * `src/objects/demo_bootstrap.hook.ts` does it at the only moment it can: when
+ * the first user is created, it grants the CRM positions and claims every
+ * ownerless seeded record.
+ */
 
 /** All CRM seed datasets */
 export const CrmSeedData = [
