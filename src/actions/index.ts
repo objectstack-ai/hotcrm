@@ -14,5 +14,5 @@
 export { EscalateCaseAction, CloseCaseAction } from './case.actions';
 export { MarkPrimaryContactAction, SendEmailAction } from './contact.actions';
 export { LogCallAction, LogMeetingAction, ExportToCsvAction } from './global.actions';
-export { ConvertLeadAction, CreateCampaignAction } from './lead.actions';
+export { ConvertLeadAction, CreateCampaignAction, ScheduleFollowUpAction } from './lead.actions';
 export { CloneOpportunityAction, MassUpdateStageAction, GenerateQuoteAction } from './opportunity.actions';

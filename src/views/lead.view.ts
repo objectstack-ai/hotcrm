@@ -29,17 +29,15 @@ export const LeadViews = defineView({
     // Column Configuration with Enhanced Features
     columns: [
       {
-        field: 'first_name',
-        label: 'First Name',
-        width: 150,
+        // One name column, not two. Splitting first/last spent 300px to say
+        // what "Alice Martinez" says in one, and hung the record link off the
+        // given name alone — so opening a person meant aiming at their first
+        // name specifically.
+        field: 'full_name',
+        label: 'Name',
+        width: 200,
         sortable: true,
         link: true, // Primary navigation link
-      },
-      {
-        field: 'last_name',
-        label: 'Last Name',
-        width: 150,
-        sortable: true,
       },
       {
         field: 'company',
@@ -218,6 +216,80 @@ export const LeadViews = defineView({
    * Additional Named List Views
    */
   listViews: {
+    // Declaration order IS tab order in the console. These three working
+    // queues used to sit AFTER the kanban / calendar / gallery views, which
+    // pushed all of them into the "3 more" overflow menu — so the one screen
+    // a rep opens this list for was the one they had to go hunting for, while
+    // three presentation modes held the front row.
+
+    /**
+     * My Leads — a rep's own queue, hottest first.
+     */
+    my_leads: {
+      name: 'my_leads',
+      type: 'grid',
+      label: 'My Leads',
+      data: {
+        provider: 'object',
+        object: 'crm_lead',
+      },
+      columns: ['full_name', 'company', 'email', 'status', 'rating'],
+      filter: [
+        { field: 'owner', operator: 'equals', value: '{current_user_id}' },
+      ],
+      sort: [
+        { field: 'rating', order: 'desc' },
+        { field: 'created_at', order: 'desc' }
+      ],
+    },
+
+    /**
+     * Hot Leads — Ready for immediate follow-up
+     * (Set by the auto_flag_hot_lead workflow)
+     */
+    hot_leads: {
+      name: 'hot_leads',
+      type: 'grid',
+      label: '🔥 Hot Leads',
+      data: { provider: 'object', object: 'crm_lead' },
+      columns: ['full_name', 'company', 'phone', 'email', 'rating', 'next_followup_date', 'owner'],
+      // The HOTTEST actionable subset (rating >= 4.5) — a tighter cut than the
+      // "High Priority" view (rating >= 4) so the two are not duplicates. Hot
+      // Leads is what a rep works first; sort by next-follow-up so the most
+      // time-sensitive surface on top. (Operator-only filters; the view runtime
+      // does not resolve date template strings.)
+      filter: [
+        { field: 'rating', operator: 'greater_than_or_equal', value: 4.5 },
+        { field: 'status', operator: 'in', value: ['new', 'contacted'] },
+      ],
+      sort: [{ field: 'next_followup_date', order: 'asc' }],
+    },
+
+    /**
+     * High Priority Leads
+     */
+    high_priority: {
+      name: 'high_priority',
+      type: 'grid',
+      label: 'High Priority',
+      data: {
+        provider: 'object',
+        object: 'crm_lead',
+      },
+      columns: ['full_name', 'company', 'email', 'status', 'rating', 'lead_source'],
+      filter: [
+        { field: 'rating', operator: 'greater_than_or_equal', value: 4 },
+        { field: 'status', operator: 'in', value: ['new', 'contacted'] },
+      ],
+      rowColor: {
+        field: 'rating',
+        colors: {
+          '5': '#00AA00',
+          '4': '#FFA500',
+        },
+      },
+    },
+
     /**
      * Kanban Board View
      */
@@ -279,72 +351,6 @@ export const LeadViews = defineView({
       },
     },
     
-    /**
-     * My Leads - Filtered View
-     */
-    my_leads: {
-      name: 'my_leads',
-      type: 'grid',
-      label: 'My Leads',
-      data: {
-        provider: 'object',
-        object: 'crm_lead',
-      },
-      columns: ['first_name', 'last_name', 'company', 'email', 'status', 'rating'],
-      filter: [
-        { field: 'owner', operator: 'equals', value: '{current_user_id}' },
-      ],
-      sort: [
-        { field: 'rating', order: 'desc' },
-        { field: 'created_at', order: 'desc' }
-      ],
-    },
-    
-    /**
-     * High Priority Leads
-     */
-    high_priority: {
-      name: 'high_priority',
-      type: 'grid',
-      label: 'High Priority',
-      data: {
-        provider: 'object',
-        object: 'crm_lead',
-      },
-      columns: ['first_name', 'last_name', 'company', 'email', 'status', 'rating', 'lead_source'],
-      filter: [
-        { field: 'rating', operator: 'greater_than_or_equal', value: 4 },
-        { field: 'status', operator: 'in', value: ['new', 'contacted'] },
-      ],
-      rowColor: {
-        field: 'rating',
-        colors: {
-          '5': '#00AA00',
-          '4': '#FFA500',
-        },
-      },
-    },
-    /**
-     * Hot Leads — Ready for immediate follow-up
-     * (Set by the auto_flag_hot_lead workflow)
-     */
-    hot_leads: {
-      name: 'hot_leads',
-      type: 'grid',
-      label: '🔥 Hot Leads',
-      data: { provider: 'object', object: 'crm_lead' },
-      columns: ['first_name', 'last_name', 'company', 'phone', 'email', 'rating', 'next_followup_date', 'owner'],
-      // The HOTTEST actionable subset (rating >= 4.5) — a tighter cut than the
-      // "High Priority" view (rating >= 4) so the two are not duplicates. Hot
-      // Leads is what a rep works first; sort by next-follow-up so the most
-      // time-sensitive surface on top. (Operator-only filters; the view runtime
-      // does not resolve date template strings.)
-      filter: [
-        { field: 'rating', operator: 'greater_than_or_equal', value: 4.5 },
-        { field: 'status', operator: 'in', value: ['new', 'contacted'] },
-      ],
-      sort: [{ field: 'next_followup_date', order: 'asc' }],
-    },
   },
 
   /**

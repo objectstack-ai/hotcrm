@@ -8,6 +8,7 @@ import type { Flow } from '@objectstack/spec/automation';
 export { CampaignEnrollmentFlow } from './campaign-enrollment.flow';
 export { CaseEscalationFlow, CaseEscalationOnCreateFlow } from './case-escalation.flow';
 export { LeadConversionFlow } from './lead-conversion.flow';
+export { ScheduleFollowUpFlow } from './schedule-followup.flow';
 export { OpportunityApprovalFlow } from './opportunity-approval.flow';
 export { QuoteGenerationFlow } from './quote-generation.flow';
 // Time/event-driven automation (scheduled + wait-node + record-change)
@@ -28,6 +29,7 @@ export { TaskDueReminderFlow } from './task-due-reminder.flow';
 import { CampaignEnrollmentFlow } from './campaign-enrollment.flow';
 import { CaseEscalationFlow, CaseEscalationOnCreateFlow } from './case-escalation.flow';
 import { LeadConversionFlow } from './lead-conversion.flow';
+import { ScheduleFollowUpFlow } from './schedule-followup.flow';
 import { OpportunityApprovalFlow } from './opportunity-approval.flow';
 import { QuoteGenerationFlow } from './quote-generation.flow';
 import { ContractRenewalFlow } from './contract-renewal.flow';
@@ -50,6 +52,7 @@ export const allFlows: Flow[] = [
   CaseEscalationFlow,
   CaseEscalationOnCreateFlow,
   LeadConversionFlow,
+  ScheduleFollowUpFlow,
   OpportunityApprovalFlow,
   QuoteGenerationFlow,
   // Time/event-driven automation

@@ -29,6 +29,36 @@ export const ConvertLeadAction: Action = {
 };
 
 /**
+ * Schedule the next follow-up on a lead.
+ *
+ * The gap this fills: `log_call` / `log_meeting` record what already happened
+ * (a `sys_activity` timeline entry), but nothing put the NEXT touch on the
+ * rep's list. Filing that follow-up meant leaving the lead, opening the
+ * Related tab, finding the Tasks block, and hand-picking the lead back as the
+ * parent — four steps for the single most common thing a rep does after a call.
+ *
+ * Flow-typed, not `type: 'modal'`: modal actions are non-functional in 16.1.0
+ * (the console resolves the action's `target` as an object name, so submitting
+ * one dies on `GET /api/v1/meta/object/<target>` → 400 — reproducible on the
+ * pre-existing `log_call` too). The screen flow under
+ * `src/flows/schedule-followup.flow.ts` collects the same fields and does the
+ * write; that mechanism is proven by `convert_lead` above.
+ */
+export const ScheduleFollowUpAction: Action = {
+  name: 'schedule_followup',
+  label: 'Schedule Follow-up',
+  objectName: 'crm_lead',
+  icon: 'calendar-plus',
+  type: 'flow',
+  target: 'schedule_followup',
+  locations: ['record_header', 'list_item'],
+  // A converted or disqualified lead has no next touch to schedule.
+  visible: P`record.is_converted == false && record.status != "unqualified" && record.status != "converted"`,
+  successMessage: 'Follow-up scheduled.',
+  refreshAfter: true,
+};
+
+/**
  * Add selected leads to a Campaign.
  *
  * Modal-typed action: collects a campaign id then writes one

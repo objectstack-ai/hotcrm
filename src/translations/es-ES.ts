@@ -293,6 +293,7 @@ export const esES: TranslationData = {
         is_private: { label: 'Privado' },
       },
       _views: {
+        open_opportunities: { label: 'Oportunidades Abiertas' },
         all_opportunities: { label: 'Todas las Oportunidades' },
         pipeline_kanban: { label: 'Pipeline de Ventas' },
         close_date_calendar: { label: 'Calendario de Pronóstico' },

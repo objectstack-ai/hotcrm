@@ -293,6 +293,7 @@ export const jaJP: TranslationData = {
         is_private: { label: '非公開' },
       },
       _views: {
+        open_opportunities: { label: '進行中の商談' },
         all_opportunities: { label: '全商談' },
         pipeline_kanban: { label: 'セールスパイプライン' },
         close_date_calendar: { label: '予測カレンダー' },

@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { Page } from '@objectstack/spec/ui';
-import { ConvertLeadAction } from '../actions/lead.actions';
+import { ConvertLeadAction, ScheduleFollowUpAction } from '../actions/lead.actions';
 
 /**
  * Lead Detail Record Page
@@ -61,7 +61,10 @@ export const LeadDetailPage: Page = {
             subtitle: '{company}',
             icon: 'user-plus',
             breadcrumb: true,
-            actions: [ConvertLeadAction],
+            // Convert is the outcome; scheduling the next touch is the daily
+            // act. Both belong in the header — the follow-up used to be four
+            // clicks deep in the Related tab.
+            actions: [ConvertLeadAction, ScheduleFollowUpAction],
           },
         },
         // Salesforce-style Highlights Panel: a horizontal strip of the

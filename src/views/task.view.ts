@@ -170,14 +170,21 @@ export const TaskViews = defineView({
       {
         label: 'Task',
         columns: 2,
+        // `type` (call / email / meeting / demo) is what makes an activity
+        // history readable and is the first thing a rep reaches for after the
+        // subject — it was missing entirely. `description` captures what was
+        // actually said on the call. `progress_percent` moved to the Effort
+        // section: a task being filed is 0% by definition, so a percentage
+        // slider on the create form is noise.
         fields: [
           { field: 'subject', required: true, colSpan: 2 },
+          { field: 'type', required: false },
           { field: 'status', required: true },
           'priority',
           'due_date',
-          'reminder_date',
           'owner',
-          'progress_percent',
+          'reminder_date',
+          { field: 'description', colSpan: 2 },
         ],
       },
       {
@@ -199,10 +206,12 @@ export const TaskViews = defineView({
         columns: 2,
         fields: [
           'is_recurring',
+          'recurrence_type',
           'recurrence_interval',
           'recurrence_end_date',
           'estimated_hours',
           'actual_hours',
+          'progress_percent',
         ],
       },
     ],
