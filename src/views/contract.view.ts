@@ -6,6 +6,7 @@ import { defineView } from '@objectstack/spec/ui';
  * Contract Views
  *
  *   • grid     — contract register with renewal info
+ *   • kanban   — status board (draft → in approval → activated → …)
  *   • calendar — start/end dates
  *   • gantt    — contract terms timeline
  *   • timeline — chronological contract stream
@@ -32,10 +33,11 @@ export const ContractViews = defineView({
     pagination: { pageSize: 25 },
     selection: { type: 'multiple' },
     appearance: {
-      allowedVisualizations: ['grid', 'calendar', 'gantt', 'timeline'],
+      allowedVisualizations: ['grid', 'kanban', 'calendar', 'gantt', 'timeline'],
     },
     tabs: [
       { name: 'all', label: 'All', view: 'all_contracts', isDefault: true, pinned: true },
+      { name: 'board', label: 'Status Board', icon: 'columns-3', view: 'status_board' },
       { name: 'renewals', label: 'Renewals', icon: 'calendar', view: 'renewal_calendar' },
       { name: 'terms', label: 'Terms', icon: 'gantt-chart', view: 'contract_gantt' },
       { name: 'timeline', label: 'Timeline', icon: 'git-commit-horizontal', view: 'contract_timeline' },
@@ -43,6 +45,22 @@ export const ContractViews = defineView({
   },
 
   listViews: {
+    /** Status kanban board — one column per contract status */
+    status_board: {
+      name: 'status_board',
+      type: 'kanban',
+      label: 'Status Board',
+      data: { provider: 'object', object: 'crm_contract' },
+      columns: ['contract_number', 'crm_account', 'end_date', 'status'],
+      kanban: {
+        groupByField: 'status',
+        summarizeField: 'contract_value',
+        // contract_number is already the card title — list only the extra fields
+        columns: ['crm_account', 'end_date', 'status'],
+      },
+      sort: [{ field: 'end_date', order: 'asc' }],
+    },
+
     /** Renewal calendar (highlights upcoming end dates) */
     renewal_calendar: {
       name: 'renewal_calendar',
