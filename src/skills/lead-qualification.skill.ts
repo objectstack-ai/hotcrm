@@ -36,6 +36,4 @@ export const LeadQualificationSkill = defineSkill({
   triggerConditions: [
     { field: 'objectName', operator: 'eq', value: 'crm_lead' },
   ],
-
-  permissions: ['crm:lead:read'],
 });

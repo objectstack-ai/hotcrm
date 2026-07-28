@@ -25,6 +25,4 @@ export const EmailDraftingSkill = defineSkill({
     'optimise subject line',
     'email template',
   ],
-
-  permissions: ['crm:email:write'],
 });
