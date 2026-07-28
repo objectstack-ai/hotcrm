@@ -128,6 +128,7 @@ export const CrmOverviewDashboard: Dashboard = {
       description: 'Closed-won revenue over the last 12 months',
       type: 'area',
       filter: { stage: 'closed_won', close_date: { $gte: '{12_months_ago}' } },
+      filterBindings: { dateRange: false }, // self-scoped to 12 months — the date picker must not narrow it
       colorVariant: 'success',
       dataset: 'opportunity_metrics', dimensions: ['close_date'], values: ['total_amount'],
       layout: { x: 0, y: 2, w: 9, h: 4 },
