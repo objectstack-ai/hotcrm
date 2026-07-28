@@ -84,7 +84,7 @@ export default defineStack({
   views: Object.values(views),
   pages: Object.values(pages),
   // Approvals are modeled as `record_change` flows with `approval` nodes
-  // (ADR-0019); see src/flows/opportunity-discount-approval.flow.ts. The
+  // (ADR-0019); see src/flows/opportunity-approval.flow.ts. The
   // standalone `approvals` stack field was removed in ObjectStack 7.4.
   analyticsCubes: Object.values(cubes),
 

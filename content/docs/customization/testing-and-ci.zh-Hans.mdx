@@ -25,13 +25,13 @@ description: HotCRM 定制化的单元、集成与端到端测试 —— 以及 
 每个元数据文件都应能通过其 spec schema 的校验。添加一个遍历所有文件的单一测试：
 
 ```ts
-// test/metadata.test.ts
+// test/metadata-references.test.ts
 import { describe, it, expect } from 'vitest';
 import { ObjectSchema } from '@objectstack/spec/data';
 import { PageSchema, ViewSchema, DashboardSchema } from '@objectstack/spec/ui';
-import { WorkflowRuleSchema, StateMachineSchema } from '@objectstack/spec/automation';
-import opportunityObj from '../src/opportunity.object';
-import opportunityPage from '../src/opportunity.page';
+import { StateMachineSchema } from '@objectstack/spec/automation';
+import opportunityObj from '../src/objects/opportunity.object';
+import opportunityPage from '../src/pages/opportunity_detail.page';
 
 describe('metadata schemas', () => {
   it('opportunity object', () => {
@@ -48,10 +48,12 @@ describe('metadata schemas', () => {
 
 ## 2. 钩子单元测试
 
+下面的示例测试的是一个假想的 `opportunity_territory` 钩子（你可能会自己添加的定制）——请替换成你自己的钩子。（针对内置钩子的真实可运行示例，见 `test/hooks-runtime.test.ts`。）
+
 ```ts
 // test/opportunity_territory.hook.test.ts
 import { it, expect, vi } from 'vitest';
-import territoryHook from '../src/opportunity_territory.hook';
+import territoryHook from '../src/objects/opportunity_territory.hook';
 
 it('assigns territory from account region', async () => {
   const broker = {
@@ -103,12 +105,12 @@ it('creates a renewal task when contract enters renewal window', async () => {
 
 ## 4. AI 技能测试
 
-当你对 LLM 进行 mock 时，技能是确定性的：
+当你对 LLM 进行 mock 时，技能是确定性的。示例测试的是一个假想的 `renewal-pitch` 技能（内置技能位于 `src/skills/`）：
 
 ```ts
-// test/renewal_pitch.skill.test.ts
+// test/renewal-pitch.skill.test.ts
 import { runSkill } from '@objectstack/runtime/ai/testing';
-import renewalPitch from '../src/renewal_pitch.skill';
+import renewalPitch from '../src/skills/renewal-pitch.skill';
 
 it('produces a pitch with citations', async () => {
   const result = await runSkill(renewalPitch, {
@@ -161,7 +163,8 @@ it('AMER reps cannot see EMEA accounts', async () => {
 ## 6. 使用 Playwright 进行端到端测试
 
 ```ts
-// e2e/lead-conversion.spec.ts
+// e2e/lead-conversion.spec.ts — 示例用例，可在内置的 e2e/smoke.spec.ts
+// 与 e2e/opportunity-lifecycle.spec.ts 旁新增
 import { test, expect } from '@playwright/test';
 
 test('rep can convert a qualified lead to an opportunity', async ({ page }) => {
@@ -184,7 +187,7 @@ test('rep can convert a qualified lead to an opportunity', async ({ page }) => {
 });
 ```
 
-用 `pnpm e2e` 运行。
+用 `pnpm test:e2e` 运行。
 
 ## CI：GitHub Actions 示例
 
@@ -198,29 +201,29 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v3
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm typecheck       # @objectstack/spec validation
+      - run: pnpm typecheck       # strict TypeScript
       - run: pnpm lint
       - run: pnpm test            # unit + integration
-      - run: pnpm test:metadata   # schema validation
+      - run: pnpm validate        # metadata schema validation
 
   e2e:
     runs-on: ubuntu-latest
     needs: validate
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v3
       - run: pnpm install --frozen-lockfile
       - run: pnpm playwright install --with-deps
       - run: pnpm dev &           # boot the runtime
       - run: pnpm wait-on http://localhost:4001
-      - run: pnpm e2e
+      - run: pnpm test:e2e
 
   deploy-sandbox:
     runs-on: ubuntu-latest
