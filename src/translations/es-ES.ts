@@ -287,7 +287,7 @@ export const esES: TranslationData = {
             partner: 'Socio', advertisement: 'Publicidad', cold_call: 'Llamada en Frío',
           },
         },
-        competitors: { label: 'Competidores' },
+        crm_competitors: { label: 'Competidores' },
         crm_campaign: { label: 'Campaña' },
         days_in_stage: { label: 'Días en Etapa Actual' },
         is_private: { label: 'Privado' },
@@ -535,6 +535,34 @@ export const esES: TranslationData = {
         campaign_gantt: { label: 'Programación de Campañas' },
         campaign_calendar: { label: 'Calendario de Campañas' },
         campaign_timeline: { label: 'Línea de Tiempo de Marketing' },
+      },
+    },
+
+    crm_competitor: {
+      label: 'Competidor',
+      pluralLabel: 'Competidores',
+      description: 'Competidores que encontramos en las oportunidades, con notas de batalla',
+      fields: {
+        name: { label: 'Nombre del Competidor' },
+        website: { label: 'Sitio Web' },
+        main_products: { label: 'Productos Principales' },
+        threat_level: {
+          label: 'Nivel de Amenaza',
+          options: { low: 'Bajo', medium: 'Medio', high: 'Alto' },
+        },
+        our_advantages: { label: 'Nuestras Ventajas' },
+        our_disadvantages: { label: 'Nuestras Desventajas' },
+        notes: { label: 'Notas' },
+        owner: { label: 'Responsable' },
+        is_active: { label: 'Activo' },
+      },
+      _views: {
+        all_competitors: { label: 'Todos los Competidores' },
+        high_threat: { label: 'Amenaza Alta' },
+      },
+      _sections: {
+        basic: { label: 'Información Básica' },
+        battlecard: { label: 'Tarjeta de Batalla' },
       },
     },
 

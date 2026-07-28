@@ -242,7 +242,7 @@ export const OpportunityViews = defineView({
       {
         label: 'Sales Strategy',
         columns: 1,
-        fields: ['next_step', 'competitors'],
+        fields: ['next_step', 'crm_competitors'],
       },
     ],
   },

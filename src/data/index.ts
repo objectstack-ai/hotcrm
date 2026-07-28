@@ -15,6 +15,7 @@ import { Opportunity } from '../objects/opportunity.object';
 import { Product } from '../objects/product.object';
 import { Task } from '../objects/task.object';
 import { Case } from '../objects/case.object';
+import { Competitor } from '../objects/competitor.object';
 import { Campaign } from '../objects/campaign.object';
 import { Contract } from '../objects/contract.object';
 import { Quote } from '../objects/quote.object';
@@ -294,6 +295,75 @@ const leads = defineSeed(Lead, {
   ]
 });
 
+// ─── Competitors ──────────────────────────────────────────────────────
+// Seeded BEFORE opportunities: the opportunity seed references these by
+// name through the multi-value `crm_competitors` lookup.
+//
+// ⚠️ Platform gap: SeedLoaderService resolves natural keys only for STRING
+// lookup values — an ARRAY (multi-value lookup) trips its object-value guard
+// and the field is silently dropped from the write. The `crm_competitors`
+// arrays on the opportunity records below document intent and will start
+// resolving if the loader gains array support; until then, links must be
+// (re)applied after a demo:reset via the opportunity form or SQL.
+const competitors = defineSeed(Competitor, {
+  mode: 'upsert',
+  externalId: 'name',
+  records: [
+    {
+      name: 'SalesForge',
+      website: 'https://salesforge.example.com',
+      main_products: 'SalesForge Cloud（销售云）、ForgeService（客服云）、ForgeAnalytics（BI 分析）',
+      threat_level: 'high',
+      our_advantages: `- **开放架构**：元数据全部开源，客户可自持部署，不被平台锁定
+- **AI 原生**：Copilot 深度嵌入销售流程，而非事后附加的聊天窗
+- **实施周期**：平均上线 4 周，对方通常需要 3-6 个月`,
+      our_disadvantages: `- 生态与插件市场规模差距明显（对方 5000+ 应用）
+- 品牌认知度低，大企业采购名单里常被默认排除
+- 行业合规认证（FedRAMP 等）尚未齐全`,
+      notes: '大客户竞标中最常遇到的对手，尤其是制造与金融行业。',
+      is_active: true,
+    },
+    {
+      name: 'HubNexus',
+      website: 'https://hubnexus.example.com',
+      main_products: '营销自动化套件、免费版 CRM、内容运营工具',
+      threat_level: 'medium',
+      our_advantages: `- 企业级权限/审批/共享模型完整，对方主打中小客户
+- 复杂销售流程（CPQ、多级审批）开箱即用
+- 数据模型可定制，对方对象扩展能力有限`,
+      our_disadvantages: `- 对方免费入门版获客能力强，中小客户先入为主
+- 营销自动化功能比我们成熟（邮件旅程、落地页）`,
+      notes: '在中小客户与营销驱动型团队中常见；Acme 的市场部曾用其 2 年合约压过我们一单。',
+      is_active: true,
+    },
+    {
+      name: 'ZenDeal',
+      website: 'https://zendeal.example.com',
+      main_products: '轻量销售管道工具、移动端 CRM',
+      threat_level: 'low',
+      our_advantages: `- 报表/预测/审批等企业功能齐全，对方只有基础管道
+- 可随业务自定义对象，对方模型固定`,
+      our_disadvantages: `- 上手门槛比对方高，10 人以下团队更偏好其极简体验
+- 单价高于对方入门套餐`,
+      notes: '主要出现在小额快单里，输单影响有限。',
+      is_active: true,
+    },
+    {
+      name: 'LegacySoft CRM',
+      website: 'https://legacysoft.example.com',
+      main_products: '本地部署 CRM 套件、行业定制开发服务',
+      threat_level: 'medium',
+      our_advantages: `- 云原生 + 持续升级，对方大版本升级需停机数天
+- 现代 UI 与移动体验，对方界面停留在上一代
+- 订阅制成本透明，对方定制开发费用高昂`,
+      our_disadvantages: `- 对方在政企/军工等强本地化场景有多年存量关系
+- 完全离线部署场景我们暂不支持`,
+      notes: '存量替换型商机的主要对手；决策链偏好"用熟不用生"。',
+      is_active: true,
+    },
+  ],
+});
+
 // ─── Opportunities ────────────────────────────────────────────────────
 const opportunities = defineSeed(Opportunity, {
   mode: 'upsert',
@@ -310,6 +380,7 @@ const opportunities = defineSeed(Opportunity, {
       forecast_category: 'pipeline',
       lead_source: 'web',
       days_in_stage: 12,
+      crm_competitors: ['SalesForge', 'HubNexus'],
       description: `Upgrade from Standard to Enterprise edition for the
 NA + EMEA teams. Drivers: (1) AI agent governance becomes a hard
 requirement after their internal compliance review, (2) advanced
@@ -327,6 +398,7 @@ analytics seats for the Ops org, (3) priority support SLA.`,
       forecast_category: 'pipeline',
       lead_source: 'referral',
       days_in_stage: 45,
+      crm_competitors: ['SalesForge', 'LegacySoft CRM'],
     },
     {
       name: 'Wayne Enterprise License',
@@ -339,6 +411,7 @@ analytics seats for the Ops org, (3) priority support SLA.`,
       forecast_category: 'commit',
       lead_source: 'partner',
       days_in_stage: 7,
+      crm_competitors: ['SalesForge'],
     },
     {
       name: 'Initech Cloud Migration',
@@ -420,6 +493,7 @@ analytics seats for the Ops org, (3) priority support SLA.`,
       type: 'existing_upgrade',
       forecast_category: 'omitted',
       lead_source: 'cold_call',
+      crm_competitors: ['HubNexus'],
       description: `Tried to bolt on the Marketing Cloud module via cold outbound. Lost because Acme's marketing org is already on a 2-year HubSpot contract. Revisit in Q3 when that contract is up for renewal.`,
     },
     {
@@ -1183,6 +1257,7 @@ export const CrmSeedData = [
   accounts,
   contacts,
   leads,
+  competitors,
   opportunities,
   products,
   tasks,
