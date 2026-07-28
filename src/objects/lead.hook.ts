@@ -9,36 +9,11 @@ import type { HookApi } from './_hook-api';
  * - Auto-scores incoming leads into `rating` (1-5) using industry/title/email/phone weights.
  * - Refuses edits to a converted lead.
  * - When status flips to `qualified`, schedules a follow-up `crm_task` for the current user.
+ *
+ * Helpers (computeRating etc.) are declared INSIDE each handler body — L2 hook
+ * bodies run body-only in the QuickJS sandbox, so module scope is not visible
+ * at runtime. See opportunity.hook.ts for the full rationale.
  */
-
-const HIGH_VALUE_INDUSTRIES = new Set([
-  'technology',
-  'finance',
-  'healthcare',
-]);
-
-const SENIOR_TITLE_PATTERN = /\b(ceo|cto|cfo|cio|coo|founder|vp|vice president|director|head of)\b/i;
-
-function computeRating(input: Record<string, unknown>): number {
-  let score = 0;
-  const email = typeof input.email === 'string' ? input.email : '';
-  const phone = typeof input.phone === 'string' ? input.phone : '';
-  const title = typeof input.title === 'string' ? input.title : '';
-  const industry = typeof input.industry === 'string' ? input.industry : '';
-  const employees = typeof input.number_of_employees === 'number' ? input.number_of_employees : 0;
-  const revenue = typeof input.annual_revenue === 'number' ? input.annual_revenue : 0;
-
-  if (email && !/(gmail|yahoo|hotmail|outlook|qq|163)\.com$/i.test(email)) score += 1;
-  if (phone.length > 0) score += 0.5;
-  if (SENIOR_TITLE_PATTERN.test(title)) score += 1.5;
-  if (HIGH_VALUE_INDUSTRIES.has(industry)) score += 1;
-  if (employees >= 200) score += 0.5;
-  if (revenue >= 10_000_000) score += 0.5;
-
-  // Cap at 5, floor at 1, round to half.
-  const clamped = Math.max(1, Math.min(5, score));
-  return Math.round(clamped * 2) / 2;
-}
 
 /**
  * Lead auto-assignment (load-balanced round-robin).
