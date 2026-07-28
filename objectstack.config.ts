@@ -9,7 +9,6 @@ import * as dashboards from './src/dashboards/index.js';
 import * as datasets from './src/datasets/index.js';
 import * as reports from './src/reports/index.js';
 import { allFlows } from './src/flows/index.js';
-import { allAgents } from './src/agents/index.js';
 import { allSkills } from './src/skills/index.js';
 import * as profiles from './src/profiles/index.js';
 import * as apps from './src/apps/index.js';
@@ -79,7 +78,6 @@ export default defineStack({
   datasets: Object.values(datasets),
   reports: Object.values(reports),
   flows: allFlows,
-  agents: allAgents,
   skills: allSkills,
   permissions: Object.values(profiles),
   apps: Object.values(apps),

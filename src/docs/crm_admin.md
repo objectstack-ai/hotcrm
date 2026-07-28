@@ -86,8 +86,13 @@ revisits:
 > on each record's detail page — they are intentionally **not** duplicated here.
 > This guide documents only what those screens can't tell you.
 
-## AI copilots
+## AI skills
 
-Two assistants ship with HotCRM: the **Sales Copilot** and the **Service
-Copilot**. They operate over live CRM data and the actions exposed to them; the
-end user simply asks the assistant — no agent selection required.
+HotCRM ships **skills**, not assistants of its own. The platform provides the
+assistant (ObjectStack ADR-0063: the runtime owns exactly two agents and the
+surface you are in binds one); an app extends it by authoring skills that
+attach by surface affinity. HotCRM's six — live data, lead qualification, case
+triage, email drafting, revenue forecasting, customer 360 — operate over live
+CRM data and reach anything that *changes* state through the same Actions the
+UI buttons use, so permissions and audit are identical. The end user simply
+asks — no agent selection required.
