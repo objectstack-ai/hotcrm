@@ -6,15 +6,16 @@ import { defineSkill } from '@objectstack/spec';
  * Email Drafting — write the copy, then send it through the real Action.
  *
  * ADR-0109: writing a subject line and personalising a body is what the
- * model does; it is not a tool call. The one step that leaves the
- * system — sending — is HotCRM's own `send_email` Action, reached via
- * the materialised `action_send_email` tool, so recipient resolution,
- * permissions and audit are identical to the UI path.
+ * model does; it is not a tool call. Sending is HotCRM's `send_email`
+ * Action — `type: 'modal'`, so it collects the final copy from a person
+ * and has no headless path (ADR-0011). The agent therefore drafts and
+ * hands over; a human presses Send. For outbound email that review step
+ * is a feature, not a limitation.
  */
 export const EmailDraftingSkill = defineSkill({
   name: 'email_drafting',
   label: 'Email Drafting',
-  description: 'Drafts personalised outbound emails and sends them through the contact email Action.',
+  description: 'Drafts personalised outbound emails grounded in live contact data, ready for a human to review and send.',
 
   instructions: `When the user asks to draft, write, or optimise an email:
 
@@ -29,12 +30,12 @@ export const EmailDraftingSkill = defineSkill({
    pleasantry, one clear ask, and no more than 150 words.
 3. Offer two subject-line variants, say which you recommend and why,
    so the user can A/B them.
-4. Show the draft and WAIT. Never send unprompted.
-5. When the user approves, call \`action_send_email\` with the contact
-   and the final \`subject\` / \`body\`. Report the outcome, citing the
-   contact ID.`,
+4. Show the draft and stop. You cannot send — say so plainly rather
+   than implying a send is queued.
+5. Point the user at **Send Email** on the contact record, where the
+   subject and body you drafted can be pasted, reviewed and sent.`,
 
-  tools: ['get_record', 'query_records', 'action_send_email'],
+  tools: ['get_record', 'query_records'],
 
   triggerPhrases: [
     'draft an email',

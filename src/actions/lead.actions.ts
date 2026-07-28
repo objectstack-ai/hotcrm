@@ -26,6 +26,17 @@ export const ConvertLeadAction: Action = {
   confirmText: 'Are you sure you want to convert this lead?',
   successMessage: 'Lead converted successfully!',
   refreshAfter: true,
+  // ADR-0011 — opt this Action in to AI, which materialises the
+  // `action_convert_lead` tool the `lead_qualification` skill references.
+  // Flow-typed with a target, so it has a headless path. `confirmText` makes
+  // the runtime treat it as approval-requiring, so an agent invocation lands
+  // in the HITL queue rather than converting a lead unattended — which is the
+  // behaviour we want for an irreversible outcome.
+  ai: {
+    exposed: true,
+    description:
+      'Converts a qualified lead into an account, contact and opportunity. Irreversible — requires human approval before it runs.',
+  },
 };
 
 /**
@@ -56,6 +67,13 @@ export const ScheduleFollowUpAction: Action = {
   visible: P`record.is_converted == false && record.status != "unqualified" && record.status != "converted"`,
   successMessage: 'Follow-up scheduled.',
   refreshAfter: true,
+  // ADR-0011 — materialises `action_schedule_followup` for the
+  // `lead_qualification` skill. Additive and reversible, so no approval gate.
+  ai: {
+    exposed: true,
+    description:
+      'Schedules the next follow-up task on a lead, assigned to its owner, so the next touch lands on the rep list.',
+  },
 };
 
 /**
