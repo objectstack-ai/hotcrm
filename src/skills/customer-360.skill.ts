@@ -24,6 +24,4 @@ customer / account / contact:
     'give me the full picture',
     'account summary',
   ],
-
-  permissions: ['crm:account:read'],
 });

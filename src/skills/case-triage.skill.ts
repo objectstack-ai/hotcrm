@@ -27,6 +27,4 @@ classify a case:
   triggerConditions: [
     { field: 'objectName', operator: 'eq', value: 'crm_case' },
   ],
-
-  permissions: ['crm:case:write'],
 });

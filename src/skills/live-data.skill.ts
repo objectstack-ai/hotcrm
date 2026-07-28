@@ -52,6 +52,4 @@ record (account, contact, lead, opportunity, case, quote, etc.):
     'pipeline',
     'forecast',
   ],
-
-  permissions: ['crm:read'],
 });
