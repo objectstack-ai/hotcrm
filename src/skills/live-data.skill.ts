@@ -6,9 +6,9 @@ import { defineSkill } from '@objectstack/spec';
  * Live Data — the foundation of HotCRM's "Wow #1" demo.
  *
  * Wires the platform's built-in metadata + data tools into the
- * Sales Copilot so it always sees the current schema before
- * querying. This is what makes "add a field, AI uses it 30s later"
- * actually work — `describe_object` re-reads metadata on every call.
+ * assistant so it always sees the current schema before querying.
+ * This is what makes "add a field, AI uses it 30s later" actually
+ * work — `describe_object` re-reads metadata on every call.
  */
 export const LiveDataSkill = defineSkill({
   name: 'live_data',

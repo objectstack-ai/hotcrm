@@ -7,7 +7,7 @@ import { F, P, cel } from '@objectstack/spec';
  * Knowledge Article Object
  *
  * Reusable, search-indexed answers that back the Support Knowledge Base
- * and ground the Service Copilot's "Suggest a resolution" skill.
+ * and ground the assistant's case-resolution skills.
  *
  * Lifecycle: draft → in_review → published → archived.
  * Audience:  public (customer portal visible) | internal (agent-only).
