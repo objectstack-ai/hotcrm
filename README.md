@@ -39,7 +39,7 @@ HotCRM is a complete, opinionated CRM built as the **first official application*
 |---|
 | ![Executive dashboard](assets/screenshots/04-executive-dashboard.png) |
 
-> Screenshots show HotCRM running in zh-CN with seeded data. Bundled translations: en, zh-CN, es-ES, ja-JP.
+> Screenshots show HotCRM running in English with seeded data. Bundled translations: en, zh-CN, es-ES, ja-JP.
 
 ---
 
