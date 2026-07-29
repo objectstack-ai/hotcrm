@@ -283,7 +283,7 @@ export const Opportunity = ObjectSchema.create({
   // per-field via Field.trackHistory (ADR-0052).
   enable: {
     apiEnabled: true,
-    apiMethods: ['get', 'list', 'create', 'update', 'delete', 'aggregate', 'search'], // Whitelist allowed API operations
+    apiMethods: ['get', 'list', 'create', 'update', 'delete'], // Whitelist allowed API operations
   },
 
   // ADR-0052 §5b.2 — declarative milestone activity. When `stage` enters these

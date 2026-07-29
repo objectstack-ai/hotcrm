@@ -5,7 +5,7 @@ import type { Action } from '@objectstack/spec/ui';
 /**
  * Log a Call.
  *
- * Modal-typed cross-domain (global) action: collects subject /
+ * Script-typed cross-domain (global) action: collects subject /
  * duration / notes then writes an `activity` record via the metadata
  * body. The originating record id is forwarded as `related_to_id`.
  */
@@ -13,8 +13,7 @@ export const LogCallAction: Action = {
   name: 'log_call',
   label: 'Log a Call',
   icon: 'phone',
-  type: 'modal',
-  target: 'log_call',
+  type: 'script',
   body: {
     language: 'js',
     source: `
@@ -69,7 +68,7 @@ export const LogCallAction: Action = {
 /**
  * Log a Meeting.
  *
- * Modal-typed cross-domain (global) action: companion to `log_call`.
+ * Script-typed cross-domain (global) action: companion to `log_call`.
  * Collects subject / duration / attendees / notes then writes a semantic
  * `sys_activity` row so the meeting lands on the record's unified timeline.
  */
@@ -77,8 +76,7 @@ export const LogMeetingAction: Action = {
   name: 'log_meeting',
   label: 'Log a Meeting',
   icon: 'calendar',
-  type: 'modal',
-  target: 'log_meeting',
+  type: 'script',
   body: {
     language: 'js',
     source: `

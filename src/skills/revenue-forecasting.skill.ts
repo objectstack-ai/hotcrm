@@ -31,5 +31,4 @@ risk, or deal slippage:
     { field: 'objectName', operator: 'in', value: ['crm_opportunity', 'dashboard'] },
   ],
 
-  permissions: ['crm:opportunity:read'],
 });

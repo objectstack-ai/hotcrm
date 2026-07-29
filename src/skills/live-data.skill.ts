@@ -53,5 +53,4 @@ record (account, contact, lead, opportunity, case, quote, etc.):
     'forecast',
   ],
 
-  permissions: ['crm:read'],
 });

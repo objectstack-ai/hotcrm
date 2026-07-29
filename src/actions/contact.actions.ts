@@ -38,7 +38,7 @@ export const MarkPrimaryContactAction: Action = {
 /**
  * Send Email to Contact.
  *
- * Modal-typed action: collects subject + body, then logs an `activity`
+ * Script-typed action: collects subject + body, then logs an `activity`
  * record via the metadata body. Runs sandboxed under `api.write`.
  */
 export const SendEmailAction: Action = {
@@ -46,8 +46,7 @@ export const SendEmailAction: Action = {
   label: 'Send Email',
   objectName: 'crm_contact',
   icon: 'mail',
-  type: 'modal',
-  target: 'send_email',
+  type: 'script',
   body: {
     language: 'js',
     source: `

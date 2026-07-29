@@ -231,7 +231,7 @@ export const Account = ObjectSchema.create({
   // `searchableFields`/per-field `searchable`.
   enable: {
     apiEnabled: true,       // Expose via REST/GraphQL
-    apiMethods: ['get', 'list', 'create', 'update', 'delete', 'search', 'export'], // Whitelist allowed API operations
+    apiMethods: ['get', 'list', 'create', 'update', 'delete'], // Whitelist allowed API operations
   },
   
   // Validation Rules

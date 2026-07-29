@@ -200,7 +200,7 @@ export const KnowledgeArticle = ObjectSchema.create({
   // only the live API surface remains. History → Field.trackHistory (ADR-0052).
   enable: {
     apiEnabled: true,
-    apiMethods: ['get', 'list', 'create', 'update', 'delete', 'search', 'export'],
+    apiMethods: ['get', 'list', 'create', 'update', 'delete'],
   },
 
   validations: [

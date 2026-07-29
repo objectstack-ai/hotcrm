@@ -23,7 +23,7 @@ case IDs.`,
   ],
 
   knowledge: {
-    topics: ['support_kb', 'sla_policies', 'case_resolution'],
+    sources: ['support_kb', 'sla_policies', 'case_resolution'],
     indexes: ['support_knowledge'],
   },
 });

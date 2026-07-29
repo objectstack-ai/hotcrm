@@ -84,9 +84,9 @@ export const LeadViews = defineView({
       view: 'detail_form', // Use named form view
     },
     
-    // List Actions
-    rowActions: ['edit', 'delete', 'convert_lead'],
-    bulkActions: ['mass_update', 'mass_delete', 'assign_owner'],
+    // List Actions — only actions actually defined in this stack; the old
+    // edit/delete/mass_* names were dead affordances (no dispatchable action).
+    rowActions: ['convert_lead'],
     
     // Features
     pagination: { pageSize: 25, pageSizeOptions: [10, 25, 50, 100] },

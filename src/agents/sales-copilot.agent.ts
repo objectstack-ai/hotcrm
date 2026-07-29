@@ -35,7 +35,7 @@ use it — that's almost certainly what the user wants you to surface.`,
   ],
 
   knowledge: {
-    topics: ['sales_playbook', 'product_catalog', 'lead_qualification'],
+    sources: ['sales_playbook', 'product_catalog', 'lead_qualification'],
     indexes: ['sales_knowledge'],
   },
 });

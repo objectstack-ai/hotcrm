@@ -53,7 +53,7 @@ export const ForecastViews = defineView({
       columns: ['owner', 'quota', 'closed_amount', 'commit_amount', 'best_case_amount', 'pipeline_amount', 'attainment_pct', 'coverage_ratio'],
       filter: [
         { field: 'period',       operator: 'equals', value: 'quarter' },
-        { field: 'period_start', operator: 'equals', value: '{this_quarter_start}' },
+        { field: 'period_start', operator: 'equals', value: '{current_quarter_start}' },
       ],
       sort: [{ field: 'attainment_pct', order: 'desc' }],
     },

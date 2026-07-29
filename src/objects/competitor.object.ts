@@ -98,6 +98,6 @@ export const Competitor = ObjectSchema.create({
 
   enable: {
     apiEnabled: true,
-    apiMethods: ['get', 'list', 'create', 'update', 'delete', 'search'],
+    apiMethods: ['get', 'list', 'create', 'update', 'delete'],
   },
 });

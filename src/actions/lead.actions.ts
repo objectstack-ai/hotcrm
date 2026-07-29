@@ -61,7 +61,7 @@ export const ScheduleFollowUpAction: Action = {
 /**
  * Add selected leads to a Campaign.
  *
- * Modal-typed action: collects a campaign id then writes one
+ * Script-typed action: collects a campaign id then writes one
  * `crm_campaign_member` record per selected lead via the metadata body.
  * Selected ids are surfaced through `input.selectedIds` (populated by
  * the list toolbar) and the chosen campaign through `input.campaign`.
@@ -71,8 +71,7 @@ export const CreateCampaignAction: Action = {
   label: 'Add to Campaign',
   objectName: 'crm_lead',
   icon: 'send',
-  type: 'modal',
-  target: 'create_campaign',
+  type: 'script',
   body: {
     language: 'js',
     source: `

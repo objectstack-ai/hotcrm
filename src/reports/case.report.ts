@@ -8,7 +8,7 @@ export const CasesByStatusPriorityReport: ReportInput = {
   description: 'Summary of cases by status and priority',
   dataset: 'case_metrics', rows: ['status', 'priority'], values: ['avg_resolution'],
   type: 'summary',
-  chart: { type: 'bar', title: 'Cases by Status', showLegend: true, xAxis: 'status', yAxis: 'case_number' }
+  chart: { type: 'bar', title: 'Cases by Status', showLegend: true, xAxis: 'status', yAxis: 'case_count' }
 };
 
 export const SlaPerformanceReport: ReportInput = {

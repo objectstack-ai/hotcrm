@@ -25,5 +25,4 @@ customer / account / contact:
     'account summary',
   ],
 
-  permissions: ['crm:account:read'],
 });

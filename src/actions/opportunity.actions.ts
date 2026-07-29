@@ -61,7 +61,7 @@ export const CloneOpportunityAction: Action = {
 /**
  * Mass Update Opportunity Stage.
  *
- * Modal-typed action: collects a target `stage` then patches every
+ * Script-typed action: collects a target `stage` then patches every
  * selected opportunity through the metadata body. Selected ids come
  * from `input.selectedIds` (populated by the list toolbar).
  */
@@ -70,8 +70,7 @@ export const MassUpdateStageAction: Action = {
   label: 'Update Stage',
   objectName: 'crm_opportunity',
   icon: 'layers',
-  type: 'modal',
-  target: 'mass_update_stage',
+  type: 'script',
   body: {
     language: 'js',
     source: `

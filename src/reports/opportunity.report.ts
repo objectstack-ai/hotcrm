@@ -14,7 +14,7 @@ export const OpportunitiesByStageReport: ReportInput = {
   dataset: 'opportunity_metrics', rows: ['stage'], values: ['total_amount', 'avg_probability'],
   type: 'summary',
   runtimeFilter: { stage: { $ne: 'closed_lost' }, close_date: { $gte: CURRENT_YEAR_START } },
-  chart: { type: 'bar', title: 'Pipeline by Stage', showLegend: true, xAxis: 'stage', yAxis: 'amount' }
+  chart: { type: 'bar', title: 'Pipeline by Stage', showLegend: true, xAxis: 'stage', yAxis: 'total_amount' }
 };
 
 export const WonOpportunitiesByOwnerReport: ReportInput = {
@@ -24,7 +24,7 @@ export const WonOpportunitiesByOwnerReport: ReportInput = {
   dataset: 'opportunity_metrics', rows: ['owner'], values: ['total_amount'],
   type: 'summary',
   runtimeFilter: { stage: 'closed_won' },
-  chart: { type: 'column', title: 'Revenue by Sales Rep', showLegend: false, xAxis: 'owner', yAxis: 'amount' }
+  chart: { type: 'column', title: 'Revenue by Sales Rep', showLegend: false, xAxis: 'owner', yAxis: 'total_amount' }
 };
 
 /**
@@ -55,5 +55,5 @@ export const OpportunityFunnelByOwnerStageReport: ReportInput = {
   dataset: 'opportunity_metrics', rows: ['owner', 'stage'], values: ['total_amount', 'opp_count', 'avg_probability'],
   type: 'summary',
   runtimeFilter: { stage: { $ne: 'closed_lost' } },
-  chart: { type: 'funnel', title: 'Pipeline Funnel', showLegend: false, xAxis: 'stage', yAxis: 'amount' },
+  chart: { type: 'funnel', title: 'Pipeline Funnel', showLegend: false, xAxis: 'stage', yAxis: 'total_amount' },
 };

@@ -28,5 +28,4 @@ classify a case:
     { field: 'objectName', operator: 'eq', value: 'crm_case' },
   ],
 
-  permissions: ['crm:case:write'],
 });

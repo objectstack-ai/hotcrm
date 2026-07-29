@@ -38,7 +38,7 @@ export const SalesDashboard: Dashboard = {
       label: 'Sales Rep',
       type: 'lookup',
       scope: 'dashboard',
-      optionsFrom: { object: 'user', valueField: 'id', labelField: 'name' },
+      optionsFrom: { object: 'sys_user', valueField: 'id', labelField: 'name' },
     },
     {
       field: 'type',
@@ -168,7 +168,7 @@ export const SalesDashboard: Dashboard = {
         annotations: [
           { type: 'line', axis: 'y', value: 100000, label: 'Quota', style: 'dashed', color: '#F59E0B' },
         ],
-        interaction: { tooltips: true, brush: true, zoom: false },
+        interaction: { tooltips: true, brush: true },
       },
       options: { dateGranularity: 'month' },
     },

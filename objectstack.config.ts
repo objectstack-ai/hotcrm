@@ -98,7 +98,6 @@ export default defineStack({
     defaultLocale: 'en',
     supportedLocales: ['en', 'zh-CN', 'ja-JP', 'es-ES'],
     fallbackLocale: 'en',
-    fileOrganization: 'per_locale',
   },
 
   translations: Object.values(translations),

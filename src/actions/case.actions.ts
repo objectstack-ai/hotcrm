@@ -6,7 +6,7 @@ import { P } from '@objectstack/spec';
 /**
  * Escalate Case.
  *
- * Modal-typed action: the UI collects `reason` then POSTs to
+ * Script-typed action: the UI collects `reason` then POSTs to
  * `/api/v1/actions/case/escalate_case`. The body runs in the QuickJS
  * sandbox via `actionBodyRunnerFactory`, gated by `api.write`.
  */
@@ -15,8 +15,7 @@ export const EscalateCaseAction: Action = {
   label: 'Escalate Case',
   objectName: 'crm_case',
   icon: 'alert-triangle',
-  type: 'modal',
-  target: 'escalate_case',
+  type: 'script',
   body: {
     language: 'js',
     source: `
@@ -53,7 +52,7 @@ export const EscalateCaseAction: Action = {
 /**
  * Close Case.
  *
- * Modal-typed action: collects `resolution` then closes the case via
+ * Script-typed action: collects `resolution` then closes the case via
  * the metadata body. Runs sandboxed under `api.write`.
  */
 export const CloseCaseAction: Action = {
@@ -61,8 +60,7 @@ export const CloseCaseAction: Action = {
   label: 'Close Case',
   objectName: 'crm_case',
   icon: 'check-circle',
-  type: 'modal',
-  target: 'close_case',
+  type: 'script',
   body: {
     language: 'js',
     source: `
