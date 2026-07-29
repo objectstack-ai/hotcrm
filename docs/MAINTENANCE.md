@@ -65,6 +65,39 @@ can silently invalidate existing metadata or **seed data** (see §4). Treat ever
    and restart. This is an environment issue, not an app change.
 7. Note the new platform version in `CHANGELOG.md`.
 
+### 3.1 Destructive schema drift — orphan columns after an upgrade
+
+`os migrate plan` diffs the live database schema against the current metadata.
+After a platform upgrade it can report columns that exist in the database but
+are no longer described by any metadata — usually companion columns an older
+platform version provisioned automatically and the new version no longer does.
+Orphan columns are harmless (the runtime never reads or writes them), so this
+cleanup is **deferred by design**: schedule it for a maintenance window instead
+of bundling it into the upgrade itself.
+
+**Known case — ObjectStack 17.0 `__search` orphans
+([#528](https://github.com/objectstack-ai/hotcrm/issues/528)).** 17.0 tightened
+the conditions under which full-text `__search` companion columns are
+provisioned, so a database that lived through ≤16.x carries 9 orphan `__search`
+columns after the upgrade (`crm_competitor`, `crm_opportunity_line_item`,
+`crm_quote_line_item`, `crm_task`, and `sys_metadata`, among others — the full
+list is whatever `os migrate plan` prints for your database).
+
+Cleanup procedure:
+
+1. **Stop the service first.** Applying destructive schema changes under live
+   traffic is unsafe — see ObjectStack platform issue #526.
+2. Back up the database (for a local dev database, copy `.objectstack/data`).
+3. Run `os migrate plan` and read the whole plan. Every destructive entry must
+   be a column you expect to drop; if anything else appears (a column backing a
+   field you still declare), stop and fix the metadata drift instead.
+4. Run `os migrate apply --allow-destructive`.
+5. Restart the service and smoke-test: `os migrate plan` should now be clean,
+   and global search in the Console should still return records.
+
+`--allow-destructive` drops columns irreversibly — never run it without the
+backup from step 2, and never against a database whose plan you have not read.
+
 ## 4. Seed-data staleness — the #1 HotCRM pitfall
 
 Stale seed data is the most common cause of "Studio shows a red
