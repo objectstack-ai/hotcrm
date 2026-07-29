@@ -503,6 +503,28 @@ describe('list-level action references resolve', () => {
     }
     expect(bad, `dangling list action references:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
+
+  it('no rowAction repeats an action that already declares list_item placement', () => {
+    // An Action with `locations: ['list_item']` auto-injects its row-menu
+    // entry. Naming it AGAIN as a rowActions string goes through objectui's
+    // legacy path, which dispatches the string as an action TYPE — producing
+    // a second, dead menu item (issue #535 / objectstack-ai/objectui#2960).
+    const listItemActions = new Set(
+      actions.filter((a) => (a.locations ?? []).includes('list_item')).map((a) => a.name),
+    );
+    const bad: string[] = [];
+    for (const v of views) {
+      const lists = [v.list, ...Object.values(v.listViews ?? {})].filter(Boolean) as AnyRec[];
+      for (const list of lists) {
+        for (const name of list.rowActions ?? []) {
+          if (typeof name === 'string' && listItemActions.has(name)) {
+            bad.push(`view "${list.name ?? 'default'}": "${name}" duplicates its list_item auto-injection`);
+          }
+        }
+      }
+    }
+    expect(bad, `redundant string rowActions:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
 });
 
 describe('row colors and kanban groups key off real option values', () => {

@@ -55,9 +55,11 @@ export const CaseViews = defineView({
       { name: 'at_risk', label: 'SLA at Risk', icon: 'clock-alert', view: 'sla_at_risk' },
       { name: 'mine', label: 'My Cases', icon: 'user', view: 'my_open_cases' },
     ],
-    // Escalate straight from the queue — the action already declared
-    // `list_item` placement but no case view surfaced it.
-    rowActions: ['edit', 'escalate_case'],
+    // Escalate straight from the queue: escalate_case's own `locations:
+    // ['list_item']` auto-injects the row-menu item. Do not repeat it here as
+    // a string — the legacy rowActions path dispatches the string as an
+    // action TYPE, yielding a duplicate, dead entry (objectui#2960).
+    rowActions: ['edit'],
   },
 
   listViews: {
