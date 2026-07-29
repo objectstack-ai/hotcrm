@@ -80,6 +80,11 @@ const TARGETS = [
   claim('opportunities', 'crm_opportunity', 'Opportunities'),
   claim('cases', 'crm_case', 'Cases'),
   claim('tasks', 'crm_task', 'Tasks'),
+  // Quotes and contracts are seeded ownerless too — without claiming them the
+  // contract_renewal / contract_expiration / quote_expiration notifies address
+  // a null owner and reach nobody (the exact failure this flow exists to fix).
+  claim('quotes', 'crm_quote', 'Quotes'),
+  claim('contracts', 'crm_contract', 'Contracts'),
 ];
 
 /**

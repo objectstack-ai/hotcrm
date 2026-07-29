@@ -315,10 +315,17 @@ export const Opportunity = ObjectSchema.create({
       message: 'Invalid opportunity stage transition',
       field: 'stage',
       transitions: {
-        prospecting: ['qualification', 'closed_lost'],
-        qualification: ['needs_analysis', 'closed_lost'],
+        // `→ proposal` is legal from every pre-proposal stage: the
+        // quote_generation flow fast-forwards the deal to `proposal` when a
+        // quote is generated, which can happen at any open stage.
+        prospecting: ['qualification', 'proposal', 'closed_lost'],
+        qualification: ['needs_analysis', 'proposal', 'closed_lost'],
         needs_analysis: ['proposal', 'closed_lost'],
-        proposal: ['negotiation', 'closed_lost'],
+        // `proposal → closed_won` is legal: the quote_on_accepted hook closes
+        // the linked deal directly from the CPQ path (quote_generation parks
+        // the opportunity at `proposal`; an accepted quote wins it without a
+        // separate negotiation step).
+        proposal: ['negotiation', 'closed_won', 'closed_lost'],
         negotiation: ['closed_won', 'closed_lost'],
         closed_won: [],
         closed_lost: [],

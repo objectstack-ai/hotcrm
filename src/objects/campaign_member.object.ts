@@ -76,9 +76,11 @@ export const CampaignMember = ObjectSchema.create({
       ],
     }),
 
+    // NOT `readonly`: the campaign_enrollment flow writes this stamp, and
+    // 16.x drops writes to readonly fields (#2948) — every member landed with
+    // a null Added Date while the flag was on.
     added_date: Field.datetime({
       label: 'Added Date',
-      readonly: true,
       group: 'response',
     }),
 

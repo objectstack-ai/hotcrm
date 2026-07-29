@@ -11,7 +11,7 @@ export { EscalateCaseFlow, CloseCaseFlow } from './case-actions.flow';
 export { LeadConversionFlow } from './lead-conversion.flow';
 export { ScheduleFollowUpFlow } from './schedule-followup.flow';
 export { DemoBootstrapFlow } from './demo-bootstrap.flow';
-export { OpportunityApprovalFlow } from './opportunity-approval.flow';
+export { OpportunityApprovalFlow, OpportunityApprovalOnCreateFlow } from './opportunity-approval.flow';
 export { QuoteGenerationFlow } from './quote-generation.flow';
 // Time/event-driven automation (scheduled + wait-node + record-change)
 export { ContractRenewalFlow } from './contract-renewal.flow';
@@ -34,7 +34,7 @@ import { EscalateCaseFlow, CloseCaseFlow } from './case-actions.flow';
 import { LeadConversionFlow } from './lead-conversion.flow';
 import { ScheduleFollowUpFlow } from './schedule-followup.flow';
 import { DemoBootstrapFlow } from './demo-bootstrap.flow';
-import { OpportunityApprovalFlow } from './opportunity-approval.flow';
+import { OpportunityApprovalFlow, OpportunityApprovalOnCreateFlow } from './opportunity-approval.flow';
 import { QuoteGenerationFlow } from './quote-generation.flow';
 import { ContractRenewalFlow } from './contract-renewal.flow';
 import { CaseSlaMonitorFlow } from './case-sla-monitor.flow';
@@ -61,6 +61,7 @@ export const allFlows: Flow[] = [
   ScheduleFollowUpFlow,
   DemoBootstrapFlow,
   OpportunityApprovalFlow,
+  OpportunityApprovalOnCreateFlow,
   QuoteGenerationFlow,
   // Time/event-driven automation
   ContractRenewalFlow,

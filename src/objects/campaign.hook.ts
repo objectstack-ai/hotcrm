@@ -60,23 +60,18 @@ const campaignCompleted: Hook = {
       (typeof previous?.id === 'string' ? (previous.id as string) : undefined);
     if (!id) return;
 
-    const [
-      leads,
-      convertedLeads,
-      opportunities,
-      wonOpps,
-      members,
-      responded,
-      sent,
-      wonOppRecords,
-    ] = await Promise.all([
-      api.object('crm_lead').count({ filter: { campaign: id } }),
-      api.object('crm_lead').count({ filter: { campaign: id, is_converted: true } }),
+    // Lead attribution goes through the `crm_campaign_member` junction —
+    // `crm_lead` has NO `campaign` field, so the old direct-count queries
+    // (`crm_lead.count({ campaign: id })`) matched nothing and every lead
+    // metric snapshot was silently zero.
+    const [memberRows, opportunities, wonOpps, wonOppRecords] = await Promise.all([
+      api.object('crm_campaign_member').find({
+        filter: { crm_campaign: id },
+        fields: ['crm_lead', 'status'],
+        top: 5000,
+      }),
       api.object('crm_opportunity').count({ filter: { crm_campaign: id } }),
       api.object('crm_opportunity').count({ filter: { crm_campaign: id, stage: 'closed_won' } }),
-      api.object('crm_campaign_member').count({ filter: { crm_campaign: id } }),
-      api.object('crm_campaign_member').count({ filter: { crm_campaign: id, status: 'responded' } }),
-      api.object('crm_campaign_member').count({ filter: { crm_campaign: id, status: 'sent' } }),
       api.object('crm_opportunity').find({
         filter: { crm_campaign: id, stage: 'closed_won' },
         fields: ['amount'],
@@ -84,17 +79,33 @@ const campaignCompleted: Hook = {
       }),
     ]);
 
+    const members = memberRows.length;
+    const responded = memberRows.filter((r) => r.status === 'responded').length;
+    const leadIds = Array.from(
+      new Set(
+        memberRows
+          .map((r) => (typeof r.crm_lead === 'string' ? r.crm_lead : ''))
+          .filter(Boolean),
+      ),
+    );
+    const convertedLeads =
+      leadIds.length > 0
+        ? await api.object('crm_lead').count({ filter: { id: { $in: leadIds }, is_converted: true } })
+        : 0;
+
     const actualRevenue = wonOppRecords.reduce((sum, row) => {
       const amt = typeof row.amount === 'number' ? row.amount : Number(row.amount) || 0;
       return sum + amt;
     }, 0);
 
     await api.object('crm_campaign').update(id, {
-      num_leads: leads,
+      num_leads: leadIds.length,
       num_converted_leads: convertedLeads,
       num_opportunities: opportunities,
       num_won_opportunities: wonOpps,
-      num_sent: sent || members,
+      // "Total members enrolled" — the single definition of num_sent. The old
+      // `sent || members` under-counted as members progressed past `sent`.
+      num_sent: members,
       num_responses: responded,
       actual_revenue: actualRevenue,
     });

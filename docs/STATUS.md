@@ -1,11 +1,11 @@
 # HotCRM Status
 
-> Snapshot date: July 28, 2026
+> Snapshot date: June 22, 2026
 > Source of truth: `pnpm validate`, `pnpm typecheck`, and `pnpm test`
 
 ## Summary
 
-HotCRM is a single ObjectStack marketplace app at version `2.2.2`. The app manifest is defined in [`objectstack.config.ts`](../objectstack.config.ts) with id `app.objectstack.hotcrm` and namespace `crm`.
+HotCRM is a single ObjectStack marketplace app at version `1.3.0`. The app manifest is defined in [`objectstack.config.ts`](../objectstack.config.ts) with id `app.objectstack.hotcrm` and namespace `crm`.
 
 ## ObjectStack Validation
 
@@ -13,9 +13,9 @@ Latest local validation:
 
 ```text
 HotCRM v2.2.2
-Data: 15 Objects  309 Fields
-UI: 1 Apps  12 Views  15 Pages  4 Dashboards  10 Reports  13 Actions
-Logic: 20 Flows  2 Agents
+Data: 16 Objects  318 Fields
+UI: 1 Apps  13 Views  15 Pages  4 Dashboards  10 Reports  14 Actions
+Logic: 21 Flows  2 Agents
 Security: 12 Positions  6 Permissions
 ```
 
@@ -31,7 +31,7 @@ pnpm validate
 | --- | --- | --- |
 | ObjectStack metadata validation | `pnpm validate` | Passes |
 | TypeScript | `pnpm typecheck` | Passes |
-| Unit tests | `pnpm test` | 8 files, 67 tests passing |
+| Unit tests | `pnpm test` | 1 file, 6 tests passing |
 
 Run the full project verification pipeline with:
 
@@ -43,9 +43,9 @@ pnpm verify
 
 | Requirement | Value |
 | --- | --- |
-| Node.js | `>=22` |
+| Node.js | `>=20` |
 | pnpm | `>=10.0.0` |
-| ObjectStack packages | `16.1.0` |
+| ObjectStack packages | `^7.7.0` |
 | Local dev port | `4001` |
 
 ## Current Metadata Inventory

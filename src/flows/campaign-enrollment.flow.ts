@@ -3,32 +3,83 @@
 import type * as Automation from '@objectstack/spec/automation';
 type Flow = Automation.Flow;
 
-/** Campaign Enrollment — scheduled flow to bulk enroll leads */
+/**
+ * Campaign Enrollment — screen flow to bulk-enroll leads into a campaign.
+ *
+ * Launched from the "Enroll Leads" action on a campaign record (the console's
+ * flow-action trigger seeds `recordId`). It was previously a `schedule` flow
+ * (Monday 9 AM cron) with `campaignId` / `leadStatus` input variables — but a
+ * cron firing seeds NO inputs (only the console's flow-action trigger does,
+ * cf. lead_conversion), so every run had both variables undefined: either it
+ * matched no campaign, or it mass-enrolled every open lead into a null
+ * campaign and died on the "Campaign required" validation. User-invoked with
+ * a real campaign id, plus per-lead dedupe, it now does what the label says.
+ *
+ * Eligibility: leads in the chosen status, not converted, with an email, and
+ * not opted out of email. Already-enrolled leads are skipped (idempotent —
+ * re-running the action tops up new eligible leads only).
+ *
+ * Campaign metric rollups (num_sent etc.) are owned by the
+ * `campaign_snapshot_metrics` hook — this flow does NOT write them (its old
+ * per-run `num_sent = {leadList.length}` overwrite clobbered prior batches).
+ */
 export const CampaignEnrollmentFlow: Flow = {
   name: 'campaign_enrollment',
   label: 'Enroll Leads in Campaign',
-  description: 'Bulk enroll leads into marketing campaigns',
-  type: 'schedule',
+  description: 'Bulk enroll eligible leads into this campaign (skips already-enrolled and opted-out leads).',
+  type: 'screen',
   status: 'active',
-  // Scheduled runs have no trigger user, so under the default runAs:'user' the
-  // data nodes execute UNSCOPED anyway. Declare runAs:'system' to make that
-  // RLS-bypassing elevation explicit and intended (ADR-0049, #1888).
-  runAs: 'system',
 
   variables: [
-    { name: 'campaignId', type: 'text', isInput: true, isOutput: false },
+    // `recordId` matches the console's flow-action trigger contract
+    // ({ recordId, objectName }) — cf. lead_conversion / quote_generation.
+    { name: 'recordId', type: 'text', isInput: true, isOutput: false },
     { name: 'leadStatus', type: 'text', isInput: true, isOutput: false },
   ],
 
   nodes: [
-    { id: 'start', type: 'start', label: 'Start (Monday 9 AM)', config: { schedule: '0 9 * * 1' } },
+    { id: 'start', type: 'start', label: 'Start', config: { objectName: 'crm_campaign' } },
+    {
+      id: 'screen_1', type: 'screen', label: 'Enrollment Criteria',
+      config: {
+        fields: [
+          {
+            name: 'leadStatus', label: 'Enroll leads in status', type: 'select', required: true,
+            defaultValue: 'new',
+            options: [
+              { label: 'New', value: 'new' },
+              { label: 'Contacted', value: 'contacted' },
+              { label: 'Qualified', value: 'qualified' },
+            ],
+          },
+        ],
+      },
+    },
     {
       id: 'get_campaign', type: 'get_record', label: 'Get Campaign',
-      config: { objectName: 'crm_campaign', filter: { id: '{campaignId}' }, outputVariable: 'campaignRecord' },
+      config: { objectName: 'crm_campaign', filter: { id: '{recordId}' }, outputVariable: 'campaignRecord' },
+    },
+    {
+      // Only enroll into campaigns that are actually running (or planned):
+      // topping up a completed/aborted campaign would corrupt its final
+      // snapshot metrics. (Status values: planning / in_progress / completed / aborted.)
+      id: 'check_campaign_open', type: 'decision', label: 'Campaign Open?',
+      config: { condition: 'campaignRecord.status == "planning" || campaignRecord.status == "in_progress"' },
     },
     {
       id: 'query_leads', type: 'get_record', label: 'Find Eligible Leads',
-      config: { objectName: 'crm_lead', filter: { status: '{leadStatus}', is_converted: false, email: { $ne: null } }, limit: 1000, outputVariable: 'leadList' },
+      config: {
+        objectName: 'crm_lead',
+        filter: {
+          status: '{leadStatus}',
+          is_converted: false,
+          email: { $ne: null },
+          // This is email-campaign enrollment — honour the opt-out flag.
+          email_opt_out: false,
+        },
+        limit: 1000,
+        outputVariable: 'leadList',
+      },
     },
     {
       id: 'loop_leads', type: 'loop', label: 'Process Each Lead',
@@ -38,30 +89,46 @@ export const CampaignEnrollmentFlow: Flow = {
         body: {
           nodes: [
             {
+              // Dedupe: skip leads already enrolled in THIS campaign, so a
+              // re-run tops up instead of double-enrolling (double rows
+              // inflated num_sent / response_rate).
+              id: 'find_existing_member', type: 'get_record', label: 'Already Enrolled?',
+              config: {
+                objectName: 'crm_campaign_member',
+                filter: { crm_campaign: '{recordId}', crm_lead: '{currentLead.id}' },
+                outputVariable: 'existingMember',
+              },
+            },
+            {
+              id: 'check_not_enrolled', type: 'decision', label: 'New Member?',
+              config: { condition: 'existingMember == null' },
+            },
+            {
               id: 'create_campaign_member', type: 'create_record', label: 'Add to Campaign',
               config: {
                 objectName: 'crm_campaign_member',
-                fields: { crm_campaign: '{campaignId}', crm_lead: '{currentLead.id}', status: 'sent', added_date: '{NOW()}' },
+                fields: { crm_campaign: '{recordId}', crm_lead: '{currentLead.id}', status: 'sent', added_date: '{NOW()}' },
               },
             },
           ],
-          edges: [],
+          edges: [
+            { id: 'b1', source: 'find_existing_member', target: 'check_not_enrolled', type: 'default' },
+            // Already enrolled → no edge → next lead.
+            { id: 'b2', source: 'check_not_enrolled', target: 'create_campaign_member', type: 'conditional', condition: 'existingMember == null', label: 'Enroll' },
+          ],
         },
       },
-    },
-    {
-      // Runs once after the loop completes; leadList is in outer scope.
-      id: 'update_campaign_stats', type: 'update_record', label: 'Update Campaign Stats',
-      config: { objectName: 'crm_campaign', filter: { id: '{campaignId}' }, fields: { num_sent: '{leadList.length}' } },
     },
     { id: 'end', type: 'end', label: 'End' },
   ],
 
   edges: [
-    { id: 'e1', source: 'start', target: 'get_campaign', type: 'default' },
-    { id: 'e2', source: 'get_campaign', target: 'query_leads', type: 'default' },
-    { id: 'e3', source: 'query_leads', target: 'loop_leads', type: 'default' },
-    { id: 'e4', source: 'loop_leads', target: 'update_campaign_stats', type: 'default' },
-    { id: 'e5', source: 'update_campaign_stats', target: 'end', type: 'default' },
+    { id: 'e1', source: 'start', target: 'screen_1', type: 'default' },
+    { id: 'e2', source: 'screen_1', target: 'get_campaign', type: 'default' },
+    { id: 'e3', source: 'get_campaign', target: 'check_campaign_open', type: 'default' },
+    // Closed campaign → no edge → flow ends without enrolling.
+    { id: 'e4', source: 'check_campaign_open', target: 'query_leads', type: 'conditional', condition: 'campaignRecord.status == "planning" || campaignRecord.status == "in_progress"', label: 'Open' },
+    { id: 'e5', source: 'query_leads', target: 'loop_leads', type: 'default' },
+    { id: 'e6', source: 'loop_leads', target: 'end', type: 'default' },
   ],
 };

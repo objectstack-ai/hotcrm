@@ -27,7 +27,7 @@ type Flow = Automation.Flow;
 export const LeadAssignmentFlow: Flow = {
   name: 'lead_assignment',
   label: 'New Lead Routing & SLA',
-  description: 'On new lead: set a rating-based follow-up SLA and route to the sales-manager queue.',
+  description: 'On new lead: set a rating-based follow-up SLA and alert the lead owner.',
   type: 'record_change',
   status: 'active',
 

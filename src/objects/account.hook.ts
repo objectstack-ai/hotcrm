@@ -32,7 +32,11 @@ const accountHook: Hook = {
 
     // Stamp last_activity_date when ownership or type changes (migrated from the
     // removed `update_last_activity` object workflow — 7.7 dropped workflows[]).
-    if (event === 'beforeUpdate') {
+    // USER writes only (`ctx.user?.id` — this repo's system-write signal, cf.
+    // opportunity/quote hooks): the demo_bootstrap flow claims ownerless seeded
+    // accounts as a system write every 10 minutes, and stamping those flattened
+    // every seeded activity date to "today", emptying the churn report buckets.
+    if (event === 'beforeUpdate' && ctx.user?.id) {
       const prev = ctx.previous ?? {};
       const ownerChanged = typeof input.owner !== 'undefined' && input.owner !== prev.owner;
       const typeChanged = typeof input.type !== 'undefined' && input.type !== prev.type;

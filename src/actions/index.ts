@@ -11,6 +11,7 @@
  * action and the screen flow under `src/flows/lead-conversion.flow.ts`
  * carries the implementation.
  */
+export { EnrollLeadsAction } from './campaign.actions';
 export { EscalateCaseAction, CloseCaseAction } from './case.actions';
 export { MarkPrimaryContactAction, SendEmailAction } from './contact.actions';
 export { LogCallAction, LogMeetingAction } from './global.actions';

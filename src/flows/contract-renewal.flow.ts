@@ -35,13 +35,16 @@ export const ContractRenewalFlow: Flow = {
   nodes: [
     { id: 'start', type: 'start', label: 'Start (daily 08:00)', config: { schedule: '0 8 * * *' } },
     {
-      // Broad pre-filter (next 60 days); the per-record notice window is
-      // applied in the decision node below so each contract honours its own
-      // renewal_notice_days.
+      // Broad pre-filter (next 120 days — must cover the LARGEST
+      // renewal_notice_days in use, seeds go up to 90); the per-record notice
+      // window is applied in the decision node below so each contract honours
+      // its own renewal_notice_days. A pre-filter narrower than the largest
+      // notice period silently truncates it (a 90-day contract was invisible
+      // until 60 days out).
       id: 'query_contracts', type: 'get_record', label: 'Find Expiring Contracts',
       config: {
         objectName: 'crm_contract',
-        filter: { status: 'activated', end_date: { $gte: '{TODAY()}', $lte: '{TODAY() + 60}' } },
+        filter: { status: 'activated', end_date: { $gte: '{TODAY()}', $lte: '{TODAY() + 120}' } },
         limit: 500,
         outputVariable: 'contractList',
       },
@@ -56,6 +59,27 @@ export const ContractRenewalFlow: Flow = {
             {
               id: 'check_notice_window', type: 'decision', label: 'Within Notice Window?',
               config: { condition: 'timestamp(currentContract.end_date) <= daysFromNow(int(currentContract.renewal_notice_days))' },
+            },
+            {
+              // Idempotency gate: the sweep matches the same contract every
+              // day of its notice window — without this it created a duplicate
+              // task + notification (and, below, a duplicate pipeline-inflating
+              // renewal opportunity) per day. An open renewal task for this
+              // contract means this window was already handled.
+              id: 'find_existing_task', type: 'get_record', label: 'Already Reminded?',
+              config: {
+                objectName: 'crm_task',
+                filter: {
+                  related_to_account: '{currentContract.crm_account}',
+                  subject: 'Renewal due: contract {currentContract.contract_number}',
+                  status: { $nin: ['completed'] },
+                },
+                outputVariable: 'existingRenewalTask',
+              },
+            },
+            {
+              id: 'check_not_reminded', type: 'decision', label: 'First Reminder?',
+              config: { condition: 'existingRenewalTask == null' },
             },
             {
               id: 'create_renewal_task', type: 'create_record', label: 'Create Renewal Task',
@@ -87,6 +111,25 @@ export const ContractRenewalFlow: Flow = {
               config: { condition: 'currentContract.auto_renewal == true' },
             },
             {
+              // Second gate: never open a second renewal opportunity while one
+              // is still in flight for this account (belt-and-braces for the
+              // case where the task was completed but the deal is still open).
+              id: 'find_existing_renewal_opp', type: 'get_record', label: 'Open Renewal Deal Exists?',
+              config: {
+                objectName: 'crm_opportunity',
+                filter: {
+                  crm_account: '{currentContract.crm_account}',
+                  type: 'existing_renewal',
+                  stage: { $nin: ['closed_won', 'closed_lost'] },
+                },
+                outputVariable: 'existingRenewalOpp',
+              },
+            },
+            {
+              id: 'check_no_open_renewal', type: 'decision', label: 'No Open Renewal Deal?',
+              config: { condition: 'existingRenewalOpp == null' },
+            },
+            {
               id: 'create_renewal_opp', type: 'create_record', label: 'Open Renewal Opportunity',
               config: {
                 objectName: 'crm_opportunity',
@@ -104,12 +147,16 @@ export const ContractRenewalFlow: Flow = {
             },
           ],
           edges: [
-            // Only act when inside the per-contract notice window; "Not yet" paths
-            // simply have no edge, so the loop moves to the next item.
-            { id: 'b1', source: 'check_notice_window', target: 'create_renewal_task', type: 'conditional', condition: 'timestamp(currentContract.end_date) <= daysFromNow(int(currentContract.renewal_notice_days))', label: 'In window' },
-            { id: 'b2', source: 'create_renewal_task', target: 'notify_owner', type: 'default' },
-            { id: 'b3', source: 'notify_owner', target: 'check_auto_renewal', type: 'default' },
-            { id: 'b4', source: 'check_auto_renewal', target: 'create_renewal_opp', type: 'conditional', condition: 'currentContract.auto_renewal == true', label: 'Auto-renew' },
+            // Only act when inside the per-contract notice window; gates with
+            // no matching edge simply end the iteration, so the loop moves on.
+            { id: 'b1', source: 'check_notice_window', target: 'find_existing_task', type: 'conditional', condition: 'timestamp(currentContract.end_date) <= daysFromNow(int(currentContract.renewal_notice_days))', label: 'In window' },
+            { id: 'b2', source: 'find_existing_task', target: 'check_not_reminded', type: 'default' },
+            { id: 'b3', source: 'check_not_reminded', target: 'create_renewal_task', type: 'conditional', condition: 'existingRenewalTask == null', label: 'First reminder' },
+            { id: 'b4', source: 'create_renewal_task', target: 'notify_owner', type: 'default' },
+            { id: 'b5', source: 'notify_owner', target: 'check_auto_renewal', type: 'default' },
+            { id: 'b6', source: 'check_auto_renewal', target: 'find_existing_renewal_opp', type: 'conditional', condition: 'currentContract.auto_renewal == true', label: 'Auto-renew' },
+            { id: 'b7', source: 'find_existing_renewal_opp', target: 'check_no_open_renewal', type: 'default' },
+            { id: 'b8', source: 'check_no_open_renewal', target: 'create_renewal_opp', type: 'conditional', condition: 'existingRenewalOpp == null', label: 'Open renewal deal' },
           ],
         },
       },
