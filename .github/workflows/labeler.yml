@@ -28,7 +28,7 @@ jobs:
       # `pull_request_target` is the classic privileged-code-execution footgun,
       # and it buys nothing — labeler fetches its configuration over the API.
       - name: Label PR based on changed files
-        uses: actions/labeler@v6
+        uses: actions/labeler@v7
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           configuration-path: .github/labeler.yml
