@@ -2,6 +2,7 @@ import { F, P, cel } from '@objectstack/spec';
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
+import { INDUSTRY_OPTIONS } from './_picklists';
 
 export const Account = ObjectSchema.create({
   name: 'crm_account',
@@ -73,14 +74,10 @@ export const Account = ObjectSchema.create({
     industry: Field.select({
       label: 'Industry',
       group: 'basic',
-      options: [
-        { label: 'Technology', value: 'technology' },
-        { label: 'Finance', value: 'finance' },
-        { label: 'Healthcare', value: 'healthcare' },
-        { label: 'Retail', value: 'retail' },
-        { label: 'Manufacturing', value: 'manufacturing' },
-        { label: 'Education', value: 'education' },
-      ]
+      // Canonical set shared with Lead (#490): lead_conversion copies
+      // `leadRecord.industry` onto the account it creates, so this must
+      // accept every Lead value.
+      options: [...INDUSTRY_OPTIONS],
     }),
 
     description: Field.markdown({

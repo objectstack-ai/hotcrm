@@ -2,6 +2,7 @@
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
 import { F, cel } from '@objectstack/spec';
+import { SALUTATION_OPTIONS, LEAD_SOURCE_OPTIONS } from './_picklists';
 
 export const Contact = ObjectSchema.create({
   name: 'crm_contact',
@@ -27,13 +28,8 @@ export const Contact = ObjectSchema.create({
     salutation: Field.select({
       label: 'Salutation',
       group: 'identity',
-      options: [
-        { label: 'Mr.', value: 'mr' },
-        { label: 'Ms.', value: 'ms' },
-        { label: 'Mrs.', value: 'mrs' },
-        { label: 'Dr.', value: 'dr' },
-        { label: 'Prof.', value: 'prof' },
-      ]
+      // Canonical set shared with Lead (#490) — see _picklists.ts.
+      options: [...SALUTATION_OPTIONS],
     }),
     first_name: Field.text({
       label: 'First Name',
@@ -141,13 +137,9 @@ export const Contact = ObjectSchema.create({
     lead_source: Field.select({
       label: 'Lead Source',
       group: 'additional',
-      options: [
-        { label: 'Web', value: 'web' },
-        { label: 'Referral', value: 'referral' },
-        { label: 'Event', value: 'event' },
-        { label: 'Partner', value: 'partner' },
-        { label: 'Advertisement', value: 'advertisement' },
-      ]
+      // Canonical set shared with Lead + Opportunity (#490) — a converted
+      // lead's source must remain representable on the contact.
+      options: [...LEAD_SOURCE_OPTIONS],
     }),
 
     description: Field.markdown({

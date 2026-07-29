@@ -22,8 +22,11 @@ export const esES: TranslationData = {
         industry: {
           label: 'Industria',
           options: {
-            technology: 'Tecnología', finance: 'Finanzas', healthcare: 'Salud',
-            retail: 'Comercio', manufacturing: 'Manufactura', education: 'Educación',
+            technology: 'Tecnología', software: 'Software / SaaS', finance: 'Finanzas',
+            healthcare: 'Salud', retail: 'Comercio', manufacturing: 'Manufactura',
+            education: 'Educación', real_estate: 'Inmobiliaria', media: 'Medios y Entretenimiento',
+            logistics: 'Logística', hospitality: 'Hostelería', energy: 'Energía y Servicios Públicos',
+            government: 'Gobierno', nonprofit: 'Sin Ánimo de Lucro', other: 'Otro',
           },
         },
         annual_revenue: { label: 'Ingresos Anuales' },
@@ -196,8 +199,10 @@ export const esES: TranslationData = {
         lead_source: {
           label: 'Origen del Prospecto',
           options: {
-            web: 'Web', referral: 'Referencia', event: 'Evento',
-            partner: 'Socio', advertisement: 'Publicidad', cold_call: 'Llamada en Frío',
+            web: 'Web', referral: 'Referencia', event: 'Evento / Feria',
+            webinar: 'Seminario Web', partner: 'Socio', advertisement: 'Publicidad',
+            paid_search: 'Búsqueda de Pago', social: 'Redes Sociales', content: 'Contenido / Blog',
+            cold_call: 'Llamada en Frío', email_campaign: 'Campaña de Email', other: 'Otro',
           },
         },
         owner: { label: 'Propietario' },
@@ -283,8 +288,10 @@ export const esES: TranslationData = {
         lead_source: {
           label: 'Origen del Prospecto',
           options: {
-            web: 'Web', referral: 'Referido', event: 'Evento',
-            partner: 'Socio', advertisement: 'Publicidad', cold_call: 'Llamada en Frío',
+            web: 'Web', referral: 'Referencia', event: 'Evento / Feria',
+            webinar: 'Seminario Web', partner: 'Socio', advertisement: 'Publicidad',
+            paid_search: 'Búsqueda de Pago', social: 'Redes Sociales', content: 'Contenido / Blog',
+            cold_call: 'Llamada en Frío', email_campaign: 'Campaña de Email', other: 'Otro',
           },
         },
         competitors: { label: 'Competidores' },

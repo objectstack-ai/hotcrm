@@ -1,6 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import type * as Automation from '@objectstack/spec/automation';
+import { TASK_TYPE_OPTIONS, plainOptions } from '../objects/_picklists';
 type Flow = Automation.Flow;
 
 /**
@@ -47,13 +48,9 @@ export const ScheduleFollowUpFlow: Flow = {
           { name: 'dueDate', label: 'Due Date', type: 'date', required: true },
           {
             name: 'activityType', label: 'Activity Type', type: 'select',
-            options: [
-              { label: 'Call', value: 'call' },
-              { label: 'Email', value: 'email' },
-              { label: 'Meeting', value: 'meeting' },
-              { label: 'Demo', value: 'demo' },
-              { label: 'Follow-up', value: 'follow_up' },
-            ],
+            // Mirrors crm_task.type exactly (#490) — a hand-copied subset here
+            // silently dropped `other` from the picker.
+            options: plainOptions(TASK_TYPE_OPTIONS),
           },
           {
             name: 'priority', label: 'Priority', type: 'select',

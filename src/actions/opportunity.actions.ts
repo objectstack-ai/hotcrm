@@ -2,6 +2,7 @@
 
 import type { Action } from '@objectstack/spec/ui';
 import { P } from '@objectstack/spec';
+import { OPPORTUNITY_STAGE_OPTIONS, plainOptions } from '../objects/_picklists';
 
 /**
  * Clone Opportunity.
@@ -95,15 +96,8 @@ export const MassUpdateStageAction: Action = {
       label: 'New Stage',
       type: 'select',
       required: true,
-      options: [
-        { label: 'Prospecting', value: 'prospecting' },
-        { label: 'Qualification', value: 'qualification' },
-        { label: 'Needs Analysis', value: 'needs_analysis' },
-        { label: 'Proposal', value: 'proposal' },
-        { label: 'Negotiation', value: 'negotiation' },
-        { label: 'Closed Won', value: 'closed_won' },
-        { label: 'Closed Lost', value: 'closed_lost' },
-      ]
+      // Mirrors crm_opportunity.stage exactly (#490) — see _picklists.ts.
+      options: plainOptions(OPPORTUNITY_STAGE_OPTIONS),
     }
   ],
   successMessage: 'Opportunities updated successfully!',

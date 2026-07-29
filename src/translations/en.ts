@@ -23,8 +23,11 @@ export const en: TranslationData = {
         industry: {
           label: 'Industry',
           options: {
-            technology: 'Technology', finance: 'Finance', healthcare: 'Healthcare',
-            retail: 'Retail', manufacturing: 'Manufacturing', education: 'Education',
+            technology: 'Technology', software: 'Software / SaaS', finance: 'Finance',
+            healthcare: 'Healthcare', retail: 'Retail', manufacturing: 'Manufacturing',
+            education: 'Education', real_estate: 'Real Estate', media: 'Media & Entertainment',
+            logistics: 'Logistics', hospitality: 'Hospitality', energy: 'Energy & Utilities',
+            government: 'Government', nonprofit: 'Non-profit', other: 'Other',
           },
         },
         annual_revenue: { label: 'Annual Revenue' },
@@ -218,8 +221,10 @@ export const en: TranslationData = {
         lead_source: {
           label: 'Lead Source',
           options: {
-            web: 'Web', referral: 'Referral', event: 'Event',
-            partner: 'Partner', advertisement: 'Advertisement', cold_call: 'Cold Call',
+            web: 'Web', referral: 'Referral', event: 'Event / Trade Show',
+            webinar: 'Webinar', partner: 'Partner', advertisement: 'Advertisement',
+            paid_search: 'Paid Search', social: 'Social Media', content: 'Content / Blog',
+            cold_call: 'Cold Call', email_campaign: 'Email Campaign', other: 'Other',
           },
         },
         owner: { label: 'Lead Owner' },
@@ -305,8 +310,10 @@ export const en: TranslationData = {
         lead_source: {
           label: 'Lead Source',
           options: {
-            web: 'Web', referral: 'Referral', event: 'Event',
-            partner: 'Partner', advertisement: 'Advertisement', cold_call: 'Cold Call',
+            web: 'Web', referral: 'Referral', event: 'Event / Trade Show',
+            webinar: 'Webinar', partner: 'Partner', advertisement: 'Advertisement',
+            paid_search: 'Paid Search', social: 'Social Media', content: 'Content / Blog',
+            cold_call: 'Cold Call', email_campaign: 'Email Campaign', other: 'Other',
           },
         },
         competitors: { label: 'Competitors' },
