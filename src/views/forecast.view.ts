@@ -39,7 +39,7 @@ export const ForecastViews = defineView({
     appearance: { allowedVisualizations: ['grid'] },
     tabs: [
       { name: 'all',          label: 'All',           view: 'all_forecasts',  isDefault: true, pinned: true },
-      { name: 'this_quarter', label: 'This Quarter',  icon: 'calendar',       view: 'this_quarter_forecasts' },
+      { name: 'this_quarter', label: 'Quarterly',     icon: 'calendar',       view: 'this_quarter_forecasts' },
       { name: 'mine',         label: 'My Forecast',   icon: 'user',           view: 'my_forecast' },
     ],
   },
@@ -48,14 +48,21 @@ export const ForecastViews = defineView({
     this_quarter_forecasts: {
       name: 'this_quarter_forecasts',
       type: 'grid',
-      label: 'This Quarter',
+      // Operator-only filter: the list data path resolves no date macro (the
+      // old `{this_quarter_start}` — not even a valid token — reached the
+      // query as a literal string and matched nothing; the valid spelling
+      // `{current_quarter_start}` would ALSO ship unresolved). Newest quarter
+      // sorts first, so the current quarter is the top group.
+      label: 'Quarterly · Latest First',
       data: { provider: 'object', object: 'crm_forecast' },
       columns: ['owner', 'quota', 'closed_amount', 'commit_amount', 'best_case_amount', 'pipeline_amount', 'attainment_pct', 'coverage_ratio'],
       filter: [
-        { field: 'period',       operator: 'equals', value: 'quarter' },
-        { field: 'period_start', operator: 'equals', value: '{this_quarter_start}' },
+        { field: 'period', operator: 'equals', value: 'quarter' },
       ],
-      sort: [{ field: 'attainment_pct', order: 'desc' }],
+      sort: [
+        { field: 'period_start', order: 'desc' },
+        { field: 'attainment_pct', order: 'desc' },
+      ],
     },
     my_forecast: {
       name: 'my_forecast',

@@ -482,6 +482,15 @@ export const zhCN: TranslationData = {
         escalated_cases: { label: '已升级工单' },
       },
       _actions: {
+        log_call: {
+          label: '记录通话',
+          successMessage: '通话记录成功！',
+          params: {
+          subject: { label: '通话主题' },
+          duration: { label: '时长（分钟）' },
+          notes: { label: '通话记录' },
+          },
+        },
         escalate_case: {
           label: '升级工单',
           confirmText: '此操作会将工单升级到升级处理团队，是否继续？',
@@ -842,15 +851,6 @@ export const zhCN: TranslationData = {
   },
 
   globalActions: {
-    log_call: {
-      label: '记录通话',
-      successMessage: '通话记录成功！',
-      params: {
-        subject: { label: '通话主题' },
-        duration: { label: '时长（分钟）' },
-        notes: { label: '通话记录' },
-      },
-    },
     log_meeting: {
       label: '记录会议',
       successMessage: '会议记录成功！',
@@ -860,10 +860,6 @@ export const zhCN: TranslationData = {
         attendees: { label: '参会人' },
         notes: { label: '会议纪要' },
       },
-    },
-    export_csv: {
-      label: '导出 CSV',
-      successMessage: '导出完成！',
     },
   },
 
@@ -893,6 +889,7 @@ export const zhCN: TranslationData = {
         nav_my_tasks: { label: '我的任务' },
         nav_my_deals: { label: '我的商机' },
         nav_my_leads: { label: '我的线索' },
+        nav_my_cases: { label: '我的工单' },
         nav_all_tasks: { label: '全部任务' },
 
         group_marketing: { label: '市场营销' },

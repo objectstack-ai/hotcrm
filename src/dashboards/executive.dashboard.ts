@@ -41,7 +41,7 @@ export const ExecutiveDashboard: Dashboard = {
       label: 'Owner',
       type: 'lookup',
       scope: 'dashboard',
-      optionsFrom: { object: 'user', valueField: 'id', labelField: 'name' },
+      optionsFrom: { object: 'sys_user', valueField: 'id', labelField: 'name' },
     },
     {
       field: 'lead_source',

@@ -45,7 +45,9 @@ export const CaseDetailPage: Page = {
           label: 'Case Information',
           properties: {
             title: '{case_number} · {subject}',
-            subtitle: '{account}',
+            // The lookup field is `crm_account` — `{account}` matched nothing
+            // and the subtitle rendered blank.
+            subtitle: '{crm_account}',
             icon: 'life-buoy',
             breadcrumb: true,
             actions: [EscalateCaseAction, CloseCaseAction, LogCallAction],

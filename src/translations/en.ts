@@ -403,6 +403,10 @@ export const en: TranslationData = {
         escalated_cases: { label: 'Escalated Cases' },
       },
       _actions: {
+        log_call: {
+          label: 'Log a Call',
+          successMessage: 'Call logged successfully!',
+        },
         escalate_case: {
           label: 'Escalate Case',
           confirmText: 'This will escalate the case to the escalation team. Continue?',
@@ -650,17 +654,6 @@ export const en: TranslationData = {
         total_price: { label: 'Total' },
         line_number: { label: 'Line #' },
       },
-    },
-  },
-
-  globalActions: {
-    log_call: {
-      label: 'Log a Call',
-      successMessage: 'Call logged successfully!',
-    },
-    export_csv: {
-      label: 'Export to CSV',
-      successMessage: 'Export completed!',
     },
   },
 

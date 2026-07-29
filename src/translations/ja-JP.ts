@@ -361,6 +361,10 @@ export const jaJP: TranslationData = {
         escalated_cases: { label: 'エスカレートしたケース' },
       },
       _actions: {
+        log_call: {
+          label: '通話を記録',
+          successMessage: '通話を記録しました！',
+        },
         escalate_case: {
           label: 'ケースをエスカレート',
           confirmText: 'このケースをエスカレーションチームへ引き継ぎます。続行しますか？',
@@ -608,17 +612,6 @@ export const jaJP: TranslationData = {
         total_price: { label: '合計' },
         line_number: { label: '行番号' },
       },
-    },
-  },
-
-  globalActions: {
-    log_call: {
-      label: '通話を記録',
-      successMessage: '通話を記録しました！',
-    },
-    export_csv: {
-      label: 'CSV エクスポート',
-      successMessage: 'エクスポートが完了しました！',
     },
   },
 

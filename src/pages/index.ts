@@ -8,12 +8,7 @@ export { CaseDetailPage } from './case_detail.page';
 export { SalesHomePage } from './home.page';
 export { AppLauncherPage } from './app_launcher.page';
 export { UtilityBarPage } from './utility_bar.page';
-export {
-  EscalateCasePage,
-  CloseCasePage,
-  CreateCampaignPage,
-  LogCallPage,
-  LogMeetingPage,
-  MassUpdateStagePage,
-  SendEmailPage,
-} from './action_modals.page';
+// The former `action_modals.page.ts` exports are gone: no action is
+// modal-typed anymore (the 16.1.0 console never opened those pages — it
+// resolves a modal `target` as an object name), so the pages were
+// unreferenced dead metadata.

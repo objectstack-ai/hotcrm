@@ -54,7 +54,9 @@ export const OpportunityStagnationFlow: Flow = {
             {
               id: 'notify_owner', type: 'notify', label: 'Nudge Owner & Manager',
               config: {
-                to: ['{currentOpp.owner}', '{currentOpp.owner.manager}'],
+                // Owner only — `{currentOpp.owner.manager}` dot-walks a
+                // lookup, which flow templates interpolate as "undefined".
+                to: ['{currentOpp.owner}'],
                 channels: ['inbox', 'email'],
                 topic: 'deal_stalled',
                 title: 'Stalled deal: {currentOpp.name}',

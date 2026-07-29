@@ -361,6 +361,10 @@ export const esES: TranslationData = {
         escalated_cases: { label: 'Casos Escalados' },
       },
       _actions: {
+        log_call: {
+          label: 'Registrar Llamada',
+          successMessage: '¡Llamada registrada con éxito!',
+        },
         escalate_case: {
           label: 'Escalar Caso',
           confirmText: 'Esto enviará el caso al equipo de escalación. ¿Continuar?',
@@ -608,17 +612,6 @@ export const esES: TranslationData = {
         total_price: { label: 'Total' },
         line_number: { label: 'Nº de Línea' },
       },
-    },
-  },
-
-  globalActions: {
-    log_call: {
-      label: 'Registrar Llamada',
-      successMessage: '¡Llamada registrada con éxito!',
-    },
-    export_csv: {
-      label: 'Exportar CSV',
-      successMessage: '¡Exportación completada!',
     },
   },
 

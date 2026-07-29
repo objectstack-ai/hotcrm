@@ -62,23 +62,32 @@ export const CloneOpportunityAction: Action = {
 /**
  * Mass Update Opportunity Stage.
  *
- * Modal-typed action: collects a target `stage` then patches every
- * selected opportunity through the metadata body. Selected ids come
- * from `input.selectedIds` (populated by the list toolbar).
+ * KNOWN-BROKEN in console 16.1.0 — kept wired and tracked in issue #508.
+ * No invocation path currently executes it: modal submits resolve `target`
+ * as an object name (400), the selection-bar bulk button is a client-side
+ * no-op (zero network requests), and the header toolbar path rejects
+ * multi-row selections, so `input.selectedIds` never arrives. Script-typed
+ * (modal is provably dead) with a recordId fallback so a single-row
+ * invocation works the moment the toolbar delivers it. Until upstream ships
+ * bulk-selection delivery, stage moves happen via the pipeline kanban
+ * drag-and-drop, inline grid editing, or the record form.
  */
 export const MassUpdateStageAction: Action = {
   name: 'mass_update_stage',
   label: 'Update Stage',
   objectName: 'crm_opportunity',
   icon: 'layers',
-  type: 'modal',
-  target: 'mass_update_stage',
+  type: 'script',
   body: {
     language: 'js',
     source: `
       const newStage = input.stage ?? null;
       if (!newStage) throw new Error('mass_update_stage requires a stage');
-      const ids = Array.isArray(input.selectedIds) ? input.selectedIds : [];
+      // Selection first, single record as the fallback (see the note above —
+      // the console does not deliver multi-row selections to actions yet).
+      const selected = Array.isArray(input.selectedIds) ? input.selectedIds : [];
+      const ids = selected.length ? selected : (ctx.recordId ? [ctx.recordId] : []);
+      if (!ids.length) throw new Error('mass_update_stage: no opportunity selected');
       let updated = 0;
       for (const id of ids) {
         await ctx.api.object('crm_opportunity').update({ id, stage: newStage }, { where: { id } });

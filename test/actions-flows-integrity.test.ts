@@ -245,3 +245,88 @@ describe('demo data is demo-ready', () => {
     }
   });
 });
+
+describe('flow notification templates stay within what the engine interpolates', () => {
+  /**
+   * Flow templates interpolate `{var}` and `{var.field}` — one hop into the
+   * loop/record variable. They can NOT traverse a lookup: `{caseRecord.owner.
+   * manager}` and `{caseRecord.crm_account.name}` render the literal string
+   * "undefined" (case-escalation.flow.ts documents this at its update node,
+   * then did exactly that two nodes later in `notify`).
+   */
+  const DOT_WALK = /\{(?!\$)([A-Za-z_$][\w$]*)\.([\w$]+)\.([\w$]+)\}/;
+
+  /** All nodes of a flow, including nodes nested inside loop bodies. */
+  const allNodes = (f: AnyRec): AnyRec[] =>
+    (f.nodes ?? []).flatMap(function expand(n: AnyRec): AnyRec[] {
+      return [n, ...((n.config?.body?.nodes ?? []) as AnyRec[]).flatMap(expand)];
+    });
+
+  it('no notify node dot-walks a lookup in recipients, title, or body', () => {
+    const bad: string[] = [];
+    for (const f of flows) {
+      for (const n of allNodes(f)) {
+        if (n.type !== 'notify') continue;
+        const texts: string[] = [
+          ...(Array.isArray(n.config?.to) ? n.config.to : []),
+          n.config?.title ?? '',
+          n.config?.body ?? '',
+        ];
+        for (const t of texts) {
+          const m = typeof t === 'string' ? t.match(DOT_WALK) : null;
+          if (m) bad.push(`${f.name}/${n.id}: "${m[0]}" interpolates to "undefined"`);
+        }
+      }
+    }
+    expect(bad, `dot-walking notify templates:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+});
+
+describe('no action relies on the broken modal machinery', () => {
+  it('no action is modal-typed', () => {
+    // Verified against the running 16.1.0 console (2026-07-28): a modal
+    // action's param dialog renders, but submit resolves `target` as an
+    // OBJECT name (`GET /api/v1/meta/object/<target>` → 400, "Error loading
+    // form") and the body is never executed. Script actions POST
+    // /api/v1/actions/... and run; screen flows handle anything that needs
+    // to UPDATE a sharing-ruled record (the sandbox api cannot).
+    const modal = actions.filter((a) => a.type === 'modal').map((a) => a.name);
+    expect(modal, `modal actions never execute in 16.1.0:\n  ${modal.join('\n  ')}`).toEqual([]);
+  });
+
+  it('escalate/close case actions delegate to registered screen flows', () => {
+    for (const name of ['escalate_case', 'close_case']) {
+      const a = action(name);
+      expect(a?.type, `${name} must be flow-typed`).toBe('flow');
+      const f = flow(a!.target);
+      expect(f, `${name} targets missing flow "${a!.target}"`).toBeTruthy();
+      expect(f!.type).toBe('screen');
+    }
+  });
+
+  it('create_campaign skips leads already on the campaign', () => {
+    // The body must check existing members before inserting — re-running the
+    // action on the same selection must not double-count marketing touches.
+    const a = action('create_campaign');
+    const src: string = a?.body?.source ?? '';
+    expect(src).toMatch(/find\(|findOne\(|existing/);
+    // The dedupe read requires the read capability alongside the write.
+    expect(a?.body?.capabilities).toContain('api.read');
+  });
+});
+
+describe('case escalation trigger does not fight the close action', () => {
+  it.each(['case_escalation', 'case_escalation_on_create'])(
+    '%s suppresses on closed/resolved cases, not just escalated ones',
+    (name) => {
+      // With only the `status != "escalated"` guard, closing a critical case
+      // (an afterUpdate) re-triggered this flow, which rewrote the case back
+      // to "escalated" the moment close_case closed it — observed live.
+      const start = nodeOf(flow(name), 'start');
+      const condition: string = start?.config?.condition ?? '';
+      expect(condition).toContain('record.status != "escalated"');
+      expect(condition).toContain('record.status != "closed"');
+      expect(condition).toContain('record.status != "resolved"');
+    },
+  );
+});

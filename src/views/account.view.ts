@@ -65,7 +65,9 @@ export const AccountViews = defineView({
             name: 'owner',
             label: 'New Owner',
             type: 'lookup',
-            object: 'user',
+            // The platform registers `sys_user` — `user` matches no object and
+            // rendered an empty picker.
+            object: 'sys_user',
             required: true,
           },
         ],
@@ -91,6 +93,8 @@ export const AccountViews = defineView({
       { name: 'map', label: 'Map', icon: 'map', view: 'account_map' },
       { name: 'enterprise', label: 'Enterprise', icon: 'crown', view: 'enterprise_accounts' },
       { name: 'mine', label: 'My Accounts', icon: 'user', view: 'my_accounts' },
+      { name: 'renewals', label: 'Renewals', icon: 'refresh-cw', view: 'renewals_due' },
+      { name: 'at_risk', label: 'At Risk', icon: 'triangle-alert', view: 'at_risk_accounts' },
     ],
   },
 
@@ -200,6 +204,10 @@ export const AccountViews = defineView({
         fields: [
           { field: 'name', required: true, colSpan: 2 },
           'account_number',
+          // `type` (prospect / customer / partner …) drives the Renewals and
+          // At-Risk views' `type = customer` filter — with no form field it
+          // could never be set, so those views matched nothing.
+          'type',
           'industry',
           'phone',
           'website',
@@ -213,6 +221,14 @@ export const AccountViews = defineView({
         label: 'Financials',
         columns: 2,
         fields: ['annual_revenue', 'number_of_employees'],
+      },
+      {
+        // The customer-success fields the renewals_due / at_risk_accounts
+        // views list and filter on. They existed on the object but no form
+        // offered them, so the CS working queues stayed permanently empty.
+        label: 'Customer Success',
+        columns: 2,
+        fields: ['tier', 'segment', 'health_score', 'renewal_owner', 'next_renewal_date'],
       },
       {
         label: 'Locations',

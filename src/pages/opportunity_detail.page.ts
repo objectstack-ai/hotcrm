@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { Page } from '@objectstack/spec/ui';
-import { CloneOpportunityAction } from '../actions/opportunity.actions';
+import { CloneOpportunityAction, GenerateQuoteAction } from '../actions/opportunity.actions';
 
 /**
  * Opportunity Detail Record Page
@@ -37,10 +37,15 @@ export const OpportunityDetailPage: Page = {
           label: 'Opportunity Information',
           properties: {
             title: '{name}',
-            subtitle: '{account}',
+            // The lookup field is `crm_account` — `{account}` matched nothing
+            // and the subtitle rendered blank.
+            subtitle: '{crm_account}',
             icon: 'briefcase',
             breadcrumb: true,
-            actions: [CloneOpportunityAction],
+            // generate_quote is the CPQ entry point (opportunity → quote); a
+            // custom record page replaces the default header, so the action
+            // must be listed here explicitly or it is unreachable.
+            actions: [GenerateQuoteAction, CloneOpportunityAction],
           },
         },
         {

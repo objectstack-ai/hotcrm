@@ -12,9 +12,19 @@ import type { Action } from '@objectstack/spec/ui';
 export const LogCallAction: Action = {
   name: 'log_call',
   label: 'Log a Call',
+  // Scoped to crm_case, no longer global — issue #509. The runtime registers
+  // a body action without an objectName under the key 'global', but the
+  // dispatcher only probes '<objectName>' then '*' — a global body action is
+  // therefore unreachable from every surface ("Action 'log_call' on object
+  // '*' not found", verified 2026-07-28). crm_case is where the app wires
+  // this action (case_detail header); scoped, it registers under crm_case
+  // and executes. When the upstream key mismatch is fixed, restoring the
+  // global design is just deleting this objectName (and log_meeting's).
+  objectName: 'crm_case',
   icon: 'phone',
-  type: 'modal',
-  target: 'log_call',
+  // script, not modal: modal submits die on GET /api/v1/meta/object/<target>
+  // → 400 in 16.1.0; script actions POST /api/v1/actions/... and execute.
+  type: 'script',
   body: {
     language: 'js',
     source: `
@@ -76,9 +86,10 @@ export const LogCallAction: Action = {
 export const LogMeetingAction: Action = {
   name: 'log_meeting',
   label: 'Log a Meeting',
+  // Scoped to crm_case for the same dispatcher-key reason as log_call (issue #509).
+  objectName: 'crm_case',
   icon: 'calendar',
-  type: 'modal',
-  target: 'log_meeting',
+  type: 'script',
   body: {
     language: 'js',
     source: `
@@ -137,35 +148,7 @@ export const LogMeetingAction: Action = {
   refreshAfter: true,
 };
 
-/**
- * Export to CSV.
- *
- * Script-typed cross-domain (global) action: dumps the rows of the
- * target object to a CSV string. Object name is forwarded by the
- * dispatcher via `input.objectName` (defaults to `crm_account`).
- */
-export const ExportToCsvAction: Action = {
-  name: 'export_csv',
-  label: 'Export to CSV',
-  icon: 'download',
-  type: 'script',
-  body: {
-    language: 'js',
-    source: `
-      const objectName = input.objectName ?? 'crm_account';
-      const raw = await ctx.api.object(objectName).find();
-      // Drivers may return either a plain array or { records, total }.
-      const records = Array.isArray(raw) ? raw : (raw?.records ?? raw?.value ?? []);
-      if (!Array.isArray(records) || records.length === 0) return '';
-      const keys = Object.keys(records[0]);
-      const header = keys.join(',');
-      const rows = records.map((r) => keys.map((k) => r[k] ?? '').join(','));
-      return [header, ...rows].join('\\n');
-    `,
-    capabilities: ['api.read'],
-    timeoutMs: 10000,
-  },
-  locations: ['list_toolbar'],
-  successMessage: 'Export completed!',
-  refreshAfter: false,
-};
+// ExportToCsvAction was removed: as a global body action it registered under
+// the 'global' key the dispatcher never probes (same defect as log_call above),
+// and the list grids' built-in `exportOptions: ['csv', 'xlsx']` already cover
+// CSV export without any action.

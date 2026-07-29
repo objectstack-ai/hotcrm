@@ -93,13 +93,53 @@ export const SalesHomePage: Page = {
           properties: {
             title: 'Key Performance Indicators',
             bordered: false,
+            // `record:highlights` needs a bound record and real fields; a home
+            // page has neither, and the four names it listed (total_revenue,
+            // deals_won, …) exist on no object — the card rendered blank.
+            // `object-metric` widgets aggregate live data instead.
             body: [
               {
-                type: 'record:highlights',
-                id: 'kpi_highlights',
+                type: 'object-metric',
+                id: 'kpi_revenue_won',
                 properties: {
-                  fields: ['total_revenue', 'deals_won', 'pipeline_value', 'conversion_rate'],
-                  layout: 'horizontal',
+                  objectName: 'crm_opportunity',
+                  label: 'Revenue (Won)',
+                  icon: 'dollar-sign',
+                  aggregate: { field: 'amount', function: 'sum' },
+                  filter: { stage: 'closed_won' },
+                },
+              },
+              {
+                type: 'object-metric',
+                id: 'kpi_deals_won',
+                properties: {
+                  objectName: 'crm_opportunity',
+                  label: 'Deals Won',
+                  icon: 'trophy',
+                  aggregate: { field: 'id', function: 'count' },
+                  filter: { stage: 'closed_won' },
+                },
+              },
+              {
+                type: 'object-metric',
+                id: 'kpi_pipeline_value',
+                properties: {
+                  objectName: 'crm_opportunity',
+                  label: 'Pipeline Value',
+                  icon: 'briefcase',
+                  aggregate: { field: 'amount', function: 'sum' },
+                  filter: { stage: { $nin: ['closed_won', 'closed_lost'] } },
+                },
+              },
+              {
+                type: 'object-metric',
+                id: 'kpi_open_leads',
+                properties: {
+                  objectName: 'crm_lead',
+                  label: 'Open Leads',
+                  icon: 'user-plus',
+                  aggregate: { field: 'id', function: 'count' },
+                  filter: { is_converted: false },
                 },
               },
             ],

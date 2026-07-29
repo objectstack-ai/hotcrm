@@ -67,7 +67,16 @@ export const OpportunityViews = defineView({
       { name: 'crm_forecast', label: 'Forecast', icon: 'calendar', view: 'close_date_calendar' },
       { name: 'timeline', label: 'Timeline', icon: 'git-commit-horizontal', view: 'deal_timeline' },
       { name: 'cards', label: 'Cards', icon: 'gallery-thumbnails', view: 'deal_gallery' },
+      { name: 'stale', label: 'Stale', icon: 'triangle-alert', view: 'stale_opportunities' },
+      { name: 'closing', label: 'Closing Soon', icon: 'calendar-check', view: 'closing_this_quarter' },
     ],
+    // List-level entry points: generate_quote runs per row (its flow needs
+    // one recordId); mass_update_stage stays wired even though console
+    // 16.1.0 cannot deliver bulk selections yet (tracked in issue #508 — see
+    // the note in opportunity.actions.ts). Built-in `exportOptions` covers
+    // CSV export.
+    rowActions: ['edit', 'generate_quote'],
+    bulkActions: ['mass_update_stage'],
   },
 
   listViews: {
@@ -233,6 +242,7 @@ export const OpportunityViews = defineView({
         fields: [
           'expected_revenue',
           'forecast_category',
+          'type',
           'lead_source',
           'crm_campaign',
           'days_in_stage',
@@ -243,6 +253,16 @@ export const OpportunityViews = defineView({
         label: 'Sales Strategy',
         columns: 1,
         fields: ['next_step', 'competitors'],
+      },
+      {
+        // Win/loss capture at close time. The fields existed on the object for
+        // reporting but no form offered them, so every closed deal lost its
+        // why-we-won / why-we-lost data.
+        label: 'Win / Loss',
+        collapsible: true,
+        collapsed: true,
+        columns: 2,
+        fields: ['win_reason', 'loss_reason', { field: 'loss_details', colSpan: 2 }],
       },
     ],
   },
