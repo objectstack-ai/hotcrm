@@ -2,6 +2,7 @@
   "name": "hotcrm",
   "version": "2.2.2",
   "description": "HotCRM - Production CRM built on ObjectStack",
+  "license": "Apache-2.0",
   "private": true,
   "main": "./objectstack.config.ts",
   "types": "./objectstack.config.ts",

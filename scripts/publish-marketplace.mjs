@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Copyright (c) 2026 ObjectStack contributors. MIT license.
+// Copyright (c) 2026 ObjectStack contributors. Licensed under the Apache-2.0 license.
 
 /**
  * publish-marketplace.mjs
