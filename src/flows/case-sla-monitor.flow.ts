@@ -58,7 +58,9 @@ export const CaseSlaMonitorFlow: Flow = {
             {
               id: 'notify_team', type: 'notify', label: 'Alert Owner & Manager',
               config: {
-                to: ['{currentCase.owner}', '{currentCase.owner.manager}'],
+                // Owner only — `{currentCase.owner.manager}` dot-walks a
+                // lookup, which flow templates interpolate as "undefined".
+                to: ['{currentCase.owner}'],
                 channels: ['inbox', 'email'],
                 severity: 'critical',
                 topic: 'case_sla_breach',

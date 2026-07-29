@@ -61,18 +61,20 @@ export const ScheduleFollowUpAction: Action = {
 /**
  * Add selected leads to a Campaign.
  *
- * Modal-typed action: collects a campaign id then writes one
- * `crm_campaign_member` record per selected lead via the metadata body.
- * Selected ids are surfaced through `input.selectedIds` (populated by
- * the list toolbar) and the chosen campaign through `input.campaign`.
+ * Script-typed action: collects a campaign id (param dialog) then writes one
+ * `crm_campaign_member` record per selected lead via the metadata body,
+ * skipping leads already on the campaign. Selected ids are surfaced through
+ * `input.selectedIds` (populated by the list toolbar) and the chosen
+ * campaign through `input.crm_campaign`.
  */
 export const CreateCampaignAction: Action = {
   name: 'create_campaign',
   label: 'Add to Campaign',
   objectName: 'crm_lead',
   icon: 'send',
-  type: 'modal',
-  target: 'create_campaign',
+  // script, not modal — modal submits never execute the body in 16.1.0 (the
+  // console resolves `target` as an object name; see ScheduleFollowUpAction).
+  type: 'script',
   body: {
     language: 'js',
     source: `
@@ -83,9 +85,28 @@ export const CreateCampaignAction: Action = {
       // left crm_campaign null → 'Campaign required' validation failure.
       const campaignId = input.crm_campaign ?? null;
       if (!campaignId) throw new Error('create_campaign requires a campaign id');
-      const ids = Array.isArray(input.selectedIds) ? input.selectedIds : [];
+      // Selection first, single record as the fallback: console 16.1.0 does
+      // not deliver multi-row selections to actions (the toolbar path rejects
+      // them), so the working invocation today is one lead at a time via the
+      // row menu / a single-row selection. When the runtime starts passing
+      // selectedIds, the bulk path lights up with no further change here.
+      const selected = Array.isArray(input.selectedIds) ? input.selectedIds : [];
+      const ids = selected.length ? selected : (ctx.recordId ? [ctx.recordId] : []);
+      if (!ids.length) throw new Error('create_campaign: no lead selected');
+      // Skip leads already on this campaign — the modal copy promises
+      // duplicates are skipped, and re-running the action on the same
+      // selection must not double-count marketing touches.
+      const raw = await ctx.api.object('crm_campaign_member').find({
+        filter: { crm_campaign: campaignId },
+        fields: ['crm_lead'],
+        top: 5000,
+      });
+      const existingRows = Array.isArray(raw) ? raw : (raw?.records ?? []);
+      const existing = new Set(existingRows.map((r) => r.crm_lead));
       const inserted = [];
+      let skipped = 0;
       for (const leadId of ids) {
+        if (existing.has(leadId)) { skipped++; continue; }
         const row = await ctx.api.object('crm_campaign_member').insert({
           crm_campaign: campaignId,
           crm_lead: leadId,
@@ -93,12 +114,15 @@ export const CreateCampaignAction: Action = {
         });
         inserted.push(row?.id ?? null);
       }
-      return { campaignId, count: inserted.length, ids: inserted };
+      return { campaignId, count: inserted.length, skipped, ids: inserted };
     `,
-    capabilities: ['api.write'],
+    capabilities: ['api.read', 'api.write'],
     timeoutMs: 10000,
   },
-  locations: ['list_toolbar'],
+  // list_item gives every row a working record-scoped entry point; the
+  // toolbar button works for a single-row selection (multi-row selections are
+  // rejected client-side in 16.1.0).
+  locations: ['list_toolbar', 'list_item'],
   params: [
     // Field-backed param: `field` + `objectOverride` make the console resolve
     // the widget from crm_campaign_member.crm_campaign (a lookup → crm_campaign),

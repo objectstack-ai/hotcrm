@@ -78,6 +78,7 @@ export const CrmApp = App.create({
         { id: 'nav_my_tasks', type: 'object', objectName: 'crm_task', viewName: 'my_open_tasks', label: 'My Tasks', icon: 'circle-check' },
         { id: 'nav_my_deals', type: 'object', objectName: 'crm_opportunity', viewName: 'my_open_deals', label: 'My Deals', icon: 'target' },
         { id: 'nav_my_leads', type: 'object', objectName: 'crm_lead', viewName: 'my_leads', label: 'My Leads', icon: 'user-plus' },
+        { id: 'nav_my_cases', type: 'object', objectName: 'crm_case', viewName: 'my_open_cases', label: 'My Cases', icon: 'life-buoy' },
         { id: 'nav_all_tasks', type: 'object', objectName: 'crm_task', label: 'All Tasks', icon: 'list' },
       ],
     },
@@ -132,7 +133,10 @@ export const CrmApp = App.create({
       icon: 'check-circle',
       children: [
         { id: 'nav_approval_requests', type: 'object', objectName: 'sys_approval_request', label: 'Inbox',     icon: 'inbox',   requiresObject: 'sys_approval_request' },
-        { id: 'nav_approval_processes',type: 'object', objectName: 'sys_approval_process', label: 'Processes', icon: 'workflow',requiresObject: 'sys_approval_process' },
+        // No "Processes" item: @objectstack/plugin-approvals registers
+        // sys_approval / sys_approval_request / sys_approval_action …, but no
+        // `sys_approval_process` object exists in any installed plugin, so the
+        // old item's requiresObject guard hid it on every install, forever.
       ],
     },
   ],

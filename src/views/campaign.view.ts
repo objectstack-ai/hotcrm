@@ -104,6 +104,7 @@ export const CampaignViews = defineView({
         fields: [
           { field: 'name', required: true, colSpan: 2 },
           'campaign_code',
+          'type',
           'channel',
           { field: 'status', required: true },
           'parent_campaign',

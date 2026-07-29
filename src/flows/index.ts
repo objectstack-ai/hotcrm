@@ -7,6 +7,7 @@ import type { Flow } from '@objectstack/spec/automation';
  */
 export { CampaignEnrollmentFlow } from './campaign-enrollment.flow';
 export { CaseEscalationFlow, CaseEscalationOnCreateFlow } from './case-escalation.flow';
+export { EscalateCaseFlow, CloseCaseFlow } from './case-actions.flow';
 export { LeadConversionFlow } from './lead-conversion.flow';
 export { ScheduleFollowUpFlow } from './schedule-followup.flow';
 export { DemoBootstrapFlow } from './demo-bootstrap.flow';
@@ -29,6 +30,7 @@ export { TaskDueReminderFlow } from './task-due-reminder.flow';
 
 import { CampaignEnrollmentFlow } from './campaign-enrollment.flow';
 import { CaseEscalationFlow, CaseEscalationOnCreateFlow } from './case-escalation.flow';
+import { EscalateCaseFlow, CloseCaseFlow } from './case-actions.flow';
 import { LeadConversionFlow } from './lead-conversion.flow';
 import { ScheduleFollowUpFlow } from './schedule-followup.flow';
 import { DemoBootstrapFlow } from './demo-bootstrap.flow';
@@ -53,6 +55,8 @@ export const allFlows: Flow[] = [
   CampaignEnrollmentFlow,
   CaseEscalationFlow,
   CaseEscalationOnCreateFlow,
+  EscalateCaseFlow,
+  CloseCaseFlow,
   LeadConversionFlow,
   ScheduleFollowUpFlow,
   DemoBootstrapFlow,

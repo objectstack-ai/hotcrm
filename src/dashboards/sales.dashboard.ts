@@ -38,7 +38,7 @@ export const SalesDashboard: Dashboard = {
       label: 'Sales Rep',
       type: 'lookup',
       scope: 'dashboard',
-      optionsFrom: { object: 'user', valueField: 'id', labelField: 'name' },
+      optionsFrom: { object: 'sys_user', valueField: 'id', labelField: 'name' },
     },
     {
       field: 'type',

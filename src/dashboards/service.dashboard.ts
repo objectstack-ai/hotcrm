@@ -39,7 +39,7 @@ export const ServiceDashboard: Dashboard = {
       label: 'Agent',
       type: 'lookup',
       scope: 'dashboard',
-      optionsFrom: { object: 'user', valueField: 'id', labelField: 'name' },
+      optionsFrom: { object: 'sys_user', valueField: 'id', labelField: 'name' },
     },
     {
       field: 'priority',
@@ -233,19 +233,22 @@ export const ServiceDashboard: Dashboard = {
       },
     },
 
-    // ─── Row 4: My Open Cases by Priority ─────────────────────────────
+    // ─── Row 4: Open Cases by Priority ────────────────────────────────
     // A dashboard `table` binds to an analytics cube and aggregates; it cannot
-    // list individual cases (ADR-0021). The previous "My Open Cases" table
-    // selected only `case_count` with no dimension — one summary row, not a
-    // queue. Keeping the personal filter but grouping by priority yields a
-    // per-priority breakdown of the agent's open queue with its SLA-breach
-    // rate. For a clickable case list, use an object-bound ListView (ADR-0017).
+    // list individual cases (ADR-0021). This is deliberately TEAM-WIDE, not
+    // "my cases": the analytics query path resolves no user token at all —
+    // `{current_user}` (and even `{current_user_id}`) reach the query as
+    // literal strings and match no owner, so a personal filter renders 0 for
+    // everyone (see the proven note in crm.app.ts's My Work group). For a
+    // per-agent queue, use the my_open_cases ListView ("My Cases" in the
+    // My Work nav group). Restoring a personal widget here is tracked in
+    // issue #510.
     {
-      id: 'my_open_cases_by_priority',
-      title: 'My Open Cases by Priority',
-      description: 'Your open cases and their SLA-violation rate, broken down by priority',
+      id: 'open_cases_by_priority',
+      title: 'Open Cases by Priority',
+      description: 'Open cases and their SLA-violation rate, broken down by priority',
       type: 'table',
-      filter: { owner: '{current_user}', is_closed: false },
+      filter: { is_closed: false },
       colorVariant: 'default',
       dataset: 'case_metrics', dimensions: ['priority'], values: ['case_count', 'avg_sla_violated'],
       layout: { x: 0, y: 10, w: 12, h: 4 },

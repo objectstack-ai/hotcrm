@@ -84,9 +84,13 @@ export const LeadViews = defineView({
       view: 'detail_form', // Use named form view
     },
     
-    // List Actions
-    rowActions: ['edit', 'delete', 'convert_lead'],
-    bulkActions: ['mass_update', 'mass_delete', 'assign_owner'],
+    // List Actions — every name here must be a defined Action (or a built-in
+    // edit/delete). The previous mass_update / mass_delete / assign_owner
+    // referenced actions that were never defined, so the toolbar buttons did
+    // nothing.
+    rowActions: ['edit', 'delete', 'convert_lead', 'schedule_followup'],
+    // Built-in `exportOptions` covers CSV export; no export action needed.
+    bulkActions: ['create_campaign'],
     
     // Features
     pagination: { pageSize: 25, pageSizeOptions: [10, 25, 50, 100] },

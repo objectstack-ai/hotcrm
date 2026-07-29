@@ -52,7 +52,12 @@ export const CaseViews = defineView({
       { name: 'sla', label: 'SLA', icon: 'calendar', view: 'sla_calendar' },
       { name: 'timeline', label: 'Timeline', icon: 'git-commit-horizontal', view: 'case_timeline' },
       { name: 'escalated', label: 'Escalated', icon: 'triangle-alert', view: 'escalated_cases' },
+      { name: 'at_risk', label: 'SLA at Risk', icon: 'clock-alert', view: 'sla_at_risk' },
+      { name: 'mine', label: 'My Cases', icon: 'user', view: 'my_open_cases' },
     ],
+    // Escalate straight from the queue — the action already declared
+    // `list_item` placement but no case view surfaced it.
+    rowActions: ['edit', 'escalate_case'],
   },
 
   listViews: {
@@ -102,6 +107,29 @@ export const CaseViews = defineView({
       },
     },
 
+    /**
+     * The agent's personal queue. This is a LIST view on purpose: the list
+     * data path resolves `{current_user_id}` (proven by my_leads /
+     * my_open_tasks), while the dashboard/analytics path resolves no user
+     * token at all — which is why service_dashboard has no "my" widget
+     * (see the note there and the proven record in crm.app.ts).
+     */
+    my_open_cases: {
+      name: 'my_open_cases',
+      type: 'grid',
+      label: 'My Open Cases',
+      data: { provider: 'object', object: 'crm_case' },
+      columns: ['case_number', 'subject', 'crm_account', 'priority', 'status', 'sla_due_date'],
+      filter: [
+        { field: 'owner', operator: 'equals', value: '{current_user_id}' },
+        { field: 'is_closed', operator: 'equals', value: false },
+      ],
+      sort: [
+        { field: 'priority_rank', order: 'desc' },
+        { field: 'sla_due_date', order: 'asc' },
+      ],
+    },
+
     escalated_cases: {
       name: 'escalated_cases',
       type: 'grid',
@@ -145,6 +173,9 @@ export const CaseViews = defineView({
           'priority',
           'origin',
           'owner',
+          // Required on the object with no default — a form without it could
+          // never save a new case.
+          { field: 'description', required: true, colSpan: 2 },
         ],
       },
       {

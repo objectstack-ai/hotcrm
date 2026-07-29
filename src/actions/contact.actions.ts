@@ -46,8 +46,9 @@ export const SendEmailAction: Action = {
   label: 'Send Email',
   objectName: 'crm_contact',
   icon: 'mail',
-  type: 'modal',
-  target: 'send_email',
+  // script, not modal: modal submits die on GET /api/v1/meta/object/<target>
+  // → 400 in 16.1.0; script actions POST /api/v1/actions/... and execute.
+  type: 'script',
   body: {
     language: 'js',
     source: `

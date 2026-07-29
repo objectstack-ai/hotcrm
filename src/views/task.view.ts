@@ -32,8 +32,11 @@ export const TaskViews = defineView({
       { field: 'due_date', order: 'asc' },
     ],
     rowColor: {
+      // Task priority is low/normal/high/urgent — the previous critical/medium
+      // keys were Case values, so urgent and normal rows got no color at all.
+      // Colors mirror the option colors on crm_task.priority.
       field: 'priority',
-      colors: { critical: '#dc2626', high: '#f97316', medium: '#eab308', low: '#94a3b8' },
+      colors: { urgent: '#dc2626', high: '#f97316', normal: '#16a34a', low: '#94a3b8' },
     },
     selection: { type: 'multiple' },
     pagination: { pageSize: 50 },
@@ -48,6 +51,8 @@ export const TaskViews = defineView({
       { name: 'plan', label: 'Plan', icon: 'gantt-chart', view: 'task_gantt' },
       { name: 'worklog', label: 'Worklog', icon: 'git-commit-horizontal', view: 'task_timeline' },
       { name: 'mine', label: 'My Tasks', icon: 'user', view: 'my_open_tasks' },
+      { name: 'priority', label: 'Priority', icon: 'flag', view: 'todays_tasks' },
+      { name: 'backlog', label: 'Backlog', icon: 'clock-alert', view: 'overdue_tasks' },
     ],
   },
 

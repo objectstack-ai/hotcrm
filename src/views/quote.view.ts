@@ -79,7 +79,9 @@ export const QuoteViews = defineView({
       {
         label: 'Quote',
         columns: 2,
-        fields: ['quote_number', 'crm_account', 'crm_contact', 'crm_opportunity', 'owner', 'status', 'quote_date', 'expiration_date'],
+        // `name` is required on crm_quote with no default — omitting it made
+        // quote creation through this form impossible.
+        fields: [{ field: 'name', required: true, colSpan: 2 }, 'quote_number', 'crm_account', 'crm_contact', 'crm_opportunity', 'owner', 'status', 'quote_date', 'expiration_date'],
       },
       {
         label: 'Totals',

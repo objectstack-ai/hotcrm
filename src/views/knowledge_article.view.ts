@@ -43,7 +43,7 @@ export const KnowledgeArticleViews = defineView({
       { name: 'all',       label: 'All',         view: 'all_articles', isDefault: true, pinned: true },
       { name: 'published', label: 'Published',   icon: 'check-circle-2', view: 'published_articles' },
       { name: 'drafts',    label: 'My Drafts',   icon: 'pencil',         view: 'my_drafts' },
-      { name: 'stale',     label: 'Stale (>180d)', icon: 'clock-alert',  view: 'stale_articles' },
+      { name: 'stale',     label: 'Review Queue', icon: 'clock-alert',  view: 'stale_articles' },
     ],
   },
 
@@ -73,12 +73,16 @@ export const KnowledgeArticleViews = defineView({
     stale_articles: {
       name: 'stale_articles',
       type: 'grid',
-      label: 'Stale',
+      // Operator-only filter + oldest-review-first sort. The list data path
+      // does NOT resolve date macros: `last_reviewed_at < '{180_days_ago}'`
+      // compared the literal string, and since '2026-…' < '{…' is
+      // lexicographically true it matched EVERY published article — including
+      // ones reviewed minutes ago (verified against the running console).
+      label: 'Review Queue · Oldest First',
       data: { provider: 'object', object: 'crm_knowledge_article' },
       columns: ['article_number', 'title', 'category', 'owner', 'last_reviewed_at'],
       filter: [
-        { field: 'status',           operator: 'equals',   value: 'published' },
-        { field: 'last_reviewed_at', operator: 'less_than', value: '{180_days_ago}' },
+        { field: 'status', operator: 'equals', value: 'published' },
       ],
       sort: [{ field: 'last_reviewed_at', order: 'asc' }],
     },

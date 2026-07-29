@@ -29,7 +29,13 @@ export const CaseEscalationFlow: Flow = {
       config: {
         objectName: 'crm_case',
         triggerType: 'record-after-update',
-        condition: 'record.priority == "critical" && record.status != "escalated"',
+        // Also suppress on closed/resolved: closing a critical case is itself
+        // an afterUpdate, and with only the `!= "escalated"` guard this flow
+        // re-escalated the case the moment it was closed (observed live:
+        // close_case wrote status "closed", this flow immediately rewrote it
+        // to "escalated"). Status strings are the reliable guard — comparing
+        // the boolean is_closed suffers the SQLite `1 != true` trap above.
+        condition: 'record.priority == "critical" && record.status != "escalated" && record.status != "closed" && record.status != "resolved"',
       },
     },
     {
@@ -69,12 +75,17 @@ export const CaseEscalationFlow: Flow = {
       // shape is a no-op stub in 7.4 and never delivered anything.
       id: 'notify_team', type: 'notify', label: 'Notify Support Team',
       config: {
-        to: ['{caseRecord.owner}', '{caseRecord.owner.manager}'],
+        // Owner only. Flow templates cannot traverse a lookup (see the note on
+        // `assign_senior_agent` above): `{caseRecord.owner.manager}` and
+        // `{caseRecord.crm_account.name}` both interpolate to the literal
+        // string "undefined" — a phantom recipient and a garbled body.
+        // "reassigned" was also false: this flow never changes the owner.
+        to: ['{caseRecord.owner}'],
         channels: ['inbox', 'email'],
         severity: 'critical',
         topic: 'case_escalated',
         title: 'Case escalated: {caseRecord.case_number}',
-        body: 'Case {caseRecord.case_number} ({caseRecord.priority}) for {caseRecord.crm_account.name} has been escalated and reassigned.',
+        body: 'Case {caseRecord.case_number} ({caseRecord.priority}) has been escalated. See the case for account and SLA details.',
         actionUrl: '/crm_case/{record.id}',
       },
     },
