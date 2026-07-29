@@ -170,13 +170,13 @@ export const Task = ObjectSchema.create({
       readonly: true,
     }),
 
-    // Set by the `task_due_reminder` schedule flow once a reminder has fired,
-    // so the hourly sweep never re-alerts the same task. Reset to false if you
-    // push `reminder_date` into the future.
+    // Set by the `task_due_reminder` schedule flow once a reminder has fired
+    // (the sweep de-dups on `reminder_date`, which it clears; this flag is the
+    // audit trail). NOT readonly: 16.x drops flow writes to readonly fields
+    // (#2948) — same reason crm_case.is_sla_violated/escalated_date are open.
     reminder_sent: Field.boolean({
       label: 'Reminder Sent',
       defaultValue: false,
-      readonly: true,
     }),
 
     // Progress

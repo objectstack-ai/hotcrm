@@ -18,13 +18,18 @@ export const CaseEscalationFlow: Flow = {
   nodes: [
     {
       // Trigger wiring (7.4): bind to afterUpdate and gate on the critical
-      // transition. The re-fire guard MUST use `status` (a string enum), NOT the
-      // boolean `is_escalated`: this flow's own escalation write re-triggers
+      // transition. The re-fire guard MUST NOT rely on the boolean
+      // `is_escalated`: this flow's own escalation write re-triggers
       // record-after-update, and on SQLite/libsql a boolean persists as integer
       // `1`, so `record.is_escalated != true` is `1 != true` = true — the guard
       // never trips and the flow loops forever (it wedged a first-boot seed on
-      // 2026-07-06). The same write sets `status: 'escalated'`, so
-      // `status != "escalated"` reliably suppresses the second fire.
+      // 2026-07-06). Instead:
+      // - `escalated_date == null` marks "never escalated" (the escalation write
+      //   stamps it, suppressing the second fire AND any re-escalation when an
+      //   agent later moves the case back to in_progress to work it);
+      // - the status terms keep the flow off cases already escalated or already
+      //   finished — without them a critical case could never be resolved or
+      //   closed (the flow would yank `status` straight back to `escalated`).
       id: 'start', type: 'start', label: 'Start',
       config: {
         objectName: 'crm_case',
@@ -35,7 +40,11 @@ export const CaseEscalationFlow: Flow = {
         // close_case wrote status "closed", this flow immediately rewrote it
         // to "escalated"). Status strings are the reliable guard — comparing
         // the boolean is_closed suffers the SQLite `1 != true` trap above.
-        condition: 'record.priority == "critical" && record.status != "escalated" && record.status != "closed" && record.status != "resolved"',
+        // `escalated_date == null` additionally keeps a case that was already
+        // escalated once (then reopened) from being escalated again.
+        condition:
+          'record.priority == "critical" && record.escalated_date == null'
+          + ' && record.status != "escalated" && record.status != "resolved" && record.status != "closed"',
       },
     },
     {
@@ -56,23 +65,17 @@ export const CaseEscalationFlow: Flow = {
         fields: { is_escalated: true, escalation_reason: 'Auto-escalated: critical priority', escalated_date: '{NOW()}', status: 'escalated' },
       },
     },
-    {
-      id: 'create_task', type: 'create_record', label: 'Create Follow-up Task',
-      config: {
-        objectName: 'crm_task',
-        fields: {
-          subject: 'Follow up on escalated case: {caseRecord.case_number}',
-          related_to_type: 'crm_case',
-          related_to_case: '{record.id}',
-          owner: '{caseRecord.owner}',
-          priority: 'high', status: 'not_started', due_date: '{TODAY() + 1}',
-        },
-      },
-    },
+    // No `create_task` node here: the escalation write above flips `status` to
+    // `escalated`, which fires the `case_status_side_effects` hook — the single
+    // owner of escalation follow-up tasks (it also covers the `escalate_case`
+    // action and the SLA monitor). A second task node here produced duplicate,
+    // disagreeing tasks (case owner/high vs account owner/urgent) per escalation.
     {
       // ADR-0012: the dedicated `notify` node dispatches through the messaging
       // service (inbox + email + push). The legacy `script` + `actionType:'email'`
       // shape is a no-op stub in 7.4 and never delivered anything.
+      // Owner only: `{caseRecord.owner.manager}` cannot traverse a lookup in
+      // flow templates — it interpolates to the literal "undefined".
       id: 'notify_team', type: 'notify', label: 'Notify Support Team',
       config: {
         // Owner only. Flow templates cannot traverse a lookup (see the note on
@@ -85,7 +88,7 @@ export const CaseEscalationFlow: Flow = {
         severity: 'critical',
         topic: 'case_escalated',
         title: 'Case escalated: {caseRecord.case_number}',
-        body: 'Case {caseRecord.case_number} ({caseRecord.priority}) has been escalated. See the case for account and SLA details.',
+        body: 'Case {caseRecord.case_number} ({caseRecord.priority}) has been auto-escalated on critical priority. It remains assigned to you.',
         actionUrl: '/crm_case/{record.id}',
       },
     },
@@ -95,9 +98,8 @@ export const CaseEscalationFlow: Flow = {
   edges: [
     { id: 'e1', source: 'start', target: 'get_case', type: 'default' },
     { id: 'e2', source: 'get_case', target: 'assign_senior_agent', type: 'default' },
-    { id: 'e3', source: 'assign_senior_agent', target: 'create_task', type: 'default' },
-    { id: 'e4', source: 'create_task', target: 'notify_team', type: 'default' },
-    { id: 'e5', source: 'notify_team', target: 'end', type: 'default' },
+    { id: 'e3', source: 'assign_senior_agent', target: 'notify_team', type: 'default' },
+    { id: 'e4', source: 'notify_team', target: 'end', type: 'default' },
   ],
 };
 
@@ -105,8 +107,8 @@ export const CaseEscalationFlow: Flow = {
  * Insert-time twin of `case_escalation`: a record-change flow binds exactly one
  * hook event, so the afterUpdate flow above never sees cases that are BORN
  * critical (phone-in P1s — the common path). Same nodes/edges, only the start
- * node is rebound to afterInsert. The `status != "escalated"` guard carries
- * over untouched.
+ * node is rebound to afterInsert. The `escalated_date == null` + status guard
+ * carries over untouched (a case born critical has neither).
  */
 export const CaseEscalationOnCreateFlow: Flow = {
   ...CaseEscalationFlow,

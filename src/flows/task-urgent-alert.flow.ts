@@ -23,7 +23,11 @@ export const TaskUrgentAlertFlow: Flow = {
       config: {
         objectName: 'crm_task',
         triggerType: 'record-after-create',
-        condition: 'record.priority == "urgent" && record.is_completed != true',
+        // Gate on the `status` enum, not the `is_completed` boolean: on
+        // SQLite/libsql booleans persist as integer 1, so `is_completed != true`
+        // is `1 != true` = always true and the guard never trips (cf. the same
+        // hazard documented in case_escalation).
+        condition: 'record.priority == "urgent" && record.status != "completed"',
       },
     },
     {
