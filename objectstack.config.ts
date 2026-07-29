@@ -34,6 +34,14 @@ export default defineStack({
     type: 'app',
     name: 'HotCRM',
     description: 'AI-Native CRM for the ObjectStack marketplace — Accounts, Contacts, Leads, Opportunities, Cases, Knowledge, Forecasts, Campaigns, Contracts.',
+    // ADR-0087 protocol handshake (ADR-0025 §3.2): the metadata/runtime
+    // protocol major this app's metadata is authored against. Only the major
+    // participates in the check — a runtime on a different major refuses the
+    // load with a structured OS_PROTOCOL_INCOMPATIBLE diagnostic (naming the
+    // `objectstack migrate meta` replay) instead of failing deep in a schema
+    // parse. Bump together with `specVersion` on every platform upgrade
+    // (docs/MAINTENANCE.md §3).
+    engines: { protocol: '^16.0.0' },
   },
 
   // ─── Platform capabilities this app needs ─────────────────────────
