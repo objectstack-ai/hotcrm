@@ -22,8 +22,11 @@ export const jaJP: TranslationData = {
         industry: {
           label: '業種',
           options: {
-            technology: 'テクノロジー', finance: '金融', healthcare: 'ヘルスケア',
-            retail: '小売', manufacturing: '製造', education: '教育',
+            technology: 'テクノロジー', software: 'ソフトウェア / SaaS', finance: '金融',
+            healthcare: 'ヘルスケア', retail: '小売', manufacturing: '製造',
+            education: '教育', real_estate: '不動産', media: 'メディア・エンタメ',
+            logistics: '物流', hospitality: 'ホスピタリティ', energy: 'エネルギー・公益',
+            government: '政府・行政', nonprofit: '非営利', other: 'その他',
           },
         },
         annual_revenue: { label: '年間売上' },
@@ -196,8 +199,10 @@ export const jaJP: TranslationData = {
         lead_source: {
           label: 'リードソース',
           options: {
-            web: 'ウェブ', referral: '紹介', event: 'イベント',
-            partner: 'パートナー', advertisement: '広告', cold_call: 'コールドコール',
+            web: 'ウェブ', referral: '紹介', event: 'イベント・展示会',
+            webinar: 'ウェビナー', partner: 'パートナー', advertisement: '広告',
+            paid_search: '有料検索', social: 'ソーシャルメディア', content: 'コンテンツ・ブログ',
+            cold_call: 'コールドコール', email_campaign: 'メールキャンペーン', other: 'その他',
           },
         },
         owner: { label: 'リード所有者' },
@@ -283,8 +288,10 @@ export const jaJP: TranslationData = {
         lead_source: {
           label: 'リードソース',
           options: {
-            web: 'ウェブ', referral: '紹介', event: 'イベント',
-            partner: 'パートナー', advertisement: '広告', cold_call: 'コールドコール',
+            web: 'ウェブ', referral: '紹介', event: 'イベント・展示会',
+            webinar: 'ウェビナー', partner: 'パートナー', advertisement: '広告',
+            paid_search: '有料検索', social: 'ソーシャルメディア', content: 'コンテンツ・ブログ',
+            cold_call: 'コールドコール', email_campaign: 'メールキャンペーン', other: 'その他',
           },
         },
         competitors: { label: '競合他社' },

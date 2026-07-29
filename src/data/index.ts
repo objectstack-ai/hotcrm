@@ -30,6 +30,31 @@ import { KnowledgeArticle } from '../objects/knowledge_article.object';
 const celDaysAgo = (n: number) => cel`daysAgo(${n})`;
 const celDaysFromNow = (n: number) => cel`daysFromNow(${n})`;
 
+/**
+ * A note on system-computed fields in seeds (#490).
+ *
+ * The seed loader writes with `{ isSystem: true, skipTriggers: true }`: hooks
+ * do NOT run over seed rows, and readonly stripping only guards user writes.
+ * Two consequences shape everything below:
+ *
+ * 1. Seeding historical values into readonly fields (`created_date`,
+ *    `days_in_stage`, `last_contacted_date`, `actual_revenue`) is legitimate
+ *    and load-bearing — it is the only way demo reports get history — and the
+ *    platform explicitly preserves explicit seed values.
+ * 2. BUT nothing recomputes derived fields for seed rows, so every seeded
+ *    value of a hook-owned field MUST match what the hook would compute
+ *    (`is_closed` ⇔ status, `resolution_time_hours` ⇔ closed−created,
+ *    opportunity `probability`/`forecast_category`/`expected_revenue` ⇔ stage,
+ *    forecast `period_label` ⇔ period_start). Otherwise the first genuine
+ *    user edit "mysteriously" rewrites the record.
+ *
+ * Autonumber fields (`case_number`, `contract_number`, `quote_number`) are
+ * NEVER seeded: the runtime owns those sequences (the SQL driver bootstraps
+ * each counter past existing rows), so hand-numbering them only invites
+ * drift. Upsert identity uses a natural key instead (subject / name /
+ * description).
+ */
+
 // ─── Accounts ─────────────────────────────────────────────────────────
 const accounts = defineSeed(Account, {
   mode: 'upsert',
@@ -295,6 +320,11 @@ const leads = defineSeed(Lead, {
 });
 
 // ─── Opportunities ────────────────────────────────────────────────────
+// `probability`, `forecast_category` and `expected_revenue` are derived from
+// `stage` by opportunity.hook.ts (STAGE_PROBABILITY / STAGE_FORECAST). Hooks
+// don't run over seeds, so every row below carries the exact values the hook
+// would compute — anything else gets silently rewritten on the first user
+// edit (#490).
 const opportunities = defineSeed(Opportunity, {
   mode: 'upsert',
   externalId: 'name',
@@ -305,9 +335,10 @@ const opportunities = defineSeed(Opportunity, {
       amount: 150000,
       stage: 'proposal',
       probability: 60,
+      expected_revenue: 90000,
       close_date: cel`daysFromNow(30)`,
       type: 'existing_upgrade',
-      forecast_category: 'pipeline',
+      forecast_category: 'commit',
       lead_source: 'web',
       days_in_stage: 12,
       description: `Upgrade from Standard to Enterprise edition for the
@@ -321,7 +352,8 @@ analytics seats for the Ops org, (3) priority support SLA.`,
       crm_account: 'Globex Industries',
       amount: 500000,
       stage: 'qualification',
-      probability: 30,
+      probability: 25,
+      expected_revenue: 125000,
       close_date: cel`daysFromNow(60)`,
       type: 'new_business',
       forecast_category: 'pipeline',
@@ -333,7 +365,8 @@ analytics seats for the Ops org, (3) priority support SLA.`,
       crm_account: 'Wayne Enterprises',
       amount: 1200000,
       stage: 'negotiation',
-      probability: 75,
+      probability: 80,
+      expected_revenue: 960000,
       close_date: cel`daysFromNow(14)`,
       type: 'new_business',
       forecast_category: 'commit',
@@ -345,7 +378,8 @@ analytics seats for the Ops org, (3) priority support SLA.`,
       crm_account: 'Initech Solutions',
       amount: 80000,
       stage: 'needs_analysis',
-      probability: 25,
+      probability: 40,
+      expected_revenue: 32000,
       close_date: cel`daysFromNow(45)`,
       type: 'existing_upgrade',
       forecast_category: 'best_case',
@@ -359,6 +393,7 @@ analytics seats for the Ops org, (3) priority support SLA.`,
       amount: 220000,
       stage: 'closed_won',
       probability: 100,
+      expected_revenue: 220000,
       close_date: cel`daysAgo(15)`,
       type: 'existing_renewal',
       forecast_category: 'closed',
@@ -371,6 +406,7 @@ analytics seats for the Ops org, (3) priority support SLA.`,
       amount: 145000,
       stage: 'closed_won',
       probability: 100,
+      expected_revenue: 145000,
       close_date: cel`daysAgo(50)`,
       type: 'new_business',
       forecast_category: 'closed',
@@ -382,6 +418,7 @@ analytics seats for the Ops org, (3) priority support SLA.`,
       amount: 380000,
       stage: 'closed_won',
       probability: 100,
+      expected_revenue: 380000,
       close_date: cel`daysAgo(95)`,
       type: 'existing_upgrade',
       forecast_category: 'closed',
@@ -393,6 +430,7 @@ analytics seats for the Ops org, (3) priority support SLA.`,
       amount: 65000,
       stage: 'closed_won',
       probability: 100,
+      expected_revenue: 65000,
       close_date: cel`daysAgo(140)`,
       type: 'new_business',
       forecast_category: 'closed',
@@ -404,6 +442,7 @@ analytics seats for the Ops org, (3) priority support SLA.`,
       amount: 90000,
       stage: 'closed_won',
       probability: 100,
+      expected_revenue: 90000,
       close_date: cel`daysAgo(200)`,
       type: 'new_business',
       forecast_category: 'closed',
@@ -416,6 +455,7 @@ analytics seats for the Ops org, (3) priority support SLA.`,
       amount: 75000,
       stage: 'closed_lost',
       probability: 0,
+      expected_revenue: 0,
       close_date: cel`daysAgo(25)`,
       type: 'existing_upgrade',
       forecast_category: 'omitted',
@@ -428,6 +468,7 @@ analytics seats for the Ops org, (3) priority support SLA.`,
       amount: 120000,
       stage: 'closed_lost',
       probability: 0,
+      expected_revenue: 0,
       close_date: cel`daysAgo(60)`,
       type: 'new_business',
       forecast_category: 'omitted',
@@ -439,13 +480,26 @@ analytics seats for the Ops org, (3) priority support SLA.`,
     // and the dashboard funnel/area widgets all have rich data to chew on.
     ...((): readonly Record<string, unknown>[] => {
       const stages = ['qualification', 'needs_analysis', 'proposal', 'negotiation', 'closed_won', 'closed_lost'] as const;
+      // Mirrors of opportunity.hook.ts STAGE_FORECAST / STAGE_PROBABILITY —
+      // hooks don't run over seeds, so the generator must produce exactly the
+      // values the hook derives from `stage` (#490). The old block used a
+      // pseudo-random probability and mapped proposal → best_case, both of
+      // which the hook rewrote on the first user edit.
       const forecastByStage: Record<typeof stages[number], string> = {
         qualification: 'pipeline',
         needs_analysis: 'best_case',
-        proposal: 'best_case',
+        proposal: 'commit',
         negotiation: 'commit',
         closed_won: 'closed',
         closed_lost: 'omitted',
+      };
+      const probabilityByStage: Record<typeof stages[number], number> = {
+        qualification: 25,
+        needs_analysis: 40,
+        proposal: 60,
+        negotiation: 80,
+        closed_won: 100,
+        closed_lost: 0,
       };
       const sources = ['web', 'referral', 'partner', 'event', 'cold_call', 'advertisement'] as const;
       const types = ['new_business', 'existing_upgrade', 'existing_renewal'] as const;
@@ -463,12 +517,16 @@ analytics seats for the Ops org, (3) priority support SLA.`,
         const close_date = isClosed(stage)
           ? celDaysAgo(5 + spread)
           : celDaysFromNow(7 + spread);
+        const amount = 20000 + ((i * 17_393) % 480_000);
+        const probability = probabilityByStage[stage];
         out.push({
           name: `Demo Deal ${String(i + 1).padStart(2, '0')}`,
           crm_account: accountsList[i % accountsList.length],
-          amount: 20000 + ((i * 17_393) % 480_000),
+          amount,
           stage,
-          probability: stage === 'closed_won' ? 100 : stage === 'closed_lost' ? 0 : 10 + (i * 13) % 80,
+          probability,
+          // Same formula as the hook: round(amount * probability) / 100.
+          expected_revenue: Math.round(amount * probability) / 100,
           close_date,
           type: types[i % types.length],
           forecast_category: forecastByStage[stage],
@@ -518,6 +576,10 @@ const products = defineSeed(Product, {
 });
 
 // ─── Tasks ────────────────────────────────────────────────────────────
+// Polymorphic parents need BOTH halves: `related_to_type` names the parent
+// object and the matching `related_to_*` lookup carries the record. The
+// Related tab and task.hook's activity bubble key off `related_to_type`, so a
+// lookup without it is invisible to both (#490).
 const tasks = defineSeed(Task, {
   mode: 'upsert',
   externalId: 'subject',
@@ -527,7 +589,9 @@ const tasks = defineSeed(Task, {
       description: 'Send Jordan Park the revised Enterprise proposal and a 30-min calendar slot to walk through the AI governance section.',
       status: 'not_started',
       priority: 'high',
+      priority_rank: 3,
       due_date: cel`daysFromNow(2)`,
+      related_to_type: 'crm_opportunity',
       related_to_account: 'Acme Corporation',
       related_to_opportunity: 'Acme Platform Upgrade',
     },
@@ -536,7 +600,9 @@ const tasks = defineSeed(Task, {
       description: 'Block a 90-min joint workshop with Acme’s compliance team to walk through how HotCRM agents handle data scoping, RBAC, audit trails, and human-in-the-loop. Pre-read: ADR-0007 + the governance demo deck.',
       status: 'not_started',
       priority: 'high',
+      priority_rank: 3,
       due_date: cel`daysFromNow(7)`,
+      related_to_type: 'crm_opportunity',
       related_to_account: 'Acme Corporation',
       related_to_opportunity: 'Acme Platform Upgrade',
     },
@@ -545,7 +611,9 @@ const tasks = defineSeed(Task, {
       description: 'Confirm engineering has the EMEA SSO clock-skew patch ready, deploy to Acme’s tenant, and send Lisa Kim a customer-facing post-mortem.',
       status: 'in_progress',
       priority: 'urgent',
+      priority_rank: 4,
       due_date: cel`daysFromNow(1)`,
+      related_to_type: 'crm_case',
       related_to_account: 'Acme Corporation',
       related_to_case: 'Login issues after platform upgrade',
     },
@@ -553,24 +621,39 @@ const tasks = defineSeed(Task, {
       subject: 'Schedule demo for Globex team',
       status: 'in_progress',
       priority: 'normal',
+      priority_rank: 2,
       due_date: cel`daysFromNow(5)`,
+      related_to_type: 'crm_account',
+      related_to_account: 'Globex Industries',
     },
     {
       subject: 'Prepare contract for Wayne Enterprises',
       status: 'not_started',
       priority: 'urgent',
+      priority_rank: 4,
       due_date: cel`daysFromNow(1)`,
+      related_to_type: 'crm_account',
+      related_to_account: 'Wayne Enterprises',
     },
     {
       subject: 'Send welcome package to Stark Medical',
       status: 'completed',
       priority: 'low',
+      priority_rank: 1,
       completed_date: cel`daysAgo(2)`,
+      // Hooks don't run over seeds — mirror what task_completion would stamp.
+      is_completed: true,
+      progress_percent: 100,
+      related_to_type: 'crm_account',
+      related_to_account: 'Stark Medical',
     },
     {
+      // Internal housekeeping task — deliberately unparented (the
+      // related_to_required rule is a warning, not an error).
       subject: 'Update CRM pipeline report',
       status: 'not_started',
       priority: 'normal',
+      priority_rank: 2,
       due_date: cel`daysFromNow(7)`,
     },
   ]
@@ -592,12 +675,12 @@ const cases = defineSeed(Case, {
       crm_contact: 'john.smith@acme.example.com',
       status: 'in_progress',
       priority: 'high',
+      priority_rank: 3,
       type: 'problem',
       origin: 'email',
       is_closed: false,
       is_sla_violated: false,
       is_escalated: false,
-      case_number: 'CASE-00001',
       created_date: cel`daysAgo(2)`,
       sla_due_date: cel`daysFromNow(1)`,
     },
@@ -608,13 +691,13 @@ const cases = defineSeed(Case, {
       crm_contact: 'sarah.j@globex.example.com',
       status: 'escalated',
       priority: 'critical',
+      priority_rank: 4,
       type: 'bug',
       origin: 'phone',
       is_closed: false,
       is_sla_violated: true,
       is_escalated: true,
       escalation_reason: 'Customer threatening churn',
-      case_number: 'CASE-00002',
       created_date: cel`daysAgo(5)`,
       sla_due_date: cel`daysAgo(2)`,
     },
@@ -625,14 +708,19 @@ const cases = defineSeed(Case, {
       crm_contact: 'mchen@initech.example.com',
       status: 'resolved',
       priority: 'medium',
+      priority_rank: 2,
       type: 'question',
       origin: 'web',
+      // Resolved-but-not-closed: case.hook keeps is_closed=false and stamps
+      // closed_date as the resolved-date proxy; resolution_time_hours is the
+      // closed−created delta the hook would compute (daysAgo() is day-granular,
+      // so deltas come in 24h steps).
       is_closed: false,
       is_sla_violated: false,
       is_escalated: false,
-      resolution_time_hours: 4.5,
-      case_number: 'CASE-00003',
+      resolution_time_hours: 24.0,
       created_date: cel`daysAgo(3)`,
+      closed_date: cel`daysAgo(2)`,
       sla_due_date: cel`daysFromNow(2)`,
     },
     {
@@ -642,6 +730,7 @@ const cases = defineSeed(Case, {
       crm_contact: 'rwilson@wayne.example.com',
       status: 'closed',
       priority: 'high',
+      priority_rank: 3,
       type: 'problem',
       origin: 'chat',
       is_closed: true,
@@ -650,8 +739,8 @@ const cases = defineSeed(Case, {
       // `resolution` is REQUIRED when status is 'closed' (object validation
       // `resolution_required_for_closed`) — without it the seed row is rejected.
       resolution: 'Raised the production rate-limit tier and added client-side backoff; usage now within limits.',
-      resolution_time_hours: 2.0,
-      case_number: 'CASE-00004',
+      // closed−created delta, as case.hook computes it.
+      resolution_time_hours: 24.0,
       created_date: cel`daysAgo(7)`,
       closed_date: cel`daysAgo(6)`,
       sla_due_date: cel`daysAgo(6)`,
@@ -663,12 +752,12 @@ const cases = defineSeed(Case, {
       crm_contact: 'emily.d@starkmed.example.com',
       status: 'new',
       priority: 'medium',
+      priority_rank: 2,
       type: 'bug',
       origin: 'email',
       is_closed: false,
       is_sla_violated: false,
       is_escalated: false,
-      case_number: 'CASE-00005',
       created_date: cel`daysAgo(1)`,
       sla_due_date: cel`daysFromNow(2)`,
     },
@@ -683,12 +772,12 @@ const cases = defineSeed(Case, {
       crm_contact: 'john.smith@acme.example.com',
       status: 'waiting_customer',
       priority: 'low',
+      priority_rank: 1,
       type: 'problem',
       origin: 'email',
       is_closed: false,
       is_sla_violated: false,
       is_escalated: false,
-      case_number: 'CASE-00006',
       created_date: cel`daysAgo(4)`,
       sla_due_date: cel`daysFromNow(3)`,
     },
@@ -699,13 +788,13 @@ const cases = defineSeed(Case, {
       crm_contact: 'sarah.j@globex.example.com',
       status: 'in_progress',
       priority: 'critical',
+      priority_rank: 4,
       type: 'bug',
       origin: 'web',
       is_closed: false,
       is_sla_violated: true,
       is_escalated: true,
       escalation_reason: 'Affects 30% of mobile users',
-      case_number: 'CASE-00007',
       created_date: cel`daysAgo(3)`,
       sla_due_date: cel`daysAgo(1)`,
     },
@@ -716,6 +805,7 @@ const cases = defineSeed(Case, {
       crm_contact: 'rwilson@wayne.example.com',
       status: 'closed',
       priority: 'low',
+      priority_rank: 1,
       type: 'feature_request',
       origin: 'web',
       is_closed: true,
@@ -723,8 +813,8 @@ const cases = defineSeed(Case, {
       is_escalated: false,
       // Required for closed cases (resolution_required_for_closed).
       resolution: 'Delivered CSV bulk-import in the 9.4 release; shared the docs link with the customer.',
-      resolution_time_hours: 8.0,
-      case_number: 'CASE-00008',
+      // closed−created delta, as case.hook computes it.
+      resolution_time_hours: 48.0,
       created_date: cel`daysAgo(10)`,
       closed_date: cel`daysAgo(8)`,
       sla_due_date: cel`daysAgo(8)`,
@@ -734,6 +824,8 @@ const cases = defineSeed(Case, {
     // matrix) and the service dashboard's daily-volume area chart.
     ...((): readonly Record<string, unknown>[] => {
       const priorities = ['low', 'medium', 'high', 'critical'] as const;
+      // Mirror of case.hook's priority rank map — hooks don't run over seeds.
+      const rankByPriority: Record<typeof priorities[number], number> = { low: 1, medium: 2, high: 3, critical: 4 };
       const types = ['question', 'bug', 'problem', 'feature_request'] as const;
       const origins = ['email', 'phone', 'web', 'chat'] as const;
       const statuses = ['new', 'in_progress', 'resolved', 'closed', 'escalated'] as const;
@@ -742,29 +834,43 @@ const cases = defineSeed(Case, {
       for (let i = 0; i < 30; i++) {
         const priority = priorities[i % priorities.length];
         const status = statuses[i % statuses.length];
-        const closed = status === 'resolved' || status === 'closed';
+        const settled = status === 'resolved' || status === 'closed';
         const ageDays = 1 + (i % 30);
+        // Settled cases get a resolution delay of 1–3 days (capped at the
+        // case's age); resolution_time_hours is exactly the closed−created
+        // delta case.hook would compute (daysAgo() is day-granular → 24h steps).
+        const resolutionDays = Math.min(ageDays, 1 + (i % 3));
+        // SLA breaches only make sense on OPEN cases with a due date already in
+        // the past (the case_sla_monitor flow's definition). The old generator
+        // flagged rows as violated while giving every row a FUTURE due date.
+        const slaViolated = !settled && priority === 'critical' && i % 3 === 0;
         out.push({
-          subject: `Demo case ${String(i + 9).padStart(5, '0')} — ${priority} ${types[i % types.length]}`,
+          subject: `Demo case ${String(i + 1).padStart(2, '0')} — ${priority} ${types[i % types.length]}`,
           description: `Auto-generated demo case for ${priority} priority on day -${ageDays}.`,
           crm_account: accountsList[i % accountsList.length],
           status,
           priority,
+          priority_rank: rankByPriority[priority],
           type: types[i % types.length],
           origin: origins[i % origins.length],
-          is_closed: closed,
-          is_sla_violated: priority === 'critical' && i % 3 === 0,
+          // is_closed strictly mirrors case.hook: true ONLY for status
+          // 'closed' — a resolved case is NOT closed yet.
+          is_closed: status === 'closed',
+          is_sla_violated: slaViolated,
           is_escalated: status === 'escalated',
-          ...(closed ? { resolution_time_hours: 1 + (i * 7) % 48 } : {}),
+          ...(settled ? { resolution_time_hours: resolutionDays * 24 } : {}),
           // Object validations require these when closed/escalated — without
           // them the generated rows are rejected (resolution_required_for_closed
           // / escalation_reason_required).
           ...(status === 'closed' ? { resolution: 'Resolved per standard runbook; root cause documented and customer confirmed.' } : {}),
           ...(status === 'escalated' ? { escalation_reason: 'Escalated to tier-2 engineering for SLA-risk review.' } : {}),
-          case_number: `CASE-${String(i + 9).padStart(5, '0')}`,
           created_date: celDaysAgo(ageDays),
-          ...(closed ? { closed_date: celDaysAgo(Math.max(0, ageDays - 1)) } : {}),
-          sla_due_date: celDaysFromNow(priority === 'critical' ? 1 : priority === 'high' ? 2 : 4),
+          // Resolved cases also carry closed_date: case.hook stamps it as the
+          // resolved-date proxy while keeping is_closed=false.
+          ...(settled ? { closed_date: celDaysAgo(ageDays - resolutionDays) } : {}),
+          sla_due_date: slaViolated
+            ? celDaysAgo(1)
+            : celDaysFromNow(priority === 'critical' ? 1 : priority === 'high' ? 2 : 4),
         });
       }
       return out;
@@ -853,12 +959,14 @@ const campaigns = defineSeed(Campaign, {
 });
 
 // ─── Contracts ────────────────────────────────────────────────────────
+// `contract_number` is a runtime-owned autonumber and is NOT seeded (#490).
+// Contract has no natural-name field, so the (unique, stable) description
+// doubles as the upsert identity for these fixtures.
 const contracts = defineSeed(Contract, {
   mode: 'upsert',
-  externalId: 'contract_number',
+  externalId: 'description',
   records: [
     {
-      contract_number: 'CTR-0001',
       crm_account: 'Acme Corporation',
       crm_contact: 'john.smith@acme.example.com',
       crm_opportunity: 'Acme Platform Upgrade',
@@ -877,7 +985,6 @@ const contracts = defineSeed(Contract, {
       description: 'Annual platform subscription with premium support tier.',
     },
     {
-      contract_number: 'CTR-0002',
       crm_account: 'Wayne Enterprises',
       crm_contact: 'rwilson@wayne.example.com',
       crm_opportunity: 'Wayne Enterprise License',
@@ -894,7 +1001,6 @@ const contracts = defineSeed(Contract, {
       description: 'Multi-year enterprise license with custom SLA.',
     },
     {
-      contract_number: 'CTR-0003',
       crm_account: 'Initech Solutions',
       crm_contact: 'mchen@initech.example.com',
       status: 'expired',
@@ -912,7 +1018,6 @@ const contracts = defineSeed(Contract, {
       description: 'Initial service agreement, pending renewal discussion.',
     },
     {
-      contract_number: 'CTR-0004',
       crm_account: 'Stark Medical',
       crm_contact: 'emily.d@starkmed.example.com',
       status: 'draft',
@@ -931,12 +1036,13 @@ const contracts = defineSeed(Contract, {
 });
 
 // ─── Quotes ───────────────────────────────────────────────────────────
+// `quote_number` is a runtime-owned autonumber and is NOT seeded (#490);
+// the (unique) quote name is the upsert identity instead.
 const quotes = defineSeed(Quote, {
   mode: 'upsert',
-  externalId: 'quote_number',
+  externalId: 'name',
   records: [
     {
-      quote_number: 'QTE-0001',
       name: 'Acme Platform Upgrade Quote',
       crm_account: 'Acme Corporation',
       crm_contact: 'john.smith@acme.example.com',
@@ -954,7 +1060,6 @@ const quotes = defineSeed(Quote, {
       description: 'Platform upgrade with 10% loyalty discount applied.',
     },
     {
-      quote_number: 'QTE-0002',
       name: 'Globex Manufacturing Suite Proposal',
       crm_account: 'Globex Industries',
       crm_contact: 'sarah.j@globex.example.com',
@@ -972,7 +1077,6 @@ const quotes = defineSeed(Quote, {
       description: 'Manufacturing suite licensing with implementation services.',
     },
     {
-      quote_number: 'QTE-0003',
       name: 'Wayne Enterprise License Quote',
       crm_account: 'Wayne Enterprises',
       crm_contact: 'rwilson@wayne.example.com',
@@ -990,7 +1094,6 @@ const quotes = defineSeed(Quote, {
       description: 'Multi-year enterprise license with volume discount.',
     },
     {
-      quote_number: 'QTE-0004',
       name: 'Initech Cloud Migration Estimate',
       crm_account: 'Initech Solutions',
       crm_contact: 'mchen@initech.example.com',
@@ -1008,7 +1111,6 @@ const quotes = defineSeed(Quote, {
       description: 'Cloud migration services, awaiting internal review.',
     },
     {
-      quote_number: 'QTE-0005',
       name: 'Stark Medical Pilot Quote',
       crm_account: 'Stark Medical',
       crm_contact: 'emily.d@starkmed.example.com',
@@ -1032,15 +1134,43 @@ const quotes = defineSeed(Quote, {
 // `owner` is left unset: seed inserts bypass field-level defaults and run
 // before any human user exists, so ownership is backfilled to the active user
 // at runtime (same as every other CRM object).
+//
+// Periods are REAL calendar periods, labelled exactly the way
+// forecast.hook.ts derives them ('Q3 2026' / 'Aug 2026') — hooks don't run
+// over seeds, and the hook only fills a BLANK period_label, so seeded rows
+// must speak the same dialect as runtime snapshots or list views end up
+// mixing 'This Quarter' with 'Q3 2026' (#490). Calendar-true period_start
+// values also make the `this_quarter_forecasts` view's
+// `{this_quarter_start}` filter actually match the seeded row.
+//
+// Computed in plain TS (UTC, mirroring the hook's helpers): this module is
+// evaluated when the app bundle loads, the same moment the cel`...` seeds
+// are resolved.
+const FORECAST_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const forecastIsoDate = (d: Date) =>
+  `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+const forecastQuarterLabel = (d: Date) => `Q${Math.floor(d.getUTCMonth() / 3) + 1} ${d.getUTCFullYear()}`;
+const forecastMonthLabel = (d: Date) => `${FORECAST_MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+const forecastNow = new Date();
+const forecastYear = forecastNow.getUTCFullYear();
+const forecastMonth = forecastNow.getUTCMonth();
+const forecastQuarterMonth = Math.floor(forecastMonth / 3) * 3;
+const thisQuarterStart = new Date(Date.UTC(forecastYear, forecastQuarterMonth, 1));
+const thisQuarterEnd = new Date(Date.UTC(forecastYear, forecastQuarterMonth + 3, 0));
+const thisMonthStart = new Date(Date.UTC(forecastYear, forecastMonth, 1));
+const thisMonthEnd = new Date(Date.UTC(forecastYear, forecastMonth + 1, 0));
+const lastQuarterStart = new Date(Date.UTC(forecastYear, forecastQuarterMonth - 3, 1));
+const lastQuarterEnd = new Date(Date.UTC(forecastYear, forecastQuarterMonth, 0));
+
 const forecasts = defineSeed(Forecast, {
   mode: 'upsert',
   externalId: 'period_label',
   records: [
     {
       period: 'quarter',
-      period_label: 'This Quarter',
-      period_start: cel`daysAgo(45)`,
-      period_end: cel`daysFromNow(45)`,
+      period_label: forecastQuarterLabel(thisQuarterStart),
+      period_start: forecastIsoDate(thisQuarterStart),
+      period_end: forecastIsoDate(thisQuarterEnd),
       snapshot_date: cel`today()`,
       quota: 1500000,
       pipeline_amount: 2400000,
@@ -1048,13 +1178,13 @@ const forecasts = defineSeed(Forecast, {
       commit_amount: 1100000,
       closed_amount: 820000,
       source: 'scheduled',
-      notes: 'On track — commit + closed covers 64% of quota with 45 days left.',
+      notes: 'On track — commit + closed covers 64% of quota with the quarter still open.',
     },
     {
       period: 'month',
-      period_label: 'This Month',
-      period_start: cel`daysAgo(15)`,
-      period_end: cel`daysFromNow(15)`,
+      period_label: forecastMonthLabel(thisMonthStart),
+      period_start: forecastIsoDate(thisMonthStart),
+      period_end: forecastIsoDate(thisMonthEnd),
       snapshot_date: cel`today()`,
       quota: 500000,
       pipeline_amount: 760000,
@@ -1066,10 +1196,10 @@ const forecasts = defineSeed(Forecast, {
     },
     {
       period: 'quarter',
-      period_label: 'Last Quarter',
-      period_start: cel`daysAgo(135)`,
-      period_end: cel`daysAgo(46)`,
-      snapshot_date: cel`daysAgo(46)`,
+      period_label: forecastQuarterLabel(lastQuarterStart),
+      period_start: forecastIsoDate(lastQuarterStart),
+      period_end: forecastIsoDate(lastQuarterEnd),
+      snapshot_date: forecastIsoDate(lastQuarterEnd),
       quota: 1400000,
       pipeline_amount: 0,
       best_case_amount: 0,
@@ -1173,9 +1303,9 @@ connector instead. Retained for customers still on the legacy stack.`,
  * id), and `cel\`os.user.id\`` inside a seed evaluates to nothing. The id does
  * not exist until first boot.
  *
- * `src/objects/demo_bootstrap.hook.ts` does it at the only moment it can: when
- * the first user is created, it grants the CRM positions and claims every
- * ownerless seeded record.
+ * The `demo_bootstrap` scheduled flow (`src/flows/demo-bootstrap.flow.ts`)
+ * does it at the only moment it can: once the first real user exists, its
+ * periodic sweep claims every ownerless seeded record for that user.
  */
 
 /** All CRM seed datasets */

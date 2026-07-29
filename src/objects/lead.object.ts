@@ -2,6 +2,7 @@
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
 import { F, P, cel } from '@objectstack/spec';
+import { SALUTATION_OPTIONS, INDUSTRY_OPTIONS, LEAD_SOURCE_OPTIONS } from './_picklists';
 
 export const Lead = ObjectSchema.create({
   name: 'crm_lead',
@@ -30,12 +31,8 @@ export const Lead = ObjectSchema.create({
     salutation: Field.select({
       label: 'Salutation',
       group: 'identity',
-      options: [
-        { label: 'Mr.', value: 'mr' },
-        { label: 'Ms.', value: 'ms' },
-        { label: 'Mrs.', value: 'mrs' },
-        { label: 'Dr.', value: 'dr' },
-      ]
+      // Canonical set shared with Contact (#490) — see _picklists.ts.
+      options: [...SALUTATION_OPTIONS],
     }),
 
     first_name: Field.text({
@@ -83,23 +80,9 @@ export const Lead = ObjectSchema.create({
     industry: Field.select({
       label: 'Industry',
       group: 'company_info',
-      options: [
-        { label: 'Technology',          value: 'technology' },
-        { label: 'Software / SaaS',     value: 'software' },
-        { label: 'Finance',             value: 'finance' },
-        { label: 'Healthcare',          value: 'healthcare' },
-        { label: 'Retail',              value: 'retail' },
-        { label: 'Manufacturing',       value: 'manufacturing' },
-        { label: 'Education',           value: 'education' },
-        { label: 'Real Estate',         value: 'real_estate' },
-        { label: 'Media & Entertainment', value: 'media' },
-        { label: 'Logistics',           value: 'logistics' },
-        { label: 'Hospitality',         value: 'hospitality' },
-        { label: 'Energy & Utilities',  value: 'energy' },
-        { label: 'Government',          value: 'government' },
-        { label: 'Non-profit',          value: 'nonprofit' },
-        { label: 'Other',               value: 'other' },
-      ]
+      // Canonical set shared with Account (#490): lead_conversion copies this
+      // value onto the created Account, so both objects MUST agree.
+      options: [...INDUSTRY_OPTIONS],
     }),
 
     // Contact Information
@@ -155,20 +138,9 @@ export const Lead = ObjectSchema.create({
     lead_source: Field.select({
       label: 'Lead Source',
       group: 'qualification',
-      options: [
-        { label: 'Web',             value: 'web' },
-        { label: 'Referral',        value: 'referral' },
-        { label: 'Event / Trade Show', value: 'event' },
-        { label: 'Webinar',         value: 'webinar' },
-        { label: 'Partner',         value: 'partner' },
-        { label: 'Advertisement',   value: 'advertisement' },
-        { label: 'Paid Search',     value: 'paid_search' },
-        { label: 'Social Media',    value: 'social' },
-        { label: 'Content / Blog',  value: 'content' },
-        { label: 'Cold Call',       value: 'cold_call' },
-        { label: 'Email Campaign',  value: 'email_campaign' },
-        { label: 'Other',           value: 'other' },
-      ]
+      // Canonical set shared with Contact + Opportunity (#490): lead_conversion
+      // copies this value onto the created Opportunity, so all three MUST agree.
+      options: [...LEAD_SOURCE_OPTIONS],
     }),
 
     // Assignment

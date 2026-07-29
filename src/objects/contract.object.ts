@@ -2,6 +2,7 @@ import { P, cel } from '@objectstack/spec';
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
+import { PAYMENT_TERMS_OPTIONS } from './_picklists';
 
 /**
  * Contract Object
@@ -132,12 +133,9 @@ export const Contract = ObjectSchema.create({
     payment_terms: Field.select({
       label: 'Payment Terms',
       group: 'value',
-      options: [
-        { label: 'Net 15', value: 'net_15' },
-        { label: 'Net 30', value: 'net_30', default: true },
-        { label: 'Net 60', value: 'net_60' },
-        { label: 'Net 90', value: 'net_90' },
-      ]
+      // Canonical set shared with Quote (#490): an accepted quote's terms
+      // (incl. due_on_receipt) must survive the copy onto the contract.
+      options: [...PAYMENT_TERMS_OPTIONS],
     }),
     
     // Renewal

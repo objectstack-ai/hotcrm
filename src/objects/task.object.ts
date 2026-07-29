@@ -2,6 +2,7 @@ import { P, cel } from '@objectstack/spec';
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
+import { TASK_TYPE_OPTIONS } from './_picklists';
 
 export const Task = ObjectSchema.create({
   name: 'crm_task',
@@ -72,14 +73,9 @@ export const Task = ObjectSchema.create({
 
     type: Field.select({
       label: 'Task Type',
-      options: [
-        { label: 'Call', value: 'call' },
-        { label: 'Email', value: 'email' },
-        { label: 'Meeting', value: 'meeting' },
-        { label: 'Follow-up', value: 'follow_up' },
-        { label: 'Demo', value: 'demo' },
-        { label: 'Other', value: 'other' },
-      ]
+      // Canonical set (#490) — the schedule_followup screen renders the same
+      // list; see _picklists.ts.
+      options: [...TASK_TYPE_OPTIONS],
     }),
     
     // Dates

@@ -23,8 +23,11 @@ export const zhCN: TranslationData = {
         industry: {
           label: '行业',
           options: {
-            technology: '科技', finance: '金融', healthcare: '医疗',
-            retail: '零售', manufacturing: '制造', education: '教育',
+            technology: '科技', software: '软件 / SaaS', finance: '金融',
+            healthcare: '医疗', retail: '零售', manufacturing: '制造',
+            education: '教育', real_estate: '房地产', media: '传媒娱乐',
+            logistics: '物流', hospitality: '酒店旅游', energy: '能源公用事业',
+            government: '政府', nonprofit: '非营利', other: '其他',
           },
         },
         annual_revenue: { label: '年营收' },
@@ -108,8 +111,10 @@ export const zhCN: TranslationData = {
         lead_source: {
           label: '线索来源',
           options: {
-            web: '网站', referral: '推荐', event: '活动',
-            partner: '合作伙伴', advertisement: '广告',
+            web: '网站', referral: '推荐', event: '活动 / 展会',
+            webinar: '线上研讨会', partner: '合作伙伴', advertisement: '广告',
+            paid_search: '付费搜索', social: '社交媒体', content: '内容 / 博客',
+            cold_call: '陌生拜访', email_campaign: '邮件营销', other: '其他',
           },
         },
         do_not_call: { label: '禁止致电' },
@@ -237,7 +242,7 @@ export const zhCN: TranslationData = {
       fields: {
         salutation: {
           label: '称谓',
-          options: { mr: '先生', ms: '女士', mrs: '夫人', dr: '博士' },
+          options: { mr: '先生', ms: '女士', mrs: '夫人', dr: '博士', prof: '教授' },
         },
         first_name: { label: '名' },
         last_name: { label: '姓' },
@@ -249,8 +254,11 @@ export const zhCN: TranslationData = {
         industry: {
           label: '行业',
           options: {
-            technology: '科技', finance: '金融', healthcare: '医疗',
-            retail: '零售', manufacturing: '制造', education: '教育',
+            technology: '科技', software: '软件 / SaaS', finance: '金融',
+            healthcare: '医疗', retail: '零售', manufacturing: '制造',
+            education: '教育', real_estate: '房地产', media: '传媒娱乐',
+            logistics: '物流', hospitality: '酒店旅游', energy: '能源公用事业',
+            government: '政府', nonprofit: '非营利', other: '其他',
           },
         },
         status: {
@@ -265,8 +273,10 @@ export const zhCN: TranslationData = {
         lead_source: {
           label: '线索来源',
           options: {
-            web: '网站', referral: '推荐', event: '活动',
-            partner: '合作伙伴', advertisement: '广告', cold_call: '陌生拜访',
+            web: '网站', referral: '推荐', event: '活动 / 展会',
+            webinar: '线上研讨会', partner: '合作伙伴', advertisement: '广告',
+            paid_search: '付费搜索', social: '社交媒体', content: '内容 / 博客',
+            cold_call: '陌生拜访', email_campaign: '邮件营销', other: '其他',
           },
         },
         owner: { label: '线索负责人' },
@@ -690,8 +700,10 @@ export const zhCN: TranslationData = {
         lead_source: {
           label: '线索来源',
           options: {
-            web: '网站', referral: '推荐', event: '活动',
-            partner: '合作伙伴', advertisement: '广告', cold_call: '陌生拜访',
+            web: '网站', referral: '推荐', event: '活动 / 展会',
+            webinar: '线上研讨会', partner: '合作伙伴', advertisement: '广告',
+            paid_search: '付费搜索', social: '社交媒体', content: '内容 / 博客',
+            cold_call: '陌生拜访', email_campaign: '邮件营销', other: '其他',
           },
         },
         competitors: { label: '竞争对手' },

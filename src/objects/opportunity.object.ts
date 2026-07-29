@@ -2,6 +2,7 @@ import { F, P, cel } from '@objectstack/spec';
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
+import { LEAD_SOURCE_OPTIONS, OPPORTUNITY_STAGE_OPTIONS } from './_picklists';
 
 export const Opportunity = ObjectSchema.create({
   name: 'crm_opportunity',
@@ -99,15 +100,9 @@ export const Opportunity = ObjectSchema.create({
       // ADR-0052 §5b.1 — the platform auto-renders each stage change on the
       // activity timeline as "Stage: Proposal → Negotiation" (no hook code).
       trackHistory: true,
-      options: [
-        { label: 'Prospecting', value: 'prospecting', color: '#808080', default: true },
-        { label: 'Qualification', value: 'qualification', color: '#FFA500' },
-        { label: 'Needs Analysis', value: 'needs_analysis', color: '#FFD700' },
-        { label: 'Proposal', value: 'proposal', color: '#4169E1' },
-        { label: 'Negotiation', value: 'negotiation', color: '#9370DB' },
-        { label: 'Closed Won', value: 'closed_won', color: '#00AA00' },
-        { label: 'Closed Lost', value: 'closed_lost', color: '#FF0000' },
-      ]
+      // Canonical set (#490) — the mass_update_stage action renders the same
+      // list; see _picklists.ts.
+      options: [...OPPORTUNITY_STAGE_OPTIONS],
     }),
 
     probability: Field.percent({
@@ -147,14 +142,10 @@ export const Opportunity = ObjectSchema.create({
     lead_source: Field.select({
       label: 'Lead Source',
       group: 'classification',
-      options: [
-        { label: 'Web', value: 'web' },
-        { label: 'Referral', value: 'referral' },
-        { label: 'Event', value: 'event' },
-        { label: 'Partner', value: 'partner' },
-        { label: 'Advertisement', value: 'advertisement' },
-        { label: 'Cold Call', value: 'cold_call' },
-      ]
+      // Canonical set shared with Lead + Contact (#490): lead_conversion
+      // copies `leadRecord.lead_source` onto the opportunity it creates, so
+      // this must accept every Lead value.
+      options: [...LEAD_SOURCE_OPTIONS],
     }),
 
     // Competitor Analysis
