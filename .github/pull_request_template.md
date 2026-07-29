@@ -39,6 +39,7 @@ Related to #
 ## Checklist
 <!-- Mark completed items with an "x" -->
 
+- [ ] **I have added a changeset** (`pnpm changeset`) — required on every PR, or the `skip-changeset` label is applied
 - [ ] My code follows the style guidelines of this project
 - [ ] I have performed a self-review of my own code
 - [ ] I have commented my code, particularly in hard-to-understand areas

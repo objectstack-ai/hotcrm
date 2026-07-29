@@ -91,11 +91,12 @@ docs: update README with new features
 
 ## 📦 Version Management
 
-We use [Changesets](https://github.com/changesets/changesets) to manage versions and changelogs across all packages in the monorepo.
+We use [Changesets](https://github.com/changesets/changesets) to manage the version and changelog of the `hotcrm` package. Since #502 took `apps/docs` out of the workspace, this is a single-package repo — every changeset targets `hotcrm`.
 
 ### Adding a Changeset
 
-When you make a change that affects the public API or user-facing behavior, add a changeset:
+**Every PR must add a changeset.** The `Changeset Check` workflow fails a PR that
+adds no `.changeset/*.md` file, so add one before you push:
 
 ```bash
 pnpm changeset
@@ -106,7 +107,12 @@ This will prompt you to:
 2. Choose the version bump type (major, minor, patch)
 3. Write a summary of the changes
 
-The changeset will be saved as a file in `.changeset/` and should be committed with your PR.
+The changeset is saved as a file in `.changeset/` and **must be committed with your PR**.
+
+The only escape hatch is the **`skip-changeset`** label, for PRs that genuinely
+ship nothing to users — CI-only chores, dependency bumps handled by Dependabot,
+repo housekeeping. If you are unsure, write the changeset; an entry too many is
+cheaper than a release note nobody wrote.
 
 ### Changeset Guidelines
 
@@ -114,14 +120,18 @@ The changeset will be saved as a file in `.changeset/` and should be committed w
 - **Minor**: New features that are backward compatible
 - **Patch**: Bug fixes and small improvements
 
-All packages in the monorepo use **linked releases** - when one package is released, all packages are released together with the same version number.
+Write the summary for the person reading the release notes: what changed and why
+it matters, not which files you touched. Breaking changes must spell out the
+FROM → TO migration — that text ships to consumers as `CHANGELOG.md`.
+
+`apps/docs` is versioned and deployed on its own and is not part of this flow.
 
 ### Version Bumping
 
 Maintainers will run this command to consume all changesets and update package versions:
 
 ```bash
-pnpm version
+pnpm changeset:version
 ```
 
 ### Publishing
@@ -138,7 +148,7 @@ This command runs `pnpm build && changeset publish`, which:
 
 Only the compiled `dist/` folder is included in published packages (controlled by the `files` field in each `package.json`). Source code (`.ts` files) is **never** published to the registry.
 
-> **Note**: Packages are published to a private GitHub Packages registry (`https://npm.pkg.github.com`) with `restricted` access. The `@hotcrm/core` and `@hotcrm/server` packages are excluded from publishing (marked `private: true`). See `docs/RELEASE_STRATEGY.md` for the full distribution strategy.
+> **Note**: Packages are published to a private GitHub Packages registry (`https://npm.pkg.github.com`) with `restricted` access. The root `hotcrm` package is `private: true` — Changesets versions it and writes its `CHANGELOG.md`, but never publishes it to a registry; the app ships through the marketplace instead (`pnpm publish:marketplace`). See `docs/RELEASE_STRATEGY.md` for the full distribution strategy.
 
 ## 🔄 Pull Request Process
 
@@ -149,7 +159,7 @@ Only the compiled `dist/` folder is included in published packages (controlled b
    - Update documentation if needed
    - Add tests for new features
    - Update ROADMAP.md if the change completes a roadmap item
-   - **Add a changeset** if your changes affect package behavior
+   - **Add a changeset** (`pnpm changeset`) — required on every PR, enforced by CI
 
 2. **Creating a PR**
    - Use a clear, descriptive title

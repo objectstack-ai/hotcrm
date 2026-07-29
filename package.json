@@ -20,6 +20,9 @@
     "test:qa": "objectstack test",
     "test:e2e": "playwright test",
     "verify": "pnpm validate && pnpm typecheck && pnpm build && pnpm test",
+    "changeset": "changeset",
+    "changeset:version": "changeset version",
+    "changeset:status": "changeset status --since=origin/main",
     "publish:marketplace": "node scripts/publish-marketplace.mjs",
     "publish:marketplace:dry-run": "DRY_RUN=1 node scripts/publish-marketplace.mjs",
     "demo:reset": "rm -rf .objectstack/data && pnpm build && echo '✅ DB reset — start the server with: pnpm dev (or pnpm start). Seed data loads on first boot.'"
@@ -42,6 +45,7 @@
     "better-sqlite3": "^12.11.1"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.31.1",
     "@playwright/test": "^1.61.1",
     "typescript": "^6.0.3",
     "vitest": "^4.1.9"

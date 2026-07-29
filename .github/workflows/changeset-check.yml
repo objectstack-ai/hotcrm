@@ -1,0 +1,68 @@
+name: Changeset Check
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+    # `labeled` / `unlabeled` are required so applying (or removing) the
+    # `skip-changeset` label re-runs this gate instead of leaving a stale result.
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+jobs:
+  changeset-check:
+    name: Check Changeset
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.pull_request.labels.*.name, 'skip-changeset')"
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Check for a changeset added by this PR
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          # Count the changesets THIS PR adds (diff against the base commit), not
+          # the files already sitting in .changeset/ — the directory is never
+          # empty (README.md, plus any changesets awaiting the next release), so
+          # a plain `ls | wc -l` could never go red.
+          # An empty-frontmatter changeset still counts: it is the sanctioned
+          # "this PR releases nothing" declaration, on par with the
+          # `skip-changeset` label.
+          ADDED=$(git diff --name-only --diff-filter=A "$BASE_SHA" HEAD -- '.changeset/*.md' \
+                  | grep -v '/README\.md$' | wc -l | tr -d '[:space:]')
+          if [ "$ADDED" -eq 0 ]; then
+            echo "::error::This PR adds no changeset. Run 'pnpm changeset' and commit the generated .changeset/*.md file, or apply the 'skip-changeset' label if this change genuinely ships nothing (pure CI/docs chores)."
+            exit 1
+          fi
+          echo "This PR adds $ADDED changeset(s)."
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22.x'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate changeset contents
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        # Fails when a changeset names a package that does not exist or its
+        # frontmatter does not parse, so a malformed entry is caught here rather
+        # than at release time.
+        # `--since=$BASE_SHA` rather than the config's `baseBranch`: Changesets
+        # resolves that with `git merge-base main HEAD`, and on a PR checkout
+        # `main` exists only as `origin/main`, so the bare form dies with
+        # "Failed to find where HEAD diverged from main". An explicit sha always
+        # resolves. An empty-frontmatter changeset still satisfies this step —
+        # it counts as a changeset, it just releases nothing.
+        run: pnpm changeset status --since="$BASE_SHA"

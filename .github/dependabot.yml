@@ -9,9 +9,13 @@ updates:
       time: "09:00"
       timezone: "Asia/Shanghai"
     open-pull-requests-limit: 10
+    # `skip-changeset` exempts these PRs from the Changeset Check gate — Dependabot
+    # cannot author a changeset. When a bump is actually user-visible (a
+    # `@objectstack/*` upgrade, say), drop the label and add a changeset by hand.
     labels:
       - "dependencies"
       - "automated"
+      - "skip-changeset"
     commit-message:
       prefix: "chore"
       include: "scope"
@@ -25,6 +29,7 @@ updates:
     labels:
       - "dependencies"
       - "github-actions"
+      - "skip-changeset"
     commit-message:
       prefix: "ci"
       include: "scope"
