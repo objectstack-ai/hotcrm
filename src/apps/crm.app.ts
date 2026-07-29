@@ -47,6 +47,9 @@ export const CrmApp = App.create({
         { id: 'nav_contact',     type: 'object', objectName: 'crm_contact',     label: 'Contacts',      icon: 'user' },
         { id: 'nav_opportunity', type: 'object', objectName: 'crm_opportunity', label: 'Opportunities', icon: 'target' },
         { id: 'nav_pipeline',    type: 'object', objectName: 'crm_opportunity', viewName: 'pipeline_kanban', label: 'Pipeline', icon: 'columns-3' },
+        // Competitive intel — the battlecard catalog opportunities link to
+        // via the multi-value `crm_competitors` lookup.
+        { id: 'nav_competitor',  type: 'object', objectName: 'crm_competitor',  label: 'Competitors',   icon: 'swords' },
         { id: 'nav_quote',       type: 'object', objectName: 'crm_quote',       label: 'Quotes',        icon: 'receipt' },
         // Contracts close the sales cycle: quote → signed agreement → renewal.
         // The object, its views and its renewal automation all shipped, but

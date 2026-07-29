@@ -294,7 +294,7 @@ export const jaJP: TranslationData = {
             cold_call: 'コールドコール', email_campaign: 'メールキャンペーン', other: 'その他',
           },
         },
-        competitors: { label: '競合他社' },
+        crm_competitors: { label: '競合他社' },
         crm_campaign: { label: 'キャンペーン' },
         days_in_stage: { label: '現ステージ滞在日数' },
         is_private: { label: '非公開' },
@@ -546,6 +546,34 @@ export const jaJP: TranslationData = {
         campaign_gantt: { label: 'キャンペーン日程' },
         campaign_calendar: { label: 'キャンペーンカレンダー' },
         campaign_timeline: { label: 'マーケティングタイムライン' },
+      },
+    },
+
+    crm_competitor: {
+      label: '競合他社',
+      pluralLabel: '競合他社',
+      description: '商談で遭遇する競合他社とバトルカード情報',
+      fields: {
+        name: { label: '競合名' },
+        website: { label: 'ウェブサイト' },
+        main_products: { label: '主要製品' },
+        threat_level: {
+          label: '脅威レベル',
+          options: { low: '低', medium: '中', high: '高' },
+        },
+        our_advantages: { label: '自社の強み' },
+        our_disadvantages: { label: '自社の弱み' },
+        notes: { label: 'メモ' },
+        owner: { label: '担当者' },
+        is_active: { label: '有効' },
+      },
+      _views: {
+        all_competitors: { label: '全競合他社' },
+        high_threat: { label: '高脅威' },
+      },
+      _sections: {
+        basic: { label: '基本情報' },
+        battlecard: { label: 'バトルカード' },
       },
     },
 

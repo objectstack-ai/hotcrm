@@ -67,6 +67,9 @@ export const ExecutiveDashboard: Dashboard = {
       description: 'Closed-won revenue this year',
       type: 'metric',
       filter: { stage: 'closed_won', close_date: { $gte: '{current_year_start}' } },
+      // Self-scoped to YTD; without this the injected dashboard dateRange
+      // (default this_quarter) is ANDed in and the tile shows quarter revenue.
+      filterBindings: { dateRange: false },
       colorVariant: 'success',
       actionUrl: '/reports/revenue-ytd',
       actionType: 'url',
@@ -148,6 +151,7 @@ export const ExecutiveDashboard: Dashboard = {
       description: 'Closed-won revenue over the last 12 months',
       type: 'area',
       filter: { stage: 'closed_won', close_date: { $gte: '{12_months_ago}' } },
+      filterBindings: { dateRange: false }, // self-scoped to 12 months — the date picker must not narrow it
       colorVariant: 'success',
       dataset: 'opportunity_metrics', dimensions: ['close_date'], values: ['total_amount'],
       layout: { x: 0, y: 2, w: 8, h: 4 },
@@ -170,6 +174,7 @@ export const ExecutiveDashboard: Dashboard = {
       description: 'YTD closed-won revenue split by customer industry',
       type: 'donut',
       filter: { stage: 'closed_won', close_date: { $gte: '{current_year_start}' } },
+      filterBindings: { dateRange: false }, // self-scoped to YTD — the date picker must not narrow it
       colorVariant: 'blue',
       dataset: 'opportunity_metrics', dimensions: ['account_industry'], values: ['total_amount'],
       layout: { x: 8, y: 2, w: 4, h: 4 },

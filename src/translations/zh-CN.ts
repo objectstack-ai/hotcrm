@@ -715,7 +715,7 @@ export const zhCN: TranslationData = {
             cold_call: '陌生拜访', email_campaign: '邮件营销', other: '其他',
           },
         },
-        competitors: { label: '竞争对手' },
+        crm_competitors: { label: '竞争对手', help: '本商机中遇到的竞争对手' },
         crm_campaign: { label: '营销活动' },
         days_in_stage: { label: '当前阶段天数' },
         is_private: { label: '私密' },
@@ -781,6 +781,34 @@ export const zhCN: TranslationData = {
             },
           },
         },
+      },
+    },
+
+    crm_competitor: {
+      label: '竞争对手',
+      pluralLabel: '竞争对手',
+      description: '商机中遇到的竞争对手及其作战卡信息',
+      fields: {
+        name: { label: '竞争对手名称' },
+        website: { label: '官网' },
+        main_products: { label: '主营产品', help: '经常正面竞争的核心产品/服务' },
+        threat_level: {
+          label: '威胁等级',
+          options: { low: '低', medium: '中', high: '高' },
+        },
+        our_advantages: { label: '我方优势', help: '与该竞争对手相比我们的赢单点' },
+        our_disadvantages: { label: '我方劣势', help: '对方领先之处——需提前准备的异议应对' },
+        notes: { label: '备注' },
+        owner: { label: '情报负责人' },
+        is_active: { label: '是否活跃' },
+      },
+      _views: {
+        all_competitors: { label: '全部竞争对手' },
+        high_threat: { label: '高威胁' },
+      },
+      _sections: {
+        basic: { label: '基本信息' },
+        battlecard: { label: '竞争作战卡' },
       },
     },
 
@@ -881,6 +909,7 @@ export const zhCN: TranslationData = {
         nav_contact: { label: '联系人' },
         nav_opportunity: { label: '商机' },
         nav_pipeline: { label: '销售管道' },
+        nav_competitor: { label: '竞争对手' },
         nav_quote: { label: '报价' },
         nav_contract: { label: '合同' },
         nav_sales_dashboard: { label: '销售业绩' },

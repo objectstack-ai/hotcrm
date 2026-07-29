@@ -325,6 +325,29 @@ describe('navigation reaches everything the app ships', () => {
     expect(stranded, `dashboards nobody can open:\n  ${stranded.join('\n  ')}`).toEqual([]);
   });
 
+  it('widgets that window the dateRange field opt out of the injected date range', () => {
+    // The runtime injects the dashboard-level dateRange into every widget
+    // query (framework#2501) unless the widget opts out via `filterBindings`.
+    // A widget that carries its OWN window on the same field gets the two
+    // ANDed: the Executive "Total Revenue (YTD)" tile silently showed
+    // this-quarter revenue (781k instead of the year's 2.6M), and the
+    // "last 12 months" trend chart collapsed to the current quarter's points.
+    // Self-described windows ("YTD", "QTD", "last 12 months") must not follow
+    // the picker — their titles don't.
+    const bad: string[] = [];
+    for (const d of dashboards) {
+      const rangeField = d.dateRange?.field;
+      if (!rangeField) continue;
+      for (const w of d.widgets ?? []) {
+        if (w.filter?.[rangeField] === undefined) continue;
+        if (w.filterBindings?.dateRange !== false) {
+          bad.push(`${d.name}/${w.id}: filters on "${rangeField}" but still binds the dashboard dateRange`);
+        }
+      }
+    }
+    expect(bad, `widgets fighting the dashboard date picker:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
   it('every navigation node has a zh-CN label', () => {
     // The groups were translated and the leaves were not, so the sidebar read
     // half Chinese, half English.

@@ -190,6 +190,7 @@ export const ServiceDashboard: Dashboard = {
       description: 'New cases created over the last 30 days',
       type: 'area',
       filter: { created_date: { $gte: '{30_days_ago}' } },
+      filterBindings: { dateRange: false }, // self-scoped to 30 days — the date picker must not re-window it
       colorVariant: 'blue',
       dataset: 'case_metrics', dimensions: ['created_date'], values: ['case_count'],
       layout: { x: 0, y: 6, w: 8, h: 4 },

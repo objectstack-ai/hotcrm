@@ -9,7 +9,7 @@
   "category": "crm",
   "isStarter": false,
   "publisher": "objectstack",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "iconUrl": "https://raw.githubusercontent.com/objectstack-ai/hotcrm/main/assets/icon.svg",
   "homepageUrl": "https://github.com/objectstack-ai/hotcrm",
   "tags": ["crm", "sales", "accounts", "leads", "opportunities", "cases", "campaigns"],

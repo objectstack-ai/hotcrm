@@ -8,7 +8,7 @@
 [![CI](https://github.com/objectstack-ai/hotcrm/workflows/CI/badge.svg)](https://github.com/objectstack-ai/hotcrm/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/objectstack-ai/hotcrm/workflows/CodeQL%20Security%20Analysis/badge.svg)](https://github.com/objectstack-ai/hotcrm/actions/workflows/codeql.yml)
 [![Code Quality](https://github.com/objectstack-ai/hotcrm/workflows/Code%20Quality/badge.svg)](https://github.com/objectstack-ai/hotcrm/actions/workflows/code-quality.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 ![Objects](https://img.shields.io/badge/Objects-~148-brightgreen)
 ![Tests](https://img.shields.io/badge/Tests-3799%20passing-brightgreen)
 ![Spec](https://img.shields.io/badge/%40objectstack%2Fspec-v3.0.11-blue)
@@ -848,7 +848,7 @@ For workflow configuration details, see the individual workflow files in [.githu
 
 ## 📄 License
 
-MIT License - see LICENSE file for details
+Apache-2.0 License - see LICENSE file for details
 
 ## 🤝 Contributing
 

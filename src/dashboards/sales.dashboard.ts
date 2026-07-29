@@ -80,6 +80,7 @@ export const SalesDashboard: Dashboard = {
       description: 'Revenue closed this quarter',
       type: 'metric',
       filter: { stage: 'closed_won', close_date: { $gte: '{current_quarter_start}' } },
+      filterBindings: { dateRange: false }, // self-scoped to QTD — the date picker must not re-window it
       colorVariant: 'success',
       actionUrl: '/reports/closed-won',
       actionType: 'url',
@@ -116,6 +117,7 @@ export const SalesDashboard: Dashboard = {
       description: 'Average value of closed-won deals this quarter',
       type: 'metric',
       filter: { stage: 'closed_won', close_date: { $gte: '{current_quarter_start}' } },
+      filterBindings: { dateRange: false }, // self-scoped to QTD — the date picker must not re-window it
       colorVariant: 'purple',
       actionUrl: '/reports/avg-deal-size',
       actionType: 'url',
@@ -152,6 +154,7 @@ export const SalesDashboard: Dashboard = {
       description: 'Closed-won revenue, last 12 months',
       type: 'area',
       filter: { stage: 'closed_won', close_date: { $gte: '{12_months_ago}' } },
+      filterBindings: { dateRange: false }, // self-scoped to 12 months — the date picker must not narrow it
       colorVariant: 'success',
       dataset: 'opportunity_metrics', dimensions: ['close_date'], values: ['total_amount'],
       layout: { x: 6, y: 2, w: 6, h: 4 },

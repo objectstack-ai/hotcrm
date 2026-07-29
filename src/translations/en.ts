@@ -316,7 +316,7 @@ export const en: TranslationData = {
             cold_call: 'Cold Call', email_campaign: 'Email Campaign', other: 'Other',
           },
         },
-        competitors: { label: 'Competitors' },
+        crm_competitors: { label: 'Competitors', help: 'Competitors we are up against in this deal' },
         crm_campaign: { label: 'Campaign' },
         days_in_stage: { label: 'Days in Current Stage' },
         is_private: { label: 'Private' },
@@ -588,6 +588,34 @@ export const en: TranslationData = {
         campaign_gantt: { label: 'Campaign Schedule' },
         campaign_calendar: { label: 'Launch Calendar' },
         campaign_timeline: { label: 'Marketing Timeline' },
+      },
+    },
+
+    crm_competitor: {
+      label: 'Competitor',
+      pluralLabel: 'Competitors',
+      description: 'Competitors we encounter in deals, with battlecard notes',
+      fields: {
+        name: { label: 'Competitor Name' },
+        website: { label: 'Website' },
+        main_products: { label: 'Main Products', help: 'Flagship products / services we run into' },
+        threat_level: {
+          label: 'Threat Level',
+          options: { low: 'Low', medium: 'Medium', high: 'High' },
+        },
+        our_advantages: { label: 'Our Advantages', help: 'Where we win against this competitor' },
+        our_disadvantages: { label: 'Our Disadvantages', help: 'Where they beat us — objections to prepare for' },
+        notes: { label: 'Notes' },
+        owner: { label: 'Intel Owner' },
+        is_active: { label: 'Active' },
+      },
+      _views: {
+        all_competitors: { label: 'All Competitors' },
+        high_threat: { label: 'High Threat' },
+      },
+      _sections: {
+        basic: { label: 'Basic Information' },
+        battlecard: { label: 'Battlecard' },
       },
     },
 

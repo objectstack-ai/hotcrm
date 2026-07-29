@@ -100,7 +100,7 @@ export const OpportunityDetailPage: Page = {
                         {
                           name: 'info',
                           label: 'Opportunity Information',
-                          fields: ['name', 'crm_account', 'owner', 'type', 'lead_source', 'crm_campaign'],
+                          fields: ['name', 'crm_account', 'owner', 'type', 'lead_source', 'crm_campaign', 'crm_competitors'],
                         },
                         {
                           name: 'crm_forecast',
