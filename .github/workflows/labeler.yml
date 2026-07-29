@@ -1,7 +1,18 @@
 name: PR Labeler
 
 on:
-  pull_request:
+  # `pull_request_target`, not `pull_request`: a `pull_request` run triggered by a
+  # fork gets a read-only GITHUB_TOKEN no matter what the `permissions:` block
+  # below asks for, so `actions/labeler` died with
+  # "Resource not accessible by integration" on every fork PR while same-repo
+  # (e.g. Dependabot) PRs labelled fine. `pull_request_target` runs in the base
+  # repo's context, where the requested `pull-requests: write` is actually granted.
+  #
+  # Safe here because nothing from the PR head is checked out or executed — the
+  # job only calls the labels API. `actions/labeler` reads `.github/labeler.yml`
+  # from the base branch via the API (it resolves it at `github.sha`, which under
+  # this trigger is the base commit), so a fork cannot supply its own label rules.
+  pull_request_target:
     types: [opened, synchronize, reopened]
 
 jobs:
@@ -11,11 +22,11 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
-    
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v7
-      
+      # Deliberately no `actions/checkout` step: checking out under
+      # `pull_request_target` is the classic privileged-code-execution footgun,
+      # and it buys nothing — labeler fetches its configuration over the API.
       - name: Label PR based on changed files
         uses: actions/labeler@v6
         with:
