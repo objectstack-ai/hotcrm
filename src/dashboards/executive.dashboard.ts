@@ -1,6 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import type { Dashboard } from '@objectstack/spec/ui';
+import { pipelineByStageFunnelWidget } from './shared-widgets';
 
 /**
  * Executive Overview Dashboard
@@ -187,22 +188,7 @@ export const ExecutiveDashboard: Dashboard = {
     },
 
     // ─── Row 3: Pipeline & Activity ───────────────────────────────────
-    {
-      id: 'pipeline_by_stage',
-      title: 'Pipeline by Stage',
-      description: 'Open opportunity value by sales stage',
-      type: 'funnel',
-      filter: { stage: { $nin: ['closed_won', 'closed_lost'] } },
-      colorVariant: 'teal',
-      dataset: 'opportunity_metrics', dimensions: ['stage'], values: ['total_amount'],
-      layout: { x: 0, y: 6, w: 6, h: 4 },
-      chartConfig: {
-        type: 'funnel',
-        showLegend: false,
-        showDataLabels: true,
-        colors: ['#0EA5E9', '#06B6D4', '#14B8A6', '#10B981', '#22C55E'],
-      },
-    },
+    pipelineByStageFunnelWidget({ x: 0, y: 6, w: 6, h: 4 }),
     {
       id: 'new_accounts_by_month',
       title: 'New Accounts',
