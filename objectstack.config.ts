@@ -1,7 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { defineStack } from '@objectstack/spec';
-import * as cubes from './src/cubes/index.js';
 
 import * as objects from './src/objects/index.js';
 import * as actions from './src/actions/index.js';
@@ -86,7 +85,9 @@ export default defineStack({
   // Approvals are modeled as `record_change` flows with `approval` nodes
   // (ADR-0019); see src/flows/opportunity-discount-approval.flow.ts. The
   // standalone `approvals` stack field was removed in ObjectStack 7.4.
-  analyticsCubes: Object.values(cubes),
+  // No `analyticsCubes`: datasets (ADR-0021) are the semantic layer — the
+  // analytics service compiles each dataset into its cube internally, and a
+  // second hand-written cube layer only duplicates and drifts.
 
   hooks: allHooks,
 
