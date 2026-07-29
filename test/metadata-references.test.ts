@@ -382,6 +382,83 @@ describe('navigation reaches everything the app ships', () => {
   });
 });
 
+describe('dashboard actions land on real routes', () => {
+  /**
+   * A widget/header action with `actionType: 'url'` is pushed into the router
+   * verbatim (pushState, no normalisation). The 16.1.0 console serves in-app
+   * pages ONLY under `/apps/:appName/…` with these children (verified against
+   * the router in @objectstack/console):
+   *   :objectName | :objectName/view/:viewId | :objectName/record/:recordId |
+   *   dashboard/:dashboardName | report/:reportName | page/:pageName
+   * There is no top-level `/objects/…` or `/reports/…` route — 16 KPI tiles
+   * navigated to dead pages that way (issue #527).
+   */
+  const apps: AnyRec[] = (stack as any).apps ?? [];
+  const dashboards: AnyRec[] = (stack as any).dashboards ?? [];
+  const reports: AnyRec[] = (stack as any).reports ?? [];
+  const appNames = new Set(apps.map((a) => a.name));
+  const reportNames = new Set(reports.map((r) => r.name));
+  const dashboardNames = new Set(dashboards.map((d) => d.name));
+  const pageNames = new Set(pages.map((p) => p.name));
+
+  /** List-view names per object (the default list plus every named listView). */
+  const viewNamesByObject = new Map<string, Set<string>>();
+  for (const v of views) {
+    const objectName = v.list?.data?.object;
+    if (!objectName) continue;
+    const known = viewNamesByObject.get(objectName) ?? new Set<string>();
+    if (v.list?.name) known.add(v.list.name);
+    for (const lv of Object.values(v.listViews ?? {}) as AnyRec[]) {
+      if (lv?.name) known.add(lv.name);
+    }
+    viewNamesByObject.set(objectName, known);
+  }
+
+  /** Returns undefined when the URL resolves, else why it doesn't. */
+  const routeError = (url: string): string | undefined => {
+    if (/^https?:\/\//.test(url) || url.startsWith('//')) return undefined; // external
+    const [path] = url.split(/[?#]/);
+    const seg = path.split('/').filter(Boolean);
+    if (seg[0] !== 'apps') return 'in-app URLs must start with /apps/<appName>/';
+    if (!appNames.has(seg[1])) return `app "${seg[1]}" is not defined`;
+    const [head, second, third] = seg.slice(2);
+    if (head === 'dashboard') {
+      return dashboardNames.has(second) ? undefined : `dashboard "${second}" is not defined`;
+    }
+    if (head === 'report') {
+      return reportNames.has(second) ? undefined : `report "${second}" is not defined`;
+    }
+    if (head === 'page') {
+      return pageNames.has(second) ? undefined : `page "${second}" is not defined`;
+    }
+    // `<objectName>` optionally followed by `view/<viewId>` (record deep links
+    // carry ids, not metadata — dashboards don't author those).
+    const objectOk = objectNames.has(head) || PLATFORM_OBJECTS.has(head);
+    if (!objectOk) return `object "${head}" is not defined`;
+    if (second === undefined) return undefined;
+    if (second !== 'view') return `unknown object sub-route "${second}"`;
+    return viewNamesByObject.get(head)?.has(third)
+      ? undefined
+      : `object "${head}" has no list view "${third}"`;
+  };
+
+  it('every url-type widget and header action resolves', () => {
+    const bad: string[] = [];
+    for (const d of dashboards) {
+      const actions = [
+        ...(d.header?.actions ?? []),
+        ...(d.widgets ?? []),
+      ] as AnyRec[];
+      for (const a of actions) {
+        if (!a.actionUrl || (a.actionType ?? 'url') !== 'url') continue;
+        const err = routeError(a.actionUrl);
+        if (err) bad.push(`${d.name}/${a.id ?? a.label}: ${a.actionUrl} — ${err}`);
+      }
+    }
+    expect(bad, `dashboard actions navigating to dead routes:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+});
+
 describe('filter template tokens are resolvable', () => {
   /**
    * Token support differs per data path, verified empirically against the
