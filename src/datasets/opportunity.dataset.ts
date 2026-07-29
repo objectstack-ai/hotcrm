@@ -26,6 +26,11 @@ export const OpportunityDataset = defineDataset({
     { name: 'forecast_category', label: 'Forecast Category', field: 'forecast_category', type: 'string' },
     { name: 'type', label: 'Deal Type', field: 'type', type: 'string' },
     { name: 'owner', label: 'Owner', field: 'owner', type: 'lookup' },
+    // NOTE: no `dateGranularity` here — a bucketed date dimension routes the
+    // query through the platform's ObjectQL aggregate bridge, which drops the
+    // caller's ExecutionContext and fail-closes the read scope (id =
+    // '__deny_all__') on @objectstack 16.1, returning zero rows. Trend widgets
+    // group by the raw date until that is fixed upstream.
     { name: 'close_date', label: 'Close Date', field: 'close_date', type: 'date' },
     // Cross-object dimension: account industry via the crm_account relationship.
     { name: 'account_industry', label: 'Account Industry', field: 'crm_account.industry', type: 'string' },
