@@ -107,3 +107,21 @@
 2. L1–L4 可在本分支或主分支按常规 issue 处理（与 17.0 无耦合）。
 3. 平台出下一个 RC 后在本 worktree `pnpm update` 重跑本计划（静态链+重点回归 P1-P6 的复现步骤即可，半自动化）。
 4. 第二步（可选）：对象级 CRUD 全字段矩阵、20 条 Flow 逐条触发、配置 LLM key 后的 AI 对话链路。
+
+---
+
+## 附录 A：源码级终判与 issue 台账（2026-07-29 复核）
+
+对 §3 的 7 条疑似平台问题，用 objectstack@fc156fa4a（17.0.0-rc.0 tag）与 objectui@4a4829d0（console 锁定 commit）源码逐条复核后的终判：
+
+| 原编号 | 终判 | 上游 issue | hotcrm issue |
+|---|---|---|---|
+| P1 datetime 过滤空集 | 平台 bug（写存 ISO TEXT / 读转 epoch；17.0 占位符解析引爆 9.10.0 旧雷） | objectstack#3912 | #520 |
+| P2 action 写库 FORBIDDEN | 平台 bug（ctx.api 无执行上下文；hook 有 isSystem 兜底而 action 没有） | objectstack#3914 | #521 |
+| P3 全局 action 派发 | 平台 bug ×2（注册键 'global' vs 查找键 '*'；失败包 200 信封） | objectstack#3913 | #522 |
+| P4 报表日期粒度 | **改判 CRM 为主**（v9 迁移丢 dateGranularity，见 #523）；列乱序是平台缺口；「—」列是有意 breaking（#3839） | objectstack#3916 | #523 |
+| P5 flow action | 拆三：死菜单项 = CRM 冗余字符串 rowActions（#535）+ objectui 字符串路径静默 no-op（objectui#2960）；launch 失败误判成功 = objectui#2958；REST 端点无 flow 分派 = objectstack#3915 | 见左 | #524、#535 |
+| P6 多 tab 表单丢值 | objectui console bug（每 tab 独立 form + Radix 卸载销毁状态；#2153 关闭但显式路径未修）；另发现 dispatcher 丢 ValidationError fields[] | objectui#2959、objectstack#3918 | #525 |
+| P7 migrate 占用 | 事实成立（零占用检测 + 确认前即发 DDL）；原「inode 被替换」猜测经源码否定并已修正 | objectstack#3917 | #526 |
+
+结论修正：升级阻断项仍是 3 个（P1/P2/P3，全部坐实为平台 bug）；P4 主因回收为 CRM 侧待办；P5/P6 为平台（console）UI 层问题、其中错误静默机制横跨服务端信封设计与客户端信封检查两层。
