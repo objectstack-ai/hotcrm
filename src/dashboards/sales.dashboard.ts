@@ -164,10 +164,12 @@ export const SalesDashboard: Dashboard = {
         showDataLabels: false,
         colors: ['#10B981'],
         xAxis: { field: 'close_date', title: 'Month', showGridLines: false, logarithmic: false },
+        // No quota annotation line: ChartAnnotationSchema only takes a STATIC
+        // value, and the real quotas live per-owner/per-period in
+        // crm_forecast.quota (seeded 500k–1.5M — the old hardcoded 100000 was
+        // fiction). Quota vs. actual is the quota_attainment_by_rep table
+        // below, bound to the forecast_metrics dataset.
         yAxis: [{ field: 'total_amount', title: 'Revenue', format: '0,0', showGridLines: true, logarithmic: false }],
-        annotations: [
-          { type: 'line', axis: 'y', value: 100000, label: 'Quota', style: 'dashed', color: '#F59E0B' },
-        ],
         interaction: { tooltips: true, brush: true, zoom: false },
       },
       options: { dateGranularity: 'month' },
@@ -240,7 +242,38 @@ export const SalesDashboard: Dashboard = {
       },
     },
 
-    // ─── Row 5: Pivot — Stage × Lead Source ───────────────────────────
+    // ─── Row 5: Quota Attainment ──────────────────────────────────────
+    // The real per-rep quota data (crm_forecast.quota) surfaced as a table:
+    // dashboard chart annotations cannot reference a dataset (static values
+    // only), so quota vs. actual gets its own widget instead of a fake line.
+    {
+      id: 'quota_attainment_by_rep',
+      title: 'Quota Attainment by Rep',
+      description: 'Quota, closed revenue and attainment per rep, from forecast snapshots',
+      type: 'table',
+      colorVariant: 'default',
+      // crm_forecast has neither `close_date` nor `type`; opt out of the
+      // dashboard filters bound to those fields (framework#2501 injects every
+      // dashboard filter into each widget query). `owner` exists and applies.
+      filterBindings: { dateRange: false, type: false },
+      dataset: 'forecast_metrics', dimensions: ['owner'], values: ['quota_sum', 'closed_sum', 'attainment'],
+      layout: { x: 0, y: 14, w: 12, h: 4 },
+      options: {
+        columns: [
+          { header: 'Owner',      accessorKey: 'owner' },
+          { header: 'Quota',      accessorKey: 'quota_sum', format: '0,0' },
+          { header: 'Closed',     accessorKey: 'closed_sum', format: '0,0' },
+          { header: 'Attainment', accessorKey: 'attainment', format: '0%' },
+        ],
+        sortBy: 'attainment',
+        sortOrder: 'desc',
+        limit: 10,
+        striped: true,
+        density: 'comfortable',
+      },
+    },
+
+    // ─── Row 6: Pivot — Stage × Lead Source ───────────────────────────
     {
       id: 'pipeline_stage_by_source',
       title: 'Pipeline by Stage × Lead Source',
@@ -249,7 +282,7 @@ export const SalesDashboard: Dashboard = {
       filter: { stage: { $nin: ['closed_won', 'closed_lost'] } },
       colorVariant: 'default',
       dataset: 'opportunity_metrics', dimensions: ['stage', 'lead_source'], values: ['total_amount'],
-      layout: { x: 0, y: 14, w: 12, h: 4 },
+      layout: { x: 0, y: 18, w: 12, h: 4 },
       options: {
         rowField: 'stage',
         columnField: 'lead_source',
