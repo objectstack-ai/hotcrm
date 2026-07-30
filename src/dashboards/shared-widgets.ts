@@ -34,9 +34,14 @@ export const pipelineByStageFunnelWidget = (layout: WidgetLayout): Widget => ({
 });
 
 /**
- * Avg-deal-size KPI over closed-won deals. The measure and drill-through are
- * fixed; the time scoping legitimately differs per dashboard (CRM follows the
- * dashboard date picker, Sales pins itself to QTD), so callers pass it in.
+ * Avg-deal-size KPI over closed-won deals. The measure is fixed; the time
+ * scoping legitimately differs per dashboard (CRM follows the dashboard date
+ * picker, Sales pins itself to QTD), so callers pass it in.
+ *
+ * No drill-through: `/reports/avg-deal-size` matched no registered report, and
+ * no report covers average deal size, so the button was dead on every dashboard
+ * that used this factory (#527). Re-add one here when such a report ships —
+ * sharing the widget means sharing the fix.
  */
 export const avgDealSizeMetricWidget = (
   layout: WidgetLayout,
@@ -48,9 +53,6 @@ export const avgDealSizeMetricWidget = (
   type: 'metric',
   filter: { stage: 'closed_won' },
   colorVariant: 'orange',
-  actionUrl: '/reports/avg-deal-size',
-  actionType: 'url',
-  actionIcon: 'ArrowUpRight',
   dataset: 'opportunity_metrics', values: ['avg_amount'],
   layout,
   options: { icon: 'bar-chart' },
