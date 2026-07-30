@@ -25,9 +25,9 @@ type WidgetLayout = Widget['layout'];
  * (`#0EA5E9` … `#22C55E`) reaches the DOM. Keeping the block would leave
  * decoration that reads as if it were in effect (#500).
  *
- * `colorVariant` is deliberately KEPT: unlike the palette, it has not been shown
- * to be inert (it appears throughout the console bundle), so it is not lumped in
- * with a verified-dead property. See #500 for that separate question.
+ * No `colorVariant` either, on the same evidence: the executive dashboard's KPI
+ * tiles declare four different variants (`success`, `blue`, `purple`, `orange`)
+ * and render with byte-identical background, border and value colours.
  */
 export const pipelineByStageFunnelWidget = (layout: WidgetLayout): Widget => ({
   id: 'pipeline_by_stage',
@@ -35,7 +35,6 @@ export const pipelineByStageFunnelWidget = (layout: WidgetLayout): Widget => ({
   description: 'Open opportunity value at each sales stage',
   type: 'funnel',
   filter: { stage: { $nin: ['closed_won', 'closed_lost'] } },
-  colorVariant: 'teal',
   dataset: 'opportunity_metrics', dimensions: ['stage'], values: ['total_amount'],
   layout,
   suppressWarnings: ['chart-config-missing'], // intentional default rendering
