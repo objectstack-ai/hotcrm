@@ -10,23 +10,11 @@ import type { HookApi } from './_hook-api';
  * - Rejects shrinking `end_date` after activation.
  * - On `activated`: stamps `signed_date` (if missing), promotes the account to `customer`,
  *   and schedules a renewal task 60 days before `end_date`.
+ *
+ * Helpers (monthsBetween, addDays) are declared INSIDE each handler body — L2
+ * hook bodies run body-only in the QuickJS sandbox, so module scope is not
+ * visible at runtime. See opportunity.hook.ts for the full rationale.
  */
-
-function monthsBetween(startISO: string, endISO: string): number {
-  const s = new Date(startISO);
-  const e = new Date(endISO);
-  return (
-    (e.getFullYear() - s.getFullYear()) * 12 +
-    (e.getMonth() - s.getMonth()) +
-    (e.getDate() >= s.getDate() ? 0 : -1)
-  );
-}
-
-function addDays(iso: string, days: number): string {
-  const d = new Date(iso);
-  d.setDate(d.getDate() + days);
-  return d.toISOString().slice(0, 10);
-}
 
 const contractValidation: Hook = {
   name: 'contract_validation',

@@ -6,7 +6,7 @@ import { defineView } from '@objectstack/spec/ui';
  * Product Views
  *
  *   • grid    — catalog listing with stock indicators
- *   • gallery — visual product catalog (image_url as cover)
+ *   • gallery — visual product catalog (`image` as cover)
  */
 export const ProductViews = defineView({
   list: {

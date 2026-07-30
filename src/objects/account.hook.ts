@@ -6,7 +6,6 @@ import type { HookApi } from './_hook-api';
 /**
  * Account protection hook.
  *
- * - Normalizes `account_number` (uppercase) on insert.
  * - Validates `website` format and `annual_revenue` non-negative.
  * - Refuses to delete a `customer` account that still has open opportunities.
  */
@@ -39,12 +38,6 @@ const accountHook: Hook = {
       const typeChanged = typeof input.type !== 'undefined' && input.type !== prev.type;
       if (ownerChanged || typeChanged) {
         input.last_activity_date = new Date().toISOString().slice(0, 10);
-      }
-    }
-
-    if (event === 'beforeInsert') {
-      if (typeof input.account_number === 'string') {
-        input.account_number = input.account_number.toUpperCase();
       }
     }
 

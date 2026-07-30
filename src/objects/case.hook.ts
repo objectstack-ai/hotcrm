@@ -8,8 +8,8 @@ import type { HookApi } from './_hook-api';
  *
  * - For `critical` cases without `sla_due_date`, sets a 4-hour SLA.
  * - On escalation: creates a follow-up task assigned to the account owner.
- * - On `resolved`: stamps `resolved_date` and bumps account `last_activity_date`.
- * - Declarative `condition` flags SLA breach when due date is past and case not closed.
+ * - On `resolved`: stamps `closed_date` (proxy for the resolution time — there is
+ *   no resolved_date field) and bumps account `last_activity_date`.
  */
 
 const caseValidation: Hook = {

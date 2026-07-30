@@ -25,13 +25,13 @@ How to test your HotCRM customisations confidently before shipping.
 Every metadata file should validate against its spec schema. Add a single test that walks all files:
 
 ```ts
-// test/metadata.test.ts
+// test/metadata-references.test.ts
 import { describe, it, expect } from 'vitest';
 import { ObjectSchema } from '@objectstack/spec/data';
 import { PageSchema, ViewSchema, DashboardSchema } from '@objectstack/spec/ui';
-import { WorkflowRuleSchema, StateMachineSchema } from '@objectstack/spec/automation';
-import opportunityObj from '../src/opportunity.object';
-import opportunityPage from '../src/opportunity.page';
+import { StateMachineSchema } from '@objectstack/spec/automation';
+import opportunityObj from '../src/objects/opportunity.object';
+import opportunityPage from '../src/pages/opportunity_detail.page';
 
 describe('metadata schemas', () => {
   it('opportunity object', () => {
@@ -48,10 +48,12 @@ These run in milliseconds and catch most metadata bugs at CI time.
 
 ## 2. Hook unit tests
 
+The example below tests a hypothetical `opportunity_territory` hook you might add — swap in your own. (For real, runnable examples against the shipped hooks, see `test/hooks-runtime.test.ts`.)
+
 ```ts
 // test/opportunity_territory.hook.test.ts
 import { it, expect, vi } from 'vitest';
-import territoryHook from '../src/opportunity_territory.hook';
+import territoryHook from '../src/objects/opportunity_territory.hook';
 
 it('assigns territory from account region', async () => {
   const broker = {
@@ -103,12 +105,12 @@ The `createTestRuntime` spins up an in-memory tenant with your packages loaded �
 
 ## 4. AI skill tests
 
-Skills are deterministic when you mock the LLM:
+Skills are deterministic when you mock the LLM. The example tests a hypothetical `renewal-pitch` skill (the shipped skills live in `src/skills/`):
 
 ```ts
-// test/renewal_pitch.skill.test.ts
+// test/renewal-pitch.skill.test.ts
 import { runSkill } from '@objectstack/runtime/ai/testing';
-import renewalPitch from '../src/renewal_pitch.skill';
+import renewalPitch from '../src/skills/renewal-pitch.skill';
 
 it('produces a pitch with citations', async () => {
   const result = await runSkill(renewalPitch, {
@@ -161,7 +163,8 @@ it('AMER reps cannot see EMEA accounts', async () => {
 ## 6. End-to-end with Playwright
 
 ```ts
-// e2e/lead-conversion.spec.ts
+// e2e/lead-conversion.spec.ts — an example spec to add alongside the shipped
+// e2e/smoke.spec.ts and e2e/opportunity-lifecycle.spec.ts
 import { test, expect } from '@playwright/test';
 
 test('rep can convert a qualified lead to an opportunity', async ({ page }) => {
@@ -184,7 +187,7 @@ test('rep can convert a qualified lead to an opportunity', async ({ page }) => {
 });
 ```
 
-Run with `pnpm e2e`.
+Run with `pnpm test:e2e`.
 
 ## CI: GitHub Actions example
 
@@ -198,29 +201,29 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v3
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm typecheck       # @objectstack/spec validation
+      - run: pnpm typecheck       # strict TypeScript
       - run: pnpm lint
       - run: pnpm test            # unit + integration
-      - run: pnpm test:metadata   # schema validation
+      - run: pnpm validate        # metadata schema validation
 
   e2e:
     runs-on: ubuntu-latest
     needs: validate
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v3
       - run: pnpm install --frozen-lockfile
       - run: pnpm playwright install --with-deps
       - run: pnpm dev &           # boot the runtime
       - run: pnpm wait-on http://localhost:4001
-      - run: pnpm e2e
+      - run: pnpm test:e2e
 
   deploy-sandbox:
     runs-on: ubuntu-latest

@@ -154,8 +154,10 @@ export const Lead = ObjectSchema.create({
     // Conversion tracking.
     // NOT `readonly`: since 16.x the platform drops writes to readonly fields
     // outright (#2948), including the lead_conversion flow's mark_converted
-    // update. Edit-protection instead comes from the `cannot_edit_converted`
-    // validation below, which blocks user edits once is_converted is set.
+    // update. Edit-protection comes from two places: the `cannot_edit_converted`
+    // validation below (4 identity fields, recoverable error) and the broader
+    // beforeUpdate guard in lead.hook.ts, which rejects ANY edit to a
+    // converted lead.
     is_converted: Field.boolean({
       label: 'Converted',
       defaultValue: false,
