@@ -196,7 +196,6 @@ export const AccountViews = defineView({
 
   form: {
     type: 'tabbed',
-    data: { provider: 'object', object: 'crm_account' },
     sections: [
       {
         label: 'Profile',

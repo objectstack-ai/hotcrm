@@ -96,7 +96,6 @@ export const CampaignViews = defineView({
 
   form: {
     type: 'tabbed',
-    data: { provider: 'object', object: 'crm_campaign' },
     sections: [
       {
         label: 'Overview',

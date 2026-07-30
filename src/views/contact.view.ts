@@ -71,7 +71,6 @@ export const ContactViews = defineView({
 
   form: {
     type: 'tabbed',
-    data: { provider: 'object', object: 'crm_contact' },
     sections: [
       {
         label: 'Identity',

@@ -222,7 +222,6 @@ export const OpportunityViews = defineView({
 
   form: {
     type: 'tabbed',
-    data: { provider: 'object', object: 'crm_opportunity' },
     sections: [
       {
         label: 'Overview',

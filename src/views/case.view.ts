@@ -161,7 +161,6 @@ export const CaseViews = defineView({
 
   form: {
     type: 'tabbed',
-    data: { provider: 'object', object: 'crm_case' },
     sections: [
       {
         label: 'Case',

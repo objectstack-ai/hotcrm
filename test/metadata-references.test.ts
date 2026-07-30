@@ -1105,3 +1105,48 @@ describe('action labels are translated in every locale', () => {
     expect(bad, `action strings declared in code but not translated:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
 });
+
+/**
+ * `form.data` is a data provider the form renderer never reads: a form binds to
+ * its object and record through the route context, so the block only *looked*
+ * like it was wiring the form to an object. The platform's own liveness rule
+ * (`liveness-dead-property`) flagged twelve of them, one per view file.
+ *
+ * Verified before removing them, rather than taken on the validator's word —
+ * the same validator reports false positives elsewhere (it cannot see view
+ * names inside the twelve grouped `views` exports, so it calls live routes
+ * dead). With every `form.data` deleted, opening a lead record's edit form on
+ * 16.1.0 still binds correctly: 8 inputs, 7 populated from the record
+ * (`first_name: "Mira"`, `company: "Atlas Construction"`, `status: "contacted"`,
+ * …), no console errors.
+ *
+ * Scope note: named forms under `formViews` (`quick_create`,
+ * `lead_conversion_wizard`, …) still carry `data` blocks. The liveness rule does
+ * NOT flag those and they have not been measured — a create form has no record
+ * in the route context, so the same reasoning may not hold. They are left alone
+ * deliberately; measure first if you plan to remove them.
+ */
+describe('form views do not declare a dead data provider', () => {
+  it('no view sets form.data', () => {
+    const bad: string[] = [];
+    for (const v of views) {
+      if (!v.form?.data) continue;
+      const objectName = v.list?.data?.object ?? v.object ?? '(unknown object)';
+      bad.push(`${objectName}: form.data = ${JSON.stringify(v.form.data)}`);
+    }
+    expect(
+      bad,
+      `form.data is not consumed — a form binds via the route context:\n  ${bad.join('\n  ')}`,
+    ).toEqual([]);
+  });
+
+  it('every view still resolves its object without the form.data fallback', () => {
+    // objectOf() used to fall back to `form.data.object`. With those blocks gone
+    // the list provider is the only source, so a view that lost both would make
+    // every rule keyed on objectOf() silently skip it.
+    const unresolved = views
+      .filter((v) => !(v.list?.data?.object ?? v.object))
+      .map((v) => v.list?.name ?? v.form?.type ?? '(unnamed view)');
+    expect(unresolved, `views whose object no longer resolves:\n  ${unresolved.join('\n  ')}`).toEqual([]);
+  });
+});

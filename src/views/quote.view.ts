@@ -74,7 +74,6 @@ export const QuoteViews = defineView({
 
   form: {
     type: 'tabbed',
-    data: { provider: 'object', object: 'crm_quote' },
     sections: [
       {
         label: 'Quote',

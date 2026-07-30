@@ -91,7 +91,6 @@ export const ContractViews = defineView({
 
   form: {
     type: 'tabbed',
-    data: { provider: 'object', object: 'crm_contract' },
     sections: [
       {
         label: 'Parties',
