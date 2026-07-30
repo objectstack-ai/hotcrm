@@ -11,7 +11,6 @@ export { Account } from './account.object';
 export { Campaign } from './campaign.object';
 export { CampaignMember } from './campaign_member.object';
 export { Case } from './case.object';
-export { Competitor } from './competitor.object';
 export { Contact } from './contact.object';
 export { Contract } from './contract.object';
 export { Forecast } from './forecast.object';

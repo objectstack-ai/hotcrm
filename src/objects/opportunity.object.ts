@@ -148,14 +148,16 @@ export const Opportunity = ObjectSchema.create({
       options: [...LEAD_SOURCE_OPTIONS],
     }),
 
-    // Competitor Analysis — multi-value lookup into the crm_competitor
-    // catalog (replaces the former hard-coded "Competitor A/B/C" multiselect;
-    // new column name keeps the schema change additive on existing DBs).
-    crm_competitors: Field.lookup('crm_competitor', {
+    // Competitor Analysis
+    competitors: Field.select({
       label: 'Competitors',
       multiple: true,
-      description: 'Competitors we are up against in this deal',
       group: 'competition',
+      options: [
+        { label: 'Competitor A', value: 'competitor_a' },
+        { label: 'Competitor B', value: 'competitor_b' },
+        { label: 'Competitor C', value: 'competitor_c' },
+      ]
     }),
 
     // Campaign tracking

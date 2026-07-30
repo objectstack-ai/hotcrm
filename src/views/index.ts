@@ -7,7 +7,6 @@ export { OpportunityViews } from './opportunity.view';
 export { TaskViews } from './task.view';
 export { CaseViews } from './case.view';
 export { CampaignViews } from './campaign.view';
-export { CompetitorViews } from './competitor.view';
 export { ContractViews } from './contract.view';
 export { ForecastViews } from './forecast.view';
 export { KnowledgeArticleViews } from './knowledge_article.view';
