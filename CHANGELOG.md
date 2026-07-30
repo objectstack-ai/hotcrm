@@ -19,6 +19,10 @@ Everything merged after the 2.2.2 tag. Not yet versioned or published.
 - Navigation entry points so every shipped capability is reachable in-app. [#482](https://github.com/objectstack-ai/hotcrm/pull/482)
 - Flow runtime test harnesses: `lead_conversion` ([#469](https://github.com/objectstack-ai/hotcrm/pull/469)) and `quote_generation` ([#470](https://github.com/objectstack-ai/hotcrm/pull/470)).
 
+### Added
+
+- **`engines.protocol` compatibility range declared ([#529](https://github.com/objectstack-ai/hotcrm/issues/529)).** The app never declared the metadata/runtime protocol range it is authored against, so a newer runtime loaded it *unchecked* — ObjectStack 17.0 warns `package 'app.objectstack.hotcrm' declares no engines.protocol range; loading under protocol 17.0.0 without a compatibility check (ADR-0087)`. The stack manifest in [`objectstack.config.ts`](objectstack.config.ts) (the manifest the ADR-0087 load-time handshake actually reads) and [`objectstack.manifest.json`](objectstack.manifest.json) now both declare `engines.protocol: "^16.0.0"`, matching the installed `@objectstack/*` 16.x line. A runtime on a different protocol major now refuses the load up front with the structured `OS_PROTOCOL_INCOMPATIBLE` diagnostic (naming the `objectstack migrate meta` replay command) instead of failing deep in a schema parse. The platform-upgrade checklist ([docs/MAINTENANCE.md](docs/MAINTENANCE.md) §3) now includes bumping this range alongside `specVersion`.
+
 ### Fixed
 
 - **P0 core-correctness sweep.** [#467](https://github.com/objectstack-ai/hotcrm/pull/467)
