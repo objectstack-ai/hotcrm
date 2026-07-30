@@ -84,11 +84,13 @@ export const LeadViews = defineView({
       view: 'detail_form', // Use named form view
     },
     
-    // List Actions — every name here must be a defined Action (or a built-in
-    // edit/delete). The previous mass_update / mass_delete / assign_owner
-    // referenced actions that were never defined, so the toolbar buttons did
-    // nothing.
-    rowActions: ['edit', 'delete', 'convert_lead', 'schedule_followup'],
+    // List Actions — built-ins only. `convert_lead` / `schedule_followup`
+    // must NOT be repeated here: they already declare `locations:
+    // ['list_item']` on their Action defs, which auto-injects the menu item.
+    // A string entry here goes through the legacy rowActions path (the string
+    // is dispatched as an action TYPE — objectstack-ai/objectui#2960), which
+    // produced a second, dead "Convert Lead" item next to the working one.
+    rowActions: ['edit', 'delete'],
     // Built-in `exportOptions` covers CSV export; no export action needed.
     bulkActions: ['create_campaign'],
     
