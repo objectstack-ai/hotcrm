@@ -858,3 +858,79 @@ describe('page templates and record components stay inside their record context'
     expect(bad, `record components with no record context:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
 });
+
+describe('dashboard date ranges window a field the query layer can actually compare', () => {
+  /**
+   * A dashboard `dateRange` is ANDed into EVERY widget query, so if the
+   * comparison cannot match, the whole dashboard renders zeros. That is #460:
+   * the Service dashboard windowed `crm_case.created_date` — a
+   * `Field.datetime()` — and opened with every KPI at 0 and every chart empty,
+   * with 38 cases in the system.
+   *
+   * The mechanism is a storage disagreement, not a bad preset. On SQLite,
+   * `driver-sql` 16.1.0 coerces datetime filter values to epoch-millisecond
+   * INTEGERs (`coerceFilterValue`), documenting the assumption that datetime
+   * columns hold INTEGER ms. In this app they hold ISO TEXT — including the
+   * platform's own `created_at`/`updated_at`. SQLite orders every INTEGER
+   * before every TEXT, so `datetime_col >= <int>` is true for all rows and
+   * `datetime_col <= <int>` is true for none. Measured against the running
+   * 16.1.0 console: `$gte` alone → all 38 cases, `$lte` alone → 0, both → 0,
+   * in every date format tried.
+   *
+   * `Field.date()` is unaffected (TEXT `YYYY-MM-DD` on both sides), which is
+   * why the CRM/Sales/Executive dashboards — all windowing `close_date` — show
+   * data. So the rule is about the FIELD TYPE, not the preset: a dashboard may
+   * only window a `date` field. Note this deliberately fails if someone
+   * restores the Service dashboard's `dateRange` before the driver is fixed.
+   */
+  const dashboards: AnyRec[] = (stack as any).dashboards ?? [];
+  const datasets: AnyRec[] = (stack as any).datasets ?? [];
+
+  /** Objects the dashboard's widgets aggregate over, via their datasets. */
+  const objectsBehind = (d: AnyRec): string[] => {
+    const names = new Set<string>();
+    for (const w of d.widgets ?? []) {
+      const ds = datasets.find((x) => x.name === w.dataset);
+      if (ds?.object) names.add(ds.object);
+    }
+    return [...names];
+  };
+
+  const fieldType = (objectName: string, field: string): string | undefined =>
+    objects.find((o) => o.name === objectName)?.fields?.[field]?.type;
+
+  it('no dashboard windows a datetime field', () => {
+    const bad: string[] = [];
+    for (const d of dashboards) {
+      const field = d.dateRange?.field;
+      if (!field) continue;
+      for (const obj of objectsBehind(d)) {
+        const type = fieldType(obj, field);
+        if (type === 'datetime') {
+          bad.push(
+            `${d.name}: dateRange windows ${obj}.${field}, a datetime field — ` +
+            `the $lte bound matches no rows, so every widget renders empty`,
+          );
+        }
+      }
+    }
+    expect(bad, `dashboards that will render empty:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
+  it('every dashboard dateRange field exists on the objects its widgets aggregate', () => {
+    // A range field that no underlying object defines is silently dropped or
+    // errors per widget — either way the picker cannot do what it claims.
+    const bad: string[] = [];
+    for (const d of dashboards) {
+      const field = d.dateRange?.field;
+      if (!field) continue;
+      const behind = objectsBehind(d);
+      if (!behind.length) continue;
+      const resolves = behind.filter((obj) => fieldType(obj, field) !== undefined);
+      if (!resolves.length) {
+        bad.push(`${d.name}: dateRange field "${field}" exists on none of ${behind.join(', ')}`);
+      }
+    }
+    expect(bad, `dangling dashboard date-range fields:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+});

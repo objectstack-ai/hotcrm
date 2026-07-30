@@ -27,11 +27,44 @@ export const ServiceDashboard: Dashboard = {
     // routes — all three were dead. Re-add real, wired-up actions here when available.
   },
 
-  dateRange: {
-    field: 'created_date',
-    defaultRange: 'last_30_days',
-    allowCustomRange: true,
-  },
+  // NO `dateRange` — deliberately, and this is the fix for #460.
+  //
+  // This dashboard carried `{ field: 'created_date', defaultRange:
+  // 'last_30_days' }` and opened on all zeros with 38 cases in the system. The
+  // cause is NOT the preset. `crm_case.created_date` is a `Field.datetime()`,
+  // and on the SQLite path `driver-sql` 16.1.0 coerces datetime filter values
+  // to epoch-millisecond INTEGERs (`coerceFilterValue`), on the documented
+  // assumption that datetime columns are stored as INTEGER ms. They are not —
+  // every datetime in the demo database is ISO TEXT, including the platform's
+  // own `created_at` / `updated_at` audit columns. SQLite orders every INTEGER
+  // before every TEXT, so on a datetime column:
+  //     created_date >= <int>   is TRUE for every row   (window has no floor)
+  //     created_date <= <int>   is FALSE for every row  (window matches nothing)
+  // The runtime ANDs the dashboard range into every widget query, so the `$lte`
+  // half zeroed the whole dashboard. Measured against the running 16.1.0
+  // console: `$gte` alone → all 38 cases, `$lte` alone → 0, both bounds → 0, in
+  // every date format tried (`2026-07-30`, full ISO, end-of-day). WIDENING THE
+  // PRESET CANNOT FIX THIS — `last_90_days` renders exactly the same zeros.
+  //
+  // The other three dashboards are unaffected because they window `close_date`,
+  // a `Field.date()`, which stays TEXT `YYYY-MM-DD` on both sides of the
+  // comparison. That is why Service was the outlier — not the preset choice.
+  //
+  // Upstream: objectstack-ai/objectstack#3912 is this exact defect (closed
+  // 2026-07-29, fix in the 17.0 train — HotCRM is pinned to 16.1.0, so it is
+  // still live here). Note that the platform upgrade alone does NOT make it
+  // safe to restore the range on a datetime field: #3777 (open, p1) is the
+  // separate bug that a bare `YYYY-MM-DD` `$lte` upper bound on a datetime
+  // column still drops every record created after 00:00 that day — silently,
+  // and by an amount that grows as the day goes on. BOTH must land first.
+  //
+  // Dropping the range is what makes the dashboard render (verified in the
+  // console: 30 open / 7 critical / 45.0h / 3 SLA breaches, every chart
+  // populated). The cost is honest and visible: this dashboard has no date
+  // picker. Restore the line below only once both upstream issues are fixed;
+  // the guard in `metadata-references.test.ts` fails while it is still unsafe.
+  //
+  //   dateRange: { field: 'created_date', defaultRange: 'last_90_days', allowCustomRange: true },
 
   globalFilters: [
     {
@@ -190,7 +223,14 @@ export const ServiceDashboard: Dashboard = {
       description: 'New cases created over the last 30 days',
       type: 'area',
       filter: { created_date: { $gte: '{30_days_ago}' } },
-      filterBindings: { dateRange: false }, // self-scoped to 30 days — the date picker must not re-window it
+      // Kept opted out so this stays self-scoped if the dashboard `dateRange`
+      // is ever restored (see the note above).
+      // Caveat, same root cause as #460: on 16.1.0 a `$gte` against a datetime
+      // column is TRUE for every row, so this floor is currently INERT and the
+      // chart plots every case rather than the last 30 days. Indistinguishable
+      // today (the seed spans exactly 30 days) and it starts working once the
+      // driver is fixed — but the title's "last 30 days" is not yet enforced.
+      filterBindings: { dateRange: false },
       colorVariant: 'blue',
       dataset: 'case_metrics', dimensions: ['created_date'], values: ['case_count'],
       layout: { x: 0, y: 6, w: 8, h: 4 },
