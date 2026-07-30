@@ -28,8 +28,20 @@ export const ServiceDashboard: Dashboard = {
   },
 
   dateRange: {
+    // The default window has to be WIDER than the span of the cases it
+    // aggregates, or the dashboard opens on all zeros (#460): the runtime ANDs
+    // this range into every widget query, and the demo cases run from 1 to 30
+    // days old, so `last_30_days` sat exactly on the edge — the oldest cases
+    // fell out of the window, and any seed that reaches further back emptied
+    // the screen. `this_quarter` (what the CRM/Sales/Executive dashboards use)
+    // is the wrong instrument here: those window `close_date` over a
+    // forward-looking pipeline, where a calendar quarter is the intended
+    // framing, whereas a support desk reads a trailing window — and a calendar
+    // quarter is only a few days long on 1 July, which reintroduces the very
+    // emptiness this fixes. A rolling 90 days always contains the full case
+    // history, whatever day the demo is opened on.
     field: 'created_date',
-    defaultRange: 'last_30_days',
+    defaultRange: 'last_90_days',
     allowCustomRange: true,
   },
 
