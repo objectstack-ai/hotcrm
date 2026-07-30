@@ -28,6 +28,21 @@ const objectNames = new Set(objects.map((o) => o.name));
 const profileNames = new Set(profiles.map((p) => p.name));
 
 /**
+ * Locale packs, flattened to `[locale, pack]` pairs.
+ *
+ * `stack.translations` holds ONE `TranslationBundle` keyed by locale
+ * (`{ en: {...}, 'zh-CN': {...} }`) — NOT a list of per-locale records. A
+ * `translations.find(t => t.locale === 'zh-CN')` therefore matches nothing and
+ * silently turns its test into a no-op, which is how the navigation guard
+ * below spent its life passing without asserting anything.
+ */
+const localePacks: [string, AnyRec][] = ((stack as any).translations ?? []).flatMap(
+  (bundle: AnyRec) => Object.entries(bundle) as [string, AnyRec][],
+);
+const packFor = (locale: string): AnyRec | undefined =>
+  localePacks.find(([name]) => name === locale)?.[1];
+
+/**
  * Audit columns the platform adds to every object. They are real at runtime
  * (`?sort=created_at desc` works) but never appear in the authored `fields`
  * map, so a reference to one is legitimate.
@@ -351,12 +366,13 @@ describe('navigation reaches everything the app ships', () => {
   it('every navigation node has a zh-CN label', () => {
     // The groups were translated and the leaves were not, so the sidebar read
     // half Chinese, half English.
-    const translations: AnyRec[] = (stack as any).translations ?? [];
-    const zh = translations.find((t) => t.locale === 'zh-CN' || t.name === 'zh-CN');
-    if (!zh) return; // no zh bundle in this build — nothing to assert
+    const zh = packFor('zh-CN');
+    // Assert, don't skip: the old lookup used the wrong bundle shape, found no
+    // pack, and returned early — a green test that checked nothing.
+    expect(zh, 'no zh-CN locale pack found in stack.translations').toBeTruthy();
     const bad: string[] = [];
     for (const app of apps) {
-      const nav = zh.data?.apps?.[app.name]?.navigation ?? zh.apps?.[app.name]?.navigation ?? {};
+      const nav = zh?.apps?.[app.name]?.navigation ?? {};
       for (const n of navNodes(app)) {
         if (n.id && !nav[n.id]?.label) bad.push(`${app.name}/${n.id}`);
       }
@@ -552,6 +568,109 @@ describe('row colors and kanban groups key off real option values', () => {
       }
     }
     expect(bad, `broken kanban groupings:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+});
+
+describe('picklist values never reach the UI unresolved', () => {
+  /**
+   * A select field stores a VALUE (`ms`, `waiting_customer`, `existing_upgrade`)
+   * and the UI resolves it to the locale's label at render time. Every #461
+   * defect was that resolution failing, in one of two ways — a lookup that
+   * misses (the translation is keyed by something that is not an option value)
+   * or a lookup that never happens (a formula splices the stored value straight
+   * into a string). Both are invisible in review and only surface as English —
+   * or worse, `closed_won` — sitting in an otherwise-translated screen.
+   */
+  const selectOptionsOf = (objDef: AnyRec, field: string): string[] | undefined => {
+    const options = objDef.fields?.[field]?.options;
+    return Array.isArray(options) && options.length
+      ? options.map((o: AnyRec) => String(o.value))
+      : undefined;
+  };
+
+  it('option translations are keyed by option VALUE, not by English label', () => {
+    // Opportunity `type` was keyed by label ('Existing Customer - Upgrade':
+    // '老客户升级'). The resolver matches by value, so deal type rendered in
+    // English on every non-en locale while `stage`/`status` — keyed by value —
+    // translated fine, which is exactly what made it hard to spot.
+    const bad: string[] = [];
+    for (const [locale, pack] of localePacks) {
+      for (const [objName, objT] of Object.entries<AnyRec>(pack?.objects ?? {})) {
+        const objDef = objects.find((o) => o.name === objName);
+        if (!objDef) continue; // covered by the key-resolution test below
+        for (const [fieldName, fieldT] of Object.entries<AnyRec>(objT?.fields ?? {})) {
+          if (!fieldT?.options) continue;
+          const values = selectOptionsOf(objDef, fieldName);
+          if (!values) {
+            bad.push(`${locale}: ${objName}.${fieldName} translates options but the field has none`);
+            continue;
+          }
+          for (const key of Object.keys(fieldT.options)) {
+            if (!values.includes(key)) {
+              bad.push(`${locale}: ${objName}.${fieldName} option key "${key}" is not an option value`);
+            }
+          }
+        }
+      }
+    }
+    expect(bad, `option translations that resolve to nothing:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
+  it('translated object and field keys name real objects and fields', () => {
+    // A translation keyed to a renamed/removed field is dead weight that reads
+    // as coverage — the bundle looks complete while the screen stays English.
+    const bad: string[] = [];
+    for (const [locale, pack] of localePacks) {
+      for (const [objName, objT] of Object.entries<AnyRec>(pack?.objects ?? {})) {
+        if (!objectNames.has(objName)) {
+          bad.push(`${locale}: translates "${objName}", which is not a defined object`);
+          continue;
+        }
+        const known = fieldsOf(objName);
+        for (const fieldName of Object.keys(objT?.fields ?? {})) {
+          if (!known.includes(fieldName)) {
+            bad.push(`${locale}: "${objName}" has no field "${fieldName}"`);
+          }
+        }
+      }
+    }
+    expect(bad, `translations keyed to nothing:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
+  it('no formula renders a select field into its output string', () => {
+    // `full_name` = joinNonEmpty([salutation, first_name, last_name]) printed
+    // "ms Emily Davis"; opportunity `display_title` = name + " - " + stage
+    // titled deals "Enterprise Deal - closed_won". The formula language has no
+    // option-label lookup (only upper/lower), so a select simply cannot be
+    // rendered from a formula — it has to stay its own field.
+    //
+    // Only RENDERING is flagged. Branching on a select (`record.stage ==
+    // "closed_won" ? …`) never puts the value on screen and stays legal.
+    const rendersSelect = (source: string, field: string): boolean => {
+      const ref = `record\\.${field}\\b`;
+      // joinNonEmpty([...]) — every element lands in the output string.
+      for (const m of source.matchAll(/joinNonEmpty\(\s*\[([^\]]*)\]/g)) {
+        if (new RegExp(ref).test(m[1])) return true;
+      }
+      // String concatenation on either side: `" - " + record.x` / `record.x + " - "`.
+      return new RegExp(`(["']\\s*\\+\\s*${ref})|(${ref}\\s*\\+\\s*["'])`).test(source);
+    };
+
+    const bad: string[] = [];
+    for (const objDef of objects) {
+      for (const [fieldName, field] of Object.entries<AnyRec>(objDef.fields ?? {})) {
+        // `expression` is `{ dialect, source }` once the F tag is evaluated.
+        const source: unknown = field?.expression?.source ?? field?.expression;
+        if (typeof source !== 'string') continue;
+        for (const other of Object.keys(objDef.fields ?? {})) {
+          if (!selectOptionsOf(objDef, other)) continue;
+          if (rendersSelect(source, other)) {
+            bad.push(`${objDef.name}.${fieldName} renders select "${other}": ${source}`);
+          }
+        }
+      }
+    }
+    expect(bad, `formulas printing raw select values:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
 });
 
