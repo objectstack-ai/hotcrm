@@ -9,13 +9,11 @@ import type { HookApi } from './_hook-api';
  * - Defaults `expiration_date` to `quote_date + 30 days` when missing.
  * - Freezes quotes once `accepted` or `expired`.
  * - On `accepted`, drafts a contract and pushes the linked opportunity to `closed_won`.
+ *
+ * Helpers (addDays) are declared INSIDE each handler body — L2 hook bodies run
+ * body-only in the QuickJS sandbox, so module scope is not visible at runtime.
+ * See opportunity.hook.ts for the full rationale.
  */
-
-function addDays(iso: string, days: number): string {
-  const d = new Date(iso);
-  d.setDate(d.getDate() + days);
-  return d.toISOString().slice(0, 10);
-}
 
 const quoteValidation: Hook = {
   name: 'quote_workflow',

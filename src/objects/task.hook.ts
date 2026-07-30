@@ -44,7 +44,6 @@ const taskValidation: Hook = {
     if (input.status === 'completed' && previous?.status !== 'completed') {
       if (!input.completed_date) input.completed_date = new Date().toISOString();
       if (typeof input.progress_percent !== 'number') input.progress_percent = 100;
-      input.is_completed = true;
     }
 
     // Derived flags (migrated from removed `set_completed_flag` / `check_overdue`

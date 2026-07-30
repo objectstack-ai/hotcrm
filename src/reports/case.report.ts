@@ -6,9 +6,12 @@ export const CasesByStatusPriorityReport: ReportInput = {
   name: 'cases_by_status_priority',
   label: 'Cases by Status and Priority',
   description: 'Summary of cases by status and priority',
-  dataset: 'case_metrics', rows: ['status', 'priority'], values: ['avg_resolution'],
+  // The chart counts cases, so `case_count` must be selected alongside the
+  // resolution time — and the yAxis must name that MEASURE ('case_number'
+  // was a raw-field name that exists in no dataset, so the axis was empty).
+  dataset: 'case_metrics', rows: ['status', 'priority'], values: ['case_count', 'avg_resolution'],
   type: 'summary',
-  chart: { type: 'bar', title: 'Cases by Status', showLegend: true, xAxis: 'status', yAxis: 'case_number' }
+  chart: { type: 'bar', title: 'Cases by Status', showLegend: true, xAxis: 'status', yAxis: 'case_count' }
 };
 
 export const SlaPerformanceReport: ReportInput = {

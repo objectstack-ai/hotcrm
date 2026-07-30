@@ -5,7 +5,7 @@
 # HotCRM
 
 > **The reference app for AI-written enterprise software.** A complete CRM —
-> 15 objects, 17 flows, 4 dashboards, 2 AI copilots, 4 languages — is roughly
+> 15 objects, 20 flows, 4 dashboards, 2 AI copilots, 4 languages — is roughly
 > **170k tokens** of typed [ObjectStack](https://github.com/objectstack-ai/objectstack)
 > metadata (~18,000 lines): the entire enterprise CRM fits in a single agent
 > context window, so an AI can hold it whole, reason about it, and refactor it.
@@ -14,7 +14,7 @@
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Manifest](https://img.shields.io/badge/manifest-app.objectstack.hotcrm-blueviolet)](objectstack.config.ts)
-[![Version](https://img.shields.io/badge/version-1.0.0-brightgreen)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-2.2.2-brightgreen)](CHANGELOG.md)
 [![Marketplace](https://img.shields.io/badge/marketplace-cloud.objectos.app-orange)](https://cloud.objectos.app)
 
 [![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/objectstack-ai/hotcrm)
@@ -57,7 +57,7 @@ HotCRM is a complete, opinionated CRM built as the **first official application*
 | `crm_product` | | | |
 | `crm_forecast` | | | |
 
-Plus **2 AI agents** (sales-copilot, service-copilot), **4 dashboards**, **17 flows**, **10 actions**, **6 AI skills**, **4 language bundles** (en, zh-CN, es-ES, ja-JP), **6 permission profiles**, **10 positions**, and **5 sharing rules**.
+Plus **2 AI agents** (sales-copilot, service-copilot), **4 dashboards**, **20 flows**, **13 actions**, **6 AI skills**, **4 language bundles** (en, zh-CN, es-ES, ja-JP), **6 permission profiles**, **12 positions**, and **5 sharing rules**.
 
 > **Business reader?** The ObjectStack docs tour every one of these capabilities in plain business language — [What Can It Do?](https://objectstack.ai/docs/capabilities) — with HotCRM as the running example on every page.
 
@@ -105,7 +105,7 @@ pnpm build
 # 3. Publish a new version
 objectstack package publish dist/objectstack.json \
   --manifest-id app.acme.crm \
-  --version 1.0.0 \
+  --version 2.2.2 \
   --display-name "Acme CRM" \
   --category crm \
   --visibility marketplace \
@@ -125,8 +125,8 @@ hotcrm/
 ├── objectstack.config.ts         # manifest + defineStack() — single source of truth
 ├── src/
 │   ├── objects/                  # *.object.ts — data model (15 objects)
-│   ├── actions/                  # *.action.ts — server actions + AI tools (10)
-│   ├── flows/                    # *.flow.ts — visual flows (10): screen, record-change & scheduled
+│   ├── actions/                  # *.actions.ts — server actions + AI tools (13)
+│   ├── flows/                    # *.flow.ts — visual flows (20): screen, record-change & scheduled
 │   ├── hooks/                    # hook registry barrel
 │   ├── agents/                   # *.agent.ts — AI copilots (2)
 │   ├── skills/                   # *.skill.ts — AI skills (6)
@@ -140,7 +140,7 @@ hotcrm/
 └── content/docs/                 # Documentation content
 ```
 
-Every file follows the **`<entity>.<kind>.ts`** convention. The `crm_` prefix on object names is explicit in source — no runtime magic. Both rules are required for marketplace acceptance.
+Every file follows the **`<entity>.<kind>.ts`** convention (actions are the one plural: `<entity>.actions.ts`, one file bundling that entity's actions). The `crm_` prefix on object names is explicit in source — no runtime magic. Both rules are required for marketplace acceptance.
 
 ---
 
