@@ -23,8 +23,13 @@ return 0, in every date format tried.
 The `dateRange` block is therefore removed rather than widened. The dashboard now
 renders real data (30 open / 7 critical / 45.0h average resolution / 3 SLA
 breaches, all charts populated). The cost is visible and intentional: this
-dashboard has no date picker until datetime filtering is fixed upstream, and the
-commented-out block plus a CI guard mark the spot.
+dashboard has no date picker, and the commented-out block plus a CI guard mark
+the spot.
+
+Upstream this is objectstack-ai/objectstack#3912 (closed, fix in the 17.0 train;
+HotCRM is pinned to 16.1.0 so it is still live here). Restoring the range needs
+objectstack-ai/objectstack#3777 too — still open, and the reason a datetime
+upper bound stays unsafe even after the #3912 fix.
 
 The CRM, Sales and Executive dashboards are untouched — they window `close_date`,
 a `Field.date()`, which compares as TEXT on both sides and works. That, not the

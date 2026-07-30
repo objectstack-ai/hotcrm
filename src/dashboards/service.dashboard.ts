@@ -50,10 +50,18 @@ export const ServiceDashboard: Dashboard = {
   // a `Field.date()`, which stays TEXT `YYYY-MM-DD` on both sides of the
   // comparison. That is why Service was the outlier — not the preset choice.
   //
+  // Upstream: objectstack-ai/objectstack#3912 is this exact defect (closed
+  // 2026-07-29, fix in the 17.0 train — HotCRM is pinned to 16.1.0, so it is
+  // still live here). Note that the platform upgrade alone does NOT make it
+  // safe to restore the range on a datetime field: #3777 (open, p1) is the
+  // separate bug that a bare `YYYY-MM-DD` `$lte` upper bound on a datetime
+  // column still drops every record created after 00:00 that day — silently,
+  // and by an amount that grows as the day goes on. BOTH must land first.
+  //
   // Dropping the range is what makes the dashboard render (verified in the
   // console: 30 open / 7 critical / 45.0h / 3 SLA breaches, every chart
   // populated). The cost is honest and visible: this dashboard has no date
-  // picker. Restore the line below once datetime filtering is fixed upstream;
+  // picker. Restore the line below only once both upstream issues are fixed;
   // the guard in `metadata-references.test.ts` fails while it is still unsafe.
   //
   //   dateRange: { field: 'created_date', defaultRange: 'last_90_days', allowCustomRange: true },
