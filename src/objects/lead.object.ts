@@ -259,8 +259,14 @@ export const Lead = ObjectSchema.create({
   // status state machines are now expressed in the validation union.
 
   // Database indexes for performance
+  //
+  // No `{ fields: ['email'], unique: true }` here: the field-level
+  // `unique: true` already builds the tenant composite `(organization_id,
+  // email)` since framework #3696. Declaring the single-column index too made
+  // the platform-wide constraint win and left the per-tenant one unreachable
+  // (framework#3991) — two organizations must be able to work the same lead
+  // address independently.
   indexes: [
-    { fields: ['email'], unique: true },
     { fields: ['owner'] },
     { fields: ['status'] },
     { fields: ['company'] },
