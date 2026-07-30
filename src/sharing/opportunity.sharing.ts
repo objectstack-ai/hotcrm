@@ -15,3 +15,21 @@ export const OpportunitySalesSharingRule = {
   accessLevel: 'read' as const,
   sharedWith: { type: 'position' as const, value: 'sales_director' },
 };
+
+/**
+ * The same large-deal visibility one rung up.
+ *
+ * Positions are FLAT (ADR-0090 D3): nothing rolls the director's grant up to the
+ * executive rung, so the rule that gives leadership its pipeline view has to be
+ * authored per position. Same criteria, same read-only level — an executive
+ * reads the deal, the deal team still owns it.
+ */
+export const OpportunityExecutiveSharingRule = {
+  name: 'opportunity_executive_sharing',
+  label: 'Large Open Deals — Executive',
+  object: 'crm_opportunity',
+  type: 'criteria' as const,
+  condition: P`!(record.stage in ["closed_won", "closed_lost"]) && record.amount >= 100000`,
+  accessLevel: 'read' as const,
+  sharedWith: { type: 'position' as const, value: 'executive' },
+};

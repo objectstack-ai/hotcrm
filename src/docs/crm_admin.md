@@ -1,7 +1,7 @@
 ---
-title: Administration — Roles, Sharing & Automation Knobs
-description: The role hierarchy, record-visibility (sharing) rules, profiles, and where every automated threshold is configured.
-# sources: the automation/sharing/role metadata this doc documents. The knobs
+title: Administration — Positions, Sharing & Automation Knobs
+description: Positions, record-visibility (sharing) rules, profiles, and where every automated threshold is configured.
+# sources: the automation/sharing/position metadata this doc documents. The knobs
 # table is guarded by test/docs-drift.test.ts; build ignores unknown frontmatter keys.
 sources:
   - flow:opportunity_approval
@@ -17,31 +17,39 @@ sources:
   - flow:contract_expiration
   - sharing_rule:account_team_sharing
   - sharing_rule:opportunity_sales_sharing
+  - sharing_rule:opportunity_executive_sharing
   - sharing_rule:case_escalation_sharing
-  - role:crm_role_hierarchy
+  - sharing_rule:case_director_sharing
+  - sharing_rule:campaign_leadership_manager
+  - sharing_rule:campaign_leadership_director
+  - position:crm_positions
 ---
 
-# Administration — Roles, Sharing & Automation
+# Administration — Positions, Sharing & Automation
 
 For administrators and implementers. This covers the parts of HotCRM that aren't
 visible by clicking around: **who can see whose data**, and **where the automated
 thresholds live** so you can tune them.
 
-## Role hierarchy
+## Positions
 
-Visibility rolls **up** the hierarchy — a manager can see the records owned by
-people below them.
+Positions are the groups that distribute record access:
 
 ```
 Executive
-├── Sales Director ── Sales Manager ── Sales Representative
-├── Service Director ── Service Manager ── Service Agent
-└── Marketing Director ── Marketing Manager ── Marketing User
+Sales Director      Sales Manager      Sales Representative
+Service Director    Service Manager    Service Agent
+Marketing Director  Marketing Manager  Marketing User
+NA Sales Team       EU Sales Team          (territory groupings)
 ```
 
-These same roles back the approval and escalation automation: large deals route
+They are **flat** — nothing rolls up. A Sales Director does not inherit a Sales
+Manager's access; each rung that needs a record is named by its own sharing
+rule, which is why the leadership rules below come in pairs.
+
+These same names back the approval and escalation automation: large deals route
 to **Sales Manager** / **Sales Director**; critical cases reassign to the owner's
-**manager** (one level up).
+**manager**.
 
 ## Record visibility (sharing rules)
 
@@ -51,14 +59,37 @@ Ownership-based access is widened by these rules:
 |---|---|---|---|
 | Account Team | Account | **Edit** | Named account-team members can edit the account. |
 | Territory — North America / Europe | Account | **Edit** | Regional teams edit accounts in their territory. |
-| Sales Sharing | Opportunity | **Read** | Broader sales visibility into opportunities. |
+| Sales Sharing | Opportunity | **Read** | Sales Director sees large open deals. |
+| Large Open Deals — Executive | Opportunity | **Read** | The same deals at the Executive rung. |
 | Case Escalation | Case | **Edit** | Escalated cases become editable by the escalation handler. |
+| Escalated Cases — Service Director | Case | **Read** | Service Director sees what the manager is paged about. |
+| Live Campaigns — Marketing Manager / Director | Campaign | **Edit** | Marketing leadership works any live campaign. |
+
+Detail objects — opportunity line items, quote line items, campaign members and
+contacts — carry **no** sharing rules by design: their record access derives
+from their parent (`controlled_by_parent`, ADR-0055), so a share on the parent
+is what widens them. Writing one requires edit access to that parent.
 
 ## Profiles
 
 Permission sets ship for the standard personas: **System Administrator**,
 **Sales Manager**, **Sales Representative**, **Service Agent**, **Marketing
 User**, and **Guest (Public Forms)** for unauthenticated web-to-lead capture.
+
+Permission sets are **explicit-allow only**: an object no set names is denied to
+every user, administrators included — the object-level CRUD gate refuses the
+call before OWD, sharing rules or *View All Data* are consulted. Adding an
+object to the app therefore always means adding a grant for it;
+`test/authorization-coverage.test.ts` fails the build when one is missing.
+
+Two record-level rules sit on top of the object grants:
+
+- `crm_opportunity.is_private` — a deal flagged Private is visible only to its
+  owner, including to the sets that hold org-wide opportunity read (Sales
+  Manager, Marketing User).
+- Field-level security masks `crm_account.health_score` (read-only below Sales
+  Manager), `crm_case.internal_notes` (service-only; hidden from Sales Rep),
+  `crm_account.annual_revenue` and the computed case SLA fields.
 
 ## Automation knobs — where every threshold lives
 

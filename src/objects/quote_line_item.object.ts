@@ -17,8 +17,17 @@ export const QuoteLineItem = ObjectSchema.create({
   icon: 'package',
   description: 'A single product line on a Quote',
 
-  // ADR-0090 D1/D7: OWD is an authored decision. Follows the quote owner; lookup child (not master-detail).
-  sharingModel: 'private',
+  // ADR-0090 D1/D7: OWD is an authored decision. Record access DERIVES from the
+  // quote (ADR-0055): reads are filtered to lines whose `crm_quote` the caller
+  // can read, and a write requires edit access to that quote. The relation
+  // resolver accepts a REQUIRED LOOKUP as the parent, so no master-detail
+  // conversion is needed.
+  //
+  // It was `private` before (#488). With no owner field on this object that
+  // resolved to the platform's auto-stamped `owner_id` — the row's inserter —
+  // so lines cloned onto a quote by the `quote_generation` flow were invisible
+  // to the rep who owns the quote.
+  sharingModel: 'controlled_by_parent',
 
   // @objectstack 12: the dead object-level `enable.trackHistory` flag was
   // removed (ADR-0049) — per-field history is opt-in via `Field.trackHistory`
