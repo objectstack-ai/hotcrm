@@ -49,9 +49,12 @@ export const Lead = ObjectSchema.create({
       group: 'identity',
     }),
 
+    // `salutation` is a picklist, so the formula sees the raw VALUE (`ms`, `dr`),
+    // not the label — names rendered as "ms Emily Davis" in lists and details
+    // (#461). Dropped here and from `display_title` below, matching Contact.
     full_name: Field.formula({
       label: 'Full Name',
-      expression: F`joinNonEmpty([record.salutation, record.first_name, record.last_name], ' ')`,
+      expression: F`joinNonEmpty([record.first_name, record.last_name], ' ')`,
       group: 'identity',
     }),
 
@@ -60,7 +63,7 @@ export const Lead = ObjectSchema.create({
     // plus `company`, so the title resolves from real stored values.
     display_title: Field.formula({
       label: 'Display Title',
-      expression: F`joinNonEmpty([record.salutation, record.first_name, record.last_name], ' ') + " - " + record.company`,
+      expression: F`joinNonEmpty([record.first_name, record.last_name], ' ') + " - " + record.company`,
       group: 'identity',
     }),
 

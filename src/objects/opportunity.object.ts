@@ -1,4 +1,4 @@
-import { F, P, cel } from '@objectstack/spec';
+import { P, cel } from '@objectstack/spec';
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
@@ -14,13 +14,17 @@ export const Opportunity = ObjectSchema.create({
   // ADR-0090 D1/D7: OWD is an authored decision. Owner + high-value management sharing rule.
   sharingModel: 'private',
   // ADR-0079: render-only `titleFormat` retired in favor of `nameField`.
-  // `stage` is a select — the formula references its stored value directly
-  // (no label resolution), matching ADR-0079 guidance.
-  nameField: 'display_title',
-  // Explicit search targets (ADR-0061). REQUIRED because nameField is a
-  // FORMULA (display_title/full_name): without this, $search auto-defaults to
-  // the formula field, which isn't a real column, so the lookup picker + global
-  // search silently return zero. These are real, indexed columns.
+  // The original template was '{name} - {stage}'. A render-time template could
+  // resolve `stage` to its translated label; a FORMULA cannot — it sees the
+  // stored select VALUE — so the migrated `display_title` titled every deal
+  // "Enterprise Deal - closed_won" in lookups, related lists and search, in
+  // every locale (#461, same defect as Contact `full_name`). The formula
+  // language has no option-label lookup, so the title is now the plain `name`
+  // column; `stage` still leads the highlight strip below, translated.
+  nameField: 'name',
+  // Explicit search targets (ADR-0061). `name` is a real indexed column, so
+  // $search resolves on its own here; the list is kept explicit to pin the
+  // intent (other objects whose nameField IS a formula rely on it).
   searchableFields: ['name'],
   highlightFields: ['name', 'crm_account', 'amount', 'stage', 'owner'],
 
@@ -43,13 +47,8 @@ export const Opportunity = ObjectSchema.create({
       group: 'basic',
     }),
 
-    // ADR-0079 record title (was titleFormat '{name} - {stage}').
-    // `stage` is referenced by its stored select value.
-    display_title: Field.formula({
-      label: 'Display Title',
-      expression: F`record.name + " - " + record.stage`,
-      group: 'basic',
-    }),
+    // (No `display_title` formula — see `nameField` above: composing the title
+    // from `stage` leaked the raw select value into every rendered title.)
 
     // Relationships
     crm_account: Field.lookup('crm_account', {
