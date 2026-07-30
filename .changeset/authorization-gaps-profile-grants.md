@@ -38,6 +38,14 @@ What changed:
   `crm_account.health_score` (read-only below sales manager),
   `crm_case.internal_notes` (service-only, masked for sales reps),
   `crm_quote.internal_notes` and `crm_opportunity.amount`.
+- **Campaign write policies for marketing.** The platform's `member_default`
+  set owner-gates all updates (`created_by == current_user.id`), and RLS
+  policies are OR-combined — so marketing's declared campaign edit only reached
+  campaigns the user personally created, and "Add to Campaign" (a write derived
+  from the campaign) was still denied. The `marketing_user` set now carries
+  update policies for `crm_campaign` and `crm_campaign_member` that make the
+  declared grants real. Verified end-to-end against a running server: enrolment
+  succeeds as a marketing user and stays denied for sales reps.
 - **Leadership sharing rules** for the four positions no rule referenced —
   `executive` on large open deals, `service_director` on escalated cases, and
   `marketing_manager` / `marketing_director` on live campaigns. Positions are

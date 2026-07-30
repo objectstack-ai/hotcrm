@@ -46,5 +46,36 @@ export const MarketingUserProfile = {
       operation: 'select' as const,
       using: 'is_private == false || owner == current_user.id',
     },
+    // The platform's `member_default` set carries a wildcard owner-only-writes
+    // policy (`created_by == current_user.id` on update), and RLS policies are
+    // OR-combined — so without a policy of its own, this set's allowEdit on
+    // campaigns only reaches campaigns the user personally created. That also
+    // silently broke "Add to Campaign": enrolling a member is a write DERIVED
+    // from the campaign (controlled_by_parent), so it requires campaign edit at
+    // the row level. This policy widens campaign updates to every holder of the
+    // set — exactly what the object grant above already declares. `id != null`
+    // is the pushdown-safe "all rows" predicate (verified: compiles to
+    // `{id: {$null: false}}`).
+    {
+      name: 'marketing_campaign_updates',
+      label: 'Marketing works any campaign',
+      description:
+        'Marketing users edit any campaign (and thereby enrol members into it), not only campaigns they created.',
+      object: 'crm_campaign',
+      operation: 'update' as const,
+      using: 'id != null',
+    },
+    // Same widening for the member rows themselves: response tracking means
+    // updating rows the enrollment flow (system context) created, which the
+    // default owner-only-writes policy would otherwise deny.
+    {
+      name: 'marketing_campaign_member_updates',
+      label: 'Marketing updates any campaign member',
+      description:
+        'Marketing users update member response state on rows they did not personally create.',
+      object: 'crm_campaign_member',
+      operation: 'update' as const,
+      using: 'id != null',
+    },
   ],
 };
