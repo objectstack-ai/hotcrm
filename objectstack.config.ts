@@ -19,8 +19,9 @@ import { CrmSeedData } from './src/data/index.js';
 
 import {
   AccountTeamSharingRule, TerritorySharingRules,
-  OpportunitySalesSharingRule,
-  CaseEscalationSharingRule,
+  OpportunitySalesSharingRule, OpportunityExecutiveSharingRule,
+  CaseEscalationSharingRule, CaseDirectorSharingRule,
+  CampaignLeadershipSharingRules,
   CrmPositions,
 } from './src/sharing/index.js';
 
@@ -104,8 +105,11 @@ export default defineStack({
   sharingRules: [
     AccountTeamSharingRule,
     OpportunitySalesSharingRule,
+    OpportunityExecutiveSharingRule,
     CaseEscalationSharingRule,
+    CaseDirectorSharingRule,
     ...TerritorySharingRules,
+    ...CampaignLeadershipSharingRules,
   ],
   // ADR-0090 D3: positions are flat capability-distribution groups — the v1
   // role hierarchy's parent links are gone (hierarchy belongs to the
