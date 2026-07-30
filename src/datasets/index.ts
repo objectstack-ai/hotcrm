@@ -8,3 +8,4 @@ export { AccountDataset } from './account.dataset';
 export { ContactDataset } from './contact.dataset';
 export { LeadDataset } from './lead.dataset';
 export { TaskDataset } from './task.dataset';
+export { ForecastDataset } from './forecast.dataset';

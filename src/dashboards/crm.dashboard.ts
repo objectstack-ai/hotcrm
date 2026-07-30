@@ -1,6 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import type { Dashboard } from '@objectstack/spec/ui';
+import { avgDealSizeMetricWidget, pipelineByStageFunnelWidget } from './shared-widgets';
 
 /**
  * CRM Overview Dashboard
@@ -103,23 +104,12 @@ export const CrmOverviewDashboard: Dashboard = {
         trend: { value: 4.3, direction: 'up', label: 'vs last month' },
       },
     },
-    {
-      id: 'avg_deal_size',
-      title: 'Avg Deal Size',
-      description: 'Average value of closed-won deals',
-      type: 'metric',
-      filter: { stage: 'closed_won' },
-      colorVariant: 'orange',
-      actionUrl: '/reports/avg-deal-size',
-      actionType: 'url',
-      actionIcon: 'ArrowUpRight',
-      dataset: 'opportunity_metrics', values: ['avg_amount'],
-      layout: { x: 9, y: 0, w: 3, h: 2 },
+    avgDealSizeMetricWidget({ x: 9, y: 0, w: 3, h: 2 }, {
       options: {
         icon: 'bar-chart',
         trend: { value: 1.2, direction: 'up', label: 'vs last month' },
       },
-    },
+    }),
 
     // ─── Charts Row 1 ─────────────────────────────────────────────────
     {
@@ -160,22 +150,7 @@ export const CrmOverviewDashboard: Dashboard = {
     },
 
     // ─── Charts Row 2 ─────────────────────────────────────────────────
-    {
-      id: 'pipeline_by_stage',
-      title: 'Pipeline by Stage',
-      description: 'Open opportunity value at each sales stage',
-      type: 'funnel',
-      filter: { stage: { $nin: ['closed_won', 'closed_lost'] } },
-      colorVariant: 'teal',
-      dataset: 'opportunity_metrics', dimensions: ['stage'], values: ['total_amount'],
-      layout: { x: 0, y: 6, w: 6, h: 4 },
-      chartConfig: {
-        type: 'funnel',
-        showLegend: false,
-        showDataLabels: true,
-        colors: ['#0EA5E9', '#06B6D4', '#14B8A6', '#10B981', '#22C55E'],
-      },
-    },
+    pipelineByStageFunnelWidget({ x: 0, y: 6, w: 6, h: 4 }),
     {
       id: 'top_products',
       title: 'Top Products',

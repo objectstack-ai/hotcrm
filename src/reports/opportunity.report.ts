@@ -2,19 +2,17 @@
 
 import type { ReportInput } from '@objectstack/spec/ui';
 
-// Server does not yet evaluate CEL helpers like `{current_year_start}` inside
-// filter values (see plan note "filter-time CEL 求值"). Compute the ISO date
-// at module load as a temporary workaround so the report actually matches rows.
-const CURRENT_YEAR_START = `${new Date().getFullYear()}-01-01`;
-
 export const OpportunitiesByStageReport: ReportInput = {
   name: 'opportunities_by_stage',
   label: 'Opportunities by Stage',
   description: 'Summary of opportunities grouped by stage',
   dataset: 'opportunity_metrics', rows: ['stage'], values: ['total_amount', 'avg_probability'],
   type: 'summary',
-  runtimeFilter: { stage: { $ne: 'closed_lost' }, close_date: { $gte: CURRENT_YEAR_START } },
-  chart: { type: 'bar', title: 'Pipeline by Stage', showLegend: true, xAxis: 'stage', yAxis: 'amount' }
+  // `{current_year_start}` is a spec date macro (DATE_MACRO_TOKENS) resolved
+  // per-query, so the YTD window rolls with time instead of freezing the year
+  // the artifact was built into dist/objectstack.json.
+  runtimeFilter: { stage: { $ne: 'closed_lost' }, close_date: { $gte: '{current_year_start}' } },
+  chart: { type: 'bar', title: 'Pipeline by Stage', showLegend: true, xAxis: 'stage', yAxis: 'total_amount' }
 };
 
 export const WonOpportunitiesByOwnerReport: ReportInput = {
@@ -24,7 +22,7 @@ export const WonOpportunitiesByOwnerReport: ReportInput = {
   dataset: 'opportunity_metrics', rows: ['owner'], values: ['total_amount'],
   type: 'summary',
   runtimeFilter: { stage: 'closed_won' },
-  chart: { type: 'column', title: 'Revenue by Sales Rep', showLegend: false, xAxis: 'owner', yAxis: 'amount' }
+  chart: { type: 'column', title: 'Revenue by Sales Rep', showLegend: false, xAxis: 'owner', yAxis: 'total_amount' }
 };
 
 /**
@@ -55,5 +53,5 @@ export const OpportunityFunnelByOwnerStageReport: ReportInput = {
   dataset: 'opportunity_metrics', rows: ['owner', 'stage'], values: ['total_amount', 'opp_count', 'avg_probability'],
   type: 'summary',
   runtimeFilter: { stage: { $ne: 'closed_lost' } },
-  chart: { type: 'funnel', title: 'Pipeline Funnel', showLegend: false, xAxis: 'stage', yAxis: 'amount' },
+  chart: { type: 'funnel', title: 'Pipeline Funnel', showLegend: false, xAxis: 'stage', yAxis: 'total_amount' },
 };
