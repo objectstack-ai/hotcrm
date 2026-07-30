@@ -457,6 +457,28 @@ describe('dashboard actions land on real routes', () => {
     }
     expect(bad, `dashboard actions navigating to dead routes:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
+
+  /**
+   * The rule above currently iterates nothing: no dashboard declares a
+   * widget-level or header action any more, because the console renders no
+   * drill-through for a dataset-bound widget (measured on 16.1.0 — a KPI tile
+   * emits no link, no button and no icon, its cursor stays `auto`, and clicking
+   * it does not navigate). Removing the config was the point of this PR.
+   *
+   * A guard that iterates an empty list is a guard that passes without checking
+   * anything — the exact failure the navigation rule above was written to fix.
+   * So the checker is exercised directly here: it must still reject the two
+   * shapes #527 found in the wild, and still accept a real one. If someone
+   * re-adds an action later, the rule above resumes covering it for real.
+   */
+  it('the route checker still rejects the shapes #527 found', () => {
+    expect(routeError('/objects/opportunity?filter=open')).toBeTruthy();
+    expect(routeError('/reports/revenue')).toBeTruthy();
+    expect(routeError('/apps/no_such_app/crm_lead')).toBeTruthy();
+    expect(routeError('/apps/crm_enterprise/crm_lead/view/no_such_view')).toBeTruthy();
+    expect(routeError('/apps/crm_enterprise/crm_lead')).toBeUndefined();
+    expect(routeError('https://example.com/anything')).toBeUndefined();
+  });
 });
 
 describe('filter template tokens are resolvable', () => {

@@ -97,12 +97,6 @@ export const ServiceDashboard: Dashboard = {
       type: 'metric',
       filter: { is_closed: false },
       colorVariant: 'orange',
-      // In-app routes live under /apps/<app>/… (`/objects/<x>` and
-      // `/reports/<x>` match no console route — issue #527). The workflow
-      // board is the open-case surface (its view filters is_closed: false).
-      actionUrl: '/apps/crm_enterprise/crm_case/view/case_workflow',
-      actionType: 'url',
-      actionIcon: 'ArrowUpRight',
       dataset: 'case_metrics', values: ['case_count'],
       layout: { x: 0, y: 0, w: 3, h: 2 },
       options: {
@@ -118,11 +112,6 @@ export const ServiceDashboard: Dashboard = {
       type: 'metric',
       filter: { priority: 'critical', is_closed: false },
       colorVariant: 'danger',
-      // No critical-only view exists; SLA at Risk (open high/critical cases)
-      // is the closest real surface for this queue.
-      actionUrl: '/apps/crm_enterprise/crm_case/view/sla_at_risk',
-      actionType: 'url',
-      actionIcon: 'ArrowUpRight',
       dataset: 'case_metrics', values: ['case_count'],
       layout: { x: 3, y: 0, w: 3, h: 2 },
       options: {
@@ -138,10 +127,6 @@ export const ServiceDashboard: Dashboard = {
       type: 'metric',
       filter: { is_closed: true },
       colorVariant: 'blue',
-      // Resolution-time drill: avg_resolution by status × priority.
-      actionUrl: '/apps/crm_enterprise/report/cases_by_status_priority',
-      actionType: 'url',
-      actionIcon: 'ArrowUpRight',
       dataset: 'case_metrics', values: ['avg_resolution'],
       layout: { x: 6, y: 0, w: 3, h: 2 },
       options: {
@@ -158,11 +143,6 @@ export const ServiceDashboard: Dashboard = {
       type: 'metric',
       filter: { is_sla_violated: true },
       colorVariant: 'warning',
-      // No sla_violated list view exists; the SLA Performance report is the
-      // violation breakdown this tile summarizes.
-      actionUrl: '/apps/crm_enterprise/report/sla_performance',
-      actionType: 'url',
-      actionIcon: 'ArrowUpRight',
       dataset: 'case_metrics', values: ['case_count'],
       layout: { x: 9, y: 0, w: 3, h: 2 },
       options: {

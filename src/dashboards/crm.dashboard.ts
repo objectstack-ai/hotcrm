@@ -58,12 +58,6 @@ export const CrmOverviewDashboard: Dashboard = {
       type: 'metric',
       filter: { stage: 'closed_won' },
       colorVariant: 'success',
-      // Drill-through: closed-won revenue broken down by rep. In-app routes
-      // live under /apps/<app>/… (`/reports/<x>` and `/objects/<x>` match no
-      // console route — issue #527).
-      actionUrl: '/apps/crm_enterprise/report/won_opportunities_by_owner',
-      actionType: 'url',
-      actionIcon: 'ArrowUpRight',
       dataset: 'opportunity_metrics', values: ['total_amount'],
       layout: { x: 0, y: 0, w: 3, h: 2 },
       options: {
@@ -78,9 +72,6 @@ export const CrmOverviewDashboard: Dashboard = {
       type: 'metric',
       filter: { stage: { $nin: ['closed_won', 'closed_lost'] } },
       colorVariant: 'blue',
-      actionUrl: '/apps/crm_enterprise/crm_opportunity/view/open_opportunities',
-      actionType: 'url',
-      actionIcon: 'ArrowUpRight',
       dataset: 'opportunity_metrics', values: ['opp_count'],
       layout: { x: 3, y: 0, w: 3, h: 2 },
       options: {
@@ -96,11 +87,6 @@ export const CrmOverviewDashboard: Dashboard = {
       type: 'metric',
       filter: { stage: 'closed_won' },
       colorVariant: 'purple',
-      // No win-rate report exists; the closest real drill is the closed-won
-      // breakdown by rep.
-      actionUrl: '/apps/crm_enterprise/report/won_opportunities_by_owner',
-      actionType: 'url',
-      actionIcon: 'ArrowUpRight',
       dataset: 'opportunity_metrics', values: ['opp_count'],
       layout: { x: 6, y: 0, w: 3, h: 2 },
       options: {

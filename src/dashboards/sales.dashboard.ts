@@ -64,11 +64,6 @@ export const SalesDashboard: Dashboard = {
       type: 'metric',
       filter: { stage: { $nin: ['closed_won', 'closed_lost'] } },
       colorVariant: 'blue',
-      // In-app routes live under /apps/<app>/… (`/objects/<x>` and
-      // `/reports/<x>` match no console route — issue #527).
-      actionUrl: '/apps/crm_enterprise/crm_opportunity/view/open_opportunities',
-      actionType: 'url',
-      actionIcon: 'ArrowUpRight',
       dataset: 'opportunity_metrics', values: ['total_amount'],
       layout: { x: 0, y: 0, w: 3, h: 2 },
       options: {
@@ -85,11 +80,6 @@ export const SalesDashboard: Dashboard = {
       filter: { stage: 'closed_won', close_date: { $gte: '{current_quarter_start}' } },
       filterBindings: { dateRange: false }, // self-scoped to QTD — the date picker must not re-window it
       colorVariant: 'success',
-      // No closed-won report exists by that name; the real closed-won drill
-      // is the revenue-by-rep report.
-      actionUrl: '/apps/crm_enterprise/report/won_opportunities_by_owner',
-      actionType: 'url',
-      actionIcon: 'ArrowUpRight',
       dataset: 'opportunity_metrics', values: ['total_amount'],
       layout: { x: 3, y: 0, w: 3, h: 2 },
       options: {
@@ -105,9 +95,6 @@ export const SalesDashboard: Dashboard = {
       type: 'metric',
       filter: { stage: { $nin: ['closed_won', 'closed_lost'] } },
       colorVariant: 'orange',
-      actionUrl: '/apps/crm_enterprise/crm_opportunity/view/open_opportunities',
-      actionType: 'url',
-      actionIcon: 'ArrowUpRight',
       dataset: 'opportunity_metrics', values: ['opp_count'],
       layout: { x: 6, y: 0, w: 3, h: 2 },
       options: {
