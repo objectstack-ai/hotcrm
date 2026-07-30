@@ -23,6 +23,7 @@ const objects: AnyRec[] = (stack as any).objects ?? [];
 const pages: AnyRec[] = (stack as any).pages ?? [];
 const views: AnyRec[] = (stack as any).views ?? [];
 const profiles: AnyRec[] = (stack as any).permissions ?? [];
+const stackActions: AnyRec[] = (stack as any).actions ?? [];
 
 const objectNames = new Set(objects.map((o) => o.name));
 const profileNames = new Set(profiles.map((p) => p.name));
@@ -954,5 +955,54 @@ describe('dashboard date ranges window a field the query layer can actually comp
       }
     }
     expect(bad, `dangling dashboard date-range fields:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+});
+
+/**
+ * Action labels are the most visible strings in the app — they render in row
+ * menus, on detail-page headers and in list toolbars. They also had no guard,
+ * so #494's i18n audit missed the whole class: three actions
+ * (`enroll_leads`, `schedule_followup`, `generate_quote`) shipped with no label
+ * entry in ANY locale pack, and `log_meeting` had one only in zh-CN.
+ *
+ * The gap only became visible as recent PRs surfaced those actions:
+ * `generate_quote` moved onto the opportunity header (#515), `enroll_leads`
+ * was introduced with the campaign-enrollment screen flow (#536), and
+ * `schedule_followup` became the row menu's sole remaining entry once the dead
+ * duplicate was removed (#537). A missing entry is not an error — it silently
+ * falls back to the English `label` in code — which is exactly why it needs a
+ * test rather than a warning.
+ */
+describe('action labels are translated in every locale', () => {
+  it('every action has a label entry in every locale pack', () => {
+    expect(localePacks.length, 'no locale packs found in stack.translations').toBeGreaterThan(0);
+    const bad: string[] = [];
+    for (const action of stackActions) {
+      const { name, objectName } = action;
+      if (!name || !objectName) continue;
+      for (const [locale, pack] of localePacks) {
+        const label = pack?.objects?.[objectName]?._actions?.[name]?.label;
+        if (!label) bad.push(`${locale}: ${objectName}._actions.${name}.label`);
+      }
+    }
+    expect(bad, `actions with no translated label:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
+  it('confirmText and successMessage are translated wherever the action declares them', () => {
+    // A half-translated action is worse than an untranslated one: the menu item
+    // reads Chinese and then the confirm dialog answers in English.
+    const bad: string[] = [];
+    for (const action of stackActions) {
+      const { name, objectName } = action;
+      if (!name || !objectName) continue;
+      for (const key of ['confirmText', 'successMessage'] as const) {
+        if (!action[key]) continue;
+        for (const [locale, pack] of localePacks) {
+          const entry = pack?.objects?.[objectName]?._actions?.[name];
+          if (entry && !entry[key]) bad.push(`${locale}: ${objectName}._actions.${name}.${key}`);
+        }
+      }
+    }
+    expect(bad, `action strings declared in code but not translated:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
 });

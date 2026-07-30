@@ -265,6 +265,10 @@ export const en: TranslationData = {
           label: 'Add to Campaign',
           successMessage: 'Leads added to campaign!',
         },
+        schedule_followup: {
+          label: 'Schedule Follow-up',
+          successMessage: 'Follow-up scheduled.',
+        },
       },
     },
 
@@ -359,6 +363,10 @@ export const en: TranslationData = {
           label: 'Update Stage',
           successMessage: 'Opportunities updated successfully!',
         },
+        generate_quote: {
+          label: 'Generate Quote',
+          successMessage: 'Quote created from opportunity!',
+        },
       },
     },
 
@@ -406,6 +414,16 @@ export const en: TranslationData = {
         log_call: {
           label: 'Log a Call',
           successMessage: 'Call logged successfully!',
+        },
+        log_meeting: {
+          label: 'Log a Meeting',
+          successMessage: 'Meeting logged successfully!',
+          params: {
+            subject: { label: 'Meeting Subject' },
+            duration: { label: 'Duration (minutes)' },
+            attendees: { label: 'Attendees' },
+            notes: { label: 'Meeting Notes' },
+          },
         },
         escalate_case: {
           label: 'Escalate Case',
@@ -588,6 +606,12 @@ export const en: TranslationData = {
         campaign_gantt: { label: 'Campaign Schedule' },
         campaign_calendar: { label: 'Launch Calendar' },
         campaign_timeline: { label: 'Marketing Timeline' },
+      },
+      _actions: {
+        enroll_leads: {
+          label: 'Enroll Leads',
+          successMessage: 'Eligible leads enrolled in campaign.',
+        },
       },
     },
 
