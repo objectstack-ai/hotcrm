@@ -740,112 +740,79 @@ describe('page templates and record components stay inside their record context'
   });
 });
 
-describe('dashboard date-range defaults keep the dashboard populated', () => {
+
+describe('dashboard date ranges window a field the query layer can actually compare', () => {
   /**
-   * The runtime ANDs a dashboard's `dateRange` into every widget query, so the
-   * default preset decides what a business user sees on the FIRST paint. The
-   * Service dashboard opened on all zeros with 38 cases in the system (#460):
-   * it defaulted to `last_30_days` while the demo cases run 1–30 days old, so
-   * the oldest cases sat outside the window and any seed reaching further back
-   * emptied the screen entirely.
+   * A dashboard `dateRange` is ANDed into EVERY widget query, so if the
+   * comparison cannot match, the whole dashboard renders zeros. That is #460:
+   * the Service dashboard windowed `crm_case.created_date` — a
+   * `Field.datetime()` — and opened with every KPI at 0 and every chart empty,
+   * with 38 cases in the system.
    *
-   * The guard below is calendar-independent on purpose. A preset that happens
-   * to cover the seed span today can be near-empty tomorrow — `this_quarter`
-   * is one day long on 1 April — so the default is checked against every
-   * reference day of a leap year, not just the day CI happens to run.
+   * The mechanism is a storage disagreement, not a bad preset. On SQLite,
+   * `driver-sql` 16.1.0 coerces datetime filter values to epoch-millisecond
+   * INTEGERs (`coerceFilterValue`), documenting the assumption that datetime
+   * columns hold INTEGER ms. In this app they hold ISO TEXT — including the
+   * platform's own `created_at`/`updated_at`. SQLite orders every INTEGER
+   * before every TEXT, so `datetime_col >= <int>` is true for all rows and
+   * `datetime_col <= <int>` is true for none. Measured against the running
+   * 16.1.0 console: `$gte` alone → all 38 cases, `$lte` alone → 0, both → 0,
+   * in every date format tried.
    *
-   * It also demands HEADROOM rather than mere coverage. `last_30_days` over
-   * cases up to 30 days old is arithmetically flush, not wrong — and that is
-   * precisely the failure: flush is one timezone rounding, one inclusive-vs-
-   * exclusive bound, or one seed tweak away from clipping the oldest cases off
-   * the dashboard again.
+   * `Field.date()` is unaffected (TEXT `YYYY-MM-DD` on both sides), which is
+   * why the CRM/Sales/Executive dashboards — all windowing `close_date` — show
+   * data. So the rule is about the FIELD TYPE, not the preset: a dashboard may
+   * only window a `date` field. Note this deliberately fails if someone
+   * restores the Service dashboard's `dateRange` before the driver is fixed.
    */
   const dashboards: AnyRec[] = (stack as any).dashboards ?? [];
-  const seeds: AnyRec[] = (stack as any).data ?? (stack as any).seeds ?? [];
+  const datasets: AnyRec[] = (stack as any).datasets ?? [];
 
-  const DAY = 86_400_000;
-  /** Days the window must extend PAST the oldest seeded record. */
-  const MARGIN_DAYS = 7;
-  const utcDay = (y: number, m: number, d: number) => new Date(Date.UTC(y, m, d));
-  const shift = (d: Date, days: number) => new Date(d.getTime() + days * DAY);
-
-  /**
-   * First and last day a preset window includes, resolved against `ref`.
-   * Unmodelled presets throw rather than silently pass — a dashboard that
-   * switches to one nobody has reasoned about should fail here.
-   */
-  const windowFor = (preset: string, ref: Date): [Date, Date] => {
-    const y = ref.getUTCFullYear();
-    const m = ref.getUTCMonth();
-    const today = utcDay(y, m, ref.getUTCDate());
-    const quarterStart = Math.floor(m / 3) * 3;
-    switch (preset) {
-      case 'today':        return [today, today];
-      case 'yesterday':    return [shift(today, -1), shift(today, -1)];
-      case 'this_week':    return [shift(today, -ref.getUTCDay()), shift(today, 6 - ref.getUTCDay())];
-      case 'last_week':    return [shift(today, -ref.getUTCDay() - 7), shift(today, -ref.getUTCDay() - 1)];
-      case 'this_month':   return [utcDay(y, m, 1), shift(utcDay(y, m + 1, 1), -1)];
-      case 'last_month':   return [utcDay(y, m - 1, 1), shift(utcDay(y, m, 1), -1)];
-      case 'this_quarter': return [utcDay(y, quarterStart, 1), shift(utcDay(y, quarterStart + 3, 1), -1)];
-      case 'last_quarter': return [utcDay(y, quarterStart - 3, 1), shift(utcDay(y, quarterStart, 1), -1)];
-      case 'this_year':    return [utcDay(y, 0, 1), utcDay(y, 11, 31)];
-      case 'last_year':    return [utcDay(y - 1, 0, 1), utcDay(y - 1, 11, 31)];
-      case 'last_7_days':  return [shift(today, -7), today];
-      case 'last_30_days': return [shift(today, -30), today];
-      case 'last_90_days': return [shift(today, -90), today];
-      default: throw new Error(`unmodelled date-range preset "${preset}"`);
+  /** Objects the dashboard's widgets aggregate over, via their datasets. */
+  const objectsBehind = (d: AnyRec): string[] => {
+    const names = new Set<string>();
+    for (const w of d.widgets ?? []) {
+      const ds = datasets.find((x) => x.name === w.dataset);
+      if (ds?.object) names.add(ds.object);
     }
+    return [...names];
   };
 
-  /** `daysAgo(N)` → N. Returns null for any other expression shape. */
-  const daysAgo = (value: unknown): number | null => {
-    const source = String((value as AnyRec)?.source ?? value ?? '');
-    const match = /^daysAgo\((\d+)\)$/.exec(source);
-    return match ? Number(match[1]) : null;
-  };
+  const fieldType = (objectName: string, field: string): string | undefined =>
+    objects.find((o) => o.name === objectName)?.fields?.[field]?.type;
 
-  it('the Service dashboard default range covers every seeded case, on any day of the year', () => {
-    const service = dashboards.find((d) => d.name === 'service_dashboard');
-    expect(service?.dateRange?.field, 'service dashboard windows created_date').toBe('created_date');
-
-    const caseSeed = seeds.find((s) => s.object === 'crm_case');
-    expect(caseSeed, 'case seed missing').toBeTruthy();
-    const ages = (caseSeed!.records ?? []).map((r: AnyRec) => daysAgo(r.created_date));
-    // Every seeded case dates itself relative to boot — an absolute date would
-    // age out of the window as the demo repo sits, which is how #460 started.
-    expect(ages.filter((a: number | null) => a === null), 'cases with a non-relative created_date').toEqual([]);
-    const oldest = Math.max(...(ages as number[]));
-    expect(oldest).toBeGreaterThan(0);
-
-    const preset = String(service!.dateRange.defaultRange);
-    const bad: string[] = [];
-    for (let i = 0; i < 366; i++) {
-      const ref = shift(utcDay(2028, 0, 1), i); // leap year — covers 29 Feb too
-      const [start, end] = windowFor(preset, ref);
-      const today = utcDay(ref.getUTCFullYear(), ref.getUTCMonth(), ref.getUTCDate());
-      const mustReach = shift(today, -(oldest + MARGIN_DAYS));
-      if (mustReach < start || ref > end) {
-        bad.push(
-          `${ref.toISOString().slice(0, 10)}: "${preset}" spans ${start.toISOString().slice(0, 10)}..` +
-          `${end.toISOString().slice(0, 10)}, which does not clear cases up to ${oldest} days old ` +
-          `by ${MARGIN_DAYS} days`,
-        );
-      }
-    }
-    expect(bad.length, `default range leaves the dashboard empty or partial:\n  ${bad.slice(0, 5).join('\n  ')}`).toBe(0);
-  });
-
-  it('every dashboard dateRange preset is one the guard above understands', () => {
+  it('no dashboard windows a datetime field', () => {
     const bad: string[] = [];
     for (const d of dashboards) {
-      const preset = d.dateRange?.defaultRange;
-      if (!preset) continue;
-      try {
-        windowFor(String(preset), utcDay(2028, 5, 15));
-      } catch {
-        bad.push(`${d.name}: "${preset}"`);
+      const field = d.dateRange?.field;
+      if (!field) continue;
+      for (const obj of objectsBehind(d)) {
+        const type = fieldType(obj, field);
+        if (type === 'datetime') {
+          bad.push(
+            `${d.name}: dateRange windows ${obj}.${field}, a datetime field — ` +
+            `the $lte bound matches no rows, so every widget renders empty`,
+          );
+        }
       }
     }
-    expect(bad, `date-range presets nobody has reasoned about:\n  ${bad.join('\n  ')}`).toEqual([]);
+    expect(bad, `dashboards that will render empty:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
+  it('every dashboard dateRange field exists on the objects its widgets aggregate', () => {
+    // A range field that no underlying object defines is silently dropped or
+    // errors per widget — either way the picker cannot do what it claims.
+    const bad: string[] = [];
+    for (const d of dashboards) {
+      const field = d.dateRange?.field;
+      if (!field) continue;
+      const behind = objectsBehind(d);
+      if (!behind.length) continue;
+      const resolves = behind.filter((obj) => fieldType(obj, field) !== undefined);
+      if (!resolves.length) {
+        bad.push(`${d.name}: dateRange field "${field}" exists on none of ${behind.join(', ')}`);
+      }
+    }
+    expect(bad, `dangling dashboard date-range fields:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
 });
