@@ -64,9 +64,6 @@ export const SalesDashboard: Dashboard = {
       type: 'metric',
       filter: { stage: { $nin: ['closed_won', 'closed_lost'] } },
       colorVariant: 'blue',
-      actionUrl: '/objects/opportunity?filter=open',
-      actionType: 'url',
-      actionIcon: 'ArrowUpRight',
       dataset: 'opportunity_metrics', values: ['total_amount'],
       layout: { x: 0, y: 0, w: 3, h: 2 },
       options: {
@@ -83,9 +80,6 @@ export const SalesDashboard: Dashboard = {
       filter: { stage: 'closed_won', close_date: { $gte: '{current_quarter_start}' } },
       filterBindings: { dateRange: false }, // self-scoped to QTD — the date picker must not re-window it
       colorVariant: 'success',
-      actionUrl: '/reports/closed-won',
-      actionType: 'url',
-      actionIcon: 'ArrowUpRight',
       dataset: 'opportunity_metrics', values: ['total_amount'],
       layout: { x: 3, y: 0, w: 3, h: 2 },
       options: {
@@ -101,9 +95,6 @@ export const SalesDashboard: Dashboard = {
       type: 'metric',
       filter: { stage: { $nin: ['closed_won', 'closed_lost'] } },
       colorVariant: 'orange',
-      actionUrl: '/objects/opportunity?filter=open',
-      actionType: 'url',
-      actionIcon: 'ArrowUpRight',
       dataset: 'opportunity_metrics', values: ['opp_count'],
       layout: { x: 6, y: 0, w: 3, h: 2 },
       options: {

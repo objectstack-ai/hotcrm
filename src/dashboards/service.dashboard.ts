@@ -97,9 +97,6 @@ export const ServiceDashboard: Dashboard = {
       type: 'metric',
       filter: { is_closed: false },
       colorVariant: 'orange',
-      actionUrl: '/objects/case?filter=open',
-      actionType: 'url',
-      actionIcon: 'ArrowUpRight',
       dataset: 'case_metrics', values: ['case_count'],
       layout: { x: 0, y: 0, w: 3, h: 2 },
       options: {
@@ -115,9 +112,6 @@ export const ServiceDashboard: Dashboard = {
       type: 'metric',
       filter: { priority: 'critical', is_closed: false },
       colorVariant: 'danger',
-      actionUrl: '/objects/case?priority=critical',
-      actionType: 'url',
-      actionIcon: 'ArrowUpRight',
       dataset: 'case_metrics', values: ['case_count'],
       layout: { x: 3, y: 0, w: 3, h: 2 },
       options: {
@@ -133,9 +127,6 @@ export const ServiceDashboard: Dashboard = {
       type: 'metric',
       filter: { is_closed: true },
       colorVariant: 'blue',
-      actionUrl: '/reports/resolution-time',
-      actionType: 'url',
-      actionIcon: 'ArrowUpRight',
       dataset: 'case_metrics', values: ['avg_resolution'],
       layout: { x: 6, y: 0, w: 3, h: 2 },
       options: {
@@ -152,9 +143,6 @@ export const ServiceDashboard: Dashboard = {
       type: 'metric',
       filter: { is_sla_violated: true },
       colorVariant: 'warning',
-      actionUrl: '/objects/case?filter=sla_violated',
-      actionType: 'url',
-      actionIcon: 'ArrowUpRight',
       dataset: 'case_metrics', values: ['case_count'],
       layout: { x: 9, y: 0, w: 3, h: 2 },
       options: {
