@@ -15,7 +15,20 @@ type WidgetLayout = Widget['layout'];
  * `layout` and may narrow presentation-only details via `overrides`.
  */
 
-/** Open-pipeline funnel by sales stage — identical semantics everywhere. */
+/**
+ * Open-pipeline funnel by sales stage — identical semantics everywhere.
+ *
+ * No `chartConfig`: a dataset-bound widget is painted with the console's own
+ * theme tokens, so the palette this factory used to declare never applied.
+ * Verified in the browser against 16.1.0 — every fill in the rendered funnel is
+ * `hsl(var(--chart-1))` … `hsl(var(--chart-5))`, and none of the five hex colors
+ * (`#0EA5E9` … `#22C55E`) reaches the DOM. Keeping the block would leave
+ * decoration that reads as if it were in effect (#500).
+ *
+ * `colorVariant` is deliberately KEPT: unlike the palette, it has not been shown
+ * to be inert (it appears throughout the console bundle), so it is not lumped in
+ * with a verified-dead property. See #500 for that separate question.
+ */
 export const pipelineByStageFunnelWidget = (layout: WidgetLayout): Widget => ({
   id: 'pipeline_by_stage',
   title: 'Pipeline by Stage',
@@ -25,12 +38,7 @@ export const pipelineByStageFunnelWidget = (layout: WidgetLayout): Widget => ({
   colorVariant: 'teal',
   dataset: 'opportunity_metrics', dimensions: ['stage'], values: ['total_amount'],
   layout,
-  chartConfig: {
-    type: 'funnel',
-    showLegend: false,
-    showDataLabels: true,
-    colors: ['#0EA5E9', '#06B6D4', '#14B8A6', '#10B981', '#22C55E'],
-  },
+  suppressWarnings: ['chart-config-missing'], // intentional default rendering
 });
 
 /**
