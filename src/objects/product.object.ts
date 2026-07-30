@@ -191,9 +191,15 @@ export const Product = ObjectSchema.create({
   },
   
   // Database indexes
+  //
+  // No `{ fields: ['sku'], unique: true }` here: the field-level `unique: true`
+  // already builds the tenant composite `(organization_id, sku)` since
+  // framework #3696. Declaring the single-column index too made the
+  // platform-wide constraint win and left the per-tenant one unreachable
+  // (framework#3991) — an SKU is unique inside a catalogue, and two
+  // organizations may legitimately both stock "ABC-123".
   indexes: [
     { fields: ['name'] },
-    { fields: ['sku'], unique: true },
     { fields: ['category'] },
     { fields: ['is_active'] },
   ],

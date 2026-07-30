@@ -176,9 +176,17 @@ export const Contact = ObjectSchema.create({
   },
   
   // Database indexes for performance
+  //
+  // NOTE: no `{ fields: ['email'], unique: true }` here. Email uniqueness is
+  // declared on the field itself (`unique: true`), which since framework #3696
+  // materializes as the tenant composite `(organization_id, email)` — unique
+  // WITHIN an organization, which is what a multi-tenant CRM wants (two orgs
+  // may each know john@acme.com). A declared single-column index is taken
+  // verbatim, i.e. platform-wide, so declaring both left the global index
+  // enforcing the old behaviour and the per-tenant constraint unreachable
+  // (framework#3991 `unique/double-declaration`).
   indexes: [
     { fields: ['crm_account'] },
-    { fields: ['email'], unique: true },
     { fields: ['owner'] },
     { fields: ['last_name', 'first_name'] },
   ],
@@ -198,8 +206,8 @@ export const Contact = ObjectSchema.create({
   // Validation Rules
   // `email_unique_per_account` (type: 'unique') was removed in 7.6 — the
   // standalone unique-validation type no longer exists (ADR-0032 validation
-  // union). Email uniqueness is already enforced (globally, which is stricter
-  // than per-account) by the `{ fields: ['email'], unique: true }` index above.
+  // union). Email uniqueness is enforced by the field-level `unique: true`
+  // above, scoped per organization since framework #3696.
 
   // Workflow Rules
   // NOTE: object `workflows[]` were removed in @objectstack 7.7. Field-updates

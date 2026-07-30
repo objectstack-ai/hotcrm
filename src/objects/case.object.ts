@@ -254,8 +254,15 @@ export const Case = ObjectSchema.create({
   },
   
   // Database indexes for performance
+  //
+  // `case_number` is an autonumber (`CASE-{00000}`), and the platform's
+  // autonumber sequence is PER TENANT — every organization counts from 1. A
+  // platform-wide unique index on it therefore rejects the second
+  // organization's `CASE-00001` on insert: the exact collision framework #3696
+  // exists to prevent. Spelled out as the tenant composite so the constraint
+  // matches the sequence that feeds it.
   indexes: [
-    { fields: ['case_number'], unique: true },
+    { fields: ['organization_id', 'case_number'], unique: true },
     { fields: ['crm_account'] },
     { fields: ['owner'] },
     { fields: ['status'] },
