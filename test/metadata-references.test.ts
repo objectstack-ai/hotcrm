@@ -740,7 +740,6 @@ describe('page templates and record components stay inside their record context'
   });
 });
 
-
 describe('dashboard date ranges window a field the query layer can actually compare', () => {
   /**
    * A dashboard `dateRange` is ANDed into EVERY widget query, so if the
