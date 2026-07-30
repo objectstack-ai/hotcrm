@@ -45,9 +45,14 @@ export const Contact = ObjectSchema.create({
     }),
 
     // Formula field - Full name
+    // `salutation` is a picklist, so the formula sees the raw VALUE (`ms`, `dr`),
+    // not the label — names rendered as "ms Emily Davis" in lists and details
+    // (#461). The formula language has no proper-case or option-label lookup, and
+    // hardcoding "Ms." would defeat translation, so the name is built from the
+    // name fields alone; salutation stays its own (translated) field.
     full_name: Field.formula({
       label: 'Full Name',
-      expression: F`joinNonEmpty([record.salutation, record.first_name, record.last_name], ' ')`,
+      expression: F`joinNonEmpty([record.first_name, record.last_name], ' ')`,
       group: 'identity',
     }),
 
