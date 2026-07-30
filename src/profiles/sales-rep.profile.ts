@@ -28,10 +28,8 @@ export const SalesRepProfile = {
     crm_campaign:    { allowCreate: false, allowRead: true,  allowEdit: false, allowDelete: false, viewAllRecords: true,  modifyAllRecords: false },
     crm_case:        { allowCreate: false, allowRead: true,  allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const },
     crm_task:        { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: true,  viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const },
-    // Reference catalogs (public_read OWD): reps read battlecards and knowledge
-    // articles, and may file a new competitor they ran into in a deal, but the
-    // battlecard content itself is curated by managers.
-    crm_competitor:        { allowCreate: true,  allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: true,  modifyAllRecords: false },
+    // Reference catalog (public_read OWD): reps read knowledge articles, which
+    // are authored by service.
     crm_knowledge_article: { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: true,  modifyAllRecords: false },
     // Forecast snapshots are written by the nightly `forecast.hook` job and the
     // `revenue_forecasting` skill, never by hand — read-only, and only the rep's
