@@ -331,6 +331,10 @@ export const zhCN: TranslationData = {
           label: '加入营销活动',
           successMessage: '已将线索加入营销活动！',
         },
+        schedule_followup: {
+          label: '安排跟进',
+          successMessage: '跟进任务已创建。',
+        },
       },
     },
 
@@ -486,9 +490,19 @@ export const zhCN: TranslationData = {
           label: '记录通话',
           successMessage: '通话记录成功！',
           params: {
-          subject: { label: '通话主题' },
-          duration: { label: '时长（分钟）' },
-          notes: { label: '通话记录' },
+            subject: { label: '通话主题' },
+            duration: { label: '时长（分钟）' },
+            notes: { label: '通话记录' },
+          },
+        },
+        log_meeting: {
+          label: '记录会议',
+          successMessage: '会议记录成功！',
+          params: {
+            subject: { label: '会议主题' },
+            duration: { label: '时长（分钟）' },
+            attendees: { label: '参会人' },
+            notes: { label: '会议纪要' },
           },
         },
         escalate_case: {
@@ -624,6 +638,12 @@ export const zhCN: TranslationData = {
         campaign_gantt: { label: '活动排期' },
         campaign_calendar: { label: '活动日历' },
         campaign_timeline: { label: '营销时间线' },
+      },
+      _actions: {
+        enroll_leads: {
+          label: '批量加入线索',
+          successMessage: '符合条件的线索已加入营销活动。',
+        },
       },
     },
 
@@ -767,6 +787,10 @@ export const zhCN: TranslationData = {
           label: '克隆商机',
           successMessage: '商机克隆成功！',
         },
+        generate_quote: {
+          label: '生成报价单',
+          successMessage: '已根据商机创建报价单！',
+        },
         mass_update_stage: {
           label: '更新阶段',
           successMessage: '商机阶段已更新！',
@@ -846,19 +870,6 @@ export const zhCN: TranslationData = {
         tax_rate: { label: '税率（%）' },
         total_price: { label: '总计' },
         line_number: { label: '行号' },
-      },
-    },
-  },
-
-  globalActions: {
-    log_meeting: {
-      label: '记录会议',
-      successMessage: '会议记录成功！',
-      params: {
-        subject: { label: '会议主题' },
-        duration: { label: '时长（分钟）' },
-        attendees: { label: '参会人' },
-        notes: { label: '会议纪要' },
       },
     },
   },

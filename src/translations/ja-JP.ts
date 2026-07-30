@@ -243,6 +243,10 @@ export const jaJP: TranslationData = {
           label: 'キャンペーンに追加',
           successMessage: 'キャンペーンに追加しました！',
         },
+        schedule_followup: {
+          label: 'フォローアップを設定',
+          successMessage: 'フォローアップを設定しました。',
+        },
       },
     },
 
@@ -317,6 +321,10 @@ export const jaJP: TranslationData = {
           label: 'ステージ更新',
           successMessage: '商談ステージを更新しました！',
         },
+        generate_quote: {
+          label: '見積を作成',
+          successMessage: '商談から見積を作成しました！',
+        },
       },
     },
 
@@ -364,6 +372,16 @@ export const jaJP: TranslationData = {
         log_call: {
           label: '通話を記録',
           successMessage: '通話を記録しました！',
+        },
+        log_meeting: {
+          label: '会議を記録',
+          successMessage: '会議を記録しました！',
+          params: {
+            subject: { label: '会議の件名' },
+            duration: { label: '所要時間（分）' },
+            attendees: { label: '参加者' },
+            notes: { label: '議事メモ' },
+          },
         },
         escalate_case: {
           label: 'ケースをエスカレート',
@@ -546,6 +564,12 @@ export const jaJP: TranslationData = {
         campaign_gantt: { label: 'キャンペーン日程' },
         campaign_calendar: { label: 'キャンペーンカレンダー' },
         campaign_timeline: { label: 'マーケティングタイムライン' },
+      },
+      _actions: {
+        enroll_leads: {
+          label: 'リードを一括登録',
+          successMessage: '対象リードをキャンペーンに登録しました。',
+        },
       },
     },
 

@@ -243,6 +243,10 @@ export const esES: TranslationData = {
           label: 'Agregar a Campaña',
           successMessage: '¡Prospecto agregado a la campaña!',
         },
+        schedule_followup: {
+          label: 'Programar Seguimiento',
+          successMessage: 'Seguimiento programado.',
+        },
       },
     },
 
@@ -317,6 +321,10 @@ export const esES: TranslationData = {
           label: 'Actualizar Etapa',
           successMessage: '¡Etapa de oportunidad actualizada!',
         },
+        generate_quote: {
+          label: 'Generar Presupuesto',
+          successMessage: '¡Presupuesto creado desde la oportunidad!',
+        },
       },
     },
 
@@ -364,6 +372,16 @@ export const esES: TranslationData = {
         log_call: {
           label: 'Registrar Llamada',
           successMessage: '¡Llamada registrada con éxito!',
+        },
+        log_meeting: {
+          label: 'Registrar Reunión',
+          successMessage: '¡Reunión registrada con éxito!',
+          params: {
+            subject: { label: 'Asunto de la Reunión' },
+            duration: { label: 'Duración (minutos)' },
+            attendees: { label: 'Asistentes' },
+            notes: { label: 'Notas de la Reunión' },
+          },
         },
         escalate_case: {
           label: 'Escalar Caso',
@@ -546,6 +564,12 @@ export const esES: TranslationData = {
         campaign_gantt: { label: 'Programación de Campañas' },
         campaign_calendar: { label: 'Calendario de Campañas' },
         campaign_timeline: { label: 'Línea de Tiempo de Marketing' },
+      },
+      _actions: {
+        enroll_leads: {
+          label: 'Inscribir Prospectos',
+          successMessage: 'Prospectos elegibles inscritos en la campaña.',
+        },
       },
     },
 
