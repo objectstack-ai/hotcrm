@@ -8,8 +8,10 @@ type Flow = Automation.Flow;
  *
  * The opportunity carries `days_in_stage`, but nothing acted on it, so deals
  * could sit untouched in a stage indefinitely. This daily sweep finds open
- * opportunities stalled longer than the threshold, nudges the owner (and their
- * manager) and books a follow-up task so the deal re-enters the working set.
+ * opportunities stalled longer than the threshold, nudges the owner and books
+ * a follow-up task so the deal re-enters the working set. A deal with an
+ * open stall task is skipped (idempotency), so each stall episode produces
+ * exactly one nudge; completing the task re-arms it.
  *
  * Capabilities exercised: scheduled trigger + `loop` + `notify` + task
  * creation. Pipeline-hygiene automation is one of the highest-ROI uses of
@@ -52,10 +54,31 @@ export const OpportunityStagnationFlow: Flow = {
         body: {
           nodes: [
             {
-              id: 'notify_owner', type: 'notify', label: 'Nudge Owner & Manager',
+              // Idempotency gate: a still-open stall task means this deal was
+              // already nudged. Without this the daily sweep re-notified and
+              // re-created an identical task every morning for as long as the
+              // deal stayed stalled (unbounded duplicate pile-up).
+              id: 'find_existing_task', type: 'get_record', label: 'Already Nudged?',
               config: {
-                // Owner only — `{currentOpp.owner.manager}` dot-walks a
-                // lookup, which flow templates interpolate as "undefined".
+                objectName: 'crm_task',
+                filter: {
+                  related_to_opportunity: '{currentOpp.id}',
+                  subject: 'Advance stalled deal: {currentOpp.name}',
+                  status: { $nin: ['completed'] },
+                },
+                outputVariable: 'existingStallTask',
+              },
+            },
+            {
+              id: 'check_not_nudged', type: 'decision', label: 'First Nudge?',
+              config: { condition: 'existingStallTask == null' },
+            },
+            {
+              // Owner only: `{currentOpp.owner.manager}` cannot traverse a
+              // lookup in flow templates — it interpolates to the literal
+              // "undefined" (cf. opportunity_won_alert).
+              id: 'notify_owner', type: 'notify', label: 'Nudge Owner',
+              config: {
                 to: ['{currentOpp.owner}'],
                 channels: ['inbox', 'email'],
                 topic: 'deal_stalled',
@@ -80,7 +103,10 @@ export const OpportunityStagnationFlow: Flow = {
             },
           ],
           edges: [
-            { id: 'b1', source: 'notify_owner', target: 'create_followup_task', type: 'default' },
+            { id: 'b1', source: 'find_existing_task', target: 'check_not_nudged', type: 'default' },
+            // "Already nudged" has no edge, so the loop moves to the next item.
+            { id: 'b2', source: 'check_not_nudged', target: 'notify_owner', type: 'conditional', condition: 'existingStallTask == null', label: 'First nudge' },
+            { id: 'b3', source: 'notify_owner', target: 'create_followup_task', type: 'default' },
           ],
         },
       },

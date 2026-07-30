@@ -9,11 +9,11 @@ import type { HookApi } from './_hook-api';
  * - Defaults `expiration_date` to `quote_date + 30 days` when missing.
  * - Freezes quotes once `accepted` or `expired`.
  * - On `accepted`, drafts a contract and pushes the linked opportunity to `closed_won`.
- *
- * Helpers (addDays) are declared INSIDE each handler body — L2 hook bodies run
- * body-only in the QuickJS sandbox, so module scope is not visible at runtime.
- * See opportunity.hook.ts for the full rationale.
  */
+
+// NB: helpers used by handlers are declared INSIDE each handler — L2 hook
+// bodies run body-only in the QuickJS sandbox, so module scope is not
+// available at runtime (cf. opportunity.hook.ts).
 
 const quoteValidation: Hook = {
   name: 'quote_workflow',
@@ -83,9 +83,11 @@ const quoteAccepted: Hook = {
     const api = ctx.api as HookApi | undefined;
     if (!api) return;
 
-    function addDays(iso: string, days: number): string {
+    // Real calendar months — `days * 30` shorted a 12-month term by ~5 days
+    // and only slipped past contract_validation's ±1-month tolerance by luck.
+    function addMonths(iso: string, months: number): string {
       const d = new Date(iso);
-      d.setDate(d.getDate() + days);
+      d.setMonth(d.getMonth() + months);
       return d.toISOString().slice(0, 10);
     }
 
@@ -119,7 +121,7 @@ const quoteAccepted: Hook = {
       status: 'draft',
       contract_term_months: months,
       start_date: today,
-      end_date: addDays(today, months * 30),
+      end_date: addMonths(today, months),
       contract_value: totalPrice,
       contract_type: 'subscription',
       description: `Auto-drafted from accepted quote ${quoteId ?? ''}`.trim(),

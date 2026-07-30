@@ -6,63 +6,47 @@ import type { HookApi } from './_hook-api';
 /**
  * Contact integrity hook.
  *
- * - On insert/update, dedupes by `email` within the same `crm_account`.
- * - On email/phone change, propagates the new value to opportunities where this
- *   contact is the `primary_contact` (best-effort rollup).
+ * - On insert/update, dedupes by `email` GLOBALLY — matching the schema's
+ *   global unique index on `email`. (The old per-account lookup let a
+ *   cross-account duplicate sail past the friendly check and explode on the
+ *   DB index instead, mid-conversion.)
  * - On delete, refuses if the contact is referenced by an active opportunity,
  *   open quote or active contract.
+ *
+ * No email/phone propagation to opportunities: `crm_opportunity` has no
+ * `contact_email` / `contact_phone` columns — the old afterUpdate rollup
+ * wrote nonexistent fields and was silently swallowed. Opportunities reach
+ * the live values through their `primary_contact` lookup.
  */
 
 const contactHook: Hook = {
   name: 'contact_integrity',
   object: 'crm_contact',
-  events: ['beforeInsert', 'beforeUpdate', 'afterUpdate', 'beforeDelete'],
+  events: ['beforeInsert', 'beforeUpdate', 'beforeDelete'],
   priority: 200,
   description:
-    'Dedupe contacts per account, propagate contact info to linked opportunities, and protect referenced contacts from deletion.',
+    'Dedupe contacts by email and protect referenced contacts from deletion.',
   handler: async (ctx: HookContext) => {
     const { event, input } = ctx;
     const api = ctx.api as HookApi | undefined;
 
     if ((event === 'beforeInsert' || event === 'beforeUpdate') && api) {
       const email = typeof input.email === 'string' ? input.email.toLowerCase() : '';
-      const account = typeof input.crm_account === 'string' ? input.crm_account : ctx.previous?.crm_account;
-      if (email && account) {
+      if (email) {
         input.email = email;
+        // GLOBAL lookup (no account scope): the unique index on `email` is
+        // global, so this guard must be at least as strict to fire first with
+        // a readable error.
         const dup = await api.object('crm_contact').findOne({
-          where: { email, crm_account: account },
+          where: { email },
         });
         const dupId = (dup as { id?: string } | null)?.id;
         const selfId = ctx.previous?.id ?? input.id;
         if (dup && dupId !== selfId) {
           throw new Error(
-            `Another contact (${dupId}) with email ${email} already exists in this account.`,
+            `Another contact (${dupId}) with email ${email} already exists.`,
           );
         }
-      }
-    }
-
-    if (event === 'afterUpdate' && api) {
-      const previous = ctx.previous;
-      const id = previous?.id ?? input.id;
-      if (!id) return;
-      const patch: Record<string, unknown> = {};
-      if (typeof input.email === 'string' && input.email !== previous?.email) {
-        patch.contact_email = input.email;
-      }
-      if (typeof input.phone === 'string' && input.phone !== previous?.phone) {
-        patch.contact_phone = input.phone;
-      }
-      if (Object.keys(patch).length === 0) return;
-      try {
-        await api.object('crm_opportunity').updateMany({
-          where: { primary_contact: id },
-          doc: patch,
-        });
-      } catch {
-        // Best-effort propagation — never break the parent write. No `console`
-        // in the L2 hook sandbox (QuickJS): a log call here would throw its own
-        // ReferenceError and mask the real failure (cf. lead_auto_assign / #471).
       }
     }
 

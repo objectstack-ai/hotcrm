@@ -33,8 +33,8 @@ An **hourly** sweep checks every open case. If a case passes its **SLA Due Date*
 without being resolved, the system automatically:
 
 - marks it **SLA Violated**,
-- **escalates** it (status → *Escalated*), and
-- alerts the owner and their manager.
+- **escalates** it (status → *Escalated*, with an escalation reason stamped), and
+- alerts the owner.
 
 You never have to manually catch a missed SLA — but you should work cases before
 the due date, because a breach is recorded permanently on the case.
@@ -44,13 +44,15 @@ the due date, because a breach is recorded permanently on the case.
 The moment a case is set to **Critical** priority, it escalates without waiting
 for the SLA clock:
 
-- it is **reassigned to the owner's manager**,
-- status moves to **Escalated** with an escalation reason stamped, and
-- a **high-priority follow-up task** is created (due the next day), with the
-  manager notified.
+- status moves to **Escalated** with an escalation reason stamped (the case
+  stays with its owner),
+- an **urgent follow-up task** is created for the account owner (due the next
+  day), and
+- the case owner is notified.
 
 > Two safety nets, two triggers: **priority = Critical** escalates *immediately*;
-> a **missed SLA Due Date** escalates *on breach*. Both reassign and alert.
+> a **missed SLA Due Date** escalates *on breach*. Both flag and alert; neither
+> reassigns the case.
 
 ## After a case closes — satisfaction follow-up (automatic)
 

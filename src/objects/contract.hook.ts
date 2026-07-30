@@ -8,13 +8,14 @@ import type { HookApi } from './_hook-api';
  *
  * - Validates `end_date` ≈ `start_date + contract_term_months`.
  * - Rejects shrinking `end_date` after activation.
- * - On `activated`: stamps `signed_date` (if missing), promotes the account to `customer`,
- *   and schedules a renewal task 60 days before `end_date`.
- *
- * Helpers (monthsBetween, addDays) are declared INSIDE each handler body — L2
- * hook bodies run body-only in the QuickJS sandbox, so module scope is not
- * visible at runtime. See opportunity.hook.ts for the full rationale.
+ * - On `activated`: stamps `signed_date` (if missing) and promotes the account
+ *   to `customer`. Renewal reminders are owned by the `contract_renewal` flow.
  */
+
+// NB: helpers used by handlers are declared INSIDE each handler — L2 hook
+// bodies run body-only in the QuickJS sandbox, so module scope is not
+// available at runtime (cf. opportunity.hook.ts). Module-level copies were
+// dead code that invited silent divergence.
 
 const contractValidation: Hook = {
   name: 'contract_validation',
@@ -88,12 +89,6 @@ const contractActivation: Hook = {
     const api = ctx.api as HookApi | undefined;
     if (!api) return;
 
-    function addDays(iso: string, days: number): string {
-      const d = new Date(iso);
-      d.setDate(d.getDate() + days);
-      return d.toISOString().slice(0, 10);
-    }
-
     const id =
       (typeof input.id === 'string' && input.id) ||
       (typeof previous?.id === 'string' ? (previous.id as string) : undefined);
@@ -117,22 +112,10 @@ const contractActivation: Hook = {
       }
     }
 
-    if (endDate) {
-      const renewalDue = addDays(endDate, -60);
-      await api.object('crm_task').insert({
-        subject: `Renewal review for contract ${id ?? ''}`.trim(),
-        status: 'not_started',
-        priority: 'high',
-        type: 'follow_up',
-        due_date: renewalDue,
-        owner:
-          (typeof input.owner === 'string' && input.owner) ||
-          (typeof previous?.owner === 'string' && previous.owner) ||
-          ctx.user?.id,
-        related_to_type: 'crm_account',
-        related_to_account: accountId,
-      });
-    }
+    // No renewal task here: renewal reminders are owned by the
+    // `contract_renewal` scheduled flow, which honours the per-contract
+    // `renewal_notice_days`. The activation-time task this hook used to
+    // create hardcoded a 60-day notice and duplicated the flow's task.
   },
 };
 

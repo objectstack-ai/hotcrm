@@ -1,6 +1,6 @@
 # HotCRM Status
 
-> Snapshot date: July 28, 2026
+> Snapshot date: July 30, 2026
 > Source of truth: `pnpm validate`, `pnpm typecheck`, and `pnpm test`
 
 ## Summary
@@ -13,9 +13,9 @@ Latest local validation:
 
 ```text
 HotCRM v2.2.2
-Data: 15 Objects  309 Fields
-UI: 1 Apps  12 Views  15 Pages  4 Dashboards  10 Reports  13 Actions
-Logic: 20 Flows  2 Agents
+Data: 16 Objects  318 Fields
+UI: 1 Apps  13 Views  8 Pages  4 Dashboards  10 Reports  13 Actions
+Logic: 23 Flows
 Security: 12 Positions  6 Permissions
 ```
 
@@ -31,7 +31,7 @@ pnpm validate
 | --- | --- | --- |
 | ObjectStack metadata validation | `pnpm validate` | Passes |
 | TypeScript | `pnpm typecheck` | Passes |
-| Unit tests | `pnpm test` | 8 files, 67 tests passing |
+| Unit tests | `pnpm test` | 9 files, 97 tests passing |
 
 Run the full project verification pipeline with:
 

@@ -33,15 +33,17 @@ automatically:
 
 | Lead Score | Follow-up SLA | What happens |
 |---|---|---|
-| **Hot** — 4★ or higher | **1 day** | Manager is alerted to *assign within 24h*. |
-| Everything else | **3 days** | Lead is queued for assignment. |
+| **Hot** — 4★ or higher | **1 day** | The owner is alerted to *follow up within 24h*. |
+| Everything else | **3 days** | The owner gets a standard follow-up deadline. |
 
 **Lead Score** is the 1–5 star field on each lead (shown as *Lead Score* in the
 UI). A score of 4★ or more marks the lead "hot" and triggers the 1-day SLA.
 
-Every new lead lands in the **sales-manager queue**. Ownership is assigned by a
-manager — there is no automatic territory or round-robin assignment, so a lead
-sits in the queue until someone claims or assigns it. **Lead status** moves
+A lead created without an owner (web-to-lead, CSV import, API capture) is
+**auto-assigned to the sales rep with the fewest open leads** — a self-balancing
+round-robin over everyone holding the *Sales Rep* position. Leads created in the
+UI keep their creator as owner. Only when no rep pool exists yet does a lead
+stay ownerless for a manager to claim. **Lead status** moves
 `New → Contacted → Qualified → Unqualified`.
 
 ## 2. Converting a qualified lead

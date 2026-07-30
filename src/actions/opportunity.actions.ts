@@ -90,7 +90,7 @@ export const MassUpdateStageAction: Action = {
       if (!ids.length) throw new Error('mass_update_stage: no opportunity selected');
       let updated = 0;
       for (const id of ids) {
-        await ctx.api.object('crm_opportunity').update({ id, stage: newStage }, { where: { id } });
+        await ctx.api.object('crm_opportunity').update(id, { stage: newStage });
         updated++;
       }
       return { stage: newStage, updated };

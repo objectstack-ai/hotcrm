@@ -9,12 +9,12 @@ type Flow = Automation.Flow;
  * Complements `case_escalation` (which reacts to *priority* the moment a case
  * is saved) by adding the missing *time* dimension. The schema carries
  * `sla_due_date` and `is_sla_violated`, but nothing watched the clock — a case
- * could silently blow its SLA. This flow sweeps open cases whose `sla_due_date`
- * has passed without resolution, stamps the breach, escalates, and alerts the
- * owner and their manager.
+ * could silently blow its SLA. This flow sweeps open (not resolved/closed)
+ * cases whose `sla_due_date` has passed, stamps the breach, escalates, and
+ * alerts the owner.
  *
  * Capabilities exercised: scheduled trigger + `loop` + `update_record` +
- * `notify` to a manager chain.
+ * `notify`.
  */
 export const CaseSlaMonitorFlow: Flow = {
   name: 'case_sla_monitor',
@@ -35,7 +35,15 @@ export const CaseSlaMonitorFlow: Flow = {
       id: 'query_breached', type: 'get_record', label: 'Find Breached Cases',
       config: {
         objectName: 'crm_case',
-        filter: { is_closed: false, is_sla_violated: false, sla_due_date: { $lt: '{NOW()}' } },
+        // `$nin` (not `is_closed: false`): a case in `resolved` has met its SLA —
+        // work is finished — but `is_closed` only flips on `closed`, so the old
+        // filter stamped false breaches on resolved cases and dragged them back
+        // to `escalated`.
+        filter: {
+          status: { $nin: ['resolved', 'closed'] },
+          is_sla_violated: false,
+          sla_due_date: { $lt: '{NOW()}' },
+        },
         limit: 500,
         outputVariable: 'caseList',
       },
@@ -52,11 +60,24 @@ export const CaseSlaMonitorFlow: Flow = {
               config: {
                 objectName: 'crm_case',
                 filter: { id: '{currentCase.id}' },
-                fields: { is_sla_violated: true, is_escalated: true, status: 'escalated', escalated_date: '{NOW()}' },
+                // `escalation_reason` must accompany `is_escalated: true` — the
+                // object's `escalation_reason_required` validation (severity:
+                // error) rejects the whole write otherwise, turning this sweep
+                // into a silent no-op (cf. the same fix in case_escalation).
+                fields: {
+                  is_sla_violated: true,
+                  is_escalated: true,
+                  status: 'escalated',
+                  escalated_date: '{NOW()}',
+                  escalation_reason: 'Auto-escalated: SLA due date breached',
+                },
               },
             },
             {
-              id: 'notify_team', type: 'notify', label: 'Alert Owner & Manager',
+              // Owner only: `{currentCase.owner.manager}` cannot traverse a
+              // lookup in flow templates — it interpolates to the literal
+              // "undefined" (cf. case_escalation / opportunity_won_alert).
+              id: 'notify_team', type: 'notify', label: 'Alert Owner',
               config: {
                 // Owner only — `{currentCase.owner.manager}` dot-walks a
                 // lookup, which flow templates interpolate as "undefined".

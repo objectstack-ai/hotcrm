@@ -121,11 +121,15 @@ export const Campaign = ObjectSchema.create({
       min: 0,
     }),
     
+    // NOT `readonly` (here and on the num_* snapshot fields below): the
+    // campaign_snapshot_metrics hook writes these through the data API, and
+    // 16.x drops writes to readonly fields (#2948) — same reason num_sent was
+    // already opened up. With readonly on, the completion snapshot silently
+    // persisted nothing but num_sent.
     actual_revenue: Field.currency({ 
       label: 'Actual Revenue',
       scale: 2,
       min: 0,
-      readonly: true,
     }),
     
     // Metrics
@@ -135,8 +139,8 @@ export const Campaign = ObjectSchema.create({
       min: 0,
     }),
     
-    // NOT `readonly`: the campaign_enrollment flow writes this rollup
-    // (16.x drops readonly writes, #2948).
+    // NOT `readonly`: the campaign_snapshot_metrics hook writes this rollup
+    // (16.x drops readonly writes, #2948). Definition: total members enrolled.
     num_sent: Field.number({
       label: 'Number Sent',
       min: 0,
@@ -145,31 +149,26 @@ export const Campaign = ObjectSchema.create({
     num_responses: Field.number({
       label: 'Number of Responses',
       min: 0,
-      readonly: true,
     }),
     
     num_leads: Field.number({
       label: 'Number of Leads',
       min: 0,
-      readonly: true,
     }),
     
     num_converted_leads: Field.number({
       label: 'Converted Leads',
       min: 0,
-      readonly: true,
     }),
     
     num_opportunities: Field.number({
       label: 'Opportunities Created',
       min: 0,
-      readonly: true,
     }),
     
     num_won_opportunities: Field.number({
       label: 'Won Opportunities',
       min: 0,
-      readonly: true,
     }),
     
     // Calculated Metrics (Formula Fields)

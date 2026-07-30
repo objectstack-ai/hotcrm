@@ -8,8 +8,9 @@ import type { HookApi } from './_hook-api';
  *
  * - Enforces `list_price >= cost`.
  * - Normalizes `sku` to uppercase.
- * - Refuses delete when the product is referenced by an active opportunity or quote;
- *   suggests deactivating instead.
+ * - Refuses delete when the product is referenced by ANY opportunity or quote
+ *   line item (historical included — deals keep their line history); suggests
+ *   deactivating (`is_active=false`) instead.
  */
 
 const productHook: Hook = {

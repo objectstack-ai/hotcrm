@@ -27,7 +27,12 @@ export const OpportunityWonAlertFlow: Flow = {
       config: {
         objectName: 'crm_opportunity',
         triggerType: 'record-after-update',
-        condition: 'record.stage == "closed_won" && record.amount > 100000',
+        // `previous.stage` guard: fire on the TRANSITION into closed_won only.
+        // Without it every later edit of a won deal (demo-bootstrap owner
+        // claims, approval-status stamps, description tweaks) re-sent the
+        // congratulations blast. The trigger forwards `previous` into the
+        // condition scope (cf. the engine's record-change context).
+        condition: 'record.stage == "closed_won" && previous.stage != "closed_won" && record.amount > 100000',
       },
     },
     {
