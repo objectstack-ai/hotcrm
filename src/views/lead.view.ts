@@ -113,10 +113,6 @@ export const LeadViews = defineView({
    */
   form: {
     type: 'simple',
-    data: {
-      provider: 'object',
-      object: 'crm_lead',
-    },
     
     sections: [
       {
@@ -401,10 +397,6 @@ export const LeadViews = defineView({
      */
     detail_form: {
       type: 'tabbed',
-      data: {
-        provider: 'object',
-        object: 'crm_lead',
-      },
       sections: [
         {
           label: 'General',

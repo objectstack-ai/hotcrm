@@ -170,7 +170,6 @@ export const TaskViews = defineView({
 
   form: {
     type: 'simple',
-    data: { provider: 'object', object: 'crm_task' },
     sections: [
       {
         label: 'Task',

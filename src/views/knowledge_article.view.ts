@@ -90,7 +90,6 @@ export const KnowledgeArticleViews = defineView({
 
   form: {
     type: 'simple',
-    data: { provider: 'object', object: 'crm_knowledge_article' },
     sections: [
       {
         label: 'Article',

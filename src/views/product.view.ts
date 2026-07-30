@@ -72,7 +72,6 @@ export const ProductViews = defineView({
 
   form: {
     type: 'simple',
-    data: { provider: 'object', object: 'crm_product' },
     sections: [
       {
         label: 'Product Info',

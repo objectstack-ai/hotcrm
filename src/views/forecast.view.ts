@@ -79,7 +79,6 @@ export const ForecastViews = defineView({
 
   form: {
     type: 'simple',
-    data: { provider: 'object', object: 'crm_forecast' },
     sections: [
       {
         label: 'Snapshot',
