@@ -27,10 +27,19 @@ export const LeadConversionFlow: Flow = {
     {
       id: 'screen_1', type: 'screen', label: 'Conversion Details',
       config: {
+        // `visibleWhen` on a screen field is BARE CEL over the screen's own
+        // field names — not the `{var}` template dialect the rest of this flow
+        // uses for filters, `update_record` fields and decision conditions. The
+        // client re-evaluates the predicate against the values collected so far,
+        // which is why it cannot be a server-interpolated template.
         fields: [
-          { name: 'createOpportunity', label: 'Create Opportunity?', type: 'boolean', required: true },
-          { name: 'opportunityName', label: 'Opportunity Name', type: 'text', required: true, visibleWhen: '{createOpportunity} == true' },
-          { name: 'opportunityAmount', label: 'Opportunity Amount', type: 'currency', visibleWhen: '{createOpportunity} == true' },
+          // `defaultValue: false` is load-bearing. An untouched checkbox holds
+          // `undefined`, which the runner counts as an unanswered required
+          // field — so "convert this lead WITHOUT an opportunity", the commonest
+          // path, blocked Submit on a box the user deliberately left clear.
+          { name: 'createOpportunity', label: 'Create Opportunity?', type: 'boolean', required: true, defaultValue: false },
+          { name: 'opportunityName', label: 'Opportunity Name', type: 'text', required: true, visibleWhen: 'createOpportunity == true' },
+          { name: 'opportunityAmount', label: 'Opportunity Amount', type: 'currency', visibleWhen: 'createOpportunity == true' },
         ],
       },
     },
