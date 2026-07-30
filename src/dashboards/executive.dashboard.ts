@@ -7,10 +7,19 @@ import { pipelineByStageFunnelWidget } from './shared-widgets';
  * Executive Overview Dashboard
  *
  * High-level revenue, customer, and pipeline KPIs for company leadership.
- * Designed to mirror the polished CRM dashboard reference at
- * https://github.com/objectstack-ai/objectui/tree/main/examples/crm — using
- * the framework's first-class metadata fields (colorVariant, chartConfig,
- * header, dateRange, descriptions, action buttons) instead of raw hex colors.
+ *
+ * Widgets here are dataset-bound (ADR-0021), and the console's dataset widget
+ * reads ONLY: type, dataset, dimensions, values, filter, filterBindings, and
+ * layout. It builds charts and tables from the dataset's own field metadata
+ * (labels, formats), so per-widget `chartConfig`, `colorVariant`, widget-level
+ * `action*`, and free-form `options` (icons, formats, static trends, table
+ * column specs) are never read — don't re-add them. In particular, metric-tile
+ * trend deltas must come from real comparison queries (widget `compareTo`)
+ * once the renderer supports them for dataset metrics; hardcoded percentages
+ * previously carried here were fabrications and were removed (#500).
+ * Date bucketing is likewise server-side (a dataset dimension's
+ * `dateGranularity`, not widget options) — but see the note in
+ * `opportunity_metrics` for why the trend widgets still group by raw dates.
  */
 export const ExecutiveDashboard: Dashboard = {
   name: 'executive_dashboard',
@@ -71,16 +80,8 @@ export const ExecutiveDashboard: Dashboard = {
       // Self-scoped to YTD; without this the injected dashboard dateRange
       // (default this_quarter) is ANDed in and the tile shows quarter revenue.
       filterBindings: { dateRange: false },
-      colorVariant: 'success',
-      actionUrl: '/reports/revenue-ytd',
-      actionType: 'url',
-      actionIcon: 'ArrowUpRight',
       dataset: 'opportunity_metrics', values: ['total_amount'],
       layout: { x: 0, y: 0, w: 3, h: 2 },
-      options: {
-        icon: 'DollarSign',
-        trend: { value: 12.5, direction: 'up', label: 'vs last quarter' },
-      },
     },
     {
       id: 'total_accounts',
@@ -88,10 +89,6 @@ export const ExecutiveDashboard: Dashboard = {
       description: 'Customers with at least one active relationship',
       type: 'metric',
       filter: { is_active: true },
-      colorVariant: 'blue',
-      actionUrl: '/objects/account',
-      actionType: 'url',
-      actionIcon: 'ArrowUpRight',
       // crm_account has neither `close_date` nor `lead_source`; opt this widget
       // out of both dashboard filters bound to those fields. ObjectStack 15
       // (framework#2501) injects every dashboard filter (dateRange + globalFilters)
@@ -101,29 +98,15 @@ export const ExecutiveDashboard: Dashboard = {
       filterBindings: { dateRange: false, lead_source: false },
       dataset: 'account_metrics', values: ['account_count'],
       layout: { x: 3, y: 0, w: 3, h: 2 },
-      options: {
-        icon: 'Building2',
-        format: '0,0',
-        trend: { value: 3.4, direction: 'up', label: 'vs last quarter' },
-      },
     },
     {
       id: 'total_contacts',
       title: 'Total Contacts',
       description: 'People in our address book',
       type: 'metric',
-      colorVariant: 'purple',
-      actionUrl: '/objects/contact',
-      actionType: 'url',
-      actionIcon: 'ArrowUpRight',
       filterBindings: { dateRange: false }, // crm_contact has no close_date — opt out of the date picker
       dataset: 'contact_metrics', values: ['contact_count'],
       layout: { x: 6, y: 0, w: 3, h: 2 },
-      options: {
-        icon: 'Users',
-        format: '0,0',
-        trend: { value: 5.8, direction: 'up', label: 'vs last quarter' },
-      },
     },
     {
       id: 'open_leads',
@@ -131,18 +114,9 @@ export const ExecutiveDashboard: Dashboard = {
       description: 'Unconverted leads in the funnel',
       type: 'metric',
       filter: { is_converted: false },
-      colorVariant: 'orange',
-      actionUrl: '/objects/lead',
-      actionType: 'url',
-      actionIcon: 'ArrowUpRight',
       filterBindings: { dateRange: false }, // crm_lead has no close_date — opt out of the date picker
       dataset: 'lead_metrics', values: ['lead_count'],
       layout: { x: 9, y: 0, w: 3, h: 2 },
-      options: {
-        icon: 'Sparkles',
-        format: '0,0',
-        trend: { value: 1.2, direction: 'down', label: 'vs last quarter' },
-      },
     },
 
     // ─── Row 2: Revenue Analysis ──────────────────────────────────────
@@ -153,21 +127,11 @@ export const ExecutiveDashboard: Dashboard = {
       type: 'area',
       filter: { stage: 'closed_won', close_date: { $gte: '{12_months_ago}' } },
       filterBindings: { dateRange: false }, // self-scoped to 12 months — the date picker must not narrow it
-      colorVariant: 'success',
       dataset: 'opportunity_metrics', dimensions: ['close_date'], values: ['total_amount'],
       layout: { x: 0, y: 2, w: 8, h: 4 },
-      chartConfig: {
-        type: 'area',
-        title: 'Revenue Trend',
-        subtitle: 'Last 12 months',
-        showLegend: false,
-        showDataLabels: false,
-        colors: ['#10B981'],
-        xAxis: { field: 'close_date', title: 'Month', showGridLines: false, logarithmic: false },
-        yAxis: [{ field: 'total_amount', title: 'Revenue', format: '0,0', showGridLines: true, logarithmic: false }],
-        interaction: { tooltips: true, zoom: false, brush: true },
-      },
-      options: { dateGranularity: 'month' },
+      // Default rendering is intentional: the dataset widget plots the selected
+      // dimension × values directly; a chartConfig would duplicate them inertly.
+      suppressWarnings: ['chart-config-missing'],
     },
     {
       id: 'revenue_by_industry',
@@ -176,18 +140,14 @@ export const ExecutiveDashboard: Dashboard = {
       type: 'donut',
       filter: { stage: 'closed_won', close_date: { $gte: '{current_year_start}' } },
       filterBindings: { dateRange: false }, // self-scoped to YTD — the date picker must not narrow it
-      colorVariant: 'blue',
       dataset: 'opportunity_metrics', dimensions: ['account_industry'], values: ['total_amount'],
       layout: { x: 8, y: 2, w: 4, h: 4 },
-      chartConfig: {
-        type: 'donut',
-        showLegend: true,
-        showDataLabels: true,
-        colors: ['#4F46E5', '#06B6D4', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'],
-      },
+      suppressWarnings: ['chart-config-missing'], // intentional default rendering (see revenue_trend)
     },
 
     // ─── Row 3: Pipeline & Activity ───────────────────────────────────
+    // The funnel now comes from the shared factory (#539); its remaining inert
+    // config lives in shared-widgets.ts and is out of this PR's scope.
     pipelineByStageFunnelWidget({ x: 0, y: 6, w: 6, h: 4 }),
     {
       id: 'new_accounts_by_month',
@@ -195,19 +155,10 @@ export const ExecutiveDashboard: Dashboard = {
       description: 'Account creation cadence — last 6 months',
       type: 'bar',
       filter: { created_at: { $gte: '{6_months_ago}' } },
-      colorVariant: 'purple',
       filterBindings: { dateRange: false, lead_source: false }, // crm_account has no close_date/lead_source; scopes itself by created_at
       dataset: 'account_metrics', dimensions: ['created_at'], values: ['account_count'],
       layout: { x: 6, y: 6, w: 6, h: 4 },
-      chartConfig: {
-        type: 'bar',
-        showLegend: false,
-        showDataLabels: true,
-        colors: ['#8B5CF6'],
-        xAxis: { field: 'created_at', title: 'Month', showGridLines: false, logarithmic: false },
-        yAxis: [{ field: 'account_count', title: 'New accounts', showGridLines: true, logarithmic: false }],
-      },
-      options: { dateGranularity: 'month' },
+      suppressWarnings: ['chart-config-missing'], // intentional default rendering (see revenue_trend)
     },
 
     // ─── Row 4: Revenue by Industry ───────────────────────────────────
@@ -217,27 +168,16 @@ export const ExecutiveDashboard: Dashboard = {
     // dimension — a single summary row, not a customer ranking. Grouping by
     // industry gives a real multi-row breakdown of book-of-business by sector;
     // for a per-account list, use an object-bound ListView (ADR-0017).
+    // Column headers and number formats come from the dataset's dimension and
+    // measure metadata.
     {
       id: 'accounts_by_industry',
       title: 'Accounts by Industry',
       description: 'Total annual revenue and account count per industry',
       type: 'table',
-      colorVariant: 'default',
       filterBindings: { dateRange: false, lead_source: false }, // crm_account has no close_date/lead_source — opt out of both
       dataset: 'account_metrics', dimensions: ['industry'], values: ['annual_revenue_sum', 'account_count'],
       layout: { x: 0, y: 10, w: 12, h: 4 },
-      options: {
-        columns: [
-          { header: 'Industry',        accessorKey: 'industry' },
-          { header: 'Annual Revenue',  accessorKey: 'annual_revenue_sum', format: '0,0' },
-          { header: 'Accounts',        accessorKey: 'account_count' },
-        ],
-        sortBy: 'annual_revenue_sum',
-        sortOrder: 'desc',
-        limit: 10,
-        striped: true,
-        density: 'comfortable',
-      },
     },
   ],
 };

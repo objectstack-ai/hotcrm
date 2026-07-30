@@ -11,6 +11,8 @@ export const AccountDataset = defineDataset({
   dimensions: [
     { name: 'industry', label: 'Industry', field: 'industry', type: 'string' },
     { name: 'type', label: 'Type', field: 'type', type: 'string' },
+    // No `dateGranularity`: bucketed date dims hit a fail-closed read scope in
+    // the platform's aggregate bridge (see opportunity_metrics.close_date).
     { name: 'created_at', label: 'Created', field: 'created_at', type: 'date' },
   ],
   measures: [
