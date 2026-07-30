@@ -316,7 +316,7 @@ export const en: TranslationData = {
             cold_call: 'Cold Call', email_campaign: 'Email Campaign', other: 'Other',
           },
         },
-        crm_competitors: { label: 'Competitors', help: 'Competitors we are up against in this deal' },
+        competitors: { label: 'Competitors' },
         crm_campaign: { label: 'Campaign' },
         days_in_stage: { label: 'Days in Current Stage' },
         is_private: { label: 'Private' },
@@ -591,34 +591,6 @@ export const en: TranslationData = {
       },
     },
 
-    crm_competitor: {
-      label: 'Competitor',
-      pluralLabel: 'Competitors',
-      description: 'Competitors we encounter in deals, with battlecard notes',
-      fields: {
-        name: { label: 'Competitor Name' },
-        website: { label: 'Website' },
-        main_products: { label: 'Main Products', help: 'Flagship products / services we run into' },
-        threat_level: {
-          label: 'Threat Level',
-          options: { low: 'Low', medium: 'Medium', high: 'High' },
-        },
-        our_advantages: { label: 'Our Advantages', help: 'Where we win against this competitor' },
-        our_disadvantages: { label: 'Our Disadvantages', help: 'Where they beat us — objections to prepare for' },
-        notes: { label: 'Notes' },
-        owner: { label: 'Intel Owner' },
-        is_active: { label: 'Active' },
-      },
-      _views: {
-        all_competitors: { label: 'All Competitors' },
-        high_threat: { label: 'High Threat' },
-      },
-      _sections: {
-        basic: { label: 'Basic Information' },
-        battlecard: { label: 'Battlecard' },
-      },
-    },
-
     crm_campaign_member: {
       label: 'Campaign Member',
       pluralLabel: 'Campaign Members',
@@ -773,6 +745,7 @@ export const en: TranslationData = {
         pipeline_by_forecast_category: { title: 'Pipeline by Forecast Category', description: 'Open pipeline grouped by sales forecast category' },
         lead_source_breakdown: { title: 'Lead Source', description: 'Where our pipeline is coming from' },
         open_pipeline_by_owner: { title: 'Open Pipeline by Owner', description: 'In-flight pipeline value, deal count and avg win probability per rep' },
+        quota_attainment_by_rep: { title: 'Quota Attainment by Rep', description: 'Quota, closed revenue and attainment per rep, from forecast snapshots' },
         pipeline_stage_by_source: { title: 'Pipeline by Stage × Lead Source', description: 'Cross-tab of open opportunity amount by stage and source' },
       },
     },
@@ -789,7 +762,7 @@ export const en: TranslationData = {
         cases_by_origin: { title: 'Cases by Origin', description: 'Where our cases are coming from' },
         daily_case_volume: { title: 'Daily Case Volume', description: 'New cases created over the last 30 days' },
         sla_compliance_gauge: { title: 'SLA Compliance', description: 'Percent of cases resolved within SLA this period' },
-        my_open_cases_by_priority: { title: 'My Open Cases by Priority', description: 'Your open cases and their SLA-violation rate, broken down by priority' },
+        open_cases_by_priority: { title: 'Open Cases by Priority', description: 'Open cases and their SLA-violation rate, broken down by priority' },
       },
     },
   },

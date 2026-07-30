@@ -28,6 +28,21 @@ const objectNames = new Set(objects.map((o) => o.name));
 const profileNames = new Set(profiles.map((p) => p.name));
 
 /**
+ * Locale packs, flattened to `[locale, pack]` pairs.
+ *
+ * `stack.translations` holds ONE `TranslationBundle` keyed by locale
+ * (`{ en: {...}, 'zh-CN': {...} }`) — NOT a list of per-locale records. A
+ * `translations.find(t => t.locale === 'zh-CN')` therefore matches nothing and
+ * silently turns its test into a no-op, which is how the navigation guard
+ * below spent its life passing without asserting anything.
+ */
+const localePacks: [string, AnyRec][] = ((stack as any).translations ?? []).flatMap(
+  (bundle: AnyRec) => Object.entries(bundle) as [string, AnyRec][],
+);
+const packFor = (locale: string): AnyRec | undefined =>
+  localePacks.find(([name]) => name === locale)?.[1];
+
+/**
  * Audit columns the platform adds to every object. They are real at runtime
  * (`?sort=created_at desc` works) but never appear in the authored `fields`
  * map, so a reference to one is legitimate.
@@ -351,12 +366,13 @@ describe('navigation reaches everything the app ships', () => {
   it('every navigation node has a zh-CN label', () => {
     // The groups were translated and the leaves were not, so the sidebar read
     // half Chinese, half English.
-    const translations: AnyRec[] = (stack as any).translations ?? [];
-    const zh = translations.find((t) => t.locale === 'zh-CN' || t.name === 'zh-CN');
-    if (!zh) return; // no zh bundle in this build — nothing to assert
+    const zh = packFor('zh-CN');
+    // Assert, don't skip: the old lookup used the wrong bundle shape, found no
+    // pack, and returned early — a green test that checked nothing.
+    expect(zh, 'no zh-CN locale pack found in stack.translations').toBeTruthy();
     const bad: string[] = [];
     for (const app of apps) {
-      const nav = zh.data?.apps?.[app.name]?.navigation ?? zh.apps?.[app.name]?.navigation ?? {};
+      const nav = zh?.apps?.[app.name]?.navigation ?? {};
       for (const n of navNodes(app)) {
         if (n.id && !nav[n.id]?.label) bad.push(`${app.name}/${n.id}`);
       }
@@ -503,6 +519,28 @@ describe('list-level action references resolve', () => {
     }
     expect(bad, `dangling list action references:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
+
+  it('no rowAction repeats an action that already declares list_item placement', () => {
+    // An Action with `locations: ['list_item']` auto-injects its row-menu
+    // entry. Naming it AGAIN as a rowActions string goes through objectui's
+    // legacy path, which dispatches the string as an action TYPE — producing
+    // a second, dead menu item (issue #535 / objectstack-ai/objectui#2960).
+    const listItemActions = new Set(
+      actions.filter((a) => (a.locations ?? []).includes('list_item')).map((a) => a.name),
+    );
+    const bad: string[] = [];
+    for (const v of views) {
+      const lists = [v.list, ...Object.values(v.listViews ?? {})].filter(Boolean) as AnyRec[];
+      for (const list of lists) {
+        for (const name of list.rowActions ?? []) {
+          if (typeof name === 'string' && listItemActions.has(name)) {
+            bad.push(`view "${list.name ?? 'default'}": "${name}" duplicates its list_item auto-injection`);
+          }
+        }
+      }
+    }
+    expect(bad, `redundant string rowActions:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
 });
 
 describe('row colors and kanban groups key off real option values', () => {
@@ -552,6 +590,109 @@ describe('row colors and kanban groups key off real option values', () => {
       }
     }
     expect(bad, `broken kanban groupings:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+});
+
+describe('picklist values never reach the UI unresolved', () => {
+  /**
+   * A select field stores a VALUE (`ms`, `waiting_customer`, `existing_upgrade`)
+   * and the UI resolves it to the locale's label at render time. Every #461
+   * defect was that resolution failing, in one of two ways — a lookup that
+   * misses (the translation is keyed by something that is not an option value)
+   * or a lookup that never happens (a formula splices the stored value straight
+   * into a string). Both are invisible in review and only surface as English —
+   * or worse, `closed_won` — sitting in an otherwise-translated screen.
+   */
+  const selectOptionsOf = (objDef: AnyRec, field: string): string[] | undefined => {
+    const options = objDef.fields?.[field]?.options;
+    return Array.isArray(options) && options.length
+      ? options.map((o: AnyRec) => String(o.value))
+      : undefined;
+  };
+
+  it('option translations are keyed by option VALUE, not by English label', () => {
+    // Opportunity `type` was keyed by label ('Existing Customer - Upgrade':
+    // '老客户升级'). The resolver matches by value, so deal type rendered in
+    // English on every non-en locale while `stage`/`status` — keyed by value —
+    // translated fine, which is exactly what made it hard to spot.
+    const bad: string[] = [];
+    for (const [locale, pack] of localePacks) {
+      for (const [objName, objT] of Object.entries<AnyRec>(pack?.objects ?? {})) {
+        const objDef = objects.find((o) => o.name === objName);
+        if (!objDef) continue; // covered by the key-resolution test below
+        for (const [fieldName, fieldT] of Object.entries<AnyRec>(objT?.fields ?? {})) {
+          if (!fieldT?.options) continue;
+          const values = selectOptionsOf(objDef, fieldName);
+          if (!values) {
+            bad.push(`${locale}: ${objName}.${fieldName} translates options but the field has none`);
+            continue;
+          }
+          for (const key of Object.keys(fieldT.options)) {
+            if (!values.includes(key)) {
+              bad.push(`${locale}: ${objName}.${fieldName} option key "${key}" is not an option value`);
+            }
+          }
+        }
+      }
+    }
+    expect(bad, `option translations that resolve to nothing:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
+  it('translated object and field keys name real objects and fields', () => {
+    // A translation keyed to a renamed/removed field is dead weight that reads
+    // as coverage — the bundle looks complete while the screen stays English.
+    const bad: string[] = [];
+    for (const [locale, pack] of localePacks) {
+      for (const [objName, objT] of Object.entries<AnyRec>(pack?.objects ?? {})) {
+        if (!objectNames.has(objName)) {
+          bad.push(`${locale}: translates "${objName}", which is not a defined object`);
+          continue;
+        }
+        const known = fieldsOf(objName);
+        for (const fieldName of Object.keys(objT?.fields ?? {})) {
+          if (!known.includes(fieldName)) {
+            bad.push(`${locale}: "${objName}" has no field "${fieldName}"`);
+          }
+        }
+      }
+    }
+    expect(bad, `translations keyed to nothing:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
+  it('no formula renders a select field into its output string', () => {
+    // `full_name` = joinNonEmpty([salutation, first_name, last_name]) printed
+    // "ms Emily Davis"; opportunity `display_title` = name + " - " + stage
+    // titled deals "Enterprise Deal - closed_won". The formula language has no
+    // option-label lookup (only upper/lower), so a select simply cannot be
+    // rendered from a formula — it has to stay its own field.
+    //
+    // Only RENDERING is flagged. Branching on a select (`record.stage ==
+    // "closed_won" ? …`) never puts the value on screen and stays legal.
+    const rendersSelect = (source: string, field: string): boolean => {
+      const ref = `record\\.${field}\\b`;
+      // joinNonEmpty([...]) — every element lands in the output string.
+      for (const m of source.matchAll(/joinNonEmpty\(\s*\[([^\]]*)\]/g)) {
+        if (new RegExp(ref).test(m[1])) return true;
+      }
+      // String concatenation on either side: `" - " + record.x` / `record.x + " - "`.
+      return new RegExp(`(["']\\s*\\+\\s*${ref})|(${ref}\\s*\\+\\s*["'])`).test(source);
+    };
+
+    const bad: string[] = [];
+    for (const objDef of objects) {
+      for (const [fieldName, field] of Object.entries<AnyRec>(objDef.fields ?? {})) {
+        // `expression` is `{ dialect, source }` once the F tag is evaluated.
+        const source: unknown = field?.expression?.source ?? field?.expression;
+        if (typeof source !== 'string') continue;
+        for (const other of Object.keys(objDef.fields ?? {})) {
+          if (!selectOptionsOf(objDef, other)) continue;
+          if (rendersSelect(source, other)) {
+            bad.push(`${objDef.name}.${fieldName} renders select "${other}": ${source}`);
+          }
+        }
+      }
+    }
+    expect(bad, `formulas printing raw select values:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
 });
 
@@ -737,5 +878,81 @@ describe('page templates and record components stay inside their record context'
       }
     }
     expect(bad, `record components with no record context:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+});
+
+describe('dashboard date ranges window a field the query layer can actually compare', () => {
+  /**
+   * A dashboard `dateRange` is ANDed into EVERY widget query, so if the
+   * comparison cannot match, the whole dashboard renders zeros. That is #460:
+   * the Service dashboard windowed `crm_case.created_date` — a
+   * `Field.datetime()` — and opened with every KPI at 0 and every chart empty,
+   * with 38 cases in the system.
+   *
+   * The mechanism is a storage disagreement, not a bad preset. On SQLite,
+   * `driver-sql` 16.1.0 coerces datetime filter values to epoch-millisecond
+   * INTEGERs (`coerceFilterValue`), documenting the assumption that datetime
+   * columns hold INTEGER ms. In this app they hold ISO TEXT — including the
+   * platform's own `created_at`/`updated_at`. SQLite orders every INTEGER
+   * before every TEXT, so `datetime_col >= <int>` is true for all rows and
+   * `datetime_col <= <int>` is true for none. Measured against the running
+   * 16.1.0 console: `$gte` alone → all 38 cases, `$lte` alone → 0, both → 0,
+   * in every date format tried.
+   *
+   * `Field.date()` is unaffected (TEXT `YYYY-MM-DD` on both sides), which is
+   * why the CRM/Sales/Executive dashboards — all windowing `close_date` — show
+   * data. So the rule is about the FIELD TYPE, not the preset: a dashboard may
+   * only window a `date` field. Note this deliberately fails if someone
+   * restores the Service dashboard's `dateRange` before the driver is fixed.
+   */
+  const dashboards: AnyRec[] = (stack as any).dashboards ?? [];
+  const datasets: AnyRec[] = (stack as any).datasets ?? [];
+
+  /** Objects the dashboard's widgets aggregate over, via their datasets. */
+  const objectsBehind = (d: AnyRec): string[] => {
+    const names = new Set<string>();
+    for (const w of d.widgets ?? []) {
+      const ds = datasets.find((x) => x.name === w.dataset);
+      if (ds?.object) names.add(ds.object);
+    }
+    return [...names];
+  };
+
+  const fieldType = (objectName: string, field: string): string | undefined =>
+    objects.find((o) => o.name === objectName)?.fields?.[field]?.type;
+
+  it('no dashboard windows a datetime field', () => {
+    const bad: string[] = [];
+    for (const d of dashboards) {
+      const field = d.dateRange?.field;
+      if (!field) continue;
+      for (const obj of objectsBehind(d)) {
+        const type = fieldType(obj, field);
+        if (type === 'datetime') {
+          bad.push(
+            `${d.name}: dateRange windows ${obj}.${field}, a datetime field — ` +
+            `the $lte bound matches no rows, so every widget renders empty`,
+          );
+        }
+      }
+    }
+    expect(bad, `dashboards that will render empty:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
+  it('every dashboard dateRange field exists on the objects its widgets aggregate', () => {
+    // A range field that no underlying object defines is silently dropped or
+    // errors per widget — either way the picker cannot do what it claims.
+    const bad: string[] = [];
+    for (const d of dashboards) {
+      const field = d.dateRange?.field;
+      if (!field) continue;
+      const behind = objectsBehind(d);
+      if (!behind.length) continue;
+      const resolves = behind.filter((obj) => fieldType(obj, field) !== undefined);
+      if (!resolves.length) {
+        bad.push(`${d.name}: dateRange field "${field}" exists on none of ${behind.join(', ')}`);
+      }
+    }
+    expect(bad, `dangling dashboard date-range fields:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
 });

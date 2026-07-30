@@ -1,147 +1,149 @@
 ---
 title: Sharing & Security
-description: Who can see and edit what — org-wide defaults, role hierarchy, sharing rules, and field-level security.
+description: Who can see and edit what — org-wide defaults, positions, sharing rules, and field-level security.
 ---
 
 # Sharing & Security
 
-Sharing answers the question: *"Which records can this user see and edit?"* In HotCRM, four layers stack together to give you the answer:
+Sharing answers the question: *"Which records can this user see and edit?"* Four layers stack together to give the answer:
 
-1. **Org-Wide Defaults (OWD)** — the baseline ("by default, opportunities are private").
-2. **Role Hierarchy** — managers automatically see their team's records.
-3. **Sharing Rules** — exceptions and openings ("the EU team can see EU accounts").
-4. **Account Teams** — record-level "you're working this account with me".
+1. **Object permissions** — may this user touch this object at all? (See [Profiles](/docs/administration/profiles).)
+2. **Org-Wide Defaults (OWD)** — the record-level baseline ("opportunities are private").
+3. **Sharing Rules** — the openings ("the EU team can edit EU accounts").
+4. **Account Teams & manual shares** — record-level "you're working this one with me".
 
-Plus **Field-Level Security** for hiding sensitive fields.
+Plus **Field-Level Security** for masking sensitive fields inside a record the user *can* see.
+
+> The first layer is a gate, not a filter. If a profile does not grant the object, no OWD, sharing rule or *View All* setting can put those records back — the request is refused before sharing is ever consulted.
 
 ## Layer 1 — Org-Wide Defaults
 
-OWD is the *most restrictive* setting for each object. Everything else either widens or maintains access.
+OWD is the *most restrictive* setting for each object. Everything else widens it.
 
-| Object | Default OWD | Why |
+| Object | OWD | Why |
 | --- | --- | --- |
 | Lead | Private | Reps work their own leads |
 | Account | Private | Account ownership matters |
 | Contact | Controlled by Parent (Account) | Visibility follows the account |
 | Opportunity | Private | Sensitive deal data |
-| Quote | Controlled by Parent (Opportunity) | Follows the deal |
+| Opportunity Line Item | Controlled by Parent (Opportunity) | A product line is part of the deal |
+| Quote | Private | Pricing is owner's business |
+| Quote Line Item | Controlled by Parent (Quote) | A line is part of the quote |
 | Contract | Private | Sensitive commercials |
+| Case | Private | An agent's queue is their own; escalations are shared |
+| Task | Private | Personal activity items |
+| Forecast | Private | A snapshot belongs to its owner; managers hold *View All* |
 | Product | Public Read-Only | Everyone sees the catalog |
-| Case | Public Read/Write | Anyone in service can pick up |
 | Campaign | Public Read-Only | Marketing creates, sales sees |
-| Campaign Member | Controlled by Parent (Campaign) | Follows the campaign |
-| Task / Event | Private | Personal activity items |
+| Campaign Member | Controlled by Parent (Campaign) | Membership follows the campaign |
+| Competitor | Public Read-Only | Shared battlecard library |
+| Knowledge Article | Public Read-Only | The knowledge base is for everyone internally; agents author it |
 
 **Options for OWD**: Private / Public Read-Only / Public Read/Write / Controlled by Parent.
 
-⚠️ **Lowering OWD is a one-way door** for safety — going from Private → Public is easy; going back may require sharing rule cleanup.
+### Controlled by Parent, in practice
 
-## Layer 2 — Role Hierarchy
+For the four parent-derived objects above, there is nothing to configure per user: access is *computed*.
 
-The role hierarchy is the **org chart** for visibility. A manager automatically sees everything their reports own.
+- **Read** — you see the rows whose parent you can see. A rep opening an account they reached through a territory rule also gets its contacts; the "Products" list on an opportunity shows the same lines the deal shows.
+- **Write** — adding, changing or removing a row requires **edit** access to the parent. You cannot add a line to someone else's quote, and marketing enrolling a campaign member needs edit on that campaign.
 
-HotCRM ships with a 10-role default that maps cleanly onto a typical Sales / Service / Marketing org under an Executive parent:
+Because access is derived, ownership of the child row is irrelevant — a quote line the quote-generation flow created is as visible to the quote's owner as one they typed themselves.
+
+## Layer 2 — Positions
+
+A **position** is a flat group used to distribute access. HotCRM ships twelve:
 
 ```
-Executive
- ├── Sales Director
- │    └── Sales Manager
- │         └── Sales Representative
- ├── Service Director
- │    └── Service Manager
- │         └── Service Agent
- └── Marketing Director
-      └── Marketing Manager
-           └── Marketing User
+executive
+sales_director      sales_manager      sales_rep
+service_director    service_manager    service_agent
+marketing_director  marketing_manager  marketing_user
+na_sales_team       eu_sales_team          (territory groupings)
 ```
 
-A *Sales Director* automatically sees every opportunity owned by anyone below them. They do not see Service or Marketing records (those are siblings, not children). To split a region into multiple teams (e.g. *Sales Manager — East* and *Sales Manager — West*), clone the **Sales Manager** node.
+Positions are **flat by design** — there is no hierarchy and **nothing rolls up**. A sales director does not inherit a sales manager's access; each rung that needs a record is named by its own sharing rule. That is why several rules below come in pairs.
 
-Configure roles in **Setup → Roles**.
+Assign positions in **Setup → Users**; a user may hold more than one.
 
 ## Layer 3 — Sharing Rules
 
-Sharing rules **open up** access beyond OWD + hierarchy. They answer cases like:
-
-- *"All North America reps can see all North America accounts, even outside their hierarchy."*
-- *"The Customer Success team can read all active customer accounts."*
-- *"Finance can read all closed-won opportunities."*
+Sharing rules **open up** record access beyond the OWD baseline.
 
 ### Two flavours
 
-| Type | What it shares with | Example |
+| Type | What it shares | Example |
 | --- | --- | --- |
-| **Criteria-based** | Anyone matching a record filter | *"Accounts where Region = EU"* → shared with the EU public group |
-| **Owner-based** | All records owned by users in a group | *"All records owned by SDRs"* → shared with the AE group |
+| **Criteria-based** | Every record matching a filter | *"Accounts billing to DE/FR/…"* → shared with the EU team |
+| **Owner-based** | Every record owned by a group | *"Records owned by SDRs"* → shared with the AE group |
+
+Criteria-based rules are the enforced flavour: matching records materialise real share grants.
 
 ### Built-in sharing rules
 
-HotCRM includes these out-of-the-box:
+| Rule | Object | Grants | To |
+| --- | --- | --- | --- |
+| Account Team Sharing | Account | Edit | `sales_manager` — active customer accounts |
+| North America Territory | Account | Edit | `na_sales_team` — accounts billing to US/CA/MX |
+| Europe Territory | Account | Edit | `eu_sales_team` — accounts billing to UK/DE/FR/IT/ES |
+| Opportunity Sales Team Sharing | Opportunity | Read | `sales_director` — open deals ≥ $100,000 |
+| Large Open Deals — Executive | Opportunity | Read | `executive` — the same deals, one rung up |
+| Escalated Cases Sharing | Case | Edit | `service_manager` — open critical cases |
+| Escalated Cases — Service Director | Case | Read | `service_director` — the same cases, one rung up |
+| Live Campaigns — Marketing Manager | Campaign | Edit | `marketing_manager` — planning / in-progress campaigns |
+| Live Campaigns — Marketing Director | Campaign | Edit | `marketing_director` — the same campaigns |
 
-- **VIP accounts** — accounts with tier = *Platinum* are shared read-only with all execs.
-- **Active contracts** — *Activated* contracts are shared read-only with the Customer Success team.
-- **Won opportunities** — *Closed Won* opportunities are shared read-only with the Finance team.
-- **Public products** — products are read-only to all users.
+Create your own in **Setup → Sharing Settings**.
 
-Create new rules in **Setup → Sharing Settings**.
+## Layer 4 — Account Teams & manual shares
 
-## Layer 4 — Account Teams
-
-For accounts worked by a **pod** (AE + SDR + SE + CSM), the **account team** is a per-record sharing list. Each member can have **Read** or **Read/Write** on the account and its child records.
-
-Configure team templates in **Setup → Account Teams** so adding a new "enterprise pod" account auto-assigns the team.
+For accounts worked by a pod (AE + SDR + SE + CSM), the **account team** is a per-record sharing list; each member gets **Read** or **Read/Write** on the account, and the account's parent-derived children follow.
 
 ## How the layers combine
 
-The user sees a record if **any** of these is true:
+A user sees a record when **all** of the following hold: their profile grants **read on the object**, and **any** of these is true:
 
 1. They **own** the record.
-2. Their **profile** grants *View All* on the object.
-3. The **OWD** is Public (or higher).
-4. A **sharing rule** grants them access.
-5. They're **above** the owner in the role hierarchy.
-6. They're on the **account team** (for account/opportunity/contract/case).
-7. The record is **shared manually** with them.
+2. Their profile grants **View All** on the object.
+3. The **OWD** is Public Read-Only or wider.
+4. The record's **parent** is visible to them (Controlled by Parent).
+5. A **sharing rule** matches the record and one of their positions.
+6. They're on the **account team**, or the record was **shared manually** with them.
 
-If none apply → no access. (And if no access, the record is invisible — not "you don't have permission", just *gone* from search and lists.)
+If none apply, the record is simply *gone* from lists, search and reports — not an error message.
+
+### Private opportunities
+
+`Private` on an opportunity is enforced on top of everything above: a deal a user flags **Private** stays visible to its owner (and to administrators) only, even for profiles that otherwise hold org-wide opportunity read, such as Sales Manager and Marketing User. Use it for board-level or acquisition-sensitive deals.
 
 ## Field-Level Security (FLS)
 
-FLS controls **which fields** within a record a profile can see and edit.
+FLS controls **which fields** inside a visible record a profile can see and edit — for example account **health score** is readable to everyone who can see the account but only the sales manager sets it, and **case internal notes** are hidden from sales reps entirely. The shipped masks are listed in [Profiles](/docs/administration/profiles#field-level-security).
 
-Common uses:
-
-- Hide **commission %** from reps (only managers see it).
-- Hide **birthday** from non-HR users.
-- Make **revenue range** read-only for everyone except finance.
-
-Configure in **Setup → Object → Fields → Field-Level Security**.
-
-FLS is enforced **everywhere** — list views, reports, API, AI Copilot. If a field is hidden, the Copilot can't reference it either.
+FLS is enforced **everywhere** — list views, reports, the API and the AI Copilot. A masked field also cannot be used as a filter, sort or grouping.
 
 ## Sharing for the AI Copilot
 
-The Copilot acts on behalf of the user — it sees exactly what the user sees, no more. This means:
+The Copilot acts on behalf of the user — it sees exactly what the user sees, no more:
 
-- Sharing rules apply automatically.
-- FLS applies automatically.
+- Object permissions, sharing and FLS all apply automatically.
 - An admin running the Copilot will see more than a rep — by design.
 
-There is no "AI bypass" — the Copilot cannot leak data the user can't already see.
+There is no "AI bypass".
 
 ## Tips for admins
 
-- ✅ **Start restrictive** — Private OWD on Lead/Account/Opportunity. Open up via sharing rules as needed.
-- ✅ **Audit sharing rules quarterly** — they accumulate; prune what's no longer needed.
-- ✅ **Use Public Groups** to make sharing rules manageable ("share with EU team" not "share with these 47 users").
-- ✅ Don't over-use **View All** in profiles — it's a sledgehammer that bypasses every sharing rule.
+- ✅ **Check the object grant first.** An empty related list or a nav item that errors is nearly always a missing object permission, not a sharing problem.
+- ✅ **Start restrictive** — Private OWD on Lead / Account / Opportunity, then open up with sharing rules.
+- ✅ **Remember positions are flat.** Granting the manager does not grant the director; author both.
+- ✅ **Audit sharing rules quarterly** — they accumulate.
+- ✅ Don't over-use **View All** — it's a sledgehammer that bypasses every sharing rule.
 
 ## Tips for users
 
 If you think you should be able to see a record and can't:
 
-1. Check **who owns it** (ask in chat).
-2. Check **whether you're on the account team** (open the account → Team tab).
-3. Ask your admin if a **sharing rule** should be added.
-
-Often the cleanest fix is to be added to the account team rather than expanding a sharing rule for everyone.
+1. Check **who owns it**.
+2. Check whether you're on the **account team** (open the account → Team tab).
+3. Check whether the deal is flagged **Private**.
+4. Ask your admin whether a **sharing rule** should cover your position.

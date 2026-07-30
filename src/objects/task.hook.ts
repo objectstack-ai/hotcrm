@@ -8,7 +8,8 @@ import type { HookApi } from './_hook-api';
  *
  * - On `completed` transition, stamps `completed_date` and `progress_percent=100`.
  * - Warns when `reminder_date` is after `due_date`.
- * - Bubbles `last_activity_date` to the polymorphic parent (account/opportunity/lead).
+ * - Bubbles activity to the polymorphic parent (account `last_activity_date`,
+ *   lead `last_contacted_date`).
  */
 
 const taskValidation: Hook = {
@@ -22,10 +23,9 @@ const taskValidation: Hook = {
     const previous = ctx.previous;
 
     // Land `reminder_sent` as a real boolean on insert, never NULL. The
-    // task_due_reminder sweep filters `reminder_sent != true`, and SQL's
-    // three-valued logic means NULL rows never match `!= true` — so without
-    // this, freshly-created tasks (column defaulted at the schema layer but
-    // stored NULL) would never be picked up by the reminder sweep.
+    // task_due_reminder sweep de-dups on `reminder_date` (cleared after each
+    // send), not on this flag — but keep it a real boolean so the audit trail
+    // and any future `!= true` filter behave under SQL three-valued logic.
     if (!previous && input.reminder_sent == null) {
       input.reminder_sent = false;
     }
@@ -44,7 +44,6 @@ const taskValidation: Hook = {
     if (input.status === 'completed' && previous?.status !== 'completed') {
       if (!input.completed_date) input.completed_date = new Date().toISOString();
       if (typeof input.progress_percent !== 'number') input.progress_percent = 100;
-      input.is_completed = true;
     }
 
     // Derived flags (migrated from removed `set_completed_flag` / `check_overdue`
@@ -69,7 +68,7 @@ const taskValidation: Hook = {
       (typeof input.due_date === 'string' && input.due_date) ||
       (typeof previous?.due_date === 'string' && (previous.due_date as string)) ||
       undefined;
-    if (reminder && due && reminder.slice(0, 10) > due) {
+    if (reminder && due && reminder.slice(0, 10) > due.slice(0, 10)) {
       throw new Error(
         `Reminder (${reminder}) is after the due date (${due}); reminders should fire before the deadline.`,
       );
@@ -209,10 +208,17 @@ const taskBubble: Hook = {
       undefined;
     if (!targetId) return;
 
-    // Only bubble to objects that have a `last_activity_date` field (account/lead).
-    if (targetType !== 'crm_account' && targetType !== 'crm_lead') return;
+    // Only bubble to objects that carry an activity timestamp, and use each
+    // object's own field: `crm_lead` has no `last_activity_date` — its activity
+    // signal is `last_contacted_date` (a datetime, so pass full ISO).
+    const activityWriteByType: Record<string, Record<string, string>> = {
+      crm_account: { last_activity_date: today },
+      crm_lead: { last_contacted_date: new Date().toISOString() },
+    };
+    const activityWrite = activityWriteByType[targetType];
+    if (!activityWrite) return;
     try {
-      await api.object(targetType).update(targetId, { last_activity_date: today });
+      await api.object(targetType).update(targetId, activityWrite);
     } catch {
       // Best-effort activity bubble; never break the parent write. No `console`
       // in the L2 hook sandbox (would throw ReferenceError — cf. #471).

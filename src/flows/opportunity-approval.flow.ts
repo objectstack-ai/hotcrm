@@ -53,7 +53,13 @@ export const OpportunityApprovalFlow: Flow = {
         // Null-tolerant: rows inserted before approval_status had a field-level
         // defaultValue (e.g. flow-created opportunities) carry null, which must
         // still enter approval.
-        condition: 'record.amount > 100000 && (record.approval_status == "not_required" || record.approval_status == null)',
+        // Stage guard: a settled deal must never (re-)enter approval — the
+        // freeze hook rejects approval-status writes on closed records, so
+        // without this guard the flow opened a locked approval request it
+        // could never resolve (lockRecord held the closed record hostage).
+        condition:
+          'record.amount > 100000 && (record.approval_status == "not_required" || record.approval_status == null)'
+          + ' && record.stage != "closed_won" && record.stage != "closed_lost"',
       },
     },
     {
@@ -185,4 +191,26 @@ export const OpportunityApprovalFlow: Flow = {
     { id: 'e11', source: 'mark_rejected', target: 'notify_rejected', type: 'default' },
     { id: 'e12', source: 'notify_rejected', target: 'end', type: 'default' },
   ],
+};
+
+/**
+ * Insert-time twin of `opportunity_approval`: a record-change flow binds
+ * exactly one hook event, so the afterUpdate flow above never saw
+ * opportunities BORN over the threshold — flow-created deals (contract
+ * renewals, lead conversion) and API inserts skipped approval entirely,
+ * which is the exact population the start condition's null-tolerance was
+ * written for. Same nodes/edges, only the start node is rebound to
+ * afterInsert (mirrors `CaseEscalationOnCreateFlow`). The stage guard
+ * carries over, keeping seeded/imported closed deals out of approval.
+ */
+export const OpportunityApprovalOnCreateFlow: Flow = {
+  ...OpportunityApprovalFlow,
+  name: 'opportunity_approval_on_create',
+  label: 'Large Deal Approval (on create)',
+  description: 'Approval intake for opportunities created above the threshold (insert-time twin of opportunity_approval).',
+  nodes: OpportunityApprovalFlow.nodes.map((n) =>
+    n.id === 'start'
+      ? { ...n, config: { ...n.config, triggerType: 'record-after-create' } }
+      : n,
+  ),
 };

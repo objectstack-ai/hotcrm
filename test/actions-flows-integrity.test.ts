@@ -91,6 +91,37 @@ describe('lead_conversion flow contracts', () => {
     const json = JSON.stringify(f);
     expect(json, 'stale {accountId.id} ref — accountId is now a bare id string').not.toContain('{accountId.id}');
   });
+
+  it('every select value copied verbatim from the lead is legal on the target object (#531)', () => {
+    // The flow transplants `{leadRecord.X}` onto the Account/Opportunity it
+    // creates. When the two objects declared their own picklists, half the
+    // Lead industries (`media`, `logistics`, …) were illegal enum values on
+    // crm_account and conversion died in create_account (#490/#531). The
+    // vocabularies are unified in src/objects/_picklists.ts; this pins the
+    // superset relation itself so drift in either object re-fails CI.
+    const leadFields = objects.find((o) => o.name === 'crm_lead')?.fields ?? {};
+    const bad: string[] = [];
+    for (const node of f?.nodes ?? []) {
+      if (node.type !== 'create_record') continue;
+      const targetObject: string = node.config?.objectName ?? '';
+      const targetFields = objects.find((o) => o.name === targetObject)?.fields ?? {};
+      for (const [target, template] of Object.entries(node.config?.fields ?? {})) {
+        const src = typeof template === 'string' && /^\{leadRecord\.(\w+)\}$/.exec(template)?.[1];
+        if (!src) continue;
+        const srcOptions = leadFields[src]?.options;
+        const dstOptions = targetFields[target]?.options;
+        // Only select→select copies carry enum constraints on both sides.
+        if (!Array.isArray(srcOptions) || !Array.isArray(dstOptions)) continue;
+        const legal = new Set(dstOptions.map((o: AnyRec) => o.value));
+        for (const o of srcOptions) {
+          if (!legal.has(o.value)) {
+            bad.push(`${node.id}: crm_lead.${src} value "${o.value}" is not a ${targetObject}.${target} option`);
+          }
+        }
+      }
+    }
+    expect(bad, bad.join('\n')).toEqual([]);
+  });
 });
 
 describe('notify recipients resolve to real audiences', () => {

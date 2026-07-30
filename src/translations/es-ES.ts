@@ -294,7 +294,7 @@ export const esES: TranslationData = {
             cold_call: 'Llamada en Frío', email_campaign: 'Campaña de Email', other: 'Otro',
           },
         },
-        crm_competitors: { label: 'Competidores' },
+        competitors: { label: 'Competidores' },
         crm_campaign: { label: 'Campaña' },
         days_in_stage: { label: 'Días en Etapa Actual' },
         is_private: { label: 'Privado' },
@@ -549,34 +549,6 @@ export const esES: TranslationData = {
       },
     },
 
-    crm_competitor: {
-      label: 'Competidor',
-      pluralLabel: 'Competidores',
-      description: 'Competidores que encontramos en las oportunidades, con notas de batalla',
-      fields: {
-        name: { label: 'Nombre del Competidor' },
-        website: { label: 'Sitio Web' },
-        main_products: { label: 'Productos Principales' },
-        threat_level: {
-          label: 'Nivel de Amenaza',
-          options: { low: 'Bajo', medium: 'Medio', high: 'Alto' },
-        },
-        our_advantages: { label: 'Nuestras Ventajas' },
-        our_disadvantages: { label: 'Nuestras Desventajas' },
-        notes: { label: 'Notas' },
-        owner: { label: 'Responsable' },
-        is_active: { label: 'Activo' },
-      },
-      _views: {
-        all_competitors: { label: 'Todos los Competidores' },
-        high_threat: { label: 'Amenaza Alta' },
-      },
-      _sections: {
-        basic: { label: 'Información Básica' },
-        battlecard: { label: 'Tarjeta de Batalla' },
-      },
-    },
-
     crm_campaign_member: {
       label: 'Miembro de Campaña',
       pluralLabel: 'Miembros de Campaña',
@@ -731,6 +703,7 @@ export const esES: TranslationData = {
         pipeline_by_forecast_category: { title: 'Pipeline por categoría de pronóstico', description: 'Pipeline abierto agrupado por categoría de pronóstico de ventas' },
         lead_source_breakdown: { title: 'Origen del prospecto', description: 'De dónde proviene nuestro pipeline' },
         open_pipeline_by_owner: { title: 'Pipeline abierto por responsable', description: 'Valor del pipeline en curso, número de negocios y probabilidad media de cierre por comercial' },
+        quota_attainment_by_rep: { title: 'Cumplimiento de cuota por representante', description: 'Cuota, ingresos cerrados y cumplimiento por representante, según instantáneas de pronóstico' },
         pipeline_stage_by_source: { title: 'Pipeline por Etapa × Origen', description: 'Tabla cruzada del importe de oportunidades abiertas por etapa y origen' },
       },
     },
@@ -747,7 +720,7 @@ export const esES: TranslationData = {
         cases_by_origin: { title: 'Casos por origen', description: 'De dónde provienen nuestros casos' },
         daily_case_volume: { title: 'Volumen diario de casos', description: 'Casos nuevos creados en los últimos 30 días' },
         sla_compliance_gauge: { title: 'Cumplimiento de SLA', description: 'Porcentaje de casos resueltos dentro del SLA en este período' },
-        my_open_cases_by_priority: { title: 'Mis casos abiertos por prioridad', description: 'Tus casos abiertos y su tasa de incumplimiento de SLA, desglosados por prioridad' },
+        open_cases_by_priority: { title: 'Casos abiertos por prioridad', description: 'Casos abiertos y su tasa de incumplimiento de SLA, desglosados por prioridad' },
       },
     },
   },

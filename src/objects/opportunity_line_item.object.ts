@@ -18,8 +18,19 @@ export const OpportunityLineItem = ObjectSchema.create({
   icon: 'package',
   description: 'A single product line on an Opportunity',
 
-  // ADR-0090 D1/D7: OWD is an authored decision. Follows the opportunity owner; lookup child (not master-detail).
-  sharingModel: 'private',
+  // ADR-0090 D1/D7: OWD is an authored decision. A line item has no meaning
+  // apart from its deal, so its record access DERIVES from the opportunity
+  // (ADR-0055): reads are filtered to line items whose `crm_opportunity` the
+  // caller can read, and any write requires edit access to that opportunity.
+  // ADR-0055's relation resolver accepts a REQUIRED LOOKUP as the parent, so
+  // this works without converting the relationship to master-detail.
+  //
+  // It was `private` before (#488), which was the wrong baseline twice over:
+  // this object has no owner field of its own, so "private" fell back to the
+  // platform's auto-stamped `owner_id` (whoever inserted the row) — the rep who
+  // owns the deal could not see a line the quote-generation flow or their
+  // manager added to it.
+  sharingModel: 'controlled_by_parent',
 
   // @objectstack 12: the dead object-level `enable.trackHistory` flag was
   // removed (ADR-0049) — per-field history is opt-in via `Field.trackHistory`

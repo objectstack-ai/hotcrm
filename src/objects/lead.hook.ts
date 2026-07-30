@@ -11,34 +11,11 @@ import type { HookApi } from './_hook-api';
  * - When status flips to `qualified`, schedules a follow-up `crm_task` for the current user.
  */
 
-const HIGH_VALUE_INDUSTRIES = new Set([
-  'technology',
-  'finance',
-  'healthcare',
-]);
-
-const SENIOR_TITLE_PATTERN = /\b(ceo|cto|cfo|cio|coo|founder|vp|vice president|director|head of)\b/i;
-
-function computeRating(input: Record<string, unknown>): number {
-  let score = 0;
-  const email = typeof input.email === 'string' ? input.email : '';
-  const phone = typeof input.phone === 'string' ? input.phone : '';
-  const title = typeof input.title === 'string' ? input.title : '';
-  const industry = typeof input.industry === 'string' ? input.industry : '';
-  const employees = typeof input.number_of_employees === 'number' ? input.number_of_employees : 0;
-  const revenue = typeof input.annual_revenue === 'number' ? input.annual_revenue : 0;
-
-  if (email && !/(gmail|yahoo|hotmail|outlook|qq|163)\.com$/i.test(email)) score += 1;
-  if (phone.length > 0) score += 0.5;
-  if (SENIOR_TITLE_PATTERN.test(title)) score += 1.5;
-  if (HIGH_VALUE_INDUSTRIES.has(industry)) score += 1;
-  if (employees >= 200) score += 0.5;
-  if (revenue >= 10_000_000) score += 0.5;
-
-  // Cap at 5, floor at 1, round to half.
-  const clamped = Math.max(1, Math.min(5, score));
-  return Math.round(clamped * 2) / 2;
-}
+// NB: the scoring constants + computeRating live INSIDE lead_automation's
+// handler — L2 hook bodies run body-only in the QuickJS sandbox, so module
+// scope is not available at runtime. A module-level copy previously lived
+// here too; it was dead code that silently diverged from the copy that
+// actually runs, so it was removed. Tune the weights in the handler.
 
 /**
  * Lead auto-assignment (load-balanced round-robin).
@@ -57,12 +34,18 @@ function computeRating(input: Record<string, unknown>): number {
  * Runs beforeInsert so the downstream lead_assignment flow (afterInsert) sees
  * the assigned owner and routes its SLA alert to that rep. Territory-based
  * routing is a future extension on top of this pool query.
+ *
+ * Priority 250 — hooks run in ASCENDING priority order, so this must run
+ * AFTER `lead_automation` (200): its guest branch strips a client-spoofed
+ * `owner` from anonymous Web-to-Lead submissions. At the old priority 150
+ * this hook assigned an owner first and the guest strip then deleted it,
+ * landing every web-to-lead ownerless — the exact case this hook exists for.
  */
 const leadAutoAssignHook: Hook = {
   name: 'lead_auto_assign',
   object: 'crm_lead',
   events: ['beforeInsert'],
-  priority: 150,
+  priority: 250,
   description: 'Assign ownerless new leads to the least-loaded sales rep.',
   handler: async (ctx: HookContext) => {
     const { input } = ctx;
@@ -140,8 +123,10 @@ const leadHook: Hook = {
       if (HIGH_VALUE_INDUSTRIES.has(industry)) score += 1;
       if (employees >= 200) score += 0.5;
       if (revenue >= 10_000_000) score += 0.5;
+      // Cap at 5, floor at 1, round to WHOLE stars — `rating` is a 1-5 star
+      // field; half values rendered inconsistently in the star widget.
       const clamped = Math.max(1, Math.min(5, score));
-      return Math.round(clamped * 2) / 2;
+      return Math.round(clamped);
     }
 
     if (event === 'beforeInsert') {
@@ -169,10 +154,31 @@ const leadHook: Hook = {
       }
     }
 
-    if (event === 'beforeUpdate') {
+    // Converted-lead lock — USER edits only (`ctx.user?.id` is this repo's
+    // system-write signal, cf. opportunity/quote/account hooks): a blanket
+    // throw also rejected system writes (demo-bootstrap owner claims, flow
+    // backfills) and blocked ALL fields, far beyond the schema's own
+    // `cannot_edit_converted` validation (identity fields only). Narrative
+    // notes and framework-managed columns stay editable; identity and
+    // conversion fields stay locked.
+    if (event === 'beforeUpdate' && ctx.user?.id) {
       const previous = ctx.previous;
-      if (previous?.is_converted === true || previous?.status === 'converted') {
-        throw new Error('Cannot edit a converted lead. Make changes on the converted records instead.');
+      const wasConverted = previous?.is_converted === true || previous?.status === 'converted';
+      if (wasConverted) {
+        const ALLOWED = new Set([
+          'description', 'notes',
+          // Framework-managed / system columns (cf. opportunity.hook.ts).
+          'id', 'owner', 'owner_id', 'created_at', 'updated_at',
+          'created_by', 'updated_by', 'space_id', 'organization_id', 'org_id', 'version',
+        ]);
+        const violating = Object.keys(input).filter(
+          (k) => !ALLOWED.has(k) && input[k] !== previous?.[k],
+        );
+        if (violating.length > 0) {
+          throw new Error(
+            `Cannot edit a converted lead (attempted: ${violating.join(', ')}). Make changes on the converted records instead.`,
+          );
+        }
       }
     }
 

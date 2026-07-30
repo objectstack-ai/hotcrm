@@ -43,6 +43,11 @@ const opportunityValidationHook: Hook = {
       'id', 'owner', 'owner_id', 'created_at', 'updated_at',
       'created_by', 'updated_by', 'space_id', 'organization_id', 'org_id', 'version',
     ]);
+    // Approval verdicts must be allowed to land even if the deal closes while
+    // the request is in flight — the opportunity_approval flow writes these
+    // via the user-context resume, and rejecting them left the record locked
+    // with a permanently pending approval.
+    const APPROVAL_FIELDS = new Set(['approval_status', 'approved_date']);
     // Stage → forecast category (migrated from the removed
     // `set_forecast_category_by_stage` object workflow — 7.7 dropped workflows[]).
     const STAGE_FORECAST: Record<string, string> = {
@@ -74,7 +79,7 @@ const opportunityValidationHook: Hook = {
       const isClosed = prevStage === 'closed_won' || prevStage === 'closed_lost';
       if (isClosed) {
         const violating = Object.keys(input).filter(
-          (k) => !NARRATIVE_FIELDS.has(k) && !SYSTEM_FIELDS.has(k) && input[k] !== previous[k],
+          (k) => !NARRATIVE_FIELDS.has(k) && !SYSTEM_FIELDS.has(k) && !APPROVAL_FIELDS.has(k) && input[k] !== previous[k],
         );
         if (violating.length > 0) {
           throw new Error(
@@ -114,6 +119,12 @@ const opportunityValidationHook: Hook = {
       // Stamp close_date when transitioning into closed_won
       if (input.stage === 'closed_won' && previous.stage !== 'closed_won' && !input.close_date) {
         input.close_date = new Date().toISOString().slice(0, 10);
+      }
+      // Reset the stage-age counter on any stage change so a deal that
+      // advances stops matching the stagnation sweep. (Readonly fields are
+      // writable from before-hooks via input mutation.)
+      if (typeof input.stage === 'string' && input.stage !== previous.stage) {
+        input.days_in_stage = 0;
       }
     }
   },

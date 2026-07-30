@@ -1,7 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { defineStack } from '@objectstack/spec';
-import * as cubes from './src/cubes/index.js';
 
 import * as objects from './src/objects/index.js';
 import * as actions from './src/actions/index.js';
@@ -19,8 +18,9 @@ import { CrmSeedData } from './src/data/index.js';
 
 import {
   AccountTeamSharingRule, TerritorySharingRules,
-  OpportunitySalesSharingRule,
-  CaseEscalationSharingRule,
+  OpportunitySalesSharingRule, OpportunityExecutiveSharingRule,
+  CaseEscalationSharingRule, CaseDirectorSharingRule,
+  CampaignLeadershipSharingRules,
   CrmPositions,
 } from './src/sharing/index.js';
 
@@ -34,6 +34,14 @@ export default defineStack({
     type: 'app',
     name: 'HotCRM',
     description: 'AI-Native CRM for the ObjectStack marketplace — Accounts, Contacts, Leads, Opportunities, Cases, Knowledge, Forecasts, Campaigns, Contracts.',
+    // ADR-0087 protocol handshake (ADR-0025 §3.2): the metadata/runtime
+    // protocol major this app's metadata is authored against. Only the major
+    // participates in the check — a runtime on a different major refuses the
+    // load with a structured OS_PROTOCOL_INCOMPATIBLE diagnostic (naming the
+    // `objectstack migrate meta` replay) instead of failing deep in a schema
+    // parse. Bump together with `specVersion` on every platform upgrade
+    // (docs/MAINTENANCE.md §3).
+    engines: { protocol: '^16.0.0' },
   },
 
   // ─── Platform capabilities this app needs ─────────────────────────
@@ -84,9 +92,11 @@ export default defineStack({
   views: Object.values(views),
   pages: Object.values(pages),
   // Approvals are modeled as `record_change` flows with `approval` nodes
-  // (ADR-0019); see src/flows/opportunity-discount-approval.flow.ts. The
+  // (ADR-0019); see src/flows/opportunity-approval.flow.ts. The
   // standalone `approvals` stack field was removed in ObjectStack 7.4.
-  analyticsCubes: Object.values(cubes),
+  // No `analyticsCubes`: datasets (ADR-0021) are the semantic layer — the
+  // analytics service compiles each dataset into its cube internally, and a
+  // second hand-written cube layer only duplicates and drifts.
 
   hooks: allHooks,
 
@@ -104,8 +114,11 @@ export default defineStack({
   sharingRules: [
     AccountTeamSharingRule,
     OpportunitySalesSharingRule,
+    OpportunityExecutiveSharingRule,
     CaseEscalationSharingRule,
+    CaseDirectorSharingRule,
     ...TerritorySharingRules,
+    ...CampaignLeadershipSharingRules,
   ],
   // ADR-0090 D3: positions are flat capability-distribution groups — the v1
   // role hierarchy's parent links are gone (hierarchy belongs to the

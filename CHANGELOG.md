@@ -4,18 +4,34 @@ All notable changes to HotCRM are documented in this file. Format follows [Keep 
 
 ## [Unreleased]
 
-Fixes [#490](https://github.com/objectstack-ai/hotcrm/issues/490) — picklist value sets had diverged across objects, and the seed data contradicted the schemas and hooks.
+Everything merged after the 2.2.2 tag. Not yet versioned or published.
+
+### Changed
+
+- **ObjectStack platform → 16.1.0 stable** across all `@objectstack/*` packages (from the 16.0.0-rc.1 line pinned in 2.2.0). [#465](https://github.com/objectstack-ai/hotcrm/pull/465)
+- CI: bump `actions/checkout` 4 → 7 ([#422](https://github.com/objectstack-ai/hotcrm/pull/422)) and `actions/setup-node` 4 → 6 ([#421](https://github.com/objectstack-ai/hotcrm/pull/421)).
+- Docs: README hero states HotCRM's size in tokens ([#483](https://github.com/objectstack-ai/hotcrm/pull/483)); drifted README counts fixed ([#466](https://github.com/objectstack-ai/hotcrm/pull/466)).
+
+### Added
+
+- **Lookup/global search plus the P1 CPQ & intake surfaces.** [#468](https://github.com/objectstack-ai/hotcrm/pull/468)
+- **Rep work queues**, and the "My Open Deals" view fixed along the way. [#485](https://github.com/objectstack-ai/hotcrm/pull/485)
+- Navigation entry points so every shipped capability is reachable in-app. [#482](https://github.com/objectstack-ai/hotcrm/pull/482)
+- Flow runtime test harnesses: `lead_conversion` ([#469](https://github.com/objectstack-ai/hotcrm/pull/469)) and `quote_generation` ([#470](https://github.com/objectstack-ai/hotcrm/pull/470)).
+
+### Added
+
+- **`engines.protocol` compatibility range declared ([#529](https://github.com/objectstack-ai/hotcrm/issues/529)).** The app never declared the metadata/runtime protocol range it is authored against, so a newer runtime loaded it *unchecked* — ObjectStack 17.0 warns `package 'app.objectstack.hotcrm' declares no engines.protocol range; loading under protocol 17.0.0 without a compatibility check (ADR-0087)`. The stack manifest in [`objectstack.config.ts`](objectstack.config.ts) (the manifest the ADR-0087 load-time handshake actually reads) and [`objectstack.manifest.json`](objectstack.manifest.json) now both declare `engines.protocol: "^16.0.0"`, matching the installed `@objectstack/*` 16.x line. A runtime on a different protocol major now refuses the load up front with the structured `OS_PROTOCOL_INCOMPATIBLE` diagnostic (naming the `objectstack migrate meta` replay command) instead of failing deep in a schema parse. The platform-upgrade checklist ([docs/MAINTENANCE.md](docs/MAINTENANCE.md) §3) now includes bumping this range alongside `specVersion`.
 
 ### Fixed
 
-- **Same-named picklists now share one canonical value set ([src/objects/_picklists.ts](src/objects/_picklists.ts)).** `lead_source` (12 values on Lead vs 6 on Opportunity vs 5 on Contact), `industry` (15 on Lead vs 6 on Account), `salutation` (Contact-only `prof`), and `payment_terms` (Quote-only `due_on_receipt`) each had per-object copies that drifted independently — so the `lead_conversion` flow's verbatim copies (`leadRecord.industry` → `crm_account.industry`, `leadRecord.lead_source` → `crm_opportunity.lead_source`) produced illegal enum values on the created records for every Lead-only value (`logistics`, `energy`, `webinar`, `paid_search`, …), and seeded leads carry exactly those values. All declarations now spread the shared superset from `_picklists.ts`, so cross-object copies are legal by construction. Inline re-declarations in [`schedule-followup.flow.ts`](src/flows/schedule-followup.flow.ts) (Task `type` copy missing `other`) and [`opportunity.actions.ts`](src/actions/opportunity.actions.ts) (hand-copied 7-stage list) now render from the same source. Option label translations for the widened sets synced across all 4 locales where option maps exist.
-- **Seed data no longer contradicts schemas and hooks ([src/data/index.ts](src/data/index.ts)).** The seed loader writes with `skipTriggers: true`, so hooks never recompute derived fields on seed rows — every seeded value of a hook-owned field must therefore match what the hook would compute, and many didn't:
-  - Seeded tasks set `related_to_account/opportunity/case` without `related_to_type`; the Related tab and `task.hook`'s activity bubble need both halves, so the links were invisible. All parented rows now carry the type half (and the three orphaned demo tasks got their natural account parent). Hook-derived `priority_rank` (queue-sort ordinal) and the completed row's `is_completed`/`progress_percent` are seeded to match hook output.
-  - Autonumber fields are no longer hand-seeded: `case_number` (38 rows), `contract_number` (4), `quote_number` (5) belong to the runtime's sequences (the SQL driver bootstraps each counter past existing rows). Upsert identity moved to natural keys — cases already keyed on `subject`; quotes now key on `name`, contracts on `description` (Contract has no name field).
-  - Cases: `is_closed` now strictly mirrors `case.hook` (`true` only for status `closed` — the generator had flagged `resolved` rows closed); resolved rows carry `closed_date` (the hook's resolved-date proxy); `resolution_time_hours` equals the closed−created delta the hook computes (the old values were arbitrary); SLA-violated rows are open cases with a past `sla_due_date` (the generator had combined the violated flag with future due dates).
-  - Opportunities: `probability` and `forecast_category` now match `opportunity.hook`'s stage mappings exactly (e.g. qualification 25 not 30, proposal → `commit` not `pipeline`/`best_case`; the generator's pseudo-random probabilities are gone), and `expected_revenue` is seeded with the hook's own formula so pipeline sums don't undercount seeded rows.
-  - Forecasts: periods are real calendar quarters/months labelled the way `forecast.hook` derives them (`Q3 2026` / `Aug 2026`, replacing `This Quarter`-style strings the hook would never produce), which also makes the `this_quarter_forecasts` view's `{this_quarter_start}` filter match the seeded row.
-  - The trailing comment pointing at a non-existent `src/objects/demo_bootstrap.hook.ts` now references the real `demo_bootstrap` scheduled flow.
+- **P0 core-correctness sweep.** [#467](https://github.com/objectstack-ai/hotcrm/pull/467)
+- **Same-named picklists unified into one canonical value set (`src/objects/_picklists.ts`); seed data aligned with what the hooks would compute** — cross-object copies in `lead_conversion` no longer produce illegal enum values, autonumber fields are no longer hand-seeded, and case/opportunity/forecast seed rows match their hooks' derived fields. Fixes [#490](https://github.com/objectstack-ai/hotcrm/issues/490) via [#516](https://github.com/objectstack-ai/hotcrm/pull/516).
+- `lead_auto_assign` now handles anonymous Web-to-Lead submissions. [#471](https://github.com/objectstack-ai/hotcrm/pull/471)
+- Demo org made demonstrable ([#481](https://github.com/objectstack-ai/hotcrm/pull/481)) and dangling UI references repaired ([#480](https://github.com/objectstack-ai/hotcrm/pull/480)).
+- i18n: dead option/section/widget translations re-keyed; missing zh-CN coverage added. [#498](https://github.com/objectstack-ai/hotcrm/pull/498)
+- Hook catch blocks no longer call `console.*`. [#472](https://github.com/objectstack-ai/hotcrm/pull/472)
+- StackBlitz demo: bootstrap under pnpm 10 in the WebContainer ([#464](https://github.com/objectstack-ai/hotcrm/pull/464)), boot with npm instead of a global pnpm install ([#484](https://github.com/objectstack-ai/hotcrm/pull/484)), and turn off the OIDC provider so the demo can log in ([#486](https://github.com/objectstack-ai/hotcrm/pull/486)).
 
 ## [2.2.2] — 2026-07-21
 
@@ -47,7 +63,7 @@ Upgrade migration was driven from the official release notes at <https://objects
 
 - **ObjectStack platform → 16.0.0-rc.1** across all 11 `@objectstack/*` packages (from `14.7`), pinned to the exact RC version.
 - **Dropped `ai` from the stack's `requires` ([objectstack.config.ts](objectstack.config.ts)).** ObjectStack 11.3.0 (ADR-0025 S2) removed `@objectstack/service-ai` from the open edition — the AI runtime ships only in the closed cloud package, whose latest open-registry version is `10.3.0`. Under 16, `requires: ['ai']` is a **fail-fast** capability: the serve command hard-aborts boot when the package is absent (the AI block runs before every other capability resolves), so `objectstack start`/`dev` for this open-edition app failed with `[AI] required but @objectstack/service-ai is not installed`. The AI **metadata is unaffected** — both agents + all skills still validate, compile into the artifact, and run wherever a runtime provides the `ai` tier (cloud's `objectos-runtime`). A local open-edition boot simply omits the AI service and hides its Console surface. (This was never caught before because the `verify` script boots nothing — `validate`/`typecheck`/`build`/`test` all resolve metadata only, not capability provider packages.)
-- **Removed the dead `visibility` field from both agents** (`src/agents/sales-copilot.agent.ts`, `src/agents/service-copilot.agent.ts` — both files since retired in #512). ObjectStack 16 removes `AgentSchema.visibility` (ADR-0049 / ADR-0056 D8): it was never enforced — a `private`/`organization` value never restricted an agent — so a security-shaped field with no runtime consumer is a liability. `AgentSchema` is not `.strict()`, so it was being silently stripped; removed for honesty. Restrict agent access via the enforced `access`/`permissions` surfaces instead.
+- **Removed the dead `visibility` field from both agents** (`sales-copilot`, `service-copilot` — both agents since retired in [#512](https://github.com/objectstack-ai/hotcrm/pull/512)). ObjectStack 16 removes `AgentSchema.visibility` (ADR-0049 / ADR-0056 D8): it was never enforced — a `private`/`organization` value never restricted an agent — so a security-shaped field with no runtime consumer is a liability. `AgentSchema` is not `.strict()`, so it was being silently stripped; removed for honesty. Restrict agent access via the enforced `access`/`permissions` surfaces instead.
 
 ### Fixed
 

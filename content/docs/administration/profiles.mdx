@@ -1,87 +1,98 @@
 ---
 title: Profiles
-description: The six built-in user profiles and what each can see, edit, and do.
+description: The six built-in permission sets and what each can see, edit, and do.
 ---
 
 # Profiles
 
-A **profile** is the bundle of permissions assigned to a user. It controls what they can see, edit, delete, and configure across the entire CRM. Every user has exactly one profile.
+A **profile** (a *permission set*, in platform terms) is the bundle of permissions assigned to a user. It controls what they can create, see, edit and delete across the CRM.
+
+Permission sets are **explicit-allow only**: if an object is not listed in a set, holders of that set cannot touch it — not even an administrator. There is no implicit "everything else is readable" rule.
 
 ## The six built-in profiles
 
-| Profile | For | Typical user |
-| --- | --- | --- |
-| 👑 **System Administrator** | CRM admins | IT, ops, implementation lead |
-| 👔 **Executive** | C-level | CEO, CRO, VP Sales/Service |
-| 💼 **Sales User** | Sales reps | AE, SDR, BDR |
-| 🎧 **Service User** | Service agents | Support agent, success manager |
-| 📣 **Marketing User** | Marketers | Demand gen, campaign manager |
-| 👀 **Read Only** | Auditors, observers | Finance reviewer, contractor |
+| Profile | Machine name | For | Typical user |
+| --- | --- | --- | --- |
+| 👑 **System Administrator** | `system_admin` | CRM admins | IT, ops, implementation lead |
+| 📈 **Sales Manager** | `sales_manager` | Front-line sales leadership | Regional manager, sales director |
+| 💼 **Sales Representative** | `sales_rep` | Sales reps | AE, SDR, BDR |
+| 🎧 **Service Agent** | `service_agent` | Support team | Support agent, success manager |
+| 📣 **Marketing User** | `marketing_user` | Marketers | Demand gen, campaign manager |
+| 🌐 **Guest (Public Forms)** | `guest_portal` | Anonymous web visitors | Nobody — it is assigned to unauthenticated form traffic |
 
 ## What each profile can do
 
 ### 👑 System Administrator
 
-- Full read/write/delete on **all** objects
-- Can configure **everything**: objects, fields, profiles, sharing, automation, AI skills
-- Can impersonate other users (for support / debugging)
-- Bypasses sharing rules and field-level security
+- Full create/read/edit/delete on **every** object in the CRM
+- **View All** and **Modify All** on every object — bypasses record-level sharing
+- Configures the system: objects, fields, profiles, sharing, automation, AI skills
 
 ⚠️ **Use sparingly** — typically 2–3 people per organisation.
 
-### 👔 Executive
+### 📈 Sales Manager
 
-- Full **read** on all CRM objects (across the company)
-- **Edit** access only to records they own or are on the team for
-- Access to all **dashboards** and **reports**, including the Executive Scorecard
-- Cannot delete records
-- Cannot configure the system
+- Org-wide read **and** write on **leads**, **accounts**, **contacts**, **opportunities**, **quotes** and **tasks** — a manager works any rep's record, not just their own
+- Create and edit **contracts**, **products** and **campaigns** (deleting them is an admin action)
+- Full control of **opportunity and quote line items**, so pricing on any rep's deal can be fixed
+- Read **cases**, **knowledge articles** and **campaign members**
+- **Forecasts**: reads every rep's snapshot and adjusts the committed number — the forecast is the manager's own deliverable
+- Curates the **competitor** battlecards
+- Cannot see a deal another user flagged **Private** (see [Sharing & security](/docs/administration/sharing-and-security))
 
-Designed for *"see everything, change nothing"* leadership.
+### 💼 Sales Representative
 
-### 💼 Sales User
+- Create, read and edit their **own** leads, accounts, opportunities, quotes and tasks
+- **Contacts** follow the account: a rep sees the contacts of every account they can see, including accounts reaching them through a territory or account-team share
+- **Opportunity and quote line items** — full control on their own deals and quotes, which is what the "Products" related list and quote building need
+- Read the **product** catalog, **campaigns**, **campaign members**, **knowledge articles** and **competitor** battlecards, and file a new competitor they ran into
+- Read their **own forecast snapshots** (they are written by the nightly forecast job, never by hand)
+- Read their own **contracts** and **cases**; deleting is a manager privilege (their own tasks excepted)
 
-- Full read/write on **accounts** they own or are on the team for
-- Full read/write on **contacts**, **opportunities**, **quotes**, **contracts** linked to their accounts
-- Full read/write on **leads** they own
-- Read/write **tasks** and **events**
-- **Submit for approval** (e.g., discount approval)
-- Read on **products** (catalog)
-- Cannot delete records (manager privilege)
-- No configuration access
+### 🎧 Service Agent
 
-### 🎧 Service User
-
-- Full read/write on **cases** in their queue or assigned to them
-- Full read on **accounts**, **contacts**, **contracts** linked to those cases
-- Read/write on **knowledge base** articles (subject to KB workflow)
-- Read on **products**
-- Read on **opportunities** linked to the customer (for context)
-- No configuration access
+- Create, read and edit **cases** and **tasks** in their own queue; critical cases reach the wider service team through the escalation sharing rule
+- Read **accounts**, **contacts** (editable) and **leads** org-wide — a ticket is meaningless without the customer behind it
+- **Knowledge articles**: read every article and author or revise them (the draft → in review → published lifecycle is enforced by the KB flow, not by permissions). Archiving is an admin action
+- Read the **product** catalog
+- No access to opportunities, quotes or forecasts
 
 ### 📣 Marketing User
 
-- Full read/write on **campaigns** and **campaign members**
-- Full read/write on **leads** (especially un-owned ones)
-- Read on **contacts**, **accounts**, **opportunities** (for ROI analysis)
-- Read/write on the **Sales Knowledge** and **Competitive Intel** knowledge bases
-- No configuration access
+- Create, read and edit **leads**, **contacts** and **campaigns** org-wide
+- **Campaign members**: enrol and update membership — this is what the "Add to Campaign" action writes
+- Read **accounts** and **opportunities** org-wide, for campaign→pipeline ROI (a deal flagged **Private** stays hidden)
+- Read **knowledge articles** and **competitor** battlecards
+- Cannot delete records
 
-### 👀 Read Only
+### 🌐 Guest (Public Forms)
 
-- Read on **all** standard objects
-- No edit, delete, or create
-- Read on dashboards and reports
-- No export rights (configurable)
+- **Insert only** on **leads** and **cases**, through the public Web-to-Lead / Web-to-Case forms
+- **No read access to anything.** Every other object — including public-audience knowledge articles — is denied
+
+## Field-level security
+
+Profiles also mask individual fields. What ships today:
+
+| Field | Who can read it | Who can edit it |
+| --- | --- | --- |
+| `crm_opportunity.amount` / `probability` | Sales rep, sales manager, marketing user | Sales rep, sales manager |
+| `crm_account.annual_revenue` | Sales rep | Sales manager (read-only for reps) |
+| `crm_account.health_score` | Sales rep, service agent, marketing user, sales manager | Sales manager |
+| `crm_case.internal_notes` | Service agent, sales manager | Service agent |
+| `crm_case.is_sla_violated` / `resolution_time_hours` | Service agent | Nobody — they are computed |
+| `crm_quote.internal_notes` | Sales rep, sales manager | Sales rep, sales manager |
+
+A masked field is blank everywhere — list views, reports, the API and the AI Copilot alike. A sales rep opening a case will not see the service team's internal notes.
 
 ## Assigning a profile
 
 1. Go to **Setup → Users**.
 2. Open the user record.
 3. Select the **Profile** from the dropdown.
-4. Save — change takes effect immediately.
+4. Save — the change takes effect immediately.
 
-A user can only have **one profile at a time**. To grant extra permissions on top of their base profile, use **Permission Sets** (the *"extra hat"* mechanism).
+To grant extra permissions on top of a user's base profile, assign an additional **permission set** ("extra hat") rather than editing the base one — sets are additive and union-merged.
 
 ## Cloning profiles
 
@@ -89,7 +100,7 @@ If a built-in profile is *almost* right but needs tweaking:
 
 1. **Setup → Profiles**.
 2. Open the profile and click **Clone**.
-3. Rename (e.g., *"Senior Sales Rep"*).
+3. Rename (e.g. *"Senior Sales Rep"*).
 4. Adjust permissions.
 5. Save and assign to users.
 
@@ -97,41 +108,36 @@ If a built-in profile is *almost* right but needs tweaking:
 
 ## What's in a profile
 
-Each profile controls:
-
 | Permission area | Controls |
 | --- | --- |
-| **Object permissions** | Read, Create, Edit, Delete on each object |
-| **Field-level security** | Visibility and read/edit per field |
-| **App access** | Which apps the user can open (Enterprise CRM, Admin, etc.) |
-| **System permissions** | Special abilities (Mass Edit, Export, View All Data, Modify All Data) |
-| **AI permissions** | Which AI skills the user can invoke |
-| **Approval permissions** | Submit, approve, recall |
+| **Object permissions** | Create, Read, Edit, Delete per object |
+| **Record scope** | How wide "read" reaches: own records only, or org-wide (*View All* / *Modify All*) |
+| **Field-level security** | Read and edit per field |
+| **System permissions** | Setup access, user management, View All / Modify All Data, sharing administration |
+| **Row-level rules** | Extra record filters, e.g. hiding opportunities flagged *Private* from org-wide readers |
 
-## Profile vs Role vs Sharing — what's the difference?
+## Profile vs position vs sharing — what's the difference?
 
-This trips up new admins. The short answer:
+- **Profile (permission set)** = *what you can do* — the verbs: create, edit, delete, and on which objects.
+- **Position** = *which group you belong to*, used to hand out sharing grants. Positions are **flat**: there is no hierarchy, so nothing rolls up automatically from a manager to a director.
+- **Sharing rules** = *the exceptions* — "everyone in the EU territory can edit EU accounts", "the service director can see every critical case".
 
-- **Profile** = *what you can do* (the verbs: create, edit, delete, submit-for-approval).
-- **Role** = *where you sit in the hierarchy* (drives whose records you can see).
-- **Sharing rules** = *the exceptions* (e.g., "everyone in EU can see EU accounts even though they're not in the role hierarchy").
+Both must allow access: the profile decides whether you may read opportunities *at all*, sharing decides *whose*.
 
-A sales rep has the **Sales User profile** (lets them edit opportunities) AND a **role** like *AE - East* (which controls *whose* opportunities). Both must allow access for them to see + edit a given record.
-
-See [Sharing & security](/docs/administration/sharing-and-security) for the role + sharing side.
+See [Sharing & security](/docs/administration/sharing-and-security) for the position + sharing side.
 
 ## Tips for admins
 
+- ✅ **A new object needs a grant.** Nothing is readable until a permission set names it — a missing grant looks like a broken screen, not a permission error.
 - ✅ **Start with built-in profiles** — don't customise unless necessary.
 - ✅ When in doubt, **clone** rather than modify.
-- ✅ Use **Permission Sets** for one-off grants ("Sarah needs Export for Q3") rather than creating new profiles.
-- ✅ **Audit profiles quarterly** — when people change roles, their profile often doesn't.
-- ✅ Limit System Administrator to **2–3 people maximum** — it's the keys to the kingdom.
+- ✅ **Audit profiles quarterly** — when people change jobs, their profile often doesn't.
+- ✅ Limit System Administrator to **2–3 people maximum**.
 
 ## Tips for users
 
 If you can't do something you think you should be able to do:
 
 1. Check your profile (top right → your name → Profile).
-2. Ask your admin if your profile is correct for your role.
-3. If the profile is right but you still can't see a specific record, it's a [sharing](/docs/administration/sharing-and-security) issue, not a profile issue.
+2. Ask your admin whether that profile grants the object at all.
+3. If the profile is right but a specific *record* is missing, it's a [sharing](/docs/administration/sharing-and-security) question, not a profile one.

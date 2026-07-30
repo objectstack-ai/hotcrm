@@ -27,10 +27,19 @@ export const LeadConversionFlow: Flow = {
     {
       id: 'screen_1', type: 'screen', label: 'Conversion Details',
       config: {
+        // `visibleWhen` on a screen field is BARE CEL over the screen's own
+        // field names — not the `{var}` template dialect the rest of this flow
+        // uses for filters, `update_record` fields and decision conditions. The
+        // client re-evaluates the predicate against the values collected so far,
+        // which is why it cannot be a server-interpolated template.
         fields: [
-          { name: 'createOpportunity', label: 'Create Opportunity?', type: 'boolean', required: true },
-          { name: 'opportunityName', label: 'Opportunity Name', type: 'text', required: true, visibleWhen: '{createOpportunity} == true' },
-          { name: 'opportunityAmount', label: 'Opportunity Amount', type: 'currency', visibleWhen: '{createOpportunity} == true' },
+          // `defaultValue: false` is load-bearing. An untouched checkbox holds
+          // `undefined`, which the runner counts as an unanswered required
+          // field — so "convert this lead WITHOUT an opportunity", the commonest
+          // path, blocked Submit on a box the user deliberately left clear.
+          { name: 'createOpportunity', label: 'Create Opportunity?', type: 'boolean', required: true, defaultValue: false },
+          { name: 'opportunityName', label: 'Opportunity Name', type: 'text', required: true, visibleWhen: 'createOpportunity == true' },
+          { name: 'opportunityAmount', label: 'Opportunity Amount', type: 'currency', visibleWhen: 'createOpportunity == true' },
         ],
       },
     },
@@ -76,14 +85,16 @@ export const LeadConversionFlow: Flow = {
       config: { assignments: { accountId: '{matchedAccount.id}' } },
     },
     {
-      // Contact dedupe: within the (possibly reused) account, look for a contact
-      // with the same email before creating one — mirrors the account dedupe so
-      // re-converting a known person doesn't spawn a duplicate contact. Leads
-      // require an email, so the match key is reliable.
+      // Contact dedupe by email — GLOBAL, not per-account: crm_contact carries
+      // a global unique index on `email`, so an account-scoped lookup missed a
+      // same-email contact under another account, and the subsequent
+      // create_contact then exploded on the DB index AFTER the account was
+      // already created (orphaning it). Leads require an email, so the match
+      // key is reliable.
       id: 'find_contact', type: 'get_record', label: 'Find Existing Contact',
       config: {
         objectName: 'crm_contact',
-        filter: { email: '{leadRecord.email}', crm_account: '{accountId}' },
+        filter: { email: '{leadRecord.email}' },
         outputVariable: 'matchedContact',
       },
     },
@@ -126,8 +137,21 @@ export const LeadConversionFlow: Flow = {
           amount: '{opportunityAmount}', stage: 'prospecting', probability: 10,
           lead_source: '{leadRecord.lead_source}', close_date: '{TODAY() + 90}', owner: '{$User.Id}',
         },
-        outputVariable: 'opportunityId',
+        outputVariable: 'createdOpportunity',
       },
+    },
+    {
+      // Normalize both opportunity branches onto a single `opportunityId`
+      // (same pattern as accountId/contactId): on the "No" branch the create
+      // node never ran, so referencing `{createdOpportunity.id}` directly in
+      // mark_converted interpolated an unresolved placeholder into the
+      // converted_opportunity lookup.
+      id: 'use_new_opportunity', type: 'assignment', label: 'Use New Opportunity',
+      config: { assignments: { opportunityId: '{createdOpportunity.id}' } },
+    },
+    {
+      id: 'no_opportunity', type: 'assignment', label: 'No Opportunity',
+      config: { assignments: { opportunityId: null } },
     },
     {
       id: 'mark_converted', type: 'update_record', label: 'Mark Lead as Converted',
@@ -139,7 +163,7 @@ export const LeadConversionFlow: Flow = {
           // per the lead_status_progression state machine).
           is_converted: true, status: 'converted', converted_date: '{NOW()}',
           converted_account: '{accountId}', converted_contact: '{contactId}',
-          converted_opportunity: '{opportunityId.id}',
+          converted_opportunity: '{opportunityId}',
         },
       },
     },
@@ -179,8 +203,10 @@ export const LeadConversionFlow: Flow = {
     { id: 'e14', source: 'use_new_contact', target: 'decision_opportunity', type: 'default' },
     { id: 'e15', source: 'use_existing_contact', target: 'decision_opportunity', type: 'default' },
     { id: 'e16', source: 'decision_opportunity', target: 'create_opportunity', type: 'default', condition: 'vars.createOpportunity == true', label: 'Yes' },
-    { id: 'e17', source: 'decision_opportunity', target: 'mark_converted', type: 'default', condition: 'vars.createOpportunity != true', label: 'No' },
-    { id: 'e18', source: 'create_opportunity', target: 'mark_converted', type: 'default' },
+    { id: 'e17', source: 'decision_opportunity', target: 'no_opportunity', type: 'default', condition: 'vars.createOpportunity != true', label: 'No' },
+    { id: 'e18', source: 'create_opportunity', target: 'use_new_opportunity', type: 'default' },
+    { id: 'e18a', source: 'use_new_opportunity', target: 'mark_converted', type: 'default' },
+    { id: 'e18b', source: 'no_opportunity', target: 'mark_converted', type: 'default' },
     { id: 'e19', source: 'mark_converted', target: 'send_notification', type: 'default' },
     { id: 'e20', source: 'send_notification', target: 'end', type: 'default' },
   ],

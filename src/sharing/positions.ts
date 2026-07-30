@@ -7,6 +7,13 @@
  * tree's reporting lines belong on the business-unit tree / manager chain,
  * which this app does not model — so the old `parentRole` links were
  * dropped rather than translated.
+ *
+ * Flat also means visibility does NOT roll up: every rung that needs access to
+ * a record carries its own sharing rule. That is why each leadership rung has
+ * an explicit companion rule (`opportunity_executive_sharing`,
+ * `case_director_sharing`, `campaign_leadership_*`) rather than inheriting the
+ * manager's — a position that no sharing rule and no permission-set binding
+ * names grants nothing at all (#488).
  */
 export const CrmPositions = [
   { name: 'executive',          label: 'Executive' },

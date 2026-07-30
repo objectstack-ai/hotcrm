@@ -16,8 +16,17 @@ export const CampaignMember = ObjectSchema.create({
   icon: 'user-plus',
   description: 'Membership and response tracking for marketing campaigns',
 
-  // ADR-0090 D1/D7: OWD is an authored decision. Follows the campaign team's ownership; lookup child (not master-detail).
-  sharingModel: 'private',
+  // ADR-0090 D1/D7: OWD is an authored decision. Membership is an attribute of
+  // the campaign, so record access DERIVES from it (ADR-0055): reads are
+  // filtered to members whose `crm_campaign` the caller can read, and enrolling
+  // or updating a member requires edit access to that campaign. The relation
+  // resolver accepts the REQUIRED `crm_campaign` LOOKUP as the parent, so no
+  // master-detail conversion is needed.
+  //
+  // It was `private` before (#488) — with no owner field on the junction row
+  // that meant "whoever inserted it", which is nobody's idea of campaign
+  // membership and hid rows written by the enrollment flow.
+  sharingModel: 'controlled_by_parent',
 
   // @objectstack 12: the dead object-level `enable.trackHistory` flag was
   // removed (ADR-0049) — per-field history is opt-in via `Field.trackHistory`
@@ -76,9 +85,11 @@ export const CampaignMember = ObjectSchema.create({
       ],
     }),
 
+    // NOT `readonly`: the campaign_enrollment flow writes this stamp, and
+    // 16.x drops writes to readonly fields (#2948) — every member landed with
+    // a null Added Date while the flag was on.
     added_date: Field.datetime({
       label: 'Added Date',
-      readonly: true,
       group: 'response',
     }),
 

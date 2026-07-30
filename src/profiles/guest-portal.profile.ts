@@ -12,6 +12,12 @@
  *
  * Any new object added to the CRM stack is implicitly DENIED for guests —
  * profile permissions are explicit-allow only.
+ *
+ * That includes every object granted to internal profiles by #488. In
+ * particular `crm_knowledge_article` stays denied even though its `audience`
+ * field marks some articles public: a customer-facing article surface would be
+ * served by a portal view with `sharing.allowAnonymous`, never by widening the
+ * guest set to read a CRM object.
  */
 export const GuestPortalProfile = {
   name: 'guest_portal',

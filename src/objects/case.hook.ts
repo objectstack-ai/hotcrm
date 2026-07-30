@@ -7,9 +7,10 @@ import type { HookApi } from './_hook-api';
  * Case SLA & escalation hook.
  *
  * - For `critical` cases without `sla_due_date`, sets a 4-hour SLA.
- * - On escalation: creates a follow-up task assigned to the account owner.
- * - On `resolved`: stamps `resolved_date` and bumps account `last_activity_date`.
- * - Declarative `condition` flags SLA breach when due date is past and case not closed.
+ * - On escalation: creates a follow-up task assigned to the account owner
+ *   (the single owner of escalation tasks — flows must not create their own).
+ * - On `resolved`: stamps `closed_date` (proxy for the resolution time — there is
+ *   no resolved_date field) and bumps account `last_activity_date`.
  */
 
 const caseValidation: Hook = {
@@ -127,12 +128,12 @@ const caseSideEffects: Hook = {
       });
     }
 
-    // Resolution rollup
+    // Resolution rollup. Note: no date is stamped here — `closed_date` belongs
+    // exclusively to the `closed` transition (stamped by `case_sla_defaults`).
+    // The old "closed_date as a proxy for resolved_date" write both corrupted
+    // resolution metrics (a resolved-then-closed case kept its resolve time as
+    // its close time) and re-entered the record-change trigger surface.
     if (input.status === 'resolved' && previous.status !== 'resolved') {
-      if (caseId && !input.closed_date && !previous.closed_date) {
-        // Use closed_date as a proxy for resolved_date (schema field).
-        await api.object('crm_case').update(caseId, { closed_date: new Date().toISOString() });
-      }
       if (accountId) {
         await api.object('crm_account').update(accountId, {
           last_activity_date: new Date().toISOString().slice(0, 10),

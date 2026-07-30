@@ -1,4 +1,10 @@
-node_modules/
+# No trailing slash. `node_modules/` matches directories only, so a *symlink*
+# named `node_modules` — what a containerised checkout leaves behind when deps
+# live outside the tree — is a plain blob to git and slips past the ignore. One
+# got committed that way, and CI died on `ERR_PNPM_ENOENT … mkdir
+# node_modules/@objectstack`: checkout restores a dangling symlink and pnpm
+# cannot mkdir through it.
+node_modules
 dist/
 .env
 *.log
@@ -13,7 +19,7 @@ coverage/
 tmp/
 
 # Monorepo specific
-packages/*/node_modules/
+packages/*/node_modules
 packages/*/dist/
 packages/*/.turbo/
 .pnpm-store/

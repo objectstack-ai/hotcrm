@@ -4,6 +4,7 @@
  * Sharing & Security Definitions Barrel
  */
 export { AccountTeamSharingRule, TerritorySharingRules } from './account.sharing';
-export { CaseEscalationSharingRule } from './case.sharing';
-export { OpportunitySalesSharingRule } from './opportunity.sharing';
+export { CampaignLeadershipSharingRules } from './campaign.sharing';
+export { CaseDirectorSharingRule, CaseEscalationSharingRule } from './case.sharing';
+export { OpportunityExecutiveSharingRule, OpportunitySalesSharingRule } from './opportunity.sharing';
 export { CrmPositions } from './positions';

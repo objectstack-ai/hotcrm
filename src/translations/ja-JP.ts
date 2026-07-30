@@ -294,7 +294,7 @@ export const jaJP: TranslationData = {
             cold_call: 'コールドコール', email_campaign: 'メールキャンペーン', other: 'その他',
           },
         },
-        crm_competitors: { label: '競合他社' },
+        competitors: { label: '競合他社' },
         crm_campaign: { label: 'キャンペーン' },
         days_in_stage: { label: '現ステージ滞在日数' },
         is_private: { label: '非公開' },
@@ -549,34 +549,6 @@ export const jaJP: TranslationData = {
       },
     },
 
-    crm_competitor: {
-      label: '競合他社',
-      pluralLabel: '競合他社',
-      description: '商談で遭遇する競合他社とバトルカード情報',
-      fields: {
-        name: { label: '競合名' },
-        website: { label: 'ウェブサイト' },
-        main_products: { label: '主要製品' },
-        threat_level: {
-          label: '脅威レベル',
-          options: { low: '低', medium: '中', high: '高' },
-        },
-        our_advantages: { label: '自社の強み' },
-        our_disadvantages: { label: '自社の弱み' },
-        notes: { label: 'メモ' },
-        owner: { label: '担当者' },
-        is_active: { label: '有効' },
-      },
-      _views: {
-        all_competitors: { label: '全競合他社' },
-        high_threat: { label: '高脅威' },
-      },
-      _sections: {
-        basic: { label: '基本情報' },
-        battlecard: { label: 'バトルカード' },
-      },
-    },
-
     crm_campaign_member: {
       label: 'キャンペーンメンバー',
       pluralLabel: 'キャンペーンメンバー',
@@ -731,6 +703,7 @@ export const jaJP: TranslationData = {
         pipeline_by_forecast_category: { title: '予測カテゴリ別パイプライン', description: '売上予測カテゴリ別のオープンパイプライン金額' },
         lead_source_breakdown: { title: 'リードソース', description: 'パイプラインの流入元' },
         open_pipeline_by_owner: { title: '担当者別オープンパイプライン', description: '営業担当者ごとの進行中パイプライン金額・商談数・平均勝率' },
+        quota_attainment_by_rep: { title: '担当者別ノルマ達成状況', description: '予測スナップショットに基づく担当者別のノルマ・成約収益・達成率' },
         pipeline_stage_by_source: { title: 'ステージ × リードソース', description: 'ステージとソース別の進行中商談金額のクロス集計' },
       },
     },
@@ -747,7 +720,7 @@ export const jaJP: TranslationData = {
         cases_by_origin: { title: '発生源別ケース', description: 'ケースの流入チャネル' },
         daily_case_volume: { title: '日次ケース件数', description: '過去30日間の新規ケース' },
         sla_compliance_gauge: { title: 'SLA 達成率', description: '当期 SLA 内に解決したケースの割合' },
-        my_open_cases_by_priority: { title: '優先度別マイオープンケース', description: '自分のオープンケースとそのSLA違反率を優先度別に集計' },
+        open_cases_by_priority: { title: '優先度別オープンケース', description: 'オープンケースとそのSLA違反率を優先度別に集計' },
       },
     },
   },

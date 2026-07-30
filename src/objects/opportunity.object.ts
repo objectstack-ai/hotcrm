@@ -1,4 +1,4 @@
-import { F, P, cel } from '@objectstack/spec';
+import { P, cel } from '@objectstack/spec';
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
@@ -14,13 +14,17 @@ export const Opportunity = ObjectSchema.create({
   // ADR-0090 D1/D7: OWD is an authored decision. Owner + high-value management sharing rule.
   sharingModel: 'private',
   // ADR-0079: render-only `titleFormat` retired in favor of `nameField`.
-  // `stage` is a select — the formula references its stored value directly
-  // (no label resolution), matching ADR-0079 guidance.
-  nameField: 'display_title',
-  // Explicit search targets (ADR-0061). REQUIRED because nameField is a
-  // FORMULA (display_title/full_name): without this, $search auto-defaults to
-  // the formula field, which isn't a real column, so the lookup picker + global
-  // search silently return zero. These are real, indexed columns.
+  // The original template was '{name} - {stage}'. A render-time template could
+  // resolve `stage` to its translated label; a FORMULA cannot — it sees the
+  // stored select VALUE — so the migrated `display_title` titled every deal
+  // "Enterprise Deal - closed_won" in lookups, related lists and search, in
+  // every locale (#461, same defect as Contact `full_name`). The formula
+  // language has no option-label lookup, so the title is now the plain `name`
+  // column; `stage` still leads the highlight strip below, translated.
+  nameField: 'name',
+  // Explicit search targets (ADR-0061). `name` is a real indexed column, so
+  // $search resolves on its own here; the list is kept explicit to pin the
+  // intent (other objects whose nameField IS a formula rely on it).
   searchableFields: ['name'],
   highlightFields: ['name', 'crm_account', 'amount', 'stage', 'owner'],
 
@@ -43,13 +47,8 @@ export const Opportunity = ObjectSchema.create({
       group: 'basic',
     }),
 
-    // ADR-0079 record title (was titleFormat '{name} - {stage}').
-    // `stage` is referenced by its stored select value.
-    display_title: Field.formula({
-      label: 'Display Title',
-      expression: F`record.name + " - " + record.stage`,
-      group: 'basic',
-    }),
+    // (No `display_title` formula — see `nameField` above: composing the title
+    // from `stage` leaked the raw select value into every rendered title.)
 
     // Relationships
     crm_account: Field.lookup('crm_account', {
@@ -148,14 +147,16 @@ export const Opportunity = ObjectSchema.create({
       options: [...LEAD_SOURCE_OPTIONS],
     }),
 
-    // Competitor Analysis — multi-value lookup into the crm_competitor
-    // catalog (replaces the former hard-coded "Competitor A/B/C" multiselect;
-    // new column name keeps the schema change additive on existing DBs).
-    crm_competitors: Field.lookup('crm_competitor', {
+    // Competitor Analysis
+    competitors: Field.select({
       label: 'Competitors',
       multiple: true,
-      description: 'Competitors we are up against in this deal',
       group: 'competition',
+      options: [
+        { label: 'Competitor A', value: 'competitor_a' },
+        { label: 'Competitor B', value: 'competitor_b' },
+        { label: 'Competitor C', value: 'competitor_c' },
+      ]
     }),
 
     // Campaign tracking
@@ -315,10 +316,17 @@ export const Opportunity = ObjectSchema.create({
       message: 'Invalid opportunity stage transition',
       field: 'stage',
       transitions: {
-        prospecting: ['qualification', 'closed_lost'],
-        qualification: ['needs_analysis', 'closed_lost'],
+        // `→ proposal` is legal from every pre-proposal stage: the
+        // quote_generation flow fast-forwards the deal to `proposal` when a
+        // quote is generated, which can happen at any open stage.
+        prospecting: ['qualification', 'proposal', 'closed_lost'],
+        qualification: ['needs_analysis', 'proposal', 'closed_lost'],
         needs_analysis: ['proposal', 'closed_lost'],
-        proposal: ['negotiation', 'closed_lost'],
+        // `proposal → closed_won` is legal: the quote_on_accepted hook closes
+        // the linked deal directly from the CPQ path (quote_generation parks
+        // the opportunity at `proposal`; an accepted quote wins it without a
+        // separate negotiation step).
+        proposal: ['negotiation', 'closed_won', 'closed_lost'],
         negotiation: ['closed_won', 'closed_lost'],
         closed_won: [],
         closed_lost: [],

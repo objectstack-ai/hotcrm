@@ -13,5 +13,68 @@ export const MarketingUserProfile = {
     // while every other object on this set is true — an oversight that hid all
     // pipeline from marketing (and tripped security-private-no-readscope).
     crm_opportunity: { allowCreate: false, allowRead: true,  allowEdit: false, allowDelete: false, viewAllRecords: true,  modifyAllRecords: false },
+    // Campaign membership is THIS profile's core write surface: the
+    // "Add to Campaign" action (`src/actions/lead.actions.ts`) inserts
+    // `crm_campaign_member` rows, and before #488 no permission set granted the
+    // object — the action failed for the only persona meant to run it. Rows
+    // derive from the campaign (controlled_by_parent), so record scope follows
+    // the campaigns this profile can already read; deleting membership history
+    // stays a manager/admin privilege, matching every other object here.
+    crm_campaign_member: { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
+    // Read-only reference: knowledge articles for campaign copy
+    // (public_read catalog).
+    crm_knowledge_article: { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: true, modifyAllRecords: false },
   },
+  fields: {
+    // Marketing reads pipeline for campaign ROI but never prices a deal, and
+    // account health is the renewal team's call — read, never write (#488).
+    'crm_opportunity.amount':   { readable: true, editable: false },
+    'crm_account.health_score': { readable: true, editable: false },
+  },
+  // The same private-deal row filter the sales_manager set carries: this
+  // profile also holds org-wide opportunity read, so it is one of the readers
+  // `crm_opportunity.is_private` has to hold back. See sales-manager.profile.ts
+  // for the full rationale.
+  rowLevelSecurity: [
+    {
+      name: 'opportunity_private_owner_only_marketing',
+      label: 'Private opportunities stay with their owner',
+      description:
+        'A deal flagged Private is visible only to its owner, even to holders of org-wide opportunity read.',
+      object: 'crm_opportunity',
+      operation: 'select' as const,
+      using: 'is_private == false || owner == current_user.id',
+    },
+    // The platform's `member_default` set carries a wildcard owner-only-writes
+    // policy (`created_by == current_user.id` on update), and RLS policies are
+    // OR-combined — so without a policy of its own, this set's allowEdit on
+    // campaigns only reaches campaigns the user personally created. That also
+    // silently broke "Add to Campaign": enrolling a member is a write DERIVED
+    // from the campaign (controlled_by_parent), so it requires campaign edit at
+    // the row level. This policy widens campaign updates to every holder of the
+    // set — exactly what the object grant above already declares. `id != null`
+    // is the pushdown-safe "all rows" predicate (verified: compiles to
+    // `{id: {$null: false}}`).
+    {
+      name: 'marketing_campaign_updates',
+      label: 'Marketing works any campaign',
+      description:
+        'Marketing users edit any campaign (and thereby enrol members into it), not only campaigns they created.',
+      object: 'crm_campaign',
+      operation: 'update' as const,
+      using: 'id != null',
+    },
+    // Same widening for the member rows themselves: response tracking means
+    // updating rows the enrollment flow (system context) created, which the
+    // default owner-only-writes policy would otherwise deny.
+    {
+      name: 'marketing_campaign_member_updates',
+      label: 'Marketing updates any campaign member',
+      description:
+        'Marketing users update member response state on rows they did not personally create.',
+      object: 'crm_campaign_member',
+      operation: 'update' as const,
+      using: 'id != null',
+    },
+  ],
 };

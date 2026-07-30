@@ -49,9 +49,12 @@ export const Lead = ObjectSchema.create({
       group: 'identity',
     }),
 
+    // `salutation` is a picklist, so the formula sees the raw VALUE (`ms`, `dr`),
+    // not the label — names rendered as "ms Emily Davis" in lists and details
+    // (#461). Dropped here and from `display_title` below, matching Contact.
     full_name: Field.formula({
       label: 'Full Name',
-      expression: F`joinNonEmpty([record.salutation, record.first_name, record.last_name], ' ')`,
+      expression: F`joinNonEmpty([record.first_name, record.last_name], ' ')`,
       group: 'identity',
     }),
 
@@ -60,7 +63,7 @@ export const Lead = ObjectSchema.create({
     // plus `company`, so the title resolves from real stored values.
     display_title: Field.formula({
       label: 'Display Title',
-      expression: F`joinNonEmpty([record.salutation, record.first_name, record.last_name], ' ') + " - " + record.company`,
+      expression: F`joinNonEmpty([record.first_name, record.last_name], ' ') + " - " + record.company`,
       group: 'identity',
     }),
 
@@ -154,8 +157,10 @@ export const Lead = ObjectSchema.create({
     // Conversion tracking.
     // NOT `readonly`: since 16.x the platform drops writes to readonly fields
     // outright (#2948), including the lead_conversion flow's mark_converted
-    // update. Edit-protection instead comes from the `cannot_edit_converted`
-    // validation below, which blocks user edits once is_converted is set.
+    // update. Edit-protection comes from two places: the `cannot_edit_converted`
+    // validation below (4 identity fields, recoverable error) and the broader
+    // beforeUpdate guard in lead.hook.ts, which rejects ANY edit to a
+    // converted lead.
     is_converted: Field.boolean({
       label: 'Converted',
       defaultValue: false,
@@ -259,8 +264,14 @@ export const Lead = ObjectSchema.create({
   // status state machines are now expressed in the validation union.
 
   // Database indexes for performance
+  //
+  // No `{ fields: ['email'], unique: true }` here: the field-level
+  // `unique: true` already builds the tenant composite `(organization_id,
+  // email)` since framework #3696. Declaring the single-column index too made
+  // the platform-wide constraint win and left the per-tenant one unreachable
+  // (framework#3991) — two organizations must be able to work the same lead
+  // address independently.
   indexes: [
-    { fields: ['email'], unique: true },
     { fields: ['owner'] },
     { fields: ['status'] },
     { fields: ['company'] },
