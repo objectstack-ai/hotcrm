@@ -24,11 +24,9 @@ export const SystemAdminProfile = {
     crm_campaign:    { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: true, modifyAllRecords: true },
     crm_case:        { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: true, modifyAllRecords: true },
     crm_task:        { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: true, modifyAllRecords: true },
-    // The six objects below shipped with navigation, views, hooks and seed
-    // data but no grant in ANY permission set (#488): "Knowledge" and
-    // "Forecasts" were permission-denied nav items for every user, admins
-    // included, and `crm_competitor` was the same story behind the Sales group.
-    crm_competitor:            { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: true, modifyAllRecords: true },
+    // The objects below shipped with navigation, views, hooks and seed data
+    // but no grant in ANY permission set (#488): "Knowledge" and "Forecasts"
+    // were permission-denied nav items for every user, admins included.
     crm_forecast:              { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: true, modifyAllRecords: true },
     crm_knowledge_article:     { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: true, modifyAllRecords: true },
     // Detail rows. Their RECORD-level access derives from the master

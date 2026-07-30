@@ -21,9 +21,8 @@ export const MarketingUserProfile = {
     // the campaigns this profile can already read; deleting membership history
     // stays a manager/admin privilege, matching every other object here.
     crm_campaign_member: { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
-    // Read-only reference: competitive intel for positioning, knowledge
-    // articles for campaign copy. Both are public_read catalogs.
-    crm_competitor:        { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: true, modifyAllRecords: false },
+    // Read-only reference: knowledge articles for campaign copy
+    // (public_read catalog).
     crm_knowledge_article: { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: true, modifyAllRecords: false },
   },
   fields: {

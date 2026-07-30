@@ -20,8 +20,6 @@ export const SalesManagerProfile = {
     crm_campaign:    { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: false, viewAllRecords: true,  modifyAllRecords: false },
     crm_case:        { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: true,  modifyAllRecords: false },
     crm_task:        { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: true,  modifyAllRecords: true },
-    // Competitive-intel catalog (public_read OWD): managers curate battlecards.
-    crm_competitor:  { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: false, viewAllRecords: true,  modifyAllRecords: false },
     // The forecast IS the manager's job: they read every rep's snapshot and
     // adjust the committed number, so this is org-wide read AND write on a
     // private object (#488 — the object had no grant at all).
