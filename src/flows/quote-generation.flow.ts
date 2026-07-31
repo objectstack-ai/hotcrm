@@ -1,5 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
+import { P } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 type Flow = Automation.Flow;
 
@@ -60,7 +61,7 @@ export const QuoteGenerationFlow: Flow = {
       // a deal already at proposal/negotiation was an illegal self/backward
       // transition — those deals keep their stage; the quote is still created.
       id: 'check_stage', type: 'decision', label: 'Can Advance to Proposal?',
-      config: { condition: 'oppRecord.stage == "prospecting" || oppRecord.stage == "qualification" || oppRecord.stage == "needs_analysis"' },
+      config: { condition: P`oppRecord.stage == "prospecting" || oppRecord.stage == "qualification" || oppRecord.stage == "needs_analysis"` },
     },
     {
       id: 'update_opportunity', type: 'update_record', label: 'Update Opportunity',
@@ -92,8 +93,8 @@ export const QuoteGenerationFlow: Flow = {
     { id: 'e2', source: 'screen_1', target: 'get_opportunity', type: 'default' },
     { id: 'e3', source: 'get_opportunity', target: 'create_quote', type: 'default' },
     { id: 'e4', source: 'create_quote', target: 'check_stage', type: 'default' },
-    { id: 'e4a', source: 'check_stage', target: 'update_opportunity', type: 'conditional', condition: 'oppRecord.stage == "prospecting" || oppRecord.stage == "qualification" || oppRecord.stage == "needs_analysis"', label: 'Advance' },
-    { id: 'e4b', source: 'check_stage', target: 'notify_owner', type: 'conditional', condition: 'oppRecord.stage != "prospecting" && oppRecord.stage != "qualification" && oppRecord.stage != "needs_analysis"', label: 'Keep stage' },
+    { id: 'e4a', source: 'check_stage', target: 'update_opportunity', type: 'conditional', condition: P`oppRecord.stage == "prospecting" || oppRecord.stage == "qualification" || oppRecord.stage == "needs_analysis"`, label: 'Advance' },
+    { id: 'e4b', source: 'check_stage', target: 'notify_owner', type: 'conditional', condition: P`oppRecord.stage != "prospecting" && oppRecord.stage != "qualification" && oppRecord.stage != "needs_analysis"`, label: 'Keep stage' },
     { id: 'e5', source: 'update_opportunity', target: 'notify_owner', type: 'default' },
     { id: 'e6', source: 'notify_owner', target: 'end', type: 'default' },
   ],

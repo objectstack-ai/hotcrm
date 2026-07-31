@@ -1,5 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
+import { P } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 type Flow = Automation.Flow;
 
@@ -32,7 +33,7 @@ export const OpportunityWonAlertFlow: Flow = {
         // claims, approval-status stamps, description tweaks) re-sent the
         // congratulations blast. The trigger forwards `previous` into the
         // condition scope (cf. the engine's record-change context).
-        condition: 'record.stage == "closed_won" && previous.stage != "closed_won" && record.amount > 100000',
+        condition: P`record.stage == "closed_won" && previous.stage != "closed_won" && record.amount > 100000`,
       },
     },
     {

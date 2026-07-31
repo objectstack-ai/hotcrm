@@ -1,5 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
+import { P } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 type Flow = Automation.Flow;
 
@@ -58,7 +59,7 @@ export const ContractRenewalFlow: Flow = {
           nodes: [
             {
               id: 'check_notice_window', type: 'decision', label: 'Within Notice Window?',
-              config: { condition: 'timestamp(currentContract.end_date) <= daysFromNow(int(currentContract.renewal_notice_days))' },
+              config: { condition: P`timestamp(currentContract.end_date) <= daysFromNow(int(currentContract.renewal_notice_days))` },
             },
             {
               // Idempotency gate: the sweep matches the same contract every
@@ -79,7 +80,7 @@ export const ContractRenewalFlow: Flow = {
             },
             {
               id: 'check_not_reminded', type: 'decision', label: 'First Reminder?',
-              config: { condition: 'existingRenewalTask == null' },
+              config: { condition: P`existingRenewalTask == null` },
             },
             {
               id: 'create_renewal_task', type: 'create_record', label: 'Create Renewal Task',
@@ -108,7 +109,7 @@ export const ContractRenewalFlow: Flow = {
             },
             {
               id: 'check_auto_renewal', type: 'decision', label: 'Auto-Renewal On?',
-              config: { condition: 'currentContract.auto_renewal == true' },
+              config: { condition: P`currentContract.auto_renewal == true` },
             },
             {
               // Second gate: never open a second renewal opportunity while one
@@ -127,7 +128,7 @@ export const ContractRenewalFlow: Flow = {
             },
             {
               id: 'check_no_open_renewal', type: 'decision', label: 'No Open Renewal Deal?',
-              config: { condition: 'existingRenewalOpp == null' },
+              config: { condition: P`existingRenewalOpp == null` },
             },
             {
               id: 'create_renewal_opp', type: 'create_record', label: 'Open Renewal Opportunity',
@@ -149,14 +150,14 @@ export const ContractRenewalFlow: Flow = {
           edges: [
             // Only act when inside the per-contract notice window; gates with
             // no matching edge simply end the iteration, so the loop moves on.
-            { id: 'b1', source: 'check_notice_window', target: 'find_existing_task', type: 'conditional', condition: 'timestamp(currentContract.end_date) <= daysFromNow(int(currentContract.renewal_notice_days))', label: 'In window' },
+            { id: 'b1', source: 'check_notice_window', target: 'find_existing_task', type: 'conditional', condition: P`timestamp(currentContract.end_date) <= daysFromNow(int(currentContract.renewal_notice_days))`, label: 'In window' },
             { id: 'b2', source: 'find_existing_task', target: 'check_not_reminded', type: 'default' },
-            { id: 'b3', source: 'check_not_reminded', target: 'create_renewal_task', type: 'conditional', condition: 'existingRenewalTask == null', label: 'First reminder' },
+            { id: 'b3', source: 'check_not_reminded', target: 'create_renewal_task', type: 'conditional', condition: P`existingRenewalTask == null`, label: 'First reminder' },
             { id: 'b4', source: 'create_renewal_task', target: 'notify_owner', type: 'default' },
             { id: 'b5', source: 'notify_owner', target: 'check_auto_renewal', type: 'default' },
-            { id: 'b6', source: 'check_auto_renewal', target: 'find_existing_renewal_opp', type: 'conditional', condition: 'currentContract.auto_renewal == true', label: 'Auto-renew' },
+            { id: 'b6', source: 'check_auto_renewal', target: 'find_existing_renewal_opp', type: 'conditional', condition: P`currentContract.auto_renewal == true`, label: 'Auto-renew' },
             { id: 'b7', source: 'find_existing_renewal_opp', target: 'check_no_open_renewal', type: 'default' },
-            { id: 'b8', source: 'check_no_open_renewal', target: 'create_renewal_opp', type: 'conditional', condition: 'existingRenewalOpp == null', label: 'Open renewal deal' },
+            { id: 'b8', source: 'check_no_open_renewal', target: 'create_renewal_opp', type: 'conditional', condition: P`existingRenewalOpp == null`, label: 'Open renewal deal' },
           ],
         },
       },

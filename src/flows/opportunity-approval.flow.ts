@@ -1,5 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
+import { P } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 type Flow = Automation.Flow;
 
@@ -57,9 +58,8 @@ export const OpportunityApprovalFlow: Flow = {
         // freeze hook rejects approval-status writes on closed records, so
         // without this guard the flow opened a locked approval request it
         // could never resolve (lockRecord held the closed record hostage).
-        condition:
-          'record.amount > 100000 && (record.approval_status == "not_required" || record.approval_status == null)'
-          + ' && record.stage != "closed_won" && record.stage != "closed_lost"',
+        condition: P`record.amount > 100000 && (record.approval_status == "not_required" || record.approval_status == null)
+          && record.stage != "closed_won" && record.stage != "closed_lost"`,
       },
     },
     {
@@ -95,7 +95,7 @@ export const OpportunityApprovalFlow: Flow = {
       id: 'check_high_value',
       type: 'decision',
       label: 'High Value (> $500K)?',
-      config: { condition: 'oppRecord.amount > 500000' },
+      config: { condition: P`oppRecord.amount > 500000` },
     },
 
     // ── Tier 2: Sales Director sign-off (deals > $500K only) ────────
@@ -178,8 +178,8 @@ export const OpportunityApprovalFlow: Flow = {
     { id: 'e4', source: 'manager_review', target: 'mark_rejected', type: 'default', label: 'reject' },
 
     // Tier gate (decision-node conditional branches)
-    { id: 'e5', source: 'check_high_value', target: 'director_signoff', type: 'conditional', condition: 'oppRecord.amount > 500000', label: 'High value (> $500K)' },
-    { id: 'e6', source: 'check_high_value', target: 'mark_approved', type: 'conditional', condition: 'oppRecord.amount <= 500000', label: 'Standard (≤ $500K)' },
+    { id: 'e5', source: 'check_high_value', target: 'director_signoff', type: 'conditional', condition: P`oppRecord.amount > 500000`, label: 'High value (> $500K)' },
+    { id: 'e6', source: 'check_high_value', target: 'mark_approved', type: 'conditional', condition: P`oppRecord.amount <= 500000`, label: 'Standard (≤ $500K)' },
 
     // Director decision (approval-node branch labels)
     { id: 'e7', source: 'director_signoff', target: 'mark_approved', type: 'default', label: 'approve' },

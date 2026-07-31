@@ -1,5 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
+import { P } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 type Flow = Automation.Flow;
 
@@ -34,7 +35,7 @@ export const CaseCsatFollowupFlow: Flow = {
       config: {
         objectName: 'crm_case',
         triggerType: 'record-after-update',
-        condition: 'record.status == "closed" && (previous == null || previous.status != "closed")',
+        condition: P`record.status == "closed" && (previous == null || previous.status != "closed")`,
       },
     },
     {

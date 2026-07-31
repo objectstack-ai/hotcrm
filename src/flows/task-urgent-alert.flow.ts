@@ -1,5 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
+import { P } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 type Flow = Automation.Flow;
 
@@ -27,7 +28,7 @@ export const TaskUrgentAlertFlow: Flow = {
         // SQLite/libsql booleans persist as integer 1, so `is_completed != true`
         // is `1 != true` = always true and the guard never trips (cf. the same
         // hazard documented in case_escalation).
-        condition: 'record.priority == "urgent" && record.status != "completed"',
+        condition: P`record.priority == "urgent" && record.status != "completed"`,
       },
     },
     {

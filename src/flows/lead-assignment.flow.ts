@@ -1,5 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
+import { P } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 type Flow = Automation.Flow;
 
@@ -40,7 +41,7 @@ export const LeadAssignmentFlow: Flow = {
     },
     {
       id: 'check_hot', type: 'decision', label: 'Hot Lead (rating ≥ 4)?',
-      config: { condition: 'record.rating >= 4' },
+      config: { condition: P`record.rating >= 4` },
     },
 
     // ── Hot path: 1-day SLA, high-severity alert ───────────────────
@@ -91,8 +92,8 @@ export const LeadAssignmentFlow: Flow = {
 
   edges: [
     { id: 'e1', source: 'start', target: 'check_hot', type: 'default' },
-    { id: 'e2', source: 'check_hot', target: 'sla_hot', type: 'conditional', condition: 'record.rating >= 4', label: 'Hot' },
-    { id: 'e3', source: 'check_hot', target: 'sla_std', type: 'conditional', condition: 'record.rating < 4', label: 'Standard' },
+    { id: 'e2', source: 'check_hot', target: 'sla_hot', type: 'conditional', condition: P`record.rating >= 4`, label: 'Hot' },
+    { id: 'e3', source: 'check_hot', target: 'sla_std', type: 'conditional', condition: P`record.rating < 4`, label: 'Standard' },
     { id: 'e4', source: 'sla_hot', target: 'notify_hot', type: 'default' },
     { id: 'e5', source: 'notify_hot', target: 'end', type: 'default' },
     { id: 'e6', source: 'sla_std', target: 'notify_std', type: 'default' },

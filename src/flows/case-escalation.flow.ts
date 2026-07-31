@@ -1,5 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
+import { P } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 type Flow = Automation.Flow;
 
@@ -42,9 +43,8 @@ export const CaseEscalationFlow: Flow = {
         // the boolean is_closed suffers the SQLite `1 != true` trap above.
         // `escalated_date == null` additionally keeps a case that was already
         // escalated once (then reopened) from being escalated again.
-        condition:
-          'record.priority == "critical" && record.escalated_date == null'
-          + ' && record.status != "escalated" && record.status != "resolved" && record.status != "closed"',
+        condition: P`record.priority == "critical" && record.escalated_date == null
+          && record.status != "escalated" && record.status != "resolved" && record.status != "closed"`,
       },
     },
     {
