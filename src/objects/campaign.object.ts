@@ -232,7 +232,10 @@ export const Campaign = ObjectSchema.create({
       type: 'script',
       severity: 'error',
       message: 'End Date must be after Start Date',
-      condition: P`record.end_date != null && record.start_date != null && record.end_date < record.start_date`,
+      // `<=`, not `<`: the message promises "after", so a campaign that ends
+      // the day it starts is a violation. Matches `crm_contract`'s twin rule
+      // and `crm_forecast.period_end_after_start` (#514 item 12).
+      condition: P`record.end_date != null && record.start_date != null && record.end_date <= record.start_date`,
     },
     {
       name: 'actual_cost_within_budget',
