@@ -2,6 +2,7 @@
 
 import type { Hook, HookContext } from '@objectstack/spec/data';
 import type { HookApi } from './_hook-api';
+import { createLineItemPriceFill } from './_line-item-price-fill';
 
 /**
  * Quote total rollup.
@@ -33,33 +34,13 @@ import type { HookApi } from './_hook-api';
  * - handles re-parenting (old + new quote).
  */
 /**
- * Line-item price fill (see opportunity_line_item.hook for the rationale).
- * Stamps catalog `list_price` from the chosen product and defaults the
- * negotiated `unit_price` to it on create when blank.
+ * Line-item price fill — one implementation shared with the opportunity line
+ * item; see `_line-item-price-fill.ts` for the behaviour and the sandbox caveat.
  */
-const quoteLineItemPriceFill: Hook = {
-  name: 'quote_line_item_price_fill',
-  object: 'crm_quote_line_item',
-  events: ['beforeInsert', 'beforeUpdate'],
-  priority: 100,
-  description: 'Default list_price / unit_price from the chosen product.',
-  handler: async (ctx: HookContext) => {
-    const { event, input } = ctx;
-    const api = ctx.api as HookApi | undefined;
-    if (!api) return;
-    const productId = typeof input.crm_product === 'string' ? input.crm_product : undefined;
-    if (!productId) return;
-    const product = await api.object('crm_product').findOne({
-      filter: { id: productId }, fields: ['id', 'list_price'],
-    });
-    const listPrice = product && typeof product.list_price === 'number' ? product.list_price : undefined;
-    if (listPrice === undefined) return;
-    input.list_price = listPrice;
-    if (event === 'beforeInsert' && input.unit_price == null) {
-      input.unit_price = listPrice;
-    }
-  },
-};
+const quoteLineItemPriceFill: Hook = createLineItemPriceFill(
+  'crm_quote_line_item',
+  'quote_line_item_price_fill',
+);
 
 const quoteTotalRollup: Hook = {
   name: 'quote_total_rollup',
