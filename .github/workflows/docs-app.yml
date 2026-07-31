@@ -1,0 +1,61 @@
+name: Docs App
+
+# `apps/docs` is a full Next.js + Fumadocs site (231 mdx pages) with its own
+# package.json and its own lockfile — it is NOT part of the root pnpm project,
+# so `pnpm install` / `pnpm typecheck` / `pnpm build` at the root have never
+# touched a single file of it. A broken import, a bad mdx frontmatter block, or
+# a dead internal link could land on main with every check green.
+#
+# This workflow is the only thing that compiles it.
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'apps/docs/**'
+      - '.github/workflows/docs-app.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'apps/docs/**'
+      - '.github/workflows/docs-app.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Typecheck and Build
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    defaults:
+      run:
+        working-directory: apps/docs
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22.x'
+          cache: 'pnpm'
+          cache-dependency-path: apps/docs/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # `fumadocs-mdx && next typegen && tsc --noEmit` — generates the mdx
+      # collection types and the route types first, then typechecks against them.
+      - name: Typecheck
+        run: pnpm run types:check
+
+      - name: Build
+        run: pnpm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: '1'

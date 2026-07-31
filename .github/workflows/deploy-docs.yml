@@ -6,8 +6,6 @@ on:
     paths:
       - 'docs/**'
       - 'README.md'
-      - 'QUICKSTART.md'
-      - 'PROJECT_SUMMARY.md'
   workflow_dispatch:
 
 jobs:
@@ -32,12 +30,15 @@ jobs:
       
       - name: Create documentation site
         run: |
+          set -euo pipefail
           mkdir -p _site
+          # QUICKSTART.md and PROJECT_SUMMARY.md were copied here unguarded and
+          # have never existed in this repo, so every triggering push failed the
+          # deploy. `docs/` is copied without `|| true` for the same reason: if
+          # the documentation tree vanishes we want to hear about it.
           cp README.md _site/index.md
-          cp QUICKSTART.md _site/
-          cp PROJECT_SUMMARY.md _site/
-          cp -r docs/* _site/ 2>/dev/null || true
-          
+          cp -r docs/. _site/
+
           # Create a simple index.html that redirects to README
           cat > _site/index.html << 'EOF'
           <!DOCTYPE html>

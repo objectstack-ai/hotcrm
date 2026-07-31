@@ -18,9 +18,11 @@
     "validate": "objectstack validate",
     "lint": "objectstack lint --skip-i18n",
     "test": "vitest run",
-    "test:qa": "objectstack test",
+    "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
-    "verify": "pnpm validate && pnpm typecheck && pnpm build && pnpm test",
+    "hygiene": "node scripts/check-source-hygiene.mjs",
+    "reconcile:analytics": "tsx scripts/analytics-reconcile/run.ts",
+    "verify": "pnpm validate && pnpm typecheck && pnpm lint && pnpm hygiene && pnpm build && pnpm test",
     "changeset": "changeset",
     "changeset:version": "changeset version",
     "changeset:status": "changeset status --since=origin/main",
@@ -48,6 +50,8 @@
   "devDependencies": {
     "@changesets/cli": "^2.31.1",
     "@playwright/test": "^1.61.1",
+    "@vitest/coverage-v8": "^4.1.10",
+    "tsx": "^4.23.1",
     "typescript": "^7.0.2",
     "vitest": "^4.1.9"
   },

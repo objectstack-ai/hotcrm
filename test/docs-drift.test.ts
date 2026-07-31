@@ -3,6 +3,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { REPO_ROOT } from './helpers/repo-root';
 
 /**
  * Docs ↔ source drift guard (the AI-era safety net).
@@ -22,8 +23,13 @@ import { join } from 'node:path';
  * markdown) so it stays readable and has no runtime/server dependency.
  */
 
-const FLOWS = (f: string) => readFileSync(join('src/flows', f), 'utf8');
-const DOC = (f: string) => readFileSync(join('src/docs', f), 'utf8');
+// Resolved from this file's own location, not `process.cwd()`. The previous
+// `join('src/flows', f)` only worked when vitest happened to be launched from
+// the repo root — from a subdirectory, or an editor runner with a different
+// working directory, this drift guard died with ENOENT instead of checking
+// anything.
+const FLOWS = (f: string) => readFileSync(join(REPO_ROOT, 'src/flows', f), 'utf8');
+const DOC = (f: string) => readFileSync(join(REPO_ROOT, 'src/docs', f), 'utf8');
 
 /** cron → the human label the docs use. Unknown cron ⇒ deliberate failure. */
 const CRON_LABEL: Record<string, string> = {

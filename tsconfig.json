@@ -1,14 +1,39 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    // Nothing here is ever emitted by tsc — `objectstack build` bundles src via
+    // esbuild and vitest transpiles the suites — so the module mode only needs
+    // to describe how this code is *consumed*. `preserve` + `bundler` does
+    // that: extensionless relative imports (which the whole tree uses) resolve,
+    // and `import.meta` is legal, which `NodeNext` rejected for any file that
+    // would notionally emit to CommonJS.
+    "module": "preserve",
+    "moduleResolution": "bundler",
     "strict": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
-    "outDir": "./dist",
-    "rootDir": "."
+    "rootDir": ".",
+    // `pnpm typecheck` is `tsc --noEmit`, but `outDir: "./dist"` was still
+    // declared — and `dist/` is where `objectstack build` writes the artifact
+    // that `scripts/publish-marketplace.mjs` uploads. Any `tsc` invocation
+    // without `--noEmit` would have scattered .js next to the build output that
+    // ships to the marketplace. Pinning `noEmit` here removes the footgun
+    // regardless of how tsc is invoked.
+    "noEmit": true,
+    "types": ["node"]
   },
-  "include": ["src/**/*", "objectstack.config.ts"]
+  // `test/`, `e2e/` and `scripts/` were all outside `include`, so ~1,900 lines
+  // of first-party TypeScript — the whole vitest suite, both playwright specs,
+  // and the 606-line analytics-reconcile tool — were never typechecked by CI.
+  "include": [
+    "src/**/*",
+    "test/**/*",
+    "e2e/**/*",
+    "scripts/**/*.ts",
+    "objectstack.config.ts",
+    "vitest.config.ts",
+    "playwright.config.ts"
+  ],
+  "exclude": ["node_modules", "dist", "apps"]
 }

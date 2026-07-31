@@ -832,7 +832,7 @@ describe('every named list view is reachable', () => {
     for (const v of views) {
       const defined = new Set([
         v.list?.name,
-        ...Object.entries(v.listViews ?? {}).map(([key, def]: [string, AnyRec]) => def.name ?? key),
+        ...Object.entries(v.listViews ?? {}).map(([key, def]) => (def as AnyRec)?.name ?? key),
       ].filter(Boolean));
       for (const t of v.list?.tabs ?? []) {
         if (t.view && !defined.has(t.view)) {

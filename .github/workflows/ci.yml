@@ -37,12 +37,17 @@ jobs:
       - name: Check the StackBlitz npm lockfile is in sync
         run: node scripts/check-stackblitz-lock.mjs
 
+      - name: Source hygiene (console.log / TODO / file size)
+        run: node scripts/check-source-hygiene.mjs
+
       - name: Validate metadata (protocol/schema)
         run: pnpm run validate
 
-      - name: Lint metadata conventions (advisory)
+      # `objectstack lint` exits 0 on warnings/suggestions and non-zero only on
+      # real errors — `continue-on-error` was hiding exactly the failures worth
+      # gating on.
+      - name: Lint metadata conventions
         run: pnpm run lint
-        continue-on-error: true
 
       - name: TypeScript type checking
         run: pnpm run typecheck
@@ -50,8 +55,20 @@ jobs:
       - name: Build project
         run: pnpm run build
 
-      - name: Run tests
-        run: pnpm test
+      # `--coverage` so the thresholds in vitest.config.ts actually gate. They
+      # are set just under the measured numbers for the hook handlers, which
+      # went from 23% statements / 22% functions to 95% / 95% when the runtime
+      # suites landed.
+      - name: Run tests with coverage
+        run: pnpm run test:coverage
+
+      - name: Upload coverage report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage
+          path: coverage/
+          retention-days: 7
       
       - name: Upload build artifacts
         if: matrix.node-version == '22.x'
