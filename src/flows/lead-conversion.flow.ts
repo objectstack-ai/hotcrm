@@ -1,5 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
+import { P } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 type Flow = Automation.Flow;
 
@@ -56,7 +57,7 @@ export const LeadConversionFlow: Flow = {
     },
     {
       id: 'decision_account', type: 'decision', label: 'Account Already Exists?',
-      config: { condition: 'vars.matchedAccount != null' },
+      config: { condition: P`vars.matchedAccount != null` },
     },
     {
       // NEW-account branch. outputVariable is `createdAccount`; the assignment
@@ -100,7 +101,7 @@ export const LeadConversionFlow: Flow = {
     },
     {
       id: 'decision_contact', type: 'decision', label: 'Contact Already Exists?',
-      config: { condition: 'vars.matchedContact != null' },
+      config: { condition: P`vars.matchedContact != null` },
     },
     {
       // `accountId` is a bare id string from whichever account branch ran.
@@ -126,7 +127,7 @@ export const LeadConversionFlow: Flow = {
     },
     {
       id: 'decision_opportunity', type: 'decision', label: 'Create Opportunity?',
-      config: { condition: 'vars.createOpportunity == true' },
+      config: { condition: P`vars.createOpportunity == true` },
     },
     {
       id: 'create_opportunity', type: 'create_record', label: 'Create Opportunity',
@@ -189,21 +190,21 @@ export const LeadConversionFlow: Flow = {
     { id: 'e3', source: 'get_lead', target: 'find_account', type: 'default' },
     { id: 'e4', source: 'find_account', target: 'decision_account', type: 'default' },
     // Existing account → reuse; no account → create. Both converge on create_contact.
-    { id: 'e5', source: 'decision_account', target: 'use_existing_account', type: 'default', condition: 'vars.matchedAccount != null', label: 'Existing' },
-    { id: 'e6', source: 'decision_account', target: 'create_account', type: 'default', condition: 'vars.matchedAccount == null', label: 'New' },
+    { id: 'e5', source: 'decision_account', target: 'use_existing_account', type: 'default', condition: P`vars.matchedAccount != null`, label: 'Existing' },
+    { id: 'e6', source: 'decision_account', target: 'create_account', type: 'default', condition: P`vars.matchedAccount == null`, label: 'New' },
     { id: 'e7', source: 'create_account', target: 'use_new_account', type: 'default' },
     // Both account branches converge on the contact-dedupe lookup.
     { id: 'e8', source: 'use_new_account', target: 'find_contact', type: 'default' },
     { id: 'e9', source: 'use_existing_account', target: 'find_contact', type: 'default' },
     { id: 'e10', source: 'find_contact', target: 'decision_contact', type: 'default' },
     // Existing contact → reuse; none → create. Both converge on decision_opportunity.
-    { id: 'e11', source: 'decision_contact', target: 'use_existing_contact', type: 'default', condition: 'vars.matchedContact != null', label: 'Existing' },
-    { id: 'e12', source: 'decision_contact', target: 'create_contact', type: 'default', condition: 'vars.matchedContact == null', label: 'New' },
+    { id: 'e11', source: 'decision_contact', target: 'use_existing_contact', type: 'default', condition: P`vars.matchedContact != null`, label: 'Existing' },
+    { id: 'e12', source: 'decision_contact', target: 'create_contact', type: 'default', condition: P`vars.matchedContact == null`, label: 'New' },
     { id: 'e13', source: 'create_contact', target: 'use_new_contact', type: 'default' },
     { id: 'e14', source: 'use_new_contact', target: 'decision_opportunity', type: 'default' },
     { id: 'e15', source: 'use_existing_contact', target: 'decision_opportunity', type: 'default' },
-    { id: 'e16', source: 'decision_opportunity', target: 'create_opportunity', type: 'default', condition: 'vars.createOpportunity == true', label: 'Yes' },
-    { id: 'e17', source: 'decision_opportunity', target: 'no_opportunity', type: 'default', condition: 'vars.createOpportunity != true', label: 'No' },
+    { id: 'e16', source: 'decision_opportunity', target: 'create_opportunity', type: 'default', condition: P`vars.createOpportunity == true`, label: 'Yes' },
+    { id: 'e17', source: 'decision_opportunity', target: 'no_opportunity', type: 'default', condition: P`vars.createOpportunity != true`, label: 'No' },
     { id: 'e18', source: 'create_opportunity', target: 'use_new_opportunity', type: 'default' },
     { id: 'e18a', source: 'use_new_opportunity', target: 'mark_converted', type: 'default' },
     { id: 'e18b', source: 'no_opportunity', target: 'mark_converted', type: 'default' },

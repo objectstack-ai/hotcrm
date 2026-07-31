@@ -1,5 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
+import { P } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 type Flow = Automation.Flow;
 
@@ -79,15 +80,7 @@ export const OpportunityStagnationFlow: Flow = {
             },
             {
               id: 'check_not_nudged', type: 'decision', label: 'First Nudge?',
-              // Explicit CEL envelope. `applyConversionsToFlow` wraps a bare
-              // string condition into one for a flow's TOP-LEVEL edges only; it
-              // does not recurse into a loop's `config.body`. A bare string here
-              // falls through to the engine's legacy template path, which
-              // string-compares the unresolved text
-              // (`'existingStallTask' === 'null'` → false) — the gate never
-              // opened and this sweep nudged nobody. See
-              // test/flow-scheduled.test.ts.
-              config: { condition: { dialect: 'cel', source: 'existingStallTask == null' } },
+              config: { condition: P`existingStallTask == null` },
             },
             {
               // Owner only: `{currentOpp.owner.manager}` cannot traverse a
@@ -121,7 +114,7 @@ export const OpportunityStagnationFlow: Flow = {
           edges: [
             { id: 'b1', source: 'find_existing_task', target: 'check_not_nudged', type: 'default' },
             // "Already nudged" has no edge, so the loop moves to the next item.
-            { id: 'b2', source: 'check_not_nudged', target: 'notify_owner', type: 'conditional', condition: { dialect: 'cel', source: 'existingStallTask == null' }, label: 'First nudge' },
+            { id: 'b2', source: 'check_not_nudged', target: 'notify_owner', type: 'conditional', condition: P`existingStallTask == null`, label: 'First nudge' },
             { id: 'b3', source: 'notify_owner', target: 'create_followup_task', type: 'default' },
           ],
         },

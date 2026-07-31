@@ -1,5 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
+import { P } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 type Flow = Automation.Flow;
 
@@ -54,30 +55,18 @@ export const ContractRenewalFlow: Flow = {
       config: {
         collection: '{contractList}',
         iteratorVariable: 'currentContract',
-        // NB: every `condition` inside this body is written as an explicit
-        // `{ dialect: 'cel', source }` envelope, unlike the bare strings used at
-        // the top level of a flow. `applyConversionsToFlow` wraps a bare string
-        // into that envelope for a flow's TOP-LEVEL edges only — it does not
-        // recurse into a loop's `config.body`. A bare string left in here falls
-        // through to the engine's legacy template path, which string-compares
-        // the unresolved expression text (`'existingRenewalTask' === 'null'` →
-        // false), so the gate never opens and the whole sweep is inert. See
-        // test/flow-scheduled.test.ts.
         body: {
           nodes: [
             {
               id: 'check_notice_window', type: 'decision', label: 'Within Notice Window?',
-              config: {
-                // `end_date` is a DATE field and arrives as `YYYY-MM-DD`, but
-                // CEL's `timestamp()` only accepts a full ISO 8601 datetime and
-                // throws otherwise ("timestamp() requires a string in ISO 8601
-                // format"). Appending the time part is what makes the
-                // comparison evaluate instead of blowing up mid-sweep.
-                condition: {
-                  dialect: 'cel',
-                  source: 'timestamp(currentContract.end_date + "T00:00:00Z") <= daysFromNow(int(currentContract.renewal_notice_days))',
-                },
-              },
+              // `end_date` is a DATE field and arrives as `YYYY-MM-DD`, but CEL's
+              // `timestamp()` only accepts a full ISO 8601 datetime and throws
+              // otherwise ("timestamp() requires a string in ISO 8601 format").
+              // Appending the time part is what makes this evaluate instead of
+              // blowing up mid-sweep — a defect that only became REACHABLE once
+              // the condition was wrapped as a real CEL envelope, because the
+              // old bare string was never evaluated at all.
+              config: { condition: P`timestamp(currentContract.end_date + "T00:00:00Z") <= daysFromNow(int(currentContract.renewal_notice_days))` },
             },
             {
               // Idempotency gate: the sweep matches the same contract every
@@ -98,7 +87,7 @@ export const ContractRenewalFlow: Flow = {
             },
             {
               id: 'check_not_reminded', type: 'decision', label: 'First Reminder?',
-              config: { condition: { dialect: 'cel', source: 'existingRenewalTask == null' } },
+              config: { condition: P`existingRenewalTask == null` },
             },
             {
               id: 'create_renewal_task', type: 'create_record', label: 'Create Renewal Task',
@@ -127,7 +116,7 @@ export const ContractRenewalFlow: Flow = {
             },
             {
               id: 'check_auto_renewal', type: 'decision', label: 'Auto-Renewal On?',
-              config: { condition: { dialect: 'cel', source: 'currentContract.auto_renewal == true' } },
+              config: { condition: P`currentContract.auto_renewal == true` },
             },
             {
               // Second gate: never open a second renewal opportunity while one
@@ -146,7 +135,7 @@ export const ContractRenewalFlow: Flow = {
             },
             {
               id: 'check_no_open_renewal', type: 'decision', label: 'No Open Renewal Deal?',
-              config: { condition: { dialect: 'cel', source: 'existingRenewalOpp == null' } },
+              config: { condition: P`existingRenewalOpp == null` },
             },
             {
               id: 'create_renewal_opp', type: 'create_record', label: 'Open Renewal Opportunity',
@@ -168,30 +157,14 @@ export const ContractRenewalFlow: Flow = {
           edges: [
             // Only act when inside the per-contract notice window; gates with
             // no matching edge simply end the iteration, so the loop moves on.
-            {
-              id: 'b1', source: 'check_notice_window', target: 'find_existing_task', type: 'conditional',
-              condition: {
-                dialect: 'cel',
-                source: 'timestamp(currentContract.end_date + "T00:00:00Z") <= daysFromNow(int(currentContract.renewal_notice_days))',
-              },
-              label: 'In window',
-            },
+            { id: 'b1', source: 'check_notice_window', target: 'find_existing_task', type: 'conditional', condition: P`timestamp(currentContract.end_date + "T00:00:00Z") <= daysFromNow(int(currentContract.renewal_notice_days))`, label: 'In window' },
             { id: 'b2', source: 'find_existing_task', target: 'check_not_reminded', type: 'default' },
-            {
-              id: 'b3', source: 'check_not_reminded', target: 'create_renewal_task', type: 'conditional',
-              condition: { dialect: 'cel', source: 'existingRenewalTask == null' }, label: 'First reminder',
-            },
+            { id: 'b3', source: 'check_not_reminded', target: 'create_renewal_task', type: 'conditional', condition: P`existingRenewalTask == null`, label: 'First reminder' },
             { id: 'b4', source: 'create_renewal_task', target: 'notify_owner', type: 'default' },
             { id: 'b5', source: 'notify_owner', target: 'check_auto_renewal', type: 'default' },
-            {
-              id: 'b6', source: 'check_auto_renewal', target: 'find_existing_renewal_opp', type: 'conditional',
-              condition: { dialect: 'cel', source: 'currentContract.auto_renewal == true' }, label: 'Auto-renew',
-            },
+            { id: 'b6', source: 'check_auto_renewal', target: 'find_existing_renewal_opp', type: 'conditional', condition: P`currentContract.auto_renewal == true`, label: 'Auto-renew' },
             { id: 'b7', source: 'find_existing_renewal_opp', target: 'check_no_open_renewal', type: 'default' },
-            {
-              id: 'b8', source: 'check_no_open_renewal', target: 'create_renewal_opp', type: 'conditional',
-              condition: { dialect: 'cel', source: 'existingRenewalOpp == null' }, label: 'Open renewal deal',
-            },
+            { id: 'b8', source: 'check_no_open_renewal', target: 'create_renewal_opp', type: 'conditional', condition: P`existingRenewalOpp == null`, label: 'Open renewal deal' },
           ],
         },
       },

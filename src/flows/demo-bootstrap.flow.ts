@@ -1,5 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
+import { P } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 type Flow = Automation.Flow;
 
@@ -120,7 +121,7 @@ export const DemoBootstrapFlow: Flow = {
     },
     {
       id: 'has_user', type: 'decision', label: 'Any user yet?',
-      config: { condition: 'vars.firstUser != null' },
+      config: { condition: P`vars.firstUser != null` },
     },
     ...TARGETS.flatMap((t) => [t.find, t.loop]),
     { id: 'end', type: 'end', label: 'End' },
@@ -134,12 +135,12 @@ export const DemoBootstrapFlow: Flow = {
       target: CHAIN[i + 1],
       type: 'default' as const,
       // The only branch: leaving `has_user` towards the first claim step.
-      ...(source === 'has_user' ? { condition: 'vars.firstUser != null', label: 'Yes' } : {}),
+      ...(source === 'has_user' ? { condition: P`vars.firstUser != null`, label: 'Yes' } : {}),
     })),
     // Nothing to claim before anyone exists — skip the whole chain.
     {
       id: 'e_nouser', source: 'has_user', target: 'end', type: 'default',
-      condition: 'vars.firstUser == null', label: 'No user yet',
+      condition: P`vars.firstUser == null`, label: 'No user yet',
     },
   ],
 };
