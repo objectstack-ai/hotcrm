@@ -29,10 +29,16 @@ export const SlaPerformanceReport: ReportInput = {
 };
 
 /**
- * Daily case inflow by priority — matrix with day-level bucketing. Support
- * managers use this to spot priority spikes (e.g. a P1 burst on Tuesday) and
- * staff accordingly. Exercises the finest `dateGranularity: 'day'` bucket and
- * its interaction with a small categorical axis.
+ * Daily case inflow by priority — matrix over `created_date`. Support managers
+ * use this to spot priority spikes (e.g. a P1 burst on Tuesday) and staff
+ * accordingly.
+ *
+ * The across axis is NOT bucketed by day yet: `case_metrics` cannot declare
+ * `dateGranularity` while the app is pinned to @objectstack 16.x (see the note
+ * on `opportunity_metrics.close_date`; hotcrm#523). Seeded cases carry a
+ * midnight timestamp, so the raw columns happen to READ as days — but they are
+ * raw timestamps, and a case created mid-afternoon gets its own column. The
+ * day bucket is pinned as intent in `test/dataset-granularity.test.ts`.
  */
 export const CasesOpenedByDayPriorityReport: ReportInput = {
   name: 'cases_opened_by_day_priority',
@@ -40,4 +46,8 @@ export const CasesOpenedByDayPriorityReport: ReportInput = {
   description: 'Daily case inflow split by priority',
   dataset: 'case_metrics', rows: ['priority'], columns: ['created_date'], values: ['case_count'],
   type: 'matrix',
+  // `created_date` is stamped by the platform, not required by the schema — a
+  // case that reaches the table without one would group into a headerless '—'
+  // column. "Cases opened" needs an open date; exclude the empty bucket.
+  runtimeFilter: { created_date: { $ne: null } },
 };
