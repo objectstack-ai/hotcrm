@@ -217,8 +217,14 @@ model with instructions describing a capability it does not have — the defect
 [#493](https://github.com/objectstack-ai/hotcrm/issues/493) catalogued. Two
 sources resolve, and only two:
 
-- **Platform data tools** — `describe_object`, `list_objects`, `query_records`,
-  `get_record`, `aggregate_data`.
+- **Platform-provided tools** — the registry the platform serves, not a list to
+  guess at. The ones a CRM skill wants are `describe_object`, `list_objects`,
+  `query_records`, `query_data`, `get_record`, `aggregate_data`,
+  `search_knowledge` and `visualize_data`. From 17.0 the authoritative set is
+  exported as `PLATFORM_PROVIDED_TOOL_NAMES` from `@objectstack/spec/system`;
+  on 16.1.0 it is transcribed into `test/skills-integrity.test.ts`. Note
+  `search_knowledge` retrieves over a *declared knowledge source*, and there is
+  currently nowhere in a skills-only app to declare one.
 - **`action_<name>`** — materialised from an Action that opts in with
   `ai: { exposed: true, description }` (ADR-0011, default off) *and* has a
   headless path. See `ConvertLeadAction` in `src/actions/lead.actions.ts`.

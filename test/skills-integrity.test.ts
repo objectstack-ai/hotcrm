@@ -10,11 +10,10 @@ import stack from '../objectstack.config';
  * validate` and `build` check that each name is a well-formed snake_case
  * string and stop there — nothing resolves it against a tool that exists.
  * At runtime an unresolved name is dropped silently, so the model is handed
- * instructions ("call `search_knowledge` for the policy context") describing
- * a capability it does not have, and improvises. Every instance of this bug
- * shipped green: issue #493 counted eleven fictional tools across six
- * skills, #512 removed ten of them, and `search_knowledge` survived in
- * `customer_360` because nothing in CI could see it.
+ * instructions ("call `triage_case` first") describing a capability it does
+ * not have, and improvises. Every instance of this bug shipped green: issue
+ * #493 counted eleven such references across six skills and #512 removed
+ * ten, none of which any check could see.
  *
  * Note the trap in "just define the missing tool": per `ToolSchema`, AI tool
  * metadata is a READ-ONLY PROJECTION for Studio discovery — it has no
@@ -39,40 +38,65 @@ const flowNames = new Set(flows.map((f) => f.name));
 const action = (name: string) => actions.find((a) => a.name === name);
 
 /**
- * Tools the AI runtime provides — the only names a skill may reference
+ * Tools the platform provides — the only names a skill may reference
  * without anything in this repo defining them.
  *
- * The runtime that serves them ships in the closed cloud package
- * (`@objectstack/service-ai`, ADR-0025 §2), so the open-edition
- * `node_modules` this repo installs cannot be read for the authoritative
- * list. What IS verifiable locally is the MCP bridge in
- * `@objectstack/mcp@16.1.0`, which registers the same registry's data +
- * metadata tools: `list_objects`, `describe_object`, `query_records`,
- * `get_record`, `aggregate_data`, `create_record`, `update_record`,
- * `delete_record`, `list_actions`, `run_action`, `validate_expression`.
+ * TRANSCRIBED VERBATIM from `PLATFORM_PROVIDED_TOOL_NAMES` in
+ * `@objectstack/spec@17.0.0-rc.0` (`dist/system`), which the upstream
+ * `ai-skill-tool-unresolved` rule resolves against. On the 17.0 upgrade,
+ * DELETE this literal and import the real thing:
  *
- * This list is the READ subset of that surface plus `visualize_data`.
- * Deliberately excluded: the write tools (`create_record` /
- * `update_record` / `delete_record`). HotCRM's state changes go through
- * Actions so that validation, sharing rules and audit match the UI path —
- * a skill reaching for raw record writes is a design regression, and this
- * list is where that gets caught.
+ *     import { PLATFORM_PROVIDED_TOOL_NAMES } from '@objectstack/spec/system';
  *
- * Adding a name here is a claim that the platform serves it. Make that
- * claim deliberately: an entry that is merely aspirational reintroduces
- * exactly the bug this file exists to prevent.
+ * The transcription is a stopgap for 16.1.0, which exposes no such
+ * registry — and a hand-copied list is exactly the drift risk this file
+ * exists to catch, one level up. Do not extend it from memory: an entry
+ * that is merely aspirational reintroduces the bug.
+ *
+ * The first pass of this file guessed the list from what the
+ * `@objectstack/mcp@16.1.0` bridge happens to register, and got it wrong
+ * in both directions. It omitted `search_knowledge` — a real platform
+ * tool, documented in 16.1.0's own
+ * `spec/src/ai/knowledge-source.zod.ts:114` — and so would have failed a
+ * legitimate reference. It also reasoned about `create_record` /
+ * `update_record` / `delete_record` as tools to deliberately exclude;
+ * they are MCP-bridge tools and are not in the platform registry at all,
+ * so there was nothing to exclude.
  */
 const PLATFORM_TOOLS = new Set([
-  'list_objects',
-  'describe_object',
-  'query_records',
-  'get_record',
+  // Data / analytics — the 'ask' surface these skills bind to.
   'aggregate_data',
-  // Charting tool served by the cloud AI runtime's analytics tier. Not in
-  // the open-edition bundle (nothing AI-runtime is), verified against the
-  // upstream reference-integrity rule when `revenue_forecasting` adopted it
-  // in #512.
+  'get_record',
+  'query_data',
+  'query_records',
+  'search_knowledge',
   'visualize_data',
+  // Metadata authoring — the 'build' surface. In the registry, so a
+  // reference resolves; no HotCRM skill has business with them.
+  'add_field',
+  'apply_blueprint',
+  'apply_edit',
+  'create_metadata',
+  'create_object',
+  'create_package',
+  'create_seed',
+  'delete_field',
+  'describe_metadata',
+  'describe_object',
+  'get_active_package',
+  'get_metadata_schema',
+  'get_package',
+  'list_metadata',
+  'list_objects',
+  'list_packages',
+  'modify_field',
+  'propose_blueprint',
+  'set_active_package',
+  'suggest_builder',
+  'todo_write',
+  'update_metadata',
+  'validate_expression',
+  'verify_build',
 ]);
 
 /** `action_<name>` — the tool the runtime materialises from an Action (ADR-0011). */
