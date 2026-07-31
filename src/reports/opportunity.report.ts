@@ -29,8 +29,16 @@ export const WonOpportunitiesByOwnerReport: ReportInput = {
  * Quarterly pipeline coverage — the matrix view that powers the classic
  * sales-ops "pipeline coverage" conversation: each forecast category against
  * the quarter the deal is expected to close in. `close_date` is the across
- * dimension (`columns`); the dataset's `dateGranularity` buckets it into
- * quarters in a single server-side aggregate query.
+ * dimension (`columns`).
+ *
+ * It is NOT bucketed into quarters yet — the comment here used to claim "the
+ * dataset's dateGranularity buckets it into quarters", but no such declaration
+ * exists (it was dropped in the v9 single-form migration and cannot be
+ * restored on @objectstack 16.x; see the note on
+ * `opportunity_metrics.close_date`, hotcrm#523). Restoring it needs a
+ * DEDICATED quarter dimension rather than a bucket on `close_date` itself:
+ * that dimension is shared with the Sales/CRM/Executive revenue trends, which
+ * want month. Both intents are pinned in `test/dataset-granularity.test.ts`.
  */
 export const PipelineCoverageByQuarterReport: ReportInput = {
   name: 'pipeline_coverage_by_quarter',
