@@ -5,20 +5,27 @@ import { defineSkill } from '@objectstack/spec';
 /**
  * Customer 360 — one profile assembled from the records that already exist.
  *
- * ADR-0109: this skill declares no bespoke tools. It used to list a
- * `search_knowledge` tool that nothing defines — the last survivor of the
- * ten fictional tools #512 removed — and the runtime silently drops an
- * unresolved tool, so the skill shipped with a single declared capability
- * that never resolved, while its instructions promised an aggregation it
- * had no tool to read.
+ * ADR-0109: this skill declares no bespoke tools. Its whole tool list used
+ * to be `search_knowledge`, while the instructions promised an account +
+ * cases + opportunities + knowledge roll-up it had no tool to read — it
+ * could not fetch a single record.
  *
- * Authoring the missing tool would not have helped: `ToolSchema` is a
- * READ-ONLY PROJECTION for Studio discovery — it carries no
- * `implementation` and no framework executor loads it, so a hand-authored
- * `search_knowledge` would validate, build, and still never run. The
- * knowledge base here is not a search service anyway; it is
- * `crm_knowledge_article`, a normal CRM object, so `query_records` reaches
- * it exactly like every other object this skill reads.
+ * `search_knowledge` is NOT fictional; #557 dropped it on that premise and
+ * the premise was wrong. It is a real platform tool, listed in
+ * `PLATFORM_PROVIDED_TOOL_NAMES` (`@objectstack/spec@17`) and documented
+ * back in 16.1.0 at `spec/src/ai/knowledge-source.zod.ts:114`.
+ *
+ * It is left out for a narrower reason: it has nothing here to search.
+ * `search_knowledge` retrieves over a declared knowledge source, and
+ * `AIKnowledgeSchema` mounts only on `AgentSchema.knowledge` — the
+ * `indexes: [...]` block that #512 deleted along with the agents. A
+ * skills-only app has nowhere to declare a source, so the tool would
+ * resolve and return nothing. That is the same lie one layer down.
+ *
+ * The knowledge base is `crm_knowledge_article`, a normal CRM object, so
+ * `query_records` reaches it exactly like every other object this skill
+ * reads. Revisit if a stack-level knowledge source ever becomes
+ * declarable.
  */
 export const Customer360Skill = defineSkill({
   name: 'customer_360',
@@ -40,9 +47,9 @@ customer / account / contact:
    by status) rather than adding up rows yourself.
 3. For the policy or playbook context, \`query_records\` on
    \`crm_knowledge_article\` — \`status\` published, matched on the
-   \`category\` or \`tags\` of the cases you just read. There is no
-   knowledge-search tool and you do not need one: the knowledge base is
-   an object like any other.
+   \`category\` or \`tags\` of the cases you just read. You have no
+   knowledge-search tool in this skill and do not need one: the knowledge
+   base is an object like any other.
 4. Summarise into three sections: **Account Snapshot** · **Active Work** ·
    **Risks & Notes**. Every risk names the record and the signal that
    raised it — an escalated case, a close date already past, a deal with
