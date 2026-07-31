@@ -14,9 +14,26 @@ export const Task = ObjectSchema.create({
   // ADR-0090 D1/D7: OWD is an authored decision. Personal activity records.
   sharingModel: 'private',
 
+  // Every other business object with a detail page groups its fields; task was
+  // one of the two that did not, so its detail page fell back to one flat grid
+  // where the five polymorphic `related_to_*` lookups and the recurrence
+  // machinery sat inline with the subject. The keys mirror the sections the
+  // task form already uses (Task / Related Records / Recurrence & Effort) so
+  // the two surfaces agree.
+  fieldGroups: [
+    { key: 'basic',      label: 'Task Information', icon: 'info' },
+    { key: 'scheduling', label: 'Scheduling',       icon: 'calendar' },
+    { key: 'assignment', label: 'Assignment',       icon: 'user' },
+    { key: 'related',    label: 'Related Records',  icon: 'link' },
+    { key: 'recurrence', label: 'Recurrence',       icon: 'refresh-ccw', defaultExpanded: false },
+    { key: 'effort',     label: 'Progress & Effort', icon: 'activity',   defaultExpanded: false },
+    { key: 'system',     label: 'System',           icon: 'database',    defaultExpanded: false },
+  ],
+
   fields: {
     // Task Information
     subject: Field.text({
+      group: 'basic',
       label: 'Subject',
       required: true,
       searchable: true,
@@ -24,11 +41,13 @@ export const Task = ObjectSchema.create({
     }),
     
     description: Field.markdown({
+      group: 'basic',
       label: 'Description',
     }),
     
     // Task Management
     status: Field.select({
+      group: 'basic',
       label: 'Status',
       required: true,
       trackHistory: true,
@@ -47,6 +66,7 @@ export const Task = ObjectSchema.create({
     }),
 
     priority: Field.select({
+      group: 'basic',
       label: 'Priority',
       required: true,
       trackHistory: true,
@@ -65,13 +85,19 @@ export const Task = ObjectSchema.create({
     // Sortable ordinal for `priority` — see crm_case.priority_rank. Sorting on
     // the select itself compares raw strings (normal > low > high > urgent),
     // which pushes urgent work to the bottom of the to-do queue.
+    //
+    // `0` is the UNRANKED sentinel, identical to crm_case.priority_rank. It
+    // used to be `2` here and `1` there, so the same unknown priority ordered
+    // differently on the two objects; `2` also made an unranked task
+    // indistinguishable from a genuine `normal`.
     priority_rank: Field.number({
       label: 'Priority Rank',
       readonly: true,
-      defaultValue: 2,
+      defaultValue: 0,
     }),
 
     type: Field.select({
+      group: 'basic',
       label: 'Task Type',
       // Canonical set (#490) — the schedule_followup screen renders the same
       // list; see _picklists.ts.
@@ -80,20 +106,24 @@ export const Task = ObjectSchema.create({
     
     // Dates
     due_date: Field.date({
+      group: 'scheduling',
       label: 'Due Date',
     }),
     
     reminder_date: Field.datetime({
+      group: 'scheduling',
       label: 'Reminder Date/Time',
     }),
     
     completed_date: Field.datetime({
+      group: 'scheduling',
       label: 'Completed Date',
       readonly: true,
     }),
     
     // Assignment
     owner: Field.lookup('sys_user', {
+      group: 'assignment',
       defaultValue: cel`os.user.id`,
       label: 'Assigned To',
       trackHistory: true,
@@ -101,6 +131,7 @@ export const Task = ObjectSchema.create({
     
     // Related To (Polymorphic relationship - can link to multiple object types)
     related_to_type: Field.select({
+      group: 'related',
       label: 'Related To Type',
       options: [
         { label: 'Account', value: 'crm_account' },
@@ -112,32 +143,39 @@ export const Task = ObjectSchema.create({
     }),
     
     related_to_account: Field.lookup('crm_account', {
+      group: 'related',
       label: 'Related Account',
     }),
     
     related_to_contact: Field.lookup('crm_contact', {
+      group: 'related',
       label: 'Related Contact',
     }),
     
     related_to_opportunity: Field.lookup('crm_opportunity', {
+      group: 'related',
       label: 'Related Opportunity',
     }),
     
     related_to_lead: Field.lookup('crm_lead', {
+      group: 'related',
       label: 'Related Lead',
     }),
     
     related_to_case: Field.lookup('crm_case', {
+      group: 'related',
       label: 'Related Case',
     }),
     
     // Recurrence (for recurring tasks)
     is_recurring: Field.boolean({
+      group: 'recurrence',
       label: 'Recurring Task',
       defaultValue: false,
     }),
     
     recurrence_type: Field.select({
+      group: 'recurrence',
       label: 'Recurrence Type',
       options: [
         { label: 'Daily', value: 'daily' },
@@ -148,23 +186,27 @@ export const Task = ObjectSchema.create({
     }),
     
     recurrence_interval: Field.number({
+      group: 'recurrence',
       label: 'Recurrence Interval',
       defaultValue: 1,
       min: 1,
     }),
     
     recurrence_end_date: Field.date({
+      group: 'recurrence',
       label: 'Recurrence End Date',
     }),
     
     // Flags
     is_completed: Field.boolean({
+      group: 'system',
       label: 'Is Completed',
       defaultValue: false,
       readonly: true,
     }),
     
     is_overdue: Field.boolean({
+      group: 'system',
       label: 'Is Overdue',
       defaultValue: false,
       readonly: true,
@@ -175,12 +217,14 @@ export const Task = ObjectSchema.create({
     // audit trail). NOT readonly: 16.x drops flow writes to readonly fields
     // (#2948) — same reason crm_case.is_sla_violated/escalated_date are open.
     reminder_sent: Field.boolean({
+      group: 'system',
       label: 'Reminder Sent',
       defaultValue: false,
     }),
 
     // Progress
     progress_percent: Field.percent({
+      group: 'effort',
       label: 'Progress (%)',
       min: 0,
       max: 100,
@@ -189,12 +233,14 @@ export const Task = ObjectSchema.create({
     
     // Time tracking
     estimated_hours: Field.number({
+      group: 'effort',
       label: 'Estimated Hours',
       scale: 2,
       min: 0,
     }),
     
     actual_hours: Field.number({
+      group: 'effort',
       label: 'Actual Hours',
       scale: 2,
       min: 0,

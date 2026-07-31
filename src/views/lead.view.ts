@@ -163,6 +163,16 @@ export const LeadViews = defineView({
             field: 'owner',
             required: true,
           },
+          // `disqualification_reason` is enforced by the
+          // `disqualification_reason_required` validation on crm_lead, so every
+          // form that lets a user pick "Unqualified" must also offer the reason
+          // — otherwise the save fails with an error the form gives you no way
+          // to clear. Hidden until it applies.
+          {
+            field: 'disqualification_reason',
+            required: true,
+            visibleOn: 'status == "unqualified"',
+          },
         ],
       },
       {
@@ -386,6 +396,13 @@ export const LeadViews = defineView({
             // when the lead is keyed in.
             'lead_source',
             'owner',
+            // See the default form: `unqualified` requires a reason, so the
+            // reason must be reachable wherever the status can be set.
+            {
+              field: 'disqualification_reason',
+              required: true,
+              visibleOn: 'status == "unqualified"',
+            },
           ],
         },
       ],
@@ -422,6 +439,12 @@ export const LeadViews = defineView({
             'industry',
             'annual_revenue',
             'number_of_employees',
+            // See the default form: `unqualified` requires a reason.
+            {
+              field: 'disqualification_reason',
+              required: true,
+              visibleOn: 'status == "unqualified"',
+            },
           ],
         },
         {
@@ -485,6 +508,13 @@ export const LeadViews = defineView({
           columns: 2,
           fields: [
             { field: 'status', required: true },
+            // See the default form: `unqualified` requires a reason. The status
+            // is editable in this step, so the wizard can land there too.
+            {
+              field: 'disqualification_reason',
+              required: true,
+              visibleOn: 'status == "unqualified"',
+            },
             { field: 'rating', widget: 'star_rating' },
             'lead_source',
             {
@@ -527,6 +557,12 @@ export const LeadViews = defineView({
             'email',
             { field: 'status', required: true },
             'owner',
+            // See the default form: `unqualified` requires a reason.
+            {
+              field: 'disqualification_reason',
+              required: true,
+              visibleOn: 'status == "unqualified"',
+            },
           ],
         },
         {
@@ -573,6 +609,12 @@ export const LeadViews = defineView({
               field: 'owner',
               visibleOn: 'status != "new"', // Only show owner after initial contact
             },
+            // See the default form: `unqualified` requires a reason.
+            {
+              field: 'disqualification_reason',
+              required: true,
+              visibleOn: 'status == "unqualified"',
+            },
           ],
         },
       ],
@@ -606,10 +648,18 @@ export const LeadViews = defineView({
               widget: 'star_rating',
               visibleOn: 'status == "qualified"', // Only show rating for qualified leads
             },
+            // The reason picklist, not just free-text notes: it is what the
+            // `disqualification_reason_required` validation checks, and this
+            // modal is the main place a rep flips a lead to Unqualified.
+            {
+              field: 'disqualification_reason',
+              required: true,
+              visibleOn: 'status == "unqualified"',
+            },
             {
               field: 'notes',
               placeholder: 'Add notes about this status change',
-              visibleOn: 'status == "unqualified"', // Require notes for unqualified
+              visibleOn: 'status == "unqualified"', // Free-text context alongside the reason
             },
           ],
         },
@@ -716,6 +766,12 @@ export const LeadViews = defineView({
               field: 'owner',
               required: true,
               visibleOn: P`record.status == "contacted" || record.status == "qualified"`,
+            },
+            // See the default form: `unqualified` requires a reason.
+            {
+              field: 'disqualification_reason',
+              required: true,
+              visibleOn: 'status == "unqualified"',
             },
             {
               field: 'notes',

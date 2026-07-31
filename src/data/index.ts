@@ -220,6 +220,23 @@ const contacts = defineSeed(Contact, {
 });
 
 // ─── Leads ────────────────────────────────────────────────────────────
+/**
+ * Disqualification reasons for the generated `unqualified` demo leads, paired
+ * with the note that explains them.
+ *
+ * `crm_lead.disqualification_reason_required` rejects an unqualified lead that
+ * carries no reason, so every seeded unqualified row must supply one — the rows
+ * used to carry a budget-flavoured note and no reason at all. Rotated over four
+ * values so the demo's disqualification breakdown has more than one bar, and
+ * the note always matches the reason it sits next to.
+ */
+const DISQUALIFICATION_REASONS = [
+  { reason: 'no_budget',     note: 'No budget approved for this fiscal year — revisit next planning cycle.' },
+  { reason: 'not_a_fit',     note: 'Requirements sit outside what the product covers today.' },
+  { reason: 'wrong_persona', note: 'Contact has no say in the buying decision and no path to an owner.' },
+  { reason: 'unreachable',   note: 'Six touches across email and phone over four weeks, no response.' },
+] as const;
+
 const leads = defineSeed(Lead, {
   mode: 'upsert',
   externalId: 'email',
@@ -312,7 +329,10 @@ const leads = defineSeed(Lead, {
           `Inbound via ${l.src.replace(/_/g, ' ')}. Evaluating a CRM to replace spreadsheets ` +
           `across their ${l.ind.replace(/_/g, ' ')} operation.`,
         ...(status === 'unqualified'
-          ? { notes: 'No budget approved for this fiscal year — revisit next planning cycle.' }
+          ? {
+              disqualification_reason: DISQUALIFICATION_REASONS[(i >> 2) % DISQUALIFICATION_REASONS.length].reason,
+              notes: DISQUALIFICATION_REASONS[(i >> 2) % DISQUALIFICATION_REASONS.length].note,
+            }
           : {}),
       };
     }),

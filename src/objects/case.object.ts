@@ -109,10 +109,16 @@ export const Case = ObjectSchema.create({
     // buried every critical case at the bottom of the agent's queue. Select
     // options carry no ordinal in the spec, so the rank is materialised here
     // and stamped by `case_sla_defaults`; queue views sort on it instead.
+    // `0` is the UNRANKED sentinel, shared with crm_task.priority_rank: it is
+    // what a record carries when no recognised priority has been stamped, and
+    // it sorts below every real rank (1–4) on the `priority_rank desc` queues.
+    // It used to be `1` here and `2` on crm_task, so the same unknown priority
+    // ordered differently on the two objects — and on this object it was
+    // indistinguishable from a genuine `low`.
     priority_rank: Field.number({
       label: 'Priority Rank',
       readonly: true,
-      defaultValue: 1,
+      defaultValue: 0,
     }),
 
     type: Field.select({

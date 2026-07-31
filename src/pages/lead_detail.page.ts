@@ -140,7 +140,11 @@ export const LeadDetailPage: Page = {
                         {
                           name: 'detail',
                           label: 'Lead Detail',
-                          fields: ['status', 'rating', 'lead_source', 'owner', 'annual_revenue', 'number_of_employees'],
+                          // `disqualification_reason` is mandatory on an
+                          // Unqualified lead (see the validation on
+                          // crm_lead) — the detail page has to show the
+                          // recorded reason, not just the red status chip.
+                          fields: ['status', 'disqualification_reason', 'rating', 'lead_source', 'owner', 'annual_revenue', 'number_of_employees'],
                         },
                         {
                           name: 'address',

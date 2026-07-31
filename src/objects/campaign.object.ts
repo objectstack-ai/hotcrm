@@ -26,16 +26,32 @@ export const Campaign = ObjectSchema.create({
   // search silently return zero. These are real, indexed columns.
   searchableFields: ['name', 'campaign_code'],
   highlightFields: ['campaign_code', 'name', 'type', 'status', 'start_date'],
-  
+
+  // Every other business object with a detail page groups its fields; campaign
+  // was one of the two that did not, so its detail page fell back to one flat
+  // 30-field grid with the ROI formulas sitting next to the campaign name. The
+  // keys mirror the sections the campaign form already uses (Overview /
+  // Schedule & Budget / Performance) so the two surfaces agree.
+  fieldGroups: [
+    { key: 'basic',      label: 'Campaign Information', icon: 'megaphone' },
+    { key: 'schedule',   label: 'Schedule',             icon: 'calendar' },
+    { key: 'budget',     label: 'Budget & ROI',         icon: 'dollar-sign' },
+    { key: 'metrics',    label: 'Performance',          icon: 'bar-chart' },
+    { key: 'assignment', label: 'Ownership',            icon: 'user' },
+    { key: 'assets',     label: 'Campaign Assets',      icon: 'link', defaultExpanded: false },
+  ],
+
   fields: {
     // AutoNumber field
     campaign_code: Field.autonumber({
+      group: 'basic',
       label: 'Campaign Code',
       format: 'CPG-{0000}',
     }),
     
     // Basic Information
     name: Field.text({
+      group: 'basic',
       label: 'Campaign Name',
       required: true,
       searchable: true,
@@ -44,16 +60,19 @@ export const Campaign = ObjectSchema.create({
 
     // ADR-0079 record title (was titleFormat '{campaign_code} - {name}').
     display_title: Field.formula({
+      group: 'basic',
       label: 'Display Title',
       expression: F`record.campaign_code + " - " + record.name`,
     }),
 
     description: Field.markdown({
+      group: 'basic',
       label: 'Description',
     }),
     
     // Type & Channel
     type: Field.select({
+      group: 'basic',
       label: 'Campaign Type',
       options: [
         { label: 'Email', value: 'email', default: true },
@@ -68,6 +87,7 @@ export const Campaign = ObjectSchema.create({
     }),
     
     channel: Field.select({
+      group: 'basic',
       label: 'Primary Channel',
       options: [
         { label: 'Digital', value: 'digital' },
@@ -80,6 +100,7 @@ export const Campaign = ObjectSchema.create({
     
     // Status
     status: Field.select({
+      group: 'basic',
       label: 'Status',
       options: [
         { label: 'Planning', value: 'planning', color: '#999999', default: true },
@@ -93,29 +114,34 @@ export const Campaign = ObjectSchema.create({
     
     // Dates
     start_date: Field.date({
+      group: 'schedule',
       label: 'Start Date',
       required: true,
     }),
     
     end_date: Field.date({
+      group: 'schedule',
       label: 'End Date',
       required: true,
     }),
     
     // Budget & ROI
     budgeted_cost: Field.currency({ 
+      group: 'budget',
       label: 'Budgeted Cost',
       scale: 2,
       min: 0,
     }),
     
     actual_cost: Field.currency({ 
+      group: 'budget',
       label: 'Actual Cost',
       scale: 2,
       min: 0,
     }),
     
     expected_revenue: Field.currency({ 
+      group: 'budget',
       label: 'Expected Revenue',
       scale: 2,
       min: 0,
@@ -127,6 +153,7 @@ export const Campaign = ObjectSchema.create({
     // already opened up. With readonly on, the completion snapshot silently
     // persisted nothing but num_sent.
     actual_revenue: Field.currency({ 
+      group: 'budget',
       label: 'Actual Revenue',
       scale: 2,
       min: 0,
@@ -134,6 +161,7 @@ export const Campaign = ObjectSchema.create({
     
     // Metrics
     target_size: Field.number({
+      group: 'metrics',
       label: 'Target Size',
       description: 'Target number of leads/contacts',
       min: 0,
@@ -142,43 +170,51 @@ export const Campaign = ObjectSchema.create({
     // NOT `readonly`: the campaign_snapshot_metrics hook writes this rollup
     // (16.x drops readonly writes, #2948). Definition: total members enrolled.
     num_sent: Field.number({
+      group: 'metrics',
       label: 'Number Sent',
       min: 0,
     }),
     
     num_responses: Field.number({
+      group: 'metrics',
       label: 'Number of Responses',
       min: 0,
     }),
     
     num_leads: Field.number({
+      group: 'metrics',
       label: 'Number of Leads',
       min: 0,
     }),
     
     num_converted_leads: Field.number({
+      group: 'metrics',
       label: 'Converted Leads',
       min: 0,
     }),
     
     num_opportunities: Field.number({
+      group: 'metrics',
       label: 'Opportunities Created',
       min: 0,
     }),
     
     num_won_opportunities: Field.number({
+      group: 'metrics',
       label: 'Won Opportunities',
       min: 0,
     }),
     
     // Calculated Metrics (Formula Fields)
     response_rate: Field.formula({
+      group: 'metrics',
       label: 'Response Rate %',
       expression: F`coalesce(record.num_sent, 0) > 0 ? (coalesce(record.num_responses, 0) * 100.0) / record.num_sent : 0.0`,
       scale: 2,
     }),
     
     roi: Field.formula({
+      group: 'budget',
       label: 'ROI %',
       expression: F`coalesce(record.actual_cost, 0) > 0 ? ((coalesce(record.actual_revenue, 0) - record.actual_cost) * 100.0) / record.actual_cost : 0.0`,
       scale: 2,
@@ -186,12 +222,13 @@ export const Campaign = ObjectSchema.create({
     
     // Relationships
     parent_campaign: Field.lookup('crm_campaign', {
+      group: 'basic',
       label: 'Parent Campaign',
       description: 'Parent campaign in hierarchy',
     }),
     
     owner: Field.lookup('sys_user', {
-
+      group: 'assignment',
       defaultValue: cel`os.user.id`,
       label: 'Campaign Owner',
       trackHistory: true,
@@ -199,10 +236,12 @@ export const Campaign = ObjectSchema.create({
     
     // Campaign Assets
     landing_page_url: Field.url({
+      group: 'assets',
       label: 'Landing Page',
     }),
     
     is_active: Field.boolean({
+      group: 'assets',
       label: 'Active',
       defaultValue: true,
     }),
