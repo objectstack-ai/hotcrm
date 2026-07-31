@@ -64,7 +64,7 @@ const quoteTotalRollup: Hook = {
 
     for (const quoteId of quoteIds) {
       const quote = await api.object('crm_quote').findOne({
-        filter: { id: quoteId },
+        where: { id: quoteId },
         fields: ['id', 'status', 'discount', 'tax', 'shipping_handling'],
       });
       if (!quote) continue;
@@ -72,7 +72,7 @@ const quoteTotalRollup: Hook = {
       if (status === 'accepted' || status === 'expired') continue;
 
       const lines = await api.object('crm_quote_line_item').find({
-        filter: { crm_quote: quoteId },
+        where: { crm_quote: quoteId },
         fields: ['quantity', 'unit_price', 'discount'],
         top: 5000,
       });

@@ -84,7 +84,26 @@ export function makeHarness(store: Record<string, Rec[]> = {}): Harness {
   const calls: RecordedCall[] = [];
   let seq = 0;
   const rows = (object: string): Rec[] => (store[object] ??= []);
-  const whereOf = (q: HookQuery = {}): Rec => (q.filter ?? q.where ?? {}) as Rec;
+  /**
+   * Extract the predicate — from `where`, and ONLY from `where`.
+   *
+   * This used to read `q.filter ?? q.where ?? {}`, which made the harness
+   * MORE permissive than the kernel and turned it into a liar: the real
+   * `findOne` ignores an unknown `filter` key and returns the object's first
+   * row, and the real `count` ignores it and counts everything, but every test
+   * here went green because the harness quietly honoured both spellings. A
+   * fake replacement that accepts inputs the real thing rejects cannot prove
+   * anything — so `filter` is now a loud failure, not a silent alias.
+   */
+  const whereOf = (q: HookQuery = {}): Rec => {
+    if ('filter' in (q as Rec)) {
+      throw new Error(
+        "hook-harness: query key \"filter\" is not a predicate — the kernel silently " +
+          'ignores it on findOne/count and reads the wrong record. Use "where".',
+      );
+    }
+    return (q.where ?? {}) as Rec;
+  };
 
   const api: HookApi = {
     object(name: string) {

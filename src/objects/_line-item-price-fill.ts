@@ -43,7 +43,7 @@ export function createLineItemPriceFill(objectName: string, hookName: string): H
       const productId = typeof input.crm_product === 'string' ? input.crm_product : undefined;
       if (!productId) return;
       const product = await api.object('crm_product').findOne({
-        filter: { id: productId }, fields: ['id', 'list_price'],
+        where: { id: productId }, fields: ['id', 'list_price'],
       });
       const listPrice = product && typeof product.list_price === 'number' ? product.list_price : undefined;
       if (listPrice === undefined) return;

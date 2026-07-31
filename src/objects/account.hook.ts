@@ -51,7 +51,7 @@ const accountHook: Hook = {
       const api = ctx.api as HookApi | undefined;
       if (!api) return;
       const openOpps = await api.object('crm_opportunity').count({
-        filter: {
+        where: {
           crm_account: previous.id,
           stage: { $nin: ['closed_won', 'closed_lost'] },
         },

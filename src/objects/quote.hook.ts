@@ -128,7 +128,7 @@ const quoteAccepted: Hook = {
     });
 
     if (opportunityId) {
-      const opp = await api.object('crm_opportunity').findOne({ filter: { id: opportunityId } });
+      const opp = await api.object('crm_opportunity').findOne({ where: { id: opportunityId } });
       if (opp && opp.stage !== 'closed_won' && opp.stage !== 'closed_lost') {
         await api.object('crm_opportunity').update(opportunityId, {
           stage: 'closed_won',

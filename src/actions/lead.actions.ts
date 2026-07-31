@@ -115,7 +115,7 @@ export const CreateCampaignAction: Action = {
       // duplicates are skipped, and re-running the action on the same
       // selection must not double-count marketing touches.
       const raw = await ctx.api.object('crm_campaign_member').find({
-        filter: { crm_campaign: campaignId },
+        where: { crm_campaign: campaignId },
         fields: ['crm_lead'],
         top: 5000,
       });
