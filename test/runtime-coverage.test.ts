@@ -39,6 +39,7 @@ const RUNTIME_TEST_FILES = [
   'flow-scheduled.test.ts',
   'flow-record-change.test.ts',
   'flow-case-actions.test.ts',
+  'flow-campaign-enrollment.test.ts',
 ];
 
 /**
@@ -49,10 +50,6 @@ const RUNTIME_TEST_FILES = [
  * the suite too, so it cannot rot.
  */
 const PENDING_FLOWS = new Set([
-  // Screen flow driven entirely from the console's campaign UI; its loop-nested
-  // enrolment gate is inert for the reason documented in flow-scheduled.test.ts,
-  // so a behavioural test would only pin that defect a third time.
-  'campaign_enrollment',
   // Spans a 24h `wait` node; needs timer-resume support in the harness.
   'case_csat_followup',
   // First-boot demo seeding. Exercised end to end every time the e2e suite

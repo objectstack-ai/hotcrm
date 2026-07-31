@@ -101,7 +101,13 @@ export const CampaignEnrollmentFlow: Flow = {
             },
             {
               id: 'check_not_enrolled', type: 'decision', label: 'New Member?',
-              config: { condition: 'existingMember == null' },
+              // Explicit CEL envelope, unlike the top-level `check_campaign_open`
+              // condition above: `applyConversionsToFlow` only wraps bare strings
+              // on a flow's TOP-LEVEL edges, never inside a loop's `config.body`.
+              // A bare string here is string-compared unresolved
+              // (`'existingMember' === 'null'` → false), so nobody is ever
+              // enrolled. See test/flow-scheduled.test.ts.
+              config: { condition: { dialect: 'cel', source: 'existingMember == null' } },
             },
             {
               id: 'create_campaign_member', type: 'create_record', label: 'Add to Campaign',
@@ -114,7 +120,10 @@ export const CampaignEnrollmentFlow: Flow = {
           edges: [
             { id: 'b1', source: 'find_existing_member', target: 'check_not_enrolled', type: 'default' },
             // Already enrolled → no edge → next lead.
-            { id: 'b2', source: 'check_not_enrolled', target: 'create_campaign_member', type: 'conditional', condition: 'existingMember == null', label: 'Enroll' },
+            {
+              id: 'b2', source: 'check_not_enrolled', target: 'create_campaign_member', type: 'conditional',
+              condition: { dialect: 'cel', source: 'existingMember == null' }, label: 'Enroll',
+            },
           ],
         },
       },

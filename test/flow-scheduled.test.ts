@@ -8,6 +8,7 @@ import { ContractRenewalFlow } from '../src/flows/contract-renewal.flow';
 import { OpportunityStagnationFlow } from '../src/flows/opportunity-stagnation.flow';
 import { QuoteExpirationFlow } from '../src/flows/quote-expiration.flow';
 import { TaskDueReminderFlow } from '../src/flows/task-due-reminder.flow';
+import * as allFlows from '../src/flows';
 import { makeFlowHarness, type Rec } from './helpers/flow-harness';
 
 /**
@@ -293,22 +294,63 @@ describe('opportunity_stagnation — daily stalled-deal nudge', () => {
     return h;
   };
 
-  it('selects exactly the open deals past the 14-day threshold', async () => {
+  it('nudges exactly the open deals past the 14-day threshold', async () => {
     const h = await run();
-    // The loop body issues one crm_task lookup per selected deal, so those
-    // lookups are the observable record of what the sweep picked up.
-    const nudgeLookups = h.queries.filter((q) => q.object === 'crm_task');
-    expect(nudgeLookups.map((q) => q.where.related_to_opportunity)).toEqual(['o_stalled']);
+
+    expect(h.store.crm_task).toHaveLength(1);
+    const [task] = h.store.crm_task;
+    expect(task.subject).toBe('Advance stalled deal: Stalled Deal');
+    expect(task.related_to_opportunity).toBe('o_stalled');
+    expect(task.related_to_type).toBe('crm_opportunity');
+    expect(task.owner).toBe('rep1');
+    expect(task.priority).toBe('high');
+    expect(task.status).toBe('not_started');
+
+    expect(h.notifications).toHaveLength(1);
+    expect(h.notifications[0].to).toContain('rep1');
+    expect(String(h.notifications[0].title)).toContain('Stalled Deal');
+    expect(
+      JSON.stringify(h.notifications[0]),
+      'a template dot-walked a lookup',
+    ).not.toContain('undefined');
   });
 
-  it('skips fresh, boundary and closed deals', async () => {
+  it('skips fresh, boundary, closed and null-clock deals', async () => {
     const h = await run();
-    const touched = h.queries
-      .filter((q) => q.object === 'crm_task')
-      .map((q) => q.where.related_to_opportunity);
+    const touched = h.store.crm_task.map((t) => t.related_to_opportunity);
     for (const id of ['o_fresh', 'o_boundary', 'o_won', 'o_lost', 'o_nullclock']) {
-      expect(touched, `${id} should not have been swept`).not.toContain(id);
+      expect(touched, `${id} should not have been nudged`).not.toContain(id);
     }
+  });
+
+  it('is idempotent: a second sweep does not pile up duplicate nudges', async () => {
+    // Without the "already nudged?" gate the daily sweep re-notified and
+    // re-created an identical task every morning for as long as the deal stayed
+    // stalled — an unbounded duplicate pile-up.
+    const h = makeFlowHarness(
+      { opportunity_stagnation: OpportunityStagnationFlow },
+      { crm_opportunity: seedOpps(), crm_task: [] },
+    );
+    await h.run('opportunity_stagnation', {}, { event: 'schedule' });
+    await h.run('opportunity_stagnation', {}, { event: 'schedule' });
+
+    expect(h.store.crm_task, 'duplicate stall task on the second sweep').toHaveLength(1);
+    expect(h.notifications, 'duplicate nudge on the second sweep').toHaveLength(1);
+  });
+
+  it('re-arms once the previous stall task is completed', async () => {
+    const h = makeFlowHarness(
+      { opportunity_stagnation: OpportunityStagnationFlow },
+      {
+        crm_opportunity: seedOpps(),
+        crm_task: [{
+          id: 't_done', related_to_opportunity: 'o_stalled',
+          subject: 'Advance stalled deal: Stalled Deal', status: 'completed',
+        }],
+      },
+    );
+    await h.run('opportunity_stagnation', {}, { event: 'schedule' });
+    expect(h.store.crm_task.filter((t) => t.status === 'not_started')).toHaveLength(1);
   });
 });
 
@@ -349,101 +391,168 @@ describe('contract_renewal — daily notice-window sweep', () => {
       contract({ id: 'k_past', end_date: day(-5) }),
       contract({ id: 'k_draft', status: 'draft' }),
     ]);
-    const contractQuery = h.queries.find((x) => x.object === 'crm_contract')!;
-    const selected = h.store.crm_contract.filter(
-      (k) => k.status === contractQuery.where.status &&
-        String(k.end_date) >= String(contractQuery.where.end_date.$gte).slice(0, 10) &&
-        String(k.end_date) <= String(contractQuery.where.end_date.$lte).slice(0, 10),
-    );
-    expect(selected).toHaveLength(0);
+    expect(h.store.crm_task).toHaveLength(0);
+    expect(h.notifications).toHaveLength(0);
+  });
+
+  it('books a renewal task and notifies the owner inside the notice window', async () => {
+    const h = await run([contract({ end_date: day(+20), renewal_notice_days: 30 })]);
+
+    expect(h.store.crm_task).toHaveLength(1);
+    const [task] = h.store.crm_task;
+    expect(task.subject).toBe('Renewal due: contract CTR-1');
+    expect(task.related_to_account).toBe('acc1');
+    expect(task.owner).toBe('rep1');
+    expect(task.priority).toBe('high');
+
+    expect(h.notifications).toHaveLength(1);
+    expect(h.notifications[0].to).toContain('rep1');
+    expect(String(h.notifications[0].title)).toContain('CTR-1');
+  });
+
+  it('honours each contract’s own renewal_notice_days, not a shared constant', async () => {
+    // The pre-filter spans 120 days precisely so a 90-day notice period is not
+    // silently truncated; the per-record decision applies the real window.
+    const h = await run([
+      contract({ id: 'k_early', contract_number: 'CTR-90', end_date: day(+80), renewal_notice_days: 90 }),
+      contract({ id: 'k_late', contract_number: 'CTR-30', end_date: day(+80), renewal_notice_days: 30 }),
+    ]);
+    const subjects = h.store.crm_task.map((t) => t.subject);
+    expect(subjects, 'the 90-day-notice contract is in window').toContain('Renewal due: contract CTR-90');
+    expect(subjects, 'the 30-day-notice contract is still 80 days out').not.toContain('Renewal due: contract CTR-30');
+  });
+
+  it('opens a pre-filled renewal opportunity only when auto_renewal is on', async () => {
+    const withAuto = await run([contract({ auto_renewal: true })]);
+    expect(withAuto.store.crm_opportunity).toHaveLength(1);
+    const [opp] = withAuto.store.crm_opportunity;
+    expect(opp.name).toBe('Renewal — CTR-1');
+    expect(opp.crm_account).toBe('acc1');
+    expect(opp.type).toBe('existing_renewal');
+    expect(Number(opp.amount)).toBe(90_000);
+    expect(opp.stage).toBe('proposal');
+
+    const withoutAuto = await run([contract({ auto_renewal: false })]);
+    expect(withoutAuto.store.crm_opportunity).toHaveLength(0);
+  });
+
+  it('never opens a second renewal deal while one is still in flight', async () => {
+    const h = await run([contract({ auto_renewal: true })], {
+      crm_opportunity: [{
+        id: 'o_open', crm_account: 'acc1', type: 'existing_renewal', stage: 'negotiation',
+      }],
+    });
+    expect(h.store.crm_opportunity, 'duplicate renewal deal opened').toHaveLength(1);
+  });
+
+  it('is idempotent across repeated sweeps within the same window', async () => {
+    const h = makeFlowHarness({ contract_renewal: ContractRenewalFlow }, {
+      crm_contract: [contract({ auto_renewal: true })], crm_task: [], crm_opportunity: [],
+    });
+    await h.run('contract_renewal', {}, { event: 'schedule' });
+    await h.run('contract_renewal', {}, { event: 'schedule' });
+    expect(h.store.crm_task, 'duplicate renewal task').toHaveLength(1);
+    expect(h.store.crm_opportunity, 'duplicate renewal deal').toHaveLength(1);
+    expect(h.notifications, 'duplicate renewal notification').toHaveLength(1);
+  });
+
+  it('ignores contracts that are not activated', async () => {
+    const h = await run([
+      contract({ status: 'draft' }),
+      contract({ id: 'k2', status: 'expired' }),
+    ]);
+    expect(h.store.crm_task).toHaveLength(0);
+    expect(h.notifications).toHaveLength(0);
   });
 });
 
 /**
- * KNOWN DEFECT — conditional edges nested inside a `loop` body never fire.
+ * Regression guard — a bare string condition inside a `loop` body is inert.
  *
  * `AutomationEngine.registerFlow` runs `applyConversionsToFlow`, which rewrites
  * a bare string `condition` into a `{ dialect: 'cel', source }` envelope. That
- * pass only walks the flow's TOP-LEVEL `edges`; it does not recurse into the
+ * pass only walks a flow's TOP-LEVEL `edges`; it does not recurse into the
  * structured control-flow regions introduced by ADR-0031 (`loop.config.body`).
  *
- * A condition left as a bare string falls through to the engine's legacy
- * template path, which substitutes `{var}` templates (there are none here) and
- * then STRING-compares the leftover expression text. So:
+ * A condition left as a bare string in there falls through to the engine's
+ * legacy template path, which substitutes `{var}` templates (there are none)
+ * and then STRING-compares the leftover expression text:
  *
  *     'existingStallTask == null'  →  'existingStallTask' === 'null'  →  false
  *
- * The gate never opens. Verified against @objectstack/service-automation
- * 16.1.0: passing the same expression as an explicit `{dialect:'cel', source}`
- * envelope evaluates correctly, which is why every TOP-LEVEL conditional edge
- * in this app works and only the loop-nested ones do not.
+ * The gate never opens, and the failure is silent: the sweep runs, selects the
+ * right records, and does nothing. `opportunity_stagnation`, `contract_renewal`
+ * and `campaign_enrollment` all shipped in that state.
  *
- * Three flows carry conditional edges inside a loop body and are therefore
- * inert past that gate: `opportunity_stagnation`, `contract_renewal`, and
- * `campaign_enrollment`.
- *
- * These assertions pin the CURRENT behaviour deliberately, so the defect is
- * visible and tracked rather than silent. Fixing it — whether by authoring the
- * nested conditions as explicit CEL envelopes here, or by making the conversion
- * pass recurse upstream — changes what these scheduled sweeps DO in production
- * (they would begin creating tasks, opportunities and notifications), so it is
- * deliberately NOT bundled into this verification-pipeline change. When it is
- * fixed, these three tests go red and must be rewritten to assert the real
- * behaviour.
+ * The fix is to author nested conditions as explicit envelopes. These two tests
+ * keep it fixed: the first pins the engine asymmetry that makes the envelope
+ * necessary (so an upstream fix that makes bare strings work shows up as a
+ * deliberate review rather than a silent behaviour change), and the second
+ * fails if ANY flow ever reintroduces a bare string inside a loop body.
  */
-describe('KNOWN DEFECT: loop-nested conditions never evaluate (see comment above)', () => {
-  it('opportunity_stagnation selects stalled deals but never nudges', async () => {
-    const h = makeFlowHarness(
-      { opportunity_stagnation: OpportunityStagnationFlow },
-      {
-        crm_opportunity: [
-          { id: 'o_stalled', name: 'Stalled Deal', stage: 'proposal', stage_entry_date: day(-30), owner: 'rep1' },
-        ],
-        crm_task: [],
-      },
-    );
-    await h.run('opportunity_stagnation', {}, { event: 'schedule' });
-
-    // Proof the deal WAS selected — the per-iteration lookup ran…
-    expect(h.queries.some((q) => q.object === 'crm_task')).toBe(true);
-    // …but the `existingStallTask == null` gate never opened.
-    expect(h.store.crm_task, 'gate now opens — rewrite this test').toHaveLength(0);
-    expect(h.notifications, 'gate now opens — rewrite this test').toHaveLength(0);
-  });
-
-  it('contract_renewal selects contracts in window but never books a renewal', async () => {
-    const h = makeFlowHarness({ contract_renewal: ContractRenewalFlow }, {
-      crm_contract: [{
-        id: 'k1', contract_number: 'CTR-1', status: 'activated', crm_account: 'acc1',
-        owner: 'rep1', contract_value: 90_000, auto_renewal: true,
-        renewal_notice_days: 30, end_date: day(+20),
-      }],
-      crm_task: [],
-      crm_opportunity: [],
-    });
-    await h.run('contract_renewal', {}, { event: 'schedule' });
-
-    expect(h.queries.some((q) => q.object === 'crm_contract')).toBe(true);
-    // The very first gate (`timestamp(end_date) <= daysFromNow(...)`) compares
-    // the literal strings 'timestamp(currentContract.end_date)' and
-    // 'daysFromNow(int(currentContract.renewal_notice_days))', so nothing runs.
-    expect(h.store.crm_task, 'gate now opens — rewrite this test').toHaveLength(0);
-    expect(h.store.crm_opportunity, 'gate now opens — rewrite this test').toHaveLength(0);
-    expect(h.notifications, 'gate now opens — rewrite this test').toHaveLength(0);
-  });
-
-  it('an explicit CEL envelope DOES evaluate — this is the available fix', async () => {
-    // Documents the remedy: the same expression, wrapped, behaves correctly.
+describe('loop-nested conditions must be explicit CEL envelopes', () => {
+  it('the engine still treats a bare string differently from an envelope', () => {
     const h = makeFlowHarness({}, {});
     const evaluate = (condition: unknown) =>
       (h.engine as unknown as {
         evaluateCondition(c: unknown, v: Map<string, unknown>): boolean;
       }).evaluateCondition(condition, new Map([['existingStallTask', null]]));
 
-    expect(evaluate('existingStallTask == null'), 'bare string (loop-nested form)').toBe(false);
+    // If this ever flips to `true`, the conversion pass (or the legacy path)
+    // changed upstream — revisit whether the explicit envelopes are still
+    // needed before relaxing them.
+    expect(evaluate('existingStallTask == null'), 'bare string, unresolved').toBe(false);
     expect(
       evaluate({ dialect: 'cel', source: 'existingStallTask == null' }),
       'explicit CEL envelope',
     ).toBe(true);
+  });
+
+  it('no flow carries a bare string condition inside a loop body', () => {
+    /** Every condition reachable inside a `loop` node's body, with its path. */
+    const nestedConditions: Array<{ flow: string; where: string; condition: unknown }> = [];
+
+    const visitBody = (flowName: string, loopId: string, body: Rec | undefined) => {
+      if (!body) return;
+      for (const node of (body.nodes ?? []) as Rec[]) {
+        if (node?.config?.condition !== undefined) {
+          nestedConditions.push({
+            flow: flowName,
+            where: `${loopId}/node:${node.id}`,
+            condition: node.config.condition,
+          });
+        }
+        // A loop nested in a loop is subject to the same rule.
+        if (node?.type === 'loop') visitBody(flowName, `${loopId}/${node.id}`, node.config?.body);
+      }
+      for (const edge of (body.edges ?? []) as Rec[]) {
+        if (edge?.condition !== undefined) {
+          nestedConditions.push({
+            flow: flowName,
+            where: `${loopId}/edge:${edge.id}`,
+            condition: edge.condition,
+          });
+        }
+      }
+    };
+
+    for (const flow of Object.values(allFlows) as Rec[]) {
+      if (!flow || typeof flow !== 'object' || !Array.isArray(flow.nodes)) continue;
+      for (const node of flow.nodes as Rec[]) {
+        if (node?.type === 'loop') visitBody(flow.name, node.id, node.config?.body);
+      }
+    }
+
+    // Guards the guard: if the walk finds nothing, it is asserting nothing.
+    expect(nestedConditions.length, 'no loop-nested conditions found — the walk broke').toBeGreaterThan(0);
+
+    const bare = nestedConditions
+      .filter((c) => typeof c.condition === 'string')
+      .map((c) => `${c.flow} ${c.where}: ${JSON.stringify(c.condition)}`);
+    expect(
+      bare,
+      'bare string condition(s) inside a loop body — these never evaluate.\n' +
+        "Wrap as { dialect: 'cel', source: '…' }:\n  " + bare.join('\n  '),
+    ).toEqual([]);
   });
 });
