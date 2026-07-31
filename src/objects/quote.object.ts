@@ -235,6 +235,35 @@ export const Quote = ObjectSchema.create({
       message: 'Discount cannot exceed 100%',
       condition: P`record.discount != null && record.discount > 100`,
     },
+    {
+      // #575 B4. `crm_quote` had a full lifecycle vocabulary and no transition
+      // constraint whatsoever — nor a status guard in `quote.hook.ts` — so a
+      // quote could go straight from `draft` to `accepted`, which in CPQ terms
+      // is a signed number nobody reviewed or sent. `warning` severity matches
+      // the lead / opportunity / case machines: it flags the jump on the record
+      // without blocking a support-driven correction.
+      name: 'quote_status_progression',
+      type: 'state_machine',
+      severity: 'warning',
+      message: 'Invalid quote status transition',
+      field: 'status',
+      transitions: {
+        // `→ expired` is legal from every UNSETTLED state: the quote_expiration
+        // flow sweeps on `expiration_date` alone and expires drafts that were
+        // never sent as readily as presented ones.
+        draft: ['in_review', 'expired'],
+        in_review: ['draft', 'presented', 'rejected', 'expired'],
+        presented: ['accepted', 'rejected', 'expired'],
+        // `accepted` and `expired` are terminal, and not only by convention —
+        // `quote_pricing_guard` in quote.hook.ts freezes both, allowing edits
+        // to `internal_notes` and nothing else.
+        accepted: [],
+        expired: [],
+        // A rejected quote is not frozen: the rep revises the numbers and
+        // re-issues, which starts again at `draft`.
+        rejected: ['draft'],
+      },
+    },
   ],
   
   // Workflow Rules

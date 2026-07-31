@@ -120,12 +120,12 @@ export const Opportunity = ObjectSchema.create({
       trackHistory: true,
     }),
 
-    created_date: Field.datetime({
-      label: 'Created Date',
-      readonly: true,
-      group: 'sales_process',
-    }),
-
+    // NO `created_date` here: the platform already injects `created_at` on
+    // every object, and this duplicate had no writer at all — not the seed
+    // data, not a hook, not a flow — so it was permanently null while
+    // `created_at` carried the real value (#575 B2). Surfaces that need the
+    // creation instant read `created_at` (see the deal_timeline view).
+    //
     // Stage-age clock (#489). This is the STORED half of the pair: a real,
     // indexed date column, so it is what automation and views may filter and
     // sort on. `days_in_stage` below is a formula derived from it.

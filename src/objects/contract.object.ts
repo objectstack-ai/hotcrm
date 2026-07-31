@@ -230,6 +230,31 @@ export const Contract = ObjectSchema.create({
     // dropped in the 9.8.0 upgrade — its CEL predicate used `monthsBetween()`,
     // which 9.8.0's aligned CEL stdlib (ADR-0032) no longer provides. It was a
     // non-blocking warning; the hard end-date>start-date rule above remains.
+    {
+      // #575 B4. Like `crm_quote`, this object shipped a lifecycle vocabulary
+      // with no transition constraint and no status guard in `contract.hook.ts`
+      // — so `draft → activated` was a legal move, activating an agreement that
+      // never passed approval. Activation is the consequential edge here:
+      // `contract_on_activation` stamps `signed_date`, promotes the account to
+      // `customer`, and the renewal flow starts counting from it.
+      name: 'contract_status_progression',
+      type: 'state_machine',
+      severity: 'warning',
+      message: 'Invalid contract status transition',
+      field: 'status',
+      transitions: {
+        draft: ['in_approval', 'terminated'],
+        // Approval either lands (`activated`) or sends the paperwork back.
+        in_approval: ['draft', 'activated', 'terminated'],
+        // `→ expired` is the contract_expiration flow, whose own sweep filter
+        // is `status: 'activated'` — nothing else ages out.
+        activated: ['expired', 'terminated'],
+        // Both ends are terminal: a renewal is a NEW contract (the
+        // contract_renewal flow files a task, it does not revive the old row).
+        expired: [],
+        terminated: [],
+      },
+    },
   ],
   
   // Workflow Rules

@@ -157,10 +157,15 @@ const leadHook: Hook = {
     // Converted-lead lock — USER edits only (`ctx.user?.id` is this repo's
     // system-write signal, cf. opportunity/quote/account hooks): a blanket
     // throw also rejected system writes (demo-bootstrap owner claims, flow
-    // backfills) and blocked ALL fields, far beyond the schema's own
-    // `cannot_edit_converted` validation (identity fields only). Narrative
-    // notes and framework-managed columns stay editable; identity and
-    // conversion fields stay locked.
+    // backfills). Narrative notes and framework-managed columns stay editable;
+    // identity and conversion fields stay locked.
+    //
+    // This is the ONLY converted-lead guard. `crm_lead` also carried a
+    // `cannot_edit_converted` script validation over the four identity fields,
+    // documented as the friendlier half of a two-layer design; #575 B1 removed
+    // it because this throw always won the race, so the second layer was a
+    // second implementation that could only drift. The message below therefore
+    // has to carry the whole story — hence the attempted-field list.
     if (event === 'beforeUpdate' && ctx.user?.id) {
       const previous = ctx.previous;
       const wasConverted = previous?.is_converted === true || previous?.status === 'converted';

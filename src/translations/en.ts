@@ -310,7 +310,6 @@ export const en: TranslationData = {
         },
         description: { label: 'Description' },
         next_step: { label: 'Next Step' },
-        created_date: { label: 'Created Date' },
         lead_source: {
           label: 'Lead Source',
           options: {

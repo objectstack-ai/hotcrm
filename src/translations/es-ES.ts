@@ -288,7 +288,6 @@ export const esES: TranslationData = {
         },
         description: { label: 'Descripción' },
         next_step: { label: 'Próximo Paso' },
-        created_date: { label: 'Fecha de Creación' },
         lead_source: {
           label: 'Origen del Prospecto',
           options: {

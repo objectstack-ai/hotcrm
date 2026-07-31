@@ -165,10 +165,19 @@ export const Case = ObjectSchema.create({
       readonly: true,
     }),
     
+    // NOT `readonly`: stamped by the `log_call` / `log_meeting` activity
+    // actions (`src/actions/global.actions.ts`), and 16.x drops writes to
+    // readonly fields on user-context writes (#2948) — an action body runs as
+    // the acting user, so `readonly` here silently disabled the stamp. Same
+    // reason `is_sla_violated` and `escalated_date` below are not readonly.
+    //
+    // Definition: the moment the customer first heard back from us, matching
+    // Salesforce `FirstResponseDateTime` / Zendesk first reply time — NOT an
+    // internal status change, which would report "responded" while the
+    // customer is still waiting (#575 B2).
     first_response_date: Field.datetime({
       label: 'First Response Date',
       group: 'sla',
-      readonly: true,
     }),
     
     resolution_time_hours: Field.number({

@@ -288,7 +288,6 @@ export const jaJP: TranslationData = {
         },
         description: { label: '説明' },
         next_step: { label: '次のステップ' },
-        created_date: { label: '作成日' },
         lead_source: {
           label: 'リードソース',
           options: {
