@@ -2,42 +2,46 @@
 'hotcrm': patch
 ---
 
-Make loop-nested flow conditions actually evaluate — three scheduled/screen
-flows were inert past their first gate.
+Fix `contract_renewal`'s notice-window gate, which throws instead of
+evaluating, and rewrite the two tests that #565 left red on main.
 
-`AutomationEngine.registerFlow` runs `applyConversionsToFlow`, which rewrites a
-bare string `condition` into a `{ dialect: 'cel', source }` envelope. That pass
-walks a flow's **top-level** `edges` only; it does not recurse into the
-ADR-0031 control-flow regions (`loop.config.body`). A bare string left in there
-falls through to the engine's legacy template path, which substitutes `{var}`
-templates (there are none) and then string-compares the leftover expression
-text — `'existingStallTask' === 'null'` → false. The gate never opens.
+**The live regression.** #565 correctly wrapped flow conditions as CEL
+envelopes so they finally evaluate. That exposed a second defect underneath, in
+`contract_renewal`:
 
-The failure was silent in the worst way: the sweep ran, queried correctly,
-selected exactly the right records, and then did nothing.
+```
+timestamp(currentContract.end_date) <= daysFromNow(int(currentContract.renewal_notice_days))
+```
 
-- `opportunity_stagnation` found every stalled deal and nudged nobody.
-- `contract_renewal` never booked a renewal task, notification or opportunity.
-- `campaign_enrollment` enrolled no leads at all.
+`end_date` is a DATE field and arrives as `YYYY-MM-DD`, but CEL's `timestamp()`
+accepts only a full ISO 8601 datetime — it throws `timestamp() requires a
+string in ISO 8601 format`. While the condition was a bare string it was never
+evaluated at all, so this sat latent; making the envelope real makes it throw
+mid-sweep. The sweep therefore still books nothing, having traded a silent
+no-op for an exception. Appending `T00:00:00Z` fixes it. Verified load-bearing:
+reverting just that change fails four `contract_renewal` tests.
 
-All loop-nested conditions in those three flows are now explicit CEL envelopes.
+**The two red tests on main**, both introduced by #563 and both firing exactly
+as designed when #565 fixed the behaviour they pinned:
 
-`contract_renewal`'s notice-window gate carried a **second** defect that only
-became reachable once the first was fixed: `timestamp(currentContract.end_date)`
-throws `timestamp() requires a string in ISO 8601 format`, because `end_date` is
-a DATE field and arrives as `YYYY-MM-DD`. It now appends `T00:00:00Z`. Verified
-discriminating: a contract ending in 20 days is in window at
-`renewal_notice_days` 30 or 90, and out of window at 10.
+- `flow-scheduled.test.ts` asserted the stagnation gate stays shut and failed
+  with the message written for this moment — "gate now opens — rewrite this
+  test". Rewritten to assert real behaviour: the nudge task and notification
+  are created, repeated sweeps stay idempotent, and the sweep re-arms once the
+  previous stall task completes. `contract_renewal` gets the same treatment
+  (task, notification, `auto_renewal` opportunity, per-contract notice window,
+  no duplicate renewal deal).
+- `flow-record-change.test.ts` asserted `typeof startCondition === 'string'`
+  for `opportunity_approval`. #565 converted it to an envelope. That assertion
+  was pinning the *notation* rather than what matters, so it now accepts either
+  form and checks a non-empty expression exists.
 
-Two guards keep this fixed. `test/flow-scheduled.test.ts` pins the engine
-asymmetry that makes the envelope necessary — so an upstream fix that makes bare
-strings work surfaces as a deliberate review rather than a silent behaviour
-change — and walks every registered flow, failing if any loop body ever
-reintroduces a bare string condition. `campaign_enrollment` gains a runtime
-suite (eligibility, opt-out, cross-campaign dedupe, closed-campaign refusal) and
-leaves the `PENDING_FLOWS` list.
+**Guards added** so the class stays fixed: one pins the engine asymmetry that
+makes envelopes necessary (a bare string still evaluates `false` where an
+envelope evaluates `true`), and one walks every registered flow — including
+nested loops — failing if any loop body reintroduces a bare string condition.
+It also asserts the walk found something, so it cannot pass vacuously.
 
-This changes what these flows DO in production: the sweeps will now create the
-tasks, notifications and renewal opportunities they were always meant to. Their
-idempotency gates — the very gates that were broken — are what stop a daily
-sweep from piling up duplicates, and each is covered by a repeated-sweep test.
+`campaign_enrollment` gains a runtime suite (eligibility, opt-out, cross-campaign
+dedupe, closed-campaign refusal) and leaves `PENDING_FLOWS`, which is now down
+to `case_csat_followup` and `demo_bootstrap`.
