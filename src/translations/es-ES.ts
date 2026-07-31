@@ -301,6 +301,7 @@ export const esES: TranslationData = {
         competitors: { label: 'Competidores' },
         crm_campaign: { label: 'Campaña' },
         days_in_stage: { label: 'Días en Etapa Actual' },
+        stage_entry_date: { label: 'Fecha de Entrada a la Etapa' },
         is_private: { label: 'Privado' },
       },
       _views: {

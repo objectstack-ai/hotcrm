@@ -251,6 +251,65 @@ describe('view field references resolve', () => {
   });
 });
 
+describe('formula fields are never used as query predicates', () => {
+  /**
+   * A `formula` field is not a column. The engine evaluates it in JS over the
+   * rows a query already returned (`applyFormulaPlan`), so naming one in a
+   * `filter` or a `sort` addresses something the data engine cannot see — the
+   * predicate is silently dropped or, worse, inverted.
+   *
+   * This is exactly how `opportunity_stagnation` came to fire on nothing
+   * (#489): `days_in_stage > 14` looked right and matched only the rows the
+   * seed had hardcoded. Filter and sort on the STORED column the formula reads
+   * from (`stage_entry_date`) and let the formula stay a display value.
+   */
+  const formulaFieldsOf = (obj: string): Set<string> => {
+    const fields = objects.find((o) => o.name === obj)?.fields ?? {};
+    return new Set(Object.entries(fields).filter(([, f]) => (f as AnyRec)?.type === 'formula').map(([n]) => n));
+  };
+
+  const viewObjectOf = (v: AnyRec): string | undefined =>
+    v.list?.data?.object ?? v.form?.data?.object ?? v.object;
+
+  it('no list view filters or sorts on a formula field', () => {
+    const bad: string[] = [];
+    for (const v of views) {
+      const objectName = viewObjectOf(v);
+      if (!objectName || !objectNames.has(objectName)) continue;
+      const formulas = formulaFieldsOf(objectName);
+      if (formulas.size === 0) continue;
+      const lists = [v.list, ...Object.values(v.listViews ?? {})].filter(Boolean) as AnyRec[];
+      for (const list of lists) {
+        const where = `${objectName} view "${list.name ?? 'default'}"`;
+        for (const f of list.filter ?? []) {
+          if (f?.field && formulas.has(f.field)) bad.push(`${where}: filters on formula "${f.field}"`);
+        }
+        for (const s of list.sort ?? []) {
+          if (s?.field && formulas.has(s.field)) bad.push(`${where}: sorts on formula "${s.field}"`);
+        }
+      }
+    }
+    expect(bad, `formula fields used as query predicates:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
+  it('no flow data node filters on a formula field', () => {
+    const flows: AnyRec[] = (stack as any).flows ?? [];
+    const bad: string[] = [];
+    for (const flow of flows) {
+      for (const node of walk(flow.nodes)) {
+        const objectName = node.config?.objectName ?? node.config?.object;
+        const filter = node.config?.filter;
+        if (typeof objectName !== 'string' || !filter || typeof filter !== 'object') continue;
+        const formulas = formulaFieldsOf(objectName);
+        for (const key of Object.keys(filter)) {
+          if (formulas.has(key)) bad.push(`flow "${flow.name}" node "${node.id}": filters ${objectName}.${key} (formula)`);
+        }
+      }
+    }
+    expect(bad, `formula fields used as flow filters:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+});
+
 describe('priority queues sort by urgency, not alphabetically', () => {
   /**
    * `priority desc` on the select itself compares the raw option strings, so
