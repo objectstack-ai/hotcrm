@@ -2,6 +2,7 @@
 
 import { describe, it, expect } from 'vitest';
 import stack from '../objectstack.config';
+import { runActionBody, type ActionRunOpts } from './helpers/action-sandbox';
 
 /**
  * Behavioral guards for the activity-logging actions in
@@ -15,11 +16,13 @@ import stack from '../objectstack.config';
  * with each other. A source-text assertion would have pinned the fix's
  * spelling; running the body pins its behavior.
  *
- * The harness is deliberately tiny — the bodies' only host surface is
- * `ctx.api.object(...).insert(...)`, so a recording stub covers it. This is
- * NOT a sandbox-accurate harness (the real runtime executes the source under
- * QuickJS); it is a plain `new Function` over the same source string, which is
- * enough to prove what the body computes.
+ * The execution is the real one (#575 A1): `test/helpers/action-sandbox.ts`
+ * runs these bodies under QuickJS through the same body-runner factory the
+ * runtime binds at boot, so the ctx they see is the dispatcher's — notably
+ * WITHOUT `ctx.object`, which is why the label lookup below has to reach
+ * `input.objectName`. The previous `new Function` stand-in could not have
+ * shown that. `test/action-sandbox.test.ts` covers the sandbox's own
+ * constraints; this file stays about what these two actions compute.
  */
 
 type AnyRec = Record<string, any>;
@@ -37,66 +40,12 @@ const action = (name: string): AnyRec => {
 /** The two twins this file is about, always exercised as a pair. */
 const TWINS = ['log_call', 'log_meeting'] as const;
 
-type RunOpts = {
-  /** Modal params the user submitted. */
-  input?: AnyRec;
-  /** The record the action was invoked on, as the dispatcher loaded it. */
-  record?: AnyRec;
-  /** The object the action was dispatched against. */
-  objectName?: string;
-};
-
-type RunResult = {
-  result: any;
-  /** Every `ctx.api.object(o).insert(doc)` the body performed, in order. */
-  inserted: { object: string; doc: AnyRec }[];
-};
-
-/**
- * Execute an action's metadata body against a recording `ctx`.
- *
- * Mirrors the runtime's action sandbox context (`buildActionSandboxContext`):
- * the body sees `input` (the submitted params, into which the dispatcher
- * merges `recordId` / `objectName`) and `ctx` (`recordId`, `record`, `object`,
- * `user`, `api`).
- */
-async function runActionBody(a: AnyRec, opts: RunOpts = {}): Promise<RunResult> {
-  const source: string = a.body?.source ?? '';
-  if (!source) throw new Error(`action ${a.name} has no body source to run`);
-
-  const inserted: RunResult['inserted'] = [];
-  const recordId = opts.record?.id ?? null;
-  const ctx = {
-    recordId,
-    record: opts.record,
-    object: opts.objectName,
-    user: { id: 'usr_1', name: 'Ada Lovelace' },
-    api: {
-      object: (object: string) => ({
-        insert: async (doc: AnyRec) => {
-          inserted.push({ object, doc });
-          return { id: `${object}_1` };
-        },
-      }),
-    },
-  };
-  const input = { ...(opts.input ?? {}), recordId, objectName: opts.objectName };
-
-  // eslint-disable-next-line @typescript-eslint/no-implied-eval
-  const run = new Function('input', 'ctx', `return (async () => {${source}})();`) as (
-    i: AnyRec,
-    c: AnyRec,
-  ) => Promise<any>;
-  const result = await run(input, ctx);
-  return { result, inserted };
-}
-
 /** The single `sys_activity` row an activity action is expected to write. */
-async function loggedActivity(actionName: string, opts: RunOpts = {}): Promise<AnyRec> {
-  const { inserted } = await runActionBody(action(actionName), opts);
-  const activities = inserted.filter((i) => i.object === 'sys_activity');
+async function loggedActivity(actionName: string, opts: ActionRunOpts = {}): Promise<AnyRec> {
+  const { engine } = await runActionBody(action(actionName), opts);
+  const activities = engine.inserted('sys_activity');
   expect(activities, `${actionName} wrote ${activities.length} sys_activity rows, expected 1`).toHaveLength(1);
-  return activities[0]!.doc;
+  return activities[0]!;
 }
 
 /** Objects that declare a `nameField`, i.e. that have a resolvable display name. */
@@ -219,7 +168,7 @@ describe('log_call and log_meeting stay twins (#514 item 15)', () => {
   });
 
   it('emits the same activity row apart from the summary prefix and metadata', async () => {
-    const opts: RunOpts = {
+    const opts: ActionRunOpts = {
       objectName: 'crm_case',
       record: { id: 'case_1', display_title: 'CASE-00042 - Printer offline' },
       input: { subject: 'Quarterly sync', duration: 30, notes: 'Agreed next steps' },

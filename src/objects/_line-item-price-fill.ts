@@ -27,6 +27,14 @@ import type { HookApi } from './_hook-api';
  * plain metadata on the returned Hook, and the handler body below closes over
  * NOTHING but its own `ctx`. Never move a value the body reads into this
  * factory's parameters; it would resolve here and be undefined in the sandbox.
+ *
+ * That rule is enforced, not just documented: `test/action-sandbox.test.ts`
+ * lowers this handler with the CLI build's own extraction pass (which rejects a
+ * body referencing anything out of scope) and runs the result under the real
+ * QuickJS runner, with a negative control that shows the guard still bites.
+ * Worth knowing why a test has to: when extraction fails the build does not,
+ * it silently keeps the handler in its bundled form and the hook stops being
+ * deployable as pure metadata.
  */
 export function createLineItemPriceFill(objectName: string, hookName: string): Hook {
   return {
