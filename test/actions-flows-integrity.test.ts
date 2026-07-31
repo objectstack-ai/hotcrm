@@ -354,7 +354,9 @@ describe('case escalation trigger does not fight the close action', () => {
       // (an afterUpdate) re-triggered this flow, which rewrote the case back
       // to "escalated" the moment close_case closed it — observed live.
       const start = nodeOf(flow(name), 'start');
-      const condition: string = start?.config?.condition ?? '';
+      // Conditions are `Expression` envelopes ({ dialect, source }), not bare
+      // strings — see the flow-condition guard in metadata-references.test.ts.
+      const condition: string = start?.config?.condition?.source ?? '';
       expect(condition).toContain('record.status != "escalated"');
       expect(condition).toContain('record.status != "closed"');
       expect(condition).toContain('record.status != "resolved"');

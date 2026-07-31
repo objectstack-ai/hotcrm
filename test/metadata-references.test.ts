@@ -310,6 +310,66 @@ describe('formula fields are never used as query predicates', () => {
   });
 });
 
+describe('flow conditions reach the CEL engine', () => {
+  /**
+   * `AutomationEngine.evaluateCondition` only routes an `Expression` envelope
+   * (`{ dialect, source }`) to the CEL engine. A bare string falls through to a
+   * legacy template path that substitutes `{var}` braces and then compares both
+   * sides as STRINGS — so `existingStallTask == null` evaluates
+   * `'existingStallTask' === 'null'` (always false) and `record.rating >= 4`
+   * evaluates `'record.rating' >= '4'` (always TRUE, because `'r' > '4'`).
+   *
+   * Neither errors. The first silently closes an idempotency gate forever; the
+   * second silently pins a branch open. That is #562, and it went unnoticed
+   * because the sweep reports success either way.
+   *
+   * Author conditions with the `P` tagged template from `@objectstack/spec`.
+   * Note that `defineFlow()` alone is NOT sufficient: it normalizes the typed
+   * edge `condition`, but a node's `config` is `z.record(z.unknown())`, so a
+   * start-node trigger gate would stay a bare string.
+   */
+  const conditionSites = (flow: AnyRec): { where: string; value: unknown }[] => {
+    const sites: { where: string; value: unknown }[] = [];
+    for (const rec of walk(flow)) {
+      // Edges carry `condition` directly; nodes carry it inside `config`.
+      const at = rec.id ? `"${rec.id}"` : `<${rec.type}>`;
+      if ('condition' in rec && rec.condition !== undefined) {
+        sites.push({ where: `flow "${flow.name}" edge/node ${at}`, value: rec.condition });
+      }
+      if (rec.config && typeof rec.config === 'object' && rec.config.condition !== undefined) {
+        sites.push({ where: `flow "${flow.name}" node ${at} config`, value: rec.config.condition });
+      }
+    }
+    return sites;
+  };
+
+  it('no flow condition is a bare string', () => {
+    const flows: AnyRec[] = (stack as any).flows ?? [];
+    const bad: string[] = [];
+    let seen = 0;
+
+    for (const flow of flows) {
+      for (const { where, value } of conditionSites(flow)) {
+        seen++;
+        if (typeof value === 'string') {
+          bad.push(`${where}: bare string \`${value}\` — wrap in P\`…\``);
+          continue;
+        }
+        const env = value as AnyRec;
+        if (env?.dialect !== 'cel') bad.push(`${where}: dialect "${env?.dialect}", expected "cel"`);
+        if (typeof env?.source !== 'string' || env.source.trim() === '') {
+          bad.push(`${where}: envelope carries no source`);
+        }
+      }
+    }
+
+    // Guard the guard: a walker that silently stops matching would make this
+    // test pass by asserting nothing.
+    expect(seen, 'no flow conditions found — the walker stopped matching').toBeGreaterThan(20);
+    expect(bad, `flow conditions that never reach the CEL engine:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+});
+
 describe('priority queues sort by urgency, not alphabetically', () => {
   /**
    * `priority desc` on the select itself compares the raw option strings, so

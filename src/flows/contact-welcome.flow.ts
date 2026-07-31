@@ -1,5 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
+import { P } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 type Flow = Automation.Flow;
 
@@ -31,7 +32,7 @@ export const ContactWelcomeFlow: Flow = {
       config: {
         objectName: 'crm_contact',
         triggerType: 'record-after-create',
-        condition: 'record.owner != null && record.email_opt_out != true',
+        condition: P`record.owner != null && record.email_opt_out != true`,
       },
     },
     {
