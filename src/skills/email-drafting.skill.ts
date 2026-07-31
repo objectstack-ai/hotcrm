@@ -7,10 +7,11 @@ import { defineSkill } from '@objectstack/spec';
  *
  * ADR-0109: writing a subject line and personalising a body is what the
  * model does; it is not a tool call. Sending is HotCRM's `send_email`
- * Action — `type: 'modal'`, so it collects the final copy from a person
- * and has no headless path (ADR-0011). The agent therefore drafts and
- * hands over; a human presses Send. For outbound email that review step
- * is a feature, not a limitation.
+ * Action, which carries no `ai` block — ADR-0011 exposure is opt-in and
+ * default off, so no `action_send_email` tool is materialised and the
+ * skill has nothing to call. The agent therefore drafts and hands over; a
+ * human reviews the copy and presses Send. For outbound email that review
+ * step is a feature, not a limitation.
  */
 export const EmailDraftingSkill = defineSkill({
   name: 'email_drafting',

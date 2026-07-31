@@ -9,13 +9,16 @@ import { defineSkill } from '@objectstack/spec';
  * reasoning, not a tool — the agent reads the case with the platform's
  * data tools and applies the rubric below.
  *
- * It deliberately calls NOTHING that mutates. Escalate and Close are
- * `type: 'modal'` Actions: they collect a reason / resolution from a
- * person, so they have no headless path and the runtime never
- * materialises tools for them (ADR-0011). That is the right shape here —
- * the agent supplies the judgement, the human supplies the words and the
- * decision — so the skill recommends the button instead of pretending to
- * press it.
+ * It deliberately calls NOTHING that mutates. Escalate and Close carry no
+ * `ai` block, and ADR-0011 exposure is opt-in / default off, so the
+ * runtime materialises no `action_escalate_case` / `action_close_case`
+ * tool for the skill to call. That is the right shape here — both Actions
+ * exist to collect a reason / resolution from a person, so the agent
+ * supplies the judgement and the human supplies the words and the
+ * decision — and the skill recommends the button instead of pretending to
+ * press it. (Both became `type: 'flow'` in #515, so opting them in later
+ * is a governance call, not a mechanical one; the review step is the
+ * point.)
  */
 export const CaseTriageSkill = defineSkill({
   name: 'case_triage',

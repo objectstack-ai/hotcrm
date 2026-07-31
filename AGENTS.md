@@ -35,9 +35,9 @@ hotcrm/
 │   ├── objects/            # *.object.ts schemas + *.hook.ts lifecycle hooks
 │   ├── views/  pages/      # App UI metadata (*.view.ts / *.page.ts)
 │   ├── flows/              # Automation (*.flow.ts)
-│   ├── actions/            # UI actions + AI-callable tools (*.action.ts)
-│   ├── dashboards/ reports/ datasets/ cubes/   # Analytics metadata
-│   ├── agents/ skills/     # AI agent + skill metadata
+│   ├── actions/            # UI actions + AI-callable tools (*.actions.ts)
+│   ├── dashboards/ reports/ datasets/          # Analytics metadata
+│   ├── skills/             # AI skill metadata (*.skill.ts) — skills-only surface
 │   ├── profiles/ sharing/  # Permission sets, role hierarchy, sharing rules
 │   ├── translations/       # Locale bundles (en / zh-CN / es-ES / ja-JP)
 │   └── data/               # Seed data (defineDataset)

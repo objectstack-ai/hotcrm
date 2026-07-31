@@ -6,8 +6,9 @@ type Flow = Automation.Flow;
 /**
  * Opportunity Stagnation — scheduled "deal-rot" detector.
  *
- * The opportunity carries `days_in_stage`, but nothing acted on it, so deals
- * could sit untouched in a stage indefinitely. This daily sweep finds open
+ * The opportunity carries `stage_entry_date` (stamped by the lifecycle hook on
+ * insert and on every stage change), but nothing acted on it, so deals could
+ * sit untouched in a stage indefinitely. This daily sweep finds open
  * opportunities stalled longer than the threshold, nudges the owner and books
  * a follow-up task so the deal re-enters the working set. A deal with an
  * open stall task is skipped (idempotency), so each stall episode produces
@@ -38,9 +39,16 @@ export const OpportunityStagnationFlow: Flow = {
       id: 'query_stalled', type: 'get_record', label: 'Find Stalled Deals',
       config: {
         objectName: 'crm_opportunity',
+        // Predicate on the STORED `stage_entry_date`, not on `days_in_stage`:
+        // the latter is a formula, computed after the query, so as a filter key
+        // it addressed a column that does not exist (#489). `entry < today − N`
+        // is the same test as `days_in_stage > N`, resolved by the flow
+        // template engine (same `{TODAY() ± n}` token as contract-renewal).
+        // A row with a null `stage_entry_date` does not satisfy `$lt` and is
+        // skipped, preserving "nothing has stagnated yet" for unstamped rows.
         filter: {
           stage: { $nin: ['closed_won', 'closed_lost'] },
-          days_in_stage: { $gt: STALE_THRESHOLD_DAYS },
+          stage_entry_date: { $lt: `{TODAY() - ${STALE_THRESHOLD_DAYS}}` },
         },
         limit: 500,
         outputVariable: 'oppList',

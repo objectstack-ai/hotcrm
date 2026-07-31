@@ -1,4 +1,4 @@
-import { P, cel } from '@objectstack/spec';
+import { F, P, cel } from '@objectstack/spec';
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
@@ -126,6 +126,20 @@ export const Opportunity = ObjectSchema.create({
       group: 'sales_process',
     }),
 
+    // Stage-age clock (#489). This is the STORED half of the pair: a real,
+    // indexed date column, so it is what automation and views may filter and
+    // sort on. `days_in_stage` below is a formula derived from it.
+    // `opportunity_lifecycle` stamps it on insert and re-stamps it on every
+    // stage change; readonly because nothing but that hook should move it
+    // (before-hook writes survive readonly stripping — only caller-supplied
+    // keys are dropped).
+    stage_entry_date: Field.date({
+      label: 'Stage Entry Date',
+      description: 'Date this opportunity entered its current stage.',
+      readonly: true,
+      group: 'sales_process',
+    }),
+
     // Additional Classification
     type: Field.select({
       label: 'Opportunity Type',
@@ -167,9 +181,27 @@ export const Opportunity = ObjectSchema.create({
     }),
 
     // Sales cycle metrics
-    days_in_stage: Field.number({
+    //
+    // FORMULA, not a stored counter (#489). As a plain number column nothing
+    // ever raised it: the hook reset it to 0 on a stage change and no sweep or
+    // hook anywhere incremented it, so `days_in_stage > 14` matched only the
+    // rows the seed hardcoded — the `opportunity_stagnation` flow never fired
+    // on real data. Deriving it from `stage_entry_date` is correct on every
+    // read and costs no nightly full-table pass.
+    //
+    // The trade-off: formulas are evaluated AFTER the query (the engine's
+    // `applyFormulaPlan` walks the returned rows), so this is not a real
+    // column and CANNOT appear in a filter or a sort. Anything that needs to
+    // *select* stalled deals predicates on `stage_entry_date` instead — see
+    // `opportunity-stagnation.flow.ts` and the `stale_opportunities` view.
+    //
+    // `has()` + null guard: `daysBetween(null, …)` faults and the whole field
+    // silently evaluates to null, so an unstamped row is spelled out as null
+    // rather than arriving there by accident.
+    days_in_stage: Field.formula({
       label: 'Days in Current Stage',
-      readonly: true,
+      expression: F`has(record.stage_entry_date) && record.stage_entry_date != null ? daysBetween(record.stage_entry_date, today()) : null`,
+      returnType: 'number',
       group: 'crm_forecast',
     }),
 
@@ -267,6 +299,8 @@ export const Opportunity = ObjectSchema.create({
     { fields: ['owner'] },
     { fields: ['stage'] },
     { fields: ['close_date'] },
+    // The stagnation sweep filters on this every morning.
+    { fields: ['stage_entry_date'] },
   ],
   
   // Enable advanced features

@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
 
@@ -146,6 +146,48 @@ describe('package docs do not drift from the flows they document', () => {
             `— the flow source now says "${raw}". Update the doc (or run the doc-sync agent).`,
         ).toBe(true);
       }
+    });
+  }
+});
+
+/**
+ * Repo-tree drift — a doc must not advertise a directory that is gone.
+ *
+ * `src/agents/` outlived its deletion by three PRs. #512 removed the two
+ * copilots and the whole directory, but seven maintainer docs kept printing
+ * `src/agents/*.agent.ts` in their tree diagrams and registration tables, so
+ * the next reader (human or agent) was told to put a file somewhere that does
+ * not exist. `src/cubes/` had the same shape: dropped in favour of datasets
+ * (ADR-0021, see the note in objectstack.config.ts), still drawn in two trees.
+ *
+ * Nothing checked, because a path in prose is just prose. This walks the
+ * maintainer docs, pulls every `src/<dir>/` they mention, and resolves it
+ * against the real tree. `docs/archive/` is deliberately excluded — it is a
+ * historical record and is allowed to describe a repo that no longer exists.
+ */
+const TREE_DOCS = [
+  'README.md',
+  'AGENTS.md',
+  'docs/README.md',
+  'docs/STATUS.md',
+  'docs/ARCHITECTURE.md',
+  'docs/MAINTENANCE.md',
+  'docs/DEPLOYMENT.md',
+  'docs/developers/code_examples.md',
+  'docs/developers/api_reference.md',
+];
+
+describe('maintainer docs do not point at directories that no longer exist', () => {
+  for (const docFile of TREE_DOCS) {
+    it(`${docFile}: every src/<dir>/ it names exists`, () => {
+      const text = readFileSync(join(docFile), 'utf8');
+      const named = new Set([...text.matchAll(/\bsrc\/([a-z][a-z0-9_]*)\//g)].map((m) => m[1]));
+      const missing = [...named].filter((dir) => !existsSync(join('src', dir)));
+      expect(
+        missing,
+        `${docFile} advertises src/ directories that do not exist: ${missing.join(', ')}. ` +
+          'Delete the reference (or restore the directory) — a path in prose is still a promise.',
+      ).toEqual([]);
     });
   }
 });

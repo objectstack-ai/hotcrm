@@ -45,10 +45,9 @@ Runtime capabilities are declared in `requires`: `ai`, `automation`, `triggers`,
 | Lifecycle hooks | `src/objects/*.hook.ts` via `src/hooks/index.ts` | `hooks` |
 | UI actions | `src/actions/*.actions.ts` | `actions` |
 | Automation | `src/flows/*.flow.ts` | `flows` |
-| AI agents | `src/agents/*.agent.ts` | `agents` |
 | AI skills | `src/skills/*.skill.ts` | `skills` |
 | Apps, views, pages | `src/apps/`, `src/views/`, `src/pages/` | `apps`, `views`, `pages` |
-| Analytics | `src/cubes/`, `src/dashboards/`, `src/reports/` | `analyticsCubes`, `dashboards`, `reports` |
+| Analytics | `src/datasets/`, `src/dashboards/`, `src/reports/` | `datasets`, `dashboards`, `reports` |
 | Security | `src/profiles/`, `src/sharing/` | `permissions`, `sharingRules`, `roles` |
 | i18n | `src/translations/` | `translations`, `i18n` |
 | Demo data | `src/data/` | `data` |
@@ -127,15 +126,24 @@ The UI is metadata-driven. Object field definitions, views, pages, actions, perm
 
 ## AI
 
-AI is modeled as ObjectStack metadata:
+AI is modeled as ObjectStack metadata. The surface is **skills-only**: the two
+`*.agent.ts` copilots were retired in [#512](https://github.com/objectstack-ai/hotcrm/pull/512),
+because ADR-0063 §2 closed agent records to third parties and the runtime
+refuses non-platform ones. The capability lives in the skills, which attach to
+the platform assistant by surface affinity.
 
 | Layer | Files | Examples |
 | --- | --- | --- |
-| Agents | `src/agents/*.agent.ts` | `sales_copilot`, `service_copilot` |
-| Skills | `src/skills/*.skill.ts` | `live_data`, `lead_qualification`, `email_drafting`, `revenue_forecasting`, `customer_360` |
+| Skills | `src/skills/*.skill.ts` | `live_data`, `lead_qualification`, `email_drafting`, `revenue_forecasting`, `case_triage`, `customer_360` |
 | Actions and flows | `src/actions/`, `src/flows/` | lead conversion, case triage, alerts |
 
-The Sales Copilot instructions explicitly require live schema inspection before answering record questions, because admins can change metadata over time.
+Skills declare no bespoke tools (ADR-0109). They compose the platform's data
+tools with the `action_<name>` tools the runtime materialises from Actions that
+opt in via `ai.exposed` (ADR-0011) — every name a skill declares must resolve to
+one of those, which `test/skills-integrity.test.ts` enforces.
+
+The `live_data` skill explicitly requires live schema inspection before
+answering record questions, because admins can change metadata over time.
 
 ## Security
 

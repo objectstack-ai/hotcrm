@@ -4,6 +4,7 @@ import { describe, it, expect } from 'vitest';
 import oppLineItemHooks from '../src/objects/opportunity_line_item.hook';
 import quoteLineItemHooks from '../src/objects/quote_line_item.hook';
 import leadHooks from '../src/objects/lead.hook';
+import opportunityHooks from '../src/objects/opportunity.hook';
 
 /**
  * Runtime hook tests — the REAL handler code, executed against a controllable
@@ -98,6 +99,58 @@ describe('opportunity_amount_rollup', () => {
     const api = makeApi(store);
     await rollup.handler({ event: 'afterUpdate', input: { crm_opportunity: 'opp1' }, api } as any);
     expect(store.crm_opportunity[0].amount).toBe(999); // unchanged
+  });
+});
+
+describe('opportunity_lifecycle · stage-age clock', () => {
+  /**
+   * `days_in_stage` is a formula over `stage_entry_date` (#489), so this hook
+   * owns the only clock the `opportunity_stagnation` sweep and the
+   * `stale_opportunities` view can read. Its predecessor wrote
+   * `days_in_stage = 0` on a stage change against a counter nothing ever
+   * incremented — the flow's `days_in_stage > 14` filter matched only seeded
+   * rows. These pin the stamping contract in both directions.
+   */
+  const lifecycle = hookByName(opportunityHooks, 'opportunity_lifecycle');
+  const today = () => new Date().toISOString().slice(0, 10);
+
+  it('starts the clock on insert', async () => {
+    const input: Rec = { name: 'New Deal', stage: 'prospecting', amount: 1000 };
+    await lifecycle.handler({ event: 'beforeInsert', input } as any);
+    expect(input.stage_entry_date).toBe(today());
+  });
+
+  it('does not overwrite a stage_entry_date the caller supplied', async () => {
+    const input: Rec = { name: 'Backfilled', stage: 'proposal', amount: 1000, stage_entry_date: '2020-01-01' };
+    await lifecycle.handler({ event: 'beforeInsert', input } as any);
+    expect(input.stage_entry_date).toBe('2020-01-01');
+  });
+
+  it('restarts the clock when the stage changes', async () => {
+    const input: Rec = { stage: 'negotiation' };
+    const previous: Rec = { stage: 'proposal', stage_entry_date: '2020-01-01' };
+    await lifecycle.handler({ event: 'beforeUpdate', input, previous } as any);
+    expect(input.stage_entry_date).toBe(today());
+  });
+
+  it('leaves the clock alone when the stage does not change', async () => {
+    const input: Rec = { amount: 250000 };
+    const previous: Rec = { stage: 'proposal', stage_entry_date: '2020-01-01' };
+    await lifecycle.handler({ event: 'beforeUpdate', input, previous } as any);
+    expect(input.stage_entry_date).toBeUndefined();
+  });
+
+  it('never writes days_in_stage — it is a formula, not a stored counter', async () => {
+    const insert: Rec = { name: 'D', stage: 'prospecting', amount: 1 };
+    await lifecycle.handler({ event: 'beforeInsert', input: insert } as any);
+    const update: Rec = { stage: 'closed_won' };
+    await lifecycle.handler({
+      event: 'beforeUpdate',
+      input: update,
+      previous: { stage: 'negotiation', stage_entry_date: '2020-01-01' },
+    } as any);
+    expect('days_in_stage' in insert).toBe(false);
+    expect('days_in_stage' in update).toBe(false);
   });
 });
 

@@ -186,23 +186,27 @@ export const OpportunityViews = defineView({
       sort: [{ field: 'close_date', order: 'asc' }],
     },
 
-    /** Stale Opportunities — still-open deals, sorted by days_in_stage desc */
+    /** Stale Opportunities — still-open deals, longest-parked first */
     stale_opportunities: {
       name: 'stale_opportunities',
       type: 'grid',
-      label: '⚠️ Stale Opportunities',
+      // Honest label: the view cannot express the 14-day cut its automation
+      // twin uses, for two independent reasons. `days_in_stage` is a FORMULA
+      // (#489) — evaluated after the query, so the data engine can neither
+      // filter nor sort on it — and the list data path resolves no date
+      // macros, so `stage_entry_date < {14_days_ago}` would ship the literal
+      // token and invert the comparison (same trap as `stale_articles`).
+      // So: operator-only filter, ordered by the stored `stage_entry_date`
+      // ascending — longest-parked on top, which is the queue a manager works.
+      // The `days_in_stage` column puts the `opportunity_stagnation` threshold
+      // (STALE_THRESHOLD_DAYS = 14) in plain sight on every row.
+      label: '⚠️ Stale Opportunities · Longest in Stage First',
       data: { provider: 'object', object: 'crm_opportunity' },
-      columns: ['name', 'crm_account', 'stage', 'amount', 'days_in_stage', 'close_date', 'owner'],
-      // Genuinely stale = open AND parked in-stage beyond the threshold the
-      // `opportunity_stagnation` flow acts on (STALE_THRESHOLD_DAYS = 14), so
-      // the view and the automation agree on what "stalled" means. Deals that
-      // never moved have a null `days_in_stage` and are intentionally excluded
-      // (nothing has stagnated yet). Most-stagnant first.
+      columns: ['name', 'crm_account', 'stage', 'amount', 'stage_entry_date', 'days_in_stage', 'close_date', 'owner'],
       filter: [
         { field: 'stage', operator: 'not_in', value: ['closed_won', 'closed_lost'] },
-        { field: 'days_in_stage', operator: 'greater_than', value: 14 },
       ],
-      sort: [{ field: 'days_in_stage', order: 'desc' }, { field: 'close_date', order: 'asc' }],
+      sort: [{ field: 'stage_entry_date', order: 'asc' }, { field: 'close_date', order: 'asc' }],
     },
 
     /** Closing this quarter (commit + best_case) — sales-manager forecast */
@@ -246,6 +250,7 @@ export const OpportunityViews = defineView({
           'type',
           'lead_source',
           'crm_campaign',
+          'stage_entry_date',
           'days_in_stage',
           'is_private',
         ],

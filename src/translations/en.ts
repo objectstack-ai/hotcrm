@@ -323,6 +323,7 @@ export const en: TranslationData = {
         competitors: { label: 'Competitors' },
         crm_campaign: { label: 'Campaign' },
         days_in_stage: { label: 'Days in Current Stage' },
+        stage_entry_date: { label: 'Stage Entry Date' },
         is_private: { label: 'Private' },
         approval_status: {
           label: 'Approval Status',
