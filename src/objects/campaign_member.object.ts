@@ -1,6 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
+import { P } from '@objectstack/spec';
 
 /**
  * Campaign Member Object
@@ -121,7 +122,7 @@ export const CampaignMember = ObjectSchema.create({
       type: 'script',
       severity: 'error',
       message: 'A campaign member must reference either a Lead or a Contact',
-      condition: { dialect: 'cel', source: 'isBlank(record.crm_lead) && isBlank(record.crm_contact)' },
+      condition: P`isBlank(record.crm_lead) && isBlank(record.crm_contact)`,
     },
   ],
 });

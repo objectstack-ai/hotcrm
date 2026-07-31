@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
-import { P } from '@objectstack/spec';
+import { F, P } from '@objectstack/spec';
 
 /**
  * Opportunity Line Item
@@ -88,7 +88,7 @@ export const OpportunityLineItem = ObjectSchema.create({
 
     total_price: Field.formula({
       label: 'Total',
-      expression: P`record.quantity * record.unit_price * (1 - record.discount / 100)`,
+      expression: F`record.quantity * record.unit_price * (1 - record.discount / 100)`,
     }),
 
     line_number: Field.number({
@@ -104,7 +104,13 @@ export const OpportunityLineItem = ObjectSchema.create({
       type: 'script',
       severity: 'error',
       message: 'Sales price cannot be negative',
-      condition: P`record.unit_price < 0`,
+      // The `!= null` guard is load-bearing, not defensive noise: strict CEL
+      // ABORTS on `null < 0` instead of evaluating it false, so the unguarded
+      // form left this rule inert on a blank price — it never fired at all,
+      // which is the opposite of what a validation is for. The hazard is
+      // written up at `account.object.ts:244-245`; the same-named rule in
+      // `quote_line_item.object.ts` has carried the guard all along.
+      condition: P`record.unit_price != null && record.unit_price < 0`,
     },
   ],
 });

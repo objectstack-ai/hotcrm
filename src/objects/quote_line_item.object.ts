@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
-import { P } from '@objectstack/spec';
+import { F, P } from '@objectstack/spec';
 
 /**
  * Quote Line Item
@@ -83,7 +83,7 @@ export const QuoteLineItem = ObjectSchema.create({
 
     subtotal: Field.formula({
       label: 'Subtotal',
-      expression: P`record.quantity * record.unit_price * (1 - record.discount / 100)`,
+      expression: F`record.quantity * record.unit_price * (1 - record.discount / 100)`,
     }),
 
     tax_rate: Field.percent({
@@ -94,9 +94,14 @@ export const QuoteLineItem = ObjectSchema.create({
       defaultValue: 0,
     }),
 
+    // Composed from the same STORED fields `subtotal` reads, not from
+    // `subtotal` itself — a formula reading another formula depends on the
+    // platform hydrating that field first, which is the hazard warned against
+    // at `lead.object.ts:61-64`. The arithmetic is unchanged: this is
+    // `subtotal`'s expression with the tax multiplier applied on top.
     total_price: Field.formula({
       label: 'Total',
-      expression: P`record.subtotal * (1 + record.tax_rate / 100)`,
+      expression: F`record.quantity * record.unit_price * (1 - record.discount / 100) * (1 + record.tax_rate / 100)`,
     }),
 
     line_number: Field.number({
