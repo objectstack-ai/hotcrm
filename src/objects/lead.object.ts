@@ -157,10 +157,15 @@ export const Lead = ObjectSchema.create({
     // Conversion tracking.
     // NOT `readonly`: since 16.x the platform drops writes to readonly fields
     // outright (#2948), including the lead_conversion flow's mark_converted
-    // update. Edit-protection comes from two places: the `cannot_edit_converted`
-    // validation below (4 identity fields, recoverable error) and the broader
-    // beforeUpdate guard in lead.hook.ts, which rejects ANY edit to a
-    // converted lead.
+    // update. Edit-protection is the beforeUpdate guard in lead.hook.ts, which
+    // rejects any USER edit to a converted lead outside a small allow-list.
+    // A `cannot_edit_converted` validation used to sit beside it covering the
+    // four identity fields, described as the friendlier recoverable half of a
+    // two-layer design. It was dead configuration and was removed in #575 B1:
+    // the hook's beforeUpdate throws first, so the validation never produced
+    // the error it promised (measured on 16.1.0 — a `PATCH company` on a
+    // converted lead returns the hook's message). Same shape as the
+    // `revenue_positive` rule removed in #571.
     is_converted: Field.boolean({
       label: 'Converted',
       defaultValue: false,
@@ -315,13 +320,6 @@ export const Lead = ObjectSchema.create({
       severity: 'error',
       message: 'Disqualification reason is required when a lead is Unqualified',
       condition: P`record.status == "unqualified" && isBlank(record.disqualification_reason)`,
-    },
-    {
-      name: 'cannot_edit_converted',
-      type: 'script',
-      severity: 'error',
-      message: 'Cannot edit a converted lead',
-      condition: P`record.is_converted == true && (record.company != previous.company || record.email != previous.email || record.first_name != previous.first_name || record.last_name != previous.last_name)`,
     },
     {
       // Migrated from the removed top-level `stateMachines` key (LeadStateMachine).

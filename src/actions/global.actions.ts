@@ -67,6 +67,11 @@ type LogActivitySpec = {
  * is the direction that keeps both forms submittable, and it is the one the
  * body was already written for — the `duration ? … : subject` summary branch
  * is unreachable while the field is mandatory.
+ *
+ * The shared body is also where `crm_case.first_response_date` is stamped
+ * (#575 B2) — because every activity twin routes through here, "the first
+ * outbound contact on a case" has exactly one implementation instead of one
+ * per action.
  */
 function logActivityAction(spec: LogActivitySpec): Action {
   const extras = Object.entries(spec.metadataExtras)
@@ -117,9 +122,47 @@ function logActivityAction(spec: LogActivitySpec): Action {
         record_label: record[nameField] ?? null,
         metadata: JSON.stringify({ kind: '${spec.kind}', duration_minutes: duration, notes, ${extras} }),
       });
+      // SLA first-response stamp (#575 B2). \`first_response_date\` was the one
+      // member of the case SLA family with no writer at all — \`sla_due_date\`
+      // and \`resolution_time_hours\` come from case.hook, \`is_sla_violated\`
+      // from the case_sla_monitor flow — so the metric was permanently null.
+      // A logged call or meeting is the only record of outbound contact a case
+      // carries, which makes the FIRST \`sys_activity\` on the case the moment
+      // the customer first heard back: the industry definition (Salesforce
+      // \`FirstResponseDateTime\`, Zendesk first reply time). A status change is
+      // deliberately NOT used — an agent can move a case to "in progress" and
+      // investigate for an hour while the customer hears nothing.
+      //
+      // CONVENTION: any future customer-facing path on a case (a reply-email
+      // action, an inbound portal reply) MUST stamp this too, or the metric
+      // silently under-reports.
+      //
+      // The stored value is read rather than taken from \`ctx.record\`: the
+      // list_item / record_related dispatch paths hand the body a PROJECTED
+      // record, and a field missing from that projection reads as blank — which
+      // would re-stamp on every log and turn "first response" into "last".
+      if (objectName === 'crm_case' && recordId) {
+        const raw = await ctx.api.object('crm_case').find({
+          where: { id: recordId },
+          fields: ['first_response_date'],
+          top: 1,
+        });
+        const found = Array.isArray(raw) ? raw : (raw?.records ?? []);
+        const stored = found.length ? found[0].first_response_date : record.first_response_date;
+        if (!stored) {
+          // \`update(data, options)\` — \`ctx.api\` is the engine repo facade,
+          // whose update takes a DOCUMENT, not an id (mass_update_stage is the
+          // action that got this wrong; test/action-sandbox.test.ts pins the
+          // contract against a real kernel).
+          await ctx.api.object('crm_case').update(
+            { id: recordId, first_response_date: new Date().toISOString() },
+            { where: { id: recordId } },
+          );
+        }
+      }
       return { activityId: activity?.id };
     `,
-      capabilities: ['api.write'],
+      capabilities: ['api.read', 'api.write'],
       timeoutMs: 5000,
     },
     locations: ['record_header', 'list_item', 'record_related'],

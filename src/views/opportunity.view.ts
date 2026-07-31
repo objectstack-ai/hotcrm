@@ -146,7 +146,11 @@ export const OpportunityViews = defineView({
       data: { provider: 'object', object: 'crm_opportunity' },
       columns: ['name', 'crm_account', 'amount'],
       timeline: {
-        startDateField: 'created_date',
+        // `created_at`, the platform's own creation stamp — the object's
+        // duplicate `created_date` was removed in #575 B2 because nothing ever
+        // wrote it, so this timeline started every bar at null. Same spelling
+        // as the lead activity calendar.
+        startDateField: 'created_at',
         endDateField: 'close_date',
         titleField: 'name',
         groupByField: 'owner',

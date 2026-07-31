@@ -725,7 +725,6 @@ export const zhCN: TranslationData = {
         },
         description: { label: '描述' },
         next_step: { label: '下一步' },
-        created_date: { label: '创建日期' },
         lead_source: {
           label: '线索来源',
           options: {
