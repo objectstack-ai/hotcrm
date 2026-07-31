@@ -2,10 +2,10 @@
 'hotcrm': patch
 ---
 
-Stop hook reads from silently querying the wrong record. Eighteen `ctx.api`
-calls across eight `*.hook.ts` files passed their predicate as `filter:`, a key
-the ObjectQL kernel does not accept on every read path — and drops without
-raising:
+Stop hook reads from silently querying the wrong record. Seventeen hook-side
+`ctx.api` calls — across eight `*.hook.ts` files and the shared
+`_line-item-price-fill.ts` — passed their predicate as `filter:`, a key the
+ObjectQL kernel does not accept on every read path, and drops without raising:
 
 - `find` normalizes `filter` → `where`, so those calls were correct by luck.
 - `findOne` spreads the query into the AST (`{ ...query, limit: 1 }`) and never
@@ -34,5 +34,11 @@ its predicate as `q.filter ?? q.where ?? {}`, making the stand-in more
 permissive than the kernel it stands in for, so every affected hook tested
 green. The harness now throws on `filter`, and `test/hook-query-predicate.test.ts`
 pins the contract against a real in-memory kernel — including the kernel's
-silent-drop behaviour, so the trap stays documented — plus a source scan that
-fails any `*.hook.ts` reintroducing the key.
+silent-drop behaviour, so the trap stays documented — plus a source scan over
+`src/objects/**.ts` that fails any file reintroducing the key.
+
+That scan deliberately covers the whole directory rather than the `*.hook.ts`
+glob: merging `main` brought in the extraction of the two price-fill hooks into
+`_line-item-price-fill.ts`, which carried the `filter:` along with it. A guard
+keyed to a filename convention would have missed the one instance most likely to
+survive a refactor.

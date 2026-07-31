@@ -127,12 +127,24 @@ describe('ctx.api query predicate — against the real kernel', () => {
   });
 });
 
-describe('no hook may query by `filter`', () => {
+/**
+ * Scans EVERY `.ts` under `src/objects/`, not just `*.hook.ts`.
+ *
+ * The narrower scan would have missed the real thing. Hook bodies get factored
+ * into shared modules — `_line-item-price-fill.ts` is the price fill both
+ * line-item objects now build from — and a `filter:` riding along in one of
+ * those is exactly as broken while matching no `*.hook.ts` glob. Scope the
+ * guard to the directory the hook code lives in, not to a filename convention
+ * the code is free to outgrow.
+ */
+describe('no hook-side code may query by `filter`', () => {
   const hookDir = join(process.cwd(), 'src', 'objects');
-  const hookFiles = readdirSync(hookDir).filter((f) => f.endsWith('.hook.ts'));
+  const hookFiles = readdirSync(hookDir).filter((f) => f.endsWith('.ts'));
 
-  it('finds hook files to check (guards against a silently empty scan)', () => {
+  it('finds files to check (guards against a silently empty scan)', () => {
     expect(hookFiles.length).toBeGreaterThan(10);
+    // The shared modules are the ones a `*.hook.ts` glob would have skipped.
+    expect(hookFiles).toContain('_line-item-price-fill.ts');
   });
 
   it.each(hookFiles)('%s uses `where:`, never `filter:`', (file) => {
