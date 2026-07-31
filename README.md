@@ -126,11 +126,10 @@ hotcrm/
 ├── src/
 │   ├── objects/                  # *.object.ts — data model (15 objects)
 │   ├── actions/                  # *.actions.ts — server actions + AI tools (13)
-│   ├── flows/                    # *.flow.ts — visual flows (20): screen, record-change & scheduled
+│   ├── flows/                    # *.flow.ts — visual flows (23): screen, record-change & scheduled
 │   ├── hooks/                    # hook registry barrel
-│   ├── agents/                   # *.agent.ts — AI copilots (2)
-│   ├── skills/                   # *.skill.ts — AI skills (6)
-│   ├── cubes/                    # *.cube.ts — analytics cubes
+│   ├── skills/                   # *.skill.ts — AI skills (6) — skills-only surface, no agents
+│   ├── datasets/                 # *.dataset.ts — analytics semantic layer (8)
 │   ├── dashboards/, reports/     # analytics UI
 │   ├── pages/, views/, apps/     # UI definitions
 │   ├── profiles/, sharing/       # security

@@ -2,7 +2,7 @@
 
 > Examples that match the current single-app HotCRM repository.
 
-HotCRM metadata is registered from `src/` through [`objectstack.config.ts`](../../objectstack.config.ts). File names use the ObjectStack suffix convention: `.object.ts`, `.hook.ts`, `.actions.ts`, `.flow.ts`, `.agent.ts`, `.skill.ts`, `.view.ts`, `.page.ts`, `.dashboard.ts`, and `.report.ts`.
+HotCRM metadata is registered from `src/` through [`objectstack.config.ts`](../../objectstack.config.ts). File names use the ObjectStack suffix convention: `.object.ts`, `.hook.ts`, `.actions.ts`, `.flow.ts`, `.skill.ts`, `.view.ts`, `.page.ts`, `.dashboard.ts`, and `.report.ts`.
 
 ## Define An Object
 
@@ -188,7 +188,7 @@ export const WarrantyExpirationFlow: Flow = {
 
 Export flows from `src/flows/index.ts`. Record-change flows require the `triggers` capability, which is already declared in `objectstack.config.ts`.
 
-## Add An Agent Skill
+## Add An AI Skill
 
 File: `src/skills/example.skill.ts`
 
@@ -204,11 +204,34 @@ summarize status, identify expired or soon-expiring warranties, and
 recommend the next action.`,
   tools: ['describe_object', 'query_records'],
   triggerPhrases: ['summarize warranties', 'warranty risk'],
-  permissions: ['crm:account:read'],
 });
 ```
 
-Register the skill in `src/skills/index.ts`, then add its name to an agent in `src/agents/*.agent.ts` if the agent should use it.
+Register the skill in `src/skills/index.ts`. There is no agent to attach it to —
+the AI surface is skills-only ([#512](https://github.com/objectstack-ai/hotcrm/pull/512)),
+and a skill binds to the platform assistant through its `surface` affinity.
+
+**Every name in `tools` must resolve to something that actually runs.** The
+runtime silently drops a tool it cannot resolve, so an invented name leaves the
+model with instructions describing a capability it does not have — the defect
+[#493](https://github.com/objectstack-ai/hotcrm/issues/493) catalogued. Two
+sources resolve, and only two:
+
+- **Platform data tools** — `describe_object`, `list_objects`, `query_records`,
+  `get_record`, `aggregate_data`.
+- **`action_<name>`** — materialised from an Action that opts in with
+  `ai: { exposed: true, description }` (ADR-0011, default off) *and* has a
+  headless path. See `ConvertLeadAction` in `src/actions/lead.actions.ts`.
+
+Authoring a `defineTool` record does **not** create a third source: `ToolSchema`
+is a read-only projection for Studio discovery with no `implementation` field
+and no executor. Reasoning — scoring, drafting, forecasting — belongs in
+`instructions`, not in a tool (ADR-0109). `test/skills-integrity.test.ts`
+enforces all of this at PR time.
+
+Note there is no `permissions` key on a skill — `SkillSchema` has no such field,
+so one is silently stripped ([#511](https://github.com/objectstack-ai/hotcrm/pull/511)).
+Gate access on the Actions the skill calls instead.
 
 ## Common Registration Points
 
@@ -218,7 +241,6 @@ Register the skill in `src/skills/index.ts`, then add its name to an agent in `s
 | Hook | `src/objects/` | `src/hooks/index.ts` |
 | Action | `src/actions/` | `src/actions/index.ts` |
 | Flow | `src/flows/` | `src/flows/index.ts` |
-| Agent | `src/agents/` | `src/agents/index.ts` |
 | Skill | `src/skills/` | `src/skills/index.ts` |
 | View | `src/views/` | `src/views/index.ts` |
 | Page | `src/pages/` | `src/pages/index.ts` |

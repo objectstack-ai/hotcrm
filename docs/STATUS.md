@@ -56,8 +56,7 @@ pnpm verify
 | Object hooks | `src/objects/*.hook.ts`, collected by `src/hooks/index.ts` |
 | Actions | `src/actions/*.actions.ts` |
 | Flows | `src/flows/*.flow.ts` |
-| Agents | `src/agents/*.agent.ts` |
-| Skills | `src/skills/*.skill.ts` |
+| Skills | `src/skills/*.skill.ts` (skills-only AI surface since #512 — the agent directory is gone) |
 | Views and pages | `src/views/`, `src/pages/` |
 | Dashboards and reports | `src/dashboards/`, `src/reports/` |
 | Security | `src/profiles/`, `src/sharing/` |
