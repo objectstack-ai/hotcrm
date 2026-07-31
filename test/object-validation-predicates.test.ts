@@ -91,15 +91,15 @@ function unguardedFields(source: string): string[] {
 /**
  * Rules still shipping an unguarded comparison, with the reason.
  *
- * This is a shrinking list, not a permanent exemption: the entry below is the
- * remaining half of #514 item 3, carved into its own change because it touches
- * a different object family. The "no stale entries" test keeps this honest —
- * once that rule grows its guard, this map must be emptied or CI fails.
+ * Empty, and the "no stale entries" test below keeps it that way. It held one
+ * entry — `crm_opportunity_line_item.unit_price_positive`, the half of #514
+ * item 3 that was carved out of #571 because it touches a different object
+ * family. #570 landed that guard in parallel, so the exemption went stale the
+ * moment both merged and this file's own staleness check turned main red. That
+ * is the mechanism working: an exemption may outlive its fix by exactly one
+ * merge, never longer.
  */
-const KNOWN_UNGUARDED: Record<string, string> = {
-  'crm_opportunity_line_item.unit_price_positive':
-    '#514 item 3, opportunity_line_item half — tracked separately',
-};
+const KNOWN_UNGUARDED: Record<string, string> = {};
 
 describe('validation predicates are null-guarded', () => {
   it('finds script validations to check at all', () => {
