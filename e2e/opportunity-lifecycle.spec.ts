@@ -99,8 +99,18 @@ test.describe('opportunity_lifecycle hook (through the real kernel)', () => {
     // future date supplied at create time must have been overwritten.
     expect(updated.close_date).toMatch(/^\d{4}-\d{2}-\d{2}/);
     expect(updated.close_date).not.toBe('2099-12-31');
-    // Advancing the stage resets the stagnation counter.
-    expect(updated.days_in_stage).toBe(0);
+    // Advancing the stage restarts the stall clock. `days_in_stage` is a
+    // FORMULA over `stage_entry_date` (#489), so the stored column is what the
+    // hook writes and what the stagnation sweep filters on.
+    expect(updated.stage_entry_date).toMatch(/^\d{4}-\d{2}-\d{2}/);
+
+    // Formulas are evaluated over QUERY results, not echoed on the write
+    // response, so re-read to prove the derived value actually resolves.
+    const reread = await api.get(`${BASE}/${id}`);
+    expect(reread.ok(), `re-read failed: ${reread.status()}`).toBeTruthy();
+    const fresh = recordOf(await reread.json());
+    expect(fresh.stage_entry_date).toBe(updated.stage_entry_date);
+    expect(fresh.days_in_stage, 'the formula should read 0 the day the stage changed').toBe(0);
   });
 
   test('closed_lost drops probability to 0 and omits the deal from forecast', async ({ api }) => {

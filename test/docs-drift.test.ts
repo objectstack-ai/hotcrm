@@ -180,9 +180,12 @@ const TREE_DOCS = [
 describe('maintainer docs do not point at directories that no longer exist', () => {
   for (const docFile of TREE_DOCS) {
     it(`${docFile}: every src/<dir>/ it names exists`, () => {
-      const text = readFileSync(join(docFile), 'utf8');
+      // Anchored on REPO_ROOT for the same reason as FLOWS/DOC above: a
+      // cwd-relative read turns this guard into an ENOENT the moment vitest is
+      // launched from anywhere but the repo root.
+      const text = readFileSync(join(REPO_ROOT, docFile), 'utf8');
       const named = new Set([...text.matchAll(/\bsrc\/([a-z][a-z0-9_]*)\//g)].map((m) => m[1]));
-      const missing = [...named].filter((dir) => !existsSync(join('src', dir)));
+      const missing = [...named].filter((dir) => !existsSync(join(REPO_ROOT, 'src', dir)));
       expect(
         missing,
         `${docFile} advertises src/ directories that do not exist: ${missing.join(', ')}. ` +

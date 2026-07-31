@@ -65,14 +65,30 @@ describe('opportunity_lifecycle', () => {
     expect(input.expected_revenue).toBe(30_000); // 50k × 60%
   });
 
-  it('stamps close_date and resets days_in_stage on the closed_won transition', async () => {
+  it('stamps close_date and restarts the stage clock on the closed_won transition', async () => {
     const input: Rec = { stage: 'closed_won' };
-    const previous: Rec = { stage: 'negotiation', amount: 25_000, days_in_stage: 42 };
+    const previous: Rec = { stage: 'negotiation', amount: 25_000, stage_entry_date: '2026-01-01' };
     await hook.handler(makeCtx({ event: 'beforeUpdate', input, previous, user: USER }));
     expect(input.close_date).toBe(today());
-    expect(input.days_in_stage).toBe(0);
+    // `days_in_stage` is a FORMULA over `stage_entry_date` (#489); re-stamping
+    // that column IS the reset. It used to write `days_in_stage = 0` against a
+    // counter nothing ever incremented.
+    expect(input.stage_entry_date).toBe(today());
     expect(input.probability).toBe(100);
     expect(input.expected_revenue).toBe(25_000);
+  });
+
+  it('starts the stage clock on insert so a never-moved deal is visible to the sweep', async () => {
+    const input: Rec = { name: 'New Deal', amount: 1_000, stage: 'prospecting' };
+    await hook.handler(makeCtx({ event: 'beforeInsert', input, user: USER }));
+    expect(input.stage_entry_date).toBe(today());
+  });
+
+  it('leaves the stage clock alone when the stage did not change', async () => {
+    const input: Rec = { amount: 2_000 };
+    const previous: Rec = { stage: 'proposal', amount: 1_000, stage_entry_date: '2026-01-01' };
+    await hook.handler(makeCtx({ event: 'beforeUpdate', input, previous, user: USER }));
+    expect(input.stage_entry_date, 'an amount edit must not reset the stall clock').toBeUndefined();
   });
 
   it('does not overwrite an explicitly supplied close_date', async () => {

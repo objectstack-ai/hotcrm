@@ -268,13 +268,20 @@ describe('task_due_reminder — hourly reminder sweep', () => {
 });
 
 describe('opportunity_stagnation — daily stalled-deal nudge', () => {
+  // The sweep predicates on the STORED `stage_entry_date`, not on the
+  // `days_in_stage` FORMULA — a formula is evaluated after the query, so it
+  // cannot be a filter key (#489). `stage_entry_date < TODAY() - 14` is the
+  // same test, resolved by the flow template engine.
   const seedOpps = (): Rec[] => [
-    { id: 'o_stalled', name: 'Stalled Deal', stage: 'proposal', days_in_stage: 30, owner: 'rep1' },
-    { id: 'o_fresh', name: 'Fresh Deal', stage: 'proposal', days_in_stage: 3, owner: 'rep1' },
-    // 14 is the threshold and the filter is `$gt`, so exactly-14 must NOT fire.
-    { id: 'o_boundary', name: 'Boundary Deal', stage: 'proposal', days_in_stage: 14, owner: 'rep1' },
-    { id: 'o_won', name: 'Won Deal', stage: 'closed_won', days_in_stage: 99, owner: 'rep1' },
-    { id: 'o_lost', name: 'Lost Deal', stage: 'closed_lost', days_in_stage: 99, owner: 'rep1' },
+    { id: 'o_stalled', name: 'Stalled Deal', stage: 'proposal', stage_entry_date: day(-30), owner: 'rep1' },
+    { id: 'o_fresh', name: 'Fresh Deal', stage: 'proposal', stage_entry_date: day(-3), owner: 'rep1' },
+    // Exactly at the threshold: the filter is `$lt`, so a deal that entered its
+    // stage exactly 14 days ago must NOT fire.
+    { id: 'o_boundary', name: 'Boundary Deal', stage: 'proposal', stage_entry_date: day(-14), owner: 'rep1' },
+    { id: 'o_won', name: 'Won Deal', stage: 'closed_won', stage_entry_date: day(-99), owner: 'rep1' },
+    { id: 'o_lost', name: 'Lost Deal', stage: 'closed_lost', stage_entry_date: day(-99), owner: 'rep1' },
+    // A row with a null clock does not satisfy `$lt` and is skipped.
+    { id: 'o_nullclock', name: 'No Clock', stage: 'proposal', stage_entry_date: null, owner: 'rep1' },
   ];
 
   const run = async () => {
@@ -299,7 +306,7 @@ describe('opportunity_stagnation — daily stalled-deal nudge', () => {
     const touched = h.queries
       .filter((q) => q.object === 'crm_task')
       .map((q) => q.where.related_to_opportunity);
-    for (const id of ['o_fresh', 'o_boundary', 'o_won', 'o_lost']) {
+    for (const id of ['o_fresh', 'o_boundary', 'o_won', 'o_lost', 'o_nullclock']) {
       expect(touched, `${id} should not have been swept`).not.toContain(id);
     }
   });
@@ -390,7 +397,7 @@ describe('KNOWN DEFECT: loop-nested conditions never evaluate (see comment above
       { opportunity_stagnation: OpportunityStagnationFlow },
       {
         crm_opportunity: [
-          { id: 'o_stalled', name: 'Stalled Deal', stage: 'proposal', days_in_stage: 30, owner: 'rep1' },
+          { id: 'o_stalled', name: 'Stalled Deal', stage: 'proposal', stage_entry_date: day(-30), owner: 'rep1' },
         ],
         crm_task: [],
       },
