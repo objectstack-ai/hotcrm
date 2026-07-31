@@ -55,6 +55,7 @@ export const CampaignMember = ObjectSchema.create({
     crm_campaign: Field.lookup('crm_campaign', {
       label: 'Campaign',
       required: true,
+      storage: { notNull: true },
       group: 'basic',
     }),
 
@@ -73,6 +74,7 @@ export const CampaignMember = ObjectSchema.create({
     status: Field.select({
       label: 'Status',
       required: true,
+      storage: { notNull: true },
       group: 'response',
       trackHistory: true,
       options: [

@@ -8,6 +8,7 @@ Everything merged after the 2.2.2 tag. Not yet versioned or published.
 
 ### Changed
 
+- **ObjectStack platform → 17.0.0-rc.1** across all `@objectstack/*` packages (from 16.1.0). The manifest protocol handshake and marketplace `specVersion` now declare the 17.0.0-rc.1 compatibility line; API methods, skills and flow notifications use only live metadata keys; pre-17 required fields preserve their database `NOT NULL` constraints explicitly; and the analytics semantic layer now declares the month/day/quarter buckets v17 executes correctly.
 - **ObjectStack platform → 16.1.0 stable** across all `@objectstack/*` packages (from the 16.0.0-rc.1 line pinned in 2.2.0). [#465](https://github.com/objectstack-ai/hotcrm/pull/465)
 - CI: bump `actions/checkout` 4 → 7 ([#422](https://github.com/objectstack-ai/hotcrm/pull/422)) and `actions/setup-node` 4 → 6 ([#421](https://github.com/objectstack-ai/hotcrm/pull/421)).
 - Docs: README hero states HotCRM's size in tokens ([#483](https://github.com/objectstack-ai/hotcrm/pull/483)); drifted README counts fixed ([#466](https://github.com/objectstack-ai/hotcrm/pull/466)).

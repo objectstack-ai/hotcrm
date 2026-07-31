@@ -65,7 +65,7 @@ export const CampaignEnrollmentFlow: Flow = {
       // topping up a completed/aborted campaign would corrupt its final
       // snapshot metrics. (Status values: planning / in_progress / completed / aborted.)
       id: 'check_campaign_open', type: 'decision', label: 'Campaign Open?',
-      config: { condition: P`campaignRecord.status == "planning" || campaignRecord.status == "in_progress"` },
+      config: { condition: P`vars.campaignRecord.status == "planning" || vars.campaignRecord.status == "in_progress"` },
     },
     {
       id: 'query_leads', type: 'get_record', label: 'Find Eligible Leads',
@@ -128,7 +128,7 @@ export const CampaignEnrollmentFlow: Flow = {
     { id: 'e2', source: 'screen_1', target: 'get_campaign', type: 'default' },
     { id: 'e3', source: 'get_campaign', target: 'check_campaign_open', type: 'default' },
     // Closed campaign → no edge → flow ends without enrolling.
-    { id: 'e4', source: 'check_campaign_open', target: 'query_leads', type: 'conditional', condition: P`campaignRecord.status == "planning" || campaignRecord.status == "in_progress"`, label: 'Open' },
+    { id: 'e4', source: 'check_campaign_open', target: 'query_leads', type: 'conditional', condition: P`vars.campaignRecord.status == "planning" || vars.campaignRecord.status == "in_progress"`, label: 'Open' },
     { id: 'e5', source: 'query_leads', target: 'loop_leads', type: 'default' },
     { id: 'e6', source: 'loop_leads', target: 'end', type: 'default' },
   ],

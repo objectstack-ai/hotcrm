@@ -8,11 +8,8 @@ import type { ReportInput } from '@objectstack/spec/ui';
  * realistic demo). Lets a marketing-ops lead spot which channels we're
  * actively working month-over-month.
  *
- * The across axis is NOT bucketed by month yet: `lead_metrics` cannot declare
- * `dateGranularity` while the app is pinned to @objectstack 16.x (both gaps
- * are spelled out on `opportunity_metrics.close_date`; hotcrm#523), so the
- * columns are one-per-raw-date until the 17.0 upgrade lands. The month bucket
- * is pinned as intent in `test/dataset-granularity.test.ts`.
+ * `lead_metrics.last_contacted_date` declares the month bucket, so each column
+ * represents one calendar month instead of a raw timestamp.
  */
 export const LeadInflowByMonthSourceReport: ReportInput = {
   name: 'lead_inflow_by_month_source',

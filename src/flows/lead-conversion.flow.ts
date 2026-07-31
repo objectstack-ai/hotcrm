@@ -173,11 +173,11 @@ export const LeadConversionFlow: Flow = {
       // `script` + `actionType:'email'` shape is a no-op stub in 7.4.
       id: 'send_notification', type: 'notify', label: 'Send Confirmation',
       config: {
-        to: ['{$User.Id}'],
+        recipients: ['{$User.Id}'],
         channels: ['inbox', 'email'],
         topic: 'lead_converted',
         title: 'Lead converted: {leadRecord.first_name} {leadRecord.last_name}',
-        body: 'Lead {leadRecord.first_name} {leadRecord.last_name} was converted into an account and contact.',
+        message: 'Lead {leadRecord.first_name} {leadRecord.last_name} was converted into an account and contact.',
         actionUrl: '/crm_account/{accountId}',
       },
     },

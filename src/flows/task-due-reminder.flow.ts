@@ -69,12 +69,12 @@ export const TaskDueReminderFlow: Flow = {
             {
               id: 'notify_owner', type: 'notify', label: 'Notify Owner',
               config: {
-                to: ['{currentTask.owner}'],
+                recipients: ['{currentTask.owner}'],
                 channels: ['inbox', 'email'],
                 severity: 'warning',
                 topic: 'task_reminder',
                 title: 'Task reminder: {currentTask.subject}',
-                body: 'Your task "{currentTask.subject}" is due (reminder set for {currentTask.reminder_date}).',
+                message: 'Your task "{currentTask.subject}" is due (reminder set for {currentTask.reminder_date}).',
                 actionUrl: '/crm_task/{currentTask.id}',
               },
             },

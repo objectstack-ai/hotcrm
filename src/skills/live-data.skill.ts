@@ -41,15 +41,4 @@ record (account, contact, lead, opportunity, case, quote, etc.):
     'aggregate_data',
   ],
 
-  triggerPhrases: [
-    'show me',
-    'how many',
-    'list',
-    'count',
-    'sum',
-    'top',
-    'recent',
-    'pipeline',
-    'forecast',
-  ],
 });

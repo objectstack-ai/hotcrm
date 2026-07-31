@@ -71,13 +71,10 @@ export const OpportunityViews = defineView({
       { name: 'closing', label: 'Closing Soon', icon: 'calendar-check', view: 'closing_this_quarter' },
     ],
     // List-level entry points: generate_quote reaches the row menu via its
-    // own `locations: ['list_item']` — repeating it here as a string would go
-    // through the legacy rowActions path and render a duplicate, dead item
-    // (objectstack-ai/objectui#2960). mass_update_stage stays wired even
+    // own `locations: ['list_item']`. mass_update_stage stays wired even
     // though console 16.1.0 cannot deliver bulk selections yet (tracked in
     // issue #508 — see the note in opportunity.actions.ts). Built-in
     // `exportOptions` covers CSV export.
-    rowActions: ['edit'],
     bulkActions: ['mass_update_stage'],
   },
 

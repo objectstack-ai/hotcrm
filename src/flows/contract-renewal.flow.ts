@@ -106,11 +106,11 @@ export const ContractRenewalFlow: Flow = {
             {
               id: 'notify_owner', type: 'notify', label: 'Notify Owner',
               config: {
-                to: ['{currentContract.owner}'],
+                recipients: ['{currentContract.owner}'],
                 channels: ['inbox', 'email'],
                 topic: 'contract_renewal',
                 title: 'Contract renewal due: {currentContract.contract_number}',
-                body: 'Contract {currentContract.contract_number} ends on {currentContract.end_date}. Start the renewal conversation now.',
+                message: 'Contract {currentContract.contract_number} ends on {currentContract.end_date}. Start the renewal conversation now.',
                 actionUrl: '/crm_contract/{currentContract.id}',
               },
             },

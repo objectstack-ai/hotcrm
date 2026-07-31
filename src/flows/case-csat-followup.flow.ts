@@ -47,11 +47,11 @@ export const CaseCsatFollowupFlow: Flow = {
     {
       id: 'notify_csat', type: 'notify', label: 'Request Satisfaction Rating',
       config: {
-        to: ['{record.owner}'],
+        recipients: ['{record.owner}'],
         channels: ['inbox', 'email'],
         topic: 'case_csat',
         title: 'Collect CSAT: case {record.case_number}',
-        body: 'Case {record.case_number} closed yesterday. Reach out to the contact and log their satisfaction rating.',
+        message: 'Case {record.case_number} closed yesterday. Reach out to the contact and log their satisfaction rating.',
         actionUrl: '/crm_case/{record.id}',
       },
     },

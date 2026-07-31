@@ -38,11 +38,4 @@ export const EmailDraftingSkill = defineSkill({
 
   tools: ['get_record', 'query_records'],
 
-  triggerPhrases: [
-    'draft an email',
-    'write a follow-up',
-    'compose email',
-    'optimise subject line',
-    'email template',
-  ],
 });

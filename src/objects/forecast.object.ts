@@ -62,6 +62,7 @@ export const Forecast = ObjectSchema.create({
     period: Field.select({
       label: 'Period',
       required: true,
+      storage: { notNull: true },
       group: 'basic',
       options: [
         { label: 'Month',   value: 'month', default: true },
@@ -72,12 +73,14 @@ export const Forecast = ObjectSchema.create({
     period_start: Field.date({
       label: 'Period Start',
       required: true,
+      storage: { notNull: true },
       group: 'basic',
     }),
 
     period_end: Field.date({
       label: 'Period End',
       required: true,
+      storage: { notNull: true },
       group: 'basic',
     }),
 
@@ -101,6 +104,7 @@ export const Forecast = ObjectSchema.create({
       label: 'Snapshot Date',
       description: 'The day this snapshot was captured.',
       required: true,
+      storage: { notNull: true },
       group: 'meta',
     }),
 
@@ -192,7 +196,7 @@ export const Forecast = ObjectSchema.create({
   // only the live API surface remains. History → Field.trackHistory (ADR-0052).
   enable: {
     apiEnabled: true,
-    apiMethods: ['get', 'list', 'create', 'update', 'delete', 'search', 'export'],
+    apiMethods: ['get', 'list', 'create', 'update', 'delete'],
   },
 
   validations: [

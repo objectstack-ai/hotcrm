@@ -45,7 +45,7 @@ pnpm verify
 | --- | --- |
 | Node.js | `>=22` |
 | pnpm | `>=10.0.0` |
-| ObjectStack packages | `16.1.0` |
+| ObjectStack packages | `17.0.0-rc.1` |
 | Local dev port | `4001` |
 
 ## Current Metadata Inventory

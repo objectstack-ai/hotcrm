@@ -47,11 +47,11 @@ export const ContractExpirationFlow: Flow = {
             {
               id: 'notify_owner', type: 'notify', label: 'Notify Owner',
               config: {
-                to: ['{currentContract.owner}'],
+                recipients: ['{currentContract.owner}'],
                 channels: ['inbox', 'email'],
                 topic: 'contract_expired',
                 title: 'Contract expired: {currentContract.contract_number}',
-                body: 'Contract {currentContract.contract_number} reached its end date and has been marked expired.',
+                message: 'Contract {currentContract.contract_number} reached its end date and has been marked expired.',
                 actionUrl: '/crm_contract/{currentContract.id}',
               },
             },

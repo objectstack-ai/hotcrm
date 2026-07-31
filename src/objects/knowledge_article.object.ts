@@ -48,6 +48,7 @@ export const KnowledgeArticle = ObjectSchema.create({
     title: Field.text({
       label: 'Title',
       required: true,
+      storage: { notNull: true },
       searchable: true,
       maxLength: 255,
       group: 'basic',
@@ -108,6 +109,7 @@ export const KnowledgeArticle = ObjectSchema.create({
     status: Field.select({
       label: 'Status',
       required: true,
+      storage: { notNull: true },
       group: 'basic',
       trackHistory: true,
       options: [
@@ -121,6 +123,7 @@ export const KnowledgeArticle = ObjectSchema.create({
     audience: Field.select({
       label: 'Audience',
       required: true,
+      storage: { notNull: true },
       group: 'basic',
       description: 'Public articles are visible in the customer portal; internal articles are agent-only.',
       options: [
@@ -200,7 +203,7 @@ export const KnowledgeArticle = ObjectSchema.create({
   // only the live API surface remains. History → Field.trackHistory (ADR-0052).
   enable: {
     apiEnabled: true,
-    apiMethods: ['get', 'list', 'create', 'update', 'delete', 'search', 'export'],
+    apiMethods: ['get', 'list', 'create', 'update', 'delete'],
   },
 
   validations: [

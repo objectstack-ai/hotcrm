@@ -77,11 +77,11 @@ export const QuoteGenerationFlow: Flow = {
       // `script` + `actionType:'email'` shape is a no-op stub in 7.4.
       id: 'notify_owner', type: 'notify', label: 'Send Notification',
       config: {
-        to: ['{$User.Id}'],
+        recipients: ['{$User.Id}'],
         channels: ['inbox', 'email'],
         topic: 'quote_created',
         title: 'Quote created: {quoteName}',
-        body: 'Your quote {quoteName} has been created from this opportunity.',
+        message: 'Your quote {quoteName} has been created from this opportunity.',
         actionUrl: '/crm_quote/{quoteId.id}',
       },
     },

@@ -41,7 +41,7 @@ export default defineStack({
     // `objectstack migrate meta` replay) instead of failing deep in a schema
     // parse. Bump together with `specVersion` on every platform upgrade
     // (docs/MAINTENANCE.md §3).
-    engines: { protocol: '^16.0.0' },
+    engines: { protocol: '^17.0.0-rc.1' },
   },
 
   // ─── Platform capabilities this app needs ─────────────────────────
@@ -106,7 +106,6 @@ export default defineStack({
     defaultLocale: 'en',
     supportedLocales: ['en', 'zh-CN', 'ja-JP', 'es-ES'],
     fallbackLocale: 'en',
-    fileOrganization: 'per_locale',
   },
 
   translations: Object.values(translations),

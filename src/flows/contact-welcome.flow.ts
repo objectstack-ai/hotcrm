@@ -38,11 +38,11 @@ export const ContactWelcomeFlow: Flow = {
     {
       id: 'send_welcome', type: 'notify', label: 'Prompt Owner to Welcome',
       config: {
-        to: ['{record.owner}'],
+        recipients: ['{record.owner}'],
         channels: ['inbox', 'email'],
         topic: 'contact_welcome',
         title: 'New contact: {record.first_name} {record.last_name}',
-        body: '{record.first_name} {record.last_name} was added as a contact. Reach out to welcome them.',
+        message: '{record.first_name} {record.last_name} was added as a contact. Reach out to welcome them.',
         actionUrl: '/crm_contact/{record.id}',
       },
     },

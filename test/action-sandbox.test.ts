@@ -92,12 +92,13 @@ describe('the sandbox engine stub obeys the kernel’s update contract', () => {
     // The real kernel first. `ctx.api` in production is an ObjectRepository (or
     // the runtime's identical repo facade), whose update takes `(data, options)`
     // — so passing an id string as `data` leaves the engine with nothing to
-    // resolve, and it says so rather than updating every row.
+    // resolve. v17 now rejects the second positional document as an unknown
+    // option rather than risking a write to every row.
     const api = ql.createContext({ isSystem: true });
     const row = await api.object('crm_opportunity').insert({ name: 'A', stage: 'prospecting' });
     await expect(
       (api.object('crm_opportunity') as AnyRec).update(row.id, { stage: 'closed_won' }),
-    ).rejects.toThrow(/Update requires an ID or options\.multi=true/);
+    ).rejects.toThrow(/does not recognise option 'stage'|Update requires an ID or options\.multi=true/);
     expect((await api.object('crm_opportunity').findOne({ where: { id: row.id } }))?.stage).toBe('prospecting');
 
     // Now the stub, reached the way a body reaches it: through the runtime's
@@ -105,7 +106,7 @@ describe('the sandbox engine stub obeys the kernel’s update contract', () => {
     const engine = makeSandboxEngine({ crm_opportunity: [{ id: 'opp_1', stage: 'prospecting' }] });
     await expect(
       runActionBody(writerAction(`await ctx.api.object('crm_opportunity').update('opp_1', { stage: 'closed_won' });`), { engine }),
-    ).rejects.toThrow(/Update requires an ID or options\.multi=true/);
+    ).rejects.toThrow(/does not recognise option 'stage'|Update requires an ID or options\.multi=true/);
     expect(engine.rows('crm_opportunity')[0]!.stage).toBe('prospecting');
   });
 

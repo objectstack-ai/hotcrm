@@ -509,17 +509,11 @@ export const zhCN: TranslationData = {
           label: '升级工单',
           confirmText: '此操作会将工单升级到升级处理团队，是否继续？',
           successMessage: '工单升级成功！',
-          params: {
-            reason: { label: '升级原因' },
-          },
         },
         close_case: {
           label: '关闭工单',
           confirmText: '确定要关闭此工单吗？',
           successMessage: '工单已成功关闭！',
-          params: {
-            resolution: { label: '解决方案' },
-          },
         },
       },
       _sections: {
@@ -879,9 +873,6 @@ export const zhCN: TranslationData = {
       label: 'HotCRM',
       description: '涵盖销售、服务和市场营销的客户关系管理系统',
       // Keyed by navigation-node `id` (a flat keyspace regardless of depth).
-      // The groups were translated but every leaf was not, so the sidebar read
-      // "销售 / Leads / Accounts / …" — half Chinese, half English. `group_products`
-      // and `group_analytics` were translations for nodes that don't exist.
       navigation: {
         nav_home: { label: '首页' },
 
@@ -921,7 +912,6 @@ export const zhCN: TranslationData = {
 
         group_approvals: { label: '审批' },
         nav_approval_requests: { label: '待我审批' },
-        nav_approval_processes: { label: '审批流程' },
       },
     },
   },

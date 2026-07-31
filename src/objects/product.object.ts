@@ -46,6 +46,7 @@ export const Product = ObjectSchema.create({
       label: 'Product Name',
       group: 'basic',
       required: true,
+      storage: { notNull: true },
       searchable: true,
       maxLength: 255,
     }),
@@ -93,6 +94,7 @@ export const Product = ObjectSchema.create({
       scale: 2,
       min: 0,
       required: true,
+      storage: { notNull: true },
     }),
     
     cost: Field.currency({ 
@@ -209,7 +211,7 @@ export const Product = ObjectSchema.create({
   // only the live API surface remains. History → Field.trackHistory (ADR-0052).
   enable: {
     apiEnabled: true,
-    apiMethods: ['get', 'list', 'create', 'update', 'delete', 'search'],
+    apiMethods: ['get', 'list', 'create', 'update', 'delete'],
   },
   
   // Validation Rules

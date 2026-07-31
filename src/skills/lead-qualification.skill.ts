@@ -46,14 +46,6 @@ export const LeadQualificationSkill = defineSkill({
     'action_schedule_followup',
   ],
 
-  triggerPhrases: [
-    'qualify this lead',
-    'score this lead',
-    'is this a hot lead',
-    'BANT analysis',
-    'lead score',
-  ],
-
   triggerConditions: [
     { field: 'objectName', operator: 'eq', value: 'crm_lead' },
   ],

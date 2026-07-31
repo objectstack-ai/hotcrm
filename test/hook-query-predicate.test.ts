@@ -88,41 +88,30 @@ describe('ctx.api query predicate — against the real kernel', () => {
   });
 
   /**
-   * Characterisation of the kernel as it ships in @objectstack/objectql 16.1.0.
-   * These are NOT the behaviour we want — they are the trap this change exists
-   * to close, pinned so nobody "helpfully" reintroduces `filter` believing the
-   * two spellings are interchangeable.
-   *
-   * If one of these starts failing, the platform has fixed the underlying
-   * silent-drop (reported separately to the @objectstack maintainers — it is
-   * framework behaviour, not ours to patch here). That is good news: confirm
-   * against the release notes, then relax the assertion. Do not just delete it,
-   * and do not read a kernel fix as licence to go back to `filter` — `where` is
-   * the spelling every read path has always honoured.
+   * v17 makes `filter` a live predicate alias across repository reads. Keep
+   * this compatibility contract explicit while production hooks continue to
+   * use canonical `where`.
    */
-  describe('filter: — the unsupported spelling the kernel drops silently', () => {
-    it('findOne ignores the predicate and yields the first row', async () => {
+  describe('filter: — supported repository predicate alias', () => {
+    it('findOne applies the predicate', async () => {
       const hit = await api.object('crm_account').findOne({ filter: { id: second.id } } as any);
-      expect(hit?.id).not.toBe(second.id);
-      expect(hit?.id).toBe(first.id);
+      expect(hit?.id).toBe(second.id);
     });
 
-    it('findOne yields the first row even when the predicate matches nothing', async () => {
-      // The most dangerous shape: a caller that checks for null gets a record.
+    it('findOne returns null when the predicate matches nothing', async () => {
       const hit = await api.object('crm_account').findOne({ where: undefined, filter: { id: 'no_such_id' } } as any);
-      expect(hit).not.toBeNull();
-      expect(hit?.id).toBe(first.id);
+      expect(hit).toBeNull();
     });
 
-    it('count ignores the predicate and counts the whole object', async () => {
+    it('count applies the predicate', async () => {
       const n = await api.object('crm_account').count({ filter: { annual_revenue: 100 } } as any);
-      expect(n).toBe(2); // 1 row actually matches
+      expect(n).toBe(1);
     });
 
-    it('never throws — which is exactly why this was invisible', async () => {
+    it('does not throw when a predicate has no match', async () => {
       await expect(
         api.object('crm_account').findOne({ filter: { id: 'no_such_id' } } as any),
-      ).resolves.toBeDefined();
+      ).resolves.toBeNull();
     });
   });
 });

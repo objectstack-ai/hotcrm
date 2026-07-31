@@ -83,12 +83,12 @@ export const CaseEscalationFlow: Flow = {
         // `{caseRecord.crm_account.name}` both interpolate to the literal
         // string "undefined" — a phantom recipient and a garbled body.
         // "reassigned" was also false: this flow never changes the owner.
-        to: ['{caseRecord.owner}'],
+        recipients: ['{caseRecord.owner}'],
         channels: ['inbox', 'email'],
         severity: 'critical',
         topic: 'case_escalated',
         title: 'Case escalated: {caseRecord.case_number}',
-        body: 'Case {caseRecord.case_number} ({caseRecord.priority}) has been auto-escalated on critical priority. It remains assigned to you.',
+        message: 'Case {caseRecord.case_number} ({caseRecord.priority}) has been auto-escalated on critical priority. It remains assigned to you.',
         actionUrl: '/crm_case/{record.id}',
       },
     },
