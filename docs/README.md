@@ -37,8 +37,7 @@ hotcrm/
 │   ├── objects/        # ObjectSchema.create metadata, object lifecycle hooks
 │   ├── actions/        # UI actions and AI-callable action bodies
 │   ├── flows/          # ObjectStack automation flows
-│   ├── agents/         # AI agent definitions
-│   ├── skills/         # AI skills used by agents
+│   ├── skills/         # AI skill definitions (skills-only surface)
 │   ├── dashboards/     # Dashboard metadata
 │   ├── reports/        # Report metadata
 │   ├── views/, pages/  # App UI metadata
