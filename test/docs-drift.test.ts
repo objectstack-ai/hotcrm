@@ -3,6 +3,7 @@
 import { describe, it, expect } from 'vitest';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { REPO_ROOT } from './helpers/repo-root';
 
 /**
  * Docs ↔ source drift guard (the AI-era safety net).
@@ -22,8 +23,13 @@ import { join } from 'node:path';
  * markdown) so it stays readable and has no runtime/server dependency.
  */
 
-const FLOWS = (f: string) => readFileSync(join('src/flows', f), 'utf8');
-const DOC = (f: string) => readFileSync(join('src/docs', f), 'utf8');
+// Resolved from this file's own location, not `process.cwd()`. The previous
+// `join('src/flows', f)` only worked when vitest happened to be launched from
+// the repo root — from a subdirectory, or an editor runner with a different
+// working directory, this drift guard died with ENOENT instead of checking
+// anything.
+const FLOWS = (f: string) => readFileSync(join(REPO_ROOT, 'src/flows', f), 'utf8');
+const DOC = (f: string) => readFileSync(join(REPO_ROOT, 'src/docs', f), 'utf8');
 
 /** cron → the human label the docs use. Unknown cron ⇒ deliberate failure. */
 const CRON_LABEL: Record<string, string> = {
@@ -174,9 +180,12 @@ const TREE_DOCS = [
 describe('maintainer docs do not point at directories that no longer exist', () => {
   for (const docFile of TREE_DOCS) {
     it(`${docFile}: every src/<dir>/ it names exists`, () => {
-      const text = readFileSync(join(docFile), 'utf8');
+      // Anchored on REPO_ROOT for the same reason as FLOWS/DOC above: a
+      // cwd-relative read turns this guard into an ENOENT the moment vitest is
+      // launched from anywhere but the repo root.
+      const text = readFileSync(join(REPO_ROOT, docFile), 'utf8');
       const named = new Set([...text.matchAll(/\bsrc\/([a-z][a-z0-9_]*)\//g)].map((m) => m[1]));
-      const missing = [...named].filter((dir) => !existsSync(join('src', dir)));
+      const missing = [...named].filter((dir) => !existsSync(join(REPO_ROOT, 'src', dir)));
       expect(
         missing,
         `${docFile} advertises src/ directories that do not exist: ${missing.join(', ')}. ` +

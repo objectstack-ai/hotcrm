@@ -7,14 +7,18 @@
 // `aggregate()` vs the new dataset `queryDataset()` and asserts identical
 // numbers. Exits non-zero on any mismatch. Read-only.
 //
-//   pnpm tsx scripts/analytics-reconcile/run.ts
+//   pnpm reconcile:analytics
+//
+// (This used to document `pnpm tsx scripts/analytics-reconcile/run.ts`, but
+// `tsx` was not a dependency of this repo and no script invoked it, so the
+// documented command could not run.)
 
 import { ObjectKernel, DriverPlugin, AppPlugin } from '@objectstack/runtime';
 import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import { ObjectQLPlugin } from '@objectstack/objectql';
 import { AnalyticsServicePlugin } from '@objectstack/service-analytics';
 import { DatasetSchema } from '@objectstack/spec/ui';
-import type { Dataset, Dashboard, Report } from '@objectstack/spec/ui';
+import type { Dataset, Dashboard } from '@objectstack/spec/ui';
 import type { IAnalyticsService, DatasetSelection } from '@objectstack/spec/contracts';
 import type { FilterCondition } from '@objectstack/spec/data';
 
@@ -23,6 +27,7 @@ import {
   reconcileReports,
   type ReconcileExecutors,
   type WidgetReconcileResult,
+  type InlineQueryReport,
 } from './reconcile.js';
 import { resolveDateMacros } from './macros.js';
 
@@ -102,7 +107,11 @@ async function main(): Promise<number> {
   for (const dashboard of Object.values(dashboardMod) as Dashboard[]) {
     mismatches += report(`hotcrm · ${dashboard.name}`, await reconcileDashboard(dashboard, datasets, exec));
   }
-  const reports = Object.values(reportMod) as Report[];
+  // `reportMod` exports the authored report metadata, which still carries the
+  // legacy inline query (`objectName`, `groupingsDown`, aggregate `columns`)
+  // alongside the dataset binding. `Report` from @objectstack/spec/ui models
+  // only the dataset-bound half, so widen to the reconciler's inline-aware view.
+  const reports = Object.values(reportMod) as unknown as InlineQueryReport[];
   if (reports.length) mismatches += report('hotcrm · reports', await reconcileReports(reports, datasets, exec));
   return mismatches;
 }

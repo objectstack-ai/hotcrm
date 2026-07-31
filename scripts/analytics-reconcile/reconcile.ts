@@ -18,6 +18,53 @@ import type { Dashboard, DashboardWidget, Dataset, Report } from '@objectstack/s
 import type { FilterCondition } from '@objectstack/spec/data';
 import type { DatasetSelection } from '@objectstack/spec/contracts';
 
+/**
+ * The LEGACY inline-query surface.
+ *
+ * `@objectstack/spec/ui` models the dataset-bound form — `DashboardWidget` has
+ * no `object` / `categoryField` / `aggregate` / `measures`, and `Report` has no
+ * `objectName` / `groupingsDown` / `groupingsAcross`, and types `columns` as
+ * `string[]`. Those keys are exactly the pre-ADR-0021 inline form this module
+ * exists to compare against, so they are declared here rather than reached for
+ * off an `any`.
+ *
+ * This file was outside `tsconfig.json`'s `include` until the verification-
+ * pipeline pass, so every one of these accesses had gone unchecked since the
+ * module was written.
+ */
+
+/** One aggregate column of a legacy report (`columns` may also hold bare names). */
+export interface InlineReportColumn {
+  field: string;
+  aggregate?: string;
+}
+
+/** One grouping level of a legacy report. */
+export interface InlineReportGrouping {
+  field: string;
+}
+
+/** A dashboard widget that may still carry its pre-dataset inline query. */
+export type InlineQueryWidget = DashboardWidget & {
+  object?: string;
+  categoryField?: string;
+  categoryGranularity?: string;
+  valueField?: string;
+  aggregate?: string;
+  measures?: Array<{ aggregate?: string; valueField?: string }>;
+};
+
+/** A report that may still carry its pre-dataset inline query. */
+export type InlineQueryReport = Omit<Report, 'columns' | 'blocks'> & {
+  objectName?: string;
+  filter?: FilterCondition;
+  runtimeFilter?: FilterCondition;
+  columns?: Array<InlineReportColumn>;
+  groupingsDown?: InlineReportGrouping[];
+  groupingsAcross?: InlineReportGrouping[];
+  blocks?: Array<Record<string, unknown> & { name?: string; dataset?: unknown }>;
+};
+
 /** A groupBy item — a plain field, or a date field bucketed by a granularity. */
 export type GroupByItem = string | { field: string; dateGranularity: string };
 
@@ -75,8 +122,8 @@ const EPSILON = 1e-9;
  * `object` query AND the new `dataset` binding with at least one measure name.
  */
 export function isReconcilableWidget(
-  w: DashboardWidget,
-): w is DashboardWidget & { object: string; dataset: string; values: string[] } {
+  w: InlineQueryWidget,
+): w is InlineQueryWidget & { object: string; dataset: string; values: string[] } {
   return (
     typeof w.object === 'string' &&
     typeof w.dataset === 'string' &&
@@ -91,7 +138,7 @@ export function isReconcilableWidget(
  * `filter`, NOT from the dataset. That independence is the whole point: if the
  * dataset was authored to mean something different, the numbers diverge here.
  */
-export function deriveOldAggregate(w: DashboardWidget): OldAggregateSpec {
+export function deriveOldAggregate(w: InlineQueryWidget): OldAggregateSpec {
   let groupBy: GroupByItem[] = w.categoryField
     ? [w.categoryGranularity
         ? { field: w.categoryField, dateGranularity: w.categoryGranularity }
@@ -118,7 +165,7 @@ export function deriveOldAggregate(w: DashboardWidget): OldAggregateSpec {
 }
 
 /** Build the dataset selection from the widget's `dimensions` / `values` / `filter`. */
-export function deriveSelection(w: DashboardWidget): DatasetSelection {
+export function deriveSelection(w: InlineQueryWidget): DatasetSelection {
   const dimensions = w.dimensions ?? [];
   const selection: DatasetSelection = {
     dimensions,
@@ -188,7 +235,7 @@ function diff(
 
 /** Reconcile a single dual-form widget against its dataset. */
 export async function reconcileWidget(
-  w: DashboardWidget,
+  w: InlineQueryWidget,
   dataset: Dataset | undefined,
   exec: ReconcileExecutors,
 ): Promise<WidgetReconcileResult> {
@@ -217,7 +264,7 @@ export async function reconcileWidget(
 
   // Resolve date macros once, then feed the identical filter to both paths.
   const wResolved = exec.resolveFilter
-    ? ({ ...w, filter: exec.resolveFilter(w.filter) } as DashboardWidget)
+    ? ({ ...w, filter: exec.resolveFilter(w.filter) } as InlineQueryWidget)
     : w;
   const oldSpec = deriveOldAggregate(wResolved);
   const selection = deriveSelection(wResolved);
@@ -263,8 +310,8 @@ export async function reconcileWidget(
 
 /** A report is reconcilable when it carries BOTH the inline query and the dataset binding. */
 export function isReconcilableReport(
-  r: Report,
-): r is Report & { objectName: string; dataset: string; values: string[] } {
+  r: InlineQueryReport,
+): r is InlineQueryReport & { objectName: string; dataset: string; values: string[] } {
   return (
     typeof r.objectName === 'string' &&
     typeof r.dataset === 'string' &&
@@ -274,7 +321,7 @@ export function isReconcilableReport(
 }
 
 /** Lower a report's LEGACY inline fields (groupings + aggregate columns) to an aggregate spec. */
-export function deriveReportAggregate(r: Report): OldAggregateSpec {
+export function deriveReportAggregate(r: InlineQueryReport): OldAggregateSpec {
   const groupBy = [
     ...(r.groupingsDown ?? []).map((g) => g.field),
     ...(r.groupingsAcross ?? []).map((g) => g.field),
@@ -288,7 +335,7 @@ export function deriveReportAggregate(r: Report): OldAggregateSpec {
 
 /** Reconcile a single dual-form report against its dataset. */
 export async function reconcileReport(
-  r: Report,
+  r: InlineQueryReport,
   dataset: Dataset | undefined,
   exec: ReconcileExecutors,
 ): Promise<WidgetReconcileResult> {
@@ -328,7 +375,7 @@ export async function reconcileReport(
 
 /** Reconcile every dual-form report. */
 export async function reconcileReports(
-  reports: Report[],
+  reports: InlineQueryReport[],
   datasets: Map<string, Dataset>,
   exec: ReconcileExecutors,
 ): Promise<WidgetReconcileResult[]> {
@@ -344,7 +391,7 @@ export async function reconcileReports(
         }
         // A block is shaped like a mini-report (objectName/columns/groupings/
         // filter + dataset/rows/values/runtimeFilter) — reconcile it as one.
-        const asReport = { ...block, name: id } as unknown as Report;
+        const asReport = { ...block, name: id } as unknown as InlineQueryReport;
         results.push(await reconcileReport(asReport, datasets.get(block.dataset), exec));
       }
       continue;

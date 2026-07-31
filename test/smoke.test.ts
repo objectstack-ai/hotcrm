@@ -18,9 +18,14 @@ const flows: any[] = (stack as any).flows ?? [];
 
 describe('hotcrm metadata bundle', () => {
   it('exposes the expected manifest', () => {
-    expect(stack.manifest.id).toBe('app.objectstack.hotcrm');
-    expect(stack.manifest.namespace).toBe('crm');
-    expect(stack.manifest.type).toBe('app');
+    const manifest = stack.manifest;
+    // `manifest` is optional on the stack type; assert its presence first so a
+    // stack that shipped without one fails here by name rather than as an
+    // unhelpful "cannot read property of undefined" three lines down.
+    expect(manifest, 'stack declares no manifest').toBeDefined();
+    expect(manifest!.id).toBe('app.objectstack.hotcrm');
+    expect(manifest!.namespace).toBe('crm');
+    expect(manifest!.type).toBe('app');
   });
 
   it('registers the core CRM objects', () => {

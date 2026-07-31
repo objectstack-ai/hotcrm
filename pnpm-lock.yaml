@@ -10,10 +10,10 @@ importers:
     dependencies:
       '@objectstack/account':
         specifier: 16.1.0
-        version: 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
+        version: 16.1.0(vitest@4.1.10)
       '@objectstack/cli':
         specifier: 16.1.0
-        version: 16.1.0(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(better-sqlite3@12.11.1)(kysely@0.29.4)(mongodb@7.5.0)(nanostores@1.4.1)(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
+        version: 16.1.0(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(better-sqlite3@12.11.1)(kysely@0.29.4)(mongodb@7.5.0)(nanostores@1.4.1)(vitest@4.1.10)
       '@objectstack/driver-memory':
         specifier: 16.1.0
         version: 16.1.0
@@ -25,13 +25,13 @@ importers:
         version: 16.1.0(better-sqlite3@12.11.1)
       '@objectstack/metadata':
         specifier: 16.1.0
-        version: 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
+        version: 16.1.0(vitest@4.1.10)
       '@objectstack/objectql':
         specifier: 16.1.0
-        version: 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
+        version: 16.1.0(vitest@4.1.10)
       '@objectstack/runtime':
         specifier: 16.1.0
-        version: 16.1.0(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(better-sqlite3@12.11.1)(kysely@0.29.4)(mongodb@7.5.0)(nanostores@1.4.1)(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
+        version: 16.1.0(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(better-sqlite3@12.11.1)(kysely@0.29.4)(mongodb@7.5.0)(nanostores@1.4.1)(vitest@4.1.10)
       '@objectstack/service-analytics':
         specifier: 16.1.0
         version: 16.1.0
@@ -48,12 +48,18 @@ importers:
       '@playwright/test':
         specifier: ^1.61.1
         version: 1.62.0
+      '@vitest/coverage-v8':
+        specifier: ^4.1.10
+        version: 4.1.10(vitest@4.1.10)
+      tsx:
+        specifier: ^4.23.1
+        version: 4.23.1
       typescript:
         specifier: ^7.0.2
         version: 7.0.2
       vitest:
         specifier: ^4.1.9
-        version: 4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0)
+        version: 4.1.10(@vitest/coverage-v8@4.1.10)(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0)
     optionalDependencies:
       better-sqlite3:
         specifier: ^12.11.1
@@ -65,9 +71,30 @@ packages:
     resolution: {integrity: sha512-cTlrKttbrRHEw3W+0/I609A2Matj5JQaRvfLtEIGZvlN0RaPi+3ANsMeqAyCAVlH/lUIW2tmtBlSMni74lcXeg==}
     engines: {node: '>=12'}
 
+  '@babel/helper-string-parser@7.29.7':
+    resolution: {integrity: sha512-Pb5ijPrZ89GDH8223L4UP8i6QApWxs04RbPQJTeWDV0/keR2E36MeKnyr6LYmUUvqRRI+Iv87SuF1W6ErINzYw==}
+    engines: {node: '>=6.9.0'}
+
+  '@babel/helper-validator-identifier@7.29.7':
+    resolution: {integrity: sha512-qehxGkRj55h/ff8EMaJ+cYhyaKlHIxqYDn682wQD7RNp9UujOQsHog2uS0r2vzr4pW+sXf90NeeayjcNaX3fFg==}
+    engines: {node: '>=6.9.0'}
+
+  '@babel/parser@7.29.7':
+    resolution: {integrity: sha512-hnORnjP/1P/zFEndoeX+n+t1RwWRJiJpM/jO7FW32Kn9r5+sJB2JWOdYo4L6k78j15eCwY3Gm/7364B1EMwtNg==}
+    engines: {node: '>=6.0.0'}
+    hasBin: true
+
   '@babel/runtime@7.29.7':
     resolution: {integrity: sha512-Nq8OhGWiZIZGV6hLHoyAKLLcJihP/xFeBMGJoUrxTX2psI8dCifzLhZISFb+VWS3wFMRDmCGw5R+dOySCqPLhw==}
     engines: {node: '>=6.9.0'}
+
+  '@babel/types@7.29.7':
+    resolution: {integrity: sha512-4zBIxpPzowiZpusoFkyGVwakdRJUyuH5PxQ/PrqghfdFWWasvnCdPfQXHrenDai+gyLARulZjZowCOj6fjT4pA==}
+    engines: {node: '>=6.9.0'}
+
+  '@bcoe/v8-coverage@1.0.2':
+    resolution: {integrity: sha512-6zABk/ECA/QYSCQ1NGiVwwbQerUCZ+TQbp64Q3AgmfNvurHH0j8TtXa1qbShXA6qqkpAj4V5W8pP6mLe1mcMqA==}
+    engines: {node: '>=18'}
 
   '@better-auth/core@1.7.0-rc.1':
     resolution: {integrity: sha512-qwVJ5LBPAp8FhhRbUzJDv8cp6h6sn266PPJIXBhB2aYXee40/VGpyoTmx9+LmOotOLQ4BWSO5rCSDvS8FGVdEQ==}
@@ -999,6 +1026,15 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@vitest/coverage-v8@4.1.10':
+    resolution: {integrity: sha512-IM49HmthevbgAO4anp1hwtoT9wYe59w0LR00gr+eagHE+ZJ5lK4sLPeO0ubgoJcwLk6dehU3R24N+FbEEKDc8g==}
+    peerDependencies:
+      '@vitest/browser': 4.1.10
+      vitest: 4.1.10
+    peerDependenciesMeta:
+      '@vitest/browser':
+        optional: true
+
   '@vitest/expect@4.1.10':
     resolution: {integrity: sha512-YsCn+qAk1GWjQOWFEsEcL2gNQ0zmVmQu3T03qP6UyjhtmdtwtbuI+DASn/7iQB3HGTXkdBwGddzxPlmiql5vlA==}
 
@@ -1100,6 +1136,9 @@ packages:
   assertion-error@2.0.1:
     resolution: {integrity: sha512-Izi8RQcffqCeNVgFigKli1ssklIbpHnCYc6AknXGYoB6grJqyeby7jv12JUQgmTAnIDnbck1uxksT4dzN3PWBA==}
     engines: {node: '>=12'}
+
+  ast-v8-to-istanbul@1.0.5:
+    resolution: {integrity: sha512-UPAgKJFSEGMWSDr3LX4tqnAb4f7KGT8O40Tyx8wbYmmZ/yn58lNCm8h3svs3eXgiGd5AXxz8NDOvXWvicq+rJA==}
 
   async@3.2.6:
     resolution: {integrity: sha512-htCUDlxyyCLMgaM3xXg0C0LW2xqfuQ6p05pCEIsXuyQ+a1koYKTuBMzRNwmybfLgvJDMd0r1LTn4+E0Ti6C2AA==}
@@ -1679,6 +1718,9 @@ packages:
     resolution: {integrity: sha512-XcuyW9qE2kJn07PkecMOBd5Vq/hMy7mmGw+idz1yblbg9N17ijJODrvPkn7/dwL3Kulj8LcRJ69DLOWf91dRUg==}
     engines: {node: '>=16.9.0'}
 
+  html-escaper@2.0.2:
+    resolution: {integrity: sha512-H2iMtd0I4Mt5eYiapRdIDjp+XzelXQ0tFE4JS7YFwFevXXMmOp9myNrUvCg0D6ws8iqkRPBfKHgbwig1SmlLfg==}
+
   http-errors@2.0.1:
     resolution: {integrity: sha512-4FbRdAX+bSdmo4AUFuS0WNiPz8NgFt+r8ThgNWmlrjQjt1Q7ZR9+zTlce2859x4KSXrwIsaeTqDoKQmtP8pLmQ==}
     engines: {node: '>= 0.8'}
@@ -1776,6 +1818,18 @@ packages:
   isexe@2.0.0:
     resolution: {integrity: sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw==}
 
+  istanbul-lib-coverage@3.2.2:
+    resolution: {integrity: sha512-O8dpsF+r0WV/8MNRKfnmrtCWhuKjxrq2w+jpzBL5UZKTi2LeVWnWOmWRxFlesJONmc+wLAGvKQZEOanko0LFTg==}
+    engines: {node: '>=8'}
+
+  istanbul-lib-report@3.0.1:
+    resolution: {integrity: sha512-GCfE1mtsHGOELCU8e/Z7YWzpmybrx/+dSTfLrvY8qRmaY6zXTKWn6WQIjaAFw069icm6GVMNkgu0NzI4iPZUNw==}
+    engines: {node: '>=10'}
+
+  istanbul-reports@3.2.0:
+    resolution: {integrity: sha512-HGYWWS/ehqTV3xN10i23tkPkpH46MLCIMFNCaaKNavAXTF1RkqxawEPtnjnGZ6XKSInBKkiOA5BKS+aZiY3AvA==}
+    engines: {node: '>=8'}
+
   jake@10.9.4:
     resolution: {integrity: sha512-wpHYzhxiVQL+IV05BLE2Xn34zW1S223hvjtqk0+gsPrwd/8JNLXJgZZM/iPFsYc1xyphF+6M6EvdE5E9MBGkDA==}
     engines: {node: '>=10'}
@@ -1783,6 +1837,9 @@ packages:
 
   jose@6.2.4:
     resolution: {integrity: sha512-N8acGzVsQy6M/fjFcxtysNc4Q379TcM5dM/qKkNtsHFji88yANnXTr7BLeP75iPnFwBfQzM/jg2BZ9+HZrHCZA==}
+
+  js-tokens@10.0.0:
+    resolution: {integrity: sha512-lM/UBzQmfJRo9ABXbPWemivdCW8V2G8FHaHdypQaIy523snUjog0W71ayWXTjiR+ixeMyVHN2XcpnTd/liPg/Q==}
 
   js-yaml@3.15.0:
     resolution: {integrity: sha512-ttBQIIQPDeLjpPOohtUdXuXUVoA2uIB6fEH9HyJ7234s5mBJ5wTx20njxplLZQgLaOfpmPQA7X2t5AX6tIPbog==}
@@ -1997,6 +2054,13 @@ packages:
 
   magic-string@0.30.21:
     resolution: {integrity: sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ==}
+
+  magicast@0.5.3:
+    resolution: {integrity: sha512-pVKE4UdSQ7DvHzivsCIFx2BJn1mHG6KsyrFcaxFx6tONdneEuThrDx0Cj3AMg58KyN4pzYT+LHOotxDQDjNvkw==}
+
+  make-dir@4.0.0:
+    resolution: {integrity: sha512-hXdUTZYIVOt1Ex//jAQi+wTZZpUpwBj/0QsOzqegb3rGMMeJiSEu5xLHnYfBrRV4RH2+OCSOO95Is/7x1WJ4bw==}
+    engines: {node: '>=10'}
 
   math-intrinsics@1.1.0:
     resolution: {integrity: sha512-/IXtbwEk5HTPyEwyKX6hGkYXxM9nbj64B+ilVJnC/R6B0pH5G4V3b0pVbL7DBj4tkhBAppbQUlf6F6Xl9LHu1g==}
@@ -2516,6 +2580,10 @@ packages:
     engines: {node: '>=16 || 14 >=14.17'}
     hasBin: true
 
+  supports-color@7.2.0:
+    resolution: {integrity: sha512-qpCAvRl9stuOHveKsn7HncJRvv501qIacKzQlO/+Lwxc9+0q2wLyv4Dfvt80/DPn2pqOBsJdDiogXGR9+OvwRw==}
+    engines: {node: '>=8'}
+
   supports-color@8.1.1:
     resolution: {integrity: sha512-MpUEN2OodtUzxvKQl72cUF7RQ5EiHsGvSsVG0ia9c5RbWGL2CI4C7EpPS8UTBIplnlzZiNuV56w+FuNxy3ty2Q==}
     engines: {node: '>=10'}
@@ -2818,7 +2886,22 @@ snapshots:
       escape-html: 1.0.3
       xpath: 0.0.32
 
+  '@babel/helper-string-parser@7.29.7': {}
+
+  '@babel/helper-validator-identifier@7.29.7': {}
+
+  '@babel/parser@7.29.7':
+    dependencies:
+      '@babel/types': 7.29.7
+
   '@babel/runtime@7.29.7': {}
+
+  '@babel/types@7.29.7':
+    dependencies:
+      '@babel/helper-string-parser': 7.29.7
+      '@babel/helper-validator-identifier': 7.29.7
+
+  '@bcoe/v8-coverage@1.0.2': {}
 
   '@better-auth/core@1.7.0-rc.1(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.4)(kysely@0.29.4)(nanostores@1.4.1)':
     dependencies:
@@ -2856,12 +2939,12 @@ snapshots:
     optionalDependencies:
       mongodb: 7.5.0
 
-  '@better-auth/oauth-provider@1.7.0-rc.1(@better-auth/core@1.7.0-rc.1(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.4)(kysely@0.29.4)(nanostores@1.4.1))(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-auth@1.7.0-rc.1(better-sqlite3@12.11.1)(mongodb@7.5.0)(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0)))(better-call@1.3.7(zod@4.4.3))':
+  '@better-auth/oauth-provider@1.7.0-rc.1(@better-auth/core@1.7.0-rc.1(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.4)(kysely@0.29.4)(nanostores@1.4.1))(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-auth@1.7.0-rc.1(better-sqlite3@12.11.1)(mongodb@7.5.0)(vitest@4.1.10))(better-call@1.3.7(zod@4.4.3))':
     dependencies:
       '@better-auth/core': 1.7.0-rc.1(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.4)(kysely@0.29.4)(nanostores@1.4.1)
       '@better-auth/utils': 0.4.2
       '@better-fetch/fetch': 1.3.1
-      better-auth: 1.7.0-rc.1(better-sqlite3@12.11.1)(mongodb@7.5.0)(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
+      better-auth: 1.7.0-rc.1(better-sqlite3@12.11.1)(mongodb@7.5.0)(vitest@4.1.10)
       better-call: 1.3.7(zod@4.4.3)
       jose: 6.2.4
       zod: 4.4.3
@@ -2871,20 +2954,20 @@ snapshots:
       '@better-auth/core': 1.7.0-rc.1(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.4)(kysely@0.29.4)(nanostores@1.4.1)
       '@better-auth/utils': 0.4.2
 
-  '@better-auth/scim@1.7.0-rc.1(@better-auth/core@1.7.0-rc.1(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.4)(kysely@0.29.4)(nanostores@1.4.1))(@better-auth/utils@0.4.2)(better-auth@1.7.0-rc.1(better-sqlite3@12.11.1)(mongodb@7.5.0)(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0)))(better-call@1.3.7(zod@4.4.3))':
+  '@better-auth/scim@1.7.0-rc.1(@better-auth/core@1.7.0-rc.1(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.4)(kysely@0.29.4)(nanostores@1.4.1))(@better-auth/utils@0.4.2)(better-auth@1.7.0-rc.1(better-sqlite3@12.11.1)(mongodb@7.5.0)(vitest@4.1.10))(better-call@1.3.7(zod@4.4.3))':
     dependencies:
       '@better-auth/core': 1.7.0-rc.1(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.4)(kysely@0.29.4)(nanostores@1.4.1)
       '@better-auth/utils': 0.4.2
-      better-auth: 1.7.0-rc.1(better-sqlite3@12.11.1)(mongodb@7.5.0)(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
+      better-auth: 1.7.0-rc.1(better-sqlite3@12.11.1)(mongodb@7.5.0)(vitest@4.1.10)
       better-call: 1.3.7(zod@4.4.3)
       zod: 4.4.3
 
-  '@better-auth/sso@1.7.0-rc.1(@better-auth/core@1.7.0-rc.1(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.4)(kysely@0.29.4)(nanostores@1.4.1))(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-auth@1.7.0-rc.1(better-sqlite3@12.11.1)(mongodb@7.5.0)(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0)))(better-call@1.3.7(zod@4.4.3))':
+  '@better-auth/sso@1.7.0-rc.1(@better-auth/core@1.7.0-rc.1(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.4)(kysely@0.29.4)(nanostores@1.4.1))(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-auth@1.7.0-rc.1(better-sqlite3@12.11.1)(mongodb@7.5.0)(vitest@4.1.10))(better-call@1.3.7(zod@4.4.3))':
     dependencies:
       '@better-auth/core': 1.7.0-rc.1(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.4)(kysely@0.29.4)(nanostores@1.4.1)
       '@better-auth/utils': 0.4.2
       '@better-fetch/fetch': 1.3.1
-      better-auth: 1.7.0-rc.1(better-sqlite3@12.11.1)(mongodb@7.5.0)(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
+      better-auth: 1.7.0-rc.1(better-sqlite3@12.11.1)(mongodb@7.5.0)(vitest@4.1.10)
       better-call: 1.3.7(zod@4.4.3)
       fast-xml-parser: 5.10.1
       jose: 6.2.4
@@ -3274,19 +3357,19 @@ snapshots:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.20.1
 
-  '@objectstack/account@16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))':
+  '@objectstack/account@16.1.0(vitest@4.1.10)':
     dependencies:
-      '@objectstack/platform-objects': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
+      '@objectstack/platform-objects': 16.1.0(vitest@4.1.10)
       '@objectstack/spec': 16.1.0
     transitivePeerDependencies:
       - ai
       - vitest
 
-  '@objectstack/cli@16.1.0(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(better-sqlite3@12.11.1)(kysely@0.29.4)(mongodb@7.5.0)(nanostores@1.4.1)(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))':
+  '@objectstack/cli@16.1.0(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(better-sqlite3@12.11.1)(kysely@0.29.4)(mongodb@7.5.0)(nanostores@1.4.1)(vitest@4.1.10)':
     dependencies:
-      '@objectstack/account': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
+      '@objectstack/account': 16.1.0(vitest@4.1.10)
       '@objectstack/client': 16.1.0
-      '@objectstack/cloud-connection': 16.1.0(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(better-sqlite3@12.11.1)(kysely@0.29.4)(mongodb@7.5.0)(nanostores@1.4.1)(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
+      '@objectstack/cloud-connection': 16.1.0(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(better-sqlite3@12.11.1)(kysely@0.29.4)(mongodb@7.5.0)(nanostores@1.4.1)(vitest@4.1.10)
       '@objectstack/console': 16.1.0
       '@objectstack/core': 16.1.0
       '@objectstack/driver-memory': 16.1.0
@@ -3296,41 +3379,41 @@ snapshots:
       '@objectstack/formula': 16.1.0
       '@objectstack/lint': 16.1.0
       '@objectstack/mcp': 16.1.0
-      '@objectstack/metadata': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
-      '@objectstack/objectql': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
+      '@objectstack/metadata': 16.1.0(vitest@4.1.10)
+      '@objectstack/objectql': 16.1.0(vitest@4.1.10)
       '@objectstack/observability': 16.1.0
-      '@objectstack/platform-objects': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
-      '@objectstack/plugin-approvals': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
-      '@objectstack/plugin-audit': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
-      '@objectstack/plugin-auth': 16.1.0(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(better-sqlite3@12.11.1)(kysely@0.29.4)(mongodb@7.5.0)(nanostores@1.4.1)(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
-      '@objectstack/plugin-email': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
+      '@objectstack/platform-objects': 16.1.0(vitest@4.1.10)
+      '@objectstack/plugin-approvals': 16.1.0(vitest@4.1.10)
+      '@objectstack/plugin-audit': 16.1.0(vitest@4.1.10)
+      '@objectstack/plugin-auth': 16.1.0(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(better-sqlite3@12.11.1)(kysely@0.29.4)(mongodb@7.5.0)(nanostores@1.4.1)(vitest@4.1.10)
+      '@objectstack/plugin-email': 16.1.0(vitest@4.1.10)
       '@objectstack/plugin-hono-server': 16.1.0
-      '@objectstack/plugin-pinyin-search': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
-      '@objectstack/plugin-reports': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
-      '@objectstack/plugin-security': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
-      '@objectstack/plugin-sharing': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
+      '@objectstack/plugin-pinyin-search': 16.1.0(vitest@4.1.10)
+      '@objectstack/plugin-reports': 16.1.0(vitest@4.1.10)
+      '@objectstack/plugin-security': 16.1.0(vitest@4.1.10)
+      '@objectstack/plugin-sharing': 16.1.0(vitest@4.1.10)
       '@objectstack/plugin-webhooks': 16.1.0
-      '@objectstack/rest': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
-      '@objectstack/runtime': 16.1.0(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(better-sqlite3@12.11.1)(kysely@0.29.4)(mongodb@7.5.0)(nanostores@1.4.1)(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
+      '@objectstack/rest': 16.1.0(vitest@4.1.10)
+      '@objectstack/runtime': 16.1.0(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(better-sqlite3@12.11.1)(kysely@0.29.4)(mongodb@7.5.0)(nanostores@1.4.1)(vitest@4.1.10)
       '@objectstack/service-analytics': 16.1.0
       '@objectstack/service-automation': 16.1.0
       '@objectstack/service-cache': 16.1.0
       '@objectstack/service-datasource': 16.1.0
-      '@objectstack/service-job': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
+      '@objectstack/service-job': 16.1.0(vitest@4.1.10)
       '@objectstack/service-messaging': 16.1.0
-      '@objectstack/service-package': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
-      '@objectstack/service-queue': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
-      '@objectstack/service-realtime': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
-      '@objectstack/service-settings': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
+      '@objectstack/service-package': 16.1.0(vitest@4.1.10)
+      '@objectstack/service-queue': 16.1.0(vitest@4.1.10)
+      '@objectstack/service-realtime': 16.1.0(vitest@4.1.10)
+      '@objectstack/service-settings': 16.1.0(vitest@4.1.10)
       '@objectstack/service-sms': 16.1.0
-      '@objectstack/service-storage': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
-      '@objectstack/setup': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
+      '@objectstack/service-storage': 16.1.0(vitest@4.1.10)
+      '@objectstack/setup': 16.1.0(vitest@4.1.10)
       '@objectstack/spec': 16.1.0
       '@objectstack/trigger-api': 16.1.0
       '@objectstack/trigger-record-change': 16.1.0
       '@objectstack/trigger-schedule': 16.1.0
       '@objectstack/types': 16.1.0
-      '@objectstack/verify': 16.1.0(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(better-sqlite3@12.11.1)(kysely@0.29.4)(mongodb@7.5.0)(nanostores@1.4.1)(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
+      '@objectstack/verify': 16.1.0(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(better-sqlite3@12.11.1)(kysely@0.29.4)(mongodb@7.5.0)(nanostores@1.4.1)(vitest@4.1.10)
       '@oclif/core': 4.13.1
       bundle-require: 5.1.0(esbuild@0.28.1)
       chalk: 5.6.2
@@ -3394,10 +3477,10 @@ snapshots:
     transitivePeerDependencies:
       - ai
 
-  '@objectstack/cloud-connection@16.1.0(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(better-sqlite3@12.11.1)(kysely@0.29.4)(mongodb@7.5.0)(nanostores@1.4.1)(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))':
+  '@objectstack/cloud-connection@16.1.0(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(better-sqlite3@12.11.1)(kysely@0.29.4)(mongodb@7.5.0)(nanostores@1.4.1)(vitest@4.1.10)':
     dependencies:
       '@objectstack/core': 16.1.0
-      '@objectstack/runtime': 16.1.0(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(better-sqlite3@12.11.1)(kysely@0.29.4)(mongodb@7.5.0)(nanostores@1.4.1)(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
+      '@objectstack/runtime': 16.1.0(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(better-sqlite3@12.11.1)(kysely@0.29.4)(mongodb@7.5.0)(nanostores@1.4.1)(vitest@4.1.10)
       '@objectstack/spec': 16.1.0
       '@objectstack/types': 16.1.0
     transitivePeerDependencies:
@@ -3546,28 +3629,28 @@ snapshots:
       - ai
       - supports-color
 
-  '@objectstack/metadata-core@16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))':
+  '@objectstack/metadata-core@16.1.0(vitest@4.1.10)':
     dependencies:
       '@objectstack/spec': 16.1.0
       zod: 4.4.3
     optionalDependencies:
-      vitest: 4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0)
+      vitest: 4.1.10(@vitest/coverage-v8@4.1.10)(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0)
     transitivePeerDependencies:
       - ai
 
-  '@objectstack/metadata-fs@16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))':
+  '@objectstack/metadata-fs@16.1.0(vitest@4.1.10)':
     dependencies:
-      '@objectstack/metadata-core': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
+      '@objectstack/metadata-core': 16.1.0(vitest@4.1.10)
       chokidar: 5.0.0
     transitivePeerDependencies:
       - ai
       - vitest
 
-  '@objectstack/metadata-protocol@16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))':
+  '@objectstack/metadata-protocol@16.1.0(vitest@4.1.10)':
     dependencies:
       '@objectstack/core': 16.1.0
       '@objectstack/formula': 16.1.0
-      '@objectstack/metadata-core': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
+      '@objectstack/metadata-core': 16.1.0(vitest@4.1.10)
       '@objectstack/spec': 16.1.0
       '@objectstack/types': 16.1.0
       zod: 4.4.3
@@ -3575,12 +3658,12 @@ snapshots:
       - ai
       - vitest
 
-  '@objectstack/metadata@16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))':
+  '@objectstack/metadata@16.1.0(vitest@4.1.10)':
     dependencies:
       '@objectstack/core': 16.1.0
-      '@objectstack/metadata-core': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
-      '@objectstack/metadata-fs': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
-      '@objectstack/platform-objects': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
+      '@objectstack/metadata-core': 16.1.0(vitest@4.1.10)
+      '@objectstack/metadata-fs': 16.1.0(vitest@4.1.10)
+      '@objectstack/platform-objects': 16.1.0(vitest@4.1.10)
       '@objectstack/spec': 16.1.0
       '@objectstack/types': 16.1.0
       chokidar: 5.0.0
@@ -3591,12 +3674,12 @@ snapshots:
       - ai
       - vitest
 
-  '@objectstack/objectql@16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))':
+  '@objectstack/objectql@16.1.0(vitest@4.1.10)':
     dependencies:
       '@objectstack/core': 16.1.0
       '@objectstack/formula': 16.1.0
-      '@objectstack/metadata-core': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
-      '@objectstack/metadata-protocol': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
+      '@objectstack/metadata-core': 16.1.0(vitest@4.1.10)
+      '@objectstack/metadata-protocol': 16.1.0(vitest@4.1.10)
       '@objectstack/spec': 16.1.0
       '@objectstack/types': 16.1.0
       ajv: 8.20.0
@@ -3611,47 +3694,47 @@ snapshots:
     transitivePeerDependencies:
       - ai
 
-  '@objectstack/platform-objects@16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))':
+  '@objectstack/platform-objects@16.1.0(vitest@4.1.10)':
     dependencies:
-      '@objectstack/metadata-core': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
+      '@objectstack/metadata-core': 16.1.0(vitest@4.1.10)
       '@objectstack/spec': 16.1.0
     transitivePeerDependencies:
       - ai
       - vitest
 
-  '@objectstack/plugin-approvals@16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))':
+  '@objectstack/plugin-approvals@16.1.0(vitest@4.1.10)':
     dependencies:
       '@objectstack/core': 16.1.0
       '@objectstack/formula': 16.1.0
-      '@objectstack/metadata-core': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
-      '@objectstack/platform-objects': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
+      '@objectstack/metadata-core': 16.1.0(vitest@4.1.10)
+      '@objectstack/platform-objects': 16.1.0(vitest@4.1.10)
       '@objectstack/spec': 16.1.0
     transitivePeerDependencies:
       - ai
       - vitest
 
-  '@objectstack/plugin-audit@16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))':
+  '@objectstack/plugin-audit@16.1.0(vitest@4.1.10)':
     dependencies:
       '@objectstack/core': 16.1.0
-      '@objectstack/platform-objects': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
+      '@objectstack/platform-objects': 16.1.0(vitest@4.1.10)
       '@objectstack/spec': 16.1.0
     transitivePeerDependencies:
       - ai
       - vitest
 
-  '@objectstack/plugin-auth@16.1.0(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(better-sqlite3@12.11.1)(kysely@0.29.4)(mongodb@7.5.0)(nanostores@1.4.1)(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))':
+  '@objectstack/plugin-auth@16.1.0(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(better-sqlite3@12.11.1)(kysely@0.29.4)(mongodb@7.5.0)(nanostores@1.4.1)(vitest@4.1.10)':
     dependencies:
       '@better-auth/core': 1.7.0-rc.1(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.4)(kysely@0.29.4)(nanostores@1.4.1)
-      '@better-auth/oauth-provider': 1.7.0-rc.1(@better-auth/core@1.7.0-rc.1(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.4)(kysely@0.29.4)(nanostores@1.4.1))(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-auth@1.7.0-rc.1(better-sqlite3@12.11.1)(mongodb@7.5.0)(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0)))(better-call@1.3.7(zod@4.4.3))
-      '@better-auth/scim': 1.7.0-rc.1(@better-auth/core@1.7.0-rc.1(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.4)(kysely@0.29.4)(nanostores@1.4.1))(@better-auth/utils@0.4.2)(better-auth@1.7.0-rc.1(better-sqlite3@12.11.1)(mongodb@7.5.0)(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0)))(better-call@1.3.7(zod@4.4.3))
-      '@better-auth/sso': 1.7.0-rc.1(@better-auth/core@1.7.0-rc.1(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.4)(kysely@0.29.4)(nanostores@1.4.1))(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-auth@1.7.0-rc.1(better-sqlite3@12.11.1)(mongodb@7.5.0)(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0)))(better-call@1.3.7(zod@4.4.3))
+      '@better-auth/oauth-provider': 1.7.0-rc.1(@better-auth/core@1.7.0-rc.1(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.4)(kysely@0.29.4)(nanostores@1.4.1))(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-auth@1.7.0-rc.1(better-sqlite3@12.11.1)(mongodb@7.5.0)(vitest@4.1.10))(better-call@1.3.7(zod@4.4.3))
+      '@better-auth/scim': 1.7.0-rc.1(@better-auth/core@1.7.0-rc.1(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.4)(kysely@0.29.4)(nanostores@1.4.1))(@better-auth/utils@0.4.2)(better-auth@1.7.0-rc.1(better-sqlite3@12.11.1)(mongodb@7.5.0)(vitest@4.1.10))(better-call@1.3.7(zod@4.4.3))
+      '@better-auth/sso': 1.7.0-rc.1(@better-auth/core@1.7.0-rc.1(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.4)(kysely@0.29.4)(nanostores@1.4.1))(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-auth@1.7.0-rc.1(better-sqlite3@12.11.1)(mongodb@7.5.0)(vitest@4.1.10))(better-call@1.3.7(zod@4.4.3))
       '@noble/hashes': 2.2.0
       '@objectstack/core': 16.1.0
-      '@objectstack/platform-objects': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
-      '@objectstack/rest': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
+      '@objectstack/platform-objects': 16.1.0(vitest@4.1.10)
+      '@objectstack/rest': 16.1.0(vitest@4.1.10)
       '@objectstack/spec': 16.1.0
       '@objectstack/types': 16.1.0
-      better-auth: 1.7.0-rc.1(better-sqlite3@12.11.1)(mongodb@7.5.0)(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
+      better-auth: 1.7.0-rc.1(better-sqlite3@12.11.1)(mongodb@7.5.0)(vitest@4.1.10)
       jose: 6.2.4
     transitivePeerDependencies:
       - '@better-auth/utils'
@@ -3682,11 +3765,11 @@ snapshots:
       - vitest
       - vue
 
-  '@objectstack/plugin-email@16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))':
+  '@objectstack/plugin-email@16.1.0(vitest@4.1.10)':
     dependencies:
       '@objectstack/core': 16.1.0
       '@objectstack/formula': 16.1.0
-      '@objectstack/platform-objects': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
+      '@objectstack/platform-objects': 16.1.0(vitest@4.1.10)
       '@objectstack/spec': 16.1.0
     transitivePeerDependencies:
       - ai
@@ -3703,42 +3786,42 @@ snapshots:
     transitivePeerDependencies:
       - ai
 
-  '@objectstack/plugin-pinyin-search@16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))':
+  '@objectstack/plugin-pinyin-search@16.1.0(vitest@4.1.10)':
     dependencies:
       '@objectstack/core': 16.1.0
-      '@objectstack/objectql': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
+      '@objectstack/objectql': 16.1.0(vitest@4.1.10)
       '@objectstack/types': 16.1.0
       pinyin-pro: 3.28.2
     transitivePeerDependencies:
       - ai
       - vitest
 
-  '@objectstack/plugin-reports@16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))':
+  '@objectstack/plugin-reports@16.1.0(vitest@4.1.10)':
     dependencies:
       '@objectstack/core': 16.1.0
-      '@objectstack/platform-objects': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
+      '@objectstack/platform-objects': 16.1.0(vitest@4.1.10)
       '@objectstack/spec': 16.1.0
       croner: 10.0.1
     transitivePeerDependencies:
       - ai
       - vitest
 
-  '@objectstack/plugin-security@16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))':
+  '@objectstack/plugin-security@16.1.0(vitest@4.1.10)':
     dependencies:
       '@objectstack/core': 16.1.0
       '@objectstack/formula': 16.1.0
-      '@objectstack/platform-objects': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
+      '@objectstack/platform-objects': 16.1.0(vitest@4.1.10)
       '@objectstack/spec': 16.1.0
     transitivePeerDependencies:
       - ai
       - vitest
 
-  '@objectstack/plugin-sharing@16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))':
+  '@objectstack/plugin-sharing@16.1.0(vitest@4.1.10)':
     dependencies:
       '@objectstack/core': 16.1.0
       '@objectstack/formula': 16.1.0
-      '@objectstack/objectql': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
-      '@objectstack/platform-objects': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
+      '@objectstack/objectql': 16.1.0(vitest@4.1.10)
+      '@objectstack/platform-objects': 16.1.0(vitest@4.1.10)
       '@objectstack/spec': 16.1.0
     transitivePeerDependencies:
       - ai
@@ -3752,12 +3835,12 @@ snapshots:
     transitivePeerDependencies:
       - ai
 
-  '@objectstack/rest@16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))':
+  '@objectstack/rest@16.1.0(vitest@4.1.10)':
     dependencies:
       '@objectstack/core': 16.1.0
       '@objectstack/observability': 16.1.0
-      '@objectstack/platform-objects': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
-      '@objectstack/service-package': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
+      '@objectstack/platform-objects': 16.1.0(vitest@4.1.10)
+      '@objectstack/service-package': 16.1.0(vitest@4.1.10)
       '@objectstack/spec': 16.1.0
       '@objectstack/types': 16.1.0
       exceljs: 4.4.0
@@ -3766,20 +3849,20 @@ snapshots:
       - ai
       - vitest
 
-  '@objectstack/runtime@16.1.0(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(better-sqlite3@12.11.1)(kysely@0.29.4)(mongodb@7.5.0)(nanostores@1.4.1)(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))':
+  '@objectstack/runtime@16.1.0(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(better-sqlite3@12.11.1)(kysely@0.29.4)(mongodb@7.5.0)(nanostores@1.4.1)(vitest@4.1.10)':
     dependencies:
       '@objectstack/core': 16.1.0
       '@objectstack/driver-memory': 16.1.0
       '@objectstack/driver-sql': 16.1.0
       '@objectstack/driver-sqlite-wasm': 16.1.0(better-sqlite3@12.11.1)
       '@objectstack/formula': 16.1.0
-      '@objectstack/metadata': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
-      '@objectstack/metadata-core': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
-      '@objectstack/objectql': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
+      '@objectstack/metadata': 16.1.0(vitest@4.1.10)
+      '@objectstack/metadata-core': 16.1.0(vitest@4.1.10)
+      '@objectstack/objectql': 16.1.0(vitest@4.1.10)
       '@objectstack/observability': 16.1.0
-      '@objectstack/plugin-auth': 16.1.0(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(better-sqlite3@12.11.1)(kysely@0.29.4)(mongodb@7.5.0)(nanostores@1.4.1)(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
-      '@objectstack/plugin-security': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
-      '@objectstack/rest': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
+      '@objectstack/plugin-auth': 16.1.0(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(better-sqlite3@12.11.1)(kysely@0.29.4)(mongodb@7.5.0)(nanostores@1.4.1)(vitest@4.1.10)
+      '@objectstack/plugin-security': 16.1.0(vitest@4.1.10)
+      '@objectstack/rest': 16.1.0(vitest@4.1.10)
       '@objectstack/service-cluster': 16.1.0
       '@objectstack/service-datasource': 16.1.0
       '@objectstack/service-i18n': 16.1.0
@@ -3878,10 +3961,10 @@ snapshots:
     transitivePeerDependencies:
       - ai
 
-  '@objectstack/service-job@16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))':
+  '@objectstack/service-job@16.1.0(vitest@4.1.10)':
     dependencies:
       '@objectstack/core': 16.1.0
-      '@objectstack/platform-objects': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
+      '@objectstack/platform-objects': 16.1.0(vitest@4.1.10)
       '@objectstack/spec': 16.1.0
       croner: 10.0.1
     transitivePeerDependencies:
@@ -3895,38 +3978,38 @@ snapshots:
     transitivePeerDependencies:
       - ai
 
-  '@objectstack/service-package@16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))':
+  '@objectstack/service-package@16.1.0(vitest@4.1.10)':
     dependencies:
       '@objectstack/core': 16.1.0
-      '@objectstack/metadata-core': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
+      '@objectstack/metadata-core': 16.1.0(vitest@4.1.10)
       '@objectstack/spec': 16.1.0
     transitivePeerDependencies:
       - ai
       - vitest
 
-  '@objectstack/service-queue@16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))':
+  '@objectstack/service-queue@16.1.0(vitest@4.1.10)':
     dependencies:
       '@objectstack/core': 16.1.0
-      '@objectstack/platform-objects': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
+      '@objectstack/platform-objects': 16.1.0(vitest@4.1.10)
       '@objectstack/spec': 16.1.0
     transitivePeerDependencies:
       - ai
       - vitest
 
-  '@objectstack/service-realtime@16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))':
+  '@objectstack/service-realtime@16.1.0(vitest@4.1.10)':
     dependencies:
       '@objectstack/core': 16.1.0
-      '@objectstack/platform-objects': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
+      '@objectstack/platform-objects': 16.1.0(vitest@4.1.10)
       '@objectstack/spec': 16.1.0
     transitivePeerDependencies:
       - ai
       - vitest
 
-  '@objectstack/service-settings@16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))':
+  '@objectstack/service-settings@16.1.0(vitest@4.1.10)':
     dependencies:
       '@noble/ciphers': 2.2.0
       '@objectstack/core': 16.1.0
-      '@objectstack/platform-objects': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
+      '@objectstack/platform-objects': 16.1.0(vitest@4.1.10)
       '@objectstack/spec': 16.1.0
       '@objectstack/types': 16.1.0
     transitivePeerDependencies:
@@ -3940,19 +4023,19 @@ snapshots:
     transitivePeerDependencies:
       - ai
 
-  '@objectstack/service-storage@16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))':
+  '@objectstack/service-storage@16.1.0(vitest@4.1.10)':
     dependencies:
       '@objectstack/core': 16.1.0
       '@objectstack/observability': 16.1.0
-      '@objectstack/platform-objects': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
+      '@objectstack/platform-objects': 16.1.0(vitest@4.1.10)
       '@objectstack/spec': 16.1.0
     transitivePeerDependencies:
       - ai
       - vitest
 
-  '@objectstack/setup@16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))':
+  '@objectstack/setup@16.1.0(vitest@4.1.10)':
     dependencies:
-      '@objectstack/platform-objects': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
+      '@objectstack/platform-objects': 16.1.0(vitest@4.1.10)
       '@objectstack/spec': 16.1.0
     transitivePeerDependencies:
       - ai
@@ -3989,21 +4072,21 @@ snapshots:
     transitivePeerDependencies:
       - ai
 
-  '@objectstack/verify@16.1.0(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(better-sqlite3@12.11.1)(kysely@0.29.4)(mongodb@7.5.0)(nanostores@1.4.1)(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))':
+  '@objectstack/verify@16.1.0(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(better-sqlite3@12.11.1)(kysely@0.29.4)(mongodb@7.5.0)(nanostores@1.4.1)(vitest@4.1.10)':
     dependencies:
       '@objectstack/core': 16.1.0
       '@objectstack/driver-sqlite-wasm': 16.1.0(better-sqlite3@12.11.1)
-      '@objectstack/objectql': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
-      '@objectstack/plugin-auth': 16.1.0(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(better-sqlite3@12.11.1)(kysely@0.29.4)(mongodb@7.5.0)(nanostores@1.4.1)(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
+      '@objectstack/objectql': 16.1.0(vitest@4.1.10)
+      '@objectstack/plugin-auth': 16.1.0(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(better-sqlite3@12.11.1)(kysely@0.29.4)(mongodb@7.5.0)(nanostores@1.4.1)(vitest@4.1.10)
       '@objectstack/plugin-hono-server': 16.1.0
-      '@objectstack/plugin-security': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
-      '@objectstack/plugin-sharing': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
-      '@objectstack/rest': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
-      '@objectstack/runtime': 16.1.0(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(better-sqlite3@12.11.1)(kysely@0.29.4)(mongodb@7.5.0)(nanostores@1.4.1)(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
+      '@objectstack/plugin-security': 16.1.0(vitest@4.1.10)
+      '@objectstack/plugin-sharing': 16.1.0(vitest@4.1.10)
+      '@objectstack/rest': 16.1.0(vitest@4.1.10)
+      '@objectstack/runtime': 16.1.0(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(better-sqlite3@12.11.1)(kysely@0.29.4)(mongodb@7.5.0)(nanostores@1.4.1)(vitest@4.1.10)
       '@objectstack/service-analytics': 16.1.0
       '@objectstack/service-automation': 16.1.0
       '@objectstack/service-datasource': 16.1.0
-      '@objectstack/service-settings': 16.1.0(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
+      '@objectstack/service-settings': 16.1.0(vitest@4.1.10)
       '@objectstack/spec': 16.1.0
     transitivePeerDependencies:
       - '@aws-sdk/credential-providers'
@@ -4220,6 +4303,20 @@ snapshots:
   '@typescript/typescript-win32-x64@7.0.2':
     optional: true
 
+  '@vitest/coverage-v8@4.1.10(vitest@4.1.10)':
+    dependencies:
+      '@bcoe/v8-coverage': 1.0.2
+      '@vitest/utils': 4.1.10
+      ast-v8-to-istanbul: 1.0.5
+      istanbul-lib-coverage: 3.2.2
+      istanbul-lib-report: 3.0.1
+      istanbul-reports: 3.2.0
+      magicast: 0.5.3
+      obug: 2.1.4
+      std-env: 4.2.0
+      tinyrainbow: 3.1.0
+      vitest: 4.1.10(@vitest/coverage-v8@4.1.10)(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0)
+
   '@vitest/expect@4.1.10':
     dependencies:
       '@standard-schema/spec': 1.1.0
@@ -4349,6 +4446,12 @@ snapshots:
 
   assertion-error@2.0.1: {}
 
+  ast-v8-to-istanbul@1.0.5:
+    dependencies:
+      '@jridgewell/trace-mapping': 0.3.31
+      estree-walker: 3.0.3
+      js-tokens: 10.0.0
+
   async@3.2.6: {}
 
   balanced-match@1.0.2: {}
@@ -4357,7 +4460,7 @@ snapshots:
 
   base64-js@1.5.1: {}
 
-  better-auth@1.7.0-rc.1(better-sqlite3@12.11.1)(mongodb@7.5.0)(vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0)):
+  better-auth@1.7.0-rc.1(better-sqlite3@12.11.1)(mongodb@7.5.0)(vitest@4.1.10):
     dependencies:
       '@better-auth/core': 1.7.0-rc.1(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.4)(kysely@0.29.4)(nanostores@1.4.1)
       '@better-auth/drizzle-adapter': 1.7.0-rc.1(@better-auth/core@1.7.0-rc.1(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.4)(kysely@0.29.4)(nanostores@1.4.1))(@better-auth/utils@0.4.2)
@@ -4379,7 +4482,7 @@ snapshots:
     optionalDependencies:
       better-sqlite3: 12.11.1
       mongodb: 7.5.0
-      vitest: 4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0)
+      vitest: 4.1.10(@vitest/coverage-v8@4.1.10)(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0)
     transitivePeerDependencies:
       - '@cloudflare/workers-types'
       - '@opentelemetry/api'
@@ -4920,6 +5023,8 @@ snapshots:
 
   hono@4.12.32: {}
 
+  html-escaper@2.0.2: {}
+
   http-errors@2.0.1:
     dependencies:
       depd: 2.0.0
@@ -4992,6 +5097,19 @@ snapshots:
 
   isexe@2.0.0: {}
 
+  istanbul-lib-coverage@3.2.2: {}
+
+  istanbul-lib-report@3.0.1:
+    dependencies:
+      istanbul-lib-coverage: 3.2.2
+      make-dir: 4.0.0
+      supports-color: 7.2.0
+
+  istanbul-reports@3.2.0:
+    dependencies:
+      html-escaper: 2.0.2
+      istanbul-lib-report: 3.0.1
+
   jake@10.9.4:
     dependencies:
       async: 3.2.6
@@ -4999,6 +5117,8 @@ snapshots:
       picocolors: 1.1.1
 
   jose@6.2.4: {}
+
+  js-tokens@10.0.0: {}
 
   js-yaml@3.15.0:
     dependencies:
@@ -5155,6 +5275,16 @@ snapshots:
   magic-string@0.30.21:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.5.5
+
+  magicast@0.5.3:
+    dependencies:
+      '@babel/parser': 7.29.7
+      '@babel/types': 7.29.7
+      source-map-js: 1.2.1
+
+  make-dir@4.0.0:
+    dependencies:
+      semver: 7.8.5
 
   math-intrinsics@1.1.0: {}
 
@@ -5662,6 +5792,10 @@ snapshots:
       tinyglobby: 0.2.17
       ts-interface-checker: 0.1.13
 
+  supports-color@7.2.0:
+    dependencies:
+      has-flag: 4.0.0
+
   supports-color@8.1.1:
     dependencies:
       has-flag: 4.0.0
@@ -5819,7 +5953,7 @@ snapshots:
       tsx: 4.23.1
       yaml: 2.9.0
 
-  vitest@4.1.10(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0):
+  vitest@4.1.10(@vitest/coverage-v8@4.1.10)(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0):
     dependencies:
       '@vitest/expect': 4.1.10
       '@vitest/mocker': 4.1.10(vite@8.1.5(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0))
@@ -5841,6 +5975,8 @@ snapshots:
       tinyrainbow: 3.1.0
       vite: 8.1.5(esbuild@0.28.1)(tsx@4.23.1)(yaml@2.9.0)
       why-is-node-running: 2.3.0
+    optionalDependencies:
+      '@vitest/coverage-v8': 4.1.10(vitest@4.1.10)
     transitivePeerDependencies:
       - '@vitejs/devtools'
       - esbuild

@@ -1,30 +1,49 @@
 # Configuration for PR labeler
-# Labels PRs based on changed files
+# Labels PRs based on changed files.
+#
+# Two invariants, both of which the previous revision broke:
+#
+#  1. Every glob must match something in the tree. `backend` pointed at
+#     `src/server.ts`, `src/engine/**` and `src/triggers/**`; `ui` pointed at
+#     `src/ui/**` and `tailwind.config.cjs`; `metadata` pointed at
+#     `src/metadata/**`. None of those paths have ever existed in this repo.
+#     `test/labeler-config.test.ts` now fails the suite on a glob that matches
+#     no file.
+#
+#  2. Every label key must already exist in the repository — `actions/labeler`
+#     does not create them. The old `ui:` key had no matching repo label, so
+#     even a corrected glob could not have applied it. The keys below are
+#     exactly the six labels that exist today: documentation, dependencies,
+#     ci/cd, backend, metadata, configuration. Adding a key here means creating
+#     the label in repo settings first.
 
 documentation:
   - changed-files:
-    - any-glob-to-any-file: ['docs/**', '*.md', 'README*', 'CONTRIBUTING*']
+    - any-glob-to-any-file: ['docs/**', 'apps/docs/**', 'src/docs/**', '*.md', 'README*', 'CONTRIBUTING*']
 
 dependencies:
   - changed-files:
-    - any-glob-to-any-file: ['package.json', 'package-lock.json']
+    - any-glob-to-any-file: ['package.json', 'package-lock.json', 'pnpm-lock.yaml', 'apps/docs/package.json', 'apps/docs/pnpm-lock.yaml']
 
+# CI plumbing and the verification pipeline itself — workflows, helper scripts,
+# and the test suites those workflows run.
 ci/cd:
   - changed-files:
-    - any-glob-to-any-file: ['.github/**']
+    - any-glob-to-any-file: ['.github/**', 'scripts/**', 'test/**', 'e2e/**']
 
+# Server-side behaviour: hook handlers, automation flows, and invocable
+# actions. This is the code that actually executes at request time.
 backend:
   - changed-files:
-    - any-glob-to-any-file: ['src/server.ts', 'src/engine/**', 'src/triggers/**', 'src/actions/**']
+    - any-glob-to-any-file: ['src/actions/**', 'src/flows/**', 'src/hooks/**', 'src/objects/*.hook.ts']
 
-ui:
-  - changed-files:
-    - any-glob-to-any-file: ['src/ui/**', 'tailwind.config.cjs']
-
+# Declarative metadata: schema, the security posture layered on it, and the
+# UI surfaces (apps, pages, views, dashboards, reports, datasets) that are
+# themselves just metadata in ObjectStack.
 metadata:
   - changed-files:
-    - any-glob-to-any-file: ['src/metadata/**']
+    - any-glob-to-any-file: ['src/objects/**', 'src/profiles/**', 'src/sharing/**', 'src/skills/**', 'src/data/**', 'src/apps/**', 'src/pages/**', 'src/views/**', 'src/interfaces/**', 'src/dashboards/**', 'src/reports/**', 'src/datasets/**', 'src/translations/**', 'objectstack.manifest.json']
 
 configuration:
   - changed-files:
-    - any-glob-to-any-file: ['*.config.js', '*.config.ts', 'tsconfig.json', '.gitignore', '.env*']
+    - any-glob-to-any-file: ['*.config.ts', 'objectstack.config.ts', 'tsconfig.json', '.gitignore', '.changeset/config.json']

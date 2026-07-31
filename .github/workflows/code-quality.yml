@@ -6,6 +6,7 @@ on:
     paths:
       - '**.ts'
       - '**.js'
+      - '**.mjs'
       - '**.json'
       - '**.yml'
       - '**.yaml'
@@ -14,16 +15,16 @@ jobs:
   quality-check:
     name: Quality Checks
     runs-on: ubuntu-latest
-    
+
     permissions:
       contents: read
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      
+
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
 
@@ -32,39 +33,26 @@ jobs:
         with:
           node-version: '22.x'
           cache: 'pnpm'
-      
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      
-      - name: Check for console.log statements
-        run: |
-          if grep -r "console\.log" packages/ --include="*.ts" --exclude-dir=node_modules --exclude-dir=__tests__; then
-            echo "Warning: console.log statements found in source code"
-            echo "Please use proper logging instead"
-            # This is just a warning, not failing the build
-          else
-            echo "No console.log statements found"
-          fi
-        continue-on-error: true
-      
+
+      # Replaces three inline greps that scanned `packages/` — a directory this
+      # repo does not have — each with `continue-on-error: true`. The script
+      # scans the real tree (src, test, e2e, scripts) and fails on a hit; it
+      # also fails loudly if a scanned directory ever disappears, so the check
+      # can never silently go vacuous again.
+      - name: Source hygiene (console.log / TODO / file size)
+        run: node scripts/check-source-hygiene.mjs
+
       - name: Check TypeScript compilation
         run: pnpm run typecheck
 
       - name: Validate metadata (protocol/schema)
         run: pnpm run validate
 
-      - name: Lint metadata conventions (advisory)
+      # `objectstack lint` exits 0 on warnings and suggestions and non-zero only
+      # on real errors, so `continue-on-error` was suppressing nothing but the
+      # errors we actually want to hear about.
+      - name: Lint metadata conventions
         run: pnpm run lint
-        continue-on-error: true
-
-      - name: Check for TODO comments
-        run: |
-          echo "Checking for TODO/FIXME comments..."
-          grep -r "TODO\|FIXME" packages/ --include="*.ts" --exclude-dir=node_modules || echo "No TODO/FIXME found"
-        continue-on-error: true
-      
-      - name: Check file sizes
-        run: |
-          echo "Checking for large files..."
-          find packages/ -type f -size +100k -exec ls -lh {} \; || echo "No large files found"
-        continue-on-error: true

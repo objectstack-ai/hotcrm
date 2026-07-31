@@ -28,6 +28,19 @@ const objects: AnyRec[] = (stack as any).objects ?? [];
 
 const action = (name: string) => actions.find((a) => a.name === name);
 const flow = (name: string) => flows.find((f) => f.name === name);
+/**
+ * A hook by name, or a thrown error naming the miss.
+ *
+ * The `const h = hooks.find(...)` / `expect(h).toBeTruthy()` / `h.events` shape
+ * these call sites used reads fine but does not narrow `h` for the compiler —
+ * something nothing noticed while `test/` sat outside tsconfig's `include`.
+ * Throwing keeps the diagnostic and gives the rest of the test a real value.
+ */
+const hookNamed = (name: string): AnyRec => {
+  const h = hooks.find((x) => x.name === name);
+  if (!h) throw new Error(`no ${name} hook registered`);
+  return h;
+};
 const nodeOf = (f: AnyRec | undefined, id: string) =>
   (f?.nodes ?? []).find((n: AnyRec) => n.id === id);
 const fieldNames = (obj: string) => Object.keys(objects.find((o) => o.name === obj)?.fields ?? {});
@@ -147,16 +160,14 @@ describe('notify recipients resolve to real audiences', () => {
 
 describe('line-item rollups keep parent totals in sync', () => {
   it('opportunity amount rollup fires on line-item insert/update/delete', () => {
-    const h = hooks.find((x) => x.name === 'opportunity_amount_rollup');
-    expect(h, 'no opportunity_amount_rollup hook').toBeTruthy();
+    const h = hookNamed('opportunity_amount_rollup');
     for (const ev of ['afterInsert', 'afterUpdate', 'afterDelete']) {
       expect(h.events, `rollup must fire on ${ev}`).toContain(ev);
     }
   });
 
   it('quote total rollup fires on line-item insert/update/delete', () => {
-    const h = hooks.find((x) => x.name === 'quote_total_rollup');
-    expect(h, 'no quote_total_rollup hook').toBeTruthy();
+    const h = hookNamed('quote_total_rollup');
     for (const ev of ['afterInsert', 'afterUpdate', 'afterDelete']) {
       expect(h.events, `rollup must fire on ${ev}`).toContain(ev);
     }
@@ -164,8 +175,7 @@ describe('line-item rollups keep parent totals in sync', () => {
 
   it('line-item price-fill hooks default price from the product on write', () => {
     for (const name of ['opportunity_line_item_price_fill', 'quote_line_item_price_fill']) {
-      const h = hooks.find((x) => x.name === name);
-      expect(h, `no ${name} hook`).toBeTruthy();
+      const h = hookNamed(name);
       expect(h.events).toContain('beforeInsert');
     }
   });
@@ -185,8 +195,7 @@ describe('lead conversion dedupes the contact too', () => {
 
 describe('lead auto-assignment', () => {
   it('a beforeInsert hook assigns ownerless leads', () => {
-    const h = hooks.find((x) => x.name === 'lead_auto_assign');
-    expect(h, 'no lead_auto_assign hook').toBeTruthy();
+    const h = hookNamed('lead_auto_assign');
     expect(h.events).toContain('beforeInsert');
   });
 });

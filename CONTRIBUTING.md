@@ -44,13 +44,28 @@ pnpm build
 ### Running Tests
 
 ```bash
-pnpm test
+pnpm test          # vitest — metadata contracts + hook/flow runtime suites
+pnpm test:e2e      # playwright — boots the server and drives the real API
+pnpm test:coverage # vitest with a v8 coverage report
 ```
 
 ### Linting
 
 ```bash
 pnpm lint
+```
+
+`pnpm lint` runs `objectstack lint`, which checks **metadata conventions** —
+naming, field groups, relationship shapes, i18n coverage. It is not a
+JavaScript/TypeScript style linter, and this repo does not use ESLint (a
+stray `.eslintrc.json` sat here for a long time with no `eslint` package
+installed anywhere to read it).
+
+Code-level hygiene is enforced separately and does gate CI:
+
+```bash
+pnpm typecheck                       # tsc over src, test, e2e, and scripts
+node scripts/check-source-hygiene.mjs # console.log / TODO / oversized files
 ```
 
 ## 🎯 Coding Standards
@@ -153,9 +168,8 @@ Only the compiled `dist/` folder is included in published packages (controlled b
 ## 🔄 Pull Request Process
 
 1. **Before Creating a PR**
-   - Ensure all tests pass (`pnpm test`)
-   - Run type checking (`pnpm typecheck`)
-   - Run linting and fix any issues (`pnpm lint`)
+   - Run the full gate (`pnpm verify` — validate, typecheck, lint, hygiene, build, test)
+   - Run the e2e suite if you touched hooks, flows, or actions (`pnpm test:e2e`)
    - Update documentation if needed
    - Add tests for new features
    - Update ROADMAP.md if the change completes a roadmap item

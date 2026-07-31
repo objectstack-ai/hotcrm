@@ -15,10 +15,18 @@
 #          'health_score', order: 'desc' }], limit: 5)`.
 #  t≈20s : Copilot answers, citing record IDs, surfacing health_score.
 #
-# Requires hotcrm dev server running on PORT (default 4001) with a
-# bearer token in HOTCRM_TOKEN.
+# Requires hotcrm running on PORT (default 4001) with a bearer token in
+# HOTCRM_TOKEN, AND a runtime that provides the `ai` capability.
 #
-# Usage:
+# ⚠ THIS DOES NOT RUN AGAINST A PLAIN `pnpm dev` / `pnpm start`.
+#
+# ObjectStack 11.3.0 (ADR-0025 S2) removed `@objectstack/service-ai` from the
+# open edition, so `objectstack.config.ts` deliberately omits `ai` from
+# `requires` — see the comment there. Nothing mounts `/api/v1/ai/*` locally and
+# every call below returns 404. The preflight makes that failure immediate and
+# self-explanatory instead of a bare `curl: (22) 404` twenty lines in.
+#
+# Usage (against a runtime that provides the `ai` tier, e.g. objectos-runtime):
 #   PORT=4001 HOTCRM_TOKEN=sk-... ./scripts/wow1-live-schema.sh
 
 set -euo pipefail
@@ -29,6 +37,28 @@ TOKEN="${HOTCRM_TOKEN:?Set HOTCRM_TOKEN to a valid bearer token}"
 AUTH="Authorization: Bearer ${TOKEN}"
 
 say() { printf '\n\033[1;34m▶ %s\033[0m\n' "$*"; }
+die() { printf '\n\033[1;31m✗ %s\033[0m\n' "$*" >&2; exit 1; }
+
+# ── 0. Preflight ───────────────────────────────────────────────────
+curl -fsS -o /dev/null "${BASE}/api/v1/health" \
+  || die "No hotcrm server answering on ${BASE}. Start one first (pnpm dev)."
+
+AI_STATUS=$(curl -s -o /dev/null -w '%{http_code}' -X POST "${BASE}/api/v1/ai/chat" \
+  -H "${AUTH}" -H 'Content-Type: application/json' -d '{}')
+if [ "${AI_STATUS}" = "404" ]; then
+  die "$(cat <<'MSG'
+This runtime does not mount /api/v1/ai/* — the demo cannot run here.
+
+hotcrm drops `ai` from `requires` on purpose (objectstack.config.ts): under
+ObjectStack 16 an unmet `requires` entry is fail-fast, and the open edition no
+longer ships @objectstack/service-ai. The app is portable and runs anywhere;
+the AI surface only exists on a runtime that provides the `ai` tier.
+
+To run this demo, point PORT/HOTCRM_TOKEN at such a runtime (cloud's
+objectos-runtime), or declare @objectstack/service-ai in your own stack.
+MSG
+)"
+fi
 
 # ── 1. Add a brand-new field to crm_account ────────────────────────
 say "t=0   Adding 'health_score' field to crm_account..."
