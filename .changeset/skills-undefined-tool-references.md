@@ -2,17 +2,22 @@
 'hotcrm': patch
 ---
 
-Drop the last undefined tool reference from the AI skills and guard the class in
-CI. `customer_360` declared `tools: ['search_knowledge']` — the survivor of the
-eleven fictional tools issue #493 counted, which #512 missed because that skill
-looked "already correct". The runtime silently drops an unresolved tool, so the
-skill shipped with its only declared capability resolving to nothing while its
-instructions promised an account + cases + opportunities + knowledge roll-up it
-had no tool to read. Defining the missing tool would not have fixed it:
-`ToolSchema` is a read-only Studio projection with no `implementation` and no
-executor, so a hand-authored `search_knowledge` would validate, build, and still
-never run. The knowledge base is `crm_knowledge_article`, a normal object, so the
-skill now reads it with `query_records` alongside the rest of the profile.
+Give `customer_360` the tools its instructions always assumed, and guard skill
+tool references in CI. Its whole tool list was `tools: ['search_knowledge']`
+while the instructions promised an account + cases + opportunities + knowledge
+roll-up — the skill could not fetch a single record. It now reads accounts,
+contacts, cases and opportunities with the platform data tools, and the
+knowledge base with `query_records`, since `crm_knowledge_article` is a normal
+object.
+
+`search_knowledge` itself is a real platform tool — it is in
+`PLATFORM_PROVIDED_TOOL_NAMES` and was documented in 16.1.0's
+`spec/src/ai/knowledge-source.zod.ts`. Issue #493 listed it as undefined and an
+earlier draft of this change repeated that; both were wrong. It is left out for
+a narrower reason: retrieval needs a declared knowledge source, `AIKnowledgeSchema`
+mounts only on `AgentSchema.knowledge`, and #512 deleted the agents — so a
+skills-only app has nowhere to declare one and the tool would resolve but return
+nothing.
 
 Adds `test/skills-integrity.test.ts`: every skill tool must resolve to a platform
 built-in or an `action_<name>` tool materialised from an Action that is
