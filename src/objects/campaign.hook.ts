@@ -66,14 +66,14 @@ const campaignCompleted: Hook = {
     // metric snapshot was silently zero.
     const [memberRows, opportunities, wonOpps, wonOppRecords] = await Promise.all([
       api.object('crm_campaign_member').find({
-        filter: { crm_campaign: id },
+        where: { crm_campaign: id },
         fields: ['crm_lead', 'status'],
         top: 5000,
       }),
-      api.object('crm_opportunity').count({ filter: { crm_campaign: id } }),
-      api.object('crm_opportunity').count({ filter: { crm_campaign: id, stage: 'closed_won' } }),
+      api.object('crm_opportunity').count({ where: { crm_campaign: id } }),
+      api.object('crm_opportunity').count({ where: { crm_campaign: id, stage: 'closed_won' } }),
       api.object('crm_opportunity').find({
-        filter: { crm_campaign: id, stage: 'closed_won' },
+        where: { crm_campaign: id, stage: 'closed_won' },
         fields: ['amount'],
         top: 5000,
       }),
@@ -90,7 +90,7 @@ const campaignCompleted: Hook = {
     );
     const convertedLeads =
       leadIds.length > 0
-        ? await api.object('crm_lead').count({ filter: { id: { $in: leadIds }, is_converted: true } })
+        ? await api.object('crm_lead').count({ where: { id: { $in: leadIds }, is_converted: true } })
         : 0;
 
     const actualRevenue = wonOppRecords.reduce((sum, row) => {

@@ -166,7 +166,7 @@ const opportunityWonHook: Hook = {
       undefined;
     if (!accountId) return;
 
-    const account = await api.object('crm_account').findOne({ filter: { id: accountId } });
+    const account = await api.object('crm_account').findOne({ where: { id: accountId } });
     if (account && account.type !== 'customer') {
       await api.object('crm_account').update(accountId, { type: 'customer' });
     }

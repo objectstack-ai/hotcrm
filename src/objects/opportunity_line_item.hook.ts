@@ -53,7 +53,7 @@ const opportunityLineItemPriceFill: Hook = {
     const productId = typeof input.crm_product === 'string' ? input.crm_product : undefined;
     if (!productId) return;
     const product = await api.object('crm_product').findOne({
-      filter: { id: productId }, fields: ['id', 'list_price'],
+      where: { id: productId }, fields: ['id', 'list_price'],
     });
     const listPrice = product && typeof product.list_price === 'number' ? product.list_price : undefined;
     if (listPrice === undefined) return;
@@ -95,13 +95,13 @@ const opportunityAmountRollup: Hook = {
       // editing a line item would silently rewrite a closed-won deal's recorded
       // amount. A closed deal's value is settled; leave it.
       const opp = await api.object('crm_opportunity').findOne({
-        filter: { id: oppId }, fields: ['id', 'stage'],
+        where: { id: oppId }, fields: ['id', 'stage'],
       });
       const stage = opp && typeof opp.stage === 'string' ? opp.stage : undefined;
       if (stage === 'closed_won' || stage === 'closed_lost') continue;
 
       const lines = await api.object('crm_opportunity_line_item').find({
-        filter: { crm_opportunity: oppId },
+        where: { crm_opportunity: oppId },
         fields: ['quantity', 'unit_price', 'discount'],
         top: 5000,
       });

@@ -111,7 +111,7 @@ const caseSideEffects: Hook = {
 
     // Escalation: open task for account owner
     if (input.status === 'escalated' && previous.status !== 'escalated' && accountId) {
-      const account = await api.object('crm_account').findOne({ filter: { id: accountId } });
+      const account = await api.object('crm_account').findOne({ where: { id: accountId } });
       const ownerId = (account as { owner?: string } | null)?.owner ?? ctx.user?.id;
       const due = new Date();
       due.setDate(due.getDate() + 1);

@@ -16,9 +16,27 @@
 
 type Doc = Record<string, unknown>;
 
-/** Query options accepted by read operations. Drivers accept `filter` or `where`. */
+/**
+ * Query options accepted by read operations.
+ *
+ * The predicate key is `where` — and ONLY `where`. An earlier version of this
+ * type also allowed `filter`, on the belief that "drivers accept either". They
+ * do not, and the mismatch fails SILENTLY:
+ *
+ *   - `find`   normalizes `filter` → `where`, so it happens to work.
+ *   - `findOne` spreads the query straight into the AST (`{...query, limit: 1}`)
+ *     and never aliases. An unknown `filter` key is dropped by the driver, so
+ *     the query degrades to "first row of the object" — no error, no null, just
+ *     the wrong record.
+ *   - `count`  reads `query.where` explicitly, so `filter` is dropped and the
+ *     call counts the WHOLE object.
+ *
+ * `filter` is therefore deliberately absent: a hook that reaches for it must
+ * fail at compile time rather than silently compute against a stranger's row.
+ * (See `test/hook-query-predicate.test.ts`, which pins this against the real
+ * kernel rather than the test harness.)
+ */
 export interface HookQuery {
-  filter?: Doc;
   where?: Doc;
   fields?: string[];
   top?: number;
