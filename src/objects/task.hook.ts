@@ -36,9 +36,16 @@ const taskValidation: Hook = {
       (typeof input.priority === 'string' && input.priority) ||
       (typeof previous?.priority === 'string' && (previous.priority as string)) ||
       undefined;
+    //
+    // Inline and duplicated in case.hook.ts on purpose — L2 hook bodies run
+    // body-only in the QuickJS sandbox, so a shared module constant resolves at
+    // authoring time and arrives as `undefined` (see _line-item-price-fill.ts).
+    // The vocabularies differ (normal vs medium), but the UNKNOWN fallback must
+    // match crm_case: `0`, the unranked sentinel that sorts below every real
+    // rank. `test/priority-rank-parity.test.ts` pins that agreement.
     if (effPriority) {
       const rank: Record<string, number> = { low: 1, normal: 2, high: 3, urgent: 4 };
-      input.priority_rank = rank[effPriority] ?? 2;
+      input.priority_rank = rank[effPriority] ?? 0;
     }
 
     if (input.status === 'completed' && previous?.status !== 'completed') {

@@ -304,6 +304,19 @@ export const Lead = ObjectSchema.create({
       condition: P`isBlank(record.email)`,
     },
     {
+      // The field description has promised "Required when status is
+      // Unqualified" since the field was added, and nothing enforced it — a
+      // lead could sit in `unqualified` with no recorded reason, which is the
+      // one datum a disqualification review needs. Same shape as
+      // `crm_case.escalation_reason_required` (the repo's existing
+      // "required when state is X" idiom).
+      name: 'disqualification_reason_required',
+      type: 'script',
+      severity: 'error',
+      message: 'Disqualification reason is required when a lead is Unqualified',
+      condition: P`record.status == "unqualified" && isBlank(record.disqualification_reason)`,
+    },
+    {
       name: 'cannot_edit_converted',
       type: 'script',
       severity: 'error',

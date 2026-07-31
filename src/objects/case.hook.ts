@@ -42,9 +42,17 @@ const caseValidation: Hook = {
     // Materialise the urgency ordinal so queue views can sort by it. Sorting
     // on `priority` itself compares raw strings and inverts urgency
     // (medium > low > high > critical).
+    //
+    // The map is declared INLINE and duplicated in task.hook.ts on purpose: L2
+    // hook bodies run body-only in the QuickJS sandbox, so a shared module
+    // constant resolves at authoring time and arrives as `undefined` (see
+    // _line-item-price-fill.ts). The two maps key off different vocabularies
+    // (medium vs normal), but the UNKNOWN fallback must stay identical on both
+    // objects — `0`, the unranked sentinel that sorts below every real rank.
+    // `test/priority-rank-parity.test.ts` pins that agreement.
     if (priority) {
       const rank: Record<string, number> = { low: 1, medium: 2, high: 3, critical: 4 };
-      input.priority_rank = rank[priority] ?? 1;
+      input.priority_rank = rank[priority] ?? 0;
     }
 
     if (priority === 'critical' && !input.sla_due_date && !ctx.previous?.sla_due_date) {
