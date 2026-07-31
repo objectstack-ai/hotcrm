@@ -635,12 +635,17 @@ describe('task_recurrence', () => {
   it.each([
     ['daily', 1, '2026-01-01', '2026-01-02'],
     ['weekly', 2, '2026-01-01', '2026-01-15'],
-    // Pins CURRENT behaviour, which is not obviously the desired one: `advanceDate`
-    // uses `Date.setMonth`, so Jan 31 + 1 month overflows Feb and lands on Mar 3
-    // rather than clamping to Feb 28. Worth a follow-up; asserted here so the
-    // quirk is visible instead of silent.
-    ['monthly', 1, '2026-01-31', '2026-03-03'],
+    ['monthly', 1, '2026-01-15', '2026-02-15'],
+    ['monthly', 3, '2026-01-15', '2026-04-15'],
+    // Month-end CLAMPS instead of overflowing. `Date.setMonth` used to roll
+    // Jan 31 + 1 month forward to Mar 3, so a month-end series walked deeper
+    // into the following month on every occurrence and skipped February.
+    ['monthly', 1, '2026-01-31', '2026-02-28'],
+    ['monthly', 1, '2028-01-31', '2028-02-29'], // leap year
+    ['monthly', 1, '2026-03-31', '2026-04-30'],
+    ['monthly', 2, '2026-01-31', '2026-03-31'], // target month is long enough
     ['yearly', 1, '2026-03-01', '2027-03-01'],
+    ['yearly', 1, '2028-02-29', '2029-02-28'], // leap day → last valid day
   ])('advances a %s/%i series from %s to %s', async (type, interval, from, to) => {
     const h = makeHarness({ crm_task: [] });
     await completeRecurring(h, {
@@ -650,6 +655,27 @@ describe('task_recurrence', () => {
     const [next] = h.rows('crm_task');
     expect(next, 'no next occurrence spawned').toBeTruthy();
     expect(next.due_date).toBe(to);
+  });
+
+  it('a month-end series settles on the shorter day rather than walking forward', async () => {
+    // Each occurrence is computed from the PREVIOUS due date, not from an
+    // anchor day, so clamping Jan 31 → Feb 28 makes the following occurrence
+    // Mar 28 rather than Mar 31. That is a deliberate trade: the alternative
+    // (storing an anchor) is a schema change, and the behaviour being replaced
+    // was strictly worse — `setMonth` overflow walked Jan 31 → Mar 3 → Apr 3,
+    // drifting FORWARD and skipping February outright.
+    const dueDates: string[] = [];
+    let due = '2026-01-31';
+    for (let i = 0; i < 3; i++) {
+      const h = makeHarness({ crm_task: [] });
+      await completeRecurring(h, {
+        subject: 'Month end', is_recurring: true,
+        recurrence_type: 'monthly', recurrence_interval: 1, due_date: due,
+      });
+      due = h.rows('crm_task')[0].due_date as string;
+      dueDates.push(due);
+    }
+    expect(dueDates).toEqual(['2026-02-28', '2026-03-28', '2026-04-28']);
   });
 
   it('spawns the next occurrence as not_started so it cannot re-trigger itself', async () => {

@@ -76,16 +76,6 @@ const taskValidation: Hook = {
   },
 };
 
-/** Advance a date by `interval` units of the given recurrence type. */
-function advanceDate(d: Date, type: string, interval: number): Date {
-  const next = new Date(d);
-  if (type === 'daily') next.setDate(next.getDate() + interval);
-  else if (type === 'weekly') next.setDate(next.getDate() + 7 * interval);
-  else if (type === 'monthly') next.setMonth(next.getMonth() + interval);
-  else if (type === 'yearly') next.setFullYear(next.getFullYear() + interval);
-  return next;
-}
-
 /**
  * Recurring-task generator.
  *
@@ -109,6 +99,45 @@ const taskRecurrence: Hook = {
   onError: 'log',
   description: 'On completion of a recurring task, spawn the next occurrence (dates advanced by recurrence_type × interval).',
   handler: async (ctx: HookContext) => {
+    /**
+     * Advance a date by `interval` units of the given recurrence type.
+     *
+     * Declared INSIDE the handler, matching every other hook in this directory:
+     * L2 hook bodies run body-only in the QuickJS sandbox, where module scope
+     * is not available (cf. opportunity.hook.ts / lead.hook.ts). This was the
+     * one module-level helper left in the tree.
+     *
+     * Month and year steps CLAMP to the last valid day of the target month
+     * instead of overflowing. `Date.setMonth` rolls a day that does not exist
+     * forward into the next month — Jan 31 + 1 month landed on Mar 3, so a
+     * month-end recurring task walked further into the following month on every
+     * occurrence and, for the 31st, skipped February entirely.
+     */
+    function advanceDate(d: Date, type: string, interval: number): Date {
+      const next = new Date(d);
+      if (type === 'daily') {
+        next.setDate(next.getDate() + interval);
+        return next;
+      }
+      if (type === 'weekly') {
+        next.setDate(next.getDate() + 7 * interval);
+        return next;
+      }
+      const months = type === 'monthly' ? interval : type === 'yearly' ? 12 * interval : 0;
+      if (months === 0) return next;
+
+      const day = next.getDate();
+      // Move to the 1st first so the month arithmetic can never overflow, then
+      // clamp the day to the target month's length.
+      next.setDate(1);
+      next.setMonth(next.getMonth() + months);
+      const lastDayOfTargetMonth = new Date(
+        next.getFullYear(), next.getMonth() + 1, 0,
+      ).getDate();
+      next.setDate(Math.min(day, lastDayOfTargetMonth));
+      return next;
+    }
+
     const { input } = ctx;
     const previous = ctx.previous;
     const api = ctx.api as HookApi | undefined;

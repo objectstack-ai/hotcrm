@@ -257,7 +257,20 @@ describe('opportunity_approval — start condition', () => {
     .find((n) => n.id === 'start')?.config?.condition;
 
   it('declares a start condition that gates on the approval-worthy transition', () => {
-    expect(typeof startCondition, 'opportunity_approval lost its start condition').toBe('string');
+    // Accepts either authoring form: a bare string (which the engine wraps
+    // into a CEL envelope for START conditions) or an explicit
+    // `{ dialect, source }` envelope. Pinning `typeof === 'string'` made this
+    // fail the moment the flow was legitimately converted to the envelope
+    // form — it was asserting the notation, not the thing that matters, which
+    // is that a gate exists and carries an expression at all.
+    const source =
+      typeof startCondition === 'string'
+        ? startCondition
+        : (startCondition as { source?: unknown } | undefined)?.source;
+    expect(
+      typeof source === 'string' && source.length > 0,
+      `opportunity_approval lost its start condition (got ${JSON.stringify(startCondition)})`,
+    ).toBe(true);
   });
 
   it('does not re-enter for an opportunity already pending approval', () => {

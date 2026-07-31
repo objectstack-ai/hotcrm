@@ -59,7 +59,14 @@ export const ContractRenewalFlow: Flow = {
           nodes: [
             {
               id: 'check_notice_window', type: 'decision', label: 'Within Notice Window?',
-              config: { condition: P`timestamp(currentContract.end_date) <= daysFromNow(int(currentContract.renewal_notice_days))` },
+              // `end_date` is a DATE field and arrives as `YYYY-MM-DD`, but CEL's
+              // `timestamp()` only accepts a full ISO 8601 datetime and throws
+              // otherwise ("timestamp() requires a string in ISO 8601 format").
+              // Appending the time part is what makes this evaluate instead of
+              // blowing up mid-sweep — a defect that only became REACHABLE once
+              // the condition was wrapped as a real CEL envelope, because the
+              // old bare string was never evaluated at all.
+              config: { condition: P`timestamp(currentContract.end_date + "T00:00:00Z") <= daysFromNow(int(currentContract.renewal_notice_days))` },
             },
             {
               // Idempotency gate: the sweep matches the same contract every
@@ -150,7 +157,7 @@ export const ContractRenewalFlow: Flow = {
           edges: [
             // Only act when inside the per-contract notice window; gates with
             // no matching edge simply end the iteration, so the loop moves on.
-            { id: 'b1', source: 'check_notice_window', target: 'find_existing_task', type: 'conditional', condition: P`timestamp(currentContract.end_date) <= daysFromNow(int(currentContract.renewal_notice_days))`, label: 'In window' },
+            { id: 'b1', source: 'check_notice_window', target: 'find_existing_task', type: 'conditional', condition: P`timestamp(currentContract.end_date + "T00:00:00Z") <= daysFromNow(int(currentContract.renewal_notice_days))`, label: 'In window' },
             { id: 'b2', source: 'find_existing_task', target: 'check_not_reminded', type: 'default' },
             { id: 'b3', source: 'check_not_reminded', target: 'create_renewal_task', type: 'conditional', condition: P`existingRenewalTask == null`, label: 'First reminder' },
             { id: 'b4', source: 'create_renewal_task', target: 'notify_owner', type: 'default' },
