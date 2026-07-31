@@ -200,8 +200,14 @@ export const Forecast = ObjectSchema.create({
       name: 'period_end_after_start',
       type: 'script',
       severity: 'error',
-      message: 'Period End must be on or after Period Start.',
-      condition: P`record.period_end != null && record.period_start != null && record.period_end < record.period_start`,
+      message: 'Period End must be after Period Start.',
+      // `<=`, not `<`: the rule name says "after" and a forecast period is a
+      // month or a quarter, never a single instant, so `period_end ==
+      // period_start` is a zero-length period rather than a valid one. Same
+      // operator as the `end_after_start` twins on campaign/contract, which
+      // this rule used to diverge from in both operator and wording
+      // ("on or after") — #514 item 12.
+      condition: P`record.period_end != null && record.period_start != null && record.period_end <= record.period_start`,
     },
     {
       name: 'snapshot_amounts_non_negative',

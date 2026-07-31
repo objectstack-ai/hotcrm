@@ -1,4 +1,4 @@
-import { F, P, cel } from '@objectstack/spec';
+import { F, cel } from '@objectstack/spec';
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
@@ -232,20 +232,20 @@ export const Account = ObjectSchema.create({
   },
   
   // Validation Rules
-  validations: [
-    {
-      name: 'revenue_positive',
-      type: 'script',
-      severity: 'error',
-      message: 'Annual Revenue must be positive',
-      // Null-guard: strict CEL cannot compare dyn<null> < int, and an
-      // unguarded predicate aborts evaluation (rule silently skipped).
-      condition: P`record.annual_revenue != null && record.annual_revenue < 0`,
-    },
-    // `account_name_unique` (type: 'unique') was removed in 7.6 — uniqueness now
-    // lives on the `name` index above (unique: true).
-  ],
-  
+  // This object declares none. Two entries used to live here:
+  //
+  // - `account_name_unique` (type: 'unique') was removed in 7.6 — uniqueness
+  //   now lives on the `name` index above (unique: true).
+  // - `revenue_positive` was removed in #514 (item 7) as a duplicate. It
+  //   restated a check `account.hook.ts` already performs on beforeInsert /
+  //   beforeUpdate, and the two disagreed in wording: the validation said
+  //   "Annual Revenue must be positive" while the hook said "greater than or
+  //   equal to 0". Both compared `< 0`, so the hook's wording was the accurate
+  //   one and zero has always been allowed. The hook is now the single
+  //   enforcement point, and it is the tested one — see
+  //   `test/hooks-runtime-sales.test.ts`, which executes the handler, whereas
+  //   the declaration was never evaluated by any test.
+
   // Workflow Rules
   // NOTE: object `workflows[]` were removed in @objectstack 7.7. Field-updates
   // moved to this object's *.hook.ts; scheduled status-flips & notifications

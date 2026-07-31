@@ -219,14 +219,20 @@ export const Product = ObjectSchema.create({
       type: 'script',
       severity: 'error',
       message: 'List Price must be positive',
-      condition: P`record.list_price < 0`,
+      // Null-guard: strict CEL cannot compare dyn<null> < int, and an
+      // unguarded predicate aborts evaluation (rule silently skipped) — the
+      // hazard written up on `account.object.ts`. `list_price` is `required`,
+      // but the rule also runs on partial updates that omit it.
+      condition: P`record.list_price != null && record.list_price < 0`,
     },
     {
       name: 'cost_less_than_price',
       type: 'script',
       severity: 'warning',
       message: 'Cost should be less than List Price',
-      condition: P`record.cost >= record.list_price`,
+      // Both operands need the guard: `cost` is optional and absent on every
+      // seeded product, so this warning has never once evaluated.
+      condition: P`record.cost != null && record.list_price != null && record.cost >= record.list_price`,
     },
   ],
 });
