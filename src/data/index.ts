@@ -38,7 +38,7 @@ const celDaysFromNow = (n: number) => cel`daysFromNow(${n})`;
  * Two consequences shape everything below:
  *
  * 1. Seeding historical values into readonly fields (`created_date`,
- *    `days_in_stage`, `last_contacted_date`, `actual_revenue`) is legitimate
+ *    `stage_entry_date`, `last_contacted_date`, `actual_revenue`) is legitimate
  *    and load-bearing — it is the only way demo reports get history — and the
  *    platform explicitly preserves explicit seed values.
  * 2. BUT nothing recomputes derived fields for seed rows, so every seeded
@@ -325,6 +325,14 @@ const leads = defineSeed(Lead, {
 // don't run over seeds, so every row below carries the exact values the hook
 // would compute — anything else gets silently rewritten on the first user
 // edit (#490).
+//
+// `stage_entry_date` follows the same rule: the hook stamps it on every insert
+// and stage change, so a seeded deal without one is a shape real data never
+// has — and it is what the stagnation sweep filters on and what the
+// `days_in_stage` FORMULA counts from, so it replaces the old hardcoded
+// `days_in_stage` numbers (#489). Open deals carry an age that spans the
+// 14-day stale threshold in both directions; settled deals entered their
+// closed stage on their close date.
 const opportunities = defineSeed(Opportunity, {
   mode: 'upsert',
   externalId: 'name',
@@ -340,7 +348,7 @@ const opportunities = defineSeed(Opportunity, {
       type: 'existing_upgrade',
       forecast_category: 'commit',
       lead_source: 'web',
-      days_in_stage: 12,
+      stage_entry_date: celDaysAgo(12),
       description: `Upgrade from Standard to Enterprise edition for the
 NA + EMEA teams. Drivers: (1) AI agent governance becomes a hard
 requirement after their internal compliance review, (2) advanced
@@ -358,7 +366,7 @@ analytics seats for the Ops org, (3) priority support SLA.`,
       type: 'new_business',
       forecast_category: 'pipeline',
       lead_source: 'referral',
-      days_in_stage: 45,
+      stage_entry_date: celDaysAgo(45),
     },
     {
       name: 'Wayne Enterprise License',
@@ -371,7 +379,7 @@ analytics seats for the Ops org, (3) priority support SLA.`,
       type: 'new_business',
       forecast_category: 'commit',
       lead_source: 'partner',
-      days_in_stage: 7,
+      stage_entry_date: celDaysAgo(7),
     },
     {
       name: 'Initech Cloud Migration',
@@ -384,7 +392,7 @@ analytics seats for the Ops org, (3) priority support SLA.`,
       type: 'existing_upgrade',
       forecast_category: 'best_case',
       lead_source: 'event',
-      days_in_stage: 38,
+      stage_entry_date: celDaysAgo(38),
     },
     // ─── Closed Won deals (powers KPIs & revenue trends) ────────────────
     {
@@ -395,6 +403,7 @@ analytics seats for the Ops org, (3) priority support SLA.`,
       probability: 100,
       expected_revenue: 220000,
       close_date: cel`daysAgo(15)`,
+      stage_entry_date: cel`daysAgo(15)`,
       type: 'existing_renewal',
       forecast_category: 'closed',
       lead_source: 'partner',
@@ -408,6 +417,7 @@ analytics seats for the Ops org, (3) priority support SLA.`,
       probability: 100,
       expected_revenue: 145000,
       close_date: cel`daysAgo(50)`,
+      stage_entry_date: cel`daysAgo(50)`,
       type: 'new_business',
       forecast_category: 'closed',
       lead_source: 'event',
@@ -420,6 +430,7 @@ analytics seats for the Ops org, (3) priority support SLA.`,
       probability: 100,
       expected_revenue: 380000,
       close_date: cel`daysAgo(95)`,
+      stage_entry_date: cel`daysAgo(95)`,
       type: 'existing_upgrade',
       forecast_category: 'closed',
       lead_source: 'web',
@@ -432,6 +443,7 @@ analytics seats for the Ops org, (3) priority support SLA.`,
       probability: 100,
       expected_revenue: 65000,
       close_date: cel`daysAgo(140)`,
+      stage_entry_date: cel`daysAgo(140)`,
       type: 'new_business',
       forecast_category: 'closed',
       lead_source: 'referral',
@@ -444,6 +456,7 @@ analytics seats for the Ops org, (3) priority support SLA.`,
       probability: 100,
       expected_revenue: 90000,
       close_date: cel`daysAgo(200)`,
+      stage_entry_date: cel`daysAgo(200)`,
       type: 'new_business',
       forecast_category: 'closed',
       lead_source: 'web',
@@ -457,6 +470,7 @@ analytics seats for the Ops org, (3) priority support SLA.`,
       probability: 0,
       expected_revenue: 0,
       close_date: cel`daysAgo(25)`,
+      stage_entry_date: cel`daysAgo(25)`,
       type: 'existing_upgrade',
       forecast_category: 'omitted',
       lead_source: 'cold_call',
@@ -470,6 +484,7 @@ analytics seats for the Ops org, (3) priority support SLA.`,
       probability: 0,
       expected_revenue: 0,
       close_date: cel`daysAgo(60)`,
+      stage_entry_date: cel`daysAgo(60)`,
       type: 'new_business',
       forecast_category: 'omitted',
       lead_source: 'advertisement',
@@ -517,6 +532,12 @@ analytics seats for the Ops org, (3) priority support SLA.`,
         const close_date = isClosed(stage)
           ? celDaysAgo(5 + spread)
           : celDaysFromNow(7 + spread);
+        // A settled deal entered its closed stage the day it closed; an open
+        // one has been parked 3–62 days, straddling STALE_THRESHOLD_DAYS so
+        // the stagnation sweep and the stale view both have rows on each side.
+        const stage_entry_date = isClosed(stage)
+          ? celDaysAgo(5 + spread)
+          : celDaysAgo(3 + (i * 11) % 60);
         const amount = 20000 + ((i * 17_393) % 480_000);
         const probability = probabilityByStage[stage];
         out.push({
@@ -531,7 +552,7 @@ analytics seats for the Ops org, (3) priority support SLA.`,
           type: types[i % types.length],
           forecast_category: forecastByStage[stage],
           lead_source: sources[i % sources.length],
-          ...(isClosed(stage) ? {} : { days_in_stage: 3 + (i * 11) % 60 }),
+          stage_entry_date,
         });
       }
       return out;

@@ -301,6 +301,7 @@ export const jaJP: TranslationData = {
         competitors: { label: '競合他社' },
         crm_campaign: { label: 'キャンペーン' },
         days_in_stage: { label: '現ステージ滞在日数' },
+        stage_entry_date: { label: 'ステージ開始日' },
         is_private: { label: '非公開' },
       },
       _views: {

@@ -7,6 +7,8 @@ import type { HookApi } from './_hook-api';
  * Opportunity lifecycle hook.
  *
  * - Re-derives `expected_revenue` from `amount * stageProbability` when either changes.
+ * - Stamps `stage_entry_date` on insert and on every stage change — the stored
+ *   clock behind the `days_in_stage` formula and the stagnation sweep (#489).
  * - Freezes most fields after stage is closed (won/lost) — only narrative fields editable.
  * - On `closed_won`: stamps `close_date=today`, promotes the parent account to `customer`,
  *   and asynchronously schedules an "Activate customer" task.
@@ -115,16 +117,27 @@ const opportunityValidationHook: Hook = {
       if (stageChanged) input.forecast_category = STAGE_FORECAST[stage];
     }
 
+    // Start the stage-age clock at creation. Without this the row lands with a
+    // null `stage_entry_date`, `days_in_stage` reads null instead of 0, and the
+    // deal is invisible to the stagnation sweep until its first stage change —
+    // exactly backwards, since a deal that never moves is the stalled one.
+    if (event === 'beforeInsert' && !input.stage_entry_date) {
+      input.stage_entry_date = new Date().toISOString().slice(0, 10);
+    }
+
     if (event === 'beforeUpdate' && previous) {
       // Stamp close_date when transitioning into closed_won
       if (input.stage === 'closed_won' && previous.stage !== 'closed_won' && !input.close_date) {
         input.close_date = new Date().toISOString().slice(0, 10);
       }
-      // Reset the stage-age counter on any stage change so a deal that
-      // advances stops matching the stagnation sweep. (Readonly fields are
-      // writable from before-hooks via input mutation.)
+      // Restart the stage-age clock on any stage change so a deal that
+      // advances stops matching the stagnation sweep. `days_in_stage` is a
+      // formula over this column, so this one write IS the reset — it used to
+      // set `days_in_stage = 0` against a counter nothing ever incremented.
+      // (Readonly fields are writable from before-hooks via input mutation:
+      // readonly stripping only drops keys the CALLER supplied.)
       if (typeof input.stage === 'string' && input.stage !== previous.stage) {
-        input.days_in_stage = 0;
+        input.stage_entry_date = new Date().toISOString().slice(0, 10);
       }
     }
   },

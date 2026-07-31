@@ -31,7 +31,7 @@ The detail screen has 7 sections:
 | --- | --- |
 | **Basic Information** | Name, account, primary contact, owner |
 | **Financials** | Amount, expected revenue *(auto)*, probability *(auto from stage)* |
-| **Sales Process** | Stage, close date, created date, days in current stage |
+| **Sales Process** | Stage, close date, created date, stage entry date |
 | **Classification** | Type (New Business / Upgrade / Renewal / Expansion), lead source |
 | **Competition & Campaigns** | Competitors, source campaign |
 | **Notes & Next Steps** | Description, next steps |
@@ -54,7 +54,7 @@ You don't have to remember any of this — the system does it for you:
 
 - **Probability** is set from the stage whenever you move the deal (you *can* override it manually if you have a special situation, but it'll reset next time the stage changes).
 - **Expected revenue** = amount × probability ÷ 100, recalculated whenever amount or probability changes.
-- **Days in current stage** is recomputed daily — it surfaces stagnant deals.
+- **Stage entry date** is stamped the moment a deal is created and re-stamped every time you move it to a new stage. **Days in current stage** counts from it, so it is always up to date — that is what surfaces stagnant deals.
 - When you mark a deal **Closed Won and the amount is over $100K**, sales management gets an email.
 - When the amount exceeds **$500K**, the deal enters the [Discount Approval](/docs/revenue/approvals) process automatically.
 

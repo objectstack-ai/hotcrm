@@ -36,7 +36,7 @@ Source: `src/objects/opportunity.object.ts`
 
 Key fields:
 
-`name`, `crm_account`, `primary_contact`, `owner`, `amount`, `expected_revenue`, `stage`, `probability`, `close_date`, `created_date`, `type`, `lead_source`, `competitors`, `crm_campaign`, `days_in_stage`, `next_step`, `is_private`, `forecast_category`, `approval_status`, `approved_date`, `win_reason`, `loss_reason`, `loss_details`
+`name`, `crm_account`, `primary_contact`, `owner`, `amount`, `expected_revenue`, `stage`, `probability`, `close_date`, `created_date`, `stage_entry_date`, `type`, `lead_source`, `competitors`, `crm_campaign`, `days_in_stage`, `next_step`, `is_private`, `forecast_category`, `approval_status`, `approved_date`, `win_reason`, `loss_reason`, `loss_details`
 
 ### `crm_opportunity_line_item` - Opportunity Line Item
 

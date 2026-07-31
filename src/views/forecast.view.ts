@@ -59,9 +59,14 @@ export const ForecastViews = defineView({
       filter: [
         { field: 'period', operator: 'equals', value: 'quarter' },
       ],
+      // The tiebreaker was `attainment_pct desc`, which is a FORMULA — the
+      // engine computes it in JS after the query, so the data engine never saw
+      // that sort key and the ordering within a quarter was arbitrary (same
+      // class of defect as #489's `days_in_stage` filter). `closed_amount` is
+      // the stored numerator behind attainment and ranks the same direction.
       sort: [
         { field: 'period_start', order: 'desc' },
-        { field: 'attainment_pct', order: 'desc' },
+        { field: 'closed_amount', order: 'desc' },
       ],
     },
     my_forecast: {

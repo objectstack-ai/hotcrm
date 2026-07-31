@@ -738,6 +738,7 @@ export const zhCN: TranslationData = {
         competitors: { label: '竞争对手' },
         crm_campaign: { label: '营销活动' },
         days_in_stage: { label: '当前阶段天数' },
+        stage_entry_date: { label: '进入当前阶段日期' },
         is_private: { label: '私密' },
         approval_status: {
           label: '审批状态',
