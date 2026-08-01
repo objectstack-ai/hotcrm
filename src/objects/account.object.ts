@@ -153,10 +153,13 @@ export const Account = ObjectSchema.create({
       group: 'branding',
     }),
 
-    // Company logo (uploaded image)
+    // Company logo (uploaded image). `accept` / `maxSize` are server-enforced
+    // from @objectstack 17 — see the note on `crm_product.image`.
     logo: Field.image({
       label: 'Company Logo',
       group: 'branding',
+      accept: ['image/png', 'image/jpeg', 'image/svg+xml', 'image/webp'],
+      maxSize: 2 * 1024 * 1024,
     }),
 
     // Date field

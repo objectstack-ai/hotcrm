@@ -448,3 +448,107 @@ describe('#488 regressions stay fixed', () => {
     expect(readable, 'the guest set must stay INSERT-only').toEqual([]);
   });
 });
+
+/**
+ * `allowExport` coverage — the opt-in bulk-egress axis (@objectstack 17, #3544).
+ *
+ * 17.0 inverted this bit's default: unset used to inherit read, so the axis
+ * only hid a button; now `resolveUserExportAllowed` (plugin-security) demands
+ * an explicit `allowExport: true` and neither `viewAllRecords` nor
+ * `modifyAllRecords` substitutes. Unset DENIES, at both bulk-egress doors —
+ * the list views' built-in `exportOptions`, and `assertExportAllowed`, which
+ * fails a report export closed with `EXPORT_NOT_PERMITTED`.
+ *
+ * That makes an unauthored export bit a SILENT outage: `os validate`, `os
+ * build` and every metadata test still pass while the Export button 403s for
+ * every user, admins included. Nothing else in this suite would catch it,
+ * because the grant is well-formed — it just isn't there.
+ *
+ * The rule these guards pin (canonical note: `src/profiles/index.ts`):
+ * a profile grants `allowExport` on an object IFF it already holds `allowRead`
+ * there AND the app ships an export surface for it. Both directions matter —
+ * a surface nobody can use is the outage, and a grant behind no surface is
+ * bulk egress nobody asked for.
+ */
+describe('allowExport tracks the app’s real export surfaces', () => {
+  const datasetByName = new Map<string, AnyRec>(
+    ((stack as any).datasets ?? []).map((d: AnyRec) => [d.name as string, d] as [string, AnyRec]),
+  );
+  const views: AnyRec[] = (stack as any).views ?? [];
+  const reports: AnyRec[] = (stack as any).reports ?? [];
+
+  /** Every `dataset:` reference anywhere in a report, including `blocks[]`. */
+  const datasetRefsIn = (node: unknown, out: string[] = []): string[] => {
+    if (Array.isArray(node)) node.forEach((n) => datasetRefsIn(n, out));
+    else if (node && typeof node === 'object') {
+      for (const [k, v] of Object.entries(node as AnyRec)) {
+        if (k === 'dataset' && typeof v === 'string') out.push(v);
+        else datasetRefsIn(v, out);
+      }
+    }
+    return out;
+  };
+
+  /**
+   * Objects with a bulk-egress door: a list view declaring `exportOptions`,
+   * or a report whose dataset is built on them.
+   */
+  const exportSurfaces = new Set<string>();
+  for (const v of views) {
+    const defaultObject = v.list?.data?.object;
+    for (const list of [v.list, ...Object.values(v.listViews ?? {})].filter(Boolean) as AnyRec[]) {
+      if (!(list.exportOptions ?? []).length) continue;
+      const objectName = list.data?.object ?? defaultObject;
+      if (typeof objectName === 'string') exportSurfaces.add(objectName);
+    }
+  }
+  for (const r of reports) {
+    for (const ref of datasetRefsIn(r)) {
+      const objectName = datasetByName.get(ref)?.object;
+      if (typeof objectName === 'string') exportSurfaces.add(objectName);
+    }
+  }
+
+  /** `[setName, objectName]` for every grant carrying the export bit. */
+  const exportGrants: Array<[string, string, AnyRec]> = permissionSets.flatMap((ps) =>
+    Object.entries((ps.objects ?? {}) as Record<string, AnyRec>)
+      .filter(([, perm]) => perm.allowExport === true)
+      .map(([objectName, perm]) => [ps.name as string, objectName, perm] as [string, string, AnyRec]),
+  );
+
+  it('the app actually has export surfaces (the guard is wired to real metadata)', () => {
+    expect(
+      [...exportSurfaces].sort(),
+      'no exportOptions view and no report dataset resolved — this guard has gone blind',
+    ).not.toEqual([]);
+  });
+
+  it('every export surface is reachable by at least one profile', () => {
+    const stranded = [...exportSurfaces]
+      .filter((objectName) => !exportGrants.some(([, granted]) => granted === objectName))
+      .map((objectName) => `${objectName}: has an export surface, but no permission set grants allowExport`);
+    expect(stranded, `export surfaces nobody can use:\n  ${stranded.join('\n  ')}`).toEqual([]);
+  });
+
+  it('no profile grants export on an object with no export surface', () => {
+    const gratuitous = exportGrants
+      .filter(([, objectName]) => !exportSurfaces.has(objectName))
+      .map(([set, objectName]) => `${set}.${objectName}: allowExport with no export surface behind it`);
+    expect(gratuitous, `undeclared bulk egress:\n  ${gratuitous.join('\n  ')}`).toEqual([]);
+  });
+
+  it('export never outruns read — the axis widens egress, never visibility', () => {
+    const bad = exportGrants
+      .filter(([, , perm]) => perm.allowRead !== true)
+      .map(([set, objectName]) => `${set}.${objectName}: allowExport without allowRead`);
+    expect(bad, `export grants with no read behind them:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
+  it('the guest set carries no export bit (ADR-0090 D9 anchor rule)', () => {
+    // `allowExport` is high-privilege: a set holding it cannot bind to the
+    // `everyone` or `guest` anchors at all, so granting it here would break the
+    // binding on top of handing anonymous visitors bulk table egress.
+    const guestExports = exportGrants.filter(([set]) => set === 'guest_portal').map(([, o]) => o);
+    expect(guestExports, 'the guest set must never carry allowExport').toEqual([]);
+  });
+});

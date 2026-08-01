@@ -146,14 +146,22 @@ export const Product = ObjectSchema.create({
     }),
     
     // Images and Assets
+    // `accept` / `maxSize` are declarable AND server-enforced from
+    // @objectstack 17 (ADR-0104 D3 wave 2). Before that the upload widget read
+    // them but `FieldSchema` dropped them at parse, so the constraint existed
+    // only in the browser and any direct API caller walked past it.
     image: Field.image({
       label: 'Product Image',
       group: 'metadata',
+      accept: ['image/png', 'image/jpeg', 'image/webp'],
+      maxSize: 5 * 1024 * 1024,
     }),
 
     datasheet: Field.file({
       label: 'Datasheet',
       group: 'metadata',
+      accept: ['application/pdf'],
+      maxSize: 20 * 1024 * 1024,
     }),
 
     // Tax & billing
