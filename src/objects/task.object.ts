@@ -23,7 +23,10 @@ export const Task = ObjectSchema.create({
   fieldGroups: [
     { key: 'basic',      label: 'Task Information', icon: 'info' },
     { key: 'scheduling', label: 'Scheduling',       icon: 'calendar' },
-    { key: 'assignment', label: 'Assignment',       icon: 'user' },
+    // No 'assignment' group: `owner` was its only member, and the synthesized
+    // detail page hoists `owner` into the highlight strip — so the group
+    // rendered on forms and never on detail pages (`field-group-shadowed`).
+    // It lives in `basic` alongside subject/status/priority instead.
     { key: 'related',    label: 'Related Records',  icon: 'link' },
     { key: 'recurrence', label: 'Recurrence',       icon: 'refresh-ccw', defaultExpanded: false },
     { key: 'effort',     label: 'Progress & Effort', icon: 'activity',   defaultExpanded: false },
@@ -126,7 +129,7 @@ export const Task = ObjectSchema.create({
     
     // Assignment
     owner: Field.lookup('sys_user', {
-      group: 'assignment',
+      group: 'basic',
       defaultValue: cel`os.user.id`,
       label: 'Assigned To',
       trackHistory: true,
