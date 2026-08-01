@@ -102,7 +102,13 @@ The owner can change status to *Terminated*. This is a one-way action — termin
 
 ## Sharing
 
-Contracts follow the account's sharing — if you can see the account, you can see its contracts. The contract owner, the account owner, and the account team have edit access. Read access flows up the role hierarchy.
+Contracts are **private**, and no sharing rule widens them. Contract visibility does **not** follow the account:
+
+- **The contract owner** reads and edits their own contracts.
+- **Sales Manager** and **System Administrator** read every contract (*View All* on the object); edits stay with the owner except for admins.
+- **Everyone else** — including a rep who reached the account through a territory or team sharing rule — sees only the contracts they own, so an account's *Contracts* related list can look empty even when the account itself is fully readable.
+
+If your org wants contracts to follow the account, an admin has to author that: a sharing rule on Contract, or a Controlled-by-Parent OWD. Both widen contract visibility for every user of the object — see [Sharing & Security](/docs/administration/sharing-and-security).
 
 ## Standard list views
 

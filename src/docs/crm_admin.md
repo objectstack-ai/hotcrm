@@ -57,7 +57,7 @@ Ownership-based access is widened by these rules:
 
 | Rule | Object | Access | Purpose |
 |---|---|---|---|
-| Account Team | Account | **Edit** | Named account-team members can edit the account. |
+| Account Team | Account | **Edit** | Sales Managers edit active customer accounts. Criteria-based despite the name — there is no account-team roster object. |
 | Territory — North America / Europe | Account | **Edit** | Regional teams edit accounts in their territory. |
 | Sales Sharing | Opportunity | **Read** | Sales Director sees large open deals. |
 | Large Open Deals — Executive | Opportunity | **Read** | The same deals at the Executive rung. |
@@ -69,6 +69,14 @@ Detail objects — opportunity line items, quote line items, campaign members an
 contacts — carry **no** sharing rules by design: their record access derives
 from their parent (`controlled_by_parent`, ADR-0055), so a share on the parent
 is what widens them. Writing one requires edit access to that parent.
+
+**A rule widens one object, not the records under it.** The account rules above
+hand over the account and — through `controlled_by_parent` — its contacts.
+Quotes, contracts and tasks on that account are `private` with no rule of their
+own, and opportunities only widen for the ≥ $100k leadership rules, so those
+related lists stay own-only for a territory recipient. Whether that should
+change is an open product decision (#549); until it is made, the docs describe
+the own-only behaviour rather than promising a 360° view.
 
 ## Profiles
 
