@@ -268,16 +268,16 @@ describe('demo data is demo-ready', () => {
     }
   });
 
-  it('open demo deals close in the future and settled ones in the past', () => {
-    // The generator used to scatter close_date across ±180 days regardless of
-    // stage, so the pipeline was full of open deals that "closed" six months
-    // ago and won deals still to close — a book that reads as abandoned.
+  it('open opportunities close in the future and settled ones in the past', () => {
+    // A pipeline that holds open deals with past close dates, or closed deals
+    // scheduled in the future, reads as abandoned. This covers the whole
+    // curated demo book rather than tying the invariant to a placeholder name.
     const seeds: AnyRec[] = (stack as any).data ?? (stack as any).seeds ?? [];
     const opps = seeds.find((s) => s.object === 'crm_opportunity');
     expect(opps, 'opportunity seed missing').toBeTruthy();
-    const demo = (opps!.records ?? []).filter((r: AnyRec) => String(r.name ?? '').startsWith('Demo Deal'));
-    expect(demo.length).toBeGreaterThan(0);
-    for (const r of demo) {
+    const records = (opps!.records ?? []) as AnyRec[];
+    expect(records.length).toBeGreaterThan(0);
+    for (const r of records) {
       const expr = String(r.close_date?.source ?? r.close_date ?? '');
       const closed = r.stage === 'closed_won' || r.stage === 'closed_lost';
       expect(expr, `${r.name} (${r.stage}) has the wrong close-date direction`)

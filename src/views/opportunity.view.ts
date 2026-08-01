@@ -36,10 +36,8 @@ export const OpportunityViews = defineView({
       { field: 'probability', width: 110, align: 'right' },
       { field: 'expected_revenue', width: 160, align: 'right', summary: 'sum' },
       { field: 'close_date', width: 140, sortable: true },
-      { field: 'owner', width: 150 },
     ],
     sort: [{ field: 'close_date', order: 'asc' }],
-    grouping: { fields: [{ field: 'stage', order: 'asc', collapsed: false }] },
     rowColor: {
       field: 'stage',
       colors: {
@@ -117,7 +115,11 @@ export const OpportunityViews = defineView({
         summarizeField: 'amount',
         columns: ['name', 'crm_account', 'amount', 'close_date'],
       },
-      filter: [{ field: 'stage', operator: 'not_equals', value: 'closed_lost' }],
+      // The board is the active working pipeline. Closed business remains in
+      // the full book and the dashboard, while excluding it here keeps all
+      // five active stages visible at a presentation-friendly width.
+      filter: [{ field: 'stage', operator: 'not_in', value: ['closed_won', 'closed_lost'] }],
+      sort: [{ field: 'close_date', order: 'asc' }],
       navigation: { mode: 'drawer', width: '640px' },
     },
 
