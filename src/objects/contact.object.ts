@@ -58,10 +58,13 @@ export const Contact = ObjectSchema.create({
       group: 'identity',
     }),
 
-    // Avatar field
+    // Avatar field. `accept` / `maxSize` are server-enforced from
+    // @objectstack 17 — see the note on `crm_product.image`.
     avatar: Field.avatar({
       label: 'Profile Picture',
       group: 'identity',
+      accept: ['image/png', 'image/jpeg', 'image/webp'],
+      maxSize: 2 * 1024 * 1024,
     }),
 
     // Relationship: Link to Account (Master-Detail)
