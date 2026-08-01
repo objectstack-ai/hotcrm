@@ -21,7 +21,9 @@ export const SalesDashboard: Dashboard = {
 
   header: {
     showTitle: true,
-    showDescription: true,
+    // Keep the opening KPI row in the first viewport for a live demo. The
+    // description remains available in dashboard metadata and translations.
+    showDescription: false,
     // Header action buttons removed: `create_opportunity` / `export_dashboard_pdf`
     // are not defined actions, and `/reports/forecast` matches no report route —
     // all three were dead. Re-add real, wired-up actions here when available.
