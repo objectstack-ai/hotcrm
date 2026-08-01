@@ -76,7 +76,10 @@ export const CampaignViews = defineView({
       type: 'timeline',
       label: 'Marketing Timeline',
       data: { provider: 'object', object: 'crm_campaign' },
-      columns: ['name', 'channel'],
+      // The list data source projects configured columns. Keep the date
+      // fields in that projection so the timeline renderer can bucket and
+      // order campaigns from the same schedule data as the calendar/Gantt.
+      columns: ['name', 'channel', 'start_date', 'end_date'],
       timeline: {
         startDateField: 'start_date',
         endDateField: 'end_date',
