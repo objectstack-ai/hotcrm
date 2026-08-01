@@ -65,6 +65,8 @@ export const zhCN: TranslationData = {
         account_map: { label: '客户地图', description: '客户的地理分布' },
         enterprise_accounts: { label: '企业客户', description: '年营收最高的大客户' },
         my_accounts: { label: '我的客户', description: '由当前用户负责的客户' },
+        renewals_due: { label: '🔄 即将续约' },
+        at_risk_accounts: { label: '⚠️ 风险客户' },
       },
       _sections: {
         basic: { label: '基本信息' },
@@ -303,6 +305,7 @@ export const zhCN: TranslationData = {
         gallery_view: { label: '线索卡片' },
         my_leads: { label: '我的线索' },
         high_priority: { label: '高优先级' },
+        hot_leads: { label: '🔥 高热度线索' },
       },
       _sections: {
         // Detail-page `record:details` section names (lead_detail.page.ts)
@@ -484,6 +487,8 @@ export const zhCN: TranslationData = {
         sla_calendar: { label: 'SLA 日历' },
         case_timeline: { label: '工单时间线' },
         escalated_cases: { label: '已升级工单' },
+        my_open_cases: { label: '我的待处理工单' },
+        sla_at_risk: { label: '⏰ SLA 风险预警' },
       },
       _actions: {
         log_call: {
@@ -577,6 +582,8 @@ export const zhCN: TranslationData = {
         task_gantt: { label: '执行计划' },
         task_timeline: { label: '工时时间线' },
         my_open_tasks: { label: '我的待办任务' },
+        todays_tasks: { label: '📅 我的优先任务' },
+        overdue_tasks: { label: '⏰ 待办任务 · 按逾期时长排序' },
       },
     },
 
@@ -762,6 +769,8 @@ export const zhCN: TranslationData = {
         deal_timeline: { label: '商机时间线' },
         deal_gallery: { label: '商机卡片' },
         my_open_deals: { label: '我的进行中商机' },
+        stale_opportunities: { label: '⚠️ 停滞商机 · 按阶段停留时间排序' },
+        closing_this_quarter: { label: '本季度待成交商机' },
       },
       _sections: {
         // Detail-page `record:details` section names (opportunity_detail.page.ts)
