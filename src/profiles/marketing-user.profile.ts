@@ -4,15 +4,19 @@ export const MarketingUserProfile = {
   name: 'marketing_user',
   label: 'Marketing User',
   objects: {
-    crm_lead:        { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: false, viewAllRecords: true,  modifyAllRecords: false },
-    crm_account:     { allowCreate: false, allowRead: true,  allowEdit: false, allowDelete: false, viewAllRecords: true,  modifyAllRecords: false },
-    crm_contact:     { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: false, viewAllRecords: true,  modifyAllRecords: false },
+    // `allowExport` where an export surface exists — canonical note in
+    // `src/profiles/index.ts`. Lead and contact list exports are marketing's
+    // core targeting workflow; account/opportunity back the campaign-ROI
+    // reports. No `crm_case` grant here, so no export bit for it either.
+    crm_lead:        { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: false, viewAllRecords: true,  modifyAllRecords: false, allowExport: true },
+    crm_account:     { allowCreate: false, allowRead: true,  allowEdit: false, allowDelete: false, viewAllRecords: true,  modifyAllRecords: false, allowExport: true },
+    crm_contact:     { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: false, viewAllRecords: true,  modifyAllRecords: false, allowExport: true },
     crm_campaign:    { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: false, viewAllRecords: true,  modifyAllRecords: false },
     // Org-wide read: marketing attributes campaign → pipeline ROI, which needs
     // every opportunity, not just self-owned. viewAllRecords was false here
     // while every other object on this set is true — an oversight that hid all
     // pipeline from marketing (and tripped security-private-no-readscope).
-    crm_opportunity: { allowCreate: false, allowRead: true,  allowEdit: false, allowDelete: false, viewAllRecords: true,  modifyAllRecords: false },
+    crm_opportunity: { allowCreate: false, allowRead: true,  allowEdit: false, allowDelete: false, viewAllRecords: true,  modifyAllRecords: false, allowExport: true },
     // Campaign membership is THIS profile's core write surface: the
     // "Add to Campaign" action (`src/actions/lead.actions.ts`) inserts
     // `crm_campaign_member` rows, and before #488 no permission set granted the

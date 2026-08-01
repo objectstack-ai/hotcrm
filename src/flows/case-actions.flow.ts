@@ -82,6 +82,9 @@ export const CloseCaseFlow: Flow = {
   description: 'Collect the resolution, then close the case and stop the SLA clock.',
   type: 'screen',
   status: 'active',
+  // `is_closed` is a readonly lifecycle field. This trusted screen flow owns
+  // the transition and must therefore run with the system writer.
+  runAs: 'system',
 
   variables: [
     { name: 'recordId', type: 'text', isInput: true, isOutput: false },

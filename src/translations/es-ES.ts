@@ -647,8 +647,6 @@ export const esES: TranslationData = {
         group_sales: { label: 'Ventas' },
         group_service: { label: 'Servicio' },
         group_marketing: { label: 'Marketing' },
-        group_products: { label: 'Productos' },
-        group_analytics: { label: 'Analíticas' },
       },
     },
   },

@@ -49,6 +49,7 @@ export const Quote = ObjectSchema.create({
       label: 'Quote Name',
       group: 'basic',
       required: true,
+      storage: { notNull: true },
       searchable: true,
       maxLength: 255,
     }),
@@ -65,6 +66,7 @@ export const Quote = ObjectSchema.create({
       label: 'Account',
       group: 'basic',
       required: true,
+      storage: { notNull: true },
     }),
     
     crm_contact: Field.lookup('crm_contact', {
@@ -106,6 +108,7 @@ export const Quote = ObjectSchema.create({
         { label: 'Expired', value: 'expired', color: '#666666' },
       ],
       required: true,
+      storage: { notNull: true },
       trackHistory: true,
     }),
     
@@ -114,6 +117,7 @@ export const Quote = ObjectSchema.create({
       label: 'Quote Date',
       group: 'terms',
       required: true,
+      storage: { notNull: true },
       defaultValue: cel`today()`,
     }),
     
@@ -121,6 +125,7 @@ export const Quote = ObjectSchema.create({
       label: 'Expiration Date',
       group: 'terms',
       required: true,
+      storage: { notNull: true },
     }),
     
     // Pricing
@@ -216,7 +221,7 @@ export const Quote = ObjectSchema.create({
   // only the live API surface remains. History → Field.trackHistory (ADR-0052).
   enable: {
     apiEnabled: true,
-    apiMethods: ['get', 'list', 'create', 'update', 'delete', 'search', 'export'],
+    apiMethods: ['get', 'list', 'create', 'update', 'delete'],
   },
   
   // Validation Rules

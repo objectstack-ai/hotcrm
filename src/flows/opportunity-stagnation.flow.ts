@@ -88,11 +88,11 @@ export const OpportunityStagnationFlow: Flow = {
               // "undefined" (cf. opportunity_won_alert).
               id: 'notify_owner', type: 'notify', label: 'Nudge Owner',
               config: {
-                to: ['{currentOpp.owner}'],
+                recipients: ['{currentOpp.owner}'],
                 channels: ['inbox', 'email'],
                 topic: 'deal_stalled',
                 title: 'Stalled deal: {currentOpp.name}',
-                body: 'Opportunity {currentOpp.name} has sat in {currentOpp.stage} for {currentOpp.days_in_stage} days. Time to advance or re-qualify it.',
+                message: 'Opportunity {currentOpp.name} has sat in {currentOpp.stage} for {currentOpp.days_in_stage} days. Time to advance or re-qualify it.',
                 actionUrl: '/crm_opportunity/{currentOpp.id}',
               },
             },

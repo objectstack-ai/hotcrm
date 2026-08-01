@@ -229,7 +229,7 @@ export const ServiceDashboard: Dashboard = {
         colors: ['#0EA5E9'],
         xAxis: { field: 'created_date', title: 'Day', showGridLines: false, logarithmic: false },
         yAxis: [{ field: 'case_count', title: 'Cases opened', showGridLines: true, logarithmic: false }],
-        interaction: { tooltips: true, brush: true, zoom: false },
+        interaction: { tooltips: true, brush: true },
       },
       options: { dateGranularity: 'day' },
     },

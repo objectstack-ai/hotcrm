@@ -36,6 +36,7 @@ export const Task = ObjectSchema.create({
       group: 'basic',
       label: 'Subject',
       required: true,
+      storage: { notNull: true },
       searchable: true,
       maxLength: 255,
     }),
@@ -50,6 +51,7 @@ export const Task = ObjectSchema.create({
       group: 'basic',
       label: 'Status',
       required: true,
+      storage: { notNull: true },
       trackHistory: true,
       // Field-level default, not just the option flag: the option `default`
       // only preselects in some form surfaces, so a quick-create modal opened
@@ -69,6 +71,7 @@ export const Task = ObjectSchema.create({
       group: 'basic',
       label: 'Priority',
       required: true,
+      storage: { notNull: true },
       trackHistory: true,
       // `normal` is the default rather than `low`: a rep filing a to-do has
       // made no priority judgement, and defaulting everything to Low made the

@@ -47,6 +47,7 @@ export const Account = ObjectSchema.create({
     name: Field.text({
       label: 'Account Name',
       required: true,
+      storage: { notNull: true },
       searchable: true,
       maxLength: 255,
       group: 'basic',
@@ -152,10 +153,13 @@ export const Account = ObjectSchema.create({
       group: 'branding',
     }),
 
-    // Company logo (uploaded image)
+    // Company logo (uploaded image). `accept` / `maxSize` are server-enforced
+    // from @objectstack 17 — see the note on `crm_product.image`.
     logo: Field.image({
       label: 'Company Logo',
       group: 'branding',
+      accept: ['image/png', 'image/jpeg', 'image/svg+xml', 'image/webp'],
+      maxSize: 2 * 1024 * 1024,
     }),
 
     // Date field
@@ -228,7 +232,7 @@ export const Account = ObjectSchema.create({
   // `searchableFields`/per-field `searchable`.
   enable: {
     apiEnabled: true,       // Expose via REST/GraphQL
-    apiMethods: ['get', 'list', 'create', 'update', 'delete', 'search', 'export'], // Whitelist allowed API operations
+    apiMethods: ['get', 'list', 'create', 'update', 'delete'], // Whitelist allowed API operations
   },
   
   // Validation Rules

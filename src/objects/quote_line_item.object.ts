@@ -40,11 +40,13 @@ export const QuoteLineItem = ObjectSchema.create({
     crm_quote: Field.lookup('crm_quote', {
       label: 'Quote',
       required: true,
+      storage: { notNull: true },
     }),
 
     crm_product: Field.lookup('crm_product', {
       label: 'Product',
       required: true,
+      storage: { notNull: true },
     }),
 
     description: Field.text({
@@ -55,6 +57,7 @@ export const QuoteLineItem = ObjectSchema.create({
     quantity: Field.number({
       label: 'Quantity',
       required: true,
+      storage: { notNull: true },
       scale: 2,
       min: 0,
       defaultValue: 1,
@@ -69,6 +72,7 @@ export const QuoteLineItem = ObjectSchema.create({
     unit_price: Field.currency({
       label: 'Sales Price',
       required: true,
+      storage: { notNull: true },
       trackHistory: true,
     }),
 

@@ -58,12 +58,12 @@ export const LeadAssignmentFlow: Flow = {
         // 'sales_manager' was stored verbatim as sys_inbox_message.user_id,
         // matching no real user, so these alerts reached nobody. owner is set
         // on insert (defaultValue os.user.id) and is the accountable party.
-        to: ['{record.owner}'],
+        recipients: ['{record.owner}'],
         channels: ['inbox', 'email'],
         severity: 'warning',
         topic: 'lead_routing',
         title: 'Hot lead — assign within 24h: {record.first_name} {record.last_name}',
-        body: '{record.first_name} {record.last_name} from {record.company} (rating {record.rating}) needs an owner today.',
+        message: '{record.first_name} {record.last_name} from {record.company} (rating {record.rating}) needs an owner today.',
         actionUrl: '/crm_lead/{record.id}',
       },
     },
@@ -78,11 +78,11 @@ export const LeadAssignmentFlow: Flow = {
       config: {
         // Route to the lead's owner — see notify_hot for why a bare
         // 'sales_manager' position never reached anyone.
-        to: ['{record.owner}'],
+        recipients: ['{record.owner}'],
         channels: ['inbox'],
         topic: 'lead_routing',
         title: 'New lead to assign: {record.first_name} {record.last_name}',
-        body: '{record.first_name} {record.last_name} from {record.company} is awaiting assignment.',
+        message: '{record.first_name} {record.last_name} from {record.company} is awaiting assignment.',
         actionUrl: '/crm_lead/{record.id}',
       },
     },

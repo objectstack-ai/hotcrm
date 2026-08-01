@@ -1,9 +1,9 @@
 {
   "$schema": "https://schemas.objectstack.dev/template-manifest.json",
   "name": "hotcrm",
-  "specVersion": "^16.0.0-rc.1",
+  "specVersion": "^17.0.0-rc.1",
   "engines": {
-    "protocol": "^16.0.0"
+    "protocol": "^17.0.0-rc.1"
   },
   "manifestId": "app.objectstack.hotcrm",
   "displayName": "HotCRM",

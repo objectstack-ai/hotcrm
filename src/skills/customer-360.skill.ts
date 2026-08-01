@@ -60,10 +60,4 @@ customer / account / contact:
 
   tools: ['describe_object', 'get_record', 'query_records', 'aggregate_data'],
 
-  triggerPhrases: [
-    'customer 360',
-    'tell me about this account',
-    'give me the full picture',
-    'account summary',
-  ],
 });

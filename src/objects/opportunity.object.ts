@@ -43,6 +43,7 @@ export const Opportunity = ObjectSchema.create({
     name: Field.text({
       label: 'Opportunity Name',
       required: true,
+      storage: { notNull: true },
       searchable: true,
       group: 'basic',
     }),
@@ -54,6 +55,7 @@ export const Opportunity = ObjectSchema.create({
     crm_account: Field.lookup('crm_account', {
       label: 'Account',
       required: true,
+      storage: { notNull: true },
       group: 'basic',
     }),
 
@@ -78,6 +80,7 @@ export const Opportunity = ObjectSchema.create({
     amount: Field.currency({
       label: 'Amount',
       required: true,
+      storage: { notNull: true },
       scale: 2,
       min: 0,
       group: 'financials',
@@ -95,6 +98,7 @@ export const Opportunity = ObjectSchema.create({
     stage: Field.select({
       label: 'Stage',
       required: true,
+      storage: { notNull: true },
       group: 'sales_process',
       // ADR-0052 §5b.1 — the platform auto-renders each stage change on the
       // activity timeline as "Stage: Proposal → Negotiation" (no hook code).
@@ -116,6 +120,7 @@ export const Opportunity = ObjectSchema.create({
     close_date: Field.date({
       label: 'Close Date',
       required: true,
+      storage: { notNull: true },
       group: 'sales_process',
       trackHistory: true,
     }),
@@ -309,7 +314,7 @@ export const Opportunity = ObjectSchema.create({
   // per-field via Field.trackHistory (ADR-0052).
   enable: {
     apiEnabled: true,
-    apiMethods: ['get', 'list', 'create', 'update', 'delete', 'aggregate', 'search'], // Whitelist allowed API operations
+    apiMethods: ['get', 'list', 'create', 'update', 'delete'], // Whitelist allowed API operations
   },
 
   // ADR-0052 §5b.2 — declarative milestone activity. When `stage` enters these

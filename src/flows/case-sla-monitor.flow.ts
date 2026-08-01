@@ -81,12 +81,12 @@ export const CaseSlaMonitorFlow: Flow = {
               config: {
                 // Owner only — `{currentCase.owner.manager}` dot-walks a
                 // lookup, which flow templates interpolate as "undefined".
-                to: ['{currentCase.owner}'],
+                recipients: ['{currentCase.owner}'],
                 channels: ['inbox', 'email'],
                 severity: 'critical',
                 topic: 'case_sla_breach',
                 title: 'SLA breached: case {currentCase.case_number}',
-                body: 'Case {currentCase.case_number} ({currentCase.priority}) passed its SLA due date and has been auto-escalated.',
+                message: 'Case {currentCase.case_number} ({currentCase.priority}) passed its SLA due date and has been auto-escalated.',
                 actionUrl: '/crm_case/{currentCase.id}',
               },
             },

@@ -84,13 +84,9 @@ export const LeadViews = defineView({
       view: 'detail_form', // Use named form view
     },
     
-    // List Actions — built-ins only. `convert_lead` / `schedule_followup`
-    // must NOT be repeated here: they already declare `locations:
-    // ['list_item']` on their Action defs, which auto-injects the menu item.
-    // A string entry here goes through the legacy rowActions path (the string
-    // is dispatched as an action TYPE — objectstack-ai/objectui#2960), which
-    // produced a second, dead "Convert Lead" item next to the working one.
-    rowActions: ['edit', 'delete'],
+    // `convert_lead` / `schedule_followup` declare `locations: ['list_item']`
+    // and are auto-injected into the menu. Do not add strings here: the legacy
+    // rowActions surface only dispatches defined stack actions.
     // Built-in `exportOptions` covers CSV export; no export action needed.
     bulkActions: ['create_campaign'],
     

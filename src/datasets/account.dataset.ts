@@ -11,9 +11,7 @@ export const AccountDataset = defineDataset({
   dimensions: [
     { name: 'industry', label: 'Industry', field: 'industry', type: 'string' },
     { name: 'type', label: 'Type', field: 'type', type: 'string' },
-    // No `dateGranularity` (intended: month) — see the note on
-    // opportunity_metrics.close_date for why it cannot be declared on 16.x.
-    { name: 'created_at', label: 'Created', field: 'created_at', type: 'date' },
+    { name: 'created_at', label: 'Created', field: 'created_at', type: 'date', dateGranularity: 'month' },
   ],
   measures: [
     { name: 'account_count', label: 'Accounts', aggregate: 'count' },

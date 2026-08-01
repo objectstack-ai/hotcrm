@@ -203,7 +203,6 @@ export const WarrantySummarySkill = defineSkill({
 summarize status, identify expired or soon-expiring warranties, and
 recommend the next action.`,
   tools: ['describe_object', 'query_records'],
-  triggerPhrases: ['summarize warranties', 'warranty risk'],
 });
 ```
 
@@ -222,7 +221,7 @@ sources resolve, and only two:
   `query_records`, `query_data`, `get_record`, `aggregate_data`,
   `search_knowledge` and `visualize_data`. From 17.0 the authoritative set is
   exported as `PLATFORM_PROVIDED_TOOL_NAMES` from `@objectstack/spec/system`;
-  on 16.1.0 it is transcribed into `test/skills-integrity.test.ts`. Note
+  before 17.0 it is transcribed into `test/skills-integrity.test.ts`. Note
   `search_knowledge` retrieves over a *declared knowledge source*, and there is
   currently nowhere in a skills-only app to declare one.
 - **`action_<name>`** — materialised from an Action that opts in with
@@ -238,6 +237,11 @@ enforces all of this at PR time.
 Note there is no `permissions` key on a skill — `SkillSchema` has no such field,
 so one is silently stripped ([#511](https://github.com/objectstack-ai/hotcrm/pull/511)).
 Gate access on the Actions the skill calls instead.
+
+Likewise, `triggerPhrases` was removed in 17.0 because the runtime never used
+it. Describe a skill's intended requests in its `description` and
+`instructions`, and use `triggerConditions` only when routing needs an
+explicit context predicate.
 
 ## Common Registration Points
 

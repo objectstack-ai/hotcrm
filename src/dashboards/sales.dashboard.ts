@@ -139,7 +139,7 @@ export const SalesDashboard: Dashboard = {
         // fiction). Quota vs. actual is the quota_attainment_by_rep table
         // below, bound to the forecast_metrics dataset.
         yAxis: [{ field: 'total_amount', title: 'Revenue', format: '0,0', showGridLines: true, logarithmic: false }],
-        interaction: { tooltips: true, brush: true, zoom: false },
+        interaction: { tooltips: true, brush: true },
       },
       options: { dateGranularity: 'month' },
     },

@@ -48,12 +48,14 @@ export const Contract = ObjectSchema.create({
       label: 'Account',
       group: 'parties',
       required: true,
+      storage: { notNull: true },
     }),
     
     crm_contact: Field.lookup('crm_contact', {
       label: 'Primary Contact',
       group: 'parties',
       required: true,
+      storage: { notNull: true },
       // @objectstack 12: string[] `referenceFilters` is dead (not read by the
       // picker); `dependsOn` is the live cascading-lookup form — scopes contacts
       // to the contract's `crm_account` (ADR-0049).
@@ -87,6 +89,7 @@ export const Contract = ObjectSchema.create({
         { label: 'Terminated', value: 'terminated', color: '#666666' },
       ],
       required: true,
+      storage: { notNull: true },
       trackHistory: true,
     }),
     
@@ -95,6 +98,7 @@ export const Contract = ObjectSchema.create({
       label: 'Contract Term (Months)',
       group: 'terms',
       required: true,
+      storage: { notNull: true },
       min: 1,
     }),
     
@@ -102,12 +106,14 @@ export const Contract = ObjectSchema.create({
       label: 'Start Date',
       group: 'terms',
       required: true,
+      storage: { notNull: true },
     }),
     
     end_date: Field.date({
       label: 'End Date',
       group: 'terms',
       required: true,
+      storage: { notNull: true },
     }),
     
     // Financial
@@ -117,6 +123,7 @@ export const Contract = ObjectSchema.create({
       scale: 2,
       min: 0,
       required: true,
+      storage: { notNull: true },
     }),
     
     billing_frequency: Field.select({
@@ -214,7 +221,7 @@ export const Contract = ObjectSchema.create({
   // only the live API surface remains. History → Field.trackHistory (ADR-0052).
   enable: {
     apiEnabled: true,
-    apiMethods: ['get', 'list', 'create', 'update', 'delete', 'search', 'export'],
+    apiMethods: ['get', 'list', 'create', 'update', 'delete'],
   },
   
   // Validation Rules

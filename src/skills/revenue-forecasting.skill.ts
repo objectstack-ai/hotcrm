@@ -40,14 +40,6 @@ risk, or deal slippage:
 
   tools: ['describe_object', 'aggregate_data', 'query_records', 'visualize_data'],
 
-  triggerPhrases: [
-    'forecast revenue',
-    'pipeline health',
-    'at-risk deals',
-    'how is the quarter looking',
-    'revenue projection',
-  ],
-
   triggerConditions: [
     { field: 'objectName', operator: 'in', value: ['crm_opportunity', 'dashboard'] },
   ],

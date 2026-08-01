@@ -34,12 +34,14 @@ export const Contact = ObjectSchema.create({
     first_name: Field.text({
       label: 'First Name',
       required: true,
+      storage: { notNull: true },
       searchable: true,
       group: 'identity',
     }),
     last_name: Field.text({
       label: 'Last Name',
       required: true,
+      storage: { notNull: true },
       searchable: true,
       group: 'identity',
     }),
@@ -56,16 +58,20 @@ export const Contact = ObjectSchema.create({
       group: 'identity',
     }),
 
-    // Avatar field
+    // Avatar field. `accept` / `maxSize` are server-enforced from
+    // @objectstack 17 — see the note on `crm_product.image`.
     avatar: Field.avatar({
       label: 'Profile Picture',
       group: 'identity',
+      accept: ['image/png', 'image/jpeg', 'image/webp'],
+      maxSize: 2 * 1024 * 1024,
     }),
 
     // Relationship: Link to Account (Master-Detail)
     crm_account: Field.masterDetail('crm_account', {
       label: 'Account',
       required: true,
+      storage: { notNull: true },
       deleteBehavior: 'cascade',  // Delete contacts when account is deleted
       group: 'account_info',
     }),
@@ -110,6 +116,7 @@ export const Contact = ObjectSchema.create({
     email: Field.email({
       label: 'Email',
       required: true,
+      storage: { notNull: true },
       unique: true,
       group: 'contact_info',
     }),

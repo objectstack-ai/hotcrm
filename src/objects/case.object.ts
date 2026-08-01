@@ -34,6 +34,7 @@ export const Case = ObjectSchema.create({
       label: 'Subject',
       group: 'basic',
       required: true,
+      storage: { notNull: true },
       searchable: true,
       maxLength: 255,
     }),
@@ -49,6 +50,7 @@ export const Case = ObjectSchema.create({
       label: 'Description',
       group: 'basic',
       required: true,
+      storage: { notNull: true },
     }),
     
     // Relationships
@@ -75,6 +77,7 @@ export const Case = ObjectSchema.create({
       label: 'Status',
       group: 'basic',
       required: true,
+      storage: { notNull: true },
       // ADR-0052 §5b.1 — platform auto-renders status changes on the timeline
       // ("Status: New → Escalated"). Delivers the case timeline declaratively
       // (the hand-coded version was deferred in #396 due to a hook-crash bug).
@@ -94,6 +97,7 @@ export const Case = ObjectSchema.create({
       label: 'Priority',
       group: 'sla',
       required: true,
+      storage: { notNull: true },
       trackHistory: true,
       options: [
         { label: 'Low', value: 'low', color: '#4169E1', default: true },

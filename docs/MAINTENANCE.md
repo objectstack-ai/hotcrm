@@ -68,6 +68,47 @@ can silently invalidate existing metadata or **seed data** (see §4). Treat ever
    native binary was built for a different Node ABI — `pnpm rebuild better-sqlite3`
    and restart. This is an environment issue, not an app change.
 7. Note the new platform version in `CHANGELOG.md`.
+8. **Check the release notes for `os migrate` steps that run against DATA, not
+   metadata** — see §3.2. `pnpm verify` cannot catch these: they gate runtime
+   behaviour on a deployment flag, so a fresh install is clean and an in-place
+   upgrade is not.
+
+### 3.2 Data migrations and enforcement gates (`os migrate`)
+
+Steps 1–7 cover the app's own metadata. A major can additionally ship
+migrations that rewrite or re-validate **stored rows**, gated behind a
+deployment flag so the new enforcement turns on only once the data is known
+clean. `demo:reset` hides these entirely — it starts from an empty database, so
+a green local run says nothing about an existing deployment.
+
+Run the metadata replay first, then each data gate as a dry run before
+`--apply`:
+
+```bash
+os migrate meta --from <previous major>   # replays renames and key conversions
+os migrate files-to-references            # dry run: media fields → sys_file records
+os migrate files-to-references --apply    # convert, verify, record the flag
+os migrate value-shapes                   # dry run: scan reference & JSON validity
+os migrate value-shapes --apply           # record the gate if the scan is clean
+```
+
+For **17.0** specifically: `files-to-references` backfills the four media
+fields this app declares (`crm_product.image`, `crm_product.datasheet`,
+`crm_account.logo`, `crm_contact.avatar`) into `sys_file` records, and
+`value-shapes` scans reference and JSON columns. Neither is needed for a fresh
+install — no seed data populates a media field — but an in-place upgrade needs
+both before strict validation is safe to enable.
+
+If a scan reports rows it cannot convert, the escape hatches downgrade the new
+enforcement to warnings while you fix the data. They are temporary, not a
+destination:
+
+| Variable | Effect |
+| --- | --- |
+| `OS_ALLOW_LAX_MEDIA_VALUES=1` | File-value verification warns instead of failing |
+| `OS_ALLOW_LAX_VALUE_SHAPES=1` | Reference/JSON validation warns instead of failing |
+| `OS_ALLOW_LAX_ACTION_PARAMS=1` | Action-param shape enforcement warns instead of failing |
+| `OS_DATA_VALUE_SHAPE_STRICT_ENABLED=1` | Opt into strict value shapes immediately, without the gate |
 
 ### 3.1 Destructive schema drift — database-only columns after an upgrade
 

@@ -647,8 +647,6 @@ export const jaJP: TranslationData = {
         group_sales: { label: '営業' },
         group_service: { label: 'サービス' },
         group_marketing: { label: 'マーケティング' },
-        group_products: { label: '製品' },
-        group_analytics: { label: '分析' },
       },
     },
   },

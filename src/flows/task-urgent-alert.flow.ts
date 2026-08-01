@@ -34,12 +34,12 @@ export const TaskUrgentAlertFlow: Flow = {
     {
       id: 'notify_owner', type: 'notify', label: 'Notify Owner',
       config: {
-        to: ['{record.owner}'],
+        recipients: ['{record.owner}'],
         channels: ['inbox', 'email'],
         severity: 'warning',
         topic: 'urgent_task',
         title: 'Urgent task: {record.subject}',
-        body: 'An urgent task "{record.subject}" was assigned to you and needs attention.',
+        message: 'An urgent task "{record.subject}" was assigned to you and needs attention.',
         actionUrl: '/crm_task/{record.id}',
       },
     },

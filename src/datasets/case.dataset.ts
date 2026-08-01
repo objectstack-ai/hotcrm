@@ -17,11 +17,7 @@ export const CaseDataset = defineDataset({
     { name: 'priority', label: 'Priority', field: 'priority', type: 'string' },
     { name: 'origin', label: 'Origin', field: 'origin', type: 'string' },
     { name: 'type', label: 'Type', field: 'type', type: 'string' },
-    // No `dateGranularity` (intended: day, for cases_opened_by_day_priority and
-    // the Service dashboard's inflow trend) — see the note on
-    // opportunity_metrics.close_date. `crm_case.created_date` is a
-    // `Field.datetime()`, so it is blocked by BOTH gaps described there.
-    { name: 'created_date', label: 'Created', field: 'created_date', type: 'date' },
+    { name: 'created_date', label: 'Created', field: 'created_date', type: 'date', dateGranularity: 'day' },
   ],
 
   measures: [

@@ -75,15 +75,18 @@ export const OpportunityApprovalFlow: Flow = {
       type: 'approval',
       label: 'Sales Manager Review',
       config: {
-        // Org-owner backstop: approvers snapshot at request creation, and a
-        // position with no holders leaves the request undecidable while
-        // lockRecord holds the record hostage (no admin override exists).
-        // behavior:'first_response' means whoever responds first wins, so the
-        // backstop changes nothing when the sales-manager bench is staffed.
-        approvers: [
-          { type: 'position', value: 'sales_manager' },
-          { type: 'org_membership_level', value: 'owner' },
-        ],
+        // The empty-position dead-end (approvers snapshot at request creation,
+        // so a position with no holders left the request undecidable while
+        // lockRecord held the record hostage) is a NODE POLICY on @objectstack
+        // 17, not something the approver list has to work around. The
+        // `{ type: 'org_membership_level', value: 'owner' }` entry that used to
+        // sit here was that workaround, and it overshot: with
+        // `behavior: 'first_response'` it made an org owner a routine approver
+        // for every deal, not just a rescue when the bench is empty.
+        approvers: [{ type: 'position', value: 'sales_manager' }],
+        // Explicit even though `admin_rescue` is the schema default — this is
+        // the mechanism the node depends on, so it is authored, not inherited.
+        onEmptyApprovers: 'admin_rescue',
         behavior: 'first_response',
         lockRecord: true,
         approvalStatusField: 'approval_status',
@@ -104,11 +107,9 @@ export const OpportunityApprovalFlow: Flow = {
       type: 'approval',
       label: 'Sales Director Sign-off',
       config: {
-        // Same org-owner backstop as manager_review (empty-position dead-end).
-        approvers: [
-          { type: 'position', value: 'sales_director' },
-          { type: 'org_membership_level', value: 'owner' },
-        ],
+        // Same node policy as manager_review — see the note there.
+        approvers: [{ type: 'position', value: 'sales_director' }],
+        onEmptyApprovers: 'admin_rescue',
         behavior: 'first_response',
         lockRecord: true,
         approvalStatusField: 'approval_status',
@@ -131,11 +132,11 @@ export const OpportunityApprovalFlow: Flow = {
       type: 'notify',
       label: 'Notify Owner — Approved',
       config: {
-        to: ['{oppRecord.owner}'],
+        recipients: ['{oppRecord.owner}'],
         channels: ['inbox', 'email'],
         topic: 'opportunity_approved',
         title: 'Deal approved: {oppRecord.name}',
-        body: 'Your opportunity {oppRecord.name} has been approved.',
+        message: 'Your opportunity {oppRecord.name} has been approved.',
         actionUrl: '/crm_opportunity/{record.id}',
       },
     },
@@ -156,12 +157,12 @@ export const OpportunityApprovalFlow: Flow = {
       type: 'notify',
       label: 'Notify Owner — Rejected',
       config: {
-        to: ['{oppRecord.owner}'],
+        recipients: ['{oppRecord.owner}'],
         channels: ['inbox', 'email'],
         severity: 'warning',
         topic: 'opportunity_rejected',
         title: 'Deal rejected: {oppRecord.name}',
-        body: 'Your opportunity {oppRecord.name} was not approved. Review and revise before resubmitting.',
+        message: 'Your opportunity {oppRecord.name} was not approved. Review and revise before resubmitting.',
         actionUrl: '/crm_opportunity/{record.id}',
       },
     },

@@ -38,6 +38,7 @@ export const Lead = ObjectSchema.create({
     first_name: Field.text({
       label: 'First Name',
       required: true,
+      storage: { notNull: true },
       searchable: true,
       group: 'identity',
     }),
@@ -45,6 +46,7 @@ export const Lead = ObjectSchema.create({
     last_name: Field.text({
       label: 'Last Name',
       required: true,
+      storage: { notNull: true },
       searchable: true,
       group: 'identity',
     }),
@@ -71,6 +73,7 @@ export const Lead = ObjectSchema.create({
     company: Field.text({
       label: 'Company',
       required: true,
+      storage: { notNull: true },
       searchable: true,
       group: 'company_info',
     }),
@@ -92,6 +95,7 @@ export const Lead = ObjectSchema.create({
     email: Field.email({
       label: 'Email',
       required: true,
+      storage: { notNull: true },
       unique: true,
       group: 'contact_info',
     }),
@@ -117,6 +121,7 @@ export const Lead = ObjectSchema.create({
     status: Field.select({
       label: 'Lead Status',
       required: true,
+      storage: { notNull: true },
       group: 'qualification',
       trackHistory: true,
       // Field-level default: option-level `default: true` only preselects in

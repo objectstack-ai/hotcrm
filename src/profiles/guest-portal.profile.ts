@@ -25,6 +25,10 @@ export const GuestPortalProfile = {
   description:
     'Anonymous visitors submitting public Web-to-Lead / Web-to-Case forms. ' +
     'INSERT-only on lead and case; no read/edit/delete on any object.',
+  // No `allowExport` anywhere below, deliberately: this set is bound to the
+  // `guest` anchor, and ADR-0090 D9 classes `allowExport` as a high-privilege
+  // bit no anchor may confer — the set would stop binding at all, on top of
+  // handing anonymous visitors bulk table egress. See `src/profiles/index.ts`.
   objects: {
     crm_lead: {
       allowCreate: true,

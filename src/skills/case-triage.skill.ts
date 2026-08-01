@@ -48,13 +48,6 @@ export const CaseTriageSkill = defineSkill({
 
   tools: ['describe_object', 'get_record'],
 
-  triggerPhrases: [
-    'triage this case',
-    'prioritise case',
-    'how urgent is this',
-    'case severity',
-  ],
-
   triggerConditions: [
     { field: 'objectName', operator: 'eq', value: 'crm_case' },
   ],

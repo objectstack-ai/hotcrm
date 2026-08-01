@@ -43,11 +43,13 @@ export const OpportunityLineItem = ObjectSchema.create({
     crm_opportunity: Field.lookup('crm_opportunity', {
       label: 'Opportunity',
       required: true,
+      storage: { notNull: true },
     }),
 
     crm_product: Field.lookup('crm_product', {
       label: 'Product',
       required: true,
+      storage: { notNull: true },
     }),
 
     description: Field.text({
@@ -58,6 +60,7 @@ export const OpportunityLineItem = ObjectSchema.create({
     quantity: Field.number({
       label: 'Quantity',
       required: true,
+      storage: { notNull: true },
       scale: 2,
       min: 0,
       defaultValue: 1,
@@ -73,6 +76,7 @@ export const OpportunityLineItem = ObjectSchema.create({
     unit_price: Field.currency({
       label: 'Sales Price',
       required: true,
+      storage: { notNull: true },
       description: 'Negotiated unit price (may differ from list price)',
       trackHistory: true,
     }),

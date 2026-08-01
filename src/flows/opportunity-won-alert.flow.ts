@@ -42,12 +42,12 @@ export const OpportunityWonAlertFlow: Flow = {
         // Owner only: `{record.owner.manager}` cannot traverse a lookup on the
         // raw trigger snapshot — it interpolates to the literal "undefined"
         // and the message is delivered to a phantom user.
-        to: ['{record.owner}'],
+        recipients: ['{record.owner}'],
         channels: ['inbox', 'email'],
         severity: 'info',
         topic: 'large_deal_won',
         title: 'Large deal won: {record.name}',
-        body: '{record.name} closed at {record.amount}. Congratulations to the team.',
+        message: '{record.name} closed at {record.amount}. Congratulations to the team.',
         actionUrl: '/crm_opportunity/{record.id}',
       },
     },

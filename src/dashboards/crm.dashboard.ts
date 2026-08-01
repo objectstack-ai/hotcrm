@@ -120,7 +120,7 @@ export const CrmOverviewDashboard: Dashboard = {
         colors: ['#10B981'],
         xAxis: { field: 'close_date', title: 'Month', showGridLines: false, logarithmic: false },
         yAxis: [{ field: 'total_amount', title: 'Revenue', format: '0,0', showGridLines: true, logarithmic: false }],
-        interaction: { tooltips: true, brush: true, zoom: false },
+        interaction: { tooltips: true, brush: true },
       },
       options: { dateGranularity: 'month' },
     },

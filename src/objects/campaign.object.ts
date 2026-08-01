@@ -54,6 +54,7 @@ export const Campaign = ObjectSchema.create({
       group: 'basic',
       label: 'Campaign Name',
       required: true,
+      storage: { notNull: true },
       searchable: true,
       maxLength: 255,
     }),
@@ -109,6 +110,7 @@ export const Campaign = ObjectSchema.create({
         { label: 'Aborted', value: 'aborted', color: '#FF0000' },
       ],
       required: true,
+      storage: { notNull: true },
       trackHistory: true,
     }),
     
@@ -117,12 +119,14 @@ export const Campaign = ObjectSchema.create({
       group: 'schedule',
       label: 'Start Date',
       required: true,
+      storage: { notNull: true },
     }),
     
     end_date: Field.date({
       group: 'schedule',
       label: 'End Date',
       required: true,
+      storage: { notNull: true },
     }),
     
     // Budget & ROI
@@ -261,7 +265,7 @@ export const Campaign = ObjectSchema.create({
   // only the live API surface remains. History → Field.trackHistory (ADR-0052).
   enable: {
     apiEnabled: true,
-    apiMethods: ['get', 'list', 'create', 'update', 'delete', 'search', 'export'],
+    apiMethods: ['get', 'list', 'create', 'update', 'delete'],
   },
   
   // Validation Rules

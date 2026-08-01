@@ -19,10 +19,8 @@ export const RenewalPitchSkill = defineSkill({
   description: 'Drafts renewal talk tracks from account and contract context.',
   instructions: `When asked for a renewal pitch, inspect the current
 account and contract records, summarize risk, and draft a concise
-customer-facing talk track.`,
+  customer-facing talk track.`,
   tools: ['describe_object', 'query_records'],
-  triggerPhrases: ['draft renewal pitch', 'renewal talk track'],
-  permissions: ['crm:account:read'],
 });
 ```
 
