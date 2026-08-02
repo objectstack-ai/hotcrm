@@ -69,11 +69,31 @@ export const OpportunityViews = defineView({
       { name: 'closing', label: 'Closing Soon', icon: 'calendar-check', view: 'closing_this_quarter' },
     ],
     // List-level entry points: generate_quote reaches the row menu via its
-    // own `locations: ['list_item']`. mass_update_stage stays wired even
-    // though console 16.1.0 cannot deliver bulk selections yet (tracked in
-    // issue #508 — see the note in opportunity.actions.ts). Built-in
-    // `exportOptions` covers CSV export.
-    bulkActions: ['mass_update_stage'],
+    // own `locations: ['list_item']`. Built-in `exportOptions` covers CSV
+    // export.
+    //
+    // There is deliberately NO `bulkActions` here.
+    //
+    // `mass_update_stage` used to be listed, and the selection-bar button that
+    // produced is a pure client-side no-op in this console: selecting rows and
+    // clicking it fires ZERO network requests and then raises a generic
+    // "Action completed successfully" toast (#508, path 2). A rep therefore
+    // watches a stage move report success and never happen — which reads as
+    // silent data loss, not as a tracked platform gap. Not shipping the
+    // control is the honest state until the platform can deliver the
+    // selection.
+    //
+    // The action DEFINITION stays in `src/actions/opportunity.actions.ts`
+    // (with its KNOWN-BROKEN note), so restoring the button is one line:
+    //
+    //     bulkActions: ['mass_update_stage'],
+    //
+    // Re-add it in the same PR that closes #508 — i.e. once the selection bar
+    // is verified to POST /api/v1/actions/crm_opportunity/mass_update_stage
+    // with `selectedIds`, and the action body has been fixed to match the
+    // engine facade (pinned in `test/action-sandbox.test.ts`). Until then reps
+    // move stages via the pipeline kanban drag-and-drop, inline grid editing,
+    // or the record form.
   },
 
   listViews: {

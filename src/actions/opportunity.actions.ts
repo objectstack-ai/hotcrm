@@ -62,15 +62,23 @@ export const CloneOpportunityAction: Action = {
 /**
  * Mass Update Opportunity Stage.
  *
- * KNOWN-BROKEN in console 16.1.0 — kept wired and tracked in issue #508.
- * No invocation path currently executes it: modal submits resolve `target`
- * as an object name (400), the selection-bar bulk button is a client-side
- * no-op (zero network requests), and the header toolbar path rejects
- * multi-row selections, so `input.selectedIds` never arrives. Script-typed
- * (modal is provably dead) with a recordId fallback so a single-row
- * invocation works the moment the toolbar delivers it. Until upstream ships
- * bulk-selection delivery, stage moves happen via the pipeline kanban
- * drag-and-drop, inline grid editing, or the record form.
+ * KNOWN-BROKEN in console 16.1.0 — kept DEFINED, no longer wired, tracked in
+ * issue #508. No invocation path currently executes it: modal submits resolve
+ * `target` as an object name (400), the selection-bar bulk button is a
+ * client-side no-op (zero network requests), and the header toolbar path
+ * rejects multi-row selections, so `input.selectedIds` never arrives.
+ * Script-typed (modal is provably dead) with a recordId fallback so a
+ * single-row invocation works the moment the toolbar delivers it.
+ *
+ * The list view no longer lists it in `bulkActions` (#588): that button was
+ * the one path that failed *silently* — success toast, nothing written — so it
+ * read as data loss rather than as a tracked gap. This definition stays put so
+ * the restore is a one-line edit in `src/views/opportunity.view.ts`; do it in
+ * the PR that closes #508, and fix the `ctx.api...update(id, {...})` call
+ * pinned in `test/action-sandbox.test.ts` at the same time.
+ *
+ * Until upstream ships bulk-selection delivery, stage moves happen via the
+ * pipeline kanban drag-and-drop, inline grid editing, or the record form.
  */
 export const MassUpdateStageAction: Action = {
   name: 'mass_update_stage',
