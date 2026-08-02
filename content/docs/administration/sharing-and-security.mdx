@@ -10,7 +10,7 @@ Sharing answers the question: *"Which records can this user see and edit?"* Four
 1. **Object permissions** — may this user touch this object at all? (See [Profiles](/docs/administration/profiles).)
 2. **Org-Wide Defaults (OWD)** — the record-level baseline ("opportunities are private").
 3. **Sharing Rules** — the openings ("the EU team can edit EU accounts").
-4. **Account Teams & manual shares** — record-level "you're working this one with me".
+4. **Manual shares** — record-level "you're working this one with me".
 
 Plus **Field-Level Security** for masking sensitive fields inside a record the user *can* see.
 
@@ -95,9 +95,28 @@ Criteria-based rules are the enforced flavour: matching records materialise real
 
 Create your own in **Setup → Sharing Settings**.
 
-## Layer 4 — Account Teams & manual shares
+### A rule widens one object, not the records underneath it
 
-For accounts worked by a pod (AE + SDR + SE + CSM), the **account team** is a per-record sharing list; each member gets **Read** or **Read/Write** on the account, and the account's parent-derived children follow.
+Sharing rules are authored **per object**. Widening `Account` widens accounts — the records hanging off a shared account keep their own baseline, and Contact is the only one derived from it:
+
+| Related list on a shared account | What the recipient sees |
+| --- | --- |
+| Contacts | All of them — Contact is Controlled by Parent, so it follows the account |
+| Opportunities | Their own deals only, plus open deals ≥ $100,000 if they hold `sales_director` or `executive` |
+| Quotes | Their own only |
+| Contracts | Their own only |
+| Cases | Their own only, plus open critical cases if they hold `service_manager` or `service_director` |
+| Tasks | Their own only |
+
+So a territory rule hands over the account record and its contacts; the deal, quote, contract, case and task history underneath stays with its owners, and those related lists can look empty or partial on an account the user can otherwise read in full.
+
+Making a child object follow the account is a deliberate widening, not a config detail: author a sharing rule on the child object with criteria matching the account rules, or set the child's OWD to Controlled by Parent. Either one opens that object for **every** holder of it, not only for the territory recipients — which is why HotCRM ships neither by default.
+
+## Layer 4 — Manual shares
+
+A **manual share** grants one user or group **Read** or **Read/Write** on a single record, on top of everything above. Shares live per record, and the parent-derived children of a shared record follow it.
+
+HotCRM ships **no account-team object** — there is no team roster on the account and no Team tab. The rule named *Account Team Sharing* in the table above is an ordinary criteria rule: it gives every `sales_manager` edit on active customer accounts, not a per-record pod. An org that sells in pods models the pod as a position with its own sharing rule, or as manual shares on the account.
 
 ## How the layers combine
 
@@ -108,7 +127,7 @@ A user sees a record when **all** of the following hold: their profile grants **
 3. The **OWD** is Public Read-Only or wider.
 4. The record's **parent** is visible to them (Controlled by Parent).
 5. A **sharing rule** matches the record and one of their positions.
-6. They're on the **account team**, or the record was **shared manually** with them.
+6. The record was **shared manually** with them.
 
 If none apply, the record is simply *gone* from lists, search and reports — not an error message.
 
@@ -144,6 +163,6 @@ There is no "AI bypass".
 If you think you should be able to see a record and can't:
 
 1. Check **who owns it**.
-2. Check whether you're on the **account team** (open the account → Team tab).
+2. If you reached it from an account, check **which object it is**: only contacts follow the account. Quotes, contracts, tasks, cases and deals stay with their owner even when the account itself is shared with you.
 3. Check whether the deal is flagged **Private**.
 4. Ask your admin whether a **sharing rule** should cover your position.

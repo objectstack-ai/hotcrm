@@ -17,8 +17,11 @@ export const ServiceAgentProfile = {
     crm_account:     { allowCreate: false, allowRead: true,  allowEdit: false, allowDelete: false, viewAllRecords: true,  modifyAllRecords: false, allowExport: true },
     crm_contact:     { allowCreate: false, allowRead: true,  allowEdit: true,  allowDelete: false, viewAllRecords: true,  modifyAllRecords: false, allowExport: true },
     crm_opportunity: { allowCreate: false, allowRead: false, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
-    // Cases + tasks: an agent's own queue by default (readScope: 'own');
-    // cross-agent visibility comes from the case-escalation sharing rule.
+    // Cases + tasks: an agent's own queue by default (readScope: 'own').
+    // Cross-agent visibility exists for CASES only — the escalation rules widen
+    // open critical cases to service_manager / service_director. `crm_task` has
+    // no sharing rule at all, so an agent reading an account org-wide still
+    // sees only their own tasks on it (#549).
     crm_case:        { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const, allowExport: true },
     crm_task:        { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: true,  viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const },
     crm_product:     { allowCreate: false, allowRead: true,  allowEdit: false, allowDelete: false, viewAllRecords: true,  modifyAllRecords: false },

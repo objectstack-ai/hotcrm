@@ -8,9 +8,17 @@ export const SalesRepProfile = {
   // `readScope: 'own'` so the intent is authored, not inferred — this both
   // silences the `security-private-no-readscope` liveness warning and pins the
   // behavior: without it, a private-OWD object with allowRead but no scope is
-  // an under-specified grant the engine reads as "own only" anyway. Reps who
-  // need cross-team visibility get it through the account team / territory
-  // sharing rules, not by widening the base set.
+  // an under-specified grant the engine reads as "own only" anyway.
+  //
+  // What widens that scope today is narrower than it sounds: the territory /
+  // account-team rules are authored on `crm_account` ONLY, and a sharing rule
+  // widens the object it names — not the records hanging off it. So a rep who
+  // receives an account through a territory rule reads the account and its
+  // contacts (`controlled_by_parent`), while the quotes, contracts and tasks on
+  // it stay own-only, and opportunities widen only through the >= $100k
+  // leadership rules. Whether those children should follow the account is an
+  // open business decision (#549), not a bug in these grants — do not widen
+  // them here to paper over it.
   objects: {
     // `allowExport` where an export surface exists — canonical note in
     // `src/profiles/index.ts`. Safe alongside `readScope: 'own'`: export is
