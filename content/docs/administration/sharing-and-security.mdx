@@ -95,6 +95,17 @@ Criteria-based rules are the enforced flavour: matching records materialise real
 
 Create your own in **Setup → Sharing Settings**.
 
+> **Criteria filter on plain fields, never on part of an Address.** The two
+> territory rules match on the account's **Billing Country** — a read-only
+> two-letter code derived from the country you type into **Billing Address** —
+> and not on the address itself. A criteria rule has to run as a database
+> query, and a query cannot reach inside a structured Address or Location
+> value. A rule written against `Billing Address → Country` is therefore
+> **rejected outright** rather than quietly widened to "every account": it is
+> never installed, and the position it names receives nothing. Nothing in the
+> UI marks such a rule as broken, so when a team reports missing records, check
+> that every field the rule names is a plain field on the object.
+
 ### A rule widens one object, not the records underneath it
 
 Sharing rules are authored **per object**. Widening `Account` widens accounts — the records hanging off a shared account keep their own baseline, and Contact is the only one derived from it:

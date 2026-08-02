@@ -93,6 +93,14 @@ On top of that:
   - North America (US, CA, MX) → North America sales team
   - Europe (UK, DE, FR, IT, ES) → Europe sales team
 
+The territory rules match on **Billing Country**, a read-only field on the
+account that is filled in from the country you enter in **Billing Address**.
+Enter the country as its two-letter code (`US`, `DE`, …) — that is what the
+rules compare against, so an account whose billing country reads
+"United States" lands in no territory. The field is on the *Locations* section
+of the account, which makes it the first thing to check when a territory team
+says an account is missing from their list.
+
 Admins can change these rules — see [Administration › Sharing](/docs/administration/sharing-and-security).
 
 ## Who can edit what

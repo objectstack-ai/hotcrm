@@ -34,6 +34,10 @@ export const esES: TranslationData = {
         phone: { label: 'Teléfono' },
         website: { label: 'Sitio Web' },
         billing_address: { label: 'Dirección de Facturación' },
+        billing_country: {
+          label: 'País de Facturación',
+          help: 'Derivado de la Dirección de Facturación — el código de país que usan las reglas de compartición por territorio.',
+        },
         office_location: { label: 'Ubicación de Oficina' },
         owner: { label: 'Propietario de Cuenta' },
         parent_account: { label: 'Cuenta Matriz' },
