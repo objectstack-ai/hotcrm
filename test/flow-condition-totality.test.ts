@@ -611,7 +611,15 @@ describe('conditions answer on a driver whose stored record omits the key', () =
         name: 'Big Deal', amount: 750_000, stage: 'negotiation',
         close_date: '2026-12-31', crm_account: account.id,
       });
-      await api.object('crm_opportunity').update({ stage: 'closed_won' }, { where: { id: opp.id } });
+      // `win_reason` is `requiredWhen` stage is closed_won (#593) — the engine
+      // rejects the close without it, exactly as it rejects the case close
+      // below without a `resolution`. Supplied here so this file keeps testing
+      // what it is about (flow-condition totality) rather than failing on a
+      // neighbouring object rule.
+      await api.object('crm_opportunity').update(
+        { stage: 'closed_won', win_reason: 'best_fit' },
+        { where: { id: opp.id } },
+      );
 
       const kase = await api.object('crm_case').insert({
         subject: 'Login broken', description: 'Cannot sign in',

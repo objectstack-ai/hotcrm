@@ -1354,9 +1354,13 @@ describe('select fields are translated in every locale', () => {
     'crm_lead.salutation': ['en', 'ja-JP', 'es-ES'],
     'crm_lead.industry': ['en', 'ja-JP', 'es-ES'],
     'crm_opportunity.competitors': UNTRANSLATED_EVERYWHERE,
+    // `crm_opportunity.win_reason` / `loss_reason` left the ledger in #593:
+    // both became REQUIRED at close and both now drive a Sales-dashboard
+    // widget, so an untranslated option is no longer a cosmetic gap — it is a
+    // raw stored value (`no_budget`, `quote_accepted`) in a picklist a rep is
+    // forced to choose from, and in a chart legend. `approval_status` stays:
+    // it is untouched by that change and belongs to #645's sweep.
     'crm_opportunity.approval_status': ['ja-JP', 'es-ES'],
-    'crm_opportunity.win_reason': ['ja-JP', 'es-ES'],
-    'crm_opportunity.loss_reason': ['ja-JP', 'es-ES'],
     'crm_product.category': ['en', 'ja-JP', 'es-ES'],
     'crm_product.family': UNTRANSLATED_EVERYWHERE,
     'crm_product.billing_type': UNTRANSLATED_EVERYWHERE,

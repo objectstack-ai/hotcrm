@@ -535,6 +535,21 @@ export const OPPORTUNITY_LINES: Record<string, readonly LineSpec[]> = {
     { product: 'Field Service Mobile', quantity: 1, unit_price: 14000, description: 'Field service mobile for the device-servicing team.' },
     { product: 'AI Agent Seat (Annual)', quantity: 6, unit_price: 1000, description: 'Agent seats for the service coordinators.' },
   ],
+  'Globex Line Expansion (Lost)': [
+    { product: 'ObjectStack Platform', quantity: 2, unit_price: 50000, description: 'Two further production-line tenants.' },
+    { product: 'Integration Connector Pack', quantity: 1, unit_price: 16000, description: 'Connector pack for the line-control systems.' },
+    { product: 'AI Agent Seat (Annual)', quantity: 8, unit_price: 1000, description: 'Agent seats for the line supervisors.' },
+  ],
+  'Northwind Field Service Pilot (Lost)': [
+    { product: 'Field Service Mobile', quantity: 1, unit_price: 14000, description: 'Field-service mobile for the metering crews.' },
+    { product: 'Standard Support', quantity: 1, unit_price: 9000, description: 'Business-hours support during the pilot.' },
+    { product: 'AI Agent Seat (Annual)', quantity: 10, unit_price: 1000, description: 'Agent seats for the dispatch desk.' },
+  ],
+  'Apex Compliance Reporting (Lost)': [
+    { product: 'Analytics Add-on', quantity: 1, unit_price: 22000, description: 'Regulatory reporting pack for fleet compliance.' },
+    { product: 'Sandbox Environment (Annual)', quantity: 1, unit_price: 7500, description: 'Sandbox for the compliance rule build-out.' },
+    { product: 'AI Agent Seat (Annual)', quantity: 6, unit_price: 1000, description: 'Agent seats for the compliance analysts.' },
+  ],
   'Northwind Grid Modernization': [
     { product: 'ObjectStack Platform', quantity: 3, unit_price: 50000, description: 'Enterprise edition for grid, field and customer operations.' },
     { product: 'Implementation Services', quantity: 1, unit_price: 75000, description: 'Operational-data assessment and implementation.' },
@@ -683,6 +698,7 @@ analytics seats for the Ops org, (3) priority support SLA.`,
       type: 'existing_renewal',
       forecast_category: 'closed',
       lead_source: 'partner',
+      win_reason: 'relationship',
       description: `Annual renewal of the Acme Standard subscription (40 seats), signed two weeks ahead of the renewal date. 22% YoY uplift driven by seat expansion in the new EMEA team. Multi-year option declined this round — they want to see how the platform upgrade lands first.`,
     },
     {
@@ -696,6 +712,7 @@ analytics seats for the Ops org, (3) priority support SLA.`,
       type: 'new_business',
       forecast_category: 'closed',
       lead_source: 'event',
+      win_reason: 'best_fit',
     },
     {
       name: 'Wayne Q1 Expansion',
@@ -708,6 +725,7 @@ analytics seats for the Ops org, (3) priority support SLA.`,
       type: 'existing_upgrade',
       forecast_category: 'closed',
       lead_source: 'web',
+      win_reason: 'better_product',
     },
     {
       name: 'Globex Training Package',
@@ -720,6 +738,7 @@ analytics seats for the Ops org, (3) priority support SLA.`,
       type: 'new_business',
       forecast_category: 'closed',
       lead_source: 'referral',
+      win_reason: 'better_support',
     },
     {
       name: 'Initech Phase 1',
@@ -732,6 +751,7 @@ analytics seats for the Ops org, (3) priority support SLA.`,
       type: 'new_business',
       forecast_category: 'closed',
       lead_source: 'web',
+      win_reason: 'better_price',
     },
     // ─── Campaign-attributed wins ───────────────────────────────────────
     // `crm_campaign` is what `campaign_snapshot_metrics` counts when a campaign
@@ -753,6 +773,7 @@ analytics seats for the Ops org, (3) priority support SLA.`,
       type: 'existing_expansion',
       forecast_category: 'closed',
       lead_source: 'email_campaign',
+      win_reason: 'best_fit',
       description: 'Analytics package for admissions and alumni engagement, sourced from the enterprise nurture track.',
     },
     {
@@ -769,6 +790,7 @@ analytics seats for the Ops org, (3) priority support SLA.`,
       forecast_category: 'closed',
       lead_source: 'content',
       description: 'Operations module for two manufacturing divisions, closed off the operations-platform launch program.',
+      win_reason: 'relationship',
     },
     {
       name: 'Vertex Developer Platform Adoption',
@@ -784,8 +806,23 @@ analytics seats for the Ops org, (3) priority support SLA.`,
       forecast_category: 'closed',
       lead_source: 'content',
       description: 'Three product teams adopted the developer platform after the technical content series.',
+      win_reason: 'better_product',
     },
-    // Closed Lost deals (powers win-rate analytics)
+    // ─── Closed Lost deals (powers win-rate + loss-reason analytics) ────
+    //
+    // Five losses across five distinct `loss_reason` values, and every one of
+    // them is now MANDATORY rather than decorative: `loss_reason` is
+    // `requiredWhen` stage is `closed_lost` (#593), so a seeded lost deal
+    // without one is rejected by the engine at seed time — the demo database
+    // cannot boot with the empty column that made the loss-reason widget
+    // unbuildable in the first place.
+    //
+    // Their `lead_source` values are chosen so that the sources carrying a loss
+    // ALSO carry a win (`web`, `referral`, `content`), plus two sources that
+    // only ever lost (`cold_call`, `advertisement`). That is what makes
+    // `win_rate_by_lead_source` a real measurement instead of a column of
+    // 100%s: three rows where both halves of the ratio move, and two rows that
+    // show what an all-loss source looks like.
     {
       name: 'Acme Add-on (Lost)',
       crm_account: 'Acme Corporation',
@@ -797,6 +834,8 @@ analytics seats for the Ops org, (3) priority support SLA.`,
       type: 'existing_upgrade',
       forecast_category: 'omitted',
       lead_source: 'cold_call',
+      loss_reason: 'timing',
+      loss_details: 'Marketing is locked into a 2-year HubSpot contract; the buying window opens when that renews.',
       description: `Tried to bolt on the Marketing Cloud module via cold outbound. Lost because Acme's marketing org is already on a 2-year HubSpot contract. Revisit in Q3 when that contract is up for renewal.`,
     },
     {
@@ -810,6 +849,53 @@ analytics seats for the Ops org, (3) priority support SLA.`,
       type: 'new_business',
       forecast_category: 'omitted',
       lead_source: 'advertisement',
+      loss_reason: 'no_budget',
+      loss_details: 'Capital freeze on non-clinical systems for the rest of the fiscal year.',
+    },
+    {
+      name: 'Globex Line Expansion (Lost)',
+      crm_account: 'Globex Industries',
+      ...dealValue('Globex Line Expansion (Lost)', 0),
+      stage: 'closed_lost',
+      probability: 0,
+      close_date: cel`daysAgo(35)`,
+      stage_entry_date: cel`daysAgo(35)`,
+      type: 'existing_expansion',
+      forecast_category: 'omitted',
+      lead_source: 'referral',
+      loss_reason: 'competitor',
+      loss_details: 'Incumbent MES vendor bundled the two additional lines into an existing master agreement.',
+      description: 'Expansion into two further production lines, lost to the incumbent MES vendor on bundling.',
+    },
+    {
+      name: 'Northwind Field Service Pilot (Lost)',
+      crm_account: 'Northwind Energy',
+      ...dealValue('Northwind Field Service Pilot (Lost)', 0),
+      stage: 'closed_lost',
+      probability: 0,
+      close_date: cel`daysAgo(80)`,
+      stage_entry_date: cel`daysAgo(80)`,
+      type: 'new_business',
+      forecast_category: 'omitted',
+      lead_source: 'web',
+      loss_reason: 'price',
+      loss_details: 'Per-technician pricing landed ~30% above the budget the operations director had approved.',
+      description: 'Field-service pilot for the metering crews, lost on price against a cheaper point solution.',
+    },
+    {
+      name: 'Apex Compliance Reporting (Lost)',
+      crm_account: 'Apex Logistics',
+      ...dealValue('Apex Compliance Reporting (Lost)', 0),
+      stage: 'closed_lost',
+      probability: 0,
+      close_date: cel`daysAgo(110)`,
+      stage_entry_date: cel`daysAgo(110)`,
+      type: 'new_business',
+      forecast_category: 'omitted',
+      lead_source: 'content',
+      loss_reason: 'features',
+      loss_details: 'No native hours-of-service audit trail; the compliance team could not sign off without it.',
+      description: 'Regulatory reporting pack for the fleet compliance team, lost on a missing audit-trail capability.',
     },
     // ─── Curated active pipeline ─────────────────────────────────────
     // Two cards in each active stage make the kanban immediately legible in

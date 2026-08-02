@@ -263,23 +263,66 @@ export const Opportunity = ObjectSchema.create({
       group: 'sales_process',
     }),
 
-    // Win / Loss analysis — required when stage moves to closed_*
+    // ─── Win / Loss analysis ────────────────────────────────────────────
+    //
+    // The reason is captured AT CLOSE, and that is enforced, not requested
+    // (#593). This comment used to read "required when stage moves to
+    // closed_*" while nothing anywhere required anything: both fields were
+    // optional, so every seeded and user-closed deal landed with them empty
+    // and the win/loss widgets below had nothing to draw.
+    //
+    // `requiredWhen`, not a script validation, for the same reason
+    // `crm_lead.duplicate_of_lead` uses it (ADR-0113): "this field must hold a
+    // value when the record looks like X" is exactly a conditional write
+    // contract, the engine evaluates it on insert AND update inside
+    // `evaluateValidationRules`, and it reports against the FIELD — so the form
+    // marks the empty picklist instead of showing a record-level banner. It is
+    // ALSO the only shape the freeze below leaves usable: once a deal is
+    // closed, `opportunity.hook.ts` refuses every user edit outside the
+    // narrative fields, so a reason not captured in the closing write can never
+    // be added afterwards. Close time is the only chance.
+    //
+    // MEASURED, not assumed (the "declared ≠ enforced" family this repo keeps
+    // finding — #621 / #633 / #650 / #651): both predicates reject the write
+    // through a real ObjectQL over a real driver, on insert and on update, and
+    // the record stays at its previous stage. `crm_case`'s
+    // `resolution_required_for_closed` was re-measured the same way first and
+    // is genuinely blocking today. See `test/win-loss-capture.test.ts`.
+    //
+    // ⚠️ `has(...)` is load-bearing. A bare `record.stage == "closed_lost"`
+    // aborts with `No such key` on any merged record that simply omits the
+    // column, and the engine's answer to a predicate that cannot evaluate is to
+    // SKIP it ("requiredWhen for 'loss_reason' failed to evaluate — skipped"),
+    // which would make this read as enforced while requiring nothing at all.
     win_reason: Field.select({
       label: 'Win Reason',
+      description: 'Why this deal was won. Required to close an opportunity as Won.',
       group: 'classification',
+      requiredWhen: P`has(record.stage) && record.stage == "closed_won"`,
       options: [
         { label: 'Better Product', value: 'better_product' },
         { label: 'Better Price', value: 'better_price' },
         { label: 'Existing Relationship', value: 'relationship' },
         { label: 'Better Support', value: 'better_support' },
         { label: 'Best Fit / Features', value: 'best_fit' },
+        // Written by the machine, not chosen by a rep: `quote_on_accepted`
+        // (quote.hook.ts) wins the deal the moment a customer accepts the
+        // quote, and no human is in that write to attribute it. Naming the
+        // automated path is this repo's existing idiom for exactly that split
+        // (`crm_lead.duplicate_status` = machine `suspected` vs human
+        // `confirmed`) and it keeps the rule exception-free: every closed_won
+        // row carries a reason, and an analyst can still tell a CPQ close from
+        // a rep's attribution instead of reading a fabricated "Better Product".
+        { label: 'Quote Accepted', value: 'quote_accepted' },
         { label: 'Other', value: 'other' },
       ],
     }),
 
     loss_reason: Field.select({
       label: 'Loss Reason',
+      description: 'Why this deal was lost. Required to close an opportunity as Lost.',
       group: 'classification',
+      requiredWhen: P`has(record.stage) && record.stage == "closed_lost"`,
       options: [
         { label: 'Price Too High', value: 'price' },
         { label: 'Lost to Competitor', value: 'competitor' },
@@ -293,6 +336,7 @@ export const Opportunity = ObjectSchema.create({
 
     loss_details: Field.textarea({
       label: 'Loss/Win Details',
+      description: 'Free-text context behind the win or loss reason.',
       group: 'classification',
     }),
   },

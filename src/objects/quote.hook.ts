@@ -135,6 +135,14 @@ const quoteAccepted: Hook = {
             id: opportunityId,
             stage: 'closed_won',
             close_date: today,
+            // `crm_opportunity.win_reason` is `requiredWhen` stage is
+            // closed_won (#593), and this write is the ONE close path with no
+            // human in it to attribute the win — so without a value here the
+            // CPQ leg would be rejected by the engine on every accepted quote.
+            // `quote_accepted` names the automated path rather than guessing a
+            // rep's answer; keep the reason the rep already recorded if there
+            // is one.
+            ...(opp.win_reason ? {} : { win_reason: 'quote_accepted' }),
           },
           { where: { id: opportunityId } },
         );

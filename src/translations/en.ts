@@ -357,7 +357,8 @@ export const en: TranslationData = {
           label: 'Win Reason',
           options: {
             better_product: 'Better Product', better_price: 'Better Price', relationship: 'Existing Relationship',
-            better_support: 'Better Support', best_fit: 'Best Fit / Features', other: 'Other',
+            better_support: 'Better Support', best_fit: 'Best Fit / Features',
+            quote_accepted: 'Quote Accepted', other: 'Other',
           },
         },
         loss_reason: {

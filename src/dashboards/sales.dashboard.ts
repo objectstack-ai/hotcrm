@@ -120,8 +120,63 @@ export const SalesDashboard: Dashboard = {
       },
     }),
 
-    // ─── Row 2: Pipeline & Trends ─────────────────────────────────────
-    pipelineByStageFunnelWidget({ x: 0, y: 2, w: 6, h: 4 }),
+    // ─── Row 2: Win / Loss KPIs ───────────────────────────────────────
+    //
+    // The ratio and its two inputs sit side by side ON PURPOSE (#593). A win
+    // rate is the failure mode #614 shipped: a wrong denominator raises no
+    // error, it just prints a plausible percentage. Showing "62%" next to
+    // "8 won" and "5 lost" means a reader can check the arithmetic at a
+    // glance, and a half that silently loses its filter stops being invisible.
+    //
+    // All three windows are the same self-scoped 12 months (`dateRange: false`
+    // so the header's date picker cannot re-window one of them and not the
+    // others — three tiles over three different windows would be worse than
+    // no tiles at all).
+    {
+      // NOTE: no `stage` filter here, and that is deliberate. Both halves of
+      // the ratio come from the DATASET's own measure filters — `won_count`
+      // over closed_won, `decided_count` over closed_won + closed_lost — so
+      // open pipeline is excluded by the measures. A widget-level
+      // `stage: {$in: [...]}` filter would narrow numerator and denominator
+      // alike, which is how a ratio quietly becomes a division by itself.
+      id: 'win_rate_12m',
+      title: 'Win Rate (12M)',
+      description: 'Deals won as a share of all deals settled in the last 12 months',
+      type: 'metric',
+      filter: { close_date: { $gte: '{12_months_ago}' } },
+      filterBindings: { dateRange: false },
+      colorVariant: 'success',
+      dataset: 'opportunity_metrics', values: ['win_rate'],
+      layout: { x: 0, y: 2, w: 4, h: 2 },
+      options: { icon: 'Percent', format: '0%' },
+    },
+    {
+      id: 'won_deals_12m',
+      title: 'Deals Won (12M)',
+      description: 'The numerator of the win rate',
+      type: 'metric',
+      filter: { close_date: { $gte: '{12_months_ago}' } },
+      filterBindings: { dateRange: false },
+      colorVariant: 'blue',
+      dataset: 'opportunity_metrics', values: ['won_count'],
+      layout: { x: 4, y: 2, w: 4, h: 2 },
+      options: { icon: 'Trophy', format: '0,0' },
+    },
+    {
+      id: 'lost_deals_12m',
+      title: 'Deals Lost (12M)',
+      description: 'The other half of the win-rate denominator',
+      type: 'metric',
+      filter: { close_date: { $gte: '{12_months_ago}' } },
+      filterBindings: { dateRange: false },
+      colorVariant: 'orange',
+      dataset: 'opportunity_metrics', values: ['lost_count'],
+      layout: { x: 8, y: 2, w: 4, h: 2 },
+      options: { icon: 'TrendingDown', format: '0,0' },
+    },
+
+    // ─── Row 3: Pipeline & Trends ─────────────────────────────────────
+    pipelineByStageFunnelWidget({ x: 0, y: 4, w: 6, h: 4 }),
     {
       id: 'monthly_revenue_trend',
       title: 'Monthly Revenue Trend',
@@ -131,7 +186,7 @@ export const SalesDashboard: Dashboard = {
       filterBindings: { dateRange: false }, // self-scoped to 12 months — the date picker must not narrow it
       colorVariant: 'success',
       dataset: 'opportunity_metrics', dimensions: ['close_date'], values: ['total_amount'],
-      layout: { x: 6, y: 2, w: 6, h: 4 },
+      layout: { x: 6, y: 4, w: 6, h: 4 },
       chartConfig: {
         type: 'area',
         showLegend: false,
@@ -149,7 +204,7 @@ export const SalesDashboard: Dashboard = {
       options: { dateGranularity: 'month' },
     },
 
-    // ─── Row 3: Performance Breakdown ─────────────────────────────────
+    // ─── Row 4: Performance Breakdown ─────────────────────────────────
     {
       id: 'pipeline_by_forecast_category',
       title: 'Pipeline by Forecast Category',
@@ -158,7 +213,7 @@ export const SalesDashboard: Dashboard = {
       filter: { stage: { $nin: ['closed_won', 'closed_lost'] } },
       colorVariant: 'blue',
       dataset: 'opportunity_metrics', dimensions: ['forecast_category'], values: ['total_amount'],
-      layout: { x: 0, y: 6, w: 6, h: 4 },
+      layout: { x: 0, y: 8, w: 6, h: 4 },
       chartConfig: {
         type: 'horizontal-bar',
         showLegend: false,
@@ -176,7 +231,7 @@ export const SalesDashboard: Dashboard = {
       filter: { stage: { $nin: ['closed_lost'] } },
       colorVariant: 'purple',
       dataset: 'opportunity_metrics', dimensions: ['lead_source'], values: ['total_amount'],
-      layout: { x: 6, y: 6, w: 6, h: 4 },
+      layout: { x: 6, y: 8, w: 6, h: 4 },
       chartConfig: {
         type: 'donut',
         showLegend: true,
@@ -185,7 +240,7 @@ export const SalesDashboard: Dashboard = {
       },
     },
 
-    // ─── Row 4: Rep Leaderboard ───────────────────────────────────────
+    // ─── Row 5: Rep Leaderboard ───────────────────────────────────────
     // A dashboard `table` binds to an analytics cube and aggregates; it cannot
     // list raw deals (ADR-0021). The previous "Top Open Opportunities" table
     // selected only `opp_count` with no dimension — one summary row, not a deal
@@ -200,7 +255,7 @@ export const SalesDashboard: Dashboard = {
       filter: { stage: { $nin: ['closed_won', 'closed_lost'] } },
       colorVariant: 'default',
       dataset: 'opportunity_metrics', dimensions: ['owner'], values: ['total_amount', 'opp_count', 'avg_probability'],
-      layout: { x: 0, y: 10, w: 12, h: 4 },
+      layout: { x: 0, y: 12, w: 12, h: 4 },
       options: {
         columns: [
           { header: 'Owner',         accessorKey: 'owner' },
@@ -216,7 +271,7 @@ export const SalesDashboard: Dashboard = {
       },
     },
 
-    // ─── Row 5: Quota Attainment ──────────────────────────────────────
+    // ─── Row 6: Quota Attainment ──────────────────────────────────────
     // The real per-rep quota data (crm_forecast.quota) surfaced as a table:
     // dashboard chart annotations cannot reference a dataset (static values
     // only), so quota vs. actual gets its own widget instead of a fake line.
@@ -261,7 +316,7 @@ export const SalesDashboard: Dashboard = {
       // this one.
       filter: { period: 'quarter', period_start: '{current_quarter_start}' },
       dataset: 'forecast_metrics', dimensions: ['owner'], values: ['quota_sum', 'closed_sum', 'attainment'],
-      layout: { x: 0, y: 14, w: 12, h: 4 },
+      layout: { x: 0, y: 16, w: 12, h: 4 },
       options: {
         columns: [
           { header: 'Owner',      accessorKey: 'owner' },
@@ -277,7 +332,108 @@ export const SalesDashboard: Dashboard = {
       },
     },
 
-    // ─── Row 6: Pivot — Stage × Lead Source ───────────────────────────
+    // ─── Row 7: Win / Loss analysis ───────────────────────────────────
+    //
+    // Three widgets over the settled half of the pipeline (#593). Each of the
+    // two win-rate breakdowns is a TABLE, not a bar chart, and that is the
+    // whole design: a bar of "67%" is unfalsifiable, whereas a row reading
+    // "Won 2 · Lost 1 · Settled 3 · 67%" carries its own proof. Perturb either
+    // half — win a deal that was lost, or lose one that was won — and three of
+    // those four numbers move. `test/win-loss-capture.test.ts` does exactly
+    // that against the real dataset executor and the real seeds.
+    //
+    // Both tables opt out of the header's `close_date` window
+    // (`dateRange: false`) for the reason the quota table does: a win rate over
+    // "this quarter" on a demo database is computed from whichever one or two
+    // deals happen to have settled inside it, which is noise wearing the
+    // costume of a KPI. Twelve months is the same window the row-2 tiles and
+    // the revenue trend use, so the dashboard tells one consistent story.
+    {
+      id: 'win_rate_by_owner',
+      title: 'Win / Loss by Rep',
+      description: 'Deals won, deals lost and win rate per rep — last 12 months',
+      type: 'table',
+      filter: { close_date: { $gte: '{12_months_ago}' } },
+      filterBindings: { dateRange: false },
+      colorVariant: 'default',
+      dataset: 'opportunity_metrics',
+      dimensions: ['owner'],
+      values: ['won_count', 'lost_count', 'decided_count', 'win_rate', 'won_amount'],
+      layout: { x: 0, y: 20, w: 6, h: 4 },
+      options: {
+        columns: [
+          { header: 'Owner',       accessorKey: 'owner' },
+          { header: 'Won',         accessorKey: 'won_count' },
+          { header: 'Lost',        accessorKey: 'lost_count' },
+          { header: 'Settled',     accessorKey: 'decided_count' },
+          { header: 'Win Rate',    accessorKey: 'win_rate', format: '0%' },
+          { header: 'Won Revenue', accessorKey: 'won_amount', format: '0,0' },
+        ],
+        sortBy: 'decided_count',
+        sortOrder: 'desc',
+        limit: 10,
+        striped: true,
+        density: 'comfortable',
+      },
+    },
+    {
+      id: 'win_rate_by_lead_source',
+      title: 'Win / Loss by Lead Source',
+      description: 'Which sources produce deals that actually close — last 12 months',
+      type: 'table',
+      filter: { close_date: { $gte: '{12_months_ago}' } },
+      filterBindings: { dateRange: false },
+      colorVariant: 'default',
+      dataset: 'opportunity_metrics',
+      dimensions: ['lead_source'],
+      values: ['won_count', 'lost_count', 'decided_count', 'win_rate', 'won_amount'],
+      layout: { x: 6, y: 20, w: 6, h: 4 },
+      options: {
+        columns: [
+          { header: 'Lead Source', accessorKey: 'lead_source' },
+          { header: 'Won',         accessorKey: 'won_count' },
+          { header: 'Lost',        accessorKey: 'lost_count' },
+          { header: 'Settled',     accessorKey: 'decided_count' },
+          { header: 'Win Rate',    accessorKey: 'win_rate', format: '0%' },
+          { header: 'Won Revenue', accessorKey: 'won_amount', format: '0,0' },
+        ],
+        sortBy: 'decided_count',
+        sortOrder: 'desc',
+        limit: 12,
+        striped: true,
+        density: 'comfortable',
+      },
+    },
+    {
+      // The loss-reason breakdown the fields were declared for and never got.
+      //
+      // `loss_reason` is mandatory on every `closed_lost` record (see
+      // crm_opportunity), so this chart has no "unattributed" slice to
+      // apologise for — an empty chart here means no losses in the window,
+      // never "nobody filled the field in".
+      //
+      // Counts, not amounts: the question a loss review asks is "how often did
+      // we lose for this reason", and one large lost deal should not outweigh
+      // five recurring feature gaps. `lost_amount` is declared on the dataset
+      // for the revenue view of the same question.
+      id: 'loss_reason_breakdown',
+      title: 'Why We Lose',
+      description: 'Lost deals by reason — last 12 months',
+      type: 'donut',
+      filter: { stage: 'closed_lost', close_date: { $gte: '{12_months_ago}' } },
+      filterBindings: { dateRange: false },
+      colorVariant: 'orange',
+      dataset: 'opportunity_metrics', dimensions: ['loss_reason'], values: ['opp_count'],
+      layout: { x: 0, y: 24, w: 12, h: 4 },
+      chartConfig: {
+        type: 'donut',
+        showLegend: true,
+        showDataLabels: true,
+        colors: ['#EF4444', '#F59E0B', '#8B5CF6', '#06B6D4', '#4F46E5', '#10B981', '#64748B'],
+      },
+    },
+
+    // ─── Row 9: Pivot — Stage × Lead Source ───────────────────────────
     {
       id: 'pipeline_stage_by_source',
       title: 'Pipeline by Stage × Lead Source',
@@ -286,7 +442,7 @@ export const SalesDashboard: Dashboard = {
       filter: { stage: { $nin: ['closed_won', 'closed_lost'] } },
       colorVariant: 'default',
       dataset: 'opportunity_metrics', dimensions: ['stage', 'lead_source'], values: ['total_amount'],
-      layout: { x: 0, y: 18, w: 12, h: 4 },
+      layout: { x: 0, y: 28, w: 12, h: 4 },
       options: {
         rowField: 'stage',
         columnField: 'lead_source',
