@@ -228,6 +228,15 @@ export const esES: TranslationData = {
         notes: { label: 'Notas' },
         do_not_call: { label: 'No Llamar' },
         email_opt_out: { label: 'Excluir de Correos' },
+        disqualification_reason: {
+          label: 'Motivo de No Calificación',
+          help: 'Obligatorio cuando el estado es No Calificado',
+          options: {
+            not_a_fit: 'No Encaja', no_budget: 'Sin Presupuesto', wrong_persona: 'Perfil Incorrecto',
+            unreachable: 'Ilocalizable', duplicate: 'Duplicado', competitor: 'Competidor',
+            other: 'Otro',
+          },
+        },
         duplicate_of_type: {
           label: 'Duplicado De',
           options: { crm_lead: 'Prospecto', crm_contact: 'Contacto' },

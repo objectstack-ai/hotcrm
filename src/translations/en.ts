@@ -250,6 +250,15 @@ export const en: TranslationData = {
         notes: { label: 'Notes' },
         do_not_call: { label: 'Do Not Call' },
         email_opt_out: { label: 'Email Opt Out' },
+        disqualification_reason: {
+          label: 'Disqualification Reason',
+          help: 'Required when status is Unqualified',
+          options: {
+            not_a_fit: 'Not a Fit', no_budget: 'No Budget', wrong_persona: 'Wrong Persona',
+            unreachable: 'Unreachable', duplicate: 'Duplicate', competitor: 'Competitor',
+            other: 'Other',
+          },
+        },
         duplicate_of_type: {
           label: 'Duplicate Of',
           options: { crm_lead: 'Lead', crm_contact: 'Contact' },
