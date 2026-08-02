@@ -43,8 +43,22 @@ export const CaseEscalationFlow: Flow = {
         // the boolean is_closed suffers the SQLite `1 != true` trap above.
         // `escalated_date == null` additionally keeps a case that was already
         // escalated once (then reopened) from being escalated again.
-        condition: P`record.priority == "critical" && record.escalated_date == null
-          && record.status != "escalated" && record.status != "resolved" && record.status != "closed"`,
+        //
+        // TOTALITY (#633): every `record.x` read carries a `has(record.x)`
+        // guard — see the house-rule block in
+        // `test/flow-condition-totality.test.ts`. Measured end-to-end on
+        // driver-memory: a case BORN critical is stored without an
+        // `escalated_date` column at all, `record.escalated_date == null`
+        // aborted with `No such key: escalated_date`, and this flow never ran
+        // on the very population it exists for. The guards below preserve the
+        // predicate's answer on every shape where it previously had one.
+        // `escalated_date` absent means the same as null ("never escalated");
+        // an absent `status` cannot be a terminal status, so it must not
+        // suppress the escalation.
+        condition: P`has(record.priority) && record.priority == "critical"
+          && (!has(record.escalated_date) || record.escalated_date == null)
+          && (!has(record.status)
+            || (record.status != "escalated" && record.status != "resolved" && record.status != "closed"))`,
       },
     },
     {

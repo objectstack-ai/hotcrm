@@ -33,7 +33,26 @@ export const OpportunityWonAlertFlow: Flow = {
         // claims, approval-status stamps, description tweaks) re-sent the
         // congratulations blast. The trigger forwards `previous` into the
         // condition scope (cf. the engine's record-change context).
-        condition: P`record.stage == "closed_won" && previous.stage != "closed_won" && record.amount > 100000`,
+        // TOTALITY (#633): `has(...)` on every read, plus `!= null` on the
+        // ordering comparison (`has()` passes an explicit null and
+        // `record.amount > 100000` then aborts with
+        // `no such overload: dyn<null> > int`).
+        //
+        // `previous.stage` is guarded FAIL-CLOSED — `has(previous.stage) &&`,
+        // not `!has(previous.stage) ||` — which is the opposite of how
+        // `record.stage` is guarded, deliberately. This term exists solely to
+        // suppress a re-fire, and the failure it was written for (a
+        // congratulations blast to management re-sent on every later edit of a
+        // won deal) is worse than a missed one. When the engine cannot see
+        // what the prior stage was it cannot see a TRANSITION either, so it
+        // must not claim one. In practice `previous` is a full prior row on
+        // every record-after-update; the shape this covers is a bulk
+        // `updateMany`, where ObjectQL never reads a prior row and `previous`
+        // arrives null — and firing one blast per row of a bulk update is
+        // exactly what nobody wants.
+        condition: P`has(record.stage) && record.stage == "closed_won"
+          && has(previous.stage) && previous.stage != "closed_won"
+          && has(record.amount) && record.amount != null && record.amount > 100000`,
       },
     },
     {

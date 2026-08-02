@@ -32,7 +32,19 @@ export const ContactWelcomeFlow: Flow = {
       config: {
         objectName: 'crm_contact',
         triggerType: 'record-after-create',
-        condition: P`record.owner != null && record.email_opt_out != true`,
+        // TOTALITY (#633): every `record.x` read carries a `has(record.x)`
+        // guard — see the house-rule block in
+        // `test/flow-condition-totality.test.ts`. Measured end-to-end on
+        // driver-memory: `owner`'s `os.user.id` default cannot evaluate on a
+        // write that carries no user (seed data, an integration, any system
+        // context), ObjectQL logs `Failed to evaluate default expression` and
+        // stores the row with NO `owner` column — so `record.owner != null`
+        // aborted with `No such key: owner` and no seeded contact ever got a
+        // welcome prompt. `!= null` is not a substitute for `has()`: on an
+        // absent key it aborts exactly like `== "v"` does. An absent
+        // `email_opt_out` means the contact has not opted out.
+        condition: P`has(record.owner) && record.owner != null
+          && (!has(record.email_opt_out) || record.email_opt_out != true)`,
       },
     },
     {

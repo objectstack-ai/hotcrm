@@ -58,8 +58,18 @@ export const OpportunityApprovalFlow: Flow = {
         // freeze hook rejects approval-status writes on closed records, so
         // without this guard the flow opened a locked approval request it
         // could never resolve (lockRecord held the closed record hostage).
-        condition: P`record.amount > 100000 && (record.approval_status == "not_required" || record.approval_status == null)
-          && record.stage != "closed_won" && record.stage != "closed_lost"`,
+        // TOTALITY (#633): `has(...)` on every read, plus `!= null` on the
+        // ordering comparison — `has()` passes an explicit null and
+        // `record.amount > 100000` then aborts with
+        // `no such overload: dyn<null> > int`. Measured total as authored
+        // today (amount/stage are required, approval_status is defaulted), but
+        // that is `crm_opportunity`'s schema doing the work, not the
+        // predicate. An absent `approval_status` reads the same as the null
+        // this condition already tolerates; an absent `stage` is not a settled
+        // stage, so it must not block approval.
+        condition: P`has(record.amount) && record.amount != null && record.amount > 100000
+          && (!has(record.approval_status) || record.approval_status == "not_required" || record.approval_status == null)
+          && (!has(record.stage) || (record.stage != "closed_won" && record.stage != "closed_lost"))`,
       },
     },
     {
