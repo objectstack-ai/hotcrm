@@ -22,8 +22,8 @@ import type { Page } from '@objectstack/spec/ui';
  * Why not embed an inline chat panel? `ai:chat_window` was dropped
  * from objectui (see @object-ui/layout CHANGELOG 5.x). The supported
  * surface is the global floating chatbot mounted by app-shell, which
- * picks up `defaultAgent: 'sales_copilot'` from this app and is
- * launched from the FAB at the bottom-right.
+ * picks up `defaultAgent: 'ask'` from this app and is launched from
+ * the FAB at the bottom-right.
  */
 export const AccountDetailPage = {
   name: 'account_detail_page',

@@ -2,6 +2,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { isDateMacroToken } from '@objectstack/spec/data';
+import { AgentSchema } from '@objectstack/spec/ai';
 import stack from '../objectstack.config';
 
 /**
@@ -1281,5 +1282,71 @@ describe('form views do not declare a dead data provider', () => {
       .filter((v) => !(v.list?.data?.object ?? v.object))
       .map((v) => v.list?.name ?? v.form?.type ?? '(unnamed view)');
     expect(unresolved, `views whose object no longer resolves:\n  ${unresolved.join('\n  ')}`).toEqual([]);
+  });
+});
+
+/**
+ * `App.defaultAgent` is a SURFACE BINDING, not a custom-agent slot.
+ *
+ * ADR-0063 §1/§2: the kernel ships exactly two agents — `ask` (the data
+ * surface, the implicit default) and `build` (authoring surfaces such as
+ * Studio). Tenant/app-package custom agents were withdrawn, and HotCRM's own
+ * app-authored agents were retired in #512; the app's AI capability now ships
+ * as skills, which attach to a platform agent by `surface` affinity.
+ *
+ * Nothing caught the dangling binding this replaces. `App.defaultAgent` is
+ * typed `SnakeCaseIdentifierSchema` — any well-formed snake_case name parses —
+ * so `os validate`, `pnpm build` and the platform's agent lint (which only
+ * walks `stack.agents`) all stayed green while `defaultAgent: 'sales_copilot'`
+ * pointed at an agent that had not existed for months. The failure is silent
+ * and late: `loadAgent()` refuses the non-platform record at chat time, so the
+ * only symptom is the ambient chatbot not answering in a demo.
+ *
+ * The platform set is READ FROM THE SPEC (`AgentSchema.shape.surface`), not
+ * transcribed here — the agent names and the surface names are the same two
+ * tokens, so this guard tracks the contract instead of drifting from it.
+ */
+describe('app AI bindings resolve to a platform agent', () => {
+  const apps: AnyRec[] = (stack as any).apps ?? [];
+
+  /** `['ask', 'build']` — straight off the spec's own surface enum. */
+  const PLATFORM_AGENTS: string[] = (() => {
+    const surface = (AgentSchema as AnyRec).shape.surface;
+    const enumSchema = typeof surface.removeDefault === 'function' ? surface.removeDefault() : surface;
+    return enumSchema.options as string[];
+  })();
+
+  it('the spec still exposes exactly the two platform agents', () => {
+    // Guard the guard: if this introspection ever returns [] the checks below
+    // would pass by asserting nothing (or fail for the wrong reason).
+    expect(PLATFORM_AGENTS).toEqual(['ask', 'build']);
+  });
+
+  it('every app defaultAgent names a platform agent', () => {
+    expect(apps.length, 'no apps found in the stack — the guard is vacuous').toBeGreaterThan(0);
+    const bad: string[] = [];
+    for (const app of apps) {
+      const agent = app.defaultAgent;
+      if (agent === undefined) continue; // omitting the key is legal — `ask` is implicit
+      if (!PLATFORM_AGENTS.includes(agent)) {
+        bad.push(
+          `${app.name}: defaultAgent "${agent}" is not a platform agent ` +
+            `(${PLATFORM_AGENTS.join(' | ')}) — it will not resolve at chat time`,
+        );
+      }
+    }
+    expect(bad, `dangling app agent bindings:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
+  it('the app authors no agents of its own — the surface is skills-only', () => {
+    // ADR-0063 §2. Re-introducing an app agent is what makes a name like
+    // `sales_copilot` look plausible in `defaultAgent` again; skills are the
+    // supported way to deepen an app's AI capability.
+    const agents: AnyRec[] = (stack as any).agents ?? [];
+    expect(
+      agents.map((a) => a.name),
+      'app-authored agents were retired in #512 — author skills instead (ADR-0063 §2)',
+    ).toEqual([]);
+    expect(((stack as any).skills ?? []).length, 'no skills registered').toBeGreaterThan(0);
   });
 });
