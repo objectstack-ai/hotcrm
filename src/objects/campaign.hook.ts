@@ -98,17 +98,21 @@ const campaignCompleted: Hook = {
       return sum + amt;
     }, 0);
 
-    await api.object('crm_campaign').update(id, {
-      num_leads: leadIds.length,
-      num_converted_leads: convertedLeads,
-      num_opportunities: opportunities,
-      num_won_opportunities: wonOpps,
-      // "Total members enrolled" — the single definition of num_sent. The old
-      // `sent || members` under-counted as members progressed past `sent`.
-      num_sent: members,
-      num_responses: responded,
-      actual_revenue: actualRevenue,
-    });
+    await api.object('crm_campaign').update(
+      {
+        id,
+        num_leads: leadIds.length,
+        num_converted_leads: convertedLeads,
+        num_opportunities: opportunities,
+        num_won_opportunities: wonOpps,
+        // "Total members enrolled" — the single definition of num_sent. The old
+        // `sent || members` under-counted as members progressed past `sent`.
+        num_sent: members,
+        num_responses: responded,
+        actual_revenue: actualRevenue,
+      },
+      { where: { id } },
+    );
   },
 };
 

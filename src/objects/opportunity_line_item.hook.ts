@@ -89,7 +89,10 @@ const opportunityAmountRollup: Hook = {
       }
       sum = Math.round(sum * 100) / 100;
       if (sum > 0) {
-        await api.object('crm_opportunity').update(oppId, { amount: sum });
+        await api.object('crm_opportunity').update(
+          { id: oppId, amount: sum },
+          { where: { id: oppId } },
+        );
       }
     }
   },

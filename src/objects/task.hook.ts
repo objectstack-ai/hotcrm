@@ -254,7 +254,10 @@ const taskBubble: Hook = {
     const activityWrite = activityWriteByType[targetType];
     if (!activityWrite) return;
     try {
-      await api.object(targetType).update(targetId, activityWrite);
+      await api.object(targetType).update(
+        { ...activityWrite, id: targetId },
+        { where: { id: targetId } },
+      );
     } catch {
       // Best-effort activity bubble; never break the parent write. No `console`
       // in the L2 hook sandbox (would throw ReferenceError — cf. #471).

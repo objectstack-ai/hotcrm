@@ -102,13 +102,19 @@ const contractActivation: Hook = {
       undefined;
 
     if (id && !input.signed_date && !previous?.signed_date) {
-      await api.object('crm_contract').update(id, { signed_date: new Date().toISOString().slice(0, 10) });
+      await api.object('crm_contract').update(
+        { id, signed_date: new Date().toISOString().slice(0, 10) },
+        { where: { id } },
+      );
     }
 
     if (accountId) {
       const account = await api.object('crm_account').findOne({ where: { id: accountId } });
       if (account && account.type !== 'customer') {
-        await api.object('crm_account').update(accountId, { type: 'customer' });
+        await api.object('crm_account').update(
+          { id: accountId, type: 'customer' },
+          { where: { id: accountId } },
+        );
       }
     }
 

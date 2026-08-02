@@ -168,7 +168,10 @@ const opportunityWonHook: Hook = {
 
     const account = await api.object('crm_account').findOne({ where: { id: accountId } });
     if (account && account.type !== 'customer') {
-      await api.object('crm_account').update(accountId, { type: 'customer' });
+      await api.object('crm_account').update(
+        { id: accountId, type: 'customer' },
+        { where: { id: accountId } },
+      );
     }
 
     const oppId = (typeof input.id === 'string' && input.id) || previous?.id;
