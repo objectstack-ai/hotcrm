@@ -67,6 +67,12 @@
 - name: needs-user-decision
   color: fbca04
   description: Needs the maintainer's call before work proceeds
+- name: "pm:queue"
+  color: 0e8a16
+  description: Ready for the PM dispatch loop
+- name: "pm:dispatched"
+  color: 1d76db
+  description: Dispatched to a dev agent by /pm-dispatch
 - name: skip-changeset
   color: cccccc
   description: PR ships nothing to users (pure CI/docs chore) — changeset gate waived
