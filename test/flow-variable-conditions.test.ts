@@ -733,7 +733,13 @@ describe('the two defects, reproduced end-to-end', () => {
     try {
       const api = b.ql.createContext({ isSystem: true });
       const lead = await api.object('crm_lead').insert({
+        // `company_normalized` is authored here because this harness registers
+        // FLOWS but no hooks — in production `lead_duplicate_check` derives it
+        // from `company` on the insert (#626). Without it the conversion's
+        // account lookup has no filter value and `get_record` refuses to run,
+        // which is a fixture gap, not the defect this test is about.
         first_name: 'Sam', last_name: 'Doe', company: 'Globex',
+        company_normalized: 'globex',
         status: 'qualified', email: 'sam@globex.com',
       });
       const started = await b.engine.execute('lead_conversion', asUser({ recordId: lead.id }));
@@ -757,7 +763,10 @@ describe('the two defects, reproduced end-to-end', () => {
     try {
       const api = b.ql.createContext({ isSystem: true });
       const lead = await api.object('crm_lead').insert({
+        // See the note on the previous test: hook-derived key, hand-authored
+        // because this harness has no hooks (#626).
         first_name: 'Jo', last_name: 'Smith', company: 'Acme',
+        company_normalized: 'acme',
         status: 'qualified', email: 'jo@acme.com',
       });
       const started = await b.engine.execute('lead_conversion', asUser({ recordId: lead.id }));

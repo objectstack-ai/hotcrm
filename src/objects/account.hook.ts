@@ -9,6 +9,8 @@ import type { HookApi } from './_hook-api';
  * - Validates `website` format and `annual_revenue` non-negative.
  * - Projects `billing_address.country` onto the flat `billing_country` column
  *   the territory sharing rules filter on (#621).
+ * - Folds `name` into the `name_normalized` column lead conversion matches
+ *   accounts on (#626).
  * - Refuses to delete a `customer` account that still has open opportunities.
  */
 const accountHook: Hook = {
@@ -66,6 +68,41 @@ const accountHook: Hook = {
             : undefined;
         const normalized = typeof country === 'string' ? country.trim().toUpperCase() : '';
         input.billing_country = normalized === '' ? null : normalized;
+      }
+
+      // ─── Account-name match key (#626) ─────────────────────────────────
+      //
+      // `name_normalized` is the column `lead_conversion` matches accounts on,
+      // and this block is its only writer. It exists because the flow that
+      // reads it cannot compute it: `service-automation`'s template resolver
+      // knows one function form (`NOW()` / `TODAY()`), so `{LOWER(x)}`,
+      // `{TRIM(x)}` and `{x.toLowerCase()}` all resolve to `undefined` — and a
+      // formula field has no physical column to filter on
+      // (`fieldHasColumn(formula) === false`). The canonical form therefore has
+      // to be established HERE, by the producer, exactly as `crm_lead.email`
+      // and `crm_contact.email` are.
+      //
+      // lower + trim + collapse internal whitespace, so "Acme Corp",
+      // "ACME  Corp" and " acme corp " all land on `acme corp`. That is the
+      // whole transform: normalize-then-EXACT. Fuzzy matching is out of scope
+      // (see the field's doc comment on `crm_account`).
+      //
+      // Recompute ONLY when the write carries the name — a partial update that
+      // never mentions `name` must leave the key alone, or every unrelated edit
+      // would blank it and make the account invisible to conversion. `name` is
+      // required + notNull, so on insert it is always present; the null branch
+      // is for a whitespace-only value the validator would reject anyway.
+      //
+      // Written inline, not as a module-scope helper, for the same reason as
+      // the block above: hook bodies lower to metadata-only (no free
+      // identifiers), which `test/action-sandbox.test.ts` enforces.
+      if ('name' in input) {
+        const rawName = input.name;
+        const normalizedName =
+          typeof rawName === 'string'
+            ? rawName.trim().toLowerCase().replace(/\s+/g, ' ')
+            : '';
+        input.name_normalized = normalizedName === '' ? null : normalizedName;
       }
     }
 

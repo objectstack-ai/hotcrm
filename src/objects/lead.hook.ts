@@ -247,7 +247,7 @@ const leadHook: Hook = {
  * answered a returning visitor with a save error. That constraint is gone; a
  * re-captured address is now recorded as a fact instead of refused.
  *
- * Two jobs, both `before`-phase so the values land in the same write:
+ * Three jobs, all `before`-phase so the values land in the same write:
  *
  * 1. **Normalize `email`** (trim + lowercase), exactly as `contact_integrity`
  *    does on `crm_contact`. This is what makes the dedupe lookup below a plain
@@ -257,6 +257,13 @@ const leadHook: Hook = {
  *    established by the PRODUCER at write time rather than worked around by
  *    every reader. Also on update: an edit that reintroduced mixed case would
  *    silently make the record invisible to every later dedupe.
+ *
+ * 1b. **Fold `company` into `company_normalized`** (#626) — a SEPARATE column,
+ *    not an in-place rewrite, because `company` is the display value the
+ *    conversion flow copies onto the account it creates. It is the lead half of
+ *    the pair `crm_account.name_normalized` completes, and it exists for the
+ *    same reason as the email fold: the reader (a flow template) can compare
+ *    two stored columns but cannot compute either one.
  *
  * 2. **Link a repeated address to the record it repeats** — on insert only.
  *    An existing `crm_contact` wins over an open lead: the prospect who already
@@ -285,7 +292,7 @@ const leadDuplicateCheckHook: Hook = {
   events: ['beforeInsert', 'beforeUpdate'],
   priority: 300,
   description:
-    'Normalize lead email; flag a re-captured address as a suspected duplicate of the record it repeats.',
+    'Normalize lead email and company match key; flag a re-captured address as a suspected duplicate of the record it repeats.',
   handler: async (ctx: HookContext) => {
     const { event, input } = ctx;
 
@@ -303,6 +310,28 @@ const leadDuplicateCheckHook: Hook = {
       input.email = input.email.trim().toLowerCase();
     }
     const email = typeof input.email === 'string' ? input.email : '';
+
+    // 1b. Canonical COMPANY, into its own column (#626). Same doctrine as the
+    //     email above — the canonical form is established by the producer at
+    //     write time — but it cannot be done in place: `company` is the display
+    //     value and is copied verbatim onto the account `lead_conversion`
+    //     creates, so folding it would ship "acme corp" as the account name.
+    //     `crm_account.name_normalized` is the other half of the pair; the flow
+    //     compares the two columns because it can compute neither
+    //     (`resolveToken` knows only `NOW()` / `TODAY()`).
+    //
+    //     Runs before the insert-only early return below, so an edit that
+    //     rewrites `company` re-folds the key instead of leaving a stale one.
+    //     Absent key ⇒ untouched: a partial update that never mentions
+    //     `company` must not blank the match key.
+    if ('company' in input) {
+      const rawCompany = input.company;
+      const normalizedCompany =
+        typeof rawCompany === 'string'
+          ? rawCompany.trim().toLowerCase().replace(/\s+/g, ' ')
+          : '';
+      input.company_normalized = normalizedCompany === '' ? null : normalizedCompany;
+    }
 
     if (event !== 'beforeInsert' || !email) return;
 

@@ -78,9 +78,23 @@ async function runConversion(
   return { started, resumed };
 }
 
+/**
+ * Fold a name the way the producer hooks do (#626).
+ *
+ * This harness has no hooks — it writes rows straight into the store — so the
+ * fixtures have to carry the derived match keys that `lead_duplicate_check` and
+ * `account_protection` stamp on every real write. Without them the flow's
+ * account lookup has no value to filter on and `get_record` refuses to run.
+ * The hook-owned columns themselves are exercised in
+ * `test/account-name-normalized-match.test.ts`, which runs the real handlers.
+ */
+const fold = (value: string): string => value.trim().toLowerCase().replace(/\s+/g, ' ');
+
 const seedLead = (data: ReturnType<typeof makeDataEngine>, over: Rec = {}) => {
+  const company = (over.company as string) ?? 'Globex Industries';
   const lead = {
-    id: 'lead_1', company: 'Globex Industries', email: 'joe@globex.example.com',
+    id: 'lead_1', company, company_normalized: fold(company),
+    email: 'joe@globex.example.com',
     first_name: 'Joe', last_name: 'Green', phone: '555', title: 'Buyer',
     lead_source: 'web', is_converted: false, status: 'qualified', ...over,
   };
@@ -111,7 +125,10 @@ describe('lead_conversion flow — runtime', () => {
   it('REUSES an existing account with the same company (no duplicate)', async () => {
     const data = makeDataEngine();
     seedLead(data);
-    data.store.crm_account = [{ id: 'acc_existing', name: 'Globex Industries', is_active: true }];
+    data.store.crm_account = [{
+      id: 'acc_existing', name: 'Globex Industries',
+      name_normalized: fold('Globex Industries'), is_active: true,
+    }];
     const engine = buildEngine(data);
     await runConversion(engine, 'lead_1');
 
@@ -125,7 +142,10 @@ describe('lead_conversion flow — runtime', () => {
   it('REUSES an existing contact (same email in the account) — no duplicate', async () => {
     const data = makeDataEngine();
     seedLead(data);
-    data.store.crm_account = [{ id: 'acc_existing', name: 'Globex Industries', is_active: true }];
+    data.store.crm_account = [{
+      id: 'acc_existing', name: 'Globex Industries',
+      name_normalized: fold('Globex Industries'), is_active: true,
+    }];
     data.store.crm_contact = [{
       id: 'con_existing', email: 'joe@globex.example.com', crm_account: 'acc_existing',
       first_name: 'Joe', last_name: 'Green',

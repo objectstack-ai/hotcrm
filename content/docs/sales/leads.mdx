@@ -94,7 +94,7 @@ When a lead is qualified, click **Convert**. A small form pops up asking:
 
 The system then, in a single step:
 
-1. Creates an **Account** from the lead's company information.
+1. Creates an **Account** from the lead's company information — or reuses the one you already have. The match ignores capitalisation and extra spaces, so a lead for `ACME  Corp` lands on your existing `Acme Corp` instead of creating a second account. It is not a fuzzy match: `Acme Corp` and `Acme Corporation` are still two different companies.
 2. Creates a **Contact** from the lead's person information, attached to that account, marked as primary.
 3. *(Optional)* Creates an **Opportunity** in the *Prospecting* stage with a 90-day close date.
 4. Marks the lead as **Converted** and locks it.
