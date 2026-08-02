@@ -2,6 +2,27 @@
 <!-- Archived 2026-02 snapshot — references planning docs that have since been
      removed. Frozen for history; not link-checked. -->
 
+# ⚠️ RETIRED ARCHITECTURE — DO NOT USE THIS DOCUMENT TO EVALUATE HotCRM
+
+> **This document describes a pre-2.x HotCRM that no longer exists.** It was written
+> against a multi-package (`packages/*`) architecture of ~148 business objects, and it
+> marks features as "✅ Implemented" — `sla_policy`, `queue`, `email_to_case`,
+> `pricebook`, four industry verticals, ten connectors, a community portal — **none of
+> which exist in the current tree**. Its headline claim of *~95% Salesforce feature
+> parity* is therefore not a statement about the shipping product.
+>
+> **What HotCRM actually is today:** a single ObjectStack marketplace app built from a
+> flat `src/{type}/` tree — **15 business objects**, 23 flows, 13 actions, 6 AI skills,
+> 4 dashboards, 8 datasets, 6 permission profiles, 12 positions, 9 sharing rules, and
+> 4 locale bundles. See the [README](../../../README.md) for the current product and
+> [docs/ARCHITECTURE.md](../../ARCHITECTURE.md) for the current architecture.
+>
+> This file is kept **only as a historical record** of the direction the project took
+> in February 2026 and later abandoned. Nothing below it is maintained, verified, or
+> a commitment.
+
+---
+
 # HotCRM vs Salesforce: Deep Feature Comparison
 
 > **Version**: 3.0  

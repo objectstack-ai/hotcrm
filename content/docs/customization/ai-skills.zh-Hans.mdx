@@ -1,11 +1,15 @@
 ---
 title: AI Skills
-description: 新增 Copilot skills，并接入 HotCRM agents。
+description: 新增 AI skills，并注册到 HotCRM stack。
 ---
 
 # AI Skills
 
-AI skills 位于 `src/skills/`，并从 `src/skills/index.ts` 注册。Agents 位于 `src/agents/`。
+AI skills 位于 `src/skills/`，并从 `src/skills/index.ts` 注册。
+
+HotCRM **不定义任何自己的 agent** —— 不存在 `src/agents/` 目录。Skills 附着在每个
+ObjectStack 环境已自带的平台助手（`ask`）之上。把 skill 注册进 `allSkills` 就是全部
+的接线工作。
 
 ## 新增 skill
 
@@ -24,26 +28,25 @@ account and contract records, summarize risk, and draft a concise
 });
 ```
 
-导出：
+## 注册
+
+导出该 skill 并把它加入 `allSkills` —— 这个数组正是 `objectstack.config.ts` 传给
+`defineStack({ skills })` 的内容：
 
 ```ts
 // src/skills/index.ts
 export { RenewalPitchSkill } from './renewal_pitch.skill.js';
+
+import { RenewalPitchSkill } from './renewal_pitch.skill.js';
+
+export const allSkills: Skill[] = [
+  // …已有的 skills
+  RenewalPitchSkill,
+];
 ```
 
-## 接入 agent
-
-```ts
-// src/agents/sales-copilot.agent.ts
-skills: [
-  'live_data',
-  'lead_qualification',
-  'email_drafting',
-  'revenue_forecasting',
-  'customer_360',
-  'renewal_pitch',
-],
-```
+若希望该 skill 只在特定记录上激活（而非处处可用），在它上面声明 `triggerConditions`
+即可，例如 `{ field: 'objectName', operator: 'eq', value: 'crm_contract' }`。
 
 ## 验证
 
