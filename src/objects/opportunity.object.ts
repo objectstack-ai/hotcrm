@@ -335,20 +335,28 @@ export const Opportunity = ObjectSchema.create({
   // (see validations[] below). 7.7 removed the top-level `stateMachines` key.
 
   // Validation Rules
+  //
+  // Predicates below are TOTAL: every `record.x` read is `has()`-guarded, so the
+  // rule returns a verdict even when the merged record has no such key. See
+  // AGENTS.md "Validation predicates must be TOTAL" and
+  // test/object-validation-predicates.test.ts, which fails the build otherwise.
   validations: [
     {
       name: 'close_date_future',
       type: 'script',
       severity: 'warning',
       message: 'Close date should not be in the past unless opportunity is closed',
-      condition: P`record.close_date != null && record.close_date < today() && record.stage != "closed_won" && record.stage != "closed_lost"`,
+      // An absent `stage` key means "no stage recorded", which is not a closed
+      // stage — hence `!has(record.stage) || (…)` rather than a leading
+      // `has(record.stage) &&`, which would suppress the warning instead.
+      condition: P`has(record.close_date) && record.close_date != null && record.close_date < today() && (!has(record.stage) || (record.stage != "closed_won" && record.stage != "closed_lost"))`,
     },
     {
       name: 'amount_positive',
       type: 'script',
       severity: 'error',
       message: 'Amount must be greater than zero',
-      condition: P`record.amount != null && record.amount <= 0`,
+      condition: P`has(record.amount) && record.amount != null && record.amount <= 0`,
     },
     {
       // Migrated from the removed top-level `stateMachines` key (OpportunityStateMachine).

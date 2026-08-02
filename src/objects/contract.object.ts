@@ -229,13 +229,18 @@ export const Contract = ObjectSchema.create({
   },
   
   // Validation Rules
+  //
+  // Predicates below are TOTAL: every `record.x` read is `has()`-guarded, so the
+  // rule returns a verdict even when the merged record has no such key. See
+  // AGENTS.md "Validation predicates must be TOTAL" and
+  // test/object-validation-predicates.test.ts, which fails the build otherwise.
   validations: [
     {
       name: 'end_after_start',
       type: 'script',
       severity: 'error',
       message: 'End Date must be after Start Date',
-      condition: P`record.end_date != null && record.start_date != null && record.end_date <= record.start_date`,
+      condition: P`has(record.end_date) && record.end_date != null && has(record.start_date) && record.start_date != null && record.end_date <= record.start_date`,
     },
     // NOTE: the `valid_contract_term` warning (months-between term check) was
     // dropped in the 9.8.0 upgrade — its CEL predicate used `monthsBetween()`,

@@ -274,27 +274,31 @@ export const Task = ObjectSchema.create({
   
   // Removed: list_views and form_views belong in UI configuration, not object definition
   
+  // Predicates below are TOTAL: every `record.x` read is `has()`-guarded, so the
+  // rule returns a verdict even when the merged record has no such key. See
+  // AGENTS.md "Validation predicates must be TOTAL" and
+  // test/object-validation-predicates.test.ts, which fails the build otherwise.
   validations: [
     {
       name: 'completed_date_required',
       type: 'script',
       severity: 'error',
       message: 'Completed date is required when status is Completed',
-      condition: P`record.status == "completed" && isBlank(record.completed_date)`,
+      condition: P`has(record.status) && record.status == "completed" && (!has(record.completed_date) || isBlank(record.completed_date))`,
     },
     {
       name: 'recurrence_fields_required',
       type: 'script',
       severity: 'error',
       message: 'Recurrence type is required for recurring tasks',
-      condition: P`record.is_recurring == true && isBlank(record.recurrence_type)`,
+      condition: P`has(record.is_recurring) && record.is_recurring == true && (!has(record.recurrence_type) || isBlank(record.recurrence_type))`,
     },
     {
       name: 'related_to_required',
       type: 'script',
       severity: 'warning',
       message: 'At least one related record should be selected',
-      condition: P`isBlank(record.related_to_account) && isBlank(record.related_to_contact) && isBlank(record.related_to_opportunity) && isBlank(record.related_to_lead) && isBlank(record.related_to_case)`,
+      condition: P`(!has(record.related_to_account) || isBlank(record.related_to_account)) && (!has(record.related_to_contact) || isBlank(record.related_to_contact)) && (!has(record.related_to_opportunity) || isBlank(record.related_to_opportunity)) && (!has(record.related_to_lead) || isBlank(record.related_to_lead)) && (!has(record.related_to_case) || isBlank(record.related_to_case))`,
     },
   ],
   

@@ -269,6 +269,11 @@ export const Campaign = ObjectSchema.create({
   },
   
   // Validation Rules
+  //
+  // Predicates below are TOTAL: every `record.x` read is `has()`-guarded, so the
+  // rule returns a verdict even when the merged record has no such key. See
+  // AGENTS.md "Validation predicates must be TOTAL" and
+  // test/object-validation-predicates.test.ts, which fails the build otherwise.
   validations: [
     {
       name: 'end_after_start',
@@ -278,14 +283,14 @@ export const Campaign = ObjectSchema.create({
       // `<=`, not `<`: the message promises "after", so a campaign that ends
       // the day it starts is a violation. Matches `crm_contract`'s twin rule
       // and `crm_forecast.period_end_after_start` (#514 item 12).
-      condition: P`record.end_date != null && record.start_date != null && record.end_date <= record.start_date`,
+      condition: P`has(record.end_date) && record.end_date != null && has(record.start_date) && record.start_date != null && record.end_date <= record.start_date`,
     },
     {
       name: 'actual_cost_within_budget',
       type: 'script',
       severity: 'warning',
       message: 'Actual Cost exceeds Budgeted Cost',
-      condition: P`record.actual_cost != null && record.budgeted_cost != null && record.actual_cost > record.budgeted_cost`,
+      condition: P`has(record.actual_cost) && record.actual_cost != null && has(record.budgeted_cost) && record.budgeted_cost != null && record.actual_cost > record.budgeted_cost`,
     },
   ],
   

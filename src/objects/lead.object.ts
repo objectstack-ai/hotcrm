@@ -393,13 +393,17 @@ export const Lead = ObjectSchema.create({
   
   // Removed: list_views and form_views belong in UI configuration, not object definition
   
+  // Predicates below are TOTAL: every `record.x` read is `has()`-guarded, so the
+  // rule returns a verdict even when the merged record has no such key. See
+  // AGENTS.md "Validation predicates must be TOTAL" and
+  // test/object-validation-predicates.test.ts, which fails the build otherwise.
   validations: [
     {
       name: 'email_required',
       type: 'script',
       severity: 'error',
       message: 'Email is required',
-      condition: P`isBlank(record.email)`,
+      condition: P`!has(record.email) || isBlank(record.email)`,
     },
     {
       // The field description has promised "Required when status is
@@ -412,7 +416,7 @@ export const Lead = ObjectSchema.create({
       type: 'script',
       severity: 'error',
       message: 'Disqualification reason is required when a lead is Unqualified',
-      condition: P`record.status == "unqualified" && isBlank(record.disqualification_reason)`,
+      condition: P`has(record.status) && record.status == "unqualified" && (!has(record.disqualification_reason) || isBlank(record.disqualification_reason))`,
     },
     {
       // "Disqualified as a duplicate" has to name the survivor (#598).

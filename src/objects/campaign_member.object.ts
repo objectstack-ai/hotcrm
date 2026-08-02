@@ -118,13 +118,17 @@ export const CampaignMember = ObjectSchema.create({
     }),
   },
 
+  // Predicates below are TOTAL: every `record.x` read is `has()`-guarded, so the
+  // rule returns a verdict even when the merged record has no such key. See
+  // AGENTS.md "Validation predicates must be TOTAL" and
+  // test/object-validation-predicates.test.ts, which fails the build otherwise.
   validations: [
     {
       name: 'lead_or_contact_required',
       type: 'script',
       severity: 'error',
       message: 'A campaign member must reference either a Lead or a Contact',
-      condition: P`isBlank(record.crm_lead) && isBlank(record.crm_contact)`,
+      condition: P`(!has(record.crm_lead) || isBlank(record.crm_lead)) && (!has(record.crm_contact) || isBlank(record.crm_contact))`,
     },
   ],
 });

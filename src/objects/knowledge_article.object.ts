@@ -206,20 +206,24 @@ export const KnowledgeArticle = ObjectSchema.create({
     apiMethods: ['get', 'list', 'create', 'update', 'delete'],
   },
 
+  // Predicates below are TOTAL: every `record.x` read is `has()`-guarded, so the
+  // rule returns a verdict even when the merged record has no such key. See
+  // AGENTS.md "Validation predicates must be TOTAL" and
+  // test/object-validation-predicates.test.ts, which fails the build otherwise.
   validations: [
     {
       name: 'published_requires_body',
       type: 'script',
       severity: 'error',
       message: 'Articles cannot be published without a body.',
-      condition: P`record.status == "published" && (record.body == null || record.body == "")`,
+      condition: P`has(record.status) && record.status == "published" && (!has(record.body) || record.body == null || record.body == "")`,
     },
     {
       name: 'published_requires_summary',
       type: 'script',
       severity: 'warning',
       message: 'Published articles should have a summary for search results and AI citations.',
-      condition: P`record.status == "published" && (record.summary == null || record.summary == "")`,
+      condition: P`has(record.status) && record.status == "published" && (!has(record.summary) || record.summary == null || record.summary == "")`,
     },
   ],
 });

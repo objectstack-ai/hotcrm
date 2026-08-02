@@ -228,20 +228,25 @@ export const Quote = ObjectSchema.create({
   },
   
   // Validation Rules
+  //
+  // Predicates below are TOTAL: every `record.x` read is `has()`-guarded, so the
+  // rule returns a verdict even when the merged record has no such key. See
+  // AGENTS.md "Validation predicates must be TOTAL" and
+  // test/object-validation-predicates.test.ts, which fails the build otherwise.
   validations: [
     {
       name: 'expiration_after_quote',
       type: 'script',
       severity: 'error',
       message: 'Expiration Date must be after Quote Date',
-      condition: P`record.expiration_date != null && record.quote_date != null && record.expiration_date <= record.quote_date`,
+      condition: P`has(record.expiration_date) && record.expiration_date != null && has(record.quote_date) && record.quote_date != null && record.expiration_date <= record.quote_date`,
     },
     {
       name: 'valid_discount',
       type: 'script',
       severity: 'error',
       message: 'Discount cannot exceed 100%',
-      condition: P`record.discount != null && record.discount > 100`,
+      condition: P`has(record.discount) && record.discount != null && record.discount > 100`,
     },
     {
       // #575 B4. `crm_quote` had a full lifecycle vocabulary and no transition
