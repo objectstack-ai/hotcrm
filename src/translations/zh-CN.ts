@@ -297,6 +297,18 @@ export const zhCN: TranslationData = {
         notes: { label: '备注' },
         do_not_call: { label: '禁止致电' },
         email_opt_out: { label: '拒收邮件' },
+        duplicate_of_type: {
+          label: '重复于',
+          options: { crm_lead: '线索', crm_contact: '联系人' },
+        },
+        duplicate_of_lead: { label: '重复的线索' },
+        duplicate_of_contact: { label: '重复的联系人' },
+        duplicate_status: {
+          // 疑似 = 录入时自动标记;已确认 = 人工核对后的判定。两者是同一
+          // 判断的两个阶段,所以共用一个字段而不是各占一套链接字段。
+          label: '重复状态',
+          options: { suspected: '疑似重复', confirmed: '已确认重复' },
+        },
       },
       _views: {
         all_leads: { label: '全部线索' },
@@ -306,6 +318,7 @@ export const zhCN: TranslationData = {
         my_leads: { label: '我的线索' },
         high_priority: { label: '高优先级' },
         hot_leads: { label: '🔥 高热度线索' },
+        suspected_duplicates: { label: '疑似重复线索' },
       },
       _sections: {
         // Detail-page `record:details` section names (lead_detail.page.ts)

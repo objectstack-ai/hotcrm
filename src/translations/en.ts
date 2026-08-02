@@ -246,6 +246,16 @@ export const en: TranslationData = {
         notes: { label: 'Notes' },
         do_not_call: { label: 'Do Not Call' },
         email_opt_out: { label: 'Email Opt Out' },
+        duplicate_of_type: {
+          label: 'Duplicate Of',
+          options: { crm_lead: 'Lead', crm_contact: 'Contact' },
+        },
+        duplicate_of_lead: { label: 'Duplicate Of Lead' },
+        duplicate_of_contact: { label: 'Duplicate Of Contact' },
+        duplicate_status: {
+          label: 'Duplicate Status',
+          options: { suspected: 'Suspected', confirmed: 'Confirmed' },
+        },
       },
       _views: {
         all_leads: { label: 'All Leads' },
@@ -254,6 +264,7 @@ export const en: TranslationData = {
         gallery_view: { label: 'Lead Cards' },
         my_leads: { label: 'My Leads' },
         high_priority: { label: 'High Priority' },
+        suspected_duplicates: { label: 'Suspected Duplicates' },
       },
       _actions: {
         convert_lead: {

@@ -4,6 +4,46 @@ import { P } from '@objectstack/spec';
 import { defineView } from '@objectstack/spec/ui';
 
 /**
+ * The duplicate-link block (#598), spread into every form that offers
+ * `disqualification_reason`.
+ *
+ * `duplicate_disqualification_requires_survivor` on `crm_lead` rejects a lead
+ * closed as "Duplicate" that does not name the record it duplicates and confirm
+ * the match. So the same rule the `disqualification_reason` field itself follows
+ * applies one level down: a form that lets a user PICK "Duplicate" must also let
+ * them satisfy it, or the save fails with an error the form gives no way to
+ * clear. Declared once and reused rather than retyped eight times — the copies
+ * would drift, and a form that quietly lost the block is exactly the failure
+ * this shape is meant to make impossible.
+ *
+ * The two lookups mirror the object's `requiredWhen` predicates: each appears
+ * only when `duplicate_of_type` names its object.
+ */
+const DUPLICATE_LINK_FIELDS = [
+  {
+    field: 'duplicate_of_type',
+    required: true,
+    visibleOn: 'disqualification_reason == "duplicate"',
+  },
+  {
+    field: 'duplicate_of_lead',
+    required: true,
+    visibleOn: 'duplicate_of_type == "crm_lead"',
+  },
+  {
+    field: 'duplicate_of_contact',
+    required: true,
+    visibleOn: 'duplicate_of_type == "crm_contact"',
+  },
+  {
+    field: 'duplicate_status',
+    required: true,
+    visibleOn: 'disqualification_reason == "duplicate"',
+    helpText: 'Confirmed means a human checked the two records and they are the same person.',
+  },
+];
+
+/**
  * Lead Views - Comprehensive UI Showcase
  * 
  * This file demonstrates:
@@ -169,6 +209,7 @@ export const LeadViews = defineView({
             required: true,
             visibleOn: 'status == "unqualified"',
           },
+          ...DUPLICATE_LINK_FIELDS,
         ],
       },
       {
@@ -299,6 +340,38 @@ export const LeadViews = defineView({
     },
 
     /**
+     * Suspected Duplicates — the review queue behind the intake flag (#598).
+     *
+     * `lead_duplicate_check` marks a re-captured email `suspected` and links it
+     * to the record it repeats. Without a place to SEE that set, the flag would
+     * be a column nobody reads: the reviewer opens this queue, compares the two
+     * records, and either clears the flag or disqualifies the lead as a
+     * confirmed duplicate. `confirmed` rows drop out of the queue, so it drains.
+     */
+    suspected_duplicates: {
+      name: 'suspected_duplicates',
+      type: 'grid',
+      label: 'Suspected Duplicates',
+      data: { provider: 'object', object: 'crm_lead' },
+      columns: [
+        'full_name', 'company', 'email',
+        'duplicate_of_type', 'duplicate_of_lead', 'duplicate_of_contact',
+        'status', 'owner',
+      ],
+      filter: [
+        { field: 'duplicate_status', operator: 'equals', value: 'suspected' },
+      ],
+      // Oldest suspicion first: an unreviewed duplicate is a second rep working
+      // the same person, so the queue is worked front to back.
+      sort: [{ field: 'created_at', order: 'asc' }],
+      emptyState: {
+        title: 'No Suspected Duplicates',
+        message: 'Nothing to review — every re-captured email has been checked.',
+        icon: 'copy',
+      },
+    },
+
+    /**
      * Kanban Board View
      */
     kanban_by_status: {
@@ -399,6 +472,7 @@ export const LeadViews = defineView({
               required: true,
               visibleOn: 'status == "unqualified"',
             },
+            ...DUPLICATE_LINK_FIELDS,
           ],
         },
       ],
@@ -441,6 +515,7 @@ export const LeadViews = defineView({
               required: true,
               visibleOn: 'status == "unqualified"',
             },
+            ...DUPLICATE_LINK_FIELDS,
           ],
         },
         {
@@ -511,6 +586,7 @@ export const LeadViews = defineView({
               required: true,
               visibleOn: 'status == "unqualified"',
             },
+            ...DUPLICATE_LINK_FIELDS,
             { field: 'rating', widget: 'star_rating' },
             'lead_source',
             {
@@ -559,6 +635,7 @@ export const LeadViews = defineView({
               required: true,
               visibleOn: 'status == "unqualified"',
             },
+            ...DUPLICATE_LINK_FIELDS,
           ],
         },
         {
@@ -611,6 +688,7 @@ export const LeadViews = defineView({
               required: true,
               visibleOn: 'status == "unqualified"',
             },
+            ...DUPLICATE_LINK_FIELDS,
           ],
         },
       ],
@@ -652,6 +730,7 @@ export const LeadViews = defineView({
               required: true,
               visibleOn: 'status == "unqualified"',
             },
+            ...DUPLICATE_LINK_FIELDS,
             {
               field: 'notes',
               placeholder: 'Add notes about this status change',
@@ -769,6 +848,7 @@ export const LeadViews = defineView({
               required: true,
               visibleOn: 'status == "unqualified"',
             },
+            ...DUPLICATE_LINK_FIELDS,
             {
               field: 'notes',
               colSpan: 2,

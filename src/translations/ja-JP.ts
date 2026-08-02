@@ -224,6 +224,16 @@ export const jaJP: TranslationData = {
         notes: { label: 'メモ' },
         do_not_call: { label: '電話拒否' },
         email_opt_out: { label: 'メール配信停止' },
+        duplicate_of_type: {
+          label: '重複対象',
+          options: { crm_lead: 'リード', crm_contact: '連絡先' },
+        },
+        duplicate_of_lead: { label: '重複リード' },
+        duplicate_of_contact: { label: '重複連絡先' },
+        duplicate_status: {
+          label: '重複ステータス',
+          options: { suspected: '重複の疑い', confirmed: '重複確定' },
+        },
       },
       _views: {
         all_leads: { label: '全リード' },
@@ -232,6 +242,7 @@ export const jaJP: TranslationData = {
         gallery_view: { label: 'リードカード' },
         my_leads: { label: '私のリード' },
         high_priority: { label: '優先度高' },
+        suspected_duplicates: { label: '重複の疑いがあるリード' },
       },
       _actions: {
         convert_lead: {

@@ -69,6 +69,22 @@ You can also set a manual **star rating (0-5)** as a human override:
 
 > An admin can adjust the scoring weights — see [Administration › Automation](/docs/administration/automation).
 
+## Duplicate leads
+
+The same person enquiring twice is normal, not an error. A returning prospect who fills in the web form again — or a trade-show list that overlaps one you already imported — creates a **second lead**, and HotCRM records the relationship instead of refusing the record.
+
+When a lead arrives with an email address already in the system, it is saved with:
+
+- **Duplicate Status = Suspected** — a machine's guess, nothing has been decided.
+- **Duplicate Of** — the record it appears to repeat: an existing **Contact** if the person already became one, otherwise the **oldest open Lead** with that address. Every re-submission points at the same original, so a cluster is one list, not a chain.
+
+Work them from the **Suspected Duplicates** view on the Leads tab. Open the pair, compare them, and then either:
+
+- **It's a new enquiry from a known person** — clear Duplicate Status and work the lead normally. A returning prospect with a fresh budget is a real opportunity.
+- **It's the same enquiry twice** — set the lead to *Unqualified* with the reason **Duplicate**. The form then requires you to name the surviving record and set Duplicate Status to **Confirmed**; the lead cannot be closed as a duplicate without saying what survives it, so the disqualification report always links to something you can open.
+
+> Anonymous Web-to-Lead submissions are always accepted. If the public form cannot check for existing records (it deliberately has no read access to your CRM data), the lead lands unflagged — review it from the normal lead queue.
+
 ## Converting a qualified lead
 
 When a lead is qualified, click **Convert**. A small form pops up asking:

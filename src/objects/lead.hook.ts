@@ -9,6 +9,7 @@ import type { HookApi } from './_hook-api';
  * - Auto-scores incoming leads into `rating` (1-5) using industry/title/email/phone weights.
  * - Refuses edits to a converted lead.
  * - When status flips to `qualified`, schedules a follow-up `crm_task` for the current user.
+ * - Normalizes `email` and flags a re-captured address as a suspected duplicate.
  */
 
 // NB: the scoring constants + computeRating live INSIDE lead_automation's
@@ -147,6 +148,16 @@ const leadHook: Hook = {
         delete (input as Record<string, unknown>).converted_opportunity;
         delete (input as Record<string, unknown>).converted_date;
         delete (input as Record<string, unknown>).owner;
+        // Same reasoning for the duplicate link (#598): a submitter who can
+        // post `duplicate_status: 'confirmed'` can switch OFF the intake
+        // dedupe for their own submission (`lead_duplicate_check` stands down
+        // on a record that already carries a verdict) and park a link to any
+        // record id they care to guess. Guests state facts about themselves,
+        // never about the pipeline.
+        delete (input as Record<string, unknown>).duplicate_of_type;
+        delete (input as Record<string, unknown>).duplicate_of_lead;
+        delete (input as Record<string, unknown>).duplicate_of_contact;
+        delete (input as Record<string, unknown>).duplicate_status;
       }
 
       if (typeof input.rating !== 'number') {
@@ -228,4 +239,141 @@ const leadHook: Hook = {
   },
 };
 
-export default [leadAutoAssignHook, leadHook];
+/**
+ * Soft lead dedupe (#598).
+ *
+ * `crm_lead.email` used to carry a hard `unique` constraint, so a prospect who
+ * enquired twice was REJECTED by the database — the public Web-to-Lead form
+ * answered a returning visitor with a save error. That constraint is gone; a
+ * re-captured address is now recorded as a fact instead of refused.
+ *
+ * Two jobs, both `before`-phase so the values land in the same write:
+ *
+ * 1. **Normalize `email`** (trim + lowercase), exactly as `contact_integrity`
+ *    does on `crm_contact`. This is what makes the dedupe lookup below a plain
+ *    equality match: there is no case-insensitive predicate to lean on
+ *    (ObjectQL's `$regex` compiles to a LIKE *substring* on SQL, which would
+ *    match `a@b.com` inside `xa@b.com`), so the canonical form has to be
+ *    established by the PRODUCER at write time rather than worked around by
+ *    every reader. Also on update: an edit that reintroduced mixed case would
+ *    silently make the record invisible to every later dedupe.
+ *
+ * 2. **Link a repeated address to the record it repeats** — on insert only.
+ *    An existing `crm_contact` wins over an open lead: the prospect who already
+ *    became a contact is the further-along record, and it is the one the
+ *    conversion flow would reuse anyway. Within a kind, the OLDEST record wins,
+ *    so a cluster of five re-submissions all point at the same origin instead
+ *    of forming a chain.
+ *
+ * The write is `duplicate_status: 'suspected'` — a machine's guess, explicitly
+ * distinguished from the `confirmed` verdict a human records when disqualifying
+ * as a duplicate. The hook stands down on any record that already carries a
+ * verdict, so `confirmed` can never be reverted to `suspected` by a later
+ * write. It also stands down on a record that already names a survivor.
+ *
+ * Detection is INSERT-only by design: a later edit re-scanning would re-open a
+ * question a human may have already closed, and the review queue
+ * (`suspected_duplicates`) is the affordance for anything intake missed.
+ *
+ * Priority 300 — after `lead_automation` (200), whose guest branch strips
+ * client-supplied `duplicate_*` from anonymous submissions. Running earlier
+ * would let a spoofed `duplicate_status` switch this hook off.
+ */
+const leadDuplicateCheckHook: Hook = {
+  name: 'lead_duplicate_check',
+  object: 'crm_lead',
+  events: ['beforeInsert', 'beforeUpdate'],
+  priority: 300,
+  description:
+    'Normalize lead email; flag a re-captured address as a suspected duplicate of the record it repeats.',
+  handler: async (ctx: HookContext) => {
+    const { event, input } = ctx;
+
+    // A duplicate cluster larger than this is pathological; every member points
+    // at the same origin either way, so the scan is bounded rather than paged.
+    const SCAN_LIMIT = 50;
+
+    /** Absent, null or whitespace — the shape `isBlank` tests in CEL. */
+    const isBlank = (value: unknown): boolean =>
+      value === undefined || value === null || (typeof value === 'string' && value.trim() === '');
+
+    // 1. Canonical email. `input.email` is absent on a partial update; leave it
+    //    alone then rather than writing an empty string over a real address.
+    if (typeof input.email === 'string') {
+      input.email = input.email.trim().toLowerCase();
+    }
+    const email = typeof input.email === 'string' ? input.email : '';
+
+    if (event !== 'beforeInsert' || !email) return;
+
+    // 2. Never overwrite an opinion the record already carries. The
+    //    `duplicate_status` half is the load-bearing one: it is what keeps a
+    //    human's `confirmed` verdict safe from any later automatic write.
+    if (!isBlank(input.duplicate_status) || !isBlank(input.duplicate_of_type)) return;
+
+    const api = ctx.api as HookApi | undefined;
+    if (!api) return;
+
+    /** Oldest row wins; an undated row only wins if nothing dated is present. */
+    const original = (rows: Array<Record<string, unknown>>): string | undefined => {
+      let best: string | undefined;
+      let bestKey = Infinity;
+      for (const row of rows) {
+        const id = typeof row.id === 'string' ? row.id : '';
+        if (!id) continue;
+        const raw = row.created_at;
+        const parsed =
+          typeof raw === 'string' || typeof raw === 'number' || raw instanceof Date
+            ? new Date(raw as string).getTime()
+            : Number.NaN;
+        const key = Number.isFinite(parsed) ? parsed : Infinity;
+        if (best === undefined || key < bestKey) {
+          best = id;
+          bestKey = key;
+        }
+      }
+      return best;
+    };
+
+    // Best-effort ENHANCEMENT, never a gate on the write — identical to
+    // `lead_auto_assign` below. An anonymous Web-to-Lead submission runs under
+    // the `guest_portal` grant, which is INSERT-only on `crm_lead` and denies
+    // reads outright; letting that denial propagate would reject the very
+    // submission this feature exists to accept. A guest's duplicate therefore
+    // lands unflagged rather than not landing at all.
+    try {
+      const contacts = await api.object('crm_contact').find({
+        where: { email },
+        fields: ['id', 'created_at'],
+        top: SCAN_LIMIT,
+      });
+      const contactId = original(contacts ?? []);
+      if (contactId) {
+        input.duplicate_of_type = 'crm_contact';
+        input.duplicate_of_contact = contactId;
+        input.duplicate_status = 'suspected';
+        return;
+      }
+
+      // Open leads only. A predecessor that already converted is represented by
+      // the contact it created, which the branch above matches on the same
+      // address — pointing at the locked lead instead would name a record
+      // nobody can work.
+      const leads = await api.object('crm_lead').find({
+        where: { email, is_converted: false },
+        fields: ['id', 'created_at'],
+        top: SCAN_LIMIT,
+      });
+      const leadId = original(leads ?? []);
+      if (leadId) {
+        input.duplicate_of_type = 'crm_lead';
+        input.duplicate_of_lead = leadId;
+        input.duplicate_status = 'suspected';
+      }
+    } catch {
+      // Swallow: see above. (No `console` in the L2 hook sandbox.)
+    }
+  },
+};
+
+export default [leadAutoAssignHook, leadHook, leadDuplicateCheckHook];
