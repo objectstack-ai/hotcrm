@@ -87,6 +87,7 @@ export const LeadImportMapping = defineMapping({
 
     // NOT MAPPED — `crm_lead.address` is a structured (json-backed) `address`
     // field; the import path cannot compose one from separate street/city/
-    // postcode columns. Same reasoning as the account mapping.
+    // postcode columns, and a joined string is rejected per row. Same
+    // reasoning, and the same measurement, as the account mapping.
   ],
 });
