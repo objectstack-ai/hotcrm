@@ -60,8 +60,22 @@ export const QuoteGenerationFlow: Flow = {
       // machine allows `→ proposal` from all three). Re-writing `proposal` on
       // a deal already at proposal/negotiation was an illegal self/backward
       // transition — those deals keep their stage; the quote is still created.
+      //
+      // TOTALITY (#643): `oppRecord` is a `get_record` OUTPUT — `findOne`
+      // answers a miss with `null`, and reading a field off it then aborts with
+      // `No such key: stage`. Measured unreachable TODAY only because two
+      // neighbouring schemas happen to close it: `crm_opportunity.stage` is
+      // `required` (never a sparse column) and `crm_quote.crm_account` is
+      // `required`, so a null `oppRecord` makes `create_quote` fail one node
+      // earlier. Both are one `required: false` away from re-opening it, so the
+      // predicate carries its own guard. Note the scope is `vars.oppRecord`,
+      // not bare `oppRecord`: measured, `has(oppRecord.stage)` still aborts
+      // with `Unknown variable: oppRecord` when the variable is unbound, while
+      // `has(vars.oppRecord)` answers `false` — only the `vars.`-scoped form is
+      // total against both hazards.
       id: 'check_stage', type: 'decision', label: 'Can Advance to Proposal?',
-      config: { condition: P`oppRecord.stage == "prospecting" || oppRecord.stage == "qualification" || oppRecord.stage == "needs_analysis"` },
+      config: { condition: P`has(vars.oppRecord) && has(vars.oppRecord.stage)
+        && (vars.oppRecord.stage == "prospecting" || vars.oppRecord.stage == "qualification" || vars.oppRecord.stage == "needs_analysis")` },
     },
     {
       id: 'update_opportunity', type: 'update_record', label: 'Update Opportunity',
@@ -93,8 +107,16 @@ export const QuoteGenerationFlow: Flow = {
     { id: 'e2', source: 'screen_1', target: 'get_opportunity', type: 'default' },
     { id: 'e3', source: 'get_opportunity', target: 'create_quote', type: 'default' },
     { id: 'e4', source: 'create_quote', target: 'check_stage', type: 'default' },
-    { id: 'e4a', source: 'check_stage', target: 'update_opportunity', type: 'conditional', condition: P`oppRecord.stage == "prospecting" || oppRecord.stage == "qualification" || oppRecord.stage == "needs_analysis"`, label: 'Advance' },
-    { id: 'e4b', source: 'check_stage', target: 'notify_owner', type: 'conditional', condition: P`oppRecord.stage != "prospecting" && oppRecord.stage != "qualification" && oppRecord.stage != "needs_analysis"`, label: 'Keep stage' },
+    // The two branches must PARTITION, so the guards are written in opposite
+    // polarity: `has(…) && …` on the advance side, `!has(…) || …` on the keep
+    // side. An unknown stage therefore lands on "keep stage" — the quote is
+    // still created and nothing illegal is written to the state machine.
+    // These EDGES are the live sites; `check_stage`'s own `config.condition` is
+    // never evaluated by the engine (see the note on that node).
+    { id: 'e4a', source: 'check_stage', target: 'update_opportunity', type: 'conditional', condition: P`has(vars.oppRecord) && has(vars.oppRecord.stage)
+      && (vars.oppRecord.stage == "prospecting" || vars.oppRecord.stage == "qualification" || vars.oppRecord.stage == "needs_analysis")`, label: 'Advance' },
+    { id: 'e4b', source: 'check_stage', target: 'notify_owner', type: 'conditional', condition: P`!has(vars.oppRecord) || !has(vars.oppRecord.stage)
+      || (vars.oppRecord.stage != "prospecting" && vars.oppRecord.stage != "qualification" && vars.oppRecord.stage != "needs_analysis")`, label: 'Keep stage' },
     { id: 'e5', source: 'update_opportunity', target: 'notify_owner', type: 'default' },
     { id: 'e6', source: 'notify_owner', target: 'end', type: 'default' },
   ],
