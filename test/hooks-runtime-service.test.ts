@@ -548,6 +548,157 @@ describe('lead_automation', () => {
   });
 });
 
+describe('lead_duplicate_check', () => {
+  const hook = hookNamed(leadHooks, 'lead_duplicate_check');
+
+  /** An intake insert, with whatever the caller supplied on top. */
+  const intake = async (input: Rec, store: Record<string, Rec[]> = {}) => {
+    const h = makeHarness(store);
+    await hook.handler(makeCtx({ event: 'beforeInsert', input, user: USER, api: h.api }));
+    return h;
+  };
+
+  it('normalizes the email it stores, which is what makes the lookup an equality match', async () => {
+    // There is no case-insensitive predicate to lean on: ObjectQL's `$regex`
+    // compiles to a LIKE SUBSTRING on SQL. The canonical form is established
+    // here, at the producer, exactly as contact_integrity does on crm_contact.
+    const input: Rec = { email: '  Ada.Lovelace@Acme.IO ' };
+    await intake(input);
+    expect(input.email).toBe('ada.lovelace@acme.io');
+  });
+
+  it('normalizes on update too — a later edit must not hide the record from dedupe', async () => {
+    const input: Rec = { id: 'l9', email: 'ADA@ACME.IO' };
+    await hook.handler(makeCtx({ event: 'beforeUpdate', input, previous: { id: 'l9' }, user: USER }));
+    expect(input.email).toBe('ada@acme.io');
+  });
+
+  it('leaves a partial update that does not touch email alone', async () => {
+    const input: Rec = { id: 'l9', phone: '555' };
+    await hook.handler(makeCtx({ event: 'beforeUpdate', input, previous: { id: 'l9' }, user: USER }));
+    expect(input).not.toHaveProperty('email');
+  });
+
+  it('flags a re-captured address as a SUSPECTED duplicate of the open lead it repeats', async () => {
+    // The acceptance case: the same web form, submitted twice. Under the old
+    // `unique: true` the second insert was rejected by the database.
+    const input: Rec = { email: 'Ada@acme.io', company: 'Acme' };
+    await intake(input, {
+      crm_lead: [
+        { id: 'lead_first', email: 'ada@acme.io', is_converted: false, created_at: '2026-03-01T00:00:00Z' },
+      ],
+    });
+    expect(input.duplicate_of_type).toBe('crm_lead');
+    expect(input.duplicate_of_lead).toBe('lead_first');
+    expect(input.duplicate_status).toBe('suspected');
+    expect(input.duplicate_of_contact).toBeUndefined();
+  });
+
+  it('prefers an existing contact over an open lead — the contact is the further-along record', async () => {
+    const input: Rec = { email: 'ada@acme.io' };
+    await intake(input, {
+      crm_contact: [{ id: 'con_1', email: 'ada@acme.io', created_at: '2026-01-01T00:00:00Z' }],
+      crm_lead: [{ id: 'lead_first', email: 'ada@acme.io', is_converted: false, created_at: '2026-03-01T00:00:00Z' }],
+    });
+    expect(input.duplicate_of_type).toBe('crm_contact');
+    expect(input.duplicate_of_contact).toBe('con_1');
+    expect(input.duplicate_of_lead).toBeUndefined();
+  });
+
+  it('points a whole cluster at the ORIGINAL, not at whichever row the driver returns first', async () => {
+    // Otherwise the third submission points at the second, the fourth at the
+    // third, and reviewing the cluster means walking a chain.
+    const input: Rec = { email: 'ada@acme.io' };
+    await intake(input, {
+      crm_lead: [
+        { id: 'lead_third',  email: 'ada@acme.io', is_converted: false, created_at: '2026-05-01T00:00:00Z' },
+        { id: 'lead_origin', email: 'ada@acme.io', is_converted: false, created_at: '2026-01-01T00:00:00Z' },
+        { id: 'lead_second', email: 'ada@acme.io', is_converted: false, created_at: '2026-03-01T00:00:00Z' },
+      ],
+    });
+    expect(input.duplicate_of_lead).toBe('lead_origin');
+  });
+
+  it('ignores a converted predecessor — its contact carries the same address', async () => {
+    const input: Rec = { email: 'ada@acme.io' };
+    await intake(input, {
+      crm_lead: [{ id: 'lead_converted', email: 'ada@acme.io', is_converted: true, created_at: '2026-01-01T00:00:00Z' }],
+    });
+    expect(input.duplicate_status).toBeUndefined();
+    expect(input.duplicate_of_type).toBeUndefined();
+  });
+
+  it('leaves a first-time address untouched', async () => {
+    const input: Rec = { email: 'newcomer@acme.io' };
+    await intake(input, { crm_lead: [{ id: 'other', email: 'someone@else.io', is_converted: false }] });
+    expect(input.duplicate_status).toBeUndefined();
+    expect(input.duplicate_of_type).toBeUndefined();
+    expect(input.duplicate_of_lead).toBeUndefined();
+  });
+
+  it('never overwrites a CONFIRMED verdict with its own guess', async () => {
+    // The whole reason suspicion and verdict share one field: a human who
+    // confirmed a match must not have it downgraded by a later automatic write.
+    const input: Rec = {
+      email: 'ada@acme.io',
+      duplicate_of_type: 'crm_contact',
+      duplicate_of_contact: 'con_human',
+      duplicate_status: 'confirmed',
+    };
+    await intake(input, {
+      crm_lead: [{ id: 'lead_first', email: 'ada@acme.io', is_converted: false, created_at: '2026-01-01T00:00:00Z' }],
+    });
+    expect(input.duplicate_status).toBe('confirmed');
+    expect(input.duplicate_of_type).toBe('crm_contact');
+    expect(input.duplicate_of_contact).toBe('con_human');
+    expect(input.duplicate_of_lead).toBeUndefined();
+  });
+
+  it('stands down on a record that already names a survivor', async () => {
+    const input: Rec = { email: 'ada@acme.io', duplicate_of_type: 'crm_lead', duplicate_of_lead: 'lead_chosen' };
+    await intake(input, {
+      crm_lead: [{ id: 'lead_first', email: 'ada@acme.io', is_converted: false, created_at: '2026-01-01T00:00:00Z' }],
+    });
+    expect(input.duplicate_of_lead).toBe('lead_chosen');
+    expect(input.duplicate_status).toBeUndefined();
+  });
+
+  it('writes nothing and throws nothing when the lookup is denied (anonymous Web-to-Lead)', async () => {
+    // A guest can INSERT on crm_lead and read NOTHING. Propagating that denial
+    // would reject the very submission this feature exists to accept — the
+    // duplicate lands unflagged rather than not landing at all.
+    const input: Rec = { email: 'ada@acme.io' };
+    await expect(
+      hook.handler(makeCtx({ event: 'beforeInsert', input, api: makeDeniedApi() })),
+    ).resolves.toBeUndefined();
+    expect(input.email).toBe('ada@acme.io');
+    expect(input.duplicate_status).toBeUndefined();
+  });
+
+  it('runs after lead_automation, so a guest cannot spoof its way out of the flag', async () => {
+    // Ascending priority order. At a lower number this hook would see the
+    // client-supplied `duplicate_status: 'confirmed'` that lead_automation's
+    // guest branch is there to delete, and stand down.
+    const automation = hookNamed(leadHooks, 'lead_automation');
+    expect(hook.priority).toBeGreaterThan(automation.priority);
+
+    const input: Rec = { email: 'ada@acme.io', duplicate_status: 'confirmed', duplicate_of_lead: 'guessed' };
+    await automation.handler(makeCtx({ event: 'beforeInsert', input, user: SYSTEM }));
+    for (const stripped of [
+      'duplicate_of_type', 'duplicate_of_lead', 'duplicate_of_contact', 'duplicate_status',
+    ]) {
+      expect(input, `public form kept ${stripped}`).not.toHaveProperty(stripped);
+    }
+
+    const h = makeHarness({
+      crm_lead: [{ id: 'lead_first', email: 'ada@acme.io', is_converted: false, created_at: '2026-01-01T00:00:00Z' }],
+    });
+    await hook.handler(makeCtx({ event: 'beforeInsert', input, api: h.api }));
+    expect(input.duplicate_status).toBe('suspected');
+    expect(input.duplicate_of_lead).toBe('lead_first');
+  });
+});
+
 describe('lead_auto_assign — permission resilience', () => {
   const hook = hookNamed(leadHooks, 'lead_auto_assign');
 

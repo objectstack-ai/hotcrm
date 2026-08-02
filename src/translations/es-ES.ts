@@ -224,6 +224,16 @@ export const esES: TranslationData = {
         notes: { label: 'Notas' },
         do_not_call: { label: 'No Llamar' },
         email_opt_out: { label: 'Excluir de Correos' },
+        duplicate_of_type: {
+          label: 'Duplicado De',
+          options: { crm_lead: 'Prospecto', crm_contact: 'Contacto' },
+        },
+        duplicate_of_lead: { label: 'Prospecto Duplicado' },
+        duplicate_of_contact: { label: 'Contacto Duplicado' },
+        duplicate_status: {
+          label: 'Estado del Duplicado',
+          options: { suspected: 'Sospechoso', confirmed: 'Confirmado' },
+        },
       },
       _views: {
         all_leads: { label: 'Todos los Prospectos' },
@@ -232,6 +242,7 @@ export const esES: TranslationData = {
         gallery_view: { label: 'Galería de Prospectos' },
         my_leads: { label: 'Mis Prospectos' },
         high_priority: { label: 'Alta Prioridad' },
+        suspected_duplicates: { label: 'Duplicados Sospechosos' },
       },
       _actions: {
         convert_lead: {
