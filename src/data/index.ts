@@ -20,6 +20,9 @@ import { Contract } from '../objects/contract.object';
 import { Quote } from '../objects/quote.object';
 import { Forecast } from '../objects/forecast.object';
 import { KnowledgeArticle } from '../objects/knowledge_article.object';
+import { OpportunityLineItem } from '../objects/opportunity_line_item.object';
+import { QuoteLineItem } from '../objects/quote_line_item.object';
+import { CampaignMember } from '../objects/campaign_member.object';
 
 /**
  * Build a CEL `daysAgo(N)` expression from a runtime number. Mirrors the
@@ -375,7 +378,13 @@ const leads = defineSeed(Lead, {
       status: 'qualified',
       lead_source: 'event',
       industry: 'technology',
-      rating: 4.5,
+      // WHOLE stars only. `lead.hook.ts` rounds its computed score to an
+      // integer because "half values rendered inconsistently in the star
+      // widget", and the hook leaves an explicitly seeded number alone — so a
+      // seeded 4.5 was the one rating in the system the contract could never
+      // produce, and it rendered as the broken half-star it was meant to
+      // prevent (#591).
+      rating: 5,
       next_followup_date: cel`daysFromNow(0)`,
       last_contacted_date: cel`daysAgo(1)`,
     },
@@ -439,6 +448,170 @@ const leads = defineSeed(Lead, {
   ]
 });
 
+// ─── Line items: the one source of truth for deal value ───────────────
+/**
+ * A configured product line. `unit_price` is the NEGOTIATED price (what the
+ * rep sold at); the catalog `list_price` is stamped separately from the
+ * product record, exactly as the price-fill hook would.
+ */
+type LineSpec = {
+  readonly product: string;
+  readonly quantity: number;
+  readonly unit_price: number;
+  /** Line-level discount %, defaults to 0. */
+  readonly discount?: number;
+  readonly description: string;
+};
+
+/** `quantity × unit_price × (1 − discount/100)`, rounded exactly as the rollup hooks round. */
+const lineTotal = (l: LineSpec): number =>
+  Math.round(l.quantity * l.unit_price * (1 - (l.discount ?? 0) / 100) * 100) / 100;
+
+const linesTotal = (lines: readonly LineSpec[]): number =>
+  Math.round(lines.reduce((sum, l) => sum + lineTotal(l), 0) * 100) / 100;
+
+/**
+ * Opportunity line items, keyed by the opportunity's name (its seed
+ * externalId). Every seeded deal is itemised — before #591 not one was, so the
+ * Products related list was empty on every opportunity in the demo and the CPQ
+ * story had nothing to show.
+ *
+ * These sums are AUTHORITATIVE: each opportunity's `amount` below is computed
+ * from its lines by `dealValue()` rather than typed in, which is the same
+ * answer `opportunity_amount_rollup` computes when a rep touches a line. There
+ * is therefore no seeded parent total that a first line-item edit can silently
+ * rewrite — the acceptance condition of #591 holds by construction rather than
+ * by anyone re-checking the arithmetic.
+ *
+ * Deriving rather than delegating is deliberate. Letting the rollup own the
+ * number would make every seeded `amount` depend on whether hooks fire over
+ * seed writes — which the doctrine block above says they do not and a boot log
+ * says they do (#617) — and on that hook surviving its own write call (#616).
+ * A derived literal is correct under every one of those combinations: if the
+ * rollup runs it recomputes the same figure, and if it never runs the figure
+ * was already right.
+ */
+const OPPORTUNITY_LINES: Record<string, readonly LineSpec[]> = {
+  'Acme Platform Upgrade': [
+    { product: 'ObjectStack Platform', quantity: 2, unit_price: 50000, discount: 10, description: 'Enterprise edition — NA + EMEA production tenants (multi-year discount).' },
+    { product: 'Premium Support', quantity: 1, unit_price: 25000, description: '24×7 premium support with a named TAM.' },
+    { product: 'AI Agent Seat (Annual)', quantity: 35, unit_price: 1000, description: 'Agent seats for the Ops organization.' },
+  ],
+  'Globex Manufacturing Suite': [
+    { product: 'ObjectStack Platform', quantity: 6, unit_price: 50000, description: 'Enterprise edition across six manufacturing sites.' },
+    { product: 'Implementation Services', quantity: 2, unit_price: 75000, description: 'Two-phase implementation: plant operations, then commercial.' },
+    { product: 'Premium Support', quantity: 2, unit_price: 25000, description: 'Premium support for both production regions.' },
+  ],
+  'Wayne Enterprise License': [
+    { product: 'ObjectStack Platform', quantity: 20, unit_price: 50000, discount: 15, description: 'Enterprise-wide license, volume discount at 20 tenants.' },
+    { product: 'Premium Support', quantity: 4, unit_price: 25000, description: 'Premium support across four business units.' },
+    { product: 'AI Agent Seat (Annual)', quantity: 250, unit_price: 1000, description: 'Agent seats for the global revenue organization.' },
+  ],
+  'Initech Cloud Migration': [
+    { product: 'Data Migration Services', quantity: 1, unit_price: 35000, description: 'Migration off the legacy on-premise CRM.' },
+    { product: 'Cloud Hosting (Annual)', quantity: 2, unit_price: 12000, description: 'Managed hosting, primary + DR region.' },
+    { product: 'Standard Support', quantity: 1, unit_price: 9000, description: 'Business-hours support for the first year.' },
+    { product: 'AI Agent Seat (Annual)', quantity: 12, unit_price: 1000, description: 'Agent seats for the service desk.' },
+  ],
+  'Acme Annual Renewal 2025': [
+    { product: 'ObjectStack Platform', quantity: 3, unit_price: 50000, description: 'Renewal of the three production tenants.' },
+    { product: 'Premium Support', quantity: 1, unit_price: 25000, description: 'Premium support renewal.' },
+    { product: 'AI Agent Seat (Annual)', quantity: 45, unit_price: 1000, description: 'Seat expansion driven by the new EMEA team.' },
+  ],
+  'Stark Medical Pilot': [
+    { product: 'ObjectStack Platform', quantity: 2, unit_price: 50000, description: 'Pilot tenants for two clinical service lines.' },
+    { product: 'Standard Support', quantity: 1, unit_price: 9000, description: 'Standard support during the pilot.' },
+    { product: 'Admin Training Workshop', quantity: 6, unit_price: 6000, description: 'Six workshop days for the clinical operations admins.' },
+  ],
+  'Wayne Q1 Expansion': [
+    { product: 'ObjectStack Platform', quantity: 6, unit_price: 50000, description: 'Expansion into six additional subsidiaries.' },
+    { product: 'Premium Support', quantity: 2, unit_price: 25000, description: 'Premium support for the expanded footprint.' },
+    { product: 'AI Agent Seat (Annual)', quantity: 30, unit_price: 1000, description: 'Agent seats for the expansion teams.' },
+  ],
+  'Globex Training Package': [
+    { product: 'Admin Training Workshop', quantity: 10, unit_price: 6000, description: 'Ten workshop days across the plant admin community.' },
+    { product: 'AI Agent Seat (Annual)', quantity: 5, unit_price: 1000, description: 'Agent seats for the training sandbox.' },
+  ],
+  'Initech Phase 1': [
+    { product: 'Implementation Services', quantity: 1, unit_price: 75000, description: 'Phase 1 implementation: accounts, contacts, pipeline.' },
+    { product: 'Standard Support', quantity: 1, unit_price: 9000, description: 'Standard support for phase 1.' },
+    { product: 'AI Agent Seat (Annual)', quantity: 6, unit_price: 1000, description: 'Agent seats for the phase-1 pilot group.' },
+  ],
+  'Acme Add-on (Lost)': [
+    { product: 'Analytics Add-on', quantity: 2, unit_price: 22000, description: 'Marketing analytics for two business units.' },
+    { product: 'Integration Connector Pack', quantity: 1, unit_price: 16000, description: 'Marketing-automation connector pack.' },
+    { product: 'Sandbox Environment (Annual)', quantity: 2, unit_price: 7500, description: 'Two sandboxes for the marketing build-out.' },
+  ],
+  'Stark Expansion (Lost)': [
+    { product: 'ObjectStack Platform', quantity: 2, unit_price: 50000, description: 'Two additional clinical tenants.' },
+    { product: 'Field Service Mobile', quantity: 1, unit_price: 14000, description: 'Field service mobile for the device-servicing team.' },
+    { product: 'AI Agent Seat (Annual)', quantity: 6, unit_price: 1000, description: 'Agent seats for the service coordinators.' },
+  ],
+  'Northwind Grid Modernization': [
+    { product: 'ObjectStack Platform', quantity: 3, unit_price: 50000, description: 'Enterprise edition for grid, field and customer operations.' },
+    { product: 'Implementation Services', quantity: 1, unit_price: 75000, description: 'Operational-data assessment and implementation.' },
+    { product: 'AI Agent Seat (Annual)', quantity: 15, unit_price: 1000, description: 'Agent seats for the control-room pilot.' },
+  ],
+  'Lattice Student Success Platform': [
+    { product: 'ObjectStack Platform (SMB Edition)', quantity: 5, unit_price: 18000, description: 'Student-success tenants for five colleges.' },
+    { product: 'Admin Training Workshop', quantity: 5, unit_price: 6000, description: 'Five workshop days for the student-success advisers.' },
+    { product: 'AI Agent Seat (Annual)', quantity: 5, unit_price: 1000, description: 'Agent seats for the advising team.' },
+  ],
+  'Vertex Analytics Expansion': [
+    { product: 'ObjectStack Platform', quantity: 2, unit_price: 50000, description: 'Two tenants for the revenue organization.' },
+    { product: 'Analytics Add-on', quantity: 5, unit_price: 22000, description: 'Analytics for sales, marketing, service, finance and ops.' },
+    { product: 'Premium Support', quantity: 2, unit_price: 25000, description: 'Premium support for the expanded footprint.' },
+    { product: 'AI Agent Seat (Annual)', quantity: 60, unit_price: 1000, description: 'Agent seats for the full revenue organization.' },
+  ],
+  'Apex Logistics Data Hub': [
+    { product: 'ObjectStack Platform', quantity: 3, unit_price: 50000, description: 'Data-hub tenants for commercial, operations and finance.' },
+    { product: 'Data Migration Services', quantity: 1, unit_price: 35000, description: 'Consolidation of four fragmented commercial systems.' },
+    { product: 'Implementation Services', quantity: 1, unit_price: 75000, description: 'Architecture workshop through go-live.' },
+    { product: 'AI Agent Seat (Annual)', quantity: 15, unit_price: 1000, description: 'Agent seats for the commercial operations team.' },
+  ],
+  'Lattice Education Renewal': [
+    { product: 'ObjectStack Platform', quantity: 3, unit_price: 50000, description: 'Renewal of the three institution tenants.' },
+    { product: 'Analytics Add-on', quantity: 1, unit_price: 22000, description: 'Expanded analytics package for the renewal term.' },
+    { product: 'Admin Training Workshop', quantity: 3, unit_price: 6000, description: 'Three workshop days for the new admissions admins.' },
+    { product: 'AI Agent Seat (Annual)', quantity: 20, unit_price: 1000, description: 'Student-success automation seats.' },
+  ],
+  'Vertex Enterprise Rollout': [
+    { product: 'ObjectStack Platform', quantity: 10, unit_price: 50000, discount: 20, description: 'Phased enterprise rollout, ten tenants (volume discount).' },
+    { product: 'Implementation Services', quantity: 1, unit_price: 75000, description: 'Phased deployment with data-residency controls.' },
+    { product: 'Premium Support', quantity: 4, unit_price: 25000, description: 'Premium support across four regions.' },
+    { product: 'AI Agent Seat (Annual)', quantity: 100, unit_price: 1000, description: 'Agent seats for the first rollout wave.' },
+  ],
+  // Campaign-attributed wins — see the campaign metrics note below.
+  'Lattice Analytics Expansion': [
+    { product: 'Analytics Add-on', quantity: 2, unit_price: 22000, description: 'Analytics for admissions and alumni engagement.' },
+    { product: 'Admin Training Workshop', quantity: 1, unit_price: 6000, description: 'Analytics enablement day for the institutional-research team.' },
+    { product: 'AI Agent Seat (Annual)', quantity: 20, unit_price: 1000, description: 'Agent seats for the admissions team.' },
+  ],
+  'Wayne Operations Module Rollout': [
+    { product: 'ObjectStack Platform', quantity: 2, unit_price: 50000, description: 'Operations tenants for two manufacturing divisions.' },
+    { product: 'Standard Support', quantity: 1, unit_price: 9000, description: 'Standard support for the operations rollout.' },
+    { product: 'AI Agent Seat (Annual)', quantity: 11, unit_price: 1000, description: 'Agent seats for the operations planners.' },
+  ],
+  'Vertex Developer Platform Adoption': [
+    { product: 'ObjectStack Platform', quantity: 3, unit_price: 50000, description: 'Developer platform tenants for three product teams.' },
+    { product: 'Integration Connector Pack', quantity: 1, unit_price: 16000, description: 'Connector pack for the internal data warehouse.' },
+    { product: 'Analytics Add-on', quantity: 1, unit_price: 22000, description: 'Product-usage analytics for the platform team.' },
+    { product: 'AI Agent Seat (Annual)', quantity: 12, unit_price: 1000, description: 'Agent seats for the developer-experience team.' },
+  ],
+};
+
+/**
+ * `amount` + `expected_revenue` for a seeded deal, both derived from its line
+ * items. `expected_revenue` uses opportunity.hook.ts's own expression
+ * (`Math.round(amount * probability) / 100`) so the two agree to the cent.
+ */
+const dealValue = (opportunityName: string, probability: number) => {
+  const lines = OPPORTUNITY_LINES[opportunityName];
+  if (!lines) throw new Error(`Seed error: no line items authored for opportunity "${opportunityName}"`);
+  const amount = linesTotal(lines);
+  return { amount, expected_revenue: Math.round(amount * probability) / 100 };
+};
+
 // ─── Opportunities ────────────────────────────────────────────────────
 // `probability`, `forecast_category` and `expected_revenue` are derived from
 // `stage` by opportunity.hook.ts (STAGE_PROBABILITY / STAGE_FORECAST). Hooks
@@ -460,10 +633,9 @@ const opportunities = defineSeed(Opportunity, {
     {
       name: 'Acme Platform Upgrade',
       crm_account: 'Acme Corporation',
-      amount: 150000,
+      ...dealValue('Acme Platform Upgrade', 60),
       stage: 'proposal',
       probability: 60,
-      expected_revenue: 90000,
       close_date: cel`daysFromNow(30)`,
       type: 'existing_upgrade',
       forecast_category: 'commit',
@@ -478,10 +650,9 @@ analytics seats for the Ops org, (3) priority support SLA.`,
     {
       name: 'Globex Manufacturing Suite',
       crm_account: 'Globex Industries',
-      amount: 500000,
+      ...dealValue('Globex Manufacturing Suite', 25),
       stage: 'qualification',
       probability: 25,
-      expected_revenue: 125000,
       close_date: cel`daysFromNow(60)`,
       type: 'new_business',
       forecast_category: 'pipeline',
@@ -491,10 +662,9 @@ analytics seats for the Ops org, (3) priority support SLA.`,
     {
       name: 'Wayne Enterprise License',
       crm_account: 'Wayne Enterprises',
-      amount: 1200000,
+      ...dealValue('Wayne Enterprise License', 80),
       stage: 'negotiation',
       probability: 80,
-      expected_revenue: 960000,
       close_date: cel`daysFromNow(14)`,
       type: 'new_business',
       forecast_category: 'commit',
@@ -504,10 +674,9 @@ analytics seats for the Ops org, (3) priority support SLA.`,
     {
       name: 'Initech Cloud Migration',
       crm_account: 'Initech Solutions',
-      amount: 80000,
+      ...dealValue('Initech Cloud Migration', 40),
       stage: 'needs_analysis',
       probability: 40,
-      expected_revenue: 32000,
       close_date: cel`daysFromNow(45)`,
       type: 'existing_upgrade',
       forecast_category: 'best_case',
@@ -518,10 +687,9 @@ analytics seats for the Ops org, (3) priority support SLA.`,
     {
       name: 'Acme Annual Renewal 2025',
       crm_account: 'Acme Corporation',
-      amount: 220000,
+      ...dealValue('Acme Annual Renewal 2025', 100),
       stage: 'closed_won',
       probability: 100,
-      expected_revenue: 220000,
       close_date: cel`daysAgo(15)`,
       stage_entry_date: cel`daysAgo(15)`,
       type: 'existing_renewal',
@@ -532,10 +700,9 @@ analytics seats for the Ops org, (3) priority support SLA.`,
     {
       name: 'Stark Medical Pilot',
       crm_account: 'Stark Medical',
-      amount: 145000,
+      ...dealValue('Stark Medical Pilot', 100),
       stage: 'closed_won',
       probability: 100,
-      expected_revenue: 145000,
       close_date: cel`daysAgo(50)`,
       stage_entry_date: cel`daysAgo(50)`,
       type: 'new_business',
@@ -545,10 +712,9 @@ analytics seats for the Ops org, (3) priority support SLA.`,
     {
       name: 'Wayne Q1 Expansion',
       crm_account: 'Wayne Enterprises',
-      amount: 380000,
+      ...dealValue('Wayne Q1 Expansion', 100),
       stage: 'closed_won',
       probability: 100,
-      expected_revenue: 380000,
       close_date: cel`daysAgo(95)`,
       stage_entry_date: cel`daysAgo(95)`,
       type: 'existing_upgrade',
@@ -558,10 +724,9 @@ analytics seats for the Ops org, (3) priority support SLA.`,
     {
       name: 'Globex Training Package',
       crm_account: 'Globex Industries',
-      amount: 65000,
+      ...dealValue('Globex Training Package', 100),
       stage: 'closed_won',
       probability: 100,
-      expected_revenue: 65000,
       close_date: cel`daysAgo(140)`,
       stage_entry_date: cel`daysAgo(140)`,
       type: 'new_business',
@@ -571,24 +736,74 @@ analytics seats for the Ops org, (3) priority support SLA.`,
     {
       name: 'Initech Phase 1',
       crm_account: 'Initech Solutions',
-      amount: 90000,
+      ...dealValue('Initech Phase 1', 100),
       stage: 'closed_won',
       probability: 100,
-      expected_revenue: 90000,
       close_date: cel`daysAgo(200)`,
       stage_entry_date: cel`daysAgo(200)`,
       type: 'new_business',
       forecast_category: 'closed',
       lead_source: 'web',
     },
+    // ─── Campaign-attributed wins ───────────────────────────────────────
+    // `crm_campaign` is what `campaign_snapshot_metrics` counts when a campaign
+    // completes (`num_opportunities` / `num_won_opportunities` / the summed
+    // `actual_revenue`). Before #591 not one opportunity carried it, so those
+    // three metrics were structurally zero and every campaign's seeded
+    // `actual_revenue` was a number the hook would have erased on completion.
+    // These three wins are what make the marketing ROI numbers below TRUE.
+    {
+      name: 'Lattice Analytics Expansion',
+      crm_account: 'Lattice Education',
+      primary_contact: 'priya.shah@lattice.example.com',
+      crm_campaign: 'Q3 Enterprise Email Nurture',
+      ...dealValue('Lattice Analytics Expansion', 100),
+      stage: 'closed_won',
+      probability: 100,
+      close_date: cel`daysAgo(6)`,
+      stage_entry_date: cel`daysAgo(6)`,
+      type: 'existing_expansion',
+      forecast_category: 'closed',
+      lead_source: 'email_campaign',
+      description: 'Analytics package for admissions and alumni engagement, sourced from the enterprise nurture track.',
+    },
+    {
+      name: 'Wayne Operations Module Rollout',
+      crm_account: 'Wayne Enterprises',
+      primary_contact: 'rwilson@wayne.example.com',
+      crm_campaign: 'Operations Platform Launch',
+      ...dealValue('Wayne Operations Module Rollout', 100),
+      stage: 'closed_won',
+      probability: 100,
+      close_date: cel`daysAgo(4)`,
+      stage_entry_date: cel`daysAgo(4)`,
+      type: 'existing_upgrade',
+      forecast_category: 'closed',
+      lead_source: 'content',
+      description: 'Operations module for two manufacturing divisions, closed off the operations-platform launch program.',
+    },
+    {
+      name: 'Vertex Developer Platform Adoption',
+      crm_account: 'Vertex Analytics',
+      primary_contact: 'ethan.brooks@vertex.example.com',
+      crm_campaign: 'Developer Content Marketing Push',
+      ...dealValue('Vertex Developer Platform Adoption', 100),
+      stage: 'closed_won',
+      probability: 100,
+      close_date: cel`daysAgo(6)`,
+      stage_entry_date: cel`daysAgo(6)`,
+      type: 'existing_expansion',
+      forecast_category: 'closed',
+      lead_source: 'content',
+      description: 'Three product teams adopted the developer platform after the technical content series.',
+    },
     // Closed Lost deals (powers win-rate analytics)
     {
       name: 'Acme Add-on (Lost)',
       crm_account: 'Acme Corporation',
-      amount: 75000,
+      ...dealValue('Acme Add-on (Lost)', 0),
       stage: 'closed_lost',
       probability: 0,
-      expected_revenue: 0,
       close_date: cel`daysAgo(25)`,
       stage_entry_date: cel`daysAgo(25)`,
       type: 'existing_upgrade',
@@ -599,10 +814,9 @@ analytics seats for the Ops org, (3) priority support SLA.`,
     {
       name: 'Stark Expansion (Lost)',
       crm_account: 'Stark Medical',
-      amount: 120000,
+      ...dealValue('Stark Expansion (Lost)', 0),
       stage: 'closed_lost',
       probability: 0,
-      expected_revenue: 0,
       close_date: cel`daysAgo(60)`,
       stage_entry_date: cel`daysAgo(60)`,
       type: 'new_business',
@@ -617,10 +831,9 @@ analytics seats for the Ops org, (3) priority support SLA.`,
       name: 'Northwind Grid Modernization',
       crm_account: 'Northwind Energy',
       primary_contact: 'olivia.chen@northwind.example.com',
-      amount: 240000,
+      ...dealValue('Northwind Grid Modernization', 10),
       stage: 'prospecting',
       probability: 10,
-      expected_revenue: 24000,
       close_date: cel`daysFromNow(72)`,
       type: 'new_business',
       forecast_category: 'pipeline',
@@ -633,10 +846,10 @@ analytics seats for the Ops org, (3) priority support SLA.`,
       name: 'Lattice Student Success Platform',
       crm_account: 'Lattice Education',
       primary_contact: 'priya.shah@lattice.example.com',
-      amount: 125000,
+      crm_campaign: 'Developer Content Marketing Push',
+      ...dealValue('Lattice Student Success Platform', 10),
       stage: 'prospecting',
       probability: 10,
-      expected_revenue: 12500,
       close_date: cel`daysFromNow(96)`,
       type: 'new_business',
       forecast_category: 'pipeline',
@@ -649,10 +862,9 @@ analytics seats for the Ops org, (3) priority support SLA.`,
       name: 'Vertex Analytics Expansion',
       crm_account: 'Vertex Analytics',
       primary_contact: 'ethan.brooks@vertex.example.com',
-      amount: 320000,
+      ...dealValue('Vertex Analytics Expansion', 25),
       stage: 'qualification',
       probability: 25,
-      expected_revenue: 80000,
       close_date: cel`daysFromNow(52)`,
       type: 'existing_expansion',
       forecast_category: 'pipeline',
@@ -665,10 +877,9 @@ analytics seats for the Ops org, (3) priority support SLA.`,
       name: 'Apex Logistics Data Hub',
       crm_account: 'Apex Logistics',
       primary_contact: 'marcus.reed@apexlogistics.example.com',
-      amount: 275000,
+      ...dealValue('Apex Logistics Data Hub', 40),
       stage: 'needs_analysis',
       probability: 40,
-      expected_revenue: 110000,
       close_date: cel`daysFromNow(38)`,
       type: 'new_business',
       forecast_category: 'best_case',
@@ -681,10 +892,10 @@ analytics seats for the Ops org, (3) priority support SLA.`,
       name: 'Lattice Education Renewal',
       crm_account: 'Lattice Education',
       primary_contact: 'priya.shah@lattice.example.com',
-      amount: 210000,
+      crm_campaign: 'Q3 Enterprise Email Nurture',
+      ...dealValue('Lattice Education Renewal', 60),
       stage: 'proposal',
       probability: 60,
-      expected_revenue: 126000,
       close_date: cel`daysFromNow(24)`,
       type: 'existing_renewal',
       forecast_category: 'commit',
@@ -697,10 +908,9 @@ analytics seats for the Ops org, (3) priority support SLA.`,
       name: 'Vertex Enterprise Rollout',
       crm_account: 'Vertex Analytics',
       primary_contact: 'ethan.brooks@vertex.example.com',
-      amount: 675000,
+      ...dealValue('Vertex Enterprise Rollout', 80),
       stage: 'negotiation',
       probability: 80,
-      expected_revenue: 540000,
       close_date: cel`daysFromNow(11)`,
       type: 'existing_expansion',
       forecast_category: 'commit',
@@ -713,39 +923,234 @@ analytics seats for the Ops org, (3) priority support SLA.`,
 });
 
 // ─── Products ─────────────────────────────────────────────────────────
+// The catalog is what every line item below prices against, so it has to be
+// wide enough to configure a realistic deal: an edition, an add-on, a
+// per-seat subscription, support tiers and professional services. Four
+// products could not (#591).
+//
+// `cost` is populated on every product: `cost_less_than_price` is a real
+// validation rule that "has never once evaluated" while the field was blank
+// everywhere, and margin is what the product-mix analytics are for. Every row
+// keeps cost strictly below list price.
 const products = defineSeed(Product, {
   mode: 'upsert',
   externalId: 'name',
   records: [
     {
       name: 'ObjectStack Platform',
+      description: 'The enterprise edition: unlimited objects, AI agents, governance and audit.',
       category: 'software',
       family: 'enterprise',
+      sku: 'OS-PLAT-ENT',
       list_price: 50000,
+      cost: 12000,
+      billing_type: 'annual',
+      unit_of_measure: 'license',
+      is_active: true,
+    },
+    {
+      name: 'ObjectStack Platform (SMB Edition)',
+      description: 'The mid-market edition: core CRM objects and automation, capped agent usage.',
+      category: 'software',
+      family: 'smb',
+      sku: 'OS-PLAT-SMB',
+      list_price: 18000,
+      cost: 4500,
+      billing_type: 'annual',
+      unit_of_measure: 'license',
       is_active: true,
     },
     {
       name: 'Cloud Hosting (Annual)',
+      description: 'Managed hosting with regional data residency and a 99.9% availability target.',
       category: 'subscription',
       family: 'cloud',
+      sku: 'OS-CLOUD-HOST',
       list_price: 12000,
+      cost: 4200,
+      billing_type: 'annual',
+      unit_of_measure: 'each',
+      is_active: true,
+    },
+    {
+      name: 'Sandbox Environment (Annual)',
+      description: 'A full-copy non-production environment for testing metadata changes before release.',
+      category: 'subscription',
+      family: 'cloud',
+      sku: 'OS-CLOUD-SBX',
+      list_price: 7500,
+      cost: 2600,
+      billing_type: 'annual',
+      unit_of_measure: 'each',
+      is_active: true,
+    },
+    {
+      name: 'AI Agent Seat (Annual)',
+      description: 'A named-user seat for the Co-Pilot and agent surfaces, billed annually.',
+      category: 'subscription',
+      family: 'cloud',
+      sku: 'OS-AI-SEAT',
+      list_price: 1000,
+      cost: 260,
+      billing_type: 'annual',
+      unit_of_measure: 'seat',
+      is_active: true,
+    },
+    {
+      name: 'Analytics Add-on',
+      description: 'Dashboards, cubes and scheduled reporting for the revenue organization.',
+      category: 'software',
+      family: 'enterprise',
+      sku: 'OS-ADDON-ANL',
+      list_price: 22000,
+      cost: 6500,
+      billing_type: 'annual',
+      unit_of_measure: 'license',
+      is_active: true,
+    },
+    {
+      name: 'Integration Connector Pack',
+      description: 'Pre-built connectors for ERP, marketing automation and data warehouse targets.',
+      category: 'software',
+      family: 'enterprise',
+      sku: 'OS-ADDON-INT',
+      list_price: 16000,
+      cost: 5200,
+      billing_type: 'annual',
+      unit_of_measure: 'license',
+      is_active: true,
+    },
+    {
+      name: 'Field Service Mobile',
+      description: 'Offline-capable mobile app for field technicians and route-based service work.',
+      category: 'software',
+      family: 'smb',
+      sku: 'OS-ADDON-FSM',
+      list_price: 14000,
+      cost: 4200,
+      billing_type: 'annual',
+      unit_of_measure: 'license',
       is_active: true,
     },
     {
       name: 'Premium Support',
+      description: '24×7 support with a one-hour P1 response target and a named technical account manager.',
       category: 'support',
       family: 'services',
+      sku: 'OS-SUP-PREM',
       list_price: 25000,
+      cost: 9000,
+      billing_type: 'annual',
+      unit_of_measure: 'each',
+      is_active: true,
+    },
+    {
+      name: 'Standard Support',
+      description: 'Business-hours support with a next-business-day response target.',
+      category: 'support',
+      family: 'services',
+      sku: 'OS-SUP-STD',
+      list_price: 9000,
+      cost: 3600,
+      billing_type: 'annual',
+      unit_of_measure: 'each',
       is_active: true,
     },
     {
       name: 'Implementation Services',
+      description: 'Guided implementation: discovery, metadata build, integration and go-live support.',
       category: 'service',
       family: 'services',
+      sku: 'OS-SVC-IMPL',
       list_price: 75000,
+      cost: 41000,
+      billing_type: 'one_time',
+      unit_of_measure: 'each',
+      is_active: true,
+    },
+    {
+      name: 'Data Migration Services',
+      description: 'Extraction, mapping and reconciliation of legacy CRM and spreadsheet data.',
+      category: 'service',
+      family: 'services',
+      sku: 'OS-SVC-MIGR',
+      list_price: 35000,
+      cost: 19000,
+      billing_type: 'one_time',
+      unit_of_measure: 'each',
+      is_active: true,
+    },
+    {
+      name: 'Admin Training Workshop',
+      description: 'A one-day workshop for administrators on metadata, permissions and analytics.',
+      category: 'service',
+      family: 'services',
+      sku: 'OS-SVC-TRN',
+      list_price: 6000,
+      cost: 2400,
+      billing_type: 'one_time',
+      unit_of_measure: 'day',
       is_active: true,
     },
   ]
+});
+
+/**
+ * Catalog price of a seeded product, read back from the dataset above so the
+ * price lives in exactly one place.
+ *
+ * Line items carry `list_price` explicitly because hooks do NOT run over seeds
+ * (#490): the shared price-fill hook (`_line-item-price-fill.ts`) is what
+ * stamps `list_price` from `crm_product.list_price` on a real write, so a
+ * seeded line has to arrive already carrying what that hook would have
+ * written. Reading it from the catalog record makes that literally impossible
+ * to get wrong.
+ */
+const catalogPrice = (productName: string): number => {
+  const product = products.records.find((r) => r.name === productName);
+  if (!product || typeof product.list_price !== 'number') {
+    throw new Error(`Seed error: no catalog product named "${productName}"`);
+  }
+  return product.list_price;
+};
+
+/**
+ * Flatten a `{ parent → lines }` table into seed records for one line-item
+ * object. `list_price` and `line_number` are the two fields a real write gets
+ * from machinery a seed cannot count on (the price-fill hook, and the quote /
+ * opportunity line editors), so both are materialised here — the row is then
+ * correct whether or not the hook fires over a seed write (#617).
+ */
+const lineItemRecords = <K extends string>(
+  parentField: K,
+  table: Record<string, readonly LineSpec[]>,
+): Array<Record<string, unknown>> =>
+  Object.entries(table).flatMap(([parent, lines]) =>
+    lines.map((l, i) => ({
+      [parentField]: parent,
+      crm_product: l.product,
+      description: l.description,
+      quantity: l.quantity,
+      list_price: catalogPrice(l.product),
+      unit_price: l.unit_price,
+      discount: l.discount ?? 0,
+      line_number: i + 1,
+    })),
+  );
+
+// ─── Opportunity line items ───────────────────────────────────────────
+// Identity is the COMPOSITE natural key (opportunity, product): the object has
+// no single natural key — no name, and `line_number` is only unique within a
+// parent — and a junction-shaped dataset without one can only run
+// `mode: 'insert'`, which re-inserts every row on each replay boot and
+// duplicates the table (framework#3434). The loader matches composite key
+// fields by their RESOLVED ids, so this dedupes correctly across restarts.
+// The practical constraint it imposes: a product appears at most once per
+// deal, which is how these lines are authored anyway.
+const opportunityLineItems = defineSeed(OpportunityLineItem, {
+  mode: 'upsert',
+  externalId: ['crm_opportunity', 'crm_product'],
+  records: lineItemRecords('crm_opportunity', OPPORTUNITY_LINES),
 });
 
 // ─── Tasks ────────────────────────────────────────────────────────────
@@ -1051,6 +1456,144 @@ const cases = defineSeed(Case, {
   ],
 });
 
+// ─── Campaign membership ──────────────────────────────────────────────
+/**
+ * Campaign members, keyed by campaign name.
+ *
+ * Membership is the ONLY path from a campaign to a lead — `crm_lead` has no
+ * campaign field — so with this table empty (as it was before #591) every
+ * campaign reported `num_sent` 0, `response_rate` 0% and no attributed leads
+ * at all, whatever the campaign records claimed.
+ *
+ * Status vocabulary is deliberately restricted to the lifecycle values a
+ * writer actually produces: `sent` (what the campaign_enrollment flow stamps),
+ * `responded` and `unsubscribed`. The `opened` / `clicked` / `bounced` states
+ * and the `first_opened_date` / `first_clicked_date` stamps have no writer
+ * anywhere in the app and are being trimmed under #597 — seeding them would
+ * manufacture data that nothing can maintain and that the trim would then
+ * invalidate.
+ *
+ * `converted` is likewise unused here: the hook counts converted leads from
+ * `crm_lead.is_converted`, and no seeded lead is converted (conversion is the
+ * lead_conversion flow's job at runtime), so a `converted` member would be a
+ * member state no lead record backs up.
+ */
+type CampaignMemberSpec = {
+  /** Lead email (the lead dataset's externalId) — mutually exclusive with `contact`. */
+  readonly lead?: string;
+  /** Contact email (the contact dataset's externalId). */
+  readonly contact?: string;
+  readonly status: 'sent' | 'responded' | 'unsubscribed';
+  readonly addedDaysAgo: number;
+  /** Days ago the member responded. Required by `responded`, absent otherwise. */
+  readonly respondedDaysAgo?: number;
+};
+
+const CAMPAIGN_MEMBERS: Record<string, readonly CampaignMemberSpec[]> = {
+  'Q3 Enterprise Email Nurture': [
+    { lead: 'noah.patel@vertexanalytics.example.com', status: 'responded', addedDaysAgo: 14, respondedDaysAgo: 9 },
+    { lead: 'maya.singh@bluepeaklogistics.example.com', status: 'sent', addedDaysAgo: 14 },
+    { lead: 'owen.becker@northwindenergy.example.com', status: 'responded', addedDaysAgo: 14, respondedDaysAgo: 11 },
+    { lead: 'sara.lopez@heliossolar.example.com', status: 'sent', addedDaysAgo: 14 },
+    { lead: 'leo.vance@cleancart.example.com', status: 'unsubscribed', addedDaysAgo: 14 },
+    { lead: 'iris.okafor@pulsehealth.example.com', status: 'sent', addedDaysAgo: 13 },
+    { lead: 'ravi.mehta@foundryrobotics.example.com', status: 'sent', addedDaysAgo: 13 },
+    { lead: 'tess.brown@latticeeducation.example.com', status: 'responded', addedDaysAgo: 13, respondedDaysAgo: 8 },
+    { contact: 'john.smith@acme.example.com', status: 'responded', addedDaysAgo: 14, respondedDaysAgo: 10 },
+    { contact: 'ethan.brooks@vertex.example.com', status: 'sent', addedDaysAgo: 14 },
+    { contact: 'priya.shah@lattice.example.com', status: 'responded', addedDaysAgo: 14, respondedDaysAgo: 7 },
+    { contact: 'rwilson@wayne.example.com', status: 'sent', addedDaysAgo: 13 },
+  ],
+  'Operations Platform Launch': [
+    { lead: 'jonas.holt@polarcargo.example.com', status: 'responded', addedDaysAgo: 11, respondedDaysAgo: 6 },
+    { lead: 'anya.volkov@redoakrealty.example.com', status: 'sent', addedDaysAgo: 11 },
+    { lead: 'theo.park@skylinemedia.example.com', status: 'sent', addedDaysAgo: 11 },
+    { lead: 'wren.garcia@maplebakerygroup.example.com', status: 'responded', addedDaysAgo: 10, respondedDaysAgo: 5 },
+    { lead: 'hugo.dubois@nimbusaerospace.example.com', status: 'sent', addedDaysAgo: 10 },
+    { contact: 'rwilson@wayne.example.com', status: 'responded', addedDaysAgo: 11, respondedDaysAgo: 7 },
+    { contact: 'marcus.reed@apexlogistics.example.com', status: 'sent', addedDaysAgo: 11 },
+    { contact: 'olivia.chen@northwind.example.com', status: 'sent', addedDaysAgo: 10 },
+    { contact: 'sarah.j@globex.example.com', status: 'sent', addedDaysAgo: 10 },
+  ],
+  'Developer Content Marketing Push': [
+    { lead: 'lena.fischer@graniteinsurance.example.com', status: 'responded', addedDaysAgo: 33, respondedDaysAgo: 27 },
+    { lead: 'kai.watanabe@coralreefhotels.example.com', status: 'sent', addedDaysAgo: 33 },
+    { lead: 'mira.costa@atlasconstruction.example.com', status: 'unsubscribed', addedDaysAgo: 33 },
+    { lead: 'pia.anand@citrinefinance.example.com', status: 'responded', addedDaysAgo: 32, respondedDaysAgo: 24 },
+    { lead: 'marco.ricci@auroratravel.example.com', status: 'sent', addedDaysAgo: 32 },
+    { lead: 'lisa.t@cloudfirst.example.com', status: 'responded', addedDaysAgo: 30, respondedDaysAgo: 21 },
+    { contact: 'ethan.brooks@vertex.example.com', status: 'responded', addedDaysAgo: 33, respondedDaysAgo: 19 },
+    { contact: 'mchen@initech.example.com', status: 'sent', addedDaysAgo: 33 },
+    { contact: 'john.smith@acme.example.com', status: 'sent', addedDaysAgo: 32 },
+    { contact: 'emily.d@starkmed.example.com', status: 'sent', addedDaysAgo: 32 },
+    { contact: 'sarah.j@globex.example.com', status: 'sent', addedDaysAgo: 30 },
+  ],
+  // Campaigns still in `planning` carry their invitation / registration list:
+  // the enrollment flow runs for `planning` and `in_progress` campaigns alike
+  // and stamps `sent` on enrollment, so a pre-launch target list looks exactly
+  // like this.
+  'Cloud Migration Webinar': [
+    { lead: 'dkim@edutechlabs.example.com', status: 'sent', addedDaysAgo: 4 },
+    { lead: 'alice@nextgenretail.example.com', status: 'sent', addedDaysAgo: 4 },
+    { lead: 'jonas.holt@polarcargo.example.com', status: 'sent', addedDaysAgo: 3 },
+    { lead: 'anya.volkov@redoakrealty.example.com', status: 'sent', addedDaysAgo: 3 },
+    { contact: 'mchen@initech.example.com', status: 'sent', addedDaysAgo: 4 },
+    { contact: 'marcus.reed@apexlogistics.example.com', status: 'sent', addedDaysAgo: 3 },
+  ],
+  'Executive AI Governance Roundtable': [
+    { contact: 'john.smith@acme.example.com', status: 'sent', addedDaysAgo: 6 },
+    { contact: 'rwilson@wayne.example.com', status: 'sent', addedDaysAgo: 6 },
+    { contact: 'ethan.brooks@vertex.example.com', status: 'sent', addedDaysAgo: 5 },
+    { contact: 'priya.shah@lattice.example.com', status: 'sent', addedDaysAgo: 5 },
+    { contact: 'emily.d@starkmed.example.com', status: 'sent', addedDaysAgo: 5 },
+  ],
+  'Partner Operations Roadshow': [
+    { lead: 'maya.singh@bluepeaklogistics.example.com', status: 'sent', addedDaysAgo: 7 },
+    { lead: 'ravi.mehta@foundryrobotics.example.com', status: 'sent', addedDaysAgo: 7 },
+    { contact: 'marcus.reed@apexlogistics.example.com', status: 'sent', addedDaysAgo: 6 },
+    { contact: 'olivia.chen@northwind.example.com', status: 'sent', addedDaysAgo: 6 },
+  ],
+  'SaaSCon 2026 Trade Show': [
+    { lead: 'theo.park@skylinemedia.example.com', status: 'sent', addedDaysAgo: 8 },
+    { lead: 'wren.garcia@maplebakerygroup.example.com', status: 'sent', addedDaysAgo: 8 },
+    { lead: 'hugo.dubois@nimbusaerospace.example.com', status: 'sent', addedDaysAgo: 7 },
+    { lead: 'marco.ricci@auroratravel.example.com', status: 'sent', addedDaysAgo: 7 },
+  ],
+};
+
+/**
+ * The metric block `campaign_snapshot_metrics` writes when a campaign moves to
+ * `completed`, computed here from the very same inputs the hook reads: the
+ * membership table above and the opportunities attributed via `crm_campaign`.
+ *
+ * Seeding these by hand is what made them wrong before. The snapshot fires on
+ * the transition INTO `completed` and nowhere else, so a hand-typed
+ * `actual_revenue` survives untouched right up until someone completes the
+ * campaign — at which point the hook replaces it with the truth and the number
+ * "mysteriously" changes. Deriving it here makes that snapshot a no-op instead:
+ * same inputs, same arithmetic, same answer.
+ */
+const campaignMetrics = (campaignName: string) => {
+  const members = CAMPAIGN_MEMBERS[campaignName] ?? [];
+  const leadKeys = new Set(members.map((m) => m.lead).filter((e): e is string => Boolean(e)));
+  const convertedLeads = leads.records.filter(
+    (l) => typeof l.email === 'string' && leadKeys.has(l.email) && l.is_converted === true,
+  ).length;
+  const attributed = opportunities.records.filter((o) => o.crm_campaign === campaignName);
+  const won = attributed.filter((o) => o.stage === 'closed_won');
+  return {
+    // "Total members enrolled" — campaign.hook.ts's single definition of num_sent.
+    num_sent: members.length,
+    // Only the exact `responded` status counts, as in the hook.
+    num_responses: members.filter((m) => m.status === 'responded').length,
+    num_leads: leadKeys.size,
+    num_converted_leads: convertedLeads,
+    num_opportunities: attributed.length,
+    num_won_opportunities: won.length,
+    actual_revenue: won.reduce((sum, o) => sum + (typeof o.amount === 'number' ? o.amount : 0), 0),
+  };
+};
+
 // ─── Campaigns ────────────────────────────────────────────────────────
 const campaigns = defineSeed(Campaign, {
   mode: 'upsert',
@@ -1067,8 +1610,8 @@ const campaigns = defineSeed(Campaign, {
       budgeted_cost: 28000,
       actual_cost: 14000,
       expected_revenue: 560000,
-      actual_revenue: 70000,
       target_size: 5000,
+      ...campaignMetrics('Q3 Enterprise Email Nurture'),
       landing_page_url: 'https://acme.example.com/lp/enterprise-q3',
       is_active: true,
     },
@@ -1083,6 +1626,7 @@ const campaigns = defineSeed(Campaign, {
       budgeted_cost: 22000,
       expected_revenue: 320000,
       target_size: 120,
+      ...campaignMetrics('Executive AI Governance Roundtable'),
       is_active: true,
     },
     {
@@ -1096,6 +1640,7 @@ const campaigns = defineSeed(Campaign, {
       budgeted_cost: 18000,
       expected_revenue: 360000,
       target_size: 1500,
+      ...campaignMetrics('Cloud Migration Webinar'),
       landing_page_url: 'https://acme.example.com/webinars/cloud-migration',
       is_active: true,
     },
@@ -1105,13 +1650,15 @@ const campaigns = defineSeed(Campaign, {
       type: 'content',
       channel: 'digital',
       status: 'in_progress',
-      start_date: cel`daysFromNow(12)`,
+      // Was `daysFromNow(12)` — an `in_progress` campaign that had not started
+      // yet, which no attribution can be consistent with (#591).
+      start_date: cel`daysAgo(12)`,
       end_date: cel`daysFromNow(14)`,
       budgeted_cost: 36000,
       actual_cost: 12000,
       expected_revenue: 480000,
-      actual_revenue: 120000,
       target_size: 8000,
+      ...campaignMetrics('Operations Platform Launch'),
       landing_page_url: 'https://acme.example.com/launch/operations-platform',
       is_active: true,
     },
@@ -1126,6 +1673,7 @@ const campaigns = defineSeed(Campaign, {
       budgeted_cost: 48000,
       expected_revenue: 720000,
       target_size: 600,
+      ...campaignMetrics('Partner Operations Roadshow'),
       is_active: true,
     },
     {
@@ -1139,6 +1687,7 @@ const campaigns = defineSeed(Campaign, {
       budgeted_cost: 75000,
       expected_revenue: 1200000,
       target_size: 3000,
+      ...campaignMetrics('SaaSCon 2026 Trade Show'),
       is_active: true,
     },
     {
@@ -1152,12 +1701,57 @@ const campaigns = defineSeed(Campaign, {
       budgeted_cost: 40000,
       actual_cost: 25000,
       expected_revenue: 250000,
-      actual_revenue: 200000,
       target_size: 10000,
+      ...campaignMetrics('Developer Content Marketing Push'),
       landing_page_url: 'https://acme.example.com/developers',
       is_active: true,
     },
   ]
+});
+
+/**
+ * Campaign members are seeded as TWO datasets over one object, split by which
+ * side of the junction is populated.
+ *
+ * Not a stylistic choice: the object has no single natural key (its only text
+ * identity is a runtime-owned autonumber), so identity has to be the composite
+ * of campaign + member. The loader builds a composite key by joining the
+ * per-field values and returns an EMPTY key — no dedupe, so a replay boot
+ * re-inserts every row — as soon as ANY component is null. `crm_lead` and
+ * `crm_contact` are mutually exclusive by design, so a single
+ * `['crm_campaign', 'crm_lead', 'crm_contact']` key would be blank on every
+ * row. Splitting the rows by member type gives each dataset a key whose parts
+ * are all present.
+ */
+const memberRecords = (
+  kind: 'lead' | 'contact',
+): Array<Record<string, unknown>> =>
+  Object.entries(CAMPAIGN_MEMBERS).flatMap(([campaign, members]) =>
+    members
+      .filter((m) => (kind === 'lead' ? m.lead : m.contact))
+      .map((m) => ({
+        crm_campaign: campaign,
+        ...(kind === 'lead' ? { crm_lead: m.lead } : { crm_contact: m.contact }),
+        status: m.status,
+        added_date: celDaysAgo(m.addedDaysAgo),
+        // `has_responded` / `response_date` track the `responded` status
+        // exactly — a responded member with no response date is a shape the
+        // response-tracking surfaces cannot render.
+        has_responded: m.status === 'responded',
+        ...(m.respondedDaysAgo !== undefined ? { response_date: celDaysAgo(m.respondedDaysAgo) } : {}),
+      })),
+  );
+
+const campaignMembersFromLeads = defineSeed(CampaignMember, {
+  mode: 'upsert',
+  externalId: ['crm_campaign', 'crm_lead'],
+  records: memberRecords('lead'),
+});
+
+const campaignMembersFromContacts = defineSeed(CampaignMember, {
+  mode: 'upsert',
+  externalId: ['crm_campaign', 'crm_contact'],
+  records: memberRecords('contact'),
 });
 
 // ─── Contracts ────────────────────────────────────────────────────────
@@ -1240,6 +1834,57 @@ const contracts = defineSeed(Contract, {
 // ─── Quotes ───────────────────────────────────────────────────────────
 // `quote_number` is a runtime-owned autonumber and is NOT seeded (#490);
 // the (unique) quote name is the upsert identity instead.
+/**
+ * Quote line items, keyed by quote name. The four quotes generated from a deal
+ * carry that deal's configuration verbatim — which is exactly what the
+ * `quote_generation` flow does when it clones opportunity lines onto a quote.
+ */
+const QUOTE_LINES: Record<string, readonly LineSpec[]> = {
+  'Acme Platform Upgrade Quote': OPPORTUNITY_LINES['Acme Platform Upgrade'],
+  'Globex Manufacturing Suite Proposal': OPPORTUNITY_LINES['Globex Manufacturing Suite'],
+  'Wayne Enterprise License Quote': OPPORTUNITY_LINES['Wayne Enterprise License'],
+  'Initech Cloud Migration Estimate': OPPORTUNITY_LINES['Initech Cloud Migration'],
+  // Quoted standalone, before any opportunity existed — and then rejected.
+  'Stark Medical Pilot Quote': [
+    { product: 'Admin Training Workshop', quantity: 5, unit_price: 6000, description: 'Five workshop days for the pilot clinical teams.' },
+    { product: 'Standard Support', quantity: 1, unit_price: 9000, description: 'Standard support for the pilot term.' },
+    { product: 'AI Agent Seat (Annual)', quantity: 6, unit_price: 1000, description: 'Agent seats for the pilot coordinators.' },
+  ],
+};
+
+/**
+ * `subtotal` / `discount_amount` / `total_price` for a quote, derived from its
+ * lines with `quote_total_rollup`'s own model:
+ *
+ *   subtotal        = Σ line (quantity × unit_price × (1 − line_discount/100))
+ *   discount_amount = subtotal × quote.discount%
+ *   total_price     = subtotal − discount_amount + tax + shipping_handling
+ *
+ * Quote-level `tax` and `shipping_handling` stay manual inputs — the rollup
+ * does not derive them either. Everything the rollup DOES own is computed here
+ * so that the first edit to a seeded line item recomputes the same numbers
+ * instead of visibly correcting them.
+ */
+const quoteTotals = (
+  quoteName: string,
+  opts: { discount: number; tax: number; shipping_handling: number },
+) => {
+  const lines = QUOTE_LINES[quoteName];
+  if (!lines) throw new Error(`Seed error: no line items authored for quote "${quoteName}"`);
+  const subtotal = linesTotal(lines);
+  const discount_amount = Math.round(subtotal * (opts.discount / 100) * 100) / 100;
+  const total_price =
+    Math.round((subtotal - discount_amount + opts.tax + opts.shipping_handling) * 100) / 100;
+  return {
+    subtotal,
+    discount: opts.discount,
+    discount_amount,
+    tax: opts.tax,
+    shipping_handling: opts.shipping_handling,
+    total_price,
+  };
+};
+
 const quotes = defineSeed(Quote, {
   mode: 'upsert',
   externalId: 'name',
@@ -1252,12 +1897,7 @@ const quotes = defineSeed(Quote, {
       status: 'accepted',
       quote_date: cel`daysAgo(45)`,
       expiration_date: cel`daysAgo(15)`,
-      subtotal: 150000,
-      discount: 10,
-      discount_amount: 15000,
-      tax: 11475,
-      shipping_handling: 0,
-      total_price: 146475,
+      ...quoteTotals('Acme Platform Upgrade Quote', { discount: 10, tax: 11475, shipping_handling: 0 }),
       payment_terms: 'net_30',
       description: 'Platform upgrade with 10% loyalty discount applied.',
     },
@@ -1269,12 +1909,7 @@ const quotes = defineSeed(Quote, {
       status: 'presented',
       quote_date: cel`daysAgo(7)`,
       expiration_date: cel`daysFromNow(23)`,
-      subtotal: 500000,
-      discount: 5,
-      discount_amount: 25000,
-      tax: 38000,
-      shipping_handling: 2500,
-      total_price: 515500,
+      ...quoteTotals('Globex Manufacturing Suite Proposal', { discount: 5, tax: 38000, shipping_handling: 2500 }),
       payment_terms: 'net_60',
       description: 'Manufacturing suite licensing with implementation services.',
     },
@@ -1286,12 +1921,7 @@ const quotes = defineSeed(Quote, {
       status: 'in_review',
       quote_date: cel`daysAgo(3)`,
       expiration_date: cel`daysFromNow(27)`,
-      subtotal: 1200000,
-      discount: 15,
-      discount_amount: 180000,
-      tax: 81600,
-      shipping_handling: 0,
-      total_price: 1101600,
+      ...quoteTotals('Wayne Enterprise License Quote', { discount: 15, tax: 81600, shipping_handling: 0 }),
       payment_terms: 'net_60',
       description: 'Multi-year enterprise license with volume discount.',
     },
@@ -1303,12 +1933,7 @@ const quotes = defineSeed(Quote, {
       status: 'draft',
       quote_date: cel`daysAgo(1)`,
       expiration_date: cel`daysFromNow(29)`,
-      subtotal: 80000,
-      discount: 0,
-      discount_amount: 0,
-      tax: 6400,
-      shipping_handling: 0,
-      total_price: 86400,
+      ...quoteTotals('Initech Cloud Migration Estimate', { discount: 0, tax: 6400, shipping_handling: 0 }),
       payment_terms: 'net_30',
       description: 'Cloud migration services, awaiting internal review.',
     },
@@ -1319,17 +1944,26 @@ const quotes = defineSeed(Quote, {
       status: 'rejected',
       quote_date: cel`daysAgo(60)`,
       expiration_date: cel`daysAgo(30)`,
-      subtotal: 45000,
-      discount: 0,
-      discount_amount: 0,
-      tax: 3600,
-      shipping_handling: 0,
-      total_price: 48600,
+      ...quoteTotals('Stark Medical Pilot Quote', { discount: 0, tax: 3600, shipping_handling: 0 }),
       payment_terms: 'net_30',
       description: 'Pilot project quote, rejected due to budget constraints.',
       internal_notes: 'Customer requested re-quote with smaller scope.',
     },
   ]
+});
+
+// ─── Quote line items ─────────────────────────────────────────────────
+// Same composite-key reasoning as the opportunity lines above: (quote,
+// product) is the only natural key this junction-shaped object has.
+const quoteLineItems = defineSeed(QuoteLineItem, {
+  mode: 'upsert',
+  externalId: ['crm_quote', 'crm_product'],
+  // `tax_rate` is deliberately left at its 0 default: in this app tax is a
+  // QUOTE-level figure (`crm_quote.tax`, applied after the quote-level
+  // discount) and `quote_total_rollup` ignores the per-line rate entirely.
+  // Seeding a rate here would put a second, contradictory tax number on the
+  // record.
+  records: lineItemRecords('crm_quote', QUOTE_LINES),
 });
 
 // ─── Forecasts ────────────────────────────────────────────────────────
@@ -1363,6 +1997,37 @@ const thisMonthStart = new Date(Date.UTC(forecastYear, forecastMonth, 1));
 const thisMonthEnd = new Date(Date.UTC(forecastYear, forecastMonth + 1, 0));
 const lastQuarterStart = new Date(Date.UTC(forecastYear, forecastQuarterMonth - 3, 1));
 const lastQuarterEnd = new Date(Date.UTC(forecastYear, forecastQuarterMonth, 0));
+// Deeper history: quota-attainment and coverage trends need more than a single
+// prior period to plot (#591). These are all SETTLED periods — deliberately so:
+// the forecast snapshot sweep upserts on (owner, period) for the CURRENT
+// period, so historical rows can never collide with what it writes.
+const quarterStartAgo = (n: number) => new Date(Date.UTC(forecastYear, forecastQuarterMonth - 3 * n, 1));
+const quarterEndAgo = (n: number) => new Date(Date.UTC(forecastYear, forecastQuarterMonth - 3 * (n - 1), 0));
+const monthStartAgo = (n: number) => new Date(Date.UTC(forecastYear, forecastMonth - n, 1));
+const monthEndAgo = (n: number) => new Date(Date.UTC(forecastYear, forecastMonth - n + 1, 0));
+
+/** A settled (past) period snapshot: pipeline is gone, only the closed number remains. */
+const closedPeriod = (
+  period: 'month' | 'quarter',
+  start: Date,
+  end: Date,
+  quota: number,
+  closed: number,
+  notes: string,
+) => ({
+  period,
+  period_label: period === 'quarter' ? forecastQuarterLabel(start) : forecastMonthLabel(start),
+  period_start: forecastIsoDate(start),
+  period_end: forecastIsoDate(end),
+  snapshot_date: forecastIsoDate(end),
+  quota,
+  pipeline_amount: 0,
+  best_case_amount: 0,
+  commit_amount: 0,
+  closed_amount: closed,
+  source: 'scheduled' as const,
+  notes,
+});
 
 const forecasts = defineSeed(Forecast, {
   mode: 'upsert',
@@ -1410,6 +2075,16 @@ const forecasts = defineSeed(Forecast, {
       source: 'scheduled',
       notes: 'Closed at 106% of quota.',
     },
+    closedPeriod('quarter', quarterStartAgo(2), quarterEndAgo(2), 1300000, 1196000,
+      'Closed at 92% of quota — two enterprise deals slipped into the next quarter.'),
+    closedPeriod('quarter', quarterStartAgo(3), quarterEndAgo(3), 1200000, 1308000,
+      'Closed at 109% of quota, carried by the enterprise renewal cohort.'),
+    closedPeriod('quarter', quarterStartAgo(4), quarterEndAgo(4), 1100000, 1045000,
+      'Closed at 95% of quota in the first quarter on the new territory model.'),
+    closedPeriod('month', monthStartAgo(1), monthEndAgo(1), 480000, 505000,
+      'Closed at 105% of quota; the expansion motion covered a soft new-business month.'),
+    closedPeriod('month', monthStartAgo(2), monthEndAgo(2), 460000, 414000,
+      'Closed at 90% of quota — summer slowdown across the mid-market segment.'),
   ]
 });
 
@@ -1517,11 +2192,15 @@ export const CrmSeedData = [
   leads,
   opportunities,
   products,
+  opportunityLineItems,
   tasks,
   cases,
   campaigns,
+  campaignMembersFromLeads,
+  campaignMembersFromContacts,
   contracts,
   quotes,
+  quoteLineItems,
   forecasts,
   knowledgeArticles,
 ];
